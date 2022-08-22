@@ -128,14 +128,14 @@ TrophyState::TrophyState(cro::StateStack& ss, cro::State::Context ctx, SharedSta
     };
 
 #ifdef CRO_DEBUG_
-    /*registerWindow([&]() 
+    registerWindow([&]() 
         {
             if (ImGui::Begin("buns"))
             {
-                ImGui::Image(m_trophyScene.getActiveCamera().getComponent<cro::Camera>().shadowMapBuffer.getTexture(), { 512.f, 512.f }, { 0.f, 1.f }, { 1.f, 0.f });
+                ImGui::Image(m_trophyScene.getActiveCamera().getComponent<cro::Camera>().shadowMapBuffer.getTexture(), { 256.f, 256.f }, { 0.f, 1.f }, { 1.f, 0.f });
             }
             ImGui::End();
-        });*/
+        });
 #endif
 }
 

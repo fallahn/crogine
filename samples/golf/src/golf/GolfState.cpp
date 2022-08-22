@@ -3129,7 +3129,7 @@ void GolfState::buildScene()
 
         //fetch this explicitly so the transition cam also gets the correct zoom
         float zoom = m_cameras[CameraID::Player].getComponent<CameraFollower::ZoomData>().fov;
-        cam.setPerspective(m_sharedData.fov * cro::Util::Const::degToRad * zoom, texSize.x / texSize.y, 0.1f, static_cast<float>(MapSize.x));
+        cam.setPerspective(m_sharedData.fov * cro::Util::Const::degToRad * zoom, texSize.x / texSize.y, 0.1f, static_cast<float>(MapSize.x), 3);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
 
@@ -3157,7 +3157,7 @@ void GolfState::buildScene()
 
         auto fov = m_sharedData.fov * cro::Util::Const::degToRad * zoom.fov;
         cam.setPerspective(fov, cam.getAspectRatio(), 0.1f, static_cast<float>(MapSize.x));
-        m_cameras[CameraID::Transition].getComponent<cro::Camera>().setPerspective(fov, cam.getAspectRatio(), 0.1f, static_cast<float>(MapSize.x));
+        m_cameras[CameraID::Transition].getComponent<cro::Camera>().setPerspective(fov, cam.getAspectRatio(), 0.1f, static_cast<float>(MapSize.x), 3);
     };
 
     m_cameras[CameraID::Player] = camEnt;

@@ -338,6 +338,11 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
                 ImGui::Image(m_avatarThumbs[3].getTexture(), { x,y }, { 0,1 }, { 1,0 });*/
                 //auto pos = m_avatarScene.getActiveCamera().getComponent<cro::Transform>().getPosition();
                 //ImGui::Text("%3.3f, %3.3f, %3.3f", pos.x, pos.y, pos.z);
+                static float maxDist = 200.f;
+                if (ImGui::SliderFloat("Dist", &maxDist, 1.f, 200.f))
+                {
+                    m_backgroundScene.getActiveCamera().getComponent<cro::Camera>().setMaxShadowDistance(maxDist);
+                }
 
                 ImGui::Image(m_backgroundScene.getActiveCamera().getComponent<cro::Camera>().shadowMapBuffer.getTexture(), { 256.f, 256.f }, { 0.f, 1.f }, { 1.f, 0.f });
             }

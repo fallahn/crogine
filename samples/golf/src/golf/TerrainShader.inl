@@ -645,15 +645,22 @@ static const std::string CelFragmentShader = R"(
         {
             vec2 coords = v_lightWorldPosition.xy / v_lightWorldPosition.w / 2.0 + 0.5;
 
-            float featherX = 1.0;//smoothstep(0.0, 0.05, coords.x);
-            //featherX *= (1.0 - smoothstep(0.95, 1.0, coords.x));
+            float featherX = smoothstep(0.0, 0.05, coords.x);
+            featherX *= (1.0 - smoothstep(0.95, 1.0, coords.x));
 
-            float featherY = 1.0;// smoothstep(0.0, 0.05, coords.y);
-            //featherY *= (1.0 - smoothstep(0.95, 1.0, coords.y));
+            float featherY = smoothstep(0.0, 0.05, coords.y);
+            featherY *= (1.0 - smoothstep(0.95, 1.0, coords.y));
 
             if(coords.x>0&&coords.x<1&&coords.y>0&&coords.y<1)
-            FRAG_OUT.rgb += vec3(0.0,0.0,0.5 * featherX * featherY);
+            { 
+                FRAG_OUT.rgb += vec3(0.0,0.0,0.5);// * featherX * featherY);
+            }
+            else
+            {
+                FRAG_OUT.rgb += vec3(0.5,0.0,0.0);
+            }
         }
+        
 #endif
 
 #if defined (ADD_NOISE)

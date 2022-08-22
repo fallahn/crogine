@@ -511,7 +511,7 @@ void ClubhouseState::addSystems()
     m_backgroundScene.addSystem<cro::ModelRenderer>(mb);
     m_backgroundScene.addSystem<cro::BillboardSystem>(mb);
     m_backgroundScene.addSystem<cro::CameraSystem>(mb);
-    m_backgroundScene.addSystem<cro::ShadowMapRenderer>(mb)->setMaxDistance(20.f);
+    m_backgroundScene.addSystem<cro::ShadowMapRenderer>(mb);
     m_backgroundScene.addSystem<cro::AudioSystem>(mb);
 
     m_tableScene.addSystem<cro::CallbackSystem>(mb);
@@ -935,7 +935,9 @@ void ClubhouseState::buildScene()
                 if (passengers[i].hasComponent<cro::Skeleton>())
                 {
                     material = m_resources.materials.get(m_materialIDs[MaterialID::CelSkinned]);
+#ifndef CRO_DEBUG_
                     passengers[i].getComponent<cro::Skeleton>().play(0);
+#endif
                 }
                 else
                 {
@@ -1045,6 +1047,7 @@ void ClubhouseState::buildScene()
     auto& cam = camEnt.getComponent<cro::Camera>();
     cam.resizeCallback = updateView;
     cam.shadowMapBuffer.create(2048, 2048);
+    cam.setMaxShadowDistance(10.f);
     updateView(cam);
 
     auto sunEnt = m_backgroundScene.getSunlight();
