@@ -115,86 +115,6 @@ void ShadowMapRenderer::updateDrawList(Entity camEnt)
         m_activeCameras.push_back(camEnt);
 
 
-        //only covers the first part of the frustum...
-        //TODO implement the rest as cascaded shadows
-        //float farPlane = std::min(camera.m_farPlane, m_maxDistance) / m_cascadeCount;
-
-        ////calc a position for the directional light
-        ////this is used for depth sorting the draw list
-        //auto centre = camEnt.getComponent<cro::Transform>().getWorldPosition() + (camEnt.getComponent<cro::Transform>().getForwardVector() * (farPlane / 2.f));
-        //auto lightPos = centre - (lightDir * ((camera.m_farPlane - camera.m_nearPlane) / 2.f));
-
-        //camera.m_shadowViewMatrix = glm::lookAt(lightPos, centre, cro::Transform::Y_AXIS);// glm::inverse(glm::toMat4(lightRotation));
-
-        ////frustum in camera coords
-        //float tanHalfFOVY = std::tan(camera.m_verticalFOV / 2.f);
-        //float tanHalfFOVX = std::tan((camera.m_verticalFOV * camera.m_aspectRatio) / 2.f);
-
-        //
-        //static constexpr float Embiggenment = 1.2f;
-
-        //float xNear = (camera.m_nearPlane * tanHalfFOVX) * Embiggenment;
-        //float xFar = (farPlane * tanHalfFOVX)* Embiggenment;
-        //float yNear = (camera.m_nearPlane * tanHalfFOVY)* Embiggenment;
-        //float yFar = (farPlane * tanHalfFOVY)* Embiggenment;
-
-        //std::array frustumCorners =
-        //{
-        //    //near
-        //    glm::vec4(xNear, yNear, -camera.m_nearPlane, 1.f),
-        //    glm::vec4(-xNear, yNear, -camera.m_nearPlane, 1.f),
-        //    glm::vec4(xNear, -yNear, -camera.m_nearPlane, 1.f),
-        //    glm::vec4(-xNear, -yNear, -camera.m_nearPlane, 1.f),
-
-        //    //far
-        //    glm::vec4(xFar, yFar, -farPlane, 1.f),
-        //    glm::vec4(-xFar, yFar, -farPlane, 1.f),
-        //    glm::vec4(xFar, -yFar, -farPlane, 1.f),
-        //    glm::vec4(-xFar, -yFar, -farPlane, 1.f)
-        //};
-
-        //auto camTx = camEnt.getComponent<Transform>().getWorldTransform();
-        //std::array<glm::vec4, 8u> lightCorners = {};
-
-        //for (auto i = 0u; i < frustumCorners.size(); ++i)
-        //{
-        //    //convert frustum to world space
-        //    auto worldPoint = camTx * frustumCorners[i];
-
-        //    //convert to light space
-        //    lightCorners[i] = camera.m_shadowViewMatrix * worldPoint;
-        //}
-
-        //auto xExtremes = std::minmax_element(lightCorners.begin(), lightCorners.end(),
-        //    [](glm::vec3 l, glm::vec3 r) 
-        //    {
-        //        return l.x < r.x;
-        //    });
-
-        //auto yExtremes = std::minmax_element(lightCorners.begin(), lightCorners.end(),
-        //    [](glm::vec3 l, glm::vec3 r)
-        //    {
-        //        return l.y < r.y;
-        //    });
-
-        //auto zExtremes = std::minmax_element(lightCorners.begin(), lightCorners.end(),
-        //    [](glm::vec3 l, glm::vec3 r)
-        //    {
-        //        return l.z < r.z;
-        //    });
-
-        //float minX = xExtremes.first->x;
-        //float maxX = xExtremes.second->x;
-        //float minY = yExtremes.first->y;
-        //float maxY = yExtremes.second->y;
-        //float minZ = zExtremes.first->z;
-        //float maxZ = zExtremes.second->z;
-
-        ////convert to ortho projection
-        //camera.m_shadowProjectionMatrix = glm::ortho(minX, maxX, minY, maxY, -maxZ, -minZ);
-        //camera.m_shadowViewProjectionMatrix = camera.m_shadowProjectionMatrix * camera.m_shadowViewMatrix;
-
-
         //store the results here to use in frustum culling
         std::vector<glm::vec3> lightPositions;
         std::vector<Box> frustums;
@@ -299,9 +219,11 @@ void ShadowMapRenderer::updateDrawList(Entity camEnt)
                 //put sphere into lightspace and do an AABB test on the ortho projection
                 auto lightSphere = sphere;
                 lightSphere.centre = glm::vec3(camera.m_shadowViewMatrices[i] * glm::vec4(lightSphere.centre, 1.f));
-                model.m_visible = frustums[i].intersects(lightSphere);
+                
+                //this is kind of redundant
+                //model.m_visible = frustums[i].intersects(lightSphere);
 
-                if (model.m_visible)
+                if (frustums[i].intersects(lightSphere))
                 {
                     drawList.push_back({ entity, distance, i });
                 }

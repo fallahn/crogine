@@ -187,14 +187,26 @@ DrivingState::DrivingState(cro::StateStack& stack, cro::State::Context context, 
     Achievements::setActive(true);
 
 #ifdef CRO_DEBUG_
-    /*registerWindow([&]()
+    registerWindow([&]()
         {
             if (ImGui::Begin("Window"))
             {
-                ImGui::Image(m_cameras[CameraID::Player].getComponent<cro::Camera>().shadowMapBuffer.getTexture(), { 256.f, 256.f }, { 0.f, 1.f }, { 1.f, 0.f });
+                static float maxDist = 80.f;
+                if (ImGui::SliderFloat("Distance", &maxDist, 1.f, 80.f))
+                {
+                    m_gameScene.getActiveCamera().getComponent<cro::Camera>().setMaxShadowDistance(maxDist);
+                }
+
+                static float overshoot = 0.f;
+                if (ImGui::SliderFloat("Overshoot", &overshoot, 0.f, 20.f))
+                {
+                    m_gameScene.getActiveCamera().getComponent<cro::Camera>().setShadowExpansion(overshoot);
+                }
+
+                //ImGui::Image(m_cameras[CameraID::Player].getComponent<cro::Camera>().shadowMapBuffer.getTexture(), { 256.f, 256.f }, { 0.f, 1.f }, { 1.f, 0.f });
             }
             ImGui::End();
-        });*/
+        });
 #endif
 }
 
@@ -1244,7 +1256,7 @@ void DrivingState::createScene()
     auto& cam = camEnt.getComponent<cro::Camera>();
     cam.shadowMapBuffer.create(ShadowMapSize, ShadowMapSize);
     cam.resizeCallback = updateView;
-    cam.setMaxShadowDistance(80.f);
+    cam.setMaxShadowDistance(40.f);
     cam.renderFlags = ~RenderFlags::MiniMap;
     updateView(cam);
     
@@ -1342,7 +1354,7 @@ void DrivingState::createScene()
         cam.setPerspective((m_sharedData.fov* cro::Util::Const::degToRad) * camEnt.getComponent<CameraFollower>().zoom.fov, vpSize.x / vpSize.y, 0.1f, vpSize.x, 2);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
-    camEnt.getComponent<cro::Camera>().setMaxShadowDistance(100.f);
+    camEnt.getComponent<cro::Camera>().setMaxShadowDistance(80.f);
     camEnt.getComponent<cro::Camera>().active = false;
     camEnt.getComponent<cro::Camera>().renderFlags = ~RenderFlags::MiniMap;
     camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(ShadowMapSize, ShadowMapSize);
