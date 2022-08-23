@@ -41,7 +41,8 @@ Camera::Camera()
     m_nearPlane         (0.1f),
     m_farPlane          (150.f),
     m_orthographic      (false),
-    m_maxShadowDistance (std::numeric_limits<float>::max())
+    m_maxShadowDistance (std::numeric_limits<float>::max()),
+    m_shadowExpansion   (0.f)
 {
     glm::vec2 windowSize(App::getWindow().getSize());
     m_aspectRatio = windowSize.x / windowSize.y;
@@ -223,6 +224,12 @@ void Camera::setMaxShadowDistance(float distance)
     updateFrustumCorners(m_frustumSplits.size());
 
     //TODO update the frustum splits if this is an ortho camera.
+}
+
+void Camera::setShadowExpansion(float distance)
+{
+    CRO_ASSERT(distance >= 0, "Must be positive");
+    m_shadowExpansion = distance;
 }
 
 void Camera::updateMatrices(const Transform& tx, float level)

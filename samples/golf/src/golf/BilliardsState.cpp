@@ -85,6 +85,7 @@ namespace
 #include "TerrainShader.inl"
 
     constexpr float MaxShadowDistance = 6.f;
+    constexpr float ShadowExpansion = 5.f;
 
     const std::array FoulStrings =
     {
@@ -106,6 +107,12 @@ namespace
     };
 
     const cro::Time ReadyPingFreq = cro::seconds(1.f);
+
+    struct CameraProperties final
+    {
+        float FOVAdjust = 1.f;
+        float farPlane = 5.f;
+    };
 
     struct CueCallbackData final
     {
@@ -761,11 +768,6 @@ void BilliardsState::buildScene()
     //update the 3D view
     resizeBuffers();
     
-    struct CameraProperties final
-    {
-        float FOVAdjust = 1.f;
-        float farPlane = 5.f;
-    };
 
     auto setPerspective = [&](cro::Camera& cam)
     {
@@ -806,6 +808,7 @@ void BilliardsState::buildScene()
     static constexpr std::uint32_t ShadowMapSize = 2048u;
     cam.shadowMapBuffer.create(ShadowMapSize, ShadowMapSize);
     cam.setMaxShadowDistance(MaxShadowDistance * 2.f);
+    cam.setShadowExpansion(ShadowExpansion);
 
     auto spectateController = m_gameScene.createEntity();
     spectateController.addComponent<cro::Transform>().setPosition({0.f, 0.2f, 0.f});
@@ -832,6 +835,7 @@ void BilliardsState::buildScene()
     camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(ShadowMapSize, ShadowMapSize);
     camEnt.getComponent<cro::Camera>().active = false;
     camEnt.getComponent<cro::Camera>().setMaxShadowDistance(MaxShadowDistance);
+    camEnt.getComponent<cro::Camera>().setShadowExpansion(ShadowExpansion);
     //camEnt.getComponent<cro::Camera>().renderFlags = ~RenderFlags::Cue;
     camEnt.addComponent<CameraProperties>().FOVAdjust = 0.75f;
     camEnt.getComponent<CameraProperties>().farPlane = 6.f;
@@ -847,6 +851,7 @@ void BilliardsState::buildScene()
     camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(ShadowMapSize, ShadowMapSize);
     camEnt.getComponent<cro::Camera>().active = false;
     camEnt.getComponent<cro::Camera>().setMaxShadowDistance(MaxShadowDistance * 2.f);
+    camEnt.getComponent<cro::Camera>().setShadowExpansion(ShadowExpansion);
     camEnt.getComponent<cro::Camera>().renderFlags = ~RenderFlags::Cue;
     camEnt.addComponent<CameraProperties>().farPlane = 7.f;
     camEnt.getComponent<CameraProperties>().FOVAdjust = 0.8f; //needs to match spectate cam initial value to prevent popping
@@ -872,6 +877,7 @@ void BilliardsState::buildScene()
     camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(ShadowMapSize, ShadowMapSize);
     camEnt.getComponent<cro::Camera>().active = false;
     camEnt.getComponent<cro::Camera>().setMaxShadowDistance(MaxShadowDistance);
+    camEnt.getComponent<cro::Camera>().setShadowExpansion(ShadowExpansion);
     camEnt.addComponent<CameraProperties>().FOVAdjust = 0.8f;
     camEnt.getComponent<CameraProperties>().farPlane = 6.f;
     camEnt.addComponent<cro::AudioListener>();
@@ -1662,11 +1668,13 @@ void BilliardsState::setActiveCamera(std::int32_t camID)
         auto pos = interpolate(transitionData.startPos, transitionData.endPos, t);
         auto rot = glm::slerp(transitionData.startRot, transitionData.endRot, t);
 
-        auto aspect = m_cameras[CameraID::Transition].getComponent<cro::Camera>().getAspectRatio();
+        
+        auto camEnt = m_cameras[CameraID::Transition];
+        auto aspect = camEnt.getComponent<cro::Camera>().getAspectRatio();
 
-        m_cameras[CameraID::Transition].getComponent<cro::Transform>().setPosition(pos);
-        m_cameras[CameraID::Transition].getComponent<cro::Transform>().setRotation(rot);
-        m_cameras[CameraID::Transition].getComponent<cro::Camera>().setPerspective(fov, aspect, 0.1f, 5.f);
+        camEnt.getComponent<cro::Transform>().setPosition(pos);
+        camEnt.getComponent<cro::Transform>().setRotation(rot);
+        camEnt.getComponent<cro::Camera>().setPerspective(fov, aspect, 0.1f, camEnt.getComponent<CameraProperties>().farPlane);
 
         if (transitionData.currentTime == 1)
         {

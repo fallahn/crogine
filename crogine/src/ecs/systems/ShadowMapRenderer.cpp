@@ -240,8 +240,12 @@ void ShadowMapRenderer::updateDrawList(Entity camEnt)
                 maxPos.y = std::max(maxPos.y, p.y);
                 maxPos.z = std::max(maxPos.z, p.z);
             }
-            /*minPos -= 1.f;
-            maxPos += 1.f;*/ //this needs to be a variable based on the scene
+            
+            //skewing this means we end up with more depth resolution as we're nearer near plane
+            //how much to skew is up for debate.
+            maxPos.z += camera.m_shadowExpansion * 0.1f;
+            minPos.z -= camera.m_shadowExpansion;
+
             const auto lightProj = glm::ortho(minPos.x, maxPos.x, minPos.y, maxPos.y, minPos.z, maxPos.z);
             camera.m_shadowProjectionMatrices[i] = lightProj;
             camera.m_shadowViewProjectionMatrices[i] = lightProj * lightView;

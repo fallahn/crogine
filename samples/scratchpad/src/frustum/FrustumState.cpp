@@ -116,6 +116,7 @@ namespace
         float aspectRatio = 1.3f;
 
         float maxDistance = 100.f;
+        float overshoot = 0.f;
 
         void update(cro::Camera& cam)
         {
@@ -470,6 +471,10 @@ void FrustumState::createUI()
                     doUpdate = true;
                     m_entities[EntityID::Camera].getComponent<cro::Camera>().setMaxShadowDistance(perspectiveDebug.maxDistance);
                 }
+                if (ImGui::SliderFloat("Overshoot", &perspectiveDebug.overshoot, 0.f, 10.f))
+                {
+                    m_entities[EntityID::Camera].getComponent<cro::Camera>().setShadowExpansion(perspectiveDebug.overshoot);
+                }
                 if (ImGui::InputInt("Cascades", &CascadeCount))
                 {
                     CascadeCount = std::min(3, std::max(1, CascadeCount));
@@ -537,6 +542,7 @@ void FrustumState::calcLightFrusta()
 
 #ifdef CRO_DEBUG_
     //this visualises the output of the shadow map system
+    //the camera members are only included in debug builds, however
     const auto& cam = m_entities[EntityID::Camera].getComponent<cro::Camera>();
     for (auto i = 0u; i < std::min(cam.lightCorners.size(), std::size_t(CascadeCount)); ++i)
     {
@@ -546,10 +552,9 @@ void FrustumState::calcLightFrusta()
  
         glProgramUniformMatrix4fv(SplitProgramID, LightUniformID, CascadeCount, GL_FALSE, cam.getShadowViewProjections());
     }
-    return;
-#endif
-
-
+    
+#else
+    //this is actually now inplemented in the ShadowMapRenderer system.
 
     //frustum corners in world coords
     auto worldMat = m_entities[EntityID::Camera].getComponent<cro::Transform>().getWorldTransform();
@@ -628,6 +633,7 @@ void FrustumState::calcLightFrusta()
 
         updateFrustumVis(glm::inverse(lightView), lightCorners, m_entities[EntityID::LightViz01 + i].getComponent<cro::Model>().getMeshData(), CascadeColours[i]);
     }
+#endif
 }
 
 void FrustumState::updateFrustumVis(glm::mat4 worldMat, const std::array<glm::vec4, 8u>& corners, cro::Mesh::Data& meshData, glm::vec4 c)

@@ -320,8 +320,9 @@ namespace cro
         \brief Returns a vector of frustum corners arranged as a set of frusta
         created by splitting the camera's main frustum.
         This is used when rendering shadow map cascades, the number of which are specified
-        when calling setPerspective() or setOrthographic(). If a single split has been specified
-        then the returned value is the same as that of getFrustumCorners().
+        when calling setPerspective() or setOrthographic(). Before splitting the
+        far plane of the Camera's frustum is clamped to the maximum shadow distance
+        \see setMaxShadowDistance()
         \see getFrustumCorners()
         */
         const std::vector<std::array<glm::vec4, 8u>>& getFrustumSplits() const { return m_frustumSplits; }
@@ -401,6 +402,9 @@ namespace cro
         ShadowCaster component (and valid shadow material) to this buffer.
         The ModelRenderer will automatically bind and pass this buffer to
         any relevant shaders when the Scene is rendered with this camera.
+
+        For notes on shadow casting and quality of shadow mapping see
+        ShadowMapRenderer
         */
 #ifdef PLATFORM_DESKTOP
         DepthTexture shadowMapBuffer;
@@ -418,11 +422,27 @@ namespace cro
         \brief Sets the maximum distance from this camera for
         rendering shadows.
         This is clamped to the camera's far plane distance. The
-        value must be greater than the current near plane.
+        value must be greater than the current near plane. This paramter
+        is usually adjusted along with setShadowExpansion()
         \param distance The distance in world units from the camera
         to which to clamp shadow rendering.
+        \see ShadowMapRenderer
         */
         void setMaxShadowDistance(float distance);
+
+        /*!
+        \brief Sets the amount of overshoot outside of the Camera
+        frustum to expand each cascade.
+        As shadow casting objects may fall outside of the Camera frustum
+        the size of the light frustum can be expanded along the z axis (from the light)
+        The default values is 0, but usually needs to be 1 unit or more, depending on
+        the size of the Scene. This parameter is often adjusted along with
+        setMaxShadowDistance()
+        \param distance Positive value to add to the near and far plane of
+        the light frustum.
+        \see ShadowMapRenderer
+        */
+        void setShadowExpansion(float distance);
 
         /*!
         \brief Returns the number of cascades this camera is currently
@@ -537,6 +557,7 @@ namespace cro
         std::vector<glm::mat4> m_shadowViewProjectionMatrices;
         std::vector<glm::mat4> m_shadowViewMatrices;
         std::vector<glm::mat4> m_shadowProjectionMatrices;
+        float m_shadowExpansion;
     };
 }
 

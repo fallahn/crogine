@@ -60,6 +60,28 @@ namespace cro
     directional shadow map for each camera in the Scene with
     a valid depthBuffer.
 
+    The quality of shadow mapping can vary wildly depending on
+    the scene being drawn. Two Camera properties can and
+    should be tweaked on a per-use case:
+    Camera::maxShadowDistance() - this reduces the distance
+    shadows are rendered from the camera, but effectively
+    increases the resoution of the shadow map by covering a
+    smaller area. If shadows are particularly blocky then
+    reducing this could improve quality without the need 
+    for creating a higher resolution DepthTexture on the camera.
+    However:
+    Reducing the draw distance of shadows can have the effect
+    of 'lifting' the frustum created by the light as it is
+    shrunk, so objects may start to fall outside of the
+    shadow casting frustum. In which case increasing the
+    length of the frustum can be done with 
+    Camera::setShadowExpansion(), which pushes the light
+    frustum's far plane back by the given amount.
+    This means it is skewed slightly towards the near plane
+    (where the depth buffer has higher resolution) so that
+    it can also improve the quality of shadows, particularly
+    self shadows, where the depth difference is very small.
+
     Note that the Camera's depthBuffer must be explicitly created:
     any camera without a valid depthBuffer will be skipped.
     \see Camera
