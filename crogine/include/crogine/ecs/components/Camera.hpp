@@ -431,6 +431,12 @@ namespace cro
         void setMaxShadowDistance(float distance);
 
         /*!
+        \brief Returns the current value set for maxShadowDistance()
+        */
+        float getMaxShadowDistance() const { return std::min(m_maxShadowDistance, m_farPlane); }
+
+
+        /*!
         \brief Sets the amount of overshoot outside of the Camera
         frustum to expand each cascade.
         As shadow casting objects may fall outside of the Camera frustum
@@ -443,6 +449,11 @@ namespace cro
         \see ShadowMapRenderer
         */
         void setShadowExpansion(float distance);
+
+        /*!
+        \brief Returns t he current value set for setShadowExpansion();
+        */
+        float getShadowExpansion() const { return m_shadowExpansion; }
 
         /*!
         \brief Returns the number of cascades this camera is currently

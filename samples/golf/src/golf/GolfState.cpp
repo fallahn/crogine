@@ -136,9 +136,9 @@ namespace
 
     float godmode = 1.f;
 
-    constexpr float ShadowFarDistance = 10.f;// 50.f;
-    constexpr float ShadowNearDistance = 10.f;// 20.f;
-    constexpr std::size_t CascadeCount = 1;
+    constexpr float ShadowFarDistance = 50.f;
+    constexpr float ShadowNearDistance = 20.f;
+    constexpr std::size_t CascadeCount = 3;
     const cro::Time ReadyPingFreq = cro::seconds(1.f);
 
     //use to move the flag as the player approaches
@@ -264,11 +264,19 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
                 /*ImGui::PlotLines("X Pos", ballDump[0].data(), ballDump[0].size(), 0, nullptr, 3.4028235e38f, 3.4028235e38f, ImVec2(0, 80.f));
                 ImGui::PlotLines("Y Pos", ballDump[1].data(), ballDump[1].size(), 0, nullptr, 3.4028235e38f, 3.4028235e38f, ImVec2(0, 80.f));
                 ImGui::PlotLines("Z Pos", ballDump[2].data(), ballDump[2].size(), 0, nullptr, 3.4028235e38f, 3.4028235e38f, ImVec2(0, 80.f));*/
-                static float maxDist = ShadowNearDistance;
+                float maxDist = m_cameras[m_currentCamera].getComponent<cro::Camera>().getMaxShadowDistance();
                 if (ImGui::SliderFloat("MaxDist", &maxDist, 1.f, 200.f))
                 {
-                    m_cameras[CameraID::Player].getComponent<cro::Camera>().setMaxShadowDistance(maxDist);
+                    m_cameras[m_currentCamera].getComponent<cro::Camera>().setMaxShadowDistance(maxDist);
                 }
+
+                float extension = m_cameras[m_currentCamera].getComponent<cro::Camera>().getShadowExpansion();
+                if (ImGui::SliderFloat("expansion", &extension, 0.f, 40.f))
+                {
+                    m_cameras[m_currentCamera].getComponent<cro::Camera>().setShadowExpansion(extension);
+                }
+
+                ImGui::Text("Cascade Count %u", m_gameScene.getActiveCamera().getComponent<cro::Camera>().getCascadeCount());
             }
             ImGui::End();
         });
@@ -3162,7 +3170,7 @@ void GolfState::buildScene()
         }
 
         auto fov = m_sharedData.fov * cro::Util::Const::degToRad * zoom.fov;
-        cam.setPerspective(fov, cam.getAspectRatio(), 0.1f, static_cast<float>(MapSize.x));
+        cam.setPerspective(fov, cam.getAspectRatio(), 0.1f, static_cast<float>(MapSize.x), CascadeCount);
         m_cameras[CameraID::Transition].getComponent<cro::Camera>().setPerspective(fov, cam.getAspectRatio(), 0.1f, static_cast<float>(MapSize.x), CascadeCount);
     };
 
@@ -3172,7 +3180,7 @@ void GolfState::buildScene()
     updateView(cam);
 
     static constexpr std::uint32_t ReflectionMapSize = 1024u;
-    static constexpr std::uint32_t ShadowMapSize = 2048u;
+    const std::uint32_t ShadowMapSize = m_sharedData.hqShadows ? 4096u : 2048u;
 
     //used by transition callback to interp camera
     camEnt.addComponent<TargetInfo>().waterPlane = waterEnt;
@@ -3181,6 +3189,7 @@ void GolfState::buildScene()
     cam.reflectionBuffer.setSmooth(true);
     cam.shadowMapBuffer.create(ShadowMapSize, ShadowMapSize);
     cam.setMaxShadowDistance(ShadowNearDistance);
+    cam.setShadowExpansion(20.f);
 
     //create an overhead camera
     auto setPerspective = [&](cro::Camera& cam)
@@ -3203,6 +3212,8 @@ void GolfState::buildScene()
     camEnt.getComponent<cro::Camera>().reflectionBuffer.setSmooth(true);
     camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(ShadowMapSize / 2, ShadowMapSize / 2);
     camEnt.getComponent<cro::Camera>().active = false;
+    camEnt.getComponent<cro::Camera>().setMaxShadowDistance(ShadowFarDistance * 2.f);
+    camEnt.getComponent<cro::Camera>().setShadowExpansion(25.f);
     camEnt.addComponent<cro::CommandTarget>().ID = CommandID::SpectatorCam;
     camEnt.addComponent<CameraFollower>().radius = 80.f * 80.f;
     camEnt.getComponent<CameraFollower>().id = CameraID::Sky;
@@ -3211,7 +3222,7 @@ void GolfState::buildScene()
     camEnt.getComponent<CameraFollower>().targetOffset = { 0.f,0.65f,0.f };
     camEnt.addComponent<cro::AudioListener>();
     //this holds the water plane ent when active
-    camEnt.addComponent<TargetInfo>();// .postProcess = &m_resources.shaders.get(ShaderID::Noise);
+    camEnt.addComponent<TargetInfo>();
     setPerspective(camEnt.getComponent<cro::Camera>());
     m_cameras[CameraID::Sky] = camEnt;
 
@@ -3229,6 +3240,8 @@ void GolfState::buildScene()
     camEnt.getComponent<cro::Camera>().reflectionBuffer.setSmooth(true);
     camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(ShadowMapSize, ShadowMapSize);
     camEnt.getComponent<cro::Camera>().active = false;
+    camEnt.getComponent<cro::Camera>().setMaxShadowDistance(ShadowFarDistance);
+    camEnt.getComponent<cro::Camera>().setShadowExpansion(25.f);
     camEnt.addComponent<cro::CommandTarget>().ID = CommandID::SpectatorCam;
     camEnt.addComponent<CameraFollower>().radius = 30.f * 30.f;
     camEnt.getComponent<CameraFollower>().id = CameraID::Green;
@@ -3246,7 +3259,6 @@ void GolfState::buildScene()
         [&,camEnt](cro::Camera& cam)
     {
         //this cam has a slightly narrower FOV
-
         auto zoomFOV = camEnt.getComponent<cro::Callback>().getUserData<CameraFollower::ZoomData>().fov;
 
         auto vpSize = glm::vec2(cro::App::getWindow().getSize());
@@ -3257,6 +3269,8 @@ void GolfState::buildScene()
     camEnt.getComponent<cro::Camera>().reflectionBuffer.setSmooth(true);
     camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(ShadowMapSize, ShadowMapSize);
     camEnt.getComponent<cro::Camera>().active = false;
+    camEnt.getComponent<cro::Camera>().setMaxShadowDistance(40.f);
+    camEnt.getComponent<cro::Camera>().setShadowExpansion(25.f);
     camEnt.addComponent<cro::AudioListener>();
     camEnt.addComponent<TargetInfo>();
 
@@ -3290,12 +3304,15 @@ void GolfState::buildScene()
     camEnt.getComponent<cro::Camera>().reflectionBuffer.setSmooth(true);
     camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(ShadowMapSize, ShadowMapSize);
     camEnt.getComponent<cro::Camera>().active = false;
+    camEnt.getComponent<cro::Camera>().setMaxShadowDistance(ShadowFarDistance);
+    camEnt.getComponent<cro::Camera>().setShadowExpansion(5.f);
     camEnt.addComponent<cro::AudioListener>();
     camEnt.addComponent<TargetInfo>();
     updateView(camEnt.getComponent<cro::Camera>());
     m_cameras[CameraID::Transition] = camEnt;
 
 #ifdef CRO_DEBUG_
+    //free cam
     camEnt = m_gameScene.createEntity();
     camEnt.addComponent<cro::Transform>();
     camEnt.addComponent<cro::Camera>().resizeCallback =
@@ -3309,6 +3326,8 @@ void GolfState::buildScene()
     camEnt.getComponent<cro::Camera>().reflectionBuffer.setSmooth(true);
     camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(ShadowMapSize, ShadowMapSize);
     camEnt.getComponent<cro::Camera>().active = false;
+    camEnt.getComponent<cro::Camera>().setMaxShadowDistance(ShadowFarDistance);
+    camEnt.getComponent<cro::Camera>().setShadowExpansion(15.f);
     camEnt.addComponent<cro::AudioListener>();
     camEnt.addComponent<FpsCamera>();
     setPerspective(camEnt.getComponent<cro::Camera>());

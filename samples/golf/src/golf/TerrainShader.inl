@@ -641,7 +641,7 @@ static const std::string CelFragmentShader = R"(
 #if defined (RX_SHADOWS)
         //FRAG_OUT.rgb *= shadowAmountSoft(v_lightWorldPosition);
         FRAG_OUT.rgb *= shadowAmount(v_lightWorldPosition);
-        if(v_lightWorldPosition.w > 0.0)
+        /*if(v_lightWorldPosition.w > 0.0)
         {
             vec2 coords = v_lightWorldPosition.xy / v_lightWorldPosition.w / 2.0 + 0.5;
 
@@ -659,7 +659,7 @@ static const std::string CelFragmentShader = R"(
             {
                 FRAG_OUT.rgb += vec3(0.5,0.0,0.0);
             }
-        }
+        }*/
         
 #endif
 

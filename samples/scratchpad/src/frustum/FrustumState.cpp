@@ -321,7 +321,7 @@ void FrustumState::createScene()
         auto entity = m_gameScene.createEntity();
         entity.addComponent<cro::Transform>().setPosition({ 0.f, -4.f, -15.f });
         entity.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -90.f * cro::Util::Const::degToRad);
-        entity.getComponent<cro::Transform>().setScale(glm::vec3(2.f));
+        entity.getComponent<cro::Transform>().setScale(glm::vec3(4.f));
         md.createModel(entity);
         entity.getComponent<cro::Model>().setRenderFlags(RenderFlags::Scene);
 
@@ -330,7 +330,7 @@ void FrustumState::createScene()
         entity = m_gameScene.createEntity();
         entity.addComponent<cro::Transform>().setPosition({ 0.f, -4.f, -15.f });
         entity.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -90.f * cro::Util::Const::degToRad);
-        entity.getComponent<cro::Transform>().setScale(glm::vec3(2.f));
+        entity.getComponent<cro::Transform>().setScale(glm::vec3(4.f));
         md.createModel(entity);
         entity.getComponent<cro::Model>().setRenderFlags(RenderFlags::Vis);
         entity.getComponent<cro::Model>().setMaterial(0, sliceMaterial);
@@ -372,6 +372,7 @@ void FrustumState::createScene()
 
     //scene camera
     auto camEnt = m_gameScene.getActiveCamera();
+    camEnt.getComponent<cro::Transform>().setPosition({ 0.f, 0.f, 10.f });
     camEnt.getComponent<cro::Camera>().resizeCallback = updateView;
     camEnt.getComponent<cro::Camera>().renderFlags = RenderFlags::Vis;
     updateView(camEnt.getComponent<cro::Camera>());
