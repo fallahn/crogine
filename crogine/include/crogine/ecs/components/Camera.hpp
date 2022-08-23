@@ -60,23 +60,31 @@ namespace cro
     buffers.
 
     Set the render flags on the Model component to 'ReflectionPlane' to
-    flag it as such. Then set the RenderFlags of the ModelRenderer to
-    the inverse:
+    flag it as such. Then set the RenderFlags of the Camera to the inverse:
     \begincode
-    scene.getSystem<ModelRenderer>().setFlags(~RenderFlags::ReflectionPlane);
+    camera.renderFlags = ~RenderFlags::ReflectionPlane;
     \endcode
     This will set all flags active on the renderer so that everything but
     reflection plane geometry will be drawn.
 
-    When renderingto the final buffer return the flags to their default
+    When rendering to the final buffer return the flags to their default
     value to render all geometry again:
     \begincode
-    scene.getSystem<ModelRenderer>().setFlags(RenderFlags::All);
+    camera.renderFlags = RenderFlags::All;
     \endcode
 
     Custom flags can be created for any renderable component starting
-    at (1<<1) and incrementing (1<<x) up to the minimum value listed
-    here.
+    at (1<<0) and incrementing (1<<x) up to the minimum value (1<<62)
+
+    Flags can be OR'd together so that only specific sets of geometry
+    are rendered, if they match the Camera's current flags:
+
+    \begincode
+    camera.renderFlags = Flags::Minimap | Flags::Skybox;
+    \endcode
+
+    While these flags are active only geometry with the Minimap or
+    Skybox flags will be rendered by the camera.
     */
 
     struct RenderFlags final
@@ -143,6 +151,8 @@ namespace cro
         disabled by first calling scene.setPostEnabled(false) and then re-enabling
         them for the final pass, to prevent post processes getting rendered into the
         reflection/refraction map buffers.
+        Multiple passes can be combined with Camera::renderFlags to ensure specific
+        sets of geometry are rendered during different passes.
         */
         struct Pass final
         {
@@ -494,6 +504,7 @@ namespace cro
         std::vector<std::array<glm::vec4, 8u>> lightCorners;
         std::vector<glm::vec3> lightPositions;
         glm::mat4 getShadowViewMatrix(std::size_t i) const { return m_shadowViewMatrices[i]; }
+        const float* getShadowViewProjections() const { return reinterpret_cast<const float*>(m_shadowViewProjectionMatrices.data()); }
 #endif
 
 

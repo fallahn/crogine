@@ -53,14 +53,69 @@ source distribution.
 
 namespace
 {
+    const std::string SliceVertex =
+        R"(
+        ATTRIBUTE vec4 a_position;
+
+        uniform mat4 u_worldMatrix;
+        uniform mat4 u_viewProjectionMatrix;
+
+        uniform mat4 u_lightViewProjections[CASCADES];
+
+        VARYING_OUT vec4 v_lightWorldPositions[CASCADES];
+
+        void main()
+        {
+            gl_Position = u_viewProjectionMatrix * u_worldMatrix * a_position;
+            
+            for(int i = 0; i < CASCADES; ++i)
+            {
+                v_lightWorldPositions[i] = u_lightViewProjections[i] * u_worldMatrix * a_position;
+            }
+
+        })";
+
+    const std::string SliceFragment =
+        R"(
+        OUTPUT
+
+        VARYING_IN vec4 v_lightWorldPositions[CASCADES];
+
+        const vec3 Colours[3] = vec3[]
+        (
+            vec3(0.8,0.0,0.0),
+            vec3(0.0,0.8,0.0),
+            vec3(0.0,0.0,0.8)
+        );
+
+        void main()
+        {
+            FRAG_OUT = vec4(vec3(0.2), 1.0);
+
+            for(int i = 0; i < CASCADES; ++i)
+            {
+                if(v_lightWorldPositions[i].w > 0.0)
+                {
+                    vec2 coords = v_lightWorldPositions[i].xy / v_lightWorldPositions[i].w / 2.0 + 0.5;
+                    if(coords.x > 0 && coords.x < 1
+                        && coords.y > 0 && coords.y < 1)
+                    {
+                        FRAG_OUT.rgb += Colours[i];
+                    }
+                }
+            }
+        })";
+
+    std::int32_t CascadeCount = 3;
+
     struct PerspectiveDebug final
     {
         float nearPlane = 0.1f;
-        float farPlane = 10.f;
+        float farPlane = 50.f;
         float fov = 40.f;
         float aspectRatio = 1.3f;
 
-        float maxDistance = 10.f;
+        float maxDistance = 100.f;
 
         void update(cro::Camera& cam)
         {
@@ -69,6 +124,7 @@ namespace
             cam.viewport = { 0.f, 0.f, 1.f, 1.f };
         }
     }perspectiveDebug;
+    
 
     struct KeyID final
     {
@@ -92,6 +148,25 @@ namespace
         std::array<std::int32_t, KeyID::Count>({SDLK_w, SDLK_s, SDLK_a, SDLK_d, SDLK_q, SDLK_e}),
         std::array<std::int32_t, KeyID::Count>({SDLK_HOME, SDLK_END, SDLK_DELETE, SDLK_PAGEDOWN, SDLK_INSERT, SDLK_PAGEUP})
     };
+
+    struct RenderFlags final
+    {
+        enum
+        {
+            Vis = 0x1,
+            Scene = 0x2
+        };
+    };
+
+    struct ShaderID final
+    {
+        enum
+        {
+            Slice = 1
+        };
+    };
+    std::int32_t LightUniformID = -1;
+    std::uint32_t SplitProgramID = 0;
 }
 
 FrustumState::FrustumState(cro::StateStack& stack, cro::State::Context context)
@@ -206,6 +281,7 @@ void FrustumState::createScene()
         auto entity = m_gameScene.createEntity();
         entity.addComponent<cro::Transform>().setPosition({ 0.f, -3.f, -15.f });
         md.createModel(entity);
+        entity.getComponent<cro::Model>().setRenderFlags(RenderFlags::Vis);
         m_entities[EntityID::Cube] = entity;
     }
 
@@ -214,6 +290,7 @@ void FrustumState::createScene()
         auto entity = m_gameScene.createEntity();
         entity.addComponent<cro::Transform>().setPosition({ 12.f, 7.f, -20.f });
         md.createModel(entity);
+        entity.getComponent<cro::Model>().setRenderFlags(RenderFlags::Vis);
         m_entities[EntityID::Light] = entity;
     }
 
@@ -224,18 +301,60 @@ void FrustumState::createScene()
             auto entity = m_gameScene.createEntity();
             entity.addComponent<cro::Transform>().setScale(glm::vec3(0.5f));
             md.createModel(entity);
+            entity.getComponent<cro::Model>().setRenderFlags(RenderFlags::Vis);
             m_entities[EntityID::LightDummy01 + i] = entity;
         }
     }
 
-    /*if (md.loadFromFile("assets/bush/ground_plane.cmt"))
+    m_resources.shaders.loadFromString(ShaderID::Slice, SliceVertex, SliceFragment, "#define CASCADES " + std::to_string(CascadeCount) + "\n");
+    auto& sliceShader = m_resources.shaders.get(ShaderID::Slice);
+    LightUniformID = sliceShader.getUniformID("u_lightViewProjections[0]");
+    SplitProgramID = sliceShader.getGLHandle();
+
+    auto sliceMaterialID = m_resources.materials.add(sliceShader);
+    auto sliceMaterial = m_resources.materials.get(sliceMaterialID);
+
+
+    if (md.loadFromFile("assets/bush/ground_plane.cmt"))
     {
         auto entity = m_gameScene.createEntity();
         entity.addComponent<cro::Transform>().setPosition({ 0.f, -4.f, -15.f });
         entity.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -90.f * cro::Util::Const::degToRad);
         entity.getComponent<cro::Transform>().setScale(glm::vec3(2.f));
         md.createModel(entity);
-    }*/
+        entity.getComponent<cro::Model>().setRenderFlags(RenderFlags::Scene);
+
+
+
+        entity = m_gameScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ 0.f, -4.f, -15.f });
+        entity.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -90.f * cro::Util::Const::degToRad);
+        entity.getComponent<cro::Transform>().setScale(glm::vec3(2.f));
+        md.createModel(entity);
+        entity.getComponent<cro::Model>().setRenderFlags(RenderFlags::Vis);
+        entity.getComponent<cro::Model>().setMaterial(0, sliceMaterial);
+    }
+
+    const std::array BoxPositions =
+    {
+        glm::vec3(5.f, -4.f, -15.f),
+        glm::vec3(-5.f, -4.f, -15.f),
+        glm::vec3(0.4f, -4.f, -18.f),
+        glm::vec3(-1.f, -4.f, -13.f)
+    };
+    if (md.loadFromFile("assets/bush/player_box.cmt"))
+    {
+        for (auto pos : BoxPositions)
+        {
+            auto entity = m_gameScene.createEntity();
+            entity.addComponent<cro::Transform>().setPosition(pos);
+            md.createModel(entity);
+            entity.getComponent<cro::Model>().setRenderFlags(RenderFlags::Scene | RenderFlags::Vis);
+
+            float offset = entity.getComponent<cro::Model>().getMeshData().boundingBox[0].y;
+            entity.getComponent<cro::Transform>().setOrigin({ 0.f, offset, 0.f });
+        }
+    }
 
     auto updateView = [](cro::Camera& cam)
     {
@@ -253,6 +372,7 @@ void FrustumState::createScene()
     //scene camera
     auto camEnt = m_gameScene.getActiveCamera();
     camEnt.getComponent<cro::Camera>().resizeCallback = updateView;
+    camEnt.getComponent<cro::Camera>().renderFlags = RenderFlags::Vis;
     updateView(camEnt.getComponent<cro::Camera>());
 
     //this is the camera on the cube which we're visualising
@@ -260,6 +380,7 @@ void FrustumState::createScene()
     camEnt.addComponent<cro::Transform>();
     camEnt.addComponent<cro::Camera>().resizeCallback = std::bind(&PerspectiveDebug::update, &perspectiveDebug, std::placeholders::_1);
     camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(512, 512);
+    camEnt.getComponent<cro::Camera>().renderFlags = RenderFlags::Scene;
     perspectiveDebug.update(camEnt.getComponent<cro::Camera>());
     m_entities[EntityID::Camera] = camEnt;
 
@@ -281,6 +402,7 @@ void FrustumState::createScene()
         auto entity = m_gameScene.createEntity();
         entity.addComponent<cro::Transform>();
         entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), material);
+        entity.getComponent<cro::Model>().setRenderFlags(RenderFlags::Vis);
         m_entities[EntityID::CameraViz01 + i] = entity;        
         
         
@@ -292,6 +414,7 @@ void FrustumState::createScene()
         entity = m_gameScene.createEntity();
         entity.addComponent<cro::Transform>();
         entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), material);
+        entity.getComponent<cro::Model>().setRenderFlags(RenderFlags::Vis);
         m_entities[EntityID::LightViz01 + i] = entity;
     }
 
@@ -342,10 +465,23 @@ void FrustumState::createUI()
                 {
                     doUpdate = true;
                 }
-                if (ImGui::SliderFloat("Max Dist", &perspectiveDebug.maxDistance, 1.f, 20.f))
+                if (ImGui::SliderFloat("Max Dist", &perspectiveDebug.maxDistance, 1.f, 100.f))
                 {
                     doUpdate = true;
                     m_entities[EntityID::Camera].getComponent<cro::Camera>().setMaxShadowDistance(perspectiveDebug.maxDistance);
+                }
+                if (ImGui::InputInt("Cascades", &CascadeCount))
+                {
+                    CascadeCount = std::min(3, std::max(1, CascadeCount));
+
+                    for (auto i = 0; i < 3; ++i)
+                    {
+                        m_entities[EntityID::LightViz01 + i].getComponent<cro::Model>().setHidden(i >= CascadeCount);
+                        m_entities[EntityID::LightDummy01 + i].getComponent<cro::Model>().setHidden(i >= CascadeCount);
+                        m_entities[EntityID::CameraViz01 + i].getComponent<cro::Model>().setHidden(i >= CascadeCount);
+                    }
+
+                    doUpdate = true;
                 }
 
                 if (doUpdate)
@@ -402,11 +538,13 @@ void FrustumState::calcLightFrusta()
 #ifdef CRO_DEBUG_
     //this visualises the output of the shadow map system
     const auto& cam = m_entities[EntityID::Camera].getComponent<cro::Camera>();
-    for (auto i = 0u; i < cam.lightCorners.size(); ++i)
+    for (auto i = 0u; i < std::min(cam.lightCorners.size(), std::size_t(CascadeCount)); ++i)
     {
         m_entities[EntityID::LightDummy01 + i].getComponent<cro::Transform>().setPosition(cam.lightPositions[i]);
         m_entities[EntityID::LightDummy01 + i].getComponent<cro::Transform>().setRotation(light.getComponent<cro::Transform>().getRotation());
         updateFrustumVis(glm::inverse(cam.getShadowViewMatrix(i)), cam.lightCorners[i], m_entities[EntityID::LightViz01 + i].getComponent<cro::Model>().getMeshData(), CascadeColours[i]);
+ 
+        glProgramUniformMatrix4fv(SplitProgramID, LightUniformID, CascadeCount, GL_FALSE, cam.getShadowViewProjections());
     }
     return;
 #endif

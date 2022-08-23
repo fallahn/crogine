@@ -44,7 +44,6 @@ namespace cro
     struct Camera;
 }
 
-static constexpr std::int32_t CascadeCount = 3;
 class FrustumState final : public cro::State, public cro::GuiClient
 {
 public:
