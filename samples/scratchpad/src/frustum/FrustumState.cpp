@@ -144,7 +144,7 @@ namespace
             Cube, Light
         };
     };
-    std::array keysets =
+    constexpr std::array keysets =
     {
         std::array<std::int32_t, KeyID::Count>({SDLK_w, SDLK_s, SDLK_a, SDLK_d, SDLK_q, SDLK_e}),
         std::array<std::int32_t, KeyID::Count>({SDLK_HOME, SDLK_END, SDLK_DELETE, SDLK_PAGEDOWN, SDLK_INSERT, SDLK_PAGEUP})
