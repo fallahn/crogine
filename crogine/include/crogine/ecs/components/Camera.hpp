@@ -278,7 +278,7 @@ namespace cro
         \param farPlane Distance to far plane
         \param numSplits Number of splits to create if using cascaded shadow maps
         */
-        void setPerspective(float fov, float aspect, float nearPlane, float farPlane, std::size_t numSplits = 1);
+        void setPerspective(float fov, float aspect, float nearPlane, float farPlane, std::uint32_t numSplits = 1);
 
         /*!
         \brief Sets the projection matrix to an orthographic projection
@@ -290,7 +290,7 @@ namespace cro
         \param farPlane Distance to far plane
         \param numSplits Number of splits to create if using cascaded shadow maps
         */
-        void setOrthographic(float left, float right, float bottom, float top, float nearPlane, float farPlane, std::size_t numSplits = 1);
+        void setOrthographic(float left, float right, float bottom, float top, float nearPlane, float farPlane, std::uint32_t numSplits = 1);
 
         /*!
         \brief Returns true if set to an orthographic projection matrix

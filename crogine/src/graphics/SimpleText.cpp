@@ -28,7 +28,7 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include "../detail/TextConstruction.hpp"
-#include "../detail/glad.hpp"
+#include "../detail/GLCheck.hpp"
 
 #include <crogine/graphics/SimpleText.hpp>
 #include <crogine/graphics/RenderTarget.hpp>

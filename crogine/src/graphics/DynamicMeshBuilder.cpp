@@ -29,7 +29,6 @@ source distribution.
 
 #include <crogine/graphics/DynamicMeshBuilder.hpp>
 
-#include "../detail/glad.hpp"
 #include "../detail/GLCheck.hpp"
 
 using namespace cro;

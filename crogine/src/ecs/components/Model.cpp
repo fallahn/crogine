@@ -29,7 +29,6 @@ source distribution.
 
 #include <crogine/ecs/components/Model.hpp>
 #include <crogine/detail/Assert.hpp>
-#include "../../detail/glad.hpp"
 #include "../../detail/GLCheck.hpp"
 
 #include <crogine/detail/glm/gtc/matrix_inverse.hpp>

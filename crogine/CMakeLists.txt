@@ -85,16 +85,18 @@ else()
 endif()
 
 
-#add platform specific source files
+#add platform specific source files for enet
 if(WIN32)
   SET(PROJECT_SRC ${PROJECT_SRC} ${project_src_win32})
 else()
   SET(PROJECT_SRC ${PROJECT_SRC} ${project_src_nix})
 endif()
 
-# Add the Resourcepath source
+# add the Resourcepath source and GL41 loader for apple, else load GL46
 if (APPLE)
-  set(PROJECT_SRC ${PROJECT_SRC} src/detail/ResourcePath.mm)
+  set(PROJECT_SRC ${PROJECT_SRC} ${project_src_macos})
+else()
+  SET(PROJECT_SRC ${PROJECT_SRC} src/detail/glad.c)
 endif()
 
 # this might be built by a project using crogine

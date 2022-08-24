@@ -132,7 +132,7 @@ const Camera::DrawList& Camera::getDrawList(std::uint32_t pass) const
     }
 }
 
-void Camera::setPerspective(float fov, float aspect, float nearPlane, float farPlane, std::size_t numSplits)
+void Camera::setPerspective(float fov, float aspect, float nearPlane, float farPlane, std::uint32_t numSplits)
 {
     m_projectionMatrix = glm::perspective(fov, aspect, nearPlane, farPlane);
     m_verticalFOV = fov;
@@ -165,7 +165,7 @@ void Camera::setPerspective(float fov, float aspect, float nearPlane, float farP
     }
 }
 
-void Camera::setOrthographic(float left, float right, float bottom, float top, float nearPlane, float farPlane, std::size_t numSplits)
+void Camera::setOrthographic(float left, float right, float bottom, float top, float nearPlane, float farPlane, std::uint32_t numSplits)
 {
     m_projectionMatrix = glm::ortho(left, right, bottom, top, nearPlane, farPlane);
     m_verticalFOV = -1.f;
