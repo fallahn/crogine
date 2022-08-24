@@ -687,6 +687,10 @@ void GolfState::buildUI()
     auto& miniCam = m_mapCam.addComponent<cro::Camera>();
     miniCam.renderFlags = RenderFlags::MiniMap;
     miniCam.active = false;
+    //this is a hack to stop the entire terrain being drawn in shadow
+    miniCam.shadowMapBuffer.create(2, 2);
+    miniCam.shadowMapBuffer.clear();
+    miniCam.shadowMapBuffer.display();
     //miniCam.resizeCallback = updateMiniView; //don't do this on resize as recreating the buffer clears it..
     updateMiniView(miniCam);
 
@@ -721,6 +725,9 @@ void GolfState::buildUI()
     greenCam.renderFlags = RenderFlags::MiniGreen;
     greenCam.resizeCallback = updateGreenView;
     greenCam.active = false;
+    greenCam.shadowMapBuffer.create(2, 2);
+    greenCam.shadowMapBuffer.clear();
+    greenCam.shadowMapBuffer.display();
     updateGreenView(greenCam);
 
     m_greenCam.addComponent<cro::Callback>().active = true;
