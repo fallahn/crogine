@@ -433,7 +433,7 @@ static const std::string CelFragmentShader = R"(
             return 1.0;
         }
 
-        return (currDepth < depthSample) ? 1.0 : 1.0 - (0.3 * featherX * featherY);
+        return (currDepth < depthSample) ? 1.0 : 1.0 - (0.3);// * featherX * featherY);
     }
 
     const vec2 kernel[16] = vec2[](
@@ -481,7 +481,7 @@ static const std::string CelFragmentShader = R"(
 
 
         float amount = shadow / 9.0;
-        return 1.0 - (amount * featherX * featherY);
+        return 1.0 - (amount);// * featherX * featherY);
     }
 #endif
 
@@ -652,8 +652,15 @@ static const std::string CelFragmentShader = R"(
             featherY *= (1.0 - smoothstep(0.95, 1.0, coords.y));
 
             if(coords.x>0&&coords.x<1&&coords.y>0&&coords.y<1)
-            FRAG_OUT.rgb += vec3(0.0,0.0,0.5 * featherX * featherY);
+            { 
+                FRAG_OUT.rgb += vec3(0.0,0.0,0.5);// * featherX * featherY);
+            }
+            else
+            {
+                FRAG_OUT.rgb += vec3(0.5,0.0,0.0);
+            }
         }*/
+        
 #endif
 
 #if defined (ADD_NOISE)

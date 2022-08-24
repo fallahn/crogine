@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021
+Matt Marchant 2021 - 2022
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -32,6 +32,8 @@ source distribution.
 #include "CommonConsts.hpp"
 
 #include <crogine/core/String.hpp>
+#include <crogine/core/Keyboard.hpp>
+#include <crogine/ecs/components/Transform.hpp>
 #include <crogine/network/NetData.hpp>
 
 #include <vector>
@@ -97,4 +99,70 @@ static inline glm::mat4 lookFrom(const glm::vec3& eye, const glm::vec3 centre, c
     Result[3][1] = -glm::dot(u, eye);
     Result[3][2] = glm::dot(f, eye);
     return Result;
+}
+
+//some stuff for quick debugging cameras / lights etc
+struct KeyID final
+{
+    enum
+    {
+        Up, Down, Left, Right,
+        CW, CCW,
+
+        Count
+    };
+};
+struct KeysetID final
+{
+    enum
+    {
+        Cube, Light
+    };
+};
+static constexpr std::array keysets =
+{
+    std::array<std::int32_t, KeyID::Count>({SDLK_w, SDLK_s, SDLK_a, SDLK_d, SDLK_q, SDLK_e}),
+    std::array<std::int32_t, KeyID::Count>({SDLK_HOME, SDLK_END, SDLK_DELETE, SDLK_PAGEDOWN, SDLK_INSERT, SDLK_PAGEUP})
+};
+
+static inline bool rotateEntity(cro::Entity entity, std::int32_t keysetID, float dt)
+{
+    const float rotationSpeed = dt;
+    glm::vec3 rotation(0.f);
+    if (cro::Keyboard::isKeyPressed(keysets[keysetID][KeyID::Down]))
+    {
+        rotation.x -= rotationSpeed;
+    }
+    if (cro::Keyboard::isKeyPressed(keysets[keysetID][KeyID::Up]))
+    {
+        rotation.x += rotationSpeed;
+    }
+    if (cro::Keyboard::isKeyPressed(keysets[keysetID][KeyID::Right]))
+    {
+        rotation.y -= rotationSpeed;
+    }
+    if (cro::Keyboard::isKeyPressed(keysets[keysetID][KeyID::Left]))
+    {
+        rotation.y += rotationSpeed;
+    }
+    if (cro::Keyboard::isKeyPressed(keysets[keysetID][KeyID::CW]))
+    {
+        rotation.z -= rotationSpeed;
+    }
+    if (cro::Keyboard::isKeyPressed(keysets[keysetID][KeyID::CCW]))
+    {
+        rotation.z += rotationSpeed;
+    }
+
+    if (glm::length2(rotation) != 0
+        && entity.isValid())
+    {
+        auto worldMat = glm::inverse(glm::mat3(entity.getComponent<cro::Transform>().getLocalTransform()));
+        entity.getComponent<cro::Transform>().rotate(/*worldMat **/ cro::Transform::X_AXIS, rotation.x);
+        entity.getComponent<cro::Transform>().rotate(worldMat * cro::Transform::Y_AXIS, rotation.y);
+        entity.getComponent<cro::Transform>().rotate(/*worldMat **/ cro::Transform::Z_AXIS, rotation.z);
+
+        return true;
+    }
+    return false;
 }

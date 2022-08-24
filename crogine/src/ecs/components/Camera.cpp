@@ -35,12 +35,14 @@ source distribution.
 using namespace cro;
 
 Camera::Camera() 
-    : viewport      (0.f, 0.f, 1.f, 1.f),
-    m_verticalFOV   (0.6f),
-    m_aspectRatio   (1.f),
-    m_nearPlane     (0.1f),
-    m_farPlane      (150.f),
-    m_orthographic  (false)
+    : viewport          (0.f, 0.f, 1.f, 1.f),
+    m_verticalFOV       (0.6f),
+    m_aspectRatio       (1.f),
+    m_nearPlane         (0.1f),
+    m_farPlane          (150.f),
+    m_orthographic      (false),
+    m_maxShadowDistance (std::numeric_limits<float>::max()),
+    m_shadowExpansion   (0.f)
 {
     glm::vec2 windowSize(App::getWindow().getSize());
     m_aspectRatio = windowSize.x / windowSize.y;
@@ -50,6 +52,12 @@ Camera::Camera()
     m_passes[Pass::Final].m_planeMultiplier = -1.f;
 
     m_passes[Pass::Reflection].m_cullFace = GL_FRONT;
+
+    std::fill(m_frustumCorners.begin(), m_frustumCorners.end(), glm::vec4(0.f));
+
+    m_shadowProjectionMatrices.resize(1);
+    m_shadowViewMatrices.resize(1);
+    m_shadowViewProjectionMatrices.resize(1);
 }
 
 void Camera::setActivePass(std::uint32_t pass)
@@ -124,7 +132,7 @@ const Camera::DrawList& Camera::getDrawList(std::uint32_t pass) const
     }
 }
 
-void Camera::setPerspective(float fov, float aspect, float nearPlane, float farPlane)
+void Camera::setPerspective(float fov, float aspect, float nearPlane, float farPlane, std::size_t numSplits)
 {
     m_projectionMatrix = glm::perspective(fov, aspect, nearPlane, farPlane);
     m_verticalFOV = fov;
@@ -132,6 +140,7 @@ void Camera::setPerspective(float fov, float aspect, float nearPlane, float farP
     m_nearPlane = nearPlane;
     m_farPlane = farPlane;
     m_orthographic = false;
+    m_maxShadowDistance = std::min(farPlane, m_maxShadowDistance);
 
     m_orthographicView = { 0.f,0.f,0.f,0.f };
 
@@ -140,9 +149,16 @@ void Camera::setPerspective(float fov, float aspect, float nearPlane, float farP
     m_frustumData.nearPlane = -nearPlane;
     m_frustumData.nearRight = aspect * nearPlane * fovTan;
     m_frustumData.nearTop = nearPlane * fovTan;
+
+    CRO_ASSERT(numSplits > 0, "");
+    updateFrustumCorners(numSplits);
+
+    m_shadowProjectionMatrices.resize(numSplits);
+    m_shadowViewMatrices.resize(numSplits);
+    m_shadowViewProjectionMatrices.resize(numSplits);
 }
 
-void Camera::setOrthographic(float left, float right, float bottom, float top, float nearPlane, float farPlane)
+void Camera::setOrthographic(float left, float right, float bottom, float top, float nearPlane, float farPlane, std::size_t numSplits)
 {
     m_projectionMatrix = glm::ortho(left, right, bottom, top, nearPlane, farPlane);
     m_verticalFOV = -1.f;
@@ -150,6 +166,7 @@ void Camera::setOrthographic(float left, float right, float bottom, float top, f
     m_nearPlane = nearPlane;
     m_farPlane = farPlane;
     m_orthographic = true;
+    m_maxShadowDistance = std::min(farPlane, m_maxShadowDistance);
 
     m_orthographicView = { left, bottom, right - left, top - bottom };
 
@@ -158,6 +175,61 @@ void Camera::setOrthographic(float left, float right, float bottom, float top, f
     m_frustumData.nearPlane = -nearPlane;
     m_frustumData.nearRight = m_aspectRatio * nearPlane;
     m_frustumData.nearTop = nearPlane;
+
+    m_frustumCorners =
+    {
+        //near
+        glm::vec4(right, top, -nearPlane, 1.f),
+        glm::vec4(left, top, -nearPlane, 1.f),
+        glm::vec4(left, bottom, -nearPlane, 1.f),
+        glm::vec4(right, bottom, -nearPlane, 1.f),
+
+        //far
+        glm::vec4(right, top, -farPlane, 1.f),
+        glm::vec4(left, top, -farPlane, 1.f),
+        glm::vec4(left, bottom, -farPlane, 1.f),
+        glm::vec4(right, bottom, -farPlane, 1.f)
+    };
+
+    CRO_ASSERT(numSplits > 0, "");
+    m_frustumSplits.resize(numSplits);
+
+    m_shadowProjectionMatrices.resize(numSplits);
+    m_shadowViewMatrices.resize(numSplits);
+    m_shadowViewProjectionMatrices.resize(numSplits);
+
+    const float splitSize = (m_maxShadowDistance - nearPlane) / numSplits;
+    for (auto i = 0u; i < numSplits; ++i)
+    {
+        m_frustumSplits[i]=
+        {
+            //near
+            glm::vec4(right, top, -nearPlane - (splitSize * i), 1.f),
+            glm::vec4(left, top, -nearPlane - (splitSize * i), 1.f),
+            glm::vec4(left, bottom, -nearPlane - (splitSize * i), 1.f),
+            glm::vec4(right, bottom, -nearPlane - (splitSize * i), 1.f),
+
+            //far
+            glm::vec4(right, top, -nearPlane - (splitSize * (i + 1)), 1.f),
+            glm::vec4(left, top, -nearPlane - (splitSize * (i + 1)), 1.f),
+            glm::vec4(left, bottom, -nearPlane - (splitSize * (i + 1)), 1.f),
+            glm::vec4(right, bottom, -nearPlane - (splitSize * (i + 1)), 1.f)
+        };
+    }
+}
+
+void Camera::setMaxShadowDistance(float distance)
+{
+    m_maxShadowDistance = std::min(m_farPlane, std::max(m_nearPlane + 0.05f, distance));
+    updateFrustumCorners(m_frustumSplits.size());
+
+    //TODO update the frustum splits if this is an ortho camera.
+}
+
+void Camera::setShadowExpansion(float distance)
+{
+    CRO_ASSERT(distance >= 0, "Must be positive");
+    m_shadowExpansion = distance;
 }
 
 void Camera::updateMatrices(const Transform& tx, float level)
@@ -226,4 +298,60 @@ glm::vec3 Camera::pixelToCoords(glm::vec2 screenPosition, glm::vec2 targetSize) 
     }
 
     return glm::unProject(winCoords, m_passes[Pass::Final].viewMatrix, m_projectionMatrix, vp);
+}
+
+//private
+void Camera::updateFrustumCorners(std::size_t numSplits)
+{
+    float tanHalfFOVY = std::tan(m_verticalFOV / 2.f);
+    float tanHalfFOVX = std::tan((m_verticalFOV * m_aspectRatio) / 2.f);
+
+    float xNear = (m_nearPlane * tanHalfFOVX);
+    float xFar = (m_farPlane * tanHalfFOVX);
+    float yNear = (m_nearPlane * tanHalfFOVY);
+    float yFar = (m_farPlane * tanHalfFOVY);
+
+    m_frustumCorners =
+    {
+        //near
+        glm::vec4(xNear, yNear, -m_nearPlane, 1.f),
+        glm::vec4(-xNear, yNear, -m_nearPlane, 1.f),
+        glm::vec4(-xNear, -yNear, -m_nearPlane, 1.f),
+        glm::vec4(xNear, -yNear, -m_nearPlane, 1.f),
+
+        //far
+        glm::vec4(xFar, yFar, -m_farPlane, 1.f),
+        glm::vec4(-xFar, yFar, -m_farPlane, 1.f),
+        glm::vec4(-xFar, -yFar, -m_farPlane, 1.f),
+        glm::vec4(xFar, -yFar, -m_farPlane, 1.f)
+    };
+
+    m_frustumSplits.resize(numSplits);
+
+    const float splitSize = (m_maxShadowDistance - m_nearPlane) / numSplits;
+    for (auto i = 0u; i < numSplits; ++i)
+    {
+        const float nearPlane = m_nearPlane + (splitSize * i);
+        const float farPlane = nearPlane + splitSize;
+
+        xNear = (nearPlane * tanHalfFOVX);
+        xFar = (farPlane * tanHalfFOVX);
+        yNear = (nearPlane * tanHalfFOVY);
+        yFar = (farPlane * tanHalfFOVY);
+
+        m_frustumSplits[i] = 
+        {
+            //near
+            glm::vec4(xNear, yNear, -nearPlane, 1.f),
+            glm::vec4(-xNear, yNear, -nearPlane, 1.f),
+            glm::vec4(-xNear, -yNear, -nearPlane, 1.f),
+            glm::vec4(xNear, -yNear, -nearPlane, 1.f),
+
+            //far
+            glm::vec4(xFar, yFar, -farPlane, 1.f),
+            glm::vec4(-xFar, yFar, -farPlane, 1.f),
+            glm::vec4(-xFar, -yFar, -farPlane, 1.f),
+            glm::vec4(xFar, -yFar, -farPlane, 1.f)
+        };
+    }
 }

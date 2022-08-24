@@ -320,7 +320,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
         {
             if (ImGui::Begin("Debug"))
             {
-                ImGui::Text("Course Index %u", m_sharedData.courseIndex);
+                //ImGui::Text("Course Index %u", m_sharedData.courseIndex);
                 /*ImGui::Image(m_sharedData.nameTextures[0].getTexture(), { 128, 64 }, { 0,1 }, { 1,0 });
                 ImGui::SameLine();
                 ImGui::Image(m_sharedData.nameTextures[1].getTexture(), { 128, 64 }, { 0,1 }, { 1,0 });
@@ -338,8 +338,13 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
                 ImGui::Image(m_avatarThumbs[3].getTexture(), { x,y }, { 0,1 }, { 1,0 });*/
                 //auto pos = m_avatarScene.getActiveCamera().getComponent<cro::Transform>().getPosition();
                 //ImGui::Text("%3.3f, %3.3f, %3.3f", pos.x, pos.y, pos.z);
+                static float maxDist = 200.f;
+                if (ImGui::SliderFloat("Dist", &maxDist, 1.f, 200.f))
+                {
+                    m_backgroundScene.getActiveCamera().getComponent<cro::Camera>().setMaxShadowDistance(maxDist);
+                }
 
-                //ImGui::Image(m_backgroundScene.getActiveCamera().getComponent<cro::Camera>().shadowMapBuffer.getTexture(), { 512.f, 512.f }, { 0.f, 1.f }, { 1.f, 0.f });
+                ImGui::Image(m_backgroundScene.getActiveCamera().getComponent<cro::Camera>().shadowMapBuffer.getTexture(), { 256.f, 256.f }, { 0.f, 1.f }, { 1.f, 0.f });
             }
             ImGui::End();
         });
@@ -1000,6 +1005,7 @@ void MenuState::createScene()
     auto& cam = camEnt.getComponent<cro::Camera>();
     cam.resizeCallback = updateView;
     cam.shadowMapBuffer.create(2048, 2048);
+    cam.setMaxShadowDistance(32.f);
     updateView(cam);
 
     //camEnt.getComponent<cro::Transform>().setPosition({ -17.8273, 4.9, 25.0144 });

@@ -241,30 +241,27 @@ ClubhouseState::ClubhouseState(cro::StateStack& ss, cro::State::Context ctx, Sha
     }
 
 #ifdef CRO_DEBUG_
-    //registerWindow([&]()
-    //    {
-    //        if (ImGui::Begin("Buns"))
-    //        {
-    //            ImGui::Image(m_tableTexture.getTexture(), {480.f, 280.f}, {0.f, 1.f}, {1.f, 0.f});
+    registerWindow([&]()
+        {
+            if (ImGui::Begin("Buns"))
+            {
+                float maxDepth = m_backgroundScene.getActiveCamera().getComponent<cro::Camera>().getMaxShadowDistance();
+                if (ImGui::SliderFloat("Depth", &maxDepth, 1.f, 30.f))
+                {
+                    m_backgroundScene.getActiveCamera().getComponent<cro::Camera>().setMaxShadowDistance(maxDepth);
+                }
 
-    //            /*static float rotation = 0.f;
-    //            if (ImGui::DragFloat("Rotation", &rotation, 0.1f, 0.f, cro::Util::Const::TAU))
-    //            {
-    //                tableEnt.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, rotation);
-    //            }*/
+                float ext = m_backgroundScene.getActiveCamera().getComponent<cro::Camera>().getShadowExpansion();
+                if (ImGui::SliderFloat("ext", &ext, 0.f, 30.f))
+                {
+                    m_backgroundScene.getActiveCamera().getComponent<cro::Camera>().setShadowExpansion(ext);
+                }
 
-    //            /*glm::vec3 position = tableCamera.getComponent<cro::Transform>().getPosition();
-    //            if (ImGui::DragFloat("X", &position.x, 0.01f, -2.f, 2.f))
-    //            {
-    //                tableCamera.getComponent<cro::Transform>().setPosition(position);
-    //            }
-    //            if (ImGui::DragFloat("Z", &position.z, 0.01f, -0.f, 4.f))
-    //            {
-    //                tableCamera.getComponent<cro::Transform>().setPosition(position);
-    //            }*/
-    //        }
-    //        ImGui::End();
-    //    });
+                auto rot = m_backgroundScene.getSunlight().getComponent<cro::Transform>().getRotation();
+                ImGui::Text("%3.3f, %3.3f, %3.3f, %3.3f", rot.x, rot.y, rot.z, rot.w);
+            }
+            ImGui::End();
+        });
 #endif
 }
 
@@ -452,6 +449,8 @@ bool ClubhouseState::simulate(float dt)
         tx.rotate(cro::Transform::Y_AXIS, rotation);
     }
 
+    rotateEntity(m_backgroundScene.getSunlight(), KeysetID::Light, dt);
+
 #endif
 
     static float accumTime = 0.f;
@@ -511,7 +510,7 @@ void ClubhouseState::addSystems()
     m_backgroundScene.addSystem<cro::ModelRenderer>(mb);
     m_backgroundScene.addSystem<cro::BillboardSystem>(mb);
     m_backgroundScene.addSystem<cro::CameraSystem>(mb);
-    m_backgroundScene.addSystem<cro::ShadowMapRenderer>(mb)->setMaxDistance(20.f);
+    m_backgroundScene.addSystem<cro::ShadowMapRenderer>(mb);
     m_backgroundScene.addSystem<cro::AudioSystem>(mb);
 
     m_tableScene.addSystem<cro::CallbackSystem>(mb);
@@ -935,7 +934,9 @@ void ClubhouseState::buildScene()
                 if (passengers[i].hasComponent<cro::Skeleton>())
                 {
                     material = m_resources.materials.get(m_materialIDs[MaterialID::CelSkinned]);
+#ifndef CRO_DEBUG_
                     passengers[i].getComponent<cro::Skeleton>().play(0);
+#endif
                 }
                 else
                 {
@@ -1045,11 +1046,14 @@ void ClubhouseState::buildScene()
     auto& cam = camEnt.getComponent<cro::Camera>();
     cam.resizeCallback = updateView;
     cam.shadowMapBuffer.create(2048, 2048);
+    cam.setMaxShadowDistance(11.f);
+    cam.setShadowExpansion(9.9f);
     updateView(cam);
 
     auto sunEnt = m_backgroundScene.getSunlight();
-    sunEnt.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, 120.f * cro::Util::Const::degToRad);
-    sunEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -40.f * cro::Util::Const::degToRad);
+    sunEnt.getComponent<cro::Transform>().setRotation({ -0.079f,0.886f,0.163f,0.427f });
+    //sunEnt.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, 120.f * cro::Util::Const::degToRad);
+    //sunEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -40.f * cro::Util::Const::degToRad);
 
     createTableScene();
     createUI();

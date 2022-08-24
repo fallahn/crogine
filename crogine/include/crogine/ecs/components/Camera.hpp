@@ -60,23 +60,31 @@ namespace cro
     buffers.
 
     Set the render flags on the Model component to 'ReflectionPlane' to
-    flag it as such. Then set the RenderFlags of the ModelRenderer to
-    the inverse:
+    flag it as such. Then set the RenderFlags of the Camera to the inverse:
     \begincode
-    scene.getSystem<ModelRenderer>().setFlags(~RenderFlags::ReflectionPlane);
+    camera.renderFlags = ~RenderFlags::ReflectionPlane;
     \endcode
     This will set all flags active on the renderer so that everything but
     reflection plane geometry will be drawn.
 
-    When renderingto the final buffer return the flags to their default
+    When rendering to the final buffer return the flags to their default
     value to render all geometry again:
     \begincode
-    scene.getSystem<ModelRenderer>().setFlags(RenderFlags::All);
+    camera.renderFlags = RenderFlags::All;
     \endcode
 
     Custom flags can be created for any renderable component starting
-    at (1<<1) and incrementing (1<<x) up to the minimum value listed
-    here.
+    at (1<<0) and incrementing (1<<x) up to the minimum value (1<<62)
+
+    Flags can be OR'd together so that only specific sets of geometry
+    are rendered, if they match the Camera's current flags:
+
+    \begincode
+    camera.renderFlags = Flags::Minimap | Flags::Skybox;
+    \endcode
+
+    While these flags are active only geometry with the Minimap or
+    Skybox flags will be rendered by the camera.
     */
 
     struct RenderFlags final
@@ -143,6 +151,8 @@ namespace cro
         disabled by first calling scene.setPostEnabled(false) and then re-enabling
         them for the final pass, to prevent post processes getting rendered into the
         reflection/refraction map buffers.
+        Multiple passes can be combined with Camera::renderFlags to ensure specific
+        sets of geometry are rendered during different passes.
         */
         struct Pass final
         {
@@ -266,8 +276,9 @@ namespace cro
         \param aspect The aspect ratio of width to height
         \param nearPlane Distance to near plane
         \param farPlane Distance to far plane
+        \param numSplits Number of splits to create if using cascaded shadow maps
         */
-        void setPerspective(float fov, float aspect, float nearPlane, float farPlane);
+        void setPerspective(float fov, float aspect, float nearPlane, float farPlane, std::size_t numSplits = 1);
 
         /*!
         \brief Sets the projection matrix to an orthographic projection
@@ -277,8 +288,9 @@ namespace cro
         \param top Top side
         \param nearPlane Distance to near plane
         \param farPlane Distance to far plane
+        \param numSplits Number of splits to create if using cascaded shadow maps
         */
-        void setOrthographic(float left, float right, float bottom, float top, float nearPlane, float farPlane);
+        void setOrthographic(float left, float right, float bottom, float top, float nearPlane, float farPlane, std::size_t numSplits = 1);
 
         /*!
         \brief Returns true if set to an orthographic projection matrix
@@ -291,6 +303,29 @@ namespace cro
         the current window size.
         */
         const glm::mat4& getProjectionMatrix() const { return m_projectionMatrix; }
+
+        /*!
+        \brief Returns the 8 corners of the frustum bounds.
+        The first 4 are the near plane, and second 4 are the far plane,
+        starting top right, wound anti-clockwise.
+        As the points are in local camera space altering the z-depth
+        of the returned values will change the near or far plane values.
+        This is updated each time setPerspective() or setOrthographic() is called.
+        \returns Array of 8 points as glm::vec4, so can be easily multiplied
+        with a transform matrix
+        */
+        const std::array<glm::vec4, 8u>& getFrustumCorners() const { return m_frustumCorners; }
+
+        /*
+        \brief Returns a vector of frustum corners arranged as a set of frusta
+        created by splitting the camera's main frustum.
+        This is used when rendering shadow map cascades, the number of which are specified
+        when calling setPerspective() or setOrthographic(). Before splitting the
+        far plane of the Camera's frustum is clamped to the maximum shadow distance
+        \see setMaxShadowDistance()
+        \see getFrustumCorners()
+        */
+        const std::vector<std::array<glm::vec4, 8u>>& getFrustumSplits() const { return m_frustumSplits; }
 
         /*!
         \brief Viewport.
@@ -367,35 +402,65 @@ namespace cro
         ShadowCaster component (and valid shadow material) to this buffer.
         The ModelRenderer will automatically bind and pass this buffer to
         any relevant shaders when the Scene is rendered with this camera.
+
+        For notes on shadow casting and quality of shadow mapping see
+        ShadowMapRenderer
         */
 #ifdef PLATFORM_DESKTOP
         DepthTexture shadowMapBuffer;
 #else
         RenderTexture shadowMapBuffer;
 #endif
+        /*!
+        \brief Returns the viewProjection matrix for the Scene's
+        directional light as calculated by the ShadowMapRenderer
+        for this camera.
+        */
+        glm::mat4 getShadowViewProjectionMatrix() const { return m_shadowViewProjectionMatrices[0]; }
 
         /*!
-        \brief View-projection matrix used when rendering the shadow map buffer.
-        This contains the view-projection matrix used by the ShadowMapRenderer
-        to render the depth buffer for the Scene's directional light. This is
-        automatically bound to any materials used by the ModelRenderer when
-        shadow casting is enabled. When rendering shadows for this camera with
-        any custom materials or render system this should be used with the
-        camera's shadowMapBuffer property.
+        \brief Sets the maximum distance from this camera for
+        rendering shadows.
+        This is clamped to the camera's far plane distance. The
+        value must be greater than the current near plane. This paramter
+        is usually adjusted along with setShadowExpansion()
+        \param distance The distance in world units from the camera
+        to which to clamp shadow rendering.
+        \see ShadowMapRenderer
         */
-        glm::mat4 shadowViewProjectionMatrix = glm::mat4(1.f);
+        void setMaxShadowDistance(float distance);
 
         /*!
-        \brief View matrix used to render the shadow map buffer.
-        Automatically updated by the ShadowMapRenderer system
+        \brief Returns the current value set for maxShadowDistance()
         */
-        glm::mat4 shadowViewMatrix = glm::mat4(1.f);
+        float getMaxShadowDistance() const { return std::min(m_maxShadowDistance, m_farPlane); }
+
 
         /*!
-        \brief Projection matrix used to render the shadow map buffer
-        Automatically updated by the ShadowMapRenderer system
+        \brief Sets the amount of overshoot outside of the Camera
+        frustum to expand each cascade.
+        As shadow casting objects may fall outside of the Camera frustum
+        the size of the light frustum can be expanded along the z axis (from the light)
+        The default values is 0, but usually needs to be 1 unit or more, depending on
+        the size of the Scene. This parameter is often adjusted along with
+        setMaxShadowDistance()
+        \param distance Positive value to add to the near and far plane of
+        the light frustum.
+        \see ShadowMapRenderer
         */
-        glm::mat4 shadowProjectionMatrix = glm::mat4(1.f);
+        void setShadowExpansion(float distance);
+
+        /*!
+        \brief Returns t he current value set for setShadowExpansion();
+        */
+        float getShadowExpansion() const { return m_shadowExpansion; }
+
+        /*!
+        \brief Returns the number of cascades this camera is currently
+        enabled for, based on the numSplits parameter passed when calling
+        setPerspective() or setOrthographic().
+        */
+        std::size_t getCascadeCount() const { return m_frustumSplits.size(); }
 
         /*!
         \brief Returns the vertical FOV in radians if the
@@ -467,9 +532,10 @@ namespace cro
         FloatRect getViewSize() const { return m_orthographicView; }
 
 #ifdef CRO_DEBUG_
-        //l,r,b,t,n,f
-        std::array<float, 6u> depthDebug = {};
-        glm::vec3 depthPosition = glm::vec3(0.f);
+        std::vector<std::array<glm::vec4, 8u>> lightCorners;
+        std::vector<glm::vec3> lightPositions;
+        glm::mat4 getShadowViewMatrix(std::size_t i) const { return m_shadowViewMatrices[i]; }
+        const float* getShadowViewProjections() const { return reinterpret_cast<const float*>(m_shadowViewProjectionMatrices.data()); }
 #endif
 
 
@@ -490,7 +556,19 @@ namespace cro
         FloatRect m_orthographicView;
         FrustumData m_frustumData;
 
+
         friend class ShadowMapRenderer;
+        friend class ModelRenderer;
+
+        std::array<glm::vec4, 8u> m_frustumCorners;
+        std::vector<std::array<glm::vec4, 8u>> m_frustumSplits;
+        void updateFrustumCorners(std::size_t);
+
+        float m_maxShadowDistance;
+        std::vector<glm::mat4> m_shadowViewProjectionMatrices;
+        std::vector<glm::mat4> m_shadowViewMatrices;
+        std::vector<glm::mat4> m_shadowProjectionMatrices;
+        float m_shadowExpansion;
     };
 }
 

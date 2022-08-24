@@ -128,14 +128,26 @@ TrophyState::TrophyState(cro::StateStack& ss, cro::State::Context ctx, SharedSta
     };
 
 #ifdef CRO_DEBUG_
-    /*registerWindow([&]() 
+    registerWindow([&]() 
         {
             if (ImGui::Begin("buns"))
             {
-                ImGui::Image(m_trophyScene.getActiveCamera().getComponent<cro::Camera>().shadowMapBuffer.getTexture(), { 512.f, 512.f }, { 0.f, 1.f }, { 1.f, 0.f });
+                static float overshoot = 0.f;
+                if (ImGui::SliderFloat("expansion", &overshoot, 0.f, 15.f))
+                {
+                    m_trophyScene.getActiveCamera().getComponent<cro::Camera>().setShadowExpansion(overshoot);
+                }
+
+                static float maxDistance = 10.f;
+                if (ImGui::SliderFloat("max dist", &maxDistance, 0.4f, 10.f))
+                {
+                    m_trophyScene.getActiveCamera().getComponent<cro::Camera>().setMaxShadowDistance(maxDistance);
+                }
+
+                ImGui::Image(m_trophyScene.getActiveCamera().getComponent<cro::Camera>().shadowMapBuffer.getTexture(), { 256.f, 256.f }, { 0.f, 1.f }, { 1.f, 0.f });
             }
             ImGui::End();
-        });*/
+        });
 #endif
 }
 
@@ -866,12 +878,14 @@ void TrophyState::buildTrophyScene()
     auto resizeCallback = [](cro::Camera& cam)
     {
         auto ratio = TrophyTextureSize.x / TrophyTextureSize.y;
-        cam.setPerspective(64.f * cro::Util::Const::degToRad, ratio, 0.1f, 2.f);
+        cam.setPerspective(64.f * cro::Util::Const::degToRad, ratio, 0.3f, 4.5f);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
     resizeCallback(m_trophyScene.getActiveCamera().getComponent<cro::Camera>());
     m_trophyScene.getActiveCamera().getComponent<cro::Camera>().resizeCallback = resizeCallback;
     m_trophyScene.getActiveCamera().getComponent<cro::Camera>().shadowMapBuffer.create(1024, 1024);
+    m_trophyScene.getActiveCamera().getComponent<cro::Camera>().setMaxShadowDistance(2.f);
+    m_trophyScene.getActiveCamera().getComponent<cro::Camera>().setShadowExpansion(15.f);
     m_trophyScene.getActiveCamera().getComponent<cro::Transform>().setPosition({ 0.f, 0.27f, 0.55f });
 
     auto sunEnt = m_trophyScene.getSunlight();

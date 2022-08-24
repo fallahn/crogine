@@ -1,8 +1,7 @@
 course tutorial
 {
     skybox = "assets/golf/skyboxes/spring.sbf"
-    billboard_model = "assets/golf/models/shrubbery.cmt"
-    billboard_sprites = "assets/golf/sprites/shrubbery.spt"
+    shrubbery = "assets/golf/shrubs/01.shb"
     audio = "assets/golf/sound/ambience.xas"
 
     title = "Tutorial"

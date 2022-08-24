@@ -61,6 +61,12 @@
     <Filter Include="Source Files\retro">
       <UniqueIdentifier>{59514787-ad20-4f97-8c62-2f279eabcfe0}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\frustum">
+      <UniqueIdentifier>{e22834f2-6de4-48ec-b229-20e857ef41e5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\frustum">
+      <UniqueIdentifier>{6c368e1e-ef41-469e-8b74-828419179251}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\LoadingScreen.cpp">
@@ -146,6 +152,9 @@
     </ClCompile>
     <ClCompile Include="src\retro\RetroState.cpp">
       <Filter>Source Files\retro</Filter>
+    </ClCompile>
+    <ClCompile Include="src\frustum\FrustumState.cpp">
+      <Filter>Source Files\frustum</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -259,6 +268,9 @@
     </ClInclude>
     <ClInclude Include="src\retro\RetroState.hpp">
       <Filter>Header Files\retro</Filter>
+    </ClInclude>
+    <ClInclude Include="src\frustum\FrustumState.hpp">
+      <Filter>Header Files\frustum</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

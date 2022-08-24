@@ -297,14 +297,25 @@ PlaylistState::PlaylistState(cro::StateStack& ss, cro::State::Context ctx, Share
         });
 
 #ifdef CRO_DEBUG_
-    //registerWindow([&]()
-    //    {
-    //        if (ImGui::Begin("buns"))
-    //        {
-    //            ImGui::Text("Current Slider %u", m_activeSlider.getIndex());
-    //        }
-    //        ImGui::End();
-    //    });
+    registerWindow([&]()
+        {
+            if (ImGui::Begin("buns"))
+            {
+                //ImGui::Text("Current Slider %u", m_activeSlider.getIndex());
+                static float maxDist = 50.f;
+                if (ImGui::SliderFloat("Distance", &maxDist, 1.f, 50.f))
+                {
+                    m_gameScene.getActiveCamera().getComponent<cro::Camera>().setMaxShadowDistance(maxDist);
+                }
+
+                static float overshoot = 0.f;
+                if (ImGui::SliderFloat("Overshoot", &overshoot, 0.f, 20.f))
+                {
+                    m_gameScene.getActiveCamera().getComponent<cro::Camera>().setShadowExpansion(overshoot);
+                }
+            }
+            ImGui::End();
+        });
 #endif
 }
 
@@ -587,7 +598,7 @@ void PlaylistState::addSystems()
     m_gameScene.addSystem<cro::CallbackSystem>(mb);
     m_gameScene.addSystem<cro::BillboardSystem>(mb);
     m_gameScene.addSystem<cro::CameraSystem>(mb);
-    m_gameScene.addSystem<cro::ShadowMapRenderer>(mb)->setMaxDistance(50.f);
+    m_gameScene.addSystem<cro::ShadowMapRenderer>(mb);
     m_gameScene.addSystem<cro::ModelRenderer>(mb);
     m_gameScene.addSystem<cro::AudioSystem>(mb);
 
@@ -819,6 +830,7 @@ void PlaylistState::buildScene()
     cam.reflectionBuffer.create(ReflectionMapSize, ReflectionMapSize);
     cam.reflectionBuffer.setSmooth(true);
     cam.shadowMapBuffer.create(ShadowMapSize, ShadowMapSize);
+    cam.setMaxShadowDistance(20.f);
     cam.resizeCallback = updateView;
     updateView(cam);
 

@@ -60,6 +60,28 @@ namespace cro
     directional shadow map for each camera in the Scene with
     a valid depthBuffer.
 
+    The quality of shadow mapping can vary wildly depending on
+    the scene being drawn. Two Camera properties can and
+    should be tweaked on a per-use case:
+    Camera::maxShadowDistance() - this reduces the distance
+    shadows are rendered from the camera, but effectively
+    increases the resoution of the shadow map by covering a
+    smaller area. If shadows are particularly blocky then
+    reducing this could improve quality without the need 
+    for creating a higher resolution DepthTexture on the camera.
+    However:
+    Reducing the draw distance of shadows can have the effect
+    of 'lifting' the frustum created by the light as it is
+    shrunk, so objects may start to fall outside of the
+    shadow casting frustum. In which case increasing the
+    length of the frustum can be done with 
+    Camera::setShadowExpansion(), which pushes the light
+    frustum's far plane back by the given amount.
+    This means it is skewed slightly towards the near plane
+    (where the depth buffer has higher resolution) so that
+    it can also improve the quality of shadows, particularly
+    self shadows, where the depth difference is very small.
+
     Note that the Camera's depthBuffer must be explicitly created:
     any camera without a valid depthBuffer will be skipped.
     \see Camera
@@ -74,22 +96,19 @@ namespace cro
         explicit ShadowMapRenderer(MessageBus& mb);
 
         /*!
-        \brief Sets the max distance which shadows are drawn
-        Note that this is clamped to the far plane distance of
-        the active camera. The default is 100 units
-        \param distance Maximum world distance to draw shadows.
-        Must be greater than 0
+        \brief DEPRECATED This function does nothing.
+        Use Camera::setMaxShadowDistance() instead.
         */
+        [[deprecated("Use Camera::setMaxShadowDistance()")]]
         void setMaxDistance(float distance);
 
         /*!
-        \brief Sets the number of cascades to use when rendering
-        the shadow map. Currently only the first cascade is implemented
-        however this value will affect how much of the MaxDistance is
-        covered. For instance setting this to 3 will only cover the
-        first third of the MaxDistance value.
-        \param count Number of cascades to use. Must be greater than 0
+        \brief DEPRECATED This function does nothing.
+        The number of cascades is dictated by the number
+        of frustum splits created with Camera::setPerspective()
+        or Camera::setOrthographic()
         */
+        [[deprecated("Use numSplits with Camera::setPerspective()")]]
         void setNumCascades(std::int32_t count);
 
         /*!
@@ -105,12 +124,17 @@ namespace cro
         void render(Entity, const RenderTarget&) override {};
 
     private:
-        float m_maxDistance;
-        std::int32_t m_cascadeCount;
         std::uint32_t m_interval;
         
         std::vector<Entity> m_activeCameras;
-        std::vector<std::vector<std::pair<Entity, float>>> m_drawLists;
+
+        struct Drawable final
+        {
+            cro::Entity entity;
+            float distance = 0.f;
+            std::size_t cascade = 0;
+        };
+        std::vector<std::vector<Drawable>> m_drawLists;
 
         void render();
 

@@ -29,6 +29,9 @@ source distribution.
 
 #include <crogine/detail/Assert.hpp>
 #include <crogine/graphics/BoundingBox.hpp>
+#include <crogine/graphics/Spatial.hpp>
+
+#include <crogine/detail/glm/gtx/norm.hpp>
 
 using namespace cro;
 
@@ -95,6 +98,16 @@ bool Box::intersects(const Box& other, Box* overlap) const
         out[1] = { std::min(m_points[1].x, other.m_points[1].x), std::min(m_points[1].y, other.m_points[1].y), std::min(m_points[1].z, other.m_points[1].z) };
     }
     return result;
+}
+
+bool Box::intersects(Sphere sphere) const
+{
+    if (!contains(sphere.centre))
+    {
+        auto dist = glm::length2(sphere.centre - closest(sphere.centre));
+        return dist < (sphere.radius* sphere.radius);
+    }
+    return true;
 }
 
 bool Box::contains(const Box& box) const
@@ -179,4 +192,14 @@ std::array<glm::vec3, 8> Box::getCorners() const
     retVal[7] = { min.x, max.y, min.z };
 
     return retVal;
+}
+
+glm::vec3 Box::closest(glm::vec3 point) const
+{
+    return
+    {
+        std::max(m_points[0].x, std::min(point.x, m_points[1].x)),
+        std::max(m_points[0].y, std::min(point.y, m_points[1].y)),
+        std::max(m_points[0].z, std::min(point.z, m_points[1].z)),
+    };
 }

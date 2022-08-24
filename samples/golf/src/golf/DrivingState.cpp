@@ -187,14 +187,26 @@ DrivingState::DrivingState(cro::StateStack& stack, cro::State::Context context, 
     Achievements::setActive(true);
 
 #ifdef CRO_DEBUG_
-    /*registerWindow([&]()
+    registerWindow([&]()
         {
             if (ImGui::Begin("Window"))
             {
-                ImGui::Image(m_cameras[CameraID::Player].getComponent<cro::Camera>().shadowMapBuffer.getTexture(), { 256.f, 256.f }, { 0.f, 1.f }, { 1.f, 0.f });
+                static float maxDist = 80.f;
+                if (ImGui::SliderFloat("Distance", &maxDist, 1.f, 80.f))
+                {
+                    m_gameScene.getActiveCamera().getComponent<cro::Camera>().setMaxShadowDistance(maxDist);
+                }
+
+                static float overshoot = 0.f;
+                if (ImGui::SliderFloat("Overshoot", &overshoot, 0.f, 20.f))
+                {
+                    m_gameScene.getActiveCamera().getComponent<cro::Camera>().setShadowExpansion(overshoot);
+                }
+
+                //ImGui::Image(m_cameras[CameraID::Player].getComponent<cro::Camera>().shadowMapBuffer.getTexture(), { 256.f, 256.f }, { 0.f, 1.f }, { 1.f, 0.f });
             }
             ImGui::End();
-        });*/
+        });
 #endif
 }
 
@@ -596,7 +608,7 @@ void DrivingState::addSystems()
     m_gameScene.addSystem<CloudSystem>(mb);
     m_gameScene.addSystem<CameraFollowSystem>(mb);
     m_gameScene.addSystem<cro::CameraSystem>(mb);
-    m_gameScene.addSystem<cro::ShadowMapRenderer>(mb)->setMaxDistance(30.f);
+    m_gameScene.addSystem<cro::ShadowMapRenderer>(mb);
     //m_gameScene.getSystem<cro::ShadowMapRenderer>()->setNumCascades(1);
     m_gameScene.addSystem<cro::ModelRenderer>(mb);
     m_gameScene.addSystem<cro::ParticleSystem>(mb);
@@ -1235,7 +1247,7 @@ void DrivingState::createScene()
         d.resolution = texSize / invScale;
         m_resolutionBuffer.setData(d);
 
-        cam.setPerspective(m_sharedData.fov * cro::Util::Const::degToRad, texSize.x / texSize.y, 0.1f, 320.f);
+        cam.setPerspective(m_sharedData.fov * cro::Util::Const::degToRad, texSize.x / texSize.y, 0.1f, 320.f, 3);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
 
@@ -1244,6 +1256,8 @@ void DrivingState::createScene()
     auto& cam = camEnt.getComponent<cro::Camera>();
     cam.shadowMapBuffer.create(ShadowMapSize, ShadowMapSize);
     cam.resizeCallback = updateView;
+    cam.setMaxShadowDistance(40.f);
+    cam.renderFlags = ~RenderFlags::MiniMap;
     updateView(cam);
     
     m_cameras[CameraID::Player] = camEnt;
@@ -1337,10 +1351,12 @@ void DrivingState::createScene()
         [&, camEnt](cro::Camera& cam) //use explicit callback so we can capture the entity and use it to zoom via CamFollowSystem
     {
         auto vpSize = glm::vec2(cro::App::getWindow().getSize());
-        cam.setPerspective((m_sharedData.fov* cro::Util::Const::degToRad) * camEnt.getComponent<CameraFollower>().zoom.fov, vpSize.x / vpSize.y, 0.1f, vpSize.x);
+        cam.setPerspective((m_sharedData.fov* cro::Util::Const::degToRad) * camEnt.getComponent<CameraFollower>().zoom.fov, vpSize.x / vpSize.y, 0.1f, vpSize.x, 2);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
+    camEnt.getComponent<cro::Camera>().setMaxShadowDistance(80.f);
     camEnt.getComponent<cro::Camera>().active = false;
+    camEnt.getComponent<cro::Camera>().renderFlags = ~RenderFlags::MiniMap;
     camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(ShadowMapSize, ShadowMapSize);
     camEnt.addComponent<cro::CommandTarget>().ID = CommandID::SpectatorCam;
     camEnt.addComponent<CameraFollower>().radius = 85.f * 85.f;
@@ -1359,10 +1375,12 @@ void DrivingState::createScene()
         [&,camEnt](cro::Camera& cam)
     {
         auto vpSize = glm::vec2(cro::App::getWindow().getSize());
-        cam.setPerspective((m_sharedData.fov* cro::Util::Const::degToRad) * camEnt.getComponent<CameraFollower>().zoom.fov, vpSize.x / vpSize.y, 0.1f, vpSize.x);
+        cam.setPerspective((m_sharedData.fov* cro::Util::Const::degToRad) * camEnt.getComponent<CameraFollower>().zoom.fov, vpSize.x / vpSize.y, 0.1f, vpSize.x, 2);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
     camEnt.getComponent<cro::Camera>().active = false;
+    camEnt.getComponent<cro::Camera>().renderFlags = ~RenderFlags::MiniMap;
+    camEnt.getComponent<cro::Camera>().setMaxShadowDistance(50.f);
     camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(ShadowMapSize, ShadowMapSize);
     camEnt.addComponent<cro::CommandTarget>().ID = CommandID::SpectatorCam;
     camEnt.addComponent<CameraFollower>().radius = 20.f * 20.f;

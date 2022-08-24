@@ -39,6 +39,7 @@ source distribution.
 
 namespace cro
 {
+    struct Sphere;
     /*!
     \brief Bounding box created from 2 3D points
     */
@@ -86,6 +87,11 @@ namespace cro
         that are currently being tested.
         */
         bool intersects(const Box& box, Box* overlap = nullptr) const;
+
+        /*!
+        \brief Returns true if the box intersects with the given sphere
+        */
+        bool intersects(Sphere sphere) const;
 
         /*!
         \brief Returns true if this box fully contains the given box
@@ -137,6 +143,8 @@ namespace cro
         std::array<glm::vec3, 2u> m_points;
 
         std::array<glm::vec3, 8> getCorners() const;
+
+        glm::vec3 closest(glm::vec3) const;
 
         friend Box operator * (const glm::mat4&, const Box&);
     };
