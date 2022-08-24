@@ -156,6 +156,13 @@ void Camera::setPerspective(float fov, float aspect, float nearPlane, float farP
     m_shadowProjectionMatrices.resize(numSplits);
     m_shadowViewMatrices.resize(numSplits);
     m_shadowViewProjectionMatrices.resize(numSplits);
+
+    if (shadowMapBuffer.available()
+        && shadowMapBuffer.getLayerCount() != numSplits)
+    {
+        auto size = shadowMapBuffer.getSize();
+        shadowMapBuffer.create(size.x, size.y, numSplits);
+    }
 }
 
 void Camera::setOrthographic(float left, float right, float bottom, float top, float nearPlane, float farPlane, std::size_t numSplits)
@@ -197,6 +204,13 @@ void Camera::setOrthographic(float left, float right, float bottom, float top, f
     m_shadowProjectionMatrices.resize(numSplits);
     m_shadowViewMatrices.resize(numSplits);
     m_shadowViewProjectionMatrices.resize(numSplits);
+
+    if (shadowMapBuffer.available()
+        && shadowMapBuffer.getLayerCount() != numSplits)
+    {
+        auto size = shadowMapBuffer.getSize();
+        shadowMapBuffer.create(size.x, size.y, numSplits);
+    }
 
     const float splitSize = (m_maxShadowDistance - nearPlane) / numSplits;
     for (auto i = 0u; i < numSplits; ++i)

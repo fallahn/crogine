@@ -572,7 +572,7 @@ void ModelRenderer::applyProperties(const Material::Data& material, const Model&
             break;
         case Material::ShadowMapSampler:
             glCheck(glActiveTexture(GL_TEXTURE0 + currentTextureUnit));
-            glCheck(glBindTexture(GL_TEXTURE_2D, camera.shadowMapBuffer.getTexture().textureID));
+            glCheck(glBindTexture(GL_TEXTURE_2D_ARRAY, camera.shadowMapBuffer.getTexture().textureID));
             glCheck(glUniform1i(material.uniforms[Material::ShadowMapSampler], currentTextureUnit++));
             break;
         case Material::SunlightColour:

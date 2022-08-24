@@ -198,7 +198,11 @@ namespace cro::Shaders::Unlit
     #endif
 
     #if defined (RX_SHADOWS)
+    #if defined (MOBILE)
         uniform sampler2D u_shadowMap;
+    #else
+        uniform sampler2DArray u_shadowMap;
+    #endif
     #endif
 
     #if defined(RIMMING)
@@ -287,7 +291,7 @@ namespace cro::Shaders::Unlit
             {
                 for(int y = 0; y < filterSize; ++y)
                 {
-                    float pcfDepth = TEXTURE(u_shadowMap, projectionCoords.xy + kernel[y * filterSize + x] * texelSize).r;
+                    float pcfDepth = TEXTURE(u_shadowMap, vec3(projectionCoords.xy + kernel[y * filterSize + x] * texelSize, 0)).r;
                     shadow += (projectionCoords.z - 0.001) > pcfDepth ? 0.4 : 0.0;
                 }
             }

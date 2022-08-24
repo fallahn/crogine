@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2021
+Matt Marchant 2017 - 2022
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -66,9 +66,10 @@ namespace cro
         \param width Width of the texture to create. This should be
         power of 2 on mobile platforms
         \param height Height of the texture.
+        \param layers Number of layers to create for shadow cascades
         \returns true on success, else returns false
         */
-        bool create(std::uint32_t width, std::uint32_t height);
+        bool create(std::uint32_t width, std::uint32_t height, std::uint32_t layers = 1);
 
         /*!
         \brief Returns the current size in pixels of the depth texture (zero if not yet created)
@@ -82,8 +83,9 @@ namespace cro
         is called. For every clear() call there must be exactly one display() call. This
         also attempts to save and restore any existing viewport, while also applying its
         own during rendering.
+        \param layer Index of the layer to clear and render to. Must be less than getLayerCount()
         */
-        void clear();
+        void clear(std::uint32_t layer = 0);
 
         /*!
         \brief This must be called once for each call to clear to properly validate
@@ -105,10 +107,16 @@ namespace cro
         */
         TextureID getTexture() const;
 
+        /*!
+        \brief Returns the number of layers in the texture
+        */
+        std::uint32_t getLayerCount() const { return m_layerCount; }
+
     private:
         std::uint32_t m_fboID;
         std::uint32_t m_textureID;
         glm::uvec2 m_size;
+        std::uint32_t m_layerCount;
 
         std::uint32_t getFrameBufferID() const override { return m_fboID; }
     };

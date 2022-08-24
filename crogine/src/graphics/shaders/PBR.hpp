@@ -36,7 +36,7 @@ namespace cro::Shaders::PBR
         #endif
 
         #if defined (RX_SHADOWS)
-        uniform sampler2D u_shadowMap;
+        uniform sampler2DArray u_shadowMap;
         #endif
 
         uniform vec3 u_lightDirection;
@@ -118,7 +118,7 @@ namespace cro::Shaders::PBR
             {
                 for(int y = 0; y < filterSize; ++y)
                 {
-                    float pcfDepth = TEXTURE(u_shadowMap, projectionCoords.xy + kernel[y * filterSize + x] * texelSize).r;
+                    float pcfDepth = TEXTURE(u_shadowMap, vec3(projectionCoords.xy + kernel[y * filterSize + x] * texelSize, 0)).r;
                     shadow += (projectionCoords.z - bias) > pcfDepth ? 0.4 : 0.0;
                 }
             }
