@@ -53,6 +53,39 @@ source distribution.
 
 namespace
 {
+    const std::string QuadVertex =
+        R"(
+        ATTRIBUTE vec2 a_position;
+        ATTRIBUTE vec2 a_texCoord0;
+        ATTRIBUTE vec4 a_colour;
+
+        uniform mat4 u_worldMatrix;
+        uniform mat4 u_projectionMatrix;
+
+        VARYING_OUT vec2 v_texCoord;
+        VARYING_OUT vec4 v_colour;
+
+        void main()
+        {
+            gl_Position = u_projectionMatrix * u_worldMatrix * vec4(a_position, 0.0, 1.0);
+            v_texCoord = a_texCoord0;
+            v_colour = a_colour;
+        })";
+
+    const std::string QuadFragment =
+            R"(
+        uniform sampler2D u_texture;
+
+        VARYING_IN vec2 v_texCoord;
+        VARYING_IN vec4 v_colour;
+
+        OUTPUT
+
+        void main()
+        {
+            FRAG_OUT = TEXTURE(u_texture, mod(v_texCoord * 2.0, 1.0)) * v_colour;
+        })";
+
     const std::string SliceVertex =
         R"(
         ATTRIBUTE vec4 a_position;
@@ -163,7 +196,8 @@ namespace
     {
         enum
         {
-            Slice = 1
+            Slice = 1,
+            Quad
         };
     };
     std::int32_t LightUniformID = -1;
@@ -253,6 +287,8 @@ void FrustumState::render()
     m_gameScene.setActiveCamera(oldCam);
     m_gameScene.render();
     m_uiScene.render();
+
+    m_depthQuad.draw();
 }
 
 //private
@@ -390,6 +426,11 @@ void FrustumState::createScene()
     {
         m_entities[EntityID::Cube].getComponent<cro::Transform>().addChild(camEnt.getComponent<cro::Transform>());
     }
+
+
+    m_depthQuad.setTexture(m_resources.textures.get("assets/images/skybox/pz.png"));
+    m_resources.shaders.loadFromString(ShaderID::Quad, QuadVertex, QuadFragment);
+    m_depthQuad.setShader(m_resources.shaders.get(ShaderID::Quad));
 
     //this entity draws the camera frustum. The points are updated in world
     //space so the entity has an identity transform

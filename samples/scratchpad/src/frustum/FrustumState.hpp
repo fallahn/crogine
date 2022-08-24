@@ -64,6 +64,7 @@ private:
 
     cro::ResourceCollection m_resources;
     cro::RenderTexture m_cameraPreview;
+    cro::SimpleQuad m_depthQuad;
 
         struct EntityID final
     {
