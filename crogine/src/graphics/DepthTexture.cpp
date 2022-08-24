@@ -44,6 +44,13 @@ DepthTexture::DepthTexture()
 
 DepthTexture::~DepthTexture()
 {
+#ifndef __APPLE__
+    if (!m_layerHandles.empty())
+    {
+        glCheck(glDeleteTextures(static_cast<GLsizei>(m_layerHandles.size()), m_layerHandles.data()));
+    }
+#endif
+
     if (m_fboID)
     {
         glCheck(glDeleteFramebuffers(1, &m_fboID));
@@ -69,12 +76,26 @@ DepthTexture::DepthTexture(DepthTexture&& other) noexcept
     other.setViewport({ 0, 0, 0, 0 });
     other.setView({ 0.f, 0.f });
     other.m_layerCount = 0;
+
+#ifndef __APPLE__
+    m_layerHandles.swap(other.m_layerHandles);
+#endif
 }
 
 DepthTexture& DepthTexture::operator=(DepthTexture&& other) noexcept
 {
     if (&other != this)
     {
+#ifndef __APPLE__
+        if (!m_layerHandles.empty())
+        {
+            glCheck(glDeleteTextures(static_cast<GLsizei>(m_layerHandles.size()), m_layerHandles.data()));
+            m_layerHandles.clear();
+        }
+
+        m_layerHandles.swap(other.m_layerHandles);
+#endif 
+
         //tidy up anything we own first!
         if (m_fboID)
         {
@@ -121,6 +142,7 @@ bool DepthTexture::create(std::uint32_t width, std::uint32_t height, std::uint32
         setView(FloatRect(getViewport()));
         m_size = { width, height };
         m_layerCount = layers;
+        updateHandles();
 
         return true;
     }
@@ -159,6 +181,7 @@ bool DepthTexture::create(std::uint32_t width, std::uint32_t height, std::uint32
         setView(FloatRect(getViewport()));
         m_size = { width, height };
         m_layerCount = layers;
+        updateHandles();
     }
 
     return result;
@@ -203,4 +226,42 @@ void DepthTexture::display()
 TextureID DepthTexture::getTexture() const
 {
     return TextureID(m_textureID);
+}
+
+TextureID DepthTexture::getTexture(std::uint32_t index) const
+{
+#ifdef __APPLE__
+    return TextureID(0);
+#else
+    CRO_ASSERT(index < m_layerHandles.size(), "Layer doesn't exist");
+    return TextureID(m_layerHandles[index]);
+#endif
+}
+
+//private
+void DepthTexture::updateHandles()
+{
+#ifndef __APPLE__
+    //balls. this only works on immutable textures.
+    
+    /*int v;
+    glGetTextureParameteriv(m_textureID, GL_TEXTURE_IMMUTABLE_FORMAT, &v);
+    LogI << v << std::endl;
+    if (m_layerCount > m_layerHandles.size())
+    {
+        auto oldSize = m_layerHandles.size();
+        m_layerHandles.resize(m_layerCount);
+        glCheck(glGenTextures(static_cast<GLsizei>(m_layerCount - oldSize), &m_layerHandles[oldSize]));
+
+        for (auto i = oldSize; i < m_layerCount; ++i)
+        {
+            glCheck(glTextureView(m_layerHandles[i], GL_TEXTURE_2D, m_textureID, GL_R32F, 0, 1, i, 1));
+        }
+    }
+    else if(m_layerCount < m_layerHandles.size())
+    {
+        glCheck(glDeleteTextures(static_cast<GLsizei>(m_layerHandles.size() - m_layerCount), &m_layerHandles[m_layerCount]));
+        m_layerHandles.resize(m_layerCount);
+    }*/
+#endif
 }

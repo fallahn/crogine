@@ -103,9 +103,18 @@ namespace cro
 
         /*!
         \brief Returns the texture ID wrappped in a handle which can be bound to
-        material uniforms.
+        material uniforms. Note that the depth texture is an array so requires
+        a shader with a sampler2DArray uniform. To retreive a single layer use
+        getTexture(layerIndex) instead
         */
         TextureID getTexture() const;
+
+                /*!
+        \brief Returns a TextureID for the requested layer, if it exists
+        Not available on macOS, so returns a null texture
+        \param index Index of the layer to return
+        */
+        TextureID getTexture(std::uint32_t index) const;
 
         /*!
         \brief Returns the number of layers in the texture
@@ -119,5 +128,13 @@ namespace cro
         std::uint32_t m_layerCount;
 
         std::uint32_t getFrameBufferID() const override { return m_fboID; }
+
+        //this manages the texture views for reading individual layers
+        //however it requires at least GL 4.3 so isn't available on macOS
+#ifndef __APPLE__
+        std::vector<std::uint32_t> m_layerHandles;
+#endif
+        void updateHandles();
+
     };
 }
