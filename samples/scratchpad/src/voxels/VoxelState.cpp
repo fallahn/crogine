@@ -228,7 +228,7 @@ void VoxelState::render()
 //private
 void VoxelState::buildScene()
 {
-    auto& mb = getContext().appInstance.getMessageBus();
+ /*   auto& mb = getContext().appInstance.getMessageBus();
 
     m_scene.addSystem<cro::CallbackSystem>(mb);
     //m_scene.addSystem<cro::ShadowMapRenderer>(mb);
@@ -294,13 +294,13 @@ void VoxelState::buildScene()
     sunEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -65.f * cro::Util::Const::degToRad);
     sunEnt.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, -35.f * cro::Util::Const::degToRad);
 
-    createLayers();
+    createLayers();*/
 }
 
 void VoxelState::createLayers()
 {
     //water plane
-    cro::ModelDefinition md(m_resources, &m_environmentMap);
+/*    cro::ModelDefinition md(m_resources, &m_environmentMap);
     md.loadFromFile("assets/voxels/models/ground_plane.cmt");
 
     auto entity = m_scene.createEntity();
@@ -512,12 +512,12 @@ void VoxelState::createLayers()
         material.setProperty("u_maskColour", cro::Colour::Red);
 
         m_exportPreview.getComponent<cro::Model>().setMaterial(i, material);
-    }
+    }*/
 }
 
 void VoxelState::updateCursorPosition()
 {
-    const auto& cam = m_scene.getActiveCamera().getComponent<cro::Camera>();
+ /*   const auto& cam = m_scene.getActiveCamera().getComponent<cro::Camera>();
     auto cursorPos = cro::Mouse::getPosition();
 
     //TODO do we really want to keep this? Used in debugging
@@ -530,7 +530,7 @@ void VoxelState::updateCursorPosition()
         || (finalPos.z > 0 || finalPos.z < -Voxel::MapSize.y);
 
     m_cursor.getComponent<cro::Model>().setHidden(hidden);
-    m_cursor.getComponent<cro::Transform>().setPosition(finalPos);
+    m_cursor.getComponent<cro::Transform>().setPosition(finalPos);*/
 }
 
 void VoxelState::loadSettings()
@@ -643,7 +643,7 @@ void VoxelState::applyEdit()
 
 void VoxelState::editTerrain()
 {
-    if (!m_cursor.getComponent<cro::Model>().isHidden()
+/*    if (!m_cursor.getComponent<cro::Model>().isHidden()
         && m_showLayer[Layer::Terrain])
     {
         auto cursorPos = m_cursor.getComponent<cro::Transform>().getPosition();
@@ -698,7 +698,7 @@ void VoxelState::editTerrain()
 
         updateTerrainImage(region);
         updateTerrainMesh(region);
-    }
+    }*/
 }
 
 void VoxelState::updateTerrainImage(cro::IntRect area)
@@ -925,13 +925,13 @@ void VoxelState::createExportMesh()
     const std::int32_t ReScale = 2;
 
     //resample the volume to a lower density - the mesh will be rescaled to the given param
-    pv::RawVolume<Voxel::Data> newVolume(pv::Region(pv::Vector3DInt32(0), pv::Vector3DInt32(Voxel::IslandSize.x / ReScale, Voxel::IslandSize.y / ReScale, Voxel::IslandSize.z / ReScale)));
+/*    pv::RawVolume<Voxel::Data> newVolume(pv::Region(pv::Vector3DInt32(0), pv::Vector3DInt32(Voxel::IslandSize.x / ReScale, Voxel::IslandSize.y / ReScale, Voxel::IslandSize.z / ReScale)));
     pv::VolumeResampler resampler(&m_voxelVolume, m_voxelVolume.getEnclosingRegion(), &newVolume, newVolume.getEnclosingRegion());
     resampler.execute();
 
     Voxel::ExtractionController<Voxel::UseSobel::True> controller;
     Voxel::ExportMesh mesh(m_layers[Layer::Voxel].getComponent<cro::Transform>().getPosition(), ReScale);
-    pv::extractMarchingCubesMeshCustom(&newVolume, newVolume.getEnclosingRegion(), &mesh, controller);
+    pv::extractMarchingCubesMeshCustom(&newVolume, newVolume.getEnclosingRegion(), &mesh, controller);*/
 
     //custom mesh extractor - splits faces into submeshes by material
     //updates vertex colour, and discards downward facing triangles
@@ -965,16 +965,16 @@ void VoxelState::createExportMesh()
 
 
 
-    auto* meshData = &m_exportPreview.getComponent<cro::Model>().getMeshData();
-    //meshData->vertexCount = vertices.size();// mesh.getVertexData().size();
-    meshData->vertexCount = mesh.getVertexData().size();
+    //auto* meshData = &m_exportPreview.getComponent<cro::Model>().getMeshData();
+    ////meshData->vertexCount = vertices.size();// mesh.getVertexData().size();
+    /*meshData->vertexCount = mesh.getVertexData().size();
     meshData->boundingBox[0] = glm::vec3(0.f);
     meshData->boundingBox[1] = glm::vec3(Voxel::IslandSize);
     meshData->boundingSphere = meshData->boundingBox;
 
-    glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData->vbo));
-    //glCheck(glBufferData(GL_ARRAY_BUFFER, sizeof(Voxel::ExportVertex) * meshData->vertexCount, vertices.data()/*mesh.getVertexData().data()*/, GL_STATIC_DRAW));
-    glCheck(glBufferData(GL_ARRAY_BUFFER, sizeof(Voxel::ExportVertex) * meshData->vertexCount, mesh.getVertexData().data(), GL_STATIC_DRAW));
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData->vbo));*/
+    ////glCheck(glBufferData(GL_ARRAY_BUFFER, sizeof(Voxel::ExportVertex) * meshData->vertexCount, vertices.data()/*mesh.getVertexData().data()*/, GL_STATIC_DRAW));
+    /*glCheck(glBufferData(GL_ARRAY_BUFFER, sizeof(Voxel::ExportVertex) * meshData->vertexCount, mesh.getVertexData().data(), GL_STATIC_DRAW));
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 
     const auto& indices = mesh.getIndexData();
@@ -986,7 +986,7 @@ void VoxelState::createExportMesh()
         glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->ibo));
         glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh->indexCount * sizeof(std::uint32_t), indices[i].data(), GL_STATIC_DRAW));
     }
-    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
+    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));*/
 
 
     //TODO look at mesh decimation instead of resampling
