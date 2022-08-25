@@ -200,6 +200,7 @@ void Camera::setOrthographic(float left, float right, float bottom, float top, f
 
     CRO_ASSERT(numSplits > 0, "");
     m_frustumSplits.resize(numSplits);
+    m_splitDistances.resize(numSplits + 1);
 
     m_shadowProjectionMatrices.resize(numSplits);
     m_shadowViewMatrices.resize(numSplits);
@@ -229,6 +230,8 @@ void Camera::setOrthographic(float left, float right, float bottom, float top, f
             glm::vec4(left, bottom, -nearPlane - (splitSize * (i + 1)), 1.f),
             glm::vec4(right, bottom, -nearPlane - (splitSize * (i + 1)), 1.f)
         };
+
+        m_splitDistances[i] = m_frustumSplits[i][4].z;
     }
 }
 
@@ -244,6 +247,14 @@ void Camera::setShadowExpansion(float distance)
 {
     CRO_ASSERT(distance >= 0, "Must be positive");
     m_shadowExpansion = distance;
+}
+
+std::size_t Camera::getCascadeCount() const
+{
+    //this is just our current hard limit in the shader
+    //if it comes to it set up the define MAX_CASCADES to be overridable
+    CRO_ASSERT(m_frustumSplits.size() < 5, "");
+    return m_frustumSplits.size();
 }
 
 void Camera::updateMatrices(const Transform& tx, float level)
@@ -341,6 +352,7 @@ void Camera::updateFrustumCorners(std::size_t numSplits)
     };
 
     m_frustumSplits.resize(numSplits);
+    m_splitDistances.resize(numSplits);
 
     const float splitSize = (m_maxShadowDistance - m_nearPlane) / numSplits;
     for (auto i = 0u; i < numSplits; ++i)
@@ -367,5 +379,7 @@ void Camera::updateFrustumCorners(std::size_t numSplits)
             glm::vec4(-xFar, -yFar, -farPlane, 1.f),
             glm::vec4(xFar, -yFar, -farPlane, 1.f)
         };
+
+        m_splitDistances[i] = -farPlane;
     }
 }

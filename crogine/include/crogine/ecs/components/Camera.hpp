@@ -460,7 +460,13 @@ namespace cro
         enabled for, based on the numSplits parameter passed when calling
         setPerspective() or setOrthographic().
         */
-        std::size_t getCascadeCount() const { return m_frustumSplits.size(); }
+        std::size_t getCascadeCount() const;
+
+        /*!
+        brief Returns the z depth, in view space, of each cascade split, ending
+        with the far plane.
+        */
+        std::vector<float> getSplitDistances() const { return m_splitDistances; }
 
         /*!
         \brief Returns the vertical FOV in radians if the
@@ -569,6 +575,7 @@ namespace cro
         std::vector<glm::mat4> m_shadowViewMatrices;
         std::vector<glm::mat4> m_shadowProjectionMatrices;
         float m_shadowExpansion;
+        std::vector<float> m_splitDistances;
     };
 }
 

@@ -568,7 +568,7 @@ void ModelRenderer::applyProperties(const Material::Data& material, const Model&
         }
             break;
         case Material::ShadowMapProjection:
-            glCheck(glUniformMatrix4fv(material.uniforms[Material::ShadowMapProjection], 1, GL_FALSE, &camera.m_shadowViewProjectionMatrices[0][0][0]));
+            glCheck(glUniformMatrix4fv(material.uniforms[Material::ShadowMapProjection], static_cast<GLsizei>(camera.getCascadeCount()), GL_FALSE, &camera.m_shadowViewProjectionMatrices[0][0][0]));
             break;
         case Material::ShadowMapSampler:
             glCheck(glActiveTexture(GL_TEXTURE0 + currentTextureUnit));
@@ -578,6 +578,12 @@ void ModelRenderer::applyProperties(const Material::Data& material, const Model&
             glCheck(glBindTexture(GL_TEXTURE_2D, camera.shadowMapBuffer.getTexture().textureID));
 #endif
             glCheck(glUniform1i(material.uniforms[Material::ShadowMapSampler], currentTextureUnit++));
+            break;
+        case Material::CascadeCount:
+            glCheck(glUniform1i(material.uniforms[Material::CascadeCount], static_cast<std::int32_t>(camera.getCascadeCount())));
+            break;
+        case Material::CascadeSplits:
+            glCheck(glUniform1fv(material.uniforms[Material::CascadeSplits], static_cast<GLsizei>(camera.getCascadeCount()), camera.getSplitDistances().data()));
             break;
         case Material::SunlightColour:
         {

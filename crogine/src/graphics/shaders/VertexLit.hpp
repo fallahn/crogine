@@ -79,7 +79,13 @@ namespace cro::Shaders::VertexLit
         uniform vec4 u_clipPlane;
 
     #if defined(RX_SHADOWS)
-        uniform mat4 u_lightViewProjectionMatrix;
+    #define MAX_CASCADES 4
+        uniform mat4 u_lightViewProjectionMatrix[MAX_CASCADES];
+    #if defined (MOBILE)
+        const int u_cascadeCount = 1;
+    #else
+        uniform int u_cascadeCount = 1;
+    #endif
     #endif
 
     #if defined (SUBRECTS)
@@ -103,7 +109,8 @@ namespace cro::Shaders::VertexLit
     #endif
 
     #if defined(RX_SHADOWS)
-        VARYING_OUT LOW vec4 v_lightWorldPosition;
+        VARYING_OUT LOW vec4 v_lightWorldPosition[MAX_CASCADES];
+        VARYING_OUT float v_viewDepth;
     #endif
 
         void main()
@@ -140,7 +147,11 @@ namespace cro::Shaders::VertexLit
             gl_Position = wvp * position;
 
         #if defined (RX_SHADOWS)
-            v_lightWorldPosition = u_lightViewProjectionMatrix * worldMatrix * position;
+            for(int i = 0; i < u_cascadeCount; i++)
+            {
+                v_lightWorldPosition[i] = u_lightViewProjectionMatrix[i] * worldMatrix * position;
+            }
+            v_viewDepth = (worldViewMatrix * position).z;
         #endif
 
             v_worldPosition = (worldMatrix * position).xyz;
@@ -235,8 +246,12 @@ namespace cro::Shaders::VertexLit
     #if defined (RX_SHADOWS)
     #if defined (MOBILE)
         uniform sampler2D u_shadowMap;
+        const int u_cascadeCount = 1;
     #else
+    #define MAX_CASCADES 4
         uniform sampler2DArray u_shadowMap;
+        uniform int u_cascadeCount = 1;
+        uniform float u_frustumSplits[MAX_CASCADES];
     #endif
     #endif
 
@@ -266,7 +281,8 @@ namespace cro::Shaders::VertexLit
     #endif
 
     #if defined(RX_SHADOWS)
-        VARYING_IN LOW vec4 v_lightWorldPosition;
+        VARYING_IN LOW vec4 v_lightWorldPosition[MAX_CASCADES];
+        VARYING_IN float v_viewDepth;
 
     #if defined(MOBILE)
     #if defined (GL_FRAGMENT_PRECISION_HIGH)
@@ -285,8 +301,10 @@ namespace cro::Shaders::VertexLit
         }
                 
     #if defined(MOBILE)
-        PREC float shadowAmount(LOW vec4 lightWorldPos)
+        PREC float shadowAmount()
         {
+            vec4 lightWorldPos = v_lightWorldPosition[0];
+
             PREC vec3 projectionCoords = lightWorldPos.xyz / lightWorldPos.w;
             projectionCoords = projectionCoords * 0.5 + 0.5;
             PREC float depthSample = unpack(TEXTURE(u_shadowMap, projectionCoords.xy));
@@ -294,6 +312,19 @@ namespace cro::Shaders::VertexLit
             return (currDepth < depthSample) ? 1.0 : 0.4;
         }
     #else
+        int getCascadeIndex()
+        {
+            for(int i = 0; i < u_cascadeCount; ++i)
+            {
+                if (v_viewDepth >= u_frustumSplits[i])
+                {
+                    return min(u_cascadeCount - 1, i);
+                }
+            }
+            return u_cascadeCount - 1;
+        }
+
+
         //some fancier pcf on desktop
         const vec2 kernel[16] = vec2[](
             vec2(-0.94201624, -0.39906216),
@@ -314,8 +345,11 @@ namespace cro::Shaders::VertexLit
             vec2(0.14383161, -0.14100790)
         );
         const int filterSize = 3;
-        float shadowAmount(vec4 lightWorldPos)
+        float shadowAmount()
         {
+            int cascadeIndex = getCascadeIndex();
+            vec4 lightWorldPos = v_lightWorldPosition[cascadeIndex];
+
             vec3 projectionCoords = lightWorldPos.xyz / lightWorldPos.w;
             projectionCoords = projectionCoords * 0.5 + 0.5;
 
@@ -327,7 +361,7 @@ namespace cro::Shaders::VertexLit
             {
                 for(int y = 0; y < filterSize; ++y)
                 {
-                    float pcfDepth = TEXTURE(u_shadowMap, vec3(projectionCoords.xy + kernel[y * filterSize + x] * texelSize, 0)).r;
+                    float pcfDepth = TEXTURE(u_shadowMap, vec3(projectionCoords.xy + kernel[y * filterSize + x] * texelSize, cascadeIndex)).r;
                     shadow += (projectionCoords.z - 0.001) > pcfDepth ? 0.4 : 0.0;
                 }
             }
@@ -389,13 +423,16 @@ namespace cro::Shaders::VertexLit
 
             blendedColour += calcLighting(normal, normalize(-u_lightDirection), u_lightColour.rgb, vec3(1.0), 1.0);
         #if defined (RX_SHADOWS)
-            blendedColour *= shadowAmount(v_lightWorldPosition);
+            blendedColour *= shadowAmount();
 //if(v_lightWorldPosition.w > 0.0)
 //{
 //vec2 coords = v_lightWorldPosition.xy / v_lightWorldPosition.w / 2.0 + 0.5;
 //if(coords.x>0&&coords.x<1&&coords.y>0&&coords.y<1)
 //blendedColour *= vec3(0.0,1.0,0.0);
 //}
+
+int index = getCascadeIndex();
+FRAG_OUT[index] += 0.5;
         #endif
 
             FRAG_OUT.rgb = mix(blendedColour, diffuseColour.rgb, mask.b);

@@ -96,6 +96,8 @@ namespace cro
             ProjectionMapCount,
             ShadowMapProjection,
             ShadowMapSampler,
+            CascadeSplits,
+            CascadeCount,
             SunlightDirection,
             SunlightColour,
             ScreenSize,
