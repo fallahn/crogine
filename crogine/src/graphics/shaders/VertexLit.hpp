@@ -301,7 +301,7 @@ namespace cro::Shaders::VertexLit
         }
                 
     #if defined(MOBILE)
-        PREC float shadowAmount()
+        PREC float shadowAmount(int)
         {
             vec4 lightWorldPos = v_lightWorldPosition[0];
 
@@ -345,9 +345,8 @@ namespace cro::Shaders::VertexLit
             vec2(0.14383161, -0.14100790)
         );
         const int filterSize = 3;
-        float shadowAmount()
+        float shadowAmount(int cascadeIndex)
         {
-            int cascadeIndex = getCascadeIndex();
             vec4 lightWorldPos = v_lightWorldPosition[cascadeIndex];
 
             vec3 projectionCoords = lightWorldPos.xyz / lightWorldPos.w;
@@ -423,16 +422,32 @@ namespace cro::Shaders::VertexLit
 
             blendedColour += calcLighting(normal, normalize(-u_lightDirection), u_lightColour.rgb, vec3(1.0), 1.0);
         #if defined (RX_SHADOWS)
-            blendedColour *= shadowAmount();
-//if(v_lightWorldPosition.w > 0.0)
-//{
-//vec2 coords = v_lightWorldPosition.xy / v_lightWorldPosition.w / 2.0 + 0.5;
-//if(coords.x>0&&coords.x<1&&coords.y>0&&coords.y<1)
-//blendedColour *= vec3(0.0,1.0,0.0);
-//}
 
-int index = getCascadeIndex();
-FRAG_OUT[index] += 0.5;
+            int cascadeIndex = getCascadeIndex();
+            float shadow = shadowAmount(cascadeIndex);
+            float fade = smoothstep(u_frustumSplits[cascadeIndex] + 0.5, u_frustumSplits[cascadeIndex],  v_viewDepth);
+            if(fade > 0)
+            {
+                int nextIndex = min(cascadeIndex + 1, u_cascadeCount - 1);
+                shadow = mix(shadow, shadowAmount(nextIndex), fade);
+            }
+
+            blendedColour *= shadow;
+
+
+//vec3 Colours[4] = vec3[4](vec3(0.2,0.0,0.0), vec3(0.0,0.2,0.0),vec3(0.0,0.0,0.2),vec3(0.2,0.0,0.2));
+//for(int i = 0; i < u_cascadeCount; ++i)
+//{
+//    if (v_lightWorldPosition[i].w > 0.0)
+//    {
+//        vec2 coords = v_lightWorldPosition[i].xy / v_lightWorldPosition[i].w / 2.0 + 0.5;
+//        if (coords.x > 0 && coords.x < 1 
+//                && coords.y > 0 && coords.y < 1)
+//        {
+//            blendedColour += Colours[i];
+//        }
+//    }
+//}
         #endif
 
             FRAG_OUT.rgb = mix(blendedColour, diffuseColour.rgb, mask.b);

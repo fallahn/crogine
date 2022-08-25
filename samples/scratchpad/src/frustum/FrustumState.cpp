@@ -109,7 +109,12 @@ namespace
                 }
             }
 
-            FRAG_OUT = vec4(Colours[min(u_cascadeCount - 1, index)], 1.0);
+            int nextIndex = min(index + 1, u_cascadeCount - 1);
+            float fade = smoothstep(u_viewSplits[index] + 0.5, u_viewSplits[index],  v_viewPosition.z);
+
+            vec3 colour = mix(Colours[index], Colours[nextIndex], fade);
+
+            FRAG_OUT = vec4(colour, 1.0);
         })";
 
 
