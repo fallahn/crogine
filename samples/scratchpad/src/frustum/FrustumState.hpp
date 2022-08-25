@@ -37,7 +37,6 @@ source distribution.
 #include <crogine/graphics/ModelDefinition.hpp>
 #include <crogine/graphics/Texture.hpp>
 #include <crogine/graphics/RenderTexture.hpp>
-#include <crogine/graphics/SimpleQuad.hpp>
 
 namespace cro
 {
@@ -64,7 +63,6 @@ private:
 
     cro::ResourceCollection m_resources;
     cro::RenderTexture m_cameraPreview;
-    cro::SimpleQuad m_depthQuad;
 
         struct EntityID final
     {

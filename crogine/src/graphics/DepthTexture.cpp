@@ -131,9 +131,15 @@ bool DepthTexture::create(std::uint32_t width, std::uint32_t height, std::uint32
 #else
     CRO_ASSERT(layers > 0, "");
 
-    if (m_fboID &&
-        m_textureID)
+    if (width == m_size.x && height == m_size.y && layers == m_layerCount)
     {
+        //don't do anything
+        return true;
+    }
+
+    if (m_textureID)
+    {
+#ifdef __APPLE__
         //resize the buffer
         glCheck(glBindTexture(GL_TEXTURE_2D_ARRAY, m_textureID));
         glCheck(glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_DEPTH_COMPONENT, width, height, layers, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL));
@@ -142,9 +148,12 @@ bool DepthTexture::create(std::uint32_t width, std::uint32_t height, std::uint32
         setView(FloatRect(getViewport()));
         m_size = { width, height };
         m_layerCount = layers;
-        updateHandles();
 
         return true;
+#else
+        //else we have to regenerate it as it's immutable
+        glCheck(glDeleteTextures(1, &m_textureID));
+#endif
     }
 
     //else create it
@@ -154,27 +163,34 @@ bool DepthTexture::create(std::uint32_t width, std::uint32_t height, std::uint32
     //create the texture
     glCheck(glGenTextures(1, &m_textureID));
     glCheck(glBindTexture(GL_TEXTURE_2D_ARRAY, m_textureID));
+#ifdef __APPLE__
+    //apple drivers don't support immutable textures.
     glCheck(glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_DEPTH_COMPONENT, width, height, layers, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL));
+#else
+    glCheck(glTexStorage3D(GL_TEXTURE_2D_ARRAY, 1, GL_DEPTH_COMPONENT24, width, height, layers));
+#endif
     glCheck(glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST));
     glCheck(glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST));
     glCheck(glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER));
     glCheck(glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER));
     const float borderColor[] = { 1.0f, 1.0f, 1.0f, 1.0f };
     glCheck(glTexParameterfv(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_BORDER_COLOR, borderColor));
-
+    
 
     //create the frame buffer
-    glCheck(glGenFramebuffers(1, &m_fboID));
+    if (m_fboID == 0)
+    {
+        glCheck(glGenFramebuffers(1, &m_fboID));
+    }
     glCheck(glBindFramebuffer(GL_FRAMEBUFFER, m_fboID));
-    //glCheck(glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, m_textureID, 0));
     glCheck(glFramebufferTextureLayer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, m_textureID, 0, 0));
     glCheck(glDrawBuffer(GL_NONE));
     glCheck(glReadBuffer(GL_NONE));
 
-    bool result = (glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE);
+    auto result = (glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE);
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
+    
     if (result)
     {
         setViewport({ 0, 0, static_cast<std::int32_t>(width), static_cast<std::int32_t>(height) });
@@ -242,26 +258,19 @@ TextureID DepthTexture::getTexture(std::uint32_t index) const
 void DepthTexture::updateHandles()
 {
 #ifndef __APPLE__
-    //balls. this only works on immutable textures.
-    
-    /*int v;
-    glGetTextureParameteriv(m_textureID, GL_TEXTURE_IMMUTABLE_FORMAT, &v);
-    LogI << v << std::endl;
-    if (m_layerCount > m_layerHandles.size())
+    if (!m_layerHandles.empty())
     {
-        auto oldSize = m_layerHandles.size();
-        m_layerHandles.resize(m_layerCount);
-        glCheck(glGenTextures(static_cast<GLsizei>(m_layerCount - oldSize), &m_layerHandles[oldSize]));
-
-        for (auto i = oldSize; i < m_layerCount; ++i)
-        {
-            glCheck(glTextureView(m_layerHandles[i], GL_TEXTURE_2D, m_textureID, GL_R32F, 0, 1, i, 1));
-        }
+        //this assumes we've recreated a depth texture (we have to, it's immutable)
+        //so we have to delete all the viewtextures and create new ones
+        glCheck(glDeleteTextures(static_cast<std::uint32_t>(m_layerHandles.size()), m_layerHandles.data()));
     }
-    else if(m_layerCount < m_layerHandles.size())
+
+    m_layerHandles.resize(m_layerCount);
+    glCheck(glGenTextures(m_layerCount, m_layerHandles.data()));
+
+    for (auto i = 0u; i < m_layerHandles.size(); ++i)
     {
-        glCheck(glDeleteTextures(static_cast<GLsizei>(m_layerHandles.size() - m_layerCount), &m_layerHandles[m_layerCount]));
-        m_layerHandles.resize(m_layerCount);
-    }*/
+        glCheck(glTextureView(m_layerHandles[i], GL_TEXTURE_2D, m_textureID, GL_DEPTH_COMPONENT24, 0, 1, i, 1));
+    }
 #endif
 }
