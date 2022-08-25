@@ -561,7 +561,7 @@ void FrustumState::createUI()
                     doUpdate = true;
                     m_entities[EntityID::Camera].getComponent<cro::Camera>().setMaxShadowDistance(perspectiveDebug.maxDistance);
                 }
-                if (ImGui::SliderFloat("Overshoot", &perspectiveDebug.overshoot, 0.f, 10.f))
+                if (ImGui::SliderFloat("Overshoot", &perspectiveDebug.overshoot, 0.f, 50.f))
                 {
                     m_entities[EntityID::Camera].getComponent<cro::Camera>().setShadowExpansion(perspectiveDebug.overshoot);
                 }

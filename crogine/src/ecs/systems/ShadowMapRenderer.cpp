@@ -53,6 +53,8 @@ using namespace cro;
 namespace
 {
     std::uint32_t intervalCounter = 0;
+
+    constexpr float CascadeOverlap = 0.15f;
 }
 
 ShadowMapRenderer::ShadowMapRenderer(cro::MessageBus& mb)
@@ -171,6 +173,13 @@ void ShadowMapRenderer::updateDrawList(Entity camEnt)
                 maxPos.z = std::max(maxPos.z, p.z);
             }
             
+            //padding the X and Y allows some overlap of cascades
+            //even when the light is perfectly parallel
+            minPos.x -= CascadeOverlap;
+            minPos.y -= CascadeOverlap;
+            maxPos.x += CascadeOverlap;
+            maxPos.y += CascadeOverlap;
+
             //skewing this means we end up with more depth resolution as we're nearer near plane
             //how much to skew is up for debate.
             maxPos.z += camera.m_shadowExpansion * 0.1f;
