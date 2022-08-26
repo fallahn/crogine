@@ -54,7 +54,7 @@ namespace
 {
     std::uint32_t intervalCounter = 0;
 
-    constexpr float CascadeOverlap = 0.15f;
+    constexpr float CascadeOverlap = 0.5f;
 }
 
 ShadowMapRenderer::ShadowMapRenderer(cro::MessageBus& mb)

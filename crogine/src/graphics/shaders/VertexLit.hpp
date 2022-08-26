@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2021
+Matt Marchant 2017 - 2022
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -79,7 +79,9 @@ namespace cro::Shaders::VertexLit
         uniform vec4 u_clipPlane;
 
     #if defined(RX_SHADOWS)
+    #if !defined(MAX_CASCADES)
     #define MAX_CASCADES 4
+    #endif
         uniform mat4 u_lightViewProjectionMatrix[MAX_CASCADES];
     #if defined (MOBILE)
         const int u_cascadeCount = 1;
@@ -248,7 +250,9 @@ namespace cro::Shaders::VertexLit
         uniform sampler2D u_shadowMap;
         const int u_cascadeCount = 1;
     #else
+    #if !defined(MAX_CASCADES)
     #define MAX_CASCADES 4
+    #endif
         uniform sampler2DArray u_shadowMap;
         uniform int u_cascadeCount = 1;
         uniform float u_frustumSplits[MAX_CASCADES];
