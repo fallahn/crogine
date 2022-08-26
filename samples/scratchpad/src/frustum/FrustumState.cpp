@@ -53,6 +53,71 @@ source distribution.
 
 namespace
 {
+    const std::string IndexVertex =
+        R"(
+        ATTRIBUTE vec4 a_position;
+
+        uniform mat4 u_worldMatrix;
+        uniform mat4 u_camMatrix;
+        uniform mat4 u_viewProjectionMatrix;
+        
+        VARYING_OUT vec4 v_viewPosition;
+
+        void main()
+        {
+            gl_Position = u_viewProjectionMatrix * u_worldMatrix * a_position;
+
+            v_viewPosition = u_camMatrix * u_worldMatrix * a_position;
+
+        })";
+
+    //https://github.com/walbourn/directx-sdk-samples/blob/main/CascadedShadowMaps11/RenderCascadeScene.hlsl#L342
+    const std::string IndexFragment =
+        R"(
+        uniform float u_viewSplits[4];
+
+        VARYING_IN vec4 v_viewPosition;
+
+        const vec3 Colours[4] = 
+        vec3[4](
+            vec3(0.0), vec3(0.33), vec3(0.66), vec3(1.0)
+        );
+
+        const int u_cascadeCount = 3;
+
+        OUTPUT
+
+        void main()
+        {
+            //this is from the MSDN article, but I don't see how it could ever
+            //work if the depth value is only used to determine if it is in the
+            //first partition or not. The result is always either 0 or u_cascadeCount -1
+            /*vec4 depthVector = vec4(float(v_viewPosition.z > u_viewSplits[0]));
+            vec4 indexVector = vec4(float(u_cascadeCount > 0.0),
+                                    float(u_cascadeCount > 1.0),
+                                    float(u_cascadeCount > 2.0),
+                                    float(u_cascadeCount > 3.0));
+
+            int index = int(min(u_cascadeCount, dot(depthVector, indexVector)));*/
+
+            int index = 0;
+            for(;index < u_cascadeCount;++index)
+            {
+                if (v_viewPosition.z > u_viewSplits[index])
+                {
+                    break;
+                }
+            }
+
+            int nextIndex = min(index + 1, u_cascadeCount - 1);
+            float fade = smoothstep(u_viewSplits[index] + 0.5, u_viewSplits[index],  v_viewPosition.z);
+
+            vec3 colour = mix(Colours[index], Colours[nextIndex], fade);
+
+            FRAG_OUT = vec4(colour, 1.0);
+        })";
+
+
     const std::string SliceVertex =
         R"(
         ATTRIBUTE vec4 a_position;
@@ -163,11 +228,16 @@ namespace
     {
         enum
         {
-            Slice = 1
+            Slice = 1,
+            Interval
         };
     };
     std::int32_t LightUniformID = -1;
     std::uint32_t SplitProgramID = 0;
+
+    std::int32_t IntervalUniformID = -1;
+    std::int32_t IntervalCamID = -1;
+    std::uint32_t IntervalProgramID = 0;
 }
 
 FrustumState::FrustumState(cro::StateStack& stack, cro::State::Context context)
@@ -237,6 +307,9 @@ bool FrustumState::simulate(float dt)
 
     //updates light projection display
     calcLightFrusta();
+
+    glProgramUniform1fv(IntervalProgramID, IntervalUniformID, 3, m_entities[EntityID::Camera].getComponent<cro::Camera>().getSplitDistances().data());
+    glProgramUniformMatrix4fv(IntervalProgramID, IntervalCamID, 1, GL_FALSE, &m_entities[EntityID::Camera].getComponent<cro::Camera>().getPass(cro::Camera::Pass::Final).viewMatrix[0][0]);
 
     m_gameScene.simulate(dt);
     m_uiScene.simulate(dt);
@@ -336,6 +409,17 @@ void FrustumState::createScene()
         entity.getComponent<cro::Model>().setMaterial(0, sliceMaterial);
     }
 
+
+    m_resources.shaders.loadFromString(ShaderID::Interval, IndexVertex, IndexFragment);
+    auto& intervalShader = m_resources.shaders.get(ShaderID::Interval);
+    IntervalUniformID = intervalShader.getUniformID("u_viewSplits[0]");
+    IntervalCamID = intervalShader.getUniformID("u_camMatrix");
+    IntervalProgramID = intervalShader.getGLHandle();
+
+    auto intervalMaterialID = m_resources.materials.add(intervalShader);
+    auto intervalMaterial = m_resources.materials.get(intervalMaterialID);
+
+
     const std::array BoxPositions =
     {
         glm::vec3(5.f, -4.f, -15.f),
@@ -350,9 +434,19 @@ void FrustumState::createScene()
             auto entity = m_gameScene.createEntity();
             entity.addComponent<cro::Transform>().setPosition(pos);
             md.createModel(entity);
-            entity.getComponent<cro::Model>().setRenderFlags(RenderFlags::Scene | RenderFlags::Vis);
+            entity.getComponent<cro::Model>().setRenderFlags(RenderFlags::Scene);
 
             float offset = entity.getComponent<cro::Model>().getMeshData().boundingBox[0].y;
+            entity.getComponent<cro::Transform>().setOrigin({ 0.f, offset, 0.f });
+
+
+            entity = m_gameScene.createEntity();
+            entity.addComponent<cro::Transform>().setPosition(pos);
+            md.createModel(entity);
+            entity.getComponent<cro::Model>().setRenderFlags(RenderFlags::Vis);
+            entity.getComponent<cro::Model>().setMaterial(0, intervalMaterial);
+
+            offset = entity.getComponent<cro::Model>().getMeshData().boundingBox[0].y;
             entity.getComponent<cro::Transform>().setOrigin({ 0.f, offset, 0.f });
         }
     }
@@ -459,23 +553,26 @@ void FrustumState::createUI()
                 {
                     doUpdate = true;
                 }
-                if (ImGui::SliderFloat("FOV", &perspectiveDebug.fov, 10.f, 100.f))
+                /*if (ImGui::SliderFloat("FOV", &perspectiveDebug.fov, 10.f, 100.f))
                 {
                     doUpdate = true;
                 }
                 if (ImGui::SliderFloat("Aspect", &perspectiveDebug.aspectRatio, 0.1f, 4.f))
                 {
                     doUpdate = true;
-                }
+                }*/
                 if (ImGui::SliderFloat("Max Dist", &perspectiveDebug.maxDistance, 1.f, 100.f))
                 {
                     doUpdate = true;
                     m_entities[EntityID::Camera].getComponent<cro::Camera>().setMaxShadowDistance(perspectiveDebug.maxDistance);
                 }
-                if (ImGui::SliderFloat("Overshoot", &perspectiveDebug.overshoot, 0.f, 10.f))
+                if (ImGui::SliderFloat("Overshoot", &perspectiveDebug.overshoot, 0.f, 50.f))
                 {
                     m_entities[EntityID::Camera].getComponent<cro::Camera>().setShadowExpansion(perspectiveDebug.overshoot);
                 }
+                const auto& splits = m_entities[EntityID::Camera].getComponent<cro::Camera>().getSplitDistances();
+                ImGui::Text("Splits: %3.3f, %3.3f, %3.3f", splits[0], splits[1], splits[2]);
+                
                 if (ImGui::InputInt("Cascades", &CascadeCount))
                 {
                     CascadeCount = std::min(3, std::max(1, CascadeCount));
@@ -501,7 +598,17 @@ void FrustumState::createUI()
                 ImGui::NewLine();
                 ImGui::Text("Home, Del, End,\nPgDn, Ins, PgUp:\nRotate Light");
             }
-            ImGui::End();        
+            ImGui::End();     
+
+            if (ImGui::Begin("Depth Layers"))
+            {
+                const auto& depthMap = m_entities[EntityID::Camera].getComponent<cro::Camera>().shadowMapBuffer;
+                for (auto i = 0u; i < depthMap.getLayerCount(); ++i)
+                {
+                    ImGui::Image(depthMap.getTexture(i), { 128.f, 128.f }, { 0.f, 1.f }, { 1.f, 0.f });
+                }
+            }
+            ImGui::End();
         });
 
     auto updateView = [](cro::Camera& cam)

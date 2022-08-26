@@ -136,9 +136,12 @@ namespace
 
     float godmode = 1.f;
 
-    constexpr float ShadowFarDistance = 50.f;
-    constexpr float ShadowNearDistance = 20.f;
-    constexpr std::size_t CascadeCount = 3;
+    constexpr std::uint32_t MaxCascades = 4;
+    std::uint32_t CascadeCount = 3;
+
+    float ShadowFarDistance = 50.f;
+    float ShadowNearDistance = 20.f;
+
     const cro::Time ReadyPingFreq = cro::seconds(1.f);
 
     //use to move the flag as the player approaches
@@ -196,6 +199,11 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
             }
         });
 
+    CascadeCount = sd.hqShadows ? 3 : 1;
+    ShadowNearDistance = 20.f / (MaxCascades - CascadeCount);
+    ShadowFarDistance = 50.f / (MaxCascades - CascadeCount);
+
+
     context.mainWindow.loadResources([this]() {
         addSystems();
         loadAssets();
@@ -206,7 +214,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     createTransition();
 
     sd.baseState = StateID::Golf;
-    //TODO can awe create a case where there's on human local player?
+    //TODO can we create a case where there's one human local player?
     Achievements::setActive(sd.localConnectionData.playerCount == 1 && !m_sharedData.localConnectionData.playerData[0].isCPU);
     
     std::int32_t clientCount = 0;
@@ -277,6 +285,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
                 }
 
                 ImGui::Text("Cascade Count %u", m_gameScene.getActiveCamera().getComponent<cro::Camera>().getCascadeCount());
+                ImGui::Image(m_gameScene.getActiveCamera().getComponent<cro::Camera>().shadowMapBuffer.getTexture(0), { 128.f, 128.f }, { 0.f, 1.f }, { 1.f, 0.f });
             }
             ImGui::End();
         });
@@ -1119,6 +1128,10 @@ bool GolfState::simulate(float dt)
     //no lag between camera orientation.
     m_skyScene.simulate(dt);
 
+    auto* camView = &srcCam.getPass(cro::Camera::Pass::Final).viewMatrix[0][0];
+    glCheck(glProgramUniformMatrix4fv(m_billboardShadowUpdate.shaderID, m_billboardShadowUpdate.viewMatUniform, 1, GL_FALSE, camView));
+
+
 #ifndef CRO_DEBUG_
     if (m_roundEnded)
 #endif
@@ -1308,6 +1321,12 @@ void GolfState::loadAssets()
     m_windBuffer.addShader(*shader);
     m_materialIDs[MaterialID::ShadowMap] = m_resources.materials.add(*shader);
 
+    m_resources.shaders.loadFromString(ShaderID::BillboardShadow, BillboardVertexShader, ShadowFragment, "#define SHADOW_MAPPING\n#define ALPHA_CLIP\n");
+    shader = &m_resources.shaders.get(ShaderID::BillboardShadow);
+    m_windBuffer.addShader(*shader);
+    m_resolutionBuffer.addShader(*shader);
+    m_billboardShadowUpdate.shaderID = shader->getGLHandle();
+    m_billboardShadowUpdate.viewMatUniform = shader->getUniformID("u_gameViewMatrix");
 
     m_resources.shaders.loadFromString(ShaderID::Leaderboard, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define DITHERED\n#define NOCHEX\n#define SUBRECT\n");
     shader = &m_resources.shaders.get(ShaderID::Leaderboard);
@@ -3188,7 +3207,7 @@ void GolfState::buildScene()
     cam.reflectionBuffer.create(ReflectionMapSize, ReflectionMapSize);
     cam.reflectionBuffer.setSmooth(true);
     cam.shadowMapBuffer.create(ShadowMapSize, ShadowMapSize);
-    cam.setMaxShadowDistance(ShadowNearDistance);
+    cam.setMaxShadowDistance(ShadowFarDistance);
     cam.setShadowExpansion(20.f);
 
     //create an overhead camera

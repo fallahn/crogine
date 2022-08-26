@@ -37,7 +37,6 @@ source distribution.
 #include <crogine/graphics/ModelDefinition.hpp>
 #include <crogine/graphics/Texture.hpp>
 #include <crogine/graphics/RenderTexture.hpp>
-#include <crogine/graphics/SimpleQuad.hpp>
 
 namespace cro
 {

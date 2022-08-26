@@ -40,11 +40,17 @@ static const std::string TerrainVertexShader = R"(
 
     uniform mat3 u_normalMatrix;
     uniform mat4 u_worldMatrix;
+    uniform mat4 u_viewMatrix;
     uniform mat4 u_viewProjectionMatrix;
 
 #if defined(RX_SHADOWS)
-    uniform mat4 u_lightViewProjectionMatrix;
+#if !defined(MAX_CASCADES)
+#define MAX_CASCADES 3
 #endif
+        uniform mat4 u_lightViewProjectionMatrix[MAX_CASCADES];
+        uniform int u_cascadeCount = 1;
+#endif
+
 
     uniform vec4 u_clipPlane;
     uniform float u_morphTime;
@@ -62,7 +68,8 @@ static const std::string TerrainVertexShader = R"(
     VARYING_OUT vec3 v_cameraWorldPosition;
 
 #if defined(RX_SHADOWS)
-    VARYING_OUT LOW vec4 v_lightWorldPosition;
+    VARYING_OUT LOW vec4 v_lightWorldPosition[MAX_CASCADES];
+    VARYING_OUT float v_viewDepth;
 #endif
 
     vec3 lerp(vec3 a, vec3 b, float t)
@@ -86,7 +93,11 @@ static const std::string TerrainVertexShader = R"(
         gl_Position = vertPos;
 
     #if defined (RX_SHADOWS)
-        v_lightWorldPosition = u_lightViewProjectionMatrix * position;
+        for(int i = 0; i < u_cascadeCount; i++)
+        {
+            v_lightWorldPosition[i] = u_lightViewProjectionMatrix[i] * u_worldMatrix * position;
+        }
+        v_viewDepth = (u_viewMatrix * position).z;
     #endif
 
         //this should be a slerp really but lerp is good enough for low spec shenanigans
@@ -187,7 +198,11 @@ static const std::string CelVertexShader = R"(
 #endif
 
 #if defined(RX_SHADOWS)
-    uniform mat4 u_lightViewProjectionMatrix;
+#if !defined(MAX_CASCADES)
+#define MAX_CASCADES 3
+#endif
+    uniform mat4 u_lightViewProjectionMatrix[MAX_CASCADES];
+    uniform int u_cascadeCount = 1;
 #endif
 
 #if defined(INSTANCING)
@@ -224,7 +239,8 @@ static const std::string CelVertexShader = R"(
 #endif
 
 #if defined(RX_SHADOWS)
-    VARYING_OUT LOW vec4 v_lightWorldPosition;
+    VARYING_OUT LOW vec4 v_lightWorldPosition[MAX_CASCADES];
+    VARYING_OUT float v_viewDepth;
 #endif
 
 #if defined (NORMAL_MAP)
@@ -273,7 +289,11 @@ static const std::string CelVertexShader = R"(
     #endif
 
     #if defined (RX_SHADOWS)
-        v_lightWorldPosition = u_lightViewProjectionMatrix * u_worldMatrix * position;
+        for(int i = 0; i < u_cascadeCount; i++)
+        {
+            v_lightWorldPosition[i] = u_lightViewProjectionMatrix[i] * worldMatrix * position;
+        }
+        v_viewDepth = (worldViewMatrix * position).z;
     #endif
 
 
@@ -358,7 +378,12 @@ static const std::string CelFragmentShader = R"(
     };
 
 #if defined (RX_SHADOWS)
-    uniform sampler2D u_shadowMap;
+#if !defined(MAX_CASCADES)
+#define MAX_CASCADES 3
+#endif
+    uniform sampler2DArray u_shadowMap;
+    uniform int u_cascadeCount = 1;
+    uniform float u_frustumSplits[MAX_CASCADES];
 #endif
 
 #if defined (TINT)
@@ -411,29 +436,37 @@ static const std::string CelFragmentShader = R"(
     OUTPUT
 
 #if defined(RX_SHADOWS)
-    VARYING_IN LOW vec4 v_lightWorldPosition;
+    VARYING_IN LOW vec4 v_lightWorldPosition[MAX_CASCADES];
+    VARYING_IN float v_viewDepth;
+
+    int getCascadeIndex()
+    {
+        for(int i = 0; i < u_cascadeCount; ++i)
+        {
+            if (v_viewDepth >= u_frustumSplits[i])
+            {
+                return min(u_cascadeCount - 1, i);
+            }
+        }
+        return u_cascadeCount - 1;
+    }
 
     const float Bias = 0.001; //0.005
-    float shadowAmount(LOW vec4 lightWorldPos)
+    float shadowAmount(int cascadeIndex)
     {
+        vec4 lightWorldPos = v_lightWorldPosition[cascadeIndex];
+
         vec3 projectionCoords = lightWorldPos.xyz / lightWorldPos.w;
         projectionCoords = projectionCoords * 0.5 + 0.5;
-        float depthSample = TEXTURE(u_shadowMap, projectionCoords.xy).r;
+        float depthSample = TEXTURE(u_shadowMap, vec3(projectionCoords.xy, cascadeIndex)).r;
         float currDepth = projectionCoords.z - Bias;
-
-        float featherX = smoothstep(0.0, 0.05, projectionCoords.x);
-        featherX *= (1.0 - smoothstep(0.95, 1.0, projectionCoords.x));
-
-        float featherY = smoothstep(0.0, 0.05, projectionCoords.y);
-        featherY *= (1.0 - smoothstep(0.95, 1.0, projectionCoords.y));
-
 
         if (currDepth > 1.0)
         {
             return 1.0;
         }
 
-        return (currDepth < depthSample) ? 1.0 : 1.0 - (0.3);// * featherX * featherY);
+        return (currDepth < depthSample) ? 1.0 : 1.0 - (0.3);
     }
 
     const vec2 kernel[16] = vec2[](
@@ -455,8 +488,10 @@ static const std::string CelFragmentShader = R"(
         vec2(0.14383161, -0.14100790)
     );
     const int filterSize = 3;
-    float shadowAmountSoft(vec4 lightWorldPos)
+    float shadowAmountSoft(int cascadeIndex)
     {
+        vec4 lightWorldPos = v_lightWorldPosition[cascadeIndex];
+
         vec3 projectionCoords = lightWorldPos.xyz / lightWorldPos.w;
         projectionCoords = projectionCoords * 0.5 + 0.5;
 
@@ -468,20 +503,13 @@ static const std::string CelFragmentShader = R"(
         {
             for(int y = 0; y < filterSize; ++y)
             {
-                float pcfDepth = TEXTURE(u_shadowMap, projectionCoords.xy + kernel[y * filterSize + x] * texelSize).r;
+                float pcfDepth = TEXTURE(u_shadowMap, vec3(projectionCoords.xy + kernel[y * filterSize + x] * texelSize, cascadeIndex)).r;
                 shadow += (projectionCoords.z - 0.001) > pcfDepth ? 0.4 : 0.0;
             }
         }
 
-        float featherX = smoothstep(0.0, 0.05, projectionCoords.x);
-        featherX *= (1.0 - smoothstep(0.95, 1.0, projectionCoords.x));
-
-        float featherY = smoothstep(0.0, 0.05, projectionCoords.y);
-        featherY *= (1.0 - smoothstep(0.95, 1.0, projectionCoords.y));
-
-
         float amount = shadow / 9.0;
-        return 1.0 - (amount);// * featherX * featherY);
+        return 1.0 - amount;
     }
 #endif
 
@@ -639,28 +667,33 @@ static const std::string CelFragmentShader = R"(
         FRAG_OUT = vec4(colour.rgb, 1.0);
 
 #if defined (RX_SHADOWS)
-        //FRAG_OUT.rgb *= shadowAmountSoft(v_lightWorldPosition);
-        FRAG_OUT.rgb *= shadowAmount(v_lightWorldPosition);
-        /*if(v_lightWorldPosition.w > 0.0)
+        int cascadeIndex = getCascadeIndex();
+        float shadow = shadowAmount(cascadeIndex);
+        //float shadow = shadowAmountSmooth(cascadeIndex);
+        float borderMix = smoothstep(u_frustumSplits[cascadeIndex] + 0.5, u_frustumSplits[cascadeIndex], v_viewDepth);
+        if (borderMix > 0)
         {
-            vec2 coords = v_lightWorldPosition.xy / v_lightWorldPosition.w / 2.0 + 0.5;
+            int nextIndex = min(cascadeIndex + 1, u_cascadeCount - 1);
+            shadow = mix(shadow, shadowAmount(nextIndex), borderMix);
+            //shadow = mix(shadow, shadowAmountSmooth(nextIndex), borderMix);
+        }
 
-            float featherX = smoothstep(0.0, 0.05, coords.x);
-            featherX *= (1.0 - smoothstep(0.95, 1.0, coords.x));
+        FRAG_OUT.rgb *= shadow;
 
-            float featherY = smoothstep(0.0, 0.05, coords.y);
-            featherY *= (1.0 - smoothstep(0.95, 1.0, coords.y));
-
-            if(coords.x>0&&coords.x<1&&coords.y>0&&coords.y<1)
-            { 
-                FRAG_OUT.rgb += vec3(0.0,0.0,0.5);// * featherX * featherY);
-            }
-            else
-            {
-                FRAG_OUT.rgb += vec3(0.5,0.0,0.0);
-            }
-        }*/
-        
+//shows cascade boundries
+//vec3 Colours[MAX_CASCADES] = vec3[MAX_CASCADES](vec3(0.2,0.0,0.0), vec3(0.0,0.2,0.0),vec3(0.0,0.0,0.2));
+//for(int i = 0; i < u_cascadeCount; ++i)
+//{
+//    if (v_lightWorldPosition[i].w > 0.0)
+//    {
+//        vec2 coords = v_lightWorldPosition[i].xy / v_lightWorldPosition[i].w / 2.0 + 0.5;
+//        if (coords.x > 0 && coords.x < 1 
+//                && coords.y > 0 && coords.y < 1)
+//        {
+//            FRAG_OUT.rgb += Colours[i];
+//        }
+//    }
+//}
 #endif
 
 #if defined (ADD_NOISE)

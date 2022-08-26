@@ -130,11 +130,13 @@ namespace cro
 
         struct Drawable final
         {
-            cro::Entity entity;
+            Drawable(Entity e, float d)
+                : entity(e), distance(d) {}
+            Entity entity;
             float distance = 0.f;
-            std::size_t cascade = 0;
         };
-        std::vector<std::vector<Drawable>> m_drawLists;
+        //for each camera, for each camera cascade, a vector of entities
+        std::vector<std::vector<std::vector<Drawable>>> m_drawLists;
 
         void render();
 

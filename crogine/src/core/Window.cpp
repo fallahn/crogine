@@ -45,7 +45,12 @@ using namespace cro;
 
 namespace
 {
-
+    const std::int32_t RequestGLMajor = 4;
+#ifdef __APPLE__
+    const std::int32_t RequestGLMinor = 1;
+#else
+    const std::int32_t RequestGLMinor = 6;
+#endif
 }
 
 Window::Window()
@@ -85,8 +90,8 @@ bool Window::create(std::uint32_t width, std::uint32_t height, const std::string
     SDL_GL_SetAttribute(SDL_GL_SHARE_WITH_CURRENT_CONTEXT, 1);
 
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, RequestGLMajor);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, RequestGLMinor);
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
     SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
@@ -109,7 +114,7 @@ bool Window::create(std::uint32_t width, std::uint32_t height, const std::string
         SDL_GL_GetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, &maj);
         SDL_GL_GetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, &min);
 
-        if (maj != 4 || min != 1)
+        if (maj != RequestGLMajor || min != RequestGLMinor)
         {
             Logger::log("Unable to create requested context version", Logger::Type::Error, Logger::Output::All);
             Logger::log("Returned version was: " + std::to_string(maj) + "." + std::to_string(min), Logger::Type::Error, cro::Logger::Output::All);

@@ -28,7 +28,7 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include "../../detail/TextConstruction.hpp"
-#include "../../detail/glad.hpp"
+#include "../../detail/GLCheck.hpp"
 
 #include <crogine/ecs/components/Text.hpp>
 #include <crogine/ecs/components/Drawable2D.hpp>

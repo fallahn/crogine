@@ -281,7 +281,7 @@ void Data::setShader(const Shader& s)
             uniforms[Material::ProjectionMapCount] = handle;
             optionalUniforms[optionalUniformCount++] = Material::ProjectionMapCount;
         }
-        else if (uniform == "u_lightViewProjectionMatrix")
+        else if (uniform == "u_lightViewProjectionMatrix[0]")
         {
             uniforms[Material::ShadowMapProjection] = handle;
             optionalUniforms[optionalUniformCount++] = Material::ShadowMapProjection;
@@ -290,6 +290,16 @@ void Data::setShader(const Shader& s)
         {
             uniforms[Material::ShadowMapSampler] = handle;
             optionalUniforms[optionalUniformCount++] = Material::ShadowMapSampler;
+        }
+        else if (uniform == "u_frustumSplits[0]")
+        {
+            uniforms[Material::CascadeSplits] = handle;
+            optionalUniforms[optionalUniformCount++] = Material::CascadeSplits;
+        }
+        else if (uniform == "u_cascadeCount")
+        {
+            uniforms[Material::CascadeCount] = handle;
+            optionalUniforms[optionalUniformCount++] = Material::CascadeCount;
         }
         else if (uniform == "u_lightDirection")
         {

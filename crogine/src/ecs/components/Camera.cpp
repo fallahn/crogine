@@ -132,7 +132,7 @@ const Camera::DrawList& Camera::getDrawList(std::uint32_t pass) const
     }
 }
 
-void Camera::setPerspective(float fov, float aspect, float nearPlane, float farPlane, std::size_t numSplits)
+void Camera::setPerspective(float fov, float aspect, float nearPlane, float farPlane, std::uint32_t numSplits)
 {
     m_projectionMatrix = glm::perspective(fov, aspect, nearPlane, farPlane);
     m_verticalFOV = fov;
@@ -156,9 +156,16 @@ void Camera::setPerspective(float fov, float aspect, float nearPlane, float farP
     m_shadowProjectionMatrices.resize(numSplits);
     m_shadowViewMatrices.resize(numSplits);
     m_shadowViewProjectionMatrices.resize(numSplits);
+
+    if (shadowMapBuffer.available()
+        && shadowMapBuffer.getLayerCount() != numSplits)
+    {
+        auto size = shadowMapBuffer.getSize();
+        shadowMapBuffer.create(size.x, size.y, numSplits);
+    }
 }
 
-void Camera::setOrthographic(float left, float right, float bottom, float top, float nearPlane, float farPlane, std::size_t numSplits)
+void Camera::setOrthographic(float left, float right, float bottom, float top, float nearPlane, float farPlane, std::uint32_t numSplits)
 {
     m_projectionMatrix = glm::ortho(left, right, bottom, top, nearPlane, farPlane);
     m_verticalFOV = -1.f;
@@ -193,10 +200,18 @@ void Camera::setOrthographic(float left, float right, float bottom, float top, f
 
     CRO_ASSERT(numSplits > 0, "");
     m_frustumSplits.resize(numSplits);
+    m_splitDistances.resize(numSplits + 1);
 
     m_shadowProjectionMatrices.resize(numSplits);
     m_shadowViewMatrices.resize(numSplits);
     m_shadowViewProjectionMatrices.resize(numSplits);
+
+    if (shadowMapBuffer.available()
+        && shadowMapBuffer.getLayerCount() != numSplits)
+    {
+        auto size = shadowMapBuffer.getSize();
+        shadowMapBuffer.create(size.x, size.y, numSplits);
+    }
 
     const float splitSize = (m_maxShadowDistance - nearPlane) / numSplits;
     for (auto i = 0u; i < numSplits; ++i)
@@ -215,6 +230,8 @@ void Camera::setOrthographic(float left, float right, float bottom, float top, f
             glm::vec4(left, bottom, -nearPlane - (splitSize * (i + 1)), 1.f),
             glm::vec4(right, bottom, -nearPlane - (splitSize * (i + 1)), 1.f)
         };
+
+        m_splitDistances[i] = m_frustumSplits[i][4].z;
     }
 }
 
@@ -230,6 +247,14 @@ void Camera::setShadowExpansion(float distance)
 {
     CRO_ASSERT(distance >= 0, "Must be positive");
     m_shadowExpansion = distance;
+}
+
+std::size_t Camera::getCascadeCount() const
+{
+    //this is just our current hard limit in the shader
+    //if it comes to it set up the define MAX_CASCADES to be overridable
+    CRO_ASSERT(m_frustumSplits.size() < 5, "");
+    return m_frustumSplits.size();
 }
 
 void Camera::updateMatrices(const Transform& tx, float level)
@@ -327,6 +352,7 @@ void Camera::updateFrustumCorners(std::size_t numSplits)
     };
 
     m_frustumSplits.resize(numSplits);
+    m_splitDistances.resize(numSplits);
 
     const float splitSize = (m_maxShadowDistance - m_nearPlane) / numSplits;
     for (auto i = 0u; i < numSplits; ++i)
@@ -353,5 +379,7 @@ void Camera::updateFrustumCorners(std::size_t numSplits)
             glm::vec4(-xFar, -yFar, -farPlane, 1.f),
             glm::vec4(xFar, -yFar, -farPlane, 1.f)
         };
+
+        m_splitDistances[i] = -farPlane;
     }
 }

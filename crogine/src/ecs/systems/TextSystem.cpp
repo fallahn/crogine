@@ -33,7 +33,7 @@ source distribution.
 #include <crogine/ecs/components/Drawable2D.hpp>
 #include <crogine/graphics/Font.hpp>
 
-#include "../../detail/glad.hpp"
+#include "../../detail/GLCheck.hpp"
 
 using namespace cro;
 

@@ -51,10 +51,11 @@ Mesh MarchingCubes::calculate(const std::vector<float>& volume, glm::ivec3 dimen
                     auto point1 = CubeVerts[edgeIndex[1]];
                     auto a = grid[edgeIndex[0]];
                     auto b = grid[edgeIndex[1]];
-                    auto dist = a - b;
+                    float dist = a - b;
                     auto t = 0.f;
 
-                    if (std::abs(dist) > 1e-6)
+//hack around building on xcode - this should be here
+                    //if (std::abs(dist) > 1e-6)
                     {
                         t = a / dist;
                     }

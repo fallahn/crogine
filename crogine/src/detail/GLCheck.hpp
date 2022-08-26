@@ -29,7 +29,11 @@ source distribution.
 
 #include <crogine/Config.hpp>
 #include <crogine/core/Log.hpp>
+#ifdef __APPLE__
+#include "41/glad.hpp"
+#else
 #include "glad.hpp"
+#endif
 
 #include <string>
 #include <sstream>

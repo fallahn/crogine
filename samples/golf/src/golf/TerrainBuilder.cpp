@@ -43,6 +43,7 @@ source distribution.
 #include <crogine/ecs/components/Model.hpp>
 #include <crogine/ecs/components/Skeleton.hpp>
 #include <crogine/ecs/components/CommandTarget.hpp>
+#include <crogine/ecs/components/ShadowCaster.hpp>
 
 #include <crogine/graphics/ModelDefinition.hpp>
 #include <crogine/graphics/SpriteSheet.hpp>
@@ -297,6 +298,13 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
     //modified billboard shader
     const auto& billboardShader = resources.shaders.get(ShaderID::Billboard);
     auto billboardMatID = resources.materials.add(billboardShader);
+    std::int32_t billboardShadowID = -1;
+
+    //if (m_sharedData.hqShadows)
+    {
+        const auto& billboardShadowShader = resources.shaders.get(ShaderID::BillboardShadow);
+        billboardShadowID = resources.materials.add(billboardShadowShader);
+    }
 
     //custom shader for instanced plants
     resources.shaders.loadFromString(ShaderID::CelTexturedInstanced, CelVertexShader, CelFragmentShader, "#define WIND_WARP\n#define TEXTURED\n#define DITHERED\n#define NOCHEX\n#define INSTANCING\n");
@@ -314,7 +322,7 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
         resources.shaders.loadFromString(ShaderID::TreesetBranch, BranchVertex, BranchFragment, "#define INSTANCING\n" + wobble);
         branchMaterialID = resources.materials.add(resources.shaders.get(ShaderID::TreesetBranch));
 
-        resources.shaders.loadFromString(ShaderID::TreesetLeaf, BushVertex, BushGeom, BushFragment, "#define POINTS\n#define INSTANCING\n#define HQ\n" + wobble);
+        resources.shaders.loadFromString(ShaderID::TreesetLeaf, BushVertex, /*BushGeom,*/ BushFragment, "#define POINTS\n#define INSTANCING\n#define HQ\n" + wobble);
         leafMaterialID = resources.materials.add(resources.shaders.get(ShaderID::TreesetLeaf));
 
         resources.shaders.loadFromString(ShaderID::TreesetShadow, ShadowVertex, ShadowFragment, "#define INSTANCING\n#define TREE_WARP\n" + wobble);
@@ -325,7 +333,7 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
         {
             alphaClip = "#define ALPHA_CLIP\n";
         }
-        resources.shaders.loadFromString(ShaderID::TreesetLeafShadow, ShadowVertex, ShadowGeom, ShadowFragment, "#define POINTS\n#define INSTANCING\n#define LEAF_SIZE\n" + alphaClip + wobble);
+        resources.shaders.loadFromString(ShaderID::TreesetLeafShadow, ShadowVertex, /*ShadowGeom,*/ ShadowFragment, "#define POINTS\n#define INSTANCING\n#define LEAF_SIZE\n" + alphaClip + wobble);
         leafShadowMaterialID = resources.materials.add(resources.shaders.get(ShaderID::TreesetLeafShadow));
     }
     //and VATs shader for crowd
@@ -383,6 +391,14 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
                 auto material = resources.materials.get(billboardMatID);
                 applyMaterialData(billboardDef, material);
                 entity.getComponent<cro::Model>().setMaterial(0, material);
+
+                if (billboardShadowID > -1)
+                {
+                    material = resources.materials.get(billboardShadowID);
+                    applyMaterialData(billboardDef, material);
+                    entity.getComponent<cro::Model>().setShadowMaterial(0, material);
+                    entity.addComponent<cro::ShadowCaster>();
+                }
 
                 m_terrainEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
             }

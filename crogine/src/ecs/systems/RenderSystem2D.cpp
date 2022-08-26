@@ -38,7 +38,6 @@ source distribution.
 #include <crogine/core/App.hpp>
 #include <crogine/core/Console.hpp>
 
-#include "../../detail/glad.hpp"
 #include "../../detail/GLCheck.hpp"
 #include "../../graphics/shaders/Sprite.hpp"
 

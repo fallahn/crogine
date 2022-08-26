@@ -303,7 +303,7 @@ float updateView(cro::Entity entity, float farPlane, float fov)
     size.y -= (size.y * uiConst::BrowserHeight);
 
     auto& cam3D = entity.getComponent<cro::Camera>();
-    cam3D.setPerspective(fov, size.x / size.y, 0.1f, farPlane);
+    cam3D.setPerspective(fov, size.x / size.y, 0.1f, farPlane, 3);
     cam3D.viewport.left = uiConst::InspectorWidth;
     cam3D.viewport.width = 1.f - uiConst::InspectorWidth;
     cam3D.viewport.bottom = uiConst::BrowserHeight + (uiConst::InfoBarHeight / windowHeight);

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2021
+Matt Marchant 2017 - 2022
 http://trederia.blogspot.com
 
 crogine test application - Zlib license.
@@ -113,14 +113,26 @@ BatcatState::BatcatState(cro::StateStack& stack, cro::State::Context context)
         createScene();
         createUI();
 
-
         registerWindow([&]() 
             {
                 ImGui::SetNextWindowSize({ 300.f, 400.f }, ImGuiCond_FirstUseEver);
 
                 if (ImGui::Begin("Window of funnage"))
                 {
-                    ImGui::Image(m_scene.getActiveCamera().getComponent<cro::Camera>().shadowMapBuffer.getTexture(), { 512.f, 512.f }, { 0.f, 1.f }, { 1.f, 0.f });
+                    auto& cam = m_scene.getActiveCamera().getComponent<cro::Camera>();
+                    float maxShadow = cam.getMaxShadowDistance();
+                    if (ImGui::SliderFloat("Shadow Distance", &maxShadow, 1.f, cam.getFarPlane()))
+                    {
+                        cam.setMaxShadowDistance(maxShadow);
+                    }
+
+                    float exp = cam.getShadowExpansion();
+                    if (ImGui::SliderFloat("Shadow Expansion", &exp, 0.f, 50.f))
+                    {
+                        cam.setShadowExpansion(exp);
+                    }
+
+                    ImGui::Image(m_scene.getActiveCamera().getComponent<cro::Camera>().shadowMapBuffer.getTexture(0), { 256.f, 256.f }, { 0.f, 1.f }, { 1.f, 0.f });
 
                     ImGui::DragFloat("Rate", &fireRate, 0.1f, 0.1f, 10.f);
                     ImGui::DragFloat("Position", &sourcePosition.x, 0.1f, -19.f, 19.f);
@@ -358,7 +370,7 @@ void BatcatState::createScene()
     auto ent = m_scene.createEntity();
     ent.addComponent<cro::Transform>().setPosition({ 0.f, 10.f, 50.f });
     //projection is set in updateView()
-    ent.addComponent<cro::Camera>().shadowMapBuffer.create(4096, 4096);
+    ent.addComponent<cro::Camera>().shadowMapBuffer.create(2048, 2048);
     ent.getComponent<cro::Camera>().resizeCallback = std::bind(&BatcatState::updateView, this, std::placeholders::_1);
     ent.addComponent<cro::CommandTarget>().ID = CommandID::Camera;
     updateView(ent.getComponent<cro::Camera>());
@@ -371,9 +383,9 @@ void BatcatState::createScene()
     m_resources.materials.get(materialID).blendMode = cro::Material::BlendMode::Alpha;
     //m_resources.materials.get(materialID).enableDepthTest = false;
 
-    auto debugEnt = m_scene.createEntity();
+    /*auto debugEnt = m_scene.createEntity();
     debugEnt.addComponent<cro::Transform>();
-    debugEnt.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), m_resources.materials.get(materialID));
+    debugEnt.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), m_resources.materials.get(materialID));*/
     //debugEnt.addComponent<cro::Callback>().active = true;
     //debugEnt.getComponent<cro::Callback>().function =
     //    [&,ent](cro::Entity e, float)
@@ -432,10 +444,10 @@ void BatcatState::createScene()
     //    meshData.boundingSphere.radius = glm::length(meshData.boundingSphere.centre);
     //};
 
-    auto& meshData = debugEnt.getComponent<cro::Model>().getMeshData();
+    /*auto& meshData = debugEnt.getComponent<cro::Model>().getMeshData();
     meshData.vertexCount = 8;
     meshData.vertexSize = 7 * meshData.vertexCount * sizeof(float);
-    meshData.indexData[0].indexCount = 24;
+    meshData.indexData[0].indexCount = 24;*/
 #endif
 
     auto sunEnt = m_scene.getSunlight();
@@ -658,5 +670,6 @@ void BatcatState::calcViewport(cro::Camera& cam)
 void BatcatState::updateView(cro::Camera& cam3D)
 {
     cam3D.setPerspective(35.f * cro::Util::Const::degToRad, 16.f / 9.f, 6.f, 280.f);
+    cam3D.setMaxShadowDistance(90.f);
     calcViewport(cam3D);
 }

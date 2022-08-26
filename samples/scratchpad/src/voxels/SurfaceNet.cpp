@@ -101,11 +101,11 @@ Mesh SurfaceNet::calculate(const std::vector<float>& volume, glm::ivec3 dimensio
                             float g1 = grid[e1];
                             float t = g0 - g1;
 
-                            if (std::abs(t) > 1e-6)
+                            //if (std::abs(t) > 1e-6) //hack around this being ambiguoug on xcode
                             {
                                 t = g0 / t;
                             }
-                            else
+                            //else
                             {
                                 continue;
                             }

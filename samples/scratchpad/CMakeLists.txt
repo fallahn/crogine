@@ -36,6 +36,7 @@ include_directories(
   ${SDL2_INCLUDE_DIR}
   ${OPENGL_INCLUDE_DIR}
   ${BULLET_INCLUDE_DIRS}
+  ../../extlibs/polyvox
   src)
 
 SET(PROJECT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
@@ -46,6 +47,9 @@ include(${PROJECT_DIR}/bsp/CMakeLists.txt)
 include(${PROJECT_DIR}/collision/CMakeLists.txt)
 include(${PROJECT_DIR}/voxels/CMakeLists.txt)
 include(${PROJECT_DIR}/vats/CMakeLists.txt)
+include(${PROJECT_DIR}/retro/CMakeLists.txt)
+include(${PROJECT_DIR}/bush/CMakeLists.txt)
+include(${PROJECT_DIR}/frustum/CMakeLists.txt)
 
 add_executable(${PROJECT_NAME}
                ${PROJECT_SRC}
@@ -54,6 +58,9 @@ add_executable(${PROJECT_NAME}
                ${BSP_SRC}
                ${COLLISION_SRC}
                ${VOXEL_SRC}
+	       ${RETRO_SRC}
+	       ${BUSH_SRC}
+               ${FRUSTUM_SRC}
                ${VATS_SRC})
 
 target_link_libraries(${PROJECT_NAME}

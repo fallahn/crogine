@@ -53,6 +53,8 @@ using namespace cro;
 namespace
 {
     std::uint32_t intervalCounter = 0;
+
+    constexpr float CascadeOverlap = 0.5f;
 }
 
 ShadowMapRenderer::ShadowMapRenderer(cro::MessageBus& mb)
@@ -101,6 +103,16 @@ void ShadowMapRenderer::updateDrawList(Entity camEnt)
     //from CameraSystem::process() - so we'll check here if
     //the camera should actually be updated then render all the
     //cameras at once in process(), above
+
+    //TODO this deals with splitting the camera frustum into
+    //cascades (if more than one is set) but only applies to
+    //desktop builds, as mobile shaders don't support this.
+    //do we want to make sure to support this separately, or
+    //just consign mobile support to the bin (we've never used
+    //it, plus we should probably be targeting ES3 these days
+    //anyway, which requires a COMPLETE overhaul).
+    //Technically this works on mobile, but is wasted processing
+
     auto& camera = camEnt.getComponent<Camera>();
     if (camera.shadowMapBuffer.available())
     {
@@ -111,6 +123,7 @@ void ShadowMapRenderer::updateDrawList(Entity camEnt)
 
         auto& drawList = m_drawLists[m_activeCameras.size()];
         drawList.clear();
+        drawList.resize(camera.getCascadeCount());
 
         m_activeCameras.push_back(camEnt);
 
@@ -121,7 +134,6 @@ void ShadowMapRenderer::updateDrawList(Entity camEnt)
 #ifdef CRO_DEBUG_
         camera.lightCorners.clear();
 #endif
-
 
         auto worldMat = camEnt.getComponent<cro::Transform>().getWorldTransform();
         auto corners = camera.getFrustumSplits();
@@ -161,6 +173,13 @@ void ShadowMapRenderer::updateDrawList(Entity camEnt)
                 maxPos.z = std::max(maxPos.z, p.z);
             }
             
+            //padding the X and Y allows some overlap of cascades
+            //even when the light is perfectly parallel
+            minPos.x -= CascadeOverlap;
+            minPos.y -= CascadeOverlap;
+            maxPos.x += CascadeOverlap;
+            maxPos.y += CascadeOverlap;
+
             //skewing this means we end up with more depth resolution as we're nearer near plane
             //how much to skew is up for debate.
             maxPos.z += camera.m_shadowExpansion * 0.1f;
@@ -185,8 +204,10 @@ void ShadowMapRenderer::updateDrawList(Entity camEnt)
                 glm::vec4(minPos.x, minPos.y, maxPos.z, 1.f),
                 glm::vec4(maxPos.x, minPos.y, maxPos.z, 1.f)
             };
+
 #endif
         }
+        std::int32_t visibleCount = 0;
 
         //use depth frusta to cull entities
         auto& entities = getEntities();
@@ -220,28 +241,34 @@ void ShadowMapRenderer::updateDrawList(Entity camEnt)
                 auto lightSphere = sphere;
                 lightSphere.centre = glm::vec3(camera.m_shadowViewMatrices[i] * glm::vec4(lightSphere.centre, 1.f));
                 
-                //this is kind of redundant
-                //model.m_visible = frustums[i].intersects(lightSphere);
-
                 if (frustums[i].intersects(lightSphere))
                 {
-                    drawList.push_back({ entity, distance, i });
+#ifdef PLATFORM_DESKTOP
+                    drawList[i].emplace_back(entity, distance);
+#else
+                    //just place them all in the same draw list
+                    drawList[0].emplace_back(entity, distance);
+#endif
+#ifdef CRO_DEBUG_
+                    visibleCount++;
+#endif
                 }
             }
         }
 
-        //sort back to front - we want to sort these per-cascade
-        std::sort(drawList.begin(), drawList.end(),
-            [](const ShadowMapRenderer::Drawable& a, const ShadowMapRenderer::Drawable& b)
-            {
-                return a.cascade == b.cascade ? 
-                    a.distance > b.distance : 
-                a.cascade >  b.cascade;
-            });
-
-        DPRINT("Visible 3D shadow ents", std::to_string(drawList.size()));
+        //sort back to front
+        for (auto& cascade : drawList)
+        {
+            std::sort(cascade.begin(), cascade.end(),
+                [](const ShadowMapRenderer::Drawable& a, const ShadowMapRenderer::Drawable& b)
+                {
+                    return a.distance > b.distance;
+                });
+        }
 
 #ifdef CRO_DEBUG_
+        //some objects might appear in multiple cascades
+        DPRINT("Rendered 3D shadow ents", std::to_string(visibleCount));
         camera.lightPositions.swap(lightPositions);
 #endif
     }
@@ -261,113 +288,119 @@ void ShadowMapRenderer::render()
         //glCheck(glCullFace(GL_FRONT));
         glCheck(glEnable(GL_DEPTH_TEST));
 
-#ifdef PLATFORM_DESKTOP
-        camera.shadowMapBuffer.clear();
-#else
-        camera.shadowMapBuffer.clear(cro::Colour::White());
-#endif
-
-        for (const auto& [e, _0, _1] : m_drawLists[c])
+        for (auto d = 0u; d < m_drawLists[c].size(); ++d)
         {
-            const auto& model = e.getComponent<Model>();
-            //skip this model if its flags don't pass
-            if ((model.m_renderFlags & camera.renderFlags) == 0)
+#ifdef PLATFORM_DESKTOP
+            camera.shadowMapBuffer.clear(d);
+#else
+            //this should only ever have one draw list so
+            //clearing in this loop only happens once.
+            camera.shadowMapBuffer.clear(cro::Colour::White());
+#endif
+            const auto& list = m_drawLists[c][d];
+            for (const auto& [e, _] : list)
             {
-                continue;
-            }
+                const auto& model = e.getComponent<Model>();
+                //skip this model if its flags don't pass
+                if ((model.m_renderFlags & camera.renderFlags) == 0)
+                {
+                    continue;
+                }
 
-            glCheck(glFrontFace(model.m_facing));
+                glCheck(glFrontFace(model.m_facing));
 
-            //calc entity transform
-            const auto& tx = e.getComponent<Transform>();
-            glm::mat4 worldMat = tx.getWorldTransform();
-            glm::mat4 worldView = camera.m_shadowViewMatrices[0] * worldMat;
+                //calc entity transform
+                const auto& tx = e.getComponent<Transform>();
+                glm::mat4 worldMat = tx.getWorldTransform();
+                glm::mat4 worldView = camera.m_shadowViewMatrices[d] * worldMat;
 
-            //foreach submesh / material:
+                //foreach submesh / material:
 
 #ifndef PLATFORM_DESKTOP
-            glCheck(glBindBuffer(GL_ARRAY_BUFFER, model.m_meshData.vbo));
+                glCheck(glBindBuffer(GL_ARRAY_BUFFER, model.m_meshData.vbo));
 #endif
 
-            for (auto i = 0u; i < model.m_meshData.submeshCount; ++i)
-            {
-                const auto& mat = model.m_materials[Mesh::IndexData::Shadow][i];
-                CRO_ASSERT(mat.shader, "Missing Shadow Cast material.");
-
-                //bind shader
-                glCheck(glUseProgram(mat.shader));
-
-                //apply shader uniforms from material
-                for (auto j = 0u; j < mat.optionalUniformCount; ++j)
+                for (auto i = 0u; i < model.m_meshData.submeshCount; ++i)
                 {
-                    switch (mat.optionalUniforms[j])
+                    const auto& mat = model.m_materials[Mesh::IndexData::Shadow][i];
+                    CRO_ASSERT(mat.shader, "Missing Shadow Cast material.");
+
+                    //bind shader
+                    glCheck(glUseProgram(mat.shader));
+
+                    //apply shader uniforms from material
+                    for (auto j = 0u; j < mat.optionalUniformCount; ++j)
                     {
-                    default: break;
-                    case Material::Skinning:
-                        glCheck(glUniformMatrix4fv(mat.uniforms[Material::Skinning], static_cast<GLsizei>(model.m_jointCount), GL_FALSE, &model.m_skeleton[0][0].r));
-                        break;
+                        switch (mat.optionalUniforms[j])
+                        {
+                        default: break;
+                        case Material::Skinning:
+                            glCheck(glUniformMatrix4fv(mat.uniforms[Material::Skinning], static_cast<GLsizei>(model.m_jointCount), GL_FALSE, &model.m_skeleton[0][0].r));
+                            break;
+                        }
                     }
-                }
 
-                //check material properties for alpha clipping
-                std::uint32_t currentTextureUnit = 0;
-                for (const auto& prop : mat.properties)
-                {
-                    switch (prop.second.second.type)
+                    //check material properties for alpha clipping
+                    std::uint32_t currentTextureUnit = 0;
+                    for (const auto& prop : mat.properties)
                     {
-                    default: break;
-                    case Material::Property::Texture:
-                        glCheck(glActiveTexture(GL_TEXTURE0 + currentTextureUnit));
-                        glCheck(glBindTexture(GL_TEXTURE_2D, prop.second.second.textureID));
-                        glCheck(glUniform1i(prop.second.first, currentTextureUnit++));
-                        break;
-                    case Material::Property::Number:
-                        glCheck(glUniform1f(prop.second.first, prop.second.second.numberValue));
-                        break;
+                        switch (prop.second.second.type)
+                        {
+                        default: break;
+                        case Material::Property::Texture:
+                            glCheck(glActiveTexture(GL_TEXTURE0 + currentTextureUnit));
+                            glCheck(glBindTexture(GL_TEXTURE_2D, prop.second.second.textureID));
+                            glCheck(glUniform1i(prop.second.first, currentTextureUnit++));
+                            break;
+                        case Material::Property::Number:
+                            glCheck(glUniform1f(prop.second.first, prop.second.second.numberValue));
+                            break;
+                        }
                     }
-                }
 
-                glCheck(glUniformMatrix4fv(mat.uniforms[Material::World], 1, GL_FALSE, glm::value_ptr(worldMat)));
-                glCheck(glUniformMatrix4fv(mat.uniforms[Material::View], 1, GL_FALSE, glm::value_ptr(camera.m_shadowViewMatrices[0])));
-                glCheck(glUniformMatrix4fv(mat.uniforms[Material::WorldView], 1, GL_FALSE, glm::value_ptr(worldView)));
-                glCheck(glUniformMatrix4fv(mat.uniforms[Material::Projection], 1, GL_FALSE, glm::value_ptr(camera.m_shadowProjectionMatrices[0])));
-                glCheck(glUniform3f(mat.uniforms[Material::Camera], cameraPosition.x, cameraPosition.y, cameraPosition.z));
-                //glCheck(glUniformMatrix4fv(mat.uniforms[Material::ViewProjection], 1, GL_FALSE, glm::value_ptr(camera.depthViewProjectionMatrix)));
+                    glCheck(glUniformMatrix4fv(mat.uniforms[Material::World], 1, GL_FALSE, glm::value_ptr(worldMat)));
+                    glCheck(glUniformMatrix4fv(mat.uniforms[Material::View], 1, GL_FALSE, glm::value_ptr(camera.m_shadowViewMatrices[d])));
+                    glCheck(glUniformMatrix4fv(mat.uniforms[Material::WorldView], 1, GL_FALSE, glm::value_ptr(worldView)));
+                    glCheck(glUniformMatrix4fv(mat.uniforms[Material::Projection], 1, GL_FALSE, glm::value_ptr(camera.m_shadowProjectionMatrices[d])));
+                    glCheck(glUniform3f(mat.uniforms[Material::Camera], cameraPosition.x, cameraPosition.y, cameraPosition.z));
+                    //glCheck(glUniformMatrix4fv(mat.uniforms[Material::ViewProjection], 1, GL_FALSE, glm::value_ptr(camera.depthViewProjectionMatrix)));
 
-                glCheck(model.m_materials[Mesh::IndexData::Final][i].doubleSided ? glDisable(GL_CULL_FACE) : glEnable(GL_CULL_FACE));
+                    glCheck(model.m_materials[Mesh::IndexData::Final][i].doubleSided ? glDisable(GL_CULL_FACE) : glEnable(GL_CULL_FACE));
 
 #ifdef PLATFORM_DESKTOP
-                model.draw(i, Mesh::IndexData::Shadow);
+                    model.draw(i, Mesh::IndexData::Shadow);
 #else
-                //bind attribs
-                const auto& attribs = mat.attribs;
-                for (auto j = 0u; j < mat.attribCount; ++j)
-                {
-                    glCheck(glEnableVertexAttribArray(attribs[j][Material::Data::Index]));
-                    glCheck(glVertexAttribPointer(attribs[j][Material::Data::Index], attribs[j][Material::Data::Size],
-                        GL_FLOAT, GL_FALSE, static_cast<GLsizei>(model.m_meshData.vertexSize),
-                        reinterpret_cast<void*>(static_cast<intptr_t>(attribs[j][Material::Data::Offset]))));
-                }
+                    //bind attribs
+                    const auto& attribs = mat.attribs;
+                    for (auto j = 0u; j < mat.attribCount; ++j)
+                    {
+                        glCheck(glEnableVertexAttribArray(attribs[j][Material::Data::Index]));
+                        glCheck(glVertexAttribPointer(attribs[j][Material::Data::Index], attribs[j][Material::Data::Size],
+                            GL_FLOAT, GL_FALSE, static_cast<GLsizei>(model.m_meshData.vertexSize),
+                            reinterpret_cast<void*>(static_cast<intptr_t>(attribs[j][Material::Data::Offset]))));
+                    }
 
-                //bind element/index buffer
-                const auto& indexData = model.m_meshData.indexData[i];
-                glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexData.ibo));
+                    //bind element/index buffer
+                    const auto& indexData = model.m_meshData.indexData[i];
+                    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexData.ibo));
 
-                //draw elements
-                glCheck(glDrawElements(static_cast<GLenum>(indexData.primitiveType), indexData.indexCount, static_cast<GLenum>(indexData.format), 0));
+                    //draw elements
+                    glCheck(glDrawElements(static_cast<GLenum>(indexData.primitiveType), indexData.indexCount, static_cast<GLenum>(indexData.format), 0));
 
-                glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
+                    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
 
-                //unbind attribs
-                for (auto j = 0u; j < mat.attribCount; ++j)
-                {
-                    glCheck(glDisableVertexAttribArray(attribs[j][Material::Data::Index]));
-                }
+                    //unbind attribs
+                    for (auto j = 0u; j < mat.attribCount; ++j)
+                    {
+                        glCheck(glDisableVertexAttribArray(attribs[j][Material::Data::Index]));
+                    }
 #endif //PLATFORM
+                }
+
             }
 
+            camera.shadowMapBuffer.display();
         }
-
 #ifdef PLATFORM_DESKTOP
         glCheck(glBindVertexArray(0));
 #else
@@ -379,8 +412,7 @@ void ShadowMapRenderer::render()
         glCheck(glFrontFace(GL_CCW));
         glCheck(glDisable(GL_DEPTH_TEST));
         glCheck(glDisable(GL_CULL_FACE));
-        //glCheck(glCullFace(GL_BACK));
-        camera.shadowMapBuffer.display();
+        //glCheck(glCullFace(GL_BACK));        
     }
 }
 

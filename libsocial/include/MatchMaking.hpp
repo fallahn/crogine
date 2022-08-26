@@ -63,7 +63,7 @@ public:
         std::int32_t playerCount = 0;
         std::int32_t clientCount = 0;
     };
-    const std::vector<LobbyData>& getLobbies() const { return {}; }
+    const std::vector<LobbyData>& getLobbies() const { static std::vector<LobbyData> d;  return d; }
 
     void leaveGame() {}
 

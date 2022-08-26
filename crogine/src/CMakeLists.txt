@@ -34,7 +34,7 @@ set(PROJECT_SRC
 
   ${PROJECT_DIR}/detail/BalancedTree.cpp
   ${PROJECT_DIR}/detail/DistanceField.cpp
-  ${PROJECT_DIR}/detail/glad.c
+  #${PROJECT_DIR}/detail/glad.c
   ${PROJECT_DIR}/detail/ModelBinary.cpp
   ${PROJECT_DIR}/detail/SDLImageRead.cpp
   ${PROJECT_DIR}/detail/SDLResource.cpp
@@ -176,4 +176,9 @@ SET(project_src_win32
 
 SET(project_src_nix
   ${PROJECT_DIR}/detail/enet/unix.c
+  )
+
+SET(project_src_macos
+  ${PROJECT_DIR}/detail/ResourcePath.mm 
+  ${PROJECT_DIR}/detail/41/glad.c
   )

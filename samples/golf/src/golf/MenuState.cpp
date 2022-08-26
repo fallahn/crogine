@@ -338,13 +338,20 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
                 ImGui::Image(m_avatarThumbs[3].getTexture(), { x,y }, { 0,1 }, { 1,0 });*/
                 //auto pos = m_avatarScene.getActiveCamera().getComponent<cro::Transform>().getPosition();
                 //ImGui::Text("%3.3f, %3.3f, %3.3f", pos.x, pos.y, pos.z);
-                static float maxDist = 200.f;
-                if (ImGui::SliderFloat("Dist", &maxDist, 1.f, 200.f))
+                auto& cam = m_backgroundScene.getActiveCamera().getComponent<cro::Camera>();
+                float maxDist = cam.getMaxShadowDistance();
+                if (ImGui::SliderFloat("Dist", &maxDist, 1.f, cam.getFarPlane()))
                 {
-                    m_backgroundScene.getActiveCamera().getComponent<cro::Camera>().setMaxShadowDistance(maxDist);
+                    cam.setMaxShadowDistance(maxDist);
                 }
 
-                ImGui::Image(m_backgroundScene.getActiveCamera().getComponent<cro::Camera>().shadowMapBuffer.getTexture(), { 256.f, 256.f }, { 0.f, 1.f }, { 1.f, 0.f });
+                float exp = cam.getShadowExpansion();
+                if (ImGui::SliderFloat("Exp", &exp, 0.f, 100.f))
+                {
+                    cam.setShadowExpansion(exp);
+                }
+
+                ImGui::Image(m_backgroundScene.getActiveCamera().getComponent<cro::Camera>().shadowMapBuffer.getTexture(0), { 256.f, 256.f }, { 0.f, 1.f }, { 1.f, 0.f });
             }
             ImGui::End();
         });
@@ -1005,7 +1012,8 @@ void MenuState::createScene()
     auto& cam = camEnt.getComponent<cro::Camera>();
     cam.resizeCallback = updateView;
     cam.shadowMapBuffer.create(2048, 2048);
-    cam.setMaxShadowDistance(32.f);
+    cam.setMaxShadowDistance(38.f);
+    cam.setShadowExpansion(140.f);
     updateView(cam);
 
     //camEnt.getComponent<cro::Transform>().setPosition({ -17.8273, 4.9, 25.0144 });

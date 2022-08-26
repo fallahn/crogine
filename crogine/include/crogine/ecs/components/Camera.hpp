@@ -278,7 +278,7 @@ namespace cro
         \param farPlane Distance to far plane
         \param numSplits Number of splits to create if using cascaded shadow maps
         */
-        void setPerspective(float fov, float aspect, float nearPlane, float farPlane, std::size_t numSplits = 1);
+        void setPerspective(float fov, float aspect, float nearPlane, float farPlane, std::uint32_t numSplits = 1);
 
         /*!
         \brief Sets the projection matrix to an orthographic projection
@@ -290,7 +290,7 @@ namespace cro
         \param farPlane Distance to far plane
         \param numSplits Number of splits to create if using cascaded shadow maps
         */
-        void setOrthographic(float left, float right, float bottom, float top, float nearPlane, float farPlane, std::size_t numSplits = 1);
+        void setOrthographic(float left, float right, float bottom, float top, float nearPlane, float farPlane, std::uint32_t numSplits = 1);
 
         /*!
         \brief Returns true if set to an orthographic projection matrix
@@ -460,7 +460,13 @@ namespace cro
         enabled for, based on the numSplits parameter passed when calling
         setPerspective() or setOrthographic().
         */
-        std::size_t getCascadeCount() const { return m_frustumSplits.size(); }
+        std::size_t getCascadeCount() const;
+
+        /*!
+        brief Returns the z depth, in view space, of each cascade split, ending
+        with the far plane.
+        */
+        std::vector<float> getSplitDistances() const { return m_splitDistances; }
 
         /*!
         \brief Returns the vertical FOV in radians if the
@@ -569,6 +575,7 @@ namespace cro
         std::vector<glm::mat4> m_shadowViewMatrices;
         std::vector<glm::mat4> m_shadowProjectionMatrices;
         float m_shadowExpansion;
+        std::vector<float> m_splitDistances;
     };
 }
 
