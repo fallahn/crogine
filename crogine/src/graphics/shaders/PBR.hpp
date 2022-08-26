@@ -36,7 +36,12 @@ namespace cro::Shaders::PBR
         #endif
 
         #if defined (RX_SHADOWS)
+        #if !defined(MAX_CASCADES)
+        #define MAX_CASCADES 4
+        #endif
         uniform sampler2DArray u_shadowMap;
+        uniform int u_cascadeCount = 1;
+        uniform float u_frustumSplits[MAX_CASCADES];
         #endif
 
         uniform vec3 u_lightDirection;
@@ -79,7 +84,20 @@ namespace cro::Shaders::PBR
         };
 
         #if defined(RX_SHADOWS)
-        VARYING_IN LOW vec4 v_lightWorldPosition;
+        VARYING_IN LOW vec4 v_lightWorldPosition[MAX_CASCADES];
+        VARYING_IN float v_viewDepth;
+
+        int getCascadeIndex()
+        {
+            for(int i = 0; i < u_cascadeCount; ++i)
+            {
+                if (v_viewDepth >= u_frustumSplits[i])
+                {
+                    return min(u_cascadeCount - 1, i);
+                }
+            }
+            return u_cascadeCount - 1;
+        }
 
         const vec2 kernel[16] = vec2[](
             vec2(-0.94201624, -0.39906216),
@@ -100,8 +118,10 @@ namespace cro::Shaders::PBR
             vec2(0.14383161, -0.14100790)
         );
         const int filterSize = 3;
-        float shadowAmount(vec4 lightWorldPos, SurfaceProperties surfProp)
+        float shadowAmount(int cascadeIndex, SurfaceProperties surfProp)
         {
+            vec4 lightWorldPos = v_lightWorldPosition[cascadeIndex];
+
             vec3 projectionCoords = lightWorldPos.xyz / lightWorldPos.w;
             projectionCoords = projectionCoords * 0.5 + 0.5;
 
@@ -118,7 +138,7 @@ namespace cro::Shaders::PBR
             {
                 for(int y = 0; y < filterSize; ++y)
                 {
-                    float pcfDepth = TEXTURE(u_shadowMap, vec3(projectionCoords.xy + kernel[y * filterSize + x] * texelSize, 0)).r;
+                    float pcfDepth = TEXTURE(u_shadowMap, vec3(projectionCoords.xy + kernel[y * filterSize + x] * texelSize, cascadeIndex)).r;
                     shadow += (projectionCoords.z - bias) > pcfDepth ? 0.4 : 0.0;
                 }
             }
@@ -282,10 +302,36 @@ namespace cro::Shaders::PBR
             colour = colour / (colour + vec3(1.0));
             //gamma correct
             colour = pow(colour, vec3(1.0 / 2.2)); 
+            
 
-            #if defined (RX_SHADOWS)
-            colour *= shadowAmount(v_lightWorldPosition, surfProp);
-            #endif            
+        #if defined (RX_SHADOWS)
+
+            int cascadeIndex = getCascadeIndex();
+            float shadow = shadowAmount(cascadeIndex, surfProp);
+            float fade = smoothstep(u_frustumSplits[cascadeIndex] + 0.5, u_frustumSplits[cascadeIndex],  v_viewDepth);
+            if(fade > 0)
+            {
+                int nextIndex = min(cascadeIndex + 1, u_cascadeCount - 1);
+                shadow = mix(shadow, shadowAmount(nextIndex, surfProp), fade);
+            }
+
+            colour *= shadow;
+
+//highlights the cascade splits
+//vec3 Colours[4] = vec3[4](vec3(0.2,0.0,0.0), vec3(0.0,0.2,0.0),vec3(0.0,0.0,0.2),vec3(0.2,0.0,0.2));
+//for(int i = 0; i < u_cascadeCount; ++i)
+//{
+//    if (v_lightWorldPosition[i].w > 0.0)
+//    {
+//        vec2 coords = v_lightWorldPosition[i].xy / v_lightWorldPosition[i].w / 2.0 + 0.5;
+//        if (coords.x > 0 && coords.x < 1 
+//                && coords.y > 0 && coords.y < 1)
+//        {
+//              colour += Colours[i];
+//        }
+//    }
+//}
+        #endif
 
             colour *= u_lightColour.rgb;
 

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020
+Matt Marchant 2020 - 2022
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -156,6 +156,20 @@ GameState::GameState(cro::StateStack& stack, cro::State::Context context, Shared
                 }
 
                 ImGui::Text("Bitrate: %3.3fkbps", static_cast<float>(bitrate) / 1024.f);
+
+
+                auto& cam = m_gameScene.getActiveCamera().getComponent<cro::Camera>();
+                float maxDist = cam.getMaxShadowDistance();
+                if (ImGui::SliderFloat("Shadow Dist", &maxDist, 1.f, IslandSize))
+                {
+                    cam.setMaxShadowDistance(maxDist);
+                }
+
+                float exp = cam.getShadowExpansion();
+                if (ImGui::SliderFloat("Expansion", &exp, 0.f, 50.f))
+                {
+                    cam.setShadowExpansion(exp);
+                }
             }
             ImGui::End();
 
@@ -716,7 +730,8 @@ void GameState::updateView(cro::Camera&)
     //set up projection
     for (auto cam : m_cameras)
     {
-        cam.getComponent<cro::Camera>().setPerspective(fov, aspect, nearPlane, farPlane);
+        cam.getComponent<cro::Camera>().setPerspective(fov, aspect, nearPlane, farPlane, 3);
+        cam.getComponent<cro::Camera>().setShadowExpansion(20.f);
     }
 }
 
