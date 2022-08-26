@@ -109,6 +109,20 @@ ModelState::ModelState(cro::StateStack& stack, cro::State::Context context, Shar
 
     context.appInstance.resetFrameTime();
     context.mainWindow.setTitle("Crogine Model Importer");
+
+    /*registerWindow([&]()
+        {
+            if (ImGui::Begin("buns"))
+            {
+                auto& cam = m_scene.getActiveCamera().getComponent<cro::Camera>();
+                float maxDepth = cam.getMaxShadowDistance();
+                if (ImGui::SliderFloat("Depth", &maxDepth, 1.f, cam.getFarPlane()))
+                {
+                    cam.setMaxShadowDistance(maxDepth);
+                }
+            }
+            ImGui::End();
+        });*/
 }
 
 //public
@@ -360,6 +374,8 @@ void ModelState::createScene()
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(DefaultCameraPosition);
     entity.addComponent<cro::Camera>().shadowMapBuffer.create(4096, 4096);
+    entity.getComponent<cro::Camera>().setMaxShadowDistance(50.f);
+    entity.getComponent<cro::Camera>().setShadowExpansion(30.f);
     m_viewportRatio = updateView(entity, DefaultFarPlane, DefaultFOV);
     m_scene.setActiveCamera(entity);
     m_cameras[CameraID::Default].camera = entity;
@@ -487,8 +503,7 @@ void ModelState::createScene()
     entity.addComponent<cro::GBuffer>();
     entity.addComponent<cro::Camera>();
     auto& cam3D = entity.getComponent<cro::Camera>();
-    cam3D.setPerspective(DefaultFOV, 1.f, 0.1f, 10.f);
-
+    cam3D.setPerspective(DefaultFOV, 1.f, 0.1f, 10.f, 3);
     m_previewScene.setActiveCamera(entity);
 
     //not rendering shadows on here, but we still want a light direction
@@ -503,6 +518,8 @@ void ModelState::createScene()
     entity.addComponent<cro::Transform>().setPosition(DefaultCameraPosition);
     entity.addComponent<FpsCamera>();
     entity.addComponent<cro::Camera>().shadowMapBuffer.create(4096, 4096);
+    entity.getComponent<cro::Camera>().setShadowExpansion(50.f);
+    entity.getComponent<cro::Camera>().setMaxShadowDistance(80.f);
     updateView(entity, DefaultFarPlane * 3.f, DefaultFOV);
 
     m_cameras[CameraID::FreeLook].FarPlane = DefaultFarPlane * 3.f;
