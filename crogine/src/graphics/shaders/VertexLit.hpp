@@ -371,7 +371,6 @@ namespace cro::Shaders::VertexLit
             return 1.0 - (shadow / 9.0);
         }
     #endif
-
     #endif               
 
         LOW vec4 diffuseColour = vec4(1.0);

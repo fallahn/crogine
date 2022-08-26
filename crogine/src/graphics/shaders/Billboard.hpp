@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2021
+Matt Marchant 2017 - 2022
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -53,9 +53,15 @@ namespace cro::Shaders::Billboard
         #endif
 
         #if defined(RX_SHADOWS)
-        uniform mat4 u_lightViewProjectionMatrix;
-
-        VARYING_OUT LOW vec4 v_lightWorldPosition;
+        #if !defined(MAX_CASCADES)
+        #define MAX_CASCADES 4
+        #endif
+            uniform mat4 u_lightViewProjectionMatrix[MAX_CASCADES];
+        #if defined (MOBILE)
+            const int u_cascadeCount = 1;
+        #else
+            uniform int u_cascadeCount = 1;
+        #endif
         #endif
 
         #if defined (VERTEX_COLOUR)
@@ -69,6 +75,11 @@ namespace cro::Shaders::Billboard
         VARYING_OUT vec3 v_worldPosition;
         #endif
         VARYING_OUT float v_ditherAmount;
+
+        #if defined(RX_SHADOWS)
+        VARYING_OUT LOW vec4 v_lightWorldPosition[MAX_CASCADES];
+        VARYING_OUT float v_viewDepth;
+        #endif
 
         void main()
         {
@@ -108,9 +119,13 @@ namespace cro::Shaders::Billboard
 
 //TODO: defs for scaled billboards
 
-            #if defined (RX_SHADOWS)
-                v_lightWorldPosition = u_lightViewProjectionMatrix * vec4(position, 1.0);
-            #endif
+        #if defined (RX_SHADOWS)
+            for(int i = 0; i < u_cascadeCount; i++)
+            {
+                v_lightWorldPosition[i] = u_lightViewProjectionMatrix[i] * worldMatrix * position;
+            }
+            v_viewDepth = (u_ViewMatrix * position).z;
+        #endif
 
             #if defined (VERTEX_COLOUR)
                 v_colour = a_colour;
@@ -168,12 +183,17 @@ namespace cro::Shaders::Billboard
         uniform LOW vec4 u_lightColour;
         uniform HIGH vec3 u_cameraWorldPosition;
         #endif
-
         #if defined (RX_SHADOWS)
         #if defined (MOBILE)
         uniform sampler2D u_shadowMap;
+        const int u_cascadeCount = 1;
         #else
+        #if !defined(MAX_CASCADES)
+        #define MAX_CASCADES 4
+        #endif
         uniform sampler2DArray u_shadowMap;
+        uniform int u_cascadeCount = 1;
+        uniform float u_frustumSplits[MAX_CASCADES];
         #endif
         #endif
 
@@ -189,7 +209,8 @@ namespace cro::Shaders::Billboard
         VARYING_IN HIGH vec3 v_worldPosition;
 
         #if defined(RX_SHADOWS)
-        VARYING_IN LOW vec4 v_lightWorldPosition;
+        VARYING_IN LOW vec4 v_lightWorldPosition[MAX_CASCADES];
+        VARYING_IN float v_viewDepth;
 
         #if defined(MOBILE)
         #if defined (GL_FRAGMENT_PRECISION_HIGH)
@@ -208,8 +229,10 @@ namespace cro::Shaders::Billboard
         }
                 
         #if defined(MOBILE)
-        PREC float shadowAmount(LOW vec4 lightWorldPos)
+        PREC float shadowAmount(int)
         {
+            vec4 lightWorldPos = v_lightWorldPosition[0];
+
             PREC vec3 projectionCoords = lightWorldPos.xyz / lightWorldPos.w;
             projectionCoords = projectionCoords * 0.5 + 0.5;
             PREC float depthSample = unpack(TEXTURE(u_shadowMap, projectionCoords.xy));
@@ -217,6 +240,18 @@ namespace cro::Shaders::Billboard
             return (currDepth < depthSample) ? 1.0 : 0.4;
         }
         #else
+        int getCascadeIndex()
+        {
+            for(int i = 0; i < u_cascadeCount; ++i)
+            {
+                if (v_viewDepth >= u_frustumSplits[i])
+                {
+                    return min(u_cascadeCount - 1, i);
+                }
+            }
+            return u_cascadeCount - 1;
+        }
+
         //some fancier pcf on desktop
         const vec2 kernel[16] = vec2[](
             vec2(-0.94201624, -0.39906216),
@@ -237,8 +272,10 @@ namespace cro::Shaders::Billboard
             vec2(0.14383161, -0.14100790)
         );
         const int filterSize = 3;
-        float shadowAmount(vec4 lightWorldPos)
+        float shadowAmount(int cascadeIndex)
         {
+            vec4 lightWorldPosition = v_lightWorldPosition[cascadeIndex];
+
             vec3 projectionCoords = lightWorldPos.xyz / lightWorldPos.w;
             projectionCoords = projectionCoords * 0.5 + 0.5;
 
@@ -250,7 +287,7 @@ namespace cro::Shaders::Billboard
             {
                 for(int y = 0; y < filterSize; ++y)
                 {
-                    float pcfDepth = TEXTURE(u_shadowMap, vec3(projectionCoords.xy + kernel[y * filterSize + x] * texelSize, 0)).r;
+                    float pcfDepth = TEXTURE(u_shadowMap, vec3(projectionCoords.xy + kernel[y * filterSize + x] * texelSize, cascadeIndex)).r;
                     shadow += (projectionCoords.z - 0.001) > pcfDepth ? 0.4 : 0.0;
                 }
             }
@@ -315,13 +352,9 @@ namespace cro::Shaders::Billboard
         void main()
         {
         //vertex lit calc
-        #if defined (VERTEX_LIT)
+    #if defined (VERTEX_LIT)
         #if defined (DIFFUSE_MAP)
             diffuseColour *= TEXTURE(u_diffuseMap, v_texCoord0);
-
-        #if defined(ALPHA_CLIP)
-        if(diffuseColour.a < u_alphaClip) discard;
-        #endif
         #endif
 
         #if defined(MASK_MAP)
@@ -354,7 +387,7 @@ namespace cro::Shaders::Billboard
             vec3 R = reflect(I, normal);
             FRAG_OUT.rgb = mix(TEXTURE_CUBE(u_skybox, R).rgb, FRAG_OUT.rgb, mask.a);
 
-        #else
+    #else
         //unlit calc
         #if defined (VERTEX_COLOUR)
             FRAG_OUT = v_colour;
@@ -368,12 +401,37 @@ namespace cro::Shaders::Billboard
         #if defined(COLOURED)
             FRAG_OUT *= u_colour;
         #endif
+    #endif
+
 
         #if defined (RX_SHADOWS)
-            FRAG_OUT.rgb *= shadowAmount(v_lightWorldPosition);
-        #endif
-        #endif
 
+            int cascadeIndex = getCascadeIndex();
+            float shadow = shadowAmount(cascadeIndex);
+            float fade = smoothstep(u_frustumSplits[cascadeIndex] + 0.5, u_frustumSplits[cascadeIndex],  v_viewDepth);
+            if(fade > 0)
+            {
+                int nextIndex = min(cascadeIndex + 1, u_cascadeCount - 1);
+                shadow = mix(shadow, shadowAmount(nextIndex), fade);
+            }
+
+            FRAG_OUT.rgb *= shadow;
+
+
+//vec3 Colours[4] = vec3[4](vec3(0.2,0.0,0.0), vec3(0.0,0.2,0.0),vec3(0.0,0.0,0.2),vec3(0.2,0.0,0.2));
+//for(int i = 0; i < u_cascadeCount; ++i)
+//{
+//    if (v_lightWorldPosition[i].w > 0.0)
+//    {
+//        vec2 coords = v_lightWorldPosition[i].xy / v_lightWorldPosition[i].w / 2.0 + 0.5;
+//        if (coords.x > 0 && coords.x < 1 
+//                && coords.y > 0 && coords.y < 1)
+//        {
+//            FRAG_OUT.rgb += Colours[i];
+//        }
+//    }
+//}
+        #endif
 
         vec2 xy = gl_FragCoord.xy;
         int x = int(mod(xy.x, MatrixSize));
