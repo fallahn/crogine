@@ -142,6 +142,7 @@ struct ShaderID final
         Horizon,
         Terrain,
         Billboard,
+        BillboardShadow,
         Cel,
         CelSkinned,
         CelTextured,

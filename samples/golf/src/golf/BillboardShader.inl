@@ -31,7 +31,8 @@ source distribution.
 
 #include <string>
 
-
+//because the billboards are based on the view direction when casting
+//shadows we need to use the game camera to set up vert positions.
 static const std::string BillboardVertexShader = R"(
     ATTRIBUTE vec4 a_position; //relative to root position (below)
     ATTRIBUTE vec3 a_normal; //actually contains root position of billboard
@@ -42,6 +43,12 @@ static const std::string BillboardVertexShader = R"(
     uniform mat4 u_worldMatrix;
     uniform mat4 u_viewMatrix;
     uniform mat4 u_viewProjectionMatrix;
+
+#if defined(SHADOW_MAPPING)
+    uniform mat4 u_gameViewMatrix;
+    uniform mat4 u_projectionMatrix;
+#endif
+
 
     uniform vec4 u_clipPlane;
     uniform vec3 u_cameraWorldPosition;
@@ -66,7 +73,14 @@ static const std::string BillboardVertexShader = R"(
     {
         vec3 position = (u_worldMatrix * vec4(a_normal, 1.0)).xyz;
 
-        vec3 camRight = vec3(u_viewMatrix[0][0], u_viewMatrix[1][0], u_viewMatrix[2][0]);
+#if defined (SHADOW_MAPPING)
+        mat4 viewMatrix = u_gameViewMatrix;
+        mat4 viewProj = u_viewMatrix * u_projectionMatrix;
+#else
+        mat4 viewMatrix = u_viewMatrix;
+        mat4 viewProj = u_viewProjectionMatrix;
+#endif
+        vec3 camRight = vec3(viewMatrix[0][0], viewMatrix[1][0], viewMatrix[2][0]);
         vec3 camUp = vec3(0.0, 1.0, 0.0);
         position = position + camRight * a_position.x
                             + camUp * a_position.y;
@@ -93,7 +107,7 @@ static const std::string BillboardVertexShader = R"(
 
         //snap vert pos to nearest fragment for retro wobble
         //hmm not so good when coupled with wind (above)
-        vec4 vertPos = u_viewProjectionMatrix * vec4(position, 1.0);
+        vec4 vertPos = viewProj * vec4(position, 1.0);
         /*vertPos.xyz /= vertPos.w;
         vertPos.xy = (vertPos.xy + vec2(1.0)) * u_scaledResolution * 0.5;
         vertPos.xy = floor(vertPos.xy);
@@ -101,6 +115,9 @@ static const std::string BillboardVertexShader = R"(
         vertPos.xyz *= vertPos.w;*/
         gl_Position = vertPos;
 
+        v_texCoord0 = a_texCoord0;
+
+#if !defined(SHADOW_MAPPING)
         v_colour = a_colour;
 
         float fadeDistance = u_nearFadeDistance * 5.0;
@@ -113,9 +130,8 @@ static const std::string BillboardVertexShader = R"(
 
         v_colour.rgb *= (((1.0 - pow(clamp(distance / farFadeDistance, 0.0, 1.0), 5.0)) * 0.8) + 0.2);
 
-        v_texCoord0 = a_texCoord0;
-
         gl_ClipDistance[0] = dot(u_worldMatrix * vec4(position, 1.0), u_clipPlane);
+#endif
 
     })";
 

@@ -146,6 +146,12 @@ private:
         float targetFade = 2.f;
     }m_resolutionUpdate;
 
+    struct BillboardShadowUpdate final
+    {
+        std::uint32_t shaderID = 0;
+        std::int32_t viewMatUniform = -1;
+    }m_billboardShadowUpdate;
+
     cro::Image m_currentMap; 
     float m_holeToModelRatio;
     std::vector<HoleData> m_holeData;
