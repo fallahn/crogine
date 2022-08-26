@@ -681,7 +681,7 @@ static const std::string CelFragmentShader = R"(
         FRAG_OUT.rgb *= shadow;
 
 //shows cascade boundries
-//vec3 Colours[4] = vec3[4](vec3(0.2,0.0,0.0), vec3(0.0,0.2,0.0),vec3(0.0,0.0,0.2),vec3(0.2,0.0,0.2));
+//vec3 Colours[MAX_CASCADES] = vec3[MAX_CASCADES](vec3(0.2,0.0,0.0), vec3(0.0,0.2,0.0),vec3(0.0,0.0,0.2));
 //for(int i = 0; i < u_cascadeCount; ++i)
 //{
 //    if (v_lightWorldPosition[i].w > 0.0)

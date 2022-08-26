@@ -136,9 +136,12 @@ namespace
 
     float godmode = 1.f;
 
-    constexpr float ShadowFarDistance = 50.f;
-    constexpr float ShadowNearDistance = 20.f;
-    constexpr std::size_t CascadeCount = 3;
+    constexpr std::uint32_t MaxCascades = 4;
+    std::uint32_t CascadeCount = 3;
+
+    float ShadowFarDistance = 50.f;
+    float ShadowNearDistance = 20.f;
+
     const cro::Time ReadyPingFreq = cro::seconds(1.f);
 
     //use to move the flag as the player approaches
@@ -196,6 +199,11 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
             }
         });
 
+    CascadeCount = sd.hqShadows ? 3 : 1;
+    ShadowNearDistance = 20.f / (MaxCascades - CascadeCount);
+    ShadowFarDistance = 50.f / (MaxCascades - CascadeCount);
+
+
     context.mainWindow.loadResources([this]() {
         addSystems();
         loadAssets();
@@ -206,7 +214,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     createTransition();
 
     sd.baseState = StateID::Golf;
-    //TODO can awe create a case where there's on human local player?
+    //TODO can we create a case where there's one human local player?
     Achievements::setActive(sd.localConnectionData.playerCount == 1 && !m_sharedData.localConnectionData.playerData[0].isCPU);
     
     std::int32_t clientCount = 0;
@@ -3188,7 +3196,7 @@ void GolfState::buildScene()
     cam.reflectionBuffer.create(ReflectionMapSize, ReflectionMapSize);
     cam.reflectionBuffer.setSmooth(true);
     cam.shadowMapBuffer.create(ShadowMapSize, ShadowMapSize);
-    cam.setMaxShadowDistance(ShadowNearDistance);
+    cam.setMaxShadowDistance(ShadowFarDistance);
     cam.setShadowExpansion(20.f);
 
     //create an overhead camera
