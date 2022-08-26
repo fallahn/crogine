@@ -171,13 +171,13 @@ std::int32_t ShaderResource::loadBuiltIn(BuiltIn type, std::int32_t flags)
         if (MAX_BONES == 0)
         {
             //query opengl for the limit (this can be pretty low on mobile!!)
-            //GLint maxVec;
-            //glCheck(glGetIntegerv(GL_MAX_VERTEX_UNIFORM_VECTORS, &maxVec));
-            //MAX_BONES = maxVec / 4; //4 x 4-components make up a mat4.
-            //we'll allow 32 vectors or other uniforms (cascaded maps take up a few)
+            GLint maxVec;
+            glCheck(glGetIntegerv(GL_MAX_VERTEX_UNIFORM_VECTORS, &maxVec));
+            MAX_BONES = maxVec / 4; //4 x 4-components make up a mat4.
+            //we'll allow 64 vectors for other uniforms (cascaded maps take up a few)
             //64 / 4 = 16
-            //MAX_BONES = std::min(MAX_BONES - 16, 255); //VMs can incorrectly report this :(
-            MAX_BONES = 64;
+            MAX_BONES = std::min(MAX_BONES - 16, 255); //VMs can incorrectly report this :(
+            //MAX_BONES = 64;
             LOG("MAX BONES " + std::to_string(MAX_BONES), Logger::Type::Info);
         }
         defines += "\n#define SKINNED\n #define MAX_BONES " + std::to_string(MAX_BONES);
