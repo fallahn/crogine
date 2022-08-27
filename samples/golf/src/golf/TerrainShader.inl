@@ -642,7 +642,7 @@ static const std::string CelFragmentShader = R"(
 
         amount = 0.8 + (amount * 0.2);
         colour.rgb *= amount;
-
+#define NOCHEX
 #if !defined(NOCHEX)
         float pixelScale = u_pixelScale;
         //float pixelScale = 1.0;

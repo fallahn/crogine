@@ -140,7 +140,7 @@ namespace
     std::uint32_t CascadeCount = 3;
 
     float ShadowFarDistance = 50.f;
-    float ShadowNearDistance = 20.f;
+    float ShadowNearDistance = 30.f;
 
     const cro::Time ReadyPingFreq = cro::seconds(1.f);
 
@@ -200,7 +200,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
         });
 
     CascadeCount = sd.hqShadows ? 3 : 1;
-    ShadowNearDistance = 20.f / (MaxCascades - CascadeCount);
+    ShadowNearDistance = 30.f / (MaxCascades - CascadeCount);
     ShadowFarDistance = 50.f / (MaxCascades - CascadeCount);
 
 
@@ -284,8 +284,14 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
                     m_cameras[m_currentCamera].getComponent<cro::Camera>().setShadowExpansion(extension);
                 }
 
-                ImGui::Text("Cascade Count %u", m_gameScene.getActiveCamera().getComponent<cro::Camera>().getCascadeCount());
+                auto cCount = m_gameScene.getActiveCamera().getComponent<cro::Camera>().getCascadeCount();
+                ImGui::Text("Cascade Count %lu", cCount);
                 ImGui::Image(m_gameScene.getActiveCamera().getComponent<cro::Camera>().shadowMapBuffer.getTexture(0), { 128.f, 128.f }, { 0.f, 1.f }, { 1.f, 0.f });
+                for (auto i = 1u; i < cCount; ++i)
+                {
+                    ImGui::SameLine();
+                    ImGui::Image(m_gameScene.getActiveCamera().getComponent<cro::Camera>().shadowMapBuffer.getTexture(i), { 128.f, 128.f }, { 0.f, 1.f }, { 1.f, 0.f });
+                }
             }
             ImGui::End();
         });
@@ -2987,12 +2993,27 @@ void GolfState::buildScene()
     meshData = &entity.getComponent<cro::Model>().getMeshData();
     verts =
     {
-        0.f, 2.f, 0.f,    LeaderboardTextLight.getRed(), LeaderboardTextLight.getGreen(), LeaderboardTextLight.getBlue(), 1.f,
-        0.f, 0.f, 0.f,    LeaderboardTextLight.getRed(), LeaderboardTextLight.getGreen(), LeaderboardTextLight.getBlue(), 1.f,
+        0.f, 2.f, 0.f,      LeaderboardTextLight.getRed(), LeaderboardTextLight.getGreen(), LeaderboardTextLight.getBlue(), 1.f,
+        0.f, 1.66f, 0.f,    LeaderboardTextLight.getRed(), LeaderboardTextLight.getGreen(), LeaderboardTextLight.getBlue(), 1.f,
+
+        0.f, 1.66f, 0.f,    0.05f, 0.043f, 0.05f, 1.f,
+        0.f, 1.33f, 0.f,    0.05f, 0.043f, 0.05f, 1.f,
+
+        0.f, 1.33f, 0.f,    LeaderboardTextLight.getRed(), LeaderboardTextLight.getGreen(), LeaderboardTextLight.getBlue(), 1.f,
+        0.f, 1.f, 0.f,      LeaderboardTextLight.getRed(), LeaderboardTextLight.getGreen(), LeaderboardTextLight.getBlue(), 1.f,
+
+        0.f, 1.f, 0.f,      0.05f, 0.043f, 0.05f, 1.f,
+        0.f, 0.66f, 0.f,    0.05f, 0.043f, 0.05f, 1.f,
+
+        0.f, 0.66f, 0.f,    LeaderboardTextLight.getRed(), LeaderboardTextLight.getGreen(), LeaderboardTextLight.getBlue(), 1.f,
+        0.f, 0.33f, 0.f,    LeaderboardTextLight.getRed(), LeaderboardTextLight.getGreen(), LeaderboardTextLight.getBlue(), 1.f,
+
+        0.f, 0.33f, 0.f,    0.05f, 0.043f, 0.05f, 1.f,
+        0.f, 0.f, 0.f,      0.05f, 0.043f, 0.05f, 1.f,
     };
     indices =
     {
-        0,1
+        0,1,2,3,4,5,6,7,8,9,10,11,12
     };
     meshData->vertexCount = verts.size() / vertStride;
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData->vbo));
