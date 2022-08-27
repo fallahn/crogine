@@ -1,0 +1,7 @@
+ball 
+{
+    model = assets/golf/models/balls/ball_stash.cmt
+    tint = 0.784,0.322,0.341,1.0
+    uid = 1789786685
+
+}
