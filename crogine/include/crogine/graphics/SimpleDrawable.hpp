@@ -132,6 +132,7 @@ namespace cro
         std::uint32_t m_vbo;
 #ifdef PLATFORM_DESKTOP
         std::uint32_t m_vao;
+        void updateVAO(const Shader&);
 #endif
         std::uint32_t m_vertexCount;
 
