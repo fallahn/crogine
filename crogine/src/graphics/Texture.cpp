@@ -43,16 +43,16 @@ using namespace cro;
 
 namespace
 {
-    std::uint32_t ensurePOW2(std::uint32_t size)
-    {
-        /*std::uint32_t pow2 = 1;
-        while (pow2 < size)
-        {
-            pow2 *= 2;
-        }
-        return pow2;*/
-        return size; //TODO this needs to not exlude combination resolutions such as 768
-    }
+    //std::uint32_t ensurePOW2(std::uint32_t size)
+    //{
+    //    /*std::uint32_t pow2 = 1;
+    //    while (pow2 < size)
+    //    {
+    //        pow2 *= 2;
+    //    }
+    //    return pow2;*/
+    //    return size; //TODO this needs to not exlude combination resolutions such as 768
+    //}
 }
 
 Texture::Texture()
@@ -166,6 +166,9 @@ void Texture::create(std::uint32_t width, std::uint32_t height, ImageFormat::Typ
 
 bool Texture::loadFromFile(const std::string& filePath, bool createMipMaps)
 {
+    //TODO leaving tis here because one day I might
+    //decide to fix loading textures as floating point
+    
     //auto path = FileSystem::getResourcePath() + filePath;
 
     //auto* file = SDL_RWFromFile(path.c_str(), "rb");
@@ -202,11 +205,6 @@ bool Texture::loadFromImage(const Image& image, bool createMipMaps)
     }
 
     auto size = image.getSize();
-    /*if (!((size.x & (size.x - 1)) == 0) && ((size.y & (size.y - 1)) == 0))
-    {
-        LOG("Image not POW2", Logger::Type::Error);
-        return false;
-    }*/
 
     create(size.x, size.y, image.getFormat());
     return update(image.getPixelData(), createMipMaps);

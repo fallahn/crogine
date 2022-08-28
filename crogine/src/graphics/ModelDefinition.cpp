@@ -56,7 +56,9 @@ namespace
     {
         "VertexLit", "Unlit", "Billboard", "PBR"
     };
+#ifdef CRO_DEBUG_
     bool billboardsWarned = false;
+#endif
 }
 
 ModelDefinition::ModelDefinition(ResourceCollection& rc, EnvironmentMap* envMap, const std::string& workingDir)

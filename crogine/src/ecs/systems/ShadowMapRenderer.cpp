@@ -139,7 +139,7 @@ void ShadowMapRenderer::updateDrawList(Entity camEnt)
         auto corners = camera.getFrustumSplits();
         glm::vec3 lightDir = -getScene()->getSunlight().getComponent<Sunlight>().getDirection();
 
-        for (auto i = 0; i < corners.size(); ++i)
+        for (auto i = 0u; i < corners.size(); ++i)
         {
             glm::vec3 centre = glm::vec3(0.f);
 
@@ -207,7 +207,9 @@ void ShadowMapRenderer::updateDrawList(Entity camEnt)
 
 #endif
         }
+#ifdef CRO_DEBUG_
         std::int32_t visibleCount = 0;
+#endif
 
         //use depth frusta to cull entities
         auto& entities = getEntities();
