@@ -396,6 +396,7 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
                 {
                     material = resources.materials.get(billboardShadowID);
                     applyMaterialData(billboardDef, material);
+                    material.doubleSided = true; //do this second because applyMaterial() overwrites it
                     entity.getComponent<cro::Model>().setShadowMaterial(0, material);
                     entity.addComponent<cro::ShadowCaster>();
                 }

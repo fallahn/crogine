@@ -367,7 +367,7 @@ void ShadowMapRenderer::render()
                     glCheck(glUniform3f(mat.uniforms[Material::Camera], cameraPosition.x, cameraPosition.y, cameraPosition.z));
                     //glCheck(glUniformMatrix4fv(mat.uniforms[Material::ViewProjection], 1, GL_FALSE, glm::value_ptr(camera.depthViewProjectionMatrix)));
 
-                    glCheck(model.m_materials[Mesh::IndexData::Final][i].doubleSided ? glDisable(GL_CULL_FACE) : glEnable(GL_CULL_FACE));
+                    glCheck((model.m_materials[Mesh::IndexData::Final][i].doubleSided || mat.doubleSided) ? glDisable(GL_CULL_FACE) : glEnable(GL_CULL_FACE));
 
 #ifdef PLATFORM_DESKTOP
                     model.draw(i, Mesh::IndexData::Shadow);

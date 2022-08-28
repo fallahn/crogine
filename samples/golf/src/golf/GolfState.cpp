@@ -1134,8 +1134,8 @@ bool GolfState::simulate(float dt)
     //no lag between camera orientation.
     m_skyScene.simulate(dt);
 
-    auto* camView = &srcCam.getPass(cro::Camera::Pass::Final).viewMatrix[0][0];
-    glCheck(glProgramUniformMatrix4fv(m_billboardShadowUpdate.shaderID, m_billboardShadowUpdate.viewMatUniform, 1, GL_FALSE, camView));
+    const auto& camView = srcCam.getPass(cro::Camera::Pass::Final).viewMatrix;
+    glCheck(glProgramUniformMatrix4fv(m_billboardShadowUpdate.shaderID, m_billboardShadowUpdate.viewMatUniform, 1, GL_FALSE, &camView[0][0]));
 
 
 #ifndef CRO_DEBUG_
@@ -3477,7 +3477,7 @@ void GolfState::buildScene()
 
 //#ifdef CRO_DEBUG_
     if (cro::SysTime::now().months() == 12
-        && cro::Util::Random::value(0, 50) == 0)
+        && cro::Util::Random::value(0, 20) == 0)
     {
         createWeather();
     }

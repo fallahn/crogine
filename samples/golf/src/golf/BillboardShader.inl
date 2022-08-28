@@ -75,7 +75,7 @@ static const std::string BillboardVertexShader = R"(
 
 #if defined (SHADOW_MAPPING)
         mat4 viewMatrix = u_gameViewMatrix;
-        mat4 viewProj = u_viewMatrix * u_projectionMatrix;
+        mat4 viewProj = u_projectionMatrix * u_viewMatrix;
 #else
         mat4 viewMatrix = u_viewMatrix;
         mat4 viewProj = u_viewProjectionMatrix;
