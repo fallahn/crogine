@@ -46,7 +46,7 @@ using namespace cro;
 namespace
 {
     const std::int32_t RequestGLMajor = 4;
-#ifdef __APPLE__
+#ifdef GL41
     const std::int32_t RequestGLMinor = 1;
 #else
     const std::int32_t RequestGLMinor = 6;
