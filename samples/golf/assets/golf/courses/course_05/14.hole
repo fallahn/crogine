@@ -1,135 +1,30 @@
 hole 14
 {
-    map="assets/golf/courses/course_05/14.png"
-    model="assets/golf/models/course_05/14.cmt"
+    map="assets/golf/courses/course_02/14.png"
+    model="assets/golf/models/course_02/14.cmt"
     par = 4
 
-    pin = 287.444153,1.797399,-138.820892
-
-    target = 187.496567,1.793530,-116.524887
-
-    tee = 29.118134,1.793530,-43.486282
-
-    prop
-    {
-        model = "assets/golf/models/bollard_day.cmt"
-        position = 183.630173,1.793526,-129.702927
-        rotation = 0.000000
-        scale = 1.000000,1.000000,1.000000
-    }
-
-    prop
-    {
-        model = "assets/golf/models/bollard_day.cmt"
-        position = 185.405045,1.793531,-126.766273
-        rotation = 0.000000
-        scale = 1.000000,1.000000,1.000000
-    }
-
-    prop
-    {
-        model = "assets/golf/models/bollard_day.cmt"
-        position = 199.467545,1.793529,-139.187256
-        rotation = 0.000000
-        scale = 1.000000,1.000000,1.000000
-    }
-
-    prop
-    {
-        model = "assets/golf/models/bollard_night.cmt"
-        position = 201.915649,1.811835,-136.559128
-        rotation = 0.000000
-        scale = 1.000000,1.000000,1.000000
-    }
-
-    prop
-    {
-        model = "assets/golf/models/bollard_day.cmt"
-        position = 274.764038,1.793529,-170.165894
-        rotation = 0.000000
-        scale = 1.000000,1.000000,1.000000
-    }
-
-    prop
-    {
-        model = "assets/golf/models/bollard_day.cmt"
-        position = 109.990829,1.793518,-119.291611
-        rotation = 0.000000
-        scale = 1.000000,1.000000,1.000000
-    }
-
-    prop
-    {
-        model = "assets/golf/models/bollard_day.cmt"
-        position = 111.121902,1.793529,-116.116684
-        rotation = 0.000000
-        scale = 1.000000,1.000000,1.000000
-    }
-
-    prop
-    {
-        model = "assets/golf/models/cart.cmt"
-        position = 47.609318,1.798530,-78.912689
-        rotation = 30.045359
-        scale = 1.000000,1.000000,1.000000
-    }
+    pin = 274.977112,1.987075,-44.083359
+    target = 120.625191,1.679725,-97.260986
+    tee = 43.680023,1.679725,-172.472137
 
     crowd
     {
-        position = 96.526825,1.793572,-62.168640
-        rotation = -150.476049
-    }
-
-    crowd
-    {
-        position = 287.174622,1.793576,-158.237930
-        rotation = -22.730158
-    }
-
-    crowd
-    {
-        position = 296.005951,1.793574,-125.618996
-        rotation = -139.431079
+        position = 291.879333,1.679770,-68.604065
+        rotation = -43.135478
     }
 
     prop
     {
-        model = "assets/golf/models/cart01.cmt"
-        position = 4.520327,0.005000,-63.864979
-        rotation = 0.000000
-        scale = 1.000000,1.000000,1.000000
-
-        path
-        {
-            point = 7.168602,1.793530,-63.147038
-            point = 15.175930,1.793530,-61.099953
-            point = 21.647943,1.793530,-62.202229
-            point = 33.591972,1.793530,-71.020439
-            point = 47.228786,1.793530,-81.216492
-            point = 62.936226,1.793530,-91.097618
-            point = 80.730118,1.793530,-102.789619
-            point = 94.744774,1.793530,-110.938591
-            point = 108.956268,1.793530,-117.197945
-            point = 123.836998,1.793530,-120.977173
-            point = 139.465698,1.793530,-122.906158
-            point = 158.401245,1.793530,-124.638306
-            point = 172.140320,1.793530,-125.150078
-            point = 180.958527,1.793530,-127.118431
-            point = 187.375366,1.793530,-129.598557
-            point = 199.106720,1.793530,-136.999557
-            point = 219.774414,1.793530,-152.431427
-            point = 232.962341,1.793530,-161.840149
-            point = 248.118652,1.793530,-168.768738
-            point = 259.771271,1.793530,-171.681900
-            point = 270.794037,1.793530,-171.248871
-            point = 275.833008,1.793530,-172.390503
-            point = 284.100067,1.793530,-183.492004
-
-            loop = false
-            delay = 22.000000
-            speed = 6.0
-        }
-        emitter = "cart"
+        model = "assets/golf/models/view_platform.cmt"
+        position = 296.171692,1.679724,-71.940659
+        rotation = -759.911305
     }
 
+    prop
+    {
+        model = "assets/golf/models/driving_shed.cmt"
+        position = 53.636566,1.679725,-148.326950
+        rotation = -219.511330
+    }
 }
