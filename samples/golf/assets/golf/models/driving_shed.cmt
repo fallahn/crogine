@@ -1,7 +1,7 @@
 model driving_shed
 {
     mesh = "assets/golf/models/driving_shed.cmb"
-    cast_shadows = false
+    cast_shadows = true
 
     material Unlit
     {

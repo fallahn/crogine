@@ -61,15 +61,33 @@ hole 04
     prop
     {
         model = "assets/golf/models/view_platform.cmt"
-        position = 212.435242,2.295681,-95.766335
-        rotation = -720.135872
+        position = 211.961578,2.240458,-101.126869
+        rotation = -680.056957
         scale = 1.000000,1.000000,1.000000
     }
 
     crowd
     {
-        position = 209.095673,2.295729,-101.494019
-        rotation = -150.911473
+        position = 221.184494,2.295728,-108.836243
+        rotation = -182.850969
+    }
+
+    crowd
+    {
+        position = 268.922394,2.295728,-161.951508
+        rotation = -54.607982
+    }
+
+    crowd
+    {
+        position = 276.088379,2.295728,-149.478378
+        rotation = -81.634726
+    }
+
+    crowd
+    {
+        position = 254.128677,2.295728,-169.400162
+        rotation = -2.458258
     }
 
 }

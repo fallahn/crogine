@@ -44,8 +44,8 @@ hole 10
 
     crowd
     {
-        position = 57.292358,0.796828,-99.032196
-        rotation = -205.672778
+        position = 41.237717,0.796828,-129.368958
+        rotation = -279.462918
     }
 
     crowd
@@ -88,16 +88,31 @@ hole 10
     prop
     {
         model = "assets/golf/models/wheelchair.cmt"
-        position = 186.209824,0.798496,-113.457748
-        rotation = 0.000000
+        position = 43.004822,0.798496,-131.197662
+        rotation = 67.926744
         scale = 1.000000,1.000000,1.000000
     }
 
     prop
     {
         model = "assets/golf/models/spectators/sitting/03.cmt"
-        position = 186.176666,0.796830,-113.427681
-        rotation = 0.000000
+        position = 43.020226,0.796830,-131.155624
+        rotation = 67.926744
         scale = 1.000000,1.000000,1.000000
     }
+
+    prop
+    {
+        model = "assets/golf/models/jetty.cmt"
+        position = 41.496040,-0.630803,-148.795395
+        rotation = 42.541649
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    crowd
+    {
+        position = 57.629642,0.796828,-144.100403
+        rotation = -343.674630
+    }
+
 }
