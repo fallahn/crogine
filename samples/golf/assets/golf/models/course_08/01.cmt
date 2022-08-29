@@ -1,6 +1,6 @@
-model 16
+model 01
 {
-    mesh = assets/golf/models/course_04/16.cmb
+    mesh = assets/golf/models/course_08/01.cmb
     cast_shadows = false
 
     material Unlit
@@ -11,6 +11,11 @@ model 16
         repeat = true
         depth_test = true
         double_sided = false
+        use_mipmaps = false
+        animated = false
+        row_count = 1
+        col_count = 1
+        framerate = 1.000000
         blendmode = none
         diffuse = "assets/golf/images/light_sand.png"
 
@@ -23,6 +28,11 @@ model 16
         repeat = true
         depth_test = true
         double_sided = false
+        use_mipmaps = false
+        animated = false
+        row_count = 1
+        col_count = 1
+        framerate = 1.000000
         blendmode = none
         diffuse = "assets/golf/images/fairway.png"
 
@@ -35,6 +45,11 @@ model 16
         repeat = true
         depth_test = true
         double_sided = false
+        use_mipmaps = false
+        animated = false
+        row_count = 1
+        col_count = 1
+        framerate = 1.000000
         blendmode = none
         diffuse = "assets/golf/images/green.png"
 
@@ -47,45 +62,48 @@ model 16
         repeat = true
         depth_test = true
         double_sided = false
+        use_mipmaps = false
+        animated = false
+        row_count = 1
+        col_count = 1
+        framerate = 1.000000
         blendmode = none
         diffuse = "assets/golf/images/rough.png"
 
     }
     material Unlit
     {
-        name = "light_sand"
+        name = "scrub"
         colour = 1.000000,1.000000,1.000000,1.000000
         smooth = false
         repeat = true
         depth_test = true
         double_sided = false
+        use_mipmaps = false
+        animated = false
+        row_count = 1
+        col_count = 1
+        framerate = 1.000000
         blendmode = none
         diffuse = "assets/golf/images/light_sand.png"
 
     }
     material Unlit
     {
-        name = "volcano"
+        name = "stone"
         colour = 1.000000,1.000000,1.000000,1.000000
         smooth = false
         repeat = true
         depth_test = true
         double_sided = false
+        use_mipmaps = false
+        animated = false
+        row_count = 1
+        col_count = 1
+        framerate = 1.000000
         rx_shadows = true
         blendmode = none
-        diffuse = "assets/golf/images/volcano.png"
-
-    }
-    material Unlit
-    {
-        name = "Water"
-        colour = 1.000000,1.000000,1.000000,1.000000
-        smooth = true
-        repeat = true
-        depth_test = true
-        double_sided = false
-        blendmode = none
-        diffuse = "assets/golf/images/water.png"
+        diffuse = "assets/golf/images/mid_sand.png"
 
     }
 }

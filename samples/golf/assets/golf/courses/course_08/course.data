@@ -1,0 +1,16 @@
+course course_08
+{
+    skybox = "assets/golf/skyboxes/mountain02.sbf"
+    shrubbery = "assets/golf/shrubs/02.shb"
+    audio = "assets/golf/sound/ambience_beach.xas"
+    grass = 0.909,0.89,0.713,1
+    grass_tint = 0.909, 0.909, 0.773, 1.0
+    instance_model = "assets/golf/models/rock.cmt"
+
+    title = "Moulin Plage, Ile du Coulee"
+    description = "Pay No Attention to the Crows"
+
+    hole = "assets/golf/courses/course_08/01.hole"
+    hole = "assets/golf/courses/course_08/02.hole"
+    hole = "assets/golf/courses/course_08/03.hole"
+}

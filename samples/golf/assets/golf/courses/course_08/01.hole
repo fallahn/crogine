@@ -1,0 +1,13 @@
+hole 01
+{
+    map="assets/golf/courses/course_08/01.png"
+    model="assets/golf/models/course_08/01.cmt"
+    par = 3
+
+    pin = 49.218178,1.214598,-40.907883
+
+    target = 109.801788,1.210535,-39.370228
+
+    tee = 291.245087,1.210535,-39.370228
+
+}

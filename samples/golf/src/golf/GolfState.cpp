@@ -1907,7 +1907,7 @@ void GolfState::loadAssets()
         }
     }
 
-    theme.cloudPath = loadSkybox(skyboxPath, m_skyScene, m_resources, m_materialIDs[MaterialID::Horizon]);
+    theme.cloudPath = loadSkybox(skyboxPath, m_skyScene, m_resources, m_materialIDs[MaterialID::Horizon], m_materialIDs[MaterialID::CelTexturedSkinned]);
 
 #ifdef CRO_DEBUG_
     auto& colours = m_skyScene.getSkyboxColours();
@@ -2764,6 +2764,7 @@ void GolfState::addSystems()
     }
 
     m_skyScene.addSystem<cro::CallbackSystem>(mb);
+    m_skyScene.addSystem<cro::SkeletalAnimator>(mb);
     m_skyScene.addSystem<cro::CameraSystem>(mb);
     m_skyScene.addSystem<cro::ModelRenderer>(mb);
 
