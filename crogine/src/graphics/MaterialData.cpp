@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2021
+Matt Marchant 2017 - 2022
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -290,6 +290,11 @@ void Data::setShader(const Shader& s)
         {
             uniforms[Material::ShadowMapSampler] = handle;
             optionalUniforms[optionalUniformCount++] = Material::ShadowMapSampler;
+        }
+        else if (uniform == "u_cameraViewMatrix")
+        {
+            uniforms[Material::CameraView] = handle;
+            optionalUniforms[optionalUniformCount++] = Material::CameraView;
         }
         else if (uniform == "u_frustumSplits[0]")
         {

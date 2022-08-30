@@ -632,10 +632,20 @@ bool ModelDefinition::loadFromFile(const std::string& path, bool instanced, bool
 
         if (m_castShadows)
         {
-            flags = ShaderResource::DepthMap | (flags & (ShaderResource::Skinning | ShaderResource::AlphaClip));
+            flags = ShaderResource::DepthMap | (flags & (ShaderResource::Skinning | ShaderResource::AlphaClip | ShaderResource::DiffuseMap));
             if (instanced)
             {
                 flags |= ShaderResource::Instanced;
+            }
+
+            if (lockRotation)
+            {
+                flags |= ShaderResource::BuiltInFlags::LockRotation;
+            }
+
+            if (lockScale)
+            {
+                flags |= ShaderResource::BuiltInFlags::LockScale;
             }
 
             shaderID = m_resources.shaders.loadBuiltIn(m_billboard ? ShaderResource::BillboardShadowMap : ShaderResource::ShadowMap, flags);
@@ -673,26 +683,16 @@ bool ModelDefinition::createModel(Entity entity)
 
         if (m_castShadows)
         {
-            //while this technically works the nature of billboards
-            //mean that the output would be facing the camera in the
-            //depth map view, which is incorrect - in this pass we'd
-            //still need to supply the viewProj for the active camera
-            //not the light source.
-            if (!m_billboard)
+            for (auto i = 0u; i < m_materialCount; ++i)
             {
-                for (auto i = 0u; i < m_materialCount; ++i)
+                if (m_shadowIDs[i] > 0)
                 {
-                    if (m_shadowIDs[i] > 0)
-                    {
-                        model.setShadowMaterial(i, m_resources.materials.get(m_shadowIDs[i]));
-                    }
+                    auto shadowMat = m_resources.materials.get(m_shadowIDs[i]);
+                    shadowMat.doubleSided = m_billboard ? true : m_resources.materials.get(m_materialIDs[i]).doubleSided;
+                    model.setShadowMaterial(i, shadowMat);
                 }
-                entity.addComponent<ShadowCaster>().skinned = (m_skeleton);
             }
-            else
-            {
-                LogW << "Billboard materials do not support shadow casting, property is ignored." << std::endl;
-            }
+            entity.addComponent<ShadowCaster>().skinned = (m_skeleton);
         }
 
         if (m_billboard)

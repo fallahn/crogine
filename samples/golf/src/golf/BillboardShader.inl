@@ -45,7 +45,7 @@ static const std::string BillboardVertexShader = R"(
     uniform mat4 u_viewProjectionMatrix;
 
 #if defined(SHADOW_MAPPING)
-    uniform mat4 u_gameViewMatrix;
+    uniform mat4 u_cameraViewMatrix;
     uniform mat4 u_projectionMatrix;
 #endif
 
@@ -74,7 +74,7 @@ static const std::string BillboardVertexShader = R"(
         vec3 position = (u_worldMatrix * vec4(a_normal, 1.0)).xyz;
 
 #if defined (SHADOW_MAPPING)
-        mat4 viewMatrix = u_gameViewMatrix;
+        mat4 viewMatrix = u_cameraViewMatrix;
         mat4 viewProj = u_projectionMatrix * u_viewMatrix;
 #else
         mat4 viewMatrix = u_viewMatrix;
@@ -129,9 +129,8 @@ static const std::string BillboardVertexShader = R"(
 
 
         v_colour.rgb *= (((1.0 - pow(clamp(distance / farFadeDistance, 0.0, 1.0), 5.0)) * 0.8) + 0.2);
-
-        gl_ClipDistance[0] = dot(u_worldMatrix * vec4(position, 1.0), u_clipPlane);
 #endif
+        gl_ClipDistance[0] = dot(u_worldMatrix * vec4(position, 1.0), u_clipPlane);
 
     })";
 

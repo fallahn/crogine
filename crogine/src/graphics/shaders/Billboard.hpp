@@ -45,6 +45,11 @@ namespace cro::Shaders::Billboard
         uniform mat4 u_viewMatrix;
         uniform mat4 u_viewProjectionMatrix;
 
+    #if defined(SHADOW_MAPPING)
+        uniform mat4 u_cameraViewMatrix;
+        uniform mat4 u_projectionMatrix;
+    #endif
+
         uniform vec4 u_clipPlane;
         uniform vec3 u_cameraWorldPosition;
 
@@ -85,28 +90,35 @@ namespace cro::Shaders::Billboard
         {
             vec3 position = (u_worldMatrix * vec4(a_normal, 1.0)).xyz;
 
+#if defined (SHADOW_MAPPING)
+            mat4 viewMatrix = u_cameraViewMatrix;
+            mat4 viewProj = u_projectionMatrix * u_viewMatrix;
+#else
+            mat4 viewMatrix = u_viewMatrix;
+            mat4 viewProj = u_viewProjectionMatrix;
+#endif
+
 #if defined (LOCK_SCALE)
 
-            gl_Position = u_viewProjectionMatrix * vec4(position, 1.0);
+            gl_Position = viewProj * vec4(position, 1.0);
             gl_Position /= gl_Position.w;
             gl_Position.xy += a_position.xy * (a_texCoord1 / u_screenSize);
 
             #if defined (VERTEX_LIT)
-            v_normalVector = vec3(u_viewMatrix[0][2], u_viewMatrix[1][2], u_viewMatrix[2][2]);
+            v_normalVector = vec3(viewMatrix[0][2], viewMatrix[1][2], viewMatrix[2][2]);
             v_worldPosition = position;
             #endif
 #else
-            //TODO setting these as uniforms is more efficient, but also more faff.
-            vec3 camRight = vec3(u_viewMatrix[0][0], u_viewMatrix[1][0], u_viewMatrix[2][0]);
+            vec3 camRight = vec3(viewMatrix[0][0], viewMatrix[1][0], viewMatrix[2][0]);
 #if defined(LOCK_ROTATION)
             vec3 camUp = vec3(0.0, 1.0, 0.0);
 #else
-            vec3 camUp = vec3(u_viewMatrix[0][1], u_viewMatrix[1][1], u_viewMatrix[2][1]) * -u_clipPlane.y;
+            vec3 camUp = vec3(viewMatrix[0][1], viewMatrix[1][1], viewMatrix[2][1]) * -u_clipPlane.y;
 #endif
             position = position + camRight * a_position.x
                                 + camUp * a_position.y;
 
-            gl_Position = u_viewProjectionMatrix * vec4(position, 1.0);
+            gl_Position = viewProj * vec4(position, 1.0);
 
 #if defined (VERTEX_LIT)
             v_normalVector = normalize(cross(camRight, camUp));
@@ -119,12 +131,17 @@ namespace cro::Shaders::Billboard
 
 //TODO: defs for scaled billboards
 
-        #if defined (RX_SHADOWS)
-            for(int i = 0; i < u_cascadeCount; i++)
-            {
-                v_lightWorldPosition[i] = u_lightViewProjectionMatrix[i] * worldMatrix * position;
-            }
-            v_viewDepth = (u_ViewMatrix * position).z;
+            #if defined (TEXTURED)
+                v_texCoord0 = a_texCoord0;
+            #endif
+
+#if !defined(SHADOW_MAPPING)
+        #if defined (RX_SHADOWS) //this should never be defined if SHADOW_MAPPING is
+                for(int i = 0; i < u_cascadeCount; i++)
+                {
+                    v_lightWorldPosition[i] = u_lightViewProjectionMatrix[i] * worldMatrix * position;
+                }
+                v_viewDepth = (u_ViewMatrix * position).z;
         #endif
 
             #if defined (VERTEX_COLOUR)
@@ -140,11 +157,7 @@ namespace cro::Shaders::Billboard
                 v_ditherAmount *= 1.0 - clamp((distance - farFadeDistance) / nearFadeDistance, 0.0, 1.0);
 
                 v_colour.rgb *= (((1.0 - pow(clamp(distance / farFadeDistance, 0.0, 1.0), 5.0)) * 0.8) + 0.2);
-
-            #if defined (TEXTURED)
-                v_texCoord0 = a_texCoord0;
-            #endif
-
+#endif
             #if defined (MOBILE)
 
             #else

@@ -1134,9 +1134,6 @@ bool GolfState::simulate(float dt)
     //no lag between camera orientation.
     m_skyScene.simulate(dt);
 
-    const auto& camView = srcCam.getPass(cro::Camera::Pass::Final).viewMatrix;
-    glCheck(glProgramUniformMatrix4fv(m_billboardShadowUpdate.shaderID, m_billboardShadowUpdate.viewMatUniform, 1, GL_FALSE, &camView[0][0]));
-
 
 #ifndef CRO_DEBUG_
     if (m_roundEnded)
@@ -1331,8 +1328,6 @@ void GolfState::loadAssets()
     shader = &m_resources.shaders.get(ShaderID::BillboardShadow);
     m_windBuffer.addShader(*shader);
     m_resolutionBuffer.addShader(*shader);
-    m_billboardShadowUpdate.shaderID = shader->getGLHandle();
-    m_billboardShadowUpdate.viewMatUniform = shader->getUniformID("u_gameViewMatrix");
 
     m_resources.shaders.loadFromString(ShaderID::Leaderboard, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define DITHERED\n#define NOCHEX\n#define SUBRECT\n");
     shader = &m_resources.shaders.get(ShaderID::Leaderboard);

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2021
+Matt Marchant 2017 - 2022
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -96,6 +96,7 @@ namespace cro
             ProjectionMapCount,
             ShadowMapProjection,
             ShadowMapSampler,
+            CameraView, //used in billboard generation when casting shadows
             CascadeSplits,
             CascadeCount,
             SunlightDirection,

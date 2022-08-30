@@ -240,6 +240,7 @@ std::int32_t ShaderResource::loadBuiltIn(BuiltIn type, std::int32_t flags)
 #endif
         break;
     case BillboardShadowMap:
+        defines += "#define SHADOW_MAPPING\n";
 #ifdef PLATFORM_DESKTOP
         success = loadFromString(id, Shaders::Billboard::Vertex, Shaders::ShadowMap::FragmentDesktop, defines);
 #else
