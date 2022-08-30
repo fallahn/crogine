@@ -85,11 +85,13 @@ static const std::string TerrainVertexShader = R"(
         //gl_Position = u_viewProjectionMatrix * position;
 
         vec4 vertPos = u_viewProjectionMatrix * position;
+    #if defined (WOBBLE)
         vertPos.xyz /= vertPos.w;
         vertPos.xy = (vertPos.xy + vec2(1.0)) * u_scaledResolution * 0.5;
         vertPos.xy = floor(vertPos.xy);
         vertPos.xy = ((vertPos.xy / u_scaledResolution) * 2.0) - 1.0;
         vertPos.xyz *= vertPos.w;
+    #endif
         gl_Position = vertPos;
 
     #if defined (RX_SHADOWS)
