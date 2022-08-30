@@ -3258,6 +3258,7 @@ void GolfState::buildScene()
     camEnt.getComponent<CameraFollower>().zoom.speed = 3.f;
     camEnt.getComponent<CameraFollower>().targetOffset = { 0.f,0.65f,0.f };
     camEnt.addComponent<cro::AudioListener>();
+    camEnt.addComponent<cro::Callback>(); //not used unless the drone chases it end of round (see showCountdown())
     //this holds the water plane ent when active
     camEnt.addComponent<TargetInfo>();
     setPerspective(camEnt.getComponent<cro::Camera>());
