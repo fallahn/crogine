@@ -59,6 +59,7 @@ source distribution.
 #include <crogine/ecs/components/Camera.hpp>
 #include <crogine/ecs/components/Drawable2D.hpp>
 #include <crogine/ecs/components/AudioEmitter.hpp>
+#include <crogine/ecs/components/ShadowCaster.hpp>
 
 #include <crogine/ecs/systems/UISystem.hpp>
 #include <crogine/ecs/systems/CommandSystem.hpp>
@@ -689,6 +690,11 @@ void PlaylistState::loadAssets()
     m_windBuffer.addShader(*shader);
     m_materialIDs[MaterialID::LeafShadow] = m_resources.materials.add(*shader);
 
+    m_resources.shaders.loadFromString(ShaderID::BillboardShadow, BillboardVertexShader, ShadowFragment, "#define SHADOW_MAPPING\n#define ALPHA_CLIP\n");
+    shader = &m_resources.shaders.get(ShaderID::BillboardShadow);
+    m_windBuffer.addShader(*shader);
+    m_resolutionBuffer.addShader(*shader);
+    m_materialIDs[MaterialID::BillboardShadow] = m_resources.materials.add(*shader);
 
     //audio - TODO do we need to keep the audio scape as a member?
     m_menuSounds.loadFromFile("assets/golf/sound/menu.xas", m_resources.audio);
@@ -2446,7 +2452,7 @@ void PlaylistState::createHoleMenu(cro::Entity rootNode, const MenuData& menuDat
                 }
                 else if (pos.y > (m_croppingArea.bottom + m_croppingArea.height))
                 {
-                    auto i = std::floor(e.getComponent<cro::Transform>().getPosition().y / -ItemSpacing);
+                    std::int32_t i = std::floor(e.getComponent<cro::Transform>().getPosition().y / -ItemSpacing);
 
                     scrollNode.getComponent<cro::Callback>().getUserData<ScrollData>().targetIndex = i;
                 }
@@ -3218,6 +3224,13 @@ void PlaylistState::loadShrubbery(const std::string& path)
                     }
                     shrubbery.billboardEnts[outIndex] = entity;
 
+
+                    auto billboardShadowMat = m_resources.materials.get(m_materialIDs[MaterialID::BillboardShadow]);
+                    applyMaterialData(md, billboardShadowMat);
+                    billboardShadowMat.doubleSided = true; //do this second because applyMaterial() overwrites it
+                    entity.getComponent<cro::Model>().setShadowMaterial(0, billboardShadowMat);
+                    entity.addComponent<cro::ShadowCaster>();
+
                     //trees are separate as we might want treesets instead
                     md.loadFromFile(modelPath); //reload to create unique VBO
                     entity = m_gameScene.createEntity();
@@ -3225,6 +3238,9 @@ void PlaylistState::loadShrubbery(const std::string& path)
                     md.createModel(entity);
                     entity.getComponent<cro::Model>().setMaterial(0, billboardMat);
 
+                    entity.getComponent<cro::Model>().setShadowMaterial(0, billboardShadowMat);
+                    entity.addComponent<cro::ShadowCaster>();
+                    
                     if (entity.hasComponent<cro::BillboardCollection>())
                     {
                         auto& collection = entity.getComponent<cro::BillboardCollection>();

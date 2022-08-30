@@ -119,7 +119,7 @@ private:
         {
             Horizon, Water, Cloud,
             Cel, CelTextured,
-            Course, Billboard,
+            Course, Billboard, BillboardShadow,
             Branch, Leaf,
             BranchShadow, LeafShadow,
 
