@@ -139,8 +139,8 @@ namespace
     constexpr std::uint32_t MaxCascades = 4;
     std::uint32_t CascadeCount = 3;
 
-    float ShadowFarDistance = 50.f;
-    float ShadowNearDistance = 30.f;
+    float ShadowFarDistance = 150.f;// 50.f; //note ctor modifies these values based on shadow quality setting
+    float ShadowNearDistance = 90.f;// 30.f;
 
     const cro::Time ReadyPingFreq = cro::seconds(1.f);
 
@@ -200,8 +200,9 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
         });
 
     CascadeCount = sd.hqShadows ? 3 : 1;
-    ShadowNearDistance = 30.f / (MaxCascades - CascadeCount);
-    ShadowFarDistance = 50.f / (MaxCascades - CascadeCount);
+    auto divisor = std::pow((MaxCascades - CascadeCount), 2);
+    ShadowNearDistance = 90.f / divisor;
+    ShadowFarDistance = 150.f / divisor;
 
 
     context.mainWindow.loadResources([this]() {
