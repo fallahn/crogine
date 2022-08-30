@@ -1010,31 +1010,19 @@ void GolfState::showCountdown(std::uint8_t seconds)
 
     if (cro::Util::Random::value(0, 2) == 0)
     {
-        //hmmm not sure the point of this as it lands so close that it fades out...
-        /*auto pos = m_holeData[m_currentHole].pin;
-        auto camPos = m_cameras[CameraID::Player].getComponent<cro::Transform>().getPosition();
-        camPos.y = pos.y + 1.24f;
-
-        auto diff = glm::normalize(pos - camPos);
-        float temp = diff.z;
-        diff.z = diff.x;
-        diff.x = -temp;
-        pos += diff * 1.25f;
-
-        m_cameras[CameraID::Sky].getComponent<cro::Transform>().setPosition(pos);*/
-
         //add a callback that makes the camera orbit the flag - and hence the drone follows
         m_cameras[CameraID::Sky].getComponent<cro::Callback>().active = true;
         m_cameras[CameraID::Sky].getComponent<cro::Callback>().function =
             [&](cro::Entity e, float dt)
         {
+            static constexpr float Radius = 1.5f;
             static float elapsed = 0.f;
             elapsed += dt;
 
             auto basePos = m_holeData[m_currentHole].pin;
-            basePos.x += std::sin(elapsed);
-            basePos.z += std::cos(elapsed);
-            basePos.y = 1.4f;
+            basePos.x += std::sin(elapsed) * Radius;
+            basePos.z += std::cos(elapsed) * Radius;
+            basePos.y += 0.7f;
             e.getComponent<cro::Transform>().setPosition(basePos);
         };
     }

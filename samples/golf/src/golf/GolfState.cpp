@@ -3264,6 +3264,8 @@ void GolfState::buildScene()
     setPerspective(camEnt.getComponent<cro::Camera>());
     m_cameras[CameraID::Sky] = camEnt;
 
+
+
     //and a green camera
     camEnt = m_gameScene.createEntity();
     camEnt.addComponent<cro::Transform>();
