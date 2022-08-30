@@ -9,8 +9,6 @@ A course folder should contain one file with the name `course.data`. It has the 
         skybox = "assets/golf/skyboxes/sky.sbf" //a path to the skybox definition file to use (see below)
         shrubbery = "assets/golf/shrubs/cliffs.shb" //path to the shrubbery definition file (see below)
         instance_model = "assets/golf/models/reeds_large.cmt" //optional path to a model which is instanced around the water's edge. Defaults to reeds if this is omitted
-        grass = 1,0.5,0,1 //surrounding grass colour. This is optional and will default to dark green from the colordome-32 palette
-        grass_tint = 1.0, 1.0, 0.5, 1 //affects the colour of the noise applied to the grass colour. This is optional, by default just darkens the grass colour
         audio = "assets/golf/sound/ambience.xas" //optional path to a crogine audioscape file for environment sounds (see below)
 
 
@@ -147,6 +145,10 @@ Up to and including version 1.7.0 shrubbery billboards were defined by two files
         sprite = "assets/golf/sprites/shrubbery_autumn.spt" //sprite sheet defining billboard sizes at 64px per metre.
 
         treeset = "assets/golf/treesets/oak.tst" //path to a treeset file - see below
+
+        //since 1.9.0 these have been moved from course.data
+        grass = 1,0.5,0,1 //surrounding grass colour. This is optional and will default to dark green from the colordome-32 palette
+        grass_tint = 1.0, 1.0, 0.5, 1 //affects the colour of the noise applied to the grass colour. This is optional, by default just darkens the grass colour
     }
 
 Shrub files have the extension `*.shb` and should be stored in `assets/golf/shrubs`. The `.cmt` file is a standard billboard definition file - see the crogine model definition format. The `.spt` file is a crogine format sprite sheet, which defines a specific set of sprites:

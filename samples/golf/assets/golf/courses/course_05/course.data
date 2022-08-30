@@ -1,7 +1,7 @@
 course course_05
 {
     skybox = "assets/golf/skyboxes/summer.sbf"
-    shrubbery = "assets/golf/shrubs/01.shb"
+    shrubbery = "assets/golf/shrubs/birch.shb"
     audio = "assets/golf/sound/ambience.xas"
 
     title = "Sunny Cove, Weald & Hedgeways"

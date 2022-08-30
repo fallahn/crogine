@@ -1851,16 +1851,16 @@ void GolfState::loadAssets()
                             theme.treesets.push_back(ts);
                         }
                     }
+                    else if (shrubName == "grass")
+                    {
+                        theme.grassColour = sp.getValue<cro::Colour>();
+                    }
+                    else if (shrubName == "grass_tint") 
+                    {
+                        theme.grassTint = sp.getValue<cro::Colour>();
+                    }
                 }
             }
-        }
-        else if (name == "grass")
-        {
-            theme.grassColour = prop.getValue<cro::Colour>();
-        }
-        else if (name == "grass_tint") 
-        {
-            theme.grassTint = prop.getValue<cro::Colour>();
         }
         else if (name == "audio")
         {
