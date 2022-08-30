@@ -7,14 +7,14 @@ if (APPLE)
  SET(MACOS_BUNDLE False CACHE BOOL "")
 
   if(MACOS_BUNDLE)
-    SET(BUNDLE_NAME "VGA Golf")
+    SET(BUNDLE_NAME "Video Golf")
   endif()
 
 endif()
 
 
 project(golf)
-SET(PROJECT_NAME vga_golf)
+SET(PROJECT_NAME golf)
 
 
 if(NOT CMAKE_BUILD_TYPE)
