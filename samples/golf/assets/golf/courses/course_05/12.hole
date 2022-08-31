@@ -1,7 +1,7 @@
 hole 12
 {
-    map="assets/golf/courses/course_02/12.png"
-    model="assets/golf/models/course_02/12.cmt"
+    map="assets/golf/courses/course_05/12.png"
+    model="assets/golf/models/course_05/12.cmt"
     par = 4
 
     pin = 287.637115,1.994914,-168.633377

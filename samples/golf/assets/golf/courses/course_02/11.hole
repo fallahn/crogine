@@ -1,7 +1,7 @@
 hole 11
 {
-    map="assets/golf/courses/course_05/11.png"
-    model="assets/golf/models/course_05/11.cmt"
+    map="assets/golf/courses/course_02/11.png"
+    model="assets/golf/models/course_02/11.cmt"
     par = 4
 
     pin = 292.721832,1.639209,-41.553253

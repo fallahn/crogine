@@ -1,7 +1,7 @@
 hole 09
 {
-    map="assets/golf/courses/course_02/09.png"
-    model="assets/golf/models/course_02/09.cmt"
+    map="assets/golf/courses/course_05/09.png"
+    model="assets/golf/models/course_05/09.cmt"
     par = 4
 
     pin = 76.670952,1.194330,-41.315582

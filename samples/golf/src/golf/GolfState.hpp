@@ -243,6 +243,7 @@ private:
     cro::Entity m_defaultCam;
     cro::Entity m_freeCam;
     void toggleFreeCam();
+    void applyShadowQuality();
 
     //UI stuffs - found in GolfStateUI.cpp
     struct SpriteID final

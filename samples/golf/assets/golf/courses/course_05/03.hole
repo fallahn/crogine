@@ -1,7 +1,7 @@
 hole 03
 {
-    map="assets/golf/courses/course_02/03.png"
-    model="assets/golf/models/course_02/03.cmt"
+    map="assets/golf/courses/course_05/03.png"
+    model="assets/golf/models/course_05/03.cmt"
     par = 3
 
     pin = 83.240166,3.856189,-54.932350

@@ -1,7 +1,7 @@
 hole 06
 {
-    map="assets/golf/courses/course_02/06.png"
-    model="assets/golf/models/course_02/06.cmt"
+    map="assets/golf/courses/course_05/06.png"
+    model="assets/golf/models/course_05/06.cmt"
     par = 4
 
     pin = 280.256378,1.659196,-174.476456

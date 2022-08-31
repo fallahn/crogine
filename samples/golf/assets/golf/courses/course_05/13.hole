@@ -1,7 +1,7 @@
 hole 13
 {
-    map="assets/golf/courses/course_02/13.png"
-    model="assets/golf/models/course_02/13.cmt"
+    map="assets/golf/courses/course_05/13.png"
+    model="assets/golf/models/course_05/13.cmt"
     par = 4
 
     pin = 76.875969,0.736959,-78.168037

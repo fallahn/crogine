@@ -1,7 +1,7 @@
 hole 07
 {
-    map="assets/golf/courses/course_05/07.png"
-    model="assets/golf/models/course_05/07.cmt"
+    map="assets/golf/courses/course_02/07.png"
+    model="assets/golf/models/course_02/07.cmt"
     par = 4
 
     pin = 270.006409,2.725003,-36.377930

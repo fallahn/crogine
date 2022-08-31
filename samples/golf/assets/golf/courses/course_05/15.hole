@@ -1,7 +1,7 @@
 hole 15
 {
-    map="assets/golf/courses/course_02/15.png"
-    model="assets/golf/models/course_02/15.cmt"
+    map="assets/golf/courses/course_05/15.png"
+    model="assets/golf/models/course_05/15.cmt"
     par = 4
 
     pin = 267.367157,0.905545,-144.593292

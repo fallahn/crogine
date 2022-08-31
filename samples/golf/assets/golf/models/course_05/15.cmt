@@ -5,15 +5,12 @@ model 15
 
     material Unlit
     {
-        name = "bunker"
+        name = "water"
         colour = 1.000000,1.000000,1.000000,1.000000
         smooth = false
         repeat = true
-        depth_test = true
-        double_sided = false
-        use_mipmaps = false
         blendmode = none
-        diffuse = "assets/golf/images/light_sand.png"
+        diffuse = "assets/golf/images/water.png"
 
     }
     material Unlit
@@ -22,9 +19,6 @@ model 15
         colour = 1.000000,1.000000,1.000000,1.000000
         smooth = false
         repeat = true
-        depth_test = true
-        double_sided = false
-        use_mipmaps = false
         blendmode = none
         diffuse = "assets/golf/images/fairway.png"
 
@@ -35,9 +29,6 @@ model 15
         colour = 1.000000,1.000000,1.000000,1.000000
         smooth = false
         repeat = true
-        depth_test = true
-        double_sided = false
-        use_mipmaps = false
         blendmode = none
         diffuse = "assets/golf/images/green.png"
 
@@ -48,9 +39,6 @@ model 15
         colour = 1.000000,1.000000,1.000000,1.000000
         smooth = false
         repeat = true
-        depth_test = true
-        double_sided = false
-        use_mipmaps = false
         blendmode = none
         diffuse = "assets/golf/images/rough.png"
 
@@ -61,24 +49,8 @@ model 15
         colour = 1.000000,1.000000,1.000000,1.000000
         smooth = false
         repeat = true
-        depth_test = true
-        double_sided = false
-        use_mipmaps = false
         blendmode = none
         diffuse = "assets/golf/images/scrub.png"
-
-    }
-    material Unlit
-    {
-        name = "Water"
-        colour = 1.000000,1.000000,1.000000,1.000000
-        smooth = true
-        repeat = true
-        depth_test = true
-        double_sided = false
-        use_mipmaps = false
-        blendmode = none
-        diffuse = "assets/golf/images/water.png"
 
     }
 }

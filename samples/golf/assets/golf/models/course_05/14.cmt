@@ -11,7 +11,6 @@ model 14
         repeat = true
         depth_test = true
         double_sided = false
-        use_mipmaps = false
         blendmode = none
         diffuse = "assets/golf/images/light_sand.png"
 
@@ -24,7 +23,6 @@ model 14
         repeat = true
         depth_test = true
         double_sided = false
-        use_mipmaps = false
         blendmode = none
         diffuse = "assets/golf/images/fairway.png"
 
@@ -37,7 +35,6 @@ model 14
         repeat = true
         depth_test = true
         double_sided = false
-        use_mipmaps = false
         blendmode = none
         diffuse = "assets/golf/images/green.png"
 
@@ -50,7 +47,6 @@ model 14
         repeat = true
         depth_test = true
         double_sided = false
-        use_mipmaps = false
         blendmode = none
         diffuse = "assets/golf/images/rough.png"
 
@@ -63,36 +59,8 @@ model 14
         repeat = true
         depth_test = true
         double_sided = false
-        use_mipmaps = false
         blendmode = none
         diffuse = "assets/golf/images/scrub.png"
-
-    }
-    material Unlit
-    {
-        name = "Water"
-        colour = 1.000000,1.000000,1.000000,1.000000
-        smooth = true
-        repeat = true
-        depth_test = true
-        double_sided = false
-        use_mipmaps = false
-        blendmode = none
-        diffuse = "assets/golf/images/water.png"
-
-    }
-    material Unlit
-    {
-        name = "stone"
-        colour = 1.000000,1.000000,1.000000,1.000000
-        smooth = false
-        repeat = true
-        depth_test = true
-        double_sided = false
-        use_mipmaps = false
-        rx_shadows = true
-        blendmode = none
-        diffuse = "assets/golf/images/stone.png"
 
     }
 }

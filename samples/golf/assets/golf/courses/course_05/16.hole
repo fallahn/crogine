@@ -1,7 +1,7 @@
 hole 16
 {
-    map="assets/golf/courses/course_02/16.png"
-    model="assets/golf/models/course_02/16.cmt"
+    map="assets/golf/courses/course_05/16.png"
+    model="assets/golf/models/course_05/16.cmt"
     par = 4
 
     pin = 61.278732,2.185324,-67.710594

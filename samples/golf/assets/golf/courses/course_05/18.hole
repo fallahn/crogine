@@ -1,7 +1,7 @@
 hole 18
 {
-    map="assets/golf/courses/course_02/18.png"
-    model="assets/golf/models/course_02/18.cmt"
+    map="assets/golf/courses/course_05/18.png"
+    model="assets/golf/models/course_05/18.cmt"
     par = 4
 
     pin = 27.500179,3.159639,-171.964966

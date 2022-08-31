@@ -1,7 +1,7 @@
 hole 14
 {
-    map="assets/golf/courses/course_02/14.png"
-    model="assets/golf/models/course_02/14.cmt"
+    map="assets/golf/courses/course_05/14.png"
+    model="assets/golf/models/course_05/14.cmt"
     par = 4
 
     pin = 274.977112,1.987075,-44.083359

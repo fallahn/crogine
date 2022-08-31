@@ -1,7 +1,7 @@
 hole 01
 {
-    map="assets/golf/courses/course_05/01.png"
-    model="assets/golf/models/course_05/01.cmt"
+    map="assets/golf/courses/course_02/01.png"
+    model="assets/golf/models/course_02/01.cmt"
     par = 4
 
     pin = 31.668137,2.347170,-53.053619

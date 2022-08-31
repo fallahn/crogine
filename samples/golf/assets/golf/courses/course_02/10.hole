@@ -1,7 +1,7 @@
 hole 10
 {
-    map="assets/golf/courses/course_05/10.png"
-    model="assets/golf/models/course_05/10.cmt"
+    map="assets/golf/courses/course_02/10.png"
+    model="assets/golf/models/course_02/10.cmt"
     par = 4
 
     pin = 55.888451,2.876203,-55.200455
