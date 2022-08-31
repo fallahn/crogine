@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021
+Matt Marchant 2021 - 2022
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -354,3 +354,91 @@ R"(
       FRAG_OUT.rgb = ToSrgb(FRAG_OUT.rgb);
       FRAG_OUT *= v_colour;
     })";
+
+    static const std::string CinematicFragment =
+    R"(
+        uniform sampler2D u_texture;
+        uniform float u_time = 1.0;
+        uniform vec2 u_scale = vec2(1.0);
+        uniform vec2 u_resolution = vec2(1.0);
+
+        in vec2 v_texCoord;
+        in vec4 v_colour;
+
+        out vec4 FRAG_OUT;
+
+
+        //brightness contrast saturation : https://www.shadertoy.com/view/XdcXzn
+        mat4 brightness(float bri)
+        {
+            return mat4(1.0, 0.0, 0.0, 0.0,
+                        0.0, 1.0, 0.0, 0.0,
+                        0.0, 0.0, 1.0, 0.0,
+                        bri, bri, bri, 1.0);
+        }
+
+        mat4 contrast(float con)
+        {
+            float t = (1.0 - con) / 2.0;
+    
+            return mat4(con, 0.0, 0.0, 0.0,
+                        0.0, con, 0.0, 0.0,
+                        0.0, 0.0, con, 0.0,
+                        t,   t,   t,   1.0);
+
+        }
+
+        mat4 saturation(float sat)
+        {
+            vec3 luminance = vec3(0.3086, 0.6094, 0.0820);
+    
+            float oneMinusSat = 1.0 - sat;
+    
+            vec3 red = vec3(luminance.x * oneMinusSat);
+            red+= vec3(sat, 0.0, 0.0);
+    
+            vec3 green = vec3(luminance.y * oneMinusSat);
+            green += vec3(0.0, sat, 0.0);
+    
+            vec3 blue = vec3(luminance.z * oneMinusSat);
+            blue += vec3(0.0, 0.0, sat);
+    
+            return mat4(red,      0.0,
+                        green,    0.0,
+                        blue,     0.0,
+                        0.0, 0.0, 0.0, 1.0);
+        }
+
+
+        float noise(float offset)
+        {
+            return fract(sin(dot(v_texCoord, vec2(12.9898,78.233) * 2.0) + u_time + offset) * 43758.5453);
+        }
+
+        void main()
+        {
+            vec4 colour = TEXTURE(u_texture, v_texCoord);
+
+    
+            //contrast / saturation
+            colour = brightness(0.1) * contrast(1.3) * saturation(0.9) * colour;
+
+            //noise
+            float noiseAmount = 0.11;
+            colour.r -= noise(colour.b) * noiseAmount;
+            colour.g -= noise(colour.r) * noiseAmount;
+            colour.b -= noise(colour.g) * noiseAmount;
+
+
+            //vignette
+            vec2 uv = v_texCoord * (vec2(1.0) - v_texCoord.yx);
+    
+            float vignette = uv.x * uv.y * 25.0;
+            vignette = pow(vignette, 0.25);
+            vignette = 0.5 + (0.5 * vignette);
+
+            colour.rgb *= vignette;
+
+
+            FRAG_OUT = vec4(colour.rgb, 1.0); 
+        })";

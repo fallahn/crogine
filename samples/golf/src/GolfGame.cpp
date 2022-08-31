@@ -92,6 +92,7 @@ namespace
         ShaderDescription(TerminalDistorted.c_str(), ShaderNames[1], "by Mostly Hairless."),
         ShaderDescription(BWFragment.c_str(), ShaderNames[2], "by Mostly Hairless."),
         ShaderDescription(CRTFragment.c_str(), ShaderNames[3], "PUBLIC DOMAIN CRT STYLED SCAN-LINE SHADER\nby Timothy Lottes"),
+        ShaderDescription(CinematicFragment.c_str(), ShaderNames[4], ""),
     };
 }
 
