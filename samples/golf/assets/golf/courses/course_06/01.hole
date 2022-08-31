@@ -4,6 +4,14 @@ hole 01
     model="assets/golf/models/course_06/01.cmt"
     par = 3
 
+    path ai
+    {
+        point = 187.415100,0.279270,-101.393013
+        point = 188.020721,0.279270,-98.650719
+        point = 186.875427,0.279270,-95.591789
+
+    }
+
     prop
     {
         model = "assets/golf/models/leaderboard.cmt"

@@ -1,7 +1,7 @@
 model wooden_fence01
 {
     mesh = assets/golf/models/wooden_fence01.cmb
-    cast_shadows = false
+    cast_shadows = true
 
     material Unlit
     {

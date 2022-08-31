@@ -1,7 +1,7 @@
 bl_info = {
     "name": "Export golf hole data",
     "author": "Bald Guy",
-    "version": (2022, 7, 31),
+    "version": (2022, 8, 31),
     "blender": (2, 80, 0),
     "location": "File > Export > Golf Hole",
     "description": "Export position and rotation info of selected objects",
@@ -27,6 +27,13 @@ def vecMultiply(vec, vec2):
 
 def WriteProperty(file, propName, location):
     file.write("    %s = %f,%f,%f\n\n" % (propName, location[0], location[2], -location[1]))
+
+def WriteAIPath(file, path):
+    file.write("\n    path ai\n    {\n")
+    for p in path.data.splines.active.points:
+        worldP = path.matrix_world @ p.co
+        file.write("        point = %f,%f,%f\n" % (worldP.x, worldP.z, -worldP.y))
+    file.write("\n    }\n")
 
 
 def WritePath(file, path):
@@ -159,7 +166,7 @@ class ExportInfo(bpy.types.Operator, bpy_extras.io_utils.ExportHelper):
 
         for ob in bpy.context.selected_objects:
 
-            if ob.type == 'MESH' or ob.type == 'EMPTY' or ob.type == 'SPEAKER':
+            if ob.type == 'MESH' or ob.type == 'EMPTY' or ob.type == 'SPEAKER' or ob.type == 'CURVE':
 
                 modelName = ob.name
                 if ob.get('model_path') is not None:
@@ -196,6 +203,9 @@ class ExportInfo(bpy.types.Operator, bpy_extras.io_utils.ExportHelper):
                         teeWritten = True
                     else:
                         self.report({'WARNING'}, "Multiple tees selected")
+                elif ob.type == 'CURVE' and "ai" in modelName.lower():
+                    WriteAIPath(file, ob)
+
                 else:
                     if ob.type == 'MESH':
                         WriteProp(file, modelName, worldLocation, worldRotation, worldScale, ob)
@@ -209,6 +219,7 @@ class ExportInfo(bpy.types.Operator, bpy_extras.io_utils.ExportHelper):
                                     WriteParticles(file, "path_missing", worldLocation)
                     elif ob.type == 'SPEAKER' and ob.parent is None:
                         WriteSpeakerSolo(file, ob)
+
 
         file.write("}")
         file.close()

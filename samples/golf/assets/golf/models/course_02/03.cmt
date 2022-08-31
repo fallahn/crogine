@@ -1,6 +1,6 @@
 model 03
 {
-    mesh = assets/golf/models/course_0/03.cmb
+    mesh = assets/golf/models/course_02/03.cmb
     cast_shadows = false
 
     material Unlit
