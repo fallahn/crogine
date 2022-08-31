@@ -107,21 +107,23 @@ MainMenuContext::MainMenuContext(MenuState* state)
 }
 
 MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, SharedStateData& sd)
-    : cro::State        (stack, context),
-    m_sharedData        (sd),
-    m_matchMaking       (context.appInstance.getMessageBus()),
-    m_cursor            (/*"assets/images/cursor.png", 0, 0*/cro::SystemCursor::Hand),
-    m_uiScene           (context.appInstance.getMessageBus(), 512),
-    m_backgroundScene   (context.appInstance.getMessageBus()/*, 128, cro::INFO_FLAG_SYSTEMS_ACTIVE*/),
-    m_avatarScene       (context.appInstance.getMessageBus()/*, 128, cro::INFO_FLAG_SYSTEMS_ACTIVE*/),
-    m_scaleBuffer       ("PixelScale"),
-    m_resolutionBuffer  ("ScaledResolution"),
-    m_windBuffer        ("WindValues"),
-    m_avatarCallbacks   (std::numeric_limits<std::uint32_t>::max(), std::numeric_limits<std::uint32_t>::max()),
-    m_currentMenu       (MenuID::Main),
-    m_prevMenu          (MenuID::Main),
-    m_viewScale         (2.f),
-    m_activePlayerAvatar(0)
+    : cro::State            (stack, context),
+    m_sharedData            (sd),
+    m_matchMaking           (context.appInstance.getMessageBus()),
+    m_cursor                (/*"assets/images/cursor.png", 0, 0*/cro::SystemCursor::Hand),
+    m_uiScene               (context.appInstance.getMessageBus(), 512),
+    m_backgroundScene       (context.appInstance.getMessageBus()/*, 128, cro::INFO_FLAG_SYSTEMS_ACTIVE*/),
+    m_avatarScene           (context.appInstance.getMessageBus()/*, 128, cro::INFO_FLAG_SYSTEMS_ACTIVE*/),
+    m_scaleBuffer           ("PixelScale"),
+    m_resolutionBuffer      ("ScaledResolution"),
+    m_windBuffer            ("WindValues"),
+    m_avatarCallbacks       (std::numeric_limits<std::uint32_t>::max(), std::numeric_limits<std::uint32_t>::max()),
+    m_currentMenu           (MenuID::Main),
+    m_prevMenu              (MenuID::Main),
+    m_viewScale             (2.f),
+    m_activeCourseCount     (0),
+    m_officialCourseCount   (0),
+    m_activePlayerAvatar    (0)
 {
     std::fill(m_readyState.begin(), m_readyState.end(), false);
     std::fill(m_ballIndices.begin(), m_ballIndices.end(), 0);

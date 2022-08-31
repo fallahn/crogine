@@ -106,6 +106,8 @@ struct SpriteID final
         PrevCourseHighlight,
         NextCourse,
         NextCourseHighlight,
+        LobbyCheckbox,
+        LobbyCheckboxHighlight,
 
         Count
     };

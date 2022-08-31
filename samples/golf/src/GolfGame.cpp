@@ -706,6 +706,10 @@ void GolfGame::loadPreferences()
                 {
                     m_sharedData.logBenchmarks = prop.getValue<bool>();
                 }
+                else if (name == "show_custom")
+                {
+                    m_sharedData.showCustomCourses = prop.getValue<bool>();
+                }
             }
         }
     }
@@ -765,6 +769,7 @@ void GolfGame::savePreferences()
     cfg.addProperty("tree_quality").setValue(m_sharedData.treeQuality);
     cfg.addProperty("hq_shadows").setValue(m_sharedData.hqShadows);
     cfg.addProperty("log_benchmark").setValue(m_sharedData.logBenchmarks);
+    cfg.addProperty("show_custom").setValue(m_sharedData.showCustomCourses);
     cfg.save(path);
 
 

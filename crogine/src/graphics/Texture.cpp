@@ -138,16 +138,19 @@ void Texture::create(std::uint32_t width, std::uint32_t height, ImageFormat::Typ
 
     auto wrap = m_repeated ? GL_REPEAT : GL_CLAMP_TO_EDGE;
     auto smooth = m_smooth ? GL_LINEAR : GL_NEAREST;
-    GLint texFormat = GL_RGB;
+    GLint texFormat = GL_RGB8;
+    GLint uploadFormat = GL_RGB;
     std::int32_t pixelSize = 3;
     if (format == ImageFormat::RGBA)
     {
-        texFormat = GL_RGBA;
+        texFormat = GL_RGBA8;
+        uploadFormat = GL_RGBA;
         pixelSize = 4;
     }
     else if(format == ImageFormat::A)
     {
-        texFormat = GL_RED;
+        texFormat = GL_R8;
+        uploadFormat = GL_RED;
         pixelSize = 1;
     }
 
@@ -156,7 +159,13 @@ void Texture::create(std::uint32_t width, std::uint32_t height, ImageFormat::Typ
     std::fill(buffer.begin(), buffer.end(), 0);
 
     glCheck(glBindTexture(GL_TEXTURE_2D, m_handle));
-    glCheck(glTexImage2D(GL_TEXTURE_2D, 0, texFormat, width, height, 0, texFormat, GL_UNSIGNED_BYTE, buffer.data()));
+//#ifdef GL41
+    glCheck(glTexImage2D(GL_TEXTURE_2D, 0, uploadFormat, width, height, 0, uploadFormat, GL_UNSIGNED_BYTE, buffer.data()));
+//#else
+//    glCheck(glTexStorage2D(GL_TEXTURE_2D, 1, texFormat, width, height));
+//    glCheck(glBindTexture(GL_TEXTURE_2D, m_handle));
+//    glCheck(glTexSubImage2D(GL_TEXTURE_2D, 0, 0,0,width,height, uploadFormat, GL_UNSIGNED_BYTE, buffer.data()));
+//#endif
     glCheck(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrap));
     glCheck(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrap));
     glCheck(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, smooth));
