@@ -77,6 +77,7 @@ source distribution.
 
 #include <crogine/util/Easings.hpp>
 #include <crogine/util/Random.hpp>
+#include <crogine/util/String.hpp>
 
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
 
@@ -3009,6 +3010,45 @@ void PlaylistState::createFileSystemMenu(cro::Entity rootNode, const MenuData& m
             });
     centreText(entity);
     m_menuEntities[MenuID::FileSystem].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+    //brwose filesystem button
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(largeFont).setString("Show On Disk");
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
+    bounds = cro::Text::getLocalBounds(entity);
+    entity.addComponent<UIElement>().depth = 0.1f;
+    entity.getComponent<UIElement>().relativePosition = { 1.f, 0.f };
+    entity.getComponent<UIElement>().absolutePosition = { -bounds.width - 18.f, ItemSpacing + 2.f };
+    entity.addComponent<cro::UIInput>().area = bounds;
+    entity.getComponent<cro::UIInput>().setGroup(MenuID::FileSystem);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = menuData.textSelected;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = menuData.textUnselected;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+        m_uiScene.getSystem<cro::UISystem>()->addCallback(
+            [&](cro::Entity e, const cro::ButtonEvent& evt)
+            {
+                if (activated(evt)
+                    && !m_playlist.empty())
+                {
+                    auto exportDir = cro::App::getPreferencePath() + UserCourseExport;
+                    if (!cro::FileSystem::directoryExists(exportDir))
+                    {
+                        cro::FileSystem::createDirectory(exportDir);
+                    }
+
+                    cro::Util::String::parseURL(exportDir);
+                    m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
+                }
+            });
+
+    m_menuEntities[MenuID::FileSystem].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
 
     m_menuEntities[MenuID::FileSystem].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
 
