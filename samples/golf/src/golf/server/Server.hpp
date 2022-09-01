@@ -58,6 +58,7 @@ public:
     bool running() const { return m_running; }
     void stop();
 
+    bool addLocalConnection(net::NetClient& client);
     void setHostID(std::uint64_t id);
 
     //note this is not atomic!

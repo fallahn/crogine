@@ -54,6 +54,10 @@ source distribution.
 #include "icon.hpp"
 #include "Achievements.hpp"
 
+#ifdef USE_GNS
+#include <AchievementsImpl.hpp>
+#endif
+
 #include <crogine/audio/AudioMixer.hpp>
 #include <crogine/core/Clock.hpp>
 #include <crogine/core/Message.hpp>
@@ -139,9 +143,11 @@ void GolfGame::handleEvent(const cro::Event& evt)
         case SDLK_AC_BACK:
             App::quit();
             break;
+#ifndef USE_GNS
         case SDLK_t:
             m_achievements->showTest();
             break;
+#endif
 #endif
         case SDLK_KP_MINUS:
             togglePixelScale(m_sharedData, false);
@@ -268,7 +274,9 @@ void GolfGame::render()
         m_stateStack.render();
     }
 
+#ifndef USE_GNS
     m_achievements->drawOverlay();
+#endif
 }
 
 bool GolfGame::initialise()
@@ -579,8 +587,13 @@ bool GolfGame::initialise()
     m_stateStack.pushState(StateID::SplashScreen);
 #endif
 
+#ifdef USE_GNS
+    static auto achievements = std::make_unique<SteamAchievements>();
+    Achievements::init(*achievements);
+#else
     m_achievements = std::make_unique<DefaultAchievements>(getMessageBus());
     Achievements::init(*m_achievements);
+#endif
 
     return true;
 }
@@ -611,7 +624,9 @@ void GolfGame::finalise()
     m_postQuad.reset();
     m_postShader.reset();
     m_postBuffer.reset();
+#ifndef USE_GNS
     m_achievements.reset();
+#endif
 
     getWindow().setCursor(nullptr);
 }

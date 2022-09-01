@@ -45,6 +45,7 @@ source distribution.
 
 #include <crogine/util/Random.hpp>
 
+#include <Achievements.hpp>
 #include <AchievementStrings.hpp>
 
 namespace

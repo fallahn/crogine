@@ -79,6 +79,8 @@ source distribution.
 #include <crogine/util/Network.hpp>
 #include <crogine/util/Random.hpp>
 
+#include <Achievements.hpp>
+
 namespace
 {
 #include "WireframeShader.inl"

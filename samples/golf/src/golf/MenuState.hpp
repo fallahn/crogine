@@ -253,7 +253,7 @@ private:
 
     //message handlers for completing connection
     void finaliseGameCreate();
-    void finaliseGameJoin();
+    void finaliseGameJoin(const MatchMaking::Message&);
 
     void beginTextEdit(cro::Entity, cro::String*, std::size_t);
     void handleTextEdit(const cro::Event&);

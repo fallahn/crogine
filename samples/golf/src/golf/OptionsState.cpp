@@ -35,6 +35,7 @@ source distribution.
 #include "GameConsts.hpp"
 #include "MessageIDs.hpp"
 
+#include <Achievements.hpp>
 #include <AchievementStrings.hpp>
 
 #include <crogine/core/Window.hpp>
@@ -43,6 +44,8 @@ source distribution.
 #include <crogine/core/GameController.hpp>
 #include <crogine/graphics/Image.hpp>
 #include <crogine/graphics/SpriteSheet.hpp>
+#include <crogine/graphics/SimpleText.hpp>
+#include <crogine/graphics/SimpleVertexArray.hpp>
 #include <crogine/gui/Gui.hpp>
 
 #include <crogine/ecs/InfoFlags.hpp>

@@ -35,6 +35,7 @@ source distribution.
 #include "TextAnimCallback.hpp"
 #include "../GolfGame.hpp"
 
+#include <Achievements.hpp>
 #include <AchievementStrings.hpp>
 
 #include <crogine/core/Window.hpp>

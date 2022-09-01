@@ -42,6 +42,7 @@ source distribution.
 #include "spooky2.hpp"
 #include "../ErrorCheck.hpp"
 
+#include <Achievements.hpp>
 #include <AchievementStrings.hpp>
 
 #include <crogine/audio/AudioScape.hpp>
@@ -528,7 +529,7 @@ void MenuState::handleMessage(const cro::Message& msg)
             finaliseGameCreate();
         break;
         case MatchMaking::Message::LobbyJoined:
-            finaliseGameJoin();
+            finaliseGameJoin(data);
             break;
         }
     }
@@ -1427,8 +1428,7 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
 void MenuState::finaliseGameCreate()
 {
 #ifdef USE_GNS
-    //gns only supports 127.0.0.1 for loopback, but to report correct local IP with enet we need 255.255.255.255
-    m_sharedData.clientConnection.connected = m_sharedData.clientConnection.netClient.connect("127.0.0.1", ConstVal::GamePort);
+    m_sharedData.clientConnection.connected = m_sharedData.serverInstance.addLocalConnection(m_sharedData.clientConnection.netClient);
 #else
     m_sharedData.clientConnection.connected = m_sharedData.clientConnection.netClient.connect("255.255.255.255", ConstVal::GamePort);
 #endif
@@ -1493,9 +1493,13 @@ void MenuState::finaliseGameCreate()
     }
 }
 
-void MenuState::finaliseGameJoin()
+void MenuState::finaliseGameJoin(const MatchMaking::Message& data)
 {
+#ifdef USE_GNS
+    m_sharedData.clientConnection.connected = m_sharedData.clientConnection.netClient.connect(CSteamID(data.hostID));
+#else
     m_sharedData.clientConnection.connected = m_sharedData.clientConnection.netClient.connect(m_sharedData.targetIP.toAnsiString(), ConstVal::GamePort);
+#endif
     if (!m_sharedData.clientConnection.connected)
     {
         m_sharedData.errorMessage = "Could not connect to server";

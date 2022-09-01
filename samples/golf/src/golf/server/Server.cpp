@@ -89,6 +89,20 @@ void Server::stop()
     m_gameMode = GameMode::None;
 }
 
+bool Server::addLocalConnection(net::NetClient& client)
+{
+#ifdef USE_GNS
+    if (!m_running)
+    {
+        LOG("Server not running", cro::Logger::Type::Error);
+        return false;
+    }
+    return m_sharedData.host.addLocalConnection(client);
+#else
+    return false;
+#endif
+}
+
 void Server::setHostID(std::uint64_t id)
 {
     m_sharedData.hostID = id;

@@ -38,6 +38,7 @@ source distribution.
 #include "../GolfGame.hpp"
 #include "../ErrorCheck.hpp"
 
+#include <Achievements.hpp>
 #include <AchievementStrings.hpp>
 #include <crogine/core/Mouse.hpp>
 
