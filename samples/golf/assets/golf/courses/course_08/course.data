@@ -6,9 +6,12 @@ course course_08
     instance_model = "assets/golf/models/rock.cmt"
 
     title = "Moulin Plage, Île du Coulée"
-    description = "We Have The Sandiest Dunes"
+    description = "Now With 10% Less Sand"
 
     hole = "assets/golf/courses/course_08/01.hole"
     hole = "assets/golf/courses/course_08/02.hole"
     hole = "assets/golf/courses/course_08/03.hole"
+    hole = "assets/golf/courses/course_08/04.hole"
+    hole = "assets/golf/courses/course_08/05.hole"
+    hole = "assets/golf/courses/course_08/06.hole"
 }

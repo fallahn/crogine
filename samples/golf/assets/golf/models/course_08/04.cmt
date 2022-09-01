@@ -1,0 +1,126 @@
+model 04
+{
+    mesh = assets/golf/models/course_08/04.cmb
+    cast_shadows = false
+
+    material Unlit
+    {
+        name = "bunker"
+        colour = 1.000000,1.000000,1.000000,1.000000
+        smooth = false
+        repeat = true
+        depth_test = true
+        double_sided = false
+        use_mipmaps = false
+        animated = false
+        row_count = 1
+        col_count = 1
+        framerate = 1.000000
+        blendmode = none
+        diffuse = "assets/golf/images/light_sand.png"
+
+    }
+    material Unlit
+    {
+        name = "fairway"
+        colour = 1.000000,1.000000,1.000000,1.000000
+        smooth = false
+        repeat = true
+        depth_test = true
+        double_sided = false
+        use_mipmaps = false
+        animated = false
+        row_count = 1
+        col_count = 1
+        framerate = 1.000000
+        blendmode = none
+        diffuse = "assets/golf/images/fairway.png"
+
+    }
+    material Unlit
+    {
+        name = "green"
+        colour = 1.000000,1.000000,1.000000,1.000000
+        smooth = false
+        repeat = true
+        depth_test = true
+        double_sided = false
+        use_mipmaps = false
+        animated = false
+        row_count = 1
+        col_count = 1
+        framerate = 1.000000
+        blendmode = none
+        diffuse = "assets/golf/images/green.png"
+
+    }
+    material Unlit
+    {
+        name = "rough"
+        colour = 1.000000,1.000000,1.000000,1.000000
+        smooth = false
+        repeat = true
+        depth_test = true
+        double_sided = false
+        use_mipmaps = false
+        animated = false
+        row_count = 1
+        col_count = 1
+        framerate = 1.000000
+        blendmode = none
+        diffuse = "assets/golf/images/rough.png"
+
+    }
+    material Unlit
+    {
+        name = "scrub"
+        colour = 1.000000,1.000000,1.000000,1.000000
+        smooth = false
+        repeat = true
+        depth_test = true
+        double_sided = false
+        use_mipmaps = false
+        animated = false
+        row_count = 1
+        col_count = 1
+        framerate = 1.000000
+        blendmode = none
+        diffuse = "assets/golf/images/light_sand.png"
+
+    }
+    material Unlit
+    {
+        name = "water"
+        colour = 1.000000,1.000000,1.000000,1.000000
+        smooth = true
+        repeat = true
+        depth_test = true
+        double_sided = false
+        use_mipmaps = false
+        animated = false
+        row_count = 1
+        col_count = 1
+        framerate = 1.000000
+        blendmode = none
+        diffuse = "assets/golf/images/water.png"
+
+    }
+    material Unlit
+    {
+        name = "stone"
+        colour = 1.000000,1.000000,1.000000,1.000000
+        smooth = false
+        repeat = true
+        depth_test = true
+        double_sided = false
+        use_mipmaps = false
+        animated = false
+        row_count = 1
+        col_count = 1
+        framerate = 1.000000
+        rx_shadows = true
+        blendmode = none
+        diffuse = "assets/golf/images/mid_sand.png"
+
+    }
+}

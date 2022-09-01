@@ -437,7 +437,7 @@ void main()
     vec4 colour = hBlur();
     
     //contrast / saturation
-    colour = brightness(0.1) * contrast(1.3) * saturation(0.9) * colour;
+    colour = brightness(0.05) * contrast(1.2) * saturation(0.9) * colour;
 
     //noise
     float noiseAmount = 0.11;
@@ -450,7 +450,7 @@ void main()
     vec2 uv = v_texCoord * (vec2(1.0) - v_texCoord.yx);
     
     float vignette = uv.x * uv.y * 25.0;
-    vignette = pow(vignette, 0.25);
+    vignette = pow(vignette, 0.15);
     vignette = 0.5 + (0.5 * vignette);
 
     colour.rgb *= vignette;
