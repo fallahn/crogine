@@ -482,18 +482,19 @@ ConfigObject::NameValue ConfigObject::getObjectName(const std::string& line)
 
 ConfigObject::NameValue ConfigObject::getPropertyName(const std::string& line)
 {
-    auto result = line.find_first_of('=');
+    auto result = line.find_first_of("=");
     assert(result != std::string::npos);
 
     std::string first = line.substr(0, result);
     Util::String::removeChar(first, ' ');
+
     std::string second = line.substr(result + 1);
     
     //check for string literal
-    result = second.find_first_of('\"');
+    result = second.find_first_of("\"");
     if (result != std::string::npos)
     {
-        auto otherResult = second.find_last_of('\"');
+        auto otherResult = second.find_last_of("\"");
         if (otherResult != std::string::npos
             && otherResult != result)
         {

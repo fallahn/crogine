@@ -803,8 +803,7 @@ void GolfGame::loadAvatars()
                     const auto& name = prop.getName();
                     if (name == "name")
                     {
-                        //TODO try running this through unicode parser
-                        m_sharedData.localConnectionData.playerData[i].name = prop.getValue<std::string>();
+                        m_sharedData.localConnectionData.playerData[i].name = prop.getValue<cro::String>();
                     }
                     else if (name == "ball_id")
                     {

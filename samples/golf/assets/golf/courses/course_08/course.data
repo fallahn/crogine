@@ -5,8 +5,8 @@ course course_08
     audio = "assets/golf/sound/ambience_beach.xas"
     instance_model = "assets/golf/models/rock.cmt"
 
-    title = "Moulin Plage, Ile du Coulee"
-    description = "Pay No Attention to the Crows"
+    title = "Moulin Plage, Île du Coulée"
+    description = "We Have The Sandiest Dunes"
 
     hole = "assets/golf/courses/course_08/01.hole"
     hole = "assets/golf/courses/course_08/02.hole"

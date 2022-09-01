@@ -145,7 +145,7 @@ void MenuState::parseCourseDirectory(const std::string& rootDir, bool isUser)
 
         if (cro::FileSystem::fileExists(testPath))
         {
-            std::string title;
+            cro::String title;
             std::string description;
             std::int32_t holeCount = 0;
 
@@ -166,7 +166,7 @@ void MenuState::parseCourseDirectory(const std::string& rootDir, bool isUser)
                 }
                 else if (propName == "title")
                 {
-                    title = prop.getValue<std::string>();
+                    title = prop.getValue<cro::String>();
                 }
                 //TODO we could validate the hole files exist
                 //but that's done when loading the game anyway
