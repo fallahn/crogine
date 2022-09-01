@@ -31,6 +31,8 @@ source distribution.
 
 #ifndef USE_GNS
 #include "DefaultAchievements.hpp"
+#else
+#include <Achievements.hpp>
 #endif
 #include "golf/SharedStateData.hpp"
 
@@ -79,7 +81,9 @@ private:
 
 #ifndef USE_GNS
     //this contains GL resources so we need to control its lifetime with initialise / finialise
-    std::unique_ptr<DefaultAchievements> m_achievements; 
+    std::unique_ptr<DefaultAchievements> m_achievements;
+#else
+    std::unique_ptr<AchievementImpl> m_achievements; 
 #endif
 
     void handleEvent(const cro::Event&) override;

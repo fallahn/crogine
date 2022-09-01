@@ -68,6 +68,8 @@ source distribution.
 
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
 
+#include <AchievementStrings.hpp>
+
 namespace
 {
     struct MenuID final
@@ -346,7 +348,7 @@ void NewsState::buildScene()
     menuEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     auto newsEnt = entity;
 
-    m_feed.fetchAsync("https://fallahn.itch.io/vga-golf/devlog.rss");
+    m_feed.fetchAsync(RSSFeed);
 
 
     entity = m_scene.createEntity();

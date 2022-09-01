@@ -588,12 +588,11 @@ bool GolfGame::initialise()
 #endif
 
 #ifdef USE_GNS
-    static auto achievements = std::make_unique<SteamAchievements>();
-    Achievements::init(*achievements);
+    m_achievements = std::make_unique<SteamAchievements>();
 #else
     m_achievements = std::make_unique<DefaultAchievements>(getMessageBus());
-    Achievements::init(*m_achievements);
 #endif
+    Achievements::init(*m_achievements);
 
     return true;
 }
@@ -624,9 +623,7 @@ void GolfGame::finalise()
     m_postQuad.reset();
     m_postShader.reset();
     m_postBuffer.reset();
-#ifndef USE_GNS
     m_achievements.reset();
-#endif
 
     getWindow().setCursor(nullptr);
 }

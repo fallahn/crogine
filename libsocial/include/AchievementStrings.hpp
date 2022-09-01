@@ -243,6 +243,7 @@ static const std::array<std::string, StatID::Count> StatStrings =
     "course_05",
     "course_06",
     "course_07",
+    "course_08",
 };
 
 static const std::array<std::string, StatID::Count> StatLabels =
@@ -275,6 +276,7 @@ static const std::array<std::string, StatID::Count> StatLabels =
     "Number of times Course 5 Completed",
     "Number of times Course 6 Completed",
     "Number of times Course 7 Completed",
+    "Number of times Course 8 Completed",
 };
 
 struct StatType final
@@ -314,6 +316,7 @@ static constexpr std::array<std::int32_t, StatID::Count> StatTypes =
     StatType::Integer,
     StatType::Integer,
     StatType::Integer,
+    StatType::Integer,
     StatType::Integer
 };
 
@@ -324,3 +327,5 @@ struct StatTrigger final
 };
 
 static std::array<std::vector<StatTrigger>, StatID::Count> StatTriggers = {};
+
+static inline const std::string RSSFeed = "https://fallahn.itch.io/vga-golf/devlog.rss";
