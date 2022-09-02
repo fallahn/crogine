@@ -63,8 +63,6 @@ source distribution.
 namespace
 {
 #include "TerrainShader.inl"
-#include "ShadowMapping.inl"
-#include "TreeShader.inl"
 
     //params for poisson disk samples
     static constexpr float GrassDensity = 1.7f; //radius for PD sampler
@@ -312,8 +310,7 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
         billboardShadowID = resources.materials.add(billboardShadowShader);
     }
 
-    //custom shader for instanced plants
-    resources.shaders.loadFromString(ShaderID::CelTexturedInstanced, CelVertexShader, CelFragmentShader, "#define WIND_WARP\n#define TEXTURED\n#define DITHERED\n#define NOCHEX\n#define INSTANCING\n");
+    //custom shader for instanced plants - shader loading is done in GolfState::loadAssets()
     auto reedMaterialID = resources.materials.add(resources.shaders.get(ShaderID::CelTexturedInstanced));
 
 
@@ -323,30 +320,13 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
     std::int32_t leafShadowMaterialID = 0;
     if (m_sharedData.treeQuality == SharedStateData::High)
     {
-        std::string wobble = m_sharedData.vertexSnap ? "#define WOBBLE\n" : "";
-
-        resources.shaders.loadFromString(ShaderID::TreesetBranch, BranchVertex, BranchFragment, "#define INSTANCING\n" + wobble);
         branchMaterialID = resources.materials.add(resources.shaders.get(ShaderID::TreesetBranch));
-
-        resources.shaders.loadFromString(ShaderID::TreesetLeaf, BushVertex, /*BushGeom,*/ BushFragment, "#define POINTS\n#define INSTANCING\n#define HQ\n" + wobble);
         leafMaterialID = resources.materials.add(resources.shaders.get(ShaderID::TreesetLeaf));
-
-        resources.shaders.loadFromString(ShaderID::TreesetShadow, ShadowVertex, ShadowFragment, "#define INSTANCING\n#define TREE_WARP\n" + wobble);
         treeShadowMaterialID = resources.materials.add(resources.shaders.get(ShaderID::TreesetShadow));
-
-        std::string alphaClip;
-        if (m_sharedData.hqShadows)
-        {
-            alphaClip = "#define ALPHA_CLIP\n";
-        }
-        resources.shaders.loadFromString(ShaderID::TreesetLeafShadow, ShadowVertex, /*ShadowGeom,*/ ShadowFragment, "#define POINTS\n#define INSTANCING\n#define LEAF_SIZE\n" + alphaClip + wobble);
         leafShadowMaterialID = resources.materials.add(resources.shaders.get(ShaderID::TreesetLeafShadow));
     }
     //and VATs shader for crowd
-    resources.shaders.loadFromString(ShaderID::Crowd, CelVertexShader, CelFragmentShader, "#define DITHERED\n#define INSTANCING\n#define VATS\n#define NOCHEX\n#define TEXTURED\n");
     auto crowdMaterialID = resources.materials.add(resources.shaders.get(ShaderID::Crowd));
-
-    resources.shaders.loadFromString(ShaderID::CrowdShadow, ShadowVertex, ShadowFragment, "#define INSTANCING\n#define VATS\n");
     auto shadowMaterialID = resources.materials.add(resources.shaders.get(ShaderID::CrowdShadow));
 
 

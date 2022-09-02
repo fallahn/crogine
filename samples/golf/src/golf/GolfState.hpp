@@ -204,7 +204,7 @@ private:
     }m_ballResources;
 
     std::string m_audioPath;
-    std::string m_courseTitle;
+    cro::String m_courseTitle;
 
     std::vector<cro::Entity> m_spectatorModels;
 

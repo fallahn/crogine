@@ -122,6 +122,7 @@ namespace
 #include "TransitionShader.inl"
 #include "BillboardShader.inl"
 #include "ShadowMapping.inl"
+#include "TreeShader.inl"
 #include "BeaconShader.inl"
 #include "PostProcess.inl"
 
@@ -1395,6 +1396,52 @@ void GolfState::loadAssets()
     m_windBuffer.addShader(*shader);
     m_materialIDs[MaterialID::Billboard] = m_resources.materials.add(*shader);
 
+
+    //shaders used by terrain
+    m_resources.shaders.loadFromString(ShaderID::CelTexturedInstanced, CelVertexShader, CelFragmentShader, "#define WIND_WARP\n#define TEXTURED\n#define DITHERED\n#define NOCHEX\n#define INSTANCING\n");
+    shader = &m_resources.shaders.get(ShaderID::CelTexturedInstanced);
+    m_scaleBuffer.addShader(*shader);
+    m_resolutionBuffer.addShader(*shader);
+    m_windBuffer.addShader(*shader);
+
+    m_resources.shaders.loadFromString(ShaderID::Crowd, CelVertexShader, CelFragmentShader, "#define DITHERED\n#define INSTANCING\n#define VATS\n#define NOCHEX\n#define TEXTURED\n");
+    shader = &m_resources.shaders.get(ShaderID::Crowd);
+    m_scaleBuffer.addShader(*shader);
+    m_resolutionBuffer.addShader(*shader);
+
+    m_resources.shaders.loadFromString(ShaderID::CrowdShadow, ShadowVertex, ShadowFragment, "#define INSTANCING\n#define VATS\n");
+
+    if (m_sharedData.treeQuality == SharedStateData::High)
+    {
+        m_resources.shaders.loadFromString(ShaderID::TreesetBranch, BranchVertex, BranchFragment, "#define INSTANCING\n" + wobble);
+        shader = &m_resources.shaders.get(ShaderID::TreesetBranch);
+        m_scaleBuffer.addShader(*shader);
+        m_resolutionBuffer.addShader(*shader);
+        m_windBuffer.addShader(*shader);
+
+        m_resources.shaders.loadFromString(ShaderID::TreesetLeaf, BushVertex, /*BushGeom,*/ BushFragment, "#define POINTS\n#define INSTANCING\n#define HQ\n" + wobble);
+        shader = &m_resources.shaders.get(ShaderID::TreesetLeaf);
+        m_scaleBuffer.addShader(*shader);
+        m_resolutionBuffer.addShader(*shader);
+        m_windBuffer.addShader(*shader);
+
+
+        m_resources.shaders.loadFromString(ShaderID::TreesetShadow, ShadowVertex, ShadowFragment, "#define INSTANCING\n#define TREE_WARP\n" + wobble);
+        shader = &m_resources.shaders.get(ShaderID::TreesetShadow);
+        m_windBuffer.addShader(*shader);
+
+
+        std::string alphaClip;
+        if (m_sharedData.hqShadows)
+        {
+            alphaClip = "#define ALPHA_CLIP\n";
+        }
+        m_resources.shaders.loadFromString(ShaderID::TreesetLeafShadow, ShadowVertex, /*ShadowGeom,*/ ShadowFragment, "#define POINTS\n#define INSTANCING\n#define LEAF_SIZE\n" + alphaClip + wobble);
+        shader = &m_resources.shaders.get(ShaderID::TreesetLeafShadow);
+        m_windBuffer.addShader(*shader);
+    }
+
+
     //scanline transition
     m_resources.shaders.loadFromString(ShaderID::Transition, MinimapVertex, ScanlineTransition);
 
@@ -1824,7 +1871,7 @@ void GolfState::loadAssets()
 
     if (auto* title = courseFile.findProperty("title"); title)
     {
-        m_courseTitle = title->getValue<std::string>();
+        m_courseTitle = title->getValue<cro::String>();
     }
 
     std::string skyboxPath;
@@ -2609,41 +2656,13 @@ void GolfState::loadAssets()
 
     m_terrainBuilder.create(m_resources, m_gameScene, theme);
 
-    //terrain builder will have loaded a series of shaders for which we need to capture some uniforms
+    //terrain builder will have loaded some shaders from which we need to capture some uniforms
     shader = &m_resources.shaders.get(ShaderID::Terrain);
-    m_scaleBuffer.addShader(*shader);
-    m_resolutionBuffer.addShader(*shader);
-
-    shader = &m_resources.shaders.get(ShaderID::CelTexturedInstanced);
-    m_scaleBuffer.addShader(*shader);
-    m_resolutionBuffer.addShader(*shader);
-    m_windBuffer.addShader(*shader);
-
-    shader = &m_resources.shaders.get(ShaderID::Crowd);
     m_scaleBuffer.addShader(*shader);
     m_resolutionBuffer.addShader(*shader);
 
     shader = &m_resources.shaders.get(ShaderID::Slope);
     m_windBuffer.addShader(*shader);
-
-    if (m_sharedData.treeQuality == SharedStateData::High)
-    {
-        shader = &m_resources.shaders.get(ShaderID::TreesetShadow);
-        m_windBuffer.addShader(*shader);
-
-        shader = &m_resources.shaders.get(ShaderID::TreesetLeafShadow);
-        m_windBuffer.addShader(*shader);
-
-        shader = &m_resources.shaders.get(ShaderID::TreesetBranch);
-        m_scaleBuffer.addShader(*shader);
-        m_resolutionBuffer.addShader(*shader);
-        m_windBuffer.addShader(*shader);
-
-        shader = &m_resources.shaders.get(ShaderID::TreesetLeaf);
-        m_scaleBuffer.addShader(*shader);
-        m_resolutionBuffer.addShader(*shader);
-        m_windBuffer.addShader(*shader);
-    }
 
     createClouds(theme.cloudPath);
     if (cro::SysTime::now().months() == 6)
@@ -5566,8 +5585,9 @@ void GolfState::startFlyBy()
     targetData.speeds[0] *= 1.f / SpeedMultiplier;
 
     //translate the transform to look at target point or half way point if not set
+    constexpr float MinTargetMoveDistance = 100.f;
     auto diff = holeData.target - holeData.pin;
-    if (glm::length2(diff) < 100.f)
+    if (glm::length2(diff) < MinTargetMoveDistance)
     {
         diff = (holeData.tee - holeData.pin) / 2.f;
     }
@@ -5578,7 +5598,12 @@ void GolfState::startFlyBy()
     targetData.targets[2] = transform;
 
     moveDist = glm::length(glm::vec3(targetData.targets[1][3]) - glm::vec3(targetData.targets[2][3]));
-    targetData.speeds[1] = moveDist / MoveSpeed;
+    auto moveSpeed = MoveSpeed;
+    if (!m_holeData[m_currentHole].puttFromTee)
+    {
+        moveSpeed *= std::min(1.f, (moveDist / (MinTargetMoveDistance / 2.f)));
+    }
+    targetData.speeds[1] = moveDist / moveSpeed;
     targetData.speeds[1] *= 1.f / SpeedMultiplier;
 
     //the final transform is set to what should be the same as the initial player view
