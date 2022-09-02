@@ -140,7 +140,7 @@ void App::loadPlugin(const std::string& path, StateStack& stateStack)
 
     if (m_pluginHandle)
     {
-        int(*entryPoint)(StateStack*, SharedStateData*);
+        int(*entryPoint)(StateStack*, std::any*);
         void(*exitPoint)(StateStack*);
 
         *(int**)(&entryPoint) = (int*)dlsym(m_pluginHandle, "begin");
@@ -152,8 +152,8 @@ void App::loadPlugin(const std::string& path, StateStack& stateStack)
             FileSystem::setResourceDirectory(path);
 
             auto reqState = entryPoint(&stateStack, &m_pluginSharedData);
-            m_stateStack.clearStates();
-            m_stateStack.pushState(reqState);
+            stateStack.clearStates();
+            stateStack.pushState(reqState);
         }
         else
         {
