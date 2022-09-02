@@ -54,6 +54,17 @@ MyApp::MyApp()
 }
 
 //public
+void MyApp::loadPlugin(const std::string& path)
+{
+    cro::App::loadPlugin(path, m_stateStack);
+}
+
+void MyApp::unloadPlugin()
+{
+    cro::App::unloadPlugin(m_stateStack);
+}
+
+//private
 void MyApp::handleEvent(const cro::Event& evt)
 {
 #ifdef CRO_DEBUG_
@@ -93,7 +104,7 @@ bool MyApp::initialise()
     getWindow().setLoadingScreen<LoadingScreen>();
     getWindow().setTitle("Scratchpad Browser");
 
-    m_stateStack.registerState<sp::MenuState>(States::ScratchPad::MainMenu);
+    m_stateStack.registerState<sp::MenuState>(States::ScratchPad::MainMenu, *this);
     m_stateStack.registerState<BatcatState>(States::ScratchPad::BatCat);
     m_stateStack.registerState<BilliardsState>(States::ScratchPad::Billiards);
     m_stateStack.registerState<BushState>(States::ScratchPad::Bush);
@@ -105,8 +116,8 @@ bool MyApp::initialise()
     m_stateStack.registerState<FrustumState>(States::ScratchPad::Frustum);
 
 #ifdef CRO_DEBUG_
-    m_stateStack.pushState(States::ScratchPad::Frustum);
-    //m_stateStack.pushState(States::ScratchPad::MainMenu);
+    //m_stateStack.pushState(States::ScratchPad::Frustum);
+    m_stateStack.pushState(States::ScratchPad::MainMenu);
 #else
     m_stateStack.pushState(States::ScratchPad::MainMenu);
 #endif
@@ -118,4 +129,6 @@ void MyApp::finalise()
 {
     m_stateStack.clearStates();
     m_stateStack.simulate(0.f);
+
+    cro::App::unloadPlugin(m_stateStack);
 }

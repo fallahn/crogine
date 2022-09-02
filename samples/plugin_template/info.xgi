@@ -1,0 +1,7 @@
+game_info
+{
+    thumb = "path/to/thumb.png"
+    title = "My Fancy Game"
+    version = "1.0.0"
+    author = "Buns McFarlane"
+}

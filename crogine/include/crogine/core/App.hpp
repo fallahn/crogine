@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2021
+Matt Marchant 2017 - 2022
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -42,6 +42,7 @@ source distribution.
 
 #include <vector>
 #include <map>
+#include <any>
 
 #ifdef CRO_DEBUG_
 #define DPRINT(x, y) cro::Console::printStat(x, y)
@@ -58,6 +59,7 @@ namespace cro
     }
     class GuiClient;
     class HiResTimer;
+    class StateStack;
 
     /*!
     \brief Base class for crogine applications.
@@ -169,6 +171,20 @@ namespace cro
         */
         void saveSettings();
 
+        /*!
+        \brief Load and execute an external project from a plugin
+        \param path Path to the directory containing the plugin. Shared library name is automatically appended
+        \param stack A reference to the StateStack with which to execute the plugin code.
+        */
+        void loadPlugin(const std::string& path, StateStack& stack);
+        
+        /*!
+        \brief Unload any loaded project plugin
+        \param stack A reference to the StateStack used to load the plugin
+        */
+        void unloadPlugin(StateStack& stack);
+
+
     private:
         std::uint32_t m_windowStyleFlags;
         Window m_window;
@@ -232,5 +248,14 @@ namespace cro
         WindowSettings loadSettings();
 
         void saveScreenshot();
+
+
+        //loading external plugins
+        std::any m_pluginSharedData;
+#ifdef _WIN32
+        HINSTANCE m_pluginHandle = nullptr;
+#else
+        void* m_pluginHandle = nullptr;
+#endif //_win32
     };
 }
