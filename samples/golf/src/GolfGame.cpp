@@ -599,6 +599,9 @@ bool GolfGame::initialise()
 
 void GolfGame::finalise()
 {
+    m_sharedData.clientConnection.netClient.disconnect();
+    m_sharedData.serverInstance.stop(); //this waits for any threads to finish first.
+
     Achievements::shutdown();
 
     savePreferences();
