@@ -961,7 +961,7 @@ void ClubhouseState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnt
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = mouseEnterCursor;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         m_uiScene.getSystem<cro::UISystem>()->addCallback(
-            [&, menuEntity](cro::Entity, const cro::ButtonEvent& evt) mutable
+            [&, menuEntity](cro::Entity e, const cro::ButtonEvent& evt) mutable
             {
                 if (activated(evt))
                 {
@@ -974,76 +974,13 @@ void ClubhouseState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnt
                     {
                         if (!m_sharedData.clientConnection.connected)
                         {
-                            m_sharedData.serverInstance.launch(2, Server::GameMode::Billiards);
+                            m_sharedData.serverInstance.launch(ConstVal::MaxClients, Server::GameMode::Billiards);
 
                             //small delay for server to get ready
                             cro::Clock clock;
                             while (clock.elapsed().asMilliseconds() < 500) {}
-#ifdef USE_GNS
-                            //gns only supports 127.0.0.1 for loopback, but to report correct local IP with enet we need 255.255.255.255
-                            m_sharedData.clientConnection.connected = m_sharedData.clientConnection.netClient.connect("127.0.0.1", ConstVal::GamePort);
-#else
-                            m_sharedData.clientConnection.connected = m_sharedData.clientConnection.netClient.connect("255.255.255.255", ConstVal::GamePort);
-#endif
-                            if (!m_sharedData.clientConnection.connected)
-                            {
-                                m_sharedData.serverInstance.stop();
-                                m_sharedData.errorMessage = "Failed to connect to local server.\nPlease make sure port "
-                                    + std::to_string(ConstVal::GamePort)
-                                    + " is allowed through\nany firewalls or NAT";
-                                requestStackPush(StateID::Error);
-                            }
-                            else
-                            {
-                                //make sure the server knows we're the host
-                                m_sharedData.serverInstance.setHostID(m_sharedData.clientConnection.netClient.getPeer().getID());
 
-                                cro::Command cmd;
-                                cmd.targetFlags = CommandID::Menu::ReadyButton;
-                                cmd.action = [&](cro::Entity e, float)
-                                {
-                                    e.getComponent<cro::Sprite>() = m_sprites[SpriteID::StartGame];
-                                };
-                                m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
-
-                                cmd.targetFlags = CommandID::Menu::ServerInfo;
-                                cmd.action = [&](cro::Entity e, float)
-                                {
-                                    e.getComponent<cro::Text>().setString(
-                                        "Hosting on: " + m_sharedData.clientConnection.netClient.getPeer().getAddress() + ":"
-                                        + std::to_string(ConstVal::GamePort));
-                                };
-                                m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
-
-                                //enable the game type selection in the lobby
-                                if (m_tableData.size() > 1)
-                                {
-                                    addTableSelectButtons();
-                                }
-
-                                //send a UI refresh to correctly place buttons
-                                glm::vec2 size(GolfGame::getActiveTarget()->getSize());
-                                cmd.targetFlags = CommandID::Menu::UIElement;
-                                cmd.action =
-                                    [&, size](cro::Entity e, float)
-                                {
-                                    const auto& element = e.getComponent<UIElement>();
-                                    auto pos = element.absolutePosition;
-                                    pos += element.relativePosition * size / m_viewScale;
-
-                                    pos.x = std::floor(pos.x);
-                                    pos.y = std::floor(pos.y);
-
-                                    e.getComponent<cro::Transform>().setPosition(glm::vec3(pos, element.depth));
-                                };
-                                m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
-
-
-                                //send the initially selected table - this triggers the menu to move to the next stage.
-                                //m_sharedData.mapDirectory = m_courseData[m_sharedData.courseIndex].directory;
-                                auto data = serialiseString(m_sharedData.mapDirectory);
-                                m_sharedData.clientConnection.netClient.sendPacket(PacketID::MapInfo, data.data(), data.size(), net::NetFlag::Reliable, ConstVal::NetChannelStrings);
-                            }
+                            m_matchMaking.createGame(Server::GameMode::Billiards);
                         }
                     }
                     else
@@ -1052,6 +989,26 @@ void ClubhouseState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnt
                         menuEntity.getComponent<cro::Callback>().getUserData<MenuData>().targetMenu = MenuID::Join;
                         menuEntity.getComponent<cro::Callback>().active = true;
                     }
+
+                    //kludgy way of temporarily disabling this button to prevent double clicks
+                    auto defaultCallback = e.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp];
+                    e.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = 0;
+
+                    auto tempEnt = m_uiScene.createEntity();
+                    tempEnt.addComponent<cro::Callback>().active = true;
+                    tempEnt.getComponent<cro::Callback>().setUserData<std::pair<std::uint32_t, float>>(defaultCallback, 0.f);
+                    tempEnt.getComponent<cro::Callback>().function =
+                        [&, e](cro::Entity t, float dt) mutable
+                    {
+                        auto& [cb, currTime] = t.getComponent<cro::Callback>().getUserData<std::pair<std::uint32_t, float>>();
+                        currTime += dt;
+                        if (currTime > 1)
+                        {
+                            e.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = cb;
+                            t.getComponent<cro::Callback>().active = false;
+                            m_uiScene.destroyEntity(t);
+                        }
+                    };
                 }
             });
     entity.getComponent<UIElement>().absolutePosition.x = -bounds.width;
@@ -1313,7 +1270,8 @@ void ClubhouseState::createJoinMenu(cro::Entity parent, std::uint32_t mouseEnter
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = mouseEnter;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = mouseExit;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
-        m_uiScene.getSystem<cro::UISystem>()->addCallback([&](cro::Entity, const cro::ButtonEvent& evt) mutable
+        m_uiScene.getSystem<cro::UISystem>()->addCallback(
+            [&](cro::Entity e, const cro::ButtonEvent& evt) mutable
             {
                 if (activated(evt))
                 {
@@ -1321,39 +1279,31 @@ void ClubhouseState::createJoinMenu(cro::Entity parent, std::uint32_t mouseEnter
 
                     m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
 
+
                     if (!m_sharedData.targetIP.empty() &&
                         !m_sharedData.clientConnection.connected)
                     {
-                        m_sharedData.clientConnection.connected = m_sharedData.clientConnection.netClient.connect(m_sharedData.targetIP.toAnsiString(), ConstVal::GamePort);
-                        if (!m_sharedData.clientConnection.connected)
-                        {
-                            m_sharedData.errorMessage = "Could not connect to server";
-                            requestStackPush(StateID::Error);
-                        }
-
-                        cro::Command cmd;
-                        cmd.targetFlags = CommandID::Menu::ReadyButton;
-                        cmd.action = [&](cro::Entity e, float)
-                        {
-                            e.getComponent<cro::Sprite>() = m_sprites[SpriteID::ReadyUp];
-                        };
-                        m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
-
-                        cmd.targetFlags = CommandID::Menu::ServerInfo;
-                        cmd.action = [&](cro::Entity e, float)
-                        {
-                            e.getComponent<cro::Text>().setString("Connected to: " + m_sharedData.targetIP + ":" + std::to_string(ConstVal::GamePort));
-                        };
-                        m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
-
-                        //disable the course selection in the lobby
-                        cmd.targetFlags = CommandID::Menu::CourseSelect;
-                        cmd.action = [&](cro::Entity e, float)
-                        {
-                            m_uiScene.destroyEntity(e);
-                        };
-                        m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+                        m_matchMaking.joinGame(0);
                     }
+
+                    auto defaultCallback = e.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown];
+                    e.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = 0;
+
+                    auto tempEnt = m_uiScene.createEntity();
+                    tempEnt.addComponent<cro::Callback>().active = true;
+                    tempEnt.getComponent<cro::Callback>().setUserData<std::pair<std::uint32_t, float>>(defaultCallback, 0.f);
+                    tempEnt.getComponent<cro::Callback>().function =
+                        [&, e](cro::Entity t, float dt) mutable
+                    {
+                        auto& [cb, currTime] = t.getComponent<cro::Callback>().getUserData<std::pair<std::uint32_t, float>>();
+                        currTime += dt;
+                        if (currTime > 1)
+                        {
+                            e.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = cb;
+                            t.getComponent<cro::Callback>().active = false;
+                            m_uiScene.destroyEntity(t);
+                        }
+                    };
                 }
             });
 
