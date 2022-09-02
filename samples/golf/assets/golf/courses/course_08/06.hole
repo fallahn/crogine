@@ -182,6 +182,21 @@ hole 06
         }
     }
 
+    prop
+    {
+        model = "assets/golf/models/jetty.cmt"
+        position = 101.298393,-0.261801,-59.946934
+        rotation = 54.431785
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/jetty.cmt"
+        position = 94.697479,-0.261801,-64.499290
+        rotation = 54.431785
+        scale = 1.000000,1.000000,1.000000
+    }
 
     pin = 24.974689,1.103812,-54.975945
 

@@ -2,7 +2,7 @@ hole 02
 {
     map="assets/golf/courses/course_08/01.png"
     model="assets/golf/models/course_08/01.cmt"
-    par = 3
+    par = 4
 
     pin = 203.598724,1.212888,-95.648399
 

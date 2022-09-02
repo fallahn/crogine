@@ -2,7 +2,7 @@ hole 05
 {
     map="assets/golf/courses/course_08/04.png"
     model="assets/golf/models/course_08/04.cmt"
-    par = 3
+    par = 4
 
     prop
     {
@@ -182,9 +182,25 @@ hole 05
         }
     }
 
+    prop
+    {
+        model = "assets/golf/models/jetty.cmt"
+        position = 101.298393,-0.261801,-59.946934
+        rotation = 54.431785
+        scale = 1.000000,1.000000,1.000000
+    }
+
+    prop
+    {
+        model = "assets/golf/models/jetty.cmt"
+        position = 94.697479,-0.261801,-64.499290
+        rotation = 54.431785
+        scale = 1.000000,1.000000,1.000000
+    }
+
     pin = 77.824448,1.102875,-70.631180
 
-    target = 112.518379,1.101642,-84.208771
+    target = 123.377342,1.101643,-80.844719
 
     tee = 302.244812,1.101643,-131.937271
 

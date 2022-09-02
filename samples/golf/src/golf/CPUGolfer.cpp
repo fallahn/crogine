@@ -448,7 +448,7 @@ void CPUGolfer::aim(float dt, glm::vec3 windVector)
                 m_targetPower = m_aimDistance / Clubs[m_clubID].target;
                 if (Clubs[m_clubID].target > m_aimDistance)
                 {
-                    m_targetPower *= 0.9f;
+                    m_targetPower *= 0.85f;
                 }
             }
             else
