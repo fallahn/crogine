@@ -442,7 +442,14 @@ void CPUGolfer::aim(float dt, glm::vec3 windVector)
             //multiplied by percent of selected club distance to target distance
             if (m_clubID < ClubID::SandWedge)
             {
+                //power is not actually linear - ie half the distance is not
+                //half the power, so we need to pull back a little to stop
+                //overshooting long drives
                 m_targetPower = m_aimDistance / Clubs[m_clubID].target;
+                if (Clubs[m_clubID].target > m_aimDistance)
+                {
+                    m_targetPower *= 0.9f;
+                }
             }
             else
             {
@@ -453,7 +460,7 @@ void CPUGolfer::aim(float dt, glm::vec3 windVector)
 
             //add some random factor to target power and set to stroke mode
             m_targetPower = std::min(1.f, m_targetPower);
-            m_targetPower += static_cast<float>(cro::Util::Random::value(-5, 5)) / 100.f;
+            m_targetPower += static_cast<float>(cro::Util::Random::value(-6, 6)) / 100.f;
             m_targetPower = std::max(0.06f, std::min(1.f, m_targetPower));
 
             if (m_activePlayer.terrain == TerrainID::Green)
