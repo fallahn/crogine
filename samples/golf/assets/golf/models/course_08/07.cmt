@@ -1,6 +1,6 @@
-model 16
+model 07
 {
-    mesh = assets/golf/models/course_04/16.cmb
+    mesh = assets/golf/models/course_08/07.cmb
     cast_shadows = false
 
     material Unlit
@@ -73,7 +73,7 @@ model 16
     }
     material Unlit
     {
-        name = "light_sand"
+        name = "scrub"
         colour = 1.000000,1.000000,1.000000,1.000000
         smooth = false
         repeat = true
@@ -90,24 +90,25 @@ model 16
     }
     material Unlit
     {
-        name = "Water"
+        name = "fringe"
         colour = 1.000000,1.000000,1.000000,1.000000
-        smooth = true
+        smooth = false
         repeat = true
         depth_test = true
-        double_sided = false
+        double_sided = true
         use_mipmaps = false
         animated = false
         row_count = 1
         col_count = 1
         framerate = 1.000000
         blendmode = none
-        diffuse = "assets/golf/images/water.png"
+        diffuse = "assets/golf/images/fringe.png"
+        alpha_clip = 0.275000
 
     }
     material Unlit
     {
-        name = "volcano"
+        name = "stone"
         colour = 1.000000,1.000000,1.000000,1.000000
         smooth = false
         repeat = true
@@ -120,7 +121,7 @@ model 16
         framerate = 1.000000
         rx_shadows = true
         blendmode = none
-        diffuse = "assets/golf/images/volcano.png"
+        diffuse = "assets/golf/images/mid_sand.png"
 
     }
 }
