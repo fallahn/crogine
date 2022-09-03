@@ -174,6 +174,11 @@ bool RetroState::handleEvent(const cro::Event& evt)
                 m_sprites.pop_back();
             }
             break;
+        case SDLK_BACKSPACE:
+        case SDLK_ESCAPE:
+            requestStackClear();
+            requestStackPush(0);
+            break;
         }
     }
 
@@ -300,7 +305,7 @@ void RetroState::createUI()
                 }
 
 
-                ImGui::Text("Sprites %u", m_sprites.size());
+                ImGui::Text("Sprites %lu", m_sprites.size());
             }
             ImGui::End();        
         });

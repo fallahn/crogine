@@ -380,11 +380,14 @@ void MenuState::createScene()
             {
                 if (activated(evt))
                 {
+                    //TODO directory browsing crashes xfce
+                    //TODO font doesn't load without trailing /
+
                     //requestStackClear();
-                    auto path = cro::FileSystem::openFolderDialogue();
-                    if (!path.empty())
+                    //auto path = cro::FileSystem::openFolderDialogue();
+                    //if (!path.empty())
                     {
-                        m_gameInstance.loadPlugin(path);
+                        m_gameInstance.loadPlugin("plugin/");
                     }
                 }
             });

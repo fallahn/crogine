@@ -2,12 +2,13 @@ cmake_minimum_required(VERSION 3.1)
 
 # Rename this variable to change the project name
 # see the last line of this file for info on copying assets
-SET(PROJECT_NAME give_me_a_name)
+SET(PROJECT_NAME croplug)
 
 # Set up the project
 project(${PROJECT_NAME})
 
 # Some default variables which the user may change
+SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/../cmake/modules/")
 SET(CMAKE_BUILD_TYPE        Debug CACHE STRING  "Choose the type of build (Debug or Release)")
 
 # We're using c++17
