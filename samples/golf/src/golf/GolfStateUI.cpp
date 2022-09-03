@@ -1010,7 +1010,7 @@ void GolfState::showCountdown(std::uint8_t seconds)
 
     if (cro::Util::Random::value(0, 2) == 0)
     {
-        float radius = glm::length(m_holeData[m_currentHole].pin - m_cameras[CameraID::Player].getComponent<cro::Transform>().getWorldPosition()) * 0.9f;
+        float radius = glm::length(m_holeData[m_currentHole].pin - m_cameras[CameraID::Player].getComponent<cro::Transform>().getWorldPosition()) * 0.85f;
 
         //add a callback that makes the camera orbit the flag - and hence the drone follows
         m_cameras[CameraID::Sky].getComponent<cro::Callback>().active = true;
