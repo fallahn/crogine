@@ -6,7 +6,7 @@ course course_08
     instance_model = "assets/golf/models/rock.cmt"
 
     title = "Moulin Plage, Île du Coulée"
-    description = "Now With 10% Less Sand"
+    description = "Now With 10% More Sand"
 
     hole = "assets/golf/courses/course_08/01.hole"
     hole = "assets/golf/courses/course_08/02.hole"
@@ -20,4 +20,7 @@ course course_08
     hole = "assets/golf/courses/course_08/10.hole"
     hole = "assets/golf/courses/course_08/11.hole"
     hole = "assets/golf/courses/course_08/12.hole"
+    hole = "assets/golf/courses/course_08/13.hole"
+    hole = "assets/golf/courses/course_08/14.hole"
+    hole = "assets/golf/courses/course_08/15.hole"
 }
