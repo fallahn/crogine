@@ -440,7 +440,7 @@ void CPUGolfer::aim(float dt, glm::vec3 windVector)
 
             //based on dot prod of aim angle and wind dir
             //multiplied by percent of selected club distance to target distance
-            if (m_clubID < ClubID::SandWedge)
+            if (m_clubID < ClubID::PitchWedge)
             {
                 //power is not actually linear - ie half the distance is not
                 //half the power, so we need to pull back a little to stop

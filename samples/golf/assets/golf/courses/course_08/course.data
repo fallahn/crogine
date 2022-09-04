@@ -23,4 +23,7 @@ course course_08
     hole = "assets/golf/courses/course_08/13.hole"
     hole = "assets/golf/courses/course_08/14.hole"
     hole = "assets/golf/courses/course_08/15.hole"
+    hole = "assets/golf/courses/course_08/16.hole"
+    hole = "assets/golf/courses/course_08/17.hole"
+    hole = "assets/golf/courses/course_08/18.hole"
 }
