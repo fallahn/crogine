@@ -1,7 +1,7 @@
 bl_info = {
     "name": "Export golf hole data",
     "author": "Bald Guy",
-    "version": (2022, 8, 31),
+    "version": (2022, 9, 5),
     "blender": (2, 80, 0),
     "location": "File > Export > Golf Hole",
     "description": "Export position and rotation info of selected objects",
@@ -183,7 +183,7 @@ class ExportInfo(bpy.types.Operator, bpy_extras.io_utils.ExportHelper):
                         worldScale = vecMultiply(ob.parent.scale, ob.scale)
 
 
-                if "crowd" in modelName.lower():
+                if "crowd" in modelName.lower() and ob.type == 'MESH':
                     WriteCrowd(file, worldLocation, worldRotation, ob)
                 elif "pin" in modelName.lower():
                     if pinWritten == False:

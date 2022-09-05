@@ -277,7 +277,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     //        ImGui::End();
     //    });
 
-    registerWindow([&]()
+    /*registerWindow([&]()
         {
             if (ImGui::Begin("buns"))
             {
@@ -306,7 +306,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
                 }
             }
             ImGui::End();
-        });
+        });*/
 #endif
 }
 
