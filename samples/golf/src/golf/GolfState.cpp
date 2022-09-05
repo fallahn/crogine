@@ -2791,6 +2791,7 @@ void GolfState::addSystems()
     m_gameScene.addDirector<GolfParticleDirector>(m_resources.textures);
     m_gameScene.addDirector<GolfSoundDirector>(m_resources.audio);
 
+
     if (m_sharedData.tutorial)
     {
         m_gameScene.addDirector<TutorialDirector>(m_sharedData, m_inputParser);

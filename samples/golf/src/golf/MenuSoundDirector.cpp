@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021
+Matt Marchant 2021 - 2022
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -34,6 +34,7 @@ source distribution.
 #include "MenuState.hpp"
 
 #include <crogine/audio/AudioResource.hpp>
+#include <crogine/audio/AudioMixer.hpp>
 
 #include <crogine/ecs/components/AudioEmitter.hpp>
 #include <crogine/ecs/components/Transform.hpp>
@@ -69,38 +70,41 @@ MenuSoundDirector::MenuSoundDirector(cro::AudioResource& ar, const std::size_t& 
 //public
 void MenuSoundDirector::handleMessage(const cro::Message& msg)
 {
-    switch (msg.id)
+    if (cro::AudioMixer::hasAudioRenderer())
     {
-    default: break;
-    case cro::Message::SpriteAnimationMessage:
-    {
-        const auto& data = msg.getData<cro::Message::SpriteAnimationEvent>();
-        if (m_currentMenu == MenuState::MenuID::Lobby)
+        switch (msg.id)
         {
-            //these are raised by the small ball animations
-            switch (data.userType)
-            {
-            default: break;
-            case 0:
-                playSound(AudioID::Ground, 2.f);
-                break;
-            case 1:
-                playSound(AudioID::Hole);
-                break;
-            }            
-        }
-        else if (m_currentMenu == MenuState::MenuID::Avatar)
+        default: break;
+        case cro::Message::SpriteAnimationMessage:
         {
-            switch (data.userType)
+            const auto& data = msg.getData<cro::Message::SpriteAnimationEvent>();
+            if (m_currentMenu == MenuState::MenuID::Lobby)
             {
-            default: break;
-            case 2:
-                playSound(AudioID::Ground, 2.f);
-                break;
+                //these are raised by the small ball animations
+                switch (data.userType)
+                {
+                default: break;
+                case 0:
+                    playSound(AudioID::Ground, 2.f);
+                    break;
+                case 1:
+                    playSound(AudioID::Hole);
+                    break;
+                }
+            }
+            else if (m_currentMenu == MenuState::MenuID::Avatar)
+            {
+                switch (data.userType)
+                {
+                default: break;
+                case 2:
+                    playSound(AudioID::Ground, 2.f);
+                    break;
+                }
             }
         }
-    }
         break;
+        }
     }
 }
 

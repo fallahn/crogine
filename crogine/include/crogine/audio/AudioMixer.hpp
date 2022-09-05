@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2021
+Matt Marchant 2017 - 2022
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -115,6 +115,12 @@ namespace cro
         \param channel Number of the channel from which to retrieve the label
         */
         static const std::string& getLabel(std::uint8_t channel);
+
+        /*!
+        \brief Returns true is a valid audio renderer was found to be available
+        */
+        static bool hasAudioRenderer();
+
 
         static constexpr std::size_t MaxChannels = 16;
 
