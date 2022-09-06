@@ -33,9 +33,10 @@ source distribution.
 
 #include <btBulletCollisionCommon.h>
 
-static constexpr glm::vec3 Gravity = glm::vec3(0.f, -0.7f, 0.f);
+static constexpr glm::vec3 Gravity = glm::vec3(0.f, -0.98f, 0.f);
 static const btVector3 RayLength = btVector3(0.f, 1.f, 0.f);
 static constexpr glm::vec3 RollResetPosition(2.5f, 3.5f, 0.f);
+static constexpr glm::vec3 RampResetPosition({ 13.f, 16.f, -25.f });
 
 static inline btVector3 fromGLM(glm::vec3 v)
 {

@@ -70,15 +70,17 @@ private:
 
     cro::Entity m_ballEntity;
     cro::Entity m_rollingEntity;
+    cro::Entity m_rampEntity;
 
     std::vector<std::unique_ptr<btPairCachingGhostObject>> m_groundObjects;
     std::vector<std::unique_ptr<btTriangleIndexVertexArray>> m_groundVertices;
     std::vector<std::unique_ptr<btBvhTriangleMeshShape>> m_groundShapes;
 
-    std::vector<float> m_vertexData;
-    std::vector<std::vector<std::uint32_t>> m_indexData;
+    //this needs to be kept around so the collision system can reference it
+    std::vector<std::vector<float>> m_vertexData;
+    std::vector<std::vector<std::vector<std::uint32_t>>> m_indexData;
 
     void buildScene();
-    void setupCollisionWorld(const cro::Mesh::Data&, glm::mat4);
+    void addCollisionMesh(const cro::Mesh::Data&, glm::mat4);
     void resetRoller();
 };

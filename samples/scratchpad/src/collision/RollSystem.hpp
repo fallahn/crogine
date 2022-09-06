@@ -36,11 +36,14 @@ class btCollisionWorld;
 
 struct Roller final
 {
+    glm::vec3 resetPosition = glm::vec3(0.f);
+    
     glm::vec3 velocity = glm::vec3(0.f);
     glm::vec3 prevVelocity = glm::vec3(0.f);
     glm::vec3 prevPosition = glm::vec3(0.f);
 
-    float mass = 160.f;
+    float mass = 60.f;
+    float friction = 0.98f;
 
     enum
     {

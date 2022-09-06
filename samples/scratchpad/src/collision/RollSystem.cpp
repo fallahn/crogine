@@ -118,7 +118,7 @@ void RollingSystem::process(float dt)
         }
         else if (roller.state == Roller::Roll)
         {
-            auto worldPos = fromGLM(tx.getPosition() - glm::vec3(0.f, 0.2f, 0.f));
+            auto worldPos = fromGLM(tx.getPosition() - glm::vec3(0.f, 0.5f, 0.f));
             auto res = collisionTest(worldPos, m_collisionWorld.get());
 
             if (res.hasHit())
@@ -133,8 +133,7 @@ void RollingSystem::process(float dt)
                 glm::vec3 accel((gravityForce * amountX) / roller.mass, 0.f, (gravityForce * amountZ) / roller.mass);
                 roller.velocity += accel;
 
-                constexpr float Friction = 0.98f;
-                roller.velocity *= Friction;
+                roller.velocity *= roller.friction;
 
                 tx.setPosition(toGLM(res.m_hitPointWorld));
 
@@ -156,9 +155,9 @@ void RollingSystem::process(float dt)
         debugState = roller.state;
 
 
-        if (tx.getPosition().y < -2.f)
+        if (tx.getPosition().y < -10.f)
         {
-            tx.setPosition(RollResetPosition);
+            tx.setPosition(roller.resetPosition);
             roller.state = Roller::Air;
             roller.velocity = glm::vec3(0.f);
         }
