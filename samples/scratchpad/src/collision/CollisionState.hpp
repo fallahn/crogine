@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021
+Matt Marchant 2021 - 2022
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -69,6 +69,7 @@ private:
     std::unique_ptr<btCollisionWorld> m_collisionWorld;
 
     cro::Entity m_ballEntity;
+    cro::Entity m_rollingEntity;
 
     std::vector<std::unique_ptr<btPairCachingGhostObject>> m_groundObjects;
     std::vector<std::unique_ptr<btTriangleIndexVertexArray>> m_groundVertices;
@@ -79,4 +80,5 @@ private:
 
     void buildScene();
     void setupCollisionWorld(const cro::Mesh::Data&, glm::mat4);
+    void resetRoller();
 };

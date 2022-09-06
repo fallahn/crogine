@@ -117,7 +117,7 @@ bool MyApp::initialise()
 
 #ifdef CRO_DEBUG_
     //m_stateStack.pushState(States::ScratchPad::Frustum);
-    m_stateStack.pushState(States::ScratchPad::MainMenu);
+    m_stateStack.pushState(States::ScratchPad::MeshCollision);
 #else
     m_stateStack.pushState(States::ScratchPad::MainMenu);
 #endif

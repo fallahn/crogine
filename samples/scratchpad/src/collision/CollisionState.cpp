@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021
+Matt Marchant 2021 - 2022
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -29,6 +29,8 @@ source distribution.
 
 #include "CollisionState.hpp"
 #include "BallSystem.hpp"
+#include "RollSystem.hpp"
+#include "Utils.hpp"
 #include "../StateIDs.hpp"
 
 #include <crogine/ecs/components/Transform.hpp>
@@ -130,6 +132,9 @@ bool CollisionState::handleEvent(const cro::Event& evt)
             showDebug = !showDebug;
             m_debugDrawer.setDebugMode(showDebug ? std::numeric_limits<std::int32_t>::max() : 0);
             break;
+        case SDLK_q:
+            resetRoller();
+            break;
         case SDLK_BACKSPACE:
             requestStackPop();
             requestStackPush(States::ScratchPad::MainMenu);
@@ -171,6 +176,7 @@ void CollisionState::buildScene()
     auto& mb = getContext().appInstance.getMessageBus();
 
     m_scene.addSystem<BallSystem>(mb, m_collisionWorld);
+    m_scene.addSystem<RollingSystem>(mb, m_collisionWorld);
     m_scene.addSystem<cro::CallbackSystem>(mb);
     m_scene.addSystem<cro::ShadowMapRenderer>(mb);
     m_scene.addSystem<cro::CameraSystem>(mb);
@@ -192,11 +198,27 @@ void CollisionState::buildScene()
     entity.addComponent<Ball>();
     m_ballEntity = entity;
 
-    md.loadFromFile("assets/collision/models/physics_test.cmt");
-    entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>();
-    md.createModel(entity);
-    setupCollisionWorld(entity.getComponent<cro::Model>().getMeshData(), entity.getComponent<cro::Transform>().getLocalTransform());
+    if (md.loadFromFile("assets/collision/models/physics_test.cmt"))
+    {
+        entity = m_scene.createEntity();
+        entity.addComponent<cro::Transform>();
+        md.createModel(entity);
+        setupCollisionWorld(entity.getComponent<cro::Model>().getMeshData(), entity.getComponent<cro::Transform>().getLocalTransform());
+    }
+
+
+    if (md.loadFromFile("assets/models/sphere_1m.cmt"))
+    {
+        entity = m_scene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition(RollResetPosition);
+        entity.getComponent<cro::Transform>().setOrigin({ 0.f, -0.5f, 0.f });
+        md.createModel(entity);
+        entity.addComponent<Roller>();
+
+        m_rollingEntity = entity;
+    }
+
+
 
     auto callback = [](cro::Camera& cam)
     {
@@ -207,6 +229,7 @@ void CollisionState::buildScene()
     auto& camera = m_scene.getActiveCamera().getComponent<cro::Camera>();
     camera.resizeCallback = callback;
     camera.shadowMapBuffer.create(2048, 2048);
+    camera.setShadowExpansion(10.f);
     callback(camera);
 
     m_scene.getActiveCamera().getComponent<cro::Transform>().move({ 0.f, 5.f, 5.f });
@@ -268,4 +291,13 @@ void CollisionState::setupCollisionWorld(const cro::Mesh::Data& meshData, glm::m
         m_groundObjects.back()->setUserIndex(static_cast<std::int32_t>(terrain)); // set the terrain type
         m_collisionWorld->addCollisionObject(m_groundObjects.back().get());
     }
+}
+
+void CollisionState::resetRoller()
+{
+    m_rollingEntity.getComponent<cro::Transform>().setPosition(RollResetPosition);
+
+    auto& roller = m_rollingEntity.getComponent<Roller>();
+    roller.velocity = { 0.f, 0.f , 0.f };
+    roller.state = Roller::Air;
 }

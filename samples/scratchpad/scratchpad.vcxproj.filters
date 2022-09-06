@@ -156,6 +156,9 @@
     <ClCompile Include="src\frustum\FrustumState.cpp">
       <Filter>Source Files\frustum</Filter>
     </ClCompile>
+    <ClCompile Include="src\collision\RollSystem.cpp">
+      <Filter>Source Files\mesh collision</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ErrorCheck.hpp">
@@ -271,6 +274,12 @@
     </ClInclude>
     <ClInclude Include="src\frustum\FrustumState.hpp">
       <Filter>Header Files\frustum</Filter>
+    </ClInclude>
+    <ClInclude Include="src\collision\RollSystem.hpp">
+      <Filter>Header Files\mesh collision</Filter>
+    </ClInclude>
+    <ClInclude Include="src\collision\Utils.hpp">
+      <Filter>Header Files\mesh collision</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
