@@ -33,6 +33,8 @@ source distribution.
 #include <crogine/gui/GuiClient.hpp>
 
 class btCollisionWorld;
+class btCollisionDispatcher;
+class btPairCachingGhostObject;
 
 struct Roller final
 {
@@ -49,16 +51,19 @@ struct Roller final
     {
         Air, Roll, Sleep
     }state = Air;
+
+    btPairCachingGhostObject* physOb = nullptr;
 };
 
 class RollingSystem final : public cro::System, public cro::GuiClient
 {
 public:
-    RollingSystem(cro::MessageBus&, std::unique_ptr<btCollisionWorld>&);
+    RollingSystem(cro::MessageBus&, std::unique_ptr<btCollisionWorld>&, std::unique_ptr<btCollisionDispatcher>&);
 
     void process(float) override;
 
 
 private:
     std::unique_ptr<btCollisionWorld>& m_collisionWorld;
+    std::unique_ptr<btCollisionDispatcher>& m_collisionDispatcher;
 };

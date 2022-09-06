@@ -34,6 +34,8 @@ source distribution.
 #include <crogine/gui/Gui.hpp>
 #include <crogine/detail/glm/gtx/norm.hpp>
 
+#include <BulletCollision/CollisionDispatch/btGhostObject.h>
+
 namespace
 {
     float debugVel = 0.f;
@@ -48,9 +50,10 @@ namespace
     };
 }
 
-RollingSystem::RollingSystem(cro::MessageBus& mb, std::unique_ptr<btCollisionWorld>& cw)
-    : cro::System(mb, typeid(RollingSystem)),
-    m_collisionWorld(cw)
+RollingSystem::RollingSystem(cro::MessageBus& mb, std::unique_ptr<btCollisionWorld>& cw, std::unique_ptr<btCollisionDispatcher>& cd)
+    : cro::System           (mb, typeid(RollingSystem)),
+    m_collisionWorld        (cw),
+    m_collisionDispatcher   (cd)
 {
     requireComponent<Roller>();
     requireComponent<cro::Transform>();
@@ -154,6 +157,48 @@ void RollingSystem::process(float dt)
         debugDir = roller.velocity;
         debugState = roller.state;
 
+        if (roller.physOb)
+        {
+            btTransform t;
+            t.setFromOpenGLMatrix(&tx.getLocalTransform()[0][0]);
+            roller.physOb->setWorldTransform(t);
+
+            //perform collisions - hmm this causes the static-static error.
+            //m_collisionWorld->performDiscreteCollisionDetection();
+
+            //read out results
+            auto manifoldCount = m_collisionDispatcher->getNumManifolds();
+            for (auto i = 0; i < manifoldCount; ++i)
+            {
+                auto manifold = m_collisionDispatcher->getManifoldByIndexInternal(i);
+                auto body0 = manifold->getBody0();
+                auto body1 = manifold->getBody1();
+
+                manifold->refreshContactPoints(body0->getWorldTransform(), body1->getWorldTransform());
+                /*auto& manifold0 = po0->m_manifolds[po0->m_collisionCount];
+                auto& manifold1 = po1->m_manifolds[po1->m_collisionCount];*/
+
+                auto contactCount = manifold->getNumContacts();
+                for (auto j = 0; j < contactCount; ++j)
+                {
+                    const auto& maniPoint = manifold->getContactPoint(j);
+                    /*manifold0.points[j].distance = maniPoint.getDistance();
+                    manifold1.points[j].distance = manifold0.points[j].distance;
+
+                    auto pointPosA = maniPoint.getPositionWorldOnA();
+                    manifold0.points[j].worldPointA.x = pointPosA.x();
+                    manifold0.points[j].worldPointA.y = pointPosA.y();
+                    manifold0.points[j].worldPointA.z = pointPosA.z();
+                    manifold1.points[j].worldPointA = manifold0.points[j].worldPointA;
+
+                    auto pointPosB = maniPoint.getPositionWorldOnB();
+                    manifold0.points[j].worldPointB.x = pointPosB.x();
+                    manifold0.points[j].worldPointB.y = pointPosB.y();
+                    manifold0.points[j].worldPointB.z = pointPosB.z();
+                    manifold1.points[j].worldPointB = manifold0.points[j].worldPointB;*/
+                }
+            }
+        }
 
         if (tx.getPosition().y < -10.f)
         {
