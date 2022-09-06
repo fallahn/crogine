@@ -308,6 +308,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
             ImGui::End();
         });*/
 #endif
+    cro::App::getInstance().resetFrameTime();
 }
 
 //public
@@ -1460,6 +1461,8 @@ void GolfState::loadAssets()
     m_resources.shaders.loadFromString(ShaderID::WireframeCulled, WireframeVertex, WireframeFragment, "#define CULLED\n");
     m_materialIDs[MaterialID::WireFrameCulled] = m_resources.materials.add(m_resources.shaders.get(ShaderID::WireframeCulled));
     m_resources.materials.get(m_materialIDs[MaterialID::WireFrameCulled]).blendMode = cro::Material::BlendMode::Alpha;
+    //shader = &m_resources.shaders.get(ShaderID::WireframeCulled);
+    //m_resolutionBuffer.addShader(*shader);
 
     //minimap
     m_resources.shaders.loadFromString(ShaderID::Minimap, MinimapVertex, MinimapFragment);

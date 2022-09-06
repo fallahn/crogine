@@ -91,6 +91,10 @@ void PropFollowSystem::process(float dt)
                             {
                                 follower.path.reverse();
                             }
+                            /*else
+                            {
+                                point.target = 1;
+                            }*/
 
                             follower.state = PropFollower::Idle;
                         }
@@ -137,10 +141,10 @@ void PropFollower::initAxis(cro::Entity e)
     auto& follower = e.getComponent<PropFollower>();
     follower.axis[0].position = follower.path.getPoint(0);
     auto dir = glm::normalize(follower.path.getPoint(1) - follower.path.getPoint(0));
-    follower.axis[0].position += dir * bb[1].x;
+    follower.axis[0].position += dir * bb[1].x * 4.f;
 
     follower.axis[1].position = follower.path.getPoint(0);
-    follower.axis[1].position += dir * bb[0].x;
+    follower.axis[1].position += dir * bb[0].x * 4.f;
 
 
     follower.axis[0].target = 1;

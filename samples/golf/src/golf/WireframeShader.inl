@@ -46,6 +46,12 @@ static const std::string WireframeVertex = R"(
 
 #if defined (CULLED)
     uniform HIGH vec3 u_cameraWorldPosition;
+
+    layout (std140) uniform ScaledResolution
+    {
+        vec2 u_scaledResolution;
+        float u_nearFadeDistance;
+    };
 #endif
 
     VARYING_OUT LOW vec4 v_colour;
