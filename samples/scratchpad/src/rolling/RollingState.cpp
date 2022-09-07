@@ -72,6 +72,9 @@ namespace
     };
 
     std::array<std::int32_t, MaterialID::Count> MaterialIDs = {};
+
+    glm::vec3 debugPos(0.f);
+    float debugMaxHeight = 0.f;
 }
 
 RollingState::RollingState(cro::StateStack& stack, cro::State::Context context)
@@ -235,7 +238,7 @@ void RollingState::createScene()
     if (md.loadFromFile("assets/models/ramp.cmt"))
     {
         auto entity = m_gameScene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition({ 0.f, -20.f, -38.f });
+        entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -38.f });
         entity.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, -85.f * cro::Util::Const::degToRad);
         md.createModel(entity);
 
@@ -247,12 +250,38 @@ void RollingState::createScene()
         auto entity = m_gameScene.createEntity();
         entity.addComponent<cro::Transform>().setPosition(BallSpawnPosition);
         md.createModel(entity);
-        entity.addComponent<Roller>().resetPosition = BallSpawnPosition;
+        //entity.addComponent<Roller>().resetPosition = BallSpawnPosition;
 
         rp::Transform tx(toR3D(BallSpawnPosition), rp::Quaternion::identity());
-        auto* body = m_physWorld->createCollisionBody(tx);
+        //auto* body = m_physWorld->createCollisionBody(tx);
+        auto* body = m_physWorld->createRigidBody(tx);
         body->addCollider(m_sphereShape, rp::Transform::identity());
-        entity.getComponent<Roller>().body = body;
+        body->setMass(260.f);
+        //entity.getComponent<Roller>().body = body;
+
+        entity.addComponent<cro::Callback>().active = true;
+        entity.getComponent<cro::Callback>().function =
+            [body](cro::Entity e, float)
+        {
+            auto pos = toGLM(body->getTransform().getPosition());
+            auto rot = toGLM(body->getTransform().getOrientation());
+
+            e.getComponent<cro::Transform>().setPosition(pos);
+            e.getComponent<cro::Transform>().setRotation(rot);
+
+            debugPos = pos;
+
+            if (pos.x < 0 && pos.y > debugMaxHeight)
+            {
+                debugMaxHeight = pos.y;
+            }
+
+            if (pos.y < -10.f)
+            {
+                //TODO can't actually update the position forcefully (it creates a huge amount of velocity)
+                //so we need to remove the ent and create a new one.
+            }
+        };
 
         m_ballEnt = entity;
     }
@@ -286,7 +315,7 @@ void RollingState::createScene()
     auto camEnt = m_gameScene.getActiveCamera();
     camEnt.getComponent<cro::Camera>().resizeCallback = updateView;
     camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(2048, 2048);
-    camEnt.getComponent<cro::Transform>().move({ 0.f, 12.f, 0.f });
+    camEnt.getComponent<cro::Transform>().move({ 0.f, 32.f, 0.f });
     camEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -20.f * cro::Util::Const::degToRad);
     updateView(camEnt.getComponent<cro::Camera>());
 
@@ -299,7 +328,8 @@ void RollingState::createUI()
         {
             if (ImGui::Begin("Window of happiness"))
             {
-
+                ImGui::Text("Pos: %3.3f, %3.3f, %3.3f", debugPos.x, debugPos.y, debugPos.z);
+                ImGui::Text("Max Height: %3.3f", debugMaxHeight);
             }
             ImGui::End();        
         });
@@ -333,17 +363,21 @@ void RollingState::parseStaticMesh(cro::Entity entity)
     auto rot = toR3D(entity.getComponent<cro::Transform>().getRotation());
     auto tx = rp::Transform(pos, rot);
 
-    auto* body = m_physWorld->createCollisionBody(tx);
+    //auto* body = m_physWorld->createCollisionBody(tx);
+    auto* body = m_physWorld->createRigidBody(tx);
+    body->setType(rp::BodyType::STATIC);
     body->addCollider(shape, rp::Transform::identity());
 }
 
 void RollingState::resetBall()
 {
-    auto& roller = m_ballEnt.getComponent<Roller>();
+    /*auto& roller = m_ballEnt.getComponent<Roller>();
     roller.prevPosition = roller.resetPosition;
     roller.state = Roller::Air;
     roller.velocity = glm::vec3(0.f);
     roller.prevVelocity = roller.velocity;
 
-    m_ballEnt.getComponent<cro::Transform>().setPosition(roller.resetPosition);
+    m_ballEnt.getComponent<cro::Transform>().setPosition(roller.resetPosition);*/
+    
+
 }
