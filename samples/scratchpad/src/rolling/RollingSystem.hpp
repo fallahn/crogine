@@ -29,31 +29,51 @@ source distribution.
 
 #pragma once
 
-#include <reactphysics3d/mathematics/Vector3.h>
-#include <reactphysics3d/mathematics/Quaternion.h>
+#include <crogine/ecs/System.hpp>
+#include <crogine/gui/GuiClient.hpp>
 
-#include <crogine/detail/glm/vec3.hpp>
-#include <crogine/detail/glm/gtx/quaternion.hpp>
-
-constexpr glm::vec3 BallSpawnPosition = glm::vec3({ 16.f, 10.f, -38.f });
-constexpr glm::vec3 Gravity = glm::vec3(0.f, -0.98f, 0.f);
-
-static inline glm::vec3 toGLM(reactphysics3d::Vector3 v)
+namespace reactphysics3d
 {
-    return { v.x, v.y, v.z };
+    class CollisionBody;
+    class PhysicsWorld;
 }
 
-static inline glm::quat toGLM(reactphysics3d::Quaternion q)
+struct Roller final
 {
-    return { q.w, q.x, q.y, q.z };
-}
+    glm::vec3 resetPosition = glm::vec3(0.f);
+    
+    glm::vec3 velocity = glm::vec3(0.f);
+    glm::vec3 prevVelocity = glm::vec3(0.f);
+    glm::vec3 prevPosition = glm::vec3(0.f);
 
-static inline reactphysics3d::Vector3 toR3D(glm::vec3 v)
-{
-    return { v.x, v.y, v.z };
-}
+    float mass = 60.f;
+    float friction = 0.98f;
 
-static inline reactphysics3d::Quaternion toR3D(glm::quat q)
+    enum
+    {
+        Air, Roll, Sleep
+    }state = Air;
+
+    reactphysics3d::CollisionBody* body = nullptr;
+
+    struct Manifold final
+    {
+        bool colliding = false;
+        glm::vec3 normal = glm::vec3(0.f);
+        float penetration = 0.f;
+    }manifold;
+};
+
+class RollSystem final : public cro::System, public cro::GuiClient
 {
-    return { q.x, q.y, q.z, q.w };
-}
+public:
+    RollSystem(cro::MessageBus&, reactphysics3d::PhysicsWorld&);
+
+    void process(float) override;
+
+
+private:
+    reactphysics3d::PhysicsWorld& m_physWorld;
+
+    void onEntityRemoved(cro::Entity) override;
+};

@@ -168,6 +168,9 @@
     <ClCompile Include="src\rolling\RollingState.cpp">
       <Filter>Source Files\rolling</Filter>
     </ClCompile>
+    <ClCompile Include="src\rolling\RollingSystem.cpp">
+      <Filter>Source Files\rolling</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ErrorCheck.hpp">
@@ -294,6 +297,9 @@
       <Filter>Header Files\rolling</Filter>
     </ClInclude>
     <ClInclude Include="src\rolling\Utility.hpp">
+      <Filter>Header Files\rolling</Filter>
+    </ClInclude>
+    <ClInclude Include="src\rolling\RollingSystem.hpp">
       <Filter>Header Files\rolling</Filter>
     </ClInclude>
   </ItemGroup>

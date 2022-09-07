@@ -28,6 +28,7 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include "RollingState.hpp"
+#include "RollingSystem.hpp"
 #include "Utility.hpp"
 
 #include <crogine/gui/Gui.hpp>
@@ -106,6 +107,9 @@ bool RollingState::handleEvent(const cro::Event& evt)
         switch (evt.key.keysym.sym)
         {
         default: break;
+        case SDLK_q:
+            resetBall();
+            break;
         case SDLK_p:
             m_physWorld->setIsDebugRenderingEnabled(!m_physWorld->getIsDebugRenderingEnabled());
             m_debugMesh.getComponent<cro::Model>().setHidden(!m_physWorld->getIsDebugRenderingEnabled());
@@ -203,6 +207,7 @@ void RollingState::addSystems()
 {
     //set up the physics stuff first
     m_physWorld = m_physCommon.createPhysicsWorld();
+    m_physWorld->getDebugRenderer().setIsDebugItemDisplayed(rp::DebugRenderer::DebugItem::CONTACT_NORMAL, true);
     m_physWorld->getDebugRenderer().setIsDebugItemDisplayed(rp::DebugRenderer::DebugItem::COLLISION_SHAPE, true);
     m_physWorld->getDebugRenderer().setIsDebugItemDisplayed(rp::DebugRenderer::DebugItem::COLLIDER_AABB, true);
     m_physWorld->setIsDebugRenderingEnabled(false);
@@ -210,6 +215,7 @@ void RollingState::addSystems()
 
     auto& mb = getContext().appInstance.getMessageBus();
     m_gameScene.addSystem<cro::CallbackSystem>(mb);
+    m_gameScene.addSystem<RollSystem>(mb, *m_physWorld);
     m_gameScene.addSystem<cro::CameraSystem>(mb);
     m_gameScene.addSystem<cro::ShadowMapRenderer>(mb);
     m_gameScene.addSystem<cro::ModelRenderer>(mb);
@@ -241,10 +247,14 @@ void RollingState::createScene()
         auto entity = m_gameScene.createEntity();
         entity.addComponent<cro::Transform>().setPosition(BallSpawnPosition);
         md.createModel(entity);
+        entity.addComponent<Roller>().resetPosition = BallSpawnPosition;
 
         rp::Transform tx(toR3D(BallSpawnPosition), rp::Quaternion::identity());
         auto* body = m_physWorld->createCollisionBody(tx);
         body->addCollider(m_sphereShape, rp::Transform::identity());
+        entity.getComponent<Roller>().body = body;
+
+        m_ballEnt = entity;
     }
 
     //debug mesh
@@ -325,4 +335,15 @@ void RollingState::parseStaticMesh(cro::Entity entity)
 
     auto* body = m_physWorld->createCollisionBody(tx);
     body->addCollider(shape, rp::Transform::identity());
+}
+
+void RollingState::resetBall()
+{
+    auto& roller = m_ballEnt.getComponent<Roller>();
+    roller.prevPosition = roller.resetPosition;
+    roller.state = Roller::Air;
+    roller.velocity = glm::vec3(0.f);
+    roller.prevVelocity = roller.velocity;
+
+    m_ballEnt.getComponent<cro::Transform>().setPosition(roller.resetPosition);
 }

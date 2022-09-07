@@ -75,7 +75,7 @@ private:
     std::vector<std::vector<std::uint32_t>> m_indexData;
     std::unique_ptr<rp::TriangleVertexArray> m_triangleVerts;
 
-
+    cro::Entity m_ballEnt;
     cro::Entity m_debugMesh;
 
     void addSystems();
@@ -84,4 +84,5 @@ private:
     void createUI();
 
     void parseStaticMesh(cro::Entity);
+    void resetBall();
 };
