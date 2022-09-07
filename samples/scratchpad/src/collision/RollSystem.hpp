@@ -51,8 +51,6 @@ struct Roller final
     {
         Air, Roll, Sleep
     }state = Air;
-
-    btPairCachingGhostObject* physOb = nullptr;
 };
 
 class RollingSystem final : public cro::System, public cro::GuiClient

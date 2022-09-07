@@ -65,9 +65,6 @@ CollisionState::CollisionState(cro::StateStack& ss, cro::State::Context ctx)
     m_collisionWorld = std::make_unique<btCollisionWorld>(m_collisionDispatcher.get(), m_broadphaseInterface.get(), m_collisionConfiguration.get());
 
     m_collisionWorld->setDebugDrawer(&m_debugDrawer);    
-    
-
-    m_sphereShape = std::make_unique<btSphereShape>(0.5f);
 
 
     //prevent resizing cos everything assplode otherwise :3
@@ -249,11 +246,6 @@ void CollisionState::buildScene()
         entity.addComponent<Roller>().resetPosition = entity.getComponent<cro::Transform>().getPosition();
         entity.getComponent<Roller>().friction = 1.f;
         m_rampEntity = entity;
-
-        auto& object = m_groundObjects.emplace_back(std::make_unique<btPairCachingGhostObject>());
-        object->setCollisionShape(m_sphereShape.get());
-        entity.getComponent<Roller>().physOb = object.get();
-        m_collisionWorld->addCollisionObject(object.get());
     }
 
     if (md.loadFromFile("assets/models/ramp.cmt"))

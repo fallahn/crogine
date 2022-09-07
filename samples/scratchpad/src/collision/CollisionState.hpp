@@ -75,7 +75,6 @@ private:
     std::vector<std::unique_ptr<btPairCachingGhostObject>> m_groundObjects;
     std::vector<std::unique_ptr<btTriangleIndexVertexArray>> m_groundVertices;
     std::vector<std::unique_ptr<btBvhTriangleMeshShape>> m_groundShapes;
-    std::unique_ptr<btSphereShape> m_sphereShape;
 
     //this needs to be kept around so the collision system can reference it
     std::vector<std::vector<float>> m_vertexData;
