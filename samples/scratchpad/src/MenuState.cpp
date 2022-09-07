@@ -372,6 +372,20 @@ void MenuState::createScene()
                 }
             });
 
+    //frustum button
+    textPos.y -= MenuSpacing;
+    entity = createButton("Rolling Balls", textPos);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
+        uiSystem->addCallback([&](cro::Entity e, const cro::ButtonEvent& evt)
+            {
+                if (activated(evt))
+                {
+                    requestStackClear();
+                    requestStackPush(States::ScratchPad::Rolling);
+                }
+            });
+
+
     //load plugin
     textPos.y -= MenuSpacing;
     entity = createButton("Load Plugin", textPos);
@@ -387,8 +401,9 @@ void MenuState::createScene()
                     //auto path = cro::FileSystem::openFolderDialogue();
                     //if (!path.empty())
                     {
-                        m_gameInstance.loadPlugin("plugin/");
+                        //m_gameInstance.loadPlugin("plugin/");
                     }
+                    cro::FileSystem::showMessageBox("Fix Me", "Fix Me", cro::FileSystem::OK);
                 }
             });
 

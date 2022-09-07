@@ -38,6 +38,7 @@ source distribution.
 #include "voxels/VoxelState.hpp"
 #include "vats/VatsState.hpp"
 #include "retro/RetroState.hpp"
+#include "rolling/RollingState.hpp"
 #include "LoadingScreen.hpp"
 
 #include <crogine/core/Clock.hpp>
@@ -114,10 +115,11 @@ bool MyApp::initialise()
     m_stateStack.registerState<VatsState>(States::ScratchPad::VATs);
     m_stateStack.registerState<RetroState>(States::ScratchPad::Retro);
     m_stateStack.registerState<FrustumState>(States::ScratchPad::Frustum);
+    m_stateStack.registerState<RollingState>(States::ScratchPad::Rolling);
 
 #ifdef CRO_DEBUG_
-    //m_stateStack.pushState(States::ScratchPad::Frustum);
-    m_stateStack.pushState(States::ScratchPad::MeshCollision);
+    m_stateStack.pushState(States::ScratchPad::Rolling);
+    //m_stateStack.pushState(States::ScratchPad::MainMenu);
 #else
     m_stateStack.pushState(States::ScratchPad::MainMenu);
 #endif

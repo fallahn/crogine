@@ -43,6 +43,7 @@ namespace States
             Frustum,
             MeshCollision,
             Retro,
+            Rolling,
             Voxels,
             VATs,
 
