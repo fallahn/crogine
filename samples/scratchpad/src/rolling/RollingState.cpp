@@ -28,21 +28,20 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include "RollingState.hpp"
+#include "Utility.hpp"
 
 #include <crogine/gui/Gui.hpp>
 
 #include <crogine/ecs/components/Camera.hpp>
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Callback.hpp>
-#include <crogine/ecs/components/Drawable2D.hpp>
-#include <crogine/ecs/components/Sprite.hpp>
 
 #include <crogine/ecs/systems/CameraSystem.hpp>
 #include <crogine/ecs/systems/CallbackSystem.hpp>
+#include <crogine/ecs/systems/ShadowMapRenderer.hpp>
 #include <crogine/ecs/systems/ModelRenderer.hpp>
-#include <crogine/ecs/systems/SpriteSystem2D.hpp>
-#include <crogine/ecs/systems/RenderSystem2D.hpp>
 
+#include <crogine/graphics/DynamicMeshBuilder.hpp>
 #include <crogine/util/Constants.hpp>
 
 #include <crogine/detail/OpenGL.hpp>
@@ -50,11 +49,35 @@ source distribution.
 
 namespace
 {
+    struct ShaderID final
+    {
+        enum
+        {
+            Wireframe,
+
+            Count
+        };
+    };
+    std::array<std::int32_t, ShaderID::Count> ShaderIDs = {};
+
+    struct MaterialID final
+    {
+        enum
+        {
+            Wireframe,
+
+            Count
+        };
+    };
+
+    std::array<std::int32_t, MaterialID::Count> MaterialIDs = {};
 }
 
 RollingState::RollingState(cro::StateStack& stack, cro::State::Context context)
     : cro::State    (stack, context),
-    m_gameScene     (context.appInstance.getMessageBus())
+    m_gameScene     (context.appInstance.getMessageBus()),
+    m_physWorld     (nullptr),
+    m_sphereShape   (nullptr)
 {
     context.mainWindow.loadResources([this]() {
         addSystems();
@@ -62,6 +85,12 @@ RollingState::RollingState(cro::StateStack& stack, cro::State::Context context)
         createScene();
         createUI();
     });
+}
+
+RollingState::~RollingState()
+{
+    //I believe this is all RAII - but experience tells me not to trust
+    m_physCommon.destroyPhysicsWorld(m_physWorld);
 }
 
 //public
@@ -77,7 +106,10 @@ bool RollingState::handleEvent(const cro::Event& evt)
         switch (evt.key.keysym.sym)
         {
         default: break;
-
+        case SDLK_p:
+            m_physWorld->setIsDebugRenderingEnabled(!m_physWorld->getIsDebugRenderingEnabled());
+            m_debugMesh.getComponent<cro::Model>().setHidden(!m_physWorld->getIsDebugRenderingEnabled());
+            break;
         case SDLK_BACKSPACE:
         case SDLK_ESCAPE:
             requestStackClear();
@@ -98,6 +130,65 @@ void RollingState::handleMessage(const cro::Message& msg)
 
 bool RollingState::simulate(float dt)
 {
+    //we're not actually doing physics, this updates the debug draw
+    m_physWorld->update(dt);
+
+    if (m_physWorld->getIsDebugRenderingEnabled())
+    {
+        const auto& debug = m_physWorld->getDebugRenderer();
+        const auto& lines = debug.getLines();
+        const auto& tris = debug.getTriangles();
+
+        //baahhh we have to convert the colour type
+        struct Vertex final
+        {
+            glm::vec3 pos = glm::vec3(0.f);
+            cro::Colour col;
+            Vertex(glm::vec3 p, cro::Colour c)
+                : pos(p), col(c) {}
+        };
+
+        std::array<std::vector<std::uint32_t>, 2> indices;
+        std::uint32_t i = 0;
+        std::vector<Vertex> verts;
+        for (const auto& l : lines)
+        {
+            verts.emplace_back(toGLM(l.point1), cro::Colour(l.color1));
+            indices[0].push_back(i++);
+            verts.emplace_back(toGLM(l.point2), cro::Colour(l.color2));
+            indices[0].push_back(i++);
+        }
+
+        for (const auto& t : tris)
+        {
+            //bit of a fudge but approximates rendering as LINES not tris
+            verts.emplace_back(toGLM(t.point1), cro::Colour::Magenta);
+            indices[1].push_back(i++);
+            verts.emplace_back(toGLM(t.point2), cro::Colour::Magenta);
+            indices[1].push_back(i++);
+            indices[1].push_back(i);
+            verts.emplace_back(toGLM(t.point3), cro::Colour::Magenta);
+            indices[1].push_back(i++);
+            indices[1].push_back(i);
+            indices[1].push_back(i-3);
+        }
+
+        auto& meshData = m_debugMesh.getComponent<cro::Model>().getMeshData();
+        glBindBuffer(GL_ARRAY_BUFFER, meshData.vbo);
+        glBufferData(GL_ARRAY_BUFFER, verts.size() * sizeof(Vertex), verts.data(), GL_DYNAMIC_DRAW);
+
+        auto* submesh = &meshData.indexData[0];
+        submesh->indexCount = static_cast<std::uint32_t>(indices[0].size());
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->ibo);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh->indexCount * sizeof(std::uint32_t), indices[0].data(), GL_DYNAMIC_DRAW);
+
+        submesh = &meshData.indexData[1];
+        //submesh->primitiveType = GL_TRIANGLES;
+        submesh->indexCount = static_cast<std::uint32_t>(indices[1].size());
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->ibo);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh->indexCount * sizeof(std::uint32_t), indices[1].data(), GL_DYNAMIC_DRAW);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+    }
     m_gameScene.simulate(dt);
     return true;
 }
@@ -110,10 +201,21 @@ void RollingState::render()
 //private
 void RollingState::addSystems()
 {
+    //set up the physics stuff first
+    m_physWorld = m_physCommon.createPhysicsWorld();
+    m_physWorld->getDebugRenderer().setIsDebugItemDisplayed(rp::DebugRenderer::DebugItem::COLLISION_SHAPE, true);
+    m_physWorld->getDebugRenderer().setIsDebugItemDisplayed(rp::DebugRenderer::DebugItem::COLLIDER_AABB, true);
+    m_physWorld->setIsDebugRenderingEnabled(false);
+    m_sphereShape = m_physCommon.createSphereShape(0.5f);
+
     auto& mb = getContext().appInstance.getMessageBus();
     m_gameScene.addSystem<cro::CallbackSystem>(mb);
     m_gameScene.addSystem<cro::CameraSystem>(mb);
+    m_gameScene.addSystem<cro::ShadowMapRenderer>(mb);
     m_gameScene.addSystem<cro::ModelRenderer>(mb);
+
+    ShaderIDs[ShaderID::Wireframe] = m_resources.shaders.loadBuiltIn(cro::ShaderResource::Unlit, cro::Mesh::Position | cro::Mesh::Colour);
+    MaterialIDs[MaterialID::Wireframe] = m_resources.materials.add(m_resources.shaders.get(ShaderIDs[ShaderID::Wireframe]));
 }
 
 void RollingState::loadAssets()
@@ -124,7 +226,38 @@ void RollingState::loadAssets()
 void RollingState::createScene()
 {
     cro::ModelDefinition md(m_resources);
+    if (md.loadFromFile("assets/models/ramp.cmt"))
+    {
+        auto entity = m_gameScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ 0.f, -20.f, -38.f });
+        entity.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, -85.f * cro::Util::Const::degToRad);
+        md.createModel(entity);
 
+        parseStaticMesh(entity);
+    }
+
+    if (md.loadFromFile("assets/models/sphere_1m.cmt"))
+    {
+        auto entity = m_gameScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition(BallSpawnPosition);
+        md.createModel(entity);
+
+        rp::Transform tx(toR3D(BallSpawnPosition), rp::Quaternion::identity());
+        auto* body = m_physWorld->createCollisionBody(tx);
+        body->addCollider(m_sphereShape, rp::Transform::identity());
+    }
+
+    //debug mesh
+    auto entity = m_gameScene.createEntity();
+    entity.addComponent<cro::Transform>();
+
+    auto meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 2, GL_LINES));
+    auto material = m_resources.materials.get(MaterialIDs[MaterialID::Wireframe]);
+    entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), material);
+    entity.getComponent<cro::Model>().getMeshData().boundingBox = { glm::vec3(-20.f), glm::vec3(20.f) };
+    entity.getComponent<cro::Model>().getMeshData().boundingSphere = entity.getComponent<cro::Model>().getMeshData().boundingBox;
+    entity.getComponent<cro::Model>().setHidden(true);
+    m_debugMesh = entity;
 
 
     auto updateView = [](cro::Camera& cam3D) 
@@ -135,14 +268,19 @@ void RollingState::createScene()
         size.x = 1.f;
 
         //90 deg in x (glm expects fov in y)
-        cam3D.setPerspective(50.6f * cro::Util::Const::degToRad, 16.f / 9.f, 0.1f, 140.f);
+        cam3D.setPerspective(50.6f * cro::Util::Const::degToRad, 16.f / 9.f, 0.1f, 60.f);
         cam3D.viewport.bottom = (1.f - size.y) / 2.f;
         cam3D.viewport.height = size.y;
     };
 
     auto camEnt = m_gameScene.getActiveCamera();
     camEnt.getComponent<cro::Camera>().resizeCallback = updateView;
+    camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(2048, 2048);
+    camEnt.getComponent<cro::Transform>().move({ 0.f, 12.f, 0.f });
+    camEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -20.f * cro::Util::Const::degToRad);
     updateView(camEnt.getComponent<cro::Camera>());
+
+    m_gameScene.getSunlight().getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -60.f * cro::Util::Const::degToRad);
 }
 
 void RollingState::createUI()
@@ -155,4 +293,36 @@ void RollingState::createUI()
             }
             ImGui::End();        
         });
+}
+
+void RollingState::parseStaticMesh(cro::Entity entity)
+{
+    //TODO this only supports one mesh and the first sub-mesh
+    //needs updating if the model changes or more models are added.
+
+    const auto& meshData = entity.getComponent<cro::Model>().getMeshData();
+    cro::Mesh::readVertexData(meshData, m_vertexData, m_indexData);
+
+    //this makes my whiskers itch.
+    m_triangleVerts = std::make_unique<rp::TriangleVertexArray>(
+        static_cast<std::uint32_t>(m_vertexData.size()),
+        (void*)m_vertexData.data(),
+        static_cast<std::uint32_t>(meshData.vertexSize),
+        static_cast<std::uint32_t>(m_indexData[0].size() / 3),
+        (void*)m_indexData[0].data(),
+        static_cast<std::uint32_t>(3 * sizeof(std::uint32_t)),
+        rp::TriangleVertexArray::VertexDataType::VERTEX_FLOAT_TYPE,
+        rp::TriangleVertexArray::IndexDataType::INDEX_INTEGER_TYPE);
+
+    auto* mesh = m_physCommon.createTriangleMesh();
+    mesh->addSubpart(m_triangleVerts.get());
+
+    auto* shape = m_physCommon.createConcaveMeshShape(mesh);
+
+    auto pos = toR3D(entity.getComponent<cro::Transform>().getPosition());
+    auto rot = toR3D(entity.getComponent<cro::Transform>().getRotation());
+    auto tx = rp::Transform(pos, rot);
+
+    auto* body = m_physWorld->createCollisionBody(tx);
+    body->addCollider(shape, rp::Transform::identity());
 }

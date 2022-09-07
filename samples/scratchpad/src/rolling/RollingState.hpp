@@ -36,6 +36,12 @@ source distribution.
 #include <crogine/gui/GuiClient.hpp>
 #include <crogine/graphics/ModelDefinition.hpp>
 
+#include <reactphysics3d/reactphysics3d.h>
+
+#include <memory>
+
+namespace rp = reactphysics3d;
+
 namespace cro
 {
     struct Camera;
@@ -45,7 +51,7 @@ class RollingState final : public cro::State, public cro::GuiClient
 {
 public:
     RollingState(cro::StateStack&, cro::State::Context);
-    ~RollingState() = default;
+    ~RollingState();
 
     cro::StateID getStateID() const override { return States::ScratchPad::Rolling; }
 
@@ -59,8 +65,23 @@ private:
     cro::Scene m_gameScene;
     cro::ResourceCollection m_resources;
 
+    rp::PhysicsCommon m_physCommon;
+    rp::PhysicsWorld* m_physWorld;
+    rp::SphereShape* m_sphereShape;
+
+    //if we want more than one static mesh increase this to a vector of vectors
+    //as the vertex data needs to be kept around for each collision mesh object
+    std::vector<float> m_vertexData;
+    std::vector<std::vector<std::uint32_t>> m_indexData;
+    std::unique_ptr<rp::TriangleVertexArray> m_triangleVerts;
+
+
+    cro::Entity m_debugMesh;
+
     void addSystems();
     void loadAssets();
     void createScene();
     void createUI();
+
+    void parseStaticMesh(cro::Entity);
 };

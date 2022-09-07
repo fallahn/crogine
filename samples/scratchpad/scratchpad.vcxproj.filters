@@ -293,6 +293,9 @@
     <ClInclude Include="src\rolling\RollingState.hpp">
       <Filter>Header Files\rolling</Filter>
     </ClInclude>
+    <ClInclude Include="src\rolling\Utility.hpp">
+      <Filter>Header Files\rolling</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="src\voxels\Tables.inl">
