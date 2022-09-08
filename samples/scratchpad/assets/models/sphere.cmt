@@ -8,7 +8,7 @@ model sphere
     {
         mask_colour = 1.000000,1.000000,0.000000,1
         name = "Untitled"
-        colour = 0.0,0.000000,1.000000,1
+        colour = 1.0,0.000000,1.000000,1
         smooth = true
         repeat = true
         blendmode = "none"

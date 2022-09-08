@@ -75,13 +75,15 @@ namespace
 
     glm::vec3 debugPos(0.f);
     float debugMaxHeight = 0.f;
+    float debugVelocity = 0.f;
 }
 
 RollingState::RollingState(cro::StateStack& stack, cro::State::Context context)
     : cro::State    (stack, context),
     m_gameScene     (context.appInstance.getMessageBus()),
     m_physWorld     (nullptr),
-    m_sphereShape   (nullptr)
+    m_sphereShape   (nullptr),
+    m_ballDef       (m_resources)
 {
     context.mainWindow.loadResources([this]() {
         addSystems();
@@ -111,7 +113,8 @@ bool RollingState::handleEvent(const cro::Event& evt)
         {
         default: break;
         case SDLK_q:
-            resetBall();
+            //resetBall();
+            spawnBall();
             break;
         case SDLK_p:
             m_physWorld->setIsDebugRenderingEnabled(!m_physWorld->getIsDebugRenderingEnabled());
@@ -137,7 +140,27 @@ void RollingState::handleMessage(const cro::Message& msg)
 
 bool RollingState::simulate(float dt)
 {
-    //we're not actually doing physics, this updates the debug draw
+    if (m_camController.getComponent<cro::Callback>().getUserData<cro::Entity>().isValid())
+    {
+        rp::Vector3 force(0.f, 0.f, 0.f);
+        if (cro::Keyboard::isKeyPressed(SDLK_UP))
+        {
+            force.z -= 1000.f;
+        }
+
+        if (force.lengthSquare() > 0)
+        {
+            auto ball = m_camController.getComponent<cro::Callback>().getUserData<cro::Entity>();
+            auto* body = ball.getComponent<cro::Callback>().getUserData<rp::RigidBody*>();
+            
+            debugVelocity = body->getLinearVelocity().length();
+            if (debugVelocity < 5)
+            {
+                body->applyWorldForceAtCenterOfMass(force);
+            }
+        }
+    }
+
     m_physWorld->update(dt);
 
     if (m_physWorld->getIsDebugRenderingEnabled())
@@ -203,6 +226,10 @@ bool RollingState::simulate(float dt)
 void RollingState::render()
 {
     m_gameScene.render();
+
+    auto oldCam = m_gameScene.setActiveCamera(m_followCam);
+    m_gameScene.render();
+    m_gameScene.setActiveCamera(oldCam);
 }
 
 //private
@@ -239,52 +266,13 @@ void RollingState::createScene()
     {
         auto entity = m_gameScene.createEntity();
         entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -38.f });
-        entity.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, -85.f * cro::Util::Const::degToRad);
+        entity.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, 180.f * cro::Util::Const::degToRad);
         md.createModel(entity);
 
         parseStaticMesh(entity);
     }
 
-    if (md.loadFromFile("assets/models/sphere_1m.cmt"))
-    {
-        auto entity = m_gameScene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition(BallSpawnPosition);
-        md.createModel(entity);
-        //entity.addComponent<Roller>().resetPosition = BallSpawnPosition;
-
-        rp::Transform tx(toR3D(BallSpawnPosition), rp::Quaternion::identity());
-        //auto* body = m_physWorld->createCollisionBody(tx);
-        auto* body = m_physWorld->createRigidBody(tx);
-        body->addCollider(m_sphereShape, rp::Transform::identity());
-        body->setMass(260.f);
-        //entity.getComponent<Roller>().body = body;
-
-        entity.addComponent<cro::Callback>().active = true;
-        entity.getComponent<cro::Callback>().function =
-            [body](cro::Entity e, float)
-        {
-            auto pos = toGLM(body->getTransform().getPosition());
-            auto rot = toGLM(body->getTransform().getOrientation());
-
-            e.getComponent<cro::Transform>().setPosition(pos);
-            e.getComponent<cro::Transform>().setRotation(rot);
-
-            debugPos = pos;
-
-            if (pos.x < 0 && pos.y > debugMaxHeight)
-            {
-                debugMaxHeight = pos.y;
-            }
-
-            if (pos.y < -10.f)
-            {
-                //TODO can't actually update the position forcefully (it creates a huge amount of velocity)
-                //so we need to remove the ent and create a new one.
-            }
-        };
-
-        m_ballEnt = entity;
-    }
+    m_ballDef.loadFromFile("assets/models/sphere_1m.cmt");
 
     //debug mesh
     auto entity = m_gameScene.createEntity();
@@ -302,7 +290,6 @@ void RollingState::createScene()
     auto updateView = [](cro::Camera& cam3D) 
     {
         glm::vec2 size(cro::App::getWindow().getSize());
-        auto windowSize = size;
         size.y = ((size.x / 16.f) * 9.f) / size.y;
         size.x = 1.f;
 
@@ -315,11 +302,54 @@ void RollingState::createScene()
     auto camEnt = m_gameScene.getActiveCamera();
     camEnt.getComponent<cro::Camera>().resizeCallback = updateView;
     camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(2048, 2048);
-    camEnt.getComponent<cro::Transform>().move({ 0.f, 32.f, 0.f });
+    camEnt.getComponent<cro::Transform>().move({ -36.f, 32.f, -26.f });
+    camEnt.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, -90.f * cro::Util::Const::degToRad);
     camEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -20.f * cro::Util::Const::degToRad);
     updateView(camEnt.getComponent<cro::Camera>());
 
+    m_camController = m_gameScene.createEntity();
+    m_camController.addComponent<cro::Transform>();
+    m_camController.addComponent<cro::Callback>().active = true;
+    m_camController.getComponent<cro::Callback>().setUserData<cro::Entity>();
+    m_camController.getComponent<cro::Callback>().function =
+        [](cro::Entity e, float)
+    {
+        const auto& target = e.getComponent<cro::Callback>().getUserData<cro::Entity>();
+        if (target.isValid())
+        {
+            e.getComponent<cro::Transform>().setPosition(target.getComponent<cro::Transform>().getPosition());
+        }
+    };
+
+    auto updateFollow = [](cro::Camera& cam3D)
+    {
+        glm::vec2 size(cro::App::getWindow().getSize());
+        size.y = ((size.x / 16.f) * 9.f) / size.y;
+        size.x = 1.f;
+        size /= 4.f;
+
+        //90 deg in x (glm expects fov in y)
+        cam3D.setPerspective(50.6f * cro::Util::Const::degToRad, 16.f / 9.f, 0.1f, 60.f);
+        cam3D.viewport.bottom = 0.01f;
+        cam3D.viewport.height = size.y;
+        cam3D.viewport.left = 1.f - (size.x + 0.01f);
+        cam3D.viewport.width = size.x;
+    };
+    camEnt = m_gameScene.createEntity();
+    camEnt.addComponent<cro::Transform>().setLocalTransform(glm::inverse(glm::lookAt(glm::vec3(0.f, 1.3f, 6.f), glm::vec3(0.f), cro::Transform::Y_AXIS)));
+    camEnt.addComponent<cro::Camera>().resizeCallback = updateFollow;
+    camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(1024, 1024);
+    updateFollow(camEnt.getComponent<cro::Camera>());
+    m_camController.getComponent<cro::Transform>().addChild(camEnt.getComponent<cro::Transform>());
+    m_followCam = camEnt;
+
+    if (md.loadFromFile("assets/models/cube_025m.cmt"))
+    {
+        md.createModel(camEnt);
+    }
+
     m_gameScene.getSunlight().getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -60.f * cro::Util::Const::degToRad);
+    m_gameScene.setCubemap("assets/billiards/skybox/sky.ccm");
 }
 
 void RollingState::createUI()
@@ -330,6 +360,7 @@ void RollingState::createUI()
             {
                 ImGui::Text("Pos: %3.3f, %3.3f, %3.3f", debugPos.x, debugPos.y, debugPos.z);
                 ImGui::Text("Max Height: %3.3f", debugMaxHeight);
+                ImGui::Text("Velocity: %3.3f", debugVelocity);
             }
             ImGui::End();        
         });
@@ -367,6 +398,47 @@ void RollingState::parseStaticMesh(cro::Entity entity)
     auto* body = m_physWorld->createRigidBody(tx);
     body->setType(rp::BodyType::STATIC);
     body->addCollider(shape, rp::Transform::identity());
+}
+
+void RollingState::spawnBall()
+{
+    auto entity = m_gameScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(BallSpawnPosition);
+    m_ballDef.createModel(entity);
+
+    rp::Transform tx(toR3D(BallSpawnPosition), rp::Quaternion::identity());
+
+    auto* body = m_physWorld->createRigidBody(tx);
+    body->addCollider(m_sphereShape, rp::Transform::identity());
+    body->setMass(260.f);
+
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<rp::RigidBody*>(body);
+    entity.getComponent<cro::Callback>().function =
+        [&,body](cro::Entity e, float)
+    {
+        auto pos = toGLM(body->getTransform().getPosition());
+        auto rot = toGLM(body->getTransform().getOrientation());
+
+        e.getComponent<cro::Transform>().setPosition(pos);
+        e.getComponent<cro::Transform>().setRotation(rot);
+
+        debugPos = pos;
+
+        if (pos.x < 0 && pos.y > debugMaxHeight)
+        {
+            debugMaxHeight = pos.y;
+        }
+
+        if (pos.y < -10.f)
+        {
+            m_physWorld->destroyRigidBody(body);
+            e.getComponent<cro::Callback>().active = false;
+            m_gameScene.destroyEntity(e);
+        }
+    };
+
+    m_camController.getComponent<cro::Callback>().setUserData<cro::Entity>(entity);
 }
 
 void RollingState::resetBall()

@@ -35,7 +35,7 @@ source distribution.
 #include <crogine/detail/glm/vec3.hpp>
 #include <crogine/detail/glm/gtx/quaternion.hpp>
 
-constexpr glm::vec3 BallSpawnPosition = glm::vec3({ 16.f, 30.f, -38.f });
+constexpr glm::vec3 BallSpawnPosition = glm::vec3({ 0.f, 31.f, -9.f });
 constexpr glm::vec3 Gravity = glm::vec3(0.f, -0.98f, 0.f);
 
 static inline glm::vec3 toGLM(reactphysics3d::Vector3 v)

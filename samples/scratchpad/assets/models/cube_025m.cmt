@@ -1,14 +1,14 @@
 model cube
 {
     mesh = cube
-    size = 1.000000,1.000000,1.000000
+    size = 0.2500000,0.2500000,0.2500000
     cast_shadows = true
 
     material VertexLit
     {
         mask_colour = 0.000000,0.000000,0.000000,1.000000
         name = "placeholder"
-        colour = 0.100000,0.1,0.161947,1.000000
+        colour = 0.600000,0.5,0.361947,1.000000
         smooth = true
         repeat = true
         depth_test = true

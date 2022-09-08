@@ -145,6 +145,9 @@ void RollSystem::process(float dt)
             RollerCallback cb(roller);
             m_physWorld.testCollision(roller.body, cb);
 
+            //funny how this is copy/pasted from the collision scratch
+            //but behaves *completely* differently
+
             if (roller.manifold.colliding)
             {
                 auto normal = roller.manifold.normal;
