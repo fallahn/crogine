@@ -569,14 +569,14 @@ bool ModelDefinition::loadFromFile(const std::string& path, bool instanced, bool
             else if (name == "subrect")
             {
                 auto subrect = p.getValue<glm::vec4>();
-                auto clamp = [](float& v)
+                /*auto clamp = [](float& v)
                 {
                     v = std::min(1.f, std::max(0.f, v));
                 };
                 clamp(subrect.x);
                 clamp(subrect.y);
                 clamp(subrect.z);
-                clamp(subrect.w);
+                clamp(subrect.w);*/
 
                 material.setProperty("u_subrect", subrect);
             }
