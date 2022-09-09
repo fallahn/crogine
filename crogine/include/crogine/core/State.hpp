@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2022
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -147,6 +147,16 @@ namespace cro
         \brief Returns the number of active states on this state's StateStack
         */
         std::size_t getStateCount() const;
+
+        /*!
+        \brief Shortcut for posting a message on the active message bus
+        \see MessageBus::post()
+        */
+        template <typename T>
+        T* postMessage(std::int32_t id)
+        {
+            return m_context.appInstance.getMessageBus().post<T>(id);
+        }
 
     private:
         StateStack& m_stack;
