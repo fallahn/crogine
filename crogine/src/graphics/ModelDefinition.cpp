@@ -34,6 +34,7 @@ source distribution.
 #include <crogine/graphics/SphereBuilder.hpp>
 #include <crogine/graphics/CubeBuilder.hpp>
 #include <crogine/graphics/QuadBuilder.hpp>
+#include <crogine/graphics/CircleMeshBuilder.hpp>
 #include <crogine/graphics/DynamicMeshBuilder.hpp>
 #include <crogine/graphics/EnvironmentMap.hpp>
 
@@ -163,6 +164,22 @@ bool ModelDefinition::loadFromFile(const std::string& path, bool instanced, bool
         }
 
         meshBuilder = std::make_unique<CubeBuilder>(size);
+    }
+    else if (Util::String::toLower(meshValue) == "circle")
+    {
+        float radius = 1.f;
+        std::uint32_t pointCount = 3;
+        if (auto rad = cfg.findProperty("radius"); rad)
+        {
+            radius = std::max(0.01f, rad->getValue<float>());
+        }
+
+        if (auto pCount = cfg.findProperty("point_count"); pCount)
+        {
+            pointCount = std::max(pointCount, pCount->getValue<std::uint32_t>());
+        }
+
+        meshBuilder = std::make_unique<CircleMeshBuilder>(radius, pointCount);
     }
     else if (Util::String::toLower(meshValue) == "quad")
     {
