@@ -30,6 +30,7 @@ source distribution.
 #pragma once
 
 #include <crogine/Config.hpp>
+#include <crogine/core/App.hpp>
 #include <crogine/detail/Types.hpp>
 #include <crogine/core/Message.hpp>
 
