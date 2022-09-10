@@ -2093,7 +2093,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
                             && m_sharedData.serverInstance.running()) //not running if we're not hosting :)
                         {
                             m_sharedData.clientConnection.netClient.sendPacket(PacketID::RequestGameStart, std::uint8_t(sv::StateID::Golf), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
-                            m_audioEnts[AudioID::Start].getComponent<cro::AudioEmitter>().play();
+                            m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
                         }
                     }
                     else
