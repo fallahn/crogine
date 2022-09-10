@@ -1257,6 +1257,7 @@ void DrivingState::createScene()
     cam.shadowMapBuffer.create(ShadowMapSize, ShadowMapSize);
     cam.resizeCallback = updateView;
     cam.setMaxShadowDistance(40.f);
+    cam.setShadowExpansion(15.f);
     cam.renderFlags = ~RenderFlags::MiniMap;
     updateView(cam);
     
