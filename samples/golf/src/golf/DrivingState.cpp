@@ -3,7 +3,7 @@
 Matt Marchant 2021 - 2022
 http://trederia.blogspot.com
 
-crogine application - Zlib license.
+Super Video Golf - zlib licence.
 
 This software is provided 'as-is', without any express or
 implied warranty.In no event will the authors be held
@@ -1257,6 +1257,7 @@ void DrivingState::createScene()
     cam.shadowMapBuffer.create(ShadowMapSize, ShadowMapSize);
     cam.resizeCallback = updateView;
     cam.setMaxShadowDistance(40.f);
+    cam.setShadowExpansion(15.f);
     cam.renderFlags = ~RenderFlags::MiniMap;
     updateView(cam);
     

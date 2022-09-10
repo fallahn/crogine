@@ -3,7 +3,7 @@
 Matt Marchant 2021 - 2022
 http://trederia.blogspot.com
 
-crogine application - Zlib license.
+Super Video Golf - zlib licence.
 
 This software is provided 'as-is', without any express or
 implied warranty.In no event will the authors be held
@@ -59,7 +59,15 @@ namespace
     uniform mat4 u_projectionMatrix;
     uniform vec4 u_clipPlane;
 
-    uniform float u_time;
+    layout (std140) uniform WindValues
+    {
+        vec4 u_windData; //dirX, strength, dirZ, elapsedTime
+    };
+
+    layout (std140) uniform PixelScale
+    {
+        float u_pixelScale;
+    };
 
 #if defined (CULLED)
     uniform HIGH vec3 u_cameraWorldPosition;
@@ -88,16 +96,19 @@ namespace
         mat4 wvp = u_projectionMatrix * u_worldViewMatrix;
         vec4 position = a_position;
 
-        float p = position.y - u_time;
+        float p = position.y - u_windData.w;
         p = mod(p, SystemHeight);
         //p = ease(0.2 + ((p / SystemHeight) * 0.8));
         p = ease((p / SystemHeight));
 
         position.y  = p * SystemHeight;
 
+        position.x -= p * u_windData.x * u_windData.y * 40.0;
+        position.z -= p * u_windData.z * u_windData.y * 40.0;
+
 
         gl_Position = wvp * position;
-        gl_PointSize = u_projectionMatrix[1][1] / gl_Position.w * 10.0;
+        gl_PointSize = u_projectionMatrix[1][1] / gl_Position.w * 10.0 * u_pixelScale;
 
         vec4 worldPos = u_worldMatrix * position;
         v_colour = a_colour;
@@ -218,22 +229,8 @@ void GolfState::createWeather()
             };
         }
     }
-
-
-    //hax to update uniform
-    auto uniformID = shader.getUniformID("u_time");
-    auto shaderID = shader.getGLHandle();
-    auto entity = m_gameScene.createEntity();
-    entity.addComponent<cro::Callback>().active = true;
-    entity.getComponent<cro::Callback>().function =
-        [uniformID, shaderID](cro::Entity, float dt)
-    {
-        static float accum = 0.f;
-        accum += dt;
-
-        glCheck(glUseProgram(shaderID));
-        glCheck(glUniform1f(uniformID, accum * 3.f));
-    };
+    m_windBuffer.addShader(shader);
+    m_scaleBuffer.addShader(shader);
 }
 
 void GolfState::createClouds(const std::string& cloudPath)

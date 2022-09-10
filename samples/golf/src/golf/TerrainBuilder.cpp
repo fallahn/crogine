@@ -3,7 +3,7 @@
 Matt Marchant 2021 - 2022
 http://trederia.blogspot.com
 
-crogine application - Zlib license.
+Super Video Golf - zlib licence.
 
 This software is provided 'as-is', without any express or
 implied warranty.In no event will the authors be held
@@ -63,8 +63,6 @@ source distribution.
 namespace
 {
 #include "TerrainShader.inl"
-#include "ShadowMapping.inl"
-#include "TreeShader.inl"
 
     //params for poisson disk samples
     static constexpr float GrassDensity = 1.7f; //radius for PD sampler
@@ -249,7 +247,13 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
 
 
     //use a custom material for morphage
-    resources.shaders.loadFromString(ShaderID::Terrain, TerrainVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n#define RX_SHADOWS\n#define ADD_NOISE\n#define TERRAIN\n");
+    std::string wobble;
+    if (m_sharedData.vertexSnap)
+    {
+        wobble = "#define WOBBLE\n";
+    }
+
+    resources.shaders.loadFromString(ShaderID::Terrain, TerrainVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n#define RX_SHADOWS\n#define ADD_NOISE\n#define TERRAIN\n" + wobble);
     const auto& shader = resources.shaders.get(ShaderID::Terrain);
     m_terrainProperties.morphUniform = shader.getUniformID("u_morphTime");
     m_terrainProperties.shaderID = shader.getGLHandle();
@@ -306,8 +310,7 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
         billboardShadowID = resources.materials.add(billboardShadowShader);
     }
 
-    //custom shader for instanced plants
-    resources.shaders.loadFromString(ShaderID::CelTexturedInstanced, CelVertexShader, CelFragmentShader, "#define WIND_WARP\n#define TEXTURED\n#define DITHERED\n#define NOCHEX\n#define INSTANCING\n");
+    //custom shader for instanced plants - shader loading is done in GolfState::loadAssets()
     auto reedMaterialID = resources.materials.add(resources.shaders.get(ShaderID::CelTexturedInstanced));
 
 
@@ -317,30 +320,13 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
     std::int32_t leafShadowMaterialID = 0;
     if (m_sharedData.treeQuality == SharedStateData::High)
     {
-        std::string wobble = m_sharedData.vertexSnap ? "#define WOBBLE\n" : "";
-
-        resources.shaders.loadFromString(ShaderID::TreesetBranch, BranchVertex, BranchFragment, "#define INSTANCING\n" + wobble);
         branchMaterialID = resources.materials.add(resources.shaders.get(ShaderID::TreesetBranch));
-
-        resources.shaders.loadFromString(ShaderID::TreesetLeaf, BushVertex, /*BushGeom,*/ BushFragment, "#define POINTS\n#define INSTANCING\n#define HQ\n" + wobble);
         leafMaterialID = resources.materials.add(resources.shaders.get(ShaderID::TreesetLeaf));
-
-        resources.shaders.loadFromString(ShaderID::TreesetShadow, ShadowVertex, ShadowFragment, "#define INSTANCING\n#define TREE_WARP\n" + wobble);
         treeShadowMaterialID = resources.materials.add(resources.shaders.get(ShaderID::TreesetShadow));
-
-        std::string alphaClip;
-        if (m_sharedData.hqShadows)
-        {
-            alphaClip = "#define ALPHA_CLIP\n";
-        }
-        resources.shaders.loadFromString(ShaderID::TreesetLeafShadow, ShadowVertex, /*ShadowGeom,*/ ShadowFragment, "#define POINTS\n#define INSTANCING\n#define LEAF_SIZE\n" + alphaClip + wobble);
         leafShadowMaterialID = resources.materials.add(resources.shaders.get(ShaderID::TreesetLeafShadow));
     }
     //and VATs shader for crowd
-    resources.shaders.loadFromString(ShaderID::Crowd, CelVertexShader, CelFragmentShader, "#define DITHERED\n#define INSTANCING\n#define VATS\n#define NOCHEX\n#define TEXTURED\n");
     auto crowdMaterialID = resources.materials.add(resources.shaders.get(ShaderID::Crowd));
-
-    resources.shaders.loadFromString(ShaderID::CrowdShadow, ShadowVertex, ShadowFragment, "#define INSTANCING\n#define VATS\n");
     auto shadowMaterialID = resources.materials.add(resources.shaders.get(ShaderID::CrowdShadow));
 
 
@@ -396,6 +382,7 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
                 {
                     material = resources.materials.get(billboardShadowID);
                     applyMaterialData(billboardDef, material);
+                    material.doubleSided = true; //do this second because applyMaterial() overwrites it
                     entity.getComponent<cro::Model>().setShadowMaterial(0, material);
                     entity.addComponent<cro::ShadowCaster>();
                 }

@@ -3,7 +3,7 @@
 Matt Marchant 2021 - 2022
 http://trederia.blogspot.com
 
-crogine application - Zlib license.
+Super Video Golf - zlib licence.
 
 This software is provided 'as-is', without any express or
 implied warranty.In no event will the authors be held
@@ -146,12 +146,6 @@ private:
         float targetFade = 2.f;
     }m_resolutionUpdate;
 
-    struct BillboardShadowUpdate final
-    {
-        std::uint32_t shaderID = 0;
-        std::int32_t viewMatUniform = -1;
-    }m_billboardShadowUpdate;
-
     cro::Image m_currentMap; 
     float m_holeToModelRatio;
     std::vector<HoleData> m_holeData;
@@ -210,7 +204,7 @@ private:
     }m_ballResources;
 
     std::string m_audioPath;
-    std::string m_courseTitle;
+    cro::String m_courseTitle;
 
     std::vector<cro::Entity> m_spectatorModels;
 
@@ -249,6 +243,7 @@ private:
     cro::Entity m_defaultCam;
     cro::Entity m_freeCam;
     void toggleFreeCam();
+    void applyShadowQuality();
 
     //UI stuffs - found in GolfStateUI.cpp
     struct SpriteID final

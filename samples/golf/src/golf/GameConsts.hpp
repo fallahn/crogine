@@ -3,7 +3,7 @@
 Matt Marchant 2021 - 2022
 http://trederia.blogspot.com
 
-crogine application - Zlib license.
+Super Video Golf - zlib licence.
 
 This software is provided 'as-is', without any express or
 implied warranty.In no event will the authors be held
@@ -446,7 +446,7 @@ static inline cro::Image loadNormalMap(std::vector<glm::vec3>& dst, const std::s
 }
 
 //return the path to cloud sprites if it is found
-static inline std::string loadSkybox(const std::string& path, cro::Scene& skyScene, cro::ResourceCollection& resources, std::int32_t materialID)
+static inline std::string loadSkybox(const std::string& path, cro::Scene& skyScene, cro::ResourceCollection& resources, std::int32_t materialID, std::int32_t skinMatID = -1)
 {
     auto skyTop = SkyTop;
     auto skyMid = TextNormalColour;
@@ -531,6 +531,13 @@ static inline std::string loadSkybox(const std::string& path, cro::Scene& skySce
             if (materialID > -1)
             {
                 auto material = resources.materials.get(materialID);
+
+                if (md.hasSkeleton() && skinMatID > -1)
+                {
+                    material = resources.materials.get(skinMatID);
+                    entity.getComponent<cro::Skeleton>().play(0);
+                }
+
                 for (auto i = 0u; i < entity.getComponent<cro::Model>().getMeshData().submeshCount; ++i)
                 {
                     applyMaterialData(md, material, i);

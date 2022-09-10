@@ -1,7 +1,7 @@
 course course_03
 {
     skybox = "assets/golf/skyboxes/mountain_spring.sbf"
-    shrubbery = "assets/golf/shrubs/01.shb"
+    shrubbery = "assets/golf/shrubs/birch.shb"
     audio = "assets/golf/sound/ambience.xas"
 
     title = "Old Stemmer's Lane Pitch 'n' Putt"

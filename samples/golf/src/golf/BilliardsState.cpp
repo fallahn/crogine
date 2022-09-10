@@ -3,7 +3,7 @@
 Matt Marchant - 2022
 http://trederia.blogspot.com
 
-crogine application - Zlib license.
+Super Video Golf - zlib licence.
 
 This software is provided 'as-is', without any express or
 implied warranty.In no event will the authors be held
@@ -79,13 +79,15 @@ source distribution.
 #include <crogine/util/Network.hpp>
 #include <crogine/util/Random.hpp>
 
+#include <Achievements.hpp>
+
 namespace
 {
 #include "WireframeShader.inl"
 #include "TerrainShader.inl"
 
-    constexpr float MaxShadowDistance = 6.f;
-    constexpr float ShadowExpansion = 5.f;
+    constexpr float MaxShadowDistance = 12.f;
+    constexpr float ShadowExpansion = 10.f;
 
     const std::array FoulStrings =
     {
@@ -187,14 +189,27 @@ BilliardsState::BilliardsState(cro::StateStack& ss, cro::State::Context ctx, Sha
     //        ImGui::End();
     //    });
 
-    /*registerWindow([&]()
+    registerWindow([&]()
         {
             if (ImGui::Begin("Window"))
             {
                 ImGui::Text("Camera: %s", CameraStrings[m_activeCamera].c_str());
+
+                auto& cam = m_cameras[m_activeCamera];
+                auto dist = cam.getComponent<cro::Camera>().getMaxShadowDistance();
+                if (ImGui::SliderFloat("Dist", &dist, 0.5f, 10.f))
+                {
+                    cam.getComponent<cro::Camera>().setMaxShadowDistance(dist);
+                }
+
+                auto depth = cam.getComponent<cro::Camera>().getShadowExpansion();
+                if (ImGui::SliderFloat("depth", &depth, 0.f, 20.f))
+                {
+                    cam.getComponent<cro::Camera>().setShadowExpansion(depth);
+                }
             }
             ImGui::End();
-        });*/
+        });
 #endif
 
     m_inputParser.setActive(false, false); //activates spectator cam input on start up
@@ -461,6 +476,19 @@ void BilliardsState::handleMessage(const cro::Message& msg)
         }
     }
         break;
+    case MessageID::SystemMessage:
+    {
+        const auto& data = msg.getData<SystemEvent>();
+        if (data.type == SystemEvent::ShadowQualityChanged)
+        {
+            auto shadowRes = m_sharedData.hqShadows ? 4096 : 2048;
+            for (auto& cam : m_cameras)
+            {
+                cam.getComponent<cro::Camera>().shadowMapBuffer.create(shadowRes, shadowRes, 2);
+            }
+        }
+    }
+    break;
     }
 
     m_gameScene.forwardMessage(msg);
@@ -789,7 +817,7 @@ void BilliardsState::buildScene()
             farPlane = ent->getComponent<CameraProperties>().farPlane;
         }
 
-        cam.setPerspective(m_sharedData.fov * fovMultiplier * cro::Util::Const::degToRad, vpSize.x / vpSize.y, 0.1f, farPlane);
+        cam.setPerspective(m_sharedData.fov * fovMultiplier * cro::Util::Const::degToRad, vpSize.x / vpSize.y, 0.1f, farPlane, 2);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
 
@@ -805,10 +833,10 @@ void BilliardsState::buildScene()
     cam.renderFlags = ~RenderFlags::Cue;
     setPerspective(cam);
 
-    static constexpr std::uint32_t ShadowMapSize = 2048u;
-    cam.shadowMapBuffer.create(ShadowMapSize, ShadowMapSize);
-    cam.setMaxShadowDistance(MaxShadowDistance * 2.f);
-    cam.setShadowExpansion(ShadowExpansion);
+    const std::uint32_t ShadowMapSize = m_sharedData.hqShadows ? 4096u : 2048u;
+    cam.shadowMapBuffer.create(ShadowMapSize, ShadowMapSize, 3);
+    cam.setMaxShadowDistance(MaxShadowDistance);
+    cam.setShadowExpansion(ShadowExpansion * 2.f);
 
     auto spectateController = m_gameScene.createEntity();
     spectateController.addComponent<cro::Transform>().setPosition({0.f, 0.2f, 0.f});
@@ -850,8 +878,8 @@ void BilliardsState::buildScene()
     camEnt.addComponent<cro::Camera>().resizeCallback = setPerspective;
     camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(ShadowMapSize, ShadowMapSize);
     camEnt.getComponent<cro::Camera>().active = false;
-    camEnt.getComponent<cro::Camera>().setMaxShadowDistance(MaxShadowDistance * 2.f);
-    camEnt.getComponent<cro::Camera>().setShadowExpansion(ShadowExpansion);
+    camEnt.getComponent<cro::Camera>().setMaxShadowDistance(MaxShadowDistance);
+    camEnt.getComponent<cro::Camera>().setShadowExpansion(ShadowExpansion * 2.f);
     camEnt.getComponent<cro::Camera>().renderFlags = ~RenderFlags::Cue;
     camEnt.addComponent<CameraProperties>().farPlane = 7.f;
     camEnt.getComponent<CameraProperties>().FOVAdjust = 0.8f; //needs to match spectate cam initial value to prevent popping
@@ -877,7 +905,7 @@ void BilliardsState::buildScene()
     camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(ShadowMapSize, ShadowMapSize);
     camEnt.getComponent<cro::Camera>().active = false;
     camEnt.getComponent<cro::Camera>().setMaxShadowDistance(MaxShadowDistance);
-    camEnt.getComponent<cro::Camera>().setShadowExpansion(ShadowExpansion);
+    camEnt.getComponent<cro::Camera>().setShadowExpansion(ShadowExpansion * 2.f);
     camEnt.addComponent<CameraProperties>().FOVAdjust = 0.8f;
     camEnt.getComponent<CameraProperties>().farPlane = 6.f;
     camEnt.addComponent<cro::AudioListener>();

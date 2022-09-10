@@ -67,6 +67,12 @@
     <Filter Include="Header Files\frustum">
       <UniqueIdentifier>{6c368e1e-ef41-469e-8b74-828419179251}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\rolling">
+      <UniqueIdentifier>{eb260caa-bd0b-45b7-b025-de00f9b19c21}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\rolling">
+      <UniqueIdentifier>{d60b5c43-9b2a-4476-a451-ad93918156b2}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\LoadingScreen.cpp">
@@ -155,6 +161,15 @@
     </ClCompile>
     <ClCompile Include="src\frustum\FrustumState.cpp">
       <Filter>Source Files\frustum</Filter>
+    </ClCompile>
+    <ClCompile Include="src\collision\RollSystem.cpp">
+      <Filter>Source Files\mesh collision</Filter>
+    </ClCompile>
+    <ClCompile Include="src\rolling\RollingState.cpp">
+      <Filter>Source Files\rolling</Filter>
+    </ClCompile>
+    <ClCompile Include="src\rolling\RollingSystem.cpp">
+      <Filter>Source Files\rolling</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -271,6 +286,21 @@
     </ClInclude>
     <ClInclude Include="src\frustum\FrustumState.hpp">
       <Filter>Header Files\frustum</Filter>
+    </ClInclude>
+    <ClInclude Include="src\collision\RollSystem.hpp">
+      <Filter>Header Files\mesh collision</Filter>
+    </ClInclude>
+    <ClInclude Include="src\collision\Utils.hpp">
+      <Filter>Header Files\mesh collision</Filter>
+    </ClInclude>
+    <ClInclude Include="src\rolling\RollingState.hpp">
+      <Filter>Header Files\rolling</Filter>
+    </ClInclude>
+    <ClInclude Include="src\rolling\Utility.hpp">
+      <Filter>Header Files\rolling</Filter>
+    </ClInclude>
+    <ClInclude Include="src\rolling\RollingSystem.hpp">
+      <Filter>Header Files\rolling</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

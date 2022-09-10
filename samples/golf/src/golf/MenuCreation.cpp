@@ -3,7 +3,7 @@
 Matt Marchant 2021 - 2022
 http://trederia.blogspot.com
 
-crogine application - Zlib license.
+Super Video Golf - zlib licence.
 
 This software is provided 'as-is', without any express or
 implied warranty.In no event will the authors be held
@@ -145,7 +145,7 @@ void MenuState::parseCourseDirectory(const std::string& rootDir, bool isUser)
 
         if (cro::FileSystem::fileExists(testPath))
         {
-            std::string title;
+            cro::String title;
             std::string description;
             std::int32_t holeCount = 0;
 
@@ -166,7 +166,7 @@ void MenuState::parseCourseDirectory(const std::string& rootDir, bool isUser)
                 }
                 else if (propName == "title")
                 {
-                    title = prop.getValue<std::string>();
+                    title = prop.getValue<cro::String>();
                 }
                 //TODO we could validate the hole files exist
                 //but that's done when loading the game anyway
@@ -250,7 +250,9 @@ void MenuState::hideToolTip()
 void MenuState::createUI()
 {
     parseCourseDirectory(ConstVal::MapPath, false);
+    m_officialCourseCount = m_courseData.size();
     parseCourseDirectory(cro::App::getPreferencePath() + ConstVal::UserMapPath, true);
+    m_activeCourseCount = m_sharedData.showCustomCourses ? m_courseData.size() : m_officialCourseCount;
 
     if (!m_courseData.empty())
     {
@@ -1097,7 +1099,7 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
         {
             if (activated(evt))
             {
-                m_sharedData.courseIndex = (m_sharedData.courseIndex + (m_courseData.size() - 1)) % m_courseData.size();
+                m_sharedData.courseIndex = (m_sharedData.courseIndex + (m_activeCourseCount - 1)) % m_activeCourseCount;
 
                 m_sharedData.mapDirectory = m_courseData[m_sharedData.courseIndex].directory;
                 auto data = serialiseString(m_sharedData.mapDirectory);
@@ -1111,11 +1113,32 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
         {
             if (activated(evt))
             {
-                m_sharedData.courseIndex = (m_sharedData.courseIndex + 1) % m_courseData.size();
+                m_sharedData.courseIndex = (m_sharedData.courseIndex + 1) % m_activeCourseCount;
 
                 m_sharedData.mapDirectory = m_courseData[m_sharedData.courseIndex].directory;
                 auto data = serialiseString(m_sharedData.mapDirectory);
                 m_sharedData.clientConnection.netClient.sendPacket(PacketID::MapInfo, data.data(), data.size(), net::NetFlag::Reliable, ConstVal::NetChannelStrings);
+
+                m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
+            }
+        });
+
+    m_courseSelectCallbacks.toggleUserCourses = m_uiScene.getSystem<cro::UISystem>()->addCallback(
+        [&](cro::Entity, const cro::ButtonEvent& evt)
+        {
+            if (activated(evt))
+            {
+                m_sharedData.showCustomCourses = !m_sharedData.showCustomCourses;
+
+                m_activeCourseCount = m_sharedData.showCustomCourses ? m_courseData.size() : m_officialCourseCount;
+                auto newIndex = m_sharedData.courseIndex % m_activeCourseCount;
+                if (newIndex != m_sharedData.courseIndex)
+                {
+                    m_sharedData.courseIndex = newIndex;
+                    m_sharedData.mapDirectory = m_courseData[newIndex].directory;
+                    auto data = serialiseString(m_sharedData.mapDirectory);
+                    m_sharedData.clientConnection.netClient.sendPacket(PacketID::MapInfo, data.data(), data.size(), net::NetFlag::Reliable, ConstVal::NetChannelStrings);
+                }
 
                 m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
             }
@@ -1131,6 +1154,18 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
         [](cro::Entity e)
         {
             e.getComponent<cro::SpriteAnimation>().play(0);
+        });
+
+    m_courseSelectCallbacks.selectHighlight = m_uiScene.getSystem<cro::UISystem>()->addCallback(
+        [](cro::Entity e)
+        {
+            e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
+            e.getComponent<cro::AudioEmitter>().play();
+        });
+    m_courseSelectCallbacks.unselectHighlight = m_uiScene.getSystem<cro::UISystem>()->addCallback(
+        [](cro::Entity e)
+        {
+            e.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
         });
 
     m_courseSelectCallbacks.showTip = m_uiScene.getSystem<cro::UISystem>()->addCallback(
@@ -1591,6 +1626,8 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     spriteSheet.loadFromFile("assets/golf/sprites/lobby_menu.spt", m_resources.textures);
     m_sprites[SpriteID::PrevCourse] = spriteSheet.getSprite("arrow_left");
     m_sprites[SpriteID::NextCourse] = spriteSheet.getSprite("arrow_right");
+    m_sprites[SpriteID::LobbyCheckbox] = spriteSheet.getSprite("checkbox");
+    m_sprites[SpriteID::LobbyCheckboxHighlight] = spriteSheet.getSprite("checkbox_highlight");
 
 
     //title
@@ -1684,7 +1721,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity.addComponent<UIElement>().relativePosition = CourseDescPosition;
     entity.getComponent<UIElement>().depth = -0.2f;
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
-    entity.getComponent<cro::Transform>().setOrigin({ std::floor( bounds.width / 2.f), std::floor(bounds.height / 2.f) });
+    entity.getComponent<cro::Transform>().setOrigin({ std::floor( bounds.width / 2.f), std::floor(bounds.height / 2.f) + 3.f });
     menuTransform.addChild(entity.getComponent<cro::Transform>());
     bgEnt = entity;
 
@@ -1724,7 +1761,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
 
     //course title
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, 40.f, 01.f });
+    entity.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, 52.f, 01.f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::CourseTitle;
     entity.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
@@ -1733,7 +1770,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
 
     //course description
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, 28.f, 01.f });
+    entity.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, 40.f, 01.f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::CourseDesc;
     entity.addComponent<cro::Text>(smallFont).setCharacterSize(InfoTextSize);
@@ -1742,7 +1779,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
 
     //hole count
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, 16.f, 01.f });
+    entity.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, 28.f, 01.f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::CourseHoles;
     entity.addComponent<cro::Text>(smallFont).setCharacterSize(InfoTextSize);
@@ -2056,6 +2093,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
                             && m_sharedData.serverInstance.running()) //not running if we're not hosting :)
                         {
                             m_sharedData.clientConnection.netClient.sendPacket(PacketID::RequestGameStart, std::uint8_t(sv::StateID::Golf), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                            m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
                         }
                     }
                     else
@@ -3392,7 +3430,7 @@ void MenuState::addCourseSelectButtons()
     buttonEnt.addComponent<cro::Sprite>() = m_sprites[SpriteID::PrevCourse];
     buttonEnt.addComponent<cro::SpriteAnimation>();
     buttonEnt.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement | CommandID::Menu::CourseSelect;
-    buttonEnt.addComponent<UIElement>().absolutePosition = { -88.f, -19.f };
+    buttonEnt.addComponent<UIElement>().absolutePosition = { -88.f, -16.f };
     buttonEnt.getComponent<UIElement>().relativePosition = CourseDescPosition;
     buttonEnt.getComponent<UIElement>().depth = 0.01f;
     bounds = buttonEnt.getComponent<cro::Sprite>().getTextureBounds();
@@ -3416,7 +3454,7 @@ void MenuState::addCourseSelectButtons()
     buttonEnt.addComponent<cro::Sprite>() = m_sprites[SpriteID::PrevCourse];
     buttonEnt.addComponent<cro::SpriteAnimation>();
     buttonEnt.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement | CommandID::Menu::CourseSelect;
-    buttonEnt.addComponent<UIElement>().absolutePosition = { -44.f, -15.f };
+    buttonEnt.addComponent<UIElement>().absolutePosition = { -44.f, -12.f };
     buttonEnt.getComponent<UIElement>().relativePosition = CourseDescPosition;
     buttonEnt.getComponent<UIElement>().depth = 0.01f;
     bounds = buttonEnt.getComponent<cro::Sprite>().getTextureBounds();
@@ -3437,7 +3475,7 @@ void MenuState::addCourseSelectButtons()
     buttonEnt.addComponent<cro::Sprite>() = m_sprites[SpriteID::NextCourse];
     buttonEnt.addComponent<cro::SpriteAnimation>();
     buttonEnt.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement | CommandID::Menu::CourseSelect;
-    buttonEnt.addComponent<UIElement>().absolutePosition = { 44.f, -15.f };
+    buttonEnt.addComponent<UIElement>().absolutePosition = { 44.f, -12.f };
     buttonEnt.getComponent<UIElement>().relativePosition = CourseDescPosition;
     buttonEnt.getComponent<UIElement>().depth = 0.01f;
     bounds = buttonEnt.getComponent<cro::Sprite>().getTextureBounds();
@@ -3460,7 +3498,7 @@ void MenuState::addCourseSelectButtons()
     buttonEnt.addComponent<cro::Sprite>() = m_sprites[SpriteID::NextCourse];
     buttonEnt.addComponent<cro::SpriteAnimation>();
     buttonEnt.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement | CommandID::Menu::CourseSelect;
-    buttonEnt.addComponent<UIElement>().absolutePosition = { 88.f, -19.f };
+    buttonEnt.addComponent<UIElement>().absolutePosition = { 88.f, -16.f };
     buttonEnt.getComponent<UIElement>().relativePosition = CourseDescPosition;
     buttonEnt.getComponent<UIElement>().depth = 0.01f;
     bounds = buttonEnt.getComponent<cro::Sprite>().getTextureBounds();
@@ -3473,4 +3511,66 @@ void MenuState::addCourseSelectButtons()
     buttonEnt.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
 
     m_menuEntities[MenuID::Lobby].getComponent<cro::Transform>().addChild(buttonEnt.getComponent<cro::Transform>());
+
+
+
+    //checkbox to hide custom courses
+    auto checkboxEnt = m_uiScene.createEntity();
+    checkboxEnt.addComponent<cro::Transform>();
+    checkboxEnt.addComponent<cro::Drawable2D>();
+    checkboxEnt.addComponent<cro::Sprite>() = m_sprites[SpriteID::LobbyCheckbox];
+    checkboxEnt.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement | CommandID::Menu::CourseSelect;
+    checkboxEnt.addComponent<UIElement>().absolutePosition = { -38.f, -31.f };
+    checkboxEnt.getComponent<UIElement>().relativePosition = CourseDescPosition;
+    checkboxEnt.getComponent<UIElement>().depth = 0.01f;
+
+    bounds = m_sprites[SpriteID::LobbyCheckbox].getTextureRect();
+    checkboxEnt.addComponent<cro::Callback>().active = true;
+    checkboxEnt.getComponent<cro::Callback>().function =
+        [&,bounds](cro::Entity e, float)
+    {
+        auto b = bounds;
+        if (m_sharedData.showCustomCourses)
+        {
+            b.bottom -= bounds.height;
+        }
+        e.getComponent<cro::Sprite>().setTextureRect(b);
+    };
+
+    m_menuEntities[MenuID::Lobby].getComponent<cro::Transform>().addChild(checkboxEnt.getComponent<cro::Transform>());
+
+    checkboxEnt = m_uiScene.createEntity();
+    checkboxEnt.addComponent<cro::Transform>();
+    checkboxEnt.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
+    checkboxEnt.addComponent<cro::Drawable2D>();
+    checkboxEnt.addComponent<cro::Sprite>() = m_sprites[SpriteID::LobbyCheckboxHighlight];
+    checkboxEnt.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+    checkboxEnt.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement | CommandID::Menu::CourseSelect;
+    checkboxEnt.addComponent<UIElement>().absolutePosition = { -39.f, -32.f };
+    checkboxEnt.getComponent<UIElement>().relativePosition = CourseDescPosition;
+    checkboxEnt.getComponent<UIElement>().depth = 0.01f;
+    bounds = checkboxEnt.getComponent<cro::Sprite>().getTextureBounds();
+    checkboxEnt.addComponent<cro::UIInput>().area = bounds;
+    checkboxEnt.getComponent<cro::UIInput>().setGroup(MenuID::Lobby);
+    checkboxEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = m_courseSelectCallbacks.selectHighlight;
+    checkboxEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = m_courseSelectCallbacks.unselectHighlight;
+    checkboxEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = m_courseSelectCallbacks.toggleUserCourses;
+    m_menuEntities[MenuID::Lobby].getComponent<cro::Transform>().addChild(checkboxEnt.getComponent<cro::Transform>());
+
+
+    //and label
+    auto& font = m_sharedData.sharedResources->fonts.get(FontID::Info);
+    auto labelEnt = m_uiScene.createEntity();
+    labelEnt.addComponent<cro::Transform>();
+    labelEnt.addComponent<cro::Drawable2D>();
+    labelEnt.addComponent<cro::Text>(font).setString("Show Custom");
+    labelEnt.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+    labelEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    labelEnt.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement | CommandID::Menu::CourseSelect;
+    labelEnt.addComponent<UIElement>().absolutePosition = { 6.f, -24.f };
+    labelEnt.getComponent<UIElement>().relativePosition = CourseDescPosition;
+    labelEnt.getComponent<UIElement>().depth = 0.01f;
+
+    centreText(labelEnt);
+    m_menuEntities[MenuID::Lobby].getComponent<cro::Transform>().addChild(labelEnt.getComponent<cro::Transform>());
 }

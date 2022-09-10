@@ -4,100 +4,45 @@ hole 10
     model="assets/golf/models/course_02/10.cmt"
     par = 4
 
-    pin = 63.414368,1.048154,-124.838715
+    pin = 55.888451,2.876203,-55.200455
 
-    target = 129.822632,0.796782,-100.813255
+    target = 159.680145,2.880401,-126.445122
 
-    tee = 267.351807,1.820629,-100.216591
+    tee = 277.823273,2.880401,-150.535049
 
-    prop
+    crowd
     {
-        model = "assets/golf/models/boat02.cmt"
-        position = 2.355911,-0.869293,-165.778534
-        rotation = -118.001061
-        scale = 1.000000,1.000000,1.000000
+        position = 33.572838,2.880445,-55.759857
+        rotation = 91.944731
     }
 
-    prop
+    crowd
     {
-        model = "assets/golf/models/view_platform.cmt"
-        position = 184.156494,0.796783,-116.760956
-        rotation = -739.370035
-        scale = 1.000000,1.000000,1.000000
+        position = 65.648949,2.880445,-34.046967
+        rotation = -165.098321
     }
 
     prop
     {
         model = "assets/golf/models/fence01.cmt"
-        position = 189.435837,0.806782,-113.528511
-        rotation = -720.135872
+        position = 263.615479,2.880401,-167.590591
+        rotation = 14.652026
         scale = 1.000000,1.000000,1.000000
     }
 
     prop
     {
         model = "assets/golf/models/fence02.cmt"
-        position = 178.526520,0.806783,-115.016808
-        rotation = -732.960305
-        scale = 1.000000,1.000000,1.000000
-    }
-
-    crowd
-    {
-        position = 57.292358,0.796828,-99.032196
-        rotation = -205.672778
-    }
-
-    crowd
-    {
-        position = 195.147903,0.865718,-114.131683
-        rotation = -4.631442
-    }
-
-    prop
-    {
-        model = "assets/golf/models/blimp.cmt"
-        position = 216.225204,8.848668,19.056610
-        rotation = 17.333839
-        scale = 1.000000,1.000000,1.000000
-
-        path
-        {
-            point = 218.681763,70.759651,-227.115250
-            point = 120.613068,70.759651,-233.417892
-            point = 30.856277,70.759651,-221.101929
-            point = -30.882362,70.759651,-185.609726
-            point = -51.601254,70.759651,-94.593483
-            point = -23.419586,70.759651,-43.204456
-            point = 24.919542,70.759651,-18.573307
-            point = 96.539566,70.759651,-3.766392
-            point = 195.190399,70.759651,1.781776
-            point = 266.745544,70.759651,2.298412
-            point = 317.334625,70.759651,-20.208054
-            point = 346.617126,70.759651,-89.411064
-            point = 338.678528,70.759651,-137.519913
-            point = 298.977448,70.759651,-184.705383
-            point = 220.115601,70.759651,-226.521896
-
-            loop = true
-            delay = 0.000000
-            speed = 1.000000
-        }
-    }
-
-    prop
-    {
-        model = "assets/golf/models/wheelchair.cmt"
-        position = 186.209824,0.798496,-113.457748
-        rotation = 0.000000
+        position = 253.283600,2.935412,-164.683212
+        rotation = 15.908514
         scale = 1.000000,1.000000,1.000000
     }
 
     prop
     {
-        model = "assets/golf/models/spectators/sitting/03.cmt"
-        position = 186.176666,0.796830,-113.427681
-        rotation = 0.000000
+        model = "assets/golf/models/scoreboard.cmt"
+        position = 258.367554,2.860312,-166.142517
+        rotation = 15.373208
         scale = 1.000000,1.000000,1.000000
     }
 }

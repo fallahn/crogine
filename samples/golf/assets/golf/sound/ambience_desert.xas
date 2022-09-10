@@ -4,9 +4,9 @@ audioscape ambience
     {
         path = "assets/golf/sound/ambience/desert01.ogg"
         streaming = true
-        volume = 2
+        volume = 2.5
         mixer_channel = 1
-        attenuation = 0.06
+        attenuation = 0.04
         looped = true
     }
 
@@ -14,9 +14,9 @@ audioscape ambience
     {
         path = "assets/golf/sound/ambience/desert02.ogg"
         streaming = true
-        volume = 2
+        volume = 2.5
         mixer_channel = 1
-        attenuation = 0.06
+        attenuation = 0.04
         looped = true
     }
 
@@ -24,9 +24,9 @@ audioscape ambience
     {
         path = "assets/golf/sound/ambience/desert03.ogg"
         streaming = true
-        volume = 2
+        volume = 2.5
         mixer_channel = 1
-        attenuation = 0.06
+        attenuation = 0.04
         looped = true
     }
 
@@ -34,9 +34,9 @@ audioscape ambience
     {
         path = "assets/golf/sound/ambience/desert04.ogg"
         streaming = true
-        volume = 2
+        volume = 2.5
         mixer_channel = 1
-        attenuation = 0.06
+        attenuation = 0.04
         looped = true
     }
 
@@ -44,9 +44,9 @@ audioscape ambience
     {
         path = "assets/golf/sound/ambience/desert05.ogg"
         streaming = true
-        volume = 2
+        volume = 2.5
         mixer_channel = 1
-        attenuation = 0.06
+        attenuation = 0.04
         looped = true
     }
 
@@ -54,9 +54,9 @@ audioscape ambience
     {
         path = "assets/golf/sound/ambience/desert06.ogg"
         streaming = true
-        volume = 2
+        volume = 2.5
         mixer_channel = 1
-        attenuation = 0.06
+        attenuation = 0.04
         looped = true
     }    
 

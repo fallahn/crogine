@@ -3,7 +3,7 @@
 Matt Marchant 2021 - 2022
 http://trederia.blogspot.com
 
-crogine application - Zlib license.
+Super Video Golf - zlib licence.
 
 This software is provided 'as-is', without any express or
 implied warranty.In no event will the authors be held
@@ -42,6 +42,7 @@ source distribution.
 #include "spooky2.hpp"
 #include "../ErrorCheck.hpp"
 
+#include <Achievements.hpp>
 #include <AchievementStrings.hpp>
 
 #include <crogine/audio/AudioScape.hpp>
@@ -107,21 +108,23 @@ MainMenuContext::MainMenuContext(MenuState* state)
 }
 
 MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, SharedStateData& sd)
-    : cro::State        (stack, context),
-    m_sharedData        (sd),
-    m_matchMaking       (context.appInstance.getMessageBus()),
-    m_cursor            (/*"assets/images/cursor.png", 0, 0*/cro::SystemCursor::Hand),
-    m_uiScene           (context.appInstance.getMessageBus(), 512),
-    m_backgroundScene   (context.appInstance.getMessageBus()/*, 128, cro::INFO_FLAG_SYSTEMS_ACTIVE*/),
-    m_avatarScene       (context.appInstance.getMessageBus()/*, 128, cro::INFO_FLAG_SYSTEMS_ACTIVE*/),
-    m_scaleBuffer       ("PixelScale"),
-    m_resolutionBuffer  ("ScaledResolution"),
-    m_windBuffer        ("WindValues"),
-    m_avatarCallbacks   (std::numeric_limits<std::uint32_t>::max(), std::numeric_limits<std::uint32_t>::max()),
-    m_currentMenu       (MenuID::Main),
-    m_prevMenu          (MenuID::Main),
-    m_viewScale         (2.f),
-    m_activePlayerAvatar(0)
+    : cro::State            (stack, context),
+    m_sharedData            (sd),
+    m_matchMaking           (context.appInstance.getMessageBus()),
+    m_cursor                (/*"assets/images/cursor.png", 0, 0*/cro::SystemCursor::Hand),
+    m_uiScene               (context.appInstance.getMessageBus(), 512),
+    m_backgroundScene       (context.appInstance.getMessageBus()/*, 128, cro::INFO_FLAG_SYSTEMS_ACTIVE*/),
+    m_avatarScene           (context.appInstance.getMessageBus()/*, 128, cro::INFO_FLAG_SYSTEMS_ACTIVE*/),
+    m_scaleBuffer           ("PixelScale"),
+    m_resolutionBuffer      ("ScaledResolution"),
+    m_windBuffer            ("WindValues"),
+    m_avatarCallbacks       (std::numeric_limits<std::uint32_t>::max(), std::numeric_limits<std::uint32_t>::max()),
+    m_currentMenu           (MenuID::Main),
+    m_prevMenu              (MenuID::Main),
+    m_viewScale             (2.f),
+    m_activeCourseCount     (0),
+    m_officialCourseCount   (0),
+    m_activePlayerAvatar    (0)
 {
     std::fill(m_readyState.begin(), m_readyState.end(), false);
     std::fill(m_ballIndices.begin(), m_ballIndices.end(), 0);
@@ -316,45 +319,45 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
         });
 
 #ifdef CRO_DEBUG_
-    registerWindow([&]() 
-        {
-            if (ImGui::Begin("Debug"))
-            {
-                //ImGui::Text("Course Index %u", m_sharedData.courseIndex);
-                /*ImGui::Image(m_sharedData.nameTextures[0].getTexture(), { 128, 64 }, { 0,1 }, { 1,0 });
-                ImGui::SameLine();
-                ImGui::Image(m_sharedData.nameTextures[1].getTexture(), { 128, 64 }, { 0,1 }, { 1,0 });
-                ImGui::Image(m_sharedData.nameTextures[2].getTexture(), { 128, 64 }, { 0,1 }, { 1,0 });
-                ImGui::SameLine();
-                ImGui::Image(m_sharedData.nameTextures[3].getTexture(), { 128, 64 }, { 0,1 }, { 1,0 });*/
-                /*float x = static_cast<float>(AvatarThumbSize.x);
-                float y = static_cast<float>(AvatarThumbSize.y);
-                ImGui::Image(m_avatarThumbs[0].getTexture(), {x,y}, {0,1}, {1,0});
-                ImGui::SameLine();
-                ImGui::Image(m_avatarThumbs[1].getTexture(), { x,y }, { 0,1 }, { 1,0 });
-                ImGui::SameLine();
-                ImGui::Image(m_avatarThumbs[2].getTexture(), { x,y }, { 0,1 }, { 1,0 });
-                ImGui::SameLine();
-                ImGui::Image(m_avatarThumbs[3].getTexture(), { x,y }, { 0,1 }, { 1,0 });*/
-                //auto pos = m_avatarScene.getActiveCamera().getComponent<cro::Transform>().getPosition();
-                //ImGui::Text("%3.3f, %3.3f, %3.3f", pos.x, pos.y, pos.z);
-                auto& cam = m_backgroundScene.getActiveCamera().getComponent<cro::Camera>();
-                float maxDist = cam.getMaxShadowDistance();
-                if (ImGui::SliderFloat("Dist", &maxDist, 1.f, cam.getFarPlane()))
-                {
-                    cam.setMaxShadowDistance(maxDist);
-                }
+    //registerWindow([&]() 
+    //    {
+    //        if (ImGui::Begin("Debug"))
+    //        {
+    //            //ImGui::Text("Course Index %u", m_sharedData.courseIndex);
+    //            /*ImGui::Image(m_sharedData.nameTextures[0].getTexture(), { 128, 64 }, { 0,1 }, { 1,0 });
+    //            ImGui::SameLine();
+    //            ImGui::Image(m_sharedData.nameTextures[1].getTexture(), { 128, 64 }, { 0,1 }, { 1,0 });
+    //            ImGui::Image(m_sharedData.nameTextures[2].getTexture(), { 128, 64 }, { 0,1 }, { 1,0 });
+    //            ImGui::SameLine();
+    //            ImGui::Image(m_sharedData.nameTextures[3].getTexture(), { 128, 64 }, { 0,1 }, { 1,0 });*/
+    //            /*float x = static_cast<float>(AvatarThumbSize.x);
+    //            float y = static_cast<float>(AvatarThumbSize.y);
+    //            ImGui::Image(m_avatarThumbs[0].getTexture(), {x,y}, {0,1}, {1,0});
+    //            ImGui::SameLine();
+    //            ImGui::Image(m_avatarThumbs[1].getTexture(), { x,y }, { 0,1 }, { 1,0 });
+    //            ImGui::SameLine();
+    //            ImGui::Image(m_avatarThumbs[2].getTexture(), { x,y }, { 0,1 }, { 1,0 });
+    //            ImGui::SameLine();
+    //            ImGui::Image(m_avatarThumbs[3].getTexture(), { x,y }, { 0,1 }, { 1,0 });*/
+    //            //auto pos = m_avatarScene.getActiveCamera().getComponent<cro::Transform>().getPosition();
+    //            //ImGui::Text("%3.3f, %3.3f, %3.3f", pos.x, pos.y, pos.z);
+    //            auto& cam = m_backgroundScene.getActiveCamera().getComponent<cro::Camera>();
+    //            float maxDist = cam.getMaxShadowDistance();
+    //            if (ImGui::SliderFloat("Dist", &maxDist, 1.f, cam.getFarPlane()))
+    //            {
+    //                cam.setMaxShadowDistance(maxDist);
+    //            }
 
-                float exp = cam.getShadowExpansion();
-                if (ImGui::SliderFloat("Exp", &exp, 0.f, 100.f))
-                {
-                    cam.setShadowExpansion(exp);
-                }
+    //            float exp = cam.getShadowExpansion();
+    //            if (ImGui::SliderFloat("Exp", &exp, 0.f, 100.f))
+    //            {
+    //                cam.setShadowExpansion(exp);
+    //            }
 
-                ImGui::Image(m_backgroundScene.getActiveCamera().getComponent<cro::Camera>().shadowMapBuffer.getTexture(0), { 256.f, 256.f }, { 0.f, 1.f }, { 1.f, 0.f });
-            }
-            ImGui::End();
-        });
+    //            ImGui::Image(m_backgroundScene.getActiveCamera().getComponent<cro::Camera>().shadowMapBuffer.getTexture(0), { 256.f, 256.f }, { 0.f, 1.f }, { 1.f, 0.f });
+    //        }
+    //        ImGui::End();
+    //    });
 #endif
 }
 
@@ -526,7 +529,7 @@ void MenuState::handleMessage(const cro::Message& msg)
             finaliseGameCreate();
         break;
         case MatchMaking::Message::LobbyJoined:
-            finaliseGameJoin();
+            finaliseGameJoin(data);
             break;
         }
     }
@@ -641,7 +644,7 @@ void MenuState::addSystems()
     //check course completion count and award
     //grand tour if applicable
     bool awarded = true;
-    for (std::int32_t i = StatID::Course01Complete; i < StatID::Course07Complete + 1; ++i)
+    for (std::int32_t i = StatID::Course01Complete; i < StatID::Course08Complete + 1; ++i)
     {
         if (Achievements::getStat(StatStrings[i])->value == 0)
         {
@@ -728,6 +731,8 @@ void MenuState::loadAssets()
     m_audioEnts[AudioID::Accept].addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("accept");
     m_audioEnts[AudioID::Back] = m_uiScene.createEntity();
     m_audioEnts[AudioID::Back].addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("back");
+    m_audioEnts[AudioID::Start] = m_uiScene.createEntity();
+    m_audioEnts[AudioID::Start].addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("start_game");
 
     for (auto& thumb : m_avatarThumbs)
     {
@@ -1425,8 +1430,7 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
 void MenuState::finaliseGameCreate()
 {
 #ifdef USE_GNS
-    //gns only supports 127.0.0.1 for loopback, but to report correct local IP with enet we need 255.255.255.255
-    m_sharedData.clientConnection.connected = m_sharedData.clientConnection.netClient.connect("127.0.0.1", ConstVal::GamePort);
+    m_sharedData.clientConnection.connected = m_sharedData.serverInstance.addLocalConnection(m_sharedData.clientConnection.netClient);
 #else
     m_sharedData.clientConnection.connected = m_sharedData.clientConnection.netClient.connect("255.255.255.255", ConstVal::GamePort);
 #endif
@@ -1491,9 +1495,13 @@ void MenuState::finaliseGameCreate()
     }
 }
 
-void MenuState::finaliseGameJoin()
+void MenuState::finaliseGameJoin(const MatchMaking::Message& data)
 {
+#ifdef USE_GNS
+    m_sharedData.clientConnection.connected = m_sharedData.clientConnection.netClient.connect(CSteamID(data.hostID));
+#else
     m_sharedData.clientConnection.connected = m_sharedData.clientConnection.netClient.connect(m_sharedData.targetIP.toAnsiString(), ConstVal::GamePort);
+#endif
     if (!m_sharedData.clientConnection.connected)
     {
         m_sharedData.errorMessage = "Could not connect to server";

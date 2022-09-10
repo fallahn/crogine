@@ -139,7 +139,7 @@ void ShadowMapRenderer::updateDrawList(Entity camEnt)
         auto corners = camera.getFrustumSplits();
         glm::vec3 lightDir = -getScene()->getSunlight().getComponent<Sunlight>().getDirection();
 
-        for (auto i = 0; i < corners.size(); ++i)
+        for (auto i = 0u; i < corners.size(); ++i)
         {
             glm::vec3 centre = glm::vec3(0.f);
 
@@ -207,7 +207,9 @@ void ShadowMapRenderer::updateDrawList(Entity camEnt)
 
 #endif
         }
+#ifdef CRO_DEBUG_
         std::int32_t visibleCount = 0;
+#endif
 
         //use depth frusta to cull entities
         auto& entities = getEntities();
@@ -281,6 +283,7 @@ void ShadowMapRenderer::render()
     {
         auto& camera = m_activeCameras[c].getComponent<Camera>();
         auto cameraPosition = m_activeCameras[c].getComponent<cro::Transform>().getWorldPosition();
+        const auto& camView = camera.getPass(Camera::Pass::Final).viewMatrix;
 
         //enable face culling and render rear faces
         //glCheck(glEnable(GL_CULL_FACE)); //this is now done per-material as some may be double sided
@@ -361,11 +364,12 @@ void ShadowMapRenderer::render()
                     glCheck(glUniformMatrix4fv(mat.uniforms[Material::World], 1, GL_FALSE, glm::value_ptr(worldMat)));
                     glCheck(glUniformMatrix4fv(mat.uniforms[Material::View], 1, GL_FALSE, glm::value_ptr(camera.m_shadowViewMatrices[d])));
                     glCheck(glUniformMatrix4fv(mat.uniforms[Material::WorldView], 1, GL_FALSE, glm::value_ptr(worldView)));
+                    glCheck(glUniformMatrix4fv(mat.uniforms[Material::CameraView], 1, GL_FALSE, glm::value_ptr(camView)));
                     glCheck(glUniformMatrix4fv(mat.uniforms[Material::Projection], 1, GL_FALSE, glm::value_ptr(camera.m_shadowProjectionMatrices[d])));
                     glCheck(glUniform3f(mat.uniforms[Material::Camera], cameraPosition.x, cameraPosition.y, cameraPosition.z));
                     //glCheck(glUniformMatrix4fv(mat.uniforms[Material::ViewProjection], 1, GL_FALSE, glm::value_ptr(camera.depthViewProjectionMatrix)));
 
-                    glCheck(model.m_materials[Mesh::IndexData::Final][i].doubleSided ? glDisable(GL_CULL_FACE) : glEnable(GL_CULL_FACE));
+                    glCheck((/*model.m_materials[Mesh::IndexData::Final][i].doubleSided ||*/ mat.doubleSided) ? glDisable(GL_CULL_FACE) : glEnable(GL_CULL_FACE));
 
 #ifdef PLATFORM_DESKTOP
                     model.draw(i, Mesh::IndexData::Shadow);

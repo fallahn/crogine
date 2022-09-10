@@ -3,7 +3,7 @@
 Matt Marchant 2021 - 2022
 http://trederia.blogspot.com
 
-crogine application - Zlib license.
+Super Video Golf - zlib licence.
 
 This software is provided 'as-is', without any express or
 implied warranty.In no event will the authors be held
@@ -29,6 +29,7 @@ source distribution.
 
 #pragma once
 
+#include "../Networking.hpp"
 #include "ServerState.hpp"
 
 #include <atomic>
@@ -58,6 +59,7 @@ public:
     bool running() const { return m_running; }
     void stop();
 
+    bool addLocalConnection(net::NetClient& client);
     void setHostID(std::uint64_t id);
 
     //note this is not atomic!

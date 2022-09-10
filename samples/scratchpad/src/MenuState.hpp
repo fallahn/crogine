@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020
+Matt Marchant 2020 - 2022
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -37,12 +37,13 @@ source distribution.
 #include <crogine/graphics/Font.hpp>
 #include <crogine/gui/GuiClient.hpp>
 
+class MyApp;
 namespace sp
 {
     class MenuState final : public cro::State, public cro::GuiClient
     {
     public:
-        MenuState(cro::StateStack&, cro::State::Context);
+        MenuState(cro::StateStack&, cro::State::Context, MyApp&);
         ~MenuState() = default;
 
         cro::StateID getStateID() const override { return States::ScratchPad::MainMenu; }
@@ -53,6 +54,7 @@ namespace sp
         void render() override;
 
     private:
+        MyApp& m_gameInstance;
 
         cro::Scene m_scene;
         cro::Font m_font;

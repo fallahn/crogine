@@ -3,7 +3,7 @@
 Matt Marchant 2021 - 2022
 http://trederia.blogspot.com
 
-crogine application - Zlib license.
+Super Video Golf - zlib licence.
 
 This software is provided 'as-is', without any express or
 implied warranty.In no event will the authors be held
@@ -29,7 +29,11 @@ source distribution.
 
 #pragma once
 
+#ifndef USE_GNS
 #include "DefaultAchievements.hpp"
+#else
+#include <Achievements.hpp>
+#endif
 #include "golf/SharedStateData.hpp"
 
 #include <crogine/core/App.hpp>
@@ -75,8 +79,12 @@ private:
 
     static cro::RenderTarget* m_renderTarget;
 
+#ifndef USE_GNS
     //this contains GL resources so we need to control its lifetime with initialise / finialise
-    std::unique_ptr<DefaultAchievements> m_achievements; 
+    std::unique_ptr<DefaultAchievements> m_achievements;
+#else
+    std::unique_ptr<AchievementImpl> m_achievements; 
+#endif
 
     void handleEvent(const cro::Event&) override;
     void handleMessage(const cro::Message&) override;

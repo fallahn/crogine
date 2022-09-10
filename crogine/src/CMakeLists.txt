@@ -14,6 +14,7 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/audio/sound_system/SoundStream.cpp
   
   ${PROJECT_DIR}/core/App.cpp
+  ${PROJECT_DIR}/core/AppPlugin.cpp
   ${PROJECT_DIR}/core/Clock.cpp
   ${PROJECT_DIR}/core/ConfigFile.cpp
   ${PROJECT_DIR}/core/Console.cpp

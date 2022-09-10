@@ -169,7 +169,8 @@ void SkeletalAnimator::process(float dt)
                 skel.m_currentAnimation = skel.m_nextAnimation;
                 skel.m_nextAnimation = -1;
                 skel.m_frameTime = 1.f / skel.m_animations[skel.m_currentAnimation].frameRate;
-                skel.m_currentFrameTime = 0.f;
+                skel.m_currentFrameTime = skel.m_currentBlendTime - skel.m_blendTime;// 0.f;
+                skel.m_currentBlendTime = 0.f;
                 skel.m_animations[skel.m_currentAnimation].playbackRate = skel.m_playbackRate;
                 skel.m_animations[skel.m_currentAnimation].currentFrame = skel.m_animations[skel.m_currentAnimation].startFrame;
 

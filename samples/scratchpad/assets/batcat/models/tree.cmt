@@ -1,6 +1,7 @@
 model tree
 {
 	mesh = billboard
+    cast_shadows = true
 
 	material VertexLit
 	{
@@ -9,5 +10,6 @@ model tree
         //colour = 1.0,0.0,0.0,1.0
         rx_shadows = true
         alpha_clip = 0.2
+        lock_rotation = true
 	}
 }

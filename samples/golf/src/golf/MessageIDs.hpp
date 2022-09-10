@@ -3,7 +3,7 @@
 Matt Marchant 2021 - 2022
 http://trederia.blogspot.com
 
-crogine application - Zlib license.
+Super Video Golf - zlib licence.
 
 This software is provided 'as-is', without any express or
 implied warranty.In no event will the authors be held
@@ -121,7 +121,8 @@ struct SystemEvent final
         PostProcessToggled,
         PostProcessIndexChanged,
         StateRequest,
-        InputActivated
+        InputActivated,
+        ShadowQualityChanged
     }type = PostProcessToggled;
     std::int32_t data = -1;
 };

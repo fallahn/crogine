@@ -3,7 +3,7 @@
 Matt Marchant 2021 - 2022
 http://trederia.blogspot.com
 
-crogine application - Zlib license.
+Super Video Golf - zlib licence.
 
 This software is provided 'as-is', without any express or
 implied warranty.In no event will the authors be held
@@ -120,12 +120,13 @@ static constexpr glm::vec2 WindIndicatorPosition(-48.f, 40.f); //absolute from e
 
 static const cro::Time MouseHideTime = cro::seconds(3.f);
 
-static const std::array<std::string, 4u> ShaderNames =
+static const std::array<std::string, 5u> ShaderNames =
 {
     "Terminal Display",
     "Terminal (Extreme)",
     "Black and White",
-    "CRT Effect"
+    "CRT Effect",
+    "Cinematic"
 };
 
 static inline bool activated(const cro::ButtonEvent& evt)

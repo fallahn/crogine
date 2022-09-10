@@ -3,7 +3,7 @@
 Matt Marchant 2021 - 2022
 http://trederia.blogspot.com
 
-crogine application - Zlib license.
+Super Video Golf - zlib licence.
 
 This software is provided 'as-is', without any express or
 implied warranty.In no event will the authors be held
@@ -87,6 +87,20 @@ void Server::stop()
         m_thread.reset();
     }
     m_gameMode = GameMode::None;
+}
+
+bool Server::addLocalConnection(net::NetClient& client)
+{
+#ifdef USE_GNS
+    if (!m_running)
+    {
+        LOG("Server not running", cro::Logger::Type::Error);
+        return false;
+    }
+    return m_sharedData.host.addLocalConnection(client);
+#else
+    return false;
+#endif
 }
 
 void Server::setHostID(std::uint64_t id)

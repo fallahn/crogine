@@ -3,7 +3,7 @@
 Matt Marchant 2021 - 2022
 http://trederia.blogspot.com
 
-crogine application - Zlib license.
+Super Video Golf - zlib licence.
 
 This software is provided 'as-is', without any express or
 implied warranty.In no event will the authors be held
@@ -38,6 +38,7 @@ source distribution.
 #include "TextAnimCallback.hpp"
 #include "../GolfGame.hpp"
 
+#include <Achievements.hpp>
 #include <AchievementStrings.hpp>
 
 #include <crogine/core/Window.hpp>
@@ -337,7 +338,11 @@ void PracticeState::buildScene()
                         cro::Clock clock;
                         while (clock.elapsed().asMilliseconds() < 500) {}
 
-                        m_sharedData.clientConnection.connected = m_sharedData.clientConnection.netClient.connect("127.0.0.1", ConstVal::GamePort);
+#ifdef USE_GNS
+                        m_sharedData.clientConnection.connected = m_sharedData.serverInstance.addLocalConnection(m_sharedData.clientConnection.netClient);
+#else
+                        m_sharedData.clientConnection.connected = m_sharedData.clientConnection.netClient.connect("255.255.255.255", ConstVal::GamePort);
+#endif
 
                         if (!m_sharedData.clientConnection.connected)
                         {

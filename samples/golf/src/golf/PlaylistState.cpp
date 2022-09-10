@@ -3,7 +3,7 @@
 Matt Marchant 2022
 http://trederia.blogspot.com
 
-crogine application - Zlib license.
+Super Video Golf - zlib licence.
 
 This software is provided 'as-is', without any express or
 implied warranty.In no event will the authors be held
@@ -59,6 +59,7 @@ source distribution.
 #include <crogine/ecs/components/Camera.hpp>
 #include <crogine/ecs/components/Drawable2D.hpp>
 #include <crogine/ecs/components/AudioEmitter.hpp>
+#include <crogine/ecs/components/ShadowCaster.hpp>
 
 #include <crogine/ecs/systems/UISystem.hpp>
 #include <crogine/ecs/systems/CommandSystem.hpp>
@@ -76,6 +77,7 @@ source distribution.
 
 #include <crogine/util/Easings.hpp>
 #include <crogine/util/Random.hpp>
+#include <crogine/util/String.hpp>
 
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
 
@@ -689,6 +691,11 @@ void PlaylistState::loadAssets()
     m_windBuffer.addShader(*shader);
     m_materialIDs[MaterialID::LeafShadow] = m_resources.materials.add(*shader);
 
+    m_resources.shaders.loadFromString(ShaderID::BillboardShadow, BillboardVertexShader, ShadowFragment, "#define SHADOW_MAPPING\n#define ALPHA_CLIP\n");
+    shader = &m_resources.shaders.get(ShaderID::BillboardShadow);
+    m_windBuffer.addShader(*shader);
+    m_resolutionBuffer.addShader(*shader);
+    m_materialIDs[MaterialID::BillboardShadow] = m_resources.materials.add(*shader);
 
     //audio - TODO do we need to keep the audio scape as a member?
     m_menuSounds.loadFromFile("assets/golf/sound/menu.xas", m_resources.audio);
@@ -2446,7 +2453,7 @@ void PlaylistState::createHoleMenu(cro::Entity rootNode, const MenuData& menuDat
                 }
                 else if (pos.y > (m_croppingArea.bottom + m_croppingArea.height))
                 {
-                    auto i = std::floor(e.getComponent<cro::Transform>().getPosition().y / -ItemSpacing);
+                    std::int32_t i = std::floor(e.getComponent<cro::Transform>().getPosition().y / -ItemSpacing);
 
                     scrollNode.getComponent<cro::Callback>().getUserData<ScrollData>().targetIndex = i;
                 }
@@ -3004,6 +3011,45 @@ void PlaylistState::createFileSystemMenu(cro::Entity rootNode, const MenuData& m
     centreText(entity);
     m_menuEntities[MenuID::FileSystem].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
+
+    //brwose filesystem button
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(largeFont).setString("Show On Disk");
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
+    bounds = cro::Text::getLocalBounds(entity);
+    entity.addComponent<UIElement>().depth = 0.1f;
+    entity.getComponent<UIElement>().relativePosition = { 1.f, 0.f };
+    entity.getComponent<UIElement>().absolutePosition = { -bounds.width - 18.f, ItemSpacing + 2.f };
+    entity.addComponent<cro::UIInput>().area = bounds;
+    entity.getComponent<cro::UIInput>().setGroup(MenuID::FileSystem);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = menuData.textSelected;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = menuData.textUnselected;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+        m_uiScene.getSystem<cro::UISystem>()->addCallback(
+            [&](cro::Entity e, const cro::ButtonEvent& evt)
+            {
+                if (activated(evt)
+                    && !m_playlist.empty())
+                {
+                    auto exportDir = cro::App::getPreferencePath() + UserCourseExport;
+                    if (!cro::FileSystem::directoryExists(exportDir))
+                    {
+                        cro::FileSystem::createDirectory(exportDir);
+                    }
+
+                    cro::Util::String::parseURL(exportDir);
+                    m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
+                }
+            });
+
+    m_menuEntities[MenuID::FileSystem].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+
     m_menuEntities[MenuID::FileSystem].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
 
     if (!m_saveFiles.empty())
@@ -3218,6 +3264,13 @@ void PlaylistState::loadShrubbery(const std::string& path)
                     }
                     shrubbery.billboardEnts[outIndex] = entity;
 
+
+                    auto billboardShadowMat = m_resources.materials.get(m_materialIDs[MaterialID::BillboardShadow]);
+                    applyMaterialData(md, billboardShadowMat);
+                    billboardShadowMat.doubleSided = true; //do this second because applyMaterial() overwrites it
+                    entity.getComponent<cro::Model>().setShadowMaterial(0, billboardShadowMat);
+                    entity.addComponent<cro::ShadowCaster>();
+
                     //trees are separate as we might want treesets instead
                     md.loadFromFile(modelPath); //reload to create unique VBO
                     entity = m_gameScene.createEntity();
@@ -3225,6 +3278,9 @@ void PlaylistState::loadShrubbery(const std::string& path)
                     md.createModel(entity);
                     entity.getComponent<cro::Model>().setMaterial(0, billboardMat);
 
+                    entity.getComponent<cro::Model>().setShadowMaterial(0, billboardShadowMat);
+                    entity.addComponent<cro::ShadowCaster>();
+                    
                     if (entity.hasComponent<cro::BillboardCollection>())
                     {
                         auto& collection = entity.getComponent<cro::BillboardCollection>();

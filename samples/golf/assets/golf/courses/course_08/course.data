@@ -1,0 +1,29 @@
+course course_08
+{
+    skybox = "assets/golf/skyboxes/mountain02.sbf"
+    shrubbery = "assets/golf/shrubs/beach.shb"
+    audio = "assets/golf/sound/ambience_beach.xas"
+    instance_model = "assets/golf/models/rock.cmt"
+
+    title = "Moulin Plage, Île du Coulée"
+    description = "Now With 10% More Sand"
+
+    hole = "assets/golf/courses/course_08/01.hole"
+    hole = "assets/golf/courses/course_08/02.hole"
+    hole = "assets/golf/courses/course_08/03.hole"
+    hole = "assets/golf/courses/course_08/04.hole"
+    hole = "assets/golf/courses/course_08/05.hole"
+    hole = "assets/golf/courses/course_08/06.hole"
+    hole = "assets/golf/courses/course_08/07.hole"
+    hole = "assets/golf/courses/course_08/08.hole"
+    hole = "assets/golf/courses/course_08/09.hole"
+    hole = "assets/golf/courses/course_08/10.hole"
+    hole = "assets/golf/courses/course_08/11.hole"
+    hole = "assets/golf/courses/course_08/12.hole"
+    hole = "assets/golf/courses/course_08/13.hole"
+    hole = "assets/golf/courses/course_08/14.hole"
+    hole = "assets/golf/courses/course_08/15.hole"
+    hole = "assets/golf/courses/course_08/16.hole"
+    hole = "assets/golf/courses/course_08/17.hole"
+    hole = "assets/golf/courses/course_08/18.hole"
+}

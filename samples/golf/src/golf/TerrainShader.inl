@@ -3,7 +3,7 @@
 Matt Marchant 2021 - 2022
 http://trederia.blogspot.com
 
-crogine application - Zlib license.
+Super Video Golf - zlib licence.
 
 This software is provided 'as-is', without any express or
 implied warranty.In no event will the authors be held
@@ -85,11 +85,13 @@ static const std::string TerrainVertexShader = R"(
         //gl_Position = u_viewProjectionMatrix * position;
 
         vec4 vertPos = u_viewProjectionMatrix * position;
+    #if defined (WOBBLE)
         vertPos.xyz /= vertPos.w;
         vertPos.xy = (vertPos.xy + vec2(1.0)) * u_scaledResolution * 0.5;
         vertPos.xy = floor(vertPos.xy);
         vertPos.xy = ((vertPos.xy / u_scaledResolution) * 2.0) - 1.0;
         vertPos.xyz *= vertPos.w;
+    #endif
         gl_Position = vertPos;
 
     #if defined (RX_SHADOWS)
@@ -642,7 +644,7 @@ static const std::string CelFragmentShader = R"(
 
         amount = 0.8 + (amount * 0.2);
         colour.rgb *= amount;
-
+#define NOCHEX
 #if !defined(NOCHEX)
         float pixelScale = u_pixelScale;
         //float pixelScale = 1.0;

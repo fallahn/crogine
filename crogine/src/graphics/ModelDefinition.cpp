@@ -34,6 +34,7 @@ source distribution.
 #include <crogine/graphics/SphereBuilder.hpp>
 #include <crogine/graphics/CubeBuilder.hpp>
 #include <crogine/graphics/QuadBuilder.hpp>
+#include <crogine/graphics/CircleMeshBuilder.hpp>
 #include <crogine/graphics/DynamicMeshBuilder.hpp>
 #include <crogine/graphics/EnvironmentMap.hpp>
 
@@ -56,7 +57,9 @@ namespace
     {
         "VertexLit", "Unlit", "Billboard", "PBR"
     };
+#ifdef CRO_DEBUG_
     bool billboardsWarned = false;
+#endif
 }
 
 ModelDefinition::ModelDefinition(ResourceCollection& rc, EnvironmentMap* envMap, const std::string& workingDir)
@@ -161,6 +164,22 @@ bool ModelDefinition::loadFromFile(const std::string& path, bool instanced, bool
         }
 
         meshBuilder = std::make_unique<CubeBuilder>(size);
+    }
+    else if (Util::String::toLower(meshValue) == "circle")
+    {
+        float radius = 1.f;
+        std::uint32_t pointCount = 3;
+        if (auto rad = cfg.findProperty("radius"); rad)
+        {
+            radius = std::max(0.01f, rad->getValue<float>());
+        }
+
+        if (auto pCount = cfg.findProperty("point_count"); pCount)
+        {
+            pointCount = std::max(pointCount, pCount->getValue<std::uint32_t>());
+        }
+
+        meshBuilder = std::make_unique<CircleMeshBuilder>(radius, pointCount);
     }
     else if (Util::String::toLower(meshValue) == "quad")
     {
@@ -550,14 +569,14 @@ bool ModelDefinition::loadFromFile(const std::string& path, bool instanced, bool
             else if (name == "subrect")
             {
                 auto subrect = p.getValue<glm::vec4>();
-                auto clamp = [](float& v)
+                /*auto clamp = [](float& v)
                 {
                     v = std::min(1.f, std::max(0.f, v));
                 };
                 clamp(subrect.x);
                 clamp(subrect.y);
                 clamp(subrect.z);
-                clamp(subrect.w);
+                clamp(subrect.w);*/
 
                 material.setProperty("u_subrect", subrect);
             }
@@ -630,10 +649,20 @@ bool ModelDefinition::loadFromFile(const std::string& path, bool instanced, bool
 
         if (m_castShadows)
         {
-            flags = ShaderResource::DepthMap | (flags & (ShaderResource::Skinning | ShaderResource::AlphaClip));
+            flags = ShaderResource::DepthMap | (flags & (ShaderResource::Skinning | ShaderResource::AlphaClip | ShaderResource::DiffuseMap));
             if (instanced)
             {
                 flags |= ShaderResource::Instanced;
+            }
+
+            if (lockRotation)
+            {
+                flags |= ShaderResource::BuiltInFlags::LockRotation;
+            }
+
+            if (lockScale)
+            {
+                flags |= ShaderResource::BuiltInFlags::LockScale;
             }
 
             shaderID = m_resources.shaders.loadBuiltIn(m_billboard ? ShaderResource::BillboardShadowMap : ShaderResource::ShadowMap, flags);
@@ -671,26 +700,16 @@ bool ModelDefinition::createModel(Entity entity)
 
         if (m_castShadows)
         {
-            //while this technically works the nature of billboards
-            //mean that the output would be facing the camera in the
-            //depth map view, which is incorrect - in this pass we'd
-            //still need to supply the viewProj for the active camera
-            //not the light source.
-            if (!m_billboard)
+            for (auto i = 0u; i < m_materialCount; ++i)
             {
-                for (auto i = 0u; i < m_materialCount; ++i)
+                if (m_shadowIDs[i] > 0)
                 {
-                    if (m_shadowIDs[i] > 0)
-                    {
-                        model.setShadowMaterial(i, m_resources.materials.get(m_shadowIDs[i]));
-                    }
+                    auto shadowMat = m_resources.materials.get(m_shadowIDs[i]);
+                    shadowMat.doubleSided = m_billboard ? true : m_resources.materials.get(m_materialIDs[i]).doubleSided;
+                    model.setShadowMaterial(i, shadowMat);
                 }
-                entity.addComponent<ShadowCaster>().skinned = (m_skeleton);
             }
-            else
-            {
-                LogW << "Billboard materials do not support shadow casting, property is ignored." << std::endl;
-            }
+            entity.addComponent<ShadowCaster>().skinned = (m_skeleton);
         }
 
         if (m_billboard)

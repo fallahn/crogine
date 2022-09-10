@@ -3,7 +3,7 @@
 Matt Marchant 2021 - 2022
 http://trederia.blogspot.com
 
-crogine application - Zlib license.
+Super Video Golf - zlib licence.
 
 This software is provided 'as-is', without any express or
 implied warranty.In no event will the authors be held
@@ -35,6 +35,7 @@ source distribution.
 #include "GameConsts.hpp"
 #include "MessageIDs.hpp"
 
+#include <Achievements.hpp>
 #include <AchievementStrings.hpp>
 
 #include <crogine/core/Window.hpp>
@@ -43,6 +44,8 @@ source distribution.
 #include <crogine/core/GameController.hpp>
 #include <crogine/graphics/Image.hpp>
 #include <crogine/graphics/SpriteSheet.hpp>
+#include <crogine/graphics/SimpleText.hpp>
+#include <crogine/graphics/SimpleVertexArray.hpp>
 #include <crogine/gui/Gui.hpp>
 
 #include <crogine/ecs/InfoFlags.hpp>
@@ -1112,13 +1115,8 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
 
 
     //shadow quality
-    auto shadowLabel = createLabel({ 204.f, 34.f }, "Shadow Quality");
-    shadowLabel.addComponent<cro::Callback>().active = true;
-    shadowLabel.getComponent<cro::Callback>().function =
-        [&](cro::Entity e, float)
-    {
-        updateToolTip(e, ToolTipID::NeedsRestart);
-    };
+    createLabel({ 204.f, 34.f }, "Shadow Quality");
+ 
 
     auto createSlider = [&](glm::vec2 position)
     {
@@ -1789,9 +1787,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
     centreText(shadowQualityText);
 
     //prev / next shadow quality
-    entity = createHighlight(glm::vec2(286.f, 25.f));
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
-        uiSystem.addCallback([&, shadowQualityText](cro::Entity e, cro::ButtonEvent evt) mutable
+    auto shadowChanged = uiSystem.addCallback([&, shadowQualityText](cro::Entity e, cro::ButtonEvent evt) mutable
             {
                 if (activated(evt))
                 {
@@ -1799,22 +1795,17 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
                     shadowQualityText.getComponent<cro::Text>().setString(m_sharedData.hqShadows ? "High" : "Low");
                     centreText(shadowQualityText);
                     m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+
+                    auto* msg = getContext().appInstance.getMessageBus().post<SystemEvent>(MessageID::SystemMessage);
+                    msg->type = SystemEvent::ShadowQualityChanged;
                 }
             });
+
+    entity = createHighlight(glm::vec2(286.f, 25.f));
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = shadowChanged;
 
     entity = createHighlight(glm::vec2(355.f, 25.f));
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
-        uiSystem.addCallback([&, shadowQualityText](cro::Entity e, cro::ButtonEvent evt) mutable
-            {
-                if (activated(evt))
-                {
-                    m_sharedData.hqShadows = !m_sharedData.hqShadows;
-                    shadowQualityText.getComponent<cro::Text>().setString(m_sharedData.hqShadows ? "High" : "Low");
-                    centreText(shadowQualityText);
-                    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
-                }
-            });
-
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = shadowChanged;
 }
 
 void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& spriteSheet)

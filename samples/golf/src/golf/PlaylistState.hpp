@@ -3,7 +3,7 @@
 Matt Marchant 2022
 http://trederia.blogspot.com
 
-crogine application - Zlib license.
+Super Video Golf - zlib licence.
 
 This software is provided 'as-is', without any express or
 implied warranty.In no event will the authors be held
@@ -119,7 +119,7 @@ private:
         {
             Horizon, Water, Cloud,
             Cel, CelTextured,
-            Course, Billboard,
+            Course, Billboard, BillboardShadow,
             Branch, Leaf,
             BranchShadow, LeafShadow,
 

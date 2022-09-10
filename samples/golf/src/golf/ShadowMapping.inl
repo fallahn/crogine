@@ -3,7 +3,7 @@
 Matt Marchant 2022
 http://trederia.blogspot.com
 
-crogine application - Zlib license.
+Super Video Golf - zlib licence.
 
 This software is provided 'as-is', without any express or
 implied warranty.In no event will the authors be held
@@ -148,7 +148,8 @@ static const std::string ShadowVertex = R"(
             float time = (u_windData.w * 15.0) + gl_InstanceID;
             float x = sin(time * 2.0) / 8.0;
             float y = cos(time) / 2.0;
-            vec3 windOffset = vec3(x, y, x) * a_colour.b * 0.1;
+            //vec3 windOffset = vec3(x, y, x) * a_colour.b * 0.1;
+            vec3 windOffset = vec3(x, 0.0, x + y) * a_colour.b * 0.5;
 
             vec3 windDir = normalize(vec3(u_windData.x, 0.f, u_windData.z));
             float dirStrength = a_colour.b;

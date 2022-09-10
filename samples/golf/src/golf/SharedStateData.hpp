@@ -3,7 +3,7 @@
 Matt Marchant 2021 - 2022
 http://trederia.blogspot.com
 
-crogine application - Zlib license.
+Super Video Golf - zlib licence.
 
 This software is provided 'as-is', without any express or
 implied warranty.In no event will the authors be held
@@ -182,6 +182,7 @@ struct SharedStateData final
     std::int32_t treeQuality = Low;
     bool hqShadows = true;
     bool logBenchmarks = false;
+    bool showCustomCourses = true;
 
     std::int32_t baseState = 0; //used to tell which state we're returning to from errors etc
     std::unique_ptr<cro::ResourceCollection> sharedResources;

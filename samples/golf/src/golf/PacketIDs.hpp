@@ -3,7 +3,7 @@
 Matt Marchant 2021 - 2022
 http://trederia.blogspot.com
 
-crogine application - Zlib license.
+Super Video Golf - zlib licence.
 
 This software is provided 'as-is', without any express or
 implied warranty.In no event will the authors be held
@@ -38,8 +38,8 @@ source distribution.
 //(server layout updated 140 -> 150)
 //(skybox format changed 150 -> 160)
 //(hole count became game rule 170 -> 180)
-static constexpr std::uint16_t CURRENT_VER = 181;
-static const std::string StringVer("1.8.2");
+static constexpr std::uint16_t CURRENT_VER = 190;
+static const std::string StringVer("1.9.0");
 
 namespace ScoreType
 {

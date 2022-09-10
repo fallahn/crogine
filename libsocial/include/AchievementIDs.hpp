@@ -3,7 +3,7 @@
 Matt Marchant 2020 - 2022
 http://trederia.blogspot.com
 
-crogine application - Zlib license.
+Super Video Golf - zlib licence.
 
 This software is provided 'as-is', without any express or
 implied warranty.In no event will the authors be held
@@ -111,6 +111,7 @@ namespace StatID
         Course05Complete,
         Course06Complete,
         Course07Complete,
+        Course08Complete,
 
         Count
     };

@@ -545,7 +545,7 @@ void FrustumState::createUI()
                 ImGui::Image(m_cameraPreview.getTexture(), { 320.f, 240.f }, { 0.f, 1.f }, { 1.f, 0.f });
 
                 bool doUpdate = false;
-                if (ImGui::SliderFloat("Near Plane", &perspectiveDebug.nearPlane, 0.0001f, perspectiveDebug.farPlane -  0.1f))
+                if (ImGui::SliderFloat("Near Plane", &perspectiveDebug.nearPlane, 0.1f, perspectiveDebug.farPlane -  0.1f))
                 {
                     doUpdate = true;
                 }

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021
+Matt Marchant 2021 - 2022
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -29,6 +29,8 @@ source distribution.
 
 #include "CollisionState.hpp"
 #include "BallSystem.hpp"
+#include "RollSystem.hpp"
+#include "Utils.hpp"
 #include "../StateIDs.hpp"
 
 #include <crogine/ecs/components/Transform.hpp>
@@ -56,6 +58,20 @@ CollisionState::CollisionState(cro::StateStack& ss, cro::State::Context ctx)
     : cro::State    (ss, ctx),
     m_scene         (ctx.appInstance.getMessageBus())
 {
+    m_collisionConfiguration = std::make_unique<btDefaultCollisionConfiguration>();
+    m_collisionDispatcher = std::make_unique<btCollisionDispatcher>(m_collisionConfiguration.get());
+
+    m_broadphaseInterface = std::make_unique<btDbvtBroadphase>();
+    m_collisionWorld = std::make_unique<btCollisionWorld>(m_collisionDispatcher.get(), m_broadphaseInterface.get(), m_collisionConfiguration.get());
+
+    m_collisionWorld->setDebugDrawer(&m_debugDrawer);    
+
+
+    //prevent resizing cos everything assplode otherwise :3
+    m_vertexData.reserve(2);
+    m_indexData.reserve(2);
+
+
     buildScene();
 
     registerWindow([&]() 
@@ -121,14 +137,23 @@ bool CollisionState::handleEvent(const cro::Event& evt)
         default: break;
         case SDLK_l:
         {
+            auto randImpulse = glm::vec3(cro::Util::Random::value(-0.05f, 0.05f), 25.f, -0.02f);
+
             auto& ball = m_ballEntity.getComponent<Ball>();
             ball.state = Ball::State::Awake;
-            ball.velocity += glm::vec3(cro::Util::Random::value(-0.05f, 0.05f), 25.f, -0.02f);
+            ball.velocity += randImpulse;
+
+            auto& roller = m_rollingEntity.getComponent<Roller>();
+            roller.state = Roller::Air;
+            roller.velocity += randImpulse;
         }
             break;
         case SDLK_p:
             showDebug = !showDebug;
             m_debugDrawer.setDebugMode(showDebug ? std::numeric_limits<std::int32_t>::max() : 0);
+            break;
+        case SDLK_q:
+            resetRoller();
             break;
         case SDLK_BACKSPACE:
             requestStackPop();
@@ -171,6 +196,7 @@ void CollisionState::buildScene()
     auto& mb = getContext().appInstance.getMessageBus();
 
     m_scene.addSystem<BallSystem>(mb, m_collisionWorld);
+    m_scene.addSystem<RollingSystem>(mb, m_collisionWorld, m_collisionDispatcher);
     m_scene.addSystem<cro::CallbackSystem>(mb);
     m_scene.addSystem<cro::ShadowMapRenderer>(mb);
     m_scene.addSystem<cro::CameraSystem>(mb);
@@ -192,11 +218,44 @@ void CollisionState::buildScene()
     entity.addComponent<Ball>();
     m_ballEntity = entity;
 
-    md.loadFromFile("assets/collision/models/physics_test.cmt");
-    entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>();
-    md.createModel(entity);
-    setupCollisionWorld(entity.getComponent<cro::Model>().getMeshData(), entity.getComponent<cro::Transform>().getLocalTransform());
+    if (md.loadFromFile("assets/collision/models/physics_test.cmt"))
+    {
+        entity = m_scene.createEntity();
+        entity.addComponent<cro::Transform>();
+        md.createModel(entity);
+        addCollisionMesh(entity.getComponent<cro::Model>().getMeshData(), entity.getComponent<cro::Transform>().getLocalTransform());
+    }
+
+
+    if (md.loadFromFile("assets/models/sphere_1m.cmt"))
+    {
+        entity = m_scene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition(RollResetPosition);
+        entity.getComponent<cro::Transform>().setOrigin({ 0.f, -0.5f, 0.f });
+        md.createModel(entity);
+        entity.addComponent<Roller>().resetPosition = RollResetPosition;
+
+        m_rollingEntity = entity;
+
+
+        //ramp ent
+        entity = m_scene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition(RampResetPosition);
+        entity.getComponent<cro::Transform>().setOrigin({ 0.f, -0.5f, 0.f });
+        md.createModel(entity);
+        entity.addComponent<Roller>().resetPosition = entity.getComponent<cro::Transform>().getPosition();
+        entity.getComponent<Roller>().friction = 1.f;
+        m_rampEntity = entity;
+    }
+
+    if (md.loadFromFile("assets/models/ramp.cmt"))
+    {
+        entity = m_scene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({0.f, -10.f, -25.f});
+        entity.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, -85.f * cro::Util::Const::degToRad);
+        md.createModel(entity);
+        addCollisionMesh(entity.getComponent<cro::Model>().getMeshData(), entity.getComponent<cro::Transform>().getLocalTransform());
+    }
 
     auto callback = [](cro::Camera& cam)
     {
@@ -207,27 +266,24 @@ void CollisionState::buildScene()
     auto& camera = m_scene.getActiveCamera().getComponent<cro::Camera>();
     camera.resizeCallback = callback;
     camera.shadowMapBuffer.create(2048, 2048);
+    camera.setShadowExpansion(10.f);
     callback(camera);
 
-    m_scene.getActiveCamera().getComponent<cro::Transform>().move({ 0.f, 5.f, 5.f });
-    m_scene.getActiveCamera().getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -28.f * cro::Util::Const::degToRad);
+    m_scene.getActiveCamera().getComponent<cro::Transform>().move({ 0.f, 15.f, 15.f });
+    m_scene.getActiveCamera().getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -20.f * cro::Util::Const::degToRad);
 
     m_scene.getSunlight().getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -25.f * cro::Util::Const::degToRad);
     m_scene.getSunlight().getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, -25.f * cro::Util::Const::degToRad);
 }
 
-void CollisionState::setupCollisionWorld(const cro::Mesh::Data& meshData, glm::mat4 groundTransform)
+void CollisionState::addCollisionMesh(const cro::Mesh::Data& meshData, glm::mat4 groundTransform)
 {
-    m_collisionConfiguration = std::make_unique<btDefaultCollisionConfiguration>();
-    m_collisionDispatcher = std::make_unique<btCollisionDispatcher>(m_collisionConfiguration.get());
+    //Future Me: if you add more meshes make sure to reserve
+    //space in the vertex data arrays, sincerely Past You.
 
-    m_broadphaseInterface = std::make_unique<btDbvtBroadphase>();
-    m_collisionWorld = std::make_unique<btCollisionWorld>(m_collisionDispatcher.get(), m_broadphaseInterface.get(), m_collisionConfiguration.get());
-
-    m_collisionWorld->setDebugDrawer(&m_debugDrawer);
-
-
-    cro::Mesh::readVertexData(meshData, m_vertexData, m_indexData);
+    auto& vertexData = m_vertexData.emplace_back();
+    auto& indexData = m_indexData.emplace_back();
+    cro::Mesh::readVertexData(meshData, vertexData, indexData);
 
     if ((meshData.attributeFlags & cro::VertexProperty::Colour) == 0)
     {
@@ -246,19 +302,19 @@ void CollisionState::setupCollisionWorld(const cro::Mesh::Data& meshData, glm::m
 
     //we have to create a specific object for each sub mesh
     //to be able to tag it with a different terrain...
-    for (auto i = 0u; i < m_indexData.size(); ++i)
+    for (auto i = 0u; i < indexData.size(); ++i)
     {
         btIndexedMesh groundMesh;
-        groundMesh.m_vertexBase = reinterpret_cast<std::uint8_t*>(m_vertexData.data());
+        groundMesh.m_vertexBase = reinterpret_cast<std::uint8_t*>(vertexData.data());
         groundMesh.m_numVertices = meshData.vertexCount;
         groundMesh.m_vertexStride = meshData.vertexSize;
 
         groundMesh.m_numTriangles = meshData.indexData[i].indexCount / 3;
-        groundMesh.m_triangleIndexBase = reinterpret_cast<std::uint8_t*>(m_indexData[i].data());
+        groundMesh.m_triangleIndexBase = reinterpret_cast<std::uint8_t*>(indexData[i].data());
         groundMesh.m_triangleIndexStride = 3 * sizeof(std::uint32_t);
 
         
-        float terrain = m_vertexData[(m_indexData[i][0] * (meshData.vertexSize / sizeof(float))) + colourOffset] * 255.f;
+        float terrain = vertexData[(indexData[i][0] * (meshData.vertexSize / sizeof(float))) + colourOffset] * 255.f;
         terrain = std::floor(terrain / 10.f);
 
         m_groundVertices.emplace_back(std::make_unique<btTriangleIndexVertexArray>())->addIndexedMesh(groundMesh);
@@ -268,4 +324,13 @@ void CollisionState::setupCollisionWorld(const cro::Mesh::Data& meshData, glm::m
         m_groundObjects.back()->setUserIndex(static_cast<std::int32_t>(terrain)); // set the terrain type
         m_collisionWorld->addCollisionObject(m_groundObjects.back().get());
     }
+}
+
+void CollisionState::resetRoller()
+{
+    m_rampEntity.getComponent<cro::Transform>().setPosition(RampResetPosition);
+
+    auto& roller = m_rampEntity.getComponent<Roller>();
+    roller.velocity = { 0.f, 0.f , 0.f };
+    roller.state = Roller::Air;
 }

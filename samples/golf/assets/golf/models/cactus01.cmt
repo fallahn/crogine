@@ -1,7 +1,7 @@
 model cactus01
 {
     mesh = assets/golf/models/cactus01.cmb
-    cast_shadows = false
+    cast_shadows = true
 
     material Unlit
     {

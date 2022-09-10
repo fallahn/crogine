@@ -28,6 +28,7 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include "MenuState.hpp"
+#include "MyApp.hpp"
 
 #include <crogine/core/App.hpp>
 #include <crogine/gui/Gui.hpp>
@@ -74,10 +75,13 @@ namespace
     }
 }
 
-MenuState::MenuState(cro::StateStack& stack, cro::State::Context context)
+MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, MyApp& app)
     : cro::State    (stack, context),
+    m_gameInstance  (app),
     m_scene         (context.appInstance.getMessageBus())
 {
+    app.unloadPlugin();
+
     //launches a loading screen (registered in MyApp.cpp)
     context.mainWindow.loadResources([this]() {
         //add systems to scene
@@ -365,6 +369,41 @@ void MenuState::createScene()
                 {
                     requestStackClear();
                     requestStackPush(States::ScratchPad::Frustum);
+                }
+            });
+
+    //frustum button
+    textPos.y -= MenuSpacing;
+    entity = createButton("Rolling Balls", textPos);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
+        uiSystem->addCallback([&](cro::Entity e, const cro::ButtonEvent& evt)
+            {
+                if (activated(evt))
+                {
+                    requestStackClear();
+                    requestStackPush(States::ScratchPad::Rolling);
+                }
+            });
+
+
+    //load plugin
+    textPos.y -= MenuSpacing;
+    entity = createButton("Load Plugin", textPos);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
+        uiSystem->addCallback([&](cro::Entity e, const cro::ButtonEvent& evt)
+            {
+                if (activated(evt))
+                {
+                    //TODO directory browsing crashes xfce
+                    //TODO font doesn't load without trailing /
+
+                    //requestStackClear();
+                    //auto path = cro::FileSystem::openFolderDialogue();
+                    //if (!path.empty())
+                    {
+                        //m_gameInstance.loadPlugin("plugin/");
+                    }
+                    cro::FileSystem::showMessageBox("Fix Me", "Fix Me", cro::FileSystem::OK);
                 }
             });
 

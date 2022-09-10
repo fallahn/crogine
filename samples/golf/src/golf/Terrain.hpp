@@ -3,7 +3,7 @@
 Matt Marchant 2021 - 2022
 http://trederia.blogspot.com
 
-crogine application - Zlib license.
+Super Video Golf - zlib licence.
 
 This software is provided 'as-is', without any express or
 implied warranty.In no event will the authors be held
@@ -79,5 +79,5 @@ static constexpr std::array<float, TerrainID::Count> Dampening =
 //how much the velocity of the ball is reduced when colliding
 static constexpr std::array<float, TerrainID::Count> Restitution =
 {
-    0.23f, 0.33f, 0.26f, 0.f, 0.f, 0.f, 0.8f, 0.f
+    0.23f, 0.33f, 0.26f, 0.f, 0.f, 0.f, 0.55f, 0.f
 };

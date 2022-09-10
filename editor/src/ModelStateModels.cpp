@@ -168,11 +168,19 @@ void ModelState::openModelAtPath(const std::string& path)
                     {
                         m_modelProperties.type = ModelProperties::Cube;
                     }
+                    else if (val == "circle")
+                    {
+                        m_modelProperties.type = ModelProperties::Circle;
+                    }
                 }
             }
             else if (name == "radius")
             {
                 m_modelProperties.radius = prop.getValue<float>();
+            }
+            else if (name == "point_count")
+            {
+                m_modelProperties.pointCount = std::max(3u, prop.getValue<std::uint32_t>());
             }
             else if (name == "size")
             {
@@ -314,6 +322,11 @@ void ModelState::saveModel(const std::string& path)
     case ModelProperties::Sphere:
         newCfg.addProperty("mesh", "sphere");
         newCfg.addProperty("radius").setValue(m_modelProperties.radius);
+        break;
+    case ModelProperties::Circle:
+        newCfg.addProperty("mesh", "circle");
+        newCfg.addProperty("radius").setValue(m_modelProperties.radius);
+        newCfg.addProperty("point_count").setValue(m_modelProperties.pointCount);
         break;
     }
     newCfg.addProperty("cast_shadows").setValue(m_modelProperties.castShadows);

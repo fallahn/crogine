@@ -5,12 +5,41 @@ model 01
 
     material Unlit
     {
+        name = "bunker"
+        colour = 1.000000,1.000000,1.000000,1.000000
+        smooth = false
+        repeat = true
+        depth_test = true
+        double_sided = false
+        use_mipmaps = false
+        blendmode = none
+        diffuse = "assets/golf/images/light_sand.png"
+
+    }
+    material Unlit
+    {
         name = "fairway"
         colour = 1.000000,1.000000,1.000000,1.000000
         smooth = false
         repeat = true
+        depth_test = true
+        double_sided = false
+        use_mipmaps = false
         blendmode = none
         diffuse = "assets/golf/images/fairway.png"
+
+    }
+    material Unlit
+    {
+        name = "green"
+        colour = 1.000000,1.000000,1.000000,1.000000
+        smooth = false
+        repeat = true
+        depth_test = true
+        double_sided = false
+        use_mipmaps = false
+        blendmode = none
+        diffuse = "assets/golf/images/green.png"
 
     }
     material Unlit
@@ -19,6 +48,9 @@ model 01
         colour = 1.000000,1.000000,1.000000,1.000000
         smooth = false
         repeat = true
+        depth_test = true
+        double_sided = false
+        use_mipmaps = false
         blendmode = none
         diffuse = "assets/golf/images/rough.png"
 
@@ -29,28 +61,11 @@ model 01
         colour = 1.000000,1.000000,1.000000,1.000000
         smooth = false
         repeat = true
+        depth_test = true
+        double_sided = false
+        use_mipmaps = false
         blendmode = none
         diffuse = "assets/golf/images/scrub.png"
-
-    }
-    material Unlit
-    {
-        name = "green"
-        colour = 1.000000,1.000000,1.000000,1.000000
-        smooth = false
-        repeat = true
-        blendmode = none
-        diffuse = "assets/golf/images/green.png"
-
-    }
-    material Unlit
-    {
-        name = "bunker"
-        colour = 1.000000,1.000000,1.000000,1.000000
-        smooth = false
-        repeat = true
-        blendmode = none
-        diffuse = "assets/golf/images/light_sand.png"
 
     }
 }

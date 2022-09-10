@@ -3,7 +3,7 @@
 Matt Marchant 2021 - 2022
 http://trederia.blogspot.com
 
-crogine application - Zlib license.
+Super Video Golf - zlib licence.
 
 This software is provided 'as-is', without any express or
 implied warranty.In no event will the authors be held
@@ -122,6 +122,7 @@ namespace
 #include "TransitionShader.inl"
 #include "BillboardShader.inl"
 #include "ShadowMapping.inl"
+#include "TreeShader.inl"
 #include "BeaconShader.inl"
 #include "PostProcess.inl"
 
@@ -136,11 +137,24 @@ namespace
 
     float godmode = 1.f;
 
-    constexpr std::uint32_t MaxCascades = 4;
-    std::uint32_t CascadeCount = 3;
+    constexpr std::uint32_t MaxCascades = 4; //actual value is 1 less this - see ShadowQuality::update()
+    constexpr float MaxShadowFarDistance = 150.f;
+    constexpr float MaxShadowNearDistance = 90.f;
 
-    float ShadowFarDistance = 50.f;
-    float ShadowNearDistance = 20.f;
+    struct ShadowQuality final
+    {
+        float shadowNearDistance = MaxShadowNearDistance;
+        float shadowFarDistance = MaxShadowFarDistance;
+        std::uint32_t cascadeCount = MaxCascades - 1;
+
+        void update(bool hq)
+        {
+            cascadeCount = hq ? 3 : 1;
+            float divisor = static_cast<float>(std::pow((MaxCascades - cascadeCount), 2)); //cascade sizes are exponential
+            shadowNearDistance = 90.f / divisor;
+            shadowFarDistance = 150.f / divisor;
+        }
+    }shadowQuality;
 
     const cro::Time ReadyPingFreq = cro::seconds(1.f);
 
@@ -199,9 +213,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
             }
         });
 
-    CascadeCount = sd.hqShadows ? 3 : 1;
-    ShadowNearDistance = 20.f / (MaxCascades - CascadeCount);
-    ShadowFarDistance = 50.f / (MaxCascades - CascadeCount);
+    shadowQuality.update(sd.hqShadows);
 
 
     context.mainWindow.loadResources([this]() {
@@ -265,13 +277,13 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     //        ImGui::End();
     //    });
 
-    registerWindow([&]()
+    /*registerWindow([&]()
         {
             if (ImGui::Begin("buns"))
             {
-                /*ImGui::PlotLines("X Pos", ballDump[0].data(), ballDump[0].size(), 0, nullptr, 3.4028235e38f, 3.4028235e38f, ImVec2(0, 80.f));
+                ImGui::PlotLines("X Pos", ballDump[0].data(), ballDump[0].size(), 0, nullptr, 3.4028235e38f, 3.4028235e38f, ImVec2(0, 80.f));
                 ImGui::PlotLines("Y Pos", ballDump[1].data(), ballDump[1].size(), 0, nullptr, 3.4028235e38f, 3.4028235e38f, ImVec2(0, 80.f));
-                ImGui::PlotLines("Z Pos", ballDump[2].data(), ballDump[2].size(), 0, nullptr, 3.4028235e38f, 3.4028235e38f, ImVec2(0, 80.f));*/
+                ImGui::PlotLines("Z Pos", ballDump[2].data(), ballDump[2].size(), 0, nullptr, 3.4028235e38f, 3.4028235e38f, ImVec2(0, 80.f));
                 float maxDist = m_cameras[m_currentCamera].getComponent<cro::Camera>().getMaxShadowDistance();
                 if (ImGui::SliderFloat("MaxDist", &maxDist, 1.f, 200.f))
                 {
@@ -284,12 +296,19 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
                     m_cameras[m_currentCamera].getComponent<cro::Camera>().setShadowExpansion(extension);
                 }
 
-                ImGui::Text("Cascade Count %u", m_gameScene.getActiveCamera().getComponent<cro::Camera>().getCascadeCount());
+                auto cCount = m_gameScene.getActiveCamera().getComponent<cro::Camera>().getCascadeCount();
+                ImGui::Text("Cascade Count %lu", cCount);
                 ImGui::Image(m_gameScene.getActiveCamera().getComponent<cro::Camera>().shadowMapBuffer.getTexture(0), { 128.f, 128.f }, { 0.f, 1.f }, { 1.f, 0.f });
+                for (auto i = 1u; i < cCount; ++i)
+                {
+                    ImGui::SameLine();
+                    ImGui::Image(m_gameScene.getActiveCamera().getComponent<cro::Camera>().shadowMapBuffer.getTexture(i), { 128.f, 128.f }, { 0.f, 1.f }, { 1.f, 0.f });
+                }
             }
             ImGui::End();
-        });
+        });*/
 #endif
+    cro::App::getInstance().resetFrameTime();
 }
 
 //public
@@ -357,7 +376,11 @@ bool GolfState::handleEvent(const cro::Event& evt)
             requestStackPush(StateID::Tutorial);
             break;
         case SDLK_F8:
-            showCountdown(20);
+        {
+            m_sharedData.hqShadows = !m_sharedData.hqShadows;
+            auto* msg = getContext().appInstance.getMessageBus().post<SystemEvent>(MessageID::SystemMessage);
+            msg->type = SystemEvent::ShadowQualityChanged;
+        }
             break;
         case SDLK_F10:
             m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, std::uint8_t(ServerCommand::ChangeWind), net::NetFlag::Reliable);
@@ -624,6 +647,10 @@ void GolfState::handleMessage(const cro::Message& msg)
         if (data.type == SystemEvent::StateRequest)
         {
             requestStackPush(data.data);
+        }
+        else if (data.type == SystemEvent::ShadowQualityChanged)
+        {
+            applyShadowQuality();
         }
     }
         break;
@@ -1128,9 +1155,6 @@ bool GolfState::simulate(float dt)
     //no lag between camera orientation.
     m_skyScene.simulate(dt);
 
-    auto* camView = &srcCam.getPass(cro::Camera::Pass::Final).viewMatrix[0][0];
-    glCheck(glProgramUniformMatrix4fv(m_billboardShadowUpdate.shaderID, m_billboardShadowUpdate.viewMatUniform, 1, GL_FALSE, camView));
-
 
 #ifndef CRO_DEBUG_
     if (m_roundEnded)
@@ -1325,8 +1349,6 @@ void GolfState::loadAssets()
     shader = &m_resources.shaders.get(ShaderID::BillboardShadow);
     m_windBuffer.addShader(*shader);
     m_resolutionBuffer.addShader(*shader);
-    m_billboardShadowUpdate.shaderID = shader->getGLHandle();
-    m_billboardShadowUpdate.viewMatUniform = shader->getUniformID("u_gameViewMatrix");
 
     m_resources.shaders.loadFromString(ShaderID::Leaderboard, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define DITHERED\n#define NOCHEX\n#define SUBRECT\n");
     shader = &m_resources.shaders.get(ShaderID::Leaderboard);
@@ -1375,6 +1397,52 @@ void GolfState::loadAssets()
     m_windBuffer.addShader(*shader);
     m_materialIDs[MaterialID::Billboard] = m_resources.materials.add(*shader);
 
+
+    //shaders used by terrain
+    m_resources.shaders.loadFromString(ShaderID::CelTexturedInstanced, CelVertexShader, CelFragmentShader, "#define WIND_WARP\n#define TEXTURED\n#define DITHERED\n#define NOCHEX\n#define INSTANCING\n");
+    shader = &m_resources.shaders.get(ShaderID::CelTexturedInstanced);
+    m_scaleBuffer.addShader(*shader);
+    m_resolutionBuffer.addShader(*shader);
+    m_windBuffer.addShader(*shader);
+
+    m_resources.shaders.loadFromString(ShaderID::Crowd, CelVertexShader, CelFragmentShader, "#define DITHERED\n#define INSTANCING\n#define VATS\n#define NOCHEX\n#define TEXTURED\n");
+    shader = &m_resources.shaders.get(ShaderID::Crowd);
+    m_scaleBuffer.addShader(*shader);
+    m_resolutionBuffer.addShader(*shader);
+
+    m_resources.shaders.loadFromString(ShaderID::CrowdShadow, ShadowVertex, ShadowFragment, "#define INSTANCING\n#define VATS\n");
+
+    if (m_sharedData.treeQuality == SharedStateData::High)
+    {
+        m_resources.shaders.loadFromString(ShaderID::TreesetBranch, BranchVertex, BranchFragment, "#define INSTANCING\n" + wobble);
+        shader = &m_resources.shaders.get(ShaderID::TreesetBranch);
+        m_scaleBuffer.addShader(*shader);
+        m_resolutionBuffer.addShader(*shader);
+        m_windBuffer.addShader(*shader);
+
+        m_resources.shaders.loadFromString(ShaderID::TreesetLeaf, BushVertex, /*BushGeom,*/ BushFragment, "#define POINTS\n#define INSTANCING\n#define HQ\n" + wobble);
+        shader = &m_resources.shaders.get(ShaderID::TreesetLeaf);
+        m_scaleBuffer.addShader(*shader);
+        m_resolutionBuffer.addShader(*shader);
+        m_windBuffer.addShader(*shader);
+
+
+        m_resources.shaders.loadFromString(ShaderID::TreesetShadow, ShadowVertex, ShadowFragment, "#define INSTANCING\n#define TREE_WARP\n" + wobble);
+        shader = &m_resources.shaders.get(ShaderID::TreesetShadow);
+        m_windBuffer.addShader(*shader);
+
+
+        std::string alphaClip;
+        if (m_sharedData.hqShadows)
+        {
+            alphaClip = "#define ALPHA_CLIP\n";
+        }
+        m_resources.shaders.loadFromString(ShaderID::TreesetLeafShadow, ShadowVertex, /*ShadowGeom,*/ ShadowFragment, "#define POINTS\n#define INSTANCING\n#define LEAF_SIZE\n" + alphaClip + wobble);
+        shader = &m_resources.shaders.get(ShaderID::TreesetLeafShadow);
+        m_windBuffer.addShader(*shader);
+    }
+
+
     //scanline transition
     m_resources.shaders.loadFromString(ShaderID::Transition, MinimapVertex, ScanlineTransition);
 
@@ -1393,6 +1461,8 @@ void GolfState::loadAssets()
     m_resources.shaders.loadFromString(ShaderID::WireframeCulled, WireframeVertex, WireframeFragment, "#define CULLED\n");
     m_materialIDs[MaterialID::WireFrameCulled] = m_resources.materials.add(m_resources.shaders.get(ShaderID::WireframeCulled));
     m_resources.materials.get(m_materialIDs[MaterialID::WireFrameCulled]).blendMode = cro::Material::BlendMode::Alpha;
+    //shader = &m_resources.shaders.get(ShaderID::WireframeCulled);
+    //m_resolutionBuffer.addShader(*shader);
 
     //minimap
     m_resources.shaders.loadFromString(ShaderID::Minimap, MinimapVertex, MinimapFragment);
@@ -1804,7 +1874,7 @@ void GolfState::loadAssets()
 
     if (auto* title = courseFile.findProperty("title"); title)
     {
-        m_courseTitle = title->getValue<std::string>();
+        m_courseTitle = title->getValue<cro::String>();
     }
 
     std::string skyboxPath;
@@ -1850,16 +1920,16 @@ void GolfState::loadAssets()
                             theme.treesets.push_back(ts);
                         }
                     }
+                    else if (shrubName == "grass")
+                    {
+                        theme.grassColour = sp.getValue<cro::Colour>();
+                    }
+                    else if (shrubName == "grass_tint") 
+                    {
+                        theme.grassTint = sp.getValue<cro::Colour>();
+                    }
                 }
             }
-        }
-        else if (name == "grass")
-        {
-            theme.grassColour = prop.getValue<cro::Colour>();
-        }
-        else if (name == "grass_tint") 
-        {
-            theme.grassTint = prop.getValue<cro::Colour>();
         }
         else if (name == "audio")
         {
@@ -1901,7 +1971,7 @@ void GolfState::loadAssets()
         }
     }
 
-    theme.cloudPath = loadSkybox(skyboxPath, m_skyScene, m_resources, m_materialIDs[MaterialID::Horizon]);
+    theme.cloudPath = loadSkybox(skyboxPath, m_skyScene, m_resources, m_materialIDs[MaterialID::Horizon], m_materialIDs[MaterialID::CelTexturedSkinned]);
 
 #ifdef CRO_DEBUG_
     auto& colours = m_skyScene.getSkyboxColours();
@@ -2589,41 +2659,13 @@ void GolfState::loadAssets()
 
     m_terrainBuilder.create(m_resources, m_gameScene, theme);
 
-    //terrain builder will have loaded a series of shaders for which we need to capture some uniforms
+    //terrain builder will have loaded some shaders from which we need to capture some uniforms
     shader = &m_resources.shaders.get(ShaderID::Terrain);
-    m_scaleBuffer.addShader(*shader);
-    m_resolutionBuffer.addShader(*shader);
-
-    shader = &m_resources.shaders.get(ShaderID::CelTexturedInstanced);
-    m_scaleBuffer.addShader(*shader);
-    m_resolutionBuffer.addShader(*shader);
-    m_windBuffer.addShader(*shader);
-
-    shader = &m_resources.shaders.get(ShaderID::Crowd);
     m_scaleBuffer.addShader(*shader);
     m_resolutionBuffer.addShader(*shader);
 
     shader = &m_resources.shaders.get(ShaderID::Slope);
     m_windBuffer.addShader(*shader);
-
-    if (m_sharedData.treeQuality == SharedStateData::High)
-    {
-        shader = &m_resources.shaders.get(ShaderID::TreesetShadow);
-        m_windBuffer.addShader(*shader);
-
-        shader = &m_resources.shaders.get(ShaderID::TreesetLeafShadow);
-        m_windBuffer.addShader(*shader);
-
-        shader = &m_resources.shaders.get(ShaderID::TreesetBranch);
-        m_scaleBuffer.addShader(*shader);
-        m_resolutionBuffer.addShader(*shader);
-        m_windBuffer.addShader(*shader);
-
-        shader = &m_resources.shaders.get(ShaderID::TreesetLeaf);
-        m_scaleBuffer.addShader(*shader);
-        m_resolutionBuffer.addShader(*shader);
-        m_windBuffer.addShader(*shader);
-    }
 
     createClouds(theme.cloudPath);
     if (cro::SysTime::now().months() == 6)
@@ -2752,12 +2794,14 @@ void GolfState::addSystems()
     m_gameScene.addDirector<GolfParticleDirector>(m_resources.textures);
     m_gameScene.addDirector<GolfSoundDirector>(m_resources.audio);
 
+
     if (m_sharedData.tutorial)
     {
         m_gameScene.addDirector<TutorialDirector>(m_sharedData, m_inputParser);
     }
 
     m_skyScene.addSystem<cro::CallbackSystem>(mb);
+    m_skyScene.addSystem<cro::SkeletalAnimator>(mb);
     m_skyScene.addSystem<cro::CameraSystem>(mb);
     m_skyScene.addSystem<cro::ModelRenderer>(mb);
 
@@ -2987,12 +3031,27 @@ void GolfState::buildScene()
     meshData = &entity.getComponent<cro::Model>().getMeshData();
     verts =
     {
-        0.f, 2.f, 0.f,    LeaderboardTextLight.getRed(), LeaderboardTextLight.getGreen(), LeaderboardTextLight.getBlue(), 1.f,
-        0.f, 0.f, 0.f,    LeaderboardTextLight.getRed(), LeaderboardTextLight.getGreen(), LeaderboardTextLight.getBlue(), 1.f,
+        0.f, 2.f, 0.f,      LeaderboardTextLight.getRed(), LeaderboardTextLight.getGreen(), LeaderboardTextLight.getBlue(), 1.f,
+        0.f, 1.66f, 0.f,    LeaderboardTextLight.getRed(), LeaderboardTextLight.getGreen(), LeaderboardTextLight.getBlue(), 1.f,
+
+        0.f, 1.66f, 0.f,    0.05f, 0.043f, 0.05f, 1.f,
+        0.f, 1.33f, 0.f,    0.05f, 0.043f, 0.05f, 1.f,
+
+        0.f, 1.33f, 0.f,    LeaderboardTextLight.getRed(), LeaderboardTextLight.getGreen(), LeaderboardTextLight.getBlue(), 1.f,
+        0.f, 1.f, 0.f,      LeaderboardTextLight.getRed(), LeaderboardTextLight.getGreen(), LeaderboardTextLight.getBlue(), 1.f,
+
+        0.f, 1.f, 0.f,      0.05f, 0.043f, 0.05f, 1.f,
+        0.f, 0.66f, 0.f,    0.05f, 0.043f, 0.05f, 1.f,
+
+        0.f, 0.66f, 0.f,    LeaderboardTextLight.getRed(), LeaderboardTextLight.getGreen(), LeaderboardTextLight.getBlue(), 1.f,
+        0.f, 0.33f, 0.f,    LeaderboardTextLight.getRed(), LeaderboardTextLight.getGreen(), LeaderboardTextLight.getBlue(), 1.f,
+
+        0.f, 0.33f, 0.f,    0.05f, 0.043f, 0.05f, 1.f,
+        0.f, 0.f, 0.f,      0.05f, 0.043f, 0.05f, 1.f,
     };
     indices =
     {
-        0,1
+        0,1,2,3,4,5,6,7,8,9,10,11,12
     };
     meshData->vertexCount = verts.size() / vertStride;
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData->vbo));
@@ -3162,7 +3221,7 @@ void GolfState::buildScene()
 
         //fetch this explicitly so the transition cam also gets the correct zoom
         float zoom = m_cameras[CameraID::Player].getComponent<CameraFollower::ZoomData>().fov;
-        cam.setPerspective(m_sharedData.fov * cro::Util::Const::degToRad * zoom, texSize.x / texSize.y, 0.1f, static_cast<float>(MapSize.x), CascadeCount);
+        cam.setPerspective(m_sharedData.fov * cro::Util::Const::degToRad * zoom, texSize.x / texSize.y, 0.1f, static_cast<float>(MapSize.x), shadowQuality.cascadeCount);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
 
@@ -3189,8 +3248,8 @@ void GolfState::buildScene()
         }
 
         auto fov = m_sharedData.fov * cro::Util::Const::degToRad * zoom.fov;
-        cam.setPerspective(fov, cam.getAspectRatio(), 0.1f, static_cast<float>(MapSize.x), CascadeCount);
-        m_cameras[CameraID::Transition].getComponent<cro::Camera>().setPerspective(fov, cam.getAspectRatio(), 0.1f, static_cast<float>(MapSize.x), CascadeCount);
+        cam.setPerspective(fov, cam.getAspectRatio(), 0.1f, static_cast<float>(MapSize.x), shadowQuality.cascadeCount);
+        m_cameras[CameraID::Transition].getComponent<cro::Camera>().setPerspective(fov, cam.getAspectRatio(), 0.1f, static_cast<float>(MapSize.x), shadowQuality.cascadeCount);
     };
 
     m_cameras[CameraID::Player] = camEnt;
@@ -3207,7 +3266,7 @@ void GolfState::buildScene()
     cam.reflectionBuffer.create(ReflectionMapSize, ReflectionMapSize);
     cam.reflectionBuffer.setSmooth(true);
     cam.shadowMapBuffer.create(ShadowMapSize, ShadowMapSize);
-    cam.setMaxShadowDistance(ShadowFarDistance);
+    cam.setMaxShadowDistance(shadowQuality.shadowFarDistance);
     cam.setShadowExpansion(20.f);
 
     //create an overhead camera
@@ -3215,7 +3274,7 @@ void GolfState::buildScene()
     {
         auto vpSize = glm::vec2(cro::App::getWindow().getSize());
 
-        cam.setPerspective(m_sharedData.fov * cro::Util::Const::degToRad, vpSize.x / vpSize.y, 0.1f, /*vpSize.x*/320.f, CascadeCount);
+        cam.setPerspective(m_sharedData.fov * cro::Util::Const::degToRad, vpSize.x / vpSize.y, 0.1f, /*vpSize.x*/320.f, shadowQuality.cascadeCount);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
     camEnt = m_gameScene.createEntity();
@@ -3224,14 +3283,16 @@ void GolfState::buildScene()
         [&,camEnt](cro::Camera& cam) //use explicit callback so we can capture the entity and use it to zoom via CamFollowSystem
     {
         auto vpSize = glm::vec2(cro::App::getWindow().getSize());
-        cam.setPerspective((m_sharedData.fov * cro::Util::Const::degToRad) * camEnt.getComponent<CameraFollower>().zoom.fov, vpSize.x / vpSize.y, 0.1f, static_cast<float>(MapSize.x) * 1.25f, CascadeCount);
+        cam.setPerspective((m_sharedData.fov * cro::Util::Const::degToRad) * camEnt.getComponent<CameraFollower>().zoom.fov,
+            vpSize.x / vpSize.y, 0.1f, static_cast<float>(MapSize.x) * 1.25f,
+            shadowQuality.cascadeCount);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
     camEnt.getComponent<cro::Camera>().reflectionBuffer.create(ReflectionMapSize, ReflectionMapSize);
     camEnt.getComponent<cro::Camera>().reflectionBuffer.setSmooth(true);
     camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(ShadowMapSize / 2, ShadowMapSize / 2);
     camEnt.getComponent<cro::Camera>().active = false;
-    camEnt.getComponent<cro::Camera>().setMaxShadowDistance(ShadowFarDistance * 2.f);
+    camEnt.getComponent<cro::Camera>().setMaxShadowDistance(shadowQuality.shadowFarDistance);
     camEnt.getComponent<cro::Camera>().setShadowExpansion(25.f);
     camEnt.addComponent<cro::CommandTarget>().ID = CommandID::SpectatorCam;
     camEnt.addComponent<CameraFollower>().radius = 80.f * 80.f;
@@ -3240,10 +3301,13 @@ void GolfState::buildScene()
     camEnt.getComponent<CameraFollower>().zoom.speed = 3.f;
     camEnt.getComponent<CameraFollower>().targetOffset = { 0.f,0.65f,0.f };
     camEnt.addComponent<cro::AudioListener>();
+    camEnt.addComponent<cro::Callback>(); //not used unless the drone chases it end of round (see showCountdown())
     //this holds the water plane ent when active
     camEnt.addComponent<TargetInfo>();
     setPerspective(camEnt.getComponent<cro::Camera>());
     m_cameras[CameraID::Sky] = camEnt;
+
+
 
     //and a green camera
     camEnt = m_gameScene.createEntity();
@@ -3252,14 +3316,16 @@ void GolfState::buildScene()
         [&,camEnt](cro::Camera& cam)
     {
         auto vpSize = glm::vec2(cro::App::getWindow().getSize());
-        cam.setPerspective((m_sharedData.fov * cro::Util::Const::degToRad) * camEnt.getComponent<CameraFollower>().zoom.fov, vpSize.x / vpSize.y, 0.1f, static_cast<float>(MapSize.x) * 1.25f, CascadeCount);
+        cam.setPerspective((m_sharedData.fov * cro::Util::Const::degToRad) * camEnt.getComponent<CameraFollower>().zoom.fov,
+            vpSize.x / vpSize.y, 0.1f, static_cast<float>(MapSize.x) * 1.25f,
+            shadowQuality.cascadeCount);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
     camEnt.getComponent<cro::Camera>().reflectionBuffer.create(ReflectionMapSize, ReflectionMapSize);
     camEnt.getComponent<cro::Camera>().reflectionBuffer.setSmooth(true);
     camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(ShadowMapSize, ShadowMapSize);
     camEnt.getComponent<cro::Camera>().active = false;
-    camEnt.getComponent<cro::Camera>().setMaxShadowDistance(ShadowFarDistance);
+    camEnt.getComponent<cro::Camera>().setMaxShadowDistance(shadowQuality.shadowFarDistance);
     camEnt.getComponent<cro::Camera>().setShadowExpansion(25.f);
     camEnt.addComponent<cro::CommandTarget>().ID = CommandID::SpectatorCam;
     camEnt.addComponent<CameraFollower>().radius = 30.f * 30.f;
@@ -3281,14 +3347,16 @@ void GolfState::buildScene()
         auto zoomFOV = camEnt.getComponent<cro::Callback>().getUserData<CameraFollower::ZoomData>().fov;
 
         auto vpSize = glm::vec2(cro::App::getWindow().getSize());
-        cam.setPerspective((m_sharedData.fov * cro::Util::Const::degToRad) * zoomFOV * 0.7f, vpSize.x / vpSize.y, 0.1f, static_cast<float>(MapSize.x) * 1.25f, CascadeCount);
+        cam.setPerspective((m_sharedData.fov * cro::Util::Const::degToRad) * zoomFOV * 0.7f,
+            vpSize.x / vpSize.y, 0.1f, static_cast<float>(MapSize.x) * 1.25f,
+            shadowQuality.cascadeCount);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
     camEnt.getComponent<cro::Camera>().reflectionBuffer.create(ReflectionMapSize, ReflectionMapSize);
     camEnt.getComponent<cro::Camera>().reflectionBuffer.setSmooth(true);
     camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(ShadowMapSize, ShadowMapSize);
     camEnt.getComponent<cro::Camera>().active = false;
-    camEnt.getComponent<cro::Camera>().setMaxShadowDistance(40.f);
+    camEnt.getComponent<cro::Camera>().setMaxShadowDistance(shadowQuality.shadowNearDistance);
     camEnt.getComponent<cro::Camera>().setShadowExpansion(25.f);
     camEnt.addComponent<cro::AudioListener>();
     camEnt.addComponent<TargetInfo>();
@@ -3323,8 +3391,8 @@ void GolfState::buildScene()
     camEnt.getComponent<cro::Camera>().reflectionBuffer.setSmooth(true);
     camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(ShadowMapSize, ShadowMapSize);
     camEnt.getComponent<cro::Camera>().active = false;
-    camEnt.getComponent<cro::Camera>().setMaxShadowDistance(ShadowFarDistance);
-    camEnt.getComponent<cro::Camera>().setShadowExpansion(5.f);
+    camEnt.getComponent<cro::Camera>().setMaxShadowDistance(shadowQuality.shadowFarDistance);
+    camEnt.getComponent<cro::Camera>().setShadowExpansion(15.f);
     camEnt.addComponent<cro::AudioListener>();
     camEnt.addComponent<TargetInfo>();
     updateView(camEnt.getComponent<cro::Camera>());
@@ -3338,14 +3406,14 @@ void GolfState::buildScene()
         [&,camEnt](cro::Camera& cam)
     {
         auto vpSize = glm::vec2(cro::App::getWindow().getSize());
-        cam.setPerspective(m_sharedData.fov * cro::Util::Const::degToRad, vpSize.x / vpSize.y, 0.1f, static_cast<float>(MapSize.x) * 1.25f, CascadeCount);
+        cam.setPerspective(m_sharedData.fov * cro::Util::Const::degToRad, vpSize.x / vpSize.y, 0.1f, static_cast<float>(MapSize.x) * 1.25f, shadowQuality.cascadeCount);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
     camEnt.getComponent<cro::Camera>().reflectionBuffer.create(ReflectionMapSize, ReflectionMapSize);
     camEnt.getComponent<cro::Camera>().reflectionBuffer.setSmooth(true);
     camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(ShadowMapSize, ShadowMapSize);
     camEnt.getComponent<cro::Camera>().active = false;
-    camEnt.getComponent<cro::Camera>().setMaxShadowDistance(ShadowFarDistance);
+    camEnt.getComponent<cro::Camera>().setMaxShadowDistance(shadowQuality.shadowFarDistance);
     camEnt.getComponent<cro::Camera>().setShadowExpansion(15.f);
     camEnt.addComponent<cro::AudioListener>();
     camEnt.addComponent<FpsCamera>();
@@ -3456,7 +3524,7 @@ void GolfState::buildScene()
 
 //#ifdef CRO_DEBUG_
     if (cro::SysTime::now().months() == 12
-        && cro::Util::Random::value(0, 50) == 0)
+        && cro::Util::Random::value(0, 20) == 0)
     {
         createWeather();
     }
@@ -4962,7 +5030,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
         }
 
         //set just far enough the flag shows in the distance
-        m_cameras[CameraID::Player].getComponent<cro::Camera>().setMaxShadowDistance(ShadowFarDistance);
+        m_cameras[CameraID::Player].getComponent<cro::Camera>().setMaxShadowDistance(shadowQuality.shadowFarDistance);
 
 
         //update the position of the bystander camera
@@ -5031,7 +5099,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
         m_activeAvatar->model.getComponent<cro::Model>().setHidden(true);
 
         //and use closer shadow mapping
-        m_cameras[CameraID::Player].getComponent<cro::Camera>().setMaxShadowDistance(ShadowNearDistance);
+        m_cameras[CameraID::Player].getComponent<cro::Camera>().setMaxShadowDistance(shadowQuality.shadowNearDistance);
     }
     setActiveCamera(CameraID::Player);
 
@@ -5470,7 +5538,7 @@ void GolfState::startFlyBy()
     //reset the zoom if not putting from tee
     m_cameras[CameraID::Player].getComponent<CameraFollower::ZoomData>().target = m_holeData[m_currentHole].puttFromTee ? PuttingZoom : 1.f;
     m_cameras[CameraID::Player].getComponent<cro::Callback>().active = true;
-    m_cameras[CameraID::Player].getComponent<cro::Camera>().setMaxShadowDistance(ShadowFarDistance);
+    m_cameras[CameraID::Player].getComponent<cro::Camera>().setMaxShadowDistance(shadowQuality.shadowFarDistance);
 
 
     //static for lambda capture
@@ -5521,8 +5589,9 @@ void GolfState::startFlyBy()
     targetData.speeds[0] *= 1.f / SpeedMultiplier;
 
     //translate the transform to look at target point or half way point if not set
+    constexpr float MinTargetMoveDistance = 100.f;
     auto diff = holeData.target - holeData.pin;
-    if (glm::length2(diff) < 100.f)
+    if (glm::length2(diff) < MinTargetMoveDistance)
     {
         diff = (holeData.tee - holeData.pin) / 2.f;
     }
@@ -5533,7 +5602,12 @@ void GolfState::startFlyBy()
     targetData.targets[2] = transform;
 
     moveDist = glm::length(glm::vec3(targetData.targets[1][3]) - glm::vec3(targetData.targets[2][3]));
-    targetData.speeds[1] = moveDist / MoveSpeed;
+    auto moveSpeed = MoveSpeed;
+    if (!m_holeData[m_currentHole].puttFromTee)
+    {
+        moveSpeed *= std::min(1.f, (moveDist / (MinTargetMoveDistance / 2.f)));
+    }
+    targetData.speeds[1] = moveDist / moveSpeed;
     targetData.speeds[1] *= 1.f / SpeedMultiplier;
 
     //the final transform is set to what should be the same as the initial player view
@@ -5816,4 +5890,44 @@ void GolfState::toggleFreeCam()
     m_waterEnt.getComponent<cro::Callback>().active = !useFreeCam;
     m_inputParser.setActive(!useFreeCam);
     cro::App::getWindow().setMouseCaptured(useFreeCam);
+}
+
+void GolfState::applyShadowQuality()
+{
+    shadowQuality.update(m_sharedData.hqShadows);
+
+    m_gameScene.getSystem<cro::ShadowMapRenderer>()->setRenderInterval(m_sharedData.hqShadows ? 2 : 3);
+
+    auto applyShadowSettings = 
+        [&](cro::Camera& cam, std::int32_t camID)
+    {
+        std::uint32_t shadowMapSize = m_sharedData.hqShadows ? 4096u : 2048u;
+        if (camID == CameraID::Sky)
+        {
+            shadowMapSize /= 2;
+        }
+
+        float camDistance = shadowQuality.shadowFarDistance;
+        if ((camID == CameraID::Player
+            && m_currentPlayer.terrain == TerrainID::Green)
+            || camID == CameraID::Bystander)
+        {
+            camDistance = shadowQuality.shadowNearDistance;
+        }
+
+        cam.shadowMapBuffer.create(shadowMapSize, shadowMapSize);
+        cam.setMaxShadowDistance(camDistance);
+
+        cam.setPerspective(cam.getFOV(), cam.getAspectRatio(), cam.getNearPlane(), cam.getFarPlane(), shadowQuality.cascadeCount);
+    };
+
+    for (auto i = 0; i < static_cast<std::int32_t>(m_cameras.size()); ++i)
+    {
+        applyShadowSettings(m_cameras[i].getComponent<cro::Camera>(), i);
+    }
+
+#ifdef CRO_DEBUG_
+    applyShadowSettings(m_freeCam.getComponent<cro::Camera>(), -1);
+#endif // CRO_DEBUG_
+
 }

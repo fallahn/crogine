@@ -3,7 +3,7 @@
 Matt Marchant 2020 - 2022
 http://trederia.blogspot.com
 
-crogine application - Zlib license.
+Super Video Golf - zlib licence.
 
 This software is provided 'as-is', without any express or
 implied warranty.In no event will the authors be held
@@ -54,6 +54,10 @@ source distribution.
 #include "icon.hpp"
 #include "Achievements.hpp"
 
+#ifdef USE_GNS
+#include <AchievementsImpl.hpp>
+#endif
+
 #include <crogine/audio/AudioMixer.hpp>
 #include <crogine/core/Clock.hpp>
 #include <crogine/core/Message.hpp>
@@ -92,6 +96,7 @@ namespace
         ShaderDescription(TerminalDistorted.c_str(), ShaderNames[1], "by Mostly Hairless."),
         ShaderDescription(BWFragment.c_str(), ShaderNames[2], "by Mostly Hairless."),
         ShaderDescription(CRTFragment.c_str(), ShaderNames[3], "PUBLIC DOMAIN CRT STYLED SCAN-LINE SHADER\nby Timothy Lottes"),
+        ShaderDescription(CinematicFragment.c_str(), ShaderNames[4], ""),
     };
 }
 
@@ -138,9 +143,11 @@ void GolfGame::handleEvent(const cro::Event& evt)
         case SDLK_AC_BACK:
             App::quit();
             break;
+#ifndef USE_GNS
         case SDLK_t:
             m_achievements->showTest();
             break;
+#endif
 #endif
         case SDLK_KP_MINUS:
             togglePixelScale(m_sharedData, false);
@@ -267,7 +274,9 @@ void GolfGame::render()
         m_stateStack.render();
     }
 
+#ifndef USE_GNS
     m_achievements->drawOverlay();
+#endif
 }
 
 bool GolfGame::initialise()
@@ -578,7 +587,11 @@ bool GolfGame::initialise()
     m_stateStack.pushState(StateID::SplashScreen);
 #endif
 
+#ifdef USE_GNS
+    m_achievements = std::make_unique<SteamAchievements>();
+#else
     m_achievements = std::make_unique<DefaultAchievements>(getMessageBus());
+#endif
     Achievements::init(*m_achievements);
 
     return true;
@@ -586,6 +599,9 @@ bool GolfGame::initialise()
 
 void GolfGame::finalise()
 {
+    m_sharedData.clientConnection.netClient.disconnect();
+    m_sharedData.serverInstance.stop(); //this waits for any threads to finish first.
+
     Achievements::shutdown();
 
     savePreferences();
@@ -705,6 +721,10 @@ void GolfGame::loadPreferences()
                 {
                     m_sharedData.logBenchmarks = prop.getValue<bool>();
                 }
+                else if (name == "show_custom")
+                {
+                    m_sharedData.showCustomCourses = prop.getValue<bool>();
+                }
             }
         }
     }
@@ -764,6 +784,7 @@ void GolfGame::savePreferences()
     cfg.addProperty("tree_quality").setValue(m_sharedData.treeQuality);
     cfg.addProperty("hq_shadows").setValue(m_sharedData.hqShadows);
     cfg.addProperty("log_benchmark").setValue(m_sharedData.logBenchmarks);
+    cfg.addProperty("show_custom").setValue(m_sharedData.showCustomCourses);
     cfg.save(path);
 
 
@@ -797,8 +818,7 @@ void GolfGame::loadAvatars()
                     const auto& name = prop.getName();
                     if (name == "name")
                     {
-                        //TODO try running this through unicode parser
-                        m_sharedData.localConnectionData.playerData[i].name = prop.getValue<std::string>();
+                        m_sharedData.localConnectionData.playerData[i].name = prop.getValue<cro::String>();
                     }
                     else if (name == "ball_id")
                     {

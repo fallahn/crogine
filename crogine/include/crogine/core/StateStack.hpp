@@ -91,6 +91,11 @@ namespace cro
         }
 
         /*!
+        \brief Unregisters the state with the given ID, if it has been registered
+        */
+        void unregisterState(std::int32_t);
+
+        /*!
         \brief Forwards window events to each active state on the stack,
         until the active state returns false or the end of the stack is reached.
         */

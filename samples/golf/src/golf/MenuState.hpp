@@ -3,7 +3,7 @@
 Matt Marchant 2021 - 2022
 http://trederia.blogspot.com
 
-crogine application - Zlib license.
+Super Video Golf - zlib licence.
 
 This software is provided 'as-is', without any express or
 implied warranty.In no event will the authors be held
@@ -97,7 +97,7 @@ private:
     {
         enum
         {
-            Accept, Back,
+            Accept, Back, Start,
 
             Count
         };
@@ -143,8 +143,11 @@ private:
         std::uint32_t nextCourse = 0;
         std::uint32_t prevHoleCount = 0;
         std::uint32_t nextHoleCount = 0;
+        std::uint32_t toggleUserCourses = 0;
         std::uint32_t selected = 0;
         std::uint32_t unselected = 0;
+        std::uint32_t selectHighlight = 0;
+        std::uint32_t unselectHighlight = 0;
         std::uint32_t showTip = 0;
         std::uint32_t hideTip = 0;
     }m_courseSelectCallbacks;
@@ -205,6 +208,8 @@ private:
         bool isUser = false;
     };
     std::vector<CourseData> m_courseData;
+    std::size_t m_activeCourseCount;
+    std::size_t m_officialCourseCount;
     void parseCourseDirectory(const std::string&, bool isUser);
 
     cro::Entity m_toolTip;
@@ -248,7 +253,7 @@ private:
 
     //message handlers for completing connection
     void finaliseGameCreate();
-    void finaliseGameJoin();
+    void finaliseGameJoin(const MatchMaking::Message&);
 
     void beginTextEdit(cro::Entity, cro::String*, std::size_t);
     void handleTextEdit(const cro::Event&);

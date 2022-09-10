@@ -1148,6 +1148,9 @@
     <ClCompile Include="..\crogine\src\detail\QuadTree.cpp">
       <Filter>Source Files\detail</Filter>
     </ClCompile>
+    <ClCompile Include="..\crogine\src\core\AppPlugin.cpp">
+      <Filter>Source Files\core</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\crogine\include\crogine\ecs\Entity.inl">

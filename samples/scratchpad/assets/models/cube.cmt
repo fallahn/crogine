@@ -2,7 +2,7 @@ model cube
 {
     mesh = cube
     size = 1.000000,1.000000,1.000000
-    cast_shadows = false
+    cast_shadows = true
 
     material VertexLit
     {

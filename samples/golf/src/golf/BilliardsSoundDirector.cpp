@@ -3,7 +3,7 @@
 Matt Marchant 2022
 http://trederia.blogspot.com
 
-crogine application - Zlib license.
+Super Video Golf - zlib licence.
 
 This software is provided 'as-is', without any express or
 implied warranty.In no event will the authors be held
@@ -33,6 +33,7 @@ source distribution.
 #include "GameConsts.hpp"
 
 #include <crogine/audio/AudioResource.hpp>
+#include <crogine/audio/AudioMixer.hpp>
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/util/Random.hpp>
 
@@ -83,75 +84,78 @@ BilliardsSoundDirector::BilliardsSoundDirector(cro::AudioResource& ar)
 //public
 void BilliardsSoundDirector::handleMessage(const cro::Message& msg)
 {
-    if (msg.id == MessageID::BilliardsMessage)
+    if (cro::AudioMixer::hasAudioRenderer())
     {
-        const auto& data = msg.getData<BilliardBallEvent>();
-        switch (data.type)
+        if (msg.id == MessageID::BilliardsMessage)
         {
-        default: break;
-        case BilliardBallEvent::Collision:
-            switch (data.data)
+            const auto& data = msg.getData<BilliardBallEvent>();
+            switch (data.type)
             {
             default: break;
-            case CollisionID::Cushion:
+            case BilliardBallEvent::Collision:
+                switch (data.data)
+                {
+                default: break;
+                case CollisionID::Cushion:
+                {
+                    auto ent = playSound(AudioID::CushionHit, data.position, std::min(1.f, data.volume));
+                    ent.getComponent<cro::AudioEmitter>().setPitch(cro::Util::Random::value(0.85f, 1.15f));
+                }
+                break;
+                case CollisionID::Ball:
+                {
+                    auto ent = playSound(AudioID::BallHit, data.position, std::min(1.f, data.volume));
+                    ent.getComponent<cro::AudioEmitter>().setPitch(cro::Util::Random::value(0.85f, 1.15f));
+                }
+                break;
+                case CollisionID::Pocket:
+                    playSound(AudioID::Pocket, data.position);
+                    break;
+                }
+                break;
+            case BilliardBallEvent::PocketStart:
             {
-                auto ent = playSound(AudioID::CushionHit, data.position, std::min(1.f, data.volume));
+                auto ent = playSound(AudioID::PocketStart, glm::vec3(0.f), 0.6f);
+                ent.getComponent<cro::AudioEmitter>().setPitch(0.8f);
+            }
+            break;
+            case BilliardBallEvent::PocketEnd:
+            {
+                auto ent = playSound(AudioID::PocketEnd, glm::vec3(0.f), data.volume);
                 ent.getComponent<cro::AudioEmitter>().setPitch(cro::Util::Random::value(0.85f, 1.15f));
             }
+            break;
+            case BilliardBallEvent::GameStarted:
+                playSound(AudioID::Start, glm::vec3(0.f)).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Voice);
                 break;
-            case CollisionID::Ball:
-            {
-                auto ent = playSound(AudioID::BallHit, data.position, std::min(1.f, data.volume));
-                ent.getComponent<cro::AudioEmitter>().setPitch(cro::Util::Random::value(0.85f, 1.15f));
-            }
+            case BilliardBallEvent::Foul:
+                playSound(AudioID::Foul01 + cro::Util::Random::value(0, 1), glm::vec3(0.f)).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Voice);
                 break;
-            case CollisionID::Pocket:
-                playSound(AudioID::Pocket, data.position);
+            case BilliardBallEvent::Score:
+                if (data.data > 0 && data.data < 8)
+                {
+                    playSound(AudioID::Win + data.data, glm::vec3(0.f)).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Voice);
+                }
+                break;
+            case BilliardBallEvent::GameEnded:
+                if (data.data == 0)
+                {
+                    playSound(AudioID::Win, glm::vec3(0.f)).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Voice);
+                }
+                else
+                {
+                    playSound(AudioID::Lose, glm::vec3(0.f)).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Voice);
+                }
                 break;
             }
-            break;
-        case BilliardBallEvent::PocketStart:
-        {
-            auto ent = playSound(AudioID::PocketStart, glm::vec3(0.f), 0.6f);
-            ent.getComponent<cro::AudioEmitter>().setPitch(0.8f);
         }
-            break;
-        case BilliardBallEvent::PocketEnd:
+        else if (msg.id == cro::Message::SkeletalAnimationMessage)
         {
-            auto ent = playSound(AudioID::PocketEnd, glm::vec3(0.f), data.volume);
-            ent.getComponent<cro::AudioEmitter>().setPitch(cro::Util::Random::value(0.85f, 1.15f));
-        }
-            break;
-        case BilliardBallEvent::GameStarted:
-            playSound(AudioID::Start, glm::vec3(0.f)).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Voice);
-            break;
-        case BilliardBallEvent::Foul:
-            playSound(AudioID::Foul01 + cro::Util::Random::value(0, 1), glm::vec3(0.f)).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Voice);
-            break;
-        case BilliardBallEvent::Score:
-            if (data.data > 0 && data.data < 8)
+            const auto& data = msg.getData<cro::Message::SkeletalAnimationEvent>();
+            if (data.userType == 0)
             {
-                playSound(AudioID::Win + data.data, glm::vec3(0.f)).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Voice);
+                playSound(AudioID::Cue, data.position);
             }
-            break;
-        case BilliardBallEvent::GameEnded:
-            if (data.data == 0)
-            {
-                playSound(AudioID::Win, glm::vec3(0.f)).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Voice);
-            }
-            else
-            {
-                playSound(AudioID::Lose, glm::vec3(0.f)).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Voice);
-            }
-            break;
-        }
-    }
-    else if (msg.id == cro::Message::SkeletalAnimationMessage)
-    {
-        const auto& data = msg.getData<cro::Message::SkeletalAnimationEvent>();
-        if (data.userType == 0)
-        {
-            playSound(AudioID::Cue, data.position);
         }
     }
 }

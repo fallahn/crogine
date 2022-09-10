@@ -245,6 +245,7 @@
     <ClCompile Include="..\crogine\src\audio\VorbisLoader.cpp" />
     <ClCompile Include="..\crogine\src\audio\WavLoader.cpp" />
     <ClCompile Include="..\crogine\src\core\App.cpp" />
+    <ClCompile Include="..\crogine\src\core\AppPlugin.cpp" />
     <ClCompile Include="..\crogine\src\core\Clock.cpp" />
     <ClCompile Include="..\crogine\src\core\ConfigFile.cpp" />
     <ClCompile Include="..\crogine\src\core\Console.cpp" />

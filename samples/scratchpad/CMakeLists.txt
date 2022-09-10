@@ -30,6 +30,7 @@ find_package(CROGINE REQUIRED)
 find_package(SDL2 REQUIRED)
 find_package(OpenGL REQUIRED)
 find_package(Bullet REQUIRED)
+find_package(ReactPhysics3D REQUIRED)
 
 include_directories(
   ${CROGINE_INCLUDE_DIR}
@@ -50,6 +51,7 @@ include(${PROJECT_DIR}/vats/CMakeLists.txt)
 include(${PROJECT_DIR}/retro/CMakeLists.txt)
 include(${PROJECT_DIR}/bush/CMakeLists.txt)
 include(${PROJECT_DIR}/frustum/CMakeLists.txt)
+include(${PROJECT_DIR}/rolling/CMakeLists.txt)
 
 add_executable(${PROJECT_NAME}
                ${PROJECT_SRC}
@@ -58,8 +60,9 @@ add_executable(${PROJECT_NAME}
                ${BSP_SRC}
                ${COLLISION_SRC}
                ${VOXEL_SRC}
-	       ${RETRO_SRC}
-	       ${BUSH_SRC}
+	             ${RETRO_SRC}
+	             ${BUSH_SRC}
+               ${ROLLING_SRC}
                ${FRUSTUM_SRC}
                ${VATS_SRC})
 
@@ -67,4 +70,5 @@ target_link_libraries(${PROJECT_NAME}
   ${CROGINE_LIBRARIES}
   ${SDL2_LIBRARY}
   ${BULLET_LIBRARIES}
-  ${OPENGL_LIBRARIES})
+  ${OPENGL_LIBRARIES}
+  ReactPhysics3D::ReactPhysics3D)

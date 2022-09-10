@@ -74,4 +74,13 @@ audioscape menu
         mixer_channel = 2
         looped = false
     }
+
+    emitter start_game
+    {
+        path = "assets/golf/sound/menu/start_game.wav"
+        streaming = false
+        volume = 0.5
+        mixer_channel = 2
+        looped = false
+    }
 }

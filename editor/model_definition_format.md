@@ -41,8 +41,9 @@ Models in crogine are described in a text format that can be loaded via the `Mod
         //a VertexLit material will likely have undesirable results. For more information about how to create billboard
         //geometry see the documentation for the BillboardCollection component.
 
-        //Primitive types are: sphere, cube and quad. Sphere meshes also expect a radius property with a float
-        //value greater an 0. Cubes are 1x1x1 by default, but may have a size property with 3 components. 
+        //Primitive types are: sphere, circle, cube and quad. Sphere meshes also expect a radius property with a float
+        //value greater an 0, as do circle meshes. Circle meshes also have the property `point_count` which must be
+        //at least 3. Cubes are 1x1x1 by default, but may have a size property with 3 components. 
         //Quads require two properties: size and uv. For example:
         size = 2,3.4
         uv = 0.0,0.0,0.5,1

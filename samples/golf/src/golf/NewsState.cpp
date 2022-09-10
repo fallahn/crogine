@@ -3,7 +3,7 @@
 Matt Marchant 2022
 http://trederia.blogspot.com
 
-crogine application - Zlib license.
+Super Video Golf - zlib licence.
 
 This software is provided 'as-is', without any express or
 implied warranty.In no event will the authors be held
@@ -67,6 +67,8 @@ source distribution.
 #include <crogine/util/String.hpp>
 
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
+
+#include <AchievementStrings.hpp>
 
 namespace
 {
@@ -346,7 +348,7 @@ void NewsState::buildScene()
     menuEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     auto newsEnt = entity;
 
-    m_feed.fetchAsync("https://fallahn.itch.io/vga-golf/devlog.rss");
+    m_feed.fetchAsync(RSSFeed);
 
 
     entity = m_scene.createEntity();

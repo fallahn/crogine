@@ -28,30 +28,18 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include "BallSystem.hpp"
+#include "Utils.hpp"
 
 #include <crogine/core/Console.hpp>
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/util/Random.hpp>
 #include <crogine/detail/glm/gtx/norm.hpp>
 
-#include <btBulletCollisionCommon.h>
 #include <BulletCollision/CollisionDispatch/btGhostObject.h>
 
 namespace
 {
-    constexpr glm::vec3 Gravity = glm::vec3(0.f, -0.7f, 0.f);
-    const btVector3 RayLength = btVector3(0.f, 1.f, 0.f);
     constexpr float Friction = 0.99f;
-
-    btVector3 fromGLM(glm::vec3 v)
-    {
-        return { v.x, v.y, v.z };
-    }
-
-    glm::vec3 toGLM(btVector3 v)
-    {
-        return { v.x(), v.y(), v.z() };
-    }
 }
 
 BallSystem::BallSystem(cro::MessageBus& mb, std::unique_ptr<btCollisionWorld>& cw)
@@ -83,8 +71,7 @@ void BallSystem::process(float dt)
             tx.move(ball.velocity * dt);
 
             auto worldPos = fromGLM(tx.getPosition());
-            btCollisionWorld::ClosestRayResultCallback res(worldPos, worldPos + RayLength);
-            m_collisionWorld->rayTest(worldPos, worldPos + RayLength, res);
+            auto res = collisionTest(worldPos, m_collisionWorld.get());
 
             if (res.hasHit())
             {
@@ -111,11 +98,6 @@ void BallSystem::process(float dt)
             {
                 //we might be at the top of an arc, so test
                 //if we're near the ground first
-                auto rayStart = worldPos + (RayLength / 50.f);
-                auto rayEnd = worldPos - (RayLength / 25.f);
-                res = { rayStart, rayEnd };
-                m_collisionWorld->rayTest(rayStart, rayEnd, res);
-
                 if (res.hasHit())
                 {
                     ball.velocity = glm::vec3(0.f);

@@ -11,8 +11,13 @@ model 04
         repeat = true
         depth_test = true
         double_sided = false
+        use_mipmaps = false
+        animated = false
+        row_count = 1
+        col_count = 1
+        framerate = 1.000000
         blendmode = none
-        diffuse = "assets/golf/images/bunker.png"
+        diffuse = "assets/golf/images/light_sand.png"
 
     }
     material Unlit
@@ -23,6 +28,11 @@ model 04
         repeat = true
         depth_test = true
         double_sided = false
+        use_mipmaps = false
+        animated = false
+        row_count = 1
+        col_count = 1
+        framerate = 1.000000
         blendmode = none
         diffuse = "assets/golf/images/fairway.png"
 
@@ -35,6 +45,11 @@ model 04
         repeat = true
         depth_test = true
         double_sided = false
+        use_mipmaps = false
+        animated = false
+        row_count = 1
+        col_count = 1
+        framerate = 1.000000
         blendmode = none
         diffuse = "assets/golf/images/green.png"
 
@@ -47,6 +62,11 @@ model 04
         repeat = true
         depth_test = true
         double_sided = false
+        use_mipmaps = false
+        animated = false
+        row_count = 1
+        col_count = 1
+        framerate = 1.000000
         blendmode = none
         diffuse = "assets/golf/images/rough.png"
 
@@ -59,6 +79,11 @@ model 04
         repeat = true
         depth_test = true
         double_sided = false
+        use_mipmaps = false
+        animated = false
+        row_count = 1
+        col_count = 1
+        framerate = 1.000000
         blendmode = none
         diffuse = "assets/golf/images/light_sand.png"
 
@@ -71,6 +96,11 @@ model 04
         repeat = true
         depth_test = true
         double_sided = false
+        use_mipmaps = false
+        animated = false
+        row_count = 1
+        col_count = 1
+        framerate = 1.000000
         rx_shadows = true
         blendmode = none
         diffuse = "assets/golf/images/volcano.png"

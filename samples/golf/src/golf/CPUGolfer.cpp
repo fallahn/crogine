@@ -3,7 +3,7 @@
 Matt Marchant 2022
 http://trederia.blogspot.com
 
-crogine application - Zlib license.
+Super Video Golf - zlib licence.
 
 This software is provided 'as-is', without any express or
 implied warranty.In no event will the authors be held
@@ -440,9 +440,18 @@ void CPUGolfer::aim(float dt, glm::vec3 windVector)
 
             //based on dot prod of aim angle and wind dir
             //multiplied by percent of selected club distance to target distance
-            if (m_clubID < ClubID::SandWedge)
+            if (m_clubID < ClubID::PitchWedge)
             {
+                //power is not actually linear - ie half the distance is not
+                //half the power, so we need to pull back a little to stop
+                //overshooting long drives
                 m_targetPower = m_aimDistance / Clubs[m_clubID].target;
+                if (Clubs[m_clubID].target > m_aimDistance)
+                {
+                    //the further we try to drive the bigger the reduction
+                    float amount = 1.f - (static_cast<float>(m_clubID) / ClubID::NineIron);
+                    m_targetPower *= (1.f - (amount * 0.16f));
+                }
             }
             else
             {
@@ -453,7 +462,7 @@ void CPUGolfer::aim(float dt, glm::vec3 windVector)
 
             //add some random factor to target power and set to stroke mode
             m_targetPower = std::min(1.f, m_targetPower);
-            m_targetPower += static_cast<float>(cro::Util::Random::value(-5, 5)) / 100.f;
+            m_targetPower += static_cast<float>(cro::Util::Random::value(-6, 6)) / 100.f;
             m_targetPower = std::max(0.06f, std::min(1.f, m_targetPower));
 
             if (m_activePlayer.terrain == TerrainID::Green)

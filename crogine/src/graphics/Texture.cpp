@@ -43,16 +43,16 @@ using namespace cro;
 
 namespace
 {
-    std::uint32_t ensurePOW2(std::uint32_t size)
-    {
-        /*std::uint32_t pow2 = 1;
-        while (pow2 < size)
-        {
-            pow2 *= 2;
-        }
-        return pow2;*/
-        return size; //TODO this needs to not exlude combination resolutions such as 768
-    }
+    //std::uint32_t ensurePOW2(std::uint32_t size)
+    //{
+    //    /*std::uint32_t pow2 = 1;
+    //    while (pow2 < size)
+    //    {
+    //        pow2 *= 2;
+    //    }
+    //    return pow2;*/
+    //    return size; //TODO this needs to not exlude combination resolutions such as 768
+    //}
 }
 
 Texture::Texture()
@@ -138,16 +138,19 @@ void Texture::create(std::uint32_t width, std::uint32_t height, ImageFormat::Typ
 
     auto wrap = m_repeated ? GL_REPEAT : GL_CLAMP_TO_EDGE;
     auto smooth = m_smooth ? GL_LINEAR : GL_NEAREST;
-    GLint texFormat = GL_RGB;
+    GLint texFormat = GL_RGB8;
+    GLint uploadFormat = GL_RGB;
     std::int32_t pixelSize = 3;
     if (format == ImageFormat::RGBA)
     {
-        texFormat = GL_RGBA;
+        texFormat = GL_RGBA8;
+        uploadFormat = GL_RGBA;
         pixelSize = 4;
     }
     else if(format == ImageFormat::A)
     {
-        texFormat = GL_RED;
+        texFormat = GL_R8;
+        uploadFormat = GL_RED;
         pixelSize = 1;
     }
 
@@ -156,7 +159,13 @@ void Texture::create(std::uint32_t width, std::uint32_t height, ImageFormat::Typ
     std::fill(buffer.begin(), buffer.end(), 0);
 
     glCheck(glBindTexture(GL_TEXTURE_2D, m_handle));
-    glCheck(glTexImage2D(GL_TEXTURE_2D, 0, texFormat, width, height, 0, texFormat, GL_UNSIGNED_BYTE, buffer.data()));
+//#ifdef GL41
+    glCheck(glTexImage2D(GL_TEXTURE_2D, 0, uploadFormat, width, height, 0, uploadFormat, GL_UNSIGNED_BYTE, buffer.data()));
+//#else
+//    glCheck(glTexStorage2D(GL_TEXTURE_2D, 1, texFormat, width, height));
+//    glCheck(glBindTexture(GL_TEXTURE_2D, m_handle));
+//    glCheck(glTexSubImage2D(GL_TEXTURE_2D, 0, 0,0,width,height, uploadFormat, GL_UNSIGNED_BYTE, buffer.data()));
+//#endif
     glCheck(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrap));
     glCheck(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrap));
     glCheck(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, smooth));
@@ -166,6 +175,9 @@ void Texture::create(std::uint32_t width, std::uint32_t height, ImageFormat::Typ
 
 bool Texture::loadFromFile(const std::string& filePath, bool createMipMaps)
 {
+    //TODO leaving tis here because one day I might
+    //decide to fix loading textures as floating point
+    
     //auto path = FileSystem::getResourcePath() + filePath;
 
     //auto* file = SDL_RWFromFile(path.c_str(), "rb");
@@ -202,11 +214,6 @@ bool Texture::loadFromImage(const Image& image, bool createMipMaps)
     }
 
     auto size = image.getSize();
-    /*if (!((size.x & (size.x - 1)) == 0) && ((size.y & (size.y - 1)) == 0))
-    {
-        LOG("Image not POW2", Logger::Type::Error);
-        return false;
-    }*/
 
     create(size.x, size.y, image.getFormat());
     return update(image.getPixelData(), createMipMaps);

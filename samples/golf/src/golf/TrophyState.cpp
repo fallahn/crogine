@@ -3,7 +3,7 @@
 Matt Marchant 2021 - 2022
 http://trederia.blogspot.com
 
-crogine application - Zlib license.
+Super Video Golf - zlib licence.
 
 This software is provided 'as-is', without any express or
 implied warranty.In no event will the authors be held
@@ -35,6 +35,7 @@ source distribution.
 #include "TextAnimCallback.hpp"
 #include "../GolfGame.hpp"
 
+#include <Achievements.hpp>
 #include <AchievementStrings.hpp>
 
 #include <crogine/core/Window.hpp>
@@ -754,7 +755,7 @@ void TrophyState::buildTrophyScene()
 
     if (!m_sharedData.sharedResources->shaders.hasShader(ShaderID::Trophy))
     {
-        m_sharedData.sharedResources->shaders.loadFromString(ShaderID::Trophy, CelVertexShader, CelFragmentShader, "#define TINT\n#define RX_SHADOWS\n#define VERTEX_COLOURED\n#define REFLECTIONS\n");
+        m_sharedData.sharedResources->shaders.loadFromString(ShaderID::Trophy, CelVertexShader, CelFragmentShader, "#define TINT\n/*#define RX_SHADOWS\n*/#define VERTEX_COLOURED\n#define REFLECTIONS\n");
     }
     shader = &m_sharedData.sharedResources->shaders.get(ShaderID::Trophy);
     m_scaleBuffer.addShader(*shader);

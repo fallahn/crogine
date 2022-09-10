@@ -3,7 +3,7 @@
 Matt Marchant 2021
 http://trederia.blogspot.com
 
-crogine application - Zlib license.
+Super Video Golf - zlib licence.
 
 This software is provided 'as-is', without any express or
 implied warranty.In no event will the authors be held
@@ -46,6 +46,12 @@ static const std::string WireframeVertex = R"(
 
 #if defined (CULLED)
     uniform HIGH vec3 u_cameraWorldPosition;
+
+    layout (std140) uniform ScaledResolution
+    {
+        vec2 u_scaledResolution;
+        float u_nearFadeDistance;
+    };
 #endif
 
     VARYING_OUT LOW vec4 v_colour;

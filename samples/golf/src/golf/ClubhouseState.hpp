@@ -3,7 +3,7 @@
 Matt Marchant 2022
 http://trederia.blogspot.com
 
-crogine application - Zlib license.
+Super Video Golf - zlib licence.
 
 This software is provided 'as-is', without any express or
 implied warranty.In no event will the authors be held
@@ -35,6 +35,8 @@ source distribution.
 #include "GameConsts.hpp"
 #include "Billboard.hpp"
 #include "BilliardsSystem.hpp"
+
+#include <MatchMaking.hpp>
 
 #include <crogine/audio/AudioScape.hpp>
 #include <crogine/core/State.hpp>
@@ -108,6 +110,7 @@ public:
 private:
 
     SharedStateData& m_sharedData;
+    MatchMaking m_matchMaking;
 
     cro::Scene m_backgroundScene;
     cro::Scene m_uiScene;
@@ -207,6 +210,8 @@ private:
     void updateBallTexture();
 
     void handleNetEvent(const net::NetEvent&);
+    void finaliseGameCreate();
+    void finaliseGameJoin(const MatchMaking::Message&);
 
     friend struct ClubhouseContext;
 };

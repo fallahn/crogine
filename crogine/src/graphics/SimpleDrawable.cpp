@@ -145,34 +145,11 @@ SimpleDrawable::SimpleDrawable()
     m_texture           (nullptr),
     m_blendMode         (Material::BlendMode::Alpha)
 {
-    increaseColourShader();
-    setShader(*colourShader);
-
     //create buffer
     glCheck(glGenBuffers(1, &m_vbo));
-#ifdef PLATFORM_DESKTOP
-    glCheck(glGenVertexArrays(1, &m_vao));
 
-    glCheck(glBindVertexArray(m_vao));
-    glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_vbo));
-
-    auto stride = 8 * static_cast<std::uint32_t>(sizeof(float)); //size of a vert
-
-    //pos
-    glCheck(glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, stride, (void*)0));
-    glCheck(glEnableVertexAttribArray(0));
-
-    //uv
-    glCheck(glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, stride, (void*)(2 * sizeof(float))));
-    glCheck(glEnableVertexAttribArray(1));
-
-    //colour
-    glCheck(glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, stride, (void*)(4 * sizeof(float))));
-    glCheck(glEnableVertexAttribArray(2));
-
-    glCheck(glBindVertexArray(0));
-    glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
-#endif
+    increaseColourShader();
+    setShader(*colourShader);
 }
 
 SimpleDrawable::~SimpleDrawable()
@@ -211,23 +188,13 @@ bool SimpleDrawable::setShader(const Shader& shader)
         return false;
     }
 
-    if (attribs[Mesh::Colour] == -1)
+    if (attribs[Mesh::Colour] == -1
+        && attribs[Mesh::UV0] == -1)
     {
-        LogE << "No colour attribute was found in shader" << std::endl;
-        LogI << "SimpleDrawable expects vec4 a_colour" << std::endl;
+        LogE << "No colour attribute or UV attribute was found in shader" << std::endl;
+        LogI << "SimpleDrawable expects at least vec4 a_colour OR vec a_texCoord0 (or both)" << std::endl;
         return false;
     }
-
-    //texture is optional
-    /*if (attribs[Mesh::UV0] == -1)
-    {
-        LogE << "No texture coordinate attribute was found in shader" << std::endl;
-        LogI << "SimpleDrawable expects vec2 a_texCoord0" << std::endl;
-        return false;
-    }*/
-
-    //TODO the above doesn't actually check that the attribs are the correct *order*
-
 
     //decrease the existing count if we're replacing a built-in
     if (textureShader &&
@@ -268,6 +235,9 @@ bool SimpleDrawable::setShader(const Shader& shader)
     m_uniforms.texture = shader.getUniformID("u_texture");
     m_uniforms.shaderID = shader.getGLHandle();
 
+#ifdef PLATFORM_DESKTOP
+    updateVAO(shader);
+#endif
 
     return true;
 }
@@ -373,6 +343,53 @@ void SimpleDrawable::drawGeometry(const glm::mat4& worldTransform) const
 }
 
 //private
+#ifdef PLATFORM_DESKTOP
+void SimpleDrawable::updateVAO(const Shader& shader)
+{
+    if (m_vao)
+    {
+        glCheck(glDeleteVertexArrays(1, &m_vao));
+        m_vao = 0;
+    }
+
+    glCheck(glGenVertexArrays(1, &m_vao));
+
+    if (m_vao)
+    {
+        glCheck(glBindVertexArray(m_vao));
+        glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_vbo));
+
+        constexpr auto stride = 8 * static_cast<std::uint32_t>(sizeof(float)); //size of a vert
+
+        const auto& attribs = shader.getAttribMap();
+        
+        //pos
+        if (attribs[Mesh::Position] > -1)
+        {
+            glCheck(glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, stride, (void*)0));
+            glCheck(glEnableVertexAttribArray(0));
+        }
+        //else warn?
+         
+        //uv
+        if (attribs[Mesh::UV0] > -1)
+        {
+            glCheck(glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, stride, (void*)(2 * sizeof(float))));
+            glCheck(glEnableVertexAttribArray(1));
+        }
+
+        //colour
+        if (attribs[Mesh::Colour] > -1)
+        {
+            glCheck(glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, stride, (void*)(4 * sizeof(float))));
+            glCheck(glEnableVertexAttribArray(2));
+        }
+        glCheck(glBindVertexArray(0));
+        glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
+    }
+}
+#endif
+
 void SimpleDrawable::applyBlendMode() const
 {
     switch (m_blendMode)

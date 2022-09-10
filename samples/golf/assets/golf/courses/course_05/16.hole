@@ -2,193 +2,97 @@ hole 16
 {
     map="assets/golf/courses/course_05/16.png"
     model="assets/golf/models/course_05/16.cmt"
-    par = 3
+    par = 4
 
-    pin = 76.404846,1.281991,-88.289360
+    pin = 61.278732,2.185324,-67.710594
 
-    target = 137.644730,1.280880,-100.493004
+    target = 175.560730,3.089482,-125.373001
 
-    tee = 266.561493,1.280880,-103.665909
+    tee = 252.402390,3.089483,-104.665817
 
     prop
     {
-        model = "assets/golf/models/lilies.cmt"
-        position = 118.983215,0.043850,-117.964386
-        rotation = 0.000000
+        model = "assets/golf/models/view_platform.cmt"
+        position = 200.604187,1.999998,-170.751831
+        rotation = -876.479600
         scale = 1.000000,1.000000,1.000000
-    }
-
-    prop
-    {
-        model = "assets/golf/models/reeds_large.cmt"
-        position = 117.159142,-0.005890,-121.202347
-        rotation = 0.000000
-        scale = 1.000000,1.000000,1.000000
-    }
-
-    prop
-    {
-        model = "assets/golf/models/reeds_large.cmt"
-        position = 119.574532,-0.005890,-121.403000
-        rotation = 0.000000
-        scale = 1.000000,1.000000,1.000000
-    }
-
-    prop
-    {
-        model = "assets/golf/models/lilies_large.cmt"
-        position = 139.186722,0.049762,-69.743591
-        rotation = -40.281010
-        scale = 1.000000,1.000000,1.000000
-    }
-
-    prop
-    {
-        model = "assets/golf/models/lilies_large.cmt"
-        position = 139.013931,0.049766,-72.916695
-        rotation = 116.290213
-        scale = 1.000000,1.000000,1.000000
-    }
-
-    prop
-    {
-        model = "assets/golf/models/lilies.cmt"
-        position = 134.335907,0.043851,-73.157959
-        rotation = 0.000000
-        scale = 1.000000,1.000000,1.000000
-    }
-
-    prop
-    {
-        model = "assets/golf/models/reeds_large.cmt"
-        position = 134.658707,-0.005888,-62.763077
-        rotation = 0.000000
-        scale = 1.000000,1.000000,1.000000
-    }
-
-    prop
-    {
-        model = "assets/golf/models/reeds_large.cmt"
-        position = 132.138733,-0.005888,-62.834644
-        rotation = -6.096246
-        scale = 0.928680,0.928680,0.928680
-    }
-
-    prop
-    {
-        model = "assets/golf/models/reeds.cmt"
-        position = 125.687782,-0.015049,-70.112694
-        rotation = 0.000000
-        scale = 1.000000,1.000000,1.000000
-    }
-
-    prop
-    {
-        model = "assets/golf/models/reeds.cmt"
-        position = 126.633415,-0.048656,-67.488052
-        rotation = 46.696222
-        scale = 0.848614,0.848614,0.848614
-    }
-
-    crowd
-    {
-        position = 60.653728,1.280928,-75.082878
-        rotation = 127.810189
-    }
-
-    crowd
-    {
-        position = 60.501205,1.280928,-106.157425
-        rotation = 44.394281
     }
 
     prop
     {
         model = "assets/golf/models/fence01.cmt"
-        position = 212.407974,1.280876,-86.248802
-        rotation = 22.001094
+        position = 205.032410,2.029085,-169.018921
+        rotation = -720.135872
         scale = 1.000000,1.000000,1.000000
     }
 
     prop
     {
         model = "assets/golf/models/fence02.cmt"
-        position = 222.525574,1.280880,-88.689819
-        rotation = 0.000000
+        position = 209.351212,2.022929,-168.138992
+        rotation = -738.788375
         scale = 1.000000,1.000000,1.000000
     }
 
     prop
     {
-        model = "assets/golf/models/scoreboard.cmt"
-        position = 217.816833,1.280880,-87.868118
-        rotation = -166.989466
+        model = "assets/golf/models/boat01.cmt"
+        position = -4.637539,-0.921081,-50.063534
+        rotation = -71.347819
         scale = 1.000000,1.000000,1.000000
+        emitter = "boat_idle"
     }
 
     prop
     {
-        model = "assets/golf/models/bollard_day.cmt"
-        position = 235.269257,1.280882,-111.462830
-        rotation = 0.000000
+        model = "assets/golf/models/boat02.cmt"
+        position = -3.421874,-0.998722,-21.132820
+        rotation = -31.903152
         scale = 1.000000,1.000000,1.000000
+        emitter = "boat_idle"
+    }
+
+    crowd
+    {
+        position = 197.782349,2.000046,-166.885422
+        rotation = 9.137431
+    }
+
+    crowd
+    {
+        position = 43.330006,2.000045,-72.489067
+        rotation = 56.896900
     }
 
     prop
     {
-        model = "assets/golf/models/bollard_day.cmt"
-        position = 235.179871,1.280880,-114.712570
-        rotation = 0.000000
-        scale = 1.000000,1.000000,1.000000
-    }
-
-    prop
-    {
-        model = "assets/golf/models/bollard_day.cmt"
-        position = 123.409470,1.280880,-56.151955
-        rotation = 0.000000
-        scale = 1.000000,1.000000,1.000000
-    }
-
-    prop
-    {
-        model = "assets/golf/models/bollard_day.cmt"
-        position = 119.345764,1.280880,-55.989891
-        rotation = 0.000000
-        scale = 1.000000,1.000000,1.000000
-    }
-
-    prop
-    {
-        model = "assets/golf/models/cart02.cmt"
-        position = 124.224045,0.005000,-38.103745
-        rotation = 0.000000
+        model = "assets/golf/models/blimp.cmt"
+        position = 205.454193,8.848668,15.882523
+        rotation = 29.379666
         scale = 1.000000,1.000000,1.000000
 
         path
         {
-            point = 281.856506,1.280880,-125.610001
-            point = 266.812683,1.280880,-114.732819
-            point = 263.216187,1.280880,-113.811768
-            point = 244.795166,1.280880,-113.285461
-            point = 223.874146,1.280880,-111.925812
-            point = 197.207504,1.280880,-107.320557
-            point = 163.874222,1.280880,-98.329330
-            point = 135.190048,1.280880,-87.101273
-            point = 127.163734,1.280880,-86.487244
-            point = 120.146202,1.280880,-83.724091
-            point = 116.944450,1.280880,-79.864441
-            point = 115.847961,1.280880,-72.978485
-            point = 119.111115,1.280880,-65.294281
-            point = 121.005852,1.280880,-56.662716
-            point = 122.111115,1.280880,-48.820621
-            point = 124.111115,1.280880,-39.767998
+            point = 163.134384,70.759651,-233.931213
+            point = 78.145668,70.759651,-190.956009
+            point = 42.377174,70.759651,-133.649689
+            point = -12.553879,70.759651,-96.111259
+            point = -33.554878,70.759651,-47.700897
+            point = -3.168083,70.759651,20.587389
+            point = 50.634857,70.759651,27.559484
+            point = 122.020432,70.759651,11.607679
+            point = 216.874680,70.759651,-18.040802
+            point = 285.431519,70.759651,-33.970795
+            point = 325.527802,70.759651,-72.155609
+            point = 329.876434,70.759651,-147.173004
+            point = 306.246613,70.759651,-189.824081
+            point = 253.007965,70.759651,-220.941452
+            point = 164.684204,70.759651,-233.853699
 
-            loop = false
-            delay = 35.000000
-            speed = 6.0
+            loop = true
+            delay = 0.000000
+            speed = 1.000000
         }
-        emitter = "cart"
     }
 
 }

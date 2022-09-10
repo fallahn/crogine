@@ -29,7 +29,12 @@ source distribution.
 
 #pragma once
 
-#if defined  __ANDROID__ || (defined __APPLE__ && TARGET_OS_IPHONE)
+#if defined __APPLE__
+#include <TargetConditionals.h>
+#define GL41 //load GL4.1 not 4.6
+#endif
+
+#if defined  __ANDROID__ || TARGET_OS_IPHONE
 #define PLATFORM_MOBILE 1
 #else
 #define PLATFORM_DESKTOP 1

@@ -139,7 +139,7 @@ bool DepthTexture::create(std::uint32_t width, std::uint32_t height, std::uint32
 
     if (m_textureID)
     {
-#ifdef __APPLE__
+#ifdef GL41
         //resize the buffer
         glCheck(glBindTexture(GL_TEXTURE_2D_ARRAY, m_textureID));
         glCheck(glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_DEPTH_COMPONENT, width, height, layers, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL));
@@ -163,7 +163,7 @@ bool DepthTexture::create(std::uint32_t width, std::uint32_t height, std::uint32
     //create the texture
     glCheck(glGenTextures(1, &m_textureID));
     glCheck(glBindTexture(GL_TEXTURE_2D_ARRAY, m_textureID));
-#ifdef __APPLE__
+#ifdef GL41
     //apple drivers don't support immutable textures.
     glCheck(glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_DEPTH_COMPONENT, width, height, layers, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL));
 #else
@@ -246,7 +246,7 @@ TextureID DepthTexture::getTexture() const
 
 TextureID DepthTexture::getTexture(std::uint32_t index) const
 {
-#ifdef __APPLE__
+#ifdef GL41
     return TextureID(0);
 #else
     CRO_ASSERT(index < m_layerHandles.size(), "Layer doesn't exist");
@@ -257,7 +257,7 @@ TextureID DepthTexture::getTexture(std::uint32_t index) const
 //private
 void DepthTexture::updateHandles()
 {
-#ifndef __APPLE__
+#ifndef GL41
     if (!m_layerHandles.empty())
     {
         //this assumes we've recreated a depth texture (we have to, it's immutable)

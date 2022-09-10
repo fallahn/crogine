@@ -32,8 +32,10 @@ source distribution.
 #include <crogine/Config.hpp>
 #include <crogine/detail/Types.hpp>
 #include <crogine/core/Log.hpp>
+#include <crogine/core/String.hpp>
 #include <crogine/graphics/Rectangle.hpp>
 #include <crogine/graphics/Colour.hpp>
+#include <crogine/util/String.hpp>
 
 #include <crogine/detail/glm/vec2.hpp>
 #include <crogine/detail/glm/vec3.hpp>

@@ -44,6 +44,14 @@ StateStack::StateStack(State::Context context)
 }
 
 //public
+void StateStack::unregisterState(StateID id)
+{
+    if (m_factories.count(id) != 0)
+    {
+        m_factories.erase(id);
+    }
+}
+
 void StateStack::handleEvent(const cro::Event& evt)
 {
     for (auto i = m_stack.rbegin(); i != m_stack.rend(); ++i)

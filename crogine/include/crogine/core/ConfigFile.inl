@@ -33,6 +33,18 @@ inline std::string ConfigProperty::getValue<std::string>() const
     return m_value;
 }
 
+template<>
+inline cro::String ConfigProperty::getValue<cro::String>() const
+{
+    if (!m_isStringValue)
+    {
+        return m_value;
+    }
+
+    auto cp = cro::Util::String::getCodepoints(m_value);
+    return cro::String::fromUtf32(cp.begin(), cp.end());
+}
+
 template <>
 inline std::int32_t ConfigProperty::getValue<std::int32_t>() const
 {

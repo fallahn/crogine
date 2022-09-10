@@ -3,7 +3,7 @@
 Matt Marchant 2021 - 2022
 http://trederia.blogspot.com
 
-crogine application - Zlib license.
+Super Video Golf - zlib licence.
 
 This software is provided 'as-is', without any express or
 implied warranty.In no event will the authors be held
@@ -1008,20 +1008,24 @@ void GolfState::showCountdown(std::uint8_t seconds)
     }
 
 
-    if (cro::Util::Random::value(0, 3) == 0)
+    if (cro::Util::Random::value(0, 2) == 0)
     {
-        //hmmm not sure the point of this as it lands so close that it fades out...
-        auto pos = m_holeData[m_currentHole].pin;
-        auto camPos = m_cameras[CameraID::Player].getComponent<cro::Transform>().getPosition();
-        camPos.y = pos.y + 0.24f;
+        float radius = glm::length(m_holeData[m_currentHole].pin - m_cameras[CameraID::Player].getComponent<cro::Transform>().getWorldPosition()) * 0.85f;
 
-        auto diff = glm::normalize(pos - camPos);
-        float temp = diff.z;
-        diff.z = diff.x;
-        diff.x = -temp;
-        pos += diff * 1.5f;
+        //add a callback that makes the camera orbit the flag - and hence the drone follows
+        m_cameras[CameraID::Sky].getComponent<cro::Callback>().active = true;
+        m_cameras[CameraID::Sky].getComponent<cro::Callback>().function =
+            [&, radius](cro::Entity e, float dt)
+        {
+            static float elapsed = 0.f;
+            elapsed += dt;
 
-        m_cameras[CameraID::Sky].getComponent<cro::Transform>().setPosition(pos);
+            auto basePos = m_holeData[m_currentHole].pin;
+            basePos.x += std::sin(elapsed) * radius;
+            basePos.z += std::cos(elapsed) * radius;
+            basePos.y += 0.7f;
+            e.getComponent<cro::Transform>().setPosition(basePos);
+        };
     }
 }
 

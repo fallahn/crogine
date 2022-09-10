@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2022
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -32,6 +32,8 @@ source distribution.
 #include <crogine/audio/AudioMixer.hpp>
 #include <crogine/util/Maths.hpp>
 #include <crogine/detail/Assert.hpp>
+
+#include "AudioRenderer.hpp"
 
 using namespace cro;
 
@@ -118,4 +120,9 @@ const std::string& AudioMixer::getLabel(std::uint8_t channel)
 {
     CRO_ASSERT(channel < MaxChannels, "Channel index out of range");
     return m_labels[channel];
+}
+
+bool AudioMixer::hasAudioRenderer()
+{
+    return AudioRenderer::isValid();
 }

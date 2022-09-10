@@ -128,7 +128,8 @@ private:
         enum Type
         {
             Static, Skinned, Cube,
-            Quad, Sphere, Billboard
+            Quad, Sphere, Circle,
+            Billboard
         }type = Static;
 
         bool lockRotation = false;
@@ -136,6 +137,7 @@ private:
         bool castShadows = false;
 
         float radius = 0.5f;
+        std::uint32_t pointCount = 3;
         glm::vec3 size = glm::vec3(1.f);
         glm::vec4 uv = glm::vec4(0.f, 0.f, 1.f, 1.f);
 
