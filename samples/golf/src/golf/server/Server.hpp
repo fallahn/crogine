@@ -29,6 +29,7 @@ source distribution.
 
 #pragma once
 
+#include "../Networking.hpp"
 #include "ServerState.hpp"
 
 #include <atomic>
