@@ -97,7 +97,7 @@ private:
     {
         enum
         {
-            Accept, Back,
+            Accept, Back, Start,
 
             Count
         };
