@@ -2837,7 +2837,6 @@ void GolfState::buildScene()
         requestStackPush(StateID::Error);
     }
 
-
     //quality holing
     cro::ModelDefinition md(m_resources);
     md.loadFromFile("assets/golf/models/cup.cmt");
@@ -3516,7 +3515,6 @@ void GolfState::buildScene()
 
     buildUI(); //put this here because we don't want to do this if the map data didn't load
     setCurrentHole(0);
-
 
     auto sunEnt = m_gameScene.getSunlight();
     sunEnt.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, -130.f * cro::Util::Const::degToRad);

@@ -118,7 +118,7 @@ private:
         enum
         {
             Horizon, Water, Cloud,
-            Cel, CelTextured,
+            Cel, CelTextured, CelTexturedSkinned,
             Course, Billboard, BillboardShadow,
             Branch, Leaf,
             BranchShadow, LeafShadow,
