@@ -79,6 +79,7 @@ public:
             LobbyJoined,
             LobbyJoinFailed,
             LobbyListUpdated,
+            LobbyInvite,
             Error
         }type = Error;
         std::uint64_t hostID = 0;

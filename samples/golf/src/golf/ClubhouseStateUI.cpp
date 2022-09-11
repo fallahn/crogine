@@ -1697,6 +1697,8 @@ void ClubhouseState::quitLobby()
     m_sharedData.clientConnection.ready = false;
     m_sharedData.clientConnection.netClient.disconnect();
 
+    m_matchMaking.leaveGame();
+
     if (m_sharedData.hosting)
     {
         m_sharedData.serverInstance.stop();

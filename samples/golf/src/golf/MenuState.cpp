@@ -525,6 +525,12 @@ void MenuState::handleMessage(const cro::Message& msg)
         default:
         case MatchMaking::Message::Error:
             break;
+        case MatchMaking::Message::LobbyInvite:
+            if (!m_sharedData.clientConnection.connected)
+            {
+                m_matchMaking.joinGame(data.hostID);
+            }
+            break;
         case MatchMaking::Message::GameCreated:
             finaliseGameCreate(data);
         break;
@@ -1423,6 +1429,7 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
     else if (evt.type == net::NetEvent::ClientDisconnect)
     {
         m_sharedData.errorMessage = "Lost Connection To Host";
+        m_matchMaking.leaveGame();
         requestStackPush(StateID::Error);
     }
 }
@@ -1431,6 +1438,9 @@ void MenuState::finaliseGameCreate(const MatchMaking::Message& msgData)
 {
 #ifdef USE_GNS
     m_sharedData.clientConnection.connected = m_sharedData.serverInstance.addLocalConnection(m_sharedData.clientConnection.netClient);
+#ifdef CRO_DEBUG_
+    cro::App::getWindow().setTitle(std::to_string(msgData.hostID));
+#endif
 #else
     m_sharedData.clientConnection.connected = m_sharedData.clientConnection.netClient.connect("255.255.255.255", ConstVal::GamePort);
 #endif
@@ -1447,8 +1457,6 @@ void MenuState::finaliseGameCreate(const MatchMaking::Message& msgData)
     else
     {
         m_sharedData.lobbyID = msgData.hostID;
-
-        cro::App::getWindow().setTitle(std::to_string(msgData.hostID));
 
         //make sure the server knows we're the host
         m_sharedData.serverInstance.setHostID(m_sharedData.clientConnection.netClient.getPeer().getID());

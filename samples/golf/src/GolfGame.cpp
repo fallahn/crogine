@@ -602,8 +602,6 @@ void GolfGame::finalise()
     m_sharedData.clientConnection.netClient.disconnect();
     m_sharedData.serverInstance.stop(); //this waits for any threads to finish first.
 
-    Achievements::shutdown();
-
     savePreferences();
 
     m_stateStack.clearStates();
@@ -621,6 +619,8 @@ void GolfGame::finalise()
     {
         t = {};
     }
+
+    Achievements::shutdown();
 
     m_sharedData.sharedResources.reset();
     m_postQuad.reset();
