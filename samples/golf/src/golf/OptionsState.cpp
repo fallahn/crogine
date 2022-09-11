@@ -1973,7 +1973,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
         });
 
     //aim left
-    entity = createHighlight(glm::vec2(230.f, 58.f), InputBinding::Left);
+    entity = createHighlight(glm::vec2(230.f, 59.f), InputBinding::Left);
     entity.getComponent<cro::UIInput>().setSelectionIndex(8);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = uiSystem.addCallback(
         [infoEnt, buttonChangeEnt](cro::Entity e) mutable
@@ -1987,7 +1987,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
         });
 
     //aim right
-    entity = createHighlight(glm::vec2(230.f, 43.f), InputBinding::Right);
+    entity = createHighlight(glm::vec2(230.f, 44.f), InputBinding::Right);
     entity.getComponent<cro::UIInput>().setSelectionIndex(9);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = uiSystem.addCallback(
         [infoEnt, buttonChangeEnt](cro::Entity e) mutable
@@ -2001,7 +2001,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
         });
 
     //swing
-    entity = createHighlight(glm::vec2(352.f, 47.f), InputBinding::Action);
+    entity = createHighlight(glm::vec2(352.f, 48.f), InputBinding::Action);
     entity.getComponent<cro::UIInput>().setSelectionIndex(11);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = uiSystem.addCallback(
         [infoEnt, buttonChangeEnt](cro::Entity e) mutable
@@ -2017,7 +2017,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
     if (m_sharedData.baseState == StateID::Clubhouse)
     {
         //top spin
-        entity = createHighlight(glm::vec2(230.f, 73.f), InputBinding::Up);
+        entity = createHighlight(glm::vec2(230.f, 74.f), InputBinding::Up);
         entity.getComponent<cro::UIInput>().setSelectionIndex(7);
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = uiSystem.addCallback(
             [infoEnt, buttonChangeEnt](cro::Entity e) mutable
@@ -2031,7 +2031,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
             });
 
         //back spin
-        entity = createHighlight(glm::vec2(230.f, 28.f), InputBinding::Down);
+        entity = createHighlight(glm::vec2(230.f, 29.f), InputBinding::Down);
         entity.getComponent<cro::UIInput>().setSelectionIndex(10);
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = uiSystem.addCallback(
             [infoEnt, buttonChangeEnt](cro::Entity e) mutable
