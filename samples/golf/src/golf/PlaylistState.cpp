@@ -66,6 +66,7 @@ source distribution.
 #include <crogine/ecs/systems/CallbackSystem.hpp>
 #include <crogine/ecs/systems/SpriteSystem2D.hpp>
 #include <crogine/ecs/systems/SpriteAnimator.hpp>
+#include <crogine/ecs/systems/SkeletalAnimator.hpp>
 #include <crogine/ecs/systems/TextSystem.hpp>
 #include <crogine/ecs/systems/ShadowMapRenderer.hpp>
 #include <crogine/ecs/systems/CameraSystem.hpp>
@@ -594,6 +595,7 @@ void PlaylistState::addSystems()
 {
     auto& mb = getContext().appInstance.getMessageBus();
     m_skyboxScene.addSystem<cro::CallbackSystem>(mb);
+    m_skyboxScene.addSystem<cro::SkeletalAnimator>(mb);
     m_skyboxScene.addSystem<cro::CameraSystem>(mb);
     m_skyboxScene.addSystem<cro::ModelRenderer>(mb);
 
@@ -651,6 +653,12 @@ void PlaylistState::loadAssets()
     m_resolutionBuffer.addShader(*shader);
     m_windBuffer.addShader(*shader);
     m_materialIDs[MaterialID::CelTextured] = m_resources.materials.add(*shader);
+
+    m_resources.shaders.loadFromString(ShaderID::CelTexturedSkinned, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define DITHERED\n#define SKINNED\n#define NOCHEX\n#define SUBRECT\n" + wobble);
+    shader = &m_resources.shaders.get(ShaderID::CelTexturedSkinned);
+    m_scaleBuffer.addShader(*shader);
+    m_resolutionBuffer.addShader(*shader);
+    m_materialIDs[MaterialID::CelTexturedSkinned] = m_resources.materials.add(*shader);
 
     m_resources.shaders.loadFromString(ShaderID::Course, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define RX_SHADOWS\n" + wobble);
     shader = &m_resources.shaders.get(ShaderID::Course);
@@ -1544,7 +1552,7 @@ void PlaylistState::createSkyboxMenu(cro::Entity rootNode, const MenuData& menuD
                             m_skyboxScene.destroyEntity(e);
                         }
 
-                        loadSkybox(SkyboxPath + m_skyboxes[i], m_skyboxScene, m_resources, m_materialIDs[MaterialID::Horizon]);
+                        loadSkybox(SkyboxPath + m_skyboxes[i], m_skyboxScene, m_resources, m_materialIDs[MaterialID::Horizon], m_materialIDs[MaterialID::CelTexturedSkinned]);
                         m_skyboxIndex = i;
                         m_courseData.skyboxPath = SkyboxPath + m_skyboxes[i];
 
@@ -1562,7 +1570,7 @@ void PlaylistState::createSkyboxMenu(cro::Entity rootNode, const MenuData& menuD
     if (!m_skyboxes.empty())
     {
         m_skyboxIndex = 0;
-        auto cloudPath = loadSkybox(SkyboxPath + m_skyboxes[m_skyboxIndex], m_skyboxScene, m_resources, m_materialIDs[MaterialID::Horizon]);
+        auto cloudPath = loadSkybox(SkyboxPath + m_skyboxes[m_skyboxIndex], m_skyboxScene, m_resources, m_materialIDs[MaterialID::Horizon], m_materialIDs[MaterialID::CelTexturedSkinned]);
         //TODO load clouds (??)
 
         m_courseData.skyboxPath = SkyboxPath + m_skyboxes[m_skyboxIndex];
@@ -4171,7 +4179,7 @@ void PlaylistState::loadCourse()
         {
             m_skyboxScene.destroyEntity(e);
         }
-        loadSkybox(SkyboxPath + m_skyboxes[m_skyboxIndex], m_skyboxScene, m_resources, m_materialIDs[MaterialID::Horizon]);
+        loadSkybox(SkyboxPath + m_skyboxes[m_skyboxIndex], m_skyboxScene, m_resources, m_materialIDs[MaterialID::Horizon], m_materialIDs[MaterialID::CelTexturedSkinned]);
 
         //apply shrubs
         for (auto& shrub : m_shrubberyModels)

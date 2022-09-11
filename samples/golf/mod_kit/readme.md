@@ -1,7 +1,7 @@
-VGA Golf Mod Kit
+Super Video Golf Mod Kit
 ----------------
 
-This folder contains Blender files and tools for creating custom balls and golf courses for VGA Golf.
+This folder contains Blender files and tools for creating custom balls and golf courses for Super Video Golf.
 
 See http://fallahn.itch.io/vga-golf for more details, or the [Wiki Page](https://github.com/fallahn/crogine/wiki) for guides on how to use this mod kit.
 
@@ -12,7 +12,7 @@ ball_format.md - description of the `*.ball` files used to load custom balls. Wr
 ball_template.blend - ball template file for Blender
 collision_colours.ase - A Photoshop palette which contains colours for terrain collision. Not an Aseprite file.
 collision_colours.kpl - A Krita palette (importable to Blender) which contains the colours used for terrain type detection.
-colordome-32.ase - The main colour palette used by VGA Golf, created by Polyphorge https://lospec.com/poly-phorge
+colordome-32.ase - The main colour palette used by Super Video Golf, created by Polyphorge https://lospec.com/poly-phorge
 course_format.md - describes the .course and .hole files used to create custom courses, as well as the files associated with hole model files. Written in markdown format.
 hole_template.blend - example hole model in Blender format
 placeholders.blend - Blender asset library of prop placeholders for creating hole layouts. Requires Blender 3 and above
@@ -25,13 +25,13 @@ wind_colours.ase - A palette used for painting the vertex data of tree models. S
 
 Converter
 ---------
-This folder contains the model converter 'editor.exe' which will convert models exported from Blender to the crogine model format, used by VGA Golf. The first time it is run it is required to set the working directory, by going to `View->Options` and clicking `Browse` under working directory. Browse to the VGA Golf directory which contains the `assets` folder, and select OK. The editor will now use this for all exported models and materials.
+This folder contains the model converter 'editor.exe' which will convert models exported from Blender to the crogine model format, used by Super Video Golf. The first time it is run it is required to set the working directory, by going to `View->Options` and clicking `Browse` under working directory. Browse to the Super Video Golf directory which contains the `assets` folder, and select OK. The editor will now use this for all exported models and materials.
 
-Export the models from Blender in gltf format, y-up and include vertex colours. Make sure to only export the selected model and not the entire scene. Use the `File->Import Model` option of the model converter to import the gltf file, making sure to check 'Convert Vertex Colourspace'. Once the model is loaded click 'convert' under the Model tab on the left of the converter window. Select the appropriate model directory of VGA Golf to save the converted model. Note that in earlier versions of the model converter the camera view is not optimal, and it may seem that large models (such as a hole) are not visible. They are merely too big for the current view.
+Export the models from Blender in gltf format, y-up and include vertex colours. Make sure to only export the selected model and not the entire scene. Use the `File->Import Model` option of the model converter to import the gltf file, making sure to check 'Convert Vertex Colourspace'. Once the model is loaded click 'convert' under the Model tab on the left of the converter window. Select the appropriate model directory of Super Video Golf to save the converted model. Note that in earlier versions of the model converter the camera view is not optimal, and it may seem that large models (such as a hole) are not visible. They are merely too big for the current view.
 
 The converted model should automatically be loaded with the default magenta PBR material applied. Under the material tab make sure to switch the shader type to Unlit, change the diffuse colour to white, and either load any textures into the diffuse slot, or check the 'use vertex colours' box if it is a ball model.
 
-Models should have a scale of 1 Blender unit to 1 metre. For further examples it is possible to open existing models from the VGA Golf model directory via `File->Open Model`.
+Models should have a scale of 1 Blender unit to 1 metre. For further examples it is possible to open existing models from the Super Video Golf model directory via `File->Open Model`.
 
 
 
@@ -61,7 +61,7 @@ Since version 1.6.0 skyboxes are created by a combination of 3D models and meta 
 
 Collision Colours
 -----------------
-Different types of terrain are represented by different colour values. These colours are stored in the Krita palette file, `collision_colours.kpl`, or Photoshop palette file `collision_colours.ase`. Either file can be imported to Blender with the palette import add-on enabled. This allows easily setting, for example, vertex colours of course geometry so that VGA golf can determine which part of a hole is which terrain. The colour values are (in RGB format):
+Different types of terrain are represented by different colour values. These colours are stored in the Krita palette file, `collision_colours.kpl`, or Photoshop palette file `collision_colours.ase`. Either file can be imported to Blender with the palette import add-on enabled. This allows easily setting, for example, vertex colours of course geometry so that Super Video golf can determine which part of a hole is which terrain. The colour values are (in RGB format):
 
         Rough   = 05,05,05
         Fairway = 15,15,15
@@ -78,7 +78,7 @@ Each section of mesh with a specific terrain type should also have its own mater
 
 Post Process Effects
 --------------------
-VGA Golf has a set of post process effects to alter the visual appearance of the game. These are accessible by opening the console (press F1 or Advanced from the options menu), and then clicking on the Advanced tab. Custom fragment shaders can be used by clicking on the 'Open' button and selecting a text file containing the shader code. Shaders are written using GLSL targetting version 410 (OpenGL version 4.1). The version preprocessor directive `#version 410` is automatically included by VGA Golf, so it should be omitted from shader source code. A full fragment shader tutorial is beyond the scope of this document (plus there are many available online), but here is a brief run-down of the available uniform inputs:
+Super Video Golf has a set of post process effects to alter the visual appearance of the game. These are accessible by opening the console (press F1 or Advanced from the options menu), and then clicking on the Advanced tab. Custom fragment shaders can be used by clicking on the 'Open' button and selecting a text file containing the shader code. Shaders are written using GLSL targetting version 410 (OpenGL version 4.1). The version preprocessor directive `#version 410` is automatically included by Super Video Golf, so it should be omitted from shader source code. A full fragment shader tutorial is beyond the scope of this document (plus there are many available online), but here is a brief run-down of the available uniform inputs:
 
         sampler2D u_texture; - This is the input texture containing the current scene. Effects should be applied to this
         float u_time; - A perpetually increasing value, contains the time elapsed, in seconds, since the game started running

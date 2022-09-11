@@ -138,6 +138,7 @@ struct SharedStateData final
     std::array<TimeStats, ConnectionData::MaxPlayers> timeStats = {};
 
     //our local player data
+    std::uint64_t lobbyID = 0;
     ConnectionData localConnectionData;
     cro::String targetIP = "255.255.255.255";
     std::array<std::int32_t, 4u> controllerIDs = {};

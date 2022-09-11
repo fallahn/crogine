@@ -252,7 +252,7 @@ private:
     void createPlayerConfigMenu();
 
     //message handlers for completing connection
-    void finaliseGameCreate();
+    void finaliseGameCreate(const MatchMaking::Message&);
     void finaliseGameJoin(const MatchMaking::Message&);
 
     void beginTextEdit(cro::Entity, cro::String*, std::size_t);

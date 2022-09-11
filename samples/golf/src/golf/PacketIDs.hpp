@@ -38,8 +38,9 @@ source distribution.
 //(server layout updated 140 -> 150)
 //(skybox format changed 150 -> 160)
 //(hole count became game rule 170 -> 180)
+
 static constexpr std::uint16_t CURRENT_VER = 190;
-static const std::string StringVer("1.9.0");
+static const std::string StringVer("1.9.1");
 
 namespace ScoreType
 {

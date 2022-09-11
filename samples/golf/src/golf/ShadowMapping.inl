@@ -81,6 +81,7 @@ static const std::string ShadowVertex = R"(
             vec4 u_windData; //dirX, strength, dirZ, elapsedTime
         };
         const float MaxWindOffset = 0.2;
+        const float Amp = 0.02; //metres
         uniform float u_leafSize = 0.25;
 #endif
 
@@ -145,18 +146,28 @@ static const std::string ShadowVertex = R"(
             position.xz += (u_windData.xz * strength * 2.0) * totalScale;
     #elif defined(TREE_WARP)
         
-            float time = (u_windData.w * 15.0) + gl_InstanceID;
+
+    //red channel is high freq done in local space
+
+            float time = (u_windData.w * 15.0) + gl_InstanceID + gl_VertexID;
+            float highFreq = sin(time) * Amp * a_colour.r;
+            position.y += highFreq * (0.2 + (0.8 * u_windData.y));
+
+    //blue channel is 'bend' in world space
+            vec4 worldPosition = worldMatrix * position;
+
+            time = (u_windData.w * 5.0) + gl_InstanceID;
             float x = sin(time * 2.0) / 8.0;
             float y = cos(time) / 2.0;
-            //vec3 windOffset = vec3(x, y, x) * a_colour.b * 0.1;
             vec3 windOffset = vec3(x, 0.0, x + y) * a_colour.b * 0.5;
+
 
             vec3 windDir = normalize(vec3(u_windData.x, 0.f, u_windData.z));
             float dirStrength = a_colour.b;
 
-            windOffset += windDir * u_windData.y * dirStrength;
-            vec4 worldPosition = worldMatrix * position;
+            windOffset += windDir * u_windData.y * dirStrength;// * 2.0;
             worldPosition.xyz += windOffset * MaxWindOffset * u_windData.y;
+
 
             //this only works if shadows are instanced...
             gl_Position = u_projectionMatrix * u_viewMatrix * worldPosition;

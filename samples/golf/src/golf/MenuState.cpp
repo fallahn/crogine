@@ -526,7 +526,7 @@ void MenuState::handleMessage(const cro::Message& msg)
         case MatchMaking::Message::Error:
             break;
         case MatchMaking::Message::GameCreated:
-            finaliseGameCreate();
+            finaliseGameCreate(data);
         break;
         case MatchMaking::Message::LobbyJoined:
             finaliseGameJoin(data);
@@ -1427,7 +1427,7 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
     }
 }
 
-void MenuState::finaliseGameCreate()
+void MenuState::finaliseGameCreate(const MatchMaking::Message& msgData)
 {
 #ifdef USE_GNS
     m_sharedData.clientConnection.connected = m_sharedData.serverInstance.addLocalConnection(m_sharedData.clientConnection.netClient);
@@ -1441,9 +1441,15 @@ void MenuState::finaliseGameCreate()
             + std::to_string(ConstVal::GamePort)
             + " is allowed through\nany firewalls or NAT";
         requestStackPush(StateID::Error);
+
+        m_sharedData.lobbyID = 0;
     }
     else
     {
+        m_sharedData.lobbyID = msgData.hostID;
+
+        cro::App::getWindow().setTitle(std::to_string(msgData.hostID));
+
         //make sure the server knows we're the host
         m_sharedData.serverInstance.setHostID(m_sharedData.clientConnection.netClient.getPeer().getID());
 

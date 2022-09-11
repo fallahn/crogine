@@ -102,6 +102,7 @@ hole 03
         position = 148.115051,-0.823150,-203.975815
         rotation = 7.967445
         scale = 1.000000,1.000000,1.000000
+        emitter = "boat_idle"
     }
 
     prop

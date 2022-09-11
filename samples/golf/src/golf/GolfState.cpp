@@ -2837,7 +2837,6 @@ void GolfState::buildScene()
         requestStackPush(StateID::Error);
     }
 
-
     //quality holing
     cro::ModelDefinition md(m_resources);
     md.loadFromFile("assets/golf/models/cup.cmt");
@@ -3517,7 +3516,6 @@ void GolfState::buildScene()
     buildUI(); //put this here because we don't want to do this if the map data didn't load
     setCurrentHole(0);
 
-
     auto sunEnt = m_gameScene.getSunlight();
     sunEnt.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, -130.f * cro::Util::Const::degToRad);
     sunEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -75.f * cro::Util::Const::degToRad);
@@ -4143,7 +4141,7 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
 
             auto* msg = cro::App::getInstance().getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
             msg->type = GolfEvent::BallLanded;
-            msg->terrain = update.terrain;
+            msg->terrain = update.position.y < WaterLevel ? TerrainID::Water : update.terrain;
             msg->club = getClub();
             msg->travelDistance = glm::length2(update.position - m_currentPlayer.position);
             msg->pinDistance = glm::length2(update.position - m_holeData[m_currentHole].pin);
