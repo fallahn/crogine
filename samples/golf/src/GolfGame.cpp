@@ -451,7 +451,7 @@ bool GolfGame::initialise()
         });
 
     getWindow().setLoadingScreen<LoadingScreen>(m_sharedData);
-    getWindow().setTitle("Video Golf - " + StringVer);
+    getWindow().setTitle("Super Video Golf - " + StringVer);
     getWindow().setIcon(icon);
     m_renderTarget = &getWindow();
 

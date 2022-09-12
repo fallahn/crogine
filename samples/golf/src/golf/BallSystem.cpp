@@ -291,7 +291,8 @@ void BallSystem::process(float dt)
                             ball.velocity *= 0.65f;// 0.15f;
                             ball.velocity.y = bounceVel;
 
-                            position.y += terrainContact.penetration;
+                            //position.y += terrainContact.penetration;
+                            position.y = terrainContact.intersection.y;
                             tx.setPosition(position);
                         }
 
@@ -310,7 +311,8 @@ void BallSystem::process(float dt)
                             //we've sunk into the ground so correct
                             ball.velocity.y = 0.f;
 
-                            position.y += terrainContact.penetration;
+                            //position.y += terrainContact.penetration;
+                            position.y = terrainContact.intersection.y;
                             tx.setPosition(position);
                         }
                         CRO_ASSERT(!std::isnan(position.x), "");
@@ -358,8 +360,9 @@ void BallSystem::process(float dt)
                 //move by velocity
                 tx.move(ball.velocity * dt);
 
-                terrainContact = getTerrain(tx.getPosition());
-                ball.terrain = terrainContact.terrain; //TODO this will be wrong if the above movement changed the terrain
+                auto newPos = tx.getPosition();
+                terrainContact = getTerrain(newPos);
+                ball.terrain = terrainContact.terrain;
 
                 //spin based on velocity
                 auto vel2 = glm::length2(ball.velocity);
