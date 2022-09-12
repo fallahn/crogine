@@ -974,13 +974,13 @@ void ClubhouseState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnt
                     {
                         if (!m_sharedData.clientConnection.connected)
                         {
-                            m_sharedData.serverInstance.launch(ConstVal::MaxClients, Server::GameMode::Billiards);
+                            m_sharedData.serverInstance.launch(2, Server::GameMode::Billiards);
 
                             //small delay for server to get ready
                             cro::Clock clock;
                             while (clock.elapsed().asMilliseconds() < 500) {}
 
-                            m_matchMaking.createGame(Server::GameMode::Billiards);
+                            m_matchMaking.createGame(2, Server::GameMode::Billiards);
                         }
                     }
                     else

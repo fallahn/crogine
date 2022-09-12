@@ -38,7 +38,7 @@ MatchMaking::MatchMaking(cro::MessageBus& mb)
 }
 
 //public
-void MatchMaking::createGame(std::int32_t gameType)
+void MatchMaking::createGame(std::int32_t, std::int32_t)
 {
     auto* msg = m_messageBus.post<Message>(MessageID);
     msg->type = Message::GameCreated;

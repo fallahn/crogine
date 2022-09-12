@@ -55,7 +55,7 @@ DefaultAchievements::DefaultAchievements(cro::MessageBus& mb)
 
 }
 
-void DefaultAchievements::init()
+bool DefaultAchievements::init()
 {
     LOG("Initialised default Achievements system", cro::Logger::Type::Info);
 
@@ -115,6 +115,8 @@ void DefaultAchievements::init()
     trigger = &StatTriggers[StatID::WaterTrapRounds].emplace_back();
     trigger->achID = AchievementID::GolfinDolphin;
     trigger->threshold = 5;
+
+    return true;
 }
 
 void DefaultAchievements::update()

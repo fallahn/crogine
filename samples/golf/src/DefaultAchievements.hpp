@@ -55,7 +55,7 @@ class DefaultAchievements final : public AchievementImpl
 public:
     explicit DefaultAchievements(cro::MessageBus&);
 
-    void init() override;
+    bool init() override;
     void update() override;
     void registerAchievement(const std::string&) override;
     void awardAchievement(const std::string&) override;

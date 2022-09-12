@@ -34,10 +34,10 @@ source distribution.
 AchievementImpl* Achievements::m_impl = nullptr;
 bool Achievements::m_active = true;
 
-void Achievements::init(AchievementImpl& impl)
+bool Achievements::init(AchievementImpl& impl)
 {
     m_impl = &impl;
-    m_impl->init();
+    return m_impl->init();
 }
 
 void Achievements::update()

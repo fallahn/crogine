@@ -558,24 +558,18 @@ bool GolfGame::initialise()
 
     m_activeIndex = m_sharedData.postProcessIndex;
 
-    //moved to menu state
-    //registerCommand("clubhouse", [&](const std::string&)
-    //    {
-    //        if (m_stateStack.getTopmostState() != StateID::Clubhouse)
-    //        {
-    //            //forces clubhouse state to clear any existing net connection
-    //            m_sharedData.tutorial = true;
 
-    //            m_sharedData.courseIndex = 0;
+#ifdef USE_GNS
+    m_achievements = std::make_unique<SteamAchievements>();
+#else
+    m_achievements = std::make_unique<DefaultAchievements>(getMessageBus());
+#endif
+    if (!Achievements::init(*m_achievements))
+    {
+        //no point trying to load the menu if we failed to init.
+        return false;
+    }
 
-    //            m_stateStack.clearStates();
-    //            m_stateStack.pushState(StateID::Clubhouse);
-    //        }
-    //        else
-    //        {
-    //            cro::Console::print("Already in clubhouse.");
-    //        }
-    //    });
 
 #ifdef CRO_DEBUG_
     //m_stateStack.pushState(StateID::DrivingRange); //can't go straight to this because menu needs to parse avatar data
@@ -586,13 +580,6 @@ bool GolfGame::initialise()
 #else
     m_stateStack.pushState(StateID::SplashScreen);
 #endif
-
-#ifdef USE_GNS
-    m_achievements = std::make_unique<SteamAchievements>();
-#else
-    m_achievements = std::make_unique<DefaultAchievements>(getMessageBus());
-#endif
-    Achievements::init(*m_achievements);
 
     return true;
 }

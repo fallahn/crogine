@@ -1223,7 +1223,7 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
                             cro::Clock clock;
                             while (clock.elapsed().asMilliseconds() < 500) {}
 
-                            m_matchMaking.createGame(Server::GameMode::Golf);
+                            m_matchMaking.createGame(ConstVal::MaxClients, Server::GameMode::Golf);
                         }
                     }
                     else

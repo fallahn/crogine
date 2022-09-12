@@ -72,7 +72,7 @@ class AchievementImpl
 public:
     virtual ~AchievementImpl() {};
 
-    virtual void init() {};
+    virtual bool init() { return true; };
     virtual void update() {};
     virtual void shutdown() {};
 
@@ -95,7 +95,7 @@ class Achievements final
 {
 public:
 
-    static void init(AchievementImpl&);
+    static bool init(AchievementImpl&);
 
     static void update();
 

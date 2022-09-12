@@ -537,6 +537,10 @@ void MenuState::handleMessage(const cro::Message& msg)
         case MatchMaking::Message::LobbyJoined:
             finaliseGameJoin(data);
             break;
+        case MatchMaking::Message::LobbyJoinFailed:
+            m_sharedData.errorMessage = "Failed to join lobby:\nEither full or no longer exists.";
+            requestStackPush(StateID::Error);
+            break;
         }
     }
 
@@ -1138,6 +1142,7 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
         case PacketID::StateChange:
             if (evt.packet.as<std::uint8_t>() == sv::StateID::Golf)
             {
+                m_matchMaking.leaveGame(); //doesn't really leave the game, it quits the lobby
                 requestStackClear();
                 requestStackPush(StateID::Golf);
             }

@@ -50,7 +50,7 @@ public:
     MatchMaking& operator = (MatchMaking&&) = delete;
 
 
-    void createGame(std::int32_t gameType = 0);
+    void createGame(std::int32_t maxPlayers, std::int32_t gameType = 0);
 
     void joinGame(std::uint64_t lobbyID);
 
