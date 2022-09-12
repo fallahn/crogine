@@ -67,6 +67,8 @@ public:
 
     void leaveGame() {}
 
+    const char* getUserName() const { return nullptr; }
+
     //use the message bus to relay callback events
     static constexpr std::int32_t MessageID = std::numeric_limits<std::int32_t>::max() / 2;
 

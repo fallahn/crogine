@@ -757,6 +757,16 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
 
 void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, std::uint32_t mouseExit)
 {
+    if (m_matchMaking.getUserName())
+    {
+        auto codePoints = cro::Util::String::getCodepoints(std::string(m_matchMaking.getUserName()));
+        cro::String nameStr = cro::String::fromUtf32(codePoints.begin(), codePoints.end());
+        if (nameStr.size() <= ConstVal::MaxNameChars)
+        {
+            m_sharedData.localConnectionData.playerData[0].name = nameStr;
+        }
+    }
+
     auto menuEntity = m_uiScene.createEntity();
     menuEntity.addComponent<cro::Transform>().setScale(glm::vec2(0.f));
     menuEntity.addComponent<cro::Callback>().setUserData<MenuData>();
