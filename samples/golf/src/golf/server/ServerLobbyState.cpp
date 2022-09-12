@@ -193,6 +193,7 @@ void LobbyState::insertPlayerInfo(const net::NetEvent& evt)
         if (c.connected)
         {
             ConnectionData cd;
+            cd.peerID = m_sharedData.clients[i].peer.getID();
             cd.connectionID = static_cast<std::uint8_t>(i);
             cd.playerCount = static_cast<std::uint8_t>(c.playerCount);
             for (auto j = 0u; j < c.playerCount; ++j)

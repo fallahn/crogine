@@ -30,11 +30,20 @@ source distribution.
 #include "SharedStateData.hpp"
 #include "CommonConsts.hpp"
 
+struct PacketHeader final
+{
+    std::uint64_t peerID = 0;
+    std::uint8_t connectionID = 0;
+    std::uint8_t playerCount = 0;
+};
+
 std::vector<std::uint8_t> ConnectionData::serialise() const
 {
-    //connectionID, player count, sizes[5], data
+    PacketHeader header = { peerID, connectionID, playerCount };
+    
+    //header, sizes[5], data
 
-    std::size_t totalSize = 0;
+    std::size_t totalSize = sizeof(header);
     std::array<std::uint8_t, 5u> sizes = { 0,0,0,0,0 };
     for (auto i = 0u; i < playerCount; ++i)
     {
@@ -48,17 +57,18 @@ std::vector<std::uint8_t> ConnectionData::serialise() const
 
         totalSize += sizes[i];
     }
+    //what's stored in sizes[4]??
 
-    std::vector<std::uint8_t> buffer(totalSize + sizeof(sizes) + 2);
-    buffer[0] = connectionID;
-    buffer[1] = playerCount;
-    buffer[2] = sizes[0];
-    buffer[3] = sizes[1];
-    buffer[4] = sizes[2];
-    buffer[5] = sizes[3];
-    buffer[6] = sizes[4];
+    std::vector<std::uint8_t> buffer(totalSize + sizeof(sizes));
+    std::memcpy(buffer.data(), &header, sizeof(header));
 
-    std::size_t offset = 2 + sizes.size();
+    buffer[sizeof(header) + 0] = sizes[0];
+    buffer[sizeof(header) + 1] = sizes[1];
+    buffer[sizeof(header) + 2] = sizes[2];
+    buffer[sizeof(header) + 3] = sizes[3];
+    buffer[sizeof(header) + 4] = sizes[4];
+
+    std::size_t offset = sizeof(header) + sizes.size();
     for (auto i = 0u; i < playerCount && offset < buffer.size(); ++i)
     {
         std::memcpy(&buffer[offset], playerData[i].avatarFlags.data(), sizeof(playerData[i].avatarFlags));
@@ -89,15 +99,20 @@ std::vector<std::uint8_t> ConnectionData::serialise() const
 
 bool ConnectionData::deserialise(const net::NetEvent::Packet& packet)
 {
+    PacketHeader header;
+
     //read header
     std::array<std::uint8_t, 5u> sizes = { 0,0,0,0,0 };
-    if (packet.getSize() < sizeof(sizes) + 2)
+    if (packet.getSize() < sizeof(sizes) + sizeof(header))
     {
         return false;
     }
 
-    std::memcpy(&connectionID, packet.getData(), 1);
-    std::memcpy(&playerCount, static_cast<const std::uint8_t*>(packet.getData()) + 1, 1);
+    std::memcpy(&header, packet.getData(), sizeof(header));
+
+    peerID = header.peerID;
+    connectionID = header.connectionID;
+    playerCount = header.playerCount;
 
     if (playerCount == 0
         || playerCount > MaxPlayers)
@@ -105,7 +120,7 @@ bool ConnectionData::deserialise(const net::NetEvent::Packet& packet)
         return false;
     }
 
-    std::size_t offset = 2;
+    std::size_t offset = sizeof(header);
     std::memcpy(sizes.data(), static_cast<const std::uint8_t*>(packet.getData()) + offset, sizeof(sizes));
 
     //check sizes are valid

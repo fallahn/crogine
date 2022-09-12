@@ -65,6 +65,8 @@ struct PlayerData final
 
 struct ConnectionData final
 {
+    std::uint64_t peerID = 0;
+
     static constexpr std::uint8_t MaxPlayers = 4;
     std::uint8_t connectionID = MaxPlayers;
 
