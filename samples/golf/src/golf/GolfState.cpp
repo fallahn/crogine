@@ -3853,10 +3853,13 @@ void GolfState::spawnBall(const ActorInfo& info)
             //only do this when active player.
             if (ballEnt.getComponent<ClientCollider>().active)
             {
-                auto ballPos = ballEnt.getComponent<cro::Transform>().getPosition();
-                ballPos.y = std::min(0.003f + m_collisionMesh.getTerrain(ballPos).height, ballPos.y); //just to prevent z-fighting
+                auto ballPos = ballEnt.getComponent<cro::Transform>().getWorldPosition();
+                //ballPos.y = std::min(0.003f + m_collisionMesh.getTerrain(ballPos).height, ballPos.y); //just to prevent z-fighting
+                if (ballPos.y > WaterLevel)
+                {
+                    ballPos.y = 0.003f + m_collisionMesh.getTerrain(ballPos).height;
+                }
                 e.getComponent<cro::Transform>().setPosition(ballPos);
-
                 e.getComponent<cro::Model>().setHidden((m_currentPlayer.terrain == TerrainID::Green) || ballEnt.getComponent<cro::Model>().isHidden());
             }
         }
