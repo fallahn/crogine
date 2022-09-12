@@ -80,6 +80,9 @@ void LobbyState::netEvent(const net::NetEvent& evt)
         case PacketID::PlayerInfo:
             insertPlayerInfo(evt);
             break;
+        case PacketID::NewLobbyReady:
+            m_sharedData.host.broadcastPacket(PacketID::NewLobbyReady, evt.packet.as<std::uint64_t>(), net::NetFlag::Reliable);
+            break;
         case PacketID::LobbyReady:
         {
             std::uint16_t data = evt.packet.as<std::uint16_t>();

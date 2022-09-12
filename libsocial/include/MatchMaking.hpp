@@ -51,8 +51,10 @@ public:
 
 
     void createGame(std::int32_t maxPlayers, std::int32_t gameType = 0);
+    void createLobby(){}
 
     void joinGame(std::uint64_t lobbyID);
+    void joinLobby(std::uint64_t) {};
 
     void refreshLobbyList(std::int32_t gameType = 0) {}
 
@@ -78,6 +80,7 @@ public:
         {
             GameCreated,
             GameCreateFailed,
+            LobbyCreated,
             LobbyJoined,
             LobbyJoinFailed,
             LobbyListUpdated,

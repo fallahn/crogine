@@ -242,6 +242,9 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
             m_sharedData.mapDirectory = m_courseData[m_sharedData.courseIndex].directory;
             auto data = serialiseString(m_sharedData.mapDirectory);
             m_sharedData.clientConnection.netClient.sendPacket(PacketID::MapInfo, data.data(), data.size(), net::NetFlag::Reliable, ConstVal::NetChannelStrings);
+
+            //create a new lobby - message handler makes sure everyone joins it
+            m_matchMaking.createLobby();
         }
         else
         {
@@ -534,6 +537,14 @@ void MenuState::handleMessage(const cro::Message& msg)
         case MatchMaking::Message::GameCreated:
             finaliseGameCreate(data);
         break;
+        case MatchMaking::Message::GameCreateFailed:
+            m_sharedData.errorMessage = "Unable to create game.";
+            requestStackPush(StateID::Error);
+            break;
+        case MatchMaking::Message::LobbyCreated:
+            //broadcast the lobby ID to clients. This will also join ourselves.
+            m_sharedData.clientConnection.netClient.sendPacket(PacketID::NewLobbyReady, data.hostID, net::NetFlag::Reliable);
+            break;
         case MatchMaking::Message::LobbyJoined:
             finaliseGameJoin(data);
             break;
@@ -1130,6 +1141,9 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
         switch (evt.packet.getID())
         {
         default: break;
+        case PacketID::NewLobbyReady:
+            m_matchMaking.joinLobby(evt.packet.as<std::uint64_t>());
+            break;
         case PacketID::PingTime:
         {
             auto data = evt.packet.as<std::uint32_t>();
