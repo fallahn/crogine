@@ -144,6 +144,7 @@ private:
         std::uint32_t prevHoleCount = 0;
         std::uint32_t nextHoleCount = 0;
         std::uint32_t toggleUserCourses = 0;
+        std::uint32_t toggleFriendsOnly = 0;
         std::uint32_t selected = 0;
         std::uint32_t unselected = 0;
         std::uint32_t selectHighlight = 0;

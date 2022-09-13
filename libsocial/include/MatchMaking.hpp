@@ -52,6 +52,7 @@ public:
 
     void createGame(std::int32_t maxPlayers, std::int32_t gameType = 0);
     void setFriendsOnly(bool) {};
+    bool getFriendsOnly() const { return false; }
     void createLobby(){}
 
     void joinGame(std::uint64_t lobbyID);

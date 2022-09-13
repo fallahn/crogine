@@ -1155,6 +1155,17 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
             }
         });
 
+    m_courseSelectCallbacks.toggleFriendsOnly = m_uiScene.getSystem<cro::UISystem>()->addCallback(
+        [&](cro::Entity, const cro::ButtonEvent& evt)
+        {
+            if (activated(evt))
+            {
+                m_matchMaking.setFriendsOnly(!m_matchMaking.getFriendsOnly());
+
+                m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
+            }
+        });
+
     m_courseSelectCallbacks.selected = m_uiScene.getSystem<cro::UISystem>()->addCallback(
         [](cro::Entity e)
         {
@@ -3604,4 +3615,64 @@ void MenuState::addCourseSelectButtons()
 
     centreText(labelEnt);
     m_menuEntities[MenuID::Lobby].getComponent<cro::Transform>().addChild(labelEnt.getComponent<cro::Transform>());
+
+    if (Social::isAvailable())
+    {
+        //friends only lobby
+        checkboxEnt = m_uiScene.createEntity();
+        checkboxEnt.addComponent<cro::Transform>();
+        checkboxEnt.addComponent<cro::Drawable2D>();
+        checkboxEnt.addComponent<cro::Sprite>() = m_sprites[SpriteID::LobbyCheckbox];
+        checkboxEnt.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement | CommandID::Menu::CourseSelect;
+        checkboxEnt.addComponent<UIElement>().absolutePosition = { -189.f, -71.f };
+        checkboxEnt.getComponent<UIElement>().relativePosition = LobbyBackgroundPosition;
+        checkboxEnt.getComponent<UIElement>().depth = 0.01f;
+
+        bounds = m_sprites[SpriteID::LobbyCheckbox].getTextureRect();
+        checkboxEnt.addComponent<cro::Callback>().active = true;
+        checkboxEnt.getComponent<cro::Callback>().function =
+            [&, bounds](cro::Entity e, float)
+        {
+            auto b = bounds;
+            if (m_matchMaking.getFriendsOnly())
+            {
+                b.bottom -= bounds.height;
+            }
+            e.getComponent<cro::Sprite>().setTextureRect(b);
+        };
+
+        m_menuEntities[MenuID::Lobby].getComponent<cro::Transform>().addChild(checkboxEnt.getComponent<cro::Transform>());
+
+
+        checkboxEnt = m_uiScene.createEntity();
+        checkboxEnt.addComponent<cro::Transform>();
+        checkboxEnt.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
+        checkboxEnt.addComponent<cro::Drawable2D>();
+        checkboxEnt.addComponent<cro::Sprite>() = m_sprites[SpriteID::LobbyCheckboxHighlight];
+        checkboxEnt.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+        checkboxEnt.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement | CommandID::Menu::CourseSelect;
+        checkboxEnt.addComponent<UIElement>().absolutePosition = { -190.f, -72.f };
+        checkboxEnt.getComponent<UIElement>().relativePosition = LobbyBackgroundPosition;
+        checkboxEnt.getComponent<UIElement>().depth = 0.01f;
+        bounds = checkboxEnt.getComponent<cro::Sprite>().getTextureBounds();
+        checkboxEnt.addComponent<cro::UIInput>().area = bounds;
+        checkboxEnt.getComponent<cro::UIInput>().setGroup(MenuID::Lobby);
+        checkboxEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = m_courseSelectCallbacks.selectHighlight;
+        checkboxEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = m_courseSelectCallbacks.unselectHighlight;
+        checkboxEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = m_courseSelectCallbacks.toggleFriendsOnly;
+        m_menuEntities[MenuID::Lobby].getComponent<cro::Transform>().addChild(checkboxEnt.getComponent<cro::Transform>());
+
+        labelEnt = m_uiScene.createEntity();
+        labelEnt.addComponent<cro::Transform>();
+        labelEnt.addComponent<cro::Drawable2D>();
+        labelEnt.addComponent<cro::Text>(font).setString("Friends Only");
+        labelEnt.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+        labelEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
+        labelEnt.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement | CommandID::Menu::CourseSelect;
+        labelEnt.addComponent<UIElement>().absolutePosition = { -176.f, -64.f };
+        labelEnt.getComponent<UIElement>().relativePosition = LobbyBackgroundPosition;
+        labelEnt.getComponent<UIElement>().depth = 0.01f;
+
+        m_menuEntities[MenuID::Lobby].getComponent<cro::Transform>().addChild(labelEnt.getComponent<cro::Transform>());
+    }
 }
