@@ -136,7 +136,7 @@ ClubhouseState::ClubhouseState(cro::StateStack& ss, cro::State::Context ctx, Sha
     sd.baseState = StateID::Clubhouse;
     sd.mapDirectory = "pool";
 
-    //this is actually set asa flag from the pause menu
+    //this is actually set as a flag from the pause menu
     //to say we want to quit
     if (sd.tutorial)
     {
@@ -173,6 +173,8 @@ ClubhouseState::ClubhouseState(cro::StateStack& ss, cro::State::Context ctx, Sha
 
         if (m_sharedData.hosting)
         {
+            m_matchMaking.createLobby();
+
             spriteID = SpriteID::StartGame;
             connectionString = "Hosting on: localhost:" + std::to_string(ConstVal::GamePort);
 
@@ -391,8 +393,24 @@ void ClubhouseState::handleMessage(const cro::Message& msg)
         default:
         case MatchMaking::Message::Error:
             break;
+        case MatchMaking::Message::LobbyInvite:
+            if (!m_sharedData.clientConnection.connected
+                && data.gameType == 1)
+            {
+                m_matchMaking.joinGame(data.hostID);
+            }
+            //TODO report some message if the game type is not correct
+            //or switch to correct game type
+            break;
+        case MatchMaking::Message::GameCreateFailed:
+            //local games still work
+            [[fallthrough]];
         case MatchMaking::Message::GameCreated:
             finaliseGameCreate();
+            break;
+        case MatchMaking::Message::LobbyCreated:
+            //broadcast the lobby ID to clients. This will also join ourselves.
+            m_sharedData.clientConnection.netClient.sendPacket(PacketID::NewLobbyReady, data.hostID, net::NetFlag::Reliable);
             break;
         case MatchMaking::Message::LobbyJoined:
             finaliseGameJoin(data);
@@ -1289,6 +1307,9 @@ void ClubhouseState::handleNetEvent(const net::NetEvent& evt)
         case PacketID::StateChange:
             if (evt.packet.as<std::uint8_t>() == sv::StateID::Billiards)
             {
+                //leave the lobby
+                m_matchMaking.leaveGame();
+
                 m_sharedData.ballSkinIndex = m_tableData[m_tableIndex].ballSkinIndex;
                 m_sharedData.tableSkinIndex = m_tableData[m_tableIndex].tableSkinIndex;
 
@@ -1501,6 +1522,7 @@ void ClubhouseState::handleNetEvent(const net::NetEvent& evt)
     }
     else if (evt.type == net::NetEvent::ClientDisconnect)
     {
+        m_matchMaking.leaveGame();
         m_sharedData.errorMessage = "Lost Connection To Host";
         requestStackPush(StateID::Error);
     }

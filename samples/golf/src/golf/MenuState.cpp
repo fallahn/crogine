@@ -529,18 +529,21 @@ void MenuState::handleMessage(const cro::Message& msg)
         case MatchMaking::Message::Error:
             break;
         case MatchMaking::Message::LobbyInvite:
-            if (!m_sharedData.clientConnection.connected)
+            if (!m_sharedData.clientConnection.connected
+                && data.gameType == 0)
             {
                 m_matchMaking.joinGame(data.hostID);
             }
+            //TODO report a message if game type is not correct
+            //or just switch game type?
             break;
+        case MatchMaking::Message::GameCreateFailed:
+            //TODO set some sort of flag to indicate offline mode?
+            //local games will still work but other players can't join
+            [[fallthrough]];
         case MatchMaking::Message::GameCreated:
             finaliseGameCreate(data);
         break;
-        case MatchMaking::Message::GameCreateFailed:
-            m_sharedData.errorMessage = "Unable to create game.";
-            requestStackPush(StateID::Error);
-            break;
         case MatchMaking::Message::LobbyCreated:
             //broadcast the lobby ID to clients. This will also join ourselves.
             m_sharedData.clientConnection.netClient.sendPacket(PacketID::NewLobbyReady, data.hostID, net::NetFlag::Reliable);
