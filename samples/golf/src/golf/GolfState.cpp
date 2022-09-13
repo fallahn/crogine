@@ -55,6 +55,7 @@ source distribution.
 
 #include <Achievements.hpp>
 #include <AchievementStrings.hpp>
+#include <Social.hpp>
 
 #include <crogine/audio/AudioScape.hpp>
 #include <crogine/audio/AudioMixer.hpp>
@@ -3922,6 +3923,7 @@ void GolfState::spawnBall(const ActorInfo& info)
 
     //name label for the ball's owner
     glm::vec2 texSize(LabelTextureSize);
+    texSize.y -= LabelIconSize.y;
 
     auto playerID = info.playerID;
     auto clientID = info.clientID;
@@ -4005,6 +4007,27 @@ void GolfState::spawnBall(const ActorInfo& info)
     };
     m_courseEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
+    //if (Social::isAvailable())
+    //{
+    //    cro::FloatRect textureRect(0.f, texSize.y, LabelIconSize.x, LabelIconSize.y);
+
+    //    auto labelEnt = entity;
+    //    entity = m_uiScene.createEntity();
+    //    entity.addComponent<cro::Transform>().setOrigin({ textureRect.width / 2.f, -texSize.y / 2.f, -0.1f - (0.1f * depthOffset) });
+    //    entity.getComponent<cro::Transform>().setPosition({ texSize.x / 2.f, 2.f });
+    //    entity.getComponent<cro::Transform>().setScale({ 0.5f, 0.5f });
+    //    entity.addComponent<cro::Drawable2D>();
+    //    entity.addComponent<cro::Sprite>().setTexture(m_sharedData.nameTextures[info.clientID].getTexture());
+    //    entity.getComponent<cro::Sprite>().setTextureRect(textureRect);
+    //    entity.addComponent<cro::Callback>().active = true;
+    //    entity.getComponent<cro::Callback>().function =
+    //        [labelEnt](cro::Entity e, float)
+    //    {
+    //        e.getComponent<cro::Sprite>().setColour(labelEnt.getComponent<cro::Sprite>().getColour());
+    //        //e.getComponent<cro::Transform>().setScale(labelEnt.getComponent<cro::Transform>().getScale() / 2.f);
+    //    };
+    //    labelEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    //}
 #ifdef CRO_DEBUG_
     ballEntity = ballEnt;
 #endif
@@ -4894,8 +4917,16 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
         data.string = m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].name;
         e.getComponent<cro::Callback>().active = true;
     };
-    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);    
+    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
+    cmd.targetFlags = CommandID::UI::PlayerIcon;
+    cmd.action =
+        [&](cro::Entity e, float)
+    {
+        e.getComponent<cro::Callback>().active = true;
+        e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
+    };
+    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
     cmd.targetFlags = CommandID::UI::PinDistance;
     cmd.action =
@@ -5413,6 +5444,14 @@ void GolfState::createTransition(const ActivePlayer& playerData)
         [&](cro::Entity e, float)
     {
         e.getComponent<cro::Text>().setString(" ");
+    };
+    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+    cmd.targetFlags = CommandID::UI::PlayerIcon;
+    cmd.action =
+        [&](cro::Entity e, float)
+    {
+        e.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
     };
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 

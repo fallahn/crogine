@@ -322,6 +322,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
         });
 
 #ifdef CRO_DEBUG_
+
     //registerWindow([&]() 
     //    {
     //        if (ImGui::Begin("Debug"))

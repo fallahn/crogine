@@ -40,6 +40,7 @@ source distribution.
 #include "server/ServerPacketData.hpp"
 
 #include <AchievementStrings.hpp>
+#include <Social.hpp>
 
 #include <crogine/detail/GlobalConsts.hpp>
 #include <crogine/core/ConfigFile.hpp>
@@ -3121,26 +3122,32 @@ void MenuState::updateLobbyAvatars()
 
         cro::Image img;
         img.create(8, 8, cro::Colour::White);
-        cro::Texture texture;
-        texture.loadFromImage(img);
-        cro::SimpleQuad simpleQuad(texture);
+        cro::Texture quadTexture;
+        quadTexture.loadFromImage(img);
+        cro::SimpleQuad simpleQuad(quadTexture);
+
+        cro::Texture iconTexture;
+        cro::Image iconImage;
 
         glm::vec2 textPos(0.f);
         std::int32_t h = 0;
+        glm::vec2 textureSize(LabelTextureSize);
+        textureSize.y -= LabelIconSize.y;
         for (const auto& c : m_sharedData.connectionData)
         {
             if (c.connectionID < m_sharedData.nameTextures.size())
             {
                 m_sharedData.nameTextures[c.connectionID].clear(cro::Colour(0.f, 0.f, 0.f, BackgroundAlpha / 3.f));
 
+                simpleQuad.setTexture(quadTexture);
                 for (auto i = 0u; i < c.playerCount; ++i)
                 {
                     simpleText.setString(c.playerData[i].name);
                     auto bounds = simpleText.getLocalBounds().width;
-                    simpleText.setPosition({ std::round((LabelTextureSize.x - bounds) / 2.f), (i * (LabelTextureSize.y / 4)) + 4.f });
+                    simpleText.setPosition({ std::round((textureSize.x - bounds) / 2.f), (i * (textureSize.y / 4)) + 4.f });
                     simpleText.draw();
 
-                    simpleQuad.setPosition({ 4.f,(i * (LabelTextureSize.y / 4)) + 4.f });
+                    simpleQuad.setPosition({ 4.f,(i * (textureSize.y / 4)) + 4.f });
                     simpleQuad.setColour(cro::Colour(pc::Palette[c.playerData[i].avatarFlags[1]].light));
                     simpleQuad.draw();
 
@@ -3148,6 +3155,17 @@ void MenuState::updateLobbyAvatars()
                     simpleQuad.setColour(cro::Colour(pc::Palette[c.playerData[i].avatarFlags[0]].light));
                     simpleQuad.draw();
                 }
+
+                iconImage = Social::getUserIcon(c.peerID);
+                if (iconImage.getPixelData())
+                {
+                    iconTexture.loadFromImage(iconImage);
+                    simpleQuad.setTexture(iconTexture);
+                    simpleQuad.setPosition({ 0.f, textureSize.y });
+                    simpleQuad.setColour(cro::Colour::White);
+                    simpleQuad.draw();
+                }
+
                 m_sharedData.nameTextures[c.connectionID].display();
             }
 

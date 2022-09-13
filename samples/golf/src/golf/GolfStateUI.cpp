@@ -44,6 +44,7 @@ source distribution.
 
 #include <Achievements.hpp>
 #include <AchievementStrings.hpp>
+#include <Social.hpp>
 
 #include <crogine/audio/AudioScape.hpp>
 
@@ -148,6 +149,58 @@ void GolfState::buildUI()
     entity.getComponent<cro::Callback>().function = TextAnimCallback();
     auto nameEnt = entity;
     infoEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    if (Social::isAvailable())
+    {
+        entity = m_uiScene.createEntity();
+        entity.addComponent<cro::Transform>().setScale({ 0.f, 0.5f });
+        entity.getComponent<cro::Transform>().setOrigin({ LabelIconSize.x / 2.f, 0.f });
+        entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::PlayerIcon | CommandID::UI::UIElement;
+        entity.addComponent<UIElement>().absolutePosition = { 18.f, -12.f };
+        entity.getComponent<UIElement>().depth = 0.05f;
+        entity.addComponent<cro::Drawable2D>();
+        entity.addComponent<cro::Sprite>(m_sharedData.nameTextures[0].getTexture());
+        entity.getComponent<cro::Sprite>().setTextureRect({ 0.f, LabelTextureSize.y - LabelIconSize.y, LabelIconSize.x, LabelIconSize.y });
+
+        struct IconData final
+        {
+            enum
+            {
+                Shrink, Grow
+            }state = Grow;
+            float progress = 0.f;
+        };
+        entity.addComponent<cro::Callback>().setUserData<IconData>();
+        entity.getComponent<cro::Callback>().function =
+            [&](cro::Entity e, float dt)
+        {
+            const float speed = dt * 3.f;
+            auto& data = e.getComponent<cro::Callback>().getUserData<IconData>();
+            if (data.state == IconData::Grow)
+            {
+                data.progress = std::min(1.f, data.progress + speed);
+                if (data.progress == 1)
+                {
+                    data.state = IconData::Shrink;
+                    e.getComponent<cro::Callback>().active = false;
+                }
+            }
+            else
+            {
+                data.progress = std::max(0.f, data.progress - speed);
+                if (data.progress == 0)
+                {
+                    e.getComponent<cro::Sprite>().setTexture(m_sharedData.nameTextures[m_currentPlayer.client].getTexture(), false);
+                    data.state = IconData::Grow;
+                }
+            }
+            float scale = cro::Util::Easing::easeOutCubic(data.progress);
+            e.getComponent<cro::Transform>().setScale({ scale * 0.5f, 0.5f });
+        };
+
+        infoEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    }
+
 
     //think bulb displayed when CPU players are thinking
     entity = m_uiScene.createEntity();
@@ -810,6 +863,8 @@ void GolfState::buildUI()
             pos.y *= (uiSize.y - UIBarHeight);
             pos.y = std::round(pos.y);
             pos.y += UITextPosV;
+
+            pos += e.getComponent<UIElement>().absolutePosition;
 
             e.getComponent<cro::Transform>().setPosition(glm::vec3(pos, e.getComponent<UIElement>().depth));
         };

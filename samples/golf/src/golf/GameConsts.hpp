@@ -90,7 +90,8 @@ static constexpr float PlaneHeight = 60.f;
 static constexpr float IndicatorDarkness = 0.002f;
 static constexpr float IndicatorLightness = 0.5f;
 
-static constexpr glm::uvec2 LabelTextureSize(128u, 64u);
+static constexpr glm::uvec2 LabelTextureSize(128u, 96u);
+static constexpr glm::vec2 LabelIconSize(32.f);
 static constexpr glm::vec3 OriginOffset(static_cast<float>(MapSize.x / 2), 0.f, -static_cast<float>(MapSize.y / 2));
 
 static const cro::Colour WaterColour(0.02f, 0.078f, 0.578f);

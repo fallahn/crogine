@@ -302,7 +302,7 @@ void SimpleDrawable::drawGeometry(const glm::mat4& worldTransform) const
     //set culling/blend mode
     glCheck(glDepthMask(GL_FALSE));
     glCheck(glDisable(GL_DEPTH_TEST));
-    glCheck(glEnable(GL_CULL_FACE));
+    glCheck(glDisable(GL_CULL_FACE));
     applyBlendMode();
 
 
