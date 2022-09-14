@@ -29,6 +29,8 @@ source distribution.
 
 #pragma once
 
+#include <crogine/core/String.hpp>
+
 #include <cstdint>
 #include <limits>
 #include <vector>
@@ -51,6 +53,8 @@ public:
 
 
     void createGame(std::int32_t maxPlayers, std::int32_t gameType = 0);
+    void setGameTitle(const cro::String&) {};
+    void setGamePlayerCount(std::int32_t) {};
     void setFriendsOnly(bool) {};
     bool getFriendsOnly() const { return false; }
     void createLobby(){}
@@ -66,6 +70,7 @@ public:
         std::uint64_t ID = 0;
         std::int32_t playerCount = 0;
         std::int32_t clientCount = 0;
+        cro::String title;
     };
     const std::vector<LobbyData>& getLobbies() const { static std::vector<LobbyData> d;  return d; }
 

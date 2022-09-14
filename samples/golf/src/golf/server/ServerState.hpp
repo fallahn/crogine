@@ -61,6 +61,7 @@ namespace sv
         //TODO this is basically the same as the ConnectionData struct in client shared data
         static constexpr std::size_t MaxPlayers = 4;
         std::size_t playerCount = 0;
+        std::uint64_t peerID = 0;
         std::array<PlayerInfo, MaxPlayers> playerData = {};
     };
 

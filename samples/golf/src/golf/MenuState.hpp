@@ -249,6 +249,7 @@ private:
     void createMainMenu(cro::Entity, std::uint32_t, std::uint32_t);
     void createAvatarMenu(cro::Entity, std::uint32_t, std::uint32_t);
     void createJoinMenu(cro::Entity, std::uint32_t, std::uint32_t);
+    void createBrowserMenu(cro::Entity, std::uint32_t, std::uint32_t);
     void createLobbyMenu(cro::Entity, std::uint32_t, std::uint32_t);
     void createPlayerConfigMenu();
 
@@ -262,6 +263,7 @@ private:
     void updateLocalAvatars(std::uint32_t, std::uint32_t);
     void updateLobbyData(const net::NetEvent&);
     void updateLobbyAvatars();
+    void updateLobbyList();
     void showPlayerConfig(bool, std::uint8_t);
     void quitLobby();
     void addCourseSelectButtons();

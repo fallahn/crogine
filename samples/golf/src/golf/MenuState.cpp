@@ -540,6 +540,9 @@ void MenuState::handleMessage(const cro::Message& msg)
         default:
         case MatchMaking::Message::Error:
             break;
+        case MatchMaking::Message::LobbyListUpdated:
+            updateLobbyList();
+            break;
         case MatchMaking::Message::LobbyInvite:
             if (!m_sharedData.clientConnection.connected)
             {
@@ -570,6 +573,8 @@ void MenuState::handleMessage(const cro::Message& msg)
             finaliseGameJoin(data);
             break;
         case MatchMaking::Message::LobbyJoinFailed:
+            //TODO something less extreme than reloading the entire state.
+            //for starters refreshing the lobby list, and staying on browser menu
             m_sharedData.errorMessage = "Failed to join lobby:\nEither full or no longer exists.";
             requestStackPush(StateID::Error);
             break;
@@ -1187,6 +1192,7 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
                 //update local player data
                 m_sharedData.clientConnection.connectionID = evt.packet.as<std::uint8_t>();
                 m_sharedData.localConnectionData.connectionID = evt.packet.as<std::uint8_t>();
+                m_sharedData.localConnectionData.peerID = m_sharedData.clientConnection.netClient.getPeer().getID();
                 m_sharedData.connectionData[m_sharedData.clientConnection.connectionID] = m_sharedData.localConnectionData;
 
                 //send player details to server (name, skin)
@@ -1361,6 +1367,8 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
                             centreText(e);
                         };
                         m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+                        m_matchMaking.setGameTitle(data->title);
                     }
                     else
                     {

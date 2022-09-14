@@ -307,7 +307,11 @@ void MenuState::createUI()
     createPlayerConfigMenu();
     createMainMenu(rootNode, mouseEnterCallback, mouseExitCallback);
     createAvatarMenu(rootNode, mouseEnterCallback, mouseExitCallback);
+#ifdef USE_GNS
+    createBrowserMenu(rootNode, mouseEnterCallback, mouseExitCallback);
+#else
     createJoinMenu(rootNode, mouseEnterCallback, mouseExitCallback);
+#endif
     createLobbyMenu(rootNode, mouseEnterCallback, mouseExitCallback);
 
     //diplays version number
@@ -1626,6 +1630,125 @@ void MenuState::createJoinMenu(cro::Entity parent, std::uint32_t mouseEnter, std
                 }
             });
     
+    menuTransform.addChild(entity.getComponent<cro::Transform>());
+}
+
+void MenuState::createBrowserMenu(cro::Entity parent, std::uint32_t mouseEnter, std::uint32_t mouseExit)
+{
+    auto menuEntity = m_uiScene.createEntity();
+    menuEntity.addComponent<cro::Transform>().setScale(glm::vec2(0.f));
+    menuEntity.addComponent<cro::Callback>().setUserData<MenuData>();
+    menuEntity.getComponent<cro::Callback>().function = MenuCallback(MainMenuContext(this));
+    m_menuEntities[MenuID::Join] = menuEntity;
+    parent.getComponent<cro::Transform>().addChild(menuEntity.getComponent<cro::Transform>());
+
+    auto& menuTransform = menuEntity.getComponent<cro::Transform>();
+    menuTransform.setPosition(-m_menuPositions[MenuID::Join]);
+
+    //cro::SpriteSheet spriteSheet;
+    //spriteSheet.loadFromFile("assets/golf/sprites/connect_menu.spt", m_resources.textures);
+
+
+    //TODO load background and create nodes to which to attach lobby list
+
+
+    //banner
+    auto entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, BannerPosition, -0.1f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::ButtonBanner];
+    auto spriteRect = entity.getComponent<cro::Sprite>().getTextureRect();
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIBanner;
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&, spriteRect](cro::Entity e, float)
+    {
+        auto rect = spriteRect;
+        rect.width = static_cast<float>(GolfGame::getActiveTarget()->getSize().x) * m_viewScale.x;
+        e.getComponent<cro::Sprite>().setTextureRect(rect);
+        e.getComponent<cro::Callback>().active = false;
+    };
+    menuTransform.addChild(entity.getComponent<cro::Transform>());
+
+    //cursor
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::Cursor];
+    entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+    entity.addComponent<cro::SpriteAnimation>().play(0);
+    menuTransform.addChild(entity.getComponent<cro::Transform>());
+
+    mouseEnter = m_uiScene.getSystem<cro::UISystem>()->addCallback(
+        [entity](cro::Entity e) mutable
+        {
+            e.getComponent<cro::AudioEmitter>().play();
+            entity.getComponent<cro::Transform>().setPosition(e.getComponent<cro::Transform>().getPosition() + CursorOffset);
+            entity.getComponent<cro::Sprite>().setColour(cro::Colour::White);
+        });
+
+    mouseExit = m_uiScene.getSystem<cro::UISystem>()->addCallback(
+        [entity](cro::Entity) mutable
+        {
+            entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+        });
+
+    //back
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<UIElement>().absolutePosition = { 20.f, MenuBottomBorder };
+    entity.getComponent<UIElement>().depth = 0.1f;
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement;
+    entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::PrevMenu];
+    auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.addComponent<cro::UIInput>().area = bounds;
+    entity.getComponent<cro::UIInput>().setGroup(MenuID::Join);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = mouseEnter;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = mouseExit;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
+        m_uiScene.getSystem<cro::UISystem>()->addCallback([&, menuEntity](cro::Entity, const cro::ButtonEvent& evt) mutable
+            {
+                if (activated(evt))
+                {
+                    applyTextEdit();
+
+                    m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Dummy);
+                    menuEntity.getComponent<cro::Callback>().getUserData<MenuData>().targetMenu = MenuID::Avatar;
+                    menuEntity.getComponent<cro::Callback>().active = true;
+
+                    m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
+                }
+            });
+    menuTransform.addChild(entity.getComponent<cro::Transform>());
+
+    //refresh
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<UIElement>().absolutePosition = { -40.f, MenuBottomBorder };
+    entity.getComponent<UIElement>().relativePosition = { 0.98f, 0.f };
+    entity.getComponent<UIElement>().depth = 0.1f;
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement;
+    entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::Connect];
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.addComponent<cro::UIInput>().area = bounds;
+    entity.getComponent<cro::UIInput>().setGroup(MenuID::Join);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = mouseEnter;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = mouseExit;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+        m_uiScene.getSystem<cro::UISystem>()->addCallback(
+            [&](cro::Entity e, const cro::ButtonEvent& evt) mutable
+            {
+                if (activated(evt))
+                {
+                    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+                    m_matchMaking.refreshLobbyList(Server::GameMode::Golf);
+                }
+            });
+
     menuTransform.addChild(entity.getComponent<cro::Transform>());
 }
 
@@ -3098,6 +3221,16 @@ void MenuState::updateLobbyData(const net::NetEvent& evt)
         m_sharedData.connectionData[cd.connectionID] = cd;
     }
 
+    if (m_sharedData.hosting)
+    {
+        std::int32_t playerCount = 0;
+        for (const auto& cd : m_sharedData.connectionData)
+        {
+            playerCount += cd.playerCount;
+        }
+        m_matchMaking.setGamePlayerCount(playerCount);
+    }
+
     updateLobbyAvatars();
 }
 
@@ -3270,6 +3403,24 @@ void MenuState::updateLobbyAvatars()
         }
     };
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+}
+
+void MenuState::updateLobbyList()
+{
+    //TODO let's page this instead of scrolling, it's just easier...
+    //TODO create the entire page as a single block of text
+    //then one button for each entry?
+    const auto& lobbyData = m_matchMaking.getLobbies();
+    if (lobbyData.empty())
+    {
+        //no lobbies found :(
+    }
+
+
+    for (const auto& data : lobbyData)
+    {
+
+    }
 }
 
 void MenuState::showPlayerConfig(bool visible, std::uint8_t playerIndex)

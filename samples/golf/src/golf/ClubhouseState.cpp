@@ -1350,6 +1350,7 @@ void ClubhouseState::handleNetEvent(const net::NetEvent& evt)
             //update local player data
             m_sharedData.clientConnection.connectionID = evt.packet.as<std::uint8_t>();
             m_sharedData.localConnectionData.connectionID = evt.packet.as<std::uint8_t>();
+            m_sharedData.localConnectionData.peerID = m_sharedData.clientConnection.netClient.getPeer().getID();
             m_sharedData.connectionData[m_sharedData.clientConnection.connectionID] = m_sharedData.localConnectionData;
 
             //send player details to server (name, skin)
