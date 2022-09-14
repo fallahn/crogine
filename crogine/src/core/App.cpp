@@ -144,6 +144,56 @@ namespace
         colors[ImGuiCol_NavWindowingDimBg] = ImVec4(0.20f, 0.20f, 0.24f, 0.20f);
         colors[ImGuiCol_ModalWindowDimBg] = ImVec4(0.20f, 0.20f, 0.24f, 0.35f);
     }
+
+#ifndef GL41
+    void APIENTRY glDebugPrint(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* msg, const void*)
+    {
+        std::stringstream ss;
+        switch (source)
+        {
+        default:
+            ss << "OpenGL: ";
+            break;
+        case GL_DEBUG_SOURCE_SHADER_COMPILER:
+            ss << "Shader compiler: ";
+            break;
+        }
+
+        switch (type)
+        {
+        default: break;
+        case GL_DEBUG_TYPE_ERROR:
+            ss << "Error - ";
+            break;
+        case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR:
+            ss << "Deprecated behaviour - ";
+            break;
+        case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:
+            ss << "Undefined behaviour - ";
+            break;
+        case GL_DEBUG_TYPE_PERFORMANCE:
+            ss << "Performance warning - ";
+            break;
+        }
+
+        ss << msg;
+
+        switch (severity)
+        {
+        default:
+        case GL_DEBUG_SEVERITY_NOTIFICATION:
+        case GL_DEBUG_SEVERITY_LOW:
+            LogI << ss.str() << std::endl;
+            break;
+        case GL_DEBUG_SEVERITY_MEDIUM:
+            LogW << ss.str() << std::endl;
+            break;
+        case GL_DEBUG_SEVERITY_HIGH:
+            LogE << ss.str() << std::endl;
+            break;
+        }
+    }
+#endif
 }
 
 
@@ -286,6 +336,12 @@ void App::run()
         ImGui_ImplOpenGL3_Init("#version 410 core");
 #else
         ImGui_ImplOpenGL3_Init("#version 460 core");
+
+#ifdef CRO_DEBUG_
+        glDebugMessageCallback(glDebugPrint, nullptr);
+        glEnable(GL_DEBUG_OUTPUT);
+        glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+#endif
 #endif
 #else
         //load ES2 shaders on mobile

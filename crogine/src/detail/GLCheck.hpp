@@ -41,7 +41,12 @@ source distribution.
 #pragma once
 
 #ifdef CRO_DEBUG_
+#if defined(PLATFORM_DESKTOP) && !defined(GL41)
+//use the gl debug context instead (see App.cpp)
+#define glCheck(x) (x)
+#else
 #define glCheck(x) do{x; cro::Detail::glErrorCheck(__FILE__, __LINE__, #x);}while (false)
+#endif
 #else
 #define glCheck(x) (x)
 #endif //CRO_DEBUG_
