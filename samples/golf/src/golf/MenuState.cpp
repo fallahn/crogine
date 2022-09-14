@@ -275,7 +275,18 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
             cd.playerCount = 0;
         }
         m_sharedData.hosting = false;
+
+        //we might have switched here from an invite received while in the clubhouse
+        if (m_sharedData.inviteID)
+        {
+            //do this via message handler to allow state to fully load
+            auto* msg = postMessage<MatchMaking::Message>(MatchMaking::MessageID);
+            msg->gameType = Server::GameMode::Golf;
+            msg->hostID = m_sharedData.inviteID;
+            msg->type = MatchMaking::Message::LobbyInvite;
+        }
     }
+    m_sharedData.inviteID = 0;
 
     //for some reason this immediately unsets itself
     //cro::App::getWindow().setCursor(&m_cursor);
@@ -530,13 +541,19 @@ void MenuState::handleMessage(const cro::Message& msg)
         case MatchMaking::Message::Error:
             break;
         case MatchMaking::Message::LobbyInvite:
-            if (!m_sharedData.clientConnection.connected
-                && data.gameType == 0)
+            if (!m_sharedData.clientConnection.connected)
             {
-                m_matchMaking.joinGame(data.hostID);
+                if (data.gameType == Server::GameMode::Golf)
+                {
+                    m_matchMaking.joinGame(data.hostID);
+                }
+                else
+                {
+                    m_sharedData.inviteID = data.hostID;
+                    requestStackClear();
+                    requestStackPush(StateID::Clubhouse);
+                }
             }
-            //TODO report a message if game type is not correct
-            //or just switch game type?
             break;
         case MatchMaking::Message::GameCreateFailed:
             //TODO set some sort of flag to indicate offline mode?

@@ -242,7 +242,18 @@ ClubhouseState::ClubhouseState(cro::StateStack& ss, cro::State::Context ctx, Sha
 
         //assume two players for a local game
         sd.localConnectionData.playerCount = 2;
+
+        //we might have switched here from an invite received while in the clubhouse
+        if (m_sharedData.inviteID)
+        {
+            //do this via message handler to allow state to fully load
+            auto* msg = postMessage<MatchMaking::Message>(MatchMaking::MessageID);
+            msg->gameType = Server::GameMode::Billiards;
+            msg->hostID = m_sharedData.inviteID;
+            msg->type = MatchMaking::Message::LobbyInvite;
+        }
     }
+    m_sharedData.inviteID = 0;
 
 #ifdef CRO_DEBUG_
     registerWindow([&]()
@@ -394,13 +405,20 @@ void ClubhouseState::handleMessage(const cro::Message& msg)
         case MatchMaking::Message::Error:
             break;
         case MatchMaking::Message::LobbyInvite:
-            if (!m_sharedData.clientConnection.connected
-                && data.gameType == 1)
+            if (!m_sharedData.clientConnection.connected)
             {
-                m_matchMaking.joinGame(data.hostID);
-            }
-            //TODO report some message if the game type is not correct
-            //or switch to correct game type
+                if (data.gameType == Server::GameMode::Billiards)
+                {
+                    m_matchMaking.joinGame(data.hostID);
+                    m_sharedData.localConnectionData.playerCount = 2;
+                }
+                else
+                {
+                    m_sharedData.inviteID = data.hostID;
+                    requestStackClear();
+                    requestStackPush(StateID::Menu);
+                }
+            }            
             break;
         case MatchMaking::Message::GameCreateFailed:
             //local games still work

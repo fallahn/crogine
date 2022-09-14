@@ -141,6 +141,7 @@ struct SharedStateData final
 
     //our local player data
     std::uint64_t lobbyID = 0;
+    std::uint64_t inviteID = 0;
     ConnectionData localConnectionData;
     cro::String targetIP = "255.255.255.255";
     std::array<std::int32_t, 4u> controllerIDs = {};
