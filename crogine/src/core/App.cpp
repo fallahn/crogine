@@ -183,7 +183,7 @@ namespace
         default:
         case GL_DEBUG_SEVERITY_NOTIFICATION:
         case GL_DEBUG_SEVERITY_LOW:
-            LogI << ss.str() << std::endl;
+            //LogI << ss.str() << std::endl;
             break;
         case GL_DEBUG_SEVERITY_MEDIUM:
             LogW << ss.str() << std::endl;
