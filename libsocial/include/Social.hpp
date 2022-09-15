@@ -36,4 +36,5 @@ class Social final
 public:
     static bool isAvailable() { return false; }
     static cro::Image getUserIcon(std::uint64_t) { return cro::Image(); }
+    static constexpr std::uint32_t IconSize = 64;
 };

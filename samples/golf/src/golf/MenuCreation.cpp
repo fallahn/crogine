@@ -3456,7 +3456,7 @@ void MenuState::updateLobbyList()
         auto entity = m_uiScene.createEntity();
         entity.addComponent<cro::Transform>().setPosition(LobbyTextRootPosition);
         entity.addComponent<cro::Drawable2D>();
-        entity.addComponent<cro::Text>(font).setString("No Games Found.");
+        entity.addComponent<cro::Text>(font).setString(" No Games Found.");
         entity.getComponent<cro::Text>().setFillColour(LeaderboardTextDark);
         entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
 
@@ -3476,12 +3476,12 @@ void MenuState::updateLobbyList()
             for (auto j = startIndex; j < endIndex; ++j)
             {
                 //TODO remove this once done debugging
-                lobbyData[j].title = "..Old Stemmer's Land Pitch 'n' Putt..";
+                lobbyData[j].title = "..Old Stemmer's Lane Pitch 'n' Putt..";
                 lobbyData[j].playerCount = j + 1;
 
 
                 std::stringstream ss;
-                ss << lobbyData[j].clientCount << "   " << std::setw(2) << std::setfill('0') << lobbyData[j].playerCount << " - ";
+                ss << " " << lobbyData[j].clientCount << "  " << std::setw(2) << std::setfill('0') << lobbyData[j].playerCount << " - ";
                 pageString += ss.str();
 
                 pageString += lobbyData[j].title + "\n";                

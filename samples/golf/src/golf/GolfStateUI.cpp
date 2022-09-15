@@ -174,6 +174,8 @@ void GolfState::buildUI()
         entity.getComponent<cro::Callback>().function =
             [&](cro::Entity e, float dt)
         {
+            const float BaseScale = UIBarHeight / Social::IconSize;
+
             const float speed = dt * 3.f;
             auto& data = e.getComponent<cro::Callback>().getUserData<IconData>();
             if (data.state == IconData::Grow)
@@ -195,7 +197,7 @@ void GolfState::buildUI()
                 }
             }
             float scale = cro::Util::Easing::easeOutCubic(data.progress);
-            e.getComponent<cro::Transform>().setScale({ scale * 0.5f, 0.5f });
+            e.getComponent<cro::Transform>().setScale({ scale * BaseScale, BaseScale });
         };
 
         infoEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
