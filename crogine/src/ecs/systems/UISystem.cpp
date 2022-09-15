@@ -279,7 +279,7 @@ void UISystem::process(float)
 
         auto area = input.area.transform(tx);
         bool contains = false;
-        if (contains = area.contains(m_eventPosition); contains)
+        if (contains = area.contains(m_eventPosition); contains && input.enabled)
         {
             if (!input.active)
             {
@@ -317,7 +317,7 @@ void UISystem::process(float)
         }
 
         //only do mouse/touch events if they're within the bounds of an input
-        if (contains)
+        if (contains && input.enabled)
         {
             for (const auto& f : m_mouseDownEvents)
             {
@@ -329,7 +329,7 @@ void UISystem::process(float)
             }
         }
 
-        else if (currentIndex == m_selectedIndex)
+        else if (currentIndex == m_selectedIndex && input.enabled)
         {
             for (const auto& f : m_buttonDownEvents)
             {
@@ -447,25 +447,40 @@ void UISystem::selectNext(std::size_t stride)
 {
     //call unselected on prev ent
     const auto& entities = m_groups[m_activeGroup];
-    unselect(m_selectedIndex);
+    auto old = m_selectedIndex;
 
-    m_selectedIndex = (m_selectedIndex + stride) % entities.size();
+    do
+    {
+        m_selectedIndex = (m_selectedIndex + stride) % entities.size();
+    } while (m_selectedIndex != old && !entities[m_selectedIndex].getComponent<UIInput>().enabled);
 
     //and do selected callback
-    select(m_selectedIndex);
+    if (m_selectedIndex != old)
+    {
+        unselect(old);
+        select(m_selectedIndex);
+    }
 }
 
 void UISystem::selectPrev(std::size_t stride)
 {
     //call unselected on prev ent
     const auto& entities = m_groups[m_activeGroup];
-    unselect(m_selectedIndex);
 
     //get new index
-    m_selectedIndex = (m_selectedIndex + (entities.size() - stride)) % entities.size();
+    auto old = m_selectedIndex;
+
+    do
+    {
+        m_selectedIndex = (m_selectedIndex + (entities.size() - stride)) % entities.size();
+    } while (m_selectedIndex != old && !entities[m_selectedIndex].getComponent<UIInput>().enabled);
 
     //and do selected callback
-    select(m_selectedIndex);
+    if (m_selectedIndex != old)
+    {
+        unselect(old);
+        select(m_selectedIndex);
+    }
 }
 
 void UISystem::unselect(std::size_t entIdx)

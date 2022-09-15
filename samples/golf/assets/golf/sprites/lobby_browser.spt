@@ -1,0 +1,49 @@
+spritesheet lobby_browser
+{
+    src = "assets/golf/images/lobby_browser.png"
+    smooth = false
+    repeat = false
+
+    sprite background
+    {
+        bounds = 0.000000,0.000000,400.000000,224.000000
+        colour = 1.000000,1.000000,1.000000,1.000000
+
+    }
+    sprite button_left
+    {
+        bounds = 421.000000,21.000000,6.000000,11.000000
+        colour = 1.000000,1.000000,1.000000,1.000000
+
+    }
+    sprite highlight_left
+    {
+        bounds = 419.000000,3.000000,10.000000,15.000000
+        colour = 1.000000,1.000000,1.000000,1.000000
+
+    }
+    sprite title
+    {
+        bounds = 2.000000,233.000000,142.000000,40.000000
+        colour = 1.000000,1.000000,1.000000,1.000000
+
+    }
+    sprite button_right
+    {
+        bounds = 437.000000,21.000000,6.000000,11.000000
+        colour = 1.000000,1.000000,1.000000,1.000000
+
+    }
+    sprite highlight_right
+    {
+        bounds = 435.000000,3.000000,10.000000,15.000000
+        colour = 1.000000,1.000000,1.000000,1.000000
+
+    }
+    sprite refresh
+    {
+        bounds = 434.000000,43.000000,12.000000,12.000000
+        colour = 1.000000,1.000000,1.000000,1.000000
+
+    }
+}

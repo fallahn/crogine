@@ -88,6 +88,7 @@ static const cro::Colour LeaderboardTextLight(0xfff8e1ff);
 
 static constexpr float LeaderboardTextSpacing = 6.f;
 static constexpr float BackgroundAlpha = 0.7f;
+static constexpr glm::vec2 LobbyTextRootPosition(8.f, 172.f);
 
 static constexpr float UIBarHeight = 16.f;
 static constexpr float UITextPosV = 12.f;

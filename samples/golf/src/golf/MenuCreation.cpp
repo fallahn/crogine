@@ -70,6 +70,7 @@ source distribution.
 #include <crogine/detail/OpenGL.hpp>
 
 #include <cstring>
+#include <iomanip>
 
 namespace
 {
@@ -1645,15 +1646,39 @@ void MenuState::createBrowserMenu(cro::Entity parent, std::uint32_t mouseEnter, 
     auto& menuTransform = menuEntity.getComponent<cro::Transform>();
     menuTransform.setPosition(-m_menuPositions[MenuID::Join]);
 
-    //cro::SpriteSheet spriteSheet;
-    //spriteSheet.loadFromFile("assets/golf/sprites/connect_menu.spt", m_resources.textures);
+    cro::SpriteSheet spriteSheet;
+    spriteSheet.loadFromFile("assets/golf/sprites/lobby_browser.spt", m_resources.textures);
 
 
-    //TODO load background and create nodes to which to attach lobby list
+    //title
+    auto entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<UIElement>().relativePosition = { 0.5f, 0.9f };
+    entity.getComponent<UIElement>().depth = 0.1f;
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement | CommandID::Menu::TitleText;
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("title");
+    auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.getComponent<cro::Transform>().setOrigin({ std::floor(bounds.width / 2.f), std::floor(bounds.height / 2.f) });
+    entity.addComponent<cro::Callback>().setUserData<float>(0.f);
+    entity.getComponent<cro::Callback>().function = TitleTextCallback();
+    menuTransform.addChild(entity.getComponent<cro::Transform>());
 
+    //background
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<UIElement>().relativePosition = { 0.5f, 0.55f };
+    entity.getComponent<UIElement>().depth = -0.01f;
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement;
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("background");
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
+    menuTransform.addChild(entity.getComponent<cro::Transform>());
+    m_lobbyPager.rootNode = entity;
 
     //banner
-    auto entity = m_uiScene.createEntity();
+    entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 0.f, BannerPosition, -0.1f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::ButtonBanner];
@@ -1702,7 +1727,7 @@ void MenuState::createBrowserMenu(cro::Entity parent, std::uint32_t mouseEnter, 
     entity.getComponent<UIElement>().depth = 0.1f;
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement;
     entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::PrevMenu];
-    auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.addComponent<cro::UIInput>().area = bounds;
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Join);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = mouseEnter;
@@ -1725,14 +1750,14 @@ void MenuState::createBrowserMenu(cro::Entity parent, std::uint32_t mouseEnter, 
 
     //refresh
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Transform>().setOrigin({ 0.f, -2.f });
     entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<UIElement>().absolutePosition = { -40.f, MenuBottomBorder };
+    entity.addComponent<UIElement>().absolutePosition = { -20.f, MenuBottomBorder };
     entity.getComponent<UIElement>().relativePosition = { 0.98f, 0.f };
     entity.getComponent<UIElement>().depth = 0.1f;
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement;
-    entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::Connect];
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("refresh");
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.addComponent<cro::UIInput>().area = bounds;
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Join);
@@ -1750,6 +1775,9 @@ void MenuState::createBrowserMenu(cro::Entity parent, std::uint32_t mouseEnter, 
             });
 
     menuTransform.addChild(entity.getComponent<cro::Transform>());
+
+
+    updateLobbyList();
 }
 
 void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, std::uint32_t mouseExit)
@@ -3269,6 +3297,7 @@ void MenuState::updateLobbyAvatars()
         cro::Texture quadTexture;
         quadTexture.loadFromImage(img);
         cro::SimpleQuad simpleQuad(quadTexture);
+        simpleQuad.setBlendMode(cro::Material::BlendMode::None);
 
         cro::Texture iconTexture;
         cro::Image iconImage;
@@ -3407,19 +3436,81 @@ void MenuState::updateLobbyAvatars()
 
 void MenuState::updateLobbyList()
 {
-    //TODO let's page this instead of scrolling, it's just easier...
-    //TODO create the entire page as a single block of text
-    //then one button for each entry?
-    const auto& lobbyData = m_matchMaking.getLobbies();
+    for (auto& e : m_lobbyPager.pages)
+    {
+        m_uiScene.destroyEntity(e);
+    }
+    for (auto e : m_lobbyPager.buttons)
+    {
+        m_uiScene.destroyEntity(e);
+    }
+    m_lobbyPager.pages.clear();
+
+
+    auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
+    std::vector<MatchMaking::LobbyData> lobbyData(36);
+    //const auto& lobbyData = m_matchMaking.getLobbies();
     if (lobbyData.empty())
     {
         //no lobbies found :(
+        auto entity = m_uiScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition(LobbyTextRootPosition);
+        entity.addComponent<cro::Drawable2D>();
+        entity.addComponent<cro::Text>(font).setString("No Games Found.");
+        entity.getComponent<cro::Text>().setFillColour(LeaderboardTextDark);
+        entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
+
+        m_lobbyPager.rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+        m_lobbyPager.pages.push_back(entity);
     }
 
-
-    for (const auto& data : lobbyData)
+    else
     {
+        auto pageCount = (lobbyData.size() / LobbyPager::ItemsPerPage) + 1;
+        for (auto i = 0u; i < pageCount; ++i)
+        {
+            cro::String pageString;
 
+            const auto startIndex = i * LobbyPager::ItemsPerPage;
+            const auto endIndex = std::min(lobbyData.size(), startIndex + LobbyPager::ItemsPerPage);
+            for (auto j = startIndex; j < endIndex; ++j)
+            {
+                //TODO remove this once done debugging
+                lobbyData[j].title = "..Old Stemmer's Land Pitch 'n' Putt..";
+                lobbyData[j].playerCount = j + 1;
+
+
+                std::stringstream ss;
+                ss << lobbyData[j].clientCount << "   " << std::setw(2) << std::setfill('0') << lobbyData[j].playerCount << " - ";
+                pageString += ss.str();
+
+                pageString += lobbyData[j].title + "\n";                
+            }
+
+            auto entity = m_uiScene.createEntity();
+            entity.addComponent<cro::Transform>().setPosition(LobbyTextRootPosition);
+            entity.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+            entity.addComponent<cro::Drawable2D>();
+            entity.addComponent<cro::Text>(font).setString(pageString);
+            entity.getComponent<cro::Text>().setFillColour(LeaderboardTextDark);
+            entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
+            entity.getComponent<cro::Text>().setVerticalSpacing(LeaderboardTextSpacing);
+
+            m_lobbyPager.rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+            m_lobbyPager.pages.push_back(entity);
+        }
+        m_lobbyPager.pages[0].getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+
+        //TODO creating/destroying highlight button ents is going to be a pain
+        //for callbacks, so we want one which we can set the index %MaxItems on
+        //and then hide/disable it if there are no pages.
+
+        //do arrow button callbacks afterwards so they can capture each other's entity
+        //TODO make sure they're not recreated each time else we'll be duplicating the callbacks
+
+
+        //TODO actually apply page number
+        m_lobbyPager.currentPage = std::min(m_lobbyPager.currentPage, m_lobbyPager.pages.size() - 1);
     }
 }
 

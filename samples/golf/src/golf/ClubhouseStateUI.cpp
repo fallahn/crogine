@@ -1664,6 +1664,7 @@ void ClubhouseState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnte
             });
     menuTransform.addChild(entity.getComponent<cro::Transform>());
 
+#ifndef USE_GNS
     //server info message
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
@@ -1677,6 +1678,7 @@ void ClubhouseState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnte
     entity.getComponent<cro::Text>().setShadowColour(cro::Colour(std::uint8_t(110), 179, 157));
     entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
     menuTransform.addChild(entity.getComponent<cro::Transform>());
+#endif
 }
 
 void ClubhouseState::updateLobbyData(const net::NetEvent& evt)

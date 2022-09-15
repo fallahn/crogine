@@ -160,6 +160,16 @@ private:
     std::size_t m_prevMenu; //used to resore active menu when completing text entry
     std::array<cro::Entity, MenuID::Count> m_menuEntities = {}; //each menu transform, attatched to root node.
 
+    struct LobbyPager final
+    {
+        cro::Entity rootNode;
+        std::vector<cro::Entity> pages;
+        std::vector<cro::Entity> buttons;
+
+        std::size_t currentPage = 0;
+        static constexpr std::size_t ItemsPerPage = 10;
+    }m_lobbyPager;
+
     //hack to quit the lobby confirm menu from event input
     std::function<void()> enterConfirmCallback;
     std::function<void()> quitConfirmCallback;

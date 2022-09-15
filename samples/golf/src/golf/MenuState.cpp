@@ -575,8 +575,9 @@ void MenuState::handleMessage(const cro::Message& msg)
         case MatchMaking::Message::LobbyJoinFailed:
             //TODO something less extreme than reloading the entire state.
             //for starters refreshing the lobby list, and staying on browser menu
-            m_sharedData.errorMessage = "Failed to join lobby:\nEither full or no longer exists.";
-            requestStackPush(StateID::Error);
+            m_matchMaking.refreshLobbyList(Server::GameMode::Golf);
+            //m_sharedData.errorMessage = "Failed to join lobby:\nEither full or no longer exists.";
+            //requestStackPush(StateID::Error);
             break;
         }
     }
