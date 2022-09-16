@@ -166,6 +166,9 @@ private:
         std::vector<cro::Entity> pages;
         std::vector<cro::Entity> buttons;
 
+        std::array<cro::Entity, 2u> buttonLeft;
+        std::array<cro::Entity, 2u> buttonRight;
+
         std::size_t currentPage = 0;
         static constexpr std::size_t ItemsPerPage = 10;
     }m_lobbyPager;
