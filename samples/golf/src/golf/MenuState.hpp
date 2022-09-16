@@ -164,12 +164,14 @@ private:
     {
         cro::Entity rootNode;
         std::vector<cro::Entity> pages;
-        std::vector<cro::Entity> buttons;
+        std::vector<cro::Entity> slots;
+        std::vector<std::uint64_t> lobbyIDs;
 
         std::array<cro::Entity, 2u> buttonLeft;
         std::array<cro::Entity, 2u> buttonRight;
 
         std::size_t currentPage = 0;
+        std::size_t currentSlot = 0;
         static constexpr std::size_t ItemsPerPage = 10;
     }m_lobbyPager;
 

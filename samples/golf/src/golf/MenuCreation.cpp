@@ -3538,12 +3538,9 @@ void MenuState::updateLobbyList()
     {
         m_uiScene.destroyEntity(e);
     }
-    for (auto e : m_lobbyPager.buttons)
-    {
-        m_uiScene.destroyEntity(e);
-    }
-    m_lobbyPager.pages.clear();
 
+    m_lobbyPager.pages.clear();
+    m_lobbyPager.lobbyIDs.clear();
 
     auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
     std::vector<MatchMaking::LobbyData> lobbyData(36);
@@ -3561,7 +3558,6 @@ void MenuState::updateLobbyList()
         m_lobbyPager.rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
         m_lobbyPager.pages.push_back(entity);
     }
-
     else
     {
         auto pageCount = (lobbyData.size() / LobbyPager::ItemsPerPage) + 1;
@@ -3582,7 +3578,9 @@ void MenuState::updateLobbyList()
                 ss << " " << lobbyData[j].clientCount << "  " << std::setw(2) << std::setfill('0') << lobbyData[j].playerCount << " - ";
                 pageString += ss.str();
 
-                pageString += lobbyData[j].title + "\n";                
+                pageString += lobbyData[j].title + "\n";
+
+                m_lobbyPager.lobbyIDs.push_back(lobbyData[j].ID);
             }
 
             auto entity = m_uiScene.createEntity();
@@ -3599,15 +3597,6 @@ void MenuState::updateLobbyList()
         }
         m_lobbyPager.pages[0].getComponent<cro::Transform>().setScale(glm::vec2(1.f));
 
-        //TODO creating/destroying highlight button ents is going to be a pain
-        //for callbacks, so we want one which we can set the index %MaxItems on
-        //and then hide/disable it if there are no pages.
-
-        //do arrow button callbacks afterwards so they can capture each other's entity
-        //TODO make sure they're not recreated each time else we'll be duplicating the callbacks
-
-
-        //TODO actually apply page number
         m_lobbyPager.currentPage = std::min(m_lobbyPager.currentPage, m_lobbyPager.pages.size() - 1);
     }
 
@@ -3621,6 +3610,12 @@ void MenuState::updateLobbyList()
         m_lobbyPager.buttonRight[0].getComponent<cro::Transform>().setScale({ 1.f, 1.f });
         m_lobbyPager.buttonRight[1].getComponent<cro::Transform>().setScale({ 1.f, 1.f });
         m_lobbyPager.buttonRight[1].getComponent<cro::UIInput>().enabled = true;
+
+        for (auto page : m_lobbyPager.pages)
+        {
+            page.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+        }
+        m_lobbyPager.pages[m_lobbyPager.currentPage].getComponent<cro::Transform>().setScale(glm::vec2(1.f));
     }
     else
     {
