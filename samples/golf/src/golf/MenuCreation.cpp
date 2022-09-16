@@ -1771,6 +1771,7 @@ void MenuState::createBrowserMenu(cro::Entity parent, std::uint32_t mouseEnter, 
                 {
                     m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
                     m_matchMaking.refreshLobbyList(Server::GameMode::Golf);
+                    updateLobbyList(); //clears existing display until message comes in
                 }
             });
 

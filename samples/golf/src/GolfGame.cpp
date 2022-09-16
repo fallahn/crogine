@@ -40,6 +40,7 @@ source distribution.
 #include "golf/DrivingState.hpp"
 #include "golf/PuttingState.hpp"
 #include "golf/ClubhouseState.hpp"
+#include "golf/MessageOverlayState.hpp"
 #include "golf/TrophyState.hpp"
 #include "golf/NewsState.hpp"
 #include "golf/PlaylistState.hpp"
@@ -126,6 +127,7 @@ GolfGame::GolfGame()
     m_stateStack.registerState<TrophyState>(StateID::Trophy, m_sharedData);
     m_stateStack.registerState<PlaylistState>(StateID::Playlist, m_sharedData);
     m_stateStack.registerState<BushState>(StateID::Bush, m_sharedData);
+    m_stateStack.registerState<MessageOverlayState>(StateID::MessageOverlay, m_sharedData);
 }
 
 //public

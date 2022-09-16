@@ -1526,6 +1526,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
                 }
             });
 
+
     //beacon checkbox centre
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(glm::vec3(83.f, 11.f, HighlightOffset));

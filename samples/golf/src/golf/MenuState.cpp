@@ -432,8 +432,9 @@ bool MenuState::handleEvent(const cro::Event& evt)
             requestStackClear();
             requestStackPush(StateID::PuttingRange);
             break;
-        case SDLK_F9:
-            requestStackPush(StateID::Bush);
+        case SDLK_KP_8:
+            m_sharedData.errorMessage = "Join Failed:\n\nEither full\nor\nno longer exists.";
+            requestStackPush(StateID::MessageOverlay);
             break;
         case SDLK_KP_0:
             requestStackPush(StateID::News);
@@ -573,11 +574,10 @@ void MenuState::handleMessage(const cro::Message& msg)
             finaliseGameJoin(data);
             break;
         case MatchMaking::Message::LobbyJoinFailed:
-            //TODO something less extreme than reloading the entire state.
-            //for starters refreshing the lobby list, and staying on browser menu
             m_matchMaking.refreshLobbyList(Server::GameMode::Golf);
-            //m_sharedData.errorMessage = "Failed to join lobby:\nEither full or no longer exists.";
-            //requestStackPush(StateID::Error);
+            updateLobbyList();
+            m_sharedData.errorMessage = "Join Failed:\n\nEither full\nor\nno longer exists.";
+            requestStackPush(StateID::MessageOverlay);
             break;
         }
     }

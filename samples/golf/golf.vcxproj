@@ -157,6 +157,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugGNS|x64'">
     <LinkIncremental>true</LinkIncremental>
+    <OutDir>$(SolutionDir)$(Platform)\Debug\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugASan|x64'">
     <LinkIncremental>false</LinkIncremental>
@@ -404,6 +405,7 @@
     <ClCompile Include="src\golf\MenuCustomisation.cpp" />
     <ClCompile Include="src\golf\MenuSoundDirector.cpp" />
     <ClCompile Include="src\golf\MenuState.cpp" />
+    <ClCompile Include="src\golf\MessageOverlayState.cpp" />
     <ClCompile Include="src\golf\NewsState.cpp" />
     <ClCompile Include="src\golf\NotificationSystem.cpp" />
     <ClCompile Include="src\golf\OptionsState.cpp" />
@@ -489,6 +491,7 @@
     <ClInclude Include="src\golf\MenuSoundDirector.hpp" />
     <ClInclude Include="src\golf\MenuState.hpp" />
     <ClInclude Include="src\golf\MessageIDs.hpp" />
+    <ClInclude Include="src\golf\MessageOverlayState.hpp" />
     <ClInclude Include="src\golf\Networking.hpp" />
     <ClInclude Include="src\golf\NewsState.hpp" />
     <ClInclude Include="src\golf\NotificationSystem.hpp" />
