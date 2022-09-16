@@ -445,7 +445,6 @@ glm::vec2 UISystem::toWorldCoords(float x, float y)
 
 void UISystem::selectNext(std::size_t stride)
 {
-    //call unselected on prev ent
     const auto& entities = m_groups[m_activeGroup];
     auto old = m_selectedIndex;
 
@@ -464,12 +463,11 @@ void UISystem::selectNext(std::size_t stride)
 
 void UISystem::selectPrev(std::size_t stride)
 {
-    //call unselected on prev ent
     const auto& entities = m_groups[m_activeGroup];
 
-    //get new index
     auto old = m_selectedIndex;
 
+    //get new index
     do
     {
         m_selectedIndex = (m_selectedIndex + (entities.size() - stride)) % entities.size();
