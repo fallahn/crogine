@@ -57,7 +57,7 @@ public:
     void setGamePlayerCount(std::int32_t) {};
     void setFriendsOnly(bool) {};
     bool getFriendsOnly() const { return false; }
-    void createLobby(){}
+    void createLobby(std::int32_t, std::int32_t) {}
 
     void joinGame(std::uint64_t lobbyID);
     void joinLobby(std::uint64_t) {};

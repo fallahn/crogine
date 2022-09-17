@@ -244,7 +244,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
             m_sharedData.clientConnection.netClient.sendPacket(PacketID::MapInfo, data.data(), data.size(), net::NetFlag::Reliable, ConstVal::NetChannelStrings);
 
             //create a new lobby - message handler makes sure everyone joins it
-            m_matchMaking.createLobby();
+            m_matchMaking.createLobby(ConstVal::MaxClients, Server::GameMode::Golf);
         }
         else
         {

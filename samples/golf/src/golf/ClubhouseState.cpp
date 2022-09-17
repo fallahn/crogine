@@ -173,7 +173,7 @@ ClubhouseState::ClubhouseState(cro::StateStack& ss, cro::State::Context ctx, Sha
 
         if (m_sharedData.hosting)
         {
-            m_matchMaking.createLobby();
+            m_matchMaking.createLobby(2, Server::GameMode::Billiards);
 
             spriteID = SpriteID::StartGame;
             connectionString = "Hosting on: localhost:" + std::to_string(ConstVal::GamePort);
@@ -240,9 +240,6 @@ ClubhouseState::ClubhouseState(cro::StateStack& ss, cro::State::Context ctx, Sha
         }
         sd.hosting = false;
 
-        //assume two players for a local game
-        sd.localConnectionData.playerCount = 2;
-
         //we might have switched here from an invite received while in the clubhouse
         if (m_sharedData.inviteID)
         {
@@ -251,6 +248,13 @@ ClubhouseState::ClubhouseState(cro::StateStack& ss, cro::State::Context ctx, Sha
             msg->gameType = Server::GameMode::Billiards;
             msg->hostID = m_sharedData.inviteID;
             msg->type = MatchMaking::Message::LobbyInvite;
+
+            sd.localConnectionData.playerCount = 1;
+        }
+        else
+        {
+            //assume two players for a local game
+            sd.localConnectionData.playerCount = 2;
         }
     }
     m_sharedData.inviteID = 0;
@@ -410,7 +414,7 @@ void ClubhouseState::handleMessage(const cro::Message& msg)
                 if (data.gameType == Server::GameMode::Billiards)
                 {
                     m_matchMaking.joinGame(data.hostID);
-                    m_sharedData.localConnectionData.playerCount = 2;
+                    m_sharedData.localConnectionData.playerCount = 1;
                 }
                 else
                 {
@@ -432,6 +436,12 @@ void ClubhouseState::handleMessage(const cro::Message& msg)
             break;
         case MatchMaking::Message::LobbyJoined:
             finaliseGameJoin(data);
+            break;
+        case MatchMaking::Message::LobbyJoinFailed:
+            m_matchMaking.refreshLobbyList(Server::GameMode::Golf);
+            //updateLobbyList();
+            m_sharedData.errorMessage = "Join Failed:\n\nEither full\nor\nno longer exists.";
+            requestStackPush(StateID::MessageOverlay);
             break;
         }
     }
