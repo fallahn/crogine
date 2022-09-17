@@ -408,6 +408,9 @@ void ClubhouseState::handleMessage(const cro::Message& msg)
         default:
         case MatchMaking::Message::Error:
             break;
+        case MatchMaking::Message::LobbyListUpdated:
+            updateLobbyList();
+            break;
         case MatchMaking::Message::LobbyInvite:
             if (!m_sharedData.clientConnection.connected)
             {
