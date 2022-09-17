@@ -1272,6 +1272,9 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
                         m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Dummy);
                         menuEntity.getComponent<cro::Callback>().getUserData<MenuData>().targetMenu = MenuID::Join;
                         menuEntity.getComponent<cro::Callback>().active = true;
+
+                        m_matchMaking.refreshLobbyList(Server::GameMode::Golf);
+                        updateLobbyList();
                     }
 
                     //kludgy way of temporarily disabling this button to prevent double clicks
@@ -1770,12 +1773,12 @@ void MenuState::createBrowserMenu(cro::Entity parent, std::uint32_t mouseEnter, 
 
                 if (idx < m_lobbyPager.lobbyIDs.size())
                 {
+                    //this will be reset next time the page is scrolled, and prevents double presses
+                    e.getComponent<cro::UIInput>().enabled = false;
+
                     m_audioEnts[AudioID::Start].getComponent<cro::AudioEmitter>().play();
 
                     m_matchMaking.joinGame(m_lobbyPager.lobbyIDs[idx]);
-                    //LogI << "join lobby at " << idx << std::endl;
-
-                    //TODO temporarily disable input to prevent double pressing
                 }
             }
         });
@@ -3664,7 +3667,6 @@ void MenuState::updateLobbyList()
     m_lobbyPager.lobbyIDs.clear();
 
     auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
-    //std::vector<MatchMaking::LobbyData> lobbyData(36);
     const auto& lobbyData = m_matchMaking.getLobbies();
     if (lobbyData.empty())
     {
@@ -3695,10 +3697,6 @@ void MenuState::updateLobbyList()
             const auto endIndex = std::min(lobbyData.size(), startIndex + LobbyPager::ItemsPerPage);
             for (auto j = startIndex; j < endIndex; ++j)
             {
-                //TODO remove this once done debugging
-                //lobbyData[j].title = "..Old Stemmer's Lane Pitch 'n' Putt..";
-                //lobbyData[j].playerCount = j + 1;
-
                 std::stringstream ss;
                 ss << " " << lobbyData[j].clientCount << "  " << std::setw(2) << std::setfill('0') << lobbyData[j].playerCount << " - ";
                 pageString += ss.str();

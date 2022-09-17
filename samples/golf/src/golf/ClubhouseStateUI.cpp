@@ -50,6 +50,8 @@ source distribution.
 #include <crogine/util/Random.hpp>
 #include <crogine/util/String.hpp>
 
+#include <iomanip>
+
 namespace
 {
 #include "RandNames.hpp"
@@ -105,7 +107,11 @@ void ClubhouseState::createUI()
 
     createMainMenu(rootNode, mouseEnterCallback, mouseExitCallback);
     createAvatarMenu(rootNode, mouseEnterCallback, mouseExitCallback);
+#ifdef USE_GNS
+    createBrowserMenu(rootNode, mouseEnterCallback, mouseExitCallback);
+#else
     createJoinMenu(rootNode, mouseEnterCallback, mouseExitCallback);
+#endif
     createLobbyMenu(rootNode, mouseEnterCallback, mouseExitCallback);
 
     //hack to activate main menu - this will eventually be done
@@ -988,6 +994,9 @@ void ClubhouseState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnt
                         m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Dummy);
                         menuEntity.getComponent<cro::Callback>().getUserData<MenuData>().targetMenu = MenuID::Join;
                         menuEntity.getComponent<cro::Callback>().active = true;
+
+                        m_matchMaking.refreshLobbyList(Server::GameMode::Billiards);
+                        updateLobbyList();
                     }
 
                     //kludgy way of temporarily disabling this button to prevent double clicks
@@ -1308,6 +1317,347 @@ void ClubhouseState::createJoinMenu(cro::Entity parent, std::uint32_t mouseEnter
             });
 
     menuTransform.addChild(entity.getComponent<cro::Transform>());
+}
+
+void ClubhouseState::createBrowserMenu(cro::Entity parent, std::uint32_t mouseEnter, std::uint32_t mouseExit)
+{
+    auto menuEntity = m_uiScene.createEntity();
+    menuEntity.addComponent<cro::Transform>().setScale(glm::vec2(0.f));
+    menuEntity.addComponent<cro::Callback>().setUserData<MenuData>();
+    menuEntity.getComponent<cro::Callback>().function = MenuCallback(ClubhouseContext(this));
+    m_menuEntities[MenuID::Join] = menuEntity;
+    parent.getComponent<cro::Transform>().addChild(menuEntity.getComponent<cro::Transform>());
+
+    auto& menuTransform = menuEntity.getComponent<cro::Transform>();
+    menuTransform.setPosition(-m_menuPositions[MenuID::Join]);
+
+    cro::SpriteSheet spriteSheet;
+    spriteSheet.loadFromFile("assets/golf/sprites/lobby_browser.spt", m_resources.textures);
+
+
+    //title
+    auto entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<UIElement>().relativePosition = { 0.5f, 0.9f };
+    entity.getComponent<UIElement>().depth = 0.1f;
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement | CommandID::Menu::TitleText;
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("title");
+    auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.getComponent<cro::Transform>().setOrigin({ std::floor(bounds.width / 2.f), std::floor(bounds.height / 2.f) });
+    entity.addComponent<cro::Callback>().setUserData<float>(0.f);
+    entity.getComponent<cro::Callback>().function = TitleTextCallback();
+    menuTransform.addChild(entity.getComponent<cro::Transform>());
+
+    //background
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<UIElement>().relativePosition = { 0.5f, 0.55f };
+    entity.getComponent<UIElement>().depth = -0.01f;
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement;
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("background");
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
+    menuTransform.addChild(entity.getComponent<cro::Transform>());
+    m_lobbyPager.rootNode = entity;
+
+
+    //banner
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, BannerPosition, -0.1f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::ButtonBanner];
+    auto spriteRect = entity.getComponent<cro::Sprite>().getTextureRect();
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIBanner;
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&, spriteRect](cro::Entity e, float)
+    {
+        auto rect = spriteRect;
+        rect.width = static_cast<float>(GolfGame::getActiveTarget()->getSize().x) * m_viewScale.x;
+        e.getComponent<cro::Sprite>().setTextureRect(rect);
+        e.getComponent<cro::Callback>().active = false;
+    };
+    menuTransform.addChild(entity.getComponent<cro::Transform>());
+
+    //cursor
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::Cursor];
+    entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+    entity.addComponent<cro::SpriteAnimation>().play(0);
+    menuTransform.addChild(entity.getComponent<cro::Transform>());
+
+    mouseEnter = m_uiScene.getSystem<cro::UISystem>()->addCallback(
+        [entity](cro::Entity e) mutable
+        {
+            e.getComponent<cro::AudioEmitter>().play();
+            entity.getComponent<cro::Transform>().setPosition(e.getComponent<cro::Transform>().getPosition() + CursorOffset);
+            entity.getComponent<cro::Transform>().setScale({ 1.f, 1.f });
+            entity.getComponent<cro::Sprite>().setColour(cro::Colour::White);
+        });
+
+    mouseExit = m_uiScene.getSystem<cro::UISystem>()->addCallback(
+        [entity](cro::Entity) mutable
+        {
+            entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+        });
+
+
+    auto arrowSelected = m_uiScene.getSystem<cro::UISystem>()->addCallback(
+        [&, entity](cro::Entity e) mutable
+        {
+            e.getComponent<cro::AudioEmitter>().play();
+            e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
+            e.getComponent<cro::Callback>().active = true;
+            entity.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+        });
+    auto arrowUnselected = m_uiScene.getSystem<cro::UISystem>()->addCallback(
+        [](cro::Entity e)
+        {
+            e.getComponent<cro::AudioEmitter>().play();
+            e.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+        });
+
+    auto lobbyActivated = m_uiScene.getSystem<cro::UISystem>()->addCallback(
+        [&](cro::Entity e, const cro::ButtonEvent& evt)
+        {
+            if (activated(evt))
+            {
+                std::size_t idx = e.getComponent<cro::Callback>().getUserData<std::uint32_t>();
+                idx += (LobbyPager::ItemsPerPage * m_lobbyPager.currentPage);
+
+                if (idx < m_lobbyPager.lobbyIDs.size())
+                {
+                    //this will be reset next time the page is scrolled, and prevents double presses
+                    e.getComponent<cro::UIInput>().enabled = false;
+
+                    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+
+                    m_matchMaking.joinGame(m_lobbyPager.lobbyIDs[idx]);
+                }
+            }
+        });
+
+    //entry highlights
+    glm::vec2 highlightPos(6.f, 161.f);
+    for (auto i = 0u; i < LobbyPager::ItemsPerPage; ++i)
+    {
+        entity = m_uiScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition(highlightPos);
+        entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
+        entity.addComponent<cro::Drawable2D>();
+        entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("lobby_highlight");
+        entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+        bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+        entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
+        entity.getComponent<cro::Transform>().move(entity.getComponent<cro::Transform>().getOrigin());
+
+        entity.addComponent<cro::Callback>().setUserData<std::uint32_t>(i); //used by button activated callback
+        entity.getComponent<cro::Callback>().function = HighlightAnimationCallback();
+
+        entity.addComponent<cro::UIInput>().area = bounds;
+        entity.getComponent<cro::UIInput>().setGroup(MenuID::Join);
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = arrowSelected;
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = arrowUnselected;
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = lobbyActivated;
+
+        m_lobbyPager.rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+        m_lobbyPager.slots.push_back(entity);
+        highlightPos.y -= entity.getComponent<cro::Sprite>().getTextureBounds().height;
+    }
+
+    auto updateActiveSlots = [&]()
+    {
+        auto start = m_lobbyPager.currentPage * LobbyPager::ItemsPerPage;
+        auto end = start + LobbyPager::ItemsPerPage;
+
+        for (auto i = start; i < end; ++i)
+        {
+            m_lobbyPager.slots[i % LobbyPager::ItemsPerPage].getComponent<cro::UIInput>().enabled = (i < m_lobbyPager.lobbyIDs.size());
+        }
+    };
+
+    //button left
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 13.f, 5.f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("button_left");
+    m_lobbyPager.rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_lobbyPager.buttonLeft[0] = entity;
+
+    //highlight left
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 11.f, 3.f });
+    entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("highlight_left");
+    entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
+    entity.getComponent<cro::Transform>().move({ bounds.width / 2.f, bounds.height / 2.f });
+    entity.addComponent<cro::Callback>().function = HighlightAnimationCallback();
+    entity.addComponent<cro::UIInput>().area = bounds;
+    entity.getComponent<cro::UIInput>().setGroup(MenuID::Join);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = arrowSelected;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = arrowUnselected;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+        m_uiScene.getSystem<cro::UISystem>()->addCallback(
+            [&, updateActiveSlots](cro::Entity e, const cro::ButtonEvent& evt)
+            {
+                if (activated(evt))
+                {
+                    if (m_lobbyPager.pages.size() > 1)
+                    {
+                        m_lobbyPager.pages[m_lobbyPager.currentPage].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+                        m_lobbyPager.currentPage = (m_lobbyPager.currentPage + (m_lobbyPager.pages.size() - 1)) % m_lobbyPager.pages.size();
+                        m_lobbyPager.pages[m_lobbyPager.currentPage].getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+
+                        //only enable item slots as available on the new page
+                        updateActiveSlots();
+
+                        m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
+                    }
+                }
+            });
+    m_lobbyPager.rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_lobbyPager.buttonLeft[1] = entity;
+
+
+    //friends overlay
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<UIElement>().absolutePosition = { 200.f, 10.f };
+    entity.getComponent<UIElement>().depth = 0.1f;
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement;
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("friends_highlight");
+    entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.getComponent<cro::Transform>().setOrigin({ std::floor(bounds.width / 2.f), std::floor(bounds.height / 2.f) });
+    entity.addComponent<cro::UIInput>().area = bounds;
+    entity.getComponent<cro::UIInput>().setGroup(MenuID::Join);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = arrowSelected;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = arrowUnselected;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
+        m_uiScene.getSystem<cro::UISystem>()->addCallback([&, menuEntity](cro::Entity, const cro::ButtonEvent& evt) mutable
+            {
+                if (activated(evt))
+                {
+                    Social::findFriends();
+                    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+                }
+            });
+    entity.addComponent<cro::Callback>().function = HighlightAnimationCallback();
+    m_lobbyPager.rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    //button right
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 382.f, 5.f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("button_right");
+    m_lobbyPager.rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_lobbyPager.buttonRight[0] = entity;
+
+    //highlight right
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 380.f, 3.f });
+    entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("highlight_right");
+    entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
+    entity.getComponent<cro::Transform>().move({ bounds.width / 2.f, bounds.height / 2.f });
+    entity.addComponent<cro::Callback>().function = HighlightAnimationCallback();
+    entity.addComponent<cro::UIInput>().area = bounds;
+    entity.getComponent<cro::UIInput>().setGroup(MenuID::Join);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = arrowSelected;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = arrowUnselected;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+        m_uiScene.getSystem<cro::UISystem>()->addCallback(
+            [&, updateActiveSlots](cro::Entity e, const cro::ButtonEvent& evt)
+            {
+                if (activated(evt))
+                {
+                    if (m_lobbyPager.pages.size() > 1)
+                    {
+                        m_lobbyPager.pages[m_lobbyPager.currentPage].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+                        m_lobbyPager.currentPage = (m_lobbyPager.currentPage + 1) % m_lobbyPager.pages.size();
+                        m_lobbyPager.pages[m_lobbyPager.currentPage].getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+
+                        updateActiveSlots();
+
+                        m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+                    }
+                }
+            });
+    m_lobbyPager.rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_lobbyPager.buttonRight[1] = entity;
+
+    //back
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<UIElement>().absolutePosition = { 20.f, MenuBottomBorder };
+    entity.getComponent<UIElement>().depth = 0.1f;
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement;
+    entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::PrevMenu];
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.addComponent<cro::UIInput>().area = bounds;
+    entity.getComponent<cro::UIInput>().setGroup(MenuID::Join);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = mouseEnter;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = mouseExit;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
+        m_uiScene.getSystem<cro::UISystem>()->addCallback([&, menuEntity](cro::Entity, const cro::ButtonEvent& evt) mutable
+            {
+                if (activated(evt))
+                {
+                    m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Dummy);
+                    menuEntity.getComponent<cro::Callback>().getUserData<MenuData>().targetMenu = MenuID::PlayerSelect;
+                    menuEntity.getComponent<cro::Callback>().active = true;
+
+                    m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
+                }
+            });
+    menuTransform.addChild(entity.getComponent<cro::Transform>());
+
+
+    //refresh
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setOrigin({ 0.f, -2.f });
+    entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<UIElement>().absolutePosition = { -20.f, MenuBottomBorder };
+    entity.getComponent<UIElement>().relativePosition = { 0.98f, 0.f };
+    entity.getComponent<UIElement>().depth = 0.1f;
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement;
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("refresh");
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.addComponent<cro::UIInput>().area = bounds;
+    entity.getComponent<cro::UIInput>().setGroup(MenuID::Join);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = mouseEnter;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = mouseExit;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+        m_uiScene.getSystem<cro::UISystem>()->addCallback(
+            [&](cro::Entity e, const cro::ButtonEvent& evt) mutable
+            {
+                if (activated(evt))
+                {
+                    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+                    m_matchMaking.refreshLobbyList(Server::GameMode::Billiards);
+                    updateLobbyList(); //clears existing display until message comes in
+                }
+            });
+
+    menuTransform.addChild(entity.getComponent<cro::Transform>());
+
+
+    updateLobbyList();
 }
 
 void ClubhouseState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, std::uint32_t mouseExit)
@@ -1689,7 +2039,112 @@ void ClubhouseState::updateLobbyData(const net::NetEvent& evt)
         m_sharedData.connectionData[cd.connectionID] = cd;
     }
 
+    m_matchMaking.setGamePlayerCount(1);
+
     updateLobbyAvatars();
+}
+
+void ClubhouseState::updateLobbyList()
+{
+    for (auto& e : m_lobbyPager.pages)
+    {
+        m_uiScene.destroyEntity(e);
+    }
+
+    m_lobbyPager.pages.clear();
+    m_lobbyPager.lobbyIDs.clear();
+
+    auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
+    const auto& lobbyData = m_matchMaking.getLobbies();
+    if (lobbyData.empty())
+    {
+        //no lobbies found :(
+        auto entity = m_uiScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition(LobbyTextRootPosition);
+        entity.addComponent<cro::Drawable2D>();
+        entity.addComponent<cro::Text>(font).setString(" No Games Found.");
+        entity.getComponent<cro::Text>().setFillColour(LeaderboardTextDark);
+        entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
+
+        m_lobbyPager.rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+        m_lobbyPager.pages.push_back(entity);
+
+        for (auto e : m_lobbyPager.slots)
+        {
+            e.getComponent<cro::UIInput>().enabled = false;
+        }
+    }
+    else
+    {
+        auto pageCount = (lobbyData.size() / LobbyPager::ItemsPerPage) + 1;
+        for (auto i = 0u; i < pageCount; ++i)
+        {
+            cro::String pageString;
+
+            const auto startIndex = i * LobbyPager::ItemsPerPage;
+            const auto endIndex = std::min(lobbyData.size(), startIndex + LobbyPager::ItemsPerPage);
+            for (auto j = startIndex; j < endIndex; ++j)
+            {
+                std::stringstream ss;
+                ss << " " << lobbyData[j].clientCount << "  " << std::setw(2) << std::setfill('0') << lobbyData[j].playerCount << " - ";
+                pageString += ss.str();
+                pageString += lobbyData[j].title + "\n";
+
+                m_lobbyPager.lobbyIDs.push_back(lobbyData[j].ID);
+            }
+
+            auto entity = m_uiScene.createEntity();
+            entity.addComponent<cro::Transform>().setPosition(LobbyTextRootPosition);
+            entity.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+            entity.addComponent<cro::Drawable2D>();
+            entity.addComponent<cro::Text>(font).setString(pageString);
+            entity.getComponent<cro::Text>().setFillColour(LeaderboardTextDark);
+            entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
+            entity.getComponent<cro::Text>().setVerticalSpacing(LeaderboardTextSpacing);
+
+            m_lobbyPager.rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+            m_lobbyPager.pages.push_back(entity);
+        }
+        m_lobbyPager.pages[0].getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+        m_lobbyPager.currentPage = std::min(m_lobbyPager.currentPage, m_lobbyPager.pages.size() - 1);
+
+        //enable slot highlights for current page
+        auto start = m_lobbyPager.currentPage * LobbyPager::ItemsPerPage;
+        auto end = start + LobbyPager::ItemsPerPage;
+
+        for (auto i = start; i < end; ++i)
+        {
+            m_lobbyPager.slots[i % LobbyPager::ItemsPerPage].getComponent<cro::UIInput>().enabled = (i < m_lobbyPager.lobbyIDs.size());
+        }
+    }
+
+    //hide or show buttons
+    if (m_lobbyPager.pages.size() > 1)
+    {
+        m_lobbyPager.buttonLeft[0].getComponent<cro::Transform>().setScale({ 1.f, 1.f });
+        m_lobbyPager.buttonLeft[1].getComponent<cro::Transform>().setScale({ 1.f, 1.f });
+        m_lobbyPager.buttonLeft[1].getComponent<cro::UIInput>().enabled = true;
+
+        m_lobbyPager.buttonRight[0].getComponent<cro::Transform>().setScale({ 1.f, 1.f });
+        m_lobbyPager.buttonRight[1].getComponent<cro::Transform>().setScale({ 1.f, 1.f });
+        m_lobbyPager.buttonRight[1].getComponent<cro::UIInput>().enabled = true;
+
+        for (auto page : m_lobbyPager.pages)
+        {
+            page.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+        }
+        m_lobbyPager.pages[m_lobbyPager.currentPage].getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+    }
+    else
+    {
+        m_lobbyPager.buttonLeft[0].getComponent<cro::Transform>().setScale({ 0.f, 1.f });
+        m_lobbyPager.buttonLeft[1].getComponent<cro::Transform>().setScale({ 0.f, 1.f });
+        m_lobbyPager.buttonLeft[1].getComponent<cro::UIInput>().enabled = false;
+
+        m_lobbyPager.buttonRight[0].getComponent<cro::Transform>().setScale({ 0.f, 1.f });
+        m_lobbyPager.buttonRight[1].getComponent<cro::Transform>().setScale({ 0.f, 1.f });
+        m_lobbyPager.buttonRight[1].getComponent<cro::UIInput>().enabled = false;
+    }
 }
 
 void ClubhouseState::quitLobby()

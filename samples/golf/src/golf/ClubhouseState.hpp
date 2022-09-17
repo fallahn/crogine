@@ -187,6 +187,8 @@ private:
         std::uint32_t mouseExit = 0;
     }m_tableSelectCallbacks;
 
+    LobbyPager m_lobbyPager;
+
     void addSystems();
     void loadResources();
     void validateTables();
@@ -197,9 +199,11 @@ private:
     void createMainMenu(cro::Entity, std::uint32_t, std::uint32_t);
     void createAvatarMenu(cro::Entity, std::uint32_t, std::uint32_t);
     void createJoinMenu(cro::Entity, std::uint32_t, std::uint32_t);
+    void createBrowserMenu(cro::Entity, std::uint32_t, std::uint32_t);
     void createLobbyMenu(cro::Entity, std::uint32_t, std::uint32_t);
 
     void updateLobbyData(const net::NetEvent&);
+    void updateLobbyList();
     void quitLobby();
 
     void beginTextEdit(cro::Entity, cro::String*, std::size_t);

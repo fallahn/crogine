@@ -101,6 +101,21 @@ static const cro::Colour SkyTop(0.678f, 0.851f, 0.718f);
 static const cro::Colour SkyBottom(0.2f, 0.304f, 0.612f);
 static const cro::Colour DropShadowColour(0.396f, 0.263f, 0.184f);
 
+struct LobbyPager final
+{
+    cro::Entity rootNode;
+    std::vector<cro::Entity> pages;
+    std::vector<cro::Entity> slots;
+    std::vector<std::uint64_t> lobbyIDs;
+
+    std::array<cro::Entity, 2u> buttonLeft;
+    std::array<cro::Entity, 2u> buttonRight;
+
+    std::size_t currentPage = 0;
+    std::size_t currentSlot = 0;
+    static constexpr std::size_t ItemsPerPage = 10;
+};
+
 struct SpriteAnimID final
 {
     enum

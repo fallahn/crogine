@@ -438,8 +438,8 @@ void ClubhouseState::handleMessage(const cro::Message& msg)
             finaliseGameJoin(data);
             break;
         case MatchMaking::Message::LobbyJoinFailed:
-            m_matchMaking.refreshLobbyList(Server::GameMode::Golf);
-            //updateLobbyList();
+            m_matchMaking.refreshLobbyList(Server::GameMode::Billiards);
+            updateLobbyList();
             m_sharedData.errorMessage = "Join Failed:\n\nEither full\nor\nno longer exists.";
             requestStackPush(StateID::MessageOverlay);
             break;
@@ -1332,6 +1332,9 @@ void ClubhouseState::handleNetEvent(const net::NetEvent& evt)
         switch (evt.packet.getID())
         {
         default: break;
+        case PacketID::NewLobbyReady:
+            m_matchMaking.joinLobby(evt.packet.as<std::uint64_t>());
+            break;
         case PacketID::StateChange:
             if (evt.packet.as<std::uint8_t>() == sv::StateID::Billiards)
             {
@@ -1505,6 +1508,8 @@ void ClubhouseState::handleNetEvent(const net::NetEvent& evt)
                     }
                 };
                 m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+                m_matchMaking.setGameTitle(TableStrings[m_tableData[m_sharedData.courseIndex].rules]);
             }
             else
             {
