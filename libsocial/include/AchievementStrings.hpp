@@ -327,5 +327,3 @@ struct StatTrigger final
 };
 
 static std::array<std::vector<StatTrigger>, StatID::Count> StatTriggers = {};
-
-static inline const std::string RSSFeed = "https://fallahn.itch.io/vga-golf/devlog.rss";

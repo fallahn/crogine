@@ -2802,7 +2802,7 @@ void OptionsState::createButtons(cro::Entity parent, std::int32_t menuID, std::u
         {
             if (activated(evt))
             {
-                cro::Util::String::parseURL("https://fallahn.itch.io/vga-golf");
+                cro::Util::String::parseURL(Social::WebURL);
                 m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
             }
         });

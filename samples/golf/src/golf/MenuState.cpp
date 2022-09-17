@@ -334,6 +334,16 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
 
 #ifdef CRO_DEBUG_
 
+    registerWindow([&]() 
+        {
+            if (ImGui::Begin("buns"))
+            {
+                auto size = glm::vec2(LabelTextureSize);
+                ImGui::Image(m_sharedData.nameTextures[0].getTexture(), {size.x, size.y}, { 0.f, 1.f }, { 1.f, 0.f });
+            }
+            ImGui::End();
+        });
+
     //registerWindow([&]() 
     //    {
     //        if (ImGui::Begin("Debug"))

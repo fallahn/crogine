@@ -409,10 +409,12 @@ bool GolfGame::initialise()
             ImGui::Text("Colour Palette: Colordome32 https://lospec.com/palette-list/colordome-32");
             ImGui::Text("Programming: Matt Marchant, source available at: https://github.com/fallahn/crogine");
             ImGui::NewLine();
+#ifndef USE_GNS
             ImGui::Text("Check out other games available from https://fallahn.itch.io !");
+#endif
             if (ImGui::Button("Visit Website"))
             {
-                cro::Util::String::parseURL("https://fallahn.itch.io/vga-golf");
+                cro::Util::String::parseURL(Social::WebURL);
             }
             ImGui::NewLine();
             ImGui::NewLine();

@@ -37,5 +37,8 @@ public:
     static bool isAvailable() { return false; }
     static cro::Image getUserIcon(std::uint64_t) { return cro::Image(); }
     static void findFriends() {}
+    static void inviteFriends(std::uint64_t) {}
     static constexpr std::uint32_t IconSize = 64;
+    static inline const std::string RSSFeed = "https://fallahn.itch.io/vga-golf/devlog.rss";
+    static inline const std::string WebURL = "https://fallahn.itch.io/vga-golf";
 };

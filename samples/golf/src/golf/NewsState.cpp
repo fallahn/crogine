@@ -348,7 +348,7 @@ void NewsState::buildScene()
     menuEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     auto newsEnt = entity;
 
-    m_feed.fetchAsync(RSSFeed);
+    m_feed.fetchAsync(Social::RSSFeed);
 
 
     entity = m_scene.createEntity();

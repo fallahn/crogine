@@ -145,10 +145,13 @@ private:
         std::uint32_t nextHoleCount = 0;
         std::uint32_t toggleUserCourses = 0;
         std::uint32_t toggleFriendsOnly = 0;
+        std::uint32_t inviteFriends = 0;
         std::uint32_t selected = 0;
         std::uint32_t unselected = 0;
         std::uint32_t selectHighlight = 0;
         std::uint32_t unselectHighlight = 0;
+        std::uint32_t selectText = 0;
+        std::uint32_t unselectText = 0;
         std::uint32_t showTip = 0;
         std::uint32_t hideTip = 0;
     }m_courseSelectCallbacks;
