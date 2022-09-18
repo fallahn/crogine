@@ -185,6 +185,9 @@ private:
         std::uint32_t nextTable = 0;
         std::uint32_t mouseEnter = 0;
         std::uint32_t mouseExit = 0;
+        std::uint32_t selectHighlight = 0;
+        std::uint32_t unselectHighlight = 0;
+        std::uint32_t toggleFriendsOnly = 0;
     }m_tableSelectCallbacks;
 
     LobbyPager m_lobbyPager;

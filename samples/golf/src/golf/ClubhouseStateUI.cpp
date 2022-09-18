@@ -1068,6 +1068,29 @@ void ClubhouseState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnt
             e.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
         });
 
+    m_tableSelectCallbacks.selectHighlight = m_uiScene.getSystem<cro::UISystem>()->addCallback(
+        [](cro::Entity e)
+        {
+            e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
+            e.getComponent<cro::AudioEmitter>().play();
+        });
+    m_tableSelectCallbacks.unselectHighlight = m_uiScene.getSystem<cro::UISystem>()->addCallback(
+        [](cro::Entity e)
+        {
+            e.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+        });
+
+    m_tableSelectCallbacks.toggleFriendsOnly = m_uiScene.getSystem<cro::UISystem>()->addCallback(
+        [&](cro::Entity, const cro::ButtonEvent& evt)
+        {
+            if (activated(evt))
+            {
+                m_matchMaking.setFriendsOnly(!m_matchMaking.getFriendsOnly());
+
+                m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
+            }
+        });
+
     //and store these to use as button icons
     m_sprites[SpriteID::PrevCourseHighlight] = spriteSheet.getSprite("arrow_left");
     m_sprites[SpriteID::PrevCourse] = spriteSheet.getSprite("arrow_fill_left");
@@ -1677,6 +1700,8 @@ void ClubhouseState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnte
     cro::SpriteSheet spriteSheet;
     spriteSheet.loadFromFile("assets/golf/sprites/lobby_menu.spt", m_resources.textures);
     m_sprites[SpriteID::ReadyStatus] = spriteSheet.getSprite("ready_status");
+    m_sprites[SpriteID::LobbyCheckbox] = spriteSheet.getSprite("checkbox");
+    m_sprites[SpriteID::LobbyCheckboxHighlight] = spriteSheet.getSprite("checkbox_highlight");
 
     //title
     auto entity = m_uiScene.createEntity();
@@ -2334,6 +2359,66 @@ void ClubhouseState::addTableSelectButtons()
     entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::NextCourse];
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::CourseSelect;
     buttonEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    if (Social::isAvailable()
+        && m_sharedData.localConnectionData.playerCount == 1)
+    {
+        cro::Command cmd;
+        cmd.targetFlags = CommandID::Menu::LobbyList;
+        cmd.action = [&](cro::Entity e, float)
+        {
+
+            auto& font = m_sharedData.sharedResources->fonts.get(FontID::Info);
+
+            //friends only lobby
+            auto checkboxEnt = m_uiScene.createEntity();
+            checkboxEnt.addComponent<cro::Transform>().setPosition({189.f, 21.f, 0.1f});
+            checkboxEnt.addComponent<cro::Drawable2D>();
+            checkboxEnt.addComponent<cro::Sprite>() = m_sprites[SpriteID::LobbyCheckbox];
+            checkboxEnt.addComponent<cro::CommandTarget>().ID = CommandID::Menu::CourseSelect;
+
+            bounds = m_sprites[SpriteID::LobbyCheckbox].getTextureRect();
+            checkboxEnt.addComponent<cro::Callback>().active = true;
+            checkboxEnt.getComponent<cro::Callback>().function =
+                [&, bounds](cro::Entity en, float)
+            {
+                auto b = bounds;
+                if (m_matchMaking.getFriendsOnly())
+                {
+                    b.bottom -= bounds.height;
+                }
+                en.getComponent<cro::Sprite>().setTextureRect(b);
+            };
+
+            e.getComponent<cro::Transform>().addChild(checkboxEnt.getComponent<cro::Transform>());
+
+
+            checkboxEnt = m_uiScene.createEntity();
+            checkboxEnt.addComponent<cro::Transform>().setPosition({ 188.f, 20.f, 0.1f });
+            checkboxEnt.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
+            checkboxEnt.addComponent<cro::Drawable2D>();
+            checkboxEnt.addComponent<cro::Sprite>() = m_sprites[SpriteID::LobbyCheckboxHighlight];
+            checkboxEnt.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+            checkboxEnt.addComponent<cro::CommandTarget>().ID = CommandID::Menu::CourseSelect;
+            bounds = checkboxEnt.getComponent<cro::Sprite>().getTextureBounds();
+            checkboxEnt.addComponent<cro::UIInput>().area = bounds;
+            checkboxEnt.getComponent<cro::UIInput>().setGroup(MenuID::Lobby);
+            checkboxEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = m_tableSelectCallbacks.selectHighlight;
+            checkboxEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = m_tableSelectCallbacks.unselectHighlight;
+            checkboxEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = m_tableSelectCallbacks.toggleFriendsOnly;
+            e.getComponent<cro::Transform>().addChild(checkboxEnt.getComponent<cro::Transform>());
+
+            auto labelEnt = m_uiScene.createEntity();
+            labelEnt.addComponent<cro::Transform>().setPosition({ 200.f, 28.f, 0.1f });
+            labelEnt.addComponent<cro::Drawable2D>();
+            labelEnt.addComponent<cro::Text>(font).setString("Friends Only");
+            labelEnt.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+            labelEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
+            labelEnt.addComponent<cro::CommandTarget>().ID = CommandID::Menu::CourseSelect;
+            e.getComponent<cro::Transform>().addChild(labelEnt.getComponent<cro::Transform>());
+        };
+        m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+    }
 }
 
 void ClubhouseState::updateLobbyAvatars()
