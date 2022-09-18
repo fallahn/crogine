@@ -2088,6 +2088,7 @@ void GolfState::buildTrophyScene()
             entity.addComponent<cro::Drawable2D>();
             entity.addComponent<cro::Sprite>(m_sharedData.nameTextures[0].getTexture());
             auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+            bounds.height -= LabelIconSize.y;
             bounds.height /= 4.f;
             bounds.bottom = bounds.height * i;
             entity.getComponent<cro::Sprite>().setTextureRect(bounds);

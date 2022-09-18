@@ -669,7 +669,7 @@ void MenuState::render()
 void MenuState::addSystems()
 {
     auto& mb = getContext().appInstance.getMessageBus();
-
+    StateID::News;
     m_backgroundScene.addSystem<GolfCartSystem>(mb);
     m_backgroundScene.addSystem<CloudSystem>(mb)->setWindVector(glm::vec3(0.25f));
     m_backgroundScene.addSystem<cro::CallbackSystem>(mb);
