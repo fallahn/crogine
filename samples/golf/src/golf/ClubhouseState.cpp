@@ -173,7 +173,10 @@ ClubhouseState::ClubhouseState(cro::StateStack& ss, cro::State::Context ctx, Sha
 
         if (m_sharedData.hosting)
         {
-            m_matchMaking.createLobby(2, Server::GameMode::Billiards);
+            if (m_sharedData.localConnectionData.playerCount == 1)
+            {
+                m_matchMaking.createLobby(2, Server::GameMode::Billiards);
+            }
 
             spriteID = SpriteID::StartGame;
             connectionString = "Hosting on: localhost:" + std::to_string(ConstVal::GamePort);
