@@ -882,6 +882,8 @@ void GolfState::buildUI()
     cam.resizeCallback = updateView;
     updateView(cam);
     m_uiScene.getActiveCamera().getComponent<cro::Transform>().setPosition({ 0.f, 0.f, 5.f });
+
+    //m_emoteWheel.build(infoEnt, m_uiScene, m_resources.textures);
 }
 
 void GolfState::showCountdown(std::uint8_t seconds)
@@ -2135,4 +2137,75 @@ glm::vec2 GolfState::toMinimapCoords(glm::vec3 worldPos) const
     worldPos /= 2.f;
 
     return { worldPos.x, -worldPos.z };
+}
+
+//------emote wheel-----//
+void GolfState::EmoteWheel::build(cro::Entity root, cro::Scene& uiScene, cro::TextureResource& textures)
+{
+    auto entity = uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<UIElement>().relativePosition = { 0.5f, 0.5f };
+    entity.getComponent<UIElement>().depth = 0.5f;
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
+
+    root.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    rootNode = entity;
+
+
+    cro::SpriteSheet spriteSheet;
+    if (spriteSheet.loadFromFile("assets/golf/sprites/emotes.spt", textures))
+    {
+        entity = uiScene.createEntity();
+        entity.addComponent<cro::Transform>();
+        entity.addComponent<cro::Drawable2D>();
+        entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("happy_large");
+        auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+        entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
+
+        rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    }
+}
+
+void GolfState::EmoteWheel::handleEvent(const cro::Event& evt)
+{
+    //TODO prevent input parser - but not via disabling.
+    if (evt.type == SDL_KEYDOWN)
+    {
+        switch (evt.key.keysym.sym)
+        {
+        default: break;
+        case SDLK_LCTRL:
+            //TODO make this a keybind
+            targetScale = 1.f;
+            break;
+        }
+    }
+    else if (evt.type == SDL_KEYUP)
+    {
+        switch (evt.key.keysym.sym)
+        {
+        default: break;
+        case SDLK_LCTRL:
+            targetScale = 0.f;
+            break;
+        //TODO send emote if scale == 1
+        }
+    }
+    //TODO add controller button
+}
+
+void GolfState::EmoteWheel::update(float dt)
+{
+    const float speed = dt * 10.f;
+    if (currentScale < targetScale)
+    {
+        currentScale = std::min(targetScale, currentScale + speed);
+    }
+    else if (currentScale > targetScale)
+    {
+        currentScale = std::max(targetScale, currentScale - speed);
+    }
+
+    float scale = cro::Util::Easing::easeOutCirc(currentScale);
+    rootNode.getComponent<cro::Transform>().setScale(glm::vec2(scale));
 }

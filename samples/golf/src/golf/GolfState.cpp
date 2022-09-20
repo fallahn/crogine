@@ -616,6 +616,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
     }
 
     m_inputParser.handleEvent(evt);
+    m_emoteWheel.handleEvent(evt);
 
 #ifdef CRO_DEBUG_
     m_gameScene.getSystem<FpsCameraSystem>()->handleEvent(evt);
@@ -1130,6 +1131,7 @@ bool GolfState::simulate(float dt)
     }
 
     m_inputParser.update(dt);
+    m_emoteWheel.update(dt);
     m_gameScene.simulate(dt);
     m_uiScene.simulate(dt);
 
