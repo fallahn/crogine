@@ -2023,7 +2023,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     m_sprites[SpriteID::NextCourse] = spriteSheet.getSprite("arrow_right");
     m_sprites[SpriteID::LobbyCheckbox] = spriteSheet.getSprite("checkbox");
     m_sprites[SpriteID::LobbyCheckboxHighlight] = spriteSheet.getSprite("checkbox_highlight");
-
+    m_sprites[SpriteID::Envelope] = spriteSheet.getSprite("envelope");
 
     //title
     auto entity = m_uiScene.createEntity();
@@ -4027,6 +4027,17 @@ void MenuState::addCourseSelectButtons()
         labelEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = m_courseSelectCallbacks.selectText;
         labelEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = m_courseSelectCallbacks.unselectText;
         labelEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = m_courseSelectCallbacks.inviteFriends;
+        m_menuEntities[MenuID::Lobby].getComponent<cro::Transform>().addChild(labelEnt.getComponent<cro::Transform>());
+
+
+        labelEnt = m_uiScene.createEntity();
+        labelEnt.addComponent<cro::Transform>();
+        labelEnt.addComponent<cro::Drawable2D>();
+        labelEnt.addComponent<cro::Sprite>() = m_sprites[SpriteID::Envelope];
+        labelEnt.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement | CommandID::Menu::CourseSelect;
+        labelEnt.addComponent<UIElement>().absolutePosition = { 138.f, -71.f };
+        labelEnt.getComponent<UIElement>().relativePosition = LobbyBackgroundPosition;
+        labelEnt.getComponent<UIElement>().depth = 0.01f;
         m_menuEntities[MenuID::Lobby].getComponent<cro::Transform>().addChild(labelEnt.getComponent<cro::Transform>());
     }
 
