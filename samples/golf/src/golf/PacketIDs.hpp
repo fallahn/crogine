@@ -64,6 +64,14 @@ namespace MessageType
     };
 }
 
+namespace Emote
+{
+    enum
+    {
+        Happy, Grumpy, Laughing, Sad
+    };
+}
+
 namespace PacketID
 {
     enum
@@ -119,7 +127,8 @@ namespace PacketID
         AchievementGet, //< uint8 client uint8 achievement id (always assume first player on client, as achievements are disabled other wise)
         CPUThink, //< uint8 0 if begin think, 1 end think
         CueUpdate, //< BilliardsUpdate to show the 'ghost' cue on remote clients
-        NewLobbyReady //< uint64 lobbyID - broadcast by host when returning from existing game and relayed by server
+        NewLobbyReady, //< uint64 lobbyID - broadcast by host when returning from existing game and relayed by server
+        Emote //< uint32 00|client|player|emoteID
     };
 }
 

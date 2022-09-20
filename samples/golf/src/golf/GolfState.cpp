@@ -196,6 +196,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     m_viewScale         (1.f),
     m_scoreColumnCount  (2),
     m_readyQuitFlags    (0),
+    m_emoteWheel        (sd),
     m_minimapScale      (1.f),
     m_hadFoul           (false)
 {
@@ -615,8 +616,10 @@ bool GolfState::handleEvent(const cro::Event& evt)
         }
     }
 
-    m_inputParser.handleEvent(evt);
-    m_emoteWheel.handleEvent(evt);
+    if (!m_emoteWheel.handleEvent(evt))
+    {
+        m_inputParser.handleEvent(evt);
+    }
 
 #ifdef CRO_DEBUG_
     m_gameScene.getSystem<FpsCameraSystem>()->handleEvent(evt);
@@ -4043,6 +4046,9 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
         switch (evt.packet.getID())
         {
         default: break;
+        case PacketID::Emote:
+            showEmote(evt.packet.as<std::uint32_t>());
+            break;
         case PacketID::MaxStrokes:
             showNotification("Stroke Limit Reached.");
             break;

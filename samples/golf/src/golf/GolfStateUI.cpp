@@ -883,7 +883,7 @@ void GolfState::buildUI()
     updateView(cam);
     m_uiScene.getActiveCamera().getComponent<cro::Transform>().setPosition({ 0.f, 0.f, 5.f });
 
-    //m_emoteWheel.build(infoEnt, m_uiScene, m_resources.textures);
+    m_emoteWheel.build(infoEnt, m_uiScene, m_resources.textures);
 }
 
 void GolfState::showCountdown(std::uint8_t seconds)
@@ -2155,20 +2155,51 @@ void GolfState::EmoteWheel::build(cro::Entity root, cro::Scene& uiScene, cro::Te
     cro::SpriteSheet spriteSheet;
     if (spriteSheet.loadFromFile("assets/golf/sprites/emotes.spt", textures))
     {
-        entity = uiScene.createEntity();
-        entity.addComponent<cro::Transform>();
-        entity.addComponent<cro::Drawable2D>();
-        entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("happy_large");
-        auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
-        entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
+        const std::array positions =
+        {
+            glm::vec2(0.f, 32.f),
+            glm::vec2(32.f, 0.f),
+            glm::vec2(0.f, -32.f),
+            glm::vec2(-32.f, 0.f)
+        };
+        const std::array spriteNames =
+        {
+            std::string("happy_large"),
+            std::string("grumpy_large"),
+            std::string("laughing_large"),
+            std::string("sad_large")
+        };
 
-        rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+        for (auto i = 0u; i < positions.size(); ++i)
+        {
+            entity = uiScene.createEntity();
+            entity.addComponent<cro::Transform>().setPosition(positions[i]);
+            entity.addComponent<cro::Drawable2D>();
+            entity.addComponent<cro::Sprite>() = spriteSheet.getSprite(spriteNames[i]);
+            auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+            entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
+
+            rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+        }
     }
 }
 
-void GolfState::EmoteWheel::handleEvent(const cro::Event& evt)
+bool GolfState::EmoteWheel::handleEvent(const cro::Event& evt)
 {
-    //TODO prevent input parser - but not via disabling.
+    const auto sendEmote = [&](std::uint8_t emoteID)
+    {
+        std::uint32_t data = 0;
+        data |= (std::uint8_t(sharedData.localConnectionData.connectionID) << 16) | (std::uint8_t(sharedData.inputBinding.controllerID) << 8) | (emoteID);
+        sharedData.clientConnection.netClient.sendPacket(PacketID::Emote, data, net::NetFlag::Reliable);
+
+        cooldown = 6.f;
+    };
+
+    if (cooldown > 0)
+    {
+        return false;
+    }
+
     if (evt.type == SDL_KEYDOWN)
     {
         switch (evt.key.keysym.sym)
@@ -2177,7 +2208,7 @@ void GolfState::EmoteWheel::handleEvent(const cro::Event& evt)
         case SDLK_LCTRL:
             //TODO make this a keybind
             targetScale = 1.f;
-            break;
+            return true;
         }
     }
     else if (evt.type == SDL_KEYUP)
@@ -2187,11 +2218,87 @@ void GolfState::EmoteWheel::handleEvent(const cro::Event& evt)
         default: break;
         case SDLK_LCTRL:
             targetScale = 0.f;
-            break;
-        //TODO send emote if scale == 1
+            return true;
+        }
+
+        if (currentScale == 1)
+        {
+            if (evt.key.keysym.sym == sharedData.inputBinding.keys[InputBinding::Up])
+            {
+                sendEmote(Emote::Happy);
+                targetScale = 0.f;
+                return true;
+            }
+            else if (evt.key.keysym.sym == sharedData.inputBinding.keys[InputBinding::Down])
+            {
+                sendEmote(Emote::Laughing);
+                targetScale = 0.f;
+                return true;
+            }
+            else if (evt.key.keysym.sym == sharedData.inputBinding.keys[InputBinding::Left])
+            {
+                sendEmote(Emote::Sad);
+                targetScale = 0.f;
+                return true;
+            }
+            else if (evt.key.keysym.sym == sharedData.inputBinding.keys[InputBinding::Right])
+            {
+                sendEmote(Emote::Grumpy);
+                targetScale = 0.f;
+                return true;
+            }
         }
     }
-    //TODO add controller button
+
+
+    else if (evt.type == SDL_CONTROLLERBUTTONDOWN
+        && cro::GameController::controllerID(evt.cbutton.which) == sharedData.inputBinding.controllerID)
+    {
+        switch (evt.cbutton.button)
+        {
+        default: break;
+        case cro::GameController::ButtonGuide:
+            targetScale = 1.f;
+            return true;
+        }
+    }
+    else if (evt.type == SDL_CONTROLLERBUTTONUP
+        && cro::GameController::controllerID(evt.cbutton.which) == sharedData.inputBinding.controllerID)
+    {
+        switch (evt.cbutton.button)
+        {
+        default: break;
+        case cro::GameController::ButtonGuide:
+            targetScale = 0.f;
+            return true;
+        }
+
+        if (currentScale == 1)
+        {
+            switch (evt.cbutton.button)
+            {
+            default: return false;
+            case SDL_CONTROLLER_BUTTON_DPAD_UP:
+                sendEmote(Emote::Happy);
+                targetScale = 0.f;
+                return true;
+            case SDL_CONTROLLER_BUTTON_DPAD_DOWN:
+                sendEmote(Emote::Laughing);
+                targetScale = 0.f;
+                return true;
+            case SDL_CONTROLLER_BUTTON_DPAD_LEFT:
+                sendEmote(Emote::Sad);
+                targetScale = 0.f;
+                return true;
+            case SDL_CONTROLLER_BUTTON_DPAD_RIGHT:
+                sendEmote(Emote::Grumpy);
+                targetScale = 0.f;
+                return true;
+            }
+        }
+    }
+
+    return false;
 }
 
 void GolfState::EmoteWheel::update(float dt)
@@ -2208,4 +2315,40 @@ void GolfState::EmoteWheel::update(float dt)
 
     float scale = cro::Util::Easing::easeOutCirc(currentScale);
     rootNode.getComponent<cro::Transform>().setScale(glm::vec2(scale));
+
+    cooldown -= dt;
+}
+
+void GolfState::showEmote(std::uint32_t data)
+{
+    std::uint8_t client = (data & 0x00ff0000) >> 16;
+    std::uint8_t player = (data & 0x0000ff00) >> 8;
+    std::uint8_t emote = (data & 0x000000ff);
+
+    client = std::min(client, std::uint8_t(3u));
+    player = std::min(player, std::uint8_t(3u));
+
+    auto msg = m_sharedData.connectionData[client].playerData[player].name;
+    msg += " is ";
+
+    switch (emote)
+    {
+    default:
+        msg += "undecided";
+        break;
+    case Emote::Happy:
+        msg += "happy";
+        break;
+    case Emote::Grumpy:
+        msg += "grumpy";
+        break;
+    case Emote::Laughing:
+        msg += "laughing";
+        break;
+    case Emote::Sad:
+        msg += "sad";
+        break;
+    }
+
+    showNotification(msg);
 }

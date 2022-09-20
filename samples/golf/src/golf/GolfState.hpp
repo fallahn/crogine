@@ -329,14 +329,19 @@ private:
 
     struct EmoteWheel final
     {
+        explicit EmoteWheel(SharedStateData& ib)
+            : sharedData(ib) {}
+
+        SharedStateData& sharedData;
         cro::Entity rootNode;
         float targetScale = 0.f;
         float currentScale = 0.f;
+        float cooldown = 0.f;
         void build(cro::Entity, cro::Scene&, cro::TextureResource&);
-        void handleEvent(const cro::Event&);
+        bool handleEvent(const cro::Event&);
         void update(float);
     }m_emoteWheel;
-
+    void showEmote(std::uint32_t);
 
     //-----------
 
