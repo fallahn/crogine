@@ -189,7 +189,7 @@ BilliardsState::BilliardsState(cro::StateStack& ss, cro::State::Context ctx, Sha
     //        ImGui::End();
     //    });
 
-    registerWindow([&]()
+    /*registerWindow([&]()
         {
             if (ImGui::Begin("Window"))
             {
@@ -209,7 +209,7 @@ BilliardsState::BilliardsState(cro::StateStack& ss, cro::State::Context ctx, Sha
                 }
             }
             ImGui::End();
-        });
+        });*/
 #endif
 
     m_inputParser.setActive(false, false); //activates spectator cam input on start up
