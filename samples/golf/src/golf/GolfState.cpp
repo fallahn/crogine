@@ -1528,6 +1528,13 @@ void GolfState::loadAssets()
     m_flagQuad.setTexture(*flagSprite.getTexture());
     m_flagQuad.setTextureRect(flagSprite.getTextureRect());
 
+    spriteSheet.loadFromFile("assets/golf/sprites/emotes.spt", m_resources.textures);
+    m_sprites[SpriteID::EmoteHappy] = spriteSheet.getSprite("happy_small");
+    m_sprites[SpriteID::EmoteGrumpy] = spriteSheet.getSprite("grumpy_small");
+    m_sprites[SpriteID::EmoteLaugh] = spriteSheet.getSprite("laughing_small");
+    m_sprites[SpriteID::EmoteSad] = spriteSheet.getSprite("sad_small");
+
+
     //load audio from avatar info
     for (const auto& avatar : m_sharedData.avatarInfo)
     {

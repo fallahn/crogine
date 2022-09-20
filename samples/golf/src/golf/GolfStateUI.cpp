@@ -2331,6 +2331,7 @@ void GolfState::showEmote(std::uint32_t data)
     auto msg = m_sharedData.connectionData[client].playerData[player].name;
     msg += " is ";
 
+    std::int32_t emoteID = SpriteID::EmoteHappy;
     switch (emote)
     {
     default:
@@ -2341,14 +2342,58 @@ void GolfState::showEmote(std::uint32_t data)
         break;
     case Emote::Grumpy:
         msg += "grumpy";
+        emoteID = SpriteID::EmoteGrumpy;
         break;
     case Emote::Laughing:
         msg += "laughing";
+        emoteID = SpriteID::EmoteLaugh;
         break;
     case Emote::Sad:
         msg += "sad";
+        emoteID = SpriteID::EmoteSad;
         break;
     }
 
     showNotification(msg);
+
+
+    struct EmoteData final
+    {
+        float velocity = 50.f;
+        float decayRate = cro::Util::Random::value(8.f, 11.5f);
+        float rotation = cro::Util::Random::value(-1.f, 1.f);
+    };
+
+    glm::vec3 pos(16.f, -16.f, 0.5f);
+    for (auto i = 0u; i < 5u; ++i)
+    {
+        auto ent = m_uiScene.createEntity();
+        ent.addComponent<cro::Transform>().setPosition(pos);
+        ent.addComponent<cro::Drawable2D>();
+        ent.addComponent<cro::Sprite>() = m_sprites[emoteID];
+        ent.addComponent<cro::Callback>().active = true;
+        ent.getComponent<cro::Callback>().setUserData<EmoteData>();
+        ent.getComponent<cro::Callback>().function =
+            [&](cro::Entity e, float dt)
+        {
+            auto& data = e.getComponent<cro::Callback>().getUserData<EmoteData>();
+            data.velocity = std::max(0.f, data.velocity - (dt * data.decayRate));
+            data.rotation *= 0.999f;
+
+            if (data.velocity == 0)
+            {
+                e.getComponent<cro::Callback>().active = false;
+                m_uiScene.destroyEntity(e);
+            }
+            e.getComponent<cro::Transform>().setScale(m_viewScale);
+            e.getComponent<cro::Transform>().move({ 0.f, data.velocity * dt, 0.f });
+            e.getComponent<cro::Transform>().rotate(data.rotation * dt);
+        };
+
+        auto bounds = ent.getComponent<cro::Sprite>().getTextureBounds();
+        ent.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
+
+        pos.x += static_cast<float>(cro::Util::Random::value(35, 48));
+        pos.y = -static_cast<float>(cro::Util::Random::value(1, 3)) * 10.f;
+    }
 }

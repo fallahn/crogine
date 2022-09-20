@@ -261,6 +261,10 @@ private:
             Foul,
             QuitReady,
             QuitNotReady,
+            EmoteHappy,
+            EmoteGrumpy,
+            EmoteLaugh,
+            EmoteSad,
 
             Count
         };
