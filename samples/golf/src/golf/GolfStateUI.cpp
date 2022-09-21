@@ -950,10 +950,26 @@ void GolfState::showCountdown(std::uint8_t seconds)
 
     for (auto i = 0u; i < trophyCount; ++i)
     {
-        if (m_statBoardScores.size() > 1 &&
-            m_statBoardScores[i].client == m_sharedData.clientConnection.connectionID)
+        if (m_statBoardScores[i].client == m_sharedData.clientConnection.connectionID)
         {
-            Achievements::incrementStat(StatStrings[StatID::GoldAverage + i], trophyStat);
+            if (m_statBoardScores.size() > 1)
+            {
+                Achievements::incrementStat(StatStrings[StatID::GoldAverage + i], trophyStat);
+            }
+
+            switch (i)
+            {
+            default: break;
+            case 0:
+                Social::awardXP(XPValues[XPID::First]);
+                break;
+            case 1:
+                Social::awardXP(XPValues[XPID::Second]);
+                break;
+            case 2:
+                Social::awardXP(XPValues[XPID::Third]);
+                break;
+            }
         }
 
         m_trophies[i].getComponent<TrophyDisplay>().state = TrophyDisplay::In;
@@ -1717,6 +1733,7 @@ void GolfState::showMessageBoard(MessageBoardID messageType)
             //hio is also technically an eagle or birdie
             //etc, so we need to differentiate
             score = ScoreID::HIO;
+            Social::awardXP(XPValues[XPID::HIO]);
         }
 
 
@@ -1760,6 +1777,23 @@ void GolfState::showMessageBoard(MessageBoardID messageType)
         {
             textEnt.getComponent<cro::Text>().setString(ScoreStrings[score]);
             textEnt.getComponent<cro::Transform>().move({ 0.f, -10.f, 0.f });
+
+            switch (score)
+            {
+            default: break;
+            case ScoreID::Albatross:
+                Social::awardXP(XPValues[XPID::Albatross]);
+                break;
+            case ScoreID::Eagle:
+                Social::awardXP(XPValues[XPID::Eagle]);
+                break;
+            case ScoreID::Birdie:
+                Social::awardXP(XPValues[XPID::Birdie]);
+                break;
+            case ScoreID::Par:
+                Social::awardXP(XPValues[XPID::Par]);
+                break;
+            }
         }
         else
         {

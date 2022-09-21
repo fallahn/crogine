@@ -121,6 +121,8 @@ public:
 
     static void setActive(bool);
 
+    static bool getActive() { return m_active; };
+
 private:
     static AchievementImpl* m_impl;
     static bool m_active;

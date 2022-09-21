@@ -32,6 +32,8 @@ source distribution.
 #include "golf/SharedStateData.hpp"
 #include "golf/MessageIDs.hpp"
 
+#include <Social.hpp>
+
 #include <crogine/core/App.hpp>
 #include <crogine/core/SysTime.hpp>
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
@@ -167,6 +169,8 @@ void DefaultAchievements::awardAchievement(const std::string& name)
 
         auto* msg = m_messageBus.post<AchievementEvent>(MessageID::AchievementMessage);
         msg->id = static_cast<std::uint8_t>(m_achievements[name].id);
+
+        Social::awardXP(XPValues[XPID::Special]);
     }
 }
 

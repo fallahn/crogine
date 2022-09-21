@@ -137,6 +137,7 @@ namespace
     std::array<std::vector<float>, 3u> ballDump;
 
     float godmode = 1.f;
+    bool allowAchievements = false;
 
     constexpr std::uint32_t MaxCascades = 4; //actual value is 1 less this - see ShadowQuality::update()
     constexpr float MaxShadowFarDistance = 150.f;
@@ -228,8 +229,18 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     createTransition();
 
     sd.baseState = StateID::Golf;
-    //TODO can we create a case where there's one human local player?
-    Achievements::setActive(sd.localConnectionData.playerCount == 1 && !m_sharedData.localConnectionData.playerData[0].isCPU);
+    //This is set when setting active player.
+    //Achievements::setActive(sd.localConnectionData.playerCount == 1 && !m_sharedData.localConnectionData.playerData[0].isCPU);
+    std::int32_t humanCount = 0;
+    for (auto i = 0u; i < m_sharedData.localConnectionData.playerCount; ++i)
+    {
+        if (!m_sharedData.localConnectionData.playerData[i].isCPU)
+        {
+            humanCount++;
+        }
+    }
+    allowAchievements = humanCount == 1;
+
     
     std::int32_t clientCount = 0;
     for (auto& c : sd.connectionData)
@@ -4162,6 +4173,7 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
                         //just completed the course
                         Achievements::incrementStat(StatStrings[StatID::HolesPlayed]);
                         Achievements::awardAchievement(AchievementStrings[AchievementID::JoinTheClub]);
+                        Social::awardXP(XPValues[XPID::CompleteCourse]);
                     }
 
                     //check putt distance / if this was in fact a putt
@@ -4170,11 +4182,13 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
                         if (glm::length(update.position - m_currentPlayer.position) > 5)
                         {
                             Achievements::awardAchievement(AchievementStrings[AchievementID::PuttStar]);
+                            Social::awardXP(XPValues[XPID::Special] / 2);
                         }
                     }
                     else
                     {
                         Achievements::awardAchievement(AchievementStrings[AchievementID::TopChip]);
+                        Social::awardXP(XPValues[XPID::Special]);
                     }
                 }
 
@@ -4913,6 +4927,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     auto isCPU = m_sharedData.localConnectionData.playerData[player.player].isCPU;
 
     m_inputParser.setActive(localPlayer, isCPU);
+    Achievements::setActive(localPlayer && !isCPU && allowAchievements);
 
     if (player.terrain == TerrainID::Bunker)
     {
@@ -5269,9 +5284,34 @@ void GolfState::hitBall()
     if (club != ClubID::Putter)
     {
         auto s = cro::Util::Maths::sgn(hook);
-        //TODO changing this func changes how accurate a player needs to be
+        //changing this func changes how accurate a player needs to be
         //sine, quad, cubic, quart, quint in steepness order
-        hook = cro::Util::Easing::easeOutQuart(hook * s) * s;
+        if (Achievements::getActive())
+        {
+            auto level = Social::getLevel();
+            switch (level / 10)
+            {
+            default:
+                hook = cro::Util::Easing::easeOutQuint(hook * s) * s;
+                break;
+            case 3:
+                hook = cro::Util::Easing::easeOutQuart(hook * s) * s;
+                break;
+            case 2:
+                hook = cro::Util::Easing::easeOutCubic(hook * s) * s;
+                break;
+            case 1:
+                hook = cro::Util::Easing::easeOutQuad(hook * s) * s;
+                break;
+            case 0:
+                hook = cro::Util::Easing::easeOutSine(hook * s) * s;
+                break;
+            }
+        }
+        else
+        {
+            hook = cro::Util::Easing::easeOutQuart(hook * s) * s;
+        }
     }
     yaw += MaxHook * hook;
 

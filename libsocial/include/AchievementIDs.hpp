@@ -29,6 +29,8 @@ source distribution.
 
 #pragma once
 
+#include <array>
+
 namespace AchievementID
 {
     enum
@@ -117,3 +119,19 @@ namespace StatID
     };
     static_assert(Count <= 64, "Count exceeds maximum number of stats");
 }
+
+namespace XPID
+{
+    enum
+    {
+        HIO, Albatross, Eagle, Birdie, Par, Special,
+        CompleteCourse, Third, Second, First,
+
+        Count
+    };
+}
+static constexpr std::array<std::int32_t, XPID::Count> XPValues =
+{
+    500, 150, 50, 30, 10, 50,
+    50, 100, 200, 300
+};
