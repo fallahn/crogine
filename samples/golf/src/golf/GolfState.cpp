@@ -1533,6 +1533,7 @@ void GolfState::loadAssets()
     m_sprites[SpriteID::EmoteGrumpy] = spriteSheet.getSprite("grumpy_small");
     m_sprites[SpriteID::EmoteLaugh] = spriteSheet.getSprite("laughing_small");
     m_sprites[SpriteID::EmoteSad] = spriteSheet.getSprite("sad_small");
+    m_sprites[SpriteID::EmotePulse] = spriteSheet.getSprite("pulse");
 
 
     //load audio from avatar info

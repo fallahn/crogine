@@ -2155,13 +2155,6 @@ void GolfState::EmoteWheel::build(cro::Entity root, cro::Scene& uiScene, cro::Te
     cro::SpriteSheet spriteSheet;
     if (spriteSheet.loadFromFile("assets/golf/sprites/emotes.spt", textures))
     {
-        const std::array positions =
-        {
-            glm::vec2(0.f, 32.f),
-            glm::vec2(32.f, 0.f),
-            glm::vec2(0.f, -32.f),
-            glm::vec2(-32.f, 0.f)
-        };
         const std::array spriteNames =
         {
             std::string("happy_large"),
@@ -2170,17 +2163,68 @@ void GolfState::EmoteWheel::build(cro::Entity root, cro::Scene& uiScene, cro::Te
             std::string("sad_large")
         };
 
-        for (auto i = 0u; i < positions.size(); ++i)
+        struct AnimData final
+        {
+            enum
+            {
+                In, Out
+            }state = In;
+            float progress = 1.f;
+        };
+
+        for (auto i = 0u; i < EmotePositions.size(); ++i)
         {
             entity = uiScene.createEntity();
-            entity.addComponent<cro::Transform>().setPosition(positions[i]);
+            entity.addComponent<cro::Transform>().setPosition(EmotePositions[i]);
             entity.addComponent<cro::Drawable2D>();
             entity.addComponent<cro::Sprite>() = spriteSheet.getSprite(spriteNames[i]);
             auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
             entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
 
+            entity.addComponent<cro::Callback>().setUserData<AnimData>();
+            entity.getComponent<cro::Callback>().function =
+                [&](cro::Entity e, float dt)
+            {
+                const float Speed = dt * 10.f;
+                auto& data = e.getComponent<cro::Callback>().getUserData<AnimData>();
+                if (data.state == AnimData::In)
+                {
+                    data.progress = std::max(0.f, data.progress - Speed);
+                    if (data.progress == 0)
+                    {
+                        data.state = AnimData::Out;
+                    }
+                }
+                else
+                {
+                    data.progress = std::min(1.f, data.progress + Speed);
+                    if (data.progress == 1)
+                    {
+                        data.state = AnimData::In;
+                        targetScale = 0.f;
+                        e.getComponent<cro::Callback>().active = false;
+                    }
+                }
+
+                cro::Colour c(1.f, data.progress, data.progress);
+                e.getComponent<cro::Sprite>().setColour(c);
+
+                float scale = cro::Util::Easing::easeOutCirc(data.progress);
+                e.getComponent<cro::Transform>().setScale({ scale, 1.f });
+            };
+
             rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+            buttonNodes[i] = entity;
         }
+
+        entity = uiScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition(glm::vec3(0.f, 0.f, 0.13f));
+        entity.addComponent<cro::Drawable2D>();
+        entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("background");
+        auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+        entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
+
+        rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     }
 }
 
@@ -2193,6 +2237,7 @@ bool GolfState::EmoteWheel::handleEvent(const cro::Event& evt)
         sharedData.clientConnection.netClient.sendPacket(PacketID::Emote, data, net::NetFlag::Reliable);
 
         cooldown = 6.f;
+        buttonNodes[emoteID].getComponent<cro::Callback>().active = true; //play anim which also closes wheel
     };
 
     if (cooldown > 0)
@@ -2226,25 +2271,21 @@ bool GolfState::EmoteWheel::handleEvent(const cro::Event& evt)
             if (evt.key.keysym.sym == sharedData.inputBinding.keys[InputBinding::Up])
             {
                 sendEmote(Emote::Happy);
-                targetScale = 0.f;
                 return true;
             }
             else if (evt.key.keysym.sym == sharedData.inputBinding.keys[InputBinding::Down])
             {
                 sendEmote(Emote::Laughing);
-                targetScale = 0.f;
                 return true;
             }
             else if (evt.key.keysym.sym == sharedData.inputBinding.keys[InputBinding::Left])
             {
                 sendEmote(Emote::Sad);
-                targetScale = 0.f;
                 return true;
             }
             else if (evt.key.keysym.sym == sharedData.inputBinding.keys[InputBinding::Right])
             {
                 sendEmote(Emote::Grumpy);
-                targetScale = 0.f;
                 return true;
             }
         }
@@ -2280,19 +2321,15 @@ bool GolfState::EmoteWheel::handleEvent(const cro::Event& evt)
             default: return false;
             case SDL_CONTROLLER_BUTTON_DPAD_UP:
                 sendEmote(Emote::Happy);
-                targetScale = 0.f;
                 return true;
             case SDL_CONTROLLER_BUTTON_DPAD_DOWN:
                 sendEmote(Emote::Laughing);
-                targetScale = 0.f;
                 return true;
             case SDL_CONTROLLER_BUTTON_DPAD_LEFT:
                 sendEmote(Emote::Sad);
-                targetScale = 0.f;
                 return true;
             case SDL_CONTROLLER_BUTTON_DPAD_RIGHT:
                 sendEmote(Emote::Grumpy);
-                targetScale = 0.f;
                 return true;
             }
         }
@@ -2364,7 +2401,7 @@ void GolfState::showEmote(std::uint32_t data)
         float rotation = cro::Util::Random::value(-1.f, 1.f);
     };
 
-    glm::vec3 pos(16.f, -16.f, 0.5f);
+    glm::vec3 pos(16.f, -16.f, 0.2f);
     for (auto i = 0u; i < 5u; ++i)
     {
         auto ent = m_uiScene.createEntity();
@@ -2377,7 +2414,7 @@ void GolfState::showEmote(std::uint32_t data)
             [&](cro::Entity e, float dt)
         {
             auto& data = e.getComponent<cro::Callback>().getUserData<EmoteData>();
-            data.velocity = std::max(0.f, data.velocity - (dt * data.decayRate));
+            data.velocity = std::max(0.f, data.velocity - (dt * data.decayRate * m_viewScale.y));
             data.rotation *= 0.999f;
 
             if (data.velocity == 0)
@@ -2386,14 +2423,14 @@ void GolfState::showEmote(std::uint32_t data)
                 m_uiScene.destroyEntity(e);
             }
             e.getComponent<cro::Transform>().setScale(m_viewScale);
-            e.getComponent<cro::Transform>().move({ 0.f, data.velocity * dt, 0.f });
+            e.getComponent<cro::Transform>().move({ 0.f, data.velocity * m_viewScale.y * dt, 0.f });
             e.getComponent<cro::Transform>().rotate(data.rotation * dt);
         };
 
         auto bounds = ent.getComponent<cro::Sprite>().getTextureBounds();
         ent.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
 
-        pos.x += static_cast<float>(cro::Util::Random::value(35, 48));
+        pos.x += static_cast<float>(cro::Util::Random::value(24, 38)) * m_viewScale.x;
         pos.y = -static_cast<float>(cro::Util::Random::value(1, 3)) * 10.f;
     }
 }

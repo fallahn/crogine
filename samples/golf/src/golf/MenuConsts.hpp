@@ -68,6 +68,14 @@ static const std::array<std::string, 3u> GimmeString =
     "Inside the putter"
 };
 
+static constexpr std::array EmotePositions =
+{
+    glm::vec3(0.f, 32.f, 0.15f),
+    glm::vec3(32.f, 0.f, 0.15f),
+    glm::vec3(0.f, -32.f, 0.15f),
+    glm::vec3(-32.f, 0.f, 0.15f)
+};
+
 static constexpr std::uint32_t LargeTextSize = 64;
 static constexpr std::uint32_t MediumTextSize = 32;
 static constexpr std::uint32_t SmallTextSize = 16;

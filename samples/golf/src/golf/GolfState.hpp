@@ -265,6 +265,7 @@ private:
             EmoteGrumpy,
             EmoteLaugh,
             EmoteSad,
+            EmotePulse,
 
             Count
         };
@@ -338,6 +339,7 @@ private:
 
         SharedStateData& sharedData;
         cro::Entity rootNode;
+        std::array<cro::Entity, 4u> buttonNodes = {};
         float targetScale = 0.f;
         float currentScale = 0.f;
         float cooldown = 0.f;
