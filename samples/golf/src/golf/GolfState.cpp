@@ -229,8 +229,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     createTransition();
 
     sd.baseState = StateID::Golf;
-    //This is set when setting active player.
-    //Achievements::setActive(sd.localConnectionData.playerCount == 1 && !m_sharedData.localConnectionData.playerData[0].isCPU);
+    
     std::int32_t humanCount = 0;
     for (auto i = 0u; i < m_sharedData.localConnectionData.playerCount; ++i)
     {
@@ -240,6 +239,9 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
         }
     }
     allowAchievements = humanCount == 1;
+
+    //This is set when setting active player.
+    Achievements::setActive(allowAchievements);
 
     
     std::int32_t clientCount = 0;
@@ -269,26 +271,35 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     ballDump[1].push_back(1.f);
     ballDump[2].push_back(1.f);
 
-    //registerWindow([&]()
-    //    {
-    //        if (ImGui::Begin("Network"))
-    //        {
-    //            /*ImGui::Text("Connection Bitrate: %3.3fkbps", static_cast<float>(bitrate) / 1024.f);
+    registerWindow([&]()
+        {
+            if (ImGui::Begin("Network"))
+            {
+                /*ImGui::Text("Connection Bitrate: %3.3fkbps", static_cast<float>(bitrate) / 1024.f);
 
-    //            for (const auto& c : m_sharedData.connectionData)
-    //            {
-    //                ImGui::Text("Ping: %u", c.pingTime);
-    //            }*/
+                for (const auto& c : m_sharedData.connectionData)
+                {
+                    ImGui::Text("Ping: %u", c.pingTime);
+                }*/
 
-    //            /*auto& zoom = m_cameras[CameraID::Player].getComponent<CameraFollower::ZoomData>();
-    //            if (ImGui::SliderFloat("Zoom", &zoom.target, 0.1f, 1.f))
-    //            {
-    //                m_cameras[CameraID::Player].getComponent<cro::Callback>().active = true;
-    //            }*/
-    //        }
+                /*auto& zoom = m_cameras[CameraID::Player].getComponent<CameraFollower::ZoomData>();
+                if (ImGui::SliderFloat("Zoom", &zoom.target, 0.1f, 1.f))
+                {
+                    m_cameras[CameraID::Player].getComponent<cro::Callback>().active = true;
+                }*/
 
-    //        ImGui::End();
-    //    });
+                if (Achievements::getActive())
+                {
+                    ImGui::Text("Achievements enabled");
+                }
+                else
+                {
+                    ImGui::Text("Achievments disabled");
+                }
+            }
+
+            ImGui::End();
+        });
 
     /*registerWindow([&]()
         {
