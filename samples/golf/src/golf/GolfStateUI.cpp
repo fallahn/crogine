@@ -2203,7 +2203,7 @@ void GolfState::EmoteWheel::build(cro::Entity root, cro::Scene& uiScene, cro::Te
             std::string("sad_large")
         };
 
-        auto& font = sharedData.sharedResources->fonts.get(FontID::Info);
+        auto& font = sharedData.sharedResources->fonts.get(FontID::UI);
 
         struct AnimData final
         {
@@ -2259,11 +2259,13 @@ void GolfState::EmoteWheel::build(cro::Entity root, cro::Scene& uiScene, cro::Te
             buttonNodes[i] = entity;
 
             auto labelEnt = uiScene.createEntity();
-            labelEnt.addComponent<cro::Transform>().setPosition(entity.getComponent<cro::Transform>().getOrigin() + glm::vec3(0.f, 24.f, 0.f));
+            labelEnt.addComponent<cro::Transform>().setPosition(entity.getComponent<cro::Transform>().getOrigin() + glm::vec3(0.f, 20.f, 0.f));
             labelEnt.addComponent<cro::Drawable2D>();
             labelEnt.addComponent<cro::Text>(font);
-            labelEnt.getComponent<cro::Text>().setFillColour(TextHighlightColour);
-            labelEnt.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+            labelEnt.getComponent<cro::Text>().setFillColour(LeaderboardTextDark);
+            /*labelEnt.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+            labelEnt.getComponent<cro::Text>().setShadowOffset({ 1.f,-1.f });*/
+            labelEnt.getComponent<cro::Text>().setCharacterSize(UITextSize);
             entity.getComponent<cro::Transform>().addChild(labelEnt.getComponent<cro::Transform>());
             labelNodes[i] = labelEnt;
         }
@@ -2491,7 +2493,7 @@ void GolfState::showEmote(std::uint32_t data)
     struct EmoteData final
     {
         float velocity = 50.f;
-        float decayRate = cro::Util::Random::value(8.f, 11.5f);
+        float decayRate = cro::Util::Random::value(13.f, 15.5f);
         float rotation = cro::Util::Random::value(-1.f, 1.f);
     };
 

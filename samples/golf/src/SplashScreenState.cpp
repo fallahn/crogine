@@ -150,9 +150,6 @@ SplashState::SplashState(cro::StateStack& stack, cro::State::Context context)
     addSystems();
     loadAssets();
     createUI();
-
-
-    m_video.play();
 }
 
 //public
@@ -246,6 +243,25 @@ void SplashState::loadAssets()
         auto scale = DisplaySize.x / size.x;
         entity.getComponent<cro::Transform>().setScale({ scale, scale });
         entity.getComponent<cro::Transform>().setOrigin(size / 2.f);
+
+
+        entity = m_uiScene.createEntity();
+        entity.addComponent<cro::Callback>().active = true;
+        entity.getComponent<cro::Callback>().function =
+            [&](cro::Entity e, float dt)
+        {
+            //we can get away witch static var because splash screen
+            //is only ever shown one per game run.
+            static float currTime = 1.f;
+            currTime -= dt;
+
+            if (currTime < 0)
+            {
+                m_video.play();
+                e.getComponent<cro::Callback>().active = false;
+                m_uiScene.destroyEntity(e);
+            }
+        };
     }
     else
     {
