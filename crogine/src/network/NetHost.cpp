@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2022
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -198,7 +198,7 @@ bool NetHost::pollEvent(NetEvent& evt)
     return false;
 }
 
-void NetHost::broadcastPacket(std::uint8_t id, const void* data, std::size_t size, NetFlag flags, std::uint8_t channel)
+void NetHost::broadcastPacket(std::uint8_t id, const void* data, std::size_t size, NetFlag flags, std::uint8_t channel) const
 {
     if (m_host)
     {
@@ -206,7 +206,7 @@ void NetHost::broadcastPacket(std::uint8_t id, const void* data, std::size_t siz
     }
 }
 
-void NetHost::sendPacket(const NetPeer& peer, std::uint8_t id, const void* data, std::size_t size, NetFlag flags, std::uint8_t channel)
+void NetHost::sendPacket(const NetPeer& peer, std::uint8_t id, const void* data, std::size_t size, NetFlag flags, std::uint8_t channel) const
 {
     if (peer.m_peer)
     {

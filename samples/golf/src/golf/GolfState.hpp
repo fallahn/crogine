@@ -334,10 +334,10 @@ private:
 
     struct EmoteWheel final
     {
-        explicit EmoteWheel(SharedStateData& ib)
+        explicit EmoteWheel(const SharedStateData& ib)
             : sharedData(ib) {}
 
-        SharedStateData& sharedData; //this ought to be const but for some reason sending a packet isn't a const function
+        const SharedStateData& sharedData;
         cro::Entity rootNode;
         std::array<cro::Entity, 4u> buttonNodes = {};
         float targetScale = 0.f;

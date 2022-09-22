@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2022
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -28,13 +28,13 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 template <typename T>
-void NetHost::broadcastPacket(std::uint8_t id, const T& data, NetFlag flags, std::uint8_t channel)
+void NetHost::broadcastPacket(std::uint8_t id, const T& data, NetFlag flags, std::uint8_t channel) const
 {
     broadcastPacket(id, (void*)&data, sizeof(T), flags, channel);
 }
 
 template <typename T>
-void NetHost::sendPacket(const NetPeer& peer, std::uint8_t id, const T& data, NetFlag flags, std::uint8_t channel)
+void NetHost::sendPacket(const NetPeer& peer, std::uint8_t id, const T& data, NetFlag flags, std::uint8_t channel) const
 {
     sendPacket(peer, id, (void*)&data, sizeof(T), flags, channel);
 }
