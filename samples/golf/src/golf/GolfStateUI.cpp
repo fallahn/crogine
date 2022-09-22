@@ -2332,7 +2332,7 @@ bool GolfState::EmoteWheel::handleEvent(const cro::Event& evt)
         switch (evt.cbutton.button)
         {
         default: break;
-        case cro::GameController::ButtonGuide:
+        case cro::GameController::ButtonY:
             targetScale = 1.f;
             return true;
         }
@@ -2343,7 +2343,7 @@ bool GolfState::EmoteWheel::handleEvent(const cro::Event& evt)
         switch (evt.cbutton.button)
         {
         default: break;
-        case cro::GameController::ButtonGuide:
+        case cro::GameController::ButtonY:
             targetScale = 0.f;
             return true;
         }

@@ -1928,9 +1928,9 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
             "Next Club",
             "Previous Club",
             "",
-            "",
+            "Emote Wheel",
             "Aim Left",
-            "Aim Right"
+            "Aim Right",
         };
     }
 
@@ -2075,6 +2075,23 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
                 centreText(infoEnt);
             });
     }
+    else
+    {
+        //emote wheel
+        entity = createHighlight(glm::vec2(338.f, 84.f), InputBinding::SwitchView);
+        entity.getComponent<cro::UIInput>().setSelectionIndex(12);
+        entity.getComponent<cro::Sprite>() = spriteSheet.getSprite("round_highlight_white");
+        entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = 0; //don't rebind this
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = uiSystem.addCallback(
+            [infoEnt](cro::Entity e) mutable
+            {
+                e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
+                e.getComponent<cro::AudioEmitter>().play();
+                infoEnt.getComponent<cro::Text>().setString(labelStrings[InputBinding::SwitchView]);
+                centreText(infoEnt);
+            });
+    }
 
 
     //label entities
@@ -2144,7 +2161,17 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
         entity.getComponent<cro::Text>().setString("Num 1");
         parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     }
-
+    else
+    {
+        //emote
+        entity = m_scene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ 351.f, 92.f, TextOffset });
+        entity.addComponent<cro::Drawable2D>();
+        entity.addComponent<cro::Text>(infoFont).setCharacterSize(InfoTextSize);
+        entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+        entity.getComponent<cro::Text>().setString("LCtrl");
+        parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    }
 
 
     //mouse input controls
