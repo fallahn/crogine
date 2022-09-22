@@ -3550,7 +3550,6 @@ void GolfState::buildScene()
     m_currentPlayer.position = m_holeData[m_currentHole].tee; //prevents the initial camera movement
 
     buildUI(); //put this here because we don't want to do this if the map data didn't load
-    setCurrentHole(0);
 
     auto sunEnt = m_gameScene.getSunlight();
     sunEnt.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, -130.f * cro::Util::Const::degToRad);
@@ -4269,7 +4268,7 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
             updateWindDisplay(cro::Util::Net::decompressVec3(evt.packet.as<std::array<std::int16_t, 3u>>()));
             break;
         case PacketID::SetHole:
-            setCurrentHole(evt.packet.as<std::uint8_t>());
+            setCurrentHole(evt.packet.as<std::uint16_t>());
             break;
         case PacketID::ScoreUpdate:
         {
@@ -4384,8 +4383,11 @@ void GolfState::removeClient(std::uint8_t clientID)
     updateScoreboard();
 }
 
-void GolfState::setCurrentHole(std::uint32_t hole)
+void GolfState::setCurrentHole(std::uint16_t holeInfo)
 {
+    std::uint8_t hole = (holeInfo & 0xff00) >> 8;
+    m_holeData[hole].par = (holeInfo & 0x00ff);
+
     if (hole != m_currentHole
         && m_sharedData.logBenchmarks)
     {

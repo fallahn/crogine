@@ -222,7 +222,7 @@ private:
     void handleNetEvent(const net::NetEvent&);
     void removeClient(std::uint8_t);
 
-    void setCurrentHole(std::uint32_t);
+    void setCurrentHole(std::uint16_t);
     void setCameraPosition(glm::vec3, float, float);
     void requestNextPlayer(const ActivePlayer&);
     void setCurrentPlayer(const ActivePlayer&);
