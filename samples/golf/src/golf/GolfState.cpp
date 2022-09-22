@@ -3550,6 +3550,7 @@ void GolfState::buildScene()
     m_currentPlayer.position = m_holeData[m_currentHole].tee; //prevents the initial camera movement
 
     buildUI(); //put this here because we don't want to do this if the map data didn't load
+    setCurrentHole(4); //need to do this here to make sure everything is loaded for rendering
 
     auto sunEnt = m_gameScene.getSunlight();
     sunEnt.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, -130.f * cro::Util::Const::degToRad);
@@ -4075,6 +4076,13 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
         switch (evt.packet.getID())
         {
         default: break;
+        case PacketID::SetPar:
+        {
+            std::uint16_t holeInfo = evt.packet.as<std::uint16_t>();
+            std::uint8_t hole = (holeInfo & 0xff00) >> 8;
+            m_holeData[hole].par = (holeInfo & 0x00ff);
+        }
+            break;
         case PacketID::Emote:
             showEmote(evt.packet.as<std::uint32_t>());
             break;

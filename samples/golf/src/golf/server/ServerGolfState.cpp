@@ -345,7 +345,7 @@ void GolfState::sendInitialGameState(std::uint8_t clientID)
         //this also tells the client to stop requesting state
 
         std::uint16_t newHole = (m_currentHole << 8) | std::uint8_t(m_holeData[m_currentHole].par);
-        m_sharedData.host.broadcastPacket(PacketID::SetHole, newHole, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+        m_sharedData.host.broadcastPacket(PacketID::SetPar, newHole, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
 
         //create an ent which waits for the clients to
         //finish playing the transition animation

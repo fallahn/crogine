@@ -88,6 +88,7 @@ namespace PacketID
         NotifyPlayer, //< BilliardsPlayer in billiards (wait for ack)
         SetPlayer, //< ActivePlayer struct in golf, BilliardsPlayer in billiards
         SetHole, //< uint16(uint8 hole | uint8 par)
+        SetPar, //< uint8 par
         ScoreUpdate, //< ScoreUpdate struct
         HoleWon, //< uint16 client OR'd player winning a match or skins point
         FoulEvent, //< int8 BilliardsEvent foul reason - tells client to display a foul message
