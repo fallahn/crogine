@@ -2268,7 +2268,7 @@ bool GolfState::EmoteWheel::handleEvent(const cro::Event& evt)
     {
         std::uint32_t data = 0;
         data |= (std::uint8_t(sharedData.localConnectionData.connectionID) << 16) | (std::uint8_t(sharedData.inputBinding.controllerID) << 8) | (emoteID);
-        sharedData.clientConnection.netClient.sendPacket(PacketID::Emote, data, net::NetFlag::Reliable);
+        sharedData.clientConnection.netClient.sendPacket(PacketID::Emote, data, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
 
         cooldown = 6.f;
         buttonNodes[emoteID].getComponent<cro::Callback>().active = true; //play anim which also closes wheel
