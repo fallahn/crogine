@@ -4134,63 +4134,65 @@ void MenuState::addCourseSelectButtons()
     m_menuEntities[MenuID::Lobby].getComponent<cro::Transform>().addChild(buttonEnt.getComponent<cro::Transform>());
 
 
-
-    //checkbox to hide custom courses
-    auto checkboxEnt = m_uiScene.createEntity();
-    checkboxEnt.addComponent<cro::Transform>();
-    checkboxEnt.addComponent<cro::Drawable2D>();
-    checkboxEnt.addComponent<cro::Sprite>() = m_sprites[SpriteID::LobbyCheckbox];
-    checkboxEnt.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement | CommandID::Menu::CourseSelect;
-    checkboxEnt.addComponent<UIElement>().absolutePosition = { -38.f, -31.f };
-    checkboxEnt.getComponent<UIElement>().relativePosition = CourseDescPosition;
-    checkboxEnt.getComponent<UIElement>().depth = 0.01f;
-
-    bounds = m_sprites[SpriteID::LobbyCheckbox].getTextureRect();
-    checkboxEnt.addComponent<cro::Callback>().active = true;
-    checkboxEnt.getComponent<cro::Callback>().function =
-        [&,bounds](cro::Entity e, float)
+    if (m_courseData.size() > m_officialCourseCount)
     {
-        auto b = bounds;
-        if (m_sharedData.showCustomCourses)
+        //checkbox to hide custom courses
+        auto checkboxEnt = m_uiScene.createEntity();
+        checkboxEnt.addComponent<cro::Transform>();
+        checkboxEnt.addComponent<cro::Drawable2D>();
+        checkboxEnt.addComponent<cro::Sprite>() = m_sprites[SpriteID::LobbyCheckbox];
+        checkboxEnt.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement | CommandID::Menu::CourseSelect;
+        checkboxEnt.addComponent<UIElement>().absolutePosition = { -38.f, -31.f };
+        checkboxEnt.getComponent<UIElement>().relativePosition = CourseDescPosition;
+        checkboxEnt.getComponent<UIElement>().depth = 0.01f;
+
+        bounds = m_sprites[SpriteID::LobbyCheckbox].getTextureRect();
+        checkboxEnt.addComponent<cro::Callback>().active = true;
+        checkboxEnt.getComponent<cro::Callback>().function =
+            [&, bounds](cro::Entity e, float)
         {
-            b.bottom -= bounds.height;
-        }
-        e.getComponent<cro::Sprite>().setTextureRect(b);
-    };
+            auto b = bounds;
+            if (m_sharedData.showCustomCourses)
+            {
+                b.bottom -= bounds.height;
+            }
+            e.getComponent<cro::Sprite>().setTextureRect(b);
+        };
 
-    m_menuEntities[MenuID::Lobby].getComponent<cro::Transform>().addChild(checkboxEnt.getComponent<cro::Transform>());
+        m_menuEntities[MenuID::Lobby].getComponent<cro::Transform>().addChild(checkboxEnt.getComponent<cro::Transform>());
 
-    checkboxEnt = m_uiScene.createEntity();
-    checkboxEnt.addComponent<cro::Transform>();
-    checkboxEnt.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
-    checkboxEnt.addComponent<cro::Drawable2D>();
-    checkboxEnt.addComponent<cro::Sprite>() = m_sprites[SpriteID::LobbyCheckboxHighlight];
-    checkboxEnt.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
-    checkboxEnt.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement | CommandID::Menu::CourseSelect;
-    checkboxEnt.addComponent<UIElement>().absolutePosition = { -39.f, -32.f };
-    checkboxEnt.getComponent<UIElement>().relativePosition = CourseDescPosition;
-    checkboxEnt.getComponent<UIElement>().depth = 0.01f;
-    bounds = checkboxEnt.getComponent<cro::Sprite>().getTextureBounds();
-    checkboxEnt.addComponent<cro::UIInput>().area = bounds;
-    checkboxEnt.getComponent<cro::UIInput>().setGroup(MenuID::Lobby);
-    checkboxEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = m_courseSelectCallbacks.selectHighlight;
-    checkboxEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = m_courseSelectCallbacks.unselectHighlight;
-    checkboxEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = m_courseSelectCallbacks.toggleUserCourses;
-    m_menuEntities[MenuID::Lobby].getComponent<cro::Transform>().addChild(checkboxEnt.getComponent<cro::Transform>());
+        checkboxEnt = m_uiScene.createEntity();
+        checkboxEnt.addComponent<cro::Transform>();
+        checkboxEnt.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
+        checkboxEnt.addComponent<cro::Drawable2D>();
+        checkboxEnt.addComponent<cro::Sprite>() = m_sprites[SpriteID::LobbyCheckboxHighlight];
+        checkboxEnt.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+        checkboxEnt.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement | CommandID::Menu::CourseSelect;
+        checkboxEnt.addComponent<UIElement>().absolutePosition = { -39.f, -32.f };
+        checkboxEnt.getComponent<UIElement>().relativePosition = CourseDescPosition;
+        checkboxEnt.getComponent<UIElement>().depth = 0.01f;
+        bounds = checkboxEnt.getComponent<cro::Sprite>().getTextureBounds();
+        checkboxEnt.addComponent<cro::UIInput>().area = bounds;
+        checkboxEnt.getComponent<cro::UIInput>().setGroup(MenuID::Lobby);
+        checkboxEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = m_courseSelectCallbacks.selectHighlight;
+        checkboxEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = m_courseSelectCallbacks.unselectHighlight;
+        checkboxEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = m_courseSelectCallbacks.toggleUserCourses;
+        m_menuEntities[MenuID::Lobby].getComponent<cro::Transform>().addChild(checkboxEnt.getComponent<cro::Transform>());
 
 
-    //and label
-    auto labelEnt = m_uiScene.createEntity();
-    labelEnt.addComponent<cro::Transform>();
-    labelEnt.addComponent<cro::Drawable2D>();
-    labelEnt.addComponent<cro::Text>(font).setString("Show Custom");
-    labelEnt.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
-    labelEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
-    labelEnt.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement | CommandID::Menu::CourseSelect;
-    labelEnt.addComponent<UIElement>().absolutePosition = { 6.f, -24.f };
-    labelEnt.getComponent<UIElement>().relativePosition = CourseDescPosition;
-    labelEnt.getComponent<UIElement>().depth = 0.01f;
+        //and label
+        auto labelEnt = m_uiScene.createEntity();
+        labelEnt.addComponent<cro::Transform>();
+        labelEnt.addComponent<cro::Drawable2D>();
+        labelEnt.addComponent<cro::Text>(font).setString("Show Custom");
+        labelEnt.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+        labelEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
+        labelEnt.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement | CommandID::Menu::CourseSelect;
+        labelEnt.addComponent<UIElement>().absolutePosition = { 6.f, -24.f };
+        labelEnt.getComponent<UIElement>().relativePosition = CourseDescPosition;
+        labelEnt.getComponent<UIElement>().depth = 0.01f;
 
-    centreText(labelEnt);
-    m_menuEntities[MenuID::Lobby].getComponent<cro::Transform>().addChild(labelEnt.getComponent<cro::Transform>());
+        centreText(labelEnt);
+        m_menuEntities[MenuID::Lobby].getComponent<cro::Transform>().addChild(labelEnt.getComponent<cro::Transform>());
+    }
 }
