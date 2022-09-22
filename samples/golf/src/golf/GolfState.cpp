@@ -605,6 +605,12 @@ bool GolfState::handleEvent(const cro::Event& evt)
                 break;
             }
         }
+        m_emoteWheel.refreshLabels(); //displays labels if no controllers connected
+    }
+    else if (evt.type == SDL_CONTROLLERDEVICEADDED)
+    {
+        //hides labels
+        m_emoteWheel.refreshLabels();
     }
 
     else if (evt.type == SDL_MOUSEMOTION)
@@ -969,6 +975,8 @@ void GolfState::handleMessage(const cro::Message& msg)
                     e.getComponent<cro::Callback>().active = true;
                 };
                 m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+                m_emoteWheel.refreshLabels();
             }
         }
     }

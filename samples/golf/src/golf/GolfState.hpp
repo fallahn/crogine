@@ -340,12 +340,17 @@ private:
         const SharedStateData& sharedData;
         cro::Entity rootNode;
         std::array<cro::Entity, 4u> buttonNodes = {};
+        std::array<cro::Entity, 4u> labelNodes = {};
+
         float targetScale = 0.f;
         float currentScale = 0.f;
         float cooldown = 0.f;
+
         void build(cro::Entity, cro::Scene&, cro::TextureResource&);
         bool handleEvent(const cro::Event&);
         void update(float);
+
+        void refreshLabels();
     }m_emoteWheel;
     void showEmote(std::uint32_t);
 
