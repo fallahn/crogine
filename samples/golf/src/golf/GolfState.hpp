@@ -334,10 +334,11 @@ private:
 
     struct EmoteWheel final
     {
-        explicit EmoteWheel(const SharedStateData& ib)
-            : sharedData(ib) {}
+        EmoteWheel(const SharedStateData& ib, const ActivePlayer& cp)
+            : sharedData(ib), currentPlayer(cp) {}
 
         const SharedStateData& sharedData;
+        const ActivePlayer& currentPlayer;
         cro::Entity rootNode;
         std::array<cro::Entity, 4u> buttonNodes = {};
         std::array<cro::Entity, 4u> labelNodes = {};

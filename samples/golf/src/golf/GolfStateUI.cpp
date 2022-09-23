@@ -2292,7 +2292,14 @@ bool GolfState::EmoteWheel::handleEvent(const cro::Event& evt)
     const auto sendEmote = [&](std::uint8_t emoteID)
     {
         std::uint32_t data = 0;
-        data |= (std::uint8_t(sharedData.localConnectionData.connectionID) << 16) | (std::uint8_t(sharedData.inputBinding.controllerID) << 8) | (emoteID);
+        if (currentPlayer.client == sharedData.localConnectionData.connectionID)
+        {
+            data |= (sharedData.localConnectionData.connectionID << 16) | (currentPlayer.player << 8) | (emoteID);
+        }
+        else
+        {
+            data |= (sharedData.localConnectionData.connectionID << 16) | (std::uint8_t(sharedData.inputBinding.controllerID) << 8) | (emoteID);
+        }
         sharedData.clientConnection.netClient.sendPacket(PacketID::Emote, data, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
 
         cooldown = 6.f;
@@ -2304,15 +2311,36 @@ bool GolfState::EmoteWheel::handleEvent(const cro::Event& evt)
         return false;
     }
 
-    if (evt.type == SDL_KEYDOWN)
+    if (evt.type == SDL_KEYDOWN
+        && evt.key.repeat == 0)
     {
         switch (evt.key.keysym.sym)
         {
         default: break;
         case SDLK_LCTRL:
-            //TODO make this a keybind
             targetScale = 1.f;
             return true;
+        }
+
+        //stop these getting forwarded to input parser
+        if (evt.key.keysym.mod & KMOD_LCTRL)
+        {
+            if (evt.key.keysym.sym == sharedData.inputBinding.keys[InputBinding::Up])
+            {
+                return true;
+            }
+            else if (evt.key.keysym.sym == sharedData.inputBinding.keys[InputBinding::Down])
+            {
+                return true;
+            }
+            else if (evt.key.keysym.sym == sharedData.inputBinding.keys[InputBinding::Left])
+            {
+                return true;
+            }
+            else if (evt.key.keysym.sym == sharedData.inputBinding.keys[InputBinding::Right])
+            {
+                return true;
+            }
         }
     }
     else if (evt.type == SDL_KEYUP)
@@ -2360,6 +2388,20 @@ bool GolfState::EmoteWheel::handleEvent(const cro::Event& evt)
         case cro::GameController::ButtonY:
             targetScale = 1.f;
             return true;
+        }
+
+        //prevent these getting forwarded to input parse if wheel is open
+        if (cro::GameController::isButtonPressed(sharedData.inputBinding.controllerID, cro::GameController::ButtonY))
+        {
+            switch (evt.cbutton.button)
+            {
+            default: return false;
+            case SDL_CONTROLLER_BUTTON_DPAD_UP:
+            case SDL_CONTROLLER_BUTTON_DPAD_DOWN:
+            case SDL_CONTROLLER_BUTTON_DPAD_LEFT:
+            case SDL_CONTROLLER_BUTTON_DPAD_RIGHT:
+                return true;
+            }
         }
     }
     else if (evt.type == SDL_CONTROLLERBUTTONUP

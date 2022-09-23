@@ -197,7 +197,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     m_viewScale         (1.f),
     m_scoreColumnCount  (2),
     m_readyQuitFlags    (0),
-    m_emoteWheel        (sd),
+    m_emoteWheel        (sd, m_currentPlayer),
     m_minimapScale      (1.f),
     m_hadFoul           (false)
 {

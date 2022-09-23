@@ -83,7 +83,8 @@ InputParser::InputParser(const InputBinding& ip, cro::MessageBus& mb)
 void InputParser::handleEvent(const cro::Event& evt)
 {
     //apply to input mask
-    if (evt.type == SDL_KEYDOWN)
+    if (evt.type == SDL_KEYDOWN
+        && evt.key.repeat == 0)
     {
         if (m_isCPU && evt.key.windowID != CPU_ID)
         {
