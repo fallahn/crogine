@@ -122,6 +122,8 @@ private:
     };
     std::array<cro::Entity, ToolTipID::Count> m_tooltips = {};
 
+    std::vector<std::string> m_labelStrings;
+
     glm::vec2 m_viewScale;
     cro::Entity m_rootNode;
     void buildScene();

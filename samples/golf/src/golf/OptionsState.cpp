@@ -498,27 +498,9 @@ void OptionsState::updateKeybind(SDL_Keycode key)
     //actually update the info text
     cro::Command cmd;
     cmd.targetFlags = CommandID::Menu::PlayerConfig;
-    cmd.action = [index](cro::Entity e, float)
+    cmd.action = [&,index](cro::Entity e, float)
     {
-        switch (index)
-        {
-        default: break;
-        case InputBinding::PrevClub:
-            e.getComponent<cro::Text>().setString("Next Club");
-            break;
-        case InputBinding::NextClub:
-            e.getComponent<cro::Text>().setString("Previous Club");
-            break;
-        case InputBinding::Left:
-            e.getComponent<cro::Text>().setString("Aim Left");
-            break;
-        case InputBinding::Right:
-            e.getComponent<cro::Text>().setString("Aim Right");
-            break;
-        case InputBinding::Action:
-            e.getComponent<cro::Text>().setString("Take Shot");
-            break;
-        }
+        e.getComponent<cro::Text>().setString(m_labelStrings[index]);
         centreText(e);
 
         //reset any existing callback so that it doesn't timeout
@@ -1821,7 +1803,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
     infoEnt.addComponent<cro::Text>(uiFont);// .setString("Info Text");
     infoEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
     infoEnt.getComponent<cro::Text>().setCharacterSize(UITextSize);
-    //infoEnt.addComponent<cro::CommandTarget>().ID = CommandID::Menu::PlayerConfig; //not the best description, just recycling existing members here...
+    infoEnt.addComponent<cro::CommandTarget>().ID = CommandID::Menu::PlayerConfig; //not the best description, just recycling existing members here...
 
     infoEnt.addComponent<cro::Callback>().function =
         [](cro::Entity e, float dt)
@@ -1875,7 +1857,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
             [&, infoEnt, keyIndex](cro::Entity e, cro::ButtonEvent evt) mutable
             {
                 if (evt.type != SDL_MOUSEBUTTONDOWN
-                    && evt.type != SDL_MOUSEBUTTONUP
+                    /*&& evt.type != SDL_MOUSEBUTTONUP*/
                     && activated(evt))
                 {
                     m_updatingKeybind = true;
@@ -1897,10 +1879,9 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
         return entity;
     };
 
-    static std::vector<std::string> labelStrings;
     if (m_sharedData.baseState == StateID::Clubhouse)
     {
-        labelStrings =
+        m_labelStrings =
         {
             "Take Shot",
             "Power Up",
@@ -1922,7 +1903,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
     }
     else
     {
-        labelStrings =
+        m_labelStrings =
         {
             "Take Shot",
             "Next Club",
@@ -1948,11 +1929,11 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
     auto entity = createHighlight(glm::vec2(258.f, 96.f), InputBinding::PrevClub);
     entity.getComponent<cro::UIInput>().setSelectionIndex(5);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = uiSystem.addCallback(
-        [infoEnt, buttonChangeEnt](cro::Entity e) mutable
+        [&,infoEnt, buttonChangeEnt](cro::Entity e) mutable
         {
             e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
             e.getComponent<cro::AudioEmitter>().play();
-            infoEnt.getComponent<cro::Text>().setString(labelStrings[InputBinding::PrevClub]);
+            infoEnt.getComponent<cro::Text>().setString(m_labelStrings[InputBinding::PrevClub]);
             centreText(infoEnt);
 
             buttonChangeEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
@@ -1963,11 +1944,11 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
     entity = createHighlight(glm::vec2(324.f, 96.f), InputBinding::NextClub);
     entity.getComponent<cro::UIInput>().setSelectionIndex(6);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = uiSystem.addCallback(
-        [infoEnt, buttonChangeEnt](cro::Entity e) mutable
+        [&,infoEnt, buttonChangeEnt](cro::Entity e) mutable
         {
             e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
             e.getComponent<cro::AudioEmitter>().play();
-            infoEnt.getComponent<cro::Text>().setString(labelStrings[InputBinding::NextClub]);
+            infoEnt.getComponent<cro::Text>().setString(m_labelStrings[InputBinding::NextClub]);
             centreText(infoEnt);
 
             buttonChangeEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
@@ -1977,11 +1958,11 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
     entity = createHighlight(glm::vec2(230.f, 59.f), InputBinding::Left);
     entity.getComponent<cro::UIInput>().setSelectionIndex(8);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = uiSystem.addCallback(
-        [infoEnt, buttonChangeEnt](cro::Entity e) mutable
+        [&,infoEnt, buttonChangeEnt](cro::Entity e) mutable
         {
             e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
             e.getComponent<cro::AudioEmitter>().play();
-            infoEnt.getComponent<cro::Text>().setString(labelStrings[InputBinding::Left]);
+            infoEnt.getComponent<cro::Text>().setString(m_labelStrings[InputBinding::Left]);
             centreText(infoEnt);
 
             buttonChangeEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
@@ -1991,11 +1972,11 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
     entity = createHighlight(glm::vec2(230.f, 44.f), InputBinding::Right);
     entity.getComponent<cro::UIInput>().setSelectionIndex(9);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = uiSystem.addCallback(
-        [infoEnt, buttonChangeEnt](cro::Entity e) mutable
+        [&,infoEnt, buttonChangeEnt](cro::Entity e) mutable
         {
             e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
             e.getComponent<cro::AudioEmitter>().play();
-            infoEnt.getComponent<cro::Text>().setString(labelStrings[InputBinding::Right]);
+            infoEnt.getComponent<cro::Text>().setString(m_labelStrings[InputBinding::Right]);
             centreText(infoEnt);
 
             buttonChangeEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
@@ -2005,11 +1986,11 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
     entity = createHighlight(glm::vec2(352.f, 48.f), InputBinding::Action);
     entity.getComponent<cro::UIInput>().setSelectionIndex(11);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = uiSystem.addCallback(
-        [infoEnt, buttonChangeEnt](cro::Entity e) mutable
+        [&,infoEnt, buttonChangeEnt](cro::Entity e) mutable
         {
             e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
             e.getComponent<cro::AudioEmitter>().play();
-            infoEnt.getComponent<cro::Text>().setString(labelStrings[InputBinding::Action]);
+            infoEnt.getComponent<cro::Text>().setString(m_labelStrings[InputBinding::Action]);
             centreText(infoEnt);
 
             buttonChangeEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
@@ -2021,11 +2002,11 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
         entity = createHighlight(glm::vec2(230.f, 74.f), InputBinding::Up);
         entity.getComponent<cro::UIInput>().setSelectionIndex(7);
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = uiSystem.addCallback(
-            [infoEnt, buttonChangeEnt](cro::Entity e) mutable
+            [&,infoEnt, buttonChangeEnt](cro::Entity e) mutable
             {
                 e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
                 e.getComponent<cro::AudioEmitter>().play();
-                infoEnt.getComponent<cro::Text>().setString(labelStrings[InputBinding::Up]);
+                infoEnt.getComponent<cro::Text>().setString(m_labelStrings[InputBinding::Up]);
                 centreText(infoEnt);
 
                 buttonChangeEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
@@ -2035,11 +2016,11 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
         entity = createHighlight(glm::vec2(230.f, 29.f), InputBinding::Down);
         entity.getComponent<cro::UIInput>().setSelectionIndex(10);
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = uiSystem.addCallback(
-            [infoEnt, buttonChangeEnt](cro::Entity e) mutable
+            [&,infoEnt, buttonChangeEnt](cro::Entity e) mutable
             {
                 e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
                 e.getComponent<cro::AudioEmitter>().play();
-                infoEnt.getComponent<cro::Text>().setString(labelStrings[InputBinding::Down]);
+                infoEnt.getComponent<cro::Text>().setString(m_labelStrings[InputBinding::Down]);
                 centreText(infoEnt);
 
                 buttonChangeEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
@@ -2052,11 +2033,11 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
         entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = 0; //don't rebind this
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = uiSystem.addCallback(
-            [infoEnt](cro::Entity e) mutable
+            [&,infoEnt](cro::Entity e) mutable
             {
                 e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
                 e.getComponent<cro::AudioEmitter>().play();
-                infoEnt.getComponent<cro::Text>().setString(labelStrings[InputBinding::SwitchView]);
+                infoEnt.getComponent<cro::Text>().setString(m_labelStrings[InputBinding::SwitchView]);
                 centreText(infoEnt);
             });
 
@@ -2067,11 +2048,11 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
         entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = 0; //don't rebind this
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = uiSystem.addCallback(
-            [infoEnt](cro::Entity e) mutable
+            [&,infoEnt](cro::Entity e) mutable
             {
                 e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
                 e.getComponent<cro::AudioEmitter>().play();
-                infoEnt.getComponent<cro::Text>().setString(labelStrings[InputBinding::CamModifier]);
+                infoEnt.getComponent<cro::Text>().setString(m_labelStrings[InputBinding::CamModifier]);
                 centreText(infoEnt);
             });
     }
@@ -2084,11 +2065,11 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
         entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = 0; //don't rebind this
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = uiSystem.addCallback(
-            [infoEnt](cro::Entity e) mutable
+            [&,infoEnt](cro::Entity e) mutable
             {
                 e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
                 e.getComponent<cro::AudioEmitter>().play();
-                infoEnt.getComponent<cro::Text>().setString(labelStrings[InputBinding::SwitchView]);
+                infoEnt.getComponent<cro::Text>().setString(m_labelStrings[InputBinding::SwitchView]);
                 centreText(infoEnt);
             });
     }
