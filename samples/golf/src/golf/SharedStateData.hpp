@@ -169,7 +169,7 @@ struct SharedStateData final
     std::int32_t postProcessIndex = 0;
     std::string customShaderPath;
     InputBinding inputBinding;
-    bool pixelScale = true;
+    bool pixelScale = false;
     float fov = MinFOV;
     bool vertexSnap = false;
     float mouseSpeed = 1.f;
@@ -184,7 +184,7 @@ struct SharedStateData final
         Classic, Low, High
     };
     std::int32_t treeQuality = Low;
-    bool hqShadows = true;
+    bool hqShadows = false;
     bool logBenchmarks = false;
     bool showCustomCourses = true;
 
