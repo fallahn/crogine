@@ -1,7 +1,0 @@
-avatar 
-{
-    model = assets/golf/models/avatars/player_zero.cmt
-    audio = assets/golf/sound/avatars/f01.xas
-    uid = 2533720330
-
-}

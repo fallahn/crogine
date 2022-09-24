@@ -1,7 +1,0 @@
-ball 
-{
-    model = assets/golf/models/balls/ball_chomps.cmt
-    tint = 0.722,0.208,0.188,1.0
-    uid = 405680102
-
-}

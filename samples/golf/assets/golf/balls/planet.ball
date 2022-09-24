@@ -1,7 +1,0 @@
-ball 
-{
-    model = assets/golf/models/balls/ball05.cmt
-    tint = 0.01176,0.2,0.45,1
-    uid = 1936300229
-
-}
