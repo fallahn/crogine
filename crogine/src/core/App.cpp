@@ -476,6 +476,18 @@ void App::handleEvents()
     {
         ImGui_ImplSDL2_ProcessEvent(&evt);
 
+        //update the count first because handling
+        //the event below might query getControllerCount()
+        if (evt.type == SDL_CONTROLLERDEVICEADDED)
+        {
+            m_controllerCount++;
+        }
+        else if (evt.type == SDL_CONTROLLERDEVICEREMOVED)
+        {
+            m_controllerCount--;
+        }
+
+        //HOWEVER
         //handle events first in case user events
         //want to read disconnected controllers
         //before the following cases handle removal
@@ -555,7 +567,7 @@ void App::handleEvents()
 
                     m_controllers[id] = ci;
                     //SDL_GameControllerSetPlayerIndex(m_controllers[id].controller, id);
-                    m_controllerCount++;
+                    //m_controllerCount++; //count is updated first (above)
                 }
             }
             else
@@ -587,7 +599,7 @@ void App::handleEvents()
                 }
                 
                 SDL_GameControllerClose(m_controllers[controllerIndex].controller);
-                m_controllerCount--;
+                //m_controllerCount--; //count is updated first (above)
                 m_controllers[controllerIndex] = {};
 
                 

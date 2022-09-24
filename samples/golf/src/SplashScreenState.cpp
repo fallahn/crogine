@@ -250,7 +250,7 @@ void SplashState::loadAssets()
         entity.getComponent<cro::Callback>().function =
             [&](cro::Entity e, float dt)
         {
-            //we can get away witch static var because splash screen
+            //we can get away with static var because splash screen
             //is only ever shown one per game run.
             static float currTime = 1.f;
             currTime -= dt;

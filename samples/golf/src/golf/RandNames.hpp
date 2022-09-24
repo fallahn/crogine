@@ -33,7 +33,7 @@ source distribution.
 
 #include <array>
 
-static const std::array RandomNames =
+static inline const std::array RandomNames =
 {
     cro::String("Elvis"),
     cro::String("Cleftwhistle"),
@@ -60,7 +60,7 @@ static const std::array RandomNames =
     cro::String("Lukas"),
     cro::String("Ehsan"),
     cro::String("Pietro"),
-    //cro::String(L"Gülizar"),
+    cro::String("Liesbeth"),
     cro::String("Kathrine"),
     cro::String("Aras"),
     cro::String("Eumelia"),
@@ -72,7 +72,7 @@ static const std::array RandomNames =
     cro::String("Herobrine"),
     cro::String("Big Bad Jon"),
     cro::String("Frieda"),
-    //cro::String(L"Jørgen"),
+    cro::String("Jørgen"),
     cro::String("Luciana"),
     cro::String("Niall"),
     cro::String("Kumuran"),
