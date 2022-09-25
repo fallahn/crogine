@@ -339,7 +339,7 @@ void BushState::loadAssets()
     shaderUniform.targetHeight = shader->getUniformID("u_targetHeight");
 
 
-    m_resources.shaders.loadFromString(BushShaderID::Branch, BranchVertex, BranchFragment, "#define INSTANCING\n");
+    m_resources.shaders.loadFromString(BushShaderID::Branch, BranchVertex, BranchFragment, "#define INSTANCING\n#define ALPHA_CLIP\n");
     shader = &m_resources.shaders.get(BushShaderID::Branch);
     branchMaterial = m_resources.materials.add(*shader);
 
@@ -443,6 +443,8 @@ void BushState::createScene()
     camEnt.getComponent<cro::Camera>().resizeCallback = std::bind(&BushState::updateView, this, std::placeholders::_1);
     camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(2048, 2048);
     camEnt.getComponent<cro::Camera>().renderFlags = ~RenderFlagsThumbnail;
+    camEnt.getComponent<cro::Camera>().setMaxShadowDistance(20.f);
+    camEnt.getComponent<cro::Camera>().setShadowExpansion(10.f);
     camEnt.getComponent<cro::Transform>().setPosition({ 0.f, 0.5f, 6.f });
 
 
@@ -842,6 +844,7 @@ void BushState::loadModel(const std::string& path)
             for (auto j = 0u; j < meshData->submeshCount; ++j)
             {
                 auto mat = m_resources.materials.get(branchMaterial);
+                mat.doubleSided = true;
                 if (md.getMaterial(j)->properties.count("u_diffuseMap"))
                 {
                     cro::TextureID tid(md.getMaterial(j)->properties.at("u_diffuseMap").second.textureID);
