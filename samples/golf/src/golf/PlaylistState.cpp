@@ -674,7 +674,7 @@ void PlaylistState::loadAssets()
     m_windBuffer.addShader(*shader);
     m_materialIDs[MaterialID::Billboard] = m_resources.materials.add(*shader);
 
-    m_resources.shaders.loadFromString(ShaderID::TreesetBranch, BranchVertex, BranchFragment, "#define INSTANCING\n" + wobble);
+    m_resources.shaders.loadFromString(ShaderID::TreesetBranch, BranchVertex, BranchFragment, "#define INSTANCING\n#define ALPHA_CLIP\n" + wobble);
     shader = &m_resources.shaders.get(ShaderID::TreesetBranch);
     m_scaleBuffer.addShader(*shader);
     m_resolutionBuffer.addShader(*shader);
@@ -688,7 +688,7 @@ void PlaylistState::loadAssets()
     m_windBuffer.addShader(*shader);
     m_materialIDs[MaterialID::Leaf] = m_resources.materials.add(*shader);
 
-    m_resources.shaders.loadFromString(ShaderID::TreesetShadow, ShadowVertex, ShadowFragment, "#define INSTANCING\n#define TREE_WARP\n" + wobble);
+    m_resources.shaders.loadFromString(ShaderID::TreesetShadow, ShadowVertex, ShadowFragment, "#define INSTANCING\n#define TREE_WARP\n#define ALPHA_CLIP\n" + wobble);
     shader = &m_resources.shaders.get(ShaderID::TreesetShadow);
     m_windBuffer.addShader(*shader);
     m_materialIDs[MaterialID::BranchShadow] = m_resources.materials.add(*shader);
@@ -3358,7 +3358,10 @@ void PlaylistState::loadShrubbery(const std::string& path)
                         auto material = m_resources.materials.get(m_materialIDs[MaterialID::Branch]);
                         applyMaterialData(md, material, idx);
                         shrubbery.treesetEnts[i].getComponent<cro::Model>().setMaterial(idx, material);
-                        shrubbery.treesetEnts[i].getComponent<cro::Model>().setShadowMaterial(idx, m_resources.materials.get(m_materialIDs[MaterialID::BranchShadow]));
+
+                        material = m_resources.materials.get(m_materialIDs[MaterialID::BranchShadow]);
+                        applyMaterialData(md, material, idx);
+                        shrubbery.treesetEnts[i].getComponent<cro::Model>().setShadowMaterial(idx, material);
                     }
 
                     auto& meshData = shrubbery.treesetEnts[i].getComponent<cro::Model>().getMeshData();
