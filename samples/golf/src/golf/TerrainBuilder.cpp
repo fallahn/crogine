@@ -428,7 +428,10 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
                             auto material = resources.materials.get(branchMaterialID);
                             applyMaterialData(shrubDef, material, idx);
                             childEnt.getComponent<cro::Model>().setMaterial(idx, material);
-                            childEnt.getComponent<cro::Model>().setShadowMaterial(idx, resources.materials.get(treeShadowMaterialID));
+
+                            material = resources.materials.get(treeShadowMaterialID);
+                            applyMaterialData(shrubDef, material, idx);
+                            childEnt.getComponent<cro::Model>().setShadowMaterial(idx, material);
                         }
 
                         auto& meshData = childEnt.getComponent<cro::Model>().getMeshData();

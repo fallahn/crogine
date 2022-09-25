@@ -564,5 +564,9 @@ std::string BranchFragment = R"(
         int y = int(mod(xy.y, MatrixSize));
 
         float alpha = findClosest(x, y, smoothstep(0.1, 0.95, v_ditherAmount));
+#if defined ALPHA_CLIP
+        alpha *= colour.a;
+#endif
+
         if (alpha < 0.1) discard;
     })";

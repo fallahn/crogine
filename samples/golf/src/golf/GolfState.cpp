@@ -1450,7 +1450,7 @@ void GolfState::loadAssets()
 
     if (m_sharedData.treeQuality == SharedStateData::High)
     {
-        m_resources.shaders.loadFromString(ShaderID::TreesetBranch, BranchVertex, BranchFragment, "#define INSTANCING\n" + wobble);
+        m_resources.shaders.loadFromString(ShaderID::TreesetBranch, BranchVertex, BranchFragment, "#define ALPHA_CLIP\n#define INSTANCING\n" + wobble);
         shader = &m_resources.shaders.get(ShaderID::TreesetBranch);
         m_scaleBuffer.addShader(*shader);
         m_resolutionBuffer.addShader(*shader);
@@ -1463,7 +1463,7 @@ void GolfState::loadAssets()
         m_windBuffer.addShader(*shader);
 
 
-        m_resources.shaders.loadFromString(ShaderID::TreesetShadow, ShadowVertex, ShadowFragment, "#define INSTANCING\n#define TREE_WARP\n" + wobble);
+        m_resources.shaders.loadFromString(ShaderID::TreesetShadow, ShadowVertex, ShadowFragment, "#define INSTANCING\n#define TREE_WARP\n#define ALPHA_CLIP\n" + wobble);
         shader = &m_resources.shaders.get(ShaderID::TreesetShadow);
         m_windBuffer.addShader(*shader);
 
