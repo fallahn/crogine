@@ -80,6 +80,7 @@ namespace
     //TODO this should be a member really
     std::vector<Anim> animations;
     bool convertVertexColourspace = true;
+    bool skipSecondUV = true;
     float SampleRate = 15.f;
 }
 
@@ -125,6 +126,10 @@ void ModelState::showGLTFBrowser()
                 ImGui::Checkbox("Convert Vertex Colourspace", &convertVertexColourspace);
                 ImGui::SameLine();
                 uiConst::showToolTip("Converts incoming vertex colour data from sRGB to linear space.\nUseful if you have data rather than colour information stored in the vertex colour channel");
+
+                ImGui::Checkbox("Skip UV1", &skipSecondUV);
+                ImGui::SameLine();
+                uiConst::showToolTip("Only import the first UV channel (if it exists)");
 
                 auto buttonLabel = "Import##" + IDString;
                 if (ImGui::Button(buttonLabel.c_str()))
@@ -580,7 +585,8 @@ bool ModelState::importGLTF(std::int32_t idx, bool loadAnims)
                 flags |= cro::VertexProperty::UV0;
                 attribIndices[cro::Mesh::UV0] = idx;
             }
-            else if (name == "TEXCOORD_1")
+            else if (name == "TEXCOORD_1"
+                && !skipSecondUV)
             {
                 flags |= cro::VertexProperty::UV1;
                 attribIndices[cro::Mesh::UV1] = idx;
@@ -831,7 +837,7 @@ bool ModelState::importGLTF(std::int32_t idx, bool loadAnims)
                     }
                 }
                 else if (j == cro::Mesh::UV0
-                    || j == cro::Mesh::UV1)
+                    || (j == cro::Mesh::UV1 && !skipSecondUV))
                 {
                     //flip the V
                     auto index = i * size;
@@ -932,7 +938,7 @@ bool ModelState::importGLTF(std::int32_t idx, bool loadAnims)
         //offset indices for submesh as we're concatting the vertex data
         indexOffset += vertexCount;
 
-        prim.material; //TODO parse this later
+        //prim.material; //TODO parse this later
     }
 
     CMFHeader header;
