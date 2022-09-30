@@ -115,7 +115,7 @@ std::vector<std::string> FileSystem::listFiles(std::string path)
     HANDLE hFind = FindFirstFile(wPath.c_str(), &findData);
     if (hFind == INVALID_HANDLE_VALUE)
     {
-        std::cout << "Failed to find file data, invalid file handle returned" << std::endl;
+        LogE << "Failed to find file data, invalid file handle returned" << std::endl;
         return results;
     }
 

@@ -345,6 +345,11 @@ glm::quat Transform::getRotation() const
     return m_rotation;
 }
 
+float Transform::getRotation2D() const
+{
+    return glm::eulerAngles(m_rotation).z;
+}
+
 glm::quat Transform::getWorldRotation() const
 {
     if (m_parent)

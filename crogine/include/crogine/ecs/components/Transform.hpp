@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2022
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -204,6 +204,11 @@ namespace cro
         \brief Returns the rotation of the transform
         */
         glm::quat getRotation() const;
+
+        /*!
+        \brief Returns the rotation, in radians, around the z axis
+        */
+        float getRotation2D() const;
 
         /*!
         \brief Returns the sum rotation of this transform
