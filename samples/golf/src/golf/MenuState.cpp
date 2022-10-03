@@ -338,8 +338,13 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
         {
             if (ImGui::Begin("buns"))
             {
-                auto size = glm::vec2(LabelTextureSize);
-                ImGui::Image(m_sharedData.nameTextures[0].getTexture(), {size.x, size.y}, { 0.f, 1.f }, { 1.f, 0.f });
+                //auto size = glm::vec2(LabelTextureSize);
+                auto size = glm::vec2(256.f);
+                auto* tex = Achievements::getIcon(AchievementStrings[1]).texture;
+                if (tex)
+                {
+                    ImGui::Image(/*m_sharedData.nameTextures[0].getTexture()*/*tex, { size.x, size.y }, { 0.f, 1.f }, { 1.f, 0.f });
+                }
             }
             ImGui::End();
         });

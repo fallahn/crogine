@@ -149,11 +149,6 @@ void DefaultAchievements::update()
     }
 }
 
-void DefaultAchievements::registerAchievement(const std::string&)
-{
-
-}
-
 void DefaultAchievements::awardAchievement(const std::string& name)
 {
     if (m_achievements.count(name) != 0 && !m_achievements[name].achieved)
