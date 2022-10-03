@@ -125,7 +125,7 @@ static const std::array<std::pair<std::string, bool>, AchievementID::Count> Achi
 {
     std::make_pair("Unknown.", true),
     std::make_pair("Get a hole in one", false),
-    std::make_pair("Complete 10 rounds of Golf", false),
+    std::make_pair("Complete 10 rounds of golf", false),
     std::make_pair("Putt a total distance of 1km", false),
     std::make_pair("Get a total stroke distance of 12km", false),
     std::make_pair("Come top of the Leaderboard", false),
@@ -269,14 +269,14 @@ static const std::array<std::string, StatID::Count> StatLabels =
     "Rounds Where Water Were Traps Hit",
     "Total Water Traps Hit",
     "Total Sand Traps Hit",
-    "Number of times Course 1 Completed",
-    "Number of times Course 2 Completed",
-    "Number of times Course 3 Completed",
-    "Number of times Course 4 Completed",
-    "Number of times Course 5 Completed",
-    "Number of times Course 6 Completed",
-    "Number of times Course 7 Completed",
-    "Number of times Course 8 Completed",
+    "Number Of Times Course 1 Completed",
+    "Number Of Times Course 2 Completed",
+    "Number Of Times Course 3 Completed",
+    "Number Of Times Course 4 Completed",
+    "Number Of Times Course 5 Completed",
+    "Number Of Times Course 6 Completed",
+    "Number Of Times Course 7 Completed",
+    "Number Of Times Course 8 Completed",
 };
 
 struct StatType final

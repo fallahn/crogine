@@ -231,6 +231,7 @@ float DefaultAchievements::incrementStat(const std::string& name, std::int32_t v
         auto& stat = m_stats[name];
         stat.value += static_cast<float>(value);
         syncStat(stat);
+        return stat.value;
     }
     return 0.f;
 }
@@ -246,6 +247,7 @@ float DefaultAchievements::incrementStat(const std::string& name, float value)
         auto& stat = m_stats[name];
         stat.value += value;
         syncStat(stat);
+        return stat.value;
     }
     return 0.f;
 }
