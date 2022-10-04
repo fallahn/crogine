@@ -2611,37 +2611,10 @@ void DrivingState::setActiveCamera(std::int32_t camID)
 
 void DrivingState::loadScores()
 {
-    const std::string loadPath = cro::App::getInstance().getPreferencePath() + "driving.scores";
-
-    cro::ConfigFile cfg;
-    if (cfg.loadFromFile(loadPath, false))
-    {
-        const auto& props = cfg.getProperties();
-        for (const auto& p : props)
-        {
-            if (p.getName() == "five")
-            {
-                m_topScores[0] = std::min(100.f, std::max(0.f, p.getValue<float>()));
-            }
-            else if (p.getName() == "nine")
-            {
-                m_topScores[1] = std::min(100.f, std::max(0.f, p.getValue<float>()));
-            }
-            else if (p.getName() == "eighteen")
-            {
-                m_topScores[2] = std::min(100.f, std::max(0.f, p.getValue<float>()));
-            }
-        }
-    }
+    Social::readDrivingStats(m_topScores);
 }
 
 void DrivingState::saveScores()
 {
-    const std::string savePath = cro::App::getInstance().getPreferencePath() + "driving.scores";
-
-    cro::ConfigFile cfg;
-    cfg.addProperty("five").setValue(m_topScores[0]);
-    cfg.addProperty("nine").setValue(m_topScores[1]);
-    cfg.addProperty("eighteen").setValue(m_topScores[2]);
-    cfg.save(savePath);
+    Social::storeDrivingStats(m_topScores);
 }
