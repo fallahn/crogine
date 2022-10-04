@@ -57,7 +57,6 @@ public:
 
     bool init() override;
     void update() override;
-    void registerAchievement(const std::string&) override {}
     void awardAchievement(const std::string&) override;
     const AchievementData* getAchievement(const std::string&) const override;
     AchievementImage getIcon(const std::string&) const override;
