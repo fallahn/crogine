@@ -283,6 +283,17 @@ void GolfGame::render()
 
 bool GolfGame::initialise()
 {
+#ifdef USE_GNS
+    m_achievements = std::make_unique<SteamAchievements>();
+#else
+    m_achievements = std::make_unique<DefaultAchievements>(getMessageBus());
+#endif
+    if (!Achievements::init(*m_achievements))
+    {
+        //no point trying to load the menu if we failed to init.
+        return false;
+    }
+
     m_hostAddresses = cro::Util::Net::getLocalAddresses();
     if (m_hostAddresses.empty())
     {
@@ -561,19 +572,6 @@ bool GolfGame::initialise()
     m_postQuad->setShader(*m_postShader);
 
     m_activeIndex = m_sharedData.postProcessIndex;
-
-
-#ifdef USE_GNS
-    m_achievements = std::make_unique<SteamAchievements>();
-#else
-    m_achievements = std::make_unique<DefaultAchievements>(getMessageBus());
-#endif
-    if (!Achievements::init(*m_achievements))
-    {
-        //no point trying to load the menu if we failed to init.
-        return false;
-    }
-
 
 #ifdef CRO_DEBUG_
     //m_stateStack.pushState(StateID::DrivingRange); //can't go straight to this because menu needs to parse avatar data
