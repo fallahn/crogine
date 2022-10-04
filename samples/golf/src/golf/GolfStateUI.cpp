@@ -939,7 +939,7 @@ void GolfState::showCountdown(std::uint8_t seconds)
         }
     }
     Achievements::incrementStat(StatStrings[StatID::TotalRounds]);
-    Achievements::incrementStat(StatStrings[StatID::TimeOnTheCourse], m_sharedData.timeStats[0].totalTime / 1000);
+    Achievements::incrementStat(StatStrings[StatID::TimeOnTheCourse], static_cast<float>(m_sharedData.timeStats[0].totalTime) / 1000.f);
     if (m_sharedData.holeCount == 0) //set to ALL - which ought to be 18
     {
         Achievements::incrementStat(m_sharedData.mapDirectory);

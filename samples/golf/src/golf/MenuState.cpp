@@ -437,6 +437,12 @@ bool MenuState::handleEvent(const cro::Event& evt)
         {
         default: break;
 #ifdef CRO_DEBUG_
+#ifdef USE_GNS
+        case SDLK_PAGEUP:
+            LogI << "resetting achievements" << std::endl;
+            Achievements::resetAll();
+            break;
+#endif
         case SDLK_F2:
             showPlayerConfig(true, 0);
             break;
