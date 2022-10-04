@@ -2286,7 +2286,7 @@ bool GolfState::EmoteWheel::handleEvent(const cro::Event& evt)
 {
     if (sharedData.tutorial)
     {
-        return true;
+        return false;
     }
 
     const auto sendEmote = [&](std::uint8_t emoteID)
