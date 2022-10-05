@@ -4414,6 +4414,8 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo)
     for (auto i = 0u; i < m_sharedData.localConnectionData.playerCount; ++i)
     {
         m_sharedData.timeStats[i].totalTime += m_sharedData.timeStats[i].holeTimes[m_currentHole];
+
+        Achievements::incrementStat(StatStrings[StatID::TimeOnTheCourse], static_cast<float>(m_sharedData.timeStats[i].holeTimes[m_currentHole]) / 1000.f);
     }
 
     updateScoreboard();
