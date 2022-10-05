@@ -239,6 +239,9 @@ bool DrivingState::handleEvent(const cro::Event& evt)
             debugFlags = (debugFlags == 0) ? BulletDebug::DebugFlags : 0;
             m_gameScene.getSystem<BallSystem>()->setDebugFlags(debugFlags);
             break;
+        case SDLK_END:
+            saveScores();
+            break;
         case SDLK_INSERT:
             toggleFreeCam();
             break;
