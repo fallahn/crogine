@@ -284,7 +284,7 @@ void GolfGame::render()
 bool GolfGame::initialise()
 {
 #ifdef USE_GNS
-    m_achievements = std::make_unique<SteamAchievements>();
+    m_achievements = std::make_unique<SteamAchievements>(getMessageBus(), MessageID::AchievementMessage);
 #else
     m_achievements = std::make_unique<DefaultAchievements>(getMessageBus());
 #endif
