@@ -2731,10 +2731,10 @@ void GolfState::loadAssets()
 
     for (auto& data : m_sharedData.timeStats)
     {
-        data.totalTime = 0;
+        data.totalTime = 0.f;
         data.holeTimes.clear();
         data.holeTimes.resize(holeStrings.size());
-        std::fill(data.holeTimes.begin(), data.holeTimes.end(), 0);
+        std::fill(data.holeTimes.begin(), data.holeTimes.end(), 0.f);
     }
 
     initAudio(theme.treesets.size() > 2);
@@ -4230,7 +4230,7 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
 
             if (m_currentPlayer.client == m_sharedData.clientConnection.connectionID)
             {
-                m_sharedData.timeStats[m_currentPlayer.player].holeTimes[m_currentHole] += m_turnTimer.elapsed().asMilliseconds();
+                m_sharedData.timeStats[m_currentPlayer.player].holeTimes[m_currentHole] += m_turnTimer.elapsed().asSeconds();
 
                 if (update.terrain == TerrainID::Bunker)
                 {
@@ -4415,7 +4415,7 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo)
     {
         m_sharedData.timeStats[i].totalTime += m_sharedData.timeStats[i].holeTimes[m_currentHole];
 
-        Achievements::incrementStat(StatStrings[StatID::TimeOnTheCourse], static_cast<float>(m_sharedData.timeStats[i].holeTimes[m_currentHole]) / 1000.f);
+        Achievements::incrementStat(StatStrings[StatID::TimeOnTheCourse], m_sharedData.timeStats[i].holeTimes[m_currentHole]);
     }
 
     updateScoreboard();

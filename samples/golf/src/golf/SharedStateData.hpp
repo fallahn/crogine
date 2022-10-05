@@ -134,8 +134,8 @@ struct SharedStateData final
 
     struct TimeStats final
     {
-        std::vector<std::int32_t> holeTimes; //millis
-        std::int32_t totalTime = 0;
+        std::vector<float> holeTimes; //seconds
+        float totalTime = 0;
     };
     std::array<TimeStats, ConnectionData::MaxPlayers> timeStats = {};
 
