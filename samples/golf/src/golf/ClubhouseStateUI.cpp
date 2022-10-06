@@ -2207,6 +2207,7 @@ void ClubhouseState::quitLobby()
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
     Social::setStatus(Social::InfoID::Menu, { "Clubhouse" });
+    Social::setGroup(0);
 }
 
 void ClubhouseState::beginTextEdit(cro::Entity stringEnt, cro::String* dst, std::size_t maxChars)

@@ -334,6 +334,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
         });
 
     Social::setStatus(Social::InfoID::Menu, { "Main Menu" });
+    Social::setGroup(0);
 
 #ifdef CRO_DEBUG_
 
@@ -1586,6 +1587,7 @@ void MenuState::finaliseGameJoin(const MatchMaking::Message& data)
 {
 #ifdef USE_GNS
     m_sharedData.clientConnection.connected = m_sharedData.clientConnection.netClient.connect(CSteamID(data.hostID));
+    Social::setGroup(data.hostID, 4);
 #else
     m_sharedData.clientConnection.connected = m_sharedData.clientConnection.netClient.connect(m_sharedData.targetIP.toAnsiString(), ConstVal::GamePort);
 #endif

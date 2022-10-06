@@ -265,6 +265,7 @@ ClubhouseState::ClubhouseState(cro::StateStack& ss, cro::State::Context ctx, Sha
     m_sharedData.inviteID = 0;
 
     Social::setStatus(Social::InfoID::Menu, { "Clubhouse" });
+    Social::setGroup(0);
 
 #ifdef CRO_DEBUG_
     registerWindow([&]()
@@ -1646,6 +1647,7 @@ void ClubhouseState::finaliseGameJoin(const MatchMaking::Message& data)
 {
 #ifdef USE_GNS
     m_sharedData.clientConnection.connected = m_sharedData.clientConnection.netClient.connect(CSteamID(data.hostID));
+    Social::setGroup(data.hostID, 2);
 #else
     m_sharedData.clientConnection.connected = m_sharedData.clientConnection.netClient.connect(m_sharedData.targetIP.toAnsiString(), ConstVal::GamePort);
 #endif

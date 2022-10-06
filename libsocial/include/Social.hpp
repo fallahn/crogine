@@ -54,6 +54,7 @@ public:
     static void storeDrivingStats(const std::array<float, 3u>&);
     static void readDrivingStats(std::array<float, 3u>&);
     static void setStatus(std::int32_t, const std::vector<const char*>&) {}
+    static void setGroup(std::uint64_t, std::int32_t = 0) {}
     static constexpr std::uint32_t IconSize = 64;
     static inline const std::string RSSFeed = "https://fallahn.itch.io/vga-golf/devlog.rss";
     static inline const std::string WebURL = "https://fallahn.itch.io/vga-golf";
