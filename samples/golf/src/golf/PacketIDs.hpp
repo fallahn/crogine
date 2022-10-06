@@ -129,7 +129,8 @@ namespace PacketID
         CPUThink, //< uint8 0 if begin think, 1 end think
         CueUpdate, //< BilliardsUpdate to show the 'ghost' cue on remote clients
         NewLobbyReady, //< uint64 lobbyID - broadcast by host when returning from existing game and relayed by server
-        Emote //< uint32 00|client|player|emoteID
+        Emote, //< uint32 00|client|player|emoteID
+        LevelUp //< uint64 00|00|client|player|level (level is 4 bytes)
     };
 }
 

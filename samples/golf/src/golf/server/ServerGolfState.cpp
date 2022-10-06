@@ -196,6 +196,9 @@ void GolfState::netEvent(const net::NetEvent& evt)
         case PacketID::Emote:
             m_sharedData.host.broadcastPacket(PacketID::Emote, evt.packet.as<std::uint32_t>(), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
             break;
+        case PacketID::LevelUp:
+            m_sharedData.host.broadcastPacket(PacketID::LevelUp, evt.packet.as<std::uint64_t>(), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+            break;
         case PacketID::ClientReady:
             if (!m_sharedData.clients[evt.packet.as<std::uint8_t>()].ready)
             {

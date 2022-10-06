@@ -51,8 +51,8 @@ namespace
     static constexpr float ImageSize = 64.f;
 }
 
-DefaultAchievements::DefaultAchievements(cro::MessageBus& mb)
-    : m_messageBus(mb)
+DefaultAchievements::DefaultAchievements()
+    : m_messageBus(cro::App::getInstance().getMessageBus())
 {
 
 }

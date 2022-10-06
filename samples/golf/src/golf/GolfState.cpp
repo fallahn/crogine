@@ -674,6 +674,19 @@ void GolfState::handleMessage(const cro::Message& msg)
     switch (msg.id)
     {
     default: break;
+    case Social::MessageID::SocialMessage:
+    {
+        const auto& data = msg.getData<Social::SocialEvent>();
+        if (data.type == Social::SocialEvent::LevelUp)
+        {
+            std::uint64_t packet = 0;
+            packet |= (static_cast<std::uint64_t>(m_sharedData.clientConnection.connectionID) << 40);
+            packet |= (static_cast<std::uint64_t>(m_currentPlayer.player) << 32);
+            packet |= data.level;
+            m_sharedData.clientConnection.netClient.sendPacket<std::uint64_t>(PacketID::LevelUp, packet, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+        }
+    }
+        break;
     case MessageID::SystemMessage:
     {
         const auto& data = msg.getData<SystemEvent>();
@@ -4084,6 +4097,9 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
         switch (evt.packet.getID())
         {
         default: break;
+        case PacketID::LevelUp:
+            showLevelUp(evt.packet.as<std::uint64_t>());
+            break;
         case PacketID::SetPar:
         {
             std::uint16_t holeInfo = evt.packet.as<std::uint16_t>();

@@ -53,7 +53,7 @@ namespace cro
 class DefaultAchievements final : public AchievementImpl
 {
 public:
-    explicit DefaultAchievements(cro::MessageBus&);
+    DefaultAchievements();
 
     bool init() override;
     void update() override;

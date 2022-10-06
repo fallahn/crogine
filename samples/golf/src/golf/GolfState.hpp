@@ -318,6 +318,7 @@ private:
     void createTransition();
     void notifyAchievement(const std::array<std::uint8_t, 2u>&);
     void showNotification(const cro::String&);
+    void showLevelUp(std::uint64_t);
     void toggleQuitReady();
 
     void buildTrophyScene();

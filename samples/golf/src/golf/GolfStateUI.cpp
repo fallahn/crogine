@@ -2041,6 +2041,19 @@ void GolfState::showNotification(const cro::String& msg)
     entity.addComponent<Notification>().message = msg;
 }
 
+void GolfState::showLevelUp(std::uint64_t levelData)
+{
+    std::int32_t level =   (levelData & 0x00000000FFFFFFFF);
+    std::int32_t player = ((levelData & 0x000000FF00000000) >> 32);
+    std::int32_t client = ((levelData & 0x0000FF0000000000) >> 40);
+
+    cro::String msg = m_sharedData.connectionData[client].playerData[player].name;
+    msg += " has reached level " + std::to_string(level);
+    showNotification(msg);
+
+    //TODO play audio?
+}
+
 void GolfState::toggleQuitReady()
 {
     if (m_roundEnded)
