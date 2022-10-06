@@ -37,6 +37,8 @@ source distribution.
 #include "GolfCartSystem.hpp"
 #include "MessageIDs.hpp"
 
+#include <Social.hpp>
+
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Camera.hpp>
 #include <crogine/ecs/components/CommandTarget.hpp>
@@ -261,6 +263,8 @@ ClubhouseState::ClubhouseState(cro::StateStack& ss, cro::State::Context ctx, Sha
         }
     }
     m_sharedData.inviteID = 0;
+
+    Social::setStatus(Social::InfoID::Menu, { "Clubhouse" });
 
 #ifdef CRO_DEBUG_
     registerWindow([&]()
@@ -1349,6 +1353,8 @@ void ClubhouseState::handleNetEvent(const net::NetEvent& evt)
 
                 m_sharedData.ballSkinIndex = m_tableData[m_tableIndex].ballSkinIndex;
                 m_sharedData.tableSkinIndex = m_tableData[m_tableIndex].tableSkinIndex;
+
+                Social::setStatus(Social::InfoID::Billiards, { TableStrings[m_tableData[m_sharedData.courseIndex].rules].toAnsiString().c_str() });
 
                 //save these for later
                 cro::ConfigFile cfg("table_skins");

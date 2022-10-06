@@ -44,6 +44,7 @@ source distribution.
 
 #include <Achievements.hpp>
 #include <AchievementStrings.hpp>
+#include <Social.hpp>
 
 #include <crogine/audio/AudioScape.hpp>
 #include <crogine/audio/AudioMixer.hpp>
@@ -331,6 +332,8 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
                 cro::Console::print("Must be on main menu to launch designer");
             }
         });
+
+    Social::setStatus(Social::InfoID::Menu, { "Main Menu" });
 
 #ifdef CRO_DEBUG_
 

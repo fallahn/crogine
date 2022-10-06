@@ -186,6 +186,8 @@ DrivingState::DrivingState(cro::StateStack& stack, cro::State::Context context, 
 
     Achievements::setActive(true);
 
+    Social::setStatus(Social::InfoID::Menu, { "On The Driving Range" });
+
 #ifdef CRO_DEBUG_
     registerWindow([&]()
         {

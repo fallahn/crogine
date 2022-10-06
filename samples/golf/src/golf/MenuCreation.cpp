@@ -3478,6 +3478,7 @@ void MenuState::updateLobbyData(const net::NetEvent& evt)
         {
             playerCount += cd.playerCount;
         }
+
         m_matchMaking.setGamePlayerCount(playerCount);
     }
 
@@ -3526,6 +3527,7 @@ void MenuState::updateLobbyAvatars()
 
         glm::vec2 textPos(0.f);
         std::int32_t h = 0;
+        std::int32_t clientCount = 0;
         glm::vec2 textureSize(LabelTextureSize);
         textureSize.y -= LabelIconSize.y;
         for (const auto& c : m_sharedData.connectionData)
@@ -3576,6 +3578,10 @@ void MenuState::updateLobbyAvatars()
             if (str.empty())
             {
                 str = "Empty";
+            }
+            else
+            {
+                clientCount++;
             }
 
             textPos.x = (h % 2) * 274.f;
@@ -3652,6 +3658,9 @@ void MenuState::updateLobbyAvatars()
 
             h++;
         }
+
+        auto strClientCount = std::to_string(clientCount);
+        Social::setStatus(Social::InfoID::Lobby, { "Golf", strClientCount.c_str(), "4" });
     };
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 }
@@ -3857,6 +3866,8 @@ void MenuState::quitLobby()
         m_uiScene.destroyEntity(b);
     };
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+    Social::setStatus(Social::InfoID::Menu, { "Main Menu" });
 }
 
 void MenuState::addCourseSelectButtons()

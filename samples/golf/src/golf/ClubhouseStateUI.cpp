@@ -2205,6 +2205,8 @@ void ClubhouseState::quitLobby()
         m_uiScene.destroyEntity(b);
     };
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+    Social::setStatus(Social::InfoID::Menu, { "Clubhouse" });
 }
 
 void ClubhouseState::beginTextEdit(cro::Entity stringEnt, cro::String* dst, std::size_t maxChars)
@@ -2463,6 +2465,7 @@ void ClubhouseState::updateLobbyAvatars()
         else
         {
             //create separate names and add readiness indicator
+            std::int32_t clientCount = 0;
             for (auto i = 0u; i < 2u; ++i)
             {
                 if (m_sharedData.connectionData[i].playerCount)
@@ -2489,12 +2492,16 @@ void ClubhouseState::updateLobbyAvatars()
                     };
                     e.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
                     children.push_back(entity);
+
+                    clientCount++;
                 }
                 else
                 {
                     createName("Waiting...", -PositionOffset + (i * (PositionOffset * 2.f)));
                 }
             }
+            auto strClientCount = std::to_string(clientCount);
+            Social::setStatus(Social::InfoID::Lobby, { "Billiards", strClientCount.c_str(), "2" });
         }
 
     };

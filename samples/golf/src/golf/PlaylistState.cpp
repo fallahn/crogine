@@ -299,6 +299,8 @@ PlaylistState::PlaylistState(cro::StateStack& ss, cro::State::Context ctx, Share
             buildUI();
         });
 
+    Social::setStatus(Social::InfoID::Menu, { "Editing a Course" });
+
 #ifdef CRO_DEBUG_
     registerWindow([&]()
         {

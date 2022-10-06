@@ -4854,6 +4854,16 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo)
         e.getComponent<cro::Callback>().active = true;
     };
     m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+
+    //update status
+    const std::size_t MaxTitleLen = 220;
+
+    auto title = m_sharedData.tutorial ? cro::String("Tutorial").toUtf8() : m_courseTitle.substr(0, MaxTitleLen).toUtf8();
+    auto holeNumber = std::to_string(m_currentHole + 1);
+    auto holeTotal = std::to_string(m_holeData.size());
+    //well... this is awful.
+    Social::setStatus(Social::InfoID::Course, { reinterpret_cast<const char*>(title.c_str()), holeNumber.c_str(), holeTotal.c_str() });
 }
 
 void GolfState::setCameraPosition(glm::vec3 position, float height, float viewOffset)
