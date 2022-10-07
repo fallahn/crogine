@@ -4239,7 +4239,7 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
 
             auto* msg = cro::App::getInstance().getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
             msg->type = GolfEvent::BallLanded;
-            msg->terrain = update.position.y < WaterLevel ? TerrainID::Water : update.terrain;
+            msg->terrain = update.position.y <= WaterLevel ? TerrainID::Water : update.terrain;
             msg->club = getClub();
             msg->travelDistance = glm::length2(update.position - m_currentPlayer.position);
             msg->pinDistance = glm::length2(update.position - m_holeData[m_currentHole].pin);
@@ -4248,11 +4248,11 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
             {
                 m_sharedData.timeStats[m_currentPlayer.player].holeTimes[m_currentHole] += m_turnTimer.elapsed().asSeconds();
 
-                if (update.terrain == TerrainID::Bunker)
+                if (msg->terrain == TerrainID::Bunker)
                 {
                     Achievements::incrementStat(StatStrings[StatID::SandTrapCount]);
                 }
-                else if (update.terrain == TerrainID::Water)
+                else if (msg->terrain == TerrainID::Water)
                 {
                     Achievements::incrementStat(StatStrings[StatID::WaterTrapCount]);
                 }

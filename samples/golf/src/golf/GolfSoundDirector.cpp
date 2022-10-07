@@ -48,6 +48,7 @@ source distribution.
 
 #include <Achievements.hpp>
 #include <AchievementStrings.hpp>
+#include <Social.hpp>
 
 namespace
 {
@@ -179,6 +180,15 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
         switch (msg.id)
         {
         default: break;
+        case Social::MessageID::SocialMessage:
+        {
+            const auto& data = msg.getData<Social::SocialEvent>();
+            if (data.type == Social::SocialEvent::LevelUp)
+            {
+                playSound(AudioID::ApplausePlus, glm::vec3(0.f)).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
+            }
+        }
+            break;
         case cro::Message::SpriteAnimationMessage:
         {
             const auto& data = msg.getData<cro::Message::SpriteAnimationEvent>();
