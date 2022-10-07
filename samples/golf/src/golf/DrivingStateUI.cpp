@@ -958,6 +958,9 @@ your overall accuracy. Good Luck!
 
 #ifdef USE_GNS
 
+    cro::SpriteSheet leaderSheet;
+    leaderSheet.loadFromFile("assets/golf/sprites/driving_leaderboard.spt", m_resources.textures);
+
     struct LeaderboardData final
     {
         float progress = 0.f;
@@ -969,10 +972,8 @@ your overall accuracy. Good Luck!
     entity.addComponent<cro::Transform>().setPosition({ 6.f, 13.f, 0.8f });
     entity.getComponent<cro::Transform>().setScale({ 0.f, 0.f });
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("background");
+    entity.addComponent<cro::Sprite>() = leaderSheet.getSprite("board");
     auto b = entity.getComponent<cro::Sprite>().getTextureRect();
-    b.height /= 2.f;
-    entity.getComponent<cro::Sprite>().setTextureRect(b);
     entity.getComponent<cro::Transform>().setOrigin({ b.width / 2.f, b.height / 2.f });
     entity.getComponent<cro::Transform>().move(entity.getComponent<cro::Transform>().getOrigin());
     entity.addComponent<cro::Callback>().setUserData<LeaderboardData>();
@@ -1037,19 +1038,21 @@ your overall accuracy. Good Luck!
     textEnt4.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = textUnselected;
     textEnt4.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem->addCallback(
-            [uiSystem, lbEntity](cro::Entity e, const cro::ButtonEvent& evt) mutable
+            [&, uiSystem, lbEntity](cro::Entity e, const cro::ButtonEvent& evt) mutable
             {
                 if (activated(evt))
                 {
                     uiSystem->setActiveGroup(MenuID::Dummy);
                     lbEntity.getComponent<cro::Callback>().active = true;
+
+                    m_summaryScreen.audioEnt.getComponent<cro::AudioEmitter>().play();
                 }
             });
     lbEntity.getComponent<cro::Transform>().addChild(textEnt4.getComponent<cro::Transform>());
     
     //name column
     textEnt4 = m_uiScene.createEntity();
-    textEnt4.addComponent<cro::Transform>().setPosition({ 2.f, 234.f, 0.12f });
+    textEnt4.addComponent<cro::Transform>().setPosition({ 94.f, 234.f, 0.12f });
     textEnt4.addComponent<cro::Drawable2D>();
     textEnt4.addComponent<cro::Text>(largeFont).setCharacterSize(UITextSize);
     textEnt4.getComponent<cro::Text>().setFillColour(LeaderboardTextDark);
@@ -1059,7 +1062,7 @@ your overall accuracy. Good Luck!
 
     //rank column
     textEnt4 = m_uiScene.createEntity();
-    textEnt4.addComponent<cro::Transform>().setPosition({ 274.f, 234.f, 0.12f });
+    textEnt4.addComponent<cro::Transform>().setPosition({ 38.f, 234.f, 0.12f });
     textEnt4.addComponent<cro::Drawable2D>();
     textEnt4.addComponent<cro::Text>(largeFont).setCharacterSize(UITextSize);
     textEnt4.getComponent<cro::Text>().setFillColour(LeaderboardTextDark);
@@ -1079,7 +1082,7 @@ your overall accuracy. Good Luck!
     
     //id display
     textEnt4 = m_uiScene.createEntity();
-    textEnt4.addComponent<cro::Transform>().setPosition({ 52.f, 11.f, 0.12f });
+    textEnt4.addComponent<cro::Transform>().setPosition({ b.width / 2.f, 11.f, 0.12f });
     textEnt4.addComponent<cro::Drawable2D>();
     textEnt4.addComponent<cro::Text>(largeFont).setCharacterSize(UITextSize);
     textEnt4.getComponent<cro::Text>().setFillColour(LeaderboardTextDark);
@@ -1089,7 +1092,7 @@ your overall accuracy. Good Luck!
 
     //rank display
     textEnt4 = m_uiScene.createEntity();
-    textEnt4.addComponent<cro::Transform>().setPosition({ b.width / 2.f, 11.f, 0.12f });
+    textEnt4.addComponent<cro::Transform>().setPosition({ b.width / 2.f, 262.f, 0.12f });
     textEnt4.addComponent<cro::Drawable2D>();
     textEnt4.addComponent<cro::Text>(largeFont).setCharacterSize(UITextSize);
     textEnt4.getComponent<cro::Text>().setFillColour(LeaderboardTextDark);
@@ -1153,7 +1156,7 @@ your overall accuracy. Good Luck!
             });
     textEnt4.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem->addCallback(
-            [uiSystem, bgEntity, lbEntity, updateDisplay](cro::Entity e, const cro::ButtonEvent& evt) mutable
+            [&, uiSystem, bgEntity, lbEntity, updateDisplay](cro::Entity e, const cro::ButtonEvent& evt) mutable
             {
                 const auto& [state, _] = bgEntity.getComponent<cro::Callback>().getUserData<MessageAnim>();
                 if (state == MessageAnim::Hold
@@ -1161,6 +1164,7 @@ your overall accuracy. Good Luck!
                 {
                     uiSystem->setActiveGroup(MenuID::Dummy);
                     lbEntity.getComponent<cro::Callback>().active = true;
+                    m_summaryScreen.audioEnt.getComponent<cro::AudioEmitter>().play();
 
                     updateDisplay();
                 }
