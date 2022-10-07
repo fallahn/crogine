@@ -4160,7 +4160,9 @@ void PlaylistState::loadCourse()
                     item.courseIndex = output.directory;
                     item.holeIndex = output.file;
                     item.currentIndex = currIndex;
-                    item.name = m_holeDirs[item.courseIndex].holes[item.holeIndex].name;
+                    //if there's an assert here it's probably because no thumbnails
+                    //have been generated and m_holeDirs is empty. TODO fix this.
+                    item.name =  m_holeDirs[item.courseIndex].holes[item.holeIndex].name;
                 }
                     break;
                 case EntryType::Skybox:

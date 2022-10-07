@@ -57,6 +57,11 @@ source distribution.
 
 namespace
 {
+    //used as indices when scrollig through leaderboards
+    std::int32_t leaderboardID = 0;
+    std::int32_t leaderboardFilter = 0;
+    constexpr std::int32_t MaxLeaderboardFilter = 3;
+
     static constexpr float SummaryOffset = 54.f;
     static constexpr float SummaryHeight = 254.f;
 
@@ -71,6 +76,7 @@ namespace
             Dummy,
             Options,
             Summary,
+            Leaderboard,
 
             Count
         };
@@ -712,7 +718,7 @@ your overall accuracy. Good Luck!
 
     //high score text
     auto textEnt4 = m_uiScene.createEntity();
-    textEnt4.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, 23.f, 0.02f });
+    textEnt4.addComponent<cro::Transform>().setPosition({ bounds.width / 5.f, 63.f, 0.02f });
     textEnt4.addComponent<cro::Drawable2D>();
     textEnt4.addComponent<cro::Text>(smallFont).setCharacterSize(InfoTextSize);
     textEnt4.getComponent<cro::Text>().setFillColour(TextNormalColour);
@@ -723,6 +729,11 @@ your overall accuracy. Good Luck!
         s << "Personal Best: " << m_topScores[m_strokeCountIndex] << "%";
 
         textEnt4.getComponent<cro::Text>().setString(s.str());
+        centreText(textEnt4);
+    }
+    else
+    {
+        textEnt4.getComponent<cro::Text>().setString("No Score");
         centreText(textEnt4);
     }
     bgEntity.getComponent<cro::Transform>().addChild(textEnt4.getComponent<cro::Transform>());
@@ -752,7 +763,8 @@ your overall accuracy. Good Luck!
                     }
                     else
                     {
-                        textEnt4.getComponent<cro::Text>().setString(" ");
+                        textEnt4.getComponent<cro::Text>().setString("No Score");
+                        centreText(textEnt4);
                     }
 
                     m_summaryScreen.audioEnt.getComponent<cro::AudioEmitter>().play();
@@ -782,7 +794,8 @@ your overall accuracy. Good Luck!
                     }
                     else
                     {
-                        textEnt4.getComponent<cro::Text>().setString(" ");
+                        textEnt4.getComponent<cro::Text>().setString("No Score");
+                        centreText(textEnt4);
                     }
 
                     m_summaryScreen.audioEnt.getComponent<cro::AudioEmitter>().play();
@@ -943,7 +956,218 @@ your overall accuracy. Good Luck!
             });
     countEnt.getComponent<cro::Transform>().addChild(buttonEnt.getComponent<cro::Transform>());
 
+#ifdef USE_GNS
 
+    struct LeaderboardData final
+    {
+        float progress = 0.f;
+        int direction = 0;
+    };
+
+    //scoreboard window
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 6.f, 13.f, 0.8f });
+    entity.getComponent<cro::Transform>().setScale({ 0.f, 0.f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("background");
+    auto b = entity.getComponent<cro::Sprite>().getTextureRect();
+    b.height /= 2.f;
+    entity.getComponent<cro::Sprite>().setTextureRect(b);
+    entity.getComponent<cro::Transform>().setOrigin({ b.width / 2.f, b.height / 2.f });
+    entity.getComponent<cro::Transform>().move(entity.getComponent<cro::Transform>().getOrigin());
+    entity.addComponent<cro::Callback>().setUserData<LeaderboardData>();
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float dt)
+    {
+        const float Speed = dt * 4.f;
+        auto& [progress, direction] = e.getComponent<cro::Callback>().getUserData<LeaderboardData>();
+        if (direction == 0)
+        {
+            //grow
+            progress = std::min(1.f, progress + Speed);
+            if (progress == 1)
+            {
+                direction = 1;
+                e.getComponent<cro::Callback>().active = false;
+                m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Leaderboard);
+            }
+        }
+        else
+        {
+            //shrink
+            progress = std::max(0.f, progress - Speed);
+            if (progress == 0)
+            {
+                direction = 0;
+                e.getComponent<cro::Callback>().active = false;
+                m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Options);
+            }
+        }
+        e.getComponent<cro::Transform>().setScale({ cro::Util::Easing::easeOutQuad(progress), 1.f });
+    };
+    bgEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    auto lbEntity = entity;
+
+    auto textSelected = uiSystem->addCallback(
+        [](cro::Entity e)
+        {
+            e.getComponent<cro::Text>().setFillColour(TextHighlightColour);
+            e.getComponent<cro::AudioEmitter>().play();
+        });
+    auto textUnselected = uiSystem->addCallback(
+        [](cro::Entity e)
+        {
+            e.getComponent<cro::Text>().setFillColour(LeaderboardTextDark);
+        });
+
+
+    //close leaderboards
+    textEnt4 = m_uiScene.createEntity();
+    textEnt4.addComponent<cro::Transform>().setPosition({ 352.f, 11.f, 0.12f });
+    textEnt4.addComponent<cro::Drawable2D>();
+    textEnt4.addComponent<cro::Text>(largeFont).setCharacterSize(UITextSize);
+    textEnt4.getComponent<cro::Text>().setFillColour(LeaderboardTextDark);
+    textEnt4.getComponent<cro::Text>().setString("Back");
+    auto textBounds = cro::Text::getLocalBounds(textEnt4);
+    textEnt4.addComponent<cro::AudioEmitter>() = as.getEmitter("switch");
+    textEnt4.addComponent<cro::UIInput>().setGroup(MenuID::Leaderboard);
+    textEnt4.getComponent<cro::UIInput>().area = textBounds;
+    textEnt4.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = textSelected;
+    textEnt4.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = textUnselected;
+    textEnt4.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+        uiSystem->addCallback(
+            [uiSystem, lbEntity](cro::Entity e, const cro::ButtonEvent& evt) mutable
+            {
+                if (activated(evt))
+                {
+                    uiSystem->setActiveGroup(MenuID::Dummy);
+                    lbEntity.getComponent<cro::Callback>().active = true;
+                }
+            });
+    lbEntity.getComponent<cro::Transform>().addChild(textEnt4.getComponent<cro::Transform>());
+    
+    //name column
+    textEnt4 = m_uiScene.createEntity();
+    textEnt4.addComponent<cro::Transform>().setPosition({ 2.f, 234.f, 0.12f });
+    textEnt4.addComponent<cro::Drawable2D>();
+    textEnt4.addComponent<cro::Text>(largeFont).setCharacterSize(UITextSize);
+    textEnt4.getComponent<cro::Text>().setFillColour(LeaderboardTextDark);
+    textEnt4.getComponent<cro::Text>().setVerticalSpacing(LeaderboardTextSpacing);
+    lbEntity.getComponent<cro::Transform>().addChild(textEnt4.getComponent<cro::Transform>());
+    auto nameColumn = textEnt4;
+
+    //rank column
+    textEnt4 = m_uiScene.createEntity();
+    textEnt4.addComponent<cro::Transform>().setPosition({ 274.f, 234.f, 0.12f });
+    textEnt4.addComponent<cro::Drawable2D>();
+    textEnt4.addComponent<cro::Text>(largeFont).setCharacterSize(UITextSize);
+    textEnt4.getComponent<cro::Text>().setFillColour(LeaderboardTextDark);
+    textEnt4.getComponent<cro::Text>().setVerticalSpacing(LeaderboardTextSpacing);
+    lbEntity.getComponent<cro::Transform>().addChild(textEnt4.getComponent<cro::Transform>());
+    auto rankColumn = textEnt4;
+
+    //score column
+    textEnt4 = m_uiScene.createEntity();
+    textEnt4.addComponent<cro::Transform>().setPosition({ 294.f, 234.f, 0.12f });
+    textEnt4.addComponent<cro::Drawable2D>();
+    textEnt4.addComponent<cro::Text>(largeFont).setCharacterSize(UITextSize);
+    textEnt4.getComponent<cro::Text>().setFillColour(LeaderboardTextDark);
+    textEnt4.getComponent<cro::Text>().setVerticalSpacing(LeaderboardTextSpacing);
+    lbEntity.getComponent<cro::Transform>().addChild(textEnt4.getComponent<cro::Transform>());
+    auto scoreColumn = textEnt4;
+    
+    //id display
+    textEnt4 = m_uiScene.createEntity();
+    textEnt4.addComponent<cro::Transform>().setPosition({ 52.f, 11.f, 0.12f });
+    textEnt4.addComponent<cro::Drawable2D>();
+    textEnt4.addComponent<cro::Text>(largeFont).setCharacterSize(UITextSize);
+    textEnt4.getComponent<cro::Text>().setFillColour(LeaderboardTextDark);
+    textEnt4.getComponent<cro::Text>().setString("Best of 5");
+    lbEntity.getComponent<cro::Transform>().addChild(textEnt4.getComponent<cro::Transform>());
+    auto scoreType = textEnt4;
+
+    //rank display
+    textEnt4 = m_uiScene.createEntity();
+    textEnt4.addComponent<cro::Transform>().setPosition({ b.width / 2.f, 11.f, 0.12f });
+    textEnt4.addComponent<cro::Drawable2D>();
+    textEnt4.addComponent<cro::Text>(largeFont).setCharacterSize(UITextSize);
+    textEnt4.getComponent<cro::Text>().setFillColour(LeaderboardTextDark);
+    textEnt4.getComponent<cro::Text>().setString("Global");
+    centreText(textEnt4);
+    lbEntity.getComponent<cro::Transform>().addChild(textEnt4.getComponent<cro::Transform>());
+    auto rankType = textEnt4;
+
+    auto updateDisplay = [nameColumn, scoreColumn, rankColumn, scoreType, rankType]() mutable
+    {
+        const std::array ScoreStrings =
+        {
+            "Best Of 5",
+            "Best Of 9",
+            "Best Of 18",
+        };
+        const std::array RankStrings =
+        {
+            "Global",
+            "Nearest",
+            "Friends"
+        };
+        scoreType.getComponent<cro::Text>().setString(ScoreStrings[leaderboardID]);
+        rankType.getComponent<cro::Text>().setString(RankStrings[leaderboardFilter]);
+        centreText(scoreType);
+        centreText(rankType);
+
+        auto scores = Social::getLeaderboardResults(leaderboardID, leaderboardFilter);
+        rankColumn.getComponent<cro::Text>().setString(scores[0]);
+        nameColumn.getComponent<cro::Text>().setString(scores[1]);
+        scoreColumn.getComponent<cro::Text>().setString(scores[2]);
+    };
+    
+
+    //browse leaderboards
+    textEnt4 = m_uiScene.createEntity();
+    textEnt4.addComponent<cro::Transform>().setPosition({ (bounds.width / 5.f) * 4.f, 63.f, 0.02f });
+    textEnt4.addComponent<cro::Drawable2D>();
+    textEnt4.addComponent<cro::Text>(smallFont).setCharacterSize(InfoTextSize);
+    textEnt4.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    textEnt4.getComponent<cro::Text>().setString("View Leaderboards");
+    centreText(textEnt4);
+
+    textBounds = cro::Text::getLocalBounds(textEnt4);
+    textEnt4.addComponent<cro::AudioEmitter>() = as.getEmitter("switch");
+    textEnt4.addComponent<cro::UIInput>().setGroup(MenuID::Options);
+    textEnt4.getComponent<cro::UIInput>().area = textBounds;
+    textEnt4.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] =
+        uiSystem->addCallback(
+            [](cro::Entity e)
+            {
+                e.getComponent<cro::Text>().setFillColour(TextGoldColour);
+                e.getComponent<cro::AudioEmitter>().play();
+            });
+        
+    textEnt4.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] =
+        uiSystem->addCallback(
+            [](cro::Entity e)
+            {
+                e.getComponent<cro::Text>().setFillColour(TextNormalColour);
+            });
+    textEnt4.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+        uiSystem->addCallback(
+            [uiSystem, bgEntity, lbEntity, updateDisplay](cro::Entity e, const cro::ButtonEvent& evt) mutable
+            {
+                const auto& [state, _] = bgEntity.getComponent<cro::Callback>().getUserData<MessageAnim>();
+                if (state == MessageAnim::Hold
+                    && activated(evt))
+                {
+                    uiSystem->setActiveGroup(MenuID::Dummy);
+                    lbEntity.getComponent<cro::Callback>().active = true;
+
+                    updateDisplay();
+                }
+            });
+
+    bgEntity.getComponent<cro::Transform>().addChild(textEnt4.getComponent<cro::Transform>());
+#endif
 
     //start button
     auto selectedBounds = spriteSheet.getSprite("start_highlight").getTextureRect();

@@ -30,6 +30,7 @@ source distribution.
 #pragma once
 
 #include <crogine/graphics/Image.hpp>
+#include <crogine/core/String.hpp>
 
 class Social final
 {
@@ -70,6 +71,7 @@ public:
     static std::int32_t getLevel() { return 0; }
     static void storeDrivingStats(const std::array<float, 3u>&);
     static void readDrivingStats(std::array<float, 3u>&);
+    static std::vector<cro::String> getLeaderboardResults(std::int32_t, std::int32_t) { return {}; }
     static void setStatus(std::int32_t, const std::vector<const char*>&) {}
     static void setGroup(std::uint64_t, std::int32_t = 0) {}
     static constexpr std::uint32_t IconSize = 64;
