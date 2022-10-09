@@ -128,9 +128,9 @@ private:
 	cro::Clock m_timer;
 	std::int32_t m_overflow = 0;
 
-	CircularBuffer<InterpolationPoint, 8u> m_buffer;
+	CircularBuffer<InterpolationPoint, 18u> m_buffer;
 
-	std::size_t m_bufferSize = 3;
+	std::size_t m_bufferSize = 6;
 	bool m_wantsBuffer = true;
 
 	glm::vec3 m_interpVelocity = glm::vec3(0.f);

@@ -3,7 +3,7 @@ Super Video Golf!
 
 A retro-styled golf game. Currently featuring up to 4 local players (per client) and 4 clients per network game for a theoretical 16 player round of golf. The game is based on more traditional rules, and is therefore turn-based.
 
-Downloads can be found on http://fallahn.itch.io/vga-golf and it can be built from source. A rudimentary mod kit is included in the repository for creating custom balls and courses.
+Downloads can be found on the releases page and it can be built from source. There is also a version on [Steam](https://store.steampowered.com/app/2173760/Super_Video_Golf/)! A rudimentary mod kit is included in the repository for creating custom balls and courses.
 
 ![Super Video Golf](sshot02.png?raw=true "Super Video Golf")
 ![Super Video Golf](sshot03.png?raw=true "Super Video Golf")
