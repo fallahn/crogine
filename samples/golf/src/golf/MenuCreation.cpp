@@ -770,9 +770,10 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
     {
         auto codePoints = cro::Util::String::getCodepoints(std::string(m_matchMaking.getUserName()));
         cro::String nameStr = cro::String::fromUtf32(codePoints.begin(), codePoints.end());
-        if (nameStr.size() <= ConstVal::MaxNameChars)
+        //if (nameStr.size() <= ConstVal::MaxNameChars)
         {
-            m_sharedData.localConnectionData.playerData[0].name = nameStr;
+            //MaxStringChars is more reasonable length - but then it breaks UI layout HUM
+            m_sharedData.localConnectionData.playerData[0].name = nameStr.substr(0, ConstVal::MaxStringChars);
         }
     }
 
@@ -3248,7 +3249,7 @@ void MenuState::updateLocalAvatars(std::uint32_t mouseEnter, std::uint32_t mouse
         auto entity = m_uiScene.createEntity();
         entity.addComponent<cro::Transform>().setPosition(localPos);
         entity.addComponent<cro::Drawable2D>();
-        entity.addComponent<cro::Text>(font).setString(m_sharedData.localConnectionData.playerData[i].name);
+        entity.addComponent<cro::Text>(font).setString(m_sharedData.localConnectionData.playerData[i].name.substr(0, ConstVal::MaxNameChars));
         entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
         entity.getComponent<cro::Text>().setFillColour(TextGoldColour);
         centreText(entity);
@@ -3574,7 +3575,7 @@ void MenuState::updateLobbyAvatars()
             cro::String str;
             for (auto i = 0u; i < c.playerCount; ++i)
             {
-                str += c.playerData[i].name + "\n";
+                str += c.playerData[i].name.substr(0, ConstVal::MaxNameChars) + "\n";
                 auto avatarIndex = indexFromAvatarID(c.playerData[i].skinID);
                 applyTexture(avatarIndex, m_sharedData.avatarTextures[c.connectionID][i], c.playerData[i].avatarFlags);
             }
@@ -3792,7 +3793,7 @@ void MenuState::showPlayerConfig(bool visible, std::uint8_t playerIndex)
     cmd.targetFlags = CommandID::Menu::PlayerName;
     cmd.action = [&](cro::Entity e, float)
     {
-        e.getComponent<cro::Text>().setString(m_sharedData.localConnectionData.playerData[m_activePlayerAvatar].name);
+        e.getComponent<cro::Text>().setString(m_sharedData.localConnectionData.playerData[m_activePlayerAvatar].name.substr(0, ConstVal::MaxNameChars));
         e.getComponent<cro::Callback>().setUserData<std::uint8_t>(m_activePlayerAvatar);
     };
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);

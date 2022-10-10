@@ -494,7 +494,7 @@ void ClubhouseState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnt
         textEnt.addComponent<cro::Drawable2D>();
         textEnt.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
         textEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
-        textEnt.getComponent<cro::Text>().setString(m_sharedData.localConnectionData.playerData[playerIndex].name);
+        textEnt.getComponent<cro::Text>().setString(m_sharedData.localConnectionData.playerData[playerIndex].name.substr(0, ConstVal::MaxNameChars));
         centreText(textEnt);
         textEnt.addComponent<cro::Callback>().function =
             [&](cro::Entity e, float)
@@ -2213,6 +2213,8 @@ void ClubhouseState::quitLobby()
 
 void ClubhouseState::beginTextEdit(cro::Entity stringEnt, cro::String* dst, std::size_t maxChars)
 {
+    *dst = dst->substr(0, maxChars);
+
     stringEnt.getComponent<cro::Text>().setFillColour(TextEditColour);
     m_textEdit.string = dst;
     m_textEdit.entity = stringEnt;
@@ -2449,7 +2451,7 @@ void ClubhouseState::updateLobbyAvatars()
             entity.addComponent<cro::Drawable2D>();
             entity.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
             entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
-            entity.getComponent<cro::Text>().setString(name);
+            entity.getComponent<cro::Text>().setString(name.substr(0, ConstVal::MaxNameChars));
             centreText(entity);
             e.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
             children.push_back(entity);

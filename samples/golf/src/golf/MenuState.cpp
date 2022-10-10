@@ -336,7 +336,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
 
     Social::setStatus(Social::InfoID::Menu, { "Main Menu" });
     Social::setGroup(0);
-
+    m_matchMaking.getUserName();
 #ifdef CRO_DEBUG_
 
     registerWindow([&]() 
@@ -444,8 +444,12 @@ bool MenuState::handleEvent(const cro::Event& evt)
 #ifdef CRO_DEBUG_
 #ifdef USE_GNS
         case SDLK_PAGEUP:
-            LogI << "resetting achievements" << std::endl;
-            Achievements::resetAll();
+            /*LogI << "resetting achievements" << std::endl;
+            Achievements::resetAll();*/
+            Achievements::awardAchievement(AchievementStrings[AchievementID::JoinTheClub]);
+            break;
+        case SDLK_PAGEDOWN:
+            Achievements::resetAchievement(AchievementStrings[AchievementID::JoinTheClub]);
             break;
 #endif
         case SDLK_F2:
@@ -1624,6 +1628,8 @@ void MenuState::finaliseGameJoin(const MatchMaking::Message& data)
 
 void MenuState::beginTextEdit(cro::Entity stringEnt, cro::String* dst, std::size_t maxChars)
 {
+    *dst = dst->substr(0, maxChars);
+
     stringEnt.getComponent<cro::Text>().setFillColour(TextEditColour);
     m_textEdit.string = dst;
     m_textEdit.entity = stringEnt;

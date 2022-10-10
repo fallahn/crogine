@@ -1408,7 +1408,7 @@ void GolfState::updateScoreboard()
         cro::String nameString = "HOLE\nPAR";
         for (auto i = 0u; i < playerCount; ++i)
         {
-            nameString += "\n" + scores[i].name;
+            nameString += "\n" + scores[i].name.substr(0, ConstVal::MaxNameChars + 1);
             m_netStrengthIcons[i].getComponent<cro::Callback>().getUserData<std::uint8_t>() = scores[i].client;
         }
         if (page2)
@@ -1422,7 +1422,7 @@ void GolfState::updateScoreboard()
             nameString += "\n\nHOLE\nPAR";
             for (auto i = 0u; i < playerCount; ++i)
             {
-                nameString += "\n" + scores[i].name;
+                nameString += "\n" + scores[i].name.substr(0, ConstVal::MaxNameChars + 1);
             }
         }
         ents[0].getComponent<cro::Text>().setString(nameString);
@@ -1812,7 +1812,7 @@ void GolfState::showMessageBoard(MessageBoardID messageType)
         bounds = m_sprites[SpriteID::Bunker].getTextureBounds();
         break;
     case MessageBoardID::PlayerName:
-        textEnt.getComponent<cro::Text>().setString(m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].name);
+        textEnt.getComponent<cro::Text>().setString(m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].name.substr(0, 17));
         textEnt2.getComponent<cro::Text>().setString("Stroke: " + std::to_string(m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].holeScores[m_currentHole] + 1));
         textEnt3.getComponent<cro::Text>().setString(ScoreTypes[m_sharedData.scoreType]);
         break;
