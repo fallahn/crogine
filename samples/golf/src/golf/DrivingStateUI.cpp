@@ -722,20 +722,28 @@ your overall accuracy. Good Luck!
     textEnt4.addComponent<cro::Drawable2D>();
     textEnt4.addComponent<cro::Text>(smallFont).setCharacterSize(InfoTextSize);
     textEnt4.getComponent<cro::Text>().setFillColour(TextNormalColour);
-    if (m_topScores[m_strokeCountIndex] > 0)
+    textEnt4.addComponent<cro::Callback>().active = true;
+    textEnt4.getComponent<cro::Callback>().function = //make sure to update with current high score
+        [&, bgEntity](cro::Entity e, float)
     {
-        std::stringstream s;
-        s.precision(3);
-        s << "Personal Best: " << m_topScores[m_strokeCountIndex] << "%";
+        const auto& data = bgEntity.getComponent<cro::Callback>().getUserData<MessageAnim>();
+        if (data.state == MessageAnim::Open)
+        {
+            if (m_topScores[m_strokeCountIndex] > 0)
+            {
+                std::stringstream s;
+                s.precision(3);
+                s << "Personal Best: " << m_topScores[m_strokeCountIndex] << "%";
 
-        textEnt4.getComponent<cro::Text>().setString(s.str());
-        centreText(textEnt4);
-    }
-    else
-    {
-        textEnt4.getComponent<cro::Text>().setString("No Score");
-        centreText(textEnt4);
-    }
+                e.getComponent<cro::Text>().setString(s.str());
+            }
+            else
+            {
+                e.getComponent<cro::Text>().setString("No Score");
+            }
+            centreText(e);
+        }
+    };
     bgEntity.getComponent<cro::Transform>().addChild(textEnt4.getComponent<cro::Transform>());
 
 
@@ -759,13 +767,12 @@ your overall accuracy. Good Luck!
                         s << "Personal Best: " << m_topScores[m_strokeCountIndex] << "%";
 
                         textEnt4.getComponent<cro::Text>().setString(s.str());
-                        centreText(textEnt4);
                     }
                     else
                     {
                         textEnt4.getComponent<cro::Text>().setString("No Score");
-                        centreText(textEnt4);
                     }
+                    centreText(textEnt4);
 
                     m_summaryScreen.audioEnt.getComponent<cro::AudioEmitter>().play();
                 }
@@ -790,13 +797,12 @@ your overall accuracy. Good Luck!
                         s << "Personal Best: " << m_topScores[m_strokeCountIndex] << "%";
 
                         textEnt4.getComponent<cro::Text>().setString(s.str());
-                        centreText(textEnt4);
                     }
                     else
                     {
                         textEnt4.getComponent<cro::Text>().setString("No Score");
-                        centreText(textEnt4);
                     }
+                    centreText(textEnt4);
 
                     m_summaryScreen.audioEnt.getComponent<cro::AudioEmitter>().play();
                 }
@@ -1171,6 +1177,96 @@ your overall accuracy. Good Luck!
             });
 
     bgEntity.getComponent<cro::Transform>().addChild(textEnt4.getComponent<cro::Transform>());
+
+
+    //arrow buttons
+    auto buttonSelected = uiSystem->addCallback(
+        [](cro::Entity e)
+        {
+            e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
+            e.getComponent<cro::AudioEmitter>().play();
+        });
+    auto buttonUnselected = uiSystem->addCallback(
+        [](cro::Entity e)
+        {
+            e.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+        });
+
+    auto createArrow =
+        [&](glm::vec2 position, const std::string& spriteName)
+    {
+        auto e = m_uiScene.createEntity();
+        e.addComponent<cro::Transform>().setPosition(glm::vec3(position , 0.1f));
+        e.addComponent<cro::AudioEmitter>() = as.getEmitter("switch");
+        e.addComponent<cro::Drawable2D>();
+        e.addComponent<cro::Sprite>() = leaderSheet.getSprite(spriteName);
+        e.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+        auto b = e.getComponent<cro::Sprite>().getTextureBounds();
+        e.addComponent<cro::UIInput>().area = b;
+        e.getComponent<cro::UIInput>().setGroup(MenuID::Leaderboard);
+        e.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = buttonSelected;
+        e.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = buttonUnselected;
+
+        lbEntity.getComponent<cro::Transform>().addChild(e.getComponent<cro::Transform>());
+
+        return e;
+    };
+    //filter left
+    entity = createArrow(glm::vec2(140.f, 250.f), "arrow_left");
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+        uiSystem->addCallback(
+            [&, updateDisplay](cro::Entity e, const cro::ButtonEvent& evt) mutable
+            {
+                if (activated(evt))
+                {
+                    leaderboardFilter = (leaderboardFilter + (MaxLeaderboardFilter - 1)) % MaxLeaderboardFilter;
+                    m_summaryScreen.audioEnt.getComponent<cro::AudioEmitter>().play();
+                    updateDisplay();
+                }
+            });
+
+    //filter right
+    entity = createArrow(glm::vec2(232.f, 250.f), "arrow_right");
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+        uiSystem->addCallback(
+            [&, updateDisplay](cro::Entity e, const cro::ButtonEvent& evt) mutable
+            {
+                if (activated(evt))
+                {
+                    leaderboardFilter = (leaderboardFilter + 1) % MaxLeaderboardFilter;
+                    m_summaryScreen.audioEnt.getComponent<cro::AudioEmitter>().play();
+                    updateDisplay();
+                }
+            });
+
+    //score left
+    entity = createArrow(glm::vec2(140.f, -2.f), "arrow_left");
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+        uiSystem->addCallback(
+            [&, updateDisplay](cro::Entity e, const cro::ButtonEvent& evt) mutable
+            {
+                if (activated(evt))
+                {
+                    leaderboardID = (leaderboardID + (MaxLeaderboardFilter - 1)) % MaxLeaderboardFilter;
+                    m_summaryScreen.audioEnt.getComponent<cro::AudioEmitter>().play();
+                    updateDisplay();
+                }
+            });
+
+    //score right
+    entity =createArrow(glm::vec2(232.f, -2.f), "arrow_right");
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+        uiSystem->addCallback(
+            [&, updateDisplay](cro::Entity e, const cro::ButtonEvent& evt) mutable
+            {
+                if (activated(evt))
+                {
+                    leaderboardID = (leaderboardID + 1) % MaxLeaderboardFilter;
+                    m_summaryScreen.audioEnt.getComponent<cro::AudioEmitter>().play();
+                    updateDisplay();
+                }
+            });
+
 #endif
 
     //start button
