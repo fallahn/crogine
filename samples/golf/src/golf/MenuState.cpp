@@ -288,6 +288,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
         }
     }
     m_sharedData.inviteID = 0;
+    m_sharedData.lobbyID = 0;
 
     //for some reason this immediately unsets itself
     //cro::App::getWindow().setCursor(&m_cursor);
@@ -575,6 +576,7 @@ void MenuState::handleMessage(const cro::Message& msg)
                 if (data.gameType == Server::GameMode::Golf)
                 {
                     m_matchMaking.joinGame(data.hostID);
+                    m_sharedData.lobbyID = data.hostID;
                 }
                 else
                 {
@@ -1587,7 +1589,6 @@ void MenuState::finaliseGameJoin(const MatchMaking::Message& data)
 {
 #ifdef USE_GNS
     m_sharedData.clientConnection.connected = m_sharedData.clientConnection.netClient.connect(CSteamID(data.hostID));
-    Social::setGroup(data.hostID, 4);
 #else
     m_sharedData.clientConnection.connected = m_sharedData.clientConnection.netClient.connect(m_sharedData.targetIP.toAnsiString(), ConstVal::GamePort);
 #endif

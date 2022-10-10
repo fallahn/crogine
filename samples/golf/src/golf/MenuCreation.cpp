@@ -1782,6 +1782,7 @@ void MenuState::createBrowserMenu(cro::Entity parent, std::uint32_t mouseEnter, 
                     m_audioEnts[AudioID::Start].getComponent<cro::AudioEmitter>().play();
 
                     m_matchMaking.joinGame(m_lobbyPager.lobbyIDs[idx]);
+                    m_sharedData.lobbyID = m_lobbyPager.lobbyIDs[idx];
                 }
             }
         });
@@ -3664,6 +3665,7 @@ void MenuState::updateLobbyAvatars()
 
         auto strClientCount = std::to_string(clientCount);
         Social::setStatus(Social::InfoID::Lobby, { "Golf", strClientCount.c_str(), "4" });
+        Social::setGroup(m_sharedData.lobbyID, clientCount);
     };
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 }

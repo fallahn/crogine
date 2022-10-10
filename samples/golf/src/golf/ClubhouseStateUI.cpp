@@ -1460,6 +1460,7 @@ void ClubhouseState::createBrowserMenu(cro::Entity parent, std::uint32_t mouseEn
                     m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
 
                     m_matchMaking.joinGame(m_lobbyPager.lobbyIDs[idx]);
+                    m_sharedData.lobbyID = m_lobbyPager.lobbyIDs[idx];
                 }
             }
         });
@@ -2503,6 +2504,7 @@ void ClubhouseState::updateLobbyAvatars()
             }
             auto strClientCount = std::to_string(clientCount);
             Social::setStatus(Social::InfoID::Lobby, { "Billiards", strClientCount.c_str(), "2" });
+            Social::setGroup(m_sharedData.lobbyID, clientCount);
         }
 
     };
