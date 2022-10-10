@@ -1641,16 +1641,19 @@ void DrivingState::showMessage(float range)
     {
         textEnt.getComponent<cro::Text>().setString("Good Effort!");
         starCount = 1;
+        Social::awardXP(XPValues[XPID::Good]);
     }
     else if (score < ExcellentScore)
     {
         textEnt.getComponent<cro::Text>().setString("Not Bad!");
         starCount = 2;
+        Social::awardXP(XPValues[XPID::NotBad]);
     }
     else
     {
         textEnt.getComponent<cro::Text>().setString("Excellent!");
         starCount = 3;
+        Social::awardXP(XPValues[XPID::Excellent]);
     }
     centreText(textEnt);
     entity.getComponent<cro::Transform>().addChild(textEnt.getComponent<cro::Transform>());
