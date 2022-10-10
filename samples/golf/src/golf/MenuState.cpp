@@ -717,7 +717,7 @@ void MenuState::addSystems()
     //check course completion count and award
     //grand tour if applicable
     bool awarded = true;
-    for (std::int32_t i = StatID::Course01Complete; i < StatID::Course08Complete + 1; ++i)
+    for (std::int32_t i = StatID::Course01Complete; i < StatID::Course09Complete + 1; ++i)
     {
         if (Achievements::getStat(StatStrings[i])->value == 0)
         {

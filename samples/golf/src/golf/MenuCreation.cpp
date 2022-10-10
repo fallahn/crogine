@@ -129,6 +129,7 @@ void MenuState::parseCourseDirectory(const std::string& rootDir, bool isUser)
     //at least be consistent across platforms
     std::sort(directories.begin(), directories.end(), [](const  std::string& a, const std::string& b) {return a < b; });
 
+    std::int32_t courseNumber = 1;
     for (const auto& dir : directories)
     {
         if (dir == "tutorial")
@@ -182,7 +183,7 @@ void MenuState::parseCourseDirectory(const std::string& rootDir, bool isUser)
                 auto& data = m_courseData.emplace_back();
                 if (!title.empty())
                 {
-                    data.title = title;
+                    data.title = std::to_string(courseNumber) + ". " + title;
                 }
                 if (!description.empty())
                 {
@@ -193,6 +194,8 @@ void MenuState::parseCourseDirectory(const std::string& rootDir, bool isUser)
                 data.holeCount[0] = "All " + std::to_string(std::min(holeCount, 18)) + " holes";
                 data.holeCount[1] = "Front " + std::to_string(std::max(holeCount / 2, 1));
                 data.holeCount[2] = "Back " + std::to_string(std::min(holeCount - (holeCount / 2), 9));
+
+                courseNumber++;
             }
         }
     }

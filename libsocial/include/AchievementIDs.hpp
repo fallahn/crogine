@@ -114,6 +114,7 @@ namespace StatID
         Course06Complete,
         Course07Complete,
         Course08Complete,
+        Course09Complete,
 
         Count
     };
