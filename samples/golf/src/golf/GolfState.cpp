@@ -4183,11 +4183,13 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
                 break;
             case TerrainID::Scrub:
                 showMessageBoard(MessageBoardID::Scrub);
-                m_hadFoul = (m_currentPlayer.client == m_sharedData.clientConnection.connectionID);
+                m_hadFoul = (m_currentPlayer.client == m_sharedData.clientConnection.connectionID
+                    && !m_sharedData.localConnectionData.playerData[m_currentPlayer.player].isCPU);
                 break;
             case TerrainID::Water:
                 showMessageBoard(MessageBoardID::Water);
-                m_hadFoul = (m_currentPlayer.client == m_sharedData.clientConnection.connectionID);
+                m_hadFoul = (m_currentPlayer.client == m_sharedData.clientConnection.connectionID
+                    && !m_sharedData.localConnectionData.playerData[m_currentPlayer.player].isCPU);
                 break;
             case TerrainID::Hole:
                 showMessageBoard(MessageBoardID::HoleScore);
