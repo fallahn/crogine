@@ -84,9 +84,13 @@ public:
 			}
 
 			//shrink any large time gap
-			if (diff > MaxTimeGap)
+			//this is a good theory - but in practice it breaks the current elapsed time
+			if constexpr (interpolationType == InterpolationType::Hermite)
 			{
-				m_buffer.back().timestamp = ip.timestamp - 10;
+				if (diff > MaxTimeGap)
+				{
+					m_buffer.back().timestamp = ip.timestamp - 10;
+				}
 			}
 
 			m_buffer.push_back(ip);

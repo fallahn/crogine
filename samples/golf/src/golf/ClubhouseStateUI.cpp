@@ -169,6 +169,19 @@ void ClubhouseState::createUI()
     entity.addComponent<cro::Camera>().resizeCallback = updateView;
     m_uiScene.setActiveCamera(entity);
     updateView(entity.getComponent<cro::Camera>());
+
+    //need to delay by one update...
+    //the prevents spurious input from previous states
+    //once the animation is finished it sets the correct active group
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+    {
+        m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Dummy);
+        e.getComponent<cro::Callback>().active = false;
+        m_uiScene.destroyEntity(e);
+    };
 }
 
 void ClubhouseState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std::uint32_t mouseExit)
@@ -259,7 +272,7 @@ void ClubhouseState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().setUserData<float>(-1.5f);
     entity.getComponent<cro::Callback>().function =
-        [](cro::Entity e, float dt)
+        [&](cro::Entity e, float dt)
     {
         auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
         currTime = std::min(1.f, currTime + (dt * 2.f));
@@ -274,6 +287,8 @@ void ClubhouseState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter
         {
             e.getComponent<cro::Transform>().setScale({ 1.f, 1.f });
             e.getComponent<cro::Callback>().active = false;
+
+            m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Main);
         }
     };
     menuTransform.addChild(entity.getComponent<cro::Transform>());
