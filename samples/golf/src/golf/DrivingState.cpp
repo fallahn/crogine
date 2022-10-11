@@ -51,6 +51,7 @@ source distribution.
 #include "../ErrorCheck.hpp"
 
 #include <Achievements.hpp>
+#include <Social.hpp>
 
 #include <crogine/audio/AudioMixer.hpp>
 #include <crogine/core/ConfigFile.hpp>
@@ -331,6 +332,15 @@ void DrivingState::handleMessage(const cro::Message& msg)
     switch (msg.id)
     {
     default: break;
+    case Social::MessageID::SocialMessage:
+    {
+        const auto& data = msg.getData<Social::SocialEvent>();
+        if (data.type == Social::SocialEvent::XPAwarded)
+        {
+            floatingMessage(std::to_string(data.level) + " XP");
+        }
+    }
+    break;
     case MessageID::CollisionMessage:
     {
         const auto& data = msg.getData<CollisionEvent>();

@@ -134,7 +134,7 @@ namespace XPID
 }
 static constexpr std::array<std::int32_t, XPID::Count> XPValues =
 {
-    500, 150, 50, 30, 10, 50,
-    50, 100, 200, 300,
-    40, 75, 100
+    0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0,
+    0, 0, 0
 };

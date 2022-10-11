@@ -959,20 +959,27 @@ void GolfState::showCountdown(std::uint8_t seconds)
             if (m_statBoardScores.size() > 1)
             {
                 Achievements::incrementStat(StatStrings[StatID::GoldAverage + i], trophyStat);
-            }
 
-            switch (i)
-            {
-            default: break;
-            case 0:
-                Social::awardXP(XPValues[XPID::First]);
-                break;
-            case 1:
-                Social::awardXP(XPValues[XPID::Second]);
-                break;
-            case 2:
-                Social::awardXP(XPValues[XPID::Third]);
-                break;
+                //only award rank XP if there are players to rank against
+                //and reduce XP if < 4 players. Probably ought to consider
+                //the opponent's XP too, ie award more if a player wins
+                //against someone with a significantly higher level.
+                float multiplier = std::min(1.f, static_cast<float>(m_statBoardScores.size()) / 4.f);
+                float xp = 0.f;
+                switch (i)
+                {
+                default: break;
+                case 0:
+                    xp = static_cast<float>(XPValues[XPID::First]) * multiplier;
+                    break;
+                case 1:
+                    xp = static_cast<float>(XPValues[XPID::Second]) * multiplier;
+                    break;
+                case 2:
+                    xp = static_cast<float>(XPValues[XPID::Third]) * multiplier;
+                    break;
+                }
+                Social::awardXP(static_cast<std::int32_t>(xp));
             }
         }
 

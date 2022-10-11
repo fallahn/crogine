@@ -395,9 +395,9 @@ bool GolfState::handleEvent(const cro::Event& evt)
             m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, std::uint8_t(ServerCommand::EndGame), net::NetFlag::Reliable);
             break;
         case SDLK_F7:
-            //showCountdown(10);
+            showCountdown(30);
             //showMessageBoard(MessageBoardID::Scrub);
-            requestStackPush(StateID::Tutorial);
+            //requestStackPush(StateID::Tutorial);
             break;
         case SDLK_F8:
         {
