@@ -44,6 +44,7 @@ struct FontID final
     {
         UI,
         Info,
+        Label,
 
         Count
     };
@@ -82,6 +83,7 @@ static constexpr std::uint32_t SmallTextSize = 16;
 
 static constexpr std::uint32_t UITextSize = 8;
 static constexpr std::uint32_t InfoTextSize = 10;
+static constexpr std::uint32_t LabelTextSize = 16;
 
 static const cro::Colour TextNormalColour(0xfff8e1ff);
 static const cro::Colour TextEditColour(0x6eb39dff);

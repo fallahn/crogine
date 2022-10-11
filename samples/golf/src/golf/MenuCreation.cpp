@@ -3515,9 +3515,9 @@ void MenuState::updateLobbyAvatars()
             }
             m_playerAvatars[idx].apply();
         };
-        const auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
+        const auto& font = m_sharedData.sharedResources->fonts.get(FontID::Label);
         cro::SimpleText simpleText(font);
-        simpleText.setCharacterSize(UITextSize);
+        simpleText.setCharacterSize(LabelTextSize);
         simpleText.setFillColour(TextNormalColour);
 
         cro::Image img;
@@ -3553,7 +3553,7 @@ void MenuState::updateLobbyAvatars()
                     simpleQuad.setColour(cro::Colour(pc::Palette[c.playerData[i].avatarFlags[1]].light));
                     simpleQuad.draw();
 
-                    simpleQuad.move({ 112.f, 0.f });
+                    simpleQuad.move({ /*112.f*/static_cast<float>(LabelTextureSize.x) - 16.f, 0.f});
                     simpleQuad.setColour(cro::Colour(pc::Palette[c.playerData[i].avatarFlags[0]].light));
                     simpleQuad.draw();
                 }
@@ -3594,10 +3594,11 @@ void MenuState::updateLobbyAvatars()
 
             textPos.x += 1.f;
 
+            auto& largeFont = m_sharedData.sharedResources->fonts.get(FontID::UI);
             auto entity = m_uiScene.createEntity();
             entity.addComponent<cro::Transform>().setPosition(textPos);
             entity.addComponent<cro::Drawable2D>();
-            entity.addComponent<cro::Text>(font).setString(str);
+            entity.addComponent<cro::Text>(largeFont).setString(str);
             entity.getComponent<cro::Text>().setFillColour(LeaderboardTextDark);
             entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
             entity.getComponent<cro::Text>().setVerticalSpacing(6.f);
