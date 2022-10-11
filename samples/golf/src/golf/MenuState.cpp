@@ -1400,7 +1400,10 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
                         };
                         m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
-                        m_matchMaking.setGameTitle(data->title);
+                        if (m_sharedData.hosting)
+                        {
+                            m_matchMaking.setGameTitle(data->title);
+                        }
                     }
                     else
                     {
