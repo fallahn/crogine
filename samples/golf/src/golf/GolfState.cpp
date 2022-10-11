@@ -2072,6 +2072,13 @@ void GolfState::loadAssets()
         holeStrings.swap(newStrings);
     }
 
+    //and reverse if rules request
+    if (m_sharedData.reverseCourse)
+    {
+        std::reverse(holeStrings.begin(), holeStrings.end());
+    }
+
+
     cro::ConfigFile holeCfg;
     cro::ModelDefinition modelDef(m_resources);
     std::string prevHoleString;

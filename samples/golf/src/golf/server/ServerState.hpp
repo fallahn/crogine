@@ -74,6 +74,7 @@ namespace sv
         std::uint8_t scoreType = 0;
         std::uint8_t gimmeRadius = 0;
         std::uint8_t holeCount = 0;
+        std::uint8_t reverseCourse = false;
 
         std::atomic_uint64_t hostID = 0;
     };

@@ -2080,7 +2080,10 @@ void ClubhouseState::updateLobbyData(const net::NetEvent& evt)
         m_sharedData.connectionData[cd.connectionID] = cd;
     }
 
-    m_matchMaking.setGamePlayerCount(1);
+    if (m_sharedData.hosting)
+    {
+        m_matchMaking.setGamePlayerCount(1);
+    }
 
     updateLobbyAvatars();
 }

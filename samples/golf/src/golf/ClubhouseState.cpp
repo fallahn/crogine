@@ -1524,7 +1524,10 @@ void ClubhouseState::handleNetEvent(const net::NetEvent& evt)
                 };
                 m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
-                m_matchMaking.setGameTitle(TableStrings[m_tableData[m_sharedData.courseIndex].rules]);
+                if (m_sharedData.hosting)
+                {
+                    m_matchMaking.setGameTitle(TableStrings[m_tableData[m_sharedData.courseIndex].rules]);
+                }
             }
             else
             {

@@ -481,7 +481,7 @@ bool MenuState::handleEvent(const cro::Event& evt)
             break;
         case SDLK_KP_9:
         {
-            requestStackPush(StateID::Trophy);
+            //requestStackPush(StateID::Trophy);
         }
             break;
 #endif
@@ -1476,6 +1476,9 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
             }
             m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
         }
+            break;
+        case PacketID::ReverseCourse:
+            m_sharedData.reverseCourse = evt.packet.as<std::uint8_t>();
             break;
         case PacketID::ServerError:
             switch (evt.packet.as<std::uint8_t>())

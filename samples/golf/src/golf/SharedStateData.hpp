@@ -153,6 +153,7 @@ struct SharedStateData final
     std::uint8_t scoreType = 0;
     std::uint8_t gimmeRadius = 0;
     std::uint8_t holeCount = 0; //0-1-2 all, front, back
+    std::uint8_t reverseCourse = 0; //play holes in reverse order
 
     //printed by the error state
     std::string errorMessage;

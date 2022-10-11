@@ -124,6 +124,7 @@ namespace PacketID
         ScoreType, //< uint8 ScoreType of golf game
         GimmeRadius, //< uint8 gimme radius of golf
         HoleCount, //< uint8 0 - 2: all, front or back
+        ReverseCourse, //< uint8 0 false else true
         LobbyReady, //< uint8 playerID uint8 0 false 1 true
         AchievementGet, //< uint8 client uint8 achievement id (always assume first player on client, as achievements are disabled other wise)
         CPUThink, //< uint8 0 if begin think, 1 end think

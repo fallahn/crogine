@@ -752,7 +752,11 @@ bool GolfState::validateMap()
         holeStrings.swap(newStrings);
     }
 
-
+    //reverse the order if game rule requests
+    if (m_sharedData.reverseCourse)
+    {
+        std::reverse(holeStrings.begin(), holeStrings.end());
+    }
 
     cro::ConfigFile holeCfg;
     for (const auto& hole : holeStrings)
