@@ -150,7 +150,7 @@ void GolfState::buildUI()
     auto nameEnt = entity;
     infoEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
-    if (Social::isAvailable())
+    /*if (Social::isAvailable())
     {
         entity = m_uiScene.createEntity();
         entity.addComponent<cro::Transform>().setScale({ 0.f, 0.5f });
@@ -201,7 +201,7 @@ void GolfState::buildUI()
         };
 
         infoEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-    }
+    }*/
 
 
     //think bulb displayed when CPU players are thinking

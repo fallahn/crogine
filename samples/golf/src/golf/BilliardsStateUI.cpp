@@ -56,8 +56,6 @@ source distribution.
 
 namespace
 {
-#include "PaletteSwap.inl"
-
     constexpr glm::vec3 TopSpinPosition(50.f, 0.f, 0.f);
     constexpr glm::vec3 TargetBallPosition(100.f, 0.f, 0.f);
     constexpr glm::vec3 TrophyPosition(150.f, 0.f, 0.f);
@@ -90,18 +88,6 @@ void BilliardsState::createUI()
     entity.addComponent<cro::Callback>().function = bufferUpdateCallback;
 
     auto backgroundEnt = entity;
-
-    /*if (m_gameSceneShader.loadFromString(PaletteSwapVertex, PaletteSwapFragment)
-        && m_lutTexture.loadFromFile("assets/golf/images/lut.png"))
-    {
-        auto uniformID = m_gameSceneShader.getUniformID("u_palette");
-
-        if (uniformID != -1)
-        {
-            entity.getComponent<cro::Drawable2D>().setShader(&m_gameSceneShader);
-            entity.getComponent<cro::Drawable2D>().bindUniform("u_palette", m_lutTexture);
-        }
-    }*/
 
     //displays the topspin ball
     entity = m_uiScene.createEntity();
@@ -290,7 +276,7 @@ void BilliardsState::createUI()
 
     static constexpr float NameVertPos = 0.95f;
     static constexpr float NameVertOffset = -4.f;
-    static constexpr float NameHorPos = 0.13f;
+    static constexpr float NameHorPos = 0.2f;
     createText(m_sharedData.connectionData[0].playerData[0].name, glm::vec2(NameHorPos, 1.f), glm::vec2(0.f, NameVertOffset));
 
     struct NameAnimationCallback final

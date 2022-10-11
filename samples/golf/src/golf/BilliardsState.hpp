@@ -105,8 +105,7 @@ private:
     cro::Entity m_trophyCamera;
     cro::Entity m_pocketedCamera;
     cro::Entity m_targetBall;
-    //cro::Shader m_gameSceneShader;
-    //cro::Texture m_lutTexture;
+
     cro::UniformBuffer<float> m_scaleBuffer;
     cro::UniformBuffer<ResolutionData> m_resolutionBuffer;
     glm::vec2 m_viewScale;
