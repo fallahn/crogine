@@ -58,7 +58,8 @@ public:
     {
         enum
         {
-            LevelUp
+            LevelUp,
+            XPAwarded
         }type = LevelUp;
         std::int32_t level = 0;
     };
@@ -68,7 +69,9 @@ public:
     static void findFriends() {}
     static void inviteFriends(std::uint64_t) {}
     static void awardXP(std::int32_t) {}
+    static std::int32_t getXP() { return 0; }
     static std::int32_t getLevel() { return 0; }
+    static float getLevelProgress() { return 0.f; }
     static void storeDrivingStats(const std::array<float, 3u>&);
     static void readDrivingStats(std::array<float, 3u>&);
     static std::vector<cro::String> getLeaderboardResults(std::int32_t, std::int32_t) { return {}; }

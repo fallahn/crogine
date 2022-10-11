@@ -348,7 +348,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
                 auto* tex = Achievements::getIcon(AchievementStrings[1]).texture;
                 if (tex)*/
                 {
-                    ImGui::Image(m_sharedData.nameTextures[0].getTexture()/**tex*/, { size.x, size.y }, { 0.f, 1.f }, { 1.f, 0.f });
+                    //ImGui::Image(m_sharedData.nameTextures[0].getTexture()/**tex*/, { size.x, size.y }, { 0.f, 1.f }, { 1.f, 0.f });
                 }
             }
             ImGui::End();

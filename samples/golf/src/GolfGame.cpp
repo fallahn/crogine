@@ -832,26 +832,22 @@ void GolfGame::loadAvatars()
 
                     else if (name == "flags0")
                     {
-                        auto flag = prop.getValue<std::int32_t>();
-                        flag = std::min(pc::ColourID::Count - 1, std::max(0, flag));
+                        auto flag = prop.getValue<std::int32_t>() % pc::PairCounts[0];
                         m_sharedData.localConnectionData.playerData[i].avatarFlags[0] = static_cast<std::uint8_t>(flag);
                     }
                     else if (name == "flags1")
                     {
-                        auto flag = prop.getValue<std::int32_t>();
-                        flag = std::min(pc::ColourID::Count - 1, std::max(0, flag));
+                        auto flag = prop.getValue<std::int32_t>() % pc::PairCounts[1];
                         m_sharedData.localConnectionData.playerData[i].avatarFlags[1] = static_cast<std::uint8_t>(flag);
                     }
                     else if (name == "flags2")
                     {
-                        auto flag = prop.getValue<std::int32_t>();
-                        flag = std::min(pc::ColourID::Count - 1, std::max(0, flag));
+                        auto flag = prop.getValue<std::int32_t>() % pc::PairCounts[2];
                         m_sharedData.localConnectionData.playerData[i].avatarFlags[2] = static_cast<std::uint8_t>(flag);
                     }
                     else if (name == "flags3")
                     {
-                        auto flag = prop.getValue<std::int32_t>();
-                        flag = std::min(pc::ColourID::Count - 1, std::max(0, flag));
+                        auto flag = prop.getValue<std::int32_t>() % pc::PairCounts[3];
                         m_sharedData.localConnectionData.playerData[i].avatarFlags[3] = static_cast<std::uint8_t>(flag);
                     }
 

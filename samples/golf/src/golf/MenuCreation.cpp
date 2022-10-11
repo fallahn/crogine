@@ -973,7 +973,7 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<UIElement>().absolutePosition = { 0.f, MenuBottomBorder };
+    entity.addComponent<UIElement>().absolutePosition = { -20.f, MenuBottomBorder };
     entity.getComponent<UIElement>().relativePosition = { 0.3334f, 0.f };
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement;
     entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::AddPlayer];
@@ -1009,13 +1009,74 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
             });
     menuTransform.addChild(entity.getComponent<cro::Transform>());
 
+    if (Social::isAvailable())
+    {
+        entity = m_uiScene.createEntity();
+        entity.addComponent<cro::Transform>();
+        entity.addComponent<UIElement>().absolutePosition = { 0.f, (spriteRect.height / 2.f) + BannerPosition };
+        entity.getComponent<UIElement>().relativePosition = { 0.5f, 0.f };
+        entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement;
+
+        const float progress = Social::getLevelProgress();
+        constexpr float BarWidth = 80.f;
+        constexpr float BarHeight = 10.f;
+        entity.addComponent<cro::Drawable2D>().setVertexData(
+            {
+                cro::Vertex2D(glm::vec2(-BarWidth / 2.f, BarHeight / 2.f), TextHighlightColour),
+                cro::Vertex2D(glm::vec2(-BarWidth / 2.f, -BarHeight / 2.f), TextHighlightColour),
+                cro::Vertex2D(glm::vec2((-BarWidth / 2.f) + (BarWidth * progress), BarHeight / 2.f), TextHighlightColour),
+                cro::Vertex2D(glm::vec2((-BarWidth / 2.f) + (BarWidth * progress), -BarHeight / 2.f), TextHighlightColour),
+
+                cro::Vertex2D(glm::vec2((-BarWidth / 2.f) + (BarWidth * progress), BarHeight / 2.f), LeaderboardTextDark),
+                cro::Vertex2D(glm::vec2((-BarWidth / 2.f) + (BarWidth * progress), -BarHeight / 2.f), LeaderboardTextDark),
+                cro::Vertex2D(glm::vec2(BarWidth / 2.f, BarHeight / 2.f), LeaderboardTextDark),
+                cro::Vertex2D(glm::vec2(BarWidth / 2.f, -BarHeight / 2.f), LeaderboardTextDark),
+            });
+        entity.getComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLE_STRIP);
+        menuTransform.addChild(entity.getComponent<cro::Transform>());
+
+        auto& font = m_sharedData.sharedResources->fonts.get(FontID::Info);
+        auto labelEnt = m_uiScene.createEntity();
+        labelEnt.addComponent<cro::Transform>().setPosition({ (-BarWidth / 2.f) + 2.f, 4.f, 0.1f});
+        labelEnt.addComponent<cro::Drawable2D>();
+        labelEnt.addComponent<cro::Text>(font).setString(std::to_string(Social::getXP()) + " XP");
+        labelEnt.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+        labelEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
+        labelEnt.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
+        labelEnt.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+        entity.getComponent<cro::Transform>().addChild(labelEnt.getComponent<cro::Transform>());
+
+        auto level = Social::getLevel();
+        labelEnt = m_uiScene.createEntity();
+        labelEnt.addComponent<cro::Transform>().setPosition({ (-BarWidth / 2.f) - 12.f, 4.f, 0.1f });
+        labelEnt.addComponent<cro::Drawable2D>();
+        labelEnt.addComponent<cro::Text>(font).setString(std::to_string(level));
+        labelEnt.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+        labelEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
+        labelEnt.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
+        labelEnt.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+        centreText(labelEnt);
+        entity.getComponent<cro::Transform>().addChild(labelEnt.getComponent<cro::Transform>());
+
+        labelEnt = m_uiScene.createEntity();
+        labelEnt.addComponent<cro::Transform>().setPosition({ (BarWidth / 2.f) + 12.f, 4.f, 0.1f });
+        labelEnt.addComponent<cro::Drawable2D>();
+        labelEnt.addComponent<cro::Text>(font).setString(std::to_string(level + 1));
+        labelEnt.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+        labelEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
+        labelEnt.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
+        labelEnt.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+        centreText(labelEnt);
+        entity.getComponent<cro::Transform>().addChild(labelEnt.getComponent<cro::Transform>());
+    }
+
     //remove player button
     entity = m_uiScene.createEntity();
     entity.setLabel("Remove Player");
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<UIElement>().absolutePosition = { 0.f, MenuBottomBorder };
+    entity.addComponent<UIElement>().absolutePosition = { 20.f, MenuBottomBorder };
     entity.getComponent<UIElement>().relativePosition = { 0.6667f, 0.f };
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement;
     entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::RemovePlayer];
@@ -2789,7 +2850,7 @@ void MenuState::createPlayerConfigMenu()
             m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
 
             auto paletteIdx = m_sharedData.localConnectionData.playerData[m_activePlayerAvatar].avatarFlags[idx];
-            paletteIdx = (paletteIdx + (pc::ColourID::Count - 1)) % pc::ColourID::Count;
+            paletteIdx = (paletteIdx + (pc::PairCounts[idx] - 1)) % pc::PairCounts[idx];
             m_sharedData.localConnectionData.playerData[m_activePlayerAvatar].avatarFlags[idx] = paletteIdx;
 
             applyAvatarColours(m_activePlayerAvatar);
@@ -2804,7 +2865,7 @@ void MenuState::createPlayerConfigMenu()
             m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
 
             auto paletteIdx = m_sharedData.localConnectionData.playerData[m_activePlayerAvatar].avatarFlags[idx];
-            paletteIdx = (paletteIdx + 1) % pc::ColourID::Count;
+            paletteIdx = (paletteIdx + 1) % pc::PairCounts[idx];
             m_sharedData.localConnectionData.playerData[m_activePlayerAvatar].avatarFlags[idx] = paletteIdx;
 
             applyAvatarColours(m_activePlayerAvatar);
@@ -2825,7 +2886,7 @@ void MenuState::createPlayerConfigMenu()
                     auto colour = m_playerAvatars[m_avatarIndices[m_activePlayerAvatar]].getColour(pc::ColourKey::Hair).first;
                     m_playerAvatars[m_avatarIndices[m_activePlayerAvatar]].hairModels[hairID].model.getComponent<cro::Model>().setMaterialProperty(0, "u_hairColour", colour);
 
-                    colour = m_playerAvatars[m_avatarIndices[m_activePlayerAvatar]].getColour(pc::ColourKey::Hair).second;
+                    //colour = m_playerAvatars[m_avatarIndices[m_activePlayerAvatar]].getColour(pc::ColourKey::Hair).second;
                     //m_playerAvatars[m_avatarIndices[m_activePlayerAvatar]].hairModels[hairID].model.getComponent<cro::Model>().setMaterialProperty(0, "u_darkColour", colour);
                 }
             });
@@ -3519,6 +3580,8 @@ void MenuState::updateLobbyAvatars()
         cro::SimpleText simpleText(font);
         simpleText.setCharacterSize(LabelTextSize);
         simpleText.setFillColour(TextNormalColour);
+        simpleText.setShadowOffset({ 1.f, -1.f });
+        simpleText.setShadowColour(LeaderboardTextDark);
 
         cro::Image img;
         img.create(8, 8, cro::Colour::White);

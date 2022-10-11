@@ -685,6 +685,10 @@ void GolfState::handleMessage(const cro::Message& msg)
             packet |= data.level;
             m_sharedData.clientConnection.netClient.sendPacket<std::uint64_t>(PacketID::LevelUp, packet, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
         }
+        else if (data.type == Social::SocialEvent::XPAwarded)
+        {
+            floatingMessage(std::to_string(data.level) + " XP");
+        }
     }
         break;
     case MessageID::SystemMessage:

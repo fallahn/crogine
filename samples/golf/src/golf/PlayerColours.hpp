@@ -50,14 +50,15 @@ namespace pc
             White,
             Taupe,
             Grey,
-            Blue,
-            Green,
-            Yellow,
-            Red,
             Beige,
             Tan,
             Brown,
             Olive,
+            Blue,
+            Green,
+            Yellow,
+            Red,
+            Black,
 
             Count
         };
@@ -68,14 +69,15 @@ namespace pc
         ColourPair(0xfff8e1ff, 0xc8b89fff), //white
         ColourPair(0x987a68ff, 0x674949ff), //taupe
         ColourPair(0xadb9b8ff, 0x6b6f72ff), //grey
+        ColourPair(0xdbaf77ff, 0xb77854ff), //beige
+        ColourPair(0xb77854ff, 0x833e35ff), //tan
+        ColourPair(0x833e35ff, 0x50285fff), //brown
+        ColourPair(0x7e6d37ff, 0x65432fff), //olive
         ColourPair(0x6eb39dff, 0x30555bff), //blue
         ColourPair(0x6ebe70ff, 0x467e3eff), //green
         ColourPair(0xf2cf5cff, 0xec773dff), //yellow
         ColourPair(0xc85287ff, 0xb83530ff), //red
-        ColourPair(0xdbaf77ff, 0xb77854ff), //beige
-        ColourPair(0xb77854ff, 0x833e35ff), //tan
-        ColourPair(0x833e35ff, 0x50285fff), //brown
-        ColourPair(0x7e6d37ff, 0x65432fff)  //olive
+        ColourPair(0x281721ff, 0x0d0b0dff), //black
     };
 
     struct ColourKey final
@@ -87,6 +89,11 @@ namespace pc
 
             Count
         };
+    };
+
+    static inline const std::array<std::uint8_t, ColourKey::Count> PairCounts =
+    {
+        ColourID::Count, ColourID::Count, ColourID::Count - 4, ColourID::Count
     };
 
     static constexpr std::array<ColourPair, ColourKey::Count> Keys =
