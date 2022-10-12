@@ -1225,6 +1225,17 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
             }
         });
 
+    m_courseSelectCallbacks.toggleReverseCourse = m_uiScene.getSystem<cro::UISystem>()->addCallback(
+        [&](cro::Entity, const cro::ButtonEvent& evt)
+        {
+            if (activated(evt))
+            {
+                m_sharedData.reverseCourse = m_sharedData.reverseCourse == 0 ? 1 : 0;
+                m_sharedData.clientConnection.netClient.sendPacket(PacketID::ReverseCourse, m_sharedData.reverseCourse, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
+            }
+        });
+
     m_courseSelectCallbacks.toggleFriendsOnly = m_uiScene.getSystem<cro::UISystem>()->addCallback(
         [&](cro::Entity, const cro::ButtonEvent& evt)
         {
@@ -2264,6 +2275,44 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
         e.getComponent<cro::Callback>().active = false;
     };
     auto bannerEnt = entity;
+    menuTransform.addChild(entity.getComponent<cro::Transform>());
+
+
+    //checkbox to show reverse status
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::LobbyCheckbox];
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement;
+    entity.addComponent<UIElement>().absolutePosition = { -88.f, -31.f };
+    entity.getComponent<UIElement>().relativePosition = CourseDescPosition;
+    entity.getComponent<UIElement>().depth = 0.01f;
+
+    bounds = m_sprites[SpriteID::LobbyCheckbox].getTextureRect();
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&, bounds](cro::Entity e, float)
+    {
+        auto b = bounds;
+        if (m_sharedData.reverseCourse)
+        {
+            b.bottom -= bounds.height;
+        }
+        e.getComponent<cro::Sprite>().setTextureRect(b);
+    };
+
+    menuTransform.addChild(entity.getComponent<cro::Transform>());
+
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(smallFont).setString("Reverse Order");
+    entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement;
+    entity.addComponent<UIElement>().absolutePosition = { -76.f, -24.f };
+    entity.getComponent<UIElement>().relativePosition = CourseDescPosition;
+    entity.getComponent<UIElement>().depth = 0.01f;
     menuTransform.addChild(entity.getComponent<cro::Transform>());
 
 
@@ -4216,15 +4265,36 @@ void MenuState::addCourseSelectButtons()
     m_menuEntities[MenuID::Lobby].getComponent<cro::Transform>().addChild(buttonEnt.getComponent<cro::Transform>());
 
 
+    //toggle course reverse
+    auto checkboxEnt = m_uiScene.createEntity();
+    checkboxEnt.addComponent<cro::Transform>();
+    checkboxEnt.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
+    checkboxEnt.addComponent<cro::Drawable2D>();
+    checkboxEnt.addComponent<cro::Sprite>() = m_sprites[SpriteID::LobbyCheckboxHighlight];
+    checkboxEnt.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+    checkboxEnt.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement | CommandID::Menu::CourseSelect;
+    checkboxEnt.addComponent<UIElement>().absolutePosition = { -89.f, -32.f };
+    checkboxEnt.getComponent<UIElement>().relativePosition = CourseDescPosition;
+    checkboxEnt.getComponent<UIElement>().depth = 0.01f;
+    bounds = checkboxEnt.getComponent<cro::Sprite>().getTextureBounds();
+    checkboxEnt.addComponent<cro::UIInput>().area = bounds;
+    checkboxEnt.getComponent<cro::UIInput>().setGroup(MenuID::Lobby);
+    checkboxEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = m_courseSelectCallbacks.selectHighlight;
+    checkboxEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = m_courseSelectCallbacks.unselectHighlight;
+    checkboxEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = m_courseSelectCallbacks.toggleReverseCourse;
+    m_menuEntities[MenuID::Lobby].getComponent<cro::Transform>().addChild(checkboxEnt.getComponent<cro::Transform>());
+
+
+
     if (m_courseData.size() > m_officialCourseCount)
     {
         //checkbox to hide custom courses
-        auto checkboxEnt = m_uiScene.createEntity();
+        checkboxEnt = m_uiScene.createEntity();
         checkboxEnt.addComponent<cro::Transform>();
         checkboxEnt.addComponent<cro::Drawable2D>();
         checkboxEnt.addComponent<cro::Sprite>() = m_sprites[SpriteID::LobbyCheckbox];
         checkboxEnt.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement | CommandID::Menu::CourseSelect;
-        checkboxEnt.addComponent<UIElement>().absolutePosition = { -38.f, -31.f };
+        checkboxEnt.addComponent<UIElement>().absolutePosition = { 12.f, -31.f };
         checkboxEnt.getComponent<UIElement>().relativePosition = CourseDescPosition;
         checkboxEnt.getComponent<UIElement>().depth = 0.01f;
 
@@ -4250,7 +4320,7 @@ void MenuState::addCourseSelectButtons()
         checkboxEnt.addComponent<cro::Sprite>() = m_sprites[SpriteID::LobbyCheckboxHighlight];
         checkboxEnt.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
         checkboxEnt.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement | CommandID::Menu::CourseSelect;
-        checkboxEnt.addComponent<UIElement>().absolutePosition = { -39.f, -32.f };
+        checkboxEnt.addComponent<UIElement>().absolutePosition = { 11.f, -32.f };
         checkboxEnt.getComponent<UIElement>().relativePosition = CourseDescPosition;
         checkboxEnt.getComponent<UIElement>().depth = 0.01f;
         bounds = checkboxEnt.getComponent<cro::Sprite>().getTextureBounds();
@@ -4270,7 +4340,7 @@ void MenuState::addCourseSelectButtons()
         labelEnt.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
         labelEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
         labelEnt.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement | CommandID::Menu::CourseSelect;
-        labelEnt.addComponent<UIElement>().absolutePosition = { 6.f, -24.f };
+        labelEnt.addComponent<UIElement>().absolutePosition = { 55.f, -24.f };
         labelEnt.getComponent<UIElement>().relativePosition = CourseDescPosition;
         labelEnt.getComponent<UIElement>().depth = 0.01f;
 
