@@ -3645,6 +3645,7 @@ void MenuState::updateLobbyAvatars()
         glm::vec2 textPos(0.f);
         std::int32_t h = 0;
         std::int32_t clientCount = 0;
+        std::int32_t playerCount = 0;
         glm::vec2 textureSize(LabelTextureSize);
         textureSize.y -= LabelIconSize.y;
         for (const auto& c : m_sharedData.connectionData)
@@ -3690,6 +3691,8 @@ void MenuState::updateLobbyAvatars()
                 str += c.playerData[i].name.substr(0, ConstVal::MaxNameChars) + "\n";
                 auto avatarIndex = indexFromAvatarID(c.playerData[i].skinID);
                 applyTexture(avatarIndex, m_sharedData.avatarTextures[c.connectionID][i], c.playerData[i].avatarFlags);
+
+                playerCount++;
             }
 
             if (str.empty())
@@ -3779,7 +3782,7 @@ void MenuState::updateLobbyAvatars()
 
         auto strClientCount = std::to_string(clientCount);
         Social::setStatus(Social::InfoID::Lobby, { "Golf", strClientCount.c_str(), "4" });
-        Social::setGroup(m_sharedData.lobbyID, clientCount);
+        Social::setGroup(m_sharedData.lobbyID, playerCount);
     };
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 }
