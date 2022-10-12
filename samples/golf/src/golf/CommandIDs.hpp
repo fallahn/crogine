@@ -73,7 +73,8 @@ struct CommandID final
             MiniGreen            = 0x10000,
             DrivingBoard         = 0x20000,
             StrengthMeter        = 0x40000,
-            PlayerIcon           = 0x80000
+            PlayerIcon           = 0x80000,
+            WaitMessage          = 0x100000
         };
     };
 

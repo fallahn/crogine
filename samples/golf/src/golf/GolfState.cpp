@@ -5907,6 +5907,15 @@ void GolfState::startFlyBy()
     };
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
+    //show wait message
+    cmd.targetFlags = CommandID::UI::WaitMessage;
+    cmd.action =
+        [&](cro::Entity e, float)
+    {
+        e.getComponent<cro::Transform>().setScale({ 1.f, 1.f });
+    };
+    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
     //hide player
     if (m_activeAvatar)
     {

@@ -1184,6 +1184,28 @@ void GolfState::createScoreboard()
         bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     }
 
+    auto connectionCount = 0;
+    for (auto i = 1u; i < m_sharedData.connectionData.size(); ++i)
+    {
+        connectionCount += m_sharedData.connectionData[i].playerCount;
+    }
+    if (connectionCount != 0)
+    {
+        auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
+
+        entity = m_uiScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ 200.f, 10.f, 0.5f });
+        entity.addComponent<cro::Drawable2D>();
+        entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::WaitMessage;
+        entity.addComponent<cro::Text>(smallFont).setString("Waiting For Other Players");
+        entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+        entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+        bounds = cro::Text::getLocalBounds(entity);
+        bounds.width = std::floor(bounds.width / 2.f);
+        entity.getComponent<cro::Transform>().setOrigin({ bounds.width, 0.f });
+        bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    }
+
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.getComponent<cro::Transform>().setOrigin({ -6.f, 253.f, -0.2f});
@@ -1609,6 +1631,18 @@ void GolfState::showScoreboard(bool visible)
         e.getComponent<cro::Callback>().active = true;
     };
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+    if (!visible)
+    {
+        //hide message
+        cmd.targetFlags = CommandID::UI::WaitMessage;
+        cmd.action =
+            [&](cro::Entity e, float)
+        {
+            e.getComponent<cro::Transform>().setScale({ 0.f, 1.f });
+        };
+        m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+    }
 }
 
 void GolfState::updateWindDisplay(glm::vec3 direction)

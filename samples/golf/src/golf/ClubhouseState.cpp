@@ -1642,9 +1642,10 @@ void ClubhouseState::finaliseGameCreate()
     
     
         //send the initially selected table - this triggers the menu to move to the next stage.
-        //m_sharedData.mapDirectory = m_courseData[m_sharedData.courseIndex].directory;
         auto data = serialiseString(m_sharedData.mapDirectory);
         m_sharedData.clientConnection.netClient.sendPacket(PacketID::MapInfo, data.data(), data.size(), net::NetFlag::Reliable, ConstVal::NetChannelStrings);
+
+
     }
 }
 
