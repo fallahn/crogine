@@ -51,7 +51,7 @@ struct SharedStateData;
 class SplashState final : public cro::State
 {
 public:
-    SplashState(cro::StateStack&, cro::State::Context);
+    SplashState(cro::StateStack&, cro::State::Context, SharedStateData&);
 
     cro::StateID getStateID() const override { return StateID::SplashScreen; }
 
@@ -61,7 +61,7 @@ public:
     void render() override;
 
 private:
-
+    SharedStateData& m_sharedData;
     cro::AudioResource m_audioResource;
 
     cro::Scene m_uiScene;

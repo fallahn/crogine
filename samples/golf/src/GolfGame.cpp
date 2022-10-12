@@ -110,7 +110,7 @@ GolfGame::GolfGame()
     //must be set before anything, else cfg is still loaded from default path
     setApplicationStrings("Trederia", "golf");
 
-    m_stateStack.registerState<SplashState>(StateID::SplashScreen);
+    m_stateStack.registerState<SplashState>(StateID::SplashScreen, m_sharedData);
     m_stateStack.registerState<KeyboardState>(StateID::Keyboard);
     m_stateStack.registerState<MenuState>(StateID::Menu, m_sharedData);
     m_stateStack.registerState<GolfState>(StateID::Golf, m_sharedData);
@@ -715,6 +715,10 @@ void GolfGame::loadPreferences()
                 {
                     m_sharedData.showCustomCourses = prop.getValue<bool>();
                 }
+                else if (name == "show_tutorial")
+                {
+                    m_sharedData.showTutorialTip = prop.getValue<bool>();
+                }
             }
         }
     }
@@ -775,6 +779,7 @@ void GolfGame::savePreferences()
     cfg.addProperty("hq_shadows").setValue(m_sharedData.hqShadows);
     cfg.addProperty("log_benchmark").setValue(m_sharedData.logBenchmarks);
     cfg.addProperty("show_custom").setValue(m_sharedData.showCustomCourses);
+    cfg.addProperty("show_tutorial").setValue(m_sharedData.showTutorialTip);
     cfg.save(path);
 
 

@@ -481,8 +481,8 @@ bool MenuState::handleEvent(const cro::Event& evt)
             break;
         case SDLK_KP_9:
         {
-            //requestStackPush(StateID::Trophy);
-            m_sharedData.reverseCourse = m_sharedData.reverseCourse == 0 ? 1: 0;
+            m_sharedData.errorMessage = "Welcome";
+            requestStackPush(StateID::MessageOverlay);
         }
             break;
 #endif
