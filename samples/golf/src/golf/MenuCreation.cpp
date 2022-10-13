@@ -3356,8 +3356,6 @@ void MenuState::updateLocalAvatars(std::uint32_t mouseEnter, std::uint32_t mouse
             0.1f);
         localPos += RootPos;
 
-        constexpr float NameWidth = 96.f;
-
         //player name
         auto entity = m_uiScene.createEntity();
         entity.addComponent<cro::Transform>().setPosition(localPos);

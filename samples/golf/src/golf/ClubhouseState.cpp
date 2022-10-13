@@ -35,6 +35,7 @@ source distribution.
 #include "Utility.hpp"
 #include "PoissonDisk.hpp"
 #include "GolfCartSystem.hpp"
+#include "NameScrollSystem.hpp"
 #include "MessageIDs.hpp"
 
 #include <Social.hpp>
@@ -606,6 +607,7 @@ void ClubhouseState::addSystems()
 
     m_uiScene.addSystem<cro::CommandSystem>(mb);
     m_uiScene.addSystem<cro::CallbackSystem>(mb);
+    m_uiScene.addSystem<NameScrollSystem>(mb);
     m_uiScene.addSystem<cro::UISystem>(mb);
     m_uiScene.addSystem<cro::TextSystem>(mb);
     m_uiScene.addSystem<cro::SpriteAnimator>(mb);

@@ -120,6 +120,7 @@ static constexpr glm::vec2 MenuSpacing(1920.f, 1080.f);
 static constexpr float MenuBottomBorder = 15.f;
 static constexpr float BannerPosition = MenuBottomBorder - 3.f;
 
+static constexpr float NameWidth = 96.f;
 static constexpr std::uint32_t BallPreviewSize = 64u;
 static constexpr glm::uvec2 AvatarPreviewSize(70, 90);
 static constexpr glm::uvec2 AvatarThumbSize(60, 77);

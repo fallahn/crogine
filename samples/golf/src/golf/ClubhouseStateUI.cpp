@@ -34,6 +34,7 @@ source distribution.
 #include "MenuCallbacks.hpp"
 #include "PacketIDs.hpp"
 #include "Utility.hpp"
+#include "NameScrollSystem.hpp"
 #include "../GolfGame.hpp"
 
 #include <crogine/ecs/components/Camera.hpp>
@@ -509,8 +510,14 @@ void ClubhouseState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnt
         textEnt.addComponent<cro::Drawable2D>();
         textEnt.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
         textEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
-        textEnt.getComponent<cro::Text>().setString(m_sharedData.localConnectionData.playerData[playerIndex].name.substr(0, ConstVal::MaxNameChars));
+        textEnt.getComponent<cro::Text>().setString(m_sharedData.localConnectionData.playerData[playerIndex].name.substr(0, ConstVal::MaxStringChars));
         centreText(textEnt);
+
+        bounds = cro::Text::getLocalBounds(textEnt);
+        textEnt.addComponent<NameScroller>().maxDistance = bounds.width - NameWidth;
+        bounds.width = NameWidth;
+        textEnt.getComponent<cro::Drawable2D>().setCroppingArea(bounds);
+        
         textEnt.addComponent<cro::Callback>().function =
             [&](cro::Entity e, float)
         {
@@ -538,7 +545,8 @@ void ClubhouseState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnt
         buttonEnt.getComponent<cro::Transform>().setOrigin({ spriteBounds.width / 2.f, spriteBounds.height / 2.f });
         buttonEnt.addComponent<cro::Callback>().function = HighlightAnimationCallback();
         buttonEnt.addComponent<cro::UIInput>().area = spriteBounds;
-        buttonEnt.getComponent<cro::UIInput>().setGroup(MenuID::PlayerSelect);
+        //buttonEnt.getComponent<cro::UIInput>().setGroup(MenuID::PlayerSelect);
+        buttonEnt.getComponent<cro::UIInput>().setGroup(MenuID::Inactive); //also uncomment line in playerCount > 0 clause
         buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = arrowSelected;
         buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = arrowUnselected;
         buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
@@ -547,11 +555,11 @@ void ClubhouseState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnt
                 {
                     if (activated(evt))
                     {
-                        auto& callback = textEnt.getComponent<cro::Callback>();
+                        /*auto& callback = textEnt.getComponent<cro::Callback>();
                         callback.active = !callback.active;
                         if (callback.active)
                         {
-                            beginTextEdit(textEnt, &m_sharedData.localConnectionData.playerData[callback.getUserData<const std::int32_t>()].name, ConstVal::MaxNameChars);
+                            beginTextEdit(textEnt, &m_sharedData.localConnectionData.playerData[callback.getUserData<const std::int32_t>()].name, ConstVal::MaxStringChars);
                             m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
 
                             if (evt.type == SDL_CONTROLLERBUTTONUP)
@@ -564,7 +572,7 @@ void ClubhouseState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnt
                             applyTextEdit();
                             centreText(textEnt);
                             m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
-                        }
+                        }*/
                     }
                 });
 
@@ -590,7 +598,7 @@ void ClubhouseState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnt
                 {
                     if (buttonEnt.getComponent<cro::UIInput>().getGroup() == MenuID::Inactive)
                     {
-                        buttonEnt.getComponent<cro::UIInput>().setGroup(MenuID::PlayerSelect);
+                        //buttonEnt.getComponent<cro::UIInput>().setGroup(MenuID::PlayerSelect);
                     }
                 }
             };
@@ -2469,7 +2477,11 @@ void ClubhouseState::updateLobbyAvatars()
             entity.addComponent<cro::Drawable2D>();
             entity.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
             entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
-            entity.getComponent<cro::Text>().setString(name.substr(0, ConstVal::MaxNameChars));
+            entity.getComponent<cro::Text>().setString(name.substr(0, ConstVal::MaxStringChars));
+            auto bounds = cro::Text::getLocalBounds(entity);
+            entity.addComponent<NameScroller>().maxDistance = bounds.width - NameWidth;
+            bounds.width = NameWidth;
+            entity.getComponent<cro::Drawable2D>().setCroppingArea(bounds);
             centreText(entity);
             e.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
             children.push_back(entity);
