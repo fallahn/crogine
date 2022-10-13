@@ -303,6 +303,9 @@
     <ClCompile Include="src\golf\MessageOverlayState.cpp">
       <Filter>Source Files\golf\client\states</Filter>
     </ClCompile>
+    <ClCompile Include="src\golf\NameScrollSystem.cpp">
+      <Filter>Source Files\golf\client\systems</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ErrorCheck.hpp">
@@ -601,6 +604,9 @@
     </ClInclude>
     <ClInclude Include="src\golf\MessageOverlayState.hpp">
       <Filter>Header Files\golf\client\states</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\NameScrollSystem.hpp">
+      <Filter>Header Files\golf\client\systems</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -3079,57 +3079,58 @@ void GolfState::buildScene()
 
 
     //when putting this shows the distance/power ratio
-    material = m_resources.materials.get(m_materialIDs[MaterialID::WireFrame]);
-    material.blendMode = cro::Material::BlendMode::Additive;
-    material.enableDepthTest = false;
-    meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_TRIANGLE_STRIP));
-    entity = m_gameScene.createEntity();
-    entity.addComponent<cro::CommandTarget>().ID = CommandID::StrokeArc; //we can recycle this as it behaves (mostly) the same way
-    entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), material);
-    entity.addComponent<cro::Transform>().setPosition(pos);
-    entity.addComponent<cro::Callback>().active = true;
-    entity.getComponent<cro::Callback>().function =
-        [&](cro::Entity e, float)
-    {
-        float scale = m_currentPlayer.terrain != TerrainID::Green ? 0.f : 1.f;
-        //TODO read current options for grid transparency and visibility
-        e.getComponent<cro::Transform>().setScale(glm::vec3(scale));
-    };
-    //TODO try a vertical arc instead?
-    constexpr float PuttWidth = 0.05f;
-    constexpr float PuttLength = 7.f;
-    c = glm::vec3(cro::Colour::Blue.getVec4());
-    c *= IndicatorLightness;
-    auto d = glm::vec3(TextGoldColour.getVec4());
-    d *= IndicatorLightness / 2.f;
-    meshData = &entity.getComponent<cro::Model>().getMeshData();
-    verts =
-    {
-        0.f,                 Ball::Radius, -PuttWidth, 0.f, 0.f, 0.f, 1.f,
-        0.f,                 Ball::Radius, PuttWidth,  0.f, 0.f, 0.f, 1.f,
-        //PuttLength * 0.334f, Ball::Radius, -0.166f,    d.r, d.g, d.b, 1.f,
-        //PuttLength * 0.334f, Ball::Radius, 0.166f,     d.r, d.g, d.b, 1.f,
-        //PuttLength * 0.667f, Ball::Radius, -0.283f,    c.r, c.g, c.b, 1.f,
-        //PuttLength * 0.667f, Ball::Radius, 0.283f,     c.r, c.g, c.b, 1.f,
-        PuttLength,          Ball::Radius, -PuttWidth * 8.f, c.r, c.g, c.b, 1.f,
-        PuttLength,          Ball::Radius, PuttWidth * 8.f,  c.r, c.g, c.b, 1.f,
-        PuttLength + 0.02f,  Ball::Radius, -PuttWidth * 8.f, 0.f, 0.f, 0.f, 1.f,
-        PuttLength + 0.02f,  Ball::Radius, PuttWidth * 8.f,  0.f, 0.f, 0.f, 1.f,
-    };
-    indices =
-    {
-        0,1,2,3,4,5,//6,7,8,9
-    };
-    meshData->vertexCount = verts.size() / vertStride;
-    glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData->vbo));
-    glCheck(glBufferData(GL_ARRAY_BUFFER, meshData->vertexSize * meshData->vertexCount, verts.data(), GL_STATIC_DRAW));
-    glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
+    //let's put, ahem, a pin in this for now...
+    //material = m_resources.materials.get(m_materialIDs[MaterialID::WireFrame]);
+    //material.blendMode = cro::Material::BlendMode::Additive;
+    //material.enableDepthTest = false;
+    //meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_TRIANGLE_STRIP));
+    //entity = m_gameScene.createEntity();
+    //entity.addComponent<cro::CommandTarget>().ID = CommandID::StrokeArc; //we can recycle this as it behaves (mostly) the same way
+    //entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), material);
+    //entity.addComponent<cro::Transform>().setPosition(pos);
+    //entity.addComponent<cro::Callback>().active = true;
+    //entity.getComponent<cro::Callback>().function =
+    //    [&](cro::Entity e, float)
+    //{
+    //    float scale = m_currentPlayer.terrain != TerrainID::Green ? 0.f : 1.f;
+    //    //TODO read current options for grid transparency and visibility
+    //    e.getComponent<cro::Transform>().setScale(glm::vec3(scale));
+    //};
+    ////TODO try a vertical arc instead?
+    //constexpr float PuttWidth = 0.05f;
+    //constexpr float PuttLength = 7.f;
+    //c = glm::vec3(cro::Colour::Blue.getVec4());
+    //c *= IndicatorLightness;
+    //auto d = glm::vec3(TextGoldColour.getVec4());
+    //d *= IndicatorLightness / 2.f;
+    //meshData = &entity.getComponent<cro::Model>().getMeshData();
+    //verts =
+    //{
+    //    0.f,                 Ball::Radius, -PuttWidth, 0.f, 0.f, 0.f, 1.f,
+    //    0.f,                 Ball::Radius, PuttWidth,  0.f, 0.f, 0.f, 1.f,
+    //    //PuttLength * 0.334f, Ball::Radius, -0.166f,    d.r, d.g, d.b, 1.f,
+    //    //PuttLength * 0.334f, Ball::Radius, 0.166f,     d.r, d.g, d.b, 1.f,
+    //    //PuttLength * 0.667f, Ball::Radius, -0.283f,    c.r, c.g, c.b, 1.f,
+    //    //PuttLength * 0.667f, Ball::Radius, 0.283f,     c.r, c.g, c.b, 1.f,
+    //    PuttLength,          Ball::Radius, -PuttWidth * 8.f, c.r, c.g, c.b, 1.f,
+    //    PuttLength,          Ball::Radius, PuttWidth * 8.f,  c.r, c.g, c.b, 1.f,
+    //    PuttLength + 0.02f,  Ball::Radius, -PuttWidth * 8.f, 0.f, 0.f, 0.f, 1.f,
+    //    PuttLength + 0.02f,  Ball::Radius, PuttWidth * 8.f,  0.f, 0.f, 0.f, 1.f,
+    //};
+    //indices =
+    //{
+    //    0,1,2,3,4,5,//6,7,8,9
+    //};
+    //meshData->vertexCount = verts.size() / vertStride;
+    //glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData->vbo));
+    //glCheck(glBufferData(GL_ARRAY_BUFFER, meshData->vertexSize * meshData->vertexCount, verts.data(), GL_STATIC_DRAW));
+    //glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 
-    submesh = &meshData->indexData[0];
-    submesh->indexCount = static_cast<std::uint32_t>(indices.size());
-    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->ibo));
-    glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh->indexCount * sizeof(std::uint32_t), indices.data(), GL_STATIC_DRAW));
-    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
+    //submesh = &meshData->indexData[0];
+    //submesh->indexCount = static_cast<std::uint32_t>(indices.size());
+    //glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->ibo));
+    //glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh->indexCount * sizeof(std::uint32_t), indices.data(), GL_STATIC_DRAW));
+    //glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
 
 
     //draw the flag pole as a single line which can be

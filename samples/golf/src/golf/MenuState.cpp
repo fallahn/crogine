@@ -37,6 +37,7 @@ source distribution.
 #include "MenuCallbacks.hpp"
 #include "PoissonDisk.hpp"
 #include "GolfCartSystem.hpp"
+#include "NameScrollSystem.hpp"
 #include "CloudSystem.hpp"
 #include "MessageIDs.hpp"
 #include "spooky2.hpp"
@@ -713,6 +714,7 @@ void MenuState::addSystems()
 
     m_uiScene.addSystem<cro::CommandSystem>(mb);
     m_uiScene.addSystem<cro::CallbackSystem>(mb);
+    m_uiScene.addSystem<NameScrollSystem>(mb);
     m_uiScene.addSystem<cro::UISystem>(mb);
     m_uiScene.addSystem<cro::CameraSystem>(mb);
     m_uiScene.addSystem<cro::SpriteAnimator>(mb);

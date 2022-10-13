@@ -34,6 +34,7 @@ source distribution.
 #include "MenuConsts.hpp"
 #include "GameConsts.hpp"
 #include "Utility.hpp"
+#include "NameScrollSystem.hpp"
 #include "CommandIDs.hpp"
 #include "spooky2.hpp"
 #include "../ErrorCheck.hpp"
@@ -2814,7 +2815,7 @@ void MenuState::createPlayerConfigMenu()
 
     //player name text
     auto entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 97.f, 171.f, ButtonDepth });
+    entity.addComponent<cro::Transform>().setPosition({ 61.f, 171.f, ButtonDepth });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
@@ -2826,7 +2827,7 @@ void MenuState::createPlayerConfigMenu()
         if (m_textEdit.string != nullptr)
         {
             auto str = *m_textEdit.string;
-            if (str.size() < ConstVal::MaxNameChars)
+            if (str.size() < ConstVal::MaxStringChars)
             {
                 str += "_";
             }
@@ -2861,7 +2862,7 @@ void MenuState::createPlayerConfigMenu()
     };
 
     //I need to finish the layout editor :3
-    entity = createButton({ 92.f, 159.f }, "name_highlight");
+    entity = createButton({ 56.f, 159.f }, "name_highlight");
     entity.getComponent<cro::Sprite>().setColour(cro::Colour::White);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         m_uiScene.getSystem<cro::UISystem>()->addCallback(
@@ -2873,7 +2874,7 @@ void MenuState::createPlayerConfigMenu()
                     callback.active = !callback.active;
                     if (callback.active)
                     {
-                        beginTextEdit(textEnt, &m_sharedData.localConnectionData.playerData[callback.getUserData<std::uint8_t>()].name, ConstVal::MaxNameChars);
+                        beginTextEdit(textEnt, &m_sharedData.localConnectionData.playerData[callback.getUserData<std::uint8_t>()].name, ConstVal::MaxStringChars);
                         m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
 
                         if (evt.type == SDL_CONTROLLERBUTTONUP)
@@ -3355,13 +3356,19 @@ void MenuState::updateLocalAvatars(std::uint32_t mouseEnter, std::uint32_t mouse
             0.1f);
         localPos += RootPos;
 
+        constexpr float NameWidth = 96.f;
+
         //player name
         auto entity = m_uiScene.createEntity();
         entity.addComponent<cro::Transform>().setPosition(localPos);
         entity.addComponent<cro::Drawable2D>();
-        entity.addComponent<cro::Text>(font).setString(m_sharedData.localConnectionData.playerData[i].name.substr(0, ConstVal::MaxNameChars));
+        entity.addComponent<cro::Text>(font).setString(m_sharedData.localConnectionData.playerData[i].name.substr(0, ConstVal::MaxStringChars));
         entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
         entity.getComponent<cro::Text>().setFillColour(TextGoldColour);
+        auto bounds = cro::Text::getLocalBounds(entity);
+        entity.addComponent<NameScroller>().maxDistance = bounds.width - NameWidth;
+        bounds.width = NameWidth;
+        entity.getComponent<cro::Drawable2D>().setCroppingArea(bounds);
         centreText(entity);
 
         m_avatarMenu.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -3397,7 +3404,7 @@ void MenuState::updateLocalAvatars(std::uint32_t mouseEnter, std::uint32_t mouse
         entity.addComponent<cro::Text>(font).setString("EDIT");
         entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
         entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
-        auto bounds = cro::Text::getLocalBounds(entity);
+        bounds = cro::Text::getLocalBounds(entity);
         entity.addComponent<cro::UIInput>().area = bounds;
         entity.getComponent<cro::UIInput>().setGroup(MenuID::Avatar);
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = mouseEnter;
@@ -3909,7 +3916,7 @@ void MenuState::showPlayerConfig(bool visible, std::uint8_t playerIndex)
     cmd.targetFlags = CommandID::Menu::PlayerName;
     cmd.action = [&](cro::Entity e, float)
     {
-        e.getComponent<cro::Text>().setString(m_sharedData.localConnectionData.playerData[m_activePlayerAvatar].name.substr(0, ConstVal::MaxNameChars));
+        e.getComponent<cro::Text>().setString(m_sharedData.localConnectionData.playerData[m_activePlayerAvatar].name.substr(0, ConstVal::MaxStringChars));
         e.getComponent<cro::Callback>().setUserData<std::uint8_t>(m_activePlayerAvatar);
     };
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
