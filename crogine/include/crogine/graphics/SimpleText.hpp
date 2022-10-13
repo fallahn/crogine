@@ -128,6 +128,12 @@ namespace cro
         void setShadowOffset(glm::vec2 offset);
 
         /*!
+        \brief Sets the font used by this text to bold, if available
+        \param bold True to use bold rendering, false to render normally
+        */
+        void setBold(bool bold);
+
+        /*!
         \brief Return a pointer to the active font
         May be nullptr
         */
@@ -173,6 +179,11 @@ namespace cro
         \see setShadowOffset
         */
         glm::vec2 getShadowOffset() const;
+
+        /*!
+        \brief Returns the current bold setting for the text
+        */
+        bool getBold() const;
 
         /*!
         \brief Get the enclosing AABB

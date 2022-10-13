@@ -121,6 +121,15 @@ void Text::setShadowOffset(glm::vec2 offset)
     }
 }
 
+void Text::setBold(bool bold)
+{
+    if (m_context.bold != bold)
+    {
+        m_context.bold = bold;
+        m_dirtyFlags |= DirtyFlags::All;
+    }
+}
+
 const Font* Text::getFont() const
 {
     return m_context.font;
@@ -164,6 +173,11 @@ Colour Text::getShadowColour() const
 glm::vec2 Text::getShadowOffset() const
 {
     return m_context.shadowOffset;
+}
+
+bool Text::getBold() const
+{
+    return m_context.bold;
 }
 
 FloatRect Text::getLocalBounds(Entity entity)

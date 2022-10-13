@@ -65,6 +65,7 @@ namespace cro
         float outlineThickness = 0.f;
         Colour shadowColour = Colour::Black;
         glm::vec2 shadowOffset = glm::vec2(0.f);
+        bool bold = false;
     };
 
     /*!
@@ -95,7 +96,7 @@ namespace cro
         \brief Attempts to return a float rect representing the sub rectangle of the atlas
         for the given codepoint.
         */
-        Glyph getGlyph(std::uint32_t codepoint, std::uint32_t charSize, float outlineThickness) const;
+        Glyph getGlyph(std::uint32_t codepoint, std::uint32_t charSize, bool bold = false, float outlineThickness = 0.f) const;
 
         /*!
         \brief Returns a reference to the texture used by the font
@@ -149,7 +150,7 @@ namespace cro
         std::any m_face;
         std::any m_stroker;
 
-        Glyph loadGlyph(std::uint32_t cp, std::uint32_t charSize, float outlineThickness) const;
+        Glyph loadGlyph(std::uint32_t cp, std::uint32_t charSize, bool bold, float outlineThickness) const;
         FloatRect getGlyphRect(Page&, std::uint32_t w, std::uint32_t h) const;
         bool setCurrentCharacterSize(std::uint32_t) const;
 

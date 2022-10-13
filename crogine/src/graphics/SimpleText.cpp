@@ -126,6 +126,15 @@ void SimpleText::setShadowOffset(glm::vec2 offset)
     }
 }
 
+void SimpleText::setBold(bool bold)
+{
+    if (m_context.bold != bold)
+    {
+        m_context.bold = bold;
+        m_dirtyFlags |= DirtyFlags::All;
+    }
+}
+
 const Font* SimpleText::getFont() const
 {
     return m_context.font;
@@ -169,6 +178,11 @@ Colour SimpleText::getShadowColour() const
 glm::vec2 SimpleText::getShadowOffset() const
 {
     return m_context.shadowOffset;
+}
+
+bool SimpleText::getBold() const
+{
+    return m_context.bold;
 }
 
 FloatRect SimpleText::getLocalBounds()

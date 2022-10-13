@@ -3636,6 +3636,7 @@ void MenuState::updateLobbyAvatars()
         simpleText.setFillColour(TextNormalColour);
         simpleText.setShadowOffset({ 1.f, -1.f });
         simpleText.setShadowColour(LeaderboardTextDark);
+        //simpleText.setBold(true);
 
         cro::Image img;
         img.create(8, 8, cro::Colour::White);

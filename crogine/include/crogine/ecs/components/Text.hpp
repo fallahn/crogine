@@ -136,6 +136,12 @@ namespace cro
         void setShadowOffset(glm::vec2 offset);
 
         /*!
+        \brief Renders this text with bold styling, if the font supports it
+        \param bold True to render with bold styling, or false for default rendering
+        */
+        void setBold(bool bold);
+
+        /*!
         \brief Return a pointer to the active font
         May be nullptr
         */
@@ -182,6 +188,11 @@ namespace cro
         */
         glm::vec2 getShadowOffset() const;
         
+        /*!
+        \brief Returns the current bold setting of this text
+        */
+        bool getBold() const;
+
         /*!
         \brief Returns the AABB of the Text component
         The given entity must have at least a Text and

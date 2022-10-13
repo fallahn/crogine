@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2021
+Matt Marchant 2017 - 2022
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -68,7 +68,7 @@ namespace
     }
     std::uint64_t combine(float outlineThickness, bool bold, std::uint32_t index)
     {
-        return (static_cast<std::uint64_t>(reinterpret<std::uint32_t>(outlineThickness)) << 32) /*| (static_cast<std::uint64_t>(bold) << 31)*/ | index;
+        return (static_cast<std::uint64_t>(reinterpret<std::uint32_t>(outlineThickness)) << 32) | (static_cast<std::uint64_t>(bold) << 31) | index;
     }
 }
 
@@ -149,11 +149,11 @@ bool Font::loadFromFile(const std::string& filePath)
     return true;
 }
 
-Glyph Font::getGlyph(std::uint32_t codepoint, std::uint32_t charSize, float outlineThickness) const
+Glyph Font::getGlyph(std::uint32_t codepoint, std::uint32_t charSize, bool bold, float outlineThickness) const
 {
     auto& currentGlyphs = m_pages[charSize].glyphs;
 
-    auto key = combine(outlineThickness, false, FT_Get_Char_Index(std::any_cast<FT_Face>(m_face), codepoint));
+    auto key = combine(outlineThickness, bold, FT_Get_Char_Index(std::any_cast<FT_Face>(m_face), codepoint));
 
     auto result = currentGlyphs.find(key);
     if (result != currentGlyphs.end())
@@ -163,7 +163,7 @@ Glyph Font::getGlyph(std::uint32_t codepoint, std::uint32_t charSize, float outl
     else
     {
         //add the glyph to the page
-        auto glyph = loadGlyph(codepoint, charSize, outlineThickness);
+        auto glyph = loadGlyph(codepoint, charSize, bold, outlineThickness);
         return currentGlyphs.insert(std::make_pair(key, glyph)).first->second;
     }
 
@@ -241,7 +241,7 @@ void Font::setSmooth(bool smooth)
 }
 
 //private
-Glyph Font::loadGlyph(std::uint32_t codepoint, std::uint32_t charSize, float outlineThickness) const
+Glyph Font::loadGlyph(std::uint32_t codepoint, std::uint32_t charSize, bool bold, float outlineThickness) const
 {
     Glyph retVal;
 
@@ -276,13 +276,22 @@ Glyph Font::loadGlyph(std::uint32_t codepoint, std::uint32_t charSize, float out
     }
 
     //get the outline
+    FT_Pos weight = (1 << 6);
     bool outline = (glyphDesc->format == FT_GLYPH_FORMAT_OUTLINE);
-    if (outline
-        && outlineThickness != 0)
+    if (outline)
     {
-        auto stroker = std::any_cast<FT_Stroker>(m_stroker);
-        FT_Stroker_Set(stroker, static_cast<FT_Fixed>(outlineThickness * MagicNumber), FT_STROKER_LINECAP_ROUND, FT_STROKER_LINEJOIN_ROUND, 0);
-        FT_Glyph_Stroke(&glyphDesc, stroker, true);
+        if (bold)
+        {
+            FT_OutlineGlyph outlineGlyph = (FT_OutlineGlyph)glyphDesc;
+            FT_Outline_Embolden(&outlineGlyph->outline, weight);
+        }
+
+        if (outlineThickness != 0)
+        {
+            auto stroker = std::any_cast<FT_Stroker>(m_stroker);
+            FT_Stroker_Set(stroker, static_cast<FT_Fixed>(outlineThickness * MagicNumber), FT_STROKER_LINECAP_ROUND, FT_STROKER_LINEJOIN_ROUND, 0);
+            FT_Glyph_Stroke(&glyphDesc, stroker, true);
+        }
     }
 
 
@@ -290,7 +299,20 @@ Glyph Font::loadGlyph(std::uint32_t codepoint, std::uint32_t charSize, float out
     FT_Glyph_To_Bitmap(&glyphDesc, FT_RENDER_MODE_NORMAL, 0, 1);
     FT_Bitmap& bitmap = reinterpret_cast<FT_BitmapGlyph>(glyphDesc)->bitmap;
 
+    if (!outline)
+    {
+        if (bold)
+        {
+            FT_Bitmap_Embolden(std::any_cast<FT_Library>(m_library), &bitmap, weight, weight);
+        }
+    }
+
+
     retVal.advance = static_cast<float>(face->glyph->metrics.horiAdvance) / static_cast<float>(1<<6);
+    if (bold)
+    {
+        retVal.advance += static_cast<float>(weight) / MagicNumber; //surely this is the same as adding 1?
+    }
 
     std::int32_t width = bitmap.width;
     std::int32_t height = bitmap.rows;

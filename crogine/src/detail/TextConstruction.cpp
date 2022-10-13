@@ -63,7 +63,7 @@ FloatRect Detail::Text::updateVertices(std::vector<Vertex2D>& dst, TextContext& 
     std::vector<Vertex2D> characterVerts;
 
     const auto& texture = context.font->getTexture(context.charSize);
-    float xOffset = static_cast<float>(context.font->getGlyph(L' ', context.charSize, context.outlineThickness).advance);
+    float xOffset = static_cast<float>(context.font->getGlyph(L' ', context.charSize, context.bold, context.outlineThickness).advance);
     float yOffset = static_cast<float>(context.font->getLineHeight(context.charSize));
     float x = 0.f;
     float y = 0.f;// static_cast<float>(m_charSize);
@@ -112,7 +112,7 @@ FloatRect Detail::Text::updateVertices(std::vector<Vertex2D>& dst, TextContext& 
         //create the quads.
         auto addOutline = [&]()
         {
-            const auto& glyph = context.font->getGlyph(currChar, context.charSize, context.outlineThickness);
+            const auto& glyph = context.font->getGlyph(currChar, context.charSize, context.bold, context.outlineThickness);
 
             //TODO mental jiggery to figure out why these cause an alignment
             //offset - although it's not important, it just means the localBounds
@@ -131,7 +131,7 @@ FloatRect Detail::Text::updateVertices(std::vector<Vertex2D>& dst, TextContext& 
             maxY = std::max(maxY, y + top + m_outlineThickness);*/
         };
 
-        const auto& glyph = context.font->getGlyph(currChar, context.charSize, 0.f);
+        const auto& glyph = context.font->getGlyph(currChar, context.charSize, context.bold, 0.f);
 
         //if outline is larger, add first
         if (context.outlineThickness > 0)
