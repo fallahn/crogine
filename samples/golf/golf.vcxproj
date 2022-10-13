@@ -466,6 +466,7 @@
     <ClCompile Include="src\golf\DrivingState.cpp" />
     <ClCompile Include="src\golf\DrivingStateUI.cpp" />
     <ClCompile Include="src\golf\ErrorState.cpp" />
+    <ClCompile Include="src\golf\FloatingTextSystem.cpp" />
     <ClCompile Include="src\golf\FpsCameraSystem.cpp" />
     <ClCompile Include="src\golf\GolfCartSystem.cpp" />
     <ClCompile Include="src\golf\GolfParticleDirector.cpp" />
@@ -551,6 +552,7 @@
     <ClInclude Include="src\golf\DrivingRangeDirector.hpp" />
     <ClInclude Include="src\golf\DrivingState.hpp" />
     <ClInclude Include="src\golf\ErrorState.hpp" />
+    <ClInclude Include="src\golf\FloatingTextSystem.hpp" />
     <ClInclude Include="src\golf\FpsCameraSystem.hpp" />
     <ClInclude Include="src\golf\GameConsts.hpp" />
     <ClInclude Include="src\golf\GolfCartSystem.hpp" />

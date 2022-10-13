@@ -46,6 +46,7 @@ source distribution.
 #include "FpsCameraSystem.hpp"
 #include "NotificationSystem.hpp"
 #include "TrophyDisplaySystem.hpp"
+#include "FloatingTextSystem.hpp"
 #include "CloudSystem.hpp"
 #include "VatAnimationSystem.hpp"
 #include "BeaconCallback.hpp"
@@ -395,9 +396,10 @@ bool GolfState::handleEvent(const cro::Event& evt)
             m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, std::uint8_t(ServerCommand::EndGame), net::NetFlag::Reliable);
             break;
         case SDLK_F7:
-            showCountdown(30);
+            //showCountdown(30);
             //showMessageBoard(MessageBoardID::Scrub);
             //requestStackPush(StateID::Tutorial);
+            floatingMessage("buns");
             break;
         case SDLK_F8:
         {
@@ -2876,6 +2878,7 @@ void GolfState::addSystems()
     m_uiScene.addSystem<cro::CallbackSystem>(mb);
     m_uiScene.addSystem<cro::CommandSystem>(mb);
     m_uiScene.addSystem<NotificationSystem>(mb);
+    m_uiScene.addSystem<FloatingTextSystem>(mb);
     m_uiScene.addSystem<cro::TextSystem>(mb);
     m_uiScene.addSystem<cro::SpriteAnimator>(mb);
     m_uiScene.addSystem<cro::SpriteSystem2D>(mb);

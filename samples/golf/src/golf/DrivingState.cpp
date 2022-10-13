@@ -43,6 +43,7 @@ source distribution.
 #include "GolfSoundDirector.hpp"
 #include "CameraFollowSystem.hpp"
 #include "ClientCollisionSystem.hpp"
+#include "FloatingTextSystem.hpp"
 #include "CloudSystem.hpp"
 #include "PoissonDisk.hpp"
 #include "BeaconCallback.hpp"
@@ -238,6 +239,9 @@ bool DrivingState::handleEvent(const cro::Event& evt)
 
             break;
 #ifdef CRO_DEBUG_
+        case SDLK_F7:
+            floatingMessage("buns");
+            break;
         case SDLK_HOME:
             debugFlags = (debugFlags == 0) ? BulletDebug::DebugFlags : 0;
             m_gameScene.getSystem<BallSystem>()->setDebugFlags(debugFlags);
@@ -647,6 +651,7 @@ void DrivingState::addSystems()
 
     m_uiScene.addSystem<cro::CommandSystem>(mb);
     m_uiScene.addSystem<cro::CallbackSystem>(mb);
+    m_uiScene.addSystem<FloatingTextSystem>(mb);
     m_uiScene.addSystem<cro::UISystem>(mb);
     m_uiScene.addSystem<cro::SpriteAnimator>(mb);
     m_uiScene.addSystem<cro::SpriteSystem2D>(mb);

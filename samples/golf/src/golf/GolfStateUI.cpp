@@ -39,6 +39,7 @@ source distribution.
 #include "MessageIDs.hpp"
 #include "NotificationSystem.hpp"
 #include "TrophyDisplaySystem.hpp"
+#include "FloatingTextSystem.hpp"
 #include "PacketIDs.hpp"
 #include "../ErrorCheck.hpp"
 
@@ -1980,35 +1981,7 @@ void GolfState::floatingMessage(const std::string& msg)
     entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
     centreText(entity);
 
-    entity.addComponent<cro::Callback>().active = true;
-    entity.getComponent<cro::Callback>().setUserData<float>(0.f);
-    entity.getComponent<cro::Callback>().function =
-        [&, position](cro::Entity e, float dt)
-    {
-        static constexpr float MaxMove = 40.f;
-        static constexpr float MaxTime = 3.f;
-
-        auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
-        currTime = std::min(MaxTime, currTime + dt);
-
-        float progress = currTime / MaxTime;
-        float move = std::floor(cro::Util::Easing::easeOutQuint(progress) * MaxMove);
-
-        auto pos = position;
-        pos.y += move;
-        e.getComponent<cro::Transform>().setPosition(pos);
-
-        if (currTime == MaxTime)
-        {
-            e.getComponent<cro::Callback>().active = false;
-            m_uiScene.destroyEntity(e);
-        }
-
-        float alpha = cro::Util::Easing::easeInCubic(progress);
-        auto c = TextNormalColour;
-        c.setAlpha(1.f - alpha);
-        e.getComponent<cro::Text>().setFillColour(c);
-    };
+    entity.addComponent<FloatingText>().basePos = position;
 }
 
 void GolfState::createTransition()
