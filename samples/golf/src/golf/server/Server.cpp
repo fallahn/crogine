@@ -39,6 +39,8 @@ source distribution.
 #include <crogine/core/Clock.hpp>
 #include <crogine/core/HiResTimer.hpp>
 
+#include <Social.hpp>
+
 #include <functional>
 
 Server::Server()

@@ -32,16 +32,6 @@ source distribution.
 #include <cstdint>
 #include <string>
 
-//just to detect client/server version mismatch
-//(terrain data changed between 100 -> 110)
-//(model format changed between 120 -> 130)
-//(server layout updated 140 -> 150)
-//(skybox format changed 150 -> 160)
-//(hole count became game rule 170 -> 180)
-//(connection method changed 190 -> 1100)
-static constexpr std::uint16_t CURRENT_VER = 1100;
-static const std::string StringVer("1.10.0");
-
 namespace ScoreType
 {
     enum
