@@ -332,10 +332,7 @@ bool ClubhouseState::handleEvent(const cro::Event& evt)
         case SDLK_RETURN:
         case SDLK_RETURN2:
         case SDLK_KP_ENTER:
-            if (m_textEdit.string)
-            {
-                applyTextEdit();
-            }
+            applyTextEdit();
             break;
         case SDLK_ESCAPE:
         case SDLK_BACKSPACE:
@@ -494,49 +491,49 @@ bool ClubhouseState::simulate(float dt)
 
 #ifdef CRO_DEBUG_
     
-    glm::vec3 movement(0.f);
-    float rotation = 0.f;
-    auto& tx = m_backgroundScene.getActiveCamera().getComponent<cro::Transform>();
+    //glm::vec3 movement(0.f);
+    //float rotation = 0.f;
+    //auto& tx = m_backgroundScene.getActiveCamera().getComponent<cro::Transform>();
 
-    if (cro::Keyboard::isKeyPressed(SDLK_d))
-    {
-        movement += tx.getRightVector();
-    }
-    if (cro::Keyboard::isKeyPressed(SDLK_a))
-    {
-        movement -= tx.getRightVector();
-    }
+    //if (cro::Keyboard::isKeyPressed(SDLK_d))
+    //{
+    //    movement += tx.getRightVector();
+    //}
+    //if (cro::Keyboard::isKeyPressed(SDLK_a))
+    //{
+    //    movement -= tx.getRightVector();
+    //}
 
-    if (cro::Keyboard::isKeyPressed(SDLK_w))
-    {
-        movement += tx.getForwardVector();
-    }
-    if (cro::Keyboard::isKeyPressed(SDLK_s))
-    {
-        movement -= tx.getForwardVector();
-    }
+    //if (cro::Keyboard::isKeyPressed(SDLK_w))
+    //{
+    //    movement += tx.getForwardVector();
+    //}
+    //if (cro::Keyboard::isKeyPressed(SDLK_s))
+    //{
+    //    movement -= tx.getForwardVector();
+    //}
 
-    if (cro::Keyboard::isKeyPressed(SDLK_q))
-    {
-        rotation -= dt;
-    }
-    if (cro::Keyboard::isKeyPressed(SDLK_e))
-    {
-        rotation += dt;
-    }
+    //if (cro::Keyboard::isKeyPressed(SDLK_q))
+    //{
+    //    rotation -= dt;
+    //}
+    //if (cro::Keyboard::isKeyPressed(SDLK_e))
+    //{
+    //    rotation += dt;
+    //}
 
-    if (glm::length2(movement) != 0)
-    {
-        movement = glm::normalize(movement);
-        tx.move(movement * dt);
-    }
+    //if (glm::length2(movement) != 0)
+    //{
+    //    movement = glm::normalize(movement);
+    //    tx.move(movement * dt);
+    //}
 
-    if (rotation != 0)
-    {
-        tx.rotate(cro::Transform::Y_AXIS, rotation);
-    }
+    //if (rotation != 0)
+    //{
+    //    tx.rotate(cro::Transform::Y_AXIS, rotation);
+    //}
 
-    rotateEntity(m_backgroundScene.getSunlight(), KeysetID::Light, dt);
+    //rotateEntity(m_backgroundScene.getSunlight(), KeysetID::Light, dt);
 
 #endif
 

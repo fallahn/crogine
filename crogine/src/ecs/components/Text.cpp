@@ -220,8 +220,8 @@ FloatRect Text::getLocalBounds(Entity entity)
             text.updateVertices(drawable);
             drawable.setTexture(&text.getFont()->getTexture(text.getCharacterSize()));
             drawable.setPrimitiveType(GL_TRIANGLES);
+            text.m_dirtyFlags = 0;
         }
-        text.m_dirtyFlags = 0;
     }
     return drawable.getLocalBounds();
 }

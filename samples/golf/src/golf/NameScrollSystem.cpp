@@ -64,7 +64,8 @@ void NameScrollSystem::process(float)
         for (auto entity : entities)
         {
             auto& scroller = entity.getComponent<NameScroller>();
-            if (scroller.maxDistance > 0)
+            if (scroller.maxDistance > 0
+                && scroller.active)
             {
                 scroller.tableIndex = (scroller.tableIndex + 1) % m_waveTable.size();
 
@@ -77,6 +78,10 @@ void NameScrollSystem::process(float)
                 auto pos = entity.getComponent<cro::Transform>().getPosition();
                 pos.x = scroller.basePosition - distance;
                 entity.getComponent<cro::Transform>().setPosition(pos);
+            }
+            else
+            {
+                scroller.tableIndex = 0;
             }
         }
     }

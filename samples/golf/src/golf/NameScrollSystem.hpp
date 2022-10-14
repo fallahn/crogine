@@ -39,6 +39,8 @@ struct NameScroller final
     std::size_t tableIndex = 0;
 
     float basePosition = 0.f;
+
+    bool active = true;
 };
 
 class NameScrollSystem final : public cro::System
