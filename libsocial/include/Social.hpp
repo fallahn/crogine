@@ -75,6 +75,13 @@ public:
         std::int32_t level = 0;
     };
 
+    struct ProgressData final
+    {
+        float progress = 0.f;
+        std::int32_t currentXP = 0;
+        std::int32_t levelXP = 0;
+    };
+
     static bool isAvailable() { return false; }
     static cro::Image getUserIcon(std::uint64_t) { return cro::Image(); }
     static void findFriends() {}
@@ -82,7 +89,7 @@ public:
     static void awardXP(std::int32_t) {}
     static std::int32_t getXP() { return 0; }
     static std::int32_t getLevel() { return 0; }
-    static float getLevelProgress() { return 0.f; }
+    static ProgressData getLevelProgress() { return {}; }
     static void storeDrivingStats(const std::array<float, 3u>&);
     static void readDrivingStats(std::array<float, 3u>&);
     static std::vector<cro::String> getLeaderboardResults(std::int32_t, std::int32_t) { return {}; }
