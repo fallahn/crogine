@@ -44,6 +44,8 @@ static const std::string BillboardVertexShader = R"(
     uniform mat4 u_viewMatrix;
     uniform mat4 u_viewProjectionMatrix;
 
+    uniform sampler2D u_noiseTexture;
+
 #if defined(SHADOW_MAPPING)
     uniform mat4 u_cameraViewMatrix;
     uniform mat4 u_projectionMatrix;
@@ -69,8 +71,76 @@ static const std::string BillboardVertexShader = R"(
 
     VARYING_OUT float v_ditherAmount;
 
+    struct WindResult
+    {
+        vec2 highFreq;
+        vec2 lowFreq;
+        float strength;
+    };
+
+    const float hFreq = 0.05;
+    const float hMagnitude = 0.08;
+    const float lFreq = 0.008;
+    const float lMagnitude = 0.2;
+    const float dirMagnitude = 0.3;
+    WindResult getWindData(vec2 coord)
+    {
+        WindResult retVal = WindResult(vec2(0.0), vec2(0.0), 0.0);
+        vec2 uv = coord;
+        uv.x += u_windData.w * hFreq;
+        retVal.highFreq.x = TEXTURE(u_noiseTexture, uv).r;
+
+        uv = coord;
+        uv.y += u_windData.w * hFreq;
+        retVal.highFreq.y = TEXTURE(u_noiseTexture, uv).r;
+
+        uv = coord;
+        uv.x -= u_windData.w * lFreq;
+        retVal.lowFreq.x = TEXTURE(u_noiseTexture, uv).r;
+
+        uv = coord;
+        uv.y -= u_windData.w * lFreq;
+        retVal.lowFreq.y = TEXTURE(u_noiseTexture, uv).r;
+
+
+        retVal.highFreq *= 2.0;
+        retVal.highFreq -= 1.0;
+        retVal.highFreq *= u_windData.y;
+        retVal.highFreq *= hMagnitude;
+
+        retVal.lowFreq *= 2.0;
+        retVal.lowFreq -= 1.0;
+        retVal.lowFreq *= (0.6 + (0.4 * u_windData.y));
+        retVal.lowFreq *= lMagnitude;
+
+        retVal.strength = u_windData.y;
+        retVal.strength *= dirMagnitude;
+
+        return retVal;
+    }
+
+
     void main()
     {
+        //red low freq, green high freq, blue direction
+
+        WindResult windResult = getWindData(a_normal.xz); //normal is root billboard position - a_position is relative
+        vec3 vertexStrength = step(0.1, a_position.y) * (vec3(1.0) - a_colour.rgb);
+        //multiply high and low frequency by vertex colours
+        windResult.lowFreq *= vertexStrength.r;
+        windResult.highFreq *= vertexStrength.g;
+
+        //apply high frequency and low frequency in local space
+        vec3 relPos = a_position.xyz;
+        relPos.x += windResult.lowFreq.x + windResult.highFreq.x;
+        relPos.z += windResult.lowFreq.y + windResult.highFreq.y;
+
+        //multiply wind direction by wind strength
+        vec3 windDir = vec3(u_windData.x, 0.0, u_windData.z) * windResult.strength * vertexStrength.b;
+        //wind dir is added in world space (below)
+
+
+
         vec3 position = (u_worldMatrix * vec4(a_normal, 1.0)).xyz;
 
 #if defined (SHADOW_MAPPING)
@@ -82,8 +152,9 @@ static const std::string BillboardVertexShader = R"(
 #endif
         vec3 camRight = vec3(viewMatrix[0][0], viewMatrix[1][0], viewMatrix[2][0]);
         vec3 camUp = vec3(0.0, 1.0, 0.0);
-        position = position + camRight * a_position.x
-                            + camUp * a_position.y;
+        position = position + camRight * relPos.x
+                            + camUp * relPos.y
+                            + cross(camRight, camUp) * relPos.z;
 
 
         const float xFreq = 0.6;
@@ -99,7 +170,7 @@ static const std::string BillboardVertexShader = R"(
         float strength = u_windData.y;
         float totalScale = scale * (height / maxHeight) * strength;
 
-
+        //TODO replace this  with texture lookup
         float windX = sin((u_windData.w * (xFreq)) + a_normal.x);
         float windZ = sin((u_windData.w * (yFreq)) + a_normal.z);
 
@@ -107,19 +178,7 @@ static const std::string BillboardVertexShader = R"(
         position.z += windZ * totalScale;
         position.xz += (u_windData.xz * strength * 2.0) * totalScale;
 
-        //then add depending on vert colour
-        vec3 windStrength = step(0.1, a_position.y) * (vec3(1.0) - a_colour.rgb);
-        //red is low freq, green is high
-        windStrength.rg *= scale;
-        windStrength.rg *= u_windData.y;
-
-        position.x += windX * windStrength.r;
-        position.z += windZ * windStrength.r;
-
-        float highFreqX = sin((u_windData.w * HighFreq) + a_normal.x);
-        float highFreqZ = sin((u_windData.w * (HighFreq * 1.06)) + a_normal.z);
-        position.x -= highFreqX * windStrength.g;
-        position.z -= highFreqZ * windStrength.g;
+        position += windDir;
 
         v_colour.rgb = vec3(1.0);
 
@@ -137,7 +196,6 @@ static const std::string BillboardVertexShader = R"(
         v_texCoord0 = a_texCoord0;
 
 #if !defined(SHADOW_MAPPING)
-        //v_colour = a_colour;
 
         float fadeDistance = u_nearFadeDistance * 5.0;
         const float farFadeDistance = 300.f;

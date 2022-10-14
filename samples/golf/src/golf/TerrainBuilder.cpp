@@ -345,6 +345,9 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
         "assets/golf/crowd/spectator04.vat"
     };
 
+    auto& noiseTex = resources.textures.get("assets/golf/images/wind.png");
+    noiseTex.setRepeated(true);
+    noiseTex.setSmooth(true);
     for (auto& entity : m_billboardEntities)
     {
         //reload the the model def each time to ensure unique VBOs
@@ -376,12 +379,14 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
 
                 auto material = resources.materials.get(billboardMatID);
                 applyMaterialData(billboardDef, material);
+                material.setProperty("u_noiseTexture", noiseTex);
                 entity.getComponent<cro::Model>().setMaterial(0, material);
 
                 if (billboardShadowID > -1)
                 {
                     material = resources.materials.get(billboardShadowID);
                     applyMaterialData(billboardDef, material);
+                    material.setProperty("u_noiseTexture", noiseTex);
                     material.doubleSided = true; //do this second because applyMaterial() overwrites it
                     entity.getComponent<cro::Model>().setShadowMaterial(0, material);
                     entity.addComponent<cro::ShadowCaster>();
