@@ -72,6 +72,7 @@ static inline cro::Billboard spriteToBillboard(const cro::Sprite& sprite)
         bb.size = { bounds.width / PPM, bounds.height / PPM };
         bb.textureRect = { bounds.left / texSize.x, bounds.bottom / texSize.y, bounds.width / texSize.x, bounds.height / texSize.y };
         bb.origin = { bb.size.x / 2.f, 0.f };
+        bb.colour = sprite.getColour();
         return bb;
     }
     return {};

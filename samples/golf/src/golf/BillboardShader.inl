@@ -88,21 +88,40 @@ static const std::string BillboardVertexShader = R"(
 
         const float xFreq = 0.6;
         const float yFreq = 0.8;
+        const float HighFreq = 20.0;
         const float scale = 0.2;
         const float minHeight = 3.0;
         const float maxHeight = 12.0;
 
-        //only animate above 3 metres
+        //default animate above 3 metres
         float height = max(0.0, a_position.y - minHeight);
 
         float strength = u_windData.y;
         float totalScale = scale * (height / maxHeight) * strength;
 
-        position.x += sin((u_windData.w * (xFreq)) + a_normal.x) * totalScale;
-        position.z += sin((u_windData.w * (yFreq)) + a_normal.z) * totalScale;
+
+        float windX = sin((u_windData.w * (xFreq)) + a_normal.x);
+        float windZ = sin((u_windData.w * (yFreq)) + a_normal.z);
+
+        position.x += windX * totalScale;
+        position.z += windZ * totalScale;
         position.xz += (u_windData.xz * strength * 2.0) * totalScale;
 
+        //then add depending on vert colour
+        vec3 windStrength = step(0.1, a_position.y) * (vec3(1.0) - a_colour.rgb);
+        //red is low freq, green is high
+        windStrength.rg *= scale;
+        windStrength.rg *= u_windData.y;
 
+        position.x += windX * windStrength.r;
+        position.z += windZ * windStrength.r;
+
+        float highFreqX = sin((u_windData.w * HighFreq) + a_normal.x);
+        float highFreqZ = sin((u_windData.w * (HighFreq * 1.06)) + a_normal.z);
+        position.x -= highFreqX * windStrength.g;
+        position.z -= highFreqZ * windStrength.g;
+
+        v_colour.rgb = vec3(1.0);
 
 
         //snap vert pos to nearest fragment for retro wobble
@@ -118,7 +137,7 @@ static const std::string BillboardVertexShader = R"(
         v_texCoord0 = a_texCoord0;
 
 #if !defined(SHADOW_MAPPING)
-        v_colour = a_colour;
+        //v_colour = a_colour;
 
         float fadeDistance = u_nearFadeDistance * 5.0;
         const float farFadeDistance = 300.f;

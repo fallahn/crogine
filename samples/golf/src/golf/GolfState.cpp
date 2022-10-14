@@ -1834,7 +1834,7 @@ void GolfState::loadAssets()
     //ball resources - ball is rendered as a single point
     //at a distance, and as a model when closer
     //glCheck(glPointSize(BallPointSize)); - this is set in resize callback based on the buffer resolution/pixel scale
-    m_ballResources.materialID = m_materialIDs[MaterialID::WireFrameCulled];
+    m_ballResources.materialID = m_materialIDs[MaterialID::WireFrame/*Culled*/];
     m_ballResources.ballMeshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_POINTS));
     m_ballResources.shadowMeshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_POINTS));
 
@@ -3925,6 +3925,7 @@ void GolfState::spawnBall(const ActorInfo& info)
 
     //render the ball as a point so no perspective is applied to the scale
     auto material = m_resources.materials.get(m_ballResources.materialID);
+    material.enableDepthTest = false;
     auto ball = std::find_if(m_sharedData.ballModels.begin(), m_sharedData.ballModels.end(),
         [ballID](const SharedStateData::BallInfo& ballPair)
         {
@@ -3932,7 +3933,7 @@ void GolfState::spawnBall(const ActorInfo& info)
         });
     if (ball != m_sharedData.ballModels.end())
     {
-        material.setProperty("u_colour", ball->tint);
+        material.setProperty("u_colour", /*ball->tint*/cro::Colour::Magenta);
     }
     else
     {
