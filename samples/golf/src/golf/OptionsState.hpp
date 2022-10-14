@@ -114,6 +114,7 @@ private:
             Volume, FOV, Pixel,
             VertSnap, Beacon, Units,
             BeaconColour, MouseSpeed,
+            PuttingPower,
             Video, Controls,
             Achievements, Stats,
             NeedsRestart,
