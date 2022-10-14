@@ -719,6 +719,10 @@ void GolfGame::loadPreferences()
                 {
                     m_sharedData.showTutorialTip = prop.getValue<bool>();
                 }
+                else if (name == "putting_power")
+                {
+                    m_sharedData.showPuttingPower = prop.getValue<bool>();
+                }
             }
         }
     }
@@ -780,6 +784,7 @@ void GolfGame::savePreferences()
     cfg.addProperty("log_benchmark").setValue(m_sharedData.logBenchmarks);
     cfg.addProperty("show_custom").setValue(m_sharedData.showCustomCourses);
     cfg.addProperty("show_tutorial").setValue(m_sharedData.showTutorialTip);
+    cfg.addProperty("putting_power").setValue(m_sharedData.showPuttingPower);
     cfg.save(path);
 
 
