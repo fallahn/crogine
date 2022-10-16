@@ -543,7 +543,10 @@ void BallSystem::process(float dt)
                 ball.lastStrokeDistance = glm::length(ball.startPoint - position);
                 msg->distance = ball.lastStrokeDistance;
                 ball.state = Ball::State::Idle;
-                updateWind(); //is a bit less random but at least stops the wind
+
+
+                //changed this so we force update wind change when hole changes.
+                //updateWind(); //is a bit less random but at least stops the wind
                 //changing direction mid-stroke which is just annoying.
             }
             //else if (m_puttFromTee &&

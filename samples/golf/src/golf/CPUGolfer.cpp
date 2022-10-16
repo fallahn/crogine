@@ -367,7 +367,7 @@ void CPUGolfer::aim(float dt, glm::vec3 windVector)
             //then calculate the slope by measuring two points either side of a point
             //approx two thirds to the hole.
             auto centrePoint = (m_target - m_activePlayer.position) * 0.75f;
-            float distanceReduction = std::min(1.f, glm::length2(centrePoint) / 25.f);
+            float distanceReduction = std::min(1.f, glm::length(centrePoint) / /*25.f*/1.f);
 
             auto distance = glm::normalize(centrePoint);
             centrePoint += m_activePlayer.position;
@@ -380,7 +380,7 @@ void CPUGolfer::aim(float dt, glm::vec3 windVector)
             distance *= -1.f;
             auto resultB = m_collisionMesh.getTerrain(centrePoint + distance);
 
-            static constexpr float MaxSlope = 0.025f; //~25cm diff in slope
+            static constexpr float MaxSlope = 0.010f; //~10cm diff in slope
 #ifdef CRO_DEBUG_
             debug.slope = resultA.height - resultB.height;
 #endif
@@ -455,7 +455,7 @@ void CPUGolfer::aim(float dt, glm::vec3 windVector)
             }
             else
             {
-                m_targetPower = (glm::length(m_target - m_activePlayer.position) * 1.1f) / Clubs[m_clubID].target;
+                m_targetPower = (glm::length(m_target - m_activePlayer.position)*0.95f/* * 1.1f*/) / Clubs[m_clubID].target;
             }
             m_targetPower += ((0.12f * (-dot * windVector.y)) * greenCompensation) * m_targetPower;
 
@@ -469,7 +469,7 @@ void CPUGolfer::aim(float dt, glm::vec3 windVector)
             {
                 //hackiness to compensate for putting shortfall
                 //float distRatio = 1.f - std::min(1.f, glm::length2(m_target - m_activePlayer.position) / 25.f);
-                float distRatio = 1.f - std::min(1.f, glm::length(m_target - m_activePlayer.position) / 5.f);
+                float distRatio = 1.f - std::min(1.f, glm::length(m_target - m_activePlayer.position) / 1.f); //applied within this radius
                 float multiplier = (0.25f * distRatio) + 1.f;
 
                 m_targetPower = std::min(1.f, m_targetPower * multiplier);

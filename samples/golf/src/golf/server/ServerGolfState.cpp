@@ -510,6 +510,8 @@ void GolfState::setNextPlayer(bool newHole)
 
 void GolfState::setNextHole()
 {
+    m_scene.getSystem<BallSystem>()->forceWindChange();
+
     bool gameFinished = false;
 
     //update player skins/match scores
