@@ -3098,9 +3098,12 @@ void GolfState::buildScene()
     {
         float scale = m_currentPlayer.terrain != TerrainID::Green ? 0.f : 1.f;
         scale *= m_sharedData.showPuttingPower ? 1.f : 0.f;
-        //TODO read current options for grid transparency and visibility
-        float size = m_inputParser.getPower();
-        e.getComponent<cro::Transform>().setScale(glm::vec3(size, scale * size, size));
+        
+        if (scale > 0)
+        {
+            float size = cro::Util::Easing::easeOutSine(m_inputParser.getPower());
+            e.getComponent<cro::Transform>().setScale(glm::vec3(size, scale * size, size));
+        }
     };
     
     verts.clear();
@@ -3123,11 +3126,11 @@ void GolfState::buildScene()
         indices.push_back(j++);
 
         verts.push_back(x);
-        verts.push_back(Ball::Radius + 0.1f);
+        verts.push_back(Ball::Radius + 0.3f);
         verts.push_back(z);
         verts.push_back(0.f);
         verts.push_back(0.f);
-        verts.push_back(0.f);
+        verts.push_back(0.2f);
         verts.push_back(1.f);
         indices.push_back(j++);
     }
@@ -5457,7 +5460,7 @@ void GolfState::hitBall()
     rotation = glm::rotate(rotation, pitch, cro::Transform::Z_AXIS);
     impulse = glm::toMat3(rotation) * impulse;
 
-    impulse *= Clubs[club].power * m_inputParser.getPower();
+    impulse *= Clubs[club].power * cro::Util::Easing::easeOutSine(m_inputParser.getPower());
     impulse *= Dampening[m_currentPlayer.terrain];
     impulse *= godmode;
 

@@ -2400,7 +2400,7 @@ void DrivingState::hitBall()
     rotation = glm::rotate(rotation, pitch, cro::Transform::Z_AXIS);
     impulse = glm::toMat3(rotation) * impulse;
 
-    impulse *= Clubs[m_inputParser.getClub()].power * m_inputParser.getPower();
+    impulse *= Clubs[m_inputParser.getClub()].power * cro::Util::Easing::easeOutSine(m_inputParser.getPower());
     impulse *= Dampening[TerrainID::Fairway];
 
     //apply impulse to ball component
