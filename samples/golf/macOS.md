@@ -1,5 +1,8 @@
 ### Building a bundle on macOS
 
+Note: if you're planning to just test or develop for macOS you can build golf the 'regular' way as you would on linux, and launch it from the command line. There's no need to (re)build a bundle each time.
+
+
 Install Xcode from the App Store, or from https://xcodereleases.com/
 
 With
@@ -24,6 +27,10 @@ And configure cmake
 
     mkdir build && cd build
     cmake .. -D MACOS_BUNDLE=true -G Xcode
+
+To build a universal binary include the define (requires cmake 3.18 and higher and Xcode 12)
+
+    -D CMAKE_OSX_ARCHITECTURES="arm64;x86_64"
 
 This will create an Xcode project in the current build directory. Invoke cmake to build it:
 
