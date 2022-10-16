@@ -344,7 +344,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
         {
             if (ImGui::Begin("buns"))
             {
-                auto size = glm::vec2(LabelTextureSize);
+                auto size = glm::vec2(LabelTextureSize) * 2.f;
                 /*auto size = glm::vec2(256.f);
                 auto* tex = Achievements::getIcon(AchievementStrings[1]).texture;
                 if (tex)*/

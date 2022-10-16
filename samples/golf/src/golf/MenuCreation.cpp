@@ -3642,11 +3642,12 @@ void MenuState::updateLobbyAvatars()
         //simpleText.setBold(true);
 
         cro::Image img;
-        img.create(8, 8, cro::Colour::White);
+        img.create(1, 1, cro::Colour::White);
         cro::Texture quadTexture;
         quadTexture.loadFromImage(img);
         cro::SimpleQuad simpleQuad(quadTexture);
         simpleQuad.setBlendMode(cro::Material::BlendMode::None);
+        simpleQuad.setColour(cro::Colour(0.f, 0.f, 0.f, BackgroundAlpha / 3.f));
 
         cro::Texture iconTexture;
         cro::Image iconImage;
@@ -3661,7 +3662,7 @@ void MenuState::updateLobbyAvatars()
         {
             if (c.connectionID < m_sharedData.nameTextures.size())
             {
-                m_sharedData.nameTextures[c.connectionID].clear(cro::Colour(0.f, 0.f, 0.f, BackgroundAlpha / 3.f));
+                m_sharedData.nameTextures[c.connectionID].clear(cro::Colour::Transparent);
 
                 simpleQuad.setTexture(quadTexture);
                 for (auto i = 0u; i < c.playerCount; ++i)
@@ -3669,15 +3670,11 @@ void MenuState::updateLobbyAvatars()
                     simpleText.setString(c.playerData[i].name);
                     auto bounds = simpleText.getLocalBounds().width;
                     simpleText.setPosition({ std::round((textureSize.x - bounds) / 2.f), (i * (textureSize.y / 4)) + 4.f });
+
+                    simpleQuad.setPosition({ simpleText.getPosition().x - 2.f,(i * (textureSize.y / 4))});
+                    simpleQuad.setScale({ (bounds + 5.f), 14.f });
+                    simpleQuad.draw();
                     simpleText.draw();
-
-                    simpleQuad.setPosition({ 4.f,(i * (textureSize.y / 4)) + 4.f });
-                    simpleQuad.setColour(cro::Colour(pc::Palette[c.playerData[i].avatarFlags[1]].light));
-                    simpleQuad.draw();
-
-                    simpleQuad.move({ /*112.f*/static_cast<float>(LabelTextureSize.x) - 16.f, 0.f});
-                    simpleQuad.setColour(cro::Colour(pc::Palette[c.playerData[i].avatarFlags[0]].light));
-                    simpleQuad.draw();
                 }
 
                 iconImage = Social::getUserIcon(c.peerID);
@@ -3685,6 +3682,7 @@ void MenuState::updateLobbyAvatars()
                 {
                     iconTexture.loadFromImage(iconImage);
                     simpleQuad.setTexture(iconTexture);
+                    simpleQuad.setScale({ 1.f, 1.f });
                     simpleQuad.setPosition({ 0.f, textureSize.y });
                     simpleQuad.setColour(cro::Colour::White);
                     simpleQuad.draw();
