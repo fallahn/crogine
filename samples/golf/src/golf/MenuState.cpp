@@ -951,6 +951,12 @@ void MenuState::createScene()
 
         auto billboardMat = m_resources.materials.get(m_materialIDs[MaterialID::Billboard]);
         applyMaterialData(md, billboardMat);
+
+        auto& noiseTex = m_resources.textures.get("assets/golf/images/wind.png");
+        noiseTex.setRepeated(true);
+        noiseTex.setSmooth(true);
+        billboardMat.setProperty("u_noiseTexture", noiseTex);
+
         entity.getComponent<cro::Model>().setMaterial(0, billboardMat);
 
         if (entity.hasComponent<cro::BillboardCollection>())

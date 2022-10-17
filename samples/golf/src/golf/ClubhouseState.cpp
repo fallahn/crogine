@@ -969,6 +969,12 @@ void ClubhouseState::buildScene()
 
         auto billboardMat = m_resources.materials.get(m_materialIDs[MaterialID::Billboard]);
         applyMaterialData(md, billboardMat);
+
+        auto& noiseTex = m_resources.textures.get("assets/golf/images/wind.png");
+        noiseTex.setSmooth(true);
+        noiseTex.setRepeated(true);
+        billboardMat.setProperty("u_noiseTexture", noiseTex);
+
         entity.getComponent<cro::Model>().setMaterial(0, billboardMat);
 
         if (entity.hasComponent<cro::BillboardCollection>())
