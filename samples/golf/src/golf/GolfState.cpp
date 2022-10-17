@@ -3112,9 +3112,9 @@ void GolfState::buildScene()
     
     verts.clear();
     indices.clear();
-    //TODO what's the default beacon hue?
-    c = glm::vec3(cro::Colour::Blue.getVec4());
-    c *= IndicatorLightness;
+    //vertex colour of the beacon model. I don't remember why I chose this specifically.
+    c = glm::vec3(1.f,0.f,0.781f);
+
     auto j = 0u;
     for (auto i = 0.f; i < cro::Util::Const::TAU; i += (cro::Util::Const::TAU / 16.f))
     {
@@ -5438,7 +5438,7 @@ void GolfState::hitBall()
         if (Achievements::getActive())
         {
             auto level = Social::getLevel();
-            switch (level / 10)
+            switch (level / 25)
             {
             default:
                 hook = cro::Util::Easing::easeOutQuint(hook * s) * s;

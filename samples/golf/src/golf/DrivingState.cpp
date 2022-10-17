@@ -2397,7 +2397,34 @@ void DrivingState::hitBall()
     auto yaw = m_inputParser.getYaw();
 
     //add hook/slice to yaw
-    yaw += MaxHook * m_inputParser.getHook();
+    auto hook = m_inputParser.getHook();
+    //changing this func changes how accurate a player needs to be
+    //sine, quad, cubic, quart, quint in steepness order
+    if (Achievements::getActive())
+    {
+        auto s = cro::Util::Maths::sgn(hook);
+        auto level = Social::getLevel();
+        switch (level / 25)
+        {
+        default:
+            hook = cro::Util::Easing::easeOutQuint(hook * s) * s;
+            break;
+        case 3:
+            hook = cro::Util::Easing::easeOutQuart(hook * s) * s;
+            break;
+        case 2:
+            hook = cro::Util::Easing::easeOutCubic(hook * s) * s;
+            break;
+        case 1:
+            hook = cro::Util::Easing::easeOutQuad(hook * s) * s;
+            break;
+        case 0:
+            hook = cro::Util::Easing::easeOutSine(hook * s) * s;
+            break;
+        }
+    }
+    yaw += MaxHook * hook;
+
     yaw += cro::Util::Const::PI / 2.f; //can't remember why we have to do this - probably to do with cam rotation in the main mode. This fudges it though.
 
     glm::vec3 impulse(1.f, 0.f, 0.f);
@@ -2437,7 +2464,6 @@ void DrivingState::hitBall()
     cro::GameController::rumbleStart(m_sharedData.inputBinding.controllerID, 50000, 35000, 200);
 
     //check if we hooked/sliced
-    auto hook = m_inputParser.getHook();
     if (hook < -0.15f)
     {
         auto* msg2 = cro::App::getInstance().getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
