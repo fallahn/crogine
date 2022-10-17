@@ -181,7 +181,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     m_uiScene           (context.appInstance.getMessageBus(), 1024),
     m_trophyScene       (context.appInstance.getMessageBus()),
     m_mouseVisible      (true),
-    m_inputParser       (sd.inputBinding, context.appInstance.getMessageBus()),
+    m_inputParser       (sd, context.appInstance.getMessageBus()),
     m_cpuGolfer         (m_inputParser, m_currentPlayer, m_collisionMesh),
     m_wantsGameState    (true),
     m_scaleBuffer       ("PixelScale"),
@@ -1182,7 +1182,7 @@ bool GolfState::simulate(float dt)
         m_cpuGolfer.update(dt, windVector);
     }
 
-    m_inputParser.update(dt);
+    m_inputParser.update(dt, m_currentPlayer.terrain);
     m_emoteWheel.update(dt);
     m_gameScene.simulate(dt);
     m_uiScene.simulate(dt);
@@ -1518,6 +1518,10 @@ void GolfState::loadAssets()
     m_resources.materials.get(m_materialIDs[MaterialID::WireFrameCulled]).blendMode = cro::Material::BlendMode::Alpha;
     //shader = &m_resources.shaders.get(ShaderID::WireframeCulled);
     //m_resolutionBuffer.addShader(*shader);
+
+    m_resources.shaders.loadFromString(ShaderID::PuttAssist, WireframeVertex, WireframeFragment, "#define HUE\n");
+    m_materialIDs[MaterialID::PuttAssist] = m_resources.materials.add(m_resources.shaders.get(ShaderID::PuttAssist));
+    m_resources.materials.get(m_materialIDs[MaterialID::PuttAssist]).blendMode = cro::Material::BlendMode::Additive;
 
     //minimap
     m_resources.shaders.loadFromString(ShaderID::Minimap, MinimapVertex, MinimapFragment);
@@ -3083,9 +3087,9 @@ void GolfState::buildScene()
 
 
     //when putting this shows the distance/power ratio
-    material = m_resources.materials.get(m_materialIDs[MaterialID::WireFrame]);
-    material.blendMode = cro::Material::BlendMode::Additive;
-    material.enableDepthTest = false;
+    material = m_resources.materials.get(m_materialIDs[MaterialID::PuttAssist]);
+    material.enableDepthTest = true;
+    material.setProperty("u_colourRotation", m_sharedData.beaconColour);
     meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_TRIANGLE_STRIP));
     entity = m_gameScene.createEntity();
     entity.addComponent<cro::CommandTarget>().ID = CommandID::StrokeArc; //we can recycle this as it behaves (mostly) the same way
@@ -3096,18 +3100,19 @@ void GolfState::buildScene()
     entity.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float)
     {
-        float scale = m_currentPlayer.terrain != TerrainID::Green ? 0.f : 1.f;
-        scale *= m_sharedData.showPuttingPower ? 1.f : 0.f;
-        
-        if (scale > 0)
+        float size = m_currentPlayer.terrain != TerrainID::Green ? 0.f : 1.f;
+
+        if (size > 0)
         {
-            float size = cro::Util::Easing::easeOutSine(m_inputParser.getPower());
-            e.getComponent<cro::Transform>().setScale(glm::vec3(size, scale * size, size));
+            float scale = cro::Util::Easing::easeOutSine(m_inputParser.getPower());
+            e.getComponent<cro::Transform>().setScale(glm::vec3(scale, size * scale, scale));
         }
+        e.getComponent<cro::Model>().setHidden(!m_sharedData.showPuttingPower || (m_currentPlayer.terrain != TerrainID::Green));
     };
     
     verts.clear();
     indices.clear();
+    //TODO what's the default beacon hue?
     c = glm::vec3(cro::Colour::Blue.getVec4());
     c *= IndicatorLightness;
     auto j = 0u;
@@ -3128,8 +3133,8 @@ void GolfState::buildScene()
         verts.push_back(x);
         verts.push_back(Ball::Radius + 0.3f);
         verts.push_back(z);
-        verts.push_back(0.f);
-        verts.push_back(0.f);
+        verts.push_back(0.2f);
+        verts.push_back(0.2f);
         verts.push_back(0.2f);
         verts.push_back(1.f);
         indices.push_back(j++);
@@ -4868,7 +4873,7 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo)
 
     m_inputParser.setHoleDirection(m_holeData[m_currentHole].target - m_currentPlayer.position);
     m_currentPlayer.terrain = TerrainID::Fairway; //this will be overwritten from the server but setting this to non-green makes sure the mini cam stops updating in time
-    m_inputParser.setMaxClub(m_holeData[m_currentHole].distanceToPin/* * 1.2f*/); //limits club selection based on hole size
+    m_inputParser.setMaxClub(m_holeData[m_currentHole].distanceToPin); //limits club selection based on hole size
 
     //hide the slope indicator
     cro::Command cmd;
@@ -5073,7 +5078,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     }
     else
     {
-        m_inputParser.setMaxClub(m_holeData[m_currentHole].distanceToPin/* * 1.2f*/);
+        m_inputParser.setMaxClub(m_holeData[m_currentHole].distanceToPin);
     }
 
     //player UI name

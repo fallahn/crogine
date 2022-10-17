@@ -39,11 +39,12 @@ namespace cro
     class MessageBus;
 }
 
+struct SharedStateData;
 class InputParser final
 {
 public:
        
-    InputParser(const InputBinding&, cro::MessageBus&);
+    InputParser(const SharedStateData&, cro::MessageBus&);
 
     void handleEvent(const cro::Event&);
     void setHoleDirection(glm::vec3);
@@ -61,7 +62,7 @@ public:
     void setMaxClub(float); //based on overall distance of hole
     void setMaxClub(std::int32_t); //force set when only wanting wedges for example
     void resetPower();
-    void update(float);
+    void update(float, std::int32_t terrain);
 
     bool inProgress() const;
     bool getActive() const;
@@ -74,6 +75,7 @@ public:
     static constexpr std::uint32_t CPU_ID = 1337u;
 
 private:
+    const SharedStateData& m_sharedData;
     const InputBinding& m_inputBinding;
     cro::MessageBus& m_messageBus;
 

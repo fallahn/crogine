@@ -1824,20 +1824,22 @@ void GolfState::showMessageBoard(MessageBoardID messageType)
             textEnt.getComponent<cro::Text>().setString(ScoreStrings[score]);
             textEnt.getComponent<cro::Transform>().move({ 0.f, -10.f, 0.f });
 
+            std::int32_t divisor = m_sharedData.showPuttingPower ? 2 : 1;
+
             switch (score)
             {
             default: break;
             case ScoreID::Albatross:
-                Social::awardXP(XPValues[XPID::Albatross]);
+                Social::awardXP(XPValues[XPID::Albatross] / divisor);
                 break;
             case ScoreID::Eagle:
-                Social::awardXP(XPValues[XPID::Eagle]);
+                Social::awardXP(XPValues[XPID::Eagle] / divisor);
                 break;
             case ScoreID::Birdie:
-                Social::awardXP(XPValues[XPID::Birdie]);
+                Social::awardXP(XPValues[XPID::Birdie] / divisor);
                 break;
             case ScoreID::Par:
-                Social::awardXP(XPValues[XPID::Par]);
+                Social::awardXP(XPValues[XPID::Par] / divisor);
                 break;
             }
         }

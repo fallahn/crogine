@@ -164,7 +164,7 @@ namespace
 DrivingState::DrivingState(cro::StateStack& stack, cro::State::Context context, SharedStateData& sd)
     : cro::State        (stack, context),
     m_sharedData        (sd),
-    m_inputParser       (sd.inputBinding, context.appInstance.getMessageBus()),
+    m_inputParser       (sd, context.appInstance.getMessageBus()),
     m_gameScene         (context.appInstance.getMessageBus()),
     m_skyScene          (context.appInstance.getMessageBus()),
     m_uiScene           (context.appInstance.getMessageBus(), 512),
@@ -538,7 +538,7 @@ bool DrivingState::simulate(float dt)
     data.elapsedTime = elapsed;
     m_windBuffer.setData(data);
 
-    m_inputParser.update(dt);
+    m_inputParser.update(dt, TerrainID::Fairway);
     m_gameScene.simulate(dt);
     m_uiScene.simulate(dt);
 

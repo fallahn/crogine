@@ -191,7 +191,8 @@ struct ShaderID final
         TreesetLeaf,
         TreesetBranch,
         TreesetShadow,
-        TreesetLeafShadow
+        TreesetLeafShadow,
+        PuttAssist
     };
 };
 

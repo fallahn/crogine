@@ -31,6 +31,8 @@ source distribution.
 #include "InputBinding.hpp"
 #include "MessageIDs.hpp"
 #include "Clubs.hpp"
+#include "Terrain.hpp"
+#include "SharedStateData.hpp"
 
 #include <crogine/core/GameController.hpp>
 #include <crogine/detail/glm/gtx/norm.hpp>
@@ -48,8 +50,9 @@ namespace
     static constexpr float MinAcceleration = 0.5f;
 }
 
-InputParser::InputParser(const InputBinding& ip, cro::MessageBus& mb)
-    : m_inputBinding    (ip),
+InputParser::InputParser(const SharedStateData& sd, cro::MessageBus& mb)
+    : m_sharedData      (sd),
+    m_inputBinding      (sd.inputBinding),
     m_messageBus        (mb),
     m_inputFlags        (0),
     m_prevFlags         (0),
@@ -377,7 +380,7 @@ void InputParser::resetPower()
     m_powerbarDirection = 1.f;
 }
 
-void InputParser::update(float dt)
+void InputParser::update(float dt, std::int32_t terrainID)
 {
     if (m_inputFlags & (InputFlag::Left | InputFlag::Right))
     {
@@ -448,8 +451,16 @@ void InputParser::update(float dt)
         }
         break;
         case State::Power:
+        {
             //move level to 1 and back (returning to 0 is a fluff)
-            m_power = std::min(1.f, std::max(0.f, m_power + (dt * 0.8f * m_powerbarDirection)));
+            float Speed = dt * 0.8f;
+            if (terrainID == TerrainID::Green
+                /*&& m_sharedData.showPuttingPower*/)
+            {
+                Speed /= 1.5f;
+            }
+
+            m_power = std::min(1.f, std::max(0.f, m_power + (Speed * m_powerbarDirection)));
 
             if (m_power == 1)
             {
@@ -460,9 +471,22 @@ void InputParser::update(float dt)
                 || ((m_inputFlags & InputFlag::Action) && ((m_prevFlags & InputFlag::Action) == 0)))
             {
                 m_powerbarDirection = 1.f;
-                m_state = State::Stroke;
-            }
 
+                if (m_sharedData.showPuttingPower
+                    && terrainID == TerrainID::Green)
+                {
+                    //skip the hook bar cos we're on easy mode
+                    m_state = State::Flight;
+
+                    auto* msg = m_messageBus.post<GolfEvent>(MessageID::GolfMessage);
+                    msg->type = GolfEvent::HitBall;
+                }
+                else
+                {
+                    m_state = State::Stroke;
+                }
+            }
+        }
             break;
         case State::Stroke:
             m_hook = std::min(1.f, std::max(0.f, m_hook + (dt * m_powerbarDirection)));

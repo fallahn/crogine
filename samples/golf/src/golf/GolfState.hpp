@@ -177,6 +177,7 @@ private:
             Billboard,
             Trophy,
             Beacon,
+            PuttAssist,
 
             Count
         };
