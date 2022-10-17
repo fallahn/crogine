@@ -18,6 +18,7 @@ hole_template.blend - example hole model in Blender format
 placeholders.blend - Blender asset library of prop placeholders for creating hole layouts. Requires Blender 3 and above
 post_process.frag - template fragment shader for creating post process effects.
 prop-export.py - Export script for Blender written in python. Used to export the positions of prop models and crowds in the `*.hole` format.
+shrub_wind_colours.ase - Colour palette containing wind strength values applied to sprites used for shrubbery
 skybox.blend - 3D skybox models.
 wind_colours.ase - A palette used for painting the vertex data of tree models. See [`course_format.md`](course_format.md)
 

@@ -4866,11 +4866,9 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo)
     m_currentPlayer.position = m_holeData[m_currentHole].tee;
 
 
-    //this is called by setCurrentPlayer, but doing it here ensures that
-    //each player starts a new hole on a driver/3 wood
-    m_inputParser.setHoleDirection(m_holeData[m_currentHole].target - m_currentPlayer.position, true);
+    m_inputParser.setHoleDirection(m_holeData[m_currentHole].target - m_currentPlayer.position);
     m_currentPlayer.terrain = TerrainID::Fairway; //this will be overwritten from the server but setting this to non-green makes sure the mini cam stops updating in time
-    m_inputParser.setMaxClub(m_holeData[m_currentHole].distanceToPin * 1.2f); //limits club selection based on hole size
+    m_inputParser.setMaxClub(m_holeData[m_currentHole].distanceToPin/* * 1.2f*/); //limits club selection based on hole size
 
     //hide the slope indicator
     cro::Command cmd;
@@ -5075,7 +5073,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     }
     else
     {
-        m_inputParser.setMaxClub(m_holeData[m_currentHole].distanceToPin * 1.2f);
+        m_inputParser.setMaxClub(m_holeData[m_currentHole].distanceToPin/* * 1.2f*/);
     }
 
     //player UI name
@@ -5163,7 +5161,13 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     //if client is ours activate input/set initial stroke direction
     auto target = m_cameras[CameraID::Player].getComponent<TargetInfo>().targetLookAt;
     m_inputParser.resetPower();
-    m_inputParser.setHoleDirection(target - player.position, m_currentPlayer != player); // this also selects the nearest club
+    m_inputParser.setHoleDirection(target - player.position);
+
+    //set this separately because target might not necessarily be the pin.
+    //if (m_currentPlayer != player)
+    {
+        m_inputParser.setClub(glm::length(m_holeData[m_currentHole].pin - m_currentPlayer.position));
+    }
 
     //check if input is CPU
     if (localPlayer

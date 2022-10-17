@@ -262,25 +262,33 @@ void InputParser::handleEvent(const cro::Event& evt)
     }
 }
 
-void InputParser::setHoleDirection(glm::vec3 dir, bool selectClub)
+void InputParser::setHoleDirection(glm::vec3 dir)
 {
-    //this assumes that dir is a vector from the player to
-    //the hole - otherwise the club selection will be wrong.
-
+    //note that this might be looking at a target other than the hole.
     if (auto len2 = glm::length2(dir); len2 > 0)
     {
         auto length = std::sqrt(len2);
-            
-        if (selectClub)
-        {
-            setClub(length);
-        }
-
         auto direction = dir / length;
         m_holeDirection = std::atan2(-direction.z, direction.x);
 
         m_rotation = 0.f;
     }
+}
+
+void InputParser::setClub(float dist)
+{
+    //assume each club can go a little further than its rating
+    m_currentClub = ClubID::SandWedge;
+    while ((Clubs[m_currentClub].target * 1.04f) < dist
+        && m_currentClub != m_firstClub)
+    {
+        auto clubCount = ClubID::Putter - m_firstClub;
+        m_clubOffset = (m_clubOffset + (clubCount - 1)) % clubCount;
+        m_currentClub = m_firstClub + m_clubOffset;
+    }
+
+    auto* msg = m_messageBus.post<GolfEvent>(MessageID::GolfMessage);
+    msg->type = GolfEvent::ClubChanged;
 }
 
 float InputParser::getYaw() const
@@ -338,11 +346,11 @@ void InputParser::setEnableFlags(std::uint16_t flags)
 
 void InputParser::setMaxClub(float dist)
 {
-    m_firstClub = ClubID::Driver;
-    while (Clubs[m_firstClub].target > dist
-        && m_firstClub < ClubID::SandWedge)
+    m_firstClub = ClubID::SandWedge;
+    while ((Clubs[m_firstClub].target * 1.05f) < dist
+        && m_firstClub != ClubID::Driver)
     {
-        m_firstClub++;
+        m_firstClub--;
     }
 
     m_currentClub = m_firstClub;
@@ -518,21 +526,6 @@ void InputParser::setMaxRotation(float rotation)
 }
 
 //private
-void InputParser::setClub(float dist)
-{
-    m_currentClub = ClubID::NineIron;
-    while (Clubs[m_currentClub].target < dist
-        && m_currentClub != m_firstClub)
-    {
-        auto clubCount = ClubID::Putter - m_firstClub;
-        m_clubOffset = (m_clubOffset + (clubCount - 1)) % clubCount;
-        m_currentClub = m_firstClub + m_clubOffset;
-    }
-
-    auto* msg = m_messageBus.post<GolfEvent>(MessageID::GolfMessage);
-    msg->type = GolfEvent::ClubChanged;
-}
-
 void InputParser::rotate(float rotation)
 {
     m_rotation = std::min(m_maxRotation, std::max(-m_maxRotation, m_rotation + rotation));

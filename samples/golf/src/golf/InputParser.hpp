@@ -46,7 +46,8 @@ public:
     InputParser(const InputBinding&, cro::MessageBus&);
 
     void handleEvent(const cro::Event&);
-    void setHoleDirection(glm::vec3, bool);
+    void setHoleDirection(glm::vec3);
+    void setClub(float); //picks closest club to given distance
     float getYaw() const;
 
     float getPower() const; //0-1 multiplied by selected club
@@ -112,7 +113,6 @@ private:
     std::int32_t m_firstClub;
     std::int32_t m_clubOffset; //offset ID from first club
 
-    void setClub(float); //picks closest club to given distance
     void rotate(float);
     void checkControllerInput();
     void checkMouseInput();
