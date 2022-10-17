@@ -122,7 +122,7 @@ static const std::string BillboardVertexShader = R"(
 
     void main()
     {
-        //red low freq, green high freq, blue direction
+        //red low freq, green high freq, blue direction amount
 
         WindResult windResult = getWindData(a_normal.xz); //normal is root billboard position - a_position is relative
         vec3 vertexStrength = step(0.1, a_position.y) * (vec3(1.0) - a_colour.rgb);
@@ -157,9 +157,10 @@ static const std::string BillboardVertexShader = R"(
                             + cross(camRight, camUp) * relPos.z;
 
 
-        const float xFreq = 0.6;
-        const float yFreq = 0.8;
-        const float HighFreq = 20.0;
+        //---generic wind added to tall billboards---//
+        const float xFreq = 0.03;// 0.6;
+        const float yFreq = 0.015;// 0.8;
+
         const float scale = 0.2;
         const float minHeight = 3.0;
         const float maxHeight = 12.0;
@@ -170,14 +171,26 @@ static const std::string BillboardVertexShader = R"(
         float strength = u_windData.y;
         float totalScale = scale * (height / maxHeight) * strength;
 
-        //TODO replace this  with texture lookup
-        float windX = sin((u_windData.w * (xFreq)) + a_normal.x);
-        float windZ = sin((u_windData.w * (yFreq)) + a_normal.z);
+
+        vec2 uv = a_normal.xz;
+        uv.x += u_windData.w * xFreq;
+        float windX = TEXTURE(u_noiseTexture, uv).r;
+        windX *= 2.0;
+        windX -= 1.0;
+
+        uv = a_normal.xz;
+        uv.y += u_windData.w * yFreq;
+        float windZ = TEXTURE(u_noiseTexture, uv).r;
+        windZ *= 2.0;
+        windZ -= 1.0;
+
 
         position.x += windX * totalScale;
         position.z += windZ * totalScale;
         position.xz += (u_windData.xz * strength * 2.0) * totalScale;
+        //------------------------------//
 
+        //wind from billboard vertex colour (above)
         position += windDir;
 
         v_colour.rgb = vec3(1.0);
