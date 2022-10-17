@@ -214,6 +214,9 @@ bool Palette::loadFromFile(const std::string& path, bool append)
                     m_swatches.emplace_back().name = "Default";
                 }
 
+                auto& colourEntry = m_swatches.back().colours.emplace_back();
+                colourEntry.name = cro::String::fromUtf16(name.begin(), name.end());
+
                 //process the colour data
                 std::uint32_t colourSpace = 0;
                 file.file->read(file.file, &colourSpace, sizeof(std::uint32_t), 1);
@@ -242,7 +245,7 @@ bool Palette::loadFromFile(const std::string& path, bool append)
                     };
 
                     //convert the colour space to RGB
-                    m_swatches.back().colours.emplace_back(
+                    colourEntry.colour = cro::Colour(
                         (1.f - c[0]) * (1.f - c[3]),
                         (1.f - c[1]) * (1.f - c[3]),
                         (1.f - c[2]) * (1.f - c[3])
@@ -255,7 +258,7 @@ bool Palette::loadFromFile(const std::string& path, bool append)
                     file.file->read(file.file, &data, sizeof(std::uint32_t), 1);
                     data = swap32(data);
 
-                    m_swatches.back().colours.emplace_back(
+                    colourEntry.colour = cro::Colour(
                         *reinterpret_cast<float*>(&data),
                         *reinterpret_cast<float*>(&data),
                         *reinterpret_cast<float*>(&data),
@@ -280,7 +283,7 @@ bool Palette::loadFromFile(const std::string& path, bool append)
                     };
 
                     auto rgb = lab2rgb(lab);
-                    m_swatches.back().colours.emplace_back(rgb[0], rgb[1], rgb[2]);
+                    colourEntry.colour = cro::Colour(rgb[0], rgb[1], rgb[2]);
                 }
                     break;
                 case ColourSpace::RGB:
@@ -292,7 +295,7 @@ bool Palette::loadFromFile(const std::string& path, bool append)
                         c = swap32(c);
                     }
 
-                    m_swatches.back().colours.emplace_back(
+                    colourEntry.colour = cro::Colour(
                         *reinterpret_cast<float*>(&data[0]), 
                         *reinterpret_cast<float*>(&data[1]), 
                         *reinterpret_cast<float*>(&data[2]), 1.f );

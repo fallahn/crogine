@@ -602,8 +602,9 @@ void BushState::drawUI()
         {
             for (const auto& colour : swatch.colours)
             {
-                ImVec4 c(colour.getVec4());
-                if (ImGui::ColorButton(std::to_string(i).c_str(), c))
+                ImVec4 c(colour.colour.getVec4());
+                std::string label = colour.name.toAnsiString() + "##" + std::to_string(i);
+                if (ImGui::ColorButton(label.c_str(), c))
                 {
                     treeset.colour = { c.x, c.y, c.z };
                     glUseProgram(shaderUniform.shaderID);
@@ -757,8 +758,9 @@ void BushState::drawUI()
             {
                 for (const auto& colour : swatch.colours)
                 {
-                    ImVec4 c(colour.getVec4());
-                    if (ImGui::ColorButton(std::to_string(i).c_str(), c))
+                    ImVec4 c(colour.colour.getVec4());
+                    std::string label = colour.name.toAnsiString() + "##" + std::to_string(i);
+                    if (ImGui::ColorButton(label.c_str(), c))
                     {
                         skyTop = cro::Colour(c.x, c.y, c.z);
                         m_skyScene.setSkyboxColours(SkyBottom, skyMid, skyTop);
@@ -777,8 +779,9 @@ void BushState::drawUI()
             {
                 for (const auto& colour : swatch.colours)
                 {
-                    ImVec4 c(colour.getVec4());
-                    if (ImGui::ColorButton(std::to_string(i).c_str(), c))
+                    ImVec4 c(colour.colour.getVec4());
+                    std::string label = colour.name.toAnsiString() + "##" + std::to_string(i);
+                    if (ImGui::ColorButton(label.c_str(), c))
                     {
                         skyMid = cro::Colour(c.x, c.y, c.z);
                         m_skyScene.setSkyboxColours(SkyBottom, skyMid, skyTop);

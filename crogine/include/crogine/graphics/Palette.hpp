@@ -39,12 +39,21 @@ source distribution.
 namespace cro
 {
     /*!
-    \brief A single entry into a palette
+    \brief A single entry into a group
+    */
+    struct CRO_EXPORT_API SwatchColour final
+    {
+        cro::String name;
+        cro::Colour colour;
+    };
+
+    /*!
+    \brief A grouping of entries in a palette
     */
     struct CRO_EXPORT_API Swatch final
     {
         cro::String name;
-        std::vector<cro::Colour> colours;
+        std::vector<SwatchColour> colours;
     };
 
     /*!
