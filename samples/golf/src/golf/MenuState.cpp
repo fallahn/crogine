@@ -91,7 +91,7 @@ source distribution.
 
 namespace
 {
-#include "TerrainShader.inl"
+#include "CelShader.inl"
 #include "BillboardShader.inl"
 #include "CloudShader.inl"
 
@@ -464,8 +464,7 @@ bool MenuState::handleEvent(const cro::Event& evt)
             requestStackPush(StateID::PuttingRange);
             break;
         case SDLK_KP_8:
-            m_sharedData.errorMessage = "Join Failed:\n\nEither full\nor\nno longer exists.";
-            requestStackPush(StateID::MessageOverlay);
+            requestStackPush(StateID::Trophy);
             break;
         case SDLK_KP_0:
             requestStackPush(StateID::News);
@@ -482,6 +481,7 @@ bool MenuState::handleEvent(const cro::Event& evt)
             break;
         case SDLK_KP_9:
         {
+            //m_sharedData.errorMessage = "Join Failed:\n\nEither full\nor\nno longer exists.";
             m_sharedData.errorMessage = "Welcome";
             requestStackPush(StateID::MessageOverlay);
         }

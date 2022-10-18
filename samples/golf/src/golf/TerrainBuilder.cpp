@@ -63,6 +63,7 @@ source distribution.
 namespace
 {
 #include "TerrainShader.inl"
+#include "CelShader.inl"
 
     //params for poisson disk samples
     static constexpr float GrassDensity = 1.7f; //radius for PD sampler
@@ -409,6 +410,7 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
                 for (auto j = 0u; j < shrubDef.getMaterialCount(); ++j)
                 {
                     applyMaterialData(shrubDef, material, j);
+                    material.setProperty("u_noiseTexture", noiseTex);
                     childEnt.getComponent<cro::Model>().setMaterial(j, material);
                 }
                 childEnt.getComponent<cro::Model>().setHidden(true);

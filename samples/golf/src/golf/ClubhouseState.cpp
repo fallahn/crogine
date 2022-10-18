@@ -67,7 +67,7 @@ source distribution.
 
 namespace
 {
-#include "TerrainShader.inl"
+#include "CelShader.inl"
 #include "BillboardShader.inl"
 
     const std::array<cro::String, TableData::Rules::Count> TableStrings =

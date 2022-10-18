@@ -90,7 +90,7 @@ source distribution.
 namespace
 {
 #include "WaterShader.inl"
-#include "TerrainShader.inl"
+#include "CelShader.inl"
 #include "BillboardShader.inl"
 #include "TreeShader.inl"
 #include "ShadowMapping.inl"

@@ -87,6 +87,7 @@ source distribution.
 
 namespace
 {
+#include "CelShader.inl"
 #include "TerrainShader.inl"
 #include "TransitionShader.inl"
 #include "MinimapShader.inl"

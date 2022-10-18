@@ -56,9 +56,8 @@ static const std::string ShadowVertex = R"(
         uniform mat4 u_boneMatrices[MAX_BONES];
     #endif
 
-    #if defined(INSTANCING)
-        uniform mat4 u_viewMatrix;        
-    #else
+        uniform mat4 u_viewMatrix;
+    #if !defined(INSTANCING)
         uniform mat4 u_worldViewMatrix;
     #endif
         uniform mat4 u_worldMatrix;
@@ -83,6 +82,7 @@ static const std::string ShadowVertex = R"(
         const float MaxWindOffset = 0.2;
         const float Amp = 0.02; //metres
         uniform float u_leafSize = 0.25;
+        uniform sampler2D u_noiseTexture;
 #endif
 
     #if defined (MOBILE)
@@ -101,6 +101,57 @@ static const std::string ShadowVertex = R"(
 
             return vec;
         }
+
+    #if defined(WIND_WARP)
+        struct WindResult
+        {
+            vec2 highFreq;
+            vec2 lowFreq;
+            float strength;
+        };
+
+        const float hFreq = 0.05;
+        const float hMagnitude = 0.08;
+        const float lFreq = 0.008;
+        const float lMagnitude = 0.2;
+        const float dirMagnitude = 0.4;
+        WindResult getWindData(vec2 coord)
+        {
+            WindResult retVal = WindResult(vec2(0.0), vec2(0.0), 0.0);
+            vec2 uv = coord;
+            uv.x += u_windData.w * hFreq;
+            retVal.highFreq.x = TEXTURE(u_noiseTexture, uv).r;
+
+            uv = coord;
+            uv.y += u_windData.w * hFreq;
+            retVal.highFreq.y = TEXTURE(u_noiseTexture, uv).r;
+
+            uv = coord;
+            uv.x -= u_windData.w * lFreq;
+            retVal.lowFreq.x = TEXTURE(u_noiseTexture, uv).r;
+
+            uv = coord;
+            uv.y -= u_windData.w * lFreq;
+            retVal.lowFreq.y = TEXTURE(u_noiseTexture, uv).r;
+
+
+            retVal.highFreq *= 2.0;
+            retVal.highFreq -= 1.0;
+            retVal.highFreq *= u_windData.y;
+            retVal.highFreq *= hMagnitude;
+
+            retVal.lowFreq *= 2.0;
+            retVal.lowFreq -= 1.0;
+            retVal.lowFreq *= (0.6 + (0.4 * u_windData.y));
+            retVal.lowFreq *= lMagnitude;
+
+            retVal.strength = u_windData.y;
+            retVal.strength *= dirMagnitude;
+
+            return retVal;
+        }
+    #endif
+
 
         void main()
         {
@@ -134,16 +185,22 @@ static const std::string ShadowVertex = R"(
         #endif                    
 
     #if defined(WIND_WARP)
-            const float xFreq = 0.6;
-            const float yFreq = 0.8;
-            const float scale = 0.2;
 
-            float strength = u_windData.y;
-            float totalScale = scale * strength * a_colour.b;
+            //red low freq, green high freq, blue direction amount
+            //worldMatrix[3].xz position for all verts.
+            WindResult windResult = getWindData(position.xz);
+            vec3 vertexStrength = a_colour.rgb;
+            //multiply high and low frequency by vertex colours
+            windResult.lowFreq *= vertexStrength.r;
+            windResult.highFreq *= vertexStrength.g;
 
-            position.x += sin((u_windData.w * (xFreq)) + worldMatrix[3].x) * totalScale;
-            position.z += sin((u_windData.w * (yFreq)) + worldMatrix[3].z) * totalScale;
-            position.xz += (u_windData.xz * strength * 2.0) * totalScale;
+            //apply high frequency and low frequency in local space
+            position.x += windResult.lowFreq.x + windResult.highFreq.x;
+            position.z += windResult.lowFreq.y + windResult.highFreq.y;
+
+            //multiply wind direction by wind strength
+            vec3 windDir = vec3(u_windData.x, 0.0, u_windData.z) * windResult.strength * vertexStrength.b;
+            //wind dir is added in world space (below)
     #elif defined(TREE_WARP)
         
 
@@ -168,8 +225,6 @@ static const std::string ShadowVertex = R"(
             windOffset += windDir * u_windData.y * dirStrength;// * 2.0;
             worldPosition.xyz += windOffset * MaxWindOffset * u_windData.y;
 
-
-            //this only works if shadows are instanced...
             gl_Position = u_projectionMatrix * u_viewMatrix * worldPosition;
             gl_PointSize = 40.0;
     #endif
@@ -229,7 +284,14 @@ static const std::string ShadowVertex = R"(
 
 
     #if !defined(TREE_WARP) && !defined(LEAF_SIZE)
+
+    #if defined(WIND_WARP)
+            position = worldMatrix * position;
+            position.xyz += windDir;
+            gl_Position = u_projectionMatrix * u_viewMatrix * position;
+    #else
             gl_Position = wvp * position;
+    #endif
     #endif
 
         #if defined (MOBILE)

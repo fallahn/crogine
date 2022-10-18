@@ -84,7 +84,7 @@ source distribution.
 namespace
 {
 #include "WireframeShader.inl"
-#include "TerrainShader.inl"
+#include "CelShader.inl"
 
     constexpr float MaxShadowDistance = 12.f;
     constexpr float ShadowExpansion = 10.f;
