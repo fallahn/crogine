@@ -364,6 +364,15 @@ void BallSystem::process(float dt)
                 terrainContact = getTerrain(newPos);
                 ball.terrain = terrainContact.terrain;
 
+                //one final correction to stop jitter
+                pinDir = m_holeData->pin - newPos;
+                len2 = glm::length2(glm::vec2(pinDir.x, pinDir.z));
+                if (len2 > MinBallDistance && terrainContact.penetration > 0)
+                {
+                    newPos.y = terrainContact.intersection.y;
+                    tx.setPosition(newPos);
+                }
+
                 //spin based on velocity
                 auto vel2 = glm::length2(ball.velocity);
                 static constexpr float MaxVel = 2.f; //some arbitrary number. Actual max is ~20.f so smaller is faster spin
