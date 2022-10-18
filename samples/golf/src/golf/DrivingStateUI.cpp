@@ -35,6 +35,7 @@ source distribution.
 #include "TextAnimCallback.hpp"
 #include "DrivingRangeDirector.hpp"
 #include "CloudSystem.hpp"
+#include "BallSystem.hpp"
 #include "FloatingTextSystem.hpp"
 
 #include <Achievements.hpp>
@@ -1306,6 +1307,8 @@ your overall accuracy. Good Luck!
                     state = MessageAnim::Close;
                     timeout = 1.f;
                     uiSystem->setActiveGroup(MenuID::Dummy);
+                    
+                    m_gameScene.getSystem<BallSystem>()->forceWindChange();
                     m_gameScene.getDirector<DrivingRangeDirector>()->setHoleCount(m_strokeCounts[m_strokeCountIndex], m_targetIndex - 1);
 
                     setHole(m_gameScene.getDirector<DrivingRangeDirector>()->getCurrentHole());
