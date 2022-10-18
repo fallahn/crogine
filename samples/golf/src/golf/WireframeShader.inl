@@ -56,6 +56,7 @@ static const std::string WireframeVertex = R"(
 
 #if defined (HUE)
     uniform float u_colourRotation = 1.0;
+    uniform vec4 u_colour = vec4(1.0);
 
     vec3 rgb2hsv(vec3 c)
     {
@@ -107,7 +108,7 @@ float far = 15.0;
 #if defined (HUE)
         vec3 hsv = rgb2hsv(a_colour.rgb);
         hsv.x += u_colourRotation;
-        v_colour.rgb = hsv2rgb(hsv);
+        v_colour.rgb = hsv2rgb(hsv) * u_colour.rgb;
 #endif
 
         gl_ClipDistance[0] = dot(worldPos, u_clipPlane);

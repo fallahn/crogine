@@ -959,6 +959,13 @@ void GolfState::handleMessage(const cro::Message& msg)
                 {
                     e.getComponent<cro::Callback>().active = m_sharedData.showBeacon;
                     e.getComponent<cro::Model>().setHidden(!m_sharedData.showBeacon);
+                };
+                m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+                //other items share the beacon colouring such as the putt assist
+                cmd.targetFlags = CommandID::BeaconColour;
+                cmd.action = [&](cro::Entity e, float)
+                {
                     e.getComponent<cro::Model>().setMaterialProperty(0, "u_colourRotation", m_sharedData.beaconColour);
                 };
                 m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
@@ -2919,7 +2926,7 @@ void GolfState::buildScene()
     entity.addComponent<cro::Transform>().setScale({ 1.1f, 1.f, 1.1f });
     md.createModel(entity);
 
-    auto holeEntity = entity;
+    auto holeEntity = entity; //each of these entities are added to the entity with CommandID::Hole - below
 
     md.loadFromFile("assets/golf/models/flag.cmt");
     entity = m_gameScene.createEntity();
@@ -2965,7 +2972,7 @@ void GolfState::buildScene()
     md.loadFromFile("assets/golf/models/beacon.cmt");
     entity = m_gameScene.createEntity();
     entity.addComponent<cro::Transform>();
-    entity.addComponent<cro::CommandTarget>().ID = CommandID::Beacon;
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::Beacon | CommandID::BeaconColour;
     entity.addComponent<cro::Callback>().active = m_sharedData.showBeacon;
     entity.getComponent<cro::Callback>().function = BeaconCallback(m_gameScene);
     md.createModel(entity);
@@ -2977,6 +2984,31 @@ void GolfState::buildScene()
     entity.getComponent<cro::Model>().setHidden(!m_sharedData.showBeacon);
     entity.getComponent<cro::Model>().setMaterialProperty(0, "u_colourRotation", m_sharedData.beaconColour);
     auto beaconEntity = entity;
+
+    //arrow pointing to hole
+    md.loadFromFile("assets/golf/models/hole_arrow.cmt");
+    entity = m_gameScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::Beacon | CommandID::BeaconColour;
+    entity.addComponent<cro::Callback>().active = m_sharedData.showBeacon;
+    entity.getComponent<cro::Callback>().function =
+        [flagEntity](cro::Entity e, float dt)
+        {
+            e.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, dt);
+
+            const auto& data = flagEntity.getComponent<cro::Callback>().getUserData<FlagCallbackData>();
+            float amount = cro::Util::Easing::easeOutExpo(data.currentHeight / FlagCallbackData::MaxHeight);
+            e.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", cro::Colour(amount, amount, amount));
+        };
+    md.createModel(entity);
+
+    applyMaterialData(md, beaconMat);
+
+    entity.getComponent<cro::Model>().setMaterial(0, beaconMat);
+    entity.getComponent<cro::Model>().setHidden(!m_sharedData.showBeacon);
+    entity.getComponent<cro::Model>().setMaterialProperty(0, "u_colourRotation", m_sharedData.beaconColour);
+    entity.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", cro::Colour::White);
+    auto arrowEntity = entity;
 
     //displays the stroke direction
     auto pos = m_holeData[0].tee;
@@ -3092,7 +3124,7 @@ void GolfState::buildScene()
     material.setProperty("u_colourRotation", m_sharedData.beaconColour);
     meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_TRIANGLE_STRIP));
     entity = m_gameScene.createEntity();
-    entity.addComponent<cro::CommandTarget>().ID = CommandID::StrokeArc; //we can recycle this as it behaves (mostly) the same way
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::StrokeArc | CommandID::BeaconColour; //we can recycle this as it behaves (mostly) the same way
     entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), material);
     entity.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniGreen | RenderFlags::MiniMap | RenderFlags::Reflection));
     entity.addComponent<cro::Transform>().setPosition(pos);
@@ -3106,6 +3138,12 @@ void GolfState::buildScene()
         {
             float scale = cro::Util::Easing::easeOutSine(m_inputParser.getPower());
             e.getComponent<cro::Transform>().setScale(glm::vec3(scale, size * scale, scale));
+
+            //fade with proximity to hole
+            auto dist = m_holeData[m_currentHole].pin - e.getComponent<cro::Transform>().getWorldPosition();
+            float amount = 0.25f + (smoothstep(4.f, 9.f, glm::length2(dist)) * 0.75f);
+            cro::Colour c(amount, amount, amount); //additive blending so darker == more transparent
+            e.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", c);
         }
         e.getComponent<cro::Model>().setHidden(!m_sharedData.showPuttingPower || (m_currentPlayer.terrain != TerrainID::Green));
     };
@@ -3133,9 +3171,9 @@ void GolfState::buildScene()
         verts.push_back(x);
         verts.push_back(Ball::Radius + 0.3f);
         verts.push_back(z);
-        verts.push_back(0.2f);
-        verts.push_back(0.2f);
-        verts.push_back(0.2f);
+        verts.push_back(0.02f);
+        verts.push_back(0.02f);
+        verts.push_back(0.02f);
         verts.push_back(1.f);
         indices.push_back(j++);
     }
@@ -3169,6 +3207,7 @@ void GolfState::buildScene()
     entity.getComponent<cro::Transform>().addChild(holeEntity.getComponent<cro::Transform>());
     entity.getComponent<cro::Transform>().addChild(flagEntity.getComponent<cro::Transform>());
     entity.getComponent<cro::Transform>().addChild(beaconEntity.getComponent<cro::Transform>());
+    entity.getComponent<cro::Transform>().addChild(arrowEntity.getComponent<cro::Transform>());
 
     meshData = &entity.getComponent<cro::Model>().getMeshData();
     verts =
