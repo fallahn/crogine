@@ -48,6 +48,8 @@ namespace
     static constexpr float MaxPower = 1.f - MinPower;
 
     static constexpr float MinAcceleration = 0.5f;
+
+    const cro::Time DoubleTapTime = cro::milliseconds(200);
 }
 
 InputParser::InputParser(const SharedStateData& sd, cro::MessageBus& mb)
@@ -423,6 +425,7 @@ void InputParser::update(float dt, std::int32_t terrainID)
             if (m_inputFlags & InputFlag::Action)
             {
                 m_state = State::Power;
+                m_doubleTapClock.restart();
             }
 
             if ((m_prevFlags & InputFlag::PrevClub) == 0
@@ -470,20 +473,24 @@ void InputParser::update(float dt, std::int32_t terrainID)
             if (m_power == 0
                 || ((m_inputFlags & InputFlag::Action) && ((m_prevFlags & InputFlag::Action) == 0)))
             {
-                m_powerbarDirection = 1.f;
-
-                if (m_sharedData.showPuttingPower
-                    && terrainID == TerrainID::Green)
+                if (m_doubleTapClock.elapsed() > DoubleTapTime)
                 {
-                    //skip the hook bar cos we're on easy mode
-                    m_state = State::Flight;
+                    m_powerbarDirection = 1.f;
 
-                    auto* msg = m_messageBus.post<GolfEvent>(MessageID::GolfMessage);
-                    msg->type = GolfEvent::HitBall;
-                }
-                else
-                {
-                    m_state = State::Stroke;
+                    if (m_sharedData.showPuttingPower
+                        && terrainID == TerrainID::Green)
+                    {
+                        //skip the hook bar cos we're on easy mode
+                        m_state = State::Flight;
+
+                        auto* msg = m_messageBus.post<GolfEvent>(MessageID::GolfMessage);
+                        msg->type = GolfEvent::HitBall;
+                    }
+                    else
+                    {
+                        m_state = State::Stroke;
+                    }
+                    m_doubleTapClock.restart();
                 }
             }
         }
@@ -499,12 +506,17 @@ void InputParser::update(float dt, std::int32_t terrainID)
             if (m_hook == 0
                 || ((m_inputFlags & InputFlag::Action) && ((m_prevFlags & InputFlag::Action) == 0)))
             {
-                m_powerbarDirection = 1.f;
-                //setActive(false); //can't set this false here because it resets the values before we read them...
-                m_state = State::Flight;
+                if (m_doubleTapClock.elapsed() > DoubleTapTime)
+                {
+                    m_powerbarDirection = 1.f;
+                    //setActive(false); //can't set this false here because it resets the values before we read them...
+                    m_state = State::Flight;
 
-                auto* msg = m_messageBus.post<GolfEvent>(MessageID::GolfMessage);
-                msg->type = GolfEvent::HitBall;
+                    auto* msg = m_messageBus.post<GolfEvent>(MessageID::GolfMessage);
+                    msg->type = GolfEvent::HitBall;
+
+                    m_doubleTapClock.restart();
+                }
             }
             break;
         case State::Flight:

@@ -32,6 +32,7 @@ source distribution.
 #include "InputBinding.hpp"
 
 #include <crogine/core/App.hpp>
+#include <crogine/core/Clock.hpp>
 #include <crogine/detail/glm/vec3.hpp>
 
 namespace cro
@@ -93,6 +94,7 @@ private:
     std::int32_t m_prevMouseMove;
 
     bool m_isCPU;
+    cro::Clock m_doubleTapClock; //prevent accidentally double tapping action
 
     float m_holeDirection; //radians
     float m_rotation; //+- max rads

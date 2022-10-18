@@ -729,7 +729,7 @@ void GolfState::handleMessage(const cro::Message& msg)
             //check if we hooked/sliced
             if (getClub() != ClubID::Putter)
             {
-                auto hook = m_inputParser.getHook();
+                auto hook = m_inputParser.getHook() * m_activeAvatar->model.getComponent<cro::Transform>().getScale().x;
                 if (hook < -0.2f)
                 {
                     auto* msg2 = cro::App::getInstance().getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
@@ -2997,7 +2997,7 @@ void GolfState::buildScene()
             e.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, dt);
 
             const auto& data = flagEntity.getComponent<cro::Callback>().getUserData<FlagCallbackData>();
-            float amount = cro::Util::Easing::easeOutExpo(data.currentHeight / FlagCallbackData::MaxHeight);
+            float amount = cro::Util::Easing::easeOutCubic(data.currentHeight / FlagCallbackData::MaxHeight);
             e.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", cro::Colour(amount, amount, amount));
         };
     md.createModel(entity);
@@ -3008,6 +3008,7 @@ void GolfState::buildScene()
     entity.getComponent<cro::Model>().setHidden(!m_sharedData.showBeacon);
     entity.getComponent<cro::Model>().setMaterialProperty(0, "u_colourRotation", m_sharedData.beaconColour);
     entity.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", cro::Colour::White);
+    entity.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniGreen | RenderFlags::MiniMap | RenderFlags::Reflection));
     auto arrowEntity = entity;
 
     //displays the stroke direction
