@@ -84,7 +84,6 @@ bool ShaderResource::loadFromString(std::int32_t ID, const std::string& vertex, 
     auto pair = std::make_pair(ID, Shader());
     if (!pair.second.loadFromString(vertex, fragment, defines))
     {
-        assert(false);
         return false;
     }
     m_shaders.insert(std::move(pair));

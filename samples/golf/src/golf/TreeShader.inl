@@ -162,6 +162,7 @@ R"(
 
 
 //size calc
+
     #if defined(HQ)
         float variation = rand(-vec2(gl_VertexID));
         variation = 0.5 + (0.5 * variation);
@@ -182,7 +183,6 @@ R"(
         //we use the camera's forward vector to shrink any points out of view to zero
         pointSize *= step(0.0, clamp(dot(eyeDir, (camForward)), 0.0, 1.0));
 
-            
         //shrink with perspective/distance and scale to world units
         pointSize *= u_targetHeight * (u_projectionMatrix[1][1] / gl_Position.w);
 
@@ -198,9 +198,11 @@ R"(
 
         gl_PointSize = pointSize;
     #endif
+
 //proximity fade
         float fadeDistance = u_nearFadeDistance * 5.0;//2.0; //I forget what this magic number was for. Lesson learned?
         const float farFadeDistance = 360.f;
+        float distance = length(worldPosition.xyz - u_cameraWorldPosition);
 
         v_data.ditherAmount = pow(clamp((distance - u_nearFadeDistance) / fadeDistance, 0.0, 1.0), 2.0);
         v_data.ditherAmount *= 1.0 - clamp((distance - farFadeDistance) / fadeDistance, 0.0, 1.0);
