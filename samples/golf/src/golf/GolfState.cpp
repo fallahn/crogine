@@ -919,6 +919,40 @@ void GolfState::handleMessage(const cro::Message& msg)
             {
                 m_courseEnt.getComponent<cro::Drawable2D>().setShader(&m_resources.shaders.get(ShaderID::Noise));
             }
+
+            auto entity = m_uiScene.createEntity();
+            entity.addComponent<cro::Transform>().setPosition({ 10.f, 32.f, 0.2f });
+            entity.addComponent<cro::Drawable2D>();
+            entity.addComponent<cro::Text>(m_sharedData.sharedResources->fonts.get(FontID::UI)).setString("FEED LOST");
+            entity.getComponent<cro::Text>().setFillColour(TextHighlightColour);
+            entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
+            entity.addComponent<cro::Callback>().active = true;
+            entity.getComponent<cro::Callback>().function =
+                [&](cro::Entity e, float dt)
+            {
+                static float state = 0.f;
+
+                if (m_currentCamera == CameraID::Sky)
+                {
+                    static float accum = 0.f;
+                    accum += dt;
+                    if (accum > 0.5f)
+                    {
+                        accum -= 0.5f;
+                        state = state == 1 ? 0 : 1;
+                    }
+                }
+                else
+                {
+                    state = 0.f;
+                }
+
+                constexpr glm::vec2 pos(10.f, 32.f);
+                auto scale = m_viewScale / glm::vec2(m_courseEnt.getComponent<cro::Transform>().getScale());
+                e.getComponent<cro::Transform>().setScale(scale * state);
+                e.getComponent<cro::Transform>().setPosition(glm::vec3(pos * scale, 0.2f));
+            };
+            m_courseEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
         }
     }
     break;

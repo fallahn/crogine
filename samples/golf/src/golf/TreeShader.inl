@@ -197,12 +197,13 @@ R"(
         pointSize *= 1.0 - (smoothstep(0.5, 1.0, distance / 150.0) * (gl_VertexID & 1));
 
         gl_PointSize = pointSize;
+    #else
+        float distance = length(worldPosition.xyz - u_cameraWorldPosition);
     #endif
 
 //proximity fade
         float fadeDistance = u_nearFadeDistance * 5.0;//2.0; //I forget what this magic number was for. Lesson learned?
         const float farFadeDistance = 360.f;
-        float distance = length(worldPosition.xyz - u_cameraWorldPosition);
 
         v_data.ditherAmount = pow(clamp((distance - u_nearFadeDistance) / fadeDistance, 0.0, 1.0), 2.0);
         v_data.ditherAmount *= 1.0 - clamp((distance - farFadeDistance) / fadeDistance, 0.0, 1.0);
