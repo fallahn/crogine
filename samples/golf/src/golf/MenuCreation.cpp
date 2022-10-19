@@ -2482,7 +2482,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
 
     //quad to darken the screen
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -0.4f });
+    entity.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, bounds.height / 2.f, -0.4f });
     entity.addComponent<cro::Drawable2D>().getVertexData() =
     {
         cro::Vertex2D(glm::vec2(-0.5f, 0.5f), cro::Colour::Black),
