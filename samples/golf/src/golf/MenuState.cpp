@@ -123,7 +123,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     m_avatarCallbacks       (std::numeric_limits<std::uint32_t>::max(), std::numeric_limits<std::uint32_t>::max()),
     m_currentMenu           (MenuID::Main),
     m_prevMenu              (MenuID::Main),
-    m_viewScale             (2.f),
+    m_viewScale             (1.f),
     m_activeCourseCount     (0),
     m_officialCourseCount   (0),
     m_activePlayerAvatar    (0)
@@ -132,6 +132,10 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     std::fill(m_ballIndices.begin(), m_ballIndices.end(), 0);
     std::fill(m_avatarIndices.begin(), m_avatarIndices.end(), 0);    
     std::fill(m_hairIndices.begin(), m_hairIndices.end(), 0);    
+
+    auto size = glm::vec2(GolfGame::getActiveTarget()->getSize());
+    auto vpSize = calcVPSize();
+    m_viewScale = glm::vec2(std::floor(size.y / vpSize.y));
 
     Achievements::setActive(true);
     

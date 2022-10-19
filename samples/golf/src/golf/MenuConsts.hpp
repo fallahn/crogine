@@ -108,9 +108,10 @@ static constexpr glm::vec3 CursorOffset(-20.f, 4.f, 0.f);
 //relative to the window size.
 struct UIElement final
 {
-    glm::vec2 absolutePosition = glm::vec2(0.f); //absolute in units
+    glm::vec2 absolutePosition = glm::vec2(0.f); //absolute in units offset from relative position
     glm::vec2 relativePosition = glm::vec2(0.f); //normalised relative to screen size
-    float depth = 0.f;
+    float depth = 0.f; //z depth
+    std::function<void(cro::Entity)> resizeCallback;
 };
 static constexpr glm::vec2 UIHiddenPosition(-10000.f, -10000.f);
 

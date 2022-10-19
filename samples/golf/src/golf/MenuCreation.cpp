@@ -367,6 +367,11 @@ void MenuState::createUI()
             pos.y = std::floor(pos.y);
 
             e.getComponent<cro::Transform>().setPosition(glm::vec3(pos, element.depth));
+
+            if (element.resizeCallback)
+            {
+                element.resizeCallback(e);
+            }
         };
         m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
@@ -2124,35 +2129,90 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("background");
+    auto bgSprite = spriteSheet.getSprite("background");
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement;
     entity.addComponent<UIElement>().relativePosition = LobbyBackgroundPosition;
     entity.getComponent<UIElement>().depth = -0.2f;
-    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
-    entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
+    entity.getComponent<UIElement>().resizeCallback =
+        [&, bgSprite](cro::Entity e)
+    {
+        auto baseSize = glm::vec2(cro::App::getWindow().getSize()) / m_viewScale;
+        constexpr float EdgeOffset = 50.f; //this much from outside before splitting
+        
+        e.getComponent<cro::Drawable2D>().setTexture(bgSprite.getTexture());
+        auto bounds = bgSprite.getTextureBounds();
+        auto rect = bgSprite.getTextureRectNormalised();
+
+        //how much bigger to get either side in wider views
+        float expansion = std::min(100.f, std::floor((baseSize.x - bounds.width) / 2.f));
+        //only needs > 0 really but this gives a little leeway
+        expansion = (baseSize.x - bounds.width > 10) ? expansion : 0.f;
+        float edgeOffsetNorm = (EdgeOffset / bgSprite.getTexture()->getSize().x);
+
+        bounds.width += expansion * 2.f;
+
+        e.getComponent<cro::Drawable2D>().setVertexData(
+            {
+                cro::Vertex2D(glm::vec2(0.f, bounds.height), glm::vec2(rect.left, rect.bottom + rect.height)),
+                cro::Vertex2D(glm::vec2(0.f), glm::vec2(rect.left, rect.bottom)),
+
+                cro::Vertex2D(glm::vec2(EdgeOffset, bounds.height), glm::vec2(rect.left + edgeOffsetNorm, rect.bottom + rect.height)),
+                cro::Vertex2D(glm::vec2(EdgeOffset, 0.f), glm::vec2(rect.left + edgeOffsetNorm, rect.bottom)),
+                cro::Vertex2D(glm::vec2(EdgeOffset + expansion, bounds.height), glm::vec2(rect.left + edgeOffsetNorm, rect.bottom + rect.height)),
+                cro::Vertex2D(glm::vec2(EdgeOffset + expansion, 0.f), glm::vec2(rect.left + edgeOffsetNorm, rect.bottom)),
+
+
+                cro::Vertex2D(glm::vec2(bounds.width - EdgeOffset - expansion, bounds.height), glm::vec2((rect.left + rect.width) - edgeOffsetNorm, rect.bottom + rect.height)),
+                cro::Vertex2D(glm::vec2(bounds.width - EdgeOffset - expansion, 0.f), glm::vec2((rect.left + rect.width) - edgeOffsetNorm, rect.bottom)),
+                cro::Vertex2D(glm::vec2(bounds.width - EdgeOffset, bounds.height), glm::vec2((rect.left + rect.width) - edgeOffsetNorm, rect.bottom + rect.height)),
+                cro::Vertex2D(glm::vec2(bounds.width - EdgeOffset, 0.f), glm::vec2((rect.left + rect.width) - edgeOffsetNorm, rect.bottom)),
+
+
+                cro::Vertex2D(glm::vec2(bounds.width, bounds.height), glm::vec2(rect.left + rect.width, rect.bottom + rect.height)),
+                cro::Vertex2D(glm::vec2(bounds.width, 0.f), glm::vec2(rect.left + rect.width, rect.bottom))
+            });
+    
+        e.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
+    };
+    entity.getComponent<UIElement>().resizeCallback(entity);
+    entity.getComponent<cro::Drawable2D>().updateLocalBounds();
+    bounds = entity.getComponent<cro::Drawable2D>().getLocalBounds();
     menuTransform.addChild(entity.getComponent<cro::Transform>());
 
     auto bgEnt = entity;
 
+    auto textResizeCallback = 
+        [bgEnt](cro::Entity e)
+    {
+        e.getComponent<cro::Transform>().setPosition({ bgEnt.getComponent<cro::Transform>().getOrigin().x , e.getComponent<UIElement>().absolutePosition.y});
+    };
+
     //display the score type
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({bounds.width / 2.f, 128.f, 0.1f});
+    entity.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, 128.f, 0.1f });
     entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<UIElement>().absolutePosition = { bounds.width / 2.f, 128.f };
+    entity.getComponent<UIElement>().depth = 0.1f;
+    entity.getComponent<UIElement>().resizeCallback = textResizeCallback;
     entity.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     entity.getComponent<cro::Text>().setString(ScoreTypes[m_sharedData.scoreType]);
-    entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::ScoreType;
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::ScoreType | CommandID::Menu::UIElement;
     centreText(entity);
     bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     //and score description
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ (bounds.width / 2.f) - 74.f, 112.f, 0.1f });
+    entity.addComponent<cro::Transform>().setOrigin({ 74.f, 0.f });
+    entity.getComponent<cro::Transform>().setPosition({(bounds.width / 2.f), 112.f, 0.1f});
     entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<UIElement>().absolutePosition = { bounds.width / 2.f, 112.f };
+    entity.getComponent<UIElement>().depth = 0.1f;
+    entity.getComponent<UIElement>().resizeCallback = textResizeCallback;
     entity.addComponent<cro::Text>(smallFont).setCharacterSize(InfoTextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     entity.getComponent<cro::Text>().setString(ScoreDesc[m_sharedData.scoreType]);
-    entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::ScoreDesc;
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::ScoreDesc | CommandID::Menu::UIElement;
     bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
@@ -2163,6 +2223,10 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     entity.getComponent<cro::Text>().setString("Gimme Radius");
+    entity.addComponent<UIElement>().absolutePosition = { bounds.width / 2.f, 52.f };
+    entity.getComponent<UIElement>().depth = 0.1f;
+    entity.getComponent<UIElement>().resizeCallback = textResizeCallback;
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement;
     centreText(entity);
     bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
@@ -2172,7 +2236,10 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity.addComponent<cro::Text>(smallFont).setCharacterSize(InfoTextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     entity.getComponent<cro::Text>().setString(GimmeString[m_sharedData.gimmeRadius]);
-    entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::GimmeDesc;
+    entity.addComponent<UIElement>().absolutePosition = { bounds.width / 2.f, 36.f };
+    entity.getComponent<UIElement>().depth = 0.1f;
+    entity.getComponent<UIElement>().resizeCallback = textResizeCallback;
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::GimmeDesc | CommandID::Menu::UIElement;
     centreText(entity);
     bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
@@ -3354,8 +3421,8 @@ void MenuState::updateLocalAvatars(std::uint32_t mouseEnter, std::uint32_t mouse
     for (auto i = 0u; i < m_sharedData.localConnectionData.playerCount; ++i)
     {
         auto localPos = glm::vec3(
-            173.f * static_cast<float>(i % 2),
-            -(LineHeight + AvatarThumbSize.y) * static_cast<float>(i / 2),
+            std::floor(173.f * static_cast<float>(i % 2)),
+            std::floor(-(LineHeight + AvatarThumbSize.y) * static_cast<float>(i / 2)),
             0.1f);
         localPos += RootPos;
 
@@ -3695,7 +3762,7 @@ void MenuState::updateLobbyAvatars()
             cro::String str;
             for (auto i = 0u; i < c.playerCount; ++i)
             {
-                str += c.playerData[i].name.substr(0, ConstVal::MaxNameChars) + "\n";
+                str += c.playerData[i].name.substr(0, ConstVal::MaxStringChars) + "\n";
                 auto avatarIndex = indexFromAvatarID(c.playerData[i].skinID);
                 applyTexture(avatarIndex, m_sharedData.avatarTextures[c.connectionID][i], c.playerData[i].avatarFlags);
 

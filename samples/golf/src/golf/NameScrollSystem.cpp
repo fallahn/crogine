@@ -76,7 +76,7 @@ void NameScrollSystem::process(float)
                 entity.getComponent<cro::Drawable2D>().setCroppingArea(bounds);
 
                 auto pos = entity.getComponent<cro::Transform>().getPosition();
-                pos.x = scroller.basePosition - distance;
+                pos.x = std::floor(scroller.basePosition - distance);
                 entity.getComponent<cro::Transform>().setPosition(pos);
             }
             else
