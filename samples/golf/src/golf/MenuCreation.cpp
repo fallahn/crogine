@@ -2173,6 +2173,25 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
             });
     
         e.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
+        m_lobbyExpansion = expansion;
+
+        cro::Command cmd;
+        cmd.targetFlags = CommandID::Menu::LobbyText;
+        cmd.action = [expansion](cro::Entity e, float)
+        {
+            //set cropping area
+            auto bounds = cro::Text::getLocalBounds(e);
+            bounds.width = std::min(bounds.width, MinLobbyCropWidth + expansion);
+            e.getComponent<cro::Drawable2D>().setCroppingArea(bounds);
+
+            //set offset if on right
+            if (auto pos = e.getComponent<cro::Transform>().getPosition(); pos.x > LobbyTextSpacing)
+            {
+                pos.x = LobbyTextSpacing + expansion + 1.f;
+                e.getComponent<cro::Transform>().setPosition(pos);
+            }
+        };
+        m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
     };
     entity.getComponent<UIElement>().resizeCallback(entity);
     entity.getComponent<cro::Drawable2D>().updateLocalBounds();
@@ -3778,7 +3797,7 @@ void MenuState::updateLobbyAvatars()
                 clientCount++;
             }
 
-            textPos.x = (h % 2) * 274.f;
+            textPos.x = (h % 2) * LobbyTextSpacing;
             textPos.y = (h / 2) * -60.f;
 
             textPos.x += 1.f;
@@ -3791,13 +3810,25 @@ void MenuState::updateLobbyAvatars()
             entity.getComponent<cro::Text>().setFillColour(LeaderboardTextDark);
             entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
             entity.getComponent<cro::Text>().setVerticalSpacing(6.f);
+
+            auto crop = cro::Text::getLocalBounds(entity);
+            crop.width = std::min(crop.width, MinLobbyCropWidth + m_lobbyExpansion);
+            entity.getComponent<cro::Drawable2D>().setCroppingArea(crop);
+            if (textPos.x > LobbyTextSpacing)
+            {
+                entity.getComponent<cro::Transform>().move({ m_lobbyExpansion, 0.f });
+            }
+
+            //used to update spacing by resize callback from lobby background ent.
+            entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::LobbyText;
             e.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
             children.push_back(entity);
+            auto textEnt = entity;
 
             //add a ready status for that client
             static constexpr glm::vec2 ReadyOffset(-12.f, -5.f);
             entity = m_uiScene.createEntity();
-            entity.addComponent<cro::Transform>().setPosition(textPos + ReadyOffset);
+            entity.addComponent<cro::Transform>().setPosition(ReadyOffset);
             entity.addComponent<cro::Drawable2D>();
             entity.addComponent<cro::Callback>().active = true;
             entity.getComponent<cro::Callback>().function =
@@ -3811,7 +3842,7 @@ void MenuState::updateLobbyAvatars()
                     v.colour = colour;
                 }
             };
-            e.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+            textEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
             children.push_back(entity);
 
             auto& verts = entity.getComponent<cro::Drawable2D>().getVertexData();
@@ -3826,7 +3857,7 @@ void MenuState::updateLobbyAvatars()
 
             //add a network status icon
             entity = m_uiScene.createEntity();
-            entity.addComponent<cro::Transform>().setPosition(textPos + ReadyOffset);
+            entity.addComponent<cro::Transform>().setPosition(ReadyOffset);
             entity.getComponent<cro::Transform>().move({ -5.f, -50.f });
             entity.addComponent<cro::Drawable2D>();
             entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::NetStrength];
@@ -3848,7 +3879,7 @@ void MenuState::updateLobbyAvatars()
                 }
             };
 
-            e.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+            textEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
             children.push_back(entity);
 
             h++;

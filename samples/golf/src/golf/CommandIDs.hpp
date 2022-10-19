@@ -99,7 +99,8 @@ struct CommandID final
             TitleText    = 0x2000,
             ScoreType    = 0x4000,
             ScoreDesc    = 0x8000,
-            GimmeDesc    = 0x10000
+            GimmeDesc    = 0x10000,
+            LobbyText    = 0x20000
         };
     };
 };

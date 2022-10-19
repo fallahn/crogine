@@ -120,6 +120,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     m_scaleBuffer           ("PixelScale"),
     m_resolutionBuffer      ("ScaledResolution"),
     m_windBuffer            ("WindValues"),
+    m_lobbyExpansion        (0.f),
     m_avatarCallbacks       (std::numeric_limits<std::uint32_t>::max(), std::numeric_limits<std::uint32_t>::max()),
     m_currentMenu           (MenuID::Main),
     m_prevMenu              (MenuID::Main),
