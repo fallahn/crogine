@@ -71,20 +71,62 @@ namespace
 {
     static constexpr float ColumnWidth = 20.f;
     static constexpr float ColumnHeight = 276.f;
+    static constexpr float ColumnMargin = 6.f;
     static constexpr std::array ColumnPositions =
     {
-        glm::vec2(10.f, ColumnHeight),
-        glm::vec2(ColumnWidth * 6.f, ColumnHeight),
-        glm::vec2(ColumnWidth * 7.f, ColumnHeight),
-        glm::vec2(ColumnWidth * 8.f, ColumnHeight),
-        glm::vec2(ColumnWidth * 9.f, ColumnHeight),
-        glm::vec2(ColumnWidth * 10.f, ColumnHeight),
-        glm::vec2(ColumnWidth * 11.f, ColumnHeight),
-        glm::vec2(ColumnWidth * 12.f, ColumnHeight),
-        glm::vec2(ColumnWidth * 13.f, ColumnHeight),
-        glm::vec2(ColumnWidth * 14.f, ColumnHeight),
-        glm::vec2(ColumnWidth * 15.f, ColumnHeight),
+        glm::vec2(24.f, ColumnHeight),
+        glm::vec2((ColumnWidth * 6.f) + ColumnMargin, ColumnHeight),
+        glm::vec2((ColumnWidth * 7.f) + ColumnMargin, ColumnHeight),
+        glm::vec2((ColumnWidth * 8.f) + ColumnMargin, ColumnHeight),
+        glm::vec2((ColumnWidth * 9.f) + ColumnMargin, ColumnHeight),
+        glm::vec2((ColumnWidth * 10.f) + ColumnMargin, ColumnHeight),
+        glm::vec2((ColumnWidth * 11.f) + ColumnMargin, ColumnHeight),
+        glm::vec2((ColumnWidth * 12.f) + ColumnMargin, ColumnHeight),
+        glm::vec2((ColumnWidth * 13.f) + ColumnMargin, ColumnHeight),
+        glm::vec2((ColumnWidth * 14.f) + ColumnMargin, ColumnHeight),
+        glm::vec2((ColumnWidth * 15.f) + ColumnMargin, ColumnHeight),
     };
+
+    float scoreboardExpansion = 0.f; //TODO move to member
+    float stretchToScreen(cro::Entity e, cro::Sprite sprite, glm::vec2 baseSize)
+    {
+        constexpr float EdgeOffset = 40.f; //this much from outside before splitting
+
+        e.getComponent<cro::Drawable2D>().setTexture(sprite.getTexture());
+        auto bounds = sprite.getTextureBounds();
+        auto rect = sprite.getTextureRectNormalised();
+
+        //how much bigger to get either side in wider views
+        float expansion = std::min(100.f, std::floor((baseSize.x - bounds.width) / 2.f));
+        //only needs > 0 really but this gives a little leeway
+        expansion = (baseSize.x - bounds.width > 10) ? expansion : 0.f;
+        float edgeOffsetNorm = (EdgeOffset / sprite.getTexture()->getSize().x);
+
+        bounds.width += expansion * 2.f;
+
+        e.getComponent<cro::Drawable2D>().setVertexData(
+            {
+                cro::Vertex2D(glm::vec2(0.f, bounds.height), glm::vec2(rect.left, rect.bottom + rect.height)),
+                cro::Vertex2D(glm::vec2(0.f), glm::vec2(rect.left, rect.bottom)),
+
+                cro::Vertex2D(glm::vec2(EdgeOffset, bounds.height), glm::vec2(rect.left + edgeOffsetNorm, rect.bottom + rect.height)),
+                cro::Vertex2D(glm::vec2(EdgeOffset, 0.f), glm::vec2(rect.left + edgeOffsetNorm, rect.bottom)),
+                cro::Vertex2D(glm::vec2(EdgeOffset + expansion, bounds.height), glm::vec2(rect.left + edgeOffsetNorm, rect.bottom + rect.height)),
+                cro::Vertex2D(glm::vec2(EdgeOffset + expansion, 0.f), glm::vec2(rect.left + edgeOffsetNorm, rect.bottom)),
+
+
+                cro::Vertex2D(glm::vec2(bounds.width - EdgeOffset - expansion, bounds.height), glm::vec2((rect.left + rect.width) - edgeOffsetNorm, rect.bottom + rect.height)),
+                cro::Vertex2D(glm::vec2(bounds.width - EdgeOffset - expansion, 0.f), glm::vec2((rect.left + rect.width) - edgeOffsetNorm, rect.bottom)),
+                cro::Vertex2D(glm::vec2(bounds.width - EdgeOffset, bounds.height), glm::vec2((rect.left + rect.width) - edgeOffsetNorm, rect.bottom + rect.height)),
+                cro::Vertex2D(glm::vec2(bounds.width - EdgeOffset, 0.f), glm::vec2((rect.left + rect.width) - edgeOffsetNorm, rect.bottom)),
+
+
+                cro::Vertex2D(glm::vec2(bounds.width, bounds.height), glm::vec2(rect.left + rect.width, rect.bottom + rect.height)),
+                cro::Vertex2D(glm::vec2(bounds.width, 0.f), glm::vec2(rect.left + rect.width, rect.bottom))
+            });
+
+        return expansion;
+    }
 }
 
 void GolfState::buildUI()
@@ -870,6 +912,11 @@ void GolfState::buildUI()
             pos += e.getComponent<UIElement>().absolutePosition;
 
             e.getComponent<cro::Transform>().setPosition(glm::vec3(pos, e.getComponent<UIElement>().depth));
+
+            if (e.getComponent<UIElement>().resizeCallback)
+            {
+                e.getComponent<UIElement>().resizeCallback(e);
+            }
         };
         m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
@@ -1151,37 +1198,59 @@ void GolfState::createScoreboard()
     auto entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::Scoreboard;
-    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("border");
-    auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::Scoreboard | CommandID::UI::UIElement;
+    auto bgSprite = spriteSheet.getSprite("border");
+    entity.addComponent<UIElement>().absolutePosition = { 0.f, -12.f };
+    entity.getComponent<UIElement>().resizeCallback =
+        [&,bgSprite](cro::Entity e)
+    {
+        auto baseSize = glm::vec2(cro::App::getWindow().getSize()) / m_viewScale;
+        scoreboardExpansion = stretchToScreen(e, bgSprite, baseSize);
+
+        auto bounds = e.getComponent<cro::Drawable2D>().getLocalBounds();
+        e.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
+    };
+    entity.getComponent<UIElement>().resizeCallback(entity);
+    entity.getComponent<cro::Drawable2D>().updateLocalBounds();
+    auto bounds = entity.getComponent<cro::Drawable2D>().getLocalBounds();
     entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
     rootEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     auto bgEnt = entity;
 
+    auto resizeCentre =
+        [](cro::Entity e)
+    {
+        e.getComponent<cro::Transform>().move({ scoreboardExpansion, 0.f });
+    };
+
     auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 200.f, 293.f, 0.5f });
+    entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
+    entity.addComponent<UIElement>().absolutePosition = { 200.f, 281.f };
+    entity.getComponent<UIElement>().depth = 0.5f;
+    entity.getComponent<UIElement>().resizeCallback = resizeCentre;
     entity.addComponent<cro::Text>(font).setString("LEADERS");
     entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
     entity.getComponent<cro::Text>().setFillColour(LeaderboardTextLight);
-    bounds = cro::Text::getLocalBounds(entity);
-    bounds.width = std::floor(bounds.width / 2.f);
-    entity.getComponent<cro::Transform>().setOrigin({ bounds.width, 0.f });
+    centreText(entity);
     bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     if (!m_courseTitle.empty())
     {
         entity = m_uiScene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition({ 200.f, 23.f, 0.5f });
+        entity.addComponent<cro::Transform>();
         entity.addComponent<cro::Drawable2D>();
+        entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
+        entity.addComponent<UIElement>().absolutePosition = { 200.f, 11.f };
+        entity.getComponent<UIElement>().depth = 0.5f;
+        entity.getComponent<UIElement>().resizeCallback = resizeCentre;
         entity.addComponent<cro::Text>(font).setString(m_courseTitle);
         entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
         entity.getComponent<cro::Text>().setFillColour(LeaderboardTextDark);
-        bounds = cro::Text::getLocalBounds(entity);
-        bounds.width = std::floor(bounds.width / 2.f);
-        entity.getComponent<cro::Transform>().setOrigin({ bounds.width, 0.f });
+        centreText(entity);
         bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     }
 
@@ -1209,15 +1278,24 @@ void GolfState::createScoreboard()
 
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
-    entity.getComponent<cro::Transform>().setOrigin({ -6.f, 253.f, -0.2f});
-    auto bgSprite = spriteSheet.getSprite("background");;
-    entity.addComponent<cro::Sprite>() = bgSprite;
-    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
-    cro::FloatRect bgCrop({ 0.f, bounds.height - 266.f, 389.f, 266.f });
-    entity.addComponent<cro::Drawable2D>().setCroppingArea(bgCrop);
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
+    bgSprite = spriteSheet.getSprite("background");
+    entity.addComponent<UIElement>().absolutePosition = { 6.f, -265.f };
+    entity.getComponent<UIElement>().depth = 0.2f;
+    entity.getComponent<UIElement>().resizeCallback =
+        [&, bgSprite](cro::Entity e)
+    {
+        auto baseSize = glm::vec2(cro::App::getWindow().getSize()) / m_viewScale;
+        stretchToScreen(e, bgSprite, baseSize);
+    };
+    entity.getComponent<UIElement>().resizeCallback(entity);
 
-    bgSprite = spriteSheet.getSprite("board");;
+    bgSprite = spriteSheet.getSprite("board");
     m_leaderboardTexture.init(bgSprite, font);
+
+    cro::FloatRect bgCrop = bgSprite.getTextureBounds();
+    bgCrop.bottom += bgCrop.height;
 
     auto scrollEnt = m_uiScene.createEntity();
     scrollEnt.addComponent<cro::Transform>();
@@ -1236,17 +1314,23 @@ void GolfState::createScoreboard()
 
         e.getComponent<cro::Transform>().setPosition(pos);
         e.getComponent<cro::Callback>().active = false;
-        steps = 0;
+        steps = 0; //this is a reference, don't delete it...
 
         //update the cropping
-        cro::FloatRect crop(0.f, -pos.y, 400.f, -256.f);
-
         auto& ents = bgEnt.getComponent<cro::Callback>().getUserData<std::vector<cro::Entity>>();
         for (auto ent : ents)
         {
+            auto crop = cro::Text::getLocalBounds(ent);
+            crop.width = std::min(crop.width, MinLobbyCropWidth + scoreboardExpansion);
+            crop.height = bgCrop.height;
+            crop.height += 1.f;
+            crop.bottom = -(bgCrop.height - 1.f) - pos.y;
             ent.getComponent<cro::Drawable2D>().setCroppingArea(crop);
         }
-        crop = bgCrop;
+        //TODO these values need to be rounded to
+        //the nearest scaled pixel ie nearest 2,3 or whatever viewScale is
+        auto crop = bgCrop;
+        crop.width += (scoreboardExpansion * 2.f);
         crop.bottom -= pos.y;
         entity.getComponent<cro::Drawable2D>().setCroppingArea(crop);
     };
@@ -1270,6 +1354,19 @@ void GolfState::createScoreboard()
         e.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
         e.getComponent<cro::Text>().setVerticalSpacing(LeaderboardTextSpacing);
         e.getComponent<cro::Text>().setFillColour(LeaderboardTextDark);
+
+        if (i > 0)
+        {
+            e.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
+            e.addComponent<UIElement>().absolutePosition = ColumnPositions[i];// +glm::vec2(-6.f, -24.f);
+            e.getComponent<UIElement>().depth = 1.3f;
+            e.getComponent<UIElement>().resizeCallback =
+                [](cro::Entity ent)
+            {
+                //UITextPosV gets added by the camera resize callback...
+                ent.getComponent<cro::Transform>().move({ scoreboardExpansion, -UITextPosV });
+            };
+        }
 
         scrollEnt.getComponent<cro::Transform>().addChild(e.getComponent<cro::Transform>());
         i++;
@@ -1438,7 +1535,7 @@ void GolfState::updateScoreboard()
         cro::String nameString = "HOLE\nPAR";
         for (auto i = 0u; i < playerCount; ++i)
         {
-            nameString += "\n" + scores[i].name.substr(0, ConstVal::MaxNameChars + 1);
+            nameString += "\n" + scores[i].name.substr(0, ConstVal::MaxStringChars);
             m_netStrengthIcons[i].getComponent<cro::Callback>().getUserData<std::uint8_t>() = scores[i].client;
         }
         if (page2)
@@ -1452,7 +1549,7 @@ void GolfState::updateScoreboard()
             nameString += "\n\nHOLE\nPAR";
             for (auto i = 0u; i < playerCount; ++i)
             {
-                nameString += "\n" + scores[i].name.substr(0, ConstVal::MaxNameChars + 1);
+                nameString += "\n" + scores[i].name.substr(0, ConstVal::MaxStringChars);
             }
         }
         ents[0].getComponent<cro::Text>().setString(nameString);
