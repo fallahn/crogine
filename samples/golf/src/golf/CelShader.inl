@@ -128,7 +128,7 @@ static const std::string CelVertexShader = R"(
     const float lFreq = 0.008;
     const float lMagnitude = 0.2;
     const float dirMagnitude = 0.4;
-    WindResult getWindData(vec2 coord)
+    WindResult getWindData(vec2 coord, vec2 coord2) //coord 2 is world pos
     {
         WindResult retVal = WindResult(vec2(0.0), vec2(0.0), 0.0);
         vec2 uv = coord;
@@ -139,11 +139,11 @@ static const std::string CelVertexShader = R"(
         uv.y += u_windData.w * hFreq;
         retVal.highFreq.y = TEXTURE(u_noiseTexture, uv).r;
 
-        uv = coord;
+        uv = coord2;
         uv.x -= u_windData.w * lFreq;
         retVal.lowFreq.x = TEXTURE(u_noiseTexture, uv).r;
 
-        uv = coord;
+        uv = coord2;
         uv.y -= u_windData.w * lFreq;
         retVal.lowFreq.y = TEXTURE(u_noiseTexture, uv).r;
 
@@ -220,7 +220,7 @@ static const std::string CelVertexShader = R"(
 #if !defined(WOBBLE)
         //red low freq, green high freq, blue direction amount
 
-        WindResult windResult = getWindData(position.xz);
+        WindResult windResult = getWindData(position.xz, worldMatrix[3].xz);
         vec3 vertexStrength = a_colour.rgb;
         //multiply high and low frequency by vertex colours
         windResult.lowFreq *= vertexStrength.r;
