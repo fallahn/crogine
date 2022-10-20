@@ -4193,6 +4193,12 @@ void MenuState::addCourseSelectButtons()
     if (Social::isAvailable())
     {
         //friends only lobby
+        auto resizeCallback = 
+            [&](cro::Entity e)
+        {
+            e.getComponent<cro::Transform>().move({ -m_lobbyExpansion, 0.f });
+        };
+
         auto checkboxEnt = m_uiScene.createEntity();
         checkboxEnt.addComponent<cro::Transform>();
         checkboxEnt.addComponent<cro::Drawable2D>();
@@ -4201,6 +4207,7 @@ void MenuState::addCourseSelectButtons()
         checkboxEnt.addComponent<UIElement>().absolutePosition = { -189.f, -71.f };
         checkboxEnt.getComponent<UIElement>().relativePosition = LobbyBackgroundPosition;
         checkboxEnt.getComponent<UIElement>().depth = 0.01f;
+        checkboxEnt.getComponent<UIElement>().resizeCallback = resizeCallback;            
 
         bounds = m_sprites[SpriteID::LobbyCheckbox].getTextureRect();
         checkboxEnt.addComponent<cro::Callback>().active = true;
@@ -4228,6 +4235,7 @@ void MenuState::addCourseSelectButtons()
         checkboxEnt.addComponent<UIElement>().absolutePosition = { -190.f, -72.f };
         checkboxEnt.getComponent<UIElement>().relativePosition = LobbyBackgroundPosition;
         checkboxEnt.getComponent<UIElement>().depth = 0.01f;
+        checkboxEnt.getComponent<UIElement>().resizeCallback = resizeCallback;
         bounds = checkboxEnt.getComponent<cro::Sprite>().getTextureBounds();
         checkboxEnt.addComponent<cro::UIInput>().area = bounds;
         checkboxEnt.getComponent<cro::UIInput>().setGroup(MenuID::Lobby);
@@ -4246,8 +4254,15 @@ void MenuState::addCourseSelectButtons()
         labelEnt.addComponent<UIElement>().absolutePosition = { -176.f, -64.f };
         labelEnt.getComponent<UIElement>().relativePosition = LobbyBackgroundPosition;
         labelEnt.getComponent<UIElement>().depth = 0.01f;
+        labelEnt.getComponent<UIElement>().resizeCallback = resizeCallback;
         m_menuEntities[MenuID::Lobby].getComponent<cro::Transform>().addChild(labelEnt.getComponent<cro::Transform>());
 
+
+        auto resizeCallbackRight = 
+            [&](cro::Entity e)
+        {
+            e.getComponent<cro::Transform>().move({ m_lobbyExpansion, 0.f });
+        };
 
         labelEnt = m_uiScene.createEntity();
         labelEnt.addComponent<cro::Transform>();
@@ -4260,6 +4275,7 @@ void MenuState::addCourseSelectButtons()
         labelEnt.addComponent<UIElement>().absolutePosition = { 156.f, -64.f };
         labelEnt.getComponent<UIElement>().relativePosition = LobbyBackgroundPosition;
         labelEnt.getComponent<UIElement>().depth = 0.01f;
+        labelEnt.getComponent<UIElement>().resizeCallback = resizeCallbackRight;
         bounds = cro::Text::getLocalBounds(labelEnt);
         labelEnt.addComponent<cro::UIInput>().area = bounds;
         labelEnt.getComponent<cro::UIInput>().setGroup(MenuID::Lobby);
@@ -4277,7 +4293,32 @@ void MenuState::addCourseSelectButtons()
         labelEnt.addComponent<UIElement>().absolutePosition = { 138.f, -71.f };
         labelEnt.getComponent<UIElement>().relativePosition = LobbyBackgroundPosition;
         labelEnt.getComponent<UIElement>().depth = 0.01f;
+        labelEnt.getComponent<UIElement>().resizeCallback = resizeCallbackRight;
         m_menuEntities[MenuID::Lobby].getComponent<cro::Transform>().addChild(labelEnt.getComponent<cro::Transform>());
+
+        //tedious method of delaying this by one frame. Ensures everything is properly placed
+        auto timerEnt = m_uiScene.createEntity();
+        timerEnt.addComponent<cro::Callback>().active = true;
+        timerEnt.getComponent<cro::Callback>().function =
+            [&](cro::Entity o, float)
+        {
+            cro::Command cmd;
+            cmd.targetFlags = CommandID::Menu::CourseSelect;
+            cmd.action = [](cro::Entity e, float)
+            {
+                if (e.hasComponent<UIElement>())
+                {
+                    if (e.getComponent<UIElement>().resizeCallback)
+                    {
+                        e.getComponent<UIElement>().resizeCallback(e);
+                    }
+                }
+            };
+            m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+            o.getComponent<cro::Callback>().active = false;
+            m_uiScene.destroyEntity(o);
+        };
     }
 
 
