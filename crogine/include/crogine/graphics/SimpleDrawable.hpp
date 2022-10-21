@@ -87,6 +87,22 @@ namespace cro
         bool setShader(const Shader& shader);
 
         /*!
+        \brief Sets the area in local coordinates to crop this drawable.
+        If this area is larger or does not overlap the local bounds then
+        no cropping is visible. Useful for UI components such as cropping
+        Text components to fit text boxes. Note that Text components in
+        particular have a *negative* bottom value as text is drawn (usually)
+        from top to bottom.
+        */
+        void setCroppingArea(FloatRect);
+
+        /*!
+        \brief Returns the current cropping area.
+        \see setCroppingArea()
+        */
+        FloatRect getCroppingArea() const { return m_croppingArea; }
+
+        /*!
         \brief Draws the geometry to the active target
         This must be overridden and provides an opportunity
         to update any vertex data as well as to submit a
@@ -147,6 +163,9 @@ namespace cro
             std::int32_t texture = -1;
             std::uint32_t shaderID = 0;
         }m_uniforms;
+
+        FloatRect m_croppingArea;
+        bool m_cropped;
 
         void applyBlendMode() const;
     };

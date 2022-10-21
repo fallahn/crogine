@@ -42,15 +42,15 @@ LeaderboardTexture::LeaderboardTexture()
 //public
 void LeaderboardTexture::init(const cro::Sprite& backgroundSprite, cro::Font& font)
 {
-    m_text.setFont(font);
-    m_text.setCharacterSize(UITextSize);
-    m_text.setFillColour(LeaderboardTextDark);
-    m_text.setVerticalSpacing(LeaderboardTextSpacing);
-
     auto textureRect = backgroundSprite.getTextureRect();
     m_backgroundSprite.setTexture(*backgroundSprite.getTexture());
     m_backgroundSprite.setTextureRect(textureRect);
 
+    m_text.setFont(font);
+    m_text.setCharacterSize(UITextSize);
+    m_text.setFillColour(LeaderboardTextDark);
+    m_text.setVerticalSpacing(LeaderboardTextSpacing);
+    m_text.setCroppingArea({ 0.f, 20.f, MinLobbyCropWidth, -((textureRect.height * 2.f) + 20.f) });
 
     m_texture.create(static_cast<std::uint32_t>(textureRect.width),
                     static_cast<std::uint32_t>(textureRect.height) * 2, false);

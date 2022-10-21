@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2021
+Matt Marchant 2017 - 2022
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -132,6 +132,17 @@ namespace
             colourShader.reset();
         }
     }
+
+    //TODO move this to its own header as it is shared/duplicated in RenderSystem2D
+    glm::ivec2 mapCoordsToPixel(glm::vec2 coord, const glm::mat4& viewProjectionMatrix, IntRect viewport)
+    {
+        auto worldPoint = viewProjectionMatrix * glm::vec4(coord, 0.f, 1.f);
+
+        glm::ivec2 retVal(static_cast<int>((worldPoint.x + 1.f) / 2.f * viewport.width + viewport.left),
+            static_cast<int>((worldPoint.y + 1.f) / 2.f * viewport.height + viewport.bottom));
+
+        return retVal;
+    }
 }
 
 SimpleDrawable::SimpleDrawable()
@@ -143,7 +154,8 @@ SimpleDrawable::SimpleDrawable()
     m_vertexCount       (0),
     m_textureID         (0),
     m_texture           (nullptr),
-    m_blendMode         (Material::BlendMode::Alpha)
+    m_blendMode         (Material::BlendMode::Alpha),
+    m_cropped           (false)
 {
     //create buffer
     glCheck(glGenBuffers(1, &m_vbo));
@@ -242,6 +254,12 @@ bool SimpleDrawable::setShader(const Shader& shader)
     return true;
 }
 
+void SimpleDrawable::setCroppingArea(FloatRect area)
+{
+    m_croppingArea = area;
+    m_cropped = true;
+}
+
 //protected
 void SimpleDrawable::setTexture(const Texture& texture)
 {
@@ -306,6 +324,29 @@ void SimpleDrawable::drawGeometry(const glm::mat4& worldTransform) const
     applyBlendMode();
 
 
+    //check if we're cropped and set up any needed scissoring
+    if (m_cropped)
+    {
+        //convert cropping area to target coords (remember this might not be a window!)
+        auto croppingWorldArea = m_croppingArea.transform(worldTransform);
+        glm::vec2 start(croppingWorldArea.left, croppingWorldArea.bottom);
+        glm::vec2 end(start.x + croppingWorldArea.width, start.y + croppingWorldArea.height);
+
+        auto scissorStart = mapCoordsToPixel(start, projectionMatrix, vp);
+        auto scissorEnd = mapCoordsToPixel(end, projectionMatrix, vp);
+
+        glCheck(glScissor(scissorStart.x, scissorStart.y, scissorEnd.x - scissorStart.x, scissorEnd.y - scissorStart.y));
+        glCheck(glEnable(GL_SCISSOR_TEST));
+    }
+    else
+    {
+        auto rtSize = RenderTarget::getActiveTarget()->getSize();
+        glCheck(glScissor(0, 0, rtSize.x, rtSize.y));
+    }
+
+    //TODO do we want to enable single sided randering?
+
+
     //draw
 #ifdef PLATFORM_DESKTOP
     glCheck(glBindVertexArray(m_vao));
@@ -338,6 +379,7 @@ void SimpleDrawable::drawGeometry(const glm::mat4& worldTransform) const
     //restore viewport/blendmode etc
     glCheck(glDepthMask(GL_TRUE));
     glCheck(glDisable(GL_BLEND));
+    glCheck(glDisable(GL_SCISSOR_TEST));
 
     glCheck(glUseProgram(0));
 }
