@@ -2282,6 +2282,53 @@ void GolfState::buildTrophyScene()
             };
 
             m_trophyLabels[i] = entity;
+
+
+            //icon if available
+            if (Social::isAvailable())
+            {
+                entity = m_uiScene.createEntity();
+                entity.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, bounds.height });
+                entity.addComponent<cro::Drawable2D>();
+                entity.addComponent<cro::Sprite>(m_sharedData.nameTextures[0].getTexture());
+                bounds = { 0.f, LabelTextureSize.y - LabelIconSize.y, LabelIconSize.x, LabelIconSize.y };
+                entity.getComponent<cro::Sprite>().setTextureRect(bounds);
+                entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, -14.f, -1.2f });
+                m_trophyLabels[i].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+                entity.addComponent<cro::Callback>().active = true;
+                entity.getComponent<cro::Callback>().setUserData<float>(1.f);
+                entity.getComponent<cro::Callback>().function =
+                    [&,i](cro::Entity e, float dt)
+                {
+                    if (m_trophyLabels[i].getComponent<cro::Callback>().active)
+                    {
+                        e.getComponent<cro::Sprite>().setTexture(*m_trophyLabels[i].getComponent<cro::Sprite>().getTexture());
+
+                        static constexpr float BaseScale = 0.5f;
+                        static constexpr float SpinCount = 6.f;
+                        static constexpr float Duration = 3.f;
+
+                        auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
+                        currTime = std::max(0.f, currTime - (dt / Duration));
+
+                        float progress = cro::Util::Easing::easeInQuart(currTime) * SpinCount;
+                        float scale = std::cos(cro::Util::Const::TAU * progress);
+
+                        scale += 1.f;
+                        scale /= 2.f;
+                        scale *= BaseScale;
+
+                        e.getComponent<cro::Transform>().setScale({ scale, BaseScale });
+
+                        if (currTime == 0)
+                        {
+                            e.getComponent<cro::Callback>().active = false;
+                            e.getComponent<cro::Transform>().setScale({ BaseScale, BaseScale });
+                        }
+                    }
+                };
+            }
         }
         ++i;
     }

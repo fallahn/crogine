@@ -51,12 +51,15 @@ Sprite::Sprite(const Texture& texture)
 //public
 void Sprite::setTexture(const Texture& texture, bool resize)
 {
-    m_texture = &texture;
-    if (resize)
+    if (m_texture != &texture)
     {
-        setTextureRect({ glm::vec2(), texture.getSize() });
+        m_texture = &texture;
+        if (resize)
+        {
+            setTextureRect({ glm::vec2(), texture.getSize() });
+        }
+        m_dirtyFlags |= DirtyFlags::Texture;
     }
-    m_dirtyFlags |= DirtyFlags::Texture;
 }
 
 void Sprite::setTextureRect(FloatRect rect)
