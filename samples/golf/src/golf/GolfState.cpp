@@ -5507,6 +5507,8 @@ void GolfState::hitBall()
 
     auto yaw = m_inputParser.getYaw();
 
+    auto power = Clubs[club].power;
+
     //add hook/slice to yaw
     auto hook = m_inputParser.getHook();
     if (club != ClubID::Putter)
@@ -5538,8 +5540,14 @@ void GolfState::hitBall()
         }
         else
         {
-            hook = cro::Util::Easing::easeOutQuart(hook * s) * s;
+            hook = cro::Util::Easing::easeOutQuad(hook * s) * s;
         }
+
+        power *= cro::Util::Easing::easeOutSine(m_inputParser.getPower());
+    }
+    else
+    {
+        power *= m_inputParser.getPower();
     }
     yaw += MaxHook * hook;
 
@@ -5548,7 +5556,7 @@ void GolfState::hitBall()
     rotation = glm::rotate(rotation, pitch, cro::Transform::Z_AXIS);
     impulse = glm::toMat3(rotation) * impulse;
 
-    impulse *= Clubs[club].power * cro::Util::Easing::easeOutSine(m_inputParser.getPower());
+    impulse *= power;
     impulse *= Dampening[m_currentPlayer.terrain];
     impulse *= godmode;
 

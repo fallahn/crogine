@@ -233,7 +233,7 @@ void CPUGolfer::pickClub(float dt, glm::vec3 windVector)
         //adjust the target distance depending on how the wind carries us
         float windDot = -(glm::dot(glm::normalize(glm::vec2(windVector.x, -windVector.z)), glm::normalize(glm::vec2(targetDir.x, -targetDir.z))));
         windDot *= windVector.y;
-        windDot *= 0.3f; //magic number. This extends a distance of 77m to 100 for example
+        windDot *= 0.25f; //magic number. This extends a distance of 77m to 100 for example
         windDot = std::max(0.f, windDot); //skew this positively, negative amounts will be compensated for by using less power
         targetDistance += (targetDistance * windDot);
 
@@ -248,7 +248,10 @@ void CPUGolfer::pickClub(float dt, glm::vec3 windVector)
             float multiplier = absDistance / Clubs[ClubID::PitchWedge].target;
             targetDistance += 20.f * multiplier; //TODO reduce this if we're close to the green
         }
-
+        /*else
+        {
+            targetDistance *= 0.87f;
+        }*/
 
 
         auto club = m_inputParser.getClub();
@@ -380,7 +383,7 @@ void CPUGolfer::aim(float dt, glm::vec3 windVector)
             distance *= -1.f;
             auto resultB = m_collisionMesh.getTerrain(centrePoint + distance);
 
-            static constexpr float MaxSlope = 0.010f; //~10cm diff in slope
+            static constexpr float MaxSlope = 0.022f; //~22cm diff in slope
 #ifdef CRO_DEBUG_
             debug.slope = resultA.height - resultB.height;
 #endif
@@ -450,14 +453,14 @@ void CPUGolfer::aim(float dt, glm::vec3 windVector)
                 {
                     //the further we try to drive the bigger the reduction
                     float amount = 1.f - (static_cast<float>(m_clubID) / ClubID::NineIron);
-                    m_targetPower *= (1.f - (amount * 0.16f));
+                    m_targetPower *= (1.f - (amount * 0.4f));
                 }
             }
             else
             {
-                m_targetPower = (glm::length(m_target - m_activePlayer.position)*0.95f/* * 1.1f*/) / Clubs[m_clubID].target;
+                m_targetPower = (glm::length(m_target - m_activePlayer.position) * 1.12f) / Clubs[m_clubID].target;
             }
-            m_targetPower += ((0.12f * (-dot * windVector.y)) * greenCompensation) * m_targetPower;
+            m_targetPower += ((0.06f * (-dot * windVector.y)) * greenCompensation) * m_targetPower;
 
 
             //add some random factor to target power and set to stroke mode
@@ -469,7 +472,7 @@ void CPUGolfer::aim(float dt, glm::vec3 windVector)
             {
                 //hackiness to compensate for putting shortfall
                 //float distRatio = 1.f - std::min(1.f, glm::length2(m_target - m_activePlayer.position) / 25.f);
-                float distRatio = 1.f - std::min(1.f, glm::length(m_target - m_activePlayer.position) / 1.f); //applied within this radius
+                float distRatio = 1.f - std::min(1.f, glm::length(m_target - m_activePlayer.position) / 2.5f); //applied within this radius
                 float multiplier = (0.25f * distRatio) + 1.f;
 
                 m_targetPower = std::min(1.f, m_targetPower * multiplier);

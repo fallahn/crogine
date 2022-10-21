@@ -1047,7 +1047,7 @@ void GolfState::showCountdown(std::uint8_t seconds)
     auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
 
     auto entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 200.f, 10.f, 0.23f }); //attaches to scoreboard which is fixed size
+    entity.addComponent<cro::Transform>().setPosition({ 200.f + scoreboardExpansion, 10.f, 0.23f }); //attaches to scoreboard which is fixed size
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
     entity.getComponent<cro::Text>().setFillColour(LeaderboardTextLight);
@@ -1961,7 +1961,7 @@ void GolfState::showMessageBoard(MessageBoardID messageType)
         bounds = m_sprites[SpriteID::Bunker].getTextureBounds();
         break;
     case MessageBoardID::PlayerName:
-        textEnt.getComponent<cro::Text>().setString(m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].name.substr(0, 17));
+        textEnt.getComponent<cro::Text>().setString(m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].name.substr(0, 19));
         textEnt2.getComponent<cro::Text>().setString("Stroke: " + std::to_string(m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].holeScores[m_currentHole] + 1));
         textEnt3.getComponent<cro::Text>().setString(ScoreTypes[m_sharedData.scoreType]);
         break;
@@ -2293,7 +2293,7 @@ void GolfState::buildTrophyScene()
                 entity.addComponent<cro::Sprite>(m_sharedData.nameTextures[0].getTexture());
                 bounds = { 0.f, LabelTextureSize.y - LabelIconSize.y, LabelIconSize.x, LabelIconSize.y };
                 entity.getComponent<cro::Sprite>().setTextureRect(bounds);
-                entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, -14.f, -1.2f });
+                entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, -14.f, -0.1f });
                 m_trophyLabels[i].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
                 entity.addComponent<cro::Callback>().active = true;
