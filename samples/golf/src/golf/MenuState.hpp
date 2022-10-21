@@ -274,6 +274,7 @@ private:
     void showPlayerConfig(bool, std::uint8_t);
     void quitLobby();
     void addCourseSelectButtons();
+    void refreshUI();
 
     //loading moved to GolfGame.cpp
 

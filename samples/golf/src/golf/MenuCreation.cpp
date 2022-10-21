@@ -353,37 +353,7 @@ void MenuState::createUI()
         versionEnt.getComponent<cro::Transform>().setScale(m_viewScale);
         versionEnt.getComponent<cro::Transform>().setPosition(versionPos * m_viewScale);
 
-        //updates any text objects / buttons with a relative position
-        cro::Command cmd;
-        cmd.targetFlags = CommandID::Menu::UIElement;
-        cmd.action =
-            [&,size](cro::Entity e, float)
-        {
-            const auto& element = e.getComponent<UIElement>();
-            auto pos = element.absolutePosition;
-            pos += element.relativePosition * size / m_viewScale;
-
-            pos.x = std::floor(pos.x);
-            pos.y = std::floor(pos.y);
-
-            e.getComponent<cro::Transform>().setPosition(glm::vec3(pos, element.depth));
-
-            if (element.resizeCallback)
-            {
-                element.resizeCallback(e);
-            }
-        };
-        m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
-
-        //and resizes banners horizontally
-        cmd.targetFlags = CommandID::Menu::UIBanner;
-        cmd.action =
-            [](cro::Entity e, float)
-        {
-            //e.getComponent<cro::Callback>().getUserData<std::pair<float, std::int32_t>>().second = 1;
-            e.getComponent<cro::Callback>().active = true;
-        };
-        m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+        refreshUI();
     };
 
     entity = m_uiScene.createEntity();
@@ -1336,6 +1306,7 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
                 {
                     applyTextEdit();
                     saveAvatars(m_sharedData);
+                    refreshUI();
                     
                     m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
 
@@ -1713,6 +1684,7 @@ void MenuState::createJoinMenu(cro::Entity parent, std::uint32_t mouseEnter, std
                 if (activated(evt))
                 {
                     applyTextEdit(); //finish any pending changes
+                    refreshUI();
 
                     m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
 
@@ -1866,6 +1838,8 @@ void MenuState::createBrowserMenu(cro::Entity parent, std::uint32_t mouseEnter, 
                     m_matchMaking.joinGame(m_lobbyPager.lobbyIDs[idx]);
                     m_sharedData.lobbyID = m_lobbyPager.lobbyIDs[idx];
                 }
+
+                refreshUI();
             }
         });
 
@@ -2201,9 +2175,9 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     auto bgEnt = entity;
 
     auto textResizeCallback = 
-        [bgEnt](cro::Entity e)
+        [&,bgEnt](cro::Entity e)
     {
-        e.getComponent<cro::Transform>().setPosition({ bgEnt.getComponent<cro::Transform>().getOrigin().x , e.getComponent<UIElement>().absolutePosition.y});
+        e.getComponent<cro::Transform>().setPosition({ bgEnt.getComponent<cro::Transform>().getOrigin().x , e.getComponent<UIElement>().absolutePosition.y });
     };
 
     //display the score type
@@ -2488,6 +2462,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
                 {
                     m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Lobby);
                 }
+                refreshUI();
             }
         }
 
@@ -4496,4 +4471,39 @@ void MenuState::addCourseSelectButtons()
         centreText(labelEnt);
         m_menuEntities[MenuID::Lobby].getComponent<cro::Transform>().addChild(labelEnt.getComponent<cro::Transform>());
     }
+}
+
+void MenuState::refreshUI()
+{
+    cro::Command cmd;
+    cmd.targetFlags = CommandID::Menu::UIElement;
+    cmd.action =
+        [&](cro::Entity e, float)
+    {
+        glm::vec2 size(GolfGame::getActiveTarget()->getSize());
+
+        const auto& element = e.getComponent<UIElement>();
+        auto pos = element.absolutePosition;
+        pos += element.relativePosition * size / m_viewScale;
+
+        pos.x = std::floor(pos.x);
+        pos.y = std::floor(pos.y);
+
+        e.getComponent<cro::Transform>().setPosition(glm::vec3(pos, element.depth));
+
+        if (element.resizeCallback)
+        {
+            element.resizeCallback(e);
+        }
+    };
+    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+    //and resizes banners horizontally
+    cmd.targetFlags = CommandID::Menu::UIBanner;
+    cmd.action =
+        [](cro::Entity e, float)
+    {
+        e.getComponent<cro::Callback>().active = true;
+    };
+    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 }

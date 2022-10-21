@@ -479,6 +479,7 @@ bool MenuState::handleEvent(const cro::Event& evt)
         case SDLK_KP_1:
             //cro::GameController::rumbleStart(1, 65000, 65000, 1000);
             //LogI << cro::GameController::getName(1) << std::endl;
+            refreshUI();
             break;
         case SDLK_KP_2:
             //cro::GameController::rumbleStart(2, 65000, 65000, 1000);
