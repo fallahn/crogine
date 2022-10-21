@@ -1381,7 +1381,7 @@ void GolfState::createScoreboard()
     updateScoreboard();
 
     //net strength icons
-    glm::vec3 iconPos(378.f, 234.f, 2.2f);
+    glm::vec3 iconPos(8.f, 235.f, 2.2f);
     static constexpr float IconSpacing = 14.f;
     for (const auto& c : m_sharedData.connectionData)
     {
@@ -1394,7 +1394,7 @@ void GolfState::createScoreboard()
             entity.addComponent<cro::SpriteAnimation>();
             entity.addComponent<cro::Callback>().setUserData<std::uint8_t>(c.connectionID);
             entity.getComponent<cro::Callback>().function =
-                [&](cro::Entity e, float)
+                [&, bgEnt](cro::Entity e, float)
             {
                 auto client = e.getComponent<cro::Callback>().getUserData<std::uint8_t>();
                 auto idx = m_sharedData.connectionData[client].pingTime / 30;
