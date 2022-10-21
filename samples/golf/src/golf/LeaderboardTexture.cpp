@@ -79,10 +79,15 @@ void LeaderboardTexture::update(std::vector<LeaderboardEntry>& entries)
     m_backgroundSprite.setPosition({ 0.f, offset });
     m_backgroundSprite.draw();
 
+    
+
     for (auto& [position, str] : entries)
     {
         position -= Border;
         position.y += offset;
+
+        position.x = std::floor(position.x);
+        position.y = std::floor(position.y);
 
         m_text.setPosition(position);
         m_text.setString(str);

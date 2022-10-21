@@ -924,6 +924,9 @@ void GolfState::buildUI()
         //relocate the power bar
         auto uiPos = glm::vec2(uiSize.x / 2.f, UIBarHeight / 2.f);
         rootNode.getComponent<cro::Transform>().setPosition(uiPos);
+
+        //this calls the update for the scoreboard render texture
+        updateScoreboard();
     };
 
     auto& cam = m_uiScene.getActiveCamera().getComponent<cro::Camera>();
@@ -1558,7 +1561,7 @@ void GolfState::updateScoreboard()
             }
         }
         ents[0].getComponent<cro::Text>().setString(nameString);
-        leaderboardEntries.emplace_back(ents[0].getComponent<cro::Transform>().getPosition(), nameString);
+        leaderboardEntries.emplace_back(ents[0].getComponent<cro::Transform>().getPosition() - glm::vec3(14.f, 0.f, 0.f), nameString);
 
         //score columns
         for (auto i = 1u; i < ents.size() - 1; ++i)
@@ -1589,7 +1592,7 @@ void GolfState::updateScoreboard()
             }
 
             ents[i].getComponent<cro::Text>().setString(scoreString);
-            leaderboardEntries.emplace_back(ents[i].getComponent<cro::Transform>().getPosition(), scoreString);
+            leaderboardEntries.emplace_back(glm::vec3(ents[i].getComponent<UIElement>().absolutePosition - glm::vec2(ColumnMargin, -UITextPosV), 0.f), scoreString);
         }
 
         //total column
@@ -1671,7 +1674,7 @@ void GolfState::updateScoreboard()
         }
 
         ents.back().getComponent<cro::Text>().setString(totalString);
-        leaderboardEntries.emplace_back(ents.back().getComponent<cro::Transform>().getPosition(), totalString);
+        leaderboardEntries.emplace_back(glm::vec3(ents.back().getComponent<UIElement>().absolutePosition - glm::vec2(ColumnMargin, -UITextPosV), 0.f), totalString);
 
         //for some reason we have to hack this to display and I'm too lazy to debug it
         auto pos = ents.back().getComponent<cro::Transform>().getPosition();
