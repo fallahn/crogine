@@ -87,6 +87,7 @@ namespace
         glm::vec2((ColumnWidth * 15.f) + ColumnMargin, ColumnHeight),
     };
 
+    static constexpr float MaxExpansion = 100.f;
     float scoreboardExpansion = 0.f; //TODO move to member
     float stretchToScreen(cro::Entity e, cro::Sprite sprite, glm::vec2 baseSize)
     {
@@ -97,7 +98,7 @@ namespace
         auto rect = sprite.getTextureRectNormalised();
 
         //how much bigger to get either side in wider views
-        float expansion = std::min(100.f, std::floor((baseSize.x - bounds.width) / 2.f));
+        float expansion = std::min(MaxExpansion, std::floor((baseSize.x - bounds.width) / 2.f));
         //only needs > 0 really but this gives a little leeway
         expansion = (baseSize.x - bounds.width > 10) ? expansion : 0.f;
         float edgeOffsetNorm = (EdgeOffset / sprite.getTexture()->getSize().x);
@@ -904,7 +905,7 @@ void GolfState::buildUI()
         {
             auto pos = e.getComponent<UIElement>().relativePosition;
             pos.x *= uiSize.x;
-            pos.x = std::round(pos.x);
+            pos.x = std::floor(pos.x);
             pos.y *= (uiSize.y - UIBarHeight);
             pos.y = std::round(pos.y);
             pos.y += UITextPosV;
@@ -1206,7 +1207,6 @@ void GolfState::createScoreboard()
     {
         auto baseSize = glm::vec2(cro::App::getWindow().getSize()) / m_viewScale;
         scoreboardExpansion = stretchToScreen(e, bgSprite, baseSize);
-
         auto bounds = e.getComponent<cro::Drawable2D>().getLocalBounds();
         e.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
     };
@@ -1357,14 +1357,19 @@ void GolfState::createScoreboard()
 
         if (i > 0)
         {
+            //UITextPosV gets added by the camera resize callback...
             e.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
-            e.addComponent<UIElement>().absolutePosition = ColumnPositions[i];// +glm::vec2(-6.f, -24.f);
+            e.addComponent<UIElement>().absolutePosition = ColumnPositions[i] - glm::vec2(0.f, UITextPosV);
             e.getComponent<UIElement>().depth = 1.3f;
             e.getComponent<UIElement>().resizeCallback =
-                [](cro::Entity ent)
+                [&](cro::Entity ent)
             {
-                //UITextPosV gets added by the camera resize callback...
-                ent.getComponent<cro::Transform>().move({ scoreboardExpansion, -UITextPosV });
+                //gotta admit - I don't know why this works.
+                if (scoreboardExpansion > 0)
+                {
+                    float offset = scoreboardExpansion == MaxExpansion ? std::floor(ColumnMargin) : 0.f;
+                    ent.getComponent<cro::Transform>().move({ std::floor(scoreboardExpansion - offset), 0.f});
+                }
             };
         }
 
