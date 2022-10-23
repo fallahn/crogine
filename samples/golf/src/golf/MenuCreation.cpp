@@ -3708,7 +3708,7 @@ void MenuState::updateLobbyAvatars()
         quadTexture.loadFromImage(img);
         cro::SimpleQuad simpleQuad(quadTexture);
         simpleQuad.setBlendMode(cro::Material::BlendMode::None);
-        simpleQuad.setColour(cro::Colour(0.f, 0.f, 0.f, BackgroundAlpha / 3.f));
+        simpleQuad.setColour(cro::Colour(0.f, 0.f, 0.f, BackgroundAlpha / 2.f));
 
         cro::Texture iconTexture;
         cro::Image iconImage;

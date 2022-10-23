@@ -3118,12 +3118,12 @@ void GolfState::buildScene()
     };
 
     const float pointCount = 5.f;
-    const float arc = m_inputParser.getMaxRotation() * 2.f;
+    const float arc = MaxRotation * 2.f;
     const float step = arc / pointCount;
     const float radius = 2.5f;
 
     std::vector<glm::vec2> points;
-    for (auto i = -m_inputParser.getMaxRotation(); i <= -m_inputParser.getMaxRotation() + arc; i += step)
+    for (auto i = -MaxRotation; i <= -MaxRotation + arc; i += step)
     {
         auto& p = points.emplace_back(std::cos(i), std::sin(i));
         p *= radius;
@@ -3176,7 +3176,7 @@ void GolfState::buildScene()
 
         if (size > 0)
         {
-            float scale = cro::Util::Easing::easeOutSine(m_inputParser.getPower());
+            float scale = /*cro::Util::Easing::easeOutSine*/(m_inputParser.getPower());
             e.getComponent<cro::Transform>().setScale(glm::vec3(scale, size * scale, scale));
 
             //fade with proximity to hole
@@ -4575,6 +4575,8 @@ void GolfState::removeClient(std::uint8_t clientID)
     str += " left the game";
 
     showNotification(str);
+
+    m_netStrengthIcons.resize(m_netStrengthIcons.size() - m_sharedData.connectionData[clientID].playerCount);
 
     m_sharedData.connectionData[clientID].playerCount = 0;
     m_sharedData.connectionData[clientID].pingTime = 1000; //just so existing net indicators don't show green

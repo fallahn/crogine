@@ -367,7 +367,9 @@ void BallSystem::process(float dt)
                 //one final correction to stop jitter
                 pinDir = m_holeData->pin - newPos;
                 len2 = glm::length2(glm::vec2(pinDir.x, pinDir.z));
-                if (len2 > MinBallDistance && terrainContact.penetration > 0)
+                if (len2 > MinBallDistance 
+                    && terrainContact.penetration > 0
+                    && terrainContact.penetration < Ball::Radius)
                 {
                     newPos.y = terrainContact.intersection.y;
                     tx.setPosition(newPos);
