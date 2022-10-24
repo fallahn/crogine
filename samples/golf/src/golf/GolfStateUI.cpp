@@ -458,6 +458,8 @@ void GolfState::buildUI()
     //power bar
     auto barEnt = entity;
     const auto BarCentre = bounds.width / 2.f;
+    const auto BarWidth = bounds.width - 8.f;
+    const auto BarHeight = bounds.height;
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(glm::vec3(5.f, 0.f, 0.05f)); //TODO expell the magic number!!
     entity.addComponent<cro::Drawable2D>();
@@ -475,7 +477,7 @@ void GolfState::buildUI()
 
     //hook/slice indicator
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec3(BarCentre, 8.f, 0.1f)); //TODO expell the magic number!!
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(BarCentre, 8.f, 0.1f));
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::HookBar];
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
@@ -490,11 +492,39 @@ void GolfState::buildUI()
     barEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     //flag power/distance when putting
-    //entity = m_uiScene.createEntity();
-    //entity.addComponent<cro::Transform>().setPosition(glm::vec3(30.f, 32.f, 0.1f)); //TODO expell the magic number!!
-    //entity.addComponent<cro::Drawable2D>();
-    //entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::MiniFlag];
-    //barEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(2.f, BarHeight, 0.1f));
+    entity.getComponent<cro::Transform>().setOrigin({ -6.f, 0.f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::MiniFlag];
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&, BarWidth](cro::Entity e, float dt)
+    {
+        const float vScaleTarget = m_currentPlayer.terrain == TerrainID::Green ? 1.f : 0.f;
+        auto scale = e.getComponent<cro::Transform>().getScale();
+        if (vScaleTarget > 0)
+        {
+            //grow
+            scale.y = std::min(1.f, scale.y + dt);
+
+            //move to position
+            auto maxDist = Clubs[ClubID::Putter].target;
+            auto currDist = glm::length(m_currentPlayer.position - m_holeData[m_currentHole].pin);
+            float hTarget = (currDist / maxDist) * BarWidth;
+
+            auto pos = e.getComponent<cro::Transform>().getPosition();
+            pos.x = std::min(pos.x + ((hTarget - pos.x) * dt), BarWidth - 4.f);
+            e.getComponent<cro::Transform>().setPosition(pos);
+        }
+        else
+        {
+            //shrink
+            scale.y = std::max(0.f, scale.y - dt);
+        }
+        e.getComponent<cro::Transform>().setScale(scale);
+    };
+    barEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     //hole number
     entity = m_uiScene.createEntity();

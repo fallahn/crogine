@@ -99,13 +99,13 @@ namespace
 
     SlopeData getSlope(glm::vec3 normal)
     {
-        auto slopeStrength = 1.f - glm::dot(normal, cro::Transform::Y_AXIS);
+        auto slopeStrength = (1.f - glm::dot(normal, cro::Transform::Y_AXIS)) * 500.f;
         //normal is not always perfectly normalised - so hack around this with some leighway
         if (slopeStrength > 0.001f)
         {
             auto tangent = glm::cross(normal, glm::normalize(glm::vec3(normal.x, 0.f, normal.z)));
             auto slope = glm::normalize(glm::cross(tangent, normal));
-            return { slope, slopeStrength };
+            return { slope, slopeStrength / 500.f };
         }
         return SlopeData();
     }
@@ -339,19 +339,32 @@ void BallSystem::process(float dt)
                     //}
                     //else
                     {
-                        //add wind again - this is intentional
-                        ball.velocity += m_windDirection * m_windStrength * 0.06f * windAmount * dt;
                         
                         //only use this when we're mini putting
                         //it's more accurate (ball runs back down a slope it went up)
                         //but is really boring to play on the full size courses
-                        auto [slope, slopeStrength] = getSlope(terrainContact.normal);
+                        auto [slope, slopeStrength] = getSlope(terrainContact.normal);                        
+                        float friction = 1.f;
 
-                        //add friction
-                        ball.velocity *= Friction[ball.terrain] + (slopeStrength * 0.05f);
+                        //add wind again - this is intentional
+                        if (m_puttFromTee)
+                        {
+                            friction = Friction[ball.terrain] + (slopeStrength * 0.05f);
+                            ball.velocity += m_windDirection * m_windStrength * 0.06f * windAmount * dt;
+                        }
+                        else
+                        {
+                            friction = Friction[ball.terrain] - (slopeStrength * 0.08f);
+                            //unrealistic but makes it more interesting on full size courses
+                            slopeStrength *= 40.f;
+                            //use the current velocity to stop the ball rolling forever
+                            slopeStrength *= std::min(1.f, glm::length2(ball.velocity));
+                        }
 
                         //move by slope from surface normal
                         ball.velocity += slope * slopeStrength;
+                        ball.velocity *= friction;
+
                         CRO_ASSERT(!std::isnan(ball.velocity.x), "");
                     }
                 }

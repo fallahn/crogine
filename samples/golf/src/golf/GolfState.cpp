@@ -1617,7 +1617,7 @@ void GolfState::loadAssets()
     m_sprites[SpriteID::PowerBar] = spriteSheet.getSprite("power_bar");
     m_sprites[SpriteID::PowerBarInner] = spriteSheet.getSprite("power_bar_inner");
     m_sprites[SpriteID::HookBar] = spriteSheet.getSprite("hook_bar");
-    m_sprites[SpriteID::HookBar] = spriteSheet.getSprite("flag03");
+    m_sprites[SpriteID::MiniFlag] = spriteSheet.getSprite("flag03");
     m_sprites[SpriteID::WindIndicator] = spriteSheet.getSprite("wind_dir");
     m_sprites[SpriteID::WindSpeed] = spriteSheet.getSprite("wind_speed");
     m_sprites[SpriteID::Thinking] = spriteSheet.getSprite("thinking");
@@ -3177,7 +3177,7 @@ void GolfState::buildScene()
 
         if (size > 0)
         {
-            float scale = /*cro::Util::Easing::easeOutSine*/(m_inputParser.getPower());
+            float scale = /*cro::Util::Easing::easeOutSine*/(m_inputParser.getPower()) * 0.9f; //bit of a fusge to try making the representation more accurate
             e.getComponent<cro::Transform>().setScale(glm::vec3(scale, size * scale, scale));
 
             //fade with proximity to hole
@@ -5231,6 +5231,8 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
         e.getComponent<cro::Callback>().active = localPlayer;
         e.getComponent<cro::Model>().setDepthTestEnabled(0, player.terrain == TerrainID::Green);
 
+        e.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", cro::Colour::White);
+
         //fudgy way of changing the render type when putting
         if (e.getComponent<cro::CommandTarget>().ID & CommandID::StrokeIndicator)
         {
@@ -5596,6 +5598,9 @@ void GolfState::hitBall()
         {
             auto& currTime = f.getComponent<cro::Callback>().getUserData<float>();
             currTime = std::max(0.f, currTime - dt);
+
+            float c = currTime / FadeTime;
+            e.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", cro::Colour(c, c, c));
 
             if (currTime == 0)
             {
