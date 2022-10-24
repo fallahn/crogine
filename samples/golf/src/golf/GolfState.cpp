@@ -3181,7 +3181,7 @@ void GolfState::buildScene()
 
             //fade with proximity to hole
             auto dist = m_holeData[m_currentHole].pin - e.getComponent<cro::Transform>().getWorldPosition();
-            float amount = 0.25f + (smoothstep(4.f, 9.f, glm::length2(dist)) * 0.75f);
+            float amount = 0.3f + (smoothstep(0.5f, 2.f, glm::length2(dist)) * 0.7f);
             cro::Colour c(amount, amount, amount); //additive blending so darker == more transparent
             e.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", c);
         }
@@ -3190,7 +3190,8 @@ void GolfState::buildScene()
     
     verts.clear();
     indices.clear();
-    //vertex colour of the beacon model. I don't remember why I chose this specifically.
+    //vertex colour of the beacon model. I don't remember why I chose this specifically,
+    //but it needs to match so that the hue rotation in the shader outputs the same result
     c = glm::vec3(1.f,0.f,0.781f);
 
     auto j = 0u;
@@ -5579,10 +5580,30 @@ void GolfState::hitBall()
     //hide the indicator
     cro::Command cmd;
     cmd.targetFlags = CommandID::StrokeIndicator | CommandID::StrokeArc;
-    cmd.action = [](cro::Entity e, float)
+    cmd.action = [&](cro::Entity e, float)
     {
-        e.getComponent<cro::Model>().setHidden(true);
+        //e.getComponent<cro::Model>().setHidden(true);
         e.getComponent<cro::Callback>().active = false;
+
+        //temp ent to delay hiding slightly then pop itself
+        static constexpr float FadeTime = 1.5;
+        auto tempEnt = m_gameScene.createEntity();
+        tempEnt.addComponent<cro::Callback>().active = true;
+        tempEnt.getComponent<cro::Callback>().setUserData<float>(FadeTime);
+        tempEnt.getComponent<cro::Callback>().function =
+            [&, e](cro::Entity f, float dt) mutable
+        {
+            auto& currTime = f.getComponent<cro::Callback>().getUserData<float>();
+            currTime = std::max(0.f, currTime - dt);
+
+            if (currTime == 0)
+            {
+                e.getComponent<cro::Model>().setHidden(true);
+
+                f.getComponent<cro::Callback>().active = false;
+                m_gameScene.destroyEntity(f);
+            }
+        };
     };
     m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
