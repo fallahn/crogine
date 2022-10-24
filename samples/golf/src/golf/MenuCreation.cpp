@@ -931,17 +931,6 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
             });
     menuTransform.addChild(entity.getComponent<cro::Transform>());
 
-    auto showTip = m_uiScene.getSystem<cro::UISystem>()->addCallback(
-        [&](cro::Entity e, glm::vec2, const cro::MotionEvent&)
-        {
-            showToolTip(e.getLabel());
-        });
-
-    auto hideTip = m_uiScene.getSystem<cro::UISystem>()->addCallback(
-        [&](cro::Entity e, glm::vec2, const cro::MotionEvent&)
-        {
-            hideToolTip();
-        });
 
     //add player button
     entity = m_uiScene.createEntity();
@@ -949,7 +938,7 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<UIElement>().absolutePosition = { -20.f, MenuBottomBorder };
+    entity.addComponent<UIElement>().absolutePosition = { -40.f, MenuBottomBorder };
     entity.getComponent<UIElement>().relativePosition = { 0.3334f, 0.f };
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement;
     entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::AddPlayer];
@@ -957,9 +946,6 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
     entity.addComponent<cro::UIInput>().area = bounds;
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Avatar);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = mouseEnterCursor;
-    //entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = mouseExit;
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Exit] = hideTip;
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Enter] = showTip;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         m_uiScene.getSystem<cro::UISystem>()->addCallback(
             [&, mouseEnter, mouseExit](cro::Entity, const cro::ButtonEvent& evt) mutable
@@ -984,6 +970,19 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
                 }
             });
     menuTransform.addChild(entity.getComponent<cro::Transform>());
+
+
+    auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
+
+    auto labelEnt = m_uiScene.createEntity();
+    labelEnt.addComponent<cro::Transform>().setPosition({ 18.f, 12.f });
+    labelEnt.addComponent<cro::Drawable2D>();
+    labelEnt.addComponent<cro::Text>(smallFont).setString("Add Player");
+    labelEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    labelEnt.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+    labelEnt.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+    labelEnt.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
+    entity.getComponent<cro::Transform>().addChild(labelEnt.getComponent<cro::Transform>());
 
     if (Social::isAvailable())
     {
@@ -1055,7 +1054,7 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<UIElement>().absolutePosition = { 20.f, MenuBottomBorder };
+    entity.addComponent<UIElement>().absolutePosition = { -30.f, MenuBottomBorder };
     entity.getComponent<UIElement>().relativePosition = { 0.6667f, 0.f };
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement;
     entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::RemovePlayer];
@@ -1063,9 +1062,6 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
     entity.addComponent<cro::UIInput>().area = bounds;
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Avatar);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = mouseEnterCursor;
-    //entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = mouseExit;
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Exit] = hideTip;
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Enter] = showTip;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         m_uiScene.getSystem<cro::UISystem>()->addCallback(
             [&, mouseEnter, mouseExit](cro::Entity, const cro::ButtonEvent& evt) mutable
@@ -1084,6 +1080,16 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
                 }
             });
     menuTransform.addChild(entity.getComponent<cro::Transform>());
+
+    labelEnt = m_uiScene.createEntity();
+    labelEnt.addComponent<cro::Transform>().setPosition({ 18.f, 12.f });
+    labelEnt.addComponent<cro::Drawable2D>();
+    labelEnt.addComponent<cro::Text>(smallFont).setString("Remove Player");
+    labelEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    labelEnt.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+    labelEnt.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+    labelEnt.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
+    entity.getComponent<cro::Transform>().addChild(labelEnt.getComponent<cro::Transform>());
 
     m_courseSelectCallbacks.prevRules = m_uiScene.getSystem<cro::UISystem>()->addCallback(
         [&](cro::Entity, const cro::ButtonEvent& evt)

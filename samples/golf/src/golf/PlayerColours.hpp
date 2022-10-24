@@ -93,7 +93,7 @@ namespace pc
 
     static inline const std::array<std::uint8_t, ColourKey::Count> PairCounts =
     {
-        ColourID::Count, ColourID::Count, ColourID::Count - 4, ColourID::Count
+        ColourID::Count, ColourID::Count, ColourID::Count - 3, ColourID::Count
     };
 
     static constexpr std::array<ColourPair, ColourKey::Count> Keys =

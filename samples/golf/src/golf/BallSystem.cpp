@@ -328,16 +328,16 @@ void BallSystem::process(float dt)
                     float windAmount = 1.f - glm::dot(m_windDirection, ball.velocity / velLength);
                     ball.velocity += m_windDirection * m_windStrength * 0.06f * windAmount * dt;
 
-                    if (!m_puttFromTee)
-                    {
-                        //slope strength (arcade version)
-                        glm::vec3 slope = glm::vec3(terrainContact.normal.x, 0.f, terrainContact.normal.z) * 0.95f * smoothstep(0.35f, 4.5f, velLength);
-                        ball.velocity += slope;
+                    //if (!m_puttFromTee)
+                    //{
+                    //    //slope strength (arcade version)
+                    //    glm::vec3 slope = glm::vec3(terrainContact.normal.x, 0.f, terrainContact.normal.z) * 0.95f * smoothstep(0.35f, 4.5f, velLength);
+                    //    ball.velocity += slope;
 
-                        //add friction
-                        ball.velocity *= Friction[ball.terrain];
-                    }
-                    else
+                    //    //add friction
+                    //    ball.velocity *= Friction[ball.terrain];
+                    //}
+                    //else
                     {
                         //add wind again - this is intentional
                         ball.velocity += m_windDirection * m_windStrength * 0.06f * windAmount * dt;
@@ -369,7 +369,7 @@ void BallSystem::process(float dt)
                 len2 = glm::length2(glm::vec2(pinDir.x, pinDir.z));
                 if (len2 > MinBallDistance 
                     && terrainContact.penetration > 0
-                    && terrainContact.penetration < Ball::Radius)
+                    && terrainContact.penetration < Ball::Radius * 2.f)
                 {
                     newPos.y = terrainContact.intersection.y;
                     tx.setPosition(newPos);

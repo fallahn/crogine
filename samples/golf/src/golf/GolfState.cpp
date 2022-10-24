@@ -169,8 +169,8 @@ namespace
         float currentHeight = 0.f;
     };
 
-    constexpr float MaxRotation = 0.1f;
-    constexpr float MaxPuttRotation = 0.2f;
+    constexpr float MaxRotation = 0.18f;
+    constexpr float MaxPuttRotation = 0.24f;
 }
 
 GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, SharedStateData& sd)
