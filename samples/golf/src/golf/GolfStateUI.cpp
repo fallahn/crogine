@@ -74,7 +74,7 @@ namespace
     static constexpr float ColumnMargin = 6.f;
     static constexpr std::array ColumnPositions =
     {
-        glm::vec2(24.f, ColumnHeight),
+        glm::vec2(8.f, ColumnHeight),
         glm::vec2((ColumnWidth * 6.f) + ColumnMargin, ColumnHeight),
         glm::vec2((ColumnWidth * 7.f) + ColumnMargin, ColumnHeight),
         glm::vec2((ColumnWidth * 8.f) + ColumnMargin, ColumnHeight),
@@ -1324,7 +1324,7 @@ void GolfState::createScoreboard()
         for (auto ent : ents)
         {
             auto crop = cro::Text::getLocalBounds(ent);
-            crop.width = std::min(crop.width, MinLobbyCropWidth + scoreboardExpansion);
+            crop.width = std::min(crop.width, MinLobbyCropWidth + 16.f + scoreboardExpansion);
             crop.height = bgCrop.height;
             crop.height += 1.f;
             crop.bottom = -(bgCrop.height - 1.f) - pos.y;
@@ -1543,7 +1543,7 @@ void GolfState::updateScoreboard()
         cro::String nameString = "HOLE\nPAR";
         for (auto i = 0u; i < playerCount; ++i)
         {
-            nameString += "\n" + scores[i].name.substr(0, ConstVal::MaxStringChars);
+            nameString += "\n  " + scores[i].name.substr(0, ConstVal::MaxStringChars);
             m_netStrengthIcons[i].getComponent<cro::Callback>().getUserData<std::uint8_t>() = scores[i].client;
         }
         if (page2)
@@ -1557,7 +1557,7 @@ void GolfState::updateScoreboard()
             nameString += "\n\nHOLE\nPAR";
             for (auto i = 0u; i < playerCount; ++i)
             {
-                nameString += "\n" + scores[i].name.substr(0, ConstVal::MaxStringChars);
+                nameString += "\n  " + scores[i].name.substr(0, ConstVal::MaxStringChars);
             }
         }
         ents[0].getComponent<cro::Text>().setString(nameString);
@@ -1674,6 +1674,7 @@ void GolfState::updateScoreboard()
         }
 
         ents.back().getComponent<cro::Text>().setString(totalString);
+        ents.back().getComponent<cro::Transform>().setPosition(ColumnPositions.back());
         leaderboardEntries.emplace_back(glm::vec3(ents.back().getComponent<UIElement>().absolutePosition - glm::vec2(ColumnMargin, -UITextPosV), 0.f), totalString);
 
         //for some reason we have to hack this to display and I'm too lazy to debug it
