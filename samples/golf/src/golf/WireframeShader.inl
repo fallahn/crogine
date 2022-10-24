@@ -132,7 +132,7 @@ static const std::string WireframeFragment = R"(
         colour.rgb += (1.0 - colour.a) * colour.rgb;
 
 #if defined (DASHED)
-        float alpha = (sin(u_time - ((v_texCoord.x * TAU)/* * 2.0*/)) + 1.0) * 0.5;
+        float alpha = (sin(u_time - ((v_texCoord.x * TAU) * 20.0)) + 1.0) * 0.5;
         alpha = step(0.5, alpha);
         if (alpha < 0.5) discard;
 #endif

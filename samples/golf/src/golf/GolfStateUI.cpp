@@ -494,9 +494,10 @@ void GolfState::buildUI()
     //flag power/distance when putting
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(glm::vec3(2.f, BarHeight, 0.1f));
-    entity.getComponent<cro::Transform>().setOrigin({ -6.f, 0.f });
+    entity.getComponent<cro::Transform>().setOrigin({ -6.f, 1.f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::MiniFlag];
+    entity.addComponent<cro::SpriteAnimation>().play(0);
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function =
         [&, BarWidth](cro::Entity e, float dt)
@@ -1711,6 +1712,12 @@ void GolfState::updateScoreboard()
 
         ents.back().getComponent<cro::Text>().setString(totalString);
         ents.back().getComponent<cro::Transform>().setPosition(ColumnPositions.back());
+        //gotta admit - I don't know why this works.
+        if (scoreboardExpansion > 0)
+        {
+            float offset = scoreboardExpansion == MaxExpansion ? std::floor(ColumnMargin) : 0.f;
+            ents.back().getComponent<cro::Transform>().move({ std::floor(scoreboardExpansion - offset), 0.f });
+        }
         leaderboardEntries.emplace_back(glm::vec3(ents.back().getComponent<UIElement>().absolutePosition - glm::vec2(ColumnMargin, -UITextPosV), 0.f), totalString);
 
         //for some reason we have to hack this to display and I'm too lazy to debug it

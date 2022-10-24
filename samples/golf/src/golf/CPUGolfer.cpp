@@ -383,7 +383,7 @@ void CPUGolfer::aim(float dt, glm::vec3 windVector)
             distance *= -1.f;
             auto resultB = m_collisionMesh.getTerrain(centrePoint + distance);
 
-            static constexpr float MaxSlope = 0.022f; //~22cm diff in slope
+            static constexpr float MaxSlope = 0.048f; //~48cm diff in slope
 #ifdef CRO_DEBUG_
             debug.slope = resultA.height - resultB.height;
 #endif

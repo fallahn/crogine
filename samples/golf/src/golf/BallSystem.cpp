@@ -356,7 +356,7 @@ void BallSystem::process(float dt)
                         {
                             friction = Friction[ball.terrain] - (slopeStrength * 0.08f);
                             //unrealistic but makes it more interesting on full size courses
-                            slopeStrength *= 40.f;
+                            slopeStrength *= 80.f;
                             //use the current velocity to stop the ball rolling forever
                             slopeStrength *= std::min(1.f, glm::length2(ball.velocity));
                         }

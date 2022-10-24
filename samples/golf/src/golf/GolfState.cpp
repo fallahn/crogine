@@ -939,7 +939,7 @@ void GolfState::handleMessage(const cro::Message& msg)
                     if (accum > 0.5f)
                     {
                         accum -= 0.5f;
-                        state = state == 1 ? 0 : 1;
+                        state = state == 1 ? 0.f : 1.f;
                     }
                 }
                 else
@@ -1617,7 +1617,7 @@ void GolfState::loadAssets()
     m_sprites[SpriteID::PowerBar] = spriteSheet.getSprite("power_bar");
     m_sprites[SpriteID::PowerBarInner] = spriteSheet.getSprite("power_bar_inner");
     m_sprites[SpriteID::HookBar] = spriteSheet.getSprite("hook_bar");
-    m_sprites[SpriteID::MiniFlag] = spriteSheet.getSprite("flag03");
+    m_sprites[SpriteID::MiniFlag] = spriteSheet.getSprite("putt_flag");
     m_sprites[SpriteID::WindIndicator] = spriteSheet.getSprite("wind_dir");
     m_sprites[SpriteID::WindSpeed] = spriteSheet.getSprite("wind_speed");
     m_sprites[SpriteID::Thinking] = spriteSheet.getSprite("thinking");
