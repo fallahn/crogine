@@ -457,9 +457,9 @@ void GolfState::buildUI()
 
     //power bar
     auto barEnt = entity;
-    auto barCentre = bounds.width / 2.f;
+    const auto BarCentre = bounds.width / 2.f;
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec3(5.f, 0.f, 0.05f)); //TODO expel the magic number!!
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(5.f, 0.f, 0.05f)); //TODO expell the magic number!!
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::PowerBarInner];
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
@@ -475,20 +475,26 @@ void GolfState::buildUI()
 
     //hook/slice indicator
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec3(barCentre, 8.f, 0.1f)); //TODO expel the magic number!!
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(BarCentre, 8.f, 0.1f)); //TODO expell the magic number!!
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::HookBar];
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.getComponent<cro::Transform>().setOrigin(glm::vec2(bounds.width / 2.f, bounds.height / 2.f));
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function =
-        [&, barCentre](cro::Entity e, float)
+        [&, BarCentre](cro::Entity e, float)
     {
-        glm::vec3 pos(barCentre + (barCentre * m_inputParser.getHook()), 8.f, 0.1f);
+        glm::vec3 pos(BarCentre + (BarCentre * m_inputParser.getHook()), 8.f, 0.1f);
         e.getComponent<cro::Transform>().setPosition(pos);
     };
     barEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
+    //flag power/distance when putting
+    //entity = m_uiScene.createEntity();
+    //entity.addComponent<cro::Transform>().setPosition(glm::vec3(30.f, 32.f, 0.1f)); //TODO expell the magic number!!
+    //entity.addComponent<cro::Drawable2D>();
+    //entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::MiniFlag];
+    //barEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     //hole number
     entity = m_uiScene.createEntity();

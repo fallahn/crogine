@@ -254,6 +254,7 @@ private:
             PowerBar,
             PowerBarInner,
             HookBar,
+            MiniFlag,
             WindIndicator,
             WindSpeed,
             Thinking,

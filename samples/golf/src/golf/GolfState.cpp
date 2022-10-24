@@ -1617,6 +1617,7 @@ void GolfState::loadAssets()
     m_sprites[SpriteID::PowerBar] = spriteSheet.getSprite("power_bar");
     m_sprites[SpriteID::PowerBarInner] = spriteSheet.getSprite("power_bar_inner");
     m_sprites[SpriteID::HookBar] = spriteSheet.getSprite("hook_bar");
+    m_sprites[SpriteID::HookBar] = spriteSheet.getSprite("flag03");
     m_sprites[SpriteID::WindIndicator] = spriteSheet.getSprite("wind_dir");
     m_sprites[SpriteID::WindSpeed] = spriteSheet.getSprite("wind_speed");
     m_sprites[SpriteID::Thinking] = spriteSheet.getSprite("thinking");
