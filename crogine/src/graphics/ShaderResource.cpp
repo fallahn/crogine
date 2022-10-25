@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2021
+Matt Marchant 2017 - 2022
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -82,9 +82,22 @@ bool ShaderResource::loadFromString(std::int32_t ID, const std::string& vertex, 
     }
 
     auto pair = std::make_pair(ID, Shader());
-    if (!pair.second.loadFromString(vertex, fragment, defines))
+    if (!m_includes.empty())
     {
-        return false;
+        auto v = parseIncludes(vertex);
+        auto f = parseIncludes(fragment);
+
+        if (!pair.second.loadFromString(v, f, defines))
+        {
+            return false;
+        }
+    }
+    else
+    {
+        if (!pair.second.loadFromString(vertex, fragment, defines))
+        {
+            return false;
+        }
     }
     m_shaders.insert(std::move(pair));
     return true;
@@ -99,9 +112,23 @@ bool ShaderResource::loadFromString(std::int32_t ID, const std::string& vertex, 
     }
 
     auto pair = std::make_pair(ID, Shader());
-    if (!pair.second.loadFromString(vertex, geom, fragment, defines))
+    if (!m_includes.empty())
     {
-        return false;
+        auto v = parseIncludes(vertex);
+        auto g = parseIncludes(geom);
+        auto f = parseIncludes(fragment);
+
+        if (!pair.second.loadFromString(v, g, f, defines))
+        {
+            return false;
+        }
+    }
+    else
+    {
+        if (!pair.second.loadFromString(vertex, geom, fragment, defines))
+        {
+            return false;
+        }
     }
     m_shaders.insert(std::move(pair));
     return true;
@@ -275,4 +302,56 @@ Shader& ShaderResource::get(std::int32_t ID)
 bool ShaderResource::hasShader(std::int32_t shaderID) const
 {
     return m_shaders.count(shaderID) != 0;
+}
+
+void ShaderResource::addInclude(const std::string& include, const char* src)
+{
+    if (m_includes.count(include) != 0)
+    {
+        LogW << include << " already exists in shader resource and has been overwritten." << std::endl;
+    }
+    m_includes.insert(std::make_pair(include, src));
+}
+
+//private
+std::string ShaderResource::parseIncludes(const std::string& src) const
+{
+    std::string ret;
+
+    std::stringstream ss;
+    ss << src;
+
+    for (std::string line; std::getline(ss, line);)
+    {
+        if (line.find("#include") != std::string::npos)
+        {
+            auto separator = line.find_last_of(' ');
+
+            if (separator != std::string::npos
+                && separator != line.size() - 1)
+            {
+                auto includeName = line.substr(separator + 1);
+                if (m_includes.count(includeName))
+                {
+                    ret += "\n";
+                    ret += m_includes.at(includeName);
+                    ret += "\n";
+                }
+                else
+                {
+                    LogW << line << ": include not found in shader resource" << std::endl;
+                }
+            }
+            else
+            {
+                LogW << line << ": invalid include directive" << std::endl;
+            }
+        }
+        else
+        {
+            ret += line + "\n";
+        }
+    }
+
+    return ret;
 }

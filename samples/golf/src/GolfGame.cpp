@@ -494,6 +494,9 @@ bool GolfGame::initialise()
     m_sharedData.sharedResources->fonts.load(FontID::Info, "assets/golf/fonts/MCPixel.otf");
     m_sharedData.sharedResources->fonts.load(FontID::Label, "assets/golf/fonts/ProggyClean.ttf");
 
+    const char* buns = "uniform float u_time;";
+    m_sharedData.sharedResources->shaders.addInclude("TIME", buns);
+
     m_sharedData.sharedResources->shaders.loadFromString(ShaderID::TutorialSlope, TutorialVertexShader, TutorialSlopeShader);
     m_sharedData.sharedResources->shaders.loadFromString(ShaderID::Beacon, BeaconVertex, BeaconFragment, "#define SPRITE\n");
 

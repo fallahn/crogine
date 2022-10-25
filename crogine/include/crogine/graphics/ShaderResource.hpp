@@ -131,9 +131,29 @@ namespace cro
         */
         bool hasShader(std::int32_t shaderID) const;
 
+        /*!
+        \brief Adds a string containing a portion of shader code to be used as an include.
+        In lieu of an #include directive in GLSL the shader resource can be provided with
+        pointers to strings which can be substituted for any #include directives found in
+        source code. This function accepts a name for the include directive which, when
+        encountered, will be substituted with the string pointed to in the map. For example
+            addInclude("MyUniform", pchStr);
+        will allow the shader resource to replace #include MyUniform with the source pointed
+        to by pchStr.
+        Note that this substitution is only performed on loadFromString() (currently) and
+        that the string pointed to as the substitute must exist for as long as the shader
+        resource manager is likely to compile shaders.
+        \param inc The name of the include directive to replace
+        \param source A pointer to the source code to insert.
+        */
+        void addInclude(const std::string& inc, const char* source);
+
     private:
 
         Shader m_defaultShader;
         std::unordered_map<std::int32_t, Shader> m_shaders;
+        std::unordered_map<std::string, const char*> m_includes;
+
+        std::string parseIncludes(const std::string& src) const;
     };
 }
