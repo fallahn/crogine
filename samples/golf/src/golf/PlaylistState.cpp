@@ -95,6 +95,7 @@ namespace
 #include "TreeShader.inl"
 #include "ShadowMapping.inl"
 #include "CloudShader.inl"
+#include "ShaderIncludes.inl"
 
     const std::string SkyboxPath = "assets/golf/skyboxes/";
     const std::string ShrubPath = "assets/golf/shrubs/";
@@ -621,6 +622,10 @@ void PlaylistState::addSystems()
 
 void PlaylistState::loadAssets()
 {
+    m_resources.shaders.addInclude("WIND_BUFFER", WindBuffer.c_str());
+    m_resources.shaders.addInclude("RESOLUTION_BUFFER", ResolutionBuffer.c_str());
+    m_resources.shaders.addInclude("SCALE_BUFFER", ScaleBuffer.c_str());
+
     //materials
     m_resources.shaders.loadFromString(ShaderID::Horizon, HorizonVert, HorizonFrag);
     auto* shader = &m_resources.shaders.get(ShaderID::Horizon);

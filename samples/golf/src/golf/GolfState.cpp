@@ -127,6 +127,7 @@ namespace
 #include "TreeShader.inl"
 #include "BeaconShader.inl"
 #include "PostProcess.inl"
+#include "ShaderIncludes.inl"
 
     std::int32_t debugFlags = 0;
     bool useFreeCam = false;
@@ -1405,6 +1406,10 @@ void GolfState::loadAssets()
 
     //load materials
     std::fill(m_materialIDs.begin(), m_materialIDs.end(), -1);
+
+    m_resources.shaders.addInclude("WIND_BUFFER", WindBuffer.c_str());
+    m_resources.shaders.addInclude("RESOLUTION_BUFFER", ResolutionBuffer.c_str());
+    m_resources.shaders.addInclude("SCALE_BUFFER", ScaleBuffer.c_str());
 
     //cel shaded material
     m_resources.shaders.loadFromString(ShaderID::Cel, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n#define DITHERED\n" + wobble);

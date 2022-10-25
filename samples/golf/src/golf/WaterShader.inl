@@ -81,10 +81,8 @@ static const std::string WaterFragment = R"(
     uniform vec3 u_cameraWorldPosition;
     uniform float u_radius = 239.9;
 
-    layout (std140) uniform WindValues
-    {
-        vec4 u_windData; //dirX, strength, dirZ, elapsedTime
-    };
+    //dirX, strength, dirZ, elapsedTime
+    #include WIND_BUFFER
 
     layout (std140) uniform PixelScale
     {

@@ -84,10 +84,9 @@ static const std::string CelVertexShader = R"(
     uniform vec3 u_cameraWorldPosition;
 
     uniform sampler2D u_noiseTexture;
-    layout (std140) uniform WindValues
-    {
-        vec4 u_windData; //dirX, strength, dirZ, elapsedTime
-    };
+
+    //dirX, strength, dirZ, elapsedTime
+    #include WIND_BUFFER
 
     layout (std140) uniform ScaledResolution
     {
@@ -301,10 +300,9 @@ static const std::string CelFragmentShader = R"(
         float u_pixelScale;
     };
 
-    layout (std140) uniform WindValues
-    {
-        vec4 u_windData; //dirX, strength, dirZ, elapsedTime
-    };
+    //dirX, strength, dirZ, elapsedTime
+    #include WIND_BUFFER
+
 
 #if defined (RX_SHADOWS)
 #if !defined(MAX_CASCADES)

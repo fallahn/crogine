@@ -38,7 +38,6 @@ source distribution.
 #include "golf/KeyboardState.hpp"
 #include "golf/PracticeState.hpp"
 #include "golf/DrivingState.hpp"
-#include "golf/PuttingState.hpp"
 #include "golf/ClubhouseState.hpp"
 #include "golf/MessageOverlayState.hpp"
 #include "golf/TrophyState.hpp"
@@ -121,7 +120,6 @@ GolfGame::GolfGame()
     m_stateStack.registerState<TutorialState>(StateID::Tutorial, m_sharedData);
     m_stateStack.registerState<PracticeState>(StateID::Practice, m_sharedData);
     m_stateStack.registerState<DrivingState>(StateID::DrivingRange, m_sharedData);
-    m_stateStack.registerState<PuttingState>(StateID::PuttingRange, m_sharedData);
     m_stateStack.registerState<ClubhouseState>(StateID::Clubhouse, m_sharedData);
     m_stateStack.registerState<BilliardsState>(StateID::Billiards, m_sharedData);
     m_stateStack.registerState<TrophyState>(StateID::Trophy, m_sharedData);
@@ -493,9 +491,6 @@ bool GolfGame::initialise()
     m_sharedData.sharedResources->fonts.load(FontID::UI, "assets/golf/fonts/IBM_CGA.ttf");
     m_sharedData.sharedResources->fonts.load(FontID::Info, "assets/golf/fonts/MCPixel.otf");
     m_sharedData.sharedResources->fonts.load(FontID::Label, "assets/golf/fonts/ProggyClean.ttf");
-
-    const char* buns = "uniform float u_time;";
-    m_sharedData.sharedResources->shaders.addInclude("TIME", buns);
 
     m_sharedData.sharedResources->shaders.loadFromString(ShaderID::TutorialSlope, TutorialVertexShader, TutorialSlopeShader);
     m_sharedData.sharedResources->shaders.loadFromString(ShaderID::Beacon, BeaconVertex, BeaconFragment, "#define SPRITE\n");

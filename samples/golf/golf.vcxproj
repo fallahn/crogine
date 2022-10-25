@@ -495,8 +495,6 @@
     <ClCompile Include="src\golf\PocketBallSystem.cpp" />
     <ClCompile Include="src\golf\PracticeState.cpp" />
     <ClCompile Include="src\golf\PropFollowSystem.cpp" />
-    <ClCompile Include="src\golf\PuttingState.cpp" />
-    <ClCompile Include="src\golf\PuttingStateUI.cpp" />
     <ClCompile Include="src\golf\server\EightballDirector.cpp" />
     <ClCompile Include="src\golf\server\NineballDirector.cpp" />
     <ClCompile Include="src\golf\server\Server.cpp" />
@@ -635,6 +633,7 @@
     <None Include="src\golf\MinimapShader.inl" />
     <None Include="src\golf\PaletteSwap.inl" />
     <None Include="src\golf\PostProcess.inl" />
+    <None Include="src\golf\ShaderIncludes.inl" />
     <None Include="src\golf\ShadowMapping.inl" />
     <None Include="src\golf\TerrainShader.inl" />
     <None Include="src\golf\TransitionShader.inl" />

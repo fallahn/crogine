@@ -55,10 +55,7 @@ static const std::string BillboardVertexShader = R"(
     uniform vec4 u_clipPlane;
     uniform vec3 u_cameraWorldPosition;
 
-    layout (std140) uniform WindValues
-    {
-        vec4 u_windData; //dirX, strength, dirZ, elapsedTime
-    };
+    #include WIND_BUFFER
 
     layout (std140) uniform ScaledResolution
     {

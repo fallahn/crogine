@@ -146,10 +146,9 @@ static const std::string SlopeFragmentShader =
 R"(
     OUTPUT
 
-    layout (std140) uniform WindValues
-    {
-        vec4 u_windData; //dirX, strength, dirZ, elapsedTime
-    };    
+    //dirX, strength, dirZ, elapsedTime
+    #include WIND_BUFFER
+
     uniform float u_alpha;
 
     VARYING_IN vec4 v_colour;

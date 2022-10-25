@@ -55,10 +55,8 @@ R"(
     uniform float u_leafSize = 0.25; //world units, in this case metres
     uniform float u_randAmount = 0.2;
 
-    layout (std140) uniform WindValues
-    {
-        vec4 u_windData; //dirX, strength, dirZ, elapsedTime
-    };
+    //dirX, strength, dirZ, elapsedTime
+    #include WIND_BUFFER
 
     layout (std140) uniform ScaledResolution
     {
@@ -423,10 +421,8 @@ std::string BranchVertex = R"(
     uniform vec4 u_clipPlane;
     uniform vec3 u_cameraWorldPosition;
 
-    layout (std140) uniform WindValues
-    {
-        vec4 u_windData; //dirX, strength, dirZ, elapsedTime
-    };
+    //dirX, strength, dirZ, elapsedTime
+    #include WIND_BUFFER
 
     layout (std140) uniform ScaledResolution
     {

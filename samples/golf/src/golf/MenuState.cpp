@@ -94,6 +94,7 @@ namespace
 #include "CelShader.inl"
 #include "BillboardShader.inl"
 #include "CloudShader.inl"
+#include "ShaderIncludes.inl"
 
     //constexpr glm::vec3 CameraBasePosition(-22.f, 4.9f, 22.2f);
 }
@@ -763,6 +764,10 @@ void MenuState::loadAssets()
     {
         wobble = "#define WOBBLE\n";
     }
+
+    m_resources.shaders.addInclude("WIND_BUFFER", WindBuffer.c_str());
+    m_resources.shaders.addInclude("RESOLUTION_BUFFER", ResolutionBuffer.c_str());
+    m_resources.shaders.addInclude("SCALE_BUFFER", ScaleBuffer.c_str());
 
     m_resources.shaders.loadFromString(ShaderID::Cel, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n" + wobble);
     m_resources.shaders.loadFromString(ShaderID::CelTextured, CelVertexShader, CelFragmentShader, "#define TEXTURED\n" + wobble);

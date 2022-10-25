@@ -75,10 +75,8 @@ static const std::string ShadowVertex = R"(
     #endif
 
 #if defined(WIND_WARP) || defined(TREE_WARP) || defined(LEAF_SIZE)
-        layout (std140) uniform WindValues
-        {
-            vec4 u_windData; //dirX, strength, dirZ, elapsedTime
-        };
+        #include WIND_BUFFER
+
         const float MaxWindOffset = 0.2;
         const float Amp = 0.02; //metres
         uniform float u_leafSize = 0.25;

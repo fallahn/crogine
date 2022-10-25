@@ -104,6 +104,7 @@ namespace
 #include "CloudShader.inl"
 #include "BeaconShader.inl"
 #include "WaterShader.inl"
+#include "ShaderIncludes.inl"
 
 #ifdef CRO_DEBUG_
     std::int32_t debugFlags = 0;
@@ -672,6 +673,10 @@ void DrivingState::loadAssets()
     }
 
     //models
+    m_resources.shaders.addInclude("WIND_BUFFER", WindBuffer.c_str());
+    m_resources.shaders.addInclude("RESOLUTION_BUFFER", ResolutionBuffer.c_str());
+    m_resources.shaders.addInclude("SCALE_BUFFER", ScaleBuffer.c_str());
+
     m_resources.shaders.loadFromString(ShaderID::Cel, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n" + wobble);
     m_resources.shaders.loadFromString(ShaderID::CelTextured, CelVertexShader, CelFragmentShader, "#define TEXTURED\n" + wobble);
     m_resources.shaders.loadFromString(ShaderID::CelTexturedSkinned, CelVertexShader, CelFragmentShader, "#define FADE_INPUT\n#define TEXTURED\n#define SKINNED\n#define NOCHEX\n" + wobble);
