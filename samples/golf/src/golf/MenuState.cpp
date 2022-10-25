@@ -620,6 +620,14 @@ void MenuState::handleMessage(const cro::Message& msg)
             break;
         }
     }
+    else if (msg.id == MessageID::SystemMessage)
+    {
+        const auto& data = msg.getData<SystemEvent>();
+        if (data.type == SystemEvent::MenuChanged)
+        {
+            refreshUI();
+        }
+    }
 
     m_backgroundScene.forwardMessage(msg);
     m_avatarScene.forwardMessage(msg);

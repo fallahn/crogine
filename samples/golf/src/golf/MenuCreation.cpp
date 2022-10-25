@@ -794,6 +794,7 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
     m_sprites[SpriteID::Keyboard] = spriteSheet.getSprite("keyboard");
     m_sprites[SpriteID::ThumbBackground] = spriteSheet.getSprite("thumb_bg");
     m_sprites[SpriteID::CPUHighlight] = spriteSheet.getSprite("check_highlight");
+    m_sprites[SpriteID::PlayerEdit] = spriteSheet.getSprite("edit_button");
 
     //this entity has the player edit text ents added to it by updateLocalAvatars
     auto avatarEnt = m_uiScene.createEntity();
@@ -3537,6 +3538,15 @@ void MenuState::updateLocalAvatars(std::uint32_t mouseEnter, std::uint32_t mouse
 
 
         //add edit button
+        entity = m_uiScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition(localPos + EditButtonOffset + glm::vec3(-3.f, -10.f, -0.05f));
+        entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
+        entity.addComponent<cro::Drawable2D>();
+        entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::PlayerEdit];
+
+        m_avatarMenu.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+        m_avatarListEntities.push_back(entity);
+
         entity = m_uiScene.createEntity();
         entity.addComponent<cro::Transform>().setPosition(localPos + EditButtonOffset);
         entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");

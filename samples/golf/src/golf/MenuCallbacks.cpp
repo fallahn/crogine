@@ -30,6 +30,7 @@ source distribution.
 #include "MenuCallbacks.hpp"
 #include "MenuState.hpp"
 #include "CommandIDs.hpp"
+#include "MessageIDs.hpp"
 
 #include <crogine/ecs/components/Callback.hpp>
 #include <crogine/ecs/components/Transform.hpp>
@@ -77,6 +78,10 @@ void MenuCallback::operator()(cro::Entity e, float dt)
                 t.getComponent<cro::Callback>().active = true;
             };
             menuContext.uiScene->getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+            auto* msg = cro::App::getInstance().getMessageBus().post<SystemEvent>(MessageID::SystemMessage);
+            msg->type = SystemEvent::MenuChanged;
+            msg->data = menuData.targetMenu;
         }
     }
     else

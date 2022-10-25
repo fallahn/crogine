@@ -122,7 +122,8 @@ struct SystemEvent final
         PostProcessIndexChanged,
         StateRequest,
         InputActivated,
-        ShadowQualityChanged
+        ShadowQualityChanged,
+        MenuChanged
     }type = PostProcessToggled;
     std::int32_t data = -1;
 };

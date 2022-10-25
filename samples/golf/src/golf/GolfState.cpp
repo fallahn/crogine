@@ -348,14 +348,17 @@ bool GolfState::handleEvent(const cro::Event& evt)
 
     const auto scrollScores = [&](std::int32_t step)
     {
-        cro::Command cmd;
-        cmd.targetFlags = CommandID::UI::ScoreScroll;
-        cmd.action = [step](cro::Entity e, float)
+        if (m_holeData.size() > 9)
         {
-            e.getComponent<cro::Callback>().getUserData<std::int32_t>() = step;
-            e.getComponent<cro::Callback>().active = true;
-        };
-        m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+            cro::Command cmd;
+            cmd.targetFlags = CommandID::UI::ScoreScroll;
+            cmd.action = [step](cro::Entity e, float)
+            {
+                e.getComponent<cro::Callback>().getUserData<std::int32_t>() = step;
+                e.getComponent<cro::Callback>().active = true;
+            };
+            m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+        }
     };
 
     if (evt.type == SDL_KEYUP)

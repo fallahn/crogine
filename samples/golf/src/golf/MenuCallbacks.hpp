@@ -89,6 +89,7 @@ struct SpriteID final
         ArrowLeftHighlight,
         ArrowRightHighlight,
         CPUHighlight,
+        PlayerEdit,
 
         ButtonBanner,
         Cursor,
