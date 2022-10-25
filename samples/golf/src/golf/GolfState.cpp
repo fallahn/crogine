@@ -297,8 +297,9 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
                 {
                     ImGui::Text("Achievments disabled");
                 }
+                glm::vec2 size(m_leaderboardTexture.getTexture().getSize());
+                ImGui::Image(m_leaderboardTexture.getTexture(), { size.x, size.y }, { 0.f, 1.f }, { 1.f, 0.f });
             }
-
             ImGui::End();
         });
 
@@ -3186,7 +3187,10 @@ void GolfState::buildScene()
             cro::Colour c(amount, amount, amount); //additive blending so darker == more transparent
             e.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", c);
         }
-        e.getComponent<cro::Model>().setHidden(!m_sharedData.showPuttingPower || (m_currentPlayer.terrain != TerrainID::Green));
+        e.getComponent<cro::Model>().setHidden(
+            !m_sharedData.showPuttingPower 
+            || (m_currentPlayer.terrain != TerrainID::Green)
+            || m_sharedData.localConnectionData.playerData[m_currentPlayer.player].isCPU);
     };
     
     verts.clear();

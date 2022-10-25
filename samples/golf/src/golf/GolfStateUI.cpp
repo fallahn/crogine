@@ -1598,7 +1598,7 @@ void GolfState::updateScoreboard()
             }
         }
         ents[0].getComponent<cro::Text>().setString(nameString);
-        leaderboardEntries.emplace_back(ents[0].getComponent<cro::Transform>().getPosition() - glm::vec3(14.f, 0.f, 0.f), nameString);
+        leaderboardEntries.emplace_back(ents[0].getComponent<cro::Transform>().getPosition() + glm::vec3(2.f, 0.f, 0.f), nameString);
 
         //score columns
         for (auto i = 1u; i < ents.size() - 1; ++i)
