@@ -695,6 +695,7 @@ void PlaylistState::loadAssets()
     m_resolutionBuffer.addShader(*shader);
     m_windBuffer.addShader(*shader);
     m_materialIDs[MaterialID::Branch] = m_resources.materials.add(*shader);
+    m_resources.materials.get(m_materialIDs[MaterialID::Branch]).setProperty("u_noiseTexture", noiseTex);
 
     m_resources.shaders.loadFromString(ShaderID::TreesetLeaf, BushVertex, BushGeom, BushFragment, "#define POINTS\n#define INSTANCING\n#define HQ\n" + wobble);
     shader = &m_resources.shaders.get(ShaderID::TreesetLeaf);
@@ -707,6 +708,7 @@ void PlaylistState::loadAssets()
     shader = &m_resources.shaders.get(ShaderID::TreesetShadow);
     m_windBuffer.addShader(*shader);
     m_materialIDs[MaterialID::BranchShadow] = m_resources.materials.add(*shader);
+    m_resources.materials.get(m_materialIDs[MaterialID::BranchShadow]).setProperty("u_noiseTexture", noiseTex);
 
     std::string alphaClip = m_sharedData.hqShadows ? "#define ALPHA_CLIP\n" : "";
     m_resources.shaders.loadFromString(ShaderID::TreesetLeafShadow, ShadowVertex, ShadowGeom, ShadowFragment, "#define POINTS\n #define INSTANCING\n#define LEAF_SIZE\n" + alphaClip + wobble);

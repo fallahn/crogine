@@ -111,53 +111,7 @@ static const std::string CelVertexShader = R"(
 #endif
 
 
-    struct WindResult
-    {
-        vec2 highFreq;
-        vec2 lowFreq;
-        float strength;
-    };
-
-    const float hFreq = 0.05;
-    const float hMagnitude = 0.08;
-    const float lFreq = 0.008;
-    const float lMagnitude = 0.2;
-    const float dirMagnitude = 0.4;
-    WindResult getWindData(vec2 coord, vec2 coord2) //coord 2 is world pos
-    {
-        WindResult retVal = WindResult(vec2(0.0), vec2(0.0), 0.0);
-        vec2 uv = coord;
-        uv.x += u_windData.w * hFreq;
-        retVal.highFreq.x = TEXTURE(u_noiseTexture, uv).r;
-
-        uv = coord;
-        uv.y += u_windData.w * hFreq;
-        retVal.highFreq.y = TEXTURE(u_noiseTexture, uv).r;
-
-        uv = coord2;
-        uv.x -= u_windData.w * lFreq;
-        retVal.lowFreq.x = TEXTURE(u_noiseTexture, uv).r;
-
-        uv = coord2;
-        uv.y -= u_windData.w * lFreq;
-        retVal.lowFreq.y = TEXTURE(u_noiseTexture, uv).r;
-
-
-        retVal.highFreq *= 2.0;
-        retVal.highFreq -= 1.0;
-        retVal.highFreq *= u_windData.y;
-        retVal.highFreq *= hMagnitude;
-
-        retVal.lowFreq *= 2.0;
-        retVal.lowFreq -= 1.0;
-        retVal.lowFreq *= (0.6 + (0.4 * u_windData.y));
-        retVal.lowFreq *= lMagnitude;
-
-        retVal.strength = u_windData.y;
-        retVal.strength *= dirMagnitude;
-
-        return retVal;
-    }
+#include WIND_CALC
 
     vec3 decodeVector(sampler2D source, vec2 coord)
     {

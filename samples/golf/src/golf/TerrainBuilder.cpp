@@ -434,9 +434,11 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
                         {
                             auto material = resources.materials.get(branchMaterialID);
                             applyMaterialData(shrubDef, material, idx);
+                            material.setProperty("u_noiseTexture", noiseTex);
                             childEnt.getComponent<cro::Model>().setMaterial(idx, material);
 
                             material = resources.materials.get(treeShadowMaterialID);
+                            material.setProperty("u_noiseTexture", noiseTex);
                             applyMaterialData(shrubDef, material, idx);
                             childEnt.getComponent<cro::Model>().setShadowMaterial(idx, material);
                         }

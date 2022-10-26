@@ -344,10 +344,14 @@ void BushState::loadAssets()
     shaderUniform.colour = shader->getUniformID("u_colour");
     shaderUniform.targetHeight = shader->getUniformID("u_targetHeight");
 
+    auto& noiseTex = m_resources.textures.get("assets/golf/images/wind.png");
+    noiseTex.setRepeated(true);
+    noiseTex.setSmooth(true);
 
     m_resources.shaders.loadFromString(BushShaderID::Branch, BranchVertex, BranchFragment, "#define INSTANCING\n#define ALPHA_CLIP\n");
     shader = &m_resources.shaders.get(BushShaderID::Branch);
     branchMaterial = m_resources.materials.add(*shader);
+    m_resources.materials.get(branchMaterial).setProperty("u_noiseTexture", noiseTex);
 
     m_windBuffer.addShader(*shader);
     m_resolutionBuffer.addShader(*shader);

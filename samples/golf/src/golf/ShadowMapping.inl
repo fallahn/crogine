@@ -78,7 +78,7 @@ static const std::string ShadowVertex = R"(
     #include WIND_BUFFER
 
         const float MaxWindOffset = 0.2;
-        const float Amp = 0.02; //metres
+
         uniform float u_leafSize = 0.25;
         uniform sampler2D u_noiseTexture;
     #endif
@@ -100,54 +100,8 @@ static const std::string ShadowVertex = R"(
             return vec;
         }
 
-    #if defined(WIND_WARP)
-        struct WindResult
-        {
-            vec2 highFreq;
-            vec2 lowFreq;
-            float strength;
-        };
-
-        const float hFreq = 0.05;
-        const float hMagnitude = 0.08;
-        const float lFreq = 0.008;
-        const float lMagnitude = 0.2;
-        const float dirMagnitude = 0.4;
-        WindResult getWindData(vec2 coord, vec2 coord2) //coord2 is base position
-        {
-            WindResult retVal = WindResult(vec2(0.0), vec2(0.0), 0.0);
-            vec2 uv = coord;
-            uv.x += u_windData.w * hFreq;
-            retVal.highFreq.x = TEXTURE(u_noiseTexture, uv).r;
-
-            uv = coord;
-            uv.y += u_windData.w * hFreq;
-            retVal.highFreq.y = TEXTURE(u_noiseTexture, uv).r;
-
-            uv = coord2;
-            uv.x -= u_windData.w * lFreq;
-            retVal.lowFreq.x = TEXTURE(u_noiseTexture, uv).r;
-
-            uv = coord2;
-            uv.y -= u_windData.w * lFreq;
-            retVal.lowFreq.y = TEXTURE(u_noiseTexture, uv).r;
-
-
-            retVal.highFreq *= 2.0;
-            retVal.highFreq -= 1.0;
-            retVal.highFreq *= u_windData.y;
-            retVal.highFreq *= hMagnitude;
-
-            retVal.lowFreq *= 2.0;
-            retVal.lowFreq -= 1.0;
-            retVal.lowFreq *= (0.6 + (0.4 * u_windData.y));
-            retVal.lowFreq *= lMagnitude;
-
-            retVal.strength = u_windData.y;
-            retVal.strength *= dirMagnitude;
-
-            return retVal;
-        }
+    #if defined(WIND_WARP) || defined (TREE_WARP)
+    #include WIND_CALC
     #endif
 
 
@@ -200,28 +154,25 @@ static const std::string ShadowVertex = R"(
             vec3 windDir = vec3(u_windData.x, 0.0, u_windData.z) * windResult.strength * vertexStrength.b;
             //wind dir is added in world space (below)
     #elif defined(TREE_WARP)
-        
 
-    //red channel is high freq done in local space
+            WindResult windResult = getWindData(position.xz, worldMatrix[3].xz);
 
-            float time = (u_windData.w * 15.0) + gl_InstanceID + gl_VertexID;
-            float highFreq = sin(time) * Amp * a_colour.r;
-            position.y += highFreq * (0.2 + (0.8 * u_windData.y));
+            vec3 vertexStrength = a_colour.rgb;
+            //multiply high and low frequency by vertex colours
+            //note that in tree models red/green ARE SWAPPED >.<
+            windResult.highFreq *= vertexStrength.r;
+            windResult.lowFreq *= vertexStrength.g;
 
-    //blue channel is 'bend' in world space
+            //apply high frequency and low frequency in local space
+            position.x += windResult.lowFreq.x + windResult.highFreq.x;
+            position.z += windResult.lowFreq.y + windResult.highFreq.y;
+
+            //multiply wind direction by wind strength
+            vec3 windDir = vec3(u_windData.x, 0.0, u_windData.z) * windResult.strength * vertexStrength.b;
+            //wind dir is added in world space (below)
+
             vec4 worldPosition = worldMatrix * position;
-
-            time = (u_windData.w * 5.0) + gl_InstanceID;
-            float x = sin(time * 2.0) / 8.0;
-            float y = cos(time) / 2.0;
-            vec3 windOffset = vec3(x, 0.0, x + y) * a_colour.b * 0.5;
-
-
-            vec3 windDir = normalize(vec3(u_windData.x, 0.f, u_windData.z));
-            float dirStrength = a_colour.b;
-
-            windOffset += windDir * u_windData.y * dirStrength;// * 2.0;
-            worldPosition.xyz += windOffset * MaxWindOffset * u_windData.y;
+            worldPosition.xyz += windDir;
 
             gl_Position = u_projectionMatrix * u_viewMatrix * worldPosition;
             gl_PointSize = 40.0;

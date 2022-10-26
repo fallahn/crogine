@@ -362,6 +362,8 @@ std::string BranchVertex = R"(
     uniform vec4 u_clipPlane;
     uniform vec3 u_cameraWorldPosition;
 
+    uniform sampler2D u_noiseTexture;
+
 //dirX, strength, dirZ, elapsedTime
 #include WIND_BUFFER
 
@@ -372,8 +374,10 @@ std::string BranchVertex = R"(
     VARYING_OUT vec3 v_normal;
     VARYING_OUT float v_darkenAmount;
 
-    const float MaxWindOffset = 0.2;
-    const float Amp = 0.02; //metres
+#include WIND_CALC
+
+    //const float MaxWindOffset = 0.2;
+    //const float Amp = 0.02; //metres
 
     void main()
     {
@@ -385,27 +389,25 @@ std::string BranchVertex = R"(
         mat3 normalMatrix = u_normalMatrix;
     #endif
 
-//red channel is high freq done in local space
-        vec4 position = a_position;
+    vec4 position = a_position;
+    WindResult windResult = getWindData(position.xz, worldMatrix[3].xz);
 
-        float time = (u_windData.w * 15.0) + gl_InstanceID + gl_VertexID;
-        float highFreq = sin(time) * Amp * a_colour.r;
-        position.y += highFreq * (0.2 + (0.8 * u_windData.y));
+    vec3 vertexStrength = a_colour.rgb;
+    //multiply high and low frequency by vertex colours
+    //note that in tree models red/green ARE SWAPPED >.<
+    windResult.highFreq *= vertexStrength.r;
+    windResult.lowFreq *= vertexStrength.g;
 
-//blue channel is 'bend' in world space
-        vec4 worldPosition = worldMatrix * position;
+    //apply high frequency and low frequency in local space
+    position.x += windResult.lowFreq.x + windResult.highFreq.x;
+    position.z += windResult.lowFreq.y + windResult.highFreq.y;
 
-        time = (u_windData.w * 5.0) + gl_InstanceID;
-        float x = sin(time * 2.0) / 8.0;
-        float y = cos(time) / 2.0;
-        vec3 windOffset = vec3(x, 0.0, x + y) * a_colour.b * 0.5;
+    //multiply wind direction by wind strength
+    vec3 windDir = vec3(u_windData.x, 0.0, u_windData.z) * windResult.strength * vertexStrength.b;
+    //wind dir is added in world space (below)
 
-
-        vec3 windDir = normalize(vec3(u_windData.x, 0.f, u_windData.z));
-        float dirStrength = a_colour.b;
-
-        windOffset += windDir * u_windData.y * dirStrength;// * 2.0;
-        worldPosition.xyz += windOffset * MaxWindOffset * u_windData.y;
+    vec4 worldPosition = worldMatrix * position;
+    worldPosition.xyz += windDir;
 
 
 #if defined(WOBBLE)

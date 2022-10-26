@@ -123,6 +123,60 @@ static inline const std::string HSV = R"(
     }
 )";
 
+//requires u_noiseTexture containing 2D noise
+//and u_windData from WIND_BUFFER
+//localPos is local position of vertex
+//world pos is the root pos of the current mesh
+static inline const std::string WindCalc = R"(
+    struct WindResult
+    {
+        vec2 highFreq;
+        vec2 lowFreq;
+        float strength;
+    };
+
+    const float hFreq = 0.05;
+    const float hMagnitude = 0.08;
+    const float lFreq = 0.008;
+    const float lMagnitude = 0.2;
+    const float dirMagnitude = 0.3;
+    WindResult getWindData(vec2 localPos, vec2 worldPos)
+    {
+        WindResult retVal = WindResult(vec2(0.0), vec2(0.0), 0.0);
+        vec2 uv = localPos;
+        uv.x += u_windData.w * hFreq;
+        retVal.highFreq.x = TEXTURE(u_noiseTexture, uv).r;
+
+        uv = localPos;
+        uv.y += u_windData.w * hFreq;
+        retVal.highFreq.y = TEXTURE(u_noiseTexture, uv).r;
+
+        uv = worldPos;
+        uv.x -= u_windData.w * lFreq;
+        retVal.lowFreq.x = TEXTURE(u_noiseTexture, uv).r;
+
+        uv = worldPos;
+        uv.y -= u_windData.w * lFreq;
+        retVal.lowFreq.y = TEXTURE(u_noiseTexture, uv).r;
+
+
+        retVal.highFreq *= 2.0;
+        retVal.highFreq -= 1.0;
+        retVal.highFreq *= u_windData.y;
+        retVal.highFreq *= hMagnitude;
+
+        retVal.lowFreq *= 2.0;
+        retVal.lowFreq -= 1.0;
+        retVal.lowFreq *= (0.6 + (0.4 * u_windData.y));
+        retVal.lowFreq *= lMagnitude;
+
+        retVal.strength = u_windData.y;
+        retVal.strength *= dirMagnitude;
+
+        return retVal;
+    }
+)";
+
 static inline const std::unordered_map<std::string, const char*> IncludeMappings =
 {
     std::make_pair("WIND_BUFFER", WindBuffer.c_str()),
@@ -131,4 +185,5 @@ static inline const std::unordered_map<std::string, const char*> IncludeMappings
     std::make_pair("BAYER_MATRIX", BayerMatrix.c_str()),
     std::make_pair("RANDOM", Random.c_str()),
     std::make_pair("HSV", HSV.c_str()),
+    std::make_pair("WIND_CALC", WindCalc.c_str()),
 };
