@@ -32,6 +32,8 @@ source distribution.
 #include <crogine/graphics/Image.hpp>
 #include <crogine/core/String.hpp>
 
+#include <array>
+
 //just to detect client/server version mismatch
 //(terrain data changed between 100 -> 110)
 //(model format changed between 120 -> 130)
