@@ -30,6 +30,7 @@ source distribution.
 #pragma once
 
 #include <string>
+#include <unordered_map>
 
 static inline const std::string WindBuffer = R"(
     layout (std140) uniform WindValues
@@ -49,3 +50,11 @@ static inline const std::string ScaleBuffer = R"(
     {
         float u_pixelScale;
     };)";
+
+
+static inline const std::unordered_map<std::string, const char*> IncludeMappings =
+{
+    std::make_pair("WIND_BUFFER", WindBuffer.c_str()),
+    std::make_pair("RESOLUTION_BUFFER", ResolutionBuffer.c_str()),
+    std::make_pair("SCALE_BUFFER", ScaleBuffer.c_str()),
+};

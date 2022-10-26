@@ -111,11 +111,7 @@ R"(
     uniform sampler2D u_texture;
     uniform vec2 u_worldCentre = vec2(0.0);
 
-    layout (std140) uniform PixelScale
-    {
-        float u_pixelScale;
-    };
-
+#include SCALE_BUFFER
 
     VARYING_IN vec3 v_worldPos;
     VARYING_IN vec2 v_texCoord;

@@ -317,9 +317,10 @@ void BushState::loadAssets()
 
     std::string hq = m_sharedData.treeQuality == SharedStateData::High ? "#define HQ\n" : "";
 
-    m_resources.shaders.addInclude("WIND_BUFFER", WindBuffer.c_str());
-    m_resources.shaders.addInclude("RESOLUTION_BUFFER", ResolutionBuffer.c_str());
-    m_resources.shaders.addInclude("SCALE_BUFFER", ScaleBuffer.c_str());
+    for (const auto& [name, str] : IncludeMappings)
+    {
+        m_resources.shaders.addInclude(name, str);
+    }
 
     m_resources.shaders.loadFromString(BushShaderID::Bush, BushVertex, BushFragment, "#define INSTANCING\n" + hq);
     auto* shader = &m_resources.shaders.get(BushShaderID::Bush);

@@ -85,14 +85,10 @@ static const std::string CelVertexShader = R"(
 
     uniform sampler2D u_noiseTexture;
 
-    //dirX, strength, dirZ, elapsedTime
-    #include WIND_BUFFER
+//dirX, strength, dirZ, elapsedTime
+#include WIND_BUFFER
 
-    layout (std140) uniform ScaledResolution
-    {
-        vec2 u_scaledResolution;
-        float u_nearFadeDistance;
-    };
+#include RESOLUTION_BUFFER
 
     VARYING_OUT float v_ditherAmount;
     VARYING_OUT vec3 v_normal;
@@ -295,13 +291,10 @@ static const std::string CelVertexShader = R"(
 static const std::string CelFragmentShader = R"(
     uniform vec3 u_lightDirection;
 
-    layout (std140) uniform PixelScale
-    {
-        float u_pixelScale;
-    };
+#include SCALE_BUFFER
 
-    //dirX, strength, dirZ, elapsedTime
-    #include WIND_BUFFER
+//dirX, strength, dirZ, elapsedTime
+#include WIND_BUFFER
 
 
 #if defined (RX_SHADOWS)

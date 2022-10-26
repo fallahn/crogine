@@ -81,13 +81,10 @@ static const std::string WaterFragment = R"(
     uniform vec3 u_cameraWorldPosition;
     uniform float u_radius = 239.9;
 
-    //dirX, strength, dirZ, elapsedTime
-    #include WIND_BUFFER
+//dirX, strength, dirZ, elapsedTime
+#include WIND_BUFFER
 
-    layout (std140) uniform PixelScale
-    {
-        float u_pixelScale;
-    };
+#include SCALE_BUFFER
 
     VARYING_IN vec3 v_normal;
     VARYING_IN vec2 v_texCoord;
@@ -98,7 +95,7 @@ static const std::string WaterFragment = R"(
 
     VARYING_IN vec2 v_vertDistance;
 
-    // pixels per metre
+    //pixels per metre
     vec2 PixelCount = vec2(320.0 * 2.0, 200.0 * 2.0);
 
     const vec3 WaterColour = vec3(0.02, 0.078, 0.578);

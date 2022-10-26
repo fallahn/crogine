@@ -74,14 +74,14 @@ static const std::string ShadowVertex = R"(
         uniform float u_offsetMultiplier;
     #endif
 
-#if defined(WIND_WARP) || defined(TREE_WARP) || defined(LEAF_SIZE)
-        #include WIND_BUFFER
+    #if defined(WIND_WARP) || defined(TREE_WARP) || defined(LEAF_SIZE)
+    #include WIND_BUFFER
 
         const float MaxWindOffset = 0.2;
         const float Amp = 0.02; //metres
         uniform float u_leafSize = 0.25;
         uniform sampler2D u_noiseTexture;
-#endif
+    #endif
 
     #if defined (MOBILE)
         VARYING_OUT vec4 v_position;

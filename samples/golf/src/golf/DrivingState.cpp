@@ -672,11 +672,12 @@ void DrivingState::loadAssets()
         wobble = "#define WOBBLE\n";
     }
 
-    //models
-    m_resources.shaders.addInclude("WIND_BUFFER", WindBuffer.c_str());
-    m_resources.shaders.addInclude("RESOLUTION_BUFFER", ResolutionBuffer.c_str());
-    m_resources.shaders.addInclude("SCALE_BUFFER", ScaleBuffer.c_str());
+    for (const auto& [name, str] : IncludeMappings)
+    {
+        m_resources.shaders.addInclude(name, str);
+    }
 
+    //models
     m_resources.shaders.loadFromString(ShaderID::Cel, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n" + wobble);
     m_resources.shaders.loadFromString(ShaderID::CelTextured, CelVertexShader, CelFragmentShader, "#define TEXTURED\n" + wobble);
     m_resources.shaders.loadFromString(ShaderID::CelTexturedSkinned, CelVertexShader, CelFragmentShader, "#define FADE_INPUT\n#define TEXTURED\n#define SKINNED\n#define NOCHEX\n" + wobble);

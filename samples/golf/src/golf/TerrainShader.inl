@@ -56,11 +56,7 @@ static const std::string TerrainVertexShader = R"(
     uniform float u_morphTime;
     uniform vec3 u_cameraWorldPosition;
 
-    layout (std140) uniform ScaledResolution
-    {
-        vec2 u_scaledResolution;
-        float u_fadeDistance;
-    };
+#include RESOLUTION_BUFFER
 
     VARYING_OUT vec3 v_normal;
     VARYING_OUT vec4 v_colour;

@@ -76,6 +76,7 @@ namespace
 #include "golf/TerrainShader.inl"
 #include "golf/BeaconShader.inl"
 #include "golf/PostProcess.inl"
+#include "golf/ShaderIncludes.inl"
 #include "golf/RandNames.hpp"
 
     struct ShaderDescription final
@@ -491,6 +492,11 @@ bool GolfGame::initialise()
     m_sharedData.sharedResources->fonts.load(FontID::UI, "assets/golf/fonts/IBM_CGA.ttf");
     m_sharedData.sharedResources->fonts.load(FontID::Info, "assets/golf/fonts/MCPixel.otf");
     m_sharedData.sharedResources->fonts.load(FontID::Label, "assets/golf/fonts/ProggyClean.ttf");
+
+    for (const auto& [name, str] : IncludeMappings)
+    {
+        m_sharedData.sharedResources->shaders.addInclude(name, str);
+    }
 
     m_sharedData.sharedResources->shaders.loadFromString(ShaderID::TutorialSlope, TutorialVertexShader, TutorialSlopeShader);
     m_sharedData.sharedResources->shaders.loadFromString(ShaderID::Beacon, BeaconVertex, BeaconFragment, "#define SPRITE\n");

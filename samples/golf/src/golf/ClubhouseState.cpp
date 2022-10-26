@@ -619,9 +619,10 @@ void ClubhouseState::loadResources()
 {
     std::fill(m_materialIDs.begin(), m_materialIDs.end(), -1);
 
-    m_resources.shaders.addInclude("WIND_BUFFER", WindBuffer.c_str());
-    m_resources.shaders.addInclude("RESOLUTION_BUFFER", ResolutionBuffer.c_str());
-    m_resources.shaders.addInclude("SCALE_BUFFER", ScaleBuffer.c_str());
+    for (const auto& [name, str] : IncludeMappings)
+    {
+        m_resources.shaders.addInclude(name, str);
+    }
 
     m_resources.shaders.loadFromString(ShaderID::Course, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define RX_SHADOWS\n");
     auto* shader = &m_resources.shaders.get(ShaderID::Course);

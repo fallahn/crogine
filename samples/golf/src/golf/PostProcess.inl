@@ -54,15 +54,8 @@ static const std::string NoiseFragment =
 R"(
     uniform sampler2D u_texture;
 
-    layout (std140) uniform WindValues
-    {
-        vec4 u_windData; //dirX, strength, dirZ, elapsedTime
-    };
-
-    layout (std140) uniform PixelScale
-    {
-        float u_pixelScale;
-    };
+#include WIND_BUFFER
+#include SCALE_BUFFER
 
     VARYING_IN vec4 v_colour;
     VARYING_IN vec2 v_texCoord;

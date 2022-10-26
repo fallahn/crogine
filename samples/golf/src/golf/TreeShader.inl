@@ -55,14 +55,10 @@ R"(
     uniform float u_leafSize = 0.25; //world units, in this case metres
     uniform float u_randAmount = 0.2;
 
-    //dirX, strength, dirZ, elapsedTime
-    #include WIND_BUFFER
+//dirX, strength, dirZ, elapsedTime
+#include WIND_BUFFER
 
-    layout (std140) uniform ScaledResolution
-    {
-        vec2 u_scaledResolution;
-        float u_nearFadeDistance;
-    };
+#include RESOLUTION_BUFFER
 
     out vData
     {
@@ -292,10 +288,7 @@ R"(
     uniform vec3 u_lightDirection;
     uniform vec3 u_colour = vec3(1.0);
 
-    layout (std140) uniform PixelScale
-    {
-        float u_pixelScale;
-    };
+#include SCALE_BUFFER
 
     in vData
     {
@@ -421,14 +414,10 @@ std::string BranchVertex = R"(
     uniform vec4 u_clipPlane;
     uniform vec3 u_cameraWorldPosition;
 
-    //dirX, strength, dirZ, elapsedTime
-    #include WIND_BUFFER
+//dirX, strength, dirZ, elapsedTime
+#include WIND_BUFFER
 
-    layout (std140) uniform ScaledResolution
-    {
-        vec2 u_scaledResolution;
-        float u_nearFadeDistance;
-    };
+#include RESOLUTION_BUFFER
 
     VARYING_OUT float v_ditherAmount;
     VARYING_OUT vec2 v_texCoord;
@@ -507,10 +496,7 @@ std::string BranchFragment = R"(
     uniform sampler2D u_diffuseMap;
     uniform vec3 u_lightDirection;
 
-    layout (std140) uniform PixelScale
-    {
-        float u_pixelScale;
-    };
+#include SCALE_BUFFER
 
     VARYING_IN float v_ditherAmount;
     VARYING_IN vec2 v_texCoord;

@@ -55,13 +55,8 @@ static const std::string BillboardVertexShader = R"(
     uniform vec4 u_clipPlane;
     uniform vec3 u_cameraWorldPosition;
 
-    #include WIND_BUFFER
-
-    layout (std140) uniform ScaledResolution
-    {
-        vec2 u_scaledResolution;
-        float u_nearFadeDistance;
-    };
+#include WIND_BUFFER
+#include RESOLUTION_BUFFER
 
     VARYING_OUT LOW vec4 v_colour;
     VARYING_OUT MED vec2 v_texCoord0;
@@ -227,10 +222,7 @@ static const std::string BillboardFragmentShader = R"(
 
     uniform sampler2D u_diffuseMap;
 
-    layout (std140) uniform PixelScale
-    {
-        float u_pixelScale;
-    };
+    #include SCALE_BUFFER
 
     VARYING_IN LOW vec4 v_colour;
     VARYING_IN MED vec2 v_texCoord0;

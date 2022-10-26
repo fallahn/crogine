@@ -85,6 +85,7 @@ namespace
 {
 #include "WireframeShader.inl"
 #include "CelShader.inl"
+#include "ShaderIncludes.inl"
 
     constexpr float MaxShadowDistance = 12.f;
     constexpr float ShadowExpansion = 10.f;
@@ -643,6 +644,11 @@ void BilliardsState::loadAssets()
     }
 
     std::fill(m_materialIDs.begin(), m_materialIDs.end(), -1);
+
+    for (const auto& [name, str] : IncludeMappings)
+    {
+        m_resources.shaders.addInclude(name, str);
+    }
 
     m_resources.shaders.loadFromString(ShaderID::Wireframe, WireframeVertex, WireframeFragment, "#define DASHED\n");
     auto* shader = &m_resources.shaders.get(ShaderID::Wireframe);
