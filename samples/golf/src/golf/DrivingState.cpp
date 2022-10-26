@@ -118,6 +118,8 @@ namespace
 #define DEBUG_DRAW false
 #endif
 
+    float playerXScale = 1.f;
+
     static constexpr glm::vec3 CameraPosition = PlayerPosition + glm::vec3(0.f, CameraStrokeHeight, CameraStrokeOffset);
 
     static constexpr glm::vec2 BillboardChunk(40.f, 50.f);
@@ -1791,6 +1793,7 @@ void DrivingState::createPlayer(cro::Entity courseEnt)
     {
         entity.getComponent<cro::Transform>().setScale({ -1.f, 0.f, 0.f });
         entity.getComponent<cro::Model>().setFacing(cro::Model::Facing::Back);
+        playerXScale = -1.f; //used to flip the hook/slice message
 
         m_clubModels[ClubModel::Wood].getComponent<cro::Model>().setFacing(cro::Model::Facing::Back);
         m_clubModels[ClubModel::Iron].getComponent<cro::Model>().setFacing(cro::Model::Facing::Back);
@@ -2469,6 +2472,10 @@ void DrivingState::hitBall()
     msg->club = static_cast<std::uint8_t>(m_inputParser.getClub());
 
     cro::GameController::rumbleStart(m_sharedData.inputBinding.controllerID, 50000, 35000, 200);
+
+    //from here the hook value is just used for UI feedback
+    //so we want to flip it as appropriate with the current avatar
+    hook *= playerXScale;
 
     //check if we hooked/sliced
     if (hook < -0.15f)
