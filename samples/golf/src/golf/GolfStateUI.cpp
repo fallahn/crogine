@@ -1084,8 +1084,10 @@ void GolfState::showCountdown(std::uint8_t seconds)
     auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
 
     auto entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 200.f + scoreboardExpansion, 10.f, 0.23f }); //attaches to scoreboard which is fixed size
+    entity.addComponent<cro::Transform>().setPosition({ 200.f + scoreboardExpansion, 10.f, 0.23f }); //attaches to scoreboard
     entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<UIElement>().absolutePosition = { 200.f, 10.f };
+    entity.getComponent<UIElement>().resizeCallback = [](cro::Entity e) {e.getComponent<cro::Transform>().move({ scoreboardExpansion, 0.f }); };
     entity.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
     entity.getComponent<cro::Text>().setFillColour(LeaderboardTextLight);
     entity.addComponent<cro::Callback>().active = true;
@@ -1328,6 +1330,16 @@ void GolfState::createScoreboard()
     {
         auto baseSize = glm::vec2(cro::App::getWindow().getSize()) / m_viewScale;
         stretchToScreen(e, bgSprite, baseSize);
+        
+        //refreshes the cropping area
+        cro::Command cmd;
+        cmd.targetFlags = CommandID::UI::ScoreScroll;
+        cmd.action = [](cro::Entity f, float)
+        {
+            f.getComponent<cro::Callback>().getUserData<std::int32_t>() = 0;
+            f.getComponent<cro::Callback>().active = true;
+        };
+        m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
     };
     entity.getComponent<UIElement>().resizeCallback(entity);
 
@@ -2332,7 +2344,7 @@ void GolfState::buildTrophyScene()
             if (Social::isAvailable())
             {
                 entity = m_uiScene.createEntity();
-                entity.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, bounds.height });
+                entity.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, bounds.height, 0.1f });
                 entity.addComponent<cro::Drawable2D>();
                 entity.addComponent<cro::Sprite>(m_sharedData.nameTextures[0].getTexture());
                 bounds = { 0.f, LabelTextureSize.y - LabelIconSize.y, LabelIconSize.x, LabelIconSize.y };
