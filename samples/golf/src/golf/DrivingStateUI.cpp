@@ -309,7 +309,45 @@ void DrivingState::createUI()
     //ui is attached to this for relative scaling
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(UIHiddenPosition);
+    entity.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::Root;
+    entity.addComponent<cro::Callback>().setUserData<std::pair<std::int32_t, float>>(0, 0.f);
+    entity.getComponent<cro::Callback>().function =
+        [](cro::Entity e, float dt)
+    {
+        auto& [dir, currTime] = e.getComponent<cro::Callback>().getUserData<std::pair<std::int32_t, float>>();
+
+        if (dir == 0)
+        {
+            //grow
+            currTime = std::min(1.f, currTime + dt);
+            const float scale = cro::Util::Easing::easeOutElastic(currTime);
+
+            e.getComponent<cro::Transform>().setScale({ scale, scale });
+
+            if (currTime == 1)
+            {
+                dir = 1;
+                e.getComponent<cro::Callback>().active = false;
+            }
+        }
+        else
+        {
+            //shrink
+            currTime = std::max(0.f, currTime - (dt * 2.f));
+            const float scale = cro::Util::Easing::easeOutBack(currTime);
+
+            e.getComponent<cro::Transform>().setScale({ scale, 1.f });
+
+            if (currTime == 0)
+            {
+                dir = 0;
+                e.getComponent<cro::Callback>().active = false;
+            }
+        }
+
+    };
+
     infoEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     auto rootNode = entity;
 

@@ -1890,7 +1890,6 @@ void DrivingState::createPlayer(cro::Entity courseEnt)
     auto playerEnt = entity;
 
     //displays the stroke direction
-    //TODO do we want to fade the player model here?
     auto pos = PlayerPosition;
     pos.y += 0.01f;
     entity = m_gameScene.createEntity();
@@ -1910,7 +1909,7 @@ void DrivingState::createPlayer(cro::Entity courseEnt)
 
         playerEnt.getComponent<cro::Model>().setMaterialProperty(0, "u_fadeAmount", alpha);
     };
-    entity.addComponent<cro::CommandTarget>().ID = CommandID::StrokeIndicator;
+    //entity.addComponent<cro::CommandTarget>().ID = CommandID::StrokeIndicator;
 
     auto meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_LINE_STRIP));
     material = m_resources.materials.get(m_materialIDs[MaterialID::Wireframe]);
@@ -1945,7 +1944,7 @@ void DrivingState::createPlayer(cro::Entity courseEnt)
 
     entity.getComponent<cro::Model>().setHidden(true);
     entity.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniGreen | RenderFlags::MiniMap));
-
+    auto indicatorEnt = entity;
 
     //a 'fan' which shows max rotation
     meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_TRIANGLE_FAN));
@@ -1954,8 +1953,53 @@ void DrivingState::createPlayer(cro::Entity courseEnt)
     entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), material);
     entity.addComponent<cro::Transform>().setPosition(pos);
     entity.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, 90.f * cro::Util::Const::degToRad);
+    entity.getComponent<cro::Transform>().setScale({ 1.f, 1.f, 0.f });
     entity.getComponent<cro::Model>().setHidden(true);
     entity.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniGreen | RenderFlags::MiniMap));
+
+    struct FanData final
+    {
+        std::int32_t dir = 1;
+        float progress = 0.f;
+    };
+    entity.addComponent<cro::Callback>().setUserData<FanData>();
+    entity.getComponent<cro::Callback>().function =
+        [indicatorEnt](cro::Entity e, float dt) mutable
+    {
+        const float Speed = dt * 3.f;
+
+        auto& [dir, progress] = e.getComponent<cro::Callback>().getUserData<FanData>();
+        if (dir == 1)
+        {
+            //grow
+            progress = std::min(1.f, progress + Speed);
+            e.getComponent<cro::Model>().setHidden(false);
+            indicatorEnt.getComponent<cro::Model>().setHidden(false);
+
+            if (progress == 1)
+            {
+                dir = 0;
+                e.getComponent<cro::Callback>().active = false;
+            }
+        }
+        else
+        {
+            progress = std::max(0.f, progress - Speed);
+
+            if (progress == 0)
+            {
+                dir = 1;
+                e.getComponent<cro::Callback>().active = false;
+
+                e.getComponent<cro::Model>().setHidden(true);
+                indicatorEnt.getComponent<cro::Model>().setHidden(true);
+            }
+        }
+        auto scale = e.getComponent<cro::Transform>().getScale();
+        scale.z = cro::Util::Easing::easeOutQuad(progress);
+        e.getComponent<cro::Transform>().setScale(scale);
+        indicatorEnt.getComponent<cro::Transform>().setScale(scale);
+    };
 
     const float pointCount = 5.f;
     const float arc = m_inputParser.getMaxRotation() * 2.f;
@@ -2327,6 +2371,23 @@ void DrivingState::createFlag()
                 e.getComponent<cro::ParticleEmitter>().start();
 
                 m_inputParser.setActive(true);
+
+                //show the input bar
+                cro::Command cmd;
+                cmd.targetFlags = CommandID::UI::Root;
+                cmd.action = [](cro::Entity f, float)
+                {
+                    f.getComponent<cro::Callback>().getUserData<std::pair<std::int32_t, float>>().first = 0;
+                    f.getComponent<cro::Callback>().active = true;
+                };
+                m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+                cmd.targetFlags = CommandID::StrokeArc;
+                cmd.action = [](cro::Entity f, float)
+                {
+                    f.getComponent<cro::Callback>().active = true;
+                };
+                m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
             }
         }
 
@@ -2502,6 +2563,22 @@ void DrivingState::hitBall()
         auto* msg2 = cro::App::getInstance().getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
         msg2->type = GolfEvent::NiceShot;
     }
+
+    //hide the power bar
+    cmd.targetFlags = CommandID::UI::Root;
+    cmd.action = [](cro::Entity e, float)
+    {
+        e.getComponent<cro::Callback>().getUserData<std::pair<std::int32_t, float>>().first = 1;
+        e.getComponent<cro::Callback>().active = true;
+    };
+    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+    cmd.targetFlags = CommandID::StrokeArc;
+    cmd.action = [](cro::Entity e, float)
+    {
+        e.getComponent<cro::Callback>().active = true;
+    };
+    m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 }
 
 void DrivingState::setHole(std::int32_t index)
@@ -2510,16 +2587,9 @@ void DrivingState::setHole(std::int32_t index)
     m_inputParser.resetPower();
     //activated when flag anim finishes
 
-    //reset stroke indicator
-    cro::Command cmd;
-    cmd.targetFlags = CommandID::StrokeIndicator | CommandID::StrokeArc;
-    cmd.action = [](cro::Entity e, float)
-    {
-        e.getComponent<cro::Model>().setHidden(false);
-    };
-    m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
     //reset avatar
+    cro::Command cmd;
     cmd.targetFlags = CommandID::PlayerAvatar;
     cmd.action = [&](cro::Entity e, float)
     {
@@ -2638,6 +2708,9 @@ void DrivingState::setHole(std::int32_t index)
     m_cameras[CameraID::Green].getComponent<cro::Transform>().setLocalTransform(tx);
 
     m_gameScene.setSystemActive<CameraFollowSystem>(false);
+
+    //TODO do we only want this to happen if we're on random holes?
+    m_gameScene.getSystem<BallSystem>()->forceWindChange();
 }
 
 void DrivingState::setActiveCamera(std::int32_t camID)
