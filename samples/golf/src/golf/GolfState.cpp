@@ -4091,13 +4091,21 @@ void GolfState::spawnBall(const ActorInfo& info)
             if (ballEnt.getComponent<ClientCollider>().active)
             {
                 auto ballPos = ballEnt.getComponent<cro::Transform>().getWorldPosition();
-                //ballPos.y = std::min(0.003f + m_collisionMesh.getTerrain(ballPos).height, ballPos.y); //just to prevent z-fighting
+
+                auto c = cro::Colour::White;
                 if (ballPos.y > WaterLevel)
                 {
-                    ballPos.y = 0.003f + m_collisionMesh.getTerrain(ballPos).height;
+                    //rays have limited length so might miss from high up (making shadow disappear)
+                    auto rayPoint = ballPos;
+                    rayPoint.y = 10.f;
+                    auto height = m_collisionMesh.getTerrain(rayPoint).height;
+                    c.setAlpha(smoothstep(0.2f, 0.8f, (ballPos.y - height) / 0.25f));
+                    
+                    ballPos.y = 0.003f + height;
                 }
                 e.getComponent<cro::Transform>().setPosition(ballPos);
                 e.getComponent<cro::Model>().setHidden((m_currentPlayer.terrain == TerrainID::Green) || ballEnt.getComponent<cro::Model>().isHidden());
+                e.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", c);
             }
         }
     };
@@ -4108,6 +4116,7 @@ void GolfState::spawnBall(const ActorInfo& info)
     auto shadowEnt = entity;
     entity = m_gameScene.createEntity();
     shadowEnt.getComponent<cro::Transform>().addChild(entity.addComponent<cro::Transform>());
+    entity.getComponent<cro::Transform>().setOrigin({ 0.f, 0.02f, 0.f });
     m_modelDefs[ModelID::BallShadow]->createModel(entity);
     entity.getComponent<cro::Model>().setRenderFlags(~RenderFlags::MiniMap);
     //entity.getComponent<cro::Transform>().setScale(glm::vec3(1.3f));
@@ -4121,7 +4130,7 @@ void GolfState::spawnBall(const ActorInfo& info)
             m_gameScene.destroyEntity(e);
         }
         e.getComponent<cro::Model>().setHidden(ballEnt.getComponent<cro::Model>().isHidden());
-        e.getComponent<cro::Transform>().setScale(ballEnt.getComponent<cro::Transform>().getScale() * 0.95f);
+        e.getComponent<cro::Transform>().setScale(ballEnt.getComponent<cro::Transform>().getScale()/* * 0.95f*/);
     };
 
     //adding a ball model means we see something a bit more reasonable when close up
