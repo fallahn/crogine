@@ -2780,7 +2780,7 @@ void GolfState::showEmote(std::uint32_t data)
         float rotation = cro::Util::Random::value(-1.f, 1.f);
     };
 
-    glm::vec3 pos(16.f, -16.f, 0.2f);
+    glm::vec3 pos(32.f, -16.f, 0.2f);
     for (auto i = 0u; i < 5u; ++i)
     {
         auto ent = m_uiScene.createEntity();

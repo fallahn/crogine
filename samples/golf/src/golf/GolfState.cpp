@@ -4116,7 +4116,7 @@ void GolfState::spawnBall(const ActorInfo& info)
     auto shadowEnt = entity;
     entity = m_gameScene.createEntity();
     shadowEnt.getComponent<cro::Transform>().addChild(entity.addComponent<cro::Transform>());
-    entity.getComponent<cro::Transform>().setOrigin({ 0.f, 0.02f, 0.f });
+    entity.getComponent<cro::Transform>().setOrigin({ 0.f, 0.002f, 0.f });
     m_modelDefs[ModelID::BallShadow]->createModel(entity);
     entity.getComponent<cro::Model>().setRenderFlags(~RenderFlags::MiniMap);
     //entity.getComponent<cro::Transform>().setScale(glm::vec3(1.3f));

@@ -69,7 +69,7 @@ static const std::array<std::string, 3u> GimmeString =
     "Inside the putter"
 };
 
-static constexpr std::array EmotePositions =
+static constexpr std::array<glm::vec3, 4u> EmotePositions =
 {
     glm::vec3(0.f, 34.f, 0.15f),
     glm::vec3(34.f, 0.f, 0.15f),
