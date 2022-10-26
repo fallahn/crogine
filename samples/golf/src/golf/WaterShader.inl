@@ -102,46 +102,9 @@ static const std::string WaterFragment = R"(
     //const vec3 WaterColour = vec3(0.2, 0.278, 0.278);
     //const vec3 WaterColour = vec3(0.137, 0.267, 0.53);
 
-    float rand(float n){return fract(sin(n) * 43758.5453123);}
+#include RANDOM
 
-    float noise(vec2 pos)
-    {
-        return fract(sin(dot(pos, vec2(12.9898, 4.1414))) * 43758.5453);
-    }
-
-    //function based on example by martinsh.blogspot.com
-    const int MatrixSize = 8;
-    float findClosest(int x, int y, float c0)
-    {
-        /* 8x8 Bayer ordered dithering */
-        /* pattern. Each input pixel */
-        /* is scaled to the 0..63 range */
-        /* before looking in this table */
-        /* to determine the action. */
-
-        const int dither[64] = int[64](
-         0, 32, 8, 40, 2, 34, 10, 42, 
-        48, 16, 56, 24, 50, 18, 58, 26, 
-        12, 44, 4, 36, 14, 46, 6, 38, 
-        60, 28, 52, 20, 62, 30, 54, 22, 
-         3, 35, 11, 43, 1, 33, 9, 41, 
-        51, 19, 59, 27, 49, 17, 57, 25,
-        15, 47, 7, 39, 13, 45, 5, 37,
-        63, 31, 55, 23, 61, 29, 53, 21 );
-
-        float limit = 0.0;
-        if (x < MatrixSize)
-        {
-            limit = (dither[y * MatrixSize + x] + 1) / 64.0;
-        }
-
-        if (c0 < limit)
-        {
-            return 0.0;
-        }
-        return 1.0;
-    }
-
+#include BAYER_MATRIX
 
     void main()
     {

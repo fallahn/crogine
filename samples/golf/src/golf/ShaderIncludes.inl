@@ -51,10 +51,84 @@ static inline const std::string ScaleBuffer = R"(
         float u_pixelScale;
     };)";
 
+/*
+function based on example by martinsh.blogspot.com
+8x8 Bayer ordered dithering
+pattern. Each input pixel
+is scaled to the 0..63 range
+before looking in this table
+to determine the action. 
+*/
+static inline const std::string BayerMatrix = R"(
+    const int MatrixSize = 8;
+    float findClosest(int x, int y, float c0)
+    {
+        const int dither[64] = int[64](
+         0, 32, 8, 40, 2, 34, 10, 42, 
+        48, 16, 56, 24, 50, 18, 58, 26, 
+        12, 44, 4, 36, 14, 46, 6, 38, 
+        60, 28, 52, 20, 62, 30, 54, 22, 
+         3, 35, 11, 43, 1, 33, 9, 41, 
+        51, 19, 59, 27, 49, 17, 57, 25,
+        15, 47, 7, 39, 13, 45, 5, 37,
+        63, 31, 55, 23, 61, 29, 53, 21 );
+
+        float limit = 0.0;
+        if (x < MatrixSize)
+        {
+            limit = (dither[y * MatrixSize + x] + 1) / 64.0;
+        }
+
+        if (c0 < limit)
+        {
+            return 0.0;
+        }
+        return 1.0;
+    })";
+
+static inline const std::string Random = R"(
+    float rand(float n)
+    {
+        return fract(sin(n) * 43758.5453123);
+    }
+
+    float rand(vec2 position)
+    {
+        return fract(sin(dot(position, vec2(12.9898, 4.1414))) * 43758.5453);
+    }
+
+    float noise(vec2 pos)
+    {
+        return fract(sin(dot(pos, vec2(12.9898, 4.1414))) * 43758.5453);
+    })";
+
+//https://gist.github.com/yiwenl/745bfea7f04c456e0101
+static inline const std::string HSV = R"(
+    vec3 rgb2hsv(vec3 c)
+    {
+        vec4 K = vec4(0.0, -1.0 / 3.0, 2.0 / 3.0, -1.0);
+        vec4 p = mix(vec4(c.bg, K.wz), vec4(c.gb, K.xy), step(c.b, c.g));
+        vec4 q = mix(vec4(p.xyw, c.r), vec4(c.r, p.yzx), step(p.x, c.r));
+
+        float d = q.x - min(q.w, q.y);
+        float e = 1.0e-10;
+        return vec3(abs(q.z + (q.w - q.y) / (6.0 * d + e)), d / (q.x + e), q.x);
+    }
+
+    vec3 hsv2rgb(vec3 c)
+    {
+        vec4 K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
+        vec3 p = abs(fract(c.xxx + K.xyz) * 6.0 - K.www);
+        return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
+    }
+)";
 
 static inline const std::unordered_map<std::string, const char*> IncludeMappings =
 {
     std::make_pair("WIND_BUFFER", WindBuffer.c_str()),
     std::make_pair("RESOLUTION_BUFFER", ResolutionBuffer.c_str()),
     std::make_pair("SCALE_BUFFER", ScaleBuffer.c_str()),
+    std::make_pair("BAYER_MATRIX", BayerMatrix.c_str()),
+    std::make_pair("RANDOM", Random.c_str()),
+    std::make_pair("HSV", HSV.c_str()),
 };
