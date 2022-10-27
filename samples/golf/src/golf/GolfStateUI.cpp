@@ -1039,15 +1039,15 @@ void GolfState::showCountdown(std::uint8_t seconds)
     }
 
     auto trophyCount = std::min(std::size_t(3), m_statBoardScores.size());
-    float trophyStat = 1.f - (1.f / m_statBoardScores.size()); //in other words, 0 if we're the only player
-
+    
     for (auto i = 0u; i < trophyCount; ++i)
     {
-        if (m_statBoardScores[i].client == m_sharedData.clientConnection.connectionID)
+        if (m_statBoardScores[i].client == m_sharedData.clientConnection.connectionID
+            && !m_sharedData.localConnectionData.playerData[m_statBoardScores[i].player].isCPU)
         {
             if (m_statBoardScores.size() > 1)
             {
-                Achievements::incrementStat(StatStrings[StatID::GoldAverage + i], trophyStat);
+                Achievements::incrementStat(StatStrings[StatID::GoldWins + i]);
 
                 //only award rank XP if there are players to rank against
                 //and reduce XP if < 4 players. Probably ought to consider

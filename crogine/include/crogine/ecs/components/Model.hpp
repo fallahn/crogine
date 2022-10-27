@@ -89,7 +89,7 @@ namespace cro
 
         /*!
         \brief Enables or disables depth testing for a material at the given index
-        \param idx Index of the material to set the depth test paramter on
+        \param idx Index of the material to set the depth test parameter on
         \param enabled Set to true to enable depth testing
         This doesn't affect shadow pass materials. Useful for overlay materials
         such as wireframe meshes.

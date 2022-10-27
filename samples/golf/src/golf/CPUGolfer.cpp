@@ -360,7 +360,7 @@ void CPUGolfer::aim(float dt, glm::vec3 windVector)
 
         //putting is a special case where wind effect is lower
         //but we also need to deal with the slope of the green
-        float greenCompensation = 1.f;
+        float greenCompensation = 0.6f; //default reduction for driving (this was reduced from 1 because max rotation was increased to 0.18)
         float slopeCompensation = 0.f;
 
         if (m_activePlayer.terrain == TerrainID::Green)
@@ -370,7 +370,7 @@ void CPUGolfer::aim(float dt, glm::vec3 windVector)
             //then calculate the slope by measuring two points either side of a point
             //approx two thirds to the hole.
             auto centrePoint = (m_target - m_activePlayer.position) * 0.75f;
-            float distanceReduction = std::min(1.f, glm::length(centrePoint) / /*25.f*/1.f);
+            float distanceReduction = std::min(1.f, glm::length2(centrePoint) / 4.f);
 
             auto distance = glm::normalize(centrePoint);
             centrePoint += m_activePlayer.position;
@@ -416,7 +416,7 @@ void CPUGolfer::aim(float dt, glm::vec3 windVector)
         targetAngle += slopeCompensation;
         targetAngle = std::min(m_aimAngle + m_inputParser.getMaxRotation(), std::max(m_aimAngle - m_inputParser.getMaxRotation(), targetAngle));
         targetAngle *= 0.99f;
-
+        
 #ifdef CRO_DEBUG_
         debug.windComp = windComp;
         debug.slopeComp = slopeCompensation;

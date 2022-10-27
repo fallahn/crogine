@@ -3085,9 +3085,9 @@ void GolfState::buildScene()
     glm::vec3 c(1.f, 0.97f, 0.88f);
     std::vector<float> verts =
     {
-        0.f, Ball::Radius, 0.005f, c.r * IndicatorLightness, c.g * IndicatorLightness, c.b * IndicatorLightness, 1.f,
+        0.1f, Ball::Radius, 0.005f, c.r * IndicatorLightness, c.g * IndicatorLightness, c.b * IndicatorLightness, 1.f,
         5.f, Ball::Radius, 0.f,    c.r * IndicatorDarkness,  c.g * IndicatorDarkness,  c.b * IndicatorDarkness, 1.f,
-        0.f, Ball::Radius, -0.005f,c.r * IndicatorLightness, c.g * IndicatorLightness, c.b * IndicatorLightness, 1.f
+        0.1f, Ball::Radius, -0.005f,c.r * IndicatorLightness, c.g * IndicatorLightness, c.b * IndicatorLightness, 1.f
     };
     std::vector<std::uint32_t> indices =
     {
@@ -5607,7 +5607,6 @@ void GolfState::hitBall()
     cmd.targetFlags = CommandID::StrokeIndicator | CommandID::StrokeArc;
     cmd.action = [&](cro::Entity e, float)
     {
-        //e.getComponent<cro::Model>().setHidden(true);
         e.getComponent<cro::Callback>().active = false;
 
         //temp ent to delay hiding slightly then pop itself

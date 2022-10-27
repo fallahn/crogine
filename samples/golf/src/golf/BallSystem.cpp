@@ -354,9 +354,13 @@ void BallSystem::process(float dt)
                         }
                         else
                         {
+                            //this means we don't add a HUGE multiplier if there's
+                            //already a steep slope, else the ball go WEEEEEEEEE
+                            float slopeMultiplier = std::max(0.f, 1.f - (slopeStrength / 0.3f));
+
                             friction = Friction[ball.terrain] - (slopeStrength * 0.08f);
                             //unrealistic but makes it more interesting on full size courses
-                            slopeStrength *= 80.f;
+                            slopeStrength *= 90.f * slopeMultiplier;
                             //use the current velocity to stop the ball rolling forever
                             slopeStrength *= std::min(1.f, glm::length2(ball.velocity));
                         }
