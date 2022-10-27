@@ -365,12 +365,12 @@ void CPUGolfer::aim(float dt, glm::vec3 windVector)
 
         if (m_activePlayer.terrain == TerrainID::Green)
         {
-            greenCompensation = 0.02f; //reduce the wind compensation by this
+            greenCompensation = 0.016f; //reduce the wind compensation by this
 
             //then calculate the slope by measuring two points either side of a point
             //approx two thirds to the hole.
             auto centrePoint = (m_target - m_activePlayer.position) * 0.75f;
-            float distanceReduction = std::min(1.f, glm::length2(centrePoint) / 4.f);
+            float distanceReduction = std::min(0.86f, glm::length(centrePoint) / 3.f);
 
             auto distance = glm::normalize(centrePoint);
             centrePoint += m_activePlayer.position;
@@ -383,7 +383,7 @@ void CPUGolfer::aim(float dt, glm::vec3 windVector)
             distance *= -1.f;
             auto resultB = m_collisionMesh.getTerrain(centrePoint + distance);
 
-            static constexpr float MaxSlope = 0.048f; //~48cm diff in slope
+            static constexpr float MaxSlope = 0.050f; //~50cm diff in slope
 #ifdef CRO_DEBUG_
             debug.slope = resultA.height - resultB.height;
 #endif
