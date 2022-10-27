@@ -322,6 +322,7 @@ private:
     void showNotification(const cro::String&);
     void showLevelUp(std::uint64_t);
     void toggleQuitReady();
+    void refreshUI();
 
     void buildTrophyScene();
     std::array<cro::Entity, 3u> m_trophies = {};

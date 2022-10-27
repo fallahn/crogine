@@ -216,7 +216,7 @@ static const std::array BallTints =
 };
 
 static constexpr float ViewportHeight = 360.f;
-static constexpr float ViewportHeightWide = 300.f;
+static constexpr float ViewportHeightWide = 320.f;// 300.f;
 
 static inline glm::vec3 interpolate(glm::vec3 a, glm::vec3 b, float t)
 {

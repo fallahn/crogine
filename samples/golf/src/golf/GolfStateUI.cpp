@@ -170,6 +170,11 @@ void GolfState::buildUI()
     entity.addComponent<cro::Callback>().function = resizeCallback;
 
     auto trophyEnt = entity;
+    for (auto label : m_trophyLabels)
+    {
+        trophyEnt.getComponent<cro::Transform>().addChild(label.getComponent<cro::Transform>());
+        label.getComponent<cro::Callback>().setUserData<cro::Entity>(trophyEnt);
+    }
 
     //info panel background - vertices are set in resize callback
     entity = m_uiScene.createEntity();
@@ -936,27 +941,7 @@ void GolfState::buildUI()
 
 
         //send command to UIElements and reposition
-        cro::Command cmd;
-        cmd.targetFlags = CommandID::UI::UIElement;
-        cmd.action = [&, uiSize](cro::Entity e, float)
-        {
-            auto pos = e.getComponent<UIElement>().relativePosition;
-            pos.x *= uiSize.x;
-            pos.x = std::floor(pos.x);
-            pos.y *= (uiSize.y - UIBarHeight);
-            pos.y = std::round(pos.y);
-            pos.y += UITextPosV;
-
-            pos += e.getComponent<UIElement>().absolutePosition;
-
-            e.getComponent<cro::Transform>().setPosition(glm::vec3(pos, e.getComponent<UIElement>().depth));
-
-            if (e.getComponent<UIElement>().resizeCallback)
-            {
-                e.getComponent<UIElement>().resizeCallback(e);
-            }
-        };
-        m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+        refreshUI();
 
         //relocate the power bar
         auto uiPos = glm::vec2(uiSize.x / 2.f, UIBarHeight / 2.f);
@@ -1045,7 +1030,8 @@ void GolfState::showCountdown(std::uint8_t seconds)
         if (m_statBoardScores[i].client == m_sharedData.clientConnection.connectionID
             && !m_sharedData.localConnectionData.playerData[m_statBoardScores[i].player].isCPU)
         {
-            if (m_statBoardScores.size() > 1)
+            if (m_statBoardScores.size() > 1
+                && m_holeData.size() > 8)
             {
                 Achievements::incrementStat(StatStrings[StatID::GoldWins + i]);
 
@@ -1086,8 +1072,13 @@ void GolfState::showCountdown(std::uint8_t seconds)
     auto entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 200.f + scoreboardExpansion, 10.f, 0.23f }); //attaches to scoreboard
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<UIElement>().absolutePosition = { 200.f, 10.f };
-    entity.getComponent<UIElement>().resizeCallback = [](cro::Entity e) {e.getComponent<cro::Transform>().move({ scoreboardExpansion, 0.f }); };
+    entity.addComponent<UIElement>().absolutePosition = { 200.f, 10.f - UITextPosV };
+    entity.getComponent<UIElement>().depth = 0.23f;
+    entity.getComponent<UIElement>().resizeCallback = [](cro::Entity e)
+    {
+        e.getComponent<cro::Transform>().move({ scoreboardExpansion, 0.f }); 
+    };
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
     entity.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
     entity.getComponent<cro::Text>().setFillColour(LeaderboardTextLight);
     entity.addComponent<cro::Callback>().active = true;
@@ -1204,6 +1195,9 @@ void GolfState::showCountdown(std::uint8_t seconds)
             e.getComponent<cro::Transform>().setPosition(basePos);
         };
     }
+
+
+    refreshUI();
 }
 
 void GolfState::createScoreboard()
@@ -2239,19 +2233,49 @@ void GolfState::toggleQuitReady()
     }
 }
 
+void GolfState::refreshUI()
+{
+    auto uiSize = glm::vec2(GolfGame::getActiveTarget()->getSize()) / m_viewScale;
+
+    cro::Command cmd;
+    cmd.targetFlags = CommandID::UI::UIElement;
+    cmd.action = [&, uiSize](cro::Entity e, float)
+    {
+        auto pos = e.getComponent<UIElement>().relativePosition;
+        pos.x *= uiSize.x;
+        pos.x = std::floor(pos.x);
+        pos.y *= (uiSize.y - UIBarHeight);
+        pos.y = std::round(pos.y);
+        pos.y += UITextPosV;
+
+        pos += e.getComponent<UIElement>().absolutePosition;
+
+        e.getComponent<cro::Transform>().setPosition(glm::vec3(pos, e.getComponent<UIElement>().depth));
+
+        if (e.getComponent<UIElement>().resizeCallback)
+        {
+            e.getComponent<UIElement>().resizeCallback(e);
+        }
+    };
+    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+}
+
 void GolfState::buildTrophyScene()
 {
     auto updateCam = [&](cro::Camera& cam)
     {
         auto vpSize = calcVPSize();
 
-        auto winSize = glm::vec2(cro::App::getWindow().getSize());
-        float maxScale = std::floor(winSize.y / vpSize.y);
-        float scale = m_sharedData.pixelScale ? maxScale : 1.f;
-        auto texSize = winSize / scale;
-        m_trophySceneTexture.create(static_cast<std::uint32_t>(texSize.x), static_cast<std::uint32_t>(texSize.y));
-
-        cam.setPerspective(m_sharedData.fov * cro::Util::Const::degToRad, winSize.x / winSize.y, 0.1f, 10.f);
+        auto winSize = glm::vec2(480.f, 360.f);
+        float maxScale = std::floor(static_cast<float>(cro::App::getWindow().getSize().y) / vpSize.y);
+        if (!m_sharedData.pixelScale)
+        {
+            winSize *= maxScale;
+        }
+        m_trophySceneTexture.create(static_cast<std::uint32_t>(winSize.x), static_cast<std::uint32_t>(winSize.y));
+        
+        float ratio = winSize.x / winSize.y;
+        cam.setPerspective(m_sharedData.fov * cro::Util::Const::degToRad, ratio, 0.1f, 10.f);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
 
@@ -2267,8 +2291,8 @@ void GolfState::buildTrophyScene()
     const std::array<std::pair<std::string, glm::vec3>, 3u> Paths =
     {
         std::make_pair("assets/golf/models/trophies/trophy01.cmt", glm::vec3(0.f, -0.3f, -1.f)),
-        std::make_pair("assets/golf/models/trophies/trophy02.cmt", glm::vec3(-0.5f, -0.35f, -1.f)),
-        std::make_pair("assets/golf/models/trophies/trophy03.cmt", glm::vec3(0.5f, -0.4f, -1.f))        
+        std::make_pair("assets/golf/models/trophies/trophy02.cmt", glm::vec3(-0.55f, -0.315f, -1.f)),
+        std::make_pair("assets/golf/models/trophies/trophy03.cmt", glm::vec3(0.55f, -0.33f, -1.f))        
     };
 
     cro::EmitterSettings emitterSettings;
@@ -2323,18 +2347,18 @@ void GolfState::buildTrophyScene()
             bounds.bottom = bounds.height * i;
             entity.getComponent<cro::Sprite>().setTextureRect(bounds);
             entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f, -1.2f });
-
+            auto p = position;
             entity.addComponent<cro::Callback>().function =
-                [&,trophyEnt](cro::Entity e, float)
+                [&,p,trophyEnt](cro::Entity e, float)
             {
-                auto trophyPos = trophyEnt.getComponent<cro::Transform>().getPosition();
-                trophyPos.y -= 0.06f;
+                //the trophy scene sprite is set as user data in createUI()
+                auto b = e.getComponent<cro::Callback>().getUserData<cro::Entity>().getComponent<cro::Sprite>().getTextureBounds();
+                glm::vec2 pos(std::floor(((b.width / 1.5f) * p.x) + (b.width / 2.f)), std::floor(((b.height / 2.f) * p.y) + (b.height / 3.f)));
 
-                auto pos = m_trophyScene.getActiveCamera().getComponent<cro::Camera>().coordsToPixel(trophyPos, m_trophySceneTexture.getSize());
+                float parentScale = e.getComponent<cro::Callback>().getUserData<cro::Entity>().getComponent<cro::Transform>().getScale().x;
 
-                float scale = m_sharedData.pixelScale ? m_viewScale.x : 1.f;
-                e.getComponent<cro::Transform>().setPosition(pos * scale);
-                e.getComponent<cro::Transform>().setScale(trophyEnt.getComponent<cro::Transform>().getScale() * m_viewScale.x);
+                e.getComponent<cro::Transform>().setPosition(pos);
+                e.getComponent<cro::Transform>().setScale(trophyEnt.getComponent<cro::Transform>().getScale() * (m_viewScale.x / parentScale));
             };
 
             m_trophyLabels[i] = entity;
@@ -2344,12 +2368,12 @@ void GolfState::buildTrophyScene()
             if (Social::isAvailable())
             {
                 entity = m_uiScene.createEntity();
-                entity.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, bounds.height, 0.1f });
+                entity.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, bounds.height, 1.2f });
                 entity.addComponent<cro::Drawable2D>();
                 entity.addComponent<cro::Sprite>(m_sharedData.nameTextures[0].getTexture());
                 bounds = { 0.f, LabelTextureSize.y - LabelIconSize.y, LabelIconSize.x, LabelIconSize.y };
                 entity.getComponent<cro::Sprite>().setTextureRect(bounds);
-                entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, -14.f, -0.1f });
+                entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, -14.f, -0.2f });
                 m_trophyLabels[i].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
                 entity.addComponent<cro::Callback>().active = true;
