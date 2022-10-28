@@ -489,8 +489,8 @@ void CPUGolfer::aim(float dt, glm::vec3 windVector)
             if (m_activePlayer.terrain == TerrainID::Green)
             {
                 //hackiness to compensate for putting shortfall
-                float distRatio = 1.f - std::min(1.f, distanceToTarget / 2.5f); //applied within this radius
-                float multiplier = (0.45f * distRatio) + 1.f;
+                float distRatio = 1.f - std::min(1.f, distanceToTarget / 3.5f); //applied within this radius
+                float multiplier = (0.5f * distRatio) + 1.f;
 
                 m_targetPower = std::min(1.f, m_targetPower * multiplier);
             }
