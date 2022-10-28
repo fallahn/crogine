@@ -65,7 +65,8 @@ private:
     enum class State
     {
         Inactive,
-        PickingClub, //assess distance to pin from player
+        CalcDistance, //assess distance to pin from player
+        PickingClub, //tries to find suitable club for chosen distance
         Aiming, //account for wind speed and direction
         Stroke, //power bar is active
         Watching //ball is mid-flight but turn not yet ended
@@ -75,6 +76,7 @@ private:
     std::int32_t m_prevClubID;
     std::int32_t m_searchDirection; //which way we search for a club
     float m_searchDistance;
+    float m_targetDistance;
 
     float m_aimDistance;
     float m_aimAngle;
@@ -96,7 +98,8 @@ private:
     void startThinking(float);
     void think(float);
 
-    void pickClub(float, glm::vec3);
+    void calcDistance(float, glm::vec3);
+    void pickClub(float);
     void aim(float, glm::vec3);
     void stroke(float);
 

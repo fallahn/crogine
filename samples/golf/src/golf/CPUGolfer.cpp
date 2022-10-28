@@ -61,7 +61,7 @@ namespace
     }debug;
 
     constexpr float MinSearchDistance = 10.f;
-    constexpr float SearchIncrease = 5.f;
+    constexpr float SearchIncrease = 10.f;
 
     template <typename T>
     T* postMessage(std::int32_t id)
@@ -81,6 +81,7 @@ CPUGolfer::CPUGolfer(const InputParser& ip, const ActivePlayer& ap, const Collis
     m_prevClubID        (ClubID::Driver),
     m_searchDirection   (0),
     m_searchDistance    (MinSearchDistance),
+    m_targetDistance    (0.f),
     m_aimDistance       (0.f),
     m_aimAngle          (0.f),
     m_targetPower       (1.f),
@@ -140,10 +141,9 @@ void CPUGolfer::activate(glm::vec3 target)
     if (m_state == State::Inactive)
     {
         m_target = target;
-        m_state = State::PickingClub;
+        m_state = State::CalcDistance;
         m_clubID = m_inputParser.getClub();
         m_prevClubID = m_clubID;
-        m_searchDistance = MinSearchDistance;
 
         startThinking(1.6f);
         //LOG("CPU is now active", cro::Logger::Type::Info);
@@ -164,8 +164,11 @@ void CPUGolfer::update(float dt, glm::vec3 windVector)
     case State::Inactive:
         
         break;
+    case State::CalcDistance:
+        calcDistance(dt, windVector);
+        break;
     case State::PickingClub:
-        pickClub(dt, windVector);
+        pickClub(dt);
         break;
     case State::Aiming:
         aim(dt, windVector);
@@ -198,7 +201,7 @@ void CPUGolfer::think(float dt)
     }
 }
 
-void CPUGolfer::pickClub(float dt, glm::vec3 windVector)
+void CPUGolfer::calcDistance(float dt, glm::vec3 windVector)
 {
     if (m_thinking)
     {
@@ -233,8 +236,8 @@ void CPUGolfer::pickClub(float dt, glm::vec3 windVector)
         //adjust the target distance depending on how the wind carries us
         float windDot = -(glm::dot(glm::normalize(glm::vec2(windVector.x, -windVector.z)), glm::normalize(glm::vec2(targetDir.x, -targetDir.z))));
         windDot *= windVector.y;
-        windDot *= 0.25f; //magic number. This extends a distance of 77m to 100 for example
-        windDot = std::max(0.f, windDot); //skew this positively, negative amounts will be compensated for by using less power
+        windDot *= 0.1f; //magic number. This is the maximum amount of the current distance added to itself
+        //windDot = std::max(0.f, windDot);
         targetDistance += (targetDistance * windDot);
 
         //and hit further if we're off the fairway
@@ -248,11 +251,21 @@ void CPUGolfer::pickClub(float dt, glm::vec3 windVector)
             float multiplier = absDistance / Clubs[ClubID::PitchWedge].target;
             targetDistance += 20.f * multiplier; //TODO reduce this if we're close to the green
         }
-        /*else
-        {
-            targetDistance *= 0.87f;
-        }*/
+        m_searchDistance = targetDistance;
+        m_targetDistance = targetDistance;
+        m_state = State::PickingClub;
+    }
+}
 
+void CPUGolfer::pickClub(float dt)
+{
+    if (m_thinking)
+    {
+        think(dt);
+    }
+    else
+    {
+        auto absDistance = glm::length(m_target - m_activePlayer.position);
 
         auto club = m_inputParser.getClub();
         float clubDistance = Clubs[club].target;
@@ -261,18 +274,18 @@ void CPUGolfer::pickClub(float dt, glm::vec3 windVector)
         {
             startThinking(0.5f);
             m_state = State::Aiming;
-            m_aimDistance = absDistance < 15.f ? absDistance : targetDistance; //hacky way to shorten distance near the green
+            m_aimDistance = absDistance < 15.f ? absDistance : m_targetDistance; //hacky way to shorten distance near the green
             m_aimAngle = m_inputParser.getYaw();
             m_aimTimer.restart();
             //LOG("CPU Entered Aiming Mode", cro::Logger::Type::Info);
         };
         
-        auto diff = targetDistance - clubDistance;
+        auto diff = m_searchDistance - clubDistance;
 #ifdef CRO_DEBUG_
         debug.diff = diff;
-        debug.windDot = windDot;
+        //debug.windDot = windDot;
 #endif
-        if (std::abs(diff) < m_searchDistance)
+        if (diff < 0) //club is further than search
         {
             m_prevClubID = club;
             m_clubID = club;
@@ -302,10 +315,10 @@ void CPUGolfer::pickClub(float dt, glm::vec3 windVector)
 
         if (diff > 0)
         {
-            //if we previously searched down increase the search distance
+            //if we previously searched down decrease the search distance
             if (m_searchDirection == -1)
             {
-                m_searchDistance += SearchIncrease;
+                m_searchDistance -= SearchIncrease;
             }
 
             //increase club if needed
@@ -320,10 +333,10 @@ void CPUGolfer::pickClub(float dt, glm::vec3 windVector)
         }
         else
         {
-            //if we previously searched up increase the search distance
+            //if we previously searched up decrease the search distance
             if (m_searchDirection == 1)
             {
-                m_searchDistance += SearchIncrease;
+                m_searchDistance -= SearchIncrease;
             }
 
             //else decrease
@@ -363,6 +376,9 @@ void CPUGolfer::aim(float dt, glm::vec3 windVector)
         float greenCompensation = 0.6f; //default reduction for driving (this was reduced from 1 because max rotation was increased to 0.18)
         float slopeCompensation = 0.f;
 
+        auto targetDir = m_target - m_activePlayer.position;
+        const float distanceToTarget = glm::length(targetDir);
+
         if (m_activePlayer.terrain == TerrainID::Green)
         {
             greenCompensation = 0.016f; //reduce the wind compensation by this
@@ -372,7 +388,8 @@ void CPUGolfer::aim(float dt, glm::vec3 windVector)
             auto centrePoint = (m_target - m_activePlayer.position) * 0.75f;
             float distanceReduction = std::min(0.86f, glm::length(centrePoint) / 3.f);
 
-            auto distance = glm::normalize(centrePoint);
+            //reduce this as we get nearer the hole
+            auto distance = glm::normalize(centrePoint) * (0.1f + (0.9f * std::min(1.f, (distanceToTarget / 2.f)))); 
             centrePoint += m_activePlayer.position;
 
             //left point
@@ -383,12 +400,12 @@ void CPUGolfer::aim(float dt, glm::vec3 windVector)
             distance *= -1.f;
             auto resultB = m_collisionMesh.getTerrain(centrePoint + distance);
 
-            static constexpr float MaxSlope = 0.050f; //~50cm diff in slope
+            static constexpr float MaxSlope = 0.048f; //~48cm diff in slope
 #ifdef CRO_DEBUG_
             debug.slope = resultA.height - resultB.height;
 #endif
             float slope = (resultA.height - resultB.height) / MaxSlope;
-            slopeCompensation = m_inputParser.getMaxRotation() * slope;// *0.15f;
+            slopeCompensation = m_inputParser.getMaxRotation() * slope * 0.5f;// *0.15f;
             slopeCompensation *= distanceReduction; //reduce the effect nearer the hole
             greenCompensation *= distanceReduction;
         }
@@ -397,13 +414,14 @@ void CPUGolfer::aim(float dt, glm::vec3 windVector)
         //wind is x, strength (0 - 1), z
 
         //create target angle based on wind strength / direction
-        auto targetDir = m_target - m_activePlayer.position;
-
         auto w = glm::normalize(glm::vec2(windVector.x, -windVector.z));
         auto t = glm::normalize(glm::vec2(targetDir.x, -targetDir.z));
 
+        //max rotation (percent of InputParser::MaxRotation) to apply for wind.
+        //rotation is good ~ 0.1 rads, so this values is 0.1/InputParser::MaxRotation
+        const float MaxCompensation = 0.12f / m_inputParser.getMaxRotation();
         float dot = glm::dot(w, t);
-        float windComp = 1.f - std::abs(dot);
+        float windComp = (1.f - std::abs(dot)) * MaxCompensation;
 
         auto wAngle = std::atan2(w.y, w.x);
         auto tAngle = std::atan2(t.y, t.x);
@@ -449,31 +467,30 @@ void CPUGolfer::aim(float dt, glm::vec3 windVector)
                 //half the power, so we need to pull back a little to stop
                 //overshooting long drives
                 m_targetPower = m_aimDistance / Clubs[m_clubID].target;
-                if (Clubs[m_clubID].target > m_aimDistance)
+                //if (Clubs[m_clubID].target > m_aimDistance)
                 {
                     //the further we try to drive the bigger the reduction
                     float amount = 1.f - (static_cast<float>(m_clubID) / ClubID::NineIron);
-                    m_targetPower *= (1.f - (amount * 0.4f));
+                    m_targetPower *= (1.f - (amount * 0.2f));
                 }
             }
             else
             {
-                m_targetPower = (glm::length(m_target - m_activePlayer.position) * 1.12f) / Clubs[m_clubID].target;
+                m_targetPower = (distanceToTarget * 1.12f) / Clubs[m_clubID].target;
             }
             m_targetPower += ((0.06f * (-dot * windVector.y)) * greenCompensation) * m_targetPower;
 
 
             //add some random factor to target power and set to stroke mode
             m_targetPower = std::min(1.f, m_targetPower);
-            m_targetPower += static_cast<float>(cro::Util::Random::value(-6, 6)) / 100.f;
+            m_targetPower += static_cast<float>(cro::Util::Random::value(-4, 4)) / 100.f;
             m_targetPower = std::max(0.06f, std::min(1.f, m_targetPower));
 
             if (m_activePlayer.terrain == TerrainID::Green)
             {
                 //hackiness to compensate for putting shortfall
-                //float distRatio = 1.f - std::min(1.f, glm::length2(m_target - m_activePlayer.position) / 25.f);
-                float distRatio = 1.f - std::min(1.f, glm::length(m_target - m_activePlayer.position) / 2.5f); //applied within this radius
-                float multiplier = (0.25f * distRatio) + 1.f;
+                float distRatio = 1.f - std::min(1.f, distanceToTarget / 2.5f); //applied within this radius
+                float multiplier = (0.45f * distRatio) + 1.f;
 
                 m_targetPower = std::min(1.f, m_targetPower * multiplier);
             }
@@ -485,7 +502,7 @@ void CPUGolfer::aim(float dt, glm::vec3 windVector)
 
             //occasionally make really inaccurate
             //... or maybe even perfect? :)
-            if (cro::Util::Random::value(0, 6) == 0)
+            if (cro::Util::Random::value(0, 8) == 0)
             {
                 m_targetAccuracy += static_cast<float>(cro::Util::Random::value(-8, 4)) / 100.f;
             }
