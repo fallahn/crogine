@@ -856,7 +856,6 @@ void GolfState::buildUI()
             greenEnt.getComponent<cro::Transform>().setScale(targetScale);
         }
         greenEnt.getComponent<cro::Transform>().setOrigin({ (texSize / 2), (texSize / 2) }); //must divide to a whole pixel!
-
         greenEnt.getComponent<cro::Callback>().getUserData<GreenCallbackData>().targetScale = targetScale.x;
     };
 
@@ -876,6 +875,7 @@ void GolfState::buildUI()
     m_greenCam.getComponent<cro::Callback>().function =
         [](cro::Entity e, float dt)
     {
+        //zooms the view as the current player approaches hole
         auto& data = e.getComponent<cro::Callback>().getUserData<MiniCamData>();
         auto diff = data.targetSize - data.currentSize;
         data.currentSize += diff * (dt * 4.f);

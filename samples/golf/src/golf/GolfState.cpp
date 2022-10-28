@@ -277,6 +277,9 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
         {
             if (ImGui::Begin("Network"))
             {
+                auto size = m_greenBuffer.getSize();
+                ImGui::Text("Buffer Size %u, %u", size.x, size.y);
+
                 /*ImGui::Text("Connection Bitrate: %3.3fkbps", static_cast<float>(bitrate) / 1024.f);
 
                 for (const auto& c : m_sharedData.connectionData)
@@ -290,14 +293,14 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
                     m_cameras[CameraID::Player].getComponent<cro::Callback>().active = true;
                 }*/
 
-                if (Achievements::getActive())
+                /*if (Achievements::getActive())
                 {
                     ImGui::Text("Achievements enabled");
                 }
                 else
                 {
                     ImGui::Text("Achievments disabled");
-                }
+                }*/
                 /*glm::vec2 size(m_leaderboardTexture.getTexture().getSize());
                 ImGui::Image(m_leaderboardTexture.getTexture(), { size.x, size.y }, { 0.f, 1.f }, { 1.f, 0.f });*/
             }
