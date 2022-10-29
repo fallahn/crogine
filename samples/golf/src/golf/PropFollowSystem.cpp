@@ -66,7 +66,6 @@ void PropFollowSystem::process(float dt)
                 {
                     follower.state = PropFollower::Follow;
                     follower.stateTimer = 0.f;
-
                     follower.initAxis(entity);
                 }
             }
@@ -79,7 +78,6 @@ void PropFollowSystem::process(float dt)
                     auto len2 = glm::length2(glm::vec2(dir.x, dir.z));
 
                     point.position += glm::normalize(dir) * follower.speed * dt;
-
 
                     if (len2 < MinTargetRadSqr)
                     {
@@ -141,10 +139,10 @@ void PropFollower::initAxis(cro::Entity e)
     auto& follower = e.getComponent<PropFollower>();
     follower.axis[0].position = follower.path.getPoint(0);
     auto dir = glm::normalize(follower.path.getPoint(1) - follower.path.getPoint(0));
-    follower.axis[0].position += dir * bb[1].x * 4.f;
+    follower.axis[0].position += dir * bb[1].x;// *4.f;
 
     follower.axis[1].position = follower.path.getPoint(0);
-    follower.axis[1].position += dir * bb[0].x * 4.f;
+    follower.axis[1].position += dir * bb[0].x;// *4.f;
 
 
     follower.axis[0].target = 1;
