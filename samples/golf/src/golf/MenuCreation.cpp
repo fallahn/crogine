@@ -3704,7 +3704,7 @@ void MenuState::updateLocalAvatars(std::uint32_t mouseEnter, std::uint32_t mouse
 
                         //add indicator for current controller ID
                         ent = m_uiScene.createEntity();
-                        ent.addComponent<cro::Transform>().setPosition({ 25.f, 4.f, 0.f });
+                        ent.addComponent<cro::Transform>().setPosition({ 25.f, 6.f, 0.f });
                         ent.addComponent<cro::Drawable2D>();
                         ent.addComponent<cro::Text>(m_sharedData.sharedResources->fonts.get(FontID::Info)).setCharacterSize(InfoTextSize);
                         ent.getComponent<cro::Text>().setFillColour(TextNormalColour);

@@ -55,7 +55,7 @@ static constexpr glm::uvec2 MapSize(320u, 200u);
 static constexpr glm::vec2 RangeSize(200.f, 250.f);
 
 static constexpr float CameraStrokeHeight = 2.f;
-static constexpr float CameraPuttHeight = 0.65f;// 0.3f;
+static constexpr float CameraPuttHeight = 0.6f;// 0.3f;
 static constexpr float CameraTeeMultiplier = 0.65f; //height reduced by this when not putting from tee
 static constexpr float CameraStrokeOffset = 5.f;
 static constexpr float CameraPuttOffset = 1.6f; //0.8f;

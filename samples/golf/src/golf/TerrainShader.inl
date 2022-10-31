@@ -150,15 +150,19 @@ R"(
     VARYING_IN vec4 v_colour;
     VARYING_IN vec2 v_texCoord;
 
-    //const float Scale = 20.0;
+    const vec3 DotColour = vec3(1.0, 0.9, 0.0);
 
     void main()
     {
         float alpha = (sin(v_texCoord.x - ((u_windData.w * 10.f) * v_texCoord.y)) + 1.0) * 0.5;
-        alpha = step(0.5, alpha);
+        alpha = step(0.1, alpha);
 
-        FRAG_OUT = v_colour;
-        FRAG_OUT.a *= alpha * u_alpha;
+        vec4 colour = v_colour;
+        colour.a *= u_alpha;
+        colour = mix(vec4(DotColour, smoothstep(0.05, 0.4, v_colour.a * u_alpha)), colour, alpha);
+
+        FRAG_OUT = colour;
+        //FRAG_OUT.a *= /*alpha **/ u_alpha;
     }
 )";
 

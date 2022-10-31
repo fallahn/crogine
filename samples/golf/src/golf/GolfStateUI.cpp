@@ -2368,12 +2368,12 @@ void GolfState::buildTrophyScene()
             if (Social::isAvailable())
             {
                 entity = m_uiScene.createEntity();
-                entity.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, bounds.height, 1.2f });
+                entity.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, bounds.height, 0.1f });
                 entity.addComponent<cro::Drawable2D>();
                 entity.addComponent<cro::Sprite>(m_sharedData.nameTextures[0].getTexture());
                 bounds = { 0.f, LabelTextureSize.y - LabelIconSize.y, LabelIconSize.x, LabelIconSize.y };
                 entity.getComponent<cro::Sprite>().setTextureRect(bounds);
-                entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, -14.f, -0.2f });
+                entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, -14.f, -0.1f });
                 m_trophyLabels[i].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
                 entity.addComponent<cro::Callback>().active = true;
