@@ -102,7 +102,7 @@ namespace
 
     //we'll assume 64px per metre
     constexpr float PixelsPerMetre = 64.f;
-    const glm::uvec2 BillboardTargetSize(320, 448);
+    const glm::uvec2 BillboardTargetSize(640, 448);
     float billboardScaleMultiplier = 0.46f;
 
 
@@ -692,7 +692,8 @@ void BushState::drawUI()
 
     if (ImGui::Begin("Billboard"))
     {
-        ImGui::Image(m_billboardTexture.getTexture(), {300.f, 400.f}, {0.f, 1.f}, {1.f, 0.f});
+        glm::vec2 size(BillboardTargetSize);
+        ImGui::Image(m_billboardTexture.getTexture(), {size.x, size.y}, {0.f, 1.f}, {1.f, 0.f});
 
         ImGui::SliderFloat("Leaf Scale", &billboardScaleMultiplier, 0.1f, 1.f);
 
