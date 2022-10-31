@@ -547,29 +547,38 @@ bool GolfState::handleEvent(const cro::Event& evt)
             break;
         }
     }
-    else if (evt.type == SDL_CONTROLLERBUTTONDOWN
-        && evt.cbutton.which == cro::GameController::deviceID(m_sharedData.inputBinding.controllerID))
+    else if (evt.type == SDL_CONTROLLERBUTTONDOWN)
     {
-        switch (evt.cbutton.button)
+        if (auto bid = cro::GameController::deviceID(m_sharedData.inputBinding.controllerID); bid == evt.cbutton.which)
         {
-        default: break;
-        case cro::GameController::ButtonBack:
-            showScoreboard(true);
-            break;
-        case cro::GameController::ButtonB:
-            showScoreboard(false);
-            break;
-        case cro::GameController::DPadUp:
-        case cro::GameController::DPadLeft:
-            scrollScores(-19);
-            break;
-        case cro::GameController::DPadDown:
-        case cro::GameController::DPadRight:
-            scrollScores(19);
-            break;
-        case cro::GameController::ButtonA:
-            toggleQuitReady();
-            break;
+            switch (evt.cbutton.button)
+            {
+            default: break;
+            case cro::GameController::ButtonBack:
+                showScoreboard(true);
+                break;
+            case cro::GameController::ButtonB:
+                showScoreboard(false);
+                break;
+            case cro::GameController::DPadUp:
+            case cro::GameController::DPadLeft:
+                scrollScores(-19);
+                break;
+            case cro::GameController::DPadDown:
+            case cro::GameController::DPadRight:
+                scrollScores(19);
+                break;
+            case cro::GameController::ButtonA:
+                toggleQuitReady();
+                break;
+            }
+        }
+        else if (bid == 0)
+        {
+            if (evt.cbutton.button == cro::GameController::ButtonA)
+            {
+                toggleQuitReady();
+            }
         }
     }
     else if (evt.type == SDL_CONTROLLERBUTTONUP
@@ -3186,12 +3195,14 @@ void GolfState::buildScene()
     entity.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float)
     {
-        float size = m_currentPlayer.terrain != TerrainID::Green ? 0.f : 1.f;
+        bool hidden = !m_sharedData.showPuttingPower
+            || (m_currentPlayer.terrain != TerrainID::Green)
+            || m_sharedData.localConnectionData.playerData[m_currentPlayer.player].isCPU;
 
-        if (size > 0)
+        if (!hidden)
         {
-            float scale = /*cro::Util::Easing::easeOutSine*/(m_inputParser.getPower()) * 0.9f; //bit of a fusge to try making the representation more accurate
-            e.getComponent<cro::Transform>().setScale(glm::vec3(scale, size * scale, scale));
+            float scale = /*cro::Util::Easing::easeOutSine*/(m_inputParser.getPower()) * 0.85f; //bit of a fudge to try making the representation more accurate
+            e.getComponent<cro::Transform>().setScale(glm::vec3(scale));
 
             //fade with proximity to hole
             auto dist = m_holeData[m_currentHole].pin - e.getComponent<cro::Transform>().getWorldPosition();
@@ -3199,10 +3210,7 @@ void GolfState::buildScene()
             cro::Colour c(amount, amount, amount); //additive blending so darker == more transparent
             e.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", c);
         }
-        e.getComponent<cro::Model>().setHidden(
-            !m_sharedData.showPuttingPower 
-            || (m_currentPlayer.terrain != TerrainID::Green)
-            || m_sharedData.localConnectionData.playerData[m_currentPlayer.player].isCPU);
+        e.getComponent<cro::Model>().setHidden(hidden);
     };
     
     verts.clear();
