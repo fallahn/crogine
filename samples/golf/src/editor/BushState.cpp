@@ -335,18 +335,19 @@ void BushState::loadAssets()
     leafTexture = &texture;
     treeset.texturePath = "leaf06.png";
 
+    auto& noiseTex = m_resources.textures.get("assets/golf/images/wind.png");
+    noiseTex.setRepeated(true);
+    noiseTex.setSmooth(true);
+
     auto& material = m_resources.materials.get(bushMaterial);
     material.setProperty("u_diffuseMap", texture);
+    material.setProperty("u_noiseTexture", noiseTex);
 
     shaderUniform.shaderID = shader->getGLHandle();
     shaderUniform.randomness = shader->getUniformID("u_randAmount");
     shaderUniform.size = shader->getUniformID("u_leafSize");
     shaderUniform.colour = shader->getUniformID("u_colour");
     shaderUniform.targetHeight = shader->getUniformID("u_targetHeight");
-
-    auto& noiseTex = m_resources.textures.get("assets/golf/images/wind.png");
-    noiseTex.setRepeated(true);
-    noiseTex.setSmooth(true);
 
     m_resources.shaders.loadFromString(BushShaderID::Branch, BranchVertex, BranchFragment, "#define INSTANCING\n#define ALPHA_CLIP\n");
     shader = &m_resources.shaders.get(BushShaderID::Branch);

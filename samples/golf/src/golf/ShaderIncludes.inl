@@ -144,11 +144,11 @@ static inline const std::string WindCalc = R"(
     {
         WindResult retVal = WindResult(vec2(0.0), vec2(0.0), 0.0);
         vec2 uv = localPos;
-        uv.x += u_windData.w * hFreq;
+        uv.x += u_windData.w * (hFreq + (hFreq * u_windData.y));
         retVal.highFreq.x = TEXTURE(u_noiseTexture, uv).r;
 
         uv = localPos;
-        uv.y += u_windData.w * hFreq;
+        uv.y += u_windData.w * (hFreq + (hFreq * u_windData.y));
         retVal.highFreq.y = TEXTURE(u_noiseTexture, uv).r;
 
         uv = worldPos;

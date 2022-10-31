@@ -452,12 +452,14 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
                             material.setProperty("u_leafSize", theme.treesets[j].leafSize);
                             material.setProperty("u_randAmount", theme.treesets[j].randomness);
                             material.setProperty("u_colour", theme.treesets[j].colour);
+                            material.setProperty("u_noiseTexture", noiseTex);
                             childEnt.getComponent<cro::Model>().setMaterial(idx, material);
 
                             material = resources.materials.get(leafShadowMaterialID);
                             if (m_sharedData.hqShadows)
                             {
                                 material.setProperty("u_diffuseMap", resources.textures.get(theme.treesets[j].texturePath));
+                                material.setProperty("u_noiseTexture", noiseTex);
                             }
                             material.setProperty("u_leafSize", theme.treesets[j].leafSize);
                             childEnt.getComponent<cro::Model>().setShadowMaterial(idx, material);
