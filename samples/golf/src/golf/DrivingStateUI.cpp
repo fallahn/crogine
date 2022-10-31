@@ -1175,30 +1175,30 @@ your overall accuracy. Good Luck!
 
     //browse leaderboards
     textEnt4 = m_uiScene.createEntity();
-    textEnt4.addComponent<cro::Transform>().setPosition({ (bounds.width / 5.f) * 4.f, 63.f, 0.02f });
+    textEnt4.addComponent<cro::Transform>().setPosition({ (bounds.width / 5.f) * 4.f, 67.f, 0.02f });
     textEnt4.addComponent<cro::Drawable2D>();
-    textEnt4.addComponent<cro::Text>(smallFont).setCharacterSize(InfoTextSize);
-    textEnt4.getComponent<cro::Text>().setFillColour(TextNormalColour);
-    textEnt4.getComponent<cro::Text>().setString("View Leaderboards");
-    centreText(textEnt4);
+    textEnt4.addComponent<cro::Sprite>() = spriteSheet.getSprite("leaderboard_button");
 
-    textBounds = cro::Text::getLocalBounds(textEnt4);
+    auto uBounds = spriteSheet.getSprite("leaderboard_button").getTextureRect();
+    auto sBounds = spriteSheet.getSprite("leaderboard_highlight").getTextureRect();
+    auto buttonBounds = textEnt4.getComponent<cro::Sprite>().getTextureBounds();
+    textEnt4.getComponent<cro::Transform>().setOrigin({ std::floor(buttonBounds.width / 2.f), buttonBounds.height });
     textEnt4.addComponent<cro::AudioEmitter>() = as.getEmitter("switch");
     textEnt4.addComponent<cro::UIInput>().setGroup(MenuID::Options);
-    textEnt4.getComponent<cro::UIInput>().area = textBounds;
+    textEnt4.getComponent<cro::UIInput>().area = buttonBounds;
     textEnt4.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] =
         uiSystem->addCallback(
-            [](cro::Entity e)
+            [sBounds](cro::Entity e)
             {
-                e.getComponent<cro::Text>().setFillColour(TextGoldColour);
+                e.getComponent<cro::Sprite>().setTextureRect(sBounds);
                 e.getComponent<cro::AudioEmitter>().play();
             });
         
     textEnt4.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] =
         uiSystem->addCallback(
-            [](cro::Entity e)
+            [uBounds](cro::Entity e)
             {
-                e.getComponent<cro::Text>().setFillColour(TextNormalColour);
+                e.getComponent<cro::Sprite>().setTextureRect(uBounds);
             });
     textEnt4.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem->addCallback(

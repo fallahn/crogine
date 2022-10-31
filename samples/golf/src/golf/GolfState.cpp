@@ -1234,13 +1234,13 @@ bool GolfState::simulate(float dt)
     };
     m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
-    //don't update the CPU if there are any menus open
+    //don't update the CPU or gamepad if there are any menus open
     if (getStateCount() == 1)
     {
         m_cpuGolfer.update(dt, windVector);
+        m_inputParser.update(dt, m_currentPlayer.terrain);
     }
 
-    m_inputParser.update(dt, m_currentPlayer.terrain);
     m_emoteWheel.update(dt);
     m_gameScene.simulate(dt);
     m_uiScene.simulate(dt);
