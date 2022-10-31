@@ -4848,13 +4848,13 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo)
     };
 
     m_currentHole = hole;
-    m_inputParser.setMaxRotation(m_holeData[m_currentHole].puttFromTee ? MaxPuttRotation : MaxRotation); //pretty sure this is overriden in setCurrentPlayer()...
+    m_inputParser.setMaxRotation(m_holeData[m_currentHole].puttFromTee ? MaxPuttRotation : MaxRotation); //pretty sure this is overridden in setCurrentPlayer()...
     startFlyBy(); //requires current hole
 
     //set putting grid values
     float height = m_holeData[m_currentHole].pin.y;
     glUseProgram(m_gridShader.shaderID);
-    glUniform1f(m_gridShader.minHeight, height - 0.03f);
+    glUniform1f(m_gridShader.minHeight, height - 0.025f);
     glUniform1f(m_gridShader.maxHeight, height + 0.08f);
     glUseProgram(0);
 
@@ -5437,7 +5437,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     setActiveCamera(CameraID::Player);
 
     //show or hide the slope indicator depending if we're on the green
-    //or if we're on a putting map (in which case we're using thecontour material)
+    //or if we're on a putting map (in which case we're using the contour material)
     cmd.targetFlags = CommandID::SlopeIndicator;
     cmd.action = [&,player](cro::Entity e, float)
     {

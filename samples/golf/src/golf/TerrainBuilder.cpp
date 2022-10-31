@@ -997,13 +997,13 @@ void TerrainBuilder::threadFunc()
                 //we can optimise this by only looping the grid around the pin pos
                 const std::int32_t startX = std::max(0, static_cast<std::int32_t>(std::floor(pinPos.x)) - HalfGridSize);
                 const std::int32_t startY = std::max(0, static_cast<std::int32_t>(-std::floor(pinPos.z)) - HalfGridSize);
-                static constexpr float DashCount = 40.f; //actual div by TAU cos its sin but eh.
+                static constexpr float DashCount = 80.f; //actual div by TAU cos its sin but eh.
                 const float SlopeSpeed = -12.f * (m_holeData[m_currentHole].puttFromTee ? 0.15f : 1.f);
                 const std::int32_t AvgDistance = m_holeData[m_currentHole].puttFromTee ? 1 : 5; //taking a long average on a small lumpy green will give wrong direction
-                static constexpr std::int32_t GridDensity = 4; //grids per metre. Can only be 1,2 or 4 to match Normal Map resolution
+                static constexpr std::int32_t GridDensity = 2; //grids per metre. Can only be 1,2 or 4 to match Normal Map resolution
                 static constexpr float GridSpacing = 1.f / GridDensity;
 
-                static constexpr float epsilon = 0.015f; //pushes grid off the surface by this much. Could just do in the transform really...
+                static constexpr float epsilon = 0.018f; //pushes grid off the surface by this much. Could just do in the transform really...
                 for (auto y = 0; y < (SlopeGridSize * GridDensity); ++y)
                 {
                     for (auto x = 0; x < (SlopeGridSize * GridDensity); ++x)
@@ -1042,7 +1042,7 @@ void TerrainBuilder::threadFunc()
                             SlopeVertex vert2;
                             vert2.position = vert.position + offset;
                             vert2.position.y = height;
-                            vert2.texCoord = { DashCount, std::min(glm::dot(glm::vec3(0.f, 1.f, 0.f), glm::normalize(avgPosition - vert.position)) * SlopeSpeed, 1.f) };
+                            vert2.texCoord = { DashCount / GridDensity, std::min(glm::dot(glm::vec3(0.f, 1.f, 0.f), glm::normalize(avgPosition - vert.position)) * SlopeSpeed, 1.f) };
                             vert.texCoord.y = vert2.texCoord.y; //must be constant across segment
                             
 
@@ -1059,7 +1059,7 @@ void TerrainBuilder::threadFunc()
                             SlopeVertex vert4;
                             vert4.position = vert.position + offset;
                             vert4.position.y = height;
-                            vert4.texCoord = { DashCount, std::min(glm::dot(glm::vec3(0.f, 1.f, 0.f), glm::normalize(avgPosition - vert3.position)) * SlopeSpeed, 1.f) };
+                            vert4.texCoord = { DashCount / GridDensity, std::min(glm::dot(glm::vec3(0.f, 1.f, 0.f), glm::normalize(avgPosition - vert3.position)) * SlopeSpeed, 1.f) };
                             vert3.texCoord.y = vert4.texCoord.y;
 
 
