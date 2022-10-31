@@ -405,7 +405,7 @@ void CPUGolfer::aim(float dt, glm::vec3 windVector)
             debug.slope = resultA.height - resultB.height;
 #endif
             float slope = (resultA.height - resultB.height) / MaxSlope;
-            slopeCompensation = m_inputParser.getMaxRotation() * slope * 0.5f;// *0.15f;
+            slopeCompensation = m_inputParser.getMaxRotation() * slope;// *0.15f;
             slopeCompensation *= distanceReduction; //reduce the effect nearer the hole
             greenCompensation *= distanceReduction;
         }

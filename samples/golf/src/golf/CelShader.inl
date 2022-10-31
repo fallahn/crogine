@@ -543,26 +543,27 @@ static const std::string CelFragmentShader = R"(
 #endif
 
 #if defined(CONTOUR)
-    float height = (v_worldPosition.y - u_minHeight) / (u_maxHeight - u_minHeight);
-    vec3 contourColour = mix(vec3(0.0,0.0,1.0), vec3(1.0,0.0,1.0), height);
+    float height = min((v_worldPosition.y - u_minHeight) / (u_maxHeight - u_minHeight), 1.0);
+    vec3 contourColour = mix(vec3(0.0,0.0,0.0), vec3(0.0,0.0,1.0), height * 2.0);
+    contourColour = mix(contourColour, vec3(1.0,0.0,1.0), max(0.0, height - 0.5) * 2.0);
 
-    vec3 f = fract(v_worldPosition);// * 2.0);
-    vec3 df = fwidth(v_worldPosition);// * 2.0);
+    vec3 f = fract(v_worldPosition * 2.0);
+    vec3 df = fwidth(v_worldPosition * 2.0);
     vec3 g = step(df * u_pixelScale, f);
-    ////vec3 g = smoothstep(df * 1.0, df * 2.0, f);
-    //float contour = 1.0 - (g.x * g.y * g.z);
+    //////vec3 g = smoothstep(df * 1.0, df * 2.0, f);
+    ////float contour = 1.0 - (g.x * g.y * g.z);
 
-    vec3 faceNormal = normalize(cross(dFdx(v_worldPosition), dFdy(v_worldPosition))) * 20.0;
+    //vec3 faceNormal = normalize(cross(dFdx(v_worldPosition), dFdy(v_worldPosition))) * 20.0;
 
     float contourX = 1.0 - (g.y * g.z);
 
-    const float frequency = 40.0;
-    float dashX = (sin((mod(v_worldPosition.x, 1.0) * frequency) - (u_windData.w * faceNormal.x)) + 1.0) * 0.5;
-    contourX *= step(0.25, dashX);
+    //const float frequency = 40.0;
+    //float dashX = (sin((mod(v_worldPosition.x, 1.0) * frequency) - (u_windData.w * faceNormal.x)) + 1.0) * 0.5;
+    //contourX *= step(0.25, dashX);
 
     float contourZ = 1.0 - (g.y * g.x);
-    float dashZ = (sin((mod(v_worldPosition.z + 0.5, 1.0) * frequency) - (u_windData.w * faceNormal.z)) + 1.0) * 0.5;
-    contourZ *= step(0.25, dashZ);
+    //float dashZ = (sin((mod(v_worldPosition.z + 0.5, 1.0) * frequency) - (u_windData.w * faceNormal.z)) + 1.0) * 0.5;
+    //contourZ *= step(0.25, dashZ);
 
     vec3 distance = v_worldPosition.xyz - v_cameraWorldPosition;
     float fade = (1.0 - smoothstep(36.0, 81.0, dot(distance, distance))) * u_transparency * 0.75;

@@ -558,7 +558,7 @@ bool InputParser::getActive() const
 
 void InputParser::setMaxRotation(float rotation)
 {
-    m_maxRotation = std::max(0.1f, std::min(MaxRotation, rotation));
+    m_maxRotation = std::max(0.05f, std::min(MaxRotation, rotation));
 }
 
 //private

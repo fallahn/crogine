@@ -883,7 +883,7 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
             auto basePos = avatarEnt.getComponent<cro::Transform>().getPosition();
             basePos -= avatarEnt.getComponent<cro::Transform>().getOrigin();
 
-            static constexpr glm::vec3 Offset(52.f, -7.f, 0.f);
+            static constexpr glm::vec3 Offset(93.f, -6.f, 0.f);
             e.getComponent<cro::Text>().setFillColour(TextGoldColour);
             e.getComponent<cro::AudioEmitter>().play();
             entity.getComponent<cro::Transform>().setPosition(e.getComponent<cro::Transform>().getPosition() + basePos + Offset);
@@ -3472,13 +3472,13 @@ void MenuState::createPlayerConfigMenu()
 void MenuState::updateLocalAvatars(std::uint32_t mouseEnter, std::uint32_t mouseExit)
 {
     //these can have fixed positions as they are attached to a menuEntity[] which is UI scaled
-    static constexpr glm::vec3 EditButtonOffset(-47.f, -57.f, 0.f);
-    static constexpr glm::vec3 CPUTextOffset(28.f, -57.f, 0.f);
-    static constexpr glm::vec3 CPUButtonOffset(16.f, -65.f, 0.f);
-    static constexpr glm::vec3 CPUHighlightOffset(18.f, -63.f, 0.f);
+    static constexpr glm::vec3 EditButtonOffset(-51.f, -56.f, 0.f);
+    static constexpr glm::vec3 CPUTextOffset(56.f, -56.f, 0.f);
+    static constexpr glm::vec3 CPUButtonOffset(44.f, -64.f, 0.f);
+    static constexpr glm::vec3 CPUHighlightOffset(46.f, -62.f, 0.f);
     static constexpr glm::vec3 AvatarOffset = EditButtonOffset + glm::vec3(-68.f, -18.f, 0.f);
     static constexpr glm::vec3 BGOffset = AvatarOffset + glm::vec3(1.f, 7.f, -0.02f);
-    static constexpr glm::vec3 ControlIconOffset = AvatarOffset + glm::vec3(115.f, 42.f, 0.f);
+    static constexpr glm::vec3 ControlIconOffset = AvatarOffset + glm::vec3(132.f, 42.f, 0.f);
     static constexpr float LineHeight = 11.f; //-8.f
 
     for (auto e : m_avatarListEntities)
@@ -3494,21 +3494,22 @@ void MenuState::updateLocalAvatars(std::uint32_t mouseEnter, std::uint32_t mouse
     for (auto i = 0u; i < m_sharedData.localConnectionData.playerCount; ++i)
     {
         auto localPos = glm::vec3(
-            std::floor(173.f * static_cast<float>(i % 2)),
+            std::floor(205.f * static_cast<float>(i % 2)),
             std::floor(-(LineHeight + AvatarThumbSize.y) * static_cast<float>(i / 2)),
             0.1f);
         localPos += RootPos;
 
         //player name
+        constexpr auto nameWidth = NameWidth + 30.f; //can't adjust the const because it's used elsewhere...
         auto entity = m_uiScene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition(localPos);
+        entity.addComponent<cro::Transform>().setPosition(localPos + glm::vec3(12.f, 1.f, 0.f));
         entity.addComponent<cro::Drawable2D>();
         entity.addComponent<cro::Text>(font).setString(m_sharedData.localConnectionData.playerData[i].name.substr(0, ConstVal::MaxStringChars));
         entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
         entity.getComponent<cro::Text>().setFillColour(TextGoldColour);
         auto bounds = cro::Text::getLocalBounds(entity);
-        entity.addComponent<NameScroller>().maxDistance = bounds.width - NameWidth;
-        bounds.width = NameWidth;
+        entity.addComponent<NameScroller>().maxDistance = bounds.width - nameWidth;
+        bounds.width = nameWidth;
         entity.getComponent<cro::Drawable2D>().setCroppingArea(bounds);
         centreText(entity);
 
@@ -3551,7 +3552,7 @@ void MenuState::updateLocalAvatars(std::uint32_t mouseEnter, std::uint32_t mouse
         entity.addComponent<cro::Transform>().setPosition(localPos + EditButtonOffset);
         entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
         entity.addComponent<cro::Drawable2D>();
-        entity.addComponent<cro::Text>(font).setString("EDIT");
+        entity.addComponent<cro::Text>(font).setString("CUSTOMISE");
         entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
         entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
         bounds = cro::Text::getLocalBounds(entity);

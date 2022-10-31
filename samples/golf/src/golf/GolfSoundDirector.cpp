@@ -425,7 +425,8 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
                 }
                 else
                 {
-                    if (data.club != ClubID::Putter
+                    if (data.travelDistance < 9
+                        && data.club != ClubID::Putter
                         && cro::Util::Random::value(0, 4) == 0)
                     {
                         //you're poop.

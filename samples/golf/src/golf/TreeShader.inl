@@ -55,6 +55,8 @@ R"(
     uniform float u_leafSize = 0.25; //world units, in this case metres
     uniform float u_randAmount = 0.2;
 
+uniform sampler2D u_noiseTexture;
+
 //dirX, strength, dirZ, elapsedTime
 #include WIND_BUFFER
 
@@ -70,6 +72,7 @@ R"(
     }v_data;
 
 #include RANDOM
+#include WIND_CALC
 
     const float MaxWindOffset = 0.1f;
     const float Amp = 0.01;
@@ -107,10 +110,13 @@ R"(
 
 //wind
     #if defined (HQ)
-        float time = (u_windData.w * 5.0) + gl_InstanceID + gl_VertexID;
-        float x = sin(time * 2.0) / 8.0;
-        float y = cos(time) / 2.0;
-        vec3 windOffset = vec3(x, y, x);
+WindResult windResult = getWindData(position.xz, worldPosition.xz);
+windResult.lowFreq *= 0.5 + (0.5 * u_windData.y);
+windResult.highFreq *= 0.5 + (0.5 * u_windData.y);
+
+        float x = windResult.highFreq.x;
+        float y = windResult.lowFreq.y;
+        vec3 windOffset = vec3(x, y, windResult.highFreq.y);
 
         vec3 windDir = normalize(vec3(u_windData.x, 0.f, u_windData.z));
         float dirStrength = dot(v_data.normal, windDir);
@@ -122,8 +128,13 @@ R"(
         dirStrength += 1.0;
         dirStrength /= 2.0;
 
+
         windOffset += windDir * u_windData.y * dirStrength * 2.0;
         worldPosition.xyz += windOffset * MaxWindOffset * u_windData.y;
+
+worldPosition.x += windResult.lowFreq.x;
+worldPosition.z += windResult.lowFreq.y;
+
     #else
         float time = (u_windData.w * 15.0) + gl_InstanceID;
         float x = sin(time * 2.0) / 8.0;
@@ -375,9 +386,6 @@ std::string BranchVertex = R"(
     VARYING_OUT float v_darkenAmount;
 
 #include WIND_CALC
-
-    //const float MaxWindOffset = 0.2;
-    //const float Amp = 0.02; //metres
 
     void main()
     {
