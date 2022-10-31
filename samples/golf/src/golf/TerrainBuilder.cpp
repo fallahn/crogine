@@ -992,16 +992,16 @@ void TerrainBuilder::threadFunc()
                 m_slopeIndices.clear();
 
                 std::uint32_t currIndex = 0u;
-                float lowestHeight = std::numeric_limits<float>::max();
-                float highestHeight = std::numeric_limits<float>::lowest();
-                //we can optimise this by only looping the grid around the pin pos
                 auto pinPos = m_holeData[m_currentHole].pin;
+
+                //we can optimise this by only looping the grid around the pin pos
                 const std::int32_t startX = std::max(0, static_cast<std::int32_t>(std::floor(pinPos.x)) - HalfGridSize);
                 const std::int32_t startY = std::max(0, static_cast<std::int32_t>(-std::floor(pinPos.z)) - HalfGridSize);
                 static constexpr float DashCount = 40.f; //actual div by TAU cos its sin but eh.
                 const float SlopeSpeed = -12.f * (m_holeData[m_currentHole].puttFromTee ? 0.15f : 1.f);
                 const std::int32_t AvgDistance = m_holeData[m_currentHole].puttFromTee ? 1 : 5; //taking a long average on a small lumpy green will give wrong direction
 
+                static constexpr float epsilon = 0.01f; //pushes grid off the surface by this much. Could just do in the transform really...
                 for (auto y = startY; y < startY + SlopeGridSize; ++y)
                 {
                     for (auto x = startX; x < startX + SlopeGridSize; ++x)
@@ -1009,7 +1009,6 @@ void TerrainBuilder::threadFunc()
                         auto terrain = readMap(mapImage, x, y).first;
                         if (terrain == TerrainID::Green)
                         {
-                            static constexpr float epsilon = 0.021f;
                             float posX = static_cast<float>(x) - pinPos.x;
                             float posZ = -static_cast<float>(y) - pinPos.z;
 
@@ -1020,17 +1019,6 @@ void TerrainBuilder::threadFunc()
                             //this is the number of times the 'dashes' repeat if enabled in the shader
                             //and the speed/direction based on height difference
                             vert.texCoord = { 0.f, 0.f };
-
-                            if (height < lowestHeight)
-                            {
-                                lowestHeight = height;
-                            }
-                            else if (height > highestHeight)
-                            {
-                                highestHeight = height;
-                            }
-
-
 
                             glm::vec3 offset(1.f, 0.f, 0.f);
                             height = (readHeightMap(x + 1, y) - pinPos.y) + epsilon;
@@ -1045,15 +1033,6 @@ void TerrainBuilder::threadFunc()
                             vert2.position.y = height;
                             vert2.texCoord = { DashCount, std::min(glm::dot(glm::vec3(0.f, 1.f, 0.f), glm::normalize(avgPosition - vert.position)) * SlopeSpeed, 1.f) };
                             vert.texCoord.y = vert2.texCoord.y; //must be constant across segment
-
-                            if (height < lowestHeight)
-                            {
-                                lowestHeight = height;
-                            }
-                            else if (height > highestHeight)
-                            {
-                                highestHeight = height;
-                            }
                             
 
                             //we have to copy first vert as the tex coords will be different
@@ -1072,15 +1051,6 @@ void TerrainBuilder::threadFunc()
                             vert4.texCoord = { DashCount, std::min(glm::dot(glm::vec3(0.f, 1.f, 0.f), glm::normalize(avgPosition - vert3.position)) * SlopeSpeed, 1.f) };
                             vert3.texCoord.y = vert4.texCoord.y;
 
-                            if (height < lowestHeight)
-                            {
-                                lowestHeight = height;
-                            }
-                            else if (height > highestHeight)
-                            {
-                                highestHeight = height;
-                            }
-
 
                             //do this last once we know everything was modified
                             m_slopeBuffer.push_back(vert);
@@ -1094,14 +1064,16 @@ void TerrainBuilder::threadFunc()
                         }
                     }
                 }
-
-                float maxHeight = highestHeight - lowestHeight;
-                if (maxHeight != 0)
+                
+                static constexpr float LowestHeight = -0.015f;
+                static constexpr float HighestHeight = 0.015f;
+                static constexpr float MaxHeight = HighestHeight - LowestHeight;
+                //if (MaxHeight != 0)
                 {
                     for (auto& v : m_slopeBuffer)
                     {
-                        auto vertHeight = v.position.y - lowestHeight;
-                        vertHeight /= maxHeight;
+                        auto vertHeight = (v.position.y - epsilon) - LowestHeight;
+                        vertHeight /= MaxHeight;
                         //v.colour = { 0.f, 0.4f * vertHeight, 1.f - vertHeight, 0.8f };
                         v.colour = 
                         { 
