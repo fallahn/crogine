@@ -227,6 +227,7 @@ private:
     void setCameraPosition(glm::vec3, float, float);
     void requestNextPlayer(const ActivePlayer&);
     void setCurrentPlayer(const ActivePlayer&);
+    void predictBall(float);
     void hitBall();
     void updateActor(const ActorInfo&);
 

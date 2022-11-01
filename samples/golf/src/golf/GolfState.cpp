@@ -443,6 +443,9 @@ bool GolfState::handleEvent(const cro::Event& evt)
             //setActiveCamera(2);
             showCountdown(10);
             break;
+        case SDLK_KP_3:
+            predictBall(0.85f);
+            break;
         case SDLK_KP_MULTIPLY:
             for (auto& d : ballDump)
             {
@@ -4298,6 +4301,10 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
         switch (evt.packet.getID())
         {
         default: break;
+        case PacketID::BallPrediction:
+            //TODO notify CPU Golfer
+            LogI << "got prediction " << evt.packet.as<glm::vec3>() << std::endl;
+            break;
         case PacketID::LevelUp:
             showLevelUp(evt.packet.as<std::uint64_t>());
             break;
@@ -5540,6 +5547,32 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
         auto pos = m_holeData[m_currentHole].puttFromTee ? glm::vec3(0.f, 16.f, 0.f) : DefaultSkycamPosition;
         m_cameras[CameraID::Sky].getComponent<cro::Transform>().setPosition(pos);
     }
+}
+
+void GolfState::predictBall(float powerPct)
+{
+    //this assumes powerPct has included easeOutSine() if not putting
+
+    auto club = getClub();
+    auto pitch = Clubs[club].angle;
+    auto yaw = m_inputParser.getYaw();
+    auto power = Clubs[club].power * powerPct;
+
+    glm::vec3 impulse(1.f, 0.f, 0.f);
+    auto rotation = glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), yaw, cro::Transform::Y_AXIS);
+    rotation = glm::rotate(rotation, pitch, cro::Transform::Z_AXIS);
+    impulse = glm::toMat3(rotation) * impulse;
+
+    impulse *= power;
+    impulse *= Dampening[m_currentPlayer.terrain];
+    impulse *= godmode;
+
+    InputUpdate update;
+    update.clientID = m_sharedData.localConnectionData.connectionID;
+    update.playerID = m_currentPlayer.player;
+    update.impulse = impulse;
+
+    m_sharedData.clientConnection.netClient.sendPacket(PacketID::BallPrediction, update, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
 }
 
 void GolfState::hitBall()
