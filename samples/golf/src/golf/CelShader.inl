@@ -394,7 +394,14 @@ static const std::string CelFragmentShader = R"(
 #include BAYER_MATRIX
 
 #include HSV
-
+    vec3 complementaryColour(vec3 c)
+    {
+        vec3 a = rgb2hsv(c);
+        a.x += 0.25;
+        a.z *= 0.5;
+        c = hsv2rgb(a);
+        return c;
+    }
 
     const float Quantise = 10.0;
     const float TerrainLevel = -0.049;
@@ -445,13 +452,30 @@ static const std::string CelFragmentShader = R"(
         //float checkAmount = step(0.3, 1.0 - amount);
         float checkAmount = smoothstep(0.3, 0.9, 1.0 - amount);
 
-        amount *= 2.0;
-        amount = round(amount);
-        amount /= 2.0;
-        //colour.rgb = mix(complementaryColour(colour.rgb), colour.rgb, (amount * 0.4) + 0.6);
+#if !defined(COLOUR_LEVELS)
+#define COLOUR_LEVELS 2.0
+#define AMOUNT_MIN 0.8
+#define AMOUNT_MAX 0.2
+#else
+#define AMOUNT_MIN 0.8
+#define AMOUNT_MAX 0.2
+#endif
 
-        amount = 0.8 + (amount * 0.2);
+#if defined(COMP_SHADE)
+        amount = smoothstep(0.75, 0.99, amount);
+#endif
+
+        amount *= COLOUR_LEVELS;
+        amount = round(amount);
+        amount /= COLOUR_LEVELS;
+        amount = AMOUNT_MIN + (amount * AMOUNT_MAX);
+
+#if defined(COMP_SHADE)
+        colour.rgb = mix(complementaryColour(colour.rgb), colour.rgb, amount);
+#else
         colour.rgb *= amount;
+#endif
+
 #define NOCHEX
 #if !defined(NOCHEX)
         float pixelScale = u_pixelScale;

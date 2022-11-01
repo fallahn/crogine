@@ -116,11 +116,12 @@ windResult.highFreq *= 0.5 + (0.5 * u_windData.y);
 
         float x = windResult.highFreq.x;
         float y = windResult.lowFreq.y;
-        vec3 windOffset = vec3(x, y, windResult.highFreq.y);
+        vec3 windOffset = vec3(x, y, windResult.highFreq.y) * 5.0;
 
         vec3 windDir = normalize(vec3(u_windData.x, 0.f, u_windData.z));
         float dirStrength = dot(v_data.normal, windDir);
 
+        x *= 3.0;
         vec2 rot = vec2(sin(x * u_windData.y), cos(x * u_windData.y));
         v_data.rotation[0] = vec2(rot.y, -rot.x);
         v_data.rotation[1]= rot;

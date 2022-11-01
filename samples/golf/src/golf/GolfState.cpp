@@ -1372,8 +1372,9 @@ void GolfState::render()
     m_gameSceneTexture.clear();
     m_skyScene.render();
     glClear(GL_DEPTH_BUFFER_BIT);
-    //glCheck(glEnable(GL_PROGRAM_POINT_SIZE)); //needed for tree leaves (and because particle system resets it, hum)
+    glCheck(glEnable(GL_LINE_SMOOTH));
     m_gameScene.render();
+    glCheck(glDisable(GL_LINE_SMOOTH));
 #ifdef CRO_DEBUG_
     m_collisionMesh.renderDebug(cam.getActivePass().viewProjectionMatrix, m_gameSceneTexture.getSize());
 #endif
@@ -1495,7 +1496,7 @@ void GolfState::loadAssets()
     m_materialIDs[MaterialID::Hair] = m_resources.materials.add(*shader);
 
 
-    m_resources.shaders.loadFromString(ShaderID::Course, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define RX_SHADOWS\n" + wobble);
+    m_resources.shaders.loadFromString(ShaderID::Course, CelVertexShader, CelFragmentShader, "#define COMP_SHADE\n#define COLOUR_LEVELS 5.0\n#define TEXTURED\n#define RX_SHADOWS\n" + wobble);
     shader = &m_resources.shaders.get(ShaderID::Course);
     m_scaleBuffer.addShader(*shader);
     m_resolutionBuffer.addShader(*shader);

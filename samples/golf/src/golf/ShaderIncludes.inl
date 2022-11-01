@@ -135,7 +135,7 @@ static inline const std::string WindCalc = R"(
         float strength;
     };
 
-    const float hFreq = 0.05;
+    const float hFreq = 0.025;
     const float hMagnitude = 0.08;
     const float lFreq = 0.008;
     const float lMagnitude = 0.2;

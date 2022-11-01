@@ -189,7 +189,7 @@ windResult.highFreq *= 0.5 + (0.5 * u_windData.y);
 
 float x = windResult.highFreq.x;
 float y = windResult.lowFreq.y;
-vec3 windOffset = vec3(x, y, windResult.highFreq.y);
+vec3 windOffset = vec3(x, y, windResult.highFreq.y) * 5.0;
 
         /*float time = (u_windData.w * 5.0) + gl_InstanceID + gl_VertexID;
         float x = sin(time * 2.0) / 8.0;
