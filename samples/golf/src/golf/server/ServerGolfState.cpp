@@ -171,6 +171,8 @@ void GolfState::handleMessage(const cro::Message& msg)
             bu.terrain = data.terrain;
             bu.position = data.position;
             m_sharedData.host.broadcastPacket(PacketID::BallLanded, bu, net::NetFlag::Reliable);
+
+            LogI << "landed at " << data.position << std::endl;
         }
         else if (data.type == GolfBallEvent::Gimme)
         {
@@ -411,6 +413,21 @@ void GolfState::handlePlayerInput(const net::NetEvent::Packet& packet)
             m_sharedData.host.broadcastPacket(PacketID::ActorAnimation, std::uint8_t(animID), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
 
             m_turnTimer.restart(); //don't time out mid-shot...
+
+
+
+            //if we want to run a prediction do so on a duplicate entity
+            //auto e = m_scene.createEntity();
+            //e.addComponent<cro::Transform>().setPosition(ball.startPoint);
+            //e.addComponent<Ball>() = ball;
+            //
+            //m_scene.simulate(0.f); //run once so entity is properly integrated.
+            //m_scene.getSystem<BallSystem>()->runPrediction(e, 1.f/20.f);
+
+            ////read the result from e
+            //LogI << "Predicted at " << e.getComponent<cro::Transform>().getPosition() << std::endl;
+
+            //m_scene.destroyEntity(e);
         }
     }
 }

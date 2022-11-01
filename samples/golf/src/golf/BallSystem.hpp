@@ -40,6 +40,7 @@ source distribution.
 
 #include <memory>
 
+struct GolfBallEvent;
 namespace cro
 {
     class Image;
@@ -112,6 +113,9 @@ public:
 
     bool getPuttFromTee() const { return m_puttFromTee; }
 
+    //reducing the timestep runs this faster, though less accurately
+    void runPrediction(cro::Entity, float timestep = 1.f/60.f);
+
 #ifdef CRO_DEBUG_
     void setDebugFlags(std::int32_t);
     void renderDebug(const glm::mat4&, glm::uvec2);
@@ -158,6 +162,11 @@ private:
 #ifdef CRO_DEBUG_
     std::unique_ptr<BulletDebug> m_debugDraw;
 #endif
+
+    bool m_predicting;
+    GolfBallEvent* postEvent() const;
+
+    void processEntity(cro::Entity, float);
 
     void initCollisionWorld(bool);
     void clearCollisionObjects();

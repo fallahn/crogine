@@ -150,7 +150,7 @@ R"(
     VARYING_IN vec4 v_colour;
     VARYING_IN vec2 v_texCoord;
 
-    const vec3 DotColour = vec3(1.0, 0.9, 0.0);
+    const vec3 DotColour = vec3(1.0, 0.9, 0.4);
 
     void main()
     {
@@ -159,7 +159,7 @@ R"(
 
         vec4 colour = v_colour;
         colour.a *= u_alpha;
-        colour = mix(vec4(DotColour, smoothstep(0.05, 0.4, v_colour.a * u_alpha)), colour, alpha);
+        colour = mix(vec4(DotColour, smoothstep(0.05, 0.15, v_colour.a * u_alpha) * 0.8), colour, alpha);
 
         FRAG_OUT = colour;
         //FRAG_OUT.a *= /*alpha **/ u_alpha;
