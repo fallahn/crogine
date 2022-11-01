@@ -1059,7 +1059,7 @@ void GolfState::showCountdown(std::uint8_t seconds)
         }
 
         m_trophies[i].getComponent<TrophyDisplay>().state = TrophyDisplay::In;
-        m_trophyLabels[i].getComponent<cro::Callback>().active = true;
+        //m_trophyLabels[i].getComponent<cro::Callback>().active = true; //this is done by TrophyDisplay (above) to properly delay it
 
         m_trophyLabels[i].getComponent<cro::Sprite>().setTexture(m_sharedData.nameTextures[m_statBoardScores[i].client].getTexture(), false);
         auto bounds = m_trophyLabels[i].getComponent<cro::Sprite>().getTextureBounds();
@@ -2360,6 +2360,7 @@ void GolfState::buildTrophyScene()
                 e.getComponent<cro::Transform>().setPosition(pos);
                 e.getComponent<cro::Transform>().setScale(trophyEnt.getComponent<cro::Transform>().getScale() * (m_viewScale.x / parentScale));
             };
+            trophyEnt.getComponent<TrophyDisplay>().label = entity;
 
             m_trophyLabels[i] = entity;
 
