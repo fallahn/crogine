@@ -203,9 +203,28 @@ void UISystem::handleEvent(const Event& evt)
     case SDL_CONTROLLERBUTTONUP:
         if (evt.cbutton.which == cro::GameController::deviceID(m_activeControllerID))
         {
-            auto& buttonEvent = m_buttonUpEvents.emplace_back();
-            buttonEvent.type = evt.type;
-            buttonEvent.cbutton = evt.cbutton;
+            switch (evt.cbutton.button)
+            {
+            default:
+            {
+                auto& buttonEvent = m_buttonUpEvents.emplace_back();
+                buttonEvent.type = evt.type;
+                buttonEvent.cbutton = evt.cbutton;
+            }
+                break;
+            case SDL_CONTROLLER_BUTTON_DPAD_UP:
+                m_controllerMask &= ~ControllerBits::Up;
+                break;
+            case SDL_CONTROLLER_BUTTON_DPAD_DOWN:
+                m_controllerMask &= ~ControllerBits::Down;
+                break;
+            case SDL_CONTROLLER_BUTTON_DPAD_LEFT:
+                m_controllerMask &= ~ControllerBits::Left;
+                break;
+            case SDL_CONTROLLER_BUTTON_DPAD_RIGHT:
+                m_controllerMask &= ~ControllerBits::Right;
+                break;
+            }
         }
         break;
     case SDL_JOYBUTTONDOWN:
@@ -224,9 +243,52 @@ void UISystem::handleEvent(const Event& evt)
         break;
 
         //joystick and controller move events
-    //case SDL_CONTROLLERAXISMOTION:
-
-    //    break;
+    case SDL_CONTROLLERAXISMOTION:
+        if (evt.caxis.which == cro::GameController::deviceID(m_activeControllerID))
+        {
+            static constexpr std::int16_t Threshold = 15000;
+            switch (evt.caxis.axis)
+            {
+            default: break;
+            case SDL_CONTROLLER_AXIS_LEFTX:
+                if (evt.caxis.value > Threshold)
+                {
+                    //right
+                    m_controllerMask |= ControllerBits::Right;
+                    m_controllerMask &= ~ControllerBits::Left;
+                }
+                else if (evt.caxis.value < -Threshold)
+                {
+                    //left
+                    m_controllerMask |= ControllerBits::Left;
+                    m_controllerMask &= ~ControllerBits::Right;
+                }
+                else
+                {
+                    m_controllerMask &= ~(ControllerBits::Left | ControllerBits::Right);
+                }
+                break;
+            case SDL_CONTROLLER_AXIS_LEFTY:
+                if (evt.caxis.value > Threshold)
+                {
+                    //down
+                    m_controllerMask |= ControllerBits::Down;
+                    m_controllerMask &= ~ControllerBits::Up;
+                }
+                else if (evt.caxis.value < -Threshold)
+                {
+                    //up
+                    m_controllerMask |= ControllerBits::Up;
+                    m_controllerMask &= ~ControllerBits::Down;
+                }
+                else
+                {
+                    m_controllerMask &= ~(ControllerBits::Up | ControllerBits::Down);
+                }
+                break;
+            }
+        }
+        break;
     //case SDL_JOYAXISMOTION:
 
     //    break;
@@ -266,7 +328,7 @@ void UISystem::process(float)
         }
     }
     m_prevControllerMask = m_controllerMask;
-    m_controllerMask = 0;
+    //m_controllerMask = 0;
 
     updateGroupAssignments();
 
@@ -413,6 +475,7 @@ void UISystem::setActiveControllerID(std::int32_t id)
     {
         m_activeControllerID = id;
     }
+    m_controllerMask = 0;
 }
 
 //private
