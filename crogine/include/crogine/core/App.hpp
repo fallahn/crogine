@@ -127,6 +127,15 @@ namespace cro
         */
         static bool isValid();
 
+        /*!
+        \brief Helper function for posting messages to the MessageBus
+        */
+        template <typename T>
+        static T* postMessage(std::int32_t id)
+        {
+            return getInstance().getMessageBus().post<T>(id);
+        };
+
     protected:
         
         virtual void handleEvent(const Event&) = 0;

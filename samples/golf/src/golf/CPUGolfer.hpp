@@ -54,7 +54,8 @@ public:
     void activate(glm::vec3);
     void update(float, glm::vec3);
     bool thinking() const { return m_thinking; }
-
+    void setPredictionResult(glm::vec3);
+    glm::vec3 getTarget() const { return m_target; }
 private:
 
     const InputParser& m_inputParser; //only reads the state - actual commands are send by raising events.
@@ -62,15 +63,29 @@ private:
     const CollisionMesh& m_collisionMesh;
     glm::vec3 m_target;
 
+    bool m_predictionUpdated;
+    bool m_wantsPrediction;
+    glm::vec3 m_predictionResult;
+    std::int32_t m_predictionCount;
+    static constexpr std::int32_t MaxPredictions = 20;
+
     enum class State
     {
         Inactive,
         CalcDistance, //assess distance to pin from player
         PickingClub, //tries to find suitable club for chosen distance
         Aiming, //account for wind speed and direction
+        UpdatePrediction, //dynamic mode correcting for prediction
         Stroke, //power bar is active
         Watching //ball is mid-flight but turn not yet ended
     }m_state = State::Inactive;
+
+    enum class Skill
+    {
+        Amateur, //uses the 'old' style
+        Dynamic  //adjusts accuracy based on some metric (player XP?)
+    }m_skill = Skill::Dynamic;
+
 
     std::int32_t m_clubID;
     std::int32_t m_prevClubID;
@@ -79,8 +94,9 @@ private:
     float m_targetDistance;
 
     float m_aimDistance;
-    float m_aimAngle;
+    float m_aimAngle; //this is the initial aim angle when the player is places
 
+    float m_targetAngle;
     float m_targetPower;
     float m_targetAccuracy;
 
@@ -92,6 +108,7 @@ private:
     }m_strokeState = StrokeState::Power;
 
     cro::Clock m_aimTimer;
+    cro::Clock m_predictTimer;
 
     bool m_thinking; //not a state per se, rather used to pause/idle while in specific states
     float m_thinkTime;
@@ -100,8 +117,12 @@ private:
 
     void calcDistance(float, glm::vec3);
     void pickClub(float);
+    void pickClubDynamic(float);
     void aim(float, glm::vec3);
+    void aimDynamic(float);
+    void updatePrediction(float);
     void stroke(float);
+
 
     //for each pressed event we need a release event the next frame
     std::vector<cro::Event> m_popEvents;

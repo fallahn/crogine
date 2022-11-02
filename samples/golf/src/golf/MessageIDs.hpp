@@ -167,6 +167,8 @@ struct AIEvent final
     enum
     {
         BeginThink,
-        EndThink
+        EndThink,
+        Predict
     }type = BeginThink;
+    float power = 0.f;
 };

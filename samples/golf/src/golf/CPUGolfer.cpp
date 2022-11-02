@@ -44,8 +44,10 @@ namespace
     const std::array StateStrings =
     {
         std::string("Inactive"),
+        std::string("Distance Calc"),
         std::string("Picking Club"),
         std::string("Aiming"),
+        std::string("Predicting"),
         std::string("Stroke"),
         std::string("Watching")
     };
@@ -58,6 +60,7 @@ namespace
         float slope = 0.f;
         float slopeComp = 0.f;
         float targetAngle = 0.f;
+        float targetDot = 0.f;
     }debug;
 
     constexpr float MinSearchDistance = 10.f;
@@ -70,6 +73,7 @@ namespace
     };
 
     const cro::Time MaxAimTime = cro::seconds(5.f);
+    const cro::Time MaxPredictTime = cro::seconds(6.f);
 }
 
 CPUGolfer::CPUGolfer(const InputParser& ip, const ActivePlayer& ap, const CollisionMesh& cm)
@@ -77,6 +81,10 @@ CPUGolfer::CPUGolfer(const InputParser& ip, const ActivePlayer& ap, const Collis
     m_activePlayer      (ap),
     m_collisionMesh     (cm),
     m_target            (0.f),
+    m_predictionUpdated (false),
+    m_wantsPrediction   (false),
+    m_predictionResult  (0.f),
+    m_predictionCount   (0),
     m_clubID            (ClubID::Driver),
     m_prevClubID        (ClubID::Driver),
     m_searchDirection   (0),
@@ -84,6 +92,7 @@ CPUGolfer::CPUGolfer(const InputParser& ip, const ActivePlayer& ap, const Collis
     m_targetDistance    (0.f),
     m_aimDistance       (0.f),
     m_aimAngle          (0.f),
+    m_targetAngle       (0.f),
     m_targetPower       (1.f),
     m_targetAccuracy    (0.f),
     m_prevPower         (0.f),
@@ -92,28 +101,36 @@ CPUGolfer::CPUGolfer(const InputParser& ip, const ActivePlayer& ap, const Collis
     m_thinkTime         (0.f)
 {
 #ifdef CRO_DEBUG_
-    /*registerWindow([&]()
+    registerWindow([&]()
         {
             if (ImGui::Begin("CPU"))
             {
                 ImGui::Text("State: %s", StateStrings[static_cast<std::int32_t>(m_state)].c_str());
-                ImGui::Text("Wind Dot: %3.2f", debug.windDot);
-                ImGui::Text("Target Diff: %3.2f", debug.diff);
-                ImGui::Text("Search Distance: %3.2f", m_searchDistance);
-                ImGui::Text("Target Distance: %3.3f", m_aimDistance);
+                //ImGui::Text("Wind Dot: %3.2f", debug.windDot);
+                //ImGui::Text("Target Diff: %3.2f", debug.diff);
+                //ImGui::Text("Search Distance: %3.2f", m_searchDistance);
+                //ImGui::Text("Target Distance: %3.3f", m_aimDistance);
                 ImGui::Text("Current Club: %s", Clubs[m_clubID].name.c_str());
                 ImGui::Separator();
-                ImGui::Text("Wind Comp: %3.3f", debug.windComp);
-                ImGui::Text("Slope: %3.3f", debug.slope);
-                ImGui::Text("Slope Comp: %3.3f", debug.slopeComp);
+                //ImGui::Text("Wind Comp: %3.3f", debug.windComp);
+                //ImGui::Text("Slope: %3.3f", debug.slope);
+                //ImGui::Text("Slope Comp: %3.3f", debug.slopeComp);
                 ImGui::Text("Start Angle: %3.3f", m_aimAngle);
-                ImGui::Text("Target Angle: %3.3f", debug.targetAngle);
+                ImGui::Text("Target Angle: %3.3f", m_targetAngle);
+                ImGui::Text("Target Dot: %3.3f", debug.targetDot);
                 ImGui::Text("Current Angle: %3.3f", m_inputParser.getYaw());
                 ImGui::Text("Target Power: %3.3f", m_targetPower);
                 ImGui::Text("Target Accuracy: %3.3f", m_targetAccuracy);
+                ImGui::Separator();
+                auto target = m_target - m_activePlayer.position;
+                ImGui::Text("Target %3.3f, %3.3f, %3.3f", target.x, target.y, target.z);
+                target = m_predictionResult - m_activePlayer.position;
+                ImGui::Text("Prediction %3.3f, %3.3f, %3.3f", target.x, target.y, target.z);
+                float dist = glm::length(m_target - m_predictionResult);
+                ImGui::Text("Distance to targ %3.3f", dist);
             }
             ImGui::End();
-        });*/
+        });
 #endif
 }
 
@@ -144,6 +161,8 @@ void CPUGolfer::activate(glm::vec3 target)
         m_state = State::CalcDistance;
         m_clubID = m_inputParser.getClub();
         m_prevClubID = m_clubID;
+        m_wantsPrediction = false;
+        m_predictionCount = 0;
 
         startThinking(1.6f);
         //LOG("CPU is now active", cro::Logger::Type::Info);
@@ -158,28 +177,59 @@ void CPUGolfer::update(float dt, glm::vec3 windVector)
     }
     m_popEvents.clear();
 
-    switch (m_state)
+    if (m_skill == Skill::Dynamic)
     {
-    default:
-    case State::Inactive:
-        
-        break;
-    case State::CalcDistance:
-        calcDistance(dt, windVector);
-        break;
-    case State::PickingClub:
-        pickClub(dt);
-        break;
-    case State::Aiming:
-        aim(dt, windVector);
-        break;
-    case State::Stroke:
-        stroke(dt);
-        break;
-    case State::Watching:
-
-        break;
+        switch (m_state)
+        {
+        default:
+        case State::Inactive:
+        case State::Watching:
+            break;
+        case State::CalcDistance:
+            m_state = State::PickingClub;
+            break;
+        case State::PickingClub:
+            pickClubDynamic(dt);
+            break;
+        case State::Aiming:
+            aimDynamic(dt);
+            break;
+        case State::UpdatePrediction:
+            updatePrediction(dt);
+            break;
+        case State::Stroke:
+            stroke(dt);
+            break;
+        }
     }
+    else
+    {
+        switch (m_state)
+        {
+        default:
+        case State::Inactive:
+        case State::Watching:
+            break;
+        case State::CalcDistance:
+            calcDistance(dt, windVector);
+            break;
+        case State::PickingClub:
+            pickClub(dt);
+            break;
+        case State::Aiming:
+            aim(dt, windVector);
+            break;
+        case State::Stroke:
+            stroke(dt);
+            break;
+        }
+    }
+}
+
+void CPUGolfer::setPredictionResult(glm::vec3 result)
+{
+    m_predictionResult = result;
+    m_predictionUpdated = true;
 }
 
 //private
@@ -354,6 +404,121 @@ void CPUGolfer::pickClub(float dt)
     }
 }
 
+void CPUGolfer::pickClubDynamic(float dt)
+{
+    if (m_thinking)
+    {
+        think(dt);
+    }
+    else
+    {
+        float targetDistance = glm::length(m_target - m_activePlayer.position);
+
+
+        //if we're on the green putter should be auto selected
+        if (m_activePlayer.terrain == TerrainID::Green)
+        {
+            startThinking(1.f);
+            m_state = State::Aiming;
+            m_clubID = ClubID::Putter;
+            m_prevClubID = m_clubID;
+
+            m_aimAngle = m_inputParser.getYaw();
+            m_aimTimer.restart();
+
+            m_targetPower = std::min(1.f, targetDistance / Clubs[m_clubID].target);
+
+            auto* msg = postMessage<AIEvent>(MessageID::AIMessage);
+            msg->type = AIEvent::BeginThink;
+
+            return;
+        }
+
+
+        //if greater than a chip reduce the distance by some percentage to allow for bounce
+        if (targetDistance > Clubs[ClubID::PitchWedge].target)
+        {
+            targetDistance *= 0.97f;
+        }
+
+        //find the first club whose target exceeds this distance
+        //else use the most powerful club available
+        auto club = m_inputParser.getClub();
+        float clubDistance = Clubs[club].target;
+        float diff = targetDistance - clubDistance;
+
+        const auto acceptClub = [&]()
+        {
+            m_state = State::Aiming;
+            m_aimAngle = m_inputParser.getYaw();
+            m_aimTimer.restart();
+
+            //guestimate power based on club (this gets refined from predictions)
+            m_targetPower = std::min(1.f, targetDistance / Clubs[m_clubID].target);
+        };
+
+        if (diff < 0)
+        {
+            m_prevClubID = club;
+            m_clubID = club;
+
+            acceptClub();
+            return;
+        }
+
+
+        //if the new club has looped switch back and accept it (it's the longest we have)
+        if (m_searchDirection == 1 && clubDistance < Clubs[m_prevClubID].target)
+        {
+            sendKeystroke(m_inputParser.getInputBinding().keys[InputBinding::PrevClub]);
+            m_clubID = m_prevClubID;
+
+            acceptClub();
+            return;
+        }
+
+        if (m_searchDirection == -1 && clubDistance > Clubs[m_prevClubID].target)
+        {
+            sendKeystroke(m_inputParser.getInputBinding().keys[InputBinding::NextClub]);
+            m_clubID = m_prevClubID;
+
+            acceptClub();
+            return;
+        }
+
+
+        if (diff > 0)
+        {
+            //increase club if needed
+            sendKeystroke(m_inputParser.getInputBinding().keys[InputBinding::NextClub]);
+            m_searchDirection = 1;
+            startThinking(0.25f);
+
+            //doesn't matter if we send this more than
+            //once as all it does is make the think bubble appear
+            auto* msg = postMessage<AIEvent>(MessageID::AIMessage);
+            msg->type = AIEvent::BeginThink;
+        }
+        else
+        {
+            //else decrease
+            sendKeystroke(m_inputParser.getInputBinding().keys[InputBinding::PrevClub]);
+            m_searchDirection = -1;
+            startThinking(0.25f);
+
+            auto* msg = postMessage<AIEvent>(MessageID::AIMessage);
+            msg->type = AIEvent::BeginThink;
+        }
+        m_prevClubID = club;
+
+        //else think for some time
+        startThinking(1.f);
+
+        auto* msg = postMessage<AIEvent>(MessageID::AIMessage);
+        msg->type = AIEvent::BeginThink;
+    }
+}
+
 void CPUGolfer::aim(float dt, glm::vec3 windVector)
 {
     if (m_thinking)
@@ -372,7 +537,7 @@ void CPUGolfer::aim(float dt, glm::vec3 windVector)
         }
 
         //putting is a special case where wind effect is lower
-        //but we also need to deal with the slope of the green
+    //but we also need to deal with the slope of the green
         float greenCompensation = 0.6f; //default reduction for driving (this was reduced from 1 because max rotation was increased to 0.18)
         float slopeCompensation = 0.f;
 
@@ -389,7 +554,7 @@ void CPUGolfer::aim(float dt, glm::vec3 windVector)
             float distanceReduction = std::min(0.86f, glm::length(centrePoint) / 3.f);
 
             //reduce this as we get nearer the hole
-            auto distance = glm::normalize(centrePoint) * (0.1f + (0.9f * std::min(1.f, (distanceToTarget / 2.f)))); 
+            auto distance = glm::normalize(centrePoint) * (0.1f + (0.9f * std::min(1.f, (distanceToTarget / 2.f))));
             centrePoint += m_activePlayer.position;
 
             //left point
@@ -434,12 +599,13 @@ void CPUGolfer::aim(float dt, glm::vec3 windVector)
         targetAngle += slopeCompensation;
         targetAngle = std::min(m_aimAngle + m_inputParser.getMaxRotation(), std::max(m_aimAngle - m_inputParser.getMaxRotation(), targetAngle));
         targetAngle *= 0.99f;
-        
+
 #ifdef CRO_DEBUG_
         debug.windComp = windComp;
         debug.slopeComp = slopeCompensation;
         debug.targetAngle = targetAngle;
-#endif        
+#endif
+
 
         //hold rotate button if not within angle tolerance
         if (targetAngle < m_inputParser.getYaw())
@@ -518,6 +684,163 @@ void CPUGolfer::aim(float dt, glm::vec3 windVector)
     }
 }
 
+void CPUGolfer::aimDynamic(float dt)
+{
+    if (m_thinking)
+    {
+        think(dt);
+    }
+    else
+    {
+        //pick inititial direction
+        if (!m_wantsPrediction)
+        {
+            m_targetAngle = m_aimAngle;// findTargetAngle(windVector).targetAngle;
+            m_wantsPrediction = true;
+        }
+        //or refine based on prediction
+        else
+        {
+            //update input parser
+            if (auto diff = std::abs(m_inputParser.getYaw() - m_targetAngle); diff > 0.05f
+                && m_aimTimer.elapsed() < MaxAimTime)
+            {
+                if (m_targetAngle < m_inputParser.getYaw())
+                {
+                    sendKeystroke(m_inputParser.getInputBinding().keys[InputBinding::Right], false);
+                }
+                else
+                {
+                    sendKeystroke(m_inputParser.getInputBinding().keys[InputBinding::Left], false);
+                }
+            }
+            else
+            {
+                //stop holding rotate
+                sendKeystroke(m_inputParser.getInputBinding().keys[InputBinding::Right], true);
+                sendKeystroke(m_inputParser.getInputBinding().keys[InputBinding::Left], true);
+
+                //request prediction and wait result.
+                auto* msg = postMessage<AIEvent>(MessageID::AIMessage);
+                msg->type = AIEvent::Predict;
+                msg->power = m_targetPower;
+
+                startThinking(0.1f);
+
+                m_state = State::UpdatePrediction;
+                m_predictTimer.restart();
+            }
+        }
+    }
+}
+
+void CPUGolfer::updatePrediction(float dt)
+{
+    if (m_thinking)
+    {
+        think(dt);
+    }
+    else
+    {
+        auto takeShot = [&]()
+        {
+            m_state = State::Stroke;
+
+            startThinking(0.4f);
+
+            auto* msg = postMessage<AIEvent>(MessageID::AIMessage);
+            msg->type = AIEvent::EndThink;
+        };
+
+        if (m_predictionUpdated)
+        {
+            //check aim and update target if necessary
+            //then switch back to aiming
+            auto targetDir = m_target - m_activePlayer.position;
+            auto predictDir = m_predictionResult - m_activePlayer.position;
+
+            auto dir = glm::normalize(targetDir);
+            dir = { -dir.z, dir.y, dir.x }; //rotating this 90 deg means dot prod is +/- depending on if it's too far left or right
+
+            auto resultDir = glm::normalize(predictDir);
+
+            constexpr float tolerance = 0.05f; //TODO vary this with CPU behaviour
+            float dot = glm::dot(resultDir, dir);
+#ifdef CRO_DEBUG_
+            debug.targetDot = dot;
+#endif
+            if ((dot < -tolerance
+                && m_targetAngle < (m_aimAngle + m_inputParser.getMaxRotation()))
+            || (dot > tolerance
+                && m_targetAngle > (m_aimAngle - m_inputParser.getMaxRotation())))
+            {
+                m_targetAngle = std::min(m_aimAngle + m_inputParser.getMaxRotation(), 
+                    std::max(m_aimAngle - m_inputParser.getMaxRotation(),
+                        m_targetAngle + (cro::Util::Const::PI / 2.f) * dot));
+
+                m_state = State::Aiming;
+                m_aimTimer.restart();
+            }
+            //else check distance / current tolerance
+            //and update power if necessary
+            else
+            {
+                //TODO calc this tolerance based on CPU difficulty
+                float precision = m_activePlayer.terrain == TerrainID::Green ? 0.02f : 2.f;
+                float precSqr = precision * precision;
+                if (float resultPrecision = glm::length2(predictDir - targetDir);
+                    resultPrecision > precSqr && m_targetPower < 1.f) //TODO less than 1- increaseAmount
+                {
+                    float precDiff = std::sqrt(resultPrecision);
+                    float change = (precDiff / Clubs[m_clubID].target) / 2.f;
+
+                    if (glm::length2(predictDir) < glm::length2(targetDir))
+                    {
+                        //increase power by some amount
+                        m_targetPower = std::min(1.f, m_targetPower + change);
+                    }
+                    else
+                    {
+                        //decrease power by some amount
+                        m_targetPower = std::min(1.f, std::max(0.1f, m_targetPower - change));
+                    }
+
+                    //request new prediction
+                    if (m_predictionCount++ < MaxPredictions)
+                    {
+                        auto* msg = postMessage<AIEvent>(MessageID::AIMessage);
+                        msg->type = AIEvent::Predict;
+                        msg->power = m_targetPower;
+
+                        startThinking(0.25f);
+
+                        m_predictTimer.restart();
+                    }
+                    else
+                    {
+                        LogI << "Reached max predictions" << std::endl;
+                        takeShot();
+                    }
+                }
+                else
+                {
+                    LogI << "result is " << resultPrecision << " and targ result is " << precSqr << std::endl;
+                    //accept our settings
+                    takeShot();
+                }
+            }
+
+            m_predictionUpdated = false;
+        }
+        else if (m_predictTimer.elapsed() > MaxPredictTime)
+        {
+            //we timed out getting a response, so just take the shot
+            LogI << "Predict timer expired" << std::endl;
+            takeShot();
+        }
+    }
+}
+
 void CPUGolfer::stroke(float dt)
 {
     if (m_thinking)
@@ -568,6 +891,7 @@ void CPUGolfer::sendKeystroke(std::int32_t key, bool autoRelease)
 {
     SDL_Event evt;
     evt.type = SDL_KEYDOWN;
+    evt.key.keysym.mod = 0; //must zero out else we get phantom keypresses
     evt.key.keysym.sym = key;
     evt.key.keysym.scancode = SDL_GetScancodeFromKey(key);
     evt.key.timestamp = 0;
