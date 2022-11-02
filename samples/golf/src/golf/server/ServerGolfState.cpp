@@ -427,7 +427,7 @@ void GolfState::handlePlayerInput(const net::NetEvent::Packet& packet, bool pred
                 e.addComponent<Ball>() = ball;
                 
                 m_scene.simulate(0.f); //run once so entity is properly integrated.
-                m_scene.getSystem<BallSystem>()->runPrediction(e, 1.f/20.f); //TODO use a player difficulty setting to set timestep
+                m_scene.getSystem<BallSystem>()->runPrediction(e, 1.f/60.f); //TODO use a player difficulty setting to set timestep
 
                 //read the result from e
                 auto resultPos = e.getComponent<cro::Transform>().getPosition();

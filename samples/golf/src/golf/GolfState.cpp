@@ -3063,7 +3063,7 @@ void GolfState::buildScene()
 
 #ifdef CRO_DEBUG_
     entity = m_gameScene.createEntity();
-    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Transform>().setScale({0.5f, 1.f, 0.5f});
     md.createModel(entity);
     entity.getComponent<cro::Model>().setMaterial(0, beaconMat);
     entity.getComponent<cro::Model>().setMaterialProperty(0, "u_colourRotation", 0.f);
@@ -3071,7 +3071,7 @@ void GolfState::buildScene()
     CPUTarget = entity;
 
     entity = m_gameScene.createEntity();
-    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Transform>().setScale({ 0.5f, 1.f, 0.5f });
     md.createModel(entity);
     entity.getComponent<cro::Model>().setMaterial(0, beaconMat);
     entity.getComponent<cro::Model>().setMaterialProperty(0, "u_colourRotation", 0.35f);

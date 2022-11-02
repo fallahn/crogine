@@ -67,7 +67,7 @@ private:
     bool m_wantsPrediction;
     glm::vec3 m_predictionResult;
     std::int32_t m_predictionCount;
-    static constexpr std::int32_t MaxPredictions = 20;
+    static constexpr std::int32_t MaxPredictions = 16;
 
     enum class State
     {
@@ -123,6 +123,7 @@ private:
     void updatePrediction(float);
     void stroke(float);
 
+    void calcAccuracy();
 
     //for each pressed event we need a release event the next frame
     std::vector<cro::Event> m_popEvents;

@@ -2346,7 +2346,7 @@ void GolfState::buildTrophyScene()
             bounds.height /= 4.f;
             bounds.bottom = bounds.height * i;
             entity.getComponent<cro::Sprite>().setTextureRect(bounds);
-            entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f, -1.2f });
+            entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f, -0.2f });
             auto p = position;
             entity.addComponent<cro::Callback>().function =
                 [&,p,trophyEnt](cro::Entity e, float)

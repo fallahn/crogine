@@ -65,6 +65,7 @@ namespace
 
     constexpr float MinSearchDistance = 10.f;
     constexpr float SearchIncrease = 10.f;
+    constexpr float Epsilon = 0.005f;
 
     template <typename T>
     T* postMessage(std::int32_t id)
@@ -164,6 +165,8 @@ void CPUGolfer::activate(glm::vec3 target)
         m_wantsPrediction = false;
         m_predictionCount = 0;
 
+        //m_skill = glm::length(target - m_activePlayer.position) < 2.f ? Skill::Amateur : Skill::Dynamic;
+
         startThinking(1.6f);
         //LOG("CPU is now active", cro::Logger::Type::Info);
     }
@@ -238,7 +241,10 @@ void CPUGolfer::startThinking(float duration)
     if (!m_thinking)
     {
         m_thinking = true;
-        m_thinkTime = duration + cro::Util::Random::value(0.1f, 0.8f);
+        m_thinkTime = duration + cro::Util::Random::value(0.1f * duration, 0.8f * duration);
+
+        auto* msg = postMessage<AIEvent>(MessageID::AIMessage);
+        msg->type = AIEvent::BeginThink;
     }
 }
 
@@ -275,9 +281,6 @@ void CPUGolfer::calcDistance(float dt, glm::vec3 windVector)
             m_aimDistance = targetDistance;
             m_aimAngle = m_inputParser.getYaw();
             m_aimTimer.restart();
-
-            auto* msg = postMessage<AIEvent>(MessageID::AIMessage);
-            msg->type = AIEvent::BeginThink;
 
             //LOG("CPU Entered Aiming Mode", cro::Logger::Type::Info);
             return;
@@ -375,11 +378,6 @@ void CPUGolfer::pickClub(float dt)
             sendKeystroke(m_inputParser.getInputBinding().keys[InputBinding::NextClub]);
             m_searchDirection = 1;
             startThinking(0.25f);
-
-            //doesn't matter if we send this more than
-            //once as all it does is make the think bubble appear
-            auto* msg = postMessage<AIEvent>(MessageID::AIMessage);
-            msg->type = AIEvent::BeginThink;
         }
         else
         {
@@ -393,9 +391,6 @@ void CPUGolfer::pickClub(float dt)
             sendKeystroke(m_inputParser.getInputBinding().keys[InputBinding::PrevClub]);
             m_searchDirection = -1;
             startThinking(0.25f);
-
-            auto* msg = postMessage<AIEvent>(MessageID::AIMessage);
-            msg->type = AIEvent::BeginThink;
         }
         m_prevClubID = club;
 
@@ -418,7 +413,7 @@ void CPUGolfer::pickClubDynamic(float dt)
         //if we're on the green putter should be auto selected
         if (m_activePlayer.terrain == TerrainID::Green)
         {
-            startThinking(1.f);
+            startThinking(0.5f);
             m_state = State::Aiming;
             m_clubID = ClubID::Putter;
             m_prevClubID = m_clubID;
@@ -428,18 +423,9 @@ void CPUGolfer::pickClubDynamic(float dt)
 
             m_targetPower = std::min(1.f, targetDistance / Clubs[m_clubID].target);
 
-            auto* msg = postMessage<AIEvent>(MessageID::AIMessage);
-            msg->type = AIEvent::BeginThink;
-
             return;
         }
 
-
-        //if greater than a chip reduce the distance by some percentage to allow for bounce
-        if (targetDistance > Clubs[ClubID::PitchWedge].target)
-        {
-            targetDistance *= 0.97f;
-        }
 
         //find the first club whose target exceeds this distance
         //else use the most powerful club available
@@ -493,11 +479,6 @@ void CPUGolfer::pickClubDynamic(float dt)
             sendKeystroke(m_inputParser.getInputBinding().keys[InputBinding::NextClub]);
             m_searchDirection = 1;
             startThinking(0.25f);
-
-            //doesn't matter if we send this more than
-            //once as all it does is make the think bubble appear
-            auto* msg = postMessage<AIEvent>(MessageID::AIMessage);
-            msg->type = AIEvent::BeginThink;
         }
         else
         {
@@ -505,17 +486,11 @@ void CPUGolfer::pickClubDynamic(float dt)
             sendKeystroke(m_inputParser.getInputBinding().keys[InputBinding::PrevClub]);
             m_searchDirection = -1;
             startThinking(0.25f);
-
-            auto* msg = postMessage<AIEvent>(MessageID::AIMessage);
-            msg->type = AIEvent::BeginThink;
         }
         m_prevClubID = club;
 
         //else think for some time
         startThinking(1.f);
-
-        auto* msg = postMessage<AIEvent>(MessageID::AIMessage);
-        msg->type = AIEvent::BeginThink;
     }
 }
 
@@ -662,16 +637,18 @@ void CPUGolfer::aim(float dt, glm::vec3 windVector)
             }
 
 
-            //due to input lag 0.08 is actually ~0 ie perfectly accurate
-            //so this range lies ~0.04 either side of perfect
-            m_targetAccuracy = static_cast<float>(cro::Util::Random::value(4, 12)) / 100.f;
+            ////due to input lag 0.08 is actually ~0 ie perfectly accurate
+            ////so this range lies ~0.04 either side of perfect
+            //m_targetAccuracy = static_cast<float>(cro::Util::Random::value(4, 12)) / 100.f;
 
-            //occasionally make really inaccurate
-            //... or maybe even perfect? :)
-            if (cro::Util::Random::value(0, 8) == 0)
-            {
-                m_targetAccuracy += static_cast<float>(cro::Util::Random::value(-8, 4)) / 100.f;
-            }
+            ////occasionally make really inaccurate
+            ////... or maybe even perfect? :)
+            //if (cro::Util::Random::value(0, 8) == 0)
+            //{
+            //    m_targetAccuracy += static_cast<float>(cro::Util::Random::value(-8, 4)) / 100.f;
+            //}
+
+            calcAccuracy();
 
             m_state = State::Stroke;
             startThinking(0.4f);
@@ -744,6 +721,11 @@ void CPUGolfer::updatePrediction(float dt)
     {
         auto takeShot = [&]()
         {
+            calcAccuracy();
+
+            //we need to maintain a min power target incase we're on the lip of the hole
+            m_targetPower = std::max(0.1f, m_targetPower);
+
             m_state = State::Stroke;
 
             startThinking(0.4f);
@@ -769,10 +751,11 @@ void CPUGolfer::updatePrediction(float dt)
 #ifdef CRO_DEBUG_
             debug.targetDot = dot;
 #endif
-            if ((dot < -tolerance
-                && m_targetAngle < (m_aimAngle + m_inputParser.getMaxRotation()))
+            if (m_predictionCount++ < MaxPredictions &&
+                ((dot < -tolerance
+                && m_targetAngle < ((m_aimAngle + m_inputParser.getMaxRotation()) - Epsilon))
             || (dot > tolerance
-                && m_targetAngle > (m_aimAngle - m_inputParser.getMaxRotation())))
+                && m_targetAngle > ((m_aimAngle - m_inputParser.getMaxRotation()) + Epsilon))))
             {
                 m_targetAngle = std::min(m_aimAngle + m_inputParser.getMaxRotation(), 
                     std::max(m_aimAngle - m_inputParser.getMaxRotation(),
@@ -785,8 +768,8 @@ void CPUGolfer::updatePrediction(float dt)
             //and update power if necessary
             else
             {
-                //TODO calc this tolerance based on CPU difficulty
-                float precision = m_activePlayer.terrain == TerrainID::Green ? 0.02f : 2.f;
+                //TODO calc this tolerance based on CPU difficulty / distance to hole
+                float precision = m_activePlayer.terrain == TerrainID::Green ? 0.06f : 2.f;
                 float precSqr = precision * precision;
                 if (float resultPrecision = glm::length2(predictDir - targetDir);
                     resultPrecision > precSqr && m_targetPower < 1.f) //TODO less than 1- increaseAmount
@@ -812,7 +795,7 @@ void CPUGolfer::updatePrediction(float dt)
                         msg->type = AIEvent::Predict;
                         msg->power = m_targetPower;
 
-                        startThinking(0.25f);
+                        startThinking(0.05f);
 
                         m_predictTimer.restart();
                     }
@@ -884,6 +867,20 @@ void CPUGolfer::stroke(float dt)
                 m_prevAccuracy = accuracy;
             }
         }
+    }
+}
+
+void CPUGolfer::calcAccuracy()
+{
+    //due to input lag 0.08 is actually ~0 ie perfectly accurate
+    //so this range lies ~0.04 either side of perfect
+    m_targetAccuracy = static_cast<float>(cro::Util::Random::value(4, 12)) / 100.f;
+
+    //occasionally make really inaccurate
+    //... or maybe even perfect? :)
+    if (cro::Util::Random::value(0, 8) == 0)
+    {
+        m_targetAccuracy += static_cast<float>(cro::Util::Random::value(-8, 4)) / 100.f;
     }
 }
 
