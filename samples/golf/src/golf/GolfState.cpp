@@ -138,8 +138,8 @@ namespace
     glm::vec4 bottomSky;
     std::array<std::vector<float>, 3u> ballDump;
 
-    cro::Entity CPUTarget;
-    cro::Entity PredictedTarget;
+    //cro::Entity CPUTarget;
+    //cro::Entity PredictedTarget;
 
     float godmode = 1.f;
     bool allowAchievements = false;
@@ -3062,21 +3062,21 @@ void GolfState::buildScene()
     auto beaconEntity = entity;
 
 #ifdef CRO_DEBUG_
-    entity = m_gameScene.createEntity();
-    entity.addComponent<cro::Transform>().setScale({0.5f, 1.f, 0.5f});
-    md.createModel(entity);
-    entity.getComponent<cro::Model>().setMaterial(0, beaconMat);
-    entity.getComponent<cro::Model>().setMaterialProperty(0, "u_colourRotation", 0.f);
-    entity.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", cro::Colour::White);
-    CPUTarget = entity;
+    //entity = m_gameScene.createEntity();
+    //entity.addComponent<cro::Transform>();
+    //md.createModel(entity);
+    //entity.getComponent<cro::Model>().setMaterial(0, beaconMat);
+    //entity.getComponent<cro::Model>().setMaterialProperty(0, "u_colourRotation", 0.f);
+    //entity.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", cro::Colour::White);
+    //CPUTarget = entity;
 
-    entity = m_gameScene.createEntity();
-    entity.addComponent<cro::Transform>().setScale({ 0.5f, 1.f, 0.5f });
-    md.createModel(entity);
-    entity.getComponent<cro::Model>().setMaterial(0, beaconMat);
-    entity.getComponent<cro::Model>().setMaterialProperty(0, "u_colourRotation", 0.35f);
-    entity.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", cro::Colour::White);
-    PredictedTarget = entity;
+    //entity = m_gameScene.createEntity();
+    //entity.addComponent<cro::Transform>();
+    //md.createModel(entity);
+    //entity.getComponent<cro::Model>().setMaterial(0, beaconMat);
+    //entity.getComponent<cro::Model>().setMaterialProperty(0, "u_colourRotation", 0.35f);
+    //entity.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", cro::Colour::White);
+    //PredictedTarget = entity;
 #endif
 
     //arrow pointing to hole
@@ -4332,7 +4332,7 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
         case PacketID::BallPrediction:
             m_cpuGolfer.setPredictionResult(evt.packet.as<glm::vec3>());
 #ifdef CRO_DEBUG_
-            PredictedTarget.getComponent<cro::Transform>().setPosition(evt.packet.as<glm::vec3>());
+            //PredictedTarget.getComponent<cro::Transform>().setPosition(evt.packet.as<glm::vec3>());
 #endif
             break;
         case PacketID::LevelUp:
@@ -5297,7 +5297,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
         auto position = player.position;
         position.y += 0.014f; //z-fighting
         e.getComponent<cro::Transform>().setPosition(position);
-        e.getComponent<cro::Model>().setHidden(!(localPlayer /*&& !m_sharedData.localConnectionData.playerData[player.player].isCPU*/));
+        e.getComponent<cro::Model>().setHidden(!(localPlayer && !m_sharedData.localConnectionData.playerData[player.player].isCPU));
         e.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, m_inputParser.getYaw());
         e.getComponent<cro::Callback>().active = localPlayer;
         e.getComponent<cro::Model>().setDepthTestEnabled(0, player.terrain == TerrainID::Green);
@@ -5357,7 +5357,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
             m_cpuGolfer.activate(target);
         }
 #ifdef CRO_DEBUG_
-        CPUTarget.getComponent<cro::Transform>().setPosition(m_cpuGolfer.getTarget());
+        //CPUTarget.getComponent<cro::Transform>().setPosition(m_cpuGolfer.getTarget());
 #endif
     }
 

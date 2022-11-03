@@ -34,6 +34,8 @@ source distribution.
 #include "CollisionMesh.hpp"
 #include "server/ServerPacketData.hpp"
 
+#include <Social.hpp>
+
 #include <crogine/gui/Gui.hpp>
 #include <crogine/util/Random.hpp>
 #include <crogine/util/Maths.hpp>
@@ -77,6 +79,22 @@ namespace
     const cro::Time MaxPredictTime = cro::seconds(6.f);
 }
 
+/*
+result tolerance
+result tolerance putting
+stroke accuracy
+mistake odds
+*/
+const std::array<CPUGolfer::SkillContext, 6> CPUGolfer::m_skills =
+{
+    CPUGolfer::SkillContext(CPUGolfer::Skill::Amateur, 0.f, 0.f, 4, 0),
+    {CPUGolfer::Skill::Dynamic, 10.f, 0.2f, 6, 4},
+    {CPUGolfer::Skill::Dynamic, 6.f, 0.2f, 5, 4},
+    {CPUGolfer::Skill::Dynamic, 4.f, 0.1f, 4, 8},
+    {CPUGolfer::Skill::Dynamic, 2.f, 0.06f, 4, 12},
+    {CPUGolfer::Skill::Dynamic, 1.8f, 0.06f, 2, 18}
+};
+
 CPUGolfer::CPUGolfer(const InputParser& ip, const ActivePlayer& ap, const CollisionMesh& cm)
     : m_inputParser     (ip),
     m_activePlayer      (ap),
@@ -86,6 +104,7 @@ CPUGolfer::CPUGolfer(const InputParser& ip, const ActivePlayer& ap, const Collis
     m_wantsPrediction   (false),
     m_predictionResult  (0.f),
     m_predictionCount   (0),
+    m_skillIndex        (0),
     m_clubID            (ClubID::Driver),
     m_prevClubID        (ClubID::Driver),
     m_searchDirection   (0),
@@ -102,36 +121,36 @@ CPUGolfer::CPUGolfer(const InputParser& ip, const ActivePlayer& ap, const Collis
     m_thinkTime         (0.f)
 {
 #ifdef CRO_DEBUG_
-    registerWindow([&]()
-        {
-            if (ImGui::Begin("CPU"))
-            {
-                ImGui::Text("State: %s", StateStrings[static_cast<std::int32_t>(m_state)].c_str());
-                //ImGui::Text("Wind Dot: %3.2f", debug.windDot);
-                //ImGui::Text("Target Diff: %3.2f", debug.diff);
-                //ImGui::Text("Search Distance: %3.2f", m_searchDistance);
-                //ImGui::Text("Target Distance: %3.3f", m_aimDistance);
-                ImGui::Text("Current Club: %s", Clubs[m_clubID].name.c_str());
-                ImGui::Separator();
-                //ImGui::Text("Wind Comp: %3.3f", debug.windComp);
-                //ImGui::Text("Slope: %3.3f", debug.slope);
-                //ImGui::Text("Slope Comp: %3.3f", debug.slopeComp);
-                ImGui::Text("Start Angle: %3.3f", m_aimAngle);
-                ImGui::Text("Target Angle: %3.3f", m_targetAngle);
-                ImGui::Text("Target Dot: %3.3f", debug.targetDot);
-                ImGui::Text("Current Angle: %3.3f", m_inputParser.getYaw());
-                ImGui::Text("Target Power: %3.3f", m_targetPower);
-                ImGui::Text("Target Accuracy: %3.3f", m_targetAccuracy);
-                ImGui::Separator();
-                auto target = m_target - m_activePlayer.position;
-                ImGui::Text("Target %3.3f, %3.3f, %3.3f", target.x, target.y, target.z);
-                target = m_predictionResult - m_activePlayer.position;
-                ImGui::Text("Prediction %3.3f, %3.3f, %3.3f", target.x, target.y, target.z);
-                float dist = glm::length(m_target - m_predictionResult);
-                ImGui::Text("Distance to targ %3.3f", dist);
-            }
-            ImGui::End();
-        });
+    //registerWindow([&]()
+    //    {
+    //        if (ImGui::Begin("CPU"))
+    //        {
+    //            ImGui::Text("State: %s", StateStrings[static_cast<std::int32_t>(m_state)].c_str());
+    //            //ImGui::Text("Wind Dot: %3.2f", debug.windDot);
+    //            //ImGui::Text("Target Diff: %3.2f", debug.diff);
+    //            //ImGui::Text("Search Distance: %3.2f", m_searchDistance);
+    //            //ImGui::Text("Target Distance: %3.3f", m_aimDistance);
+    //            ImGui::Text("Current Club: %s", Clubs[m_clubID].name.c_str());
+    //            ImGui::Separator();
+    //            //ImGui::Text("Wind Comp: %3.3f", debug.windComp);
+    //            //ImGui::Text("Slope: %3.3f", debug.slope);
+    //            //ImGui::Text("Slope Comp: %3.3f", debug.slopeComp);
+    //            ImGui::Text("Start Angle: %3.3f", m_aimAngle);
+    //            ImGui::Text("Target Angle: %3.3f", m_targetAngle);
+    //            ImGui::Text("Target Dot: %3.3f", debug.targetDot);
+    //            ImGui::Text("Current Angle: %3.3f", m_inputParser.getYaw());
+    //            ImGui::Text("Target Power: %3.3f", m_targetPower);
+    //            ImGui::Text("Target Accuracy: %3.3f", m_targetAccuracy);
+    //            ImGui::Separator();
+    //            auto target = m_target - m_activePlayer.position;
+    //            ImGui::Text("Target %3.3f, %3.3f, %3.3f", target.x, target.y, target.z);
+    //            target = m_predictionResult - m_activePlayer.position;
+    //            ImGui::Text("Prediction %3.3f, %3.3f, %3.3f", target.x, target.y, target.z);
+    //            float dist = glm::length(m_target - m_predictionResult);
+    //            ImGui::Text("Distance to targ %3.3f", dist);
+    //        }
+    //        ImGui::End();
+    //    });
 #endif
 }
 
@@ -165,9 +184,16 @@ void CPUGolfer::activate(glm::vec3 target)
         m_wantsPrediction = false;
         m_predictionCount = 0;
 
-        //m_skill = glm::length(target - m_activePlayer.position) < 2.f ? Skill::Amateur : Skill::Dynamic;
+        //choose skill based on player's XP, increasing every 3 levels
+        auto level = std::min(Social::getLevel(), 15);
+        m_skillIndex = level / 3;
 
         startThinking(1.6f);
+
+        //this just hides the icon cos I don't like it showing until the name animation is complete :)
+        auto* msg = postMessage<AIEvent>(MessageID::AIMessage);
+        msg->type = AIEvent::EndThink;
+
         //LOG("CPU is now active", cro::Logger::Type::Info);
     }
 }
@@ -180,7 +206,7 @@ void CPUGolfer::update(float dt, glm::vec3 windVector)
     }
     m_popEvents.clear();
 
-    if (m_skill == Skill::Dynamic)
+    if (m_skills[m_skillIndex].skill == Skill::Dynamic)
     {
         switch (m_state)
         {
@@ -746,7 +772,7 @@ void CPUGolfer::updatePrediction(float dt)
 
             auto resultDir = glm::normalize(predictDir);
 
-            constexpr float tolerance = 0.05f; //TODO vary this with CPU behaviour
+            constexpr float tolerance = 0.05f; //TODO vary this with CPU behaviour(?)
             float dot = glm::dot(resultDir, dir);
 #ifdef CRO_DEBUG_
             debug.targetDot = dot;
@@ -768,11 +794,17 @@ void CPUGolfer::updatePrediction(float dt)
             //and update power if necessary
             else
             {
-                //TODO calc this tolerance based on CPU difficulty / distance to hole
-                float precision = m_activePlayer.terrain == TerrainID::Green ? 0.06f : 2.f;
+                //calc this tolerance based on CPU difficulty / distance to hole
+                float precision = m_skills[m_skillIndex].resultTolerancePutt;
+                if (m_activePlayer.terrain != TerrainID::Green)
+                {
+                    precision = m_skills[m_skillIndex].resultTolerance;
+                    precision = (precision / 2.f) + ((precision / 2.f) * std::min(1.f, glm::length(targetDir) / 200.f));
+                }
+
                 float precSqr = precision * precision;
                 if (float resultPrecision = glm::length2(predictDir - targetDir);
-                    resultPrecision > precSqr && m_targetPower < 1.f) //TODO less than 1- increaseAmount
+                    resultPrecision > precSqr && m_targetPower < 1.f)
                 {
                     float precDiff = std::sqrt(resultPrecision);
                     float change = (precDiff / Clubs[m_clubID].target) / 2.f;
@@ -801,13 +833,13 @@ void CPUGolfer::updatePrediction(float dt)
                     }
                     else
                     {
-                        LogI << "Reached max predictions" << std::endl;
+                        //LogI << "Reached max predictions" << std::endl;
                         takeShot();
                     }
                 }
                 else
                 {
-                    LogI << "result is " << resultPrecision << " and targ result is " << precSqr << std::endl;
+                    //LogI << "result is " << resultPrecision << " and targ result is " << precSqr << std::endl;
                     //accept our settings
                     takeShot();
                 }
@@ -818,7 +850,7 @@ void CPUGolfer::updatePrediction(float dt)
         else if (m_predictTimer.elapsed() > MaxPredictTime)
         {
             //we timed out getting a response, so just take the shot
-            LogI << "Predict timer expired" << std::endl;
+            //LogI << "Predict timer expired" << std::endl;
             takeShot();
         }
     }
@@ -874,13 +906,22 @@ void CPUGolfer::calcAccuracy()
 {
     //due to input lag 0.08 is actually ~0 ie perfectly accurate
     //so this range lies ~0.04 either side of perfect
-    m_targetAccuracy = static_cast<float>(cro::Util::Random::value(4, 12)) / 100.f;
+    //m_targetAccuracy = static_cast<float>(cro::Util::Random::value(4, 12)) / 100.f;
+
+    m_targetAccuracy = 0.08f;
+    if (m_skills[m_skillIndex].strokeAccuracy != 0)
+    {
+        m_targetAccuracy += static_cast<float>(-m_skills[m_skillIndex].strokeAccuracy, m_skills[m_skillIndex].strokeAccuracy) / 100.f;
+    }
 
     //occasionally make really inaccurate
     //... or maybe even perfect? :)
-    if (cro::Util::Random::value(0, 8) == 0)
+    if (m_skills[m_skillIndex].mistakeOdds != 0)
     {
-        m_targetAccuracy += static_cast<float>(cro::Util::Random::value(-8, 4)) / 100.f;
+        if (cro::Util::Random::value(0, m_skills[m_skillIndex].mistakeOdds) == 0)
+        {
+            m_targetAccuracy += static_cast<float>(cro::Util::Random::value(-12, 12)) / 100.f;
+        }
     }
 }
 
