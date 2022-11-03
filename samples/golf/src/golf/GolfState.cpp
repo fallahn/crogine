@@ -5169,7 +5169,7 @@ void GolfState::setCameraPosition(glm::vec3 position, float height, float viewOf
 
     //lower height as we get closer to hole
     heightMultiplier = std::min(1.f, std::max(0.f, holeDist / MinRadSqr));
-    if (!m_holeData[m_currentHole].puttFromTee)
+    //if (!m_holeData[m_currentHole].puttFromTee)
     {
         heightMultiplier *= CameraTeeMultiplier;
     }
@@ -5815,11 +5815,11 @@ void GolfState::createTransition(const ActivePlayer& playerData)
     float zoom = 1.f;
     if (playerData.terrain == TerrainID::Green)
     {
-        zoom = m_holeData[m_currentHole].puttFromTee ? PuttingZoom : GolfZoom;
+        const float dist = 1.f - std::min(1.f, glm::length(playerData.position - m_holeData[m_currentHole].pin));
+        zoom = m_holeData[m_currentHole].puttFromTee ? (PuttingZoom * (1.f - (0.56f * dist))) : GolfZoom;
 
         //reduce the zoom within the final metre
         float diff = 1.f - zoom;
-        const float dist = 1.f - std::min(1.f, glm::length(playerData.position - m_holeData[m_currentHole].pin));
         zoom += diff * dist;
     }
 
@@ -5884,7 +5884,7 @@ void GolfState::createTransition(const ActivePlayer& playerData)
     if (playerData.terrain == TerrainID::Green)
     {
         targetInfo.targetHeight = CameraPuttHeight;
-        if (!m_holeData[m_currentHole].puttFromTee)
+        //if (!m_holeData[m_currentHole].puttFromTee)
         {
             targetInfo.targetHeight *= CameraTeeMultiplier;
         }
