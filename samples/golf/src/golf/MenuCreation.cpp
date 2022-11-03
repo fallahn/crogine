@@ -1004,7 +1004,7 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
     entity.getComponent<cro::Transform>().addChild(labelEnt.getComponent<cro::Transform>());
     entity.getComponent<cro::UIInput>().area.width += cro::Text::getLocalBounds(labelEnt).width;
 
-    if (Social::isAvailable())
+    //if (Social::isAvailable())
     {
         const float xPos = spriteSheet.getSprite("background").getTextureRect().width / 2.f;
         entity = m_uiScene.createEntity();
