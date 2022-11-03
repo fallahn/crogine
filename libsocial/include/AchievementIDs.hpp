@@ -76,6 +76,13 @@ namespace AchievementID
         GrandTour,
         GrandDesign,
 
+        GettingStarted,
+        Junior,
+        Amateur,
+        Enthusiast,
+        SemiPro,
+        Pro,
+
         Count
     };
     static_assert(Count <= 256, "Count exceeds maximum 256 Achievements!");

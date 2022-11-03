@@ -464,7 +464,7 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
                     {
                         //this means we don't add a HUGE multiplier if there's
                         //already a steep slope, else the ball go WEEEEEEEEE
-                        float slopeMultiplier = std::max(0.f, 1.f - (slopeStrength / 0.025f));
+                        float slopeMultiplier = std::max(0.f, 1.f - (slopeStrength / 0.02f));
 
                         friction = Friction[ball.terrain] - (slopeStrength * 0.08f);
                         //unrealistic but makes it more interesting on full size courses

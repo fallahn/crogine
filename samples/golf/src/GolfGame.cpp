@@ -54,6 +54,9 @@ source distribution.
 #include "icon.hpp"
 #include "Achievements.hpp"
 
+#include <AchievementIDs.hpp>
+#include <AchievementStrings.hpp>
+
 #ifdef USE_GNS
 #include <AchievementsImpl.hpp>
 #endif
@@ -237,6 +240,35 @@ void GolfGame::handleMessage(const cro::Message& msg)
         case SystemEvent::PostProcessIndexChanged:
             applyPostProcess();
             break;
+        }
+    }
+    else if (msg.id == Social::MessageID::SocialMessage)
+    {
+        const auto& data = msg.getData<Social::SocialEvent>();
+        if (data.type == Social::SocialEvent::LevelUp)
+        {
+            switch (data.level)
+            {
+            default: break;
+            case 1:
+                Achievements::awardAchievement(AchievementStrings[AchievementID::GettingStarted]);
+                break;
+            case 10:
+                Achievements::awardAchievement(AchievementStrings[AchievementID::Junior]);
+                break;
+            case 20:
+                Achievements::awardAchievement(AchievementStrings[AchievementID::Amateur]);
+                break;
+            case 30:
+                Achievements::awardAchievement(AchievementStrings[AchievementID::Enthusiast]);
+                break;
+            case 40:
+                Achievements::awardAchievement(AchievementStrings[AchievementID::SemiPro]);
+                break;
+            case 50:
+                Achievements::awardAchievement(AchievementStrings[AchievementID::Pro]);
+                break;
+            }
         }
     }
 

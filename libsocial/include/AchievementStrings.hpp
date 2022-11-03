@@ -80,6 +80,12 @@ static const std::array<std::string, AchievementID::Count> AchievementStrings =
     "golfin_dolphin",
     "grand_tour",
     "grand_design",
+    "getting_started",
+    "junior",
+    "amateur",
+    "enthusiast",
+    "semi_pro",
+    "pro"
 };
 
 //appears on the notification
@@ -117,7 +123,13 @@ static const std::array<std::string, AchievementID::Count> AchievementLabels =
     "I Like Big Putts",
     "Golfin' Dolphin",
     "Grand Tour",
-    "Grand Design"
+    "Grand Design",
+    "Getting Started",
+    "Junior",
+    "Amateur",
+    "Enthusiast",
+    "Semi-Pro",
+    "Professional"
 };
 
 //description and whether or not the achievement is hidden until it is unlocked
@@ -156,6 +168,12 @@ static const std::array<std::pair<std::string, bool>, AchievementID::Count> Achi
     std::make_pair("Hit a water trap on 5 different rounds", false),
     std::make_pair("Play a full round on every course", false),
     std::make_pair("Save your first custom course", false),
+    std::make_pair("Reach Level 1", false),
+    std::make_pair("Reach Level 10", false),
+    std::make_pair("Reach Level 20", false),
+    std::make_pair("Reach Level 30", false),
+    std::make_pair("Reach Level 40", false),
+    std::make_pair("Reach Level 50", false)
 };
 
 //assuming trophies load correctly they are:
