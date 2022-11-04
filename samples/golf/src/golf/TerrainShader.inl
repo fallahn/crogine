@@ -120,7 +120,7 @@ R"(
     VARYING_OUT vec4 v_colour;
     VARYING_OUT vec2 v_texCoord;
 
-    const float Radius = 5.0;
+    const float Radius = 7.0; //this should match max putt distance
 
     void main()
     {

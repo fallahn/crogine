@@ -344,9 +344,9 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
             auto pinDir = m_holeData->pin - position;
             auto len2 = glm::length2(glm::vec2(pinDir.x, pinDir.z));
 
-            if (len2 < AttractRadius) //uh... this should be MinAttractRadius, but it seems to work, so...
+            if (len2 < MinAttractRadius)
             {
-                auto attraction = pinDir;
+                auto attraction = pinDir; //* 0.5f
                 attraction.y = 0.f;
                 ball.velocity += attraction * dt;
             }

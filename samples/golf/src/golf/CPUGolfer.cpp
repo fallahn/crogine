@@ -88,11 +88,11 @@ mistake odds
 const std::array<CPUGolfer::SkillContext, 6> CPUGolfer::m_skills =
 {
     CPUGolfer::SkillContext(CPUGolfer::Skill::Amateur, 0.f, 0.f, 4, 0),
-    {CPUGolfer::Skill::Dynamic, 10.f, 0.2f, 6, 4},
-    {CPUGolfer::Skill::Dynamic, 6.f, 0.2f, 5, 4},
-    {CPUGolfer::Skill::Dynamic, 4.f, 0.1f, 4, 8},
-    {CPUGolfer::Skill::Dynamic, 2.f, 0.06f, 4, 12},
-    {CPUGolfer::Skill::Dynamic, 1.8f, 0.06f, 2, 18}
+    {CPUGolfer::Skill::Dynamic, 10.f, 0.12f, 6, 6},
+    {CPUGolfer::Skill::Dynamic, 6.f, 0.12f, 5, 6},
+    {CPUGolfer::Skill::Dynamic, 4.f, 0.9f, 4, 10},
+    {CPUGolfer::Skill::Dynamic, 2.2f, 0.06f, 2, 14},
+    {CPUGolfer::Skill::Dynamic, 2.f, 0.06f, 1, 50}
 };
 
 CPUGolfer::CPUGolfer(const InputParser& ip, const ActivePlayer& ap, const CollisionMesh& cm)
@@ -188,8 +188,8 @@ void CPUGolfer::activate(glm::vec3 target)
         m_offsetRotation++; //causes the offset calc to pick a new number each time a player is selected
 
         //choose skill based on player's XP, increasing every 3 levels
-        auto level = std::min(Social::getLevel(), 15);
-        m_skillIndex = level / 3;
+        auto level = std::min(Social::getLevel(), 20);
+        m_skillIndex = level / 4;
 
         startThinking(1.6f);
 
@@ -470,7 +470,7 @@ void CPUGolfer::pickClubDynamic(float dt)
 
             //guestimate power based on club (this gets refined from predictions)
             m_targetPower = std::min(1.f, targetDistance / Clubs[m_clubID].target);
-            m_targetPower = std::min(1.f, m_targetPower + getOffsetValue() / 100.f);
+            m_targetPower = std::min(1.f, m_targetPower + (getOffsetValue() / 100.f));
         };
 
         if (diff < 0)
@@ -928,7 +928,7 @@ void CPUGolfer::calcAccuracy()
     {
         if (cro::Util::Random::value(0, m_skills[m_skillIndex].mistakeOdds) == 0)
         {
-            m_targetAccuracy += static_cast<float>(cro::Util::Random::value(-12, 12)) / 100.f;
+            m_targetAccuracy += static_cast<float>(cro::Util::Random::value(-16, 16)) / 100.f;
         }
     }
 
@@ -941,11 +941,16 @@ void CPUGolfer::calcAccuracy()
     {
         m_targetPower = std::min(1.f, m_targetPower + (1 - (cro::Util::Random::value(0, 1) * 2)) * (static_cast<float>(m_offsetRotation % 4) / 50.f));
     }
+    else
+    {
+        //hack to make the ball putt a little further
+        m_targetPower = std::min(1.f, m_targetPower + (static_cast<float>(m_skillIndex) * 0.01f));
+    }
 }
 
 float CPUGolfer::getOffsetValue() const
 {
-    return m_clubID == ClubID::Putter ? 0.f : (1 - ((m_offsetRotation % 2) * 2)) * static_cast<float>((m_offsetRotation % 4));
+    return m_activePlayer.terrain == TerrainID::Green ? 0.f : (1 - ((m_offsetRotation % 2) * 2)) * static_cast<float>((m_offsetRotation % (m_skills.size() - m_skillIndex)));
 }
 
 void CPUGolfer::sendKeystroke(std::int32_t key, bool autoRelease)
