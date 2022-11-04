@@ -772,7 +772,8 @@ void CPUGolfer::updatePrediction(float dt)
 
             auto resultDir = glm::normalize(predictDir);
 
-            constexpr float tolerance = 0.05f; //TODO vary this with CPU behaviour(?)
+            //adding the player ID just means that 2 players on a client won't make identical decisions
+            const float tolerance = 0.05f + (static_cast<float>(m_activePlayer.player + m_activePlayer.client) / 200.f);
             float dot = glm::dot(resultDir, dir);
 #ifdef CRO_DEBUG_
             debug.targetDot = dot;
@@ -801,6 +802,7 @@ void CPUGolfer::updatePrediction(float dt)
                     precision = m_skills[m_skillIndex].resultTolerance;
                     precision = (precision / 2.f) + ((precision / 2.f) * std::min(1.f, glm::length(targetDir) / 200.f));
                 }
+                precision += (1 - (cro::Util::Random::value(0, 1) * 2)) * (static_cast<float>(m_activePlayer.player) / 20.f);
 
                 float precSqr = precision * precision;
                 if (float resultPrecision = glm::length2(predictDir - targetDir);
@@ -808,6 +810,7 @@ void CPUGolfer::updatePrediction(float dt)
                 {
                     float precDiff = std::sqrt(resultPrecision);
                     float change = (precDiff / Clubs[m_clubID].target) / 2.f;
+                    change += (1 - (cro::Util::Random::value(0, 1) * 2)) * (static_cast<float>(m_activePlayer.player + m_activePlayer.client) / 80.f);
 
                     if (glm::length2(predictDir) < glm::length2(targetDir))
                     {
@@ -923,6 +926,13 @@ void CPUGolfer::calcAccuracy()
             m_targetAccuracy += static_cast<float>(cro::Util::Random::value(-12, 12)) / 100.f;
         }
     }
+
+    //to prevent multiple players making the same decision offset the accuracy a small amount
+    //based on their client and player number
+    auto offset = static_cast<float>(m_activePlayer.player + m_activePlayer.client) / 2.f;
+    m_targetAccuracy += cro::Util::Random::value(-offset, offset + 0.001f) / 100.f;
+
+    m_targetPower += (1 - (cro::Util::Random::value(0, 1) * 2)) * (static_cast<float>(m_activePlayer.player) / 50.f);
 }
 
 void CPUGolfer::sendKeystroke(std::int32_t key, bool autoRelease)
