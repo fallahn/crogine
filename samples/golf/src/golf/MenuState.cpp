@@ -1228,6 +1228,14 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
         switch (evt.packet.getID())
         {
         default: break;
+        case PacketID::PlayerXP:
+        {
+            auto value = evt.packet.as<std::uint16_t>();
+            std::uint8_t client = value & 0xff;
+            std::uint8_t level = value >> 8;
+            
+        }
+            break;
         case PacketID::NewLobbyReady:
             m_matchMaking.joinLobby(evt.packet.as<std::uint64_t>());
             break;
@@ -1259,6 +1267,10 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
                 //send player details to server (name, skin)
                 auto buffer = m_sharedData.localConnectionData.serialise();
                 m_sharedData.clientConnection.netClient.sendPacket(PacketID::PlayerInfo, buffer.data(), buffer.size(), net::NetFlag::Reliable, ConstVal::NetChannelStrings);
+
+                //and share our XP info
+                std::uint16_t xp = (Social::getLevel() << 8) | m_sharedData.clientConnection.connectionID;
+                m_sharedData.clientConnection.netClient.sendPacket(PacketID::PlayerXP, xp, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
 
                 if (m_sharedData.tutorial)
                 {

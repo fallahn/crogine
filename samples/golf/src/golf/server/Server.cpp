@@ -174,8 +174,14 @@ void Server::run()
             }
             else if(evt.type == net::NetEvent::PacketReceived)
             {
-                if (evt.packet.getID() == PacketID::ClientVersion)
+                switch (evt.packet.getID())
                 {
+                default: break;
+                case PacketID::AchievementGet:
+                    //re-broadcast to all clients
+                    m_sharedData.host.broadcastPacket(PacketID::AchievementGet, evt.packet.as<std::array<std::uint8_t, 2u>>(), net::NetFlag::Reliable);
+                    break;
+                case PacketID::ClientVersion:
                     if (evt.packet.as<std::uint16_t>() != CURRENT_VER)
                     {
                         m_sharedData.host.sendPacket(evt.peer, PacketID::ConnectionRefused, std::uint8_t(MessageType::VersionMismatch), net::NetFlag::Reliable);
@@ -184,11 +190,10 @@ void Server::run()
                     {
                         validatePeer(evt.peer);
                     }
-                }
-                else if (evt.packet.getID() == PacketID::AchievementGet)
-                {
-                    //re-broadcast to all clients
-                    m_sharedData.host.broadcastPacket(PacketID::AchievementGet, evt.packet.as<std::array<std::uint8_t, 2u>>(), net::NetFlag::Reliable);
+                    break;
+                case PacketID::PlayerXP:
+                    m_sharedData.host.broadcastPacket(PacketID::PlayerXP, evt.packet.as<std::uint16_t>(), net::NetFlag::Reliable);
+                    break;
                 }
             }
         }

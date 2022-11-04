@@ -118,7 +118,8 @@ CPUGolfer::CPUGolfer(const InputParser& ip, const ActivePlayer& ap, const Collis
     m_prevPower         (0.f),
     m_prevAccuracy      (-1.f),
     m_thinking          (false),
-    m_thinkTime         (0.f)
+    m_thinkTime         (0.f),
+    m_offsetRotation    (cro::Util::Random::value(0, 1024))
 {
 #ifdef CRO_DEBUG_
     //registerWindow([&]()
@@ -183,6 +184,8 @@ void CPUGolfer::activate(glm::vec3 target)
         m_prevClubID = m_clubID;
         m_wantsPrediction = false;
         m_predictionCount = 0;
+
+        m_offsetRotation++; //causes the offset calc to pick a new number each time a player is selected
 
         //choose skill based on player's XP, increasing every 3 levels
         auto level = std::min(Social::getLevel(), 15);
@@ -257,7 +260,7 @@ void CPUGolfer::update(float dt, glm::vec3 windVector)
 
 void CPUGolfer::setPredictionResult(glm::vec3 result)
 {
-    m_predictionResult = result;
+    m_predictionResult = result + (glm::vec3(getOffsetValue(), 0.f, -getOffsetValue()) * 0.001f);
     m_predictionUpdated = true;
 }
 
@@ -462,11 +465,12 @@ void CPUGolfer::pickClubDynamic(float dt)
         const auto acceptClub = [&]()
         {
             m_state = State::Aiming;
-            m_aimAngle = m_inputParser.getYaw();
+            m_aimAngle = m_inputParser.getYaw() + (getOffsetValue() * 0.002f);
             m_aimTimer.restart();
 
             //guestimate power based on club (this gets refined from predictions)
             m_targetPower = std::min(1.f, targetDistance / Clubs[m_clubID].target);
+            m_targetPower = std::min(1.f, m_targetPower + getOffsetValue() / 100.f);
         };
 
         if (diff < 0)
@@ -698,7 +702,7 @@ void CPUGolfer::aimDynamic(float dt)
         //pick inititial direction
         if (!m_wantsPrediction)
         {
-            m_targetAngle = m_aimAngle;// findTargetAngle(windVector).targetAngle;
+            m_targetAngle = m_aimAngle + getOffsetValue() * 0.001f;
             m_wantsPrediction = true;
         }
         //or refine based on prediction
@@ -773,7 +777,7 @@ void CPUGolfer::updatePrediction(float dt)
             auto resultDir = glm::normalize(predictDir);
 
             //adding the player ID just means that 2 players on a client won't make identical decisions
-            const float tolerance = 0.05f + (static_cast<float>(m_activePlayer.player + m_activePlayer.client) / 200.f);
+            const float tolerance = 0.05f + (getOffsetValue() / 100.f);
             float dot = glm::dot(resultDir, dir);
 #ifdef CRO_DEBUG_
             debug.targetDot = dot;
@@ -784,9 +788,11 @@ void CPUGolfer::updatePrediction(float dt)
             || (dot > tolerance
                 && m_targetAngle > ((m_aimAngle - m_inputParser.getMaxRotation()) + Epsilon))))
             {
+                float skew = getOffsetValue() / 1000.f;
+
                 m_targetAngle = std::min(m_aimAngle + m_inputParser.getMaxRotation(), 
                     std::max(m_aimAngle - m_inputParser.getMaxRotation(),
-                        m_targetAngle + (cro::Util::Const::PI / 2.f) * dot));
+                        m_targetAngle + ((cro::Util::Const::PI / 2.f) * dot) + skew));
 
                 m_state = State::Aiming;
                 m_aimTimer.restart();
@@ -799,10 +805,9 @@ void CPUGolfer::updatePrediction(float dt)
                 float precision = m_skills[m_skillIndex].resultTolerancePutt;
                 if (m_activePlayer.terrain != TerrainID::Green)
                 {
-                    precision = m_skills[m_skillIndex].resultTolerance;
+                    precision = m_skills[m_skillIndex].resultTolerance + (getOffsetValue() * 0.5f);
                     precision = (precision / 2.f) + ((precision / 2.f) * std::min(1.f, glm::length(targetDir) / 200.f));
                 }
-                precision += (1 - (cro::Util::Random::value(0, 1) * 2)) * (static_cast<float>(m_activePlayer.player) / 20.f);
 
                 float precSqr = precision * precision;
                 if (float resultPrecision = glm::length2(predictDir - targetDir);
@@ -810,7 +815,7 @@ void CPUGolfer::updatePrediction(float dt)
                 {
                     float precDiff = std::sqrt(resultPrecision);
                     float change = (precDiff / Clubs[m_clubID].target) / 2.f;
-                    change += (1 - (cro::Util::Random::value(0, 1) * 2)) * (static_cast<float>(m_activePlayer.player + m_activePlayer.client) / 80.f);
+                    change += getOffsetValue() / 60.f;
 
                     if (glm::length2(predictDir) < glm::length2(targetDir))
                     {
@@ -929,10 +934,18 @@ void CPUGolfer::calcAccuracy()
 
     //to prevent multiple players making the same decision offset the accuracy a small amount
     //based on their client and player number
-    auto offset = static_cast<float>(m_activePlayer.player + m_activePlayer.client) / 2.f;
-    m_targetAccuracy += cro::Util::Random::value(-offset, offset + 0.001f) / 100.f;
+    auto offset = (m_offsetRotation % 4) * 10;
+    m_targetAccuracy += (static_cast<float>(cro::Util::Random::value(-(offset / 2), (offset / 2) + 1)) / 500.f) * getOffsetValue();
 
-    m_targetPower += (1 - (cro::Util::Random::value(0, 1) * 2)) * (static_cast<float>(m_activePlayer.player) / 50.f);
+    if (m_clubID != ClubID::Putter)
+    {
+        m_targetPower = std::min(1.f, m_targetPower + (1 - (cro::Util::Random::value(0, 1) * 2)) * (static_cast<float>(m_offsetRotation % 4) / 50.f));
+    }
+}
+
+float CPUGolfer::getOffsetValue() const
+{
+    return m_clubID == ClubID::Putter ? 0.f : (1 - ((m_offsetRotation % 2) * 2)) * static_cast<float>((m_offsetRotation % 4));
 }
 
 void CPUGolfer::sendKeystroke(std::int32_t key, bool autoRelease)

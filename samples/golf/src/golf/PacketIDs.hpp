@@ -122,7 +122,8 @@ namespace PacketID
         NewLobbyReady, //< uint64 lobbyID - broadcast by host when returning from existing game and relayed by server
         Emote, //< uint32 00|client|player|emoteID
         LevelUp, //< uint64 00|00|client|player|level (level is 4 bytes)
-        BallPrediction //< InputUpdate if from client, vec3 if from server
+        BallPrediction, //< InputUpdate if from client, vec3 if from server
+        PlayerXP //<uint16 level << 8 | client - used to share client xp/level info
     };
 }
 

@@ -248,15 +248,8 @@ public:
 							entity.template getComponent<cro::Transform>().setPosition(position);
 #ifdef CRO_DEBUG_
 							interp.addPosition(position);
-							auto lastVel = interp.m_interpVelocity;
 #endif
 							interp.m_interpVelocity = (position - lastPos) * (1.f / dt);// 60.f; //fixed step... should be 1/dt?
-#ifdef CRO_DEBUG_
-							if (glm::dot(lastVel, interp.m_interpVelocity) < 0)
-							{
-								LogW << "Interpolation travelled backwards!" << std::endl;
-							}
-#endif
 
 						}
 
