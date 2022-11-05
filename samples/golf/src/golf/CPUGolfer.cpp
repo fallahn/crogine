@@ -950,7 +950,11 @@ void CPUGolfer::calcAccuracy()
 
 float CPUGolfer::getOffsetValue() const
 {
-    return m_activePlayer.terrain == TerrainID::Green ? 0.f : (1 - ((m_offsetRotation % 2) * 2)) * static_cast<float>((m_offsetRotation % (m_skills.size() - m_skillIndex)));
+    float multiplier = m_activePlayer.terrain == TerrainID::Green ? smoothstep(0.1f, 0.95f, glm::length(m_target - m_activePlayer.position) / Clubs[ClubID::Putter].target) : 1.f;
+
+    return static_cast<float>(1 - ((m_offsetRotation % 2) * 2))
+        * static_cast<float>((m_offsetRotation % (m_skills.size() - m_skillIndex)))
+        * multiplier;
 }
 
 void CPUGolfer::sendKeystroke(std::int32_t key, bool autoRelease)
