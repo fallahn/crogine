@@ -106,9 +106,9 @@ namespace cro
         void setTexture(const std::string& path, TextureResource& textureResource, const std::string& workingDirectory = "");
 
         /*!
-        \brief Adds the sprite with the given name, or does nothing if it already exists
+        \brief Adds the sprite with the given name, or returns false if it already exists
         */
-        void addSprite(const std::string& spriteName);
+        bool addSprite(const std::string& spriteName);
 
     private:
         mutable std::unordered_map<std::string, Sprite> m_sprites;

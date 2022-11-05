@@ -290,23 +290,25 @@ void SpriteSheet::setTexture(const std::string& path, TextureResource& tr, const
     }
 }
 
-void SpriteSheet::addSprite(const std::string& name)
+bool SpriteSheet::addSprite(const std::string& name)
 {
     if (name.empty())
     {
         LogE << "Could not add sprite: name cannot be empty" << std::endl;
-        return;
+        return false;
     }
 
     if (!m_texture)
     {
         LogE << "Failed adding " << name << ": no texture is set." << std::endl;
-        return;
+        return false;
     }
 
     if (m_sprites.count(name) == 0)
     {
         m_sprites.insert(std::make_pair(name, Sprite()));
         m_sprites[name].setTexture(*m_texture);
+        return true;
     }
+    return false;
 }

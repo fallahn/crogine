@@ -41,6 +41,12 @@ source distribution.
 
 #include <crogine/gui/Gui.hpp>
 
+namespace
+{
+    std::int32_t nameNumber = 0; //hack to increment names
+    std::string newSpriteName;
+}
+
 void SpriteState::openSprite(const std::string& path)
 {
     if (m_spriteSheet.loadFromFile(path, m_textures, m_sharedData.workingDirectory + "/"))
@@ -424,6 +430,43 @@ void SpriteState::drawSpriteWindow()
                 sprite.setTextureRect(cro::FloatRect(intBounds));
                 updateBoundsEntity();
             }
+
+            if (ImGui::Button("Duplicate"))
+            {
+                ImGui::OpenPopup("Duplicate Sprite");
+                newSpriteName = name + std::to_string(nameNumber);
+            }
+
+            if (ImGui::BeginPopupModal("Duplicate Sprite"))
+            {
+                ImGui::InputText("Name", &newSpriteName);
+
+                if (ImGui::Button("OK"))
+                {
+                    if (m_spriteSheet.addSprite(newSpriteName))
+                    {
+                        m_spriteSheet.getSprites().at(newSpriteName) = sprite;
+                        nameNumber++; //only increment this if accepted...
+
+                        cro::FileSystem::showMessageBox("Success", "Added Sprite " + newSpriteName);
+                    }
+                    else
+                    {
+                        cro::FileSystem::showMessageBox("Duplicate Failed", newSpriteName + " already exists?");
+                    }
+
+                    ImGui::CloseCurrentPopup();
+                }
+
+                ImGui::SameLine();
+                if (ImGui::Button("Cancel"))
+                {
+                    ImGui::CloseCurrentPopup();
+                }
+
+                ImGui::EndPopup();
+            }
+
 
             const auto& anims = sprite.getAnimations();
             if (!anims.empty())
