@@ -54,7 +54,7 @@ public:
     void activate(glm::vec3);
     void update(float, glm::vec3);
     bool thinking() const { return m_thinking; }
-    void setPredictionResult(glm::vec3);
+    void setPredictionResult(glm::vec3, std::int32_t);
     glm::vec3 getTarget() const { return m_target; }
 private:
 
@@ -62,12 +62,13 @@ private:
     const ActivePlayer& m_activePlayer;
     const CollisionMesh& m_collisionMesh;
     glm::vec3 m_target;
+    glm::vec3 m_baseTarget; //this is what was originally set before retargetting potentially updates m_target
+    std::int32_t m_retargetCount;
 
     bool m_predictionUpdated;
     bool m_wantsPrediction;
     glm::vec3 m_predictionResult;
     std::int32_t m_predictionCount;
-    static constexpr std::int32_t MaxPredictions = 20;
 
     enum class State
     {

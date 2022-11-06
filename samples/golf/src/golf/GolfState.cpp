@@ -4342,10 +4342,13 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
         {
         default: break;
         case PacketID::BallPrediction:
-            m_cpuGolfer.setPredictionResult(evt.packet.as<glm::vec3>());
+        {
+            auto pos = evt.packet.as<glm::vec3>();
+            m_cpuGolfer.setPredictionResult(pos, m_collisionMesh.getTerrain(pos).terrain);
 #ifdef CRO_DEBUG_
             //PredictedTarget.getComponent<cro::Transform>().setPosition(evt.packet.as<glm::vec3>());
 #endif
+        }
             break;
         case PacketID::LevelUp:
             showLevelUp(evt.packet.as<std::uint64_t>());

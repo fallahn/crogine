@@ -246,8 +246,8 @@ void GolfState::netBroadcast()
         //ideally we want to send only non-idle balls but without
         //sending a few pre-movement frames first we get visible pops
         //in the client side interpolation.
-        if (ball == m_playerInfo[0].ballEntity ||
-            ball.getComponent<Ball>().state != Ball::State::Idle)
+        if (ball == m_playerInfo[0].ballEntity/* ||
+            ball.getComponent<Ball>().state != Ball::State::Idle*/)
         {
             auto timestamp = m_serverTime.elapsed().asMilliseconds();
             

@@ -68,6 +68,9 @@ namespace
     constexpr float MinSearchDistance = 10.f;
     constexpr float SearchIncrease = 10.f;
     constexpr float Epsilon = 0.005f;
+    constexpr std::int32_t MaxRetargets = 12;
+    constexpr std::int32_t RetargetsPerDirection = 3;
+    constexpr std::int32_t MaxPredictions = 20;
 
     template <typename T>
     T* postMessage(std::int32_t id)
@@ -100,6 +103,8 @@ CPUGolfer::CPUGolfer(const InputParser& ip, const ActivePlayer& ap, const Collis
     m_activePlayer      (ap),
     m_collisionMesh     (cm),
     m_target            (0.f),
+    m_baseTarget        (0.f),
+    m_retargetCount     (0),
     m_predictionUpdated (false),
     m_wantsPrediction   (false),
     m_predictionResult  (0.f),
@@ -178,7 +183,8 @@ void CPUGolfer::activate(glm::vec3 target)
 {
     if (m_state == State::Inactive)
     {
-        m_target = target;
+        m_baseTarget = m_target = target;
+        m_retargetCount = 0;
         m_state = State::CalcDistance;
         m_clubID = m_inputParser.getClub();
         m_prevClubID = m_clubID;
@@ -258,10 +264,48 @@ void CPUGolfer::update(float dt, glm::vec3 windVector)
     }
 }
 
-void CPUGolfer::setPredictionResult(glm::vec3 result)
+void CPUGolfer::setPredictionResult(glm::vec3 result, std::int32_t terrain)
 {
-    m_predictionResult = result + (glm::vec3(getOffsetValue(), 0.f, -getOffsetValue()) * 0.001f);
-    m_predictionUpdated = true;
+    if (m_retargetCount < MaxRetargets &&
+        (terrain == TerrainID::Water
+        || terrain == TerrainID::Scrub))
+    {
+        //retarget
+        const float searchDistance = m_activePlayer.terrain == TerrainID::Green ? 0.5f : 2.f;
+        auto direction = m_retargetCount % 4;
+        auto offset = (glm::normalize(m_baseTarget - m_activePlayer.position) * searchDistance) * static_cast<float>((m_retargetCount % RetargetsPerDirection) + 1);
+
+        //TODO decide on some optimal priority for this?
+        switch (direction)
+        {
+        default:
+        case 0:
+            //move away
+            break;
+        case 1:
+            //move towards
+            offset *= -1.f;
+            break;
+        case 2:
+            //move right
+            offset = { -offset.z, offset.y, offset.x };
+            break;
+        case 3:
+            //move right
+            offset = { offset.z, offset.y, -offset.x };
+            break;
+        }
+
+        m_target = m_baseTarget + offset;
+        m_state = State::CalcDistance;
+        m_wantsPrediction = false;
+        m_retargetCount++;
+    }
+    else
+    {
+        m_predictionResult = result + (glm::vec3(getOffsetValue(), 0.f, -getOffsetValue()) * 0.001f);
+        m_predictionUpdated = true;
+    }
 }
 
 //private
