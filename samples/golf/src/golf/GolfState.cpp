@@ -283,9 +283,9 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
                 auto size = m_greenBuffer.getSize();
                 ImGui::Text("Buffer Size %u, %u", size.x, size.y);
 
-                /*ImGui::Text("Connection Bitrate: %3.3fkbps", static_cast<float>(bitrate) / 1024.f);
+                ImGui::Text("Connection Bitrate: %3.3fkbps", static_cast<float>(bitrate) / 1024.f);
 
-                for (const auto& c : m_sharedData.connectionData)
+                /*for (const auto& c : m_sharedData.connectionData)
                 {
                     ImGui::Text("Ping: %u", c.pingTime);
                 }*/
@@ -1509,7 +1509,7 @@ void GolfState::loadAssets()
     m_materialIDs[MaterialID::Hair] = m_resources.materials.add(*shader);
 
 
-    m_resources.shaders.loadFromString(ShaderID::Course, CelVertexShader, CelFragmentShader, "#define COMP_SHADE\n#define COLOUR_LEVELS 5.0\n#define TEXTURED\n#define RX_SHADOWS\n" + wobble);
+    m_resources.shaders.loadFromString(ShaderID::Course, CelVertexShader, CelFragmentShader, "#define COLOUR_LEVELS 5.0\n#define TEXTURED\n#define RX_SHADOWS\n" + wobble);
     shader = &m_resources.shaders.get(ShaderID::Course);
     m_scaleBuffer.addShader(*shader);
     m_resolutionBuffer.addShader(*shader);
@@ -2795,6 +2795,15 @@ void GolfState::loadAssets()
                 model.setMaterial(i, mat);
             }
         }
+        /*else
+        {
+            auto& model = hole.modelEntity.getComponent<cro::Model>();
+            auto matCount = model.getMeshData().submeshCount;
+            for (auto i = 0u; i < matCount; ++i)
+            {
+                model.setMaterialProperty(i, "u_holeHeight", hole.pin.y);
+            }
+        }*/
     }
 
 
@@ -2943,6 +2952,7 @@ void GolfState::addSystems()
     m_gameScene.addSystem<cro::ParticleSystem>(mb);
     m_gameScene.addSystem<cro::AudioSystem>(mb);
 
+    //m_gameScene.setSystemActive<InterpolationSystem<InterpolationType::Linear>>(false);
     m_gameScene.setSystemActive<CameraFollowSystem>(false);
 #ifdef CRO_DEBUG_
     m_gameScene.setSystemActive<FpsCameraSystem>(false);
@@ -4110,6 +4120,8 @@ void GolfState::spawnBall(const ActorInfo& info)
         }
     };
     m_avatars[info.clientID][info.playerID].ballModel = entity;
+
+
 
     //ball shadow
     auto ballEnt = entity;
@@ -5737,7 +5749,11 @@ void GolfState::updateActor(const ActorInfo& update)
             bool active = (interp.id == update.serverID);
             if (active)
             {
-                interp.addPoint({ update.position, glm::vec3(0.f), cro::Util::Net::decompressQuat(update.rotation), update.timestamp });
+                interp.addPoint({ update.position, /*update.velocity*/glm::vec3(0.f), cro::Util::Net::decompressQuat(update.rotation), update.timestamp});
+
+
+                //e.getComponent<cro::Transform>().setPosition(update.position);
+
 
                 //update spectator camera
                 cro::Command cmd2;

@@ -293,6 +293,10 @@ static const std::string CelFragmentShader = R"(
     uniform float u_maxHeight = 1.0;
 #endif
 
+#if defined (COMP_SHADE)
+    uniform float u_holeHeight = 0.0;
+#endif
+
 #if defined (NORMAL_MAP)
     uniform sampler2D u_normalMap;
     VARYING_IN vec2 v_normalTexCoord;
@@ -462,7 +466,7 @@ static const std::string CelFragmentShader = R"(
 #endif
 
 #if defined(COMP_SHADE)
-        amount = smoothstep(0.75, 0.99, amount);
+        //amount = smoothstep(0.75, 0.99, amount);
 #endif
 
         amount *= COLOUR_LEVELS;
@@ -471,7 +475,12 @@ static const std::string CelFragmentShader = R"(
         amount = AMOUNT_MIN + (amount * AMOUNT_MAX);
 
 #if defined(COMP_SHADE)
-        colour.rgb = mix(complementaryColour(colour.rgb), colour.rgb, amount);
+        //colour.rgb = mix(complementaryColour(colour.rgb), colour.rgb, amount);
+        
+        float minHeight = u_holeHeight - 0.15;
+        float maxHeight = u_holeHeight + 0.15;
+        float height = min(1.0, (v_worldPosition.y - minHeight) / (maxHeight - minHeight));
+        colour.rgb *= height;
 #else
         colour.rgb *= amount;
 #endif

@@ -243,7 +243,11 @@ void GolfState::netBroadcast()
         //only send active player's ball
         auto ball = player.ballEntity;
         
-        if (ball == m_playerInfo[0].ballEntity)
+        //ideally we want to send only non-idle balls but without
+        //sending a few pre-movement frames first we get visible pops
+        //in the client side interpolation.
+        if (ball == m_playerInfo[0].ballEntity ||
+            ball.getComponent<Ball>().state != Ball::State::Idle)
         {
             auto timestamp = m_serverTime.elapsed().asMilliseconds();
             
@@ -253,6 +257,7 @@ void GolfState::netBroadcast()
             info.position = ball.getComponent<cro::Transform>().getPosition();
             info.rotation = cro::Util::Net::compressQuat(ball.getComponent<cro::Transform>().getRotation());
             //info.velocity = cro::Util::Net::compressVec3(ball.getComponent<Ball>().velocity);
+            //info.velocity = ball.getComponent<Ball>().velocity;
             info.timestamp = timestamp;
             info.clientID = player.client;
             info.playerID = player.player;
