@@ -321,6 +321,7 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
 
             //test collision
             doCollision(entity);
+            doBallCollision(entity);
 
             CRO_ASSERT(!std::isnan(tx.getPosition().x), "");
             CRO_ASSERT(!std::isnan(ball.velocity.x), "");
@@ -332,10 +333,12 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
         ball.delay -= dt;
         if (ball.delay < 0)
         {
+            doBallCollision(entity);
+
             auto& tx = entity.getComponent<cro::Transform>();
             auto position = tx.getPosition();
 
-            //attempts to trap an obscure NaN bug
+            //attempts to trap NaN bug caused by invalid wind values
             CRO_ASSERT(!std::isnan(position.x), "");
 
             auto terrainContact = getTerrain(position);
@@ -823,6 +826,51 @@ void BallSystem::doCollision(cro::Entity entity)
         msg->terrain = TerrainID::Water;
         msg->position = pos;
         msg->type = CollisionEvent::Begin;
+    }
+}
+
+void BallSystem::doBallCollision(cro::Entity entity)
+{
+    //even with max 16 balls this sould be negligable to do
+    //but we can always place them in some sort of grid if we need to
+
+    //this is crude collision which acts like other balls are
+    //solid but it prevents balls overlapping and accidentally
+    //knocking other balls into the hole which makes for
+    //complicated rule making... :3
+
+    auto& tx = entity.getComponent<cro::Transform>();
+    auto& ball = entity.getComponent<Ball>();
+    static constexpr float MinDist = (Ball::Radius * 2.5f) * (Ball::Radius * 2.5f);
+    static constexpr float CollisionDist = (Ball::Radius * 2.f) * (Ball::Radius * 2.f);
+
+    //don't collide until we moved from our start position
+    if (glm::length2(ball.startPoint - tx.getPosition()) > MinDist)
+    {
+        //ball centre is actually pos.y + radius
+        glm::vec3 ballPos = entity.getComponent<cro::Transform>().getPosition();
+        ballPos.y += Ball::Radius;
+
+        const auto& others = getEntities();
+        for (auto other : others)
+        {
+            if (other != entity)
+            {
+                auto otherPos = other.getComponent<cro::Transform>().getPosition();
+                otherPos.y += Ball::Radius;
+
+                auto otherDir = ballPos - otherPos;
+                if (float testDist = glm::length2(otherDir); testDist < CollisionDist)
+                {
+                    float actualDist = std::sqrt(testDist);
+                    auto norm = otherDir / actualDist;
+                    float penetration = Ball::Radius - (actualDist / 2.f);
+
+                    tx.move(norm * penetration);
+                    ball.velocity = glm::reflect(ball.velocity, norm);
+                }
+            }
+        }
     }
 }
 

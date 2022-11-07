@@ -145,6 +145,7 @@ private:
     std::uint8_t m_gimmeRadius;
 
     void doCollision(cro::Entity);
+    void doBallCollision(cro::Entity);
     void updateWind();
 
     std::unique_ptr<btDefaultCollisionConfiguration> m_collisionCfg;
