@@ -182,7 +182,9 @@ void CameraFollowSystem::process(float dt)
             //check the distance to the ball, and store it if closer than previous dist
             //and if we fall within the camera's radius
             //and if the player isn't standing too close
-            if (follower.target.getComponent<ClientCollider>().state == static_cast<std::uint8_t>(Ball::State::Flight))
+            const auto& collider = follower.target.getComponent<ClientCollider>();
+            if (collider.state == static_cast<std::uint8_t>(Ball::State::Flight)
+                || collider.terrain == TerrainID::Green)
             {
                 auto dist = glm::length2(tx.getPosition() - target);
                 auto dist2 = glm::length2(tx.getPosition() - follower.playerPosition);
@@ -199,7 +201,12 @@ void CameraFollowSystem::process(float dt)
             //zoom if ball goes near the hole
             static constexpr float ZoomRadius = 3.f;
             static constexpr float ZoomRadiusSqr = ZoomRadius * ZoomRadius;
-            auto dist = glm::length2(target - follower.holePosition);
+            auto zoomDir = target - follower.holePosition;
+            if (collider.terrain == TerrainID::Green)
+            {
+                zoomDir *= 3.f;
+            }
+            auto dist = glm::length2(zoomDir);
             if (dist < ZoomRadiusSqr)
             {
                 follower.state = CameraFollower::Zoom;

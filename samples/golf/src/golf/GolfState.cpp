@@ -788,6 +788,10 @@ void GolfState::handleMessage(const cro::Message& msg)
                 m_activeAvatar->ballModel.getComponent<cro::Callback>().active = true;
                 m_activeAvatar->ballModel.getComponent<cro::Model>().setHidden(true);
             }
+            else
+            {
+                m_gameScene.setSystemActive<CameraFollowSystem>(m_holeData[m_currentHole].puttFromTee);
+            }
         }
         else if (data.userType == cro::Message::SkeletalAnimationEvent::Stopped)
         {
@@ -5095,20 +5099,28 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo)
 
     //and the uh, other green cam. The spectator one
     m_cameras[CameraID::Green].getComponent<cro::Transform>().setPosition({ holePos.x, GreenCamHeight, holePos.z });
-    //TODO what's a reasonable way to find an offset for this?
-    //perhaps move at least 15m away in opposite direction from map centre?
 
-    auto centre = glm::vec3(MapSize.x / 2.f, 0.f, -static_cast<float>(MapSize.y) / 2.f);
-    auto direction = holePos - centre;
-    direction = glm::normalize(direction) * 15.f;
-    direction.y += holePos.y; //TODO this only works if hole is higher than the camera
-    m_cameras[CameraID::Green].getComponent<cro::Transform>().move(direction);
-
+    if (m_holeData[m_currentHole].puttFromTee)
+    {
+        auto direction = holePos - m_holeData[m_currentHole].tee;
+        direction = glm::normalize(direction) * 2.f;
+        m_cameras[CameraID::Green].getComponent<cro::Transform>().move(direction);
+        m_cameras[CameraID::Green].getComponent<CameraFollower>().radius = 4.5f * 4.5f;
+    }
+    else
+    {
+        auto centre = glm::vec3(MapSize.x / 2.f, 0.f, -static_cast<float>(MapSize.y) / 2.f);
+        auto direction = holePos - centre;
+        direction = glm::normalize(direction) * 15.f;
+        direction.y += holePos.y; //TODO this only works if hole is higher than the camera
+        m_cameras[CameraID::Green].getComponent<cro::Transform>().move(direction);
+        m_cameras[CameraID::Green].getComponent<CameraFollower>().radius = 30.f * 30.f;
+    }
 
     //double check terrain height and make sure camera is always above
     auto result = m_collisionMesh.getTerrain(m_cameras[CameraID::Green].getComponent<cro::Transform>().getPosition());
     result.height = std::max(result.height, holePos.y);
-    result.height += GreenCamHeight;
+    result.height += m_holeData[m_currentHole].puttFromTee ? GreenCamHeight * 0.2f : GreenCamHeight;
 
     auto pos = m_cameras[CameraID::Green].getComponent<cro::Transform>().getPosition();
     pos.y = result.height;
@@ -5756,7 +5768,6 @@ void GolfState::updateActor(const ActorInfo& update)
 
 
                 //e.getComponent<cro::Transform>().setPosition(update.position);
-
 
                 //update spectator camera
                 cro::Command cmd2;

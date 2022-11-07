@@ -82,6 +82,7 @@ struct SpriteID final
     enum
     {
         Controller,
+        ControllerPS,
         Keyboard,
         ThumbBackground,
         ArrowLeft,

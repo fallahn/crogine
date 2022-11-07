@@ -791,6 +791,7 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
     m_sprites[SpriteID::ArrowRight] = spriteSheet.getSprite("arrow_r");
     m_sprites[SpriteID::ArrowRightHighlight] = spriteSheet.getSprite("arrow_r_h");
     m_sprites[SpriteID::Controller] = spriteSheet.getSprite("controller");
+    m_sprites[SpriteID::ControllerPS] = spriteSheet.getSprite("controller_ps");
     m_sprites[SpriteID::Keyboard] = spriteSheet.getSprite("keyboard");
     m_sprites[SpriteID::ThumbBackground] = spriteSheet.getSprite("thumb_bg");
     m_sprites[SpriteID::CPUHighlight] = spriteSheet.getSprite("check_highlight");
@@ -4492,6 +4493,7 @@ void MenuState::addCourseSelectButtons()
     checkboxEnt.getComponent<UIElement>().relativePosition = CourseDescPosition;
     checkboxEnt.getComponent<UIElement>().depth = 0.01f;
     bounds = checkboxEnt.getComponent<cro::Sprite>().getTextureBounds();
+    bounds.width += 78.f; //wild stab at the width of the text (it's not here to measure...)
     checkboxEnt.addComponent<cro::UIInput>().area = bounds;
     checkboxEnt.getComponent<cro::UIInput>().setGroup(MenuID::Lobby);
     checkboxEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = m_courseSelectCallbacks.selectHighlight;
@@ -4558,6 +4560,8 @@ void MenuState::addCourseSelectButtons()
         labelEnt.addComponent<UIElement>().absolutePosition = { 53.f, -24.f };
         labelEnt.getComponent<UIElement>().relativePosition = CourseDescPosition;
         labelEnt.getComponent<UIElement>().depth = 0.01f;
+
+        checkboxEnt.getComponent<cro::UIInput>().area.width += cro::Text::getLocalBounds(labelEnt).width;
 
         centreText(labelEnt);
         m_menuEntities[MenuID::Lobby].getComponent<cro::Transform>().addChild(labelEnt.getComponent<cro::Transform>());
