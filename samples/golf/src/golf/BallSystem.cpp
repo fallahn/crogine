@@ -548,6 +548,8 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
                     position.x = m_holeData->pin.x;
                     position.z = m_holeData->pin.z;
                     tx.setPosition(position);
+
+                    ball.terrain = TerrainID::Hole;
                 }
                 else if (len2 < GimmeRadii[m_gimmeRadius])
                 {
@@ -560,7 +562,8 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
                 CRO_ASSERT(!std::isnan(position.x), "");
                 CRO_ASSERT(!std::isnan(ball.velocity.x), "");
             }
-            //makes the ball go bat shit crazy for some reason.
+            //makes the ball go bat shit crazy for some reason,
+            //when I expect it to actually get some air
             /*else if (terrainContact.penetration < 0.1f)
             {
                 ball.state = Ball::State::Flight;
@@ -835,17 +838,18 @@ void BallSystem::doBallCollision(cro::Entity entity)
     //but we can always place them in some sort of grid if we need to
 
     //this is crude collision which acts like other balls are
-    //solid but it prevents balls overlapping and accidentally
-    //knocking other balls into the hole which makes for
+    //solid, but it prevents balls overlapping and accidentally
+    //knocking other balls into the hole which would need
     //complicated rule making... :3
 
     auto& tx = entity.getComponent<cro::Transform>();
     auto& ball = entity.getComponent<Ball>();
-    static constexpr float MinDist = (Ball::Radius * 2.5f) * (Ball::Radius * 2.5f);
-    static constexpr float CollisionDist = (Ball::Radius * 2.f) * (Ball::Radius * 2.f);
+    static constexpr float MinDist = 0.5f * 0.5f;// (Ball::Radius * 10.f)* (Ball::Radius * 10.f);
+    static constexpr float CollisionDist = (Ball::Radius * 1.7f) * (Ball::Radius * 1.7f);
 
     //don't collide until we moved from our start position
-    if (glm::length2(ball.startPoint - tx.getPosition()) > MinDist)
+    if (ball.terrain != TerrainID::Hole &&
+        glm::length2(ball.startPoint - tx.getPosition()) > MinDist)
     {
         //ball centre is actually pos.y + radius
         glm::vec3 ballPos = entity.getComponent<cro::Transform>().getPosition();
@@ -854,7 +858,8 @@ void BallSystem::doBallCollision(cro::Entity entity)
         const auto& others = getEntities();
         for (auto other : others)
         {
-            if (other != entity)
+            if (other != entity
+                && other.getComponent<Ball>().terrain != TerrainID::Hole)
             {
                 auto otherPos = other.getComponent<cro::Transform>().getPosition();
                 otherPos.y += Ball::Radius;
@@ -864,10 +869,10 @@ void BallSystem::doBallCollision(cro::Entity entity)
                 {
                     float actualDist = std::sqrt(testDist);
                     auto norm = otherDir / actualDist;
-                    float penetration = Ball::Radius - (actualDist / 2.f);
+                    float penetration = (Ball::Radius * 2.f) - actualDist;
 
                     tx.move(norm * penetration);
-                    ball.velocity = glm::reflect(ball.velocity, norm);
+                    ball.velocity = glm::reflect(ball.velocity, norm) * 0.4f;
                 }
             }
         }

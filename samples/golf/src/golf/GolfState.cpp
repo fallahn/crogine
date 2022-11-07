@@ -5112,15 +5112,18 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo)
         direction = glm::normalize(direction) * 2.f;
         m_cameras[CameraID::Green].getComponent<cro::Transform>().move(direction);
         m_cameras[CameraID::Green].getComponent<CameraFollower>().radius = 4.5f * 4.5f;
+        m_cameras[CameraID::Green].getComponent<CameraFollower>().zoom.target = 0.5f;
+        m_cameras[CameraID::Green].getComponent<CameraFollower>().zoom.speed = 0.8f;
     }
     else
     {
         auto centre = glm::vec3(MapSize.x / 2.f, 0.f, -static_cast<float>(MapSize.y) / 2.f);
         auto direction = holePos - centre;
         direction = glm::normalize(direction) * 15.f;
-        direction.y += holePos.y; //TODO this only works if hole is higher than the camera
         m_cameras[CameraID::Green].getComponent<cro::Transform>().move(direction);
         m_cameras[CameraID::Green].getComponent<CameraFollower>().radius = 30.f * 30.f;
+        m_cameras[CameraID::Green].getComponent<CameraFollower>().zoom.target = 0.25f;
+        m_cameras[CameraID::Green].getComponent<CameraFollower>().zoom.speed = 2.f;
     }
 
     //double check terrain height and make sure camera is always above

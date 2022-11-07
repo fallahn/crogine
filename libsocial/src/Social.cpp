@@ -61,7 +61,7 @@ void Social::awardXP(std::int32_t amount)
 {
     if (Achievements::getActive())
     {
-        auto oldLevel = experience;
+        auto oldLevel = getLevelFromXP(experience);
 
         experience += amount;
         writeExperience();
