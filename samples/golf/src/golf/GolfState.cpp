@@ -173,7 +173,7 @@ namespace
         float currentHeight = 0.f;
     };
 
-    constexpr float MaxRotation = 0.18f;
+    constexpr float MaxRotation = 0.13f;
     constexpr float MaxPuttRotation = 0.24f;
 }
 
@@ -3186,15 +3186,16 @@ void GolfState::buildScene()
         e.getComponent<cro::Transform>().setScale(glm::vec3(scale));
     };
 
-    const float pointCount = 5.f;
+    const std::int32_t pointCount = 6;
     const float arc = MaxRotation * 2.f;
     const float step = arc / pointCount;
     const float radius = 2.5f;
 
     std::vector<glm::vec2> points;
-    for (auto i = -MaxRotation; i <= -MaxRotation + arc; i += step)
+    for(auto i = 0; i <= pointCount; ++i)
     {
-        auto& p = points.emplace_back(std::cos(i), std::sin(i));
+        auto t = -MaxRotation + (i * step);
+        auto& p = points.emplace_back(std::cos(t), std::sin(t));
         p *= radius;
     }
 
@@ -3203,18 +3204,23 @@ void GolfState::buildScene()
     meshData = &entity.getComponent<cro::Model>().getMeshData();
     verts =
     {
-        0.f, Ball::Radius, 0.f,                      c.r, c.g, c.b, 1.f,
-        points[0].x, Ball::Radius, -points[0].y,     c.r, c.g, c.b, 1.f,
-        points[1].x, Ball::Radius, -points[1].y,     c.r, c.g, c.b, 1.f,
-        points[2].x, Ball::Radius, -points[2].y,     c.r, c.g, c.b, 1.f,
-        points[3].x, Ball::Radius, -points[3].y,     c.r, c.g, c.b, 1.f,
-        points[4].x, Ball::Radius, -points[4].y,     c.r, c.g, c.b, 1.f,
-        points[5].x, Ball::Radius, -points[5].y,     c.r, c.g, c.b, 1.f
+        0.f, Ball::Radius, 0.f, c.r, c.g, c.b, 1.f
     };
-    indices =
+    indices = { 0 };
+
+    for (auto i = 0u; i < points.size(); ++i)
     {
-        0,1,2,3,4,5,6
-    };
+        verts.push_back(points[i].x);
+        verts.push_back(Ball::Radius);
+        verts.push_back(-points[i].y);
+        verts.push_back(c.r);
+        verts.push_back(c.g);
+        verts.push_back(c.b);
+        verts.push_back(1.f);
+
+        indices.push_back(i + 1);
+    }
+
     meshData->vertexCount = verts.size() / vertStride;
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData->vbo));
     glCheck(glBufferData(GL_ARRAY_BUFFER, meshData->vertexSize * meshData->vertexCount, verts.data(), GL_STATIC_DRAW));

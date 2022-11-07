@@ -587,7 +587,7 @@ void CPUGolfer::aim(float dt, glm::vec3 windVector)
 
         //putting is a special case where wind effect is lower
     //but we also need to deal with the slope of the green
-        float greenCompensation = 0.6f; //default reduction for driving (this was reduced from 1 because max rotation was increased to 0.18)
+        float greenCompensation = 0.9f; //default reduction for driving (this was reduced from 1 because max rotation was increased to 0.13)
         float slopeCompensation = 0.f;
 
         auto targetDir = m_target - m_activePlayer.position;
