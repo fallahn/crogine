@@ -111,6 +111,7 @@ struct SpriteID final
         LobbyCheckbox,
         LobbyCheckboxHighlight,
         Envelope,
+        LevelBadge,
 
         Count
     };

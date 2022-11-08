@@ -59,6 +59,7 @@ source distribution.
 #include <crogine/ecs/components/Callback.hpp>
 #include <crogine/ecs/components/ParticleEmitter.hpp>
 
+#include <crogine/ecs/systems/SpriteSystem3D.hpp>
 #include <crogine/ecs/systems/RenderSystem2D.hpp>
 
 #include <crogine/graphics/SpriteSheet.hpp>
@@ -1060,6 +1061,8 @@ void GolfState::showCountdown(std::uint8_t seconds)
 
         m_trophies[i].getComponent<TrophyDisplay>().state = TrophyDisplay::In;
         //m_trophyLabels[i].getComponent<cro::Callback>().active = true; //this is done by TrophyDisplay (above) to properly delay it
+        m_trophyBadges[i].getComponent<cro::SpriteAnimation>().play(std::min(5, m_sharedData.connectionData[m_statBoardScores[i].client].level / 10));
+        m_trophyBadges[i].getComponent<cro::Model>().setDoubleSided(0, true);
 
         m_trophyLabels[i].getComponent<cro::Sprite>().setTexture(m_sharedData.nameTextures[m_statBoardScores[i].client].getTexture(), false);
         auto bounds = m_trophyLabels[i].getComponent<cro::Sprite>().getTextureBounds();
@@ -2218,11 +2221,11 @@ void GolfState::showLevelUp(std::uint64_t levelData)
     std::int32_t player = ((levelData & 0x000000FF00000000) >> 32);
     std::int32_t client = ((levelData & 0x0000FF0000000000) >> 40);
 
+    m_sharedData.connectionData[client].level = std::uint8_t(level);
+
     cro::String msg = m_sharedData.connectionData[client].playerData[player].name;
     msg += " has reached level " + std::to_string(level);
     showNotification(msg);
-
-    //TODO play audio?
 }
 
 void GolfState::toggleQuitReady()
@@ -2306,6 +2309,9 @@ void GolfState::buildTrophyScene()
     cro::AudioScape as;
     as.loadFromFile("assets/golf/sound/menu.xas", m_resources.audio);
 
+    cro::SpriteSheet spriteSheet;
+    spriteSheet.loadFromFile("assets/golf/sprites/player_menu.spt", m_resources.textures);
+
     std::int32_t i = 0;
     cro::ModelDefinition md(m_resources);
     for (const auto& [path, position] : Paths)
@@ -2336,12 +2342,24 @@ void GolfState::buildTrophyScene()
             m_trophies[i] = entity;
             auto trophyEnt = entity;
 
+            //badge
+            entity = m_trophyScene.createEntity();
+            entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.1f, 0.04f });
+            entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("rank_icon");
+            auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+            bounds.width /= m_trophyScene.getSystem<cro::SpriteSystem3D>()->getPixelsPerUnit();
+            entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, 0.f });
+            entity.addComponent<cro::Model>();
+            entity.addComponent<cro::SpriteAnimation>();
+            trophyEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+            m_trophyBadges[i] = entity;
+
             //name label
             entity = m_uiScene.createEntity();
             entity.addComponent<cro::Transform>().setScale(glm::vec2(0.f));
             entity.addComponent<cro::Drawable2D>();
             entity.addComponent<cro::Sprite>(m_sharedData.nameTextures[0].getTexture());
-            auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+            bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
             bounds.height -= LabelIconSize.y;
             bounds.height /= 4.f;
             bounds.bottom = bounds.height * i;

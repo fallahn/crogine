@@ -1233,7 +1233,7 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
             auto value = evt.packet.as<std::uint16_t>();
             std::uint8_t client = value & 0xff;
             std::uint8_t level = value >> 8;
-            
+            m_sharedData.connectionData[client].level = level;
         }
             break;
         case PacketID::NewLobbyReady:

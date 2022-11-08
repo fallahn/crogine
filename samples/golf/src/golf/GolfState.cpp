@@ -2987,6 +2987,8 @@ void GolfState::addSystems()
     m_uiScene.addSystem<cro::RenderSystem2D>(mb);
 
     m_trophyScene.addSystem<TrophyDisplaySystem>(mb);
+    m_trophyScene.addSystem<cro::SpriteSystem3D>(mb, 260.f);
+    m_trophyScene.addSystem<cro::SpriteAnimator>(mb);
     m_trophyScene.addSystem<cro::ParticleSystem>(mb);
     m_trophyScene.addSystem<cro::CameraSystem>(mb);
     m_trophyScene.addSystem<cro::ModelRenderer>(mb);
@@ -4351,6 +4353,14 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
         switch (evt.packet.getID())
         {
         default: break;
+        case PacketID::PlayerXP:
+        {
+            auto value = evt.packet.as<std::uint16_t>();
+            std::uint8_t client = value & 0xff;
+            std::uint8_t level = value >> 8;
+            m_sharedData.connectionData[client].level = level;
+        }
+        break;
         case PacketID::BallPrediction:
         {
             auto pos = evt.packet.as<glm::vec3>();

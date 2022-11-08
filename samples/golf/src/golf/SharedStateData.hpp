@@ -74,6 +74,7 @@ struct ConnectionData final
     std::array<PlayerData, MaxPlayers> playerData = {};
 
     std::uint32_t pingTime = 0;
+    std::uint8_t level = 0;
 
     std::vector<std::uint8_t> serialise() const;
     bool deserialise(const net::NetEvent::Packet&);

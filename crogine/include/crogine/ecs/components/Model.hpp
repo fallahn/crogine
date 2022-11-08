@@ -97,6 +97,13 @@ namespace cro
         void setDepthTestEnabled(std::size_t idx, bool enabled);
 
         /*!
+        \brief Enables or disables double-sided rendering for a material at the given index
+        \param idx Index of the material to set the double sided propert on
+        \param doubleSided Set to true for double sided rendering else false
+        */
+        void setDoubleSided(std::size_t idx, bool doubleSided);
+
+        /*!
         \brief Returns a reference to the mesh data for this model.
         This can be used to update vertex data, but care should be taken to
         not modify the attribute layout as this will already be bound to the
