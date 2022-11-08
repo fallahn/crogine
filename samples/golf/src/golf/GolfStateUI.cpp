@@ -2344,7 +2344,7 @@ void GolfState::buildTrophyScene()
 
             //badge
             entity = m_trophyScene.createEntity();
-            entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.1f, 0.04f });
+            entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.08f, 0.06f });
             entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("rank_icon");
             auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
             bounds.width /= m_trophyScene.getSystem<cro::SpriteSystem3D>()->getPixelsPerUnit();
