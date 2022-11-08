@@ -849,7 +849,8 @@ void BallSystem::doBallCollision(cro::Entity entity)
 
     //don't collide until we moved from our start position
     if (ball.terrain != TerrainID::Hole &&
-        glm::length2(ball.startPoint - tx.getPosition()) > MinDist)
+        glm::length2(ball.startPoint - tx.getPosition()) > MinDist &&
+        glm::length2(m_holeData->pin - tx.getPosition()) > BallHoleDistance)
     {
         //ball centre is actually pos.y + radius
         glm::vec3 ballPos = entity.getComponent<cro::Transform>().getPosition();

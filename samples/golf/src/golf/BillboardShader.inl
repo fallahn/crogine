@@ -191,7 +191,7 @@ static const std::string BillboardFragmentShader = R"(
         FRAG_OUT = v_colour;
         FRAG_OUT *= TEXTURE(u_diffuseMap, v_texCoord0);
 
-        vec2 xy = gl_FragCoord.xy / u_pixelScale;
+        vec2 xy = gl_FragCoord.xy;// / u_pixelScale;
         int x = int(mod(xy.x, MatrixSize));
         int y = int(mod(xy.y, MatrixSize));
         float alpha = findClosest(x, y, smoothstep(0.1, 0.999, v_ditherAmount));

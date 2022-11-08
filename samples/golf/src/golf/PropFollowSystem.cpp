@@ -136,13 +136,19 @@ void PropFollower::initAxis(cro::Entity e)
     //and space them bounding box width
 
     auto bb = e.getComponent<cro::Model>().getAABB();
+
+    //bigger models such as the blimp want their axes scaling
+    //less as they're already big - so we'll approximate around
+    //the blimp length
+    const float scale = 4.f - (3.f * (bb[1].x / 38.f));
+
     auto& follower = e.getComponent<PropFollower>();
     follower.axis[0].position = follower.path.getPoint(0);
     auto dir = glm::normalize(follower.path.getPoint(1) - follower.path.getPoint(0));
-    follower.axis[0].position += dir * bb[1].x;// *4.f;
+    follower.axis[0].position += dir * bb[1].x * scale;
 
     follower.axis[1].position = follower.path.getPoint(0);
-    follower.axis[1].position += dir * bb[0].x;// *4.f;
+    follower.axis[1].position += dir * bb[0].x * scale;
 
 
     follower.axis[0].target = 1;

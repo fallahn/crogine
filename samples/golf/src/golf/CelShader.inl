@@ -556,7 +556,7 @@ static const std::string CelFragmentShader = R"(
 
 
 #if defined (DITHERED) || defined (FADE_INPUT)// || defined (TERRAIN)
-        vec2 xy = gl_FragCoord.xy / u_pixelScale;
+        vec2 xy = gl_FragCoord.xy;// / u_pixelScale;
         int x = int(mod(xy.x, MatrixSize));
         int y = int(mod(xy.y, MatrixSize));
 

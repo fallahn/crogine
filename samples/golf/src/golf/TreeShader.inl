@@ -344,7 +344,7 @@ R"(
 #else
         vec4 textureColour = vec4(1.0);
 #endif
-        vec2 xy = gl_FragCoord.xy / u_pixelScale;
+        vec2 xy = gl_FragCoord.xy;// / u_pixelScale;
         int x = int(mod(xy.x, MatrixSize));
         int y = int(mod(xy.y, MatrixSize));
 
@@ -478,7 +478,7 @@ std::string BranchFragment = R"(
         FRAG_OUT = colour;
 
 
-        vec2 xy = gl_FragCoord.xy / u_pixelScale;
+        vec2 xy = gl_FragCoord.xy;// / u_pixelScale;
         int x = int(mod(xy.x, MatrixSize));
         int y = int(mod(xy.y, MatrixSize));
 

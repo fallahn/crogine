@@ -143,7 +143,7 @@ static const std::string WaterFragment = R"(
         //edge feather
         float amount = 1.0 - smoothstep(u_radius * 0.625, u_radius, length(v_vertDistance));
 
-        vec2 xy = gl_FragCoord.xy / u_pixelScale;
+        vec2 xy = gl_FragCoord.xy;// / u_pixelScale;
         int x = int(mod(xy.x, MatrixSize));
         int y = int(mod(xy.y, MatrixSize));
         float alpha = findClosest(x, y, amount);

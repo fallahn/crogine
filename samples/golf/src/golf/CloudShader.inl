@@ -130,7 +130,7 @@ R"(
 
         float amount = 1.0 - smoothstep(0.7, 1.0, (length(v_worldPos.xz - u_worldCentre) / MaxDist));
 
-        vec2 xy = gl_FragCoord.xy / u_pixelScale;
+        vec2 xy = gl_FragCoord.xy;// / u_pixelScale;
         int x = int(mod(xy.x, MatrixSize));
         int y = int(mod(xy.y, MatrixSize));
         float alpha = findClosest(x, y, amount);

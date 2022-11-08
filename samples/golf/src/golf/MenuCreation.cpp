@@ -4323,7 +4323,7 @@ void MenuState::addCourseSelectButtons()
         labelEnt.getComponent<UIElement>().depth = 0.01f;
         labelEnt.getComponent<UIElement>().resizeCallback = resizeCallback;
         m_menuEntities[MenuID::Lobby].getComponent<cro::Transform>().addChild(labelEnt.getComponent<cro::Transform>());
-
+        checkboxEnt.getComponent<cro::UIInput>().area.width += cro::Text::getLocalBounds(labelEnt).width;
 
         auto resizeCallbackRight = 
             [&](cro::Entity e)
