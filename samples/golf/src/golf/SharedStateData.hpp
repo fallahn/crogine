@@ -52,6 +52,7 @@ struct PlayerData final
     std::uint32_t hairID = 0;
     std::uint32_t skinID = 0; //as loaded from the avatar data file
     bool flipped = false; //whether or not avatar flipped
+    bool isCPU = false; //these bools are flagged as bits in a single byte when serialised
 
     //these aren't included in serialise/deserialise
     std::vector<std::uint8_t> holeScores;
@@ -60,7 +61,6 @@ struct PlayerData final
     std::uint8_t skinScore = 0;
     glm::vec3 currentTarget = glm::vec3(0.f);
 
-    bool isCPU = false;
 };
 
 struct ConnectionData final

@@ -179,6 +179,7 @@ void LobbyState::insertPlayerInfo(const net::NetEvent& evt)
                     m_sharedData.clients[connectionID].playerData[i].hairID = cd.playerData[i].hairID;
                     m_sharedData.clients[connectionID].playerData[i].skinID = cd.playerData[i].skinID;
                     m_sharedData.clients[connectionID].playerData[i].flipped = cd.playerData[i].flipped;
+                    m_sharedData.clients[connectionID].playerData[i].isCPU = cd.playerData[i].isCPU;
                 }
             }
             else
@@ -212,6 +213,7 @@ void LobbyState::insertPlayerInfo(const net::NetEvent& evt)
                 cd.playerData[j].hairID = c.playerData[j].hairID;
                 cd.playerData[j].skinID = c.playerData[j].skinID;
                 cd.playerData[j].flipped = c.playerData[j].flipped;
+                cd.playerData[j].isCPU = c.playerData[j].isCPU;
             }
             auto buffer = cd.serialise();
 

@@ -37,6 +37,15 @@ struct PacketHeader final
     std::uint8_t playerCount = 0;
 };
 
+struct BoolFlags final
+{
+    enum
+    {
+        Flipped   = 0x1,
+        CPUPlayer = 0x2
+    };
+};
+
 std::vector<std::uint8_t> ConnectionData::serialise() const
 {
     PacketHeader header = { peerID, connectionID, playerCount };
@@ -53,7 +62,7 @@ std::vector<std::uint8_t> ConnectionData::serialise() const
         sizes[i] += sizeof(playerData[i].ballID);
         sizes[i] += sizeof(playerData[i].hairID);
         sizes[i] += sizeof(playerData[i].skinID);
-        sizes[i] += sizeof(std::uint8_t); //bool flipped
+        sizes[i] += sizeof(std::uint8_t); //bool flags
 
         totalSize += sizes[i];
     }
@@ -83,7 +92,16 @@ std::vector<std::uint8_t> ConnectionData::serialise() const
         std::memcpy(&buffer[offset], &playerData[i].skinID, sizeof(playerData[i].skinID));
         offset += sizeof(playerData[i].skinID);
 
-        buffer[offset] = playerData[i].flipped ? 1 : 0;
+        //buffer[offset] = playerData[i].flipped ? 1 : 0;
+        buffer[offset] = 0;
+        if (playerData[i].flipped)
+        {
+            buffer[offset] |= BoolFlags::Flipped;
+        }
+        if (playerData[i].isCPU)
+        {
+            buffer[offset] |= BoolFlags::CPUPlayer;
+        }
         offset++;
 
 
@@ -172,7 +190,8 @@ bool ConnectionData::deserialise(const net::NetEvent::Packet& packet)
         offset += sizeof(playerData[i].skinID);
         stringSize -= sizeof(playerData[i].skinID);
         
-        playerData[i].flipped = ptr[offset] != 0;
+        playerData[i].flipped = (ptr[offset] & BoolFlags::Flipped) != 0;
+        playerData[i].isCPU = (ptr[offset] & BoolFlags::CPUPlayer) != 0;
         offset++;
         stringSize--;
 

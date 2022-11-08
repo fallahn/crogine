@@ -424,7 +424,7 @@ void GolfState::handlePlayerInput(const net::NetEvent::Packet& packet, bool pred
 
                 m_playerInfo[0].ballEntity.getComponent<Ball>() = ball;
             }
-            else
+            else if (m_sharedData.clients[input.clientID].playerData[input.playerID].isCPU)
             {
                 //if we want to run a prediction do so on a duplicate entity
                 auto e = m_scene.createEntity();
@@ -432,7 +432,7 @@ void GolfState::handlePlayerInput(const net::NetEvent::Packet& packet, bool pred
                 e.addComponent<Ball>() = ball;
                 
                 m_scene.simulate(0.f); //run once so entity is properly integrated.
-                m_scene.getSystem<BallSystem>()->runPrediction(e, 1.f/60.f); //TODO use a player difficulty setting to set timestep
+                m_scene.getSystem<BallSystem>()->runPrediction(e, 1.f/60.f);
 
                 //read the result from e
                 auto resultPos = e.getComponent<cro::Transform>().getPosition();
