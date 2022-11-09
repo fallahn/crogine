@@ -787,7 +787,6 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
     m_sprites[SpriteID::ArrowRight] = spriteSheet.getSprite("arrow_r");
     m_sprites[SpriteID::ArrowRightHighlight] = spriteSheet.getSprite("arrow_r_h");
     m_sprites[SpriteID::Controller] = spriteSheet.getSprite("controller");
-    m_sprites[SpriteID::ControllerPS] = spriteSheet.getSprite("controller_ps");
     m_sprites[SpriteID::Keyboard] = spriteSheet.getSprite("keyboard");
     m_sprites[SpriteID::ThumbBackground] = spriteSheet.getSprite("thumb_bg");
     m_sprites[SpriteID::CPUHighlight] = spriteSheet.getSprite("check_highlight");
@@ -3636,6 +3635,7 @@ void MenuState::updateLocalAvatars(std::uint32_t mouseEnter, std::uint32_t mouse
         entity.addComponent<cro::Transform>().setPosition(localPos + ControlIconOffset);
         entity.addComponent<cro::Drawable2D>();
         entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::Keyboard];
+        entity.addComponent<cro::SpriteAnimation>();
         bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
         entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
 
@@ -3675,10 +3675,12 @@ void MenuState::updateLocalAvatars(std::uint32_t mouseEnter, std::uint32_t mouse
                 if (controllerCount == 0)
                 {
                     e.getComponent<cro::Sprite>() = m_sprites[SpriteID::Keyboard];
+                    e.getComponent<cro::SpriteAnimation>().play(0);
                 }
                 else
                 {
                     e.getComponent<cro::Sprite>() = m_sprites[SpriteID::Controller];
+                    e.getComponent<cro::SpriteAnimation>().play(cro::GameController::hasPSLayout(m_sharedData.controllerIDs[i]) ? 1 : 0);
 
                     //add buttons for selecting controller ID
                     if (controllerCount > 1)
