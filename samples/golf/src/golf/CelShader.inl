@@ -476,11 +476,19 @@ static const std::string CelFragmentShader = R"(
 
 #if defined(COMP_SHADE)
         //colour.rgb = mix(complementaryColour(colour.rgb), colour.rgb, amount);
-        
-        float minHeight = u_holeHeight - 0.15;
-        float maxHeight = u_holeHeight + 0.15;
-        float height = min(1.0, (v_worldPosition.y - minHeight) / (maxHeight - minHeight));
-        colour.rgb *= height;
+
+const vec3 shade = vec3(0.439, 0.368, 0.223);
+//        float minHeight = u_holeHeight - 3.0;
+//        float maxHeight = u_holeHeight;// + 0.15;
+//        float height = min(1.0, (v_worldPosition.y - minHeight) / (maxHeight - minHeight));
+        //colour.rgb *= 0.6 + (0.4 * height);
+
+//float depth = 0.55 + (0.45 * height);
+//colour.rgb = mix(colour.rgb * shade, colour.rgb, depth);
+
+float tilt  = dot(normal, vec3(0.0, 1.0, 0.0));
+colour.rgb = mix(colour.rgb * shade, colour.rgb, 1.0 - (smoothstep(0.94, 0.999, tilt) * 0.25));
+
 #else
         colour.rgb *= amount;
 #endif
