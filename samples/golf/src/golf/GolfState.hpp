@@ -244,6 +244,8 @@ private:
     cro::Entity m_drone;
     cro::Entity m_defaultCam;
     cro::Entity m_freeCam;
+    bool m_photoMode;
+    bool m_restoreInput;
     void toggleFreeCam();
     void applyShadowQuality();
 

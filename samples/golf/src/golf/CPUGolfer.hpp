@@ -56,6 +56,7 @@ public:
     bool thinking() const { return m_thinking; }
     void setPredictionResult(glm::vec3, std::int32_t);
     glm::vec3 getTarget() const { return m_target; }
+
 private:
 
     const InputParser& m_inputParser; //only reads the state - actual commands are send by raising events.
@@ -78,8 +79,9 @@ private:
         Aiming, //account for wind speed and direction
         UpdatePrediction, //dynamic mode correcting for prediction
         Stroke, //power bar is active
-        Watching //ball is mid-flight but turn not yet ended
+        Watching, //ball is mid-flight but turn not yet ended
     }m_state = State::Inactive;
+
 
     enum class Skill
     {

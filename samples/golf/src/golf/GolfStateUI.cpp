@@ -891,7 +891,7 @@ void GolfState::buildUI()
     auto updateView = [&, trophyEnt, courseEnt, infoEnt, windEnt, mapEnt, greenEnt, rootNode](cro::Camera& cam) mutable
     {
         auto size = glm::vec2(GolfGame::getActiveTarget()->getSize());
-        cam.setOrthographic(0.f, size.x, 0.f, size.y, -2.5f, 20.f);
+        cam.setOrthographic(0.f, size.x, 0.f, size.y, -3.5f, 20.f);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
 
         auto vpSize = calcVPSize();

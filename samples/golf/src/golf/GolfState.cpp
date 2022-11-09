@@ -130,7 +130,6 @@ namespace
 #include "ShaderIncludes.inl"
 
     std::int32_t debugFlags = 0;
-    bool useFreeCam = false;
     cro::Entity ballEntity;
     std::size_t bitrate = 0;
     std::size_t bitrateCounter = 0;
@@ -196,6 +195,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     m_terrainBuilder    (sd, m_holeData),
     m_audioPath         ("assets/golf/sound/ambience.xas"),
     m_currentCamera     (CameraID::Player),
+    m_photoMode         (false),
     m_activeAvatar      (nullptr),
     m_camRotation       (0.f),
     m_roundEnded        (false),
@@ -271,7 +271,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     //glLineWidth(1.5f);
 #ifdef CRO_DEBUG_
     ballEntity = {};
-    useFreeCam = false;
+
     ballDump[0].push_back(1.f);
     ballDump[1].push_back(1.f);
     ballDump[2].push_back(1.f);
@@ -484,9 +484,6 @@ bool GolfState::handleEvent(const cro::Event& evt)
             debugFlags = (debugFlags == 0) ? BulletDebug::DebugFlags : 0;
             m_collisionMesh.setDebugFlags(debugFlags);
             break;
-        case SDLK_INSERT:
-            toggleFreeCam();
-            break;
         case SDLK_END:
         {
             cro::Command cmd;
@@ -517,6 +514,9 @@ bool GolfState::handleEvent(const cro::Event& evt)
             };
             m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
         }
+            break;
+        case SDLK_INSERT:
+            toggleFreeCam();
             break;
 #endif
         }
@@ -641,7 +641,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
     else if (evt.type == SDL_MOUSEMOTION)
     {
 #ifdef CRO_DEBUG_
-        if (!useFreeCam) {
+        if (!m_photoMode) {
 #endif
             cro::App::getWindow().setMouseCaptured(false);
             m_mouseVisible = true;
@@ -669,22 +669,18 @@ bool GolfState::handleEvent(const cro::Event& evt)
         }
     }
 
-    if (!m_emoteWheel.handleEvent(evt))
-    {
-        m_inputParser.handleEvent(evt);
-    }
 
-#ifdef CRO_DEBUG_
-    m_gameScene.getSystem<FpsCameraSystem>()->handleEvent(evt);
-    /*if (evt.type == SDL_MOUSEBUTTONDOWN)
+    if (m_photoMode)
     {
-        if (evt.button.button == SDL_BUTTON_LEFT)
+        m_gameScene.getSystem<FpsCameraSystem>()->handleEvent(evt);
+    }
+    else
+    {
+        if (!m_emoteWheel.handleEvent(evt))
         {
-            auto wp = m_gameScene.getActiveCamera().getComponent<cro::Camera>().pixelToCoords(glm::vec2(evt.button.x, evt.button.y));
-            LogI << glm::length(wp = m_holeData[m_currentHole].pin);
+            m_inputParser.handleEvent(evt);
         }
-    }*/
-#endif
+    }
 
     m_gameScene.forwardEvent(evt);
     m_skyScene.forwardEvent(evt);
@@ -5269,7 +5265,8 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     auto localPlayer = (player.client == m_sharedData.clientConnection.connectionID);
     auto isCPU = m_sharedData.localConnectionData.playerData[player.player].isCPU;
 
-    m_inputParser.setActive(localPlayer, isCPU);
+    m_inputParser.setActive(localPlayer && !m_photoMode, isCPU);
+    m_restoreInput = localPlayer; //if we're in photo mode should we restore input parser?
     Achievements::setActive(localPlayer && !isCPU && allowAchievements);
 
     if (player.terrain == TerrainID::Bunker)
@@ -5725,7 +5722,7 @@ void GolfState::hitBall()
     m_sharedData.clientConnection.netClient.sendPacket(PacketID::InputUpdate, update, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
 
     m_inputParser.setActive(false);
-
+    m_restoreInput = false;
 
     //increase the local stroke count so that the UI is updated
     //the server will set the actual value
@@ -6312,13 +6309,10 @@ std::int32_t GolfState::getClub() const
 
 void GolfState::setActiveCamera(std::int32_t camID)
 {
-#ifdef CRO_DEBUG_
-    if (useFreeCam)
+    if (m_photoMode)
     {
         return;
     }
-    //LogI << "Request Camera " << camID << std::endl;
-#endif
 
     CRO_ASSERT(camID >= 0 && camID < CameraID::Count, "");
 
@@ -6341,10 +6335,8 @@ void GolfState::setActiveCamera(std::int32_t camID)
         }
 
         //set the water plane ent on the active camera
-        cro::Entity waterEnt;
         if (m_cameras[m_currentCamera].getComponent<TargetInfo>().waterPlane.isValid())
         {
-            waterEnt = m_cameras[m_currentCamera].getComponent<TargetInfo>().waterPlane;
             m_cameras[m_currentCamera].getComponent<TargetInfo>().waterPlane = {};
         }
         m_cameras[m_currentCamera].getComponent<cro::Camera>().active = false;
@@ -6352,7 +6344,7 @@ void GolfState::setActiveCamera(std::int32_t camID)
         if (camID == CameraID::Player)
         {
             auto target = m_currentPlayer.position;
-            waterEnt.getComponent<cro::Callback>().setUserData<glm::vec3>(target.x, WaterLevel, target.z);
+            m_waterEnt.getComponent<cro::Callback>().setUserData<glm::vec3>(target.x, WaterLevel, target.z);
         }
 
         //set scene camera
@@ -6363,7 +6355,7 @@ void GolfState::setActiveCamera(std::int32_t camID)
         }
         m_currentCamera = camID;
 
-        m_cameras[m_currentCamera].getComponent<TargetInfo>().waterPlane = waterEnt;
+        m_cameras[m_currentCamera].getComponent<TargetInfo>().waterPlane = m_waterEnt;
         m_cameras[m_currentCamera].getComponent<cro::Camera>().active = true;
 
         m_courseEnt.getComponent<cro::Drawable2D>().setShader(m_cameras[m_currentCamera].getComponent<TargetInfo>().postProcess);
@@ -6388,8 +6380,8 @@ void GolfState::setPlayerPosition(cro::Entity e, glm::vec3 position)
 
 void GolfState::toggleFreeCam()
 {
-    useFreeCam = !useFreeCam;
-    if (useFreeCam)
+    m_photoMode = !m_photoMode;
+    if (m_photoMode)
     {
         m_defaultCam = m_gameScene.setActiveCamera(m_freeCam);
         m_defaultCam.getComponent<cro::Camera>().active = false;
@@ -6399,6 +6391,16 @@ void GolfState::toggleFreeCam()
         m_freeCam.getComponent<cro::Transform>().setLocalTransform(glm::inverse(tx));
         m_freeCam.getComponent<FpsCamera>().resetOrientation(m_freeCam);
         m_freeCam.getComponent<cro::Camera>().active = true;
+
+        //TODO hide stroke indicator
+
+        //reduce fade distance
+        m_resolutionUpdate.targetFade = 0.2f;
+
+        //hide UI by bringing scene ent to front
+        auto origin = m_courseEnt.getComponent<cro::Transform>().getOrigin();
+        origin.z = -3.f;
+        m_courseEnt.getComponent<cro::Transform>().setOrigin(origin);
     }
     else
     {
@@ -6407,12 +6409,20 @@ void GolfState::toggleFreeCam()
 
         m_defaultCam.getComponent<cro::Camera>().active = true;
         m_freeCam.getComponent<cro::Camera>().active = false;
+
+        //restore fade distance
+        m_resolutionUpdate.targetFade = m_currentPlayer.terrain == TerrainID::Green ? GreenFadeDistance : CourseFadeDistance;
+
+        //unhide UI
+        auto origin = m_courseEnt.getComponent<cro::Transform>().getOrigin();
+        origin.z = 0.5f;
+        m_courseEnt.getComponent<cro::Transform>().setOrigin(origin);
     }
 
-    m_gameScene.setSystemActive<FpsCameraSystem>(useFreeCam);
-    m_waterEnt.getComponent<cro::Callback>().active = !useFreeCam;
-    m_inputParser.setActive(!useFreeCam);
-    cro::App::getWindow().setMouseCaptured(useFreeCam);
+    m_gameScene.setSystemActive<FpsCameraSystem>(m_photoMode);
+    m_waterEnt.getComponent<cro::Callback>().active = !m_photoMode;
+    m_inputParser.setActive(!m_photoMode && m_restoreInput);
+    cro::App::getWindow().setMouseCaptured(m_photoMode);
 }
 
 void GolfState::applyShadowQuality()
