@@ -2157,7 +2157,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     m_sprites[SpriteID::LobbyCheckbox] = spriteSheet.getSprite("checkbox");
     m_sprites[SpriteID::LobbyCheckboxHighlight] = spriteSheet.getSprite("checkbox_highlight");
     m_sprites[SpriteID::Envelope] = spriteSheet.getSprite("envelope");
-    m_sprites[SpriteID::LevelBadge] = spriteSheet.getSprite("level_badge");
+    m_sprites[SpriteID::LevelBadge] = spriteSheet.getSprite("rank_badge");
 
     //title
     auto entity = m_uiScene.createEntity();
@@ -3938,37 +3938,10 @@ void MenuState::updateLobbyAvatars()
             };
             entity.getComponent<cro::Drawable2D>().updateLocalBounds();
 
-            //add a rank badge
-            /*entity = m_uiScene.createEntity();
-            entity.addComponent<cro::Transform>().setPosition(ReadyOffset);
-            entity.getComponent<cro::Transform>().move({ 14.f, -66.f });
-            entity.addComponent<cro::Drawable2D>();
-            entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::LevelBadge];
-            entity.addComponent<cro::SpriteAnimation>();
-
-            entity.addComponent<cro::Callback>().active = true;
-            entity.getComponent<cro::Callback>().function =
-                [&, h](cro::Entity ent, float)
-            {
-                if (m_sharedData.connectionData[h].playerCount == 0
-                    ||  m_sharedData.connectionData[h].level == 0)
-                {
-                    ent.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
-                }
-                else
-                {
-                    ent.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
-                    auto index = std::min(5, m_sharedData.connectionData[h].level / 10);
-                    ent.getComponent<cro::SpriteAnimation>().play(index);
-                }
-            };
-            textEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-            children.push_back(entity);*/
-
             //rank text
             entity = m_uiScene.createEntity();
             entity.addComponent<cro::Transform>().setPosition(ReadyOffset);
-            entity.getComponent<cro::Transform>().move({ 106.f, -50.f });
+            entity.getComponent<cro::Transform>().move({ 106.f, -51.f });
             entity.addComponent<cro::Drawable2D>();
             entity.addComponent<cro::Text>(smallFont).setString("Level");
             entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
@@ -3993,12 +3966,39 @@ void MenuState::updateLobbyAvatars()
             };
             textEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
             children.push_back(entity);
+            auto rankEnt = entity;
+
+            //add a rank badge
+            entity = m_uiScene.createEntity();
+            entity.addComponent<cro::Transform>().setPosition({-16.f, -12.f});
+            entity.addComponent<cro::Drawable2D>();
+            entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::LevelBadge];
+            entity.addComponent<cro::SpriteAnimation>();
+
+            entity.addComponent<cro::Callback>().active = true;
+            entity.getComponent<cro::Callback>().function =
+                [&, h](cro::Entity ent, float)
+            {
+                if (m_sharedData.connectionData[h].playerCount == 0
+                    ||  m_sharedData.connectionData[h].level == 0)
+                {
+                    ent.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+                }
+                else
+                {
+                    ent.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+                    auto index = std::min(5, m_sharedData.connectionData[h].level / 10);
+                    ent.getComponent<cro::SpriteAnimation>().play(index);
+                }
+            };
+            rankEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+            children.push_back(entity);
 
 
             //add a network status icon
             entity = m_uiScene.createEntity();
             entity.addComponent<cro::Transform>().setPosition(ReadyOffset);
-            entity.getComponent<cro::Transform>().move({ -5.f, -50.f });
+            entity.getComponent<cro::Transform>().move({ -5.f, -64.f });
             entity.addComponent<cro::Drawable2D>();
             entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::NetStrength];
             entity.addComponent<cro::SpriteAnimation>();
