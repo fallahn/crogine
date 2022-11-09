@@ -454,6 +454,25 @@ bool App::isValid()
     return m_instance != nullptr;
 }
 
+void App::saveScreenshot()
+{
+    auto size = m_window.getSize();
+    std::vector<GLubyte> buffer(size.x * size.y * 4);
+    glCheck(glPixelStorei(GL_PACK_ALIGNMENT, 1));
+    glCheck(glReadPixels(0, 0, size.x, size.y, GL_RGBA, GL_UNSIGNED_BYTE, buffer.data()));
+
+    //flip row order
+    stbi_flip_vertically_on_write(1);
+
+    std::string filename = "screenshot_" + SysTime::dateString() + "_" + SysTime::timeString() + ".png";
+    std::replace(filename.begin(), filename.end(), '/', '_');
+    std::replace(filename.begin(), filename.end(), ':', '_');
+
+    RaiiRWops out;
+    out.file = SDL_RWFromFile(filename.c_str(), "w");
+    stbi_write_png_to_func(image_write_func, out.file, size.x, size.y, 4, buffer.data(), size.x * 4);
+}
+
 //protected
 void App::setApplicationStrings(const std::string& organisation, const std::string& appName)
 {
@@ -779,25 +798,6 @@ void App::saveSettings()
     }
 
     saveSettings.save(m_prefPath + cfgName);
-}
-
-void App::saveScreenshot()
-{
-    auto size = m_window.getSize();
-    std::vector<GLubyte> buffer(size.x * size.y * 4);
-    glCheck(glPixelStorei(GL_PACK_ALIGNMENT, 1));
-    glCheck(glReadPixels(0, 0, size.x, size.y, GL_RGBA, GL_UNSIGNED_BYTE, buffer.data()));
-
-    //flip row order
-    stbi_flip_vertically_on_write(1);
-
-    std::string filename = "screenshot_" + SysTime::dateString() + "_" + SysTime::timeString() + ".png";
-    std::replace(filename.begin(), filename.end(), '/', '_');
-    std::replace(filename.begin(), filename.end(), ':', '_');
-
-    RaiiRWops out;
-    out.file = SDL_RWFromFile(filename.c_str(), "w");
-    stbi_write_png_to_func(image_write_func, out.file, size.x, size.y, 4, buffer.data(), size.x * 4);
 }
 
 bool Detail::isPSLayout(SDL_GameController* gc)

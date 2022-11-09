@@ -30,6 +30,7 @@ source distribution.
 #pragma once
 
 #include <crogine/graphics/Image.hpp>
+#include <crogine/core/App.hpp>
 #include <crogine/core/String.hpp>
 
 #include <array>
@@ -102,6 +103,7 @@ public:
     static std::vector<cro::String> getLeaderboardResults(std::int32_t, std::int32_t) { return {}; }
     static void setStatus(std::int32_t, const std::vector<const char*>&) {}
     static void setGroup(std::uint64_t, std::int32_t = 0) {}
+    static void takeScreenShot() { cro::App::getInstance().saveScreenshot(); }
     static constexpr std::uint32_t IconSize = 64;
     static inline const std::string RSSFeed = "https://fallahn.itch.io/vga-golf/devlog.rss";
     static inline const std::string WebURL = "https://fallahn.itch.io/vga-golf";

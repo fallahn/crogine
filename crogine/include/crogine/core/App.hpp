@@ -136,6 +136,12 @@ namespace cro
             return getInstance().getMessageBus().post<T>(id);
         };
 
+        /*!
+        brief Saves a copy of the window contents to disk as an
+        image in the current working directory.
+        */
+        void saveScreenshot();
+
     protected:
         
         virtual void handleEvent(const Event&) = 0;
@@ -255,8 +261,6 @@ namespace cro
             glm::vec2 windowedSize = glm::vec2(0.f);
         };
         WindowSettings loadSettings();
-
-        void saveScreenshot();
 
 
         //loading external plugins
