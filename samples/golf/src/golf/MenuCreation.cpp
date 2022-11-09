@@ -746,11 +746,7 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
     {
         auto codePoints = cro::Util::String::getCodepoints(std::string(m_matchMaking.getUserName()));
         cro::String nameStr = cro::String::fromUtf32(codePoints.begin(), codePoints.end());
-        //if (nameStr.size() <= ConstVal::MaxNameChars)
-        {
-            //MaxStringChars is more reasonable length - but then it breaks UI layout HUM
-            m_sharedData.localConnectionData.playerData[0].name = nameStr.substr(0, ConstVal::MaxStringChars);
-        }
+        m_sharedData.localConnectionData.playerData[0].name = nameStr.substr(0, ConstVal::MaxStringChars);
     }
 
     auto menuEntity = m_uiScene.createEntity();
@@ -1038,13 +1034,16 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
         if (Social::getLevel() > 0)
         {
             auto iconEnt = m_uiScene.createEntity();
-            iconEnt.addComponent<cro::Transform>().move({ 0.f, -10.f });
+            iconEnt.addComponent<cro::Transform>();
             iconEnt.addComponent<cro::Drawable2D>();
             iconEnt.addComponent<cro::Sprite>() = spriteSheet.getSprite("rank_icon");
             iconEnt.addComponent<cro::SpriteAnimation>().play(std::min(5, Social::getLevel() / 10));
             bounds = iconEnt.getComponent<cro::Sprite>().getTextureBounds();
-            iconEnt.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height });
-            entity.getComponent<cro::Transform>().addChild(iconEnt.getComponent<cro::Transform>());
+            iconEnt.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
+            iconEnt.addComponent<UIElement>().relativePosition = { 0.5f, 0.f };
+            iconEnt.getComponent<UIElement>().absolutePosition = { 0.f, 24.f };
+            iconEnt.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement;
+            menuTransform.addChild(iconEnt.getComponent<cro::Transform>());
         }
 
         auto& font = m_sharedData.sharedResources->fonts.get(FontID::Info);
