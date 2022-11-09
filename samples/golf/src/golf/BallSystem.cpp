@@ -499,7 +499,7 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
             len2 = glm::length2(glm::vec2(pinDir.x, pinDir.z));
             if (len2 > MinBallDistance
                 && terrainContact.penetration > 0
-                && terrainContact.penetration < Ball::Radius * 2.f)
+                && terrainContact.penetration < Ball::Radius * 2.4f)
             {
                 newPos.y = terrainContact.intersection.y;
                 tx.setPosition(newPos);

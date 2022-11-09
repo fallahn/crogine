@@ -487,7 +487,7 @@ const vec3 shade = vec3(0.439, 0.368, 0.223);
 //colour.rgb = mix(colour.rgb * shade, colour.rgb, depth);
 
 float tilt  = dot(normal, vec3(0.0, 1.0, 0.0));
-colour.rgb = mix(colour.rgb * shade, colour.rgb, 1.0 - (smoothstep(0.94, 0.999, tilt) * 0.25));
+colour.rgb = mix(colour.rgb * shade, colour.rgb, 1.0 - (smoothstep(0.97, 0.999, tilt) * 0.3));
 
 #else
         colour.rgb *= amount;
