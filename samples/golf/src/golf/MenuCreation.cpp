@@ -2447,8 +2447,10 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity.addComponent<cro::Text>(smallFont).setString("Reverse Order");
     entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+    entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement;
-    entity.addComponent<UIElement>().absolutePosition = { -73.f, -24.f };
+    entity.addComponent<UIElement>().absolutePosition = { -73.f, -23.f };
     entity.getComponent<UIElement>().relativePosition = CourseDescPosition;
     entity.getComponent<UIElement>().depth = 0.01f;
     menuTransform.addChild(entity.getComponent<cro::Transform>());
@@ -4392,8 +4394,10 @@ void MenuState::addCourseSelectButtons()
         labelEnt.addComponent<cro::Text>(font).setString("Friends Only");
         labelEnt.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
         labelEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
+        labelEnt.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+        labelEnt.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
         labelEnt.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement | CommandID::Menu::CourseSelect;
-        labelEnt.addComponent<UIElement>().absolutePosition = { -176.f, -78.f };
+        labelEnt.addComponent<UIElement>().absolutePosition = { -176.f, -77.f };
         labelEnt.getComponent<UIElement>().relativePosition = LobbyBackgroundPosition;
         labelEnt.getComponent<UIElement>().depth = 0.01f;
         labelEnt.getComponent<UIElement>().resizeCallback = resizeCallback;
@@ -4413,8 +4417,10 @@ void MenuState::addCourseSelectButtons()
         labelEnt.addComponent<cro::Text>(font).setString("Invite");
         labelEnt.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
         labelEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
+        labelEnt.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+        labelEnt.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
         labelEnt.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement | CommandID::Menu::CourseSelect;
-        labelEnt.addComponent<UIElement>().absolutePosition = { 156.f, -78.f };
+        labelEnt.addComponent<UIElement>().absolutePosition = { 156.f, -77.f };
         labelEnt.getComponent<UIElement>().relativePosition = LobbyBackgroundPosition;
         labelEnt.getComponent<UIElement>().depth = 0.01f;
         labelEnt.getComponent<UIElement>().resizeCallback = resizeCallbackRight;
@@ -4631,8 +4637,10 @@ void MenuState::addCourseSelectButtons()
         labelEnt.addComponent<cro::Text>(font).setString("Show Custom");
         labelEnt.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
         labelEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
+        labelEnt.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+        labelEnt.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
         labelEnt.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement | CommandID::Menu::CourseSelect;
-        labelEnt.addComponent<UIElement>().absolutePosition = { 53.f, -24.f };
+        labelEnt.addComponent<UIElement>().absolutePosition = { 53.f, -23.f };
         labelEnt.getComponent<UIElement>().relativePosition = CourseDescPosition;
         labelEnt.getComponent<UIElement>().depth = 0.01f;
 
