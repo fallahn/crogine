@@ -204,6 +204,8 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     m_readyQuitFlags    (0),
     m_emoteWheel        (sd, m_currentPlayer),
     m_minimapScale      (1.f),
+    m_minimapRotation   (0.f),
+    m_minimapOffset     (0.f),
     m_hadFoul           (false)
 {
     godmode = 1.f;

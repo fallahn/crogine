@@ -475,7 +475,14 @@ static const std::string CelFragmentShader = R"(
         const vec3 shade = vec3(0.439, 0.368, 0.223);
 
         float tilt  = dot(normal, vec3(0.0, 1.0, 0.0));
-        colour.rgb = mix(colour.rgb, colour.rgb * shade, ((smoothstep(0.97, 0.999, tilt) * 0.2)) * (1.0 - u_colour.r));
+        //tilt = ((smoothstep(0.97, 0.999, tilt) * 0.2)) * (1.0 - u_colour.r);
+        tilt = ((1.0 - smoothstep(0.97, 0.999, tilt)) * 0.2) * (1.0 - u_colour.r);
+
+//tilt *= 20.0;
+//tilt = round(tilt);
+//tilt /= 20.0;
+
+        colour.rgb = mix(colour.rgb, colour.rgb * shade, tilt);
 
 #else
         colour.rgb *= amount;

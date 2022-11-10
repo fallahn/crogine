@@ -61,6 +61,7 @@ source distribution.
 
 #include <crogine/ecs/systems/SpriteSystem3D.hpp>
 #include <crogine/ecs/systems/RenderSystem2D.hpp>
+#include <crogine/ecs/systems/CameraSystem.hpp>
 
 #include <crogine/graphics/SpriteSheet.hpp>
 
@@ -592,19 +593,47 @@ void GolfState::buildUI()
                 glm::vec2 offset = glm::vec2(2.f * -rotation);
                 m_flagQuad.setRotation(-rotation * 90.f);
 
-                auto aabb = m_holeData[m_currentHole].modelEntity.getComponent<cro::Model>().getAABB();
-                float width = aabb[1].x - aabb[0].x;
-                auto height = aabb[1].z - aabb[0].z;
-                m_minimapScale = std::max(1.f, std::min(std::floor(static_cast<float>(MapSize.x) / width), static_cast<float>(MapSize.y) / height));
+                m_mapCam.getComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, -90.f * cro::Util::Const::degToRad);
+                m_minimapRotation = 0.f;
+
+                //zoom in putting/small course
+                m_minimapOffset = { 0.f,0.f,0.f };
+                auto dist = m_holeData[m_currentHole].pin - m_holeData[m_currentHole].tee;
+                if (auto len2 = glm::length2(dist); len2 < 144.f)
+                {
+                    float width = std::abs(dist.x);
+                    float height = std::abs(dist.z);
+                    m_minimapScale = std::max(1.f, std::min(std::floor(static_cast<float>(MapSize.x) / width), static_cast<float>(MapSize.y) / height));
+                    m_minimapScale *= std::max(1.f, std::sqrt(len2) / 10.f);
+
+                    if (height < width)
+                    {
+                        m_minimapRotation = (90.f * cro::Util::Const::degToRad) * -cro::Util::Maths::sgn(dist.z);
+                        m_mapCam.getComponent<cro::Transform>().rotate(cro::Transform::Z_AXIS, m_minimapRotation);
+                    }
+                    m_mapCam.getComponent<cro::Transform>().rotate(cro::Transform::Z_AXIS, 90.f * cro::Util::Const::degToRad);
+                    m_minimapOffset = m_holeData[m_currentHole].tee + (dist / 2.f);
+                    m_minimapOffset -= m_holeData[m_currentHole].modelEntity.getComponent<cro::Transform>().getOrigin();
+                }
+                else
+                {
+                    auto aabb = m_holeData[m_currentHole].modelEntity.getComponent<cro::Model>().getAABB();
+                    float width = aabb[1].x - aabb[0].x;
+                    auto height = aabb[1].z - aabb[0].z;
+                    m_minimapScale = std::max(1.f, std::min(std::floor(static_cast<float>(MapSize.x) / width), static_cast<float>(MapSize.y) / height));
+                }
 
                 //update render
                 auto oldCam = m_gameScene.setActiveCamera(m_mapCam);
+                m_gameScene.getSystem<cro::CameraSystem>()->process(0.f);
                 m_holeData[m_currentHole].modelEntity.getComponent<cro::Transform>().setScale(glm::vec3(m_minimapScale));
+                m_holeData[m_currentHole].modelEntity.getComponent<cro::Transform>().move(-m_minimapOffset * m_minimapScale);
                 m_mapBuffer.clear(cro::Colour::Transparent);
                 m_gameScene.render();
                 m_mapBuffer.display();
                 m_gameScene.setActiveCamera(oldCam);
                 m_holeData[m_currentHole].modelEntity.getComponent<cro::Transform>().setScale(glm::vec3(1.f));
+                m_holeData[m_currentHole].modelEntity.getComponent<cro::Transform>().move(m_minimapOffset * m_minimapScale);
 
                 m_mapQuad.setPosition(offset);
                 m_mapQuad.setColour(DropShadowColour);
@@ -819,12 +848,13 @@ void GolfState::buildUI()
         mapEnt.getComponent<cro::Sprite>().setTexture(m_mapTexture.getTexture());
         mapEnt.getComponent<cro::Transform>().setOrigin({ previewSize.x / 2.f, previewSize.y / 2.f });
 
-        miniCam.setOrthographic(0.f, static_cast<float>(MapSize.x), 0.f, static_cast<float>(MapSize.y), -0.1f, 20.f);
+        glm::vec2 viewSize(MapSize);
+        miniCam.setOrthographic(-viewSize.x / 2.f, viewSize.x / 2.f, -viewSize.y / 2.f, viewSize.y / 2.f, -0.1f, 20.f);
         miniCam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
 
     m_mapCam = m_gameScene.createEntity();
-    m_mapCam.addComponent<cro::Transform>().setPosition({ 0.f, 10.f, 0.f });
+    m_mapCam.addComponent<cro::Transform>().setPosition({ static_cast<float>(MapSize.x) / 2.f, 10.f, -static_cast<float>(MapSize.y) / 2.f});
     m_mapCam.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -90.f * cro::Util::Const::degToRad);
     auto& miniCam = m_mapCam.addComponent<cro::Camera>();
     miniCam.renderFlags = RenderFlags::MiniMap;
@@ -2450,7 +2480,7 @@ void GolfState::updateMiniMap()
     cmd.targetFlags = CommandID::UI::MiniMap;
     cmd.action = [&](cro::Entity en, float)
     {
-        //trigger animation
+        //trigger animation - this does the actual render
         en.getComponent<cro::Callback>().active = true;
         m_mapCam.getComponent<cro::Camera>().active = true;
     };
@@ -2461,6 +2491,7 @@ glm::vec2 GolfState::toMinimapCoords(glm::vec3 worldPos) const
 {
     auto origin = m_holeData[m_currentHole].modelEntity.getComponent<cro::Transform>().getOrigin();
     worldPos -= origin;
+    //worldPos += m_minimapOffset;
     worldPos *= m_minimapScale;
     worldPos += origin;
     worldPos /= 2.f;

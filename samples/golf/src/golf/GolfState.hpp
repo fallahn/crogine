@@ -373,6 +373,8 @@ private:
     void updateMiniMap();
 
     float m_minimapScale; //how big the model was when drawn to minimap
+    float m_minimapRotation; //rads cam was rotated when shooting minimap
+    glm::vec3 m_minimapOffset;
     glm::vec2 toMinimapCoords(glm::vec3) const;
 
     cro::Entity m_greenCam;
