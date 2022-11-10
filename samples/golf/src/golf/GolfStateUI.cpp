@@ -201,58 +201,6 @@ void GolfState::buildUI()
     auto nameEnt = entity;
     infoEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
-    /*if (Social::isAvailable())
-    {
-        entity = m_uiScene.createEntity();
-        entity.addComponent<cro::Transform>().setScale({ 0.f, 0.5f });
-        entity.getComponent<cro::Transform>().setOrigin({ LabelIconSize.x / 2.f, 0.f });
-        entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::PlayerIcon | CommandID::UI::UIElement;
-        entity.addComponent<UIElement>().absolutePosition = { 18.f, -12.f };
-        entity.getComponent<UIElement>().depth = 0.05f;
-        entity.addComponent<cro::Drawable2D>();
-        entity.addComponent<cro::Sprite>(m_sharedData.nameTextures[0].getTexture());
-        entity.getComponent<cro::Sprite>().setTextureRect({ 0.f, LabelTextureSize.y - LabelIconSize.y, LabelIconSize.x, LabelIconSize.y });
-
-        struct IconData final
-        {
-            enum
-            {
-                Shrink, Grow
-            }state = Grow;
-            float progress = 0.f;
-        };
-        entity.addComponent<cro::Callback>().setUserData<IconData>();
-        entity.getComponent<cro::Callback>().function =
-            [&](cro::Entity e, float dt)
-        {
-            const float BaseScale = UIBarHeight / Social::IconSize;
-
-            const float speed = dt * 3.f;
-            auto& data = e.getComponent<cro::Callback>().getUserData<IconData>();
-            if (data.state == IconData::Grow)
-            {
-                data.progress = std::min(1.f, data.progress + speed);
-                if (data.progress == 1)
-                {
-                    data.state = IconData::Shrink;
-                    e.getComponent<cro::Callback>().active = false;
-                }
-            }
-            else
-            {
-                data.progress = std::max(0.f, data.progress - speed);
-                if (data.progress == 0)
-                {
-                    e.getComponent<cro::Sprite>().setTexture(m_sharedData.nameTextures[m_currentPlayer.client].getTexture(), false);
-                    data.state = IconData::Grow;
-                }
-            }
-            float scale = cro::Util::Easing::easeOutCubic(data.progress);
-            e.getComponent<cro::Transform>().setScale({ scale * BaseScale, BaseScale });
-        };
-
-        infoEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-    }*/
 
 
     //think bulb displayed when CPU players are thinking
@@ -599,19 +547,18 @@ void GolfState::buildUI()
                 //zoom in putting/small course
                 m_minimapOffset = { 0.f,0.f,0.f };
                 auto dist = m_holeData[m_currentHole].pin - m_holeData[m_currentHole].tee;
-                if (auto len2 = glm::length2(dist); len2 < 144.f)
+                if (auto len2 = glm::length2(dist); len2 < 225.f) //15 metres
                 {
                     float width = std::abs(dist.x);
                     float height = std::abs(dist.z);
                     m_minimapScale = std::max(1.f, std::min(std::floor(static_cast<float>(MapSize.x) / width), static_cast<float>(MapSize.y) / height));
-                    m_minimapScale *= std::max(1.f, std::sqrt(len2) / 10.f);
+                    m_minimapScale /= 2.f;// TODO increase the divisor the larger the length of dist
 
-                    if (height < width)
+                    if (height > width)
                     {
-                        m_minimapRotation = (90.f * cro::Util::Const::degToRad) * -cro::Util::Maths::sgn(dist.z);
+                        m_minimapRotation = (90.f * cro::Util::Const::degToRad) * -cro::Util::Maths::sgn(dist.x);
                         m_mapCam.getComponent<cro::Transform>().rotate(cro::Transform::Z_AXIS, m_minimapRotation);
                     }
-                    m_mapCam.getComponent<cro::Transform>().rotate(cro::Transform::Z_AXIS, 90.f * cro::Util::Const::degToRad);
                     m_minimapOffset = m_holeData[m_currentHole].tee + (dist / 2.f);
                     m_minimapOffset -= m_holeData[m_currentHole].modelEntity.getComponent<cro::Transform>().getOrigin();
                 }
@@ -2490,13 +2437,32 @@ void GolfState::updateMiniMap()
 glm::vec2 GolfState::toMinimapCoords(glm::vec3 worldPos) const
 {
     auto origin = m_holeData[m_currentHole].modelEntity.getComponent<cro::Transform>().getOrigin();
+    worldPos -= m_minimapOffset;
     worldPos -= origin;
-    //worldPos += m_minimapOffset;
     worldPos *= m_minimapScale;
     worldPos += origin;
     worldPos /= 2.f;
 
-    return { worldPos.x, -worldPos.z };
+    glm::vec2 result = { worldPos.x, -worldPos.z };
+
+    if (m_minimapRotation)
+    {
+        static constexpr glm::vec2 MapCentre(MapSize / 4u);
+        result -= MapCentre;
+
+        //assume we're only ever rotatating 90 deg
+        if (m_minimapRotation < 0)
+        {
+            result = { -result.y, result.x };
+        }
+        else
+        {
+            result = { result.y, -result.x };
+        }
+        result += MapCentre;
+    }
+
+    return result;
 }
 
 //------emote wheel-----//
