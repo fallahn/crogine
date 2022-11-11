@@ -370,8 +370,19 @@ bool GolfState::handleEvent(const cro::Event& evt)
         }
     };
 
+    const auto hideMouse = [&]()
+    {
+        if (m_mouseVisible
+            && getStateCount() == 1)
+        {
+            m_mouseVisible = false;
+            cro::App::getWindow().setMouseCaptured(true);
+        }
+    };
+
     if (evt.type == SDL_KEYUP)
     {
+        hideMouse();
         switch (evt.key.keysym.sym)
         {
         default: break;
@@ -592,6 +603,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
     else if (evt.type == SDL_CONTROLLERBUTTONUP
         && evt.cbutton.which == cro::GameController::deviceID(m_sharedData.inputBinding.controllerID))
     {
+        hideMouse();
         switch (evt.cbutton.button)
         {
         default: break;
@@ -642,22 +654,17 @@ bool GolfState::handleEvent(const cro::Event& evt)
 
     else if (evt.type == SDL_MOUSEMOTION)
     {
-#ifdef CRO_DEBUG_
-        if (!m_photoMode) {
-#endif
+        if (!m_photoMode) 
+        {
             cro::App::getWindow().setMouseCaptured(false);
             m_mouseVisible = true;
-            m_mouseClock.restart();
-#ifdef CRO_DEBUG_
         }
-#endif // CRO_DEBUG_
-
     }
-
     else if (evt.type == SDL_JOYAXISMOTION)
     {
         if (evt.caxis.which == cro::GameController::deviceID(m_sharedData.inputBinding.controllerID))
         {
+            hideMouse();
             switch (evt.caxis.axis)
             {
             default: break;
@@ -1323,18 +1330,6 @@ bool GolfState::simulate(float dt)
             }
         };
         m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
-    }
-
-    //auto hide the mouse
-    if (m_mouseVisible
-        && getStateCount() == 1)
-    {
-        if (m_mouseClock.elapsed() > MouseHideTime
-            && !ImGui::GetIO().WantCaptureMouse)
-        {
-            m_mouseVisible = false;
-            cro::App::getWindow().setMouseCaptured(true);
-        }
     }
 
     return true;

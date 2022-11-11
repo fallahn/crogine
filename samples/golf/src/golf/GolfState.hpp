@@ -115,7 +115,6 @@ private:
     cro::Scene m_uiScene;
     cro::Scene m_trophyScene;
 
-    cro::Clock m_mouseClock;
     bool m_mouseVisible;
 
     InputParser m_inputParser;
