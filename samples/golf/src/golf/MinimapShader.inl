@@ -108,7 +108,10 @@ static const std::string MinimapViewFragment = R"(
 
         uniform float u_effect = 0.0;
 
-        const float Radius = (0.48 * 0.48);
+#include BAYER_MATRIX
+
+        const float RadiusOuter = (0.48 * 0.48);
+        const float RadiusInner = (0.4 * 0.4);
 
         void main()
         {
@@ -116,5 +119,9 @@ static const std::string MinimapViewFragment = R"(
 
             vec2 pos = v_texCoord - vec2(0.5);
             float len = dot(pos, pos);
-            FRAG_OUT.a *= 1.0 - (step(Radius, len) * u_effect);
+
+            int x = int(mod(gl_FragCoord.x, MatrixSize));
+            int y = int(mod(gl_FragCoord.y, MatrixSize));
+
+            FRAG_OUT.a *= findClosest(x, y, 1.0 - (smoothstep(RadiusInner, RadiusOuter, len) * u_effect));
         })";
