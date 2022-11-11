@@ -1810,10 +1810,18 @@ void GolfState::updateWindDisplay(glm::vec3 direction)
     cmd.targetFlags = CommandID::UI::WindSock;
     cmd.action = [&, rotation](cro::Entity e, float dt)
     {
-        auto r = rotation - m_camRotation;
+        auto camRotation = m_camRotation;
+        if (m_currentCamera != CameraID::Player)
+        {
+            //set the rotation relative to the active cam
+            auto vec = m_cameras[m_currentCamera].getComponent<cro::Transform>().getForwardVector();
+            camRotation = std::atan2(-vec.z, vec.x);
+        }
+
+        auto r = rotation - camRotation;
 
         float& currRotation = e.getComponent<float>();
-        currRotation += cro::Util::Maths::shortestRotation(currRotation, r) * dt;
+        currRotation += cro::Util::Maths::shortestRotation(currRotation, r) * (dt * 4.f);
         e.getComponent<cro::Transform>().setRotation(currRotation);
     };
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
