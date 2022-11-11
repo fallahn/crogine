@@ -61,25 +61,34 @@ void TextSystem::process(float)
             {
                 //don't rebuild the entire array
                 auto& verts = drawable.getVertexData();
-                if (text.m_context.outlineThickness == 0)
+
+                auto secondColour = cro::Colour::Transparent;
+                if (text.m_context.outlineThickness != 0)
                 {
-                    for (auto& v : verts)
+                    secondColour = text.m_context.outlineColour;
+                }
+                else if (glm::length(text.m_context.shadowOffset) != 0)
+                {
+                    secondColour = text.m_context.shadowColour;
+                }
+
+                if (secondColour.getAlpha() != 0)
+                {
+                    for (auto i = 0u; i < verts.size() / 2; ++i)
                     {
-                        v.colour = text.m_context.fillColour;
+                        verts[i].colour = secondColour;
+                    }
+
+                    for (auto i = verts.size() / 2; i < verts.size(); ++i)
+                    {
+                        verts[i].colour = text.m_context.fillColour;
                     }
                 }
                 else
                 {
-                    for (auto i = 0u; i < verts.size(); ++i)
+                    for (auto& v : verts)
                     {
-                        if (i < verts.size() / 2)
-                        {
-                            verts[i].colour = text.m_context.outlineColour;
-                        }
-                        else
-                        {
-                            verts[i].colour = text.m_context.fillColour;
-                        }
+                        v.colour = text.m_context.fillColour;
                     }
                 }
             }
