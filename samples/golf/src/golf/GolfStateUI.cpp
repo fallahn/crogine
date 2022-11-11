@@ -549,17 +549,23 @@ void GolfState::buildUI()
                 auto dist = m_holeData[m_currentHole].pin - m_holeData[m_currentHole].tee;
                 if (auto len2 = glm::length2(dist); len2 < 225.f) //15 metres
                 {
-                    float width = std::abs(dist.x);
-                    float height = std::abs(dist.z);
+                    float padding = std::max(1.f, 
+                        (std::sqrt(len2) + glm::length(m_holeData[m_currentHole].target - m_holeData[m_currentHole].tee)) / 10.f) * 4.f;
+
+                    float width = std::abs(dist.x) + padding;
+                    float height = std::abs(dist.z) + padding;
                     m_minimapScale = std::max(1.f, std::min(std::floor(static_cast<float>(MapSize.x) / width), static_cast<float>(MapSize.y) / height));
-                    m_minimapScale /= 2.f;// TODO increase the divisor the larger the length of dist
 
                     if (height > width)
                     {
                         m_minimapRotation = (90.f * cro::Util::Const::degToRad) * -cro::Util::Maths::sgn(dist.x);
                         m_mapCam.getComponent<cro::Transform>().rotate(cro::Transform::Z_AXIS, m_minimapRotation);
                     }
-                    m_minimapOffset = m_holeData[m_currentHole].tee + (dist / 2.f);
+
+                    m_minimapOffset = (m_holeData[m_currentHole].tee + 
+                                        m_holeData[m_currentHole].target + 
+                                        m_holeData[m_currentHole].pin) / 3.f;
+
                     m_minimapOffset -= m_holeData[m_currentHole].modelEntity.getComponent<cro::Transform>().getOrigin();
                     m_mapQuad.setUniform("u_effect", 1.f);
                 }
