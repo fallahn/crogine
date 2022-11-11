@@ -223,6 +223,19 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
             }
         });
 
+    registerCommand("noclip", [&](const std::string&)
+        {
+            toggleFreeCam();
+            if (m_photoMode)
+            {
+                cro::Console::print("noclip ON");
+            }
+            else
+            {
+                cro::Console::print("noclip OFF");
+            }
+        });
+
     shadowQuality.update(sd.hqShadows);
 
 

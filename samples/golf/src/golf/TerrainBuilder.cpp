@@ -998,7 +998,7 @@ void TerrainBuilder::threadFunc()
                 const std::int32_t startX = std::max(0, static_cast<std::int32_t>(std::floor(pinPos.x)) - HalfGridSize);
                 const std::int32_t startY = std::max(0, static_cast<std::int32_t>(-std::floor(pinPos.z)) - HalfGridSize);
                 static constexpr float DashCount = 80.f; //actual div by TAU cos its sin but eh.
-                const float SlopeSpeed = -12.f * (m_holeData[m_currentHole].puttFromTee ? 0.15f : 1.f);
+                const float SlopeSpeed = -12.f * (/*m_holeData[m_currentHole].puttFromTee ? 0.15f :*/ 1.f); //REMEMBER this const is also used in the slope frag shader
                 const std::int32_t AvgDistance = m_holeData[m_currentHole].puttFromTee ? 1 : 5; //taking a long average on a small lumpy green will give wrong direction
                 static constexpr std::int32_t GridDensity = 2; //grids per metre. Can only be 1,2 or 4 to match Normal Map resolution
                 static constexpr float GridSpacing = 1.f / GridDensity;

@@ -152,17 +152,22 @@ R"(
 
     const vec3 DotColour = vec3(1.0, 0.9, 0.4);
 
+const float MaxStrength = 12.0; //this is the +/- max value in UV.y - must match TerrainBuilder.cpp 1001
+
     void main()
     {
         float alpha = (sin(v_texCoord.x - ((u_windData.w * 10.f) * v_texCoord.y)) + 1.0) * 0.5;
         alpha = step(0.1, alpha);
 
+//float strength  = (v_texCoord.y + MaxStrength) / 2.0;
+//strength /= MaxStrength;
+
         vec4 colour = v_colour;
+        //vec4 colour = vec4(vec3(strength), v_colour.a);
         colour.a *= u_alpha;
         colour = mix(vec4(DotColour, smoothstep(0.05, 0.15, v_colour.a * u_alpha) * 0.8), colour, alpha);
 
         FRAG_OUT = colour;
-        //FRAG_OUT.a *= /*alpha **/ u_alpha;
     }
 )";
 
