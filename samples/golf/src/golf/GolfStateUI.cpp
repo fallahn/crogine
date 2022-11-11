@@ -1011,7 +1011,7 @@ void GolfState::showCountdown(std::uint8_t seconds)
     }
 
     auto trophyCount = std::min(std::size_t(3), m_statBoardScores.size());
-    
+
     for (auto i = 0u; i < trophyCount; ++i)
     {
         if (m_statBoardScores[i].client == m_sharedData.clientConnection.connectionID
@@ -1412,6 +1412,7 @@ void GolfState::createScoreboard()
         i++;
     }
     ents.back().getComponent<cro::Transform>().setPosition(glm::vec3(ColumnPositions.back(), 0.5f));
+    ents.back().getComponent<UIElement>().absolutePosition = ColumnPositions.back() - glm::vec2(0.f, UITextPosV);
 
     updateScoreboard();
 
@@ -1730,7 +1731,6 @@ void GolfState::updateScoreboard()
         auto pos = ents.back().getComponent<cro::Transform>().getPosition();
         pos.z = 1.5f;
         ents.back().getComponent<cro::Transform>().setPosition(pos);
-
 
         m_leaderboardTexture.update(leaderboardEntries);
     };
@@ -2428,6 +2428,11 @@ void GolfState::buildTrophyScene()
         }
         ++i;
     }
+
+    //we have to make sure everything is processed at least once
+    //as a hacky way of making sure the double sided property is
+    //applied to the badge materials.
+    m_trophyScene.simulate(0.f);
 }
 
 void GolfState::updateMiniMap()
