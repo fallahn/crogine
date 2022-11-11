@@ -179,6 +179,7 @@ struct ShaderID final
         Ball,
         Slope,
         Minimap,
+        MinimapView,
         TutorialSlope,
         Wireframe,
         WireframeCulled,

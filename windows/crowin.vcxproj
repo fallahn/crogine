@@ -396,6 +396,7 @@
     <None Include="..\crogine\include\crogine\ecs\SystemManager.inl" />
     <None Include="..\crogine\include\crogine\graphics\MeshData.inl" />
     <None Include="..\crogine\include\crogine\graphics\Rectangle.inl" />
+    <None Include="..\crogine\include\crogine\graphics\SimpleDrawable.inl" />
     <None Include="..\crogine\include\crogine\network\NetClient.inl" />
     <None Include="..\crogine\include\crogine\network\NetData.inl" />
     <None Include="..\crogine\include\crogine\network\NetHost.inl" />

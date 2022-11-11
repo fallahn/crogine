@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021
+Matt Marchant 2021 - 2022
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -49,6 +49,7 @@ static const std::string MinimapVertex = R"(
             v_texCoord = a_texCoord0;
         })";
 
+//minimap as in top down view of green
 static const std::string MinimapFragment = R"(
         uniform sampler2D u_texture;
 
@@ -76,4 +77,44 @@ const float scale = 2.0;
             FRAG_OUT = TEXTURE(u_texture, v_texCoord) * v_colour;
             //FRAG_OUT.rgb = mix(FRAG_OUT.rgb, borderColour, step(borderPos, length2));
             FRAG_OUT.a = 1.0 - step(stepPos, length2);
+        })";
+
+//minimap as in mini course view
+//well, this is a silly inconsistency...
+static const std::string MinimapViewVertex = R"(
+        uniform mat4 u_worldMatrix;
+        uniform mat4 u_projectionMatrix;
+
+        ATTRIBUTE vec2 a_position;
+        ATTRIBUTE MED vec2 a_texCoord0;
+        ATTRIBUTE LOW vec4 a_colour;
+
+        VARYING_OUT LOW vec4 v_colour;
+        VARYING_OUT MED vec2 v_texCoord;
+
+        void main()
+        {
+            gl_Position = u_projectionMatrix * u_worldMatrix * vec4(a_position, 0.0, 1.0);
+            v_colour = a_colour;
+            v_texCoord = a_texCoord0;
+        })";
+
+static const std::string MinimapViewFragment = R"(
+        uniform sampler2D u_texture;
+
+        VARYING_IN LOW vec4 v_colour;
+        VARYING_IN MED vec2 v_texCoord;
+        OUTPUT
+
+        uniform float u_effect = 0.0;
+
+        const float Radius = (0.48 * 0.48);
+
+        void main()
+        {
+            FRAG_OUT = TEXTURE(u_texture, v_texCoord) * v_colour;
+
+            vec2 pos = v_texCoord - vec2(0.5);
+            float len = dot(pos, pos);
+            FRAG_OUT.a *= 1.0 - (step(Radius, len) * u_effect);
         })";

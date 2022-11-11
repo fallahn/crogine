@@ -113,6 +113,20 @@ namespace cro
         */
         virtual void draw(const glm::mat4&) = 0;
 
+        /*!
+        \brief Sets a uniform value for the active shader
+        If the uniform doesn't exist in the current shader this
+        does nothing. Note that setting a new shader also resets
+        all existing uniform values, even if the new shader
+        contains the same uniforms.
+        Supported types are:
+        float, Vec2, Vec3, Vec4, Mat4 and Texture
+        \param name Name of the uniform to set
+        \param value Value to set the uniform
+        */
+        template <typename T>
+        void setUniform(const std::string& name, T value);
+
     protected:
         /*!
         \brief Sets the Texture to be used when rendering
@@ -168,5 +182,32 @@ namespace cro
         bool m_cropped;
 
         void applyBlendMode() const;
+
+
+
+        struct UniformValue final
+        {
+            enum
+            {
+                None,
+                Number,
+                Vec2,
+                Vec3,
+                Vec4,
+                Mat4,
+                Texture
+            }type = None;
+
+            union
+            {
+                float numberValue;
+                float vecValue[4];
+                std::uint32_t textureID = 0;
+                glm::mat4 matrixValue;
+            };
+        };
+        std::unordered_map<std::string, std::pair<std::int32_t, UniformValue>> m_uniformValues;
     };
+
+#include "SimpleDrawable.inl"
 }

@@ -1607,9 +1607,11 @@ void GolfState::loadAssets()
     m_materialIDs[MaterialID::PuttAssist] = m_resources.materials.add(m_resources.shaders.get(ShaderID::PuttAssist));
     m_resources.materials.get(m_materialIDs[MaterialID::PuttAssist]).blendMode = cro::Material::BlendMode::Additive;
 
-    //minimap
+    //minimap - green overhead
     m_resources.shaders.loadFromString(ShaderID::Minimap, MinimapVertex, MinimapFragment);
 
+    //minimap - course view
+    m_resources.shaders.loadFromString(ShaderID::MinimapView, MinimapViewVertex, MinimapViewFragment);
 
     //water
     m_resources.shaders.loadFromString(ShaderID::Water, WaterVertex, WaterFragment);

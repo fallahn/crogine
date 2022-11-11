@@ -222,30 +222,40 @@ bool SimpleDrawable::setShader(const Shader& shader)
 
 
 
-    auto uniforms = shader.getUniformMap();
+    const auto& uniforms = shader.getUniformMap();
     m_uniforms = {};
-    if (uniforms.count("u_projectionMatrix"))
-    {
-        m_uniforms.projectionMatrix = uniforms.at("u_projectionMatrix");
-    }
-    else
-    {
-        m_uniforms.projectionMatrix = -1;
-        LogW << "Uniform u_projectionMatrix not found in SimpleDrawble shader" << std::endl;
-    }
+    m_uniformValues.clear();
 
-    if (uniforms.count("u_worldMatrix"))
+    for (const auto& [name, id] : uniforms)
     {
-        m_uniforms.worldMatrix = uniforms.at("u_worldMatrix");
-    }
-    else
-    {
-        m_uniforms.worldMatrix = -1;
-        LogW << "Uniform u_worldMatrix not found in SimpleDrawable shader" << std::endl;
+        if (name == "u_projectionMatrix")
+        {
+            m_uniforms.projectionMatrix = id;
+        }
+        else if (name == "u_worldMatrix")
+        {
+            m_uniforms.worldMatrix = id;
+        }
+        else
+        {
+            m_uniformValues.insert(std::make_pair(name, std::make_pair(id, UniformValue())));
+        }
     }
 
     m_uniforms.texture = shader.getUniformID("u_texture");
     m_uniforms.shaderID = shader.getGLHandle();
+
+
+
+    if (m_uniforms.projectionMatrix == -1)
+    {
+        LogW << "Uniform u_projectionMatrix not found in SimpleDrawble shader" << std::endl;
+    }
+    if(m_uniforms.worldMatrix == -1)
+    {
+        LogW << "Uniform u_worldMatrix not found in SimpleDrawable shader" << std::endl;
+    }
+
 
 #ifdef PLATFORM_DESKTOP
     updateVAO(shader);
@@ -304,13 +314,48 @@ void SimpleDrawable::drawGeometry(const glm::mat4& worldTransform) const
     glCheck(glUniformMatrix4fv(m_uniforms.worldMatrix, 1, GL_FALSE, &worldTransform[0][0]));
     glCheck(glUniformMatrix4fv(m_uniforms.projectionMatrix, 1, GL_FALSE, &projectionMatrix[0][0]));
 
+    auto texIndex = 0;
     if (m_textureID)
     {
         //bind texture
         glCheck(glActiveTexture(GL_TEXTURE0));
         glCheck(glBindTexture(GL_TEXTURE_2D, m_textureID));
 
-        glCheck(glUniform1i(m_uniforms.texture, 0));
+        glCheck(glUniform1i(m_uniforms.texture, texIndex));
+        texIndex++;
+    }
+
+    for (const auto& [_, uniformPair] : m_uniformValues)
+    {
+        const auto& [uid, value] = uniformPair;
+        switch (uniformPair.second.type)
+        {
+        default:
+        case UniformValue::None:
+            break;
+        case UniformValue::Number:
+            glCheck(glUniform1f(uid, value.numberValue));
+            break;
+        case UniformValue::Vec2:
+            glCheck(glUniform2f(uid, value.vecValue[0], value.vecValue[1]));
+            break;
+        case UniformValue::Vec3:
+            glCheck(glUniform3f(uid, value.vecValue[0], value.vecValue[1], value.vecValue[2]));
+            break;
+        case UniformValue::Vec4:
+            glCheck(glUniform4f(uid, value.vecValue[0], value.vecValue[1], value.vecValue[2], value.vecValue[3]));
+            break;
+        case UniformValue::Mat4:
+            glCheck(glUniformMatrix4fv(uid, 1, GL_FALSE, &value.matrixValue[0][0]));
+            break;
+        case UniformValue::Texture:
+            glCheck(glActiveTexture(GL_TEXTURE0 + texIndex));
+            glCheck(glBindTexture(GL_TEXTURE_2D, value.textureID));
+
+            glCheck(glUniform1i(uid, texIndex));
+            texIndex++;
+            break;
+        }
     }
 
     //set viewport
@@ -344,7 +389,7 @@ void SimpleDrawable::drawGeometry(const glm::mat4& worldTransform) const
         glCheck(glScissor(0, 0, rtSize.x, rtSize.y));
     }
 
-    //TODO do we want to enable single sided randering?
+    //TODO do we want to enable single sided rendering?
 
 
     //draw

@@ -1195,6 +1195,9 @@
     <None Include="..\crogine\include\crogine\graphics\MeshData.inl">
       <Filter>Header Files\graphics</Filter>
     </None>
+    <None Include="..\crogine\include\crogine\graphics\SimpleDrawable.inl">
+      <Filter>Header Files\graphics</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="crogine.rc">

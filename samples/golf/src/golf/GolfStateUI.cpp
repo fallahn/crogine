@@ -561,6 +561,7 @@ void GolfState::buildUI()
                     }
                     m_minimapOffset = m_holeData[m_currentHole].tee + (dist / 2.f);
                     m_minimapOffset -= m_holeData[m_currentHole].modelEntity.getComponent<cro::Transform>().getOrigin();
+                    m_mapQuad.setUniform("u_effect", 1.f);
                 }
                 else
                 {
@@ -568,6 +569,7 @@ void GolfState::buildUI()
                     float width = aabb[1].x - aabb[0].x;
                     auto height = aabb[1].z - aabb[0].z;
                     m_minimapScale = std::max(1.f, std::min(std::floor(static_cast<float>(MapSize.x) / width), static_cast<float>(MapSize.y) / height));
+                    m_mapQuad.setUniform("u_effect", 0.f);
                 }
 
                 //update render
@@ -791,6 +793,7 @@ void GolfState::buildUI()
 
         m_mapBuffer.create(previewSize.x, previewSize.y);
         m_mapQuad.setTexture(m_mapBuffer.getTexture());
+        m_mapQuad.setShader(m_resources.shaders.get(ShaderID::MinimapView));
         m_mapTexture.create(previewSize.x, previewSize.y);
         mapEnt.getComponent<cro::Sprite>().setTexture(m_mapTexture.getTexture());
         mapEnt.getComponent<cro::Transform>().setOrigin({ previewSize.x / 2.f, previewSize.y / 2.f });
