@@ -2957,9 +2957,9 @@ void GolfState::addSystems()
     m_gameScene.addSystem<CameraFollowSystem>(mb);
     m_gameScene.addSystem<cro::CameraSystem>(mb);
     m_gameScene.addSystem<cro::ShadowMapRenderer>(mb)->setRenderInterval(m_sharedData.hqShadows ? 2 : 3);
-#ifdef CRO_DEBUG_
+//#ifdef CRO_DEBUG_
     m_gameScene.addSystem<FpsCameraSystem>(mb);
-#endif
+//#endif
     m_gameScene.addSystem<cro::ModelRenderer>(mb);
     m_gameScene.addSystem<cro::ParticleSystem>(mb);
     m_gameScene.addSystem<cro::AudioSystem>(mb);
@@ -3707,7 +3707,7 @@ void GolfState::buildScene()
     updateView(camEnt.getComponent<cro::Camera>());
     m_cameras[CameraID::Transition] = camEnt;
 
-#ifdef CRO_DEBUG_
+//#ifdef CRO_DEBUG_
     //free cam
     camEnt = m_gameScene.createEntity();
     camEnt.addComponent<cro::Transform>();
@@ -3732,7 +3732,7 @@ void GolfState::buildScene()
 #ifdef PATH_TRACING
     initBallDebug();
 #endif
-#endif
+//#endif
 
     //drone model to follow camera
     if (md.loadFromFile("assets/golf/models/drone.cmt"))
