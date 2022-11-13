@@ -677,7 +677,11 @@ bool GolfState::handleEvent(const cro::Event& evt)
     {
         if (evt.caxis.which == cro::GameController::deviceID(m_sharedData.inputBinding.controllerID))
         {
-            hideMouse();
+            if (std::abs(evt.caxis.value) > 10000)
+            {
+                hideMouse();
+            }
+
             switch (evt.caxis.axis)
             {
             default: break;

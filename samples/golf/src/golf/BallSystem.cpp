@@ -471,7 +471,7 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
 
                         friction = Friction[ball.terrain] - (slopeStrength * 0.08f);
                         //unrealistic but makes it more interesting on full size courses
-                        slopeStrength *= 70.f * slopeMultiplier;
+                        slopeStrength *= 40.f * slopeMultiplier;
                         //use the current velocity to stop the ball rolling forever
                         slopeStrength *= std::min(1.f, glm::length2(ball.velocity));
                         //and reduce if slope is along wind vector
