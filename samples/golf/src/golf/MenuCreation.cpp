@@ -2462,7 +2462,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
     entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement;
-    entity.addComponent<UIElement>().absolutePosition = { -73.f, -23.f };
+    entity.addComponent<UIElement>().absolutePosition = { -73.f, -24.f };
     entity.getComponent<UIElement>().relativePosition = CourseDescPosition;
     entity.getComponent<UIElement>().depth = 0.01f;
     menuTransform.addChild(entity.getComponent<cro::Transform>());
@@ -3786,7 +3786,12 @@ void MenuState::updateLobbyData(const net::NetEvent& evt)
         }
 
         m_matchMaking.setGamePlayerCount(playerCount);
+
     }
+
+    //new players won't have other levels
+    std::uint16_t xp = (Social::getLevel() << 8) | m_sharedData.clientConnection.connectionID;
+    m_sharedData.clientConnection.netClient.sendPacket(PacketID::PlayerXP, xp, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
 
     updateLobbyAvatars();
 }
@@ -4658,7 +4663,7 @@ void MenuState::addCourseSelectButtons()
         labelEnt.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
         labelEnt.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
         labelEnt.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement | CommandID::Menu::CourseSelect;
-        labelEnt.addComponent<UIElement>().absolutePosition = { 53.f, -23.f };
+        labelEnt.addComponent<UIElement>().absolutePosition = { 53.f, -24.f };
         labelEnt.getComponent<UIElement>().relativePosition = CourseDescPosition;
         labelEnt.getComponent<UIElement>().depth = 0.01f;
 
