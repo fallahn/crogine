@@ -3770,7 +3770,11 @@ void MenuState::updateLobbyData(const net::NetEvent& evt)
     ConnectionData cd;
     if (cd.deserialise(evt.packet))
     {
+        //hum. this overwrite level values as they're maintained independently
+        //would it be better to resend our level data when rx'ing this?
+        auto lvl = m_sharedData.connectionData[cd.connectionID].level;
         m_sharedData.connectionData[cd.connectionID] = cd;
+        m_sharedData.connectionData[cd.connectionID].level = lvl;
     }
 
     if (m_sharedData.hosting)

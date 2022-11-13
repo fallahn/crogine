@@ -4696,6 +4696,10 @@ void GolfState::removeClient(std::uint8_t clientID)
 
     showNotification(str);
 
+    for (auto i = m_netStrengthIcons.size() - 1; i >= (m_netStrengthIcons.size() - m_sharedData.connectionData[clientID].playerCount); i--)
+    {
+        m_uiScene.destroyEntity(m_netStrengthIcons[i]);
+    }
     m_netStrengthIcons.resize(m_netStrengthIcons.size() - m_sharedData.connectionData[clientID].playerCount);
 
     m_sharedData.connectionData[clientID].playerCount = 0;
