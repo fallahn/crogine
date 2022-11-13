@@ -354,8 +354,10 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
                 /*auto size = glm::vec2(256.f);
                 auto* tex = Achievements::getIcon(AchievementStrings[1]).texture;
                 if (tex)*/
+                for(const auto& t : m_sharedData.nameTextures)
                 {
-                    ImGui::Image(m_sharedData.nameTextures[0].getTexture()/**tex*/, { size.x, size.y }, { 0.f, 1.f }, { 1.f, 0.f });
+                    ImGui::Image(t.getTexture()/**tex*/, { size.x, size.y }, { 0.f, 1.f }, { 1.f, 0.f });
+                    ImGui::SameLine();
                 }
             }
             ImGui::End();

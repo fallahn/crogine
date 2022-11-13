@@ -3852,6 +3852,8 @@ void MenuState::updateLobbyAvatars()
                 m_sharedData.nameTextures[c.connectionID].clear(cro::Colour::Transparent);
 
                 simpleQuad.setTexture(quadTexture);
+                simpleQuad.setColour(cro::Colour(0.f, 0.f, 0.f, BackgroundAlpha / 2.f));
+
                 for (auto i = 0u; i < c.playerCount; ++i)
                 {
                     simpleText.setString(c.playerData[i].name);
