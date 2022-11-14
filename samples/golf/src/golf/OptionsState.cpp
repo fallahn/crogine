@@ -255,6 +255,19 @@ bool OptionsState::handleEvent(const cro::Event& evt)
     }
 
 
+    auto closeWindow = [&]()
+    {
+        if (!m_updatingKeybind)
+        {
+            quitState();
+        }
+        else
+        {
+            //cancel the input
+            updateKeybind(evt.key.keysym.sym);
+        }
+    };
+
     if (evt.type == SDL_KEYUP)
     {
         switch (evt.key.keysym.sym)
@@ -281,15 +294,7 @@ bool OptionsState::handleEvent(const cro::Event& evt)
             break;
         case SDLK_BACKSPACE:
         case SDLK_ESCAPE:
-            if (!m_updatingKeybind)
-            {
-                quitState();
-            }
-            else
-            {
-                //cancel the input
-                updateKeybind(evt.key.keysym.sym);
-            }
+            closeWindow();
             return false;
         }
     }
@@ -302,14 +307,7 @@ bool OptionsState::handleEvent(const cro::Event& evt)
             {
             default: break;
             case cro::GameController::ButtonB:
-                if (!m_updatingKeybind)
-                {
-                    quitState();
-                }
-                else
-                {
-                    updateKeybind(SDLK_ESCAPE);
-                }
+                closeWindow();
                 return false;
             }
         }
@@ -352,6 +350,10 @@ bool OptionsState::handleEvent(const cro::Event& evt)
         if (evt.button.button == SDL_BUTTON_LEFT)
         {
             m_activeSlider = {};
+        }
+        else if (evt.button.button == SDL_BUTTON_RIGHT)
+        {
+            closeWindow();
         }
     }
     else if (evt.type == SDL_MOUSEMOTION)
@@ -2840,7 +2842,7 @@ void OptionsState::createButtons(cro::Entity parent, std::int32_t menuID, std::u
     entity.addComponent<cro::Transform>().setPosition(glm::vec2(89.f, 14.f));
     entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(font).setString("Website");
+    entity.addComponent<cro::Text>(font).setString("Credits");
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
     bounds = cro::Text::getLocalBounds(entity);
@@ -2853,7 +2855,7 @@ void OptionsState::createButtons(cro::Entity parent, std::int32_t menuID, std::u
         {
             if (activated(evt))
             {
-                cro::Util::String::parseURL(Social::WebURL);
+                requestStackPush(StateID::Credits);
                 m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
             }
         });

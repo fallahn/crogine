@@ -303,6 +303,9 @@
     <ClCompile Include="src\golf\FloatingTextSystem.cpp">
       <Filter>Source Files\golf\client\systems</Filter>
     </ClCompile>
+    <ClCompile Include="src\golf\CreditsState.cpp">
+      <Filter>Source Files\golf\client\states</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ErrorCheck.hpp">
@@ -607,6 +610,9 @@
     </ClInclude>
     <ClInclude Include="src\golf\FloatingTextSystem.hpp">
       <Filter>Header Files\golf\client\systems</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\CreditsState.hpp">
+      <Filter>Header Files\golf\client\states</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

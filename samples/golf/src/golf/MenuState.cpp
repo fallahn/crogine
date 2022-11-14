@@ -468,8 +468,9 @@ bool MenuState::handleEvent(const cro::Event& evt)
             showPlayerConfig(false, 0);
             break;
         case SDLK_F4:
-            requestStackClear();
-            requestStackPush(StateID::PuttingRange);
+            //requestStackClear();
+            //requestStackPush(StateID::PuttingRange);
+            requestStackPush(StateID::Credits);
             break;
         case SDLK_KP_8:
             requestStackPush(StateID::Trophy);

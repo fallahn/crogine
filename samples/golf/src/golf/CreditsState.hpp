@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2022
+Matt Marchant 2022
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -29,28 +29,44 @@ source distribution.
 
 #pragma once
 
-struct StateID final
+#include "../StateIDs.hpp"
+
+#include <crogine/core/State.hpp>
+#include <crogine/audio/AudioScape.hpp>
+#include <crogine/ecs/Scene.hpp>
+
+struct SharedStateData;
+struct CreditEntry final
 {
-    enum
-    {
-        Menu,
-        Golf,
-        Options,
-        Pause,
-        Error,
-        SplashScreen,
-        Tutorial,
-        Keyboard,
-        Practice,
-        DrivingRange,
-        PuttingRange,
-        Clubhouse,
-        Billiards,
-        Trophy,
-        News,
-        Bush,
-        Playlist,
-        MessageOverlay,
-        Credits
-    };
+    cro::String title;
+    std::vector<cro::String> names;
+};
+
+class CreditsState final : public cro::State
+{
+public:
+    CreditsState(cro::StateStack&, cro::State::Context, SharedStateData&, const std::vector<CreditEntry>&);
+
+    bool handleEvent(const cro::Event&) override;
+
+    void handleMessage(const cro::Message&) override;
+
+    bool simulate(float) override;
+
+    void render() override;
+
+    cro::StateID getStateID() const override { return StateID::Credits; }
+
+private:
+
+    cro::Scene m_scene;
+    SharedStateData& m_sharedData;
+    const std::vector<CreditEntry>& m_credits;
+
+
+    glm::vec2 m_viewScale;
+    cro::Entity m_rootNode;
+    void buildScene();
+
+    void quitState();
 };

@@ -43,6 +43,7 @@ source distribution.
 #include "golf/TrophyState.hpp"
 #include "golf/NewsState.hpp"
 #include "golf/PlaylistState.hpp"
+#include "golf/CreditsState.hpp"
 #include "golf/MenuConsts.hpp"
 #include "golf/GameConsts.hpp"
 #include "golf/MessageIDs.hpp"
@@ -102,6 +103,43 @@ namespace
         ShaderDescription(CRTFragment.c_str(), ShaderNames[3], "PUBLIC DOMAIN CRT STYLED SCAN-LINE SHADER\nby Timothy Lottes"),
         ShaderDescription(CinematicFragment.c_str(), ShaderNames[4], ""),
     };
+
+    std::vector<CreditEntry> credits;
+    void readString(const cro::ConfigProperty& src, cro::String& dst)
+    {
+        auto text = src.getValue<std::string>();
+        auto data = cro::Util::String::getCodepoints(text);
+        dst = cro::String::fromUtf32(data.begin(), data.end());
+    }
+
+    void parseCredits()
+    {
+        cro::ConfigFile file;
+        if (file.loadFromFile("assets/credits.tgl"))
+        {
+            const auto& entries = file.getObjects();
+            for (const auto& entry : entries)
+            {
+                if (entry.getName() == "section")
+                {
+                    auto& creditEntry = credits.emplace_back();
+                    const auto& props = entry.getProperties();
+                    for (const auto& prop : props)
+                    {
+                        const auto& name = prop.getName();
+                        if (name == "title")
+                        {
+                            readString(prop, creditEntry.title);
+                        }
+                        else if (name == "name")
+                        {
+                            readString(prop, creditEntry.names.emplace_back());
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 
 cro::RenderTarget* GolfGame::m_renderTarget = nullptr;
@@ -130,6 +168,7 @@ GolfGame::GolfGame()
     m_stateStack.registerState<PlaylistState>(StateID::Playlist, m_sharedData);
     m_stateStack.registerState<BushState>(StateID::Bush, m_sharedData);
     m_stateStack.registerState<MessageOverlayState>(StateID::MessageOverlay, m_sharedData);
+    m_stateStack.registerState<CreditsState>(StateID::Credits, m_sharedData, credits);
 }
 
 //public
@@ -332,6 +371,8 @@ bool GolfGame::initialise()
         return false;
     }
 
+    parseCredits();
+
     registerConsoleTab("Advanced",
         [&]()
         {
@@ -444,13 +485,18 @@ bool GolfGame::initialise()
         []()
         {
             ImGui::Text("Credits:");
-            ImGui::Text("OPL VST synthesiser: https://github.com/jpcima/ADLplug");
-            ImGui::Text("Sound Effects: https://freesound.org (see assets directory for specific credits)");
-            ImGui::Text("CRT Effect Post Process Shader by Timothy Lottes (Public Domain)");
-            ImGui::Text("Artwork: Blender and Aseprite https://blender.org https://aseprite.org");
-            ImGui::Text("Colour Palette: Colordome32 https://lospec.com/palette-list/colordome-32");
-            ImGui::Text("Programming: Matt Marchant, source available at: https://github.com/fallahn/crogine");
-            ImGui::NewLine();
+
+            for (const auto& [title, names] : credits)
+            {
+                ImGui::Text(title.toAnsiString().c_str());
+
+                for (const auto& name : names)
+                {
+                    ImGui::Text(name.toAnsiString().c_str());
+                }
+                ImGui::NewLine();
+            }
+
 #ifndef USE_GNS
             ImGui::Text("Check out other games available from https://fallahn.itch.io !");
 #endif
