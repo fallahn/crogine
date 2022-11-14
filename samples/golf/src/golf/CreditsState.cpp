@@ -246,7 +246,7 @@ void CreditsState::buildScene()
         auto pos = e.getComponent<cro::Transform>().getPosition();
         pos.y += Speed * dt;
         e.getComponent<cro::Transform>().setPosition(pos);
-        e.getComponent<cro::Transform>().setScale(rootNode.getComponent<cro::Transform>().getScale());
+        e.getComponent<cro::Transform>().setScale(rootNode.getComponent<cro::Transform>().getScale() / glm::vec3(m_viewScale, 1.f));
 
         if (pos.y > endPos + scrollOffset)
         {

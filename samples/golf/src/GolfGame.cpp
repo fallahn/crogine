@@ -105,12 +105,6 @@ namespace
     };
 
     std::vector<CreditEntry> credits;
-    void readString(const cro::ConfigProperty& src, cro::String& dst)
-    {
-        auto text = src.getValue<std::string>();
-        auto data = cro::Util::String::getCodepoints(text);
-        dst = cro::String::fromUtf32(data.begin(), data.end());
-    }
 
     void parseCredits()
     {
@@ -129,11 +123,11 @@ namespace
                         const auto& name = prop.getName();
                         if (name == "title")
                         {
-                            readString(prop, creditEntry.title);
+                            creditEntry.title = prop.getValue<cro::String>();
                         }
                         else if (name == "name")
                         {
-                            readString(prop, creditEntry.names.emplace_back());
+                            creditEntry.names.emplace_back(prop.getValue<cro::String>());
                         }
                     }
                 }

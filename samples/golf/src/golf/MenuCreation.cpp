@@ -4606,7 +4606,6 @@ void MenuState::addCourseSelectButtons()
     m_menuEntities[MenuID::Lobby].getComponent<cro::Transform>().addChild(checkboxEnt.getComponent<cro::Transform>());
 
 
-
     if (m_courseData.size() > m_officialCourseCount)
     {
         //checkbox to hide custom courses
