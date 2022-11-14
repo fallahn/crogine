@@ -110,6 +110,7 @@ static const std::string SlopeVertexShader =
 R"(
     ATTRIBUTE vec4 a_position;
     ATTRIBUTE vec4 a_colour;
+    ATTRIBUTE vec3 a_normal;
     ATTRIBUTE vec2 a_texCoord0;
 
     uniform mat4 u_worldMatrix;
@@ -118,6 +119,7 @@ R"(
     uniform vec3 u_cameraWorldPosition;
 
     VARYING_OUT vec4 v_colour;
+    VARYING_OUT vec3 v_normal;
     VARYING_OUT vec2 v_texCoord;
 
     const float Radius = 7.0; //this should match max putt distance
@@ -133,6 +135,7 @@ R"(
         v_colour = a_colour;
         v_colour.a *= alpha;
 
+        v_normal = a_normal;
         v_texCoord = a_texCoord0;
     }   
 )";
@@ -148,6 +151,7 @@ R"(
     uniform float u_alpha;
 
     VARYING_IN vec4 v_colour;
+    VARYING_IN vec3 v_normal;
     VARYING_IN vec2 v_texCoord;
 
     const vec3 DotColour = vec3(1.0, 0.9, 0.4);
@@ -159,11 +163,14 @@ const float MaxStrength = 12.0; //this is the +/- max value in UV.y - must match
         float alpha = (sin(v_texCoord.x - ((u_windData.w * 10.f) * v_texCoord.y)) + 1.0) * 0.5;
         alpha = step(0.1, alpha);
 
-//float strength  = (v_texCoord.y + MaxStrength) / 2.0;
-//strength /= MaxStrength;
+        float strength = 1.0 - dot((v_normal), vec3(0.f, 1.f, 0.f));
+        strength = smoothstep(0.0001, 0.02, strength);
 
         vec4 colour = v_colour;
-        //vec4 colour = vec4(vec3(strength), v_colour.a);
+
+        //colour.rgb = mix(colour.rgb, vec3(1.0, 0.0, 0.0), strength);
+        colour.r = strength;
+
         colour.a *= u_alpha;
         colour = mix(vec4(DotColour, smoothstep(0.05, 0.15, v_colour.a * u_alpha) * 0.8), colour, alpha);
 

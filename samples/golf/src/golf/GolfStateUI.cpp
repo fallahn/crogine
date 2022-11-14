@@ -550,7 +550,7 @@ void GolfState::buildUI()
                 if (auto len2 = glm::length2(dist); len2 < (110.f * 110.f))// 225.f) //15 metres
                 {
                     float padding = std::max(1.f, 
-                        (std::sqrt(len2) + glm::length(m_holeData[m_currentHole].target - m_holeData[m_currentHole].tee)) / 10.f) * 4.f;
+                        (std::sqrt(len2) + glm::length(m_holeData[m_currentHole].target - m_holeData[m_currentHole].tee)) / 10.f) * 5.f;
 
                     float width = std::abs(dist.x) + padding;
                     float height = std::abs(dist.z) + padding;
@@ -684,7 +684,7 @@ void GolfState::buildUI()
     entity.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float)
     {
-        e.getComponent<cro::Transform>().setRotation(m_inputParser.getYaw() + m_minimapRotation);
+        e.getComponent<cro::Transform>().setRotation(m_inputParser.getYaw() - m_minimapRotation);
         e.getComponent<cro::Transform>().setPosition(glm::vec3(toMinimapCoords(m_currentPlayer.position), 0.5f));
 
         if (!m_inputParser.getActive())
@@ -1061,7 +1061,7 @@ void GolfState::showCountdown(std::uint8_t seconds)
     auto entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 200.f + scoreboardExpansion, 10.f, 0.23f }); //attaches to scoreboard
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<UIElement>().absolutePosition = { 200.f + scoreboardExpansion, 10.f - UITextPosV };
+    entity.addComponent<UIElement>().absolutePosition = { 200.f, 10.f - UITextPosV };
     entity.getComponent<UIElement>().depth = 0.23f;
     entity.getComponent<UIElement>().resizeCallback = [](cro::Entity e)
     {
@@ -1292,7 +1292,7 @@ void GolfState::createScoreboard()
         entity.addComponent<cro::Transform>().setPosition({ 200.f + scoreboardExpansion, 10.f, 0.5f });
         entity.addComponent<cro::Drawable2D>();
         entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::WaitMessage | CommandID::UI::UIElement;
-        entity.addComponent<UIElement>().absolutePosition = { scoreboardExpansion, 10.f - UITextPosV };
+        entity.addComponent<UIElement>().absolutePosition = { 0.f, 10.f - UITextPosV };
         entity.addComponent<UIElement>().relativePosition = { 0.5f, 0.f };
         entity.getComponent<UIElement>().depth = 0.5f;
         entity.addComponent<cro::Text>(smallFont).setString("Waiting For Other Players");

@@ -535,7 +535,7 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
 
 
     //create a mesh to display the slope data
-    flags = cro::VertexProperty::Position | cro::VertexProperty::Colour | cro::VertexProperty::UV0;
+    flags = cro::VertexProperty::Position | cro::VertexProperty::Colour | cro::VertexProperty::Normal | cro::VertexProperty::UV0;
     meshID = resources.meshes.loadMesh(cro::DynamicMeshBuilder(flags, 1, GL_LINES));
     resources.shaders.loadFromString(ShaderID::Slope, SlopeVertexShader, SlopeFragmentShader);
     auto& slopeShader = resources.shaders.get(ShaderID::Slope);
@@ -742,6 +742,21 @@ void TerrainBuilder::threadFunc()
         float height = static_cast<float>(m_normalMapImage.getPixel(x, y)[3]) / 255.f;
 
         return m_holeHeight.bottom + (m_holeHeight.height * height);
+    };
+
+    const auto readNormal = [&](std::uint32_t x, std::uint32_t y, std::int32_t gridRes = 1)
+    {
+        auto size = m_normalMapImage.getSize();
+        x = std::min(size.x - 1, std::max(0u, x * (NormalMapMultiplier / gridRes)));
+        y = std::min(size.y - 1, std::max(0u, y * (NormalMapMultiplier / gridRes)));
+
+        glm::vec3 normal(static_cast<float>(m_normalMapImage.getPixel(x, y)[0]) / 255.f,
+            static_cast<float>(m_normalMapImage.getPixel(x, y)[2]) / 255.f,
+            -static_cast<float>(m_normalMapImage.getPixel(x, y)[1]) / 255.f);
+
+        normal *= 2.f;
+        normal -= glm::vec3(1.f);
+        return normal;
     };
 
     //we can optimise this a bit by storing each prop
@@ -1026,6 +1041,7 @@ void TerrainBuilder::threadFunc()
                             auto height = (readHeightMap(worldX, worldY, GridDensity) - pinPos.y) + epsilon;
                             SlopeVertex vert;
                             vert.position = { posX, height, posZ };
+                            vert.normal = readNormal(worldX, worldY, GridDensity);
 
                             //this is the number of times the 'dashes' repeat if enabled in the shader
                             //and the speed/direction based on height difference
@@ -1042,6 +1058,7 @@ void TerrainBuilder::threadFunc()
                             SlopeVertex vert2;
                             vert2.position = vert.position + offset;
                             vert2.position.y = height;
+                            vert2.normal = readNormal(worldX + 1, worldY, GridDensity);
                             vert2.texCoord = { DashCount / GridDensity, std::min(glm::dot(glm::vec3(0.f, 1.f, 0.f), glm::normalize(avgPosition - vert.position)) * SlopeSpeed, 1.f) };
                             vert.texCoord.y = vert2.texCoord.y; //must be constant across segment
                             
@@ -1059,6 +1076,7 @@ void TerrainBuilder::threadFunc()
                             SlopeVertex vert4;
                             vert4.position = vert.position + offset;
                             vert4.position.y = height;
+                            vert4.normal = readNormal(worldX, worldY + 1, GridDensity);
                             vert4.texCoord = { DashCount / GridDensity, std::min(glm::dot(glm::vec3(0.f, 1.f, 0.f), glm::normalize(avgPosition - vert3.position)) * SlopeSpeed, 1.f) };
                             vert3.texCoord.y = vert4.texCoord.y;
 
@@ -1076,8 +1094,8 @@ void TerrainBuilder::threadFunc()
                     }
                 }
                 
-                static constexpr float LowestHeight = -0.02f;
-                static constexpr float HighestHeight = 0.02f;
+                static constexpr float LowestHeight = -0.04f;
+                static constexpr float HighestHeight = 0.04f;
                 static constexpr float MaxHeight = HighestHeight - LowestHeight;
                 //if (MaxHeight != 0)
                 {
@@ -1088,8 +1106,9 @@ void TerrainBuilder::threadFunc()
                         //v.colour = { 0.f, 0.4f * vertHeight, 1.f - vertHeight, 0.8f };
                         v.colour = 
                         { 
-                            cro::Util::Easing::easeInQuint(std::max(0.f, (vertHeight - 0.5f) * 2.f)),
-                            0.f,
+                            //cro::Util::Easing::easeInQuint(std::max(0.f, (vertHeight - 0.5f) * 2.f)),
+                            0.f, //red is set as slope strength in shader
+                            0.2f,
                             cro::Util::Easing::easeInQuint(std::min(1.f, vertHeight * 2.f)),
                             0.8f
                         };
