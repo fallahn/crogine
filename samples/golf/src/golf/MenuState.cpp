@@ -558,6 +558,11 @@ bool MenuState::handleEvent(const cro::Event& evt)
         }
     }
 
+    else if (evt.type == SDL_CONTROLLERAXISMOTION)
+    {
+        m_uiScene.getSystem<cro::UISystem>()->setActiveControllerID(cro::GameController::controllerID(evt.caxis.which));
+    }
+
     m_uiScene.getSystem<cro::UISystem>()->handleEvent(evt);
 
     m_uiScene.forwardEvent(evt);

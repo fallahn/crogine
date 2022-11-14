@@ -768,7 +768,9 @@ void GolfState::handleMessage(const cro::Message& msg)
             if (m_currentPlayer.client == m_sharedData.localConnectionData.connectionID
                 && !m_sharedData.localConnectionData.playerData[m_currentPlayer.player].isCPU)
             {
-                cro::GameController::rumbleStart(m_sharedData.inputBinding.controllerID, 50000, 35000, 200);
+                auto strLow = static_cast<std::uint16_t>(50000.f * m_inputParser.getPower());
+                auto strHigh = static_cast<std::uint16_t>(35000.f * m_inputParser.getPower());
+                cro::GameController::rumbleStart(m_sharedData.inputBinding.controllerID, strLow, strHigh, 200);
             }
 
             //check if we hooked/sliced
