@@ -1293,9 +1293,13 @@ void GolfState::createScoreboard()
         entity.addComponent<cro::Transform>().setPosition({ 200.f + scoreboardExpansion, 10.f, 0.5f });
         entity.addComponent<cro::Drawable2D>();
         entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::WaitMessage | CommandID::UI::UIElement;
-        entity.addComponent<UIElement>().absolutePosition = { 0.f, 10.f - UITextPosV };
-        entity.addComponent<UIElement>().relativePosition = { 0.5f, 0.f };
+        entity.addComponent<UIElement>().absolutePosition = { 200.f, 10.f - UITextPosV };
+        entity.getComponent<UIElement>().relativePosition = { 0.f, 0.f };
         entity.getComponent<UIElement>().depth = 0.5f;
+        entity.getComponent<UIElement>().resizeCallback = [](cro::Entity e)
+        {
+            e.getComponent<cro::Transform>().move({ scoreboardExpansion, 0.f });
+        };
         entity.addComponent<cro::Text>(smallFont).setString("Waiting For Other Players");
         entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
         entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
