@@ -546,8 +546,10 @@ void GolfState::buildUI()
 
                 //zoom in putting/small course
                 m_minimapOffset = { 0.f,0.f,0.f };
+                auto aabb = m_holeData[m_currentHole].modelEntity.getComponent<cro::Model>().getAABB();
+                auto minBounds = (aabb[1].x - aabb[0].x) / 2.f; //if this is a small bounds it's probably a single hole
                 auto dist = m_holeData[m_currentHole].pin - m_holeData[m_currentHole].tee;
-                if (auto len2 = glm::length2(dist); len2 < (110.f * 110.f))// 225.f) //15 metres
+                if (auto len2 = glm::length2(dist); len2 < (110.f * 110.f) && len2 < (minBounds * minBounds))
                 {
                     float padding = std::max(1.f, 
                         (std::sqrt(len2) + glm::length(m_holeData[m_currentHole].target - m_holeData[m_currentHole].tee)) / 10.f) * 5.f;
@@ -571,7 +573,6 @@ void GolfState::buildUI()
                 }
                 else
                 {
-                    auto aabb = m_holeData[m_currentHole].modelEntity.getComponent<cro::Model>().getAABB();
                     float width = aabb[1].x - aabb[0].x;
                     auto height = aabb[1].z - aabb[0].z;
                     m_minimapScale = std::max(1.f, std::min(std::floor(static_cast<float>(MapSize.x) / width), static_cast<float>(MapSize.y) / height));
