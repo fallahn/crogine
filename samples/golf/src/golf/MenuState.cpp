@@ -97,6 +97,9 @@ namespace
 #include "ShaderIncludes.inl"
 
     //constexpr glm::vec3 CameraBasePosition(-22.f, 4.9f, 22.2f);
+
+    ImVec4 C(1.f, 1.f, 1.f, 1.f);
+    float strength = 0.f;
 }
 
 MainMenuContext::MainMenuContext(MenuState* state)
@@ -350,6 +353,14 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
         {
             if (ImGui::Begin("buns"))
             {
+                ImGui::ColorButton("cb", C);
+                if (ImGui::SliderFloat("Strength", &strength, 0.f, 1.f))
+                {
+                    C.x = 1.f - std::pow(1.f - strength, 3.f);
+                    C.y = std::pow(1.f - strength, 5.f);
+                    C.z = 1.f - std::pow(1.f - strength, 40.f);
+                }
+
                 auto size = glm::vec2(LabelTextureSize) * 2.f;
                 /*auto size = glm::vec2(256.f);
                 auto* tex = Achievements::getIcon(AchievementStrings[1]).texture;

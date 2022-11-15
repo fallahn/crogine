@@ -238,7 +238,9 @@ void TutorialState::render()
     glGetFloatv(GL_LINE_WIDTH, &currWidth);
     
     glLineWidth(m_viewScale.y);
+    glEnable(GL_LINE_SMOOTH);
     m_scene.render();
+    glDisable(GL_LINE_SMOOTH);
     glLineWidth(currWidth);
 }
 
@@ -419,7 +421,6 @@ void TutorialState::buildScene()
         tutorialFour(rootNode);
         break;
     }
-
 
     //set up camera / resize callback
     auto camCallback = [&, rootNode](cro::Camera& cam) mutable
@@ -1674,13 +1675,13 @@ void TutorialState::tutorialFour(cro::Entity root)
     root.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
-    //blue line
+    //slope line
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>().getVertexData() =
     {
         cro::Vertex2D(glm::vec2(-60.f, 5.f), cro::Colour(1.f, 0.f, 1.f, 0.f)),
-        cro::Vertex2D(glm::vec2(60.f, -5.f), cro::Colour(0.f, 0.f, 1.f, 01.f))
+        cro::Vertex2D(glm::vec2(60.f, -5.f), cro::Colour(0.f, 1.f, 0.f, 01.f))
     };
     entity.getComponent<cro::Drawable2D>().updateLocalBounds();
     entity.getComponent<cro::Drawable2D>().setPrimitiveType(GL_LINES);

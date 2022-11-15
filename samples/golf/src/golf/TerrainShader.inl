@@ -154,25 +154,25 @@ R"(
     VARYING_IN vec3 v_normal;
     VARYING_IN vec2 v_texCoord;
 
-    const vec3 DotColour = vec3(1.0, 0.9, 0.4);
+    const vec3 DotColour = vec3(1.0, 0.95, 0.3);
 
-const float MaxStrength = 12.0; //this is the +/- max value in UV.y - must match TerrainBuilder.cpp 1001
+//const float MaxStrength = 12.0; //this is the +/- max value in UV.y - must match TerrainBuilder.cpp 1001
 
     void main()
     {
-        float alpha = (sin(v_texCoord.x - ((u_windData.w * 10.f) * v_texCoord.y)) + 1.0) * 0.5;
-        alpha = step(0.1, alpha);
-
         float strength = 1.0 - dot((v_normal), vec3(0.f, 1.f, 0.f));
-        strength = smoothstep(0.0001, 0.015, strength);
+        strength = smoothstep(0.001, 0.025, strength);
+
+        float alpha = (sin(v_texCoord.x - ((u_windData.w * 30.f * strength) * v_texCoord.y)) + 1.0) * 0.5;
+        alpha = step(0.1, alpha);
 
         vec4 colour = v_colour;
 
         //colour.rgb = mix(colour.rgb, vec3(1.0, 0.0, 0.0), strength);
-        colour.rb = vec2(strength);
+        colour.rgb = vec3(1.0 - pow(1.0 - strength, 3.0), pow(1.0 - strength, 5.0), 1.0 - pow(1.0 - strength, 40.0));
 
         colour.a *= u_alpha;
-        colour = mix(vec4(DotColour, smoothstep(0.05, 0.15, v_colour.a * u_alpha) * 0.8), colour, alpha);
+        colour = mix(vec4(DotColour, smoothstep(0.05, 0.15, v_colour.a * u_alpha) * 0.9), colour, alpha);
 
         FRAG_OUT = colour;
     }

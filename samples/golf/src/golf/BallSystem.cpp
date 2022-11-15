@@ -437,7 +437,7 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
                 //wind direction means we don't get blown forever
                 auto velLength = glm::length(ball.velocity);
                 float windAmount = 1.f - glm::dot(m_windDirection, ball.velocity / velLength);
-                ball.velocity += m_windDirection * m_windStrength * 0.06f * windAmount * dt;
+                ball.velocity += (m_windDirection * m_windStrength * 0.08f * windAmount * dt);// *2.f;
 
                 //if (!m_puttFromTee)
                 //{
@@ -461,7 +461,7 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
                     if (m_puttFromTee)
                     {
                         friction = Friction[ball.terrain] + (slopeStrength * 0.05f);
-                        ball.velocity += m_windDirection * m_windStrength * 0.06f * windAmount * dt;
+                        //ball.velocity += m_windDirection * m_windStrength * 0.06f * windAmount * dt;
                     }
                     else
                     {
@@ -471,7 +471,7 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
 
                         friction = Friction[ball.terrain] - (slopeStrength * 0.08f);
                         //unrealistic but makes it more interesting on full size courses
-                        slopeStrength *= 10.f * slopeMultiplier;
+                        slopeStrength *= 5.f;// *= 10.f * slopeMultiplier;
                         //use the current velocity to stop the ball rolling forever
                         slopeStrength *= std::min(1.f, glm::length2(ball.velocity));
                         //and reduce if slope is along wind vector

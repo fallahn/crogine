@@ -60,10 +60,10 @@ R"(
 
     void main()
     {
-        float alpha = (sin((v_position.x * 0.5) - u_time) + 1.0) * 0.5;
-        alpha = step(0.5, alpha);
+        float alpha = (sin((v_position.x * 0.5) - (u_time * 0.1)) + 1.0) * 0.5;
+        alpha = step(0.15, alpha);
 
-        FRAG_OUT = v_colour;
-        FRAG_OUT.a *= alpha;
+        FRAG_OUT = mix(vec4(1.0, 1.0, 0.0, 1.0), v_colour, alpha);
+        //FRAG_OUT.a *= alpha;
     }
 )";
