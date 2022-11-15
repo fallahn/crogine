@@ -45,7 +45,7 @@ using namespace cro;
 
 UISystem::UISystem(MessageBus& mb)
     : System            (mb, typeid(UISystem)),
-    m_activeControllerID(0),
+    m_activeControllerID(ActiveControllerAll),
     m_controllerMask    (0),
     m_prevControllerMask(0),
     m_columnCount       (1),
@@ -72,7 +72,8 @@ void UISystem::handleEvent(const Event& evt)
     case SDL_CONTROLLERDEVICEREMOVED:
         //check if this is the active controller and update
         //if necessary to a connected controller
-        if (evt.cdevice.which == cro::GameController::deviceID(m_activeControllerID))
+        if (m_activeControllerID != ActiveControllerAll &&
+            evt.cdevice.which == cro::GameController::deviceID(m_activeControllerID))
         {
             //controller IDs automatically shift down
             //so drop to the next lowest available
@@ -174,7 +175,8 @@ void UISystem::handleEvent(const Event& evt)
     }
         break;
     case SDL_CONTROLLERBUTTONDOWN:
-        if(evt.cbutton.which == cro::GameController::deviceID(m_activeControllerID))
+        if(m_activeControllerID == ActiveControllerAll ||
+            evt.cbutton.which == cro::GameController::deviceID(m_activeControllerID))
         {
             switch (evt.cbutton.button)
             {
@@ -201,7 +203,8 @@ void UISystem::handleEvent(const Event& evt)
         }
         break;
     case SDL_CONTROLLERBUTTONUP:
-        if (evt.cbutton.which == cro::GameController::deviceID(m_activeControllerID))
+        if (m_activeControllerID == ActiveControllerAll ||
+            evt.cbutton.which == cro::GameController::deviceID(m_activeControllerID))
         {
             switch (evt.cbutton.button)
             {
@@ -244,7 +247,8 @@ void UISystem::handleEvent(const Event& evt)
 
         //joystick and controller move events
     case SDL_CONTROLLERAXISMOTION:
-        if (evt.caxis.which == cro::GameController::deviceID(m_activeControllerID))
+        if (m_activeControllerID == ActiveControllerAll ||
+            evt.caxis.which == cro::GameController::deviceID(m_activeControllerID))
         {
             static constexpr std::int16_t Threshold = 15000;
             switch (evt.caxis.axis)
