@@ -437,7 +437,7 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
                 //wind direction means we don't get blown forever
                 auto velLength = glm::length(ball.velocity);
                 float windAmount = 1.f - glm::dot(m_windDirection, ball.velocity / velLength);
-                ball.velocity += (m_windDirection * m_windStrength * 0.08f * windAmount * dt);// *2.f;
+                ball.velocity += (m_windDirection * m_windStrength * 0.07f * windAmount * dt);
 
                 //if (!m_puttFromTee)
                 //{
@@ -457,11 +457,9 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
                     auto [slope, slopeStrength] = getSlope(terrainContact.normal);
                     float friction = 1.f;
 
-                    //add wind again - this is intentional
                     if (m_puttFromTee)
                     {
                         friction = Friction[ball.terrain] + (slopeStrength * 0.05f);
-                        //ball.velocity += m_windDirection * m_windStrength * 0.06f * windAmount * dt;
                     }
                     else
                     {

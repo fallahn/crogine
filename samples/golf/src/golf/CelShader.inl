@@ -488,12 +488,11 @@ static const std::string CelFragmentShader = R"(
         int texX = int(mod(texCheck.x, MatrixSize));
         int texY = int(mod(texCheck.y, MatrixSize));
 
-float facing = dot(normal, vec3(0.0, 1.0, 0.0));
-
-        float waterFade = (1.0 - smoothstep(WaterLevel, WaterLevel + (0.95 * (1.0 - smoothstep(0.6, 0.99, facing))), v_worldPosition.y));
+        float facing = dot(normal, vec3(0.0, 1.0, 0.0));
+        float waterFade = (1.0 - smoothstep(WaterLevel, WaterLevel + (1.15 * (1.0 - smoothstep(0.89, 0.99, facing))), v_worldPosition.y));
         float waterDither = findClosest(texX, texY, waterFade) * waterFade * (1.0 - step(0.96, facing));
 
-        colour.rgb = mix(colour.rgb, colour.rgb * SlopeShade, waterDither * 0.5);
+        colour.rgb = mix(colour.rgb, colour.rgb * SlopeShade, waterDither * 0.5 * step(WaterLevel, v_worldPosition.y));
 #endif
 
 #define NOCHEX
