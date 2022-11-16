@@ -385,6 +385,19 @@ void MenuState::createScene()
                 }
             });
 
+    //swing test button
+    textPos.y -= MenuSpacing;
+    entity = createButton("Swingput", textPos);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
+        uiSystem->addCallback([&](cro::Entity e, const cro::ButtonEvent& evt)
+            {
+                if (activated(evt))
+                {
+                    requestStackClear();
+                    requestStackPush(States::ScratchPad::Swing);
+                }
+            });
+
 
     //load plugin
     textPos.y -= MenuSpacing;

@@ -73,6 +73,12 @@
     <Filter Include="Source Files\rolling">
       <UniqueIdentifier>{d60b5c43-9b2a-4476-a451-ad93918156b2}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\swingput">
+      <UniqueIdentifier>{b9eb7d19-bce5-4e5a-a13b-e0d8f099757d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\swingput">
+      <UniqueIdentifier>{70109b5f-b87f-410b-8ed6-4a37dba20190}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\LoadingScreen.cpp">
@@ -170,6 +176,9 @@
     </ClCompile>
     <ClCompile Include="src\rolling\RollingSystem.cpp">
       <Filter>Source Files\rolling</Filter>
+    </ClCompile>
+    <ClCompile Include="src\swingput\SwingState.cpp">
+      <Filter>Source Files\swingput</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -301,6 +310,9 @@
     </ClInclude>
     <ClInclude Include="src\rolling\RollingSystem.hpp">
       <Filter>Header Files\rolling</Filter>
+    </ClInclude>
+    <ClInclude Include="src\swingput\SwingState.hpp">
+      <Filter>Header Files\swingput</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

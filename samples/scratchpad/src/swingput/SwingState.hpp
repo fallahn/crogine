@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2022
+Matt Marchant 2022
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -29,26 +29,42 @@ source distribution.
 
 #pragma once
 
-namespace States
-{
-    struct ScratchPad final
-    {
-        enum
-        {
-            MainMenu,
-            BatCat,
-            Billiards,
-            Bush,
-            BSP,
-            Frustum,
-            MeshCollision,
-            Retro,
-            Rolling,
-            Swing,
-            Voxels,
-            VATs,
+#include "../StateIDs.hpp"
 
-            Count
-        };
-    };
+#include <crogine/core/State.hpp>
+#include <crogine/ecs/Scene.hpp>
+#include <crogine/gui/GuiClient.hpp>
+#include <crogine/graphics/ModelDefinition.hpp>
+
+namespace cro
+{
+    struct Camera;
 }
+
+class SwingState final : public cro::State, public cro::GuiClient
+{
+public:
+    SwingState(cro::StateStack&, cro::State::Context);
+
+    cro::StateID getStateID() const override { return States::ScratchPad::Swing; }
+
+    bool handleEvent(const cro::Event&) override;
+    void handleMessage(const cro::Message&) override;
+    bool simulate(float) override;
+    void render() override;
+
+private:
+
+    cro::Scene m_gameScene;
+    cro::Scene m_uiScene;
+
+    cro::ResourceCollection m_resources;
+
+    void addSystems();
+    void loadAssets();
+    void createScene();
+    void createUI();
+
+    //assigned to camera resize callback
+    void updateView(cro::Camera&);
+};
