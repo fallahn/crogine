@@ -63,6 +63,9 @@ static const std::string TerrainVertexShader = R"(
     VARYING_OUT vec3 v_worldPosition;
     VARYING_OUT vec3 v_cameraWorldPosition;
 
+//used to calculate the water shade in frag shader
+    VARYING_OUT vec2 v_texCoord;
+
 #if defined(RX_SHADOWS)
     VARYING_OUT LOW vec4 v_lightWorldPosition[MAX_CASCADES];
     VARYING_OUT float v_viewDepth;
@@ -102,6 +105,7 @@ static const std::string TerrainVertexShader = R"(
         v_normal = u_normalMatrix * lerp(a_normal, a_bitangent, u_morphTime);
         v_colour = a_colour;
         v_worldPosition = position.xyz;
+        v_texCoord = vec2(position.x / 100.0, position.z / -62.5);
 
         gl_ClipDistance[0] = dot(position, u_clipPlane);
     })";

@@ -284,7 +284,6 @@ static const std::string CelFragmentShader = R"(
 
 #if defined (TEXTURED)
     uniform sampler2D u_diffuseMap;
-    VARYING_IN vec2 v_texCoord;
 #endif
 
 #if defined (CONTOUR)
@@ -307,6 +306,7 @@ static const std::string CelFragmentShader = R"(
     VARYING_IN float v_ditherAmount;
     VARYING_IN vec3 v_cameraWorldPosition;
     VARYING_IN vec3 v_worldPosition;
+    VARYING_IN vec2 v_texCoord;
 
     OUTPUT
 
@@ -411,12 +411,10 @@ static const std::string CelFragmentShader = R"(
     const float TerrainLevel = -0.049;
     const float WaterLevel = -0.019;
 
+    const vec3 SlopeShade = vec3(0.439, 0.368, 0.223);
+
     void main()
     {
-#if defined(TERRAIN)
-    //if (v_worldPosition.y < TerrainLevel - u_morphTime) discard;
-#endif
-
         vec4 colour = vec4(1.0);
 #if defined (TEXTURED)
         vec2 texCoord = v_texCoord;
@@ -472,8 +470,6 @@ static const std::string CelFragmentShader = R"(
 
 #if defined(COMP_SHADE)
 
-        const vec3 shade = vec3(0.439, 0.368, 0.223);
-
         float tilt  = dot(normal, vec3(0.0, 1.0, 0.0));
         //tilt = ((smoothstep(0.97, 0.999, tilt) * 0.2)) * (1.0 - u_colour.r);
         tilt = ((1.0 - smoothstep(0.97, 0.999, tilt)) * 0.2) * (1.0 - u_colour.r);
@@ -482,10 +478,22 @@ static const std::string CelFragmentShader = R"(
 //tilt = round(tilt);
 //tilt /= 20.0;
 
-        colour.rgb = mix(colour.rgb, colour.rgb * shade, tilt);
-
+        colour.rgb = mix(colour.rgb, colour.rgb * SlopeShade, tilt);
 #else
         colour.rgb *= amount;
+#endif
+
+#if defined(TERRAIN)
+        vec2 texCheck = v_texCoord * 4096.0;
+        int texX = int(mod(texCheck.x, MatrixSize));
+        int texY = int(mod(texCheck.y, MatrixSize));
+
+float facing = dot(normal, vec3(0.0, 1.0, 0.0));
+
+        float waterFade = (1.0 - smoothstep(WaterLevel, WaterLevel + (0.95 * (1.0 - smoothstep(0.6, 0.99, facing))), v_worldPosition.y));
+        float waterDither = findClosest(texX, texY, waterFade) * waterFade * (1.0 - step(0.96, facing));
+
+        colour.rgb = mix(colour.rgb, colour.rgb * SlopeShade, waterDither * 0.5);
 #endif
 
 #define NOCHEX
@@ -553,10 +561,6 @@ static const std::string CelFragmentShader = R"(
         FRAG_OUT *= u_tintColour;
 #endif 
 
-#if defined (TERRAIN)
-    //FRAG_OUT.rgb = mix(FRAG_OUT.rgb, vec3(0.02, 0.078, 0.578), clamp(v_worldPosition.y / WaterLevel, 0.0, 1.0));
-#endif
-
 
 #if defined (DITHERED) || defined (FADE_INPUT)// || defined (TERRAIN)
         vec2 xy = gl_FragCoord.xy;// / u_pixelScale;
@@ -565,13 +569,6 @@ static const std::string CelFragmentShader = R"(
 
 #if defined (FADE_INPUT)
         float alpha = findClosest(x, y, smoothstep(0.1, 0.95, u_fadeAmount));
-//#elif defined(TERRAIN)
-//        float alpha = 1.0;
-//        if(v_worldPosition.y < WaterLevel)
-//        {
-//            float distance = clamp(length(vec2(v_worldPosition.xz - vec2(160.0, -100.0))) / 100.0, 0.0, 1.0);
-//            alpha = findClosest(x, y, smoothstep(0.9, 0.99, 1.0 - distance));
-//        }
 #else
         float alpha = findClosest(x, y, smoothstep(0.1, 0.95, v_ditherAmount));
 #endif
