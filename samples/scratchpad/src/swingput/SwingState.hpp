@@ -45,6 +45,7 @@ class SwingState final : public cro::State, public cro::GuiClient
 {
 public:
     SwingState(cro::StateStack&, cro::State::Context);
+    ~SwingState();
 
     cro::StateID getStateID() const override { return States::ScratchPad::Swing; }
 
@@ -64,6 +65,9 @@ private:
     void loadAssets();
     void createScene();
     void createUI();
+
+    void loadSettings();
+    void saveSettings();
 
     //assigned to camera resize callback
     void updateView(cro::Camera&);
