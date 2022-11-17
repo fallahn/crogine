@@ -180,6 +180,9 @@
     <ClCompile Include="src\swingput\SwingState.cpp">
       <Filter>Source Files\swingput</Filter>
     </ClCompile>
+    <ClCompile Include="src\swingput\InputHandler.cpp">
+      <Filter>Source Files\swingput</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ErrorCheck.hpp">
@@ -312,6 +315,9 @@
       <Filter>Header Files\rolling</Filter>
     </ClInclude>
     <ClInclude Include="src\swingput\SwingState.hpp">
+      <Filter>Header Files\swingput</Filter>
+    </ClInclude>
+    <ClInclude Include="src\swingput\InputHandler.hpp">
       <Filter>Header Files\swingput</Filter>
     </ClInclude>
   </ItemGroup>

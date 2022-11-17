@@ -29,49 +29,47 @@ source distribution.
 
 #pragma once
 
-#include "../StateIDs.hpp"
-#include "InputHandler.hpp"
-
-#include <crogine/core/State.hpp>
-#include <crogine/ecs/Scene.hpp>
+#include <crogine/detail/Types.hpp>
+#include <crogine/detail/glm/vec2.hpp>
+#include <crogine/core/Clock.hpp>
 #include <crogine/gui/GuiClient.hpp>
-#include <crogine/graphics/ModelDefinition.hpp>
 
-namespace cro
-{
-    struct Camera;
-}
-
-class SwingState final : public cro::State, public cro::GuiClient
+class InputHandler final : public cro::GuiClient
 {
 public:
-    SwingState(cro::StateStack&, cro::State::Context);
-    ~SwingState();
+    InputHandler();
 
-    cro::StateID getStateID() const override { return States::ScratchPad::Swing; }
+    void handleEvent(const cro::Event&);
 
-    bool handleEvent(const cro::Event&) override;
-    void handleMessage(const cro::Message&) override;
-    bool simulate(float) override;
-    void render() override;
+    void process(float);
+
+
+    glm::vec2 getBackPoint() const { return m_backPoint; }
+    glm::vec2 getFrontPoint() const { return m_frontPoint; }
 
 private:
 
-    cro::Scene m_gameScene;
-    cro::Scene m_uiScene;
+    glm::vec2 m_backPoint;
+    glm::vec2 m_frontPoint;
 
-    cro::ResourceCollection m_resources;
+    struct State final
+    {
+        enum
+        {
+            Inactive,
+            Draw,
+            Push,
+            Summarise,
 
-    InputHandler m_inputParser;
+            Count
+        };
+    };    
+    std::int32_t m_state = State::Inactive;
+    const std::array<std::string, State::Count> StateStrings =
+    {
+        "Inactive", "Draw", "Push", "Summarise"
+    };
 
-    void addSystems();
-    void loadAssets();
-    void createScene();
-    void createUI();
-
-    void loadSettings();
-    void saveSettings();
-
-    //assigned to camera resize callback
-    void updateView(cro::Camera&);
+    cro::Clock m_timer;
+    cro::Time m_elapsedTime;
 };
