@@ -51,6 +51,7 @@ public:
     float getHook() const { return m_hook; }
 
     glm::vec2 getBackPoint() const { return m_backPoint; }
+    glm::vec2 getActivePoint() const { return m_activePoint; }
     glm::vec2 getFrontPoint() const { return m_frontPoint; }
 
     struct State final
@@ -58,8 +59,7 @@ public:
         enum
         {
             Inactive,
-            Draw,
-            Push,
+            Swing,
             Summarise,
 
             Count
@@ -70,8 +70,8 @@ public:
 private:
 
     glm::vec2 m_backPoint;
+    glm::vec2 m_activePoint;
     glm::vec2 m_frontPoint;
-    std::int16_t m_previousControllerAxis;
 
     float m_power;
     float m_hook;
@@ -79,7 +79,7 @@ private:
     std::int32_t m_state = State::Inactive;
     const std::array<std::string, State::Count> StateStrings =
     {
-        "Inactive", "Draw", "Push", "Summarise"
+        "Inactive", "Swing", "Summarise"
     };
 
     cro::HiResTimer m_timer;

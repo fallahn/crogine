@@ -162,18 +162,25 @@ void SwingState::createUI()
 
     auto entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 320.f, 240.f });
-    entity.addComponent<cro::Drawable2D>().setPrimitiveType(GL_LINES);
-    entity.getComponent<cro::Drawable2D>().setVertexData({ cro::Vertex2D(glm::vec2(-10.f), cro::Colour::Red), cro::Vertex2D(glm::vec2(50.f), cro::Colour::Green) });
+    entity.addComponent<cro::Drawable2D>().setPrimitiveType(GL_LINE_STRIP);
+    entity.getComponent<cro::Drawable2D>().setVertexData(
+        {
+            cro::Vertex2D(glm::vec2(-10.f), cro::Colour::Red),
+            cro::Vertex2D(glm::vec2(50.f), cro::Colour::Blue) ,
+            cro::Vertex2D(glm::vec2(50.f), cro::Colour::Green) ,
+        });
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float)
     {
         auto start = m_inputParser.getBackPoint();
+        auto active = m_inputParser.getActivePoint();
         auto end = m_inputParser.getFrontPoint();
 
         auto& verts = e.getComponent<cro::Drawable2D>().getVertexData();
         verts[0].position = start;
-        verts[1].position = end;
+        verts[1].position = active;
+        verts[2].position = end;
     };
 
 
@@ -215,14 +222,7 @@ void SwingState::createUI()
 
         if (m_inputParser.active())
         {
-            if (m_inputParser.getState() == InputHandler::State::Draw)
-            {
-                height = m_inputParser.getBackPoint().y;
-            }
-            else if (m_inputParser.getState() == InputHandler::State::Push)
-            {
-                height = m_inputParser.getFrontPoint().y;
-            }
+            height = m_inputParser.getActivePoint().y;
             targetAlpha = 1.f;
         }
 
@@ -249,7 +249,8 @@ void SwingState::createUI()
     auto updateUI = [](cro::Camera& cam)
     {
         glm::vec2 size(cro::App::getWindow().getSize());
-        cam.setOrthographic(0.f, size.x, 0.f, size.y, -1.f, 2.f);
+        //cam.setOrthographic(0.f, size.x, 0.f, size.y, -1.f, 2.f);
+        cam.setOrthographic(0.f, 720.f, 0.f, 480.f, -1.f, 2.f);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
     m_uiScene.getActiveCamera().getComponent<cro::Camera>().resizeCallback = updateUI;

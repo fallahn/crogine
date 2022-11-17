@@ -47,16 +47,16 @@ namespace
     constexpr float CommitDistance = 0.01f;
 
     constexpr float ControllerAxisRange = 32767.f;
-    constexpr std::int16_t MinControllerMove = 1200;
+    constexpr std::int16_t MinControllerMove = 12000;
 }
 
 InputHandler::InputHandler()
-    : m_backPoint           (0.f),
-    m_frontPoint            (0.f),
-    m_previousControllerAxis(0),
-    m_power                 (0.f),
-    m_hook                  (0.f),
-    m_elapsedTime           (0.f)
+    : m_backPoint       (0.f),
+    m_activePoint       (0.f),
+    m_frontPoint        (0.f),
+    m_power             (0.f),
+    m_hook              (0.f),
+    m_elapsedTime       (0.f)
 {
     registerWindow([&]()
         {
@@ -71,9 +71,9 @@ InputHandler::InputHandler()
                 ImGui::Text("Power: %3.3f", m_power);
                 ImGui::Text("Hook: %3.3f", m_hook);
 
-                /*ImGui::SliderFloat("Max Distance", &MaxDistance, 100.f, 200.f);
-                ImGui::SliderFloat("Max Velocity", &MaxVelocity, 100.f, 200.f);
-                ImGui::SliderFloat("Max Accuracy", &MaxAccuracy, 10.f, 60.f);*/
+                ImGui::Text("Active Point %3.3f, %3.3f", m_activePoint.x, m_activePoint.y);
+                ImGui::Text("Back Point %3.3f, %3.3f", m_backPoint.x, m_backPoint.y);
+                ImGui::Text("Front Point %3.3f, %3.3f", m_frontPoint.x, m_frontPoint.y);
             }
             ImGui::End();
         });
@@ -86,36 +86,21 @@ void InputHandler::handleEvent(const cro::Event& evt)
     {
         if (m_state == State::Inactive)
         {
-            m_state = State::Draw;
-            m_backPoint = { 0.f, -MaxDistance / 4.f };
+            m_state = State::Swing;
+            m_backPoint = { 0.f, 0.f };
+            m_activePoint = { 0.f, 0.f };
             m_frontPoint = { 0.f, 0.f };
-            m_previousControllerAxis = 0;
             m_power = 0.f;
             m_hook = 0.f;
-
+            LogI << "buns" << std::endl;
             cro::App::getWindow().setMouseCaptured(true);
         }
     };
 
-    const auto commitStroke = [&]()
-    {
-        m_frontPoint = m_backPoint;
-        m_state = State::Push;
-        m_timer.restart();
-    };
-
     const auto endStroke = [&]()
     {
-        if (m_state == State::Push)
-        {
-            m_state = State::Summarise;
-            m_elapsedTime = m_timer.restart();
-        }
-        else
-        {
-            m_state = State::Inactive;
-        }
-        debug = {};
+        m_state = State::Inactive;
+        m_activePoint = { 0.f, 0.f };
         cro::App::getWindow().setMouseCaptured(false);
     };
 
@@ -135,39 +120,14 @@ void InputHandler::handleEvent(const cro::Event& evt)
         }
         break;
     case SDL_MOUSEMOTION:
+        //TODO we need to scale this down relative to the game buffer size
+        //TODOwe need to the scale it up to match the controller speed
         switch (m_state)
         {
         default: break;
-            //move in both directions but commit to swing once past origin point
-        case State::Draw:
-            if(m_backPoint.y < CommitDistance)
-            {
-                //drawing back
-                m_backPoint.x += evt.motion.xrel;
-                m_backPoint.y -= evt.motion.yrel;
-
-                //clamp Y value
-                m_backPoint.y = std::max(m_backPoint.y, -MaxDistance / 2.f);
-            }
-            else
-            {
-                //changed direction
-                commitStroke();
-            }
-            break;
-            //only moev forward, reversing or releaseing button takes shot
-        case State::Push:
-            if (evt.motion.yrel < 0)
-            {
-                m_frontPoint.x += evt.motion.xrel;
-                m_frontPoint.y -= evt.motion.yrel;
-
-                m_frontPoint.y = std::min(m_frontPoint.y, MaxDistance / 2.f);
-            }
-            else
-            {
-                endStroke();
-            }
+        case State::Swing:
+            m_activePoint.x = std::clamp(m_activePoint.x + evt.motion.xrel, -MaxAccuracy, MaxAccuracy);
+            m_activePoint.y = std::clamp(m_activePoint.y - evt.motion.yrel, -(MaxDistance / 2.f), MaxDistance / 2.f);
             break;
         }
         break;
@@ -182,6 +142,7 @@ void InputHandler::handleEvent(const cro::Event& evt)
         case SDL_CONTROLLER_AXIS_TRIGGERRIGHT:
             if (evt.caxis.value > MinControllerMove)
             {
+                //TODO sometimes this is activated when letting go of trigger...
                 startStroke();
             }
             else
@@ -193,26 +154,10 @@ void InputHandler::handleEvent(const cro::Event& evt)
         case SDL_CONTROLLER_AXIS_RIGHTY:
             if (std::abs(evt.caxis.value) > MinControllerMove)
             {
-                if (m_state == State::Draw)
+                if (m_state == State::Swing)
                 {
-                    m_backPoint.y = (static_cast<float>(evt.caxis.value) / ControllerAxisRange) * (MaxDistance / 2.f);
-
-                    if(m_backPoint.y > CommitDistance)
-                    {
-                        //changed direction
-                        commitStroke();
-                    }
+                    m_activePoint.y = (static_cast<float>(-evt.caxis.value) / ControllerAxisRange) * (MaxDistance / 2.f);
                 }
-                else if (m_state == State::Push)
-                {
-                    m_frontPoint.y = (static_cast<float>(evt.caxis.value) / ControllerAxisRange) * (MaxDistance / 2.f);
-
-                    if (evt.caxis.value > m_previousControllerAxis)
-                    {
-                        endStroke();
-                    }
-                }
-                m_previousControllerAxis = evt.caxis.value;
             }
             break;
         case SDL_CONTROLLER_AXIS_LEFTX:
@@ -220,9 +165,10 @@ void InputHandler::handleEvent(const cro::Event& evt)
             //just set this and we'll have
             //whichever value was present when
             //the swing is finished
-            if (std::abs(evt.caxis.value) > MinControllerMove)
+            if (std::abs(evt.caxis.value) > MinControllerMove
+                && m_state == State::Swing)
             {
-                m_frontPoint.x = (static_cast<float>(evt.caxis.value) / ControllerAxisRange) * MaxAccuracy;
+                m_activePoint.x = (static_cast<float>(evt.caxis.value) / ControllerAxisRange) * MaxAccuracy;
             }
             break;
         }
@@ -232,21 +178,50 @@ void InputHandler::handleEvent(const cro::Event& evt)
 
 void InputHandler::process(float)
 {
-    if (m_state == State::Summarise)
+    switch (m_state)
     {
-        //check we went forward past starting point
-        if (m_frontPoint.y > 0)
+    default: break;
+    case State::Swing:
+    {
+        //moving down
+        if (m_activePoint.y < m_frontPoint.y)
         {
-            debug.distance = (m_frontPoint.y - m_backPoint.y);
-            debug.velocity = debug.distance / (m_elapsedTime + 0.0001f); //potential NaN
-            debug.accuracy = (m_frontPoint.x - m_backPoint.x);
-            
-            float multiplier = m_frontPoint.y / ((MaxDistance / 2.f));
-
-            m_power = std::clamp(debug.velocity / MaxVelocity, 0.f, 1.f) * multiplier;
-            m_hook = std::clamp(debug.accuracy / MaxAccuracy, -1.f, 1.f);
+            m_backPoint = m_activePoint;
         }
 
+        //started moving back up so time the ascent
+        if (m_activePoint.y > m_backPoint.y
+            && m_frontPoint.y == m_backPoint.y)
+        {
+            m_timer.restart();
+        }
+
+        //we've done full stroke
+        if (m_activePoint.y > (MaxDistance / 2.f) - CommitDistance)
+        {
+            m_state = State::Summarise;
+            m_elapsedTime = m_timer.restart();
+        }
+
+        m_frontPoint = m_activePoint;
+    }
+        break;
+    case State::Summarise:
         m_state = State::Inactive;
+
+        debug.distance = (m_frontPoint.y - m_backPoint.y);
+        debug.velocity = debug.distance / (m_elapsedTime + 0.0001f); //potential NaN
+        debug.accuracy = (m_frontPoint.x - m_backPoint.x);
+        
+        m_power = std::clamp(debug.velocity / MaxVelocity, 0.f, 1.f);
+        m_hook = std::clamp(debug.accuracy / MaxAccuracy, -1.f, 1.f);
+
+
+        //TODO travelling a shorter distance doesn't imply lower
+        //velocity so we need to crete a distance based modifier
+        //float multiplier = m_backPoint.y / (MaxDistance / 2.f);
+        //m_power = (m_power / 2.f) + ((m_power / 2.f) * multiplier);
+
+        break;
     }
 }
