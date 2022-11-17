@@ -61,11 +61,15 @@ namespace
     constexpr float MaxDistance = 160.f;
     constexpr float MaxVelocity = 1200.f;
     constexpr float MaxAccuracy = 20.f;
+
+    constexpr float ControllerAxisRange = 32767.f;
+    constexpr std::int16_t MinControllerMove = 1200;
 }
 
 InputHandler::InputHandler()
-    : m_backPoint   (0.f),
-    m_frontPoint    (0.f)
+    : m_backPoint           (0.f),
+    m_frontPoint            (0.f),
+    m_previousControllerAxis(0)
 {
     registerWindow([&]()
         {
@@ -98,16 +102,30 @@ void InputHandler::handleEvent(const cro::Event& evt)
             m_state = State::Draw;
             m_backPoint = { 0.f, 0.f };
             m_frontPoint = { 0.f, 0.f };
+            m_previousControllerAxis = 0;
 
             cro::App::getWindow().setMouseCaptured(true);
         }
     };
 
+    const auto switchDirection = [&]()
+    {
+        m_frontPoint = m_backPoint;
+        m_state = State::Push;
+        m_timer.restart();
+    };
+
     const auto endStroke = [&]()
     {
-        m_state = State::Summarise;
-        m_elapsedTime = m_timer.elapsed();
-
+        if (m_state == State::Push)
+        {
+            m_state = State::Summarise;
+            m_elapsedTime = m_timer.elapsed();
+        }
+        else
+        {
+            m_state = State::Inactive;
+        }
         cro::App::getWindow().setMouseCaptured(false);
     };
 
@@ -143,9 +161,7 @@ void InputHandler::handleEvent(const cro::Event& evt)
             else
             {
                 //changed direction
-                m_frontPoint = m_backPoint;
-                m_state = State::Push;
-                m_timer.restart();
+                switchDirection();
             }
             break;
         case State::Push:
@@ -159,6 +175,62 @@ void InputHandler::handleEvent(const cro::Event& evt)
             else
             {
                 endStroke();
+            }
+            break;
+        }
+        break;
+
+        //we allow either trigger or either stick
+        //to aid handedness of players
+    case SDL_CONTROLLERAXISMOTION:
+        switch (evt.caxis.axis)
+        {
+        default: break;
+        case SDL_CONTROLLER_AXIS_TRIGGERLEFT:
+        case SDL_CONTROLLER_AXIS_TRIGGERRIGHT:
+            if (evt.caxis.value > MinControllerMove)
+            {
+                startStroke();
+            }
+            else
+            {
+                endStroke();
+            }
+            break;
+        case SDL_CONTROLLER_AXIS_LEFTY:
+        case SDL_CONTROLLER_AXIS_RIGHTY:
+            if (std::abs(evt.caxis.value) > MinControllerMove)
+            {
+                if (m_state == State::Draw)
+                {
+                    m_backPoint.y = (static_cast<float>(evt.caxis.value) / ControllerAxisRange) * (MaxDistance / 2.f);
+
+                    if (evt.caxis.value < m_previousControllerAxis)
+                    {
+                        //changed direction
+                        switchDirection();
+                    }
+                }
+                else if (m_state == State::Push)
+                {
+                    m_frontPoint.y = (static_cast<float>(evt.caxis.value) / ControllerAxisRange) * (MaxDistance / 2.f);
+
+                    if (evt.caxis.value > m_previousControllerAxis)
+                    {
+                        endStroke();
+                    }
+                }
+                m_previousControllerAxis = evt.caxis.value;
+            }
+            break;
+        case SDL_CONTROLLER_AXIS_LEFTX:
+        case SDL_CONTROLLER_AXIS_RIGHTX:
+            //just set this and we'll have
+            //whichever value was present when
+            //the swing is finished
+            if (std::abs(evt.caxis.value) > MinControllerMove)
+            {
+                m_frontPoint.x = (static_cast<float>(evt.caxis.value) / ControllerAxisRange) * MaxAccuracy;
             }
             break;
         }

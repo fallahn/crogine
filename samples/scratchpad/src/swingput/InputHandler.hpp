@@ -43,6 +43,7 @@ public:
 
     void process(float);
 
+    bool active() const { return m_state != State::Inactive; }
 
     glm::vec2 getBackPoint() const { return m_backPoint; }
     glm::vec2 getFrontPoint() const { return m_frontPoint; }
@@ -51,6 +52,7 @@ private:
 
     glm::vec2 m_backPoint;
     glm::vec2 m_frontPoint;
+    std::int16_t m_previousControllerAxis;
 
     struct State final
     {
