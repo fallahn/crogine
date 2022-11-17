@@ -31,8 +31,10 @@ source distribution.
 
 #include <crogine/detail/Types.hpp>
 #include <crogine/detail/glm/vec2.hpp>
-#include <crogine/core/Clock.hpp>
+#include <crogine/core/HiResTimer.hpp>
 #include <crogine/gui/GuiClient.hpp>
+
+#include <array>
 
 class InputHandler final : public cro::GuiClient
 {
@@ -45,14 +47,11 @@ public:
 
     bool active() const { return m_state != State::Inactive; }
 
+    float getPower() const { return m_power; }
+    float getHook() const { return m_hook; }
+
     glm::vec2 getBackPoint() const { return m_backPoint; }
     glm::vec2 getFrontPoint() const { return m_frontPoint; }
-
-private:
-
-    glm::vec2 m_backPoint;
-    glm::vec2 m_frontPoint;
-    std::int16_t m_previousControllerAxis;
 
     struct State final
     {
@@ -65,13 +64,24 @@ private:
 
             Count
         };
-    };    
+    };
+    std::int32_t getState() const { return m_state; }
+
+private:
+
+    glm::vec2 m_backPoint;
+    glm::vec2 m_frontPoint;
+    std::int16_t m_previousControllerAxis;
+
+    float m_power;
+    float m_hook;
+
     std::int32_t m_state = State::Inactive;
     const std::array<std::string, State::Count> StateStrings =
     {
         "Inactive", "Draw", "Push", "Summarise"
     };
 
-    cro::Clock m_timer;
-    cro::Time m_elapsedTime;
+    cro::HiResTimer m_timer;
+    float m_elapsedTime;
 };

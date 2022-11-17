@@ -177,6 +177,75 @@ void SwingState::createUI()
     };
 
 
+    constexpr float Size = 100.f;
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 600.f, 240.f });
+    entity.addComponent<cro::Drawable2D>().setVertexData(
+        {
+            cro::Vertex2D(glm::vec2(-10.f, -Size), cro::Colour::Red),
+            cro::Vertex2D(glm::vec2(10.f,  -Size), cro::Colour::Red),
+            cro::Vertex2D(glm::vec2(-10.f,  -0.5f), cro::Colour::Red),
+            cro::Vertex2D(glm::vec2(10.f,  -0.5f), cro::Colour::Red),
+
+            cro::Vertex2D(glm::vec2(-10.f,  -0.5f), cro::Colour::White),
+            cro::Vertex2D(glm::vec2(10.f,  -0.5f), cro::Colour::White),
+            cro::Vertex2D(glm::vec2(-10.f,  0.5f), cro::Colour::White),
+            cro::Vertex2D(glm::vec2(10.f,  0.5f), cro::Colour::White),
+
+            cro::Vertex2D(glm::vec2(-10.f,  0.5f), cro::Colour::Red),
+            cro::Vertex2D(glm::vec2(10.f,  0.5f), cro::Colour::Red),
+            cro::Vertex2D(glm::vec2(-10.f, Size), cro::Colour::Red),
+            cro::Vertex2D(glm::vec2(10.f,  Size), cro::Colour::Red),
+
+
+            cro::Vertex2D(glm::vec2(-10.f, -Size), cro::Colour::Blue),
+            cro::Vertex2D(glm::vec2(10.f,  -Size), cro::Colour::Blue),
+            cro::Vertex2D(glm::vec2(-10.f, 0.f), cro::Colour::Blue),
+            cro::Vertex2D(glm::vec2(10.f,  0.f), cro::Colour::Blue),
+
+        });
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<float>(0.f);
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float dt)
+    {
+        auto& verts = e.getComponent<cro::Drawable2D>().getVertexData();
+        float height = verts[14].position.y;
+        float targetAlpha = 0.f;
+
+        if (m_inputParser.active())
+        {
+            if (m_inputParser.getState() == InputHandler::State::Draw)
+            {
+                height = m_inputParser.getBackPoint().y;
+            }
+            else if (m_inputParser.getState() == InputHandler::State::Push)
+            {
+                height = m_inputParser.getFrontPoint().y;
+            }
+            targetAlpha = 1.f;
+        }
+
+        auto& currentAlpha = e.getComponent<cro::Callback>().getUserData<float>();
+        const float InSpeed = dt * 6.f;
+        const float OutSpeed = m_inputParser.getPower() == 0 ? InSpeed : dt * 0.5f;
+        if (currentAlpha < targetAlpha)
+        {
+            currentAlpha = std::min(1.f, currentAlpha + InSpeed);
+        }
+        else
+        {
+            currentAlpha = std::max(0.f, currentAlpha - OutSpeed);
+        }
+
+        for (auto& v : verts)
+        {
+            v.colour.setAlpha(currentAlpha);
+        }
+        verts[14].position.y = height;
+        verts[15].position.y = height;
+    };
+
     auto updateUI = [](cro::Camera& cam)
     {
         glm::vec2 size(cro::App::getWindow().getSize());

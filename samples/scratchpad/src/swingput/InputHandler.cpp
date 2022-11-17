@@ -34,33 +34,17 @@ source distribution.
 
 namespace
 {
-    //button press resets rest point
-    //if button pressed
-        //track motion
-            //if motion was backward or still
-                //restart timer
-                //record start point
-            //if motion stopped, turned reverse or button released
-                //record end point
-                //if end point greater than rest point
-                    //record time
-                    //velocity is start->end dist over time
-                    //accuracy is start->end dot forward vector
-                    //power is velocity / max velocity
-
     struct DebugInfo final
     {
         float distance = 0.f;
         float velocity = 0.f;
         float accuracy = 0.f;
-
-        float power = 0.f;
-        float hook = 0.f;
     }debug;
 
-    constexpr float MaxDistance = 160.f;
-    constexpr float MaxVelocity = 1200.f;
+    constexpr float MaxDistance = 200.f;
+    constexpr float MaxVelocity = 1600.f;
     constexpr float MaxAccuracy = 20.f;
+    constexpr float CommitDistance = 0.01f;
 
     constexpr float ControllerAxisRange = 32767.f;
     constexpr std::int16_t MinControllerMove = 1200;
@@ -69,7 +53,10 @@ namespace
 InputHandler::InputHandler()
     : m_backPoint           (0.f),
     m_frontPoint            (0.f),
-    m_previousControllerAxis(0)
+    m_previousControllerAxis(0),
+    m_power                 (0.f),
+    m_hook                  (0.f),
+    m_elapsedTime           (0.f)
 {
     registerWindow([&]()
         {
@@ -81,8 +68,8 @@ InputHandler::InputHandler()
                 ImGui::Text("Velocity: %3.3f", debug.velocity);
                 ImGui::Text("Accuracy: %3.3f", debug.accuracy);
 
-                ImGui::Text("Power: %3.3f", debug.power);
-                ImGui::Text("Hook: %3.3f", debug.hook);
+                ImGui::Text("Power: %3.3f", m_power);
+                ImGui::Text("Hook: %3.3f", m_hook);
 
                 /*ImGui::SliderFloat("Max Distance", &MaxDistance, 100.f, 200.f);
                 ImGui::SliderFloat("Max Velocity", &MaxVelocity, 100.f, 200.f);
@@ -100,15 +87,17 @@ void InputHandler::handleEvent(const cro::Event& evt)
         if (m_state == State::Inactive)
         {
             m_state = State::Draw;
-            m_backPoint = { 0.f, 0.f };
+            m_backPoint = { 0.f, -MaxDistance / 4.f };
             m_frontPoint = { 0.f, 0.f };
             m_previousControllerAxis = 0;
+            m_power = 0.f;
+            m_hook = 0.f;
 
             cro::App::getWindow().setMouseCaptured(true);
         }
     };
 
-    const auto switchDirection = [&]()
+    const auto commitStroke = [&]()
     {
         m_frontPoint = m_backPoint;
         m_state = State::Push;
@@ -120,12 +109,13 @@ void InputHandler::handleEvent(const cro::Event& evt)
         if (m_state == State::Push)
         {
             m_state = State::Summarise;
-            m_elapsedTime = m_timer.elapsed();
+            m_elapsedTime = m_timer.restart();
         }
         else
         {
             m_state = State::Inactive;
         }
+        debug = {};
         cro::App::getWindow().setMouseCaptured(false);
     };
 
@@ -148,8 +138,9 @@ void InputHandler::handleEvent(const cro::Event& evt)
         switch (m_state)
         {
         default: break;
+            //move in both directions but commit to swing once past origin point
         case State::Draw:
-            if (evt.motion.yrel >= 0)
+            if(m_backPoint.y < CommitDistance)
             {
                 //drawing back
                 m_backPoint.x += evt.motion.xrel;
@@ -161,9 +152,10 @@ void InputHandler::handleEvent(const cro::Event& evt)
             else
             {
                 //changed direction
-                switchDirection();
+                commitStroke();
             }
             break;
+            //only moev forward, reversing or releaseing button takes shot
         case State::Push:
             if (evt.motion.yrel < 0)
             {
@@ -205,10 +197,10 @@ void InputHandler::handleEvent(const cro::Event& evt)
                 {
                     m_backPoint.y = (static_cast<float>(evt.caxis.value) / ControllerAxisRange) * (MaxDistance / 2.f);
 
-                    if (evt.caxis.value < m_previousControllerAxis)
+                    if(m_backPoint.y > CommitDistance)
                     {
                         //changed direction
-                        switchDirection();
+                        commitStroke();
                     }
                 }
                 else if (m_state == State::Push)
@@ -246,11 +238,13 @@ void InputHandler::process(float)
         if (m_frontPoint.y > 0)
         {
             debug.distance = (m_frontPoint.y - m_backPoint.y);
-            debug.velocity = debug.distance / m_elapsedTime.asSeconds();
+            debug.velocity = debug.distance / (m_elapsedTime + 0.0001f); //potential NaN
             debug.accuracy = (m_frontPoint.x - m_backPoint.x);
             
-            debug.power = std::clamp(debug.velocity / MaxVelocity, 0.f, 1.f);
-            debug.hook = std::clamp(debug.accuracy / MaxAccuracy, -1.f, 1.f);
+            float multiplier = m_frontPoint.y / ((MaxDistance / 2.f));
+
+            m_power = std::clamp(debug.velocity / MaxVelocity, 0.f, 1.f) * multiplier;
+            m_hook = std::clamp(debug.accuracy / MaxAccuracy, -1.f, 1.f);
         }
 
         m_state = State::Inactive;
