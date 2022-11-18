@@ -317,7 +317,7 @@ private:
         PlayerName, HoleScore,
         Gimme
     };
-    void showMessageBoard(MessageBoardID);
+    void showMessageBoard(MessageBoardID, bool special = false);
     void floatingMessage(const std::string&);
     void createTransition();
     void notifyAchievement(const std::array<std::uint8_t, 2u>&);

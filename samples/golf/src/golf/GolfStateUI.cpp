@@ -1882,7 +1882,7 @@ void GolfState::updateWindDisplay(glm::vec3 direction)
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 }
 
-void GolfState::showMessageBoard(MessageBoardID messageType)
+void GolfState::showMessageBoard(MessageBoardID messageType, bool special)
 {
     auto bounds = m_sprites[SpriteID::MessageBoard].getTextureBounds();
     auto size = glm::vec2(GolfGame::getActiveTarget()->getSize());
@@ -2012,6 +2012,12 @@ void GolfState::showMessageBoard(MessageBoardID messageType)
             case ScoreID::Par:
                 Social::awardXP(XPValues[XPID::Par] / divisor);
                 break;
+            }
+
+            if (special)
+            {
+                textEnt3.getComponent<cro::Text>().setString("Nice Putt!");
+                textEnt3.getComponent<cro::Transform>().move({ 0.f, -6.f });
             }
         }
         else

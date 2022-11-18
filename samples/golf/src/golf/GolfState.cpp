@@ -4489,7 +4489,7 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
                     && !m_sharedData.localConnectionData.playerData[m_currentPlayer.player].isCPU);
                 break;
             case TerrainID::Hole:
-                showMessageBoard(MessageBoardID::HoleScore);
+                
 
                 if (m_sharedData.tutorial)
                 {
@@ -4497,6 +4497,7 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
                 }
 
                 //check if this is our own score
+                bool special = false;
                 if (m_currentPlayer.client == m_sharedData.clientConnection.connectionID)
                 {
                     std::int32_t score = m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].holeScores[m_currentHole];
@@ -4524,6 +4525,7 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
                         {
                             Achievements::awardAchievement(AchievementStrings[AchievementID::PuttStar]);
                             Social::awardXP(XPValues[XPID::Special] / 2);
+                            special = true;
                         }
                     }
                     else
@@ -4532,6 +4534,7 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
                         Social::awardXP(XPValues[XPID::Special]);
                     }
                 }
+                showMessageBoard(MessageBoardID::HoleScore, special);
 
                 break;
             }
