@@ -932,8 +932,8 @@ void TutorialState::tutorialTwo(cro::Entity root)
     entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     bounds = cro::Text::getLocalBounds(entity);
-    entity.addComponent<UIElement>().absolutePosition = { -(bounds.width + 20.f), 200.f };
-    entity.getComponent<UIElement>().relativePosition = { 1.f, 0.f };
+    entity.addComponent<UIElement>().absolutePosition = { /*-(bounds.width + 20.f)*/20.f, 200.f };
+    entity.getComponent<UIElement>().relativePosition = { 0.f, 0.f };
     entity.getComponent<UIElement>().depth = 0.01f;
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
     entity.addComponent<cro::Callback>().setUserData<float>(0.f);
@@ -964,7 +964,7 @@ void TutorialState::tutorialTwo(cro::Entity root)
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("wind_dir");
     entity.addComponent<cro::SpriteAnimation>().play(0);
     entity.addComponent<UIElement>().absolutePosition = { WindIndicatorPosition.x, WindIndicatorPosition.y + 20.f };
-    entity.getComponent<UIElement>().relativePosition = { 1.f, 0.f };
+    entity.getComponent<UIElement>().relativePosition = { 0.f, 0.f };
     entity.getComponent<UIElement>().depth = 0.01f;
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
@@ -993,14 +993,14 @@ void TutorialState::tutorialTwo(cro::Entity root)
     entity.addComponent<cro::Drawable2D>().getVertexData() =
     {
         cro::Vertex2D(glm::vec2(-0.5f, 0.f), TextNormalColour),
-        cro::Vertex2D(glm::vec2(-0.5f, -90.f), TextNormalColour),
+        cro::Vertex2D(glm::vec2(-0.5f, -64.f), TextNormalColour),
         cro::Vertex2D(glm::vec2(0.5f, 0.f), TextNormalColour),
-        cro::Vertex2D(glm::vec2(0.5f, -90.f), TextNormalColour)
+        cro::Vertex2D(glm::vec2(0.5f, -64.f), TextNormalColour)
     };
     entity.getComponent<cro::Drawable2D>().updateLocalBounds();
     entity.getComponent<cro::Drawable2D>().setCroppingArea({ 0.f, 0.f, 0.f, 0.f });
-    entity.addComponent<UIElement>().absolutePosition = { WindIndicatorPosition.x, 170.f };
-    entity.getComponent<UIElement>().relativePosition = { 1.f, 0.f };
+    entity.addComponent<UIElement>().absolutePosition = { WindIndicatorPosition.x, 164.f };
+    entity.getComponent<UIElement>().relativePosition = { 0.f, 0.f };
     entity.getComponent<UIElement>().depth = 0.01f;
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
     entity.addComponent<cro::Callback>().setUserData<float>(0.f);
@@ -1011,7 +1011,7 @@ void TutorialState::tutorialTwo(cro::Entity root)
         {
             auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
             currTime = std::min(1.f, currTime + (dt * 4.f));
-            cro::FloatRect area = { -1.f, 0.f, 2.f, -90.f * currTime };
+            cro::FloatRect area = { -1.f, 0.f, 2.f, -64.f * currTime };
             e.getComponent<cro::Drawable2D>().setCroppingArea(area);
 
             if (currTime == 1)

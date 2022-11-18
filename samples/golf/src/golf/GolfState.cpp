@@ -443,7 +443,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
             //showCountdown(30);
             //showMessageBoard(MessageBoardID::Scrub);
             //requestStackPush(StateID::Tutorial);
-            floatingMessage("buns");
+            showNotification("buns");
             break;
         case SDLK_F8:
         {
