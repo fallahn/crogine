@@ -1372,7 +1372,8 @@ bool GolfState::simulate(float dt)
     }
 
     //play avatar sound if player idles
-    if (m_idleTimer.elapsed() > idleTime)
+    if (m_idleTimer.elapsed() > idleTime
+        && !m_sharedData.tutorial)
     {
         m_idleTimer.restart();
         idleTime = cro::seconds(std::max(10.f, idleTime.asSeconds() / 2.f));

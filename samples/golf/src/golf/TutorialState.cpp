@@ -826,7 +826,7 @@ void TutorialState::tutorialTwo(cro::Entity root)
     entity.addComponent<cro::Drawable2D>().setCroppingArea({ 0.f, 0.f, 0.f, 0.f });
     entity.addComponent<cro::Text>(font).setCharacterSize(InfoTextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
-    entity.addComponent<UIElement>().absolutePosition = { -160.f, 0.f };
+    entity.addComponent<UIElement>().absolutePosition = { -60.f, 8.f };
     entity.getComponent<UIElement>().relativePosition = { 0.5f, 0.5f };
     entity.getComponent<UIElement>().depth = 0.01f;
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
@@ -932,7 +932,7 @@ void TutorialState::tutorialTwo(cro::Entity root)
     entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     bounds = cro::Text::getLocalBounds(entity);
-    entity.addComponent<UIElement>().absolutePosition = { /*-(bounds.width + 20.f)*/20.f, 200.f };
+    entity.addComponent<UIElement>().absolutePosition = { /*-(bounds.width + 20.f)*/20.f, 230.f };
     entity.getComponent<UIElement>().relativePosition = { 0.f, 0.f };
     entity.getComponent<UIElement>().depth = 0.01f;
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
@@ -993,13 +993,13 @@ void TutorialState::tutorialTwo(cro::Entity root)
     entity.addComponent<cro::Drawable2D>().getVertexData() =
     {
         cro::Vertex2D(glm::vec2(-0.5f, 0.f), TextNormalColour),
-        cro::Vertex2D(glm::vec2(-0.5f, -64.f), TextNormalColour),
+        cro::Vertex2D(glm::vec2(-0.5f, -94.f), TextNormalColour),
         cro::Vertex2D(glm::vec2(0.5f, 0.f), TextNormalColour),
-        cro::Vertex2D(glm::vec2(0.5f, -64.f), TextNormalColour)
+        cro::Vertex2D(glm::vec2(0.5f, -94.f), TextNormalColour)
     };
     entity.getComponent<cro::Drawable2D>().updateLocalBounds();
     entity.getComponent<cro::Drawable2D>().setCroppingArea({ 0.f, 0.f, 0.f, 0.f });
-    entity.addComponent<UIElement>().absolutePosition = { WindIndicatorPosition.x, 164.f };
+    entity.addComponent<UIElement>().absolutePosition = { WindIndicatorPosition.x, 194.f };
     entity.getComponent<UIElement>().relativePosition = { 0.f, 0.f };
     entity.getComponent<UIElement>().depth = 0.01f;
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
@@ -1011,7 +1011,7 @@ void TutorialState::tutorialTwo(cro::Entity root)
         {
             auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
             currTime = std::min(1.f, currTime + (dt * 4.f));
-            cro::FloatRect area = { -1.f, 0.f, 2.f, -64.f * currTime };
+            cro::FloatRect area = { -1.f, 0.f, 2.f, -94.f * currTime };
             e.getComponent<cro::Drawable2D>().setCroppingArea(area);
 
             if (currTime == 1)
@@ -1747,7 +1747,7 @@ void TutorialState::tutorialFour(cro::Entity root)
     entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     centreText(entity);
-    entity.addComponent<UIElement>().absolutePosition = { 0.f, -52.f };
+    entity.addComponent<UIElement>().absolutePosition = { 0.f, -44.f };
     entity.getComponent<UIElement>().relativePosition = { 0.5f, 0.5f };
     entity.getComponent<UIElement>().depth = 0.01f;
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
@@ -1781,7 +1781,7 @@ void TutorialState::tutorialFour(cro::Entity root)
     entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     centreText(entity);
-    entity.addComponent<UIElement>().absolutePosition = { 0.f, UIBarHeight*4.f };
+    entity.addComponent<UIElement>().absolutePosition = { 0.f, UIBarHeight*5.5f };
     entity.getComponent<UIElement>().relativePosition = { 0.5f, 0.f };
     entity.getComponent<UIElement>().depth = 0.01f;
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
@@ -1812,12 +1812,12 @@ void TutorialState::tutorialFour(cro::Entity root)
     entity.addComponent<cro::Drawable2D>().setCroppingArea({ 0.f, 0.f, 0.f, 0.f });
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("putt_flag");
     entity.addComponent<cro::SpriteAnimation>().play(0);
-    entity.addComponent<UIElement>().absolutePosition = { 0.f, std::floor(UIBarHeight * 2.5f) };
+    entity.addComponent<UIElement>().absolutePosition = { 0.f, std::floor(UIBarHeight * 6.f) };
     entity.getComponent<UIElement>().relativePosition = { 0.5f, 0.f };
     entity.getComponent<UIElement>().depth = 0.01f;
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
-    entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, 0.f });
+    //entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, 0.f });
     entity.addComponent<cro::Callback>().setUserData<float>(0.f);
     entity.getComponent<cro::Callback>().function =
         [&, bounds](cro::Entity e, float dt)

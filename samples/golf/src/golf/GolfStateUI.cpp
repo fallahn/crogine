@@ -2017,7 +2017,10 @@ void GolfState::showMessageBoard(MessageBoardID messageType, bool special)
             if (special)
             {
                 textEnt3.getComponent<cro::Text>().setString("Nice Putt!");
-                textEnt3.getComponent<cro::Transform>().move({ 0.f, -6.f });
+                textEnt3.getComponent<cro::Text>().setFillColour(TextGoldColour);
+                textEnt3.getComponent<cro::Transform>().move({ 0.f, -8.f });
+
+                textEnt.getComponent<cro::Transform>().move({ 0.f, 2.f, 0.f });
             }
         }
         else
@@ -2034,12 +2037,14 @@ void GolfState::showMessageBoard(MessageBoardID messageType, bool special)
         break;
     case MessageBoardID::PlayerName:
         textEnt.getComponent<cro::Text>().setString(m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].name.substr(0, 19));
+        textEnt.getComponent<cro::Text>().setFillColour(TextGoldColour);
         textEnt2.getComponent<cro::Text>().setString("Stroke: " + std::to_string(m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].holeScores[m_currentHole] + 1));
         textEnt3.getComponent<cro::Text>().setString(ScoreTypes[m_sharedData.scoreType]);
         break;
     case MessageBoardID::Scrub:
     case MessageBoardID::Water:
         textEnt.getComponent<cro::Text>().setString("Foul!");
+        textEnt.getComponent<cro::Text>().setFillColour(TextGoldColour);
         textEnt2.getComponent<cro::Text>().setString("1 Stroke Penalty");
         imgEnt.addComponent<cro::Sprite>() = m_sprites[SpriteID::Foul];
         bounds = m_sprites[SpriteID::Foul].getTextureBounds();
