@@ -4164,7 +4164,7 @@ void GolfState::spawnBall(const ActorInfo& info)
 
     //point shadow seen from distance
     entity = m_gameScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(info.position);
+    entity.addComponent<cro::Transform>();// .setPosition(info.position);
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function =
         [&, ballEnt](cro::Entity e, float)
@@ -4179,7 +4179,8 @@ void GolfState::spawnBall(const ActorInfo& info)
             //only do this when active player.
             if (ballEnt.getComponent<ClientCollider>().active)
             {
-                auto ballPos = ballEnt.getComponent<cro::Transform>().getWorldPosition();
+                auto ballPos = ballEnt.getComponent<cro::Transform>().getPosition();
+                auto ballHeight = ballPos.y;
 
                 auto c = cro::Colour::White;
                 if (ballPos.y > WaterLevel)
@@ -4190,9 +4191,9 @@ void GolfState::spawnBall(const ActorInfo& info)
                     auto height = m_collisionMesh.getTerrain(rayPoint).height;
                     c.setAlpha(smoothstep(0.2f, 0.8f, (ballPos.y - height) / 0.25f));
                     
-                    ballPos.y = 0.003f + height;
+                    ballPos.y = 0.003f + (height - ballHeight);
                 }
-                e.getComponent<cro::Transform>().setPosition(ballPos);
+                e.getComponent<cro::Transform>().setPosition({ 0.f, ballPos.y, 0.f });
                 e.getComponent<cro::Model>().setHidden((m_currentPlayer.terrain == TerrainID::Green) || ballEnt.getComponent<cro::Model>().isHidden());
                 e.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", c);
             }
@@ -4200,6 +4201,7 @@ void GolfState::spawnBall(const ActorInfo& info)
     };
     entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_ballResources.shadowMeshID), material);
     entity.getComponent<cro::Model>().setRenderFlags(~RenderFlags::MiniMap);
+    ballEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     //large shadow seen close up
     auto shadowEnt = entity;

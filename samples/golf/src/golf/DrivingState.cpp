@@ -2174,9 +2174,9 @@ void DrivingState::createBall()
             m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
         }
-        pos.y = 0.f;
+        pos.y = 3.f;
         auto groundHeight = m_gameScene.getSystem<BallSystem>()->getTerrain(pos).intersection.y;
-        ent.getComponent<cro::Callback>().getUserData<float>() = groundHeight + 0.003f; //prevent z-fighting
+        ent.getComponent<cro::Callback>().getUserData<float>() = groundHeight;
 
         ent.getComponent<ClientCollider>().state = static_cast<std::uint8_t>(state);
     };
@@ -2193,11 +2193,11 @@ void DrivingState::createBall()
     entity.getComponent<cro::Model>().setRenderFlags(~RenderFlags::MiniMap);
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function =
-        [ballEnt](cro::Entity e, float)
+        [&,ballEnt](cro::Entity e, float)
     {
         float height = ballEnt.getComponent<cro::Callback>().getUserData<float>();
         height -= ballEnt.getComponent<cro::Transform>().getPosition().y;
-        e.getComponent<cro::Transform>().setPosition({ 0.f, height, 0.f });
+        e.getComponent<cro::Transform>().setPosition({ 0.f, height + 0.003f, 0.f });
     };
     ballEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
