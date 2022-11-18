@@ -494,6 +494,17 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
             {
                 m_newHole = true;
             }
+            else if (data.type == SceneEvent::PlayerIdle)
+            {
+                if (auto idx = m_playerIndices[m_currentClient][m_currentPlayer]; idx > -1)
+                {
+                    std::string emitterName = cro::Util::Random::value(0,1) == 1 ? "rough" : "bunker";
+                    if (m_playerVoices[idx].hasEmitter(emitterName))
+                    {
+                        playAvatarSound(idx, emitterName, glm::vec3(0.f));
+                    }
+                }
+            }
         }
         break;
         }

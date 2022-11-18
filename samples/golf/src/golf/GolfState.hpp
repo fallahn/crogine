@@ -121,6 +121,8 @@ private:
     CPUGolfer m_cpuGolfer;
     cro::Clock m_turnTimer;
 
+    cro::Clock m_idleTimer;
+
     bool m_wantsGameState;
     cro::Clock m_readyClock; //pings ready state until ack'd
 

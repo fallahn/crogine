@@ -142,6 +142,7 @@ namespace
 
     float godmode = 1.f;
     bool allowAchievements = false;
+    cro::Time idleTime = cro::seconds(30.f);
 
     constexpr std::uint32_t MaxCascades = 4; //actual value is 1 less this - see ShadowQuality::update()
     constexpr float MaxShadowFarDistance = 150.f;
@@ -393,6 +394,12 @@ bool GolfState::handleEvent(const cro::Event& evt)
         }
     };
 
+    const auto resetIdle = [&]()
+    {
+        m_idleTimer.restart();
+        idleTime = cro::seconds(30.f);
+    };
+
     if (evt.type == SDL_KEYUP)
     {
         hideMouse();
@@ -549,6 +556,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_KEYDOWN)
     {
+        resetIdle();
         switch (evt.key.keysym.sym)
         {
         default: break;
@@ -581,6 +589,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_CONTROLLERBUTTONDOWN)
     {
+        resetIdle();
         if (auto bid = cro::GameController::deviceID(m_sharedData.inputBinding.controllerID); bid == evt.cbutton.which)
         {
             switch (evt.cbutton.button)
@@ -638,6 +647,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
         {
             scrollScores(19);
         }
+        resetIdle();
     }
 
     else if (evt.type == SDL_CONTROLLERDEVICEREMOVED)
@@ -677,9 +687,11 @@ bool GolfState::handleEvent(const cro::Event& evt)
     {
         if (evt.caxis.which == cro::GameController::deviceID(m_sharedData.inputBinding.controllerID))
         {
+            
             if (std::abs(evt.caxis.value) > 10000)
             {
                 hideMouse();
+                resetIdle();
             }
 
             switch (evt.caxis.axis)
@@ -1357,6 +1369,16 @@ bool GolfState::simulate(float dt)
             }
         };
         m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+    }
+
+    //play avatar sound if player idles
+    if (m_idleTimer.elapsed() > idleTime)
+    {
+        m_idleTimer.restart();
+        idleTime = cro::seconds(std::max(10.f, idleTime.asSeconds() / 2.f));
+
+        auto* msg = postMessage<SceneEvent>(MessageID::SceneMessage);
+        msg->type = SceneEvent::PlayerIdle;
     }
 
     return true;
