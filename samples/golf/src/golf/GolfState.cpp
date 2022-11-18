@@ -800,6 +800,8 @@ void GolfState::handleMessage(const cro::Message& msg)
                 {
                     auto* msg2 = cro::App::getInstance().getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
                     msg2->type = GolfEvent::NiceShot;
+
+                    Social::awardXP(5);
                 }
 
 
@@ -953,6 +955,11 @@ void GolfState::handleMessage(const cro::Message& msg)
                     m_gameScene.destroyEntity(e);
                 }
             };
+
+            if (data.terrain == TerrainID::Fairway)
+            {
+                Social::awardXP(1);
+            }
 #ifdef PATH_TRACING
             endBallDebug();
 #endif
@@ -960,6 +967,7 @@ void GolfState::handleMessage(const cro::Message& msg)
         else if (data.type == GolfEvent::DroneHit)
         {
             Achievements::awardAchievement(AchievementStrings[AchievementID::HoleInOneMillion]);
+            Social::awardXP(XPValues[XPID::Special]);
 
             m_gameScene.destroyEntity(m_drone);
             m_drone = {};

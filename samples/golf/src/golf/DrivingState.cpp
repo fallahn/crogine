@@ -2532,7 +2532,9 @@ void DrivingState::hitBall()
     msg->terrain = TerrainID::Fairway;
     msg->club = static_cast<std::uint8_t>(m_inputParser.getClub());
 
-    cro::GameController::rumbleStart(m_sharedData.inputBinding.controllerID, 50000, 35000, 200);
+    float lowFreq = 50000.f * m_inputParser.getPower();
+    float hiFreq = 35000.f * m_inputParser.getPower();
+    cro::GameController::rumbleStart(m_sharedData.inputBinding.controllerID, static_cast<std::uint16_t>(lowFreq), static_cast<std::uint16_t>(hiFreq), 200);
 
     //from here the hook value is just used for UI feedback
     //so we want to flip it as appropriate with the current avatar
