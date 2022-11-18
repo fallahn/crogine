@@ -30,6 +30,7 @@ source distribution.
 #include "InputHandler.hpp"
 
 #include <crogine/core/App.hpp>
+#include <crogine/core/GameController.hpp>
 #include <crogine/gui/Gui.hpp>
 
 namespace
@@ -47,7 +48,7 @@ namespace
     constexpr float CommitDistance = 0.01f;
 
     constexpr float ControllerAxisRange = 32767.f;
-    constexpr std::int16_t MinControllerMove = 12000;
+    constexpr std::int16_t MinControllerMove = 16000;
 }
 
 InputHandler::InputHandler()
@@ -84,7 +85,9 @@ void InputHandler::handleEvent(const cro::Event& evt)
 {
     const auto startStroke = [&]()
     {
-        if (m_state == State::Inactive)
+        if (m_state == State::Inactive
+            && cro::GameController::getAxisPosition(0, cro::GameController::TriggerLeft) == 0
+            && cro::GameController::getAxisPosition(0, cro::GameController::TriggerRight) == 0)
         {
             m_state = State::Swing;
             m_backPoint = { 0.f, 0.f };
@@ -121,7 +124,7 @@ void InputHandler::handleEvent(const cro::Event& evt)
         break;
     case SDL_MOUSEMOTION:
         //TODO we need to scale this down relative to the game buffer size
-        //TODOwe need to the scale it up to match the controller speed
+        //TODO we need to the scale it up to match the controller speed
         switch (m_state)
         {
         default: break;
@@ -143,6 +146,8 @@ void InputHandler::handleEvent(const cro::Event& evt)
             if (evt.caxis.value > MinControllerMove)
             {
                 //TODO sometimes this is activated when letting go of trigger...
+                //probably because the move when letting go enters this block
+                //and the state has already been made inactive by stroke summary
                 startStroke();
             }
             else
@@ -217,10 +222,10 @@ void InputHandler::process(float)
         m_hook = std::clamp(debug.accuracy / MaxAccuracy, -1.f, 1.f);
 
 
-        //TODO travelling a shorter distance doesn't imply lower
-        //velocity so we need to crete a distance based modifier
-        //float multiplier = m_backPoint.y / (MaxDistance / 2.f);
-        //m_power = (m_power / 2.f) + ((m_power / 2.f) * multiplier);
+        //travelling a shorter distance doesn't imply lower
+        //velocity so we need to create a distance based modifier
+        float multiplier = debug.distance / MaxDistance;
+        m_power *= multiplier;
 
         break;
     }
