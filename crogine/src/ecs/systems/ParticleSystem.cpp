@@ -177,6 +177,7 @@ namespace
 
 ParticleSystem::ParticleSystem(MessageBus& mb)
     : System            (mb, typeid(ParticleSystem)),
+    m_drawLists         (1),
     m_dataBuffer        (MaxVertData),
     m_vboIDs            (MaxParticleSystems),
     m_vaoIDs            (MaxParticleSystems),
@@ -267,7 +268,13 @@ void ParticleSystem::updateDrawList(Entity cameraEnt)
     auto& cam = cameraEnt.getComponent<Camera>();
     auto passCount = cam.reflectionBuffer.available() ? 2 : 1;
 
-    for (auto& visible : m_visibleEntities)
+    if (cam.getDrawListIndex() >= m_drawLists.size())
+    {
+        m_drawLists.resize(cam.getDrawListIndex() + 1);
+    }
+    auto& drawlist = m_drawLists[cam.getDrawListIndex()];
+
+    for (auto& visible : drawlist)
     {
         visible.clear();
     }
@@ -282,18 +289,12 @@ void ParticleSystem::updateDrawList(Entity cameraEnt)
             if (emitter.m_nextFreeParticle > 0 && inFrustum(frustum, emitter))
             {
                 emitter.m_visible = true;
-                m_visibleEntities[i].push_back(entity);
+                drawlist[i].push_back(entity);
             }
         }
     }
 
-    DPRINT("Visible particle Systems", std::to_string(m_visibleEntities[0].size()));
-
-    for (auto i = 0; i < passCount; ++i)
-    {
-        //TODO find a way to swap this buffer rather than copy each time.
-        cam.getDrawList(i)[getType()] = std::make_any<std::vector<Entity>>(m_visibleEntities[i]);
-    }
+    DPRINT("Visible particle Systems", std::to_string(drawlist[0].size()));
 }
 
 void ParticleSystem::process(float dt)
@@ -489,123 +490,121 @@ void ParticleSystem::render(Entity camera, const RenderTarget& rt)
 {   
     //particles are already in world space so just need viewProj
     const auto& cam = camera.getComponent<Camera>();
-    const auto& pass = cam.getActivePass();
-
-    if (pass.drawList.count(getType()) == 0)
+    if (cam.getDrawListIndex() < m_drawLists.size())
     {
-        return;
-    }
+        const auto& pass = cam.getActivePass();
 
-    glm::vec4 clipPlane = glm::vec4(0.f, 1.f, 0.f, -getScene()->getWaterLevel() + (0.05f * pass.getClipPlaneMultiplier())) * pass.getClipPlaneMultiplier();
+        glm::vec4 clipPlane = glm::vec4(0.f, 1.f, 0.f, -getScene()->getWaterLevel() + (0.05f * pass.getClipPlaneMultiplier())) * pass.getClipPlaneMultiplier();
 
-    float pointSize = 0.f;
-    glCheck(glGetFloatv(GL_POINT_SIZE, &pointSize));
+        float pointSize = 0.f;
+        glCheck(glGetFloatv(GL_POINT_SIZE, &pointSize));
 
-    glCheck(glEnable(GL_CULL_FACE));
-    glCheck(glCullFace(pass.getCullFace()));
-    glCheck(glEnable(GL_BLEND));
-    glCheck(glEnable(GL_DEPTH_TEST));
-    glCheck(glDepthMask(GL_FALSE));
-    ENABLE_POINT_SPRITES;
+        glCheck(glEnable(GL_CULL_FACE));
+        glCheck(glCullFace(pass.getCullFace()));
+        glCheck(glEnable(GL_BLEND));
+        glCheck(glEnable(GL_DEPTH_TEST));
+        glCheck(glDepthMask(GL_FALSE));
+        ENABLE_POINT_SPRITES;
 
-    auto vp = applyViewport(cam.viewport, rt);
+        auto vp = applyViewport(cam.viewport, rt);
 
-    //bind shader
-    glCheck(glUseProgram(m_shader.getGLHandle()));
+        //bind shader
+        glCheck(glUseProgram(m_shader.getGLHandle()));
 
-    //set shader uniforms (texture/projection)
-    glCheck(glUniform4f(m_uniformIDs[UniformID::ClipPlane], clipPlane.r, clipPlane.g, clipPlane.b, clipPlane.a));
-    glCheck(glUniformMatrix4fv(m_uniformIDs[UniformID::Projection], 1, GL_FALSE, glm::value_ptr(cam.getProjectionMatrix())));
-    glCheck(glUniformMatrix4fv(m_uniformIDs[UniformID::ViewProjection], 1, GL_FALSE, glm::value_ptr(pass.viewProjectionMatrix)));
-    glCheck(glUniform1f(m_uniformIDs[UniformID::Viewport], static_cast<float>(vp.height)));
-    glCheck(glUniform1i(m_uniformIDs[UniformID::Texture], 0));
-    glCheck(glUniform2f(m_uniformIDs[UniformID::CameraRange], cam.getNearPlane(), cam.getFarPlane()));
-    glCheck(glActiveTexture(GL_TEXTURE0));
+        //set shader uniforms (texture/projection)
+        glCheck(glUniform4f(m_uniformIDs[UniformID::ClipPlane], clipPlane.r, clipPlane.g, clipPlane.b, clipPlane.a));
+        glCheck(glUniformMatrix4fv(m_uniformIDs[UniformID::Projection], 1, GL_FALSE, glm::value_ptr(cam.getProjectionMatrix())));
+        glCheck(glUniformMatrix4fv(m_uniformIDs[UniformID::ViewProjection], 1, GL_FALSE, glm::value_ptr(pass.viewProjectionMatrix)));
+        glCheck(glUniform1f(m_uniformIDs[UniformID::Viewport], static_cast<float>(vp.height)));
+        glCheck(glUniform1i(m_uniformIDs[UniformID::Texture], 0));
+        glCheck(glUniform2f(m_uniformIDs[UniformID::CameraRange], cam.getNearPlane(), cam.getFarPlane()));
+        glCheck(glActiveTexture(GL_TEXTURE0));
 
-    
-    
-    const auto& entities = std::any_cast<const std::vector<Entity>&>(pass.drawList.at(getType()));
-    for(auto entity : entities)
-    {
-        //it's possible an entity might be destroyed between adding to the 
-        //draw list and render time - hum.
-        if (entity.destroyed())
+
+
+        const auto& entities = m_drawLists[cam.getDrawListIndex()][cam.getActivePassIndex()];// std::any_cast<const std::vector<Entity>&>(pass.drawList.at(getType()));
+        for (auto entity : entities)
         {
-            continue;
-        }
+            //it's possible an entity might be destroyed between adding to the 
+            //draw list and render time - hum.
+            if (entity.destroyed())
+            {
+                continue;
+            }
 
-        const auto& emitter = entity.getComponent<ParticleEmitter>();
+            const auto& emitter = entity.getComponent<ParticleEmitter>();
 
-        if ((emitter.m_renderFlags & cam.renderFlags) == 0)
-        {
-            continue;
-        }
+            if ((emitter.m_renderFlags & cam.renderFlags) == 0)
+            {
+                continue;
+            }
 
-        //bind emitter texture
-        glCheck(glBindTexture(GL_TEXTURE_2D, emitter.settings.textureID));
-        glCheck(glUniform1f(m_uniformIDs[UniformID::ParticleSize], emitter.settings.size));
-        glCheck(glUniform1f(m_uniformIDs[UniformID::FrameCount], static_cast<float>(emitter.settings.frameCount)));
-        glCheck(glUniform2f(m_uniformIDs[UniformID::TextureSize], emitter.settings.textureSize.x, emitter.settings.textureSize.y));
+            //bind emitter texture
+            glCheck(glBindTexture(GL_TEXTURE_2D, emitter.settings.textureID));
+            glCheck(glUniform1f(m_uniformIDs[UniformID::ParticleSize], emitter.settings.size));
+            glCheck(glUniform1f(m_uniformIDs[UniformID::FrameCount], static_cast<float>(emitter.settings.frameCount)));
+            glCheck(glUniform2f(m_uniformIDs[UniformID::TextureSize], emitter.settings.textureSize.x, emitter.settings.textureSize.y));
 
-        //apply blend mode
-        switch (emitter.settings.blendmode)
-        {
-        default: break;
-        case EmitterSettings::Alpha:
-            glCheck(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
-            break;
-        case EmitterSettings::Multiply:
-            glCheck(glBlendFunc(GL_DST_COLOR, GL_ZERO));
-            break;
-        case EmitterSettings::Add:
-            glCheck(glBlendFunc(GL_ONE, GL_ONE));
-            break;
+            //apply blend mode
+            switch (emitter.settings.blendmode)
+            {
+            default: break;
+            case EmitterSettings::Alpha:
+                glCheck(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
+                break;
+            case EmitterSettings::Multiply:
+                glCheck(glBlendFunc(GL_DST_COLOR, GL_ZERO));
+                break;
+            case EmitterSettings::Add:
+                glCheck(glBlendFunc(GL_ONE, GL_ONE));
+                break;
+            }
+
+#ifdef PLATFORM_DESKTOP
+            glCheck(glBindVertexArray(emitter.m_vao));
+            glCheck(glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(emitter.m_nextFreeParticle)));
+#else
+            //bind emitter vbo
+            glCheck(glBindBuffer(GL_ARRAY_BUFFER, emitter.m_vbo));
+
+            //bind vertex attribs
+            for (auto [index, attribSize, offset] : m_attribData)
+            {
+                glCheck(glEnableVertexAttribArray(index));
+                glCheck(glVertexAttribPointer(index, attribSize,
+                    GL_FLOAT, GL_FALSE, VertexSize,
+                    reinterpret_cast<void*>(static_cast<intptr_t>(offset))));
+            }
+
+            //draw
+            glCheck(glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(emitter.m_nextFreeParticle)));
+
+            //unbind attribs
+            for (auto j = 0u; j < m_attribData.size(); ++j)
+            {
+                glCheck(glDisableVertexAttribArray(m_attribData[j].index));
+            }
+#endif //PLATFORM
         }
 
 #ifdef PLATFORM_DESKTOP
-        glCheck(glBindVertexArray(emitter.m_vao));
-        glCheck(glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(emitter.m_nextFreeParticle)));
+        glCheck(glBindVertexArray(0));
 #else
-        //bind emitter vbo
-        glCheck(glBindBuffer(GL_ARRAY_BUFFER, emitter.m_vbo));
-
-        //bind vertex attribs
-        for (auto [index, attribSize, offset] : m_attribData)
-        {
-            glCheck(glEnableVertexAttribArray(index));
-            glCheck(glVertexAttribPointer(index, attribSize,
-                GL_FLOAT, GL_FALSE, VertexSize,
-                reinterpret_cast<void*>(static_cast<intptr_t>(offset))));
-        }
-
-        //draw
-        glCheck(glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(emitter.m_nextFreeParticle)));
-
-        //unbind attribs
-        for (auto j = 0u; j < m_attribData.size(); ++j)
-        {
-            glCheck(glDisableVertexAttribArray(m_attribData[j].index));
-        }
+        glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 #endif //PLATFORM
+
+        glCheck(glUseProgram(0));
+        glCheck(glBindTexture(GL_TEXTURE_2D, 0));
+
+        restorePreviousViewport();
+        glCheck(glDisable(GL_CULL_FACE));
+        glCheck(glDisable(GL_BLEND));
+        glCheck(glDisable(GL_DEPTH_TEST));
+        glCheck(glDepthMask(GL_TRUE));
+        //DISABLE_POINT_SPRITES;
+
+        glCheck(glPointSize(pointSize));
     }
-
-#ifdef PLATFORM_DESKTOP
-    glCheck(glBindVertexArray(0));
-#else
-    glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
-#endif //PLATFORM
-
-    glCheck(glUseProgram(0));
-    glCheck(glBindTexture(GL_TEXTURE_2D, 0));
-
-    restorePreviousViewport();
-    glCheck(glDisable(GL_CULL_FACE));
-    glCheck(glDisable(GL_BLEND));
-    glCheck(glDisable(GL_DEPTH_TEST));
-    glCheck(glDepthMask(GL_TRUE));
-    //DISABLE_POINT_SPRITES;
-
-    glCheck(glPointSize(pointSize));
 }
 
 //private

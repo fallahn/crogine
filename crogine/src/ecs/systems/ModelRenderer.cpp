@@ -54,6 +54,7 @@ namespace
 
 ModelRenderer::ModelRenderer(MessageBus& mb)
     : System        (mb, typeid(ModelRenderer)),
+    m_drawLists     (1),
     m_pass          (Mesh::IndexData::Final),
     m_tree          (1.f),
     m_useTreeQueries(false)
@@ -65,6 +66,12 @@ ModelRenderer::ModelRenderer(MessageBus& mb)
 //public
 void ModelRenderer::updateDrawList(Entity cameraEnt)
 {
+    auto& camComponent = cameraEnt.getComponent<Camera>();
+    if (m_drawLists.size() <= camComponent.getDrawListIndex())
+    {
+        m_drawLists.resize(camComponent.getDrawListIndex() + 1);
+    }
+
     if (m_useTreeQueries)
     {
         updateDrawListBalancedTree(cameraEnt);
@@ -73,27 +80,24 @@ void ModelRenderer::updateDrawList(Entity cameraEnt)
     {
         updateDrawListDefault(cameraEnt);
     }
-
-    auto& camComponent = cameraEnt.getComponent<Camera>();
+    
     auto passCount = camComponent.reflectionBuffer.available() ? 2 : 1;
 
     DPRINT("Visible 3D ents in Scene " + std::to_string(getScene()->getInstanceID()) 
-        + ", Camera " + std::to_string(cameraEnt.getIndex()), std::to_string(m_visibleEnts[0].size()));
+        + ", Camera " + std::to_string(cameraEnt.getIndex()), std::to_string(m_drawLists[camComponent.getDrawListIndex()][0].size()));
     //DPRINT("Total ents", std::to_string(entities.size()));
 
     //sort lists by depth
     //flag values make sure transparent materials are rendered last
     //with opaque going front to back and transparent back to front
+    auto& drawList = m_drawLists[camComponent.getDrawListIndex()];
     for (auto i = 0; i < passCount; ++i)
     {
-        std::sort(std::begin(m_visibleEnts[i]), std::end(m_visibleEnts[i]),
+        std::sort(std::begin(drawList[i]), std::end(drawList[i]),
             [](MaterialPair& a, MaterialPair& b)
             {
                 return a.second.flags < b.second.flags;
             });
-
-        //TODO remove this copy with a swap operation somewhere...
-        camComponent.getDrawList(i)[getType()] = std::make_any<MaterialList>(m_visibleEnts[i]);
     }
 }
 
@@ -127,121 +131,119 @@ void ModelRenderer::process(float dt)
 void ModelRenderer::render(Entity camera, const RenderTarget& rt)
 {
     const auto& camComponent = camera.getComponent<Camera>();
-    const auto& pass = camComponent.getActivePass();
-
-    glm::vec4 clipPlane = glm::vec4(0.f, 1.f, 0.f, -getScene()->getWaterLevel() + (0.08f * pass.getClipPlaneMultiplier())) * pass.getClipPlaneMultiplier();
-
-    if (pass.drawList.count(getType()) == 0)
+    if (camComponent.getDrawListIndex() < m_drawLists.size())
     {
-        return;
-    }
-    
-    const auto& camTx = camera.getComponent<Transform>();
-    auto cameraPosition = camTx.getWorldPosition();
-    auto screenSize = glm::vec2(rt.getSize());
+        const auto& pass = camComponent.getActivePass();
 
-    glCheck(glCullFace(pass.getCullFace()));
+        glm::vec4 clipPlane = glm::vec4(0.f, 1.f, 0.f, -getScene()->getWaterLevel() + (0.08f * pass.getClipPlaneMultiplier())) * pass.getClipPlaneMultiplier();
 
-    //DPRINT("Render count", std::to_string(m_visibleEntities.size()));
-    const auto& visibleEntities = std::any_cast<const MaterialList&>(pass.drawList.at(getType()));
-    for (const auto& [entity, sortData] : visibleEntities)
-    {
-        //may have been marked for deletion - OK to draw but will trigger assert
-#ifdef CRO_DEBUG_
-        if (!entity.isValid())
+        const auto& camTx = camera.getComponent<Transform>();
+        auto cameraPosition = camTx.getWorldPosition();
+        auto screenSize = glm::vec2(rt.getSize());
+
+        glCheck(glCullFace(pass.getCullFace()));
+
+        //DPRINT("Render count", std::to_string(m_visibleEntities.size()));
+        const auto& visibleEntities = m_drawLists[camComponent.getDrawListIndex()][camComponent.getActivePassIndex()];
+        for (const auto& [entity, sortData] : visibleEntities)
         {
-            continue;
-        }
+            //may have been marked for deletion - OK to draw but will trigger assert
+#ifdef CRO_DEBUG_
+            if (!entity.isValid())
+            {
+                continue;
+            }
 #endif
 
-        //foreach submesh / material:
-        const auto& model = entity.getComponent<Model>();
+            //foreach submesh / material:
+            const auto& model = entity.getComponent<Model>();
 
-        if ((model.m_renderFlags & camComponent.renderFlags) == 0)
-        {
-            continue;
-        } 
-        glCheck(glFrontFace(model.m_facing));
-        
-        //calc entity transform
-        const auto& tx = entity.getComponent<Transform>();
-        glm::mat4 worldMat = tx.getWorldTransform();
-        glm::mat4 worldView = pass.viewMatrix * worldMat;
+            if ((model.m_renderFlags & camComponent.renderFlags) == 0)
+            {
+                continue;
+            }
+            glCheck(glFrontFace(model.m_facing));
+
+            //calc entity transform
+            const auto& tx = entity.getComponent<Transform>();
+            glm::mat4 worldMat = tx.getWorldTransform();
+            glm::mat4 worldView = pass.viewMatrix * worldMat;
 
 #ifndef PLATFORM_DESKTOP
-        glCheck(glBindBuffer(GL_ARRAY_BUFFER, model.m_meshData.vbo));
+            glCheck(glBindBuffer(GL_ARRAY_BUFFER, model.m_meshData.vbo));
 #endif //PLATFORM
-        
-        for (auto i : sortData.matIDs)
-        {
-            //bind shader
-            glCheck(glUseProgram(model.m_materials[Mesh::IndexData::Final][i].shader));
 
-            //apply shader uniforms from material
-            glCheck(glUniformMatrix4fv(model.m_materials[Mesh::IndexData::Final][i].uniforms[Material::WorldView], 1, GL_FALSE, glm::value_ptr(worldView)));
-            applyProperties(model.m_materials[Mesh::IndexData::Final][i], model, *getScene(), camComponent);
+            for (auto i : sortData.matIDs)
+            {
+                //bind shader
+                glCheck(glUseProgram(model.m_materials[Mesh::IndexData::Final][i].shader));
 
-            //apply standard uniforms
-            glCheck(glUniform3f(model.m_materials[Mesh::IndexData::Final][i].uniforms[Material::Camera], cameraPosition.x, cameraPosition.y, cameraPosition.z));
-            glCheck(glUniform2f(model.m_materials[Mesh::IndexData::Final][i].uniforms[Material::ScreenSize], screenSize.x, screenSize.y));
-            glCheck(glUniform4f(model.m_materials[Mesh::IndexData::Final][i].uniforms[Material::ClipPlane], clipPlane[0], clipPlane[1], clipPlane[2], clipPlane[3]));
-            glCheck(glUniformMatrix4fv(model.m_materials[Mesh::IndexData::Final][i].uniforms[Material::View], 1, GL_FALSE, glm::value_ptr(pass.viewMatrix)));
-            glCheck(glUniformMatrix4fv(model.m_materials[Mesh::IndexData::Final][i].uniforms[Material::ViewProjection], 1, GL_FALSE, glm::value_ptr(pass.viewProjectionMatrix)));
-            glCheck(glUniformMatrix4fv(model.m_materials[Mesh::IndexData::Final][i].uniforms[Material::Projection], 1, GL_FALSE, glm::value_ptr(camComponent.getProjectionMatrix())));
-            glCheck(glUniformMatrix4fv(model.m_materials[Mesh::IndexData::Final][i].uniforms[Material::World], 1, GL_FALSE, glm::value_ptr(worldMat)));
-            glCheck(glUniformMatrix3fv(model.m_materials[Mesh::IndexData::Final][i].uniforms[Material::Normal], 1, GL_FALSE, glm::value_ptr(glm::inverseTranspose(glm::mat3(worldMat)))));
+                //apply shader uniforms from material
+                glCheck(glUniformMatrix4fv(model.m_materials[Mesh::IndexData::Final][i].uniforms[Material::WorldView], 1, GL_FALSE, glm::value_ptr(worldView)));
+                applyProperties(model.m_materials[Mesh::IndexData::Final][i], model, *getScene(), camComponent);
 
-            applyBlendMode(model.m_materials[Mesh::IndexData::Final][i].blendMode);
+                //apply standard uniforms
+                glCheck(glUniform3f(model.m_materials[Mesh::IndexData::Final][i].uniforms[Material::Camera], cameraPosition.x, cameraPosition.y, cameraPosition.z));
+                glCheck(glUniform2f(model.m_materials[Mesh::IndexData::Final][i].uniforms[Material::ScreenSize], screenSize.x, screenSize.y));
+                glCheck(glUniform4f(model.m_materials[Mesh::IndexData::Final][i].uniforms[Material::ClipPlane], clipPlane[0], clipPlane[1], clipPlane[2], clipPlane[3]));
+                glCheck(glUniformMatrix4fv(model.m_materials[Mesh::IndexData::Final][i].uniforms[Material::View], 1, GL_FALSE, glm::value_ptr(pass.viewMatrix)));
+                glCheck(glUniformMatrix4fv(model.m_materials[Mesh::IndexData::Final][i].uniforms[Material::ViewProjection], 1, GL_FALSE, glm::value_ptr(pass.viewProjectionMatrix)));
+                glCheck(glUniformMatrix4fv(model.m_materials[Mesh::IndexData::Final][i].uniforms[Material::Projection], 1, GL_FALSE, glm::value_ptr(camComponent.getProjectionMatrix())));
+                glCheck(glUniformMatrix4fv(model.m_materials[Mesh::IndexData::Final][i].uniforms[Material::World], 1, GL_FALSE, glm::value_ptr(worldMat)));
+                glCheck(glUniformMatrix3fv(model.m_materials[Mesh::IndexData::Final][i].uniforms[Material::Normal], 1, GL_FALSE, glm::value_ptr(glm::inverseTranspose(glm::mat3(worldMat)))));
 
-            glCheck(model.m_materials[Mesh::IndexData::Final][i].doubleSided ? glDisable(GL_CULL_FACE) : glEnable(GL_CULL_FACE));
-            glCheck(model.m_materials[Mesh::IndexData::Final][i].enableDepthTest ? glEnable(GL_DEPTH_TEST) : glDisable(GL_DEPTH_TEST));
+                applyBlendMode(model.m_materials[Mesh::IndexData::Final][i].blendMode);
+
+                glCheck(model.m_materials[Mesh::IndexData::Final][i].doubleSided ? glDisable(GL_CULL_FACE) : glEnable(GL_CULL_FACE));
+                glCheck(model.m_materials[Mesh::IndexData::Final][i].enableDepthTest ? glEnable(GL_DEPTH_TEST) : glDisable(GL_DEPTH_TEST));
 
 #ifdef PLATFORM_DESKTOP
-            model.draw(i, Mesh::IndexData::Final);
+                model.draw(i, Mesh::IndexData::Final);
 
 #else //GLES 2 doesn't have VAO support without extensions
 
-            //bind attribs
-            const auto& attribs = model.m_materials[Mesh::IndexData::Final][i].attribs;
-            for (auto j = 0u; j < model.m_materials[Mesh::IndexData::Final][i].attribCount; ++j)
-            {
-                glCheck(glEnableVertexAttribArray(attribs[j][Material::Data::Index]));
-                glCheck(glVertexAttribPointer(attribs[j][Material::Data::Index], attribs[j][Material::Data::Size],
-                    GL_FLOAT, GL_FALSE, static_cast<GLsizei>(model.m_meshData.vertexSize),
-                    reinterpret_cast<void*>(static_cast<intptr_t>(attribs[j][Material::Data::Offset]))));
-            }
+                //bind attribs
+                const auto& attribs = model.m_materials[Mesh::IndexData::Final][i].attribs;
+                for (auto j = 0u; j < model.m_materials[Mesh::IndexData::Final][i].attribCount; ++j)
+                {
+                    glCheck(glEnableVertexAttribArray(attribs[j][Material::Data::Index]));
+                    glCheck(glVertexAttribPointer(attribs[j][Material::Data::Index], attribs[j][Material::Data::Size],
+                        GL_FLOAT, GL_FALSE, static_cast<GLsizei>(model.m_meshData.vertexSize),
+                        reinterpret_cast<void*>(static_cast<intptr_t>(attribs[j][Material::Data::Offset]))));
+                }
 
-            //bind element/index buffer
-            const auto& indexData = model.m_meshData.indexData[i];
-            glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexData.ibo));
+                //bind element/index buffer
+                const auto& indexData = model.m_meshData.indexData[i];
+                glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexData.ibo));
 
-            //draw elements
-            glCheck(glDrawElements(static_cast<GLenum>(indexData.primitiveType), indexData.indexCount, static_cast<GLenum>(indexData.format), 0));
+                //draw elements
+                glCheck(glDrawElements(static_cast<GLenum>(indexData.primitiveType), indexData.indexCount, static_cast<GLenum>(indexData.format), 0));
 
-            glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
+                glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
 
-            //unbind attribs
-            for (auto j = 0u; j < model.m_materials[Mesh::IndexData::Final][i].attribCount; ++j)
-            {
-                glCheck(glDisableVertexAttribArray(attribs[j][Material::Data::Index]));
+                //unbind attribs
+                for (auto j = 0u; j < model.m_materials[Mesh::IndexData::Final][i].attribCount; ++j)
+                {
+                    glCheck(glDisableVertexAttribArray(attribs[j][Material::Data::Index]));
             }
 #endif //PLATFORM 
         }
     }
 
 #ifdef PLATFORM_DESKTOP
-    glCheck(glBindVertexArray(0));
+        glCheck(glBindVertexArray(0));
 #else
-    glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
+        glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 #endif //PLATFORM
 
-    glCheck(glUseProgram(0));
-    
-    glCheck(glFrontFace(GL_CCW));
-    glCheck(glDisable(GL_BLEND));
-    glCheck(glDisable(GL_CULL_FACE));
-    glCheck(glDisable(GL_DEPTH_TEST));
-    glCheck(glDepthMask(GL_TRUE)); //restore this else clearing the depth buffer fails
+        glCheck(glUseProgram(0));
+
+        glCheck(glFrontFace(GL_CCW));
+        glCheck(glDisable(GL_BLEND));
+        glCheck(glDisable(GL_CULL_FACE));
+        glCheck(glDisable(GL_DEPTH_TEST));
+        glCheck(glDepthMask(GL_TRUE)); //restore this else clearing the depth buffer fails
+}
 }
 
 void ModelRenderer::onEntityAdded(Entity entity)
@@ -267,9 +269,10 @@ void ModelRenderer::updateDrawListDefault(Entity cameraEnt)
     auto passCount = camComponent.reflectionBuffer.available() ? 2 : 1;
 
     auto& entities = getEntities();
+    auto& drawList = m_drawLists[camComponent.getDrawListIndex()];
 
     //cull entities by viewable into draw lists by pass
-    for (auto& list : m_visibleEnts)
+    for (auto& list : drawList)
     {
         list.clear();
     }
@@ -356,12 +359,12 @@ void ModelRenderer::updateDrawListDefault(Entity cameraEnt)
 
                 if (!opaque.second.matIDs.empty())
                 {
-                    m_visibleEnts[p].push_back(opaque);
+                    drawList[p].push_back(opaque);
                 }
 
                 if (!transparent.second.matIDs.empty())
                 {
-                    m_visibleEnts[p].push_back(transparent);
+                    drawList[p].push_back(transparent);
                 }
             }
         }
@@ -373,7 +376,9 @@ void ModelRenderer::updateDrawListBalancedTree(Entity cameraEnt)
     const auto& camComponent = cameraEnt.getComponent<Camera>();
     auto cameraPos = cameraEnt.getComponent<Transform>().getWorldPosition();
 
-    for (auto& list : m_visibleEnts)
+    auto& drawList = m_drawLists[camComponent.getDrawListIndex()];
+
+    for (auto& list : drawList)
     {
         list.clear();
     }
@@ -457,12 +462,12 @@ void ModelRenderer::updateDrawListBalancedTree(Entity cameraEnt)
 
                 if (!opaque.second.matIDs.empty())
                 {
-                    m_visibleEnts[p].push_back(opaque);
+                    drawList[p].push_back(opaque);
                 }
 
                 if (!transparent.second.matIDs.empty())
                 {
-                    m_visibleEnts[p].push_back(transparent);
+                    drawList[p].push_back(transparent);
                 }
             }
         }

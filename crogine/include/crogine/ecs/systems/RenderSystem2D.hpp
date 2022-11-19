@@ -88,6 +88,7 @@ namespace cro
         const RenderSystem2D& operator = (const RenderSystem2D&) = delete;
         RenderSystem2D& operator = (RenderSystem2D&&) = delete;
 
+
         /*!
         \brief Performs frustum culling and Material sorting by depth and blend mode
         */
@@ -95,10 +96,12 @@ namespace cro
 
         void process(float) override;
 
+
         /*!
         \brief Attempts to render the scene based on the current entity lists
         */
         void render(Entity, const RenderTarget&) override;
+
 
         /*!
         \brief Sets whether Drawable components should be sorted by the Y or
@@ -114,7 +117,7 @@ namespace cro
         Shader m_texturedShader;
 
         DepthAxis m_sortOrder;
-        std::vector<Entity> m_drawList;
+        std::vector<std::vector<Entity>> m_drawLists;
 
         Detail::QuadTree m_quadTree;
         std::vector<Entity> m_dirtyEnts; //transform callback marks these as needing to be moved in the quad tree

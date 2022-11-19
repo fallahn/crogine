@@ -32,6 +32,7 @@ source distribution.
 #include <crogine/Config.hpp>
 #include <crogine/ecs/System.hpp>
 
+#include <vector>
 
 namespace cro
 {
@@ -60,7 +61,12 @@ namespace cro
         const std::vector<Entity>& getCameras() const;
     private:
 
+        std::size_t m_nextDrawlistIndex;
+        std::vector<std::size_t> m_freeDrawlistIndices;
+
         void resizeGBuffer(Entity);
         void onEntityAdded(Entity) override;
+        void onEntityRemoved(Entity) override;
+
     };
 }

@@ -38,7 +38,8 @@ source distribution.
 using namespace cro;
 
 CameraSystem::CameraSystem(cro::MessageBus& mb)
-    : System(mb, typeid(CameraSystem))
+    : System            (mb, typeid(CameraSystem)),
+    m_nextDrawlistIndex (0)
 {
     requireComponent<Camera>();
     requireComponent<Transform>();
@@ -118,4 +119,19 @@ void CameraSystem::resizeGBuffer(Entity entity)
 void CameraSystem::onEntityAdded(Entity entity)
 {
     resizeGBuffer(entity);
+
+    if (!m_freeDrawlistIndices.empty())
+    {
+        entity.getComponent<cro::Camera>().m_drawListIndex = m_freeDrawlistIndices.back();
+        m_freeDrawlistIndices.pop_back();
+    }
+    else
+    {
+        entity.getComponent<cro::Camera>().m_drawListIndex = m_nextDrawlistIndex++;
+    }
+}
+
+void CameraSystem::onEntityRemoved(Entity entity)
+{
+    m_freeDrawlistIndices.push_back(entity.getComponent<cro::Camera>().m_drawListIndex);
 }

@@ -60,7 +60,7 @@ namespace cro
     \brief Used to draw scene Models.
     The system frustum-culls then renders any entities with a Model component
     in the scene. Note this only renders Models - Sprite and Text components
-    have their own respective rendering systems.
+    are rendered with RenderSystem2D.
     */
     class CRO_EXPORT_API ModelRenderer final : public System, public Renderable
     {
@@ -88,7 +88,10 @@ namespace cro
         void onEntityRemoved(Entity) override;
 
     private:
-        std::array<MaterialList, 2u> m_visibleEnts;
+
+        using DrawList = std::array<MaterialList, 2u>;
+        std::vector<DrawList> m_drawLists;
+
         Mesh::IndexData::Pass m_pass;
 
         Detail::BalancedTree m_tree;

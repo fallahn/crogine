@@ -89,6 +89,7 @@ namespace cro
         Scene& operator = (const Scene&) = delete;
         Scene& operator = (const Scene&&) = delete;
 
+
         /*!
         \brief Executes one simulation step.
         \param dt The time elapsed since the last simulation step
@@ -96,25 +97,30 @@ namespace cro
         */
         void simulate(float dt);
 
+
         /*!
         \brief Creates a new entity in the Scene, and returns a handle to it
         */
         Entity createEntity();
+
 
         /*!
         \brief Destroys the given entity and removes it from the scene
         */
         void destroyEntity(Entity);
 
+
         /*|
         \brief Returns the entity with the given ID if it exists
         */
         Entity getEntity(Entity::ID) const;
 
+
         /*!
         \brief Returns the number of active entities in the scene
         */
         std::size_t getEntityCount() const { return m_entityManager.getEntityCount(); }
+
 
         /*!
         \brief Creates a new system of the given type.
@@ -126,6 +132,7 @@ namespace cro
         template <typename T, typename... Args>
         T* addSystem(Args&&... args);
 
+
         /*!
         \brief Returns a pointer to the Scene's system of this type, if it exists
         else returns nullptr
@@ -136,6 +143,7 @@ namespace cro
         template <typename T>
         const T* getSystem() const;
 
+
         /*!
         \brief Sets the given system type active or inactive in the scene.
         Inactive systems are moved from the processing list and are ignored
@@ -144,6 +152,7 @@ namespace cro
         */
         template <typename T>
         void setSystemActive(bool active);
+
 
         /*!
         \brief Adds a Director to the Scene.
@@ -154,12 +163,14 @@ namespace cro
         template <typename T, typename... Args>
         T* addDirector(Args&&... args);
 
+
         /*!
         \brief Returns a pointer to the the requested Director, if it exists
         else returns a nullptr
         */
         template <typename T>
         T* getDirector();
+
 
         /*!
         \brief Adds a post process effect to the scene.
@@ -170,10 +181,12 @@ namespace cro
         template <typename T, typename... Args>
         T& addPostProcess(Args&&... args);
 
+
         /*!
         \brief Enables or disables any added post processes added to the scene
         */
         void setPostEnabled(bool);
+
 
         /*!
         \brief Sets the active Sunlight object.
@@ -183,11 +196,13 @@ namespace cro
         */
         void setSunlight(Entity sun);
 
+
         /*!
         \brief Returns a copy the active Sunlight entity.
         \see Sunlight
         */
         Entity getSunlight() const;
+
 
         /*!
         \brief Enables the skybox.
@@ -199,11 +214,13 @@ namespace cro
         */
         void enableSkybox();
 
+
         /*!
         \brief Disables the skybox.
         Note that this also removes any skybox textures added with setCubemap
         */
         void disableSkybox();
+
 
         /*!
         \brief Attempts to load the cubemap at the given path and applies it to the skybox.
@@ -223,6 +240,7 @@ namespace cro
         */
         void setCubemap(const std::string& path);
 
+
         /*!
         \brief Sets the skybox cubemap to that of the given EnvironmentMap.
         As EnvironmentMaps are only available on desktop platforms this will
@@ -232,11 +250,13 @@ namespace cro
         */
         void setCubemap(const EnvironmentMap& map);
 
+
         /*!
         \brief Returns the texture handle to the active cubemap texture.
         This is useful for setting cubemap properties of materials.
         */
         CubemapID getCubemap() const;
+
 
         /*!
         \brief Sets the colours used in the default skybox.
@@ -253,6 +273,7 @@ namespace cro
             cro::Colour middle;
             cro::Colour bottom;
         };
+        
         /*!
         \brief Returns a reference to a struct containing the current skybox colours
         */
@@ -275,16 +296,19 @@ namespace cro
         */
         void setWaterLevel(float level) { m_waterLevel = level; }
 
+
         /*!
         \brief Returns the current water level
         \see setWasterLevel()
         */
         float getWaterLevel() const { return m_waterLevel; }
 
+
         /*!
         \brief Returns a copy of the entity containing the default camera
         */
         Entity getDefaultCamera() const;
+
 
         /*!
         \brief Sets the active camera used when rendering.
@@ -298,10 +322,12 @@ namespace cro
         */
         Entity setActiveCamera(Entity);
 
+
         /*!
         \brief Returns the entity containing the active camera component
         */
         Entity getActiveCamera() const;
+
 
         /*!
         \brief Sets the active listener when processing audio.
@@ -312,20 +338,24 @@ namespace cro
         */
         Entity setActiveListener(Entity);
 
+
         /*!
         \brief Returns the entity containing the active AudioListener component
         */
         Entity getActiveListener() const;
+
 
         /*!
         \brief Forwards any events to Directors in the Scene
         */
         void forwardEvent(const Event&);
 
+
         /*!
         \brief Forwards messages to the systems in the scene
         */
         void forwardMessage(const Message&);
+
 
         /*!
         \brief Draws any renderable systems in this scene, in the order in which they were added
@@ -335,6 +365,7 @@ namespace cro
         \see setActiveCamera()
         */
         void render(bool doPost = true);
+
 
         /*!
         \brief Draws any renderable systems in this scene, in the order in which they were added
@@ -346,10 +377,12 @@ namespace cro
         */
         void render(const std::vector<Entity>& cameras, bool doPost = true);
 
+
         /*!
         \brief Returns a pointer to the array of active projection maps, with the count.
         */
         std::pair<const float*, std::size_t> getActiveProjectionMaps() const;
+
 
         /*!
         \brief Passes the given camera to each Renderable system so that they
@@ -361,22 +394,26 @@ namespace cro
         */
         void updateDrawLists(Entity);
 
+
         /*!
         \brief Posts a message on the system wide message bus
         */
         template <typename T>
         T* postMessage(Message::ID id);
 
+
         /*
         \brief Sets the orientation of the skybox to the given quaternion
         */
         void setSkyboxOrientation(glm::quat);
+
 
         /*!
         \brief Returns a reference to the Scene's active message bus
         */
         MessageBus& getMessageBus() { return m_messageBus; }
         const MessageBus& getMessageBus() const { return m_messageBus; }
+
 
         /*!
         \brief Returns a unique ID for the current Scene instance

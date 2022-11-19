@@ -66,7 +66,10 @@ namespace cro
         void render(Entity, const RenderTarget&) override;
 
     private:
-        std::array<std::vector<Entity>, 2u> m_visibleEntities;
+        //for two passes, normal and reflection
+        using DrawList = std::array<std::vector<Entity>, 2u>;
+        //one of these is inserted for each active camera based on the Camera draw list index
+        std::vector<DrawList> m_drawLists;
 
         void onEntityAdded(Entity) override;
         void onEntityRemoved(Entity) override;

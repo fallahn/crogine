@@ -59,6 +59,7 @@ using namespace cro;
 RenderSystem2D::RenderSystem2D(MessageBus& mb)
     : System        (mb, typeid(RenderSystem2D)),
     m_sortOrder     (DepthAxis::Z),
+    m_drawLists     (1),
     m_quadTree({ -10.f, -10.f, 800.f, 600.f }) //this needs to be a reasonable size, if its too large we end up too deep and everything is placed in one cell
     /*m_quadTree      ({std::numeric_limits<float>::lowest() / 2.f,
         std::numeric_limits<float>::lowest() / 2.f,
@@ -94,9 +95,16 @@ void RenderSystem2D::updateDrawList(Entity camEnt)
     //}
     //m_dirtyEnts.clear();
 
-    m_drawList.clear();
     auto& camera = camEnt.getComponent<Camera>();
     CRO_ASSERT(camera.isOrthographic(), "");
+
+    if (m_drawLists.size() <= camera.getDrawListIndex())
+    {
+        m_drawLists.resize(camera.getDrawListIndex() + 1);
+    }
+    auto& drawlist = m_drawLists[camera.getDrawListIndex()];
+    drawlist.clear();
+
     auto viewRect = camEnt.getComponent<cro::Transform>().getWorldTransform() * camera.getViewSize();
 
 
@@ -116,28 +124,23 @@ void RenderSystem2D::updateDrawList(Entity camEnt)
                 auto bounds = drawable.m_localBounds.transform(worldMat);
                 if (bounds.intersects(viewRect))
                 {
-                    m_drawList.push_back(entity);
+                    drawlist.push_back(entity);
                 }
             }
         }
         else
         {
-            m_drawList.push_back(entity);
+            drawlist.push_back(entity);
         }
     }
 
-    DPRINT("Visible 2D ents", std::to_string(m_drawList.size()));
+    DPRINT("Visible 2D ents", std::to_string(drawlist.size()));
 
-    std::sort(m_drawList.begin(), m_drawList.end(),
+    std::sort(drawlist.begin(), drawlist.end(),
         [](Entity a, Entity b)
         {
             return a.getComponent<Drawable2D>().m_sortCriteria < b.getComponent<Drawable2D>().m_sortCriteria;
         });
-
-    auto& drawList = camera.getDrawList(Camera::Pass::Final)[getType()];
-    
-    //you'd think swapping vectors ought to be faster, but it doesn't appear so...
-    drawList = std::make_any<std::vector<Entity>>(m_drawList);
 }
 
 void RenderSystem2D::process(float)
@@ -204,149 +207,147 @@ void RenderSystem2D::process(float)
 void RenderSystem2D::render(Entity cameraEntity, const RenderTarget& rt)
 {
     const auto& camComponent = cameraEntity.getComponent<Camera>();
-    const auto& pass = camComponent.getActivePass();
-    if (pass.drawList.count(getType()) == 0)
+    if (camComponent.getDrawListIndex() < m_drawLists.size())
     {
-        return;
-    }
+        const auto& pass = camComponent.getActivePass();
+        auto viewport = rt.getViewport(camComponent.viewport);
 
-    auto viewport = rt.getViewport(camComponent.viewport);
+        glCheck(glDepthMask(GL_FALSE));
+        glCheck(glEnable(GL_CULL_FACE));
+        glCheck(glDisable(GL_DEPTH_TEST));
+        glCheck(glEnable(GL_SCISSOR_TEST));
 
-    glCheck(glDepthMask(GL_FALSE));
-    glCheck(glEnable(GL_CULL_FACE));
-    glCheck(glDisable(GL_DEPTH_TEST));
-    glCheck(glEnable(GL_SCISSOR_TEST));
+        std::uint32_t lastProgram = 0;
 
-    std::uint32_t lastProgram = 0;
-
-    const auto& entities = std::any_cast<const std::vector<Entity>&>(pass.drawList.at(getType()));
-    for (auto entity : entities)
-    {
-        const auto& drawable = entity.getComponent<Drawable2D>();
-        const auto& tx = entity.getComponent<cro::Transform>();
-        glm::mat4 worldMat = tx.getWorldTransform();
-
-        if ((camComponent.renderFlags & drawable.m_renderFlags) &&
-            drawable.m_shader && !drawable.m_updateBufferData)
+        const auto& entities = m_drawLists[camComponent.getDrawListIndex()];
+        for (auto entity : entities)
         {
-            //apply shader
-            glm::mat4 worldView = pass.viewMatrix * worldMat;
+            const auto& drawable = entity.getComponent<Drawable2D>();
+            const auto& tx = entity.getComponent<cro::Transform>();
+            glm::mat4 worldMat = tx.getWorldTransform();
 
-            auto program = drawable.m_shader->getGLHandle();
-            if (program != lastProgram)
+            if ((camComponent.renderFlags & drawable.m_renderFlags) &&
+                drawable.m_shader && !drawable.m_updateBufferData)
             {
-                glCheck(glUseProgram(program));
-                lastProgram = program;
-            }
-            //glCheck(glUniformMatrix4fv(drawable.m_worldUniform, 1, GL_FALSE, &(worldMat[0].x)));
-            glCheck(glUniformMatrix4fv(drawable.m_projectionUniform, 1, GL_FALSE, glm::value_ptr(camComponent.getProjectionMatrix())));
-            glCheck(glUniformMatrix4fv(drawable.m_worldViewUniform, 1, GL_FALSE, glm::value_ptr(worldView)));
+                //apply shader
+                glm::mat4 worldView = pass.viewMatrix * worldMat;
 
-            //apply texture if active
-            if (drawable.m_texture)
-            {
-                glCheck(glActiveTexture(GL_TEXTURE0));
-                glCheck(glBindTexture(GL_TEXTURE_2D, drawable.m_texture->getGLHandle()));
-                glCheck(glUniform1i(drawable.m_textureUniform, 0));
-            }
-            
-            //apply any custom uniforms
-            std::int32_t j = 1;
-            for (const auto& [uniform, value] : drawable.m_textureBindings)
-            {
-                glCheck(glActiveTexture(GL_TEXTURE0 + j));
-                glCheck(glBindTexture(GL_TEXTURE_2D, value->getGLHandle()));
-                glCheck(glUniform1i(uniform, j));
-            }
-            for (auto [uniform, value] : drawable.m_floatBindings)
-            {
-                glCheck(glUniform1f(uniform, value));
-            }
-            for (auto [uniform, value] : drawable.m_vec2Bindings)
-            {
-                glCheck(glUniform2f(uniform, value.x, value.y));
-            }
-            for (auto [uniform, value] : drawable.m_vec3Bindings)
-            {
-                glCheck(glUniform3f(uniform, value.x, value.y, value.z));
-            }
-            for (auto [uniform, value] : drawable.m_vec4Bindings)
-            {
-                glCheck(glUniform4f(uniform, value.r, value.g, value.b, value.a));
-            }
-            for (auto [uniform, value] : drawable.m_boolBindings)
-            {
-                glCheck(glUniform1i(uniform, value));
-            }
-            for (const auto& [uniform, value] : drawable.m_matBindings)
-            {
-                glCheck(glUniformMatrix4fv(uniform, 1, GL_FALSE, value));
-            }
+                auto program = drawable.m_shader->getGLHandle();
+                if (program != lastProgram)
+                {
+                    glCheck(glUseProgram(program));
+                    lastProgram = program;
+                }
+                //glCheck(glUniformMatrix4fv(drawable.m_worldUniform, 1, GL_FALSE, &(worldMat[0].x)));
+                glCheck(glUniformMatrix4fv(drawable.m_projectionUniform, 1, GL_FALSE, glm::value_ptr(camComponent.getProjectionMatrix())));
+                glCheck(glUniformMatrix4fv(drawable.m_worldViewUniform, 1, GL_FALSE, glm::value_ptr(worldView)));
 
-            applyBlendMode(drawable.m_blendMode);
-            
-            if (drawable.m_cropped)
-            {
-                //convert cropping area to target coords (remember this might not be a window!)
-                glm::vec2 start(drawable.m_croppingWorldArea.left, drawable.m_croppingWorldArea.bottom);
-                glm::vec2 end(start.x + drawable.m_croppingWorldArea.width, start.y + drawable.m_croppingWorldArea.height);
+                //apply texture if active
+                if (drawable.m_texture)
+                {
+                    glCheck(glActiveTexture(GL_TEXTURE0));
+                    glCheck(glBindTexture(GL_TEXTURE_2D, drawable.m_texture->getGLHandle()));
+                    glCheck(glUniform1i(drawable.m_textureUniform, 0));
+                }
 
-                auto scissorStart = mapCoordsToPixel(start, pass.viewProjectionMatrix, viewport);
-                auto scissorEnd = mapCoordsToPixel(end, pass.viewProjectionMatrix, viewport);
+                //apply any custom uniforms
+                std::int32_t j = 1;
+                for (const auto& [uniform, value] : drawable.m_textureBindings)
+                {
+                    glCheck(glActiveTexture(GL_TEXTURE0 + j));
+                    glCheck(glBindTexture(GL_TEXTURE_2D, value->getGLHandle()));
+                    glCheck(glUniform1i(uniform, j));
+                }
+                for (auto [uniform, value] : drawable.m_floatBindings)
+                {
+                    glCheck(glUniform1f(uniform, value));
+                }
+                for (auto [uniform, value] : drawable.m_vec2Bindings)
+                {
+                    glCheck(glUniform2f(uniform, value.x, value.y));
+                }
+                for (auto [uniform, value] : drawable.m_vec3Bindings)
+                {
+                    glCheck(glUniform3f(uniform, value.x, value.y, value.z));
+                }
+                for (auto [uniform, value] : drawable.m_vec4Bindings)
+                {
+                    glCheck(glUniform4f(uniform, value.r, value.g, value.b, value.a));
+                }
+                for (auto [uniform, value] : drawable.m_boolBindings)
+                {
+                    glCheck(glUniform1i(uniform, value));
+                }
+                for (const auto& [uniform, value] : drawable.m_matBindings)
+                {
+                    glCheck(glUniformMatrix4fv(uniform, 1, GL_FALSE, value));
+                }
 
-                glCheck(glScissor(scissorStart.x, scissorStart.y, scissorEnd.x - scissorStart.x, scissorEnd.y - scissorStart.y));
-            }
-            else
-            {
-                auto rtSize = rt.getSize();
-                glCheck(glScissor(0, 0, rtSize.x, rtSize.y));
-            }
+                applyBlendMode(drawable.m_blendMode);
 
-            glCheck(glFrontFace(drawable.m_facing));
+                if (drawable.m_cropped)
+                {
+                    //convert cropping area to target coords (remember this might not be a window!)
+                    glm::vec2 start(drawable.m_croppingWorldArea.left, drawable.m_croppingWorldArea.bottom);
+                    glm::vec2 end(start.x + drawable.m_croppingWorldArea.width, start.y + drawable.m_croppingWorldArea.height);
+
+                    auto scissorStart = mapCoordsToPixel(start, pass.viewProjectionMatrix, viewport);
+                    auto scissorEnd = mapCoordsToPixel(end, pass.viewProjectionMatrix, viewport);
+
+                    glCheck(glScissor(scissorStart.x, scissorStart.y, scissorEnd.x - scissorStart.x, scissorEnd.y - scissorStart.y));
+                }
+                else
+                {
+                    auto rtSize = rt.getSize();
+                    glCheck(glScissor(0, 0, rtSize.x, rtSize.y));
+                }
+
+                glCheck(glFrontFace(drawable.m_facing));
 
 #ifdef PLATFORM_DESKTOP
-            glCheck(glBindVertexArray(drawable.m_vao));
-            glCheck(glDrawArrays(static_cast<GLenum>(drawable.m_primitiveType), 0, static_cast<GLsizei>(drawable.m_vertices.size())));
+                glCheck(glBindVertexArray(drawable.m_vao));
+                glCheck(glDrawArrays(static_cast<GLenum>(drawable.m_primitiveType), 0, static_cast<GLsizei>(drawable.m_vertices.size())));
 
 #else //GLES 2 doesn't have VAO support without extensions
-            glCheck(glBindBuffer(GL_ARRAY_BUFFER, drawable.m_vbo));
+                glCheck(glBindBuffer(GL_ARRAY_BUFFER, drawable.m_vbo));
 
-            //bind attribs
-            //const auto& attribs = drawable.m_vertexAttribs;
-            for (const auto& [id, size, offset] : drawable.m_vertexAttributes)
-            {
-                glCheck(glEnableVertexAttribArray(id));
-                glCheck(glVertexAttribPointer(id, size,
-                                                GL_FLOAT, GL_FALSE, static_cast<GLsizei>(Vertex2D::Size),
-                                                reinterpret_cast<void*>(static_cast<intptr_t>(offset))));
-            }
+                //bind attribs
+                //const auto& attribs = drawable.m_vertexAttribs;
+                for (const auto& [id, size, offset] : drawable.m_vertexAttributes)
+                {
+                    glCheck(glEnableVertexAttribArray(id));
+                    glCheck(glVertexAttribPointer(id, size,
+                        GL_FLOAT, GL_FALSE, static_cast<GLsizei>(Vertex2D::Size),
+                        reinterpret_cast<void*>(static_cast<intptr_t>(offset))));
+                }
 
-            //draw array
-            glCheck(glDrawArrays(static_cast<GLenum>(drawable.m_primitiveType), 0, drawable.m_vertices.size()));
+                //draw array
+                glCheck(glDrawArrays(static_cast<GLenum>(drawable.m_primitiveType), 0, drawable.m_vertices.size()));
 
-            //and unbind... this could be saved by only changing when switching shader
-            for (const auto& attrib : drawable.m_vertexAttributes)
-            {
-                glCheck(glDisableVertexAttribArray(attrib.id));
-            }
+                //and unbind... this could be saved by only changing when switching shader
+                for (const auto& attrib : drawable.m_vertexAttributes)
+                {
+                    glCheck(glDisableVertexAttribArray(attrib.id));
+                }
 
 #endif //PLATFORM 
+            }
         }
-    }
 
 #ifdef PLATFORM_DESKTOP
-    glCheck(glBindVertexArray(0));
+        glCheck(glBindVertexArray(0));
 #else
-    glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
+        glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 #endif
-    glCheck(glUseProgram(0));
+        glCheck(glUseProgram(0));
 
-    glCheck(glDisable(GL_SCISSOR_TEST));
-    applyBlendMode(Material::BlendMode::None);
-    glCheck(glDisable(GL_CULL_FACE));
-    glCheck(glFrontFace(GL_CCW));
-    glCheck(glDepthMask(GL_TRUE));
-    //glCheck(glCullFace(GL_BACK));
+        glCheck(glDisable(GL_SCISSOR_TEST));
+        applyBlendMode(Material::BlendMode::None);
+        glCheck(glDisable(GL_CULL_FACE));
+        glCheck(glFrontFace(GL_CCW));
+        glCheck(glDepthMask(GL_TRUE));
+        //glCheck(glCullFace(GL_BACK));
+    }
 }
 
 void RenderSystem2D::setSortOrder(DepthAxis sortOrder)

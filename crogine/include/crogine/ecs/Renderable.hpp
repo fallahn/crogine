@@ -56,15 +56,14 @@ namespace cro
         For each camera component in the Scene this function is used to
         update the list of entities visible to the camera and sort their
         draw order. This function should use the given camera's frustum
-        (or some other method) do determine an entity's visibility. Once
+        (or some other method) to determine an entity's visibility. Once
         visible entities are found (and potentially depth sorted) they
-        should be appended to the camera's draw list. This list should
-        then be used when rendering this system.
+        should be stored in a list indexed by the Camera's draw list index
 
         This is called during the Scene update once for each Camera in the
         CameraSystem
 
-        \see Camera::drawList
+        \see Camera::getDrawListIndex()
         \see CameraSystem::process()
         */
         virtual void updateDrawList(Entity camera) = 0;

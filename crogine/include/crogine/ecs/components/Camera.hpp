@@ -101,7 +101,7 @@ namespace cro
     Use Scene::setActiveCamera() to use an entity with
     a camera component as the current view. The default
     output is a letterboxed perspective camera with a 16:9
-    ratio. This can easily be overriden with a custom
+    ratio. This can easily be overridden with a custom
     projection matrix and viewport - usually set via a
     callback applied to Camera::resizeCallback
 
@@ -110,14 +110,10 @@ namespace cro
     struct CRO_EXPORT_API Camera final
     {
         /*!
-        \brief Maps a Renderable type to a list of drawable objects
-        */
-        using DrawList = std::unordered_map<std::type_index, std::any>;
-
-        /*!
         \brief Default constructor
         */
         Camera();
+
 
         /*!
         \brief Contains the View, ViewProjection and draw list for a given render pass.
@@ -156,21 +152,6 @@ namespace cro
         */
         struct Pass final
         {
-            /*!
-            \brief List of entities which should be rendered when this camera is active.
-            This is automatically cleared by the camera system each Scene update, and
-            passed to the Scene so that Renderable systems can update it with visible
-            entities, sorted in draw order. This list is then used when the Renderable
-            system is drawn.
-            type_index allows multiple systems to store draw lists of differing types
-            which themselves are stored in std::any. It's up to the specific systems
-            to maintain which types are stored.
-            \see System::getType()
-            \see Renderable::updateDrawList()
-            \see Renderable::render()
-            */
-            DrawList drawList;
-
             /*!
             \brief View Matrix.
             This matrix is, by default, an identity matrix. This
@@ -243,6 +224,7 @@ namespace cro
             friend class CameraSystem;
         };
 
+
         /*!
         \brief Sets the active render pass.
         By default this is set to 'Final'. If you are not rendering any
@@ -251,6 +233,7 @@ namespace cro
         */
         void setActivePass(std::uint32_t pass);
 
+
         /*!
         \brief Returns a reference to the active pass.
         Use this to get the View and ViewProjection matrices for
@@ -258,17 +241,32 @@ namespace cro
         */
         const Pass& getActivePass() const { return m_passes[m_passIndex]; }
 
+
+        /*!
+        \brief Returns the active Pass index
+        This may be Final or Reflection - refraction passes use the same data
+        as Final. This is the index used when returning the active Pass with
+        getActivePass().
+        */
+        std::uint32_t getActivePassIndex() const { return m_passIndex; }
+
+
         /*!
         \brief Returns a reference to the requested pass.
         \param pass The Pass enum value requested.
         */
         const Pass& getPass(std::uint32_t pass) const;
 
+
         /*!
-        \brief Returns a reference to the drawlist at the requested pass
+        \brief Returns the draw list index assigned to this camera.
+        Renderable systems are expected to maintain their own list
+        of visible entities - when this camera is passed into
+        Renderable::updateDrawList() the index is used to map the
+        camera to its respective draw list.
         */
-        DrawList& getDrawList(std::uint32_t pass);
-        const DrawList& getDrawList(std::uint32_t pass) const;
+        std::size_t getDrawListIndex() const { return m_drawListIndex; }
+
 
         /*!
         \brief Sets the projection matrix to a perspective projection
@@ -279,6 +277,7 @@ namespace cro
         \param numSplits Number of splits to create if using cascaded shadow maps
         */
         void setPerspective(float fov, float aspect, float nearPlane, float farPlane, std::uint32_t numSplits = 1);
+
 
         /*!
         \brief Sets the projection matrix to an orthographic projection
@@ -292,10 +291,12 @@ namespace cro
         */
         void setOrthographic(float left, float right, float bottom, float top, float nearPlane, float farPlane, std::uint32_t numSplits = 1);
 
+
         /*!
         \brief Returns true if set to an orthographic projection matrix
         */
         bool isOrthographic() const { return m_orthographic; }
+
 
         /*!
         \brief Returns a reference to the projection matrix
@@ -303,6 +304,7 @@ namespace cro
         the current window size.
         */
         const glm::mat4& getProjectionMatrix() const { return m_projectionMatrix; }
+
 
         /*!
         \brief Returns the 8 corners of the frustum bounds.
@@ -316,6 +318,7 @@ namespace cro
         */
         const std::array<glm::vec4, 8u>& getFrustumCorners() const { return m_frustumCorners; }
 
+
         /*
         \brief Returns a vector of frustum corners arranged as a set of frusta
         created by splitting the camera's main frustum.
@@ -327,6 +330,7 @@ namespace cro
         */
         const std::vector<std::array<glm::vec4, 8u>>& getFrustumSplits() const { return m_frustumSplits; }
 
+
         /*!
         \brief Viewport.
         This is in normalised (0 - 1) coordinates to describe which part
@@ -337,6 +341,7 @@ namespace cro
         */
         FloatRect viewport;
 
+
         /*!
         \brief Resize callback.
         Optional callback automatically called by the camera's Scene if the 
@@ -346,6 +351,7 @@ namespace cro
         */
         std::function<void(Camera&)> resizeCallback;
 
+
         /*!
         \brief If this is set to false the CameraSystem will ignore
         this Camera component. Setting this to false on Camera components
@@ -354,6 +360,7 @@ namespace cro
         culling will not be updated unnecesarily.
         */
         bool active = true;
+
 
         /*!
         \brief If this camera is in a static Scene then this can be set to true.
@@ -367,6 +374,7 @@ namespace cro
         */
         bool isStatic = false;
 
+
         /*!
         \brief Target to use as this camera's reflection buffer.
         This is up to the user to initiate and draw to - by default
@@ -378,6 +386,7 @@ namespace cro
         */
         RenderTexture reflectionBuffer;
 
+
         /*!
         \brief Target to use as this camera's refraction buffer.
         This is up to the user to initiate and draw to - by default
@@ -386,11 +395,13 @@ namespace cro
         */
         RenderTexture refractionBuffer;
 
+
         /*!
         \brief Only renderables which match these flags when AND together
         will be drawn when this camera is active.
         */
         std::uint64_t renderFlags = RenderFlags::All;
+
 
         /*
         \brief Depth map buffer used for rendering directional shadow maps.
@@ -411,12 +422,14 @@ namespace cro
 #else
         RenderTexture shadowMapBuffer;
 #endif
+
         /*!
         \brief Returns the viewProjection matrix for the Scene's
         directional light as calculated by the ShadowMapRenderer
         for this camera.
         */
         glm::mat4 getShadowViewProjectionMatrix() const { return m_shadowViewProjectionMatrices[0]; }
+
 
         /*!
         \brief Sets the maximum distance from this camera for
@@ -429,6 +442,7 @@ namespace cro
         \see ShadowMapRenderer
         */
         void setMaxShadowDistance(float distance);
+
 
         /*!
         \brief Returns the current value set for maxShadowDistance()
@@ -450,10 +464,12 @@ namespace cro
         */
         void setShadowExpansion(float distance);
 
+
         /*!
         \brief Returns t he current value set for setShadowExpansion();
         */
         float getShadowExpansion() const { return m_shadowExpansion; }
+
 
         /*!
         \brief Returns the number of cascades this camera is currently
@@ -462,11 +478,13 @@ namespace cro
         */
         std::size_t getCascadeCount() const;
 
+
         /*!
         brief Returns the z depth, in view space, of each cascade split, ending
         with the far plane.
         */
         std::vector<float> getSplitDistances() const { return m_splitDistances; }
+
 
         /*!
         \brief Returns the vertical FOV in radians if the
@@ -475,20 +493,24 @@ namespace cro
         */
         float getFOV() const { return m_verticalFOV; }
 
+
         /*!
         \brief Returns the aspect ratio of the projection matrix
         */
         float getAspectRatio() const { return m_aspectRatio; }
+
 
         /*!
         \brief Returns the near plane value of the projection matrix
         */
         float getNearPlane() const { return m_nearPlane; }
 
+
         /*!
         \brief Returns the far plane value of the projection matrix
         */
         float getFarPlane() const { return m_farPlane; }
+
 
         /*!
         \brief Updates the Camera's view and projection matrices
@@ -499,6 +521,7 @@ namespace cro
         \param reflectionLevel The level about which to set the reflection matrix
         */
         void updateMatrices(const Transform& tx, float reflectionLevel = 0.f);
+
 
         /*!
         \brief Returns the render target coordinates of the given
@@ -517,6 +540,7 @@ namespace cro
         */
         glm::vec2 coordsToPixel(glm::vec3 worldPoint, glm::vec2 targetSize = cro::App::getWindow().getSize(), std::int32_t pass = Pass::Final) const;
 
+
         /*
         \brief Returns the world coordinates currently projected onto
         the given screen coordinates.
@@ -525,11 +549,13 @@ namespace cro
         */
         glm::vec3 pixelToCoords(glm::vec2 screenPosition, glm::vec2 targetSize = cro::App::getWindow().getSize()) const;
 
+
         /*!
         \brief Returns the FrustumData needed to test AABBs against
         this Camera's frustum, using cro::Util::Frustum::visible()
         */
         FrustumData getFrustumData() const { return m_frustumData; }
+
 
         /*!
         \brief Returns the view size if this is an orthographic camera
@@ -544,11 +570,12 @@ namespace cro
         const float* getShadowViewProjections() const { return reinterpret_cast<const float*>(m_shadowViewProjectionMatrices.data()); }
 #endif
 
-
     private:
 
         std::array<Pass, 2u> m_passes = {}; //final pass and refraction pass share the same data
         std::uint32_t m_passIndex = Pass::Final;
+
+        std::size_t m_drawListIndex = 0;
 
         friend class CameraSystem;
 

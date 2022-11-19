@@ -91,6 +91,7 @@ namespace
 DeferredRenderSystem::DeferredRenderSystem(MessageBus& mb)
     : System        (mb, typeid(DeferredRenderSystem)),
     m_cameraCount   (0),
+    m_listIndices   (1),
     m_deferredVao   (0),
     m_forwardVao    (0),
     m_vbo           (0),
@@ -143,6 +144,12 @@ void DeferredRenderSystem::updateDrawList(Entity camera)
         return;
     }
     CRO_ASSERT(camera.hasComponent<GBuffer>(), "Needs a GBuffer component to render");
+
+    if (m_listIndices.size() <= cam.getDrawListIndex())
+    {
+        m_listIndices.resize(cam.getDrawListIndex() + 1);
+    }
+
 
     auto cameraPos = camera.getComponent<Transform>().getWorldPosition();
     auto& entities = getEntities();
@@ -243,7 +250,7 @@ void DeferredRenderSystem::updateDrawList(Entity camera)
     DPRINT("Deferred ents: ", std::to_string(deferred.size()));
     DPRINT("Forward ents: ", std::to_string(forward.size()));
 
-    cam.getDrawList(Camera::Pass::Final)[getType()] = std::make_any<std::uint32_t>(m_cameraCount);
+    m_listIndices[cam.getDrawListIndex()] = m_cameraCount;
     m_cameraCount++;
 }
 
@@ -253,8 +260,7 @@ void DeferredRenderSystem::render(Entity camera, const RenderTarget& rt)
     const auto& cam = camera.getComponent<Camera>();
     const auto& pass = cam.getPass(Camera::Pass::Final);
 
-    auto listID = std::any_cast<std::uint32_t>(pass.drawList.at(getType()));
-
+    auto listID = m_listIndices[cam.getDrawListIndex()];
     const auto& [deferred, forward] = m_visibleLists[listID];
 
     glm::vec4 clipPlane = glm::vec4(0.f, 1.f, 0.f, -getScene()->getWaterLevel() + (0.08f * pass.getClipPlaneMultiplier())) * pass.getClipPlaneMultiplier();

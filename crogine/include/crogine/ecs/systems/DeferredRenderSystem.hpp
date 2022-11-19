@@ -93,9 +93,9 @@ namespace cro
         };
 
         //one for each camera we encounter
-        //camer holds a index into this
         std::vector<VisibleList> m_visibleLists;
         std::uint32_t m_cameraCount;
+        std::vector<std::uint32_t> m_listIndices; //indexed by camera draw list index
 
         std::uint32_t m_deferredVao;
         std::uint32_t m_forwardVao;
