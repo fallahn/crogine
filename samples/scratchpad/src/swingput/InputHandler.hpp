@@ -76,6 +76,9 @@ private:
     float m_power;
     float m_hook;
 
+    std::int16_t m_lastLT;
+    std::int16_t m_lastRT;
+
     std::int32_t m_state = State::Inactive;
     const std::array<std::string, State::Count> StateStrings =
     {

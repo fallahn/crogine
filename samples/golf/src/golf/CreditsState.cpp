@@ -257,7 +257,7 @@ void CreditsState::buildScene()
 
 
     auto& largeFont = m_sharedData.sharedResources->fonts.get(FontID::UI);
-    auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
+    auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Label);
 
     glm::vec2 position(0.f);
     auto createEntry = [&](const CreditEntry& entry)
@@ -284,9 +284,11 @@ void CreditsState::buildScene()
         textEnt.addComponent<cro::Transform>();
         textEnt.addComponent<cro::Drawable2D>();
         textEnt.addComponent<cro::Text>(smallFont).setString(str);
-        textEnt.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+        textEnt.getComponent<cro::Text>().setCharacterSize(LabelTextSize);
         textEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
+        //textEnt.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
         e.getComponent<cro::Transform>().addChild(textEnt.getComponent<cro::Transform>());
+        bounds.width = std::max(bounds.width, cro::Text::getLocalBounds(textEnt).width);
         bounds.height += cro::Text::getLocalBounds(textEnt).height;
 
         scrollNode.getComponent<cro::Transform>().addChild(e.getComponent<cro::Transform>());

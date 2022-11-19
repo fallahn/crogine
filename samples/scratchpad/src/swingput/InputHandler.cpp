@@ -57,6 +57,8 @@ InputHandler::InputHandler()
     m_frontPoint        (0.f),
     m_power             (0.f),
     m_hook              (0.f),
+    m_lastLT            (0),
+    m_lastRT            (0),
     m_elapsedTime       (0.f)
 {
     registerWindow([&]()
@@ -86,8 +88,8 @@ void InputHandler::handleEvent(const cro::Event& evt)
     const auto startStroke = [&]()
     {
         if (m_state == State::Inactive
-            && cro::GameController::getAxisPosition(0, cro::GameController::TriggerLeft) == 0
-            && cro::GameController::getAxisPosition(0, cro::GameController::TriggerRight) == 0)
+            && (m_lastLT < MinControllerMove)
+            && (m_lastRT < MinControllerMove))
         {
             m_state = State::Swing;
             m_backPoint = { 0.f, 0.f };
@@ -95,7 +97,7 @@ void InputHandler::handleEvent(const cro::Event& evt)
             m_frontPoint = { 0.f, 0.f };
             m_power = 0.f;
             m_hook = 0.f;
-            LogI << "buns" << std::endl;
+
             cro::App::getWindow().setMouseCaptured(true);
         }
     };
@@ -124,7 +126,6 @@ void InputHandler::handleEvent(const cro::Event& evt)
         break;
     case SDL_MOUSEMOTION:
         //TODO we need to scale this down relative to the game buffer size
-        //TODO we need to the scale it up to match the controller speed
         switch (m_state)
         {
         default: break;
@@ -145,18 +146,27 @@ void InputHandler::handleEvent(const cro::Event& evt)
         case SDL_CONTROLLER_AXIS_TRIGGERRIGHT:
             if (evt.caxis.value > MinControllerMove)
             {
-                //TODO sometimes this is activated when letting go of trigger...
-                //probably because the move when letting go enters this block
-                //and the state has already been made inactive by stroke summary
                 startStroke();
             }
             else
             {
                 endStroke();
             }
+
+            if (evt.caxis.axis == SDL_CONTROLLER_AXIS_TRIGGERLEFT)
+            {
+                m_lastLT = evt.caxis.value;
+            }
+            else
+            {
+                m_lastRT = evt.caxis.value;
+            }
             break;
         case SDL_CONTROLLER_AXIS_LEFTY:
         case SDL_CONTROLLER_AXIS_RIGHTY:
+
+            //TODO we need to make this less sensitive - can
+            //we use an easing curve here? Do they work on negative values?
             if (std::abs(evt.caxis.value) > MinControllerMove)
             {
                 if (m_state == State::Swing)
@@ -170,6 +180,8 @@ void InputHandler::handleEvent(const cro::Event& evt)
             //just set this and we'll have
             //whichever value was present when
             //the swing is finished
+
+            //TODO we need to make this more sensitive because it's too easy to hit a perfect line
             if (std::abs(evt.caxis.value) > MinControllerMove
                 && m_state == State::Swing)
             {
