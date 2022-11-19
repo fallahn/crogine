@@ -7,3 +7,7 @@ Debug
 *.user
 imgui.ini
 .vs
+
+.DS_Store
+
+build/
