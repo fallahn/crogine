@@ -577,7 +577,11 @@ static const std::string CelFragmentShader = R"(
 #if defined(CONTOUR)
     float height = min((v_worldPosition.y - u_minHeight) / (u_maxHeight - u_minHeight), 1.0);
     vec3 contourColour = mix(vec3(0.0,1.0,0.0), vec3(0.0,0.0,1.0), height * 2.0);
-    contourColour = mix(contourColour, vec3(1.0,0.0,1.0), max(0.0, height - 0.5) * 2.0);
+    //contourColour = mix(contourColour, vec3(1.0,0.0,1.0), max(0.0, height - 0.5) * 2.0);
+
+
+//vec3 contourColour = vec3(1.0 - pow(1.0 - (0.1 + (height * 0.9)), 30.0), pow(1.0 - height, 5.0), 1.0 - pow(1.0 - (0.03 + (height * 0.97)), 40.0));
+
 
     vec3 f = fract(v_worldPosition * 2.0);
     vec3 df = fwidth(v_worldPosition * 2.0);

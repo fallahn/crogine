@@ -411,7 +411,7 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
                             {
                                 playSoundDelayed(AudioID::Applause, glm::vec3(0.f), 0.8f);
                                 applaud();
-                                Social::awardXP(XPValues[XPID::Par]);
+                                Social::awardXP(XPValues[XPID::Par] / 2);
                             }
                         }
                         break;

@@ -142,7 +142,7 @@ namespace
 
     float godmode = 1.f;
     bool allowAchievements = false;
-    cro::Time idleTime = cro::seconds(30.f);
+    cro::Time idleTime = cro::seconds(90.f);
 
     constexpr std::uint32_t MaxCascades = 4; //actual value is 1 less this - see ShadowQuality::update()
     constexpr float MaxShadowFarDistance = 150.f;
