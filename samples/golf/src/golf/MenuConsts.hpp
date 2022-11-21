@@ -38,6 +38,12 @@ source distribution.
 #include <crogine/util/Easings.hpp>
 #include <crogine/detail/glm/vec2.hpp>
 
+#ifdef USE_GNS
+#define IS_PS(x) Input::isPSController(x)
+#else
+#define IS_PS(x) cro::GameController::hasPSLayout(x)
+#endif
+
 struct FontID final
 {
     enum

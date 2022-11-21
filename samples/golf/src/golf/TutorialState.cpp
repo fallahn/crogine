@@ -36,6 +36,8 @@ source distribution.
 #include "MessageIDs.hpp"
 #include "../ErrorCheck.hpp"
 
+#include <Input.hpp>
+
 #include <crogine/gui/Gui.hpp>
 
 #include <crogine/ecs/components/Transform.hpp>
@@ -267,7 +269,7 @@ void TutorialState::buildScene()
         cro::SpriteSheet spriteSheet;
         spriteSheet.loadFromFile("assets/golf/sprites/controller_buttons.spt", m_sharedData.sharedResources->textures);
 
-        if (cro::GameController::hasPSLayout(0))
+        if (IS_PS(0))
         {
             m_buttonSprites[ButtonID::A] = spriteSheet.getSprite("cross");
             m_buttonSprites[ButtonID::B] = spriteSheet.getSprite("circle");

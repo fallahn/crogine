@@ -37,6 +37,7 @@ source distribution.
 
 #include <Achievements.hpp>
 #include <AchievementStrings.hpp>
+#include <Input.hpp>
 
 #include <crogine/core/Window.hpp>
 #include <crogine/core/Mouse.hpp>
@@ -1943,7 +1944,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
         auto entity = m_scene.createEntity();
         entity.addComponent<cro::Transform>().setPosition({ 236.f, 32.f, HighlightOffset });
         entity.addComponent<cro::Drawable2D>();
-        entity.addComponent<cro::Sprite>() = cro::GameController::hasPSLayout(0) ? spriteSheet.getSprite("extra_buttons_ps") : spriteSheet.getSprite("extra_buttons");
+        entity.addComponent<cro::Sprite>() = IS_PS(0) ? spriteSheet.getSprite("extra_buttons_ps") : spriteSheet.getSprite("extra_buttons");
         parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     }
     else
@@ -1961,7 +1962,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
     }
 
     //display a PS controller if we found one
-    if (cro::GameController::hasPSLayout(0))
+    if (IS_PS(m_sharedData.inputBinding.controllerID))
     {
         auto entity = m_scene.createEntity();
         entity.addComponent<cro::Transform>().setPosition({236.f, 14.f, HighlightOffset / 2.f});

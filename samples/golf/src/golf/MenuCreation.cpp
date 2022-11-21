@@ -42,6 +42,7 @@ source distribution.
 
 #include <AchievementStrings.hpp>
 #include <Social.hpp>
+#include <Input.hpp>
 
 #include <crogine/detail/GlobalConsts.hpp>
 #include <crogine/core/ConfigFile.hpp>
@@ -3694,7 +3695,7 @@ void MenuState::updateLocalAvatars(std::uint32_t mouseEnter, std::uint32_t mouse
                 else
                 {
                     e.getComponent<cro::Sprite>() = m_sprites[SpriteID::Controller];
-                    e.getComponent<cro::SpriteAnimation>().play(cro::GameController::hasPSLayout(m_sharedData.controllerIDs[i]) ? 1 : 0);
+                    e.getComponent<cro::SpriteAnimation>().play(IS_PS(m_sharedData.controllerIDs[i]) ? 1 : 0);
 
                     //add buttons for selecting controller ID
                     if (controllerCount > 1)

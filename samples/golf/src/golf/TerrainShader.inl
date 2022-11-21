@@ -131,7 +131,9 @@ R"(
     void main()
     {
         vec4 worldPos = u_worldMatrix * a_position;
-        float alpha = 1.0 - smoothstep(Radius, Radius + 5.0, length(worldPos.xyz - u_centrePosition));
+        float centreLength = length(worldPos.xyz - u_centrePosition);
+        float alpha = 1.0 - smoothstep(Radius, Radius + 5.0, centreLength);
+        //alpha *= smoothstep(0.1, 0.5, centreLength);
         alpha *= (1.0 - smoothstep(Radius, Radius + 1.0, length(worldPos.xyz - u_cameraWorldPosition)));
 
         gl_Position = u_viewProjectionMatrix * worldPos;

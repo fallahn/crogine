@@ -544,7 +544,7 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
     m_slopeProperties.shader = slopeShader.getGLHandle();
     materialID = resources.materials.add(slopeShader);
     resources.materials.get(materialID).blendMode = cro::Material::BlendMode::Alpha;
-    //resources.materials.get(materialID).enableDepthTest = false;
+    //resources.materials.get(materialID).enableDepthTest = true;
 
     entity = scene.createEntity();
     entity.addComponent<cro::Transform>();

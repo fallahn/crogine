@@ -301,6 +301,10 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
 
                 ImGui::Text("Connection Bitrate: %3.3fkbps", static_cast<float>(bitrate) / 1024.f);
 
+
+                auto terrain = m_collisionMesh.getTerrain(m_freeCam.getComponent<cro::Transform>().getPosition());
+                ImGui::Text("Terrain %s", TerrainStrings[terrain.terrain].c_str());
+
                 /*for (const auto& c : m_sharedData.connectionData)
                 {
                     ImGui::Text("Ping: %u", c.pingTime);
