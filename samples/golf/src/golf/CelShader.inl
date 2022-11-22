@@ -492,6 +492,10 @@ static const std::string CelFragmentShader = R"(
         float waterFade = (1.0 - smoothstep(WaterLevel, WaterLevel + (1.15 * (1.0 - smoothstep(0.89, 0.99, facing))), v_worldPosition.y));
         float waterDither = findClosest(texX, texY, waterFade) * waterFade * (1.0 - step(0.96, facing));
 
+#if defined(COMP_SHADE)
+        waterDither *= u_colour.g;
+#endif
+
         colour.rgb = mix(colour.rgb, colour.rgb * SlopeShade, waterDither * 0.5 * step(WaterLevel, v_worldPosition.y));
 #endif
 
