@@ -73,7 +73,8 @@ public:
         enum
         {
             LevelUp,
-            XPAwarded
+            XPAwarded,
+            OverlayActivated
         }type = LevelUp;
         std::int32_t level = 0;
     };

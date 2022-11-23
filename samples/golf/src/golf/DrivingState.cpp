@@ -292,7 +292,7 @@ bool DrivingState::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_CONTROLLERBUTTONUP)
     {
-        if (evt.cbutton.which == cro::GameController::deviceID(0))
+        //if (evt.cbutton.which == cro::GameController::deviceID(0))
         {
             switch (evt.cbutton.button)
             {
@@ -315,6 +315,10 @@ bool DrivingState::handleEvent(const cro::Event& evt)
         }
 #endif // CRO_DEBUG_
 
+    }
+    else if (evt.type == SDL_CONTROLLERDEVICEREMOVED)
+    {
+        requestStackPush(StateID::Pause);
     }
 #ifdef CRO_DEBUG_
     m_gameScene.getSystem<FpsCameraSystem>()->handleEvent(evt);

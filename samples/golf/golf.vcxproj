@@ -552,6 +552,7 @@
     <ClInclude Include="src\golf\DrivingRangeDirector.hpp" />
     <ClInclude Include="src\golf\DrivingState.hpp" />
     <ClInclude Include="src\golf\ErrorState.hpp" />
+    <ClInclude Include="src\golf\EventOverlay.hpp" />
     <ClInclude Include="src\golf\FloatingTextSystem.hpp" />
     <ClInclude Include="src\golf\FpsCameraSystem.hpp" />
     <ClInclude Include="src\golf\GameConsts.hpp" />

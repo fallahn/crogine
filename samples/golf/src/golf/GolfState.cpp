@@ -672,6 +672,9 @@ bool GolfState::handleEvent(const cro::Event& evt)
             }
         }
         m_emoteWheel.refreshLabels(); //displays labels if no controllers connected
+
+        //pause the game
+        requestStackPush(StateID::Pause);
     }
     else if (evt.type == SDL_CONTROLLERDEVICEADDED)
     {

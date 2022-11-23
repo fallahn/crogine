@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2022
+Matt Marchant 2022
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -29,29 +29,37 @@ source distribution.
 
 #pragma once
 
-struct StateID final
+#include "../StateIDs.hpp"
+
+#include <Social.hpp>
+
+#include <crogine/core/State.hpp>
+
+class EventOverlayState final : public cro::State
 {
-    enum
+public:
+    EventOverlayState(cro::StateStack& ss, cro::State::Context ctx)
+        : cro::State(ss, ctx) {}
+
+    bool handleEvent(const cro::Event&) override { return false; }
+    void handleMessage(const cro::Message& msg) override
     {
-        Menu,
-        Golf,
-        Options,
-        Pause,
-        Error,
-        SplashScreen,
-        Tutorial,
-        Keyboard,
-        Practice,
-        DrivingRange,
-        PuttingRange,
-        Clubhouse,
-        Billiards,
-        Trophy,
-        News,
-        Bush,
-        Playlist,
-        MessageOverlay,
-        Credits,
-        EventOverlay //consumes events if the overlay is open
-    };
+        if (msg.id == Social::MessageID::SocialMessage)
+        {
+            const auto& data = msg.getData<Social::SocialEvent>();
+            if (data.type == Social::SocialEvent::OverlayActivated
+                && data.level == 0)
+            {
+                requestStackPop();
+            }
+        }
+    }
+
+    bool simulate(float) override { return true; }
+    void render() override {}
+
+    std::int32_t getStateID() const override { return StateID::EventOverlay; }
+
+private:
+
 };

@@ -44,6 +44,7 @@ source distribution.
 #include "golf/NewsState.hpp"
 #include "golf/PlaylistState.hpp"
 #include "golf/CreditsState.hpp"
+#include "golf/EventOverlay.hpp"
 #include "golf/MenuConsts.hpp"
 #include "golf/GameConsts.hpp"
 #include "golf/MessageIDs.hpp"
@@ -163,6 +164,7 @@ GolfGame::GolfGame()
     m_stateStack.registerState<BushState>(StateID::Bush, m_sharedData);
     m_stateStack.registerState<MessageOverlayState>(StateID::MessageOverlay, m_sharedData);
     m_stateStack.registerState<CreditsState>(StateID::Credits, m_sharedData, credits);
+    m_stateStack.registerState<EventOverlayState>(StateID::EventOverlay);
 }
 
 //public
@@ -301,6 +303,13 @@ void GolfGame::handleMessage(const cro::Message& msg)
             case 50:
                 Achievements::awardAchievement(AchievementStrings[AchievementID::Pro]);
                 break;
+            }
+        }
+        else if (data.type == Social::SocialEvent::OverlayActivated)
+        {
+            if (data.level != 0)
+            {
+                m_stateStack.pushState(StateID::EventOverlay);
             }
         }
     }
