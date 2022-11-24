@@ -166,10 +166,10 @@ R"(
 
     void main()
     {
-        float strength = 1.0 - dot((v_normal), vec3(0.f, 1.f, 0.f));
-        strength = smoothstep(0.001, 0.025, strength);
+        float strength = 1.0 - dot(normalize(v_normal), vec3(0.0, 1.0, 0.0));
+        strength = smoothstep(0.01, 0.05, strength);
 
-        float alpha = (sin(v_texCoord.x - ((u_windData.w * 30.f * strength) * v_texCoord.y)) + 1.0) * 0.5;
+        float alpha = (sin(v_texCoord.x - ((u_windData.w * 5.0 * strength) * v_texCoord.y)) + 1.0) * 0.5;
         alpha = step(0.1, alpha);
 
         vec4 colour = v_colour;

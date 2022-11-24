@@ -457,24 +457,24 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
                     auto [slope, slopeStrength] = getSlope(terrainContact.normal);
                     float friction = 1.f;
 
-                    if (m_puttFromTee)
+                    //if (m_puttFromTee)
                     {
                         friction = Friction[ball.terrain] + (slopeStrength * 0.05f);
                     }
-                    else
-                    {
-                        //this means we don't add a HUGE multiplier if there's
-                        //already a steep slope, else the ball go WEEEEEEEEE
-                        float slopeMultiplier = std::max(0.f, 1.f - (slopeStrength / 0.4f));
+                    //else
+                    //{
+                    //    //this means we don't add a HUGE multiplier if there's
+                    //    //already a steep slope, else the ball go WEEEEEEEEE
+                    //    float slopeMultiplier = std::max(0.f, 1.f - (slopeStrength / 0.4f));
 
-                        friction = Friction[ball.terrain] - (slopeStrength * 0.08f);
-                        //unrealistic but makes it more interesting on full size courses
-                        slopeStrength *= 5.f;// *= 10.f * slopeMultiplier;
-                        //use the current velocity to stop the ball rolling forever
-                        slopeStrength *= std::min(1.f, glm::length2(ball.velocity));
-                        //and reduce if slope is along wind vector
-                        slopeStrength *= (1.f - glm::dot(slope, m_windDirection)) * (1.f - m_windStrength);
-                    }
+                    //    friction = Friction[ball.terrain] - (slopeStrength * 0.08f);
+                    //    //unrealistic but makes it more interesting on full size courses
+                    //    slopeStrength *= 5.f;// *= 10.f * slopeMultiplier;
+                    //    //use the current velocity to stop the ball rolling forever
+                    //    slopeStrength *= std::min(1.f, glm::length2(ball.velocity));
+                    //    //and reduce if slope is along wind vector
+                    //    slopeStrength *= (1.f - glm::dot(slope, m_windDirection)) * (1.f - m_windStrength);
+                    //}
 
                     //move by slope from surface normal
                     ball.velocity += slope * slopeStrength;

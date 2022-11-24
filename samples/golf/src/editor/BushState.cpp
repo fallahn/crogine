@@ -1166,6 +1166,16 @@ void BushState::createThumbnails()
                         md.createModel(entity);
                         entity.getComponent<cro::Model>().setRenderFlags(RenderFlagsThumbnail);
 
+                        //because we've started using material colours to affect
+                        //the in-game material properties, we need to reset them
+                        //all to white when rendering thumbs
+                        for (auto i = 0; i < entity.getComponent<cro::Model>().getMeshData().submeshCount; ++i)
+                        {
+                            entity.getComponent<cro::Model>().setMaterialProperty(i, "u_colour", cro::Colour::White);
+                        }
+
+
+
                         const auto& bounds = entity.getComponent<cro::Model>().getMeshData().boundingBox;
                         auto size = bounds[1] - bounds[0];
                         float scale = 1.f;

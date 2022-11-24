@@ -31,6 +31,7 @@ source distribution.
 
 #include "GolfGame.hpp"
 
+#include <iostream>
 int main(int argc, char** argsv)
 {
     GolfGame game;
