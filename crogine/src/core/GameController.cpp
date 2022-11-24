@@ -56,6 +56,13 @@ std::int16_t GameController::getAxisPosition(std::int32_t controllerIndex, std::
         //return the average of all inputs
         std::int32_t sum = 0;
         std::int32_t controllerCount = static_cast<std::int32_t>(getControllerCount());
+
+        if (controllerCount == 0)
+        {
+            return 0;
+        }
+
+
         for (auto i = 0; i < controllerCount; ++i)
         {
             sum += SDL_GameControllerGetAxis(App::m_instance->m_controllers[i].controller, static_cast<SDL_GameControllerAxis>(axis));
