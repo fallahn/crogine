@@ -153,6 +153,7 @@ namespace
             float strength = smoothstep(0.0, 0.05, diff);
 
             FRAG_OUT = v_colour * TEXTURE(u_texture, coord);// * strength;
+//FRAG_OUT.rgb *= v_colour.a;
         }
     )";
 

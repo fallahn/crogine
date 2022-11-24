@@ -301,7 +301,7 @@ bool OptionsState::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_CONTROLLERBUTTONUP)
     {
-        if (evt.cbutton.which == cro::GameController::deviceID(0))
+        //if (evt.cbutton.which == cro::GameController::deviceID(0))
         {
         
             switch (evt.cbutton.button)
@@ -315,7 +315,7 @@ bool OptionsState::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_CONTROLLERBUTTONDOWN)
     {
-        if (evt.cbutton.which == cro::GameController::deviceID(0))
+        //if (evt.cbutton.which == cro::GameController::deviceID(0))
         {
 
             switch (evt.cbutton.button)
@@ -516,10 +516,8 @@ void OptionsState::updateKeybind(SDL_Keycode key)
 void OptionsState::buildScene()
 {
     auto& mb = getContext().appInstance.getMessageBus();
-    //only problem here is if player changes between opening
-    //pause menu and opening options menu changes the active controller
-    //as the game isn't actually paused. Not much we can do about this though?
-    m_scene.addSystem<cro::UISystem>(mb)->setActiveControllerID(m_sharedData.inputBinding.controllerID);
+
+    m_scene.addSystem<cro::UISystem>(mb);// ->setActiveControllerID(m_sharedData.inputBinding.controllerID);
     m_scene.addSystem<cro::CommandSystem>(mb);
     m_scene.addSystem<cro::CallbackSystem>(mb);
     m_scene.addSystem<cro::SpriteSystem2D>(mb);
@@ -1962,14 +1960,15 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
     }
 
     //display a PS controller if we found one
-    if (IS_PS(m_sharedData.inputBinding.controllerID))
+    //TODO track the last controller activated and update this accordingly
+    /*if (IS_PS(m_sharedData.inputBinding.controllerID))
     {
         auto entity = m_scene.createEntity();
         entity.addComponent<cro::Transform>().setPosition({236.f, 14.f, HighlightOffset / 2.f});
         entity.addComponent<cro::Drawable2D>();
         entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("controller_ps");
         parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-    }
+    }*/
 
     //prev club
     auto entity = createHighlight(glm::vec2(258.f, 96.f), InputBinding::PrevClub);

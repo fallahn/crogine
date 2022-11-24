@@ -125,6 +125,8 @@ namespace
     static constexpr glm::vec2 BillboardChunk(40.f, 50.f);
     static constexpr std::size_t ChunkCount = 5;
 
+    std::int32_t lastControllerID = 0;
+
     struct FoliageCallback final
     {
         FoliageCallback(float d = 0.f) : delay(d + 8.f) {} //magic number is some delay before effect starts
@@ -298,7 +300,11 @@ bool DrivingState::handleEvent(const cro::Event& evt)
             {
             default: break;
             case cro::GameController::ButtonStart:
+            case cro::GameController::ButtonGuide:
                 requestStackPush(StateID::Pause);
+                break;
+            case cro::GameController::ButtonA:
+                lastControllerID = cro::GameController::controllerID(evt.cbutton.which);
                 break;
             }
         }
@@ -2538,7 +2544,8 @@ void DrivingState::hitBall()
 
     float lowFreq = 50000.f * m_inputParser.getPower();
     float hiFreq = 35000.f * m_inputParser.getPower();
-    cro::GameController::rumbleStart(m_sharedData.inputBinding.controllerID, static_cast<std::uint16_t>(lowFreq), static_cast<std::uint16_t>(hiFreq), 200);
+    //TODO track the last controller to trigger this
+    cro::GameController::rumbleStart(/*m_sharedData.inputBinding.controllerID*/lastControllerID, static_cast<std::uint16_t>(lowFreq), static_cast<std::uint16_t>(hiFreq), 200);
 
     //from here the hook value is just used for UI feedback
     //so we want to flip it as appropriate with the current avatar

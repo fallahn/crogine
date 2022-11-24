@@ -113,7 +113,7 @@ bool NewsState::handleEvent(const cro::Event& evt)
         }
     }
     else if (evt.type == SDL_CONTROLLERBUTTONUP
-        && evt.cbutton.which == cro::GameController::deviceID(m_sharedData.inputBinding.controllerID))
+        /*&& evt.cbutton.which == cro::GameController::deviceID(m_sharedData.inputBinding.controllerID)*/)
     {
         if (evt.cbutton.button == cro::GameController::ButtonB
             || evt.cbutton.button == cro::GameController::ButtonStart
@@ -157,7 +157,7 @@ void NewsState::render()
 void NewsState::buildScene()
 {
     auto& mb = getContext().appInstance.getMessageBus();
-    m_scene.addSystem<cro::UISystem>(mb)->setActiveControllerID(m_sharedData.inputBinding.controllerID);
+    m_scene.addSystem<cro::UISystem>(mb);// ->setActiveControllerID(m_sharedData.inputBinding.controllerID);
     m_scene.addSystem<cro::CommandSystem>(mb);
     m_scene.addSystem<cro::CallbackSystem>(mb);
     m_scene.addSystem<cro::SpriteSystem2D>(mb);

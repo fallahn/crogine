@@ -2622,7 +2622,7 @@ bool GolfState::EmoteWheel::handleEvent(const cro::Event& evt)
         return false;
     }
 
-    const auto sendEmote = [&](std::uint8_t emoteID)
+    const auto sendEmote = [&](std::uint8_t emoteID, std::int32_t controllerID)
     {
         std::uint32_t data = 0;
         if (currentPlayer.client == sharedData.localConnectionData.connectionID)
@@ -2631,7 +2631,7 @@ bool GolfState::EmoteWheel::handleEvent(const cro::Event& evt)
         }
         else
         {
-            data |= (sharedData.localConnectionData.connectionID << 16) | (std::uint8_t(sharedData.inputBinding.controllerID) << 8) | (emoteID);
+            data |= (sharedData.localConnectionData.connectionID << 16) | (std::uint8_t(/*sharedData.inputBinding.*/controllerID) << 8) | (emoteID);
         }
         sharedData.clientConnection.netClient.sendPacket(PacketID::Emote, data, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
 
@@ -2690,22 +2690,22 @@ bool GolfState::EmoteWheel::handleEvent(const cro::Event& evt)
         {
             if (evt.key.keysym.sym == sharedData.inputBinding.keys[InputBinding::Up])
             {
-                sendEmote(Emote::Happy);
+                sendEmote(Emote::Happy, 0);
                 return true;
             }
             else if (evt.key.keysym.sym == sharedData.inputBinding.keys[InputBinding::Down])
             {
-                sendEmote(Emote::Laughing);
+                sendEmote(Emote::Laughing, 0);
                 return true;
             }
             else if (evt.key.keysym.sym == sharedData.inputBinding.keys[InputBinding::Left])
             {
-                sendEmote(Emote::Sad);
+                sendEmote(Emote::Sad, 0);
                 return true;
             }
             else if (evt.key.keysym.sym == sharedData.inputBinding.keys[InputBinding::Right])
             {
-                sendEmote(Emote::Grumpy);
+                sendEmote(Emote::Grumpy, 0);
                 return true;
             }
         }
@@ -2713,7 +2713,7 @@ bool GolfState::EmoteWheel::handleEvent(const cro::Event& evt)
 
 
     else if (evt.type == SDL_CONTROLLERBUTTONDOWN
-        && cro::GameController::controllerID(evt.cbutton.which) == sharedData.inputBinding.controllerID)
+        /*&& cro::GameController::controllerID(evt.cbutton.which) == sharedData.inputBinding.controllerID*/)
     {
         switch (evt.cbutton.button)
         {
@@ -2723,8 +2723,8 @@ bool GolfState::EmoteWheel::handleEvent(const cro::Event& evt)
             return true;
         }
 
-        //prevent these getting forwarded to input parse if wheel is open
-        if (cro::GameController::isButtonPressed(sharedData.inputBinding.controllerID, cro::GameController::ButtonY))
+        //prevent these getting forwarded to input parser if wheel is open
+        if (cro::GameController::isButtonPressed(/*sharedData.inputBinding.controllerID*/-1, cro::GameController::ButtonY))
         {
             switch (evt.cbutton.button)
             {
@@ -2738,7 +2738,7 @@ bool GolfState::EmoteWheel::handleEvent(const cro::Event& evt)
         }
     }
     else if (evt.type == SDL_CONTROLLERBUTTONUP
-        && cro::GameController::controllerID(evt.cbutton.which) == sharedData.inputBinding.controllerID)
+        /*&& cro::GameController::controllerID(evt.cbutton.which) == sharedData.inputBinding.controllerID*/)
     {
         switch (evt.cbutton.button)
         {
@@ -2754,16 +2754,16 @@ bool GolfState::EmoteWheel::handleEvent(const cro::Event& evt)
             {
             default: return false;
             case SDL_CONTROLLER_BUTTON_DPAD_UP:
-                sendEmote(Emote::Happy);
+                sendEmote(Emote::Happy, cro::GameController::controllerID(evt.cbutton.which));
                 return true;
             case SDL_CONTROLLER_BUTTON_DPAD_DOWN:
-                sendEmote(Emote::Laughing);
+                sendEmote(Emote::Laughing, cro::GameController::controllerID(evt.cbutton.which));
                 return true;
             case SDL_CONTROLLER_BUTTON_DPAD_LEFT:
-                sendEmote(Emote::Sad);
+                sendEmote(Emote::Sad, cro::GameController::controllerID(evt.cbutton.which));
                 return true;
             case SDL_CONTROLLER_BUTTON_DPAD_RIGHT:
-                sendEmote(Emote::Grumpy);
+                sendEmote(Emote::Grumpy, cro::GameController::controllerID(evt.cbutton.which));
                 return true;
             }
         }

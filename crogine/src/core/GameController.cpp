@@ -51,7 +51,19 @@ std::int16_t GameController::getAxisPosition(std::int32_t controllerIndex, std::
     CRO_ASSERT(App::m_instance, "No app running");
     CRO_ASSERT(controllerIndex < MaxControllers, "");
 
-    return controllerIndex < 0 ? 0 : SDL_GameControllerGetAxis(App::m_instance->m_controllers[controllerIndex].controller, static_cast<SDL_GameControllerAxis>(axis));
+    if (controllerIndex < 0)
+    {
+        //return the average of all inputs
+        std::int32_t sum = 0;
+        std::int32_t controllerCount = static_cast<std::int32_t>(getControllerCount());
+        for (auto i = 0; i < controllerCount; ++i)
+        {
+            sum += SDL_GameControllerGetAxis(App::m_instance->m_controllers[i].controller, static_cast<SDL_GameControllerAxis>(axis));
+        }
+        return static_cast<std::int16_t>(sum / controllerCount);
+    }
+
+    return SDL_GameControllerGetAxis(App::m_instance->m_controllers[controllerIndex].controller, static_cast<SDL_GameControllerAxis>(axis));
 }
 
 bool GameController::isButtonPressed(std::int32_t controllerIndex, std::int32_t button)
@@ -59,7 +71,19 @@ bool GameController::isButtonPressed(std::int32_t controllerIndex, std::int32_t 
     CRO_ASSERT(App::m_instance, "No app running");
     CRO_ASSERT(controllerIndex < MaxControllers, "");
 
-    return controllerIndex < 0 ? false : (SDL_GameControllerGetButton(App::m_instance->m_controllers[controllerIndex].controller, static_cast<SDL_GameControllerButton>(button)) == 1);
+    if (controllerIndex < 0)
+    {
+        for (auto i = 0u; i < getControllerCount(); ++i)
+        {
+            if (SDL_GameControllerGetButton(App::m_instance->m_controllers[i].controller, static_cast<SDL_GameControllerButton>(button)) == 1)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    return (SDL_GameControllerGetButton(App::m_instance->m_controllers[controllerIndex].controller, static_cast<SDL_GameControllerButton>(button)) == 1);
 }
 
 bool GameController::isConnected(std::int32_t controllerIndex)

@@ -107,7 +107,7 @@ bool PracticeState::handleEvent(const cro::Event& evt)
         }
     }
     else if (evt.type == SDL_CONTROLLERBUTTONUP
-        && evt.cbutton.which == cro::GameController::deviceID(/*m_sharedData.inputBinding.controllerID*/0))
+        /*&& evt.cbutton.which == cro::GameController::deviceID(m_sharedData.inputBinding.controllerID)*/)
     {
         if (evt.cbutton.button == cro::GameController::ButtonB)
         {

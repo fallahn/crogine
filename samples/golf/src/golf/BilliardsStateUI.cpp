@@ -370,7 +370,7 @@ void BilliardsState::createUI()
     {
         if (m_inputParser.canRotate() && 
             (cro::Mouse::isButtonPressed(cro::Mouse::Button::Right)
-                || cro::GameController::isButtonPressed(m_sharedData.inputBinding.controllerID, m_sharedData.inputBinding.buttons[InputBinding::CamModifier])))
+                || cro::GameController::isButtonPressed(/*m_sharedData.inputBinding.controllerID*/-1, m_sharedData.inputBinding.buttons[InputBinding::CamModifier])))
         {
             auto camPos = m_cameraController.getComponent<cro::Transform>().getPosition();
             auto size = m_gameSceneTexture.getSize();

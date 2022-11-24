@@ -165,7 +165,7 @@ void BilliardsInput::handleEvent(const cro::Event& evt)
     
     else if (evt.type == SDL_CONTROLLERBUTTONDOWN)
     {
-        if (evt.cbutton.which == cro::GameController::deviceID(inputBinding.controllerID))
+        //if (evt.cbutton.which == cro::GameController::deviceID(inputBinding.controllerID))
         {
             if (evt.cbutton.button == inputBinding.buttons[InputBinding::Action])
             {
@@ -204,7 +204,7 @@ void BilliardsInput::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_CONTROLLERBUTTONUP)
     {
-        if (evt.cbutton.which == cro::GameController::deviceID(inputBinding.controllerID))
+        //if (evt.cbutton.which == cro::GameController::deviceID(inputBinding.controllerID))
         {
             if (evt.cbutton.button == inputBinding.buttons[InputBinding::Action])
             {
@@ -390,19 +390,19 @@ void BilliardsInput::checkController(float dt)
     m_analogueAmountRight = 1.f;
 
     const auto& inputBinding = m_sharedData.inputBinding;
-    if (!cro::GameController::isConnected(inputBinding.controllerID))
+    //if (!cro::GameController::isConnected(inputBinding.controllerID))
     {
         return;
     }
 
     //triggers to set power
-    float powerUp = static_cast<float>(cro::GameController::getAxisPosition(inputBinding.controllerID, cro::GameController::TriggerRight)) / cro::GameController::AxisMax;
+    float powerUp = static_cast<float>(cro::GameController::getAxisPosition(/*inputBinding.controllerID*/-1, cro::GameController::TriggerRight)) / cro::GameController::AxisMax;
     if (powerUp > AnalogueDeadZone)
     {
         m_power = std::min(MaxPower, m_power + (powerUp * dt));
     }
 
-    float powerDown = static_cast<float>(cro::GameController::getAxisPosition(inputBinding.controllerID, cro::GameController::TriggerLeft)) / cro::GameController::AxisMax;
+    float powerDown = static_cast<float>(cro::GameController::getAxisPosition(/*inputBinding.controllerID*/-1, cro::GameController::TriggerLeft)) / cro::GameController::AxisMax;
     if (powerDown > AnalogueDeadZone)
     {
         m_power = std::max(MinPower, m_power - (powerDown * dt));
@@ -412,14 +412,14 @@ void BilliardsInput::checkController(float dt)
     //left stick emulates mouse movement (but shouldn't overwrite it)
     if (!hasMouseMotion())
     {
-        float xMove = static_cast<float>(cro::GameController::getAxisPosition(inputBinding.controllerID, cro::GameController::AxisLeftX)) / cro::GameController::AxisMax;
+        float xMove = static_cast<float>(cro::GameController::getAxisPosition(/*inputBinding.controllerID*/-1, cro::GameController::AxisLeftX)) / cro::GameController::AxisMax;
 
         if (xMove > AnalogueDeadZone || xMove < -AnalogueDeadZone)
         {
             m_mouseMove.x = xMove;
         }
 
-        float yMove = static_cast<float>(cro::GameController::getAxisPosition(inputBinding.controllerID, cro::GameController::AxisLeftY)) / cro::GameController::AxisMax;
+        float yMove = static_cast<float>(cro::GameController::getAxisPosition(/*inputBinding.controllerID*/-1, cro::GameController::AxisLeftY)) / cro::GameController::AxisMax;
 
         if (yMove > AnalogueDeadZone || yMove < -AnalogueDeadZone)
         {
@@ -433,14 +433,14 @@ void BilliardsInput::checkController(float dt)
         else
         {
             //right stick does the same but sets the cam look flag too.
-            xMove = static_cast<float>(cro::GameController::getAxisPosition(inputBinding.controllerID, cro::GameController::AxisRightX)) / cro::GameController::AxisMax;
+            xMove = static_cast<float>(cro::GameController::getAxisPosition(/*inputBinding.controllerID*/-1, cro::GameController::AxisRightX)) / cro::GameController::AxisMax;
 
             if (xMove > AnalogueDeadZone || xMove < -AnalogueDeadZone)
             {
                 m_mouseMove.x = xMove;
             }
 
-            yMove = static_cast<float>(cro::GameController::getAxisPosition(inputBinding.controllerID, cro::GameController::AxisRightY)) / cro::GameController::AxisMax;
+            yMove = static_cast<float>(cro::GameController::getAxisPosition(/*inputBinding.controllerID*/-1, cro::GameController::AxisRightY)) / cro::GameController::AxisMax;
 
             if (yMove > AnalogueDeadZone || yMove < -AnalogueDeadZone)
             {

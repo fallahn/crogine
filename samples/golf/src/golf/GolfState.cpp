@@ -175,6 +175,8 @@ namespace
 
     constexpr float MaxRotation = 0.13f;
     constexpr float MaxPuttRotation = 0.24f;
+
+    std::int32_t lastControllerID = 0;
 }
 
 GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, SharedStateData& sd)
@@ -594,7 +596,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
     else if (evt.type == SDL_CONTROLLERBUTTONDOWN)
     {
         resetIdle();
-        if (auto bid = cro::GameController::deviceID(m_sharedData.inputBinding.controllerID); bid == evt.cbutton.which)
+        //if (auto bid = cro::GameController::deviceID(m_sharedData.inputBinding.controllerID); bid == evt.cbutton.which)
         {
             switch (evt.cbutton.button)
             {
@@ -615,19 +617,20 @@ bool GolfState::handleEvent(const cro::Event& evt)
                 break;
             case cro::GameController::ButtonA:
                 toggleQuitReady();
+                lastControllerID = cro::GameController::controllerID(evt.cbutton.which);
                 break;
             }
         }
-        else if (bid == 0)
+        /*else if (bid == 0)
         {
             if (evt.cbutton.button == cro::GameController::ButtonA)
             {
                 toggleQuitReady();
             }
-        }
+        }*/
     }
     else if (evt.type == SDL_CONTROLLERBUTTONUP
-        && evt.cbutton.which == cro::GameController::deviceID(m_sharedData.inputBinding.controllerID))
+        /*&& evt.cbutton.which == cro::GameController::deviceID(m_sharedData.inputBinding.controllerID)*/)
     {
         hideMouse();
         switch (evt.cbutton.button)
@@ -637,6 +640,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
             showScoreboard(false);
             break;
         case cro::GameController::ButtonStart:
+        case cro::GameController::ButtonGuide: //TODO this could be from any controller as it brings up the overlay in steam big picture mode
             requestStackPush(StateID::Pause);
             break;
         }
@@ -667,7 +671,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
                     idx = std::max(0, i - 1);
                 }
                 //update the input parser in case this player is active
-                m_sharedData.inputBinding.controllerID = m_sharedData.controllerIDs[m_currentPlayer.player];
+                //m_sharedData.inputBinding.controllerID = m_sharedData.controllerIDs[m_currentPlayer.player];
                 break;
             }
         }
@@ -692,7 +696,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_JOYAXISMOTION)
     {
-        if (evt.caxis.which == cro::GameController::deviceID(m_sharedData.inputBinding.controllerID))
+        //if (evt.caxis.which == cro::GameController::deviceID(m_sharedData.inputBinding.controllerID))
         {
             
             if (std::abs(evt.caxis.value) > 10000)
@@ -789,7 +793,8 @@ void GolfState::handleMessage(const cro::Message& msg)
             {
                 auto strLow = static_cast<std::uint16_t>(50000.f * m_inputParser.getPower());
                 auto strHigh = static_cast<std::uint16_t>(35000.f * m_inputParser.getPower());
-                cro::GameController::rumbleStart(m_sharedData.inputBinding.controllerID, strLow, strHigh, 200);
+                //TODO track the last active controller
+                cro::GameController::rumbleStart(/*m_sharedData.inputBinding.controllerID*/lastControllerID, strLow, strHigh, 200);
             }
 
             //check if we hooked/sliced
@@ -1060,7 +1065,7 @@ void GolfState::handleMessage(const cro::Message& msg)
                 cro::App::getWindow().setMouseCaptured(true);
 
                 //make sure to set the correct controller
-                m_sharedData.inputBinding.controllerID = m_sharedData.controllerIDs[m_currentPlayer.player];
+                //m_sharedData.inputBinding.controllerID = m_sharedData.controllerIDs[m_currentPlayer.player];
             }
             else if (data.id == StateID::Options)
             {
@@ -5472,10 +5477,10 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
 
     //if the pause/options menu is open, don't take control
     //from the active input (this will be set when the state is closed)
-    if (getStateCount() == 1)
+    /*if (getStateCount() == 1)
     {
         m_sharedData.inputBinding.controllerID = m_sharedData.controllerIDs[player.player];
-    }
+    }*/
 
     //this just makes sure to update the direction indicator
     //regardless of whether or not we actually switched clubs

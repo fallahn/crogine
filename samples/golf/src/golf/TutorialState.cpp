@@ -158,7 +158,7 @@ bool TutorialState::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_CONTROLLERBUTTONUP)
     {
-        if (evt.cbutton.which == cro::GameController::deviceID(0))
+        //if (evt.cbutton.which == cro::GameController::deviceID(0))
         {
             switch (evt.cbutton.button)
             {
@@ -174,7 +174,7 @@ bool TutorialState::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_CONTROLLERBUTTONDOWN)
     {
-        if (evt.cbutton.which == cro::GameController::deviceID(0))
+        //if (evt.cbutton.which == cro::GameController::deviceID(0))
         {
             if (evt.cbutton.button == cro::GameController::ButtonA)
             {

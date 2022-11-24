@@ -136,7 +136,7 @@ ClubhouseState::ClubhouseState(cro::StateStack& ss, cro::State::Context ctx, Sha
 
     ctx.mainWindow.setMouseCaptured(false);
 
-    sd.inputBinding.controllerID = 0;
+    //sd.inputBinding.controllerID = 0;
     sd.baseState = StateID::Clubhouse;
     sd.mapDirectory = "pool";
 

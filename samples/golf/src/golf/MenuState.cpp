@@ -158,7 +158,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
  
     context.mainWindow.setMouseCaptured(false);
     
-    sd.inputBinding.controllerID = 0;
+    //sd.inputBinding.controllerID = 0;
     sd.baseState = StateID::Menu;
     sd.mapDirectory = "course_01";
 
@@ -360,6 +360,8 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
                     C.y = std::pow(1.f - strength, 5.f);
                     C.z = 1.f - std::pow(1.f - (0.02f + (strength * 0.98f)), 40.f);
                 }
+
+                ImGui::Text("Controller Count %lu", cro::GameController::getControllerCount());
 
                 auto size = glm::vec2(LabelTextureSize) * 2.f;
                 /*auto size = glm::vec2(256.f);
