@@ -178,7 +178,7 @@ R"(
         vec4 colour = v_colour;
 
         //colour.rgb = mix(colour.rgb, vec3(1.0, 0.0, 0.0), strength);
-        colour.rgb = vec3(1.0 - pow(1.0 - (0.1 + (strength * 0.9)), 30.0), pow(1.0 - strength, 5.0), 1.0 - pow(1.0 - (0.03 + (strength * 0.97)), 40.0));
+        //colour.rgb = vec3(1.0 - pow(1.0 - strength, 3.0), pow(1.0 - strength, 5.0), 1.0 - pow(1.0 - (0.1 + (strength * 0.9)), 40.0));
 
         colour.a *= u_alpha;
         colour = mix(vec4(DotColour, smoothstep(0.05, 0.15, v_colour.a * u_alpha) * 0.8), colour, alpha);

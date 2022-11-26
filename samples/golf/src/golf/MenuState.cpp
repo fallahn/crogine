@@ -356,9 +356,9 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
                 ImGui::ColorButton("cb", C);
                 if (ImGui::SliderFloat("Strength", &strength, 0.f, 1.f))
                 {
-                    C.x = 1.f - std::pow(1.f - (0.1f + (strength * 0.9f)), 30.f);
+                    C.x = 1.f - std::pow(1.f - strength, 3.f);
                     C.y = std::pow(1.f - strength, 5.f);
-                    C.z = 1.f - std::pow(1.f - (0.02f + (strength * 0.98f)), 40.f);
+                    C.z = 1.f - std::pow(1.f - (0.1f + (strength * 0.9f)), 40.f);
                 }
 
                 ImGui::Text("Controller Count %lu", cro::GameController::getControllerCount());

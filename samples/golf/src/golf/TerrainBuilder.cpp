@@ -1106,10 +1106,10 @@ void TerrainBuilder::threadFunc()
                         //v.colour = { 0.f, 0.4f * vertHeight, 1.f - vertHeight, 0.8f };
                         v.colour = 
                         { 
-                            //cro::Util::Easing::easeInQuint(std::max(0.f, (vertHeight - 0.5f) * 2.f)),
-                            0.f, //red is set as slope strength in shader
-                            0.2f,
-                            cro::Util::Easing::easeInQuint(std::min(1.f, vertHeight * 2.f)),
+                            cro::Util::Easing::easeInQuint(std::max(0.f, (vertHeight - 0.5f) * 2.f)),
+                            //0.f,
+                            0.5f,
+                            cro::Util::Easing::easeInQuint(0.8f + (std::min(1.f, vertHeight * 2.f) * 0.2f)),
                             0.8f
                         };
                     }
