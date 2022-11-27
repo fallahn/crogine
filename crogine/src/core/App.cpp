@@ -70,7 +70,7 @@ namespace
     //accurate than converting to a Time and
     //back as the underlying SDL timer only
     //supports milliseconds
-    const float frameTime = 1.f / 60.f;
+    constexpr float frameTime = 1.f / 60.f;
 
 #include "../detail/DefaultIcon.inl"
 
@@ -584,9 +584,11 @@ void App::handleEvents()
                     ci.joystickID = SDL_JoystickInstanceID(j);                    
                     ci.psLayout = Detail::isPSLayout(ci.controller);
 
-                    m_controllers[id] = ci;
-                    //SDL_GameControllerSetPlayerIndex(m_controllers[id].controller, id);
-                    //m_controllerCount++; //count is updated first (above)
+                    auto idx = SDL_GameControllerGetPlayerIndex(ci.controller);
+                    if (idx != -1)
+                    {
+                        m_controllers[idx] = ci;
+                    }
                 }
             }
             else
@@ -599,15 +601,7 @@ void App::handleEvents()
         {
             auto id = evt.cdevice.which;
 
-            std::int32_t controllerIndex = -1;
-            for (auto i = 0u; i < m_controllers.size(); ++i)
-            {
-                if (m_controllers[i].joystickID == id)
-                {
-                    controllerIndex = i;
-                    break;
-                }
-            }
+            std::int32_t controllerIndex = SDL_GameControllerGetPlayerIndex(SDL_GameControllerFromInstanceID(id));// -1;
 
             if (controllerIndex > -1 &&
                 m_controllers[controllerIndex].controller)
@@ -618,7 +612,6 @@ void App::handleEvents()
                 }
                 
                 SDL_GameControllerClose(m_controllers[controllerIndex].controller);
-                //m_controllerCount--; //count is updated first (above)
                 m_controllers[controllerIndex] = {};
 
                 
@@ -626,7 +619,6 @@ void App::handleEvents()
                 for (auto i = controllerIndex; i < GameController::MaxControllers - 1; ++i)
                 {
                     m_controllers[i] = m_controllers[i + 1];
-                    //SDL_GameControllerSetPlayerIndex(m_controllers[i].controller, i);
                 }
                 m_controllers.back() = {};
             }
