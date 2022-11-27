@@ -864,7 +864,7 @@ void BallSystem::doBallCollision(cro::Entity entity)
                 otherPos.y += Ball::Radius;
 
                 auto otherDir = ballPos - otherPos;
-                if (float testDist = glm::length2(otherDir); testDist < CollisionDist)
+                if (float testDist = glm::length2(otherDir); testDist < CollisionDist && testDist != 0)
                 {
                     float actualDist = std::sqrt(testDist);
                     auto norm = otherDir / actualDist;
@@ -872,6 +872,9 @@ void BallSystem::doBallCollision(cro::Entity entity)
 
                     tx.move(norm * penetration);
                     ball.velocity = glm::reflect(ball.velocity, norm) * 0.4f;
+
+                    CRO_ASSERT(!std::isnan(tx.getPosition().x), "");
+                    CRO_ASSERT(!std::isnan(ball.velocity.x), "");
                 }
             }
         }

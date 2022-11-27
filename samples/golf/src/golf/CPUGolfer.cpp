@@ -127,36 +127,36 @@ CPUGolfer::CPUGolfer(const InputParser& ip, const ActivePlayer& ap, const Collis
     m_offsetRotation    (cro::Util::Random::value(0, 1024))
 {
 #ifdef CRO_DEBUG_
-    //registerWindow([&]()
-    //    {
-    //        if (ImGui::Begin("CPU"))
-    //        {
-    //            ImGui::Text("State: %s", StateStrings[static_cast<std::int32_t>(m_state)].c_str());
-    //            //ImGui::Text("Wind Dot: %3.2f", debug.windDot);
-    //            //ImGui::Text("Target Diff: %3.2f", debug.diff);
-    //            //ImGui::Text("Search Distance: %3.2f", m_searchDistance);
-    //            //ImGui::Text("Target Distance: %3.3f", m_aimDistance);
-    //            ImGui::Text("Current Club: %s", Clubs[m_clubID].name.c_str());
-    //            ImGui::Separator();
-    //            //ImGui::Text("Wind Comp: %3.3f", debug.windComp);
-    //            //ImGui::Text("Slope: %3.3f", debug.slope);
-    //            //ImGui::Text("Slope Comp: %3.3f", debug.slopeComp);
-    //            ImGui::Text("Start Angle: %3.3f", m_aimAngle);
-    //            ImGui::Text("Target Angle: %3.3f", m_targetAngle);
-    //            ImGui::Text("Target Dot: %3.3f", debug.targetDot);
-    //            ImGui::Text("Current Angle: %3.3f", m_inputParser.getYaw());
-    //            ImGui::Text("Target Power: %3.3f", m_targetPower);
-    //            ImGui::Text("Target Accuracy: %3.3f", m_targetAccuracy);
-    //            ImGui::Separator();
-    //            auto target = m_target - m_activePlayer.position;
-    //            ImGui::Text("Target %3.3f, %3.3f, %3.3f", target.x, target.y, target.z);
-    //            target = m_predictionResult - m_activePlayer.position;
-    //            ImGui::Text("Prediction %3.3f, %3.3f, %3.3f", target.x, target.y, target.z);
-    //            float dist = glm::length(m_target - m_predictionResult);
-    //            ImGui::Text("Distance to targ %3.3f", dist);
-    //        }
-    //        ImGui::End();
-    //    });
+    registerWindow([&]()
+        {
+            if (ImGui::Begin("CPU"))
+            {
+                ImGui::Text("State: %s", StateStrings[static_cast<std::int32_t>(m_state)].c_str());
+                //ImGui::Text("Wind Dot: %3.2f", debug.windDot);
+                //ImGui::Text("Target Diff: %3.2f", debug.diff);
+                //ImGui::Text("Search Distance: %3.2f", m_searchDistance);
+                //ImGui::Text("Target Distance: %3.3f", m_aimDistance);
+                ImGui::Text("Current Club: %s", Clubs[m_clubID].name.c_str());
+                ImGui::Separator();
+                //ImGui::Text("Wind Comp: %3.3f", debug.windComp);
+                //ImGui::Text("Slope: %3.3f", debug.slope);
+                //ImGui::Text("Slope Comp: %3.3f", debug.slopeComp);
+                ImGui::Text("Start Angle: %3.3f", m_aimAngle);
+                ImGui::Text("Target Angle: %3.3f", m_targetAngle);
+                ImGui::Text("Target Dot: %3.3f", debug.targetDot);
+                ImGui::Text("Current Angle: %3.3f", m_inputParser.getYaw());
+                ImGui::Text("Target Power: %3.3f", m_targetPower);
+                ImGui::Text("Target Accuracy: %3.3f", m_targetAccuracy);
+                ImGui::Separator();
+                auto target = m_target - m_activePlayer.position;
+                ImGui::Text("Target %3.3f, %3.3f, %3.3f", target.x, target.y, target.z);
+                target = m_predictionResult - m_activePlayer.position;
+                ImGui::Text("Prediction %3.3f, %3.3f, %3.3f", target.x, target.y, target.z);
+                float dist = glm::length(m_target - m_predictionResult);
+                ImGui::Text("Distance to targ %3.3f", dist);
+            }
+            ImGui::End();
+        });
 #endif
 }
 
@@ -752,6 +752,8 @@ void CPUGolfer::aimDynamic(float dt)
         //or refine based on prediction
         else
         {
+            m_targetAngle = std::clamp(m_targetAngle, m_aimAngle - m_inputParser.getMaxRotation(), m_aimAngle + m_inputParser.getMaxRotation());
+
             //update input parser
             if (auto diff = std::abs(m_inputParser.getYaw() - m_targetAngle); diff > 0.05f
                 && m_aimTimer.elapsed() < MaxAimTime)
