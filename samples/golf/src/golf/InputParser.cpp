@@ -42,7 +42,7 @@ namespace
 {
     static constexpr float RotationSpeed = 1.2f;
     static constexpr float MaxRotation = 0.36f;
-    static constexpr std::int16_t DeadZone = 4000;
+    static constexpr std::int16_t DeadZone = 5000;
 
     static constexpr float MinPower = 0.01f;
     static constexpr float MaxPower = 1.f - MinPower;
@@ -163,8 +163,9 @@ void InputParser::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_CONTROLLERBUTTONDOWN)
     {
-        if (!m_isCPU/* &&
-            evt.cbutton.which == cro::GameController::deviceID(m_inputBinding.controllerID)*/)
+        //auto controllerID = std::min(cro::GameController::getControllerCount() - 1, m_inputBinding.playerID);
+        if (!m_isCPU /*&&
+            evt.cbutton.which == cro::GameController::deviceID(controllerID)*/)
         {
             if (evt.cbutton.button == m_inputBinding.buttons[InputBinding::Action])
             {
@@ -199,8 +200,9 @@ void InputParser::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_CONTROLLERBUTTONUP)
     {
-        if (!m_isCPU/* &&
-            evt.cbutton.which == cro::GameController::deviceID(m_inputBinding.controllerID)*/)
+        //auto controllerID = std::min(cro::GameController::getControllerCount() - 1, m_inputBinding.playerID);
+        if (!m_isCPU /*&&
+            evt.cbutton.which == cro::GameController::deviceID(controllerID)*/)
         {
             if (evt.cbutton.button == m_inputBinding.buttons[InputBinding::Action])
             {
@@ -257,14 +259,14 @@ void InputParser::handleEvent(const cro::Event& evt)
         }
     }*/  
 
-    else if (evt.type == SDL_MOUSEWHEEL)
+    /*else if (evt.type == SDL_MOUSEWHEEL)
     {
         m_mouseWheel += evt.wheel.y;
     }
     else if (evt.type == SDL_MOUSEMOTION)
     {
         m_mouseMove += evt.motion.xrel;
-    }
+    }*/
 }
 
 void InputParser::setHoleDirection(glm::vec3 dir)
@@ -573,16 +575,17 @@ void InputParser::checkControllerInput()
     //by controller if there is any controller input.
     m_analogueAmount = MinAcceleration + ((1.f - MinAcceleration) * m_inputAcceleration);
 
-    if (m_isCPU/* ||
-        !cro::GameController::isConnected(m_inputBinding.controllerID)*/)
+    if (m_isCPU ||
+        cro::GameController::getControllerCount() == 0)
     {
         return;
     }
 
+    auto controllerID = -1;// std::min(cro::GameController::getControllerCount() - 1, m_inputBinding.playerID);
 
     //left stick (xInput controller)
     auto startInput = m_inputFlags;
-    float xPos = cro::GameController::getAxisPosition(/*m_inputBinding.controllerID*/-1, cro::GameController::AxisLeftX);
+    float xPos = cro::GameController::getAxisPosition(controllerID, cro::GameController::AxisLeftX);
     if (xPos < -DeadZone)
     {
         m_inputFlags |= InputFlag::Left;
@@ -601,7 +604,7 @@ void InputParser::checkControllerInput()
         m_inputFlags &= ~InputFlag::Right;
     }
 
-    float yPos = cro::GameController::getAxisPosition(/*m_inputBinding.controllerID*/-1, cro::GameController::AxisLeftY);
+    float yPos = cro::GameController::getAxisPosition(controllerID, cro::GameController::AxisLeftY);
     if (yPos > (DeadZone))
     {
         m_inputFlags |= InputFlag::Down;

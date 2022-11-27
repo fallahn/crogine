@@ -601,7 +601,16 @@ void App::handleEvents()
         {
             auto id = evt.cdevice.which;
 
-            std::int32_t controllerIndex = SDL_GameControllerGetPlayerIndex(SDL_GameControllerFromInstanceID(id));// -1;
+            //as the device is disconnected we can't query SDL and have to find the index manually
+            std::int32_t controllerIndex = -1;// SDL_GameControllerGetPlayerIndex(SDL_GameControllerFromInstanceID(id));
+            for (auto i = 0; i < GameController::MaxControllers; ++i)
+            {
+                if (m_controllers[i].joystickID == id)
+                {
+                    controllerIndex = i;
+                    break;
+                }
+            }
 
             if (controllerIndex > -1 &&
                 m_controllers[controllerIndex].controller)
@@ -613,14 +622,6 @@ void App::handleEvents()
                 
                 SDL_GameControllerClose(m_controllers[controllerIndex].controller);
                 m_controllers[controllerIndex] = {};
-
-                
-                //all controller IDs after the ID removed now move down..
-                for (auto i = controllerIndex; i < GameController::MaxControllers - 1; ++i)
-                {
-                    m_controllers[i] = m_controllers[i + 1];
-                }
-                m_controllers.back() = {};
             }
 
             if (m_joysticks.count(id) > 0)

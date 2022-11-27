@@ -230,7 +230,7 @@ namespace cro
 
         std::array<ControllerInfo, GameController::MaxControllers> m_controllers = {};
         std::map<std::int32_t, SDL_Joystick*> m_joysticks;
-        std::size_t m_controllerCount;
+        std::int32_t m_controllerCount;
         friend class GameController;
 
         std::vector<std::pair<std::function<void()>, const GuiClient*>> m_statusControls;

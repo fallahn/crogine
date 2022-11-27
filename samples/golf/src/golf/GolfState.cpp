@@ -5335,6 +5335,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     auto localPlayer = (player.client == m_sharedData.clientConnection.connectionID);
     auto isCPU = m_sharedData.localConnectionData.playerData[player.player].isCPU;
 
+    m_sharedData.inputBinding.playerID = player.player;
     m_inputParser.setActive(localPlayer && !m_photoMode, isCPU);
     m_restoreInput = localPlayer; //if we're in photo mode should we restore input parser?
     Achievements::setActive(localPlayer && !isCPU && allowAchievements);

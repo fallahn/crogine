@@ -55,17 +55,20 @@ std::int16_t GameController::getAxisPosition(std::int32_t controllerIndex, std::
     {
         //return the average of all inputs
         std::int32_t sum = 0;
-        std::int32_t controllerCount = static_cast<std::int32_t>(getControllerCount());
+        std::int32_t controllerCount = getControllerCount();
 
         if (controllerCount == 0)
         {
             return 0;
         }
 
-
-        for (auto i = 0; i < controllerCount; ++i)
+        //there may be only 2 connected but indexed at 2/3 if 0 and 1 were disconnected mid-game
+        for (auto i = 0; i < /*controllerCount*/4; ++i)
         {
-            sum += SDL_GameControllerGetAxis(App::m_instance->m_controllers[i].controller, static_cast<SDL_GameControllerAxis>(axis));
+            if (App::m_instance->m_controllers[i].controller)
+            {
+                sum += SDL_GameControllerGetAxis(App::m_instance->m_controllers[i].controller, static_cast<SDL_GameControllerAxis>(axis));
+            }
         }
         return static_cast<std::int16_t>(sum / controllerCount);
     }
@@ -80,7 +83,7 @@ bool GameController::isButtonPressed(std::int32_t controllerIndex, std::int32_t 
 
     if (controllerIndex < 0)
     {
-        for (auto i = 0u; i < getControllerCount(); ++i)
+        for (auto i = 0; i < /*getControllerCount()*/4; ++i)
         {
             if (SDL_GameControllerGetButton(App::m_instance->m_controllers[i].controller, static_cast<SDL_GameControllerButton>(button)) == 1)
             {
@@ -251,7 +254,7 @@ std::string GameController::getName(std::int32_t controllerIndex)
     return "Unknown Device";
 }
 
-std::size_t GameController::getControllerCount()
+std::int32_t GameController::getControllerCount()
 {
     CRO_ASSERT(App::m_instance, "No app running");
     return App::m_instance->m_controllerCount;
