@@ -37,6 +37,7 @@ source distribution.
 #include <Social.hpp>
 
 #include <crogine/core/ConfigFile.hpp>
+#include <crogine/core/GameController.hpp>
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/ecs/components/Model.hpp>
 #include <crogine/ecs/components/Callback.hpp>
@@ -218,6 +219,23 @@ static const std::array BallTints =
 
 static constexpr float ViewportHeight = 360.f;
 static constexpr float ViewportHeightWide = 320.f;// 300.f;
+
+static inline std::int32_t activeControllerID(std::int32_t bestMatch)
+{
+    if (cro::GameController::isConnected(bestMatch))
+    {
+        return bestMatch;
+    }
+
+    for (auto i = 3; i >= 0; --i)
+    {
+        if (cro::GameController::isConnected(i))
+        {
+            return i;
+        }
+    }
+    return -1;
+}
 
 static inline glm::vec3 interpolate(glm::vec3 a, glm::vec3 b, float t)
 {

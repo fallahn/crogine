@@ -33,6 +33,7 @@ source distribution.
 #include "Clubs.hpp"
 #include "Terrain.hpp"
 #include "SharedStateData.hpp"
+#include "GameConsts.hpp"
 
 #include <crogine/core/GameController.hpp>
 #include <crogine/detail/glm/gtx/norm.hpp>
@@ -50,18 +51,6 @@ namespace
     static constexpr float MinAcceleration = 0.5f;
 
     const cro::Time DoubleTapTime = cro::milliseconds(200);
-
-    std::int32_t highestControllerID()
-    {
-        for (auto i = 3; i >= 0; --i)
-        {
-            if (cro::GameController::isConnected(i))
-            {
-                return i;
-            }
-        }
-        return -1;
-    }
 }
 
 InputParser::InputParser(const SharedStateData& sd, cro::MessageBus& mb)
@@ -175,7 +164,7 @@ void InputParser::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_CONTROLLERBUTTONDOWN)
     {
-        auto controllerID = cro::GameController::isConnected(m_inputBinding.playerID) ? m_inputBinding.playerID : highestControllerID();
+        auto controllerID = activeControllerID(m_inputBinding.playerID);
         if (!m_isCPU &&
             evt.cbutton.which == cro::GameController::deviceID(controllerID))
         {
@@ -212,7 +201,7 @@ void InputParser::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_CONTROLLERBUTTONUP)
     {
-        auto controllerID = cro::GameController::isConnected(m_inputBinding.playerID) ? m_inputBinding.playerID : highestControllerID();
+        auto controllerID = activeControllerID(m_inputBinding.playerID);
         if (!m_isCPU &&
             evt.cbutton.which == cro::GameController::deviceID(controllerID))
         {
@@ -593,7 +582,7 @@ void InputParser::checkControllerInput()
         return;
     }
 
-    auto controllerID = cro::GameController::isConnected(m_inputBinding.playerID) ? m_inputBinding.playerID : highestControllerID();
+    auto controllerID = activeControllerID(m_inputBinding.playerID);
 
     //left stick (xInput controller)
     auto startInput = m_inputFlags;

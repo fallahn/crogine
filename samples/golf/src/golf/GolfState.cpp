@@ -621,16 +621,8 @@ bool GolfState::handleEvent(const cro::Event& evt)
                 break;
             }
         }
-        /*else if (bid == 0)
-        {
-            if (evt.cbutton.button == cro::GameController::ButtonA)
-            {
-                toggleQuitReady();
-            }
-        }*/
     }
-    else if (evt.type == SDL_CONTROLLERBUTTONUP
-        /*&& evt.cbutton.which == cro::GameController::deviceID(m_sharedData.inputBinding.controllerID)*/)
+    else if (evt.type == SDL_CONTROLLERBUTTONUP)
     {
         hideMouse();
         switch (evt.cbutton.button)
@@ -640,7 +632,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
             showScoreboard(false);
             break;
         case cro::GameController::ButtonStart:
-        case cro::GameController::ButtonGuide: //TODO this could be from any controller as it brings up the overlay in steam big picture mode
+        case cro::GameController::ButtonGuide:
             requestStackPush(StateID::Pause);
             break;
         }
@@ -5335,7 +5327,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     auto localPlayer = (player.client == m_sharedData.clientConnection.connectionID);
     auto isCPU = m_sharedData.localConnectionData.playerData[player.player].isCPU;
 
-    m_sharedData.inputBinding.playerID = player.player;
+    m_sharedData.inputBinding.playerID = localPlayer ? player.player : 0; //this also affects who can emote, so if we're currently emoting when it's not our turn always be player 0(??)
     m_inputParser.setActive(localPlayer && !m_photoMode, isCPU);
     m_restoreInput = localPlayer; //if we're in photo mode should we restore input parser?
     Achievements::setActive(localPlayer && !isCPU && allowAchievements);
@@ -5475,13 +5467,6 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
 #endif
     }
 
-
-    //if the pause/options menu is open, don't take control
-    //from the active input (this will be set when the state is closed)
-    /*if (getStateCount() == 1)
-    {
-        m_sharedData.inputBinding.controllerID = m_sharedData.controllerIDs[player.player];
-    }*/
 
     //this just makes sure to update the direction indicator
     //regardless of whether or not we actually switched clubs
