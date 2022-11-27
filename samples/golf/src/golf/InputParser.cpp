@@ -50,6 +50,18 @@ namespace
     static constexpr float MinAcceleration = 0.5f;
 
     const cro::Time DoubleTapTime = cro::milliseconds(200);
+
+    std::int32_t highestControllerID()
+    {
+        for (auto i = 3; i >= 0; --i)
+        {
+            if (cro::GameController::isConnected(i))
+            {
+                return i;
+            }
+        }
+        return -1;
+    }
 }
 
 InputParser::InputParser(const SharedStateData& sd, cro::MessageBus& mb)
@@ -163,9 +175,9 @@ void InputParser::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_CONTROLLERBUTTONDOWN)
     {
-        //auto controllerID = std::min(cro::GameController::getControllerCount() - 1, m_inputBinding.playerID);
-        if (!m_isCPU /*&&
-            evt.cbutton.which == cro::GameController::deviceID(controllerID)*/)
+        auto controllerID = cro::GameController::isConnected(m_inputBinding.playerID) ? m_inputBinding.playerID : highestControllerID();
+        if (!m_isCPU &&
+            evt.cbutton.which == cro::GameController::deviceID(controllerID))
         {
             if (evt.cbutton.button == m_inputBinding.buttons[InputBinding::Action])
             {
@@ -200,9 +212,9 @@ void InputParser::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_CONTROLLERBUTTONUP)
     {
-        //auto controllerID = std::min(cro::GameController::getControllerCount() - 1, m_inputBinding.playerID);
-        if (!m_isCPU /*&&
-            evt.cbutton.which == cro::GameController::deviceID(controllerID)*/)
+        auto controllerID = cro::GameController::isConnected(m_inputBinding.playerID) ? m_inputBinding.playerID : highestControllerID();
+        if (!m_isCPU &&
+            evt.cbutton.which == cro::GameController::deviceID(controllerID))
         {
             if (evt.cbutton.button == m_inputBinding.buttons[InputBinding::Action])
             {
@@ -581,7 +593,7 @@ void InputParser::checkControllerInput()
         return;
     }
 
-    auto controllerID = -1;// std::min(cro::GameController::getControllerCount() - 1, m_inputBinding.playerID);
+    auto controllerID = cro::GameController::isConnected(m_inputBinding.playerID) ? m_inputBinding.playerID : highestControllerID();
 
     //left stick (xInput controller)
     auto startInput = m_inputFlags;
