@@ -1640,7 +1640,7 @@ void TutorialState::tutorialFour(cro::Entity root)
     auto entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>().setCroppingArea({ 0.f, 0.f, 0.f, 0.f });
-    entity.addComponent<cro::Text>(font).setString("The coloured lines indicate the strength and direction of the green's slope.");
+    entity.addComponent<cro::Text>(font).setString("The coloured lines indicate the direction of the green's slope.");
     entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     centreText(entity);
@@ -1676,13 +1676,14 @@ void TutorialState::tutorialFour(cro::Entity root)
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>().getVertexData() =
     {
-        cro::Vertex2D(glm::vec2(-60.f, 5.f), cro::Colour(1.f, 0.f, 1.f, 0.f)),
-        cro::Vertex2D(glm::vec2(60.f, -5.f), cro::Colour(0.f, 1.f, 0.f, 01.f))
+        cro::Vertex2D(glm::vec2(-60.f, 5.f), cro::Colour(1.f, 0.f, 0.9f, 0.f)),
+        cro::Vertex2D(glm::vec2(60.f, -5.f), cro::Colour(0.f, 0.05f, 1.f, 0.f))
     };
     entity.getComponent<cro::Drawable2D>().updateLocalBounds();
     entity.getComponent<cro::Drawable2D>().setPrimitiveType(GL_LINES);
     entity.getComponent<cro::Drawable2D>().setShader(&m_sharedData.sharedResources->shaders.get(ShaderID::TutorialSlope));
     entity.addComponent<UIElement>().relativePosition = { 0.5f, 0.5f };
+    entity.getComponent<UIElement>().absolutePosition = { 0.f, 10.f };
     entity.getComponent<UIElement>().depth = 0.01f;
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
     entity.addComponent<cro::Callback>().active = true;
@@ -1736,7 +1737,7 @@ void TutorialState::tutorialFour(cro::Entity root)
 
 
     //second tip text
-    entity = m_scene.createEntity();
+    /*entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>().setCroppingArea({ 0.f, 0.f, 0.f, 0.f });
     entity.addComponent<cro::Text>(font).setString("Use your aim to compensate for the slope.");
@@ -1766,7 +1767,7 @@ void TutorialState::tutorialFour(cro::Entity root)
     root.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     auto text02 = entity;
 
-    m_actionCallbacks.push_back([text02]() mutable { text02.getComponent<cro::Callback>().active = true; });
+    m_actionCallbacks.push_back([text02]() mutable { text02.getComponent<cro::Callback>().active = true; });*/
 
 
     //third tip text
@@ -1777,8 +1778,8 @@ void TutorialState::tutorialFour(cro::Entity root)
     entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     centreText(entity);
-    entity.addComponent<UIElement>().absolutePosition = { 0.f, UIBarHeight*5.5f };
-    entity.getComponent<UIElement>().relativePosition = { 0.5f, 0.f };
+    entity.addComponent<UIElement>().absolutePosition = { 0.f, /*UIBarHeight*5.5f*/-34.f };
+    entity.getComponent<UIElement>().relativePosition = { 0.5f, 0.5f };
     entity.getComponent<UIElement>().depth = 0.01f;
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
     bounds = cro::Text::getLocalBounds(entity);
@@ -1808,8 +1809,8 @@ void TutorialState::tutorialFour(cro::Entity root)
     entity.addComponent<cro::Drawable2D>().setCroppingArea({ 0.f, 0.f, 0.f, 0.f });
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("putt_flag");
     entity.addComponent<cro::SpriteAnimation>().play(0);
-    entity.addComponent<UIElement>().absolutePosition = { 0.f, std::floor(UIBarHeight * 6.f) };
-    entity.getComponent<UIElement>().relativePosition = { 0.5f, 0.f };
+    entity.addComponent<UIElement>().absolutePosition = { 0.f, /*std::floor(UIBarHeight * 6.f)*/-60.f };
+    entity.getComponent<UIElement>().relativePosition = { 0.5f, 0.5f };
     entity.getComponent<UIElement>().depth = 0.01f;
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
