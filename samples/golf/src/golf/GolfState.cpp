@@ -5294,6 +5294,8 @@ void GolfState::requestNextPlayer(const ActivePlayer& player)
 void GolfState::setCurrentPlayer(const ActivePlayer& player)
 {
     m_turnTimer.restart();
+    m_idleTimer.restart();
+    idleTime = cro::seconds(90.f);
 
     m_gameScene.getDirector<GolfSoundDirector>()->setActivePlayer(player.client, player.player);
     m_avatars[player.client][player.player].ballModel.getComponent<cro::Transform>().setScale(glm::vec3(1.f));
@@ -6081,6 +6083,9 @@ void GolfState::createTransition(const ActivePlayer& playerData)
 
 void GolfState::startFlyBy()
 {
+    m_idleTimer.restart();
+    idleTime = cro::seconds(90.f);
+
     //reset the zoom if not putting from tee
     m_cameras[CameraID::Player].getComponent<CameraFollower::ZoomData>().target = m_holeData[m_currentHole].puttFromTee ? PuttingZoom : 1.f;
     m_cameras[CameraID::Player].getComponent<cro::Callback>().active = true;
