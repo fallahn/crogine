@@ -766,8 +766,22 @@ void OptionsState::buildScene()
             e.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
         });
 
+    //delays reactivating the camera for one frame.
+    const auto refreshView =
+        [&]() 
+    {
+        auto ent = m_scene.createEntity();
+        ent.addComponent<cro::Callback>().active = true;
+        ent.getComponent<cro::Callback>().function =
+            [&](cro::Entity e, float)
+        {
+            m_scene.getActiveCamera().getComponent<cro::Camera>().active = true;
+            m_scene.destroyEntity(e);
+        };
+    };
+
     //tab callback functions
-    m_tabFunctions[0] = [&, showVideo, hideControls, hideAchievements, hideStats]() mutable
+    m_tabFunctions[0] = [&, showVideo, hideControls, hideAchievements, hideStats, refreshView]() mutable
     {
         //hide other tabs
         hideControls();
@@ -778,10 +792,13 @@ void OptionsState::buildScene()
         showVideo();
         uiSystem.setActiveGroup(MenuID::Video);
 
+        //refresh visible objects for one frame
+        refreshView();
+
         m_currentTabFunction = 0;
     };
 
-    m_tabFunctions[1] = [&, hideVideo, showControls, hideAchievements, hideStats]() mutable
+    m_tabFunctions[1] = [&, hideVideo, showControls, hideAchievements, hideStats, refreshView]() mutable
     {
         //hide other tabs
         hideVideo();
@@ -791,12 +808,14 @@ void OptionsState::buildScene()
         //reset position for control button ent
         showControls();
 
+        refreshView();
+
         uiSystem.setActiveGroup(MenuID::Controls);
 
         m_currentTabFunction = 1;
     };
 
-    m_tabFunctions[2] = [&, hideVideo, hideControls, showAchievements, hideStats]() mutable
+    m_tabFunctions[2] = [&, hideVideo, hideControls, showAchievements, hideStats, refreshView]() mutable
     {
         //hide other tabs
         hideVideo();
@@ -805,12 +824,15 @@ void OptionsState::buildScene()
 
         //show achievment tab
         showAchievements();
+
+        refreshView();
+
         uiSystem.setActiveGroup(MenuID::Achievements);
 
         m_currentTabFunction = 2;
     };
 
-    m_tabFunctions[3] = [&, hideVideo, hideControls, hideAchievements, showStats]() mutable
+    m_tabFunctions[3] = [&, hideVideo, hideControls, hideAchievements, showStats, refreshView]() mutable
     {
         //hide other tabs
         hideVideo();
@@ -819,6 +841,9 @@ void OptionsState::buildScene()
 
         //show stats tab
         showStats();
+
+        refreshView();
+
         uiSystem.setActiveGroup(MenuID::Stats);
 
         m_currentTabFunction = 3;
@@ -997,6 +1022,7 @@ void OptionsState::buildScene()
         [&](cro::Entity e, float)
     {
         m_scene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Controls);
+        m_scene.getActiveCamera().getComponent<cro::Camera>().isStatic = true;
         e.getComponent<cro::Callback>().active = false;
         m_scene.destroyEntity(e);
     };

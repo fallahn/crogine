@@ -1034,9 +1034,6 @@ void GolfState::handleMessage(const cro::Message& msg)
                 || data.id == StateID::Tutorial)
             {
                 cro::App::getWindow().setMouseCaptured(true);
-
-                //make sure to set the correct controller
-                //m_sharedData.inputBinding.controllerID = m_sharedData.controllerIDs[m_currentPlayer.player];
             }
             else if (data.id == StateID::Options)
             {
