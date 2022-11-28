@@ -3440,13 +3440,13 @@ void MenuState::createPlayerConfigMenu()
 void MenuState::updateLocalAvatars(std::uint32_t mouseEnter, std::uint32_t mouseExit)
 {
     //these can have fixed positions as they are attached to a menuEntity[] which is UI scaled
-    static constexpr glm::vec3 EditButtonOffset(-51.f, -56.f, 0.f);
-    static constexpr glm::vec3 CPUTextOffset(56.f, -56.f, 0.f);
-    static constexpr glm::vec3 CPUButtonOffset(44.f, -64.f, 0.f);
-    static constexpr glm::vec3 CPUHighlightOffset(46.f, -62.f, 0.f);
+    static constexpr glm::vec3 EditButtonOffset(-51.f, -58.f, 0.f);
+    static constexpr glm::vec3 CPUTextOffset(56.f, -58.f, 0.f);
+    static constexpr glm::vec3 CPUButtonOffset(44.f, -66.f, 0.f);
+    static constexpr glm::vec3 CPUHighlightOffset(46.f, -64.f, 0.f);
     static constexpr glm::vec3 AvatarOffset = EditButtonOffset + glm::vec3(-68.f, -18.f, 0.f);
-    static constexpr glm::vec3 BGOffset = AvatarOffset + glm::vec3(1.f, 7.f, -0.02f);
-    static constexpr glm::vec3 ControlIconOffset = AvatarOffset + glm::vec3(132.f, 42.f, 0.f);
+    static constexpr glm::vec3 BGOffset = AvatarOffset + glm::vec3(1.f, 9.f, -0.02f);
+    static constexpr glm::vec3 ControlIconOffset = AvatarOffset + glm::vec3(131.f, 44.f, 0.f);
     static constexpr float LineHeight = 11.f; //-8.f
 
     for (auto e : m_avatarListEntities)
@@ -3470,7 +3470,7 @@ void MenuState::updateLocalAvatars(std::uint32_t mouseEnter, std::uint32_t mouse
         //player name
         constexpr auto nameWidth = NameWidth + 30.f; //can't adjust the const because it's used elsewhere...
         auto entity = m_uiScene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition(localPos + glm::vec3(12.f, 1.f, 0.f));
+        entity.addComponent<cro::Transform>().setPosition(localPos + glm::vec3(12.f, 3.f, 0.f));
         entity.addComponent<cro::Drawable2D>();
         entity.addComponent<cro::Text>(font).setString(m_sharedData.localConnectionData.playerData[i].name.substr(0, ConstVal::MaxStringChars));
         entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
@@ -3588,14 +3588,28 @@ void MenuState::updateLocalAvatars(std::uint32_t mouseEnter, std::uint32_t mouse
 
         //ball preview
         auto thumbSize = glm::vec2(m_ballThumbTexture.getSize() / 2u);
+        cro::FloatRect textureRect = { (i % 2) * thumbSize.x, (i / 2) * thumbSize.y, thumbSize.x, thumbSize.y };
+
         entity = m_uiScene.createEntity();
         entity.addComponent<cro::Transform>().setPosition(localPos + ControlIconOffset);
         entity.addComponent<cro::Drawable2D>();
         entity.addComponent<cro::Sprite>(m_ballThumbTexture.getTexture());
-        entity.getComponent<cro::Sprite>().setTextureRect({ (i % 2) * thumbSize.x, (i / 2) * thumbSize.y, thumbSize.x, thumbSize.y });
-        bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
-        entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
+        entity.getComponent<cro::Sprite>().setTextureRect(textureRect);
+        entity.getComponent<cro::Transform>().setOrigin({ textureRect.width / 2.f, textureRect.height / 2.f });
         m_ballThumbCams[i].getComponent<cro::Callback>().setUserData<std::int32_t>(static_cast<std::int32_t>(m_ballIndices[i]));
+
+        entity.addComponent<cro::Callback>().active = true;
+        entity.getComponent<cro::Callback>().function =
+            [i](cro::Entity e, float)
+        {
+            auto size = glm::vec2(e.getComponent<cro::Sprite>().getTexture()->getSize()) / 2.f; //because it's a 2x2 sized grid
+            cro::FloatRect rect = { (i % 2) * size.x, (i / 2) * size.y, size.x, size.y };
+            e.getComponent<cro::Sprite>().setTextureRect(rect);
+            e.getComponent<cro::Transform>().setOrigin({ rect.width / 2.f, rect.height / 2.f });
+
+            float scale = static_cast<float>(BallThumbSize) / size.y;
+            e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
+        };
 
         m_avatarMenu.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
         m_avatarListEntities.push_back(entity);

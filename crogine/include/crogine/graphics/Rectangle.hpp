@@ -129,5 +129,11 @@ namespace cro
         return rect.transform(mat);
     }
 
+    template <typename T>
+    Rectangle<T> operator * (const Rectangle<T>& rect, T scale)
+    {
+        return { rect.left * scale, rect.bottom * scale, rect.width * scale, rect.height * scale };
+    }
+
 #include "Rectangle.inl"
 }

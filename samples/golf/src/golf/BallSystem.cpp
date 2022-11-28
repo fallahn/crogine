@@ -842,7 +842,7 @@ void BallSystem::doBallCollision(cro::Entity entity)
 
     auto& tx = entity.getComponent<cro::Transform>();
     auto& ball = entity.getComponent<Ball>();
-    static constexpr float MinDist = 0.5f * 0.5f;// (Ball::Radius * 10.f)* (Ball::Radius * 10.f);
+    static constexpr float MinDist = 5.f * 5.f;// 0.5f * 0.5f;// (Ball::Radius * 10.f)* (Ball::Radius * 10.f);
     static constexpr float CollisionDist = (Ball::Radius * 1.7f) * (Ball::Radius * 1.7f);
 
     //don't collide until we moved from our start position
