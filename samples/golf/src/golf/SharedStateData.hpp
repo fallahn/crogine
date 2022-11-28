@@ -145,7 +145,6 @@ struct SharedStateData final
     std::uint64_t inviteID = 0;
     ConnectionData localConnectionData;
     cro::String targetIP = "255.255.255.255";
-    std::array<std::int32_t, 4u> controllerIDs = {};
 
     //sent to server if hosting else rx'd from server
     //for brevity this only contains a directory name

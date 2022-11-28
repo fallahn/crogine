@@ -180,28 +180,6 @@ private:
 
     glm::vec2 m_viewScale;
 
-    struct ControllerCallbackID final
-    {
-        enum
-        {
-            EnterLeft, ExitLeft,
-            EnterRight, ExitRight,
-            //this order is IMPORTANT
-            Inc01,
-            Inc02,
-            Inc03,
-            Inc04,
-
-            Dec01,
-            Dec02,
-            Dec03,
-            Dec04,
-
-            Count
-        };
-    };
-    std::array<std::uint32_t, ControllerCallbackID::Count> m_controllerCallbackIDs = {};
-
     void addSystems();
     void loadAssets();
     void createScene();
@@ -229,7 +207,9 @@ private:
     //----ball, avatar and hair funcs are in MenuCustomisation.cpp----//
     std::array<std::size_t, ConnectionData::MaxPlayers> m_ballIndices = {}; //index into the model list, not ballID
     cro::Entity m_ballCam;
+    std::array<cro::Entity, 4u> m_ballThumbCams = {};
     cro::RenderTexture m_ballTexture;
+    cro::RenderTexture m_ballThumbTexture;
     void createBallScene();
     std::int32_t indexFromBallID(std::uint32_t);
 

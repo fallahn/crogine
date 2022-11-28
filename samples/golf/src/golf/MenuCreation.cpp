@@ -1400,68 +1400,9 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
     //we need to create the controller icon callbacks here
     //so we can assign/reassign them dynamically if needs be
     auto& uiSystem = *m_uiScene.getSystem<cro::UISystem>();
-    m_controllerCallbackIDs[ControllerCallbackID::EnterLeft] =
-        uiSystem.addCallback([&, cursorEnt](cro::Entity e) mutable
-            {
-                e.getComponent<cro::Sprite>() = m_sprites[SpriteID::ArrowLeftHighlight];
-                e.getComponent<cro::AudioEmitter>().play();
-
-                //hide the cursor
-                cursorEnt.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
-            });
-    m_controllerCallbackIDs[ControllerCallbackID::ExitLeft] =
-        uiSystem.addCallback([&](cro::Entity e)
-            {
-                e.getComponent<cro::Sprite>() = m_sprites[SpriteID::ArrowLeft];
-            });
-    m_controllerCallbackIDs[ControllerCallbackID::EnterRight] =
-        uiSystem.addCallback([&, cursorEnt](cro::Entity e) mutable
-            {
-                e.getComponent<cro::Sprite>() = m_sprites[SpriteID::ArrowRightHighlight];
-                e.getComponent<cro::AudioEmitter>().play();
-
-                //hide the cursor
-                cursorEnt.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
-            });
-    m_controllerCallbackIDs[ControllerCallbackID::ExitRight] =
-        uiSystem.addCallback([&](cro::Entity e)
-            {
-                e.getComponent<cro::Sprite>() = m_sprites[SpriteID::ArrowRight];
-            });
-
 
     for (auto i = 0u; i < 4u; ++i)
     {
-        m_controllerCallbackIDs[ControllerCallbackID::Dec01 + i] =
-            uiSystem.addCallback([&, i](cro::Entity e, const cro::ButtonEvent& evt)
-                {
-                    if (activated(evt))
-                    {
-                        auto controllerCount = static_cast<std::int32_t>(cro::GameController::getControllerCount());
-                        if (controllerCount > 0)
-                        {
-                            m_sharedData.controllerIDs[i] = (m_sharedData.controllerIDs[i] + (controllerCount - 1)) % controllerCount;
-                        }
-
-                        m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
-                    }
-                });
-
-        m_controllerCallbackIDs[ControllerCallbackID::Inc01 + i] =
-            uiSystem.addCallback([&, i](cro::Entity e, const cro::ButtonEvent& evt)
-                {
-                    if (activated(evt))
-                    {
-                        auto controllerCount = static_cast<std::int32_t>(cro::GameController::getControllerCount());
-                        if (controllerCount > 0)
-                        {
-                            m_sharedData.controllerIDs[i] = (m_sharedData.controllerIDs[i] + 1) % controllerCount;
-                        }
-
-                        m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
-                    }
-                });
-
         m_avatarEditCallbacks[i] =
             uiSystem.addCallback([&, i](cro::Entity e, const cro::ButtonEvent& evt)
                 {
@@ -3645,121 +3586,16 @@ void MenuState::updateLocalAvatars(std::uint32_t mouseEnter, std::uint32_t mouse
         m_avatarListEntities.push_back(entity);
 
 
-        //input type icon
+        //ball preview
+        auto thumbSize = glm::vec2(m_ballThumbTexture.getSize() / 2u);
         entity = m_uiScene.createEntity();
         entity.addComponent<cro::Transform>().setPosition(localPos + ControlIconOffset);
         entity.addComponent<cro::Drawable2D>();
-        entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::Keyboard];
-        entity.addComponent<cro::SpriteAnimation>();
+        entity.addComponent<cro::Sprite>(m_ballThumbTexture.getTexture());
+        entity.getComponent<cro::Sprite>().setTextureRect({ (i % 2) * thumbSize.x, (i / 2) * thumbSize.y, thumbSize.x, thumbSize.y });
         bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
         entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
-
-        struct ControlUserData final
-        {
-            std::size_t prevControllerCount = 0;
-            std::array<cro::Entity, 3u> arrowEntities = {}; //includes number indicator
-        };
-
-        entity.addComponent<cro::Callback>().active = true;
-        entity.getComponent<cro::Callback>().setUserData<ControlUserData>();
-        entity.getComponent<cro::Callback>().function =
-            [&, i](cro::Entity e, float)
-        {
-            auto& controlData = e.getComponent<cro::Callback>().getUserData<ControlUserData>();
-            auto controllerCount = cro::GameController::getControllerCount();
-            if (controllerCount != controlData.prevControllerCount)
-            {
-                //we need to delete specifically the button
-                //arrows should we be going to < 2 controllers
-                if (controllerCount < 2u && controlData.arrowEntities[0].isValid())
-                {
-                    //remove from main list first
-                    m_avatarListEntities.erase(std::remove_if(m_avatarListEntities.begin(), m_avatarListEntities.end(),
-                        [&controlData](const cro::Entity a)
-                        {
-                            return (a == controlData.arrowEntities[0] || a == controlData.arrowEntities[1]);
-                        }), m_avatarListEntities.end());
-
-                    m_uiScene.destroyEntity(controlData.arrowEntities[0]);
-                    m_uiScene.destroyEntity(controlData.arrowEntities[1]);
-                    m_uiScene.destroyEntity(controlData.arrowEntities[2]);
-                    controlData.arrowEntities = {};
-                }
-
-
-                if (controllerCount == 0)
-                {
-                    e.getComponent<cro::Sprite>() = m_sprites[SpriteID::Keyboard];
-                    e.getComponent<cro::SpriteAnimation>().play(0);
-                }
-                else
-                {
-                    e.getComponent<cro::Sprite>() = m_sprites[SpriteID::Controller];
-                    e.getComponent<cro::SpriteAnimation>().play(IS_PS(m_sharedData.controllerIDs[i]) ? 1 : 0);
-
-                    //add buttons for selecting controller ID
-                    if (controllerCount > 1)
-                    {
-                        auto ent = m_uiScene.createEntity();
-                        ent.addComponent<cro::Transform>().setPosition({ -22.f, 7.f, 0.f });
-                        ent.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
-                        ent.addComponent<cro::Drawable2D>();
-                        ent.addComponent<cro::Sprite>() = m_sprites[SpriteID::ArrowLeft];
-
-                        ent.addComponent<cro::UIInput>().area = m_sprites[SpriteID::ArrowLeft].getTextureBounds();
-                        ent.getComponent<cro::UIInput>().setGroup(MenuID::Avatar);
-                        ent.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = m_controllerCallbackIDs[ControllerCallbackID::EnterLeft];
-                        ent.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = m_controllerCallbackIDs[ControllerCallbackID::ExitLeft];
-                        ent.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = m_controllerCallbackIDs[ControllerCallbackID::Dec01 + i];
-
-                        e.getComponent<cro::Transform>().addChild(ent.getComponent<cro::Transform>());
-                        m_avatarListEntities.push_back(ent);
-                        controlData.arrowEntities[0] = ent;
-
-                        ent = m_uiScene.createEntity();
-                        ent.addComponent<cro::Transform>().setPosition({ 55.f, 7.f, 0.f });
-                        ent.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
-                        ent.addComponent<cro::Drawable2D>();
-                        ent.addComponent<cro::Sprite>() = m_sprites[SpriteID::ArrowRight];
-
-                        ent.addComponent<cro::UIInput>().area = m_sprites[SpriteID::ArrowRight].getTextureBounds();
-                        ent.getComponent<cro::UIInput>().setGroup(MenuID::Avatar);
-                        ent.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = m_controllerCallbackIDs[ControllerCallbackID::EnterRight];
-                        ent.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = m_controllerCallbackIDs[ControllerCallbackID::ExitRight];
-                        ent.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = m_controllerCallbackIDs[ControllerCallbackID::Inc01 + i];
-
-                        e.getComponent<cro::Transform>().addChild(ent.getComponent<cro::Transform>());
-                        m_avatarListEntities.push_back(ent);
-                        controlData.arrowEntities[1] = ent;
-
-                        //add indicator for current controller ID
-                        ent = m_uiScene.createEntity();
-                        ent.addComponent<cro::Transform>().setPosition({ 25.f, 6.f, 0.f });
-                        ent.addComponent<cro::Drawable2D>();
-                        ent.addComponent<cro::Text>(m_sharedData.sharedResources->fonts.get(FontID::Info)).setCharacterSize(InfoTextSize);
-                        ent.getComponent<cro::Text>().setFillColour(TextNormalColour);
-                        ent.addComponent<cro::Callback>().active = true;
-                        ent.getComponent<cro::Callback>().function =
-                            [&, i](cro::Entity numEnt, float)
-                        {
-                            numEnt.getComponent<cro::Text>().setString(std::to_string(m_sharedData.controllerIDs[i] + 1));
-                            centreText(numEnt);
-                        };
-
-                        e.getComponent<cro::Transform>().addChild(ent.getComponent<cro::Transform>());
-                        m_avatarListEntities.push_back(ent);
-                        controlData.arrowEntities[2] = ent;
-
-                        //auto select next available controller based on this player ID
-                        m_sharedData.controllerIDs[i] = std::min(i, static_cast<std::uint32_t>(controllerCount) - 1);
-                    }
-                }
-
-                auto bb = e.getComponent<cro::Sprite>().getTextureBounds();
-                e.getComponent<cro::Transform>().setOrigin({ std::floor(bb.width / 2.f), std::floor(bb.height / 2.f) });
-            }
-            controlData.prevControllerCount = controllerCount;
-        };
+        m_ballThumbCams[i].getComponent<cro::Callback>().setUserData<std::int32_t>(static_cast<std::int32_t>(m_ballIndices[i]));
 
         m_avatarMenu.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
         m_avatarListEntities.push_back(entity);

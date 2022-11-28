@@ -173,6 +173,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
         if (idx > -1)
         {
             m_ballIndices[i] = idx;
+            m_ballThumbCams[i].getComponent<cro::Callback>().setUserData<std::int32_t>(idx);
         }
         else
         {
@@ -363,7 +364,10 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
 
                 ImGui::Text("Controller Count %lu", cro::GameController::getControllerCount());
 
-                auto size = glm::vec2(LabelTextureSize) * 2.f;
+                auto size = glm::vec2(m_ballThumbTexture.getSize());
+                ImGui::Image(m_ballThumbTexture.getTexture(), {size.x, size.y}, {0.f, 1.f}, {1.f, 0.f});
+
+                size = glm::vec2(LabelTextureSize) * 2.f;
                 /*auto size = glm::vec2(256.f);
                 auto* tex = Achievements::getIcon(AchievementStrings[1]).texture;
                 if (tex)*/
@@ -534,14 +538,7 @@ bool MenuState::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_CONTROLLERDEVICEREMOVED)
     {
-        //controller IDs are automatically reassigned
-        //so we just need to make sure no one is out of range
-        for (auto& c : m_sharedData.controllerIDs)
-        {
-            //be careful with this cast because we might assign - 1 as an ID...
-            //note that the controller count hasn't been updated yet...
-            c = std::min(static_cast<std::int32_t>(cro::GameController::getControllerCount() - 2), c);
-        }
+
     }
     else if (evt.type == SDL_CONTROLLERBUTTONUP)
     {
@@ -703,6 +700,14 @@ void MenuState::render()
     m_ballTexture.clear(cro::Colour::Magenta);
     m_backgroundScene.render();
     m_ballTexture.display();
+
+    m_ballThumbTexture.clear(cro::Colour::Red);
+    for (auto i = 0u; i < m_sharedData.localConnectionData.playerCount; ++i)
+    {
+        m_backgroundScene.setActiveCamera(m_ballThumbCams[i]);
+        m_backgroundScene.render();
+    }
+    m_ballThumbTexture.display();
 
     //and avatar preview
     m_avatarTexture.clear(cro::Colour::Transparent);

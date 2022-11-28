@@ -351,14 +351,7 @@ bool ClubhouseState::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_CONTROLLERDEVICEREMOVED)
     {
-        //controller IDs are automatically reassigned
-        //so we just need to make sure no one is out of range
-        for (auto& c : m_sharedData.controllerIDs)
-        {
-            //be careful with this cast because we might assign - 1 as an ID...
-            //note that the controller count hasn't been updated yet...
-            c = std::min(static_cast<std::int32_t>(cro::GameController::getControllerCount() - 2), c);
-        }
+
     }
     else if (evt.type == SDL_CONTROLLERBUTTONUP)
     {

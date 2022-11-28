@@ -354,21 +354,7 @@ bool BilliardsState::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_CONTROLLERDEVICEREMOVED)
     {
-        //check if any players are using the controller
-        //and reassign any still connected devices
-        for (auto i = 0; i < 4; ++i)
-        {
-            if (evt.cdevice.which == cro::GameController::deviceID(i))
-            {
-                for (auto& idx : m_sharedData.controllerIDs)
-                {
-                    idx = std::max(0, i - 1);
-                }
-                //update the input parser in case this player is active
-                //m_sharedData.inputBinding.controllerID = m_sharedData.controllerIDs[m_currentPlayer.player];
-                break;
-            }
-        }
+
     }
     else if (evt.type == SDL_MOUSEBUTTONDOWN)
     {

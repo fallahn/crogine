@@ -626,7 +626,7 @@ void InputParser::checkControllerInput()
     }
 
     float len2 = (xPos * xPos) + (yPos * yPos);
-    static const float MinLen2 = (LeftThumbDeadZone * LeftThumbDeadZone);
+    static const float MinLen2 = static_cast<float>(LeftThumbDeadZone * LeftThumbDeadZone);
     if (len2 > MinLen2)
     {
         m_analogueAmount = std::pow(std::sqrt(len2) / (cro::GameController::AxisMax - LeftThumbDeadZone), 3.f);

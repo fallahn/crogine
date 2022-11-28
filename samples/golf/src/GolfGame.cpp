@@ -561,7 +561,6 @@ bool GolfGame::initialise()
 
     m_sharedData.clientConnection.netClient.create(ConstVal::MaxClients);
     m_sharedData.sharedResources = std::make_unique<cro::ResourceCollection>();
-    std::fill(m_sharedData.controllerIDs.begin(), m_sharedData.controllerIDs.end(), 0);
 
     //texture used to hold name tags
     for (auto& t : m_sharedData.nameTextures)
