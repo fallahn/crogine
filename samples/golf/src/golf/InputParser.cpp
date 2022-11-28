@@ -43,7 +43,6 @@ namespace
 {
     static constexpr float RotationSpeed = 1.2f;
     static constexpr float MaxRotation = 0.36f;
-    static constexpr std::int16_t DeadZone = 5000;
 
     static constexpr float MinPower = 0.01f;
     static constexpr float MaxPower = 1.f - MinPower;
@@ -587,7 +586,7 @@ void InputParser::checkControllerInput()
     //left stick (xInput controller)
     auto startInput = m_inputFlags;
     float xPos = cro::GameController::getAxisPosition(controllerID, cro::GameController::AxisLeftX);
-    if (xPos < -DeadZone)
+    if (xPos < -LeftThumbDeadZone)
     {
         m_inputFlags |= InputFlag::Left;
     }
@@ -596,7 +595,7 @@ void InputParser::checkControllerInput()
         m_inputFlags &= ~InputFlag::Left;
     }
 
-    if (xPos > DeadZone)
+    if (xPos > LeftThumbDeadZone)
     {
         m_inputFlags |= InputFlag::Right;
     }
@@ -606,7 +605,7 @@ void InputParser::checkControllerInput()
     }
 
     float yPos = cro::GameController::getAxisPosition(controllerID, cro::GameController::AxisLeftY);
-    if (yPos > (DeadZone))
+    if (yPos > (LeftThumbDeadZone))
     {
         m_inputFlags |= InputFlag::Down;
         m_inputFlags &= ~InputFlag::Up;
@@ -616,7 +615,7 @@ void InputParser::checkControllerInput()
         m_inputFlags &= ~InputFlag::Down;
     }
 
-    if (yPos < (-DeadZone))
+    if (yPos < (-LeftThumbDeadZone))
     {
         m_inputFlags |= InputFlag::Up;
         m_inputFlags &= ~InputFlag::Down;
@@ -627,10 +626,10 @@ void InputParser::checkControllerInput()
     }
 
     float len2 = (xPos * xPos) + (yPos * yPos);
-    static const float MinLen2 = (DeadZone * DeadZone);
+    static const float MinLen2 = (LeftThumbDeadZone * LeftThumbDeadZone);
     if (len2 > MinLen2)
     {
-        m_analogueAmount = std::sqrt(len2) / (cro::GameController::AxisMax - DeadZone);
+        m_analogueAmount = std::pow(std::sqrt(len2) / (cro::GameController::AxisMax - LeftThumbDeadZone), 3.f);
     }
 
 

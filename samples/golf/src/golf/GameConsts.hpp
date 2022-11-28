@@ -102,6 +102,12 @@ static const cro::Colour SkyTop(0.678f, 0.851f, 0.718f);
 static const cro::Colour SkyBottom(0.2f, 0.304f, 0.612f);
 static const cro::Colour DropShadowColour(0.396f, 0.263f, 0.184f);
 
+//default values from DX sdk
+static constexpr std::int16_t LeftThumbDeadZone = 7849;
+static constexpr std::int16_t RightThumbDeadZone = 8689;
+static constexpr std::int16_t TriggerDeadZone = 30;
+
+
 struct LobbyPager final
 {
     cro::Entity rootNode;

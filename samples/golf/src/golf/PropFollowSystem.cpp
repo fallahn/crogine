@@ -104,10 +104,14 @@ void PropFollowSystem::process(float dt)
 
                 //some paths might be aircraft, such as a blimp, so
                 //only snap these below a threshold
+                //or boats which need to be above water level
                 if (pos.y < 15.f)
                 {
                     auto result = m_collisionMesh.getTerrain(pos);
-                    pos.y = result.height;
+                    if (result.height > WaterLevel)
+                    {
+                        pos.y = result.height;
+                    }
                 }
 
                 entity.getComponent<cro::Transform>().setPosition(pos);
