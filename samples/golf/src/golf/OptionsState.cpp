@@ -301,41 +301,33 @@ bool OptionsState::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_CONTROLLERBUTTONUP)
     {
-        //if (evt.cbutton.which == cro::GameController::deviceID(0))
+        switch (evt.cbutton.button)
         {
-        
-            switch (evt.cbutton.button)
-            {
-            default: break;
-            case cro::GameController::ButtonB:
-                closeWindow();
-                return false;
-            }
+        default: break;
+        case cro::GameController::ButtonB:
+            closeWindow();
+            return false;
         }
     }
     else if (evt.type == SDL_CONTROLLERBUTTONDOWN)
     {
-        //if (evt.cbutton.which == cro::GameController::deviceID(0))
+        switch (evt.cbutton.button)
         {
-
-            switch (evt.cbutton.button)
+        default: break;
+        case cro::GameController::ButtonLeftShoulder:
+            if (!m_updatingKeybind)
             {
-            default: break;
-            case cro::GameController::ButtonLeftShoulder:
-                if (!m_updatingKeybind)
-                {
-                    m_currentTabFunction = (m_currentTabFunction + (m_tabFunctions.size() - 1)) % m_tabFunctions.size();
-                    m_tabFunctions[m_currentTabFunction]();
-                }
-                break;
-            case cro::GameController::ButtonRightShoulder:
-                if (!m_updatingKeybind)
-                {
-                    m_currentTabFunction = (m_currentTabFunction + 1) % m_tabFunctions.size();
-                    m_tabFunctions[m_currentTabFunction]();
-                }
-                break;
+                m_currentTabFunction = (m_currentTabFunction + (m_tabFunctions.size() - 1)) % m_tabFunctions.size();
+                m_tabFunctions[m_currentTabFunction]();
             }
+            break;
+        case cro::GameController::ButtonRightShoulder:
+            if (!m_updatingKeybind)
+            {
+                m_currentTabFunction = (m_currentTabFunction + 1) % m_tabFunctions.size();
+                m_tabFunctions[m_currentTabFunction]();
+            }
+            break;
         }
     }
     else if (evt.type == SDL_MOUSEBUTTONDOWN)

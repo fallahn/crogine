@@ -596,30 +596,28 @@ bool GolfState::handleEvent(const cro::Event& evt)
     else if (evt.type == SDL_CONTROLLERBUTTONDOWN)
     {
         resetIdle();
-        //if (auto bid = cro::GameController::deviceID(m_sharedData.inputBinding.controllerID); bid == evt.cbutton.which)
+
+        switch (evt.cbutton.button)
         {
-            switch (evt.cbutton.button)
-            {
-            default: break;
-            case cro::GameController::ButtonBack:
-                showScoreboard(true);
-                break;
-            case cro::GameController::ButtonB:
-                showScoreboard(false);
-                break;
-            case cro::GameController::DPadUp:
-            case cro::GameController::DPadLeft:
-                scrollScores(-19);
-                break;
-            case cro::GameController::DPadDown:
-            case cro::GameController::DPadRight:
-                scrollScores(19);
-                break;
-            case cro::GameController::ButtonA:
-                toggleQuitReady();
-                lastControllerID = cro::GameController::controllerID(evt.cbutton.which);
-                break;
-            }
+        default: break;
+        case cro::GameController::ButtonBack:
+            showScoreboard(true);
+            break;
+        case cro::GameController::ButtonB:
+            showScoreboard(false);
+            break;
+        case cro::GameController::DPadUp:
+        case cro::GameController::DPadLeft:
+            scrollScores(-19);
+            break;
+        case cro::GameController::DPadDown:
+        case cro::GameController::DPadRight:
+            scrollScores(19);
+            break;
+        case cro::GameController::ButtonA:
+            toggleQuitReady();
+            lastControllerID = cro::GameController::controllerID(evt.cbutton.which);
+            break;
         }
     }
     else if (evt.type == SDL_CONTROLLERBUTTONUP)
@@ -652,21 +650,6 @@ bool GolfState::handleEvent(const cro::Event& evt)
 
     else if (evt.type == SDL_CONTROLLERDEVICEREMOVED)
     {
-        //check if any players are using the controller
-        //and reassign any still connected devices
-        for (auto i = 0; i < 4; ++i)
-        {
-            if (evt.cdevice.which == cro::GameController::deviceID(i))
-            {
-                for (auto& idx : m_sharedData.controllerIDs)
-                {
-                    idx = std::max(0, i - 1);
-                }
-                //update the input parser in case this player is active
-                //m_sharedData.inputBinding.controllerID = m_sharedData.controllerIDs[m_currentPlayer.player];
-                break;
-            }
-        }
         m_emoteWheel.refreshLabels(); //displays labels if no controllers connected
 
         //pause the game
@@ -688,25 +671,21 @@ bool GolfState::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_JOYAXISMOTION)
     {
-        //if (evt.caxis.which == cro::GameController::deviceID(m_sharedData.inputBinding.controllerID))
+        if (std::abs(evt.caxis.value) > 10000)
         {
-            
+            hideMouse();
+            resetIdle();
+        }
+
+        switch (evt.caxis.axis)
+        {
+        default: break;
+        case cro::GameController::AxisRightY:
             if (std::abs(evt.caxis.value) > 10000)
             {
-                hideMouse();
-                resetIdle();
+                scrollScores(cro::Util::Maths::sgn(evt.caxis.value) * 19);
             }
-
-            switch (evt.caxis.axis)
-            {
-            default: break;
-            case cro::GameController::AxisRightY:
-                if (std::abs(evt.caxis.value) > 10000)
-                {
-                    scrollScores(cro::Util::Maths::sgn(evt.caxis.value) * 19);
-                }
-                break;
-            }
+            break;
         }
     }
 
@@ -785,8 +764,8 @@ void GolfState::handleMessage(const cro::Message& msg)
             {
                 auto strLow = static_cast<std::uint16_t>(50000.f * m_inputParser.getPower());
                 auto strHigh = static_cast<std::uint16_t>(35000.f * m_inputParser.getPower());
-                //TODO track the last active controller
-                cro::GameController::rumbleStart(/*m_sharedData.inputBinding.controllerID*/lastControllerID, strLow, strHigh, 200);
+
+                cro::GameController::rumbleStart(lastControllerID, strLow, strHigh, 200);
             }
 
             //check if we hooked/sliced

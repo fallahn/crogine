@@ -369,8 +369,7 @@ bool PlaylistState::handleEvent(const cro::Event& evt)
 #endif
         }
     }
-    else if (evt.type == SDL_CONTROLLERBUTTONUP
-        /*&& evt.cbutton.which == cro::GameController::deviceID(m_sharedData.inputBinding.controllerID)*/)
+    else if (evt.type == SDL_CONTROLLERBUTTONUP)
     {
         switch (evt.cbutton.button)
         {

@@ -106,8 +106,7 @@ bool MessageOverlayState::handleEvent(const cro::Event& evt)
             return false;
         }
     }
-    else if (evt.type == SDL_CONTROLLERBUTTONUP
-        /*&& evt.cbutton.which == cro::GameController::deviceID(m_sharedData.inputBinding.controllerID)*/)
+    else if (evt.type == SDL_CONTROLLERBUTTONUP)
     {
         if (evt.cbutton.button == cro::GameController::ButtonB)
         {

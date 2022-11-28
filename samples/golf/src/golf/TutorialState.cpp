@@ -158,28 +158,22 @@ bool TutorialState::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_CONTROLLERBUTTONUP)
     {
-        //if (evt.cbutton.which == cro::GameController::deviceID(0))
+        switch (evt.cbutton.button)
         {
-            switch (evt.cbutton.button)
-            {
-            default: break;
-            case cro::GameController::ButtonB:
-                doCurrentAction();
-                break;
-            case cro::GameController::ButtonStart:
-                requestStackPush(StateID::Pause);
-                break;
-            }
+        default: break;
+        case cro::GameController::ButtonB:
+            doCurrentAction();
+            break;
+        case cro::GameController::ButtonStart:
+            requestStackPush(StateID::Pause);
+            break;
         }
     }
     else if (evt.type == SDL_CONTROLLERBUTTONDOWN)
     {
-        //if (evt.cbutton.which == cro::GameController::deviceID(0))
+        if (evt.cbutton.button == cro::GameController::ButtonA)
         {
-            if (evt.cbutton.button == cro::GameController::ButtonA)
-            {
-                doCurrentAction();
-            }
+            doCurrentAction();
         }
     }
     else if (evt.type == SDL_MOUSEMOTION)

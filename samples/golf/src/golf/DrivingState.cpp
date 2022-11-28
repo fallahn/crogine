@@ -2544,8 +2544,8 @@ void DrivingState::hitBall()
 
     float lowFreq = 50000.f * m_inputParser.getPower();
     float hiFreq = 35000.f * m_inputParser.getPower();
-    //TODO track the last controller to trigger this
-    cro::GameController::rumbleStart(/*m_sharedData.inputBinding.controllerID*/lastControllerID, static_cast<std::uint16_t>(lowFreq), static_cast<std::uint16_t>(hiFreq), 200);
+
+    cro::GameController::rumbleStart(lastControllerID, static_cast<std::uint16_t>(lowFreq), static_cast<std::uint16_t>(hiFreq), 200);
 
     //from here the hook value is just used for UI feedback
     //so we want to flip it as appropriate with the current avatar
