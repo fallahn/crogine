@@ -121,6 +121,23 @@ bool TutorialState::handleEvent(const cro::Event& evt)
         return false;
     }
 
+    auto updateButtonIcon = [&](std::int32_t controllerID)
+    {
+        std::int32_t animID = 0;
+        if (IS_PS(controllerID))
+        {
+            animID = 1;
+        }
+
+        cro::Command cmd;
+        cmd.targetFlags = CommandID::UI::PlayerIcon;
+        cmd.action = [animID](cro::Entity e, float)
+        {
+            e.getComponent<cro::SpriteAnimation>().play(animID);
+        };
+        m_scene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+    };
+
     if (evt.type == SDL_KEYUP)
     {
         switch (evt.key.keysym.sym)
@@ -175,12 +192,18 @@ bool TutorialState::handleEvent(const cro::Event& evt)
         {
             doCurrentAction();
         }
+        updateButtonIcon(cro::GameController::controllerID(evt.cbutton.which));
     }
     else if (evt.type == SDL_MOUSEMOTION)
     {
         cro::App::getWindow().setMouseCaptured(false);
         m_mouseVisible = true;
         m_mouseClock.restart();
+    }
+
+    else if (evt.type == SDL_CONTROLLERAXISMOTION)
+    {
+        updateButtonIcon(cro::GameController::controllerID(evt.caxis.which));
     }
 
     m_scene.forwardEvent(evt);
@@ -379,6 +402,8 @@ void TutorialState::buildScene()
         buttonEnt.addComponent<cro::Drawable2D>();
         buttonEnt.addComponent<cro::Sprite>() = m_buttonSprites[ButtonID::A];
         buttonEnt.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+        buttonEnt.addComponent<cro::SpriteAnimation>();
+        buttonEnt.addComponent<cro::CommandTarget>().ID = CommandID::UI::PlayerIcon;
         buttonEnt.addComponent<cro::Callback>().active = true;
         buttonEnt.getComponent<cro::Callback>().setUserData<float>(0.f);
         buttonEnt.getComponent<cro::Callback>().function =
@@ -1091,6 +1116,8 @@ void TutorialState::tutorialThree(cro::Entity root)
         buttonEnt.addComponent<cro::Drawable2D>();
         buttonEnt.addComponent<cro::Sprite>() = m_buttonSprites[ButtonID::A];
         buttonEnt.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+        buttonEnt.addComponent<cro::SpriteAnimation>();
+        buttonEnt.addComponent<cro::CommandTarget>().ID = CommandID::UI::PlayerIcon;
         buttonEnt.addComponent<cro::Callback>().active = true;
         buttonEnt.getComponent<cro::Callback>().setUserData<float>(0.f);
         buttonEnt.getComponent<cro::Callback>().function = callback;
@@ -1257,6 +1284,8 @@ void TutorialState::tutorialThree(cro::Entity root)
         buttonEnt.addComponent<cro::Drawable2D>();
         buttonEnt.addComponent<cro::Sprite>() = m_buttonSprites[ButtonID::A];
         buttonEnt.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+        buttonEnt.addComponent<cro::SpriteAnimation>();
+        buttonEnt.addComponent<cro::CommandTarget>().ID = CommandID::UI::PlayerIcon;
         buttonEnt.addComponent<cro::Callback>().active = true;
         buttonEnt.getComponent<cro::Callback>().setUserData<float>(0.f);
         buttonEnt.getComponent<cro::Callback>().function =
@@ -1419,6 +1448,8 @@ void TutorialState::tutorialThree(cro::Entity root)
         buttonEnt.addComponent<cro::Drawable2D>();
         buttonEnt.addComponent<cro::Sprite>() = m_buttonSprites[ButtonID::A];
         buttonEnt.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+        buttonEnt.addComponent<cro::SpriteAnimation>();
+        buttonEnt.addComponent<cro::CommandTarget>().ID = CommandID::UI::PlayerIcon;
         buttonEnt.addComponent<cro::Callback>().active = true;
         buttonEnt.getComponent<cro::Callback>().setUserData<float>(0.f);
         buttonEnt.getComponent<cro::Callback>().function = 
