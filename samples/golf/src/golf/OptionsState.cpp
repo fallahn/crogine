@@ -332,6 +332,19 @@ bool OptionsState::handleEvent(const cro::Event& evt)
         case cro::GameController::ButtonB:
             closeWindow();
             return false;
+        case cro::GameController::ButtonLeftShoulder:
+        case cro::GameController::ButtonRightShoulder:
+        {
+            auto ent = m_scene.createEntity();
+            ent.addComponent<cro::Callback>().active = true;
+            ent.getComponent<cro::Callback>().function =
+                [&](cro::Entity e, float)
+            {
+                m_scene.getActiveCamera().getComponent<cro::Camera>().active = true;
+                m_scene.destroyEntity(e);
+            };
+        }
+            break;
         }
     }
     else if (evt.type == SDL_CONTROLLERBUTTONDOWN)

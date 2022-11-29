@@ -43,6 +43,10 @@ std::int32_t GameController::deviceID(std::int32_t controllerID)
 
 std::int32_t GameController::controllerID(std::int32_t joystickID)
 {
+    //hmmmmmmmmm either this or steam is incorrect as using this to query
+    //steam for controller type returns the wrong device..
+    
+    //return SDL_JoystickGetPlayerIndex(SDL_JoystickFromInstanceID(joystickID));
     return SDL_GameControllerGetPlayerIndex(SDL_GameControllerFromInstanceID(joystickID));
 }
 

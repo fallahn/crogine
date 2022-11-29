@@ -128,7 +128,7 @@ bool TutorialState::handleEvent(const cro::Event& evt)
         {
             animID = 1;
         }
-
+        
         cro::Command cmd;
         cmd.targetFlags = CommandID::UI::PlayerIcon;
         cmd.action = [animID](cro::Entity e, float)
@@ -286,7 +286,7 @@ void TutorialState::buildScene()
         cro::SpriteSheet spriteSheet;
         spriteSheet.loadFromFile("assets/golf/sprites/controller_buttons.spt", m_sharedData.sharedResources->textures);
 
-        if (IS_PS(0))
+        /*if (IS_PS(0))
         {
             m_buttonSprites[ButtonID::A] = spriteSheet.getSprite("cross");
             m_buttonSprites[ButtonID::B] = spriteSheet.getSprite("circle");
@@ -295,8 +295,9 @@ void TutorialState::buildScene()
             m_buttonSprites[ButtonID::Select] = spriteSheet.getSprite("sel_ps");
             m_buttonSprites[ButtonID::Start] = spriteSheet.getSprite("start_ps");
         }
-        else
+        else*/
         {
+            //we'll play an aniation for the correct frame based on controller movement
             m_buttonSprites[ButtonID::A] = spriteSheet.getSprite("button_a");
             m_buttonSprites[ButtonID::B] = spriteSheet.getSprite("button_b");
             m_buttonSprites[ButtonID::X] = spriteSheet.getSprite("button_x");
@@ -402,7 +403,7 @@ void TutorialState::buildScene()
         buttonEnt.addComponent<cro::Drawable2D>();
         buttonEnt.addComponent<cro::Sprite>() = m_buttonSprites[ButtonID::A];
         buttonEnt.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
-        buttonEnt.addComponent<cro::SpriteAnimation>();
+        buttonEnt.addComponent<cro::SpriteAnimation>().play(0);
         buttonEnt.addComponent<cro::CommandTarget>().ID = CommandID::UI::PlayerIcon;
         buttonEnt.addComponent<cro::Callback>().active = true;
         buttonEnt.getComponent<cro::Callback>().setUserData<float>(0.f);
@@ -1116,7 +1117,7 @@ void TutorialState::tutorialThree(cro::Entity root)
         buttonEnt.addComponent<cro::Drawable2D>();
         buttonEnt.addComponent<cro::Sprite>() = m_buttonSprites[ButtonID::A];
         buttonEnt.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
-        buttonEnt.addComponent<cro::SpriteAnimation>();
+        buttonEnt.addComponent<cro::SpriteAnimation>().play(0);
         buttonEnt.addComponent<cro::CommandTarget>().ID = CommandID::UI::PlayerIcon;
         buttonEnt.addComponent<cro::Callback>().active = true;
         buttonEnt.getComponent<cro::Callback>().setUserData<float>(0.f);
@@ -1284,7 +1285,7 @@ void TutorialState::tutorialThree(cro::Entity root)
         buttonEnt.addComponent<cro::Drawable2D>();
         buttonEnt.addComponent<cro::Sprite>() = m_buttonSprites[ButtonID::A];
         buttonEnt.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
-        buttonEnt.addComponent<cro::SpriteAnimation>();
+        buttonEnt.addComponent<cro::SpriteAnimation>().play(0);
         buttonEnt.addComponent<cro::CommandTarget>().ID = CommandID::UI::PlayerIcon;
         buttonEnt.addComponent<cro::Callback>().active = true;
         buttonEnt.getComponent<cro::Callback>().setUserData<float>(0.f);
@@ -1448,7 +1449,7 @@ void TutorialState::tutorialThree(cro::Entity root)
         buttonEnt.addComponent<cro::Drawable2D>();
         buttonEnt.addComponent<cro::Sprite>() = m_buttonSprites[ButtonID::A];
         buttonEnt.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
-        buttonEnt.addComponent<cro::SpriteAnimation>();
+        buttonEnt.addComponent<cro::SpriteAnimation>().play(0);
         buttonEnt.addComponent<cro::CommandTarget>().ID = CommandID::UI::PlayerIcon;
         buttonEnt.addComponent<cro::Callback>().active = true;
         buttonEnt.getComponent<cro::Callback>().setUserData<float>(0.f);
