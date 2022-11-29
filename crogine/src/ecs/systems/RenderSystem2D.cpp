@@ -42,7 +42,6 @@ source distribution.
 #include "../../graphics/shaders/Sprite.hpp"
 
 #include <string>
-#include <algorithm>
 
 namespace
 {

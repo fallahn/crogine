@@ -125,6 +125,10 @@ private:
 
     std::vector<std::string> m_labelStrings;
 
+    cro::Entity m_psController;
+    cro::Entity m_psOverlay;
+    cro::Entity m_xboxOverlay;
+
     glm::vec2 m_viewScale;
     cro::Entity m_rootNode;
     void buildScene();

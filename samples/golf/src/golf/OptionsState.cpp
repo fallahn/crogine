@@ -256,6 +256,31 @@ bool OptionsState::handleEvent(const cro::Event& evt)
     }
 
 
+    auto toggleControllerIcon = [&](std::int32_t controllerID)
+    {
+        if (IS_PS(controllerID))
+        {
+            m_psController.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+            m_scene.getActiveCamera().getComponent<cro::Camera>().active = true;
+
+            if (m_sharedData.baseState == StateID::Clubhouse)
+            {
+                m_psOverlay.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+                m_xboxOverlay.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+            }
+        }
+        else
+        {
+            m_psController.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+
+            if (m_sharedData.baseState == StateID::Clubhouse)
+            {
+                m_psOverlay.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+                m_xboxOverlay.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+            }
+        }
+    };
+
     auto closeWindow = [&]()
     {
         if (!m_updatingKeybind)
@@ -329,6 +354,12 @@ bool OptionsState::handleEvent(const cro::Event& evt)
             }
             break;
         }
+
+        toggleControllerIcon(cro::GameController::controllerID(evt.cbutton.which));
+    }
+    else if (evt.type == SDL_CONTROLLERAXISMOTION)
+    {
+        toggleControllerIcon(cro::GameController::controllerID(evt.caxis.which));
     }
     else if (evt.type == SDL_MOUSEBUTTONDOWN)
     {
@@ -509,7 +540,7 @@ void OptionsState::buildScene()
 {
     auto& mb = getContext().appInstance.getMessageBus();
 
-    m_scene.addSystem<cro::UISystem>(mb);// ->setActiveControllerID(m_sharedData.inputBinding.controllerID);
+    m_scene.addSystem<cro::UISystem>(mb);
     m_scene.addSystem<cro::CommandSystem>(mb);
     m_scene.addSystem<cro::CallbackSystem>(mb);
     m_scene.addSystem<cro::SpriteSystem2D>(mb);
@@ -1960,8 +1991,17 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
         auto entity = m_scene.createEntity();
         entity.addComponent<cro::Transform>().setPosition({ 236.f, 32.f, HighlightOffset });
         entity.addComponent<cro::Drawable2D>();
-        entity.addComponent<cro::Sprite>() = IS_PS(0) ? spriteSheet.getSprite("extra_buttons_ps") : spriteSheet.getSprite("extra_buttons");
+        entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("extra_buttons");
         parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+        m_xboxOverlay = entity;
+
+        entity = m_scene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ 236.f, 32.f, HighlightOffset });
+        entity.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+        entity.addComponent<cro::Drawable2D>();
+        entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("extra_buttons_ps");
+        parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+        m_psOverlay = entity;
     }
     else
     {
@@ -1978,18 +2018,16 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
     }
 
     //display a PS controller if we found one
-    //TODO track the last controller activated and update this accordingly
-    /*if (IS_PS(m_sharedData.inputBinding.controllerID))
-    {
-        auto entity = m_scene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition({236.f, 14.f, HighlightOffset / 2.f});
-        entity.addComponent<cro::Drawable2D>();
-        entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("controller_ps");
-        parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-    }*/
+    auto entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({236.f, 14.f, HighlightOffset / 2.f});
+    entity.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("controller_ps");
+    parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_psController = entity;
 
     //prev club
-    auto entity = createHighlight(glm::vec2(258.f, 96.f), InputBinding::PrevClub);
+    entity = createHighlight(glm::vec2(258.f, 96.f), InputBinding::PrevClub);
     entity.getComponent<cro::UIInput>().setSelectionIndex(5);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = uiSystem.addCallback(
         [&,infoEnt, buttonChangeEnt](cro::Entity e) mutable
@@ -2000,6 +2038,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
             centreText(infoEnt);
 
             buttonChangeEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
+            m_scene.getActiveCamera().getComponent<cro::Camera>().active = true;
         });
 
 
@@ -2015,6 +2054,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
             centreText(infoEnt);
 
             buttonChangeEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
+            m_scene.getActiveCamera().getComponent<cro::Camera>().active = true;
         });
 
     //aim left
@@ -2029,6 +2069,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
             centreText(infoEnt);
 
             buttonChangeEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
+            m_scene.getActiveCamera().getComponent<cro::Camera>().active = true;
         });
 
     //aim right
@@ -2043,6 +2084,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
             centreText(infoEnt);
 
             buttonChangeEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
+            m_scene.getActiveCamera().getComponent<cro::Camera>().active = true;
         });
 
     //swing
@@ -2057,6 +2099,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
             centreText(infoEnt);
 
             buttonChangeEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
+            m_scene.getActiveCamera().getComponent<cro::Camera>().active = true;
         });
 
     if (m_sharedData.baseState == StateID::Clubhouse)
@@ -2073,6 +2116,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
                 centreText(infoEnt);
 
                 buttonChangeEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
+                m_scene.getActiveCamera().getComponent<cro::Camera>().active = true;
             });
 
         //back spin
@@ -2087,6 +2131,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
                 centreText(infoEnt);
 
                 buttonChangeEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
+                m_scene.getActiveCamera().getComponent<cro::Camera>().active = true;
             });
 
         //switch view
@@ -2304,6 +2349,8 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
             ss.precision(2);
             ss << std::setw(2) << m_sharedData.mouseSpeed;
             m_tooltips[ToolTipID::MouseSpeed].getComponent<cro::Text>().setString(ss.str());
+            
+            m_scene.getActiveCamera().getComponent<cro::Camera>().active = true;
         }
         else
         {
@@ -2373,6 +2420,8 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
             {
                 m_sharedData.invertX = !m_sharedData.invertX;
                 m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
+
+                m_scene.getActiveCamera().getComponent<cro::Camera>().active = true;
             }
         });
 
@@ -2406,6 +2455,8 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
             {
                 m_sharedData.invertY = !m_sharedData.invertY;
                 m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
+
+                m_scene.getActiveCamera().getComponent<cro::Camera>().active = true;
             }
         });
 
@@ -2966,6 +3017,8 @@ void OptionsState::updateToolTip(cro::Entity e, std::int32_t tipID)
 
             m_tooltips[tipID].getComponent<ToolTip>().target = e;
         }
+
+        m_scene.getActiveCamera().getComponent<cro::Camera>().active = true;
     }
     else
     {
