@@ -875,7 +875,7 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
 
     //this callback is overridden for the avatar previews
     mouseEnter = m_uiScene.getSystem<cro::UISystem>()->addCallback(
-        [entity, avatarEnt](cro::Entity e) mutable
+        [&, entity, avatarEnt](cro::Entity e) mutable
         {
             auto basePos = avatarEnt.getComponent<cro::Transform>().getPosition();
             basePos -= avatarEnt.getComponent<cro::Transform>().getOrigin();
@@ -893,7 +893,7 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
 
     //and this one is used for regular buttons.
     auto mouseEnterCursor = m_uiScene.getSystem<cro::UISystem>()->addCallback(
-        [entity](cro::Entity e) mutable
+        [&, entity](cro::Entity e) mutable
         {
             e.getComponent<cro::AudioEmitter>().play();
             entity.getComponent<cro::Transform>().setPosition(e.getComponent<cro::Transform>().getPosition() + CursorOffset);
@@ -2422,12 +2422,14 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     auto exit = mouseExit;
 
     mouseEnter = m_uiScene.getSystem<cro::UISystem>()->addCallback(
-        [entity](cro::Entity e) mutable
+        [&, entity](cro::Entity e) mutable
         {
             e.getComponent<cro::AudioEmitter>().play();
             entity.getComponent<cro::Transform>().setPosition(e.getComponent<cro::Transform>().getPosition() + CursorOffset);
             entity.getComponent<cro::Sprite>().setColour(cro::Colour::White);
             entity.getComponent<cro::Transform>().setScale({ 1.f, 1.f });
+
+            m_uiScene.getActiveCamera().getComponent<cro::Camera>().active = true;
         });
 
     mouseExit = m_uiScene.getSystem<cro::UISystem>()->addCallback(
@@ -2551,6 +2553,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
         }
 
         e.getComponent<cro::Callback>().active = confirmEnt.getComponent<cro::Callback>().active;
+        m_uiScene.getActiveCamera().getComponent<cro::Camera>().active = confirmEnt.getComponent<cro::Callback>().active;
     };
     confirmEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     auto shadeEnt = entity;
@@ -4557,4 +4560,7 @@ void MenuState::refreshUI()
         e.getComponent<cro::Callback>().active = true;
     };
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+    //makes sure to refresh for at least one frame if cam currently static
+    m_uiScene.getActiveCamera().getComponent<cro::Camera>().active = true;
 }

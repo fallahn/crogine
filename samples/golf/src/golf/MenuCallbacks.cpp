@@ -83,9 +83,6 @@ void MenuCallback::operator()(cro::Entity e, float dt)
             auto* msg = cro::App::getInstance().getMessageBus().post<SystemEvent>(MessageID::SystemMessage);
             msg->type = SystemEvent::MenuChanged;
             msg->data = menuData.targetMenu;
-
-            //set camera back to static
-            //menuContext.uiScene->getActiveCamera().getComponent<cro::Camera>().isStatic = true;
         }
     }
     else
@@ -94,8 +91,8 @@ void MenuCallback::operator()(cro::Entity e, float dt)
         menuData.currentTime = std::max(0.f, menuData.currentTime - (dt * Speed));
         e.getComponent<cro::Transform>().setScale({ cro::Util::Easing::easeInQuint(menuData.currentTime), 1.f });
 
-        //menuContext.uiScene->getActiveCamera().getComponent<cro::Camera>().isStatic = false;
-        //menuContext.uiScene->getActiveCamera().getComponent<cro::Camera>().active = true;
+        menuContext.uiScene->getActiveCamera().getComponent<cro::Camera>().isStatic = false;
+        menuContext.uiScene->getActiveCamera().getComponent<cro::Camera>().active = true;
 
         if (menuData.currentTime == 0)
         {

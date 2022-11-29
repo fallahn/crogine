@@ -640,6 +640,11 @@ void MenuState::handleMessage(const cro::Message& msg)
         if (data.type == SystemEvent::MenuChanged)
         {
             refreshUI();
+
+            if (data.data == MenuID::Lobby)
+            {
+                m_uiScene.getActiveCamera().getComponent<cro::Camera>().isStatic = true;
+            }
         }
     }
 
@@ -701,7 +706,7 @@ void MenuState::render()
     m_backgroundScene.render();
     m_ballTexture.display();
 
-    m_ballThumbTexture.clear(cro::Colour::Red);
+    m_ballThumbTexture.clear(cro::Colour::Transparent);
     for (auto i = 0u; i < m_sharedData.localConnectionData.playerCount; ++i)
     {
         m_backgroundScene.setActiveCamera(m_ballThumbCams[i]);
