@@ -272,6 +272,7 @@ void CreditsState::buildScene()
         textEnt.addComponent<cro::Text>(largeFont).setString(entry.title);
         textEnt.getComponent<cro::Text>().setCharacterSize(UITextSize);
         textEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
+        textEnt.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
         e.getComponent<cro::Transform>().addChild(textEnt.getComponent<cro::Transform>());
         bounds = cro::Text::getLocalBounds(textEnt);
 
@@ -286,7 +287,7 @@ void CreditsState::buildScene()
         textEnt.addComponent<cro::Text>(smallFont).setString(str);
         textEnt.getComponent<cro::Text>().setCharacterSize(LabelTextSize);
         textEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
-        //textEnt.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+        textEnt.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
         e.getComponent<cro::Transform>().addChild(textEnt.getComponent<cro::Transform>());
         bounds.width = std::max(bounds.width, cro::Text::getLocalBounds(textEnt).width);
         bounds.height += cro::Text::getLocalBounds(textEnt).height;
@@ -307,7 +308,7 @@ void CreditsState::buildScene()
         }
     }
     scrollNode.getComponent<cro::Callback>().setUserData<const float>(-position.y);
-    scrollNode.getComponent<cro::Transform>().setOrigin({ width / 2.f, 0.f });
+    //scrollNode.getComponent<cro::Transform>().setOrigin({ std::floor(width / 2.f), 0.f });
 
     auto updateView = [&, rootNode](cro::Camera& cam) mutable
     {

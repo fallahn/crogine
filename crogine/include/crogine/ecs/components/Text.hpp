@@ -215,7 +215,7 @@ namespace cro
         /*!
         \brief Returns the Text's current Alignment
         */
-        Alignment getAlignment() const { return m_alignment; }
+        Alignment getAlignment() const { return Alignment(m_context.alignment); }
 
     private:
 
@@ -233,8 +233,6 @@ namespace cro
             };
         };
         std::uint16_t m_dirtyFlags;
-
-        Alignment m_alignment;
 
         void updateVertices(Drawable2D&);
 

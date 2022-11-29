@@ -29,6 +29,7 @@ source distribution.
 
 #include "TextConstruction.hpp"
 
+#include <crogine/ecs/components/Text.hpp>
 #include <crogine/detail/glm/gtx/norm.hpp>
 
 using namespace cro;
@@ -61,6 +62,38 @@ FloatRect Detail::Text::updateVertices(std::vector<Vertex2D>& dst, TextContext& 
     std::vector<Vertex2D> outlineVerts;
     std::vector<Vertex2D> shadowVerts;
     std::vector<Vertex2D> characterVerts;
+
+    std::size_t rowStart = 0; //index of first vert in current row
+    const auto realign = [&](float diff)
+    {
+        for (auto i = rowStart; i < characterVerts.size(); ++i)
+        {
+            characterVerts[i].position.x -= diff;
+
+            if (context.outlineThickness != 0)
+            {
+                outlineVerts[i].position.x -= diff;
+            }
+
+            if (glm::length2(context.shadowOffset) != 0)
+            {
+                shadowVerts[i].position.x -= diff;
+            }
+        }
+    };
+    const auto eol = [&]()
+    {
+        if (context.alignment == std::int32_t(cro::Text::Alignment::Centre))
+        {
+            float diff = std::floor((characterVerts.back().position.x - characterVerts[rowStart].position.x) / 2.f);
+            realign(diff);
+        }
+        else if (context.alignment == std::int32_t(cro::Text::Alignment::Right))
+        {
+            float diff = std::floor(characterVerts.back().position.x - characterVerts[rowStart].position.x);
+            realign(diff);
+        }
+    };
 
     const auto& texture = context.font->getTexture(context.charSize);
     float xOffset = static_cast<float>(context.font->getGlyph(L' ', context.charSize, context.bold, context.outlineThickness).advance);
@@ -100,6 +133,10 @@ FloatRect Detail::Text::updateVertices(std::vector<Vertex2D>& dst, TextContext& 
             case '\n':
                 y -= yOffset + context.verticalSpacing;
                 x = 0.f;
+
+                eol();
+
+                rowStart = characterVerts.size();
                 break;
             }
 
@@ -134,7 +171,7 @@ FloatRect Detail::Text::updateVertices(std::vector<Vertex2D>& dst, TextContext& 
         const auto& glyph = context.font->getGlyph(currChar, context.charSize, context.bold, 0.f);
 
         //if outline is larger, add first
-        if (context.outlineThickness > 0)
+        if (context.outlineThickness != 0)
         {
             addOutline();
         }
@@ -161,6 +198,19 @@ FloatRect Detail::Text::updateVertices(std::vector<Vertex2D>& dst, TextContext& 
 
         x += glyph.advance;
     }
+    //update alignment if there is no newline at the end
+    if (rowStart != characterVerts.size())
+    {
+        eol();
+    }
+
+
+    //ensures the outline/shadow is always drawn first
+    outlineVerts.insert(outlineVerts.end(), shadowVerts.begin(), shadowVerts.end());
+    outlineVerts.insert(outlineVerts.end(), characterVerts.begin(), characterVerts.end());
+    dst.swap(outlineVerts);
+
+
 
     FloatRect localBounds;
     localBounds.left = minX;
@@ -168,10 +218,28 @@ FloatRect Detail::Text::updateVertices(std::vector<Vertex2D>& dst, TextContext& 
     localBounds.width = maxX - minX;
     localBounds.height = maxY - minY;
 
-    //ensures the outline/shadow is always drawn first
-    outlineVerts.insert(outlineVerts.end(), shadowVerts.begin(), shadowVerts.end());
-    outlineVerts.insert(outlineVerts.end(), characterVerts.begin(), characterVerts.end());
-    dst.swap(outlineVerts);
+
+    maxY = localBounds.bottom + localBounds.height;
+
+    //check for alignment
+    float offset = 0.f;
+    if (context.alignment == std::int32_t(cro::Text::Alignment::Centre))
+    {
+        offset = localBounds.width / 2.f;
+    }
+    else if (context.alignment == std::int32_t(cro::Text::Alignment::Right))
+    {
+        offset = localBounds.width;
+    }
+    //if (offset > 0)
+    {
+        for (auto& v : dst)
+        {
+            v.position.y -= maxY;
+        }
+        localBounds.left -= offset;
+        localBounds.bottom -= maxY;
+    }
 
     return localBounds;
 }

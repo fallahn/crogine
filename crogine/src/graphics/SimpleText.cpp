@@ -135,6 +135,16 @@ void SimpleText::setBold(bool bold)
     }
 }
 
+void SimpleText::setAlignment(std::int32_t alignment)
+{
+    CRO_ASSERT(alignment > -1 && alignment < Alignment::Null, "");
+    if (m_context.alignment != alignment)
+    {
+        m_context.alignment = alignment;
+        m_dirtyFlags = DirtyFlags::All;
+    }
+}
+
 const Font* SimpleText::getFont() const
 {
     return m_context.font;

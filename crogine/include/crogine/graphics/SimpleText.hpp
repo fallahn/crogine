@@ -133,6 +133,22 @@ namespace cro
         */
         void setBold(bool bold);
 
+
+        struct Alignment final
+        {
+            enum
+            {
+                Left, Right, Centre,
+
+                Null
+            };
+        };
+        /*!
+        \brief Sets the justification of the text to left, right or center
+        Defaults to left
+        */
+        void setAlignment(std::int32_t algnment);
+
         /*!
         \brief Return a pointer to the active font
         May be nullptr
@@ -184,6 +200,12 @@ namespace cro
         \brief Returns the current bold setting for the text
         */
         bool getBold() const;
+
+        /*!
+        \brief Returns the current Alignment
+        \see Alignment, setAlignment
+        */
+        std::int32_t getAlignment() const { return m_context.alignment; }
 
         /*!
         \brief Get the enclosing AABB

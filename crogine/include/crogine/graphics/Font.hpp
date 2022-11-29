@@ -66,6 +66,7 @@ namespace cro
         Colour shadowColour = Colour::Black;
         glm::vec2 shadowOffset = glm::vec2(0.f);
         bool bold = false;
+        std::int32_t alignment = 0;
     };
 
     /*!

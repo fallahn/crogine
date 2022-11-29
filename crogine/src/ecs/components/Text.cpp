@@ -36,8 +36,7 @@ source distribution.
 using namespace cro;
 
 Text::Text()
-    : m_dirtyFlags  (DirtyFlags::All),
-    m_alignment     (Alignment::Left)
+    : m_dirtyFlags  (DirtyFlags::All)
 {
 
 }
@@ -228,8 +227,11 @@ FloatRect Text::getLocalBounds(Entity entity)
 
 void Text::setAlignment(Text::Alignment alignment)
 {
-    m_alignment = alignment;
-    m_dirtyFlags |= DirtyFlags::All;
+    if (m_context.alignment != std::int32_t(alignment))
+    {
+        m_context.alignment = std::int32_t(alignment);
+        m_dirtyFlags |= DirtyFlags::All;
+    }
 }
 
 //private
@@ -249,28 +251,6 @@ void Text::updateVertices(Drawable2D& drawable)
     //update glyphs
     auto& vertices = drawable.getVertexData();
     localBounds = Detail::Text::updateVertices(vertices, m_context);
-    auto maxY = localBounds.bottom + localBounds.height;
-
-    //check for alignment
-    float offset = 0.f;
-    if (m_alignment == Text::Alignment::Centre)
-    {
-        offset = localBounds.width / 2.f;
-    }
-    else if (m_alignment == Text::Alignment::Right)
-    {
-        offset = localBounds.width;
-    }
-    //if (offset > 0)
-    {
-        for (auto& v : vertices)
-        {
-            v.position.x -= offset;
-            v.position.y -= maxY;
-        }
-        localBounds.left -= offset;
-        localBounds.bottom -= maxY;
-    }
 
     drawable.updateLocalBounds(localBounds);
 }
