@@ -614,9 +614,12 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
                 auto res = getTerrain(ballPos);
                 terrain = res.terrain;
 
+                const auto slope = dot(res.normal, glm::vec3(0.f, 1.f, 0.f));
+
                 if (terrain != TerrainID::Water
                     && terrain != TerrainID::Scrub
-                    && terrain != TerrainID::Stone)
+                    && terrain != TerrainID::Stone
+                    && slope > 0.996f)
                 {
                     //move the ball a bit closer so we're not balancing on the edge
                     //but only if we're not on the green else we might get placed in the hole :)
