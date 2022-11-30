@@ -52,8 +52,11 @@ namespace cro
         it as the current target. All drawing operations will then be performed on it
         until display() is called. Both clear AND display() *must* be called either side of 
         drawing to prevent undefined results.
+        \param multiSamples If this is greater than zero, desktop platforms will attempt
+        to create a multisampled render target with the given number of samples. This is
+        ignored on mobile.
         */
-        RenderTexture();
+        RenderTexture(std::uint32_t multiSamples = 0);
         ~RenderTexture();
 
         RenderTexture(const RenderTexture&) = delete;
@@ -140,14 +143,22 @@ namespace cro
         bool saveToFile(const std::string& path) const;
 
     private:
+        std::uint32_t m_samples;
         std::uint32_t m_fboID;
         std::uint32_t m_rboID;
         std::uint32_t m_clearBits;
+
+        std::uint32_t m_msfboID;
+        std::uint32_t m_msTextureID;
+
         Texture m_texture;
         std::array<float, 4u> m_lastClearColour = {};
 
         bool m_hasDepthBuffer;
         bool m_hasStencilBuffer;
+
+        bool createDefault(std::uint32_t width, std::uint32_t height, bool depthBuffer, bool stencilBuffer);
+        bool createMultiSampled(std::uint32_t width, std::uint32_t height, bool depthBuffer, bool stencilBuffer);
 
         std::uint32_t getFrameBufferID() const override { return m_fboID; }
     };

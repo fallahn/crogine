@@ -33,10 +33,13 @@ source distribution.
 
 using namespace cro;
 
-RenderTexture::RenderTexture()
-    : m_fboID           (0),
+RenderTexture::RenderTexture(std::uint32_t samples)
+    : m_samples         (0),
+    m_fboID             (0),
     m_rboID             (0),
     m_clearBits         (0),
+    m_msfboID           (0),
+    m_msTextureID       (0),
     m_hasDepthBuffer    (false),
     m_hasStencilBuffer  (false)
 {
@@ -45,6 +48,15 @@ RenderTexture::RenderTexture()
 
 RenderTexture::~RenderTexture()
 {
+    if (m_msfboID)
+    {
+        glCheck(glDeleteFramebuffers(1, &m_msfboID));
+    }
+    if (m_msTextureID)
+    {
+        glCheck(glDeleteTextures(1, &m_msTextureID));
+    }
+    
     if (m_fboID)
     {
         glCheck(glDeleteFramebuffers(1, &m_fboID));
@@ -58,17 +70,27 @@ RenderTexture::~RenderTexture()
 RenderTexture::RenderTexture(RenderTexture&& other) noexcept
     : RenderTexture()
 {
+    m_samples = other.m_samples;
     m_fboID = other.m_fboID;
     m_rboID = other.m_rboID;
     m_clearBits = other.m_clearBits;
+
+    m_msfboID = other.m_msfboID;
+    m_msTextureID = other.m_msTextureID;
+
     m_texture = std::move(other.m_texture);
     setViewport(other.getViewport());
     setView(other.getView());
     m_hasDepthBuffer = other.m_hasDepthBuffer;
     m_hasStencilBuffer = other.m_hasStencilBuffer;
 
+    other.m_samples = 0;
     other.m_fboID = 0;
     other.m_rboID = 0;
+
+    other.m_msfboID = 0;
+    other.m_msTextureID = 0;
+
     other.setViewport({ 0, 0, 0, 0 });
     other.setView({ 0.f, 0.f });
 }
@@ -78,6 +100,15 @@ RenderTexture& RenderTexture::operator=(RenderTexture&& other) noexcept
     if (&other != this)
     {
         //tidy up anything we currently own first
+        if (m_msfboID)
+        {
+            glCheck(glDeleteFramebuffers(1, &m_msfboID));
+        }
+        if (m_msTextureID)
+        {
+            glCheck(glDeleteTextures(1, &m_msTextureID));
+        }
+
         if (m_fboID)
         {
             glCheck(glDeleteFramebuffers(1, &m_fboID));
@@ -87,17 +118,27 @@ RenderTexture& RenderTexture::operator=(RenderTexture&& other) noexcept
             glCheck(glDeleteRenderbuffers(1, &m_rboID));
         }
 
+        m_samples = other.m_samples;
         m_fboID = other.m_fboID;
         m_rboID = other.m_rboID;
         m_clearBits = other.m_clearBits;
+
+        m_msfboID = other.m_msfboID;
+        m_msTextureID = other.m_msTextureID;
+
         m_texture = std::move(other.m_texture);
         setViewport(other.getViewport());
         setView(other.getView());
         m_hasDepthBuffer = other.m_hasDepthBuffer;
         m_hasStencilBuffer = other.m_hasStencilBuffer;
 
+        other.m_samples = 0;
         other.m_fboID = 0;
         other.m_rboID = 0;
+
+        other.m_msfboID = 0;
+        other.m_msTextureID = 0;
+
         other.setViewport({ 0, 0, 0, 0 });
         other.setView({ 0.f, 0.f });
     }
@@ -107,104 +148,18 @@ RenderTexture& RenderTexture::operator=(RenderTexture&& other) noexcept
 //public
 bool RenderTexture::create(std::uint32_t width, std::uint32_t height, bool depthBuffer, bool stencilBuffer)
 {
-    if (m_fboID)
+#ifdef PLATFORM_MOBILE
+    return createDefault(width, height, depthBuffer, stencilBuffer);
+#else
+    if (m_samples)
     {
-        //if the settings are the same and we're just
-        //resizing, skip re-creation and return with a
-        //resized texture
-        if (depthBuffer == m_hasDepthBuffer
-            && stencilBuffer == m_hasStencilBuffer)
-        {
-            m_texture.create(width, height);
-            if (m_rboID)
-            {
-                std::int32_t format = stencilBuffer? GL_DEPTH24_STENCIL8 : GL_DEPTH_COMPONENT24;
-
-                glCheck(glBindRenderbuffer(GL_RENDERBUFFER, m_rboID));
-                glCheck(glRenderbufferStorage(GL_RENDERBUFFER, format, width, height));
-                glCheck(glBindRenderbuffer(GL_RENDERBUFFER, m_rboID));
-            }
-
-            setViewport(getDefaultViewport());
-            setView(FloatRect(getViewport()));
-
-            return true;
-        }
-
-        //else delete the buffer and create a fresh one
-        glCheck(glDeleteFramebuffers(1, &m_fboID));
-        m_clearBits = 0;
+        return createMultiSampled(width, height, depthBuffer, stencilBuffer);
     }
-
-    if (m_rboID)
+    else
     {
-        glCheck(glDeleteRenderbuffers(1, &m_rboID));
+        return createDefault(width, height, depthBuffer, stencilBuffer);
     }
-
-    m_texture.create(width, height, ImageFormat::RGBA);
-
-    GLuint fbo;
-    glCheck(glGenFramebuffers(1, &fbo));
-    if (fbo)
-    {
-        glCheck(glBindFramebuffer(GL_FRAMEBUFFER, fbo));
-        glCheck(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_texture.getGLHandle(), 0));
-
-        m_clearBits |= GL_COLOR_BUFFER_BIT;
-
-        if (depthBuffer)
-        {
-            m_clearBits |= GL_DEPTH_BUFFER_BIT;
-            
-            std::int32_t format = GL_DEPTH_COMPONENT24;
-            std::int32_t attachment = GL_DEPTH_ATTACHMENT;
-            if (stencilBuffer)
-            {
-                format = GL_DEPTH24_STENCIL8;
-                attachment = GL_DEPTH_STENCIL_ATTACHMENT;
-                m_clearBits |= GL_STENCIL_BUFFER_BIT;
-            }
-
-            GLuint rbo;
-            glCheck(glGenRenderbuffers(1, &rbo));
-            if (!rbo)
-            {
-                Logger::log("Failed creating depth / stencil render buffer", Logger::Type::Error);
-                glCheck(glDeleteFramebuffers(1, &fbo));
-
-                //tidy up the texture as we won't need it
-                Texture temp;
-                temp.swap(m_texture);
-
-                return false;
-            }
-            m_rboID = rbo;
-
-            glCheck(glBindRenderbuffer(GL_RENDERBUFFER, m_rboID));
-            glCheck(glRenderbufferStorage(GL_RENDERBUFFER, format, width, height));
-            glCheck(glFramebufferRenderbuffer(GL_FRAMEBUFFER, attachment, GL_RENDERBUFFER, m_rboID));
-            glCheck(glBindRenderbuffer(GL_RENDERBUFFER, 0));
-        }
-
-        if (glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE)
-        {
-            glCheck(glBindFramebuffer(GL_FRAMEBUFFER, 0));
-            m_fboID = fbo;
-            setViewport(getDefaultViewport());
-            setView(FloatRect(getViewport()));
-
-            m_hasDepthBuffer = depthBuffer;
-            m_hasStencilBuffer = stencilBuffer;
-
-            return true;
-        }
-    }
-    glCheck(glBindFramebuffer(GL_FRAMEBUFFER, 0));
-
-    Texture temp;
-    temp.swap(m_texture);
-
-    return false;
+#endif
 }
 
 glm::uvec2 RenderTexture::getSize() const
@@ -257,6 +212,19 @@ void RenderTexture::display()
 
     //unbind buffer
     setActive(false);
+
+    //TODO as this is set only once on construction is there a way to condirionally compile this?
+    if (m_samples)
+    {
+        CRO_ASSERT(m_fboID, "Texture not created");
+        
+        auto size = m_texture.getSize();
+
+        //blit the multisampled buffer to the output
+        glCheck(glBindFramebuffer(GL_READ_FRAMEBUFFER, m_fboID));
+        glCheck(glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_msfboID)); //maybe misleading name - contains our regular downsampled texture
+        glCheck(glBlitFramebuffer(0, 0, size.x, size.y, 0, 0, size.x, size.y, GL_COLOR_BUFFER_BIT, GL_NEAREST));
+    }
 }
 
 bool RenderTexture::saveToFile(const std::string& path) const
@@ -265,5 +233,113 @@ bool RenderTexture::saveToFile(const std::string& path) const
     {
         return m_texture.saveToFile(path);
     }
+    return false;
+}
+
+//private
+bool RenderTexture::createDefault(std::uint32_t width, std::uint32_t height, bool depthBuffer, bool stencilBuffer)
+{
+    if (m_fboID)
+    {
+        //if the settings are the same and we're just
+        //resizing, skip re-creation and return with a
+        //resized texture
+        if (depthBuffer == m_hasDepthBuffer
+            && stencilBuffer == m_hasStencilBuffer)
+        {
+            m_texture.create(width, height);
+            if (m_rboID)
+            {
+                std::int32_t format = stencilBuffer ? GL_DEPTH24_STENCIL8 : GL_DEPTH_COMPONENT24;
+
+                glCheck(glBindRenderbuffer(GL_RENDERBUFFER, m_rboID));
+                glCheck(glRenderbufferStorage(GL_RENDERBUFFER, format, width, height));
+                glCheck(glBindRenderbuffer(GL_RENDERBUFFER, m_rboID));
+            }
+
+            setViewport(getDefaultViewport());
+            setView(FloatRect(getViewport()));
+
+            return true;
+        }
+
+        //else delete the buffer and create a fresh one
+        glCheck(glDeleteFramebuffers(1, &m_fboID));
+        m_clearBits = 0;
+    }
+
+    if (m_rboID)
+    {
+        glCheck(glDeleteRenderbuffers(1, &m_rboID));
+    }
+
+    m_texture.create(width, height, ImageFormat::RGBA);
+
+    GLuint fbo;
+    glCheck(glGenFramebuffers(1, &fbo));
+    if (fbo)
+    {
+        glCheck(glBindFramebuffer(GL_FRAMEBUFFER, fbo));
+        glCheck(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_texture.getGLHandle(), 0));
+
+        m_clearBits |= GL_COLOR_BUFFER_BIT;
+
+        if (depthBuffer)
+        {
+            m_clearBits |= GL_DEPTH_BUFFER_BIT;
+
+            std::int32_t format = GL_DEPTH_COMPONENT24;
+            std::int32_t attachment = GL_DEPTH_ATTACHMENT;
+            if (stencilBuffer)
+            {
+                format = GL_DEPTH24_STENCIL8;
+                attachment = GL_DEPTH_STENCIL_ATTACHMENT;
+                m_clearBits |= GL_STENCIL_BUFFER_BIT;
+            }
+
+            GLuint rbo;
+            glCheck(glGenRenderbuffers(1, &rbo));
+            if (!rbo)
+            {
+                Logger::log("Failed creating depth / stencil render buffer", Logger::Type::Error);
+                glCheck(glDeleteFramebuffers(1, &fbo));
+
+                //tidy up the texture as we won't need it
+                Texture temp;
+                temp.swap(m_texture);
+
+                return false;
+            }
+            m_rboID = rbo;
+
+            glCheck(glBindRenderbuffer(GL_RENDERBUFFER, m_rboID));
+            glCheck(glRenderbufferStorage(GL_RENDERBUFFER, format, width, height));
+            glCheck(glFramebufferRenderbuffer(GL_FRAMEBUFFER, attachment, GL_RENDERBUFFER, m_rboID));
+            glCheck(glBindRenderbuffer(GL_RENDERBUFFER, 0));
+        }
+
+        if (glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE)
+        {
+            glCheck(glBindFramebuffer(GL_FRAMEBUFFER, 0));
+            m_fboID = fbo;
+            setViewport(getDefaultViewport());
+            setView(FloatRect(getViewport()));
+
+            m_hasDepthBuffer = depthBuffer;
+            m_hasStencilBuffer = stencilBuffer;
+
+            return true;
+        }
+    }
+    glCheck(glBindFramebuffer(GL_FRAMEBUFFER, 0));
+
+    Texture temp;
+    temp.swap(m_texture);
+
+    return false;
+}
+
+bool RenderTexture::createMultiSampled(std::uint32_t width, std::uint32_t height, bool depthBuffer, bool stencilBuffer)
+{
     return false;
 }
