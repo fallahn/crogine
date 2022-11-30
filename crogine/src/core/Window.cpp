@@ -225,10 +225,17 @@ void Window::setSize(glm::uvec2 size)
 
     setViewport({ 0, 0, static_cast<std::int32_t>(size.x), static_cast<std::int32_t>(size.y) });
     setView(FloatRect(getViewport()));
+
+    m_fullscreen = false;
 }
 
 void Window::setFullScreen(bool fullscreen)
 {
+    if (fullscreen == m_fullscreen)
+    {
+        return;
+    }
+
 #ifdef __APPLE__
 #define FS_MODE SDL_WINDOW_FULLSCREEN
 #else

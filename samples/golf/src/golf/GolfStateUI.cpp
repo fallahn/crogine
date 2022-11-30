@@ -71,6 +71,8 @@ source distribution.
 
 namespace
 {
+#include "PostProcess.inl"
+
     static constexpr float ColumnWidth = 20.f;
     static constexpr float ColumnHeight = 276.f;
     static constexpr float ColumnMargin = 6.f;
@@ -139,7 +141,7 @@ void GolfState::buildUI()
         return;
     }
 
-    auto resizeCallback = [](cro::Entity e, float)
+    auto resizeCallback = [&](cro::Entity e, float)
     {
         //this is activated once to make sure the
         //sprite is up to date with any texture buffer resize
@@ -161,6 +163,9 @@ void GolfState::buildUI()
     auto courseEnt = entity;
     m_courseEnt = courseEnt;
 
+    /*m_resources.shaders.loadFromString(ShaderID::FXAA, FXAAVertex, FXAAFrag);
+    auto& shader = m_resources.shaders.get(ShaderID::FXAA);
+    m_courseEnt.getComponent<cro::Drawable2D>().setShader(&shader);*/
 
     //displays the trophies on round end - has to be displayed over top of scoreboard
     entity = m_uiScene.createEntity();

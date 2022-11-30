@@ -77,6 +77,7 @@ source distribution.
 namespace
 {
 #include "RandNames.hpp"
+#include "PostProcess.inl"
 
     struct CursorAnimationCallback final
     {
@@ -289,7 +290,7 @@ void MenuState::createUI()
     auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.getComponent<cro::Transform>().setOrigin(glm::vec2(bounds.width / 2.f, bounds.height / 2.f));
     entity.addComponent<cro::Callback>().function =
-        [](cro::Entity e, float)
+        [&](cro::Entity e, float)
     {
         //this is activated once to make sure the
         //sprite is up to date with any texture buffer resize
@@ -297,8 +298,17 @@ void MenuState::createUI()
         e.getComponent<cro::Sprite>().setTextureRect({ glm::vec2(0.f), texSize });
         e.getComponent<cro::Transform>().setOrigin(texSize / 2.f);
         e.getComponent<cro::Callback>().active = false;
+
+        /*auto& shader = m_resources.shaders.get(ShaderID::FXAA);
+        auto handle = shader.getGLHandle();
+        auto uID = shader.getUniformID("u_resolution");
+        glCheck(glUseProgram(handle));
+        glCheck(glUniform2f(uID, texSize.x, texSize.y));*/
     };
     auto courseEnt = entity;
+    /*m_resources.shaders.loadFromString(ShaderID::FXAA, FXAAVertex, FXAAFrag);
+    auto& shader = m_resources.shaders.get(ShaderID::FXAA);
+    courseEnt.getComponent<cro::Drawable2D>().setShader(&shader);*/
 
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();

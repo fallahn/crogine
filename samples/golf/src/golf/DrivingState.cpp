@@ -228,6 +228,20 @@ bool DrivingState::handleEvent(const cro::Event& evt)
         return true;
     }
 
+#ifdef USE_GNS
+    const auto closeLeaderboard = [&]()
+    {
+        auto* uiSystem = m_uiScene.getSystem<cro::UISystem>();
+        if (uiSystem->getActiveGroup() == MenuID::Leaderboard)
+        {
+            uiSystem->setActiveGroup(MenuID::Dummy);
+            m_leaderboardEntity.getComponent<cro::Callback>().active = true;
+
+            m_summaryScreen.audioEnt.getComponent<cro::AudioEmitter>().play();
+        }
+    };
+#endif
+
     if (evt.type == SDL_KEYUP)
     {
         switch (evt.key.keysym.sym)
@@ -289,24 +303,29 @@ bool DrivingState::handleEvent(const cro::Event& evt)
             m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);*/
         }
         break;
+        case SDLK_KP_MULTIPLY:
+
+            break;
 #endif
         }
     }
     else if (evt.type == SDL_CONTROLLERBUTTONUP)
     {
-        //if (evt.cbutton.which == cro::GameController::deviceID(0))
+        switch (evt.cbutton.button)
         {
-            switch (evt.cbutton.button)
-            {
-            default: break;
-            case cro::GameController::ButtonStart:
-            case cro::GameController::ButtonGuide:
-                requestStackPush(StateID::Pause);
-                break;
-            case cro::GameController::ButtonA:
-                lastControllerID = cro::GameController::controllerID(evt.cbutton.which);
-                break;
-            }
+        default: break;
+        case cro::GameController::ButtonStart:
+        case cro::GameController::ButtonGuide:
+            requestStackPush(StateID::Pause);
+            break;
+        case cro::GameController::ButtonA:
+            lastControllerID = cro::GameController::controllerID(evt.cbutton.which);
+            break;
+#ifdef USE_GNS
+        case cro::GameController::ButtonB:
+            closeLeaderboard();
+            break;
+#endif
         }
     }
     else if (evt.type == SDL_MOUSEMOTION)

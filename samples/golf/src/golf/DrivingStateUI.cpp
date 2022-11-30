@@ -59,7 +59,7 @@ source distribution.
 
 namespace
 {
-    //used as indices when scrollig through leaderboards
+    //used as indices when scrolling through leaderboards
     std::int32_t leaderboardID = 0;
     std::int32_t leaderboardFilter = 0;
     constexpr std::int32_t MaxLeaderboardFilter = 3;
@@ -70,19 +70,6 @@ namespace
     static constexpr float BadScore = 50.f;
     static constexpr float GoodScore = 75.f;
     static constexpr float ExcellentScore = 95.f;
-
-    struct MenuID final
-    {
-        enum
-        {
-            Dummy,
-            Options,
-            Summary,
-            Leaderboard,
-
-            Count
-        };
-    };
 
     //callback data for anim/self destruction
     //of messages / options window
@@ -99,7 +86,7 @@ namespace
     {
         const glm::vec2& viewScale;
         cro::UISystem* uiSystem = nullptr;
-        std::int32_t menuID = MenuID::Dummy;
+        std::int32_t menuID = DrivingState::MenuID::Dummy;
 
         MenuCallback(const glm::vec2& v, cro::UISystem* ui, std::int32_t id)
             : viewScale(v), uiSystem(ui), menuID(id) {}
@@ -1055,6 +1042,7 @@ your overall accuracy. Good Luck!
     bgEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     auto lbEntity = entity;
+    m_leaderboardEntity = entity;
 
     auto textSelected = uiSystem->addCallback(
         [](cro::Entity e)

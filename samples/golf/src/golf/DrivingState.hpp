@@ -61,6 +61,20 @@ public:
     bool simulate(float) override;
     void render() override;
 
+    struct MenuID final
+    {
+        enum
+        {
+            Dummy,
+            Options,
+            Summary,
+            Leaderboard,
+
+            Count
+        };
+    };
+
+
 private:
     SharedStateData& m_sharedData;
     InputParser m_inputParser;
@@ -167,6 +181,9 @@ private:
     void setActiveCamera(std::int32_t);
     
     //DrivingStateUI.cpp
+#ifdef USE_GNS
+    cro::Entity m_leaderboardEntity;
+#endif
     cro::RenderTexture m_mapTexture;
     cro::Entity m_mapCam;
     cro::SimpleQuad m_flagQuad;
