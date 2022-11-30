@@ -32,6 +32,7 @@ source distribution.
 #include "SharedStateData.hpp"
 #include "CommandIDs.hpp"
 #include "MenuConsts.hpp"
+#include "GameConsts.hpp"
 #include "FpsCameraSystem.hpp"
 #include "TextAnimCallback.hpp"
 #include "DrivingRangeDirector.hpp"
@@ -178,7 +179,6 @@ DrivingState::DrivingState(cro::StateStack& stack, cro::State::Context context, 
     m_scaleBuffer       ("PixelScale"),
     m_resolutionBuffer  ("ScaledResolution"),
     m_windBuffer        ("WindValues"),
-    m_mouseVisible      (true),
     m_targetIndex       (0),
     m_strokeCountIndex  (0),
     m_currentCamera     (CameraID::Player)
@@ -244,6 +244,7 @@ bool DrivingState::handleEvent(const cro::Event& evt)
 
     if (evt.type == SDL_KEYUP)
     {
+        cro::App::getWindow().setMouseCaptured(true);
         switch (evt.key.keysym.sym)
         {
         default: break;
@@ -309,6 +310,13 @@ bool DrivingState::handleEvent(const cro::Event& evt)
 #endif
         }
     }
+    else if (evt.type == SDL_CONTROLLERAXISMOTION)
+    {
+        if (evt.caxis.value > LeftThumbDeadZone)
+        {
+            cro::App::getWindow().setMouseCaptured(true);
+        }
+    }
     else if (evt.type == SDL_CONTROLLERBUTTONUP)
     {
         switch (evt.cbutton.button)
@@ -334,8 +342,6 @@ bool DrivingState::handleEvent(const cro::Event& evt)
         if (!useFreeCam) {
 #endif
             cro::App::getWindow().setMouseCaptured(false);
-            m_mouseVisible = true;
-            m_mouseClock.restart();
 #ifdef CRO_DEBUG_
         }
 #endif // CRO_DEBUG_
@@ -589,18 +595,6 @@ bool DrivingState::simulate(float dt)
     pos.z = 0.f;
     m_skyScene.getActiveCamera().getComponent<cro::Transform>().setPosition(pos);
     m_skyScene.simulate(dt);
-
-    //auto hide the mouse if not paused
-    if (m_mouseVisible
-        && getStateCount() == 1)
-    {
-        if (m_mouseClock.elapsed() > MouseHideTime
-            && !ImGui::GetIO().WantCaptureMouse)
-        {
-            m_mouseVisible = false;
-            cro::App::getWindow().setMouseCaptured(true);
-        }
-    }
 
     return true;
 }

@@ -97,8 +97,6 @@ private:
         glm::vec3 currentWindVector = glm::vec3(0.f);
     }m_windUpdate;
 
-    bool m_mouseVisible;
-    cro::Clock m_mouseClock;
 
     struct MaterialID final
     {
