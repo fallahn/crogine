@@ -121,6 +121,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     m_uiScene               (context.appInstance.getMessageBus(), 512),
     m_backgroundScene       (context.appInstance.getMessageBus()/*, 128, cro::INFO_FLAG_SYSTEMS_ACTIVE*/),
     m_avatarScene           (context.appInstance.getMessageBus()/*, 128, cro::INFO_FLAG_SYSTEMS_ACTIVE*/),
+    //m_backgroundTexture     (16),
     m_scaleBuffer           ("PixelScale"),
     m_resolutionBuffer      ("ScaledResolution"),
     m_windBuffer            ("WindValues"),
