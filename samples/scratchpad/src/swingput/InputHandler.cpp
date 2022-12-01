@@ -43,12 +43,13 @@ namespace
     }debug;
 
     constexpr float MaxDistance = 200.f;
-    constexpr float MaxVelocity = 1600.f;
+    constexpr float MaxVelocity = 3000.f;
     constexpr float MaxAccuracy = 20.f;
-    constexpr float CommitDistance = 0.01f;
+    constexpr float CommitDistance = 4.f;// 0.01f;
 
     constexpr float ControllerAxisRange = 32767.f;
-    constexpr std::int16_t MinControllerMove = 16000;
+    constexpr std::int16_t MinTriggerMove = 16000;
+    constexpr std::int16_t MinStickMove = 8000;
 }
 
 InputHandler::InputHandler()
@@ -88,8 +89,8 @@ void InputHandler::handleEvent(const cro::Event& evt)
     const auto startStroke = [&]()
     {
         if (m_state == State::Inactive
-            && (m_lastLT < MinControllerMove)
-            && (m_lastRT < MinControllerMove))
+            && (m_lastLT < MinTriggerMove)
+            && (m_lastRT < MinTriggerMove))
         {
             m_state = State::Swing;
             m_backPoint = { 0.f, 0.f };
@@ -144,7 +145,7 @@ void InputHandler::handleEvent(const cro::Event& evt)
         default: break;
         case SDL_CONTROLLER_AXIS_TRIGGERLEFT:
         case SDL_CONTROLLER_AXIS_TRIGGERRIGHT:
-            if (evt.caxis.value > MinControllerMove)
+            if (evt.caxis.value > MinTriggerMove)
             {
                 startStroke();
             }
@@ -165,13 +166,11 @@ void InputHandler::handleEvent(const cro::Event& evt)
         case SDL_CONTROLLER_AXIS_LEFTY:
         case SDL_CONTROLLER_AXIS_RIGHTY:
 
-            //TODO we need to make this less sensitive - can
-            //we use an easing curve here? Do they work on negative values?
-            if (std::abs(evt.caxis.value) > MinControllerMove)
+            if (std::abs(evt.caxis.value) > MinStickMove)
             {
                 if (m_state == State::Swing)
                 {
-                    m_activePoint.y = (static_cast<float>(-evt.caxis.value) / ControllerAxisRange) * (MaxDistance / 2.f);
+                    m_activePoint.y = std::pow((static_cast<float>(-evt.caxis.value) / ControllerAxisRange), 5.f) * (MaxDistance / 2.f);
                 }
             }
             break;
@@ -181,8 +180,7 @@ void InputHandler::handleEvent(const cro::Event& evt)
             //whichever value was present when
             //the swing is finished
 
-            //TODO we need to make this more sensitive because it's too easy to hit a perfect line
-            if (std::abs(evt.caxis.value) > MinControllerMove
+            if (std::abs(evt.caxis.value) > MinStickMove
                 && m_state == State::Swing)
             {
                 m_activePoint.x = (static_cast<float>(evt.caxis.value) / ControllerAxisRange) * MaxAccuracy;
@@ -213,7 +211,9 @@ void InputHandler::process(float)
             m_timer.restart();
         }
 
-        //we've done full stroke
+        //we've done full stroke. TODO commit distance needs
+        //to be changable - stick ranges vary between controllers
+        //and even between sticks on the same controller...
         if (m_activePoint.y > (MaxDistance / 2.f) - CommitDistance)
         {
             m_state = State::Summarise;
