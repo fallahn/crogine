@@ -212,28 +212,26 @@ void RenderTexture::display()
     //restore clear colour
     glCheck(glClearColor(m_lastClearColour[0], m_lastClearColour[1], m_lastClearColour[2], m_lastClearColour[3]));
 
-    //unbind buffer
-    setActive(false);
-
-    //TODO as this is set only once on construction is there a way to condirionally compile this?
+    
     if (m_samples)
     {
         CRO_ASSERT(m_fboID, "Texture not created");
         
         auto size = m_texture.getSize();
 
-        //blit the multisampled buffer to the output
-        glCheck(glBindFramebuffer(GL_READ_FRAMEBUFFER, m_fboID));
+        //blit the multisampled buffer to the output:
+        //the read frame buffer should already be current
+        //then we rely on setActive(false) - below - to restore
+        //the correct GL_DRAW_FRAMEBUFFER
         glCheck(glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_msfboID)); //maybe misleading name - contains our regular downsampled texture
         glCheck(glBlitFramebuffer(0, 0, size.x, size.y, 0, 0, size.x, size.y, GL_COLOR_BUFFER_BIT, GL_NEAREST));
 
-        //TODO can we be sure we are always returning this to 0?
-        //what about nested draw calls as with regular (non-multisampled) FBOs?
-        //glCheck(glBindFramebuffer(GL_READ_FRAMEBUFFER, 0));
-        glCheck(glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0));
-
         glCheck(glDisable(GL_MULTISAMPLE));
     }
+
+
+    //unbind buffer
+    setActive(false);
 }
 
 bool RenderTexture::saveToFile(const std::string& path) const
@@ -490,7 +488,6 @@ bool RenderTexture::createMultiSampled(std::uint32_t width, std::uint32_t height
             m_hasDepthBuffer = depthBuffer;
             m_hasStencilBuffer = stencilBuffer;
 
-            LogI << "Created multisampled RBO with " << m_samples << " samples" << std::endl;
             return true;
         }
     }
