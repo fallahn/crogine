@@ -43,7 +43,7 @@ source distribution.
 #ifdef CRO_DEBUG_
 #if defined(PLATFORM_DESKTOP) && !defined(GL41)
 //use the gl debug context instead (see App.cpp)
-#define glCheck(x) (x)
+#define glCheck(x) do{x; cro::Detail::printLocation(__FILE__, __LINE__, #x);}while (false)
 #else
 #define glCheck(x) do{x; cro::Detail::glErrorCheck(__FILE__, __LINE__, #x);}while (false)
 #endif
@@ -55,6 +55,20 @@ namespace cro
 {
     namespace Detail
     {
+        static inline void printLocation(const char* file, unsigned int line, const char* expression)
+        {
+            if (glGetError() != GL_NO_ERROR)
+            {
+                std::string fileString = file;
+
+                std::stringstream ss;
+                ss << fileString.substr(fileString.find_last_of("\\/") + 1) << "(" << line << ")."
+                    << "\nExpression: " << expression
+                    << std::endl;
+                Logger::log(ss.str(), Logger::Type::Error);
+            }
+        }
+
         static inline void glErrorCheck(const char* file, unsigned int line, const char* expression)
         {
             //get the last error

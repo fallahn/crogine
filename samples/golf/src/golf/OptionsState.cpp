@@ -1091,7 +1091,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
     };
 
     //audio label
-    auto audioLabel = createLabel(glm::vec2(bgBounds.width / 2.f, 137.f), "Music Volume");
+    auto audioLabel = createLabel(glm::vec2((bgBounds.width / 2.f) - 101.f, 139.f), "Music Volume");
     centreText(audioLabel);
 
     //FOV label
@@ -1200,7 +1200,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
     };
 
     //volume slider
-    auto volSlider = createSlider(glm::vec2(125.f, 119.f));
+    auto volSlider = createSlider(glm::vec2(192.f, 136.f));
     auto tipEnt = m_scene.createEntity();
     tipEnt.addComponent<cro::Transform>();
     tipEnt.addComponent<cro::Callback>().active = true;
@@ -1346,7 +1346,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
     };
 
     //channel select down
-    auto entity = createHighlight(glm::vec2((bgBounds.width / 2.f) - 56.f, 128.f));
+    auto entity = createHighlight(glm::vec2((bgBounds.width / 2.f) - 156.f, 130.f));
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
         [&,audioLabel](cro::Entity e, cro::ButtonEvent evt) mutable
         {
@@ -1360,7 +1360,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
         });
 
     //channel select up
-    entity = createHighlight(glm::vec2((bgBounds.width / 2.f) + 45.f, 128.f));
+    entity = createHighlight(glm::vec2((bgBounds.width / 2.f) - 55.f, 130.f));
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
         [&,audioLabel](cro::Entity e, cro::ButtonEvent evt) mutable
         {
@@ -1375,11 +1375,11 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
 
 
     //audio down
-    entity = createHighlight(glm::vec2(107.f, 113.f));
+    entity = createHighlight(glm::vec2(174.f, 130.f));
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(SliderDownCallback(m_audioEnts[AudioID::Accept]));
 
     //audio up
-    entity = createHighlight(glm::vec2(274.f, 113.f));
+    entity = createHighlight(glm::vec2(341.f, 130.f));
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(SliderUpCallback(m_audioEnts[AudioID::Back]));
 
     //FOV down

@@ -307,8 +307,32 @@ static inline void togglePixelScale(SharedStateData& sharedData, bool on)
     if (on != sharedData.pixelScale)
     {
         sharedData.pixelScale = on;
+        sharedData.antialias = on ? false : sharedData.multisamples != 0;
 
         //raise a window resize message to trigger callbacks
+        auto size = cro::App::getWindow().getSize();
+        auto* msg = cro::App::getInstance().getMessageBus().post<cro::Message::WindowEvent>(cro::Message::WindowMessage);
+        msg->data0 = size.x;
+        msg->data1 = size.y;
+        msg->event = SDL_WINDOWEVENT_SIZE_CHANGED;
+    }
+}
+
+static inline void toggleAntialiasing(SharedStateData& sharedData, bool on, std::uint32_t samples)
+{
+    if (on != sharedData.antialias)
+    {
+        sharedData.antialias = on;
+        if (!on)
+        {
+            sharedData.multisamples = 0;
+        }
+        else
+        {
+            sharedData.pixelScale = false;
+            sharedData.multisamples = samples;
+        }
+
         auto size = cro::App::getWindow().getSize();
         auto* msg = cro::App::getInstance().getMessageBus().post<cro::Message::WindowEvent>(cro::Message::WindowMessage);
         msg->data0 = size.x;

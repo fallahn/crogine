@@ -171,6 +171,8 @@ struct SharedStateData final
     std::string customShaderPath;
     InputBinding inputBinding;
     bool pixelScale = false;
+    bool antialias = false;
+    std::uint32_t multisamples = 0;
     float fov = MinFOV;
     bool vertexSnap = false;
     float mouseSpeed = 1.f;
