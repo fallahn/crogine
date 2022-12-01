@@ -33,8 +33,8 @@ source distribution.
 
 using namespace cro;
 
-RenderTexture::RenderTexture(std::uint32_t samples)
-    : m_samples         (samples),
+RenderTexture::RenderTexture()
+    : m_samples         (0),
     m_fboID             (0),
     m_rboID             (0),
     m_clearBits         (0),
@@ -146,17 +146,34 @@ RenderTexture& RenderTexture::operator=(RenderTexture&& other) noexcept
 }
 
 //public
-bool RenderTexture::create(std::uint32_t width, std::uint32_t height, bool depthBuffer, bool stencilBuffer)
+bool RenderTexture::create(std::uint32_t width, std::uint32_t height, bool depthBuffer, bool stencilBuffer, std::uint32_t samples)
 {
 #ifdef PLATFORM_MOBILE
     return createDefault(width, height, depthBuffer, stencilBuffer);
 #else
-    if (m_samples)
+    if (samples)
     {
+        std::int32_t samplesAvailable = 0;
+        glCheck(glGetIntegerv(GL_MAX_SAMPLES, &samplesAvailable));
+
+        m_samples = std::min(samples, static_cast<std::uint32_t>(samplesAvailable));
+
+        if (m_samples == 0)
+        {
+            LogE << "Multisampled RenderTextures not supported (Max Samples returned was 0)" << std::endl;
+            return false;
+        }
+        else if (m_samples != samples)
+        {
+            LogW << "Sample count reduced to " << m_samples << " (max available)" << std::endl;
+        }
+
         return createMultiSampled(width, height, depthBuffer, stencilBuffer);
     }
     else
     {
+        //this will make sure to reset any extra FBO/Texture used for MSAA
+        //if they currently exist
         return createDefault(width, height, depthBuffer, stencilBuffer);
     }
 #endif
@@ -246,6 +263,21 @@ bool RenderTexture::saveToFile(const std::string& path) const
 //private
 bool RenderTexture::createDefault(std::uint32_t width, std::uint32_t height, bool depthBuffer, bool stencilBuffer)
 {
+    if (m_samples)
+    {
+        //we previously had multisampling so tidy it up
+        glCheck(glDeleteBuffers(1, &m_fboID));
+        glCheck(glDeleteBuffers(1, &m_msfboID));
+        m_fboID = 0;
+        m_msfboID = 0;
+
+        glCheck(glDeleteTextures(1, &m_msTextureID));
+        m_msTextureID = 0;
+
+        m_samples = 0;
+    }
+
+
     if (m_fboID)
     {
         //if the settings are the same and we're just
@@ -350,24 +382,7 @@ bool RenderTexture::createDefault(std::uint32_t width, std::uint32_t height, boo
 
 bool RenderTexture::createMultiSampled(std::uint32_t width, std::uint32_t height, bool depthBuffer, bool stencilBuffer)
 {
-    std::int32_t samplesAvailable = 0;
-    glCheck(glGetIntegerv(GL_MAX_SAMPLES, &samplesAvailable));
-
-    auto oldSamples = m_samples;
-    m_samples = std::min(m_samples, static_cast<std::uint32_t>(samplesAvailable));
-
-    if(m_samples == 0)
-    {
-        LogE << "Multisampled RenderTextures not supported (Max Samples returned was 0)" << std::endl;
-        return false;
-    }
-    else if (m_samples != m_samples)
-    {
-        LogW << "Sample count reduced to " << m_samples << " (max available)" << std::endl;
-    }
-
-
-    if (m_fboID)
+    if (m_msfboID) //already created at least once
     {
         //if the settings are the same and we're just
         //resizing, skip re-creation and return with a

@@ -52,11 +52,8 @@ namespace cro
         it as the current target. All drawing operations will then be performed on it
         until display() is called. Both clear AND display() *must* be called either side of 
         drawing to prevent undefined results.
-        \param multiSamples If this is greater than zero, desktop platforms will attempt
-        to create a multisampled render target with the given number of samples. This is
-        ignored on mobile.
         */
-        RenderTexture(std::uint32_t multiSamples = 0);
+        RenderTexture();
         ~RenderTexture();
 
         RenderTexture(const RenderTexture&) = delete;
@@ -70,13 +67,18 @@ namespace cro
         power of 2 on mobile platforms
         \param height Height of the texture. This should be power of
         2 on mobile platforms.
-        \param depthBuffer Creates an 24 bit depth buffer when set to true (default)
+        \param depthBuffer Creates an 24 bit depth buffer when set to true (default true)
         \param stencilBuffer Creates an 8 bit stencil buffer when set to true (default false)
         Stencil buffers must be accompanied by a depth buffer. If depthbuffer is false no stencil
         buffer will be created.
+        \param samples Number of samples to use with multisampling. This is clamped to the maximum
+        available on current hardware, and is unavailable (does nothing) on mobile platforms.
+        By default this value is 0, ie multisampling is disabled.
+        Note that at 16x or higher the size of point sprites are affected due to the way OpenGL
+        calculates alpha coverage when multisampling is enabled.
         \returns true on success, else returns false
         */
-        bool create(std::uint32_t width, std::uint32_t height, bool depthBuffer = true, bool stencilBuffer = false);
+        bool create(std::uint32_t width, std::uint32_t height, bool depthBuffer = true, bool stencilBuffer = false, std::uint32_t samples = 0);
 
         /*!
         \brief Returns the current size in pixels of the render texture (zero if not yet created)

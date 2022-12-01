@@ -121,7 +121,6 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     m_uiScene               (context.appInstance.getMessageBus(), 512),
     m_backgroundScene       (context.appInstance.getMessageBus()/*, 128, cro::INFO_FLAG_SYSTEMS_ACTIVE*/),
     m_avatarScene           (context.appInstance.getMessageBus()/*, 128, cro::INFO_FLAG_SYSTEMS_ACTIVE*/),
-    //m_backgroundTexture     (16),
     m_scaleBuffer           ("PixelScale"),
     m_resolutionBuffer      ("ScaledResolution"),
     m_windBuffer            ("WindValues"),
@@ -490,22 +489,34 @@ bool MenuState::handleEvent(const cro::Event& evt)
             //requestStackPush(StateID::PuttingRange);
             requestStackPush(StateID::Credits);
             break;
-        case SDLK_KP_8:
-            requestStackPush(StateID::Trophy);
-            break;
         case SDLK_KP_0:
-            requestStackPush(StateID::News);
-            //cro::GameController::rumbleStart(0, 65000, 65000, 1000);
-            //LogI << cro::GameController::getName(0) << std::endl;
+            //requestStackPush(StateID::News);
+        {
+            auto size = m_backgroundTexture.getSize();
+            m_backgroundTexture.create(size.x, size.y);
+        }
             break;
         case SDLK_KP_1:
-            //cro::GameController::rumbleStart(1, 65000, 65000, 1000);
-            //LogI << cro::GameController::getName(1) << std::endl;
             refreshUI();
             break;
         case SDLK_KP_2:
-            //cro::GameController::rumbleStart(2, 65000, 65000, 1000);
-            //LogI << cro::GameController::getName(2) << std::endl;
+        {
+            auto size = m_backgroundTexture.getSize();
+            m_backgroundTexture.create(size.x, size.y, true, false, 2);
+        }
+            break;
+        case SDLK_KP_4:
+        {
+            auto size = m_backgroundTexture.getSize();
+            m_backgroundTexture.create(size.x, size.y, true, false, 4);
+        }
+            break;
+        case SDLK_KP_8:
+            //requestStackPush(StateID::Trophy);
+        {
+            auto size = m_backgroundTexture.getSize();
+            m_backgroundTexture.create(size.x, size.y, true, false, 8);
+        }
             break;
         case SDLK_KP_9:
         {
