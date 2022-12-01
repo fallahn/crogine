@@ -52,20 +52,29 @@ SimpleText::SimpleText(const Font& font)
 //public
 void SimpleText::setFont(const Font& font)
 {
-    m_context.font = &font;
-    m_dirtyFlags |= DirtyFlags::All;
+    if (m_context.font != &font)
+    {
+        m_context.font = &font;
+        m_dirtyFlags |= DirtyFlags::All;
+    }
 }
 
 void SimpleText::setCharacterSize(std::uint32_t size)
 {
-    m_context.charSize = size;
-    m_dirtyFlags |= DirtyFlags::All;
+    if (m_context.charSize != size)
+    {
+        m_context.charSize = size;
+        m_dirtyFlags |= DirtyFlags::All;
+    }
 }
 
 void SimpleText::setVerticalSpacing(float spacing)
 {
-    m_context.verticalSpacing = spacing;
-    m_dirtyFlags |= DirtyFlags::All;
+    if (m_context.verticalSpacing != spacing)
+    {
+        m_context.verticalSpacing = spacing;
+        m_dirtyFlags |= DirtyFlags::All;
+    }
 }
 
 void SimpleText::setString(const String& str)

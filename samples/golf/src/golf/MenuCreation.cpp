@@ -3713,7 +3713,7 @@ void MenuState::updateLobbyAvatars()
         
         auto& largeFont = m_sharedData.sharedResources->fonts.get(FontID::UI);
         auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
-        
+
         for (const auto& c : m_sharedData.connectionData)
         {
             if (c.connectionID < m_sharedData.nameTextures.size())
@@ -3726,11 +3726,11 @@ void MenuState::updateLobbyAvatars()
                 for (auto i = 0u; i < c.playerCount; ++i)
                 {
                     simpleText.setString(c.playerData[i].name);
-                    auto bounds = simpleText.getLocalBounds().width;
-                    simpleText.setPosition({ std::round((textureSize.x - bounds) / 2.f), (i * (textureSize.y / 4)) + 4.f });
+                    auto bounds = simpleText.getLocalBounds();
+                    simpleText.setPosition({ std::round((textureSize.x - bounds.width) / 2.f), (i * (textureSize.y / 4)) + 4.f });
 
                     simpleQuad.setPosition({ simpleText.getPosition().x - 2.f,(i * (textureSize.y / 4))});
-                    simpleQuad.setScale({ (bounds + 5.f), 14.f });
+                    simpleQuad.setScale({ (bounds.width + 5.f), 14.f });
                     simpleQuad.draw();
                     simpleText.draw();
                 }

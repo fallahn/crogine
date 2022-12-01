@@ -364,10 +364,10 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
 
                 ImGui::Text("Controller Count %lu", cro::GameController::getControllerCount());
 
-                auto size = glm::vec2(m_ballThumbTexture.getSize());
-                ImGui::Image(m_ballThumbTexture.getTexture(), {size.x, size.y}, {0.f, 1.f}, {1.f, 0.f});
+                //auto size = glm::vec2(m_ballThumbTexture.getSize());
+                //ImGui::Image(m_ballThumbTexture.getTexture(), {size.x, size.y}, {0.f, 1.f}, {1.f, 0.f});
 
-                size = glm::vec2(LabelTextureSize) * 2.f;
+                auto size = glm::vec2(LabelTextureSize) * 2.f;
                 /*auto size = glm::vec2(256.f);
                 auto* tex = Achievements::getIcon(AchievementStrings[1]).texture;
                 if (tex)*/

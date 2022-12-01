@@ -252,5 +252,14 @@ void Text::updateVertices(Drawable2D& drawable)
     auto& vertices = drawable.getVertexData();
     localBounds = Detail::Text::updateVertices(vertices, m_context);
 
+    auto maxY = localBounds.bottom + localBounds.height;
+
+    for (auto& v : vertices)
+    {
+        v.position.y -= maxY;
+    }
+    localBounds.bottom -= maxY;
+
+
     drawable.updateLocalBounds(localBounds);
 }

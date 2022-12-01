@@ -218,9 +218,6 @@ FloatRect Detail::Text::updateVertices(std::vector<Vertex2D>& dst, TextContext& 
     localBounds.width = maxX - minX;
     localBounds.height = maxY - minY;
 
-
-    maxY = localBounds.bottom + localBounds.height;
-
     //check for alignment
     float offset = 0.f;
     if (context.alignment == std::int32_t(cro::Text::Alignment::Centre))
@@ -231,15 +228,7 @@ FloatRect Detail::Text::updateVertices(std::vector<Vertex2D>& dst, TextContext& 
     {
         offset = localBounds.width;
     }
-    //if (offset > 0)
-    {
-        for (auto& v : dst)
-        {
-            v.position.y -= maxY;
-        }
-        localBounds.left -= offset;
-        localBounds.bottom -= maxY;
-    }
+    localBounds.left -= offset;
 
     return localBounds;
 }
