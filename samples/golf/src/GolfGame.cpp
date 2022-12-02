@@ -807,13 +807,10 @@ void GolfGame::loadPreferences()
                 {
                     m_sharedData.showPuttingPower = prop.getValue<bool>();
                 }
-                else if (name == "use_antialiasing")
-                {
-                    m_sharedData.antialias = prop.getValue<bool>();
-                }
                 else if (name == "multisamples")
                 {
                     m_sharedData.multisamples = prop.getValue<std::uint32_t>();
+                    m_sharedData.antialias = m_sharedData.multisamples != 0;
                 }
             }
         }
@@ -877,7 +874,6 @@ void GolfGame::savePreferences()
     cfg.addProperty("show_custom").setValue(m_sharedData.showCustomCourses);
     cfg.addProperty("show_tutorial").setValue(m_sharedData.showTutorialTip);
     cfg.addProperty("putting_power").setValue(m_sharedData.showPuttingPower);
-    cfg.addProperty("use_antialiasing").setValue(m_sharedData.antialias);
     cfg.addProperty("multisamples").setValue(m_sharedData.multisamples);
     cfg.save(path);
 

@@ -123,6 +123,31 @@ namespace
     static constexpr float SliderWidth = 142.f;
     static constexpr glm::vec3 ToolTipOffset(10.f, 10.f, 0.f);
 
+
+    const std::array<cro::String, 4u> AAStrings =
+    {
+        "None",
+        "2x MSAA",
+        "4x MSAA",
+        "8x MSAA"
+    };
+    constexpr std::array<std::size_t, 9u> AAIndexMap =
+    {
+        0,
+        0,
+        1,
+        0,
+        2,
+        0,
+        0,
+        0,
+        3
+    };
+    constexpr std::array<std::uint32_t, 4u> AASamples =
+    {
+        0,2,4,8
+    };
+
     struct SliderData final
     {
         const glm::vec2 basePosition = glm::vec2(0.f);
@@ -1022,6 +1047,7 @@ void OptionsState::buildScene()
         return entity;
     };
     m_tooltips[ToolTipID::Volume] = createToolTip("Vol: 100");
+    m_tooltips[ToolTipID::AA] = createToolTip("Automatically disabled when\nusing pixel scaling");
     m_tooltips[ToolTipID::FOV] = createToolTip("FOV: 60");
     m_tooltips[ToolTipID::Pixel] = createToolTip("Scale up pixels to match\nthe current resolution.");
     m_tooltips[ToolTipID::VertSnap] = createToolTip("Snaps vertices to the nearest\nwhole pixel for a retro \'wobble\'.");
@@ -1093,6 +1119,18 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
     //audio label
     auto audioLabel = createLabel(glm::vec2((bgBounds.width / 2.f) - 101.f, 139.f), "Music Volume");
     centreText(audioLabel);
+
+    //antialiasing label
+    auto aliasLabel = createLabel(glm::vec2(12.f, 114.f), "Antialiasing");
+    aliasLabel.addComponent<cro::Callback>().active = true;
+    aliasLabel.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+    {
+        updateToolTip(e, ToolTipID::AA);
+    };
+
+    auto aaLabel = createLabel(glm::vec2(136.f, 114.f), AAStrings[AAIndexMap[m_sharedData.multisamples]]);
+    centreText(aaLabel);
 
     //FOV label
     auto fovLabel = createLabel(glm::vec2(12.f, 98.f), "FOV: " + std::to_string(static_cast<std::int32_t>(m_sharedData.fov)));
@@ -1381,6 +1419,49 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
     //audio up
     entity = createHighlight(glm::vec2(341.f, 130.f));
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(SliderUpCallback(m_audioEnts[AudioID::Back]));
+
+    //aa down
+    entity = createHighlight(glm::vec2((bgBounds.width / 2.f) - 115.f, 105.f));
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+        uiSystem.addCallback(
+            [&, aaLabel](cro::Entity e, cro::ButtonEvent evt) mutable
+            {
+                if (activated(evt))
+                {
+                    auto currIndex = AAIndexMap[m_sharedData.multisamples];
+                    currIndex = (currIndex + (AASamples.size() - 1)) % AASamples.size();
+                    m_sharedData.multisamples = AASamples[currIndex];
+                    
+                    aaLabel.getComponent<cro::Text>().setString(AAStrings[currIndex]);
+                    centreText(aaLabel);
+
+                    toggleAntialiasing(m_sharedData, m_sharedData.multisamples != 0, m_sharedData.multisamples);
+
+                    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+                }
+            });
+
+    //aa up
+    entity = createHighlight(glm::vec2((bgBounds.width / 2.f) - 14.f, 105.f));
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+        uiSystem.addCallback(
+            [&, aaLabel](cro::Entity e, cro::ButtonEvent evt) mutable
+            {
+                if (activated(evt))
+                {
+                    auto currIndex = AAIndexMap[m_sharedData.multisamples];
+                    currIndex = (currIndex + 1) % AASamples.size();
+                    m_sharedData.multisamples = AASamples[currIndex];
+
+                    aaLabel.getComponent<cro::Text>().setString(AAStrings[currIndex]);
+                    centreText(aaLabel);
+
+                    toggleAntialiasing(m_sharedData, m_sharedData.multisamples != 0, m_sharedData.multisamples);
+
+                    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+                }
+            });
+
 
     //FOV down
     entity = createHighlight(glm::vec2((bgBounds.width / 2.f) - 115.f, 89.f));

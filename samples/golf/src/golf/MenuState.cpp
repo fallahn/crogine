@@ -1160,11 +1160,14 @@ void MenuState::createScene()
         d.resolution = texSize / invScale;
         m_resolutionBuffer.setData(d);
 
-
+        //oh boy am I butchering this...
         std::uint32_t samples = m_sharedData.pixelScale ? 0 :
             m_sharedData.antialias ? m_sharedData.multisamples : 0;
 
-        m_backgroundTexture.create(static_cast<std::uint32_t>(texSize.x), static_cast<std::uint32_t>(texSize.y), true, false, samples);
+        m_sharedData.antialias = 
+            m_backgroundTexture.create(static_cast<std::uint32_t>(texSize.x), static_cast<std::uint32_t>(texSize.y), true, false, samples) 
+            && m_sharedData.multisamples != 0
+            && !m_sharedData.pixelScale;
 
         cam.setPerspective(m_sharedData.fov * cro::Util::Const::degToRad, texSize.x / texSize.y, 0.1f, vpSize.x);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
