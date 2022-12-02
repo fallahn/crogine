@@ -840,7 +840,10 @@ void GolfState::buildUI()
         scale = (windowScale + 1.f) - scale;
         texSize *= static_cast<std::uint32_t>(scale);
 
-        m_greenBuffer.create(texSize, texSize); //yes, it's square
+        std::uint32_t samples = m_sharedData.pixelScale ? 0 :
+            m_sharedData.antialias ? m_sharedData.multisamples : 0;
+
+        m_greenBuffer.create(texSize, texSize, true, false, samples); //yes, it's square
         greenEnt.getComponent<cro::Sprite>().setTexture(m_greenBuffer.getTexture());
 
         auto targetScale = glm::vec2(1.f / scale);
@@ -2304,7 +2307,11 @@ void GolfState::buildTrophyScene()
         {
             winSize *= maxScale;
         }
-        m_trophySceneTexture.create(static_cast<std::uint32_t>(winSize.x), static_cast<std::uint32_t>(winSize.y));
+
+        std::uint32_t samples = m_sharedData.pixelScale ? 0 :
+            m_sharedData.antialias ? m_sharedData.multisamples : 0;
+
+        m_trophySceneTexture.create(static_cast<std::uint32_t>(winSize.x), static_cast<std::uint32_t>(winSize.y), true, false, samples);
         
         float ratio = winSize.x / winSize.y;
         cam.setPerspective(m_sharedData.fov * cro::Util::Const::degToRad, ratio, 0.1f, 10.f);

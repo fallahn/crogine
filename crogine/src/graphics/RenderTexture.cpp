@@ -278,12 +278,14 @@ bool RenderTexture::createDefault(std::uint32_t width, std::uint32_t height, boo
     }
 
 
-    if (m_fboID)
+    //we were already created if the texture exists
+    if (m_texture.getGLHandle())
     {
         //if the settings are the same and we're just
         //resizing, skip re-creation and return with a
         //resized texture
-        if (depthBuffer == m_hasDepthBuffer
+        if (m_fboID
+            && depthBuffer == m_hasDepthBuffer
             && stencilBuffer == m_hasStencilBuffer)
         {
             m_texture.create(width, height);
@@ -293,7 +295,7 @@ bool RenderTexture::createDefault(std::uint32_t width, std::uint32_t height, boo
 
                 glCheck(glBindRenderbuffer(GL_RENDERBUFFER, m_rboID));
                 glCheck(glRenderbufferStorage(GL_RENDERBUFFER, format, width, height));
-                glCheck(glBindRenderbuffer(GL_RENDERBUFFER, m_rboID));
+                glCheck(glBindRenderbuffer(GL_RENDERBUFFER, 0));
             }
 
             setViewport(getDefaultViewport());
@@ -382,7 +384,7 @@ bool RenderTexture::createDefault(std::uint32_t width, std::uint32_t height, boo
 
 bool RenderTexture::createMultiSampled(std::uint32_t width, std::uint32_t height, bool depthBuffer, bool stencilBuffer)
 {
-    if (m_msfboID) //already created at least once
+    if (m_msTextureID) //already created at least once
     {
         //if the settings are the same and we're just
         //resizing, skip re-creation and return with a
@@ -402,7 +404,7 @@ bool RenderTexture::createMultiSampled(std::uint32_t width, std::uint32_t height
 
                 glCheck(glBindRenderbuffer(GL_RENDERBUFFER, m_rboID));
                 glCheck(glRenderbufferStorageMultisample(GL_RENDERBUFFER, m_samples, format, width, height));
-                glCheck(glBindRenderbuffer(GL_RENDERBUFFER, m_rboID));
+                glCheck(glBindRenderbuffer(GL_RENDERBUFFER, 0));
             }
 
             setViewport(getDefaultViewport());
@@ -428,7 +430,11 @@ bool RenderTexture::createMultiSampled(std::uint32_t width, std::uint32_t height
         m_rboID = 0;
     }
 
-    glCheck(glGenTextures(1, &m_msTextureID));
+    if (m_msTextureID == 0)
+    {
+        glCheck(glGenTextures(1, &m_msTextureID));
+    }
+
     if (m_msTextureID)
     {
         glCheck(glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, m_msTextureID));

@@ -1430,12 +1430,12 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
                 {
                     auto currIndex = AAIndexMap[m_sharedData.multisamples];
                     currIndex = (currIndex + (AASamples.size() - 1)) % AASamples.size();
-                    m_sharedData.multisamples = AASamples[currIndex];
+                    //m_sharedData.multisamples = AASamples[currIndex];
                     
                     aaLabel.getComponent<cro::Text>().setString(AAStrings[currIndex]);
                     centreText(aaLabel);
 
-                    toggleAntialiasing(m_sharedData, m_sharedData.multisamples != 0, m_sharedData.multisamples);
+                    toggleAntialiasing(m_sharedData, AASamples[currIndex] != 0, AASamples[currIndex]);
 
                     m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
                 }
@@ -1451,12 +1451,12 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
                 {
                     auto currIndex = AAIndexMap[m_sharedData.multisamples];
                     currIndex = (currIndex + 1) % AASamples.size();
-                    m_sharedData.multisamples = AASamples[currIndex];
+                   // m_sharedData.multisamples = AASamples[currIndex];
 
                     aaLabel.getComponent<cro::Text>().setString(AAStrings[currIndex]);
                     centreText(aaLabel);
 
-                    toggleAntialiasing(m_sharedData, m_sharedData.multisamples != 0, m_sharedData.multisamples);
+                    toggleAntialiasing(m_sharedData, AASamples[currIndex] != 0, AASamples[currIndex]);
 
                     m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
                 }

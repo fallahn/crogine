@@ -190,7 +190,6 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     m_inputParser       (sd, context.appInstance.getMessageBus()),
     m_cpuGolfer         (m_inputParser, m_currentPlayer, m_collisionMesh),
     m_wantsGameState    (true),
-    //m_gameSceneTexture  (8),
     m_scaleBuffer       ("PixelScale"),
     m_resolutionBuffer  ("ScaledResolution"),
     m_windBuffer        ("WindValues"),
@@ -3526,7 +3525,14 @@ void GolfState::buildScene()
         float maxScale = std::floor(winSize.y / vpSize.y);
         float scale = m_sharedData.pixelScale ? maxScale : 1.f;
         auto texSize = winSize / scale;
-        m_gameSceneTexture.create(static_cast<std::uint32_t>(texSize.x), static_cast<std::uint32_t>(texSize.y));
+
+        std::uint32_t samples = m_sharedData.pixelScale ? 0 :
+            m_sharedData.antialias ? m_sharedData.multisamples : 0;
+
+        m_sharedData.antialias =
+            m_gameSceneTexture.create(static_cast<std::uint32_t>(texSize.x), static_cast<std::uint32_t>(texSize.y), true, false, samples)
+            && m_sharedData.multisamples != 0
+            && !m_sharedData.pixelScale;
 
         auto invScale = (maxScale + 1.f) - scale;
         glCheck(glPointSize(invScale * BallPointSize));

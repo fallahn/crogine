@@ -1730,7 +1730,14 @@ void BilliardsState::resizeBuffers()
     float maxScale = std::floor(winSize.y / vpSize.y);
     float scale = m_sharedData.pixelScale ? maxScale : 1.f;
     auto texSize = winSize / scale;
-    m_gameSceneTexture.create(static_cast<std::uint32_t>(texSize.x), static_cast<std::uint32_t>(texSize.y));
+
+    std::uint32_t samples = m_sharedData.pixelScale ? 0 :
+        m_sharedData.antialias ? m_sharedData.multisamples : 0;
+
+    m_sharedData.antialias =
+        m_gameSceneTexture.create(static_cast<std::uint32_t>(texSize.x), static_cast<std::uint32_t>(texSize.y), true, false, samples)
+        && m_sharedData.multisamples != 0
+        && !m_sharedData.pixelScale;
 
 #ifdef CRO_DEBUG_
     auto size = m_gameSceneTexture.getSize() / 2u;
@@ -1754,7 +1761,7 @@ void BilliardsState::resizeBuffers()
     texSize = { TopspinSize, TopspinSize };
     texSize *= maxScale;
     texSize /= scale;
-    m_topspinTexture.create(static_cast<std::uint32_t>(texSize.x), static_cast<std::uint32_t>(texSize.y));
+    m_topspinTexture.create(static_cast<std::uint32_t>(texSize.x), static_cast<std::uint32_t>(texSize.y),true, false, samples);
 
     //target ball texture...
     constexpr float TargetSize = 22.f;
@@ -1791,14 +1798,14 @@ void BilliardsState::resizeBuffers()
     texSize = { 128.f, 128.f };
     texSize *= maxScale;
     texSize /= scale;
-    m_trophyTexture.create(static_cast<std::uint32_t>(texSize.x), static_cast<std::uint32_t>(texSize.y));
+    m_trophyTexture.create(static_cast<std::uint32_t>(texSize.x), static_cast<std::uint32_t>(texSize.y), true, false, samples);
 
 
     //and texture to display pocketed balls
     texSize = { 228.f, 14.f };
     texSize *= maxScale;
     texSize /= scale;
-    m_pocketedTexture.create(static_cast<std::uint32_t>(texSize.x), static_cast<std::uint32_t>(texSize.y));
+    m_pocketedTexture.create(static_cast<std::uint32_t>(texSize.x), static_cast<std::uint32_t>(texSize.y), true, false, samples);
 }
 
 glm::vec4 BilliardsState::getSubrect(std::int8_t id) const

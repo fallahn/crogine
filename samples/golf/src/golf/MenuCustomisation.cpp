@@ -79,6 +79,9 @@ void MenuState::createBallScene()
 
     auto ballTexCallback = [&](cro::Camera&)
     {
+        std::uint32_t samples = m_sharedData.pixelScale ? 0 :
+            m_sharedData.antialias ? m_sharedData.multisamples : 0;
+
         auto vpSize = calcVPSize().y;
         auto windowSize = static_cast<float>(cro::App::getWindow().getSize().y);
 
@@ -87,10 +90,10 @@ void MenuState::createBallScene()
         
         auto invScale = static_cast<std::uint32_t>((windowScale + 1.f) - scale);
         auto size = BallPreviewSize * invScale;
-        m_ballTexture.create(size, size);
+        m_ballTexture.create(size, size, true, false, samples);
 
         size = BallThumbSize * invScale;
-        m_ballThumbTexture.create(size * 4, size * 2);
+        m_ballThumbTexture.create(size * 4, size * 2, true, false, samples);
     };
 
     m_ballCam = m_backgroundScene.createEntity();

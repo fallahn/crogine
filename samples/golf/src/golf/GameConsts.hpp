@@ -320,7 +320,8 @@ static inline void togglePixelScale(SharedStateData& sharedData, bool on)
 
 static inline void toggleAntialiasing(SharedStateData& sharedData, bool on, std::uint32_t samples)
 {
-    if (on != sharedData.antialias)
+    if (on != sharedData.antialias
+        || samples != sharedData.multisamples)
     {
         sharedData.antialias = on;
         if (!on)

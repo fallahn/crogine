@@ -221,7 +221,7 @@ void TrophyState::render()
 void TrophyState::buildScene()
 {
     auto& mb = getContext().appInstance.getMessageBus();
-    m_scene.addSystem<cro::UISystem>(mb);// ->setActiveControllerID(m_sharedData.inputBinding.controllerID);
+    m_scene.addSystem<cro::UISystem>(mb);
     m_scene.addSystem<cro::CommandSystem>(mb);
     m_scene.addSystem<cro::CallbackSystem>(mb);
     m_scene.addSystem<cro::SpriteSystem2D>(mb);
@@ -685,7 +685,10 @@ void TrophyState::buildScene()
             trophyEnt.getComponent<cro::Transform>().setScale(glm::vec2(1.f) / m_viewScale);
         }
 
-        m_trophyTexture.create(textureSize.x, textureSize.y);
+        std::uint32_t samples = m_sharedData.pixelScale ? 0 :
+            m_sharedData.antialias ? m_sharedData.multisamples : 0;
+
+        m_trophyTexture.create(textureSize.x, textureSize.y, true, false, samples);
         trophyEnt.getComponent<cro::Sprite>().setTexture(m_trophyTexture.getTexture());
         trophyEnt.getComponent<cro::Transform>().setOrigin({ textureSize.x / 2.f, textureSize.y / 2.f });
 
