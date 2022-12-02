@@ -97,6 +97,11 @@ namespace cro
         static const RenderTarget* getActiveTarget();
 
         /*!
+        \brief Returns the ID of the currently active target
+        */
+        static std::uint32_t getActiveTargetID();
+
+        /*!
         \brief Returns an orthographic projection matrix based on
         the RenderTarget's current view
         \see setView()

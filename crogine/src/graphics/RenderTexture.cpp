@@ -266,8 +266,8 @@ bool RenderTexture::createDefault(std::uint32_t width, std::uint32_t height, boo
     if (m_samples)
     {
         //we previously had multisampling so tidy it up
-        glCheck(glDeleteBuffers(1, &m_fboID));
-        glCheck(glDeleteBuffers(1, &m_msfboID));
+        glCheck(glDeleteFramebuffers(1, &m_fboID));
+        glCheck(glDeleteFramebuffers(1, &m_msfboID));
         m_fboID = 0;
         m_msfboID = 0;
 
@@ -363,7 +363,7 @@ bool RenderTexture::createDefault(std::uint32_t width, std::uint32_t height, boo
 
         if (glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE)
         {
-            glCheck(glBindFramebuffer(GL_FRAMEBUFFER, 0));
+            glCheck(glBindFramebuffer(GL_FRAMEBUFFER, RenderTarget::getActiveTargetID()));
             m_fboID = fbo;
             setViewport(getDefaultViewport());
             setView(FloatRect(getViewport()));
@@ -374,7 +374,7 @@ bool RenderTexture::createDefault(std::uint32_t width, std::uint32_t height, boo
             return true;
         }
     }
-    glCheck(glBindFramebuffer(GL_FRAMEBUFFER, 0));
+    glCheck(glBindFramebuffer(GL_FRAMEBUFFER, RenderTarget::getActiveTargetID()));
 
     Texture temp;
     temp.swap(m_texture);
@@ -500,7 +500,7 @@ bool RenderTexture::createMultiSampled(std::uint32_t width, std::uint32_t height
 
         if (glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE)
         {
-            glCheck(glBindFramebuffer(GL_FRAMEBUFFER, 0));
+            glCheck(glBindFramebuffer(GL_FRAMEBUFFER, RenderTarget::getActiveTargetID()));
             m_fboID = fbos[0];
             m_msfboID = fbos[1];
             setViewport(getDefaultViewport());
@@ -512,7 +512,7 @@ bool RenderTexture::createMultiSampled(std::uint32_t width, std::uint32_t height
             return true;
         }
     }
-    glCheck(glBindFramebuffer(GL_FRAMEBUFFER, 0));
+    glCheck(glBindFramebuffer(GL_FRAMEBUFFER, RenderTarget::getActiveTargetID()));
 
     //remove unused textures cos creating FBOs failed
     glCheck(glDeleteTextures(1, &m_msTextureID));
