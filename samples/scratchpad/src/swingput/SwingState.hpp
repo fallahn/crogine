@@ -30,7 +30,7 @@ source distribution.
 #pragma once
 
 #include "../StateIDs.hpp"
-#include "InputHandler.hpp"
+#include "Swingput.hpp"
 
 #include <crogine/core/State.hpp>
 #include <crogine/ecs/Scene.hpp>
@@ -62,7 +62,7 @@ private:
 
     cro::ResourceCollection m_resources;
 
-    InputHandler m_inputParser;
+    Swingput m_inputParser;
 
     void addSystems();
     void loadAssets();

@@ -27,7 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#include "InputHandler.hpp"
+#include "Swingput.hpp"
 
 #include <crogine/core/App.hpp>
 #include <crogine/core/GameController.hpp>
@@ -43,7 +43,8 @@ namespace
     }debug;
 
     constexpr float MaxDistance = 200.f;
-    constexpr float MaxVelocity = 3000.f;
+    constexpr float MaxControllerVelocity = 3000.f;
+    constexpr float MaxMouseVelocity = 1700.f;
     constexpr float MaxAccuracy = 20.f;
     constexpr float CommitDistance = 4.f;// 0.01f;
 
@@ -52,12 +53,13 @@ namespace
     constexpr std::int16_t MinStickMove = 8000;
 }
 
-InputHandler::InputHandler()
+Swingput::Swingput()
     : m_backPoint       (0.f),
     m_activePoint       (0.f),
     m_frontPoint        (0.f),
     m_power             (0.f),
     m_hook              (0.f),
+    m_maxVelocity       (1.f),
     m_lastLT            (0),
     m_lastRT            (0),
     m_elapsedTime       (0.f)
@@ -84,9 +86,9 @@ InputHandler::InputHandler()
 }
 
 //public
-void InputHandler::handleEvent(const cro::Event& evt)
+bool Swingput::handleEvent(const cro::Event& evt)
 {
-    const auto startStroke = [&]()
+    const auto startStroke = [&](float maxVelocity)
     {
         if (m_state == State::Inactive
             && (m_lastLT < MinTriggerMove)
@@ -98,6 +100,8 @@ void InputHandler::handleEvent(const cro::Event& evt)
             m_frontPoint = { 0.f, 0.f };
             m_power = 0.f;
             m_hook = 0.f;
+
+            m_maxVelocity = maxVelocity;
 
             cro::App::getWindow().setMouseCaptured(true);
         }
@@ -112,19 +116,19 @@ void InputHandler::handleEvent(const cro::Event& evt)
 
     switch (evt.type)
     {
-    default: break;
+    default: return false;
     case SDL_MOUSEBUTTONDOWN:
         if (evt.button.button == SDL_BUTTON_LEFT)
         {
-            startStroke();
+            startStroke(MaxMouseVelocity);
         }
-        break;
+        return true;
     case SDL_MOUSEBUTTONUP:
         if (evt.button.button == SDL_BUTTON_LEFT)
         {
             endStroke();
         }
-        break;
+        return true;
     case SDL_MOUSEMOTION:
         //TODO we need to scale this down relative to the game buffer size
         switch (m_state)
@@ -133,9 +137,9 @@ void InputHandler::handleEvent(const cro::Event& evt)
         case State::Swing:
             m_activePoint.x = std::clamp(m_activePoint.x + evt.motion.xrel, -MaxAccuracy, MaxAccuracy);
             m_activePoint.y = std::clamp(m_activePoint.y - evt.motion.yrel, -(MaxDistance / 2.f), MaxDistance / 2.f);
-            break;
+            return true;
         }
-        break;
+        return false;
 
         //we allow either trigger or either stick
         //to aid handedness of players
@@ -147,7 +151,7 @@ void InputHandler::handleEvent(const cro::Event& evt)
         case SDL_CONTROLLER_AXIS_TRIGGERRIGHT:
             if (evt.caxis.value > MinTriggerMove)
             {
-                startStroke();
+                startStroke(MaxControllerVelocity);
             }
             else
             {
@@ -162,7 +166,7 @@ void InputHandler::handleEvent(const cro::Event& evt)
             {
                 m_lastRT = evt.caxis.value;
             }
-            break;
+            return true;
         case SDL_CONTROLLER_AXIS_LEFTY:
         case SDL_CONTROLLER_AXIS_RIGHTY:
 
@@ -173,7 +177,7 @@ void InputHandler::handleEvent(const cro::Event& evt)
                     m_activePoint.y = std::pow((static_cast<float>(-evt.caxis.value) / ControllerAxisRange), 5.f) * (MaxDistance / 2.f);
                 }
             }
-            break;
+            return true;
         case SDL_CONTROLLER_AXIS_LEFTX:
         case SDL_CONTROLLER_AXIS_RIGHTX:
             //just set this and we'll have
@@ -185,13 +189,15 @@ void InputHandler::handleEvent(const cro::Event& evt)
             {
                 m_activePoint.x = (static_cast<float>(evt.caxis.value) / ControllerAxisRange) * MaxAccuracy;
             }
-            break;
+            return true;
         }
-        break;
+        return false;
     }
+
+    return false;
 }
 
-void InputHandler::process(float)
+bool Swingput::process(float)
 {
     switch (m_state)
     {
@@ -222,7 +228,7 @@ void InputHandler::process(float)
 
         m_frontPoint = m_activePoint;
     }
-        break;
+    return false;
     case State::Summarise:
         m_state = State::Inactive;
 
@@ -230,7 +236,7 @@ void InputHandler::process(float)
         debug.velocity = debug.distance / (m_elapsedTime + 0.0001f); //potential NaN
         debug.accuracy = (m_frontPoint.x - m_backPoint.x);
         
-        m_power = std::clamp(debug.velocity / MaxVelocity, 0.f, 1.f);
+        m_power = std::clamp(debug.velocity / m_maxVelocity, 0.f, 1.f);
         m_hook = std::clamp(debug.accuracy / MaxAccuracy, -1.f, 1.f);
 
 
@@ -239,6 +245,7 @@ void InputHandler::process(float)
         float multiplier = debug.distance / MaxDistance;
         m_power *= multiplier;
 
-        break;
+        return true;
     }
+    return false;
 }

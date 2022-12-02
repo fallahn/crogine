@@ -36,14 +36,17 @@ source distribution.
 
 #include <array>
 
-class InputHandler final : public cro::GuiClient
+class Swingput final : public cro::GuiClient
 {
 public:
-    InputHandler();
+    Swingput();
 
-    void handleEvent(const cro::Event&);
+    //returns true if this consumed the event
+    bool handleEvent(const cro::Event&);
 
-    void process(float);
+    //returns true if the shot was taken and result
+    //is ready in power/hook
+    bool process(float);
 
     bool active() const { return m_state != State::Inactive; }
 
@@ -75,6 +78,8 @@ private:
 
     float m_power;
     float m_hook;
+
+    float m_maxVelocity; //depends on controller or mouse input
 
     std::int16_t m_lastLT;
     std::int16_t m_lastRT;

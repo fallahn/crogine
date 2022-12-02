@@ -180,7 +180,7 @@
     <ClCompile Include="src\swingput\SwingState.cpp">
       <Filter>Source Files\swingput</Filter>
     </ClCompile>
-    <ClCompile Include="src\swingput\InputHandler.cpp">
+    <ClCompile Include="src\swingput\Swingput.cpp">
       <Filter>Source Files\swingput</Filter>
     </ClCompile>
   </ItemGroup>
@@ -317,7 +317,7 @@
     <ClInclude Include="src\swingput\SwingState.hpp">
       <Filter>Header Files\swingput</Filter>
     </ClInclude>
-    <ClInclude Include="src\swingput\InputHandler.hpp">
+    <ClInclude Include="src\swingput\Swingput.hpp">
       <Filter>Header Files\swingput</Filter>
     </ClInclude>
   </ItemGroup>

@@ -403,7 +403,7 @@ void TutorialState::buildScene()
         buttonEnt.addComponent<cro::Drawable2D>();
         buttonEnt.addComponent<cro::Sprite>() = m_buttonSprites[ButtonID::A];
         buttonEnt.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
-        buttonEnt.addComponent<cro::SpriteAnimation>().play(0);
+        buttonEnt.addComponent<cro::SpriteAnimation>().play(IS_PS(activeControllerID(0)) ? 1 : 0);
         buttonEnt.addComponent<cro::CommandTarget>().ID = CommandID::UI::PlayerIcon;
         buttonEnt.addComponent<cro::Callback>().active = true;
         buttonEnt.getComponent<cro::Callback>().setUserData<float>(0.f);
@@ -1806,7 +1806,7 @@ void TutorialState::tutorialFour(cro::Entity root)
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>().setCroppingArea({ 0.f, 0.f, 0.f, 0.f });
-    entity.addComponent<cro::Text>(font).setString("Use the flag on the power bar to judge the distance.");
+    entity.addComponent<cro::Text>(font).setString("Use the flag on the power bar to judge the distance to the hole.");
     entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     centreText(entity);
