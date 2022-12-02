@@ -490,7 +490,6 @@ bool MenuState::handleEvent(const cro::Event& evt)
             requestStackPush(StateID::Credits);
             break;
         case SDLK_KP_0:
-            //requestStackPush(StateID::News);
         {
             auto size = m_backgroundTexture.getSize();
             m_backgroundTexture.create(size.x, size.y);
@@ -518,8 +517,13 @@ bool MenuState::handleEvent(const cro::Event& evt)
             m_backgroundTexture.create(size.x, size.y, true, false, 4);
         }
             break;
+        case SDLK_KP_5:
+            requestStackPush(StateID::News);
+            break;
+        case SDLK_KP_6:
+            requestStackPush(StateID::Trophy);
+            break;
         case SDLK_KP_8:
-            //requestStackPush(StateID::Trophy);
         {
             auto size = m_backgroundTexture.getSize();
             m_backgroundTexture.create(size.x, size.y, true, false, 8);

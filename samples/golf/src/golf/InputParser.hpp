@@ -30,6 +30,7 @@ source distribution.
 #pragma once
 
 #include "InputBinding.hpp"
+#include "Swingput.hpp"
 
 #include <crogine/core/App.hpp>
 #include <crogine/core/Clock.hpp>
@@ -79,6 +80,8 @@ private:
     const SharedStateData& m_sharedData;
     const InputBinding& m_inputBinding;
     cro::MessageBus& m_messageBus;
+
+    Swingput m_swingput;
 
     std::uint16_t m_inputFlags;
     std::uint16_t m_prevFlags;
