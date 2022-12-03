@@ -69,6 +69,10 @@ public:
     bool inProgress() const;
     bool getActive() const;
 
+    bool isSwingputActive() const { return m_swingput.isActive(); }
+    float getSwingputPosition() const { return m_swingput.getActivePoint().y; }
+    void setMouseScale(float scale) { CRO_ASSERT(scale > 0, ""); m_swingput.setMouseScale(scale); }
+
     void setMaxRotation(float);
     float getMaxRotation() const { return m_maxRotation; }
 

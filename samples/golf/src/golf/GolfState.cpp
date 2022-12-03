@@ -175,8 +175,6 @@ namespace
 
     constexpr float MaxRotation = 0.13f;
     constexpr float MaxPuttRotation = 0.24f;
-
-    std::int32_t lastControllerID = 0;
 }
 
 GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, SharedStateData& sd)
@@ -616,7 +614,6 @@ bool GolfState::handleEvent(const cro::Event& evt)
             break;
         case cro::GameController::ButtonA:
             toggleQuitReady();
-            lastControllerID = cro::GameController::controllerID(evt.cbutton.which);
             break;
         }
     }
@@ -663,7 +660,8 @@ bool GolfState::handleEvent(const cro::Event& evt)
 
     else if (evt.type == SDL_MOUSEMOTION)
     {
-        if (!m_photoMode) 
+        if (!m_photoMode
+            && !m_inputParser.isSwingputActive()) 
         {
             cro::App::getWindow().setMouseCaptured(false);
             m_mouseVisible = true;
@@ -765,7 +763,7 @@ void GolfState::handleMessage(const cro::Message& msg)
                 auto strLow = static_cast<std::uint16_t>(50000.f * m_inputParser.getPower());
                 auto strHigh = static_cast<std::uint16_t>(35000.f * m_inputParser.getPower());
 
-                cro::GameController::rumbleStart(lastControllerID, strLow, strHigh, 200);
+                cro::GameController::rumbleStart(activeControllerID(m_sharedData.inputBinding.playerID), strLow, strHigh, 200);
             }
 
             //check if we hooked/sliced
@@ -5520,9 +5518,6 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
         auto tx = glm::inverse(glm::lookAt(eye, target, cro::Transform::Y_AXIS));
         m_cameras[CameraID::Bystander].getComponent<cro::Transform>().setLocalTransform(tx);
 
-
-
-
         //if this is a CPU player or a remote player, show a bystander cam automatically
         if (player.client != m_sharedData.localConnectionData.connectionID
             || 
@@ -5601,6 +5596,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
         }
     };
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
 
     m_currentPlayer = player;
 

@@ -126,8 +126,6 @@ namespace
     static constexpr glm::vec2 BillboardChunk(40.f, 50.f);
     static constexpr std::size_t ChunkCount = 5;
 
-    std::int32_t lastControllerID = 0;
-
     struct FoliageCallback final
     {
         FoliageCallback(float d = 0.f) : delay(d + 8.f) {} //magic number is some delay before effect starts
@@ -326,9 +324,6 @@ bool DrivingState::handleEvent(const cro::Event& evt)
         case cro::GameController::ButtonGuide:
             requestStackPush(StateID::Pause);
             break;
-        case cro::GameController::ButtonA:
-            lastControllerID = cro::GameController::controllerID(evt.cbutton.which);
-            break;
 #ifdef USE_GNS
         case cro::GameController::ButtonB:
             closeLeaderboard();
@@ -341,7 +336,10 @@ bool DrivingState::handleEvent(const cro::Event& evt)
 #ifdef CRO_DEBUG_
         if (!useFreeCam) {
 #endif
-            cro::App::getWindow().setMouseCaptured(false);
+            if (!m_inputParser.isSwingputActive())
+            {
+                cro::App::getWindow().setMouseCaptured(false);
+            }
 #ifdef CRO_DEBUG_
         }
 #endif // CRO_DEBUG_
@@ -2565,7 +2563,7 @@ void DrivingState::hitBall()
     float lowFreq = 50000.f * m_inputParser.getPower();
     float hiFreq = 35000.f * m_inputParser.getPower();
 
-    cro::GameController::rumbleStart(lastControllerID, static_cast<std::uint16_t>(lowFreq), static_cast<std::uint16_t>(hiFreq), 200);
+    cro::GameController::rumbleStart(activeControllerID(m_sharedData.inputBinding.playerID), static_cast<std::uint16_t>(lowFreq), static_cast<std::uint16_t>(hiFreq), 200);
 
     //from here the hook value is just used for UI feedback
     //so we want to flip it as appropriate with the current avatar

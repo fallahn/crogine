@@ -45,7 +45,6 @@ namespace
     }debugOutput;
 #endif
 
-    constexpr float MaxDistance = 200.f;
     constexpr float MaxControllerVelocity = 3000.f;
     constexpr float MaxMouseVelocity = 1700.f;
     constexpr float MaxAccuracy = 20.f;
@@ -64,6 +63,7 @@ Swingput::Swingput()
     m_power         (0.f),
     m_hook          (0.f),
     m_maxVelocity   (1.f),
+    m_mouseScale    (1.f),
     m_lastLT        (0),
     m_lastRT        (0),
     m_elapsedTime   (0.f)
@@ -123,7 +123,6 @@ bool Swingput::handleEvent(const cro::Event& evt)
     {
         m_state = State::Inactive;
         m_activePoint = { 0.f, 0.f };
-        cro::App::getWindow().setMouseCaptured(false);
     };
 
     switch (evt.type)
@@ -147,8 +146,8 @@ bool Swingput::handleEvent(const cro::Event& evt)
         {
         default: break;
         case State::Swing:
-            m_activePoint.x = std::clamp(m_activePoint.x + evt.motion.xrel, -MaxAccuracy, MaxAccuracy);
-            m_activePoint.y = std::clamp(m_activePoint.y - evt.motion.yrel, -(MaxDistance / 2.f), MaxDistance / 2.f);
+            m_activePoint.x = std::clamp(m_activePoint.x + (static_cast<float>(evt.motion.xrel) / 10.f/* / m_mouseScale*/), -MaxAccuracy, MaxAccuracy);
+            m_activePoint.y = std::clamp(m_activePoint.y - (static_cast<float>(evt.motion.yrel)/* / m_mouseScale*/), -(MaxSwingputDistance / 2.f), MaxSwingputDistance / 2.f);
             return true;
         }
         return false;
@@ -188,7 +187,7 @@ bool Swingput::handleEvent(const cro::Event& evt)
                 {
                     if (m_state == State::Swing)
                     {
-                        m_activePoint.y = std::pow((static_cast<float>(-evt.caxis.value) / ControllerAxisRange), 5.f) * (MaxDistance / 2.f);
+                        m_activePoint.y = std::pow((static_cast<float>(-evt.caxis.value) / ControllerAxisRange), 7.f) * (MaxSwingputDistance / 2.f);
                     }
                 }
                 return true;
@@ -235,7 +234,7 @@ bool Swingput::process(float)
         //we've done full stroke. TODO commit distance needs
         //to be changable - stick ranges vary between controllers
         //and even between sticks on the same controller...
-        if (m_activePoint.y > (MaxDistance / 2.f) - CommitDistance)
+        if (m_activePoint.y > (MaxSwingputDistance / 2.f) - CommitDistance)
         {
             m_state = State::Summarise;
             m_elapsedTime = m_timer.restart();
@@ -256,7 +255,7 @@ bool Swingput::process(float)
 
         //travelling a shorter distance doesn't imply lower
         //velocity so we need to create a distance based modifier
-        float multiplier = debugOutput.distance / MaxDistance;
+        float multiplier = debugOutput.distance / MaxSwingputDistance;
 
 #else
         float distance = (m_frontPoint.y - m_backPoint.y);
@@ -267,7 +266,7 @@ bool Swingput::process(float)
 
         //travelling a shorter distance doesn't imply lower
         //velocity so we need to create a distance based modifier
-        float multiplier = distance / MaxDistance;
+        float multiplier = distance / MaxSwingputDistance;
 #endif
 
         //hmm have to double convert this because the input parser
@@ -280,4 +279,11 @@ bool Swingput::process(float)
         return true;
     }
     return false;
+}
+
+void Swingput::setEnabled(std::int32_t enabled)
+{
+    m_enabled = enabled; 
+    m_lastLT = 0;
+    m_lastRT = 0;
 }
