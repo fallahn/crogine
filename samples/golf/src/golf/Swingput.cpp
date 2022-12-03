@@ -73,6 +73,7 @@ Swingput::Swingput()
         {
             if (ImGui::Begin("Swingput"))
             {
+                ImGui::Text("Active Input %d", m_enabled);
                 ImGui::Text("State: %s", StateStrings[m_state].c_str());
 
                 ImGui::Text("Distance: %3.3f", debugOutput.distance);
@@ -94,6 +95,11 @@ Swingput::Swingput()
 //public
 bool Swingput::handleEvent(const cro::Event& evt)
 {
+    if (m_enabled == -1)
+    {
+        return false;
+    }
+
     const auto startStroke = [&](float maxVelocity)
     {
         if (m_state == State::Inactive

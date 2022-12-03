@@ -339,7 +339,7 @@ void InputParser::setActive(bool active, bool isCPU)
         resetPower();
         m_inputFlags = 0;
 
-        m_swingput.setEnabled(m_inputBinding.playerID);
+        m_swingput.setEnabled(m_enableFlags == std::numeric_limits<std::uint16_t>::max() ? m_inputBinding.playerID : -1);
     }
     else
     {
@@ -364,6 +364,8 @@ void InputParser::setSuspended(bool suspended)
 void InputParser::setEnableFlags(std::uint16_t flags)
 {
     m_enableFlags = flags;
+
+    m_swingput.setEnabled(flags == std::numeric_limits<std::uint16_t>::max() ? m_swingput.getEnabled() : -1);
 }
 
 void InputParser::setMaxClub(float dist)
@@ -658,7 +660,7 @@ void InputParser::checkControllerInput()
     static const float MinLen2 = static_cast<float>(LeftThumbDeadZone * LeftThumbDeadZone);
     if (len2 > MinLen2)
     {
-        m_analogueAmount = std::pow(std::sqrt(len2) / (cro::GameController::AxisMax - LeftThumbDeadZone), 3.f);
+        m_analogueAmount = std::min(1.f, std::pow(std::sqrt(len2) / (cro::GameController::AxisMax - LeftThumbDeadZone), 3.f));
     }
 
 

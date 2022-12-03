@@ -52,6 +52,7 @@ public:
 
     //set to -1 to deactivate, else current player ID
     void setEnabled(std::int32_t enabled) { m_enabled = enabled; }
+    std::int32_t getEnabled() const { return m_enabled; }
 
     float getPower() const { return m_power; }
     float getHook() const { return m_hook; }
