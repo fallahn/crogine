@@ -655,6 +655,8 @@ void BilliardsState::showReadyNotify(const BilliardsPlayer& player)
         }
     };
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+    m_sharedData.inputBinding.playerID = player.player;
 }
 
 void BilliardsState::showNotification(const cro::String& msg)

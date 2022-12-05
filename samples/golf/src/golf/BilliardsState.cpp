@@ -327,7 +327,7 @@ bool BilliardsState::handleEvent(const cro::Event& evt)
         }
     }
     else if (evt.type == SDL_CONTROLLERBUTTONDOWN
-        /*&& evt.cbutton.which == cro::GameController::deviceID(m_sharedData.inputBinding.controllerID)*/)
+        && evt.cbutton.which == activeControllerID(m_sharedData.inputBinding.playerID))
     {
         switch (evt.cbutton.button)
         {
@@ -342,7 +342,7 @@ bool BilliardsState::handleEvent(const cro::Event& evt)
         }
     }
     else if (evt.type == SDL_CONTROLLERBUTTONUP
-        /*&& evt.cbutton.which == cro::GameController::deviceID(m_sharedData.inputBinding.controllerID)*/)
+        && evt.cbutton.which == activeControllerID(m_sharedData.inputBinding.playerID))
     {
         switch (evt.cbutton.button)
         {
@@ -352,10 +352,7 @@ bool BilliardsState::handleEvent(const cro::Event& evt)
             break;
         }
     }
-    else if (evt.type == SDL_CONTROLLERDEVICEREMOVED)
-    {
 
-    }
     else if (evt.type == SDL_MOUSEBUTTONDOWN)
     {
         if (evt.button.button == SDL_BUTTON_LEFT)
@@ -1585,7 +1582,7 @@ void BilliardsState::setPlayer(const BilliardsPlayer& playerInfo)
             {
                 m_inputParser.setActive(true, !m_cueball.isValid());
                 //m_uiScene.getSystem<NotificationSystem>()->clearCurrent();
-                //m_sharedData.inputBinding.controllerID = m_sharedData.controllerIDs[playerInfo.player];
+                m_sharedData.inputBinding.playerID = playerInfo.player;
 
                 m_localCue.getComponent<cro::Callback>().getUserData<CueCallbackData>().direction = CueCallbackData::In;
                 m_localCue.getComponent<cro::Callback>().active = true;
