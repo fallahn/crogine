@@ -39,6 +39,7 @@ set(GOLF_SRC
   ${PROJECT_DIR}/golf/MenuSoundDirector.cpp
   ${PROJECT_DIR}/golf/MenuState.cpp
   ${PROJECT_DIR}/golf/MessageOverlayState.cpp
+  ${PROJECT_DIR}/golf/MiniBallSystem.cpp
   ${PROJECT_DIR}/golf/NameScrollSystem.cpp
   ${PROJECT_DIR}/golf/NewsState.cpp
   ${PROJECT_DIR}/golf/NotificationSystem.cpp
