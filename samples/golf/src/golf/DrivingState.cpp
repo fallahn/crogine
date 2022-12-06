@@ -336,7 +336,7 @@ bool DrivingState::handleEvent(const cro::Event& evt)
 #ifdef CRO_DEBUG_
         if (!useFreeCam) {
 #endif
-            if (!m_inputParser.isSwingputActive())
+            if ((evt.motion.state & SDL_BUTTON_RMASK) == 0)
             {
                 cro::App::getWindow().setMouseCaptured(false);
             }

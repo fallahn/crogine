@@ -1027,7 +1027,6 @@ void GolfState::createSwingMeter(cro::Entity root)
     entity.getComponent<UIElement>().relativePosition = { 1.f, 0.f };
     entity.getComponent<UIElement>().absolutePosition = { -10.f, 50.f };
     
-    m_swingMeter = entity;
     root.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 }
 

@@ -661,7 +661,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
     else if (evt.type == SDL_MOUSEMOTION)
     {
         if (!m_photoMode
-            && !m_inputParser.isSwingputActive()) 
+            && (evt.motion.state & SDL_BUTTON_RMASK) == 0)
         {
             cro::App::getWindow().setMouseCaptured(false);
             m_mouseVisible = true;

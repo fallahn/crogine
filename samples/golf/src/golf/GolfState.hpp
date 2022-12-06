@@ -303,7 +303,6 @@ private:
 
     cro::Entity m_courseEnt;
     cro::Entity m_waterEnt;
-    cro::Entity m_swingMeter;
     std::uint8_t m_readyQuitFlags;
 
     void buildUI();
