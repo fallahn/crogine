@@ -44,11 +44,26 @@ source distribution.
 #include <crogine/util/Easings.hpp>
 #include <crogine/util/Random.hpp>
 
+#include <crogine/gui/Gui.hpp>
+
 namespace
 {
     static constexpr float MaxTargetDiff = 25.f; //dist sqr
 
     static constexpr float MaxOffsetDistance = 2500.f; //dist sqr
+
+    const std::array<std::string, CameraID::Count> CamNames =
+    {
+        "Player", "Bystander", "Sky", "Green", "Transition"
+    };
+
+    const std::array<std::string, 3u> StateNames =
+    {
+        "Follow", "Zoom", "Reset"
+    };
+
+    //follows just above the target
+    constexpr glm::vec3 TargetOffset(0.f, 0.2f, 0.f);
 }
 
 CameraFollowSystem::CameraFollowSystem(cro::MessageBus& mb)
@@ -58,6 +73,22 @@ CameraFollowSystem::CameraFollowSystem(cro::MessageBus& mb)
     requireComponent<cro::Transform>();
     requireComponent<cro::Camera>();
     requireComponent<CameraFollower>();
+
+    //registerWindow([&]()
+    //    {
+    //        if (ImGui::Begin("Cameras"))
+    //        {
+    //            ImGui::Text("Closest %s", CamNames[m_closestCamera].c_str());
+
+    //            const auto& ents = getEntities();
+    //            for (auto ent : ents)
+    //            {
+    //                const auto& cam = ent.getComponent<CameraFollower>();
+    //                ImGui::Text("%s, state %s", CamNames[cam.id].c_str(), StateNames[cam.state].c_str());
+    //            }
+    //        }
+    //        ImGui::End();        
+    //    });
 }
 
 //public
@@ -163,7 +194,7 @@ void CameraFollowSystem::process(float dt)
         {
             auto& tx = entity.getComponent<cro::Transform>();
 
-            auto target = follower.target.getComponent<cro::Transform>().getPosition();
+            auto target = follower.target.getComponent<cro::Transform>().getPosition() + TargetOffset;
             target += follower.targetOffset * std::min(1.f, glm::length2(target - tx.getPosition()) / MaxOffsetDistance);
 
             auto diff = target - follower.currentTarget;
@@ -187,7 +218,7 @@ void CameraFollowSystem::process(float dt)
                 || collider.terrain == TerrainID::Green)
             {
                 auto dist = glm::length2(tx.getPosition() - target);
-                auto dist2 = glm::length2(tx.getPosition() - follower.playerPosition);
+                auto dist2 = glm::length2((tx.getPosition() - follower.playerPosition) * 0.79f);
                 if (dist < currDist
                     && dist < follower.radius
                     && dist2 > follower.radius
@@ -242,7 +273,7 @@ void CameraFollowSystem::process(float dt)
                 }
 
                 auto& tx = entity.getComponent<cro::Transform>();
-                auto target = follower.target.getComponent<cro::Transform>().getPosition();
+                auto target = follower.target.getComponent<cro::Transform>().getPosition() + TargetOffset;
                 target += follower.targetOffset * std::min(1.f, glm::length2(target - tx.getPosition()) / MaxOffsetDistance);
 
                 auto diff = target - follower.currentTarget;

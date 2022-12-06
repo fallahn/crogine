@@ -69,26 +69,26 @@ Swingput::Swingput()
     m_elapsedTime   (0.f)
 {
 #ifdef CRO_DEBUG_
-    registerWindow([&]()
-        {
-            if (ImGui::Begin("Swingput"))
-            {
-                ImGui::Text("Active Input %d", m_enabled);
-                ImGui::Text("State: %s", StateStrings[m_state].c_str());
+    //registerWindow([&]()
+    //    {
+    //        if (ImGui::Begin("Swingput"))
+    //        {
+    //            ImGui::Text("Active Input %d", m_enabled);
+    //            ImGui::Text("State: %s", StateStrings[m_state].c_str());
 
-                ImGui::Text("Distance: %3.3f", debugOutput.distance);
-                ImGui::Text("Velocity: %3.3f", debugOutput.velocity);
-                ImGui::Text("Accuracy: %3.3f", debugOutput.accuracy);
+    //            ImGui::Text("Distance: %3.3f", debugOutput.distance);
+    //            ImGui::Text("Velocity: %3.3f", debugOutput.velocity);
+    //            ImGui::Text("Accuracy: %3.3f", debugOutput.accuracy);
 
-                ImGui::Text("Power: %3.3f", m_power);
-                ImGui::Text("Hook: %3.3f", m_hook);
+    //            ImGui::Text("Power: %3.3f", m_power);
+    //            ImGui::Text("Hook: %3.3f", m_hook);
 
-                ImGui::Text("Active Point %3.3f, %3.3f", m_activePoint.x, m_activePoint.y);
-                ImGui::Text("Back Point %3.3f, %3.3f", m_backPoint.x, m_backPoint.y);
-                ImGui::Text("Front Point %3.3f, %3.3f", m_frontPoint.x, m_frontPoint.y);
-            }
-            ImGui::End();
-        });
+    //            ImGui::Text("Active Point %3.3f, %3.3f", m_activePoint.x, m_activePoint.y);
+    //            ImGui::Text("Back Point %3.3f, %3.3f", m_backPoint.x, m_backPoint.y);
+    //            ImGui::Text("Front Point %3.3f, %3.3f", m_frontPoint.x, m_frontPoint.y);
+    //        }
+    //        ImGui::End();
+    //    });
 #endif
 }
 

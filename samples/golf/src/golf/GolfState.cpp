@@ -800,7 +800,7 @@ void GolfState::handleMessage(const cro::Message& msg)
 
 
                 //enable the camera following
-                m_gameScene.setSystemActive<CameraFollowSystem>(true);
+                //m_gameScene.setSystemActive<CameraFollowSystem>(true);
 
                 //hide the ball briefly to hack around the motion lag
                 //(the callback automatically scales back)
@@ -808,10 +808,11 @@ void GolfState::handleMessage(const cro::Message& msg)
                 m_activeAvatar->ballModel.getComponent<cro::Callback>().active = true;
                 m_activeAvatar->ballModel.getComponent<cro::Model>().setHidden(true);
             }
-            else
+            /*else
             {
                 m_gameScene.setSystemActive<CameraFollowSystem>(m_holeData[m_currentHole].puttFromTee);
-            }
+            }*/
+            m_gameScene.setSystemActive<CameraFollowSystem>(true);
         }
         else if (data.userType == cro::Message::SkeletalAnimationEvent::Stopped)
         {
@@ -3643,7 +3644,6 @@ void GolfState::buildScene()
     m_cameras[CameraID::Sky] = camEnt;
 
 
-
     //and a green camera
     camEnt = m_gameScene.createEntity();
     camEnt.addComponent<cro::Transform>();
@@ -3670,7 +3670,6 @@ void GolfState::buildScene()
     camEnt.addComponent<TargetInfo>();
     setPerspective(camEnt.getComponent<cro::Camera>());
     m_cameras[CameraID::Green] = camEnt;
-
 
     //bystander cam (when remote or CPU player is swinging)
     camEnt = m_gameScene.createEntity();
@@ -5685,13 +5684,17 @@ void GolfState::setGreenCamPosition()
     else if (m_currentPlayer.terrain == TerrainID::Green)
     {
         auto direction = holePos - m_currentPlayer.position;
-        direction = glm::normalize(direction) * 2.f;
-        m_cameras[CameraID::Green].getComponent<cro::Transform>().move(direction);
-        m_cameras[CameraID::Green].getComponent<CameraFollower>().radius = 4.5f * 4.5f;
-        m_cameras[CameraID::Green].getComponent<CameraFollower>().zoom.target = 0.5f;
-        m_cameras[CameraID::Green].getComponent<CameraFollower>().zoom.speed = 0.8f;
+        direction = glm::normalize(direction) * 4.2f;
 
-        heightOffset *= 0.2f;
+        auto r = (cro::Util::Random::value(0, 1) * 2) - 1;
+        direction = glm::rotate(direction, 0.5f * static_cast<float>(r), glm::vec3(0.f, 1.f, 0.f));
+
+        m_cameras[CameraID::Green].getComponent<cro::Transform>().move(direction);
+        m_cameras[CameraID::Green].getComponent<CameraFollower>().radius = 5.7f * 5.7f;
+        m_cameras[CameraID::Green].getComponent<CameraFollower>().zoom.target = 0.3f;
+        m_cameras[CameraID::Green].getComponent<CameraFollower>().zoom.speed = 1.4f;
+
+        heightOffset *= 0.15f;
     }
     else
     {
