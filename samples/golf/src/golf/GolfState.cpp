@@ -5176,38 +5176,7 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo)
 
 
     //and the uh, other green cam. The spectator one
-    m_cameras[CameraID::Green].getComponent<cro::Transform>().setPosition({ holePos.x, GreenCamHeight, holePos.z });
-
-    if (m_holeData[m_currentHole].puttFromTee)
-    {
-        auto direction = holePos - m_holeData[m_currentHole].tee;
-        direction = glm::normalize(direction) * 2.f;
-        m_cameras[CameraID::Green].getComponent<cro::Transform>().move(direction);
-        m_cameras[CameraID::Green].getComponent<CameraFollower>().radius = 4.5f * 4.5f;
-        m_cameras[CameraID::Green].getComponent<CameraFollower>().zoom.target = 0.5f;
-        m_cameras[CameraID::Green].getComponent<CameraFollower>().zoom.speed = 0.8f;
-    }
-    else
-    {
-        auto centre = glm::vec3(MapSize.x / 2.f, 0.f, -static_cast<float>(MapSize.y) / 2.f);
-        auto direction = holePos - centre;
-        direction = glm::normalize(direction) * 15.f;
-        m_cameras[CameraID::Green].getComponent<cro::Transform>().move(direction);
-        m_cameras[CameraID::Green].getComponent<CameraFollower>().radius = 30.f * 30.f;
-        m_cameras[CameraID::Green].getComponent<CameraFollower>().zoom.target = 0.25f;
-        m_cameras[CameraID::Green].getComponent<CameraFollower>().zoom.speed = 2.f;
-    }
-
-    //double check terrain height and make sure camera is always above
-    auto result = m_collisionMesh.getTerrain(m_cameras[CameraID::Green].getComponent<cro::Transform>().getPosition());
-    result.height = std::max(result.height, holePos.y);
-    result.height += m_holeData[m_currentHole].puttFromTee ? GreenCamHeight * 0.2f : GreenCamHeight;
-
-    auto pos = m_cameras[CameraID::Green].getComponent<cro::Transform>().getPosition();
-    pos.y = result.height;
-
-    auto tx = glm::inverse(glm::lookAt(pos, m_holeData[hole].pin, cro::Transform::Y_AXIS));
-    m_cameras[CameraID::Green].getComponent<cro::Transform>().setLocalTransform(tx);
+    setGreenCamPosition();
 
 
     //reset the flag
@@ -5688,6 +5657,63 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
         auto pos = m_holeData[m_currentHole].puttFromTee ? glm::vec3(0.f, 16.f, 0.f) : DefaultSkycamPosition;
         m_cameras[CameraID::Sky].getComponent<cro::Transform>().setPosition(pos);
     }
+
+    if (!m_holeData[m_currentHole].puttFromTee)
+    {
+        setGreenCamPosition();
+    }
+}
+
+void GolfState::setGreenCamPosition()
+{
+    auto holePos = m_holeData[m_currentHole].pin;
+
+    m_cameras[CameraID::Green].getComponent<cro::Transform>().setPosition({ holePos.x, GreenCamHeight, holePos.z });
+
+    float heightOffset = GreenCamHeight;
+
+    if (m_holeData[m_currentHole].puttFromTee)
+    {
+        auto direction = holePos - m_holeData[m_currentHole].tee;
+        direction = glm::normalize(direction) * 2.f;
+        m_cameras[CameraID::Green].getComponent<cro::Transform>().move(direction);
+        m_cameras[CameraID::Green].getComponent<CameraFollower>().radius = 4.5f * 4.5f;
+        m_cameras[CameraID::Green].getComponent<CameraFollower>().zoom.target = 0.5f;
+        m_cameras[CameraID::Green].getComponent<CameraFollower>().zoom.speed = 0.8f;
+        heightOffset *= 0.2f;
+    }
+    else if (m_currentPlayer.terrain == TerrainID::Green)
+    {
+        auto direction = holePos - m_currentPlayer.position;
+        direction = glm::normalize(direction) * 2.f;
+        m_cameras[CameraID::Green].getComponent<cro::Transform>().move(direction);
+        m_cameras[CameraID::Green].getComponent<CameraFollower>().radius = 4.5f * 4.5f;
+        m_cameras[CameraID::Green].getComponent<CameraFollower>().zoom.target = 0.5f;
+        m_cameras[CameraID::Green].getComponent<CameraFollower>().zoom.speed = 0.8f;
+
+        heightOffset *= 0.2f;
+    }
+    else
+    {
+        auto centre = glm::vec3(MapSize.x / 2.f, 0.f, -static_cast<float>(MapSize.y) / 2.f);
+        auto direction = holePos - centre;
+        direction = glm::normalize(direction) * 15.f;
+        m_cameras[CameraID::Green].getComponent<cro::Transform>().move(direction);
+        m_cameras[CameraID::Green].getComponent<CameraFollower>().radius = 30.f * 30.f;
+        m_cameras[CameraID::Green].getComponent<CameraFollower>().zoom.target = 0.25f;
+        m_cameras[CameraID::Green].getComponent<CameraFollower>().zoom.speed = 2.f;
+    }
+
+    //double check terrain height and make sure camera is always above
+    auto result = m_collisionMesh.getTerrain(m_cameras[CameraID::Green].getComponent<cro::Transform>().getPosition());
+    result.height = std::max(result.height, holePos.y);
+    result.height += heightOffset;
+
+    auto pos = m_cameras[CameraID::Green].getComponent<cro::Transform>().getPosition();
+    pos.y = result.height;
+
+    auto tx = glm::inverse(glm::lookAt(pos, m_holeData[m_currentHole].pin, cro::Transform::Y_AXIS));
+    m_cameras[CameraID::Green].getComponent<cro::Transform>().setLocalTransform(tx);
 }
 
 void GolfState::predictBall(float powerPct)
