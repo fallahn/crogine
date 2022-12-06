@@ -41,6 +41,7 @@ source distribution.
 #include "TrophyDisplaySystem.hpp"
 #include "FloatingTextSystem.hpp"
 #include "PacketIDs.hpp"
+#include "MiniBallSystem.hpp"
 #include "../ErrorCheck.hpp"
 
 #include <Achievements.hpp>
@@ -634,44 +635,9 @@ void GolfState::buildUI()
     };
     infoEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     auto mapEnt = entity;
+    m_minimapEnt = entity;
 
-    //ball icon on mini map
-    entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>();
-    entity.addComponent<cro::Drawable2D>().getVertexData() =
-    {
-        cro::Vertex2D(glm::vec2(-0.5f, 0.5f), TextNormalColour),
-        cro::Vertex2D(glm::vec2(-0.5f), TextNormalColour),
-        cro::Vertex2D(glm::vec2(0.5f), TextNormalColour),
-        cro::Vertex2D(glm::vec2(0.5f, -0.5f), TextNormalColour)
-    };
-    entity.getComponent<cro::Drawable2D>().updateLocalBounds();
-    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::MiniBall;
-    entity.addComponent<cro::Callback>().setUserData<float>(1.f);
-    entity.getComponent<cro::Callback>().function =
-        [](cro::Entity e, float dt)
-    {
-        auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
-        currTime = std::max(0.f, currTime - (dt * 3.f));
 
-        static constexpr float MaxScale = 6.f - 1.f;
-        float scale = 1.f + (MaxScale * currTime);
-        e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
-
-        float alpha = 1.f - currTime;
-        auto& verts = e.getComponent<cro::Drawable2D>().getVertexData();
-        for (auto& v : verts)
-        {
-            v.colour.setAlpha(alpha);
-        }
-
-        if (currTime == 0)
-        {
-            currTime = 1.f;
-            e.getComponent<cro::Callback>().active = false;
-        }
-    };
-    mapEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     //stroke indicator
     entity = m_uiScene.createEntity();
@@ -1027,7 +993,6 @@ void GolfState::createSwingMeter(cro::Entity root)
     entity.getComponent<UIElement>().relativePosition = { 1.f, 0.f };
     entity.getComponent<UIElement>().absolutePosition = { -10.f, 50.f };
     
-    m_swingMeter = entity;
     root.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 }
 

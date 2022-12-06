@@ -484,6 +484,7 @@
     <ClCompile Include="src\golf\MenuSoundDirector.cpp" />
     <ClCompile Include="src\golf\MenuState.cpp" />
     <ClCompile Include="src\golf\MessageOverlayState.cpp" />
+    <ClCompile Include="src\golf\MiniBallSystem.cpp" />
     <ClCompile Include="src\golf\NameScrollSystem.cpp" />
     <ClCompile Include="src\golf\NewsState.cpp" />
     <ClCompile Include="src\golf\NotificationSystem.cpp" />
@@ -573,6 +574,7 @@
     <ClInclude Include="src\golf\MenuState.hpp" />
     <ClInclude Include="src\golf\MessageIDs.hpp" />
     <ClInclude Include="src\golf\MessageOverlayState.hpp" />
+    <ClInclude Include="src\golf\MiniBallSystem.hpp" />
     <ClInclude Include="src\golf\NameScrollSystem.hpp" />
     <ClInclude Include="src\golf\Networking.hpp" />
     <ClInclude Include="src\golf\NewsState.hpp" />

@@ -1,5 +1,5 @@
 [![Github Actions](https://github.com/fallahn/crogine/actions/workflows/cmake.yml/badge.svg)](https://github.com/fallahn/crogine/actions) 
-[![Documentation](https://codedocs.xyz/fallahn/crogine.svg)](https://codedocs.xyz/fallahn/crogine/)
+
 
 CROGINE
 -------
@@ -18,13 +18,15 @@ Android make files can also be created with the included cmake file, but the too
 
 
 #### About
-crogine was built with the aim of creating a flexible ECS based framework to run on mobile devices which support OpenGLES2. crogine supplies renderers for both 2D and 3D GLES2 based graphics, although desktop builds provide an OpenGL 4.1 context. As crogine is targeted at lower end hardware it doesn't feature a huge array of cutting edge rendering techniques - however desktop builds do support some PBR rendering, and new features are still being added.  
+crogine was built with the aim of creating a flexible ECS based framework to run on mobile devices which support OpenGLES2. crogine supplies renderers for both 2D and 3D GLES2 based graphics, although desktop builds provide an OpenGL 4.6 context (GL 4.1 on macOS). As crogine is targeted at lower end hardware it doesn't feature a huge array of cutting edge rendering techniques - however desktop builds do support some PBR rendering, and new features are still being added.  
 
 crogine uses OpenAL for audio, and SDL2 for cross platform parts such as windowing, events and context creation. Documentation can be generated with doxygen using the doxy file in common/docs. Eventually I plan to fully document features on the github wiki as and when I have the time. It might be worth noting that the API is very similar to that of my other library [xygine](https://github.com/fallahn/xygine) so studying that may be of some use.
 
 Included systems can be used to create and render 3D scenes, 2D scenes (using sprites), rendering text, particles and playing back 3D audio. The API is designed specifically for creating and extending the ECS for custom use as quickly and easily as possible. See the [samples](https://github.com/fallahn/crogine/tree/master/samples) directory for more detail.
 
 The `extras` directory contains the source for useful systems such as collision detection, which aren't included in the main library.
+
+Note that for the last few years Android development has fallen somewhat behind and is unlikely to build as-is. However I've tried to keep as many recent features as compatible as possible so with a little work it's not unreasonable to assume that it can be brought up to date.
 
 Portions of this software are copyright (c) 2019 The FreeType Project (www.freetype.org). All rights reserved.  
 Portions of this software are copyright (c) 2019 SFML (www.sfml-dev.org). All rights reserved.

@@ -173,10 +173,18 @@ bool TrophyState::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_CONTROLLERBUTTONUP)
     {
-        if (evt.cbutton.button == cro::GameController::ButtonB
-            || evt.cbutton.button == cro::GameController::ButtonBack)
+        switch (evt.cbutton.button)
         {
+        default: break;
+        case cro::GameController::ButtonB:
+        case cro::GameController::ButtonBack:
             quitState();
+            return false;
+        case cro::GameController::ButtonLeftShoulder:
+            m_pageFuncs[0]();
+            return false;
+        case cro::GameController::ButtonRightShoulder:
+            m_pageFuncs[1]();
             return false;
         }
     }
@@ -511,6 +519,52 @@ void TrophyState::buildScene()
     };
     updateText();
 
+    m_pageFuncs[0] =
+        [&, updateText]() mutable
+    {
+        m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+
+        //hide model
+        if (!m_trophyEnts.empty())
+        {
+            auto modelIndex = std::min(m_trophyEnts.size() - 1, AchievementTrophies[m_trophyIndex]);
+            m_trophyEnts[modelIndex].getComponent<cro::Callback>().getUserData<std::pair<float, std::int32_t>>().second = 0;
+            m_trophyEnts[modelIndex].getComponent<cro::Callback>().active = true;
+        }
+
+
+        m_trophyIndex = ((m_trophyIndex + (AchievementID::Count - 1)) % AchievementID::Count);
+        if (m_trophyIndex == 0)
+        {
+            m_trophyIndex = AchievementID::Count - 1;
+        }
+        updateText();
+    };
+
+    m_pageFuncs[1] =
+        [&, updateText]() mutable
+    {
+        m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+
+        //hide model
+        if (!m_trophyEnts.empty())
+        {
+            auto modelIndex = std::min(m_trophyEnts.size() - 1, AchievementTrophies[m_trophyIndex]);
+            m_trophyEnts[modelIndex].getComponent<cro::Callback>().getUserData<std::pair<float, std::int32_t>>().second = 0;
+            m_trophyEnts[modelIndex].getComponent<cro::Callback>().active = true;
+        }
+
+
+        m_trophyIndex = ((m_trophyIndex + 1) % AchievementID::Count);
+
+        //there's probably a smart way to do this, but brain.
+        if (m_trophyIndex == 0)
+        {
+            m_trophyIndex++;
+        }
+
+        updateText();
+    };
 
     //arrow left
     entity = m_scene.createEntity();
@@ -523,29 +577,13 @@ void TrophyState::buildScene()
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectedID;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectedID;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown ] =
-        uiSystem.addCallback([&, updateText](cro::Entity e, const cro::ButtonEvent& evt) mutable
-    {
+        uiSystem.addCallback([&, updateText](cro::Entity, const cro::ButtonEvent& evt) 
+            {
                 if (activated(evt))
                 {
-                    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
-
-                    //hide model
-                    if (!m_trophyEnts.empty())
-                    {
-                        auto modelIndex = std::min(m_trophyEnts.size() - 1, AchievementTrophies[m_trophyIndex]);
-                        m_trophyEnts[modelIndex].getComponent<cro::Callback>().getUserData<std::pair<float, std::int32_t>>().second = 0;
-                        m_trophyEnts[modelIndex].getComponent<cro::Callback>().active = true;
-                    }
-
-
-                    m_trophyIndex = ((m_trophyIndex + (AchievementID::Count - 1)) % AchievementID::Count);
-                    if (m_trophyIndex == 0)
-                    {
-                        m_trophyIndex = AchievementID::Count - 1;
-                    }
-                    updateText();
+                    m_pageFuncs[0]();
                 }
-    });
+            });
     backgroundEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
@@ -599,26 +637,7 @@ void TrophyState::buildScene()
             {
                 if (activated(evt))
                 {
-                    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
-
-                    //hide model
-                    if (!m_trophyEnts.empty())
-                    {
-                        auto modelIndex = std::min(m_trophyEnts.size() - 1, AchievementTrophies[m_trophyIndex]);
-                        m_trophyEnts[modelIndex].getComponent<cro::Callback>().getUserData<std::pair<float, std::int32_t>>().second = 0;
-                        m_trophyEnts[modelIndex].getComponent<cro::Callback>().active = true;
-                    }
-
-
-                    m_trophyIndex = ((m_trophyIndex + 1) % AchievementID::Count);
-                    
-                    //there's probably a smart way to do this, but brain.
-                    if (m_trophyIndex == 0)
-                    {
-                        m_trophyIndex++;
-                    }
-                    
-                    updateText();
+                    m_pageFuncs[1]();
                 }
             });
     backgroundEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());

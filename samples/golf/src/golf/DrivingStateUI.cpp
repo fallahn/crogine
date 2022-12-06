@@ -196,6 +196,7 @@ void DrivingState::createUI()
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>();
     auto infoEnt = entity;
+    createSwingMeter(entity);
 
     auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
 
@@ -592,6 +593,8 @@ void DrivingState::createUI()
             pos.y = std::round(pos.y);
             pos.y += UITextPosV;
 
+            pos += e.getComponent<UIElement>().absolutePosition;
+
             e.getComponent<cro::Transform>().setPosition(glm::vec3(pos, e.getComponent<UIElement>().depth));
         };
         m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
@@ -610,6 +613,80 @@ void DrivingState::createUI()
     createGameOptions();
     createSummary();
 }
+
+void DrivingState::createSwingMeter(cro::Entity root)
+{
+    static constexpr float Width = 4.f;
+    static constexpr float Height = 40.f;
+    auto entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>().setVertexData(
+        {
+            cro::Vertex2D(glm::vec2(-Width, -Height), TextHighlightColour),
+            cro::Vertex2D(glm::vec2(Width,  -Height), TextHighlightColour),
+            cro::Vertex2D(glm::vec2(-Width,  -0.5f), TextHighlightColour),
+            cro::Vertex2D(glm::vec2(Width,  -0.5f), TextHighlightColour),
+
+            cro::Vertex2D(glm::vec2(-Width,  -0.5f), TextNormalColour),
+            cro::Vertex2D(glm::vec2(Width,  -0.5f), TextNormalColour),
+            cro::Vertex2D(glm::vec2(-Width,  0.5f), TextNormalColour),
+            cro::Vertex2D(glm::vec2(Width,  0.5f), TextNormalColour),
+
+            cro::Vertex2D(glm::vec2(-Width,  0.5f), TextHighlightColour),
+            cro::Vertex2D(glm::vec2(Width,  0.5f), TextHighlightColour),
+            cro::Vertex2D(glm::vec2(-Width, Height), TextHighlightColour),
+            cro::Vertex2D(glm::vec2(Width,  Height), TextHighlightColour),
+
+
+            cro::Vertex2D(glm::vec2(-Width, -Height), LeaderboardTextDark),
+            cro::Vertex2D(glm::vec2(Width,  -Height), LeaderboardTextDark),
+            cro::Vertex2D(glm::vec2(-Width, 0.f), LeaderboardTextDark),
+            cro::Vertex2D(glm::vec2(Width,  0.f), LeaderboardTextDark),
+
+        });
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<float>(0.f);
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float dt)
+    {
+        auto& verts = e.getComponent<cro::Drawable2D>().getVertexData();
+        float height = verts[14].position.y;
+        float targetAlpha = 0.f;
+
+        if (m_inputParser.isSwingputActive())
+        {
+            height = m_inputParser.getSwingputPosition() * ((Height * 2.f) / MaxSwingputDistance);
+            targetAlpha = 1.f;
+        }
+
+        auto& currentAlpha = e.getComponent<cro::Callback>().getUserData<float>();
+        const float InSpeed = dt * 6.f;
+        const float OutSpeed = m_inputParser.getPower() < 0.5 ? InSpeed : dt * 0.5f;
+        if (currentAlpha < targetAlpha)
+        {
+            currentAlpha = std::min(1.f, currentAlpha + InSpeed);
+        }
+        else
+        {
+            currentAlpha = std::max(0.f, currentAlpha - OutSpeed);
+        }
+
+        for (auto& v : verts)
+        {
+            v.colour.setAlpha(currentAlpha);
+        }
+        verts[14].position.y = height;
+        verts[15].position.y = height;
+    };
+
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
+    entity.addComponent<UIElement>().depth = 0.2f;
+    entity.getComponent<UIElement>().relativePosition = { 1.f, 0.f };
+    entity.getComponent<UIElement>().absolutePosition = { -10.f, 50.f };
+
+    root.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+}
+
 
 void DrivingState::createGameOptions()
 {

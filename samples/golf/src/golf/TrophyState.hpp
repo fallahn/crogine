@@ -64,6 +64,8 @@ private:
     cro::Scene m_trophyScene;
     SharedStateData& m_sharedData;
 
+    std::array<std::function<void()>, 2u> m_pageFuncs = {};
+
     cro::AudioScape m_menuSounds;
     struct AudioID final
     {
