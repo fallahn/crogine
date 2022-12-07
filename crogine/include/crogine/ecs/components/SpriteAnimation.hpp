@@ -43,7 +43,7 @@ namespace cro
         std::int32_t id = -1;
         bool playing = false;
         float currentFrameTime = 0.f;
-        float playbackRate = 1.f;
+        float playbackRate = 1.f; //< normalised value multiplied with base frame rate
         std::uint32_t frameID = 0;
 
         /*!

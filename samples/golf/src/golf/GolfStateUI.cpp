@@ -960,7 +960,7 @@ void GolfState::createSwingMeter(cro::Entity root)
     {
         auto& verts = e.getComponent<cro::Drawable2D>().getVertexData();
         float height = verts[14].position.y;
-        float targetAlpha = 0.f;
+        float targetAlpha = -0.01f;
 
         if (m_inputParser.isSwingputActive())
         {
@@ -971,7 +971,7 @@ void GolfState::createSwingMeter(cro::Entity root)
         auto& currentAlpha = e.getComponent<cro::Callback>().getUserData<float>();
         const float InSpeed = dt * 6.f;
         const float OutSpeed = m_inputParser.getPower() < 0.5 ? InSpeed : dt * 0.5f;
-        if (currentAlpha < targetAlpha)
+        if (currentAlpha <= targetAlpha)
         {
             currentAlpha = std::min(1.f, currentAlpha + InSpeed);
         }

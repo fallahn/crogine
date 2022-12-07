@@ -77,7 +77,7 @@ private:
     std::size_t m_currentAction;
     bool m_actionActive;
 
-    std::array<cro::Sprite, 6> m_buttonSprites = {};
+    std::array<cro::Sprite, 8> m_buttonSprites = {};
 
     void buildScene();
 

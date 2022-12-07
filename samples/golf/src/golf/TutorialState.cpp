@@ -71,12 +71,14 @@ namespace
     {
         enum
         {
-            A,B,X,Y,Start,Select
+            A,B,X,Y,Start,Select,LT,RT
         };
     };
 
     std::int32_t timeUniform = -1;
     std::uint32_t shaderID = 0;
+
+    std::uint32_t inputMask = 0;
 
     struct BackgroundCallbackData final
     {
@@ -100,6 +102,7 @@ TutorialState::TutorialState(cro::StateStack& ss, cro::State::Context ctx, Share
     m_currentAction (0),
     m_actionActive  (false)
 {
+    inputMask = 0;
     ctx.mainWindow.setMouseCaptured(true);
 
     buildScene();
@@ -212,12 +215,37 @@ bool TutorialState::handleEvent(const cro::Event& evt)
             cro::App::getWindow().setMouseCaptured(true);
             m_mouseVisible = false;
         }
+
+        if (evt.caxis.value > TriggerDeadZone)
+        {
+            if (evt.caxis.axis == cro::GameController::TriggerLeft
+                || evt.caxis.axis == cro::GameController::TriggerRight)
+            {
+                inputMask |= (1 << evt.caxis.axis);
+            }
+        }
+        else
+        {
+            if (evt.caxis.axis == cro::GameController::TriggerLeft
+                || evt.caxis.axis == cro::GameController::TriggerRight)
+            {
+                inputMask &= ~(1 << evt.caxis.axis);
+            }
+        }
     }
-    else if (evt.type == SDL_MOUSEMOTION)
+    else if (evt.type == SDL_MOUSEBUTTONDOWN)
     {
-        cro::App::getWindow().setMouseCaptured(false);
-        m_mouseVisible = true;
-        m_mouseClock.restart();
+        if (evt.button.button == SDL_BUTTON_RIGHT)
+        {
+            inputMask |= (1 << evt.button.button);
+        }
+    }
+    else if (evt.type == SDL_MOUSEBUTTONUP)
+    {
+        if (evt.button.button == SDL_BUTTON_RIGHT)
+        {
+            inputMask &= ~(1 << evt.button.button);
+        }
     }
 
     m_scene.forwardEvent(evt);
@@ -233,6 +261,21 @@ void TutorialState::handleMessage(const cro::Message& msg)
             && data.id == StateID::Pause)
         {
             cro::App::getWindow().setMouseCaptured(true);
+        }
+    }
+    else if (msg.id == cro::Message::SpriteAnimationMessage)
+    {
+        //used to modify animation speed of thumbstick sprite
+        const auto& data = msg.getData<cro::Message::SpriteAnimationEvent>();
+        if (data.userType == 10)
+        {
+            auto e = data.entity;
+            e.getComponent<cro::SpriteAnimation>().playbackRate = 2.2f;
+        }
+        else if(data.userType == 11)
+        {
+            auto e = data.entity;
+            e.getComponent<cro::SpriteAnimation>().playbackRate = 1.f;
         }
     }
 
@@ -307,6 +350,8 @@ void TutorialState::buildScene()
         m_buttonSprites[ButtonID::Y] = spriteSheet.getSprite("button_y");
         m_buttonSprites[ButtonID::Select] = spriteSheet.getSprite("button_select");
         m_buttonSprites[ButtonID::Start] = spriteSheet.getSprite("button_start");
+        m_buttonSprites[ButtonID::LT] = spriteSheet.getSprite("button_lt");
+        m_buttonSprites[ButtonID::RT] = spriteSheet.getSprite("button_rt");
     }
 
     //used to animate the slope line
@@ -540,6 +585,8 @@ void TutorialState::tutorialOne(cro::Entity root)
         buttonEnt.addComponent<cro::Drawable2D>();
         buttonEnt.addComponent<cro::Sprite>() = spriteSheet.getSprite("button_lb");
         buttonEnt.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+        buttonEnt.addComponent<cro::SpriteAnimation>().play(IS_PS(activeControllerID(0)) ? 1 : 0);
+        buttonEnt.addComponent<cro::CommandTarget>().ID = CommandID::UI::PlayerIcon;
         buttonEnt.addComponent<cro::Callback>().active = true;
         buttonEnt.getComponent<cro::Callback>().setUserData<float>(0.f);
         buttonEnt.getComponent<cro::Callback>().function = callback;
@@ -550,6 +597,8 @@ void TutorialState::tutorialOne(cro::Entity root)
         buttonEnt.addComponent<cro::Drawable2D>();
         buttonEnt.addComponent<cro::Sprite>() = spriteSheet.getSprite("button_rb");
         buttonEnt.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+        buttonEnt.addComponent<cro::SpriteAnimation>().play(IS_PS(activeControllerID(0)) ? 1 : 0);
+        buttonEnt.addComponent<cro::CommandTarget>().ID = CommandID::UI::PlayerIcon;
         buttonEnt.addComponent<cro::Callback>().active = true;
         buttonEnt.getComponent<cro::Callback>().setUserData<float>(0.f);
         buttonEnt.getComponent<cro::Callback>().function = callback;
@@ -1896,12 +1945,12 @@ void TutorialState::tutorialSwing(cro::Entity root)
     auto entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>().setCroppingArea({ 0.f, 0.f, 0.f, 0.f });
-    entity.addComponent<cro::Text>(font).setString("If you prefer you can use either thumbstick to swing your club");
+    entity.addComponent<cro::Text>(font).setString("If you prefer you can use the thumbsticks to swing your club");
     entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     centreText(entity);
-    entity.addComponent<UIElement>().absolutePosition = { 0.f, 80.f };
-    entity.getComponent<UIElement>().relativePosition = { 0.5f, 0.5f };
+    entity.addComponent<UIElement>().absolutePosition = { 0.f, -40.f };
+    entity.getComponent<UIElement>().relativePosition = { 0.5f, 1.f };
     entity.getComponent<UIElement>().depth = 0.01f;
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
     auto bounds = cro::Text::getLocalBounds(entity);
@@ -1927,45 +1976,39 @@ void TutorialState::tutorialSwing(cro::Entity root)
     root.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
-    //swingput bar and activated in second tip callback
+    //swingput bar activated in second tip callback
     static constexpr float Width = 4.f;
     static constexpr float Height = 40.f;
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setScale(glm::vec2(0.f));
     entity.addComponent<cro::Drawable2D>().setVertexData(
         {
-            cro::Vertex2D(glm::vec2(-Width, -Height), TextHighlightColour),
-            cro::Vertex2D(glm::vec2(Width,  -Height), TextHighlightColour),
-            cro::Vertex2D(glm::vec2(-Width,  -0.5f), TextHighlightColour),
-            cro::Vertex2D(glm::vec2(Width,  -0.5f), TextHighlightColour),
 
-            cro::Vertex2D(glm::vec2(-Width,  -0.5f), TextNormalColour),
-            cro::Vertex2D(glm::vec2(Width,  -0.5f), TextNormalColour),
-            cro::Vertex2D(glm::vec2(-Width,  0.5f), TextNormalColour),
-            cro::Vertex2D(glm::vec2(Width,  0.5f), TextNormalColour),
-
-            cro::Vertex2D(glm::vec2(-Width,  0.5f), TextHighlightColour),
-            cro::Vertex2D(glm::vec2(Width,  0.5f), TextHighlightColour),
-            cro::Vertex2D(glm::vec2(-Width, Height), TextHighlightColour),
             cro::Vertex2D(glm::vec2(Width,  Height), TextHighlightColour),
+            cro::Vertex2D(glm::vec2(-Width, Height), TextHighlightColour),
+            cro::Vertex2D(glm::vec2(Width,  0.5f), TextHighlightColour),
+            cro::Vertex2D(glm::vec2(-Width,  0.5f), TextHighlightColour),
 
+            cro::Vertex2D(glm::vec2(Width,  0.5f), TextNormalColour),
+            cro::Vertex2D(glm::vec2(-Width,  0.5f), TextNormalColour),
+            cro::Vertex2D(glm::vec2(Width,  -0.5f), TextNormalColour),
+            cro::Vertex2D(glm::vec2(-Width,  -0.5f), TextNormalColour),
 
-            cro::Vertex2D(glm::vec2(-Width, -Height), LeaderboardTextDark),
+            cro::Vertex2D(glm::vec2(Width,  -0.5f), LeaderboardTextDark),
+            cro::Vertex2D(glm::vec2(-Width, -0.5f), LeaderboardTextDark),
             cro::Vertex2D(glm::vec2(Width,  -Height), LeaderboardTextDark),
-            cro::Vertex2D(glm::vec2(-Width, 0.f), LeaderboardTextDark),
-            cro::Vertex2D(glm::vec2(Width,  0.f), LeaderboardTextDark),
-
+            cro::Vertex2D(glm::vec2(-Width, -Height), LeaderboardTextDark)
         });
     entity.addComponent<cro::Callback>().setUserData<float>(0.f);
     entity.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float dt)
     {
         auto& verts = e.getComponent<cro::Drawable2D>().getVertexData();
-        float targetAlpha = 0.f;
+        float targetAlpha = 0.25f;
 
         auto controllerID = activeControllerID(m_sharedData.inputBinding.playerID);
 
-        if (cro::Mouse::isButtonPressed(cro::Mouse::Button::Right))
+        if (inputMask != 0)
         {
             targetAlpha = 1.f;
         }
@@ -1973,13 +2016,13 @@ void TutorialState::tutorialSwing(cro::Entity root)
         auto& currentAlpha = e.getComponent<cro::Callback>().getUserData<float>();
         const float InSpeed = dt * 6.f;
 
-        if (currentAlpha < targetAlpha)
+        if (currentAlpha <= targetAlpha)
         {
             currentAlpha = std::min(1.f, currentAlpha + InSpeed);
         }
         else
         {
-            currentAlpha = std::max(0.f, currentAlpha - InSpeed);
+            currentAlpha = std::max(0.251f, currentAlpha - InSpeed);
         }
 
         for (auto& v : verts)
@@ -2002,12 +2045,12 @@ void TutorialState::tutorialSwing(cro::Entity root)
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>().setCroppingArea({ 0.f, 0.f, 0.f, 0.f });
-    entity.addComponent<cro::Text>(font).setString("Press and hold either    or    to show the Swingput display\n|\n|");
+    entity.addComponent<cro::Text>(font).setString("Press and hold either     or     to show the Swingput display");
     entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Right);
     bounds = cro::Text::getLocalBounds(entity);
-    entity.addComponent<UIElement>().absolutePosition = { -10.f, 140.f};
+    entity.addComponent<UIElement>().absolutePosition = { -18.f, 66.f};
     entity.getComponent<UIElement>().relativePosition = { 1.f, 0.f };
     entity.getComponent<UIElement>().depth = 0.01f;
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
@@ -2018,7 +2061,7 @@ void TutorialState::tutorialSwing(cro::Entity root)
     {
         auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
         currTime = std::min(1.f, currTime + (dt * 3.f));
-        cro::FloatRect area(bounds.left, bounds.bottom - (bounds.height * (1.f - currTime)), bounds.width, bounds.height);
+        cro::FloatRect area(bounds.left, bounds.bottom/* - (bounds.height * (1.f - currTime))*/, bounds.width * currTime, bounds.height);
         e.getComponent<cro::Drawable2D>().setCroppingArea(area);
 
         if (currTime == 1)
@@ -2033,19 +2076,73 @@ void TutorialState::tutorialSwing(cro::Entity root)
     root.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     auto text02 = entity;
 
-    m_actionCallbacks.push_back([text02]() mutable { text02.getComponent<cro::Callback>().active = true; });
+    //lt sprite
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ -193.f, -12.f });
+    entity.addComponent<cro::Drawable2D>().setCroppingArea({ 0.f, 0.f, 0.f, 0.f });
+    entity.addComponent<cro::Sprite>() = m_buttonSprites[ButtonID::LT];
+    entity.addComponent<cro::SpriteAnimation>().play(IS_PS(activeControllerID(0)) ? 1 : 0);
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::PlayerIcon;
+    text02.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.addComponent<cro::Callback>().setUserData<float>(0.f);
+    entity.getComponent<cro::Callback>().function =
+        [&, bounds](cro::Entity e, float dt)
+    {
+        auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
+        currTime = std::min(1.f, currTime + (dt * 3.f));
+        cro::FloatRect area(0.f, bounds.bottom - (bounds.height * (1.f - currTime)), bounds.width, bounds.height);
+        e.getComponent<cro::Drawable2D>().setCroppingArea(area);
 
+        if (currTime == 1)
+        {
+            e.getComponent<cro::Callback>().active = false;
+        }
+    };
+    auto lt = entity;
+
+    //rt sprite
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ -160.f, -12.f });
+    entity.addComponent<cro::Drawable2D>().setCroppingArea({ 0.f, 0.f, 0.f, 0.f });
+    entity.addComponent<cro::Sprite>() = m_buttonSprites[ButtonID::RT];
+    entity.addComponent<cro::SpriteAnimation>().play(IS_PS(activeControllerID(0)) ? 1 : 0);
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::PlayerIcon;
+    text02.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.addComponent<cro::Callback>().setUserData<float>(0.f);
+    entity.getComponent<cro::Callback>().function =
+        [&, bounds](cro::Entity e, float dt)
+    {
+        auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
+        currTime = std::min(1.f, currTime + (dt * 3.f));
+        cro::FloatRect area(0.f, bounds.bottom - (bounds.height * (1.f - currTime)), bounds.width, bounds.height);
+        e.getComponent<cro::Drawable2D>().setCroppingArea(area);
+
+        if (currTime == 1)
+        {
+            e.getComponent<cro::Callback>().active = false;
+        }
+    };
+    auto rt = entity;
+
+    m_actionCallbacks.push_back([text02, lt, rt]() mutable 
+        {
+            text02.getComponent<cro::Callback>().active = true; 
+            lt.getComponent<cro::Callback>().active = true; 
+            rt.getComponent<cro::Callback>().active = true;         
+        });
 
 
     //third tip text
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>().setCroppingArea({ 0.f, 0.f, 0.f, 0.f });
-    entity.addComponent<cro::Text>(font).setString("With the display active draw back on either thumbstick\nthen press forward to take a swing");
+    entity.addComponent<cro::Text>(font).setString("With the display active\ndraw back on either one of the thumbsticks\nthen press forward to take a swing");
     entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
-    entity.addComponent<UIElement>().absolutePosition = { 0.f, 40.f };
+    entity.addComponent<UIElement>().absolutePosition = { 0.f, 86.f };
     entity.getComponent<UIElement>().relativePosition = { 0.5f, 0.5f };
     entity.getComponent<UIElement>().depth = 0.01f;
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
@@ -2076,7 +2173,7 @@ void TutorialState::tutorialSwing(cro::Entity root)
     entity.addComponent<cro::Drawable2D>().setCroppingArea({ 0.f, 0.f, 0.f, 0.f });
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("swingput");
     entity.addComponent<cro::SpriteAnimation>().play(0);
-    entity.addComponent<UIElement>().absolutePosition = { 0.f, -40.f };
+    entity.addComponent<UIElement>().absolutePosition = { 0.f, 18.f };
     entity.getComponent<UIElement>().relativePosition = { 0.5f, 0.5f };
     entity.getComponent<UIElement>().depth = 0.01f;
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
