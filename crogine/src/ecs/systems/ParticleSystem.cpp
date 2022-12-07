@@ -153,7 +153,14 @@ namespace
             float strength = smoothstep(0.0, 0.05, diff);
 
             FRAG_OUT = v_colour * TEXTURE(u_texture, coord);// * strength;
-//FRAG_OUT.rgb *= v_colour.a;
+
+        #if defined (BLEND_ADD)
+            FRAG_OUT.rgb *= v_colour.a;
+        #endif
+
+        #if defined (BLEND_MULTIPLY)
+            FRAG_OUT.rgb += (vec3(1.0) - FRAG_OUT.rgb) * (1.0 - FRAG_OUT.a);
+        #endif
         }
     )";
 
@@ -185,8 +192,6 @@ ParticleSystem::ParticleSystem(MessageBus& mb)
     m_nextBuffer        (0),
     m_bufferCount       (0)
 {
-    std::fill(m_uniformIDs.begin(), m_uniformIDs.end(), -1);
-
     for (auto& vbo : m_vboIDs)
     {
         vbo = 0;
@@ -201,44 +206,60 @@ ParticleSystem::ParticleSystem(MessageBus& mb)
     requireComponent<Transform>();
     requireComponent<ParticleEmitter>();
 
-    if (!m_shader.loadFromString(vertex, fragment))
+    const std::array<std::string, ShaderID::Count> Defines =
     {
-        Logger::log("Failed to compile Particle shader", Logger::Type::Error);
-    }
-    else
+        "", "#define BLEND_ADD\n", "#define BLEND_MULTIPLY\n"
+    };
+
+    for (auto i = 0; i < ShaderID::Count; ++i)
     {
-        //fetch uniforms.
-        const auto& uniforms = m_shader.getUniformMap();
-#ifdef PLATFORM_DESKTOP
-        m_uniformIDs[UniformID::ClipPlane] = uniforms.find("u_clipPlane")->second;
-#endif
-        m_uniformIDs[UniformID::Projection] = uniforms.find("u_projection")->second;
-        m_uniformIDs[UniformID::Texture] = uniforms.find("u_texture")->second;
-        m_uniformIDs[UniformID::ViewProjection] = uniforms.find("u_viewProjection")->second;
-        m_uniformIDs[UniformID::Viewport] = uniforms.find("u_viewportHeight")->second;
-        m_uniformIDs[UniformID::ParticleSize] = uniforms.find("u_particleSize")->second;
-        m_uniformIDs[UniformID::TextureSize] = uniforms.find("u_textureSize")->second;
-        m_uniformIDs[UniformID::FrameCount] = uniforms.find("u_frameCount")->second;
-        if (uniforms.count("u_cameraRange"))
+        auto& shader = m_shaders.emplace_back(std::make_unique<Shader>());
+
+        auto& handle = m_shaderHandles[i];
+
+        //ATTRIB MAPPING RELIES ON ALL VARIANTS USING THE SAME VERTEX SHADER
+        //so please avoid changing this if you can...
+        std::fill(handle.uniformIDs.begin(), handle.uniformIDs.end(), -1);
+        if (!shader->loadFromString(vertex, fragment, Defines[i]))
         {
-            m_uniformIDs[UniformID::CameraRange] = uniforms.find("u_cameraRange")->second;
+            Logger::log("Failed to compile Particle shader", Logger::Type::Error);
         }
+        else
+        {
+            handle.id = shader->getGLHandle();
 
-        //map attributes
-        const auto& attribMap = m_shader.getAttribMap();
-        m_attribData[0].index = attribMap[Mesh::Position];
-        m_attribData[0].attribSize = 3;
-        m_attribData[0].offset = 0;
+            //fetch uniforms.
+            const auto& uniforms = shader->getUniformMap();
+#ifdef PLATFORM_DESKTOP
+            handle.uniformIDs[UniformID::ClipPlane] = uniforms.find("u_clipPlane")->second;
+#endif
+            handle.uniformIDs[UniformID::Projection] = uniforms.find("u_projection")->second;
+            handle.uniformIDs[UniformID::Texture] = uniforms.find("u_texture")->second;
+            handle.uniformIDs[UniformID::ViewProjection] = uniforms.find("u_viewProjection")->second;
+            handle.uniformIDs[UniformID::Viewport] = uniforms.find("u_viewportHeight")->second;
+            handle.uniformIDs[UniformID::ParticleSize] = uniforms.find("u_particleSize")->second;
+            handle.uniformIDs[UniformID::TextureSize] = uniforms.find("u_textureSize")->second;
+            handle.uniformIDs[UniformID::FrameCount] = uniforms.find("u_frameCount")->second;
+            if (uniforms.count("u_cameraRange"))
+            {
+                handle.uniformIDs[UniformID::CameraRange] = uniforms.find("u_cameraRange")->second;
+            }
 
-        m_attribData[1].index = attribMap[Mesh::Colour];
-        m_attribData[1].attribSize = 4;
-        m_attribData[1].offset = 3 * sizeof(float);
+            //map attributes
+            const auto& attribMap = shader->getAttribMap();
+            handle.attribData[0].index = attribMap[Mesh::Position];
+            handle.attribData[0].attribSize = 3;
+            handle.attribData[0].offset = 0;
 
-        m_attribData[2].index = attribMap[Mesh::Normal]; //actually rotation/scale just using the existing naming convention
-        m_attribData[2].attribSize = 3;
-        m_attribData[2].offset = (3 + 4) * sizeof(float);
+            handle.attribData[1].index = attribMap[Mesh::Colour];
+            handle.attribData[1].attribSize = 4;
+            handle.attribData[1].offset = 3 * sizeof(float);
+
+            handle.attribData[2].index = attribMap[Mesh::Normal]; //actually rotation/scale just using the existing naming convention
+            handle.attribData[2].attribSize = 3;
+            handle.attribData[2].offset = (3 + 4) * sizeof(float);
+        }
     }
-
     cro::Image img;
     img.create(2, 2, cro::Colour::White);
     m_fallbackTexture.loadFromImage(img);
@@ -300,18 +321,23 @@ void ParticleSystem::updateDrawList(Entity cameraEnt)
 
 void ParticleSystem::process(float dt)
 {
+    for (auto& handle : m_shaderHandles)
+    {
+        handle.boundThisFrame = false;
+    }
+
     auto& entities = getEntities();
     for (auto& e : entities)
     {
-        //TODO we're not anticipating large worlds, but it might be worth
-        //skipping emitter updates that are a long way from the camera.
-        //this if course also means per camera updates, and therefore suddenly
-        //gets complicated....
+        //TODO this would be better to iterate over the list of
+        //visible entities and only update those, however for
+        //the visibility check to work every entity needs
+        //updating at least once so we have a calculated bounds
+        //with which to perform a visibility check...
 
         //check each emitter to see if it should spawn a new particle
         auto& emitter = e.getComponent<ParticleEmitter>();
-        if (/*emitter.m_visible &&*/ //we get a chicken/egg here if an emitter becomes visible - as it never passes the visibility test without at least one update to set its bounds
-            emitter.m_running &&
+        if (emitter.m_running &&
             emitter.m_emissionClock.elapsed().asSeconds() > (1.f / emitter.settings.emitRate))
         {
             //make sure not to update this again unless it gets marked as visible next frame
@@ -510,20 +536,33 @@ void ParticleSystem::render(Entity camera, const RenderTarget& rt)
         auto vp = applyViewport(cam.viewport, rt);
 
         //bind shader
-        glCheck(glUseProgram(m_shader.getGLHandle()));
+        const auto bindShader = [&](std::int32_t index, const ParticleEmitter& emitter)
+        {
+            auto& handle = m_shaderHandles[index];
+            glCheck(glUseProgram(handle.id));
 
-        //set shader uniforms (texture/projection)
-        glCheck(glUniform4f(m_uniformIDs[UniformID::ClipPlane], clipPlane.r, clipPlane.g, clipPlane.b, clipPlane.a));
-        glCheck(glUniformMatrix4fv(m_uniformIDs[UniformID::Projection], 1, GL_FALSE, glm::value_ptr(cam.getProjectionMatrix())));
-        glCheck(glUniformMatrix4fv(m_uniformIDs[UniformID::ViewProjection], 1, GL_FALSE, glm::value_ptr(pass.viewProjectionMatrix)));
-        glCheck(glUniform1f(m_uniformIDs[UniformID::Viewport], static_cast<float>(vp.height)));
-        glCheck(glUniform1i(m_uniformIDs[UniformID::Texture], 0));
-        glCheck(glUniform2f(m_uniformIDs[UniformID::CameraRange], cam.getNearPlane(), cam.getFarPlane()));
+            //set shader uniforms (texture/projection)
+            if (!handle.boundThisFrame)
+            {
+                glCheck(glUniform4f(handle.uniformIDs[UniformID::ClipPlane], clipPlane.r, clipPlane.g, clipPlane.b, clipPlane.a));
+                glCheck(glUniformMatrix4fv(handle.uniformIDs[UniformID::Projection], 1, GL_FALSE, glm::value_ptr(cam.getProjectionMatrix())));
+                glCheck(glUniformMatrix4fv(handle.uniformIDs[UniformID::ViewProjection], 1, GL_FALSE, glm::value_ptr(pass.viewProjectionMatrix)));
+                glCheck(glUniform1f(handle.uniformIDs[UniformID::Viewport], static_cast<float>(vp.height)));
+                glCheck(glUniform1i(handle.uniformIDs[UniformID::Texture], 0));
+                glCheck(glUniform2f(handle.uniformIDs[UniformID::CameraRange], cam.getNearPlane(), cam.getFarPlane()));
+
+                handle.boundThisFrame = true;
+            }
+
+            glCheck(glUniform1f(handle.uniformIDs[UniformID::ParticleSize], emitter.settings.size));
+            glCheck(glUniform1f(handle.uniformIDs[UniformID::FrameCount], static_cast<float>(emitter.settings.frameCount)));
+            glCheck(glUniform2f(handle.uniformIDs[UniformID::TextureSize], emitter.settings.textureSize.x, emitter.settings.textureSize.y));
+        };
         glCheck(glActiveTexture(GL_TEXTURE0));
 
 
 
-        const auto& entities = m_drawLists[cam.getDrawListIndex()][cam.getActivePassIndex()];// std::any_cast<const std::vector<Entity>&>(pass.drawList.at(getType()));
+        const auto& entities = m_drawLists[cam.getDrawListIndex()][cam.getActivePassIndex()];
         for (auto entity : entities)
         {
             //it's possible an entity might be destroyed between adding to the 
@@ -540,26 +579,27 @@ void ParticleSystem::render(Entity camera, const RenderTarget& rt)
                 continue;
             }
 
-            //bind emitter texture
-            glCheck(glBindTexture(GL_TEXTURE_2D, emitter.settings.textureID));
-            glCheck(glUniform1f(m_uniformIDs[UniformID::ParticleSize], emitter.settings.size));
-            glCheck(glUniform1f(m_uniformIDs[UniformID::FrameCount], static_cast<float>(emitter.settings.frameCount)));
-            glCheck(glUniform2f(m_uniformIDs[UniformID::TextureSize], emitter.settings.textureSize.x, emitter.settings.textureSize.y));
-
-            //apply blend mode
+            //apply blend mode - this also binds the appropriate shader for current mode
             switch (emitter.settings.blendmode)
             {
             default: break;
             case EmitterSettings::Alpha:
                 glCheck(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
+                bindShader(ShaderID::Alpha, emitter);
                 break;
             case EmitterSettings::Multiply:
                 glCheck(glBlendFunc(GL_DST_COLOR, GL_ZERO));
+                bindShader(ShaderID::Multiply, emitter);
                 break;
             case EmitterSettings::Add:
                 glCheck(glBlendFunc(GL_ONE, GL_ONE));
+                bindShader(ShaderID::Add, emitter);
                 break;
             }
+
+            //bind emitter texture
+            glCheck(glBindTexture(GL_TEXTURE_2D, emitter.settings.textureID));
+
 
 #ifdef PLATFORM_DESKTOP
             glCheck(glBindVertexArray(emitter.m_vao));
@@ -569,7 +609,7 @@ void ParticleSystem::render(Entity camera, const RenderTarget& rt)
             glCheck(glBindBuffer(GL_ARRAY_BUFFER, emitter.m_vbo));
 
             //bind vertex attribs
-            for (auto [index, attribSize, offset] : m_attribData)
+            for (auto [index, attribSize, offset] : m_shaderHandles[0].attribData)
             {
                 glCheck(glEnableVertexAttribArray(index));
                 glCheck(glVertexAttribPointer(index, attribSize,
@@ -581,9 +621,9 @@ void ParticleSystem::render(Entity camera, const RenderTarget& rt)
             glCheck(glDrawArrays(GL_POINTS, 0, static_cast<GLsizei>(emitter.m_nextFreeParticle)));
 
             //unbind attribs
-            for (auto j = 0u; j < m_attribData.size(); ++j)
+            for (auto j = 0u; j < m_shaderHandles[0].attribData.size(); ++j)
             {
-                glCheck(glDisableVertexAttribArray(m_attribData[j].index));
+                glCheck(glDisableVertexAttribArray(m_shaderHandles[0].attribData[j].index));
             }
 #endif //PLATFORM
         }
@@ -659,7 +699,8 @@ void ParticleSystem::allocateBuffer()
     glCheck(glBufferData(GL_ARRAY_BUFFER, MaxVertData * sizeof(float), nullptr, GL_DYNAMIC_DRAW));
 
 #ifdef PLATFORM_DESKTOP
-    for(auto [index, attribSize, offset] : m_attribData)
+    //HMMMMMMM this only works because all the shaders use the same vertex shader
+    for(auto [index, attribSize, offset] : m_shaderHandles[0].attribData)
     {
         glCheck(glEnableVertexAttribArray(index));
         glCheck(glVertexAttribPointer(index, attribSize,

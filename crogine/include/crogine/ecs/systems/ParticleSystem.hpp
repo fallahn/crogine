@@ -36,6 +36,7 @@ source distribution.
 #include <crogine/graphics/Texture.hpp>
 
 #include <vector>
+#include <memory>
 
 namespace cro
 {
@@ -87,7 +88,7 @@ namespace cro
 
         void allocateBuffer();
 
-        Shader m_shader;
+        std::vector<std::unique_ptr<Shader>> m_shaders;
 
         enum UniformID
         {
@@ -103,14 +104,31 @@ namespace cro
 
             Count
         };
-        std::array<std::int32_t, UniformID::Count> m_uniformIDs = {};
 
-        struct AttribData final
+        struct ShaderHandle final
         {
-            std::int32_t index = 0;
-            std::int32_t attribSize = 0;
-            std::int32_t offset = 0;
+            std::array<std::int32_t, UniformID::Count> uniformIDs = {};
+
+            struct AttribData final
+            {
+                std::int32_t index = 0;
+                std::int32_t attribSize = 0;
+                std::int32_t offset = 0;
+            };
+            std::array<AttribData, 3u> attribData;
+            std::uint32_t id = 0;
+
+            bool boundThisFrame = false;
         };
-        std::array<AttribData, 3u> m_attribData;
+
+        struct ShaderID final
+        {
+            enum
+            {
+                Alpha, Add, Multiply,
+                Count
+            };
+        };
+        std::array<ShaderHandle, ShaderID::Count> m_shaderHandles = {};
     };
 }
