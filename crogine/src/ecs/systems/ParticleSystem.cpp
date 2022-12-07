@@ -542,7 +542,7 @@ void ParticleSystem::render(Entity camera, const RenderTarget& rt)
             glCheck(glUseProgram(handle.id));
 
             //set shader uniforms (texture/projection)
-            if (!handle.boundThisFrame)
+            //if (!handle.boundThisFrame)
             {
                 glCheck(glUniform4f(handle.uniformIDs[UniformID::ClipPlane], clipPlane.r, clipPlane.g, clipPlane.b, clipPlane.a));
                 glCheck(glUniformMatrix4fv(handle.uniformIDs[UniformID::Projection], 1, GL_FALSE, glm::value_ptr(cam.getProjectionMatrix())));
