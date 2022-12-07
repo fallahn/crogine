@@ -129,7 +129,7 @@ private:
     std::array<bool, ConstVal::MaxClients> m_readyState = {};
 
     static const std::array<glm::vec2, MenuID::Count> m_menuPositions;
-    float m_lobbyExpansion; //how much the lobby menu has been stretched to fill the screen
+    float m_lobbyExpansion; //how much the lobby menu has been stretched to fill the screen in total
     cro::Entity m_avatarMenu; //root of the avatar menu to which each player avatar is attached
     std::vector<cro::Entity> m_avatarListEntities;
     std::pair<std::uint32_t, std::uint32_t> m_avatarCallbacks;

@@ -1011,84 +1011,120 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
     entity.getComponent<cro::Transform>().addChild(labelEnt.getComponent<cro::Transform>());
     entity.getComponent<cro::UIInput>().area.width += cro::Text::getLocalBounds(labelEnt).width;
 
-    //if (Social::isAvailable())
-    {
-        const float xPos = spriteSheet.getSprite("background").getTextureRect().width / 2.f;
-        entity = m_uiScene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition({xPos, 10.f, 0.1f});
 
-        const auto progress = Social::getLevelProgress();
-        constexpr float BarWidth = 80.f;
-        constexpr float BarHeight = 10.f;
-        entity.addComponent<cro::Drawable2D>().setVertexData(
-            {
-                cro::Vertex2D(glm::vec2(-BarWidth / 2.f, BarHeight / 2.f), TextHighlightColour),
-                cro::Vertex2D(glm::vec2(-BarWidth / 2.f, -BarHeight / 2.f), TextHighlightColour),
-                cro::Vertex2D(glm::vec2((-BarWidth / 2.f) + (BarWidth * progress.progress), BarHeight / 2.f), TextHighlightColour),
-                cro::Vertex2D(glm::vec2((-BarWidth / 2.f) + (BarWidth * progress.progress), -BarHeight / 2.f), TextHighlightColour),
+    //XP info
+    const float xPos = spriteSheet.getSprite("background").getTextureRect().width / 2.f;
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({xPos, 10.f, 0.1f});
 
-                cro::Vertex2D(glm::vec2((-BarWidth / 2.f) + (BarWidth * progress.progress), BarHeight / 2.f), LeaderboardTextDark),
-                cro::Vertex2D(glm::vec2((-BarWidth / 2.f) + (BarWidth * progress.progress), -BarHeight / 2.f), LeaderboardTextDark),
-                cro::Vertex2D(glm::vec2(BarWidth / 2.f, BarHeight / 2.f), LeaderboardTextDark),
-                cro::Vertex2D(glm::vec2(BarWidth / 2.f, -BarHeight / 2.f), LeaderboardTextDark),
-            });
-        entity.getComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLE_STRIP);
-        avatarEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-
-        auto borderEnt = m_uiScene.createEntity();
-        borderEnt.addComponent<cro::Transform>().setPosition({ -BarWidth / 2.f, -BarHeight / 2.f, 0.1f });
-        borderEnt.addComponent<cro::Drawable2D>();
-        borderEnt.addComponent<cro::Sprite>() = spriteSheet.getSprite("xp_corners");
-        entity.getComponent<cro::Transform>().addChild(borderEnt.getComponent<cro::Transform>());
-
-        if (Social::getLevel() > 0)
+    const auto progress = Social::getLevelProgress();
+    constexpr float BarWidth = 80.f;
+    constexpr float BarHeight = 10.f;
+    const auto CornerColour = cro::Colour(std::uint8_t(101), 67, 47);
+    entity.addComponent<cro::Drawable2D>().setVertexData(
         {
-            auto iconEnt = m_uiScene.createEntity();
-            iconEnt.addComponent<cro::Transform>();
-            iconEnt.addComponent<cro::Drawable2D>();
-            iconEnt.addComponent<cro::Sprite>() = spriteSheet.getSprite("rank_icon");
-            iconEnt.addComponent<cro::SpriteAnimation>().play(std::min(5, Social::getLevel() / 10));
-            bounds = iconEnt.getComponent<cro::Sprite>().getTextureBounds();
-            iconEnt.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
-            iconEnt.addComponent<UIElement>().relativePosition = { 0.5f, 0.f };
-            iconEnt.getComponent<UIElement>().absolutePosition = { 0.f, 24.f };
-            iconEnt.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement;
-            menuTransform.addChild(iconEnt.getComponent<cro::Transform>());
-        }
+            cro::Vertex2D(glm::vec2(-BarWidth / 2.f, BarHeight / 2.f), TextHighlightColour),
+            cro::Vertex2D(glm::vec2(-BarWidth / 2.f, -BarHeight / 2.f), TextHighlightColour),
+            cro::Vertex2D(glm::vec2((-BarWidth / 2.f) + (BarWidth * progress.progress), BarHeight / 2.f), TextHighlightColour),
 
-        auto& font = m_sharedData.sharedResources->fonts.get(FontID::Info);
-        auto labelEnt = m_uiScene.createEntity();
-        labelEnt.addComponent<cro::Transform>().setPosition({ (-BarWidth / 2.f) + 2.f, 4.f, 0.1f});
-        labelEnt.addComponent<cro::Drawable2D>();
-        labelEnt.addComponent<cro::Text>(font).setString("Level " + std::to_string(Social::getLevel()));
-        labelEnt.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
-        labelEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
-        labelEnt.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
-        labelEnt.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
-        entity.getComponent<cro::Transform>().addChild(labelEnt.getComponent<cro::Transform>());
+            cro::Vertex2D(glm::vec2((-BarWidth / 2.f) + (BarWidth * progress.progress), BarHeight / 2.f), TextHighlightColour),
+            cro::Vertex2D(glm::vec2(-BarWidth / 2.f, -BarHeight / 2.f), TextHighlightColour),
+            cro::Vertex2D(glm::vec2((-BarWidth / 2.f) + (BarWidth * progress.progress), -BarHeight / 2.f), TextHighlightColour),
 
-        labelEnt = m_uiScene.createEntity();
-        labelEnt.addComponent<cro::Transform>().setPosition({ std::floor(-xPos * 0.6f), 4.f, 0.1f });
-        labelEnt.addComponent<cro::Drawable2D>();
-        labelEnt.addComponent<cro::Text>(font).setString(std::to_string(progress.currentXP) + "/" + std::to_string(progress.levelXP) + " XP");
-        labelEnt.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
-        labelEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
-        labelEnt.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
-        labelEnt.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
-        centreText(labelEnt);
-        entity.getComponent<cro::Transform>().addChild(labelEnt.getComponent<cro::Transform>());
+            cro::Vertex2D(glm::vec2((-BarWidth / 2.f) + (BarWidth * progress.progress), BarHeight / 2.f), LeaderboardTextDark),
+            cro::Vertex2D(glm::vec2((-BarWidth / 2.f) + (BarWidth * progress.progress), -BarHeight / 2.f), LeaderboardTextDark),
+            cro::Vertex2D(glm::vec2(BarWidth / 2.f, BarHeight / 2.f), LeaderboardTextDark),
 
-        labelEnt = m_uiScene.createEntity();
-        labelEnt.addComponent<cro::Transform>().setPosition({ std::floor(xPos * 0.6f), 4.f, 0.1f});
-        labelEnt.addComponent<cro::Drawable2D>();
-        labelEnt.addComponent<cro::Text>(font).setString("Total: " + std::to_string(Social::getXP()) + " XP");
-        labelEnt.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
-        labelEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
-        labelEnt.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
-        labelEnt.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
-        centreText(labelEnt);
-        entity.getComponent<cro::Transform>().addChild(labelEnt.getComponent<cro::Transform>());
+            cro::Vertex2D(glm::vec2(BarWidth / 2.f, BarHeight / 2.f), LeaderboardTextDark),
+            cro::Vertex2D(glm::vec2((-BarWidth / 2.f) + (BarWidth * progress.progress), -BarHeight / 2.f), LeaderboardTextDark),
+            cro::Vertex2D(glm::vec2(BarWidth / 2.f, -BarHeight / 2.f), LeaderboardTextDark),
+
+            //corners
+            cro::Vertex2D(glm::vec2(-BarWidth / 2.f, BarHeight / 2.f), CornerColour),
+            cro::Vertex2D(glm::vec2(-BarWidth / 2.f, (BarHeight / 2.f) - 1.f), CornerColour),
+            cro::Vertex2D(glm::vec2((-BarWidth / 2.f) + 1.f, BarHeight / 2.f), CornerColour),
+
+            cro::Vertex2D(glm::vec2((-BarWidth / 2.f) + 1.f, BarHeight / 2.f), CornerColour),
+            cro::Vertex2D(glm::vec2(-BarWidth / 2.f, (BarHeight / 2.f) - 1.f), CornerColour),
+            cro::Vertex2D(glm::vec2((-BarWidth / 2.f) + 1.f, (BarHeight / 2.f) - 1.f), CornerColour),
+
+            cro::Vertex2D(glm::vec2(-BarWidth / 2.f, (-BarHeight / 2.f) + 1.f), CornerColour),
+            cro::Vertex2D(glm::vec2(-BarWidth / 2.f, -BarHeight / 2.f), CornerColour),
+            cro::Vertex2D(glm::vec2((-BarWidth / 2.f) + 1.f, (-BarHeight / 2.f) + 1.f), CornerColour),
+
+            cro::Vertex2D(glm::vec2((-BarWidth / 2.f) + 1.f, (-BarHeight / 2.f) + 1.f), CornerColour),
+            cro::Vertex2D(glm::vec2(-BarWidth / 2.f, -BarHeight / 2.f), CornerColour),
+            cro::Vertex2D(glm::vec2((-BarWidth / 2.f) + 1.f, -BarHeight / 2.f), CornerColour),
+
+
+            cro::Vertex2D(glm::vec2((BarWidth / 2.f) - 1.f, BarHeight / 2.f), CornerColour),
+            cro::Vertex2D(glm::vec2((BarWidth / 2.f) - 1.f, (BarHeight / 2.f) - 1.f), CornerColour),
+            cro::Vertex2D(glm::vec2(BarWidth / 2.f, BarHeight / 2.f), CornerColour),
+
+            cro::Vertex2D(glm::vec2(BarWidth / 2.f, BarHeight / 2.f), CornerColour),
+            cro::Vertex2D(glm::vec2((BarWidth / 2.f) - 1.f, (BarHeight / 2.f) - 1.f), CornerColour),
+            cro::Vertex2D(glm::vec2(BarWidth / 2.f, (BarHeight / 2.f) - 1.f), CornerColour),
+
+            cro::Vertex2D(glm::vec2((BarWidth / 2.f) - 1.f, (-BarHeight / 2.f) + 1.f), CornerColour),
+            cro::Vertex2D(glm::vec2((BarWidth / 2.f) - 1.f, -BarHeight / 2.f), CornerColour),
+            cro::Vertex2D(glm::vec2(BarWidth / 2.f, (-BarHeight / 2.f) + 1.f), CornerColour),
+
+            cro::Vertex2D(glm::vec2(BarWidth / 2.f, (-BarHeight / 2.f) + 1.f), CornerColour),
+            cro::Vertex2D(glm::vec2((BarWidth / 2.f) - 1.f, -BarHeight / 2.f), CornerColour),
+            cro::Vertex2D(glm::vec2(BarWidth / 2.f, -BarHeight / 2.f), CornerColour)
+        });
+    entity.getComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLES);
+    avatarEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+    if (Social::getLevel() > 0)
+    {
+        auto iconEnt = m_uiScene.createEntity();
+        iconEnt.addComponent<cro::Transform>();
+        iconEnt.addComponent<cro::Drawable2D>();
+        iconEnt.addComponent<cro::Sprite>() = spriteSheet.getSprite("rank_icon");
+        iconEnt.addComponent<cro::SpriteAnimation>().play(std::min(5, Social::getLevel() / 10));
+        bounds = iconEnt.getComponent<cro::Sprite>().getTextureBounds();
+        iconEnt.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
+        iconEnt.addComponent<UIElement>().relativePosition = { 0.5f, 0.f };
+        iconEnt.getComponent<UIElement>().absolutePosition = { 0.f, 24.f };
+        iconEnt.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement;
+        menuTransform.addChild(iconEnt.getComponent<cro::Transform>());
     }
+
+    auto& font = m_sharedData.sharedResources->fonts.get(FontID::Info);
+    labelEnt = m_uiScene.createEntity();
+    labelEnt.addComponent<cro::Transform>().setPosition({ (-BarWidth / 2.f) + 2.f, 4.f, 0.1f});
+    labelEnt.addComponent<cro::Drawable2D>();
+    labelEnt.addComponent<cro::Text>(font).setString("Level " + std::to_string(Social::getLevel()));
+    labelEnt.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+    labelEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    labelEnt.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
+    labelEnt.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+    entity.getComponent<cro::Transform>().addChild(labelEnt.getComponent<cro::Transform>());
+
+    labelEnt = m_uiScene.createEntity();
+    labelEnt.addComponent<cro::Transform>().setPosition({ std::floor(-xPos * 0.6f), 4.f, 0.1f });
+    labelEnt.addComponent<cro::Drawable2D>();
+    labelEnt.addComponent<cro::Text>(font).setString(std::to_string(progress.currentXP) + "/" + std::to_string(progress.levelXP) + " XP");
+    labelEnt.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+    labelEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    labelEnt.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
+    labelEnt.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+    centreText(labelEnt);
+    entity.getComponent<cro::Transform>().addChild(labelEnt.getComponent<cro::Transform>());
+
+    labelEnt = m_uiScene.createEntity();
+    labelEnt.addComponent<cro::Transform>().setPosition({ std::floor(xPos * 0.6f), 4.f, 0.1f});
+    labelEnt.addComponent<cro::Drawable2D>();
+    labelEnt.addComponent<cro::Text>(font).setString("Total: " + std::to_string(Social::getXP()) + " XP");
+    labelEnt.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+    labelEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    labelEnt.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
+    labelEnt.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+    centreText(labelEnt);
+    entity.getComponent<cro::Transform>().addChild(labelEnt.getComponent<cro::Transform>());
+
 
     //remove player button
     entity = m_uiScene.createEntity();
@@ -3829,8 +3865,8 @@ void MenuState::updateLobbyAvatars()
 
             //rank text
             entity = m_uiScene.createEntity();
-            entity.addComponent<cro::Transform>().setPosition(ReadyOffset);
-            entity.getComponent<cro::Transform>().move({ 106.f, -51.f });
+            entity.addComponent<cro::Transform>();// .setPosition({ -textPos.x, -56.f });
+            //entity.getComponent<cro::Transform>().move({ 50.f + (m_lobbyExpansion / 2.f), 0.f });
             entity.addComponent<cro::Drawable2D>();
             entity.addComponent<cro::Text>(smallFont).setString("Level");
             entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
@@ -3840,7 +3876,7 @@ void MenuState::updateLobbyAvatars()
 
             entity.addComponent<cro::Callback>().active = true;
             entity.getComponent<cro::Callback>().function =
-                [&, h](cro::Entity ent, float)
+                [&, h, textPos](cro::Entity ent, float)
             {
                 if (m_sharedData.connectionData[h].playerCount == 0)
                 {
@@ -3850,7 +3886,9 @@ void MenuState::updateLobbyAvatars()
                 {
                     ent.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
                     ent.getComponent<cro::Text>().setString("Level " + std::to_string(m_sharedData.connectionData[h].level));
-                    centreText(ent);
+                    
+                    float offset = ent.getComponent<cro::Callback>().getUserData<float>();
+                    ent.getComponent<cro::Transform>().setPosition({ (50.f + (m_lobbyExpansion / 2.f)) - textPos.x - offset, -56.f });
                 }
             };
             textEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -3883,6 +3921,83 @@ void MenuState::updateLobbyAvatars()
             rankEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
             children.push_back(entity);
 
+            //if this is our local client then add the current xp level
+            if (h == m_sharedData.clientConnection.connectionID)
+            {
+                constexpr float BarWidth = 80.f;
+                constexpr float BarHeight = 10.f;
+                auto bounds = cro::Text::getLocalBounds(rankEnt);
+
+                entity = m_uiScene.createEntity();
+                entity.addComponent<cro::Transform>().setPosition({(BarWidth / 2.f) - 2.f, -4.f, -0.1f});
+
+                const auto CornerColour = cro::Colour(std::uint8_t(152), 122, 104);
+
+                const auto progress = Social::getLevelProgress();
+                entity.addComponent<cro::Drawable2D>().setVertexData(
+                    {
+                        cro::Vertex2D(glm::vec2(-BarWidth / 2.f, BarHeight / 2.f), TextHighlightColour),
+                        cro::Vertex2D(glm::vec2(-BarWidth / 2.f, -BarHeight / 2.f), TextHighlightColour),
+                        cro::Vertex2D(glm::vec2((-BarWidth / 2.f) + (BarWidth * progress.progress), BarHeight / 2.f), TextHighlightColour),
+
+                        cro::Vertex2D(glm::vec2((-BarWidth / 2.f) + (BarWidth * progress.progress), BarHeight / 2.f), TextHighlightColour),
+                        cro::Vertex2D(glm::vec2(-BarWidth / 2.f, -BarHeight / 2.f), TextHighlightColour),
+                        cro::Vertex2D(glm::vec2((-BarWidth / 2.f) + (BarWidth * progress.progress), -BarHeight / 2.f), TextHighlightColour),
+
+                        cro::Vertex2D(glm::vec2((-BarWidth / 2.f) + (BarWidth * progress.progress), BarHeight / 2.f), LeaderboardTextDark),
+                        cro::Vertex2D(glm::vec2((-BarWidth / 2.f) + (BarWidth * progress.progress), -BarHeight / 2.f), LeaderboardTextDark),
+                        cro::Vertex2D(glm::vec2(BarWidth / 2.f, BarHeight / 2.f), LeaderboardTextDark),
+
+                        cro::Vertex2D(glm::vec2(BarWidth / 2.f, BarHeight / 2.f), LeaderboardTextDark),
+                        cro::Vertex2D(glm::vec2((-BarWidth / 2.f) + (BarWidth * progress.progress), -BarHeight / 2.f), LeaderboardTextDark),
+                        cro::Vertex2D(glm::vec2(BarWidth / 2.f, -BarHeight / 2.f), LeaderboardTextDark),
+
+                        //corners
+                        cro::Vertex2D(glm::vec2(-BarWidth / 2.f, BarHeight / 2.f), CornerColour),
+                        cro::Vertex2D(glm::vec2(-BarWidth / 2.f, (BarHeight / 2.f) - 1.f), CornerColour),
+                        cro::Vertex2D(glm::vec2((-BarWidth / 2.f) + 1.f, BarHeight / 2.f), CornerColour),
+
+                        cro::Vertex2D(glm::vec2((-BarWidth / 2.f) + 1.f, BarHeight / 2.f), CornerColour),
+                        cro::Vertex2D(glm::vec2(-BarWidth / 2.f, (BarHeight / 2.f) - 1.f), CornerColour),
+                        cro::Vertex2D(glm::vec2((-BarWidth / 2.f) + 1.f, (BarHeight / 2.f) - 1.f), CornerColour),
+
+                        cro::Vertex2D(glm::vec2(-BarWidth / 2.f, (-BarHeight / 2.f) + 1.f), CornerColour),
+                        cro::Vertex2D(glm::vec2(-BarWidth / 2.f, -BarHeight / 2.f), CornerColour),
+                        cro::Vertex2D(glm::vec2((-BarWidth / 2.f) + 1.f, (-BarHeight / 2.f) + 1.f), CornerColour),
+
+                        cro::Vertex2D(glm::vec2((-BarWidth / 2.f) + 1.f, (-BarHeight / 2.f) + 1.f), CornerColour),
+                        cro::Vertex2D(glm::vec2(-BarWidth / 2.f, -BarHeight / 2.f), CornerColour),
+                        cro::Vertex2D(glm::vec2((-BarWidth / 2.f) + 1.f, -BarHeight / 2.f), CornerColour),
+
+
+                        cro::Vertex2D(glm::vec2((BarWidth / 2.f) - 1.f, BarHeight / 2.f), CornerColour),
+                        cro::Vertex2D(glm::vec2((BarWidth / 2.f) - 1.f, (BarHeight / 2.f) - 1.f), CornerColour),
+                        cro::Vertex2D(glm::vec2(BarWidth / 2.f, BarHeight / 2.f), CornerColour),
+
+                        cro::Vertex2D(glm::vec2(BarWidth / 2.f, BarHeight / 2.f), CornerColour),
+                        cro::Vertex2D(glm::vec2((BarWidth / 2.f) - 1.f, (BarHeight / 2.f) - 1.f), CornerColour),
+                        cro::Vertex2D(glm::vec2(BarWidth / 2.f, (BarHeight / 2.f) - 1.f), CornerColour),
+
+                        cro::Vertex2D(glm::vec2((BarWidth / 2.f) - 1.f, (-BarHeight / 2.f) + 1.f), CornerColour),
+                        cro::Vertex2D(glm::vec2((BarWidth / 2.f) - 1.f, -BarHeight / 2.f), CornerColour),
+                        cro::Vertex2D(glm::vec2(BarWidth / 2.f, (-BarHeight / 2.f) + 1.f), CornerColour),
+
+                        cro::Vertex2D(glm::vec2(BarWidth / 2.f, (-BarHeight / 2.f) + 1.f), CornerColour),
+                        cro::Vertex2D(glm::vec2((BarWidth / 2.f) - 1.f, -BarHeight / 2.f), CornerColour),
+                        cro::Vertex2D(glm::vec2(BarWidth / 2.f, -BarHeight / 2.f), CornerColour),
+                    });
+                entity.getComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLES);
+                rankEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+                children.push_back(entity);
+
+                rankEnt.getComponent<cro::Callback>().setUserData<float>((BarWidth / 2.f) - 7.f);
+            }
+            else
+            {
+                //text width
+                auto bounds = cro::Text::getLocalBounds(rankEnt);
+                rankEnt.getComponent<cro::Callback>().setUserData<float>((bounds.width / 2.f) - 8.f);
+            }
 
             //add a network status icon
             entity = m_uiScene.createEntity();
