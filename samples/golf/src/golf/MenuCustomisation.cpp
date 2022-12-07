@@ -66,7 +66,7 @@ void MenuState::createBallScene()
     for (auto i = 0u; i < m_ballThumbCams.size(); ++i)
     {
         auto entity = m_backgroundScene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition({ RootPoint, 0.045f, 0.095f });
+        entity.addComponent<cro::Transform>().setPosition({ RootPoint - 10.f, 0.045f, 0.095f });
         entity.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -0.03f);
         entity.addComponent<cro::Camera>().setPerspective(0.89f, 2.f, 0.001f, 2.f);
         entity.getComponent<cro::Camera>().viewport = { (i % 2) * 0.5f, (i / 2) * 0.5f, 0.5f, 0.5f };
@@ -97,7 +97,7 @@ void MenuState::createBallScene()
     };
 
     m_ballCam = m_backgroundScene.createEntity();
-    m_ballCam.addComponent<cro::Transform>().setPosition({ RootPoint, 0.045f, 0.095f });
+    m_ballCam.addComponent<cro::Transform>().setPosition({ RootPoint - 10.f, 0.045f, 0.095f });
     m_ballCam.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -0.03f);
     m_ballCam.addComponent<cro::Camera>().setPerspective(1.f, 1.f, 0.001f, 2.f);
     m_ballCam.getComponent<cro::Camera>().resizeCallback = ballTexCallback;

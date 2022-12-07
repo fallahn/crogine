@@ -398,6 +398,11 @@ bool OptionsState::handleEvent(const cro::Event& evt)
     else if (evt.type == SDL_CONTROLLERAXISMOTION)
     {
         toggleControllerIcon(cro::GameController::controllerID(evt.caxis.which));
+
+        if (evt.caxis.value > LeftThumbDeadZone)
+        {
+            cro::App::getWindow().setMouseCaptured(true);
+        }
     }
     else if (evt.type == SDL_MOUSEBUTTONDOWN)
     {
@@ -421,6 +426,7 @@ bool OptionsState::handleEvent(const cro::Event& evt)
     else if (evt.type == SDL_MOUSEMOTION)
     {
         updateSlider();
+        cro::App::getWindow().setMouseCaptured(false);
     }
     else if (evt.type == SDL_MOUSEWHEEL)
     {

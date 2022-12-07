@@ -349,10 +349,6 @@ bool ClubhouseState::handleEvent(const cro::Event& evt)
     {
         handleTextEdit(evt);
     }
-    else if (evt.type == SDL_CONTROLLERDEVICEREMOVED)
-    {
-
-    }
     else if (evt.type == SDL_CONTROLLERBUTTONUP)
     {
         switch (evt.cbutton.button)
@@ -378,6 +374,17 @@ bool ClubhouseState::handleEvent(const cro::Event& evt)
                 //UISystem
                 return true;
             }
+        }
+    }
+    else if (evt.type == SDL_MOUSEMOTION)
+    {
+        cro::App::getWindow().setMouseCaptured(false);
+    }
+    else if (evt.type == SDL_CONTROLLERAXISMOTION)
+    {
+        if (evt.caxis.value > LeftThumbDeadZone)
+        {
+            cro::App::getWindow().setMouseCaptured(true);
         }
     }
 

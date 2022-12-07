@@ -123,6 +123,17 @@ bool PracticeState::handleEvent(const cro::Event& evt)
             return false;
         }
     }
+    else if (evt.type == SDL_CONTROLLERAXISMOTION)
+    {
+        if (evt.caxis.value > LeftThumbDeadZone)
+        {
+            cro::App::getWindow().setMouseCaptured(true);
+        }
+    }
+    else if (evt.type == SDL_MOUSEMOTION)
+    {
+        cro::App::getWindow().setMouseCaptured(false);
+    }
 
     m_scene.getSystem<cro::UISystem>()->handleEvent(evt);
     m_scene.forwardEvent(evt);

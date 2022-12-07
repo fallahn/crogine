@@ -5679,7 +5679,7 @@ void GolfState::setGreenCamPosition()
         m_cameras[CameraID::Green].getComponent<CameraFollower>().radius = 4.5f * 4.5f;
         m_cameras[CameraID::Green].getComponent<CameraFollower>().zoom.target = 0.5f;
         m_cameras[CameraID::Green].getComponent<CameraFollower>().zoom.speed = 0.8f;
-        heightOffset *= 0.2f;
+        heightOffset *= 0.18f;
     }
     else if (m_currentPlayer.terrain == TerrainID::Green)
     {

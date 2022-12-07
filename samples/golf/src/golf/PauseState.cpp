@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021
+Matt Marchant 2021 - 2022
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -125,6 +125,17 @@ bool PauseState::handleEvent(const cro::Event& evt)
             quitState();
             return false;
         }
+    }
+    else if (evt.type == SDL_CONTROLLERAXISMOTION)
+    {
+        if (evt.caxis.value > LeftThumbDeadZone)
+        {
+            cro::App::getWindow().setMouseCaptured(true);
+        }
+    }
+    else if (evt.type == SDL_MOUSEMOTION)
+    {
+        cro::App::getWindow().setMouseCaptured(false);
     }
 
     m_scene.getSystem<cro::UISystem>()->handleEvent(evt);

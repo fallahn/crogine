@@ -427,6 +427,7 @@ bool PlaylistState::handleEvent(const cro::Event& evt)
             auto pos = m_uiScene.getActiveCamera().getComponent<cro::Camera>().pixelToCoords(glm::vec2(evt.button.x, evt.button.y));
             m_activeSlider.getComponent<cro::Callback>().getUserData<SliderData>().updatePosition(pos);
         }
+        cro::App::getWindow().setMouseCaptured(false);
     }
     else if (evt.type == SDL_MOUSEWHEEL)
     {
@@ -502,6 +503,14 @@ bool PlaylistState::handleEvent(const cro::Event& evt)
             }
         }
     }
+    else if (evt.type == SDL_CONTROLLERAXISMOTION)
+    {
+        if (evt.caxis.value > LeftThumbDeadZone)
+        {
+            cro::App::getWindow().setMouseCaptured(true);
+        }
+    }
+
 
     m_uiScene.getSystem<cro::UISystem>()->handleEvent(evt);
 

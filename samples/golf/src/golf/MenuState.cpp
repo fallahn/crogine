@@ -590,6 +590,17 @@ bool MenuState::handleEvent(const cro::Event& evt)
             }
         }
     }
+    else if (evt.type == SDL_MOUSEMOTION)
+    {
+        cro::App::getWindow().setMouseCaptured(false);
+    }
+    else if (evt.type == SDL_CONTROLLERAXISMOTION)
+    {
+        if (evt.caxis.value > LeftThumbDeadZone)
+        {
+            cro::App::getWindow().setMouseCaptured(true);
+        }
+    }
 
     m_uiScene.getSystem<cro::UISystem>()->handleEvent(evt);
 
