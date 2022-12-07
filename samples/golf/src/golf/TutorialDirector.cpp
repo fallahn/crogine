@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021
+Matt Marchant 2021 - 2022
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -37,6 +37,7 @@ source distribution.
 
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/ecs/components/Callback.hpp>
+#include <crogine/core/GameController.hpp>
 
 /*
 Tutorial 1 triggered on scene transition completion
@@ -126,14 +127,35 @@ void TutorialDirector::handleMessage(const cro::Message& msg)
     case MessageID::GolfMessage:
     {
         const auto& data = msg.getData<GolfEvent>();
-        if (data.type == GolfEvent::SetNewPlayer
-            && data.terrain == TerrainID::Green
-            && m_sharedData.tutorialIndex == 3)
+        if (data.type == GolfEvent::SetNewPlayer)
         {
-            //final tutorial about putting
-            auto* msg2 = postMessage<SystemEvent>(MessageID::SystemMessage);
-            msg2->data = StateID::Tutorial;
-            msg2->type = SystemEvent::StateRequest;
+            switch (m_sharedData.tutorialIndex)
+            {
+            default: break;
+            case 3:
+                if (cro::GameController::getControllerCount() != 0)
+                {
+                    //swingput tutorial
+                    auto* msg2 = postMessage<SystemEvent>(MessageID::SystemMessage);
+                    msg2->data = StateID::Tutorial;
+                    msg2->type = SystemEvent::StateRequest;
+                }
+                else
+                {
+                    //skip to next
+                    m_sharedData.tutorialIndex++;
+                }
+                break;
+            case 4:
+                if (data.terrain == TerrainID::Green)
+                {
+                    //final tutorial about putting
+                    auto* msg2 = postMessage<SystemEvent>(MessageID::SystemMessage);
+                    msg2->data = StateID::Tutorial;
+                    msg2->type = SystemEvent::StateRequest;
+                }
+                break;
+            }
         }
     }
         break;

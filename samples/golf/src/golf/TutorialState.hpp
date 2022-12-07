@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021
+Matt Marchant 2021 - 2022
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -84,7 +84,8 @@ private:
     void tutorialOne(cro::Entity);
     void tutorialTwo(cro::Entity);
     void tutorialThree(cro::Entity);
-    void tutorialFour(cro::Entity);
+    void tutorialPutt(cro::Entity);
+    void tutorialSwing(cro::Entity);
 
     void showContinue();
     void doCurrentAction();
