@@ -1498,6 +1498,39 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
             hideToolTip();
         });
 
+    //these scroll the player's ball from the avatar menu
+    m_ballPreviewCallbacks[0] = uiSystem.addCallback([&](cro::Entity e, const cro::ButtonEvent& evt) 
+        {
+            if (activated(evt))
+            {
+                m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
+                auto playerIndex = e.getComponent<cro::Callback>().getUserData<std::int32_t>();
+
+                auto idx = m_ballIndices[playerIndex];
+                idx = (idx + (m_sharedData.ballModels.size() - 1)) % m_sharedData.ballModels.size();
+                m_sharedData.localConnectionData.playerData[playerIndex].ballID = m_sharedData.ballModels[idx].uid;
+                m_ballIndices[playerIndex] = idx;
+
+                m_ballThumbCams[playerIndex].getComponent<cro::Callback>().getUserData<std::int32_t>() = static_cast<std::int32_t>(idx);
+            }
+        });
+
+    m_ballPreviewCallbacks[1] = uiSystem.addCallback([&](cro::Entity e, const cro::ButtonEvent& evt)
+        {
+            if (activated(evt))
+            {
+                m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+                auto playerIndex = e.getComponent<cro::Callback>().getUserData<std::int32_t>();
+
+                auto idx = m_ballIndices[playerIndex];
+                idx = (idx + 1) % m_sharedData.ballModels.size();
+                m_sharedData.localConnectionData.playerData[playerIndex].ballID = m_sharedData.ballModels[idx].uid;
+                m_ballIndices[playerIndex] = idx;
+
+                m_ballThumbCams[playerIndex].getComponent<cro::Callback>().getUserData<std::int32_t>() = static_cast<std::int32_t>(idx);
+            }
+        });
+
     updateLocalAvatars(mouseEnter, mouseExit);
 }
 
@@ -3660,6 +3693,65 @@ void MenuState::updateLocalAvatars(std::uint32_t mouseEnter, std::uint32_t mouse
             e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
         };
 
+        m_avatarMenu.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+        m_avatarListEntities.push_back(entity);
+
+
+        //prev/next arrows
+        entity = m_uiScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition(localPos + ControlIconOffset);
+        entity.getComponent<cro::Transform>().move({ -textureRect.width / 2.f, 0.f });
+        entity.addComponent<cro::Drawable2D>();
+        entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::ArrowLeft];
+        bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+        entity.getComponent<cro::Transform>().setOrigin({ std::floor(bounds.width * 1.6f), bounds.height / 2.f });
+        m_avatarMenu.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+        m_avatarListEntities.push_back(entity);
+
+
+        entity = m_uiScene.createEntity();
+        entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
+        entity.addComponent<cro::Transform>().setPosition(localPos + ControlIconOffset);
+        entity.getComponent<cro::Transform>().move({ -textureRect.width / 2.f, 0.f });
+        entity.addComponent<cro::Drawable2D>();
+        entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::ArrowLeftHighlight];
+        entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+        entity.getComponent<cro::Transform>().setOrigin({ std::floor(bounds.width * 1.6f), bounds.height / 2.f });
+        entity.addComponent<cro::Callback>().setUserData<std::int32_t>(i); //just use this to store the player index for the button callback
+        entity.addComponent<cro::UIInput>().area = bounds;
+        entity.getComponent<cro::UIInput>().setGroup(MenuID::Avatar);
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = m_cpuOptionCallbacks[0];//this does the same thing
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = m_cpuOptionCallbacks[1];
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = m_ballPreviewCallbacks[0];
+        m_avatarMenu.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+        m_avatarListEntities.push_back(entity);
+
+        //next
+        entity = m_uiScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition(localPos + ControlIconOffset);
+        entity.getComponent<cro::Transform>().move({ textureRect.width / 2.f, 0.f });
+        entity.addComponent<cro::Drawable2D>();
+        entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::ArrowRight];
+        bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+        entity.getComponent<cro::Transform>().setOrigin({ std::floor(-bounds.width * 0.6f), bounds.height / 2.f });
+        m_avatarMenu.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+        m_avatarListEntities.push_back(entity);
+
+
+        entity = m_uiScene.createEntity();
+        entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
+        entity.addComponent<cro::Transform>().setPosition(localPos + ControlIconOffset);
+        entity.getComponent<cro::Transform>().move({ textureRect.width / 2.f, 0.f });
+        entity.addComponent<cro::Drawable2D>();
+        entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::ArrowRightHighlight];
+        entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+        entity.getComponent<cro::Transform>().setOrigin({ std::floor(-bounds.width * 0.6f), bounds.height / 2.f });
+        entity.addComponent<cro::Callback>().setUserData<std::int32_t>(i); //just use this to store the player index for the button callback
+        entity.addComponent<cro::UIInput>().area = bounds;
+        entity.getComponent<cro::UIInput>().setGroup(MenuID::Avatar);
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = m_cpuOptionCallbacks[0];
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = m_cpuOptionCallbacks[1];
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = m_ballPreviewCallbacks[1];
         m_avatarMenu.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
         m_avatarListEntities.push_back(entity);
     }

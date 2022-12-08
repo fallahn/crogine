@@ -432,6 +432,7 @@ bool MenuState::handleEvent(const cro::Event& evt)
         {
         default: break;
         case MenuID::Avatar:
+            m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
             m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Dummy);
             m_menuEntities[m_currentMenu].getComponent<cro::Callback>().getUserData<MenuData>().targetMenu = MenuID::Main;
             m_menuEntities[m_currentMenu].getComponent<cro::Callback>().active = true;

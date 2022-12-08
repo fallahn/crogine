@@ -134,6 +134,7 @@ private:
     std::vector<cro::Entity> m_avatarListEntities;
     std::pair<std::uint32_t, std::uint32_t> m_avatarCallbacks;
     std::array<std::uint32_t, 5u> m_cpuOptionCallbacks = {};
+    std::array<std::uint32_t, 2u> m_ballPreviewCallbacks = {};
     struct HostOptionCallbacks final
     {
         std::uint32_t prevRules = 0;
