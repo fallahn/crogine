@@ -327,6 +327,8 @@ bool DrivingState::handleEvent(const cro::Event& evt)
         case SDLK_F10:
         case SDLK_F11:
         case SDLK_F12:
+        case SDLK_KP_PLUS:
+        case SDLK_KP_MINUS:
             break;
         }
     }
