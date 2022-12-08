@@ -931,27 +931,26 @@ void GolfState::createSwingMeter(cro::Entity root)
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>().setVertexData(
         {
-            cro::Vertex2D(glm::vec2(-Width, -Height), TextHighlightColour),
-            cro::Vertex2D(glm::vec2(Width,  -Height), TextHighlightColour),
-            cro::Vertex2D(glm::vec2(-Width,  -0.5f), TextHighlightColour),
-            cro::Vertex2D(glm::vec2(Width,  -0.5f), TextHighlightColour),
+            cro::Vertex2D(glm::vec2(-Width, -Height), SwingputDark),
+            cro::Vertex2D(glm::vec2(Width,  -Height), SwingputDark),
+            cro::Vertex2D(glm::vec2(-Width,  -0.5f), SwingputDark),
+            cro::Vertex2D(glm::vec2(Width,  -0.5f), SwingputDark),
 
             cro::Vertex2D(glm::vec2(-Width,  -0.5f), TextNormalColour),
             cro::Vertex2D(glm::vec2(Width,  -0.5f), TextNormalColour),
             cro::Vertex2D(glm::vec2(-Width,  0.5f), TextNormalColour),
             cro::Vertex2D(glm::vec2(Width,  0.5f), TextNormalColour),
 
-            cro::Vertex2D(glm::vec2(-Width,  0.5f), TextHighlightColour),
-            cro::Vertex2D(glm::vec2(Width,  0.5f), TextHighlightColour),
-            cro::Vertex2D(glm::vec2(-Width, Height), TextHighlightColour),
-            cro::Vertex2D(glm::vec2(Width,  Height), TextHighlightColour),
+            cro::Vertex2D(glm::vec2(-Width,  0.5f), SwingputDark),
+            cro::Vertex2D(glm::vec2(Width,  0.5f), SwingputDark),
+            cro::Vertex2D(glm::vec2(-Width, Height), SwingputDark),
+            cro::Vertex2D(glm::vec2(Width,  Height), SwingputDark),
 
 
-            cro::Vertex2D(glm::vec2(-Width, -Height), LeaderboardTextDark),
-            cro::Vertex2D(glm::vec2(Width,  -Height), LeaderboardTextDark),
-            cro::Vertex2D(glm::vec2(-Width, 0.f), LeaderboardTextDark),
-            cro::Vertex2D(glm::vec2(Width,  0.f), LeaderboardTextDark),
-
+            cro::Vertex2D(glm::vec2(-Width, -Height), SwingputLight),
+            cro::Vertex2D(glm::vec2(Width,  -Height), SwingputLight),
+            cro::Vertex2D(glm::vec2(-Width, 0.f), SwingputLight),
+            cro::Vertex2D(glm::vec2(Width,  0.f), SwingputLight),
         });
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().setUserData<float>(0.f);

@@ -1984,20 +1984,20 @@ void TutorialState::tutorialSwing(cro::Entity root)
     entity.addComponent<cro::Drawable2D>().setVertexData(
         {
 
-            cro::Vertex2D(glm::vec2(Width,  Height), TextHighlightColour),
-            cro::Vertex2D(glm::vec2(-Width, Height), TextHighlightColour),
-            cro::Vertex2D(glm::vec2(Width,  0.5f), TextHighlightColour),
-            cro::Vertex2D(glm::vec2(-Width,  0.5f), TextHighlightColour),
+            cro::Vertex2D(glm::vec2(Width,  Height), SwingputDark),
+            cro::Vertex2D(glm::vec2(-Width, Height), SwingputDark),
+            cro::Vertex2D(glm::vec2(Width,  0.5f), SwingputDark),
+            cro::Vertex2D(glm::vec2(-Width,  0.5f), SwingputDark),
 
             cro::Vertex2D(glm::vec2(Width,  0.5f), TextNormalColour),
             cro::Vertex2D(glm::vec2(-Width,  0.5f), TextNormalColour),
             cro::Vertex2D(glm::vec2(Width,  -0.5f), TextNormalColour),
             cro::Vertex2D(glm::vec2(-Width,  -0.5f), TextNormalColour),
 
-            cro::Vertex2D(glm::vec2(Width,  -0.5f), LeaderboardTextDark),
-            cro::Vertex2D(glm::vec2(-Width, -0.5f), LeaderboardTextDark),
-            cro::Vertex2D(glm::vec2(Width,  -Height), LeaderboardTextDark),
-            cro::Vertex2D(glm::vec2(-Width, -Height), LeaderboardTextDark)
+            cro::Vertex2D(glm::vec2(Width,  -0.5f), SwingputLight),
+            cro::Vertex2D(glm::vec2(-Width, -0.5f), SwingputLight),
+            cro::Vertex2D(glm::vec2(Width,  -Height), SwingputLight),
+            cro::Vertex2D(glm::vec2(-Width, -Height), SwingputLight)
         });
     entity.addComponent<cro::Callback>().setUserData<float>(0.f);
     entity.getComponent<cro::Callback>().function =

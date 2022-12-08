@@ -102,6 +102,11 @@ static const cro::Colour SkyTop(0.678f, 0.851f, 0.718f);
 static const cro::Colour SkyBottom(0.2f, 0.304f, 0.612f);
 static const cro::Colour DropShadowColour(0.396f, 0.263f, 0.184f);
 
+static const cro::Colour SwingputDark(std::uint8_t(40), 23, 33);
+//static const cro::Colour SwingputLight(std::uint8_t(242), 207, 92);
+static const cro::Colour SwingputLight(std::uint8_t(236), 119, 61);
+//static const cro::Colour SwingputLight(std::uint8_t(236), 153, 61);
+
 //default values from DX sdk
 static constexpr std::int16_t LeftThumbDeadZone = 7849;
 static constexpr std::int16_t RightThumbDeadZone = 8689;
