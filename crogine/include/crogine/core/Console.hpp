@@ -115,7 +115,9 @@ namespace cro
             if (auto* obj = getConvars().findObjectWithName(convar); obj != nullptr)
             {
                 CRO_ASSERT(obj->findProperty("value"), "");
-                return obj->findProperty("value")->setValue(value);
+                obj->findProperty("value")->setValue(value);
+                finalise(); //saves convar file.
+                return;
             }
             LogE << convar << ": variable doesn't exist" << std::endl;
         }

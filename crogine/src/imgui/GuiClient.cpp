@@ -44,9 +44,14 @@ void GuiClient::registerConsoleTab(const std::string& name, const std::function<
     App::addConsoleTab(name, f, this);
 }
 
-void GuiClient::registerWindow(const std::function<void()>& f) const
+void GuiClient::registerWindow(const std::function<void()>& f, bool isDebug) const
 {
-    App::addWindow(f, this);
+    App::addWindow(f, this, isDebug);
+
+    if (isDebug && !Console::getConvarValue<bool>("drawDebugWindows"))
+    {
+        LogW << "Registered window with isDebug flag set to true, but r_drawDebugWindows is currently false. Set this to true to enable debug windows." << std::endl;
+    }
 }
 
 void GuiClient::unregisterWindows() const

@@ -378,7 +378,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
                 }
             }
             ImGui::End();
-        });
+        }, true);
 
     //registerWindow([&]() 
     //    {
@@ -418,7 +418,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     //            ImGui::Image(m_backgroundScene.getActiveCamera().getComponent<cro::Camera>().shadowMapBuffer.getTexture(0), { 256.f, 256.f }, { 0.f, 1.f }, { 1.f, 0.f });
     //        }
     //        ImGui::End();
-    //    });
+    //    }, true);
 #endif
 }
 

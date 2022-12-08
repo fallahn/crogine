@@ -69,8 +69,10 @@ namespace cro
         The given function should include the Begin() and End() calls to create a
         fully stand-alone window with ImGui. The window will exist all the time
         the object which inherits this interface exists.
+        \param windowFunc A std::function (or lambda) used to draw the ImGui window
+        \param isDebug If true debug windows will only be drawn if r_drawDebugWindow is true
         */
-        void registerWindow(const std::function<void()>&) const;
+        void registerWindow(const std::function<void()>& windowFunc, bool isDebug = false) const;
 
         /*!
         \brief Removes all ImGui windows currently registered by this state

@@ -233,15 +233,16 @@ namespace cro
         std::int32_t m_controllerCount;
         friend class GameController;
 
-        std::vector<std::pair<std::function<void()>, const GuiClient*>> m_statusControls;
+        std::vector<std::pair<std::function<void()>, const GuiClient*>> m_debugWindows;
         std::vector<std::pair<std::function<void()>, const GuiClient*>> m_guiWindows;
+        bool m_drawDebugWindows;
         void doImGui();
 
 
         static void addConsoleTab(const std::string&, const std::function<void()>&, const GuiClient*);
         static void removeConsoleTab(const GuiClient*);
 
-        static void addWindow(const std::function<void()>&, const GuiClient*);
+        static void addWindow(const std::function<void()>&, const GuiClient*, bool isDebug);
         static void removeWindows(const GuiClient*);
 
         friend class GuiClient;

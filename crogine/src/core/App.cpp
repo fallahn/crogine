@@ -204,6 +204,7 @@ App::App(std::uint32_t styleFlags)
     m_frameClock        (nullptr),
     m_running           (false),
     m_controllerCount   (0),
+    m_drawDebugWindows  (true),
     m_orgString         ("Trederia"),
     m_appString         ("CrogineApp")
 {
@@ -355,6 +356,35 @@ void App::run()
         m_window.setVsyncEnabled(settings.vsync);
         m_window.setMultisamplingEnabled(settings.useMultisampling);
         Console::init();
+
+        //add any 'built in' convars
+        Console::addConvar("drawDebugWindows",
+            "true",
+            "If true then any GuiClient windows registered with the isDebug flag will be drawn to the UI. Set with r_drawDebugWindows");
+
+        m_drawDebugWindows = Console::getConvarValue<bool>("drawDebugWindows");
+
+        //set the drawDebugWindows flag
+        Console::addCommand("r_drawDebugWindows",
+            [&](const std::string& param)
+            {
+                if (param == "0")
+                {
+                    Console::setConvarValue("drawDebugWindows", false);
+                    Console::print("r_drawDebugWindows set to FALSE");
+                    m_drawDebugWindows = false;
+                }
+                else if (param == "1")
+                {
+                    Console::setConvarValue("drawDebugWindows", true);
+                    Console::print("r_drawDebugWindows set to TRUE");
+                    m_drawDebugWindows = true;
+                }
+                else
+                {
+                    Console::print("Usage: r_drawDebugWindows <0|1>");
+                }
+            }, nullptr);
     }
     else
     {
@@ -662,7 +692,17 @@ void App::doImGui()
     //show other windows (console etc)
     Console::draw();
 
-    for (auto& f : m_guiWindows) f.first();
+    for (const auto& f : m_guiWindows)
+    {
+        f.first();
+    }
+    if (m_drawDebugWindows)
+    {
+        for (const auto& f : m_debugWindows)
+        {
+            f.first();
+        }
+    }
 }
 
 void App::addConsoleTab(const std::string& name, const std::function<void()>& func, const GuiClient* c)
@@ -675,10 +715,18 @@ void App::removeConsoleTab(const GuiClient* c)
     Console::removeConsoleTab(c);
 }
 
-void App::addWindow(const std::function<void()>& func, const GuiClient* c)
+void App::addWindow(const std::function<void()>& func, const GuiClient* c, bool isDebug)
 {
     CRO_ASSERT(m_instance, "App not properly instanciated!");
-    m_instance->m_guiWindows.push_back(std::make_pair(func, c));
+
+    if (isDebug)
+    {
+        m_instance->m_debugWindows.push_back(std::make_pair(func, c));
+    }
+    else
+    {
+        m_instance->m_guiWindows.push_back(std::make_pair(func, c));
+    }
 }
 
 void App::removeWindows(const GuiClient* c)
@@ -692,6 +740,13 @@ void App::removeWindows(const GuiClient* c)
         return pair.second == c;
     }), std::end(m_instance->m_guiWindows));
 
+
+    m_instance->m_debugWindows.erase(
+        std::remove_if(std::begin(m_instance->m_debugWindows), std::end(m_instance->m_debugWindows),
+            [c](const std::pair<std::function<void()>, const GuiClient*>& pair)
+            {
+                return pair.second == c;
+            }), std::end(m_instance->m_debugWindows));
 }
 
 App::WindowSettings App::loadSettings() 
