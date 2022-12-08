@@ -554,6 +554,25 @@ bool MenuState::handleEvent(const cro::Event& evt)
     else if (evt.type == SDL_KEYDOWN)
     {
         handleTextEdit(evt);
+        switch (evt.key.keysym.sym)
+        {
+        default:
+            cro::App::getWindow().setMouseCaptured(true);
+            break;
+        case SDLK_F1:
+        case SDLK_F2:
+        case SDLK_F3:
+        case SDLK_F4:
+        case SDLK_F5:
+        case SDLK_F6:
+        case SDLK_F7:
+        case SDLK_F8:
+        case SDLK_F9:
+        case SDLK_F10:
+        case SDLK_F11:
+        case SDLK_F12:
+            break;
+        }
     }
     else if (evt.type == SDL_TEXTINPUT)
     {

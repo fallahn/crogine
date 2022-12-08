@@ -50,7 +50,7 @@ void GuiClient::registerWindow(const std::function<void()>& f, bool isDebug) con
 
     if (isDebug && !Console::getConvarValue<bool>("drawDebugWindows"))
     {
-        LogW << "Registered window with isDebug flag set to true, but r_drawDebugWindows is currently false. Set this to true to enable debug windows." << std::endl;
+        LogW << "Registered window with isDebug flag set to true, but r_drawDebugWindows is currently false." << std::endl;
     }
 }
 

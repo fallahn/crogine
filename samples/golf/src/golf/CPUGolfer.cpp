@@ -156,7 +156,7 @@ CPUGolfer::CPUGolfer(const InputParser& ip, const ActivePlayer& ap, const Collis
                 ImGui::Text("Distance to targ %3.3f", dist);
             }
             ImGui::End();
-        });
+        }, true);
 #endif
 }
 

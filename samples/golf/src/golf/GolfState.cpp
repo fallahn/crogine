@@ -329,7 +329,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
                 ImGui::Image(m_leaderboardTexture.getTexture(), { size.x, size.y }, { 0.f, 1.f }, { 1.f, 0.f });*/
             }
             ImGui::End();
-        });
+        }, true);
 
     /*registerWindow([&]()
         {
