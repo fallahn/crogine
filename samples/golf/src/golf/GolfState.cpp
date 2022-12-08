@@ -5415,7 +5415,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     //set this separately because target might not necessarily be the pin.
     //if (m_currentPlayer != player)
     {
-        m_inputParser.setClub(glm::length(m_holeData[m_currentHole].pin - m_currentPlayer.position));
+        m_inputParser.setClub(glm::length(m_holeData[m_currentHole].pin - player.position));
     }
 
     //check if input is CPU

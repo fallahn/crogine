@@ -614,9 +614,12 @@ void InputParser::checkControllerInput()
 
     auto controllerID = activeControllerID(m_inputBinding.playerID);
 
-    //left stick (xInput controller)
+    //left stick
     auto startInput = m_inputFlags;
-    float xPos = cro::GameController::getAxisPosition(controllerID, cro::GameController::AxisLeftX);
+    float xPos = (cro::GameController::getAxisPosition(controllerID, cro::GameController::AxisLeftX) 
+        + cro::GameController::getAxisPosition(controllerID, cro::GameController::AxisLeftY));
+    xPos /= 2.f;
+
     if (xPos < -LeftThumbDeadZone)
     {
         m_inputFlags |= InputFlag::Left;
