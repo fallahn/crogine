@@ -616,9 +616,8 @@ void InputParser::checkControllerInput()
 
     //left stick
     auto startInput = m_inputFlags;
-    float xPos = (cro::GameController::getAxisPosition(controllerID, cro::GameController::AxisLeftX) 
-        + cro::GameController::getAxisPosition(controllerID, cro::GameController::AxisLeftY));
-    xPos /= 2.f;
+    float xPos = cro::GameController::getAxisPosition(controllerID, cro::GameController::AxisLeftX);
+    xPos += cro::GameController::getAxisPosition(controllerID, cro::GameController::AxisRightX);
 
     if (xPos < -LeftThumbDeadZone)
     {
@@ -663,7 +662,7 @@ void InputParser::checkControllerInput()
     static const float MinLen2 = static_cast<float>(LeftThumbDeadZone * LeftThumbDeadZone);
     if (len2 > MinLen2)
     {
-        m_analogueAmount = std::min(1.f, std::pow(std::sqrt(len2) / (cro::GameController::AxisMax - LeftThumbDeadZone), 3.f));
+        m_analogueAmount = std::min(1.f, std::pow(std::sqrt(len2) / (cro::GameController::AxisMax /*- LeftThumbDeadZone*/), 5.f));
     }
 
 

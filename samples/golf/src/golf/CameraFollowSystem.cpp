@@ -217,8 +217,14 @@ void CameraFollowSystem::process(float dt)
             if (collider.state == static_cast<std::uint8_t>(Ball::State::Flight)
                 || collider.terrain == TerrainID::Green)
             {
+                float positionMultiplier = 1.f;
+                if (follower.id == CameraID::Green)
+                {
+                    positionMultiplier = 0.79f;
+                }
+
                 auto dist = glm::length2(tx.getPosition() - target);
-                auto dist2 = glm::length2((tx.getPosition() - follower.playerPosition) * 0.79f);
+                auto dist2 = glm::length2((tx.getPosition() - follower.playerPosition) * positionMultiplier);
                 if (dist < currDist
                     && dist < follower.radius
                     && dist2 > follower.radius
