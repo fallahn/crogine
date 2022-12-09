@@ -61,6 +61,7 @@ set(GOLF_SRC
   ${PROJECT_DIR}/golf/StudioCameraSystem.cpp
   ${PROJECT_DIR}/golf/Swingput.cpp
   ${PROJECT_DIR}/golf/TerrainBuilder.cpp
+  ${PROJECT_DIR}/golf/TerrainDepthmap.cpp
   ${PROJECT_DIR}/golf/TrophyDisplaySystem.cpp
   ${PROJECT_DIR}/golf/TrophyState.cpp
   ${PROJECT_DIR}/golf/TutorialDirector.cpp

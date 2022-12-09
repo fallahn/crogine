@@ -295,41 +295,36 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
 
     registerWindow([&]()
         {
-            if (ImGui::Begin("Network"))
+            if (ImGui::Begin("Depthmap"))
             {
-                auto size = m_greenBuffer.getSize();
-                ImGui::Text("Buffer Size %u, %u", size.x, size.y);
-
-                ImGui::Text("Connection Bitrate: %3.3fkbps", static_cast<float>(bitrate) / 1024.f);
-
-
-                auto terrain = m_collisionMesh.getTerrain(m_freeCam.getComponent<cro::Transform>().getPosition());
-                ImGui::Text("Terrain %s", TerrainStrings[terrain.terrain].c_str());
-
-                /*for (const auto& c : m_sharedData.connectionData)
+                for (auto y = 4; y >= 0; --y)
                 {
-                    ImGui::Text("Ping: %u", c.pingTime);
-                }*/
-
-                /*auto& zoom = m_cameras[CameraID::Player].getComponent<CameraFollower::ZoomData>();
-                if (ImGui::SliderFloat("Zoom", &zoom.target, 0.1f, 1.f))
-                {
-                    m_cameras[CameraID::Player].getComponent<cro::Callback>().active = true;
-                }*/
-
-                /*if (Achievements::getActive())
-                {
-                    ImGui::Text("Achievements enabled");
+                    for (auto x = 0; x < 8; ++x)
+                    {
+                        auto idx = y * 8 + x;
+                        ImGui::Image(m_depthMap.getTextureAt(idx), { 80.f, 80.f }, { 0.f, 1.f }, { 1.f, 0.f });
+                        ImGui::SameLine();
+                    }
+                    ImGui::NewLine();
                 }
-                else
-                {
-                    ImGui::Text("Achievments disabled");
-                }*/
-                /*glm::vec2 size(m_leaderboardTexture.getTexture().getSize());
-                ImGui::Image(m_leaderboardTexture.getTexture(), { size.x, size.y }, { 0.f, 1.f }, { 1.f, 0.f });*/
             }
             ImGui::End();
         }, true);
+
+    //registerWindow([&]()
+    //    {
+    //        if (ImGui::Begin("Network"))
+    //        {
+    //            auto size = m_greenBuffer.getSize();
+    //            ImGui::Text("Buffer Size %u, %u", size.x, size.y);
+
+    //            ImGui::Text("Connection Bitrate: %3.3fkbps", static_cast<float>(bitrate) / 1024.f);
+
+    //            auto terrain = m_collisionMesh.getTerrain(m_freeCam.getComponent<cro::Transform>().getPosition());
+    //            ImGui::Text("Terrain %s", TerrainStrings[terrain.terrain].c_str());
+    //        }
+    //        ImGui::End();
+    //    }, true);
 
     /*registerWindow([&]()
         {
@@ -407,7 +402,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
 
     if (evt.type == SDL_KEYUP)
     {
-        hideMouse();
+        //hideMouse(); //TODO this should only react to current keybindings
         switch (evt.key.keysym.sym)
         {
         default: break;
@@ -1171,6 +1166,8 @@ bool GolfState::simulate(float dt)
     }
     m_waterEnt.getComponent<cro::Transform>().move(move * 10.f * dt);
 #endif
+
+    m_depthMap.update(1);
 
     if (m_sharedData.clientConnection.connected)
     {
@@ -2851,6 +2848,9 @@ void GolfState::loadAssets()
         {
             loadSpectators();
         }
+
+        m_depthMap.setModel(m_holeData[0].modelEntity.getComponent<cro::Model>().getMeshData());
+        m_depthMap.update(40);
     }
 
 
@@ -5196,6 +5196,18 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo)
     auto holeTotal = std::to_string(m_holeData.size());
     //well... this is awful.
     Social::setStatus(Social::InfoID::Course, { reinterpret_cast<const char*>(title.c_str()), holeNumber.c_str(), holeTotal.c_str() });
+
+
+    //cue up next depth map
+    auto next = m_currentHole + 1;
+    if (next < m_holeData.size())
+    {
+        m_depthMap.setModel(m_holeData[next].modelEntity.getComponent<cro::Model>().getMeshData());
+    }
+    else
+    {
+        m_depthMap.forceSwap(); //make sure we're reading the correct texture anyway
+    }
 }
 
 void GolfState::setCameraPosition(glm::vec3 position, float height, float viewOffset)

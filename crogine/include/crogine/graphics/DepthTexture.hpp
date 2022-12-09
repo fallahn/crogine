@@ -109,7 +109,7 @@ namespace cro
         */
         TextureID getTexture() const;
 
-                /*!
+        /*!
         \brief Returns a TextureID for the requested layer, if it exists
         Not available on macOS, so returns a null texture
         \param index Index of the layer to return

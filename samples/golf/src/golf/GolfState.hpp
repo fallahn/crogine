@@ -38,6 +38,7 @@ source distribution.
 #include "CollisionMesh.hpp"
 #include "LeaderboardTexture.hpp"
 #include "CPUGolfer.hpp"
+#include "TerrainDepthmap.hpp"
 #include "server/ServerPacketData.hpp"
 
 #include <crogine/core/State.hpp>
@@ -114,6 +115,7 @@ private:
     cro::Scene m_skyScene;
     cro::Scene m_uiScene;
     cro::Scene m_trophyScene;
+    TerrainDepthmap m_depthMap;
 
     bool m_mouseVisible;
 
