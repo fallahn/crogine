@@ -67,7 +67,7 @@ Transform::Transform(Transform&& other) noexcept
 
     if (other.m_parent != this)
     {
-        //orphan any children
+        //orphan any children (why? we've just been constructed so we shouldn't have any)
         for (auto c : m_children)
         {
             c->m_parent = nullptr;
@@ -138,6 +138,12 @@ Transform& Transform::operator=(Transform&& other) noexcept
 
     if (&other != this && other.m_parent != this)
     {
+        //remove this transform from its parent
+        if (m_parent)
+        {
+            m_parent->removeChild(*this);
+        }
+
         //orphan any children
         for (auto c : m_children)
         {
