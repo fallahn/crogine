@@ -122,6 +122,19 @@ bool CreditsState::handleEvent(const cro::Event& evt)
             return false;
         }
     }
+    else if (evt.type == SDL_KEYDOWN)
+    {
+        switch (evt.key.keysym.sym)
+        {
+        default: break;
+        case SDLK_UP:
+        case SDLK_DOWN:
+        case SDLK_LEFT:
+        case SDLK_RIGHT:
+            cro::App::getWindow().setMouseCaptured(true);
+            break;
+        }
+    }
 
     m_scene.forwardEvent(evt);
     return false;

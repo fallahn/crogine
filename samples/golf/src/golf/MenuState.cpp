@@ -557,23 +557,12 @@ bool MenuState::handleEvent(const cro::Event& evt)
         handleTextEdit(evt);
         switch (evt.key.keysym.sym)
         {
-        default:
+        default: break;
+        case SDLK_UP:
+        case SDLK_DOWN:
+        case SDLK_LEFT:
+        case SDLK_RIGHT:
             cro::App::getWindow().setMouseCaptured(true);
-            break;
-        case SDLK_F1:
-        case SDLK_F2:
-        case SDLK_F3:
-        case SDLK_F4:
-        case SDLK_F5:
-        case SDLK_F6:
-        case SDLK_F7:
-        case SDLK_F8:
-        case SDLK_F9:
-        case SDLK_F10:
-        case SDLK_F11:
-        case SDLK_F12:
-        case SDLK_KP_PLUS:
-        case SDLK_KP_MINUS:
             break;
         }
     }
