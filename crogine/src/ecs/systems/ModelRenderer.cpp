@@ -516,6 +516,11 @@ void ModelRenderer::applyProperties(const Material::Data& material, const Model&
         switch (prop.second.second.type)
         {
         default: break;
+        case Material::Property::TextureArray:
+            glCheck(glActiveTexture(GL_TEXTURE0 + currentTextureUnit));
+            glCheck(glBindTexture(GL_TEXTURE_2D_ARRAY, prop.second.second.textureID));
+            glCheck(glUniform1i(prop.second.first, currentTextureUnit++));
+            break;        
         case Material::Property::Texture:
             //TODO textures need to track which unit they're currently bound
             //to so that they don't get bound to multiple units

@@ -28,6 +28,7 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include "TerrainDepthmap.hpp"
+#include "GameConsts.hpp"
 
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Camera.hpp>
@@ -40,17 +41,16 @@ source distribution.
 
 namespace
 {
-    //8x5 texture grid @ 800x800px
+    //8x5 texture grid @ 1200x1200px
     //gives us 40 metres per tile, 20 pixels per metre
-    constexpr std::uint32_t TextureSize = 800u;
+    constexpr std::uint32_t TextureSize = 1200u;
     constexpr std::uint32_t ColCount = 8u;
     constexpr std::uint32_t RowCount = 5u;
     constexpr std::uint32_t TextureCount = ColCount * RowCount;
     constexpr float TileSize = 320.f / ColCount;
 
     constexpr float CameraHeight = 10.f;
-    constexpr float WaterLevel = -0.02f;
-    constexpr float MaxDepth = -1.f;
+    constexpr float MaxDepth = -0.5f;// TerrainLevel;
 }
 
 TerrainDepthmap::TerrainDepthmap()

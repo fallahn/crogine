@@ -52,9 +52,10 @@ namespace cro
     struct CRO_EXPORT_API TextureID final
     {
         std::uint32_t textureID = 0;
+        const bool isArray = false;
 
         TextureID() = default;
-        explicit TextureID(std::uint32_t id) : textureID(id) {}
+        explicit TextureID(std::uint32_t id, bool a = false) : textureID(id), isArray(a) {}
         explicit TextureID(const cro::Texture&);
 
         TextureID& operator = (std::uint32_t id);
@@ -129,6 +130,7 @@ namespace cro
                 Vec4,
                 Mat4,
                 Texture,
+                TextureArray,
                 Cubemap
             }type = None;
 

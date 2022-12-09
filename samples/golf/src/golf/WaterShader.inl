@@ -78,6 +78,8 @@ static const std::string WaterFragment = R"(
     uniform sampler2D u_reflectionMap;
     uniform sampler2D u_refractionMap;
 
+uniform sampler2DArray u_depthMap;
+
     uniform vec3 u_cameraWorldPosition;
     uniform float u_radius = 239.9;
 
@@ -105,6 +107,21 @@ static const std::string WaterFragment = R"(
 #include RANDOM
 
 #include BAYER_MATRIX
+
+    float getDepth()
+    {
+        const float ColCount = 8.0;
+        const float MetresPerTexture = 40.0;
+
+        float x = floor((v_worldPosition.x / MetresPerTexture));
+        float y = floor((-v_worldPosition.z / MetresPerTexture));
+        float index = clamp((y * ColCount) + x, 0.0, 39.0);
+
+        float u = (v_worldPosition.x - (x * MetresPerTexture)) / MetresPerTexture;
+        float v = -(v_worldPosition.z + (y * MetresPerTexture)) / MetresPerTexture;
+
+        return texture(u_depthMap, vec3(u, v, index)).r;
+    }
 
     void main()
     {
@@ -150,7 +167,7 @@ static const std::string WaterFragment = R"(
 
         if(alpha < 0.1) discard;
 
-        FRAG_OUT = vec4(blendedColour, 1.0);
+        FRAG_OUT = vec4(mix(vec3(1.0, 0.0, 1.0), blendedColour, getDepth()), 1.0);
     })";
 
     static const std::string HorizonVert = 
