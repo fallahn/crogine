@@ -613,4 +613,7 @@ static const std::string CelFragmentShader = R"(
     FRAG_OUT.rgb = mix(FRAG_OUT.rgb, contourColour, contourZ * fade);
     FRAG_OUT.rgb += clamp(height, 0.0, 1.0) * 0.1;
 #endif
+#if defined(TERRAIN_CLIP)
+    FRAG_OUT.rgb = mix(vec3(0.2, 0.3059, 0.6118), FRAG_OUT.rgb, smoothstep(WaterLevel - 0.001, WaterLevel + 0.001, v_worldPosition.y));
+#endif
     })";

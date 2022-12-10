@@ -108,6 +108,14 @@ uniform sampler2DArray u_depthMap;
 
 #include BAYER_MATRIX
 
+    float linearise(float d)
+    {
+        const float zNear = 10.02;
+        const float zFar = 10.5;
+
+        return zNear * zFar / (zFar + d * (zNear - zFar));
+    }
+
     float getDepth()
     {
         const float ColCount = 8.0;

@@ -109,7 +109,7 @@ cro::TextureID TerrainDepthmap::getTexture() const
 cro::TextureID TerrainDepthmap::getTextureAt(std::uint32_t idx) const
 {
 #ifdef GL41
-    return 0; //not available on macOS, but only used for debugging anyway
+    return cro::TextureID(0); //not available on macOS, but only used for debugging anyway
 #else
     return m_textures[m_srcTexture].getTexture(idx);
 #endif

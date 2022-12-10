@@ -2267,6 +2267,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     bounds = entity.getComponent<cro::Drawable2D>().getLocalBounds();
     menuTransform.addChild(entity.getComponent<cro::Transform>());
 
+
     auto bgEnt = entity;
 
     auto textResizeCallback = 
@@ -3888,7 +3889,7 @@ void MenuState::updateLobbyAvatars()
 
             
             auto entity = m_uiScene.createEntity();
-            entity.addComponent<cro::Transform>().setPosition(textPos);
+            entity.addComponent<cro::Transform>().setPosition(glm::vec3(textPos, 0.2f));
             entity.addComponent<cro::Drawable2D>();
             entity.addComponent<cro::Text>(largeFont).setString(str);
             entity.getComponent<cro::Text>().setFillColour(LeaderboardTextDark);
@@ -3952,7 +3953,7 @@ void MenuState::updateLobbyAvatars()
 
             entity.addComponent<cro::Callback>().active = true;
             entity.getComponent<cro::Callback>().function =
-                [&, h, textPos](cro::Entity ent, float)
+                [&, h](cro::Entity ent, float)
             {
                 if (m_sharedData.connectionData[h].playerCount == 0)
                 {
@@ -3964,7 +3965,7 @@ void MenuState::updateLobbyAvatars()
                     ent.getComponent<cro::Text>().setString("Level " + std::to_string(m_sharedData.connectionData[h].level));
                     
                     float offset = ent.getComponent<cro::Callback>().getUserData<float>();
-                    ent.getComponent<cro::Transform>().setPosition({ (50.f + (m_lobbyExpansion / 2.f)) - textPos.x - offset, -56.f });
+                    ent.getComponent<cro::Transform>().setPosition({ (50.f + (m_lobbyExpansion / 2.f)) - offset, -56.f, 0.1f});
                 }
             };
             textEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -3973,7 +3974,7 @@ void MenuState::updateLobbyAvatars()
 
             //add a rank badge
             entity = m_uiScene.createEntity();
-            entity.addComponent<cro::Transform>().setPosition({-16.f, -12.f});
+            entity.addComponent<cro::Transform>().setPosition({-16.f, -12.f, 0.2f});
             entity.addComponent<cro::Drawable2D>();
             entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::LevelBadge];
             entity.addComponent<cro::SpriteAnimation>();
@@ -4005,7 +4006,7 @@ void MenuState::updateLobbyAvatars()
                 auto bounds = cro::Text::getLocalBounds(rankEnt);
 
                 entity = m_uiScene.createEntity();
-                entity.addComponent<cro::Transform>().setPosition({(BarWidth / 2.f) - 2.f, -4.f, -0.1f});
+                entity.addComponent<cro::Transform>().setPosition({(BarWidth / 2.f) - 2.f, -4.f, -0.15f});
 
                 const auto CornerColour = cro::Colour(std::uint8_t(152), 122, 104);
 
@@ -4072,7 +4073,7 @@ void MenuState::updateLobbyAvatars()
             {
                 //text width
                 auto bounds = cro::Text::getLocalBounds(rankEnt);
-                rankEnt.getComponent<cro::Callback>().setUserData<float>((bounds.width / 2.f) - 8.f);
+                rankEnt.getComponent<cro::Callback>().setUserData<float>((bounds.width / 2.f) + 8.f);
             }
 
             //add a network status icon
@@ -4108,6 +4109,26 @@ void MenuState::updateLobbyAvatars()
         auto strClientCount = std::to_string(clientCount);
         Social::setStatus(Social::InfoID::Lobby, { "Golf", strClientCount.c_str(), "4" });
         Social::setGroup(m_sharedData.lobbyID, playerCount);
+
+
+        auto temp = m_uiScene.createEntity();
+        temp.addComponent<cro::Callback>().active = true;
+        temp.getComponent<cro::Callback>().function = [&](cro::Entity e, float)
+        {
+            refreshUI();
+            e.getComponent<cro::Callback>().active = false;
+            m_uiScene.destroyEntity(e);
+
+            auto f = m_uiScene.createEntity();
+            f.addComponent<cro::Callback>().active = true;
+            f.getComponent<cro::Callback>().function =
+                [&](cro::Entity g, float)
+            {
+                m_uiScene.getActiveCamera().getComponent<cro::Camera>().active = true;
+                g.getComponent<cro::Callback>().active = false;
+                m_uiScene.destroyEntity(g);
+            };
+        };
     };
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 }
