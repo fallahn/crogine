@@ -187,6 +187,11 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
             {
                 playSound(AudioID::ApplausePlus, glm::vec3(0.f)).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
             }
+            else if (data.type == Social::SocialEvent::PlayerAchievement)
+            {
+                auto id = data.level == 0 ? AudioID::ApplausePlus : AudioID::NearMiss;
+                playSound(id, glm::vec3(0.f)).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
+            }
         }
             break;
         case cro::Message::SpriteAnimationMessage:

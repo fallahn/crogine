@@ -492,6 +492,16 @@ bool GolfState::handleEvent(const cro::Event& evt)
         case SDLK_KP_5:
             gamepadNotify(GamepadNotify::HoleInOne);
             break;
+        case SDLK_KP_6:
+        {
+            std::array<std::uint8_t, 2u> packet =
+            {
+                m_sharedData.localConnectionData.connectionID,
+                2
+            };
+            m_sharedData.clientConnection.netClient.sendPacket(PacketID::AchievementGet, packet, net::NetFlag::Reliable);
+        }
+            break;
         case SDLK_KP_MULTIPLY:
             for (auto& d : ballDump)
             {
@@ -4438,6 +4448,11 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
             break;
         case PacketID::MaxStrokes:
             showNotification("Stroke Limit Reached.");
+            {
+                auto* msg = postMessage<Social::SocialEvent>(Social::MessageID::SocialMessage);
+                msg->type = Social::SocialEvent::PlayerAchievement;
+                msg->level = 1; //sad sound
+            }
             break;
         case PacketID::PingTime:
         {

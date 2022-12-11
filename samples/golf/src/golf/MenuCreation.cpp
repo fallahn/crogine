@@ -4315,12 +4315,13 @@ void MenuState::quitLobby()
     {
         m_sharedData.serverInstance.stop();
         m_sharedData.hosting = false;
-
-        for (auto& cd : m_sharedData.connectionData)
-        {
-            cd.playerCount = 0;
-        }
     }
+
+    for (auto& cd : m_sharedData.connectionData)
+    {
+        cd.playerCount = 0;
+    }
+    
 
     m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Dummy);
     m_menuEntities[m_currentMenu].getComponent<cro::Callback>().getUserData<MenuData>().targetMenu = MenuID::Main;

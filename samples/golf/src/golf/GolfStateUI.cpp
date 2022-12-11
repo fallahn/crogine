@@ -2271,6 +2271,10 @@ void GolfState::notifyAchievement(const std::array<std::uint8_t, 2u>& data)
             auto achievement = AchievementLabels[data[1]];
 
             showNotification(name + " achieved " + achievement);
+
+            auto* msg = postMessage<Social::SocialEvent>(Social::MessageID::SocialMessage);
+            msg->type = Social::SocialEvent::PlayerAchievement;
+            msg->level = 0; //cheer
         }
     }
 }
