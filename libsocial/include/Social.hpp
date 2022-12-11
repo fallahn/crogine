@@ -74,7 +74,8 @@ public:
         {
             LevelUp,
             XPAwarded,
-            OverlayActivated
+            OverlayActivated,
+            PlayerAchievement
         }type = LevelUp;
         std::int32_t level = 0;
     };
