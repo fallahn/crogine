@@ -400,6 +400,15 @@ private:
     };
     std::vector<StatBoardEntry> m_statBoardScores;
 
+    struct GamepadNotify final
+    {
+        enum
+        {
+            NewPlayer, Hole, HoleInOne
+        };
+    };
+    void gamepadNotify(std::int32_t);
+
 #ifdef PATH_TRACING
     //------------
     struct BallDebugPoint final

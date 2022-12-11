@@ -275,3 +275,11 @@ bool GameController::hasPSLayout(std::int32_t controllerIndex)
     }
     return false;
 }
+
+void GameController::setLEDColour(std::int32_t controllerIndex, cro::Colour colour)
+{
+    if (auto* controller = SDL_GameControllerFromInstanceID(controllerIndex); controller)
+    {
+        SDL_GameControllerSetLED(controller, colour.getRedByte(), colour.getGreenByte(), colour.getBlueByte());
+    }
+}

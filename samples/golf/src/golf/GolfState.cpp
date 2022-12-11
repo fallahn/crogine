@@ -389,7 +389,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
         if (m_mouseVisible
             && getStateCount() == 1)
         {
-            m_mouseVisible = false;
+            m_mouseVisible = false; //TODO do we really need to track this?
             cro::App::getWindow().setMouseCaptured(true);
         }
     };
@@ -488,6 +488,9 @@ bool GolfState::handleEvent(const cro::Event& evt)
             hidden = !hidden;
             m_holeData[m_currentHole].modelEntity.getComponent<cro::Model>().setHidden(hidden);
         }
+            break;
+        case SDLK_KP_5:
+            gamepadNotify(GamepadNotify::HoleInOne);
             break;
         case SDLK_KP_MULTIPLY:
             for (auto& d : ballDump)
@@ -1011,6 +1014,10 @@ void GolfState::handleMessage(const cro::Message& msg)
             };
             m_courseEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
         }
+        else if (data.type == GolfEvent::HoleInOne)
+        {
+            gamepadNotify(GamepadNotify::HoleInOne);
+        }
     }
     break;
     case cro::Message::ConsoleMessage:
@@ -1366,6 +1373,8 @@ bool GolfState::simulate(float dt)
 
         auto* msg = postMessage<SceneEvent>(MessageID::SceneMessage);
         msg->type = SceneEvent::PlayerIdle;
+
+        gamepadNotify(GamepadNotify::NewPlayer);
     }
 
     return true;
@@ -4382,7 +4391,7 @@ void GolfState::spawnBall(const ActorInfo& info)
 
     m_minimapEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
-
+    m_sharedData.connectionData[info.clientID].playerData[info.playerID].ballTint = miniBallColour;
 
 #ifdef CRO_DEBUG_
     ballEntity = ballEnt;
@@ -5681,6 +5690,13 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     {
         setGreenCamPosition();
     }
+
+    if ((cro::GameController::getControllerCount() > 1
+        && (m_sharedData.localConnectionData.playerCount > 1 && !isCPU))
+        || m_sharedData.connectionData[1].playerCount != 0) //doesn't account is someone leaves mid-game however
+    {
+        gamepadNotify(GamepadNotify::NewPlayer);
+    }
 }
 
 void GolfState::setGreenCamPosition()
@@ -6585,4 +6601,112 @@ void GolfState::applyShadowQuality()
     applyShadowSettings(m_freeCam.getComponent<cro::Camera>(), -1);
 #endif // CRO_DEBUG_
 
+}
+
+void GolfState::gamepadNotify(std::int32_t type)
+{
+    if (m_currentPlayer.client == m_sharedData.clientConnection.connectionID)
+    {
+        struct CallbackData final
+        {
+            float flashRate = 1.f;
+            float currentTime = 0.f;
+            std::int32_t state = 0; //on or off
+            
+            std::size_t colourIndex = 0;
+            std::vector<cro::Colour> colours;
+        };
+
+        auto controllerID = activeControllerID(m_currentPlayer.player);
+
+        auto ent = m_gameScene.createEntity();
+        ent.addComponent<cro::Callback>().active = true;
+        ent.getComponent<cro::Callback>().function =
+            [&, controllerID](cro::Entity e, float dt)
+        {
+            auto& data = e.getComponent<cro::Callback>().getUserData<CallbackData>();
+            if (data.colourIndex < data.colours.size())
+            {
+                data.currentTime += dt;
+                if (data.currentTime > data.flashRate)
+                {
+                    data.currentTime -= data.flashRate;
+
+                    if (data.state == 0)
+                    {
+                        data.state = 1;
+
+                        //switch on effect
+                        cro::GameController::rumbleStart(controllerID, 0, 60000, static_cast<std::uint32_t>(data.flashRate / 1000.f));
+                        cro::GameController::setLEDColour(controllerID, data.colours[data.colourIndex++]);
+                    }
+                    else
+                    {
+                        data.state = 0;
+
+                        //switch off effect
+                        cro::GameController::rumbleStop(controllerID);
+                        cro::GameController::setLEDColour(controllerID, data.colours[data.colourIndex++]);
+                    }
+                }
+            }
+            else
+            {
+                cro::GameController::setLEDColour(controllerID, cro::Colour::Blue);
+
+                e.getComponent<cro::Callback>().active = false;
+                m_gameScene.destroyEntity(e);
+            }
+        };
+
+        CallbackData data;
+        auto colour = m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].ballTint;
+
+        switch (type)
+        {
+        default: break;
+        case GamepadNotify::NewPlayer:
+        {
+            data.flashRate = 0.15f;
+            data.colours = { colour, cro::Colour::Black, colour, cro::Colour::Black };
+        }
+            break;
+        case GamepadNotify::Hole:
+
+            break;
+        case GamepadNotify::HoleInOne:
+        {
+            data.flashRate = 0.1f;
+            data.colours = 
+            {
+                colour,
+                cro::Colour::Red,
+                colour, 
+                cro::Colour::Green,
+                colour,
+                cro::Colour::Blue,
+                colour,
+                cro::Colour::Cyan,
+                colour,
+                cro::Colour::Magenta,
+                colour,
+                cro::Colour::Yellow,
+                colour,
+                cro::Colour::Red,
+                colour,
+                cro::Colour::Green,
+                colour,
+                cro::Colour::Blue,
+                colour,
+                cro::Colour::Cyan,
+                colour,
+                cro::Colour::Magenta,
+                colour,
+                cro::Colour::Yellow
+            };
+        }
+            break;
+        }
+        ent.getComponent<cro::Callback>().setUserData<CallbackData>(data);
+    }
 }

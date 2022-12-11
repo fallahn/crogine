@@ -30,6 +30,7 @@ source distribution.
 #pragma once
 
 #include <crogine/Config.hpp>
+#include <crogine/graphics/Colour.hpp>
 #include <crogine/detail/Types.hpp>
 
 #include <SDL_gamecontroller.h>
@@ -244,6 +245,14 @@ namespace cro
         name string which was read at the time of the controller connection
         */
         static bool hasPSLayout(std::int32_t controllerIndex);
+
+        /*!
+        \brief Sets the LED colour of the controller to the given colour
+        Only works on supported controllers, else has no effect
+        \param controllerIndex Controller ID to apply the colour to
+        \param colour A cro::Colour containing the values with which to set the LED
+        */
+        static void setLEDColour(std::int32_t controllerIndex, cro::Colour colour);
 
         /*!
         \brief Maximum number of game controllers which may be connected

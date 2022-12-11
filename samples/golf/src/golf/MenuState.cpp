@@ -524,18 +524,24 @@ bool MenuState::handleEvent(const cro::Event& evt)
         case SDLK_KP_6:
             requestStackPush(StateID::Trophy);
             break;
-        case SDLK_KP_8:
+        case SDLK_KP_7:
         {
             auto size = m_backgroundTexture.getSize();
             m_backgroundTexture.create(size.x, size.y, true, false, 8);
         }
             break;
-        case SDLK_KP_9:
+        case SDLK_KP_8:
         {
             //m_sharedData.errorMessage = "Join Failed:\n\nEither full\nor\nno longer exists.";
             m_sharedData.errorMessage = "Welcome";
             requestStackPush(StateID::MessageOverlay);
         }
+            break;
+        case SDLK_KP_MULTIPLY:
+            cro::GameController::setLEDColour(0, cro::Colour::Red);
+            break;
+        case SDLK_KP_DIVIDE:
+            cro::GameController::setLEDColour(0, cro::Colour::Magenta);
             break;
 #endif
         case SDLK_RETURN:
