@@ -1105,15 +1105,33 @@ void OptionsState::buildScene()
     //we need to delay setting the active group until all the
     //new entities are processed, so we kludge this with a callback
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float)
     {
         m_scene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Controls);
-        m_scene.getActiveCamera().getComponent<cro::Camera>().isStatic = true;
+        //m_scene.getActiveCamera().getComponent<cro::Camera>().isStatic = true;
         e.getComponent<cro::Callback>().active = false;
         m_scene.destroyEntity(e);
+    };
+
+    //then this refreshes the UI at least once
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<float>(0.5f);
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float dt)
+    {
+        auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
+        currTime -= dt;
+
+        if(currTime < 0)
+        {
+            m_scene.getActiveCamera().getComponent<cro::Camera>().isStatic = true;
+            e.getComponent<cro::Callback>().active = false;
+            m_scene.destroyEntity(e);
+        }
     };
 }
 

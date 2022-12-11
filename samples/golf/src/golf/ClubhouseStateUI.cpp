@@ -455,14 +455,14 @@ void ClubhouseState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnt
     menuTransform.addChild(entity.getComponent<cro::Transform>());
 
 
-    auto mouseEnterCursor = m_uiScene.getSystem<cro::UISystem>()->addCallback(
+    /*auto mouseEnterCursor = m_uiScene.getSystem<cro::UISystem>()->addCallback(
         [entity](cro::Entity e) mutable
         {
             e.getComponent<cro::AudioEmitter>().play();
             entity.getComponent<cro::Transform>().setPosition(e.getComponent<cro::Transform>().getPosition() + CursorOffset);
             entity.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
             entity.getComponent<cro::Sprite>().setColour(cro::Colour::White);
-        });
+        });*/
     auto mouseEnterHighlight = m_uiScene.getSystem<cro::UISystem>()->addCallback(
         [entity](cro::Entity e) mutable
         {

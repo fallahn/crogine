@@ -2006,8 +2006,6 @@ void TutorialState::tutorialSwing(cro::Entity root)
         auto& verts = e.getComponent<cro::Drawable2D>().getVertexData();
         float targetAlpha = 0.25f;
 
-        auto controllerID = activeControllerID(m_sharedData.inputBinding.playerID);
-
         if (inputMask != 0)
         {
             targetAlpha = 1.f;

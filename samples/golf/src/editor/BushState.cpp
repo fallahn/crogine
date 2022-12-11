@@ -1169,7 +1169,7 @@ void BushState::createThumbnails()
                         //because we've started using material colours to affect
                         //the in-game material properties, we need to reset them
                         //all to white when rendering thumbs
-                        for (auto i = 0; i < entity.getComponent<cro::Model>().getMeshData().submeshCount; ++i)
+                        for (auto i = 0u; i < entity.getComponent<cro::Model>().getMeshData().submeshCount; ++i)
                         {
                             entity.getComponent<cro::Model>().setMaterialProperty(i, "u_colour", cro::Colour::White);
                         }

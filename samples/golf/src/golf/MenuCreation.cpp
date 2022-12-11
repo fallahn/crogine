@@ -4003,7 +4003,6 @@ void MenuState::updateLobbyAvatars()
             {
                 constexpr float BarWidth = 80.f;
                 constexpr float BarHeight = 10.f;
-                auto bounds = cro::Text::getLocalBounds(rankEnt);
 
                 entity = m_uiScene.createEntity();
                 entity.addComponent<cro::Transform>().setPosition({(BarWidth / 2.f) - 2.f, -4.f, -0.15f});
