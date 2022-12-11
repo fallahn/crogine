@@ -494,12 +494,9 @@ bool GolfState::handleEvent(const cro::Event& evt)
             break;
         case SDLK_KP_6:
         {
-            std::array<std::uint8_t, 2u> packet =
-            {
-                m_sharedData.localConnectionData.connectionID,
-                2
-            };
-            m_sharedData.clientConnection.netClient.sendPacket(PacketID::AchievementGet, packet, net::NetFlag::Reliable);
+            auto* msg = postMessage<Social::SocialEvent>(Social::MessageID::SocialMessage);
+            msg->type = Social::SocialEvent::LevelUp;
+            msg->level = 19;
         }
             break;
         case SDLK_KP_MULTIPLY:
