@@ -5705,9 +5705,13 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
 
     if ((cro::GameController::getControllerCount() > 1
         && (m_sharedData.localConnectionData.playerCount > 1 && !isCPU))
-        || m_sharedData.connectionData[1].playerCount != 0) //doesn't account is someone leaves mid-game however
+        || m_sharedData.connectionData[1].playerCount != 0) //doesn't account if someone leaves mid-game however
     {
         gamepadNotify(GamepadNotify::NewPlayer);
+    }
+    else
+    {
+        cro::GameController::setLEDColour(activeControllerID(player.player), m_sharedData.connectionData[player.client].playerData[player.player].ballTint);
     }
 }
 

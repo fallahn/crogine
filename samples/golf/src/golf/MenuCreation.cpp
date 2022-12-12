@@ -1221,10 +1221,7 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
         {
             if (activated(evt))
             {
-                m_sharedData.holeCount = (m_sharedData.holeCount + 2) % 3;
-                m_sharedData.clientConnection.netClient.sendPacket(PacketID::HoleCount, m_sharedData.holeCount, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
-
-                m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+                prevHoleCount();
             }
         });
     m_courseSelectCallbacks.nextHoleCount = m_uiScene.getSystem<cro::UISystem>()->addCallback(
@@ -1232,10 +1229,7 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
         {
             if (activated(evt))
             {
-                m_sharedData.holeCount = (m_sharedData.holeCount + 1) % 3;
-                m_sharedData.clientConnection.netClient.sendPacket(PacketID::HoleCount, m_sharedData.holeCount, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
-
-                m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
+                nextHoleCount();
             }
         });
 
@@ -1244,13 +1238,7 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
         {
             if (activated(evt))
             {
-                m_sharedData.courseIndex = (m_sharedData.courseIndex + (m_activeCourseCount - 1)) % m_activeCourseCount;
-
-                m_sharedData.mapDirectory = m_courseData[m_sharedData.courseIndex].directory;
-                auto data = serialiseString(m_sharedData.mapDirectory);
-                m_sharedData.clientConnection.netClient.sendPacket(PacketID::MapInfo, data.data(), data.size(), net::NetFlag::Reliable, ConstVal::NetChannelStrings);
-
-                m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+                prevCourse();
             }
         });
     m_courseSelectCallbacks.nextCourse = m_uiScene.getSystem<cro::UISystem>()->addCallback(
@@ -1258,13 +1246,7 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
         {
             if (activated(evt))
             {
-                m_sharedData.courseIndex = (m_sharedData.courseIndex + 1) % m_activeCourseCount;
-
-                m_sharedData.mapDirectory = m_courseData[m_sharedData.courseIndex].directory;
-                auto data = serialiseString(m_sharedData.mapDirectory);
-                m_sharedData.clientConnection.netClient.sendPacket(PacketID::MapInfo, data.data(), data.size(), net::NetFlag::Reliable, ConstVal::NetChannelStrings);
-
-                m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
+                nextCourse();
             }
         });
 
@@ -4747,6 +4729,44 @@ void MenuState::addCourseSelectButtons()
         centreText(labelEnt);
         m_menuEntities[MenuID::Lobby].getComponent<cro::Transform>().addChild(labelEnt.getComponent<cro::Transform>());
     }
+}
+
+void MenuState::prevHoleCount()
+{
+    m_sharedData.holeCount = (m_sharedData.holeCount + 2) % 3;
+    m_sharedData.clientConnection.netClient.sendPacket(PacketID::HoleCount, m_sharedData.holeCount, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+
+    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+}
+
+void MenuState::nextHoleCount()
+{
+    m_sharedData.holeCount = (m_sharedData.holeCount + 1) % 3;
+    m_sharedData.clientConnection.netClient.sendPacket(PacketID::HoleCount, m_sharedData.holeCount, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+
+    m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
+}
+
+void MenuState::prevCourse()
+{
+    m_sharedData.courseIndex = (m_sharedData.courseIndex + (m_activeCourseCount - 1)) % m_activeCourseCount;
+
+    m_sharedData.mapDirectory = m_courseData[m_sharedData.courseIndex].directory;
+    auto data = serialiseString(m_sharedData.mapDirectory);
+    m_sharedData.clientConnection.netClient.sendPacket(PacketID::MapInfo, data.data(), data.size(), net::NetFlag::Reliable, ConstVal::NetChannelStrings);
+
+    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+}
+
+void MenuState::nextCourse()
+{
+    m_sharedData.courseIndex = (m_sharedData.courseIndex + 1) % m_activeCourseCount;
+
+    m_sharedData.mapDirectory = m_courseData[m_sharedData.courseIndex].directory;
+    auto data = serialiseString(m_sharedData.mapDirectory);
+    m_sharedData.clientConnection.netClient.sendPacket(PacketID::MapInfo, data.data(), data.size(), net::NetFlag::Reliable, ConstVal::NetChannelStrings);
+
+    m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
 }
 
 void MenuState::refreshUI()

@@ -590,6 +590,20 @@ bool MenuState::handleEvent(const cro::Event& evt)
         case cro::GameController::ButtonB:
             quitMenu();
             break;
+        case cro::GameController::ButtonRightShoulder:
+            if (m_sharedData.hosting
+                && m_currentMenu == MenuID::Lobby)
+            {
+                nextCourse();
+            }
+            break;
+        case cro::GameController::ButtonLeftShoulder:
+            if (m_sharedData.hosting
+                && m_currentMenu == MenuID::Lobby)
+            {
+                prevCourse();
+            }
+            break;
         }
     }
     else if (evt.type == SDL_MOUSEBUTTONUP)

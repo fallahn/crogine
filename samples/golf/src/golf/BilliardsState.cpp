@@ -33,6 +33,7 @@ source distribution.
 #include "CommandIDs.hpp"
 #include "MessageIDs.hpp"
 #include "MenuConsts.hpp"
+#include "GameConsts.hpp"
 #include "BilliardsSystem.hpp"
 #include "BilliardsClientCollision.hpp"
 #include "InterpolationSystem.hpp"
@@ -395,6 +396,7 @@ void BilliardsState::handleMessage(const cro::Message& msg)
             input.player = m_currentPlayer.player;
 
             m_sharedData.clientConnection.netClient.sendPacket(PacketID::InputUpdate, input, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+            cro::GameController::rumbleStart(activeControllerID(m_currentPlayer.player), 60000 * m_sharedData.enableRumble, 0, 300);
 
             if (m_activeCamera != CameraID::Overhead)
             {

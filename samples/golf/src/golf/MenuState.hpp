@@ -255,6 +255,10 @@ private:
     void showPlayerConfig(bool, std::uint8_t);
     void quitLobby();
     void addCourseSelectButtons();
+    void prevHoleCount();
+    void nextHoleCount();
+    void prevCourse();
+    void nextCourse();
     void refreshUI();
 
     //loading moved to GolfGame.cpp
