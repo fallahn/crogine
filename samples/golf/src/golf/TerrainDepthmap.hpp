@@ -66,9 +66,9 @@ private:
     cro::MeshResource m_meshes;
     cro::ShaderResource m_shaders;
     cro::MaterialResource m_materials;
-    cro::Material::Data m_material;
+    cro::Material::Data m_holeMaterial;
 
-    cro::Entity m_modelEnt;
+    cro::Entity m_holeEnt;
     cro::Entity m_terrainEnt;
     cro::Texture m_heightmap;
 

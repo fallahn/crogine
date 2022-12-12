@@ -113,12 +113,12 @@ void TerrainDepthmap::setModel(const HoleData& holeData)
     //TODO for completeness we want to render all prop models because some,
     //such as boats or jetties, intersect the water. Not sure its worth the
     //extra effort though (and may block for too long)
-    m_scene.destroyEntity(m_modelEnt);
+    m_scene.destroyEntity(m_holeEnt);
 
     const auto& meshData = holeData.modelEntity.getComponent<cro::Model>().getMeshData();
-    m_modelEnt = m_scene.createEntity();
-    m_modelEnt.addComponent<cro::Transform>();
-    m_modelEnt.addComponent<cro::Model>(meshData, m_material);
+    m_holeEnt = m_scene.createEntity();
+    m_holeEnt.addComponent<cro::Transform>();
+    m_holeEnt.addComponent<cro::Model>(meshData, m_holeMaterial);
 
     m_gridIndex = 0;
     std::swap(m_srcTexture, m_dstTexture);
@@ -161,14 +161,14 @@ void TerrainDepthmap::buildScene()
     //create material
     auto shaderID = m_shaders.loadBuiltIn(cro::ShaderResource::ShadowMap, cro::ShaderResource::DepthMap);
     auto materialID = m_materials.add(m_shaders.get(shaderID));
-    m_material = m_materials.get(materialID);
+    m_holeMaterial = m_materials.get(materialID);
 
 
     //set up scene for rendering
     auto& mb = cro::App::getInstance().getMessageBus();
     m_scene.addSystem<cro::CameraSystem>(mb);
     m_scene.addSystem<cro::ModelRenderer>(mb);
-    m_modelEnt = m_scene.createEntity();
+    m_holeEnt = m_scene.createEntity();
 
     auto resizeCallback = [](cro::Camera& cam)
     {

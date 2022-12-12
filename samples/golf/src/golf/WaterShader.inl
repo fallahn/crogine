@@ -74,6 +74,7 @@ static const std::string WaterVertex = R"(
 
 static const std::string WaterFragment = R"(
     OUTPUT
+    #define MAX_RADIUS 239.9
 
     uniform sampler2D u_reflectionMap;
     uniform sampler2D u_refractionMap;
@@ -81,7 +82,7 @@ static const std::string WaterFragment = R"(
 uniform sampler2DArray u_depthMap;
 
     uniform vec3 u_cameraWorldPosition;
-    uniform float u_radius = 239.9;
+    uniform float u_radius = MAX_RADIUS;
 
 //dirX, strength, dirZ, elapsedTime
 #include WIND_BUFFER
@@ -98,7 +99,7 @@ uniform sampler2DArray u_depthMap;
     VARYING_IN vec2 v_vertDistance;
 
     //pixels per metre
-    vec2 PixelCount = vec2(320.0 * 2.0, 200.0 * 2.0);
+    vec2 PixelCount = vec2(320.0 * 4.0, 200.0 * 4.0);
 
     const vec3 WaterColour = vec3(0.02, 0.078, 0.578);
     //const vec3 WaterColour = vec3(0.2, 0.278, 0.278);
@@ -128,7 +129,10 @@ uniform sampler2DArray u_depthMap;
         float u = (v_worldPosition.x - (x * MetresPerTexture)) / MetresPerTexture;
         float v = -(v_worldPosition.z + (y * MetresPerTexture)) / MetresPerTexture;
 
-        return texture(u_depthMap, vec3(u, v, index)).r;
+        float stepX = step(0.0, v_worldPosition.x) * (1.0 - step(320.0, v_worldPosition.x));
+        float stepY = step(0.0, -v_worldPosition.z) * (1.0 - step(200.0, -v_worldPosition.z));
+
+        return (1.0 - texture(u_depthMap, vec3(u, v, index)).r) * stepX * stepY;
     }
 
     void main()
@@ -136,7 +140,7 @@ uniform sampler2DArray u_depthMap;
         //sparkle
         float waveSpeed = (u_windData.w * 7.5);
         vec2 coord = v_texCoord;
-        coord.y += waveSpeed / (PixelCount.y * 4.0);
+        //coord.y += waveSpeed / (PixelCount.y * 4.0); //makes the waves drift across the surface
 
         vec2 pixelCoord = floor(mod(coord, 1.0) * PixelCount);
         float wave = noise(pixelCoord);
@@ -162,7 +166,11 @@ uniform sampler2DArray u_depthMap;
 
         vec3 blendedColour = mix(reflectColour.rgb, WaterColour.rgb, fresnel);
 
-        wave *= 0.2 * pow(reflectCoords.y, 4.0);
+        float edgeWave = wave * 0.07;
+
+        //wave *= 0.2 * pow(reflectCoords.y, 4.0);
+        wave *= 0.01 + (0.19 * pow(reflectCoords.y, 4.0));
+
         blendedColour.rgb += wave;
 
         //edge feather
@@ -175,7 +183,13 @@ uniform sampler2DArray u_depthMap;
 
         if(alpha < 0.1) discard;
 
-        FRAG_OUT = vec4(mix(vec3(1.0, 0.0, 1.0), blendedColour, getDepth()), 1.0);
+        //wave at edge/intersection
+        float depth = getDepth() * clamp(u_radius / MAX_RADIUS, 0.0, 1.0);
+        depth = findClosest(x,y,pow(depth, 3.0));
+        blendedColour += edgeWave * depth;
+        blendedColour += depth * 0.18;
+
+        FRAG_OUT = vec4(blendedColour, 1.0);
     })";
 
     static const std::string HorizonVert = 

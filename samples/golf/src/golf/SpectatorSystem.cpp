@@ -29,6 +29,7 @@ source distribution.
 
 #include "SpectatorSystem.hpp"
 #include "Path.hpp"
+#include "CollisionMesh.hpp"
 
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Skeleton.hpp>
@@ -43,8 +44,9 @@ namespace
     constexpr float NextTargetRadius = (0.5f * 0.5f);
 }
 
-SpectatorSystem::SpectatorSystem(cro::MessageBus& mb)
-    : cro::System(mb, typeid(SpectatorSystem))
+SpectatorSystem::SpectatorSystem(cro::MessageBus& mb, const CollisionMesh& cm)
+    : cro::System   (mb, typeid(SpectatorSystem)),
+    m_collisionMesh (cm)
 {
     requireComponent<cro::Transform>();
     requireComponent<cro::Skeleton>();
@@ -125,10 +127,15 @@ void SpectatorSystem::process(float dt)
 
                 auto& tx = entity.getComponent<cro::Transform>();
 
-                auto dir = targetPos - tx.getPosition();
+                auto pos = tx.getPosition();
+                auto dir = targetPos - pos;
                 spectator.velocity += glm::normalize(dir) * speed;
                 spectator.velocity /= 2.f;
-                tx.move(spectator.velocity * dt);
+
+                pos += spectator.velocity * dt;
+                pos.y = m_collisionMesh.getTerrain(pos).height;
+
+                tx.setPosition(pos);
 
                 spectator.targetRotation = std::atan2(-spectator.velocity.z, spectator.velocity.x) + ((cro::Util::Const::PI / 2.f));
                 spectator.rotation += cro::Util::Maths::shortestRotation(spectator.rotation, spectator.targetRotation) * (dt * 6.f);

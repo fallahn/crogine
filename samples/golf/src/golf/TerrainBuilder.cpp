@@ -482,7 +482,7 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
                     crowdDef.loadFromFile(vatFile.getModelPath(), true))
                 {
                     auto childEnt = scene.createEntity();
-                    childEnt.addComponent<cro::Transform>().setPosition({ MapSize.x / 2.f, 0.f, -static_cast<float>(MapSize.y) / 2.f });
+                    childEnt.addComponent<cro::Transform>().setPosition({ MapSize.x / 2.f, -TerrainLevel, -static_cast<float>(MapSize.y) / 2.f });
                     crowdDef.createModel(childEnt);
 
                     //setup material
