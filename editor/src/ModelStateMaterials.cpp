@@ -686,5 +686,9 @@ void ModelState::readMaterialDefinition(MaterialDefinition& matDef, const cro::C
         {
             matDef.frameRate = std::max(1.f, prop.getValue<float>());
         }
+        else if (name == "use_mipmaps")
+        {
+            matDef.useMipmaps = prop.getValue<bool>();
+        }
     }
 }
