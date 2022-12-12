@@ -6630,11 +6630,12 @@ void GolfState::gamepadNotify(std::int32_t type)
         };
 
         auto controllerID = activeControllerID(m_currentPlayer.player);
+        auto colour = m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].ballTint;
 
         auto ent = m_gameScene.createEntity();
         ent.addComponent<cro::Callback>().active = true;
         ent.getComponent<cro::Callback>().function =
-            [&, controllerID](cro::Entity e, float dt)
+            [&, controllerID, colour](cro::Entity e, float dt)
         {
             auto& data = e.getComponent<cro::Callback>().getUserData<CallbackData>();
             if (data.colourIndex < data.colours.size())
@@ -6664,7 +6665,7 @@ void GolfState::gamepadNotify(std::int32_t type)
             }
             else
             {
-                cro::GameController::setLEDColour(controllerID, cro::Colour::Blue);
+                cro::GameController::setLEDColour(controllerID, colour);
 
                 e.getComponent<cro::Callback>().active = false;
                 m_gameScene.destroyEntity(e);
@@ -6672,7 +6673,6 @@ void GolfState::gamepadNotify(std::int32_t type)
         };
 
         CallbackData data;
-        auto colour = m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].ballTint;
 
         switch (type)
         {

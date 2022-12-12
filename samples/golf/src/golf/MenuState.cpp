@@ -582,6 +582,7 @@ bool MenuState::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_CONTROLLERBUTTONUP)
     {
+        cro::App::getWindow().setMouseCaptured(true);
         switch (evt.cbutton.button)
         {
         default: break;

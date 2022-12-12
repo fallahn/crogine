@@ -387,6 +387,7 @@ bool OptionsState::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_CONTROLLERBUTTONDOWN)
     {
+        cro::App::getWindow().setMouseCaptured(true);
         switch (evt.cbutton.button)
         {
         default: break;

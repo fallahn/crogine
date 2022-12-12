@@ -121,6 +121,7 @@ bool PracticeState::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_CONTROLLERBUTTONUP)
     {
+        cro::App::getWindow().setMouseCaptured(true);
         if (evt.cbutton.button == cro::GameController::ButtonB)
         {
             quitState();
