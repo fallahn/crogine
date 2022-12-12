@@ -2573,8 +2573,8 @@ void DrivingState::hitBall()
     msg->terrain = TerrainID::Fairway;
     msg->club = static_cast<std::uint8_t>(m_inputParser.getClub());
 
-    float lowFreq = 50000.f * m_inputParser.getPower();
-    float hiFreq = 35000.f * m_inputParser.getPower();
+    float lowFreq = 50000.f * m_inputParser.getPower() * m_sharedData.enableRumble;
+    float hiFreq = 35000.f * m_inputParser.getPower() * m_sharedData.enableRumble;
 
     cro::GameController::rumbleStart(activeControllerID(m_sharedData.inputBinding.playerID), static_cast<std::uint16_t>(lowFreq), static_cast<std::uint16_t>(hiFreq), 200);
 

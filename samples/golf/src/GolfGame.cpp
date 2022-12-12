@@ -812,6 +812,10 @@ void GolfGame::loadPreferences()
                     m_sharedData.multisamples = prop.getValue<std::uint32_t>();
                     m_sharedData.antialias = m_sharedData.multisamples != 0;
                 }
+                else if (name == "use_vibration")
+                {
+                    m_sharedData.enableRumble = prop.getValue<bool>() ? 1 : 0;
+                }
             }
         }
     }
@@ -875,6 +879,7 @@ void GolfGame::savePreferences()
     cfg.addProperty("show_tutorial").setValue(m_sharedData.showTutorialTip);
     cfg.addProperty("putting_power").setValue(m_sharedData.showPuttingPower);
     cfg.addProperty("multisamples").setValue(m_sharedData.multisamples);
+    cfg.addProperty("use_vibration").setValue(m_sharedData.enableRumble == 0 ? false : true);
     cfg.save(path);
 
 

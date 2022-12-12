@@ -835,7 +835,7 @@ void BallSystem::doCollision(cro::Entity entity)
 
 void BallSystem::doBallCollision(cro::Entity entity)
 {
-    //even with max 16 balls this sould be negligable to do
+    //even with max 16 balls this should be negligable to do
     //but we can always place them in some sort of grid if we need to
 
     //this is crude collision which acts like other balls are

@@ -773,8 +773,8 @@ void GolfState::handleMessage(const cro::Message& msg)
             if (m_currentPlayer.client == m_sharedData.localConnectionData.connectionID
                 && !m_sharedData.localConnectionData.playerData[m_currentPlayer.player].isCPU)
             {
-                auto strLow = static_cast<std::uint16_t>(50000.f * m_inputParser.getPower());
-                auto strHigh = static_cast<std::uint16_t>(35000.f * m_inputParser.getPower());
+                auto strLow = static_cast<std::uint16_t>(50000.f * m_inputParser.getPower()) * m_sharedData.enableRumble;
+                auto strHigh = static_cast<std::uint16_t>(35000.f * m_inputParser.getPower()) * m_sharedData.enableRumble;
 
                 cro::GameController::rumbleStart(activeControllerID(m_sharedData.inputBinding.playerID), strLow, strHigh, 200);
             }
@@ -6650,7 +6650,7 @@ void GolfState::gamepadNotify(std::int32_t type)
                         data.state = 1;
 
                         //switch on effect
-                        cro::GameController::rumbleStart(controllerID, 0, 60000, static_cast<std::uint32_t>(data.flashRate / 1000.f));
+                        cro::GameController::rumbleStart(controllerID, 0, 60000 * m_sharedData.enableRumble, static_cast<std::uint32_t>(data.flashRate / 1000.f));
                         cro::GameController::setLEDColour(controllerID, data.colours[data.colourIndex++]);
                     }
                     else
