@@ -33,16 +33,18 @@ source distribution.
 #include <crogine/graphics/MeshData.hpp>
 #include <crogine/graphics/MaterialResource.hpp>
 #include <crogine/graphics/ShaderResource.hpp>
+#include <crogine/graphics/MeshResource.hpp>
 #include <crogine/ecs/Scene.hpp>
 
 #include <array>
 
+struct HoleData;
 class TerrainDepthmap final
 {
 public:
     TerrainDepthmap();
 
-    void setModel(const cro::Mesh::Data&);
+    void setModel(const HoleData&);
 
     //updates the given number of tiles
     void update(std::uint32_t count);
@@ -61,11 +63,14 @@ private:
     std::array<cro::DepthTexture, 2u> m_textures;
 
     cro::Scene m_scene;
+    cro::MeshResource m_meshes;
     cro::ShaderResource m_shaders;
     cro::MaterialResource m_materials;
     cro::Material::Data m_material;
 
     cro::Entity m_modelEnt;
+    cro::Entity m_terrainEnt;
+    cro::Texture m_heightmap;
 
     void buildScene();
 };

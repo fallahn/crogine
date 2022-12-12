@@ -110,8 +110,8 @@ uniform sampler2DArray u_depthMap;
 
     float linearise(float d)
     {
-        const float zNear = 10.02;
-        const float zFar = 10.5;
+        const float zNear = 10.02; //note these have to match the near/far plane of the depthmap camera
+        const float zFar = 10.48;
 
         return zNear * zFar / (zFar + d * (zNear - zFar));
     }

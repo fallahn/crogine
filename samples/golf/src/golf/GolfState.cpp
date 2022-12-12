@@ -2872,7 +2872,7 @@ void GolfState::loadAssets()
             loadSpectators();
         }
 
-        m_depthMap.setModel(m_holeData[0].modelEntity.getComponent<cro::Model>().getMeshData());
+        m_depthMap.setModel(m_holeData[0]);
         m_depthMap.update(40);
     }
 
@@ -5230,7 +5230,7 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo)
     auto next = m_currentHole + 1;
     if (next < m_holeData.size())
     {
-        m_depthMap.setModel(m_holeData[next].modelEntity.getComponent<cro::Model>().getMeshData());
+        m_depthMap.setModel(m_holeData[next]);
     }
     else
     {
