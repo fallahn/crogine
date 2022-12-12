@@ -454,15 +454,6 @@ void ClubhouseState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnt
     entity.addComponent<cro::SpriteAnimation>().play(0);
     menuTransform.addChild(entity.getComponent<cro::Transform>());
 
-
-    /*auto mouseEnterCursor = m_uiScene.getSystem<cro::UISystem>()->addCallback(
-        [entity](cro::Entity e) mutable
-        {
-            e.getComponent<cro::AudioEmitter>().play();
-            entity.getComponent<cro::Transform>().setPosition(e.getComponent<cro::Transform>().getPosition() + CursorOffset);
-            entity.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
-            entity.getComponent<cro::Sprite>().setColour(cro::Colour::White);
-        });*/
     auto mouseEnterHighlight = m_uiScene.getSystem<cro::UISystem>()->addCallback(
         [entity](cro::Entity e) mutable
         {
@@ -522,7 +513,7 @@ void ClubhouseState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnt
         editEnt.getComponent<cro::Transform>().setOrigin({ spriteBounds.width / 2.f, std::floor(spriteBounds.height / 2.f) });
 
         auto textEnt = m_uiScene.createEntity();
-        textEnt.addComponent<cro::Transform>().setPosition({ spriteBounds.width / 2.f, 97.f, 0.1f });
+        textEnt.addComponent<cro::Transform>().setPosition({ spriteBounds.width / 2.f, 48.f, 0.1f });
         textEnt.addComponent<cro::Drawable2D>();
         textEnt.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
         textEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
@@ -557,7 +548,7 @@ void ClubhouseState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnt
         editEnt.getComponent<cro::Transform>().addChild(textEnt.getComponent<cro::Transform>());
 
         auto buttonEnt = m_uiScene.createEntity();
-        buttonEnt.addComponent<cro::Transform>().setPosition({ spriteBounds.width / 2.f, 93.f, 0.1f });
+        buttonEnt.addComponent<cro::Transform>().setPosition({ spriteBounds.width / 2.f, 44.f, 0.1f });
         buttonEnt.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
         buttonEnt.addComponent<cro::Drawable2D>();
         buttonEnt.addComponent<cro::Sprite>() = spriteSheet.getSprite("name_highlight");
@@ -628,49 +619,6 @@ void ClubhouseState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnt
                 }
             };
         }        
-
-        auto controllerEnt = m_uiScene.createEntity();
-        controllerEnt.addComponent<cro::Transform>();
-        controllerEnt.addComponent<cro::Drawable2D>();
-        controllerEnt.addComponent<cro::Sprite>() = spriteSheet.getSprite("keyboard");
-        controllerEnt.addComponent<cro::Callback>().active = true;
-        controllerEnt.getComponent<cro::Callback>().setUserData<std::size_t>(10);
-        controllerEnt.getComponent<cro::Callback>().function =
-            [buttonEnt, spriteSheet](cro::Entity e, float)
-        {
-            //update this dynamically because count might change at runtime
-            auto& prevCount = e.getComponent<cro::Callback>().getUserData<std::size_t>();
-            auto controllerCount = cro::GameController::getControllerCount();
-
-            if (prevCount != controllerCount)
-            {
-                cro::Sprite sprite;
-                if (controllerCount == 0)
-                {
-                    sprite = spriteSheet.getSprite("keyboard");
-                }
-                else
-                {
-                    sprite = spriteSheet.getSprite("controller");
-
-                    if (controllerCount > 1)
-                    {
-                        //TODO show controller number? or is this implied?
-                    }
-                }
-                e.getComponent<cro::Sprite>() = sprite;
-
-                auto bounds = sprite.getTextureBounds();
-                e.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
-                auto position = buttonEnt.getComponent<cro::Transform>().getPosition();
-                position.y -= 40.f;
-                e.getComponent<cro::Transform>().setPosition(position);
-            }
-            prevCount = controllerCount;
-        };
-
-        editEnt.getComponent<cro::Transform>().addChild(controllerEnt.getComponent<cro::Transform>());
-
 
         editRoot.getComponent<cro::Transform>().addChild(editEnt.getComponent<cro::Transform>());
         return editEnt;
