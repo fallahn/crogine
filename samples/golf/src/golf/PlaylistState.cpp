@@ -308,7 +308,7 @@ PlaylistState::PlaylistState(cro::StateStack& ss, cro::State::Context ctx, Share
             if (ImGui::Begin("buns"))
             {
                 //ImGui::Text("Current Slider %u", m_activeSlider.getIndex());
-                static float maxDist = 50.f;
+                /*static float maxDist = 50.f;
                 if (ImGui::SliderFloat("Distance", &maxDist, 1.f, 50.f))
                 {
                     m_gameScene.getActiveCamera().getComponent<cro::Camera>().setMaxShadowDistance(maxDist);
@@ -318,10 +318,12 @@ PlaylistState::PlaylistState(cro::StateStack& ss, cro::State::Context ctx, Share
                 if (ImGui::SliderFloat("Overshoot", &overshoot, 0.f, 20.f))
                 {
                     m_gameScene.getActiveCamera().getComponent<cro::Camera>().setShadowExpansion(overshoot);
-                }
+                }*/
+                const auto& cam = m_gameScene.getActiveCamera().getComponent<cro::Camera>();
+                ImGui::Image(cam.reflectionBuffer.getTexture(), {300.f, 300.f}, {0.f, 1.f}, {1.f, 0.f});
             }
             ImGui::End();
-        });
+        }, true);
 #endif
 }
 
@@ -384,6 +386,8 @@ bool PlaylistState::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_CONTROLLERBUTTONUP)
     {
+        static constexpr std::size_t MaxTabs = 4;
+
         cro::App::getWindow().setMouseCaptured(true);
         switch (evt.cbutton.button)
         {
@@ -392,11 +396,11 @@ bool PlaylistState::handleEvent(const cro::Event& evt)
             quitState();
             return false;
         case cro::GameController::ButtonLeftShoulder:
-            m_currentTab = (m_currentTab + (MenuID::Count - 2)) % (MenuID::Count - 1);
+            m_currentTab = (m_currentTab + (MaxTabs - 1)) % MaxTabs;
             setActiveTab(m_currentTab);
             break;
         case cro::GameController::ButtonRightShoulder:
-            m_currentTab = (m_currentTab + 1) % (MenuID::Count - 1);
+            m_currentTab = (m_currentTab + 1) % MaxTabs;
             setActiveTab(m_currentTab);
             break;
         case cro::GameController::ButtonStart:
@@ -654,7 +658,7 @@ void PlaylistState::loadAssets()
     auto* shader = &m_resources.shaders.get(ShaderID::Horizon);
     m_materialIDs[MaterialID::Horizon] = m_resources.materials.add(*shader);
 
-    m_resources.shaders.loadFromString(ShaderID::Water, WaterVertex, WaterFragment);
+    m_resources.shaders.loadFromString(ShaderID::Water, WaterVertex, WaterFragment, "#define NO_DEPTH\n");
     shader = &m_resources.shaders.get(ShaderID::Water);
     m_scaleBuffer.addShader(*shader);
     m_windBuffer.addShader(*shader);
@@ -3441,6 +3445,10 @@ void PlaylistState::loadShrubbery(const std::string& path)
                     shrubbery.treesetEnts[i] = m_gameScene.createEntity();
                     shrubbery.treesetEnts[i].addComponent<cro::Transform>();
                     md.createModel(shrubbery.treesetEnts[i]);
+                    
+                    auto billboardMat = m_resources.materials.get(m_materialIDs[MaterialID::Billboard]);
+                    applyMaterialData(md, billboardMat);
+                    shrubbery.treesetEnts[i].getComponent<cro::Model>().setMaterial(0, billboardMat);
                 }
             }
         }

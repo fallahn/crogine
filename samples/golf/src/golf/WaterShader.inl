@@ -79,8 +79,9 @@ static const std::string WaterFragment = R"(
     uniform sampler2D u_reflectionMap;
     uniform sampler2D u_refractionMap;
 
+#if !defined(NO_DEPTH)
 uniform sampler2DArray u_depthMap;
-
+#endif
     uniform vec3 u_cameraWorldPosition;
     uniform float u_radius = MAX_RADIUS;
 
@@ -117,6 +118,7 @@ uniform sampler2DArray u_depthMap;
         return zNear * zFar / (zFar + d * (zNear - zFar));
     }
 
+#if !defined(NO_DEPTH)
     float getDepth()
     {
         const float ColCount = 8.0;
@@ -134,6 +136,7 @@ uniform sampler2DArray u_depthMap;
 
         return (1.0 - texture(u_depthMap, vec3(u, v, index)).r) * stepX * stepY;
     }
+#endif
 
     void main()
     {
@@ -182,13 +185,13 @@ uniform sampler2DArray u_depthMap;
         float alpha = findClosest(x, y, amount);
 
         if(alpha < 0.1) discard;
-
+#if !defined(NO_DEPTH)
         //wave at edge/intersection
         float depth = getDepth() * clamp(u_radius / MAX_RADIUS, 0.0, 1.0);
         depth = findClosest(x,y,pow(depth, 3.0));
         blendedColour += edgeWave * depth;
         blendedColour += depth * 0.18;
-
+#endif
         FRAG_OUT = vec4(blendedColour, 1.0);
     })";
 
