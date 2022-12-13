@@ -254,7 +254,7 @@ bool BilliardsState::handleEvent(const cro::Event& evt)
     }
     else 
 #endif
-
+    //TODO we need a good way to release the mouse without interfering with game play...
     if (evt.type == SDL_KEYDOWN)
     {
         switch (evt.key.keysym.sym)

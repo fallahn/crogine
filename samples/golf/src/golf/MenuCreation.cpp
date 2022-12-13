@@ -3371,12 +3371,12 @@ void MenuState::createPlayerConfigMenu()
                     std::int32_t prevIndex = 0;
                     for (auto i = 0; i < 4; ++i)
                     {
-                        auto paletteIdx = cro::Util::Random::value(0, pc::ColourID::Count - 1);
+                        auto paletteIdx = cro::Util::Random::value(0, pc::PairCounts[i] - 1);
 
                         //prevent getting the same colours in a row
                         if (paletteIdx == prevIndex)
                         {
-                            paletteIdx = (paletteIdx + 1) % pc::ColourID::Count;
+                            paletteIdx = (paletteIdx + 1) % pc::PairCounts[i];
                         }
 
                         m_playerAvatars[m_avatarIndices[m_activePlayerAvatar]].setColour(pc::ColourKey::Index(i), paletteIdx);
