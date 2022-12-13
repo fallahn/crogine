@@ -232,6 +232,13 @@ void CameraFollowSystem::process(float dt)
                 {
                     currDist = dist;
                     m_closestCamera = follower.id;
+
+                    //special case to stop the overhead cam when on the green
+                    if (collider.terrain == TerrainID::Green &&
+                        m_closestCamera == CameraID::Sky)
+                    {
+                        m_closestCamera = CameraID::Green;
+                    }
                 }
             }
 

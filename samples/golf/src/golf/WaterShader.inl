@@ -51,6 +51,7 @@ static const std::string WaterVertex = R"(
     VARYING_OUT vec4 v_refractionPosition;
     VARYING_OUT LOW vec4 v_lightWorldPosition;
     VARYING_OUT vec2 v_vertDistance;
+    VARYING_OUT float v_scale;
 
     const vec2 MapSize = vec2(320.0, 200.0);
 
@@ -70,6 +71,8 @@ static const std::string WaterVertex = R"(
         v_lightWorldPosition = u_lightViewProjectionMatrix * position;
 
         v_vertDistance = a_position.xy;
+
+        v_scale = u_worldMatrix[0][0];
     })";
 
 static const std::string WaterFragment = R"(
@@ -98,6 +101,7 @@ uniform sampler2DArray u_depthMap;
     VARYING_IN vec4 v_refractionPosition;
 
     VARYING_IN vec2 v_vertDistance;
+    VARYING_IN float v_scale;
 
     //pixels per metre
     vec2 PixelCount = vec2(320.0 * 4.0, 200.0 * 4.0);
@@ -187,7 +191,7 @@ uniform sampler2DArray u_depthMap;
         if(alpha < 0.1) discard;
 #if !defined(NO_DEPTH)
         //wave at edge/intersection
-        float depth = getDepth() * clamp(u_radius / MAX_RADIUS, 0.0, 1.0);
+        float depth = getDepth() * clamp(v_scale, 0.0, 1.0);
         depth = findClosest(x,y,pow(depth, 3.0));
         blendedColour += edgeWave * depth;
         blendedColour += depth * 0.18;
