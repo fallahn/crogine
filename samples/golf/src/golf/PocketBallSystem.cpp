@@ -56,7 +56,7 @@ void PocketBallSystem::process(float dt)
     static constexpr float MinDistance = (BilliardBall::Radius * 2.f);
     cro::Entity previousEntity;
 
-    auto& entities = getEntities();
+    const auto& entities = getEntities();
     for (auto entity : entities)
     {
         auto& ball = entity.getComponent<PocketBall>();
@@ -141,7 +141,7 @@ void PocketBallSystem::onEntityAdded(cro::Entity)
 {
     bool wasRemoved = false;
 
-    auto& entities = getEntities();
+    const auto& entities = getEntities();
     for (auto entity : entities)
     {
         entity.getComponent<PocketBall>().totalCount++;

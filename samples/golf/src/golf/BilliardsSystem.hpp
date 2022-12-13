@@ -161,7 +161,7 @@ class BulletDebug;
 class BilliardsSystem final : public cro::System
 {
 public:
-    BilliardsSystem(cro::MessageBus&);
+    explicit BilliardsSystem(cro::MessageBus&);
     BilliardsSystem(cro::MessageBus&, BulletDebug&);
     ~BilliardsSystem();
 

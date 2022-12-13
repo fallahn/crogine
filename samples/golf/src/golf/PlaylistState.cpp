@@ -173,7 +173,7 @@ namespace
     struct ListItemCallback final
     {
         const cro::FloatRect& croppingArea;
-        ListItemCallback(const cro::FloatRect& c)
+        explicit ListItemCallback(const cro::FloatRect& c)
             : croppingArea(c) {}
 
         void operator ()(cro::Entity e, float)
@@ -4450,7 +4450,7 @@ void PlaylistState::showHelp()
     };
 
     //info panel title and desc
-    const auto createTitle = [&](glm::vec3 position, const std::string label, glm::vec2 relPos = glm::vec2(0.f))
+    const auto createTitle = [&](glm::vec3 position, const std::string& label, glm::vec2 relPos = glm::vec2(0.f))
     {
         auto entity = m_uiScene.createEntity();
         entity.addComponent<cro::Transform>().setPosition((screenSize / m_viewScale) * relPos);

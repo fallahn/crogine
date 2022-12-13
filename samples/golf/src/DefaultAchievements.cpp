@@ -351,7 +351,7 @@ void DefaultAchievements::readFile()
                 LogW << "Failed reading stats" << std::endl;
             }
 
-            read = fread(m_timeStamps.data(), timesize, 1, inFile);
+            fread(m_timeStamps.data(), timesize, 1, inFile);
 
             fclose(inFile);
         }

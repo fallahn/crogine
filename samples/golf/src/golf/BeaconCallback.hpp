@@ -47,7 +47,7 @@ public:
         pos = m_scene.getActiveCamera().getComponent<cro::Transform>().getWorldPosition();
         glm::vec2 camPos(pos.x, -pos.z);
 
-        float amount = smoothstep(MinDist / MaxDist, MaxDist / MaxDist, std::min(1.f, glm::length2(beaconPos - camPos) / (MaxDist * MaxDist)));
+        float amount = smoothstep(MinDist / MaxDist, 1.f, std::min(1.f, glm::length2(beaconPos - camPos) / (MaxDist * MaxDist)));
 
         if (amount == 0)
         {

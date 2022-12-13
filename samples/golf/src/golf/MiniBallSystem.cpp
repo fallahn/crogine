@@ -43,7 +43,7 @@ MiniBallSystem::MiniBallSystem(cro::MessageBus& mb)
 //public
 void MiniBallSystem::process(float dt)
 {
-    auto& entities = getEntities();
+    const auto& entities = getEntities();
     for (auto entity : entities)
     {
         auto& ball = entity.getComponent<MiniBall>();

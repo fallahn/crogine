@@ -1069,7 +1069,7 @@ void DrivingState::createScene()
     cro::AudioScape as;
     as.loadFromFile("assets/golf/sound/menu.xas", m_resources.audio);
 
-    const auto& quitFail = [&](const std::string msg)
+    const auto& quitFail = [&](const std::string& msg)
     {
         //create a basic render texture in case a load
         //error occurs (this will be resized by camera callback on success)
@@ -1121,8 +1121,8 @@ void DrivingState::createScene()
 
             std::vector<glm::vec3> targets;
 
-            const auto& properties = obj.getProperties();
-            for (const auto& p : properties)
+            const auto& props = obj.getProperties();
+            for (const auto& p : props)
             {
                 const auto& propName = p.getName();
                 if (propName == "model")
@@ -1901,9 +1901,9 @@ void DrivingState::createPlayer(cro::Entity courseEnt)
                 md.createModel(hairEnt);
 
                 //set material and colour
-                auto material = m_resources.materials.get(m_materialIDs[MaterialID::Hair]);
-                material.setProperty("u_hairColour", cro::Colour(pc::Palette[playerData.avatarFlags[pc::ColourKey::Hair]].light));
-                hairEnt.getComponent<cro::Model>().setMaterial(0, material);
+                auto mat = m_resources.materials.get(m_materialIDs[MaterialID::Hair]);
+                mat.setProperty("u_hairColour", cro::Colour(pc::Palette[playerData.avatarFlags[pc::ColourKey::Hair]].light));
+                hairEnt.getComponent<cro::Model>().setMaterial(0, mat);
 
                 skel.getAttachments()[id].setModel(hairEnt);
 

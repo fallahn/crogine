@@ -62,7 +62,7 @@ VatAnimationSystem::VatAnimationSystem(cro::MessageBus& mb)
 //public
 void VatAnimationSystem::process(float dt)
 {
-    auto& entities = getEntities();
+    const auto& entities = getEntities();
     for (auto entity : entities)
     {
         auto& anim = entity.getComponent<VatAnimation>();

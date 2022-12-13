@@ -56,7 +56,7 @@ SpectatorSystem::SpectatorSystem(cro::MessageBus& mb, const CollisionMesh& cm)
 //public
 void SpectatorSystem::process(float dt)
 {
-    auto& entities = getEntities();
+    const auto& entities = getEntities();
     for (auto entity : entities)
     {
         auto& spectator = entity.getComponent<Spectator>();

@@ -550,21 +550,23 @@ static inline std::string loadSkybox(const std::string& path, cro::Scene& skySce
     if (!path.empty()
         && cfg.loadFromFile(path))
     {
-        const auto& props = cfg.getProperties();
-        for (const auto& p : props)
         {
-            const auto& name = p.getName();
-            if (name == "sky_top")
+            const auto& props = cfg.getProperties();
+            for (const auto& p : props)
             {
-                skyTop = p.getValue<cro::Colour>();
-            }
-            else if (name == "sky_bottom")
-            {
-                skyMid = p.getValue<cro::Colour>();
-            }
-            else if (name == "clouds")
-            {
-                cloudPath = p.getValue<std::string>();
+                const auto& name = p.getName();
+                if (name == "sky_top")
+                {
+                    skyTop = p.getValue<cro::Colour>();
+                }
+                else if (name == "sky_bottom")
+                {
+                    skyMid = p.getValue<cro::Colour>();
+                }
+                else if (name == "clouds")
+                {
+                    cloudPath = p.getValue<std::string>();
+                }
             }
         }
 

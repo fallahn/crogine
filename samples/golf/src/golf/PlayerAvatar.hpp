@@ -43,7 +43,7 @@ source distribution.
 class PlayerAvatar final
 {
 public:
-    PlayerAvatar(const std::string&);
+    explicit PlayerAvatar(const std::string&);
 
     void setTarget(cro::Texture&);
     void setColour(pc::ColourKey::Index, std::int8_t);

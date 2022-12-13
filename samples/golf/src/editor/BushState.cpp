@@ -427,7 +427,7 @@ void BushState::createScene()
     cro::ModelDefinition md(m_resources);
     if (md.loadFromFile("assets/models/player_box.cmt"))
     {
-        auto entity = m_gameScene.createEntity();
+        entity = m_gameScene.createEntity();
         entity.addComponent<cro::Transform>();
         md.createModel(entity);
 
@@ -440,7 +440,7 @@ void BushState::createScene()
 
     if (md.loadFromFile("assets/models/ground_plane.cmt"))
     {
-        auto entity = m_gameScene.createEntity();
+        entity = m_gameScene.createEntity();
         entity.addComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -90.f * cro::Util::Const::degToRad);
         md.createModel(entity);
         entity.getComponent<cro::Model>().setRenderFlags(~(RenderFlagsBillboard | RenderFlagsThumbnail));
@@ -669,7 +669,7 @@ void BushState::drawUI()
                 m_models[2].getComponent<cro::Model>().setHidden(!showInstanced);
             }
 
-            for (auto i = 0u; i < m_materials.size(); ++i)
+            for (i = 0u; i < m_materials.size(); ++i)
             {
                 auto label = "Material##" + std::to_string(i);
                 if (ImGui::InputInt(label.c_str(), &m_materials[i].activeMaterial))
@@ -1169,9 +1169,9 @@ void BushState::createThumbnails()
                         //because we've started using material colours to affect
                         //the in-game material properties, we need to reset them
                         //all to white when rendering thumbs
-                        for (auto i = 0u; i < entity.getComponent<cro::Model>().getMeshData().submeshCount; ++i)
+                        for (auto j = 0u; j < entity.getComponent<cro::Model>().getMeshData().submeshCount; ++j)
                         {
-                            entity.getComponent<cro::Model>().setMaterialProperty(i, "u_colour", cro::Colour::White);
+                            entity.getComponent<cro::Model>().setMaterialProperty(j, "u_colour", cro::Colour::White);
                         }
 
 

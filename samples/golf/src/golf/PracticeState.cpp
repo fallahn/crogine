@@ -312,7 +312,7 @@ void PracticeState::buildScene()
             helpText.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
         });
     
-    auto createItem = [&](glm::vec2 position, const std::string label, cro::Entity parent) 
+    auto createItem = [&](glm::vec2 position, const std::string& label, cro::Entity parent) 
     {
         auto e = m_scene.createEntity();
         e.addComponent<cro::Transform>().setPosition(position);

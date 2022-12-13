@@ -55,7 +55,7 @@ TrophyDisplaySystem::TrophyDisplaySystem(cro::MessageBus& mb)
 //public
 void TrophyDisplaySystem::process(float dt)
 {
-    auto& entities = getEntities();
+    const auto& entities = getEntities();
     for (auto entity : entities)
     {
         auto& trophy = entity.getComponent<TrophyDisplay>();

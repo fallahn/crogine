@@ -290,7 +290,7 @@ void MessageOverlayState::buildScene()
         });
 
     
-    auto createItem = [&](glm::vec2 position, const std::string label, cro::Entity parent) 
+    auto createItem = [&](glm::vec2 position, const std::string& label, cro::Entity parent) 
     {
         auto e = m_scene.createEntity();
         e.addComponent<cro::Transform>().setPosition(position);

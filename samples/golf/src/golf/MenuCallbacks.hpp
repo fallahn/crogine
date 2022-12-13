@@ -55,7 +55,7 @@ struct MenuContext
 struct MenuCallback final
 {
     MenuContext menuContext;
-    explicit MenuCallback(MenuContext m) : menuContext(m) {}
+    explicit MenuCallback(const MenuContext& m) : menuContext(m) {}
 
     void operator()(cro::Entity, float);
 };

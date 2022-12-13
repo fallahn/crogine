@@ -89,7 +89,7 @@ namespace
             In, Out
         }state = In;
 
-        BackgroundCallbackData(glm::vec2 t) : targetSize(t) {}
+        explicit BackgroundCallbackData(glm::vec2 t) : targetSize(t) {}
     };
 }
 

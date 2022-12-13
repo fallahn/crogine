@@ -60,7 +60,7 @@ void CloudSystem::process(float dt)
     velocity *= 10.f * m_currentWindSpeed.y;
 
     //process clouds
-    auto& entities = getEntities();
+    const auto& entities = getEntities();
     for (auto entity : entities)
     {
         auto& cloud = entity.getComponent<Cloud>();

@@ -328,7 +328,7 @@ void NewsState::buildScene()
             e.getComponent<cro::Text>().setFillColour(TextGoldColour);
         });
     
-    const auto createItem = [&, selectedID, unselectedID](glm::vec2 position, const std::string label, cro::Entity parent) 
+    const auto createItem = [&, selectedID, unselectedID](glm::vec2 position, const std::string& label, cro::Entity parent) 
     {
         auto e = m_scene.createEntity();
         e.addComponent<cro::Transform>().setPosition(position);

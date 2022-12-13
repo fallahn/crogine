@@ -47,7 +47,7 @@ FloatingTextSystem::FloatingTextSystem(cro::MessageBus& mb)
 //public
 void FloatingTextSystem::process(float dt)
 {
-    auto& entities = getEntities();
+    const auto& entities = getEntities();
     for (auto e : entities)
     {
         auto& floatingText = e.getComponent<FloatingText>();

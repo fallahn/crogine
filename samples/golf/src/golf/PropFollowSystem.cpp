@@ -53,7 +53,7 @@ PropFollowSystem::PropFollowSystem(cro::MessageBus& mb, const CollisionMesh& cm)
 //public
 void PropFollowSystem::process(float dt)
 {
-    auto& entities = getEntities();
+    const auto& entities = getEntities();
     for (auto entity : entities)
     {
         if (!entity.getComponent<cro::Model>().isHidden())

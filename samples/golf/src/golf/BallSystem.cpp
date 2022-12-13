@@ -160,7 +160,7 @@ BallSystem::~BallSystem()
 //public
 void BallSystem::process(float dt)
 {
-    auto& entities = getEntities();
+    const auto& entities = getEntities();
     
     //interpolate current strength/direction
     m_currentWindInterpTime = std::min(m_windInterpTime, m_currentWindInterpTime + dt);

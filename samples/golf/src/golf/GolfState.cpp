@@ -785,14 +785,14 @@ void GolfState::handleMessage(const cro::Message& msg)
                 auto hook = m_inputParser.getHook() * m_activeAvatar->model.getComponent<cro::Transform>().getScale().x;
                 if (hook < -0.2f)
                 {
-                    auto* msg2 = cro::App::getInstance().getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
-                    msg2->type = GolfEvent::HookedBall;
+                    auto* msg3 = cro::App::getInstance().getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
+                    msg3->type = GolfEvent::HookedBall;
                     floatingMessage("Hook");
                 }
                 else if (hook > 0.2f)
                 {
-                    auto* msg2 = cro::App::getInstance().getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
-                    msg2->type = GolfEvent::SlicedBall;
+                    auto* msg3 = cro::App::getInstance().getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
+                    msg3->type = GolfEvent::SlicedBall;
                     floatingMessage("Slice");
                 }
 
@@ -804,8 +804,8 @@ void GolfState::handleMessage(const cro::Message& msg)
                 if (power > 0.9f
                     && std::fabs(hook) < 0.05f)
                 {
-                    auto* msg2 = cro::App::getInstance().getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
-                    msg2->type = GolfEvent::NiceShot;
+                    auto* msg3 = cro::App::getInstance().getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
+                    msg3->type = GolfEvent::NiceShot;
 
                     Social::awardXP(5);
                 }
@@ -1274,7 +1274,7 @@ bool GolfState::simulate(float dt)
                         m_windUpdate.currentWindVector.z);
     m_gameScene.getSystem<CloudSystem>()->setWindVector(windVector);
 
-    auto& windEnts = m_skyScene.getSystem<cro::CallbackSystem>()->getEntities();
+    const auto& windEnts = m_skyScene.getSystem<cro::CallbackSystem>()->getEntities();
     for (auto e : windEnts)
     {
         e.getComponent<cro::Callback>().setUserData<float>(m_windUpdate.currentWindSpeed);
@@ -1339,7 +1339,6 @@ bool GolfState::simulate(float dt)
     //tell the flag to raise or lower
     if (m_currentPlayer.terrain == TerrainID::Green)
     {
-        cro::Command cmd;
         cmd.targetFlags = CommandID::Flag;
         cmd.action = [&](cro::Entity e, float)
         {
@@ -1880,7 +1879,7 @@ void GolfState::loadAssets()
                             md.createModel(hairEnt);
 
                             //set material and colour
-                            auto material = m_resources.materials.get(m_materialIDs[MaterialID::Hair]);
+                            material = m_resources.materials.get(m_materialIDs[MaterialID::Hair]);
                             material.setProperty("u_hairColour", cro::Colour(pc::Palette[m_sharedData.connectionData[i].playerData[j].avatarFlags[pc::ColourKey::Hair]].light));
                             //material.setProperty("u_darkColour", cro::Colour(pc::Palette[m_sharedData.connectionData[i].playerData[j].avatarFlags[pc::ColourKey::Hair]].dark));
                             hairEnt.getComponent<cro::Model>().setMaterial(0, material);
@@ -3789,7 +3788,7 @@ void GolfState::buildScene()
         entity.addComponent<cro::Transform>().setScale(glm::vec3(2.f));
         md.createModel(entity);
 
-        auto material = m_resources.materials.get(m_materialIDs[MaterialID::CelTextured]);
+        material = m_resources.materials.get(m_materialIDs[MaterialID::CelTextured]);
         applyMaterialData(md, material);
         entity.getComponent<cro::Model>().setMaterial(0, material);
 

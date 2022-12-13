@@ -1610,7 +1610,6 @@ void ClubhouseState::handleNetEvent(const net::NetEvent& evt)
                 requestStackPush(StateID::Error);
             }
             break;
-            break;
         }
     }
     else if (evt.type == net::NetEvent::ClientDisconnect)

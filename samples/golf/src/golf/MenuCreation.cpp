@@ -3739,13 +3739,12 @@ void MenuState::updateLobbyData(const net::NetEvent& evt)
     if (m_sharedData.hosting)
     {
         std::int32_t playerCount = 0;
-        for (const auto& cd : m_sharedData.connectionData)
+        for (const auto& c : m_sharedData.connectionData)
         {
-            playerCount += cd.playerCount;
+            playerCount += c.playerCount;
         }
 
         m_matchMaking.setGamePlayerCount(playerCount);
-
     }
 
     //new players won't have other levels

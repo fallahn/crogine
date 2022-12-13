@@ -146,12 +146,12 @@ bool TableData::loadFromFile(const std::string& path)
                 const auto& spawnProps = obj.getProperties();
                 for (const auto& prop : spawnProps)
                 {
-                    const auto& name = prop.getName();
-                    if (name == "position")
+                    const auto& sName = prop.getName();
+                    if (sName == "position")
                     {
                         position = prop.getValue<glm::vec2>();
                     }
-                    else if (name == "size")
+                    else if (sName == "size")
                     {
                         size = prop.getValue<glm::vec2>();
                     }
@@ -429,11 +429,11 @@ void BilliardsSystem::initTable(const TableData& tableData)
         pocket.value = p.value;
 
         //wall objects
-        for (auto i = 0; i < 4; ++i)
+        for (auto j = 0; j < 4; ++j)
         {
-            const auto& wallShape = m_pocketWalls[i % 2];
+            const auto& wallShape = m_pocketWalls[j % 2];
             auto& obj = m_tableObjects.emplace_back(std::make_unique<btRigidBody>(createBodyDef(CollisionID::Pocket, 0.f, wallShape.get())));
-            transform.setOrigin(glmToBt(pocketPos) + (Offsets[i] * (WallThickness + p.radius)));
+            transform.setOrigin(glmToBt(pocketPos) + (Offsets[j] * (WallThickness + p.radius)));
             obj->setWorldTransform(transform);
             m_collisionWorld->addCollisionObject(obj.get(), (1 << CollisionID::Pocket), (1 << CollisionID::Ball));
         }
@@ -651,7 +651,7 @@ void BilliardsSystem::onEntityAdded(cro::Entity entity)
 
 void BilliardsSystem::onEntityRemoved(cro::Entity entity)
 {
-    auto& ball = entity.getComponent<BilliardBall>();
+    const auto& ball = entity.getComponent<BilliardBall>();
 
     auto* body = ball.m_physicsBody;
     body->setUserPointer(nullptr);

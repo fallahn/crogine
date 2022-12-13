@@ -3200,7 +3200,7 @@ void OptionsState::updateToolTip(cro::Entity e, std::int32_t tipID)
 void OptionsState::updateActiveCallbacks()
 {
     auto group = m_scene.getSystem<cro::UISystem>()->getActiveGroup();
-    auto& entities = m_scene.getSystem<cro::CallbackSystem>()->getEntities();
+    const auto& entities = m_scene.getSystem<cro::CallbackSystem>()->getEntities();
     for (auto entity : entities)
     {
         if (entity.hasComponent<cro::UIInput>())

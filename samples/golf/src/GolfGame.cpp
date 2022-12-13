@@ -90,7 +90,7 @@ namespace
         std::string description;
         std::string toolTip;
 
-        ShaderDescription(const char* frag, std::string desc, std::string tip)
+        ShaderDescription(const char* frag, const std::string& desc, const std::string& tip)
             : fragmentString(frag), description(desc), toolTip(tip) {}
     };
 

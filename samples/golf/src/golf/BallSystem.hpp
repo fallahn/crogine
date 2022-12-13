@@ -84,7 +84,7 @@ class BallSystem final : public cro::System
 public:
     //don't try and create debug drawer on server instances
     //there's no OpenGL context on the server thread.
-    BallSystem(cro::MessageBus&, bool debug = false);
+    explicit BallSystem(cro::MessageBus&, bool debug = false);
     ~BallSystem();
 
     BallSystem(const BallSystem&) = delete;

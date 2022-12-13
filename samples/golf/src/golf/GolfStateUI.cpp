@@ -1407,7 +1407,7 @@ void GolfState::createScoreboard()
         steps = 0; //this is a reference, don't delete it...
 
         //update the cropping
-        auto& ents = bgEnt.getComponent<cro::Callback>().getUserData<std::vector<cro::Entity>>();
+        const auto& ents = bgEnt.getComponent<cro::Callback>().getUserData<std::vector<cro::Entity>>();
         for (auto ent : ents)
         {
             auto crop = cro::Text::getLocalBounds(ent);
@@ -1476,14 +1476,14 @@ void GolfState::createScoreboard()
     static constexpr float IconSpacing = 14.f;
     for (const auto& c : m_sharedData.connectionData)
     {
-        for (auto i = 0u; i < c.playerCount; ++i)
+        for (auto j = 0u; j < c.playerCount; ++j)
         {
             entity = m_uiScene.createEntity();
             entity.addComponent<cro::Transform>().setPosition(iconPos);
             entity.addComponent<cro::Drawable2D>();
             entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("strength_meter");
             entity.addComponent<cro::SpriteAnimation>();
-            entity.addComponent<cro::Callback>().setUserData<std::pair<std::uint8_t, std::uint8_t>>(c.connectionID, i);
+            entity.addComponent<cro::Callback>().setUserData<std::pair<std::uint8_t, std::uint8_t>>(c.connectionID, j);
             entity.getComponent<cro::Callback>().function =
                 [&, bgEnt](cro::Entity e, float)
             {
