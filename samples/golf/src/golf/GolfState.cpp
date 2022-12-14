@@ -499,6 +499,15 @@ bool GolfState::handleEvent(const cro::Event& evt)
             msg->level = 19;
         }
             break;
+        case SDLK_KP_7:
+        {
+            auto* msg2 = cro::App::getInstance().getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
+            msg2->type = GolfEvent::BirdHit;
+            msg2->position = m_currentPlayer.position;
+            float rot = glm::eulerAngles(m_cameras[m_currentCamera].getComponent<cro::Transform>().getWorldRotation()).y;
+            msg2->travelDistance = rot;
+        }
+            break;
         case SDLK_KP_MULTIPLY:
             for (auto& d : ballDump)
             {
@@ -1144,8 +1153,9 @@ void GolfState::handleMessage(const cro::Message& msg)
                 auto* msg2 = cro::App::getInstance().getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
                 msg2->type = GolfEvent::BirdHit;
                 msg2->position = data.position;
-                auto dir = data.position - m_cameras[m_currentCamera].getComponent<cro::Transform>().getPosition();
-                msg2->travelDistance = std::atan2(dir.z, dir.x);
+
+                float rot = glm::eulerAngles(m_cameras[m_currentCamera].getComponent<cro::Transform>().getWorldRotation()).y;
+                msg2->travelDistance = rot;
             }
         }
     }
