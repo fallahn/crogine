@@ -103,7 +103,7 @@ namespace
             swapData.currentTime = std::min(SwapData::TransitionTime, swapData.currentTime + dt);
 
             pos.y = swapData.start + ((swapData.destination - swapData.start) * cro::Util::Easing::easeInOutQuint(swapData.currentTime / SwapData::TransitionTime));
-            pos.y = std::min(0.f, std::max(-MaxShrubOffset, pos.y));
+            pos.y = std::min(-TerrainLevel, std::max(-MaxShrubOffset, pos.y));
 
             e.getComponent<cro::Transform>().setPosition(pos);
 
@@ -482,7 +482,7 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
                     crowdDef.loadFromFile(vatFile.getModelPath(), true))
                 {
                     auto childEnt = scene.createEntity();
-                    childEnt.addComponent<cro::Transform>().setPosition({ MapSize.x / 2.f, -TerrainLevel, -static_cast<float>(MapSize.y) / 2.f });
+                    childEnt.addComponent<cro::Transform>().setPosition({ MapSize.x / 2.f, /*-TerrainLevel*/0.f, -static_cast<float>(MapSize.y) / 2.f });
                     crowdDef.createModel(childEnt);
 
                     //setup material
@@ -634,7 +634,7 @@ void TerrainBuilder::update(std::size_t holeIndex)
                 //update the billboard data
                 SwapData swapData;
                 swapData.start = m_billboardEntities[first].getComponent<cro::Transform>().getPosition().y;
-                swapData.destination = 0.f;
+                swapData.destination = -TerrainLevel;
                 swapData.currentTime = 0.f;
                 m_billboardEntities[first].getComponent<cro::BillboardCollection>().setBillboards(m_billboardBuffer);
                 m_billboardEntities[first].getComponent<cro::Callback>().setUserData<SwapData>(swapData);

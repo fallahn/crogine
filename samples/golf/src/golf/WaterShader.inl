@@ -191,6 +191,13 @@ uniform sampler2DArray u_depthMap;
         if(alpha < 0.1) discard;
 #if !defined(NO_DEPTH)
         //wave at edge/intersection
+
+        xy = gl_FragCoord.xy / u_pixelScale;
+
+//xy = vec2(v_worldPosition.x, -v_worldPosition.z) * 32.0;
+        x = int(mod(xy.x, MatrixSize));
+        y = int(mod(xy.y, MatrixSize));
+
         float depth = getDepth() * clamp(v_scale, 0.0, 1.0);
         depth = findClosest(x,y,pow(depth, 3.0));
         blendedColour += edgeWave * depth;
