@@ -835,7 +835,7 @@ void TerrainBuilder::threadFunc()
                         if (height > WaterLevel)
                         {
                             auto& bb = m_billboardBuffer.emplace_back(m_billboardTemplates[cro::Util::Random::value(BillboardID::Grass01, BillboardID::Grass02)]);
-                            bb.position = { x, height, -y };
+                            bb.position = { x, height - 0.02f, -y };
                             bb.size *= scale;
                         }
                     }
@@ -850,7 +850,7 @@ void TerrainBuilder::threadFunc()
                         {
                             float scale = static_cast<float>(cro::Util::Random::value(9, 16)) / 10.f;
 
-                            glm::mat4 tx = glm::translate(glm::mat4(1.f), { x, height, -y });
+                            glm::mat4 tx = glm::translate(glm::mat4(1.f), { x, height - 0.01f, -y });
                             tx = glm::rotate(tx, cro::Util::Random::value(-cro::Util::Const::PI, cro::Util::Const::PI), cro::Transform::Y_AXIS);
                             tx = glm::scale(tx, glm::vec3(scale));
                             m_instanceTransforms.push_back(tx);
@@ -870,7 +870,7 @@ void TerrainBuilder::threadFunc()
                         //check we're actually above water height
                         if (height > -(TerrainLevel - WaterLevel))
                         {
-                            glm::vec3 position(x, height, -y);
+                            glm::vec3 position(x, height - 0.01f, -y);
 
                             bool isNearProp = false;
                             for (auto v = position.z - 1; v < position.z + 2; ++v)
@@ -941,7 +941,7 @@ void TerrainBuilder::threadFunc()
 
                         if (height > -(TerrainLevel - WaterLevel))
                         {
-                            glm::vec3 position(x, height, -y);
+                            glm::vec3 position(x, height - 0.001f, -y);
 
                             if (!nearProp(position))
                             {
