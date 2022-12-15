@@ -844,7 +844,7 @@ void TerrainBuilder::threadFunc()
                         || terrain == TerrainID::Scrub)
                     {
                         float height = readHeightMap(static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(y));
-                        height = std::max(height, terrainHeight);
+                        height = std::max(height, terrainHeight + TerrainLevel);
 
                         if (height < 0.1f)
                         {
@@ -865,7 +865,7 @@ void TerrainBuilder::threadFunc()
                     {
                         //check if model mesh is higher than terrain
                         float height2 = readHeightMap(static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(y));
-                        height = std::max(height, height2);
+                        height = std::max(height + TerrainLevel, height2);
 
                         //check we're actually above water height
                         if (height > -(TerrainLevel - WaterLevel))
@@ -937,7 +937,7 @@ void TerrainBuilder::threadFunc()
                         /*&& height > 0.6f*/)
                     {
                         float height2 = readHeightMap(static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(y));
-                        height = std::max(height, height2);
+                        height = std::max(height + TerrainLevel, height2);
 
                         if (height > -(TerrainLevel - WaterLevel))
                         {
@@ -947,14 +947,14 @@ void TerrainBuilder::threadFunc()
                             {
                                 float scale = static_cast<float>(cro::Util::Random::value(13, 17)) / 10.f;
                                 auto& bb = m_billboardBuffer.emplace_back(m_billboardTemplates[cro::Util::Random::value(BillboardID::Flowers01, BillboardID::Bush02)]);
-                                bb.position = { x, height + 0.05f, -y };
+                                bb.position = { x, height - 0.05f, -y };
                                 bb.size *= scale;
                             }
                             else
                             {
                                 float scale = static_cast<float>(cro::Util::Random::value(14, 16)) / 10.f;
                                 auto& bb = m_billboardBuffer.emplace_back(m_billboardTemplates[cro::Util::Random::value(BillboardID::Grass01, BillboardID::Grass02)]);
-                                bb.position = { x, height, -y };
+                                bb.position = { x, height - 0.05f, -y };
                                 bb.size *= scale;
                             }
                         }
