@@ -356,6 +356,10 @@ void GolfGame::render()
 
 bool GolfGame::initialise()
 {
+    //do this first because if we quit early the preferences will otherwise get overwritten by defaults.
+    loadPreferences();
+    loadAvatars();
+
 #ifdef USE_GNS
     m_achievements = std::make_unique<SteamAchievements>(MessageID::AchievementMessage);
 #else
@@ -556,8 +560,8 @@ bool GolfGame::initialise()
     cro::AudioMixer::setLabel("Announcer", MixerChannel::Voice);
     cro::AudioMixer::setLabel("Vehicles", MixerChannel::Vehicles);
 
-    loadPreferences();
-    loadAvatars();
+    //loadPreferences();
+    //loadAvatars();
 
     m_sharedData.clientConnection.netClient.create(ConstVal::MaxClients);
     m_sharedData.sharedResources = std::make_unique<cro::ResourceCollection>();

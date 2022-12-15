@@ -231,13 +231,13 @@ void CameraFollowSystem::process(float dt)
                     && follower.id > m_closestCamera) //once we reach green don't go back until explicitly reset
                 {
                     currDist = dist;
-                    m_closestCamera = follower.id;
+                    //m_closestCamera = follower.id;
 
                     //special case to stop the overhead cam when on the green
-                    if (collider.terrain == TerrainID::Green &&
-                        m_closestCamera == CameraID::Sky)
+                    if (collider.terrain != TerrainID::Green ||
+                        follower.id == CameraID::Green)
                     {
-                        m_closestCamera = CameraID::Green;
+                        m_closestCamera = follower.id;
                     }
                 }
             }
