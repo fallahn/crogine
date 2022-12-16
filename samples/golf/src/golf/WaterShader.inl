@@ -173,7 +173,7 @@ uniform sampler2DArray u_depthMap;
 
         vec3 blendedColour = mix(reflectColour.rgb, WaterColour.rgb, fresnel);
 
-        float edgeWave = wave * 0.07;
+        float edgeWave = wave;
 
         //wave *= 0.2 * pow(reflectCoords.y, 4.0);
         wave *= 0.01 + (0.19 * pow(reflectCoords.y, 4.0));
@@ -194,12 +194,14 @@ uniform sampler2DArray u_depthMap;
 
         //xy = gl_FragCoord.xy / u_pixelScale;
 
-xy = vec2(v_worldPosition.x, -v_worldPosition.z) * 32.0;
+        xy = vec2(v_worldPosition.x, -v_worldPosition.z) * 32.0;
         x = int(mod(xy.x, MatrixSize));
         y = int(mod(xy.y, MatrixSize));
 
         float depth = getDepth() * clamp(v_scale, 0.0, 1.0);
         depth *= findClosest(x,y,pow(depth, 3.0));
+        
+        edgeWave *= 0.07;
         blendedColour += edgeWave * depth;
         blendedColour += depth * 0.18;
 #endif
