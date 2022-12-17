@@ -126,7 +126,7 @@ void GolfParticleDirector::handleMessage(const cro::Message& msg)
         }
         else if (data.type == GolfEvent::BirdHit)
         {
-            getEnt(ParticleID::Bird, data.position).getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, data.travelDistance - (cro::Util::Const::PI / 2.f));
+            getEnt(ParticleID::Bird, data.position).getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, data.travelDistance + (cro::Util::Const::PI / 2.f));
         }
     }
         break;

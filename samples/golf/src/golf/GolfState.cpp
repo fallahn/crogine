@@ -5127,7 +5127,11 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo)
             cmd.targetFlags = CommandID::Hole;
             cmd.action = [&](cro::Entity en, float)
             {
-                en.getComponent<cro::Transform>().setPosition(m_holeData[m_currentHole].pin + glm::vec3(0.f, 0.004f, 0.f));
+                auto pos = m_holeData[m_currentHole].pin;
+                auto terrain = m_collisionMesh.getTerrain(pos);
+                pos.y = terrain.height + 0.0001f;
+
+                en.getComponent<cro::Transform>().setPosition(pos);
             };
             m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 

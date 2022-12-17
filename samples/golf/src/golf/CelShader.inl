@@ -615,5 +615,7 @@ static const std::string CelFragmentShader = R"(
 #endif
 #if defined(TERRAIN_CLIP)
     FRAG_OUT.rgb = mix(vec3(0.2, 0.3059, 0.6118), FRAG_OUT.rgb, smoothstep(WaterLevel - 0.001, WaterLevel + 0.001, v_worldPosition.y));
+
+//if(v_worldPosition.y < WaterLevel) discard;//don't do this, it reveals the hidden trees.
 #endif
     })";
