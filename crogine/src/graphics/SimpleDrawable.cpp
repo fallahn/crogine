@@ -453,7 +453,7 @@ void SimpleDrawable::updateVAO(const Shader& shader)
         //pos
         if (attribs[Mesh::Position] > -1)
         {
-            glCheck(glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, stride, (void*)0));
+            glCheck(glVertexAttribPointer(attribs[Mesh::Position], 2, GL_FLOAT, GL_FALSE, stride, (void*)0));
             glCheck(glEnableVertexAttribArray(0));
         }
         //else warn?
@@ -461,14 +461,14 @@ void SimpleDrawable::updateVAO(const Shader& shader)
         //uv
         if (attribs[Mesh::UV0] > -1)
         {
-            glCheck(glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, stride, (void*)(2 * sizeof(float))));
+            glCheck(glVertexAttribPointer(attribs[Mesh::UV0], 2, GL_FLOAT, GL_FALSE, stride, (void*)(2 * sizeof(float))));
             glCheck(glEnableVertexAttribArray(1));
         }
 
         //colour
         if (attribs[Mesh::Colour] > -1)
         {
-            glCheck(glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, stride, (void*)(4 * sizeof(float))));
+            glCheck(glVertexAttribPointer(attribs[Mesh::Colour], 4, GL_FLOAT, GL_FALSE, stride, (void*)(4 * sizeof(float))));
             glCheck(glEnableVertexAttribArray(2));
         }
         glCheck(glBindVertexArray(0));
