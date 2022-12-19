@@ -4223,7 +4223,8 @@ void GolfState::spawnBall(const ActorInfo& info)
         else
         {
             //only do this when active player.
-            if (ballEnt.getComponent<ClientCollider>().state != std::uint8_t(Ball::State::Idle))
+            if (ballEnt.getComponent<ClientCollider>().state != std::uint8_t(Ball::State::Idle)
+                || ballEnt.getComponent<cro::Transform>().getPosition() == m_holeData[m_currentHole].tee)
             {
                 auto ballPos = ballEnt.getComponent<cro::Transform>().getPosition();
                 auto ballHeight = ballPos.y;
@@ -4237,7 +4238,7 @@ void GolfState::spawnBall(const ActorInfo& info)
                     auto height = m_collisionMesh.getTerrain(rayPoint).height;
                     c.setAlpha(smoothstep(0.2f, 0.8f, (ballPos.y - height) / 0.25f));
                     
-                    ballPos.y = 0.003f + (height - ballHeight);
+                    ballPos.y = 0.001f + (height - ballHeight);
                 }
                 e.getComponent<cro::Transform>().setPosition({ 0.f, ballPos.y, 0.f });
                 e.getComponent<cro::Model>().setHidden((m_currentPlayer.terrain == TerrainID::Green) || ballEnt.getComponent<cro::Model>().isHidden());
@@ -5664,6 +5665,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
 
     m_gameScene.setSystemActive<CameraFollowSystem>(false);
 
+    
 
     //see where the player is and move the sky cam if possible
     //else set it to the default position
