@@ -125,6 +125,10 @@ bool Window::create(std::uint32_t width, std::uint32_t height, const std::string
             Logger::log("Unable to create requested context version", Logger::Type::Error, Logger::Output::All);
             Logger::log("Returned version was: " + std::to_string(maj) + "." + std::to_string(min), Logger::Type::Error, cro::Logger::Output::All);
 
+            std::stringstream ss;
+            ss << "Hardware Support for OpenGL " << RequestGLMajor << "." << RequestGLMinor << " not found.";
+            cro::FileSystem::showMessageBox("Error", ss.str());
+
             return false; //because our shaders will fail to compile.
         }
         LOG("Created OpenGL context version: " + std::to_string(maj) + "." + std::to_string(min), Logger::Type::Info);
