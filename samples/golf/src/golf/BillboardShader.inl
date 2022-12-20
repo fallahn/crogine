@@ -138,7 +138,7 @@ static const std::string BillboardVertexShader = R"(
         //wind from billboard vertex colour (above)
         position += windDir;
 
-        v_colour.rgb = vec3(1.0);
+        v_colour = vec4(1.0);
 
 
         //snap vert pos to nearest fragment for retro wobble
