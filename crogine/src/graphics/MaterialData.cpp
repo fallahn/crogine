@@ -48,7 +48,7 @@ TextureID& TextureID::operator = (std::uint32_t id)
 
 TextureID& TextureID::operator = (const Texture& t)
 {
-    CRO_ASSERT(isArray, "Already assigned to array texture.");
+    CRO_ASSERT(!isArray, "Already assigned to array texture.");
     textureID = t.getGLHandle();
     return *this;
 }
