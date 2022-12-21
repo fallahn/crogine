@@ -175,7 +175,7 @@ void Texture::create(std::uint32_t width, std::uint32_t height, ImageFormat::Typ
 
 bool Texture::loadFromFile(const std::string& filePath, bool createMipMaps)
 {
-    //TODO leaving tis here because one day I might
+    //TODO leaving this here because one day I might
     //decide to fix loading textures as floating point
     
     //auto path = FileSystem::getResourcePath() + filePath;

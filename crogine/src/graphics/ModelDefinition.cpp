@@ -121,27 +121,54 @@ bool ModelDefinition::loadFromFile(const std::string& path, bool instanced, bool
         return false;
     }
 
-    const std::string& meshValue = meshPath->getValue<std::string>();
+    std::string meshValue = meshPath->getValue<std::string>();
+    std::replace(meshValue.begin(), meshValue.end(), '\\', '/');
     auto ext = FileSystem::getFileExtension(meshValue);
     std::unique_ptr<MeshBuilder> meshBuilder;
 
     bool lockRotation = false;
     bool lockScale = false;
 
+    //if there's an empty working path this checks to see if we have a model file
+    //in the same dir as the definition without a full path
+    auto updateLocalPath = [&](std::string& filePath) 
+    {
+        auto pos = filePath.find_last_of('/');
+        if (pos == std::string::npos)
+        {
+            pos = path.find_last_of('/');
+            if (pos != std::string::npos)
+            {
+                filePath = path.substr(0, path.find_last_of('/')) + "/" + filePath;
+            }
+            else
+            {
+                filePath = m_workingDir + filePath;
+            }
+        }
+        else
+        {
+            filePath = m_workingDir + filePath;
+        }
+    };
+
     if (ext == ".cmf")
     {
         //we have a static mesh
-        meshBuilder = std::make_unique<StaticMeshBuilder>(m_workingDir + meshValue);
+        updateLocalPath(meshValue);
+        meshBuilder = std::make_unique<StaticMeshBuilder>(meshValue);
     }
     else if (ext == ".cmb")
     {
         //binary model
-        meshBuilder = std::make_unique<BinaryMeshBuilder>(m_workingDir + meshValue);
+        updateLocalPath(meshValue);
+        meshBuilder = std::make_unique<BinaryMeshBuilder>(meshValue);
     }
     else if (ext == ".iqm")
     {
         //use iqm loader
-        meshBuilder = std::make_unique<IqmBuilder>(m_workingDir + meshValue);
+        updateLocalPath(meshValue);
+        meshBuilder = std::make_unique<IqmBuilder>(meshValue);
     }
     else if (Util::String::toLower(meshValue) == "sphere")
     {
@@ -514,7 +541,10 @@ bool ModelDefinition::loadFromFile(const std::string& path, bool instanced, bool
             const auto& name = Util::String::toLower(p.getName());
             if (name == "diffuse")
             {
-                auto& tex = m_resources.textures.get(m_workingDir + p.getValue<std::string>(), createMipmaps);
+                auto filepath = p.getValue<std::string>();
+                updateLocalPath(filepath);
+
+                auto& tex = m_resources.textures.get(filepath, createMipmaps);
                 tex.setSmooth(smoothTextures);
                 tex.setRepeated(repeatTextures);
                 material.setProperty("u_diffuseMap", tex);
@@ -523,21 +553,30 @@ bool ModelDefinition::loadFromFile(const std::string& path, bool instanced, bool
             }
             else if (name == "mask")
             {
-                auto& tex = m_resources.textures.get(m_workingDir + p.getValue<std::string>());
+                auto filepath = p.getValue<std::string>();
+                updateLocalPath(filepath);
+
+                auto& tex = m_resources.textures.get(filepath, createMipmaps);
                 tex.setSmooth(smoothTextures);
                 tex.setRepeated(repeatTextures);
                 material.setProperty("u_maskMap", tex);
             }
             else if (name == "normal")
             {
-                auto& tex = m_resources.textures.get(m_workingDir + p.getValue<std::string>());
+                auto filepath = p.getValue<std::string>();
+                updateLocalPath(filepath);
+
+                auto& tex = m_resources.textures.get(filepath, createMipmaps);
                 tex.setSmooth(smoothTextures);
                 tex.setRepeated(repeatTextures);
                 material.setProperty("u_normalMap", tex);
             }
             else if (name == "lightmap")
             {
-                auto& tex = m_resources.textures.get(m_workingDir + p.getValue<std::string>());
+                auto filepath = p.getValue<std::string>();
+                updateLocalPath(filepath);
+
+                auto& tex = m_resources.textures.get(filepath, createMipmaps);
                 tex.setSmooth(true);
                 material.setProperty("u_lightMap", tex);
             }
