@@ -49,7 +49,7 @@ namespace cro
             \param amplitude Amplitude of generated sine wave
             \param updateRate Rate at which the wave table is likely to be stepped through, normally
             the same rate at which the framework is updated (60hz)
-            Sinewaves are useful for a variety of things, including dictating the motion of animated
+            Sine waves are useful for a variety of things, including dictating the motion of animated
             objects. Precalculating a wavetable is more efficient than repeatedly calling sin()
             */
             static inline std::vector<float> sine(float frequency, float amplitude = 1.f, float updateRate = 60.f)

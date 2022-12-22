@@ -44,7 +44,7 @@ namespace cro
     \brief Particle system.
     Updates and renders all particle emitters in the scene.
     Particle systems are renderable, but do write to the depth buffer.
-    They do, however, read from the the depth buffer, and so should be
+    They do, however, read from the depth buffer, and so should be
     added to a Scene after any other render systems such as the
     ModelRenderer. This allows for correct blending of alpha transparent
     particle systems.

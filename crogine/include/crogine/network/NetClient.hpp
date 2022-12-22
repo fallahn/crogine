@@ -45,7 +45,7 @@ struct _ENetHost;
 namespace cro
 {
     /*!
-    \brief Creates a clientside host which can be used to create
+    \brief Creates a client side host which can be used to create
     a peer connected to a NetHost server.
     */
     class CRO_EXPORT_API NetClient final

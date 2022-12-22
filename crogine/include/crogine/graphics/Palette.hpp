@@ -69,7 +69,7 @@ namespace cro
         Palette();
 
         /*!
-        \brief Cosntructor
+        \brief Constructor
         \param path Path to ase file to attempt to load
         Constructs a palette and immediately tries to load the ase
         file at the given path. If loading fails an error is logged.

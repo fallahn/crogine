@@ -95,7 +95,7 @@ namespace cro
         \brief Draws the quad to the active target
         \param parentTransform An option transform with
         which the Quad's transform is multiplied, to create
-        scene-graph like hierachies
+        scene-graph like hierarchies
         */
         void draw(const glm::mat4& parentTransform = glm::mat4(1.f)) override;
 

@@ -50,7 +50,7 @@ namespace cro
     AABB) is then left to the user/custom Systems, including ensuring the
     data given correctly matches the requested layout.
 
-    Buffers are also drawn using index arrays so at least 1 submesh needs to
+    Buffers are also drawn using index arrays so at least 1 sub-mesh needs to
     be requested and index data updated with the accompanying vertex data.
     Index arrays use unsigned integer format.
 
@@ -65,7 +65,7 @@ namespace cro
         /*!
         \brief Constructor
         \param flags A bitfield of VertexProperty flags which define the vertex attributes of the created buffer
-        \param submeshCount At least one submesh should be requested
+        \param submeshCount At least one sub-mesh should be requested
         \param primitiveType OpenGL primitive type to use when drawing, eg GL_TRIANGLE_STRIP
         */
         DynamicMeshBuilder(std::uint32_t flags, std::uint8_t submeshCount, std::uint32_t primitiveType);

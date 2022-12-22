@@ -105,7 +105,7 @@ namespace cro
         const Texture& getTexture(std::uint32_t charSize) const;
 
         /*!
-        \brief Returns the lineheight 
+        \brief Returns the line height 
         */
         float getLineHeight(std::uint32_t charSize) const;
 

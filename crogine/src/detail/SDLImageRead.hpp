@@ -33,6 +33,8 @@ source distribution.
 
 #include <SDL_rwops.h>
 
+#include <cstdint>
+
 //callbacks to all STB image to read/write via SDL_RWops
 
 struct STBIMG_stbio_RWops;

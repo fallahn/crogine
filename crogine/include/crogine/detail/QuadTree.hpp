@@ -42,7 +42,7 @@ namespace cro::Detail
     
     Quad trees are by their nature 2 dimensional, and work best with
     mostly static geometry. This implementation is designed to be used
-    with enities in a Scene which make up a menu or UI for example,
+    with entities in a Scene which make up a menu or UI for example,
     where the members are mostly static and can be quickly culled when
     rendering. For more dynamic scenes consider using the DynamicTreeSystem.
     \see DynamicTreeSystem
@@ -83,7 +83,7 @@ namespace cro::Detail
         \returns vector of entities whose AABB are contained within
         or intersect the given query area.
         Useful for returning entities whose position currently
-        interects the active render area (ie 2D frustum culling)
+        intersects the active render area (ie 2D frustum culling)
         */
         std::vector<Entity> query(FloatRect area) const;
 

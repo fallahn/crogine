@@ -38,7 +38,7 @@ namespace cro
 {
     /*!
     \brief Allows registering GUI controls with the default output
-    window, or registering custom windows using the Nim namespace.
+    window, or registering custom windows.
     Classes which inherit this interface may register controls with
     the imgui renderer. This is usually used for debugging output or
     when creating tooling.

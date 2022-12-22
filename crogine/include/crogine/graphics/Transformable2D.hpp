@@ -77,7 +77,7 @@ namespace cro
 
         /*!
         \brief Set the scale of the transform
-        \param scale A vec2 comtinaing the scale in the x and y axis
+        \param scale A vec2 containing the scale in the x and y axis
         */
         void setScale(glm::vec2 scale);
 

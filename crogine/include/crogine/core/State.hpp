@@ -49,7 +49,7 @@ namespace cro
     /*!
     \brief Abstract base class for states.
 
-    States, when used in conjustion with the state stack, are used
+    States, when used in conjunction with the state stack, are used
     to encapsulate game states, such as menus or pausing mode.
     Concrete states should provide a unique ID using the StateID type.
     */
@@ -73,7 +73,7 @@ namespace cro
         /*!
         \brief Constructor
 
-        \param StateStack Instance of th state state to which this state will belong
+        \param StateStack Instance of the state to which this state will belong
         \param Context Copy of the current application's Context
         */
         State(StateStack&, Context);
@@ -95,7 +95,7 @@ namespace cro
 
         /*!
         \brief Receives system messages handed down from the StateStack.
-        All states receive all messages regardlessly.
+        All states receive all messages regardless.
         */
         virtual void handleMessage(const cro::Message&) = 0;
 

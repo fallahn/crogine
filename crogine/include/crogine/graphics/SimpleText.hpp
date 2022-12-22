@@ -56,7 +56,7 @@ namespace cro
         SimpleText();
 
         /*!
-        \brief Construxt a SimpleText with the given Font.
+        \brief Construct a SimpleText with the given Font.
         */
         SimpleText(const Font& font);
 
@@ -74,7 +74,7 @@ namespace cro
 
         /*!
         \brief Sets the vertical spacing between lines of text
-        \param spacing By default the spacingis 0. Negative values
+        \param spacing By default the spacing is 0. Negative values
         can cause lines to overlap or event appear in reverse order.
         */
         void setVerticalSpacing(float spacing);
@@ -106,7 +106,7 @@ namespace cro
         \brief Set the thickness of the text outline
         Negative values will not have the expected result.
         The outline colour must not be transparent and a value
-        greater than zero must be set in orderfor outlines to appear
+        greater than zero must be set in order for outlines to appear
         \param outlineThickness The thickness, in pixels, of
         the outline to render
         */
@@ -121,7 +121,7 @@ namespace cro
 
         /*!
         \brief Sets the shadow offset value.
-        Shadows are only rendered if the the Text has no outlining
+        Shadows are only rendered if the Text has no outlining
         \param offset A vec2 containing the offset in X/Y direction
         \see setShadowColour()
         */
@@ -144,7 +144,7 @@ namespace cro
             };
         };
         /*!
-        \brief Sets the justification of the text to left, right or center
+        \brief Sets the justification of the text to left, right or centre
         Defaults to left
         */
         void setAlignment(std::int32_t algnment);
@@ -221,7 +221,7 @@ namespace cro
         \brief Draw the text to the active buffer
         \param parentTransform An optional transform with which
         the Text's transform is multiplied to create a scene-graph
-        like hierachy
+        like hierarchy
         */
         void draw(const glm::mat4& parentTransform = glm::mat4(1.f)) override;
 

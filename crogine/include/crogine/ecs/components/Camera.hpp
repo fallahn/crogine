@@ -100,7 +100,7 @@ namespace cro
     \brief Represents a camera within the scene.
     Use Scene::setActiveCamera() to use an entity with
     a camera component as the current view. The default
-    output is a letterboxed perspective camera with a 16:9
+    output is a letter-boxed perspective camera with a 16:9
     ratio. This can easily be overridden with a custom
     projection matrix and viewport - usually set via a
     callback applied to Camera::resizeCallback
@@ -320,7 +320,7 @@ namespace cro
 
 
         /*
-        \brief Returns a vector of frustum corners arranged as a set of frusta
+        \brief Returns a vector of frustum corners arranged as a set of frustae
         created by splitting the camera's main frustum.
         This is used when rendering shadow map cascades, the number of which are specified
         when calling setPerspective() or setOrthographic(). Before splitting the
@@ -335,7 +335,7 @@ namespace cro
         \brief Viewport.
         This is in normalised (0 - 1) coordinates to describe which part
         of the window this camera should render to. By default it is 0, 0, 1, 1
-        which covers the entire screen. Changing this is useful when letterboxing
+        which covers the entire screen. Changing this is useful when letter-boxing
         the output to maintain a fixed aspect ratio, or for rendering sub-areas of
         the screen such as a minimap or split-screen multiplayer.
         */
@@ -345,7 +345,7 @@ namespace cro
         /*!
         \brief Resize callback.
         Optional callback automatically called by the camera's Scene if the 
-        main window is resized. Useful for resizing viewports or letterboxing
+        main window is resized. Useful for resizing viewports or letter-boxing
         2D views when the current window has changed aspect ratio. The callback
         takes the current camera as a parameter and returns void
         */
@@ -357,7 +357,7 @@ namespace cro
         this Camera component. Setting this to false on Camera components
         in a Scene which are currently not used (eg when switching between
         views) can improve performance as the Camera's draw list / frustum
-        culling will not be updated unnecesarily.
+        culling will not be updated unnecessarily.
         */
         bool active = true;
 
@@ -435,7 +435,7 @@ namespace cro
         \brief Sets the maximum distance from this camera for
         rendering shadows.
         This is clamped to the camera's far plane distance. The
-        value must be greater than the current near plane. This paramter
+        value must be greater than the current near plane. This parameter
         is usually adjusted along with setShadowExpansion()
         \param distance The distance in world units from the camera
         to which to clamp shadow rendering.
@@ -608,8 +608,8 @@ namespace cro
 
 /*!
 \brief Comparison operator
-Cameras are only moveable, so it only makes sense that comparing cameras returns whether
-or not we're comparing a reference to the same instance, particulary in sort/find cases
+Cameras are only moveable (because of the buffer textures), so it only makes sense that comparing cameras returns whether
+or not we're comparing a reference to the same instance, particularly in sort/find cases
 */
 
 static inline bool operator == (const cro::Camera& lhs, const cro::Camera& rhs)

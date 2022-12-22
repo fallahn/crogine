@@ -97,7 +97,7 @@ namespace cro
 
         /*!
         \brief Event packet.
-        Contains packet data recieved by PacketRecieved event.
+        Contains packet data received by PacketRecieved event.
         Not valid for other event types.
         */
         struct CRO_EXPORT_API Packet final
@@ -116,7 +116,7 @@ namespace cro
             std::uint8_t getID() const;
 
             /*!
-            \brief Used to retreive the data as a specific type.
+            \brief Used to retrieve the data as a specific type.
             Trying to read data as an incorrect type will lead to
             undefined behaviour.
             */
@@ -155,7 +155,7 @@ namespace cro
     */
     enum class NetFlag
     {
-        Reliable = 0x1, //! <packet must be received by the remote connection, and resend attemps are made until delivered
+        Reliable = 0x1, //! <packet must be received by the remote connection, and resend attempts are made until delivered
         Unsequenced = 0x2, //! <packet will not be sequenced with other packets. Not supported on reliable packets
         Unreliable = 0x4 //! <packet will be fragments and sent unreliably if it exceeds MTU
     };

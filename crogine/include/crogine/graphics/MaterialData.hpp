@@ -201,14 +201,14 @@ namespace cro
             /*!
             \brief Sets a 3 component vector uniform
             \param name String containing the name of the uniform
-            \param value Value of the unform
+            \param value Value of the uniform
             */
             void setProperty(const std::string& name, glm::vec3 value);
             
             /*!
             \brief Sets a 4 component vector uniform
             \param name String containing the name of the uniform
-            \param value Value of the unform
+            \param value Value of the uniform
             */
             void setProperty(const std::string& name, glm::vec4 value);
             

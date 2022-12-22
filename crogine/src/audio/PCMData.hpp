@@ -29,7 +29,7 @@ source distribution.
 
 #pragma once
 
-#include <crogine/detail/Types.hpp>
+#include <cstdint>
 
 namespace cro
 {

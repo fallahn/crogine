@@ -35,7 +35,7 @@ source distribution.
 namespace cro
 {
     /*!
-    \brief Post process simulating chromatic abberation
+    \brief Post process simulating chromatic aberration
     */
     class CRO_EXPORT_API PostChromeAB final : public PostProcess
     {

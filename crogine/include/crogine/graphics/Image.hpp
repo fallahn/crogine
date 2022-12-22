@@ -76,7 +76,7 @@ namespace cro
         bool loadFromFile(const std::string& path);
 
         /*!
-        \brief Attemps to load an image from raw pixels in memory.
+        \brief Attempts to load an image from raw pixels in memory.
         Pixels must be 8-bit and in RGB or RGBA format
         \param px Pointer to array of pixels in memory
         \param width Width of image to create. On mobile platforms this should be pow2

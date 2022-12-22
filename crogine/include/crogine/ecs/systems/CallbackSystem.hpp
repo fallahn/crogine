@@ -43,7 +43,7 @@ namespace cro
     behaviour. Overuse of this system is not recommended, however, as there
     is a certain amount of overhead in calling the behavioural functions,
     so this system should be reserved for specific cases where it makes sense
-    or for rapid prototying of ideas that may or may not be expanded to a full
+    or for rapid prototyping of ideas that may or may not be expanded to a full
     system.
     */
     class CRO_EXPORT_API CallbackSystem final : public cro::System

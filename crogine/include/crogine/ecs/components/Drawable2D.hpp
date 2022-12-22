@@ -82,7 +82,7 @@ namespace cro
         although custom vertex shaders much match the attribute layout
         of Vertex2D. Setting this to nullptr returns the drawable
         to the default shader. Note that this also resets any
-        bound uniform values so unforms must be set after setting a
+        bound uniform values so uniforms must be set after setting a
         new shader for the drawable
         */
         void setShader(Shader*);
@@ -210,7 +210,7 @@ namespace cro
         \brief Set filter flags for rendering.
         Render flags allow certain drawables to be omitted from a drawing
         pass by the render system, by doing a bitwise AND comparison with
-        the render flags of the active camera. This is useful for multipass
+        the render flags of the active camera. This is useful for multi-pass
         effects which require rendering different entities to different 
         render buffers. For example lighting objects may be flagged as such
         so that when the lighting only flag is active on the render system 

@@ -59,7 +59,7 @@ namespace cro
 
     The BillboardCollection components defines the properties of the billboards
     associated with a single model/mesh. As such entities with a BillboardCollection
-    also require a Model component created with a DynamicMeshBuilder that was initialied
+    also require a Model component created with a DynamicMeshBuilder that was initialised
     with VertexProperty flags for Position, Normal and Colour. The Model component also
     requires a single Material created with the built-in Billboard type shader.
 

@@ -81,7 +81,7 @@ namespace cro
             /*!
             \brief Returns a pair of floats containing the near and far plane values of the given projection matrix
             \param projMat Projection matrix
-            \returns std::pair<float, float> Near nad Far plane values
+            \returns std::pair<float, float> Near and Far plane values
             */
             static inline std::pair<float, float> getNearFar(glm::mat4 projMat)
             {

@@ -66,7 +66,7 @@ namespace cro
         Skeleton getSkeleton() const override { return m_skeleton; }
 
         /*!
-        \brief Implenets the UID based on the file path given in the constructor
+        \brief Implements the UID based on the file path given in the constructor
         */
         std::size_t getUID() const override;
 

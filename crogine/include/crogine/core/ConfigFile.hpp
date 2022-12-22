@@ -191,7 +191,7 @@ namespace cro
         \brief Adds an object with the given name and optional id to this object
         and returns a pointer to it.
         WARNING this will likely invalidate any existing pointers to objects
-        retreived with findObject()
+        retrieved with findObject()
         */
         ConfigObject* addObject(const std::string& name, const std::string& id = "");
 

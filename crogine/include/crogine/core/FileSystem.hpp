@@ -59,7 +59,7 @@ namespace cro
         */
         static std::string getFileName(const std::string& path);
         /*!
-        \brief Attempts to return the path of a given filepath without
+        \brief Attempts to return the path of a given file path without
         the file name, including trailing separator char.
         */
         static std::string getFilePath(const std::string& path);
@@ -132,17 +132,17 @@ namespace cro
         static std::string getConfigDirectory(const std::string& appName);
 
         /*!
-        \brief Show a native file dialog to open a file
+        \brief Show a native file dialogue to open a file
         \param defaultDir Default path *and file* to open (optional)
-        \param filter File extention filter in the format "png,jpg,bmp"
+        \param filter File extension filter in the format "png,jpg,bmp"
         \param selectMultiple If true then allows selecting multiple files
         \returns path the path selected by the user
         */
         static std::string openFileDialogue(const std::string& defaultDir = "", const std::string& filter = "", bool selectMultiple = false);
 
         /*!
-        \brief Show a native file dialog to open a folder
-        \param defaultPath String cntaining the default path to browse to
+        \brief Show a native file dialogue to open a folder
+        \param defaultPath String containing the default path to browse to
         \returns path the path selected by the user
         */
         static std::string openFolderDialogue(const std::string& path = "");
@@ -197,7 +197,7 @@ namespace cro
         /*!
         \brief Shows a notification in the tray area.
         \param title String containing title
-        \param message String containing messge to display
+        \param message String containing message to display
         \param iconType Type of icon to display. Defaults to Info
         */
         static void showNotification(const std::string& title, const std::string& message, IconType = IconType::Info);

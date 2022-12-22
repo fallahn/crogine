@@ -152,7 +152,7 @@ namespace cro
         /*!
         \brief Set the window position in desktop coordinates.
         \param x Horizontal position to place the window. A negative number
-        will centre the window horizonally
+        will centre the window horizontally
         \param y Vertical position to place the window. A negative number
         will centre the window vertically
         */
@@ -222,7 +222,7 @@ namespace cro
 
         /*!
         \brief Returns a pointer to the active cursor, or nullptr
-        if no specific currsor has been set.
+        if no specific cursor has been set.
         */
         const Cursor* getCursor() const;
 
@@ -233,7 +233,7 @@ namespace cro
         void setWindowedSize(glm::uvec2 size);
 
         /*!
-        \brief Returns the currnt windowed size used when returning
+        \brief Returns the current windowed size used when returning
         from full screen mode
         */
         glm::uvec2 getWindowedSize() const;

@@ -82,7 +82,7 @@ namespace cro
 
         /*!
         \brief Sets the vertical spacing between lines of text
-        \param spacing By default the spacingis 0. Negative values
+        \param spacing By default the spacing is 0. Negative values
         can cause lines to overlap or even appear in reverse order.
         */
         void setVerticalSpacing(float spacing);
@@ -114,7 +114,7 @@ namespace cro
         \brief Set the thickness of the text outline
         Negative values will not have the expected result.
         The outline colour must not be transparent and a value
-        greater than zero must be set in orderfor outlines to appear
+        greater than zero must be set in order for outlines to appear
         \param outlineThickness The thickness, in pixels, of
         the outline to render
         */
@@ -129,7 +129,7 @@ namespace cro
 
         /*!
         \brief Sets the shadow offset value.
-        Shadows are only rendered if the the Text has no outlining
+        Shadows are only rendered if the Text has no outlining
         \param offset A vec2 containing the offset in X/Y direction
         \see setShadowColour()
         */

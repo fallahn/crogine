@@ -42,7 +42,7 @@ namespace cro
 
     /*
     \brief Deferred rendering system.
-    This sytem renders PBR via a deferred system using the MRT (multi-render target)
+    This system renders PBR via a deferred system using the MRT (multi-render target)
     component attached to an active Camera. Deferred rendering supports PBR materials
     as well as forward-rendering (semi)transparent VertexLit materials using order
     independent depth sorting. NON-PBR MATERIALS WILL ALWAYS APPEAR SLIGHTY TRANSPARENT.
@@ -82,7 +82,7 @@ namespace cro
         struct SortData final
         {
             Entity entity; //model entity
-            std::vector<std::int32_t> materialIDs; //index into the model submesh array
+            std::vector<std::int32_t> materialIDs; //index into the model sub-mesh array
             float distanceFromCamera = 0.f; //sort criteria
         };
 

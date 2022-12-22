@@ -90,7 +90,7 @@ namespace cro::Util::String
     }
 
     /*!
-    \brief Converts the given string to lowercase
+    \brief Converts the given string to lower case
     */
     static inline std::string toLower(const std::string& str)
     {

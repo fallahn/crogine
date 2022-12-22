@@ -82,7 +82,7 @@ namespace cro
         \brief Draws the array to the active target
         \param parentTransform An optional transform which
         is multiplied by the VertexArray's transform to allow
-        creating scene-graph like hierachies.
+        creating scene-graph like hierarchies.
         */
         void draw(const glm::mat4& parentTransform = glm::mat4(1.f)) override;
 

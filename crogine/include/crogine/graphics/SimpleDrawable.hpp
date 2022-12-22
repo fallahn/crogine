@@ -109,7 +109,7 @@ namespace cro
         deriving class's transform to the protected
         drawGeometry() function
         \param parentTransform An optional transform for creating
-        parented scene-graph like hierachies
+        parented scene-graph like hierarchies
         */
         virtual void draw(const glm::mat4&) = 0;
 

@@ -53,9 +53,9 @@ namespace cro
         /*!
         Command functions are registered with their associated
         string, and executed when that string is entered into the
-        consle window. Any further characters entered after the
-        command are passed into the command function as a paramter.
-        If this is a list of paramters it is up to the command
+        console window. Any further characters entered after the
+        command are passed into the command function as a parameter.
+        If this is a list of parameters it is up to the command
         function implementation to properly parse the given string.
         */
         using Command = std::function<void(const std::string&)>;
@@ -72,7 +72,7 @@ namespace cro
 
         /*!
         \brief Executes the given command line.
-        Allows for programatically executing arbitrary commands
+        Allows for programmatically executing arbitrary commands
         */
         static void doCommand(const std::string&);
 

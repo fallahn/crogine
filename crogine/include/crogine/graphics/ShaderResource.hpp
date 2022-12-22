@@ -114,7 +114,7 @@ namespace cro
         /*!
         \brief Preloads one of the built in shaders.
         \param type BuiltIn type for shader. Vertex lit supports normal mapping, mask mapping and skinning
-        and is lit by in-scene entities which posess lights.
+        and is lit by in-scene entities which possess lights.
         \param flags A combination of BuiltInFlags bitwise ORd together indicating which shader features are requested
         \returns std::int32_t representing the ID of the preloaded shader if it succeeds, else returns -1. The returned ID
         can be used with get() to return an instance of the shader.

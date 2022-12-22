@@ -48,7 +48,7 @@ namespace cro
 
     /*!
     \brief Base class for systems.
-    Systems should all derive from this base class, and instanciated before any entities
+    Systems should all derive from this base class, and instantiated before any entities
     are created. Concrete system types should declare a list component types via requireComponent()
     on construction, so that only entities with the relevant components are added to the system.
     */
@@ -106,7 +106,7 @@ namespace cro
 
         /*!
         \brief Returns true if the system is currently active.
-        Systems can be activeated and deactivated with Scene::setSystemActive()
+        Systems can be activated and deactivated with Scene::setSystemActive()
         */
         bool isActive() const { return m_active; }
 

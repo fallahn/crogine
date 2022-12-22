@@ -139,7 +139,7 @@ namespace cro
         \brief Saves the texture to a png file if it is a valid texture.
         If the texture contains no data, or create() had not been called
         then this function does nothing.
-        \param path A string containg a path to same the texture to.
+        \param path A string containing a path to save the texture to.
         \returns true if successful else returns false
         */
         bool saveToFile(const std::string& path) const;

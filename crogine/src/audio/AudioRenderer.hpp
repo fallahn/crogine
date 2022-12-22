@@ -47,7 +47,7 @@ namespace cro
     
     /*!
     \brief Defines the interface for an audio renderer.
-    Allows for definining multiple rendersystems for targetting different
+    Allows for defining multiple rendersystems for targeting different
     platforms. Currently only OpenAL is implemented as a renderer.
     */
     class AudioRendererImpl
@@ -159,7 +159,7 @@ namespace cro
 
         /*!
         \brief Sets the velocity value of the Listener.
-        The velocity is used by the AudioRenderer to calculate doppler effects.
+        The velocity is used by the AudioRenderer to calculate Doppler effects.
         \param velocity A vector 3 representing the current velocity of the Listener.
         By default this is in metres per second.
         */
@@ -172,7 +172,7 @@ namespace cro
 
         /*!
         \brief Requests a new buffer be created from the file at the given string.
-        \returns A unique ID for the new buffer on succes, else -1 if something failed.
+        \returns A unique ID for the new buffer on success, else -1 if something failed.
         NOTE: there is no resource management done here, no checks are done to see if the
         file requested to be loaded already exists, and it is up to the requester to make
         sure buffers are properly released with deleteBuffer()
@@ -283,7 +283,7 @@ namespace cro
         static void setSourceVolume(std::int32_t src, float vol);
 
         /*!
-        \brief Sets the given source rolloff
+        \brief Sets the given source roll-off
         */
         static void setSourceRolloff(std::int32_t src, float rolloff);
 
@@ -293,17 +293,17 @@ namespace cro
         static void setSourceVelocity(std::int32_t src, glm::vec3 velocity);
 
         /*!
-        \brief Sets the doppler effect multiplier.
+        \brief Sets the Doppler effect multiplier.
         This has the effects of multiplying the current source and listener velocities
-        for an increased or more subtle doppler effect. Must be a positive value.
+        for an increased or more subtle Doppler effect. Must be a positive value.
         Default value is 1
         \param multiplier Effect multiplier value
         */
         static void setDopplerFactor(float multiplier);
 
         /*!
-        \brief Sets the percieved speed of sound.
-        This is used when calculating pitch change during doppler effects. By 
+        \brief Sets the perceived speed of sound.
+        This is used when calculating pitch change during Doppler effects. By 
         default this value is 343.3 which is the approximate metres per second
         sound travels through air. Setting this to a lower value will simulate
         sound as it travels through water, for example
