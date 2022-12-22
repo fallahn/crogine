@@ -273,10 +273,16 @@ void SimpleDrawable::setCroppingArea(FloatRect area)
 //protected
 void SimpleDrawable::setTexture(const Texture& texture)
 {
-    m_textureID = texture.getGLHandle();
+    setTexture(TextureID(texture.getGLHandle()));
     m_texture = &texture;
+}
 
-    //only replace the texture if  active shader is
+void SimpleDrawable::setTexture(TextureID texture)
+{
+    m_textureID = texture.textureID;
+    m_texture = nullptr;
+
+    //only replace the shader if active shader is
     //colour shader (don't replace custom shaders)
     if (colourShader &&
         m_uniforms.shaderID == colourShader->getGLHandle())

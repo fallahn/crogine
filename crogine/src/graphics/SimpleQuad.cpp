@@ -63,6 +63,21 @@ void SimpleQuad::setTexture(const cro::Texture& texture)
     }
 }
 
+void SimpleQuad::setTexture(cro::TextureID texture, glm::uvec2 size)
+{
+    if (texture.textureID > 0)
+    {
+        SimpleDrawable::setTexture(texture);
+        m_size = glm::vec2(size);
+        m_uvRect = { 0.f, 0.f, 1.f, 1.f };
+        updateVertexData();
+    }
+    else
+    {
+        LogE << "Invalid texture supplied to SimpleQuad" << std::endl;
+    }
+}
+
 void SimpleQuad::setTextureRect(cro::FloatRect subRect)
 {
     if (m_size.x > 0 

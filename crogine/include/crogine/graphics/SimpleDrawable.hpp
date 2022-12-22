@@ -134,9 +134,16 @@ namespace cro
         void setTexture(const Texture& texture);
 
         /*!
+        \brief Set the texture via texture ID - it is up to the
+        derived class to track its size if necessary. Note that
+        when using this getTexture() will always return nullptr
+        */
+        void setTexture(TextureID texture);
+
+        /*!
         \brief Returns a pointer to the active texture if there is one
         */
-        const Texture* getTexture() const;
+        const Texture* getTexture() const { return m_texture; }
         
         /*!
         \brief Sets the OpenGL primitive type with which to
