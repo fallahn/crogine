@@ -1,7 +1,0 @@
-ball 
-{
-    model = assets/golf/models/balls/ball_pizza.cmt
-    tint = 0.949,0.812,0.361,1.0
-    uid = 2435379180
-
-}

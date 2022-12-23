@@ -87,15 +87,45 @@ namespace cro
         bool setShader(const Shader& shader);
 
         /*!
+        \brief Sets the area in local coordinates to crop this drawable.
+        If this area is larger or does not overlap the local bounds then
+        no cropping is visible. Useful for UI components such as cropping
+        Text components to fit text boxes. Note that Text components in
+        particular have a *negative* bottom value as text is drawn (usually)
+        from top to bottom.
+        */
+        void setCroppingArea(FloatRect);
+
+        /*!
+        \brief Returns the current cropping area.
+        \see setCroppingArea()
+        */
+        FloatRect getCroppingArea() const { return m_croppingArea; }
+
+        /*!
         \brief Draws the geometry to the active target
         This must be overridden and provides an opportunity
         to update any vertex data as well as to submit a
         deriving class's transform to the protected
         drawGeometry() function
         \param parentTransform An optional transform for creating
-        parented scene-graph like hierachies
+        parented scene-graph like hierarchies
         */
         virtual void draw(const glm::mat4&) = 0;
+
+        /*!
+        \brief Sets a uniform value for the active shader
+        If the uniform doesn't exist in the current shader this
+        does nothing. Note that setting a new shader also resets
+        all existing uniform values, even if the new shader
+        contains the same uniforms.
+        Supported types are:
+        float, Vec2, Vec3, Vec4, Mat4 and Texture
+        \param name Name of the uniform to set
+        \param value Value to set the uniform
+        */
+        template <typename T>
+        void setUniform(const std::string& name, T value);
 
     protected:
         /*!
@@ -104,9 +134,16 @@ namespace cro
         void setTexture(const Texture& texture);
 
         /*!
+        \brief Set the texture via texture ID - it is up to the
+        derived class to track its size if necessary. Note that
+        when using this getTexture() will always return nullptr
+        */
+        void setTexture(TextureID texture);
+
+        /*!
         \brief Returns a pointer to the active texture if there is one
         */
-        const Texture* getTexture() const;
+        const Texture* getTexture() const { return m_texture; }
         
         /*!
         \brief Sets the OpenGL primitive type with which to
@@ -148,6 +185,36 @@ namespace cro
             std::uint32_t shaderID = 0;
         }m_uniforms;
 
+        FloatRect m_croppingArea;
+        bool m_cropped;
+
         void applyBlendMode() const;
+
+
+
+        struct UniformValue final
+        {
+            enum
+            {
+                None,
+                Number,
+                Vec2,
+                Vec3,
+                Vec4,
+                Mat4,
+                Texture
+            }type = None;
+
+            union
+            {
+                float numberValue;
+                float vecValue[4];
+                std::uint32_t textureID = 0;
+                glm::mat4 matrixValue;
+            };
+        };
+        std::unordered_map<std::string, std::pair<std::int32_t, UniformValue>> m_uniformValues;
     };
+
+#include "SimpleDrawable.inl"
 }

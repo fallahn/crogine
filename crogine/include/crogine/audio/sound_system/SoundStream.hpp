@@ -86,7 +86,7 @@ namespace cro
         Status getStatus() const override;
 
         /*!
-        \brief Returns he numberb eof audio channels in the stream
+        \brief Returns he number of audio channels in the stream
         */
         std::uint32_t getChannelCount() const;
 
@@ -109,7 +109,7 @@ namespace cro
 
         Until it is called at least once operations such as play() or
         pause() will fail. This can be called multiple times with
-        new paramters, but must be done while the stream is stopped.
+        new parameters, but must be done while the stream is stopped.
 
         \param channelCount - The number of audio channels in the stream
         \param sampleRate - The stream sample rate.
@@ -118,7 +118,7 @@ namespace cro
 
 
         /*!
-        \break Request a new chunk of audio data from the stream
+        \brief Request a new chunk of audio data from the stream
 
         This must be implemented by derived classes to provide the audio
         data to the stream. It is called continuously by the stream thread.
@@ -140,7 +140,7 @@ namespace cro
         virtual void onSeek(std::int32_t offset) = 0;
 
         /*!
-        \brief Set the procesing interval at which onGetData() is called.
+        \brief Set the processing interval at which onGetData() is called.
         Defaults to 10ms. Larger times create a larger, more reliable buffer
         however it also introduces greater latency.
         \param interval Number of milliseconds to buffer.

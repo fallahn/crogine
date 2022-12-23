@@ -82,7 +82,7 @@ namespace cro
 
         /*!
         \brief Sets the vertical spacing between lines of text
-        \param spacing By default the spacingis 0. Negative values
+        \param spacing By default the spacing is 0. Negative values
         can cause lines to overlap or even appear in reverse order.
         */
         void setVerticalSpacing(float spacing);
@@ -114,7 +114,7 @@ namespace cro
         \brief Set the thickness of the text outline
         Negative values will not have the expected result.
         The outline colour must not be transparent and a value
-        greater than zero must be set in orderfor outlines to appear
+        greater than zero must be set in order for outlines to appear
         \param outlineThickness The thickness, in pixels, of
         the outline to render
         */
@@ -129,11 +129,17 @@ namespace cro
 
         /*!
         \brief Sets the shadow offset value.
-        Shadows are only rendered if the the Text has no outlining
+        Shadows are only rendered if the Text has no outlining
         \param offset A vec2 containing the offset in X/Y direction
         \see setShadowColour()
         */
         void setShadowOffset(glm::vec2 offset);
+
+        /*!
+        \brief Renders this text with bold styling, if the font supports it
+        \param bold True to render with bold styling, or false for default rendering
+        */
+        void setBold(bool bold);
 
         /*!
         \brief Return a pointer to the active font
@@ -183,6 +189,11 @@ namespace cro
         glm::vec2 getShadowOffset() const;
         
         /*!
+        \brief Returns the current bold setting of this text
+        */
+        bool getBold() const;
+
+        /*!
         \brief Returns the AABB of the Text component
         The given entity must have at least a Text and
         Drawable2D component attached to it
@@ -204,7 +215,7 @@ namespace cro
         /*!
         \brief Returns the Text's current Alignment
         */
-        Alignment getAlignment() const { return m_alignment; }
+        Alignment getAlignment() const { return Alignment(m_context.alignment); }
 
     private:
 
@@ -222,8 +233,6 @@ namespace cro
             };
         };
         std::uint16_t m_dirtyFlags;
-
-        Alignment m_alignment;
 
         void updateVertices(Drawable2D&);
 

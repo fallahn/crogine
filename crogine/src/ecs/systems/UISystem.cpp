@@ -45,7 +45,7 @@ using namespace cro;
 
 UISystem::UISystem(MessageBus& mb)
     : System            (mb, typeid(UISystem)),
-    m_activeControllerID(0),
+    m_activeControllerID(ActiveControllerAll),
     m_controllerMask    (0),
     m_prevControllerMask(0),
     m_columnCount       (1),
@@ -72,7 +72,8 @@ void UISystem::handleEvent(const Event& evt)
     case SDL_CONTROLLERDEVICEREMOVED:
         //check if this is the active controller and update
         //if necessary to a connected controller
-        if (evt.cdevice.which == cro::GameController::deviceID(m_activeControllerID))
+        if (m_activeControllerID != ActiveControllerAll &&
+            evt.cdevice.which == cro::GameController::deviceID(m_activeControllerID))
         {
             //controller IDs automatically shift down
             //so drop to the next lowest available
@@ -174,7 +175,8 @@ void UISystem::handleEvent(const Event& evt)
     }
         break;
     case SDL_CONTROLLERBUTTONDOWN:
-        if(evt.cbutton.which == cro::GameController::deviceID(m_activeControllerID))
+        if(m_activeControllerID == ActiveControllerAll ||
+            evt.cbutton.which == cro::GameController::deviceID(m_activeControllerID))
         {
             switch (evt.cbutton.button)
             {
@@ -201,11 +203,31 @@ void UISystem::handleEvent(const Event& evt)
         }
         break;
     case SDL_CONTROLLERBUTTONUP:
-        if (evt.cbutton.which == cro::GameController::deviceID(m_activeControllerID))
+        if (m_activeControllerID == ActiveControllerAll ||
+            evt.cbutton.which == cro::GameController::deviceID(m_activeControllerID))
         {
-            auto& buttonEvent = m_buttonUpEvents.emplace_back();
-            buttonEvent.type = evt.type;
-            buttonEvent.cbutton = evt.cbutton;
+            switch (evt.cbutton.button)
+            {
+            default:
+            {
+                auto& buttonEvent = m_buttonUpEvents.emplace_back();
+                buttonEvent.type = evt.type;
+                buttonEvent.cbutton = evt.cbutton;
+            }
+                break;
+            case SDL_CONTROLLER_BUTTON_DPAD_UP:
+                m_controllerMask &= ~ControllerBits::Up;
+                break;
+            case SDL_CONTROLLER_BUTTON_DPAD_DOWN:
+                m_controllerMask &= ~ControllerBits::Down;
+                break;
+            case SDL_CONTROLLER_BUTTON_DPAD_LEFT:
+                m_controllerMask &= ~ControllerBits::Left;
+                break;
+            case SDL_CONTROLLER_BUTTON_DPAD_RIGHT:
+                m_controllerMask &= ~ControllerBits::Right;
+                break;
+            }
         }
         break;
     case SDL_JOYBUTTONDOWN:
@@ -224,9 +246,53 @@ void UISystem::handleEvent(const Event& evt)
         break;
 
         //joystick and controller move events
-    //case SDL_CONTROLLERAXISMOTION:
-
-    //    break;
+    case SDL_CONTROLLERAXISMOTION:
+        if (m_activeControllerID == ActiveControllerAll ||
+            evt.caxis.which == cro::GameController::deviceID(m_activeControllerID))
+        {
+            static constexpr std::int16_t Threshold = 15000;
+            switch (evt.caxis.axis)
+            {
+            default: break;
+            case SDL_CONTROLLER_AXIS_LEFTX:
+                if (evt.caxis.value > Threshold)
+                {
+                    //right
+                    m_controllerMask |= ControllerBits::Right;
+                    m_controllerMask &= ~ControllerBits::Left;
+                }
+                else if (evt.caxis.value < -Threshold)
+                {
+                    //left
+                    m_controllerMask |= ControllerBits::Left;
+                    m_controllerMask &= ~ControllerBits::Right;
+                }
+                else
+                {
+                    m_controllerMask &= ~(ControllerBits::Left | ControllerBits::Right);
+                }
+                break;
+            case SDL_CONTROLLER_AXIS_LEFTY:
+                if (evt.caxis.value > Threshold)
+                {
+                    //down
+                    m_controllerMask |= ControllerBits::Down;
+                    m_controllerMask &= ~ControllerBits::Up;
+                }
+                else if (evt.caxis.value < -Threshold)
+                {
+                    //up
+                    m_controllerMask |= ControllerBits::Up;
+                    m_controllerMask &= ~ControllerBits::Down;
+                }
+                else
+                {
+                    m_controllerMask &= ~(ControllerBits::Up | ControllerBits::Down);
+                }
+                break;
+            }
+        }
+        break;
     //case SDL_JOYAXISMOTION:
 
     //    break;
@@ -266,7 +332,7 @@ void UISystem::process(float)
         }
     }
     m_prevControllerMask = m_controllerMask;
-    m_controllerMask = 0;
+    //m_controllerMask = 0;
 
     updateGroupAssignments();
 
@@ -279,7 +345,7 @@ void UISystem::process(float)
 
         auto area = input.area.transform(tx);
         bool contains = false;
-        if (contains = area.contains(m_eventPosition); contains)
+        if (contains = area.contains(m_eventPosition); contains && input.enabled)
         {
             if (!input.active)
             {
@@ -317,7 +383,7 @@ void UISystem::process(float)
         }
 
         //only do mouse/touch events if they're within the bounds of an input
-        if (contains)
+        if (contains && input.enabled)
         {
             for (const auto& f : m_mouseDownEvents)
             {
@@ -329,7 +395,7 @@ void UISystem::process(float)
             }
         }
 
-        else if (currentIndex == m_selectedIndex)
+        else if (currentIndex == m_selectedIndex && input.enabled)
         {
             for (const auto& f : m_buttonDownEvents)
             {
@@ -413,6 +479,7 @@ void UISystem::setActiveControllerID(std::int32_t id)
     {
         m_activeControllerID = id;
     }
+    m_controllerMask = 0;
 }
 
 //private
@@ -445,27 +512,40 @@ glm::vec2 UISystem::toWorldCoords(float x, float y)
 
 void UISystem::selectNext(std::size_t stride)
 {
-    //call unselected on prev ent
     const auto& entities = m_groups[m_activeGroup];
-    unselect(m_selectedIndex);
+    auto old = m_selectedIndex;
 
-    m_selectedIndex = (m_selectedIndex + stride) % entities.size();
+    do
+    {
+        m_selectedIndex = (m_selectedIndex + stride) % entities.size();
+    } while (m_selectedIndex != old && !entities[m_selectedIndex].getComponent<UIInput>().enabled);
 
     //and do selected callback
-    select(m_selectedIndex);
+    if (m_selectedIndex != old)
+    {
+        unselect(old);
+        select(m_selectedIndex);
+    }
 }
 
 void UISystem::selectPrev(std::size_t stride)
 {
-    //call unselected on prev ent
     const auto& entities = m_groups[m_activeGroup];
-    unselect(m_selectedIndex);
+
+    auto old = m_selectedIndex;
 
     //get new index
-    m_selectedIndex = (m_selectedIndex + (entities.size() - stride)) % entities.size();
+    do
+    {
+        m_selectedIndex = (m_selectedIndex + (entities.size() - stride)) % entities.size();
+    } while (m_selectedIndex != old && !entities[m_selectedIndex].getComponent<UIInput>().enabled);
 
     //and do selected callback
-    select(m_selectedIndex);
+    if (m_selectedIndex != old)
+    {
+        unselect(old);
+        select(m_selectedIndex);
+    }
 }
 
 void UISystem::unselect(std::size_t entIdx)

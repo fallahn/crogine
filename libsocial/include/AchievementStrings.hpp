@@ -80,6 +80,12 @@ static const std::array<std::string, AchievementID::Count> AchievementStrings =
     "golfin_dolphin",
     "grand_tour",
     "grand_design",
+    "getting_started",
+    "junior",
+    "amateur",
+    "enthusiast",
+    "semi_pro",
+    "pro"
 };
 
 //appears on the notification
@@ -117,7 +123,13 @@ static const std::array<std::string, AchievementID::Count> AchievementLabels =
     "I Like Big Putts",
     "Golfin' Dolphin",
     "Grand Tour",
-    "Grand Design"
+    "Grand Design",
+    "Getting Started",
+    "Junior",
+    "Amateur",
+    "Enthusiast",
+    "Semi-Pro",
+    "Professional"
 };
 
 //description and whether or not the achievement is hidden until it is unlocked
@@ -125,7 +137,7 @@ static const std::array<std::pair<std::string, bool>, AchievementID::Count> Achi
 {
     std::make_pair("Unknown.", true),
     std::make_pair("Get a hole in one", false),
-    std::make_pair("Complete 10 rounds of Golf", false),
+    std::make_pair("Complete 10 rounds of golf", false),
     std::make_pair("Putt a total distance of 1km", false),
     std::make_pair("Get a total stroke distance of 12km", false),
     std::make_pair("Come top of the Leaderboard", false),
@@ -156,6 +168,12 @@ static const std::array<std::pair<std::string, bool>, AchievementID::Count> Achi
     std::make_pair("Hit a water trap on 5 different rounds", false),
     std::make_pair("Play a full round on every course", false),
     std::make_pair("Save your first custom course", false),
+    std::make_pair("Reach Level 1", false),
+    std::make_pair("Reach Level 10", false),
+    std::make_pair("Reach Level 20", false),
+    std::make_pair("Reach Level 30", false),
+    std::make_pair("Reach Level 40", false),
+    std::make_pair("Reach Level 50", false)
 };
 
 //assuming trophies load correctly they are:
@@ -244,6 +262,8 @@ static const std::array<std::string, StatID::Count> StatStrings =
     "course_06",
     "course_07",
     "course_08",
+    "course_09",
+    "course_10",
 };
 
 static const std::array<std::string, StatID::Count> StatLabels =
@@ -251,9 +271,9 @@ static const std::array<std::string, StatID::Count> StatLabels =
     "Full Rounds Completed (18 holes)",
     "Total Putt Distance (metres)",
     "Total Stroke Distance (metres)",
-    "Average Gold Wins (multiplayer)",
-    "Average Silver Wins (multiplayer)",
-    "Average Bronze Wins (multiplayer)",
+    "Gold Wins (multiplayer)",
+    "Silver Wins (multiplayer)",
+    "Bronze Wins (multiplayer)",
     "Total Rounds Played",
     "Eightball Games Won (multiplayer)",
     "Nineball Games Won (multiplayer)",
@@ -269,14 +289,16 @@ static const std::array<std::string, StatID::Count> StatLabels =
     "Rounds Where Water Were Traps Hit",
     "Total Water Traps Hit",
     "Total Sand Traps Hit",
-    "Number of times Course 1 Completed",
-    "Number of times Course 2 Completed",
-    "Number of times Course 3 Completed",
-    "Number of times Course 4 Completed",
-    "Number of times Course 5 Completed",
-    "Number of times Course 6 Completed",
-    "Number of times Course 7 Completed",
-    "Number of times Course 8 Completed",
+    "Number Of Times Course 1 Completed",
+    "Number Of Times Course 2 Completed",
+    "Number Of Times Course 3 Completed",
+    "Number Of Times Course 4 Completed",
+    "Number Of Times Course 5 Completed",
+    "Number Of Times Course 6 Completed",
+    "Number Of Times Course 7 Completed",
+    "Number Of Times Course 8 Completed",
+    "Number Of Times Course 9 Completed",
+    "Number Of Times Course 10 Completed",
 };
 
 struct StatType final
@@ -292,9 +314,9 @@ static constexpr std::array<std::int32_t, StatID::Count> StatTypes =
     StatType::Integer,
     StatType::Float,
     StatType::Float,
-    StatType::Percent,
-    StatType::Percent,
-    StatType::Percent,
+    StatType::Integer,
+    StatType::Integer,
+    StatType::Integer,
     StatType::Integer,
     StatType::Integer,
     StatType::Integer,
@@ -317,7 +339,9 @@ static constexpr std::array<std::int32_t, StatID::Count> StatTypes =
     StatType::Integer,
     StatType::Integer,
     StatType::Integer,
-    StatType::Integer
+    StatType::Integer,
+    StatType::Integer,
+    StatType::Integer,
 };
 
 struct StatTrigger final
@@ -327,5 +351,3 @@ struct StatTrigger final
 };
 
 static std::array<std::vector<StatTrigger>, StatID::Count> StatTriggers = {};
-
-static inline const std::string RSSFeed = "https://fallahn.itch.io/vga-golf/devlog.rss";

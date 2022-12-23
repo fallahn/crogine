@@ -72,11 +72,10 @@ class AchievementImpl
 public:
     virtual ~AchievementImpl() {};
 
-    virtual void init() {};
+    virtual bool init() { return true; };
     virtual void update() {};
     virtual void shutdown() {};
 
-    virtual void registerAchievement(const std::string&) {}
     virtual void awardAchievement(const std::string&) = 0;
 
     virtual const AchievementData* getAchievement(const std::string&) const { return nullptr; }
@@ -95,13 +94,11 @@ class Achievements final
 {
 public:
 
-    static void init(AchievementImpl&);
+    static bool init(AchievementImpl&);
 
     static void update();
 
     static void shutdown();
-
-    static void registerAchievement(const std::string&);
 
     static void awardAchievement(const std::string&);
 
@@ -120,6 +117,8 @@ public:
     static const StatData* getStat(const std::string&);
 
     static void setActive(bool);
+
+    static bool getActive() { return m_active; };
 
 private:
     static AchievementImpl* m_impl;

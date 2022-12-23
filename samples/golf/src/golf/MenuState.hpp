@@ -129,10 +129,12 @@ private:
     std::array<bool, ConstVal::MaxClients> m_readyState = {};
 
     static const std::array<glm::vec2, MenuID::Count> m_menuPositions;
+    float m_lobbyExpansion; //how much the lobby menu has been stretched to fill the screen in total
     cro::Entity m_avatarMenu; //root of the avatar menu to which each player avatar is attached
     std::vector<cro::Entity> m_avatarListEntities;
     std::pair<std::uint32_t, std::uint32_t> m_avatarCallbacks;
     std::array<std::uint32_t, 5u> m_cpuOptionCallbacks = {};
+    std::array<std::uint32_t, 2u> m_ballPreviewCallbacks = {};
     struct HostOptionCallbacks final
     {
         std::uint32_t prevRules = 0;
@@ -144,10 +146,15 @@ private:
         std::uint32_t prevHoleCount = 0;
         std::uint32_t nextHoleCount = 0;
         std::uint32_t toggleUserCourses = 0;
+        std::uint32_t toggleReverseCourse = 0;
+        std::uint32_t toggleFriendsOnly = 0;
+        std::uint32_t inviteFriends = 0;
         std::uint32_t selected = 0;
         std::uint32_t unselected = 0;
         std::uint32_t selectHighlight = 0;
         std::uint32_t unselectHighlight = 0;
+        std::uint32_t selectText = 0;
+        std::uint32_t unselectText = 0;
         std::uint32_t showTip = 0;
         std::uint32_t hideTip = 0;
     }m_courseSelectCallbacks;
@@ -158,6 +165,8 @@ private:
     std::size_t m_currentMenu; //used by view callback to reposition the root node on window resize
     std::size_t m_prevMenu; //used to resore active menu when completing text entry
     std::array<cro::Entity, MenuID::Count> m_menuEntities = {}; //each menu transform, attatched to root node.
+
+    LobbyPager m_lobbyPager;
 
     //hack to quit the lobby confirm menu from event input
     std::function<void()> enterConfirmCallback;
@@ -171,28 +180,6 @@ private:
     }m_textEdit;
 
     glm::vec2 m_viewScale;
-
-    struct ControllerCallbackID final
-    {
-        enum
-        {
-            EnterLeft, ExitLeft,
-            EnterRight, ExitRight,
-            //this order is IMPORTANT
-            Inc01,
-            Inc02,
-            Inc03,
-            Inc04,
-
-            Dec01,
-            Dec02,
-            Dec03,
-            Dec04,
-
-            Count
-        };
-    };
-    std::array<std::uint32_t, ControllerCallbackID::Count> m_controllerCallbackIDs = {};
 
     void addSystems();
     void loadAssets();
@@ -221,7 +208,9 @@ private:
     //----ball, avatar and hair funcs are in MenuCustomisation.cpp----//
     std::array<std::size_t, ConnectionData::MaxPlayers> m_ballIndices = {}; //index into the model list, not ballID
     cro::Entity m_ballCam;
+    std::array<cro::Entity, 4u> m_ballThumbCams = {};
     cro::RenderTexture m_ballTexture;
+    cro::RenderTexture m_ballThumbTexture;
     void createBallScene();
     std::int32_t indexFromBallID(std::uint32_t);
 
@@ -248,6 +237,7 @@ private:
     void createMainMenu(cro::Entity, std::uint32_t, std::uint32_t);
     void createAvatarMenu(cro::Entity, std::uint32_t, std::uint32_t);
     void createJoinMenu(cro::Entity, std::uint32_t, std::uint32_t);
+    void createBrowserMenu(cro::Entity, std::uint32_t, std::uint32_t);
     void createLobbyMenu(cro::Entity, std::uint32_t, std::uint32_t);
     void createPlayerConfigMenu();
 
@@ -261,9 +251,15 @@ private:
     void updateLocalAvatars(std::uint32_t, std::uint32_t);
     void updateLobbyData(const net::NetEvent&);
     void updateLobbyAvatars();
+    void updateLobbyList();
     void showPlayerConfig(bool, std::uint8_t);
     void quitLobby();
     void addCourseSelectButtons();
+    void prevHoleCount();
+    void nextHoleCount();
+    void prevCourse();
+    void nextCourse();
+    void refreshUI();
 
     //loading moved to GolfGame.cpp
 

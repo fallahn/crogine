@@ -48,7 +48,7 @@ namespace cro
 
     /*
     \brief The command system is used to execute commands which are
-    targetted at specific IDs
+    targeted at specific IDs
     */
     class CRO_EXPORT_API CommandSystem final : public cro::System
     {

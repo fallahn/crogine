@@ -52,6 +52,7 @@ include(${PROJECT_DIR}/retro/CMakeLists.txt)
 include(${PROJECT_DIR}/bush/CMakeLists.txt)
 include(${PROJECT_DIR}/frustum/CMakeLists.txt)
 include(${PROJECT_DIR}/rolling/CMakeLists.txt)
+include(${PROJECT_DIR}/swingput/CMakeLists.txt)
 
 add_executable(${PROJECT_NAME}
                ${PROJECT_SRC}
@@ -63,6 +64,7 @@ add_executable(${PROJECT_NAME}
 	             ${RETRO_SRC}
 	             ${BUSH_SRC}
                ${ROLLING_SRC}
+               ${SWING_SRC}
                ${FRUSTUM_SRC}
                ${VATS_SRC})
 

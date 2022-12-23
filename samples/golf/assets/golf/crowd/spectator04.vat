@@ -1,9 +1,0 @@
-vat clapping
-{
-    model = "spectator04.cmt"
-    scale = 1.800000
-    frame_count = 264
-    frame_rate = 30.000000
-    position = "model04_position.png"
-    normal = "model04_normal.png"
-}

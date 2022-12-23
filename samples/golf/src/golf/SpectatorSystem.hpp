@@ -34,6 +34,7 @@ source distribution.
 #include <unordered_map>
 
 class Path;
+class CollisionMesh;
 
 struct Spectator final
 {
@@ -69,13 +70,14 @@ struct Spectator final
 class SpectatorSystem final : public cro::System
 {
 public:
-    explicit SpectatorSystem(cro::MessageBus&);
+    SpectatorSystem(cro::MessageBus&, const CollisionMesh&);
 
     void process(float) override;
 
     void updateSpectatorGroups();
 
 private:
+    const CollisionMesh& m_collisionMesh;
     std::unordered_map<const Path*, std::vector<cro::Entity>> m_spectatorGroups;
 
     void onEntityAdded(cro::Entity) override;

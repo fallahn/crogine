@@ -53,7 +53,7 @@ private:
     {
         enum
         {
-            Grass, Water, Sand,
+            Grass, GrassDark, Water, Sand,
             Sparkle, HIO, Bird,
             Drone, Explode, Blades,
             Puff,

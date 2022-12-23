@@ -86,7 +86,7 @@ namespace cro
         /*!
         \brief Sets the playing offset of the emitter to the given time
         from the beginning of the source.
-        Thsi only affects emitters which are playing or paused, as
+        This only affects emitters which are playing or paused, as
         stopped emitters will automatically rewind when they are played.
         */
         void setPlayingOffset(Time offset);
@@ -129,7 +129,7 @@ namespace cro
         float getVolume() const { return m_volume; }
 
         /*!
-        \brief Sets the volume rolloff of the sound.
+        \brief Sets the volume roll-off of the sound.
         The larger this value the more quickly the sounds
         volume will fade with distance from the active listener.
         The default value is 1.0, and a value of 0 will cause the
@@ -138,7 +138,7 @@ namespace cro
         void setRolloff(float);
 
         /*!
-        \brief Returns the current rolloff value of this emitter
+        \brief Returns the current roll-off value of this emitter
         */
         float getRolloff() const { return m_rolloff; }
 
@@ -147,7 +147,7 @@ namespace cro
         Note that this stays set at the supplied value - it does not
         automatically update with any motion of the entity to which
         the emitter is connected.
-        The velocity of the emitter is used to calculate the doppler
+        The velocity of the emitter is used to calculate the Doppler
         effect of moving objects.
         \see AudioRenderer::setDopplerFactor()
         \see AudioRenderer::setSpeedOfSound()
@@ -167,8 +167,8 @@ namespace cro
         in turn affect the playback volume of the sources. For example
         an AudioEmitter which plays music could be routed through a
         different channel than AudioEmitters which play sound effects
-        so that music may be quickly and easily adusted or muted
-        independently of soud effect. By default all sound sources
+        so that music may be quickly and easily adjusted or muted
+        independently of sound effect. By default all sound sources
         are mapped to channel 0
         \see AudioMixer
         */

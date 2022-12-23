@@ -70,7 +70,7 @@ namespace
     //accurate than converting to a Time and
     //back as the underlying SDL timer only
     //supports milliseconds
-    const float frameTime = 1.f / 60.f;
+    constexpr float frameTime = 1.f / 60.f;
 
 #include "../detail/DefaultIcon.inl"
 
@@ -144,6 +144,58 @@ namespace
         colors[ImGuiCol_NavWindowingDimBg] = ImVec4(0.20f, 0.20f, 0.24f, 0.20f);
         colors[ImGuiCol_ModalWindowDimBg] = ImVec4(0.20f, 0.20f, 0.24f, 0.35f);
     }
+
+#ifndef GL41
+    void APIENTRY glDebugPrint(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar* msg, const void*)
+    {
+        std::stringstream ss;
+        switch (source)
+        {
+        default:
+            ss << "OpenGL: ";
+            break;
+        case GL_DEBUG_SOURCE_SHADER_COMPILER:
+            ss << "Shader compiler: ";
+            break;
+        }
+
+        switch (type)
+        {
+        default: break;
+        case GL_DEBUG_TYPE_ERROR:
+            ss << "Error - ";
+            break;
+        case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR:
+            ss << "Deprecated behaviour - ";
+            break;
+        case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:
+            ss << "Undefined behaviour - ";
+            break;
+        case GL_DEBUG_TYPE_PERFORMANCE:
+            ss << "Performance warning - ";
+            break;
+        }
+
+        ss << msg;
+
+        switch (severity)
+        {
+        default:
+        case GL_DEBUG_SEVERITY_NOTIFICATION:
+            //LogI << ss.str() << std::endl;
+            break;
+        case GL_DEBUG_SEVERITY_LOW:
+            LogI << ss.str() << std::endl;
+            break;
+        case GL_DEBUG_SEVERITY_MEDIUM:
+            LogW << ss.str() << std::endl;
+            break;
+        case GL_DEBUG_SEVERITY_HIGH:
+            LogE << ss.str() << std::endl;
+            break;
+        }
+    }
+#endif
 }
 
 
@@ -152,6 +204,7 @@ App::App(std::uint32_t styleFlags)
     m_frameClock        (nullptr),
     m_running           (false),
     m_controllerCount   (0),
+    m_drawDebugWindows  (true),
     m_orgString         ("Trederia"),
     m_appString         ("CrogineApp")
 {
@@ -286,6 +339,12 @@ void App::run()
         ImGui_ImplOpenGL3_Init("#version 410 core");
 #else
         ImGui_ImplOpenGL3_Init("#version 460 core");
+
+#ifdef CRO_DEBUG_
+        glDebugMessageCallback(glDebugPrint, nullptr);
+        glEnable(GL_DEBUG_OUTPUT);
+        glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+#endif
 #endif
 #else
         //load ES2 shaders on mobile
@@ -297,6 +356,35 @@ void App::run()
         m_window.setVsyncEnabled(settings.vsync);
         m_window.setMultisamplingEnabled(settings.useMultisampling);
         Console::init();
+
+        //add any 'built in' convars
+        Console::addConvar("drawDebugWindows",
+            "true",
+            "If true then any GuiClient windows registered with the isDebug flag will be drawn to the UI. Set with r_drawDebugWindows");
+
+        m_drawDebugWindows = Console::getConvarValue<bool>("drawDebugWindows");
+
+        //set the drawDebugWindows flag
+        Console::addCommand("r_drawDebugWindows",
+            [&](const std::string& param)
+            {
+                if (param == "0")
+                {
+                    Console::setConvarValue("drawDebugWindows", false);
+                    Console::print("r_drawDebugWindows set to FALSE");
+                    m_drawDebugWindows = false;
+                }
+                else if (param == "1")
+                {
+                    Console::setConvarValue("drawDebugWindows", true);
+                    Console::print("r_drawDebugWindows set to TRUE");
+                    m_drawDebugWindows = true;
+                }
+                else
+                {
+                    Console::print("Usage: r_drawDebugWindows <0|1>");
+                }
+            }, nullptr);
     }
     else
     {
@@ -397,6 +485,25 @@ bool App::isValid()
     return m_instance != nullptr;
 }
 
+void App::saveScreenshot()
+{
+    auto size = m_window.getSize();
+    std::vector<GLubyte> buffer(size.x * size.y * 4);
+    glCheck(glPixelStorei(GL_PACK_ALIGNMENT, 1));
+    glCheck(glReadPixels(0, 0, size.x, size.y, GL_RGBA, GL_UNSIGNED_BYTE, buffer.data()));
+
+    //flip row order
+    stbi_flip_vertically_on_write(1);
+
+    std::string filename = "screenshot_" + SysTime::dateString() + "_" + SysTime::timeString() + ".png";
+    std::replace(filename.begin(), filename.end(), '/', '_');
+    std::replace(filename.begin(), filename.end(), ':', '_');
+
+    RaiiRWops out;
+    out.file = SDL_RWFromFile(filename.c_str(), "w");
+    stbi_write_png_to_func(image_write_func, out.file, size.x, size.y, 4, buffer.data(), size.x * 4);
+}
+
 //protected
 void App::setApplicationStrings(const std::string& organisation, const std::string& appName)
 {
@@ -419,6 +526,18 @@ void App::handleEvents()
     {
         ImGui_ImplSDL2_ProcessEvent(&evt);
 
+        //update the count first because handling
+        //the event below might query getControllerCount()
+        if (evt.type == SDL_CONTROLLERDEVICEADDED)
+        {
+            m_controllerCount++;
+        }
+        else if (evt.type == SDL_CONTROLLERDEVICEREMOVED)
+        {
+            m_controllerCount--;
+        }
+
+        //HOWEVER
         //handle events first in case user events
         //want to read disconnected controllers
         //before the following cases handle removal
@@ -496,9 +615,11 @@ void App::handleEvents()
                     ci.joystickID = SDL_JoystickInstanceID(j);                    
                     ci.psLayout = Detail::isPSLayout(ci.controller);
 
-                    m_controllers[id] = ci;
-                    //SDL_GameControllerSetPlayerIndex(m_controllers[id].controller, id);
-                    m_controllerCount++;
+                    auto idx = SDL_GameControllerGetPlayerIndex(ci.controller);
+                    if (idx != -1)
+                    {
+                        m_controllers[idx] = ci;
+                    }
                 }
             }
             else
@@ -511,8 +632,9 @@ void App::handleEvents()
         {
             auto id = evt.cdevice.which;
 
-            std::int32_t controllerIndex = -1;
-            for (auto i = 0u; i < m_controllers.size(); ++i)
+            //as the device is disconnected we can't query SDL and have to find the index manually
+            std::int32_t controllerIndex = -1;// SDL_GameControllerGetPlayerIndex(SDL_GameControllerFromInstanceID(id));
+            for (auto i = 0; i < GameController::MaxControllers; ++i)
             {
                 if (m_controllers[i].joystickID == id)
                 {
@@ -530,17 +652,7 @@ void App::handleEvents()
                 }
                 
                 SDL_GameControllerClose(m_controllers[controllerIndex].controller);
-                m_controllerCount--;
                 m_controllers[controllerIndex] = {};
-
-                
-                //all controller IDs after the ID removed now move down..
-                for (auto i = controllerIndex; i < GameController::MaxControllers - 1; ++i)
-                {
-                    m_controllers[i] = m_controllers[i + 1];
-                    //SDL_GameControllerSetPlayerIndex(m_controllers[i].controller, i);
-                }
-                m_controllers.back() = {};
             }
 
             if (m_joysticks.count(id) > 0)
@@ -580,7 +692,17 @@ void App::doImGui()
     //show other windows (console etc)
     Console::draw();
 
-    for (auto& f : m_guiWindows) f.first();
+    for (const auto& f : m_guiWindows)
+    {
+        f.first();
+    }
+    if (m_drawDebugWindows)
+    {
+        for (const auto& f : m_debugWindows)
+        {
+            f.first();
+        }
+    }
 }
 
 void App::addConsoleTab(const std::string& name, const std::function<void()>& func, const GuiClient* c)
@@ -593,10 +715,18 @@ void App::removeConsoleTab(const GuiClient* c)
     Console::removeConsoleTab(c);
 }
 
-void App::addWindow(const std::function<void()>& func, const GuiClient* c)
+void App::addWindow(const std::function<void()>& func, const GuiClient* c, bool isDebug)
 {
     CRO_ASSERT(m_instance, "App not properly instanciated!");
-    m_instance->m_guiWindows.push_back(std::make_pair(func, c));
+
+    if (isDebug)
+    {
+        m_instance->m_debugWindows.push_back(std::make_pair(func, c));
+    }
+    else
+    {
+        m_instance->m_guiWindows.push_back(std::make_pair(func, c));
+    }
 }
 
 void App::removeWindows(const GuiClient* c)
@@ -610,6 +740,13 @@ void App::removeWindows(const GuiClient* c)
         return pair.second == c;
     }), std::end(m_instance->m_guiWindows));
 
+
+    m_instance->m_debugWindows.erase(
+        std::remove_if(std::begin(m_instance->m_debugWindows), std::end(m_instance->m_debugWindows),
+            [c](const std::pair<std::function<void()>, const GuiClient*>& pair)
+            {
+                return pair.second == c;
+            }), std::end(m_instance->m_debugWindows));
 }
 
 App::WindowSettings App::loadSettings() 
@@ -710,25 +847,6 @@ void App::saveSettings()
     }
 
     saveSettings.save(m_prefPath + cfgName);
-}
-
-void App::saveScreenshot()
-{
-    auto size = m_window.getSize();
-    std::vector<GLubyte> buffer(size.x * size.y * 4);
-    glCheck(glPixelStorei(GL_PACK_ALIGNMENT, 1));
-    glCheck(glReadPixels(0, 0, size.x, size.y, GL_RGBA, GL_UNSIGNED_BYTE, buffer.data()));
-
-    //flip row order
-    stbi_flip_vertically_on_write(1);
-
-    std::string filename = "screenshot_" + SysTime::dateString() + "_" + SysTime::timeString() + ".png";
-    std::replace(filename.begin(), filename.end(), '/', '_');
-    std::replace(filename.begin(), filename.end(), ':', '_');
-
-    RaiiRWops out;
-    out.file = SDL_RWFromFile(filename.c_str(), "w");
-    stbi_write_png_to_func(image_write_func, out.file, size.x, size.y, 4, buffer.data(), size.x * 4);
 }
 
 bool Detail::isPSLayout(SDL_GameController* gc)

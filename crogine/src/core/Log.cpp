@@ -30,6 +30,7 @@ source distribution.
 #include <crogine/core/Log.hpp>
 #include <crogine/core/App.hpp>
 #include <crogine/core/Console.hpp>
+#include <crogine/core/String.hpp>
 #include <crogine/core/SysTime.hpp>
 #include <crogine/detail/Types.hpp>
 
@@ -226,3 +227,10 @@ LogStream::LogStream()
 {
 
 }
+
+//operator overloads
+//std::ostream& operator << (std::ostream& out, const cro::String& str)
+//{
+//    out << str.toAnsiString();
+//    return out;
+//}

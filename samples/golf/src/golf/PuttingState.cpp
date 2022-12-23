@@ -87,6 +87,7 @@ source distribution.
 
 namespace
 {
+#include "CelShader.inl"
 #include "TerrainShader.inl"
 #include "TransitionShader.inl"
 #include "MinimapShader.inl"
@@ -156,7 +157,7 @@ namespace
 PuttingState::PuttingState(cro::StateStack& stack, cro::State::Context context, SharedStateData& sd)
     : cro::State        (stack, context),
     m_sharedData        (sd),
-    m_inputParser       (sd.inputBinding, context.appInstance.getMessageBus()),
+    m_inputParser       (sd, context.appInstance.getMessageBus()),
     m_gameScene         (context.appInstance.getMessageBus()),
     m_uiScene           (context.appInstance.getMessageBus()),
     m_viewScale         (1.f),
@@ -462,7 +463,7 @@ bool PuttingState::simulate(float dt)
     m_windBuffer.setData(data);
 
 
-    m_inputParser.update(dt);
+    m_inputParser.update(dt, TerrainID::Fairway);
     m_gameScene.simulate(dt);
     m_uiScene.simulate(dt);
 

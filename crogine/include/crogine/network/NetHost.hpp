@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2022
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -103,7 +103,7 @@ namespace cro
         channels have higher priority, with 0 being highest.
         */
         template <typename T>
-        void broadcastPacket(std::uint8_t id, const T& data, NetFlag flags, std::uint8_t channel = 0);
+        void broadcastPacket(std::uint8_t id, const T& data, NetFlag flags, std::uint8_t channel = 0) const;
 
         /*!
         \brief Broadcasts the given stream of bytes to all connected clients
@@ -116,7 +116,7 @@ namespace cro
         \param channel Stream channel over which to send the data. Lower number
         channels have higher priority, with 0 being highest.
         */
-        void broadcastPacket(std::uint8_t id, const void* data, std::size_t size, NetFlag flags, std::uint8_t channel = 0);
+        void broadcastPacket(std::uint8_t id, const void* data, std::size_t size, NetFlag flags, std::uint8_t channel = 0) const;
 
         /*!
         \brief Sends a packet to the given peer if a connection is
@@ -135,7 +135,7 @@ namespace cro
         channels have higher priority, with 0 being highest.
         */
         template <typename T>
-        void sendPacket(const NetPeer& peer, std::uint8_t id, const T& data, NetFlag flags, std::uint8_t channel = 0);
+        void sendPacket(const NetPeer& peer, std::uint8_t id, const T& data, NetFlag flags, std::uint8_t channel = 0) const;
 
         /*!
         \brief Sends the given array of bytes out over the given peer if it
@@ -150,7 +150,7 @@ namespace cro
         \param channel Stream channel over which to send the data. Lower number
         channels have higher priority, with 0 being highest.
         */
-        void sendPacket(const NetPeer& peer, std::uint8_t id, const void* data, std::size_t size, NetFlag flags, std::uint8_t channel = 0);
+        void sendPacket(const NetPeer& peer, std::uint8_t id, const void* data, std::size_t size, NetFlag flags, std::uint8_t channel = 0) const;
 
 
         /*!

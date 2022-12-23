@@ -98,7 +98,8 @@ struct SceneEvent
     enum
     {
         TransitionComplete,
-        RequestSwitchCamera
+        RequestSwitchCamera,
+        PlayerIdle
     }type = TransitionComplete;
     std::int32_t data = -1;
 };
@@ -122,7 +123,8 @@ struct SystemEvent final
         PostProcessIndexChanged,
         StateRequest,
         InputActivated,
-        ShadowQualityChanged
+        ShadowQualityChanged,
+        MenuChanged
     }type = PostProcessToggled;
     std::int32_t data = -1;
 };
@@ -166,6 +168,8 @@ struct AIEvent final
     enum
     {
         BeginThink,
-        EndThink
+        EndThink,
+        Predict
     }type = BeginThink;
+    float power = 0.f;
 };

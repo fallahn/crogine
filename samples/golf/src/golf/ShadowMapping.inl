@@ -56,9 +56,8 @@ static const std::string ShadowVertex = R"(
         uniform mat4 u_boneMatrices[MAX_BONES];
     #endif
 
-    #if defined(INSTANCING)
-        uniform mat4 u_viewMatrix;        
-    #else
+        uniform mat4 u_viewMatrix;
+    #if !defined(INSTANCING)
         uniform mat4 u_worldViewMatrix;
     #endif
         uniform mat4 u_worldMatrix;
@@ -75,15 +74,14 @@ static const std::string ShadowVertex = R"(
         uniform float u_offsetMultiplier;
     #endif
 
-#if defined(WIND_WARP) || defined(TREE_WARP) || defined(LEAF_SIZE)
-        layout (std140) uniform WindValues
-        {
-            vec4 u_windData; //dirX, strength, dirZ, elapsedTime
-        };
+    #if defined(WIND_WARP) || defined(TREE_WARP) || defined(LEAF_SIZE)
+    #include WIND_BUFFER
+
         const float MaxWindOffset = 0.2;
-        const float Amp = 0.02; //metres
+
         uniform float u_leafSize = 0.25;
-#endif
+        uniform sampler2D u_noiseTexture;
+    #endif
 
     #if defined (MOBILE)
         VARYING_OUT vec4 v_position;
@@ -101,6 +99,11 @@ static const std::string ShadowVertex = R"(
 
             return vec;
         }
+
+    #if defined(WIND_WARP) || defined (TREE_WARP) || defined(LEAF_SIZE)
+    #include WIND_CALC
+    #endif
+
 
         void main()
         {
@@ -134,42 +137,43 @@ static const std::string ShadowVertex = R"(
         #endif                    
 
     #if defined(WIND_WARP)
-            const float xFreq = 0.6;
-            const float yFreq = 0.8;
-            const float scale = 0.2;
 
-            float strength = u_windData.y;
-            float totalScale = scale * strength * a_colour.b;
+            //red low freq, green high freq, blue direction amount
+            //worldMatrix[3].xz position for all verts.
+            WindResult windResult = getWindData(position.xz, worldMatrix[3].xz);
+            vec3 vertexStrength = a_colour.rgb;
+            //multiply high and low frequency by vertex colours
+            windResult.lowFreq *= vertexStrength.r;
+            windResult.highFreq *= vertexStrength.g;
 
-            position.x += sin((u_windData.w * (xFreq)) + worldMatrix[3].x) * totalScale;
-            position.z += sin((u_windData.w * (yFreq)) + worldMatrix[3].z) * totalScale;
-            position.xz += (u_windData.xz * strength * 2.0) * totalScale;
+            //apply high frequency and low frequency in local space
+            position.x += windResult.lowFreq.x + windResult.highFreq.x;
+            position.z += windResult.lowFreq.y + windResult.highFreq.y;
+
+            //multiply wind direction by wind strength
+            vec3 windDir = vec3(u_windData.x, 0.0, u_windData.z) * windResult.strength * vertexStrength.b;
+            //wind dir is added in world space (below)
     #elif defined(TREE_WARP)
-        
 
-    //red channel is high freq done in local space
+            WindResult windResult = getWindData(position.xz, worldMatrix[3].xz);
 
-            float time = (u_windData.w * 15.0) + gl_InstanceID + gl_VertexID;
-            float highFreq = sin(time) * Amp * a_colour.r;
-            position.y += highFreq * (0.2 + (0.8 * u_windData.y));
+            vec3 vertexStrength = a_colour.rgb;
+            //multiply high and low frequency by vertex colours
+            //note that in tree models red/green ARE SWAPPED >.<
+            windResult.highFreq *= vertexStrength.r;
+            windResult.lowFreq *= vertexStrength.g;
 
-    //blue channel is 'bend' in world space
+            //apply high frequency and low frequency in local space
+            position.x += windResult.lowFreq.x + windResult.highFreq.x;
+            position.z += windResult.lowFreq.y + windResult.highFreq.y;
+
+            //multiply wind direction by wind strength
+            vec3 windDir = vec3(u_windData.x, 0.0, u_windData.z) * windResult.strength * vertexStrength.b;
+            //wind dir is added in world space (below)
+
             vec4 worldPosition = worldMatrix * position;
+            worldPosition.xyz += windDir;
 
-            time = (u_windData.w * 5.0) + gl_InstanceID;
-            float x = sin(time * 2.0) / 8.0;
-            float y = cos(time) / 2.0;
-            vec3 windOffset = vec3(x, 0.0, x + y) * a_colour.b * 0.5;
-
-
-            vec3 windDir = normalize(vec3(u_windData.x, 0.f, u_windData.z));
-            float dirStrength = a_colour.b;
-
-            windOffset += windDir * u_windData.y * dirStrength;// * 2.0;
-            worldPosition.xyz += windOffset * MaxWindOffset * u_windData.y;
-
-
-            //this only works if shadows are instanced...
             gl_Position = u_projectionMatrix * u_viewMatrix * worldPosition;
             gl_PointSize = 40.0;
     #endif
@@ -179,10 +183,18 @@ static const std::string ShadowVertex = R"(
         vec4 worldPosition = worldMatrix * position;
         vec3 normal = u_normalMatrix * a_normal;
 
-        float time = (u_windData.w * 5.0) + gl_InstanceID + gl_VertexID;
+WindResult windResult = getWindData(position.xz, worldPosition.xz);
+windResult.lowFreq *= 0.5 + (0.5 * u_windData.y);
+windResult.highFreq *= 0.5 + (0.5 * u_windData.y);
+
+float x = windResult.highFreq.x;
+float y = windResult.lowFreq.y;
+vec3 windOffset = vec3(x, y, windResult.highFreq.y) * 5.0;
+
+        /*float time = (u_windData.w * 5.0) + gl_InstanceID + gl_VertexID;
         float x = sin(time * 2.0) / 8.0;
         float y = cos(time) / 2.0;
-        vec3 windOffset = vec3(x, y, x);
+        vec3 windOffset = vec3(x, y, x);*/
 
         vec3 windDir = normalize(vec3(u_windData.x, 0.f, u_windData.z));
         float dirStrength = dot(normal, windDir);
@@ -191,6 +203,9 @@ static const std::string ShadowVertex = R"(
 
         windOffset += windDir * u_windData.y * dirStrength * 2.0;
         worldPosition.xyz += windOffset * MaxWindOffset * u_windData.y;
+
+worldPosition.x += windResult.lowFreq.x;
+worldPosition.z += windResult.lowFreq.y;
 
         gl_Position = u_projectionMatrix * u_viewMatrix * worldPosition;
 
@@ -229,7 +244,14 @@ static const std::string ShadowVertex = R"(
 
 
     #if !defined(TREE_WARP) && !defined(LEAF_SIZE)
+
+    #if defined(WIND_WARP)
+            position = worldMatrix * position;
+            position.xyz += windDir;
+            gl_Position = u_projectionMatrix * u_viewMatrix * position;
+    #else
             gl_Position = wvp * position;
+    #endif
     #endif
 
         #if defined (MOBILE)

@@ -108,7 +108,7 @@ namespace cro
         T& addComponent(Args&&...);
 
         /*!
-        \brief returns true if the component type exists on thie entity
+        \brief returns true if the component type exists on the entity
         */
         template <typename T>
         bool hasComponent() const;

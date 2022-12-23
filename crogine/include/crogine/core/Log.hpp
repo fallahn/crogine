@@ -50,6 +50,8 @@ source distribution.
 
 namespace cro
 {
+    class String;
+
     /*!
     \brief Class to allowing messages to be logged to a combination
     of one or more destinations such as the console, log file or

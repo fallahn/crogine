@@ -33,6 +33,7 @@ source distribution.
 #include "CommandIDs.hpp"
 #include "MessageIDs.hpp"
 #include "MenuConsts.hpp"
+#include "GameConsts.hpp"
 #include "BilliardsSystem.hpp"
 #include "BilliardsClientCollision.hpp"
 #include "InterpolationSystem.hpp"
@@ -84,7 +85,8 @@ source distribution.
 namespace
 {
 #include "WireframeShader.inl"
-#include "TerrainShader.inl"
+#include "CelShader.inl"
+#include "ShaderIncludes.inl"
 
     constexpr float MaxShadowDistance = 12.f;
     constexpr float ShadowExpansion = 10.f;
@@ -189,7 +191,7 @@ BilliardsState::BilliardsState(cro::StateStack& ss, cro::State::Context ctx, Sha
     //        ImGui::End();
     //    });
 
-    registerWindow([&]()
+    /*registerWindow([&]()
         {
             if (ImGui::Begin("Window"))
             {
@@ -209,7 +211,7 @@ BilliardsState::BilliardsState(cro::StateStack& ss, cro::State::Context ctx, Sha
                 }
             }
             ImGui::End();
-        });
+        });*/
 #endif
 
     m_inputParser.setActive(false, false); //activates spectator cam input on start up
@@ -252,7 +254,7 @@ bool BilliardsState::handleEvent(const cro::Event& evt)
     }
     else 
 #endif
-
+    //TODO we need a good way to release the mouse without interfering with game play...
     if (evt.type == SDL_KEYDOWN)
     {
         switch (evt.key.keysym.sym)
@@ -326,7 +328,7 @@ bool BilliardsState::handleEvent(const cro::Event& evt)
         }
     }
     else if (evt.type == SDL_CONTROLLERBUTTONDOWN
-        && evt.cbutton.which == cro::GameController::deviceID(m_sharedData.inputBinding.controllerID))
+        && evt.cbutton.which == activeControllerID(m_sharedData.inputBinding.playerID))
     {
         switch (evt.cbutton.button)
         {
@@ -341,7 +343,7 @@ bool BilliardsState::handleEvent(const cro::Event& evt)
         }
     }
     else if (evt.type == SDL_CONTROLLERBUTTONUP
-        && evt.cbutton.which == cro::GameController::deviceID(m_sharedData.inputBinding.controllerID))
+        && evt.cbutton.which == activeControllerID(m_sharedData.inputBinding.playerID))
     {
         switch (evt.cbutton.button)
         {
@@ -351,24 +353,7 @@ bool BilliardsState::handleEvent(const cro::Event& evt)
             break;
         }
     }
-    else if (evt.type == SDL_CONTROLLERDEVICEREMOVED)
-    {
-        //check if any players are using the controller
-        //and reassign any still connected devices
-        for (auto i = 0; i < 4; ++i)
-        {
-            if (evt.cdevice.which == cro::GameController::deviceID(i))
-            {
-                for (auto& idx : m_sharedData.controllerIDs)
-                {
-                    idx = std::max(0, i - 1);
-                }
-                //update the input parser in case this player is active
-                m_sharedData.inputBinding.controllerID = m_sharedData.controllerIDs[m_currentPlayer.player];
-                break;
-            }
-        }
-    }
+
     else if (evt.type == SDL_MOUSEBUTTONDOWN)
     {
         if (evt.button.button == SDL_BUTTON_LEFT)
@@ -411,6 +396,7 @@ void BilliardsState::handleMessage(const cro::Message& msg)
             input.player = m_currentPlayer.player;
 
             m_sharedData.clientConnection.netClient.sendPacket(PacketID::InputUpdate, input, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+            cro::GameController::rumbleStart(activeControllerID(m_currentPlayer.player), 60000 * m_sharedData.enableRumble, 0, 300);
 
             if (m_activeCamera != CameraID::Overhead)
             {
@@ -643,6 +629,11 @@ void BilliardsState::loadAssets()
     }
 
     std::fill(m_materialIDs.begin(), m_materialIDs.end(), -1);
+
+    for (const auto& [name, str] : IncludeMappings)
+    {
+        m_resources.shaders.addInclude(name, str);
+    }
 
     m_resources.shaders.loadFromString(ShaderID::Wireframe, WireframeVertex, WireframeFragment, "#define DASHED\n");
     auto* shader = &m_resources.shaders.get(ShaderID::Wireframe);
@@ -1593,7 +1584,7 @@ void BilliardsState::setPlayer(const BilliardsPlayer& playerInfo)
             {
                 m_inputParser.setActive(true, !m_cueball.isValid());
                 //m_uiScene.getSystem<NotificationSystem>()->clearCurrent();
-                m_sharedData.inputBinding.controllerID = m_sharedData.controllerIDs[playerInfo.player];
+                m_sharedData.inputBinding.playerID = playerInfo.player;
 
                 m_localCue.getComponent<cro::Callback>().getUserData<CueCallbackData>().direction = CueCallbackData::In;
                 m_localCue.getComponent<cro::Callback>().active = true;
@@ -1738,7 +1729,14 @@ void BilliardsState::resizeBuffers()
     float maxScale = std::floor(winSize.y / vpSize.y);
     float scale = m_sharedData.pixelScale ? maxScale : 1.f;
     auto texSize = winSize / scale;
-    m_gameSceneTexture.create(static_cast<std::uint32_t>(texSize.x), static_cast<std::uint32_t>(texSize.y));
+
+    std::uint32_t samples = m_sharedData.pixelScale ? 0 :
+        m_sharedData.antialias ? m_sharedData.multisamples : 0;
+
+    m_sharedData.antialias =
+        m_gameSceneTexture.create(static_cast<std::uint32_t>(texSize.x), static_cast<std::uint32_t>(texSize.y), true, false, samples)
+        && m_sharedData.multisamples != 0
+        && !m_sharedData.pixelScale;
 
 #ifdef CRO_DEBUG_
     auto size = m_gameSceneTexture.getSize() / 2u;
@@ -1762,7 +1760,7 @@ void BilliardsState::resizeBuffers()
     texSize = { TopspinSize, TopspinSize };
     texSize *= maxScale;
     texSize /= scale;
-    m_topspinTexture.create(static_cast<std::uint32_t>(texSize.x), static_cast<std::uint32_t>(texSize.y));
+    m_topspinTexture.create(static_cast<std::uint32_t>(texSize.x), static_cast<std::uint32_t>(texSize.y),true, false, samples);
 
     //target ball texture...
     constexpr float TargetSize = 22.f;
@@ -1799,14 +1797,14 @@ void BilliardsState::resizeBuffers()
     texSize = { 128.f, 128.f };
     texSize *= maxScale;
     texSize /= scale;
-    m_trophyTexture.create(static_cast<std::uint32_t>(texSize.x), static_cast<std::uint32_t>(texSize.y));
+    m_trophyTexture.create(static_cast<std::uint32_t>(texSize.x), static_cast<std::uint32_t>(texSize.y), true, false, samples);
 
 
     //and texture to display pocketed balls
     texSize = { 228.f, 14.f };
     texSize *= maxScale;
     texSize /= scale;
-    m_pocketedTexture.create(static_cast<std::uint32_t>(texSize.x), static_cast<std::uint32_t>(texSize.y));
+    m_pocketedTexture.create(static_cast<std::uint32_t>(texSize.x), static_cast<std::uint32_t>(texSize.y), true, false, samples);
 }
 
 glm::vec4 BilliardsState::getSubrect(std::int8_t id) const

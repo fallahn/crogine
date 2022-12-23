@@ -36,7 +36,7 @@ namespace cro
 {
     /*!
     \brief Wraps a MultiRenderTexture into a component.
-    GBuffer components sre used for Cameras which output
+    GBuffer components are used for Cameras which output
     via deferred renderering. Therefore it only makes sense
     to add this component to an entity with a Camera component
     which belongs to a Scene using the DeferredRenderSystem.

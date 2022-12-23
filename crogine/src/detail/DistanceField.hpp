@@ -35,6 +35,7 @@ source distribution.
 #include <SDL_surface.h>
 
 #include <vector>
+#include <cstdint>
 
 namespace cro
 {

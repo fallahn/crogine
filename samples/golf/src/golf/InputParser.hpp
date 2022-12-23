@@ -30,8 +30,10 @@ source distribution.
 #pragma once
 
 #include "InputBinding.hpp"
+#include "Swingput.hpp"
 
 #include <crogine/core/App.hpp>
+#include <crogine/core/Clock.hpp>
 #include <crogine/detail/glm/vec3.hpp>
 
 namespace cro
@@ -39,14 +41,16 @@ namespace cro
     class MessageBus;
 }
 
+struct SharedStateData;
 class InputParser final
 {
 public:
        
-    InputParser(const InputBinding&, cro::MessageBus&);
+    InputParser(const SharedStateData&, cro::MessageBus&);
 
     void handleEvent(const cro::Event&);
-    void setHoleDirection(glm::vec3, bool);
+    void setHoleDirection(glm::vec3);
+    void setClub(float); //picks closest club to given distance
     float getYaw() const;
 
     float getPower() const; //0-1 multiplied by selected club
@@ -60,10 +64,14 @@ public:
     void setMaxClub(float); //based on overall distance of hole
     void setMaxClub(std::int32_t); //force set when only wanting wedges for example
     void resetPower();
-    void update(float);
+    void update(float, std::int32_t terrain);
 
     bool inProgress() const;
     bool getActive() const;
+
+    bool isSwingputActive() const { return m_swingput.isActive(); }
+    float getSwingputPosition() const { return m_swingput.getActivePoint().y; }
+    void setMouseScale(float scale) { CRO_ASSERT(scale > 0, ""); m_swingput.setMouseScale(scale); }
 
     void setMaxRotation(float);
     float getMaxRotation() const { return m_maxRotation; }
@@ -73,8 +81,11 @@ public:
     static constexpr std::uint32_t CPU_ID = 1337u;
 
 private:
+    const SharedStateData& m_sharedData;
     const InputBinding& m_inputBinding;
     cro::MessageBus& m_messageBus;
+
+    Swingput m_swingput;
 
     std::uint16_t m_inputFlags;
     std::uint16_t m_prevFlags;
@@ -90,6 +101,7 @@ private:
     std::int32_t m_prevMouseMove;
 
     bool m_isCPU;
+    cro::Clock m_doubleTapClock; //prevent accidentally double tapping action
 
     float m_holeDirection; //radians
     float m_rotation; //+- max rads
@@ -112,7 +124,6 @@ private:
     std::int32_t m_firstClub;
     std::int32_t m_clubOffset; //offset ID from first club
 
-    void setClub(float); //picks closest club to given distance
     void rotate(float);
     void checkControllerInput();
     void checkMouseInput();

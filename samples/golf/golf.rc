@@ -61,8 +61,8 @@ IDI_ICON1               ICON                    "icon.ico"
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 1,2,0,0
- PRODUCTVERSION 1,2,0,0
+ FILEVERSION 1,10,0,0
+ PRODUCTVERSION 1,10,0,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -78,13 +78,13 @@ BEGIN
         BLOCK "080904b0"
         BEGIN
             VALUE "CompanyName", "Trederia"
-            VALUE "FileDescription", "VGA Golf"
-            VALUE "FileVersion", "1.2.0.0"
+            VALUE "FileDescription", "Super Video Golf"
+            VALUE "FileVersion", "1.10.0.0"
             VALUE "InternalName", "golf.exe"
-            VALUE "LegalCopyright", "Copyright (C) 2021 Trederia Games"
+            VALUE "LegalCopyright", "Copyright (C) 2022 Trederia Games"
             VALUE "OriginalFilename", "golf.exe"
-            VALUE "ProductName", "VGA Golf"
-            VALUE "ProductVersion", "1.2.0.0"
+            VALUE "ProductName", "Super Video Golf"
+            VALUE "ProductVersion", "1.10.0.0"
         END
     END
     BLOCK "VarFileInfo"

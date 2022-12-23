@@ -1,7 +1,0 @@
-ball 
-{
-    model = assets/golf/models/balls/ball_wings.cmt
-    tint = 0.447,0.125,0.188,1.0
-    uid = 923248659
-
-}

@@ -39,6 +39,7 @@ source distribution.
 #include "vats/VatsState.hpp"
 #include "retro/RetroState.hpp"
 #include "rolling/RollingState.hpp"
+#include "swingput/SwingState.hpp"
 #include "LoadingScreen.hpp"
 
 #include <crogine/core/Clock.hpp>
@@ -116,9 +117,10 @@ bool MyApp::initialise()
     m_stateStack.registerState<RetroState>(States::ScratchPad::Retro);
     m_stateStack.registerState<FrustumState>(States::ScratchPad::Frustum);
     m_stateStack.registerState<RollingState>(States::ScratchPad::Rolling);
+    m_stateStack.registerState<SwingState>(States::ScratchPad::Swing);
 
 #ifdef CRO_DEBUG_
-    m_stateStack.pushState(States::ScratchPad::Rolling);
+    m_stateStack.pushState(States::ScratchPad::Swing);
     //m_stateStack.pushState(States::ScratchPad::MainMenu);
 #else
     m_stateStack.pushState(States::ScratchPad::MainMenu);

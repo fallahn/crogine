@@ -106,34 +106,6 @@ const Camera::Pass& Camera::getPass(std::uint32_t pass) const
     }
 }
 
-Camera::DrawList& Camera::getDrawList(std::uint32_t pass)
-{
-    CRO_ASSERT(pass <= Camera::Pass::Refraction, "Must be a value for Camera::Pass enum");
-    switch (pass)
-    {
-    default:
-    case Camera::Pass::Final:
-    case Camera::Pass::Refraction:
-        return m_passes[Pass::Final].drawList;
-    case Camera::Pass::Reflection:
-        return m_passes[Pass::Reflection].drawList;
-    }
-}
-
-const Camera::DrawList& Camera::getDrawList(std::uint32_t pass) const
-{
-    CRO_ASSERT(pass <= Camera::Pass::Refraction, "Must be a value for Camera::Pass enum");
-    switch (pass)
-    {
-    default:
-    case Camera::Pass::Final:
-    case Camera::Pass::Refraction:
-        return m_passes[Pass::Final].drawList;
-    case Camera::Pass::Reflection:
-        return m_passes[Pass::Reflection].drawList;
-    }
-}
-
 void Camera::setPerspective(float fov, float aspect, float nearPlane, float farPlane, std::uint32_t numSplits)
 {
     m_projectionMatrix = glm::perspective(fov, aspect, nearPlane, farPlane);

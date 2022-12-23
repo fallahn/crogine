@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2021
+Matt Marchant 2020 - 2022
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -44,6 +44,7 @@ namespace States
             MeshCollision,
             Retro,
             Rolling,
+            Swing,
             Voxels,
             VATs,
 

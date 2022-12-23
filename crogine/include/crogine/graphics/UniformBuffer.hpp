@@ -96,7 +96,7 @@ namespace cro
 	\brief Utility class around a OpenGL's uniform buffer object.
 	Not available on mobile.
 
-	This class can be used to more effeciently group together shader
+	This class can be used to more efficiently group together shader
 	uniforms which are common between many shaders, for example elapsed
 	game time. Only really useful when using custom shaders, rather than
 	the built in material shaders (which have no uniform blocks defined).

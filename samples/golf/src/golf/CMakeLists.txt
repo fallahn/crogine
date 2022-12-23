@@ -14,11 +14,13 @@ set(GOLF_SRC
   ${PROJECT_DIR}/golf/ClubhouseStateUI.cpp
   ${PROJECT_DIR}/golf/CollisionMesh.cpp
   ${PROJECT_DIR}/golf/CPUGolfer.cpp
+  ${PROJECT_DIR}/golf/CreditsState.cpp
   ${PROJECT_DIR}/golf/DebugDraw.cpp
   ${PROJECT_DIR}/golf/DrivingRangeDirector.cpp
   ${PROJECT_DIR}/golf/DrivingState.cpp
   ${PROJECT_DIR}/golf/DrivingStateUI.cpp
   ${PROJECT_DIR}/golf/ErrorState.cpp
+  ${PROJECT_DIR}/golf/FloatingTextSystem.cpp
   ${PROJECT_DIR}/golf/FpsCameraSystem.cpp
   ${PROJECT_DIR}/golf/GolfCartSystem.cpp
   ${PROJECT_DIR}/golf/GolfParticleDirector.cpp
@@ -36,6 +38,9 @@ set(GOLF_SRC
   ${PROJECT_DIR}/golf/MenuCustomisation.cpp
   ${PROJECT_DIR}/golf/MenuSoundDirector.cpp
   ${PROJECT_DIR}/golf/MenuState.cpp
+  ${PROJECT_DIR}/golf/MessageOverlayState.cpp
+  ${PROJECT_DIR}/golf/MiniBallSystem.cpp
+  ${PROJECT_DIR}/golf/NameScrollSystem.cpp
   ${PROJECT_DIR}/golf/NewsState.cpp
   ${PROJECT_DIR}/golf/NotificationSystem.cpp
   ${PROJECT_DIR}/golf/OptionsState.cpp
@@ -47,14 +52,16 @@ set(GOLF_SRC
   ${PROJECT_DIR}/golf/PocketBallSystem.cpp
   ${PROJECT_DIR}/golf/PracticeState.cpp
   ${PROJECT_DIR}/golf/PropFollowSystem.cpp
-  ${PROJECT_DIR}/golf/PuttingState.cpp
-  ${PROJECT_DIR}/golf/PuttingStateUI.cpp
+  #${PROJECT_DIR}/golf/PuttingState.cpp
+  #${PROJECT_DIR}/golf/PuttingStateUI.cpp
   ${PROJECT_DIR}/golf/SharedStateData.cpp
   ${PROJECT_DIR}/golf/SoundEffectsDirector.cpp
   ${PROJECT_DIR}/golf/SpectatorSystem.cpp
   ${PROJECT_DIR}/golf/spooky2.cpp
   ${PROJECT_DIR}/golf/StudioCameraSystem.cpp
+  ${PROJECT_DIR}/golf/Swingput.cpp
   ${PROJECT_DIR}/golf/TerrainBuilder.cpp
+  ${PROJECT_DIR}/golf/TerrainDepthmap.cpp
   ${PROJECT_DIR}/golf/TrophyDisplaySystem.cpp
   ${PROJECT_DIR}/golf/TrophyState.cpp
   ${PROJECT_DIR}/golf/TutorialDirector.cpp

@@ -51,6 +51,7 @@ static const std::string WaterVertex = R"(
     VARYING_OUT vec4 v_refractionPosition;
     VARYING_OUT LOW vec4 v_lightWorldPosition;
     VARYING_OUT vec2 v_vertDistance;
+    VARYING_OUT float v_scale;
 
     const vec2 MapSize = vec2(320.0, 200.0);
 
@@ -70,26 +71,27 @@ static const std::string WaterVertex = R"(
         v_lightWorldPosition = u_lightViewProjectionMatrix * position;
 
         v_vertDistance = a_position.xy;
+
+        v_scale = u_worldMatrix[0][0];
     })";
 
 static const std::string WaterFragment = R"(
     OUTPUT
+    #define MAX_RADIUS 239.9
 
     uniform sampler2D u_reflectionMap;
     uniform sampler2D u_refractionMap;
 
+#if !defined(NO_DEPTH)
+uniform sampler2DArray u_depthMap;
+#endif
     uniform vec3 u_cameraWorldPosition;
-    uniform float u_radius = 239.9;
+    uniform float u_radius = MAX_RADIUS;
 
-    layout (std140) uniform WindValues
-    {
-        vec4 u_windData; //dirX, strength, dirZ, elapsedTime
-    };
+//dirX, strength, dirZ, elapsedTime
+#include WIND_BUFFER
 
-    layout (std140) uniform PixelScale
-    {
-        float u_pixelScale;
-    };
+#include SCALE_BUFFER
 
     VARYING_IN vec3 v_normal;
     VARYING_IN vec2 v_texCoord;
@@ -99,61 +101,53 @@ static const std::string WaterFragment = R"(
     VARYING_IN vec4 v_refractionPosition;
 
     VARYING_IN vec2 v_vertDistance;
+    VARYING_IN float v_scale;
 
-    // pixels per metre
-    vec2 PixelCount = vec2(320.0 * 2.0, 200.0 * 2.0);
+    //pixels per metre
+    vec2 PixelCount = vec2(320.0 * 4.0, 200.0 * 4.0);
 
     const vec3 WaterColour = vec3(0.02, 0.078, 0.578);
     //const vec3 WaterColour = vec3(0.2, 0.278, 0.278);
     //const vec3 WaterColour = vec3(0.137, 0.267, 0.53);
 
-    float rand(float n){return fract(sin(n) * 43758.5453123);}
+#include RANDOM
 
-    float noise(vec2 pos)
+#include BAYER_MATRIX
+
+    float linearise(float d)
     {
-        return fract(sin(dot(pos, vec2(12.9898, 4.1414))) * 43758.5453);
+        const float zNear = 10.02; //note these have to match the near/far plane of the depthmap camera
+        const float zFar = 10.48;
+
+        return zNear * zFar / (zFar + d * (zNear - zFar));
     }
 
-    //function based on example by martinsh.blogspot.com
-    const int MatrixSize = 8;
-    float findClosest(int x, int y, float c0)
+#if !defined(NO_DEPTH)
+    float getDepth()
     {
-        /* 8x8 Bayer ordered dithering */
-        /* pattern. Each input pixel */
-        /* is scaled to the 0..63 range */
-        /* before looking in this table */
-        /* to determine the action. */
+        const float ColCount = 8.0;
+        const float MetresPerTexture = 40.0;
 
-        const int dither[64] = int[64](
-         0, 32, 8, 40, 2, 34, 10, 42, 
-        48, 16, 56, 24, 50, 18, 58, 26, 
-        12, 44, 4, 36, 14, 46, 6, 38, 
-        60, 28, 52, 20, 62, 30, 54, 22, 
-         3, 35, 11, 43, 1, 33, 9, 41, 
-        51, 19, 59, 27, 49, 17, 57, 25,
-        15, 47, 7, 39, 13, 45, 5, 37,
-        63, 31, 55, 23, 61, 29, 53, 21 );
+        float x = floor((v_worldPosition.x / MetresPerTexture));
+        float y = floor((-v_worldPosition.z / MetresPerTexture));
+        float index = clamp((y * ColCount) + x, 0.0, 39.0);
 
-        float limit = 0.0;
-        if (x < MatrixSize)
-        {
-            limit = (dither[y * MatrixSize + x] + 1) / 64.0;
-        }
+        float u = (v_worldPosition.x - (x * MetresPerTexture)) / MetresPerTexture;
+        float v = -(v_worldPosition.z + (y * MetresPerTexture)) / MetresPerTexture;
 
-        if (c0 < limit)
-        {
-            return 0.0;
-        }
-        return 1.0;
+        float stepX = step(0.0, v_worldPosition.x) * (1.0 - step(320.0, v_worldPosition.x));
+        float stepY = step(0.0, -v_worldPosition.z) * (1.0 - step(200.0, -v_worldPosition.z));
+
+        return (1.0 - texture(u_depthMap, vec3(u, v, index)).r) * stepX * stepY;
     }
-
+#endif
 
     void main()
     {
         //sparkle
         float waveSpeed = (u_windData.w * 7.5);
         vec2 coord = v_texCoord;
-        coord.y += waveSpeed / (PixelCount.y * 4.0);
+        //coord.y += waveSpeed / (PixelCount.y * 4.0); //makes the waves drift across the surface
 
         vec2 pixelCoord = floor(mod(coord, 1.0) * PixelCount);
         float wave = noise(pixelCoord);
@@ -179,19 +173,38 @@ static const std::string WaterFragment = R"(
 
         vec3 blendedColour = mix(reflectColour.rgb, WaterColour.rgb, fresnel);
 
-        wave *= 0.2 * pow(reflectCoords.y, 4.0);
+        float edgeWave = wave;
+
+        //wave *= 0.2 * pow(reflectCoords.y, 4.0);
+        wave *= 0.01 + (0.19 * pow(reflectCoords.y, 4.0));
+
         blendedColour.rgb += wave;
 
         //edge feather
         float amount = 1.0 - smoothstep(u_radius * 0.625, u_radius, length(v_vertDistance));
 
-        vec2 xy = gl_FragCoord.xy / u_pixelScale;
+        vec2 xy = gl_FragCoord.xy;// / u_pixelScale;
         int x = int(mod(xy.x, MatrixSize));
         int y = int(mod(xy.y, MatrixSize));
         float alpha = findClosest(x, y, amount);
 
         if(alpha < 0.1) discard;
+#if !defined(NO_DEPTH)
+        //wave at edge/intersection
 
+        //xy = gl_FragCoord.xy / u_pixelScale;
+
+        xy = vec2(v_worldPosition.x, -v_worldPosition.z) * 32.0;
+        x = int(mod(xy.x, MatrixSize));
+        y = int(mod(xy.y, MatrixSize));
+
+        float depth = getDepth() * clamp(v_scale, 0.0, 1.0);
+        depth *= findClosest(x,y,pow(depth, 3.0));
+        
+        edgeWave *= 0.07;
+        blendedColour += edgeWave * depth;
+        blendedColour += depth * 0.18;
+#endif
         FRAG_OUT = vec4(blendedColour, 1.0);
     })";
 

@@ -31,6 +31,7 @@ source distribution.
 #include "GameConsts.hpp"
 #include "MenuConsts.hpp"
 #include "spooky2.hpp"
+#include "BallSystem.hpp"
 
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Model.hpp>
@@ -49,26 +50,7 @@ void MenuState::createBallScene()
     static constexpr float RootPoint = 100.f;
     static constexpr float BallSpacing = 0.09f;
 
-    auto ballTexCallback = [&](cro::Camera&)
-    {
-        auto vpSize = calcVPSize().y;
-        auto windowSize = static_cast<float>(cro::App::getWindow().getSize().y);
-
-        float windowScale = std::floor(windowSize / vpSize);
-        float scale = m_sharedData.pixelScale ? windowScale : 1.f;
-        auto size = BallPreviewSize * static_cast<std::uint32_t>((windowScale + 1.f) - scale);
-        m_ballTexture.create(size, size);
-    };
-
-    m_ballCam = m_backgroundScene.createEntity();
-    m_ballCam.addComponent<cro::Transform>().setPosition({ RootPoint, 0.045f, 0.095f });
-    m_ballCam.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -0.03f);
-    m_ballCam.addComponent<cro::Camera>().setPerspective(1.f, 1.f, 0.001f, 2.f);
-    m_ballCam.getComponent<cro::Camera>().resizeCallback = ballTexCallback;
-    m_ballCam.addComponent<cro::Callback>().active = true;
-    m_ballCam.getComponent<cro::Callback>().setUserData<std::int32_t>(0);
-    m_ballCam.getComponent<cro::Callback>().function =
-        [](cro::Entity e, float dt)
+    auto ballTargetCallback = [](cro::Entity e, float dt)
     {
         auto id = e.getComponent<cro::Callback>().getUserData<std::int32_t>();
         float target = RootPoint + (BallSpacing * id);
@@ -78,10 +60,53 @@ void MenuState::createBallScene()
         pos.x += diff * (dt * 10.f);
 
         e.getComponent<cro::Transform>().setPosition(pos);
+        e.getComponent<cro::Camera>().active = (std::abs(diff) > Ball::Radius * 0.1f);
     };
 
-    ballTexCallback(m_ballCam.getComponent<cro::Camera>());
+    for (auto i = 0u; i < m_ballThumbCams.size(); ++i)
+    {
+        auto entity = m_backgroundScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ RootPoint - 10.f, 0.045f, 0.095f });
+        entity.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -0.03f);
+        entity.addComponent<cro::Camera>().setPerspective(0.89f, 2.f, 0.001f, 2.f);
+        entity.getComponent<cro::Camera>().viewport = { (i % 2) * 0.5f, (i / 2) * 0.5f, 0.5f, 0.5f };
+        entity.addComponent<cro::Callback>().active = true;
+        entity.getComponent<cro::Callback>().setUserData<std::int32_t>(0);
+        entity.getComponent<cro::Callback>().function = ballTargetCallback;
+        m_ballThumbCams[i] = entity;
+    }
 
+
+    auto ballTexCallback = [&](cro::Camera&)
+    {
+        std::uint32_t samples = m_sharedData.pixelScale ? 0 :
+            m_sharedData.antialias ? m_sharedData.multisamples : 0;
+
+        auto vpSize = calcVPSize().y;
+        auto windowSize = static_cast<float>(cro::App::getWindow().getSize().y);
+
+        float windowScale = std::floor(windowSize / vpSize);
+        float scale = m_sharedData.pixelScale ? windowScale : 1.f;
+        
+        auto invScale = static_cast<std::uint32_t>((windowScale + 1.f) - scale);
+        auto size = BallPreviewSize * invScale;
+        m_ballTexture.create(size, size, true, false, samples);
+
+        size = BallThumbSize * invScale;
+        m_ballThumbTexture.create(size * 4, size * 2, true, false, samples);
+    };
+
+    m_ballCam = m_backgroundScene.createEntity();
+    m_ballCam.addComponent<cro::Transform>().setPosition({ RootPoint - 10.f, 0.045f, 0.095f });
+    m_ballCam.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -0.03f);
+    m_ballCam.addComponent<cro::Camera>().setPerspective(1.f, 1.f, 0.001f, 2.f);
+    m_ballCam.getComponent<cro::Camera>().resizeCallback = ballTexCallback;
+    m_ballCam.addComponent<cro::Callback>().active = true;
+    m_ballCam.getComponent<cro::Callback>().setUserData<std::int32_t>(0);
+    m_ballCam.getComponent<cro::Callback>().function = ballTargetCallback;
+
+
+    ballTexCallback(m_ballCam.getComponent<cro::Camera>());
 
     auto ballFiles = cro::FileSystem::listFiles(cro::FileSystem::getResourcePath() + "assets/golf/balls");
     if (ballFiles.empty())

@@ -391,9 +391,9 @@ void EightballDirector::summariseTurn()
                 //this should notify clients
                 if (m_turnFlags == TurnFlags::FreeTable)
                 {
-                    auto* msg = postMessage<BilliardsEvent>(sv::MessageID::BilliardsMessage);
-                    msg->type = BilliardsEvent::Foul;
-                    msg->first = BilliardsEvent::FreeTable;
+                    auto* msg2 = postMessage<BilliardsEvent>(sv::MessageID::BilliardsMessage);
+                    msg2->type = BilliardsEvent::Foul;
+                    msg2->first = BilliardsEvent::FreeTable;
                 }
             }
         };

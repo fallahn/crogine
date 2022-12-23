@@ -241,7 +241,7 @@ void DepthTexture::display()
 
 TextureID DepthTexture::getTexture() const
 {
-    return TextureID(m_textureID);
+    return TextureID(m_textureID, true);
 }
 
 TextureID DepthTexture::getTexture(std::uint32_t index) const

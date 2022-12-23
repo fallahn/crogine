@@ -62,7 +62,7 @@ namespace cro
 
         /*!
         \brief Sets the perceived velocity of the Listener.
-        This is used by the AudioRenderer to calculate the doppler effect when
+        This is used by the AudioRenderer to calculate the Doppler effect when
         moving the Listener past an Emitter.
         Note that this is not automatically calculated and needs to be set
         explicitly by the user. The default units are metres per second.

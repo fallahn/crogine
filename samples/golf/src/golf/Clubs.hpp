@@ -74,12 +74,12 @@ struct ClubID final
 
 static const std::array<Club, ClubID::Count> Clubs =
 {
-    Club("Driver ", 46.5f, 45.f, 220.f),
-    Club("3 Wood ", 42.02f, 45.f, 180.f),
-    Club("5 Iron ", 37.35f, 40.f, 140.f),
-    Club("9 Iron ", 31.56f, 40.f, 100.f),
-    Club("Pitch Wedge ", 25.9f, 52.f, 70.f),
-    Club("Gap Wedge ", 17.8f, 60.f, 30.f),
-    Club("Sand Wedge ", 10.65f, 60.f, 10.f),
-    Club("Putter ", 7.f, 0.f, 7.f)
+    Club("Driver ", 44.f, 45.f, 220.f),
+    Club("3 Wood ", 39.5f, 45.f, 180.f),
+    Club("5 Iron ", 35.f, 40.f, 140.f),
+    Club("9 Iron ", 30.1f, 40.f, 100.f),
+    Club("Pitch Wedge ", 25.2f, 52.f, 70.f),
+    Club("Gap Wedge ", 17.4f, 60.f, 30.f),
+    Club("Sand Wedge ", 10.3f, 60.f, 10.f),
+    Club("Putter ", 6.39f, 0.f, 7.f) //make sure to update slope shader in TerrainShader.inl with this as the radius
 };

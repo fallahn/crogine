@@ -1,9 +1,0 @@
-cubemap sky
-{
-    up = "assets/golf/images/skybox/autumn/py.png"
-    down = "assets/golf/images/skybox/autumn/ny.png"
-    left = "assets/golf/images/skybox/autumn/nx.png"
-    right = "assets/golf/images/skybox/autumn/px.png"
-    front = "assets/golf/images/skybox/autumn/pz.png"
-    back = "assets/golf/images/skybox/autumn/nz.png"
-}

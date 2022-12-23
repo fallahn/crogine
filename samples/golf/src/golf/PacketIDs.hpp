@@ -32,16 +32,6 @@ source distribution.
 #include <cstdint>
 #include <string>
 
-//just to detect client/server version mismatch
-//(terrain data changed between 100 -> 110)
-//(model format changed between 120 -> 130)
-//(server layout updated 140 -> 150)
-//(skybox format changed 150 -> 160)
-//(hole count became game rule 170 -> 180)
-
-static constexpr std::uint16_t CURRENT_VER = 190;
-static const std::string StringVer("1.9.1");
-
 namespace ScoreType
 {
     enum
@@ -64,6 +54,14 @@ namespace MessageType
     };
 }
 
+namespace Emote
+{
+    enum
+    {
+        Happy, Grumpy, Laughing, Sad
+    };
+}
+
 namespace PacketID
 {
     enum
@@ -79,7 +77,8 @@ namespace PacketID
         LobbyUpdate, //< ConnectionData array
         NotifyPlayer, //< BilliardsPlayer in billiards (wait for ack)
         SetPlayer, //< ActivePlayer struct in golf, BilliardsPlayer in billiards
-        SetHole, //< uint8 hole
+        SetHole, //< uint16(uint8 hole | uint8 par)
+        SetPar, //< uint8 par
         ScoreUpdate, //< ScoreUpdate struct
         HoleWon, //< uint16 client OR'd player winning a match or skins point
         FoulEvent, //< int8 BilliardsEvent foul reason - tells client to display a foul message
@@ -101,7 +100,7 @@ namespace PacketID
         //from client
         RequestGameStart, //uint8 sv::State, ie Golf to start golf, Billiards to start billiards etc
         ClientReady, //< uint8 clientID - requests game data from server. Sent repeatedly until ack'd
-        InputUpdate, //< uint8 ID (0-3) Input struct (PlayerInput) for golf, or BilliardBallInput
+        InputUpdate, //< InputUpdate struct for golf, or BilliardBallInput
         PlayerInfo, //< ConnectionData array
         ServerCommand, //< uint8_t command type
         TransitionComplete, //< uint8 clientID, signal hole transition completed
@@ -115,10 +114,16 @@ namespace PacketID
         ScoreType, //< uint8 ScoreType of golf game
         GimmeRadius, //< uint8 gimme radius of golf
         HoleCount, //< uint8 0 - 2: all, front or back
+        ReverseCourse, //< uint8 0 false else true
         LobbyReady, //< uint8 playerID uint8 0 false 1 true
         AchievementGet, //< uint8 client uint8 achievement id (always assume first player on client, as achievements are disabled other wise)
         CPUThink, //< uint8 0 if begin think, 1 end think
-        CueUpdate //< BilliardsUpdate to show the 'ghost' cue on remote clients
+        CueUpdate, //< BilliardsUpdate to show the 'ghost' cue on remote clients
+        NewLobbyReady, //< uint64 lobbyID - broadcast by host when returning from existing game and relayed by server
+        Emote, //< uint32 00|client|player|emoteID
+        LevelUp, //< uint64 00|00|client|player|level (level is 4 bytes)
+        BallPrediction, //< InputUpdate if from client, vec3 if from server
+        PlayerXP //<uint16 level << 8 | client - used to share client xp/level info
     };
 }
 

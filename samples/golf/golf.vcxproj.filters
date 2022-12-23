@@ -198,12 +198,6 @@
     <ClCompile Include="src\golf\MenuCustomisation.cpp">
       <Filter>Source Files\golf\client\states</Filter>
     </ClCompile>
-    <ClCompile Include="src\golf\PuttingState.cpp">
-      <Filter>Source Files\golf\client\states</Filter>
-    </ClCompile>
-    <ClCompile Include="src\golf\PuttingStateUI.cpp">
-      <Filter>Source Files\golf\client\states</Filter>
-    </ClCompile>
     <ClCompile Include="src\DefaultAchievements.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -299,6 +293,27 @@
     </ClCompile>
     <ClCompile Include="src\golf\PlaylistState.cpp">
       <Filter>Source Files\golf\client\states</Filter>
+    </ClCompile>
+    <ClCompile Include="src\golf\MessageOverlayState.cpp">
+      <Filter>Source Files\golf\client\states</Filter>
+    </ClCompile>
+    <ClCompile Include="src\golf\NameScrollSystem.cpp">
+      <Filter>Source Files\golf\client\systems</Filter>
+    </ClCompile>
+    <ClCompile Include="src\golf\FloatingTextSystem.cpp">
+      <Filter>Source Files\golf\client\systems</Filter>
+    </ClCompile>
+    <ClCompile Include="src\golf\CreditsState.cpp">
+      <Filter>Source Files\golf\client\states</Filter>
+    </ClCompile>
+    <ClCompile Include="src\golf\Swingput.cpp">
+      <Filter>Source Files\golf\client</Filter>
+    </ClCompile>
+    <ClCompile Include="src\golf\MiniBallSystem.cpp">
+      <Filter>Source Files\golf\client\systems</Filter>
+    </ClCompile>
+    <ClCompile Include="src\golf\TerrainDepthmap.cpp">
+      <Filter>Source Files\golf\client</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -596,6 +611,30 @@
     <ClInclude Include="src\golf\PlaylistState.hpp">
       <Filter>Header Files\golf\client\states</Filter>
     </ClInclude>
+    <ClInclude Include="src\golf\MessageOverlayState.hpp">
+      <Filter>Header Files\golf\client\states</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\NameScrollSystem.hpp">
+      <Filter>Header Files\golf\client\systems</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\FloatingTextSystem.hpp">
+      <Filter>Header Files\golf\client\systems</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\CreditsState.hpp">
+      <Filter>Header Files\golf\client\states</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\EventOverlay.hpp">
+      <Filter>Header Files\golf\client\states</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\Swingput.hpp">
+      <Filter>Header Files\golf\client</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\MiniBallSystem.hpp">
+      <Filter>Header Files\golf\client\systems</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\TerrainDepthmap.hpp">
+      <Filter>Header Files\golf\client</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="src\golf\WaterShader.inl">
@@ -635,6 +674,12 @@
       <Filter>Header Files\golf\client\shaders</Filter>
     </None>
     <None Include="src\golf\TreeShader.inl">
+      <Filter>Header Files\golf\client\shaders</Filter>
+    </None>
+    <None Include="src\golf\CelShader.inl">
+      <Filter>Header Files\golf\client\shaders</Filter>
+    </None>
+    <None Include="src\golf\ShaderIncludes.inl">
       <Filter>Header Files\golf\client\shaders</Filter>
     </None>
   </ItemGroup>

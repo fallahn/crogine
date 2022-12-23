@@ -61,6 +61,20 @@ public:
     bool simulate(float) override;
     void render() override;
 
+    struct MenuID final
+    {
+        enum
+        {
+            Dummy,
+            Options,
+            Summary,
+            Leaderboard,
+
+            Count
+        };
+    };
+
+
 private:
     SharedStateData& m_sharedData;
     InputParser m_inputParser;
@@ -83,8 +97,6 @@ private:
         glm::vec3 currentWindVector = glm::vec3(0.f);
     }m_windUpdate;
 
-    bool m_mouseVisible;
-    cro::Clock m_mouseClock;
 
     struct MaterialID final
     {
@@ -167,10 +179,14 @@ private:
     void setActiveCamera(std::int32_t);
     
     //DrivingStateUI.cpp
+#ifdef USE_GNS
+    cro::Entity m_leaderboardEntity;
+#endif
     cro::RenderTexture m_mapTexture;
     cro::Entity m_mapCam;
     cro::SimpleQuad m_flagQuad;
     void createUI();
+    void createSwingMeter(cro::Entity);
     void createGameOptions();
     void createSummary();
     void updateMinimap();

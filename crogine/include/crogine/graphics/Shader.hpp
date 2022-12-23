@@ -94,7 +94,7 @@ namespace cro
         bool loadFromString(const std::string& vertex, const std::string& geometry, const std::string& fragment, const std::string& defines);
 
         /*!
-        \brief Returns the opengl handle for the shader program
+        \brief Returns the OpenGL handle for the shader program
         */
         std::uint32_t getGLHandle() const;
 
@@ -172,7 +172,7 @@ to varying on glsl 100 or out in glsl 150
 VARYING_OUT vec3 v_worldPosition;
 \endcode
 
-Fragment shaders also have a selection of macros used for portibility.
+Fragment shaders also have a selection of macros used for portability.
 When using a varying variable or input in a fragment shader use the
 VARYING_IN macro which expands to varying or in as appropriate.
 
@@ -193,7 +193,7 @@ OUTPUT
 \endcode
 
 When writing to the fragment shader output use the FRAG_OUT macro. This
-will expland to gl_FragColor on mobile targets and and variable named
+will expand to gl_FragColor on mobile targets and a variable named
 fragOut, declared by the OUTPUT macro on desktop targets.
 
 \code
@@ -201,7 +201,7 @@ FRAG_OUT.rgb = v_vertexColour.rgb;
 \endcode
 
 Finally, when sampling textures, the texture2D() function from glsl 100
-needs to be substitued with texture() in glsl 150. For this the TEXTURE
+needs to be substituted with texture() in glsl 150. For this the TEXTURE
 macro is supplied. This macro unfortunately doesn't cover other variations
 such as texture3D, which will need to be taken in to consideration for
 any custom shaders which may require it.

@@ -55,16 +55,12 @@ R"(
     uniform float u_leafSize = 0.25; //world units, in this case metres
     uniform float u_randAmount = 0.2;
 
-    layout (std140) uniform WindValues
-    {
-        vec4 u_windData; //dirX, strength, dirZ, elapsedTime
-    };
+uniform sampler2D u_noiseTexture;
 
-    layout (std140) uniform ScaledResolution
-    {
-        vec2 u_scaledResolution;
-        float u_nearFadeDistance;
-    };
+//dirX, strength, dirZ, elapsedTime
+#include WIND_BUFFER
+
+#include RESOLUTION_BUFFER
 
     out vData
     {
@@ -75,10 +71,8 @@ R"(
         float ditherAmount;
     }v_data;
 
-    float rand(vec2 position)
-    {
-        return fract(sin(dot(position, vec2(12.9898, 4.1414))) * 43758.5453);
-    }
+#include RANDOM
+#include WIND_CALC
 
     const float MaxWindOffset = 0.1f;
     const float Amp = 0.01;
@@ -116,14 +110,18 @@ R"(
 
 //wind
     #if defined (HQ)
-        float time = (u_windData.w * 5.0) + gl_InstanceID + gl_VertexID;
-        float x = sin(time * 2.0) / 8.0;
-        float y = cos(time) / 2.0;
-        vec3 windOffset = vec3(x, y, x);
+WindResult windResult = getWindData(position.xz, worldPosition.xz);
+windResult.lowFreq *= 0.5 + (0.5 * u_windData.y);
+windResult.highFreq *= 0.5 + (0.5 * u_windData.y);
+
+        float x = windResult.highFreq.x;
+        float y = windResult.lowFreq.y;
+        vec3 windOffset = vec3(x, y, windResult.highFreq.y) * 5.0;
 
         vec3 windDir = normalize(vec3(u_windData.x, 0.f, u_windData.z));
         float dirStrength = dot(v_data.normal, windDir);
 
+        x *= 3.0;
         vec2 rot = vec2(sin(x * u_windData.y), cos(x * u_windData.y));
         v_data.rotation[0] = vec2(rot.y, -rot.x);
         v_data.rotation[1]= rot;
@@ -131,8 +129,13 @@ R"(
         dirStrength += 1.0;
         dirStrength /= 2.0;
 
+
         windOffset += windDir * u_windData.y * dirStrength * 2.0;
         worldPosition.xyz += windOffset * MaxWindOffset * u_windData.y;
+
+worldPosition.x += windResult.lowFreq.x;
+worldPosition.z += windResult.lowFreq.y;
+
     #else
         float time = (u_windData.w * 15.0) + gl_InstanceID;
         float x = sin(time * 2.0) / 8.0;
@@ -162,6 +165,7 @@ R"(
 
 
 //size calc
+
     #if defined(HQ)
         float variation = rand(-vec2(gl_VertexID));
         variation = 0.5 + (0.5 * variation);
@@ -182,7 +186,6 @@ R"(
         //we use the camera's forward vector to shrink any points out of view to zero
         pointSize *= step(0.0, clamp(dot(eyeDir, (camForward)), 0.0, 1.0));
 
-            
         //shrink with perspective/distance and scale to world units
         pointSize *= u_targetHeight * (u_projectionMatrix[1][1] / gl_Position.w);
 
@@ -197,7 +200,10 @@ R"(
         pointSize *= 1.0 - (smoothstep(0.5, 1.0, distance / 150.0) * (gl_VertexID & 1));
 
         gl_PointSize = pointSize;
+    #else
+        float distance = length(worldPosition.xyz - u_cameraWorldPosition);
     #endif
+
 //proximity fade
         float fadeDistance = u_nearFadeDistance * 5.0;//2.0; //I forget what this magic number was for. Lesson learned?
         const float farFadeDistance = 360.f;
@@ -291,10 +297,7 @@ R"(
     uniform vec3 u_lightDirection;
     uniform vec3 u_colour = vec3(1.0);
 
-    layout (std140) uniform PixelScale
-    {
-        float u_pixelScale;
-    };
+#include SCALE_BUFFER
 
     in vData
     {
@@ -305,58 +308,9 @@ R"(
         float ditherAmount;
     }v_data;
 
-    //function based on example by martinsh.blogspot.com
-    const int MatrixSize = 8;
-    float findClosest(int x, int y, float c0)
-    {
-        /* 8x8 Bayer ordered dithering */
-        /* pattern. Each input pixel */
-        /* is scaled to the 0..63 range */
-        /* before looking in this table */
-        /* to determine the action. */
+#include BAYER_MATRIX
 
-        const int dither[64] = int[64](
-            0, 32, 8, 40, 2, 34, 10, 42, 
-        48, 16, 56, 24, 50, 18, 58, 26, 
-        12, 44, 4, 36, 14, 46, 6, 38, 
-        60, 28, 52, 20, 62, 30, 54, 22, 
-            3, 35, 11, 43, 1, 33, 9, 41, 
-        51, 19, 59, 27, 49, 17, 57, 25,
-        15, 47, 7, 39, 13, 45, 5, 37,
-        63, 31, 55, 23, 61, 29, 53, 21 );
-
-        float limit = 0.0;
-        if (x < MatrixSize)
-        {
-            limit = (dither[y * MatrixSize + x] + 1) / 64.0;
-        }
-
-        if (c0 < limit)
-        {
-            return 0.0;
-        }
-        return 1.0;
-    }
-
-
-    vec3 rgb2hsv(vec3 c)
-    {
-        vec4 K = vec4(0.0, -1.0 / 3.0, 2.0 / 3.0, -1.0);
-        vec4 p = mix(vec4(c.bg, K.wz), vec4(c.gb, K.xy), step(c.b, c.g));
-        vec4 q = mix(vec4(p.xyw, c.r), vec4(c.r, p.yzx), step(p.x, c.r));
-
-        float d = q.x - min(q.w, q.y);
-        float e = 1.0e-10;
-        return vec3(abs(q.z + (q.w - q.y) / (6.0 * d + e)), d / (q.x + e), q.x);
-    }
-
-    vec3 hsv2rgb(vec3 c)
-    {
-        vec4 K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
-        vec3 p = abs(fract(c.xxx + K.xyz) * 6.0 - K.www);
-        return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
-    }
-
+#include HSV
     vec3 complementaryColour(vec3 c)
     {
         vec3 a = rgb2hsv(c);
@@ -390,7 +344,7 @@ R"(
 #else
         vec4 textureColour = vec4(1.0);
 #endif
-        vec2 xy = gl_FragCoord.xy / u_pixelScale;
+        vec2 xy = gl_FragCoord.xy;// / u_pixelScale;
         int x = int(mod(xy.x, MatrixSize));
         int y = int(mod(xy.y, MatrixSize));
 
@@ -420,24 +374,19 @@ std::string BranchVertex = R"(
     uniform vec4 u_clipPlane;
     uniform vec3 u_cameraWorldPosition;
 
-    layout (std140) uniform WindValues
-    {
-        vec4 u_windData; //dirX, strength, dirZ, elapsedTime
-    };
+    uniform sampler2D u_noiseTexture;
 
-    layout (std140) uniform ScaledResolution
-    {
-        vec2 u_scaledResolution;
-        float u_nearFadeDistance;
-    };
+//dirX, strength, dirZ, elapsedTime
+#include WIND_BUFFER
+
+#include RESOLUTION_BUFFER
 
     VARYING_OUT float v_ditherAmount;
     VARYING_OUT vec2 v_texCoord;
     VARYING_OUT vec3 v_normal;
     VARYING_OUT float v_darkenAmount;
 
-    const float MaxWindOffset = 0.2;
-    const float Amp = 0.02; //metres
+#include WIND_CALC
 
     void main()
     {
@@ -449,27 +398,25 @@ std::string BranchVertex = R"(
         mat3 normalMatrix = u_normalMatrix;
     #endif
 
-//red channel is high freq done in local space
-        vec4 position = a_position;
+    vec4 position = a_position;
+    WindResult windResult = getWindData(position.xz, worldMatrix[3].xz);
 
-        float time = (u_windData.w * 15.0) + gl_InstanceID + gl_VertexID;
-        float highFreq = sin(time) * Amp * a_colour.r;
-        position.y += highFreq * (0.2 + (0.8 * u_windData.y));
+    vec3 vertexStrength = a_colour.rgb;
+    //multiply high and low frequency by vertex colours
+    //note that in tree models red/green ARE SWAPPED >.<
+    windResult.highFreq *= vertexStrength.r;
+    windResult.lowFreq *= vertexStrength.g;
 
-//blue channel is 'bend' in world space
-        vec4 worldPosition = worldMatrix * position;
+    //apply high frequency and low frequency in local space
+    position.x += windResult.lowFreq.x + windResult.highFreq.x;
+    position.z += windResult.lowFreq.y + windResult.highFreq.y;
 
-        time = (u_windData.w * 5.0) + gl_InstanceID;
-        float x = sin(time * 2.0) / 8.0;
-        float y = cos(time) / 2.0;
-        vec3 windOffset = vec3(x, 0.0, x + y) * a_colour.b * 0.5;
+    //multiply wind direction by wind strength
+    vec3 windDir = vec3(u_windData.x, 0.0, u_windData.z) * windResult.strength * vertexStrength.b;
+    //wind dir is added in world space (below)
 
-
-        vec3 windDir = normalize(vec3(u_windData.x, 0.f, u_windData.z));
-        float dirStrength = a_colour.b;
-
-        windOffset += windDir * u_windData.y * dirStrength;// * 2.0;
-        worldPosition.xyz += windOffset * MaxWindOffset * u_windData.y;
+    vec4 worldPosition = worldMatrix * position;
+    worldPosition.xyz += windDir;
 
 
 #if defined(WOBBLE)
@@ -508,42 +455,14 @@ std::string BranchFragment = R"(
     uniform sampler2D u_diffuseMap;
     uniform vec3 u_lightDirection;
 
-    layout (std140) uniform PixelScale
-    {
-        float u_pixelScale;
-    };
+#include SCALE_BUFFER
 
     VARYING_IN float v_ditherAmount;
     VARYING_IN vec2 v_texCoord;
     VARYING_IN vec3 v_normal;
     VARYING_IN float v_darkenAmount;
 
-    //function based on example by martinsh.blogspot.com
-    const int MatrixSize = 8;
-    float findClosest(int x, int y, float c0)
-    {
-        const int dither[64] = int[64](
-            0, 32, 8, 40, 2, 34, 10, 42, 
-        48, 16, 56, 24, 50, 18, 58, 26, 
-        12, 44, 4, 36, 14, 46, 6, 38, 
-        60, 28, 52, 20, 62, 30, 54, 22, 
-            3, 35, 11, 43, 1, 33, 9, 41, 
-        51, 19, 59, 27, 49, 17, 57, 25,
-        15, 47, 7, 39, 13, 45, 5, 37,
-        63, 31, 55, 23, 61, 29, 53, 21 );
-
-        float limit = 0.0;
-        if (x < MatrixSize)
-        {
-            limit = (dither[y * MatrixSize + x] + 1) / 64.0;
-        }
-
-        if (c0 < limit)
-        {
-            return 0.0;
-        }
-        return 1.0;
-    }
+#include BAYER_MATRIX
 
     void main()
     {
@@ -559,10 +478,14 @@ std::string BranchFragment = R"(
         FRAG_OUT = colour;
 
 
-        vec2 xy = gl_FragCoord.xy / u_pixelScale;
+        vec2 xy = gl_FragCoord.xy;// / u_pixelScale;
         int x = int(mod(xy.x, MatrixSize));
         int y = int(mod(xy.y, MatrixSize));
 
         float alpha = findClosest(x, y, smoothstep(0.1, 0.95, v_ditherAmount));
+#if defined ALPHA_CLIP
+        alpha *= colour.a;
+#endif
+
         if (alpha < 0.1) discard;
     })";

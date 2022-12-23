@@ -56,7 +56,7 @@ namespace cro
             streaming = <bool>
             volume = <float>
             mixer_channel = <0 - 15>
-            attenuation = <float> //analagous to AudioEmitter::rolloff
+            attenuation = <float> //analogous to AudioEmitter::rolloff
             pitch = <float> 0.5 - 2.0
             relative_listener = <bool>
         }

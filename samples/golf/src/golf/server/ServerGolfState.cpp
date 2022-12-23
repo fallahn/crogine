@@ -193,14 +193,23 @@ void GolfState::netEvent(const net::NetEvent& evt)
         case PacketID::CPUThink:
             m_sharedData.host.broadcastPacket(PacketID::CPUThink, evt.packet.as<std::uint8_t>(), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
             break;
+        case PacketID::Emote:
+            m_sharedData.host.broadcastPacket(PacketID::Emote, evt.packet.as<std::uint32_t>(), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+            break;
+        case PacketID::LevelUp:
+            m_sharedData.host.broadcastPacket(PacketID::LevelUp, evt.packet.as<std::uint64_t>(), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+            break;
         case PacketID::ClientReady:
             if (!m_sharedData.clients[evt.packet.as<std::uint8_t>()].ready)
             {
                 sendInitialGameState(evt.packet.as<std::uint8_t>());
             }
             break;
+        case PacketID::BallPrediction:
+            handlePlayerInput(evt.packet, true);
+            break;
         case PacketID::InputUpdate:
-            handlePlayerInput(evt.packet);
+            handlePlayerInput(evt.packet, false);
             break;
         case PacketID::ServerCommand:
             if (evt.peer.getID() == m_sharedData.hostID)
@@ -234,7 +243,11 @@ void GolfState::netBroadcast()
         //only send active player's ball
         auto ball = player.ballEntity;
         
-        if (ball == m_playerInfo[0].ballEntity)
+        //ideally we want to send only non-idle balls but without
+        //sending a few pre-movement frames first we get visible pops
+        //in the client side interpolation.
+        if (ball == m_playerInfo[0].ballEntity/* ||
+            ball.getComponent<Ball>().state != Ball::State::Idle*/)
         {
             auto timestamp = m_serverTime.elapsed().asMilliseconds();
             
@@ -244,6 +257,7 @@ void GolfState::netBroadcast()
             info.position = ball.getComponent<cro::Transform>().getPosition();
             info.rotation = cro::Util::Net::compressQuat(ball.getComponent<cro::Transform>().getRotation());
             //info.velocity = cro::Util::Net::compressVec3(ball.getComponent<Ball>().velocity);
+            //info.velocity = ball.getComponent<Ball>().velocity;
             info.timestamp = timestamp;
             info.clientID = player.client;
             info.playerID = player.player;
@@ -338,8 +352,11 @@ void GolfState::sendInitialGameState(std::uint8_t clientID)
         //a guard to make sure this is sent just once
         m_gameStarted = true;
 
-        //send command to set clients to first player
+        //send command to set clients to first player / hole
         //this also tells the client to stop requesting state
+
+        std::uint16_t newHole = (m_currentHole << 8) | std::uint8_t(m_holeData[m_currentHole].par);
+        m_sharedData.host.broadcastPacket(PacketID::SetPar, newHole, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
 
         //create an ent which waits for the clients to
         //finish playing the transition animation
@@ -363,7 +380,7 @@ void GolfState::sendInitialGameState(std::uint8_t clientID)
     }
 }
 
-void GolfState::handlePlayerInput(const net::NetEvent::Packet& packet)
+void GolfState::handlePlayerInput(const net::NetEvent::Packet& packet, bool predict)
 {
     if (m_playerInfo.empty())
     {
@@ -374,7 +391,8 @@ void GolfState::handlePlayerInput(const net::NetEvent::Packet& packet)
     if (m_playerInfo[0].client == input.clientID
         && m_playerInfo[0].player == input.playerID)
     {
-        auto& ball = m_playerInfo[0].ballEntity.getComponent<Ball>();
+        //we make a copy of this and then re-apply it if not predicting a result
+        auto ball = m_playerInfo[0].ballEntity.getComponent<Ball>();
 
         if (ball.state == Ball::State::Idle)
         {
@@ -395,13 +413,35 @@ void GolfState::handlePlayerInput(const net::NetEvent::Packet& packet)
             dir.x = x;
             ball.spin = glm::dot(dir, glm::normalize(glm::vec2(ball.velocity.x, ball.velocity.z))) + 0.1f;
 
+            if (!predict)
+            {
+                m_playerInfo[0].holeScore[m_currentHole]++;
 
-            m_playerInfo[0].holeScore[m_currentHole]++;
+                auto animID = ball.terrain == TerrainID::Green ? AnimationID::Putt : AnimationID::Swing;
+                m_sharedData.host.broadcastPacket(PacketID::ActorAnimation, std::uint8_t(animID), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
 
-            auto animID = ball.terrain == TerrainID::Green ? AnimationID::Putt : AnimationID::Swing;
-            m_sharedData.host.broadcastPacket(PacketID::ActorAnimation, std::uint8_t(animID), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                m_turnTimer.restart(); //don't time out mid-shot...
 
-            m_turnTimer.restart(); //don't time out mid-shot...
+                m_playerInfo[0].ballEntity.getComponent<Ball>() = ball;
+            }
+            else if (m_sharedData.clients[input.clientID].playerData[input.playerID].isCPU)
+            {
+                //if we want to run a prediction do so on a duplicate entity
+                auto e = m_scene.createEntity();
+                e.addComponent<cro::Transform>().setPosition(ball.startPoint);
+                e.addComponent<Ball>() = ball;
+                
+                m_scene.simulate(0.f); //run once so entity is properly integrated.
+                m_scene.getSystem<BallSystem>()->runPrediction(e, 1.f/60.f);
+
+                //read the result from e
+                auto resultPos = e.getComponent<cro::Transform>().getPosition();
+                
+                //reply to client with result
+                m_sharedData.host.sendPacket(m_sharedData.clients[input.clientID].peer, PacketID::BallPrediction, resultPos, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+
+                m_scene.destroyEntity(e);
+            }
         }
     }
 }
@@ -501,6 +541,8 @@ void GolfState::setNextPlayer(bool newHole)
 
 void GolfState::setNextHole()
 {
+    m_scene.getSystem<BallSystem>()->forceWindChange();
+
     bool gameFinished = false;
 
     //update player skins/match scores
@@ -617,7 +659,8 @@ void GolfState::setNextHole()
         }
 
         //tell clients to set up next hole
-        m_sharedData.host.broadcastPacket(PacketID::SetHole, m_currentHole, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+        std::uint16_t newHole = (m_currentHole << 8) | std::uint8_t(m_holeData[m_currentHole].par);
+        m_sharedData.host.broadcastPacket(PacketID::SetHole, newHole, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
 
         //create an ent which waits for all clients to load the next hole
         //which include playing the transition animation.
@@ -742,7 +785,11 @@ bool GolfState::validateMap()
         holeStrings.swap(newStrings);
     }
 
-
+    //reverse the order if game rule requests
+    if (m_sharedData.reverseCourse)
+    {
+        std::reverse(holeStrings.begin(), holeStrings.end());
+    }
 
     cro::ConfigFile holeCfg;
     for (const auto& hole : holeStrings)

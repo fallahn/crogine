@@ -577,6 +577,28 @@ void ModelState::readMaterialDefinition(MaterialDefinition& matDef, const cro::C
         {
             auto path = m_sharedData.workingDirectory + "/" + prop.getValue<std::string>();
 
+            //TODO use this to correct path for textures which are in the same dir as definition
+            /*
+            auto pos = filePath.find_last_of('/');
+            if (pos == std::string::npos)
+            {
+                pos = path.find_last_of('/');
+                if (pos != std::string::npos)
+                {
+                    filePath = path.substr(0, path.find_last_of('/')) + "/" + filePath;
+                }
+                else
+                {
+                    filePath = m_workingDir + filePath;
+                }
+            }
+            else
+            {
+                filePath = m_workingDir + filePath;
+            }
+            */
+            LogI << __FILE__ << ", " << __LINE__ << "Fix me" << std::endl;
+
             if (name == "diffuse") matDef.textureIDs[MaterialDefinition::Diffuse] = addTextureToBrowser(path);
             if (name == "mask") matDef.textureIDs[MaterialDefinition::Mask] = addTextureToBrowser(path);
             if (name == "normal") matDef.textureIDs[MaterialDefinition::Normal] = addTextureToBrowser(path);
@@ -685,6 +707,10 @@ void ModelState::readMaterialDefinition(MaterialDefinition& matDef, const cro::C
         else if (name == "framerate")
         {
             matDef.frameRate = std::max(1.f, prop.getValue<float>());
+        }
+        else if (name == "use_mipmaps")
+        {
+            matDef.useMipmaps = prop.getValue<bool>();
         }
     }
 }

@@ -38,6 +38,7 @@ source distribution.
 #include "CollisionMesh.hpp"
 #include "LeaderboardTexture.hpp"
 #include "CPUGolfer.hpp"
+#include "TerrainDepthmap.hpp"
 #include "server/ServerPacketData.hpp"
 
 #include <crogine/core/State.hpp>
@@ -114,13 +115,15 @@ private:
     cro::Scene m_skyScene;
     cro::Scene m_uiScene;
     cro::Scene m_trophyScene;
+    TerrainDepthmap m_depthMap;
 
-    cro::Clock m_mouseClock;
     bool m_mouseVisible;
 
     InputParser m_inputParser;
     CPUGolfer m_cpuGolfer;
     cro::Clock m_turnTimer;
+
+    cro::Clock m_idleTimer;
 
     bool m_wantsGameState;
     cro::Clock m_readyClock; //pings ready state until ack'd
@@ -177,6 +180,7 @@ private:
             Billboard,
             Trophy,
             Beacon,
+            PuttAssist,
 
             Count
         };
@@ -222,10 +226,11 @@ private:
     void handleNetEvent(const net::NetEvent&);
     void removeClient(std::uint8_t);
 
-    void setCurrentHole(std::uint32_t);
+    void setCurrentHole(std::uint16_t);
     void setCameraPosition(glm::vec3, float, float);
     void requestNextPlayer(const ActivePlayer&);
     void setCurrentPlayer(const ActivePlayer&);
+    void predictBall(float);
     void hitBall();
     void updateActor(const ActorInfo&);
 
@@ -238,10 +243,13 @@ private:
     std::int32_t m_currentCamera;
     void setActiveCamera(std::int32_t);
     void setPlayerPosition(cro::Entity, glm::vec3);
+    void setGreenCamPosition();
 
     cro::Entity m_drone;
     cro::Entity m_defaultCam;
     cro::Entity m_freeCam;
+    bool m_photoMode;
+    bool m_restoreInput;
     void toggleFreeCam();
     void applyShadowQuality();
 
@@ -253,6 +261,7 @@ private:
             PowerBar,
             PowerBarInner,
             HookBar,
+            MiniFlag,
             WindIndicator,
             WindSpeed,
             Thinking,
@@ -261,6 +270,11 @@ private:
             Foul,
             QuitReady,
             QuitNotReady,
+            EmoteHappy,
+            EmoteGrumpy,
+            EmoteLaugh,
+            EmoteSad,
+            EmotePulse,
 
             Count
         };
@@ -292,10 +306,11 @@ private:
 
     cro::Entity m_courseEnt;
     cro::Entity m_waterEnt;
-    cro::Entity m_uiReflectionCam;
+    cro::Entity m_minimapEnt;
     std::uint8_t m_readyQuitFlags;
 
     void buildUI();
+    void createSwingMeter(cro::Entity);
     void showCountdown(std::uint8_t);
     void createScoreboard();
     void updateScoreboard();
@@ -308,15 +323,18 @@ private:
         PlayerName, HoleScore,
         Gimme
     };
-    void showMessageBoard(MessageBoardID);
+    void showMessageBoard(MessageBoardID, bool special = false);
     void floatingMessage(const std::string&);
     void createTransition();
     void notifyAchievement(const std::array<std::uint8_t, 2u>&);
     void showNotification(const cro::String&);
+    void showLevelUp(std::uint64_t);
     void toggleQuitReady();
+    void refreshUI();
 
     void buildTrophyScene();
     std::array<cro::Entity, 3u> m_trophies = {};
+    std::array<cro::Entity, 3u> m_trophyBadges = {};
     std::array<cro::Entity, 3u> m_trophyLabels = {};
 
     struct GridShader final
@@ -327,6 +345,28 @@ private:
         std::int32_t maxHeight = -1;
     }m_gridShader;
 
+    struct EmoteWheel final
+    {
+        EmoteWheel(const SharedStateData& ib, const ActivePlayer& cp)
+            : sharedData(ib), currentPlayer(cp) {}
+
+        const SharedStateData& sharedData;
+        const ActivePlayer& currentPlayer;
+        cro::Entity rootNode;
+        std::array<cro::Entity, 4u> buttonNodes = {};
+        std::array<cro::Entity, 4u> labelNodes = {};
+
+        float targetScale = 0.f;
+        float currentScale = 0.f;
+        float cooldown = 0.f;
+
+        void build(cro::Entity, cro::Scene&, cro::TextureResource&);
+        bool handleEvent(const cro::Event&);
+        void update(float);
+
+        void refreshLabels();
+    }m_emoteWheel;
+    void showEmote(std::uint32_t);
 
     //-----------
 
@@ -338,6 +378,8 @@ private:
     void updateMiniMap();
 
     float m_minimapScale; //how big the model was when drawn to minimap
+    float m_minimapRotation; //rads cam was rotated when shooting minimap
+    glm::vec3 m_minimapOffset;
     glm::vec2 toMinimapCoords(glm::vec3) const;
 
     cro::Entity m_greenCam;
@@ -357,6 +399,15 @@ private:
         std::int32_t score = 0;
     };
     std::vector<StatBoardEntry> m_statBoardScores;
+
+    struct GamepadNotify final
+    {
+        enum
+        {
+            NewPlayer, Hole, HoleInOne
+        };
+    };
+    void gamepadNotify(std::int32_t);
 
 #ifdef PATH_TRACING
     //------------

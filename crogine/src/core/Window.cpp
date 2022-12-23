@@ -96,6 +96,12 @@ bool Window::create(std::uint32_t width, std::uint32_t height, const std::string
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
     SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
 
+#ifdef CRO_DEBUG_
+#ifndef GL41
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG);
+#endif
+#endif
+
     m_window = SDL_CreateWindow(title.c_str(), SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width, height, styleMask);
 
     if (!m_window)
@@ -118,6 +124,10 @@ bool Window::create(std::uint32_t width, std::uint32_t height, const std::string
         {
             Logger::log("Unable to create requested context version", Logger::Type::Error, Logger::Output::All);
             Logger::log("Returned version was: " + std::to_string(maj) + "." + std::to_string(min), Logger::Type::Error, cro::Logger::Output::All);
+
+            std::stringstream ss;
+            ss << "Hardware Support for OpenGL " << RequestGLMajor << "." << RequestGLMinor << " not found.";
+            cro::FileSystem::showMessageBox("Error", ss.str());
 
             return false; //because our shaders will fail to compile.
         }
@@ -219,10 +229,17 @@ void Window::setSize(glm::uvec2 size)
 
     setViewport({ 0, 0, static_cast<std::int32_t>(size.x), static_cast<std::int32_t>(size.y) });
     setView(FloatRect(getViewport()));
+
+    m_fullscreen = false;
 }
 
 void Window::setFullScreen(bool fullscreen)
 {
+    if (fullscreen == m_fullscreen)
+    {
+        return;
+    }
+
 #ifdef __APPLE__
 #define FS_MODE SDL_WINDOW_FULLSCREEN
 #else
@@ -393,7 +410,10 @@ void Window::loadResources(const std::function<void()>& loader)
 void Window::setMouseCaptured(bool captured)
 {
     SDL_SetRelativeMouseMode(captured ? SDL_TRUE : SDL_FALSE);
-    
+    if (captured)
+    {
+        SDL_WarpMouseInWindow(m_window, 1, 1);
+    }
     //auto centre = getSize() / 2u;
     //SDL_WarpMouseInWindow(m_window, centre.x, centre.y);
 

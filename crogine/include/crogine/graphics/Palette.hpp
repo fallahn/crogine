@@ -39,12 +39,21 @@ source distribution.
 namespace cro
 {
     /*!
-    \brief A single entry into a palette
+    \brief A single entry into a group
+    */
+    struct CRO_EXPORT_API SwatchColour final
+    {
+        cro::String name;
+        cro::Colour colour;
+    };
+
+    /*!
+    \brief A grouping of entries in a palette
     */
     struct CRO_EXPORT_API Swatch final
     {
         cro::String name;
-        std::vector<cro::Colour> colours;
+        std::vector<SwatchColour> colours;
     };
 
     /*!
@@ -60,7 +69,7 @@ namespace cro
         Palette();
 
         /*!
-        \brief Cosntructor
+        \brief Constructor
         \param path Path to ase file to attempt to load
         Constructs a palette and immediately tries to load the ase
         file at the given path. If loading fails an error is logged.

@@ -53,7 +53,7 @@ PropFollowSystem::PropFollowSystem(cro::MessageBus& mb, const CollisionMesh& cm)
 //public
 void PropFollowSystem::process(float dt)
 {
-    auto& entities = getEntities();
+    const auto& entities = getEntities();
     for (auto entity : entities)
     {
         if (!entity.getComponent<cro::Model>().isHidden())
@@ -66,7 +66,6 @@ void PropFollowSystem::process(float dt)
                 {
                     follower.state = PropFollower::Follow;
                     follower.stateTimer = 0.f;
-
                     follower.initAxis(entity);
                 }
             }
@@ -79,7 +78,6 @@ void PropFollowSystem::process(float dt)
                     auto len2 = glm::length2(glm::vec2(dir.x, dir.z));
 
                     point.position += glm::normalize(dir) * follower.speed * dt;
-
 
                     if (len2 < MinTargetRadSqr)
                     {
@@ -106,10 +104,14 @@ void PropFollowSystem::process(float dt)
 
                 //some paths might be aircraft, such as a blimp, so
                 //only snap these below a threshold
+                //or boats which need to be above water level
                 if (pos.y < 15.f)
                 {
                     auto result = m_collisionMesh.getTerrain(pos);
-                    pos.y = result.height;
+                    if (result.height > WaterLevel)
+                    {
+                        pos.y = result.height;
+                    }
                 }
 
                 entity.getComponent<cro::Transform>().setPosition(pos);
@@ -138,13 +140,19 @@ void PropFollower::initAxis(cro::Entity e)
     //and space them bounding box width
 
     auto bb = e.getComponent<cro::Model>().getAABB();
+
+    //bigger models such as the blimp want their axes scaling
+    //less as they're already big - so we'll approximate around
+    //the blimp length
+    const float scale = 4.f - (3.f * (bb[1].x / 38.f));
+
     auto& follower = e.getComponent<PropFollower>();
     follower.axis[0].position = follower.path.getPoint(0);
     auto dir = glm::normalize(follower.path.getPoint(1) - follower.path.getPoint(0));
-    follower.axis[0].position += dir * bb[1].x * 4.f;
+    follower.axis[0].position += dir * bb[1].x * scale;
 
     follower.axis[1].position = follower.path.getPoint(0);
-    follower.axis[1].position += dir * bb[0].x * 4.f;
+    follower.axis[1].position += dir * bb[0].x * scale;
 
 
     follower.axis[0].target = 1;

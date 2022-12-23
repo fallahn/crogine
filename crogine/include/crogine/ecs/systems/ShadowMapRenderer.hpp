@@ -65,7 +65,7 @@ namespace cro
     should be tweaked on a per-use case:
     Camera::maxShadowDistance() - this reduces the distance
     shadows are rendered from the camera, but effectively
-    increases the resoution of the shadow map by covering a
+    increases the resolution of the shadow map by covering a
     smaller area. If shadows are particularly blocky then
     reducing this could improve quality without the need 
     for creating a higher resolution DepthTexture on the camera.

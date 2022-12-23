@@ -38,11 +38,13 @@ source distribution.
 #include "golf/KeyboardState.hpp"
 #include "golf/PracticeState.hpp"
 #include "golf/DrivingState.hpp"
-#include "golf/PuttingState.hpp"
 #include "golf/ClubhouseState.hpp"
+#include "golf/MessageOverlayState.hpp"
 #include "golf/TrophyState.hpp"
 #include "golf/NewsState.hpp"
 #include "golf/PlaylistState.hpp"
+#include "golf/CreditsState.hpp"
+#include "golf/EventOverlay.hpp"
 #include "golf/MenuConsts.hpp"
 #include "golf/GameConsts.hpp"
 #include "golf/MessageIDs.hpp"
@@ -53,6 +55,9 @@ source distribution.
 #include "ErrorCheck.hpp"
 #include "icon.hpp"
 #include "Achievements.hpp"
+
+#include <AchievementIDs.hpp>
+#include <AchievementStrings.hpp>
 
 #ifdef USE_GNS
 #include <AchievementsImpl.hpp>
@@ -76,6 +81,7 @@ namespace
 #include "golf/TerrainShader.inl"
 #include "golf/BeaconShader.inl"
 #include "golf/PostProcess.inl"
+#include "golf/ShaderIncludes.inl"
 #include "golf/RandNames.hpp"
 
     struct ShaderDescription final
@@ -84,7 +90,7 @@ namespace
         std::string description;
         std::string toolTip;
 
-        ShaderDescription(const char* frag, std::string desc, std::string tip)
+        ShaderDescription(const char* frag, const std::string& desc, const std::string& tip)
             : fragmentString(frag), description(desc), toolTip(tip) {}
     };
 
@@ -98,6 +104,37 @@ namespace
         ShaderDescription(CRTFragment.c_str(), ShaderNames[3], "PUBLIC DOMAIN CRT STYLED SCAN-LINE SHADER\nby Timothy Lottes"),
         ShaderDescription(CinematicFragment.c_str(), ShaderNames[4], ""),
     };
+
+    std::vector<CreditEntry> credits;
+
+    void parseCredits()
+    {
+        cro::ConfigFile file;
+        if (file.loadFromFile("assets/credits.tgl"))
+        {
+            const auto& entries = file.getObjects();
+            for (const auto& entry : entries)
+            {
+                if (entry.getName() == "section")
+                {
+                    auto& creditEntry = credits.emplace_back();
+                    const auto& props = entry.getProperties();
+                    for (const auto& prop : props)
+                    {
+                        const auto& name = prop.getName();
+                        if (name == "title")
+                        {
+                            creditEntry.title = prop.getValue<cro::String>();
+                        }
+                        else if (name == "name")
+                        {
+                            creditEntry.names.emplace_back(prop.getValue<cro::String>());
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 
 cro::RenderTarget* GolfGame::m_renderTarget = nullptr;
@@ -109,7 +146,7 @@ GolfGame::GolfGame()
     //must be set before anything, else cfg is still loaded from default path
     setApplicationStrings("Trederia", "golf");
 
-    m_stateStack.registerState<SplashState>(StateID::SplashScreen);
+    m_stateStack.registerState<SplashState>(StateID::SplashScreen, m_sharedData);
     m_stateStack.registerState<KeyboardState>(StateID::Keyboard);
     m_stateStack.registerState<MenuState>(StateID::Menu, m_sharedData);
     m_stateStack.registerState<GolfState>(StateID::Golf, m_sharedData);
@@ -120,12 +157,14 @@ GolfGame::GolfGame()
     m_stateStack.registerState<TutorialState>(StateID::Tutorial, m_sharedData);
     m_stateStack.registerState<PracticeState>(StateID::Practice, m_sharedData);
     m_stateStack.registerState<DrivingState>(StateID::DrivingRange, m_sharedData);
-    m_stateStack.registerState<PuttingState>(StateID::PuttingRange, m_sharedData);
     m_stateStack.registerState<ClubhouseState>(StateID::Clubhouse, m_sharedData);
     m_stateStack.registerState<BilliardsState>(StateID::Billiards, m_sharedData);
     m_stateStack.registerState<TrophyState>(StateID::Trophy, m_sharedData);
     m_stateStack.registerState<PlaylistState>(StateID::Playlist, m_sharedData);
     m_stateStack.registerState<BushState>(StateID::Bush, m_sharedData);
+    m_stateStack.registerState<MessageOverlayState>(StateID::MessageOverlay, m_sharedData);
+    m_stateStack.registerState<CreditsState>(StateID::Credits, m_sharedData, credits);
+    m_stateStack.registerState<EventOverlayState>(StateID::EventOverlay);
 }
 
 //public
@@ -238,6 +277,42 @@ void GolfGame::handleMessage(const cro::Message& msg)
             break;
         }
     }
+    else if (msg.id == Social::MessageID::SocialMessage)
+    {
+        const auto& data = msg.getData<Social::SocialEvent>();
+        if (data.type == Social::SocialEvent::LevelUp)
+        {
+            switch (data.level)
+            {
+            default: break;
+            case 1:
+                Achievements::awardAchievement(AchievementStrings[AchievementID::GettingStarted]);
+                break;
+            case 10:
+                Achievements::awardAchievement(AchievementStrings[AchievementID::Junior]);
+                break;
+            case 20:
+                Achievements::awardAchievement(AchievementStrings[AchievementID::Amateur]);
+                break;
+            case 30:
+                Achievements::awardAchievement(AchievementStrings[AchievementID::Enthusiast]);
+                break;
+            case 40:
+                Achievements::awardAchievement(AchievementStrings[AchievementID::SemiPro]);
+                break;
+            case 50:
+                Achievements::awardAchievement(AchievementStrings[AchievementID::Pro]);
+                break;
+            }
+        }
+        else if (data.type == Social::SocialEvent::OverlayActivated)
+        {
+            if (data.level != 0)
+            {
+                m_stateStack.pushState(StateID::EventOverlay);
+            }
+        }
+    }
 
     m_stateStack.handleMessage(msg);
 }
@@ -281,12 +356,29 @@ void GolfGame::render()
 
 bool GolfGame::initialise()
 {
+    //do this first because if we quit early the preferences will otherwise get overwritten by defaults.
+    loadPreferences();
+    loadAvatars();
+
+#ifdef USE_GNS
+    m_achievements = std::make_unique<SteamAchievements>(MessageID::AchievementMessage);
+#else
+    m_achievements = std::make_unique<DefaultAchievements>();
+#endif
+    if (!Achievements::init(*m_achievements))
+    {
+        //no point trying to load the menu if we failed to init.
+        return false;
+    }
+
     m_hostAddresses = cro::Util::Net::getLocalAddresses();
     if (m_hostAddresses.empty())
     {
         LogE << "No suitable host addresses were found" << std::endl;
         return false;
     }
+
+    parseCredits();
 
     registerConsoleTab("Advanced",
         [&]()
@@ -400,17 +492,24 @@ bool GolfGame::initialise()
         []()
         {
             ImGui::Text("Credits:");
-            ImGui::Text("OPL VST synthesiser: https://github.com/jpcima/ADLplug");
-            ImGui::Text("Sound Effects: https://freesound.org (see assets directory for specific credits)");
-            ImGui::Text("CRT Effect Post Process Shader by Timothy Lottes (Public Domain)");
-            ImGui::Text("Artwork: Blender and Aseprite https://blender.org https://aseprite.org");
-            ImGui::Text("Colour Palette: Colordome32 https://lospec.com/palette-list/colordome-32");
-            ImGui::Text("Programming: Matt Marchant, source available at: https://github.com/fallahn/crogine");
-            ImGui::NewLine();
+
+            for (const auto& [title, names] : credits)
+            {
+                ImGui::Text(title.toAnsiString().c_str());
+
+                for (const auto& name : names)
+                {
+                    ImGui::Text(name.toAnsiString().c_str());
+                }
+                ImGui::NewLine();
+            }
+
+#ifndef USE_GNS
             ImGui::Text("Check out other games available from https://fallahn.itch.io !");
+#endif
             if (ImGui::Button("Visit Website"))
             {
-                cro::Util::String::parseURL("https://fallahn.itch.io/vga-golf");
+                cro::Util::String::parseURL(Social::WebURL);
             }
             ImGui::NewLine();
             ImGui::NewLine();
@@ -451,7 +550,7 @@ bool GolfGame::initialise()
         });
 
     getWindow().setLoadingScreen<LoadingScreen>(m_sharedData);
-    getWindow().setTitle("Video Golf - " + StringVer);
+    getWindow().setTitle("Super Video Golf - " + StringVer);
     getWindow().setIcon(icon);
     m_renderTarget = &getWindow();
 
@@ -461,12 +560,11 @@ bool GolfGame::initialise()
     cro::AudioMixer::setLabel("Announcer", MixerChannel::Voice);
     cro::AudioMixer::setLabel("Vehicles", MixerChannel::Vehicles);
 
-    loadPreferences();
-    loadAvatars();
+    //loadPreferences();
+    //loadAvatars();
 
     m_sharedData.clientConnection.netClient.create(ConstVal::MaxClients);
     m_sharedData.sharedResources = std::make_unique<cro::ResourceCollection>();
-    std::fill(m_sharedData.controllerIDs.begin(), m_sharedData.controllerIDs.end(), 0);
 
     //texture used to hold name tags
     for (auto& t : m_sharedData.nameTextures)
@@ -477,6 +575,12 @@ bool GolfGame::initialise()
     //preload resources which will be used in dynamically loaded menus
     m_sharedData.sharedResources->fonts.load(FontID::UI, "assets/golf/fonts/IBM_CGA.ttf");
     m_sharedData.sharedResources->fonts.load(FontID::Info, "assets/golf/fonts/MCPixel.otf");
+    m_sharedData.sharedResources->fonts.load(FontID::Label, "assets/golf/fonts/ProggyClean.ttf");
+
+    for (const auto& [name, str] : IncludeMappings)
+    {
+        m_sharedData.sharedResources->shaders.addInclude(name, str);
+    }
 
     m_sharedData.sharedResources->shaders.loadFromString(ShaderID::TutorialSlope, TutorialVertexShader, TutorialSlopeShader);
     m_sharedData.sharedResources->shaders.loadFromString(ShaderID::Beacon, BeaconVertex, BeaconFragment, "#define SPRITE\n");
@@ -558,41 +662,15 @@ bool GolfGame::initialise()
 
     m_activeIndex = m_sharedData.postProcessIndex;
 
-    //moved to menu state
-    //registerCommand("clubhouse", [&](const std::string&)
-    //    {
-    //        if (m_stateStack.getTopmostState() != StateID::Clubhouse)
-    //        {
-    //            //forces clubhouse state to clear any existing net connection
-    //            m_sharedData.tutorial = true;
-
-    //            m_sharedData.courseIndex = 0;
-
-    //            m_stateStack.clearStates();
-    //            m_stateStack.pushState(StateID::Clubhouse);
-    //        }
-    //        else
-    //        {
-    //            cro::Console::print("Already in clubhouse.");
-    //        }
-    //    });
-
 #ifdef CRO_DEBUG_
     //m_stateStack.pushState(StateID::DrivingRange); //can't go straight to this because menu needs to parse avatar data
-    //m_stateStack.pushState(StateID::Playlist);
+    //m_stateStack.pushState(StateID::Bush);
     m_stateStack.pushState(StateID::Menu);
     //m_stateStack.pushState(StateID::Clubhouse);
     //m_stateStack.pushState(StateID::SplashScreen);
 #else
     m_stateStack.pushState(StateID::SplashScreen);
 #endif
-
-#ifdef USE_GNS
-    m_achievements = std::make_unique<SteamAchievements>();
-#else
-    m_achievements = std::make_unique<DefaultAchievements>(getMessageBus());
-#endif
-    Achievements::init(*m_achievements);
 
     return true;
 }
@@ -601,8 +679,6 @@ void GolfGame::finalise()
 {
     m_sharedData.clientConnection.netClient.disconnect();
     m_sharedData.serverInstance.stop(); //this waits for any threads to finish first.
-
-    Achievements::shutdown();
 
     savePreferences();
 
@@ -621,6 +697,8 @@ void GolfGame::finalise()
     {
         t = {};
     }
+
+    Achievements::shutdown();
 
     m_sharedData.sharedResources.reset();
     m_postQuad.reset();
@@ -725,6 +803,23 @@ void GolfGame::loadPreferences()
                 {
                     m_sharedData.showCustomCourses = prop.getValue<bool>();
                 }
+                else if (name == "show_tutorial")
+                {
+                    m_sharedData.showTutorialTip = prop.getValue<bool>();
+                }
+                else if (name == "putting_power")
+                {
+                    m_sharedData.showPuttingPower = prop.getValue<bool>();
+                }
+                else if (name == "multisamples")
+                {
+                    m_sharedData.multisamples = prop.getValue<std::uint32_t>();
+                    m_sharedData.antialias = m_sharedData.multisamples != 0;
+                }
+                else if (name == "use_vibration")
+                {
+                    m_sharedData.enableRumble = prop.getValue<bool>() ? 1 : 0;
+                }
             }
         }
     }
@@ -785,6 +880,10 @@ void GolfGame::savePreferences()
     cfg.addProperty("hq_shadows").setValue(m_sharedData.hqShadows);
     cfg.addProperty("log_benchmark").setValue(m_sharedData.logBenchmarks);
     cfg.addProperty("show_custom").setValue(m_sharedData.showCustomCourses);
+    cfg.addProperty("show_tutorial").setValue(m_sharedData.showTutorialTip);
+    cfg.addProperty("putting_power").setValue(m_sharedData.showPuttingPower);
+    cfg.addProperty("multisamples").setValue(m_sharedData.multisamples);
+    cfg.addProperty("use_vibration").setValue(m_sharedData.enableRumble == 0 ? false : true);
     cfg.save(path);
 
 
@@ -842,26 +941,22 @@ void GolfGame::loadAvatars()
 
                     else if (name == "flags0")
                     {
-                        auto flag = prop.getValue<std::int32_t>();
-                        flag = std::min(pc::ColourID::Count - 1, std::max(0, flag));
+                        auto flag = prop.getValue<std::int32_t>() % pc::PairCounts[0];
                         m_sharedData.localConnectionData.playerData[i].avatarFlags[0] = static_cast<std::uint8_t>(flag);
                     }
                     else if (name == "flags1")
                     {
-                        auto flag = prop.getValue<std::int32_t>();
-                        flag = std::min(pc::ColourID::Count - 1, std::max(0, flag));
+                        auto flag = prop.getValue<std::int32_t>() % pc::PairCounts[1];
                         m_sharedData.localConnectionData.playerData[i].avatarFlags[1] = static_cast<std::uint8_t>(flag);
                     }
                     else if (name == "flags2")
                     {
-                        auto flag = prop.getValue<std::int32_t>();
-                        flag = std::min(pc::ColourID::Count - 1, std::max(0, flag));
+                        auto flag = prop.getValue<std::int32_t>() % pc::PairCounts[2];
                         m_sharedData.localConnectionData.playerData[i].avatarFlags[2] = static_cast<std::uint8_t>(flag);
                     }
                     else if (name == "flags3")
                     {
-                        auto flag = prop.getValue<std::int32_t>();
-                        flag = std::min(pc::ColourID::Count - 1, std::max(0, flag));
+                        auto flag = prop.getValue<std::int32_t>() % pc::PairCounts[3];
                         m_sharedData.localConnectionData.playerData[i].avatarFlags[3] = static_cast<std::uint8_t>(flag);
                     }
 

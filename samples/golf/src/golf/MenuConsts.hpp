@@ -38,12 +38,20 @@ source distribution.
 #include <crogine/util/Easings.hpp>
 #include <crogine/detail/glm/vec2.hpp>
 
+#ifdef USE_GNS
+//#define IS_PS(x) Input::isPSController(x)
+#define IS_PS(x) cro::GameController::hasPSLayout(x)
+#else
+#define IS_PS(x) cro::GameController::hasPSLayout(x)
+#endif
+
 struct FontID final
 {
     enum
     {
         UI,
         Info,
+        Label,
 
         Count
     };
@@ -68,12 +76,21 @@ static const std::array<std::string, 3u> GimmeString =
     "Inside the putter"
 };
 
+static constexpr std::array<glm::vec3, 4u> EmotePositions =
+{
+    glm::vec3(0.f, 34.f, 0.15f),
+    glm::vec3(34.f, 0.f, 0.15f),
+    glm::vec3(0.f, -34.f, 0.15f),
+    glm::vec3(-34.f, 0.f, 0.15f)
+};
+
 static constexpr std::uint32_t LargeTextSize = 64;
 static constexpr std::uint32_t MediumTextSize = 32;
 static constexpr std::uint32_t SmallTextSize = 16;
 
 static constexpr std::uint32_t UITextSize = 8;
 static constexpr std::uint32_t InfoTextSize = 10;
+static constexpr std::uint32_t LabelTextSize = 16;
 
 static const cro::Colour TextNormalColour(0xfff8e1ff);
 static const cro::Colour TextEditColour(0x6eb39dff);
@@ -88,6 +105,7 @@ static const cro::Colour LeaderboardTextLight(0xfff8e1ff);
 
 static constexpr float LeaderboardTextSpacing = 6.f;
 static constexpr float BackgroundAlpha = 0.7f;
+static constexpr glm::vec2 LobbyTextRootPosition(8.f, 172.f);
 
 static constexpr float UIBarHeight = 16.f;
 static constexpr float UITextPosV = 12.f;
@@ -97,9 +115,10 @@ static constexpr glm::vec3 CursorOffset(-20.f, 4.f, 0.f);
 //relative to the window size.
 struct UIElement final
 {
-    glm::vec2 absolutePosition = glm::vec2(0.f); //absolute in units
+    glm::vec2 absolutePosition = glm::vec2(0.f); //absolute in units offset from relative position
     glm::vec2 relativePosition = glm::vec2(0.f); //normalised relative to screen size
-    float depth = 0.f;
+    float depth = 0.f; //z depth
+    std::function<void(cro::Entity)> resizeCallback;
 };
 static constexpr glm::vec2 UIHiddenPosition(-10000.f, -10000.f);
 
@@ -109,14 +128,18 @@ static constexpr glm::vec2 MenuSpacing(1920.f, 1080.f);
 static constexpr float MenuBottomBorder = 15.f;
 static constexpr float BannerPosition = MenuBottomBorder - 3.f;
 
+static constexpr float NameWidth = 96.f;
 static constexpr std::uint32_t BallPreviewSize = 64u;
+static constexpr std::uint32_t BallThumbSize = 40u;
 static constexpr glm::uvec2 AvatarPreviewSize(70, 90);
 static constexpr glm::uvec2 AvatarThumbSize(60, 77);
 
+static constexpr float LobbyTextSpacing = 274.f;
+static constexpr float MinLobbyCropWidth = 96.f;
 static constexpr glm::vec2 LobbyBackgroundPosition(0.5f, 0.62f); //relative
 static constexpr glm::vec2 CourseDescPosition(0.5f, 0.24f); //relative
 static constexpr glm::vec2 ClubTextPosition(0.01f, 1.f); //relative
-static constexpr glm::vec2 WindIndicatorPosition(-48.f, 40.f); //absolute from edge of the screen
+static constexpr glm::vec2 WindIndicatorPosition(48.f, 56.f); //absolute from edge of the screen
 
 static const cro::Time MouseHideTime = cro::seconds(3.f);
 

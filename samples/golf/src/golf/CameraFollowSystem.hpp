@@ -33,6 +33,7 @@ source distribution.
 
 #include <crogine/ecs/System.hpp>
 #include <crogine/detail/glm/vec3.hpp>
+#include <crogine/gui/GuiClient.hpp>
 
 //updates specator cameras to follow the active ball
 
@@ -41,7 +42,7 @@ struct CameraID final
     enum
     {
         Player, Bystander, Sky, Green,
-        Transition,        
+        Transition,
         Count
     };
 };
@@ -91,7 +92,7 @@ struct CameraFollower final
     }zoom;
 };
 
-class CameraFollowSystem final : public cro::System
+class CameraFollowSystem final : public cro::System, public cro::GuiClient
 {
 public:
     explicit CameraFollowSystem(cro::MessageBus&);

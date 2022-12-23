@@ -48,6 +48,7 @@ source distribution.
 
 #include <Achievements.hpp>
 #include <AchievementStrings.hpp>
+#include <Social.hpp>
 
 namespace
 {
@@ -179,6 +180,20 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
         switch (msg.id)
         {
         default: break;
+        case Social::MessageID::SocialMessage:
+        {
+            const auto& data = msg.getData<Social::SocialEvent>();
+            if (data.type == Social::SocialEvent::LevelUp)
+            {
+                playSound(AudioID::ApplausePlus, glm::vec3(0.f)).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
+            }
+            else if (data.type == Social::SocialEvent::PlayerAchievement)
+            {
+                auto id = data.level == 0 ? AudioID::ApplausePlus : AudioID::NearMiss;
+                playSound(id, glm::vec3(0.f)).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
+            }
+        }
+            break;
         case cro::Message::SpriteAnimationMessage:
         {
             const auto& data = msg.getData<cro::Message::SpriteAnimationEvent>();
@@ -401,6 +416,7 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
                             {
                                 playSoundDelayed(AudioID::Applause, glm::vec3(0.f), 0.8f);
                                 applaud();
+                                Social::awardXP(XPValues[XPID::Par] / 2);
                             }
                         }
                         break;
@@ -414,7 +430,8 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
                 }
                 else
                 {
-                    if (data.club != ClubID::Putter
+                    if (data.travelDistance < 9
+                        && data.club != ClubID::Putter
                         && cro::Util::Random::value(0, 4) == 0)
                     {
                         //you're poop.
@@ -426,6 +443,13 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
                     {
                         //assume we putt off the green on a putting course
                         playSound(AudioID::TerrainWater03, glm::vec3(0.f));
+                    }
+
+                    if (data.terrain == TerrainID::Hole
+                        && data.club != ClubID::Putter)
+                    {
+                        playSoundDelayed(AudioID::DriveGood, data.position, 2.4f, 1.f, MixerChannel::Voice);
+                        playSoundDelayed(AudioID::ApplausePlus, data.position, 0.8f, 0.6f, MixerChannel::Effects);
                     }
                 }
                 break;
@@ -481,6 +505,17 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
             if (data.type == SceneEvent::TransitionComplete)
             {
                 m_newHole = true;
+            }
+            else if (data.type == SceneEvent::PlayerIdle)
+            {
+                if (auto idx = m_playerIndices[m_currentClient][m_currentPlayer]; idx > -1)
+                {
+                    std::string emitterName = cro::Util::Random::value(0,1) == 1 ? "rough" : "bunker";
+                    if (m_playerVoices[idx].hasEmitter(emitterName))
+                    {
+                        playAvatarSound(idx, emitterName, glm::vec3(0.f));
+                    }
+                }
             }
         }
         break;

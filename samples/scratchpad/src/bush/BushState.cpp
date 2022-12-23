@@ -537,7 +537,7 @@ BushState::BushState(cro::StateStack& stack, cro::State::Context context)
                 {
                     for (const auto& colour : swatch.colours)
                     {
-                        ImVec4 c(colour.getVec4());
+                        ImVec4 c(colour.colour.getVec4());
                         if (ImGui::ColorButton(std::to_string(i).c_str(), c))
                         {
                             treeset.colour = { c.x, c.y, c.z };

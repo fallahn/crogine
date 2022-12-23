@@ -44,6 +44,9 @@ namespace cro
     \brief Exposes a selection of ImGui functions to the public API.
     These can be used to create stand-alone windows or to add useful
     information to the status window via Console::registerConsoleTab().
+
+    Honestly though I don't know why I thought this was a good idea.
+    Just use DearImgui directly.
     */
     namespace ui
     {
@@ -73,7 +76,7 @@ namespace cro
         CRO_EXPORT_API bool wantsMouse();
 
         /*!
-        \brief Returns true if the ui wants to caputure keyboard input
+        \brief Returns true if the ui wants to capture keyboard input
         */
         CRO_EXPORT_API bool wantsKeyboard();
     }

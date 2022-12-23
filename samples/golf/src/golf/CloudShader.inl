@@ -111,11 +111,7 @@ R"(
     uniform sampler2D u_texture;
     uniform vec2 u_worldCentre = vec2(0.0);
 
-    layout (std140) uniform PixelScale
-    {
-        float u_pixelScale;
-    };
-
+#include SCALE_BUFFER
 
     VARYING_IN vec3 v_worldPos;
     VARYING_IN vec2 v_texCoord;
@@ -126,39 +122,7 @@ R"(
     const float MaxDist = MAX_RADIUS;
 #endif
 
-    //function based on example by martinsh.blogspot.com
-    const int MatrixSize = 8;
-    float findClosest(int x, int y, float c0)
-    {
-        /* 8x8 Bayer ordered dithering */
-        /* pattern. Each input pixel */
-        /* is scaled to the 0..63 range */
-        /* before looking in this table */
-        /* to determine the action. */
-
-        const int dither[64] = int[64](
-         0, 32, 8, 40, 2, 34, 10, 42, 
-        48, 16, 56, 24, 50, 18, 58, 26, 
-        12, 44, 4, 36, 14, 46, 6, 38, 
-        60, 28, 52, 20, 62, 30, 54, 22, 
-         3, 35, 11, 43, 1, 33, 9, 41, 
-        51, 19, 59, 27, 49, 17, 57, 25,
-        15, 47, 7, 39, 13, 45, 5, 37,
-        63, 31, 55, 23, 61, 29, 53, 21 );
-
-        float limit = 0.0;
-        if (x < MatrixSize)
-        {
-            limit = (dither[y * MatrixSize + x] + 1) / 64.0;
-        }
-
-        if (c0 < limit)
-        {
-            return 0.0;
-        }
-        return 1.0;
-    }
-
+#include BAYER_MATRIX
 
     void main()
     {
@@ -166,7 +130,7 @@ R"(
 
         float amount = 1.0 - smoothstep(0.7, 1.0, (length(v_worldPos.xz - u_worldCentre) / MaxDist));
 
-        vec2 xy = gl_FragCoord.xy / u_pixelScale;
+        vec2 xy = gl_FragCoord.xy;// / u_pixelScale;
         int x = int(mod(xy.x, MatrixSize));
         int y = int(mod(xy.y, MatrixSize));
         float alpha = findClosest(x, y, amount);
@@ -203,10 +167,7 @@ uniform vec4 u_colourA = vec4(1.0);
 uniform vec4 u_colourB = vec4(0.0,0.0,0.0,1.0);
 uniform vec3 u_lightDirection;
 
-layout (std140) uniform PixelScale
-{
-    float u_pixelScale;
-};
+#include SCALE_BUFFER
 
 VARYING_IN vec3 v_normal;
 

@@ -178,12 +178,12 @@ namespace cro
     CRO_EXPORT_API Time operator / (Time, Time);
 
     /*!
-    \brief Overload of % opertor to return remainder of one Time object divided by another
+    \brief Overload of % operator to return remainder of one Time object divided by another
     */
     CRO_EXPORT_API Time operator % (Time, Time);
 
     /*!
-    \brief Overload of %= opertor to return remainder of one Time object divided by another
+    \brief Overload of %= operator to return remainder of one Time object divided by another
     */
     CRO_EXPORT_API Time& operator %= (Time&, Time);
 

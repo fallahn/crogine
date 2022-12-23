@@ -78,7 +78,7 @@ namespace cro
         /*!
         \brief Sets a parameter on the shadow map material applied at the given index
         This is generally only useful for custom shadow map shaders, as the default has
-        no paramters to set.
+        no parameters to set.
         */
         template <typename T>
         void setShadowMaterialProperty(std::size_t idx, const std::string& str, T val)
@@ -89,12 +89,19 @@ namespace cro
 
         /*!
         \brief Enables or disables depth testing for a material at the given index
-        \param idx Index of the material to set the depth test paramter on
+        \param idx Index of the material to set the depth test parameter on
         \param enabled Set to true to enable depth testing
         This doesn't affect shadow pass materials. Useful for overlay materials
         such as wireframe meshes.
         */
         void setDepthTestEnabled(std::size_t idx, bool enabled);
+
+        /*!
+        \brief Enables or disables double-sided rendering for a material at the given index
+        \param idx Index of the material to set the double sided property on
+        \param doubleSided Set to true for double sided rendering else false
+        */
+        void setDoubleSided(std::size_t idx, bool doubleSided);
 
         /*!
         \brief Returns a reference to the mesh data for this model.
@@ -118,14 +125,14 @@ namespace cro
         \brief Sets the material used when casting shadows.
         This material is used by ShadowMap systems to render the depth data
         of the model.
-        \param idx The index of the sub-mesh to which to applyh the material
+        \param idx The index of the sub-mesh to which to apply the material
         \param material Data struct containing the material definition
         */
         void setShadowMaterial(std::size_t idx, Material::Data material);
 
         /*!
         \brief returns whether or not the model is currently inside the
-        frustum of the active camera according the the last render pass.
+        frustum of the active camera according the last render pass.
         This may be out of date by a frame when switching active scene cameras
         */
         bool isVisible() const { return m_visible; }
@@ -189,10 +196,10 @@ namespace cro
         std::size_t getJointCount() const { return m_jointCount; }
 
         /*!
-        \brief Returns the material data associated with the given submesh
+        \brief Returns the material data associated with the given sub-mesh
         at the given pass.
         \param pass Can be IndexData::Final or IndexData::Shadow
-        \param submesh Index of the submesh to retrieve.
+        \param sub-mesh Index of the sub-mesh to retrieve.
         \returns const reference to the material if it exists
         */
         const Material::Data& getMaterialData(Mesh::IndexData::Pass pass, std::size_t submesh) const;

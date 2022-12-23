@@ -62,8 +62,8 @@ namespace cro
         \param frequency The frequency of a single cycle of the wavetable
         \param amplitude Amplitude of the waveform. Default is +- 1.0
         \param updateRate Rate at which the next sample of the wavetable is fetched.
-        Lower values require less memory but create greate aliasing of the waveform.
-        Defaults to 30 time per second.
+        Lower values require less memory but create aliasing of the waveform.
+        Defaults to 30 times per second.
         */
         Wavetable(Waveform wavform, float frequency, float amplitude = 1.f, float updateRate = 30.f);
 

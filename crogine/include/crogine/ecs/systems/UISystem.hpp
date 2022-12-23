@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2021
+Matt Marchant 2017 - 2022
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -91,6 +91,7 @@ namespace cro
         using ButtonCallback = std::function<void(Entity, const ButtonEvent&)>;
         using MovementCallback = std::function<void(Entity, glm::vec2, const MotionEvent&)>;
         using SelectionChangedCallback = std::function<void(Entity)>;
+        static constexpr std::int32_t ActiveControllerAll = -1;
 
         explicit UISystem(MessageBus&);
 
@@ -174,8 +175,9 @@ namespace cro
         /*!
         \brief Sets the controller ID allowed to send input to the system.
         Only controller events with the controller ID will be forwarded to
-        the UI callbacks. By default this is controller 0
-        \param id The ID of the controller to set active. Normally 0 - 3.
+        the UI callbacks, or all events if this is set to ActiveControllerAll
+        \param id The ID of the controller to set active. Should be 0 - 3 or
+        ActiveControllerAll (default)
         */
         void setActiveControllerID(std::int32_t id);
 

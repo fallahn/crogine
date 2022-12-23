@@ -68,7 +68,7 @@ namespace cro
 
     /*!
     \brief Represents a Joint in the skeleton
-    These are used to make up the jointsof a key frame.
+    These are used to make up the joints of a key frame.
     Each transform is assumed to *already* be transformed
     by its parents - done by the model loader when the 
     key frames were created.
@@ -105,7 +105,7 @@ namespace cro
     for example weapons or items, to a skinned mesh.
     Attachments contain the ID of the joint to which
     they are associated, as well as a relative translation
-    and rotation. The skeletal aniamtion system will automatically
+    and rotation. The skeletal animation system will automatically
     update the transform of any attached model to match
     that of its parent joint.
     */
@@ -251,7 +251,7 @@ namespace cro
 
         /*!
         \brief Returns a reference to the vector of joints which make up the key frames
-        Note that the stride of each frame is equal the the  number of joints in a frame
+        Note that the stride of each frame is equal the number of joints in a frame
         aka FrameSize
         */
         const std::vector<Joint>& getFrames() const { return m_frames; }
@@ -290,7 +290,7 @@ namespace cro
         \brief Adds an attachment to the skeleton.
         The attachment's translation should be relative to
         the Skeleton's joint to which it is attached.
-        \returns ID of the created attament point.
+        \returns ID of the created attachment point.
         */
         std::int32_t addAttachment(const Attachment&);
 
@@ -332,7 +332,7 @@ namespace cro
 
         /*!
         \brief Sets the root transform applied to a frame during interpolation.
-        Use this to rescale/orientate a model, fo example if importing a z-up model
+        Use this to rescale/orientate a model, for example if importing a z-up model
         */
         void setRootTransform(const glm::mat4& transform);
 
@@ -349,7 +349,7 @@ namespace cro
         void setInterpolationEnabled(bool enabled) { m_useInterpolation = enabled; }
 
         /*!
-        \brief Sets the max distance from the camera to use interpolation.
+        \brief Sets the maximum distance from the camera to use interpolation.
         Models further from this will still animate but the frames will skip
         from one to the next without being interpolated in between.
         Defaults to 50 units

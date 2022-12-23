@@ -278,7 +278,7 @@ namespace cro::Detail::ModelBinary
     /*!
     \brief Reads vertex positions and index arrays from a binary file at the given path
     If the file is successfully opened at the given path the mesh data is stored in the
-    given vectors, and meta data returned in the cro::MeshData::Struct
+    given vectors, and meta data returned in the cro::MeshData struct
     Note that this only loads position data from the file, as it is currently used
     for loading collision meshes into the golf game. TODO: fix this.
     */

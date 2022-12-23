@@ -75,6 +75,7 @@ namespace
     const ImVec4 DefaultColour(1.f, 1.f, 1.f, 1.f);
 
     bool isNewFrame = true;
+    bool showDemoWindow = false;
 }
 int textEditCallback(ImGuiTextEditCallbackData* data);
 
@@ -255,9 +256,15 @@ void Console::newFrame()
 
 void Console::draw()
 {
+#ifdef CRO_DEBUG_
+    if (showDemoWindow)
+    {
+        ImGui::ShowDemoWindow();
+    }
+#endif
+
     if (visible)
     {
-        //ImGui::ShowDemoWindow();
         ui::SetNextWindowSizeConstraints({ 640, 480 }, { 1024.f, 768.f });
         if (ui::Begin("Console", &visible, ImGuiWindowFlags_NoScrollbar))
         {
@@ -538,6 +545,26 @@ void Console::init()
         }
     });
 
+#ifdef CRO_DEBUG_
+    //shows the imgui debug window
+    addCommand("r_drawDemoWindow",
+        [](const std::string& param) 
+        {
+            if (param == "0")
+            {
+                showDemoWindow = false;
+            }
+            else if (param == "1")
+            {
+                showDemoWindow = true;
+            }
+            else
+            {
+                print("Usage: r_drawDemoWindow <0|1>. Toggles visibility of ImGui demo window.");
+            }
+        });
+#endif
+
     //quits
     addCommand("quit",
         [](const std::string&)
@@ -545,14 +572,16 @@ void Console::init()
         App::quit();
     });
 
-
     //loads any convars which may have been saved
     convars.loadFromFile(App::getPreferencePath() + convarName, false);
-    //TODO execute callback for each to make sure values are applied
+    //TODO execute callback for each to make sure values are applied (? can always add a command which executes something while updating value)
 }
 
 void Console::finalise()
 {
+    //TODO if we add anything else here make sure
+    //to modify setConvarValue as it calls this to
+    //update the file with new values.
     convars.save(App::getPreferencePath() + convarName);
 }
 

@@ -36,6 +36,7 @@ source distribution.
 #include <crogine/graphics/Texture.hpp>
 
 #include <vector>
+#include <memory>
 
 namespace cro
 {
@@ -43,7 +44,7 @@ namespace cro
     \brief Particle system.
     Updates and renders all particle emitters in the scene.
     Particle systems are renderable, but do write to the depth buffer.
-    They do, however, read from the the depth buffer, and so should be
+    They do, however, read from the depth buffer, and so should be
     added to a Scene after any other render systems such as the
     ModelRenderer. This allows for correct blending of alpha transparent
     particle systems.
@@ -66,7 +67,10 @@ namespace cro
         void render(Entity, const RenderTarget&) override;
 
     private:
-        std::array<std::vector<Entity>, 2u> m_visibleEntities;
+        //for two passes, normal and reflection
+        using DrawList = std::array<std::vector<Entity>, 2u>;
+        //one of these is inserted for each active camera based on the Camera draw list index
+        std::vector<DrawList> m_drawLists;
 
         void onEntityAdded(Entity) override;
         void onEntityRemoved(Entity) override;
@@ -84,7 +88,7 @@ namespace cro
 
         void allocateBuffer();
 
-        Shader m_shader;
+        std::vector<std::unique_ptr<Shader>> m_shaders;
 
         enum UniformID
         {
@@ -100,14 +104,31 @@ namespace cro
 
             Count
         };
-        std::array<std::int32_t, UniformID::Count> m_uniformIDs = {};
 
-        struct AttribData final
+        struct ShaderHandle final
         {
-            std::int32_t index = 0;
-            std::int32_t attribSize = 0;
-            std::int32_t offset = 0;
+            std::array<std::int32_t, UniformID::Count> uniformIDs = {};
+
+            struct AttribData final
+            {
+                std::int32_t index = 0;
+                std::int32_t attribSize = 0;
+                std::int32_t offset = 0;
+            };
+            std::array<AttribData, 3u> attribData;
+            std::uint32_t id = 0;
+
+            bool boundThisFrame = false;
         };
-        std::array<AttribData, 3u> m_attribData;
+
+        struct ShaderID final
+        {
+            enum
+            {
+                Alpha, Add, Multiply,
+                Count
+            };
+        };
+        std::array<ShaderHandle, ShaderID::Count> m_shaderHandles = {};
     };
 }

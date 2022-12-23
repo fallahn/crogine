@@ -120,7 +120,11 @@ void Detail::UniformBufferImpl::addShader(const Shader& shader)
 void Detail::UniformBufferImpl::bind(std::uint32_t bindPoint)
 {
 #ifdef PLATFORM_DESKTOP
-	CRO_ASSERT(bindPoint < GL_MAX_UNIFORM_BUFFER_BINDINGS, "");
+#ifdef CRO_DEBUG_
+	std::int32_t maxBindings = 0;
+	glGetIntegerv(GL_MAX_UNIFORM_BUFFER_BINDINGS, &maxBindings);
+	CRO_ASSERT(bindPoint < maxBindings, "");
+#endif
 
 	//bind ubo to bind point
 	glCheck(glBindBufferBase(GL_UNIFORM_BUFFER, bindPoint, m_ubo));

@@ -43,6 +43,7 @@ struct TrophyDisplay final
     {
         Idle, In, Active
     }state = Idle;
+    cro::Entity label;
 };
 
 class TrophyDisplaySystem final : public cro::System

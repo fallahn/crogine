@@ -49,7 +49,7 @@ namespace cro
     top of Drawables nearer the top of the view). Useful for top-down
     tile map style rendering
     DepthAxis::Z - Drawables are drawn in the order in which their Z
-    values appear - smaller Z values are drawn first with larget Z values
+    values appear - smaller Z values are drawn first with larger Z values
     drawn over the top. Z values can be set in the entities Transform component.
     */
     enum class DepthAxis
@@ -60,7 +60,7 @@ namespace cro
     /*!
     \brief Renders any entities with a Drawable2D component and Transform component.
     This includes entities with Sprite or Text components, although these require
-    their respective systems in the Scene to update their geometry correctly. Usuaully
+    their respective systems in the Scene to update their geometry correctly. Usually
     these items would be drawn in a 2D world with an orthographic projection, rather
     than mixing items with a 3D world.
 
@@ -88,6 +88,7 @@ namespace cro
         const RenderSystem2D& operator = (const RenderSystem2D&) = delete;
         RenderSystem2D& operator = (RenderSystem2D&&) = delete;
 
+
         /*!
         \brief Performs frustum culling and Material sorting by depth and blend mode
         */
@@ -95,10 +96,12 @@ namespace cro
 
         void process(float) override;
 
+
         /*!
         \brief Attempts to render the scene based on the current entity lists
         */
         void render(Entity, const RenderTarget&) override;
+
 
         /*!
         \brief Sets whether Drawable components should be sorted by the Y or
@@ -114,7 +117,7 @@ namespace cro
         Shader m_texturedShader;
 
         DepthAxis m_sortOrder;
-        std::vector<Entity> m_drawList;
+        std::vector<std::vector<Entity>> m_drawLists;
 
         Detail::QuadTree m_quadTree;
         std::vector<Entity> m_dirtyEnts; //transform callback marks these as needing to be moved in the quad tree

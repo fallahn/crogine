@@ -45,6 +45,8 @@ source distribution.
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
 #include <crogine/detail/glm/gtc/type_ptr.hpp>
 
+#include <crogine/gui/Gui.hpp>
+
 #include "../detail/GLCheck.hpp"
 
 using namespace cro;

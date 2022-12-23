@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2022
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -67,13 +67,18 @@ namespace cro
         power of 2 on mobile platforms
         \param height Height of the texture. This should be power of
         2 on mobile platforms.
-        \param depthBuffer Creates an 24 bit depth buffer when set to true (default)
+        \param depthBuffer Creates an 24 bit depth buffer when set to true (default true)
         \param stencilBuffer Creates an 8 bit stencil buffer when set to true (default false)
         Stencil buffers must be accompanied by a depth buffer. If depthbuffer is false no stencil
         buffer will be created.
+        \param samples Number of samples to use with multisampling. This is clamped to the maximum
+        available on current hardware, and is unavailable (does nothing) on mobile platforms.
+        By default this value is 0, ie multisampling is disabled.
+        Note that at 16x or higher the size of point sprites are affected due to the way OpenGL
+        calculates alpha coverage when multisampling is enabled.
         \returns true on success, else returns false
         */
-        bool create(std::uint32_t width, std::uint32_t height, bool depthBuffer = true, bool stencilBuffer = false);
+        bool create(std::uint32_t width, std::uint32_t height, bool depthBuffer = true, bool stencilBuffer = false, std::uint32_t samples = 0);
 
         /*!
         \brief Returns the current size in pixels of the render texture (zero if not yet created)
@@ -134,20 +139,28 @@ namespace cro
         \brief Saves the texture to a png file if it is a valid texture.
         If the texture contains no data, or create() had not been called
         then this function does nothing.
-        \param path A string containg a path to same the texture to.
+        \param path A string containing a path to save the texture to.
         \returns true if successful else returns false
         */
         bool saveToFile(const std::string& path) const;
 
     private:
+        std::uint32_t m_samples;
         std::uint32_t m_fboID;
         std::uint32_t m_rboID;
         std::uint32_t m_clearBits;
+
+        std::uint32_t m_msfboID;
+        std::uint32_t m_msTextureID;
+
         Texture m_texture;
         std::array<float, 4u> m_lastClearColour = {};
 
         bool m_hasDepthBuffer;
         bool m_hasStencilBuffer;
+
+        bool createDefault(std::uint32_t width, std::uint32_t height, bool depthBuffer, bool stencilBuffer);
+        bool createMultiSampled(std::uint32_t width, std::uint32_t height, bool depthBuffer, bool stencilBuffer);
 
         std::uint32_t getFrameBufferID() const override { return m_fboID; }
     };

@@ -55,7 +55,7 @@ namespace cro
         \brief Sets the master volume.
         Volume ranges from 0 - 1 for normal values
         but are clamped up to a value of 10 which,
-        depending onthe active subsystem, attemps
+        depending on the active subsystem, attempts
         to amplify the volume.
         */
         static void setMasterVolume(float);
@@ -69,7 +69,7 @@ namespace cro
         \brief Sets the volume of the given channel.
         Volume ranges from 0 - 1 for normal values
         but are clamped up to a value of 10 which,
-        depending onthe active subsystem, attemps
+        depending on the active subsystem, attempts
         to amplify the volume.
         \param vol The volume to which to set the channel
         \param channel ID (0 - 15) of the channel whose
@@ -84,7 +84,7 @@ namespace cro
 
         /*!
         \brief Sets the pre-fade volume.
-        This allows programatically altering the volume at run-time
+        This allows programmatically altering the volume at run-time
         without modifying the overall level of the mixer channel.
         Unlike main mixer channels these values are not stored in the
         application configuration between sessions, and are reset to
@@ -106,7 +106,7 @@ namespace cro
         and channel 1 to 'Music' for easy reference. Channel names
         will appear in the console mixer window.
         \param label String to use as channel label
-        \param channel To to which to apply the label
+        \param channel To which to apply the label
         */
         static void setLabel(const std::string& label, std::uint8_t channel);
 

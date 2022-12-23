@@ -52,6 +52,7 @@ source distribution.
 namespace
 {
 #include "../golf/TreeShader.inl"
+#include "../golf/ShaderIncludes.inl"
 
     struct BushShaderID final
     {
@@ -101,7 +102,7 @@ namespace
 
     //we'll assume 64px per metre
     constexpr float PixelsPerMetre = 64.f;
-    const glm::uvec2 BillboardTargetSize(320, 448);
+    const glm::uvec2 BillboardTargetSize(640, 448);
     float billboardScaleMultiplier = 0.46f;
 
 
@@ -316,6 +317,11 @@ void BushState::loadAssets()
 
     std::string hq = m_sharedData.treeQuality == SharedStateData::High ? "#define HQ\n" : "";
 
+    for (const auto& [name, str] : IncludeMappings)
+    {
+        m_resources.shaders.addInclude(name, str);
+    }
+
     m_resources.shaders.loadFromString(BushShaderID::Bush, BushVertex, BushFragment, "#define INSTANCING\n" + hq);
     auto* shader = &m_resources.shaders.get(BushShaderID::Bush);
     bushMaterial = m_resources.materials.add(*shader);
@@ -329,8 +335,13 @@ void BushState::loadAssets()
     leafTexture = &texture;
     treeset.texturePath = "leaf06.png";
 
+    auto& noiseTex = m_resources.textures.get("assets/golf/images/wind.png");
+    noiseTex.setRepeated(true);
+    noiseTex.setSmooth(true);
+
     auto& material = m_resources.materials.get(bushMaterial);
     material.setProperty("u_diffuseMap", texture);
+    material.setProperty("u_noiseTexture", noiseTex);
 
     shaderUniform.shaderID = shader->getGLHandle();
     shaderUniform.randomness = shader->getUniformID("u_randAmount");
@@ -338,10 +349,10 @@ void BushState::loadAssets()
     shaderUniform.colour = shader->getUniformID("u_colour");
     shaderUniform.targetHeight = shader->getUniformID("u_targetHeight");
 
-
-    m_resources.shaders.loadFromString(BushShaderID::Branch, BranchVertex, BranchFragment, "#define INSTANCING\n");
+    m_resources.shaders.loadFromString(BushShaderID::Branch, BranchVertex, BranchFragment, "#define INSTANCING\n#define ALPHA_CLIP\n");
     shader = &m_resources.shaders.get(BushShaderID::Branch);
     branchMaterial = m_resources.materials.add(*shader);
+    m_resources.materials.get(branchMaterial).setProperty("u_noiseTexture", noiseTex);
 
     m_windBuffer.addShader(*shader);
     m_resolutionBuffer.addShader(*shader);
@@ -416,7 +427,7 @@ void BushState::createScene()
     cro::ModelDefinition md(m_resources);
     if (md.loadFromFile("assets/models/player_box.cmt"))
     {
-        auto entity = m_gameScene.createEntity();
+        entity = m_gameScene.createEntity();
         entity.addComponent<cro::Transform>();
         md.createModel(entity);
 
@@ -429,7 +440,7 @@ void BushState::createScene()
 
     if (md.loadFromFile("assets/models/ground_plane.cmt"))
     {
-        auto entity = m_gameScene.createEntity();
+        entity = m_gameScene.createEntity();
         entity.addComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -90.f * cro::Util::Const::degToRad);
         md.createModel(entity);
         entity.getComponent<cro::Model>().setRenderFlags(~(RenderFlagsBillboard | RenderFlagsThumbnail));
@@ -443,6 +454,8 @@ void BushState::createScene()
     camEnt.getComponent<cro::Camera>().resizeCallback = std::bind(&BushState::updateView, this, std::placeholders::_1);
     camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(2048, 2048);
     camEnt.getComponent<cro::Camera>().renderFlags = ~RenderFlagsThumbnail;
+    camEnt.getComponent<cro::Camera>().setMaxShadowDistance(20.f);
+    camEnt.getComponent<cro::Camera>().setShadowExpansion(10.f);
     camEnt.getComponent<cro::Transform>().setPosition({ 0.f, 0.5f, 6.f });
 
 
@@ -600,8 +613,9 @@ void BushState::drawUI()
         {
             for (const auto& colour : swatch.colours)
             {
-                ImVec4 c(colour.getVec4());
-                if (ImGui::ColorButton(std::to_string(i).c_str(), c))
+                ImVec4 c(colour.colour.getVec4());
+                std::string label = colour.name.toAnsiString() + "##" + std::to_string(i);
+                if (ImGui::ColorButton(label.c_str(), c))
                 {
                     treeset.colour = { c.x, c.y, c.z };
                     glUseProgram(shaderUniform.shaderID);
@@ -655,7 +669,7 @@ void BushState::drawUI()
                 m_models[2].getComponent<cro::Model>().setHidden(!showInstanced);
             }
 
-            for (auto i = 0u; i < m_materials.size(); ++i)
+            for (i = 0u; i < m_materials.size(); ++i)
             {
                 auto label = "Material##" + std::to_string(i);
                 if (ImGui::InputInt(label.c_str(), &m_materials[i].activeMaterial))
@@ -679,7 +693,8 @@ void BushState::drawUI()
 
     if (ImGui::Begin("Billboard"))
     {
-        ImGui::Image(m_billboardTexture.getTexture(), {300.f, 400.f}, {0.f, 1.f}, {1.f, 0.f});
+        glm::vec2 size(BillboardTargetSize);
+        ImGui::Image(m_billboardTexture.getTexture(), {size.x, size.y}, {0.f, 1.f}, {1.f, 0.f});
 
         ImGui::SliderFloat("Leaf Scale", &billboardScaleMultiplier, 0.1f, 1.f);
 
@@ -755,8 +770,9 @@ void BushState::drawUI()
             {
                 for (const auto& colour : swatch.colours)
                 {
-                    ImVec4 c(colour.getVec4());
-                    if (ImGui::ColorButton(std::to_string(i).c_str(), c))
+                    ImVec4 c(colour.colour.getVec4());
+                    std::string label = colour.name.toAnsiString() + "##" + std::to_string(i);
+                    if (ImGui::ColorButton(label.c_str(), c))
                     {
                         skyTop = cro::Colour(c.x, c.y, c.z);
                         m_skyScene.setSkyboxColours(SkyBottom, skyMid, skyTop);
@@ -775,8 +791,9 @@ void BushState::drawUI()
             {
                 for (const auto& colour : swatch.colours)
                 {
-                    ImVec4 c(colour.getVec4());
-                    if (ImGui::ColorButton(std::to_string(i).c_str(), c))
+                    ImVec4 c(colour.colour.getVec4());
+                    std::string label = colour.name.toAnsiString() + "##" + std::to_string(i);
+                    if (ImGui::ColorButton(label.c_str(), c))
                     {
                         skyMid = cro::Colour(c.x, c.y, c.z);
                         m_skyScene.setSkyboxColours(SkyBottom, skyMid, skyTop);
@@ -842,6 +859,7 @@ void BushState::loadModel(const std::string& path)
             for (auto j = 0u; j < meshData->submeshCount; ++j)
             {
                 auto mat = m_resources.materials.get(branchMaterial);
+                mat.doubleSided = true;
                 if (md.getMaterial(j)->properties.count("u_diffuseMap"))
                 {
                     cro::TextureID tid(md.getMaterial(j)->properties.at("u_diffuseMap").second.textureID);
@@ -1147,6 +1165,16 @@ void BushState::createThumbnails()
                         entity.getComponent<cro::Transform>().setPosition({160.f, 0.f, -100.f});
                         md.createModel(entity);
                         entity.getComponent<cro::Model>().setRenderFlags(RenderFlagsThumbnail);
+
+                        //because we've started using material colours to affect
+                        //the in-game material properties, we need to reset them
+                        //all to white when rendering thumbs
+                        for (auto j = 0u; j < entity.getComponent<cro::Model>().getMeshData().submeshCount; ++j)
+                        {
+                            entity.getComponent<cro::Model>().setMaterialProperty(j, "u_colour", cro::Colour::White);
+                        }
+
+
 
                         const auto& bounds = entity.getComponent<cro::Model>().getMeshData().boundingBox;
                         auto size = bounds[1] - bounds[0];

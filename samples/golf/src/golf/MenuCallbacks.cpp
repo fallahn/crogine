@@ -30,9 +30,11 @@ source distribution.
 #include "MenuCallbacks.hpp"
 #include "MenuState.hpp"
 #include "CommandIDs.hpp"
+#include "MessageIDs.hpp"
 
 #include <crogine/ecs/components/Callback.hpp>
 #include <crogine/ecs/components/Transform.hpp>
+#include <crogine/ecs/components/Camera.hpp>
 
 #include <crogine/ecs/systems/UISystem.hpp>
 
@@ -77,6 +79,10 @@ void MenuCallback::operator()(cro::Entity e, float dt)
                 t.getComponent<cro::Callback>().active = true;
             };
             menuContext.uiScene->getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+            auto* msg = cro::App::getInstance().getMessageBus().post<SystemEvent>(MessageID::SystemMessage);
+            msg->type = SystemEvent::MenuChanged;
+            msg->data = menuData.targetMenu;
         }
     }
     else
@@ -84,6 +90,9 @@ void MenuCallback::operator()(cro::Entity e, float dt)
         //contract horizontally
         menuData.currentTime = std::max(0.f, menuData.currentTime - (dt * Speed));
         e.getComponent<cro::Transform>().setScale({ cro::Util::Easing::easeInQuint(menuData.currentTime), 1.f });
+
+        menuContext.uiScene->getActiveCamera().getComponent<cro::Camera>().isStatic = false;
+        menuContext.uiScene->getActiveCamera().getComponent<cro::Camera>().active = true;
 
         if (menuData.currentTime == 0)
         {

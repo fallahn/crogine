@@ -52,20 +52,29 @@ SimpleText::SimpleText(const Font& font)
 //public
 void SimpleText::setFont(const Font& font)
 {
-    m_context.font = &font;
-    m_dirtyFlags |= DirtyFlags::All;
+    if (m_context.font != &font)
+    {
+        m_context.font = &font;
+        m_dirtyFlags |= DirtyFlags::All;
+    }
 }
 
 void SimpleText::setCharacterSize(std::uint32_t size)
 {
-    m_context.charSize = size;
-    m_dirtyFlags |= DirtyFlags::All;
+    if (m_context.charSize != size)
+    {
+        m_context.charSize = size;
+        m_dirtyFlags |= DirtyFlags::All;
+    }
 }
 
 void SimpleText::setVerticalSpacing(float spacing)
 {
-    m_context.verticalSpacing = spacing;
-    m_dirtyFlags |= DirtyFlags::All;
+    if (m_context.verticalSpacing != spacing)
+    {
+        m_context.verticalSpacing = spacing;
+        m_dirtyFlags |= DirtyFlags::All;
+    }
 }
 
 void SimpleText::setString(const String& str)
@@ -126,6 +135,25 @@ void SimpleText::setShadowOffset(glm::vec2 offset)
     }
 }
 
+void SimpleText::setBold(bool bold)
+{
+    if (m_context.bold != bold)
+    {
+        m_context.bold = bold;
+        m_dirtyFlags |= DirtyFlags::All;
+    }
+}
+
+void SimpleText::setAlignment(std::int32_t alignment)
+{
+    CRO_ASSERT(alignment > -1 && alignment < Alignment::Null, "");
+    if (m_context.alignment != alignment)
+    {
+        m_context.alignment = alignment;
+        m_dirtyFlags = DirtyFlags::All;
+    }
+}
+
 const Font* SimpleText::getFont() const
 {
     return m_context.font;
@@ -169,6 +197,11 @@ Colour SimpleText::getShadowColour() const
 glm::vec2 SimpleText::getShadowOffset() const
 {
     return m_context.shadowOffset;
+}
+
+bool SimpleText::getBold() const
+{
+    return m_context.bold;
 }
 
 FloatRect SimpleText::getLocalBounds()

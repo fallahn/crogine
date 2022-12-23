@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2021
+Matt Marchant 2017 - 2022
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -132,6 +132,17 @@ namespace
             colourShader.reset();
         }
     }
+
+    //TODO move this to its own header as it is shared/duplicated in RenderSystem2D
+    glm::ivec2 mapCoordsToPixel(glm::vec2 coord, const glm::mat4& viewProjectionMatrix, IntRect viewport)
+    {
+        auto worldPoint = viewProjectionMatrix * glm::vec4(coord, 0.f, 1.f);
+
+        glm::ivec2 retVal(static_cast<int>((worldPoint.x + 1.f) / 2.f * viewport.width + viewport.left),
+            static_cast<int>((worldPoint.y + 1.f) / 2.f * viewport.height + viewport.bottom));
+
+        return retVal;
+    }
 }
 
 SimpleDrawable::SimpleDrawable()
@@ -143,7 +154,8 @@ SimpleDrawable::SimpleDrawable()
     m_vertexCount       (0),
     m_textureID         (0),
     m_texture           (nullptr),
-    m_blendMode         (Material::BlendMode::Alpha)
+    m_blendMode         (Material::BlendMode::Alpha),
+    m_cropped           (false)
 {
     //create buffer
     glCheck(glGenBuffers(1, &m_vbo));
@@ -210,30 +222,40 @@ bool SimpleDrawable::setShader(const Shader& shader)
 
 
 
-    auto uniforms = shader.getUniformMap();
+    const auto& uniforms = shader.getUniformMap();
     m_uniforms = {};
-    if (uniforms.count("u_projectionMatrix"))
-    {
-        m_uniforms.projectionMatrix = uniforms.at("u_projectionMatrix");
-    }
-    else
-    {
-        m_uniforms.projectionMatrix = -1;
-        LogW << "Uniform u_projectionMatrix not found in SimpleDrawble shader" << std::endl;
-    }
+    m_uniformValues.clear();
 
-    if (uniforms.count("u_worldMatrix"))
+    for (const auto& [name, id] : uniforms)
     {
-        m_uniforms.worldMatrix = uniforms.at("u_worldMatrix");
-    }
-    else
-    {
-        m_uniforms.worldMatrix = -1;
-        LogW << "Uniform u_worldMatrix not found in SimpleDrawable shader" << std::endl;
+        if (name == "u_projectionMatrix")
+        {
+            m_uniforms.projectionMatrix = id;
+        }
+        else if (name == "u_worldMatrix")
+        {
+            m_uniforms.worldMatrix = id;
+        }
+        else
+        {
+            m_uniformValues.insert(std::make_pair(name, std::make_pair(id, UniformValue())));
+        }
     }
 
     m_uniforms.texture = shader.getUniformID("u_texture");
     m_uniforms.shaderID = shader.getGLHandle();
+
+
+
+    if (m_uniforms.projectionMatrix == -1)
+    {
+        LogW << "Uniform u_projectionMatrix not found in SimpleDrawble shader" << std::endl;
+    }
+    if(m_uniforms.worldMatrix == -1)
+    {
+        LogW << "Uniform u_worldMatrix not found in SimpleDrawable shader" << std::endl;
+    }
+
 
 #ifdef PLATFORM_DESKTOP
     updateVAO(shader);
@@ -242,13 +264,25 @@ bool SimpleDrawable::setShader(const Shader& shader)
     return true;
 }
 
+void SimpleDrawable::setCroppingArea(FloatRect area)
+{
+    m_croppingArea = area;
+    m_cropped = true;
+}
+
 //protected
 void SimpleDrawable::setTexture(const Texture& texture)
 {
-    m_textureID = texture.getGLHandle();
+    setTexture(TextureID(texture.getGLHandle()));
     m_texture = &texture;
+}
 
-    //only replace the texture if  active shader is
+void SimpleDrawable::setTexture(TextureID texture)
+{
+    m_textureID = texture.textureID;
+    m_texture = nullptr;
+
+    //only replace the shader if active shader is
     //colour shader (don't replace custom shaders)
     if (colourShader &&
         m_uniforms.shaderID == colourShader->getGLHandle())
@@ -286,13 +320,48 @@ void SimpleDrawable::drawGeometry(const glm::mat4& worldTransform) const
     glCheck(glUniformMatrix4fv(m_uniforms.worldMatrix, 1, GL_FALSE, &worldTransform[0][0]));
     glCheck(glUniformMatrix4fv(m_uniforms.projectionMatrix, 1, GL_FALSE, &projectionMatrix[0][0]));
 
+    auto texIndex = 0;
     if (m_textureID)
     {
         //bind texture
         glCheck(glActiveTexture(GL_TEXTURE0));
         glCheck(glBindTexture(GL_TEXTURE_2D, m_textureID));
 
-        glCheck(glUniform1i(m_uniforms.texture, 0));
+        glCheck(glUniform1i(m_uniforms.texture, texIndex));
+        texIndex++;
+    }
+
+    for (const auto& [_, uniformPair] : m_uniformValues)
+    {
+        const auto& [uid, value] = uniformPair;
+        switch (uniformPair.second.type)
+        {
+        default:
+        case UniformValue::None:
+            break;
+        case UniformValue::Number:
+            glCheck(glUniform1f(uid, value.numberValue));
+            break;
+        case UniformValue::Vec2:
+            glCheck(glUniform2f(uid, value.vecValue[0], value.vecValue[1]));
+            break;
+        case UniformValue::Vec3:
+            glCheck(glUniform3f(uid, value.vecValue[0], value.vecValue[1], value.vecValue[2]));
+            break;
+        case UniformValue::Vec4:
+            glCheck(glUniform4f(uid, value.vecValue[0], value.vecValue[1], value.vecValue[2], value.vecValue[3]));
+            break;
+        case UniformValue::Mat4:
+            glCheck(glUniformMatrix4fv(uid, 1, GL_FALSE, &value.matrixValue[0][0]));
+            break;
+        case UniformValue::Texture:
+            glCheck(glActiveTexture(GL_TEXTURE0 + texIndex));
+            glCheck(glBindTexture(GL_TEXTURE_2D, value.textureID));
+
+            glCheck(glUniform1i(uid, texIndex));
+            texIndex++;
+            break;
+        }
     }
 
     //set viewport
@@ -302,8 +371,31 @@ void SimpleDrawable::drawGeometry(const glm::mat4& worldTransform) const
     //set culling/blend mode
     glCheck(glDepthMask(GL_FALSE));
     glCheck(glDisable(GL_DEPTH_TEST));
-    glCheck(glEnable(GL_CULL_FACE));
+    glCheck(glDisable(GL_CULL_FACE));
     applyBlendMode();
+
+
+    //check if we're cropped and set up any needed scissoring
+    if (m_cropped)
+    {
+        //convert cropping area to target coords (remember this might not be a window!)
+        auto croppingWorldArea = m_croppingArea.transform(worldTransform);
+        glm::vec2 start(croppingWorldArea.left, croppingWorldArea.bottom);
+        glm::vec2 end(start.x + croppingWorldArea.width, start.y + croppingWorldArea.height);
+
+        auto scissorStart = mapCoordsToPixel(start, projectionMatrix, vp);
+        auto scissorEnd = mapCoordsToPixel(end, projectionMatrix, vp);
+
+        glCheck(glScissor(scissorStart.x, scissorStart.y, scissorEnd.x - scissorStart.x, scissorEnd.y - scissorStart.y));
+        glCheck(glEnable(GL_SCISSOR_TEST));
+    }
+    else
+    {
+        auto rtSize = RenderTarget::getActiveTarget()->getSize();
+        glCheck(glScissor(0, 0, rtSize.x, rtSize.y));
+    }
+
+    //TODO do we want to enable single sided rendering?
 
 
     //draw
@@ -338,6 +430,7 @@ void SimpleDrawable::drawGeometry(const glm::mat4& worldTransform) const
     //restore viewport/blendmode etc
     glCheck(glDepthMask(GL_TRUE));
     glCheck(glDisable(GL_BLEND));
+    glCheck(glDisable(GL_SCISSOR_TEST));
 
     glCheck(glUseProgram(0));
 }
@@ -366,7 +459,7 @@ void SimpleDrawable::updateVAO(const Shader& shader)
         //pos
         if (attribs[Mesh::Position] > -1)
         {
-            glCheck(glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, stride, (void*)0));
+            glCheck(glVertexAttribPointer(attribs[Mesh::Position], 2, GL_FLOAT, GL_FALSE, stride, (void*)0));
             glCheck(glEnableVertexAttribArray(0));
         }
         //else warn?
@@ -374,14 +467,14 @@ void SimpleDrawable::updateVAO(const Shader& shader)
         //uv
         if (attribs[Mesh::UV0] > -1)
         {
-            glCheck(glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, stride, (void*)(2 * sizeof(float))));
+            glCheck(glVertexAttribPointer(attribs[Mesh::UV0], 2, GL_FLOAT, GL_FALSE, stride, (void*)(2 * sizeof(float))));
             glCheck(glEnableVertexAttribArray(1));
         }
 
         //colour
         if (attribs[Mesh::Colour] > -1)
         {
-            glCheck(glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, stride, (void*)(4 * sizeof(float))));
+            glCheck(glVertexAttribPointer(attribs[Mesh::Colour], 4, GL_FLOAT, GL_FALSE, stride, (void*)(4 * sizeof(float))));
             glCheck(glEnableVertexAttribArray(2));
         }
         glCheck(glBindVertexArray(0));

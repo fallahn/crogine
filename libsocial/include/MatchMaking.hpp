@@ -29,6 +29,8 @@ source distribution.
 
 #pragma once
 
+#include <crogine/core/String.hpp>
+
 #include <cstdint>
 #include <limits>
 #include <vector>
@@ -50,9 +52,15 @@ public:
     MatchMaking& operator = (MatchMaking&&) = delete;
 
 
-    void createGame(std::int32_t gameType = 0);
+    void createGame(std::int32_t maxPlayers, std::int32_t gameType = 0);
+    void setGameTitle(const cro::String&) {};
+    void setGamePlayerCount(std::int32_t) {};
+    void setFriendsOnly(bool) {};
+    bool getFriendsOnly() const { return false; }
+    void createLobby(std::int32_t, std::int32_t) {}
 
     void joinGame(std::uint64_t lobbyID);
+    void joinLobby(std::uint64_t) {};
 
     void refreshLobbyList(std::int32_t gameType = 0) {}
 
@@ -62,10 +70,13 @@ public:
         std::uint64_t ID = 0;
         std::int32_t playerCount = 0;
         std::int32_t clientCount = 0;
+        cro::String title;
     };
     const std::vector<LobbyData>& getLobbies() const { static std::vector<LobbyData> d;  return d; }
 
     void leaveGame() {}
+
+    const char* getUserName() const { return nullptr; }
 
     //use the message bus to relay callback events
     static constexpr std::int32_t MessageID = std::numeric_limits<std::int32_t>::max() / 2;
@@ -76,12 +87,15 @@ public:
         {
             GameCreated,
             GameCreateFailed,
+            LobbyCreated,
             LobbyJoined,
             LobbyJoinFailed,
             LobbyListUpdated,
+            LobbyInvite,
             Error
         }type = Error;
         std::uint64_t hostID = 0;
+        std::int32_t gameType = 0;
     };
 
 private:

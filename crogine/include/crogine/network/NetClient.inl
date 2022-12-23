@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2022
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -28,7 +28,7 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 template <typename T>
-void NetClient::sendPacket(std::uint8_t id, const T& data, NetFlag flags, std::uint8_t channel)
+void NetClient::sendPacket(std::uint8_t id, const T& data, NetFlag flags, std::uint8_t channel) const
 {
     sendPacket(id, (void*)&data, sizeof(T), flags, channel);
 }

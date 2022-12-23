@@ -40,6 +40,7 @@ source distribution.
 
 #include <memory>
 
+struct GolfBallEvent;
 namespace cro
 {
     class Image;
@@ -83,7 +84,7 @@ class BallSystem final : public cro::System
 public:
     //don't try and create debug drawer on server instances
     //there's no OpenGL context on the server thread.
-    BallSystem(cro::MessageBus&, bool debug = false);
+    explicit BallSystem(cro::MessageBus&, bool debug = false);
     ~BallSystem();
 
     BallSystem(const BallSystem&) = delete;
@@ -111,6 +112,9 @@ public:
     TerrainResult getTerrain(glm::vec3) const;
 
     bool getPuttFromTee() const { return m_puttFromTee; }
+
+    //reducing the timestep runs this faster, though less accurately
+    void runPrediction(cro::Entity, float timestep = 1.f/60.f);
 
 #ifdef CRO_DEBUG_
     void setDebugFlags(std::int32_t);
@@ -141,6 +145,7 @@ private:
     std::uint8_t m_gimmeRadius;
 
     void doCollision(cro::Entity);
+    void doBallCollision(cro::Entity);
     void updateWind();
 
     std::unique_ptr<btDefaultCollisionConfiguration> m_collisionCfg;
@@ -158,6 +163,11 @@ private:
 #ifdef CRO_DEBUG_
     std::unique_ptr<BulletDebug> m_debugDraw;
 #endif
+
+    bool m_predicting;
+    GolfBallEvent* postEvent() const;
+
+    void processEntity(cro::Entity, float);
 
     void initCollisionWorld(bool);
     void clearCollisionObjects();

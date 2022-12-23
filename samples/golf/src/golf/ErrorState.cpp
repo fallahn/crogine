@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021
+Matt Marchant 2021 - 2022
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -229,7 +229,7 @@ void ErrorState::buildScene()
     auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
 
     //title
-    auto createItem = [&](glm::vec2 position, const std::string label, cro::Entity parent)
+    auto createItem = [&](glm::vec2 position, const std::string& label, cro::Entity parent)
     {
         auto e = m_scene.createEntity();
         e.addComponent<cro::Transform>().setPosition(position);

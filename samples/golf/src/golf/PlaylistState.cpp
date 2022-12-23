@@ -90,11 +90,12 @@ source distribution.
 namespace
 {
 #include "WaterShader.inl"
-#include "TerrainShader.inl"
+#include "CelShader.inl"
 #include "BillboardShader.inl"
 #include "TreeShader.inl"
 #include "ShadowMapping.inl"
 #include "CloudShader.inl"
+#include "ShaderIncludes.inl"
 
     const std::string SkyboxPath = "assets/golf/skyboxes/";
     const std::string ShrubPath = "assets/golf/shrubs/";
@@ -172,7 +173,7 @@ namespace
     struct ListItemCallback final
     {
         const cro::FloatRect& croppingArea;
-        ListItemCallback(const cro::FloatRect& c)
+        explicit ListItemCallback(const cro::FloatRect& c)
             : croppingArea(c) {}
 
         void operator ()(cro::Entity e, float)
@@ -299,13 +300,15 @@ PlaylistState::PlaylistState(cro::StateStack& ss, cro::State::Context ctx, Share
             buildUI();
         });
 
+    Social::setStatus(Social::InfoID::Menu, { "Editing a Course" });
+
 #ifdef CRO_DEBUG_
     registerWindow([&]()
         {
             if (ImGui::Begin("buns"))
             {
                 //ImGui::Text("Current Slider %u", m_activeSlider.getIndex());
-                static float maxDist = 50.f;
+                /*static float maxDist = 50.f;
                 if (ImGui::SliderFloat("Distance", &maxDist, 1.f, 50.f))
                 {
                     m_gameScene.getActiveCamera().getComponent<cro::Camera>().setMaxShadowDistance(maxDist);
@@ -315,10 +318,12 @@ PlaylistState::PlaylistState(cro::StateStack& ss, cro::State::Context ctx, Share
                 if (ImGui::SliderFloat("Overshoot", &overshoot, 0.f, 20.f))
                 {
                     m_gameScene.getActiveCamera().getComponent<cro::Camera>().setShadowExpansion(overshoot);
-                }
+                }*/
+                const auto& cam = m_gameScene.getActiveCamera().getComponent<cro::Camera>();
+                ImGui::Image(cam.reflectionBuffer.getTexture(), {300.f, 300.f}, {0.f, 1.f}, {1.f, 0.f});
             }
             ImGui::End();
-        });
+        }, true);
 #endif
 }
 
@@ -366,9 +371,24 @@ bool PlaylistState::handleEvent(const cro::Event& evt)
 #endif
         }
     }
-    else if (evt.type == SDL_CONTROLLERBUTTONUP
-        && evt.cbutton.which == cro::GameController::deviceID(m_sharedData.inputBinding.controllerID))
+    else if (evt.type == SDL_KEYDOWN)
     {
+        switch (evt.key.keysym.sym)
+        {
+        default: break;
+        case SDLK_UP:
+        case SDLK_DOWN:
+        case SDLK_LEFT:
+        case SDLK_RIGHT:
+            cro::App::getWindow().setMouseCaptured(true);
+            break;
+        }
+    }
+    else if (evt.type == SDL_CONTROLLERBUTTONUP)
+    {
+        static constexpr std::size_t MaxTabs = 4;
+
+        cro::App::getWindow().setMouseCaptured(true);
         switch (evt.cbutton.button)
         {
         case cro::GameController::ButtonB:
@@ -376,11 +396,11 @@ bool PlaylistState::handleEvent(const cro::Event& evt)
             quitState();
             return false;
         case cro::GameController::ButtonLeftShoulder:
-            m_currentTab = (m_currentTab + (MenuID::Count - 2)) % (MenuID::Count - 1);
+            m_currentTab = (m_currentTab + (MaxTabs - 1)) % MaxTabs;
             setActiveTab(m_currentTab);
             break;
         case cro::GameController::ButtonRightShoulder:
-            m_currentTab = (m_currentTab + 1) % (MenuID::Count - 1);
+            m_currentTab = (m_currentTab + 1) % MaxTabs;
             setActiveTab(m_currentTab);
             break;
         case cro::GameController::ButtonStart:
@@ -425,6 +445,7 @@ bool PlaylistState::handleEvent(const cro::Event& evt)
             auto pos = m_uiScene.getActiveCamera().getComponent<cro::Camera>().pixelToCoords(glm::vec2(evt.button.x, evt.button.y));
             m_activeSlider.getComponent<cro::Callback>().getUserData<SliderData>().updatePosition(pos);
         }
+        cro::App::getWindow().setMouseCaptured(false);
     }
     else if (evt.type == SDL_MOUSEWHEEL)
     {
@@ -500,6 +521,14 @@ bool PlaylistState::handleEvent(const cro::Event& evt)
             }
         }
     }
+    else if (evt.type == SDL_CONTROLLERAXISMOTION)
+    {
+        if (evt.caxis.value > LeftThumbDeadZone)
+        {
+            cro::App::getWindow().setMouseCaptured(true);
+        }
+    }
+
 
     m_uiScene.getSystem<cro::UISystem>()->handleEvent(evt);
 
@@ -619,12 +648,17 @@ void PlaylistState::addSystems()
 
 void PlaylistState::loadAssets()
 {
+    for (const auto& [name, str] : IncludeMappings)
+    {
+        m_resources.shaders.addInclude(name, str);
+    }
+
     //materials
     m_resources.shaders.loadFromString(ShaderID::Horizon, HorizonVert, HorizonFrag);
     auto* shader = &m_resources.shaders.get(ShaderID::Horizon);
     m_materialIDs[MaterialID::Horizon] = m_resources.materials.add(*shader);
 
-    m_resources.shaders.loadFromString(ShaderID::Water, WaterVertex, WaterFragment);
+    m_resources.shaders.loadFromString(ShaderID::Water, WaterVertex, WaterFragment, "#define NO_DEPTH\n");
     shader = &m_resources.shaders.get(ShaderID::Water);
     m_scaleBuffer.addShader(*shader);
     m_windBuffer.addShader(*shader);
@@ -647,12 +681,17 @@ void PlaylistState::loadAssets()
     m_resolutionBuffer.addShader(*shader);
     m_materialIDs[MaterialID::Cel] = m_resources.materials.add(*shader);
 
+    auto& noiseTex = m_resources.textures.get("assets/golf/images/wind.png");
+    noiseTex.setRepeated(true);
+    noiseTex.setSmooth(true);
+
     m_resources.shaders.loadFromString(ShaderID::CelTextured, CelVertexShader, CelFragmentShader, "#define WIND_WARP\n#define TEXTURED\n#define NOCHEX\n#define SUBRECT\n" + wobble);
     shader = &m_resources.shaders.get(ShaderID::CelTextured);
     m_scaleBuffer.addShader(*shader);
     m_resolutionBuffer.addShader(*shader);
     m_windBuffer.addShader(*shader);
     m_materialIDs[MaterialID::CelTextured] = m_resources.materials.add(*shader);
+    m_resources.materials.get(m_materialIDs[MaterialID::CelTextured]).setProperty("u_noiseTexture", noiseTex);
 
     m_resources.shaders.loadFromString(ShaderID::CelTexturedSkinned, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define DITHERED\n#define SKINNED\n#define NOCHEX\n#define SUBRECT\n" + wobble);
     shader = &m_resources.shaders.get(ShaderID::CelTexturedSkinned);
@@ -673,13 +712,16 @@ void PlaylistState::loadAssets()
     m_resolutionBuffer.addShader(*shader);
     m_windBuffer.addShader(*shader);
     m_materialIDs[MaterialID::Billboard] = m_resources.materials.add(*shader);
+    m_resources.materials.get(m_materialIDs[MaterialID::Billboard]).setProperty("u_noiseTexture", noiseTex);
 
-    m_resources.shaders.loadFromString(ShaderID::TreesetBranch, BranchVertex, BranchFragment, "#define INSTANCING\n" + wobble);
+
+    m_resources.shaders.loadFromString(ShaderID::TreesetBranch, BranchVertex, BranchFragment, "#define INSTANCING\n#define ALPHA_CLIP\n" + wobble);
     shader = &m_resources.shaders.get(ShaderID::TreesetBranch);
     m_scaleBuffer.addShader(*shader);
     m_resolutionBuffer.addShader(*shader);
     m_windBuffer.addShader(*shader);
     m_materialIDs[MaterialID::Branch] = m_resources.materials.add(*shader);
+    m_resources.materials.get(m_materialIDs[MaterialID::Branch]).setProperty("u_noiseTexture", noiseTex);
 
     m_resources.shaders.loadFromString(ShaderID::TreesetLeaf, BushVertex, BushGeom, BushFragment, "#define POINTS\n#define INSTANCING\n#define HQ\n" + wobble);
     shader = &m_resources.shaders.get(ShaderID::TreesetLeaf);
@@ -688,10 +730,11 @@ void PlaylistState::loadAssets()
     m_windBuffer.addShader(*shader);
     m_materialIDs[MaterialID::Leaf] = m_resources.materials.add(*shader);
 
-    m_resources.shaders.loadFromString(ShaderID::TreesetShadow, ShadowVertex, ShadowFragment, "#define INSTANCING\n#define TREE_WARP\n" + wobble);
+    m_resources.shaders.loadFromString(ShaderID::TreesetShadow, ShadowVertex, ShadowFragment, "#define INSTANCING\n#define TREE_WARP\n#define ALPHA_CLIP\n" + wobble);
     shader = &m_resources.shaders.get(ShaderID::TreesetShadow);
     m_windBuffer.addShader(*shader);
     m_materialIDs[MaterialID::BranchShadow] = m_resources.materials.add(*shader);
+    m_resources.materials.get(m_materialIDs[MaterialID::BranchShadow]).setProperty("u_noiseTexture", noiseTex);
 
     std::string alphaClip = m_sharedData.hqShadows ? "#define ALPHA_CLIP\n" : "";
     m_resources.shaders.loadFromString(ShaderID::TreesetLeafShadow, ShadowVertex, ShadowGeom, ShadowFragment, "#define POINTS\n #define INSTANCING\n#define LEAF_SIZE\n" + alphaClip + wobble);
@@ -814,7 +857,14 @@ void PlaylistState::buildScene()
         float maxScale = std::floor(winSize.y / vpSize.y);
         float scale = m_sharedData.pixelScale ? maxScale : 1.f;
         auto texSize = winSize / scale;
-        m_gameSceneTexture.create(static_cast<std::uint32_t>(texSize.x), static_cast<std::uint32_t>(texSize.y));
+
+        std::uint32_t samples = m_sharedData.pixelScale ? 0 :
+            m_sharedData.antialias ? m_sharedData.multisamples : 0;
+
+        m_sharedData.antialias =
+            m_gameSceneTexture.create(static_cast<std::uint32_t>(texSize.x), static_cast<std::uint32_t>(texSize.y), true, false, samples)
+            && m_sharedData.multisamples != 0
+            && !m_sharedData.pixelScale;
 
         auto invScale = (maxScale + 1.f) - scale;
         glCheck(glPointSize(invScale * BallPointSize));
@@ -3358,7 +3408,10 @@ void PlaylistState::loadShrubbery(const std::string& path)
                         auto material = m_resources.materials.get(m_materialIDs[MaterialID::Branch]);
                         applyMaterialData(md, material, idx);
                         shrubbery.treesetEnts[i].getComponent<cro::Model>().setMaterial(idx, material);
-                        shrubbery.treesetEnts[i].getComponent<cro::Model>().setShadowMaterial(idx, m_resources.materials.get(m_materialIDs[MaterialID::BranchShadow]));
+
+                        material = m_resources.materials.get(m_materialIDs[MaterialID::BranchShadow]);
+                        applyMaterialData(md, material, idx);
+                        shrubbery.treesetEnts[i].getComponent<cro::Model>().setShadowMaterial(idx, material);
                     }
 
                     auto& meshData = shrubbery.treesetEnts[i].getComponent<cro::Model>().getMeshData();
@@ -3392,6 +3445,10 @@ void PlaylistState::loadShrubbery(const std::string& path)
                     shrubbery.treesetEnts[i] = m_gameScene.createEntity();
                     shrubbery.treesetEnts[i].addComponent<cro::Transform>();
                     md.createModel(shrubbery.treesetEnts[i]);
+                    
+                    auto billboardMat = m_resources.materials.get(m_materialIDs[MaterialID::Billboard]);
+                    applyMaterialData(md, billboardMat);
+                    shrubbery.treesetEnts[i].getComponent<cro::Model>().setMaterial(0, billboardMat);
                 }
             }
         }
@@ -4155,7 +4212,9 @@ void PlaylistState::loadCourse()
                     item.courseIndex = output.directory;
                     item.holeIndex = output.file;
                     item.currentIndex = currIndex;
-                    item.name = m_holeDirs[item.courseIndex].holes[item.holeIndex].name;
+                    //if there's an assert here it's probably because no thumbnails
+                    //have been generated and m_holeDirs is empty. TODO fix this.
+                    item.name =  m_holeDirs[item.courseIndex].holes[item.holeIndex].name;
                 }
                     break;
                 case EntryType::Skybox:
@@ -4391,7 +4450,7 @@ void PlaylistState::showHelp()
     };
 
     //info panel title and desc
-    const auto createTitle = [&](glm::vec3 position, const std::string label, glm::vec2 relPos = glm::vec2(0.f))
+    const auto createTitle = [&](glm::vec3 position, const std::string& label, glm::vec2 relPos = glm::vec2(0.f))
     {
         auto entity = m_uiScene.createEntity();
         entity.addComponent<cro::Transform>().setPosition((screenSize / m_viewScale) * relPos);

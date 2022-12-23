@@ -70,7 +70,7 @@ namespace sv
         cro::Clock m_turnTimer;
 
         void sendInitialGameState(std::uint8_t);
-        void handlePlayerInput(const net::NetEvent::Packet&);
+        void handlePlayerInput(const net::NetEvent::Packet&, bool predict);
         void checkReadyQuit(std::uint8_t);
 
         void setNextPlayer(bool newHole = false);

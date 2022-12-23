@@ -30,7 +30,8 @@ source distribution.
 #pragma once
 
 #include <crogine/Config.hpp>
-#include <crogine/detail/Types.hpp>
+
+#include <cstdint>
 
 namespace cro
 {

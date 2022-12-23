@@ -63,6 +63,7 @@ source distribution.
 namespace
 {
 #include "TerrainShader.inl"
+#include "CelShader.inl"
 
     //params for poisson disk samples
     static constexpr float GrassDensity = 1.7f; //radius for PD sampler
@@ -102,7 +103,7 @@ namespace
             swapData.currentTime = std::min(SwapData::TransitionTime, swapData.currentTime + dt);
 
             pos.y = swapData.start + ((swapData.destination - swapData.start) * cro::Util::Easing::easeInOutQuint(swapData.currentTime / SwapData::TransitionTime));
-            pos.y = std::min(0.f, std::max(-MaxShrubOffset, pos.y));
+            pos.y = std::min(-TerrainLevel, std::max(-MaxShrubOffset, pos.y));
 
             e.getComponent<cro::Transform>().setPosition(pos);
 
@@ -253,7 +254,7 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
         wobble = "#define WOBBLE\n";
     }
 
-    resources.shaders.loadFromString(ShaderID::Terrain, TerrainVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n#define RX_SHADOWS\n#define ADD_NOISE\n#define TERRAIN\n" + wobble);
+    resources.shaders.loadFromString(ShaderID::Terrain, TerrainVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n#define RX_SHADOWS\n#define ADD_NOISE\n#define TERRAIN\n#define TERRAIN_CLIP\n" + wobble);
     const auto& shader = resources.shaders.get(ShaderID::Terrain);
     m_terrainProperties.morphUniform = shader.getUniformID("u_morphTime");
     m_terrainProperties.shaderID = shader.getGLHandle();
@@ -345,6 +346,9 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
         "assets/golf/crowd/spectator04.vat"
     };
 
+    auto& noiseTex = resources.textures.get("assets/golf/images/wind.png");
+    noiseTex.setRepeated(true);
+    noiseTex.setSmooth(true);
     for (auto& entity : m_billboardEntities)
     {
         //reload the the model def each time to ensure unique VBOs
@@ -376,12 +380,14 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
 
                 auto material = resources.materials.get(billboardMatID);
                 applyMaterialData(billboardDef, material);
+                material.setProperty("u_noiseTexture", noiseTex);
                 entity.getComponent<cro::Model>().setMaterial(0, material);
 
                 if (billboardShadowID > -1)
                 {
                     material = resources.materials.get(billboardShadowID);
                     applyMaterialData(billboardDef, material);
+                    material.setProperty("u_noiseTexture", noiseTex);
                     material.doubleSided = true; //do this second because applyMaterial() overwrites it
                     entity.getComponent<cro::Model>().setShadowMaterial(0, material);
                     entity.addComponent<cro::ShadowCaster>();
@@ -404,6 +410,7 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
                 for (auto j = 0u; j < shrubDef.getMaterialCount(); ++j)
                 {
                     applyMaterialData(shrubDef, material, j);
+                    material.setProperty("u_noiseTexture", noiseTex);
                     childEnt.getComponent<cro::Model>().setMaterial(j, material);
                 }
                 childEnt.getComponent<cro::Model>().setHidden(true);
@@ -427,8 +434,13 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
                         {
                             auto material = resources.materials.get(branchMaterialID);
                             applyMaterialData(shrubDef, material, idx);
+                            material.setProperty("u_noiseTexture", noiseTex);
                             childEnt.getComponent<cro::Model>().setMaterial(idx, material);
-                            childEnt.getComponent<cro::Model>().setShadowMaterial(idx, resources.materials.get(treeShadowMaterialID));
+
+                            material = resources.materials.get(treeShadowMaterialID);
+                            material.setProperty("u_noiseTexture", noiseTex);
+                            applyMaterialData(shrubDef, material, idx);
+                            childEnt.getComponent<cro::Model>().setShadowMaterial(idx, material);
                         }
 
                         auto& meshData = childEnt.getComponent<cro::Model>().getMeshData();
@@ -440,12 +452,14 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
                             material.setProperty("u_leafSize", theme.treesets[j].leafSize);
                             material.setProperty("u_randAmount", theme.treesets[j].randomness);
                             material.setProperty("u_colour", theme.treesets[j].colour);
+                            material.setProperty("u_noiseTexture", noiseTex);
                             childEnt.getComponent<cro::Model>().setMaterial(idx, material);
 
                             material = resources.materials.get(leafShadowMaterialID);
                             if (m_sharedData.hqShadows)
                             {
                                 material.setProperty("u_diffuseMap", resources.textures.get(theme.treesets[j].texturePath));
+                                material.setProperty("u_noiseTexture", noiseTex);
                             }
                             material.setProperty("u_leafSize", theme.treesets[j].leafSize);
                             childEnt.getComponent<cro::Model>().setShadowMaterial(idx, material);
@@ -468,7 +482,7 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
                     crowdDef.loadFromFile(vatFile.getModelPath(), true))
                 {
                     auto childEnt = scene.createEntity();
-                    childEnt.addComponent<cro::Transform>().setPosition({ MapSize.x / 2.f, 0.f, -static_cast<float>(MapSize.y) / 2.f });
+                    childEnt.addComponent<cro::Transform>().setPosition({ MapSize.x / 2.f, /*-TerrainLevel*/0.f, -static_cast<float>(MapSize.y) / 2.f });
                     crowdDef.createModel(childEnt);
 
                     //setup material
@@ -521,7 +535,7 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
 
 
     //create a mesh to display the slope data
-    flags = cro::VertexProperty::Position | cro::VertexProperty::Colour | cro::VertexProperty::UV0;
+    flags = cro::VertexProperty::Position | cro::VertexProperty::Colour | cro::VertexProperty::Normal | cro::VertexProperty::UV0;
     meshID = resources.meshes.loadMesh(cro::DynamicMeshBuilder(flags, 1, GL_LINES));
     resources.shaders.loadFromString(ShaderID::Slope, SlopeVertexShader, SlopeFragmentShader);
     auto& slopeShader = resources.shaders.get(ShaderID::Slope);
@@ -530,7 +544,7 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
     m_slopeProperties.shader = slopeShader.getGLHandle();
     materialID = resources.materials.add(slopeShader);
     resources.materials.get(materialID).blendMode = cro::Material::BlendMode::Alpha;
-    //resources.materials.get(materialID).enableDepthTest = false;
+    //resources.materials.get(materialID).enableDepthTest = true;
 
     entity = scene.createEntity();
     entity.addComponent<cro::Transform>();
@@ -620,7 +634,7 @@ void TerrainBuilder::update(std::size_t holeIndex)
                 //update the billboard data
                 SwapData swapData;
                 swapData.start = m_billboardEntities[first].getComponent<cro::Transform>().getPosition().y;
-                swapData.destination = 0.f;
+                swapData.destination = -TerrainLevel;
                 swapData.currentTime = 0.f;
                 m_billboardEntities[first].getComponent<cro::BillboardCollection>().setBillboards(m_billboardBuffer);
                 m_billboardEntities[first].getComponent<cro::Callback>().setUserData<SwapData>(swapData);
@@ -719,15 +733,30 @@ void TerrainBuilder::setSlopePosition(glm::vec3 position)
 //private
 void TerrainBuilder::threadFunc()
 {
-    const auto readHeightMap = [&](std::uint32_t x, std::uint32_t y)
+    const auto readHeightMap = [&](std::uint32_t x, std::uint32_t y, std::int32_t gridRes = 1)
     {
         auto size = m_normalMapImage.getSize();
-        x = std::min(size.x - 1, std::max(0u, x * NormalMapMultiplier));
-        y = std::min(size.y - 1, std::max(0u, y * NormalMapMultiplier));
+        x = std::min(size.x - 1, std::max(0u, x * (NormalMapMultiplier / gridRes)));
+        y = std::min(size.y - 1, std::max(0u, y * (NormalMapMultiplier / gridRes)));
 
         float height = static_cast<float>(m_normalMapImage.getPixel(x, y)[3]) / 255.f;
 
         return m_holeHeight.bottom + (m_holeHeight.height * height);
+    };
+
+    const auto readNormal = [&](std::uint32_t x, std::uint32_t y, std::int32_t gridRes = 1)
+    {
+        auto size = m_normalMapImage.getSize();
+        x = std::min(size.x - 1, std::max(0u, x * (NormalMapMultiplier / gridRes)));
+        y = std::min(size.y - 1, std::max(0u, y * (NormalMapMultiplier / gridRes)));
+
+        glm::vec3 normal(static_cast<float>(m_normalMapImage.getPixel(x, y)[0]) / 255.f,
+            static_cast<float>(m_normalMapImage.getPixel(x, y)[2]) / 255.f,
+            -static_cast<float>(m_normalMapImage.getPixel(x, y)[1]) / 255.f);
+
+        normal *= 2.f;
+        normal -= glm::vec3(1.f);
+        return normal;
     };
 
     //we can optimise this a bit by storing each prop
@@ -806,7 +835,7 @@ void TerrainBuilder::threadFunc()
                         if (height > WaterLevel)
                         {
                             auto& bb = m_billboardBuffer.emplace_back(m_billboardTemplates[cro::Util::Random::value(BillboardID::Grass01, BillboardID::Grass02)]);
-                            bb.position = { x, height, -y };
+                            bb.position = { x, height - 0.02f, -y };
                             bb.size *= scale;
                         }
                     }
@@ -815,13 +844,13 @@ void TerrainBuilder::threadFunc()
                         || terrain == TerrainID::Scrub)
                     {
                         float height = readHeightMap(static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(y));
-                        height = std::max(height, terrainHeight);
+                        height = std::max(height, terrainHeight + TerrainLevel);
 
                         if (height < 0.1f)
                         {
                             float scale = static_cast<float>(cro::Util::Random::value(9, 16)) / 10.f;
 
-                            glm::mat4 tx = glm::translate(glm::mat4(1.f), { x, height, -y });
+                            glm::mat4 tx = glm::translate(glm::mat4(1.f), { x, height - 0.01f, -y });
                             tx = glm::rotate(tx, cro::Util::Random::value(-cro::Util::Const::PI, cro::Util::Const::PI), cro::Transform::Y_AXIS);
                             tx = glm::scale(tx, glm::vec3(scale));
                             m_instanceTransforms.push_back(tx);
@@ -836,12 +865,12 @@ void TerrainBuilder::threadFunc()
                     {
                         //check if model mesh is higher than terrain
                         float height2 = readHeightMap(static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(y));
-                        height = std::max(height, height2);
+                        height = std::max(height + TerrainLevel, height2);
 
                         //check we're actually above water height
                         if (height > -(TerrainLevel - WaterLevel))
                         {
-                            glm::vec3 position(x, height, -y);
+                            glm::vec3 position(x, height - 0.01f, -y);
 
                             bool isNearProp = false;
                             for (auto v = position.z - 1; v < position.z + 2; ++v)
@@ -908,24 +937,24 @@ void TerrainBuilder::threadFunc()
                         /*&& height > 0.6f*/)
                     {
                         float height2 = readHeightMap(static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(y));
-                        height = std::max(height, height2);
+                        height = std::max(height + TerrainLevel, height2);
 
                         if (height > -(TerrainLevel - WaterLevel))
                         {
-                            glm::vec3 position(x, height, -y);
+                            glm::vec3 position(x, height - 0.001f, -y);
 
                             if (!nearProp(position))
                             {
                                 float scale = static_cast<float>(cro::Util::Random::value(13, 17)) / 10.f;
                                 auto& bb = m_billboardBuffer.emplace_back(m_billboardTemplates[cro::Util::Random::value(BillboardID::Flowers01, BillboardID::Bush02)]);
-                                bb.position = { x, height + 0.05f, -y };
+                                bb.position = { x, height - 0.05f, -y };
                                 bb.size *= scale;
                             }
                             else
                             {
                                 float scale = static_cast<float>(cro::Util::Random::value(14, 16)) / 10.f;
                                 auto& bb = m_billboardBuffer.emplace_back(m_billboardTemplates[cro::Util::Random::value(BillboardID::Grass01, BillboardID::Grass02)]);
-                                bb.position = { x, height, -y };
+                                bb.position = { x, height - 0.05f, -y };
                                 bb.size *= scale;
                             }
                         }
@@ -978,94 +1007,78 @@ void TerrainBuilder::threadFunc()
                 m_slopeIndices.clear();
 
                 std::uint32_t currIndex = 0u;
-                float lowestHeight = std::numeric_limits<float>::max();
-                float highestHeight = std::numeric_limits<float>::lowest();
-                //we can optimise this by only looping the grid around the pin pos
                 auto pinPos = m_holeData[m_currentHole].pin;
+
+                //we can optimise this by only looping the grid around the pin pos
                 const std::int32_t startX = std::max(0, static_cast<std::int32_t>(std::floor(pinPos.x)) - HalfGridSize);
                 const std::int32_t startY = std::max(0, static_cast<std::int32_t>(-std::floor(pinPos.z)) - HalfGridSize);
-                static constexpr float DashCount = 40.f; //actual div by TAU cos its sin but eh.
-                const float SlopeSpeed = -20.f * (m_holeData[m_currentHole].puttFromTee ? 0.15f : 1.f);
+                static constexpr float DashCount = 80.f; //actual div by TAU cos its sin but eh.
+                const float SlopeSpeed = -12.f * (/*m_holeData[m_currentHole].puttFromTee ? 0.15f :*/ 1.f); //REMEMBER this const is also used in the slope frag shader
                 const std::int32_t AvgDistance = m_holeData[m_currentHole].puttFromTee ? 1 : 5; //taking a long average on a small lumpy green will give wrong direction
+                static constexpr std::int32_t GridDensity = 2; //grids per metre. Can only be 1,2 or 4 to match Normal Map resolution
+                static constexpr float GridSpacing = 1.f / GridDensity;
 
-                for (auto y = startY; y < startY + SlopeGridSize; ++y)
+                static constexpr float epsilon = 0.018f; //pushes grid off the surface by this much. Could just do in the transform really...
+                for (auto y = 0; y < (SlopeGridSize * GridDensity); ++y)
                 {
-                    for (auto x = startX; x < startX + SlopeGridSize; ++x)
+                    for (auto x = 0; x < (SlopeGridSize * GridDensity); ++x)
                     {
-                        auto terrain = readMap(mapImage, x, y).first;
+                        auto worldX = startX + (x / GridDensity);
+                        auto worldY = startY + (y / GridDensity);
+
+                        auto terrain = readMap(mapImage, worldX, worldY).first;
                         if (terrain == TerrainID::Green)
                         {
-                            static constexpr float epsilon = 0.021f;
-                            float posX = static_cast<float>(x) - pinPos.x;
-                            float posZ = -static_cast<float>(y) - pinPos.z;
+                            float posX = static_cast<float>(x / GridDensity) + ((x % GridDensity) * GridSpacing) + startX;
+                            float posZ = -(static_cast<float>(y / GridDensity) + ((y % GridDensity) * GridSpacing) + startY);
 
-                            auto height = (readHeightMap(x, y) - pinPos.y) + epsilon;
+                            posX -= pinPos.x;
+                            posZ -= pinPos.z;
+
+                            worldX = startX * GridDensity + x;
+                            worldY = startY * GridDensity + y;
+
+                            auto height = (readHeightMap(worldX, worldY, GridDensity) - pinPos.y) + epsilon;
                             SlopeVertex vert;
                             vert.position = { posX, height, posZ };
+                            vert.normal = readNormal(worldX, worldY, GridDensity);
 
                             //this is the number of times the 'dashes' repeat if enabled in the shader
                             //and the speed/direction based on height difference
                             vert.texCoord = { 0.f, 0.f };
 
-                            if (height < lowestHeight)
-                            {
-                                lowestHeight = height;
-                            }
-                            else if (height > highestHeight)
-                            {
-                                highestHeight = height;
-                            }
-
-
-
-                            glm::vec3 offset(1.f, 0.f, 0.f);
-                            height = (readHeightMap(x + 1, y) - pinPos.y) + epsilon;
+                            glm::vec3 offset(GridSpacing, 0.f, 0.f);
+                            height = (readHeightMap(worldX + 1, worldY, GridDensity) - pinPos.y) + epsilon;
 
                             //because of the low precision of the height map
                             //we average out the slope over a greater distance
                             glm::vec3 avgPosition = vert.position + glm::vec3(AvgDistance, 0.f, 0.f);
-                            avgPosition.y = (readHeightMap(x + AvgDistance, y) - pinPos.y) + epsilon;
+                            avgPosition.y = (readHeightMap(worldX + AvgDistance, worldY, GridDensity) - pinPos.y) + epsilon;
 
                             SlopeVertex vert2;
                             vert2.position = vert.position + offset;
                             vert2.position.y = height;
-                            vert2.texCoord = { DashCount, std::min(glm::dot(glm::vec3(0.f, 1.f, 0.f), glm::normalize(avgPosition - vert.position)) * SlopeSpeed, 1.f) };
+                            vert2.normal = readNormal(worldX + 1, worldY, GridDensity);
+                            vert2.texCoord = { DashCount / GridDensity, std::min(glm::dot(glm::vec3(0.f, 1.f, 0.f), glm::normalize(avgPosition - vert.position)) * SlopeSpeed, 1.f) };
                             vert.texCoord.y = vert2.texCoord.y; //must be constant across segment
-
-                            if (height < lowestHeight)
-                            {
-                                lowestHeight = height;
-                            }
-                            else if (height > highestHeight)
-                            {
-                                highestHeight = height;
-                            }
                             
 
                             //we have to copy first vert as the tex coords will be different
                             //shame we can't just recycle the index...
                             auto vert3 = vert;
 
-                            offset = glm::vec3(0.f, 0.f, -1.f);
-                            height = (readHeightMap(x, y + 1) - pinPos.y) + epsilon;
+                            offset = glm::vec3(0.f, 0.f, -GridSpacing);
+                            height = (readHeightMap(worldX, worldY + 1, GridDensity) - pinPos.y) + epsilon;
 
                             avgPosition = vert.position + glm::vec3(0.f, 0.f, -AvgDistance);
-                            avgPosition.y = (readHeightMap(x, y + AvgDistance) - pinPos.y) + epsilon;
+                            avgPosition.y = (readHeightMap(worldX, worldY + AvgDistance, GridDensity) - pinPos.y) + epsilon;
 
                             SlopeVertex vert4;
                             vert4.position = vert.position + offset;
                             vert4.position.y = height;
-                            vert4.texCoord = { DashCount, std::min(glm::dot(glm::vec3(0.f, 1.f, 0.f), glm::normalize(avgPosition - vert3.position)) * SlopeSpeed, 1.f) };
+                            vert4.normal = readNormal(worldX, worldY + 1, GridDensity);
+                            vert4.texCoord = { DashCount / GridDensity, std::min(glm::dot(glm::vec3(0.f, 1.f, 0.f), glm::normalize(avgPosition - vert3.position)) * SlopeSpeed, 1.f) };
                             vert3.texCoord.y = vert4.texCoord.y;
-
-                            if (height < lowestHeight)
-                            {
-                                lowestHeight = height;
-                            }
-                            else if (height > highestHeight)
-                            {
-                                highestHeight = height;
-                            }
 
 
                             //do this last once we know everything was modified
@@ -1080,20 +1093,23 @@ void TerrainBuilder::threadFunc()
                         }
                     }
                 }
-
-                float maxHeight = highestHeight - lowestHeight;
-                if (maxHeight != 0)
+                
+                static constexpr float LowestHeight = -0.04f;
+                static constexpr float HighestHeight = 0.04f;
+                static constexpr float MaxHeight = HighestHeight - LowestHeight;
+                //if (MaxHeight != 0)
                 {
                     for (auto& v : m_slopeBuffer)
                     {
-                        auto vertHeight = v.position.y - lowestHeight;
-                        vertHeight /= maxHeight;
+                        auto vertHeight = (v.position.y - epsilon) - LowestHeight;
+                        vertHeight /= MaxHeight;
                         //v.colour = { 0.f, 0.4f * vertHeight, 1.f - vertHeight, 0.8f };
                         v.colour = 
                         { 
                             cro::Util::Easing::easeInQuint(std::max(0.f, (vertHeight - 0.5f) * 2.f)),
-                            0.f,
-                            cro::Util::Easing::easeInQuint(std::min(1.f, vertHeight * 2.f)),
+                            //0.f,
+                            0.5f,
+                            cro::Util::Easing::easeInQuint(0.8f + (std::min(1.f, vertHeight * 2.f) * 0.2f)),
                             0.8f
                         };
                     }

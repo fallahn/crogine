@@ -59,7 +59,7 @@ namespace cro
     /*!
     \brief Base class for mesh creation.
     This class should be used as a base for mesh file format parsers
-    or programatically creating meshes. See the Quad, Cube or Sphere
+    or programmatically creating meshes. See the Quad, Cube or Sphere
     builders for examples.
 
     Mesh builder types should be used to pre-load mesh data with the
@@ -93,7 +93,7 @@ namespace cro
         virtual std::size_t getUID() const { return 0; }
 
         /*!
-        \brief If the derived class is used to patse a format which contains
+        \brief If the derived class is used to parse a format which contains
         skeletal animation data override this to return the base pose skeleton.
         These will then be cached by the mesh resource when the mesh is built
         and applied to any entities created via the ModelDefinition class.

@@ -36,8 +36,7 @@ source distribution.
 using namespace cro;
 
 Text::Text()
-    : m_dirtyFlags  (DirtyFlags::All),
-    m_alignment     (Alignment::Left)
+    : m_dirtyFlags  (DirtyFlags::All)
 {
 
 }
@@ -121,6 +120,15 @@ void Text::setShadowOffset(glm::vec2 offset)
     }
 }
 
+void Text::setBold(bool bold)
+{
+    if (m_context.bold != bold)
+    {
+        m_context.bold = bold;
+        m_dirtyFlags |= DirtyFlags::All;
+    }
+}
+
 const Font* Text::getFont() const
 {
     return m_context.font;
@@ -166,6 +174,11 @@ glm::vec2 Text::getShadowOffset() const
     return m_context.shadowOffset;
 }
 
+bool Text::getBold() const
+{
+    return m_context.bold;
+}
+
 FloatRect Text::getLocalBounds(Entity entity)
 {
     CRO_ASSERT(entity.hasComponent<Text>() && entity.hasComponent<Drawable2D>(), "Invalid Entity");
@@ -206,16 +219,19 @@ FloatRect Text::getLocalBounds(Entity entity)
             text.updateVertices(drawable);
             drawable.setTexture(&text.getFont()->getTexture(text.getCharacterSize()));
             drawable.setPrimitiveType(GL_TRIANGLES);
+            text.m_dirtyFlags = 0;
         }
-        text.m_dirtyFlags = 0;
     }
     return drawable.getLocalBounds();
 }
 
 void Text::setAlignment(Text::Alignment alignment)
 {
-    m_alignment = alignment;
-    m_dirtyFlags |= DirtyFlags::All;
+    if (m_context.alignment != std::int32_t(alignment))
+    {
+        m_context.alignment = std::int32_t(alignment);
+        m_dirtyFlags |= DirtyFlags::All;
+    }
 }
 
 //private
@@ -235,28 +251,15 @@ void Text::updateVertices(Drawable2D& drawable)
     //update glyphs
     auto& vertices = drawable.getVertexData();
     localBounds = Detail::Text::updateVertices(vertices, m_context);
+
     auto maxY = localBounds.bottom + localBounds.height;
 
-    //check for alignment
-    float offset = 0.f;
-    if (m_alignment == Text::Alignment::Centre)
+    for (auto& v : vertices)
     {
-        offset = localBounds.width / 2.f;
+        v.position.y -= maxY;
     }
-    else if (m_alignment == Text::Alignment::Right)
-    {
-        offset = localBounds.width;
-    }
-    //if (offset > 0)
-    {
-        for (auto& v : vertices)
-        {
-            v.position.x -= offset;
-            v.position.y -= maxY;
-        }
-        localBounds.left -= offset;
-        localBounds.bottom -= maxY;
-    }
+    localBounds.bottom -= maxY;
+
 
     drawable.updateLocalBounds(localBounds);
 }

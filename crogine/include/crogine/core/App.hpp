@@ -127,6 +127,21 @@ namespace cro
         */
         static bool isValid();
 
+        /*!
+        \brief Helper function for posting messages to the MessageBus
+        */
+        template <typename T>
+        static T* postMessage(std::int32_t id)
+        {
+            return getInstance().getMessageBus().post<T>(id);
+        };
+
+        /*!
+        brief Saves a copy of the window contents to disk as an
+        image in the current working directory.
+        */
+        void saveScreenshot();
+
     protected:
         
         virtual void handleEvent(const Event&) = 0;
@@ -215,18 +230,19 @@ namespace cro
 
         std::array<ControllerInfo, GameController::MaxControllers> m_controllers = {};
         std::map<std::int32_t, SDL_Joystick*> m_joysticks;
-        std::size_t m_controllerCount;
+        std::int32_t m_controllerCount;
         friend class GameController;
 
-        std::vector<std::pair<std::function<void()>, const GuiClient*>> m_statusControls;
+        std::vector<std::pair<std::function<void()>, const GuiClient*>> m_debugWindows;
         std::vector<std::pair<std::function<void()>, const GuiClient*>> m_guiWindows;
+        bool m_drawDebugWindows;
         void doImGui();
 
 
         static void addConsoleTab(const std::string&, const std::function<void()>&, const GuiClient*);
         static void removeConsoleTab(const GuiClient*);
 
-        static void addWindow(const std::function<void()>&, const GuiClient*);
+        static void addWindow(const std::function<void()>&, const GuiClient*, bool isDebug);
         static void removeWindows(const GuiClient*);
 
         friend class GuiClient;
@@ -246,8 +262,6 @@ namespace cro
             glm::vec2 windowedSize = glm::vec2(0.f);
         };
         WindowSettings loadSettings();
-
-        void saveScreenshot();
 
 
         //loading external plugins

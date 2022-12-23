@@ -49,6 +49,7 @@ GolfParticleDirector::GolfParticleDirector(cro::TextureResource& tr)
 {
     m_emitterSettings[ParticleID::Water].loadFromFile("assets/golf/particles/water.cps", tr);
     m_emitterSettings[ParticleID::Grass].loadFromFile("assets/golf/particles/dirt.cps", tr);
+    m_emitterSettings[ParticleID::GrassDark].loadFromFile("assets/golf/particles/grass_dark.cps", tr);
     m_emitterSettings[ParticleID::Sand].loadFromFile("assets/golf/particles/sand.cps", tr);
     m_emitterSettings[ParticleID::Sparkle].loadFromFile("assets/golf/particles/new_ball.cps", tr);
     m_emitterSettings[ParticleID::HIO].loadFromFile("assets/golf/particles/hio.cps", tr);
@@ -91,6 +92,8 @@ void GolfParticleDirector::handleMessage(const cro::Message& msg)
             {
             default: break;
             case TerrainID::Rough:
+                getEnt(ParticleID::GrassDark, data.position);
+                break;
             case TerrainID::Fairway:
                 getEnt(ParticleID::Grass, data.position);
                 break;
@@ -123,7 +126,7 @@ void GolfParticleDirector::handleMessage(const cro::Message& msg)
         }
         else if (data.type == GolfEvent::BirdHit)
         {
-            getEnt(ParticleID::Bird, data.position).getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, data.travelDistance);
+            getEnt(ParticleID::Bird, data.position).getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, data.travelDistance + (cro::Util::Const::PI / 2.f));
         }
     }
         break;
@@ -137,7 +140,7 @@ void GolfParticleDirector::handleMessage(const cro::Message& msg)
             {
             default: break;
             case TerrainID::Rough:
-                getEnt(ParticleID::Grass, data.position);
+                getEnt(ParticleID::GrassDark, data.position);
                 break;
             case TerrainID::Bunker:
                 getEnt(ParticleID::Sand, data.position);

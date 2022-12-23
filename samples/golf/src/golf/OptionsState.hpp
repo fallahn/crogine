@@ -111,9 +111,10 @@ private:
     {
         enum
         {
-            Volume, FOV, Pixel,
+            Volume, AA, FOV, Pixel,
             VertSnap, Beacon, Units,
             BeaconColour, MouseSpeed,
+            PuttingPower,
             Video, Controls,
             Achievements, Stats,
             NeedsRestart,
@@ -121,6 +122,12 @@ private:
         };
     };
     std::array<cro::Entity, ToolTipID::Count> m_tooltips = {};
+
+    std::vector<std::string> m_labelStrings;
+
+    cro::Entity m_psController;
+    cro::Entity m_psOverlay;
+    cro::Entity m_xboxOverlay;
 
     glm::vec2 m_viewScale;
     cro::Entity m_rootNode;

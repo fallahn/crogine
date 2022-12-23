@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021
+Matt Marchant 2021 - 2022
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -77,14 +77,15 @@ private:
     std::size_t m_currentAction;
     bool m_actionActive;
 
-    std::array<cro::Sprite, 6> m_buttonSprites = {};
+    std::array<cro::Sprite, 8> m_buttonSprites = {};
 
     void buildScene();
 
     void tutorialOne(cro::Entity);
     void tutorialTwo(cro::Entity);
     void tutorialThree(cro::Entity);
-    void tutorialFour(cro::Entity);
+    void tutorialPutt(cro::Entity);
+    void tutorialSwing(cro::Entity);
 
     void showContinue();
     void doCurrentAction();

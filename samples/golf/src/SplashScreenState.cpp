@@ -139,8 +139,9 @@ namespace
     constexpr glm::vec2 DisplaySize(1920.f, 1080.f);
 }
 
-SplashState::SplashState(cro::StateStack& stack, cro::State::Context context)
+SplashState::SplashState(cro::StateStack& stack, cro::State::Context context, SharedStateData& sd)
     : cro::State        (stack, context),
+    m_sharedData        (sd),
     m_uiScene           (context.appInstance.getMessageBus()),
     m_timer             (0.f),
     m_windowRatio       (1.f),
@@ -150,9 +151,6 @@ SplashState::SplashState(cro::StateStack& stack, cro::State::Context context)
     addSystems();
     loadAssets();
     createUI();
-
-
-    m_video.play();
 }
 
 //public
@@ -169,8 +167,16 @@ bool SplashState::handleEvent(const cro::Event& evt)
     {
         requestStackClear();
         requestStackPush(StateID::Menu);
+        if (m_sharedData.showTutorialTip)
+        {
+            m_sharedData.errorMessage = "Welcome";
+            requestStackPush(StateID::MessageOverlay);
+        }
 #ifdef USE_RSS
-        requestStackPush(StateID::News);
+        else
+        {
+            requestStackPush(StateID::News);
+        }
 #endif
     }
 
@@ -201,8 +207,16 @@ bool SplashState::simulate(float dt)
     {
         requestStackClear();
         requestStackPush(StateID::Menu);
+        if (m_sharedData.showTutorialTip)
+        {
+            m_sharedData.errorMessage = "Welcome";
+            requestStackPush(StateID::MessageOverlay);
+        }
 #ifdef USE_RSS
-        requestStackPush(StateID::News);
+        else
+        {
+            requestStackPush(StateID::News);
+        }
 #endif
     }
 
@@ -246,6 +260,25 @@ void SplashState::loadAssets()
         auto scale = DisplaySize.x / size.x;
         entity.getComponent<cro::Transform>().setScale({ scale, scale });
         entity.getComponent<cro::Transform>().setOrigin(size / 2.f);
+
+
+        entity = m_uiScene.createEntity();
+        entity.addComponent<cro::Callback>().active = true;
+        entity.getComponent<cro::Callback>().function =
+            [&](cro::Entity e, float dt)
+        {
+            //we can get away with static var because splash screen
+            //is only ever shown one per game run.
+            static float currTime = 2.f;
+            currTime -= dt;
+
+            if (currTime < 0)
+            {
+                m_video.play();
+                e.getComponent<cro::Callback>().active = false;
+                m_uiScene.destroyEntity(e);
+            }
+        };
     }
     else
     {
@@ -353,6 +386,17 @@ void SplashState::loadAssets()
                         e.getComponent<cro::Callback>().active = false;
                         requestStackClear();
                         requestStackPush(StateID::Menu);
+                        if (m_sharedData.showTutorialTip)
+                        {
+                            m_sharedData.errorMessage = "Welcome";
+                            requestStackPush(StateID::MessageOverlay);
+                        }
+#ifdef USE_RSS
+                        else
+                        {
+                            requestStackPush(StateID::News);
+                        }
+#endif
                     }
                 }
                 break;

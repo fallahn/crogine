@@ -57,6 +57,7 @@ namespace cro
 
         FloatRect area;
         bool active = false;
+        bool enabled = true;
         std::array<std::uint32_t, CallbackID::Count> callbacks{};
         std::int32_t ID = -1;
 
@@ -65,7 +66,7 @@ namespace cro
         this component belongs.
         By default all UIInput components are added to
         group 0. When creating multiple menus it is sometimes
-        advantagous to activate smaller groups of components
+        advantageous to activate smaller groups of components
         at a time. Use UISystem::setActiveGroup() to control
         which group of UIInputs currently receive input.
         \see UISystem::setActiveGroup()

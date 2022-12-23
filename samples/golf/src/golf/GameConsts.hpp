@@ -34,7 +34,10 @@ source distribution.
 #include "SharedStateData.hpp"
 #include "../GolfGame.hpp"
 
+#include <Social.hpp>
+
 #include <crogine/core/ConfigFile.hpp>
+#include <crogine/core/GameController.hpp>
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/ecs/components/Model.hpp>
 #include <crogine/ecs/components/Callback.hpp>
@@ -56,10 +59,10 @@ static constexpr float CameraStrokeHeight = 2.f;
 static constexpr float CameraPuttHeight = 0.6f;// 0.3f;
 static constexpr float CameraTeeMultiplier = 0.65f; //height reduced by this when not putting from tee
 static constexpr float CameraStrokeOffset = 5.f;
-static constexpr float CameraPuttOffset = 1.55f; //0.8f;
+static constexpr float CameraPuttOffset = 1.6f; //0.8f;
 static constexpr glm::vec3 CameraBystanderOffset = glm::vec3(7.f, 2.f, 7.f);
 
-static constexpr float PuttingZoom = 0.93f;
+static constexpr float PuttingZoom = 0.78f;// 0.83f;// 0.93f;
 static constexpr float GolfZoom = 0.59f;
 
 static constexpr float GreenFadeDistance = 0.8f;
@@ -76,8 +79,8 @@ static constexpr float KnotsPerMetre = 1.94384f;
 static constexpr float HoleRadius = 0.058f;
 
 static constexpr float WaterLevel = -0.02f;
-static constexpr float TerrainLevel = WaterLevel - 0.03f;
-static constexpr float MaxTerrainHeight = 4.5f;
+static constexpr float TerrainLevel = WaterLevel - 0.48f;// 0.03f;
+static constexpr float MaxTerrainHeight = 5.f;// 4.5f;
 
 static constexpr float FlagRaiseDistance = 3.f * 3.f;
 static constexpr float PlayerShadowOffset = 0.04f;
@@ -90,13 +93,40 @@ static constexpr float PlaneHeight = 60.f;
 static constexpr float IndicatorDarkness = 0.002f;
 static constexpr float IndicatorLightness = 0.5f;
 
-static constexpr glm::uvec2 LabelTextureSize(128u, 64u);
+static constexpr glm::vec2 LabelIconSize(Social::IconSize);
+static constexpr glm::uvec2 LabelTextureSize(160u, 64u + Social::IconSize);
 static constexpr glm::vec3 OriginOffset(static_cast<float>(MapSize.x / 2), 0.f, -static_cast<float>(MapSize.y / 2));
 
 static const cro::Colour WaterColour(0.02f, 0.078f, 0.578f);
 static const cro::Colour SkyTop(0.678f, 0.851f, 0.718f);
 static const cro::Colour SkyBottom(0.2f, 0.304f, 0.612f);
 static const cro::Colour DropShadowColour(0.396f, 0.263f, 0.184f);
+
+static const cro::Colour SwingputDark(std::uint8_t(40), 23, 33);
+//static const cro::Colour SwingputLight(std::uint8_t(242), 207, 92);
+static const cro::Colour SwingputLight(std::uint8_t(236), 119, 61);
+//static const cro::Colour SwingputLight(std::uint8_t(236), 153, 61);
+
+//default values from DX sdk
+static constexpr std::int16_t LeftThumbDeadZone = 7849;
+static constexpr std::int16_t RightThumbDeadZone = 8689;
+static constexpr std::int16_t TriggerDeadZone = 30;
+
+
+struct LobbyPager final
+{
+    cro::Entity rootNode;
+    std::vector<cro::Entity> pages;
+    std::vector<cro::Entity> slots;
+    std::vector<std::uint64_t> lobbyIDs;
+
+    std::array<cro::Entity, 2u> buttonLeft;
+    std::array<cro::Entity, 2u> buttonRight;
+
+    std::size_t currentPage = 0;
+    std::size_t currentSlot = 0;
+    static constexpr std::size_t ItemsPerPage = 10;
+};
 
 struct SpriteAnimID final
 {
@@ -161,6 +191,7 @@ struct ShaderID final
         Ball,
         Slope,
         Minimap,
+        MinimapView,
         TutorialSlope,
         Wireframe,
         WireframeCulled,
@@ -173,7 +204,9 @@ struct ShaderID final
         TreesetLeaf,
         TreesetBranch,
         TreesetShadow,
-        TreesetLeafShadow
+        TreesetLeafShadow,
+        PuttAssist,
+        FXAA,
     };
 };
 
@@ -197,7 +230,24 @@ static const std::array BallTints =
 };
 
 static constexpr float ViewportHeight = 360.f;
-static constexpr float ViewportHeightWide = 300.f;
+static constexpr float ViewportHeightWide = 320.f;// 300.f;
+
+static inline std::int32_t activeControllerID(std::int32_t bestMatch)
+{
+    if (cro::GameController::isConnected(bestMatch))
+    {
+        return bestMatch;
+    }
+
+    for (auto i = 3; i >= 0; --i)
+    {
+        if (cro::GameController::isConnected(i))
+        {
+            return i;
+        }
+    }
+    return -1;
+}
 
 static inline glm::vec3 interpolate(glm::vec3 a, glm::vec3 b, float t)
 {
@@ -262,8 +312,33 @@ static inline void togglePixelScale(SharedStateData& sharedData, bool on)
     if (on != sharedData.pixelScale)
     {
         sharedData.pixelScale = on;
+        sharedData.antialias = on ? false : sharedData.multisamples != 0;
 
         //raise a window resize message to trigger callbacks
+        auto size = cro::App::getWindow().getSize();
+        auto* msg = cro::App::getInstance().getMessageBus().post<cro::Message::WindowEvent>(cro::Message::WindowMessage);
+        msg->data0 = size.x;
+        msg->data1 = size.y;
+        msg->event = SDL_WINDOWEVENT_SIZE_CHANGED;
+    }
+}
+
+static inline void toggleAntialiasing(SharedStateData& sharedData, bool on, std::uint32_t samples)
+{
+    if (on != sharedData.antialias
+        || samples != sharedData.multisamples)
+    {
+        sharedData.antialias = on;
+        if (!on)
+        {
+            sharedData.multisamples = 0;
+        }
+        else
+        {
+            sharedData.pixelScale = false;
+            sharedData.multisamples = samples;
+        }
+
         auto size = cro::App::getWindow().getSize();
         auto* msg = cro::App::getInstance().getMessageBus().post<cro::Message::WindowEvent>(cro::Message::WindowMessage);
         msg->data0 = size.x;
@@ -314,6 +389,15 @@ static inline void applyMaterialData(const cro::ModelDefinition& modelDef, cro::
         if (m->properties.count("u_diffuseMap"))
         {
             dest.setProperty("u_diffuseMap", cro::TextureID(m->properties.at("u_diffuseMap").second.textureID));
+        }
+
+        if (m->properties.count("u_colour")
+            && dest.properties.count("u_colour"))
+        {
+            const auto* c = m->properties.at("u_colour").second.vecValue;
+            glm::vec4 colour(c[0],c[1],c[2],c[3]);
+
+            dest.setProperty("u_colour", colour);
         }
 
         if (m->properties.count("u_subrect"))
@@ -466,21 +550,23 @@ static inline std::string loadSkybox(const std::string& path, cro::Scene& skySce
     if (!path.empty()
         && cfg.loadFromFile(path))
     {
-        const auto& props = cfg.getProperties();
-        for (const auto& p : props)
         {
-            const auto& name = p.getName();
-            if (name == "sky_top")
+            const auto& props = cfg.getProperties();
+            for (const auto& p : props)
             {
-                skyTop = p.getValue<cro::Colour>();
-            }
-            else if (name == "sky_bottom")
-            {
-                skyMid = p.getValue<cro::Colour>();
-            }
-            else if (name == "clouds")
-            {
-                cloudPath = p.getValue<std::string>();
+                const auto& name = p.getName();
+                if (name == "sky_top")
+                {
+                    skyTop = p.getValue<cro::Colour>();
+                }
+                else if (name == "sky_bottom")
+                {
+                    skyMid = p.getValue<cro::Colour>();
+                }
+                else if (name == "clouds")
+                {
+                    cloudPath = p.getValue<std::string>();
+                }
             }
         }
 
@@ -594,7 +680,7 @@ static inline void formatDistanceString(float distance, cro::Text& target, bool 
     {
         if (distance > 7) //TODO this should read the putter value
         {
-            auto dist = static_cast<std::int32_t>(distance * ToYards);
+            auto dist = static_cast<std::int32_t>(std::round(distance * ToYards));
             target.setString("Pin: " + std::to_string(dist) + "yds");
         }
         else
@@ -616,7 +702,7 @@ static inline void formatDistanceString(float distance, cro::Text& target, bool 
     {
         if (distance > 5)
         {
-            auto dist = static_cast<std::int32_t>(distance);
+            auto dist = static_cast<std::int32_t>(std::round(distance));
             target.setString("Pin: " + std::to_string(dist) + "m");
         }
         else

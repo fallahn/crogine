@@ -112,9 +112,22 @@ bool NewsState::handleEvent(const cro::Event& evt)
             return false;
         }
     }
-    else if (evt.type == SDL_CONTROLLERBUTTONUP
-        && evt.cbutton.which == cro::GameController::deviceID(m_sharedData.inputBinding.controllerID))
+    else if (evt.type == SDL_KEYDOWN)
     {
+        switch (evt.key.keysym.sym)
+        {
+        default: break;
+        case SDLK_UP:
+        case SDLK_DOWN:
+        case SDLK_LEFT:
+        case SDLK_RIGHT:
+            cro::App::getWindow().setMouseCaptured(true);
+            break;
+        }
+    }
+    else if (evt.type == SDL_CONTROLLERBUTTONUP)
+    {
+        cro::App::getWindow().setMouseCaptured(true);
         if (evt.cbutton.button == cro::GameController::ButtonB
             || evt.cbutton.button == cro::GameController::ButtonStart
             || evt.cbutton.button == cro::GameController::ButtonBack)
@@ -130,6 +143,17 @@ bool NewsState::handleEvent(const cro::Event& evt)
             quitState();
             return false;
         }
+    }
+    else if (evt.type == SDL_CONTROLLERAXISMOTION)
+    {
+        if (evt.caxis.value > LeftThumbDeadZone)
+        {
+            cro::App::getWindow().setMouseCaptured(true);
+        }
+    }
+    else if (evt.type == SDL_MOUSEMOTION)
+    {
+        cro::App::getWindow().setMouseCaptured(false);
     }
 
     m_scene.getSystem<cro::UISystem>()->handleEvent(evt);
@@ -157,7 +181,7 @@ void NewsState::render()
 void NewsState::buildScene()
 {
     auto& mb = getContext().appInstance.getMessageBus();
-    m_scene.addSystem<cro::UISystem>(mb)->setActiveControllerID(m_sharedData.inputBinding.controllerID);
+    m_scene.addSystem<cro::UISystem>(mb);// ->setActiveControllerID(m_sharedData.inputBinding.controllerID);
     m_scene.addSystem<cro::CommandSystem>(mb);
     m_scene.addSystem<cro::CallbackSystem>(mb);
     m_scene.addSystem<cro::SpriteSystem2D>(mb);
@@ -304,7 +328,7 @@ void NewsState::buildScene()
             e.getComponent<cro::Text>().setFillColour(TextGoldColour);
         });
     
-    const auto createItem = [&, selectedID, unselectedID](glm::vec2 position, const std::string label, cro::Entity parent) 
+    const auto createItem = [&, selectedID, unselectedID](glm::vec2 position, const std::string& label, cro::Entity parent) 
     {
         auto e = m_scene.createEntity();
         e.addComponent<cro::Transform>().setPosition(position);
@@ -348,7 +372,7 @@ void NewsState::buildScene()
     menuEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     auto newsEnt = entity;
 
-    m_feed.fetchAsync(RSSFeed);
+    m_feed.fetchAsync(Social::RSSFeed);
 
 
     entity = m_scene.createEntity();

@@ -84,9 +84,13 @@ public:
 			}
 
 			//shrink any large time gap
-			if (diff > MaxTimeGap)
+			//this is a good theory - but in practice it breaks the current elapsed time
+			if constexpr (interpolationType == InterpolationType::Hermite)
 			{
-				m_buffer.back().timestamp = ip.timestamp - 10;
+				if (diff > MaxTimeGap)
+				{
+					m_buffer.back().timestamp = ip.timestamp - 10;
+				}
 			}
 
 			m_buffer.push_back(ip);
@@ -141,7 +145,7 @@ private:
 	friend class InterpolationSystem;
 
 #ifdef CRO_DEBUG_
-	std::array<glm::vec3, 240> m_prevPositions;
+	std::array<glm::vec3, 240> m_prevPositions = {};
 	std::size_t m_positionsIndex = 0;
 
 	void addPosition(glm::vec3 p)
@@ -242,12 +246,11 @@ public:
 
 							auto lastPos = entity.template getComponent<cro::Transform>().getPosition();
 							entity.template getComponent<cro::Transform>().setPosition(position);
-
-							interp.m_interpVelocity = (position - lastPos) * (1.f / dt);// 60.f; //fixed step... should be 1/dt?
-
 #ifdef CRO_DEBUG_
 							interp.addPosition(position);
 #endif
+							interp.m_interpVelocity = (position - lastPos) * (1.f / dt);// 60.f; //fixed step... should be 1/dt?
+
 						}
 
 						auto rotation = glm::slerp(interp.m_buffer[0].rotation, interp.m_buffer[1].rotation, t);

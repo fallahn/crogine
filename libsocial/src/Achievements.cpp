@@ -34,10 +34,10 @@ source distribution.
 AchievementImpl* Achievements::m_impl = nullptr;
 bool Achievements::m_active = true;
 
-void Achievements::init(AchievementImpl& impl)
+bool Achievements::init(AchievementImpl& impl)
 {
     m_impl = &impl;
-    m_impl->init();
+    return m_impl->init();
 }
 
 void Achievements::update()
@@ -50,12 +50,6 @@ void Achievements::shutdown()
 {
     CRO_ASSERT(m_impl, "Achievements have not been initialised!");
     m_impl->shutdown();
-}
-
-void Achievements::registerAchievement(const std::string& name)
-{
-    CRO_ASSERT(m_impl, "Achievements have not been initialised!");
-    m_impl->registerAchievement(name);
 }
 
 void Achievements::awardAchievement(const std::string& name)

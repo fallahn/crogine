@@ -36,7 +36,7 @@ namespace cro
     namespace Detail
     {
         /*!
-        \brief Any classes which rely on SDL subsystems or opengl
+        \brief Any classes which rely on SDL subsystems or OpenGL
         should inherit this class.
         This is done to ensure that the class required to maintain SDL
         (the App class) exists before any resources can be created.

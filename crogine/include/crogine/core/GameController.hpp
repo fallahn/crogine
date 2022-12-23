@@ -30,6 +30,7 @@ source distribution.
 #pragma once
 
 #include <crogine/Config.hpp>
+#include <crogine/graphics/Colour.hpp>
 #include <crogine/detail/Types.hpp>
 
 #include <SDL_gamecontroller.h>
@@ -133,7 +134,7 @@ namespace cro
         If the joystick ID is not valid this function returns -1. Use it to find the ControllerID
         of a joystick event such as SDL_CONTROLLERBUTTONDOWN
         \begincode
-
+        auto id = controllerID(evt.cbutton.which);
         \endcode
         \param joystickID The ID from which to retrieve the controller ID
         \returns 0-3 on success or -1 if the joystick is not a GameController
@@ -233,12 +234,9 @@ namespace cro
 
         /*!
         \brief Returns the number of currently connected GameControllers.
-        Note that this does not include any Joystick devices. This will also
-        not be updated until AFTER a CONTROLLERDEVICEREMOVED event, so will
-        return at least 1 higher than the actual count when being queried during
-        an event handler. TODO fix this :3
+        Note that this does not include any Joystick devices.
         */
-        static std::size_t getControllerCount();
+        static std::int32_t getControllerCount();
 
         /*!
         \brief Returns true if the controller at the given index was detected
@@ -247,6 +245,14 @@ namespace cro
         name string which was read at the time of the controller connection
         */
         static bool hasPSLayout(std::int32_t controllerIndex);
+
+        /*!
+        \brief Sets the LED colour of the controller to the given colour
+        Only works on supported controllers, else has no effect
+        \param controllerIndex Controller ID to apply the colour to
+        \param colour A cro::Colour containing the values with which to set the LED
+        */
+        static void setLEDColour(std::int32_t controllerIndex, cro::Colour colour);
 
         /*!
         \brief Maximum number of game controllers which may be connected

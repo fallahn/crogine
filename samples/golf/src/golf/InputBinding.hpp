@@ -82,5 +82,5 @@ struct InputBinding final
         SDL_CONTROLLER_BUTTON_X,
         SDL_CONTROLLER_BUTTON_Y
     };
-    std::int32_t controllerID = 0;
+    std::int32_t playerID = 0;
 };

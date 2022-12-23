@@ -71,6 +71,11 @@ const RenderTarget* RenderTarget::getActiveTarget()
     return m_bufferStack[m_bufferIndex];
 }
 
+std::uint32_t RenderTarget::getActiveTargetID()
+{
+    return m_bufferStack[m_bufferIndex]->getFrameBufferID();
+}
+
 FloatRect RenderTarget::getView() const
 {
     return m_view;

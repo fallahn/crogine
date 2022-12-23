@@ -112,7 +112,7 @@ namespace cro
         /*!
         \brief Called when main output buffer resized.
         Override this if you need to resize any intermediate render textures. Use
-        getCurrentBufferSize() to read the new value. This is gaurenteed to be called at
+        getCurrentBufferSize() to read the new value. This is guaranteed to be called at
         least once for each post process so it is safe to initialise any intermediate
         buffers here, rather than upon construction.
         */

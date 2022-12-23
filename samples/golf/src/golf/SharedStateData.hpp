@@ -52,6 +52,7 @@ struct PlayerData final
     std::uint32_t hairID = 0;
     std::uint32_t skinID = 0; //as loaded from the avatar data file
     bool flipped = false; //whether or not avatar flipped
+    bool isCPU = false; //these bools are flagged as bits in a single byte when serialised
 
     //these aren't included in serialise/deserialise
     std::vector<std::uint8_t> holeScores;
@@ -59,12 +60,13 @@ struct PlayerData final
     std::uint8_t matchScore = 0;
     std::uint8_t skinScore = 0;
     glm::vec3 currentTarget = glm::vec3(0.f);
-
-    bool isCPU = false;
+    cro::Colour ballTint;
 };
 
 struct ConnectionData final
 {
+    std::uint64_t peerID = 0;
+
     static constexpr std::uint8_t MaxPlayers = 4;
     std::uint8_t connectionID = MaxPlayers;
 
@@ -72,6 +74,7 @@ struct ConnectionData final
     std::array<PlayerData, MaxPlayers> playerData = {};
 
     std::uint32_t pingTime = 0;
+    std::uint8_t level = 0;
 
     std::vector<std::uint8_t> serialise() const;
     bool deserialise(const net::NetEvent::Packet&);
@@ -132,16 +135,16 @@ struct SharedStateData final
 
     struct TimeStats final
     {
-        std::vector<std::int32_t> holeTimes; //millis
-        std::int32_t totalTime = 0;
+        std::vector<float> holeTimes; //seconds
+        float totalTime = 0;
     };
     std::array<TimeStats, ConnectionData::MaxPlayers> timeStats = {};
 
     //our local player data
     std::uint64_t lobbyID = 0;
+    std::uint64_t inviteID = 0;
     ConnectionData localConnectionData;
     cro::String targetIP = "255.255.255.255";
-    std::array<std::int32_t, 4u> controllerIDs = {};
 
     //sent to server if hosting else rx'd from server
     //for brevity this only contains a directory name
@@ -150,6 +153,7 @@ struct SharedStateData final
     std::uint8_t scoreType = 0;
     std::uint8_t gimmeRadius = 0;
     std::uint8_t holeCount = 0; //0-1-2 all, front, back
+    std::uint8_t reverseCourse = 0; //play holes in reverse order
 
     //printed by the error state
     std::string errorMessage;
@@ -166,7 +170,9 @@ struct SharedStateData final
     std::int32_t postProcessIndex = 0;
     std::string customShaderPath;
     InputBinding inputBinding;
-    bool pixelScale = true;
+    bool pixelScale = false;
+    bool antialias = false;
+    std::uint32_t multisamples = 0;
     float fov = MinFOV;
     bool vertexSnap = false;
     float mouseSpeed = 1.f;
@@ -181,9 +187,12 @@ struct SharedStateData final
         Classic, Low, High
     };
     std::int32_t treeQuality = Low;
-    bool hqShadows = true;
+    bool hqShadows = false;
     bool logBenchmarks = false;
     bool showCustomCourses = true;
+    bool showTutorialTip = true;
+    bool showPuttingPower = false;
+    std::int32_t enableRumble = 1;
 
     std::int32_t baseState = 0; //used to tell which state we're returning to from errors etc
     std::unique_ptr<cro::ResourceCollection> sharedResources;

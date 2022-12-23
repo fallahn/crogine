@@ -35,7 +35,10 @@ source distribution.
 #include "Utility.hpp"
 #include "PoissonDisk.hpp"
 #include "GolfCartSystem.hpp"
+#include "NameScrollSystem.hpp"
 #include "MessageIDs.hpp"
+
+#include <Social.hpp>
 
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Camera.hpp>
@@ -64,8 +67,9 @@ source distribution.
 
 namespace
 {
-#include "TerrainShader.inl"
+#include "CelShader.inl"
 #include "BillboardShader.inl"
+#include "ShaderIncludes.inl"
 
     const std::array<cro::String, TableData::Rules::Count> TableStrings =
     {
@@ -132,11 +136,11 @@ ClubhouseState::ClubhouseState(cro::StateStack& ss, cro::State::Context ctx, Sha
 
     ctx.mainWindow.setMouseCaptured(false);
 
-    sd.inputBinding.controllerID = 0;
+    //sd.inputBinding.controllerID = 0;
     sd.baseState = StateID::Clubhouse;
     sd.mapDirectory = "pool";
 
-    //this is actually set asa flag from the pause menu
+    //this is actually set as a flag from the pause menu
     //to say we want to quit
     if (sd.tutorial)
     {
@@ -173,6 +177,11 @@ ClubhouseState::ClubhouseState(cro::StateStack& ss, cro::State::Context ctx, Sha
 
         if (m_sharedData.hosting)
         {
+            if (m_sharedData.localConnectionData.playerCount == 1)
+            {
+                m_matchMaking.createLobby(2, Server::GameMode::Billiards);
+            }
+
             spriteID = SpriteID::StartGame;
             connectionString = "Hosting on: localhost:" + std::to_string(ConstVal::GamePort);
 
@@ -238,9 +247,28 @@ ClubhouseState::ClubhouseState(cro::StateStack& ss, cro::State::Context ctx, Sha
         }
         sd.hosting = false;
 
-        //assume two players for a local game
-        sd.localConnectionData.playerCount = 2;
+        //we might have switched here from an invite received while in the clubhouse
+        if (m_sharedData.inviteID)
+        {
+            //do this via message handler to allow state to fully load
+            auto* msg = postMessage<MatchMaking::Message>(MatchMaking::MessageID);
+            msg->gameType = Server::GameMode::Billiards;
+            msg->hostID = m_sharedData.inviteID;
+            msg->type = MatchMaking::Message::LobbyInvite;
+
+            sd.localConnectionData.playerCount = 1;
+        }
+        else
+        {
+            //assume two players for a local game
+            sd.localConnectionData.playerCount = 2;
+        }
     }
+    m_sharedData.inviteID = 0;
+    m_sharedData.lobbyID = 0;
+
+    Social::setStatus(Social::InfoID::Menu, { "Clubhouse" });
+    Social::setGroup(0);
 
 #ifdef CRO_DEBUG_
     registerWindow([&]()
@@ -305,10 +333,7 @@ bool ClubhouseState::handleEvent(const cro::Event& evt)
         case SDLK_RETURN:
         case SDLK_RETURN2:
         case SDLK_KP_ENTER:
-            if (m_textEdit.string)
-            {
-                applyTextEdit();
-            }
+            applyTextEdit();
             break;
         case SDLK_ESCAPE:
         case SDLK_BACKSPACE:
@@ -319,24 +344,33 @@ bool ClubhouseState::handleEvent(const cro::Event& evt)
     else if (evt.type == SDL_KEYDOWN)
     {
         handleTextEdit(evt);
+        switch (evt.key.keysym.sym)
+        {
+        default:
+            cro::App::getWindow().setMouseCaptured(true);
+            break;
+        case SDLK_F1:
+        case SDLK_F2:
+        case SDLK_F3:
+        case SDLK_F4:
+        case SDLK_F5:
+        case SDLK_F6:
+        case SDLK_F7:
+        case SDLK_F8:
+        case SDLK_F9:
+        case SDLK_F10:
+        case SDLK_F11:
+        case SDLK_F12:
+            break;
+        }
     }
     else if (evt.type == SDL_TEXTINPUT)
     {
         handleTextEdit(evt);
     }
-    else if (evt.type == SDL_CONTROLLERDEVICEREMOVED)
-    {
-        //controller IDs are automatically reassigned
-        //so we just need to make sure no one is out of range
-        for (auto& c : m_sharedData.controllerIDs)
-        {
-            //be careful with this cast because we might assign - 1 as an ID...
-            //note that the controller count hasn't been updated yet...
-            c = std::min(static_cast<std::int32_t>(cro::GameController::getControllerCount() - 2), c);
-        }
-    }
     else if (evt.type == SDL_CONTROLLERBUTTONUP)
     {
+        cro::App::getWindow().setMouseCaptured(true);
         switch (evt.cbutton.button)
         {
         default: break;
@@ -360,6 +394,17 @@ bool ClubhouseState::handleEvent(const cro::Event& evt)
                 //UISystem
                 return true;
             }
+        }
+    }
+    else if (evt.type == SDL_MOUSEMOTION)
+    {
+        cro::App::getWindow().setMouseCaptured(false);
+    }
+    else if (evt.type == SDL_CONTROLLERAXISMOTION)
+    {
+        if (evt.caxis.value > LeftThumbDeadZone)
+        {
+            cro::App::getWindow().setMouseCaptured(true);
         }
     }
 
@@ -391,11 +436,44 @@ void ClubhouseState::handleMessage(const cro::Message& msg)
         default:
         case MatchMaking::Message::Error:
             break;
+        case MatchMaking::Message::LobbyListUpdated:
+            updateLobbyList();
+            break;
+        case MatchMaking::Message::LobbyInvite:
+            if (!m_sharedData.clientConnection.connected)
+            {
+                if (data.gameType == Server::GameMode::Billiards)
+                {
+                    m_matchMaking.joinGame(data.hostID);
+                    m_sharedData.lobbyID = data.hostID;
+                    m_sharedData.localConnectionData.playerCount = 1;
+                }
+                else
+                {
+                    m_sharedData.inviteID = data.hostID;
+                    requestStackClear();
+                    requestStackPush(StateID::Menu);
+                }
+            }            
+            break;
+        case MatchMaking::Message::GameCreateFailed:
+            //local games still work
+            [[fallthrough]];
         case MatchMaking::Message::GameCreated:
             finaliseGameCreate();
             break;
+        case MatchMaking::Message::LobbyCreated:
+            //broadcast the lobby ID to clients. This will also join ourselves.
+            m_sharedData.clientConnection.netClient.sendPacket(PacketID::NewLobbyReady, data.hostID, net::NetFlag::Reliable);
+            break;
         case MatchMaking::Message::LobbyJoined:
             finaliseGameJoin(data);
+            break;
+        case MatchMaking::Message::LobbyJoinFailed:
+            m_matchMaking.refreshLobbyList(Server::GameMode::Billiards);
+            updateLobbyList();
+            m_sharedData.errorMessage = "Join Failed:\n\nEither full\nor\nno longer exists.";
+            requestStackPush(StateID::MessageOverlay);
             break;
         }
     }
@@ -434,49 +512,49 @@ bool ClubhouseState::simulate(float dt)
 
 #ifdef CRO_DEBUG_
     
-    glm::vec3 movement(0.f);
-    float rotation = 0.f;
-    auto& tx = m_backgroundScene.getActiveCamera().getComponent<cro::Transform>();
+    //glm::vec3 movement(0.f);
+    //float rotation = 0.f;
+    //auto& tx = m_backgroundScene.getActiveCamera().getComponent<cro::Transform>();
 
-    if (cro::Keyboard::isKeyPressed(SDLK_d))
-    {
-        movement += tx.getRightVector();
-    }
-    if (cro::Keyboard::isKeyPressed(SDLK_a))
-    {
-        movement -= tx.getRightVector();
-    }
+    //if (cro::Keyboard::isKeyPressed(SDLK_d))
+    //{
+    //    movement += tx.getRightVector();
+    //}
+    //if (cro::Keyboard::isKeyPressed(SDLK_a))
+    //{
+    //    movement -= tx.getRightVector();
+    //}
 
-    if (cro::Keyboard::isKeyPressed(SDLK_w))
-    {
-        movement += tx.getForwardVector();
-    }
-    if (cro::Keyboard::isKeyPressed(SDLK_s))
-    {
-        movement -= tx.getForwardVector();
-    }
+    //if (cro::Keyboard::isKeyPressed(SDLK_w))
+    //{
+    //    movement += tx.getForwardVector();
+    //}
+    //if (cro::Keyboard::isKeyPressed(SDLK_s))
+    //{
+    //    movement -= tx.getForwardVector();
+    //}
 
-    if (cro::Keyboard::isKeyPressed(SDLK_q))
-    {
-        rotation -= dt;
-    }
-    if (cro::Keyboard::isKeyPressed(SDLK_e))
-    {
-        rotation += dt;
-    }
+    //if (cro::Keyboard::isKeyPressed(SDLK_q))
+    //{
+    //    rotation -= dt;
+    //}
+    //if (cro::Keyboard::isKeyPressed(SDLK_e))
+    //{
+    //    rotation += dt;
+    //}
 
-    if (glm::length2(movement) != 0)
-    {
-        movement = glm::normalize(movement);
-        tx.move(movement * dt);
-    }
+    //if (glm::length2(movement) != 0)
+    //{
+    //    movement = glm::normalize(movement);
+    //    tx.move(movement * dt);
+    //}
 
-    if (rotation != 0)
-    {
-        tx.rotate(cro::Transform::Y_AXIS, rotation);
-    }
+    //if (rotation != 0)
+    //{
+    //    tx.rotate(cro::Transform::Y_AXIS, rotation);
+    //}
 
-    rotateEntity(m_backgroundScene.getSunlight(), KeysetID::Light, dt);
+    //rotateEntity(m_backgroundScene.getSunlight(), KeysetID::Light, dt);
 
 #endif
 
@@ -547,6 +625,7 @@ void ClubhouseState::addSystems()
 
     m_uiScene.addSystem<cro::CommandSystem>(mb);
     m_uiScene.addSystem<cro::CallbackSystem>(mb);
+    m_uiScene.addSystem<NameScrollSystem>(mb);
     m_uiScene.addSystem<cro::UISystem>(mb);
     m_uiScene.addSystem<cro::TextSystem>(mb);
     m_uiScene.addSystem<cro::SpriteAnimator>(mb);
@@ -559,6 +638,11 @@ void ClubhouseState::addSystems()
 void ClubhouseState::loadResources()
 {
     std::fill(m_materialIDs.begin(), m_materialIDs.end(), -1);
+
+    for (const auto& [name, str] : IncludeMappings)
+    {
+        m_resources.shaders.addInclude(name, str);
+    }
 
     m_resources.shaders.loadFromString(ShaderID::Course, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define RX_SHADOWS\n");
     auto* shader = &m_resources.shaders.get(ShaderID::Course);
@@ -911,6 +995,12 @@ void ClubhouseState::buildScene()
 
         auto billboardMat = m_resources.materials.get(m_materialIDs[MaterialID::Billboard]);
         applyMaterialData(md, billboardMat);
+
+        auto& noiseTex = m_resources.textures.get("assets/golf/images/wind.png");
+        noiseTex.setSmooth(true);
+        noiseTex.setRepeated(true);
+        billboardMat.setProperty("u_noiseTexture", noiseTex);
+
         entity.getComponent<cro::Model>().setMaterial(0, billboardMat);
 
         if (entity.hasComponent<cro::BillboardCollection>())
@@ -1056,7 +1146,13 @@ void ClubhouseState::buildScene()
         d.resolution = texSize / invScale;
         m_resolutionBuffer.setData(d);
 
-        m_backgroundTexture.create(static_cast<std::uint32_t>(texSize.x), static_cast<std::uint32_t>(texSize.y));
+        std::uint32_t samples = m_sharedData.pixelScale ? 0 :
+            m_sharedData.antialias ? m_sharedData.multisamples : 0;
+
+        m_sharedData.antialias =
+            m_backgroundTexture.create(static_cast<std::uint32_t>(texSize.x), static_cast<std::uint32_t>(texSize.y), true, false, samples)
+            && m_sharedData.multisamples != 0
+            && !m_sharedData.pixelScale;
 
         cam.setPerspective(m_sharedData.fov * cro::Util::Const::degToRad, texSize.x / texSize.y, 0.1f, 85.f);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
@@ -1108,7 +1204,11 @@ void ClubhouseState::createTableScene()
         {
             texSize *= viewScale;
         }
-        m_tableTexture.create(texSize.x, texSize.y);
+
+        std::uint32_t samples = m_sharedData.pixelScale ? 0 :
+            m_sharedData.antialias ? m_sharedData.multisamples : 0;
+
+        m_tableTexture.create(texSize.x, texSize.y, true, false, samples);
         
         cro::Command cmd;
         cmd.targetFlags = CommandID::Menu::CourseDesc;
@@ -1286,11 +1386,19 @@ void ClubhouseState::handleNetEvent(const net::NetEvent& evt)
         switch (evt.packet.getID())
         {
         default: break;
+        case PacketID::NewLobbyReady:
+            m_matchMaking.joinLobby(evt.packet.as<std::uint64_t>());
+            break;
         case PacketID::StateChange:
             if (evt.packet.as<std::uint8_t>() == sv::StateID::Billiards)
             {
+                //leave the lobby
+                m_matchMaking.leaveGame();
+
                 m_sharedData.ballSkinIndex = m_tableData[m_tableIndex].ballSkinIndex;
                 m_sharedData.tableSkinIndex = m_tableData[m_tableIndex].tableSkinIndex;
+
+                Social::setStatus(Social::InfoID::Billiards, { TableStrings[m_tableData[m_sharedData.courseIndex].rules].toAnsiString().c_str() });
 
                 //save these for later
                 cro::ConfigFile cfg("table_skins");
@@ -1311,6 +1419,7 @@ void ClubhouseState::handleNetEvent(const net::NetEvent& evt)
             //update local player data
             m_sharedData.clientConnection.connectionID = evt.packet.as<std::uint8_t>();
             m_sharedData.localConnectionData.connectionID = evt.packet.as<std::uint8_t>();
+            m_sharedData.localConnectionData.peerID = m_sharedData.clientConnection.netClient.getPeer().getID();
             m_sharedData.connectionData[m_sharedData.clientConnection.connectionID] = m_sharedData.localConnectionData;
 
             //send player details to server (name, skin)
@@ -1455,6 +1564,11 @@ void ClubhouseState::handleNetEvent(const net::NetEvent& evt)
                     }
                 };
                 m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+                if (m_sharedData.hosting)
+                {
+                    m_matchMaking.setGameTitle(TableStrings[m_tableData[m_sharedData.courseIndex].rules]);
+                }
             }
             else
             {
@@ -1496,11 +1610,11 @@ void ClubhouseState::handleNetEvent(const net::NetEvent& evt)
                 requestStackPush(StateID::Error);
             }
             break;
-            break;
         }
     }
     else if (evt.type == net::NetEvent::ClientDisconnect)
     {
+        m_matchMaking.leaveGame();
         m_sharedData.errorMessage = "Lost Connection To Host";
         requestStackPush(StateID::Error);
     }
@@ -1568,7 +1682,6 @@ void ClubhouseState::finaliseGameCreate()
     
     
         //send the initially selected table - this triggers the menu to move to the next stage.
-        //m_sharedData.mapDirectory = m_courseData[m_sharedData.courseIndex].directory;
         auto data = serialiseString(m_sharedData.mapDirectory);
         m_sharedData.clientConnection.netClient.sendPacket(PacketID::MapInfo, data.data(), data.size(), net::NetFlag::Reliable, ConstVal::NetChannelStrings);
     }

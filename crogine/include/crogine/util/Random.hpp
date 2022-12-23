@@ -81,7 +81,7 @@ namespace cro
                 return dist(rndEngine);
             }
             /*!
-            \brief Returns a poission disc sampled distribution of points within a given area
+            \brief Returns a poisson disc sampled distribution of points within a given area
             \param area sf::FloatRect within which the points are distributed
             \param minDist minimum distance between points
             \param maxPoints maximum number of points to try generating

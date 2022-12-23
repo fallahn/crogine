@@ -42,7 +42,7 @@ namespace cro
     MultiRenderTextures (or MRTs) have multiple colour targets and can be used
     as a G-Buffer for techniques such as deferred rendering or screen-space
     post processes like SSAO or depth of field. Unlike the standard RenderTexture
-    the colour buffers are 132 bit floating point format for higher precision
+    the colour buffers are 32 bit floating point format for higher precision
     when rendering data such as normal or vertex position information.
     MultiRenderTextures are not available on mobile platforms, and RenderTexture
     should be used instead.
@@ -119,14 +119,14 @@ namespace cro
         bool available() const { return m_fboID != 0; }
 
         /*!
-        \brief Returns the texture ID of a texture wrappped 
+        \brief Returns the texture ID of a texture wrapped 
         in a handle which can be bound to material uniforms.
         \param index The index of the texture to return.
         */
         TextureID getTexture(std::size_t index) const;
 
         /*!
-        \brief Returns the texture ID of the Depth texture wrappped
+        \brief Returns the texture ID of the Depth texture wrapped
         in a handle which can be bound to material uniforms.
         */
         TextureID getDepthTexture() const;

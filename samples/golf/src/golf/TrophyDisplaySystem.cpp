@@ -34,6 +34,7 @@ source distribution.
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/ParticleEmitter.hpp>
 #include <crogine/ecs/components/Camera.hpp>
+#include <crogine/ecs/components/Callback.hpp>
 #include <crogine/ecs/components/AudioEmitter.hpp>
 
 #include <crogine/util/Easings.hpp>
@@ -54,7 +55,7 @@ TrophyDisplaySystem::TrophyDisplaySystem(cro::MessageBus& mb)
 //public
 void TrophyDisplaySystem::process(float dt)
 {
-    auto& entities = getEntities();
+    const auto& entities = getEntities();
     for (auto entity : entities)
     {
         auto& trophy = entity.getComponent<TrophyDisplay>();
@@ -69,6 +70,7 @@ void TrophyDisplaySystem::process(float dt)
             if (trophy.delay < 0)
             {
                 trophy.scale = std::min(1.f, trophy.scale + (dt * 4.f));
+                trophy.label.getComponent<cro::Callback>().active = true;
 
                 float scale = cro::Util::Easing::easeOutBack(trophy.scale);
                 tx.setScale(glm::vec3(scale));

@@ -54,12 +54,13 @@ struct GolfBallEvent final
 {
     enum
     {
+        None,
         Landed,
         Foul,
         TurnEnded,
         Holed,
         Gimme
-    }type = Landed;
+    }type = None;
     std::int32_t terrain = -1;
     float distance = 0.f;
     glm::vec3 position = glm::vec3(0.f);

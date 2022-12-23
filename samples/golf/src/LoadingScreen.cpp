@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020
+Matt Marchant 2020 - 2022
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -93,10 +93,9 @@ LoadingScreen::LoadingScreen(SharedStateData& sd)
     m_frameIndex        (-1),
     m_currentFrame      (0),
     m_transform         (1.f),
-    m_projectionMatrix  (1.f)
+    m_projectionMatrix  (1.f),
+    m_viewport          (cro::App::getWindow().getSize())
 {
-    m_viewport = cro::App::getWindow().getSize();
-
     if (!m_texture.loadFromFile("assets/images/loading.png"))
     {
         cro::Image img;

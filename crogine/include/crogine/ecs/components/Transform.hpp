@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2022
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -100,7 +100,7 @@ namespace cro
         void setRotation(glm::vec3 axis, float angle);
 
         /*!
-        \brief Sets the euler rotation around the z axis, in radians.
+        \brief Sets the Euler rotation around the z axis, in radians.
         Useful shortcut when using 2D objects such as sprites or text
         */
         void setRotation(float);
@@ -134,13 +134,13 @@ namespace cro
 
         /*
         \brief Moves the transform.
-        The given paramter is added to the transform's existing position
+        The given parameter is added to the transform's existing position
         */
         void move(glm::vec3);
 
         /*!
         \brief Moves the transform on the x and y axis only.
-        The given paramter is added to the transform's current position.
+        The given parameter is added to the transform's current position.
         Useful for working with 2D objects such as sprites or text
         */
         void move(glm::vec2);
@@ -206,6 +206,11 @@ namespace cro
         glm::quat getRotation() const;
 
         /*!
+        \brief Returns the rotation, in radians, around the z axis
+        */
+        float getRotation2D() const;
+
+        /*!
         \brief Returns the sum rotation of this transform
         and all its parents (if any)
         */
@@ -217,7 +222,7 @@ namespace cro
         glm::vec3 getScale() const;
 
         /*!
-        \brief Returns the the combined world scale of the transform
+        \brief Returns the combined world scale of the transform
         according to its scene graph hierarchy
         */
         glm::vec3 getWorldScale() const;

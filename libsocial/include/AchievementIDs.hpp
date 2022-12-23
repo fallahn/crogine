@@ -29,6 +29,8 @@ source distribution.
 
 #pragma once
 
+#include <array>
+
 namespace AchievementID
 {
     enum
@@ -74,6 +76,13 @@ namespace AchievementID
         GrandTour,
         GrandDesign,
 
+        GettingStarted,
+        Junior,
+        Amateur,
+        Enthusiast,
+        SemiPro,
+        Pro,
+
         Count
     };
     static_assert(Count <= 256, "Count exceeds maximum 256 Achievements!");
@@ -86,9 +95,9 @@ namespace StatID
         HolesPlayed,
         PuttDistance,
         StrokeDistance,
-        GoldAverage,
-        SilverAverage,
-        BronzeAverage,
+        GoldWins,
+        SilverWins,
+        BronzeWins,
         TotalRounds,
         EightballWon,
         NineballWon,
@@ -112,8 +121,28 @@ namespace StatID
         Course06Complete,
         Course07Complete,
         Course08Complete,
+        Course09Complete,
+        Course10Complete,
 
         Count
     };
     static_assert(Count <= 64, "Count exceeds maximum number of stats");
 }
+
+namespace XPID
+{
+    enum
+    {
+        HIO, Albatross, Eagle, Birdie, Par, Special,
+        CompleteCourse, Third, Second, First,
+        Good, NotBad, Excellent,
+
+        Count
+    };
+}
+static constexpr std::array<std::int32_t, XPID::Count> XPValues =
+{
+    500, 150, 50,  30, 10, 50,
+    50,  100, 200, 300,
+    10,  40,  100
+};

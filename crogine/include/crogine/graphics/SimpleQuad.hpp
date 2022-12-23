@@ -66,6 +66,13 @@ namespace cro
         void setTexture(const Texture& texture);
 
         /*!
+        \brief Set the texture of the quad with the given texture handle
+        \param texture TextureID to apply to the quad
+        \param size Size to set the quad to when rendering
+        */
+        void setTexture(TextureID texture, glm::uvec2 size);
+
+        /*!
         \brief Sets the quad to render a sub-rectangle of the current texture
         \param subrect A FloatRect containing a sub-rectangular area of the
         texture, in pixel coords, to set the quad to. Note that this will be reset
@@ -95,7 +102,7 @@ namespace cro
         \brief Draws the quad to the active target
         \param parentTransform An option transform with
         which the Quad's transform is multiplied, to create
-        scene-graph like hierachies
+        scene-graph like hierarchies
         */
         void draw(const glm::mat4& parentTransform = glm::mat4(1.f)) override;
 

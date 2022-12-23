@@ -245,6 +245,12 @@ void Model::setDepthTestEnabled(std::size_t idx, bool enabled)
     m_materials[Mesh::IndexData::Pass::Final][idx].enableDepthTest = enabled;
 }
 
+void Model::setDoubleSided(std::size_t idx, bool doubleSided)
+{
+    CRO_ASSERT(idx < m_materials.size(), "Out of Range");
+    m_materials[Mesh::IndexData::Pass::Final][idx].doubleSided = doubleSided;
+}
+
 void Model::setSkeleton(glm::mat4* frame, std::size_t jointCount)
 {
     m_skeleton = frame;

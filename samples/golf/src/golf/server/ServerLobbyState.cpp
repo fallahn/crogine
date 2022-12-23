@@ -80,6 +80,9 @@ void LobbyState::netEvent(const net::NetEvent& evt)
         case PacketID::PlayerInfo:
             insertPlayerInfo(evt);
             break;
+        case PacketID::NewLobbyReady:
+            m_sharedData.host.broadcastPacket(PacketID::NewLobbyReady, evt.packet.as<std::uint64_t>(), net::NetFlag::Reliable);
+            break;
         case PacketID::LobbyReady:
         {
             std::uint16_t data = evt.packet.as<std::uint16_t>();
@@ -116,6 +119,13 @@ void LobbyState::netEvent(const net::NetEvent& evt)
             {
                 m_sharedData.holeCount = evt.packet.as<std::uint8_t>();
                 m_sharedData.host.broadcastPacket(PacketID::HoleCount, m_sharedData.holeCount, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+            }
+            break;
+        case PacketID::ReverseCourse:
+            if (evt.peer.getID() == m_sharedData.hostID)
+            {
+                m_sharedData.reverseCourse = evt.packet.as<std::uint8_t>();
+                m_sharedData.host.broadcastPacket(PacketID::ReverseCourse, m_sharedData.reverseCourse, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
             }
             break;
         case PacketID::RequestGameStart:
@@ -159,6 +169,7 @@ void LobbyState::insertPlayerInfo(const net::NetEvent& evt)
             ConnectionData cd;
             if (cd.deserialise(evt.packet))
             {
+                m_sharedData.clients[connectionID].peerID = cd.peerID;
                 m_sharedData.clients[connectionID].playerCount = cd.playerCount;
                 for (auto i = 0u; i < cd.playerCount; ++i)
                 {
@@ -168,6 +179,7 @@ void LobbyState::insertPlayerInfo(const net::NetEvent& evt)
                     m_sharedData.clients[connectionID].playerData[i].hairID = cd.playerData[i].hairID;
                     m_sharedData.clients[connectionID].playerData[i].skinID = cd.playerData[i].skinID;
                     m_sharedData.clients[connectionID].playerData[i].flipped = cd.playerData[i].flipped;
+                    m_sharedData.clients[connectionID].playerData[i].isCPU = cd.playerData[i].isCPU;
                 }
             }
             else
@@ -190,6 +202,7 @@ void LobbyState::insertPlayerInfo(const net::NetEvent& evt)
         if (c.connected)
         {
             ConnectionData cd;
+            cd.peerID = c.peerID;
             cd.connectionID = static_cast<std::uint8_t>(i);
             cd.playerCount = static_cast<std::uint8_t>(c.playerCount);
             for (auto j = 0u; j < c.playerCount; ++j)
@@ -200,6 +213,7 @@ void LobbyState::insertPlayerInfo(const net::NetEvent& evt)
                 cd.playerData[j].hairID = c.playerData[j].hairID;
                 cd.playerData[j].skinID = c.playerData[j].skinID;
                 cd.playerData[j].flipped = c.playerData[j].flipped;
+                cd.playerData[j].isCPU = c.playerData[j].isCPU;
             }
             auto buffer = cd.serialise();
 
@@ -215,5 +229,6 @@ void LobbyState::insertPlayerInfo(const net::NetEvent& evt)
         m_sharedData.host.broadcastPacket(PacketID::ScoreType, m_sharedData.scoreType, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
         m_sharedData.host.broadcastPacket(PacketID::HoleCount, m_sharedData.holeCount, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
         m_sharedData.host.broadcastPacket(PacketID::GimmeRadius, m_sharedData.gimmeRadius, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+        m_sharedData.host.broadcastPacket(PacketID::ReverseCourse, m_sharedData.reverseCourse, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
     }
 }

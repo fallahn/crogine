@@ -55,7 +55,7 @@ struct MenuContext
 struct MenuCallback final
 {
     MenuContext menuContext;
-    explicit MenuCallback(MenuContext m) : menuContext(m) {}
+    explicit MenuCallback(const MenuContext& m) : menuContext(m) {}
 
     void operator()(cro::Entity, float);
 };
@@ -89,6 +89,7 @@ struct SpriteID final
         ArrowLeftHighlight,
         ArrowRightHighlight,
         CPUHighlight,
+        PlayerEdit,
 
         ButtonBanner,
         Cursor,
@@ -108,6 +109,8 @@ struct SpriteID final
         NextCourseHighlight,
         LobbyCheckbox,
         LobbyCheckboxHighlight,
+        Envelope,
+        LevelBadge,
 
         Count
     };

@@ -44,6 +44,8 @@ static const std::string BillboardVertexShader = R"(
     uniform mat4 u_viewMatrix;
     uniform mat4 u_viewProjectionMatrix;
 
+    uniform sampler2D u_noiseTexture;
+
 #if defined(SHADOW_MAPPING)
     uniform mat4 u_cameraViewMatrix;
     uniform mat4 u_projectionMatrix;
@@ -53,24 +55,37 @@ static const std::string BillboardVertexShader = R"(
     uniform vec4 u_clipPlane;
     uniform vec3 u_cameraWorldPosition;
 
-    layout (std140) uniform WindValues
-    {
-        vec4 u_windData; //dirX, strength, dirZ, elapsedTime
-    };
-
-    layout (std140) uniform ScaledResolution
-    {
-        vec2 u_scaledResolution;
-        float u_nearFadeDistance;
-    };
+#include WIND_BUFFER
+#include RESOLUTION_BUFFER
 
     VARYING_OUT LOW vec4 v_colour;
     VARYING_OUT MED vec2 v_texCoord0;
 
     VARYING_OUT float v_ditherAmount;
 
+#include WIND_CALC
+
     void main()
     {
+        //red low freq, green high freq, blue direction amount
+
+        WindResult windResult = getWindData(a_normal.xz + a_position.xz, a_normal.xz); //normal is root billboard position - a_position is relative
+        vec3 vertexStrength = step(0.1, a_position.y) * (vec3(1.0) - a_colour.rgb);
+        //multiply high and low frequency by vertex colours
+        windResult.lowFreq *= vertexStrength.r;
+        windResult.highFreq *= vertexStrength.g;
+
+        //apply high frequency and low frequency in local space
+        vec3 relPos = a_position.xyz;
+        relPos.x += windResult.lowFreq.x + windResult.highFreq.x;
+        relPos.z += windResult.lowFreq.y + windResult.highFreq.y;
+
+        //multiply wind direction by wind strength
+        vec3 windDir = vec3(u_windData.x, 0.0, u_windData.z) * windResult.strength * vertexStrength.b;
+        //wind dir is added in world space (below)
+
+
+
         vec3 position = (u_worldMatrix * vec4(a_normal, 1.0)).xyz;
 
 #if defined (SHADOW_MAPPING)
@@ -82,27 +97,48 @@ static const std::string BillboardVertexShader = R"(
 #endif
         vec3 camRight = vec3(viewMatrix[0][0], viewMatrix[1][0], viewMatrix[2][0]);
         vec3 camUp = vec3(0.0, 1.0, 0.0);
-        position = position + camRight * a_position.x
-                            + camUp * a_position.y;
+        position = position + camRight * relPos.x
+                            + camUp * relPos.y
+                            + cross(camRight, camUp) * relPos.z;
 
 
-        const float xFreq = 0.6;
-        const float yFreq = 0.8;
+        //---generic wind added to tall billboards---//
+        const float xFreq = 0.03;// 0.6;
+        const float yFreq = 0.015;// 0.8;
+
         const float scale = 0.2;
         const float minHeight = 3.0;
         const float maxHeight = 12.0;
 
-        //only animate above 3 metres
+        //default animate above 3 metres
         float height = max(0.0, a_position.y - minHeight);
 
         float strength = u_windData.y;
         float totalScale = scale * (height / maxHeight) * strength;
 
-        position.x += sin((u_windData.w * (xFreq)) + a_normal.x) * totalScale;
-        position.z += sin((u_windData.w * (yFreq)) + a_normal.z) * totalScale;
+
+        vec2 uv = a_normal.xz;
+        uv.x += u_windData.w * xFreq;
+        float windX = TEXTURE(u_noiseTexture, uv).r;
+        windX *= 2.0;
+        windX -= 1.0;
+
+        uv = a_normal.xz;
+        uv.y += u_windData.w * yFreq;
+        float windZ = TEXTURE(u_noiseTexture, uv).r;
+        windZ *= 2.0;
+        windZ -= 1.0;
+
+
+        position.x += windX * totalScale;
+        position.z += windZ * totalScale;
         position.xz += (u_windData.xz * strength * 2.0) * totalScale;
+        //------------------------------//
 
+        //wind from billboard vertex colour (above)
+        position += windDir;
 
+        v_colour = vec4(1.0);
 
 
         //snap vert pos to nearest fragment for retro wobble
@@ -118,7 +154,6 @@ static const std::string BillboardVertexShader = R"(
         v_texCoord0 = a_texCoord0;
 
 #if !defined(SHADOW_MAPPING)
-        v_colour = a_colour;
 
         float fadeDistance = u_nearFadeDistance * 5.0;
         const float farFadeDistance = 300.f;
@@ -140,10 +175,7 @@ static const std::string BillboardFragmentShader = R"(
 
     uniform sampler2D u_diffuseMap;
 
-    layout (std140) uniform PixelScale
-    {
-        float u_pixelScale;
-    };
+    #include SCALE_BUFFER
 
     VARYING_IN LOW vec4 v_colour;
     VARYING_IN MED vec2 v_texCoord0;
@@ -152,46 +184,14 @@ static const std::string BillboardFragmentShader = R"(
     VARYING_IN vec3 v_normalVector;
     VARYING_IN HIGH vec3 v_worldPosition;
 
-    //function based on example by martinsh.blogspot.com
-    const int MatrixSize = 8;
-    float findClosest(int x, int y, float c0)
-    {
-        /* 8x8 Bayer ordered dithering */
-        /* pattern. Each input pixel */
-        /* is scaled to the 0..63 range */
-        /* before looking in this table */
-        /* to determine the action. */
-
-        const int dither[64] = int[64](
-            0,  32, 8,  40, 2,  34, 10, 42, 
-            48, 16, 56, 24, 50, 18, 58, 26, 
-            12, 44, 4,  36, 14, 46, 6,  38, 
-            60, 28, 52, 20, 62, 30, 54, 22, 
-            3,  35, 11, 43, 1,  33, 9,  41, 
-            51, 19, 59, 27, 49, 17, 57, 25,
-            15, 47, 7,  39, 13, 45, 5,  37,
-            63, 31, 55, 23, 61, 29, 53, 21 );
-
-        float limit = 0.0;
-        if (x < MatrixSize)
-        {
-            limit = (dither[y * MatrixSize + x] + 1) / 64.0;
-        }
-
-        if (c0 < limit)
-        {
-            return 0.0;
-        }
-        return 1.0;
-    }
-
+    #include BAYER_MATRIX
 
     void main()
     {
         FRAG_OUT = v_colour;
         FRAG_OUT *= TEXTURE(u_diffuseMap, v_texCoord0);
 
-        vec2 xy = gl_FragCoord.xy / u_pixelScale;
+        vec2 xy = gl_FragCoord.xy;// / u_pixelScale;
         int x = int(mod(xy.x, MatrixSize));
         int y = int(mod(xy.y, MatrixSize));
         float alpha = findClosest(x, y, smoothstep(0.1, 0.999, v_ditherAmount));

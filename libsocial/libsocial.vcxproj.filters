@@ -27,12 +27,21 @@
     <ClInclude Include="include\MatchMaking.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="include\Social.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\Input.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Achievements.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\MatchMaking.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Social.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

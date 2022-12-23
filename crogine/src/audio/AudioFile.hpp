@@ -60,7 +60,7 @@ namespace cro
             chunk of decoded LPCM audio data.
             \param chunkSize How much data is required to fill the PCMData
             \param looped Whether or not filling the struct should loop back
-            to the beginning again once the end of the dile is reached
+            to the beginning again once the end of the file is reached
             \see PCMData
             */
             virtual const PCMData& getData(std::size_t chunkSize = 0, bool looped = false) const = 0;

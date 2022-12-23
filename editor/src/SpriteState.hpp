@@ -37,6 +37,7 @@ source distribution.
 #include <crogine/gui/GuiClient.hpp>
 #include <crogine/graphics/TextureResource.hpp>
 #include <crogine/graphics/SpriteSheet.hpp>
+#include <crogine/graphics/Palette.hpp>
 
 #include <array>
 #include <tuple>
@@ -85,6 +86,8 @@ private:
 
     bool m_showPreferences;
     bool m_showNewSprite;
+    bool m_showPalette;
+    cro::Palette m_palette;
 
     cro::Clock m_doubleClickClock;
 
@@ -103,4 +106,5 @@ private:
     void drawSpriteWindow();
     void drawPreferences();
     void drawNewSprite();
+    void drawPalette();
 };

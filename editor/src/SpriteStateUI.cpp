@@ -41,6 +41,12 @@ source distribution.
 
 #include <crogine/gui/Gui.hpp>
 
+namespace
+{
+    std::int32_t nameNumber = 0; //hack to increment names
+    std::string newSpriteName;
+}
+
 void SpriteState::openSprite(const std::string& path)
 {
     if (m_spriteSheet.loadFromFile(path, m_textures, m_sharedData.workingDirectory + "/"))
@@ -127,6 +133,7 @@ void SpriteState::createUI()
             drawSpriteWindow();
             drawPreferences();
             drawNewSprite();
+            drawPalette();
 		});
     
     getContext().mainWindow.setTitle("Sprite Editor");
@@ -215,7 +222,7 @@ void SpriteState::drawMenuBar()
         if (ImGui::BeginMenu("View##sprite"))
         {
             ImGui::MenuItem("Options", nullptr, &m_showPreferences);
-
+            ImGui::MenuItem("Palette", nullptr, &m_showPalette);
             ImGui::EndMenu();
         }
 
@@ -424,6 +431,43 @@ void SpriteState::drawSpriteWindow()
                 updateBoundsEntity();
             }
 
+            if (ImGui::Button("Duplicate"))
+            {
+                ImGui::OpenPopup("Duplicate Sprite");
+                newSpriteName = name + std::to_string(nameNumber);
+            }
+
+            if (ImGui::BeginPopupModal("Duplicate Sprite"))
+            {
+                ImGui::InputText("Name", &newSpriteName);
+
+                if (ImGui::Button("OK"))
+                {
+                    if (m_spriteSheet.addSprite(newSpriteName))
+                    {
+                        m_spriteSheet.getSprites().at(newSpriteName) = sprite;
+                        nameNumber++; //only increment this if accepted...
+
+                        cro::FileSystem::showMessageBox("Success", "Added Sprite " + newSpriteName);
+                    }
+                    else
+                    {
+                        cro::FileSystem::showMessageBox("Duplicate Failed", newSpriteName + " already exists?");
+                    }
+
+                    ImGui::CloseCurrentPopup();
+                }
+
+                ImGui::SameLine();
+                if (ImGui::Button("Cancel"))
+                {
+                    ImGui::CloseCurrentPopup();
+                }
+
+                ImGui::EndPopup();
+            }
+
+
             const auto& anims = sprite.getAnimations();
             if (!anims.empty())
             {
@@ -471,6 +515,12 @@ void SpriteState::drawSpriteWindow()
             }
 
             //preview
+            ImVec4 c(sprite.getColour().getVec4());
+            if (ImGui::ColorButton("Colour", c))
+            {
+                m_showPalette = true;
+            }
+
             ImVec2 uv0(bounds.left / texSize.x, ((bounds.bottom + bounds.height) / texSize.y));
             ImVec2 uv1((bounds.left + bounds.width) / texSize.x, (bounds.bottom / texSize.y));
 
@@ -481,6 +531,8 @@ void SpriteState::drawSpriteWindow()
             ImGui::BeginChild("##tex", ImVec2(460.f, 200.f));
             ImGui::ImageButton(*texture, size, uv0, uv1);
             ImGui::EndChild();
+
+
         }
 
         ImGui::End();
@@ -549,6 +601,60 @@ void SpriteState::drawNewSprite()
             {
                 m_spriteSheet.addSprite(nameBuffer);
                 nameBuffer.clear();
+            }
+        }
+        ImGui::End();
+    }
+}
+
+void SpriteState::drawPalette()
+{
+    if (m_showPalette)
+    {
+        ImGui::SetNextWindowSize({ 240.f, 220.f });
+        if (ImGui::Begin("Palette"))
+        {
+            if (ImGui::Button("Open"))
+            {
+                auto path = cro::FileSystem::openFileDialogue("", "ase");
+                if (!path.empty())
+                {
+                    m_palette.loadFromFile(path);
+                }
+            }
+
+            const auto& swatches = m_palette.getSwatches();
+            auto i = 0;
+            for (const auto& swatch : swatches)
+            {
+                for (const auto& colour : swatch.colours)
+                {
+                    ImVec4 c(colour.colour.getVec4());
+                    std::string label = colour.name.toAnsiString() + "##" + std::to_string(i);
+
+                    if (ImGui::ColorButton(label.c_str(), c))
+                    {
+                        if (m_activeSprite)
+                        {
+                            m_activeSprite->second.setColour(colour.colour);
+                        }
+                    }
+
+                    if ((i++ % 5) != 4)
+                    {
+                        ImGui::SameLine();
+                    }
+                }
+            }
+            ImGui::NewLine();
+
+            if (m_activeSprite)
+            {
+                glm::vec4 outColour = m_activeSprite->second.getColour().getVec4();
+                if (ImGui::ColorPicker4("Sprite Colour", &outColour[0]))
+                {
+                    m_activeSprite->second.setColour(cro::Colour(outColour));
+                }
             }
         }
         ImGui::End();

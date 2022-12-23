@@ -47,7 +47,8 @@ struct CommandID final
         AudioEmitter    = 0x800,
         Beacon          = 0x1000,
         StrokeArc       = 0x2000,
-        Spectator       = 0x4000
+        Spectator       = 0x4000,
+        BeaconColour    = 0x8000
     };
 
     struct UI final
@@ -72,7 +73,9 @@ struct CommandID final
             MessageBoard         = 0x8000,
             MiniGreen            = 0x10000,
             DrivingBoard         = 0x20000,
-            StrengthMeter        = 0x40000
+            StrengthMeter        = 0x40000,
+            PlayerIcon           = 0x80000,
+            WaitMessage          = 0x100000
         };
     };
 
@@ -96,7 +99,8 @@ struct CommandID final
             TitleText    = 0x2000,
             ScoreType    = 0x4000,
             ScoreDesc    = 0x8000,
-            GimmeDesc    = 0x10000
+            GimmeDesc    = 0x10000,
+            LobbyText    = 0x20000
         };
     };
 };

@@ -32,6 +32,8 @@ source distribution.
 #include "golf/SharedStateData.hpp"
 #include "golf/MessageIDs.hpp"
 
+#include <Social.hpp>
+
 #include <crogine/core/App.hpp>
 #include <crogine/core/SysTime.hpp>
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
@@ -49,13 +51,13 @@ namespace
     static constexpr float ImageSize = 64.f;
 }
 
-DefaultAchievements::DefaultAchievements(cro::MessageBus& mb)
-    : m_messageBus(mb)
+DefaultAchievements::DefaultAchievements()
+    : m_messageBus(cro::App::getInstance().getMessageBus())
 {
 
 }
 
-void DefaultAchievements::init()
+bool DefaultAchievements::init()
 {
     LOG("Initialised default Achievements system", cro::Logger::Type::Info);
 
@@ -115,6 +117,8 @@ void DefaultAchievements::init()
     trigger = &StatTriggers[StatID::WaterTrapRounds].emplace_back();
     trigger->achID = AchievementID::GolfinDolphin;
     trigger->threshold = 5;
+
+    return true;
 }
 
 void DefaultAchievements::update()
@@ -145,11 +149,6 @@ void DefaultAchievements::update()
     }
 }
 
-void DefaultAchievements::registerAchievement(const std::string&)
-{
-
-}
-
 void DefaultAchievements::awardAchievement(const std::string& name)
 {
     if (m_achievements.count(name) != 0 && !m_achievements[name].achieved)
@@ -165,6 +164,8 @@ void DefaultAchievements::awardAchievement(const std::string& name)
 
         auto* msg = m_messageBus.post<AchievementEvent>(MessageID::AchievementMessage);
         msg->id = static_cast<std::uint8_t>(m_achievements[name].id);
+
+        Social::awardXP(XPValues[XPID::Special]);
     }
 }
 
@@ -225,6 +226,7 @@ float DefaultAchievements::incrementStat(const std::string& name, std::int32_t v
         auto& stat = m_stats[name];
         stat.value += static_cast<float>(value);
         syncStat(stat);
+        return stat.value;
     }
     return 0.f;
 }
@@ -240,6 +242,7 @@ float DefaultAchievements::incrementStat(const std::string& name, float value)
         auto& stat = m_stats[name];
         stat.value += value;
         syncStat(stat);
+        return stat.value;
     }
     return 0.f;
 }
@@ -348,7 +351,7 @@ void DefaultAchievements::readFile()
                 LogW << "Failed reading stats" << std::endl;
             }
 
-            read = fread(m_timeStamps.data(), timesize, 1, inFile);
+            fread(m_timeStamps.data(), timesize, 1, inFile);
 
             fclose(inFile);
         }

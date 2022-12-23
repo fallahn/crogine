@@ -102,14 +102,14 @@ namespace cro
         bool available() const { return m_fboID != 0; }
 
         /*!
-        \brief Returns the texture ID wrappped in a handle which can be bound to
+        \brief Returns the texture ID wrapped in a handle which can be bound to
         material uniforms. Note that the depth texture is an array so requires
-        a shader with a sampler2DArray uniform. To retreive a single layer use
+        a shader with a sampler2DArray uniform. To retrieve a single layer use
         getTexture(layerIndex) instead
         */
         TextureID getTexture() const;
 
-                /*!
+        /*!
         \brief Returns a TextureID for the requested layer, if it exists
         Not available on macOS, so returns a null texture
         \param index Index of the layer to return

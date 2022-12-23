@@ -239,6 +239,14 @@ bool ParticleState::simulate(float dt)
         motion -= cro::Util::Matrix::getRightVector(tx) * CamSpeed;
     }
 
+    if (cro::Keyboard::isKeyPressed(SDL_SCANCODE_LEFT))
+    {
+        m_cameras[m_cameraIndex].emitter.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, dt);
+    }
+    if (cro::Keyboard::isKeyPressed(SDL_SCANCODE_RIGHT))
+    {
+        m_cameras[m_cameraIndex].emitter.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, -dt);
+    }
 
     if (glm::length2(motion) > 0)
     {

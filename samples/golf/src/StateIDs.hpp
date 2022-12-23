@@ -49,6 +49,9 @@ struct StateID final
         Trophy,
         News,
         Bush,
-        Playlist
+        Playlist,
+        MessageOverlay,
+        Credits,
+        EventOverlay //consumes events if the overlay is open
     };
 };

@@ -83,7 +83,7 @@ namespace cro::Detail
 
         //moves a proxy with the specified treeID. If the entity
         //has moved outside of the node's fattened AABB then it
-        //is removed from the tree and reinsterted.
+        //is removed from the tree and reinserted.
         bool moveNode(std::int32_t, Box, glm::vec3);
 
         std::int32_t getRoot() const { return m_root; }

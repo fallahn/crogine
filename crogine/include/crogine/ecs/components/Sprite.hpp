@@ -105,7 +105,7 @@ namespace cro
         const FloatRect& getTextureRect() const { return m_textureRect; }
 
         /*!
-        \brief Returns the normlised texture rect based on the current
+        \brief Returns the normalised texture rect based on the current
         texture, or and empty rectangle if not texture exists
         */
         FloatRect getTextureRectNormalised() const;

@@ -80,7 +80,7 @@ void CollisionMesh::updateCollisionMesh(const cro::Mesh::Data& meshData)
         groundMesh.m_triangleIndexBase = reinterpret_cast<std::uint8_t*>(m_indexData[i].data());
         groundMesh.m_triangleIndexStride = 3 * sizeof(std::uint32_t);
 
-
+        
         float terrain = std::min(1.f, std::max(0.f, m_vertexData[(m_indexData[i][0] * (meshData.vertexSize / sizeof(float))) + colourOffset])) * 255.f;
         terrain = std::floor(terrain / 10.f);
         if (terrain >= TerrainID::Hole)

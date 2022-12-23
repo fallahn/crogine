@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021
+Matt Marchant 2021 - 2022
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -47,11 +47,30 @@ static const std::string WireframeVertex = R"(
 #if defined (CULLED)
     uniform HIGH vec3 u_cameraWorldPosition;
 
-    layout (std140) uniform ScaledResolution
+    #include RESOLUTION_BUFFER
+#endif
+
+#if defined (HUE)
+    uniform float u_colourRotation = 1.0;
+    uniform vec4 u_colour = vec4(1.0);
+
+    vec3 rgb2hsv(vec3 c)
     {
-        vec2 u_scaledResolution;
-        float u_nearFadeDistance;
-    };
+        vec4 K = vec4(0.0, -1.0 / 3.0, 2.0 / 3.0, -1.0);
+        vec4 p = mix(vec4(c.bg, K.wz), vec4(c.gb, K.xy), step(c.b, c.g));
+        vec4 q = mix(vec4(p.xyw, c.r), vec4(c.r, p.yzx), step(p.x, c.r));
+
+        float d = q.x - min(q.w, q.y);
+        float e = 1.0e-10;
+        return vec3(abs(q.z + (q.w - q.y) / (6.0 * d + e)), d / (q.x + e), q.x);
+    }
+
+    vec3 hsv2rgb(vec3 c)
+    {
+        vec4 K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
+        vec3 p = abs(fract(c.xxx + K.xyz) * 6.0 - K.www);
+        return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
+    }
 #endif
 
     VARYING_OUT LOW vec4 v_colour;
@@ -64,6 +83,7 @@ static const std::string WireframeVertex = R"(
         gl_Position = wvp * position;
 
         vec4 worldPos = u_worldMatrix * position;
+
         v_colour = a_colour;
 #if defined (DASHED)
         v_texCoord = a_texCoord0;
@@ -79,6 +99,12 @@ float near = 10.0;
 float far = 15.0;
 
         v_colour.a *= smoothstep(near*near, far*far, dot(distance, distance));
+#endif
+
+#if defined (HUE)
+        vec3 hsv = rgb2hsv(a_colour.rgb);
+        hsv.x += u_colourRotation;
+        v_colour.rgb = hsv2rgb(hsv) * u_colour.rgb;
 #endif
 
         gl_ClipDistance[0] = dot(worldPos, u_clipPlane);
@@ -102,7 +128,7 @@ static const std::string WireframeFragment = R"(
         colour.rgb += (1.0 - colour.a) * colour.rgb;
 
 #if defined (DASHED)
-        float alpha = (sin(u_time - ((v_texCoord.x * TAU) * 40.0)) + 1.0) * 0.5;
+        float alpha = (sin(u_time - ((v_texCoord.x * TAU) * 20.0)) + 1.0) * 0.5;
         alpha = step(0.5, alpha);
         if (alpha < 0.5) discard;
 #endif

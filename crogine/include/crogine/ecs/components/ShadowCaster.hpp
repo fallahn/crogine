@@ -32,7 +32,7 @@ source distribution.
 namespace cro
 {
     //entities with this component will be rendered into the depth map
-    //for shadow casting, when using a shadowmap system
+    //for shadow casting, when using a shadow map system
     struct ShadowCaster final
     {
         bool skinned = false;

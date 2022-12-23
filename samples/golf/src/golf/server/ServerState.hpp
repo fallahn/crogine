@@ -49,6 +49,7 @@ namespace sv
         std::uint32_t hairID = 0;
         std::uint32_t skinID = 0;
         bool flipped = false; //we don't really care about this on the server, but we do need to forward it to clients.
+        bool isCPU = false; //only allow CPU players to request predictions
     };
 
     struct ClientConnection final
@@ -61,6 +62,7 @@ namespace sv
         //TODO this is basically the same as the ConnectionData struct in client shared data
         static constexpr std::size_t MaxPlayers = 4;
         std::size_t playerCount = 0;
+        std::uint64_t peerID = 0;
         std::array<PlayerInfo, MaxPlayers> playerData = {};
     };
 
@@ -73,6 +75,7 @@ namespace sv
         std::uint8_t scoreType = 0;
         std::uint8_t gimmeRadius = 0;
         std::uint8_t holeCount = 0;
+        std::uint8_t reverseCourse = false;
 
         std::atomic_uint64_t hostID = 0;
     };
