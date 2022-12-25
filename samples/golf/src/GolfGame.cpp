@@ -762,6 +762,10 @@ void GolfGame::loadPreferences()
                 {
                     m_sharedData.mouseSpeed = std::max(ConstVal::MinMouseSpeed, std::min(ConstVal::MaxMouseSpeed, prop.getValue<float>()));
                 }
+                else if (name == "swingput_threshold")
+                {
+                    m_sharedData.swingputThreshold = std::max(ConstVal::MinSwingputThresh, std::min(ConstVal::MaxSwingputThresh, prop.getValue<float>()));
+                }
                 else if (name == "invert_x")
                 {
                     m_sharedData.invertX = prop.getValue<bool>();
@@ -870,6 +874,7 @@ void GolfGame::savePreferences()
     cfg.addProperty("fov").setValue(m_sharedData.fov);
     cfg.addProperty("vertex_snap").setValue(m_sharedData.vertexSnap);
     cfg.addProperty("mouse_speed").setValue(m_sharedData.mouseSpeed);
+    cfg.addProperty("swingput_threshold").setValue(m_sharedData.swingputThreshold);
     cfg.addProperty("invert_x").setValue(m_sharedData.invertX);
     cfg.addProperty("invert_y").setValue(m_sharedData.invertY);
     cfg.addProperty("show_beacon").setValue(m_sharedData.showBeacon);

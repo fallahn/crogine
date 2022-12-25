@@ -293,6 +293,37 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     ballDump[1].push_back(1.f);
     ballDump[2].push_back(1.f);
 
+    //registerWindow([&]() 
+    //    {
+    //        if (ImGui::Begin("Shader"))
+    //        {
+    //            static float power = 65.f;
+    //            if (ImGui::SliderFloat("Power", &power, 65.f, 350.f))
+    //            {
+    //                auto& shader = m_resources.shaders.get(ShaderID::Course);
+    //                glUseProgram(shader.getGLHandle());
+    //                glUniform1f(shader.getUniformID("u_rim"), power);
+    //            }
+
+    //            static float step = 0.8f;
+    //            if (ImGui::SliderFloat("Step", &step, 0.8f, 0.999f))
+    //            {
+    //                auto& shader = m_resources.shaders.get(ShaderID::Course);
+    //                glUseProgram(shader.getGLHandle());
+    //                glUniform1f(shader.getUniformID("u_step"), step);
+    //            }
+
+    //            static float mm = 0.1f;
+    //            if (ImGui::SliderFloat("MM", &mm, 0.1f, 1.2f))
+    //            {
+    //                auto& shader = m_resources.shaders.get(ShaderID::Course);
+    //                glUseProgram(shader.getGLHandle());
+    //                glUniform1f(shader.getUniformID("u_mm"), mm);
+    //            }
+    //        }
+    //        ImGui::End();        
+    //    });
+
     registerWindow([&]()
         {
             if (ImGui::Begin("Depthmap"))

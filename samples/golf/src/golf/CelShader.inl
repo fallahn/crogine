@@ -295,6 +295,9 @@ static const std::string CelFragmentShader = R"(
 #if defined (COMP_SHADE)
     uniform vec4 u_colour = vec4(1.0);
 #endif
+//uniform float u_rim = 65.0;
+//uniform float u_step = 0.8;
+//uniform float u_mm = 1.0;
 
 #if defined (NORMAL_MAP)
     uniform sampler2D u_normalMap;
@@ -617,5 +620,16 @@ static const std::string CelFragmentShader = R"(
     FRAG_OUT.rgb = mix(vec3(0.2, 0.3059, 0.6118), FRAG_OUT.rgb, smoothstep(WaterLevel - 0.001, WaterLevel + 0.001, v_worldPosition.y));
 
 //if(v_worldPosition.y < WaterLevel) discard;//don't do this, it reveals the hidden trees.
+#endif
+
+//#if defined(COMP_SHADE) || defined(CONTOUR)
+#if defined(BUNS)
+        float rim = 1.0 - dot(normal, viewDirection);
+        rim = smoothstep(u_step, 1.0, rim);
+        rim = pow(rim, u_rim);
+        
+        //FRAG_OUT.rgb += vec3(rim * 0.05);
+        FRAG_OUT.rgb = mix(FRAG_OUT.rgb, FRAG_OUT.rgb * u_mm, rim);
+
 #endif
     })";

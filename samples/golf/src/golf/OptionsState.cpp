@@ -2405,9 +2405,19 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
         e.getComponent<cro::Text>().setFillColour(TextNormalColour);
         e.getComponent<cro::Text>().setString(str);
         parent.getComponent<cro::Transform>().addChild(e.getComponent<cro::Transform>());
-    };
 
-    createText(glm::vec2(20.f, 92.f), "Look Speed (Billiards)");
+        return e;
+    };
+    std::stringstream ss;
+    ss.precision(2);
+    ss << "Swingput Threshold " << m_sharedData.swingputThreshold;
+    auto swingputText = createText(glm::vec2(20.f, 124.f), ss.str());
+
+
+    std::stringstream st;
+    st.precision(2);
+    st << "Look Speed (Billiards) " << m_sharedData.mouseSpeed;
+    auto mouseText = createText(glm::vec2(20.f, 92.f), st.str());
     createText(glm::vec2(32.f, 63.f), "Invert X");
     createText(glm::vec2(32.f, 47.f), "Invert Y");
     createText(glm::vec2(32.f, 31.f), "Use Vibration");
@@ -2425,7 +2435,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
         });
 
 
-    auto createSlider = [&](glm::vec2 position)
+    auto createSlider = [&, mouseText](glm::vec2 position)
     {
         auto entity = m_scene.createEntity();
         entity.addComponent<cro::Transform>().setPosition(position);
@@ -2434,11 +2444,17 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
         auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
         entity.getComponent<cro::Transform>().setOrigin({ std::floor(bounds.width / 2.f), /*std::floor*/(bounds.height / 2.f), -TextOffset });
 
+        //TODO this should be done outside the factory func
         auto userData = SliderData(position);
-        userData.onActivate = [&](float distance)
+        userData.onActivate = [&, mouseText](float distance) mutable
         {
             //distance = 0-1
             m_sharedData.mouseSpeed = ConstVal::MinMouseSpeed + ((ConstVal::MaxMouseSpeed - ConstVal::MinMouseSpeed) * distance);
+
+            std::stringstream st;
+            st.precision(2);
+            st << "Look Speed (Billiards) " << m_sharedData.mouseSpeed;
+            mouseText.getComponent<cro::Text>().setString(st.str());
         };
         entity.addComponent<cro::Callback>().active = true;
         entity.getComponent<cro::Callback>().setUserData<SliderData>(userData);
@@ -2457,40 +2473,28 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
         return entity;
     };
 
-    auto mouseSlider = createSlider(glm::vec2(35.f, 77.f));
-
-    auto tipEnt = m_scene.createEntity();
-    tipEnt.addComponent<cro::Transform>();
-    tipEnt.addComponent<cro::Callback>().active = true;
-    tipEnt.getComponent<cro::Callback>().function =
-        [&, mouseSlider](cro::Entity, float)
+    auto swingputSlider = createSlider({ 35.f, 109.f });
+    swingputSlider.getComponent<cro::Callback>().getUserData<SliderData>().onActivate =
+        [&, swingputText](float distance) mutable
     {
-        auto mousePos = m_scene.getActiveCamera().getComponent<cro::Camera>().pixelToCoords(cro::Mouse::getPosition());
-        auto bounds = mouseSlider.getComponent<cro::Drawable2D>().getLocalBounds();
-        bounds = mouseSlider.getComponent<cro::Transform>().getWorldTransform() * bounds;
+        m_sharedData.swingputThreshold = ConstVal::MinSwingputThresh + ((ConstVal::MaxSwingputThresh - ConstVal::MinSwingputThresh) * distance);
 
-        if (bounds.contains(mousePos))
-        {
-            mousePos.x = std::floor(mousePos.x);
-            mousePos.y = std::floor(mousePos.y);
-            mousePos.z = ToolTipDepth;
-
-            m_tooltips[ToolTipID::MouseSpeed].getComponent<cro::Transform>().setPosition(mousePos + (ToolTipOffset * m_viewScale.x));
-            m_tooltips[ToolTipID::MouseSpeed].getComponent<cro::Transform>().setScale(m_viewScale);
-
-            std::stringstream ss;
-            ss.precision(2);
-            ss << std::setw(2) << m_sharedData.mouseSpeed;
-            m_tooltips[ToolTipID::MouseSpeed].getComponent<cro::Text>().setString(ss.str());
-            
-            m_scene.getActiveCamera().getComponent<cro::Camera>().active = true;
-        }
-        else
-        {
-            m_tooltips[ToolTipID::MouseSpeed].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
-        }
+        std::stringstream ss;
+        ss.precision(2);
+        ss << "Swingput Threshold " << m_sharedData.swingputThreshold;
+        swingputText.getComponent<cro::Text>().setString(ss.str());
     };
-    mouseSlider.getComponent<cro::Transform>().addChild(tipEnt.getComponent<cro::Transform>());
+    swingputSlider.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+    {
+        const auto& [pos, width, _] = e.getComponent<cro::Callback>().getUserData<SliderData>();
+        float amount = (m_sharedData.swingputThreshold - ConstVal::MinSwingputThresh) / (ConstVal::MaxSwingputThresh - ConstVal::MinSwingputThresh);
+
+        e.getComponent<cro::Transform>().setPosition({ pos.x + (width * amount), pos.y });
+    };
+
+    //mouse speed slider
+    createSlider(glm::vec2(35.f, 77.f));
 
 
     auto createSquareHighlight = [&](glm::vec2 pos)
@@ -2516,15 +2520,56 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
         return ent;
     };
 
+    //swingput down
+    entity = createSquareHighlight(glm::vec2(17.f, 103.f));
+    entity.getComponent<cro::UIInput>().setSelectionIndex(14);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
+        [&, swingputText](cro::Entity e, cro::ButtonEvent evt) mutable
+        {
+            if (activated(evt))
+            {
+                std::stringstream ss;
+                ss.precision(2);
+                ss << "Swingput Threshold " << m_sharedData.swingputThreshold;
+                swingputText.getComponent<cro::Text>().setString(ss.str());
+
+                m_sharedData.swingputThreshold = std::max(ConstVal::MinSwingputThresh, m_sharedData.swingputThreshold - 0.6f);
+                m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+            }
+        });
+
+    //swingput up
+    entity = createSquareHighlight(glm::vec2(184.f, 103.f));
+    entity.getComponent<cro::UIInput>().setSelectionIndex(15);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
+        [&, swingputText](cro::Entity e, cro::ButtonEvent evt) mutable
+        {
+            if (activated(evt))
+            {
+                std::stringstream ss;
+                ss.precision(2);
+                ss << "Swingput Threshold " << m_sharedData.swingputThreshold;
+                swingputText.getComponent<cro::Text>().setString(ss.str());
+
+                m_sharedData.swingputThreshold = std::min(ConstVal::MaxSwingputThresh, m_sharedData.swingputThreshold + 0.6f);
+                m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
+            }
+        });
+
 
     //mouse speed down
     entity = createSquareHighlight(glm::vec2(17.f, 71.f));
     entity.getComponent<cro::UIInput>().setSelectionIndex(14);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
-        [&](cro::Entity e, cro::ButtonEvent evt) mutable
+        [&, mouseText](cro::Entity e, cro::ButtonEvent evt) mutable
         {
             if (activated(evt))
             {
+                std::stringstream st;
+                st.precision(2);
+                st << "Look Speed (Billiards) " << m_sharedData.mouseSpeed;
+                mouseText.getComponent<cro::Text>().setString(st.str());
+
                 m_sharedData.mouseSpeed = std::max(ConstVal::MinMouseSpeed, m_sharedData.mouseSpeed - 0.1f);
                 m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
             }
@@ -2534,10 +2579,15 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
     entity = createSquareHighlight(glm::vec2(184.f, 71.f));
     entity.getComponent<cro::UIInput>().setSelectionIndex(15);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
-        [&](cro::Entity e, cro::ButtonEvent evt) mutable
+        [&, mouseText](cro::Entity e, cro::ButtonEvent evt) mutable
         {
             if (activated(evt))
             {
+                std::stringstream st;
+                st.precision(2);
+                st << "Look Speed (Billiards) " << m_sharedData.mouseSpeed;
+                mouseText.getComponent<cro::Text>().setString(st.str());
+
                 m_sharedData.mouseSpeed = std::min(ConstVal::MaxMouseSpeed, m_sharedData.mouseSpeed + 0.1f);
                 m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
             }
