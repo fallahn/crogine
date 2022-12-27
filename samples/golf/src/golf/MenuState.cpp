@@ -1073,25 +1073,39 @@ void MenuState::createScene()
 
         if (entity.hasComponent<cro::BillboardCollection>())
         {
-            std::array minBounds = { 30.f, 0.f };
-            std::array maxBounds = { 80.f, 10.f };
+            std::vector<std::array<float, 2u>> bounds =
+            {
+                { 30.f, 0.f },
+                { 80.f, 10.f },
+
+                { 14.f, -23.f },
+                { 62.f, -13.f },
+
+                { -40.f, 0.f },
+                { -30.f, 40.f },
+            };
 
             auto& collection = entity.getComponent<cro::BillboardCollection>();
 
-            auto trees = pd::PoissonDiskSampling(2.8f, minBounds, maxBounds);
-            for (auto [x, y] : trees)
+            for (auto i = 0u; i < bounds.size(); i += 2)
             {
-                float scale = static_cast<float>(cro::Util::Random::value(12, 22)) / 10.f;
+                const auto& minBounds = bounds[i];
+                const auto& maxBounds = bounds[i + 1];
+                auto trees = pd::PoissonDiskSampling(2.8f, minBounds, maxBounds);
+                for (auto [x, y] : trees)
+                {
+                    float scale = static_cast<float>(cro::Util::Random::value(12, 22)) / 10.f;
 
-                auto bb = m_billboardTemplates[cro::Util::Random::value(BillboardID::Tree01, BillboardID::Tree04)];
-                bb.position = { x, 0.f, -y };
-                bb.size *= scale;
-                collection.addBillboard(bb);
+                    auto bb = m_billboardTemplates[cro::Util::Random::value(BillboardID::Tree01, BillboardID::Tree04)];
+                    bb.position = { x, 0.f, -y };
+                    bb.size *= scale;
+                    collection.addBillboard(bb);
+                }
             }
 
             //repeat for grass
-            minBounds = { 10.5f, 12.f };
-            maxBounds = { 26.f, 30.f };
+            const std::array minBounds = { 10.5f, 12.f };
+            const std::array maxBounds = { 26.f, 30.f };
 
             auto grass = pd::PoissonDiskSampling(1.f, minBounds, maxBounds);
             for (auto [x, y] : grass)
