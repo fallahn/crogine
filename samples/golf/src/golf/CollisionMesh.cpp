@@ -28,6 +28,7 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include "CollisionMesh.hpp"
+#include "RayResultCallback.hpp"
 
 #include <crogine/detail/glm/mat4x4.hpp>
 
@@ -69,6 +70,9 @@ void CollisionMesh::updateCollisionMesh(const cro::Mesh::Data& meshData)
 
     //we have to create a specific object for each sub mesh
     //to be able to tag it with a different terrain...
+
+    //TODO this is basically the same as the BallSystem - so we probably ought
+    //to make this class a member of BallSystem
     for (auto i = 0u; i < m_indexData.size(); ++i)
     {
         btIndexedMesh groundMesh;
@@ -80,19 +84,11 @@ void CollisionMesh::updateCollisionMesh(const cro::Mesh::Data& meshData)
         groundMesh.m_triangleIndexBase = reinterpret_cast<std::uint8_t*>(m_indexData[i].data());
         groundMesh.m_triangleIndexStride = 3 * sizeof(std::uint32_t);
 
-        
-        float terrain = std::min(1.f, std::max(0.f, m_vertexData[(m_indexData[i][0] * (meshData.vertexSize / sizeof(float))) + colourOffset])) * 255.f;
-        terrain = std::floor(terrain / 10.f);
-        if (terrain >= TerrainID::Hole)
-        {
-            terrain = TerrainID::Scrub;
-        }
-
         m_groundVertices.emplace_back(std::make_unique<btTriangleIndexVertexArray>())->addIndexedMesh(groundMesh);
         m_groundShapes.emplace_back(std::make_unique<btBvhTriangleMeshShape>(m_groundVertices.back().get(), false));
         m_groundObjects.emplace_back(std::make_unique<btPairCachingGhostObject>())->setCollisionShape(m_groundShapes.back().get());
-        m_groundObjects.back()->setUserIndex(static_cast<std::int32_t>(terrain)); // set the terrain type
-        m_collisionWorld->addCollisionObject(m_groundObjects.back().get());
+        m_groundObjects.back()->setUserIndex(colourOffset); //used by RayResultCallback to read the terrain type
+        m_collisionWorld->addCollisionObject(m_groundObjects.back().get(), CollisionGroup::Terrain, CollisionGroup::Ball);
     }
 
 #ifdef CRO_DEBUG_
@@ -111,13 +107,18 @@ TerrainResult CollisionMesh::getTerrain(glm::vec3 position) const
 
     TerrainResult retVal;
 
-    btCollisionWorld::ClosestRayResultCallback res(worldPos, worldPos + RayLength);
+    //btCollisionWorld::ClosestRayResultCallback res(worldPos, worldPos + RayLength);
+    //m_collisionWorld->rayTest(worldPos, worldPos + RayLength, res);
+
+    //TODO this might not stictly be necessary for client collision
+    //but we might want to share this class with the ball system eventually
+    RayResultCallback res(worldPos, worldPos + RayLength);
     m_collisionWorld->rayTest(worldPos, worldPos + RayLength, res);
 
     if (res.hasHit())
     {
         retVal.height = res.m_hitPointWorld.y();
-        retVal.terrain = res.m_collisionObject->getUserIndex(); //contains the terrain
+        retVal.terrain = (res.m_collisionType >> 24);
         retVal.normal = { res.m_hitNormalWorld.getX(), res.m_hitNormalWorld.getY(), res.m_hitNormalWorld.getZ() };
         retVal.wasRayHit = true;
     }

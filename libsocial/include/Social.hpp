@@ -42,6 +42,7 @@ source distribution.
 //(skybox format changed 150 -> 160)
 //(hole count became game rule 170 -> 180)
 //(connection method changed 190 -> 1100)
+//terrain collision is now per face in 1110
 static constexpr std::uint16_t CURRENT_VER = 1110;
 static const std::string StringVer("1.11.0");
 

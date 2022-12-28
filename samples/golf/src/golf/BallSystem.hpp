@@ -31,11 +31,11 @@ source distribution.
 
 #include "Terrain.hpp"
 #include "DebugDraw.hpp"
+#include "RayResultCallback.hpp"
 
 #include <crogine/ecs/System.hpp>
 #include <crogine/core/Clock.hpp>
 
-#include <btBulletCollisionCommon.h>
 #include <BulletCollision/CollisionDispatch/btGhostObject.h>
 
 #include <memory>
@@ -45,15 +45,6 @@ namespace cro
 {
     class Image;
 }
-
-struct RayResultCallback final : public btCollisionWorld::ClosestRayResultCallback
-{
-    RayResultCallback(const btVector3& rayFromWorld, const btVector3& rayToWorld);
-    btScalar addSingleResult(btCollisionWorld::LocalRayResult& rayResult, bool normalInWorldSpace) override;
-
-private:
-    btVector3 getFaceNormal(const btCollisionWorld::LocalRayResult& rayResult) const;
-};
 
 struct Ball final
 {

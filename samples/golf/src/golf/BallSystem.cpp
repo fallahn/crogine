@@ -82,15 +82,6 @@ namespace
         0.f, 0.65f * 0.65f, 1.f
     };
 
-    struct CollisionGroup final
-    {
-        enum
-        {
-            Ball = 1,
-            Terrain = 2
-        };
-    };
-
     struct SlopeData final
     {
         glm::vec3 direction = glm::vec3(0.f);
@@ -214,11 +205,11 @@ BallSystem::TerrainResult BallSystem::getTerrain(glm::vec3 pos) const
     auto rayEnd = rayStart + RayLength;
 
     RayResultCallback res(rayStart, rayEnd);
-    //btCollisionWorld::ClosestRayResultCallback res(rayStart, rayEnd);
+
     m_collisionWorld->rayTest(rayStart, rayEnd, res);
     if (res.hasHit())
     {
-        retVal.terrain = static_cast<std::uint8_t>(res.m_collisionObject->getUserIndex());
+        retVal.terrain = (res.m_collisionType >> 24);
         retVal.normal = { res.m_hitNormalWorld.x(), res.m_hitNormalWorld.y(), res.m_hitNormalWorld.z() };
         retVal.intersection = { res.m_hitPointWorld.x(), res.m_hitPointWorld.y(), res.m_hitPointWorld.z() };
         retVal.penetration = res.m_hitPointWorld.y() - pos.y;
@@ -985,6 +976,8 @@ bool BallSystem::updateCollisionMesh(const std::string& modelPath)
 
     //we have to create a specific object for each sub mesh
     //to be able to tag it with a different terrain...
+
+    //Later note: now we have per-traingle terrain detection this probably isn't true now.
     for (auto i = 0u; i < m_indexData.size(); ++i)
     {
         btIndexedMesh groundMesh;
@@ -997,90 +990,15 @@ bool BallSystem::updateCollisionMesh(const std::string& modelPath)
         groundMesh.m_triangleIndexStride = 3 * sizeof(std::uint32_t);
 
 
-        float terrain = std::min(1.f, std::max(0.f, m_vertexData[(m_indexData[i][0] * (meshData.vertexSize / sizeof(float))) + colourOffset])) * 255.f;
-        terrain = std::floor(terrain / 10.f);
-
-        if (terrain >= TerrainID::Hole)
-        {
-            terrain = TerrainID::Scrub;
-        }
-
         m_groundVertices.emplace_back(std::make_unique<btTriangleIndexVertexArray>())->addIndexedMesh(groundMesh);
         m_groundShapes.emplace_back(std::make_unique<btBvhTriangleMeshShape>(m_groundVertices.back().get(), false));
         m_groundObjects.emplace_back(std::make_unique<btPairCachingGhostObject>())->setCollisionShape(m_groundShapes.back().get());
-        m_groundObjects.back()->setUserIndex(static_cast<std::int32_t>(terrain)); // set the terrain type
+        m_groundObjects.back()->setUserIndex(colourOffset); //use to read the terrain type in RayResult
         m_collisionWorld->addCollisionObject(m_groundObjects.back().get(), CollisionGroup::Terrain, CollisionGroup::Ball);
     }
 
 
     m_puttFromTee = getTerrain(m_holeData->tee).terrain == TerrainID::Green;
 
-
     return true;
-}
-
-
-//custom callback to return proper face normal (I wish we could cache these...)
-RayResultCallback::RayResultCallback(const btVector3& rayFromWorld, const btVector3& rayToWorld)
-    : ClosestRayResultCallback(rayFromWorld, rayToWorld)
-{
-}
-
-btScalar RayResultCallback::addSingleResult(btCollisionWorld::LocalRayResult& rayResult, bool normalInWorldSpace)
-{
-    //caller already does the filter on the m_closestHitFraction
-    btAssert(rayResult.m_hitFraction <= m_closestHitFraction);
-
-    m_closestHitFraction = rayResult.m_hitFraction;
-    m_collisionObject = rayResult.m_collisionObject;
-    if (rayResult.m_collisionObject->getCollisionFlags() == CollisionGroup::Ball)
-    {
-        m_hitNormalWorld = getFaceNormal(rayResult);
-        m_hitPointWorld.setInterpolate3(m_rayFromWorld, m_rayToWorld, rayResult.m_hitFraction);
-    }
-    else
-    {
-        rayResult.m_collisionObject = nullptr; //remove the ball objects then hasHit() returns false
-    }
-    return rayResult.m_hitFraction;
-}
-
-btVector3 RayResultCallback::getFaceNormal(const btCollisionWorld::LocalRayResult& rayResult) const
-{
-    /*
-    Respect to https://pybullet.org/Bullet/phpBB3/viewtopic.php?t=12826
-    */
-
-    const unsigned char* vertices = nullptr;
-    int numVertices = 0;
-    int vertexStride = 0;
-    PHY_ScalarType verticesType;
-
-    const unsigned char* indices = nullptr;
-    int indicesStride = 0;
-    int numFaces = 0;
-    PHY_ScalarType indicesType;
-
-    auto vertex = [&](int vertexIndex)
-    {
-        const auto* data = reinterpret_cast<const btScalar*>(vertices + vertexIndex * vertexStride);
-        return btVector3(*data, *(data + 1), *(data + 2));
-    };
-
-    const auto* triangleShape = static_cast<const btBvhTriangleMeshShape*>(rayResult.m_collisionObject->getCollisionShape());
-    const auto* triangleMesh = static_cast<const btTriangleIndexVertexArray*>(triangleShape->getMeshInterface());
-
-    triangleMesh->getLockedReadOnlyVertexIndexBase(
-        &vertices, numVertices, verticesType, vertexStride, &indices, indicesStride, numFaces, indicesType, rayResult.m_localShapeInfo->m_shapePart
-    );
-
-    const auto* index = reinterpret_cast<const int*>(indices + rayResult.m_localShapeInfo->m_triangleIndex * indicesStride);
-    btVector3 va = vertex(*index);
-    btVector3 vb = vertex(*(index + 1));
-    btVector3 vc = vertex(*(index + 2));
-    btVector3 normal = (vb - va).cross(vc - va).normalized();
-
-    triangleMesh->unLockReadOnlyVertexBase(rayResult.m_localShapeInfo->m_shapePart);
-
-    return normal;
 }
