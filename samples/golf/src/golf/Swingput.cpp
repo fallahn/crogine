@@ -132,14 +132,16 @@ bool Swingput::handleEvent(const cro::Event& evt)
         if (evt.button.button == SDL_BUTTON_RIGHT)
         {
             startStroke(MaxMouseVelocity);
+            return true;
         }
-        return true;
+        return false;
     case SDL_MOUSEBUTTONUP:
         if (evt.button.button == SDL_BUTTON_RIGHT)
         {
             endStroke();
+            return true;
         }
-        return true;
+        return false;
     case SDL_MOUSEMOTION:
         //TODO we need to scale this down relative to the game buffer size
         switch (m_state)
@@ -179,7 +181,8 @@ bool Swingput::handleEvent(const cro::Event& evt)
                 {
                     m_lastRT = evt.caxis.value;
                 }
-                return true;
+
+                return (evt.caxis.value > MinTriggerMove);
             case SDL_CONTROLLER_AXIS_LEFTY:
             case SDL_CONTROLLER_AXIS_RIGHTY:
 
@@ -188,9 +191,10 @@ bool Swingput::handleEvent(const cro::Event& evt)
                     if (m_state == State::Swing)
                     {
                         m_activePoint.y = std::pow((static_cast<float>(-evt.caxis.value) / ControllerAxisRange), 7.f) * (MaxSwingputDistance / 2.f);
+                        return true;
                     }
                 }
-                return true;
+                return false;
             case SDL_CONTROLLER_AXIS_LEFTX:
             case SDL_CONTROLLER_AXIS_RIGHTX:
                 //just set this and we'll have
@@ -201,8 +205,9 @@ bool Swingput::handleEvent(const cro::Event& evt)
                     && m_state == State::Swing)
                 {
                     m_activePoint.x = (static_cast<float>(evt.caxis.value) / ControllerAxisRange) * MaxAccuracy;
+                    return true;
                 }
-                return true;
+                return false;
             }
         }
         return isActive();
