@@ -499,9 +499,27 @@ void App::saveScreenshot()
     std::replace(filename.begin(), filename.end(), '/', '_');
     std::replace(filename.begin(), filename.end(), ':', '_');
 
+    auto outPath = getPreferencePath()+ "screenshots/";
+    std::replace(outPath.begin(), outPath.end(), '\\', '/');
+
+    if (!FileSystem::directoryExists(outPath))
+    {
+        FileSystem::createDirectory(outPath);
+    }
+
+    filename = outPath + filename;
+
     RaiiRWops out;
     out.file = SDL_RWFromFile(filename.c_str(), "w");
-    stbi_write_png_to_func(image_write_func, out.file, size.x, size.y, 4, buffer.data(), size.x * 4);
+    if (out.file)
+    {
+        stbi_write_png_to_func(image_write_func, out.file, size.x, size.y, 4, buffer.data(), size.x * 4);
+        LogI << "Saved " << filename << std::endl;
+    }
+    else
+    {
+        LogE << SDL_GetError() << std::endl;
+    }
 }
 
 //protected

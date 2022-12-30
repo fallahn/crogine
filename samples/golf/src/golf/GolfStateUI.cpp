@@ -1018,21 +1018,24 @@ void GolfState::showCountdown(std::uint8_t seconds)
     {
         if (m_statBoardScores[0].client == m_sharedData.clientConnection.connectionID)
         {
-            //remember this is auto-disabled if the player is not the only one on the client
-            Achievements::awardAchievement(AchievementStrings[AchievementID::LeaderOfThePack]);
-
-            switch (m_sharedData.scoreType)
+            if (!m_sharedData.localConnectionData.playerData[m_statBoardScores[0].player].isCPU)
             {
-            default:
-            case ScoreType::Stroke:
-                Achievements::awardAchievement(AchievementStrings[AchievementID::StrokeOfGenius]);
-                break;
-            case ScoreType::Match:
-                Achievements::awardAchievement(AchievementStrings[AchievementID::NoMatch]);
-                break;
-            case ScoreType::Skins:
-                Achievements::awardAchievement(AchievementStrings[AchievementID::SkinOfYourTeeth]);
-                break;
+                //remember this is auto-disabled if the player is not the only one on the client
+                Achievements::awardAchievement(AchievementStrings[AchievementID::LeaderOfThePack]);
+
+                switch (m_sharedData.scoreType)
+                {
+                default:
+                case ScoreType::Stroke:
+                    Achievements::awardAchievement(AchievementStrings[AchievementID::StrokeOfGenius]);
+                    break;
+                case ScoreType::Match:
+                    Achievements::awardAchievement(AchievementStrings[AchievementID::NoMatch]);
+                    break;
+                case ScoreType::Skins:
+                    Achievements::awardAchievement(AchievementStrings[AchievementID::SkinOfYourTeeth]);
+                    break;
+                }
             }
 
             //message for audio director
