@@ -218,8 +218,22 @@ private:
     void buildScene();
     void initAudio(bool loadTrees);
 
+    struct SkyData final
+    {
+        static constexpr float MinAngle = 45.f;
+        static constexpr float MaxAngle = 135.f;
+        float tod = 0.f;
+
+        cro::Entity sunModel;
+        cro::Entity sunRoot;
+        cro::Image sunPalette;
+        cro::Image lightPalette;
+
+        cro::Scene::SkyColours skyColours;
+    }m_skyData;
     void createWeather(); //weather.cpp
     void createClouds(const std::string&);
+    void createSun();
     void buildBow();
     void spawnBall(const struct ActorInfo&);
 
@@ -425,6 +439,8 @@ private:
     void updateBallDebug(glm::vec3);
     void endBallDebug();
 #endif
+    void registerDebugWindows();
+
     struct Benchmark final
     {
         float minRate = std::numeric_limits<float>::max();

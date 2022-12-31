@@ -241,6 +241,7 @@ static const std::string CelVertexShader = R"(
 
 static const std::string CelFragmentShader = R"(
     uniform vec3 u_lightDirection;
+    uniform vec4 u_lightColour;
 
 #include SCALE_BUFFER
 
@@ -621,7 +622,7 @@ static const std::string CelFragmentShader = R"(
 
 //if(v_worldPosition.y < WaterLevel) discard;//don't do this, it reveals the hidden trees.
 #endif
-
+//FRAG_OUT.rgb *= u_lightColour.rgb;
 //#if defined(COMP_SHADE) || defined(CONTOUR)
 #if defined(BUNS)
         float rim = 1.0 - dot(normal, viewDirection);

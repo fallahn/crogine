@@ -41,6 +41,7 @@ source distribution.
 #include <crogine/ecs/components/Callback.hpp>
 
 #include <crogine/graphics/DynamicMeshBuilder.hpp>
+#include <crogine/graphics/CircleMeshBuilder.hpp>
 #include <crogine/graphics/SpriteSheet.hpp>
 
 #include <crogine/util/Random.hpp>
@@ -311,6 +312,34 @@ void GolfState::createClouds(const std::string& cloudPath)
             m_uiScene.destroyEntity(e);
         };
     }
+
+    //createSun();
+}
+
+void GolfState::createSun()
+{
+    //TODO replace this with a custom mesh which doesn't have unused vertex attributes
+    auto shaderID = m_resources.shaders.loadBuiltIn(cro::ShaderResource::Unlit, cro::ShaderResource::BuiltInFlags::DiffuseColour);
+    auto materialID = m_resources.materials.add(m_resources.shaders.get(shaderID));
+    auto material = m_resources.materials.get(materialID);
+
+    auto meshID = m_resources.meshes.loadMesh(cro::CircleMeshBuilder(0.8f, 24));
+
+    auto entity = m_skyScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 11.f });
+    entity.getComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, cro::Util::Const::PI);
+    entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), material);
+    m_skyData.sunModel = entity;
+
+    entity = m_skyScene.createEntity();
+    entity.addComponent<cro::Transform>().addChild(m_skyData.sunModel.getComponent<cro::Transform>());
+
+    m_skyData.sunRoot = entity;
+
+
+    m_skyData.sunPalette.loadFromFile("assets/golf/images/sun_grad.png");
+    m_skyData.lightPalette.loadFromFile("assets/golf/images/sky_grad.png");
+    m_skyData.skyColours = m_skyScene.getSkyboxColours();
 }
 
 void GolfState::buildBow()

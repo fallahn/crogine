@@ -136,10 +136,7 @@ namespace
     std::size_t bitrateCounter = 0;
     glm::vec4 topSky;
     glm::vec4 bottomSky;
-    std::array<std::vector<float>, 3u> ballDump;
 
-    //cro::Entity CPUTarget;
-    //cro::Entity PredictedTarget;
 
     float godmode = 1.f;
     bool allowAchievements = false;
@@ -176,6 +173,7 @@ namespace
 
     constexpr float MaxRotation = 0.13f;
     constexpr float MaxPuttRotation = 0.24f;
+
 }
 
 GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, SharedStateData& sd)
@@ -289,104 +287,8 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
 #ifdef CRO_DEBUG_
     ballEntity = {};
 
-    ballDump[0].push_back(1.f);
-    ballDump[1].push_back(1.f);
-    ballDump[2].push_back(1.f);
+    registerDebugWindows();
 
-    //registerWindow([&]() 
-    //    {
-    //        if (ImGui::Begin("Shader"))
-    //        {
-    //            static float power = 65.f;
-    //            if (ImGui::SliderFloat("Power", &power, 65.f, 350.f))
-    //            {
-    //                auto& shader = m_resources.shaders.get(ShaderID::Course);
-    //                glUseProgram(shader.getGLHandle());
-    //                glUniform1f(shader.getUniformID("u_rim"), power);
-    //            }
-
-    //            static float step = 0.8f;
-    //            if (ImGui::SliderFloat("Step", &step, 0.8f, 0.999f))
-    //            {
-    //                auto& shader = m_resources.shaders.get(ShaderID::Course);
-    //                glUseProgram(shader.getGLHandle());
-    //                glUniform1f(shader.getUniformID("u_step"), step);
-    //            }
-
-    //            static float mm = 0.1f;
-    //            if (ImGui::SliderFloat("MM", &mm, 0.1f, 1.2f))
-    //            {
-    //                auto& shader = m_resources.shaders.get(ShaderID::Course);
-    //                glUseProgram(shader.getGLHandle());
-    //                glUniform1f(shader.getUniformID("u_mm"), mm);
-    //            }
-    //        }
-    //        ImGui::End();        
-    //    });
-
-    registerWindow([&]()
-        {
-            if (ImGui::Begin("Depthmap"))
-            {
-                for (auto y = 4; y >= 0; --y)
-                {
-                    for (auto x = 0; x < 8; ++x)
-                    {
-                        auto idx = y * 8 + x;
-                        ImGui::Image(m_depthMap.getTextureAt(idx), { 80.f, 80.f }, { 0.f, 1.f }, { 1.f, 0.f });
-                        ImGui::SameLine();
-                    }
-                    ImGui::NewLine();
-                }
-            }
-            ImGui::End();
-        }, true);
-
-    //registerWindow([&]()
-    //    {
-    //        if (ImGui::Begin("Network"))
-    //        {
-    //            auto size = m_greenBuffer.getSize();
-    //            ImGui::Text("Buffer Size %u, %u", size.x, size.y);
-
-    //            ImGui::Text("Connection Bitrate: %3.3fkbps", static_cast<float>(bitrate) / 1024.f);
-
-    //            auto terrain = m_collisionMesh.getTerrain(m_freeCam.getComponent<cro::Transform>().getPosition());
-    //            ImGui::Text("Terrain %s", TerrainStrings[terrain.terrain].c_str());
-    //        }
-    //        ImGui::End();
-    //    }, true);
-
-    /*registerWindow([&]()
-        {
-            if (ImGui::Begin("buns"))
-            {
-                ImGui::PlotLines("X Pos", ballDump[0].data(), ballDump[0].size(), 0, nullptr, 3.4028235e38f, 3.4028235e38f, ImVec2(0, 80.f));
-                ImGui::PlotLines("Y Pos", ballDump[1].data(), ballDump[1].size(), 0, nullptr, 3.4028235e38f, 3.4028235e38f, ImVec2(0, 80.f));
-                ImGui::PlotLines("Z Pos", ballDump[2].data(), ballDump[2].size(), 0, nullptr, 3.4028235e38f, 3.4028235e38f, ImVec2(0, 80.f));
-                float maxDist = m_cameras[m_currentCamera].getComponent<cro::Camera>().getMaxShadowDistance();
-                if (ImGui::SliderFloat("MaxDist", &maxDist, 1.f, 200.f))
-                {
-                    m_cameras[m_currentCamera].getComponent<cro::Camera>().setMaxShadowDistance(maxDist);
-                }
-
-                float extension = m_cameras[m_currentCamera].getComponent<cro::Camera>().getShadowExpansion();
-                if (ImGui::SliderFloat("expansion", &extension, 0.f, 40.f))
-                {
-                    m_cameras[m_currentCamera].getComponent<cro::Camera>().setShadowExpansion(extension);
-                }
-
-                auto cCount = m_gameScene.getActiveCamera().getComponent<cro::Camera>().getCascadeCount();
-                ImGui::Text("Cascade Count %lu", cCount);
-                ImGui::Image(m_gameScene.getActiveCamera().getComponent<cro::Camera>().shadowMapBuffer.getTexture(0), { 128.f, 128.f }, { 0.f, 1.f }, { 1.f, 0.f });
-                for (auto i = 1u; i < cCount; ++i)
-                {
-                    ImGui::SameLine();
-                    ImGui::Image(m_gameScene.getActiveCamera().getComponent<cro::Camera>().shadowMapBuffer.getTexture(i), { 128.f, 128.f }, { 0.f, 1.f }, { 1.f, 0.f });
-                }
-            }
-            ImGui::End();
-        });*/
 #endif
     cro::App::getInstance().resetFrameTime();
 }
@@ -540,11 +442,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
         }
             break;
         case SDLK_KP_MULTIPLY:
-            for (auto& d : ballDump)
-            {
-                d.clear();
-            }
-            m_activeAvatar->ballModel.getComponent<InterpolationComponent<InterpolationType::Linear>>().dumpPositions(ballDump);
+
             break;
         case SDLK_PAGEUP:
         {

@@ -174,6 +174,8 @@ Scene::Scene(MessageBus& mb, std::size_t initialPoolSize, std::uint32_t infoFlag
 
     using namespace std::placeholders;
     currentRenderPath = std::bind(&Scene::defaultRenderPath, this, _1, _2, _3);
+
+    std::fill(m_skyColourUniforms.begin(), m_skyColourUniforms.end(), -1);
 }
 
 Scene::~Scene()
@@ -340,6 +342,10 @@ void Scene::enableSkybox()
             setSkyboxColours(cro::Colour::Blue, cro::Colour::Green, cro::Colour::Red);
 
             m_shaderIndex = SkyboxType::Coloured;
+
+            m_skyColourUniforms[0] = m_skyboxShaders[SkyboxType::Coloured].getUniformID("u_darkColour");
+            m_skyColourUniforms[1] = m_skyboxShaders[SkyboxType::Coloured].getUniformID("u_midColour");
+            m_skyColourUniforms[2] = m_skyboxShaders[SkyboxType::Coloured].getUniformID("u_lightColour");
         }
         else
         {
@@ -483,19 +489,18 @@ CubemapID Scene::getCubemap() const
     return CubemapID(m_activeSkyboxTexture);
 }
 
-void Scene::setSkyboxColours(cro::Colour dark, cro::Colour mid, cro::Colour light)
+void Scene::setSkyboxColours(Colour dark, Colour mid, Colour light)
 {
-    if (m_skyboxShaders[SkyboxType::Coloured].getGLHandle())
-    {
-        glCheck(glUseProgram(m_skyboxShaders[SkyboxType::Coloured].getGLHandle()));
-        glCheck(glUniform3f(m_skyboxShaders[SkyboxType::Coloured].getUniformMap().at("u_darkColour"), dark.getRed(), dark.getGreen(), dark.getBlue()));
-        glCheck(glUniform3f(m_skyboxShaders[SkyboxType::Coloured].getUniformMap().at("u_midColour"), mid.getRed(), mid.getGreen(), mid.getBlue()));
-        glCheck(glUniform3f(m_skyboxShaders[SkyboxType::Coloured].getUniformMap().at("u_lightColour"), light.getRed(), light.getGreen(), light.getBlue()));
-        glCheck(glUseProgram(0));
-    }
     m_skybox.colours.bottom = dark;
     m_skybox.colours.middle = mid;
     m_skybox.colours.top = light;
+    applySkyboxColours();
+}
+
+void Scene::setSkyboxColours(SkyColours colours)
+{
+    m_skybox.colours = colours;
+    applySkyboxColours();
 }
 
 Entity Scene::getDefaultCamera() const
@@ -620,6 +625,20 @@ void Scene::setSkyboxOrientation(glm::quat q)
 }
 
 //private
+void Scene::applySkyboxColours()
+{
+    const auto& [dark, mid, light] = m_skybox.colours;
+
+    if (m_skyboxShaders[SkyboxType::Coloured].getGLHandle())
+    {
+        glCheck(glUseProgram(m_skyboxShaders[SkyboxType::Coloured].getGLHandle()));
+        glCheck(glUniform3f(m_skyColourUniforms[0], dark.getRed(), dark.getGreen(), dark.getBlue()));
+        glCheck(glUniform3f(m_skyColourUniforms[1], mid.getRed(), mid.getGreen(), mid.getBlue()));
+        glCheck(glUniform3f(m_skyColourUniforms[2], light.getRed(), light.getGreen(), light.getBlue()));
+        glCheck(glUseProgram(0));
+    }
+}
+
 void Scene::defaultRenderPath(const RenderTarget& rt, const Entity* cameraList, std::size_t cameraCount)
 {
     CRO_ASSERT(cameraList, "Must not be nullptr");
