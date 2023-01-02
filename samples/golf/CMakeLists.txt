@@ -21,7 +21,11 @@ if(NOT CMAKE_BUILD_TYPE)
   SET(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build (Debug or Release)" FORCE)
 endif()
 
+if(APPLE)
 SET(USE_RSS False CACHE STRING "Set to true to attempt to parse RSS newsfeed from itchio. Requires libcurl")
+else()
+SET(USE_RSS True CACHE STRING "Set to true to attempt to parse RSS newsfeed from itchio. Requires libcurl")
+endif()
 
 SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/../cmake/modules/")
 SET (PROJECT_STATIC_RUNTIME FALSE)
