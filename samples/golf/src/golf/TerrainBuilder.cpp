@@ -939,7 +939,7 @@ void TerrainBuilder::threadFunc()
                         float height2 = readHeightMap(static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(y));
                         height = std::max(height + TerrainLevel, height2);
 
-                        if (height > -(TerrainLevel - WaterLevel))
+                        if (height > /*-(TerrainLevel - WaterLevel)*/0)
                         {
                             glm::vec3 position(x, height - 0.001f, -y);
 
