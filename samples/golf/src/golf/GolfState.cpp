@@ -54,6 +54,7 @@ source distribution.
 #include "PropFollowSystem.hpp"
 #include "SpectatorAnimCallback.hpp"
 #include "MiniBallSystem.hpp"
+#include "CallbackData.hpp"
 
 #include <Achievements.hpp>
 #include <AchievementStrings.hpp>
@@ -163,17 +164,8 @@ namespace
 
     const cro::Time ReadyPingFreq = cro::seconds(1.f);
 
-    //use to move the flag as the player approaches
-    struct FlagCallbackData final
-    {
-        static constexpr float MaxHeight = 1.f;
-        float targetHeight = 0.f;
-        float currentHeight = 0.f;
-    };
-
     constexpr float MaxRotation = 0.13f;
     constexpr float MaxPuttRotation = 0.24f;
-
 }
 
 GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, SharedStateData& sd)
@@ -3598,7 +3590,7 @@ void GolfState::buildScene()
     camEnt.getComponent<CameraFollower>().zoom.speed = 3.f;
     camEnt.getComponent<CameraFollower>().targetOffset = { 0.f,0.65f,0.f };
     camEnt.addComponent<cro::AudioListener>();
-    camEnt.addComponent<cro::Callback>(); //not used unless the drone chases it end of round (see showCountdown())
+
     //this holds the water plane ent when active
     camEnt.addComponent<TargetInfo>();
     setPerspective(camEnt.getComponent<cro::Camera>());
@@ -3746,12 +3738,6 @@ void GolfState::buildScene()
             entity.getComponent<cro::AudioEmitter>().play();
         }
 
-        struct DroneCallbackData final
-        {
-            float rotation = 0.f;
-            float acceleration = 0.f;
-        };
-
         entity.addComponent<cro::Callback>().active = true;
         entity.getComponent<cro::Callback>().setUserData<DroneCallbackData>();
         entity.getComponent<cro::Callback>().function =
@@ -3765,13 +3751,13 @@ void GolfState::buildScene()
             float rotation = std::atan2(dir.y, dir.x) + (cro::Util::Const::PI / 2.f);
 
 
-            auto& [currRotation, acceleration] = e.getComponent<cro::Callback>().getUserData<DroneCallbackData>();
+            auto& [currRotation, acceleration, target] = e.getComponent<cro::Callback>().getUserData<DroneCallbackData>();
 
             //move towards skycam
             static constexpr float MoveSpeed = 20.f;
             static constexpr float MinRadius = MoveSpeed * MoveSpeed;
 
-            auto movement = m_cameras[CameraID::Sky].getComponent<cro::Transform>().getPosition() - oldPos;
+            auto movement = target.getComponent<cro::Transform>().getPosition() - oldPos;
             if (auto len2 = glm::length2(movement); len2 > MinRadius)
             {
                 movement /= std::sqrt(len2);
@@ -3790,6 +3776,8 @@ void GolfState::buildScene()
             e.getComponent<cro::Transform>().move(movement * dt);
             e.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, currRotation);
 
+            m_cameras[CameraID::Sky].getComponent<cro::Transform>().setPosition(e.getComponent<cro::Transform>().getPosition());
+
             //update emitter based on velocity
             auto velocity = oldPos - e.getComponent<cro::Transform>().getPosition();
             e.getComponent<cro::AudioEmitter>().setVelocity(velocity * 60.f);
@@ -3804,6 +3792,12 @@ void GolfState::buildScene()
         };
 
         m_drone = entity;
+
+        //make sure this is acutally valid...
+        auto targetEnt = m_gameScene.createEntity();
+        targetEnt.addComponent<cro::Transform>();
+        targetEnt.addComponent<cro::Callback>(); //used to make the drone orbit the flag (see showCountdown())
+        m_drone.getComponent<cro::Callback>().getUserData<DroneCallbackData>().target = targetEnt;
     }
 
 
@@ -5634,12 +5628,27 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
             dir.y = std::min(dir.y, SkyCamHeight);
         }
 
-        m_cameras[CameraID::Sky].getComponent<cro::Transform>().setPosition(dir);
+        if (m_drone.isValid())
+        {
+            m_drone.getComponent<cro::Callback>().getUserData<DroneCallbackData>().target.getComponent<cro::Transform>().setPosition(dir);
+        }
+        else
+        {
+            m_cameras[CameraID::Sky].getComponent<cro::Transform>().setPosition(dir);
+        }
     }
     else
     {
         auto pos = m_holeData[m_currentHole].puttFromTee ? glm::vec3(0.f, 16.f, 0.f) : DefaultSkycamPosition;
-        m_cameras[CameraID::Sky].getComponent<cro::Transform>().setPosition(pos);
+
+        if (m_drone.isValid())
+        {
+            m_drone.getComponent<cro::Callback>().getUserData<DroneCallbackData>().target.getComponent<cro::Transform>().setPosition(pos);
+        }
+        else
+        {
+            m_cameras[CameraID::Sky].getComponent<cro::Transform>().setPosition(pos);
+        }
     }
 
     if (!m_holeData[m_currentHole].puttFromTee)

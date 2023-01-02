@@ -540,6 +540,7 @@
     <ClInclude Include="src\golf\BilliardsState.hpp" />
     <ClInclude Include="src\golf\BilliardsSystem.hpp" />
     <ClInclude Include="src\golf\BilliardsInput.hpp" />
+    <ClInclude Include="src\golf\CallbackData.hpp" />
     <ClInclude Include="src\golf\CameraFollowSystem.hpp" />
     <ClInclude Include="src\golf\CircularBuffer.hpp" />
     <ClInclude Include="src\golf\ClientCollisionSystem.hpp" />

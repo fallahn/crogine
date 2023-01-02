@@ -42,6 +42,7 @@ source distribution.
 #include "FloatingTextSystem.hpp"
 #include "PacketIDs.hpp"
 #include "MiniBallSystem.hpp"
+#include "CallbackData.hpp"
 #include "../ErrorCheck.hpp"
 
 #include <Achievements.hpp>
@@ -1216,13 +1217,15 @@ void GolfState::showCountdown(std::uint8_t seconds)
     }
 
 
-    if (cro::Util::Random::value(0, 2) == 0)
+    if (m_drone.isValid() &&
+        cro::Util::Random::value(0, 2) == 0)
     {
         float radius = glm::length(m_holeData[m_currentHole].pin - m_cameras[CameraID::Player].getComponent<cro::Transform>().getWorldPosition()) * 0.85f;
+        auto targetEnt = m_drone.getComponent<cro::Callback>().getUserData<DroneCallbackData>().target;
 
         //add a callback that makes the camera orbit the flag - and hence the drone follows
-        m_cameras[CameraID::Sky].getComponent<cro::Callback>().active = true;
-        m_cameras[CameraID::Sky].getComponent<cro::Callback>().function =
+        targetEnt.getComponent<cro::Callback>().active = true;
+        targetEnt.getComponent<cro::Callback>().function =
             [&, radius](cro::Entity e, float dt)
         {
             static float elapsed = 0.f;
