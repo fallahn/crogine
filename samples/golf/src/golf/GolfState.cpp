@@ -3591,6 +3591,26 @@ void GolfState::buildScene()
     camEnt.getComponent<CameraFollower>().targetOffset = { 0.f,0.65f,0.f };
     camEnt.addComponent<cro::AudioListener>();
 
+    //this grows the radius if it has been reset by target movement
+    //as this cam follows the drone
+    camEnt.addComponent<cro::Callback>().setUserData<CamCallbackData>();
+    camEnt.getComponent<cro::Callback>().function =
+        [](cro::Entity e, float dt)
+    {
+        //TODO radius needs to be const somewhere?
+        static constexpr float MaxRadius = 80.f;
+        auto& progress = e.getComponent<cro::Callback>().getUserData<CamCallbackData>().progress;
+        progress = std::min(1.f, progress + (dt * 0.5f));
+
+        const float radius = MaxRadius * progress;
+        e.getComponent<CameraFollower>().radius = radius * radius;
+
+        if (progress == 1)
+        {
+            e.getComponent<cro::Callback>().active = false;
+        }
+    };
+
     //this holds the water plane ent when active
     camEnt.addComponent<TargetInfo>();
     setPerspective(camEnt.getComponent<cro::Camera>());
@@ -5588,7 +5608,19 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
 
     m_gameScene.setSystemActive<CameraFollowSystem>(false);
 
-    
+    const auto setCamTarget = [&](glm::vec3 pos)
+    {
+        if (m_drone.isValid())
+        {
+            m_drone.getComponent<cro::Callback>().getUserData<DroneCallbackData>().target.getComponent<cro::Transform>().setPosition(pos);
+            m_cameras[CameraID::Sky].getComponent<CameraFollower>().radius = 0.f;
+            m_cameras[CameraID::Sky].getComponent<cro::Callback>().active = true;
+        }
+        else
+        {
+            m_cameras[CameraID::Sky].getComponent<cro::Transform>().setPosition(pos);
+        }
+    };
 
     //see where the player is and move the sky cam if possible
     //else set it to the default position
@@ -5628,27 +5660,12 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
             dir.y = std::min(dir.y, SkyCamHeight);
         }
 
-        if (m_drone.isValid())
-        {
-            m_drone.getComponent<cro::Callback>().getUserData<DroneCallbackData>().target.getComponent<cro::Transform>().setPosition(dir);
-        }
-        else
-        {
-            m_cameras[CameraID::Sky].getComponent<cro::Transform>().setPosition(dir);
-        }
+        setCamTarget(dir);
     }
     else
     {
         auto pos = m_holeData[m_currentHole].puttFromTee ? glm::vec3(0.f, 16.f, 0.f) : DefaultSkycamPosition;
-
-        if (m_drone.isValid())
-        {
-            m_drone.getComponent<cro::Callback>().getUserData<DroneCallbackData>().target.getComponent<cro::Transform>().setPosition(pos);
-        }
-        else
-        {
-            m_cameras[CameraID::Sky].getComponent<cro::Transform>().setPosition(pos);
-        }
+        setCamTarget(pos);
     }
 
     if (!m_holeData[m_currentHole].puttFromTee)

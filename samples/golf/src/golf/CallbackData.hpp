@@ -46,3 +46,9 @@ struct DroneCallbackData final
     float acceleration = 0.f;
     cro::Entity target;
 };
+
+//used for expanding the detection radius of the sky cam
+struct CamCallbackData final
+{
+    float progress = 0.f;
+};
