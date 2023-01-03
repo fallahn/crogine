@@ -96,6 +96,7 @@ public:
     struct TerrainResult final
     {
         std::uint8_t terrain = TerrainID::Scrub;
+        std::uint8_t trigger = TriggerID::Count;
         glm::vec3 normal = glm::vec3(0.f, 1.f, 0.f);
         glm::vec3 intersection = glm::vec3(0.f);
         float penetration = 0.f; //positive values are down into the ground

@@ -65,6 +65,23 @@ struct TerrainID final
     };
 };
 
+struct TriggerID final
+{
+    //these are stored on the green channel
+    //we start from above the terrain ID to
+    //stop conflicts/backwards compat with
+    //existing terrain models
+    enum
+    {
+        Volcano = TerrainID::Count,
+        Boat,
+
+
+        Count
+    };
+};
+static_assert(TriggerID::Count < 25, "MAX VALUE REACHED");
+
 static const std::array<std::string, TerrainID::Count> TerrainStrings =
 {
     "Rough", "Fairway", "Green", "Bunker", "Water", "Scrub", "Stone", "Hole"

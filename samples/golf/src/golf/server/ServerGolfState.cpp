@@ -179,6 +179,31 @@ void GolfState::handleMessage(const cro::Message& msg)
             m_sharedData.host.broadcastPacket<std::uint16_t>(PacketID::Gimme, inf, net::NetFlag::Reliable);
         }
     }
+    else if (msg.id == sv::MessageID::TriggerMessage)
+    {
+        const auto sendAchievement = [&](std::uint8_t achID)
+        {
+            //TODO not sure we want to send this blindly to the client
+            //but only the client knows if achievements are currently enabled.
+            std::array<std::uint8_t, 2u> packet =
+            {
+                m_playerInfo[0].client, achID
+            };
+            m_sharedData.host.broadcastPacket(PacketID::AchievementGet, packet, net::NetFlag::Reliable);
+        };
+
+        const auto& data = msg.getData<TriggerEvent>();
+        switch (data.triggerID)
+        {
+        default: break;
+        case TriggerID::Volcano:
+            sendAchievement(255);
+            break;
+        case TriggerID::Boat:
+            sendAchievement(255);
+            break;
+        }
+    }
 
     m_scene.forwardMessage(msg);
 }

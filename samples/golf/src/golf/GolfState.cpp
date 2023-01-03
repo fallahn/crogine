@@ -1042,12 +1042,24 @@ void GolfState::handleMessage(const cro::Message& msg)
     case MessageID::AchievementMessage:
     {
         const auto& data = msg.getData<AchievementEvent>();
-        std::array<std::uint8_t, 2u> packet =
+
+        //if we received the achievement notification from the
+        //server in the first place, don't send a notification
+        //back
+        switch (data.id)
         {
-            m_sharedData.localConnectionData.connectionID,
-            data.id
-        };
-        m_sharedData.clientConnection.netClient.sendPacket(PacketID::AchievementGet, packet, net::NetFlag::Reliable);
+        default:
+        {
+            std::array<std::uint8_t, 2u> packet =
+            {
+                m_sharedData.localConnectionData.connectionID,
+                data.id
+            };
+            m_sharedData.clientConnection.netClient.sendPacket(PacketID::AchievementGet, packet, net::NetFlag::Reliable);
+        }
+        break;
+        //TODO achievement IDs received from the server
+        }
     }
     break;
 

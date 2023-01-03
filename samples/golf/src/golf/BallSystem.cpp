@@ -210,6 +210,7 @@ BallSystem::TerrainResult BallSystem::getTerrain(glm::vec3 pos) const
     if (res.hasHit())
     {
         retVal.terrain = (res.m_collisionType >> 24);
+        retVal.trigger = ((res.m_collisionType & 0x00ff0000) >> 16);
         retVal.normal = { res.m_hitNormalWorld.x(), res.m_hitNormalWorld.y(), res.m_hitNormalWorld.z() };
         retVal.intersection = { res.m_hitPointWorld.x(), res.m_hitPointWorld.y(), res.m_hitPointWorld.z() };
         retVal.penetration = res.m_hitPointWorld.y() - pos.y;
@@ -692,13 +693,6 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
 
 void BallSystem::doCollision(cro::Entity entity)
 {
-    /*
-    This function raises collision messages, although
-    they are only effective when the system is used locally, such
-    as in the driving range. Server instances ignore
-    collision messages.
-    */
-
     //check height
     auto& tx = entity.getComponent<cro::Transform>();
     auto pos = tx.getPosition();
@@ -799,9 +793,8 @@ void BallSystem::doCollision(cro::Entity entity)
             }
         }
 
-        //these are only used for sound on client side
-        //usage - ie driving range, so don't raise them
-        //if the velocity is too low.
+        //this stops repeated events if the ball is moving slowly
+        //so eg we don't raise a lot of sound requests
         if (len2 > 0.05f
             || terrainResult.terrain == TerrainID::Scrub) //vel will be 0 in this case
         {
@@ -809,6 +802,14 @@ void BallSystem::doCollision(cro::Entity entity)
             msg->terrain = terrainResult.terrain;
             msg->position = pos;
             msg->type = CollisionEvent::Begin;
+
+            //this might raise an achievement for example
+            //so don't do it during CPU prediction
+            if (!m_predicting)
+            {
+                auto* msg2 = postMessage<TriggerEvent>(sv::MessageID::TriggerMessage);
+                msg2->triggerID = terrainResult.trigger;
+            }
         }
     }
     else if (pos.y < WaterLevel)
