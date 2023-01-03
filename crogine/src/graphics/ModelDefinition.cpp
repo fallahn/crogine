@@ -82,11 +82,14 @@ ModelDefinition::ModelDefinition(ResourceCollection& rc, EnvironmentMap* envMap,
     }
 }
 
-bool ModelDefinition::loadFromFile(const std::string& path, bool instanced, bool useDeferredShaders, bool forceReload)
+bool ModelDefinition::loadFromFile(const std::string& inPath, bool instanced, bool useDeferredShaders, bool forceReload)
 {
 #ifdef PLATFORM_MOBILE
     instanced = false
 #endif
+
+    auto path = inPath;
+    std::replace(path.begin(), path.end(), '\\', '/');
 
     if (m_modelLoaded)
     {
