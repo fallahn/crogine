@@ -65,6 +65,9 @@ struct TerrainID final
     };
 };
 
+//make sure we reserve room for trigger IDs
+static_assert(TerrainID::Count < 14, "MAX VALUE REACHED");
+
 struct TriggerID final
 {
     //these are stored on the green channel
@@ -73,7 +76,7 @@ struct TriggerID final
     //existing terrain models
     enum
     {
-        Volcano = TerrainID::Count,
+        Volcano = 13,
         Boat,
 
 
