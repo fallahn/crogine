@@ -36,11 +36,12 @@ source distribution.
 
 #include <array>
 
+struct SharedStateData;
 constexpr float MaxSwingputDistance = 200.f;
 class Swingput final : public cro::GuiClient
 {
 public:
-    Swingput();
+    explicit Swingput(const SharedStateData&);
 
     //returns true if this consumed the event
     bool handleEvent(const cro::Event&);
@@ -78,6 +79,7 @@ public:
     void setMouseScale(float scale) { m_mouseScale = scale; }
 
 private:
+    const SharedStateData& m_sharedData;
     std::int32_t m_enabled;
 
     glm::vec2 m_backPoint;

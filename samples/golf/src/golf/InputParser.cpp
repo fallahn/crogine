@@ -56,6 +56,7 @@ InputParser::InputParser(const SharedStateData& sd, cro::MessageBus& mb)
     : m_sharedData      (sd),
     m_inputBinding      (sd.inputBinding),
     m_messageBus        (mb),
+    m_swingput          (sd),
     m_inputFlags        (0),
     m_prevFlags         (0),
     m_enableFlags       (std::numeric_limits<std::uint16_t>::max()),
