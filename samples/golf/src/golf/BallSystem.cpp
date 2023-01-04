@@ -362,7 +362,7 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
                 //if the ball falls low enough when
                 //over the hole we'll put it in.
                 ball.velocity += (gravityAmount * Gravity * forceAffect) * dt;
-
+                ball.velocity *= glm::vec3(0.995f, 1.f, 0.995f);
 
                 //this draws the ball to the pin a little bit to make sure the ball
                 //falls entirely within the radius

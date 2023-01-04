@@ -449,6 +449,7 @@ void GolfState::buildUI()
         [&, BarCentre](cro::Entity e, float)
     {
         glm::vec3 pos(BarCentre + (BarCentre * m_inputParser.getHook()), 8.f, 0.1f);
+        pos.x = std::round(pos.x);
         e.getComponent<cro::Transform>().setPosition(pos);
     };
     barEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -1223,8 +1224,7 @@ void GolfState::showCountdown(std::uint8_t seconds)
         float radius = glm::length(m_holeData[m_currentHole].pin - m_cameras[CameraID::Player].getComponent<cro::Transform>().getWorldPosition()) * 0.85f;
         auto targetEnt = m_drone.getComponent<cro::Callback>().getUserData<DroneCallbackData>().target;
 
-        //add a callback that makes the camera orbit the flag - and hence the drone follows
-        targetEnt.getComponent<cro::Callback>().active = true;
+        //set a callback that makes the camera orbit the flag - and hence the drone follows
         targetEnt.getComponent<cro::Callback>().function =
             [&, radius](cro::Entity e, float dt)
         {
