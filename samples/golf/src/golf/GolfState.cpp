@@ -1058,7 +1058,12 @@ void GolfState::handleMessage(const cro::Message& msg)
             m_sharedData.clientConnection.netClient.sendPacket(PacketID::AchievementGet, packet, net::NetFlag::Reliable);
         }
         break;
-        //TODO achievement IDs received from the server
+        //achievement IDs received from the server
+        case AchievementID::HotStuff:
+        case AchievementID::ISeeNoShips:
+        case AchievementID::IntoOrbit:
+            //we already got these as a notification from the server so no need to send.
+            break;
         }
     }
     break;
@@ -1339,8 +1344,6 @@ void GolfState::render()
     m_windBuffer.bind(2);
 
     //render reflections first
-    //auto uiCam = m_uiScene.setActiveCamera(m_uiReflectionCam);
-
     auto& cam = m_gameScene.getActiveCamera().getComponent<cro::Camera>();
     auto oldVP = cam.viewport;
 
@@ -1380,7 +1383,7 @@ void GolfState::render()
     m_gameScene.render();
     glCheck(glDisable(GL_LINE_SMOOTH));
 #ifdef CRO_DEBUG_
-    m_collisionMesh.renderDebug(cam.getActivePass().viewProjectionMatrix, m_gameSceneTexture.getSize());
+    //m_collisionMesh.renderDebug(cam.getActivePass().viewProjectionMatrix, m_gameSceneTexture.getSize());
 #endif
     m_gameSceneTexture.display();
 

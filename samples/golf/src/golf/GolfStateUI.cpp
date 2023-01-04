@@ -2286,13 +2286,10 @@ void GolfState::notifyAchievement(const std::array<std::uint8_t, 2u>& data)
     else
     {
         //award the achievement if this is from the server
-        
-
-        //TODO we can't just call AwardAchievement because that
-        //raises a message to notify the server and we get a
-        //double notification (at least it's not infinite...)
-        //perhaps, ugh, handle special cases in the Message
-        //handler and not notify the server in certain cases
+        if (data[1] < AchievementID::Count)
+        {
+            Achievements::awardAchievement(AchievementStrings[data[1]]);
+        }
     }
 }
 

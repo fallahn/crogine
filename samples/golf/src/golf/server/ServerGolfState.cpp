@@ -35,6 +35,8 @@ source distribution.
 #include "ServerGolfState.hpp"
 #include "ServerMessages.hpp"
 
+#include <AchievementIDs.hpp>
+
 #include <crogine/core/Log.hpp>
 #include <crogine/core/ConfigFile.hpp>
 
@@ -76,6 +78,17 @@ GolfState::GolfState(SharedData& sd)
 
 void GolfState::handleMessage(const cro::Message& msg)
 {
+    const auto sendAchievement = [&](std::uint8_t achID)
+    {
+        //TODO not sure we want to send this blindly to the client
+        //but only the client knows if achievements are currently enabled.
+        std::array<std::uint8_t, 2u> packet =
+        {
+            m_playerInfo[0].client, achID
+        };
+        m_sharedData.host.broadcastPacket(PacketID::AchievementGet, packet, net::NetFlag::Reliable);
+    };
+
     if (msg.id == sv::MessageID::ConnectionMessage)
     {
         const auto& data = msg.getData<ConnectionEvent>();
@@ -171,6 +184,13 @@ void GolfState::handleMessage(const cro::Message& msg)
             bu.terrain = data.terrain;
             bu.position = data.position;
             m_sharedData.host.broadcastPacket(PacketID::BallLanded, bu, net::NetFlag::Reliable);
+
+            auto dist = glm::length2(m_playerInfo[0].position - data.position);
+            if (dist > 2250000.f)
+            {
+                //1500m
+                sendAchievement(AchievementID::IntoOrbit);
+            }
         }
         else if (data.type == GolfBallEvent::Gimme)
         {
@@ -181,26 +201,15 @@ void GolfState::handleMessage(const cro::Message& msg)
     }
     else if (msg.id == sv::MessageID::TriggerMessage)
     {
-        const auto sendAchievement = [&](std::uint8_t achID)
-        {
-            //TODO not sure we want to send this blindly to the client
-            //but only the client knows if achievements are currently enabled.
-            std::array<std::uint8_t, 2u> packet =
-            {
-                m_playerInfo[0].client, achID
-            };
-            m_sharedData.host.broadcastPacket(PacketID::AchievementGet, packet, net::NetFlag::Reliable);
-        };
-
         const auto& data = msg.getData<TriggerEvent>();
         switch (data.triggerID)
         {
         default: break;
         case TriggerID::Volcano:
-            sendAchievement(255);
+            sendAchievement(AchievementID::HotStuff);
             break;
         case TriggerID::Boat:
-            sendAchievement(255);
+            sendAchievement(AchievementID::ISeeNoShips);
             break;
         }
     }
