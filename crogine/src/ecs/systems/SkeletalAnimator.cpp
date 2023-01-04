@@ -45,9 +45,9 @@ namespace
     //TODO convert to 4x3 to free up some uniform space
     glm::mat4 mixJoint(const Joint& a, const Joint& b, float time)
     {
-        glm::vec3 trans = mix(a.translation, b.translation, time);
+        glm::vec3 trans = glm::mix(a.translation, b.translation, time);
         glm::quat rot = glm::slerp(a.rotation, b.rotation, time);
-        glm::vec3 scale = mix(a.scale, b.scale, time);
+        glm::vec3 scale = glm::mix(a.scale, b.scale, time);
 
         glm::mat4 result = glm::translate(glm::mat4(1.f), trans);
         result *= glm::toMat4(rot);
@@ -65,8 +65,14 @@ SkeletalAnimator::SkeletalAnimator(MessageBus& mb)
 //public
 void SkeletalAnimator::process(float dt)
 {
-    auto camPos = getScene()->getActiveCamera().getComponent<cro::Transform>().getWorldPosition();
-    auto camDir = getScene()->getActiveCamera().getComponent<cro::Transform>().getForwardVector();
+    const auto camPos = getScene()->getActiveCamera().getComponent<cro::Transform>().getWorldPosition();
+    const auto camDir = getScene()->getActiveCamera().getComponent<cro::Transform>().getForwardVector();
+
+    //TODO we might increase perf a bit if we split the entities across
+    //a series of joblists each in its own thread, then wait for those lists to complete
+    //gotta try it to find out. I have a feeling it'll actually be worse on low numbers
+    //also remember raising messages is not thread safe so might have to do all those
+    //on the main thread anyway...
 
     auto& entities = getEntities();
     for (auto& entity : entities)
@@ -155,11 +161,24 @@ void SkeletalAnimator::process(float dt)
             //first frame of the next anim. Really we should interpolate the current
             //position of both animations, and then blend the results according to
             //the current blend time.
+
+            //for example this currently causes popping in the animation
+            //if the current output is actually almost interpolated to the next
+            //frame as it jumps *back* to the current frame to begin interpolation.
+            //currently I've tried to reduce this by rounding to the nearest frame
+            //however we probably want to cache the transforms for the current
+            //interpolation output (before root and bindpose transform) and use
+            //that as the basis for interpolation.
+
             skel.m_currentBlendTime += dt;
             if (entity.getComponent<Model>().isVisible())
             {
                 float interpTime = std::min(1.f, skel.m_currentBlendTime / skel.m_blendTime);
-                interpolate(skel.m_animations[skel.m_currentAnimation].currentFrame, skel.m_animations[skel.m_nextAnimation].startFrame, interpTime, skel);
+
+                auto startFrame = static_cast<std::uint32_t>(skel.m_animations[skel.m_currentAnimation].currentFrame + std::round(skel.m_currentFrameTime / skel.m_frameTime));
+                startFrame %= skel.m_animations[skel.m_currentAnimation].frameCount;
+
+                interpolate(startFrame, skel.m_animations[skel.m_nextAnimation].startFrame, interpTime, skel);
             }
 
             if (skel.m_currentBlendTime > skel.m_blendTime
@@ -197,7 +216,7 @@ void SkeletalAnimator::onEntityAdded(Entity entity)
     auto& skeleton = entity.getComponent<Skeleton>();
 
     //TODO reject this if it has no animations (or at least prevent div0)
-
+    CRO_ASSERT(skeleton.m_animations[0].frameRate > 0, "");
     entity.getComponent<Model>().setSkeleton(&skeleton.m_currentFrame[0], skeleton.m_frameSize);
     skeleton.m_frameTime = 1.f / skeleton.m_animations[0].frameRate;
 

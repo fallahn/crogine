@@ -449,7 +449,6 @@ void GolfState::buildUI()
         [&, BarCentre](cro::Entity e, float)
     {
         glm::vec3 pos(BarCentre + (BarCentre * m_inputParser.getHook()), 8.f, 0.1f);
-        pos.x = std::round(pos.x);
         e.getComponent<cro::Transform>().setPosition(pos);
     };
     barEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
