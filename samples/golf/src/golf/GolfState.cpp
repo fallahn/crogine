@@ -3589,26 +3589,6 @@ void GolfState::buildScene()
     camEnt.getComponent<CameraFollower>().targetOffset = { 0.f,0.65f,0.f };
     camEnt.addComponent<cro::AudioListener>();
 
-    //this grows the radius if it has been reset by target movement
-    //as this cam follows the drone
-    camEnt.addComponent<cro::Callback>().setUserData<CamCallbackData>();
-    camEnt.getComponent<cro::Callback>().function =
-        [](cro::Entity e, float dt)
-    {
-        //TODO radius needs to be const somewhere?
-        static constexpr float MaxRadius = 80.f;
-        auto& progress = e.getComponent<cro::Callback>().getUserData<CamCallbackData>().progress;
-        progress = std::min(1.f, progress + (dt * 0.5f));
-
-        const float radius = MaxRadius * progress;
-        e.getComponent<CameraFollower>().radius = radius * radius;
-
-        if (progress == 1)
-        {
-            e.getComponent<cro::Callback>().active = false;
-        }
-    };
-
     //this holds the water plane ent when active
     camEnt.addComponent<TargetInfo>();
     setPerspective(camEnt.getComponent<cro::Camera>());
@@ -3735,6 +3715,7 @@ void GolfState::buildScene()
     {
         entity = m_gameScene.createEntity();
         entity.addComponent<cro::Transform>().setScale(glm::vec3(2.f));
+        entity.getComponent<cro::Transform>().setPosition({ 160.f, 1.f, -100.f }); //lazy man's half map size
         md.createModel(entity);
 
         material = m_resources.materials.get(m_materialIDs[MaterialID::CelTextured]);
@@ -5630,9 +5611,6 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
             auto& data = m_drone.getComponent<cro::Callback>().getUserData<DroneCallbackData>();
             data.target.getComponent<cro::Transform>().setPosition(pos);
             data.canRetarget = true;
-
-            m_cameras[CameraID::Sky].getComponent<CameraFollower>().radius = 0.f;
-            m_cameras[CameraID::Sky].getComponent<cro::Callback>().active = true;
         }
         else
         {
