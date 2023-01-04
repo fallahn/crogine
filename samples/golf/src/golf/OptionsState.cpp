@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2022
+Matt Marchant 2021 - 2023
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -2771,15 +2771,24 @@ void OptionsState::buildAchievementsMenu(cro::Entity parent, const cro::SpriteSh
             icon.draw();
         }
 
+        auto* data = Achievements::getAchievement(AchievementStrings[i]);
+        if (data->achieved || !AchievementDesc[i].second)
+        {
+            title.setString(AchievementLabels[i]);
+            desc.setString(AchievementDesc[i].first);
+        }
+        else
+        {
+            title.setString("HIDDEN");
+            desc.setString("????????");
+        }
         title.setPosition(position + TitleOffset);
-        title.setString(AchievementLabels[i]);
         title.draw();
 
         desc.setPosition(position + DescOffset);
-        desc.setString(AchievementDesc[i].first);
         desc.draw();
 
-        auto ts = Achievements::getAchievement(AchievementStrings[i])->timestamp;
+        auto ts = data->timestamp;
         if (ts != 0)
         {
             timestamp.setPosition(position + TSOffset);

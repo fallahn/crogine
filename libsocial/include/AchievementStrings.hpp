@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2022
+Matt Marchant 2020 - 2023
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -85,7 +85,10 @@ static const std::array<std::string, AchievementID::Count> AchievementStrings =
     "amateur",
     "enthusiast",
     "semi_pro",
-    "pro"
+    "pro",
+    "hot_stuff",
+    "no_ships",
+    "into_orbit"
 };
 
 //appears on the notification
@@ -129,7 +132,10 @@ static const std::array<std::string, AchievementID::Count> AchievementLabels =
     "Amateur",
     "Enthusiast",
     "Semi-Pro",
-    "Professional"
+    "Professional",
+    "Hot Stuff",
+    "I See No Ships",
+    "Into Orbit"
 };
 
 //description and whether or not the achievement is hidden until it is unlocked
@@ -173,7 +179,10 @@ static const std::array<std::pair<std::string, bool>, AchievementID::Count> Achi
     std::make_pair("Reach Level 20", false),
     std::make_pair("Reach Level 30", false),
     std::make_pair("Reach Level 40", false),
-    std::make_pair("Reach Level 50", false)
+    std::make_pair("Reach Level 50", false),
+    std::make_pair("Hit the ball into the volcano on 3-18", false),
+    std::make_pair("Hit the boat on 8-11", false),
+    std::make_pair("Hit the ball over 1500m in a single stroke", true)
 };
 
 //assuming trophies load correctly they are:
@@ -227,7 +236,18 @@ static constexpr std::array<std::size_t, AchievementID::Count> AchievementTrophi
     TrophyID::GoldCup,
     TrophyID::BronzeFigure,
     TrophyID::GoldFigure,
-    TrophyID::BronzeCup
+    TrophyID::BronzeCup,
+
+    TrophyID::BronzeCup,
+    TrophyID::SilverCup,
+    TrophyID::GoldCup,
+    TrophyID::BronzeFigure,
+    TrophyID::SilverFigure,
+    TrophyID::GoldFigure,
+
+    TrophyID::Platinum,
+    TrophyID::GoldFigure,
+    TrophyID::Platinum,
 };
 
 //these are indexed by StatID, so do try to get them in the correct order ;)

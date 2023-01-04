@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2022
+Matt Marchant 2021 - 2023
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -495,9 +495,6 @@ void TrophyState::buildScene()
 
     auto updateText = [&, titleEnt, descEnt, dateEnt, iconEnt]() mutable
     {
-        titleEnt.getComponent<cro::Text>().setString(AchievementLabels[m_trophyIndex]);
-        centreText(titleEnt);
-
         auto [descString, hidden] = AchievementDesc[m_trophyIndex];
         if (!hidden || Achievements::getAchievement(AchievementStrings[m_trophyIndex])->achieved)
         {
@@ -512,12 +509,16 @@ void TrophyState::buildScene()
                     descString[pos] = '\n';
                 }
             }
+
+            titleEnt.getComponent<cro::Text>().setString(AchievementLabels[m_trophyIndex]);
         }
         else
         {
-            descString = "????";
+            titleEnt.getComponent<cro::Text>().setString("HIDDEN");
+            descString = "????????";
         }
         descEnt.getComponent<cro::Text>().setString(descString);
+        centreText(titleEnt);
 
         auto timestamp = Achievements::getAchievement(AchievementStrings[m_trophyIndex])->timestamp;
         if (timestamp != 0)
