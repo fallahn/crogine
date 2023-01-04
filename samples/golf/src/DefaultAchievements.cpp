@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2022
+Matt Marchant 2020 - 2023
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -290,6 +290,20 @@ void DefaultAchievements::drawOverlay()
     }
 }
 
+void DefaultAchievements::clearAchievement(const std::string& name)
+{
+    if (m_achievements.count(name) != 0 && m_achievements[name].achieved)
+    {
+        LOG("Cleared achievement " + name, cro::Logger::Type::Info);
+
+        m_achievements[name].achieved = false;
+        m_timeStamps[m_achievements[name].id] = 0;
+
+        clearBit(m_achievements[name].id);
+        writeFile();
+    }
+}
+
 //private
 void DefaultAchievements::syncStat(const StatData& stat)
 {
@@ -403,6 +417,17 @@ void DefaultAchievements::writeBit(std::int32_t index)
 
     CRO_ASSERT(offset < m_bitArray.size(), "");
     m_bitArray[offset] |= (1 << bit);
+}
+
+void DefaultAchievements::clearBit(std::int32_t index)
+{
+    CRO_ASSERT(index > -1, "");
+
+    auto offset = index / 32;
+    auto bit = index % 32;
+
+    CRO_ASSERT(offset < m_bitArray.size(), "");
+    m_bitArray[offset] &= ~(1 << bit);
 }
 
 //----------------------------------

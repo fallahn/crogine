@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2022
+Matt Marchant 2021 - 2023
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -1042,29 +1042,12 @@ void GolfState::handleMessage(const cro::Message& msg)
     case MessageID::AchievementMessage:
     {
         const auto& data = msg.getData<AchievementEvent>();
-
-        //if we received the achievement notification from the
-        //server in the first place, don't send a notification
-        //back
-        switch (data.id)
+        std::array<std::uint8_t, 2u> packet =
         {
-        default:
-        {
-            std::array<std::uint8_t, 2u> packet =
-            {
-                m_sharedData.localConnectionData.connectionID,
-                data.id
-            };
-            m_sharedData.clientConnection.netClient.sendPacket(PacketID::AchievementGet, packet, net::NetFlag::Reliable);
-        }
-        break;
-        //achievement IDs received from the server
-        case AchievementID::HotStuff:
-        case AchievementID::ISeeNoShips:
-        case AchievementID::IntoOrbit:
-            //we already got these as a notification from the server so no need to send.
-            break;
-        }
+            m_sharedData.localConnectionData.connectionID,
+            data.id
+        };
+        m_sharedData.clientConnection.netClient.sendPacket(PacketID::AchievementGet, packet, net::NetFlag::Reliable);
     }
     break;
 
@@ -4455,6 +4438,16 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
             break;
         case PacketID::AchievementGet:
             notifyAchievement(evt.packet.as<std::array<std::uint8_t, 2u>>());
+            break;
+        case PacketID::ServerAchievement:
+        {
+            auto [client, achID] = evt.packet.as<std::array<std::uint8_t, 2u>>();
+            if (client == m_sharedData.localConnectionData.connectionID
+                && achID < AchievementID::Count)
+            {
+                Achievements::awardAchievement(AchievementStrings[achID]);
+            }
+        }
             break;
         case PacketID::Gimme:
             {

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2022
+Matt Marchant 2021 - 2023
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -2281,14 +2281,6 @@ void GolfState::notifyAchievement(const std::array<std::uint8_t, 2u>& data)
             auto* msg = postMessage<Social::SocialEvent>(Social::MessageID::SocialMessage);
             msg->type = Social::SocialEvent::PlayerAchievement;
             msg->level = 0; //cheer
-        }
-    }
-    else
-    {
-        //award the achievement if this is from the server
-        if (data[1] < AchievementID::Count)
-        {
-            Achievements::awardAchievement(AchievementStrings[data[1]]);
         }
     }
 }

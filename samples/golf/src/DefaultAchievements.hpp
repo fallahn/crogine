@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2022
+Matt Marchant 2020 - 2023
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -71,6 +71,8 @@ public:
 
     void drawOverlay();
 
+    void clearAchievement(const std::string&);
+
 private:
     cro::MessageBus& m_messageBus;
 
@@ -90,6 +92,7 @@ private:
     void writeFile();
     bool readBit(std::int32_t);
     void writeBit(std::int32_t);
+    void clearBit(std::int32_t);
 
     cro::Clock m_updateClock;
     bool m_statsUpdated = false;

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2022
+Matt Marchant 2021 - 2023
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -86,7 +86,7 @@ void GolfState::handleMessage(const cro::Message& msg)
         {
             m_playerInfo[0].client, achID
         };
-        m_sharedData.host.broadcastPacket(PacketID::AchievementGet, packet, net::NetFlag::Reliable);
+        m_sharedData.host.broadcastPacket(PacketID::ServerAchievement, packet, net::NetFlag::Reliable);
     };
 
     if (msg.id == sv::MessageID::ConnectionMessage)

@@ -371,6 +371,12 @@ bool GolfGame::initialise()
         return false;
     }
 
+#ifdef CRO_DEBUG_
+#ifndef USE_GNS
+    m_achievements->clearAchievement(AchievementStrings[AchievementID::IntoOrbit]);
+#endif // !USE_GNS
+#endif
+
     m_hostAddresses = cro::Util::Net::getLocalAddresses();
     if (m_hostAddresses.empty())
     {
