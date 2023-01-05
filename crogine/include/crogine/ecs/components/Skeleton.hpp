@@ -64,6 +64,12 @@ namespace cro
         float frameRate = 12.f;
         bool looped = false;
         float playbackRate = 0.f;
+        float currentFrameTime = 0.f;
+
+        //holds the current state of interpolation pre-transform
+        //so it can be mixed with other animations before creating
+        //final output
+        std::vector<glm::mat4> interpolationOutput;
     };
 
     /*!
@@ -242,7 +248,7 @@ namespace cro
         /*!
         \brief Returns the current, normalised, time between frames
         */
-        float getCurrentFrameTime() const { return m_currentFrameTime / m_frameTime; }
+        float getCurrentFrameTime() const;// { return m_currentFrameTime / m_frameTime; }
 
         operator bool() const
         {
@@ -368,7 +374,7 @@ namespace cro
         float m_currentBlendTime;
 
         float m_frameTime;
-        float m_currentFrameTime;
+        //float m_currentFrameTime;
         bool m_useInterpolation;
         float m_interpolationDistance;
 

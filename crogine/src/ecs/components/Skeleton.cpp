@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2022
+Matt Marchant 2021 - 2023
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -42,7 +42,6 @@ Skeleton::Skeleton()
     m_blendTime             (1.f),
     m_currentBlendTime      (0.f),
     m_frameTime             (1.f),
-    m_currentFrameTime      (0.f),
     m_useInterpolation      (true),
     m_interpolationDistance (2500.f),
     m_frameSize             (0),
@@ -78,7 +77,6 @@ void Skeleton::play(std::size_t idx, float rate, float blendingTime)
 }
 
 void Skeleton::prevFrame()
-
 {
     CRO_ASSERT(!m_animations.empty(), "No animations loaded");
 
@@ -86,7 +84,7 @@ void Skeleton::prevFrame()
     auto frame = anim.currentFrame - anim.startFrame;
     frame = (frame + (anim.frameCount - 1)) % anim.frameCount;
     anim.currentFrame = frame + anim.startFrame;
-    m_currentFrameTime = 0.f;
+    anim.currentFrameTime = 0.f;
     buildKeyframe(anim.currentFrame);
 }
 
@@ -97,7 +95,7 @@ void Skeleton::nextFrame()
     auto frame = anim.currentFrame - anim.startFrame;
     frame = (frame + 1) % anim.frameCount;
     anim.currentFrame = frame + anim.startFrame;
-    m_currentFrameTime = 0.f;
+    anim.currentFrameTime = 0.f;
     buildKeyframe(anim.currentFrame);
 }
 
@@ -108,7 +106,7 @@ void Skeleton::gotoFrame(std::uint32_t frame)
     if (frame < anim.frameCount)
     {
         anim.currentFrame = frame + anim.startFrame;
-        m_currentFrameTime = 0.f;
+        anim.currentFrameTime = 0.f;
         buildKeyframe(anim.currentFrame);
     }
 }
@@ -150,6 +148,13 @@ std::size_t Skeleton::getCurrentFrame() const
 {
     CRO_ASSERT(!m_animations.empty(), "");
     return m_animations[m_currentAnimation].currentFrame;
+}
+
+float Skeleton::getCurrentFrameTime() const
+{
+    CRO_ASSERT(!m_animations.empty(), "");
+    CRO_ASSERT(m_frameTime > 0.f, "");
+    return m_animations[m_currentAnimation].currentFrameTime / m_frameTime;
 }
 
 void Skeleton::addNotification(std::size_t frameID, Notification n)

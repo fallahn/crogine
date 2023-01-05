@@ -86,15 +86,15 @@ void SkeletalAnimator::process(float dt)
         {
             //update current animation
             auto& anim = skel.m_animations[skel.m_currentAnimation];
-            skel.m_currentFrameTime += dt * anim.playbackRate;
+            anim.currentFrameTime += dt * anim.playbackRate;
 
             auto nextFrame = ((anim.currentFrame - anim.startFrame) + 1) % anim.frameCount;
             nextFrame += anim.startFrame;
 
-            if (skel.m_currentFrameTime > skel.m_frameTime)
+            if (anim.currentFrameTime > skel.m_frameTime)
             {
                 //frame is done, move to next
-                skel.m_currentFrameTime -= skel.m_frameTime;
+                anim.currentFrameTime -= skel.m_frameTime;
                 anim.currentFrame = nextFrame;
 
                 nextFrame = ((anim.currentFrame - anim.startFrame) + 1) % anim.frameCount;
@@ -112,8 +112,6 @@ void SkeletalAnimator::process(float dt)
                 {
                     if (!anim.looped)
                     {
-                        /*anim.playbackRate = 0.f;
-                        anim.stop*/
                         skel.stop();
                         
                         auto* msg = postMessage<Message::SkeletalAnimationEvent>(Message::SkeletalAnimationMessage);
@@ -129,7 +127,7 @@ void SkeletalAnimator::process(float dt)
                 {
                     glm::vec4 position = 
                         (worldTransform * skel.m_rootTransform *
-                        skel.m_frames[(anim.currentFrame * skel.m_frameSize) + joint].worldMatrix)[3];// *glm::vec4(0.f, 0.f, 0.f, 1.f);
+                        skel.m_frames[(anim.currentFrame * skel.m_frameSize) + joint].worldMatrix)[3];
 
                     auto* msg = postMessage<Message::SkeletalAnimationEvent>(Message::SkeletalAnimationMessage);
                     msg->position = position;
@@ -149,34 +147,23 @@ void SkeletalAnimator::process(float dt)
                 if (glm::dot(direction, camDir) > 0
                     && glm::length2(direction) < skel.m_interpolationDistance)
                 {
-                    float interpTime = skel.m_currentFrameTime / skel.m_frameTime;
+                    float interpTime = anim.currentFrameTime / skel.m_frameTime;
                     interpolate(anim.currentFrame, nextFrame, interpTime, skel);
                 }
             }
         }
         else
         {
-            //TODO blend to next animation
-            //this is a bit of a kludge which blends from the current frame to the
-            //first frame of the next anim. Really we should interpolate the current
-            //position of both animations, and then blend the results according to
-            //the current blend time.
-
-            //for example this currently causes popping in the animation
-            //if the current output is actually almost interpolated to the next
-            //frame as it jumps *back* to the current frame to begin interpolation.
-            //currently I've tried to reduce this by rounding to the nearest frame
-            //however we probably want to cache the transforms for the current
-            //interpolation output (before root and bindpose transform) and use
-            //that as the basis for interpolation.
+            
 
             skel.m_currentBlendTime += dt;
             if (entity.getComponent<Model>().isVisible())
             {
+                auto& anim = skel.m_animations[skel.m_currentAnimation];
                 float interpTime = std::min(1.f, skel.m_currentBlendTime / skel.m_blendTime);
 
-                auto startFrame = static_cast<std::uint32_t>(skel.m_animations[skel.m_currentAnimation].currentFrame + std::round(skel.m_currentFrameTime / skel.m_frameTime));
-                startFrame %= skel.m_animations[skel.m_currentAnimation].frameCount;
+                auto startFrame = static_cast<std::uint32_t>(anim.currentFrame + std::round(anim.currentFrameTime / skel.m_frameTime));
+                startFrame %= anim.frameCount;
 
                 interpolate(startFrame, skel.m_animations[skel.m_nextAnimation].startFrame, interpTime, skel);
             }
@@ -186,14 +173,17 @@ void SkeletalAnimator::process(float dt)
             {
                 skel.m_animations[skel.m_currentAnimation].playbackRate = 0.f;
                 skel.m_currentAnimation = skel.m_nextAnimation;
+
                 skel.m_nextAnimation = -1;
                 skel.m_frameTime = 1.f / skel.m_animations[skel.m_currentAnimation].frameRate;
-                skel.m_currentFrameTime = skel.m_currentBlendTime - skel.m_blendTime;// 0.f;
                 skel.m_currentBlendTime = 0.f;
-                skel.m_animations[skel.m_currentAnimation].playbackRate = skel.m_playbackRate;
-                skel.m_animations[skel.m_currentAnimation].currentFrame = skel.m_animations[skel.m_currentAnimation].startFrame;
 
-                skel.buildKeyframe(skel.m_animations[skel.m_currentAnimation].currentFrame);
+                auto& anim = skel.m_animations[skel.m_currentAnimation];
+                anim.currentFrameTime = skel.m_currentBlendTime - skel.m_blendTime;
+                anim.playbackRate = skel.m_playbackRate;
+                anim.currentFrame = anim.startFrame;
+
+                skel.buildKeyframe(anim.currentFrame);
             }
         }
 
