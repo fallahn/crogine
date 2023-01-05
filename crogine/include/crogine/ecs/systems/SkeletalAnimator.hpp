@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2022
+Matt Marchant 2017 - 2023
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -48,8 +48,22 @@ namespace cro
     private:
         void onEntityAdded(Entity) override;
 
-        void interpolate(std::size_t a, std::size_t b, float time, Skeleton& skelteton);
 
-        void updateBoundsFromCurrentFrame(Skeleton& dest, const Mesh::Data&);
+        struct AnimationContext final
+        {
+            glm::vec3 camPos = glm::vec3(0.f);
+            glm::vec3 camDir = glm::vec3(0.f);
+            glm::mat4 worldTransform = glm::mat4(1.f);
+            static constexpr float dt = 1.f / 60.f;
+        };
+
+        void updateAnimation(SkeletalAnim& anim, Skeleton& skeleton, Entity entity, const AnimationContext& ctx) const;
+
+        //interpolates frames within a single animation (move this to anim struct?)
+        void interpolateAnimation(SkeletalAnim& source, std::size_t targetFrame, float time, Skeleton& skeleton) const;
+
+        void blendAnimations(const SkeletalAnim&, const SkeletalAnim&, Skeleton&) const;
+
+        void updateBoundsFromCurrentFrame(Skeleton& dest, const Mesh::Data&) const;
     };
 }

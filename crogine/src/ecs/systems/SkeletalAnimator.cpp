@@ -79,93 +79,33 @@ void SkeletalAnimator::process(float dt)
     {      
         //get skeleton
         auto& skel = entity.getComponent<Skeleton>();
-        const auto& worldTransform = entity.getComponent<cro::Transform>().getWorldTransform();
+        const AnimationContext ctx = 
+        {
+            camPos, 
+            camDir, 
+            entity.getComponent<cro::Transform>().getWorldTransform() 
+        };
 
         //update current frame if running
         if (skel.m_nextAnimation < 0)
         {
             //update current animation
-            auto& anim = skel.m_animations[skel.m_currentAnimation];
-            anim.currentFrameTime += dt * anim.playbackRate;
-
-            auto nextFrame = ((anim.currentFrame - anim.startFrame) + 1) % anim.frameCount;
-            nextFrame += anim.startFrame;
-
-            if (anim.currentFrameTime > skel.m_frameTime)
-            {
-                //frame is done, move to next
-                anim.currentFrameTime -= skel.m_frameTime;
-                anim.currentFrame = nextFrame;
-
-                nextFrame = ((anim.currentFrame - anim.startFrame) + 1) % anim.frameCount;
-                nextFrame += anim.startFrame;
-
-                //apply the current frame
-                skel.buildKeyframe(anim.currentFrame);
-
-                auto& meshData = entity.getComponent<Model>().getMeshData();
-                meshData.boundingBox = skel.m_keyFrameBounds[anim.currentFrame];
-                meshData.boundingSphere = skel.m_keyFrameBounds[anim.currentFrame];
-
-                //stop playback if frame ID has looped
-                if (nextFrame < anim.currentFrame)
-                {
-                    if (!anim.looped)
-                    {
-                        skel.stop();
-                        
-                        auto* msg = postMessage<Message::SkeletalAnimationEvent>(Message::SkeletalAnimationMessage);
-                        msg->userType = Message::SkeletalAnimationEvent::Stopped;
-                        msg->entity = entity;
-                        msg->animationID = skel.getCurrentAnimation();
-                    }
-                }
-
-
-                //raise notification events
-                for (auto [joint, uid, _] : skel.m_notifications[anim.currentFrame])
-                {
-                    glm::vec4 position = 
-                        (worldTransform * skel.m_rootTransform *
-                        skel.m_frames[(anim.currentFrame * skel.m_frameSize) + joint].worldMatrix)[3];
-
-                    auto* msg = postMessage<Message::SkeletalAnimationEvent>(Message::SkeletalAnimationMessage);
-                    msg->position = position;
-                    msg->userType = uid;
-                    msg->entity = entity;
-                    msg->animationID = skel.getCurrentAnimation();
-                }
-            }
-                   
-            //only interpolate if model is visible and close to the active camera
-            if (!entity.getComponent<Model>().isHidden()
-                && anim.playbackRate != 0
-                && skel.m_useInterpolation)
-            {
-                //check distance to camera and check if actually in front
-                auto direction = entity.getComponent<cro::Transform>().getWorldPosition() - camPos;
-                if (glm::dot(direction, camDir) > 0
-                    && glm::length2(direction) < skel.m_interpolationDistance)
-                {
-                    float interpTime = anim.currentFrameTime / skel.m_frameTime;
-                    interpolate(anim.currentFrame, nextFrame, interpTime, skel);
-                }
-            }
+            updateAnimation(skel.m_animations[skel.m_currentAnimation], skel, entity, ctx);
         }
         else
         {
             
-
+            //blend to next animation
             skel.m_currentBlendTime += dt;
             if (entity.getComponent<Model>().isVisible())
             {
-                auto& anim = skel.m_animations[skel.m_currentAnimation];
+                /*auto& anim = skel.m_animations[skel.m_currentAnimation];
                 float interpTime = std::min(1.f, skel.m_currentBlendTime / skel.m_blendTime);
 
                 auto startFrame = static_cast<std::uint32_t>(anim.currentFrame + std::round(anim.currentFrameTime / skel.m_frameTime));
                 startFrame %= anim.frameCount;
 
-                interpolate(startFrame, skel.m_animations[skel.m_nextAnimation].startFrame, interpTime, skel);
+                interpolate(startFrame, skel.m_animations[skel.m_nextAnimation].startFrame, interpTime, skel);*/
             }
 
             if (skel.m_currentBlendTime > skel.m_blendTime
@@ -194,7 +134,7 @@ void SkeletalAnimator::process(float dt)
             auto& ap = skel.m_attachments[i];
             if (ap.getModel().isValid())
             {
-                ap.getModel().getComponent<cro::Transform>().m_attachmentTransform = worldTransform * skel.getAttachmentTransform(i);
+                ap.getModel().getComponent<cro::Transform>().m_attachmentTransform = ctx.worldTransform * skel.getAttachmentTransform(i);
             }
         }
     }
@@ -207,6 +147,15 @@ void SkeletalAnimator::onEntityAdded(Entity entity)
 
     //TODO reject this if it has no animations (or at least prevent div0)
     CRO_ASSERT(skeleton.m_animations[0].frameRate > 0, "");
+    CRO_ASSERT(!skeleton.m_animations.empty(), "");
+    CRO_ASSERT(skeleton.m_frameSize != 0, "");
+
+    //initialise the interpolated output to the correct size.
+    for (auto& anim : skeleton.m_animations)
+    {
+        anim.interpolationOutput.resize(skeleton.m_currentFrame.size());
+    }
+
     entity.getComponent<Model>().setSkeleton(&skeleton.m_currentFrame[0], skeleton.m_frameSize);
     skeleton.m_frameTime = 1.f / skeleton.m_animations[0].frameRate;
 
@@ -225,13 +174,84 @@ void SkeletalAnimator::onEntityAdded(Entity entity)
     entity.getComponent<Model>().getMeshData().boundingSphere = skeleton.m_keyFrameBounds[0];
 }
 
-void SkeletalAnimator::interpolate(std::size_t a, std::size_t b, float time, Skeleton& skeleton)
+void SkeletalAnimator::updateAnimation(SkeletalAnim& anim, Skeleton& skel, Entity entity, const AnimationContext& ctx) const
+{
+    anim.currentFrameTime += ctx.dt * anim.playbackRate;
+
+    auto nextFrame = ((anim.currentFrame - anim.startFrame) + 1) % anim.frameCount;
+    nextFrame += anim.startFrame;
+
+    if (anim.currentFrameTime > skel.m_frameTime)
+    {
+        //frame is done, move to next
+        anim.currentFrameTime -= skel.m_frameTime;
+        anim.currentFrame = nextFrame;
+
+        nextFrame = ((anim.currentFrame - anim.startFrame) + 1) % anim.frameCount;
+        nextFrame += anim.startFrame;
+
+        //apply the current frame
+        skel.buildKeyframe(anim.currentFrame);
+
+        auto& meshData = entity.getComponent<Model>().getMeshData();
+        meshData.boundingBox = skel.m_keyFrameBounds[anim.currentFrame];
+        meshData.boundingSphere = skel.m_keyFrameBounds[anim.currentFrame];
+
+        //stop playback if frame ID has looped
+        if (nextFrame < anim.currentFrame)
+        {
+            if (!anim.looped)
+            {
+                skel.stop();
+
+                auto* msg = postMessage<Message::SkeletalAnimationEvent>(Message::SkeletalAnimationMessage);
+                msg->userType = Message::SkeletalAnimationEvent::Stopped;
+                msg->entity = entity;
+                msg->animationID = skel.getCurrentAnimation();
+            }
+        }
+
+
+        //raise notification events
+        for (auto [joint, uid, _] : skel.m_notifications[anim.currentFrame])
+        {
+            glm::vec4 position =
+                (ctx.worldTransform * skel.m_rootTransform *
+                    skel.m_frames[(anim.currentFrame * skel.m_frameSize) + joint].worldMatrix)[3];
+
+            auto* msg = postMessage<Message::SkeletalAnimationEvent>(Message::SkeletalAnimationMessage);
+            msg->position = position;
+            msg->userType = uid;
+            msg->entity = entity;
+            msg->animationID = skel.getCurrentAnimation();
+        }
+    }
+
+    //only interpolate if model is visible and close to the active camera
+    if (!entity.getComponent<Model>().isHidden()
+        && anim.playbackRate != 0
+        && skel.m_useInterpolation)
+    {
+        //check distance to camera and check if actually in front
+        auto direction = entity.getComponent<cro::Transform>().getWorldPosition() - ctx.camPos;
+        if (glm::dot(direction, ctx.camDir) > 0
+            && glm::length2(direction) < skel.m_interpolationDistance)
+        {
+            float interpTime = anim.currentFrameTime / skel.m_frameTime;
+            interpolateAnimation(anim, nextFrame, interpTime, skel);
+        }
+    }
+}
+
+void SkeletalAnimator::interpolateAnimation(SkeletalAnim& source, std::size_t targetFrame, float time, Skeleton& skeleton) const
 {
     //TODO interpolate hit boxes for key frames(?)
 
-    //NOTE a and b are FRAME INDICES not indices directly into the frame array
-    std::size_t startA = a * skeleton.m_frameSize;
-    std::size_t startB = b * skeleton.m_frameSize;
+    //NOTE FRAME INDICES are not indices directly into the frame array
+    std::size_t startA = source.currentFrame * skeleton.m_frameSize;
+    std::size_t startB = targetFrame * skeleton.m_frameSize;
+
+
     for (auto i = 0u; i < skeleton.m_frameSize; ++i)
     {
         glm::mat4 worldMatrix = mixJoint(skeleton.m_frames[startA + i], skeleton.m_frames[startB + i], time);
@@ -243,11 +263,17 @@ void SkeletalAnimator::interpolate(std::size_t a, std::size_t b, float time, Ske
             parent = skeleton.m_frames[startA + parent].parent;
         }
 
+        source.interpolationOutput[i] = worldMatrix;
         skeleton.m_currentFrame[i] = skeleton.m_rootTransform * worldMatrix *  skeleton.m_invBindPose[i];
     }
 }
 
-void SkeletalAnimator::updateBoundsFromCurrentFrame(Skeleton& dest, const Mesh::Data& source)
+void SkeletalAnimator::blendAnimations(const SkeletalAnim& a, const SkeletalAnim& b, Skeleton& skeleton) const
+{
+
+}
+
+void SkeletalAnimator::updateBoundsFromCurrentFrame(Skeleton& dest, const Mesh::Data& source) const
 {
     //store these in case we want to update the bounds
     std::vector<glm::vec3> positions;
