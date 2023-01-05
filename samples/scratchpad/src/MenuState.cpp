@@ -31,6 +31,7 @@ source distribution.
 #include "MyApp.hpp"
 
 #include <crogine/core/App.hpp>
+#include <crogine/core/SysTime.hpp>
 #include <crogine/gui/Gui.hpp>
 
 #include <crogine/ecs/components/Transform.hpp>
@@ -73,6 +74,9 @@ namespace
             return (evt.key.keysym.sym == SDLK_SPACE || evt.key.keysym.sym == SDLK_RETURN);
         }
     }
+
+    bool showVideoPlayer = false;
+    bool showBoilerplate = false;
 }
 
 MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, MyApp& app)
@@ -90,67 +94,9 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, MyApp&
         loadAssets();
         //create some entities
         createScene();
+        //create ImGui stuff
+        createUI();
     });
-
-//#ifdef CRO_DEBUG_
-    registerWindow([&]() 
-        {
-            if (ImGui::Begin("MPG1 Playback"))
-            {
-                static std::string label("No file open");
-                ImGui::Text("%s", label.c_str());
-                ImGui::SameLine();
-                if (ImGui::Button("Open video"))
-                {
-                    auto path = cro::FileSystem::openFileDialogue("", "mpg");
-                    if (!path.empty())
-                    {
-                        if (!m_video.loadFromFile(path))
-                        {
-                            cro::FileSystem::showMessageBox("Error", "Could not open file");
-                            label = "No file open";
-                        }
-                        else
-                        {
-                            label = cro::FileSystem::getFileName(path);
-                        }
-                    }
-                }
-
-                ImGui::Image(m_video.getTexture(), { 352.f, 288.f }, { 0.f, 1.f }, { 1.f, 0.f });
-
-                if (ImGui::Button("Play"))
-                {
-                    m_video.play();
-                }
-                ImGui::SameLine();
-                if (ImGui::Button("Pause"))
-                {
-                    m_video.pause();
-                }
-                ImGui::SameLine();
-                if (ImGui::Button("Stop"))
-                {
-                    m_video.stop();
-                }
-                ImGui::SameLine();
-                auto looped = m_video.getLooped();
-                if (ImGui::Checkbox("Loop", &looped))
-                {
-                    m_video.setLooped(looped);
-                }
-
-                ImGui::Text("%3.3f / %3.3f", m_video.getPosition(), m_video.getDuration());
-
-                ImGui::SameLine();
-                if (ImGui::Button("Jump"))
-                {
-                    m_video.seek(100.f);
-                }
-            }
-            ImGui::End();
-        });
-//#endif
 }
 
 //public
@@ -466,4 +412,329 @@ void MenuState::createScene()
     auto& cam = m_scene.getActiveCamera().getComponent<cro::Camera>();
     cam.resizeCallback = updateCam;
     updateCam(cam);
+}
+
+void MenuState::createUI()
+{
+    registerWindow([&]()
+        {
+            if (ImGui::BeginMainMenuBar())
+            {
+                if (ImGui::BeginMenu("Utility"))
+                {
+                    if (ImGui::MenuItem("Video Player"))
+                    {
+                        showVideoPlayer = true;
+                    }
+
+                    if (ImGui::MenuItem("Generate Boilerplate"))
+                    {
+                        showBoilerplate = true;
+                    }
+
+                    ImGui::EndMenu();
+                }
+
+                ImGui::EndMainMenuBar();
+            }
+
+            if (showVideoPlayer)
+            {
+                if (ImGui::Begin("MPG1 Playback", &showVideoPlayer))
+                {
+                    static std::string label("No file open");
+                    ImGui::Text("%s", label.c_str());
+                    ImGui::SameLine();
+                    if (ImGui::Button("Open video"))
+                    {
+                        auto path = cro::FileSystem::openFileDialogue("", "mpg");
+                        if (!path.empty())
+                        {
+                            if (!m_video.loadFromFile(path))
+                            {
+                                cro::FileSystem::showMessageBox("Error", "Could not open file");
+                                label = "No file open";
+                            }
+                            else
+                            {
+                                label = cro::FileSystem::getFileName(path);
+                            }
+                        }
+                    }
+
+                    ImGui::Image(m_video.getTexture(), { 352.f, 288.f }, { 0.f, 1.f }, { 1.f, 0.f });
+
+                    if (ImGui::Button("Play"))
+                    {
+                        m_video.play();
+                    }
+                    ImGui::SameLine();
+                    if (ImGui::Button("Pause"))
+                    {
+                        m_video.pause();
+                    }
+                    ImGui::SameLine();
+                    if (ImGui::Button("Stop"))
+                    {
+                        m_video.stop();
+                    }
+                    ImGui::SameLine();
+                    auto looped = m_video.getLooped();
+                    if (ImGui::Checkbox("Loop", &looped))
+                    {
+                        m_video.setLooped(looped);
+                    }
+
+                    ImGui::Text("%3.3f / %3.3f", m_video.getPosition(), m_video.getDuration());
+
+                    ImGui::SameLine();
+                    if (ImGui::Button("Jump"))
+                    {
+                        m_video.seek(100.f);
+                    }
+                }
+                ImGui::End();
+            }
+
+            if (showBoilerplate)
+            {
+                if (ImGui::Begin("Create Boilerplate", &showBoilerplate))
+                {
+                    static std::string textBuffer;
+                    ImGui::InputText("Name:", &textBuffer);
+                    ImGui::SameLine();
+
+                    if (ImGui::Button("Create"))
+                    {
+                        if (!textBuffer.empty())
+                        {
+                            if (!createStub(textBuffer))
+                            {
+                                cro::FileSystem::showMessageBox("Error", "Stub not created (already exists?)");
+                            }
+                            else
+                            {
+                                std::stringstream ss;
+                                ss << "Created stub files for " << textBuffer << "State in src/" << textBuffer << "\n\n";
+                                ss << "Add the files to the project, register the state in MyApp\n";
+                                ss << "and add " << textBuffer << " to the StateIDs enum\n";
+
+                                cro::FileSystem::showMessageBox("Success", ss.str());
+                            }
+                        }
+
+                        textBuffer.clear();
+                    }
+                }
+                ImGui::End();
+            }
+        });
+}
+
+bool MenuState::createStub(const std::string& name)
+{
+    auto className = cro::Util::String::toLower(name);
+
+    std::array badChar =
+    {
+        ' ', '\t', '\\', '/', ';',
+        '\r', '\n'
+    };
+
+    for (auto c : badChar)
+    {
+        std::replace(className.begin(), className.end(), c, '_');
+    }
+    
+    std::string path = "src/" + className;
+    if (cro::FileSystem::directoryExists(path))
+    {
+        LogE << name << ": path already exists" << std::endl;
+        return false;
+    }
+
+    if (!cro::FileSystem::createDirectory(path))
+    {
+        LogE << "Failed creating " << path << std::endl;
+        return false;
+    }
+
+    auto frontStr = cro::Util::String::toUpper(className.substr(0, 1));
+    className[0] = frontStr[0];
+
+
+    auto headerPath = path + "/" + className + "State.hpp";
+    std::ofstream headerFile(headerPath);
+    if (headerFile.is_open() && headerFile.good())
+    {
+        headerFile << "//Auto-generated header file for Scratchpad Stub " << cro::SysTime::dateString() << ", " << cro::SysTime::timeString() << "\n\n";
+        headerFile << "#pragma once\n\n";
+        headerFile << "#include \"../StateIDs.hpp\"\n\n";
+        headerFile << "#include <crogine/core/State.hpp>\n#include <crogine/ecs/Scene.hpp>\n#include <crogine/gui/GuiClient.hpp>\n#include <crogine/graphics/ModelDefinition.hpp>\n\n";
+
+        headerFile << "class " << className << "State final : public cro::State, public cro::GuiClient\n{\n";
+        headerFile << "public:\n    " << className << "State(cro::StateStack&, cro::State::Context);\n\n";
+        headerFile << "    cro::StateID getStateID() const override { return States::ScratchPad::" << name << "; }\n\n";
+        headerFile << "    bool handleEvent(const cro::Event&) override;\n";
+        headerFile << "    void handleMessage(const cro::Message&) override;\n";
+        headerFile << "    bool simulate(float) override;\n";
+        headerFile << "    void render() override;\n\n";
+
+        headerFile << "private:\n\n";
+        headerFile << "    cro::Scene m_gameScene;\n";
+        headerFile << "    cro::Scene m_uiScene;\n";
+        headerFile << "    cro::ResourceCollection m_resources;\n\n";
+        headerFile << "    void addSystems();\n";
+        headerFile << "    void loadAssets();\n";
+        headerFile << "    void createScene();\n";
+        headerFile << "    void createUI();\n\n";
+
+        headerFile << "};";
+        headerFile.close();
+    }
+    else
+    {
+        LogE << "Failed creating " << headerPath << std::endl;
+        return false;
+    }
+
+    auto cppPath = path + "/" + className + "State.cpp";
+    std::ofstream cppFile(cppPath);
+    if (cppFile.is_open() && cppFile.good())
+    {
+        cppFile << "//Auto-generated source file for Scratchpad Stub " << cro::SysTime::dateString() << ", " << cro::SysTime::timeString() << "\n\n";
+
+        cppFile << "#include \"" << className << "State.hpp\"\n";
+
+        cppFile << R"(
+#include <crogine/gui/Gui.hpp>
+
+#include <crogine/ecs/components/Camera.hpp>
+#include <crogine/ecs/components/Transform.hpp>
+#include <crogine/ecs/components/Callback.hpp>
+#include <crogine/ecs/components/Drawable2D.hpp>
+#include <crogine/ecs/components/Sprite.hpp>
+
+#include <crogine/ecs/systems/CameraSystem.hpp>
+#include <crogine/ecs/systems/CallbackSystem.hpp>
+#include <crogine/ecs/systems/ModelRenderer.hpp>
+#include <crogine/ecs/systems/SpriteSystem2D.hpp>
+#include <crogine/ecs/systems/RenderSystem2D.hpp>
+
+)";
+
+        cppFile << className << "State::" << className << "State(cro::StateStack& stack, cro::State::Context context)";
+        cppFile << R"(
+    : cro::State    (stack, context),
+    m_gameScene     (context.appInstance.getMessageBus()),
+    m_uiScene       (context.appInstance.getMessageBus())
+{
+    context.mainWindow.loadResources([this]() {
+        addSystems();
+        loadAssets();
+        createScene();
+        createUI();
+    });
+}
+
+//public
+)";
+
+        cppFile << "bool " << className << "State::handleEvent(const cro::Event& evt)";
+        cppFile << R"(
+{
+    if (cro::ui::wantsMouse() || cro::ui::wantsKeyboard())
+    {
+        return true;
+    }
+
+    if (evt.type == SDL_KEYDOWN)
+    {
+        switch (evt.key.keysym.sym)
+        {
+        default: break;
+        case SDLK_BACKSPACE:
+        case SDLK_ESCAPE:
+            requestStackClear();
+            requestStackPush(0);
+            break;
+        }
+    }
+
+    m_gameScene.forwardEvent(evt);
+    m_uiScene.forwardEvent(evt);
+    return true;
+}
+
+)";
+        cppFile << "void " << className << "State::handleMessage(const cro::Message& msg)";
+        cppFile << R"(
+{
+    m_gameScene.forwardMessage(msg);
+    m_uiScene.forwardMessage(msg);
+}
+
+)";
+
+        cppFile << "bool " << className << "State::simulate(float dt)";
+        cppFile << R"(
+{
+    m_gameScene.simulate(dt);
+    m_uiScene.simulate(dt);
+    return true;
+}
+
+)";
+        cppFile << "void " << className << "State::render()";
+        cppFile << R"(
+{
+    m_gameScene.render();
+    m_uiScene.render();
+}
+
+//private
+)";
+
+        cppFile << "void " << className << "State::addSystems()";
+        cppFile << R"(
+{
+    auto& mb = getContext().appInstance.getMessageBus();
+    m_gameScene.addSystem<cro::CallbackSystem>(mb);
+    m_gameScene.addSystem<cro::CameraSystem>(mb);
+    m_gameScene.addSystem<cro::ModelRenderer>(mb);
+
+    m_uiScene.addSystem<cro::SpriteSystem2D>(mb);
+    m_uiScene.addSystem<cro::CameraSystem>(mb);
+    m_uiScene.addSystem<cro::RenderSystem2D>(mb);
+}
+
+)";
+
+        cppFile << "void " << className << "State::loadAssets()\n{\n}\n\n";
+        cppFile << "void " << className << "State::createScene()\n{\n}\n\n";
+        cppFile << "void " << className << "State::createUI()";
+        cppFile << R"(
+{
+    auto resize = [](cro::Camera& cam)
+    {
+        glm::vec2 size(cro::App::getWindow().getSize());
+        cam.viewport = {0.f, 0.f, 1.f, 1.f};
+        cam.setOrthographic(0.f, size.x, 0.f, size.y, -0.1f, 10.f);
+    };
+
+    auto& cam = m_uiScene.getActiveCamera().getComponent<cro::Camera>();
+    cam.resizeCallback = resize;
+    resize(cam);
+})";
+
+        cppFile.close();
+    }
+    else
+    {
+        LogE << "Failed creating " << cppPath << std::endl;
+        return false;
+    }
+
+
+    return true;
 }

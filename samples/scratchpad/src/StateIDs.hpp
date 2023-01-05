@@ -36,6 +36,7 @@ namespace States
         enum
         {
             MainMenu,
+            AnimBlend,
             BatCat,
             Billiards,
             Bush,

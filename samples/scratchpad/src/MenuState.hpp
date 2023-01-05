@@ -64,5 +64,8 @@ namespace sp
         void addSystems();
         void loadAssets();
         void createScene();
+        void createUI();
+
+        bool createStub(const std::string&);
     };
 }

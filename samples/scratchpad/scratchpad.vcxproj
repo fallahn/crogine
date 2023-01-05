@@ -297,6 +297,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\animblend\AnimBlendState.cpp" />
     <ClCompile Include="src\batcat\BatcatState.cpp" />
     <ClCompile Include="src\batcat\PlayerDirector.cpp" />
     <ClCompile Include="src\batcat\TerrainSystem.cpp" />
@@ -333,6 +334,7 @@
     <ClCompile Include="src\voxels\VoxelStateUI.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\animblend\AnimBlendState.hpp" />
     <ClInclude Include="src\batcat\BatcatState.hpp" />
     <ClInclude Include="src\batcat\icon.hpp" />
     <ClInclude Include="src\batcat\LoadingScreen.hpp" />

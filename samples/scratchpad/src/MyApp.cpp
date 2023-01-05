@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2022
+Matt Marchant 2020 - 2023
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -40,6 +40,7 @@ source distribution.
 #include "retro/RetroState.hpp"
 #include "rolling/RollingState.hpp"
 #include "swingput/SwingState.hpp"
+#include "animblend/AnimBlendState.hpp"
 #include "LoadingScreen.hpp"
 
 #include <crogine/core/Clock.hpp>
@@ -118,9 +119,10 @@ bool MyApp::initialise()
     m_stateStack.registerState<FrustumState>(States::ScratchPad::Frustum);
     m_stateStack.registerState<RollingState>(States::ScratchPad::Rolling);
     m_stateStack.registerState<SwingState>(States::ScratchPad::Swing);
+    m_stateStack.registerState<AnimBlendState>(States::ScratchPad::AnimBlend);
 
 #ifdef CRO_DEBUG_
-    m_stateStack.pushState(States::ScratchPad::Frustum);
+    m_stateStack.pushState(States::ScratchPad::AnimBlend);
     //m_stateStack.pushState(States::ScratchPad::MainMenu);
 #else
     m_stateStack.pushState(States::ScratchPad::MainMenu);

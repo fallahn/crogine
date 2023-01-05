@@ -79,6 +79,12 @@
     <Filter Include="Header Files\swingput">
       <UniqueIdentifier>{70109b5f-b87f-410b-8ed6-4a37dba20190}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\anim_blend">
+      <UniqueIdentifier>{2bc82466-9b57-4e2c-bb4d-10b2c0dabc97}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\anim_blend">
+      <UniqueIdentifier>{0456efab-54e8-4cc8-83db-b45f2e99256a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\LoadingScreen.cpp">
@@ -182,6 +188,9 @@
     </ClCompile>
     <ClCompile Include="src\swingput\Swingput.cpp">
       <Filter>Source Files\swingput</Filter>
+    </ClCompile>
+    <ClCompile Include="src\animblend\AnimBlendState.cpp">
+      <Filter>Source Files\anim_blend</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -319,6 +328,9 @@
     </ClInclude>
     <ClInclude Include="src\swingput\Swingput.hpp">
       <Filter>Header Files\swingput</Filter>
+    </ClInclude>
+    <ClInclude Include="src\animblend\AnimBlendState.hpp">
+      <Filter>Header Files\anim_blend</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
