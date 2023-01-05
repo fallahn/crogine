@@ -60,6 +60,16 @@ void Skeleton::play(std::size_t idx, float rate, float blendingTime)
         return;
     }
 
+    m_animations[idx].playbackRate = rate;
+    m_animations[idx].currentFrame = m_animations[idx].startFrame;
+
+    //make sure the interp output is correct so we can blend with it
+    auto startIndex = idx * m_frameSize;
+    for (auto i = 0u; i < m_frameSize; ++i)
+    {
+        m_animations[idx].interpolationOutput[i] = m_frames[startIndex + i];
+    }
+
     if (idx != m_currentAnimation)
     {
         //blend if we're already playing
@@ -67,11 +77,7 @@ void Skeleton::play(std::size_t idx, float rate, float blendingTime)
         m_blendTime = blendingTime;
         m_currentBlendTime = 0.f;
     }
-    else
-    {
-        m_animations[idx].playbackRate = rate;
-        m_animations[idx].currentFrame = m_animations[idx].startFrame;
-    }
+
     m_playbackRate = rate;
     m_state = Playing;
 }
@@ -128,6 +134,7 @@ void Skeleton::addAnimation(const SkeletalAnim& anim)
 {
     CRO_ASSERT(m_frameCount >= (anim.startFrame + anim.frameCount), "animation is out of frame range");
     m_animations.push_back(anim);
+    m_animations.back().interpolationOutput.resize(m_frameSize);
 }
 
 void Skeleton::addFrame(const std::vector<Joint>& frame)
@@ -228,6 +235,8 @@ void Skeleton::buildKeyframe(std::size_t frame)
     for (auto i = 0u; i < m_frameSize; ++i)
     {
        m_currentFrame[i] = m_rootTransform * m_frames[offset + i].worldMatrix * m_invBindPose[i];
+
+       //m_animations[m_currentAnimation].interpolationOutput[i] = m_frames[offset + i];
     }
 }
 

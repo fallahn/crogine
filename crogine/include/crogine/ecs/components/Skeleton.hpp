@@ -50,33 +50,10 @@ namespace cro
     }
 
     /*!
-    \brief Describes an animation made up from a series of
-    frames within a skeleton.
-    This is used as part of a Skeleton component, rather than
-    as a stand-alone component itself
-    */
-    struct CRO_EXPORT_API SkeletalAnim final
-    {
-        std::string name;
-        std::uint32_t startFrame = 0;
-        std::uint32_t frameCount = 0;
-        std::uint32_t currentFrame = 0;
-        float frameRate = 12.f;
-        bool looped = false;
-        float playbackRate = 0.f;
-        float currentFrameTime = 0.f;
-
-        //holds the current state of interpolation pre-transform
-        //so it can be mixed with other animations before creating
-        //final output
-        std::vector<glm::mat4> interpolationOutput;
-    };
-
-    /*!
     \brief Represents a Joint in the skeleton
     These are used to make up the joints of a key frame.
     Each transform is assumed to *already* be transformed
-    by its parents - done by the model loader when the 
+    by its parents - done by the model loader when the
     key frames were created.
     */
     struct CRO_EXPORT_API Joint final
@@ -105,6 +82,30 @@ namespace cro
         glm::mat4 worldMatrix = glm::mat4(1.f);
     };
 
+    /*!
+    \brief Describes an animation made up from a series of
+    frames within a skeleton.
+    This is used as part of a Skeleton component, rather than
+    as a stand-alone component itself
+    */
+    struct CRO_EXPORT_API SkeletalAnim final
+    {
+        std::string name;
+        std::uint32_t startFrame = 0;
+        std::uint32_t frameCount = 0;
+        std::uint32_t currentFrame = 0;
+        float frameRate = 12.f;
+        bool looped = false;
+        float playbackRate = 0.f;
+        float currentFrameTime = 0.f;
+
+        //holds the current state of interpolation pre-transform
+        //so it can be mixed with other animations before creating
+        //final output
+        std::vector<Joint> interpolationOutput;
+    };
+
+    
     /*!
     \brief Represents and attachment on a skeleton.
     Attachments are used for attaching other models,

@@ -62,7 +62,7 @@ namespace cro
         //interpolates frames within a single animation (move this to anim struct?)
         void interpolateAnimation(SkeletalAnim& source, std::size_t targetFrame, float time, Skeleton& skeleton) const;
 
-        void blendAnimations(const SkeletalAnim&, const SkeletalAnim&, Skeleton&) const;
+        void blendAnimations(const SkeletalAnim&, const SkeletalAnim&, float time, Skeleton&) const;
 
         void updateBoundsFromCurrentFrame(Skeleton& dest, const Mesh::Data&) const;
     };

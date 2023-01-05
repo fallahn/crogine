@@ -43,15 +43,17 @@ namespace
 {
     //interp tx and rot separately
     //TODO convert to 4x3 to free up some uniform space
-    glm::mat4 mixJoint(const Joint& a, const Joint& b, float time)
+    glm::mat4 mixJoint(const Joint& a, const Joint& b, float time, Joint& output)
     {
-        glm::vec3 trans = glm::mix(a.translation, b.translation, time);
-        glm::quat rot = glm::slerp(a.rotation, b.rotation, time);
-        glm::vec3 scale = glm::mix(a.scale, b.scale, time);
+        output.translation = glm::mix(a.translation, b.translation, time);
+        output.rotation = glm::slerp(a.rotation, b.rotation, time);
+        output.scale = glm::mix(a.scale, b.scale, time);
 
-        glm::mat4 result = glm::translate(glm::mat4(1.f), trans);
-        result *= glm::toMat4(rot);
-        return glm::scale(result, scale);
+        output.parent = a.parent; //if a and b's parents differ then something is very wrong
+
+        glm::mat4 result = glm::translate(glm::mat4(1.f), output.translation);
+        result *= glm::toMat4(output.rotation);
+        return glm::scale(result, output.scale);
     }
 }
 
@@ -86,31 +88,29 @@ void SkeletalAnimator::process(float dt)
             entity.getComponent<cro::Transform>().getWorldTransform() 
         };
 
-        //update current frame if running
-        if (skel.m_nextAnimation < 0)
+
+        //update current animation
+        updateAnimation(skel.m_animations[skel.m_currentAnimation], skel, entity, ctx);
+
+        //if we have a new animation start updating it and blend its output
+        //with the current anim according to blend time
+        if (skel.m_nextAnimation > -1)
         {
-            //update current animation
-            updateAnimation(skel.m_animations[skel.m_currentAnimation], skel, entity, ctx);
-        }
-        else
-        {
-            
+            //update the next animation to start blending it in
+            updateAnimation(skel.m_animations[skel.m_nextAnimation], skel, entity, ctx);
+
             //blend to next animation
             skel.m_currentBlendTime += dt;
             if (entity.getComponent<Model>().isVisible())
             {
-                /*auto& anim = skel.m_animations[skel.m_currentAnimation];
                 float interpTime = std::min(1.f, skel.m_currentBlendTime / skel.m_blendTime);
-
-                auto startFrame = static_cast<std::uint32_t>(anim.currentFrame + std::round(anim.currentFrameTime / skel.m_frameTime));
-                startFrame %= anim.frameCount;
-
-                interpolate(startFrame, skel.m_animations[skel.m_nextAnimation].startFrame, interpTime, skel);*/
+                blendAnimations(skel.m_animations[skel.m_currentAnimation], skel.m_animations[skel.m_nextAnimation], interpTime, skel);
             }
 
             if (skel.m_currentBlendTime > skel.m_blendTime
                 || !skel.m_useInterpolation)
             {
+                //update to current animation to next animation
                 skel.m_animations[skel.m_currentAnimation].playbackRate = 0.f;
                 skel.m_currentAnimation = skel.m_nextAnimation;
 
@@ -119,11 +119,7 @@ void SkeletalAnimator::process(float dt)
                 skel.m_currentBlendTime = 0.f;
 
                 auto& anim = skel.m_animations[skel.m_currentAnimation];
-                anim.currentFrameTime = skel.m_currentBlendTime - skel.m_blendTime;
                 anim.playbackRate = skel.m_playbackRate;
-                anim.currentFrame = anim.startFrame;
-
-                skel.buildKeyframe(anim.currentFrame);
             }
         }
 
@@ -151,9 +147,20 @@ void SkeletalAnimator::onEntityAdded(Entity entity)
     CRO_ASSERT(skeleton.m_frameSize != 0, "");
 
     //initialise the interpolated output to the correct size.
-    for (auto& anim : skeleton.m_animations)
+    for (auto i = 0u; i < skeleton.m_animations.size(); ++i)
     {
-        anim.interpolationOutput.resize(skeleton.m_currentFrame.size());
+        auto& anim = skeleton.m_animations[i];
+
+        //probably don't need this as it should be done when anim was added to skel
+        anim.interpolationOutput.resize(skeleton.m_frameSize);
+
+        //copies the initial frame so we have something to mix when
+        //blending an animation if it hasn't been interpolated at least once
+        auto startIndex = i * skeleton.m_frameSize;
+        for (auto j = 0; j < skeleton.m_frameSize; ++j)
+        {
+            anim.interpolationOutput[j] = skeleton.m_frames[startIndex + j];
+        }
     }
 
     entity.getComponent<Model>().setSkeleton(&skeleton.m_currentFrame[0], skeleton.m_frameSize);
@@ -193,6 +200,13 @@ void SkeletalAnimator::updateAnimation(SkeletalAnim& anim, Skeleton& skel, Entit
         //apply the current frame
         skel.buildKeyframe(anim.currentFrame);
 
+        //rebuild the anim cache in case we need it for blending
+        auto startIndex = anim.currentFrame * skel.m_frameSize;
+        for (auto i = 0; i < skel.m_frameSize; ++i)
+        {
+            anim.interpolationOutput[i] = skel.m_frames[startIndex + i];
+        }
+
         auto& meshData = entity.getComponent<Model>().getMeshData();
         meshData.boundingBox = skel.m_keyFrameBounds[anim.currentFrame];
         meshData.boundingSphere = skel.m_keyFrameBounds[anim.currentFrame];
@@ -211,7 +225,6 @@ void SkeletalAnimator::updateAnimation(SkeletalAnim& anim, Skeleton& skel, Entit
             }
         }
 
-
         //raise notification events
         for (auto [joint, uid, _] : skel.m_notifications[anim.currentFrame])
         {
@@ -229,16 +242,18 @@ void SkeletalAnimator::updateAnimation(SkeletalAnim& anim, Skeleton& skel, Entit
 
     //only interpolate if model is visible and close to the active camera
     if (!entity.getComponent<Model>().isHidden()
-        && anim.playbackRate != 0
-        && skel.m_useInterpolation)
+        && anim.playbackRate != 0)
     {
-        //check distance to camera and check if actually in front
-        auto direction = entity.getComponent<cro::Transform>().getWorldPosition() - ctx.camPos;
-        if (glm::dot(direction, ctx.camDir) > 0
-            && glm::length2(direction) < skel.m_interpolationDistance)
+        if (skel.m_useInterpolation)
         {
-            float interpTime = anim.currentFrameTime / skel.m_frameTime;
-            interpolateAnimation(anim, nextFrame, interpTime, skel);
+            //check distance to camera and check if actually in front
+            auto direction = entity.getComponent<cro::Transform>().getWorldPosition() - ctx.camPos;
+            if (glm::dot(direction, ctx.camDir) > 0
+                && glm::length2(direction) < skel.m_interpolationDistance)
+            {
+                float interpTime = anim.currentFrameTime / skel.m_frameTime;
+                interpolateAnimation(anim, nextFrame, interpTime, skel);
+            }
         }
     }
 }
@@ -251,26 +266,40 @@ void SkeletalAnimator::interpolateAnimation(SkeletalAnim& source, std::size_t ta
     std::size_t startA = source.currentFrame * skeleton.m_frameSize;
     std::size_t startB = targetFrame * skeleton.m_frameSize;
 
-
+    //stores interpolated output in source so we can use it to blend.
     for (auto i = 0u; i < skeleton.m_frameSize; ++i)
     {
-        glm::mat4 worldMatrix = mixJoint(skeleton.m_frames[startA + i], skeleton.m_frames[startB + i], time);
+        glm::mat4 worldMatrix = mixJoint(skeleton.m_frames[startA + i], skeleton.m_frames[startB + i], time, source.interpolationOutput[i]);
 
         std::int32_t parent = skeleton.m_frames[startA + i].parent;
         while (parent != -1)
         {
-            worldMatrix = mixJoint(skeleton.m_frames[startA + parent], skeleton.m_frames[startB + parent], time) * worldMatrix;
+            worldMatrix = mixJoint(skeleton.m_frames[startA + parent], skeleton.m_frames[startB + parent], time, source.interpolationOutput[parent]) * worldMatrix;
             parent = skeleton.m_frames[startA + parent].parent;
         }
 
-        source.interpolationOutput[i] = worldMatrix;
+        //note this gets overwritten if blending animations - might be
+        //useful to prevent it happening in those cases?
         skeleton.m_currentFrame[i] = skeleton.m_rootTransform * worldMatrix *  skeleton.m_invBindPose[i];
     }
 }
 
-void SkeletalAnimator::blendAnimations(const SkeletalAnim& a, const SkeletalAnim& b, Skeleton& skeleton) const
+void SkeletalAnimator::blendAnimations(const SkeletalAnim& a, const SkeletalAnim& b, float time, Skeleton& skeleton) const
 {
+    Joint temp; //we need something to pass as a func param
+    for (auto i = 0u; i < skeleton.m_frameSize; ++i)
+    {
+        auto worldMat = mixJoint(a.interpolationOutput[i], b.interpolationOutput[i], time, temp);
 
+        auto parent = a.interpolationOutput[i].parent;
+        while (parent != -1)
+        {
+            worldMat = mixJoint(a.interpolationOutput[parent], b.interpolationOutput[parent], time, temp) * worldMat;
+            parent = a.interpolationOutput[parent].parent;
+        }
+
+        skeleton.m_currentFrame[i] = skeleton.m_rootTransform * worldMat * skeleton.m_invBindPose[i];
+    }
 }
 
 void SkeletalAnimator::updateBoundsFromCurrentFrame(Skeleton& dest, const Mesh::Data& source) const
