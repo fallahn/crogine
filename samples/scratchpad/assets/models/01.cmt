@@ -1,0 +1,26 @@
+model 01
+{
+    mesh = assets/models/01.cmb
+    cast_shadows = true
+
+    material VertexLit
+    {
+        name = "Untitled"
+        colour = 1.000000,1.000000,1.000000,1.000000
+        mask_colour = 1,0,0,1
+        smooth = false
+        repeat = true
+        depth_test = true
+        double_sided = false
+        use_mipmaps = false
+        animated = false
+        row_count = 1
+        col_count = 1
+        framerate = 1.000000
+        subrect = 0.000000,0.000000,1.000,1.000000
+        blendmode = none
+        diffuse = "assets/images/crowd01.png"
+        skinned = true
+
+    }
+}

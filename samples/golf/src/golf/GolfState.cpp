@@ -241,7 +241,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     createTransition();
 
     sd.baseState = StateID::Golf;
-    
+
     std::int32_t humanCount = 0;
     for (auto i = 0u; i < m_sharedData.localConnectionData.playerCount; ++i)
     {
@@ -255,7 +255,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     //This is set when setting active player.
     Achievements::setActive(allowAchievements);
 
-    
+
     std::int32_t clientCount = 0;
     for (auto& c : sd.connectionData)
     {
@@ -283,6 +283,15 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
 
 #endif
     cro::App::getInstance().resetFrameTime();
+
+    registerWindow([&]() 
+        {
+            if (ImGui::Begin("Window"))
+            {
+                m_gameScene.getSystem<cro::SkeletalAnimator>()->debugUI();
+            }
+            ImGui::End();        
+        });
 }
 
 //public
@@ -2919,11 +2928,11 @@ void GolfState::addSystems()
     m_gameScene.addSystem<cro::CallbackSystem>(mb);
     m_gameScene.addSystem<SpectatorSystem>(mb, m_collisionMesh);
     m_gameScene.addSystem<PropFollowSystem>(mb, m_collisionMesh);
-    m_gameScene.addSystem<cro::SkeletalAnimator>(mb);
     m_gameScene.addSystem<cro::BillboardSystem>(mb);
     m_gameScene.addSystem<VatAnimationSystem>(mb);
     m_gameScene.addSystem<cro::SpriteSystem3D>(mb, 10.f); //water rings sprite :D
     m_gameScene.addSystem<cro::SpriteAnimator>(mb);
+    m_gameScene.addSystem<cro::SkeletalAnimator>(mb);
     m_gameScene.addSystem<CameraFollowSystem>(mb);
     m_gameScene.addSystem<cro::CameraSystem>(mb);
     m_gameScene.addSystem<cro::ShadowMapRenderer>(mb)->setRenderInterval(m_sharedData.hqShadows ? 2 : 3);

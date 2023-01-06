@@ -344,6 +344,18 @@ void MenuState::createScene()
                 }
             });
 
+    //animation blending
+    textPos.y -= MenuSpacing;
+    entity = createButton("Anim Blending", textPos);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
+        uiSystem->addCallback([&](cro::Entity e, const cro::ButtonEvent& evt)
+            {
+                if (activated(evt))
+                {
+                    requestStackClear();
+                    requestStackPush(States::ScratchPad::AnimBlend);
+                }
+            });
 
     //load plugin
     textPos.y -= MenuSpacing;
@@ -629,6 +641,8 @@ bool MenuState::createStub(const std::string& name)
 #include <crogine/ecs/systems/SpriteSystem2D.hpp>
 #include <crogine/ecs/systems/RenderSystem2D.hpp>
 
+#include <crogine/util/Constants.hpp>
+
 )";
 
         cppFile << className << "State::" << className << "State(cro::StateStack& stack, cro::State::Context context)";
@@ -719,7 +733,25 @@ bool MenuState::createStub(const std::string& name)
 )";
 
         cppFile << "void " << className << "State::loadAssets()\n{\n}\n\n";
-        cppFile << "void " << className << "State::createScene()\n{\n}\n\n";
+        cppFile << "void " << className << "State::createScene()";
+        cppFile << R"(
+{
+    auto resize = [](cro::Camera& cam)
+    {
+        glm::vec2 size(cro::App::getWindow().getSize());
+        cam.viewport = { 0.f, 0.f, 1.f, 1.f };
+        cam.setPerspective(70.f * cro::Util::Const::degToRad, size.x / size.y, 0.1f, 10.f);
+    };
+
+    auto& cam = m_gameScene.getActiveCamera().getComponent<cro::Camera>();
+    cam.resizeCallback = resize;
+    resize(cam);
+
+    m_gameScene.getActiveCamera().getComponent<cro::Transform>().setPosition({ 0.f, 0.8f, 2.f });
+}
+
+)";
+
         cppFile << "void " << className << "State::createUI()";
         cppFile << R"(
 {

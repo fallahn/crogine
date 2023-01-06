@@ -45,22 +45,25 @@ namespace cro
 
         void process(float) override;
 
+        //must be drawn inside a window - ie doesn't include begin()/end()
+        void debugUI() const;
+
     private:
         void onEntityAdded(Entity) override;
 
 
         struct AnimationContext final
         {
-            glm::vec3 camPos = glm::vec3(0.f);
-            glm::vec3 camDir = glm::vec3(0.f);
+            bool useInterpolation = false;
             glm::mat4 worldTransform = glm::mat4(1.f);
-            static constexpr float dt = 1.f / 60.f;
+            float dt = 1.f / 60.f;
+            bool writeOutput = true; //if false the result of interpolation isn't output to the current frame
         };
 
         void updateAnimation(SkeletalAnim& anim, Skeleton& skeleton, Entity entity, const AnimationContext& ctx) const;
 
         //interpolates frames within a single animation (move this to anim struct?)
-        void interpolateAnimation(SkeletalAnim& source, std::size_t targetFrame, float time, Skeleton& skeleton) const;
+        void interpolateAnimation(SkeletalAnim& source, std::size_t targetFrame, float time, Skeleton& skeleton, bool) const;
 
         void blendAnimations(const SkeletalAnim&, const SkeletalAnim&, float time, Skeleton&) const;
 

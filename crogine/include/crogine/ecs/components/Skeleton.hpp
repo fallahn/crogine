@@ -103,6 +103,7 @@ namespace cro
         //so it can be mixed with other animations before creating
         //final output
         std::vector<Joint> interpolationOutput;
+        void resetInterp(const class Skeleton&);
     };
 
     
@@ -356,6 +357,12 @@ namespace cro
         void setInterpolationEnabled(bool enabled) { m_useInterpolation = enabled; }
 
         /*!
+        \brief Returns whether interpolation between frames is currently enabled
+        \see setInterpolationEnabled
+        */
+        bool getInterpolationEnabled() const { return m_useInterpolation; }
+
+        /*!
         \brief Sets the maximum distance from the camera to use interpolation.
         Models further from this will still animate but the frames will skip
         from one to the next without being interpolated in between.
@@ -375,7 +382,6 @@ namespace cro
         float m_currentBlendTime;
 
         float m_frameTime;
-        //float m_currentFrameTime;
         bool m_useInterpolation;
         float m_interpolationDistance;
 
@@ -396,6 +402,7 @@ namespace cro
         std::vector<cro::Box> m_keyFrameBounds; //calc'd on joining the System for each key frame
 
         friend class SkeletalAnimator;
+        friend struct SkeletalAnim;
         friend struct Detail::ModelBinary::SkeletonHeader;
         friend struct Detail::ModelBinary::SkeletonHeaderV2;
 
