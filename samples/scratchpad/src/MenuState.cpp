@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2022
+Matt Marchant 2020 - 2023
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -562,6 +562,14 @@ bool MenuState::createStub(const std::string& name)
     auto frontStr = cro::Util::String::toUpper(className.substr(0, 1));
     className[0] = frontStr[0];
 
+    std::ofstream cmakeFile(path + "/CMakeLists.txt");
+    if (cmakeFile.is_open() && cmakeFile.good())
+    {
+        cmakeFile << "set(" << cro::Util::String::toUpper(className) << "_SRC\n";
+        cmakeFile << "  ${PROJECT_DIR}/" << cro::Util::String::toLower(className) << "/" << className << "State.cpp)";
+
+        cmakeFile.close();
+    }
 
     auto headerPath = path + "/" + className + "State.hpp";
     std::ofstream headerFile(headerPath);
