@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2022
+Matt Marchant 2021 - 2023
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -78,6 +78,9 @@ struct CameraFollower final
     glm::vec3 playerPosition = glm::vec3(0.f);
     float radius = 0.f; //camera becomes active when ball within this (should be ^2)
 
+    static constexpr float MinFollowTime = 4.f;
+    float currentFollowTime = 0.f;
+
     glm::vec3 targetOffset = glm::vec3(0.f); //aim is offset by this from target position
 
     std::int32_t id = -1;
@@ -105,4 +108,7 @@ public:
 
 private:
     std::int32_t m_closestCamera;
+    cro::Entity m_currentCamera;
+
+    void onEntityAdded(cro::Entity) override;
 };

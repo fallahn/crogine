@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2022
+Matt Marchant 2017 - 2023
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -157,7 +157,7 @@ void SkeletalAnimator::debugUI() const
 {
     ImGui::SliderFloat("Rate", &playbackRate, 0.1f, 2.f);
 
-    auto c = std::min(2ull, getEntities().size());
+    auto c = std::min(2u, static_cast<std::uint32_t>(getEntities().size()));
     
     //if (!getEntities().empty())
     for(auto i = 0u; i < c; ++i)

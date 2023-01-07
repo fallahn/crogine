@@ -200,7 +200,7 @@ void AnimBlendState::createScene()
     cam.resizeCallback = resize;
     resize(cam);
 
-    m_gameScene.getActiveCamera().getComponent<cro::Transform>().setPosition({ 0.f, 0.8f, 2.f });
+    m_gameScene.getActiveCamera().getComponent<cro::Transform>().setPosition({ 0.f, 0.8f, 1.f });
 }
 
 void AnimBlendState::createUI()

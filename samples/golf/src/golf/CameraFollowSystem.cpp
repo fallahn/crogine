@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2022
+Matt Marchant 2021 - 2023
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -165,6 +165,7 @@ void CameraFollowSystem::process(float dt)
 
     float currDist = std::numeric_limits<float>::max();
     auto lastCam = m_closestCamera;
+    cro::Entity currentCam;
 
     auto& entities = getEntities();
     for (auto entity : entities)
@@ -186,6 +187,8 @@ void CameraFollowSystem::process(float dt)
         {
             continue;
         }
+
+        follower.currentFollowTime -= dt;
 
         switch (follower.state)
         {
@@ -214,8 +217,9 @@ void CameraFollowSystem::process(float dt)
             //and if we fall within the camera's radius
             //and if the player isn't standing too close
             const auto& collider = follower.target.getComponent<ClientCollider>();
-            if (collider.state == static_cast<std::uint8_t>(Ball::State::Flight)
-                || collider.terrain == TerrainID::Green)
+            if (m_currentCamera.getComponent<CameraFollower>().currentFollowTime < 0 &&
+                (collider.state == static_cast<std::uint8_t>(Ball::State::Flight)
+                || collider.terrain == TerrainID::Green))
             {
                 float positionMultiplier = 1.f;
                 if (follower.id == CameraID::Green)
@@ -231,13 +235,13 @@ void CameraFollowSystem::process(float dt)
                     && follower.id > m_closestCamera) //once we reach green don't go back until explicitly reset
                 {
                     currDist = dist;
-                    //m_closestCamera = follower.id;
 
                     //special case to stop the overhead cam when on the green
                     if (collider.terrain != TerrainID::Green ||
                         follower.id == CameraID::Green)
                     {
                         m_closestCamera = follower.id;
+                        currentCam = entity;
                     }
                 }
             }
@@ -316,6 +320,8 @@ void CameraFollowSystem::process(float dt)
         auto* msg = postMessage<SceneEvent>(MessageID::SceneMessage);
         msg->type = SceneEvent::RequestSwitchCamera;
         msg->data = m_closestCamera;
+
+        m_currentCamera = currentCam;
     }
 }
 
@@ -335,4 +341,11 @@ void CameraFollowSystem::resetCamera()
             entity.getComponent<CameraFollower>().state = CameraFollower::Reset;
         }
     }
+}
+
+//private
+void CameraFollowSystem::onEntityAdded(cro::Entity e)
+{
+    //we need at least one valid value
+    m_currentCamera = e;
 }

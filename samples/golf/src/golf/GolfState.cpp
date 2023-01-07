@@ -5932,11 +5932,11 @@ void GolfState::updateActor(const ActorInfo& update)
                     if (glm::length2(ballPos - camPos) < MaxRad
                         && glm::length2(destPos - camPos) > MaxRad)
                     {
-                        auto offset = (destPos - camPos) / 2.f;
                         auto& data = m_drone.getComponent<cro::Callback>().getUserData<DroneCallbackData>();
                         
                         if (data.canRetarget)
                         {
+                            auto offset = (destPos - camPos) * 0.6f;
                             data.target.getComponent<cro::Transform>().move({ offset.x, 0.f, offset.y });
                             data.canRetarget = false; //only do this once per shot.
                         }
@@ -6512,7 +6512,11 @@ void GolfState::setActiveCamera(std::int32_t camID)
 
         m_cameras[m_currentCamera].getComponent<TargetInfo>().waterPlane = m_waterEnt;
         m_cameras[m_currentCamera].getComponent<cro::Camera>().active = true;
-
+        
+        if (m_cameras[m_currentCamera].hasComponent<CameraFollower>())
+        {
+            m_cameras[m_currentCamera].getComponent<CameraFollower>().currentFollowTime = CameraFollower::MinFollowTime;
+        }
         m_courseEnt.getComponent<cro::Drawable2D>().setShader(m_cameras[m_currentCamera].getComponent<TargetInfo>().postProcess);
     }
 }
