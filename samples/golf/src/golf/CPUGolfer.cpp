@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022
+Matt Marchant 2022 - 2023
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -80,6 +80,14 @@ namespace
 
     const cro::Time MaxAimTime = cro::seconds(5.f);
     const cro::Time MaxPredictTime = cro::seconds(6.f);
+
+    constexpr std::array Deviance =
+    {
+        0.001f, -0.001f,
+        0.008f, -0.0032f,
+        0.0048f, 0.002f, 0.0001f
+    };
+    std::size_t devianceOffset = 0;
 }
 
 /*
@@ -215,7 +223,7 @@ void CPUGolfer::update(float dt, glm::vec3 windVector)
     }
     m_popEvents.clear();
 
-    if (m_skills[m_skillIndex].skill == Skill::Dynamic)
+    if (m_skills[getSkillIndex()].skill == Skill::Dynamic)
     {
         switch (m_state)
         {
@@ -752,7 +760,7 @@ void CPUGolfer::aimDynamic(float dt)
         //or refine based on prediction
         else
         {
-            m_targetAngle = std::clamp(m_targetAngle, m_aimAngle - m_inputParser.getMaxRotation(), m_aimAngle + m_inputParser.getMaxRotation());
+            m_targetAngle = std::clamp(m_targetAngle + (Deviance[devianceOffset] * 0.1f), m_aimAngle - (m_inputParser.getMaxRotation() * 0.9f), m_aimAngle + (m_inputParser.getMaxRotation() * 0.9f));
 
             //update input parser
             if (auto diff = std::abs(m_inputParser.getYaw() - m_targetAngle); diff > 0.05f
@@ -800,7 +808,9 @@ void CPUGolfer::updatePrediction(float dt)
             calcAccuracy();
 
             //we need to maintain a min power target incase we're on the lip of the hole
-            m_targetPower = std::max(0.1f, m_targetPower);
+            auto multiplier = m_activePlayer.terrain - TerrainID::Green; //if green no deviance, rough then double deviance :)
+            m_targetPower = std::max(0.1f, std::min(m_targetPower + ((Deviance[devianceOffset] * 0.1f) * multiplier), 1.f));
+            m_targetAccuracy -= (Deviance[devianceOffset] * 0.01f) * multiplier;
 
             m_state = State::Stroke;
 
@@ -848,10 +858,10 @@ void CPUGolfer::updatePrediction(float dt)
             else
             {
                 //calc this tolerance based on CPU difficulty / distance to hole
-                float precision = m_skills[m_skillIndex].resultTolerancePutt;
+                float precision = m_skills[getSkillIndex()].resultTolerancePutt;
                 if (m_activePlayer.terrain != TerrainID::Green)
                 {
-                    precision = m_skills[m_skillIndex].resultTolerance + (getOffsetValue() * 0.5f);
+                    precision = m_skills[getSkillIndex()].resultTolerance + (getOffsetValue() * 0.5f);
                     precision = (precision / 2.f) + ((precision / 2.f) * std::min(1.f, glm::length(targetDir) / 200.f));
                 }
 
@@ -926,6 +936,11 @@ void CPUGolfer::stroke(float dt)
             m_strokeState = StrokeState::Power;
             m_prevPower = 0.f;
             m_prevAccuracy = -1.f;
+
+            devianceOffset = (devianceOffset + 1 + m_activePlayer.player) % Deviance.size();
+            //TODO this actually happens twice because of the delay of the
+            //event queue, how ever doesn't appear to be a problem as long
+            //as the 'double-tap' prevention works
         }
         else
         {
@@ -963,16 +978,16 @@ void CPUGolfer::calcAccuracy()
     //m_targetAccuracy = static_cast<float>(cro::Util::Random::value(4, 12)) / 100.f;
 
     m_targetAccuracy = 0.08f;
-    if (m_skills[m_skillIndex].strokeAccuracy != 0)
+    if (m_skills[getSkillIndex()].strokeAccuracy != 0)
     {
-        m_targetAccuracy += static_cast<float>(-m_skills[m_skillIndex].strokeAccuracy, m_skills[m_skillIndex].strokeAccuracy) / 100.f;
+        m_targetAccuracy += static_cast<float>(-m_skills[getSkillIndex()].strokeAccuracy, m_skills[m_skillIndex].strokeAccuracy) / 100.f;
     }
 
     //occasionally make really inaccurate
     //... or maybe even perfect? :)
-    if (m_skills[m_skillIndex].mistakeOdds != 0)
+    if (m_skills[getSkillIndex()].mistakeOdds != 0)
     {
-        if (cro::Util::Random::value(0, m_skills[m_skillIndex].mistakeOdds) == 0)
+        if (cro::Util::Random::value(0, m_skills[getSkillIndex()].mistakeOdds) == 0)
         {
             m_targetAccuracy += static_cast<float>(cro::Util::Random::value(-16, 16)) / 100.f;
         }
@@ -999,8 +1014,19 @@ float CPUGolfer::getOffsetValue() const
     float multiplier = m_activePlayer.terrain == TerrainID::Green ? smoothstep(0.1f, 0.95f, glm::length(m_target - m_activePlayer.position) / Clubs[ClubID::Putter].target) : 1.f;
 
     return static_cast<float>(1 - ((m_offsetRotation % 2) * 2))
-        * static_cast<float>((m_offsetRotation % (m_skills.size() - m_skillIndex)))
+        * static_cast<float>((m_offsetRotation % (m_skills.size() - getSkillIndex())))
         * multiplier;
+}
+
+std::size_t CPUGolfer::getSkillIndex() const
+{
+    std::int32_t offset = m_activePlayer.player % 2;
+    if (m_skillIndex > 2)
+    {
+        offset *= -1;
+    }
+
+    return std::min(static_cast<std::int32_t>(m_skills.size() - 1), static_cast<std::int32_t>(m_skillIndex) + offset);
 }
 
 void CPUGolfer::sendKeystroke(std::int32_t key, bool autoRelease)

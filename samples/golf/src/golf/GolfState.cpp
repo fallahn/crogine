@@ -3808,7 +3808,9 @@ void GolfState::buildScene()
         targetEnt.getComponent<cro::Callback>().function =
             [&](cro::Entity e, float dt)
         {
-            auto wind = m_windUpdate.currentWindSpeed * m_windUpdate.currentWindVector;
+            auto wind = m_windUpdate.currentWindSpeed * (m_windUpdate.currentWindVector * 0.8f);
+            wind += m_windUpdate.currentWindVector * 0.2f;
+
             e.getComponent<cro::Transform>().move(wind * dt);
         };
 
@@ -6516,6 +6518,7 @@ void GolfState::setActiveCamera(std::int32_t camID)
         if (m_cameras[m_currentCamera].hasComponent<CameraFollower>())
         {
             m_cameras[m_currentCamera].getComponent<CameraFollower>().currentFollowTime = CameraFollower::MinFollowTime;
+            m_cameras[m_currentCamera].getComponent<CameraFollower>().isSnapped = false;
         }
         m_courseEnt.getComponent<cro::Drawable2D>().setShader(m_cameras[m_currentCamera].getComponent<TargetInfo>().postProcess);
     }

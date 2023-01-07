@@ -143,6 +143,12 @@ void CameraFollowSystem::process(float dt)
 {
     const auto snapTarget = [](CameraFollower& follower, glm::vec3 target)
     {
+        if (follower.isSnapped)
+        {
+            follower.currentTarget = target;
+            return;
+        }
+
         float velocity = 0.f;
         if (follower.target.hasComponent<Ball>())
         {
@@ -160,6 +166,9 @@ void CameraFollowSystem::process(float dt)
         if (glm::length2(target - follower.currentTarget) < (0.005f * snapMultiplier))
         {
             follower.currentTarget = target;
+            follower.isSnapped = true;
+
+            //LogI << "snapped to target" << std::endl;
         }
     };
 

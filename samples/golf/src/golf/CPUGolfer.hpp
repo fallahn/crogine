@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022
+Matt Marchant 2022 - 2023
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -142,6 +142,8 @@ private:
     std::int32_t m_offsetRotation;
     void calcAccuracy();
     float getOffsetValue() const;
+
+    std::size_t getSkillIndex() const;
 
     //for each pressed event we need a release event the next frame
     std::vector<cro::Event> m_popEvents;

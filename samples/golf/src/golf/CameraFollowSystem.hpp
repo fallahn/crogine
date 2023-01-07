@@ -85,6 +85,8 @@ struct CameraFollower final
 
     std::int32_t id = -1;
 
+    bool isSnapped = false;
+
     struct ZoomData final
     {
         float target = 0.25f;

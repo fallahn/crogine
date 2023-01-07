@@ -683,8 +683,10 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
 
 
             //changed this so we force update wind change when hole changes.
-            //updateWind(); //is a bit less random but at least stops the wind
-            //changing direction mid-stroke which is just annoying.
+            if (!m_predicting)
+            {
+                m_windStrengthTarget = std::min(cro::Util::Random::value(0.99f, 1.01f) * m_windStrengthTarget, 1.f);
+            }
         }
     }
     break;
