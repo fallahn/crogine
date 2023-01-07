@@ -163,12 +163,14 @@ void CameraFollowSystem::process(float dt)
         float snapMultiplier = velocity / 1350.f;
 
         //snap to target if close to reduce stutter
-        if (glm::length2(target - follower.currentTarget) < (0.005f * snapMultiplier))
+        static constexpr float MinRad = Ball::Radius * Ball::Radius;
+        if (glm::length2(target - follower.currentTarget) < (MinRad * snapMultiplier))
         {
             follower.currentTarget = target;
             follower.isSnapped = true;
 
             //LogI << "snapped to target" << std::endl;
+            //hm, this never actually reaches here. Who knew?
         }
     };
 
@@ -213,7 +215,7 @@ void CameraFollowSystem::process(float dt)
 
             float diffMultiplier = std::min(1.f, std::max(0.f, glm::length2(diff) / MaxTargetDiff));
             diffMultiplier *= 4.f;
-            follower.currentTarget += diff * std::min(1.f, (dt * (diffMultiplier + (4.f * follower.zoom.progress))));
+            follower.currentTarget += diff * std::min(0.9f, (dt * (diffMultiplier + (4.f * follower.zoom.progress))));
 
             snapTarget(follower, target);
 
@@ -226,9 +228,11 @@ void CameraFollowSystem::process(float dt)
             //and if we fall within the camera's radius
             //and if the player isn't standing too close
             const auto& collider = follower.target.getComponent<ClientCollider>();
-            if (m_currentCamera.getComponent<CameraFollower>().currentFollowTime < 0 &&
-                (collider.state == static_cast<std::uint8_t>(Ball::State::Flight)
-                || collider.terrain == TerrainID::Green))
+            const auto& currentFollower = m_currentCamera.getComponent<CameraFollower>();
+
+            if ((currentFollower.currentFollowTime < 0/* && currentFollower.state != CameraFollower::Zoom*/)
+                &&
+                (collider.state == static_cast<std::uint8_t>(Ball::State::Flight) || collider.terrain == TerrainID::Green))
             {
                 float positionMultiplier = 1.f;
                 if (follower.id == CameraID::Green)
@@ -288,6 +292,7 @@ void CameraFollowSystem::process(float dt)
             }
             else
             {
+                follower.currentFollowTime = 20.f;
                 follower.zoom.progress = std::min(1.f, follower.zoom.progress + (dt *  follower.zoom.speed));
                 follower.zoom.fov = glm::mix(1.f, follower.zoom.target, cro::Util::Easing::easeOutExpo(cro::Util::Easing::easeInQuad(follower.zoom.progress)));
                 entity.getComponent<cro::Camera>().resizeCallback(entity.getComponent<cro::Camera>());
@@ -303,7 +308,7 @@ void CameraFollowSystem::process(float dt)
                 target += follower.targetOffset * std::min(1.f, glm::length2(target - tx.getPosition()) / MaxOffsetDistance);
 
                 auto diff = target - follower.currentTarget;
-                follower.currentTarget += diff * std::min(1.f, (dt * (2.f + (2.f * follower.zoom.progress))));
+                follower.currentTarget += diff * std::min(0.9f, (dt * (2.f + (2.f * follower.zoom.progress))));
 
                 snapTarget(follower, target);
 
@@ -348,6 +353,7 @@ void CameraFollowSystem::resetCamera()
         for (auto entity : getEntities())
         {
             entity.getComponent<CameraFollower>().state = CameraFollower::Reset;
+            entity.getComponent<CameraFollower>().currentFollowTime = 0.f;
         }
     }
 }

@@ -455,7 +455,7 @@ void GolfState::buildUI()
 
     //flag power/distance when putting
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec3(2.f, BarHeight, 0.1f));
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(2.f, BarHeight, -0.01f));
     entity.getComponent<cro::Transform>().setOrigin({ -6.f, 1.f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::MiniFlag];

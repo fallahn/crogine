@@ -84,7 +84,7 @@ namespace
         uniform LOW vec3 u_midColour;
         uniform LOW vec3 u_lightColour;
 
-        uniform float u_stepStart = 0.495;
+        uniform float u_stepStart = 0.48;//0.495;
         uniform float u_stepEnd = 0.505;
 
         VARYING_IN vec3 v_texCoords;

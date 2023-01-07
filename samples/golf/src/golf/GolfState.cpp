@@ -773,7 +773,7 @@ void GolfState::handleMessage(const cro::Message& msg)
                 //delayed ent to restore player cam
                 auto entity = m_gameScene.createEntity();
                 entity.addComponent<cro::Callback>().active = true;
-                entity.getComponent<cro::Callback>().setUserData<float>(1.f);
+                entity.getComponent<cro::Callback>().setUserData<float>(0.6f);
                 entity.getComponent<cro::Callback>().function =
                     [&](cro::Entity e, float dt)
                 {
@@ -3764,15 +3764,20 @@ void GolfState::buildScene()
             //move towards skycam
             static constexpr float MoveSpeed = 20.f;
             static constexpr float MinRadius = MoveSpeed * MoveSpeed;
+            static constexpr float AccelerationRadius = 40.f;
 
             auto movement = target.getComponent<cro::Transform>().getPosition() - oldPos;
             if (auto len2 = glm::length2(movement); len2 > MinRadius)
             {
-                movement /= std::sqrt(len2);
+                const float len = std::sqrt(len2);
+                movement /= len;
                 movement *= MoveSpeed;
 
-                acceleration = std::min(1.f, acceleration + (dt / 2.f));
-                movement *= cro::Util::Easing::easeInCubic(acceleration);
+                //go slower over short distances
+                const float multiplier = 0.6f + (0.4f * std::min(1.f, len / AccelerationRadius));
+
+                acceleration = std::min(1.f, acceleration + ((dt / 2.f) * multiplier));
+                movement *= cro::Util::Easing::easeInSine(acceleration);
 
                 currRotation += cro::Util::Maths::shortestRotation(currRotation, rotation) * dt;
             }
@@ -3801,15 +3806,15 @@ void GolfState::buildScene()
 
         m_drone = entity;
 
-        //make sure this is acutally valid...
+        //make sure this is actually valid...
         auto targetEnt = m_gameScene.createEntity();
-        targetEnt.addComponent<cro::Transform>();
+        targetEnt.addComponent<cro::Transform>().setPosition({ 160.f, 30.f, -100.f });
         targetEnt.addComponent<cro::Callback>().active = true; //also used to make the drone orbit the flag (see showCountdown())
         targetEnt.getComponent<cro::Callback>().function =
             [&](cro::Entity e, float dt)
         {
-            auto wind = m_windUpdate.currentWindSpeed * (m_windUpdate.currentWindVector * 0.8f);
-            wind += m_windUpdate.currentWindVector * 0.2f;
+            auto wind = m_windUpdate.currentWindSpeed * (m_windUpdate.currentWindVector * 0.3f);
+            wind += m_windUpdate.currentWindVector * 0.7f;
 
             e.getComponent<cro::Transform>().move(wind * dt);
         };
@@ -5637,7 +5642,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     {
         static constexpr float MaxHeightMultiplier = static_cast<float>(MapSize.x) * 0.8f; //probably should be diagonal but meh
         
-        auto camHeight = SkyCamHeight * (std::sqrt(len2) / MaxHeightMultiplier);
+        auto camHeight = SkyCamHeight * std::min(1.5f, (std::sqrt(len2) / MaxHeightMultiplier));
         dir /= 2.f;
         dir.y = camHeight;
 
@@ -5671,7 +5676,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     }
     else
     {
-        auto pos = m_holeData[m_currentHole].puttFromTee ? glm::vec3(0.f, 16.f, 0.f) : DefaultSkycamPosition;
+        auto pos = m_holeData[m_currentHole].puttFromTee ? glm::vec3(0.f, SkyCamHeight, 0.f) : DefaultSkycamPosition;
         setCamTarget(pos);
     }
 
