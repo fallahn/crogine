@@ -5642,7 +5642,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     {
         static constexpr float MaxHeightMultiplier = static_cast<float>(MapSize.x) * 0.8f; //probably should be diagonal but meh
         
-        auto camHeight = SkyCamHeight * std::min(1.5f, (std::sqrt(len2) / MaxHeightMultiplier));
+        auto camHeight = SkyCamHeight * std::min(1.2f, (std::sqrt(len2) / MaxHeightMultiplier));
         dir /= 2.f;
         dir.y = camHeight;
 
@@ -5935,19 +5935,19 @@ void GolfState::updateActor(const ActorInfo& update)
                     glm::vec2 ballPos(p.x, p.z);
                     glm::vec2 destPos(update.position.x, update.position.z);
 
-                    constexpr float MaxRad = 25.f * 25.f;
-                    if (glm::length2(ballPos - camPos) < MaxRad
-                        && glm::length2(destPos - camPos) > MaxRad)
-                    {
-                        auto& data = m_drone.getComponent<cro::Callback>().getUserData<DroneCallbackData>();
-                        
-                        if (data.canRetarget)
-                        {
-                            auto offset = (destPos - camPos) * 0.6f;
-                            data.target.getComponent<cro::Transform>().move({ offset.x, 0.f, offset.y });
-                            data.canRetarget = false; //only do this once per shot.
-                        }
-                    }
+                    //constexpr float MaxRad = 25.f * 25.f;
+                    //if (glm::length2(ballPos - camPos) < MaxRad
+                    //    && glm::length2(destPos - camPos) > MaxRad)
+                    //{
+                    //    auto& data = m_drone.getComponent<cro::Callback>().getUserData<DroneCallbackData>();
+                    //    
+                    //    if (data.canRetarget)
+                    //    {
+                    //        auto offset = (destPos - camPos) * 0.6f;
+                    //        data.target.getComponent<cro::Transform>().move({ offset.x, 0.f, offset.y });
+                    //        data.canRetarget = false; //only do this once per shot.
+                    //    }
+                    //}
                 }
             }
 

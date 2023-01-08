@@ -803,14 +803,14 @@ void CPUGolfer::updatePrediction(float dt)
     }
     else
     {
+        auto devianceMultiplier = m_activePlayer.terrain - TerrainID::Green; //if green no deviance, rough then double deviance :)
         auto takeShot = [&]()
         {
             calcAccuracy();
 
             //we need to maintain a min power target incase we're on the lip of the hole
-            auto multiplier = m_activePlayer.terrain - TerrainID::Green; //if green no deviance, rough then double deviance :)
-            m_targetPower = std::max(0.1f, std::min(m_targetPower + ((Deviance[devianceOffset] * 0.1f) * multiplier), 1.f));
-            m_targetAccuracy -= (Deviance[devianceOffset] * 0.01f) * multiplier;
+            m_targetPower = std::max(0.1f, std::min(m_targetPower + ((Deviance[devianceOffset] * 0.1f) * devianceMultiplier), 1.f));
+            m_targetAccuracy -= (Deviance[devianceOffset] * 0.05f) * devianceMultiplier;
 
             m_state = State::Stroke;
 
@@ -845,6 +845,7 @@ void CPUGolfer::updatePrediction(float dt)
                 && m_targetAngle > ((m_aimAngle - m_inputParser.getMaxRotation()) + Epsilon))))
             {
                 float skew = getOffsetValue() / 1000.f;
+                skew += (Deviance[devianceOffset] * 0.06f) * devianceMultiplier;
 
                 m_targetAngle = std::min(m_aimAngle + m_inputParser.getMaxRotation(), 
                     std::max(m_aimAngle - m_inputParser.getMaxRotation(),

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2022
+Matt Marchant 2021 - 2023
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -685,7 +685,7 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
             //changed this so we force update wind change when hole changes.
             if (!m_predicting)
             {
-                m_windStrengthTarget = std::min(cro::Util::Random::value(0.99f, 1.01f) * m_windStrengthTarget, 1.f);
+                m_windStrengthTarget = std::min(cro::Util::Random::value(0.97f, 1.025f) * m_windStrengthTarget, 1.f);
             }
         }
     }

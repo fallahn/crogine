@@ -219,7 +219,7 @@ void CameraFollowSystem::process(float dt)
 
             float diffMultiplier = std::min(1.f, std::max(0.f, glm::length2(diff) / MaxTargetDiff));
             diffMultiplier *= 4.f;
-            follower.currentTarget += diff * std::min(0.9f, (dt * (diffMultiplier + (4.f * follower.zoom.progress))));
+            follower.currentTarget += diff * std::min(0.8f, (dt * (diffMultiplier + (4.f * follower.zoom.progress))));
 
             snapTarget(follower, target);
 
@@ -311,7 +311,7 @@ void CameraFollowSystem::process(float dt)
                 target += follower.targetOffset * std::min(1.f, glm::length2(target - tx.getPosition()) / MaxOffsetDistance);
 
                 auto diff = target - follower.currentTarget;
-                follower.currentTarget += diff * std::min(0.9f, (dt * (2.f + (2.f * follower.zoom.progress))));
+                follower.currentTarget += diff * std::min(0.8f, (dt * (2.f + (2.f * follower.zoom.progress))));
 
                 snapTarget(follower, target);
 
