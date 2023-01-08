@@ -706,6 +706,7 @@ void GolfState::handleMessage(const cro::Message& msg)
             msg2->position = m_currentPlayer.position;
             msg2->terrain = m_currentPlayer.terrain;
             msg2->club = static_cast<std::uint8_t>(getClub());
+            LogI << data.animationID << " " << __FILE__ << " " << __LINE__ << std::endl;
 
             m_gameScene.getSystem<ClientCollisionSystem>()->setActiveClub(getClub());
 
@@ -4600,7 +4601,7 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
             if (m_activeAvatar)
             {
                 auto animID = evt.packet.as<std::uint8_t>();
-                m_activeAvatar->model.getComponent<cro::Skeleton>().play(m_activeAvatar->animationIDs[animID]);
+                m_activeAvatar->model.getComponent<cro::Skeleton>().play(m_activeAvatar->animationIDs[animID], 1.f, 0.f);
             }
         }
             break;

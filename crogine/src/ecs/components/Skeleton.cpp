@@ -65,6 +65,7 @@ void Skeleton::play(std::size_t idx, float rate, float blendingTime)
 {
     CRO_ASSERT(idx < m_animations.size(), "Index out of range");
     CRO_ASSERT(rate >= 0, "");
+    CRO_ASSERT(blendingTime >= 0, "");
 
     if (idx >= m_animations.size())
     {
@@ -76,11 +77,26 @@ void Skeleton::play(std::size_t idx, float rate, float blendingTime)
 
     if (idx != m_currentAnimation)
     {
-        //blend if we're already playing
-        m_nextAnimation = static_cast<std::int32_t>(idx);
-        m_blendTime = blendingTime;
-        m_currentBlendTime = 0.f;
-        
+        if (blendingTime > 0)
+        {
+            //blend if we're already playing
+            m_nextAnimation = static_cast<std::int32_t>(idx);
+            m_blendTime = blendingTime;
+            m_currentBlendTime = 0.f;
+
+            if (!m_animations[idx].looped)
+            {
+                //clamp the blending time so it's no longer than the incoming animation
+                auto duration = (1.f/m_animations[idx].frameRate) * m_animations[idx].frameCount * m_animations[m_currentAnimation].playbackRate;
+                m_blendTime *= std::min(1.f, duration / blendingTime);
+            }
+        }
+        else
+        {
+            //go straight to next anim
+            m_animations[m_currentAnimation].playbackRate = 0.f;
+            m_currentAnimation = idx;
+        }
         //reset initial interp frame
         m_animations[idx].resetInterp(*this);
     }
