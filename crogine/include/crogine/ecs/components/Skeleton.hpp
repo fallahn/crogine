@@ -98,6 +98,7 @@ namespace cro
         bool looped = false;
         float playbackRate = 0.f;
         float currentFrameTime = 0.f;
+        float frameTime = 1.f / frameRate;
 
         //holds the current state of interpolation pre-transform
         //so it can be mixed with other animations before creating
@@ -381,7 +382,6 @@ namespace cro
         float m_blendTime;
         float m_currentBlendTime;
 
-        float m_frameTime;
         bool m_useInterpolation;
         float m_interpolationDistance;
 

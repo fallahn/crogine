@@ -706,7 +706,6 @@ void GolfState::handleMessage(const cro::Message& msg)
             msg2->position = m_currentPlayer.position;
             msg2->terrain = m_currentPlayer.terrain;
             msg2->club = static_cast<std::uint8_t>(getClub());
-            LogI << data.animationID << " " << __FILE__ << " " << __LINE__ << std::endl;
 
             m_gameScene.getSystem<ClientCollisionSystem>()->setActiveClub(getClub());
 

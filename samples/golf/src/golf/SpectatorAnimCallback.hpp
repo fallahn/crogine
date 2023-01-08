@@ -97,7 +97,6 @@ public:
                 clap = false;
             }
         }
-        ////e.getComponent<cro::Callback>().setUserData<bool>(false);
     }
 
 private:

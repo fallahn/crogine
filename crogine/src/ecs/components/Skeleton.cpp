@@ -52,7 +52,6 @@ Skeleton::Skeleton()
     m_state                 (Stopped),
     m_blendTime             (1.f),
     m_currentBlendTime      (0.f),
-    m_frameTime             (1.f),
     m_useInterpolation      (true),
     m_interpolationDistance (2500.f),
     m_frameSize             (0),
@@ -95,7 +94,7 @@ void Skeleton::play(std::size_t idx, float rate, float blendingTime)
         {
             //go straight to next anim
             m_animations[m_currentAnimation].playbackRate = 0.f;
-            m_currentAnimation = idx;
+            m_currentAnimation = static_cast<std::int32_t>(idx);
         }
         //reset initial interp frame
         m_animations[idx].resetInterp(*this);
@@ -157,6 +156,7 @@ void Skeleton::addAnimation(const SkeletalAnim& anim)
 {
     CRO_ASSERT(m_frameCount >= (anim.startFrame + anim.frameCount), "animation is out of frame range");
     m_animations.push_back(anim);
+    m_animations.back().frameTime = 1.f / m_animations.back().frameRate;
     m_animations.back().interpolationOutput.resize(m_frameSize);
     m_animations.back().resetInterp(*this);
 }
@@ -184,8 +184,8 @@ std::size_t Skeleton::getCurrentFrame() const
 float Skeleton::getCurrentFrameTime() const
 {
     CRO_ASSERT(!m_animations.empty(), "");
-    CRO_ASSERT(m_frameTime > 0.f, "");
-    return m_animations[m_currentAnimation].currentFrameTime / m_frameTime;
+    CRO_ASSERT(m_animations[m_currentAnimation].frameTime > 0.f, "");
+    return m_animations[m_currentAnimation].currentFrameTime / m_animations[m_currentAnimation].frameTime;
 }
 
 void Skeleton::addNotification(std::size_t frameID, Notification n)

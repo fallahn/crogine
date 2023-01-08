@@ -48,6 +48,8 @@ namespace cro
         //must be drawn inside a window - ie doesn't include begin()/end()
         void debugUI() const;
 
+        float getPlaybackRate() const;
+
     private:
         void onEntityAdded(Entity) override;
 

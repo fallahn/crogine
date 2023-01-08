@@ -117,7 +117,7 @@ void SkeletalAnimator::process(float dt)
 
             //blend to next animation
             skel.m_currentBlendTime += dt;
-            if (entity.getComponent<Model>().isVisible())
+            if (!entity.getComponent<Model>().isHidden())
             {
                 //hmm if interpolation is disabled we probably only want to blend once
                 //per frame at the current framerate - although blend times are so short
@@ -134,9 +134,6 @@ void SkeletalAnimator::process(float dt)
 
                 skel.m_nextAnimation = -1;
                 skel.m_currentBlendTime = 0.f;
-
-                skel.m_frameTime = 1.f / skel.m_animations[skel.m_currentAnimation].frameRate;
-                skel.m_animations[skel.m_currentAnimation].playbackRate = skel.m_playbackRate;
             }
         }
 
@@ -155,32 +152,51 @@ void SkeletalAnimator::process(float dt)
 
 void SkeletalAnimator::debugUI() const
 {
-    ImGui::SliderFloat("Rate", &playbackRate, 0.1f, 2.f);
+    ImGui::SliderFloat("Playback Rate", &playbackRate, 0.1f, 2.f);
 
-    auto c = std::min(2u, static_cast<std::uint32_t>(getEntities().size()));
+    const std::int32_t max = static_cast<std::int32_t>(getEntities().size());
+    static std::int32_t start = 0;
+    static std::int32_t end = std::min(2, max);
+    if (ImGui::InputInt("Start", &start))
+    {
+        start = std::max(0, std::min(start, end - 1));
+    }
+    if (ImGui::InputInt("End", &end))
+    {
+        end = std::max(start, std::min(end, max));
+    }
     
-    //if (!getEntities().empty())
-    for(auto i = 0u; i < c; ++i)
+    for(auto i = start; i < end; ++i)
     {
         auto entity = getEntities()[i];
 
         const auto& skel = entity.getComponent<Skeleton>();
         const auto& anim = skel.getAnimations()[skel.getCurrentAnimation()];
         ImGui::Text("Animation %d: %s", skel.getCurrentAnimation(), anim.name.c_str());
-        ImGui::ProgressBar(anim.currentFrameTime / skel.m_frameTime);
+        ImGui::ProgressBar(anim.currentFrameTime / anim.frameTime);
 
+        float currentFrameTime = 0.f;
+        std::string nextAnimName("None");
         if (skel.m_nextAnimation > -1)
         {
             const auto& nextAnim = skel.getAnimations()[skel.m_nextAnimation];
-            ImGui::Text("Next Animation %d: %s", skel.m_nextAnimation, nextAnim.name.c_str());
-            ImGui::ProgressBar(nextAnim.currentFrameTime / skel.m_frameTime);
-
-            ImGui::Text("Blend Progress");
-            ImGui::ProgressBar(skel.m_currentBlendTime / skel.m_blendTime);
+            currentFrameTime = nextAnim.currentFrameTime;
+            nextAnimName = nextAnim.name;
         }
+
+        ImGui::Text("Next Animation %d: %s", skel.m_nextAnimation, nextAnimName.c_str());
+        ImGui::ProgressBar(currentFrameTime / anim.frameTime);
+
+        ImGui::Text("Blend Progress");
+        ImGui::ProgressBar(skel.m_currentBlendTime / skel.m_blendTime);
 
         ImGui::Separator();
     }
+}
+
+float SkeletalAnimator::getPlaybackRate() const
+{
+    return playbackRate;
 }
 
 //private
@@ -194,7 +210,6 @@ void SkeletalAnimator::onEntityAdded(Entity entity)
     CRO_ASSERT(skeleton.m_frameSize != 0, "");
 
     entity.getComponent<Model>().setSkeleton(&skeleton.m_currentFrame[0], skeleton.m_frameSize);
-    skeleton.m_frameTime = 1.f / skeleton.m_animations[0].frameRate;
 
     if (skeleton.m_invBindPose.empty())
     {
@@ -218,10 +233,10 @@ void SkeletalAnimator::updateAnimation(SkeletalAnim& anim, Skeleton& skel, Entit
     auto nextFrame = ((anim.currentFrame - anim.startFrame) + 1) % anim.frameCount;
     nextFrame += anim.startFrame;
 
-    if (anim.currentFrameTime > skel.m_frameTime)
+    if (anim.currentFrameTime > anim.frameTime)
     {
         //frame is done, move to next
-        anim.currentFrameTime -= skel.m_frameTime;
+        anim.currentFrameTime -= anim.frameTime;
         anim.currentFrame = nextFrame;
 
         nextFrame = ((anim.currentFrame - anim.startFrame) + 1) % anim.frameCount;
@@ -242,14 +257,23 @@ void SkeletalAnimator::updateAnimation(SkeletalAnim& anim, Skeleton& skel, Entit
         {
             if (!anim.looped)
             {
-                skel.stop();
+                if (skel.m_nextAnimation == -1)
+                {
+                    skel.stop();
 
-                auto* msg = postMessage<Message::SkeletalAnimationEvent>(Message::SkeletalAnimationMessage);
-                msg->userType = Message::SkeletalAnimationEvent::Stopped;
-                msg->entity = entity;
-                msg->animationID = skel.getCurrentAnimation();
+                    auto* msg = postMessage<Message::SkeletalAnimationEvent>(Message::SkeletalAnimationMessage);
+                    msg->userType = Message::SkeletalAnimationEvent::Stopped;
+                    msg->entity = entity;
+                    msg->animationID = skel.getCurrentAnimation();
+                }
+                else
+                {
+                    anim.playbackRate = 0.f;
+                }
             }
         }
+
+
 
         //raise notification events
         for (auto [joint, uid, _] : skel.m_notifications[anim.currentFrame])
@@ -272,7 +296,7 @@ void SkeletalAnimator::updateAnimation(SkeletalAnim& anim, Skeleton& skel, Entit
     {
         if (ctx.useInterpolation)
         {
-            float interpTime = anim.currentFrameTime / skel.m_frameTime;
+            float interpTime = anim.currentFrameTime / anim.frameTime;
             interpolateAnimation(anim, nextFrame, interpTime, skel, ctx.writeOutput);
         }
     }

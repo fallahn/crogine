@@ -148,7 +148,7 @@ void AnimBlendState::createScene()
                     [&, animCount](cro::Entity e, float dt)
                 {
                     auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
-                    currTime -= dt;
+                    currTime -= dt * m_gameScene.getSystem<cro::SkeletalAnimator>()->getPlaybackRate();
 
                     if (currTime < 0)
                     {
