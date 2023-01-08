@@ -79,6 +79,9 @@ CameraFollowSystem::CameraFollowSystem(cro::MessageBus& mb)
     //        if (ImGui::Begin("Cameras"))
     //        {
     //            ImGui::Text("Closest %s", CamNames[m_closestCamera].c_str());
+    //            ImGui::Text("Active %s, %3.3f", CamNames[m_currentCamera.getComponent<CameraFollower>().id].c_str(), m_currentCamera.getComponent<CameraFollower>().currentFollowTime);
+
+    //            ImGui::Separator();
 
     //            const auto& ents = getEntities();
     //            for (auto ent : ents)
@@ -88,7 +91,7 @@ CameraFollowSystem::CameraFollowSystem(cro::MessageBus& mb)
     //            }
     //        }
     //        ImGui::End();        
-    //    });
+    //    }, true);
 }
 
 //public
@@ -178,6 +181,9 @@ void CameraFollowSystem::process(float dt)
     auto lastCam = m_closestCamera;
     cro::Entity currentCam;
 
+    auto& currentFollower = m_currentCamera.getComponent<CameraFollower>();
+    currentFollower.currentFollowTime -= dt;
+
     auto& entities = getEntities();
     for (auto entity : entities)
     {
@@ -198,8 +204,6 @@ void CameraFollowSystem::process(float dt)
         {
             continue;
         }
-
-        follower.currentFollowTime -= dt;
 
         switch (follower.state)
         {
@@ -228,7 +232,6 @@ void CameraFollowSystem::process(float dt)
             //and if we fall within the camera's radius
             //and if the player isn't standing too close
             const auto& collider = follower.target.getComponent<ClientCollider>();
-            const auto& currentFollower = m_currentCamera.getComponent<CameraFollower>();
 
             if ((currentFollower.currentFollowTime < 0/* && currentFollower.state != CameraFollower::Zoom*/)
                 &&
@@ -335,7 +338,13 @@ void CameraFollowSystem::process(float dt)
         msg->type = SceneEvent::RequestSwitchCamera;
         msg->data = m_closestCamera;
 
+        m_currentCamera.getComponent<CameraFollower>().currentFollowTime = -1.f;
         m_currentCamera = currentCam;
+    }
+
+    if (m_closestCamera == CameraID::Player)
+    {
+        m_currentCamera.getComponent<CameraFollower>().currentFollowTime = -1.f;
     }
 }
 
@@ -348,14 +357,14 @@ void CameraFollowSystem::resetCamera()
         auto* msg = postMessage<SceneEvent>(MessageID::SceneMessage);
         msg->type = SceneEvent::RequestSwitchCamera;
         msg->data = m_closestCamera;
-
-
-        for (auto entity : getEntities())
-        {
-            entity.getComponent<CameraFollower>().state = CameraFollower::Reset;
-            entity.getComponent<CameraFollower>().currentFollowTime = 0.f;
-        }
     }
+
+    for (auto entity : getEntities())
+    {
+        entity.getComponent<CameraFollower>().state = CameraFollower::Reset;
+        entity.getComponent<CameraFollower>().currentFollowTime = -1.f;
+    }
+    m_currentCamera.getComponent<CameraFollower>().currentFollowTime = -1.f;
 }
 
 //private
