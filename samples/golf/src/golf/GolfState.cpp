@@ -283,15 +283,6 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
 
 #endif
     cro::App::getInstance().resetFrameTime();
-
-    registerWindow([&]() 
-        {
-            if (ImGui::Begin("Window"))
-            {
-                m_gameScene.getSystem<cro::SkeletalAnimator>()->debugUI();
-            }
-            ImGui::End();        
-        });
 }
 
 //public

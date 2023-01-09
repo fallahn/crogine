@@ -616,24 +616,24 @@ void Texture::generateMipMaps(const std::uint8_t* pixels, URect area)
     CRO_ASSERT(result == m_handle, "Texture not bound!");
 #endif
 
-    //if (m_smooth)
+    if (m_smooth)
     {
         glGenerateMipmap(GL_TEXTURE_2D);
         auto err = glGetError();
         if (err == GL_INVALID_OPERATION || err == GL_INVALID_ENUM)
         {
-            glCheck(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, m_smooth ? GL_LINEAR : GL_NEAREST));
+            glCheck(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, /*m_smooth ?*/ GL_LINEAR /*: GL_NEAREST*/));
             m_hasMipMaps = false;
             LOG("Failed to create Mipmaps", Logger::Type::Warning);
         }
         else
         {
-            glCheck(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, m_smooth ? GL_LINEAR_MIPMAP_LINEAR : GL_NEAREST_MIPMAP_NEAREST));
+            glCheck(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,/* m_smooth ?*/ GL_LINEAR_MIPMAP_LINEAR /*: GL_NEAREST_MIPMAP_NEAREST*/));
             m_hasMipMaps = true;
         }
     }
-    return;
-    //else
+    //return;
+    else
     {
         //generate mipmaps by hand, using a 'nearest' filter
         CRO_ASSERT(pixels != nullptr, "");
@@ -706,5 +706,7 @@ void Texture::generateMipMaps(const std::uint8_t* pixels, URect area)
         }
 
         glCheck(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST));
+        glCheck(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0));
+        glCheck(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, level - 1));
     }
 }
