@@ -29,6 +29,7 @@ source distribution.
 
 #include "GolfState.hpp"
 
+#include <crogine/ecs/components/Camera.hpp>
 #include <crogine/core/SysTime.hpp>
 #include <crogine/detail/OpenGL.hpp>
 #include <crogine/gui/Gui.hpp>
@@ -162,7 +163,7 @@ void GolfState::registerDebugWindows()
         {
             if (ImGui::Begin("Depthmap"))
             {
-                for (auto y = 4; y >= 0; --y)
+                /*for (auto y = 4; y >= 0; --y)
                 {
                     for (auto x = 0; x < 8; ++x)
                     {
@@ -171,10 +172,17 @@ void GolfState::registerDebugWindows()
                         ImGui::SameLine();
                     }
                     ImGui::NewLine();
+                }*/
+
+                const auto& cam = m_gameScene.getActiveCamera().getComponent<cro::Camera>();
+                for (auto i = 0u; i < cam.shadowMapBuffer.getLayerCount(); ++i)
+                {
+                    ImGui::Image(cam.shadowMapBuffer.getTexture(i), { 256.f, 256.f }, { 0.f, 1.f }, { 1.f, 0.f });
+                    ImGui::SameLine();
                 }
             }
             ImGui::End();
-        }, true);
+        },true);
 
     //registerWindow([&]()
     //    {

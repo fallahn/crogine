@@ -83,9 +83,9 @@ namespace
 
     constexpr std::array Deviance =
     {
-        0.001f, -0.001f,
-        0.008f, -0.0032f,
-        0.0048f, 0.002f, 0.0001f
+        0.001f, 0.f, -0.001f, 0.f,
+        0.003f, 0.f, -0.0022f, 0.f,
+        0.004f, 0.002f, 0.0001f, 0.f
     };
     std::size_t devianceOffset = 0;
 }
@@ -1002,6 +1002,15 @@ void CPUGolfer::calcAccuracy()
     if (m_clubID != ClubID::Putter)
     {
         m_targetPower = std::min(1.f, m_targetPower + (1 - (cro::Util::Random::value(0, 1) * 2)) * (static_cast<float>(m_offsetRotation % 4) / 50.f));
+
+        if (m_skills[getSkillIndex()].mistakeOdds != 0)
+        {
+            if (cro::Util::Random::value(0, m_skills[getSkillIndex()].mistakeOdds) == 0)
+            {
+                m_targetPower += static_cast<float>(cro::Util::Random::value(-6, 6)) / 1000.f;
+            }
+        }
+        m_targetPower = std::min(1.f, m_targetPower);
     }
     else
     {

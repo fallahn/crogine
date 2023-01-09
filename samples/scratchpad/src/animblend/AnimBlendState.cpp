@@ -49,6 +49,14 @@ source distribution.
 #include <crogine/util/Constants.hpp>
 #include <crogine/util/Random.hpp>
 
+#include <crogine/graphics/Image.hpp>
+#include <crogine/graphics/Texture.hpp>
+
+namespace
+{
+    std::vector<std::unique_ptr<cro::Texture>> testTextures;
+}
+
 AnimBlendState::AnimBlendState(cro::StateStack& stack, cro::State::Context context)
     : cro::State    (stack, context),
     m_gameScene     (context.appInstance.getMessageBus()),
@@ -123,6 +131,77 @@ void AnimBlendState::addSystems()
 
 void AnimBlendState::loadAssets()
 {
+    if (cro::Image img; img.loadFromFile("assets/images/face.png"))
+    {
+        testTextures.emplace_back(std::make_unique<cro::Texture>())->loadFromImage(img);
+
+        std::int32_t stride = 4;
+
+        if (img.getFormat() == cro::ImageFormat::RGB)
+        {
+            stride = 3;
+        }
+        else if (img.getFormat() == cro::ImageFormat::A)
+        {
+            stride = 1;
+        }
+
+        cro::URect area(0, 0, img.getSize().x, img.getSize().y);
+
+        std::vector<std::uint8_t> buffA(area.width * area.height * stride); //technically we only need to be 1/4 the size first iter...
+        std::vector<std::uint8_t> buffB(area.width * area.height * stride);
+
+        auto src = img.getPixelData();
+        auto dst = buffA.data();
+        //GLint level = 1;
+        std::int32_t sizeX = img.getSize().x;
+        std::int32_t sizeY = img.getSize().y;
+        
+        while (area.width > 1 && area.height > 1)
+        {
+            std::int32_t i = 0;
+            for (auto y = 0u; y < area.height; y += 2)
+            {
+                for (auto x = 0u; x < area.width; x += 2)
+                {
+                    //TODO add in area left/bottom
+
+                    auto p = (area.width * stride) * y + (x * stride);
+
+                    for (auto j = 0; j < stride; ++j)
+                    {
+                        dst[i++] = src[p + j];
+                    }
+                }
+            }
+
+            //mipmaps require both dimensions go down to 1
+            //so for non-square images 8x1, 4x1, 2x1 are all required
+            if (area.width > 1)
+            {
+                area.width /= 2;
+                sizeX /= 2;
+            }
+            if (area.height > 1)
+            {
+                area.height /= 2;
+                sizeY /= 2;
+            }
+            area.left /= 2;
+            area.bottom /= 2;
+
+            //we're assuming texture is currently bound
+            //glCheck(glTexImage2D(GL_TEXTURE_2D, level++, format, sizeX, sizeY, 0, format, GL_UNSIGNED_BYTE, dst));
+            //glCheck(glTexSubImage2D(GL_TEXTURE_2D, level++, area.left, area.bottom, area.width, area.height, format, GL_UNSIGNED_BYTE, dst));
+            testTextures.emplace_back(std::make_unique<cro::Texture>())->create(sizeX, sizeY, img.getFormat());
+            testTextures.back()->update(dst);
+
+            //probably a nicer way to swap these, but let's just get things
+            //working first, eh?
+            src = (src == buffA.data()) ? buffB.data() : buffA.data();
+            dst = (dst == buffA.data()) ? buffB.data() : buffA.data();
+        }
+    }
 }
 
 void AnimBlendState::createScene()
@@ -257,6 +336,17 @@ void AnimBlendState::createUI()
                 }
                 ImGui::End();
             }
+
+            if (ImGui::Begin("Textures"))
+            {
+                for(const auto& t : testTextures)
+                {
+                    glm::vec2 size(t->getSize() * 4u);
+                    ImGui::Image(*t, { size.x, size.y }, { 0.f, 1.f }, { 1.f, 0.f });
+                    ImGui::SameLine();
+                }
+            }
+            ImGui::End();
         });
 
     auto resize = [](cro::Camera& cam)

@@ -337,7 +337,7 @@ static const std::string CelFragmentShader = R"(
 
         vec3 projectionCoords = lightWorldPos.xyz / lightWorldPos.w;
         projectionCoords = projectionCoords * 0.5 + 0.5;
-        float depthSample = TEXTURE(u_shadowMap, vec3(projectionCoords.xy, cascadeIndex)).r;
+        float depthSample = TEXTURE(u_shadowMap, vec3(projectionCoords.xy, float(cascadeIndex))).r;
         float currDepth = projectionCoords.z - Bias;
 
         if (currDepth > 1.0)
@@ -530,13 +530,13 @@ static const std::string CelFragmentShader = R"(
 #if defined (RX_SHADOWS)
         int cascadeIndex = getCascadeIndex();
         float shadow = shadowAmount(cascadeIndex);
-        //float shadow = shadowAmountSmooth(cascadeIndex);
+        //float shadow = shadowAmountSoft(cascadeIndex);
         float borderMix = smoothstep(u_frustumSplits[cascadeIndex] + 0.5, u_frustumSplits[cascadeIndex], v_viewDepth);
         if (borderMix > 0)
         {
             int nextIndex = min(cascadeIndex + 1, u_cascadeCount - 1);
             shadow = mix(shadow, shadowAmount(nextIndex), borderMix);
-            //shadow = mix(shadow, shadowAmountSmooth(nextIndex), borderMix);
+            //shadow = mix(shadow, shadowAmountSoft(nextIndex), borderMix);
         }
 
         FRAG_OUT.rgb *= shadow;

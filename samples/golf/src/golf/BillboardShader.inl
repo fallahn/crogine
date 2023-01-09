@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2022
+Matt Marchant 2021 - 2023
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -191,11 +191,14 @@ static const std::string BillboardFragmentShader = R"(
         FRAG_OUT = v_colour;
         FRAG_OUT *= TEXTURE(u_diffuseMap, v_texCoord0);
 
+//this probably undoes any usefulness of mipmapping
+//FRAG_OUT.a = textureLod(u_diffuseMap, v_texCoord0, 0.0).a;
+
         vec2 xy = gl_FragCoord.xy;// / u_pixelScale;
         int x = int(mod(xy.x, MatrixSize));
         int y = int(mod(xy.y, MatrixSize));
         float alpha = findClosest(x, y, smoothstep(0.1, 0.999, v_ditherAmount));
         FRAG_OUT.a *= alpha;
 
-        if(FRAG_OUT.a < 0.2) discard;
+        if(FRAG_OUT.a < 0.3) discard;
     })";

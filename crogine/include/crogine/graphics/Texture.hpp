@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2023
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -187,6 +187,6 @@ namespace cro
         bool isFloat(SDL_RWops* file);
         bool loadAsFloat(SDL_RWops* file, bool createMipmaps);
         bool loadAsByte(SDL_RWops* file, bool createMipmaps);
-        void generateMipMaps();
+        void generateMipMaps(const std::uint8_t* = nullptr, URect = {}); //TODO this shouldn't have default params, they exist because of the unused loadAsFloat func
     };
 }

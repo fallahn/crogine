@@ -92,10 +92,10 @@ private:
     struct SkillContext final
     {
         Skill skill = Skill::Amateur;
-        float resultTolerance = 2.f; //how close to the target the prediction will be before we accept
+        float resultTolerance = 2.f; //!< how close to the target the prediction will be before we accept
         float resultTolerancePutt = 0.05f;
-        std::int32_t strokeAccuracy = 0; //the bigger this number the more likely the accuracy will be off, with 0 being perfect
-        std::uint32_t mistakeOdds = 0; //the larger the number the smaller the odds of making a 'mistake'
+        std::int32_t strokeAccuracy = 0; //!< the bigger this number the more likely the accuracy will be off, with 0 being perfect
+        std::uint32_t mistakeOdds = 0; //!< the larger the number the smaller the odds of making a 'mistake'
 
         SkillContext(Skill s, float rt, float rp, std::int32_t sa, std::uint32_t mo)
             : skill(s), resultTolerance(rt), resultTolerancePutt(rp), strokeAccuracy(sa), mistakeOdds(mo) {}
