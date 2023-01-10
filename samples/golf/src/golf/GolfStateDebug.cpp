@@ -130,9 +130,9 @@ void GolfState::registerDebugWindows()
     //            {
     //                float angle = SkyData::MinAngle + (m_skyData.tod * (SkyData::MaxAngle - SkyData::MinAngle));
     //                m_gameScene.getSunlight().getComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, -angle * cro::Util::Const::degToRad);
-    //                m_skyData.sunRoot.getComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, -angle * cro::Util::Const::degToRad);
+    //                //m_skyData.sunRoot.getComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, -angle * cro::Util::Const::degToRad);
 
-    //                if (auto w = m_skyData.sunPalette.getSize().x; w != 0)
+    //                /*if (auto w = m_skyData.sunPalette.getSize().x; w != 0)
     //                {
     //                    auto index = (w - 1) * m_skyData.tod;
     //                    auto* colour = m_skyData.sunPalette.getPixel(static_cast<std::uint32_t>(index), 0);
@@ -153,7 +153,7 @@ void GolfState::registerDebugWindows()
     //                    cro::Colour sLight(colour[0], colour[1], colour[2]);
     //                    m_skyScene.getSunlight().getComponent<cro::Sunlight>().setColour(sLight);
     //                    m_gameScene.getSunlight().getComponent<cro::Sunlight>().setColour(sLight);
-    //                }
+    //                }*/
     //            }
     //        }
     //        ImGui::End();

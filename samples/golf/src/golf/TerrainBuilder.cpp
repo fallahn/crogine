@@ -173,15 +173,15 @@ TerrainBuilder::TerrainBuilder(SharedStateData& sd, const std::vector<HoleData>&
     //            if (ImGui::SliderFloat("Slope", &slopePos.y, -10.f, 10.f))
     //            {
     //                slopeEntity.getComponent<cro::Transform>().setPosition(slopePos);
-    //            }
+    //            }*/
 
-    //            auto pos = m_terrainEntity.getComponent<cro::Transform>().getPosition();
-    //            if (ImGui::SliderFloat("Height", &pos.y, -10.f, 10.f))
+    //            /*auto pos = m_terrainEntity.getComponent<cro::Transform>().getPosition();
+    //            if (ImGui::SliderFloat("Height", &pos.y, -50.f, 10.f))
     //            {
     //                m_terrainEntity.getComponent<cro::Transform>().setPosition(pos);
-    //            }
+    //            }*/
 
-    //            auto visible = m_terrainEntity.getComponent<cro::Model>().isVisible();
+    //            /*auto visible = m_terrainEntity.getComponent<cro::Model>().isVisible();
     //            ImGui::Text("Visible: %s", visible ? "yes" : "no");
 
     //            if (ImGui::SliderFloat("Morph", &m_terrainProperties.morphTime, 0.f, 1.f))
@@ -189,11 +189,11 @@ TerrainBuilder::TerrainBuilder(SharedStateData& sd, const std::vector<HoleData>&
     //                glCheck(glUseProgram(m_terrainProperties.shaderID));
     //                glCheck(glUniform1f(m_terrainProperties.morphUniform, m_terrainProperties.morphTime));
     //            }*/
-    //            ImGui::Image(m_normalDebugTexture, { 640.f, 400.f }, { 0.f, 1.f }, { 1.f, 0.f });
+    //            //ImGui::Image(m_normalDebugTexture, { 640.f, 400.f }, { 0.f, 1.f }, { 1.f, 0.f });
     //            //ImGui::Image(m_normalMap.getTexture(), { 320.f, 200.f }, { 0.f, 1.f }, { 1.f, 0.f });
     //        }
     //        ImGui::End();        
-    //    });
+    //    }, true);
 #endif
 }
 
@@ -300,18 +300,11 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
     //parent the shrubbery so they always stay the same relative height
     m_terrainEntity = entity;
 
-    //modified billboard shader
-    const auto& billboardShader = resources.shaders.get(ShaderID::Billboard);
-    auto billboardMatID = resources.materials.add(billboardShader);
-    std::int32_t billboardShadowID = -1;
+    //modified billboard shader - shader loading is done in GolfState::loadAssets()
+    auto billboardMatID = resources.materials.add(resources.shaders.get(ShaderID::Billboard));
+    auto billboardShadowID = resources.materials.add(resources.shaders.get(ShaderID::BillboardShadow));
 
-    //if (m_sharedData.hqShadows)
-    {
-        const auto& billboardShadowShader = resources.shaders.get(ShaderID::BillboardShadow);
-        billboardShadowID = resources.materials.add(billboardShadowShader);
-    }
-
-    //custom shader for instanced plants - shader loading is done in GolfState::loadAssets()
+    //custom shader for instanced plants
     auto reedMaterialID = resources.materials.add(resources.shaders.get(ShaderID::CelTexturedInstanced));
     auto reedShadowID = resources.materials.add(resources.shaders.get(ShaderID::ShadowMapInstanced));
 
@@ -384,15 +377,12 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
                 material.setProperty("u_noiseTexture", noiseTex);
                 entity.getComponent<cro::Model>().setMaterial(0, material);
 
-                if (billboardShadowID > -1)
-                {
-                    material = resources.materials.get(billboardShadowID);
-                    applyMaterialData(billboardDef, material);
-                    material.setProperty("u_noiseTexture", noiseTex);
-                    material.doubleSided = true; //do this second because applyMaterial() overwrites it
-                    entity.getComponent<cro::Model>().setShadowMaterial(0, material);
-                    entity.addComponent<cro::ShadowCaster>();
-                }
+
+                material = resources.materials.get(billboardShadowID);
+                applyMaterialData(billboardDef, material);
+                material.setProperty("u_noiseTexture", noiseTex);
+                material.doubleSided = true; //do this second because applyMaterial() overwrites it
+                entity.getComponent<cro::Model>().setShadowMaterial(0, material);
 
                 m_terrainEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
             }

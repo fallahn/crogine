@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2022
+Matt Marchant 2021 - 2023
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -322,7 +322,7 @@ static const std::string CelFragmentShader = R"(
     {
         for(int i = 0; i < u_cascadeCount; ++i)
         {
-            if (v_viewDepth >= u_frustumSplits[i])
+            if (v_viewDepth > u_frustumSplits[i] - 15.0) //hmmmmm why do we have to offset this? and why is it more visible on AMD hardware?
             {
                 return min(u_cascadeCount - 1, i);
             }
@@ -337,14 +337,14 @@ static const std::string CelFragmentShader = R"(
 
         vec3 projectionCoords = lightWorldPos.xyz / lightWorldPos.w;
         projectionCoords = projectionCoords * 0.5 + 0.5;
-        float depthSample = TEXTURE(u_shadowMap, vec3(projectionCoords.xy, float(cascadeIndex))).r;
         float currDepth = projectionCoords.z - Bias;
 
-        if (currDepth > 1.0)
+        if (projectionCoords.z > 1.0)
         {
             return 1.0;
         }
 
+        float depthSample = TEXTURE(u_shadowMap, vec3(projectionCoords.xy, float(cascadeIndex))).r;
         return (currDepth < depthSample) ? 1.0 : 1.0 - (0.3);
     }
 
@@ -543,6 +543,7 @@ static const std::string CelFragmentShader = R"(
 
 //shows cascade boundries
 //vec3 Colours[MAX_CASCADES] = vec3[MAX_CASCADES](vec3(0.2,0.0,0.0), vec3(0.0,0.2,0.0),vec3(0.0,0.0,0.2));
+//FRAG_OUT.rgb += Colours[cascadeIndex];
 //for(int i = 0; i < u_cascadeCount; ++i)
 //{
 //    if (v_lightWorldPosition[i].w > 0.0)
