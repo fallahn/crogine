@@ -179,6 +179,7 @@ struct ShaderID final
         CelTexturedInstanced,
         CelTexturedSkinned,
         ShadowMap,
+        ShadowMapInstanced,
         ShadowMapSkinned,
         Crowd,
         CrowdShadow,

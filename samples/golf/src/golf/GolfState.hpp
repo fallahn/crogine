@@ -171,6 +171,7 @@ private:
             CelTextured,
             CelTexturedSkinned,
             ShadowMap,
+            ShadowMapInstanced,
             ShadowMapSkinned,
             Leaderboard,
             Player,

@@ -616,97 +616,100 @@ void Texture::generateMipMaps(const std::uint8_t* pixels, URect area)
     CRO_ASSERT(result == m_handle, "Texture not bound!");
 #endif
 
-    if (m_smooth)
+    //if (m_smooth)
     {
         glGenerateMipmap(GL_TEXTURE_2D);
         auto err = glGetError();
         if (err == GL_INVALID_OPERATION || err == GL_INVALID_ENUM)
         {
-            glCheck(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, /*m_smooth ?*/ GL_LINEAR /*: GL_NEAREST*/));
+            glCheck(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, m_smooth ? GL_LINEAR : GL_NEAREST));
             m_hasMipMaps = false;
             LOG("Failed to create Mipmaps", Logger::Type::Warning);
         }
         else
         {
-            glCheck(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,/* m_smooth ?*/ GL_LINEAR_MIPMAP_LINEAR /*: GL_NEAREST_MIPMAP_NEAREST*/));
+            glCheck(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, m_smooth ? GL_LINEAR_MIPMAP_LINEAR : GL_NEAREST_MIPMAP_NEAREST));
             m_hasMipMaps = true;
         }
     }
-    //return;
-    else
-    {
-        //generate mipmaps by hand, using a 'nearest' filter
-        CRO_ASSERT(pixels != nullptr, "");
-        CRO_ASSERT(area.width != 0, "");
-        CRO_ASSERT(area.height != 0, "");
 
-        std::int32_t stride = 4;
-        GLint format = GL_RGBA;
-        if (m_format == ImageFormat::RGB)
-        {
-            stride = 3;
-            format = GL_RGB;
-        }
-        else if (m_format == ImageFormat::A)
-        {
-            stride = 1;
-            format = GL_RED;
-        }
+    //else
+    //{
+    //    //generate mipmaps by hand, using a 'nearest' filter
+    //    CRO_ASSERT(pixels != nullptr, "");
+    //    CRO_ASSERT(area.width != 0, "");
+    //    CRO_ASSERT(area.height != 0, "");
 
-        std::vector<std::uint8_t> buffA(area.width * area.height * stride); //technically we only need to be 1/4 the size first iter...
-        std::vector<std::uint8_t> buffB(area.width * area.height * stride);
+    //    std::int32_t stride = 4;
+    //    GLint format = GL_RGBA;
+    //    if (m_format == ImageFormat::RGB)
+    //    {
+    //        stride = 3;
+    //        format = GL_RGB;
+    //    }
+    //    else if (m_format == ImageFormat::A)
+    //    {
+    //        stride = 1;
+    //        format = GL_RED;
+    //    }
 
-        auto src = pixels;
-        auto dst = buffA.data();
-        GLint level = 1;
-        GLuint sizeX = m_size.x;
-        GLuint sizeY = m_size.y;
+    //    std::vector<std::uint8_t> buffA(area.width * area.height * stride); //technically we only need to be 1/4 the size first iter...
+    //    std::vector<std::uint8_t> buffB(area.width * area.height * stride);
 
-        while (area.width > 1 && area.height > 1)
-        {
-            std::int32_t i = 0;
-            for (auto y = 0u; y < area.height; y += 2)
-            {
-                for (auto x = 0u; x < area.width; x += 2)
-                {
-                    //TODO add in area left/bottom
+    //    auto src = pixels;
+    //    auto dst = buffA.data();
+    //    GLint level = 1;
+    //    GLuint sizeX = m_size.x;
+    //    GLuint sizeY = m_size.y;
 
-                    auto p = (area.width * stride) * y + (x * stride);
-                    for (auto j = 0; j < stride; ++j)
-                    {
-                        dst[i++] = src[p + j];
-                    }
-                }
-            }            
-            
-            //mipmaps require both dimensions go down to 1
-            //so for non-square images 8x1, 4x1, 2x1 are all required
-            if (area.width > 1)
-            {
-                area.width /= 2;
-                sizeX /= 2;
-            }
-            if (area.height > 1)
-            {
-                area.height /= 2;
-                sizeY /= 2;
-            }
-            area.left /= 2;
-            area.bottom /= 2;
+    //    while (area.width > 1 && area.height > 1)
+    //    {
+    //        std::int32_t i = 0;
+    //        for (auto y = 0u; y < area.height; y += 2)
+    //        {
+    //            for (auto x = 0u; x < area.width; x += 2)
+    //            {
+    //                //TODO add in area left/bottom
 
-            //we're assuming texture is currently bound
-            glCheck(glTexImage2D(GL_TEXTURE_2D, level++, format, sizeX, sizeY, 0, format, GL_UNSIGNED_BYTE, dst));
-            //glCheck(glTexSubImage2D(GL_TEXTURE_2D, level++, area.left, area.bottom, area.width, area.height, format, GL_UNSIGNED_BYTE, dst));
+    //                auto p = (area.width * stride) * y + (x * stride);
+    //                for (auto j = 0; j < stride; ++j)
+    //                {
+    //                    dst[i++] = src[p + j];
+    //                }
+    //            }
+    //        }            
+    //        
+    //        //mipmaps require both dimensions go down to 1
+    //        //so for non-square images 8x1, 4x1, 2x1 are all required
+    //        if (area.width > 1)
+    //        {
+    //            area.width /= 2;
+    //            sizeX /= 2;
+    //        }
+    //        if (area.height > 1)
+    //        {
+    //            area.height /= 2;
+    //            sizeY /= 2;
+    //        }
+    //        area.left /= 2;
+    //        area.bottom /= 2;
+
+    //        //we're assuming texture is currently bound
+    //        glCheck(glTexImage2D(GL_TEXTURE_2D, level++, format, sizeX, sizeY, 0, format, GL_UNSIGNED_BYTE, dst));
+    //        //glCheck(glTexSubImage2D(GL_TEXTURE_2D, level++, area.left, area.bottom, area.width, area.height, format, GL_UNSIGNED_BYTE, dst));
 
 
-            //probably a nicer way to swap these, but let's just get things
-            //working first, eh?
-            src = (src == buffA.data()) ? buffB.data() : buffA.data();
-            dst = (dst == buffA.data()) ? buffB.data() : buffA.data();
-        }
+    //        //probably a nicer way to swap these, but let's just get things
+    //        //working first, eh?
+    //        src = (src == buffA.data()) ? buffB.data() : buffA.data();
+    //        dst = (dst == buffA.data()) ? buffB.data() : buffA.data();
+    //    }
 
-        glCheck(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST));
-        glCheck(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0));
-        glCheck(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, level - 1));
-    }
+    //    //while this works (ish) texture atlases will be reduced down to the 
+    //    //corner of the given area, not the corner of the subrect - somthing we'll
+    //    //never be able to read here. A different tactic is requried methinks.
+    //    glCheck(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST));
+    //    glCheck(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0));
+    //    glCheck(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, level - 1));
+    //}
 }

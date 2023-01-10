@@ -1518,6 +1518,10 @@ void GolfState::loadAssets()
     m_resolutionBuffer.addShader(*shader);
     m_windBuffer.addShader(*shader);
 
+    m_resources.shaders.loadFromString(ShaderID::ShadowMapInstanced, ShadowVertex, ShadowFragment, "#define WIND_WARP\n#define ALPHA_CLIP\n#define INSTANCING\n");
+    shader = &m_resources.shaders.get(ShaderID::ShadowMapInstanced);
+    m_windBuffer.addShader(*shader);
+
     m_resources.shaders.loadFromString(ShaderID::Crowd, CelVertexShader, CelFragmentShader, "#define DITHERED\n#define INSTANCING\n#define VATS\n#define NOCHEX\n#define TEXTURED\n");
     shader = &m_resources.shaders.get(ShaderID::Crowd);
     m_scaleBuffer.addShader(*shader);

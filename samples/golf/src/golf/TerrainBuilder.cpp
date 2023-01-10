@@ -313,6 +313,7 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
 
     //custom shader for instanced plants - shader loading is done in GolfState::loadAssets()
     auto reedMaterialID = resources.materials.add(resources.shaders.get(ShaderID::CelTexturedInstanced));
+    auto reedShadowID = resources.materials.add(resources.shaders.get(ShaderID::ShadowMapInstanced));
 
 
     std::int32_t branchMaterialID = 0;
@@ -402,6 +403,7 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
             if (shrubDef.loadFromFile(instancePath, true))
             {
                 auto material = resources.materials.get(reedMaterialID);
+                auto shadowMat = resources.materials.get(reedShadowID);
 
                 auto childEnt = scene.createEntity();
                 childEnt.addComponent<cro::Transform>();
@@ -412,6 +414,10 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
                     applyMaterialData(shrubDef, material, j);
                     material.setProperty("u_noiseTexture", noiseTex);
                     childEnt.getComponent<cro::Model>().setMaterial(j, material);
+
+                    applyMaterialData(shrubDef, shadowMat, j);
+                    shadowMat.setProperty("u_noiseTexture", noiseTex);
+                    childEnt.getComponent<cro::Model>().setShadowMaterial(j, shadowMat);
                 }
                 childEnt.getComponent<cro::Model>().setHidden(true);
                 childEnt.getComponent<cro::Model>().setRenderFlags(~RenderFlags::MiniMap);
