@@ -322,12 +322,16 @@ static const std::string CelFragmentShader = R"(
     {
         for(int i = 0; i < u_cascadeCount; ++i)
         {
-            if (v_viewDepth > u_frustumSplits[i] - 15.0) //hmmmmm why do we have to offset this? and why is it more visible on AMD hardware?
+#if defined (GPU_AMD)
+            if (v_viewDepth > u_frustumSplits[i] - 15.0) //it might be an AMD driver bug. Wait for the next patch.
+#else
+            if (v_viewDepth > u_frustumSplits[i])
+#endif
             {
                 return min(u_cascadeCount - 1, i);
             }
         }
-        return u_cascadeCount - 1;
+        return 0;//u_cascadeCount - 1;
     }
 
     const float Bias = 0.001; //0.005

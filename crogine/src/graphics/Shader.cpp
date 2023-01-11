@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2022
+Matt Marchant 2017 - 2023
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -31,6 +31,7 @@ source distribution.
 #include <crogine/core/FileSystem.hpp>
 
 #include <crogine/detail/Types.hpp>
+#include <crogine/util/String.hpp>
 
 #include "../detail/GLCheck.hpp"
 
@@ -73,12 +74,40 @@ namespace
 
         #endif
         )";
+
+    std::string vendorDef;
 }
 
 Shader::Shader()
     : m_handle  (0),
     m_attribMap ({})
 {
+    if (vendorDef.empty())
+    {
+        //crude but covers most cases
+        std::string vendor = reinterpret_cast<const char*>(glGetString(GL_VENDOR));
+        vendor += reinterpret_cast<const char*>(glGetString(GL_RENDERER));
+        
+        vendor = Util::String::toLower(vendor);
+        if (vendor.find("amd"))
+        {
+            vendorDef = "#define GPU_AMD\n";
+        }
+        else if (vendor.find("nvidia"))
+        {
+            vendorDef = "#define GPU_NVIDIA\n";
+        }
+        else if (vendor.find("intel"))
+        {
+            vendorDef = "#define GPU_INTEL\n";
+        }
+        else
+        {
+            vendorDef = "#define GPU_UNKNOWN\n";
+        }
+        LOG("Shader " + vendorDef, Logger::Type::Info);
+    }
+
     resetAttribMap();
 }
 
@@ -220,9 +249,11 @@ bool Shader::loadFromSource(const char* vertex, const char* geometry, const char
     GLuint vertID = glCreateShader(GL_VERTEX_SHADER);
 
 #ifdef __ANDROID__
-    const char* src[] = { "#version 100\n#define MOBILE\n", precision.c_str(), defines, vertex };
+    std::string version = "#version 100\n#define MOBILE\n" + vendorDef;
+    const char* src[] = { version.c_str(), precision.c_str(), defines, vertex};
 #else
-    const char* src[] = { "#version 410 core\n", precision.c_str(), defines, vertex };
+    std::string version = "#version 410 core\n" + vendorDef;
+    const char* src[] = { version.c_str(), precision.c_str(), defines, vertex};
 #endif //__ANDROID__
 
     glCheck(glShaderSource(vertID, 4, src, nullptr));
