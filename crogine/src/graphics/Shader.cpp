@@ -89,15 +89,15 @@ Shader::Shader()
         vendor += reinterpret_cast<const char*>(glGetString(GL_RENDERER));
         
         vendor = Util::String::toLower(vendor);
-        if (vendor.find("amd"))
+        if (vendor.find("amd") != std::string::npos)
         {
             vendorDef = "#define GPU_AMD\n";
         }
-        else if (vendor.find("nvidia"))
+        else if (vendor.find("nvidia") != std::string::npos)
         {
             vendorDef = "#define GPU_NVIDIA\n";
         }
-        else if (vendor.find("intel"))
+        else if (vendor.find("intel") != std::string::npos)
         {
             vendorDef = "#define GPU_INTEL\n";
         }
