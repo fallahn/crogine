@@ -1623,13 +1623,8 @@ void GolfState::loadAssets()
     //ball models - the menu should never have let us get this far if it found no ball files
     for (const auto& [colour, uid, path] : m_sharedData.ballModels)
     {
-        //TODO there's no need to load EVERY file - this needs to be addressed if there
-        //are potentially a lot of workshop files...
         std::unique_ptr<cro::ModelDefinition> def = std::make_unique<cro::ModelDefinition>(m_resources);
-        if (def->loadFromFile(path))
-        {
-            m_ballModels.insert(std::make_pair(uid, std::move(def)));
-        }
+        m_ballModels.insert(std::make_pair(uid, std::move(def)));
     }
 
     //UI stuffs
@@ -4227,19 +4222,44 @@ void GolfState::spawnBall(const ActorInfo& info)
         }
     };
 
-    material = m_resources.materials.get(m_materialIDs[MaterialID::Ball]);
-    if (m_ballModels.count(ballID) != 0)
+    const auto loadDefaultBall = [&]()
     {
-        m_ballModels[ballID]->createModel(entity);
-        applyMaterialData(*m_ballModels[ballID], material);
+        auto& defaultBall = m_ballModels.begin()->second;
+        if (!defaultBall->isLoaded())
+        {
+            defaultBall->loadFromFile(m_sharedData.ballModels[0].modelPath);
+        }
+
+        //a bit dangerous assuming we're not empty, but we
+        //shouldn't have made it this far if there are no ball files
+        //as they are vetted by the menu state.
+        LogW << "Ball with ID " << (int)ballID << " not found" << std::endl;
+        defaultBall->createModel(entity);
+        applyMaterialData(*m_ballModels.begin()->second, material);
+    };
+
+    material = m_resources.materials.get(m_materialIDs[MaterialID::Ball]);
+    if (m_ballModels.count(ballID) != 0
+        && ball != m_sharedData.ballModels.end())
+    {
+        if (!m_ballModels[ballID]->isLoaded())
+        {
+            m_ballModels[ballID]->loadFromFile(ball->modelPath);
+        }
+
+        if (m_ballModels[ballID]->isLoaded())
+        {
+            m_ballModels[ballID]->createModel(entity);
+            applyMaterialData(*m_ballModels[ballID], material);
+        }
+        else
+        {
+            loadDefaultBall();
+        }
     }
     else
     {
-        //a bit dangerous assuming we're not empty, but we
-        //shouldn't have made it this far without loading at least something...
-        LogW << "Ball with ID " << (int)ballID << " not found" << std::endl;
-        m_ballModels.begin()->second->createModel(entity);
-        applyMaterialData(*m_ballModels.begin()->second, material);
+        loadDefaultBall();
     }
     //clamp scale of balls in case someone got funny with a large model
     const float scale = std::min(1.f, MaxBallRadius / entity.getComponent<cro::Model>().getBoundingSphere().radius);

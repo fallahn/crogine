@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2022
+Matt Marchant 2021 - 2023
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -809,16 +809,6 @@ void DrivingState::loadAssets()
     auto flagSprite = spriteSheet.getSprite("flag03");
     m_flagQuad.setTexture(*flagSprite.getTexture());
     m_flagQuad.setTextureRect(flagSprite.getTextureRect());
-
-    //ball models - the menu should never have let us get this far if it found no ball files
-    for (const auto& [colour, uid, path] : m_sharedData.ballModels)
-    {
-        std::unique_ptr<cro::ModelDefinition> def = std::make_unique<cro::ModelDefinition>(m_resources);
-        if (def->loadFromFile(path))
-        {
-            m_ballModels.insert(std::make_pair(uid, std::move(def)));
-        }
-    }
 
     //club models
     cro::ModelDefinition md(m_resources);
@@ -2136,6 +2126,7 @@ void DrivingState::createBall()
 
     //render the ball as a point so no perspective is applied to the scale
     auto material = m_resources.materials.get(ballMaterialID);
+    cro::ModelDefinition ballDef(m_resources);
     material.setProperty("u_colour", TextNormalColour);
     auto ball = std::find_if(m_sharedData.ballModels.begin(), m_sharedData.ballModels.end(),
         [ballID](const SharedStateData::BallInfo& ballPair)
@@ -2145,11 +2136,13 @@ void DrivingState::createBall()
     if (ball != m_sharedData.ballModels.end())
     {
         material.setProperty("u_colour", ball->tint);
+        ballDef.loadFromFile(ball->modelPath);
     }
     else
     {
         //this should at least line up with the fallback model
         material.setProperty("u_colour", m_sharedData.ballModels.begin()->tint);
+        ballDef.loadFromFile(m_sharedData.ballModels[0].modelPath);
     }
 
     auto entity = m_gameScene.createEntity();
@@ -2246,7 +2239,7 @@ void DrivingState::createBall()
     auto shadowEnt = entity;
     entity = m_gameScene.createEntity();
     shadowEnt.getComponent<cro::Transform>().addChild(entity.addComponent<cro::Transform>());
-    //entity.getComponent<cro::Transform>().setOrigin({ 0.f, -0.0003f, 0.f });
+    entity.getComponent<cro::Transform>().setOrigin({ 0.f, 0.0028f, 0.f });
     
     cro::ModelDefinition md(m_resources);
     md.loadFromFile("assets/golf/models/ball_shadow.cmt");
@@ -2258,18 +2251,7 @@ void DrivingState::createBall()
     //adding a ball model means we see something a bit more reasonable when close up
     entity = m_gameScene.createEntity();
     entity.addComponent<cro::Transform>();
-
-    if (m_ballModels.count(ballID) != 0)
-    {
-        m_ballModels[ballID]->createModel(entity);
-    }
-    else
-    {
-        //a bit dangerous assuming we're not empty, but we
-        //shouldn't have made it this far without loading at least something...
-        LogW << "Ball with ID " << (int)ballID << " not found" << std::endl;
-        m_ballModels.begin()->second->createModel(entity);
-    }
+    ballDef.createModel(entity);
 
     //clamp scale of balls in case someone got funny with a large model
     const float scale = std::min(1.f, MaxBallRadius / entity.getComponent<cro::Model>().getBoundingSphere().radius);

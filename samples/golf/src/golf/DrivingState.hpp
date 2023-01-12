@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2022
+Matt Marchant 2021 - 2023
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -46,7 +46,6 @@ source distribution.
 #include <crogine/graphics/UniformBuffer.hpp>
 
 #include <crogine/detail/glm/vec2.hpp>
-#include <unordered_map>
 
 struct SharedStateData;
 class DrivingState final : public cro::State, public cro::GuiClient
@@ -121,7 +120,6 @@ private:
     std::vector<HoleData> m_holeData;
     std::int32_t m_targetIndex;
     std::array<cro::Billboard, BillboardID::Count> m_billboardTemplates = {};
-    std::unordered_map<std::int32_t, std::unique_ptr<cro::ModelDefinition>> m_ballModels;
 
     struct SpriteID final
     {
