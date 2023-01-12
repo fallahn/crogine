@@ -95,6 +95,7 @@ namespace
 #include "BillboardShader.inl"
 #include "CloudShader.inl"
 #include "ShaderIncludes.inl"
+#include "ShadowMapping.inl"
 
     //constexpr glm::vec3 CameraBasePosition(-22.f, 4.9f, 22.2f);
 
@@ -868,6 +869,7 @@ void MenuState::loadAssets()
     m_resources.shaders.loadFromString(ShaderID::CelTexturedSkinned, CelVertexShader, CelFragmentShader, "#define SUBRECT\n#define TEXTURED\n#define SKINNED\n#define NOCHEX\n");
     m_resources.shaders.loadFromString(ShaderID::Hair, CelVertexShader, CelFragmentShader, "#define USER_COLOUR\n#define NOCHEX");
     m_resources.shaders.loadFromString(ShaderID::Billboard, BillboardVertexShader, BillboardFragmentShader);
+    m_resources.shaders.loadFromString(ShaderID::BillboardShadow, BillboardVertexShader, ShadowFragment, "#define SHADOW_MAPPING\n#define ALPHA_CLIP\n");
 
     auto* shader = &m_resources.shaders.get(ShaderID::Cel);
     m_scaleBuffer.addShader(*shader);
@@ -899,6 +901,11 @@ void MenuState::loadAssets()
     m_scaleBuffer.addShader(*shader);
     m_resolutionBuffer.addShader(*shader);
     m_windBuffer.addShader(*shader);
+
+    shader = &m_resources.shaders.get(ShaderID::BillboardShadow);
+    m_materialIDs[MaterialID::BillboardShadow] = m_resources.materials.add(*shader);
+    m_windBuffer.addShader(*shader);
+    m_resolutionBuffer.addShader(*shader);
 
     //load the billboard rects from a sprite sheet and convert to templates
     cro::SpriteSheet spriteSheet;
@@ -1070,6 +1077,11 @@ void MenuState::createScene()
         billboardMat.setProperty("u_noiseTexture", noiseTex);
 
         entity.getComponent<cro::Model>().setMaterial(0, billboardMat);
+
+        billboardMat = m_resources.materials.get(m_materialIDs[MaterialID::BillboardShadow]);
+        applyMaterialData(md, billboardMat);
+        billboardMat.setProperty("u_noiseTexture", noiseTex);
+        entity.getComponent<cro::Model>().setShadowMaterial(0, billboardMat);
 
         if (entity.hasComponent<cro::BillboardCollection>())
         {

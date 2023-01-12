@@ -114,6 +114,7 @@ private:
             CelTexturedSkinned,
             Hair,
             Billboard,
+            BillboardShadow,
             Ground,
 
             Count
