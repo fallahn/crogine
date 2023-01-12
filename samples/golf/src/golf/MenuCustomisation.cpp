@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2022
+Matt Marchant 2021 - 2023
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -152,8 +152,7 @@ void MenuState::createBallScene()
                 cfg.save("assets/golf/balls/" + file);
             }
 
-            if (/*uid > -1
-                &&*/ (!modelPath.empty() && cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + modelPath)))
+            if ((!modelPath.empty() && cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + modelPath)))
             {
                 auto ball = std::find_if(m_sharedData.ballModels.begin(), m_sharedData.ballModels.end(),
                     [uid](const SharedStateData::BallInfo& ballPair)
@@ -186,6 +185,10 @@ void MenuState::createBallScene()
             entity.addComponent<cro::Transform>().setPosition({ (i * BallSpacing) + RootPoint, 0.f, 0.f });
             ballDef.createModel(entity);
 
+            //clamp scale of balls in case someone got funny with a large model
+            const float scale = std::min(1.f, MaxBallRadius / entity.getComponent<cro::Model>().getBoundingSphere().radius);
+            entity.getComponent<cro::Transform>().setScale(glm::vec3(scale));
+
             //allow for double sided balls.
             auto material = m_resources.materials.get(m_materialIDs[MaterialID::Cel]);
             applyMaterialData(ballDef, material);
@@ -195,7 +198,7 @@ void MenuState::createBallScene()
             entity.getComponent<cro::Callback>().function =
                 [](cro::Entity e, float dt)
             {
-                e.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, /*0.3f **/ dt);
+                e.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, dt);
             };
 
             if (shadow)

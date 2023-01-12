@@ -1623,6 +1623,8 @@ void GolfState::loadAssets()
     //ball models - the menu should never have let us get this far if it found no ball files
     for (const auto& [colour, uid, path] : m_sharedData.ballModels)
     {
+        //TODO there's no need to load EVERY file - this needs to be addressed if there
+        //are potentially a lot of workshop files...
         std::unique_ptr<cro::ModelDefinition> def = std::make_unique<cro::ModelDefinition>(m_resources);
         if (def->loadFromFile(path))
         {
@@ -4194,7 +4196,7 @@ void GolfState::spawnBall(const ActorInfo& info)
     auto shadowEnt = entity;
     entity = m_gameScene.createEntity();
     shadowEnt.getComponent<cro::Transform>().addChild(entity.addComponent<cro::Transform>());
-    entity.getComponent<cro::Transform>().setOrigin({ 0.f, 0.002f, 0.f });
+    entity.getComponent<cro::Transform>().setOrigin({ 0.f, 0.0028f, 0.f });
     m_modelDefs[ModelID::BallShadow]->createModel(entity);
     entity.getComponent<cro::Model>().setRenderFlags(~RenderFlags::MiniMap);
     //entity.getComponent<cro::Transform>().setScale(glm::vec3(1.3f));
@@ -4239,6 +4241,9 @@ void GolfState::spawnBall(const ActorInfo& info)
         m_ballModels.begin()->second->createModel(entity);
         applyMaterialData(*m_ballModels.begin()->second, material);
     }
+    //clamp scale of balls in case someone got funny with a large model
+    const float scale = std::min(1.f, MaxBallRadius / entity.getComponent<cro::Model>().getBoundingSphere().radius);
+    entity.getComponent<cro::Transform>().setScale(glm::vec3(scale));
     
     entity.getComponent<cro::Model>().setMaterial(0, material);
     entity.getComponent<cro::Model>().setRenderFlags(~RenderFlags::MiniMap);

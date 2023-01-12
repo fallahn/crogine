@@ -2246,6 +2246,7 @@ void DrivingState::createBall()
     auto shadowEnt = entity;
     entity = m_gameScene.createEntity();
     shadowEnt.getComponent<cro::Transform>().addChild(entity.addComponent<cro::Transform>());
+    //entity.getComponent<cro::Transform>().setOrigin({ 0.f, -0.0003f, 0.f });
     
     cro::ModelDefinition md(m_resources);
     md.loadFromFile("assets/golf/models/ball_shadow.cmt");
@@ -2269,6 +2270,10 @@ void DrivingState::createBall()
         LogW << "Ball with ID " << (int)ballID << " not found" << std::endl;
         m_ballModels.begin()->second->createModel(entity);
     }
+
+    //clamp scale of balls in case someone got funny with a large model
+    const float scale = std::min(1.f, MaxBallRadius / entity.getComponent<cro::Model>().getBoundingSphere().radius);
+    entity.getComponent<cro::Transform>().setScale(glm::vec3(scale));
 
     entity.getComponent<cro::Model>().setMaterial(0, m_resources.materials.get(m_materialIDs[MaterialID::Cel]));
     entity.getComponent<cro::Model>().setRenderFlags(~RenderFlags::MiniMap);

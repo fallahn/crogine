@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2022
+Matt Marchant 2021 - 2023
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -51,6 +51,8 @@ source distribution.
 #include <crogine/util/Matrix.hpp>
 
 #include <cstdint>
+
+static constexpr float MaxBallRadius = 0.07f;
 
 static constexpr glm::uvec2 MapSize(320u, 200u);
 static constexpr glm::vec2 RangeSize(200.f, 250.f);
