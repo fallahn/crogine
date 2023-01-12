@@ -43,6 +43,52 @@ source distribution.
 namespace
 {
 #include "RandNames.hpp"
+
+    SharedStateData::BallInfo readBallCfg(const cro::ConfigFile& cfg)
+    {
+        SharedStateData::BallInfo retVal;
+
+        const auto& props = cfg.getProperties();
+        for (const auto& p : props)
+        {
+            const auto& name = p.getName();
+            if (name == "model")
+            {
+                retVal.modelPath = p.getValue<std::string>();
+            }
+            else if (name == "uid")
+            {
+                retVal.uid = p.getValue<std::uint32_t>();
+            }
+            else if (name == "tint")
+            {
+                retVal.tint = p.getValue<cro::Colour>();
+            }
+        }
+
+        return retVal;
+    }
+
+    void insertInfo(SharedStateData::BallInfo info, std::vector<SharedStateData::BallInfo>& dst)
+    {
+        if ((!info.modelPath.empty() && cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + info.modelPath)))
+        {
+            auto ball = std::find_if(dst.begin(), dst.end(),
+                [&info](const SharedStateData::BallInfo& ballPair)
+                {
+                    return ballPair.uid == info.uid;
+                });
+
+            if (ball == dst.end())
+            {
+                dst.emplace_back(info);
+            }
+            else
+            {
+                LogE << info.modelPath << ": a ball already exists with UID " << info.uid << std::endl;
+            }
+        }
+    }
 }
 
 void MenuState::createBallScene()
@@ -116,66 +162,67 @@ void MenuState::createBallScene()
 
     m_sharedData.ballModels.clear();
 
+    //parse the defaul ball directory
     for (const auto& file : ballFiles)
     {
         cro::ConfigFile cfg;
         if (cro::FileSystem::getFileExtension(file) == ".ball"
             && cfg.loadFromFile("assets/golf/balls/" + file))
         {
-            std::uint32_t uid = 0;// SpookyHash::Hash32(file.data(), file.size(), 0);
-            std::string modelPath;
-            cro::Colour colour = cro::Colour::White;
-
-            const auto& props = cfg.getProperties();
-            for (const auto& p : props)
-            {
-                const auto& name = p.getName();
-                if (name == "model")
-                {
-                    modelPath = p.getValue<std::string>();
-                }
-                else if (name == "uid")
-                {
-                    uid = p.getValue<std::uint32_t>();
-                }
-                else if (name == "tint")
-                {
-                    colour = p.getValue<cro::Colour>();
-                }
-            }
+            auto info = readBallCfg(cfg);
 
             //if we didn't find a UID create one from the file name and save it to the cfg
-            if (uid == 0)
+            if (info.uid == 0)
             {
-                uid = SpookyHash::Hash32(file.data(), file.size(), 0);
-                cfg.addProperty("uid").setValue(uid);
+                info.uid = SpookyHash::Hash32(file.data(), file.size(), 0);
+                cfg.addProperty("uid").setValue(info.uid);
                 cfg.save("assets/golf/balls/" + file);
             }
 
-            if ((!modelPath.empty() && cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + modelPath)))
-            {
-                auto ball = std::find_if(m_sharedData.ballModels.begin(), m_sharedData.ballModels.end(),
-                    [uid](const SharedStateData::BallInfo& ballPair)
-                    {
-                        return ballPair.uid == uid;
-                    });
+            insertInfo(info, m_sharedData.ballModels);
+        }
+    }
 
-                if (ball == m_sharedData.ballModels.end())
+    //look in the user directory - only do this if the default dir is OK?
+    //also this won't work on mac using a bundle. maybe we should store these
+    //in some other location?
+#ifndef _APPLE_
+    if (cro::FileSystem::directoryExists(BallUserPath))
+    {
+        auto dirList = cro::FileSystem::listDirectories(BallUserPath);
+        for (const auto& dir : dirList)
+        {
+            auto path = BallUserPath + dir + "/" ;
+            auto files = cro::FileSystem::listFiles(path);
+
+            for (auto file : files)
+            {
+                if (cro::FileSystem::getFileExtension(file) == ".ball")
                 {
-                    m_sharedData.ballModels.emplace_back(colour, uid, modelPath);
-                }
-                else
-                {
-                    LogE << file << ": a ball already exists with UID " << uid << std::endl;
+                    cro::ConfigFile cfg;
+                    if (cfg.loadFromFile(path + file))
+                    {
+                        auto info = readBallCfg(cfg);
+                        info.modelPath = path + info.modelPath;
+
+                        insertInfo(info, m_sharedData.ballModels);
+                    }
+
+
+                    break; //skip the rest of the file list
                 }
             }
         }
     }
+#endif
 
+    //load each model for the preview in the player menu
     cro::ModelDefinition ballDef(m_resources);
-
     cro::ModelDefinition shadowDef(m_resources);
+
     auto shadow = shadowDef.loadFromFile("assets/golf/models/ball_shadow.cmt");
+
+    std::vector<std::uint32_t> invalidBalls;
 
     for (auto i = 0u; i < m_sharedData.ballModels.size(); ++i)
     {
@@ -210,6 +257,21 @@ void MenuState::createBallScene()
                 ballEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
             }
         }
+        else
+        {
+            //probably should remove from the ball models vector so that it's completely vetted
+            invalidBalls.push_back(m_sharedData.ballModels[i].uid);
+        }
+    }
+
+    //tidy up bad balls.
+    for (auto uid : invalidBalls)
+    {
+        m_sharedData.ballModels.erase(std::remove_if(m_sharedData.ballModels.begin(), m_sharedData.ballModels.end(),
+            [uid](const SharedStateData::BallInfo& ball)
+            {
+                return ball.uid == uid;
+            }), m_sharedData.ballModels.end());
     }
 }
 

@@ -53,6 +53,7 @@ source distribution.
 #include <cstdint>
 
 static constexpr float MaxBallRadius = 0.07f;
+static const std::string BallUserPath = "assets/user/balls/";
 
 static constexpr glm::uvec2 MapSize(320u, 200u);
 static constexpr glm::vec2 RangeSize(200.f, 250.f);
