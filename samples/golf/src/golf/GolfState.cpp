@@ -4139,7 +4139,8 @@ void GolfState::spawnBall(const ActorInfo& info)
     };
     m_avatars[info.clientID][info.playerID].ballModel = entity;
 
-
+    //entity.addComponent<cro::ParticleEmitter>().settings.loadFromFile("assets/golf/particles/sprinkler.cps", m_resources.textures);
+    //entity.getComponent<cro::ParticleEmitter>().start();
 
     //ball shadow
     auto ballEnt = entity;
@@ -5753,8 +5754,8 @@ void GolfState::setGreenCamPosition()
     }
     else
     {
-        auto centre = glm::vec3(MapSize.x / 2.f, 0.f, -static_cast<float>(MapSize.y) / 2.f);
-        auto direction = holePos - centre;
+        //auto centre = glm::vec3(MapSize.x / 2.f, 0.f, -static_cast<float>(MapSize.y) / 2.f);
+        auto direction = holePos - m_currentPlayer.position;// centre;
         direction = glm::normalize(direction) * 15.f;
         m_cameras[CameraID::Green].getComponent<cro::Transform>().move(direction);
         m_cameras[CameraID::Green].getComponent<CameraFollower>().radius = 30.f * 30.f;

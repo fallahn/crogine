@@ -437,6 +437,7 @@ void GolfState::handlePlayerInput(const net::NetEvent::Packet& packet, bool pred
             //as well as account for a frame of interp delay on the client
             //at the very least we should add the client ping to this
             ball.delay = ball.terrain == TerrainID::Green ? 0.12f : 1.17f;
+            ball.delay += static_cast<float>(m_sharedData.clients[input.clientID].peer.getRoundTripTime()) / 1000.f;
             ball.startPoint = m_playerInfo[0].ballEntity.getComponent<cro::Transform>().getPosition();
 
             //calc the amount of spin based on if we're going towards the hole

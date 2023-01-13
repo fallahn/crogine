@@ -990,6 +990,7 @@ void MenuState::createScene()
         texturedMat = m_resources.materials.get(m_materialIDs[MaterialID::Ground]);
         applyMaterialData(md, texturedMat);
         entity.getComponent<cro::Model>().setMaterial(0, texturedMat);
+        entity.getComponent<cro::Model>().setRenderFlags(~BallRenderFlags);
     }
 
     if (md.loadFromFile("assets/golf/models/phone_box.cmt"))

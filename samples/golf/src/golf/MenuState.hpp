@@ -53,6 +53,8 @@ source distribution.
 
 #include <array>
 
+static const std::uint32_t BallRenderFlags = (1 << 22);
+
 namespace cro
 {
     struct NetEvent;

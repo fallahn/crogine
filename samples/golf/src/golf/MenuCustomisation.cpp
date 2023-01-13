@@ -123,6 +123,7 @@ void MenuState::createBallScene()
         entity.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -0.03f);
         entity.addComponent<cro::Camera>().setPerspective(0.89f, 2.f, 0.001f, 2.f);
         entity.getComponent<cro::Camera>().viewport = { (i % 2) * 0.5f, (i / 2) * 0.5f, 0.5f, 0.5f };
+        entity.getComponent<cro::Camera>().renderFlags = BallRenderFlags;
         entity.addComponent<cro::Callback>().active = true;
         entity.getComponent<cro::Callback>().setUserData<std::int32_t>(0);
         entity.getComponent<cro::Callback>().function = ballTargetCallback;
@@ -154,6 +155,7 @@ void MenuState::createBallScene()
     m_ballCam.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -0.03f);
     m_ballCam.addComponent<cro::Camera>().setPerspective(1.f, 1.f, 0.001f, 2.f);
     m_ballCam.getComponent<cro::Camera>().resizeCallback = ballTexCallback;
+    m_ballCam.getComponent<cro::Camera>().renderFlags = BallRenderFlags;
     m_ballCam.addComponent<cro::Callback>().active = true;
     m_ballCam.getComponent<cro::Callback>().setUserData<std::int32_t>(0);
     m_ballCam.getComponent<cro::Callback>().function = ballTargetCallback;
@@ -245,6 +247,7 @@ void MenuState::createBallScene()
             auto material = m_resources.materials.get(m_materialIDs[MaterialID::Cel]);
             applyMaterialData(ballDef, material);
             entity.getComponent<cro::Model>().setMaterial(0, material);
+            entity.getComponent<cro::Model>().setRenderFlags(BallRenderFlags);
 
             entity.addComponent<cro::Callback>().active = true;
             entity.getComponent<cro::Callback>().function =
@@ -260,6 +263,7 @@ void MenuState::createBallScene()
                 entity.addComponent<cro::Transform>();
                 shadowDef.createModel(entity);
                 ballEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+                entity.getComponent<cro::Model>().setRenderFlags(BallRenderFlags);
             }
         }
         else
