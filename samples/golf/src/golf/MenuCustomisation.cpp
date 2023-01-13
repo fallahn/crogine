@@ -205,7 +205,7 @@ void MenuState::createBallScene()
                 if (cro::FileSystem::getFileExtension(file) == ".ball")
                 {
                     cro::ConfigFile cfg;
-                    if (cfg.loadFromFile(path + file))
+                    if (cfg.loadFromFile(path + file, false))
                     {
                         auto info = readBallCfg(cfg);
                         info.modelPath = path + info.modelPath;

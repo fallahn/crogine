@@ -435,7 +435,8 @@ void GolfState::handlePlayerInput(const net::NetEvent::Packet& packet, bool pred
             //this is a kludge to wait for the anim before hitting the ball
             //Ideally we want to read the frame data from the avatar
             //as well as account for a frame of interp delay on the client
-            ball.delay = ball.terrain == TerrainID::Green ? 0.12f : 1.27f;
+            //at the very least we should add the client ping to this
+            ball.delay = ball.terrain == TerrainID::Green ? 0.12f : 1.17f;
             ball.startPoint = m_playerInfo[0].ballEntity.getComponent<cro::Transform>().getPosition();
 
             //calc the amount of spin based on if we're going towards the hole
