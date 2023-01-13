@@ -53,6 +53,13 @@ source distribution.
 #include <cstdint>
 
 static constexpr float MaxBallRadius = 0.07f;
+static constexpr float GreenCamRadiusLarge = 20.f;
+static constexpr float GreenCamRadiusSmall = 5.7f;
+static constexpr float SkyCamRadius = 80.f;
+
+static constexpr float GreenCamZoomFast = 2.5f;
+static constexpr float GreenCamZoomSlow = 1.8f;
+static constexpr float SkyCamZoomSpeed = 1.1f;// 3.f;
 
 static constexpr glm::uvec2 MapSize(320u, 200u);
 static constexpr glm::vec2 RangeSize(200.f, 250.f);

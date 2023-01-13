@@ -154,27 +154,33 @@ void CameraFollowSystem::process(float dt)
             return;
         }
 
-        float velocity = 0.f;
-        if (follower.target.hasComponent<Ball>())
-        {
-            //driving range
-            velocity = glm::length2(follower.target.getComponent<Ball>().velocity);
-        }
-        else
-        {
-            //net game
-            velocity = glm::length2(follower.target.getComponent<InterpolationComponent<InterpolationType::Linear>>().getVelocity());
-        }
-        float snapMultiplier = velocity / 1350.f;
+        //float velocity = 0.f;
+        //if (follower.target.hasComponent<Ball>())
+        //{
+        //    //driving range
+        //    velocity = glm::length2(follower.target.getComponent<Ball>().velocity);
+        //}
+        //else
+        //{
+        //    //net game
+        //    velocity = glm::length2(follower.target.getComponent<InterpolationComponent<InterpolationType::Linear>>().getVelocity());
+        //}
+        //float snapMultiplier = velocity / 1350.f;
 
-        //snap to target if close to reduce stutter
-        static constexpr float MinRad = Ball::Radius * Ball::Radius;
-        if (glm::length2(target - follower.currentTarget) < (MinRad * snapMultiplier))
+        ////snap to target if close to reduce stutter
+        //static constexpr float Rad = 0.05f;
+        //static constexpr float MinRad = /*Rad * Rad;*/Ball::Radius* Ball::Radius;
+        //if (glm::length2(target - follower.currentTarget) < (MinRad * snapMultiplier))
+
+        //this is almost, but not quite what you want to do.
+        float dir = glm::dot(target - follower.prevTarget, target - follower.currentTarget);
+
+        if (dir < 0)
         {
             follower.currentTarget = target;
             follower.isSnapped = true;
 
-            //LogI << "snapped to target" << std::endl;
+            LogI << "snapped to target" << std::endl;
             //hm, this never actually reaches here. Who knew?
         }
     };
@@ -217,13 +223,13 @@ void CameraFollowSystem::process(float dt)
             auto target = follower.target.getComponent<cro::Transform>().getPosition() + TargetOffset;
             target += follower.targetOffset * std::min(1.f, glm::length2(target - tx.getPosition()) / follower.maxOffsetDistance);
 
-
             auto diff = target - follower.currentTarget;
 
             float diffMultiplier = std::min(1.f, std::max(0.f, glm::length2(diff) / MaxTargetDiff));
             diffMultiplier *= 4.f;
 
-            follower.currentTarget += diff * std::min(0.998f, (dt * (diffMultiplier + (4.f * follower.zoom.progress))));
+            follower.prevTarget = follower.currentTarget;
+            follower.currentTarget += diff * std::min(0.9998f, (dt * (diffMultiplier + (4.f * follower.zoom.progress))));
             snapTarget(follower, target);
 
 
@@ -316,7 +322,7 @@ void CameraFollowSystem::process(float dt)
                 target += follower.targetOffset * std::min(1.f, glm::length2(target - tx.getPosition()) / follower.maxOffsetDistance);
 
                 auto diff = target - follower.currentTarget;
-                follower.currentTarget += diff * std::min(0.98f, (dt * (2.f + (2.f * follower.zoom.progress))));
+                follower.currentTarget += diff * std::min(0.998f, (dt * (2.f + (2.f * follower.zoom.progress))));
                 snapTarget(follower, target);
 
 

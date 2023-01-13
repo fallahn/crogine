@@ -74,6 +74,7 @@ struct CameraFollower final
 
     cro::Entity target;
     glm::vec3 currentTarget = glm::vec3(0.f); //used to interpolate
+    glm::vec3 prevTarget = glm::vec3(0.f);
     glm::vec3 holePosition = glm::vec3(0.f);
     glm::vec3 playerPosition = glm::vec3(0.f);
     float radius = 0.f; //camera becomes active when ball within this (should be ^2)

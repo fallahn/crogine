@@ -3583,11 +3583,11 @@ void GolfState::buildScene()
     camEnt.getComponent<cro::Camera>().setMaxShadowDistance(shadowQuality.shadowFarDistance);
     camEnt.getComponent<cro::Camera>().setShadowExpansion(25.f);
     camEnt.addComponent<cro::CommandTarget>().ID = CommandID::SpectatorCam;
-    camEnt.addComponent<CameraFollower>().radius = 80.f * 80.f;
+    camEnt.addComponent<CameraFollower>().radius = SkyCamRadius * SkyCamRadius;
     camEnt.getComponent<CameraFollower>().maxOffsetDistance = 100.f;
     camEnt.getComponent<CameraFollower>().id = CameraID::Sky;
-    camEnt.getComponent<CameraFollower>().zoom.target = 0.1f;
-    camEnt.getComponent<CameraFollower>().zoom.speed = 3.f;
+    camEnt.getComponent<CameraFollower>().zoom.target = 0.25f;// 0.1f;
+    camEnt.getComponent<CameraFollower>().zoom.speed = SkyCamZoomSpeed;
     camEnt.getComponent<CameraFollower>().targetOffset = { 0.f,0.65f,0.f };
     camEnt.addComponent<cro::AudioListener>();
 
@@ -3616,9 +3616,9 @@ void GolfState::buildScene()
     camEnt.getComponent<cro::Camera>().setMaxShadowDistance(shadowQuality.shadowFarDistance);
     camEnt.getComponent<cro::Camera>().setShadowExpansion(25.f);
     camEnt.addComponent<cro::CommandTarget>().ID = CommandID::SpectatorCam;
-    camEnt.addComponent<CameraFollower>().radius = 30.f * 30.f;
+    camEnt.addComponent<CameraFollower>().radius = GreenCamRadiusLarge * GreenCamRadiusLarge;
     camEnt.getComponent<CameraFollower>().id = CameraID::Green;
-    camEnt.getComponent<CameraFollower>().zoom.speed = 2.f;
+    camEnt.getComponent<CameraFollower>().zoom.speed = GreenCamZoomFast;
     camEnt.addComponent<cro::AudioListener>();
     camEnt.addComponent<TargetInfo>();
     setPerspective(camEnt.getComponent<cro::Camera>());
@@ -3679,7 +3679,7 @@ void GolfState::buildScene()
     camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(ShadowMapSize, ShadowMapSize);
     camEnt.getComponent<cro::Camera>().active = false;
     camEnt.getComponent<cro::Camera>().setMaxShadowDistance(shadowQuality.shadowFarDistance);
-    camEnt.getComponent<cro::Camera>().setShadowExpansion(15.f);
+    camEnt.getComponent<cro::Camera>().setShadowExpansion(25.f);
     camEnt.addComponent<cro::AudioListener>();
     camEnt.addComponent<TargetInfo>();
     updateView(camEnt.getComponent<cro::Camera>());
@@ -4115,7 +4115,7 @@ void GolfState::spawnBall(const ActorInfo& info)
 
     auto entity = m_gameScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(info.position);
-    entity.getComponent<cro::Transform>().setOrigin({ 0.f, -0.003f, 0.f }); //pushes the ent above the ground a bit to stop Z fighting
+    //entity.getComponent<cro::Transform>().setOrigin({ 0.f, -0.003f, 0.f }); //pushes the ent above the ground a bit to stop Z fighting
     entity.getComponent<cro::Transform>().setScale(glm::vec3(0.f));
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Ball;
     entity.addComponent<InterpolationComponent<InterpolationType::Linear>>(
@@ -4177,7 +4177,7 @@ void GolfState::spawnBall(const ActorInfo& info)
                     auto height = m_collisionMesh.getTerrain(rayPoint).height;
                     c.setAlpha(smoothstep(0.2f, 0.8f, (ballPos.y - height) / 0.25f));
                     
-                    ballPos.y = 0.001f + (height - ballHeight);
+                    ballPos.y = 0.00001f + (height - ballHeight);
                 }
                 e.getComponent<cro::Transform>().setPosition({ 0.f, ballPos.y, 0.f });
                 e.getComponent<cro::Model>().setHidden((m_currentPlayer.terrain == TerrainID::Green) || ballEnt.getComponent<cro::Model>().isHidden());
@@ -4193,7 +4193,7 @@ void GolfState::spawnBall(const ActorInfo& info)
     auto shadowEnt = entity;
     entity = m_gameScene.createEntity();
     shadowEnt.getComponent<cro::Transform>().addChild(entity.addComponent<cro::Transform>());
-    entity.getComponent<cro::Transform>().setOrigin({ 0.f, 0.0028f, 0.f });
+    entity.getComponent<cro::Transform>().setOrigin({ 0.f, 0.003f, 0.f });
     m_modelDefs[ModelID::BallShadow]->createModel(entity);
     entity.getComponent<cro::Model>().setRenderFlags(~RenderFlags::MiniMap);
     //entity.getComponent<cro::Transform>().setScale(glm::vec3(1.3f));
@@ -5746,9 +5746,9 @@ void GolfState::setGreenCamPosition()
         direction = glm::rotate(direction, 0.5f * static_cast<float>(r), glm::vec3(0.f, 1.f, 0.f));
 
         m_cameras[CameraID::Green].getComponent<cro::Transform>().move(direction);
-        m_cameras[CameraID::Green].getComponent<CameraFollower>().radius = 5.7f * 5.7f;
+        m_cameras[CameraID::Green].getComponent<CameraFollower>().radius = GreenCamRadiusSmall * GreenCamRadiusSmall;
         m_cameras[CameraID::Green].getComponent<CameraFollower>().zoom.target = 0.3f;
-        m_cameras[CameraID::Green].getComponent<CameraFollower>().zoom.speed = 1.4f;
+        m_cameras[CameraID::Green].getComponent<CameraFollower>().zoom.speed = GreenCamZoomSlow;
 
         heightOffset *= 0.15f;
     }
@@ -5757,10 +5757,14 @@ void GolfState::setGreenCamPosition()
         //auto centre = glm::vec3(MapSize.x / 2.f, 0.f, -static_cast<float>(MapSize.y) / 2.f);
         auto direction = holePos - m_currentPlayer.position;// centre;
         direction = glm::normalize(direction) * 15.f;
+
+        auto r = (cro::Util::Random::value(0, 1) * 2) - 1;
+        direction = glm::rotate(direction, 0.35f * static_cast<float>(r), glm::vec3(0.f, 1.f, 0.f));
+
         m_cameras[CameraID::Green].getComponent<cro::Transform>().move(direction);
-        m_cameras[CameraID::Green].getComponent<CameraFollower>().radius = 30.f * 30.f;
+        m_cameras[CameraID::Green].getComponent<CameraFollower>().radius = GreenCamRadiusLarge * GreenCamRadiusLarge;
         m_cameras[CameraID::Green].getComponent<CameraFollower>().zoom.target = 0.25f;
-        m_cameras[CameraID::Green].getComponent<CameraFollower>().zoom.speed = 2.f;
+        m_cameras[CameraID::Green].getComponent<CameraFollower>().zoom.speed = GreenCamZoomFast;
     }
 
     //double check terrain height and make sure camera is always above
