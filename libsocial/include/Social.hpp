@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022
+Matt Marchant 2022 - 2023
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -110,4 +110,14 @@ public:
     static constexpr std::uint32_t IconSize = 64;
     static inline const std::string RSSFeed = "https://fallahn.itch.io/vga-golf/devlog.rss";
     static inline const std::string WebURL = "https://fallahn.itch.io/vga-golf";
+
+    struct UserDir final
+    {
+        enum
+        {
+            Ball, Hair, Course
+        };
+    };
+    static std::string getBaseContentPath();
+    static std::string getUserContentPath(std::int32_t);
 };

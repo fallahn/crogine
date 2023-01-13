@@ -33,6 +33,8 @@ source distribution.
 #include "spooky2.hpp"
 #include "BallSystem.hpp"
 
+#include <Social.hpp>
+
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Model.hpp>
 #include <crogine/ecs/components/Callback.hpp>
@@ -93,6 +95,11 @@ namespace
 
 void MenuState::createBallScene()
 {
+    if (!cro::FileSystem::directoryExists(Social::getBaseContentPath()))
+    {
+        cro::FileSystem::createDirectory(Social::getBaseContentPath());
+    }
+
     static constexpr float RootPoint = 100.f;
     static constexpr float BallSpacing = 0.09f;
 
@@ -184,9 +191,7 @@ void MenuState::createBallScene()
     }
 
     //look in the user directory - only do this if the default dir is OK?
-    //also this won't work on mac using a bundle. maybe we should store these
-    //in some other location?
-#ifndef _APPLE_
+    const auto BallUserPath = Social::getUserContentPath(Social::UserDir::Ball);
     if (cro::FileSystem::directoryExists(BallUserPath))
     {
         auto dirList = cro::FileSystem::listDirectories(BallUserPath);
@@ -214,7 +219,7 @@ void MenuState::createBallScene()
             }
         }
     }
-#endif
+
 
     //load each model for the preview in the player menu
     cro::ModelDefinition ballDef(m_resources);
