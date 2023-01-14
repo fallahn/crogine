@@ -3618,6 +3618,7 @@ void GolfState::buildScene()
     camEnt.addComponent<cro::CommandTarget>().ID = CommandID::SpectatorCam;
     camEnt.addComponent<CameraFollower>().radius = GreenCamRadiusLarge * GreenCamRadiusLarge;
     camEnt.getComponent<CameraFollower>().id = CameraID::Green;
+    camEnt.getComponent<CameraFollower>().maxTargetDiff = 16.f;
     camEnt.getComponent<CameraFollower>().zoom.speed = GreenCamZoomFast;
     camEnt.addComponent<cro::AudioListener>();
     camEnt.addComponent<TargetInfo>();
@@ -4139,7 +4140,8 @@ void GolfState::spawnBall(const ActorInfo& info)
     };
     m_avatars[info.clientID][info.playerID].ballModel = entity;
 
-    //entity.addComponent<cro::ParticleEmitter>().settings.loadFromFile("assets/golf/particles/sprinkler.cps", m_resources.textures);
+    //entity.addComponent<cro::ParticleEmitter>().settings.loadFromFile("assets/golf/particles/trail.cps", m_resources.textures);
+    //entity.getComponent<cro::ParticleEmitter>().settings.colour = miniBallColour;
     //entity.getComponent<cro::ParticleEmitter>().start();
 
     //ball shadow
@@ -5747,6 +5749,8 @@ void GolfState::setGreenCamPosition()
 
         m_cameras[CameraID::Green].getComponent<cro::Transform>().move(direction);
         m_cameras[CameraID::Green].getComponent<CameraFollower>().radius = GreenCamRadiusSmall * GreenCamRadiusSmall;
+        m_cameras[CameraID::Green].getComponent<CameraFollower>().isSnapped = true;
+        m_cameras[CameraID::Green].getComponent<CameraFollower>().maxTargetDiff = 4.f;
         m_cameras[CameraID::Green].getComponent<CameraFollower>().zoom.target = 0.3f;
         m_cameras[CameraID::Green].getComponent<CameraFollower>().zoom.speed = GreenCamZoomSlow;
 
@@ -5763,6 +5767,8 @@ void GolfState::setGreenCamPosition()
 
         m_cameras[CameraID::Green].getComponent<cro::Transform>().move(direction);
         m_cameras[CameraID::Green].getComponent<CameraFollower>().radius = GreenCamRadiusLarge * GreenCamRadiusLarge;
+        m_cameras[CameraID::Green].getComponent<CameraFollower>().isSnapped = false;
+        m_cameras[CameraID::Green].getComponent<CameraFollower>().maxTargetDiff = 16.f;
         m_cameras[CameraID::Green].getComponent<CameraFollower>().zoom.target = 0.25f;
         m_cameras[CameraID::Green].getComponent<CameraFollower>().zoom.speed = GreenCamZoomFast;
     }

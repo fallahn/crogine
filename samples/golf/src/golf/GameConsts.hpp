@@ -53,7 +53,7 @@ source distribution.
 #include <cstdint>
 
 static constexpr float MaxBallRadius = 0.07f;
-static constexpr float GreenCamRadiusLarge = 20.f;
+static constexpr float GreenCamRadiusLarge = 30.f;
 static constexpr float GreenCamRadiusSmall = 5.7f;
 static constexpr float SkyCamRadius = 80.f;
 
