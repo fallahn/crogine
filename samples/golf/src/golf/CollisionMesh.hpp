@@ -67,6 +67,7 @@ public:
 
     void updateCollisionMesh(const cro::Mesh::Data&);
     TerrainResult getTerrain(glm::vec3 position) const;
+    TerrainResult getTerrain(glm::vec3 rayStart, glm::vec3 rayEnd) const;
 
     void renderDebug(const glm::mat4& viewProj, glm::uvec2 targetSize);
     void setDebugFlags(std::int32_t);

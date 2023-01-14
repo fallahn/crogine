@@ -92,7 +92,7 @@ RayResultCallback::FaceData RayResultCallback::getFaceData(const btCollisionWorl
         auto g = std::clamp(data[colourOffset + 1], 0.f, 1.f) * 255.f;
         auto b = std::clamp(data[colourOffset + 2], 0.f, 1.f) * 255.f;
 
-        r = std::min(std::floor(r / 10.f), static_cast<float>(TerrainID::Scrub));
+        r = std::min(std::floor(r / 10.f), static_cast<float>(TerrainID::Stone));
         g = std::floor(g / 10.f);
         b = std::floor(b / 10.f);
 
