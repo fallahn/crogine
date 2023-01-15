@@ -4140,9 +4140,14 @@ void GolfState::spawnBall(const ActorInfo& info)
     };
     m_avatars[info.clientID][info.playerID].ballModel = entity;
 
-    //entity.addComponent<cro::ParticleEmitter>().settings.loadFromFile("assets/golf/particles/trail.cps", m_resources.textures);
-    //entity.getComponent<cro::ParticleEmitter>().settings.colour = miniBallColour;
-    //entity.getComponent<cro::ParticleEmitter>().start();
+    /*entity.addComponent<cro::ParticleEmitter>().settings.loadFromFile("assets/golf/particles/trail.cps", m_resources.textures);
+    entity.getComponent<cro::ParticleEmitter>().start();*/
+
+    //cro::AudioScape propAudio;
+    //propAudio.loadFromFile("assets/golf/sound/props.xas", m_resources.audio);
+    //entity.addComponent<cro::AudioEmitter>() = propAudio.getEmitter("ball");
+    //entity.getComponent<cro::AudioEmitter>().play();
+
 
     //ball shadow
     auto ballEnt = entity;
@@ -4624,7 +4629,20 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
             if (m_activeAvatar)
             {
                 auto animID = evt.packet.as<std::uint8_t>();
-                m_activeAvatar->model.getComponent<cro::Skeleton>().play(m_activeAvatar->animationIDs[animID], 1.f, 0.f);
+                float speed = 1.f;
+
+                //TODO reenable this when attachment rotation can be interpolated between animations
+                /*if (animID == AnimationID::Swing)
+                {
+                    if (m_inputParser.getPower() < (static_cast<float>(getClub()) * 1.5f) / 10.f
+                        || getClub() > ClubID::PitchWedge)
+                    {
+                        animID = AnimationID::Chip;
+                        speed = 0.9f;
+                    }
+                }*/
+
+                m_activeAvatar->model.getComponent<cro::Skeleton>().play(m_activeAvatar->animationIDs[animID], speed, 0.8f);
             }
         }
             break;
