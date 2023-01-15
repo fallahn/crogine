@@ -2227,6 +2227,7 @@ void ModelState::drawBrowser()
                 ImGui::SameLine();
 
                 ImGui::BeginChild("##attachment_details", { 240.f, 0.f }, true);
+                ImGui::Text("Attachment models (preview)");
                 if (ImGui::Button("Quick Scale"))
                 {
                     glm::vec3 aPos, aScale;

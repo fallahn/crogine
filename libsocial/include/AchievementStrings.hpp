@@ -180,7 +180,7 @@ static const std::array<std::pair<std::string, bool>, AchievementID::Count> Achi
     std::make_pair("Reach Level 30", false),
     std::make_pair("Reach Level 40", false),
     std::make_pair("Reach Level 50", false),
-    std::make_pair("Hit the ball into the volcano on 3-18", false),
+    std::make_pair("Hit the ball into the volcano on 4-18", false),
     std::make_pair("Hit the boat on 8-11", false),
     std::make_pair("Hit the ball over 1500m in a single stroke", true)
 };
