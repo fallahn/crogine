@@ -1,6 +1,6 @@
 material_definition bunker
 {
-    type = 0
+    type = 1
     colour = 1.000000,1.000000,1.000000,1.000000
     mask_colour = 1.000000,1.000000,0.000000,1.000000
     alpha_clip = 0.000000
@@ -16,7 +16,7 @@ material_definition bunker
     texture_repeat = true
     depth_test = true
     double_sided = false
-    use_mipmaps = false
+    use_mipmaps = true
     animated = false
     row_count = 1
     col_count = 1
