@@ -51,6 +51,8 @@ source distribution.
 #include <crogine/util/Matrix.hpp>
 
 #include <cstdint>
+#include <sstream>
+#include <iomanip>
 
 static constexpr float MaxBallRadius = 0.07f;
 static constexpr float GreenCamRadiusLarge = 30.f;
@@ -704,7 +706,16 @@ static inline void formatDistanceString(float distance, cro::Text& target, bool 
         }
         else
         {
-            distance *= ToFeet;
+            float dist = std::ceil((distance * ToYards) * 100.f) / 100.f;
+            std::stringstream ss;
+            ss.precision(2);
+            ss << "Distance: ";
+            ss << std::fixed << dist;
+            ss << "yds";
+
+            target.setString(ss.str());
+
+            /*distance *= ToFeet;
             if (distance > 1)
             {
                 auto dist = static_cast<std::int32_t>(distance);
@@ -714,7 +725,7 @@ static inline void formatDistanceString(float distance, cro::Text& target, bool 
             {
                 auto dist = static_cast<std::int32_t>(distance * ToInches);
                 target.setString("Distance: " + std::to_string(dist) + "in");
-            }
+            }*/
         }
     }
     else
