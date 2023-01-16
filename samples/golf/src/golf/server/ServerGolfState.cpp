@@ -53,19 +53,22 @@ using namespace sv;
 
 namespace
 {
+    constexpr float MaxScoreboardTime = 10.f;
     constexpr std::uint8_t MaxStrokes = 12;
     const cro::Time TurnTime = cro::seconds(90.f);
 }
 
 GolfState::GolfState(SharedData& sd)
-    : m_returnValue (StateID::Golf),
-    m_sharedData    (sd),
-    m_mapDataValid  (false),
-    m_scene         (sd.messageBus, 512),
-    m_gameStarted   (false),
-    m_allMapsLoaded (false),
-    m_currentHole   (0),
-    m_skinsPot      (1)
+    : m_returnValue         (StateID::Golf),
+    m_sharedData            (sd),
+    m_mapDataValid          (false),
+    m_scene                 (sd.messageBus, 512),
+    m_scoreboardTime        (0.f),
+    m_scoreboardReadyFlags  (0),
+    m_gameStarted           (false),
+    m_allMapsLoaded         (false),
+    m_currentHole           (0),
+    m_skinsPot              (1)
 {
     if (m_mapDataValid = validateMap(); m_mapDataValid)
     {
@@ -402,15 +405,26 @@ void GolfState::sendInitialGameState(std::uint8_t clientID)
         {
             if (m_allMapsLoaded)
             {
-                setNextPlayer();
-                e.getComponent<cro::Callback>().active = false;
-                m_scene.destroyEntity(e);
+                m_scoreboardTime += dt;
+
+                if (m_scoreboardTime > MaxScoreboardTime)
+                {
+                    setNextPlayer();
+                    e.getComponent<cro::Callback>().active = false;
+                    m_scene.destroyEntity(e);
+                }
+            }
+            else
+            {
+                m_scoreboardTime = 0.f;
             }
 
             //make sure to keep resetting this to prevent unfairly
             //truncating the next player's turn
             m_turnTimer.restart();
         };
+
+        m_scoreboardReadyFlags = 0;
     }
 }
 
@@ -486,6 +500,17 @@ void GolfState::checkReadyQuit(std::uint8_t clientID)
 {
     if (m_gameStarted)
     {
+        //we might be waiting for others to start new hole
+        m_scoreboardReadyFlags |= (1 << clientID);
+
+        for (auto i = 0u; i < m_playerInfo.size(); ++i)
+        {
+            if ((m_scoreboardReadyFlags & (1 << i)) == 0)
+            {
+                return;
+            }
+        }
+        m_scoreboardTime = MaxScoreboardTime; //skips ahead to timeout if everyone is ready
         return;
     }
 
@@ -657,6 +682,7 @@ void GolfState::setNextHole()
         client.mapLoaded = false;
     }
     m_allMapsLoaded = false;
+    m_scoreboardTime = 0.f;
 
     m_currentHole++;
     if (m_currentHole < m_holeData.size()
@@ -708,15 +734,26 @@ void GolfState::setNextHole()
         {
             if (m_allMapsLoaded)
             {
-                setNextPlayer(true);
-                e.getComponent<cro::Callback>().active = false;
-                m_scene.destroyEntity(e);
+                m_scoreboardTime += dt;
+
+                if (m_scoreboardTime > MaxScoreboardTime)
+                {
+                    setNextPlayer(true);
+                    e.getComponent<cro::Callback>().active = false;
+                    m_scene.destroyEntity(e);
+                }
+            }
+            else
+            {
+                m_scoreboardTime = 0.f;
             }
 
             //make sure to keep resetting this to prevent unfairly
             //truncating the next player's turn
             m_turnTimer.restart();
         };
+
+        m_scoreboardReadyFlags = 0;
     }
     else
     {

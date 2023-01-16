@@ -1859,7 +1859,8 @@ void GolfState::showScoreboard(bool visible)
     }
 
     //don't hide if the round finished
-    if (m_roundEnded)
+    if (m_roundEnded
+        || m_newHole)
     {
         visible = true;
     }
@@ -2157,14 +2158,6 @@ void GolfState::showMessageBoard(MessageBoardID messageType, bool special)
     entity.getComponent<cro::Transform>().addChild(imgEnt.getComponent<cro::Transform>());
 
     //callback for anim/self destruction
-    struct MessageAnim final
-    {
-        enum
-        {
-            Delay, Open, Hold, Close
-        }state = Delay;
-        float currentTime = 0.5f;
-    };
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().setUserData<MessageAnim>();
     entity.getComponent<cro::Callback>().function =
@@ -2353,7 +2346,8 @@ void GolfState::showLevelUp(std::uint64_t levelData)
 
 void GolfState::toggleQuitReady()
 {
-    if (m_roundEnded)
+    if (m_roundEnded
+        || m_newHole)
     {
         m_sharedData.clientConnection.netClient.sendPacket<std::uint8_t>(PacketID::ReadyQuit, m_sharedData.clientConnection.connectionID, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
     }

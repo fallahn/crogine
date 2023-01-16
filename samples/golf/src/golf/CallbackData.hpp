@@ -53,3 +53,13 @@ struct CamCallbackData final
 {
     float progress = 0.f;
 };
+
+//used by pop-up messages
+struct MessageAnim final
+{
+    enum
+    {
+        Delay, Open, Hold, Close
+    }state = Delay;
+    float currentTime = 0.5f;
+};

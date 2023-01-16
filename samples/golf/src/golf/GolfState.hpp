@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2022
+Matt Marchant 2021 - 2023
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -315,6 +315,7 @@ private:
 
     float m_camRotation; //used to offset the rotation of the wind indicator
     bool m_roundEnded;
+    bool m_newHole; //prevents closing scoreboard until everyone is ready
     glm::vec2 m_viewScale;
     std::size_t m_scoreColumnCount;
     LeaderboardTexture m_leaderboardTexture;
@@ -329,7 +330,7 @@ private:
     void showCountdown(std::uint8_t);
     void createScoreboard();
     void updateScoreboard();
-    void showScoreboard(bool);
+    void showScoreboard(bool visible);
     void updateWindDisplay(glm::vec3);
 
     enum class MessageBoardID

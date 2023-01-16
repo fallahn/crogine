@@ -191,6 +191,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     m_activeAvatar      (nullptr),
     m_camRotation       (0.f),
     m_roundEnded        (false),
+    m_newHole           (true),
     m_viewScale         (1.f),
     m_scoreColumnCount  (2),
     m_readyQuitFlags    (0),
@@ -325,6 +326,22 @@ bool GolfState::handleEvent(const cro::Event& evt)
         idleTime = cro::seconds(30.f);
     };
 
+    const auto closeMessage = [&]()
+    {
+        cro::Command cmd;
+        cmd.targetFlags = CommandID::UI::MessageBoard;
+        cmd.action = [](cro::Entity e, float)
+        {
+            auto& [state, currTime] = e.getComponent<cro::Callback>().getUserData<MessageAnim>();
+            if (state == MessageAnim::Hold)
+            {
+                currTime = 1.f;
+                state = MessageAnim::Close;
+            }
+        };
+        m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+    };
+
     if (evt.type == SDL_KEYUP)
     {
         //hideMouse(); //TODO this should only react to current keybindings
@@ -350,6 +367,9 @@ bool GolfState::handleEvent(const cro::Event& evt)
             break;
         case SDLK_TAB:
             showScoreboard(false);
+            break;
+        case SDLK_RETURN:
+            closeMessage();
             break;
 #ifdef CRO_DEBUG_
         case SDLK_F2:
@@ -572,6 +592,12 @@ bool GolfState::handleEvent(const cro::Event& evt)
         case cro::GameController::ButtonStart:
         case cro::GameController::ButtonGuide:
             requestStackPush(StateID::Pause);
+            break;
+        case cro::GameController::ButtonA:
+            if (evt.cbutton.which == cro::GameController::deviceID(activeControllerID(m_currentPlayer.player)))
+            {
+                closeMessage();
+            }
             break;
         }
     }
@@ -5347,6 +5373,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
 
     m_resolutionUpdate.targetFade = player.terrain == TerrainID::Green ? GreenFadeDistance : CourseFadeDistance;
 
+    m_newHole = false; //not necessarily a new hole, but the server has said player wants to go, regardless
     updateScoreboard();
     showScoreboard(false);
 
@@ -6403,6 +6430,7 @@ void GolfState::startFlyBy()
                 else
                 {
                     showScoreboard(true);
+                    m_newHole = true;
                     m_cameras[CameraID::Player].getComponent<cro::AudioEmitter>().play();
 
                     //delayed ent just to show the score board for a while

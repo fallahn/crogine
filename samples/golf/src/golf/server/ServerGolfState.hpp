@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2022
+Matt Marchant 2021 - 2023
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -59,6 +59,9 @@ namespace sv
         std::vector<HoleData> m_holeData;
         cro::Clock m_serverTime; //used in timestamping
         cro::Scene m_scene;
+
+        float m_scoreboardTime; //how long to wait before setting next player active
+        std::uint16_t m_scoreboardReadyFlags;
 
         //game rule stuff. TODO encapsulate somewhere
         bool m_gameStarted;
