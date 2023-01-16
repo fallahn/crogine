@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2022
+Matt Marchant 2020 - 2023
 http://trederia.blogspot.com
 
 crogine editor - Zlib license.
@@ -2766,7 +2766,7 @@ void ModelState::drawImageCombiner()
                             }
                             if (blue)
                             {
-                                outPixel.setGreen(blue[2]);
+                                outPixel.setBlue(blue[2]);
                             }
                             if (alpha && m_combinedImages[3].second.getFormat() == cro::ImageFormat::RGBA)
                             {

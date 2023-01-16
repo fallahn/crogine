@@ -87,6 +87,11 @@ static const std::string ShadowVertex = R"(
         VARYING_OUT vec4 v_position;
     #endif
 
+#if defined (DITHERED)
+    #include RESOLUTION_BUFFER
+        VARYING_OUT float v_ditherAmount;
+#endif
+
     #if defined (ALPHA_CLIP)
         VARYING_OUT vec2 v_texCoord0;
     #endif
@@ -264,6 +269,21 @@ worldPosition.z += windResult.lowFreq.y;
             v_texCoord0 = a_texCoord0;
         #endif
 
+#if defined(DITHERED)
+        float fadeDistance = u_nearFadeDistance * 2.0;
+        const float farFadeDistance = 360.f;
+
+        //problem here is that this is the shadow camera
+        //not the final pass camera...
+
+        vec4 position = worldMatrix * a_position;
+        float distance = length(position.xyz - u_cameraWorldPosition);
+
+        v_ditherAmount = pow(clamp((distance - u_nearFadeDistance) / fadeDistance, 0.0, 1.0), 2.0);
+        v_ditherAmount *= 1.0 - clamp((distance - farFadeDistance) / fadeDistance, 0.0, 1.0);
+#endif
+
+
         })";
 
 const static std::string ShadowGeom = R"(
@@ -312,9 +332,25 @@ const static std::string ShadowFragment = R"(
         uniform float u_alphaClip;
 
         in vec2 v_texCoord0;
+#if defined (DITHERED)
+        in float v_ditherAmount;
+
+    #include BAYER_MATRIX
+#endif
 
         void main()
         {
+
+#if defined(DITHERED)
+        vec2 xy = gl_FragCoord.xy;
+        int x = int(mod(xy.x, MatrixSize));
+        int y = int(mod(xy.y, MatrixSize));
+
+        float alpha = findClosest(x, y, smoothstep(0.1, 0.95, v_ditherAmount));
+        if(alpha < 0.1) discard;
+#endif
+
+
 #if defined(LEAF_SIZE)
         vec2 coord = gl_PointCoord;
 #else
