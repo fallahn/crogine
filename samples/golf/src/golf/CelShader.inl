@@ -294,7 +294,7 @@ static const std::string CelFragmentShader = R"(
 #endif
 
 #if defined (COMP_SHADE)
-    uniform vec4 u_colour = vec4(1.0);
+    uniform vec4 u_maskColour = vec4(1.0);
 #endif
 //uniform float u_rim = 65.0;
 //uniform float u_step = 0.8;
@@ -479,8 +479,8 @@ static const std::string CelFragmentShader = R"(
 #if defined(COMP_SHADE)
 
         float tilt  = dot(normal, vec3(0.0, 1.0, 0.0));
-        //tilt = ((smoothstep(0.97, 0.999, tilt) * 0.2)) * (1.0 - u_colour.r);
-        tilt = ((1.0 - smoothstep(0.97, 0.999, tilt)) * 0.2) * (1.0 - u_colour.r);
+        //tilt = ((smoothstep(0.97, 0.999, tilt) * 0.2)) * (1.0 - u_maskColour.r);
+        tilt = ((1.0 - smoothstep(0.97, 0.999, tilt)) * 0.2) * (1.0 - u_maskColour.r);
 
 //tilt *= 20.0;
 //tilt = round(tilt);
@@ -501,7 +501,7 @@ static const std::string CelFragmentShader = R"(
         float waterDither = findClosest(texX, texY, waterFade) * waterFade * (1.0 - step(0.96, facing));
 
 #if defined(COMP_SHADE)
-        waterDither *= u_colour.g;
+        waterDither *= u_maskColour.g;
 #endif
 
         colour.rgb = mix(colour.rgb, colour.rgb * SlopeShade, waterDither * 0.5 * step(WaterLevel, v_worldPosition.y));

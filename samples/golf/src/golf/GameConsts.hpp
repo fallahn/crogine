@@ -410,6 +410,15 @@ static inline void applyMaterialData(const cro::ModelDefinition& modelDef, cro::
             dest.setProperty("u_colour", colour);
         }
 
+        if (m->properties.count("u_maskColour")
+            && dest.properties.count("u_maskColour"))
+        {
+            const auto* c = m->properties.at("u_maskColour").second.vecValue;
+            glm::vec4 colour(c[0], c[1], c[2], c[3]);
+
+            dest.setProperty("u_maskColour", colour);
+        }
+
         if (m->properties.count("u_subrect"))
         {
             const float* v = m->properties.at("u_subrect").second.vecValue;
