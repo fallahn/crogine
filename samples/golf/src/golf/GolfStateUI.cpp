@@ -1525,6 +1525,7 @@ void GolfState::updateScoreboard()
             std::int32_t frontNine = 0;
             std::int32_t backNine = 0;
             std::int32_t total = 0;
+            std::int32_t parDiff = 0;
             std::uint8_t client = 0;
             std::uint8_t player = 0;
         };
@@ -1548,7 +1549,14 @@ void GolfState::updateScoreboard()
 
                 for (auto j = 0u; j < client.playerData[i].holeScores.size(); ++j)
                 {
-                    entry.holes.push_back(client.playerData[i].holeScores[j]);
+                    auto s = client.playerData[i].holeScores[j];
+                    entry.holes.push_back(s);
+                    
+                    if (s)
+                    {
+                        entry.parDiff += static_cast<std::int32_t>(s) - m_holeData[j].par;
+                    }
+
                     if (j < 9)
                     {
                         if (m_sharedData.scoreType == ScoreType::Stroke)
@@ -1674,7 +1682,13 @@ void GolfState::updateScoreboard()
 
             for (auto j = 0u; j < playerCount; ++j)
             {
-                scoreString += "\n" + std::to_string(scores[j].holes[i - 1]);
+                scoreString += "\n";
+
+                auto s = scores[j].holes[i - 1];
+                if (s)
+                {
+                     scoreString += std::to_string(s);
+                }
             }
 
             if (page2)
@@ -1690,7 +1704,12 @@ void GolfState::updateScoreboard()
                     scoreString += "\n\n" + std::to_string(i + MaxCols) + "\n" + std::to_string(m_holeData[holeIndex].par);
                     for (auto j = 0u; j < playerCount; ++j)
                     {
-                        scoreString += "\n" + std::to_string(scores[j].holes[holeIndex]);
+                        scoreString += "\n";
+                        auto s = scores[j].holes[holeIndex];
+                        if (s)
+                        {
+                            scoreString += std::to_string(s);
+                        }
                     }
                 }
             }
@@ -1716,6 +1735,18 @@ void GolfState::updateScoreboard()
             {
             default:
             case ScoreType::Stroke:
+                if (scores[i].parDiff > 0)
+                {
+                    totalString += " (+" + std::to_string(scores[i].parDiff) + ")";
+                }
+                else if (scores[i].parDiff < 0)
+                {
+                    totalString += " (" + std::to_string(scores[i].parDiff) + ")";
+                }
+                else
+                {
+                    totalString += " (0)";
+                }
                 break;
             case ScoreType::Match:
                 totalString += " POINTS";
@@ -1766,6 +1797,18 @@ void GolfState::updateScoreboard()
                 default:
                 case ScoreType::Stroke:
                     totalString += separator + std::to_string(scores[i].total);
+                    if (scores[i].parDiff > 0)
+                    {
+                        totalString += " (+" + std::to_string(scores[i].parDiff) + ")";
+                    }
+                    else if (scores[i].parDiff < 0)
+                    {
+                        totalString += " (" + std::to_string(scores[i].parDiff) + ")";
+                    }
+                    else
+                    {
+                        totalString += " (0)";
+                    }
                     break;
                 case ScoreType::Match:
                     totalString += " POINTS";
