@@ -368,7 +368,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
         case SDLK_TAB:
             showScoreboard(false);
             break;
-        case SDLK_RETURN:
+        case SDLK_SPACE: //TODO this should read the keymap... but it's not const
             closeMessage();
             break;
 #ifdef CRO_DEBUG_
@@ -4639,6 +4639,7 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
             break;
         case PacketID::SetPlayer:
             m_wantsGameState = false;
+            m_newHole = false; //not necessarily a new hole, but the server has said player wants to go, regardless
             {
                 auto playerData = evt.packet.as<ActivePlayer>();
                 createTransition(playerData);
@@ -5373,7 +5374,6 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
 
     m_resolutionUpdate.targetFade = player.terrain == TerrainID::Green ? GreenFadeDistance : CourseFadeDistance;
 
-    m_newHole = false; //not necessarily a new hole, but the server has said player wants to go, regardless
     updateScoreboard();
     showScoreboard(false);
 
@@ -6436,7 +6436,7 @@ void GolfState::startFlyBy()
                     //delayed ent just to show the score board for a while
                     auto de = m_gameScene.createEntity();
                     de.addComponent<cro::Callback>().active = true;
-                    de.getComponent<cro::Callback>().setUserData<float>(3.f);
+                    de.getComponent<cro::Callback>().setUserData<float>(0.2f);
                     de.getComponent<cro::Callback>().function =
                         [&](cro::Entity ent, float dt)
                     {

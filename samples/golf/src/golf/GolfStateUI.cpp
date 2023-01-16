@@ -1359,6 +1359,25 @@ void GolfState::createScoreboard()
         bounds.width = std::floor(bounds.width / 2.f);
         entity.getComponent<cro::Transform>().setOrigin({ bounds.width, 0.f });
         bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+        entity.addComponent<cro::Callback>().setUserData<float>(0.f);
+        entity.getComponent<cro::Callback>().function =
+            [](cro::Entity e, float dt)
+        {
+            auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
+            currTime = std::min(1.f, currTime + (dt * 2.f));
+
+            auto scale = e.getComponent<cro::Transform>().getScale();
+            scale.x = 0.8f + (0.2f * cro::Util::Easing::easeOutElastic(currTime));
+            scale.y = 1.f;
+            e.getComponent<cro::Transform>().setScale(scale);
+
+            if (currTime == 1)
+            {
+                currTime = 0.f;
+                e.getComponent<cro::Callback>().active = false;
+            }
+        };
     }
 
     entity = m_uiScene.createEntity();
@@ -1899,7 +1918,7 @@ void GolfState::showScoreboard(bool visible)
         cmd.action =
             [&](cro::Entity e, float)
         {
-            e.getComponent<cro::Transform>().setScale({ 0.f, 1.f });
+            e.getComponent<cro::Transform>().setScale({ 1.f, 0.f });
         };
         m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
     }
@@ -2350,6 +2369,18 @@ void GolfState::toggleQuitReady()
         || m_newHole)
     {
         m_sharedData.clientConnection.netClient.sendPacket<std::uint8_t>(PacketID::ReadyQuit, m_sharedData.clientConnection.connectionID, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+
+        if (m_newHole)
+        {
+            cro::Command cmd;
+            cmd.targetFlags = CommandID::UI::WaitMessage;
+            cmd.action = [](cro::Entity e, float)
+            {
+                e.getComponent<cro::Callback>().active = true;
+                e.getComponent<cro::Callback>().getUserData<float>() = 0.f;
+            };
+            m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+        }
     }
 }
 
