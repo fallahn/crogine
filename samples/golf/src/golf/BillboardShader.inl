@@ -153,7 +153,6 @@ static const std::string BillboardVertexShader = R"(
 
         v_texCoord0 = a_texCoord0;
 
-#if !defined(SHADOW_MAPPING)
 
         float fadeDistance = u_nearFadeDistance * 5.0;
         const float farFadeDistance = 300.f;
@@ -162,6 +161,7 @@ static const std::string BillboardVertexShader = R"(
         v_ditherAmount = pow(clamp((distance - u_nearFadeDistance) / fadeDistance, 0.0, 1.0), 5.0);
         v_ditherAmount *= 1.0 - clamp((distance - farFadeDistance) / fadeDistance, 0.0, 1.0);
 
+#if !defined(SHADOW_MAPPING)
 
         v_colour.rgb *= (((1.0 - pow(clamp(distance / farFadeDistance, 0.0, 1.0), 5.0)) * 0.8) + 0.2);
 #endif

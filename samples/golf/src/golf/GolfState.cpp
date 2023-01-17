@@ -1479,13 +1479,14 @@ void GolfState::loadAssets()
     m_resources.materials.get(m_materialIDs[MaterialID::CelTextured]).setProperty("u_noiseTexture", noiseTex);
 
     //custom shadow map so shadows move with wind too...
-    m_resources.shaders.loadFromString(ShaderID::ShadowMap, ShadowVertex, ShadowFragment, "#define WIND_WARP\n#define ALPHA_CLIP\n");
+    m_resources.shaders.loadFromString(ShaderID::ShadowMap, ShadowVertex, ShadowFragment, "#define DITHERED\n#define WIND_WARP\n#define ALPHA_CLIP\n");
     shader = &m_resources.shaders.get(ShaderID::ShadowMap);
     m_windBuffer.addShader(*shader);
+    m_resolutionBuffer.addShader(*shader);
     m_materialIDs[MaterialID::ShadowMap] = m_resources.materials.add(*shader);
     m_resources.materials.get(m_materialIDs[MaterialID::ShadowMap]).setProperty("u_noiseTexture", noiseTex);
 
-    m_resources.shaders.loadFromString(ShaderID::BillboardShadow, BillboardVertexShader, ShadowFragment, "#define SHADOW_MAPPING\n#define ALPHA_CLIP\n");
+    m_resources.shaders.loadFromString(ShaderID::BillboardShadow, BillboardVertexShader, ShadowFragment, "#define DITHERED\n#define SHADOW_MAPPING\n#define ALPHA_CLIP\n");
     shader = &m_resources.shaders.get(ShaderID::BillboardShadow);
     m_windBuffer.addShader(*shader);
     m_resolutionBuffer.addShader(*shader);
@@ -1544,16 +1545,18 @@ void GolfState::loadAssets()
     m_resolutionBuffer.addShader(*shader);
     m_windBuffer.addShader(*shader);
 
-    m_resources.shaders.loadFromString(ShaderID::ShadowMapInstanced, ShadowVertex, ShadowFragment, "#define WIND_WARP\n#define ALPHA_CLIP\n#define INSTANCING\n");
+    m_resources.shaders.loadFromString(ShaderID::ShadowMapInstanced, ShadowVertex, ShadowFragment, "#define DITHERED\n#define WIND_WARP\n#define ALPHA_CLIP\n#define INSTANCING\n");
     shader = &m_resources.shaders.get(ShaderID::ShadowMapInstanced);
     m_windBuffer.addShader(*shader);
+    m_resolutionBuffer.addShader(*shader);
 
     m_resources.shaders.loadFromString(ShaderID::Crowd, CelVertexShader, CelFragmentShader, "#define DITHERED\n#define INSTANCING\n#define VATS\n#define NOCHEX\n#define TEXTURED\n");
     shader = &m_resources.shaders.get(ShaderID::Crowd);
     m_scaleBuffer.addShader(*shader);
     m_resolutionBuffer.addShader(*shader);
 
-    m_resources.shaders.loadFromString(ShaderID::CrowdShadow, ShadowVertex, ShadowFragment, "#define INSTANCING\n#define VATS\n");
+    m_resources.shaders.loadFromString(ShaderID::CrowdShadow, ShadowVertex, ShadowFragment, "#define DITHERED\n#define INSTANCING\n#define VATS\n");
+    m_resolutionBuffer.addShader(m_resources.shaders.get(ShaderID::CrowdShadow));
 
     if (m_sharedData.treeQuality == SharedStateData::High)
     {
@@ -1573,7 +1576,7 @@ void GolfState::loadAssets()
         m_resources.shaders.loadFromString(ShaderID::TreesetShadow, ShadowVertex, ShadowFragment, "#define INSTANCING\n#define TREE_WARP\n#define ALPHA_CLIP\n" + wobble);
         shader = &m_resources.shaders.get(ShaderID::TreesetShadow);
         m_windBuffer.addShader(*shader);
-
+        //m_resolutionBuffer.addShader(*shader);
 
         std::string alphaClip;
         if (m_sharedData.hqShadows)
@@ -1583,6 +1586,7 @@ void GolfState::loadAssets()
         m_resources.shaders.loadFromString(ShaderID::TreesetLeafShadow, ShadowVertex, /*ShadowGeom,*/ ShadowFragment, "#define POINTS\n#define INSTANCING\n#define LEAF_SIZE\n" + alphaClip + wobble);
         shader = &m_resources.shaders.get(ShaderID::TreesetLeafShadow);
         m_windBuffer.addShader(*shader);
+        //m_resolutionBuffer.addShader(*shader);
     }
 
 

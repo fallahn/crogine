@@ -273,14 +273,11 @@ worldPosition.z += windResult.lowFreq.y;
         float fadeDistance = u_nearFadeDistance * 2.0;
         const float farFadeDistance = 360.f;
 
-        //problem here is that this is the shadow camera
-        //not the final pass camera...
+        vec4 p = worldMatrix * a_position;
+        float d = length(p.xyz - u_cameraWorldPosition);
 
-        vec4 position = worldMatrix * a_position;
-        float distance = length(position.xyz - u_cameraWorldPosition);
-
-        v_ditherAmount = pow(clamp((distance - u_nearFadeDistance) / fadeDistance, 0.0, 1.0), 2.0);
-        v_ditherAmount *= 1.0 - clamp((distance - farFadeDistance) / fadeDistance, 0.0, 1.0);
+        v_ditherAmount = pow(clamp((d - u_nearFadeDistance) / fadeDistance, 0.0, 1.0), 2.0);
+        v_ditherAmount *= 1.0 - clamp((d - farFadeDistance) / fadeDistance, 0.0, 1.0);
 #endif
 
 
@@ -326,17 +323,19 @@ const static std::string ShadowGeom = R"(
     })";
 
 const static std::string ShadowFragment = R"(
-        #if defined(ALPHA_CLIP)
-
-        uniform sampler2D u_diffuseMap;
-        uniform float u_alphaClip;
-
-        in vec2 v_texCoord0;
+        
 #if defined (DITHERED)
         in float v_ditherAmount;
 
     #include BAYER_MATRIX
 #endif
+
+    #if defined(ALPHA_CLIP)
+
+        uniform sampler2D u_diffuseMap;
+        uniform float u_alphaClip;
+
+        in vec2 v_texCoord0;
 
         void main()
         {
@@ -347,7 +346,7 @@ const static std::string ShadowFragment = R"(
         int y = int(mod(xy.y, MatrixSize));
 
         float alpha = findClosest(x, y, smoothstep(0.1, 0.95, v_ditherAmount));
-        if(alpha < 0.1) discard;
+        if(alpha < 0.5) discard;
 #endif
 
 
@@ -363,6 +362,16 @@ const static std::string ShadowFragment = R"(
         OUTPUT             
         void main()
         {
+
+#if defined(DITHERED)
+        vec2 xy = gl_FragCoord.xy;
+        int x = int(mod(xy.x, MatrixSize));
+        int y = int(mod(xy.y, MatrixSize));
+
+        float alpha = findClosest(x, y, smoothstep(0.1, 0.95, v_ditherAmount));
+        if(alpha < 0.5) discard;
+#endif
+
             FRAG_OUT = vec4(1.0);
         }
         #endif
