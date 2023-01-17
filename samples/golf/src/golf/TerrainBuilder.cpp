@@ -830,9 +830,14 @@ void TerrainBuilder::threadFunc()
 
                         if (height > WaterLevel)
                         {
-                            auto& bb = m_billboardBuffer.emplace_back(m_billboardTemplates[cro::Util::Random::value(BillboardID::Grass01, BillboardID::Grass02)]);
-                            bb.position = { x, height - 0.02f, -y };
-                            bb.size *= scale;
+                            auto n = readNormal(static_cast<std::uint32_t>(x), static_cast<std::uint32_t>(y));
+                            //don't place on steep slopes
+                            if (glm::dot(n, cro::Transform::Y_AXIS) > 0.3f)
+                            {
+                                auto& bb = m_billboardBuffer.emplace_back(m_billboardTemplates[cro::Util::Random::value(BillboardID::Grass01, BillboardID::Grass02)]);
+                                bb.position = { x, height - 0.02f, -y };
+                                bb.size *= scale;
+                            }
                         }
                     }
                     //reeds at water edge

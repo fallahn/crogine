@@ -283,7 +283,6 @@ void ShadowMapRenderer::render()
     {
         auto& camera = m_activeCameras[c].getComponent<Camera>();
         auto cameraPosition = m_activeCameras[c].getComponent<cro::Transform>().getWorldPosition();
-        //auto cameraPosition = getScene()->getActiveCamera().getComponent<cro::Transform>().getWorldPosition();
         const auto& camView = camera.getPass(Camera::Pass::Final).viewMatrix;
 
         //enable face culling and render rear faces
