@@ -44,7 +44,6 @@ struct DroneCallbackData final
 {
     float rotation = 0.f;
     float acceleration = 0.f;
-    bool canRetarget = true;
     cro::Entity target;
 };
 

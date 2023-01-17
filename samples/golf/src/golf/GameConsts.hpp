@@ -261,16 +261,17 @@ static inline std::int32_t activeControllerID(std::int32_t bestMatch)
     return -1;
 }
 
-static inline glm::vec3 interpolate(glm::vec3 a, glm::vec3 b, float t)
-{
-    auto diff = b - a;
-    return a + (diff *t);
-}
-
-static inline constexpr float interpolate(float a, float b, float t)
+template <typename T>
+constexpr T interpolate(T a, T b, float t)
 {
     auto diff = b - a;
     return a + (diff * t);
+}
+
+template <typename T>
+constexpr T step(T s, T v)
+{
+    return v < s ? static_cast<T>(0) : static_cast<T>(1);
 }
 
 static inline constexpr float clamp(float t)
@@ -741,4 +742,33 @@ static inline void formatDistanceString(float distance, cro::Text& target, bool 
             target.setString("Distance: " + std::to_string(dist) + "cm");
         }
     }
+}
+
+static inline glm::vec3 rgb2hsv(glm::vec3 c)
+{
+    constexpr glm::vec4 K = glm::vec4(0.f, -1.f / 3.f, 2.f / 3.f, -1.f);
+    const glm::vec4 p = interpolate(glm::vec4(c.b, c.g, K.w, K.z), glm::vec4(c.g, c.b, K.x, K.y), step(c.b, c.g));
+    const glm::vec4 q = interpolate(glm::vec4(p.x, p.y, p.w, c.r), glm::vec4(c.r, p.y, p.z, p.x), step(p.x, c.r));
+
+    const float d = q.x - glm::min(q.w, q.y);
+    constexpr float e = float(1.0e-10);
+    return glm::vec3(glm::abs(q.z + (q.w - q.y) / (6.f * d + e)), d / (q.x + e), q.x);
+}
+
+static inline glm::vec3 hsv2rgb(glm::vec3 c)
+{
+    constexpr glm::vec4 K = glm::vec4(1.f, 2.f / 3.f, 1.f / 3.f, 3.f);
+    const glm::vec3 p = glm::abs(glm::fract(glm::vec3(c.x, c.x, c.x) + glm::vec3(K.x, K.y, K.z)) * 6.f - glm::vec3(K.w, K.w, K.w));
+    
+    return c.z * interpolate(glm::vec3(K.x, K.x, K.x), glm::clamp(p - glm::vec3(K.x, K.x, K.x), 0.f, 1.f), c.y);
+}
+
+static inline cro::Colour getBeaconColour(float rotation)
+{
+    glm::vec3 c(1.f, 0.f, 1.f);
+    c = rgb2hsv(c);
+    c.x += rotation;
+    c = hsv2rgb(c);
+
+    return cro::Colour(c.r, c.g, c.b, 1.f);
 }

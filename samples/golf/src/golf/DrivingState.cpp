@@ -2209,12 +2209,18 @@ void DrivingState::createBall()
             m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
         }
+        else
+        {
+            ent.getComponent<cro::ParticleEmitter>().stop();
+        }
         pos.y = 3.f;
         auto groundHeight = m_gameScene.getSystem<BallSystem>()->getTerrain(pos).intersection.y;
         ent.getComponent<cro::Callback>().getUserData<float>() = groundHeight;
 
         ent.getComponent<ClientCollider>().state = static_cast<std::uint8_t>(state);
     };
+
+    entity.addComponent<cro::ParticleEmitter>().settings.loadFromFile("assets/golf/particles/trail.cps", m_resources.textures);
 
     //ball shadow
     auto ballEnt = entity;
@@ -2538,7 +2544,7 @@ void DrivingState::hitBall()
     //apply impulse to ball component
     cro::Command cmd;
     cmd.targetFlags = CommandID::Ball;
-    cmd.action = [impulse](cro::Entity e, float)
+    cmd.action = [&,impulse](cro::Entity e, float)
     {
         auto& ball = e.getComponent<Ball>();
 
@@ -2548,6 +2554,12 @@ void DrivingState::hitBall()
             ball.state = Ball::State::Flight;
             ball.delay = 0.f;
             ball.startPoint = e.getComponent<cro::Transform>().getPosition();
+
+            if (m_sharedData.showBallTrail)
+            {
+                e.getComponent<cro::ParticleEmitter>().settings.colour = getBeaconColour(m_sharedData.beaconColour);
+                e.getComponent<cro::ParticleEmitter>().start();
+            }
         }
     };
     m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);

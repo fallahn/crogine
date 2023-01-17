@@ -90,7 +90,7 @@ namespace
     constexpr glm::vec3 PanelPosition(4.f, 20.f, TabWindowDepth);
     constexpr glm::vec3 HiddenPosition(-10000.f);
 
-    constexpr float HighlightOffset = 0.2f;
+    constexpr float HighlightOffset = 0.25f;
     constexpr float TextOffset = 0.15f;
 
     constexpr float ToolTipDepth = CameraDepth - 0.8f;
@@ -1211,6 +1211,9 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
         updateToolTip(e, ToolTipID::Beacon);
     };
 
+    //ball trail label
+    createLabel({ 204.f, 114.f }, "Enable       Ball Trail");
+    
     //post process label
     createLabel({ 204.f, 98.f }, "Post FX");
 
@@ -1790,6 +1793,41 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
         const auto& [pos, width, _] = e.getComponent<cro::Callback>().getUserData<SliderData>();
         e.getComponent<cro::Transform>().setPosition({ pos.x + (width * m_sharedData.beaconColour), pos.y });
     };
+
+    //ball trail checkbox
+    entity = createHighlight(glm::vec2(246.f, 105.f));
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+        uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)
+            {
+                if (activated(evt))
+                {
+                    m_sharedData.showBallTrail = !m_sharedData.showBallTrail;
+                    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+                }
+            });
+
+    //ball trail checkbox centre
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(248.f, 107.f, HighlightOffset));
+    entity.addComponent<cro::Drawable2D>().getVertexData() =
+    {
+        cro::Vertex2D(glm::vec2(0.f, 7.f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(0.f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(7.f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(7.f, 0.f), TextGoldColour)
+    };
+    entity.getComponent<cro::Drawable2D>().updateLocalBounds();
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+    {
+        float scale = m_sharedData.showBallTrail ? 1.f : 0.f;
+        e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
+    };
+    parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+
 
 
     //post process checkbox

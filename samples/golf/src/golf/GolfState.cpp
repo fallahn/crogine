@@ -736,7 +736,7 @@ void GolfState::handleMessage(const cro::Message& msg)
             }
 
             //check if we hooked/sliced
-            if (getClub() != ClubID::Putter)
+            if (auto club = getClub(); club != ClubID::Putter)
             {
                 auto hook = m_inputParser.getHook() * m_activeAvatar->model.getComponent<cro::Transform>().getScale().x;
                 if (hook < -0.2f)
@@ -766,20 +766,22 @@ void GolfState::handleMessage(const cro::Message& msg)
                     Social::awardXP(5);
                 }
 
-
-                //enable the camera following
-                //m_gameScene.setSystemActive<CameraFollowSystem>(true);
-
                 //hide the ball briefly to hack around the motion lag
                 //(the callback automatically scales back)
                 m_activeAvatar->ballModel.getComponent<cro::Transform>().setScale(glm::vec3(0.f));
                 m_activeAvatar->ballModel.getComponent<cro::Callback>().active = true;
                 m_activeAvatar->ballModel.getComponent<cro::Model>().setHidden(true);
+
+                //if particles are enabled, start them
+                if (m_sharedData.showBallTrail &&
+                    club < ClubID::GapWedge)
+                {
+                    auto& emitter = m_avatars[m_currentPlayer.client][m_currentPlayer.player].ballModel.getComponent<cro::ParticleEmitter>();
+                    emitter.settings.colour = getBeaconColour(m_sharedData.beaconColour);
+                    emitter.start();
+                }
             }
-            /*else
-            {
-                m_gameScene.setSystemActive<CameraFollowSystem>(m_holeData[m_currentHole].puttFromTee);
-            }*/
+
             m_gameScene.setSystemActive<CameraFollowSystem>(true);
         }
         else if (data.userType == cro::Message::SkeletalAnimationEvent::Stopped)
@@ -3783,7 +3785,7 @@ void GolfState::buildScene()
             float rotation = std::atan2(dir.y, dir.x) + (cro::Util::Const::PI / 2.f);
 
 
-            auto& [currRotation, acceleration, _, target] = e.getComponent<cro::Callback>().getUserData<DroneCallbackData>();
+            auto& [currRotation, acceleration, target] = e.getComponent<cro::Callback>().getUserData<DroneCallbackData>();
 
             //move towards skycam
             static constexpr float MoveSpeed = 20.f;
@@ -4170,8 +4172,7 @@ void GolfState::spawnBall(const ActorInfo& info)
     };
     m_avatars[info.clientID][info.playerID].ballModel = entity;
 
-    /*entity.addComponent<cro::ParticleEmitter>().settings.loadFromFile("assets/golf/particles/trail.cps", m_resources.textures);
-    entity.getComponent<cro::ParticleEmitter>().start();*/
+    entity.addComponent<cro::ParticleEmitter>().settings.loadFromFile("assets/golf/particles/trail.cps", m_resources.textures);
 
     //cro::AudioScape propAudio;
     //propAudio.loadFromFile("assets/golf/sound/props.xas", m_resources.audio);
@@ -5699,7 +5700,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
         {
             auto& data = m_drone.getComponent<cro::Callback>().getUserData<DroneCallbackData>();
             data.target.getComponent<cro::Transform>().setPosition(pos);
-            data.canRetarget = true;
+            //data.canRetarget = true;
         }
         else
         {
@@ -6015,25 +6016,16 @@ void GolfState::updateActor(const ActorInfo& update)
                     p = e.getComponent<cro::Transform>().getPosition();
                     glm::vec2 ballPos(p.x, p.z);
                     glm::vec2 destPos(update.position.x, update.position.z);
-
-                    //constexpr float MaxRad = 25.f * 25.f;
-                    //if (glm::length2(ballPos - camPos) < MaxRad
-                    //    && glm::length2(destPos - camPos) > MaxRad)
-                    //{
-                    //    auto& data = m_drone.getComponent<cro::Callback>().getUserData<DroneCallbackData>();
-                    //    
-                    //    if (data.canRetarget)
-                    //    {
-                    //        auto offset = (destPos - camPos) * 0.6f;
-                    //        data.target.getComponent<cro::Transform>().move({ offset.x, 0.f, offset.y });
-                    //        data.canRetarget = false; //only do this once per shot.
-                    //    }
-                    //}
                 }
             }
 
             e.getComponent<ClientCollider>().active = active;
             e.getComponent<ClientCollider>().state = update.state;
+
+            if (update.state != static_cast<std::uint8_t>(Ball::State::Flight))
+            {
+                e.getComponent<cro::ParticleEmitter>().stop();
+            }
         }
     };
     m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);

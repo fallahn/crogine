@@ -479,12 +479,12 @@ static const std::string CelFragmentShader = R"(
 
 #if defined(COMP_SHADE)
 
-//vec2 fringeCoord = v_texCoord * (textureSize(u_diffuseMap, 0) * 4.0);
+//vec2 fringeCoord = v_texCoord * (textureSize(u_diffuseMap, 0) * 8.0);
 //
 //int fringeX = int(mod(fringeCoord.x, MatrixSize));
 //int fringeY = int(mod(fringeCoord.y, MatrixSize));
 //
-//colour.rgb = mix(colour.rgb, u_colour.rgb, findClosest(fringeX, fringeY, v_colour.b));
+//colour.rgb = mix(colour.rgb, mix(colour.rgb, u_colour.rgb, v_colour.b), findClosest(fringeX, fringeY, v_colour.b));
 
 
         float tilt  = dot(normal, vec3(0.0, 1.0, 0.0));

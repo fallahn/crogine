@@ -830,6 +830,10 @@ void GolfGame::loadPreferences()
                 {
                     m_sharedData.enableRumble = prop.getValue<bool>() ? 1 : 0;
                 }
+                else if (name == "use_trail")
+                {
+                    m_sharedData.showBallTrail = prop.getValue<bool>();
+                }
             }
         }
     }
@@ -895,6 +899,7 @@ void GolfGame::savePreferences()
     cfg.addProperty("putting_power").setValue(m_sharedData.showPuttingPower);
     cfg.addProperty("multisamples").setValue(m_sharedData.multisamples);
     cfg.addProperty("use_vibration").setValue(m_sharedData.enableRumble == 0 ? false : true);
+    cfg.addProperty("use_trail").setValue(m_sharedData.showBallTrail);
     cfg.save(path);
 
 
