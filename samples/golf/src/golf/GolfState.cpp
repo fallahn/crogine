@@ -4734,7 +4734,14 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
             else
             {
                 auto txt = m_sharedData.connectionData[client].playerData[player].name;
-                txt += " has won the hole!";
+                if (m_sharedData.scoreType == ScoreType::Match)
+                {
+                    txt += " has won the hole!";
+                }
+                else
+                {
+                    txt += " has won the pot!";
+                }
                 showNotification(txt);
 
                 auto* msg = getContext().appInstance.getMessageBus().post<GolfEvent>(MessageID::GolfMessage);

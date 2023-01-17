@@ -505,7 +505,7 @@ void GolfState::checkReadyQuit(std::uint8_t clientID)
 
         for (auto i = 0u; i < m_playerInfo.size(); ++i)
         {
-            if ((m_scoreboardReadyFlags & (1 << i)) == 0)
+            if ((m_scoreboardReadyFlags & (1 << m_playerInfo[i].client)) == 0)
             {
                 return;
             }
