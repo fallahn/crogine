@@ -1966,16 +1966,16 @@ void ModelState::drawBrowser()
                 }
                 if (!attachments.empty())
                 {
-                    /*ImGui::SameLine();
+                    ImGui::SameLine();
                     if (ImGui::Button("Duplicate##attachment"))
                     {
                         auto a = attachments[m_attachmentIndex];
                         a.setName(a.getName() + uniqueID());
                         attachments.push_back(a);
-                        m_attachmentAngles.emplace_back(glm::eulerAngles(a.getRotation()));
+                        m_attachmentAngles.emplace_back(glm::eulerAngles(a.getRotation()) * cro::Util::Const::radToDeg);
 
                         refreshAttachmentView();
-                    }*/
+                    }
 
                     ImGui::SameLine();
                     if (ImGui::Button("Remove##attachment"))

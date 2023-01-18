@@ -1262,10 +1262,10 @@ bool GolfState::simulate(float dt)
     }
 
 
-    if (m_activeAvatar)
-    {
-        m_activeAvatar->interpRotations();
-    }
+    //if (m_activeAvatar)
+    //{
+    //    m_activeAvatar->interpRotations();
+    //}
 
     m_emoteWheel.update(dt);
     m_gameScene.simulate(dt);
@@ -1809,11 +1809,13 @@ void GolfState::loadAssets()
                     
                     //find attachment points for club model
                     glm::quat handRotation(1.f, 0.f, 0.f, 0.f);
+                    glm::vec3 handPosition(0.f);
                     auto id = skel.getAttachmentIndex("hands");
                     if (id > -1)
                     {
                         m_avatars[i][j].hands = &skel.getAttachments()[id];
                         handRotation = m_avatars[i][j].hands->getRotation();
+                        handPosition = m_avatars[i][j].hands->getPosition();
                     }                    
                     
                     const auto& anims = skel.getAnimations();
@@ -1838,6 +1840,7 @@ void GolfState::loadAssets()
                             if (id > -1)
                             {
                                 m_avatars[i][j].handRotations[k] = skel.getAttachments()[id].getRotation();
+                                m_avatars[i][j].handPositions[k] = skel.getAttachments()[id].getPosition();
                             }
                         }
                         else if (anims[k].name == "putt")
@@ -4683,7 +4686,7 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
                 auto animID = evt.packet.as<std::uint8_t>();
                 float speed = 1.f;
 
-                if (animID == AnimationID::Swing)
+                /*if (animID == AnimationID::Swing)
                 {
                     if (m_inputParser.getPower() < (static_cast<float>(getClub()) * 1.5f) / 10.f
                         || getClub() > ClubID::PitchWedge)
@@ -4691,7 +4694,7 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
                         animID = AnimationID::Chip;
                         speed = 0.8f;
                     }
-                }
+                }*/
 
                 m_activeAvatar->model.getComponent<cro::Skeleton>().play(m_activeAvatar->animationIDs[animID], speed, 0.8f);
             }
