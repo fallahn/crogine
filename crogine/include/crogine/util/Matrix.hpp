@@ -33,6 +33,9 @@ source distribution.
 
 #include <crogine/detail/glm/vec3.hpp>
 #include <crogine/detail/glm/mat4x4.hpp>
+#include <crogine/detail/glm/gtx/quaternion.hpp>
+
+#include <crogine/util/Constants.hpp>
 
 #include <utility>
 
@@ -40,6 +43,17 @@ namespace cro
 {
     namespace Util
     {
+        namespace Vector
+        {
+            static inline glm::quat eulerToQuat(glm::vec3 rot)
+            {
+                auto q = glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), rot[2], glm::vec3(0.f, 0.f, 1.f));
+                q = glm::rotate(q, rot[1], glm::vec3(0.f, 1.f, 0.f));
+                q = glm::rotate(q, rot[0], glm::vec3(1.f, 0.f, 0.f));
+                return q;
+            }
+        }
+
         namespace Matrix
         {
             /*!

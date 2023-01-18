@@ -251,7 +251,7 @@ namespace cro
         /*!
         \brief Returns the current, normalised, time between frames
         */
-        float getCurrentFrameTime() const;// { return m_currentFrameTime / m_frameTime; }
+        float getCurrentFrameTime() const;
 
         operator bool() const
         {
@@ -370,6 +370,17 @@ namespace cro
         Defaults to 50 units
         */
         void setMaxInterpolationDistance(float distance) { m_interpolationDistance = std::max(1.f, distance * distance); }
+
+        /*!
+        \brief Returns the current blend time if blending between two animations
+        */
+        float getCurrentBlendTime() const { return m_blendTime; }
+
+        /*!
+        \brief Returns the index of the currently playing animation and next animation
+        if the animations are currently being blended - else returns -1
+        */
+        std::pair<std::int32_t, std::int32_t> getActiveAnimations() const { return std::make_pair(m_currentAnimation, m_nextAnimation); }
 
     private:
 

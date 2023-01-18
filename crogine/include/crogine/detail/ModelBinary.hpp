@@ -245,7 +245,7 @@ namespace cro::Detail::ModelBinary
         glm::vec3 translation = glm::vec3(0.f);
         glm::vec3 scale = glm::vec3(1.f);
         std::int32_t parent = -1;
-        char name[Attachment::MaxNameLength + 1];
+        char name[Attachment::MaxNameLength + 1] = {};
 
         SerialAttachment() = default;
         explicit SerialAttachment(const cro::Attachment& ap)

@@ -113,6 +113,7 @@ source distribution.
 
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
 #include <crogine/detail/glm/gtx/rotate_vector.hpp>
+#include <crogine/detail/glm/gtx/euler_angles.hpp>
 #include "../ErrorCheck.hpp"
 
 #include <sstream>
@@ -1260,6 +1261,12 @@ bool GolfState::simulate(float dt)
         m_inputParser.update(dt, m_currentPlayer.terrain);
     }
 
+
+    if (m_activeAvatar)
+    {
+        m_activeAvatar->interpRotations();
+    }
+
     m_emoteWheel.update(dt);
     m_gameScene.simulate(dt);
     m_uiScene.simulate(dt);
@@ -1799,10 +1806,21 @@ void GolfState::loadAssets()
                 if (entity.hasComponent<cro::Skeleton>())
                 {
                     auto& skel = entity.getComponent<cro::Skeleton>();
-                    //skel.setInterpolationEnabled(false);
-                    const auto& anims = skel.getAnimations();
-                    for (auto k = 0u; k < anims.size(); ++k)
+                    
+                    //find attachment points for club model
+                    glm::quat handRotation(1.f, 0.f, 0.f, 0.f);
+                    auto id = skel.getAttachmentIndex("hands");
+                    if (id > -1)
                     {
+                        m_avatars[i][j].hands = &skel.getAttachments()[id];
+                        handRotation = m_avatars[i][j].hands->getRotation();
+                    }                    
+                    
+                    const auto& anims = skel.getAnimations();
+                    for (auto k = 0u; k < std::min(anims.size(), static_cast<std::size_t>(AnimationID::Count)); ++k)
+                    {
+                        m_avatars[i][j].handRotations[k] = handRotation;
+
                         if (anims[k].name == "idle")
                         {
                             m_avatars[i][j].animationIDs[AnimationID::Idle] = k;
@@ -1814,6 +1832,13 @@ void GolfState::loadAssets()
                         else if (anims[k].name == "chip")
                         {
                             m_avatars[i][j].animationIDs[AnimationID::Chip] = k;
+
+                            //hax.
+                            id = skel.getAttachmentIndex("hands_chip");
+                            if (id > -1)
+                            {
+                                m_avatars[i][j].handRotations[k] = skel.getAttachments()[id].getRotation();
+                            }
                         }
                         else if (anims[k].name == "putt")
                         {
@@ -1821,13 +1846,8 @@ void GolfState::loadAssets()
                         }
                     }
 
-                    //find attachment points for club model
-                    auto id = skel.getAttachmentIndex("hands");
-                    if (id > -1)
-                    {
-                        m_avatars[i][j].hands = &skel.getAttachments()[id];
-                    }
 
+                    //and attachment for hair/hats
                     id = skel.getAttachmentIndex("head");
                     if (id > -1)
                     {
@@ -4663,16 +4683,15 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
                 auto animID = evt.packet.as<std::uint8_t>();
                 float speed = 1.f;
 
-                //TODO reenable this when attachment rotation can be interpolated between animations
-                /*if (animID == AnimationID::Swing)
+                if (animID == AnimationID::Swing)
                 {
                     if (m_inputParser.getPower() < (static_cast<float>(getClub()) * 1.5f) / 10.f
                         || getClub() > ClubID::PitchWedge)
                     {
                         animID = AnimationID::Chip;
-                        speed = 0.9f;
+                        speed = 0.8f;
                     }
-                }*/
+                }
 
                 m_activeAvatar->model.getComponent<cro::Skeleton>().play(m_activeAvatar->animationIDs[animID], speed, 0.8f);
             }

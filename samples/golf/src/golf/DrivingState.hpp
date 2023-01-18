@@ -138,12 +138,7 @@ private:
     };
     std::array<cro::Sprite, SpriteID::Count> m_sprites = {};
 
-    struct Avatar final
-    {
-        std::array<std::size_t, AnimationID::Count> animationIDs = {};
-        cro::Attachment* handsAttachment = nullptr;
-    }m_avatar;
-
+    Avatar m_avatar;
 
     struct ClubModel final
     {

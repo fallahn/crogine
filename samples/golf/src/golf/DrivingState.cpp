@@ -485,7 +485,7 @@ void DrivingState::handleMessage(const cro::Message& msg)
 
 
             //set the correct club model on our attachment
-            if (m_avatar.handsAttachment)
+            if (m_avatar.hands)
             {
                 //TODO handle cases when club model failed to load...
                 if (m_inputParser.getClub() < ClubID::FiveIron)
@@ -493,14 +493,14 @@ void DrivingState::handleMessage(const cro::Message& msg)
                     m_clubModels[ClubModel::Iron].getComponent<cro::Model>().setHidden(true);
                     m_clubModels[ClubModel::Wood].getComponent<cro::Model>().setHidden(false);
 
-                    m_avatar.handsAttachment->setModel(m_clubModels[ClubModel::Wood]);
+                    m_avatar.hands->setModel(m_clubModels[ClubModel::Wood]);
                 }
                 else
                 {
                     m_clubModels[ClubModel::Iron].getComponent<cro::Model>().setHidden(false);
                     m_clubModels[ClubModel::Wood].getComponent<cro::Model>().setHidden(true);
 
-                    m_avatar.handsAttachment->setModel(m_clubModels[ClubModel::Iron]);
+                    m_avatar.hands->setModel(m_clubModels[ClubModel::Iron]);
                 }
             }
         }
@@ -1862,8 +1862,8 @@ void DrivingState::createPlayer(cro::Entity courseEnt)
         auto id = skel.getAttachmentIndex("hands");
         if (id > -1)
         {
-            m_avatar.handsAttachment = &skel.getAttachments()[id];
-            m_avatar.handsAttachment->setModel(m_clubModels[ClubModel::Wood]);
+            m_avatar.hands = &skel.getAttachments()[id];
+            m_avatar.hands->setModel(m_clubModels[ClubModel::Wood]);
         }
         else
         {

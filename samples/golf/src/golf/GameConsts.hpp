@@ -231,6 +231,31 @@ struct AnimationID final
     };
 };
 
+struct Avatar final
+{
+    bool flipped = false;
+    cro::Entity model;
+    cro::Attachment* hands = nullptr;
+    std::array<std::size_t, AnimationID::Count> animationIDs = {};
+    std::array<glm::quat, AnimationID::Count> handRotations = {};
+    cro::Entity ballModel;
+
+    //hack to update the hand attachment between chip and drive anims
+    void interpRotations() 
+    {
+        if (hands)
+        {
+            const auto& skel = model.getComponent<cro::Skeleton>();
+            auto [current, next] = skel.getActiveAnimations();
+            if (next != -1)
+            {
+                auto rot = glm::slerp(handRotations[current], handRotations[next], skel.getCurrentBlendTime());
+                hands->setRotation(rot);
+            }
+        }
+    }
+};
+
 static const std::array BallTints =
 {
     cro::Colour(1.f,0.937f,0.752f), //default
