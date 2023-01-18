@@ -40,7 +40,7 @@ ParticleEmitter::ParticleEmitter()
     m_particles         (MaxParticles),
     m_nextFreeParticle  (0),
     m_running           (false),
-    m_visible           (true),
+    m_pendingUpdate     (true),
     m_renderFlags       (std::numeric_limits<std::uint64_t>::max()),
     m_releaseCount      (-1)
 {

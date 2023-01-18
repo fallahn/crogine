@@ -175,7 +175,8 @@ namespace cro
         bool m_running;
         Clock m_emissionClock;
         Sphere m_bounds;
-        bool m_visible;
+
+        bool m_pendingUpdate;
         std::uint64_t m_renderFlags;
 
         std::int32_t m_releaseCount;
