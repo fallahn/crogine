@@ -237,27 +237,7 @@ struct Avatar final
     cro::Entity model;
     cro::Attachment* hands = nullptr;
     std::array<std::size_t, AnimationID::Count> animationIDs = {};
-    std::array<glm::quat, AnimationID::Count> handRotations = {};
-    std::array<glm::vec3, AnimationID::Count> handPositions = {};
     cro::Entity ballModel;
-
-    //hack to update the hand attachment between chip and drive anims
-    void interpRotations() 
-    {
-        if (hands)
-        {
-            const auto& skel = model.getComponent<cro::Skeleton>();
-            auto [current, next] = skel.getActiveAnimations();
-            if (next != -1)
-            {
-                auto rot = glm::slerp(handRotations[current], handRotations[next], skel.getCurrentBlendTime());
-                hands->setRotation(rot);
-
-                auto pos = glm::mix(handPositions[current], handPositions[next], skel.getCurrentBlendTime());
-                hands->setPosition(pos);
-            }
-        }
-    }
 };
 
 static const std::array BallTints =

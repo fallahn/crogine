@@ -1821,8 +1821,6 @@ void GolfState::loadAssets()
                     const auto& anims = skel.getAnimations();
                     for (auto k = 0u; k < std::min(anims.size(), static_cast<std::size_t>(AnimationID::Count)); ++k)
                     {
-                        m_avatars[i][j].handRotations[k] = handRotation;
-
                         if (anims[k].name == "idle")
                         {
                             m_avatars[i][j].animationIDs[AnimationID::Idle] = k;
@@ -1834,14 +1832,6 @@ void GolfState::loadAssets()
                         else if (anims[k].name == "chip")
                         {
                             m_avatars[i][j].animationIDs[AnimationID::Chip] = k;
-
-                            //hax.
-                            id = skel.getAttachmentIndex("hands_chip");
-                            if (id > -1)
-                            {
-                                m_avatars[i][j].handRotations[k] = skel.getAttachments()[id].getRotation();
-                                m_avatars[i][j].handPositions[k] = skel.getAttachments()[id].getPosition();
-                            }
                         }
                         else if (anims[k].name == "putt")
                         {
