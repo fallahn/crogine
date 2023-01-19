@@ -86,21 +86,29 @@ static inline const std::string BayerMatrix = R"(
         return 1.0;
     })";
 
+//https://gist.github.com/patriciogonzalezvivo/670c22f3966e662d2f83
 static inline const std::string Random = R"(
     float rand(float n)
     {
         return fract(sin(n) * 43758.5453123);
     }
 
+#define noise rand
     float rand(vec2 position)
     {
         return fract(sin(dot(position, vec2(12.9898, 4.1414))) * 43758.5453);
     }
 
-    float noise(vec2 pos)
-    {
-        return fract(sin(dot(pos, vec2(12.9898, 4.1414))) * 43758.5453);
-    })";
+
+
+float noise2(vec2 n)
+{
+	const vec2 d = vec2(0.0, 1.0);
+    vec2 b = floor(n), f = smoothstep(vec2(0.0), vec2(1.0), fract(n));
+	return mix(mix(rand(b), rand(b + d.yx), f.x), mix(rand(b + d.xy), rand(b + d.yy), f.x), f.y);
+}
+
+)";
 
 //https://gist.github.com/yiwenl/745bfea7f04c456e0101
 static inline const std::string HSV = R"(
