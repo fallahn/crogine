@@ -845,18 +845,23 @@ void GolfState::handleMessage(const cro::Message& msg)
     case MessageID::GolfMessage:
     {
         const auto& data = msg.getData<GolfEvent>();
-        if (data.type == GolfEvent::HitBall)
+
+        switch (data.type)
+        {
+        default: break;
+        case GolfEvent::HitBall:
         {
             hitBall();
 #ifdef PATH_TRACING
             beginBallDebug();
 #endif
         }
-        else if (data.type == GolfEvent::ClubChanged)
+        break;
+        case GolfEvent::ClubChanged:
         {
             cro::Command cmd;
             cmd.targetFlags = CommandID::StrokeIndicator;
-            cmd.action = [&](cro::Entity e, float) 
+            cmd.action = [&](cro::Entity e, float)
             {
                 float scale = Clubs[getClub()].power / Clubs[ClubID::Driver].power;
                 e.getComponent<cro::Transform>().setScale({ scale, 1.f });
@@ -904,8 +909,34 @@ void GolfState::handleMessage(const cro::Message& msg)
             };
             m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
         }
-        else if (data.type == GolfEvent::BallLanded)
+        break;
+        case GolfEvent::BallLanded:
         {
+            switch (data.terrain)
+            {
+            default: break;
+            case TerrainID::Bunker:
+            case TerrainID::Scrub:
+            case TerrainID::Water:
+                if (data.travelDistance > 100.f)
+                {
+                    m_activeAvatar->model.getComponent<cro::Skeleton>().play(m_activeAvatar->animationIDs[AnimationID::Disappoint], 1.f, 0.8f);
+                }
+                break;
+            case TerrainID::Green:
+                if (getClub() != ClubID::Putter)
+                {
+                    if (data.pinDistance < 1.f
+                        || data.travelDistance > 10000.f)
+                    {
+                        //m_activeAvatar->model.getComponent<cro::Skeleton>().play(m_activeAvatar->animationIDs[AnimationID::Celebrate], 1.f, 0.8f);
+                    }
+                }
+                break;
+            }
+
+
+            //creates a delay before switching back to player cam
             auto entity = m_gameScene.createEntity();
             entity.addComponent<cro::Callback>().active = true;
             entity.getComponent<cro::Callback>().setUserData<float>(1.5f);
@@ -931,7 +962,8 @@ void GolfState::handleMessage(const cro::Message& msg)
             endBallDebug();
 #endif
         }
-        else if (data.type == GolfEvent::DroneHit)
+        break;
+        case GolfEvent::DroneHit:
         {
             Achievements::awardAchievement(AchievementStrings[AchievementID::HoleInOneMillion]);
             Social::awardXP(XPValues[XPID::Special]);
@@ -980,9 +1012,12 @@ void GolfState::handleMessage(const cro::Message& msg)
             };
             m_courseEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
         }
-        else if (data.type == GolfEvent::HoleInOne)
+        break;
+        case GolfEvent::HoleInOne:
         {
             gamepadNotify(GamepadNotify::HoleInOne);
+        }
+        break;
         }
     }
     break;
@@ -1836,6 +1871,14 @@ void GolfState::loadAssets()
                         else if (anims[k].name == "putt")
                         {
                             m_avatars[i][j].animationIDs[AnimationID::Putt] = k;
+                        }
+                        else if (anims[k].name == "celebrate")
+                        {
+                            m_avatars[i][j].animationIDs[AnimationID::Celebrate] = k;
+                        }
+                        else if (anims[k].name == "disappointment")
+                        {
+                            m_avatars[i][j].animationIDs[AnimationID::Disappoint] = k;
                         }
                     }
 
@@ -4676,15 +4719,15 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
                 auto animID = evt.packet.as<std::uint8_t>();
                 float speed = 1.f;
 
-                /*if (animID == AnimationID::Swing)
-                {
-                    if (m_inputParser.getPower() < (static_cast<float>(getClub()) * 1.5f) / 10.f
-                        || getClub() > ClubID::PitchWedge)
-                    {
-                        animID = AnimationID::Chip;
-                        speed = 0.8f;
-                    }
-                }*/
+                //if (animID == AnimationID::Swing)
+                //{
+                //    if (m_inputParser.getPower() < (static_cast<float>(getClub()) * 1.5f) / 10.f
+                //        || getClub() > ClubID::PitchWedge)
+                //    {
+                //        animID = AnimationID::Chip;
+                //        //speed = 0.8f;
+                //    }
+                //}
 
                 m_activeAvatar->model.getComponent<cro::Skeleton>().play(m_activeAvatar->animationIDs[animID], speed, 0.8f);
             }

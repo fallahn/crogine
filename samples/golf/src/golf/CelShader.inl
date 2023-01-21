@@ -497,7 +497,7 @@ static const std::string CelFragmentShader = R"(
 //float fringe = v_colour.b * levelCount;
 //fringe = round(fringe);
 //fringe /= levelCount;
-//colour.rgb = mix(colour.rgb, u_colour.rgb, fringe);
+//colour.rgb = mix(colour.rgb, u_colour.rgb, v_colour.b);
 
         float tilt  = dot(normal, vec3(0.0, 1.0, 0.0));
         //tilt = ((smoothstep(0.97, 0.999, tilt) * 0.2)) * (1.0 - u_maskColour.r);
