@@ -2080,7 +2080,7 @@ void ModelState::drawBrowser()
                 }
                 ImGui::SameLine();
                 if (ImGui::Button("Import##attachments")
-                    && cro::FileSystem::showMessageBox("Warning", "This will replace all existing attachement data", cro::FileSystem::OKCancel, cro::FileSystem::Warning))
+                    && cro::FileSystem::showMessageBox("Warning", "This will replace all existing attachment data", cro::FileSystem::OKCancel, cro::FileSystem::Warning))
                 {
                     auto path = cro::FileSystem::openFileDialogue("", "atc");
                     if (!path.empty())

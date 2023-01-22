@@ -920,7 +920,7 @@ void GolfState::handleMessage(const cro::Message& msg)
             case TerrainID::Water:
                 if (data.travelDistance > 100.f)
                 {
-                    m_activeAvatar->model.getComponent<cro::Skeleton>().play(m_activeAvatar->animationIDs[AnimationID::Disappoint], 1.f, 0.8f);
+                    m_activeAvatar->model.getComponent<cro::Skeleton>().play(m_activeAvatar->animationIDs[AnimationID::Disappoint], 1.f, 0.2f);
                 }
                 break;
             case TerrainID::Green:
@@ -929,7 +929,7 @@ void GolfState::handleMessage(const cro::Message& msg)
                     if (data.pinDistance < 1.f
                         || data.travelDistance > 10000.f)
                     {
-                        //m_activeAvatar->model.getComponent<cro::Skeleton>().play(m_activeAvatar->animationIDs[AnimationID::Celebrate], 1.f, 0.8f);
+                        m_activeAvatar->model.getComponent<cro::Skeleton>().play(m_activeAvatar->animationIDs[AnimationID::Celebrate], 1.f, 0.8f);
                     }
                 }
                 break;
@@ -4717,19 +4717,17 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
             if (m_activeAvatar)
             {
                 auto animID = evt.packet.as<std::uint8_t>();
-                float speed = 1.f;
 
-                //if (animID == AnimationID::Swing)
-                //{
-                //    if (m_inputParser.getPower() < (static_cast<float>(getClub()) * 1.5f) / 10.f
-                //        || getClub() > ClubID::PitchWedge)
-                //    {
-                //        animID = AnimationID::Chip;
-                //        //speed = 0.8f;
-                //    }
-                //}
+                if (animID == AnimationID::Swing)
+                {
+                    if (m_inputParser.getPower() < (static_cast<float>(getClub()) * 1.5f) / 10.f
+                        || getClub() > ClubID::PitchWedge)
+                    {
+                        animID = AnimationID::Chip;
+                    }
+                }
 
-                m_activeAvatar->model.getComponent<cro::Skeleton>().play(m_activeAvatar->animationIDs[animID], speed, 0.8f);
+                m_activeAvatar->model.getComponent<cro::Skeleton>().play(m_activeAvatar->animationIDs[animID]);
             }
         }
             break;
