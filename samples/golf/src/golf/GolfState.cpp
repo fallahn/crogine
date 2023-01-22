@@ -929,7 +929,7 @@ void GolfState::handleMessage(const cro::Message& msg)
                     if (data.pinDistance < 1.f
                         || data.travelDistance > 10000.f)
                     {
-                        m_activeAvatar->model.getComponent<cro::Skeleton>().play(m_activeAvatar->animationIDs[AnimationID::Celebrate], 1.f, 0.8f);
+                        m_activeAvatar->model.getComponent<cro::Skeleton>().play(m_activeAvatar->animationIDs[AnimationID::Celebrate], 1.f, 1.2f);
                     }
                 }
                 break;
@@ -4718,14 +4718,13 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
             {
                 auto animID = evt.packet.as<std::uint8_t>();
 
-                if (animID == AnimationID::Swing)
+                /*if (animID == AnimationID::Swing)
                 {
-                    if (m_inputParser.getPower() < (static_cast<float>(getClub()) * 1.5f) / 10.f
-                        || getClub() > ClubID::PitchWedge)
+                    if(m_inputParser.getPower() * Clubs[getClub()].target < 20.f)
                     {
                         animID = AnimationID::Chip;
                     }
-                }
+                }*/
 
                 m_activeAvatar->model.getComponent<cro::Skeleton>().play(m_activeAvatar->animationIDs[animID]);
             }
