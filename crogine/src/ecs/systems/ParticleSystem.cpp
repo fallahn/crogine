@@ -313,8 +313,11 @@ void ParticleSystem::updateDrawList(Entity cameraEnt)
         {
             if (glm::dot(forwardVec, emitterDirection) > 0)
             {
-                m_potentiallyVisible.push_back(entity);
-                emitter.m_pendingUpdate = true;
+                if (!emitter.m_pendingUpdate)
+                {
+                    emitter.m_pendingUpdate = true;
+                    m_potentiallyVisible.push_back(entity);
+                }
 
                 const auto& frustum = cam.getPass(i).getFrustum();
                 if (emitter.m_nextFreeParticle > 0 && inFrustum(frustum, emitter))
@@ -335,12 +338,12 @@ void ParticleSystem::process(float dt)
         handle.boundThisFrame = false;
     }*/
 
-    //auto& entities = getEntities();
-    for (auto& e : /*entities*/m_potentiallyVisible)
+    auto& entities = getEntities();
+    for (auto& e : entities/*m_potentiallyVisible*/)
     {
         //check each emitter to see if it should spawn a new particle
         auto& emitter = e.getComponent<ParticleEmitter>();
-        if (emitter.m_pendingUpdate &&
+        if (/*emitter.m_pendingUpdate &&*/
             emitter.m_running &&
             emitter.m_emissionClock.elapsed().asSeconds() > (1.f / emitter.settings.emitRate))
         {

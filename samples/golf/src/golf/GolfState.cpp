@@ -165,8 +165,8 @@ namespace
 
     const cro::Time ReadyPingFreq = cro::seconds(1.f);
 
-    constexpr float MaxRotation = 0.13f;
-    constexpr float MaxPuttRotation = 0.24f;
+    constexpr float MaxRotation = 0.3f;// 0.13f;
+    constexpr float MaxPuttRotation = 0.4f;// 0.24f;
 }
 
 GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, SharedStateData& sd)
