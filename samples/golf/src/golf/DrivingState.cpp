@@ -205,8 +205,8 @@ DrivingState::DrivingState(cro::StateStack& stack, cro::State::Context context, 
                     m_gameScene.getActiveCamera().getComponent<cro::Camera>().setMaxShadowDistance(maxDist);
                 }
 
-                static float overshoot = 0.f;
-                if (ImGui::SliderFloat("Overshoot", &overshoot, 0.f, 20.f))
+                float overshoot = m_gameScene.getActiveCamera().getComponent<cro::Camera>().getShadowExpansion();
+                if (ImGui::SliderFloat("Overshoot", &overshoot, 0.f, 120.f))
                 {
                     m_gameScene.getActiveCamera().getComponent<cro::Camera>().setShadowExpansion(overshoot);
                 }
@@ -1322,7 +1322,7 @@ void DrivingState::createScene()
     cam.shadowMapBuffer.create(ShadowMapSize, ShadowMapSize);
     cam.resizeCallback = updateView;
     cam.setMaxShadowDistance(40.f);
-    cam.setShadowExpansion(25.f);
+    cam.setShadowExpansion(30.f);
     cam.renderFlags = ~RenderFlags::MiniMap;
     updateView(cam);
     
@@ -1848,6 +1848,7 @@ void DrivingState::createPlayer(cro::Entity courseEnt)
             if (anims[i].name == "idle")
             {
                 m_avatar.animationIDs[AnimationID::Idle] = i;
+                skel.play(i);
             }
             else if (anims[i].name == "drive")
             {

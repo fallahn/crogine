@@ -940,6 +940,16 @@ void GolfState::handleMessage(const cro::Message& msg)
                     {
                         m_activeAvatar->model.getComponent<cro::Skeleton>().play(m_activeAvatar->animationIDs[AnimationID::Celebrate], 1.f, 1.2f);
                     }
+                    else if (data.travelDistance < 9.f)
+                    {
+                        m_activeAvatar->model.getComponent<cro::Skeleton>().play(m_activeAvatar->animationIDs[AnimationID::Disappoint], 1.f, 0.4f);
+                    }
+                }
+                break;
+            case TerrainID::Fairway:
+                if (data.travelDistance < 16.f)
+                {
+                    m_activeAvatar->model.getComponent<cro::Skeleton>().play(m_activeAvatar->animationIDs[AnimationID::Disappoint], 1.f, 0.4f);
                 }
                 break;
             }
@@ -3780,7 +3790,7 @@ void GolfState::buildScene()
     camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(ShadowMapSize, ShadowMapSize);
     camEnt.getComponent<cro::Camera>().active = false;
     camEnt.getComponent<cro::Camera>().setMaxShadowDistance(shadowQuality.shadowFarDistance);
-    camEnt.getComponent<cro::Camera>().setShadowExpansion(25.f);
+    camEnt.getComponent<cro::Camera>().setShadowExpansion(45.f);
     camEnt.addComponent<cro::AudioListener>();
     camEnt.addComponent<TargetInfo>();
     updateView(camEnt.getComponent<cro::Camera>());

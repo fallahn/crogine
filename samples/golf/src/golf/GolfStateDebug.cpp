@@ -36,7 +36,10 @@ source distribution.
 
 namespace
 {
-
+    const std::array<std::string, CameraID::Count> CameraStrings =
+    {
+        "Player", "Bystander", "Sky", "Green", "Transition"
+    };
 }
 
 #ifdef PATH_TRACING
@@ -138,6 +141,8 @@ void GolfState::registerDebugWindows()
                 {
                     ImGui::Text("Inf.");
                 }
+
+                ImGui::Text("Current Camera %s", CameraStrings[m_currentCamera].c_str());
             }        
             ImGui::End();
 

@@ -193,7 +193,7 @@ void CameraFollowSystem::process(float dt)
                 float diffMultiplier = std::min(1.f, std::max(0.f, glm::length2(diff) / follower.maxTargetDiff));
                 diffMultiplier *= 4.f;
 
-                follower.currentTarget += diff * /*std::min(0.9998f, */(dt * (diffMultiplier + (4.f * follower.zoom.progress)));//);
+                follower.currentTarget += diff * /*std::min(0.9998f, */(dt * (diffMultiplier + (3.f * follower.zoom.progress)));//);
             }
             else
             {
