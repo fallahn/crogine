@@ -166,6 +166,22 @@ void GolfState::handleMessage(const cro::Message& msg)
             m_playerInfo[0].distanceToHole = 0.f;
             m_playerInfo[0].terrain = data.terrain;
 
+            //if we're playing match play or skins then
+            //anyone who has a worse score has already lost
+            //so set them to finished.
+            if (m_sharedData.scoreType == ScoreType::Match
+                || m_sharedData.scoreType == ScoreType::Skins)
+            {
+                for (auto i = 1u; i < m_playerInfo.size(); ++i)
+                {
+                    if (m_playerInfo[i].holeScore[m_currentHole] >
+                        m_playerInfo[0].holeScore[m_currentHole])
+                    {
+                        m_playerInfo[i].distanceToHole = 0.f;
+                    }
+                }
+            }
+
             setNextPlayer();
         }
         else if (data.type == GolfBallEvent::Foul)
