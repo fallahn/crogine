@@ -254,7 +254,7 @@ void DrivingState::createUI()
 
     //wind indicator
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec3(38.f, 20.f, 0.03f));
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(38.f, 26.f, 0.03f));
     entity.addComponent<cro::Drawable2D>().setVertexData(
         {
             cro::Vertex2D(glm::vec2(-1.f, 12.f), LeaderboardTextLight),
@@ -267,7 +267,7 @@ void DrivingState::createUI()
     windEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec3(38.f, 52.f, 0.01f));
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(38.f, 58.f, 0.01f));
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::WindIndicator];
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
@@ -276,6 +276,21 @@ void DrivingState::createUI()
     windEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     auto windDial = entity;
+
+    //text background
+    auto vertColour = cro::Colour(0.f, 0.f, 0.f, 0.25f);
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ -4.f, -14.f, -0.01f });
+    entity.addComponent<cro::Drawable2D>().setVertexData(
+        {
+            cro::Vertex2D(glm::vec2(0.f, 16.f), vertColour),
+            cro::Vertex2D(glm::vec2(0.f, 5.f), vertColour),
+            cro::Vertex2D(glm::vec2(86.f, 16.f), vertColour),
+            cro::Vertex2D(glm::vec2(86.f, 5.f), vertColour)
+        });
+    windEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    //rotating part
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>();

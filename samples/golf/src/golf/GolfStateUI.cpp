@@ -323,7 +323,7 @@ void GolfState::buildUI()
 
     //wind indicator
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec3(38.f, 20.f, 0.03f));
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(38.f, 24.f, 0.03f));
     entity.addComponent<cro::Drawable2D>().setVertexData( 
     {
         cro::Vertex2D(glm::vec2(-1.f, 12.f), LeaderboardTextLight),
@@ -335,8 +335,9 @@ void GolfState::buildUI()
     entity.addComponent<float>() = 0.f; //current wind direction/rotation
     windEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     
+    //circular background
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec3(38.f, 52.f, 0.01f));
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(38.f, 56.f, 0.01f));
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::WindIndicator];
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
@@ -345,6 +346,20 @@ void GolfState::buildUI()
     windEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     auto windDial = entity;
+    //text background
+    auto vertColour = cro::Colour(0.f, 0.f, 0.f, 0.25f);
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ -4.f, -14.f, -0.01f });
+    entity.addComponent<cro::Drawable2D>().setVertexData(
+        {
+            cro::Vertex2D(glm::vec2(0.f, 16.f), vertColour),
+            cro::Vertex2D(glm::vec2(0.f, -6.f), vertColour),
+            cro::Vertex2D(glm::vec2(86.f, 16.f), vertColour),
+            cro::Vertex2D(glm::vec2(86.f, -6.f), vertColour)
+        });
+    windEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    //rotating part of dial
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>();
@@ -491,7 +506,7 @@ void GolfState::buildUI()
 
     //hole number
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec2(38.f, -12.f));
+    entity.addComponent<cro::Transform>().setPosition(glm::vec2(38.f, -10.f));
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::HoleNumber;
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
