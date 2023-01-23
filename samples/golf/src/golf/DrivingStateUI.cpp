@@ -1839,6 +1839,11 @@ void DrivingState::showMessage(float range)
     if (score < BadScore)
     {
         textEnt.getComponent<cro::Text>().setString("Bad Luck!");
+
+        if (m_avatar.animationIDs[AnimationID::Disappoint] != AnimationID::Invalid)
+        {
+            m_avatar.model.getComponent<cro::Skeleton>().play(m_avatar.animationIDs[AnimationID::Disappoint], 1.f, 0.8f);
+        }
     }
     else if (score < GoodScore)
     {
@@ -1857,6 +1862,11 @@ void DrivingState::showMessage(float range)
         textEnt.getComponent<cro::Text>().setString("Excellent!");
         starCount = 3;
         Social::awardXP(XPValues[XPID::Excellent]);
+
+        if (m_avatar.animationIDs[AnimationID::Celebrate] != AnimationID::Invalid)
+        {
+            m_avatar.model.getComponent<cro::Skeleton>().play(m_avatar.animationIDs[AnimationID::Celebrate], 1.f, 0.8f);
+        }
     }
     centreText(textEnt);
     entity.getComponent<cro::Transform>().addChild(textEnt.getComponent<cro::Transform>());

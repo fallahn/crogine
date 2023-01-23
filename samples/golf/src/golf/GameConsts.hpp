@@ -228,8 +228,10 @@ struct AnimationID final
     {
         Idle, Swing, Chip, Putt,
         Celebrate, Disappoint,
-        Count
+        Count,
+
     };
+    static constexpr std::size_t Invalid = std::numeric_limits<std::size_t>::max();
 };
 
 struct Avatar final

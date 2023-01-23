@@ -1771,6 +1771,7 @@ void GolfState::loadAssets()
         return 0;
     };
 
+    //player avatars
     cro::ModelDefinition md(m_resources);
     for (auto i = 0u; i < m_sharedData.connectionData.size(); ++i)
     {
@@ -1845,19 +1846,18 @@ void GolfState::loadAssets()
                     entity.getComponent<cro::Transform>().setScale({ 1.f, 0.f, 0.f });
                 }
 
+                //this should assert in debug, however oor IDs will just be ignored
+                //in release so this is the safest way to handle missing animations
+                std::fill(m_avatars[i][j].animationIDs.begin(), m_avatars[i][j].animationIDs.end(), AnimationID::Invalid);
                 if (entity.hasComponent<cro::Skeleton>())
                 {
                     auto& skel = entity.getComponent<cro::Skeleton>();
                     
                     //find attachment points for club model
-                    glm::quat handRotation(1.f, 0.f, 0.f, 0.f);
-                    glm::vec3 handPosition(0.f);
                     auto id = skel.getAttachmentIndex("hands");
                     if (id > -1)
                     {
                         m_avatars[i][j].hands = &skel.getAttachments()[id];
-                        handRotation = m_avatars[i][j].hands->getRotation();
-                        handPosition = m_avatars[i][j].hands->getPosition();
                     }                    
                     
                     const auto& anims = skel.getAnimations();

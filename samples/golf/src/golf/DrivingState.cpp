@@ -1837,6 +1837,7 @@ void DrivingState::createPlayer(cro::Entity courseEnt)
     material.setProperty("u_diffuseMap", m_sharedData.avatarTextures[0][playerIndex]);
     entity.getComponent<cro::Model>().setMaterial(0, material);
 
+    std::fill(m_avatar.animationIDs.begin(), m_avatar.animationIDs.end(), AnimationID::Invalid);
     if (entity.hasComponent<cro::Skeleton>())
     {
         //map the animation IDs
@@ -1855,6 +1856,14 @@ void DrivingState::createPlayer(cro::Entity courseEnt)
             else if (anims[i].name == "chip")
             {
                 m_avatar.animationIDs[AnimationID::Chip] = i;
+            }
+            else if (anims[i].name == "celebrate")
+            {
+                m_avatar.animationIDs[AnimationID::Celebrate] = i;
+            }
+            else if (anims[i].name == "disappointment")
+            {
+                m_avatar.animationIDs[AnimationID::Disappoint] = i;
             }
         }
 
@@ -1920,6 +1929,7 @@ void DrivingState::createPlayer(cro::Entity courseEnt)
     }
 
     auto playerEnt = entity;
+    m_avatar.model = playerEnt;
 
     //displays the stroke direction
     auto pos = PlayerPosition;
@@ -2637,7 +2647,7 @@ void DrivingState::setHole(std::int32_t index)
     cmd.targetFlags = CommandID::PlayerAvatar;
     cmd.action = [&](cro::Entity e, float)
     {
-        e.getComponent<cro::Skeleton>().play(m_avatar.animationIDs[AnimationID::Idle]);
+        e.getComponent<cro::Skeleton>().play(m_avatar.animationIDs[AnimationID::Idle], 1.f, 0.2f);
     };
     m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
