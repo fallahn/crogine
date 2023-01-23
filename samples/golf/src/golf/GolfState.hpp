@@ -91,7 +91,6 @@ struct PlayerCallbackData final
 {
     std::int32_t direction = 0; //grow or shrink
     float scale = 0.f;
-    float reflectionOffset = 0.f;
 };
 
 class GolfState final : public cro::State, public cro::GuiClient, public cro::ConsoleClient
@@ -257,7 +256,6 @@ private:
     std::array<cro::Entity, CameraID::Count> m_cameras = {};
     std::int32_t m_currentCamera;
     void setActiveCamera(std::int32_t);
-    void setPlayerPosition(cro::Entity, glm::vec3);
     void setGreenCamPosition();
 
     cro::Entity m_drone;

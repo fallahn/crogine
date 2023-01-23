@@ -1794,7 +1794,7 @@ void GolfState::loadAssets()
                 entity.getComponent<cro::Callback>().function =
                     [&](cro::Entity e, float dt)
                 {
-                    auto& [direction, scale, _] = e.getComponent<cro::Callback>().getUserData<PlayerCallbackData>();
+                    auto& [direction, scale] = e.getComponent<cro::Callback>().getUserData<PlayerCallbackData>();
                     const auto xScale = e.getComponent<cro::Transform>().getScale().x; //might be flipped
 
                     if (direction == 0)
@@ -6173,8 +6173,8 @@ void GolfState::createTransition(const ActivePlayer& playerData)
     if (m_activeAvatar)
     {
         //check distance and animate 
-        if (targetDistance > 0.01
-            || playerData.terrain == TerrainID::Green)
+        if (/*targetDistance > 0.01
+            ||*/ playerData.terrain == TerrainID::Green)
         {
             auto scale = m_activeAvatar->model.getComponent<cro::Transform>().getScale();
             scale.y = 0.f;
@@ -6667,22 +6667,6 @@ void GolfState::setActiveCamera(std::int32_t camID)
         }
         m_courseEnt.getComponent<cro::Drawable2D>().setShader(m_cameras[m_currentCamera].getComponent<TargetInfo>().postProcess);
     }
-}
-
-void GolfState::setPlayerPosition(cro::Entity e, glm::vec3 position)
-{
-    const auto& camera = m_cameras[CameraID::Player].getComponent<cro::Camera>();
-    auto pos = camera.coordsToPixel(position, m_gameSceneTexture.getSize());
-    e.getComponent<cro::Transform>().setPosition(pos);
-
-    float playerY = pos.y;
-
-    auto reflectPos = position;
-    reflectPos.y -= WaterLevel;
-    reflectPos.y = WaterLevel - reflectPos.y;
-
-    pos = camera.coordsToPixel(reflectPos, m_gameSceneTexture.getSize());
-    e.getComponent<cro::Callback>().getUserData<PlayerCallbackData>().reflectionOffset = pos.y - playerY;
 }
 
 void GolfState::toggleFreeCam()
