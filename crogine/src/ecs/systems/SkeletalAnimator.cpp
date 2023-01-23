@@ -112,7 +112,6 @@ void SkeletalAnimator::process(float dt)
         if (skel.m_nextAnimation > -1)
         {
             //update the next animation to start blending it in
-            //TODO somewhere in here we're overwriting the interp output of the current anim?
             updateAnimation(skel.m_animations[skel.m_nextAnimation], skel, entity, ctx);
 
             //blend to next animation

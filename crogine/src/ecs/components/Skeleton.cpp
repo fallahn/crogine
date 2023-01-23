@@ -86,7 +86,7 @@ void Skeleton::play(std::size_t idx, float rate, float blendingTime)
             if (!m_animations[idx].looped)
             {
                 //clamp the blending time so it's no longer than the incoming animation
-                auto duration = (1.f/m_animations[idx].frameRate) * m_animations[idx].frameCount * m_animations[m_currentAnimation].playbackRate;
+                auto duration = (static_cast<float>(m_animations[idx].frameCount) / m_animations[idx].frameRate) * m_animations[idx].playbackRate;
                 m_blendTime *= std::min(1.f, duration / blendingTime);
             }
         }

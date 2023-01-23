@@ -423,10 +423,12 @@ bool GolfState::handleEvent(const cro::Event& evt)
             break;
         case SDLK_KP_2:
             //setActiveCamera(2);
-            showCountdown(10);
+            //showCountdown(10);
+            m_activeAvatar->model.getComponent<cro::Skeleton>().play(m_activeAvatar->animationIDs[AnimationID::Swing], 1.f, 1.2f);
             break;
         case SDLK_KP_3:
-            predictBall(0.85f);
+            //predictBall(0.85f);
+            m_activeAvatar->model.getComponent<cro::Skeleton>().play(m_activeAvatar->animationIDs[AnimationID::Celebrate], 1.f, 1.2f);
             break;
         case SDLK_KP_4:
         {
@@ -1866,6 +1868,7 @@ void GolfState::loadAssets()
                         if (anims[k].name == "idle")
                         {
                             m_avatars[i][j].animationIDs[AnimationID::Idle] = k;
+                            skel.play(k);
                         }
                         else if (anims[k].name == "drive")
                         {
@@ -1888,7 +1891,6 @@ void GolfState::loadAssets()
                             m_avatars[i][j].animationIDs[AnimationID::Disappoint] = k;
                         }
                     }
-
 
                     //and attachment for hair/hats
                     id = skel.getAttachmentIndex("head");
