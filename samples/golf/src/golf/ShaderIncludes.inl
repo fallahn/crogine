@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022
+Matt Marchant 2022 - 2023
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -101,12 +101,12 @@ static inline const std::string Random = R"(
 
 
 
-float noise2(vec2 n)
-{
-	const vec2 d = vec2(0.0, 1.0);
-    vec2 b = floor(n), f = smoothstep(vec2(0.0), vec2(1.0), fract(n));
-	return mix(mix(rand(b), rand(b + d.yx), f.x), mix(rand(b + d.xy), rand(b + d.yy), f.x), f.y);
-}
+    //float noise2(vec2 n)
+    //{
+	   // const vec2 d = vec2(0.0, 1.0);
+    //    vec2 b = floor(n), f = smoothstep(vec2(0.0), vec2(1.0), fract(n));
+	   // return mix(mix(rand(b), rand(b + d.yx), f.x), mix(rand(b + d.xy), rand(b + d.yy), f.x), f.y);
+    //}
 
 )";
 

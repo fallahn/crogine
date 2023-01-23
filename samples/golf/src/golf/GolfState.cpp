@@ -758,13 +758,20 @@ void GolfState::handleMessage(const cro::Message& msg)
                 hook = std::round(hook);
                 hook /= 20.f;
 
-                if (power > 0.9f
-                    && std::fabs(hook) < 0.05f)
+                if (power > 0.59f //hmm not sure why power should factor into this?
+                    && std::abs(hook) < 0.05f)
                 {
                     auto* msg3 = cro::App::getInstance().getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
                     msg3->type = GolfEvent::NiceShot;
 
-                    Social::awardXP(5);
+                    //award more XP for aiming straight
+                    float dirAmount = cro::Util::Easing::easeOutExpo((m_inputParser.getMaxRotation() - std::abs(m_inputParser.getYaw())) / m_inputParser.getMaxRotation());
+
+                    auto xp = static_cast<std::int32_t>(6.f * dirAmount);
+                    if (xp)
+                    {
+                        Social::awardXP(xp);
+                    }
                 }
 
                 //hide the ball briefly to hack around the motion lag
@@ -4217,7 +4224,7 @@ void GolfState::spawnBall(const ActorInfo& info)
         [](cro::Entity e, float dt)
     {
         auto scale = e.getComponent<cro::Transform>().getScale().x;
-        scale = std::min(1.f, scale + (dt * 3.f));
+        scale = std::min(1.f, scale + (dt/* * 3.f*/));
         e.getComponent<cro::Transform>().setScale(glm::vec3(scale));
 
         if (scale == 1)
