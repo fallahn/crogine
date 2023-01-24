@@ -71,17 +71,6 @@ namespace
     static constexpr float GoodScore = 75.f;
     static constexpr float ExcellentScore = 95.f;
 
-    //callback data for anim/self destruction
-    //of messages / options window
-    struct MessageAnim final
-    {
-        enum
-        {
-            Delay, Open, Hold, Close
-        }state = Delay;
-        float currentTime = 0.5f;
-    };
-
     struct MenuCallback final
     {
         const glm::vec2& viewScale;

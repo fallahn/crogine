@@ -47,6 +47,17 @@ source distribution.
 
 #include <crogine/detail/glm/vec2.hpp>
 
+//callback data for anim/self destruction
+//of messages / options window
+struct MessageAnim final
+{
+    enum
+    {
+        Delay, Open, Hold, Close
+    }state = Delay;
+    float currentTime = 0.5f;
+};
+
 struct SharedStateData;
 class DrivingState final : public cro::State, public cro::GuiClient
 {

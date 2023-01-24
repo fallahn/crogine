@@ -240,6 +240,21 @@ bool DrivingState::handleEvent(const cro::Event& evt)
     };
 #endif
 
+    const auto closeMessage = [&]()
+    {
+        cro::Command cmd;
+        cmd.targetFlags = CommandID::UI::MessageBoard;
+        cmd.action = [](cro::Entity e, float)
+        {
+            auto& [state, currTime] = e.getComponent<cro::Callback>().getUserData<MessageAnim>();
+            if (state == MessageAnim::Hold)
+            {
+                currTime = 10.f; //some suitably large number - the callback will clamp it
+            }
+        };
+        m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+    };
+
     if (evt.type == SDL_KEYUP)
     {
         cro::App::getWindow().setMouseCaptured(true);
@@ -256,6 +271,9 @@ bool DrivingState::handleEvent(const cro::Event& evt)
         case SDLK_F1:
         case SDLK_F5:
 
+            break;
+        case SDLK_SPACE:
+            closeMessage();
             break;
 #ifdef CRO_DEBUG_
         case SDLK_F7:
@@ -336,6 +354,9 @@ bool DrivingState::handleEvent(const cro::Event& evt)
         case cro::GameController::ButtonStart:
         case cro::GameController::ButtonGuide:
             requestStackPush(StateID::Pause);
+            break;
+        case cro::GameController::ButtonA:
+            closeMessage();
             break;
 #ifdef USE_GNS
         case cro::GameController::ButtonB:
