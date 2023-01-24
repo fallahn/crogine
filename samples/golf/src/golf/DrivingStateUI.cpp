@@ -690,7 +690,6 @@ void DrivingState::createSwingMeter(cro::Entity root)
     root.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 }
 
-
 void DrivingState::createGameOptions()
 {
     const auto centreSprite = [](cro::Entity e)

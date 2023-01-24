@@ -43,8 +43,8 @@ source distribution.
 //(hole count became game rule 170 -> 180)
 //(connection method changed 190 -> 1100)
 //(terrain vertex data and materials changed 1100 -> 1110)
-static constexpr std::uint16_t CURRENT_VER = 1110;
-static const std::string StringVer("1.11.0");
+static constexpr std::uint16_t CURRENT_VER = 1101;
+static const std::string StringVer("1.10.1");
 
 
 class Social final
