@@ -156,6 +156,10 @@ void GolfState::handleMessage(const cro::Message& msg)
                 m_playerInfo[0].distanceToHole = glm::length(data.position - m_holeData[m_currentHole].pin);
             }
             m_playerInfo[0].terrain = data.terrain;
+
+            //TODO if match/skins play check if our score is even with anyone holed already and forfeit
+
+
             setNextPlayer();
         }
         else if (data.type == GolfBallEvent::Holed)
@@ -174,10 +178,14 @@ void GolfState::handleMessage(const cro::Message& msg)
             {
                 for (auto i = 1u; i < m_playerInfo.size(); ++i)
                 {
-                    if (m_playerInfo[i].holeScore[m_currentHole] >
+                    if (m_playerInfo[i].holeScore[m_currentHole] >=
                         m_playerInfo[0].holeScore[m_currentHole])
                     {
-                        m_playerInfo[i].distanceToHole = 0.f;
+                        if (m_playerInfo[i].distanceToHole > 0) //not already holed
+                        {
+                            m_playerInfo[i].distanceToHole = 0.f;
+                            m_playerInfo[i].holeScore[m_currentHole]++; //therefore they lose a stroke and don't draw
+                        }
                     }
                 }
             }
@@ -466,7 +474,7 @@ void GolfState::handlePlayerInput(const net::NetEvent::Packet& packet, bool pred
             //Ideally we want to read the frame data from the avatar
             //as well as account for a frame of interp delay on the client
             //at the very least we should add the client ping to this
-            ball.delay = ball.terrain == TerrainID::Green ? 0.12f : 1.17f;
+            ball.delay = ball.terrain == TerrainID::Green ? 0.05f : 1.17f;
             ball.delay += static_cast<float>(m_sharedData.clients[input.clientID].peer.getRoundTripTime()) / 1000.f;
             ball.startPoint = m_playerInfo[0].ballEntity.getComponent<cro::Transform>().getPosition();
 

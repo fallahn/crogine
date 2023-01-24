@@ -108,8 +108,8 @@ public:
     static void setGroup(std::uint64_t, std::int32_t = 0) {}
     static void takeScreenShot() { cro::App::getInstance().saveScreenshot(); }
     static constexpr std::uint32_t IconSize = 64;
-    static inline const std::string RSSFeed = "https://fallahn.itch.io/vga-golf/devlog.rss";
-    static inline const std::string WebURL = "https://fallahn.itch.io/vga-golf";
+    static inline const std::string RSSFeed = "https://fallahn.itch.io/super-video-golf/devlog.rss";
+    static inline const std::string WebURL = "https://fallahn.itch.io/super-video-golf";
 
     struct UserDir final
     {

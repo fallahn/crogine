@@ -767,7 +767,7 @@ void GolfState::handleMessage(const cro::Message& msg)
                     msg3->type = GolfEvent::NiceShot;
 
                     //award more XP for aiming straight
-                    float dirAmount = cro::Util::Easing::easeOutExpo((m_inputParser.getMaxRotation() - std::abs(m_inputParser.getRotation())) / m_inputParser.getMaxRotation());
+                    float dirAmount = /*cro::Util::Easing::easeOutExpo*/((m_inputParser.getMaxRotation() - std::abs(m_inputParser.getRotation())) / m_inputParser.getMaxRotation());
 
                     auto xp = std::clamp(static_cast<std::int32_t>(6.f * dirAmount), 0, 6);
                     if (xp)
