@@ -159,7 +159,7 @@ void MenuState::createBallScene()
     m_ballCam.addComponent<cro::Callback>().active = true;
     m_ballCam.getComponent<cro::Callback>().setUserData<std::int32_t>(0);
     m_ballCam.getComponent<cro::Callback>().function = ballTargetCallback;
-
+    
 
     ballTexCallback(m_ballCam.getComponent<cro::Camera>());
 
@@ -226,8 +226,10 @@ void MenuState::createBallScene()
     //load each model for the preview in the player menu
     cro::ModelDefinition ballDef(m_resources);
     cro::ModelDefinition shadowDef(m_resources);
+    cro::ModelDefinition grassDef(m_resources);
 
     auto shadow = shadowDef.loadFromFile("assets/golf/models/ball_shadow.cmt");
+    auto grass = grassDef.loadFromFile("assets/golf/models/ball_plane.cmt");
 
     std::vector<std::uint32_t> invalidBalls;
 
@@ -256,12 +258,23 @@ void MenuState::createBallScene()
                 e.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, dt);
             };
 
+            auto ballEnt = entity;
+            
             if (shadow)
             {
-                auto ballEnt = entity;
                 entity = m_backgroundScene.createEntity();
                 entity.addComponent<cro::Transform>();
                 shadowDef.createModel(entity);
+                ballEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+                entity.getComponent<cro::Model>().setRenderFlags(BallRenderFlags);
+            }
+
+            if (grass)
+            {
+                entity = m_backgroundScene.createEntity();
+                entity.addComponent<cro::Transform>().setPosition({ 0.f, -0.001f, 0.f });
+                entity.getComponent<cro::Transform>().setScale(glm::vec3(5.f));
+                grassDef.createModel(entity);
                 ballEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
                 entity.getComponent<cro::Model>().setRenderFlags(BallRenderFlags);
             }
