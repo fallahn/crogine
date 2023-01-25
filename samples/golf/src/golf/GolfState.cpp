@@ -5130,7 +5130,7 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo)
     };
 
     m_currentHole = hole;
-    m_inputParser.setMaxRotation(m_holeData[m_currentHole].puttFromTee ? MaxPuttRotation : MaxRotation); //pretty sure this is overridden in setCurrentPlayer()...
+    //m_inputParser.setMaxRotation(m_holeData[m_currentHole].puttFromTee ? MaxPuttRotation : MaxRotation); //pretty sure this is overridden in setCurrentPlayer()...
     startFlyBy(); //requires current hole
 
     //set putting grid values
@@ -5573,8 +5573,10 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     auto target = m_cameras[CameraID::Player].getComponent<TargetInfo>().targetLookAt;
     m_inputParser.resetPower();
     m_inputParser.setHoleDirection(target - player.position);
+    
+    auto rotation = MaxRotation * isCPU ? MaxRotation / 3.f : MaxRotation;
     m_inputParser.setMaxRotation(m_holeData[m_currentHole].puttFromTee ? MaxPuttRotation : 
-        player.terrain == TerrainID::Green ? MaxRotation / 3.f : MaxRotation);
+        player.terrain == TerrainID::Green ? rotation / 3.f : rotation);
 
 
     //set this separately because target might not necessarily be the pin.

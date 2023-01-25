@@ -234,6 +234,19 @@ void GolfState::handleMessage(const cro::Message& msg)
             m_playerInfo[0].holeScore[m_currentHole]++;
             std::uint16_t inf = (m_playerInfo[0].client << 8) | m_playerInfo[0].player;
             m_sharedData.host.broadcastPacket<std::uint16_t>(PacketID::Gimme, inf, net::NetFlag::Reliable);
+
+            //if match/skins play check if our score is even with anyone holed already and forfeit
+            if (m_sharedData.scoreType != ScoreType::Stroke)
+            {
+                for (auto i = 1u; i < m_playerInfo.size(); ++i)
+                {
+                    if (m_playerInfo[i].distanceToHole == 0
+                        && m_playerInfo[i].holeScore[m_currentHole] < m_playerInfo[0].holeScore[m_currentHole])
+                    {
+                        m_playerInfo[0].distanceToHole = 0;
+                    }
+                }
+            }
         }
     }
     else if (msg.id == sv::MessageID::TriggerMessage)
