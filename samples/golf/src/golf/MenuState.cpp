@@ -714,6 +714,13 @@ void MenuState::handleMessage(const cro::Message& msg)
             }
         }
     }
+#ifdef USE_GNS
+    else if (msg.id == Social::MessageID::UGCMessage)
+    {
+        const auto& data = msg.getData<Social::UGCEvent>();
+        ugcInstalledHandler(data.itemID, data.type);
+    }
+#endif
 
     m_backgroundScene.forwardMessage(msg);
     m_avatarScene.forwardMessage(msg);

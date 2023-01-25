@@ -229,6 +229,7 @@ private:
     void applyAvatarColours(std::size_t);
     void setPreviewModel(std::size_t);
     void updateThumb(std::size_t);
+    void ugcInstalledHandler(std::uint64_t id, std::int32_t type);
 
     
     //index into hair model vector - converted from hairID with indexFromHairID

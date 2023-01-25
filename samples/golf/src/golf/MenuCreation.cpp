@@ -3734,6 +3734,30 @@ void MenuState::updateLobbyData(const net::NetEvent& evt)
         auto lvl = m_sharedData.connectionData[cd.connectionID].level;
         m_sharedData.connectionData[cd.connectionID] = cd;
         m_sharedData.connectionData[cd.connectionID].level = lvl;
+
+#ifdef USE_GNS
+        //check the new player data for UGC
+        for (auto i = 0u; i < cd.playerCount; ++i)
+        {
+            if (indexFromBallID(cd.playerData[i].ballID) == -1)
+            {
+                //no local ball for this player
+                Social::findUserContent(cd.playerData[i].ballID, Social::UserContent::Ball);
+            }
+
+            //this assumes all the hair data was successfully loaded for the first avatar...
+            auto id = cd.playerData[i].hairID;
+            auto hair = std::find_if(m_playerAvatars[0].hairModels.begin(), m_playerAvatars[0].hairModels.end(),
+                [id](const PlayerAvatar::HairInfo& h)
+                {
+                    return h.uid == id;
+                });
+            if (hair == m_playerAvatars[0].hairModels.end())
+            {
+                Social::findUserContent(id, Social::UserContent::Hair);
+            }
+        }
+#endif
     }
 
     if (m_sharedData.hosting)

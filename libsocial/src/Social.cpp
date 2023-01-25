@@ -183,11 +183,11 @@ std::string Social::getUserContentPath(std::int32_t contentType)
     default:
         assert(false);
         return "";
-    case Social::UserDir::Ball:
+    case Social::UserContent::Ball:
         return getBaseContentPath() + "balls/";
-    case Social::UserDir::Course:
+    case Social::UserContent::Course:
         return getBaseContentPath() + "course/";
-    case Social::UserDir::Hair:
+    case Social::UserContent::Hair:
         return getBaseContentPath() + "hair/";
     }
 }

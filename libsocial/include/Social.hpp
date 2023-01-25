@@ -111,7 +111,7 @@ public:
     static inline const std::string RSSFeed = "https://fallahn.itch.io/super-video-golf/devlog.rss";
     static inline const std::string WebURL = "https://fallahn.itch.io/super-video-golf";
 
-    struct UserDir final
+    struct UserContent final
     {
         enum
         {

@@ -269,6 +269,7 @@ App::App(std::uint32_t styleFlags)
         char* pp = SDL_GetPrefPath(m_orgString.c_str(), m_appString.c_str());
         m_prefPath = std::string(pp);
         SDL_free(pp);
+        std::replace(m_prefPath.begin(), m_prefPath.end(), '\\', '/');
 
 #ifdef WIN32
 #ifdef CRO_DEBUG_
@@ -534,6 +535,7 @@ void App::setApplicationStrings(const std::string& organisation, const std::stri
     char* pp = SDL_GetPrefPath(m_orgString.c_str(), m_appString.c_str());
     m_prefPath = std::string(pp);
     SDL_free(pp);
+    std::replace(m_prefPath.begin(), m_prefPath.end(), '\\', '/');
 }
 
 //private

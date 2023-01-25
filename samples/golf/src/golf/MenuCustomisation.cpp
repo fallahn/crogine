@@ -85,10 +85,13 @@ namespace
             {
                 dst.emplace_back(info);
             }
+#ifdef CRO_DEBUG_
             else
             {
-                LogE << info.modelPath << ": a ball already exists with UID " << info.uid << std::endl;
+                LogW << info.modelPath << ": a ball already exists with UID " << info.uid << std::endl;
+                LogW << info.uid << " has been ignored" << std::endl;
             }
+#endif
         }
     }
 }
@@ -171,7 +174,7 @@ void MenuState::createBallScene()
 
     m_sharedData.ballModels.clear();
 
-    //parse the defaul ball directory
+    //parse the default ball directory
     for (const auto& file : ballFiles)
     {
         cro::ConfigFile cfg;
@@ -193,7 +196,7 @@ void MenuState::createBallScene()
     }
 
     //look in the user directory - only do this if the default dir is OK?
-    const auto BallUserPath = Social::getUserContentPath(Social::UserDir::Ball);
+    const auto BallUserPath = Social::getUserContentPath(Social::UserContent::Ball);
     if (cro::FileSystem::directoryExists(BallUserPath))
     {
         auto dirList = cro::FileSystem::listDirectories(BallUserPath);
@@ -214,7 +217,6 @@ void MenuState::createBallScene()
 
                         insertInfo(info, m_sharedData.ballModels);
                     }
-
 
                     break; //skip the rest of the file list
                 }
@@ -687,6 +689,46 @@ void MenuState::updateThumb(std::size_t index)
     //m_avatarThumbs[index].clear(cro::Colour::Magenta);
     m_avatarScene.render();
     m_avatarThumbs[index].display();
+}
+
+void MenuState::ugcInstalledHandler(std::uint64_t id, std::int32_t type)
+{
+    //called when UGC such as a ball or hair model is received
+    //from a remote player and downloaded locally.
+    if (type == Social::UserContent::Ball)
+    {
+        //these won't appear as selectable until the menu is quit
+        //and reloaded, but that's probably OK. They just need to
+        //exist in the shared data so the main game can find the
+        //models for remote players who have them.
+        const auto BallUserPath = Social::getUserContentPath(Social::UserContent::Ball) + std::to_string(id) + "/";
+        auto files = cro::FileSystem::listFiles(BallUserPath);
+
+        for (auto file : files)
+        {
+            if (cro::FileSystem::getFileExtension(file) == ".ball")
+            {
+                cro::ConfigFile cfg;
+                if (cfg.loadFromFile(BallUserPath + file, false))
+                {
+                    auto info = readBallCfg(cfg);
+                    info.modelPath = BallUserPath + info.modelPath;
+
+                    insertInfo(info, m_sharedData.ballModels);
+                }
+
+                break; //skip the rest of the file list
+            }
+        }
+    }
+    else if (type == Social::UserContent::Hair)
+    {
+
+    }
+    else
+    {
+        LogE << "Unknown UGC: " << id << ", " << type << std::endl;
+    }
 }
 
 void MenuState::setPreviewModel(std::size_t playerIndex)
