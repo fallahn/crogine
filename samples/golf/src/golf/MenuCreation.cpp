@@ -3742,7 +3742,7 @@ void MenuState::updateLobbyData(const net::NetEvent& evt)
             if (indexFromBallID(cd.playerData[i].ballID) == -1)
             {
                 //no local ball for this player
-                Social::findUserContent(cd.playerData[i].ballID, Social::UserContent::Ball);
+                Social::findUserContent(cd.peerID, cd.playerData[i].ballID, Social::UserContent::Ball);
             }
 
             //this assumes all the hair data was successfully loaded for the first avatar...
@@ -3754,7 +3754,7 @@ void MenuState::updateLobbyData(const net::NetEvent& evt)
                 });
             if (hair == m_playerAvatars[0].hairModels.end())
             {
-                Social::findUserContent(id, Social::UserContent::Hair);
+                Social::findUserContent(cd.peerID, id, Social::UserContent::Hair);
             }
         }
 #endif
