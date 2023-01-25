@@ -157,8 +157,19 @@ void GolfState::handleMessage(const cro::Message& msg)
             }
             m_playerInfo[0].terrain = data.terrain;
 
-            //TODO if match/skins play check if our score is even with anyone holed already and forfeit
-
+            //if match/skins play check if our score is even with anyone holed already and forfeit
+            if (m_sharedData.scoreType != ScoreType::Stroke)
+            {
+                for (auto i = 1u; i < m_playerInfo.size(); ++i)
+                {
+                    if (m_playerInfo[i].distanceToHole == 0
+                        && m_playerInfo[i].holeScore[m_currentHole] == m_playerInfo[0].holeScore[m_currentHole])
+                    {
+                        m_playerInfo[0].holeScore[m_currentHole]++;
+                        m_playerInfo[0].distanceToHole = 0;
+                    }
+                }
+            }
 
             setNextPlayer();
         }
@@ -173,8 +184,7 @@ void GolfState::handleMessage(const cro::Message& msg)
             //if we're playing match play or skins then
             //anyone who has a worse score has already lost
             //so set them to finished.
-            if (m_sharedData.scoreType == ScoreType::Match
-                || m_sharedData.scoreType == ScoreType::Skins)
+            if (m_sharedData.scoreType != ScoreType::Stroke)
             {
                 for (auto i = 1u; i < m_playerInfo.size(); ++i)
                 {
