@@ -71,9 +71,34 @@ namespace
         return retVal;
     }
 
-    void insertInfo(SharedStateData::BallInfo info, std::vector<SharedStateData::BallInfo>& dst)
+    SharedStateData::HairInfo readHairCfg(const cro::ConfigFile& cfg)
     {
-        if ((!info.modelPath.empty() && cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + info.modelPath)))
+        SharedStateData::HairInfo retVal;
+
+        const auto& props = cfg.getProperties();
+        for (const auto& p : props)
+        {
+            const auto& name = p.getName();
+            if (name == "model")
+            {
+                retVal.modelPath = p.getValue<std::string>();
+            }
+            else if (name == "uid")
+            {
+                retVal.uid = p.getValue<std::uint32_t>();
+            }
+        }
+
+        return retVal;
+    }
+
+    void insertInfo(SharedStateData::BallInfo info, std::vector<SharedStateData::BallInfo>& dst, bool relPath)
+    {
+        bool exists = relPath ?
+            cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + info.modelPath) :
+            cro::FileSystem::fileExists(info.modelPath);
+
+        if ((!info.modelPath.empty() && exists))
         {
             auto ball = std::find_if(dst.begin(), dst.end(),
                 [&info](const SharedStateData::BallInfo& ballPair)
@@ -93,6 +118,34 @@ namespace
             }
 #endif
         }
+    }
+
+    bool insertInfo(SharedStateData::HairInfo info, std::vector<SharedStateData::HairInfo>& dst, bool relPath)
+    {
+        bool exists = relPath ?
+            cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + info.modelPath) :
+            cro::FileSystem::fileExists(info.modelPath);
+
+        if ((!info.modelPath.empty() && exists))
+        {
+            auto hair = std::find_if(dst.begin(), dst.end(), [&info](const SharedStateData::HairInfo& h)
+                {
+                    return h.uid == info.uid;
+                });
+
+            if (hair == dst.end())
+            {
+                dst.emplace_back(info);
+                return true;
+            }
+#ifdef CRO_DEBUG_
+            else
+            {
+                LogW << "Duplicate hair " << info.uid << " has been skipped for loading" << std::endl;
+            }
+#endif
+        }
+        return false;
     }
 }
 
@@ -191,7 +244,7 @@ void MenuState::createBallScene()
                 cfg.save("assets/golf/balls/" + file);
             }
 
-            insertInfo(info, m_sharedData.ballModels);
+            insertInfo(info, m_sharedData.ballModels, true);
         }
     }
 
@@ -215,7 +268,7 @@ void MenuState::createBallScene()
                         auto info = readBallCfg(cfg);
                         info.modelPath = path + info.modelPath;
 
-                        insertInfo(info, m_sharedData.ballModels);
+                        insertInfo(info, m_sharedData.ballModels, false);
                     }
 
                     break; //skip the rest of the file list
@@ -418,7 +471,7 @@ void MenuState::parseAvatarDirectory()
     }
 
     const std::string HairPath = "assets/golf/avatars/hair/";
-    const auto hairFiles = cro::FileSystem::listFiles(cro::FileSystem::getResourcePath() + HairPath);
+    auto hairFiles = cro::FileSystem::listFiles(cro::FileSystem::getResourcePath() + HairPath);
 
     cro::ModelDefinition md(m_resources);
     for (const auto& file : hairFiles)
@@ -431,56 +484,87 @@ void MenuState::parseAvatarDirectory()
         cro::ConfigFile cfg;
         if (cfg.loadFromFile(HairPath + file))
         {
-            std::string modelPath;
-            std::uint32_t uid = 0;
-
-            const auto& props = cfg.getProperties();
-            for (const auto& p : props)
+            auto info = readHairCfg(cfg);
+            if (md.loadFromFile(info.modelPath))
             {
-                const auto& name = p.getName();
-                if (name == "model")
+                //if uid is missing write it to cfg - although this doesn't work on apple bundles
+                if (info.uid == 0)
                 {
-                    auto model = p.getValue<std::string>();
-                    if (cro::FileSystem::getFileExtension(model) == ".cmt"
-                        && cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + model))
-                    {
-                        modelPath = model;
-                    }
-                }
-                else if (name == "uid")
-                {
-                    uid = p.getValue<std::uint32_t>();
-                }
-            }
-
-            if (md.loadFromFile(modelPath))
-            {
-                //if uid is missing write it to cfg
-                if (uid == 0)
-                {
-                    uid = SpookyHash::Hash32(file.data(), file.size(), 0);
-                    cfg.addProperty("uid").setValue(uid);
+                    info.uid = SpookyHash::Hash32(file.data(), file.size(), 0);
+                    cfg.addProperty("uid").setValue(info.uid);
                     cfg.save(HairPath + file);
                 }
-                m_sharedData.hairInfo.emplace_back(uid, modelPath);
 
-                for (auto& avatar : m_playerAvatars)
+                //store this so we know what to load when starting the game
+                if (insertInfo(info, m_sharedData.hairInfo, true))
                 {
-                    auto& info = avatar.hairModels.emplace_back();
-                    info.model = m_avatarScene.createEntity();
-                    info.model.addComponent<cro::Transform>();
-                    md.createModel(info.model);
+                    //and load a menu copy for avatar previews
+                    //TODO do this all at once when we have all
+                    //info parsed into sharedData
+                    for (auto& avatar : m_playerAvatars)
+                    {
+                        auto& modelInfo = avatar.hairModels.emplace_back();
+                        modelInfo.model = m_avatarScene.createEntity();
+                        modelInfo.model.addComponent<cro::Transform>();
+                        md.createModel(modelInfo.model);
 
-                    info.model.getComponent<cro::Model>().setMaterial(0, m_resources.materials.get(m_materialIDs[MaterialID::Hair]));
-                    info.model.getComponent<cro::Model>().setHidden(true);
+                        modelInfo.model.getComponent<cro::Model>().setMaterial(0, m_resources.materials.get(m_materialIDs[MaterialID::Hair]));
+                        modelInfo.model.getComponent<cro::Model>().setHidden(true);
 
-                    info.uid = uid;
+                        modelInfo.uid = info.uid;
+                    }
                 }
             }
         }
     }
 
+    const auto userHairPath = Social::getUserContentPath(Social::UserContent::Hair);
+    if (cro::FileSystem::directoryExists(userHairPath))
+    {
+        const auto userDirs = cro::FileSystem::listDirectories(userHairPath);
+        for (const auto& userDir : userDirs)
+        {
+            const auto userPath = userHairPath + userDir + "/";
+            hairFiles = cro::FileSystem::listFiles(userPath);
 
+            for (const auto& file : hairFiles)
+            {
+                if (cro::FileSystem::getFileExtension(file) != ".hct")
+                {
+                    continue;
+                }
+
+                cro::ConfigFile cfg;
+                if (cfg.loadFromFile(userPath + file, false))
+                {
+                    auto info = readHairCfg(cfg);
+                    info.modelPath = userPath + info.modelPath;
+
+                    if (md.loadFromFile(info.modelPath))
+                    {
+                        if (insertInfo(info, m_sharedData.hairInfo, false))
+                        {
+                            for (auto& avatar : m_playerAvatars)
+                            {
+                                auto& modelInfo = avatar.hairModels.emplace_back();
+                                modelInfo.model = m_avatarScene.createEntity();
+                                modelInfo.model.addComponent<cro::Transform>();
+                                md.createModel(modelInfo.model);
+
+                                modelInfo.model.getComponent<cro::Model>().setMaterial(0, m_resources.materials.get(m_materialIDs[MaterialID::Hair]));
+                                modelInfo.model.getComponent<cro::Model>().setHidden(true);
+
+                                modelInfo.uid = info.uid;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    //these are just used in the player preview window
+    //not in game.
     if (!m_playerAvatars.empty())
     {
         for (auto i = 0u; i < ConnectionData::MaxPlayers; ++i)
@@ -714,7 +798,7 @@ void MenuState::ugcInstalledHandler(std::uint64_t id, std::int32_t type)
                     auto info = readBallCfg(cfg);
                     info.modelPath = BallUserPath + info.modelPath;
 
-                    insertInfo(info, m_sharedData.ballModels);
+                    insertInfo(info, m_sharedData.ballModels, false);
                 }
 
                 break; //skip the rest of the file list

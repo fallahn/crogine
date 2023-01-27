@@ -129,6 +129,7 @@ struct SharedStateData final
     {
         std::uint32_t uid = 0;
         std::string modelPath;
+        HairInfo() = default;
         HairInfo(std::uint32_t i, const std::string& str)
             :uid(i), modelPath(str) {}
     };

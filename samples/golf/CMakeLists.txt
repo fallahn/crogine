@@ -22,9 +22,9 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 
 if(APPLE)
-SET(USE_RSS False CACHE STRING "Set to true to attempt to parse RSS newsfeed from itchio. Requires libcurl")
+SET(USE_NEWSFEED False CACHE STRING "Set to true to attempt to parse RSS newsfeed from itchio. Requires libcurl")
 else()
-SET(USE_RSS True CACHE STRING "Set to true to attempt to parse RSS newsfeed from itchio. Requires libcurl")
+SET(USE_NEWSFEED True CACHE STRING "Set to true to attempt to parse RSS newsfeed from itchio. Requires libcurl")
 endif()
 
 SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/../cmake/modules/")
@@ -38,12 +38,16 @@ if(CMAKE_COMPILER_IS_GNUCXX OR APPLE)
   endif()
 endif()
 
-if(USE_RSS)
-  add_definitions(-DUSE_RSS)
-endif()
-
 SET(CMAKE_CXX_FLAGS_DEBUG "-g -DCRO_DEBUG_")
 SET(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG")
+
+if(USE_NEWSFEED)
+  #add_definitions(-DUSE_RSS) #doesn't work?
+  add_compile_definitions(USE_RSS)
+  #add_compile_definitions(-DUSE_RSS) #can't find a definitive answer on this...
+endif()
+
+
 
 # We're using c++17
 SET(CMAKE_CXX_STANDARD 17)
@@ -57,7 +61,7 @@ find_package(OpenGL REQUIRED)
 #TODO specify version 2.83
 find_package(Bullet REQUIRED)
 
-if(USE_RSS)
+if(USE_NEWSFEED)
 find_package(CURL REQUIRED)
 endif()
 
@@ -78,7 +82,7 @@ include_directories(
   ${CMAKE_CURRENT_SOURCE_DIR}/../../libsocial/include
   src)
 
-if(USE_RSS)
+if(USE_NEWSFEED)
 include_directories(${CURL_INCLUDE_DIR})
 endif()
 
@@ -90,7 +94,7 @@ include(${PROJECT_DIR}/editor/CMakeLists.txt)
 include(${SOCIAL_DIR}/CMakeLists.txt)
 
 SET(GOLF_SRC ${GOLF_SRC} ${SOCIAL_SRC} ${EDITOR_SRC})
-if(USE_RSS)
+if(USE_NEWSFEED)
   include(${PROJECT_DIR}/rss/CMakeLists.txt)
   SET(GOLF_SRC ${GOLF_SRC} ${RSS_SRC})
 endif()
@@ -151,7 +155,7 @@ target_link_libraries(${PROJECT_NAME}
   ${BULLET_LIBRARIES}  
   ${OPENGL_LIBRARIES})
 
-if(USE_RSS)
+if(USE_NEWSFEED)
   target_link_libraries(${PROJECT_NAME} ${CURL_LIBRARIES})
 endif()
 

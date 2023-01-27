@@ -707,8 +707,8 @@ static inline void createFallbackModel(cro::Entity target, cro::ResourceCollecti
 static inline void formatDistanceString(float distance, cro::Text& target, bool imperial)
 {
     static constexpr float ToYards = 1.094f;
-    static constexpr float ToFeet = 3.281f;
-    static constexpr float ToInches = 12.f;
+    //static constexpr float ToFeet = 3.281f;
+    //static constexpr float ToInches = 12.f;
 
     if (imperial)
     {
