@@ -457,7 +457,7 @@ static const std::string CelFragmentShader = R"(
 
 #if defined (USER_COLOUR)
         //colour *= mix(u_darkColour, u_hairColour, step(0.5, amount));
-        colour *= u_hairColour;
+        colour *= u_hairColour;// * v_colour;
 #endif
 
         //float checkAmount = step(0.3, 1.0 - amount);
@@ -478,34 +478,9 @@ static const std::string CelFragmentShader = R"(
         amount = AMOUNT_MIN + (amount * AMOUNT_MAX);
 
 #if defined(COMP_SHADE)
-
-//vec2 fringeCoord = v_texCoord * (textureSize(u_diffuseMap, 0) * 8.0);
-//
-//int fringeX = int(mod(fringeCoord.x, MatrixSize));
-//int fringeY = int(mod(fringeCoord.y, MatrixSize));
-
-//colour.rgb = mix(colour.rgb, mix(colour.rgb, u_colour.rgb, v_colour.b), findClosest(fringeX, fringeY, v_colour.b));
-//colour.rgb = mix(colour.rgb, mix(colour.rgb, u_colour.rgb, noise2(fringeCoord)), findClosest(fringeX, fringeY, v_colour.b));
-
-
-//vec2 fringeCoord = textureSize(u_diffuseMap, 0) * 4.0 * v_texCoord;
-//vec2 ch = floor(fringeCoord);
-//float check = sign(mod(ch.x + ch.y, 2.0));
-//
-//
-//float levelCount = 5.0 - check;
-//float fringe = v_colour.b * levelCount;
-//fringe = round(fringe);
-//fringe /= levelCount;
-//colour.rgb = mix(colour.rgb, u_colour.rgb, v_colour.b);
-
         float tilt  = dot(normal, vec3(0.0, 1.0, 0.0));
         //tilt = ((smoothstep(0.97, 0.999, tilt) * 0.2)) * (1.0 - u_maskColour.r);
         tilt = ((1.0 - smoothstep(0.97, 0.999, tilt)) * 0.2) * (1.0 - u_maskColour.r);
-
-//tilt *= 20.0;
-//tilt = round(tilt);
-//tilt /= 20.0;
 
         colour.rgb = mix(colour.rgb, colour.rgb * SlopeShade, tilt);
 #else

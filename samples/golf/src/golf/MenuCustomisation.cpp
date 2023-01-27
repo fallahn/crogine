@@ -529,7 +529,8 @@ void MenuState::parseAvatarDirectory()
         cro::ModelDefinition md(m_resources);
         for (const auto& info : m_sharedData.hairInfo)
         {
-            if (md.loadFromFile(info.modelPath))
+            if (!info.modelPath.empty() && //first entry is 'bald' ie no model
+                md.loadFromFile(info.modelPath))
             {
                 for (auto& avatar : m_playerAvatars)
                 {
@@ -871,6 +872,7 @@ void MenuState::setPreviewModel(std::size_t playerIndex)
 std::int32_t MenuState::indexFromHairID(std::uint32_t id)
 {
     //assumes all avatars contain some list of models...
+    //not sure why we aren't doing this on m_sharedData.hairInfo ? 
     auto hair = std::find_if(m_playerAvatars[0].hairModels.begin(), m_playerAvatars[0].hairModels.end(),
         [id](const PlayerAvatar::HairInfo& h)
         {

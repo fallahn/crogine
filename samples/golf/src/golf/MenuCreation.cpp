@@ -3742,19 +3742,19 @@ void MenuState::updateLobbyData(const net::NetEvent& evt)
             if (indexFromBallID(cd.playerData[i].ballID) == -1)
             {
                 //no local ball for this player
-                Social::findUserContent(cd.peerID, cd.playerData[i].ballID, Social::UserContent::Ball);
+                Social::fetchRemoteContent(cd.peerID, cd.playerData[i].ballID, Social::UserContent::Ball);
             }
 
-            //this assumes all the hair data was successfully loaded for the first avatar...
             auto id = cd.playerData[i].hairID;
-            auto hair = std::find_if(m_playerAvatars[0].hairModels.begin(), m_playerAvatars[0].hairModels.end(),
-                [id](const PlayerAvatar::HairInfo& h)
+            auto hair = std::find_if(m_sharedData.hairInfo.begin(), m_sharedData.hairInfo.end(),
+                [id](const SharedStateData::HairInfo& h)
                 {
                     return h.uid == id;
                 });
-            if (hair == m_playerAvatars[0].hairModels.end())
+            if (hair == m_sharedData.hairInfo.end())
             {
-                Social::findUserContent(cd.peerID, id, Social::UserContent::Hair);
+                //no local hair model
+                Social::fetchRemoteContent(cd.peerID, id, Social::UserContent::Hair);
             }
         }
 #endif
