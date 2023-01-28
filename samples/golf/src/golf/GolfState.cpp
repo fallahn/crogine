@@ -1401,6 +1401,34 @@ bool GolfState::simulate(float dt)
         msg->type = SceneEvent::PlayerIdle;
 
         gamepadNotify(GamepadNotify::NewPlayer);
+
+        auto* skel = &m_activeAvatar->model.getComponent<cro::Skeleton>();
+        auto animID = m_activeAvatar->animationIDs[AnimationID::Impatient];
+        auto idleID = m_activeAvatar->animationIDs[AnimationID::Idle];
+        skel->play(animID, 1.f, 0.8f);
+
+        auto entity = m_gameScene.createEntity();
+        entity.addComponent<cro::Callback>().active = true;
+        entity.getComponent<cro::Callback>().function =
+            [&, skel, animID, idleID](cro::Entity e, float)
+        {
+            auto [currAnim, nextAnim] = skel->getActiveAnimations();
+            if (currAnim == animID
+                || nextAnim == animID)
+            {
+                if (skel->getState() == cro::Skeleton::Stopped)
+                {
+                    skel->play(idleID, 1.f, 0.8f);
+                    e.getComponent<cro::Callback>().active = false;
+                    m_gameScene.destroyEntity(e);
+                }
+            }
+            else
+            {
+                e.getComponent<cro::Callback>().active = false;
+                m_gameScene.destroyEntity(e);
+            }
+        };
     }
 
     return true;
@@ -1899,6 +1927,10 @@ void GolfState::loadAssets()
                         else if (anims[k].name == "disappointment")
                         {
                             m_avatars[i][j].animationIDs[AnimationID::Disappoint] = k;
+                        }
+                        else if (anims[k].name == "impatient")
+                        {
+                            m_avatars[i][j].animationIDs[AnimationID::Impatient] = k;
                         }
                     }
 
@@ -4748,7 +4780,7 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
                     }
                 }*/
 
-                m_activeAvatar->model.getComponent<cro::Skeleton>().play(m_activeAvatar->animationIDs[animID]);
+                m_activeAvatar->model.getComponent<cro::Skeleton>().play(m_activeAvatar->animationIDs[animID], 1.f, 0.4f);
             }
         }
             break;

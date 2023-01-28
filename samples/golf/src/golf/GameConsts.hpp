@@ -228,6 +228,7 @@ struct AnimationID final
     {
         Idle, Swing, Chip, Putt,
         Celebrate, Disappoint,
+        Impatient,
         Count,
 
     };
