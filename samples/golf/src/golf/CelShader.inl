@@ -456,8 +456,10 @@ static const std::string CelFragmentShader = R"(
         float amount = dot(normal, lightDirection);
 
 #if defined (USER_COLOUR)
-        //colour *= mix(u_darkColour, u_hairColour, step(0.5, amount));
-        colour *= u_hairColour;// * v_colour;
+        float mixAmount = step(0.95, (v_colour.r + v_colour.g + v_colour.b) / 3.0);        
+        colour.rgb = mix(v_colour.rgb, u_hairColour.rgb, mixAmount);
+
+        //colour *= u_hairColour;// * v_colour;
 #endif
 
         //float checkAmount = step(0.3, 1.0 - amount);
