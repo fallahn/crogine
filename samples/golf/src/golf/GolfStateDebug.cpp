@@ -158,7 +158,7 @@ void GolfState::registerDebugWindows()
                 ImGui::Begin("Point");
                 ImGui::End();
             }
-        });
+        }, true);
 
     //registerWindow([&]()
     //    {
