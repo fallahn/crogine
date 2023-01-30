@@ -186,6 +186,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     m_windBuffer        ("WindValues"),
     m_holeToModelRatio  (1.f),
     m_currentHole       (0),
+    m_terrainChunker    (m_gameScene),
     m_terrainBuilder    (sd, m_holeData),
     m_audioPath         ("assets/golf/sound/ambience.xas"),
     m_currentCamera     (CameraID::Player),
@@ -1331,10 +1332,12 @@ bool GolfState::simulate(float dt)
         m_inputParser.update(dt, m_currentPlayer.terrain);
     }
 
+
     m_emoteWheel.update(dt);
     m_gameScene.simulate(dt);
     m_uiScene.simulate(dt);
 
+    m_terrainChunker.update();//this needs to be done after the camera system is updated
 
     //do this last to ensure game scene camera is up to date
     const auto& srcCam = m_gameScene.getActiveCamera().getComponent<cro::Camera>();
@@ -1442,7 +1445,7 @@ bool GolfState::simulate(float dt)
     }
 
     //switch to idle cam if more than half time
-    if (m_idleTimer.elapsed() > (idleTime * 0.5f)
+    if (m_idleTimer.elapsed() > (idleTime * 0.65f)
         && m_currentCamera == CameraID::Player
         && m_inputParser.getActive()) //hmm this stops this happening on remote clients
     {

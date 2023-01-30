@@ -321,6 +321,9 @@
     <ClCompile Include="src\golf\RayResultCallback.cpp">
       <Filter>Source Files\golf\shared</Filter>
     </ClCompile>
+    <ClCompile Include="src\golf\TerrainChunks.cpp">
+      <Filter>Source Files\golf</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ErrorCheck.hpp">
@@ -645,6 +648,9 @@
       <Filter>Header Files\golf\shared</Filter>
     </ClInclude>
     <ClInclude Include="src\golf\CallbackData.hpp">
+      <Filter>Header Files\golf\client</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\TerrainChunks.hpp">
       <Filter>Header Files\golf\client</Filter>
     </ClInclude>
   </ItemGroup>

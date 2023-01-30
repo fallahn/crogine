@@ -39,6 +39,7 @@ source distribution.
 #include "LeaderboardTexture.hpp"
 #include "CPUGolfer.hpp"
 #include "TerrainDepthmap.hpp"
+#include "TerrainChunks.hpp"
 #include "server/ServerPacketData.hpp"
 
 #include <crogine/core/State.hpp>
@@ -154,6 +155,7 @@ private:
     std::uint32_t m_currentHole;
     ActivePlayer m_currentPlayer;
     CollisionMesh m_collisionMesh;
+    TerrainChunker m_terrainChunker;
 
     TerrainBuilder m_terrainBuilder;
 
@@ -218,22 +220,8 @@ private:
     void buildScene();
     void initAudio(bool loadTrees);
 
-    struct SkyData final
-    {
-        static constexpr float MinAngle = 45.f;
-        static constexpr float MaxAngle = 135.f;
-        float tod = 0.f;
-
-        cro::Entity sunModel;
-        cro::Entity sunRoot;
-        cro::Image sunPalette;
-        cro::Image lightPalette;
-
-        cro::Scene::SkyColours skyColours;
-    }m_skyData;
     void createWeather(); //weather.cpp
     void createClouds(const std::string&);
-    void createSun();
     void buildBow();
     void createDrone();
     void spawnBall(const struct ActorInfo&);

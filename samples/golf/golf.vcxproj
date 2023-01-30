@@ -512,6 +512,7 @@
     <ClCompile Include="src\golf\StudioCameraSystem.cpp" />
     <ClCompile Include="src\golf\Swingput.cpp" />
     <ClCompile Include="src\golf\TerrainBuilder.cpp" />
+    <ClCompile Include="src\golf\TerrainChunks.cpp" />
     <ClCompile Include="src\golf\TerrainDepthmap.cpp" />
     <ClCompile Include="src\golf\TrophyDisplaySystem.cpp" />
     <ClCompile Include="src\golf\TrophyState.cpp" />
@@ -619,6 +620,7 @@
     <ClInclude Include="src\golf\Swingput.hpp" />
     <ClInclude Include="src\golf\Terrain.hpp" />
     <ClInclude Include="src\golf\TerrainBuilder.hpp" />
+    <ClInclude Include="src\golf\TerrainChunks.hpp" />
     <ClInclude Include="src\golf\TerrainDepthmap.hpp" />
     <ClInclude Include="src\golf\TextAnimCallback.hpp" />
     <ClInclude Include="src\golf\Treeset.hpp" />
