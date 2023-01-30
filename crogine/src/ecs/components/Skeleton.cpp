@@ -262,6 +262,28 @@ void Skeleton::buildKeyframe(std::size_t frame)
     }
 }
 
+void Skeleton::findBlendIndices()
+{
+    std::vector<bool> children(m_frameSize);
+    std::fill(children.begin(), children.end(), false);
+
+    for (auto i = 0u; i < m_frameSize; ++i)
+    {
+        if (m_frames[i].parent != -1)
+        {
+            children[m_frames[i].parent] = true;
+        }
+    }
+
+    m_blendIndices.clear();
+    for (auto i = 0u; i < children.size(); ++i)
+    {
+        if (!children[i])
+        {
+            m_blendIndices.push_back(static_cast<std::int32_t>(i));
+        }
+    }
+}
 
 //----attachment struct-----//
 void Attachment::setParent(std::int32_t parent)

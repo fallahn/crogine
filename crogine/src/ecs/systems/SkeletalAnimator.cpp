@@ -214,6 +214,7 @@ void SkeletalAnimator::onEntityAdded(Entity entity)
     {
         skeleton.m_invBindPose.resize(skeleton.m_frameSize);
     }
+    skeleton.findBlendIndices(); //find the joints with no children for basis of recursion
 
     //update the bounds for each key frame
     for (auto i = 0u; i < skeleton.m_frameCount; ++i)
@@ -311,7 +312,9 @@ void SkeletalAnimator::interpolateAnimation(SkeletalAnim& source, std::size_t ta
 
     //stores interpolated output in source so we can use it to blend.
     for (auto i = 0u; i < skeleton.m_frameSize; ++i)
+    //for(auto j = 0u; j < skeleton.m_blendIndices.size(); ++j)
     {
+        //auto i = skeleton.m_blendIndices[j];
         glm::mat4 worldMatrix = mixJoint(skeleton.m_frames[startA + i], skeleton.m_frames[startB + i], time, source.interpolationOutput[i]);
 
         std::int32_t parent = skeleton.m_frames[startA + i].parent;
@@ -327,6 +330,7 @@ void SkeletalAnimator::interpolateAnimation(SkeletalAnim& source, std::size_t ta
         {
             skeleton.m_currentFrame[i] = skeleton.m_rootTransform * worldMatrix * skeleton.m_invBindPose[i];
         }
+        
     }
 }
 

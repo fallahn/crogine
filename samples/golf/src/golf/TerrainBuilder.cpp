@@ -737,13 +737,13 @@ void TerrainBuilder::threadFunc()
 {
     const auto chunkIndex = [](glm::vec3 worldPos)
     {
-        static constexpr float ChunkSizeX = MapSize.x / TerrainChunker::ChunkCountX;
-        static constexpr float ChunkSizeY = MapSize.y / TerrainChunker::ChunkCountY;
+        static constexpr float ChunkSizeX = static_cast<float>(MapSize.x) / TerrainChunker::ChunkCountX;
+        static constexpr float ChunkSizeY = static_cast<float>(MapSize.y) / TerrainChunker::ChunkCountY;
 
         glm::vec2 pos(worldPos.x, -worldPos.z);
         //TODO is this safe to assume the position is always within the map?
-        std::int32_t xPos = pos.x / ChunkSizeX;
-        std::int32_t yPos = pos.y / ChunkSizeY;
+        std::int32_t xPos = static_cast<std::int32_t>(pos.x / ChunkSizeX);
+        std::int32_t yPos = static_cast<std::int32_t>(pos.y / ChunkSizeY);
         return yPos * TerrainChunker::ChunkCountX + xPos;
     };
 
