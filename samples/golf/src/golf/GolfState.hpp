@@ -241,7 +241,7 @@ private:
     void handleNetEvent(const net::NetEvent&);
     void removeClient(std::uint8_t);
 
-    void setCurrentHole(std::uint16_t);
+    void setCurrentHole(std::uint16_t); //(number << 8) | par
     void setCameraPosition(glm::vec3, float, float);
     void requestNextPlayer(const ActivePlayer&);
     void setCurrentPlayer(const ActivePlayer&);
