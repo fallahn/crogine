@@ -64,12 +64,15 @@ public:
 
     void update();
 
+    //swaps with existing
+    void setChunks(std::vector<TerrainChunk>&);
+
     static constexpr int32_t ChunkCountX = 6;
     static constexpr int32_t ChunkCountY = 4;
 
 private:
     const cro::Scene& m_scene;
-    std::array<TerrainChunk, ChunkCountX * ChunkCountY> m_chunks = {};
+    std::vector<TerrainChunk> m_chunks;
 
     //these are indices to the chunk array
     std::vector<std::int32_t> m_visible;

@@ -154,10 +154,11 @@ namespace
     };
 }
 
-TerrainBuilder::TerrainBuilder(SharedStateData& sd, const std::vector<HoleData>& hd)
+TerrainBuilder::TerrainBuilder(SharedStateData& sd, const std::vector<HoleData>& hd, TerrainChunker& chunker)
     : m_sharedData  (sd),
     m_holeData      (hd),
     m_currentHole   (0),
+    m_terrainChunker(chunker),
     m_swapIndex     (0),
     m_terrainBuffer ((MapSize.x * MapSize.y) / QuadsPerMetre),
     m_threadRunning (false),
@@ -707,6 +708,11 @@ void TerrainBuilder::update(std::size_t holeIndex)
         
         m_slopeProperties.entity.getComponent<cro::Transform>().setPosition(m_holeData[m_currentHole].pin);
 
+
+        //TODO this wants to be done at the bottom of the animation - need to make it available to the callback
+        m_terrainChunker.setChunks(m_chunks);
+
+
         //signal to the thread we want to update the buffers
         //ready for next time
         m_currentHole++;
@@ -729,6 +735,18 @@ void TerrainBuilder::setSlopePosition(glm::vec3 position)
 //private
 void TerrainBuilder::threadFunc()
 {
+    const auto chunkIndex = [](glm::vec3 worldPos)
+    {
+        static constexpr float ChunkSizeX = MapSize.x / TerrainChunker::ChunkCountX;
+        static constexpr float ChunkSizeY = MapSize.y / TerrainChunker::ChunkCountY;
+
+        glm::vec2 pos(worldPos.x, -worldPos.z);
+        //TODO is this safe to assume the position is always within the map?
+        std::int32_t xPos = pos.x / ChunkSizeX;
+        std::int32_t yPos = pos.y / ChunkSizeY;
+        return yPos * TerrainChunker::ChunkCountX + xPos;
+    };
+
     const auto readHeightMap = [&](std::uint32_t x, std::uint32_t y, std::int32_t gridRes = 1)
     {
         auto size = m_normalMapImage.getSize();
@@ -786,6 +804,9 @@ void TerrainBuilder::threadFunc()
     {
         if (m_wantsUpdate)
         {
+            m_chunks.clear();
+            m_chunks.resize(TerrainChunker::ChunkCountX * TerrainChunker::ChunkCountY);
+
             //should be empty anyway because we clear after assigning them
             m_instanceTransforms.clear();
             for (auto& tx : m_shrubTransforms)
@@ -837,6 +858,8 @@ void TerrainBuilder::threadFunc()
                                 auto& bb = m_billboardBuffer.emplace_back(m_billboardTemplates[cro::Util::Random::value(BillboardID::Grass01, BillboardID::Grass02)]);
                                 bb.position = { x, height - 0.02f, -y };
                                 bb.size *= scale;
+
+                                m_chunks[chunkIndex(bb.position)].itemCount++;
                             }
                         }
                     }
@@ -924,6 +947,8 @@ void TerrainBuilder::threadFunc()
                                         bb.textureRect.left = rect.left + rect.width;
                                         bb.textureRect.width = -rect.width;
                                     }
+
+                                    m_chunks[chunkIndex(bb.position)].itemCount++;
                                 }
                                 shrubIdx++;
                             }
@@ -950,6 +975,8 @@ void TerrainBuilder::threadFunc()
                                 auto& bb = m_billboardBuffer.emplace_back(m_billboardTemplates[cro::Util::Random::value(BillboardID::Flowers01, BillboardID::Bush02)]);
                                 bb.position = { x, height - 0.05f, -y };
                                 bb.size *= scale;
+
+                                m_chunks[chunkIndex(bb.position)].itemCount++;
                             }
                             else
                             {
@@ -957,6 +984,8 @@ void TerrainBuilder::threadFunc()
                                 auto& bb = m_billboardBuffer.emplace_back(m_billboardTemplates[cro::Util::Random::value(BillboardID::Grass01, BillboardID::Grass02)]);
                                 bb.position = { x, height - 0.05f, -y };
                                 bb.size *= scale;
+
+                                m_chunks[chunkIndex(bb.position)].itemCount++;
                             }
                         }
                     }

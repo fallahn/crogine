@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2022
+Matt Marchant 2021 - 2023
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -32,6 +32,7 @@ source distribution.
 #include "HoleData.hpp"
 #include "Billboard.hpp"
 #include "Treeset.hpp"
+#include "TerrainChunks.hpp"
 
 #include <crogine/gui/GuiClient.hpp>
 #include <crogine/ecs/Entity.hpp>
@@ -71,7 +72,7 @@ struct SharedStateData;
 class TerrainBuilder final : public cro::GuiClient
 {
 public:
-    TerrainBuilder(SharedStateData&, const std::vector<HoleData>&);
+    TerrainBuilder(SharedStateData&, const std::vector<HoleData>&, TerrainChunker&);
     ~TerrainBuilder();
 
     TerrainBuilder(const TerrainBuilder&) = delete;
@@ -90,6 +91,9 @@ private:
     SharedStateData& m_sharedData;
     const std::vector<HoleData>& m_holeData;
     std::size_t m_currentHole;
+
+    TerrainChunker& m_terrainChunker;
+    std::vector<TerrainChunk> m_chunks;
 
     std::array<cro::Billboard, BillboardID::Count> m_billboardTemplates = {};
     std::vector<cro::Billboard> m_billboardBuffer;

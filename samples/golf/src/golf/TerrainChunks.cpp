@@ -31,6 +31,7 @@ source distribution.
 
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/ecs/components/Camera.hpp>
+#include <crogine/ecs/components/Model.hpp>
 
 #include <crogine/gui/Gui.hpp>
 
@@ -57,7 +58,8 @@ namespace
 }
 
 TerrainChunker::TerrainChunker(const cro::Scene& scene)
-    : m_scene(scene)
+    : m_scene   (scene),
+    m_chunks    (ChunkCountX * ChunkCountY)
 {
     m_debugTexture.create(320, 200, false);
     m_debugQuadTexture.create(1, 1);
@@ -79,7 +81,7 @@ TerrainChunker::TerrainChunker(const cro::Scene& scene)
             if (ImGui::Begin("Terrain Chunks"))
             {
                 ImGui::Image(m_debugTexture.getTexture(), { MapSize.width, MapSize.height }, { 0.f, 1.f }, { 1.f, 0.f });
-                ImGui::Text("Draw Count %ul", m_visible.size());
+                ImGui::Text("Draw Count %u", m_visible.size());
             }
             ImGui::End();
         });
@@ -109,6 +111,22 @@ void TerrainChunker::update()
         m_chunks[chunkIndex].lod0 = 0;
         m_chunks[chunkIndex].lod1 = 0;
         m_chunks[chunkIndex].shrubs = 0;
+
+        //hm, just becase there's a positive
+        //item count we can't assume the entity
+        //for a specific type will be valid
+        if (m_chunks[chunkIndex].treeLOD0.isValid())
+        {
+            m_chunks[chunkIndex].treeLOD0.getComponent<cro::Model>().setHidden(true);
+        }
+        if (m_chunks[chunkIndex].treeLOD1.isValid())
+        {
+            m_chunks[chunkIndex].treeLOD1.getComponent<cro::Model>().setHidden(true);
+        }
+        if (m_chunks[chunkIndex].foliage.isValid())
+        {
+            m_chunks[chunkIndex].foliage.getComponent<cro::Model>().setHidden(true);
+        }
     }
 
     m_visible.clear();
@@ -125,21 +143,38 @@ void TerrainChunker::update()
         {
             auto idx = y * ChunkCountX + x;
 
-            //TODO count foliage as it's entered
-            //if (m_chunks[idx].itemCount != 0)
+            if (m_chunks[idx].itemCount != 0)
             {
                 //update visibility
                 cro::FloatRect cell({ x * ChunkSize.x, y * ChunkSize.y, ChunkSize.x, ChunkSize.y });
+                
+                //TODO we want to be able to vary this radius and use only LOD1 when trees are set to low quality
                 if (intersects(camPos, cell, 30.f))
                 {
                     m_chunks[idx].lod0 = 255;
+
+                    if (m_chunks[idx].treeLOD0.isValid())
+                    {
+                        m_chunks[idx].treeLOD0.getComponent<cro::Model>().setHidden(true);
+                    }
                 }
                 if (!intersects(camPos, cell, 20.f))
                 {
                     m_chunks[idx].lod1 = 255;
+
+                    if (m_chunks[idx].treeLOD1.isValid())
+                    {
+                        m_chunks[idx].treeLOD1.getComponent<cro::Model>().setHidden(true);
+                    }
                 }
 
                 m_chunks[idx].shrubs = 127;
+
+                if (m_chunks[idx].foliage.isValid())
+                {
+                    m_chunks[idx].foliage.getComponent<cro::Model>().setHidden(true);
+                }
+
 
                 //and insert into visible list
                 m_visible.push_back(idx);
@@ -147,8 +182,20 @@ void TerrainChunker::update()
         }
     }
 
+
+
+    //TODO we could run a second pass and ray test against each chunk
+    //greater than a certain distance - if the ray passes through HQ
+    //trees, then we can occlusion cull it? Assumes the trees are
+    //actually occluding however, and not sparse like the beach courses
+
+
+
+
+
+
     auto forward = cro::Util::Matrix::getForwardVector(m_scene.getActiveCamera().getComponent<cro::Transform>().getWorldTransform());
-    float camRot = glm::eulerAngles(m_scene.getActiveCamera().getComponent<cro::Transform>().getWorldRotation()).y;
+    //float camRot = glm::eulerAngles(m_scene.getActiveCamera().getComponent<cro::Transform>().getWorldRotation()).y;
 
     m_debugTexture.clear(cro::Colour::Magenta);
     for (auto y = 0u; y < ChunkCountY; ++y)
@@ -163,18 +210,26 @@ void TerrainChunker::update()
         }
     }
 
-    m_debugQuad.setPosition({ camAABB.left, camAABB.bottom });
-    m_debugQuad.setColour(cro::Colour(1.f, 0.f, 1.f, 0.4f));
-    m_debugQuad.setTextureRect({ 0.f, 0.f, camAABB.width, camAABB.height });
-    m_debugQuad.draw();
-    m_debugQuad.setTextureRect({ 0.f, 0.f, ChunkSize.x, ChunkSize.y });
+    //m_debugQuad.setPosition({ camAABB.left, camAABB.bottom });
+    //m_debugQuad.setColour(cro::Colour(1.f, 0.f, 1.f, 0.4f));
+    //m_debugQuad.setTextureRect({ 0.f, 0.f, camAABB.width, camAABB.height });
+    //m_debugQuad.draw();
+    //m_debugQuad.setTextureRect({ 0.f, 0.f, ChunkSize.x, ChunkSize.y });
 
-    m_debugCamera.setPosition(camPos);
-    //buh why did I use degrees for this??
-    m_debugCamera.setRotation(camRot * cro::Util::Const::radToDeg);
-    m_debugCamera.draw();
+    //m_debugCamera.setPosition(camPos);
+    ////buh why did I use degrees for this??
+    //m_debugCamera.setRotation(camRot * cro::Util::Const::radToDeg);
+    //m_debugCamera.draw();
 
     m_debugTexture.display();
+}
+
+void TerrainChunker::setChunks(std::vector<TerrainChunk>& chunks)
+{
+    CRO_ASSERT(chunks.size() == ChunkCountX * ChunkCountY, "");
+    //TODO set all outgoing chunks to visible? How do we update them during the transition?
+    //or will it not matter if we swap at the bottom of the animation?
+    m_chunks.swap(chunks);
 }
 
 //private
