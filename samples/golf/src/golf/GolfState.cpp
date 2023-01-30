@@ -1028,6 +1028,13 @@ void GolfState::handleMessage(const cro::Message& msg)
                 auto scale = m_viewScale / glm::vec2(m_courseEnt.getComponent<cro::Transform>().getScale());
                 e.getComponent<cro::Transform>().setScale(scale * state);
                 e.getComponent<cro::Transform>().setPosition(glm::vec3(pos * scale, 0.2f));
+
+                if (m_drone.isValid())
+                {
+                    //camera was restored
+                    e.getComponent<cro::Callback>().active = false;
+                    m_uiScene.destroyEntity(e);
+                }
             };
             m_courseEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
         }
@@ -3856,107 +3863,115 @@ void GolfState::buildScene()
 //#endif
 
     //drone model to follow camera
-    if (md.loadFromFile("assets/golf/models/drone.cmt"))
-    {
-        entity = m_gameScene.createEntity();
-        entity.addComponent<cro::Transform>().setScale(glm::vec3(2.f));
-        entity.getComponent<cro::Transform>().setPosition({ 160.f, 1.f, -100.f }); //lazy man's half map size
-        md.createModel(entity);
+    createDrone();
+    //if (md.loadFromFile("assets/golf/models/drone.cmt"))
+    //{
+    //    entity = m_gameScene.createEntity();
+    //    entity.addComponent<cro::Transform>().setScale(glm::vec3(2.f));
+    //    entity.getComponent<cro::Transform>().setPosition({ 160.f, 1.f, -100.f }); //lazy man's half map size
+    //    md.createModel(entity);
 
-        material = m_resources.materials.get(m_materialIDs[MaterialID::CelTextured]);
-        applyMaterialData(md, material);
-        entity.getComponent<cro::Model>().setMaterial(0, material);
+    //    material = m_resources.materials.get(m_materialIDs[MaterialID::CelTextured]);
+    //    applyMaterialData(md, material);
+    //    entity.getComponent<cro::Model>().setMaterial(0, material);
 
-        //material.doubleSided = true;
-        applyMaterialData(md, material, 1);
-        material.blendMode = cro::Material::BlendMode::Alpha;
-        entity.getComponent<cro::Model>().setMaterial(1, material);
+    //    //material.doubleSided = true;
+    //    applyMaterialData(md, material, 1);
+    //    material.blendMode = cro::Material::BlendMode::Alpha;
+    //    entity.getComponent<cro::Model>().setMaterial(1, material);
 
-        entity.addComponent<cro::AudioEmitter>();
+    //    entity.addComponent<cro::AudioEmitter>();
 
-        cro::AudioScape as;
-        if (as.loadFromFile("assets/golf/sound/drone.xas", m_resources.audio)
-            && as.hasEmitter("drone"))
-        {
-            entity.getComponent<cro::AudioEmitter>() = as.getEmitter("drone");
-            entity.getComponent<cro::AudioEmitter>().play();
-        }
+    //    cro::AudioScape as;
+    //    if (as.loadFromFile("assets/golf/sound/drone.xas", m_resources.audio)
+    //        && as.hasEmitter("drone"))
+    //    {
+    //        entity.getComponent<cro::AudioEmitter>() = as.getEmitter("drone");
+    //        entity.getComponent<cro::AudioEmitter>().play();
+    //    }
 
-        entity.addComponent<cro::Callback>().active = true;
-        entity.getComponent<cro::Callback>().setUserData<DroneCallbackData>();
-        entity.getComponent<cro::Callback>().function =
-            [&](cro::Entity e, float dt)
-        {
-            auto oldPos = e.getComponent<cro::Transform>().getPosition();
-            auto playerPos = m_currentPlayer.position;
+    //    entity.addComponent<cro::Callback>().active = true;
+    //    entity.getComponent<cro::Callback>().setUserData<DroneCallbackData>();
+    //    entity.getComponent<cro::Callback>().function =
+    //        [&](cro::Entity e, float dt)
+    //    {
+    //        auto oldPos = e.getComponent<cro::Transform>().getPosition();
+    //        auto playerPos = m_currentPlayer.position;
 
-            //rotate towards active player
-            glm::vec2 dir = glm::vec2(oldPos.x - playerPos.x, oldPos.z - playerPos.z);
-            float rotation = std::atan2(dir.y, dir.x) + (cro::Util::Const::PI / 2.f);
+    //        //rotate towards active player
+    //        glm::vec2 dir = glm::vec2(oldPos.x - playerPos.x, oldPos.z - playerPos.z);
+    //        float rotation = std::atan2(dir.y, dir.x) + (cro::Util::Const::PI / 2.f);
 
 
-            auto& [currRotation, acceleration, target] = e.getComponent<cro::Callback>().getUserData<DroneCallbackData>();
+    //        auto& [currRotation, acceleration, target] = e.getComponent<cro::Callback>().getUserData<DroneCallbackData>();
 
-            //move towards skycam
-            static constexpr float MoveSpeed = 20.f;
-            static constexpr float MinRadius = MoveSpeed * MoveSpeed;
-            static constexpr float AccelerationRadius = 40.f;
+    //        //move towards skycam
+    //        static constexpr float MoveSpeed = 20.f;
+    //        static constexpr float MinRadius = MoveSpeed * MoveSpeed;
+    //        static constexpr float AccelerationRadius = 40.f;
 
-            auto movement = target.getComponent<cro::Transform>().getPosition() - oldPos;
-            if (auto len2 = glm::length2(movement); len2 > MinRadius)
-            {
-                const float len = std::sqrt(len2);
-                movement /= len;
-                movement *= MoveSpeed;
+    //        auto movement = target.getComponent<cro::Transform>().getPosition() - oldPos;
+    //        if (auto len2 = glm::length2(movement); len2 > MinRadius)
+    //        {
+    //            const float len = std::sqrt(len2);
+    //            movement /= len;
+    //            movement *= MoveSpeed;
 
-                //go slower over short distances
-                const float multiplier = 0.6f + (0.4f * std::min(1.f, len / AccelerationRadius));
+    //            //go slower over short distances
+    //            const float multiplier = 0.6f + (0.4f * std::min(1.f, len / AccelerationRadius));
 
-                acceleration = std::min(1.f, acceleration + ((dt / 2.f) * multiplier));
-                movement *= cro::Util::Easing::easeInSine(acceleration);
+    //            acceleration = std::min(1.f, acceleration + ((dt / 2.f) * multiplier));
+    //            movement *= cro::Util::Easing::easeInSine(acceleration);
 
-                currRotation += cro::Util::Maths::shortestRotation(currRotation, rotation) * dt;
-            }
-            else
-            {
-                acceleration = 0.f;
-                currRotation = std::fmod(currRotation + (dt * 0.5f), cro::Util::Const::TAU);
-            }
-            e.getComponent<cro::Transform>().move(movement * dt);
-            e.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, currRotation);
+    //            currRotation += cro::Util::Maths::shortestRotation(currRotation, rotation) * dt;
+    //        }
+    //        else
+    //        {
+    //            acceleration = 0.f;
+    //            currRotation = std::fmod(currRotation + (dt * 0.5f), cro::Util::Const::TAU);
+    //        }
+    //        e.getComponent<cro::Transform>().move(movement * dt);
+    //        e.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, currRotation);
 
-            m_cameras[CameraID::Sky].getComponent<cro::Transform>().setPosition(e.getComponent<cro::Transform>().getPosition());
+    //        m_cameras[CameraID::Sky].getComponent<cro::Transform>().setPosition(e.getComponent<cro::Transform>().getPosition());
 
-            //update emitter based on velocity
-            auto velocity = oldPos - e.getComponent<cro::Transform>().getPosition();
-            e.getComponent<cro::AudioEmitter>().setVelocity(velocity * 60.f);
+    //        //update emitter based on velocity
+    //        auto velocity = oldPos - e.getComponent<cro::Transform>().getPosition();
+    //        e.getComponent<cro::AudioEmitter>().setVelocity(velocity * 60.f);
 
-            //update the pitch based on height above hole
-            static constexpr float MaxHeight = 10.f;
-            float height = oldPos.y - m_holeData[m_currentHole].pin.y;
-            height = std::min(1.f, height / MaxHeight);
+    //        //update the pitch based on height above hole
+    //        static constexpr float MaxHeight = 10.f;
+    //        float height = oldPos.y - m_holeData[m_currentHole].pin.y;
+    //        height = std::min(1.f, height / MaxHeight);
 
-            float pitch = 0.5f + (0.5f * height);
-            e.getComponent<cro::AudioEmitter>().setPitch(pitch);
-        };
+    //        float pitch = 0.5f + (0.5f * height);
+    //        e.getComponent<cro::AudioEmitter>().setPitch(pitch);
+    //    };
 
-        m_drone = entity;
+    //    m_drone = entity;
 
-        //make sure this is actually valid...
-        auto targetEnt = m_gameScene.createEntity();
-        targetEnt.addComponent<cro::Transform>().setPosition({ 160.f, 30.f, -100.f });
-        targetEnt.addComponent<cro::Callback>().active = true; //also used to make the drone orbit the flag (see showCountdown())
-        targetEnt.getComponent<cro::Callback>().function =
-            [&](cro::Entity e, float dt)
-        {
-            auto wind = m_windUpdate.currentWindSpeed * (m_windUpdate.currentWindVector * 0.3f);
-            wind += m_windUpdate.currentWindVector * 0.7f;
+    //    //make sure this is actually valid...
+    //    auto targetEnt = m_gameScene.createEntity();
+    //    targetEnt.addComponent<cro::Transform>().setPosition({ 160.f, 30.f, -100.f });
+    //    targetEnt.addComponent<cro::Callback>().active = true; //also used to make the drone orbit the flag (see showCountdown())
+    //    targetEnt.getComponent<cro::Callback>().function =
+    //        [&](cro::Entity e, float dt)
+    //    {
+    //        auto wind = m_windUpdate.currentWindSpeed * (m_windUpdate.currentWindVector * 0.3f);
+    //        wind += m_windUpdate.currentWindVector * 0.7f;
 
-            e.getComponent<cro::Transform>().move(wind * dt);
-        };
+    //        e.getComponent<cro::Transform>().move(wind * dt);
 
-        m_drone.getComponent<cro::Callback>().getUserData<DroneCallbackData>().target = targetEnt;
-    }
+    //        if (m_drone.destroyed())
+    //        {
+    //            e.getComponent<cro::Callback>().active = false;
+    //            m_gameScene.destroyEntity(e);
+    //        }
+    //    };
+
+    //    m_drone.getComponent<cro::Callback>().getUserData<DroneCallbackData>().target = targetEnt;
+    //    m_cameras[CameraID::Sky].getComponent<TargetInfo>().postProcess = nullptr;
+    //}
 
 
     m_currentPlayer.position = m_holeData[m_currentHole].tee; //prevents the initial camera movement
@@ -4230,6 +4245,119 @@ void GolfState::initAudio(bool loadTrees)
             m_gameScene.destroyEntity(e);
         }
     };
+}
+
+void GolfState::createDrone()
+{
+    cro::ModelDefinition md(m_resources);
+    if (md.loadFromFile("assets/golf/models/drone.cmt"))
+    {
+        auto entity = m_gameScene.createEntity();
+        entity.addComponent<cro::Transform>().setScale(glm::vec3(2.f));
+        entity.getComponent<cro::Transform>().setPosition({ 160.f, 1.f, -100.f }); //lazy man's half map size
+        md.createModel(entity);
+
+        auto material = m_resources.materials.get(m_materialIDs[MaterialID::CelTextured]);
+        applyMaterialData(md, material);
+        entity.getComponent<cro::Model>().setMaterial(0, material);
+
+        //material.doubleSided = true;
+        applyMaterialData(md, material, 1);
+        material.blendMode = cro::Material::BlendMode::Alpha;
+        entity.getComponent<cro::Model>().setMaterial(1, material);
+
+        entity.addComponent<cro::AudioEmitter>();
+
+        cro::AudioScape as;
+        if (as.loadFromFile("assets/golf/sound/drone.xas", m_resources.audio)
+            && as.hasEmitter("drone"))
+        {
+            entity.getComponent<cro::AudioEmitter>() = as.getEmitter("drone");
+            entity.getComponent<cro::AudioEmitter>().play();
+        }
+
+        entity.addComponent<cro::Callback>().active = true;
+        entity.getComponent<cro::Callback>().setUserData<DroneCallbackData>();
+        entity.getComponent<cro::Callback>().function =
+            [&](cro::Entity e, float dt)
+        {
+            auto oldPos = e.getComponent<cro::Transform>().getPosition();
+            auto playerPos = m_currentPlayer.position;
+
+            //rotate towards active player
+            glm::vec2 dir = glm::vec2(oldPos.x - playerPos.x, oldPos.z - playerPos.z);
+            float rotation = std::atan2(dir.y, dir.x) + (cro::Util::Const::PI / 2.f);
+
+
+            auto& [currRotation, acceleration, target] = e.getComponent<cro::Callback>().getUserData<DroneCallbackData>();
+
+            //move towards skycam
+            static constexpr float MoveSpeed = 20.f;
+            static constexpr float MinRadius = MoveSpeed * MoveSpeed;
+            static constexpr float AccelerationRadius = 40.f;
+
+            auto movement = target.getComponent<cro::Transform>().getPosition() - oldPos;
+            if (auto len2 = glm::length2(movement); len2 > MinRadius)
+            {
+                const float len = std::sqrt(len2);
+                movement /= len;
+                movement *= MoveSpeed;
+
+                //go slower over short distances
+                const float multiplier = 0.6f + (0.4f * std::min(1.f, len / AccelerationRadius));
+
+                acceleration = std::min(1.f, acceleration + ((dt / 2.f) * multiplier));
+                movement *= cro::Util::Easing::easeInSine(acceleration);
+
+                currRotation += cro::Util::Maths::shortestRotation(currRotation, rotation) * dt;
+            }
+            else
+            {
+                acceleration = 0.f;
+                currRotation = std::fmod(currRotation + (dt * 0.5f), cro::Util::Const::TAU);
+            }
+            e.getComponent<cro::Transform>().move(movement * dt);
+            e.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, currRotation);
+
+            m_cameras[CameraID::Sky].getComponent<cro::Transform>().setPosition(e.getComponent<cro::Transform>().getPosition());
+
+            //update emitter based on velocity
+            auto velocity = oldPos - e.getComponent<cro::Transform>().getPosition();
+            e.getComponent<cro::AudioEmitter>().setVelocity(velocity * 60.f);
+
+            //update the pitch based on height above hole
+            static constexpr float MaxHeight = 10.f;
+            float height = oldPos.y - m_holeData[m_currentHole].pin.y;
+            height = std::min(1.f, height / MaxHeight);
+
+            float pitch = 0.5f + (0.5f * height);
+            e.getComponent<cro::AudioEmitter>().setPitch(pitch);
+        };
+
+        m_drone = entity;
+
+        //make sure this is actually valid...
+        auto targetEnt = m_gameScene.createEntity();
+        targetEnt.addComponent<cro::Transform>().setPosition({ 160.f, 30.f, -100.f });
+        targetEnt.addComponent<cro::Callback>().active = true; //also used to make the drone orbit the flag (see showCountdown())
+        targetEnt.getComponent<cro::Callback>().function =
+            [&](cro::Entity e, float dt)
+        {
+            auto wind = m_windUpdate.currentWindSpeed * (m_windUpdate.currentWindVector * 0.3f);
+            wind += m_windUpdate.currentWindVector * 0.7f;
+
+            e.getComponent<cro::Transform>().move(wind * dt);
+
+            if (!m_drone.isValid())
+            {
+                e.getComponent<cro::Callback>().active = false;
+                m_gameScene.destroyEntity(e);
+            }
+        };
+
+        m_drone.getComponent<cro::Callback>().getUserData<DroneCallbackData>().target = targetEnt;
+        m_cameras[CameraID::Sky].getComponent<TargetInfo>().postProcess = nullptr;
+    }
 }
 
 void GolfState::spawnBall(const ActorInfo& info)
@@ -5164,6 +5292,12 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo)
     m_currentHole = hole;
     //m_inputParser.setMaxRotation(m_holeData[m_currentHole].puttFromTee ? MaxPuttRotation : MaxRotation); //pretty sure this is overridden in setCurrentPlayer()...
     startFlyBy(); //requires current hole
+
+    //restore the drone if someone hit it
+    if (!m_drone.isValid())
+    {
+        createDrone();
+    }
 
     //set putting grid values
     float height = m_holeData[m_currentHole].pin.y;

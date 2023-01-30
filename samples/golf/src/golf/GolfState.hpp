@@ -235,6 +235,7 @@ private:
     void createClouds(const std::string&);
     void createSun();
     void buildBow();
+    void createDrone();
     void spawnBall(const struct ActorInfo&);
 
     void handleNetEvent(const net::NetEvent&);
