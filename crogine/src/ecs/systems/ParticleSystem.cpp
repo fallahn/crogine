@@ -39,6 +39,7 @@ source distribution.
 #include <crogine/core/Console.hpp>
 #include <crogine/util/Random.hpp>
 #include <crogine/util/Constants.hpp>
+#include <crogine/util/Matrix.hpp>
 
 #include "../../detail/GLCheck.hpp"
 
@@ -290,7 +291,7 @@ void ParticleSystem::updateDrawList(Entity cameraEnt)
     const auto& cam = cameraEnt.getComponent<Camera>();
     auto passCount = cam.reflectionBuffer.available() ? 2 : 1;
     const auto camPos = cameraEnt.getComponent<cro::Transform>().getWorldPosition();
-    const auto forwardVec = cameraEnt.getComponent<cro::Transform>().getForwardVector();
+    const auto forwardVec = cro::Util::Matrix::getForwardVector(cameraEnt.getComponent<cro::Transform>().getWorldTransform());
 
     if (cam.getDrawListIndex() >= m_drawLists.size())
     {

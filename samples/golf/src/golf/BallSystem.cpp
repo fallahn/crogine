@@ -661,7 +661,6 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
             //send message to report status
             auto* msg = postEvent();
             msg->terrain = ball.terrain;
-            msg->position = position;
 
             if (ball.terrain == TerrainID::Hole
                 || (len2 <= (BallHoleDistance + GimmeRadii[m_gimmeRadius])))
@@ -669,9 +668,16 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
                 //we're in the hole
                 msg->type = GolfBallEvent::Holed;
                 //LogI << "Ball Holed" << std::endl;
+
+                //if under gimme we move the ball to the hole
+                auto ballPos = m_holeData->pin;
+                ballPos.y -= Ball::Radius * 2.f;
+                entity.getComponent<cro::Transform>().setPosition(ballPos);
+                msg->position = ballPos;
             }
             else
             {
+                msg->position = position;
                 msg->type = GolfBallEvent::TurnEnded;
                 //LogI << "Turn Ended" << std::endl;
             }

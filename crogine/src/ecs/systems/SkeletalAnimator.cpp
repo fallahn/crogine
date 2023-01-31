@@ -38,6 +38,8 @@ source distribution.
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Camera.hpp>
 
+#include <crogine/util/Matrix.hpp>
+
 #include <crogine/detail/glm/gtx/quaternion.hpp>
 
 using namespace cro;
@@ -76,7 +78,7 @@ void SkeletalAnimator::process(float dt)
     dt *= playbackRate;
 
     const auto camPos = getScene()->getActiveCamera().getComponent<cro::Transform>().getWorldPosition();
-    const auto camDir = getScene()->getActiveCamera().getComponent<cro::Transform>().getForwardVector();
+    const auto camDir = cro::Util::Matrix::getForwardVector(getScene()->getActiveCamera().getComponent<cro::Transform>().getWorldTransform());
 
     //TODO we might increase perf a bit if we split the entities across
     //a series of joblists each in its own thread, then wait for those lists to complete
