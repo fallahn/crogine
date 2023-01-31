@@ -115,17 +115,9 @@ void TerrainChunker::update()
         //hm, just becase there's a positive
         //item count we can't assume the entity
         //for a specific type will be valid
-        if (m_chunks[chunkIndex].treeLOD0.isValid())
+        if (m_chunks[chunkIndex].billboardEnt.isValid())
         {
-            m_chunks[chunkIndex].treeLOD0.getComponent<cro::Model>().setHidden(true);
-        }
-        if (m_chunks[chunkIndex].treeLOD1.isValid())
-        {
-            m_chunks[chunkIndex].treeLOD1.getComponent<cro::Model>().setHidden(true);
-        }
-        if (m_chunks[chunkIndex].foliage.isValid())
-        {
-            m_chunks[chunkIndex].foliage.getComponent<cro::Model>().setHidden(true);
+            m_chunks[chunkIndex].billboardEnt.getComponent<cro::Model>().setHidden(true);
         }
     }
 
@@ -146,10 +138,10 @@ void TerrainChunker::update()
             if (m_chunks[idx].itemCount != 0)
             {
                 //update visibility
-                cro::FloatRect cell({ x * ChunkSize.x, y * ChunkSize.y, ChunkSize.x, ChunkSize.y });
+                //cro::FloatRect cell({ x * ChunkSize.x, y * ChunkSize.y, ChunkSize.x, ChunkSize.y });
                 
                 //TODO we want to be able to vary this radius and use only LOD1 when trees are set to low quality
-                if (intersects(camPos, cell, 30.f))
+                /*if (intersects(camPos, cell, 30.f))
                 {
                     m_chunks[idx].lod0 = 255;
 
@@ -166,13 +158,13 @@ void TerrainChunker::update()
                     {
                         m_chunks[idx].treeLOD1.getComponent<cro::Model>().setHidden(true);
                     }
-                }
+                }*/
 
                 m_chunks[idx].shrubs = 127;
 
-                if (m_chunks[idx].foliage.isValid())
+                if (m_chunks[idx].billboardEnt.isValid())
                 {
-                    m_chunks[idx].foliage.getComponent<cro::Model>().setHidden(true);
+                    m_chunks[idx].billboardEnt.getComponent<cro::Model>().setHidden(false);
                 }
 
 

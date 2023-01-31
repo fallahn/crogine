@@ -47,10 +47,7 @@ namespace cro
 struct TerrainChunk final
 {
     std::int32_t itemCount = 0;
-    cro::Entity treeLOD0; //if not valid then we're using low quality trees, else HQ geom
-    cro::Entity treeLOD1; //billboard trees
-    cro::Entity foliage; //billboard grass/bushes etc, always same lod
-
+    cro::Entity billboardEnt;
 
     std::uint8_t lod0 = 0;
     std::uint8_t lod1 = 0;
@@ -69,6 +66,7 @@ public:
 
     static constexpr int32_t ChunkCountX = 6;
     static constexpr int32_t ChunkCountY = 4;
+    static constexpr int32_t ChunkCount = ChunkCountX * ChunkCountY;
 
 private:
     const cro::Scene& m_scene;

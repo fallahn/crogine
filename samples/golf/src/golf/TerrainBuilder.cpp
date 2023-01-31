@@ -90,6 +90,7 @@ namespace
         cro::Entity instancedEnt; //entity containing instanced waterside geometry
         std::array<cro::Entity, 4> shrubberyEnts; //instanced shrubbery/trees (if HQ)
         std::vector<cro::Entity>* crowdEnts = nullptr;
+        std::array<cro::Entity, TerrainChunker::ChunkCount>* billboardEnts = nullptr;
     };
 
     //callback for swapping shrub ents
@@ -115,13 +116,19 @@ namespace
 
                 if (swapData.otherEnt.isValid())
                 {
-                    //e.getComponent<cro::Model>().setHidden(true);
-                    //copy all billboard chunks to TerrainChunker which will set visibility per frame
+                    auto& ents = *swapData.billboardEnts;
+                    for (auto e : ents)
+                    {
+                        if (e.isValid())
+                        {
+                            e.getComponent<cro::Model>().setHidden(true);
+                        }
+                    }
+                    
+                    //TODO copy all billboard chunks to TerrainChunker which will set visibility per frame
 
                     swapData.otherEnt.getComponent<cro::Callback>().active = true;
                     //swapData.otherEnt.getComponent<cro::Model>().setHidden(false);
-                    //TODO go over all chunks on the rent end set as hidden
-
                     terrainEntity.getComponent<cro::Callback>().active = true; //starts terrain morph
                 }
 
@@ -357,7 +364,8 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
         entity.addComponent<cro::Callback>().function = transition;
         m_terrainEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
-        auto& bbEnts = m_billboardEntities[b++];
+        auto& bbEnts = m_billboardEntities[b];
+        auto c = 0;
         for (auto& e : bbEnts)
         {
             //create a billboard entity for each chunk in the TerrainChunker
@@ -379,9 +387,16 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
 
                 if (e.hasComponent<cro::Model>())
                 {
-                    //TODO set the bounding box to the current chunk size
-                    //e.getComponent<cro::Model>().setHidden(true);
-                    e.getComponent<cro::Model>().getMeshData().boundingBox = { glm::vec3(0.f), glm::vec3(MapSize.x, 30.f, -static_cast<float>(MapSize.y)) };
+                    static constexpr float ChunkWidth = static_cast<float>(MapSize.x) / TerrainChunker::ChunkCountX;
+                    static constexpr float ChunkHeight = static_cast<float>(MapSize.y) / TerrainChunker::ChunkCountY;
+
+                    auto x = c % TerrainChunker::ChunkCountX;
+                    auto y = c / TerrainChunker::ChunkCountY;
+                    auto minBounds = glm::vec3(x * ChunkWidth, 0.f, -y * ChunkHeight);
+                    cro::Box bounds = cro::Box(minBounds, minBounds + glm::vec3(ChunkWidth, 15.f, -ChunkHeight));
+
+                    e.getComponent<cro::Model>().setHidden(true);
+                    e.getComponent<cro::Model>().getMeshData().boundingBox = bounds;
                     e.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniMap));
 
                     auto material = resources.materials.get(billboardMatID);
@@ -389,21 +404,17 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
                     material.setProperty("u_noiseTexture", noiseTex);
                     e.getComponent<cro::Model>().setMaterial(0, material);
 
-
                     material = resources.materials.get(billboardShadowID);
                     applyMaterialData(billboardDef, material);
                     material.setProperty("u_noiseTexture", noiseTex);
                     material.doubleSided = true; //do this second because applyMaterial() overwrites it
                     e.getComponent<cro::Model>().setShadowMaterial(0, material);
+
+                    m_billboardEntities[b][c++] = e;
                 }
             }
-            //else
-            //{
-            //    //hmmm we need access to shared state data to set an
-            //    //error message and the state stack to push said error
-            //    m_sharedData.errorMessage = "Failed loading billboards";
-            //}
         }
+        b++;
 
         //create a child entity for instanced geometry
         std::string instancePath = theme.instancePath.empty() ? "assets/golf/models/reeds_large.cmt" : theme.instancePath;
@@ -642,7 +653,6 @@ void TerrainBuilder::update(std::size_t holeIndex)
                 swapData.start = m_propRootEntities[first].getComponent<cro::Transform>().getPosition().y;
                 swapData.destination = -TerrainLevel;
                 swapData.currentTime = 0.f;
-                //m_propRootEntities[first].getComponent<cro::BillboardCollection>().setBillboards(m_billboardBuffer);
 
                 for (auto i = 0u; i < m_billboardBuffers.size(); ++i)
                 {
@@ -657,6 +667,7 @@ void TerrainBuilder::update(std::size_t holeIndex)
                 swapData.instancedEnt = m_instancedEntities[second];
                 swapData.shrubberyEnts = m_instancedShrubs[second];
                 swapData.crowdEnts = &m_crowdEntities[second];
+                swapData.billboardEnts = &m_billboardEntities[second];
                 swapData.currentTime = 0.f;
                 m_propRootEntities[second].getComponent<cro::Callback>().setUserData<SwapData>(swapData);
                 m_propRootEntities[second].getComponent<cro::Callback>().active = true;
@@ -820,7 +831,13 @@ void TerrainBuilder::threadFunc()
         if (m_wantsUpdate)
         {
             m_chunks.clear();
-            m_chunks.resize(TerrainChunker::ChunkCountX * TerrainChunker::ChunkCountY);
+            m_chunks.resize(TerrainChunker::ChunkCount);
+
+            const auto& bbEnts = m_billboardEntities[(m_swapIndex + 1) % 2];
+            for (auto i = 0u; i < bbEnts.size(); ++i)
+            {
+                m_chunks[i].billboardEnt = bbEnts[i];
+            }
 
             //should be empty anyway because we clear after assigning them
             m_instanceTransforms.clear();
