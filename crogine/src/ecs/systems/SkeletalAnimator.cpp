@@ -214,7 +214,6 @@ void SkeletalAnimator::onEntityAdded(Entity entity)
     {
         skeleton.m_invBindPose.resize(skeleton.m_frameSize);
     }
-    skeleton.findBlendIndices(); //find the joints with no children for basis of recursion
 
     //update the bounds for each key frame
     for (auto i = 0u; i < skeleton.m_frameCount; ++i)
@@ -311,16 +310,22 @@ void SkeletalAnimator::interpolateAnimation(SkeletalAnim& source, std::size_t ta
     std::size_t startB = targetFrame * skeleton.m_frameSize;
 
     //stores interpolated output in source so we can use it to blend.
+    //we mix all the joints first to prevent it happening multiple times
+    //when we create the world transforms.
+    m_mixBuffer.resize(skeleton.m_frameSize);
     for (auto i = 0u; i < skeleton.m_frameSize; ++i)
-    //for(auto j = 0u; j < skeleton.m_blendIndices.size(); ++j)
     {
-        //auto i = skeleton.m_blendIndices[j];
-        glm::mat4 worldMatrix = mixJoint(skeleton.m_frames[startA + i], skeleton.m_frames[startB + i], time, source.interpolationOutput[i]);
+        m_mixBuffer[i] = mixJoint(skeleton.m_frames[startA + i], skeleton.m_frames[startB + i], time, source.interpolationOutput[i]);
+    }
+
+    for (auto i = 0u; i < skeleton.m_frameSize; ++i)
+    {
+        glm::mat4 worldMatrix = m_mixBuffer[i];
 
         std::int32_t parent = skeleton.m_frames[startA + i].parent;
         while (parent != -1)
         {
-            worldMatrix = mixJoint(skeleton.m_frames[startA + parent], skeleton.m_frames[startB + parent], time, source.interpolationOutput[parent]) * worldMatrix;
+            worldMatrix = m_mixBuffer[parent] * worldMatrix;
             parent = skeleton.m_frames[startA + parent].parent;
         }
 
@@ -337,14 +342,21 @@ void SkeletalAnimator::interpolateAnimation(SkeletalAnim& source, std::size_t ta
 void SkeletalAnimator::blendAnimations(const SkeletalAnim& a, const SkeletalAnim& b, float time, Skeleton& skeleton) const
 {
     Joint temp; //we need something to pass as a func param
+    m_mixBuffer.resize(skeleton.m_frameSize);
+
     for (auto i = 0u; i < skeleton.m_frameSize; ++i)
     {
-        auto worldMat = mixJoint(a.interpolationOutput[i], b.interpolationOutput[i], time, temp);
+        m_mixBuffer[i] = mixJoint(a.interpolationOutput[i], b.interpolationOutput[i], time, temp);
+    }
+
+    for (auto i = 0u; i < skeleton.m_frameSize; ++i)
+    {
+        auto worldMat = m_mixBuffer[i];
 
         auto parent = a.interpolationOutput[i].parent;
         while (parent != -1)
         {
-            worldMat = mixJoint(a.interpolationOutput[parent], b.interpolationOutput[parent], time, temp) * worldMat;
+            worldMat = m_mixBuffer[parent] * worldMat;
             parent = a.interpolationOutput[parent].parent;
         }
 

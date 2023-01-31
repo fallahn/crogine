@@ -416,14 +416,11 @@ namespace cro
 
         std::vector<cro::Box> m_keyFrameBounds; //calc'd on joining the System for each key frame
 
-        std::vector<std::int32_t> m_blendIndices; //these are the root bones with no children where recursion for animation should start
-
         friend class SkeletalAnimator;
         friend struct SkeletalAnim;
         friend struct Detail::ModelBinary::SkeletonHeader;
         friend struct Detail::ModelBinary::SkeletonHeaderV2;
 
         void buildKeyframe(std::size_t frame);
-        void findBlendIndices();
     };
 }
