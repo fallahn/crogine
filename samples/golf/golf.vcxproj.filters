@@ -322,7 +322,7 @@
       <Filter>Source Files\golf\shared</Filter>
     </ClCompile>
     <ClCompile Include="src\golf\TerrainChunks.cpp">
-      <Filter>Source Files\golf</Filter>
+      <Filter>Source Files\golf\client</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
