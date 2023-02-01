@@ -685,9 +685,10 @@ void GolfState::setNextHole()
                         return a.matchWins > b.matchWins;
                     });
 
-                std::uint32_t scoreDiff = sortData[0].matchWins - sortData[1].matchWins;
-                auto remainingHoles = m_holeData.size() - (m_currentHole + 1);
-                if (scoreDiff > remainingHoles)
+
+                auto remainingHoles = static_cast<std::uint8_t>(m_holeData.size()) - (m_currentHole + 1);
+                //if second place can't beat first even if they win all the holes it's game over
+                if(sortData[1].matchWins + remainingHoles < sortData[0].matchWins)
                 {
                     gameFinished = true;
                 }
