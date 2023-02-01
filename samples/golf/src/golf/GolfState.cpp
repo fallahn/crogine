@@ -347,6 +347,15 @@ bool GolfState::handleEvent(const cro::Event& evt)
         {
             setActiveCamera(CameraID::Player);
             m_inputParser.setSuspended(false);
+
+            cro::Command cmd;
+            cmd.targetFlags = CommandID::StrokeArc | CommandID::StrokeIndicator;
+            cmd.action = [&](cro::Entity e, float)
+            {
+                auto localPlayer = m_currentPlayer.client == m_sharedData.clientConnection.connectionID;
+                e.getComponent<cro::Model>().setHidden(!(localPlayer && !m_sharedData.localConnectionData.playerData[m_currentPlayer.player].isCPU));
+            };
+            m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
         }
     };
 
@@ -1451,6 +1460,11 @@ bool GolfState::simulate(float dt)
     {
         setActiveCamera(CameraID::Idle);
         m_inputParser.setSuspended(true);
+
+        cro::Command cmd;
+        cmd.targetFlags = CommandID::StrokeArc | CommandID::StrokeIndicator;
+        cmd.action = [](cro::Entity e, float) {e.getComponent<cro::Model>().setHidden(true); };
+        m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
     }
 
     return true;
@@ -4352,7 +4366,7 @@ void GolfState::spawnBall(const ActorInfo& info)
         [](cro::Entity e, float dt)
     {
         auto scale = e.getComponent<cro::Transform>().getScale().x;
-        scale = std::min(1.f, scale + (dt/* * 3.f*/));
+        scale = std::min(1.f, scale + (dt * 1.5f));
         e.getComponent<cro::Transform>().setScale(glm::vec3(scale));
 
         if (scale == 1)
