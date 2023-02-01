@@ -98,8 +98,8 @@ private:
     static constexpr auto ChunkCount = TerrainChunker::ChunkCountX * TerrainChunker::ChunkCountY;
 
     std::array<cro::Billboard, BillboardID::Count> m_billboardTemplates = {};
-    std::array<std::vector<cro::Billboard>, ChunkCount> m_billboardBuffers;
-    std::array<std::array<cro::Entity, ChunkCount>, 2u> m_billboardEntities = {};
+    std::vector<cro::Billboard> m_billboardBuffer;
+    std::array<cro::Entity, 2u> m_billboardEntities = {};
     std::array<cro::Entity, 2u> m_propRootEntities = {};
     std::size_t m_swapIndex; //might not swap every hole so we need to track this independently
 

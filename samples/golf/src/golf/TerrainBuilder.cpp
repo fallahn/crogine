@@ -88,9 +88,9 @@ namespace
         float destination = 0.f;
         cro::Entity otherEnt;
         cro::Entity instancedEnt; //entity containing instanced waterside geometry
-        std::array<cro::Entity, 4> shrubberyEnts; //instanced shrubbery/trees (if HQ)
+        std::array<cro::Entity, 2u> billboardEnts = {};
+        std::array<cro::Entity, 4u> shrubberyEnts; //instanced shrubbery/trees (if HQ)
         std::vector<cro::Entity>* crowdEnts = nullptr;
-        std::array<cro::Entity, TerrainChunker::ChunkCount>* billboardEnts = nullptr;
     };
 
     //callback for swapping shrub ents
@@ -116,19 +116,10 @@ namespace
 
                 if (swapData.otherEnt.isValid())
                 {
-                    auto& ents = *swapData.billboardEnts;
-                    for (auto e : ents)
-                    {
-                        if (e.isValid())
-                        {
-                            e.getComponent<cro::Model>().setHidden(true);
-                        }
-                    }
-                    
-                    //TODO copy all billboard chunks to TerrainChunker which will set visibility per frame
+                    swapData.billboardEnts[0].getComponent<cro::Model>().setHidden(true);
 
                     swapData.otherEnt.getComponent<cro::Callback>().active = true;
-                    //swapData.otherEnt.getComponent<cro::Model>().setHidden(false);
+                    swapData.billboardEnts[1].getComponent<cro::Model>().setHidden(false);
                     terrainEntity.getComponent<cro::Callback>().active = true; //starts terrain morph
                 }
 
@@ -364,57 +355,44 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
         entity.addComponent<cro::Callback>().function = transition;
         m_terrainEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
-        auto& bbEnts = m_billboardEntities[b];
-        auto c = 0;
-        for (auto& e : bbEnts)
+
+        //create a billboard entity for each chunk in the TerrainChunker
+        //reload the the model def each time to ensure unique VBOs
+        if (billboardDef.loadFromFile(theme.billboardModel))
         {
-            //create a billboard entity for each chunk in the TerrainChunker
-            //reload the the model def each time to ensure unique VBOs
-            if (billboardDef.loadFromFile(theme.billboardModel))
+            auto e = scene.createEntity();
+            e.addComponent<cro::Transform>();
+            entity.getComponent<cro::Transform>().addChild(e.getComponent<cro::Transform>());
+
+            billboardDef.createModel(e);
+            //if the model def failed to load for some reason this will be
+            //missing, so we'll add it here just to stop the thread exploding
+            //if it can't find the component
+            if (!e.hasComponent<cro::BillboardCollection>())
             {
-                e = scene.createEntity();
-                e.addComponent<cro::Transform>();
-                entity.getComponent<cro::Transform>().addChild(e.getComponent<cro::Transform>());
+                e.addComponent<cro::BillboardCollection>();
+            }
 
-                billboardDef.createModel(e);
-                //if the model def failed to load for some reason this will be
-                //missing, so we'll add it here just to stop the thread exploding
-                //if it can't find the component
-                if (!e.hasComponent<cro::BillboardCollection>())
-                {
-                    e.addComponent<cro::BillboardCollection>();
-                }
+            if (e.hasComponent<cro::Model>())
+            {
+                e.getComponent<cro::Model>().setHidden(true);
+                e.getComponent<cro::Model>().getMeshData().boundingBox = { glm::vec3(0.f), glm::vec3(MapSize.x, 20.f, -static_cast<float>(MapSize.y)) };
+                e.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniMap));
 
-                if (e.hasComponent<cro::Model>())
-                {
-                    static constexpr float ChunkWidth = static_cast<float>(MapSize.x) / TerrainChunker::ChunkCountX;
-                    static constexpr float ChunkHeight = static_cast<float>(MapSize.y) / TerrainChunker::ChunkCountY;
+                auto material = resources.materials.get(billboardMatID);
+                applyMaterialData(billboardDef, material);
+                material.setProperty("u_noiseTexture", noiseTex);
+                e.getComponent<cro::Model>().setMaterial(0, material);
 
-                    auto x = c % TerrainChunker::ChunkCountX;
-                    auto y = c / TerrainChunker::ChunkCountY;
-                    auto minBounds = glm::vec3(x * ChunkWidth, 0.f, -y * ChunkHeight);
-                    cro::Box bounds = cro::Box(minBounds, minBounds + glm::vec3(ChunkWidth, 15.f, -ChunkHeight));
+                material = resources.materials.get(billboardShadowID);
+                applyMaterialData(billboardDef, material);
+                material.setProperty("u_noiseTexture", noiseTex);
+                material.doubleSided = true; //do this second because applyMaterial() overwrites it
+                e.getComponent<cro::Model>().setShadowMaterial(0, material);
 
-                    e.getComponent<cro::Model>().setHidden(true);
-                    e.getComponent<cro::Model>().getMeshData().boundingBox = bounds;
-                    e.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniMap));
-
-                    auto material = resources.materials.get(billboardMatID);
-                    applyMaterialData(billboardDef, material);
-                    material.setProperty("u_noiseTexture", noiseTex);
-                    e.getComponent<cro::Model>().setMaterial(0, material);
-
-                    material = resources.materials.get(billboardShadowID);
-                    applyMaterialData(billboardDef, material);
-                    material.setProperty("u_noiseTexture", noiseTex);
-                    material.doubleSided = true; //do this second because applyMaterial() overwrites it
-                    e.getComponent<cro::Model>().setShadowMaterial(0, material);
-
-                    m_billboardEntities[b][c++] = e;
-                }
+                m_billboardEntities[b++] = e;
             }
         }
-        b++;
 
         //create a child entity for instanced geometry
         std::string instancePath = theme.instancePath.empty() ? "assets/golf/models/reeds_large.cmt" : theme.instancePath;
@@ -654,11 +632,7 @@ void TerrainBuilder::update(std::size_t holeIndex)
                 swapData.destination = -TerrainLevel;
                 swapData.currentTime = 0.f;
 
-                for (auto i = 0u; i < m_billboardBuffers.size(); ++i)
-                {
-                    m_billboardEntities[first][i].getComponent<cro::BillboardCollection>().setBillboards(m_billboardBuffers[i]);
-                }
-
+                m_billboardEntities[first].getComponent<cro::BillboardCollection>().setBillboards(m_billboardBuffer);
                 m_propRootEntities[first].getComponent<cro::Callback>().setUserData<SwapData>(swapData);
 
                 swapData.start = m_propRootEntities[second].getComponent<cro::Transform>().getPosition().y;
@@ -667,7 +641,8 @@ void TerrainBuilder::update(std::size_t holeIndex)
                 swapData.instancedEnt = m_instancedEntities[second];
                 swapData.shrubberyEnts = m_instancedShrubs[second];
                 swapData.crowdEnts = &m_crowdEntities[second];
-                swapData.billboardEnts = &m_billboardEntities[second];
+                swapData.billboardEnts[0] = m_billboardEntities[second];
+                swapData.billboardEnts[1] = m_billboardEntities[first];
                 swapData.currentTime = 0.f;
                 m_propRootEntities[second].getComponent<cro::Callback>().setUserData<SwapData>(swapData);
                 m_propRootEntities[second].getComponent<cro::Callback>().active = true;
@@ -833,12 +808,6 @@ void TerrainBuilder::threadFunc()
             m_chunks.clear();
             m_chunks.resize(TerrainChunker::ChunkCount);
 
-            const auto& bbEnts = m_billboardEntities[(m_swapIndex + 1) % 2];
-            for (auto i = 0u; i < bbEnts.size(); ++i)
-            {
-                m_chunks[i].billboardEnt = bbEnts[i];
-            }
-
             //should be empty anyway because we clear after assigning them
             m_instanceTransforms.clear();
             for (auto& tx : m_shrubTransforms)
@@ -872,11 +841,8 @@ void TerrainBuilder::threadFunc()
                 auto flowers = pd::PoissonDiskSampling(TreeDensity * 0.5f, MinBounds, MaxBounds, 30u, seed / 2);
 
                 //filter distribution by map area
-                for (auto& buffer : m_billboardBuffers)
-                {
-                    buffer.clear();
-                }
-
+                m_billboardBuffer.clear();
+                
                 for (auto [x, y] : grass)
                 {
                     auto [terrain, terrainHeight] = readMap(mapImage, x, y);
@@ -892,13 +858,10 @@ void TerrainBuilder::threadFunc()
                             if (glm::dot(n, cro::Transform::Y_AXIS) > 0.3f)
                             {
                                 glm::vec3 bbPos({ x, height - 0.02f, -y });
-                                auto idx = chunkIndex(bbPos);
-
-                                auto& bb = m_billboardBuffers[idx].emplace_back(m_billboardTemplates[cro::Util::Random::value(BillboardID::Grass01, BillboardID::Grass02)]);
+                                
+                                auto& bb = m_billboardBuffer.emplace_back(m_billboardTemplates[cro::Util::Random::value(BillboardID::Grass01, BillboardID::Grass02)]);
                                 bb.position = bbPos;
                                 bb.size *= scale;
-
-                                m_chunks[idx].itemCount++;
                             }
                         }
                     }
@@ -975,10 +938,9 @@ void TerrainBuilder::threadFunc()
                                 {
                                     //no model loaded for this theme or quality setting prevents it, so fall back to billboard
                                     glm::vec3 bbPos({ x, height - 0.05f, -y });
-                                    auto idx = chunkIndex(bbPos);
 
                                     float scale = static_cast<float>(cro::Util::Random::value(12, 22)) / 10.f;
-                                    auto& bb = m_billboardBuffers[idx].emplace_back(m_billboardTemplates[BillboardID::Tree01 + currIndex]);
+                                    auto& bb = m_billboardBuffer.emplace_back(m_billboardTemplates[BillboardID::Tree01 + currIndex]);
                                     bb.position = bbPos; //small vertical offset to stop floating billboards
                                     bb.size *= scale;
                                     
@@ -989,8 +951,6 @@ void TerrainBuilder::threadFunc()
                                         bb.textureRect.left = rect.left + rect.width;
                                         bb.textureRect.width = -rect.width;
                                     }
-
-                                    m_chunks[idx].itemCount++;
                                 }
                                 shrubIdx++;
                             }
@@ -1014,27 +974,21 @@ void TerrainBuilder::threadFunc()
                             if (!nearProp(position))
                             {
                                 glm::vec3 bbPos({ x, height - 0.05f, -y });
-                                auto idx = chunkIndex(bbPos);
-
+                                
                                 float scale = static_cast<float>(cro::Util::Random::value(13, 17)) / 10.f;
-                                auto& bb = m_billboardBuffers[idx].emplace_back(m_billboardTemplates[cro::Util::Random::value(BillboardID::Flowers01, BillboardID::Bush02)]);
+                                auto& bb = m_billboardBuffer.emplace_back(m_billboardTemplates[cro::Util::Random::value(BillboardID::Flowers01, BillboardID::Bush02)]);
                                 bb.position = bbPos;
                                 bb.size *= scale;
-
-                                m_chunks[idx].itemCount++;
                             }
                             else
                             {
                                 //TODO not sure how this position is different, but hey
                                 glm::vec3 bbPos({ x, height - 0.05f, -y });
-                                auto idx = chunkIndex(bbPos);
-
+                                
                                 float scale = static_cast<float>(cro::Util::Random::value(14, 16)) / 10.f;
-                                auto& bb = m_billboardBuffers[idx].emplace_back(m_billboardTemplates[cro::Util::Random::value(BillboardID::Grass01, BillboardID::Grass02)]);
+                                auto& bb = m_billboardBuffer.emplace_back(m_billboardTemplates[cro::Util::Random::value(BillboardID::Grass01, BillboardID::Grass02)]);
                                 bb.position = bbPos;
                                 bb.size *= scale;
-
-                                m_chunks[idx].itemCount++;
                             }
                         }
                     }

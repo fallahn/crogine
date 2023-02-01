@@ -75,7 +75,7 @@ TerrainChunker::TerrainChunker(const cro::Scene& scene)
             cro::Vertex2D(glm::vec2(0.f), cro::Colour::Red),
             cro::Vertex2D(glm::vec2(30.f, 80.f), cro::Colour::Cyan)        
         });
-
+#ifdef CRO_DEBUG_
     registerWindow([&]()
         {
             if (ImGui::Begin("Terrain Chunks"))
@@ -85,6 +85,7 @@ TerrainChunker::TerrainChunker(const cro::Scene& scene)
             }
             ImGui::End();
         });
+#endif
 }
 
 //public
