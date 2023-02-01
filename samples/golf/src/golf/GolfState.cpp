@@ -5991,9 +5991,8 @@ void GolfState::setGreenCamPosition()
         m_cameras[CameraID::Green].getComponent<CameraFollower>().zoom.speed = 0.8f;
         heightOffset *= 0.18f;
     }
-    else if (m_currentPlayer.terrain == TerrainID::Green)
+    else if (auto direction = holePos - m_currentPlayer.position; m_currentPlayer.terrain == TerrainID::Green)
     {
-        auto direction = holePos - m_currentPlayer.position;
         direction = glm::normalize(direction) * 4.2f;
 
         auto r = (cro::Util::Random::value(0, 1) * 2) - 1;
@@ -6008,10 +6007,27 @@ void GolfState::setGreenCamPosition()
 
         heightOffset *= 0.15f;
     }
+
+    else if ((glm::length2(direction) < (15.f * 15.f)))
+    {
+        //player is within larger radius
+        direction = glm::normalize(direction) * 4.2f;
+
+        auto r = (cro::Util::Random::value(0, 1) * 2) - 1;
+        direction = glm::rotate(direction, 0.5f * static_cast<float>(r), glm::vec3(0.f, 1.f, 0.f));
+
+        m_cameras[CameraID::Green].getComponent<cro::Transform>().move(direction);
+        m_cameras[CameraID::Green].getComponent<CameraFollower>().radius = GreenCamRadiusSmall * GreenCamRadiusSmall;
+        m_cameras[CameraID::Green].getComponent<CameraFollower>().isSnapped = true;
+        m_cameras[CameraID::Green].getComponent<CameraFollower>().maxTargetDiff = 16.f;
+        m_cameras[CameraID::Green].getComponent<CameraFollower>().zoom.target = 0.5f;
+        m_cameras[CameraID::Green].getComponent<CameraFollower>().zoom.speed = GreenCamZoomSlow / 2.f;
+
+        heightOffset *= 0.15f;
+    }
+
     else
     {
-        //auto centre = glm::vec3(MapSize.x / 2.f, 0.f, -static_cast<float>(MapSize.y) / 2.f);
-        auto direction = holePos - m_currentPlayer.position;// centre;
         direction = glm::normalize(direction) * 15.f;
 
         auto r = (cro::Util::Random::value(0, 1) * 2) - 1;

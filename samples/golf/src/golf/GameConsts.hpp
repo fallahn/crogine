@@ -713,7 +713,7 @@ static inline void formatDistanceString(float distance, cro::Text& target, bool 
 
     if (imperial)
     {
-        if (distance > 7) //TODO this should read the putter value
+        if (distance > 7) //TODO this should read the putter value (?)
         {
             auto dist = static_cast<std::int32_t>(std::round(distance * ToYards));
             target.setString("Pin: " + std::to_string(dist) + "yds");
