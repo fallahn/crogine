@@ -300,6 +300,7 @@ void Model::setInstanceTransforms(const std::vector<glm::mat4>& transforms)
         glCheck(glGenBuffers(1, &m_instanceBuffers.transformBuffer));
     }
     m_instanceBuffers.instanceCount = static_cast<std::uint32_t>(transforms.size());
+    m_instanceBuffers.maxInstanceCount = m_instanceBuffers.instanceCount;
 
     //upload transform data
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_instanceBuffers.transformBuffer));
@@ -341,8 +342,33 @@ void Model::setInstanceTransforms(const std::vector<glm::mat4>& transforms)
             updateVAO(i, Mesh::IndexData::Shadow);
         }
     }
+#else
+    LogE << "Instancing is not available" << std::endl;
 #endif
 }
+
+#ifdef PLATFORM_DESKTOP
+void Model::updateInstanceTransforms(const std::vector<glm::mat4>& transforms, const std::vector<glm::mat3>& normals, std::uint32_t offset)
+{
+    CRO_ASSERT(!transforms.empty(), "");
+    CRO_ASSERT(transforms.size() == normals.size(), "");
+    CRO_ASSERT(m_instanceBuffers.maxInstanceCount != 0, "");
+    CRO_ASSERT(offset <= (m_instanceBuffers.maxInstanceCount - transforms.size()), "");
+
+    //TODO calling this func repeatedly will end up binding the same buffers repeatedly - we want to avoid that
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_instanceBuffers.transformBuffer));
+    glCheck(glBufferSubData(GL_ARRAY_BUFFER, offset * sizeof(glm::mat4), transforms.size() * sizeof(glm::mat4), transforms.data()));
+
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_instanceBuffers.normalBuffer));
+    glCheck(glBufferSubData(GL_ARRAY_BUFFER, offset * sizeof(glm::mat3), normals.size() * sizeof(glm::mat3), normals.data()));
+}
+
+void Model::setInstanceCount(std::uint32_t instanceCount)
+{
+    CRO_ASSERT(instanceCount <= m_instanceBuffers.maxInstanceCount, "");
+    m_instanceBuffers.instanceCount = instanceCount;
+}
+#endif
 
 //private
 void Model::initMaterialAnimation(std::size_t index)

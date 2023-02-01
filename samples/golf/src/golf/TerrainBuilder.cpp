@@ -55,6 +55,7 @@ source distribution.
 #include <crogine/util/Easings.hpp>
 #include <crogine/util/Maths.hpp>
 #include <crogine/detail/glm/gtx/norm.hpp>
+#include <crogine/detail/glm/gtc/matrix_inverse.hpp>
 
 #include "../ErrorCheck.hpp"
 
@@ -431,47 +432,50 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
                 {
                     auto childEnt = scene.createEntity();
                     childEnt.addComponent<cro::Transform>();
-                    shrubDef.createModel(childEnt);
-
-                    for (auto idx : theme.treesets[j].branchIndices)
+                    if (shrubDef.createModel(childEnt))
                     {
-                        auto material = resources.materials.get(branchMaterialID);
-                        applyMaterialData(shrubDef, material, idx);
-                        material.setProperty("u_noiseTexture", noiseTex);
-                        childEnt.getComponent<cro::Model>().setMaterial(idx, material);
+                        m_terrainChunker.addModel(&childEnt.getComponent<cro::Model>(), 0, j);
 
-                        material = resources.materials.get(treeShadowMaterialID);
-                        material.setProperty("u_noiseTexture", noiseTex);
-                        applyMaterialData(shrubDef, material, idx);
-                        childEnt.getComponent<cro::Model>().setShadowMaterial(idx, material);
-                    }
-
-                    auto& meshData = childEnt.getComponent<cro::Model>().getMeshData();
-                    for (auto idx : theme.treesets[j].leafIndices)
-                    {
-                        auto material = resources.materials.get(leafMaterialID);
-                        meshData.indexData[idx].primitiveType = GL_POINTS;
-                        material.setProperty("u_diffuseMap", resources.textures.get(theme.treesets[j].texturePath));
-                        material.setProperty("u_leafSize", theme.treesets[j].leafSize);
-                        material.setProperty("u_randAmount", theme.treesets[j].randomness);
-                        material.setProperty("u_colour", theme.treesets[j].colour);
-                        material.setProperty("u_noiseTexture", noiseTex);
-                        childEnt.getComponent<cro::Model>().setMaterial(idx, material);
-
-                        material = resources.materials.get(leafShadowMaterialID);
-                        if (m_sharedData.hqShadows)
+                        for (auto idx : theme.treesets[j].branchIndices)
                         {
-                            material.setProperty("u_diffuseMap", resources.textures.get(theme.treesets[j].texturePath));
+                            auto material = resources.materials.get(branchMaterialID);
+                            applyMaterialData(shrubDef, material, idx);
                             material.setProperty("u_noiseTexture", noiseTex);
-                        }
-                        material.setProperty("u_leafSize", theme.treesets[j].leafSize);
-                        childEnt.getComponent<cro::Model>().setShadowMaterial(idx, material);
-                    }
+                            childEnt.getComponent<cro::Model>().setMaterial(idx, material);
 
-                    childEnt.getComponent<cro::Model>().setHidden(true);
-                    childEnt.getComponent<cro::Model>().setRenderFlags(~RenderFlags::MiniMap);
-                    entity.getComponent<cro::Transform>().addChild(childEnt.getComponent<cro::Transform>());
-                    m_instancedShrubs[i][j] = childEnt;
+                            material = resources.materials.get(treeShadowMaterialID);
+                            material.setProperty("u_noiseTexture", noiseTex);
+                            applyMaterialData(shrubDef, material, idx);
+                            childEnt.getComponent<cro::Model>().setShadowMaterial(idx, material);
+                        }
+
+                        auto& meshData = childEnt.getComponent<cro::Model>().getMeshData();
+                        for (auto idx : theme.treesets[j].leafIndices)
+                        {
+                            auto material = resources.materials.get(leafMaterialID);
+                            meshData.indexData[idx].primitiveType = GL_POINTS;
+                            material.setProperty("u_diffuseMap", resources.textures.get(theme.treesets[j].texturePath));
+                            material.setProperty("u_leafSize", theme.treesets[j].leafSize);
+                            material.setProperty("u_randAmount", theme.treesets[j].randomness);
+                            material.setProperty("u_colour", theme.treesets[j].colour);
+                            material.setProperty("u_noiseTexture", noiseTex);
+                            childEnt.getComponent<cro::Model>().setMaterial(idx, material);
+
+                            material = resources.materials.get(leafShadowMaterialID);
+                            if (m_sharedData.hqShadows)
+                            {
+                                material.setProperty("u_diffuseMap", resources.textures.get(theme.treesets[j].texturePath));
+                                material.setProperty("u_noiseTexture", noiseTex);
+                            }
+                            material.setProperty("u_leafSize", theme.treesets[j].leafSize);
+                            childEnt.getComponent<cro::Model>().setShadowMaterial(idx, material);
+                        }
+
+                        childEnt.getComponent<cro::Model>().setHidden(true);
+                        childEnt.getComponent<cro::Model>().setRenderFlags(~RenderFlags::MiniMap);
+                        entity.getComponent<cro::Transform>().addChild(childEnt.getComponent<cro::Transform>());
+                        m_instancedShrubs[i][j] = childEnt;
+                    }
                 }
             }
         }
@@ -647,7 +651,7 @@ void TerrainBuilder::update(std::size_t holeIndex)
                 m_propRootEntities[second].getComponent<cro::Callback>().setUserData<SwapData>(swapData);
                 m_propRootEntities[second].getComponent<cro::Callback>().active = true;
 
-                //update any instanced geom
+                //update any instanced geom (water plants etc)
                 if (!m_instanceTransforms.empty()
                     && m_instancedEntities[first].isValid())
                 {
@@ -933,6 +937,12 @@ void TerrainBuilder::threadFunc()
                                     mat4 = glm::translate(mat4, position);
                                     mat4 = glm::rotate(mat4, rotation, cro::Transform::Y_AXIS);
                                     mat4 = glm::scale(mat4, glm::vec3(scale));
+
+                                    auto idx = chunkIndex(position);
+                                    m_chunks[idx].itemCount++;
+
+                                    m_chunks[idx].lodData[0].models[currIndex].transforms.push_back(mat4);
+                                    m_chunks[idx].lodData[0].models[currIndex].normalMatrices.push_back(glm::inverseTranspose(mat4));
                                 }
                                 else
                                 {
@@ -951,6 +961,11 @@ void TerrainBuilder::threadFunc()
                                         bb.textureRect.left = rect.left + rect.width;
                                         bb.textureRect.width = -rect.width;
                                     }
+#ifdef CRO_DEBUG_
+                                    //this is just so the chunker visualiser works in debug builds
+                                    auto idx = chunkIndex(position);
+                                    m_chunks[idx].itemCount++;
+#endif
                                 }
                                 shrubIdx++;
                             }

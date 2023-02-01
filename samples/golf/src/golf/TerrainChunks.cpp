@@ -43,7 +43,6 @@ namespace
     const cro::FloatRect MapSize(0.f, 0.f, 320.f, 200.f);
     const glm::vec2 ChunkSize(MapSize.width / TerrainChunker::ChunkCountX, MapSize.height / TerrainChunker::ChunkCountY);
 
-
     bool intersects(glm::vec2 camPos, cro::FloatRect cell, float radius)
     {
         glm::vec2 closest(
@@ -61,6 +60,12 @@ TerrainChunker::TerrainChunker(const cro::Scene& scene)
     : m_scene   (scene),
     m_chunks    (ChunkCountX * ChunkCountY)
 {
+    for (auto& lod : m_models)
+    {
+        std::fill(lod.begin(), lod.end(), nullptr);
+    }
+
+#ifdef CRO_DEBUG_
     m_debugTexture.create(320, 200, false);
     m_debugQuadTexture.create(1, 1);
     std::array<std::uint8_t, 4u> c = { 255,255,255,255 };
@@ -75,13 +80,12 @@ TerrainChunker::TerrainChunker(const cro::Scene& scene)
             cro::Vertex2D(glm::vec2(0.f), cro::Colour::Red),
             cro::Vertex2D(glm::vec2(30.f, 80.f), cro::Colour::Cyan)        
         });
-#ifdef CRO_DEBUG_
     registerWindow([&]()
         {
             if (ImGui::Begin("Terrain Chunks"))
             {
                 ImGui::Image(m_debugTexture.getTexture(), { MapSize.width, MapSize.height }, { 0.f, 1.f }, { 1.f, 0.f });
-                ImGui::Text("Draw Count %u", m_visible.size());
+                //ImGui::Text("Draw Count %u", m_visible.size());
             }
             ImGui::End();
         });
@@ -105,21 +109,21 @@ void TerrainChunker::update()
     auto camWorldPos = m_scene.getActiveCamera().getComponent<cro::Transform>().getWorldPosition();
     auto camPos = glm::vec2(camWorldPos.x, -camWorldPos.z);
 
+    std::uint32_t previousFlags = 0u;
+
     m_previouslyVisible.swap(m_visible);
     for (auto chunkIndex : m_previouslyVisible)
     {
         //update visibility
+#ifdef CRO_DEBUG_
         m_chunks[chunkIndex].lod0 = 0;
         m_chunks[chunkIndex].lod1 = 0;
-        m_chunks[chunkIndex].shrubs = 0;
+#endif // CRO_DEBUG_
 
-        //hm, just becase there's a positive
-        //item count we can't assume the entity
-        //for a specific type will be valid
-        if (m_chunks[chunkIndex].billboardEnt.isValid())
-        {
-            m_chunks[chunkIndex].billboardEnt.getComponent<cro::Model>().setHidden(true);
-        }
+        m_chunks[chunkIndex].lodData[0].visible = false;
+        m_chunks[chunkIndex].lodData[1].visible = false;
+
+        previousFlags |= (1 << chunkIndex);
     }
 
     m_visible.clear();
@@ -130,6 +134,7 @@ void TerrainChunker::update()
     std::int32_t startY = std::clamp(static_cast<std::int32_t>(camAABB.bottom / ChunkSize.y), 0, ChunkCountY - 1);
     std::int32_t countY = std::clamp(static_cast<std::int32_t>(camAABB.height / ChunkSize.y) + 1, 1, ChunkCountY);
 
+    std::uint32_t currentFlags = 0u;
     for (auto y = startY; y < startY + countY; ++y)
     {
         for (auto x = startX; x < startX + countX; ++x)
@@ -139,54 +144,73 @@ void TerrainChunker::update()
             if (m_chunks[idx].itemCount != 0)
             {
                 //update visibility
-                //cro::FloatRect cell({ x * ChunkSize.x, y * ChunkSize.y, ChunkSize.x, ChunkSize.y });
+                cro::FloatRect cell({ x * ChunkSize.x, y * ChunkSize.y, ChunkSize.x, ChunkSize.y });
                 
-                //TODO we want to be able to vary this radius and use only LOD1 when trees are set to low quality
-                /*if (intersects(camPos, cell, 30.f))
+                if (intersects(camPos, cell, 30.f))
                 {
+#ifdef CRO_DEBUG_
                     m_chunks[idx].lod0 = 255;
-
-                    if (m_chunks[idx].treeLOD0.isValid())
-                    {
-                        m_chunks[idx].treeLOD0.getComponent<cro::Model>().setHidden(true);
-                    }
+#endif
+                    m_chunks[idx].lodData[0].visible = true;
                 }
-                if (!intersects(camPos, cell, 20.f))
+                //if (!intersects(camPos, cell, 20.f))
+                else
                 {
+#ifdef CRO_DEBUG_
                     m_chunks[idx].lod1 = 255;
-
-                    if (m_chunks[idx].treeLOD1.isValid())
-                    {
-                        m_chunks[idx].treeLOD1.getComponent<cro::Model>().setHidden(true);
-                    }
-                }*/
-
-                m_chunks[idx].shrubs = 127;
-
-                if (m_chunks[idx].billboardEnt.isValid())
-                {
-                    m_chunks[idx].billboardEnt.getComponent<cro::Model>().setHidden(false);
+#endif
+                    m_chunks[idx].lodData[1].visible = true;
                 }
 
 
                 //and insert into visible list
                 m_visible.push_back(idx);
+                currentFlags |= (1 << idx);
             }
         }
     }
 
+    if (previousFlags != currentFlags)
+    {
+        std::array<std::array<std::uint32_t, 4u>, 2u> counts;
+        std::fill(counts[0].begin(), counts[0].end(), 0);
+        std::fill(counts[1].begin(), counts[1].end(), 0);
+
+        const auto updateLOD = [&](const TerrainChunk& chunk, std::int32_t idx)
+        {
+            auto& instanceCounts = counts[idx];
+
+            if (chunk.lodData[idx].visible)
+            {
+                for (auto i = 0u; i < m_models[idx].size(); ++i)
+                {
+                    if (m_models[idx][i])
+                    {
+                        const auto& lodData = chunk.lodData[idx].models[i];
+                        if (!lodData.transforms.empty())
+                        {
+                            m_models[idx][i]->updateInstanceTransforms(lodData.transforms, lodData.normalMatrices, instanceCounts[i]);
+                            instanceCounts[i] += static_cast<std::uint32_t>(lodData.transforms.size());
+                        }
+
+                        m_models[0][i]->setInstanceCount(instanceCounts[i]);
+                    }
+                }
+            }
+        };
 
 
-    //TODO we could run a second pass and ray test against each chunk
-    //greater than a certain distance - if the ray passes through HQ
-    //trees, then we can occlusion cull it? Assumes the trees are
-    //actually occluding however, and not sparse like the beach courses
+        //only update VBO if needed
+        //hmmmmm this is very not optimal.
+        for (auto idx : m_visible)
+        {
+            updateLOD(m_chunks[idx], 0);
+            updateLOD(m_chunks[idx], 1);
+        }
+    }
 
 
-
-
-
-
+#ifdef CRO_DEBUG_
     auto forward = cro::Util::Matrix::getForwardVector(m_scene.getActiveCamera().getComponent<cro::Transform>().getWorldTransform());
     //float camRot = glm::eulerAngles(m_scene.getActiveCamera().getComponent<cro::Transform>().getWorldRotation()).y;
 
@@ -198,7 +222,7 @@ void TerrainChunker::update()
             auto idx = y * ChunkCountX + x;
 
             m_debugQuad.setPosition({ x * ChunkSize.x, y * ChunkSize.y });
-            m_debugQuad.setColour(cro::Colour(m_chunks[idx].lod0, m_chunks[idx].lod1, m_chunks[idx].shrubs));
+            m_debugQuad.setColour(cro::Colour(m_chunks[idx].lod0, m_chunks[idx].lod1, 0));
             m_debugQuad.draw();
         }
     }
@@ -215,14 +239,20 @@ void TerrainChunker::update()
     //m_debugCamera.draw();
 
     m_debugTexture.display();
+#endif
 }
 
 void TerrainChunker::setChunks(std::vector<TerrainChunk>& chunks)
 {
     CRO_ASSERT(chunks.size() == ChunkCountX * ChunkCountY, "");
-    //TODO set all outgoing chunks to visible? How do we update them during the transition?
-    //or will it not matter if we swap at the bottom of the animation?
     m_chunks.swap(chunks);
+
+    //TODO we might need to force an update here if the visibility flags don't change
+}
+
+void TerrainChunker::addModel(cro::Model* model, std::uint32_t lod, std::uint32_t idx)
+{
+    m_models[lod][idx] = model;
 }
 
 //private

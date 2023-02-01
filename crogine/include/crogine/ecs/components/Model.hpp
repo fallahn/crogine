@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2022
+Matt Marchant 2017 - 2023
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -237,6 +237,37 @@ namespace cro
 
 #ifdef PLATFORM_DESKTOP
         /*!
+        \brief Returns the maximum number of instances which can be
+        rendered using the current instance buffers as set by
+        setInstanceTransforms()
+        */
+        std::uint32_t getMaxInstances() const { return m_instanceBuffers.maxInstanceCount; }
+        
+        /*!
+        \brief Allows updating instanced geometry transform buffers.
+        This requires that setInstanceTransforms() has been called at least
+        once (and all criteria to call this are met) to ensure the correct
+        buffer sizes have been allocated. As this assumes the buffers are
+        already valid it requires that normal matrices are also passed,
+        as they will not automatically be calculated.
+        \param transforms A vector containing the new transform data
+        \param normals A vector containing the normal matrices for each instance.
+        Must be the same size as transforms
+        \param offset The instance offset into the buffer. Must be less
+        than MaxInstances - transforms.size()
+        */
+        void updateInstanceTransforms(const std::vector<glm::mat4>& transforms, const std::vector<glm::mat3>& normals, std::uint32_t offset);
+
+        /*!
+        \brief Sets the number of instances to draw with instanced rendering
+        The model must first have instanced rendering initialised with at least
+        one call to setInstanceTransforms()
+        \param instanceCount The number of instances to draw. Must be less than
+        or equal to getMaxInstances()
+        */
+        void setInstanceCount(std::uint32_t instanceCount);
+
+        /*!
         \brief Used to implement custom draw functions for the Model.
         This is used internally to set whether the Model is drawn with instancing
         or not. Overriding this yourself probably won't do what  you expect
@@ -289,7 +320,8 @@ namespace cro
         {
             std::uint32_t transformBuffer = 0;
             std::uint32_t normalBuffer = 0;
-            std::uint32_t instanceCount = 0;
+            std::uint32_t instanceCount = 0; //how many to draw
+            std::uint32_t maxInstanceCount = 0; //maximum instances the buffer has space for
         }m_instanceBuffers;
 #endif //DESKTOP
 

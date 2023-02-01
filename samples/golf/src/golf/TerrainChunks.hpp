@@ -42,16 +42,27 @@ source distribution.
 namespace cro
 {
     class Scene;
+    class Model;
 }
 
 struct TerrainChunk final
 {
     std::int32_t itemCount = 0;
-    cro::Entity billboardEnt;
+
+    struct LOD final
+    {
+        bool visible = false; //whether or not to include this LOD
+        struct ModelNode final
+        {
+            std::vector<glm::mat4> transforms;
+            std::vector<glm::mat3> normalMatrices;
+        };
+        std::array<ModelNode, 4u> models = {};
+    };
+    std::array<LOD, 2u> lodData = {};
 
     std::uint8_t lod0 = 0;
     std::uint8_t lod1 = 0;
-    std::uint8_t shrubs = 0;
 };
 
 class TerrainChunker final : public cro::GuiClient
@@ -63,6 +74,8 @@ public:
 
     //swaps with existing
     void setChunks(std::vector<TerrainChunk>&);
+
+    void addModel(cro::Model*, std::uint32_t lod, std::uint32_t idx);
 
     static constexpr int32_t ChunkCountX = 6;
     static constexpr int32_t ChunkCountY = 4;
@@ -76,8 +89,12 @@ private:
     std::vector<std::int32_t> m_visible;
     std::vector<std::int32_t> m_previouslyVisible;
 
+    std::array<std::array<cro::Model*, 4u>, 2u> m_models = {};
+
+#ifdef CRO_DEBUG_
     cro::RenderTexture m_debugTexture;
     cro::Texture m_debugQuadTexture;
     cro::SimpleQuad m_debugQuad;
     cro::SimpleVertexArray m_debugCamera;
+#endif
 };
