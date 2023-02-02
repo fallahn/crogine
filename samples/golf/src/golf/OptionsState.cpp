@@ -438,7 +438,7 @@ bool OptionsState::handleEvent(const cro::Event& evt)
     {
         toggleControllerIcon(cro::GameController::controllerID(evt.caxis.which));
 
-        if (evt.caxis.value > LeftThumbDeadZone)
+        if (std::abs(evt.caxis.value) > LeftThumbDeadZone)
         {
             cro::App::getWindow().setMouseCaptured(true);
 
@@ -446,11 +446,11 @@ bool OptionsState::handleEvent(const cro::Event& evt)
             {
                 if (evt.caxis.value > 0)
                 {
-                    scrollMenu(0);
+                    scrollMenu(1);
                 }
                 else
                 {
-                    scrollMenu(1);
+                    scrollMenu(0);
                 }
             }
         }
