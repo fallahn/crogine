@@ -110,7 +110,7 @@ private:
     float m_targetDistance;
 
     float m_aimDistance;
-    float m_aimAngle; //this is the initial aim angle when the player is places
+    float m_aimAngle; //this is the initial aim angle when the player is placed
 
     float m_targetAngle;
     float m_targetPower;

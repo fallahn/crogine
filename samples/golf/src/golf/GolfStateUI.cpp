@@ -479,7 +479,13 @@ void GolfState::buildUI()
     entity.getComponent<cro::Callback>().function =
         [&, BarWidth](cro::Entity e, float dt)
     {
-        const float vScaleTarget = m_currentPlayer.terrain == TerrainID::Green ? 1.f : 0.f;
+        float vScaleTarget = m_currentPlayer.terrain == TerrainID::Green ? 1.f : 0.f;
+
+        if (m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].holeScores[m_currentHole] == 0)
+        {
+            vScaleTarget = 0.f;
+        }        
+
         auto scale = e.getComponent<cro::Transform>().getScale();
         if (vScaleTarget > 0)
         {
