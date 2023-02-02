@@ -2207,6 +2207,8 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
             "Emote Wheel",
             "Aim Left",
             "Aim Right",
+            "Raise Putt Camera",
+            "Lower Putt Camera"
         };
 
         auto entity = m_scene.createEntity();
@@ -2313,38 +2315,40 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
             m_scene.getActiveCamera().getComponent<cro::Camera>().active = true;
         });
 
+
+    //top spin / raise putt cam
+    entity = createHighlight(glm::vec2(230.f, 74.f), InputBinding::Up);
+    entity.getComponent<cro::UIInput>().setSelectionIndex(7);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = uiSystem.addCallback(
+        [&, infoEnt, buttonChangeEnt](cro::Entity e) mutable
+        {
+            e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
+            e.getComponent<cro::AudioEmitter>().play();
+            infoEnt.getComponent<cro::Text>().setString(m_labelStrings[InputBinding::Up]);
+            centreText(infoEnt);
+
+            buttonChangeEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
+            m_scene.getActiveCamera().getComponent<cro::Camera>().active = true;
+        });
+
+    //back spin / lower putt cam
+    entity = createHighlight(glm::vec2(230.f, 29.f), InputBinding::Down);
+    entity.getComponent<cro::UIInput>().setSelectionIndex(10);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = uiSystem.addCallback(
+        [&, infoEnt, buttonChangeEnt](cro::Entity e) mutable
+        {
+            e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
+            e.getComponent<cro::AudioEmitter>().play();
+            infoEnt.getComponent<cro::Text>().setString(m_labelStrings[InputBinding::Down]);
+            centreText(infoEnt);
+
+            buttonChangeEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
+            m_scene.getActiveCamera().getComponent<cro::Camera>().active = true;
+        });
+
+
     if (m_sharedData.baseState == StateID::Clubhouse)
     {
-        //top spin
-        entity = createHighlight(glm::vec2(230.f, 74.f), InputBinding::Up);
-        entity.getComponent<cro::UIInput>().setSelectionIndex(7);
-        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = uiSystem.addCallback(
-            [&,infoEnt, buttonChangeEnt](cro::Entity e) mutable
-            {
-                e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
-                e.getComponent<cro::AudioEmitter>().play();
-                infoEnt.getComponent<cro::Text>().setString(m_labelStrings[InputBinding::Up]);
-                centreText(infoEnt);
-
-                buttonChangeEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
-                m_scene.getActiveCamera().getComponent<cro::Camera>().active = true;
-            });
-
-        //back spin
-        entity = createHighlight(glm::vec2(230.f, 29.f), InputBinding::Down);
-        entity.getComponent<cro::UIInput>().setSelectionIndex(10);
-        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = uiSystem.addCallback(
-            [&,infoEnt, buttonChangeEnt](cro::Entity e) mutable
-            {
-                e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
-                e.getComponent<cro::AudioEmitter>().play();
-                infoEnt.getComponent<cro::Text>().setString(m_labelStrings[InputBinding::Down]);
-                centreText(infoEnt);
-
-                buttonChangeEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
-                m_scene.getActiveCamera().getComponent<cro::Camera>().active = true;
-            });
-
         //switch view
         entity = createHighlight(glm::vec2(338.f, 84.f), InputBinding::SwitchView);
         entity.getComponent<cro::UIInput>().setSelectionIndex(12);
@@ -2449,15 +2453,16 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
     
     //right
     createLabel(glm::vec2(220.f, 51.f), InputBinding::Right);
+    
+    //up
+    createLabel(glm::vec2(220.f, 81.f), InputBinding::Up);
+
+    //down
+    createLabel(glm::vec2(220.f, 36.f), InputBinding::Down);
+
 
     if (m_sharedData.baseState == StateID::Clubhouse)
     {
-        //up
-        createLabel(glm::vec2(220.f, 81.f), InputBinding::Up);
-
-        //down
-        createLabel(glm::vec2(220.f, 36.f), InputBinding::Down);
-
         //rotate cam
         entity = m_scene.createEntity();
         entity.addComponent<cro::Transform>().setPosition({ 288.f, 101.f, TextOffset });
