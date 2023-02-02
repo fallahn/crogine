@@ -2794,7 +2794,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
     entity.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float)
     {
-        float scale = m_sharedData.enableRumble;
+        float scale = static_cast<float>(m_sharedData.enableRumble);
         e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
     };
     parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());

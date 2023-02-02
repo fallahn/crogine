@@ -139,7 +139,6 @@ namespace
     glm::vec4 topSky;
     glm::vec4 bottomSky;
 
-
     float godmode = 1.f;
     bool allowAchievements = false;
     const cro::Time DefaultIdleTime = cro::seconds(90.f);
@@ -1339,6 +1338,11 @@ bool GolfState::simulate(float dt)
     {
         m_cpuGolfer.update(dt, windVector);
         m_inputParser.update(dt, m_currentPlayer.terrain);
+
+        if (float movement = m_inputParser.getCamMotion(); movement != 0)
+        {
+            updateCameraHeight(movement * dt);
+        }
     }
 
 
@@ -1346,7 +1350,7 @@ bool GolfState::simulate(float dt)
     m_gameScene.simulate(dt);
     m_uiScene.simulate(dt);
 
-    m_terrainChunker.update();//this needs to be done after the camera system is updated
+    //m_terrainChunker.update();//this needs to be done after the camera system is updated
 
     //do this last to ensure game scene camera is up to date
     const auto& srcCam = m_gameScene.getActiveCamera().getComponent<cro::Camera>();
@@ -5518,7 +5522,11 @@ void GolfState::setCameraPosition(glm::vec3 position, float height, float viewOf
 
     camEnt.getComponent<cro::Transform>().setPosition({ position.x, result.height + height, position.z });
 
-    auto lookat = glm::lookAt(camEnt.getComponent<cro::Transform>().getPosition(), glm::vec3(target.x, result.height + (height * heightMultiplier), target.z), cro::Transform::Y_AXIS);
+
+    auto currentCamTarget = glm::vec3(target.x, result.height + (height * heightMultiplier), target.z);
+    camEnt.getComponent<TargetInfo>().finalLookAt = currentCamTarget;
+
+    auto lookat = glm::lookAt(camEnt.getComponent<cro::Transform>().getPosition(), currentCamTarget, cro::Transform::Y_AXIS);
     camEnt.getComponent<cro::Transform>().setRotation(glm::inverse(lookat));
 
     auto offset = -camEnt.getComponent<cro::Transform>().getForwardVector();
@@ -6832,6 +6840,23 @@ void GolfState::setActiveCamera(std::int32_t camID)
             m_cameras[m_currentCamera].getComponent<CameraFollower>().isSnapped = false;
         }
         m_courseEnt.getComponent<cro::Drawable2D>().setShader(m_cameras[m_currentCamera].getComponent<TargetInfo>().postProcess);
+    }
+}
+
+void GolfState::updateCameraHeight(float movement)
+{
+    if (m_currentCamera == CameraID::Player
+        && m_currentPlayer.terrain == TerrainID::Green)
+    {
+        auto camPos = m_cameras[CameraID::Player].getComponent<cro::Transform>().getPosition();
+
+        const auto MaxOffset = m_cameras[CameraID::Player].getComponent<TargetInfo>().targetHeight;
+        const auto TargetHeight = MaxOffset + m_collisionMesh.getTerrain(camPos).height;
+
+        camPos.y = std::clamp(camPos.y + movement, TargetHeight - (MaxOffset * 0.5f), TargetHeight + (MaxOffset * 0.8f));
+
+        auto tx = glm::lookAt(camPos, m_cameras[CameraID::Player].getComponent<TargetInfo>().finalLookAt, cro::Transform::Y_AXIS);
+        m_cameras[CameraID::Player].getComponent<cro::Transform>().setLocalTransform(glm::inverse(tx));
     }
 }
 

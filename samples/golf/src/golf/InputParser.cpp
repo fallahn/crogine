@@ -64,6 +64,7 @@ InputParser::InputParser(const SharedStateData& sd, cro::MessageBus& mb)
     m_prevStick         (0),
     m_analogueAmount    (0.f),
     m_inputAcceleration (0.f),
+    m_camMotion         (0.f),
     m_mouseWheel        (0),
     m_prevMouseWheel    (0),
     m_mouseMove         (0),
@@ -416,7 +417,7 @@ void InputParser::resetPower()
 
 void InputParser::update(float dt, std::int32_t terrainID)
 {
-    if (m_inputFlags & (InputFlag::Left | InputFlag::Right))
+    if (m_inputFlags & (InputFlag::Left | InputFlag::Right | InputFlag::Up | InputFlag::Down))
     {
         m_inputAcceleration = std::min(1.f, m_inputAcceleration + dt);
     }
@@ -455,6 +456,20 @@ void InputParser::update(float dt, std::int32_t terrainID)
         default: break;
         case State::Aim:
         {
+            //allows the scene to move the putt cam up and down
+            m_camMotion = 0.f;
+            if (m_inputFlags & InputFlag::Up)
+            {
+                m_camMotion = 1.f;
+            }
+            if (m_inputFlags & InputFlag::Down)
+            {
+                m_camMotion -= 1.f;
+            }
+            m_camMotion *= m_analogueAmount;
+
+
+            //rotation
             const float rotation = RotationSpeed * m_maxRotation * m_analogueAmount * dt;
 
             if (m_inputFlags & InputFlag::Left)
@@ -651,25 +666,25 @@ void InputParser::checkControllerInput()
     }
 
     float yPos = cro::GameController::getAxisPosition(controllerID, cro::GameController::AxisLeftY);
-    if (yPos > (LeftThumbDeadZone))
-    {
-        m_inputFlags |= InputFlag::Down;
-        m_inputFlags &= ~InputFlag::Up;
-    }
-    else if (m_prevStick & InputFlag::Down)
-    {
-        m_inputFlags &= ~InputFlag::Down;
-    }
+    //if (yPos > (LeftThumbDeadZone))
+    //{
+    //    m_inputFlags |= InputFlag::Down;
+    //    m_inputFlags &= ~InputFlag::Up;
+    //}
+    //else if (m_prevStick & InputFlag::Down)
+    //{
+    //    m_inputFlags &= ~InputFlag::Down;
+    //}
 
-    if (yPos < (-LeftThumbDeadZone))
-    {
-        m_inputFlags |= InputFlag::Up;
-        m_inputFlags &= ~InputFlag::Down;
-    }
-    else if (m_prevStick & InputFlag::Up)
-    {
-        m_inputFlags &= ~InputFlag::Up;
-    }
+    //if (yPos < (-LeftThumbDeadZone))
+    //{
+    //    m_inputFlags |= InputFlag::Up;
+    //    m_inputFlags &= ~InputFlag::Down;
+    //}
+    //else if (m_prevStick & InputFlag::Up)
+    //{
+    //    m_inputFlags &= ~InputFlag::Up;
+    //}
 
     float len2 = (xPos * xPos) + (yPos * yPos);
     static const float MinLen2 = static_cast<float>(LeftThumbDeadZone * LeftThumbDeadZone);

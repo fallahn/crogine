@@ -101,6 +101,7 @@ struct SceneEvent
         RequestSwitchCamera,
         PlayerIdle
     }type = TransitionComplete;
+
     std::int32_t data = -1;
 };
 

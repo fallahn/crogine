@@ -58,6 +58,7 @@ struct TargetInfo final
     glm::vec3 targetLookAt = glm::vec3(0.f);
     glm::vec3 currentLookAt = glm::vec3(0.f);
     glm::vec3 prevLookAt = glm::vec3(0.f);
+    glm::vec3 finalLookAt = glm::vec3(0.f); //final lookat point with any height offset added (see updateCameraHeight())
 
     cro::Entity waterPlane;
     cro::Shader* postProcess = nullptr;

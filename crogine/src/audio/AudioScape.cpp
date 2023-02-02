@@ -121,7 +121,7 @@ bool AudioScape::loadFromFile(const std::string& path, AudioResource& audioResou
             }
             else
             {
-                LogW << obj.getId() << " found no valid media file" << std::endl;
+                LogW << obj.getId() << " found no valid media file " << mediaPath << " in " << cro::FileSystem::getFileName(path) << std::endl;
             }
         }
 
