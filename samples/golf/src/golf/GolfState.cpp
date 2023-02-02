@@ -4798,8 +4798,9 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
                     //check putt distance / if this was in fact a putt
                     if (getClub() == ClubID::Putter)
                     {
-                        if (glm::length(update.position - m_currentPlayer.position) > 5)
+                        if (glm::length(update.position - m_currentPlayer.position) > LongPuttDistance)
                         {
+                            Achievements::incrementStat(StatStrings[StatID::LongPutts]);
                             Achievements::awardAchievement(AchievementStrings[AchievementID::PuttStar]);
                             Social::awardXP(XPValues[XPID::Special] / 2);
                             special = true;
@@ -6867,7 +6868,7 @@ void GolfState::updateCameraHeight(float movement)
 
         auto& lookAt = m_cameras[CameraID::Player].getComponent<TargetInfo>().finalLookAt;
         //this may have been moved in a camera correction, so shift it back to the floor
-        lookAt.y += (m_holeData[m_currentHole].pin.y - lookAt.y) * (1.f / 60.f);
+        //lookAt += (m_holeData[m_currentHole].pin.y - lookAt) * 0.5f;
 
         auto tx = glm::lookAt(camPos, lookAt, cro::Transform::Y_AXIS);
         m_cameras[CameraID::Player].getComponent<cro::Transform>().setLocalTransform(glm::inverse(tx));

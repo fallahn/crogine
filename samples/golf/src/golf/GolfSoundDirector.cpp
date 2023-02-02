@@ -366,7 +366,7 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
                     applaud();
                 }
 
-                if (data.travelDistance > 25.f) //5m
+                if (data.travelDistance > (LongPuttDistance * LongPuttDistance))
                 {
                     playSoundDelayed(AudioID::ApplausePlus, glm::vec3(0.f), 1.2f, MixerChannel::Effects);
                     applaud();
@@ -375,7 +375,6 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
                     if (data.club == ClubID::Putter)
                     {
                         playSoundDelayed(cro::Util::Random::value(AudioID::NicePutt01, AudioID::NicePutt02), glm::vec3(0.f), 2.2f, MixerChannel::Voice);
-                        Achievements::incrementStat(StatStrings[StatID::LongPutts]);
                     }
                 }
 
