@@ -5567,9 +5567,9 @@ void GolfState::setCameraPosition(glm::vec3 position, float height, float viewOf
     
     //hmm this stops the putt cam jumping when the position has been offset
     //however the look at point is no longer the hole, so the rotation
-    //is weird...
+    //is weird and we need to interpolate back through the offset
     camEnt.getComponent<TargetInfo>().finalLookAt += newPos - oldPos;
-
+    camEnt.getComponent<TargetInfo>().finalLookAtOffset = newPos - oldPos;
 
     //also updated by camera follower...
     if (targetInfo.waterPlane.isValid())
@@ -6860,15 +6860,23 @@ void GolfState::updateCameraHeight(float movement)
     {
         auto camPos = m_cameras[CameraID::Player].getComponent<cro::Transform>().getPosition();
 
+        static constexpr float DistanceIncrease = 5.f;
+        float distanceToHole = glm::length(m_holeData[m_currentHole].pin - camPos);
+        float heightMultiplier = std::clamp(distanceToHole - DistanceIncrease, 0.f, DistanceIncrease);
+
         const auto MaxOffset = m_cameras[CameraID::Player].getComponent<TargetInfo>().targetHeight;
         const auto TargetHeight = MaxOffset + m_collisionMesh.getTerrain(camPos).height;
 
-        camPos.y = std::clamp(camPos.y + movement, TargetHeight - (MaxOffset * 0.5f), TargetHeight + (MaxOffset * 0.8f));
+        camPos.y = std::clamp(camPos.y + movement, TargetHeight - (MaxOffset * 0.5f), TargetHeight + (MaxOffset * 0.6f) + (heightMultiplier / DistanceIncrease));
 
+
+        //correct for any target offset that may have been added in transition
+        auto& lookAtOffset = m_cameras[CameraID::Player].getComponent<TargetInfo>().finalLookAtOffset;
+        auto movement = lookAtOffset * (1.f / 30.f);
+        lookAtOffset += movement;
 
         auto& lookAt = m_cameras[CameraID::Player].getComponent<TargetInfo>().finalLookAt;
-        //this may have been moved in a camera correction, so shift it back to the floor
-        //lookAt += (m_holeData[m_currentHole].pin.y - lookAt) * 0.5f;
+        lookAt -= movement;
 
         auto tx = glm::lookAt(camPos, lookAt, cro::Transform::Y_AXIS);
         m_cameras[CameraID::Player].getComponent<cro::Transform>().setLocalTransform(glm::inverse(tx));
