@@ -281,7 +281,7 @@ bool OptionsState::handleEvent(const cro::Event& evt)
     }
 
 
-    auto toggleControllerIcon = [&](std::int32_t controllerID)
+    const auto toggleControllerIcon = [&](std::int32_t controllerID)
     {
 #ifdef CRO_DEBUG_
         static bool temp = false;
@@ -307,7 +307,7 @@ bool OptionsState::handleEvent(const cro::Event& evt)
         m_scene.getActiveCamera().getComponent<cro::Camera>().active = true; //forces refresh
     };
 
-    auto closeWindow = [&]()
+    const auto closeWindow = [&]()
     {
         if (!m_updatingKeybind)
         {
@@ -318,6 +318,25 @@ bool OptionsState::handleEvent(const cro::Event& evt)
             //cancel the input
             updateKeybind(evt.key.keysym.sym);
         }
+    };
+
+    const auto scrollMenu = [&](std::int32_t direction)
+    {
+        std::int32_t callbackID = 0;
+        auto menuID = m_scene.getSystem<cro::UISystem>()->getActiveGroup();
+        if (menuID == MenuID::Achievements)
+        {
+            callbackID = direction == 0 ? ScrollID::AchUp : ScrollID::AchDown;
+        }
+        else if (menuID == MenuID::Stats)
+        {
+            callbackID = direction == 0 ? ScrollID::StatUp : ScrollID::StatDown;
+        }
+
+        cro::ButtonEvent fakeEvent;
+        fakeEvent.type = SDL_MOUSEBUTTONDOWN;
+        fakeEvent.button.button = SDL_BUTTON_LEFT;
+        m_scrollFunctions[callbackID](cro::Entity(), fakeEvent);
     };
 
     if (evt.type == SDL_KEYUP)
@@ -422,6 +441,18 @@ bool OptionsState::handleEvent(const cro::Event& evt)
         if (evt.caxis.value > LeftThumbDeadZone)
         {
             cro::App::getWindow().setMouseCaptured(true);
+
+            if (evt.caxis.axis == cro::GameController::AxisRightY)
+            {
+                if (evt.caxis.value > 0)
+                {
+                    scrollMenu(0);
+                }
+                else
+                {
+                    scrollMenu(1);
+                }
+            }
         }
     }
     else if (evt.type == SDL_MOUSEBUTTONDOWN)
@@ -452,37 +483,13 @@ bool OptionsState::handleEvent(const cro::Event& evt)
     {
         if (evt.wheel.y > 0)
         {
-            cro::ButtonEvent fakeEvent;
-            fakeEvent.type = SDL_MOUSEBUTTONDOWN;
-            fakeEvent.button.button = SDL_BUTTON_LEFT;
-
             //up
-            auto menuID = m_scene.getSystem<cro::UISystem>()->getActiveGroup();
-            if (menuID == MenuID::Achievements)
-            {
-                m_scrollFunctions[ScrollID::AchUp](cro::Entity(), fakeEvent);
-            }
-            else if (menuID == MenuID::Stats)
-            {
-                m_scrollFunctions[ScrollID::StatUp](cro::Entity(), fakeEvent);
-            }
+            scrollMenu(0);
         }
         else if (evt.wheel.y < 0)
         {
-            cro::ButtonEvent fakeEvent;
-            fakeEvent.type = SDL_MOUSEBUTTONDOWN;
-            fakeEvent.button.button = SDL_BUTTON_LEFT;
-
             //down
-            auto menuID = m_scene.getSystem<cro::UISystem>()->getActiveGroup();
-            if (menuID == MenuID::Achievements)
-            {
-                m_scrollFunctions[ScrollID::AchDown](cro::Entity(), fakeEvent);
-            }
-            else if (menuID == MenuID::Stats)
-            {
-                m_scrollFunctions[ScrollID::StatDown](cro::Entity(), fakeEvent);
-            }
+            scrollMenu(1);
         }
     }
 
