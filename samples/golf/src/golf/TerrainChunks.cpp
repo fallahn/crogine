@@ -76,15 +76,15 @@ TerrainChunker::TerrainChunker(const cro::Scene& scene)
             cro::Vertex2D(glm::vec2(30.f, 80.f), cro::Colour::Cyan)        
         });
 #ifdef CRO_DEBUG_
-    registerWindow([&]()
-        {
-            if (ImGui::Begin("Terrain Chunks"))
-            {
-                ImGui::Image(m_debugTexture.getTexture(), { MapSize.width, MapSize.height }, { 0.f, 1.f }, { 1.f, 0.f });
-                ImGui::Text("Draw Count %u", m_visible.size());
-            }
-            ImGui::End();
-        });
+    //registerWindow([&]()
+    //    {
+    //        if (ImGui::Begin("Terrain Chunks"))
+    //        {
+    //            ImGui::Image(m_debugTexture.getTexture(), { MapSize.width, MapSize.height }, { 0.f, 1.f }, { 1.f, 0.f });
+    //            ImGui::Text("Draw Count %u", m_visible.size());
+    //        }
+    //        ImGui::End();
+    //    });
 #endif
 }
 
