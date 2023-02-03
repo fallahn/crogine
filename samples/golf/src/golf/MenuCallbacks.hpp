@@ -109,6 +109,8 @@ struct SpriteID final
         NextCourseHighlight,
         LobbyCheckbox,
         LobbyCheckboxHighlight,
+        LobbyRuleButton,
+        LobbyRuleButtonHighlight,
         Envelope,
         LevelBadge,
 
