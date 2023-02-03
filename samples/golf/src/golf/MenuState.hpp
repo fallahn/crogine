@@ -151,6 +151,7 @@ private:
         std::uint32_t toggleUserCourses = 0;
         std::uint32_t toggleReverseCourse = 0;
         std::uint32_t toggleFriendsOnly = 0;
+        std::uint32_t toggleGameRules = 0;
         std::uint32_t inviteFriends = 0;
         std::uint32_t selected = 0;
         std::uint32_t unselected = 0;
@@ -168,6 +169,18 @@ private:
     std::size_t m_currentMenu; //used by view callback to reposition the root node on window resize
     std::size_t m_prevMenu; //used to resore active menu when completing text entry
     std::array<cro::Entity, MenuID::Count> m_menuEntities = {}; //each menu transform, attatched to root node.
+
+    struct LobbyEntityID final
+    {
+        enum
+        {
+            HoleSelection,
+            HoleThumb,
+
+            Count
+        };
+    };
+    std::array<cro::Entity, LobbyEntityID::Count> m_lobbyWindowEntities = {};
 
     LobbyPager m_lobbyPager;
 
