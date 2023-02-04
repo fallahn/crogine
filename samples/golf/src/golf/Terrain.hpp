@@ -99,5 +99,5 @@ static constexpr std::array<float, TerrainID::Count> Dampening =
 //how much the velocity of the ball is reduced when colliding
 static constexpr std::array<float, TerrainID::Count> Restitution =
 {
-    0.23f, 0.33f, 0.26f, 0.f, 0.f, 0.f, 0.55f, 0.f
+    0.23f, 0.33f, 0.28f, 0.f, 0.f, 0.f, 0.55f, 0.f
 };

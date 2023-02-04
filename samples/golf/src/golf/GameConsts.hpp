@@ -84,7 +84,7 @@ static constexpr float SkyCamHeight = 16.f;
 static constexpr glm::vec3 DefaultSkycamPosition(MapSize.x / 2.f, SkyCamHeight, -static_cast<float>(MapSize.y) / 2.f);
 
 static constexpr float BallPointSize = 1.4f;
-static constexpr float LongPuttDistance = 7.f;
+static constexpr float LongPuttDistance = 6.f;
 
 static constexpr float MaxHook = -0.25f;
 static constexpr float KnotsPerMetre = 1.94384f;

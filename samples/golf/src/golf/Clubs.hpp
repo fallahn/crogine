@@ -81,6 +81,6 @@ static const std::array<Club, ClubID::Count> Clubs =
     Club("Pitch Wedge ", 25.2f, 52.f, 70.f),
     Club("Gap Wedge ", 17.4f, 60.f, 30.f),
     Club("Sand Wedge ", 10.3f, 60.f, 10.f),
-    Club("Putter ", 9.1f, 0.f, 10.f)
+    Club("Putter ", 9.11f, 0.f, 10.f)
     //Club("Putter ", 6.39f, 0.f, 7.f) //make sure to update slope shader in TerrainShader.inl with this as the radius
 };

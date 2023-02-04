@@ -444,14 +444,14 @@ bool OptionsState::handleEvent(const cro::Event& evt)
 
             if (evt.caxis.axis == cro::GameController::AxisRightY)
             {
-                if (evt.caxis.value > 0)
+                /*if (evt.caxis.value > 0)
                 {
                     scrollMenu(1);
                 }
                 else
                 {
                     scrollMenu(0);
-                }
+                }*/
             }
         }
     }

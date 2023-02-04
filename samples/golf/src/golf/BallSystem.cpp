@@ -66,12 +66,12 @@ namespace
     static constexpr float BallTurnDelay = 2.5f; //how long to delay before stating turn ended
     static constexpr float AngularVelocity = 46.5f; //rad/s at 1m/s vel. Used for rolling animation.
 
-    static constexpr float MinVelocitySqr = 0.005f;//0.04f
+    static constexpr float MinVelocitySqr = 0.0001f;// 0.005f;//0.04f
 
     static constexpr std::array<float, TerrainID::Count> Friction =
     {
         0.1f, 0.9f,
-        0.985f, 0.1f,
+        0.986f, 0.1f,
         0.001f, 0.001f,
         0.98f,
         0.f
@@ -355,7 +355,7 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
 
 
                 //gravity
-                static constexpr float MinFallVelocity = 2.1f;
+                static constexpr float MinFallVelocity = 2.f;
                 float gravityAmount = 1.f - std::min(1.f, glm::length2(ball.velocity) / MinFallVelocity);
 
                 //this is some fudgy non-physics.
@@ -428,45 +428,14 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
                 //add wind - adding less wind the more the ball travels in the
                 //wind direction means we don't get blown forever
                 auto velLength = glm::length(ball.velocity);
-                float windAmount = 1.f - glm::dot(m_windDirection, ball.velocity / velLength);
+                float windAmount = (1.f - glm::dot(m_windDirection, ball.velocity / velLength)) * 0.1f;
                 ball.velocity += (m_windDirection * m_windStrength * 0.07f * windAmount * dt);
 
-                //if (!m_puttFromTee)
-                //{
-                //    //slope strength (arcade version)
-                //    glm::vec3 slope = glm::vec3(terrainContact.normal.x, 0.f, terrainContact.normal.z) * 0.95f * smoothstep(0.35f, 4.5f, velLength);
-                //    ball.velocity += slope;
 
-                //    //add friction
-                //    ball.velocity *= Friction[ball.terrain];
-                //}
-                //else
                 {
 
-                    //only use this when we're mini putting
-                    //it's more accurate (ball runs back down a slope it went up)
-                    //but is really boring to play on the full size courses
                     auto [slope, slopeStrength] = getSlope(terrainContact.normal);
-                    float friction = 1.f;
-
-                    //if (m_puttFromTee)
-                    {
-                        friction = Friction[ball.terrain] + (slopeStrength * 0.05f);
-                    }
-                    //else
-                    //{
-                    //    //this means we don't add a HUGE multiplier if there's
-                    //    //already a steep slope, else the ball go WEEEEEEEEE
-                    //    float slopeMultiplier = std::max(0.f, 1.f - (slopeStrength / 0.4f));
-
-                    //    friction = Friction[ball.terrain] - (slopeStrength * 0.08f);
-                    //    //unrealistic but makes it more interesting on full size courses
-                    //    slopeStrength *= 5.f;// *= 10.f * slopeMultiplier;
-                    //    //use the current velocity to stop the ball rolling forever
-                    //    slopeStrength *= std::min(1.f, glm::length2(ball.velocity));
-                    //    //and reduce if slope is along wind vector
-                    //    slopeStrength *= (1.f - glm::dot(slope, m_windDirection)) * (1.f - m_windStrength);
-                    //}
+                    float friction = Friction[ball.terrain] + (slopeStrength * 0.05f);
 
                     //move by slope from surface normal
                     ball.velocity += slope * slopeStrength;
@@ -751,14 +720,14 @@ void BallSystem::doCollision(cro::Entity entity)
             ball.velocity = glm::reflect(ball.velocity, terrainResult.normal);
             break;
         case TerrainID::Green:
-            ball.velocity *= 0.26f;
+            //ball.velocity *= 0.26f;
 
             //if low bounce start rolling
-            if (ball.velocity.y > -0.05f)
+            if (ball.velocity.y > -0.015f)
             {
-                float momentum = 1.f - glm::dot(-cro::Transform::Y_AXIS, glm::normalize(ball.velocity));
-                static constexpr float MaxMomentum = 20.f;
-                momentum *= MaxMomentum;
+                float momentum = cro::Util::Easing::easeOutCubic(0.25f + ((1.f - glm::dot(-cro::Transform::Y_AXIS, glm::normalize(ball.velocity))) * 0.75f));
+                static constexpr float MaxMomentum = 28.f;
+                //momentum *= MaxMomentum;
                 CRO_ASSERT(!std::isnan(ball.velocity.x), "");
 
                 auto len = glm::length(ball.velocity);
@@ -767,8 +736,8 @@ void BallSystem::doCollision(cro::Entity entity)
                 ball.state = Ball::State::Putt;
                 ball.delay = 0.f;
 
-                auto [slope, slopeStrength] = getSlope(terrainResult.normal);
-                ball.velocity += slope * slopeStrength;
+                //auto [slope, slopeStrength] = getSlope(terrainResult.normal);
+                //ball.velocity += slope * slopeStrength;
 
                 CRO_ASSERT(!std::isnan(ball.velocity.x), "");
 
@@ -776,6 +745,7 @@ void BallSystem::doCollision(cro::Entity entity)
             }
             else //bounce
             {
+                ball.velocity *= Restitution[terrainResult.terrain];
                 ball.velocity = glm::reflect(ball.velocity, terrainResult.normal);
                 CRO_ASSERT(!std::isnan(ball.velocity.x), "");
             }
@@ -786,18 +756,25 @@ void BallSystem::doCollision(cro::Entity entity)
         auto len2 = glm::length2(ball.velocity);
         if (len2 < 0.01f)
         {
-            if (terrainResult.terrain == TerrainID::Water
-                || terrainResult.terrain == TerrainID::Scrub)
+            switch (terrainResult.terrain)
             {
-                resetBall(ball, Ball::State::Reset, terrainResult.terrain);
-            }
-            else if (terrainResult.terrain == TerrainID::Stone)
-            {
-                resetBall(ball, Ball::State::Reset, TerrainID::Scrub);
-            }
-            else
-            {
+            default: 
                 resetBall(ball, Ball::State::Paused, terrainResult.terrain);
+                break;
+            case TerrainID::Water:
+            case TerrainID::Scrub:
+                resetBall(ball, Ball::State::Reset, terrainResult.terrain);
+                break;
+            case TerrainID::Green:
+                //if (len2 < 0.005f)
+                {
+                    ball.velocity.y = 0.f;
+                    ball.state = Ball::State::Putt;
+                }
+                break;
+            case TerrainID::Stone:
+                resetBall(ball, Ball::State::Reset, TerrainID::Scrub);
+                break;
             }
         }
 
