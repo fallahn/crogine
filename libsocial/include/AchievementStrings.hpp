@@ -147,7 +147,7 @@ static const std::array<std::pair<std::string, bool>, AchievementID::Count> Achi
     std::make_pair("Putt a total distance of 1km", false),
     std::make_pair("Get a total stroke distance of 12km", false),
     std::make_pair("Come top of the Leaderboard", false),
-    std::make_pair("Sink a putt greater than 5m", false),
+    std::make_pair("Sink a putt greater than 6m", false),
     std::make_pair("Sink a hole from outside the green", false),
     std::make_pair("Get a PAR or better after at least one foul", false),
     std::make_pair("Play a network game with 4 clients", false),

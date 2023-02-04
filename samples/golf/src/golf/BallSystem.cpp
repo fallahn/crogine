@@ -720,24 +720,17 @@ void BallSystem::doCollision(cro::Entity entity)
             ball.velocity = glm::reflect(ball.velocity, terrainResult.normal);
             break;
         case TerrainID::Green:
-            //ball.velocity *= 0.26f;
-
             //if low bounce start rolling
-            if (ball.velocity.y > -0.015f)
+            //if (ball.velocity.y > -0.015f)
+            if (ball.velocity.y > -0.25f) // the sooner we start rolling the more velocity we have left to roll :)
             {
-                float momentum = cro::Util::Easing::easeOutCubic(0.25f + ((1.f - glm::dot(-cro::Transform::Y_AXIS, glm::normalize(ball.velocity))) * 0.75f));
-                static constexpr float MaxMomentum = 28.f;
-                //momentum *= MaxMomentum;
                 CRO_ASSERT(!std::isnan(ball.velocity.x), "");
 
                 auto len = glm::length(ball.velocity);
                 ball.velocity.y = 0.f;
-                ball.velocity = glm::normalize(ball.velocity) * len * momentum; //fake physics to simulate momentum
+                ball.velocity = glm::normalize(ball.velocity) * len * 2.f; //fake physics to simulate momentum
                 ball.state = Ball::State::Putt;
                 ball.delay = 0.f;
-
-                //auto [slope, slopeStrength] = getSlope(terrainResult.normal);
-                //ball.velocity += slope * slopeStrength;
 
                 CRO_ASSERT(!std::isnan(ball.velocity.x), "");
 
@@ -765,13 +758,14 @@ void BallSystem::doCollision(cro::Entity entity)
             case TerrainID::Scrub:
                 resetBall(ball, Ball::State::Reset, terrainResult.terrain);
                 break;
-            case TerrainID::Green:
-                //if (len2 < 0.005f)
-                {
-                    ball.velocity.y = 0.f;
-                    ball.state = Ball::State::Putt;
-                }
-                break;
+            //case TerrainID::Green:
+            //    //if (len2 < 0.005f)
+            //    {
+            //        ball.velocity.y = 0.f;
+            //        ball.delay = 0.f;
+            //        ball.state = Ball::State::Putt;
+            //    }
+            //    break;
             case TerrainID::Stone:
                 resetBall(ball, Ball::State::Reset, TerrainID::Scrub);
                 break;
