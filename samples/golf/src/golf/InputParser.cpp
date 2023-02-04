@@ -353,7 +353,7 @@ void InputParser::setActive(bool active, bool isCPU)
         resetPower();
         m_inputFlags = 0;
 
-        m_swingput.setEnabled(m_enableFlags == std::numeric_limits<std::uint16_t>::max() ? m_inputBinding.playerID : -1);
+        m_swingput.setEnabled((m_enableFlags == std::numeric_limits<std::uint16_t>::max()) && !isCPU ? m_inputBinding.playerID : -1);
     }
     else
     {
