@@ -71,7 +71,7 @@ static const std::array<std::string, 3u> ScoreDesc =
 
 static const std::array<std::string, 3u> GimmeString =
 {
-    "None",
+    "No Gimme",
     "Inside the leather",
     "Inside the putter"
 };

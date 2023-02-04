@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2022
+Matt Marchant 2021 - 2023
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -200,6 +200,21 @@ void MenuState::parseCourseDirectory(const std::string& rootDir, bool isUser)
 
                 courseNumber++;
             }
+        }
+
+
+        //check for thumbnail
+        courseFile = rootDir + dir + "/preview.png";
+        testPath = courseFile;
+        if (!isUser)
+        {
+            testPath = cro::FileSystem::getResourcePath() + testPath;
+        }
+
+        std::unique_ptr<cro::Texture> t = std::make_unique<cro::Texture>();
+        if (t->loadFromFile(testPath))
+        {
+            m_courseThumbs.insert(std::make_pair(dir, std::move(t)));
         }
     }
 
@@ -2287,7 +2302,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     auto textResizeCallback = 
         [&,bgEnt](cro::Entity e)
     {
-        e.getComponent<cro::Transform>().setPosition({ bgEnt.getComponent<cro::Transform>().getOrigin().x , e.getComponent<UIElement>().absolutePosition.y });
+        e.getComponent<cro::Transform>().setPosition({ bgEnt.getComponent<cro::Transform>().getOrigin().x , e.getComponent<UIElement>().absolutePosition.y, e.getComponent<UIElement>().depth });
     };
 
     //display the score type
@@ -2377,6 +2392,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("thumbnail_window");
     entity.addComponent<UIElement>().absolutePosition = { bounds.width / 2.f, bounds.height / 2.f };
     entity.getComponent<UIElement>().depth = 1.2f;
+    entity.getComponent<UIElement>().resizeCallback = textResizeCallback;
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement;
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.getComponent<cro::Transform>().setOrigin({ std::floor(bounds.width / 2.f), std::floor(bounds.height / 2.f) });
@@ -2384,9 +2400,17 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     auto thumbBgEnt = entity;
     m_lobbyWindowEntities[LobbyEntityID::HoleSelection] = thumbBgEnt;
 
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 6.f, 34.f, 0.2f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>();
+    thumbBgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_lobbyWindowEntities[LobbyEntityID::HoleThumb] = entity;
+
+
     //hole count
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, 28.f, 01.f });
+    entity.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, 28.f, 0.1f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::CourseHoles;
     entity.addComponent<cro::Text>(smallFont).setCharacterSize(InfoTextSize);
@@ -2433,16 +2457,16 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     bgEnt = entity;
 
     //flag
-    entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ (bounds.width / 2.f), bounds.height });
-    entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::Flag];
-    entity.addComponent<cro::SpriteAnimation>().play(0);
-    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    //entity = m_uiScene.createEntity();
+    //entity.addComponent<cro::Transform>().setPosition({ (bounds.width / 2.f), bounds.height });
+    //entity.addComponent<cro::Drawable2D>();
+    //entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::Flag];
+    //entity.addComponent<cro::SpriteAnimation>().play(0);
+    //bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
     //bouncy ball
-    cro::SpriteSheet sheet;
+    /*cro::SpriteSheet sheet;
     sheet.loadFromFile("assets/golf/sprites/bounce.spt", m_resources.textures);
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 14.f, bounds.height - 4.f, 0.3f });
@@ -2462,7 +2486,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
             currTime = static_cast<float>(cro::Util::Random::value(30, 60));
         }
     };
-    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());*/
 
     
 
@@ -4979,4 +5003,35 @@ void MenuState::refreshUI()
 
     //makes sure to refresh for at least one frame if cam currently static
     m_uiScene.getActiveCamera().getComponent<cro::Camera>().active = true;
+}
+
+void MenuState::updateCourseRuleString()
+{
+    cro::Command cmd;
+    cmd.targetFlags = CommandID::Menu::CourseRules;
+    cmd.action = [&](cro::Entity e, float)
+    {
+        auto str = ScoreTypes[m_sharedData.scoreType];
+        str += ", " + GimmeString[m_sharedData.gimmeRadius];
+
+
+        if (auto data = std::find_if(m_courseData.cbegin(), m_courseData.cend(),
+            [&](const CourseData& cd)
+            {
+                return cd.directory == m_sharedData.mapDirectory;
+            }); data != m_courseData.cend())
+        {
+
+            str += ", " + data->holeCount[m_sharedData.holeCount];
+        }
+
+        if (m_sharedData.reverseCourse)
+        {
+            str += ", Reversed";
+        }
+        
+        e.getComponent<cro::Text>().setString(str);
+        centreText(e);
+    };
+    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 }

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2022
+Matt Marchant 2021 - 2023
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -52,6 +52,7 @@ source distribution.
 #include <crogine/graphics/UniformBuffer.hpp>
 
 #include <array>
+#include <unordered_map>
 
 static const std::uint32_t BallRenderFlags = (1 << 22);
 
@@ -211,6 +212,7 @@ private:
         bool isUser = false;
     };
     std::vector<CourseData> m_courseData;
+    std::unordered_map<std::string, std::unique_ptr<cro::Texture>> m_courseThumbs;
     std::size_t m_activeCourseCount;
     std::size_t m_officialCourseCount;
     void parseCourseDirectory(const std::string&, bool isUser);
@@ -277,6 +279,7 @@ private:
     void prevCourse();
     void nextCourse();
     void refreshUI();
+    void updateCourseRuleString();
 
     //loading moved to GolfGame.cpp
 

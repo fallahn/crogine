@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2022
+Matt Marchant 2021 - 2023
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -1588,6 +1588,18 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
                 {
                     setUnavailable();
                 }
+                updateCourseRuleString();
+
+                if (m_courseThumbs.count(course))
+                {
+                    m_lobbyWindowEntities[LobbyEntityID::HoleThumb].getComponent<cro::Sprite>().setTexture(*m_courseThumbs.at(course));
+                    auto scale = glm::vec2(138.f, 104.f) / glm::vec2(m_courseThumbs.at(course)->getSize());
+                    m_lobbyWindowEntities[LobbyEntityID::HoleThumb].getComponent<cro::Transform>().setScale(scale);
+                }
+                else
+                {
+                    m_lobbyWindowEntities[LobbyEntityID::HoleThumb].getComponent<cro::Transform>().setScale({0.f, 0.f});
+                }
             }
         }
             break;
@@ -1609,6 +1621,8 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
                     e.getComponent<cro::Text>().setString(ScoreDesc[m_sharedData.scoreType]);
                 };
                 m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+                updateCourseRuleString();
             }
             break;
         case PacketID::GimmeRadius:
@@ -1623,6 +1637,8 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
                 centreText(e);
             };
             m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+            updateCourseRuleString();
         }
             break;
         case PacketID::HoleCount:
@@ -1652,10 +1668,12 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
                 };
             }
             m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+            updateCourseRuleString();
         }
             break;
         case PacketID::ReverseCourse:
             m_sharedData.reverseCourse = evt.packet.as<std::uint8_t>();
+            updateCourseRuleString();
             break;
         case PacketID::ServerError:
             switch (evt.packet.as<std::uint8_t>())
