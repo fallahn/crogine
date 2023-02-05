@@ -865,6 +865,12 @@ void GolfGame::loadPreferences()
     {
         m_sharedData.inputBinding.keys[InputBinding::Down] = SDLK_s;
     }
+
+    //and then the cancel button update
+    if (m_sharedData.inputBinding.keys[InputBinding::CancelShot] == SDLK_UNKNOWN)
+    {
+        m_sharedData.inputBinding.keys[InputBinding::CancelShot] = SDLK_LSHIFT;
+    }
 }
 
 void GolfGame::savePreferences()

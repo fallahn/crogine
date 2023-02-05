@@ -136,6 +136,11 @@ void InputParser::handleEvent(const cro::Event& evt)
                 m_inputFlags |= InputFlag::PrevClub;
                 cro::App::getWindow().setMouseCaptured(!m_isCPU);
             }
+            else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::CancelShot])
+            {
+                m_inputFlags |= InputFlag::Cancel;
+                cro::App::getWindow().setMouseCaptured(!m_isCPU);
+            }
         }
         else if (evt.type == SDL_KEYUP)
         {
@@ -172,6 +177,10 @@ void InputParser::handleEvent(const cro::Event& evt)
             {
                 m_inputFlags &= ~InputFlag::PrevClub;
             }
+            else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::CancelShot])
+            {
+                m_inputFlags &= ~InputFlag::Cancel;
+            }
         }
         else if (evt.type == SDL_CONTROLLERBUTTONDOWN)
         {
@@ -190,6 +199,10 @@ void InputParser::handleEvent(const cro::Event& evt)
                 else if (evt.cbutton.button == m_inputBinding.buttons[InputBinding::PrevClub])
                 {
                     m_inputFlags |= InputFlag::PrevClub;
+                }
+                else if (evt.cbutton.button == m_inputBinding.buttons[InputBinding::CancelShot])
+                {
+                    m_inputFlags |= InputFlag::Cancel;
                 }
 
                 else if (evt.cbutton.button == cro::GameController::DPadLeft)
@@ -227,6 +240,10 @@ void InputParser::handleEvent(const cro::Event& evt)
                 else if (evt.cbutton.button == m_inputBinding.buttons[InputBinding::PrevClub])
                 {
                     m_inputFlags &= ~InputFlag::PrevClub;
+                }
+                else if (evt.cbutton.button == m_inputBinding.buttons[InputBinding::CancelShot])
+                {
+                    m_inputFlags &= ~InputFlag::Cancel;
                 }
 
                 else if (evt.cbutton.button == cro::GameController::DPadLeft)
@@ -515,6 +532,13 @@ void InputParser::update(float dt, std::int32_t terrainID)
         break;
         case State::Power:
         {
+            if ((m_inputFlags & InputFlag::Cancel) && ((m_prevFlags & InputFlag::Cancel) == 0))
+            {
+                m_state = State::Aim;
+                resetPower();
+                break;
+            }
+
             //move level to 1 and back (returning to 0 is a fluff)
             float Speed = dt * 0.8f;
             if (terrainID == TerrainID::Green
@@ -556,6 +580,14 @@ void InputParser::update(float dt, std::int32_t terrainID)
         }
             break;
         case State::Stroke:
+            if ((m_inputFlags & InputFlag::Cancel) && ((m_prevFlags & InputFlag::Cancel) == 0))
+            {
+                m_state = State::Aim;
+                resetPower();
+                break;
+            }
+
+
             m_hook = std::min(1.f, std::max(0.f, m_hook + (dt * m_powerbarDirection)));
 
             if (m_hook == 1)
@@ -666,26 +698,7 @@ void InputParser::checkControllerInput()
     }
 
     float yPos = cro::GameController::getAxisPosition(controllerID, cro::GameController::AxisLeftY);
-    //if (yPos > (LeftThumbDeadZone))
-    //{
-    //    m_inputFlags |= InputFlag::Down;
-    //    m_inputFlags &= ~InputFlag::Up;
-    //}
-    //else if (m_prevStick & InputFlag::Down)
-    //{
-    //    m_inputFlags &= ~InputFlag::Down;
-    //}
-
-    //if (yPos < (-LeftThumbDeadZone))
-    //{
-    //    m_inputFlags |= InputFlag::Up;
-    //    m_inputFlags &= ~InputFlag::Down;
-    //}
-    //else if (m_prevStick & InputFlag::Up)
-    //{
-    //    m_inputFlags &= ~InputFlag::Up;
-    //}
-
+    
     float len2 = (xPos * xPos) + (yPos * yPos);
     static const float MinLen2 = static_cast<float>(LeftThumbDeadZone * LeftThumbDeadZone);
     if (len2 > MinLen2)
@@ -693,6 +706,28 @@ void InputParser::checkControllerInput()
         m_analogueAmount = std::min(1.f, std::pow(std::sqrt(len2) / (cro::GameController::AxisMax /*- LeftThumbDeadZone*/), 5.f));
     }
 
+
+    //this isn't really analogue, it just moves the camera so do it separately
+    yPos = cro::GameController::getAxisPosition(controllerID, cro::GameController::AxisRightY);
+    if (yPos > (LeftThumbDeadZone))
+    {
+        m_inputFlags |= InputFlag::Down;
+        m_inputFlags &= ~InputFlag::Up;
+    }
+    else if (m_prevStick & InputFlag::Down)
+    {
+        m_inputFlags &= ~InputFlag::Down;
+    }
+
+    if (yPos < (-LeftThumbDeadZone))
+    {
+        m_inputFlags |= InputFlag::Up;
+        m_inputFlags &= ~InputFlag::Down;
+    }
+    else if (m_prevStick & InputFlag::Up)
+    {
+        m_inputFlags &= ~InputFlag::Up;
+    }
 
     if (startInput ^ m_inputFlags)
     {

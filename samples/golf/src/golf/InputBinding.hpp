@@ -46,7 +46,7 @@ namespace InputFlag
         NextClub    = 0x20,
         PrevClub    = 0x40,
         CamModifier = 0x80,
-        Unused1     = 0x100,
+        Cancel      = 0x100,
 
         All = 0xFFFF
     };
@@ -58,7 +58,7 @@ struct InputBinding final
     //button array as well as the key array
     enum
     {
-        Action, NextClub, PrevClub, CamModifier, SwitchView, Left, Right, Up, Down, Count
+        Action, NextClub, PrevClub, CamModifier, SwitchView, CancelShot, Left, Right, Up, Down, Count
     };
 
     std::array<std::int32_t, Count> keys =
@@ -68,19 +68,21 @@ struct InputBinding final
         SDLK_q,
         SDLK_UNKNOWN,
         SDLK_UNKNOWN,
+        SDLK_LSHIFT,
         SDLK_a,
         SDLK_d,
         SDLK_w,
         SDLK_s
     };
 
-    std::array<std::int32_t, 5u> buttons =
+    std::array<std::int32_t, 6u> buttons =
     {
         SDL_CONTROLLER_BUTTON_A,
         SDL_CONTROLLER_BUTTON_RIGHTSHOULDER,
         SDL_CONTROLLER_BUTTON_LEFTSHOULDER,
         SDL_CONTROLLER_BUTTON_X,
-        SDL_CONTROLLER_BUTTON_Y
+        SDL_CONTROLLER_BUTTON_Y,
+        SDL_CONTROLLER_BUTTON_B
     };
     std::int32_t playerID = 0;
 };
