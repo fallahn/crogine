@@ -6332,7 +6332,7 @@ void GolfState::updateActor(const ActorInfo& update)
 
     if (m_drone.isValid() 
         && !m_roundEnded
-        && glm::length2(m_drone.getComponent<cro::Transform>().getPosition() - update.position) < 1.f)
+        && glm::length2(m_drone.getComponent<cro::Transform>().getPosition() - update.position) < 4.f)
     {
         auto* msg = getContext().appInstance.getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
         msg->position = m_drone.getComponent<cro::Transform>().getPosition();

@@ -1984,7 +1984,7 @@ void GolfState::updateWindDisplay(glm::vec3 direction)
         }
         else
         {
-            ss << " " << std::fixed << speed * KPHPerMetre << " kph";
+            ss << " " << std::fixed << speed * KPHPerMetre << " kmh";
         }
         e.getComponent<cro::Text>().setString(ss.str());
 
