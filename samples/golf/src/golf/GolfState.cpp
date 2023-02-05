@@ -1416,61 +1416,62 @@ bool GolfState::simulate(float dt)
     }
 
     //play avatar sound if player idles
-    if (m_idleTimer.elapsed() > idleTime
-        && !m_sharedData.tutorial
+    if (!m_sharedData.tutorial
         && !m_roundEnded)
     {
-        m_idleTimer.restart();
-        idleTime = cro::seconds(std::max(10.f, idleTime.asSeconds() / 2.f));
-
-        auto* msg = postMessage<SceneEvent>(MessageID::SceneMessage);
-        msg->type = SceneEvent::PlayerIdle;
-
-        gamepadNotify(GamepadNotify::NewPlayer);
-
-        auto* skel = &m_activeAvatar->model.getComponent<cro::Skeleton>();
-        auto animID = m_activeAvatar->animationIDs[AnimationID::Impatient];
-        auto idleID = m_activeAvatar->animationIDs[AnimationID::Idle];
-        skel->play(animID, 1.f, 0.8f);
-
-        auto entity = m_gameScene.createEntity();
-        entity.addComponent<cro::Callback>().active = true;
-        entity.getComponent<cro::Callback>().function =
-            [&, skel, animID, idleID](cro::Entity e, float)
+        if (m_idleTimer.elapsed() > idleTime)
         {
-            auto [currAnim, nextAnim] = skel->getActiveAnimations();
-            if (currAnim == animID
-                || nextAnim == animID)
+            m_idleTimer.restart();
+            idleTime = cro::seconds(std::max(10.f, idleTime.asSeconds() / 2.f));
+
+            auto* msg = postMessage<SceneEvent>(MessageID::SceneMessage);
+            msg->type = SceneEvent::PlayerIdle;
+
+            gamepadNotify(GamepadNotify::NewPlayer);
+
+            auto* skel = &m_activeAvatar->model.getComponent<cro::Skeleton>();
+            auto animID = m_activeAvatar->animationIDs[AnimationID::Impatient];
+            auto idleID = m_activeAvatar->animationIDs[AnimationID::Idle];
+            skel->play(animID, 1.f, 0.8f);
+
+            auto entity = m_gameScene.createEntity();
+            entity.addComponent<cro::Callback>().active = true;
+            entity.getComponent<cro::Callback>().function =
+                [&, skel, animID, idleID](cro::Entity e, float)
             {
-                if (skel->getState() == cro::Skeleton::Stopped)
+                auto [currAnim, nextAnim] = skel->getActiveAnimations();
+                if (currAnim == animID
+                    || nextAnim == animID)
                 {
-                    skel->play(idleID, 1.f, 0.8f);
+                    if (skel->getState() == cro::Skeleton::Stopped)
+                    {
+                        skel->play(idleID, 1.f, 0.8f);
+                        e.getComponent<cro::Callback>().active = false;
+                        m_gameScene.destroyEntity(e);
+                    }
+                }
+                else
+                {
                     e.getComponent<cro::Callback>().active = false;
                     m_gameScene.destroyEntity(e);
                 }
-            }
-            else
-            {
-                e.getComponent<cro::Callback>().active = false;
-                m_gameScene.destroyEntity(e);
-            }
-        };
+            };
+        }
+
+        //switch to idle cam if more than half time
+        if (m_idleTimer.elapsed() > (idleTime * 0.65f)
+            && m_currentCamera == CameraID::Player
+            && m_inputParser.getActive()) //hmm this stops this happening on remote clients
+        {
+            setActiveCamera(CameraID::Idle);
+            m_inputParser.setSuspended(true);
+
+            cro::Command cmd;
+            cmd.targetFlags = CommandID::StrokeArc | CommandID::StrokeIndicator;
+            cmd.action = [](cro::Entity e, float) {e.getComponent<cro::Model>().setHidden(true); };
+            m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+        }
     }
-
-    //switch to idle cam if more than half time
-    if (m_idleTimer.elapsed() > (idleTime * 0.65f)
-        && m_currentCamera == CameraID::Player
-        && m_inputParser.getActive()) //hmm this stops this happening on remote clients
-    {
-        setActiveCamera(CameraID::Idle);
-        m_inputParser.setSuspended(true);
-
-        cro::Command cmd;
-        cmd.targetFlags = CommandID::StrokeArc | CommandID::StrokeIndicator;
-        cmd.action = [](cro::Entity e, float) {e.getComponent<cro::Model>().setHidden(true); };
-        m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
-    }
-
     return true;
 }
 
@@ -3878,7 +3879,8 @@ void GolfState::buildScene()
     camEnt.getComponent<cro::Camera>().setShadowExpansion(25.f);
     camEnt.addComponent<cro::AudioListener>();
     camEnt.addComponent<TargetInfo>();
-    camEnt.addComponent<cro::Callback>().active = true;
+    camEnt.addComponent<cro::Callback>().setUserData<CameraFollower::ZoomData>(zoomData); //needed by resize callback, but not used HUM
+    camEnt.getComponent<cro::Callback>().active = true;
     camEnt.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float dt)
     {
