@@ -88,6 +88,8 @@ static constexpr float LongPuttDistance = 6.f;
 
 static constexpr float MaxHook = -0.25f;
 static constexpr float KnotsPerMetre = 1.94384f;
+static constexpr float MPHPerMetre = 2.23694f;
+static constexpr float KPHPerMetre = 3.6f;
 static constexpr float HoleRadius = 0.058f;
 
 static constexpr float WaterLevel = -0.02f;
