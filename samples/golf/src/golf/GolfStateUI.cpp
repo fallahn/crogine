@@ -495,7 +495,7 @@ void GolfState::buildUI()
             //move to position
             auto maxDist = Clubs[ClubID::Putter].target;
             auto currDist = glm::length(m_currentPlayer.position - m_holeData[m_currentHole].pin);
-            float hTarget = (currDist / maxDist) * BarWidth;
+            float hTarget = std::clamp((currDist / maxDist) * 0.97f, 0.f, 1.f) * BarWidth; //magic number just stops the flag recommending too much power
 
             auto pos = e.getComponent<cro::Transform>().getPosition();
             pos.x = std::min(pos.x + ((hTarget - pos.x) * dt), BarWidth - 4.f);

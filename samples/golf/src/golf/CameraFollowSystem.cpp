@@ -181,7 +181,8 @@ void CameraFollowSystem::process(float dt)
         {
             auto& tx = entity.getComponent<cro::Transform>();
 
-            auto target = follower.target.getComponent<cro::Transform>().getPosition() + TargetOffset;
+            auto ballPos = follower.target.getComponent<cro::Transform>().getPosition();
+            auto target = ballPos + TargetOffset;
             follower.prevTarget = follower.currentTarget;
             
             if (!follower.isSnapped)
@@ -242,15 +243,9 @@ void CameraFollowSystem::process(float dt)
             }
 
             //zoom if ball goes near the hole
-            static constexpr float ZoomRadius = 3.f;
-            static constexpr float ZoomRadiusSqr = ZoomRadius * ZoomRadius;
-            auto zoomDir = target - follower.holePosition;
-            if (collider.terrain == TerrainID::Green)
-            {
-                zoomDir *= 3.f;
-            }
+            auto zoomDir = follower.holePosition - ballPos;
             auto dist = glm::length2(zoomDir);
-            if (dist < ZoomRadiusSqr)
+            if (dist < follower.zoomRadius)
             {
                 follower.state = CameraFollower::Zoom;
             }

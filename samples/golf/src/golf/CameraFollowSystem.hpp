@@ -80,6 +80,7 @@ struct CameraFollower final
     glm::vec3 holePosition = glm::vec3(0.f);
     glm::vec3 playerPosition = glm::vec3(0.f);
     float radius = 0.f; //camera becomes active when ball within this (should be ^2)
+    float zoomRadius = 25.f; //dist^2 from hole when zoom becomes active
     float maxOffsetDistance = 9.f; //dist^2
     float maxTargetDiff = 100.f; //dist^2
 

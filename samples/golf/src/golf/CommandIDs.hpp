@@ -101,7 +101,8 @@ struct CommandID final
             ScoreDesc    = 0x8000,
             GimmeDesc    = 0x10000,
             LobbyText    = 0x20000,
-            CourseRules  = 0x40000
+            CourseRules  = 0x40000,
+            CourseType   = 0x80000
         };
     };
 };
