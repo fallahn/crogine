@@ -66,7 +66,7 @@ namespace
     static constexpr float BallTurnDelay = 2.5f; //how long to delay before stating turn ended
     static constexpr float AngularVelocity = 46.5f; //rad/s at 1m/s vel. Used for rolling animation.
 
-    static constexpr float MinVelocitySqr = 0.0001f;// 0.005f;//0.04f
+    static constexpr float MinVelocitySqr = 0.001f;// 0.005f;//0.04f
 
     static constexpr std::array<float, TerrainID::Count> Friction =
     {
@@ -299,16 +299,22 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
         ball.delay -= dt;
         if (ball.delay < 0)
         {
+            auto& tx = entity.getComponent<cro::Transform>();
+            
             //add gravity
             ball.velocity += Gravity * dt;
 
             //add wind
-            ball.velocity += m_windDirection * m_windStrength * dt;
+            static constexpr float MinWind = 10.f;
+            static constexpr float MaxWind = 30.f;
 
-            //TODO add air friction?
+            float dist = glm::length(m_holeData->pin - tx.getPosition());
+            float multiplier = std::clamp((dist - MinWind) / (MaxWind - MinWind), 0.f, 1.f);
+            multiplier = cro::Util::Easing::easeInCubic(multiplier);
+            ball.velocity += m_windDirection * m_windStrength * multiplier * dt;
+
 
             //move by velocity
-            auto& tx = entity.getComponent<cro::Transform>();
             tx.move(ball.velocity * dt);
 
             //test collision
