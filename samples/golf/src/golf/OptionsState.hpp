@@ -30,6 +30,7 @@ source distribution.
 #pragma once
 
 #include "../StateIDs.hpp"
+#include "InputBinding.hpp"
 
 #include <crogine/core/State.hpp>
 #include <crogine/audio/AudioScape.hpp>
@@ -123,7 +124,7 @@ private:
     };
     std::array<cro::Entity, ToolTipID::Count> m_tooltips = {};
 
-    std::vector<std::string> m_labelStrings;
+    std::array<std::string, InputBinding::Count> m_labelStrings = {};
 
     cro::Entity m_psController;
     cro::Entity m_psOverlay;

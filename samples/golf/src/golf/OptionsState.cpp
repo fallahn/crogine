@@ -2174,6 +2174,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
             "Power Down",
             "Rotate Camera (Hold)",
             "Switch View",
+            "Unused",
             "Side Spin",
             "Side Spin",
             "Top Spin",
@@ -2205,6 +2206,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
             "Previous Club",
             "Show Scores",
             "Emote Wheel",
+            "Cancel Shot",
             "Aim Left",
             "Aim Right",
             "Raise Putt Camera",
@@ -2270,9 +2272,24 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
             m_scene.getActiveCamera().getComponent<cro::Camera>().active = true;
         });
 
+    //cancel shot
+    entity = createHighlight(glm::vec2(347.f, 67.f), InputBinding::CancelShot);
+    entity.getComponent<cro::UIInput>().setSelectionIndex(7);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = uiSystem.addCallback(
+        [&, infoEnt, buttonChangeEnt](cro::Entity e) mutable
+        {
+            e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
+            e.getComponent<cro::AudioEmitter>().play();
+            infoEnt.getComponent<cro::Text>().setString(m_labelStrings[InputBinding::CancelShot]);
+            centreText(infoEnt);
+
+            buttonChangeEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
+            m_scene.getActiveCamera().getComponent<cro::Camera>().active = true;
+        });
+
     //aim left
     entity = createHighlight(glm::vec2(230.f, 59.f), InputBinding::Left);
-    entity.getComponent<cro::UIInput>().setSelectionIndex(8);
+    entity.getComponent<cro::UIInput>().setSelectionIndex(9);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = uiSystem.addCallback(
         [&,infoEnt, buttonChangeEnt](cro::Entity e) mutable
         {
@@ -2287,7 +2304,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
 
     //aim right
     entity = createHighlight(glm::vec2(230.f, 44.f), InputBinding::Right);
-    entity.getComponent<cro::UIInput>().setSelectionIndex(9);
+    entity.getComponent<cro::UIInput>().setSelectionIndex(10);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = uiSystem.addCallback(
         [&,infoEnt, buttonChangeEnt](cro::Entity e) mutable
         {
@@ -2302,7 +2319,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
 
     //swing
     entity = createHighlight(glm::vec2(352.f, 48.f), InputBinding::Action);
-    entity.getComponent<cro::UIInput>().setSelectionIndex(11);
+    entity.getComponent<cro::UIInput>().setSelectionIndex(12);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = uiSystem.addCallback(
         [&,infoEnt, buttonChangeEnt](cro::Entity e) mutable
         {
@@ -2318,7 +2335,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
 
     //top spin / raise putt cam
     entity = createHighlight(glm::vec2(230.f, 74.f), InputBinding::Up);
-    entity.getComponent<cro::UIInput>().setSelectionIndex(7);
+    entity.getComponent<cro::UIInput>().setSelectionIndex(8);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = uiSystem.addCallback(
         [&, infoEnt, buttonChangeEnt](cro::Entity e) mutable
         {
@@ -2351,7 +2368,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
     {
         //switch view
         entity = createHighlight(glm::vec2(338.f, 84.f), InputBinding::SwitchView);
-        entity.getComponent<cro::UIInput>().setSelectionIndex(12);
+        entity.getComponent<cro::UIInput>().setSelectionIndex(13);
         entity.getComponent<cro::Sprite>() = spriteSheet.getSprite("round_highlight_white");
         entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = 0; //don't rebind this
@@ -2366,7 +2383,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
 
         //rotate cam
         entity = createHighlight(glm::vec2(292.f, 81.f), InputBinding::CamModifier);
-        entity.getComponent<cro::UIInput>().setSelectionIndex(13);
+        entity.getComponent<cro::UIInput>().setSelectionIndex(14);
         entity.getComponent<cro::Sprite>() = spriteSheet.getSprite("round_highlight_white");
         entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = 0; //don't rebind this
@@ -2383,7 +2400,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
     {
         //emote wheel
         entity = createHighlight(glm::vec2(338.f, 84.f), InputBinding::SwitchView); //hmm this creates a discarded callback
-        entity.getComponent<cro::UIInput>().setSelectionIndex(13);
+        entity.getComponent<cro::UIInput>().setSelectionIndex(14);
         entity.getComponent<cro::Sprite>() = spriteSheet.getSprite("round_highlight_white");
         entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = 0; //don't rebind this
@@ -2398,7 +2415,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
 
         //show scores
         entity = createHighlight(glm::vec2(285.f, 92.f), InputBinding::CamModifier);
-        entity.getComponent<cro::UIInput>().setSelectionIndex(12);
+        entity.getComponent<cro::UIInput>().setSelectionIndex(13);
         entity.getComponent<cro::Sprite>() = spriteSheet.getSprite("round_highlight_white");
         entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = 0; //don't rebind this
@@ -2420,10 +2437,21 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
         const InputBinding& binding;
         LabelCallback(std::int32_t idx, const InputBinding& b) : labelIndex(idx), binding(b) {}
 
+        std::int32_t previousKey = 0;
+
         void operator() (cro::Entity e, float)
         {
-            e.getComponent<cro::Text>().setString(cro::Keyboard::keyString(binding.keys[labelIndex]));
-            centreText(e);
+            auto key = binding.keys[labelIndex];
+
+            if (key != previousKey)
+            {
+                auto str = cro::Keyboard::keyString(key);
+                str.replace(" ", "\n");
+
+                e.getComponent<cro::Text>().setString(str);
+                centreText(e);
+            }
+            previousKey = key;
         }
     };
 
@@ -2434,6 +2462,10 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
         e.addComponent<cro::Drawable2D>();
         e.addComponent<cro::Text>(infoFont).setCharacterSize(InfoTextSize);
         e.getComponent<cro::Text>().setFillColour(TextNormalColour);
+        e.getComponent<cro::Text>().setVerticalSpacing(-4.f);
+        e.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
+        e.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+        //e.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
         e.addComponent<cro::Callback>().active = true;
         e.getComponent<cro::Callback>().function = LabelCallback(bindingIndex, m_sharedData.inputBinding);
         parent.getComponent<cro::Transform>().addChild(e.getComponent<cro::Transform>());
@@ -2444,6 +2476,9 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
 
     //next club
     createLabel(glm::vec2(340.f, 110.f), InputBinding::NextClub);
+
+    //cancel shot
+    createLabel(glm::vec2(371.f, 76.f), InputBinding::CancelShot);
 
     //stroke
     createLabel(glm::vec2(366.f, 45.f), InputBinding::Action);
@@ -2470,26 +2505,32 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
         entity.addComponent<cro::Text>(infoFont).setCharacterSize(InfoTextSize);
         entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
         entity.getComponent<cro::Text>().setString("RMB");
+        entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
+        entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
         parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
         //switch view
         entity = m_scene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition({ 351.f, 92.f, TextOffset });
+        entity.addComponent<cro::Transform>().setPosition({ 351.f, 96.f, TextOffset });
         entity.addComponent<cro::Drawable2D>();
         entity.addComponent<cro::Text>(infoFont).setCharacterSize(InfoTextSize);
         entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
         entity.getComponent<cro::Text>().setString("Num 1");
+        entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
+        entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
         parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     }
     else
     {
         //emote
         entity = m_scene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition({ 351.f, 92.f, TextOffset });
+        entity.addComponent<cro::Transform>().setPosition({ 351.f, 96.f, TextOffset });
         entity.addComponent<cro::Drawable2D>();
         entity.addComponent<cro::Text>(infoFont).setCharacterSize(InfoTextSize);
         entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
         entity.getComponent<cro::Text>().setString("LCtrl");
+        entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
+        entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
         parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
         //scores
@@ -2499,6 +2540,8 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
         entity.addComponent<cro::Text>(infoFont).setCharacterSize(InfoTextSize);
         entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
         entity.getComponent<cro::Text>().setString("Tab");
+        entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
+        entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
         parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     }
 
