@@ -368,11 +368,14 @@ void CPUGolfer::calcDistance(float dt, glm::vec3 windVector)
         }
 
         //adjust the target distance depending on how the wind carries us
-        float windDot = -(glm::dot(glm::normalize(glm::vec2(windVector.x, -windVector.z)), glm::normalize(glm::vec2(targetDir.x, -targetDir.z))));
-        windDot *= windVector.y;
-        windDot *= 0.1f; //magic number. This is the maximum amount of the current distance added to itself
-        //windDot = std::max(0.f, windDot);
-        targetDistance += (targetDistance * windDot);
+        if (m_activePlayer.terrain != TerrainID::Green)
+        {
+            float windDot = -(glm::dot(glm::normalize(glm::vec2(windVector.x, -windVector.z)), glm::normalize(glm::vec2(targetDir.x, -targetDir.z))));
+            windDot *= windVector.y;
+            windDot *= 0.1f; //magic number. This is the maximum amount of the current distance added to itself
+            //windDot = std::max(0.f, windDot);
+            targetDistance += (targetDistance * windDot);
+        }
 
         //and hit further if we're off the fairway
         if (m_activePlayer.terrain == TerrainID::Rough
@@ -594,7 +597,7 @@ void CPUGolfer::aim(float dt, glm::vec3 windVector)
         }
 
         //putting is a special case where wind effect is lower
-    //but we also need to deal with the slope of the green
+        //but we also need to deal with the slope of the green
         float greenCompensation = 0.9f; //default reduction for driving (this was reduced from 1 because max rotation was increased to 0.13)
         float slopeCompensation = 0.f;
 
@@ -603,33 +606,34 @@ void CPUGolfer::aim(float dt, glm::vec3 windVector)
 
         if (m_activePlayer.terrain == TerrainID::Green)
         {
-            greenCompensation = 0.016f; //reduce the wind compensation by this
+            //no wind on the green
+            greenCompensation = 0.f;// 0.016f; //reduce the wind compensation by this
 
-            //then calculate the slope by measuring two points either side of a point
-            //approx two thirds to the hole.
-            auto centrePoint = (m_target - m_activePlayer.position) * 0.75f;
-            float distanceReduction = std::min(0.86f, glm::length(centrePoint) / 3.f);
-
-            //reduce this as we get nearer the hole
-            auto distance = glm::normalize(centrePoint) * (0.1f + (0.9f * std::min(1.f, (distanceToTarget / 2.f))));
-            centrePoint += m_activePlayer.position;
-
-            //left point
-            distance = { distance.z, distance.y, -distance.x };
-            auto resultA = m_collisionMesh.getTerrain(centrePoint + distance);
-
-            //right point
-            distance *= -1.f;
-            auto resultB = m_collisionMesh.getTerrain(centrePoint + distance);
-
-            static constexpr float MaxSlope = 0.048f; //~48cm diff in slope
-#ifdef CRO_DEBUG_
-            debug.slope = resultA.height - resultB.height;
-#endif
-            float slope = (resultA.height - resultB.height) / MaxSlope;
-            slopeCompensation = m_inputParser.getMaxRotation() * slope;// *0.15f;
-            slopeCompensation *= distanceReduction; //reduce the effect nearer the hole
-            greenCompensation *= distanceReduction;
+//            //then calculate the slope by measuring two points either side of a point
+//            //approx two thirds to the hole.
+//            auto centrePoint = (m_target - m_activePlayer.position) * 0.75f;
+//            float distanceReduction = std::min(0.86f, glm::length(centrePoint) / 3.f);
+//
+//            //reduce this as we get nearer the hole
+//            auto distance = glm::normalize(centrePoint) * (0.1f + (0.9f * std::min(1.f, (distanceToTarget / 2.f))));
+//            centrePoint += m_activePlayer.position;
+//
+//            //left point
+//            distance = { distance.z, distance.y, -distance.x };
+//            auto resultA = m_collisionMesh.getTerrain(centrePoint + distance);
+//
+//            //right point
+//            distance *= -1.f;
+//            auto resultB = m_collisionMesh.getTerrain(centrePoint + distance);
+//
+//            static constexpr float MaxSlope = 0.048f; //~48cm diff in slope
+//#ifdef CRO_DEBUG_
+//            debug.slope = resultA.height - resultB.height;
+//#endif
+//            float slope = (resultA.height - resultB.height) / MaxSlope;
+//            slopeCompensation = m_inputParser.getMaxRotation() * slope;// *0.15f;
+//            slopeCompensation *= distanceReduction; //reduce the effect nearer the hole
+//            greenCompensation *= distanceReduction;
         }
 
 
@@ -754,7 +758,11 @@ void CPUGolfer::aimDynamic(float dt)
         //pick inititial direction
         if (!m_wantsPrediction)
         {
-            m_targetAngle = m_aimAngle + getOffsetValue() * 0.001f;
+            m_targetAngle = m_aimAngle;
+            if (m_activePlayer.terrain != TerrainID::Green)
+            {
+                m_targetAngle += getOffsetValue() * 0.001f;
+            }
             m_wantsPrediction = true;
         }
         //or refine based on prediction
@@ -1015,7 +1023,7 @@ void CPUGolfer::calcAccuracy()
     else
     {
         //hack to make the ball putt a little further
-        m_targetPower = std::min(1.f, m_targetPower /*+ (static_cast<float>(m_skillIndex) * 0.01f)*/);
+        m_targetPower = std::min(1.f, m_targetPower * 0.98f /*+ (static_cast<float>(m_skillIndex) * 0.01f)*/);
     }
 }
 

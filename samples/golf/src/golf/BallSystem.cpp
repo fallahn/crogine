@@ -388,7 +388,7 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
                     //these are all just a wild stab
                     //destined for some tweaking - basically puts the ball back along its vector
                     //towards the hole while maintaining gravity. As if it bounced off the inside of the hole
-                    if (terrainContact.penetration > (Ball::Radius * 0.5f))
+                    if (terrainContact.penetration > (Ball::Radius * 0.25f))
                     {
                         ball.velocity *= -1.f;
                         ball.velocity.y *= -1.f;
@@ -420,7 +420,6 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
                         //we've sunk into the ground so correct
                         ball.velocity.y = 0.f;
 
-                        //position.y += terrainContact.penetration;
                         position.y = terrainContact.intersection.y;
                         tx.setPosition(position);
                     }
