@@ -520,6 +520,11 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
                 {
                     auto* msg2 = postEvent();
                     msg2->type = GolfBallEvent::Gimme;
+
+                    position.x = m_holeData->pin.x;
+                    position.y = m_holeData->pin.y - (Ball::Radius * 2.5f);
+                    position.z = m_holeData->pin.z;
+                    tx.setPosition(position);
                 }
 
                 msg->position = position;
@@ -643,12 +648,6 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
                 //we're in the hole
                 msg->type = GolfBallEvent::Holed;
                 //LogI << "Ball Holed" << std::endl;
-
-                //if under gimme we move the ball to the hole
-                auto ballPos = m_holeData->pin;
-                ballPos.y -= Ball::Radius * 2.f;
-                entity.getComponent<cro::Transform>().setPosition(ballPos);
-                msg->position = ballPos;
             }
             else
             {
