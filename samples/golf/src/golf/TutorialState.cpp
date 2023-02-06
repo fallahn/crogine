@@ -473,6 +473,7 @@ void TutorialState::buildScene()
 
     //create the layout depending on the requested tutorial
     //tutorialSwing(rootNode);
+    //tutorialThree(rootNode);
     switch (m_sharedData.tutorialIndex)
     {
     default:
@@ -1146,8 +1147,76 @@ void TutorialState::tutorialThree(cro::Entity root)
     uiSprites.loadFromFile("assets/golf/sprites/ui.spt", m_sharedData.sharedResources->textures);
 
 
-    //fourth tip text
+    //cancel tip text
     auto entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>().setCroppingArea({ 0.f,0.f,0.f,0.f });
+    entity.addComponent<cro::Text>(font).setCharacterSize(InfoTextSize);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    if (cro::GameController::getControllerCount() != 0)
+    {
+        entity.getComponent<cro::Text>().setString("Press     at any time to cancel the shot");
+        centreText(entity);
+
+        auto buttonEnt = m_scene.createEntity();
+        buttonEnt.addComponent<cro::Transform>().setPosition({ 32.f - (entity.getComponent<cro::Transform>().getOrigin().x / 2.f), -11.f });
+        buttonEnt.addComponent<cro::Drawable2D>();
+        buttonEnt.addComponent<cro::Sprite>() = m_buttonSprites[ButtonID::B];
+        buttonEnt.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+        buttonEnt.addComponent<cro::SpriteAnimation>().play(0);
+        buttonEnt.addComponent<cro::CommandTarget>().ID = CommandID::UI::PlayerIcon;
+        buttonEnt.addComponent<cro::Callback>().active = true;
+        buttonEnt.getComponent<cro::Callback>().setUserData<float>(0.f);
+        buttonEnt.getComponent<cro::Callback>().function =
+            [entity](cro::Entity e, float dt)
+        {
+            if (entity.getComponent<cro::Callback>().active)
+            {
+                auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
+                currTime = std::min(1.f, currTime + (dt * 4.f));
+
+                cro::Colour c(1.f, 1.f, 1.f, currTime);
+                e.getComponent<cro::Sprite>().setColour(c);
+            }
+        };
+        entity.getComponent<cro::Transform>().addChild(buttonEnt.getComponent<cro::Transform>());
+    }
+    else
+    {
+        cro::String str = "Press " + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::CancelShot]) + " at any time to cancel the shot";
+        entity.getComponent<cro::Text>().setString(str);
+        centreText(entity);
+    }
+    auto bounds = cro::Text::getLocalBounds(entity);
+    entity.addComponent<UIElement>().relativePosition = { 0.5f, 0.5f };
+    entity.getComponent<UIElement>().absolutePosition = { 0.f, std::floor(bounds.height / 2.f) - 110.f };
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
+    entity.addComponent<cro::Callback>().setUserData<float>(0.f);
+    entity.getComponent<cro::Callback>().function =
+        [&, bounds](cro::Entity e, float dt) mutable
+    {
+        auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
+        currTime = std::min(1.f, currTime + (dt * 3.f));
+        auto area = bounds;
+        area.width *= currTime;
+        e.getComponent<cro::Drawable2D>().setCroppingArea(area);
+
+        if (currTime == 1)
+        {
+            e.getComponent<cro::Callback>().active = false;
+            showContinue();
+        }
+    };
+
+    auto cancelEnt = entity;
+    root.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+
+
+
+    //fourth tip text
+    entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>().setCroppingArea({ 0.f, 0.f, 0.f, 0.f });
     entity.addComponent<cro::Text>(font).setCharacterSize(InfoTextSize);
@@ -1194,10 +1263,10 @@ void TutorialState::tutorialThree(cro::Entity root)
     }
 
     centreText(entity);
-    auto bounds = cro::Text::getLocalBounds(entity);
+    bounds = cro::Text::getLocalBounds(entity);
     entity.addComponent<cro::Callback>().setUserData<float>(0.f);
     entity.getComponent<cro::Callback>().function =
-        [&, bounds](cro::Entity e, float dt)
+        [&, cancelEnt, bounds](cro::Entity e, float dt) mutable
     {
         auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
         currTime = std::min(1.f, currTime + (dt * 3.f));
@@ -1331,6 +1400,7 @@ void TutorialState::tutorialThree(cro::Entity root)
         e.getComponent<cro::Transform>().setScale(glm::vec2(currTime));
     };
     root.getComponent<cro::Transform>().addChild(pingEnt.getComponent<cro::Transform>());
+
 
     //third tip text
     entity = m_scene.createEntity();
@@ -1697,10 +1767,13 @@ void TutorialState::tutorialThree(cro::Entity root)
             hookBar.getComponent<cro::Callback>().active = true;
             arrow04.getComponent<cro::Callback>().active = true;
         });
-    m_actionCallbacks.push_back([&, hookBar]() mutable
+    m_actionCallbacks.push_back([cancelEnt, hookBar]() mutable
         {
             hookBar.getComponent<cro::Callback>().active = false;
-
+            cancelEnt.getComponent<cro::Callback>().active = true;
+        });
+    m_actionCallbacks.push_back([&]() mutable
+        {
             auto e = m_scene.createEntity();
             e.addComponent<cro::Callback>().active = true;
             e.getComponent<cro::Callback>().setUserData<float>(0.f);
