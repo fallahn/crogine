@@ -6891,6 +6891,9 @@ void GolfState::updateCameraHeight(float movement)
 
 void GolfState::toggleFreeCam()
 {
+    cro::Command cmd;
+    cmd.targetFlags = CommandID::StrokeArc | CommandID::StrokeIndicator;
+
     m_photoMode = !m_photoMode;
     if (m_photoMode)
     {
@@ -6903,7 +6906,8 @@ void GolfState::toggleFreeCam()
         m_freeCam.getComponent<FpsCamera>().resetOrientation(m_freeCam);
         m_freeCam.getComponent<cro::Camera>().active = true;
 
-        //TODO hide stroke indicator
+        //hide stroke indicator
+        cmd.action = [](cro::Entity e, float) {e.getComponent<cro::Model>().setHidden(true); };
 
         //reduce fade distance
         m_resolutionUpdate.targetFade = 0.2f;
@@ -6928,7 +6932,16 @@ void GolfState::toggleFreeCam()
         auto origin = m_courseEnt.getComponent<cro::Transform>().getOrigin();
         origin.z = 0.5f;
         m_courseEnt.getComponent<cro::Transform>().setOrigin(origin);
+
+
+        //and stroke indicator
+        cmd.action = [&](cro::Entity e, float)
+        {
+            auto localPlayer = m_currentPlayer.client == m_sharedData.clientConnection.connectionID;
+            e.getComponent<cro::Model>().setHidden(!(localPlayer && !m_sharedData.localConnectionData.playerData[m_currentPlayer.player].isCPU));
+        };
     }
+    m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
     m_gameScene.setSystemActive<FpsCameraSystem>(m_photoMode);
     m_waterEnt.getComponent<cro::Callback>().active = !m_photoMode;
