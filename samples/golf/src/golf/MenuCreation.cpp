@@ -100,6 +100,11 @@ namespace
     };
     std::vector<float> CursorAnimationCallback::WaveTable;
 
+    const std::array<std::string, 3u> CourseTypes =
+    {
+        "Official Courses", "User Courses", "Workshop Courses"
+    };
+
     const std::array<std::string, ScoreType::Count> RuleDescriptions =
     {
         "Player with fewest overall strokes wins",
@@ -131,6 +136,8 @@ void MenuState::parseCourseDirectory(const std::string& rootDir, bool isUser)
 
     //at least be consistent across platforms
     std::sort(directories.begin(), directories.end(), [](const  std::string& a, const std::string& b) {return a < b; });
+
+    m_courseIndices[m_currentRange].start = m_courseData.size();
 
     std::int32_t courseNumber = 1;
     for (const auto& dir : directories)
@@ -199,6 +206,7 @@ void MenuState::parseCourseDirectory(const std::string& rootDir, bool isUser)
                 data.holeCount[2] = "Back " + std::to_string(std::min(holeCount - (holeCount / 2), 9));
 
                 courseNumber++;
+                m_courseIndices[m_currentRange].count++;
             }
         }
 
@@ -272,10 +280,16 @@ void MenuState::hideToolTip()
 
 void MenuState::createUI()
 {
+    m_currentRange = Range::Official;
     parseCourseDirectory(ConstVal::MapPath, false);
-    m_officialCourseCount = m_courseData.size();
+
+    m_currentRange = Range::Custom;
     parseCourseDirectory(cro::App::getPreferencePath() + ConstVal::UserMapPath, true);
-    m_activeCourseCount = m_sharedData.showCustomCourses ? m_courseData.size() : m_officialCourseCount;
+
+    //TODO workshop path
+
+
+    m_currentRange = Range::Official; //make this default
 
     if (!m_courseData.empty())
     {
@@ -1265,24 +1279,48 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
             }
         });
 
-    m_courseSelectCallbacks.toggleUserCourses = m_uiScene.getSystem<cro::UISystem>()->addCallback(
+    m_courseSelectCallbacks.prevHoleType = m_uiScene.getSystem<cro::UISystem>()->addCallback(
         [&](cro::Entity, const cro::ButtonEvent& evt)
         {
             if (activated(evt))
             {
-                m_sharedData.showCustomCourses = !m_sharedData.showCustomCourses;
-
-                m_activeCourseCount = m_sharedData.showCustomCourses ? m_courseData.size() : m_officialCourseCount;
-                auto newIndex = m_sharedData.courseIndex % m_activeCourseCount;
-                if (newIndex != m_sharedData.courseIndex)
+                do
                 {
-                    m_sharedData.courseIndex = newIndex;
-                    m_sharedData.mapDirectory = m_courseData[newIndex].directory;
-                    auto data = serialiseString(m_sharedData.mapDirectory);
-                    m_sharedData.clientConnection.netClient.sendPacket(PacketID::MapInfo, data.data(), data.size(), net::NetFlag::Reliable, ConstVal::NetChannelStrings);
-                }
+                    m_currentRange = (m_currentRange + (Range::Count - 1)) % Range::Count;
+                    m_sharedData.courseIndex = m_courseIndices[m_currentRange].start;
+                } while (m_courseIndices[m_currentRange].count == 0);
+                nextCourse(); //silly way of refreshing the display
+                prevCourse();
 
-                m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
+                cro::Command cmd;
+                cmd.targetFlags = CommandID::Menu::CourseType;
+                cmd.action = [&](cro::Entity e, float)
+                {
+                    e.getComponent<cro::Text>().setString(CourseTypes[m_currentRange]);
+                };
+                m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+            }
+        });
+    m_courseSelectCallbacks.nextHoleType = m_uiScene.getSystem<cro::UISystem>()->addCallback(
+        [&](cro::Entity, const cro::ButtonEvent& evt)
+        {
+            if (activated(evt))
+            {
+                do
+                {
+                    m_currentRange = (m_currentRange + 1) % Range::Count;
+                    m_sharedData.courseIndex = m_courseIndices[m_currentRange].start;
+                } while (m_courseIndices[m_currentRange].count == 0);
+                prevCourse();
+                nextCourse();
+
+                cro::Command cmd;
+                cmd.targetFlags = CommandID::Menu::CourseType;
+                cmd.action = [&](cro::Entity e, float)
+                {
+                    e.getComponent<cro::Text>().setString(CourseTypes[m_currentRange]);
+                };
+                m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
             }
         });
 
@@ -4860,7 +4898,7 @@ void MenuState::addCourseSelectButtons()
 
 
 
-    if (m_courseData.size() > m_officialCourseCount)
+    if (m_courseData.size() > m_courseIndices[Range::Official].count)
     {
         //add arrows to scroll through course list sub indices.
         buttonEnt = m_uiScene.createEntity();
@@ -4878,7 +4916,7 @@ void MenuState::addCourseSelectButtons()
         buttonEnt.getComponent<cro::UIInput>().setGroup(MenuID::Lobby);
         buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = m_courseSelectCallbacks.selected;
         buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = m_courseSelectCallbacks.unselected;
-        //buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = m_courseSelectCallbacks.prevCourse;
+        buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = m_courseSelectCallbacks.prevHoleType;
         buttonEnt.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
         m_menuEntities[MenuID::Lobby].getComponent<cro::Transform>().addChild(buttonEnt.getComponent<cro::Transform>());
         
@@ -4900,18 +4938,17 @@ void MenuState::addCourseSelectButtons()
         buttonEnt.getComponent<cro::UIInput>().setGroup(MenuID::Lobby);
         buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = m_courseSelectCallbacks.selected;
         buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = m_courseSelectCallbacks.unselected;
-        //buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = m_courseSelectCallbacks.nextCourse;
+        buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = m_courseSelectCallbacks.nextHoleType;
 
         buttonEnt.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
 
         m_menuEntities[MenuID::Lobby].getComponent<cro::Transform>().addChild(buttonEnt.getComponent<cro::Transform>());
 
 
-
         auto labelEnt = m_uiScene.createEntity();
         labelEnt.addComponent<cro::Transform>();
         labelEnt.addComponent<cro::Drawable2D>();
-        labelEnt.addComponent<cro::Text>(font).setString("Official Courses");
+        labelEnt.addComponent<cro::Text>(font).setString(CourseTypes[m_currentRange]);
         labelEnt.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
         labelEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
         labelEnt.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
@@ -4944,7 +4981,10 @@ void MenuState::nextHoleCount()
 
 void MenuState::prevCourse()
 {
-    m_sharedData.courseIndex = (m_sharedData.courseIndex + (m_activeCourseCount - 1)) % m_activeCourseCount;
+    auto idx = m_sharedData.courseIndex - m_courseIndices[m_currentRange].start;
+    idx = (idx + (m_courseIndices[m_currentRange].count - 1)) % m_courseIndices[m_currentRange].count;
+
+    m_sharedData.courseIndex = m_courseIndices[m_currentRange].start + idx;
 
     m_sharedData.mapDirectory = m_courseData[m_sharedData.courseIndex].directory;
     auto data = serialiseString(m_sharedData.mapDirectory);
@@ -4955,7 +4995,10 @@ void MenuState::prevCourse()
 
 void MenuState::nextCourse()
 {
-    m_sharedData.courseIndex = (m_sharedData.courseIndex + 1) % m_activeCourseCount;
+    auto idx = m_sharedData.courseIndex - m_courseIndices[m_currentRange].start;
+    idx = (idx + 1) % m_courseIndices[m_currentRange].count;
+
+    m_sharedData.courseIndex = m_courseIndices[m_currentRange].start + idx;
 
     m_sharedData.mapDirectory = m_courseData[m_sharedData.courseIndex].directory;
     auto data = serialiseString(m_sharedData.mapDirectory);

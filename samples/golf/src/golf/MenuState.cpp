@@ -130,8 +130,6 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     m_currentMenu           (MenuID::Main),
     m_prevMenu              (MenuID::Main),
     m_viewScale             (1.f),
-    m_activeCourseCount     (0),
-    m_officialCourseCount   (0),
     m_activePlayerAvatar    (0)
 {
     std::fill(m_readyState.begin(), m_readyState.end(), false);

@@ -149,7 +149,8 @@ private:
         std::uint32_t nextCourse = 0;
         std::uint32_t prevHoleCount = 0;
         std::uint32_t nextHoleCount = 0;
-        std::uint32_t toggleUserCourses = 0;
+        std::uint32_t prevHoleType = 0;
+        std::uint32_t nextHoleType = 0;
         std::uint32_t toggleReverseCourse = 0;
         std::uint32_t toggleFriendsOnly = 0;
         std::uint32_t toggleGameRules = 0;
@@ -213,8 +214,21 @@ private:
     };
     std::vector<CourseData> m_courseData;
     std::unordered_map<std::string, std::unique_ptr<cro::Texture>> m_courseThumbs;
-    std::size_t m_activeCourseCount;
-    std::size_t m_officialCourseCount;
+    
+    struct Range final
+    {
+        std::size_t start = 0;
+        std::size_t count = 0;
+
+        enum
+        {
+            Official, Custom, Workshop,
+            Count
+        };
+    };
+    std::int32_t m_currentRange = Range::Official;
+    std::array<Range, Range::Count> m_courseIndices = {};
+
     void parseCourseDirectory(const std::string&, bool isUser);
 
     cro::Entity m_toolTip;
