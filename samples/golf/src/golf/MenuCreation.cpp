@@ -224,6 +224,19 @@ void MenuState::parseCourseDirectory(const std::string& rootDir, bool isUser)
         {
             m_courseThumbs.insert(std::make_pair(dir, std::move(t)));
         }
+
+        //and video thumbnail
+        courseFile = rootDir + dir + "/preview.mpg";
+        testPath = courseFile;
+        if (!isUser)
+        {
+            testPath = cro::FileSystem::getResourcePath() + testPath;
+        }
+
+        if (cro::FileSystem::fileExists(testPath))
+        {
+            m_videoPaths.insert(std::make_pair(dir, testPath));
+        }
     }
 
     //moved to createUI() because this func gets called multiple times

@@ -763,6 +763,8 @@ bool MenuState::simulate(float dt)
         m_uiScene.simulate(dt);
     }
 
+    m_videoPlayer.update(dt);
+
     return true;
 }
 
@@ -1588,10 +1590,23 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
                 }
                 updateCourseRuleString();
 
-                if (m_courseThumbs.count(course))
+                static constexpr glm::vec2 ThumbnailSize(138.f, 104.f);
+
+                if (m_videoPaths.count(course) != 0
+                    && m_videoPlayer.loadFromFile(m_videoPaths.at(course)))
+                {
+                    m_videoPlayer.setLooped(true);
+                    m_videoPlayer.play();
+                    m_videoPlayer.update(1.f/30.f);
+
+                    m_lobbyWindowEntities[LobbyEntityID::HoleThumb].getComponent<cro::Sprite>().setTexture(m_videoPlayer.getTexture());
+                    auto scale = ThumbnailSize / glm::vec2(m_videoPlayer.getTexture().getSize());
+                    m_lobbyWindowEntities[LobbyEntityID::HoleThumb].getComponent<cro::Transform>().setScale(scale);
+                }
+                else if (m_courseThumbs.count(course) != 0)
                 {
                     m_lobbyWindowEntities[LobbyEntityID::HoleThumb].getComponent<cro::Sprite>().setTexture(*m_courseThumbs.at(course));
-                    auto scale = glm::vec2(138.f, 104.f) / glm::vec2(m_courseThumbs.at(course)->getSize());
+                    auto scale = ThumbnailSize / glm::vec2(m_courseThumbs.at(course)->getSize());
                     m_lobbyWindowEntities[LobbyEntityID::HoleThumb].getComponent<cro::Transform>().setScale(scale);
                 }
                 else

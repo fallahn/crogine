@@ -50,6 +50,7 @@ source distribution.
 #include <crogine/graphics/Font.hpp>
 #include <crogine/graphics/RenderTexture.hpp>
 #include <crogine/graphics/UniformBuffer.hpp>
+#include <crogine/graphics/VideoPlayer.hpp>
 
 #include <array>
 #include <unordered_map>
@@ -214,6 +215,8 @@ private:
     };
     std::vector<CourseData> m_courseData;
     std::unordered_map<std::string, std::unique_ptr<cro::Texture>> m_courseThumbs;
+    std::unordered_map<std::string, std::string> m_videoPaths;
+    cro::VideoPlayer m_videoPlayer;
     
     struct Range final
     {
