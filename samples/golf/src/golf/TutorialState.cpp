@@ -1159,7 +1159,7 @@ void TutorialState::tutorialThree(cro::Entity root)
         centreText(entity);
 
         auto buttonEnt = m_scene.createEntity();
-        buttonEnt.addComponent<cro::Transform>().setPosition({ 32.f - (entity.getComponent<cro::Transform>().getOrigin().x / 2.f), -11.f });
+        buttonEnt.addComponent<cro::Transform>().setPosition({ 32.f, -13.f });
         buttonEnt.addComponent<cro::Drawable2D>();
         buttonEnt.addComponent<cro::Sprite>() = m_buttonSprites[ButtonID::B];
         buttonEnt.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
