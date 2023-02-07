@@ -1765,12 +1765,21 @@ void DrivingState::updateWindDisplay(glm::vec3 direction)
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
     cmd.targetFlags = CommandID::UI::WindString;
-    cmd.action = [direction](cro::Entity e, float dt)
+    cmd.action = [&,direction](cro::Entity e, float dt)
     {
         float knots = direction.y * KnotsPerMetre;
+        float speed = direction.y;
+
         std::stringstream ss;
         ss.precision(2);
-        ss << std::fixed << knots << " knots";
+        if (m_sharedData.imperialMeasurements)
+        {
+            ss << " " << std::fixed << speed * MPHPerMetre << " mph";
+        }
+        else
+        {
+            ss << " " << std::fixed << speed * KPHPerMetre << " kph";
+        }
         e.getComponent<cro::Text>().setString(ss.str());
 
         auto bounds = cro::Text::getLocalBounds(e);
