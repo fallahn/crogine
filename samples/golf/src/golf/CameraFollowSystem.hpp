@@ -32,6 +32,7 @@ source distribution.
 #include "GameConsts.hpp"
 
 #include <crogine/ecs/System.hpp>
+#include <crogine/ecs/components/Camera.hpp>
 #include <crogine/detail/glm/vec3.hpp>
 #include <crogine/gui/GuiClient.hpp>
 
@@ -71,7 +72,7 @@ struct CameraFollower final
     {
         Track,
         Zoom,
-        Reset
+        //Reset
     }state = Track;
 
     cro::Entity target;
@@ -101,6 +102,17 @@ struct CameraFollower final
         float speed = 1.f;
         bool done = false;
     }zoom;
+
+    void reset(cro::Entity parent)
+    {
+        zoom.fov = 1.f;
+        zoom.progress = 0.f;
+        zoom.done = false;
+        parent.getComponent<cro::Camera>().resizeCallback(parent.getComponent<cro::Camera>());
+
+        state = CameraFollower::Track;
+        isSnapped = false;
+    }
 };
 
 class CameraFollowSystem final : public cro::System, public cro::GuiClient

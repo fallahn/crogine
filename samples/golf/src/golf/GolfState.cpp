@@ -6036,7 +6036,7 @@ void GolfState::setGreenCamPosition()
         m_cameras[CameraID::Green].getComponent<cro::Transform>().move(direction);
         m_cameras[CameraID::Green].getComponent<CameraFollower>().radius = GreenCamRadiusSmall * GreenCamRadiusSmall;
         m_cameras[CameraID::Green].getComponent<CameraFollower>().zoomRadius = 1.f;
-        m_cameras[CameraID::Green].getComponent<CameraFollower>().isSnapped = true;
+        m_cameras[CameraID::Green].getComponent<CameraFollower>().isSnapped = true; //this actually gets overridden when camera is set active...
         m_cameras[CameraID::Green].getComponent<CameraFollower>().maxTargetDiff = 4.f;
         m_cameras[CameraID::Green].getComponent<CameraFollower>().zoom.target = 0.3f;
         m_cameras[CameraID::Green].getComponent<CameraFollower>().zoom.speed = GreenCamZoomSlow;
@@ -6055,7 +6055,7 @@ void GolfState::setGreenCamPosition()
         m_cameras[CameraID::Green].getComponent<cro::Transform>().move(direction);
         m_cameras[CameraID::Green].getComponent<CameraFollower>().radius = GreenCamRadiusMedium * GreenCamRadiusMedium;
         m_cameras[CameraID::Green].getComponent<CameraFollower>().zoomRadius = 9.f;
-        m_cameras[CameraID::Green].getComponent<CameraFollower>().isSnapped = true;
+        m_cameras[CameraID::Green].getComponent<CameraFollower>().isSnapped = true; //this actually gets overridden when camera is set active...
         m_cameras[CameraID::Green].getComponent<CameraFollower>().maxTargetDiff = 8.f;
         m_cameras[CameraID::Green].getComponent<CameraFollower>().zoom.target = 0.5f;
         m_cameras[CameraID::Green].getComponent<CameraFollower>().zoom.speed = GreenCamZoomSlow / 2.f;
@@ -6823,7 +6823,7 @@ void GolfState::setActiveCamera(std::int32_t camID)
         //reset existing zoom
         if (m_cameras[m_currentCamera].hasComponent<CameraFollower>())
         {
-            m_cameras[m_currentCamera].getComponent<CameraFollower>().state = CameraFollower::Reset;
+            m_cameras[m_currentCamera].getComponent<CameraFollower>().reset(m_cameras[m_currentCamera]);
         }
 
         //set the water plane ent on the active camera
@@ -6852,8 +6852,8 @@ void GolfState::setActiveCamera(std::int32_t camID)
         
         if (m_cameras[m_currentCamera].hasComponent<CameraFollower>())
         {
+            m_cameras[m_currentCamera].getComponent<CameraFollower>().reset(m_cameras[m_currentCamera]);
             m_cameras[m_currentCamera].getComponent<CameraFollower>().currentFollowTime = CameraFollower::MinFollowTime;
-            m_cameras[m_currentCamera].getComponent<CameraFollower>().isSnapped = false;
         }
         m_courseEnt.getComponent<cro::Drawable2D>().setShader(m_cameras[m_currentCamera].getComponent<TargetInfo>().postProcess);
     }

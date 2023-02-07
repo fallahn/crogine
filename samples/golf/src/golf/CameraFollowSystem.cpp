@@ -36,7 +36,6 @@ source distribution.
 
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/ecs/components/Transform.hpp>
-#include <crogine/ecs/components/Camera.hpp>
 #include <crogine/ecs/components/Callback.hpp>
 #include <crogine/detail/glm/gtx/norm.hpp>
 #include <crogine/detail/glm/common.hpp>
@@ -158,7 +157,7 @@ void CameraFollowSystem::process(float dt)
     {
         auto& follower = entity.getComponent<CameraFollower>();
 
-        if (follower.state == CameraFollower::Reset)
+        /*if (follower.state == CameraFollower::Reset)
         {
             follower.zoom.fov = 1.f;
             follower.zoom.progress = 0.f;
@@ -167,7 +166,7 @@ void CameraFollowSystem::process(float dt)
 
             follower.state = CameraFollower::Track;
             continue;
-        }
+        }*/
 
         if (!follower.target.isValid())
         {
@@ -205,7 +204,6 @@ void CameraFollowSystem::process(float dt)
             //auto lookAt = lookFrom(tx.getPosition(), follower.currentTarget, cro::Transform::Y_AXIS);
             auto lookAt = glm::lookAt(tx.getPosition(), follower.currentTarget, cro::Transform::Y_AXIS);
             tx.setLocalTransform(glm::inverse(lookAt));
-
 
 
             //check the distance to the ball, and store it if closer than previous dist
@@ -250,10 +248,11 @@ void CameraFollowSystem::process(float dt)
                 follower.state = CameraFollower::Zoom;
             }
 
-            if (m_closestCamera != follower.id)
-            {
-                follower.state = CameraFollower::Reset;
-            }
+            //moved to Follower::reset();
+            //if (m_closestCamera != follower.id)
+            //{
+                //follower.state = CameraFollower::Reset;
+            //}
 
             auto& targetInfo = entity.getComponent<TargetInfo>();
             if (targetInfo.waterPlane.isValid())
@@ -334,7 +333,7 @@ void CameraFollowSystem::resetCamera()
 
     for (auto entity : getEntities())
     {
-        entity.getComponent<CameraFollower>().state = CameraFollower::Reset;
+        entity.getComponent<CameraFollower>().reset(entity);
         entity.getComponent<CameraFollower>().currentFollowTime = -1.f;
     }
     m_currentCamera.getComponent<CameraFollower>().currentFollowTime = -1.f;

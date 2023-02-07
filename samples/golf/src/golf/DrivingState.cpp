@@ -2820,6 +2820,11 @@ void DrivingState::setActiveCamera(std::int32_t camID)
         m_currentCamera = camID;
 
         m_cameras[m_currentCamera].getComponent<cro::Camera>().active = true;
+
+        if (m_cameras[m_currentCamera].hasComponent<CameraFollower>())
+        {
+            m_cameras[m_currentCamera].getComponent<CameraFollower>().reset(m_cameras[m_currentCamera]);
+        }
     }
 }
 
