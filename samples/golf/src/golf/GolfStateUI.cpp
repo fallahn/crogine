@@ -1129,6 +1129,22 @@ void GolfState::showCountdown(std::uint8_t seconds)
         m_trophyLabels[i].getComponent<cro::Sprite>().setTextureRect(bounds);
     }
 
+
+    //enter score into leaderboard
+    if (m_sharedData.scoreType == ScoreType::Stroke)
+    {
+        const auto& connectionData = m_sharedData.connectionData[m_sharedData.clientConnection.connectionID];
+        for (auto i = 0u; i < connectionData.playerCount; ++i)
+        {
+            if (!connectionData.playerData[i].isCPU)
+            {
+                Social::insertScore(m_sharedData.mapDirectory, m_sharedData.holeCount, connectionData.playerData[i].score);
+                break;
+            }
+        }
+    }
+
+
     auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
 
     auto entity = m_uiScene.createEntity();
