@@ -48,8 +48,20 @@ struct Club final
     {
         if (imperial)
         {
-            auto dist = static_cast<std::int32_t>(target * 1.094f);
-            return name + std::to_string(dist) + "yds";
+            static constexpr float ToYards = 1.094f;
+            static constexpr float ToFeet = 3.281f;
+            //static constexpr float ToInches = 12.f;
+
+            if (power > 10.f)
+            {
+                auto dist = static_cast<std::int32_t>(target * ToYards);
+                return name + std::to_string(dist) + "yds";
+            }
+            else
+            {
+                auto dist = static_cast<std::int32_t>(target * ToFeet);
+                return name + std::to_string(dist) + "ft";
+            }
         }
         else
         {
@@ -82,5 +94,4 @@ static const std::array<Club, ClubID::Count> Clubs =
     Club("Gap Wedge ", 17.4f, 60.f, 30.f),
     Club("Sand Wedge ", 10.3f, 60.f, 10.f),
     Club("Putter ", 9.11f, 0.f, 10.f)
-    //Club("Putter ", 6.39f, 0.f, 7.f) //make sure to update slope shader in TerrainShader.inl with this as the radius
 };

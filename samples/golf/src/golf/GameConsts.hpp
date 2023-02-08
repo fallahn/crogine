@@ -712,8 +712,8 @@ static inline void createFallbackModel(cro::Entity target, cro::ResourceCollecti
 static inline void formatDistanceString(float distance, cro::Text& target, bool imperial)
 {
     static constexpr float ToYards = 1.094f;
-    //static constexpr float ToFeet = 3.281f;
-    //static constexpr float ToInches = 12.f;
+    static constexpr float ToFeet = 3.281f;
+    static constexpr float ToInches = 12.f;
 
     if (imperial)
     {
@@ -724,16 +724,16 @@ static inline void formatDistanceString(float distance, cro::Text& target, bool 
         }
         else
         {
-            float dist = std::ceil((distance * ToYards) * 100.f) / 100.f;
+            /*float dist = std::ceil((distance * ToYards) * 100.f) / 100.f;
             std::stringstream ss;
             ss.precision(2);
             ss << "Distance: ";
             ss << std::fixed << dist;
             ss << "yds";
 
-            target.setString(ss.str());
+            target.setString(ss.str());*/
 
-            /*distance *= ToFeet;
+            distance *= ToFeet;
             if (distance > 1)
             {
                 auto dist = static_cast<std::int32_t>(distance);
@@ -743,7 +743,7 @@ static inline void formatDistanceString(float distance, cro::Text& target, bool 
             {
                 auto dist = static_cast<std::int32_t>(distance * ToInches);
                 target.setString("Distance: " + std::to_string(dist) + "in");
-            }*/
+            }
         }
     }
     else
