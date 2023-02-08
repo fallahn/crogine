@@ -3337,7 +3337,7 @@ void GolfState::buildScene()
     glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
 
     entity.getComponent<cro::Model>().setHidden(true);
-    entity.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniGreen | RenderFlags::MiniMap | RenderFlags::Reflection));
+    entity.getComponent<cro::Model>().setRenderFlags(~(/*RenderFlags::MiniGreen |*/ RenderFlags::MiniMap | RenderFlags::Reflection));
 
 
     //a 'fan' which shows max rotation

@@ -27,4 +27,19 @@ It is also possible to add new hair models to Super Video Golf. These models wil
        uid = 2563436 //see avatar note, above
     }
 
-Hair models are untextured, and have their colour set by the avatar customisation menu in game. Any texture / vertex colour properties are ignored.
+Hair models are untextured, and have their colour set by the avatar customisation menu in game. Custom colours are applied to white vertices, other vertex colours are maintained.
+
+
+
+#### Key Colours
+When texturing avatars these colours in RGB, eg 0,0,0 or 30,30,30 will be used to key the coloursin the texture with the in-game palette. Other colours are left as they are and will appear unmodified on the model in game.
+
+Avatar colour keys are:
+
+            Dark  Light
+    Bottom - 0     10
+    Top    - 30    40
+    Skin   - 60    70
+    Hair   - 90    100
+
+In RGB linear space.
