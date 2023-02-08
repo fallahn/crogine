@@ -690,6 +690,9 @@
     <ClInclude Include="..\crogine\include\crogine\detail\QuadTree.hpp">
       <Filter>Header Files\detail</Filter>
     </ClInclude>
+    <ClInclude Include="..\crogine\src\detail\backward.hpp">
+      <Filter>Header Files\detail</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\crogine\src\ecs\Entity.cpp">
@@ -1150,6 +1153,9 @@
     </ClCompile>
     <ClCompile Include="..\crogine\src\core\AppPlugin.cpp">
       <Filter>Source Files\core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\detail\backward.cpp">
+      <Filter>Source Files\detail</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

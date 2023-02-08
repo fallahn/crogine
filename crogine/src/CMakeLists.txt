@@ -33,6 +33,7 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/core/Wavetable.cpp
   ${PROJECT_DIR}/core/Window.cpp
 
+  ${PROJECT_DIR}/detail/backward.cpp
   ${PROJECT_DIR}/detail/BalancedTree.cpp
   ${PROJECT_DIR}/detail/DistanceField.cpp
   #${PROJECT_DIR}/detail/glad.c

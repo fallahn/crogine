@@ -43,6 +43,7 @@ source distribution.
 #include <SDL_joystick.h>
 #include <SDL_filesystem.h>
 
+#include "../detail/backward.hpp"
 #include "../detail/GLCheck.hpp"
 #include "../detail/SDLImageRead.hpp"
 #include "../imgui/imgui_impl_opengl3.h"
@@ -324,16 +325,16 @@ void App::run()
         if (!gladLoadGLLoader(SDL_GL_GetProcAddress))
 #endif //PLATFORM_MOBILE
         {
-            Logger::log("Failed loading OpenGL", Logger::Type::Error);
+            Logger::log("Failed loading OpenGL", Logger::Type::Error, Logger::Output::All);
             return;
         }
-        
+
         m_window.setMultisamplingEnabled(glIsEnabled(GL_MULTISAMPLE));
 
         ImGui::CreateContext();
         setImguiStyle(&ImGui::GetStyle());
         ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
-        
+
         ImGui_ImplSDL2_InitForOpenGL(m_window.m_window, m_window.m_mainContext);
 #ifdef PLATFORM_DESKTOP
 #ifdef GL41
@@ -393,8 +394,8 @@ void App::run()
         Logger::log("Failed creating main window", Logger::Type::Error, Logger::Output::All);
         return;
     }
-    
-    
+
+
     HiResTimer frameClock;
     m_frameClock = &frameClock;
     m_running = initialise();
