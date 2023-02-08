@@ -1,5 +1,6 @@
 
 set(GOLF_SRC
+  ${PROJECT_DIR}/golf/BallAnimationSystem.cpp
   ${PROJECT_DIR}/golf/BallSystem.cpp
   ${PROJECT_DIR}/golf/BilliardsClientCollision.cpp
   ${PROJECT_DIR}/golf/BilliardsInput.cpp

@@ -77,7 +77,7 @@ BilliardsInput::BilliardsInput(const SharedStateData& sd, cro::MessageBus& mb)
     m_analogueAmountLeft    (1.f),
     m_analogueAmountRight   (1.f),
     m_active                (false),
-    m_clampRotation         (true),
+    m_clampRotation         (/*true*/false),
     m_maxRotation           (cro::Util::Const::PI / 2.f),
     m_power                 (0.5f),
     m_topSpin               (0.f),
@@ -327,7 +327,7 @@ void BilliardsInput::update(float dt)
 void BilliardsInput::setActive(bool active, bool placeBall)
 {
     m_active = active;
-    m_clampRotation = placeBall;
+    m_clampRotation = false;// placeBall;
 
     m_controlEntities.indicator.getComponent<cro::Model>().setHidden(!active);
     m_controlEntities.indicator.getComponent<cro::Callback>().active = active;

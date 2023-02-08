@@ -52,6 +52,7 @@ source distribution.
 #include "BeaconCallback.hpp"
 #include "SpectatorSystem.hpp"
 #include "PropFollowSystem.hpp"
+#include "BallAnimationSystem.hpp"
 #include "SpectatorAnimCallback.hpp"
 #include "MiniBallSystem.hpp"
 #include "CallbackData.hpp"
@@ -3108,6 +3109,7 @@ void GolfState::addSystems()
     m_gameScene.addSystem<PropFollowSystem>(mb, m_collisionMesh);
     m_gameScene.addSystem<cro::BillboardSystem>(mb);
     m_gameScene.addSystem<VatAnimationSystem>(mb);
+    m_gameScene.addSystem<BallAnimationSystem>(mb);
     m_gameScene.addSystem<cro::SpriteSystem3D>(mb, 10.f); //water rings sprite :D
     m_gameScene.addSystem<cro::SpriteAnimator>(mb);
     m_gameScene.addSystem<cro::SkeletalAnimator>(mb);
@@ -4467,6 +4469,12 @@ void GolfState::spawnBall(const ActorInfo& info)
     //adding a ball model means we see something a bit more reasonable when close up
     entity = m_gameScene.createEntity();
     entity.addComponent<cro::Transform>();
+    
+    //TODO add this based on ball config
+    entity.getComponent<cro::Transform>().setPosition({0.f, Ball::Radius, 0.f});
+    entity.getComponent<cro::Transform>().setOrigin({ 0.f, Ball::Radius, 0.f });
+    entity.addComponent<BallAnimation>().parent = ballEnt;
+    
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function =
         [&, ballEnt](cro::Entity e, float dt)
@@ -6248,6 +6256,7 @@ void GolfState::updateActor(const ActorInfo& update)
             bool active = (interp.id == update.serverID);
             if (active)
             {
+                //glm::quat(1.f, 0.f, 0.f, 0.f)
                 interp.addPoint({ update.position, /*update.velocity*/glm::vec3(0.f), cro::Util::Net::decompressQuat(update.rotation), update.timestamp});
 
 

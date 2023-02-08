@@ -47,32 +47,21 @@ struct ClubID final
     };
 };
 
-struct Club final
+class Club final
 {
-private:
-    const std::int32_t id = -1;
-    std::string name; //displayed in UI
-    float power = 0.f; //magnitude of impulse applied to reach target
-    float angle = 0.f; //pitch of shot (should be positive)
-    const float target = 0.f; //the max (approx) distance when hit with 100% power
-
-    //putter below this is rescaled
-    static constexpr float ShortRange = 1.f / 5.f;
-    static constexpr float TinyRange = 1.f / 20.f;
-
 public:
 
     Club(std::int32_t i, const std::string& n, float p, float a, float t)
-        : id(i), name(n), power(p), angle(a * cro::Util::Const::degToRad), target(t) {}
+        : m_id(i), m_name(n), m_power(p), m_angle(a* cro::Util::Const::degToRad), m_target(t) {}
 
     std::string getName(bool imperial, float distanceToPin) const
     {
-        auto t = target;
-        if (id == ClubID::Putter)
+        auto t = m_target;
+        if (m_id == ClubID::Putter)
         {
-            if (distanceToPin < (target * ShortRange))
+            if (distanceToPin < (m_target * ShortRange))
             {
-                if (distanceToPin < (target * TinyRange))
+                if (distanceToPin < (m_target * TinyRange))
                 {
                     t *= TinyRange;
                 }
@@ -89,15 +78,15 @@ public:
             static constexpr float ToFeet = 3.281f;
             //static constexpr float ToInches = 12.f;
 
-            if (power > 10.f)
+            if (m_power > 10.f)
             {
                 auto dist = static_cast<std::int32_t>(t * ToYards);
-                return name + std::to_string(dist) + "yds";
+                return m_name + std::to_string(dist) + "yds";
             }
             else
             {
                 auto dist = static_cast<std::int32_t>(t * ToFeet);
-                return name + std::to_string(dist) + "ft";
+                return m_name + std::to_string(dist) + "ft";
             }
         }
         else
@@ -106,49 +95,60 @@ public:
             {
                 t *= 100.f;
                 auto dist = static_cast<std::int32_t>(t);
-                return name + std::to_string(dist) + "cm";
+                return m_name + std::to_string(dist) + "cm";
             }
             auto dist = static_cast<std::int32_t>(t);
-            return name + std::to_string(dist) + "m";
+            return m_name + std::to_string(dist) + "m";
         }
     }
 
     float getPower(float distanceToPin) const
     {
-        if (id == ClubID::Putter)
+        if (m_id == ClubID::Putter)
         {
             //ugh this is such a fudge...
-            if (distanceToPin < target * ShortRange)
+            if (distanceToPin < m_target * ShortRange)
             {
-                if (distanceToPin < target * TinyRange)
+                if (distanceToPin < m_target * TinyRange)
                 {
-                    return power * TinyRange;
+                    return m_power * TinyRange;
                 }
 
-                return power * ShortRange;
+                return m_power * ShortRange;
             }
         }
-        return power;
+        return m_power;
     }
 
-    float getAngle() const { return angle; }
+    float getAngle() const { return m_angle; }
 
     float getTarget(float distanceToPin) const
     {
-        if (id == ClubID::Putter)
+        if (m_id == ClubID::Putter)
         {
-            if (distanceToPin < target * ShortRange)
+            if (distanceToPin < m_target * ShortRange)
             {
-                if (distanceToPin < target * TinyRange)
+                if (distanceToPin < m_target * TinyRange)
                 {
-                    return target * TinyRange;
+                    return m_target * TinyRange;
                 }
 
-                return target * ShortRange;
+                return m_target * ShortRange;
             }
         }
-        return target;
+        return m_target;
     }
+
+private:
+    const std::int32_t m_id = -1;
+    std::string m_name; //displayed in UI
+    float m_power = 0.f; //magnitude of impulse applied to reach target
+    float m_angle = 0.f; //pitch of shot (should be positive)
+    const float m_target = 0.f; //the max (approx) distance when hit with 100% power
+
+    //putter below this is rescaled
+    static constexpr float ShortRange = 1.f / 5.f;
+    static constexpr float TinyRange = 1.f / 20.f;
 };
 
 static const std::array<Club, ClubID::Count> Clubs =
