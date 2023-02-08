@@ -76,6 +76,7 @@ namespace
         )";
 
     std::string vendorDef;
+    std::string vendorInfo;
 }
 
 Shader::Shader()
@@ -86,7 +87,9 @@ Shader::Shader()
     {
         //crude but covers most cases
         std::string vendor = reinterpret_cast<const char*>(glGetString(GL_VENDOR));
+        vendor += " - ";
         vendor += reinterpret_cast<const char*>(glGetString(GL_RENDERER));
+        vendorInfo = vendor;
         
         vendor = Util::String::toLower(vendor);
         if (vendor.find("amd") != std::string::npos)
@@ -270,6 +273,7 @@ bool Shader::loadFromSource(const char* vertex, const char* geometry, const char
         std::string str;
         str.resize(resultLength + 1);
         glCheck(glGetShaderInfoLog(vertID, resultLength, nullptr, &str[0]));
+        Logger::log(vendorInfo, Logger::Type::Error);
         Logger::log("Failed compiling vertex shader: " + std::to_string(result) + ", " + str, Logger::Type::Error);
 
         glCheck(glDeleteShader(vertID));
@@ -296,6 +300,7 @@ bool Shader::loadFromSource(const char* vertex, const char* geometry, const char
             std::string str;
             str.resize(resultLength + 1);
             glCheck(glGetShaderInfoLog(geomID, resultLength, nullptr, &str[0]));
+            Logger::log(vendorInfo, Logger::Type::Error);
             Logger::log("Failed compiling geometry shader: " + std::to_string(result) + ", " + str, Logger::Type::Error);
 
             glCheck(glDeleteShader(vertID));
@@ -322,6 +327,7 @@ bool Shader::loadFromSource(const char* vertex, const char* geometry, const char
         std::string str;
         str.resize(resultLength + 1);
         glCheck(glGetShaderInfoLog(fragID, resultLength, nullptr, &str[0]));
+        Logger::log(vendorInfo, Logger::Type::Error);
         Logger::log("Failed compiling fragment shader: " + std::to_string(result) + ", " + str, Logger::Type::Error);
 
         glCheck(glDeleteShader(vertID));
@@ -355,6 +361,7 @@ bool Shader::loadFromSource(const char* vertex, const char* geometry, const char
             std::string str;
             str.resize(resultLength + 1);
             glCheck(glGetProgramInfoLog(m_handle, resultLength, nullptr, &str[0]));
+            Logger::log(vendorInfo, Logger::Type::Error);
             Logger::log("Failed to link shader program: " + std::to_string(result) + ", " + str, Logger::Type::Error);
 
             glCheck(glDetachShader(m_handle, vertID));
