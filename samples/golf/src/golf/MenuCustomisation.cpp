@@ -66,6 +66,10 @@ namespace
             {
                 retVal.tint = p.getValue<cro::Colour>();
             }
+            else if (name == "roll")
+            {
+                retVal.rollAnimation = p.getValue<bool>();
+            }
         }
 
         return retVal;

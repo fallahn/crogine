@@ -1787,7 +1787,7 @@ void GolfState::loadAssets()
     m_modelDefs[ModelID::PlayerShadow]->loadFromFile("assets/golf/models/player_shadow.cmt");
 
     //ball models - the menu should never have let us get this far if it found no ball files
-    for (const auto& [colour, uid, path] : m_sharedData.ballModels)
+    for (const auto& [colour, uid, path, _] : m_sharedData.ballModels)
     {
         std::unique_ptr<cro::ModelDefinition> def = std::make_unique<cro::ModelDefinition>(m_resources);
         m_ballModels.insert(std::make_pair(uid, std::move(def)));
@@ -4346,6 +4346,7 @@ void GolfState::spawnBall(const ActorInfo& info)
 
     //render the ball as a point so no perspective is applied to the scale
     cro::Colour miniBallColour;
+    bool rollAnimation = true;
     auto material = m_resources.materials.get(m_ballResources.materialID);
     auto ball = std::find_if(m_sharedData.ballModels.begin(), m_sharedData.ballModels.end(),
         [ballID](const SharedStateData::BallInfo& ballPair)
@@ -4356,6 +4357,7 @@ void GolfState::spawnBall(const ActorInfo& info)
     {
         material.setProperty("u_colour", ball->tint);
         miniBallColour = ball->tint;
+        rollAnimation = ball->rollAnimation;
     }
     else
     {
@@ -4469,12 +4471,12 @@ void GolfState::spawnBall(const ActorInfo& info)
     //adding a ball model means we see something a bit more reasonable when close up
     entity = m_gameScene.createEntity();
     entity.addComponent<cro::Transform>();
-    
-    //TODO add this based on ball config
-    entity.getComponent<cro::Transform>().setPosition({0.f, Ball::Radius, 0.f});
-    entity.getComponent<cro::Transform>().setOrigin({ 0.f, Ball::Radius, 0.f });
-    entity.addComponent<BallAnimation>().parent = ballEnt;
-    
+    if (rollAnimation)
+    {
+        entity.getComponent<cro::Transform>().setPosition({ 0.f, Ball::Radius, 0.f });
+        entity.getComponent<cro::Transform>().setOrigin({ 0.f, Ball::Radius, 0.f });
+        entity.addComponent<BallAnimation>().parent = ballEnt;
+    }
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function =
         [&, ballEnt](cro::Entity e, float dt)
