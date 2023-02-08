@@ -110,6 +110,7 @@ CPUGolfer::CPUGolfer(const InputParser& ip, const ActivePlayer& ap, const Collis
     : m_inputParser     (ip),
     m_activePlayer      (ap),
     m_collisionMesh     (cm),
+    m_distanceToPin     (1.f),
     m_target            (0.f),
     m_baseTarget        (0.f),
     m_retargetCount     (0),
@@ -144,7 +145,7 @@ CPUGolfer::CPUGolfer(const InputParser& ip, const ActivePlayer& ap, const Collis
                 //ImGui::Text("Target Diff: %3.2f", debug.diff);
                 //ImGui::Text("Search Distance: %3.2f", m_searchDistance);
                 //ImGui::Text("Target Distance: %3.3f", m_aimDistance);
-                ImGui::Text("Current Club: %s", Clubs[m_clubID].name.c_str());
+                //ImGui::Text("Current Club: %s", Clubs[m_clubID].name.c_str());
                 ImGui::Separator();
                 //ImGui::Text("Wind Comp: %3.3f", debug.windComp);
                 //ImGui::Text("Slope: %3.3f", debug.slope);
@@ -215,8 +216,10 @@ void CPUGolfer::activate(glm::vec3 target)
     }
 }
 
-void CPUGolfer::update(float dt, glm::vec3 windVector)
+void CPUGolfer::update(float dt, glm::vec3 windVector, float distanceToPin)
 {
+    m_distanceToPin = distanceToPin;
+
     for (auto& evt : m_popEvents)
     {
         SDL_PushEvent(&evt);
@@ -385,7 +388,7 @@ void CPUGolfer::calcDistance(float dt, glm::vec3 windVector)
             //off the fairway, so we hit a bit harder.
 
             //but not too much if we're near the hole
-            float multiplier = absDistance / Clubs[ClubID::PitchWedge].target;
+            float multiplier = absDistance / Clubs[ClubID::PitchWedge].getTarget(m_distanceToPin);
             targetDistance += 20.f * multiplier; //TODO reduce this if we're close to the green
         }
         m_searchDistance = targetDistance;
@@ -405,7 +408,7 @@ void CPUGolfer::pickClub(float dt)
         auto absDistance = glm::length(m_target - m_activePlayer.position);
 
         auto club = m_inputParser.getClub();
-        float clubDistance = Clubs[club].target;
+        float clubDistance = Clubs[club].getTarget(m_distanceToPin);
 
         const auto acceptClub = [&]()
         {
@@ -432,7 +435,7 @@ void CPUGolfer::pickClub(float dt)
         }
 
         //if the new club has looped switch back and accept it
-        if (m_searchDirection == 1 && clubDistance < Clubs[m_prevClubID].target)
+        if (m_searchDirection == 1 && clubDistance < Clubs[m_prevClubID].getTarget(m_distanceToPin))
         {
             sendKeystroke(m_inputParser.getInputBinding().keys[InputBinding::PrevClub]);
             m_clubID = m_prevClubID;
@@ -441,7 +444,7 @@ void CPUGolfer::pickClub(float dt)
             return;
         }
 
-        if (m_searchDirection == -1 && clubDistance > Clubs[m_prevClubID].target)
+        if (m_searchDirection == -1 && clubDistance > Clubs[m_prevClubID].getTarget(m_distanceToPin))
         {
             sendKeystroke(m_inputParser.getInputBinding().keys[InputBinding::NextClub]);
             m_clubID = m_prevClubID;
@@ -505,7 +508,7 @@ void CPUGolfer::pickClubDynamic(float dt)
             m_aimAngle = m_inputParser.getYaw();
             m_aimTimer.restart();
 
-            m_targetPower = std::min(1.f, targetDistance / Clubs[m_clubID].target);
+            m_targetPower = std::min(1.f, targetDistance / Clubs[m_clubID].getTarget(m_distanceToPin));
 
             return;
         }
@@ -514,7 +517,7 @@ void CPUGolfer::pickClubDynamic(float dt)
         //find the first club whose target exceeds this distance
         //else use the most powerful club available
         auto club = m_inputParser.getClub();
-        float clubDistance = Clubs[club].target;
+        float clubDistance = Clubs[club].getTarget(m_distanceToPin);
         float diff = targetDistance - clubDistance;
 
         const auto acceptClub = [&]()
@@ -524,7 +527,7 @@ void CPUGolfer::pickClubDynamic(float dt)
             m_aimTimer.restart();
 
             //guestimate power based on club (this gets refined from predictions)
-            m_targetPower = std::min(1.f, targetDistance / Clubs[m_clubID].target);
+            m_targetPower = std::min(1.f, targetDistance / Clubs[m_clubID].getTarget(m_distanceToPin));
             m_targetPower = std::min(1.f, m_targetPower + (getOffsetValue() / 100.f));
         };
 
@@ -539,7 +542,7 @@ void CPUGolfer::pickClubDynamic(float dt)
 
 
         //if the new club has looped switch back and accept it (it's the longest we have)
-        if (m_searchDirection == 1 && clubDistance < Clubs[m_prevClubID].target)
+        if (m_searchDirection == 1 && clubDistance < Clubs[m_prevClubID].getTarget(m_distanceToPin))
         {
             sendKeystroke(m_inputParser.getInputBinding().keys[InputBinding::PrevClub]);
             m_clubID = m_prevClubID;
@@ -548,7 +551,7 @@ void CPUGolfer::pickClubDynamic(float dt)
             return;
         }
 
-        if (m_searchDirection == -1 && clubDistance > Clubs[m_prevClubID].target)
+        if (m_searchDirection == -1 && clubDistance > Clubs[m_prevClubID].getTarget(m_distanceToPin))
         {
             sendKeystroke(m_inputParser.getInputBinding().keys[InputBinding::NextClub]);
             m_clubID = m_prevClubID;
@@ -693,7 +696,7 @@ void CPUGolfer::aim(float dt, glm::vec3 windVector)
                 //power is not actually linear - ie half the distance is not
                 //half the power, so we need to pull back a little to stop
                 //overshooting long drives
-                m_targetPower = m_aimDistance / Clubs[m_clubID].target;
+                m_targetPower = m_aimDistance / Clubs[m_clubID].getTarget(m_distanceToPin);
                 //if (Clubs[m_clubID].target > m_aimDistance)
                 {
                     //the further we try to drive the bigger the reduction
@@ -703,7 +706,7 @@ void CPUGolfer::aim(float dt, glm::vec3 windVector)
             }
             else
             {
-                m_targetPower = (distanceToTarget * 1.12f) / Clubs[m_clubID].target;
+                m_targetPower = (distanceToTarget * 1.12f) / Clubs[m_clubID].getTarget(m_distanceToPin);
             }
             m_targetPower += ((0.06f * (-dot * windVector.y)) * greenCompensation) * m_targetPower;
 
@@ -879,7 +882,7 @@ void CPUGolfer::updatePrediction(float dt)
                     resultPrecision > precSqr && m_targetPower < 1.f)
                 {
                     float precDiff = std::sqrt(resultPrecision);
-                    float change = (precDiff / Clubs[m_clubID].target) / 2.f;
+                    float change = (precDiff / Clubs[m_clubID].getTarget(m_distanceToPin)) / 2.f;
                     change += getOffsetValue() / 60.f;
 
                     if (glm::length2(predictDir) < glm::length2(targetDir))
@@ -1029,7 +1032,7 @@ void CPUGolfer::calcAccuracy()
 
 float CPUGolfer::getOffsetValue() const
 {
-    float multiplier = m_activePlayer.terrain == TerrainID::Green ? smoothstep(0.2f, 0.95f, glm::length(m_target - m_activePlayer.position) / Clubs[ClubID::Putter].target) : 1.f;
+    float multiplier = m_activePlayer.terrain == TerrainID::Green ? smoothstep(0.2f, 0.95f, glm::length(m_target - m_activePlayer.position) / Clubs[ClubID::Putter].getTarget(m_distanceToPin)) : 1.f;
 
     return static_cast<float>(1 - ((m_offsetRotation % 2) * 2))
         * static_cast<float>((m_offsetRotation % (m_skills.size() - getSkillIndex())))

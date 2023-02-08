@@ -153,6 +153,7 @@ private:
     float m_holeToModelRatio;
     std::vector<HoleData> m_holeData;
     std::uint32_t m_currentHole;
+    float m_distanceToHole;
     ActivePlayer m_currentPlayer;
     CollisionMesh m_collisionMesh;
     TerrainChunker m_terrainChunker;

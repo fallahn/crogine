@@ -52,7 +52,7 @@ public:
 
     void handleMessage(const cro::Message&);
     void activate(glm::vec3);
-    void update(float, glm::vec3);
+    void update(float, glm::vec3, float distanceToPin);
     bool thinking() const { return m_thinking; }
     void setPredictionResult(glm::vec3, std::int32_t);
     glm::vec3 getTarget() const { return m_target; }
@@ -62,6 +62,7 @@ private:
     const InputParser& m_inputParser; //only reads the state - actual commands are send by raising events.
     const ActivePlayer& m_activePlayer;
     const CollisionMesh& m_collisionMesh;
+    float m_distanceToPin;
     glm::vec3 m_target;
     glm::vec3 m_baseTarget; //this is what was originally set before retargetting potentially updates m_target
     std::int32_t m_retargetCount;

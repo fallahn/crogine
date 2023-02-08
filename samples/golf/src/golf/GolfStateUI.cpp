@@ -493,9 +493,8 @@ void GolfState::buildUI()
             scale.y = std::min(1.f, scale.y + dt);
 
             //move to position
-            auto maxDist = Clubs[ClubID::Putter].target;
-            auto currDist = glm::length(m_currentPlayer.position - m_holeData[m_currentHole].pin);
-            float hTarget = std::clamp((currDist / maxDist) * 0.97f, 0.f, 1.f) * BarWidth; //magic number just stops the flag recommending too much power
+            auto maxDist = Clubs[ClubID::Putter].getTarget(m_distanceToHole);
+            float hTarget = std::clamp((m_distanceToHole / maxDist) * 0.97f, 0.f, 1.f) * BarWidth; //magic number just stops the flag recommending too much power
 
             auto pos = e.getComponent<cro::Transform>().getPosition();
             pos.x = std::min(pos.x + ((hTarget - pos.x) * dt), BarWidth - 4.f);
@@ -691,7 +690,7 @@ void GolfState::buildUI()
             switch (club)
             {
             default: 
-                e.getComponent<cro::Transform>().setScale(glm::vec2(Clubs[club].target * m_minimapScale, 1.f));
+                e.getComponent<cro::Transform>().setScale(glm::vec2(Clubs[club].getTarget(m_distanceToHole) * m_minimapScale, 1.f));
                 break;
             case ClubID::Putter:
                 e.getComponent<cro::Transform>().setScale(glm::vec2(0.f));

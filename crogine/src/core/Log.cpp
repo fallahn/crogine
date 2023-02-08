@@ -54,6 +54,7 @@ void Logger::log(const std::string& message, Type type, Output output)
         break;
     case Type::Error:
         outstring = "ERROR: " + message;
+        output = Output::All;
         break;
     case Type::Warning:
         outstring = "WARNING: " + message;

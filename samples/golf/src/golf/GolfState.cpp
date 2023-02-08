@@ -185,6 +185,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     m_windBuffer        ("WindValues"),
     m_holeToModelRatio  (1.f),
     m_currentHole       (0),
+    m_distanceToHole    (1.f), //don't init to 0 incase we get div0
     m_terrainChunker    (m_gameScene),
     m_terrainBuilder    (sd, m_holeData, m_terrainChunker),
     m_audioPath         ("assets/golf/sound/ambience.xas"),
@@ -890,7 +891,7 @@ void GolfState::handleMessage(const cro::Message& msg)
             cmd.targetFlags = CommandID::StrokeIndicator;
             cmd.action = [&](cro::Entity e, float)
             {
-                float scale = Clubs[getClub()].power / Clubs[ClubID::Driver].power;
+                float scale = Clubs[getClub()].getPower(m_distanceToHole) / Clubs[ClubID::Driver].getPower(m_distanceToHole);
                 e.getComponent<cro::Transform>().setScale({ scale, 1.f });
             };
             m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
@@ -916,11 +917,11 @@ void GolfState::handleMessage(const cro::Message& msg)
             {
                 if (m_currentPlayer.client == m_sharedData.clientConnection.connectionID)
                 {
-                    e.getComponent<cro::Text>().setString(Clubs[getClub()].getName(m_sharedData.imperialMeasurements));
+                    e.getComponent<cro::Text>().setString(Clubs[getClub()].getName(m_sharedData.imperialMeasurements, m_distanceToHole));
 
-                    auto dist = glm::length(m_currentPlayer.position - m_holeData[m_currentHole].pin) * 1.67f;
+                    auto dist = m_distanceToHole * 1.67f;
                     if (getClub() < ClubID::NineIron &&
-                        Clubs[getClub()].target > dist)
+                        Clubs[getClub()].getTarget(m_distanceToHole) > dist)
                     {
                         e.getComponent<cro::Text>().setFillColour(TextHighlightColour);
                     }
@@ -1116,7 +1117,7 @@ void GolfState::handleMessage(const cro::Message& msg)
                 {
                     if (m_currentPlayer.client == m_sharedData.clientConnection.connectionID)
                     {
-                        e.getComponent<cro::Text>().setString(Clubs[getClub()].getName(m_sharedData.imperialMeasurements));
+                        e.getComponent<cro::Text>().setString(Clubs[getClub()].getName(m_sharedData.imperialMeasurements, m_distanceToHole));
                     }
                 };
                 m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
@@ -1125,8 +1126,7 @@ void GolfState::handleMessage(const cro::Message& msg)
                 cmd.action =
                     [&](cro::Entity e, float)
                 {
-                    float ballDist = glm::length(m_currentPlayer.position - m_holeData[m_currentHole].pin);
-                    formatDistanceString(ballDist, e.getComponent<cro::Text>(), m_sharedData.imperialMeasurements);
+                    formatDistanceString(m_distanceToHole, e.getComponent<cro::Text>(), m_sharedData.imperialMeasurements);
 
                     auto bounds = cro::Text::getLocalBounds(e);
                     bounds.width = std::floor(bounds.width / 2.f);
@@ -1226,6 +1226,9 @@ bool GolfState::simulate(float dt)
     }
     m_waterEnt.getComponent<cro::Transform>().move(move * 10.f * dt);
 #endif
+
+    //this gets used a lot so we'll save on some calls to length()
+    m_distanceToHole = glm::length(m_holeData[m_currentHole].pin - m_currentPlayer.position);
 
     m_depthMap.update(1);
 
@@ -1336,7 +1339,7 @@ bool GolfState::simulate(float dt)
     //don't update the CPU or gamepad if there are any menus open
     if (getStateCount() == 1)
     {
-        m_cpuGolfer.update(dt, windVector);
+        m_cpuGolfer.update(dt, windVector, m_distanceToHole);
         m_inputParser.update(dt, m_currentPlayer.terrain);
 
         if (float movement = m_inputParser.getCamMotion(); movement != 0)
@@ -3441,8 +3444,8 @@ void GolfState::buildScene()
     auto j = 0u;
     for (auto i = 0.f; i < cro::Util::Const::TAU; i += (cro::Util::Const::TAU / 16.f))
     {
-        auto x = std::cos(i) * Clubs[ClubID::Putter].target;
-        auto z = -std::sin(i) * Clubs[ClubID::Putter].target;
+        auto x = std::cos(i) * Clubs[ClubID::Putter].getTarget(10000.f); //distance isn't calc's yet so make sure it's suitable large
+        auto z = -std::sin(i) * Clubs[ClubID::Putter].getTarget(10000.f);
 
         verts.push_back(x);
         verts.push_back(Ball::Radius);
@@ -5656,10 +5659,9 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
 
     cmd.targetFlags = CommandID::UI::PinDistance;
     cmd.action =
-        [&, player](cro::Entity e, float)
+        [&](cro::Entity e, float)
     {
-        float ballDist = glm::length(player.position - m_holeData[m_currentHole].pin);
-        formatDistanceString(ballDist, e.getComponent<cro::Text>(), m_sharedData.imperialMeasurements);
+        formatDistanceString(m_distanceToHole, e.getComponent<cro::Text>(), m_sharedData.imperialMeasurements);
 
         auto bounds = cro::Text::getLocalBounds(e);
         bounds.width = std::floor(bounds.width / 2.f);
@@ -6098,9 +6100,9 @@ void GolfState::predictBall(float powerPct)
     {
         powerPct = cro::Util::Easing::easeOutSine(powerPct);
     }
-    auto pitch = Clubs[club].angle;
+    auto pitch = Clubs[club].getAngle();
     auto yaw = m_inputParser.getYaw();
-    auto power = Clubs[club].power * powerPct;
+    auto power = Clubs[club].getPower(m_distanceToHole) * powerPct;
 
     glm::vec3 impulse(1.f, 0.f, 0.f);
     auto rotation = glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), yaw, cro::Transform::Y_AXIS);
@@ -6123,11 +6125,11 @@ void GolfState::hitBall()
 {
     auto club = getClub();
 
-    auto pitch = Clubs[club].angle;// cro::Util::Const::PI / 4.f;
+    auto pitch = Clubs[club].getAngle();// cro::Util::Const::PI / 4.f;
 
     auto yaw = m_inputParser.getYaw();
 
-    auto power = Clubs[club].power;
+    auto power = Clubs[club].getPower(m_distanceToHole);
 
     //add hook/slice to yaw
     auto hook = m_inputParser.getHook();

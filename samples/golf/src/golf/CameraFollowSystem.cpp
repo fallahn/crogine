@@ -184,7 +184,7 @@ void CameraFollowSystem::process(float dt)
             auto target = ballPos + TargetOffset;
             follower.prevTarget = follower.currentTarget;
             
-            if (!follower.isSnapped)
+            //if (!follower.isSnapped)
             {
                 target += follower.targetOffset * std::min(1.f, glm::length2(target - tx.getPosition()) / follower.maxOffsetDistance);
 
@@ -195,11 +195,11 @@ void CameraFollowSystem::process(float dt)
 
                 follower.currentTarget += diff * /*std::min(0.9998f, */(dt * (diffMultiplier + (3.f * follower.zoom.progress)));//);
             }
-            else
+            /*else
             {
                 target += follower.targetOffset;
                 follower.currentTarget = target;
-            }
+            }*/
 
             //auto lookAt = lookFrom(tx.getPosition(), follower.currentTarget, cro::Transform::Y_AXIS);
             auto lookAt = glm::lookAt(tx.getPosition(), follower.currentTarget, cro::Transform::Y_AXIS);

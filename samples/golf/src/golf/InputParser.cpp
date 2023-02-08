@@ -321,7 +321,7 @@ void InputParser::setClub(float dist)
 {
     //assume each club can go a little further than its rating
     m_currentClub = ClubID::SandWedge;
-    while ((Clubs[m_currentClub].target * 1.04f) < dist
+    while ((Clubs[m_currentClub].getTarget(dist) * 1.04f) < dist
         && m_currentClub != m_firstClub)
     {
         auto clubCount = ClubID::Putter - m_firstClub;
@@ -402,7 +402,7 @@ void InputParser::setEnableFlags(std::uint16_t flags)
 void InputParser::setMaxClub(float dist)
 {
     m_firstClub = ClubID::SandWedge;
-    while ((Clubs[m_firstClub].target * 1.05f) < dist
+    while ((Clubs[m_firstClub].getTarget(dist) * 1.05f) < dist
         && m_firstClub != ClubID::Driver)
     {
         m_firstClub--;

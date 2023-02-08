@@ -480,7 +480,8 @@ void DrivingState::handleMessage(const cro::Message& msg)
             cmd.targetFlags = CommandID::StrokeIndicator;
             cmd.action = [&](cro::Entity e, float)
             {
-                float scale = Clubs[m_inputParser.getClub()].power / Clubs[ClubID::Driver].power;
+                //distance is zero because we should never select a putter here.
+                float scale = Clubs[m_inputParser.getClub()].getPower(0.f) / Clubs[ClubID::Driver].getPower(0.f);
                 e.getComponent<cro::Transform>().setScale({ scale, 1.f });
             };
             m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
@@ -489,11 +490,11 @@ void DrivingState::handleMessage(const cro::Message& msg)
             cmd.targetFlags = CommandID::UI::ClubName;
             cmd.action = [&](cro::Entity e, float)
             {
-                e.getComponent<cro::Text>().setString(Clubs[m_inputParser.getClub()].getName(m_sharedData.imperialMeasurements));
+                e.getComponent<cro::Text>().setString(Clubs[m_inputParser.getClub()].getName(m_sharedData.imperialMeasurements, 0.f));
 
                 auto dist = glm::length(PlayerPosition - m_holeData[m_gameScene.getDirector<DrivingRangeDirector>()->getCurrentHole()].pin) * 1.67f;
                 if (m_inputParser.getClub() < ClubID::NineIron &&
-                    Clubs[m_inputParser.getClub()].target > dist)
+                    Clubs[m_inputParser.getClub()].getTarget(0.f) > dist)
                 {
                     e.getComponent<cro::Text>().setFillColour(TextHighlightColour);
                 }
@@ -567,7 +568,7 @@ void DrivingState::handleMessage(const cro::Message& msg)
                 cmd.targetFlags = CommandID::UI::ClubName;
                 cmd.action = [&](cro::Entity e, float)
                 {
-                    e.getComponent<cro::Text>().setString(Clubs[m_inputParser.getClub()].getName(m_sharedData.imperialMeasurements));
+                    e.getComponent<cro::Text>().setString(Clubs[m_inputParser.getClub()].getName(m_sharedData.imperialMeasurements, 0.f));
                 };
                 m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
@@ -2530,7 +2531,7 @@ void DrivingState::startTransition()
 
 void DrivingState::hitBall()
 {
-    auto pitch = Clubs[m_inputParser.getClub()].angle;
+    auto pitch = Clubs[m_inputParser.getClub()].getAngle();
 
     auto yaw = m_inputParser.getYaw();
 
@@ -2570,7 +2571,7 @@ void DrivingState::hitBall()
     rotation = glm::rotate(rotation, pitch, cro::Transform::Z_AXIS);
     impulse = glm::toMat3(rotation) * impulse;
 
-    impulse *= Clubs[m_inputParser.getClub()].power * cro::Util::Easing::easeOutSine(m_inputParser.getPower());
+    impulse *= Clubs[m_inputParser.getClub()].getPower(0.f) * cro::Util::Easing::easeOutSine(m_inputParser.getPower());
     impulse *= Dampening[TerrainID::Fairway];
 
     //apply impulse to ball component
@@ -2677,11 +2678,11 @@ void DrivingState::setHole(std::int32_t index)
     cmd.targetFlags = CommandID::UI::ClubName;
     cmd.action = [&, index](cro::Entity e, float)
     {
-        e.getComponent<cro::Text>().setString(Clubs[m_inputParser.getClub()].getName(m_sharedData.imperialMeasurements));
+        e.getComponent<cro::Text>().setString(Clubs[m_inputParser.getClub()].getName(m_sharedData.imperialMeasurements, 0.f));
 
         auto dist = glm::length(PlayerPosition - m_holeData[index].pin) * 1.67f;
         if (m_inputParser.getClub() < ClubID::NineIron &&
-            Clubs[m_inputParser.getClub()].target > dist)
+            Clubs[m_inputParser.getClub()].getTarget(0.f) > dist)
         {
             e.getComponent<cro::Text>().setFillColour(TextHighlightColour);
         }
