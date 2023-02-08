@@ -57,7 +57,8 @@ private:
     const float target = 0.f; //the max (approx) distance when hit with 100% power
 
     //putter below this is rescaled
-    static constexpr float ShortRange = 1.f / 4.f;
+    static constexpr float ShortRange = 1.f / 5.f;
+    static constexpr float TinyRange = 1.f / 20.f;
 
 public:
 
@@ -67,9 +68,19 @@ public:
     std::string getName(bool imperial, float distanceToPin) const
     {
         auto t = target;
-        if (id == ClubID::Putter && distanceToPin < (target * ShortRange))
+        if (id == ClubID::Putter)
         {
-            t *= ShortRange;
+            if (distanceToPin < (target * ShortRange))
+            {
+                if (distanceToPin < (target * TinyRange))
+                {
+                    t *= TinyRange;
+                }
+                else
+                {
+                    t *= ShortRange;
+                }
+            }
         }
 
         if (imperial)
@@ -91,6 +102,12 @@ public:
         }
         else
         {
+            if (t < 1.f)
+            {
+                t *= 100.f;
+                auto dist = static_cast<std::int32_t>(t);
+                return name + std::to_string(dist) + "cm";
+            }
             auto dist = static_cast<std::int32_t>(t);
             return name + std::to_string(dist) + "m";
         }
@@ -103,6 +120,11 @@ public:
             //ugh this is such a fudge...
             if (distanceToPin < target * ShortRange)
             {
+                if (distanceToPin < target * TinyRange)
+                {
+                    return power * TinyRange;
+                }
+
                 return power * ShortRange;
             }
         }
@@ -113,11 +135,18 @@ public:
 
     float getTarget(float distanceToPin) const
     {
-        if (distanceToPin < target * ShortRange)
+        if (id == ClubID::Putter)
         {
-            return target * ShortRange;
-        }
+            if (distanceToPin < target * ShortRange)
+            {
+                if (distanceToPin < target * TinyRange)
+                {
+                    return target * TinyRange;
+                }
 
+                return target * ShortRange;
+            }
+        }
         return target;
     }
 };
