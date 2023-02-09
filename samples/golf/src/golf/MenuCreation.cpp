@@ -4105,7 +4105,7 @@ void MenuState::updateLobbyAvatars()
                     ent.getComponent<cro::Text>().setString("Level " + std::to_string(m_sharedData.connectionData[h].level));
                     
                     float offset = ent.getComponent<cro::Callback>().getUserData<float>();
-                    ent.getComponent<cro::Transform>().setPosition({ (50.f + (m_lobbyExpansion / 2.f)) - offset, -56.f, 0.1f});
+                    ent.getComponent<cro::Transform>().setPosition({ std::floor((50.f + (m_lobbyExpansion / 2.f)) - offset), -56.f, 0.1f});
                 }
             };
             textEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());

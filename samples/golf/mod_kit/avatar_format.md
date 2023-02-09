@@ -42,4 +42,4 @@ Avatar colour keys are:
     Skin   - 60    70
     Hair   - 90    100
 
-In RGB linear space.
+In RGB linear space - although textures MUST be RGBA

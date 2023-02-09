@@ -1796,8 +1796,8 @@ void GolfState::loadAssets()
     //UI stuffs
     cro::SpriteSheet spriteSheet;
     spriteSheet.loadFromFile("assets/golf/sprites/ui.spt", m_resources.textures);
-    m_sprites[SpriteID::PowerBar] = spriteSheet.getSprite("power_bar");
-    m_sprites[SpriteID::PowerBarInner] = spriteSheet.getSprite("power_bar_inner");
+    m_sprites[SpriteID::PowerBar] = spriteSheet.getSprite("power_bar_wide");
+    m_sprites[SpriteID::PowerBarInner] = spriteSheet.getSprite("power_bar_inner_wide");
     m_sprites[SpriteID::HookBar] = spriteSheet.getSprite("hook_bar");
     m_sprites[SpriteID::MiniFlag] = spriteSheet.getSprite("putt_flag");
     m_sprites[SpriteID::WindIndicator] = spriteSheet.getSprite("wind_dir");

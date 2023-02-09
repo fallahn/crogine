@@ -540,7 +540,7 @@ void InputParser::update(float dt, std::int32_t terrainID)
             }
 
             //move level to 1 and back (returning to 0 is a fluff)
-            float Speed = dt * 0.8f;
+            float Speed = dt * 0.7f;
             if (terrainID == TerrainID::Green
                 && m_sharedData.showPuttingPower)
             {
@@ -588,7 +588,7 @@ void InputParser::update(float dt, std::int32_t terrainID)
             }
 
 
-            m_hook = std::min(1.f, std::max(0.f, m_hook + (dt * m_powerbarDirection)));
+            m_hook = std::min(1.f, std::max(0.f, m_hook + ((dt * m_powerbarDirection))));
 
             if (m_hook == 1)
             {
