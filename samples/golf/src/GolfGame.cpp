@@ -61,6 +61,7 @@ source distribution.
 
 #ifdef USE_GNS
 #include <AchievementsImpl.hpp>
+#include <WorkshopState.hpp>
 #endif
 
 #include <crogine/audio/AudioMixer.hpp>
@@ -165,6 +166,10 @@ GolfGame::GolfGame()
     m_stateStack.registerState<MessageOverlayState>(StateID::MessageOverlay, m_sharedData);
     m_stateStack.registerState<CreditsState>(StateID::Credits, m_sharedData, credits);
     m_stateStack.registerState<EventOverlayState>(StateID::EventOverlay);
+
+#ifdef USE_GNS
+    m_stateStack.registerState<WorkshopState>(StateID::Workshop);
+#endif
 }
 
 //public
@@ -362,6 +367,13 @@ bool GolfGame::initialise()
 
 #ifdef USE_GNS
     m_achievements = std::make_unique<SteamAchievements>(MessageID::AchievementMessage);
+
+    registerCommand("workshop",
+        [&](const std::string&)
+        {
+            m_stateStack.clearStates();
+            m_stateStack.pushState(StateID::Workshop);
+        });
 #else
     m_achievements = std::make_unique<DefaultAchievements>();
 #endif
@@ -555,12 +567,6 @@ bool GolfGame::initialise()
                     cro::Console::print("Use log_benchmark <true|false> to toggle");
                 }
             }
-        });
-
-    registerCommand("importer",
-        [&](const std::string&)
-        {
-
         });
 
     getWindow().setLoadingScreen<LoadingScreen>(m_sharedData);

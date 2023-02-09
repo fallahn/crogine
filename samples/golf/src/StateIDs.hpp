@@ -52,6 +52,12 @@ struct StateID final
         Playlist,
         MessageOverlay,
         Credits,
-        EventOverlay //consumes events if the overlay is open
+        EventOverlay, //consumes events if the overlay is open
+
+
+
+
+
+        Workshop = 1100
     };
 };
