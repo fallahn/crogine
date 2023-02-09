@@ -27,6 +27,16 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
+#ifdef _MSC_VER
+#include "../detail/StackDump.hpp"
+#include <signal.h>
+void winAbort(int)
+{
+    StackDump::dump();
+}
+
+#endif
+
 #include <crogine/core/App.hpp>
 #include <crogine/core/Log.hpp>
 #include <crogine/core/Window.hpp>
@@ -43,7 +53,7 @@ source distribution.
 #include <SDL_joystick.h>
 #include <SDL_filesystem.h>
 
-#include "../detail/backward.hpp"
+//#include "../detail/backward.hpp"
 #include "../detail/GLCheck.hpp"
 #include "../detail/SDLImageRead.hpp"
 #include "../imgui/imgui_impl_opengl3.h"
@@ -210,6 +220,12 @@ App::App(std::uint32_t styleFlags)
     m_appString         ("CrogineApp")
 {
     CRO_ASSERT(m_instance == nullptr, "App instance already exists!");
+
+#ifdef _MSC_VER
+    //register custom abort which prints the call stack
+    signal(SIGABRT, &winAbort);
+#endif
+
 
 #ifdef DEBUG_NO_CONTROLLER
     //urg sometimes some USB driver or something crashes and causes SDL_Init to hang

@@ -203,14 +203,15 @@
     <ClInclude Include="..\crogine\src\audio\VorbisLoader.hpp" />
     <ClInclude Include="..\crogine\src\audio\WavLoader.hpp" />
     <ClInclude Include="..\crogine\src\core\DefaultLoadingScreen.hpp" />
-    <ClInclude Include="..\crogine\src\detail\backward.hpp" />
     <ClInclude Include="..\crogine\src\detail\DistanceField.hpp" />
     <ClInclude Include="..\crogine\src\detail\glad.hpp" />
     <ClInclude Include="..\crogine\src\detail\GLCheck.hpp" />
     <ClInclude Include="..\crogine\src\detail\HiResTimer.hpp" />
     <ClInclude Include="..\crogine\src\detail\SDLImageRead.hpp" />
+    <ClInclude Include="..\crogine\src\detail\StackDump.hpp" />
     <ClInclude Include="..\crogine\src\detail\StaticMeshFile.hpp" />
     <ClInclude Include="..\crogine\src\detail\TextConstruction.hpp" />
+    <ClInclude Include="..\crogine\src\detail\ust.hpp" />
     <ClInclude Include="..\crogine\src\graphics\shaders\Billboard.hpp" />
     <ClInclude Include="..\crogine\src\graphics\shaders\Debug.hpp" />
     <ClInclude Include="..\crogine\src\graphics\shaders\Default.hpp" />
@@ -280,6 +281,7 @@
     <ClCompile Include="..\crogine\src\detail\QuadTree.cpp" />
     <ClCompile Include="..\crogine\src\detail\SDLImageRead.cpp" />
     <ClCompile Include="..\crogine\src\detail\SDLResource.cpp" />
+    <ClCompile Include="..\crogine\src\detail\StackDump.cpp" />
     <ClCompile Include="..\crogine\src\detail\StaticMeshFile.cpp" />
     <ClCompile Include="..\crogine\src\detail\TextConstruction.cpp" />
     <ClCompile Include="..\crogine\src\ecs\Component.cpp" />
@@ -583,7 +585,7 @@
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>$(SolutionDir)extlibs\freetype\win64;$(SolutionDir)extlibs\sdl2\lib\x64;$(SolutionDir)extlibs\openal\msvc\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>SDL2.lib;freetype.lib;ws2_32.lib;winmm.lib;IPHLPAPI.lib;%(AdditionalDependencies);openal32.lib</AdditionalDependencies>
+      <AdditionalDependencies>SDL2.lib;freetype.lib;ws2_32.lib;winmm.lib;IPHLPAPI.lib;%(AdditionalDependencies);openal32.lib;DbgHelp.lib;Shlwapi.lib</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='DebugASan|x64'">
@@ -658,7 +660,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalLibraryDirectories>$(SolutionDir)extlibs\freetype\win64;$(SolutionDir)extlibs\sdl2\lib\x64;$(SolutionDir)extlibs\enet\lib\release;$(SolutionDir)extlibs\openal\msvc\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>openal32.lib;SDL2.lib;freetype.lib;ws2_32.lib;winmm.lib;IPHLPAPI.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>openal32.lib;SDL2.lib;freetype.lib;ws2_32.lib;winmm.lib;IPHLPAPI.lib;DbgHelp.lib;Shlwapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <LinkTimeCodeGeneration>UseLinkTimeCodeGeneration</LinkTimeCodeGeneration>
       <SubSystem>Windows</SubSystem>
     </Link>
