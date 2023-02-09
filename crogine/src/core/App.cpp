@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2022
+Matt Marchant 2017 - 2023
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -246,37 +246,7 @@ App::App(std::uint32_t styleFlags)
 
         std::fill(m_controllers.begin(), m_controllers.end(), ControllerInfo());
         //controllers are automatically connected as the connect events are raised
-        //on start up. Must test if this is true on other platforms
-
-        //for (auto i = 0; i < SDL_NumJoysticks() && i < MaxControllers; ++i)
-        //{
-        //    if (SDL_IsGameController(i))
-        //    {
-        //        //add to game controllers
-        //        ControllerInfo ci;
-        //        ci.controller = SDL_GameControllerOpen(i);
-        //        if (ci.controller)
-        //        {
-        //            ci.haptic = SDL_HapticOpen(i);
-
-        //            if (ci.haptic)
-        //            {
-        //                ci.rumble = (SDL_HapticRumbleInit(ci.haptic) == 0);
-        //            }
-
-        //            //the actual index is different to the id of the event
-        //            auto* j = SDL_GameControllerGetJoystick(ci.controller);
-        //            ci.joystickID = SDL_JoystickInstanceID(j);
-
-        //            m_controllers[i] = ci;
-        //        }
-        //    }
-        //    else
-        //    {
-        //        //add to joysticks
-        //        m_joysticks.insert(std::make_pair(i, SDL_JoystickOpen(i)));
-        //    }
-        //}
+        //on start up
 
         if (!AudioRenderer::init())
         {
@@ -415,6 +385,11 @@ void App::run()
     HiResTimer frameClock;
     m_frameClock = &frameClock;
     m_running = initialise();
+
+    if (!m_running)
+    {
+        Logger::log("App initialise() returned false.", Logger::Type::Error, Logger::Output::All);
+    }
 
     float timeSinceLastUpdate = 0.f;
 

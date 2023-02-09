@@ -557,6 +557,12 @@ bool GolfGame::initialise()
             }
         });
 
+    registerCommand("importer",
+        [&](const std::string&)
+        {
+
+        });
+
     getWindow().setLoadingScreen<LoadingScreen>(m_sharedData);
     getWindow().setTitle("Super Video Golf - " + StringVer);
     getWindow().setIcon(icon);
