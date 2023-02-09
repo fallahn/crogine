@@ -377,12 +377,14 @@ bool GolfGame::initialise()
 #endif // !USE_GNS
 #endif
 
+#ifndef USE_GNS
     m_hostAddresses = cro::Util::Net::getLocalAddresses();
     if (m_hostAddresses.empty())
     {
-        LogE << "No suitable host addresses were found" << std::endl;
+        cro::Logger::log("No suitable host addresses were found", cro::Logger::Type::Error< cro::Logger::Output::All);
         return false;
     }
+#endif
 
     parseCredits();
 
@@ -565,9 +567,6 @@ bool GolfGame::initialise()
     cro::AudioMixer::setLabel("Menu", MixerChannel::Menu);
     cro::AudioMixer::setLabel("Announcer", MixerChannel::Voice);
     cro::AudioMixer::setLabel("Vehicles", MixerChannel::Vehicles);
-
-    //loadPreferences();
-    //loadAvatars();
 
     m_sharedData.clientConnection.netClient.create(ConstVal::MaxClients);
     m_sharedData.sharedResources = std::make_unique<cro::ResourceCollection>();
