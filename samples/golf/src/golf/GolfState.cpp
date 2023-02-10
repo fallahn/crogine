@@ -5776,7 +5776,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     m_inputParser.resetPower();
     m_inputParser.setHoleDirection(target - player.position);
     
-    auto rotation = MaxRotation * isCPU ? MaxRotation / 3.f : MaxRotation;
+    auto rotation = isCPU ? MaxRotation / 3.f : MaxRotation;
     m_inputParser.setMaxRotation(m_holeData[m_currentHole].puttFromTee ? MaxPuttRotation : 
         player.terrain == TerrainID::Green ? rotation / 3.f : rotation);
 
@@ -6178,7 +6178,7 @@ void GolfState::hitBall()
 {
     auto club = getClub();
 
-    auto pitch = Clubs[club].getAngle();// cro::Util::Const::PI / 4.f;
+    auto pitch = Clubs[club].getAngle(); //TODO lower / raise with top/back spin
 
     auto yaw = m_inputParser.getYaw();
 
