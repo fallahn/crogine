@@ -6054,6 +6054,12 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     {
         cro::GameController::setLEDColour(activeControllerID(player.player), m_sharedData.connectionData[player.client].playerData[player.player].ballTint);
     }
+
+    /*if (player.terrain != TerrainID::Green
+        || m_holeData[m_currentHole].puttFromTee)
+    {
+        updateMiniMap();
+    }*/
 }
 
 void GolfState::setGreenCamPosition()

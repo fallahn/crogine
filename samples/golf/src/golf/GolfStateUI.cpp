@@ -552,10 +552,11 @@ void GolfState::buildUI()
             if (scale == 0)
             {
                 //orientation - sets tee to bottom of map
-                if (m_currentHole == 0
-                    || m_holeData[m_currentHole].modelEntity != m_holeData[m_currentHole - 1].modelEntity)
+                //if (m_currentHole == 0
+                //    || m_holeData[m_currentHole].modelEntity != m_holeData[m_currentHole - 1].modelEntity)
                 {
-                    if (m_holeData[m_currentHole].tee.x > 160)
+                    if (m_holeData[m_currentHole].tee.x > /*160*/static_cast<float>(MapSize.x) / 2)
+                    //if(m_currentPlayer.position.x > m_holeData[m_currentHole].pin.x)
                     {
                         e.getComponent<cro::Transform>().setRotation(-90.f * cro::Util::Const::degToRad);
                         rotation = -1.f;
@@ -670,6 +671,21 @@ void GolfState::buildUI()
     {
         cro::Vertex2D(glm::vec2(0.f, 0.5f), TextGoldColour),
         cro::Vertex2D(glm::vec2(0.f), TextGoldColour),
+
+
+        cro::Vertex2D(glm::vec2(0.24f, 0.5f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(0.24f), TextGoldColour),
+
+        cro::Vertex2D(glm::vec2(0.24f, 0.5f), TextNormalColour),
+        cro::Vertex2D(glm::vec2(0.24f), TextNormalColour),
+
+        cro::Vertex2D(glm::vec2(0.26f, 0.5f), TextNormalColour),
+        cro::Vertex2D(glm::vec2(0.26f), TextNormalColour),
+
+        cro::Vertex2D(glm::vec2(0.26f, 0.5f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(0.26f), TextGoldColour),
+
+
         cro::Vertex2D(glm::vec2(0.5f, 0.5f), endColour),
         cro::Vertex2D(glm::vec2(0.5f, -0.5f), endColour)
     };
