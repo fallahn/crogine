@@ -304,6 +304,7 @@ private:
     cro::Entity m_courseEnt;
     cro::Entity m_waterEnt;
     cro::Entity m_minimapEnt;
+    cro::Entity m_miniGreenEnt;
     std::uint8_t m_readyQuitFlags;
 
     void buildUI();

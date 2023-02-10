@@ -892,7 +892,7 @@ void GolfState::handleMessage(const cro::Message& msg)
             cmd.targetFlags = CommandID::StrokeIndicator;
             cmd.action = [&](cro::Entity e, float)
             {
-                float scale = Clubs[getClub()].getPower(m_distanceToHole) / Clubs[ClubID::Driver].getPower(m_distanceToHole);
+                float scale = std::max(0.25f, Clubs[getClub()].getPower(m_distanceToHole) / Clubs[ClubID::Driver].getPower(m_distanceToHole));
                 e.getComponent<cro::Transform>().setScale({ scale, 1.f });
             };
             m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
@@ -4639,6 +4639,43 @@ void GolfState::spawnBall(const ActorInfo& info)
 
     m_minimapEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
+
+    //and indicator icon when putting
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>().getVertexData() =
+    {
+        cro::Vertex2D(glm::vec2(-2.5f, 6.5f), miniBallColour),
+        cro::Vertex2D(glm::vec2(0.f), miniBallColour),
+        cro::Vertex2D(glm::vec2(2.5f, 6.5), miniBallColour)
+    };
+    entity.getComponent<cro::Drawable2D>().updateLocalBounds();
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&, ballEnt, depthOffset](cro::Entity e, float)
+    {
+        if (m_currentPlayer.terrain == TerrainID::Green)
+        {
+            auto pos = ballEnt.getComponent<cro::Transform>().getWorldPosition();
+            auto iconPos = m_greenCam.getComponent<cro::Camera>().coordsToPixel(pos, m_greenBuffer.getSize());
+
+            static const glm::vec2 Centre(m_greenBuffer.getSize() / 2u);
+
+            iconPos -= Centre;
+            iconPos *= std::min(1.f, Centre.x / glm::length(iconPos));
+            iconPos += Centre;
+
+            e.getComponent<cro::Transform>().setPosition(glm::vec3(iconPos, depthOffset));
+
+
+            auto terrain = ballEnt.getComponent<ClientCollider>().terrain;
+            float scale = terrain == TerrainID::Green ? 1.f : 0.f;
+            e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
+        }
+    };
+
+    m_miniGreenEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
     m_sharedData.connectionData[info.clientID].playerData[info.playerID].ballTint = miniBallColour;
 
 #ifdef CRO_DEBUG_
@@ -6056,10 +6093,10 @@ void GolfState::setGreenCamPosition()
         heightOffset *= 0.15f;
     }
 
-    else if ((glm::length2(direction) < (40.f * 40.f)))
+    else if ((glm::length2(direction) < (50.f * 50.f)))
     {
         //player is within larger radius
-        direction = glm::normalize(direction) * 4.2f;
+        direction = glm::normalize(direction) * 5.5f;
 
         auto r = (cro::Util::Random::value(0, 1) * 2) - 1;
         direction = glm::rotate(direction, 0.5f * static_cast<float>(r), glm::vec3(0.f, 1.f, 0.f));

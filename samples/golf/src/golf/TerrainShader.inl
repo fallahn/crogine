@@ -126,7 +126,7 @@ R"(
     VARYING_OUT vec3 v_normal;
     VARYING_OUT vec2 v_texCoord;
 
-    const float MaxRadius = 7.0; //this should match max putt distance
+    const float MaxRadius = 10.0; //this should match max putt distance
     const float MinRadius = 0.5;
 
     void main()

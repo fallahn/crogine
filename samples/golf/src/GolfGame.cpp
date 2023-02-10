@@ -61,6 +61,8 @@ source distribution.
 
 #ifdef USE_GNS
 #include <AchievementsImpl.hpp>
+#endif
+#ifdef USE_WORKSHOP
 #include <WorkshopState.hpp>
 #endif
 
@@ -167,7 +169,7 @@ GolfGame::GolfGame()
     m_stateStack.registerState<CreditsState>(StateID::Credits, m_sharedData, credits);
     m_stateStack.registerState<EventOverlayState>(StateID::EventOverlay);
 
-#ifdef USE_GNS
+#ifdef USE_WORKSHOP
     m_stateStack.registerState<WorkshopState>(StateID::Workshop);
 #endif
 }
@@ -365,15 +367,8 @@ bool GolfGame::initialise()
     loadPreferences();
     loadAvatars();
 
-#ifdef USE_GNS
+#if defined USE_GNS
     m_achievements = std::make_unique<SteamAchievements>(MessageID::AchievementMessage);
-
-    registerCommand("workshop",
-        [&](const std::string&)
-        {
-            m_stateStack.clearStates();
-            m_stateStack.pushState(StateID::Workshop);
-        });
 #else
     m_achievements = std::make_unique<DefaultAchievements>();
 #endif
@@ -382,6 +377,15 @@ bool GolfGame::initialise()
         //no point trying to load the menu if we failed to init.
         return false;
     }
+
+#ifdef USE_WORKSHOP
+    registerCommand("workshop",
+        [&](const std::string&)
+        {
+            m_stateStack.clearStates();
+            m_stateStack.pushState(StateID::Workshop);
+        });
+#endif
 
 #ifdef CRO_DEBUG_
 #ifndef USE_GNS
@@ -393,7 +397,7 @@ bool GolfGame::initialise()
     m_hostAddresses = cro::Util::Net::getLocalAddresses();
     if (m_hostAddresses.empty())
     {
-        cro::Logger::log("No suitable host addresses were found", cro::Logger::Type::Error< cro::Logger::Output::All);
+        cro::Logger::log("No suitable host addresses were found", cro::Logger::Type::Error, cro::Logger::Output::All);
         return false;
     }
 #endif

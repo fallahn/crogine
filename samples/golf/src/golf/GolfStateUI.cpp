@@ -749,39 +749,38 @@ void GolfState::buildUI()
 
     infoEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     auto greenEnt = entity;
+    m_miniGreenEnt = entity;
 
     //arrow pointing to player position on the green
-    //kinda made redundant now that the slope indicator is no longer visible
-    //on the mini view
-    /*entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 0.1f });
-    entity.addComponent<cro::Drawable2D>().getVertexData() =
-    {
-        cro::Vertex2D(glm::vec2(42.f, -1.f), TextGoldColour),
-        cro::Vertex2D(glm::vec2(42.f, 1.f), TextGoldColour),
-        cro::Vertex2D(glm::vec2(32.f, 0.f), TextGoldColour)
-    };
-    entity.getComponent<cro::Drawable2D>().updateLocalBounds();
-    entity.addComponent<cro::Callback>().active = true;
-    entity.getComponent<cro::Callback>().setUserData<float>(0.f);
-    entity.getComponent<cro::Callback>().function =
-        [&, greenEnt](cro::Entity e, float dt)
-    {
-        if (m_currentPlayer.terrain == TerrainID::Green)
-        {
-            auto offset = greenEnt.getComponent<cro::Transform>().getOrigin();
-            e.getComponent<cro::Transform>().setPosition({ offset.x, offset.y });
+    //entity = m_uiScene.createEntity();
+    //entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 0.1f });
+    //entity.addComponent<cro::Drawable2D>().getVertexData() =
+    //{
+    //    cro::Vertex2D(glm::vec2(42.f, -1.f), TextGoldColour),
+    //    cro::Vertex2D(glm::vec2(42.f, 1.f), TextGoldColour),
+    //    cro::Vertex2D(glm::vec2(32.f, 0.f), TextGoldColour)
+    //};
+    //entity.getComponent<cro::Drawable2D>().updateLocalBounds();
+    //entity.addComponent<cro::Callback>().active = true;
+    //entity.getComponent<cro::Callback>().setUserData<float>(0.f);
+    //entity.getComponent<cro::Callback>().function =
+    //    [&, greenEnt](cro::Entity e, float dt)
+    //{
+    //    if (m_currentPlayer.terrain == TerrainID::Green)
+    //    {
+    //        auto offset = greenEnt.getComponent<cro::Transform>().getOrigin();
+    //        e.getComponent<cro::Transform>().setPosition({ offset.x, offset.y });
 
-            auto& currentRotation = e.getComponent<cro::Callback>().getUserData<float>();
-            auto dir = m_currentPlayer.position - m_holeData[m_currentHole].pin;
-            auto targetRotation = std::atan2(-dir.z, dir.x);
+    //        auto& currentRotation = e.getComponent<cro::Callback>().getUserData<float>();
+    //        auto dir = m_currentPlayer.position - m_holeData[m_currentHole].pin;
+    //        auto targetRotation = std::atan2(-dir.z, dir.x);
 
-            float rotation = cro::Util::Maths::shortestRotation(currentRotation, targetRotation) * dt;
-            currentRotation += rotation;
-            e.getComponent<cro::Transform>().setRotation(currentRotation);
-        }
-    };
-    greenEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());*/
+    //        float rotation = cro::Util::Maths::shortestRotation(currentRotation, targetRotation) * dt;
+    //        currentRotation += rotation;
+    //        e.getComponent<cro::Transform>().setRotation(currentRotation);
+    //    }
+    //};
+    //greenEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     createScoreboard();
 
