@@ -4645,9 +4645,9 @@ void GolfState::spawnBall(const ActorInfo& info)
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>().getVertexData() =
     {
-        cro::Vertex2D(glm::vec2(-2.5f, 6.5f), miniBallColour),
-        cro::Vertex2D(glm::vec2(0.f), miniBallColour),
-        cro::Vertex2D(glm::vec2(2.5f, 6.5), miniBallColour)
+        cro::Vertex2D(glm::vec2(-2.5f, 9.5f), miniBallColour),
+        cro::Vertex2D(glm::vec2(0.f,3.f), miniBallColour),
+        cro::Vertex2D(glm::vec2(2.5f, 9.5f), miniBallColour)
     };
     entity.getComponent<cro::Drawable2D>().updateLocalBounds();
     entity.addComponent<cro::Callback>().active = true;
@@ -4669,7 +4669,7 @@ void GolfState::spawnBall(const ActorInfo& info)
 
 
             auto terrain = ballEnt.getComponent<ClientCollider>().terrain;
-            float scale = terrain == TerrainID::Green ? 1.f : 0.f;
+            float scale = terrain == TerrainID::Green ? m_viewScale.x : 0.f;
             e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
         }
     };
