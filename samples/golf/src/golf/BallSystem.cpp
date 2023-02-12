@@ -477,7 +477,7 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
 
             //if we've slowed down or fallen more than the
             //ball's diameter (radius??) stop the ball
-            if (vel2 < MinVelocitySqr
+            if (vel2 < MinVelocitySqr || ((ball.delay < -10.f) && (vel2 < 0.04f))
                 || (terrainContact.penetration > (Ball::Radius * 2.5f)))
             {
                 ball.velocity = glm::vec3(0.f);

@@ -220,7 +220,8 @@ void MenuState::parseCourseDirectory(const std::string& rootDir, bool isUser)
         }
 
         std::unique_ptr<cro::Texture> t = std::make_unique<cro::Texture>();
-        if (t->loadFromFile(testPath))
+        if (cro::FileSystem::fileExists(testPath) &&
+            t->loadFromFile(testPath))
         {
             m_courseThumbs.insert(std::make_pair(dir, std::move(t)));
         }

@@ -5752,7 +5752,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
         e.getComponent<cro::Model>().setHidden(!(localPlayer && !m_sharedData.localConnectionData.playerData[player.player].isCPU));
         e.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, m_inputParser.getYaw());
         e.getComponent<cro::Callback>().active = localPlayer;
-        e.getComponent<cro::Model>().setDepthTestEnabled(0, player.terrain == TerrainID::Green);
+        e.getComponent<cro::Model>().setDepthTestEnabled(0, /*player.terrain == TerrainID::Green*/false);
 
         e.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", cro::Colour::White);
 

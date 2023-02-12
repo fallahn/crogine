@@ -2126,7 +2126,12 @@ void GolfState::showMessageBoard(MessageBoardID messageType, bool special)
             //hio is also technically an eagle or birdie
             //etc, so we need to differentiate
             score = ScoreID::HIO;
-            Social::awardXP(XPValues[XPID::HIO]);
+            auto xp = XPValues[XPID::HIO];
+            if (m_holeData[m_currentHole].puttFromTee)
+            {
+                xp /= 5;
+            }
+            Social::awardXP(xp);
         }
 
 
