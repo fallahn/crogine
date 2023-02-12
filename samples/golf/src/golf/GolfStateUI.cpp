@@ -439,7 +439,7 @@ void GolfState::buildUI()
     const auto BarWidth = bounds.width - 8.f;
     const auto BarHeight = bounds.height;
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec3(5.f, 0.f, 0.05f)); //TODO expell the magic number!!
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(5.f, 0.f, 0.1f)); //TODO expell the magic number!!
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::PowerBarInner];
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
@@ -455,7 +455,7 @@ void GolfState::buildUI()
 
     //hook/slice indicator
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec3(BarCentre, 8.f, 0.1f));
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(BarCentre, 8.f, 0.2f));
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::HookBar];
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
@@ -670,20 +670,50 @@ void GolfState::buildUI()
     entity.addComponent<cro::Drawable2D>().getVertexData() =
     {
         cro::Vertex2D(glm::vec2(0.f, 0.5f), TextGoldColour),
-        cro::Vertex2D(glm::vec2(0.f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(0.f, -0.5f), TextGoldColour),
 
 
-        cro::Vertex2D(glm::vec2(0.24f, 0.5f), TextGoldColour),
-        cro::Vertex2D(glm::vec2(0.24f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(0.12f, 0.5f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(0.12f, -0.5f), TextGoldColour),
 
-        cro::Vertex2D(glm::vec2(0.24f, 0.5f), TextNormalColour),
-        cro::Vertex2D(glm::vec2(0.24f), TextNormalColour),
+        cro::Vertex2D(glm::vec2(0.12f, 0.5f), LeaderboardTextDark),
+        cro::Vertex2D(glm::vec2(0.12f, -0.5f), LeaderboardTextDark),
 
-        cro::Vertex2D(glm::vec2(0.26f, 0.5f), TextNormalColour),
-        cro::Vertex2D(glm::vec2(0.26f), TextNormalColour),
+        cro::Vertex2D(glm::vec2(0.13f, 0.5f), LeaderboardTextDark),
+        cro::Vertex2D(glm::vec2(0.13f, -0.5f), LeaderboardTextDark),
 
-        cro::Vertex2D(glm::vec2(0.26f, 0.5f), TextGoldColour),
-        cro::Vertex2D(glm::vec2(0.26f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(0.13f, 0.5f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(0.13f, -0.5f), TextGoldColour),
+
+
+
+
+        cro::Vertex2D(glm::vec2(0.245f, 0.5f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(0.245f, -0.5f), TextGoldColour),
+
+        cro::Vertex2D(glm::vec2(0.245f, 0.5f), LeaderboardTextDark),
+        cro::Vertex2D(glm::vec2(0.245f, -0.5f), LeaderboardTextDark),
+
+        cro::Vertex2D(glm::vec2(0.255f, 0.5f), LeaderboardTextDark),
+        cro::Vertex2D(glm::vec2(0.255f, -0.5f), LeaderboardTextDark),
+
+        cro::Vertex2D(glm::vec2(0.255f, 0.5f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(0.255f, -0.5f), TextGoldColour),
+
+
+
+        cro::Vertex2D(glm::vec2(0.37f, 0.5f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(0.37f, -0.5f), TextGoldColour),
+
+        cro::Vertex2D(glm::vec2(0.37f, 0.5f), LeaderboardTextDark),
+        cro::Vertex2D(glm::vec2(0.37f, -0.5f), LeaderboardTextDark),
+
+        cro::Vertex2D(glm::vec2(0.38f, 0.5f), LeaderboardTextDark),
+        cro::Vertex2D(glm::vec2(0.38f, -0.5f), LeaderboardTextDark),
+
+        cro::Vertex2D(glm::vec2(0.38f, 0.5f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(0.38f, -0.5f), TextGoldColour),
+
 
 
         cro::Vertex2D(glm::vec2(0.5f, 0.5f), endColour),

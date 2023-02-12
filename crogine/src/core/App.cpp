@@ -222,8 +222,10 @@ App::App(std::uint32_t styleFlags)
     CRO_ASSERT(m_instance == nullptr, "App instance already exists!");
 
 #ifdef _MSC_VER
+#ifndef CRO_DEBUG_
     //register custom abort which prints the call stack
     signal(SIGABRT, &winAbort);
+#endif
 #endif
 
 

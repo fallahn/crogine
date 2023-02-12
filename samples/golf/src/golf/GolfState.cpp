@@ -1647,6 +1647,7 @@ void GolfState::loadAssets()
     shader = &m_resources.shaders.get(ShaderID::Hair);
     m_resolutionBuffer.addShader(*shader);
     m_materialIDs[MaterialID::Hair] = m_resources.materials.add(*shader);
+    m_resources.materials.get(m_materialIDs[MaterialID::Hair]).doubleSided = true;
 
     m_resources.shaders.loadFromString(ShaderID::Course, CelVertexShader, CelFragmentShader, "#define TERRAIN\n#define COMP_SHADE\n#define COLOUR_LEVELS 5.0\n#define TEXTURED\n#define RX_SHADOWS\n" + wobble);
     shader = &m_resources.shaders.get(ShaderID::Course);
