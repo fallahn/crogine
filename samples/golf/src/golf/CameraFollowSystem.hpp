@@ -71,8 +71,7 @@ struct CameraFollower final
     enum State
     {
         Track,
-        Zoom,
-        //Reset
+        Zoom
     }state = Track;
 
     cro::Entity target;

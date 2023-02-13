@@ -157,17 +157,6 @@ void CameraFollowSystem::process(float dt)
     {
         auto& follower = entity.getComponent<CameraFollower>();
 
-        /*if (follower.state == CameraFollower::Reset)
-        {
-            follower.zoom.fov = 1.f;
-            follower.zoom.progress = 0.f;
-            follower.zoom.done = false;
-            entity.getComponent<cro::Camera>().resizeCallback(entity.getComponent<cro::Camera>());
-
-            follower.state = CameraFollower::Track;
-            continue;
-        }*/
-
         if (!follower.target.isValid())
         {
             continue;
@@ -186,7 +175,7 @@ void CameraFollowSystem::process(float dt)
             
             //if (!follower.isSnapped)
             {
-                //target += follower.targetOffset * std::min(1.f, glm::length2(target - tx.getPosition()) / follower.maxOffsetDistance);
+                target += follower.targetOffset * std::min(1.f, glm::length2(target - tx.getPosition()) / follower.maxOffsetDistance);
 
                 auto diff = target - follower.currentTarget;
 
@@ -271,7 +260,7 @@ void CameraFollowSystem::process(float dt)
 
                 auto& tx = entity.getComponent<cro::Transform>();
                 auto target = follower.target.getComponent<cro::Transform>().getPosition() + TargetOffset;
-                //target += follower.targetOffset * std::min(1.f, glm::length2(target - tx.getPosition()) / follower.maxOffsetDistance);
+                target += follower.targetOffset * std::min(1.f, glm::length2(target - tx.getPosition()) / follower.maxOffsetDistance);
 
                 auto diff = target - follower.currentTarget;
                 follower.currentTarget += diff * (dt * (2.f + (2.f * follower.zoom.progress)));
@@ -281,15 +270,6 @@ void CameraFollowSystem::process(float dt)
                 tx.setLocalTransform(glm::inverse(lookAt));
             }
             break;
-            //we always do this, above.
-        /*case CameraFollower::Reset:
-            follower.zoom.fov = 1.f;
-            follower.zoom.progress = 0.f;
-            follower.zoom.done = false;
-            entity.getComponent<cro::Camera>().resizeCallback(entity.getComponent<cro::Camera>());
-
-            follower.state = CameraFollower::Track;
-            break;*/
         }
     }
 

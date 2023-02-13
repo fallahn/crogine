@@ -816,7 +816,8 @@ void GolfState::handleMessage(const cro::Message& msg)
                 auto camVec = cro::Util::Matrix::getForwardVector(m_cameras[CameraID::Player].getComponent<cro::Transform>().getWorldTransform());
                 auto rotation = glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), m_inputParser.getYaw(), cro::Transform::Y_AXIS);
                 auto ballDir = glm::toMat3(rotation) * cro::Transform::X_AXIS;
-                if (glm::dot(camVec, ballDir) < -0.9f)
+                if (glm::dot(camVec, ballDir) < -0.9f
+                    && !Achievements::getAchievement(AchievementStrings[AchievementID::BadSport])->achieved)
                 {
                     auto* shader = &m_resources.shaders.get(ShaderID::Noise);
                     m_courseEnt.getComponent<cro::Drawable2D>().setShader(shader);
@@ -852,6 +853,9 @@ void GolfState::handleMessage(const cro::Message& msg)
                         e.getComponent<cro::Transform>().setPosition(glm::vec3(pos * scale, 0.2f));
                     };
                     m_courseEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+                    cro::App::postMessage<SceneEvent>(MessageID::SceneMessage)->type = SceneEvent::PlayerBad;
+                    Achievements::awardAchievement(AchievementStrings[AchievementID::BadSport]);
                 }
             }
 

@@ -141,6 +141,7 @@ private:
             Foot02,
             Foot03,
             Foot04,
+            BadSport,
 
             Count
         };

@@ -100,7 +100,8 @@ struct SceneEvent
         TransitionComplete,
         RequestSwitchCamera,
         PlayerIdle,
-        PlayerRotate
+        PlayerRotate,
+        PlayerBad
     }type = TransitionComplete;
 
     union

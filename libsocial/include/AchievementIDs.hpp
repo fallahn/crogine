@@ -86,6 +86,7 @@ namespace AchievementID
         HotStuff,
         ISeeNoShips,
         IntoOrbit,
+        BadSport,
 
         Count
     };
