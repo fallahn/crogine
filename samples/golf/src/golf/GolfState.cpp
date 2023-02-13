@@ -1072,6 +1072,8 @@ void GolfState::handleMessage(const cro::Message& msg)
             entity.addComponent<cro::Text>(m_sharedData.sharedResources->fonts.get(FontID::UI)).setString("FEED LOST");
             entity.getComponent<cro::Text>().setFillColour(TextHighlightColour);
             entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
+            entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+            entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
             entity.addComponent<cro::Callback>().active = true;
             entity.getComponent<cro::Callback>().function =
                 [&](cro::Entity e, float dt)
@@ -1337,7 +1339,7 @@ bool GolfState::simulate(float dt)
         float diff = m_resolutionUpdate.targetFade - m_resolutionUpdate.resolutionData.nearFadeDistance;
         if (std::fabs(diff) > 0.001f)
         {
-            m_resolutionUpdate.resolutionData.nearFadeDistance += (diff * dt);
+            m_resolutionUpdate.resolutionData.nearFadeDistance += (diff * (dt * 4.f));
         }
         else
         {
@@ -3817,6 +3819,13 @@ void GolfState::buildScene()
             vpSize.x / vpSize.y, 0.1f, static_cast<float>(MapSize.x) * 1.25f,
             shadowQuality.cascadeCount);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
+
+        //fades billboards with zoom
+        if (m_currentCamera == CameraID::Sky)
+        {
+            m_resolutionUpdate.targetFade = m_currentPlayer.terrain == TerrainID::Green ? GreenFadeDistance : CourseFadeDistance;
+            m_resolutionUpdate.targetFade += (ZoomFadeDistance / 2.f) + (camEnt.getComponent<CameraFollower>().zoom.progress * (ZoomFadeDistance / 2.f));
+        }
     };
     camEnt.getComponent<cro::Camera>().reflectionBuffer.create(ReflectionMapSize, ReflectionMapSize);
     camEnt.getComponent<cro::Camera>().reflectionBuffer.setSmooth(true);
@@ -6945,6 +6954,9 @@ void GolfState::setActiveCamera(std::int32_t camID)
         {
             auto target = m_currentPlayer.position;
             m_waterEnt.getComponent<cro::Callback>().setUserData<glm::vec3>(target.x, WaterLevel, target.z);
+
+            //reset the fade distance which may have been modified by a zooming follower.
+            m_resolutionUpdate.targetFade = m_currentPlayer.terrain == TerrainID::Green ? GreenFadeDistance : CourseFadeDistance;
         }
 
         //set scene camera

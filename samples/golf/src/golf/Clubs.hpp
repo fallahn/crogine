@@ -126,9 +126,9 @@ public:
     {
         if (m_id == ClubID::Putter)
         {
-            if (distanceToPin < m_target * ShortRange)
+            if (distanceToPin < m_target * ShortRangeThreshold)
             {
-                if (distanceToPin < m_target * TinyRange)
+                if (distanceToPin < m_target * TinyRangeThreshold)
                 {
                     return m_target * TinyRange;
                 }

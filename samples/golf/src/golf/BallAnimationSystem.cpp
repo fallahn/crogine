@@ -49,23 +49,31 @@ void BallAnimationSystem::process(float dt)
         const auto& animation = entity.getComponent<BallAnimation>();
         const auto& interp = animation.parent.getComponent<InterpolationComponent<InterpolationType::Linear>>();
 
-        //if (auto len2 = glm::length2(interp.getVelocity()); len2 != 0)
-        //{
-        //    auto rightVec = glm::cross(cro::Transform::Y_AXIS, glm::normalize(interp.getVelocity()));
-        //    CRO_ASSERT(!std::isnan(rightVec.x), "");
 
-        //    //hmmmmm one of these inverts can introduce a NaN
-        //    rightVec = glm::inverse(glm::toMat3(animation.parent.getComponent<cro::Transform>().getRotation())) * rightVec;
-        //    CRO_ASSERT(!std::isnan(rightVec.x), "NaN from parent rotation");
+        //as the dot product of these reaches +-1 it's not
+        //possible to get a cross product (and probably causes the NaN case...)
+        if (auto len2 = glm::length2(interp.getVelocity()); len2 != 0)
+        {
+            auto len = glm::sqrt(len2);
+            auto forward = interp.getVelocity() / len;
 
-        //    rightVec = glm::inverse(glm::toMat3(entity.getComponent<cro::Transform>().getRotation())) * rightVec;
-        //    CRO_ASSERT(!std::isnan(rightVec.x), "NaN from ball rotation");
+            if (auto d = dot(forward, cro::Transform::Y_AXIS);
+                d < 0.9f && d > -0.9f)
+            {
+                auto rightVec = glm::cross(cro::Transform::Y_AXIS, forward);
+                CRO_ASSERT(!std::isnan(rightVec.x), "");
 
-        //    float rotation = (glm::sqrt(len2) / Ball::Radius);
+                rightVec = glm::inverse(glm::toMat3(animation.parent.getComponent<cro::Transform>().getRotation())) * rightVec;
+                CRO_ASSERT(!std::isnan(rightVec.x), "NaN from parent rotation");
 
-        //    CRO_ASSERT(!std::isnan(rotation), "");
+                rightVec = glm::inverse(glm::toMat3(entity.getComponent<cro::Transform>().getRotation())) * rightVec;
+                CRO_ASSERT(!std::isnan(rightVec.x), "NaN from ball rotation");
 
-        //    entity.getComponent<cro::Transform>().rotate(rightVec, rotation * dt);
-        //}
+                float rotation = (len / Ball::Radius);
+                CRO_ASSERT(!std::isnan(rotation), "");
+
+                entity.getComponent<cro::Transform>().rotate(rightVec, rotation * dt);
+            }
+        }
     }
 }

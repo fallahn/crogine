@@ -79,6 +79,7 @@ static constexpr float GolfZoom = 0.59f;
 
 static constexpr float GreenFadeDistance = 0.8f;
 static constexpr float CourseFadeDistance = 2.f;
+static constexpr float ZoomFadeDistance = 10.f;
 
 static constexpr float GreenCamHeight = 3.f;
 static constexpr float SkyCamHeight = 16.f;
