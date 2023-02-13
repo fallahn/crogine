@@ -1343,7 +1343,7 @@ bool GolfState::simulate(float dt)
         float diff = m_resolutionUpdate.targetFade - m_resolutionUpdate.resolutionData.nearFadeDistance;
         if (std::fabs(diff) > 0.001f)
         {
-            m_resolutionUpdate.resolutionData.nearFadeDistance += (diff * (dt * 4.f));
+            m_resolutionUpdate.resolutionData.nearFadeDistance += (diff * (dt * 1.2f));
         }
         else
         {

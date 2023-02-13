@@ -539,7 +539,7 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
     m_slopeProperties.shader = slopeShader.getGLHandle();
     materialID = resources.materials.add(slopeShader);
     resources.materials.get(materialID).blendMode = cro::Material::BlendMode::Alpha;
-    //resources.materials.get(materialID).enableDepthTest = true;
+    //resources.materials.get(materialID).enableDepthTest = false;
 
     entity = scene.createEntity();
     entity.addComponent<cro::Transform>();
@@ -1051,7 +1051,7 @@ void TerrainBuilder::threadFunc()
                 static constexpr std::int32_t GridDensity = 2; //grids per metre. Can only be 1,2 or 4 to match Normal Map resolution
                 static constexpr float GridSpacing = 1.f / GridDensity;
 
-                static constexpr float epsilon = 0.018f; //pushes grid off the surface by this much. Could just do in the transform really...
+                static constexpr float epsilon = 0.016f; //pushes grid off the surface by this much. Could just do in the transform really...
                 for (auto y = 0; y < (SlopeGridSize * GridDensity); ++y)
                 {
                     for (auto x = 0; x < (SlopeGridSize * GridDensity); ++x)

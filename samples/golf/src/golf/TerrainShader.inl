@@ -183,6 +183,7 @@ R"(
         colour.a *= u_alpha;
         colour = mix(vec4(DotColour, smoothstep(0.05, 0.15, v_colour.a * u_alpha) * 0.8), colour, alpha);
 
+//colour.rgb *= colour.a;
         FRAG_OUT = colour;
     }
 )";
