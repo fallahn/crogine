@@ -53,6 +53,7 @@ public:
     void setClub(float); //picks closest club to given distance
     float getYaw() const; //yaw in world space (includes facing direction)
     float getRotation() const; //relative rotation
+    float getDirection() const { return m_holeDirection; }
     float getCamMotion() const { return m_camMotion; }
 
     float getPower() const; //0-1 multiplied by selected club

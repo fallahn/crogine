@@ -656,7 +656,32 @@ void InputParser::setMaxRotation(float rotation)
 //private
 void InputParser::rotate(float rotation)
 {
-    m_rotation = std::min(m_maxRotation, std::max(-m_maxRotation, m_rotation + rotation));
+    float total = m_rotation + rotation;
+    float overspill = 0.f;
+
+    if (total > m_maxRotation)
+    {
+        overspill = total - m_maxRotation;
+        m_rotation = m_maxRotation;
+    }
+    else if (total < -m_maxRotation)
+    {
+        overspill = total + m_maxRotation;
+        m_rotation = -m_maxRotation;
+    }
+    else
+    {
+        m_rotation = total;
+    }
+
+    if (!m_isCPU)
+    {
+        m_holeDirection += overspill;
+
+        auto* msg = cro::App::postMessage<SceneEvent>(MessageID::SceneMessage);
+        msg->type = SceneEvent::PlayerRotate;
+        msg->rotation = m_holeDirection - (cro::Util::Const::PI / 2.f); //probably not necessary as we could read this directly? Meh.
+    }
 }
 
 void InputParser::checkControllerInput()

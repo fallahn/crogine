@@ -810,6 +810,49 @@ void GolfState::handleMessage(const cro::Message& msg)
                     emitter.settings.colour = getBeaconColour(m_sharedData.beaconColour);
                     emitter.start();
                 }
+
+
+                //see if we're doing something silly like facing the camera
+                auto camVec = cro::Util::Matrix::getForwardVector(m_cameras[CameraID::Player].getComponent<cro::Transform>().getWorldTransform());
+                auto rotation = glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), m_inputParser.getYaw(), cro::Transform::Y_AXIS);
+                auto ballDir = glm::toMat3(rotation) * cro::Transform::X_AXIS;
+                if (glm::dot(camVec, ballDir) < -0.9f)
+                {
+                    auto* shader = &m_resources.shaders.get(ShaderID::Noise);
+                    m_courseEnt.getComponent<cro::Drawable2D>().setShader(shader);
+                    for (auto& cam : m_cameras)
+                    {
+                        cam.getComponent<TargetInfo>().postProcess = shader;
+                    }
+
+                    auto entity = m_uiScene.createEntity();
+                    entity.addComponent<cro::Transform>().setPosition({ 10.f, 32.f, 0.2f });
+                    entity.addComponent<cro::Drawable2D>();
+                    entity.addComponent<cro::Text>(m_sharedData.sharedResources->fonts.get(FontID::UI)).setString("FEED LOST");
+                    entity.getComponent<cro::Text>().setFillColour(TextHighlightColour);
+                    entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
+                    entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+                    entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
+                    entity.addComponent<cro::Callback>().active = true;
+                    entity.getComponent<cro::Callback>().function =
+                        [&](cro::Entity e, float dt)
+                    {
+                        static float state = 0.f;
+                        static float accum = 0.f;
+                        accum += dt;
+                        if (accum > 0.5f)
+                        {
+                            accum -= 0.5f;
+                            state = state == 1 ? 0.f : 1.f;
+                        }
+
+                        constexpr glm::vec2 pos(10.f, 32.f);
+                        auto scale = m_viewScale / glm::vec2(m_courseEnt.getComponent<cro::Transform>().getScale());
+                        e.getComponent<cro::Transform>().setScale(scale * state);
+                        e.getComponent<cro::Transform>().setPosition(glm::vec3(pos * scale, 0.2f));
+                    };
+                    m_courseEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+                }
             }
 
             m_gameScene.setSystemActive<CameraFollowSystem>(true);
@@ -850,6 +893,12 @@ void GolfState::handleMessage(const cro::Message& msg)
         switch(data.type)
         {
         default: break;
+        case SceneEvent::PlayerRotate:
+            if (m_activeAvatar)
+            {
+                m_activeAvatar->model.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, data.rotation);
+            }
+            break;
         case SceneEvent::TransitionComplete:
         {
             //show miniball
@@ -3357,6 +3406,8 @@ void GolfState::buildScene()
     {
         float scale = m_currentPlayer.terrain != TerrainID::Green ? 1.f : 0.f;
         e.getComponent<cro::Transform>().setScale(glm::vec3(scale));
+
+        e.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, m_inputParser.getDirection());
     };
 
     const std::int32_t pointCount = 6;

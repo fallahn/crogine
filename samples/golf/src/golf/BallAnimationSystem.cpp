@@ -49,23 +49,23 @@ void BallAnimationSystem::process(float dt)
         const auto& animation = entity.getComponent<BallAnimation>();
         const auto& interp = animation.parent.getComponent<InterpolationComponent<InterpolationType::Linear>>();
 
-        if (auto len2 = glm::length2(interp.getVelocity()); len2 != 0)
-        {
-            auto rightVec = glm::cross(cro::Transform::Y_AXIS, interp.getVelocity());
-            CRO_ASSERT(!std::isnan(rightVec.x), "");
+        //if (auto len2 = glm::length2(interp.getVelocity()); len2 != 0)
+        //{
+        //    auto rightVec = glm::cross(cro::Transform::Y_AXIS, glm::normalize(interp.getVelocity()));
+        //    CRO_ASSERT(!std::isnan(rightVec.x), "");
 
-            //hmmmmm one of these inverts can introduce a NaN
-            rightVec = glm::inverse(glm::toMat3(animation.parent.getComponent<cro::Transform>().getRotation())) * rightVec;
-            CRO_ASSERT(!std::isnan(rightVec.x), "");
+        //    //hmmmmm one of these inverts can introduce a NaN
+        //    rightVec = glm::inverse(glm::toMat3(animation.parent.getComponent<cro::Transform>().getRotation())) * rightVec;
+        //    CRO_ASSERT(!std::isnan(rightVec.x), "NaN from parent rotation");
 
-            rightVec = glm::inverse(glm::toMat3(entity.getComponent<cro::Transform>().getRotation())) * rightVec;
-            CRO_ASSERT(!std::isnan(rightVec.x), "");
+        //    rightVec = glm::inverse(glm::toMat3(entity.getComponent<cro::Transform>().getRotation())) * rightVec;
+        //    CRO_ASSERT(!std::isnan(rightVec.x), "NaN from ball rotation");
 
-            float rotation = (glm::sqrt(len2) / Ball::Radius);
+        //    float rotation = (glm::sqrt(len2) / Ball::Radius);
 
-            CRO_ASSERT(!std::isnan(rotation), "");
+        //    CRO_ASSERT(!std::isnan(rotation), "");
 
-            entity.getComponent<cro::Transform>().rotate(rightVec, rotation * dt);
-        }
+        //    entity.getComponent<cro::Transform>().rotate(rightVec, rotation * dt);
+        //}
     }
 }
