@@ -59,9 +59,9 @@ public:
         auto t = m_target;
         if (m_id == ClubID::Putter)
         {
-            if (distanceToPin < (m_target * ShortRange))
+            if (distanceToPin < (m_target * ShortRangeThreshold))
             {
-                if (distanceToPin < (m_target * TinyRange))
+                if (distanceToPin < (m_target * TinyRangeThreshold))
                 {
                     t *= TinyRange;
                 }
@@ -107,9 +107,9 @@ public:
         if (m_id == ClubID::Putter)
         {
             //ugh this is such a fudge...
-            if (distanceToPin < m_target * ShortRange)
+            if (distanceToPin < m_target * ShortRangeThreshold)
             {
-                if (distanceToPin < m_target * TinyRange)
+                if (distanceToPin < m_target * TinyRangeThreshold)
                 {
                     return m_power * TinyRange;
                 }
@@ -147,8 +147,10 @@ private:
     const float m_target = 0.f; //the max (approx) distance when hit with 100% power
 
     //putter below this is rescaled
-    static constexpr float ShortRange = 1.f / 5.f;
-    static constexpr float TinyRange = 1.f / 20.f;
+    static constexpr float ShortRange = 1.f / 3.f;
+    static constexpr float ShortRangeThreshold = ShortRange * 0.65f;
+    static constexpr float TinyRange = 1.f / 10.f;
+    static constexpr float TinyRangeThreshold = TinyRange * 0.5f;
 };
 
 static const std::array<Club, ClubID::Count> Clubs =
