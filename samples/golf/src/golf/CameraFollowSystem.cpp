@@ -186,22 +186,18 @@ void CameraFollowSystem::process(float dt)
             
             //if (!follower.isSnapped)
             {
-                target += follower.targetOffset * std::min(1.f, glm::length2(target - tx.getPosition()) / follower.maxOffsetDistance);
+                //target += follower.targetOffset * std::min(1.f, glm::length2(target - tx.getPosition()) / follower.maxOffsetDistance);
 
                 auto diff = target - follower.currentTarget;
 
                 float diffMultiplier = std::min(1.f, std::max(0.f, glm::length2(diff) / follower.maxTargetDiff));
                 diffMultiplier *= 4.f;
 
-                follower.currentTarget += diff * /*std::min(0.9998f, */(dt * (diffMultiplier + (3.f * follower.zoom.progress)));//);
-            }
-            /*else
-            {
-                target += follower.targetOffset;
-                follower.currentTarget = target;
-            }*/
+                diffMultiplier = (dt * (diffMultiplier + (3.f * follower.zoom.progress)));
 
-            //auto lookAt = lookFrom(tx.getPosition(), follower.currentTarget, cro::Transform::Y_AXIS);
+                follower.currentTarget += diff * diffMultiplier;
+            }
+
             auto lookAt = glm::lookAt(tx.getPosition(), follower.currentTarget, cro::Transform::Y_AXIS);
             tx.setLocalTransform(glm::inverse(lookAt));
 
@@ -248,12 +244,6 @@ void CameraFollowSystem::process(float dt)
                 follower.state = CameraFollower::Zoom;
             }
 
-            //moved to Follower::reset();
-            //if (m_closestCamera != follower.id)
-            //{
-                //follower.state = CameraFollower::Reset;
-            //}
-
             auto& targetInfo = entity.getComponent<TargetInfo>();
             if (targetInfo.waterPlane.isValid())
             {
@@ -281,10 +271,10 @@ void CameraFollowSystem::process(float dt)
 
                 auto& tx = entity.getComponent<cro::Transform>();
                 auto target = follower.target.getComponent<cro::Transform>().getPosition() + TargetOffset;
-                target += follower.targetOffset * std::min(1.f, glm::length2(target - tx.getPosition()) / follower.maxOffsetDistance);
+                //target += follower.targetOffset * std::min(1.f, glm::length2(target - tx.getPosition()) / follower.maxOffsetDistance);
 
                 auto diff = target - follower.currentTarget;
-                follower.currentTarget += diff * /*std::min(0.998f, */(dt * (2.f + (2.f * follower.zoom.progress)));//);
+                follower.currentTarget += diff * (dt * (2.f + (2.f * follower.zoom.progress)));
 
 
                 auto lookAt = glm::lookAt(tx.getPosition(), follower.currentTarget, cro::Transform::Y_AXIS);

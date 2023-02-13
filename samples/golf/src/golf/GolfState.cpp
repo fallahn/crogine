@@ -6957,6 +6957,7 @@ void GolfState::setActiveCamera(std::int32_t camID)
 
             //reset the fade distance which may have been modified by a zooming follower.
             m_resolutionUpdate.targetFade = m_currentPlayer.terrain == TerrainID::Green ? GreenFadeDistance : CourseFadeDistance;
+            m_resolutionUpdate.resolutionData.nearFadeDistance = m_resolutionUpdate.targetFade - 0.01f;
         }
 
         //set scene camera
