@@ -495,7 +495,12 @@ void GolfState::buildUI()
 
             //move to position
             auto maxDist = Clubs[ClubID::Putter].getTarget(m_distanceToHole);
-            float hTarget = std::clamp((m_distanceToHole / maxDist) * 0.97f, 0.f, 1.f) * BarWidth; //magic number just stops the flag recommending too much power
+            float guestimation = (m_distanceToHole / maxDist) * 0.97f; //magic number just stops the flag recommending too much power
+            //add a bit more power if putting uphill
+            static constexpr float MaxSlope = 0.15f;
+            float slope = (m_holeData[m_currentHole].pin.y - m_currentPlayer.position.y) / MaxSlope;
+
+            float hTarget = std::clamp(guestimation + (slope * 0.095f), 0.f, 1.f) * BarWidth;
 
             auto pos = e.getComponent<cro::Transform>().getPosition();
             pos.x = std::min(pos.x + ((hTarget - pos.x) * dt), BarWidth - 4.f);
