@@ -6950,10 +6950,6 @@ void GolfState::setActiveCamera(std::int32_t camID)
         {
             auto target = m_currentPlayer.position;
             m_waterEnt.getComponent<cro::Callback>().setUserData<glm::vec3>(target.x, WaterLevel, target.z);
-
-            //reset the fade distance which may have been modified by a zooming follower.
-            m_resolutionUpdate.targetFade = m_currentPlayer.terrain == TerrainID::Green ? GreenFadeDistance : CourseFadeDistance;
-            m_resolutionUpdate.resolutionData.nearFadeDistance = m_resolutionUpdate.targetFade - 0.01f;
         }
 
         //set scene camera
@@ -6961,6 +6957,10 @@ void GolfState::setActiveCamera(std::int32_t camID)
         if (camID != CameraID::Sky)
         {
             m_gameScene.setActiveListener(m_cameras[camID]);
+
+            //reset the fade distance which may have been modified by a zooming follower.
+            m_resolutionUpdate.targetFade = m_currentPlayer.terrain == TerrainID::Green ? GreenFadeDistance : CourseFadeDistance;
+            m_resolutionUpdate.resolutionData.nearFadeDistance = m_resolutionUpdate.targetFade - 0.01f;
         }
         m_currentCamera = camID;
 

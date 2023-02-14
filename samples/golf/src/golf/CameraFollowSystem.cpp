@@ -155,9 +155,9 @@ void CameraFollowSystem::process(float dt)
 
     const auto updateVelocity = [](glm::vec3 target, CameraFollower& follower, float dt)
     {
-        static constexpr float Cohesion = 20.f;
+        static constexpr float Cohesion = 25.f;
         static constexpr float MaxVelocity = 175.f;
-        static constexpr float TargetRadius = 5.f;
+        static constexpr float TargetRadius = 15.f;
 
         auto diff = target - follower.currentTarget;
         follower.velocity += diff * (Cohesion + (Cohesion * follower.zoom.progress));
@@ -166,7 +166,13 @@ void CameraFollowSystem::process(float dt)
         {
             follower.velocity = (follower.velocity / glm::sqrt(l2)) * MaxVelocity;
         }
-        const float RadiusMultiplier = std::clamp(glm::length2(diff) / (TargetRadius * TargetRadius), 0.f, 1.f);
+
+        //reduce radius with zoom
+        float ActiveRadius = TargetRadius - ((TargetRadius / 2.f) * follower.zoom.progress);
+        //and more so when < 1m from hole
+        ActiveRadius -= (ActiveRadius / 2.f) * (1.f - glm::step(1.f, glm::length2(follower.holePosition - follower.currentTarget)));
+
+        const float RadiusMultiplier = std::clamp(glm::length2(diff) / (ActiveRadius * ActiveRadius), 0.f, 1.f);
         follower.currentTarget += follower.velocity * RadiusMultiplier * dt;
     };
 
@@ -191,24 +197,8 @@ void CameraFollowSystem::process(float dt)
 
             auto ballPos = follower.target.getComponent<cro::Transform>().getPosition();
             auto target = ballPos + TargetOffset;
-            //follower.prevTarget = follower.currentTarget;
-            
-            //if (!follower.isSnapped)
-            /*{
-                target += follower.targetOffset * std::min(1.f, glm::length2(target - tx.getPosition()) / follower.maxOffsetDistance);
-
-                auto diff = target - follower.currentTarget;
-
-                float diffMultiplier = std::min(1.f, std::max(0.f, glm::length2(diff) / follower.maxTargetDiff));
-                diffMultiplier *= 4.f;
-
-                diffMultiplier = (dt * (diffMultiplier + (3.f * follower.zoom.progress)));
-
-                follower.currentTarget += diff * diffMultiplier;
-            }*/
 
             updateVelocity(target, follower, dt);
-
 
             auto lookAt = glm::lookAt(tx.getPosition(), follower.currentTarget, cro::Transform::Y_AXIS);
             tx.setLocalTransform(glm::inverse(lookAt));

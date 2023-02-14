@@ -500,11 +500,11 @@ void GolfState::buildUI()
             
             //add a bit more power if putting uphill
             float slope = 0.f;
-            if (m_distanceToHole > 0.01f)
+            if (m_distanceToHole > 0.005f)
             {
                 slope = glm::dot(cro::Transform::Y_AXIS, m_holeData[m_currentHole].pin - m_currentPlayer.position) / m_distanceToHole;
             }
-            float hTarget = std::clamp(guestimation + (0.125f * slope), 0.f, 1.f) * BarWidth;
+            float hTarget = std::clamp(guestimation + (0.25f * slope), 0.f, 1.f) * BarWidth;
 
             auto pos = e.getComponent<cro::Transform>().getPosition();
             pos.x = std::min(pos.x + ((hTarget - pos.x) * dt), BarWidth - 4.f);
