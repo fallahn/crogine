@@ -357,6 +357,10 @@ bool GolfState::handleEvent(const cro::Event& evt)
                 e.getComponent<cro::Model>().setHidden(!(localPlayer && !m_sharedData.localConnectionData.playerData[m_currentPlayer.player].isCPU));
             };
             m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+            //resets the drone which may have drifted while player idled.
+            auto& data = m_drone.getComponent<cro::Callback>().getUserData<DroneCallbackData>();
+            data.target.getComponent<cro::Transform>().setPosition(data.resetPosition);
         }
     };
 
@@ -4332,7 +4336,7 @@ void GolfState::createDrone()
             float rotation = std::atan2(dir.y, dir.x) + (cro::Util::Const::PI / 2.f);
 
 
-            auto& [currRotation, acceleration, target] = e.getComponent<cro::Callback>().getUserData<DroneCallbackData>();
+            auto& [currRotation, acceleration, target, _] = e.getComponent<cro::Callback>().getUserData<DroneCallbackData>();
 
             //move towards skycam
             static constexpr float MoveSpeed = 20.f;
@@ -6048,7 +6052,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
         {
             auto& data = m_drone.getComponent<cro::Callback>().getUserData<DroneCallbackData>();
             data.target.getComponent<cro::Transform>().setPosition(pos);
-            //data.canRetarget = true;
+            data.resetPosition = pos;
         }
         else
         {
@@ -6358,7 +6362,7 @@ void GolfState::updateActor(const ActorInfo& update)
             bool active = (interp.id == update.serverID);
             if (active)
             {
-                //glm::quat(1.f, 0.f, 0.f, 0.f)
+                //cro::Transform::QUAT_IDENTITY;
                 interp.addPoint({ update.position, /*update.velocity*/glm::vec3(0.f), cro::Util::Net::decompressQuat(update.rotation), update.timestamp});
 
 
@@ -6385,6 +6389,18 @@ void GolfState::updateActor(const ActorInfo& update)
                     p = e.getComponent<cro::Transform>().getPosition();
                     glm::vec2 ballPos(p.x, p.z);
                     glm::vec2 destPos(update.position.x, update.position.z);
+
+                    //Later note: I found this half written code^^ and can't remember what
+                    //I was planning, so here we go:
+                    static constexpr float MaxRadius = 25.f * 25.f;
+                    if (glm::length2(camPos - ballPos) < MaxRadius
+                        && glm::length2(camPos - destPos) > MaxRadius)
+                    {
+                        auto& data = m_drone.getComponent<cro::Callback>().getUserData<DroneCallbackData>();
+                        auto d = glm::normalize(ballPos - camPos) * 25.f;
+                        data.resetPosition += glm::vec3(d.x, 0.f, d.y);
+                        data.target.getComponent<cro::Transform>().setPosition(data.resetPosition);
+                    }
                 }
             }
 
