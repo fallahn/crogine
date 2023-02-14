@@ -6156,7 +6156,6 @@ void GolfState::setGreenCamPosition()
         m_cameras[CameraID::Green].getComponent<cro::Transform>().move(direction);
         m_cameras[CameraID::Green].getComponent<CameraFollower>().radius = GreenCamRadiusSmall * GreenCamRadiusSmall;
         m_cameras[CameraID::Green].getComponent<CameraFollower>().zoomRadius = 1.f;
-        m_cameras[CameraID::Green].getComponent<CameraFollower>().isSnapped = true; //this actually gets overridden when camera is set active...
         m_cameras[CameraID::Green].getComponent<CameraFollower>().maxTargetDiff = 4.f;
         m_cameras[CameraID::Green].getComponent<CameraFollower>().zoom.target = 0.3f;
         m_cameras[CameraID::Green].getComponent<CameraFollower>().zoom.speed = GreenCamZoomSlow;
@@ -6175,7 +6174,6 @@ void GolfState::setGreenCamPosition()
         m_cameras[CameraID::Green].getComponent<cro::Transform>().move(direction);
         m_cameras[CameraID::Green].getComponent<CameraFollower>().radius = GreenCamRadiusMedium * GreenCamRadiusMedium;
         m_cameras[CameraID::Green].getComponent<CameraFollower>().zoomRadius = 9.f;
-        m_cameras[CameraID::Green].getComponent<CameraFollower>().isSnapped = true; //this actually gets overridden when camera is set active...
         m_cameras[CameraID::Green].getComponent<CameraFollower>().maxTargetDiff = 8.f;
         m_cameras[CameraID::Green].getComponent<CameraFollower>().zoom.target = 0.5f;
         m_cameras[CameraID::Green].getComponent<CameraFollower>().zoom.speed = GreenCamZoomSlow / 2.f;
@@ -6193,7 +6191,6 @@ void GolfState::setGreenCamPosition()
         m_cameras[CameraID::Green].getComponent<cro::Transform>().move(direction);
         m_cameras[CameraID::Green].getComponent<CameraFollower>().radius = GreenCamRadiusLarge * GreenCamRadiusLarge;
         m_cameras[CameraID::Green].getComponent<CameraFollower>().zoomRadius = 16.f;
-        m_cameras[CameraID::Green].getComponent<CameraFollower>().isSnapped = false;
         m_cameras[CameraID::Green].getComponent<CameraFollower>().maxTargetDiff = 16.f;
         m_cameras[CameraID::Green].getComponent<CameraFollower>().zoom.target = 0.25f;
         m_cameras[CameraID::Green].getComponent<CameraFollower>().zoom.speed = GreenCamZoomFast;

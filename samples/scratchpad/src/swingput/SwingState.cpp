@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022
+Matt Marchant 2022 - 2023
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -51,7 +51,9 @@ source distribution.
 
 namespace
 {
-
+    float cohesion = 10.f;
+    float maxVelocity = 200.f;
+    float targetRadius = 50.f;
 }
 
 SwingState::SwingState(cro::StateStack& stack, cro::State::Context context)
@@ -95,9 +97,24 @@ bool SwingState::handleEvent(const cro::Event& evt)
             break;
         }
     }
+    else if (evt.type == SDL_MOUSEMOTION)
+    {
+        if (evt.motion.state & SDL_BUTTON_LMASK)
+        {
+            auto pos = m_uiScene.getActiveCamera().getComponent<cro::Camera>().pixelToCoords(glm::vec2(evt.motion.x, evt.motion.y));
+            m_target.setPosition(pos);
+        }
+    }
+    else if (evt.type == SDL_MOUSEBUTTONDOWN)
+    {
+        if (evt.button.button == SDL_BUTTON_LEFT)
+        {
+            auto pos = m_uiScene.getActiveCamera().getComponent<cro::Camera>().pixelToCoords(glm::vec2(evt.button.x, evt.button.y));
+            m_target.setPosition(pos);
+        }
+    }
 
-
-    m_inputParser.handleEvent(evt);
+    //m_inputParser.handleEvent(evt);
 
     m_gameScene.forwardEvent(evt);
     m_uiScene.forwardEvent(evt);
@@ -123,6 +140,9 @@ void SwingState::render()
 {
     m_gameScene.render();
     m_uiScene.render();
+
+    m_target.draw();
+    m_follower.draw();
 }
 
 //private
@@ -141,24 +161,89 @@ void SwingState::addSystems()
 
 void SwingState::loadAssets()
 {
+    m_target.setVertexData(
+        {
+            cro::Vertex2D(glm::vec2(-10.f, 10.f), cro::Colour::Blue),
+            cro::Vertex2D(glm::vec2(-10.f, -10.f), cro::Colour::Blue),
+            cro::Vertex2D(glm::vec2(10.f, 10.f), cro::Colour::Blue),
+            cro::Vertex2D(glm::vec2(10.f, -10.f), cro::Colour::Blue)
+        }
+    );
 
+    m_follower.setVertexData(
+        {
+            cro::Vertex2D(glm::vec2(-10.f, 10.f), cro::Colour::Red),
+            cro::Vertex2D(glm::vec2(-10.f, -10.f), cro::Colour::Red),
+            cro::Vertex2D(glm::vec2(10.f, 10.f), cro::Colour::Red),
+            cro::Vertex2D(glm::vec2(10.f, -10.f), cro::Colour::Red)
+        }
+    );
 }
 
 void SwingState::createScene()
 {
-
-
     //this is called when the window is resized to automatically update the camera's matrices/viewport
     auto camEnt = m_gameScene.getActiveCamera();
     updateView(camEnt.getComponent<cro::Camera>());
     camEnt.getComponent<cro::Camera>().resizeCallback = std::bind(&SwingState::updateView, this, std::placeholders::_1);
 
 
+    //entity uses callback system to process logic of follower
+    struct FollowerData final
+    {
+        glm::vec2 velocity = glm::vec2(0.f);
+    };
 
+    auto entity = m_gameScene.createEntity();
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<FollowerData>();
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float dt) mutable
+    {
+        auto& data = e.getComponent<cro::Callback>().getUserData<FollowerData>();
+
+        auto diff = (m_target.getPosition() - m_follower.getPosition());
+
+        //coherance
+        data.velocity += diff * cohesion;
+
+        //velocity matching is redundant in cases where target is stopped - because we'll just stop following
+
+
+        //clamp velocity
+        if (auto len2 = glm::length2(data.velocity); len2 > (maxVelocity * maxVelocity))
+        {
+            data.velocity = (data.velocity / glm::sqrt(len2)) * maxVelocity;
+        }
+
+        //reduce speed as we get within radius of target
+        float multiplier = std::clamp(glm::length2(diff) / (targetRadius * targetRadius), 0.f, 1.f);
+
+        //make sure not to mutate the velocity by the multiplier
+        m_follower.move(data.velocity * multiplier * dt);
+    };
 }
 
 void SwingState::createUI()
 {
+    registerWindow([&]() 
+        {
+            if (ImGui::Begin("Follower"))
+            {
+                auto pos = m_target.getPosition();
+                ImGui::Text("Target: %3.1f, %3.1f", pos.x, pos.y);
+
+                pos = m_follower.getPosition();
+                ImGui::Text("Follower: %3.1f, %3.1f", pos.x, pos.y);
+
+                ImGui::Separator();
+                ImGui::SliderFloat("Cohesion", &cohesion, 10.f, 40.f);
+                ImGui::SliderFloat("Max Velocity", &maxVelocity, 200.f, 500.f);
+                ImGui::SliderFloat("Target Radius", &targetRadius, 50.f, 100.f);
+            }
+            ImGui::End();   
+        });
+
 
     auto entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 320.f, 240.f });
@@ -248,7 +333,7 @@ void SwingState::createUI()
 
     auto updateUI = [](cro::Camera& cam)
     {
-        glm::vec2 size(cro::App::getWindow().getSize());
+        //glm::vec2 size(cro::App::getWindow().getSize());
         //cam.setOrthographic(0.f, size.x, 0.f, size.y, -1.f, 2.f);
         cam.setOrthographic(0.f, 720.f, 0.f, 480.f, -1.f, 2.f);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };

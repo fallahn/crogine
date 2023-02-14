@@ -174,7 +174,7 @@ void CameraFollowSystem::process(float dt)
             follower.prevTarget = follower.currentTarget;
             
             //if (!follower.isSnapped)
-            {
+            /*{
                 target += follower.targetOffset * std::min(1.f, glm::length2(target - tx.getPosition()) / follower.maxOffsetDistance);
 
                 auto diff = target - follower.currentTarget;
@@ -185,7 +185,23 @@ void CameraFollowSystem::process(float dt)
                 diffMultiplier = (dt * (diffMultiplier + (3.f * follower.zoom.progress)));
 
                 follower.currentTarget += diff * diffMultiplier;
+            }*/
+
+            static constexpr float Cohesion = 20.f;
+            static constexpr float MaxVelocity = 175.f;
+            static constexpr float TargetRadius = 5.f;
+
+            auto diff = target - follower.currentTarget;
+            follower.velocity += diff * Cohesion;
+
+            if (auto l2 = glm::length2(follower.velocity); l2 > (MaxVelocity * MaxVelocity))
+            {
+                follower.velocity = (follower.velocity / glm::sqrt(l2)) * MaxVelocity;
             }
+            const float RadiusMultiplier = std::clamp(glm::length2(diff) / (TargetRadius * TargetRadius), 0.f, 1.f);
+            follower.currentTarget += follower.velocity * RadiusMultiplier * dt;
+
+
 
             auto lookAt = glm::lookAt(tx.getPosition(), follower.currentTarget, cro::Transform::Y_AXIS);
             tx.setLocalTransform(glm::inverse(lookAt));

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022
+Matt Marchant 2022 - 2023
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -36,6 +36,7 @@ source distribution.
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/gui/GuiClient.hpp>
 #include <crogine/graphics/ModelDefinition.hpp>
+#include <crogine/graphics/SimpleVertexArray.hpp>
 
 namespace cro
 {
@@ -63,6 +64,9 @@ private:
     cro::ResourceCollection m_resources;
 
     Swingput m_inputParser;
+
+    cro::SimpleVertexArray m_target;
+    cro::SimpleVertexArray m_follower;
 
     void addSystems();
     void loadAssets();

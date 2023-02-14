@@ -122,7 +122,7 @@ bool MyApp::initialise()
     m_stateStack.registerState<AnimBlendState>(States::ScratchPad::AnimBlend);
 
 #ifdef CRO_DEBUG_
-    m_stateStack.pushState(States::ScratchPad::Frustum);
+    m_stateStack.pushState(States::ScratchPad::Swing);
     //m_stateStack.pushState(States::ScratchPad::MainMenu);
 #else
     m_stateStack.pushState(States::ScratchPad::MainMenu);

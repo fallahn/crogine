@@ -76,9 +76,10 @@ struct CameraFollower final
 
     cro::Entity target;
     glm::vec3 currentTarget = glm::vec3(0.f); //used to interpolate
-    glm::vec3 prevTarget = glm::vec3(0.f);
-    glm::vec3 holePosition = glm::vec3(0.f);
-    glm::vec3 playerPosition = glm::vec3(0.f);
+    glm::vec3 prevTarget = glm::vec3(0.f); //TODO check we still need this
+    glm::vec3 velocity = glm::vec3(0.f);
+    glm::vec3 holePosition = glm::vec3(0.f); //used to tell if we should zoom
+    glm::vec3 playerPosition = glm::vec3(0.f); //used to tell if we can be active (not if too close to player)
     float radius = 0.f; //camera becomes active when ball within this (should be ^2)
     float zoomRadius = 25.f; //dist^2 from hole when zoom becomes active
     float maxOffsetDistance = 9.f; //dist^2
@@ -90,8 +91,6 @@ struct CameraFollower final
     glm::vec3 targetOffset = glm::vec3(0.f); //aim is offset by this from target position
 
     std::int32_t id = -1;
-
-    bool isSnapped = false;
 
     struct ZoomData final
     {
@@ -110,7 +109,6 @@ struct CameraFollower final
         parent.getComponent<cro::Camera>().resizeCallback(parent.getComponent<cro::Camera>());
 
         state = CameraFollower::Track;
-        isSnapped = false;
     }
 };
 
