@@ -3839,7 +3839,6 @@ void GolfState::buildScene()
     camEnt.getComponent<cro::Camera>().setShadowExpansion(25.f);
     camEnt.addComponent<cro::CommandTarget>().ID = CommandID::SpectatorCam;
     camEnt.addComponent<CameraFollower>().radius = SkyCamRadius * SkyCamRadius;
-    camEnt.getComponent<CameraFollower>().maxOffsetDistance = 100.f;
     camEnt.getComponent<CameraFollower>().id = CameraID::Sky;
     camEnt.getComponent<CameraFollower>().zoom.target = 0.25f;// 0.1f;
     camEnt.getComponent<CameraFollower>().zoom.speed = SkyCamZoomSpeed;
@@ -3873,7 +3872,6 @@ void GolfState::buildScene()
     camEnt.addComponent<cro::CommandTarget>().ID = CommandID::SpectatorCam;
     camEnt.addComponent<CameraFollower>().radius = GreenCamRadiusLarge * GreenCamRadiusLarge;
     camEnt.getComponent<CameraFollower>().id = CameraID::Green;
-    camEnt.getComponent<CameraFollower>().maxTargetDiff = 16.f;
     camEnt.getComponent<CameraFollower>().zoom.speed = GreenCamZoomFast;
     camEnt.addComponent<cro::AudioListener>();
     camEnt.addComponent<TargetInfo>();
@@ -6156,7 +6154,6 @@ void GolfState::setGreenCamPosition()
         m_cameras[CameraID::Green].getComponent<cro::Transform>().move(direction);
         m_cameras[CameraID::Green].getComponent<CameraFollower>().radius = GreenCamRadiusSmall * GreenCamRadiusSmall;
         m_cameras[CameraID::Green].getComponent<CameraFollower>().zoomRadius = 1.f;
-        m_cameras[CameraID::Green].getComponent<CameraFollower>().maxTargetDiff = 4.f;
         m_cameras[CameraID::Green].getComponent<CameraFollower>().zoom.target = 0.3f;
         m_cameras[CameraID::Green].getComponent<CameraFollower>().zoom.speed = GreenCamZoomSlow;
 
@@ -6174,7 +6171,6 @@ void GolfState::setGreenCamPosition()
         m_cameras[CameraID::Green].getComponent<cro::Transform>().move(direction);
         m_cameras[CameraID::Green].getComponent<CameraFollower>().radius = GreenCamRadiusMedium * GreenCamRadiusMedium;
         m_cameras[CameraID::Green].getComponent<CameraFollower>().zoomRadius = 9.f;
-        m_cameras[CameraID::Green].getComponent<CameraFollower>().maxTargetDiff = 8.f;
         m_cameras[CameraID::Green].getComponent<CameraFollower>().zoom.target = 0.5f;
         m_cameras[CameraID::Green].getComponent<CameraFollower>().zoom.speed = GreenCamZoomSlow / 2.f;
 
@@ -6191,7 +6187,6 @@ void GolfState::setGreenCamPosition()
         m_cameras[CameraID::Green].getComponent<cro::Transform>().move(direction);
         m_cameras[CameraID::Green].getComponent<CameraFollower>().radius = GreenCamRadiusLarge * GreenCamRadiusLarge;
         m_cameras[CameraID::Green].getComponent<CameraFollower>().zoomRadius = 16.f;
-        m_cameras[CameraID::Green].getComponent<CameraFollower>().maxTargetDiff = 16.f;
         m_cameras[CameraID::Green].getComponent<CameraFollower>().zoom.target = 0.25f;
         m_cameras[CameraID::Green].getComponent<CameraFollower>().zoom.speed = GreenCamZoomFast;
     }

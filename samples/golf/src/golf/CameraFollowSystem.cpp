@@ -152,6 +152,26 @@ void CameraFollowSystem::process(float dt)
     auto& currentFollower = m_currentCamera.getComponent<CameraFollower>();
     currentFollower.currentFollowTime -= dt;
 
+
+    const auto updateVelocity = [](glm::vec3 target, CameraFollower& follower, float dt)
+    {
+        static constexpr float Cohesion = 20.f;
+        static constexpr float MaxVelocity = 175.f;
+        static constexpr float TargetRadius = 5.f;
+
+        auto diff = target - follower.currentTarget;
+        follower.velocity += diff * (Cohesion + (Cohesion * follower.zoom.progress));
+
+        if (auto l2 = glm::length2(follower.velocity); l2 > (MaxVelocity * MaxVelocity))
+        {
+            follower.velocity = (follower.velocity / glm::sqrt(l2)) * MaxVelocity;
+        }
+        const float RadiusMultiplier = std::clamp(glm::length2(diff) / (TargetRadius * TargetRadius), 0.f, 1.f);
+        follower.currentTarget += follower.velocity * RadiusMultiplier * dt;
+    };
+
+
+
     auto& entities = getEntities();
     for (auto entity : entities)
     {
@@ -171,7 +191,7 @@ void CameraFollowSystem::process(float dt)
 
             auto ballPos = follower.target.getComponent<cro::Transform>().getPosition();
             auto target = ballPos + TargetOffset;
-            follower.prevTarget = follower.currentTarget;
+            //follower.prevTarget = follower.currentTarget;
             
             //if (!follower.isSnapped)
             /*{
@@ -187,20 +207,7 @@ void CameraFollowSystem::process(float dt)
                 follower.currentTarget += diff * diffMultiplier;
             }*/
 
-            static constexpr float Cohesion = 20.f;
-            static constexpr float MaxVelocity = 175.f;
-            static constexpr float TargetRadius = 5.f;
-
-            auto diff = target - follower.currentTarget;
-            follower.velocity += diff * Cohesion;
-
-            if (auto l2 = glm::length2(follower.velocity); l2 > (MaxVelocity * MaxVelocity))
-            {
-                follower.velocity = (follower.velocity / glm::sqrt(l2)) * MaxVelocity;
-            }
-            const float RadiusMultiplier = std::clamp(glm::length2(diff) / (TargetRadius * TargetRadius), 0.f, 1.f);
-            follower.currentTarget += follower.velocity * RadiusMultiplier * dt;
-
+            updateVelocity(target, follower, dt);
 
 
             auto lookAt = glm::lookAt(tx.getPosition(), follower.currentTarget, cro::Transform::Y_AXIS);
@@ -276,10 +283,7 @@ void CameraFollowSystem::process(float dt)
 
                 auto& tx = entity.getComponent<cro::Transform>();
                 auto target = follower.target.getComponent<cro::Transform>().getPosition() + TargetOffset;
-                target += follower.targetOffset * std::min(1.f, glm::length2(target - tx.getPosition()) / follower.maxOffsetDistance);
-
-                auto diff = target - follower.currentTarget;
-                follower.currentTarget += diff * (dt * (2.f + (2.f * follower.zoom.progress)));
+                updateVelocity(target, follower, dt);
 
 
                 auto lookAt = glm::lookAt(tx.getPosition(), follower.currentTarget, cro::Transform::Y_AXIS);

@@ -1449,7 +1449,6 @@ void DrivingState::createScene()
     camEnt.addComponent<cro::CommandTarget>().ID = CommandID::SpectatorCam;
     camEnt.addComponent<CameraFollower>().radius = 85.f * 85.f;
     camEnt.getComponent<CameraFollower>().id = CameraID::Sky;
-    camEnt.getComponent<CameraFollower>().maxOffsetDistance = 100.f;
     camEnt.getComponent<CameraFollower>().zoom.target = 0.1f;
     camEnt.getComponent<CameraFollower>().zoom.speed = 3.f;
     camEnt.addComponent<cro::AudioListener>();
