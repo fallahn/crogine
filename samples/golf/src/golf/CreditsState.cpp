@@ -74,11 +74,12 @@ namespace
 }
 
 CreditsState::CreditsState(cro::StateStack& ss, cro::State::Context ctx, SharedStateData& sd, const std::vector<CreditEntry>& credits)
-    : cro::State(ss, ctx),
-    m_scene     (ctx.appInstance.getMessageBus()),
-    m_sharedData(sd),
-    m_credits   (credits),
-    m_viewScale (2.f)
+    : cro::State        (ss, ctx),
+    m_scene             (ctx.appInstance.getMessageBus()),
+    m_sharedData        (sd),
+    m_credits           (credits),
+    m_speedMultiplier   (0.f),
+    m_viewScale         (2.f)
 {
     ctx.mainWindow.setMouseCaptured(false);
 
@@ -147,6 +148,20 @@ void CreditsState::handleMessage(const cro::Message& msg)
 
 bool CreditsState::simulate(float dt)
 {
+    m_speedMultiplier = 0.f;
+    if (cro::Keyboard::isKeyPressed(SDLK_UP))
+    {
+        m_speedMultiplier -= 3.f;
+    }
+    if (cro::Keyboard::isKeyPressed(SDLK_DOWN))
+    {
+        m_speedMultiplier += 3.f;
+    }
+    
+    auto controllerAmount = static_cast<float>(cro::GameController::getAxisPosition(0, cro::GameController::AxisRightY));
+    controllerAmount /= std::numeric_limits<std::int16_t>::max();
+    m_speedMultiplier = std::clamp(m_speedMultiplier + (3.f * controllerAmount), -3.f, 3.f);
+
     m_scene.simulate(dt);
     return true;
 }
@@ -257,7 +272,7 @@ void CreditsState::buildScene()
         const float endPos = e.getComponent<cro::Callback>().getUserData<const float>();
         constexpr float Speed = 20.f;
         auto pos = e.getComponent<cro::Transform>().getPosition();
-        pos.y += Speed * dt;
+        pos.y += (Speed + (Speed * m_speedMultiplier)) * dt;
         e.getComponent<cro::Transform>().setPosition(pos);
         e.getComponent<cro::Transform>().setScale(rootNode.getComponent<cro::Transform>().getScale() / glm::vec3(m_viewScale, 1.f));
 
@@ -321,7 +336,7 @@ void CreditsState::buildScene()
         }
     }
     scrollNode.getComponent<cro::Callback>().setUserData<const float>(-position.y);
-    //scrollNode.getComponent<cro::Transform>().setOrigin({ std::floor(width / 2.f), 0.f });
+
 
     auto updateView = [&, rootNode](cro::Camera& cam) mutable
     {

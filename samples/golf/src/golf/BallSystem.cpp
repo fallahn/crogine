@@ -67,6 +67,8 @@ namespace
     static constexpr float AngularVelocity = 46.5f; //rad/s at 1m/s vel. Used for rolling animation.
 
     static constexpr float MinVelocitySqr = 0.001f;// 0.005f;//0.04f
+    static constexpr float BallRollTimeout = -10.f;
+    static constexpr float BallTimeoutVelocity = 0.04f;
 
     static constexpr std::array<float, TerrainID::Count> Friction =
     {
@@ -437,17 +439,17 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
                 ball.velocity += (m_windDirection * m_windStrength * 0.07f * windAmount * dt);
 
 
-                {
+                auto [slope, slopeStrength] = getSlope(terrainContact.normal);
+                float friction = Friction[ball.terrain] + (slopeStrength * 0.05f);
 
-                    auto [slope, slopeStrength] = getSlope(terrainContact.normal);
-                    float friction = Friction[ball.terrain] + (slopeStrength * 0.05f);
+                //as a timeout device to stop the ball rolling forever reduce the slope strength
+                float timeoutStrength = std::clamp(((BallRollTimeout - ball.delay) / -3.f), 0.f, 1.f);
 
-                    //move by slope from surface normal
-                    ball.velocity += slope * slopeStrength;
-                    ball.velocity *= friction;
+                //move by slope from surface normal
+                ball.velocity += slope * slopeStrength * timeoutStrength;
+                ball.velocity *= friction;
 
-                    CRO_ASSERT(!std::isnan(ball.velocity.x), "");
-                }
+                CRO_ASSERT(!std::isnan(ball.velocity.x), "");
             }
 
 
@@ -477,8 +479,10 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
 
             //if we've slowed down or fallen more than the
             //ball's diameter (radius??) stop the ball
-            if (vel2 < MinVelocitySqr || ((ball.delay < -10.f) && (vel2 < 0.04f))
-                || (terrainContact.penetration > (Ball::Radius * 2.5f)))
+            if (vel2 < MinVelocitySqr 
+                || (terrainContact.penetration > (Ball::Radius * 2.5f)) 
+                || ((ball.delay < BallRollTimeout) && (vel2 < BallTimeoutVelocity))
+                || (ball.delay < (BallRollTimeout * 2.f)))
             {
                 ball.velocity = glm::vec3(0.f);
 
