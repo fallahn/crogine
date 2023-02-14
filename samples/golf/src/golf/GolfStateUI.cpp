@@ -496,7 +496,7 @@ void GolfState::buildUI()
 
             //move to position
             auto maxDist = Clubs[ClubID::Putter].getTarget(m_distanceToHole);
-            float guestimation = (m_distanceToHole / maxDist) * 0.98f; //magic number just stops the flag recommending too much power
+            float guestimation = (m_distanceToHole / maxDist);// *0.98f; //magic number just stops the flag recommending too much power
             
             //add a bit more power if putting uphill
             float slope = 0.f;

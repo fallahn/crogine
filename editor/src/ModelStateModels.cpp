@@ -1146,7 +1146,7 @@ void ModelState::applyImportTransform()
         m_importedTransform = {};
     }
     m_entities[EntityID::ActiveModel].getComponent<cro::Transform>().setScale(glm::vec3(1.f));
-    m_entities[EntityID::ActiveModel].getComponent<cro::Transform>().setRotation(cro::Transform::QUAT_IDENTY);
+    m_entities[EntityID::ActiveModel].getComponent<cro::Transform>().setRotation(cro::Transform::QUAT_IDENTITY);
 }
 
 void ModelState::readBackVertexData(cro::Mesh::Data meshData, std::vector<float>& destVerts, std::vector<std::vector<std::uint32_t>>& destIndices)

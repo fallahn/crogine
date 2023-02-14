@@ -169,8 +169,9 @@ void CameraFollowSystem::process(float dt)
 
         //reduce radius with zoom
         float ActiveRadius = TargetRadius - ((TargetRadius / 2.f) * follower.zoom.progress);
-        //and more so when < 1m from hole
-        ActiveRadius -= (ActiveRadius / 2.f) * (1.f - glm::step(1.f, glm::length2(follower.holePosition - follower.currentTarget)));
+        //and more so when < 1m from hole - actually this causes a huge jump (obviously)
+        //we need to find a way to fit this into the curve
+        //ActiveRadius -= (ActiveRadius / 2.f) * (1.f - glm::step(1.f, glm::length2(follower.holePosition - follower.currentTarget)));
 
         const float RadiusMultiplier = std::clamp(glm::length2(diff) / (ActiveRadius * ActiveRadius), 0.f, 1.f);
         follower.currentTarget += follower.velocity * RadiusMultiplier * dt;

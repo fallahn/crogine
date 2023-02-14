@@ -399,10 +399,9 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
                     {
                         //lets the ball continue travelling, ie overshoot
                         auto bounceVel = glm::length(ball.velocity) * 0.4f;// 0.2f;
-                        ball.velocity *= 0.65f;// 0.15f;
+                        ball.velocity *= 0.45f;// 0.65f;// 0.15f;
                         ball.velocity.y = bounceVel;
 
-                        //position.y += terrainContact.penetration;
                         position.y = terrainContact.intersection.y;
                         tx.setPosition(position);
                     }
@@ -445,8 +444,11 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
                 //as a timeout device to stop the ball rolling forever reduce the slope strength
                 float timeoutStrength = std::clamp(((BallRollTimeout - ball.delay) / -3.f), 0.f, 1.f);
 
+                //and reduce the slope effect near the hole because it's just painful
+                float holeStrength = std::clamp(len2 /*/ (0.3f * 0.3f)*/, 0.f, 1.f);
+
                 //move by slope from surface normal
-                ball.velocity += slope * slopeStrength * timeoutStrength;
+                ball.velocity += slope * slopeStrength * timeoutStrength * holeStrength;
                 ball.velocity *= friction;
 
                 CRO_ASSERT(!std::isnan(ball.velocity.x), "");

@@ -6392,12 +6392,12 @@ void GolfState::updateActor(const ActorInfo& update)
 
                     //Later note: I found this half written code^^ and can't remember what
                     //I was planning, so here we go:
-                    static constexpr float MaxRadius = 25.f * 25.f;
+                    static constexpr float MaxRadius = 15.f * 15.f;
                     if (glm::length2(camPos - ballPos) < MaxRadius
                         && glm::length2(camPos - destPos) > MaxRadius)
                     {
                         auto& data = m_drone.getComponent<cro::Callback>().getUserData<DroneCallbackData>();
-                        auto d = glm::normalize(ballPos - camPos) * 25.f;
+                        auto d = glm::normalize(ballPos - camPos) * 15.f;
                         data.resetPosition += glm::vec3(d.x, 0.f, d.y);
                         data.target.getComponent<cro::Transform>().setPosition(data.resetPosition);
                     }

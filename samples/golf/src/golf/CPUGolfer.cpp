@@ -508,7 +508,8 @@ void CPUGolfer::pickClubDynamic(float dt)
             m_aimAngle = m_inputParser.getYaw();
             m_aimTimer.restart();
 
-            m_targetPower = std::min(1.f, targetDistance / Clubs[m_clubID].getTarget(m_distanceToPin));
+            //TODO increase target power with slope
+            m_targetPower = std::min(1.f, (targetDistance / Clubs[m_clubID].getTarget(m_distanceToPin)) + 0.2f);
 
             return;
         }
