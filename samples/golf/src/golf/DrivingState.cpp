@@ -510,7 +510,7 @@ void DrivingState::handleMessage(const cro::Message& msg)
             if (m_avatar.hands)
             {
                 //TODO handle cases when club model failed to load...
-                if (m_inputParser.getClub() < ClubID::FiveIron)
+                if (m_inputParser.getClub() <= ClubID::FiveWood)
                 {
                     m_clubModels[ClubModel::Iron].getComponent<cro::Model>().setHidden(true);
                     m_clubModels[ClubModel::Wood].getComponent<cro::Model>().setHidden(false);

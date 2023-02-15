@@ -958,7 +958,7 @@ void GolfState::handleMessage(const cro::Message& msg)
             if (m_activeAvatar
                 && m_activeAvatar->hands)
             {
-                if (getClub() < ClubID::FiveIron)
+                if (getClub() <= ClubID::FiveWood)
                 {
                     m_activeAvatar->hands->setModel(m_clubModels[ClubModel::Wood]);
                 }

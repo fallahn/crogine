@@ -96,23 +96,23 @@ private:
 
 static const std::array<Club, ClubID::Count> Clubs =
 {
-    Club(ClubID::Driver, "Driver ", 44.f, 45.f, 220.f),
-    Club(ClubID::ThreeWood, "3 Wood ", 39.5f, 45.f, 180.f),
-    Club(ClubID::ThreeWood, "5 Wood ", 37.9f, 45.f, 150.f),//////
+    Club(ClubID::Driver,    "Driver ", 46.32f, 45.f, 220.f),  //default set
+    Club(ClubID::ThreeWood, "3 Wood ", 41.8f,  45.f, 180.f),  //default set
+    Club(ClubID::ThreeWood, "5 Wood ", 38.15f, 45.f, 150.f),  //Level 5
     
     
     
-    Club(ClubID::FourIron, "4 Iron ", 36.f, 40.f, 160.f),//////
-    Club(ClubID::FiveIron, "5 Iron ", 35.f, 40.f, 140.f),
-    Club(ClubID::SixIron, "6 Iron ", 34.f, 40.f, 120.f),////////
-    Club(ClubID::SevenIron, "7 Iron ", 32.8f, 40.f, 110.f),///////
-    Club(ClubID::EightIron, "8 Iron ", 30.1f, 40.f, 100.f),   
-    Club(ClubID::NineIron, "9 Iron ", 28.f, 40.f, 90.f),///////
+    Club(ClubID::FourIron,  "4 Iron ", 37.11f, 40.f, 140.f),  //Level 10
+    Club(ClubID::FiveIron,  "5 Iron ", 35.82f, 40.f, 130.f),  //default set
+    Club(ClubID::SixIron,   "6 Iron ", 34.4f,  40.f, 120.f),  //Level 15
+    Club(ClubID::SevenIron, "7 Iron ", 32.98f, 40.f, 110.f),  //Level 20
+    Club(ClubID::EightIron, "8 Iron ", 31.5f,  40.f, 100.f),  //default set
+    Club(ClubID::NineIron,  "9 Iron ", 29.9f,  40.f, 90.f),   //Level 25
 
     
     
-    Club(ClubID::PitchWedge, "Pitch Wedge ", 25.2f, 52.f, 70.f),
-    Club(ClubID::GapWedge, "Gap Wedge ", 17.4f, 60.f, 30.f),
-    Club(ClubID::SandWedge, "Sand Wedge ", 10.3f, 60.f, 10.f),
-    Club(ClubID::Putter, "Putter ", 9.11f, 0.f, 10.f)
+    Club(ClubID::PitchWedge, "Pitch Wedge ", 26.51f, 52.f, 70.f),  //default set
+    Club(ClubID::GapWedge,   "Gap Wedge ",   18.4f,  60.f, 30.f),  //default set
+    Club(ClubID::SandWedge,  "Sand Wedge ",  10.65f, 60.f, 10.f),  //default set
+    Club(ClubID::Putter,     "Putter ",      9.11f,  0.f,  10.f)   //default set
 };
