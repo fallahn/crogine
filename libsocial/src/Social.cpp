@@ -35,39 +35,62 @@ source distribution.
 
 namespace
 {
-    //TODO make this 'less' hacky with a singleton?
-
-    bool wasLoaded = false;
-    std::int32_t experience = 0;
-    void readExperience()
+    void readValue(std::int32_t& dst, const std::string& fileName)
     {
-        if (!wasLoaded)
+        auto path = cro::App::getPreferencePath() + fileName;
+        if (cro::FileSystem::fileExists(path))
         {
-            auto path = cro::App::getPreferencePath() + "exp";
-            if (cro::FileSystem::fileExists(path))
+            auto* file = SDL_RWFromFile(path.c_str(), "rb");
+            if (file)
             {
-                auto* file = SDL_RWFromFile(path.c_str(), "rb");
-                if (file)
-                {
-                    SDL_RWread(file, &experience, sizeof(experience), 1);
-                }
-                SDL_RWclose(file);
+                SDL_RWread(file, &dst, sizeof(dst), 1);
             }
+            SDL_RWclose(file);
         }
-
-        wasLoaded = true;
     }
-    void writeExperience()
+
+    void writeValue(std::int32_t src, const std::string& fileName)
     {
-        auto path = cro::App::getPreferencePath() + "exp";
+        auto path = cro::App::getPreferencePath() + fileName;
         auto* file = SDL_RWFromFile(path.c_str(), "wb");
         if (file)
         {
-            SDL_RWwrite(file, &experience, sizeof(experience), 1);
+            SDL_RWwrite(file, &src, sizeof(src), 1);
         }
         SDL_RWclose(file);
     }
 
+    bool xpLoaded = false;
+    std::int32_t experience = 0;
+    void readExperience()
+    {
+        if (!xpLoaded)
+        {
+            readValue(experience, "exp");
+        }
+
+        xpLoaded = true;
+    }
+    void writeExperience()
+    {
+        writeValue(experience, "exp");
+    }
+
+    bool clubsetLoaded = false;
+    std::int32_t clubset = 0;
+    void readClubset()
+    {
+        if (!clubsetLoaded)
+        {
+            readValue(clubset, "clb");
+        }
+        clubsetLoaded = true;
+    }
+
+    void writeClubset()
+    {
+        writeValue(clubset, "clb");
+    }
 
     //XP curve = (level / x) ^ y
     constexpr float XPx = 0.07f;
@@ -169,6 +192,18 @@ void Social::readDrivingStats(std::array<float, 3u>& topScores)
             }
         }
     }
+}
+
+std::int32_t Social::getClubSet()
+{
+    readClubset();
+    return clubset;
+}
+
+void Social::setClubSet(std::int32_t set)
+{
+    clubset = set;
+    writeClubset();
 }
 
 std::string Social::getBaseContentPath()
