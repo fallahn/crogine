@@ -4341,7 +4341,7 @@ void GolfState::createDrone()
             auto& [currRotation, acceleration, target, _] = e.getComponent<cro::Callback>().getUserData<DroneCallbackData>();
 
             //move towards skycam target
-            static constexpr float MoveSpeed = 20.f;
+            static constexpr float MoveSpeed = 12.f;
             static constexpr float MinRadius = MoveSpeed * MoveSpeed;
             static constexpr float AccelerationRadius = 7.f;// 40.f;
 
@@ -4350,7 +4350,7 @@ void GolfState::createDrone()
             {
                 const float len = std::sqrt(len2);
                 movement /= len;
-                movement *= MoveSpeed;
+                movement *= MoveSpeed / 2.f;
 
                 //go slower over short distances
                 const float multiplier = 0.4f + (0.6f * std::min(1.f, len / AccelerationRadius));
@@ -6388,7 +6388,7 @@ void GolfState::updateActor(const ActorInfo& update)
                         && glm::length2(camPos - destPos) > MaxRadius)
                     {
                         auto& data = m_drone.getComponent<cro::Callback>().getUserData<DroneCallbackData>();
-                        auto d = glm::normalize(ballPos - camPos) * 15.f;
+                        auto d = glm::normalize(ballPos - camPos) * 8.f;
                         data.resetPosition += glm::vec3(d.x, 0.f, d.y);
                         data.target.getComponent<cro::Transform>().setPosition(data.resetPosition);
                     }

@@ -67,6 +67,7 @@ source distribution.
 #include <crogine/ecs/systems/CameraSystem.hpp>
 
 #include <crogine/graphics/SpriteSheet.hpp>
+#include <crogine/gui/Gui.hpp>
 
 #include <crogine/util/Easings.hpp>
 #include <crogine/util/Maths.hpp>
@@ -527,41 +528,47 @@ void GolfState::buildUI()
     };
     barEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
-    //slope strength
-    entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec3(BarWidth + 12.f, 8.f, -0.01f));
-    bounds = m_sprites[SpriteID::SlopeStrength].getTextureBounds();
-    entity.getComponent<cro::Transform>().setOrigin({ std::floor(bounds.width / 2.f), 0.f});
-    entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::SlopeStrength];
-    entity.addComponent<cro::SpriteAnimation>().play(0);
-    entity.addComponent<cro::Callback>().active = true;
-    entity.getComponent<cro::Callback>().function = 
-        [&](cro::Entity e, float)
-    {
-        if (m_currentPlayer.terrain == TerrainID::Green)
-        {
-            float slope = glm::dot(cro::Transform::Y_AXIS, m_holeData[m_currentHole].pin - m_currentPlayer.position) / m_distanceToHole;
-            static constexpr float Step = 1.f / 16.f;
-            auto idx = std::round(std::clamp(std::abs(slope / Step), 0.f, 3.f));
-            e.getComponent<cro::SpriteAnimation>().play(static_cast<std::int32_t>(idx));
 
-            if (slope > 0)
-            {
-                e.getComponent<cro::Transform>().setRotation(0.f);
-            }
-            else
-            {
-                e.getComponent<cro::Transform>().setRotation(cro::Util::Const::PI);
-            }
-            e.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
-        }
-        else
-        {
-            e.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
-        }
-    };
-    barEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    //slope strength - looks OK but difficult to get a useful reading
+    //entity = m_uiScene.createEntity();
+    //entity.addComponent<cro::Transform>().setPosition(glm::vec3(BarWidth + 12.f, 8.f, -0.01f));
+    //bounds = m_sprites[SpriteID::SlopeStrength].getTextureBounds();
+    //entity.getComponent<cro::Transform>().setOrigin({ std::floor(bounds.width / 2.f), 0.f});
+    //entity.addComponent<cro::Drawable2D>();
+    //entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::SlopeStrength];
+    //entity.addComponent<cro::SpriteAnimation>().play(0);
+    //entity.addComponent<cro::Callback>().active = true;
+    //entity.getComponent<cro::Callback>().function = 
+    //    [&](cro::Entity e, float)
+    //{
+    //    if (m_currentPlayer.terrain == TerrainID::Green)
+    //    {
+    //        auto dir = m_holeData[m_currentHole].pin - m_currentPlayer.position;
+    //        auto len2 = glm::length2(dir);
+    //        if (len2 > 0)
+    //        {
+    //            float slope = glm::dot(cro::Transform::Y_AXIS, dir / glm::sqrt(len2));// / m_distanceToHole;
+    //            slope *= std::clamp(len2, 0.f, 1.f); //ball system applies less slope closer to hole
+    //            static constexpr float Step = 1.f / 16.f;
+    //            auto idx = std::round(std::clamp(std::abs(slope / Step), 0.f, 3.f));
+    //            e.getComponent<cro::SpriteAnimation>().play(static_cast<std::int32_t>(idx));
+    //            if (slope > 0)
+    //            {
+    //                e.getComponent<cro::Transform>().setRotation(0.f);
+    //            }
+    //            else
+    //            {
+    //                e.getComponent<cro::Transform>().setRotation(cro::Util::Const::PI);
+    //            }
+    //            e.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+    //        }
+    //    }
+    //    else
+    //    {
+    //        e.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+    //    }
+    //};
+    //barEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     //ball speed - nice idea, badly executed.
     //entity = m_uiScene.createEntity();
@@ -578,7 +585,6 @@ void GolfState::buildUI()
     //        && m_currentPlayer.terrain == TerrainID::Green)
     //    {
     //        e.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
-
     //        const auto& interp = m_activeAvatar->ballModel.getComponent<InterpolationComponent<InterpolationType::Linear>>();
     //        e.getComponent<cro::Transform>().rotate(glm::length(interp.getVelocity()) * dt);
     //    }
