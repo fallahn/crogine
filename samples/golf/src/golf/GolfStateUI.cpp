@@ -43,6 +43,7 @@ source distribution.
 #include "PacketIDs.hpp"
 #include "MiniBallSystem.hpp"
 #include "CallbackData.hpp"
+#include "InterpolationSystem.hpp"
 #include "../ErrorCheck.hpp"
 
 #include <Achievements.hpp>
@@ -426,6 +427,7 @@ void GolfState::buildUI()
     };
     infoEnt.getComponent<cro::Transform>().addChild(rootNode.getComponent<cro::Transform>());
 
+    //power bar frame
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>();
@@ -496,8 +498,14 @@ void GolfState::buildUI()
 
             //move to position
             auto maxDist = Clubs[ClubID::Putter].getTarget(m_distanceToHole);
-            float guestimation = (m_distanceToHole / maxDist);// *0.98f; //magic number just stops the flag recommending too much power
+            float guestimation = (m_distanceToHole / maxDist);
             
+            //kludge stops the flag recommending too much power            
+            if (maxDist == Clubs[ClubID::Putter].getBaseTarget())
+            {
+                guestimation *= 0.98f;
+            }
+
             //add a bit more power if putting uphill
             float slope = 0.f;
             if (m_distanceToHole > 0.005f)
@@ -518,6 +526,68 @@ void GolfState::buildUI()
         e.getComponent<cro::Transform>().setScale(scale);
     };
     barEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    //slope strength
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(BarWidth + 12.f, 8.f, -0.01f));
+    bounds = m_sprites[SpriteID::SlopeStrength].getTextureBounds();
+    entity.getComponent<cro::Transform>().setOrigin({ std::floor(bounds.width / 2.f), 0.f});
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::SlopeStrength];
+    entity.addComponent<cro::SpriteAnimation>().play(0);
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function = 
+        [&](cro::Entity e, float)
+    {
+        if (m_currentPlayer.terrain == TerrainID::Green)
+        {
+            float slope = glm::dot(cro::Transform::Y_AXIS, m_holeData[m_currentHole].pin - m_currentPlayer.position) / m_distanceToHole;
+            static constexpr float Step = 1.f / 16.f;
+            auto idx = std::round(std::clamp(std::abs(slope / Step), 0.f, 3.f));
+            e.getComponent<cro::SpriteAnimation>().play(static_cast<std::int32_t>(idx));
+
+            if (slope > 0)
+            {
+                e.getComponent<cro::Transform>().setRotation(0.f);
+            }
+            else
+            {
+                e.getComponent<cro::Transform>().setRotation(cro::Util::Const::PI);
+            }
+            e.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+        }
+        else
+        {
+            e.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+        }
+    };
+    barEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    //ball speed - nice idea, badly executed.
+    //entity = m_uiScene.createEntity();
+    //entity.addComponent<cro::Transform>().setPosition(glm::vec3(-8.f, 8.f, -0.01f));
+    //bounds = m_sprites[SpriteID::BallSpeed].getTextureBounds();
+    //entity.getComponent<cro::Transform>().setOrigin({ std::floor(bounds.width / 2.f), std::floor(bounds.height / 2.f) });
+    //entity.addComponent<cro::Drawable2D>();
+    //entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::BallSpeed];
+    //entity.addComponent<cro::Callback>().active = true;
+    //entity.getComponent<cro::Callback>().function = 
+    //    [&](cro::Entity e, float dt)
+    //{
+    //    if (m_activeAvatar
+    //        && m_currentPlayer.terrain == TerrainID::Green)
+    //    {
+    //        e.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+
+    //        const auto& interp = m_activeAvatar->ballModel.getComponent<InterpolationComponent<InterpolationType::Linear>>();
+    //        e.getComponent<cro::Transform>().rotate(glm::length(interp.getVelocity()) * dt);
+    //    }
+    //    else
+    //    {
+    //        e.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+    //    }
+    //};
+    //barEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     //hole number
     entity = m_uiScene.createEntity();
@@ -952,7 +1022,7 @@ void GolfState::buildUI()
         mapEnt.getComponent<cro::Transform>().setPosition({ uiSize.x - mapSize.y, uiSize.y - (mapSize.x) - (UIBarHeight * 1.5f) }); //map sprite is rotated 90
 
 
-        greenEnt.getComponent<cro::Transform>().setPosition({ 2.f, uiSize.y - (MapSize.y / 2) - UIBarHeight - 2.f });
+        greenEnt.getComponent<cro::Transform>().setPosition({ 2.f, uiSize.y - (MapSize.y / 2) - UIBarHeight - 2.f, -0.1f });
         greenEnt.getComponent<cro::Transform>().move(glm::vec2(static_cast<float>(MapSize.y) / 4.f));
 
         windEnt.getComponent<cro::Transform>().setPosition(glm::vec2(/*uiSize.x + */WindIndicatorPosition.x, WindIndicatorPosition.y));

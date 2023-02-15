@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022
+Matt Marchant 2022 - 2023
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -257,6 +257,9 @@ public:
 						entity.template getComponent<cro::Transform>().setRotation(rotation);
 					}
 				}
+#ifdef CRO_DEBUG_
+				else { LogI << "Interp wants buffer" << std::endl; }
+#endif
 			}
 			else
 			{

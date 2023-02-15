@@ -139,6 +139,7 @@ public:
         return m_target;
     }
 
+    float getBaseTarget() const { return m_target; }
 private:
     const std::int32_t m_id = -1;
     std::string m_name; //displayed in UI

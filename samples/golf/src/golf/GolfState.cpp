@@ -1859,6 +1859,8 @@ void GolfState::loadAssets()
     m_sprites[SpriteID::PowerBar] = spriteSheet.getSprite("power_bar_wide");
     m_sprites[SpriteID::PowerBarInner] = spriteSheet.getSprite("power_bar_inner_wide");
     m_sprites[SpriteID::HookBar] = spriteSheet.getSprite("hook_bar");
+    m_sprites[SpriteID::SlopeStrength] = spriteSheet.getSprite("slope_indicator");
+    m_sprites[SpriteID::BallSpeed] = spriteSheet.getSprite("ball_speed");
     m_sprites[SpriteID::MiniFlag] = spriteSheet.getSprite("putt_flag");
     m_sprites[SpriteID::WindIndicator] = spriteSheet.getSprite("wind_dir");
     m_sprites[SpriteID::WindSpeed] = spriteSheet.getSprite("wind_speed");
@@ -4338,10 +4340,10 @@ void GolfState::createDrone()
 
             auto& [currRotation, acceleration, target, _] = e.getComponent<cro::Callback>().getUserData<DroneCallbackData>();
 
-            //move towards skycam
+            //move towards skycam target
             static constexpr float MoveSpeed = 20.f;
             static constexpr float MinRadius = MoveSpeed * MoveSpeed;
-            static constexpr float AccelerationRadius = 40.f;
+            static constexpr float AccelerationRadius = 7.f;// 40.f;
 
             auto movement = target.getComponent<cro::Transform>().getPosition() - oldPos;
             if (auto len2 = glm::length2(movement); len2 > MinRadius)
@@ -4351,7 +4353,7 @@ void GolfState::createDrone()
                 movement *= MoveSpeed;
 
                 //go slower over short distances
-                const float multiplier = 0.6f + (0.4f * std::min(1.f, len / AccelerationRadius));
+                const float multiplier = 0.4f + (0.6f * std::min(1.f, len / AccelerationRadius));
 
                 acceleration = std::min(1.f, acceleration + ((dt / 2.f) * multiplier));
                 movement *= cro::Util::Easing::easeInSine(acceleration);
@@ -4633,17 +4635,6 @@ void GolfState::spawnBall(const ActorInfo& info)
 
         auto labelPos = m_gameScene.getActiveCamera().getComponent<cro::Camera>().coordsToPixel(position, m_gameSceneTexture.getSize());
         const float halfWidth = m_gameSceneTexture.getSize().x / 2.f;
-        
-        /*static constexpr float MaxLabelOffset = 70.f;
-        float diff = labelPos.x - halfWidth;
-        if (diff < -1)
-        {
-            labelPos.x = std::min(labelPos.x, halfWidth - MaxLabelOffset);
-        }
-        else
-        {
-            labelPos.x = std::max(labelPos.x, halfWidth + MaxLabelOffset);
-        }*/
 
         e.getComponent<cro::Transform>().setPosition(labelPos);
 
@@ -4732,7 +4723,7 @@ void GolfState::spawnBall(const ActorInfo& info)
             iconPos *= std::min(1.f, Centre.x / glm::length(iconPos));
             iconPos += Centre;
 
-            e.getComponent<cro::Transform>().setPosition(glm::vec3(iconPos, depthOffset));
+            e.getComponent<cro::Transform>().setPosition(glm::vec3(iconPos, static_cast<float>(depthOffset) / 100.f));
 
 
             auto terrain = ballEnt.getComponent<ClientCollider>().terrain;

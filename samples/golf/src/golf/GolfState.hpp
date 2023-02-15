@@ -265,6 +265,8 @@ private:
             PowerBar,
             PowerBarInner,
             HookBar,
+            SlopeStrength,
+            BallSpeed,
             MiniFlag,
             WindIndicator,
             WindSpeed,

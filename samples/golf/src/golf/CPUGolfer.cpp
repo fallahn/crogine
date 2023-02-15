@@ -509,7 +509,13 @@ void CPUGolfer::pickClubDynamic(float dt)
             m_aimTimer.restart();
 
             //TODO increase target power with slope
-            m_targetPower = std::min(1.f, (targetDistance / Clubs[m_clubID].getTarget(m_distanceToPin)) + 0.2f);
+            const auto clubTarget = Clubs[ClubID::Putter].getTarget(m_distanceToPin);
+            m_targetPower = std::min(1.f, targetDistance / clubTarget);
+            if (clubTarget < Clubs[ClubID::Putter].getBaseTarget())
+            {
+                //this is a shortened putter
+                m_targetPower += 0.2f;
+            }
 
             return;
         }
