@@ -460,6 +460,7 @@
     <ClCompile Include="src\golf\CloudSystem.cpp" />
     <ClCompile Include="src\golf\ClubhouseState.cpp" />
     <ClCompile Include="src\golf\ClubhouseStateUI.cpp" />
+    <ClCompile Include="src\golf\Clubs.cpp" />
     <ClCompile Include="src\golf\CollisionMesh.cpp" />
     <ClCompile Include="src\golf\CPUGolfer.cpp" />
     <ClCompile Include="src\golf\CreditsState.cpp" />

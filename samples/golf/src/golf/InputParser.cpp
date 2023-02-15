@@ -325,8 +325,11 @@ void InputParser::setClub(float dist)
         && m_currentClub != m_firstClub)
     {
         auto clubCount = ClubID::Putter - m_firstClub;
-        m_clubOffset = (m_clubOffset + (clubCount - 1)) % clubCount;
-        m_currentClub = m_firstClub + m_clubOffset;
+        do
+        {
+            m_clubOffset = (m_clubOffset + (clubCount - 1)) % clubCount;
+            m_currentClub = m_firstClub + m_clubOffset;
+        } while ((m_inputBinding.clubset & ClubID::Flags[m_currentClub]) == 0);
     }
 
     auto* msg = m_messageBus.post<GolfEvent>(MessageID::GolfMessage);
@@ -402,10 +405,16 @@ void InputParser::setEnableFlags(std::uint16_t flags)
 void InputParser::setMaxClub(float dist)
 {
     m_firstClub = ClubID::SandWedge;
+
     while ((Clubs[m_firstClub].getTarget(dist) * 1.05f) < dist
         && m_firstClub != ClubID::Driver)
     {
-        m_firstClub--;
+        //m_firstClub--;
+        //this WILL get stuck in an infinite loop if the clubset is 0 for some reason
+        do
+        {
+            m_firstClub--;
+        } while ((m_inputBinding.clubset & ClubID::Flags[m_firstClub]) == 0);
     }
 
     m_currentClub = m_firstClub;
@@ -508,9 +517,12 @@ void InputParser::update(float dt, std::int32_t terrainID)
             if ((m_prevFlags & InputFlag::PrevClub) == 0
                 && (m_inputFlags & InputFlag::PrevClub))
             {
-                auto clubCount = ClubID::Putter - m_firstClub;
-                m_clubOffset = (m_clubOffset + 1) % clubCount;
-                m_currentClub = m_firstClub + m_clubOffset;
+                do
+                {
+                    auto clubCount = ClubID::Putter - m_firstClub;
+                    m_clubOffset = (m_clubOffset + 1) % clubCount;
+                    m_currentClub = m_firstClub + m_clubOffset;
+                } while ((m_inputBinding.clubset & ClubID::Flags[m_currentClub]) == 0);
 
                 auto* msg = m_messageBus.post<GolfEvent>(MessageID::GolfMessage);
                 msg->type = GolfEvent::ClubChanged;
@@ -520,9 +532,12 @@ void InputParser::update(float dt, std::int32_t terrainID)
             if ((m_prevFlags & InputFlag::NextClub) == 0
                 && (m_inputFlags & InputFlag::NextClub))
             {
-                auto clubCount = ClubID::Putter - m_firstClub;
-                m_clubOffset = (m_clubOffset + (clubCount - 1)) % clubCount;
-                m_currentClub = m_firstClub + m_clubOffset;
+                do
+                {
+                    auto clubCount = ClubID::Putter - m_firstClub;
+                    m_clubOffset = (m_clubOffset + (clubCount - 1)) % clubCount;
+                    m_currentClub = m_firstClub + m_clubOffset;
+                } while ((m_inputBinding.clubset & ClubID::Flags[m_currentClub]) == 0);
 
                 auto* msg = m_messageBus.post<GolfEvent>(MessageID::GolfMessage);
                 msg->type = GolfEvent::ClubChanged;

@@ -33,6 +33,7 @@ source distribution.
 
 #include <array>
 #include <cstdint>
+#include <limits>
 
 namespace InputFlag
 {
@@ -85,4 +86,6 @@ struct InputBinding final
         SDL_CONTROLLER_BUTTON_B
     };
     std::int32_t playerID = 0;
+
+    std::int32_t clubset = std::numeric_limits<std::int32_t>::max();
 };

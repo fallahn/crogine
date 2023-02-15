@@ -55,6 +55,7 @@ source distribution.
 #include "ErrorCheck.hpp"
 #include "icon.hpp"
 #include "Achievements.hpp"
+#include "golf/Clubs.hpp"
 
 #include <AchievementIDs.hpp>
 #include <AchievementStrings.hpp>
@@ -886,6 +887,8 @@ void GolfGame::loadPreferences()
     {
         m_sharedData.inputBinding.keys[InputBinding::CancelShot] = SDLK_LSHIFT;
     }
+
+    m_sharedData.inputBinding.clubset = ClubID::DefaultSet;
 }
 
 void GolfGame::savePreferences()

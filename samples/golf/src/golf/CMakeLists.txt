@@ -13,6 +13,7 @@ set(GOLF_SRC
   ${PROJECT_DIR}/golf/CloudSystem.cpp
   ${PROJECT_DIR}/golf/ClubhouseState.cpp
   ${PROJECT_DIR}/golf/ClubhouseStateUI.cpp
+  ${PROJECT_DIR}/golf/Clubs.cpp
   ${PROJECT_DIR}/golf/CollisionMesh.cpp
   ${PROJECT_DIR}/golf/CPUGolfer.cpp
   ${PROJECT_DIR}/golf/CreditsState.cpp

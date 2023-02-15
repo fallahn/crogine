@@ -38,106 +38,44 @@ struct ClubID final
 {
     enum
     {
-        Driver, ThreeWood,
-        FiveIron, NineIron,
+        Driver, ThreeWood, FiveWood,
+        FourIron, FiveIron, SixIron,
+        SevenIron, EightIron, NineIron,
         PitchWedge, GapWedge, SandWedge,
         Putter,
 
         Count
     };
+    
+    static constexpr std::array<std::int32_t, ClubID::Count> Flags =
+    {
+        (1<<0), (1<<1), (1<<2),
+        (1<<3), (1<<4), (1<<5),
+        (1<<6), (1<<7), (1<<8),
+        (1<<9), (1<<10), (1<<11)
+    };
+
+    static constexpr std::int32_t DefaultSet =
+        Flags[Driver] | Flags[ThreeWood] | Flags[FiveIron] |
+        Flags[EightIron] | Flags[PitchWedge] | Flags[GapWedge] |
+        Flags[SandWedge] | Flags[Putter];
+
+    static constexpr std::int32_t FullSet = 0x1FFF;
 };
 
 class Club final
 {
 public:
 
-    Club(std::int32_t i, const std::string& n, float p, float a, float t)
-        : m_id(i), m_name(n), m_power(p), m_angle(a* cro::Util::Const::degToRad), m_target(t) {}
+    Club(std::int32_t id, const std::string& name, float power, float angle, float target);
 
-    std::string getName(bool imperial, float distanceToPin) const
-    {
-        auto t = m_target;
-        if (m_id == ClubID::Putter)
-        {
-            if (distanceToPin < (m_target * ShortRangeThreshold))
-            {
-                if (distanceToPin < (m_target * TinyRangeThreshold))
-                {
-                    t *= TinyRange;
-                }
-                else
-                {
-                    t *= ShortRange;
-                }
-            }
-        }
+    std::string getName(bool imperial, float distanceToPin) const;
 
-        if (imperial)
-        {
-            static constexpr float ToYards = 1.094f;
-            static constexpr float ToFeet = 3.281f;
-            //static constexpr float ToInches = 12.f;
-
-            if (m_power > 10.f)
-            {
-                auto dist = static_cast<std::int32_t>(t * ToYards);
-                return m_name + std::to_string(dist) + "yds";
-            }
-            else
-            {
-                auto dist = static_cast<std::int32_t>(t * ToFeet);
-                return m_name + std::to_string(dist) + "ft";
-            }
-        }
-        else
-        {
-            if (t < 1.f)
-            {
-                t *= 100.f;
-                auto dist = static_cast<std::int32_t>(t);
-                return m_name + std::to_string(dist) + "cm";
-            }
-            auto dist = static_cast<std::int32_t>(t);
-            return m_name + std::to_string(dist) + "m";
-        }
-    }
-
-    float getPower(float distanceToPin) const
-    {
-        if (m_id == ClubID::Putter)
-        {
-            //ugh this is such a fudge...
-            if (distanceToPin < m_target * ShortRangeThreshold)
-            {
-                if (distanceToPin < m_target * TinyRangeThreshold)
-                {
-                    return m_power * TinyRange;
-                }
-
-                return m_power * ShortRange;
-            }
-        }
-        return m_power;
-    }
+    float getPower(float distanceToPin) const;
 
     float getAngle() const { return m_angle; }
 
-    float getTarget(float distanceToPin) const
-    {
-        if (m_id == ClubID::Putter)
-        {
-            if (distanceToPin < m_target * ShortRangeThreshold)
-            {
-                if (distanceToPin < m_target * TinyRangeThreshold)
-                {
-                    return m_target * TinyRange;
-                }
-
-                return m_target * ShortRange;
-            }
-        }
-        return m_target;
-    }
+    float getTarget(float distanceToPin) const;
 
     float getBaseTarget() const { return m_target; }
 private:
@@ -152,14 +90,27 @@ private:
     static constexpr float ShortRangeThreshold = ShortRange * 0.65f;
     static constexpr float TinyRange = 1.f / 10.f;
     static constexpr float TinyRangeThreshold = TinyRange * 0.5f;
+
+    float getScaledValue(float v, float dist) const;
 };
 
 static const std::array<Club, ClubID::Count> Clubs =
 {
     Club(ClubID::Driver, "Driver ", 44.f, 45.f, 220.f),
     Club(ClubID::ThreeWood, "3 Wood ", 39.5f, 45.f, 180.f),
+    Club(ClubID::ThreeWood, "5 Wood ", 37.9f, 45.f, 150.f),//////
+    
+    
+    
+    Club(ClubID::FourIron, "4 Iron ", 36.f, 40.f, 160.f),//////
     Club(ClubID::FiveIron, "5 Iron ", 35.f, 40.f, 140.f),
-    Club(ClubID::NineIron, "9 Iron ", 30.1f, 40.f, 100.f),
+    Club(ClubID::SixIron, "6 Iron ", 34.f, 40.f, 120.f),////////
+    Club(ClubID::SevenIron, "7 Iron ", 32.8f, 40.f, 110.f),///////
+    Club(ClubID::EightIron, "8 Iron ", 30.1f, 40.f, 100.f),   
+    Club(ClubID::NineIron, "9 Iron ", 28.f, 40.f, 90.f),///////
+
+    
+    
     Club(ClubID::PitchWedge, "Pitch Wedge ", 25.2f, 52.f, 70.f),
     Club(ClubID::GapWedge, "Gap Wedge ", 17.4f, 60.f, 30.f),
     Club(ClubID::SandWedge, "Sand Wedge ", 10.3f, 60.f, 10.f),

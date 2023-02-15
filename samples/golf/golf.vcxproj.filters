@@ -327,6 +327,9 @@
     <ClCompile Include="src\golf\BallAnimationSystem.cpp">
       <Filter>Source Files\golf\client\systems</Filter>
     </ClCompile>
+    <ClCompile Include="src\golf\Clubs.cpp">
+      <Filter>Source Files\golf\shared</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ErrorCheck.hpp">

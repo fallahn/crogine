@@ -112,6 +112,9 @@ public:
     static inline const std::string RSSFeed = "https://fallahn.itch.io/super-video-golf/devlog.rss";
     static inline const std::string WebURL = "https://fallahn.itch.io/super-video-golf";
 
+    static inline std::int32_t getClubSet() { return 0; }
+    static inline void setClubSet(std::int32_t set) { LogI << "Implement this as read/write XP!!" << std::endl; }
+
     struct UserContent final
     {
         enum
