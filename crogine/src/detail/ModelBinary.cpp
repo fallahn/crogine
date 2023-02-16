@@ -225,7 +225,12 @@ bool cro::Detail::ModelBinary::write(cro::Entity entity, const std::string& path
             }
         }
 
-
+        //remove any empty index arrays to prevent creating empty submeshes
+        indexData.erase(std::remove_if(indexData.begin(), indexData.end(),
+            [](const std::vector<std::uint32_t>& v)
+            {
+                return v.empty();
+            }), indexData.end());
 
         //copy index data
         for (const auto& data : indexData)
