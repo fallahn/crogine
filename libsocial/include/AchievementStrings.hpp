@@ -89,7 +89,8 @@ static const std::array<std::string, AchievementID::Count> AchievementStrings =
     "hot_stuff",
     "no_ships",
     "into_orbit",
-    "bad_sport"
+    "bad_sport",
+    "full_house"
 };
 
 //appears on the notification
@@ -137,7 +138,8 @@ static const std::array<std::string, AchievementID::Count> AchievementLabels =
     "Hot Stuff",
     "I See No Ships",
     "Into Orbit",
-    "Bad Sport"
+    "Bad Sport",
+    "Full House"
 };
 
 //description and whether or not the achievement is hidden until it is unlocked
@@ -185,7 +187,8 @@ static const std::array<std::pair<std::string, bool>, AchievementID::Count> Achi
     std::make_pair("Hit the ball into the volcano on 4-18", false),
     std::make_pair("Hit the boat on 8-11", false),
     std::make_pair("Hit the ball over 1500m in a single stroke", true),
-    std::make_pair("Ruin the game for everyone", true)
+    std::make_pair("Ruin the game for everyone", true),
+    std::make_pair("Collect a full set of clubs", false)
 };
 
 //assuming trophies load correctly they are:
@@ -252,6 +255,8 @@ static constexpr std::array<std::size_t, AchievementID::Count> AchievementTrophi
     TrophyID::GoldFigure,
     TrophyID::Platinum,
     TrophyID::BronzeCup,
+
+    TrophyID::GoldFigure,
 };
 
 //these are indexed by StatID, so do try to get them in the correct order ;)

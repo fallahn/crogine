@@ -87,6 +87,7 @@ namespace AchievementID
         ISeeNoShips,
         IntoOrbit,
         BadSport,
+        FullHouse,
 
         Count
     };
