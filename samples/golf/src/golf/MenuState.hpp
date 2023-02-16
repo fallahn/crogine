@@ -300,6 +300,7 @@ private:
     void nextCourse();
     void refreshUI();
     void updateCourseRuleString();
+    void updateUnlockedItems();
 
     //loading moved to GolfGame.cpp
 

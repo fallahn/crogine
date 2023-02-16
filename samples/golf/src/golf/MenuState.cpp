@@ -709,6 +709,7 @@ void MenuState::handleMessage(const cro::Message& msg)
             if (data.data == MenuID::Lobby)
             {
                 m_uiScene.getActiveCamera().getComponent<cro::Camera>().isStatic = true;
+                updateUnlockedItems();
             }
         }
     }

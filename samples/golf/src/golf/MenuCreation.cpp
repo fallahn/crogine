@@ -5089,3 +5089,12 @@ void MenuState::updateCourseRuleString()
     };
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 }
+
+void MenuState::updateUnlockedItems()
+{
+    //TODO check XP/Levels, for each
+    //level check current unlock flags
+    //and add each new item to shared data
+    //unlock list, and update flags. if
+    //list not empty then push the unlock state.
+}

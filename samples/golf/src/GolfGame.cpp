@@ -44,6 +44,7 @@ source distribution.
 #include "golf/NewsState.hpp"
 #include "golf/PlaylistState.hpp"
 #include "golf/CreditsState.hpp"
+#include "golf/UnlockState.hpp"
 #include "golf/EventOverlay.hpp"
 #include "golf/MenuConsts.hpp"
 #include "golf/GameConsts.hpp"
@@ -167,6 +168,7 @@ GolfGame::GolfGame()
     m_stateStack.registerState<PlaylistState>(StateID::Playlist, m_sharedData);
     m_stateStack.registerState<BushState>(StateID::Bush, m_sharedData);
     m_stateStack.registerState<MessageOverlayState>(StateID::MessageOverlay, m_sharedData);
+    m_stateStack.registerState<UnlockState>(StateID::Unlock, m_sharedData);
     m_stateStack.registerState<CreditsState>(StateID::Credits, m_sharedData, credits);
     m_stateStack.registerState<EventOverlayState>(StateID::EventOverlay);
 

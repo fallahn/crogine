@@ -70,6 +70,7 @@ set(GOLF_SRC
   ${PROJECT_DIR}/golf/TrophyState.cpp
   ${PROJECT_DIR}/golf/TutorialDirector.cpp
   ${PROJECT_DIR}/golf/TutorialState.cpp
+  ${PROJECT_DIR}/golf/UnlockState.cpp
   ${PROJECT_DIR}/golf/VatAnimationSystem.cpp
   ${PROJECT_DIR}/golf/VatFile.cpp
   ${PROJECT_DIR}/golf/Weather.cpp
