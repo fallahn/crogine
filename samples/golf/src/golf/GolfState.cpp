@@ -4353,7 +4353,7 @@ void GolfState::createDrone()
                 movement *= MoveSpeed / 2.f;
 
                 //go slower over short distances
-                const float multiplier = 0.4f + (0.6f * std::min(1.f, len / AccelerationRadius));
+                const float multiplier = 0.6f + (0.4f * std::min(1.f, len / AccelerationRadius));
 
                 acceleration = std::min(1.f, acceleration + ((dt / 2.f) * multiplier));
                 movement *= cro::Util::Easing::easeInSine(acceleration);

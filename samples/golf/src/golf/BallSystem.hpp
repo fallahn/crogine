@@ -51,7 +51,7 @@ struct Ball final
     static constexpr float Radius = 0.0215f;
     enum class State
     {
-        Idle, Flight, Putt, Paused, Reset
+        Idle, Flight, Roll, Putt, Paused, Reset
     }state = State::Idle;
 
     static const std::array<std::string, 5> StateStrings;

@@ -506,6 +506,10 @@ void GolfState::buildUI()
             {
                 guestimation *= 0.98f;
             }
+            else
+            {
+                guestimation = std::min(1.f, guestimation + 0.12f);
+            }
 
             //add a bit more power if putting uphill
             float slope = 0.f;
