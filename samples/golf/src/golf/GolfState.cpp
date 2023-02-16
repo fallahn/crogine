@@ -4341,7 +4341,7 @@ void GolfState::createDrone()
             auto& [currRotation, acceleration, target, _] = e.getComponent<cro::Callback>().getUserData<DroneCallbackData>();
 
             //move towards skycam target
-            static constexpr float MoveSpeed = 12.f;
+            static constexpr float MoveSpeed = 6.f;
             static constexpr float MinRadius = MoveSpeed * MoveSpeed;
             static constexpr float AccelerationRadius = 7.f;// 40.f;
 
@@ -4350,7 +4350,7 @@ void GolfState::createDrone()
             {
                 const float len = std::sqrt(len2);
                 movement /= len;
-                movement *= MoveSpeed / 2.f;
+                movement *= MoveSpeed;
 
                 //go slower over short distances
                 const float multiplier = 0.6f + (0.4f * std::min(1.f, len / AccelerationRadius));

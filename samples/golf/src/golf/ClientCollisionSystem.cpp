@@ -44,7 +44,7 @@ source distribution.
 namespace
 {
     static constexpr float MinBallDist = (HoleRadius * 1.2f) * (HoleRadius * 1.2f);
-    static constexpr float NearHoleDist = (0.06f * 0.06f); //6cm, used for near misses
+    static constexpr float NearHoleDist = (0.1f * 0.1f); //10cm, used for near misses
 }
 
 ClientCollisionSystem::ClientCollisionSystem(cro::MessageBus& mb, const std::vector<HoleData>& hd, const CollisionMesh& cm)
@@ -70,8 +70,8 @@ void ClientCollisionSystem::process(float)
         auto position = tx.getPosition();
 
         //skip if not near the ground
-        if (/*!collider.active
-            ||*/ position.y > 10.f)
+        if (!collider.active
+            || position.y > 10.f)
         {
             continue;
         }

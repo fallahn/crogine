@@ -326,12 +326,7 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
         auto position = tx.getPosition();
         auto terrainContact = getTerrain(position);
 
-        //if (terrainContact.penetration < 0) //above ground
-        //{
-        //    //we had a bump so add gravity
-        //    ball.velocity += Gravity * dt;
-        //}
-        //else 
+
         if (terrainContact.penetration > 0)
         {
             //we've sunk into the ground so correct
@@ -868,7 +863,7 @@ void BallSystem::doCollision(cro::Entity entity)
 
         //stop the ball if velocity low enough
         auto len2 = glm::length2(ball.velocity);
-        if (len2 < /*0.01f*/MinVelocitySqr)
+        if (len2 < 0.01f)
         {
             switch (terrainResult.terrain)
             {
