@@ -306,6 +306,12 @@ void MenuState::createBallScene()
             auto material = m_resources.materials.get(m_materialIDs[MaterialID::Cel]);
             applyMaterialData(ballDef, material);
             entity.getComponent<cro::Model>().setMaterial(0, material);
+            if (entity.getComponent<cro::Model>().getMeshData().submeshCount > 1)
+            {
+                material = m_resources.materials.get(m_materialIDs[MaterialID::Trophy]);
+                applyMaterialData(ballDef, material);
+                entity.getComponent<cro::Model>().setMaterial(1, material);
+            }
             entity.getComponent<cro::Model>().setRenderFlags(BallRenderFlags);
 
             entity.addComponent<cro::Callback>().active = true;

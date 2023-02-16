@@ -858,6 +858,7 @@ void MenuState::addSystems()
 void MenuState::loadAssets()
 {
     m_backgroundScene.setCubemap("assets/golf/images/skybox/spring/sky.ccm");
+    m_reflectionMap.loadFromFile("assets/golf/images/skybox/billiards/trophy.ccm");
 
     std::string wobble;
     if (m_sharedData.vertexSnap)
@@ -877,6 +878,8 @@ void MenuState::loadAssets()
     m_resources.shaders.loadFromString(ShaderID::Hair, CelVertexShader, CelFragmentShader, "#define USER_COLOUR\n#define NOCHEX");
     m_resources.shaders.loadFromString(ShaderID::Billboard, BillboardVertexShader, BillboardFragmentShader);
     m_resources.shaders.loadFromString(ShaderID::BillboardShadow, BillboardVertexShader, ShadowFragment, "#define SHADOW_MAPPING\n#define ALPHA_CLIP\n");
+    m_resources.shaders.loadFromString(ShaderID::Trophy, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n#define REFLECTIONS\n" + wobble);
+    
 
     auto* shader = &m_resources.shaders.get(ShaderID::Cel);
     m_scaleBuffer.addShader(*shader);
@@ -913,6 +916,13 @@ void MenuState::loadAssets()
     m_materialIDs[MaterialID::BillboardShadow] = m_resources.materials.add(*shader);
     m_windBuffer.addShader(*shader);
     m_resolutionBuffer.addShader(*shader);
+
+    shader = &m_resources.shaders.get(ShaderID::Trophy);
+    m_scaleBuffer.addShader(*shader);
+    m_resolutionBuffer.addShader(*shader);
+    m_materialIDs[MaterialID::Trophy] = m_resources.materials.add(*shader);
+    m_resources.materials.get(m_materialIDs[MaterialID::Trophy]).setProperty("u_reflectMap", cro::CubemapID(m_reflectionMap.getGLHandle()));
+
 
     //load the billboard rects from a sprite sheet and convert to templates
     cro::SpriteSheet spriteSheet;

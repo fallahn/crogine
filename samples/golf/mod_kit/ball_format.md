@@ -3,6 +3,8 @@ Ball Definitions
 
 To add a custom ball first create a model approximately 0.021 units in radius, and place it in the model directory. Ball models should have vertex colouring (textures are ignored) and use an Unlit material (see material definition for more information).
 
+Since version 1.11 ball models can have up to 2 materials. Each material must share the same propreties as stated above, however the second material will be rendered with a cubemap reflection, to simulate 'metallic' materials.
+
 Then create a ball definition and place it in the balls directory with the extension .ball
 
     ball

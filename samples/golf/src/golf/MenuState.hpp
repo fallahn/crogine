@@ -49,6 +49,7 @@ source distribution.
 #include <crogine/graphics/ModelDefinition.hpp>
 #include <crogine/graphics/Font.hpp>
 #include <crogine/graphics/RenderTexture.hpp>
+#include <crogine/graphics/CubemapTexture.hpp>
 #include <crogine/graphics/UniformBuffer.hpp>
 #include <crogine/graphics/VideoPlayer.hpp>
 
@@ -95,6 +96,7 @@ private:
     cro::Scene m_uiScene;
     cro::Scene m_backgroundScene;
     cro::Scene m_avatarScene;
+    cro::CubemapTexture m_reflectionMap;
 
     cro::AudioScape m_menuSounds;
     struct AudioID final
@@ -120,6 +122,7 @@ private:
             Billboard,
             BillboardShadow,
             Ground,
+            Trophy,
 
             Count
         };

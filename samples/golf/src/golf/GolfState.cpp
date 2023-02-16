@@ -4601,6 +4601,14 @@ void GolfState::spawnBall(const ActorInfo& info)
     entity.getComponent<cro::Transform>().setScale(glm::vec3(scale));
     
     entity.getComponent<cro::Model>().setMaterial(0, material);
+    if (entity.getComponent<cro::Model>().getMeshData().submeshCount > 1)
+    {
+        //this assumes the model loaded successfully, otherwise
+        //there wouldn't be two submeshes.
+        auto mat = m_resources.materials.get(m_materialIDs[MaterialID::Trophy]);
+        applyMaterialData(*m_ballModels[ballID], mat);
+        entity.getComponent<cro::Model>().setMaterial(1, mat);
+    }
     entity.getComponent<cro::Model>().setRenderFlags(~RenderFlags::MiniMap);
     ballEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
