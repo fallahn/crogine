@@ -55,6 +55,11 @@ struct ClubID final
         (1<<9), (1<<10), (1<<11)
     };
 
+    static constexpr std::array<std::int32_t, 5u> LockedSet =
+    {
+        ThreeWood, FourIron, SixIron, SevenIron, NineIron
+    };
+
     static constexpr std::int32_t DefaultSet =
         Flags[Driver] | Flags[ThreeWood] | Flags[FiveIron] |
         Flags[EightIron] | Flags[PitchWedge] | Flags[GapWedge] |
@@ -101,7 +106,6 @@ static const std::array<Club, ClubID::Count> Clubs =
     Club(ClubID::ThreeWood, "5 Wood ", 38.15f, 45.f, 150.f),  //Level 5
     
     
-    
     Club(ClubID::FourIron,  "4 Iron ", 37.11f, 40.f, 140.f),  //Level 10
     Club(ClubID::FiveIron,  "5 Iron ", 35.82f, 40.f, 130.f),  //default set
     Club(ClubID::SixIron,   "6 Iron ", 34.4f,  40.f, 120.f),  //Level 15
@@ -109,7 +113,6 @@ static const std::array<Club, ClubID::Count> Clubs =
     Club(ClubID::EightIron, "8 Iron ", 31.5f,  40.f, 100.f),  //default set
     Club(ClubID::NineIron,  "9 Iron ", 29.9f,  40.f, 90.f),   //Level 25
 
-    
     
     Club(ClubID::PitchWedge, "Pitch Wedge ", 26.51f, 52.f, 70.f),  //default set
     Club(ClubID::GapWedge,   "Gap Wedge ",   18.4f,  60.f, 30.f),  //default set

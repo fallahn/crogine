@@ -668,6 +668,9 @@
     <ClInclude Include="src\golf\UnlockState.hpp">
       <Filter>Header Files\golf\client\states</Filter>
     </ClInclude>
+    <ClInclude Include="src\golf\UnlockItems.hpp">
+      <Filter>Header Files\golf\client</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="src\golf\WaterShader.inl">

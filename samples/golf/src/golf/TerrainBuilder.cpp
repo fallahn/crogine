@@ -1051,7 +1051,7 @@ void TerrainBuilder::threadFunc()
                 static constexpr std::int32_t GridDensity = 4; //grids per metre. Can only be 1,2 or 4 to match Normal Map resolution
                 static constexpr float GridSpacing = 1.f / GridDensity;
 
-                static constexpr float epsilon = 0.016f; //pushes grid off the surface by this much. Could just do in the transform really...
+                static constexpr float epsilon = 0.02f; //pushes grid off the surface by this much. TODO push along normals, not upwards
                 for (auto y = 0; y < (SlopeGridSize * GridDensity); ++y)
                 {
                     for (auto x = 0; x < (SlopeGridSize * GridDensity); ++x)

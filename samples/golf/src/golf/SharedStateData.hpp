@@ -80,12 +80,6 @@ struct ConnectionData final
     bool deserialise(const net::NetEvent::Packet&);
 };
 
-struct UnlockData final
-{
-    std::int32_t modelID = -1; //preview model
-    std::string description;
-};
-
 static constexpr float MinFOV = 60.f;
 static constexpr float MaxFOV = 90.f;
 
@@ -174,8 +168,8 @@ struct SharedStateData final
     std::int32_t ballSkinIndex = 0; //billiards balls
     std::int32_t tableSkinIndex = 0; //billiards table
 
-    //used by the unlock state to display new unlocks
-    std::vector<UnlockData> unlockedItems;
+    //IDs used by the unlock state to display new unlocks
+    std::vector<std::int32_t> unlockedItems;
 
     //client settings
     bool usePostProcess = false;

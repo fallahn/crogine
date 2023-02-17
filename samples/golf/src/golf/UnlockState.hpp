@@ -57,12 +57,23 @@ private:
     cro::Scene m_scene;
     SharedStateData& m_sharedData;
 
+    struct UnlockCollection final
+    {
+        cro::Entity root;
+        cro::Entity description;
+        cro::Entity name;
+        //TODO other entities
+    };
+    std::size_t m_itemIndex;
+    std::vector<UnlockCollection> m_unlockCollections;
+
     cro::AudioScape m_menuSounds;
     struct AudioID final
     {
         enum
         {
             Accept, Back,
+            Fireworks,
 
             Count
         };

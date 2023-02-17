@@ -33,6 +33,7 @@ source distribution.
 #include "CommandIDs.hpp"
 #include "MenuConsts.hpp"
 #include "GameConsts.hpp"
+#include "UnlockItems.hpp"
 
 #include <crogine/core/Window.hpp>
 #include <crogine/core/GameController.hpp>
@@ -65,7 +66,25 @@ source distribution.
 
 namespace
 {
+    struct ItemCallbackData final
+    {
+        enum
+        {
+            In, Hold, Out
+        }state = In;
+        float stateTime = 0.f;
 
+        bool close()
+        {
+            if (state == Hold)
+            {
+                state = Out;
+                stateTime = 0.f;
+                return true;
+            }
+            return false;
+        }
+    };
 }
 
 UnlockState::UnlockState(cro::StateStack& ss, cro::State::Context ctx, SharedStateData& sd)
@@ -89,14 +108,31 @@ bool UnlockState::handleEvent(const cro::Event& evt)
         return false;
     }
 
+    const auto dismissItem =
+        [&]()
+    {
+        if (m_itemIndex < m_unlockCollections.size())
+        {
+            auto& item = m_unlockCollections[m_itemIndex].root.getComponent<cro::Callback>().getUserData<ItemCallbackData>();
+            if (item.close())
+            {
+                m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+            }
+        }
+    };
+
     if (evt.type == SDL_KEYUP)
     {
-        if (evt.key.keysym.sym == SDLK_BACKSPACE
-            || evt.key.keysym.sym == SDLK_ESCAPE
-            || evt.key.keysym.sym == SDLK_p)
+        switch (evt.key.keysym.sym)
         {
+        default: break;
+        case SDLK_BACKSPACE:
+        case SDLK_ESCAPE:
             quitState();
             return false;
+        case SDLK_SPACE: //TODO probably should check keybinds but that breaks my lovely switch block :(
+            dismissItem();
+            break;
         }
     }
     else if (evt.type == SDL_KEYDOWN)
@@ -115,9 +151,14 @@ bool UnlockState::handleEvent(const cro::Event& evt)
     else if (evt.type == SDL_CONTROLLERBUTTONUP)
     {
         cro::App::getWindow().setMouseCaptured(true);
-        if (evt.cbutton.button == cro::GameController::ButtonB
-            || evt.cbutton.button == cro::GameController::ButtonStart)
+        switch (evt.cbutton.button)
         {
+        default: break;
+        case cro::GameController::ButtonA:
+            dismissItem();
+            break;
+        case cro::GameController::ButtonB:
+        case cro::GameController::ButtonBack:
             quitState();
             return false;
         }
@@ -142,7 +183,6 @@ bool UnlockState::handleEvent(const cro::Event& evt)
         cro::App::getWindow().setMouseCaptured(false);
     }
 
-    m_scene.getSystem<cro::UISystem>()->handleEvent(evt);
     m_scene.forwardEvent(evt);
     return false;
 }
@@ -181,6 +221,8 @@ void UnlockState::buildScene()
     m_audioEnts[AudioID::Accept].addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("accept");
     m_audioEnts[AudioID::Back] = m_scene.createEntity();
     m_audioEnts[AudioID::Back].addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("back");
+    m_audioEnts[AudioID::Fireworks] = m_scene.createEntity();
+    m_audioEnts[AudioID::Fireworks].addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("firework");
 
     m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
 
@@ -258,8 +300,181 @@ void UnlockState::buildScene()
         }
     };
 
-   
-    
+
+    cro::SpriteSheet spriteSheet;
+    spriteSheet.loadFromFile("assets/golf/sprites/unlocks.spt", m_sharedData.sharedResources->textures);
+
+    auto& largeFont = m_sharedData.sharedResources->fonts.get(FontID::UI);
+    auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
+
+    const auto createItem = [&](std::int32_t unlockID)
+    {
+        auto& collection = m_unlockCollections.emplace_back();
+
+        auto entity = m_scene.createEntity();
+        entity.addComponent<cro::Transform>().setScale(glm::vec2(0.f));
+        entity.getComponent<cro::Transform>().setPosition({ 0.f, -30.f });
+        entity.addComponent<cro::Drawable2D>();
+        entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("background");
+        auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+        entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
+        entity.addComponent<cro::Callback>().setUserData<ItemCallbackData>();
+        entity.getComponent<cro::Callback>().function =
+            [&](cro::Entity e, float dt)
+        {
+            static constexpr float InTime = 0.8f;
+            static constexpr float HoldTime = 10.f;
+            static constexpr float OutTime = InTime;
+
+            auto& collection = m_unlockCollections[m_itemIndex];
+
+            auto& data = e.getComponent<cro::Callback>().getUserData<ItemCallbackData>();
+            data.stateTime += dt;
+
+            switch (data.state)
+            {
+            default: break;
+            case ItemCallbackData::In:
+            {
+                const float scale = std::min(1.f, data.stateTime / InTime);
+                
+                const float bgScale = cro::Util::Easing::easeOutElastic(scale);
+                e.getComponent<cro::Transform>().setScale(glm::vec2(bgScale));
+                e.getComponent<cro::Transform>().setRotation(bgScale * cro::Util::Const::TAU);
+
+                const float windowWidth = static_cast<float>(cro::App::getWindow().getSize().x) * 2.f;
+                const float textScale = cro::Util::Easing::easeInExpo(1.f - scale);
+                auto pos = collection.description.getComponent<cro::Transform>().getPosition();
+                pos.x = std::floor(windowWidth * textScale);
+                collection.description.getComponent<cro::Transform>().setPosition(pos);
+                collection.description.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+
+                pos = collection.name.getComponent<cro::Transform>().getPosition();
+                pos.x = std::floor(-windowWidth * textScale);
+                collection.name.getComponent<cro::Transform>().setPosition(pos);
+                collection.name.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+
+                if (data.stateTime > InTime)
+                {
+                    data.stateTime = 0.f;
+                    data.state = ItemCallbackData::Hold;
+                }
+            }
+                break;
+            case ItemCallbackData::Hold:
+                if (data.stateTime > HoldTime)
+                {
+                    data.stateTime = 0.f;
+                    data.state = ItemCallbackData::Out;
+
+                    //TODO activate other callbacks
+                    //TODO activate fireworks
+
+                    m_audioEnts[AudioID::Fireworks].getComponent<cro::AudioEmitter>().play();
+                }
+                break;
+            case ItemCallbackData::Out:
+            {
+                const float scale = std::min(1.f, data.stateTime / OutTime);
+                const float bgScale = cro::Util::Easing::easeOutElastic(1.f - scale);
+                e.getComponent<cro::Transform>().setScale(glm::vec2(bgScale));
+                e.getComponent<cro::Transform>().setRotation(bgScale * cro::Util::Const::TAU);
+
+
+                const float windowWidth = static_cast<float>(cro::App::getWindow().getSize().x) * 2.f;
+                const float textScale = cro::Util::Easing::easeOutExpo(scale);
+                auto pos = collection.description.getComponent<cro::Transform>().getPosition();
+                pos.x = std::floor(-windowWidth * textScale);
+                collection.description.getComponent<cro::Transform>().setPosition(pos);
+
+                pos = collection.name.getComponent<cro::Transform>().getPosition();
+                pos.x = std::floor(windowWidth * textScale);
+                collection.name.getComponent<cro::Transform>().setPosition(pos);
+
+                if (data.stateTime > OutTime)
+                {
+                    m_scene.destroyEntity(collection.root);
+                    m_scene.destroyEntity(collection.description);
+                    m_scene.destroyEntity(collection.name);
+                    //TODO tidy up other items in collection
+
+                    m_itemIndex++;
+
+                    if (m_itemIndex < m_unlockCollections.size())
+                    {
+                        m_unlockCollections[m_itemIndex].root.getComponent<cro::Callback>().active = true;
+                    }
+                    else
+                    {
+                        quitState();
+                    }
+                }
+            }
+                break;
+            }
+        };
+        collection.root = entity;
+
+        m_rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+        //title text
+        //TODO
+
+        //unlock description
+        entity = m_scene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ 0.f, 132.f, 0.1f });
+        entity.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+        entity.addComponent<cro::Drawable2D>();
+        entity.addComponent<cro::Text>(largeFont).setString(ul::Items[unlockID].description);
+        entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+        entity.getComponent<cro::Text>().setCharacterSize(UITextSize * 2);
+        entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+        entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
+        centreText(entity);
+        m_rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+        collection.description = entity;
+
+        //item preview
+        //TODO
+
+        //unlock name
+        entity = m_scene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ 0.f, -102.f, 0.1f });
+        entity.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+        entity.addComponent<cro::Drawable2D>();
+        entity.addComponent<cro::Text>(smallFont).setString(ul::Items[unlockID].name);
+        entity.getComponent<cro::Text>().setFillColour(TextHighlightColour);
+        entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize * 2);
+        entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+        entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
+        centreText(entity);
+        m_rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+        collection.name = entity;
+    };
+
+
+    for (auto i : m_sharedData.unlockedItems)
+    {
+        createItem(i);
+    }
+
+    //small delay
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<float>(0.f);
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float dt)
+    {
+        auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
+        currTime += dt;
+        if (currTime > 1.f)
+        {
+            m_unlockCollections[0].root.getComponent<cro::Callback>().active = true;
+            e.getComponent<cro::Callback>().active = false;
+            m_scene.destroyEntity(e);
+        }
+    };
 
 
     auto updateView = [&, rootNode](cro::Camera& cam) mutable

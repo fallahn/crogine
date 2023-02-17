@@ -38,6 +38,7 @@ source distribution.
 #include "CommandIDs.hpp"
 #include "spooky2.hpp"
 #include "Clubs.hpp"
+#include "UnlockItems.hpp"
 #include "../ErrorCheck.hpp"
 #include "server/ServerPacketData.hpp"
 
@@ -5093,14 +5094,41 @@ void MenuState::updateCourseRuleString()
 
 void MenuState::updateUnlockedItems()
 {
-    //TODO check XP/Levels, for each
-    //level check current unlock flags
-    //and add each new item to shared data
-    //unlock list, and update flags. if
-    //list not empty then push the unlock state.
+    auto clubFlags = Social::getClubSet();
+    if (clubFlags == 0)
+    {
+        clubFlags = ClubID::DefaultSet;
+    }
+    auto level = Social::getLevel();
+    auto clubCount = std::min(ClubID::LockedSet.size(), static_cast<std::size_t>(level / 5));
+    for (auto i = 0u; i < clubCount; ++i)
+    {
+        auto clubID = ClubID::LockedSet[i];
+        if ((clubFlags & ClubID::Flags[clubID]) == 0)
+        {
+            clubFlags |= ClubID::Flags[clubID];
+            m_sharedData.unlockedItems.push_back(i); //TODO we want a more explicit way of mapping to unlock ID
+        }
+    }
+
+    m_sharedData.inputBinding.clubset = clubFlags;
+    //Social::setClubSet(clubFlags); //TODO enable this
 
     if (m_sharedData.inputBinding.clubset == ClubID::FullSet)
     {
         Achievements::awardAchievement(AchievementStrings[AchievementID::FullHouse]);
+    }
+
+
+    //TODO ball flags (balls are unlocked every 10 levels)
+    //TODO newly unlocked balls will be expected by the player to be immediately available...
+    //perhaps these could be silently prechecked when loading the state/ball models
+    //and then flagged for includion in this function
+
+
+
+    if (!m_sharedData.unlockedItems.empty())
+    {
+        requestStackPush(StateID::Unlock);
     }
 }

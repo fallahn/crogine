@@ -632,6 +632,7 @@
     <ClInclude Include="src\golf\TrophyState.hpp" />
     <ClInclude Include="src\golf\TutorialDirector.hpp" />
     <ClInclude Include="src\golf\TutorialState.hpp" />
+    <ClInclude Include="src\golf\UnlockItems.hpp" />
     <ClInclude Include="src\golf\UnlockState.hpp" />
     <ClInclude Include="src\golf\Utility.hpp" />
     <ClInclude Include="src\golf\VatFile.hpp" />

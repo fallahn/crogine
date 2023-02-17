@@ -623,6 +623,7 @@ bool GolfGame::initialise()
     s.loadFromFile("assets/golf/sprites/facilities_menu.spt", m_sharedData.sharedResources->textures);
     s.loadFromFile("assets/golf/sprites/scoreboard.spt", m_sharedData.sharedResources->textures);
     s.loadFromFile("assets/golf/sprites/controller_buttons.spt", m_sharedData.sharedResources->textures);
+    s.loadFromFile("assets/golf/sprites/unlocks.spt", m_sharedData.sharedResources->textures);
     s.loadFromFile("assets/golf/sprites/tutorial.spt", m_sharedData.sharedResources->textures);
 
     cro::ModelDefinition md(*m_sharedData.sharedResources);
