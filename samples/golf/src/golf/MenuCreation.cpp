@@ -37,6 +37,7 @@ source distribution.
 #include "NameScrollSystem.hpp"
 #include "CommandIDs.hpp"
 #include "spooky2.hpp"
+#include "Clubs.hpp"
 #include "../ErrorCheck.hpp"
 #include "server/ServerPacketData.hpp"
 
@@ -5097,4 +5098,9 @@ void MenuState::updateUnlockedItems()
     //and add each new item to shared data
     //unlock list, and update flags. if
     //list not empty then push the unlock state.
+
+    if (m_sharedData.inputBinding.clubset == ClubID::FullSet)
+    {
+        Achievements::awardAchievement(AchievementStrings[AchievementID::FullHouse]);
+    }
 }

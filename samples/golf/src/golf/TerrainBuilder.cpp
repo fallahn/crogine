@@ -1127,26 +1127,26 @@ void TerrainBuilder::threadFunc()
                     }
                 }
                 
-                static constexpr float LowestHeight = -0.04f;
-                static constexpr float HighestHeight = 0.04f;
-                static constexpr float MaxHeight = HighestHeight - LowestHeight;
-                //if (MaxHeight != 0)
-                {
-                    for (auto& v : m_slopeBuffer)
-                    {
-                        auto vertHeight = (v.position.y - epsilon) - LowestHeight;
-                        vertHeight /= MaxHeight;
-                        //v.colour = { 0.f, 0.4f * vertHeight, 1.f - vertHeight, 0.8f };
-                        v.colour = 
-                        { 
-                            cro::Util::Easing::easeInQuint(std::max(0.f, (vertHeight - 0.5f) * 2.f)),
-                            //0.f,
-                            0.5f,
-                            cro::Util::Easing::easeInQuint(0.8f + (std::min(1.f, vertHeight * 2.f) * 0.2f)),
-                            0.8f
-                        };
-                    }
-                }
+                //static constexpr float LowestHeight = -0.04f;
+                //static constexpr float HighestHeight = 0.04f;
+                //static constexpr float MaxHeight = HighestHeight - LowestHeight;
+                ////if (MaxHeight != 0)
+                //{
+                //    for (auto& v : m_slopeBuffer)
+                //    {
+                //        auto vertHeight = (v.position.y - epsilon) - LowestHeight;
+                //        vertHeight /= MaxHeight;
+                //        //v.colour = { 0.f, 0.4f * vertHeight, 1.f - vertHeight, 0.8f };
+                //        v.colour = 
+                //        { 
+                //            cro::Util::Easing::easeInQuint(std::max(0.f, (vertHeight - 0.5f) * 2.f)),
+                //            //0.f,
+                //            0.5f,
+                //            cro::Util::Easing::easeInQuint(0.8f + (std::min(1.f, vertHeight * 2.f) * 0.2f)),
+                //            0.8f
+                //        };
+                //    }
+                //}
 
                 m_slopeProperties.meshData->vertexCount = static_cast<std::uint32_t>(m_slopeBuffer.size());
             }

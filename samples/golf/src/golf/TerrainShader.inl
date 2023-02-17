@@ -122,9 +122,9 @@ R"(
     uniform vec3 u_centrePosition;
     uniform vec3 u_cameraWorldPosition;
 
-    VARYING_OUT vec4 v_colour;
     VARYING_OUT vec3 v_normal;
     VARYING_OUT vec2 v_texCoord;
+    VARYING_OUT vec2 v_heightData;
 
     const float MaxRadius = 10.0; //this should match max putt distance
     const float MinRadius = 0.5;
@@ -141,8 +141,8 @@ R"(
 
         gl_Position = u_viewProjectionMatrix * worldPos;
 
-        v_colour = a_colour;
-        v_colour.a *= alpha;
+        v_heightData.x = a_colour.a * alpha;
+        v_heightData.y = worldPos.y;
 
         v_normal = a_normal;
         v_texCoord = a_texCoord0;
@@ -154,18 +154,19 @@ static const std::string SlopeFragmentShader =
 R"(
     OUTPUT
 
-    //dirX, strength, dirZ, elapsedTime
+    //for elapsedTime in w component
     #include WIND_BUFFER
 
     uniform float u_alpha;
 
-    VARYING_IN vec4 v_colour;
     VARYING_IN vec3 v_normal;
     VARYING_IN vec2 v_texCoord;
+    VARYING_IN vec2 v_heightData;
 
     const vec3 DotColour = vec3(1.0, 0.65, 0.3);
+    const vec3 BaseColour = vec3(0.827, 0.599, 0.91); //stored as HSV to save on a conversion
 
-//const float MaxStrength = 12.0; //this is the +/- max value in UV.y - must match TerrainBuilder.cpp 1001
+    #include HSV
 
     void main()
     {
@@ -175,15 +176,15 @@ R"(
         float alpha = (sin(v_texCoord.x - ((u_windData.w * 5.0 * strength) * v_texCoord.y)) + 1.0) * 0.5;
         alpha = step(0.1, alpha);
 
-        vec4 colour = v_colour;
+        vec3 c = BaseColour;
+        c.x += mod(v_heightData.y * 3.0, 1.0);
+        c = hsv2rgb(c);
 
-        //colour.rgb = mix(colour.rgb, vec3(1.0, 0.0, 0.0), strength);
-        //colour.rgb = vec3(1.0 - pow(1.0 - strength, 3.0), pow(1.0 - strength, 5.0), 1.0 - pow(1.0 - (0.1 + (strength * 0.9)), 40.0));
+        vec4 colour = vec4(c, v_heightData.x);
 
         colour.a *= u_alpha;
-        colour = mix(vec4(DotColour, smoothstep(0.05, 0.15, v_colour.a * u_alpha) * 0.8), colour, alpha);
+        colour = mix(vec4(DotColour, smoothstep(0.05, 0.15, v_heightData.x * u_alpha) * 0.8), colour, alpha);
 
-//colour.rgb *= colour.a;
         FRAG_OUT = colour;
     }
 )";
