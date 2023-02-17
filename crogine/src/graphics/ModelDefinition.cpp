@@ -352,6 +352,7 @@ bool ModelDefinition::loadFromFile(const std::string& inPath, bool instanced, bo
         bool enableDepthTest = true;
         bool doubleSided = false;
         bool createMipmaps = false;
+        std::string materialName;
         Material::Data::Animation animation;
 
         const auto& properties = mat.getProperties();
@@ -491,6 +492,10 @@ bool ModelDefinition::loadFromFile(const std::string& inPath, bool instanced, bo
                 float rate = std::max(1.f, std::min(60.f, p.getValue<float>()));
                 animation.frameTime = 1.f / rate;
             }
+            else if (name == "name")
+            { 
+                materialName = p.getValue<std::string>();
+            }
         }
 
         if (lockRotation)
@@ -516,6 +521,7 @@ bool ModelDefinition::loadFromFile(const std::string& inPath, bool instanced, bo
         material.enableDepthTest = enableDepthTest;
         material.doubleSided = doubleSided;
         material.animation = animation;
+        material.name = materialName;
 
         //set a default mask colour - this is overwritten
         //below, if a custom property is found.

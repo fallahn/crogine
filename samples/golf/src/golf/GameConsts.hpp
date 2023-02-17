@@ -453,6 +453,7 @@ static inline void applyMaterialData(const cro::ModelDefinition& modelDef, cro::
 
         dest.doubleSided = m->doubleSided;
         dest.animation = m->animation;
+        dest.name = m->name;
     }
 }
 

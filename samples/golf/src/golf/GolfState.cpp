@@ -3020,19 +3020,13 @@ void GolfState::loadAssets()
             for (auto i = 0u; i < matCount; ++i)
             {
                 auto mat = model.getMaterialData(cro::Mesh::IndexData::Final, i);
-                mat.setShader(*gridShader);
-                model.setMaterial(i, mat);
+                if (mat.name == "green")
+                {
+                    mat.setShader(*gridShader);
+                    model.setMaterial(i, mat);
+                }
             }
         }
-        /*else
-        {
-            auto& model = hole.modelEntity.getComponent<cro::Model>();
-            auto matCount = model.getMeshData().submeshCount;
-            for (auto i = 0u; i < matCount; ++i)
-            {
-                model.setMaterialProperty(i, "u_holeHeight", hole.pin.y);
-            }
-        }*/
     }
 
 
