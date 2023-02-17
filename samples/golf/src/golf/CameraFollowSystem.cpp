@@ -157,7 +157,8 @@ void CameraFollowSystem::process(float dt)
     {
         static constexpr float Cohesion = 25.f;
         static constexpr float MaxVelocity = 175.f;
-        static constexpr float TargetRadius = 15.f;
+        //static constexpr float TargetRadius = 15.f;
+        //static constexpr float TargetRadius = 1.f;
 
         auto diff = target - follower.currentTarget;
 
@@ -169,23 +170,19 @@ void CameraFollowSystem::process(float dt)
         }
 
         //reduce radius with zoom
-        const float ActiveRadius = TargetRadius - ((TargetRadius / 2.f) * follower.zoom.progress);
-        //and more so when < 1m from hole - actually this causes a huge jump (obviously)
-        //we need to find a way to fit this into the curve
-        //ActiveRadius -= (ActiveRadius / 2.f) * (1.f - glm::step(1.f, glm::length2(follower.holePosition - follower.currentTarget)));
-
+        const float ActiveRadius = follower.targetRadius - ((follower.targetRadius / 2.f) * follower.zoom.progress);
         const float RadiusMultiplier = cro::Util::Easing::easeOutExpo(std::clamp(glm::length2(diff) / (ActiveRadius * ActiveRadius), 0.f, 1.f));
 
-        //clamp movement to diff to prevent overshoot
-        auto movement = follower.velocity * RadiusMultiplier * dt;
-        if (glm::length2(movement) > glm::length2(diff))
+        //slow down as we near the target
+        follower.velocity *= RadiusMultiplier;
+
+        //but make sure we never go all the way to zero
+        if (glm::length2(follower.velocity) < glm::length2(diff))
         {
-            follower.currentTarget = target;
+            follower.velocity = diff;
         }
-        else
-        {
-            follower.currentTarget += movement;
-        }
+
+        follower.currentTarget += follower.velocity * dt;
     };
 
 

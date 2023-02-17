@@ -5129,6 +5129,7 @@ void MenuState::updateUnlockedItems()
 
     if (!m_sharedData.unlockedItems.empty())
     {
-        requestStackPush(StateID::Unlock);
+        //TODO create a timed enitity to delay this a bit
+        //requestStackPush(StateID::Unlock);
     }
 }

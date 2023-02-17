@@ -1048,7 +1048,7 @@ void TerrainBuilder::threadFunc()
                 static constexpr float DashCount = 80.f; //actual div by TAU cos its sin but eh.
                 static constexpr float SlopeSpeed = -30.f;//REMEMBER this const is also used in the slope frag shader
                 static constexpr std::int32_t AvgDistance = 1;
-                static constexpr std::int32_t GridDensity = 4; //grids per metre. Can only be 1,2 or 4 to match Normal Map resolution
+                static constexpr std::int32_t GridDensity = 2; //grids per metre. Can only be 1,2 or 4 to match Normal Map resolution
                 static constexpr float GridSpacing = 1.f / GridDensity;
 
                 static constexpr float epsilon = 0.02f; //pushes grid off the surface by this much. TODO push along normals, not upwards

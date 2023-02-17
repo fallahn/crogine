@@ -57,7 +57,7 @@ struct ClubID final
 
     static constexpr std::array<std::int32_t, 5u> LockedSet =
     {
-        ThreeWood, FourIron, SixIron, SevenIron, NineIron
+        FiveWood, FourIron, SixIron, SevenIron, NineIron
     };
 
     static constexpr std::int32_t DefaultSet =

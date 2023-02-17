@@ -62,6 +62,7 @@ private:
         cro::Entity root;
         cro::Entity description;
         cro::Entity name;
+        cro::Entity title;
         //TODO other entities
     };
     std::size_t m_itemIndex;

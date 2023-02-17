@@ -82,6 +82,8 @@ struct CameraFollower final
     float radius = 0.f; //camera becomes active when ball within this (should be ^2)
     float zoomRadius = 25.f; //dist^2 from hole when zoom becomes active
 
+    float targetRadius = 15.f; //radius at which point velocity starts to slow. Bigger is better further away
+
     static constexpr float MinFollowTime = 4.f;
     float currentFollowTime = 0.f;
 

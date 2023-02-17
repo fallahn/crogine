@@ -342,6 +342,8 @@ void UnlockState::buildScene()
                 e.getComponent<cro::Transform>().setScale(glm::vec2(bgScale));
                 e.getComponent<cro::Transform>().setRotation(bgScale * cro::Util::Const::TAU);
 
+                collection.title.getComponent<cro::Transform>().setScale(glm::vec2(bgScale));
+
                 const float windowWidth = static_cast<float>(cro::App::getWindow().getSize().x) * 2.f;
                 const float textScale = cro::Util::Easing::easeInExpo(1.f - scale);
                 auto pos = collection.description.getComponent<cro::Transform>().getPosition();
@@ -358,6 +360,11 @@ void UnlockState::buildScene()
                 {
                     data.stateTime = 0.f;
                     data.state = ItemCallbackData::Hold;
+
+                    //TODO activate other callbacks
+                    //TODO activate fireworks
+
+                    m_audioEnts[AudioID::Fireworks].getComponent<cro::AudioEmitter>().play();
                 }
             }
                 break;
@@ -366,11 +373,6 @@ void UnlockState::buildScene()
                 {
                     data.stateTime = 0.f;
                     data.state = ItemCallbackData::Out;
-
-                    //TODO activate other callbacks
-                    //TODO activate fireworks
-
-                    m_audioEnts[AudioID::Fireworks].getComponent<cro::AudioEmitter>().play();
                 }
                 break;
             case ItemCallbackData::Out:
@@ -380,6 +382,7 @@ void UnlockState::buildScene()
                 e.getComponent<cro::Transform>().setScale(glm::vec2(bgScale));
                 e.getComponent<cro::Transform>().setRotation(bgScale * cro::Util::Const::TAU);
 
+                collection.title.getComponent<cro::Transform>().setScale(glm::vec2(bgScale));
 
                 const float windowWidth = static_cast<float>(cro::App::getWindow().getSize().x) * 2.f;
                 const float textScale = cro::Util::Easing::easeOutExpo(scale);
@@ -396,6 +399,7 @@ void UnlockState::buildScene()
                     m_scene.destroyEntity(collection.root);
                     m_scene.destroyEntity(collection.description);
                     m_scene.destroyEntity(collection.name);
+                    m_scene.destroyEntity(collection.title);
                     //TODO tidy up other items in collection
 
                     m_itemIndex++;
@@ -419,11 +423,19 @@ void UnlockState::buildScene()
 
 
         //title text
-        //TODO
+        entity = m_scene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ 0.f, 132.f, 0.1f });
+        entity.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+        entity.addComponent<cro::Drawable2D>();
+        entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("title");
+        bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+        entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
+        m_rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+        collection.title = entity;
 
         //unlock description
         entity = m_scene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition({ 0.f, 132.f, 0.1f });
+        entity.addComponent<cro::Transform>().setPosition({ 0.f, 82.f, 0.1f });
         entity.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
         entity.addComponent<cro::Drawable2D>();
         entity.addComponent<cro::Text>(largeFont).setString(ul::Items[unlockID].description);

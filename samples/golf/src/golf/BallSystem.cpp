@@ -353,7 +353,12 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
         terrainContact = getTerrain(newPos);
         ball.terrain = terrainContact.terrain;
 
-        if (terrainContact.penetration > 0)
+        if (terrainContact.penetration < 0) //above ground
+        {
+            //we had a bump so add gravity
+            ball.velocity += Gravity * dt;
+        }
+        else if (terrainContact.penetration > 0)
         {
             newPos.y = terrainContact.intersection.y;
             tx.setPosition(newPos);
@@ -565,7 +570,7 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
             if (terrainContact.terrain == TerrainID::Fairway)
             {
                 ball.state = Ball::State::Roll;
-                ball.delay = 0.f;
+                //ball.delay = 0.f;
                 return;
             }
 
@@ -798,7 +803,7 @@ void BallSystem::doCollision(cro::Entity entity)
     {
         auto len = glm::length(ball.velocity);
         ball.velocity.y = 0.f;
-        ball.velocity = glm::normalize(ball.velocity) * len * 4.f; //fake physics to simulate momentum
+        ball.velocity = glm::normalize(ball.velocity) * len * 3.f; //fake physics to simulate momentum
         ball.state = state;
         ball.delay = 0.f;
     };

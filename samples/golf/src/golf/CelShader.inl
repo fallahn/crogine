@@ -595,7 +595,8 @@ static const std::string CelFragmentShader = R"(
     float contourZ = 1.0 - (g.y * g.x);
 
     vec3 distance = v_worldPosition.xyz - v_cameraWorldPosition;
-    float fade = (1.0 - smoothstep(36.0, 81.0, dot(distance, distance))) * u_transparency * 0.75;
+    //these magic numbers are distance sqr
+    float fade = (1.0 - smoothstep(81.0, 144.0, dot(distance, distance))) * u_transparency * 0.75;
 
     vec3 contourColour = BaseContourColour;
     contourColour.x += mod(v_worldPosition.y * 3.0, 1.0);
