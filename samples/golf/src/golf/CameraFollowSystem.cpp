@@ -157,8 +157,6 @@ void CameraFollowSystem::process(float dt)
     {
         static constexpr float Cohesion = 25.f;
         static constexpr float MaxVelocity = 175.f;
-        //static constexpr float TargetRadius = 15.f;
-        //static constexpr float TargetRadius = 1.f;
 
         auto diff = target - follower.currentTarget;
 

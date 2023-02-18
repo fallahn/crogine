@@ -486,6 +486,11 @@ static const std::string CelFragmentShader = R"(
         tilt = ((1.0 - smoothstep(0.97, 0.999, tilt)) * 0.2) * (1.0 - u_maskColour.r);
 
         colour.rgb = mix(colour.rgb, colour.rgb * SlopeShade, tilt);
+
+//float height = sin(3.14 * mod(v_worldPosition.y * 2.0, 1.0)) * 0.1;
+//colour.rgb *= 1.0 - height;
+
+
 #else
         colour.rgb *= amount;
 #endif

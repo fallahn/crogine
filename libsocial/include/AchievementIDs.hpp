@@ -88,6 +88,7 @@ namespace AchievementID
         IntoOrbit,
         BadSport,
         FullHouse,
+        Subscriber,
 
         Count
     };
