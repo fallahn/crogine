@@ -223,6 +223,8 @@ void UnlockState::buildScene()
     m_audioEnts[AudioID::Back].addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("back");
     m_audioEnts[AudioID::Fireworks] = m_scene.createEntity();
     m_audioEnts[AudioID::Fireworks].addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("firework");
+    m_audioEnts[AudioID::Cheer] = m_scene.createEntity();
+    m_audioEnts[AudioID::Cheer].addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("unlock");
 
     m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
 
@@ -482,6 +484,8 @@ void UnlockState::buildScene()
         currTime += dt;
         if (currTime > 1.f)
         {
+            m_audioEnts[AudioID::Cheer].getComponent<cro::AudioEmitter>().play();
+
             m_unlockCollections[0].root.getComponent<cro::Callback>().active = true;
             e.getComponent<cro::Callback>().active = false;
             m_scene.destroyEntity(e);

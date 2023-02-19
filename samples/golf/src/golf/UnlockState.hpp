@@ -75,6 +75,7 @@ private:
         {
             Accept, Back,
             Fireworks,
+            Cheer,
 
             Count
         };
