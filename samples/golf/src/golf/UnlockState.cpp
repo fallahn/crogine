@@ -387,7 +387,7 @@ void UnlockState::buildScene()
                 collection.title.getComponent<cro::Transform>().setScale(glm::vec2(bgScale));
 
                 const float windowWidth = static_cast<float>(cro::App::getWindow().getSize().x) * 2.f;
-                const float textScale = cro::Util::Easing::easeOutExpo(scale);
+                const float textScale = cro::Util::Easing::easeInExpo(scale);
                 auto pos = collection.description.getComponent<cro::Transform>().getPosition();
                 pos.x = std::floor(-windowWidth * textScale);
                 collection.description.getComponent<cro::Transform>().setPosition(pos);

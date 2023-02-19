@@ -89,7 +89,7 @@ namespace cro
             \param maxSpeed Maximum velocity of movement
             */
             template <typename T>
-            T smoothDamp(T src, T dst, T& currVel, float smoothTime, float dt, float maxSpeed = 1500.f)
+            T smoothDamp(T src, T dst, T& currVel, float smoothTime, float dt, float maxSpeed = std::numeric_limits<float>::max())
             {
                 T retVal = T(0.f);
 

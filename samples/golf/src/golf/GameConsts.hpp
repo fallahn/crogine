@@ -292,6 +292,7 @@ constexpr T step(T s, T v)
     return v < s ? static_cast<T>(0) : static_cast<T>(1);
 }
 
+//WHY do I keep defining this? (It's also in Util::Maths) - the std library has this
 static inline constexpr float clamp(float t)
 {
     return std::min(1.f, std::max(0.f, t));
@@ -326,6 +327,19 @@ static inline glm::mat4 lookFrom(glm::vec3 eye, glm::vec3 target, glm::vec3 up)
     );
 
     return rotation * glm::translate(glm::mat4(1.f), eye);
+}
+
+static inline glm::quat lookRotation(glm::vec3 eye, glm::vec3 target, glm::vec3 up = glm::vec3(0.f, 1.f, 0.f))
+{
+    auto forward = eye - target;
+    CRO_ASSERT(glm::length2(forward) != 0, "");
+
+    forward = glm::normalize(forward);
+    auto right = glm::cross(up, forward);
+    auto upNew = glm::cross(forward, right);
+
+    glm::mat3 m(right, upNew, forward);
+    return glm::toQuat(m);
 }
 
 static inline glm::vec2 calcVPSize()

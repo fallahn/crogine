@@ -160,6 +160,7 @@ void CameraFollowSystem::process(float dt)
 
         if (!follower.target.isValid())
         {
+            LogI << "buns" << std::endl;
             continue;
         }
 
@@ -175,14 +176,13 @@ void CameraFollowSystem::process(float dt)
 
             follower.currentTarget = cro::Util::Maths::smoothDamp(follower.currentTarget, target, follower.velocity, CameraTrackTime + ((CameraTrackTime / 2.f) * follower.zoom.progress), dt);
 
-            auto lookAt = glm::lookAt(tx.getPosition(), follower.currentTarget, cro::Transform::Y_AXIS);
-            tx.setLocalTransform(glm::inverse(lookAt));
-
+            tx.setRotation(lookRotation(tx.getPosition(), follower.currentTarget));
 
             //check the distance to the ball, and store it if closer than previous dist
             //and if we fall within the camera's radius
             //and if the player isn't standing too close
             const auto& collider = follower.target.getComponent<ClientCollider>();
+            if (!collider.active) LogI << "flaps" << std::endl;
 
             if ((currentFollower.currentFollowTime < 0)
                 &&
@@ -251,8 +251,7 @@ void CameraFollowSystem::process(float dt)
                 follower.currentTarget = cro::Util::Maths::smoothDamp(follower.currentTarget, target, follower.velocity, CameraTrackTime + ((CameraTrackTime / 2.f) * follower.zoom.progress), dt);
 
 
-                auto lookAt = glm::lookAt(tx.getPosition(), follower.currentTarget, cro::Transform::Y_AXIS);
-                tx.setLocalTransform(glm::inverse(lookAt));
+                tx.setRotation(lookRotation(tx.getPosition(), follower.currentTarget));
             }
             break;
         }

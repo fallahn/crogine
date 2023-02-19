@@ -3163,13 +3163,13 @@ void GolfState::addSystems()
     m_gameScene.addSystem<InterpolationSystem<InterpolationType::Linear>>(mb);
     m_gameScene.addSystem<CloudSystem>(mb);
     m_gameScene.addSystem<ClientCollisionSystem>(mb, m_holeData, m_collisionMesh);
-    m_gameScene.addSystem<cro::CommandSystem>(mb);
-    m_gameScene.addSystem<cro::CallbackSystem>(mb);
     m_gameScene.addSystem<SpectatorSystem>(mb, m_collisionMesh);
     m_gameScene.addSystem<PropFollowSystem>(mb, m_collisionMesh);
     m_gameScene.addSystem<cro::BillboardSystem>(mb);
     m_gameScene.addSystem<VatAnimationSystem>(mb);
     m_gameScene.addSystem<BallAnimationSystem>(mb);
+    m_gameScene.addSystem<cro::CommandSystem>(mb);
+    m_gameScene.addSystem<cro::CallbackSystem>(mb);
     m_gameScene.addSystem<cro::SpriteSystem3D>(mb, 10.f); //water rings sprite :D
     m_gameScene.addSystem<cro::SpriteAnimator>(mb);
     m_gameScene.addSystem<cro::SkeletalAnimator>(mb);
