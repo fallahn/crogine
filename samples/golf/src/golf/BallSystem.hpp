@@ -89,7 +89,9 @@ public:
     glm::vec3 getWindDirection() const;
     void forceWindChange();
 
-    bool setHoleData(const struct HoleData&, bool rebuildMesh = true);
+    //this will modify the hole data by reading the collision
+    //mesh and correcting the height on the pin property.
+    bool setHoleData(struct HoleData&, bool rebuildMesh = true);
 
     void setGimmeRadius(std::uint8_t);
 

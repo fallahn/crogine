@@ -3009,6 +3009,10 @@ void GolfState::loadAssets()
             }
         }
 
+        //make sure the hole position matches the terrain
+        auto result = m_collisionMesh.getTerrain(hole.pin);
+        hole.pin.y = result.height;
+
         //while we're here check if this is a putting
         //course by looking to see if the tee is on the green
         hole.puttFromTee = m_collisionMesh.getTerrain(hole.tee).terrain == TerrainID::Green;
@@ -5491,8 +5495,7 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo)
             cmd.action = [&](cro::Entity en, float)
             {
                 auto pos = m_holeData[m_currentHole].pin;
-                auto terrain = m_collisionMesh.getTerrain(pos);
-                pos.y = terrain.height + 0.0001f;
+                pos.y += 0.0001f;
 
                 en.getComponent<cro::Transform>().setPosition(pos);
             };

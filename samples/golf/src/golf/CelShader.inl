@@ -480,16 +480,21 @@ static const std::string CelFragmentShader = R"(
         amount /= COLOUR_LEVELS;
         amount = AMOUNT_MIN + (amount * AMOUNT_MAX);
 
+        vec3 viewDirection = normalize(v_cameraWorldPosition - v_worldPosition.xyz);
 #if defined(COMP_SHADE)
+        float effectAmount = (1.0 - u_maskColour.r);
         float tilt  = dot(normal, vec3(0.0, 1.0, 0.0));
-        //tilt = ((smoothstep(0.97, 0.999, tilt) * 0.2)) * (1.0 - u_maskColour.r);
-        tilt = ((1.0 - smoothstep(0.97, 0.999, tilt)) * 0.2) * (1.0 - u_maskColour.r);
+        //tilt = ((smoothstep(0.97, 0.999, tilt) * 0.2)) * effectAmount;
+        tilt = ((1.0 - smoothstep(0.97, 0.999, tilt)) * 0.2) * effectAmount;
 
         colour.rgb = mix(colour.rgb, colour.rgb * SlopeShade, tilt);
 
-//float height = sin(3.14 * mod(v_worldPosition.y * 2.0, 1.0)) * 0.1;
-//colour.rgb *= 1.0 - height;
 
+        /*float rim = 1.0 - dot(normal, viewDirection);
+        rim = smoothstep(0.9, 1.0, rim);
+        rim = pow(rim, 5.0) * effectAmount;
+
+        colour.rg += rim * 0.08;*/
 
 #else
         colour.rgb *= amount;
@@ -522,7 +527,7 @@ static const std::string CelFragmentShader = R"(
         //colour.rgb = mix(complementaryColour(colour.rgb), colour.rgb, amount);
         colour.rgb *= amount;
 #endif
-        vec3 viewDirection = normalize(v_cameraWorldPosition - v_worldPosition.xyz);
+
 #if defined (SPECULAR)
         vec3 reflectDirection = reflect(-lightDirection, normal);
         float spec = pow(max(dot(viewDirection, reflectDirection), 0.50), 256.0);
@@ -619,14 +624,5 @@ static const std::string CelFragmentShader = R"(
 //if(v_worldPosition.y < WaterLevel) discard;//don't do this, it reveals the hidden trees.
 #endif
 //FRAG_OUT.rgb *= u_lightColour.rgb;
-//#if defined(COMP_SHADE) || defined(CONTOUR)
-#if defined(BUNS)
-        float rim = 1.0 - dot(normal, viewDirection);
-        rim = smoothstep(u_step, 1.0, rim);
-        rim = pow(rim, u_rim);
-        
-        //FRAG_OUT.rgb += vec3(rim * 0.05);
-        FRAG_OUT.rgb = mix(FRAG_OUT.rgb, FRAG_OUT.rgb * u_mm, rim);
 
-#endif
     })";

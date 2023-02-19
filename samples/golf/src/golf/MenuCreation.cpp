@@ -5132,7 +5132,7 @@ void MenuState::updateUnlockedItems()
         //create a timed enitity to delay this a bit
         cro::Entity e = m_uiScene.createEntity();
         e.addComponent<cro::Callback>().active = true;
-        e.getComponent<cro::Callback>().setUserData<float>(1.f);
+        e.getComponent<cro::Callback>().setUserData<float>(0.2f);
         e.getComponent<cro::Callback>().function =
             [&](cro::Entity ent, float dt)
         {

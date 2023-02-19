@@ -186,11 +186,14 @@ void BallSystem::forceWindChange()
     updateWind();
 }
 
-bool BallSystem::setHoleData(const HoleData& holeData, bool rebuildMesh)
+bool BallSystem::setHoleData(HoleData& holeData, bool rebuildMesh)
 {
     m_holeData = &holeData;
 
-    return rebuildMesh ? updateCollisionMesh(holeData.modelPath) : true;
+    auto result = rebuildMesh ? updateCollisionMesh(holeData.modelPath) : true;
+    holeData.pin.y = getTerrain(holeData.pin).intersection.y;
+
+    return result;
 }
 
 void BallSystem::setGimmeRadius(std::uint8_t rad)
