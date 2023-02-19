@@ -160,7 +160,6 @@ void CameraFollowSystem::process(float dt)
 
         if (!follower.target.isValid())
         {
-            LogI << "buns" << std::endl;
             continue;
         }
 
@@ -173,6 +172,7 @@ void CameraFollowSystem::process(float dt)
 
             auto ballPos = follower.target.getComponent<cro::Transform>().getPosition();
             auto target = ballPos + TargetOffset;
+            CRO_ASSERT(!std::isnan(target.x), "Target pos is NaN");
 
             follower.currentTarget = cro::Util::Maths::smoothDamp(follower.currentTarget, target, follower.velocity, CameraTrackTime + ((CameraTrackTime / 2.f) * follower.zoom.progress), dt);
 
@@ -182,7 +182,7 @@ void CameraFollowSystem::process(float dt)
             //and if we fall within the camera's radius
             //and if the player isn't standing too close
             const auto& collider = follower.target.getComponent<ClientCollider>();
-            if (!collider.active) LogI << "flaps" << std::endl;
+            //if (!collider.active) LogI << "flaps" << std::endl;
 
             if ((currentFollower.currentFollowTime < 0)
                 &&
