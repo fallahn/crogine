@@ -76,13 +76,11 @@ struct CameraFollower final
 
     cro::Entity target;
     glm::vec3 currentTarget = glm::vec3(0.f); //used to interpolate
-    glm::vec3 velocity = glm::vec3(0.f);
+    glm::vec3 velocity = glm::vec3(0.f); //used by the interpolation function
     glm::vec3 holePosition = glm::vec3(0.f); //used to tell if we should zoom
     glm::vec3 playerPosition = glm::vec3(0.f); //used to tell if we can be active (not if too close to player)
     float radius = 0.f; //camera becomes active when ball within this (should be ^2)
     float zoomRadius = 25.f; //dist^2 from hole when zoom becomes active
-
-    float targetRadius = 15.f; //radius at which point velocity starts to slow. Bigger is better further away
 
     static constexpr float MinFollowTime = 4.f;
     float currentFollowTime = 0.f;

@@ -42,14 +42,12 @@ source distribution.
 
 #include <crogine/util/Easings.hpp>
 #include <crogine/util/Random.hpp>
+#include <crogine/util/Maths.hpp>
 
 #include <crogine/gui/Gui.hpp>
 
 namespace
 {
-    //static constexpr float MaxOffsetDistance = 2500.f; //dist sqr
-    //static constexpr float MaxTargetDiff = 100.f; //25.f //sqr
-
     const std::array<std::string, CameraID::Count> CamNames =
     {
         "Player", "Bystander", "Sky", "Green", "Transition"
@@ -62,6 +60,8 @@ namespace
 
     //follows just above the target
     constexpr glm::vec3 TargetOffset(0.f, 0.2f, 0.f);
+
+    constexpr float CameraTrackTime = 0.25f; //approx delay in tracking interpolation
 }
 
 CameraFollowSystem::CameraFollowSystem(cro::MessageBus& mb)
@@ -153,38 +153,6 @@ void CameraFollowSystem::process(float dt)
     currentFollower.currentFollowTime -= dt;
 
 
-    const auto updateVelocity = [](glm::vec3 target, CameraFollower& follower, float dt)
-    {
-        static constexpr float Cohesion = 25.f;
-        static constexpr float MaxVelocity = 175.f;
-
-        auto diff = target - follower.currentTarget;
-
-        follower.velocity += diff * (Cohesion + (Cohesion * follower.zoom.progress));
-
-        if (auto l2 = glm::length2(follower.velocity); l2 > (MaxVelocity * MaxVelocity))
-        {
-            follower.velocity = (follower.velocity / glm::sqrt(l2)) * MaxVelocity;
-        }
-
-        //reduce radius with zoom
-        const float ActiveRadius = follower.targetRadius - ((follower.targetRadius / 2.f) * follower.zoom.progress);
-        const float RadiusMultiplier = cro::Util::Easing::easeOutExpo(std::clamp(glm::length2(diff) / (ActiveRadius * ActiveRadius), 0.f, 1.f));
-
-        //slow down as we near the target
-        follower.velocity *= RadiusMultiplier;
-
-        //but make sure we never go all the way to zero
-        if (glm::length2(follower.velocity) < glm::length2(diff))
-        {
-            follower.velocity = diff;
-        }
-
-        follower.currentTarget += follower.velocity * dt;
-    };
-
-
-
     auto& entities = getEntities();
     for (auto entity : entities)
     {
@@ -205,7 +173,7 @@ void CameraFollowSystem::process(float dt)
             auto ballPos = follower.target.getComponent<cro::Transform>().getPosition();
             auto target = ballPos + TargetOffset;
 
-            updateVelocity(target, follower, dt);
+            follower.currentTarget = cro::Util::Maths::smoothDamp(follower.currentTarget, target, follower.velocity, CameraTrackTime + ((CameraTrackTime / 2.f) * follower.zoom.progress), dt);
 
             auto lookAt = glm::lookAt(tx.getPosition(), follower.currentTarget, cro::Transform::Y_AXIS);
             tx.setLocalTransform(glm::inverse(lookAt));
@@ -280,7 +248,7 @@ void CameraFollowSystem::process(float dt)
 
                 auto& tx = entity.getComponent<cro::Transform>();
                 auto target = follower.target.getComponent<cro::Transform>().getPosition() + TargetOffset;
-                updateVelocity(target, follower, dt);
+                follower.currentTarget = cro::Util::Maths::smoothDamp(follower.currentTarget, target, follower.velocity, CameraTrackTime + ((CameraTrackTime / 2.f) * follower.zoom.progress), dt);
 
 
                 auto lookAt = glm::lookAt(tx.getPosition(), follower.currentTarget, cro::Transform::Y_AXIS);

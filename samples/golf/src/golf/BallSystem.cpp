@@ -67,7 +67,7 @@ namespace
     static constexpr float AngularVelocity = 46.5f; //rad/s at 1m/s vel. Used for rolling animation.
 
     static constexpr float MinVelocitySqr = 0.001f;// 0.005f;//0.04f
-    static constexpr float BallRollTimeout = -10.f;
+    static constexpr float BallRollTimeout = -8.f;
     static constexpr float BallTimeoutVelocity = 0.04f;
 
     static constexpr float MinRollVelocity = -0.25f;
@@ -327,7 +327,12 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
         auto terrainContact = getTerrain(position);
 
 
-        if (terrainContact.penetration > 0)
+        if (terrainContact.penetration < 0) //above ground
+        {
+            //we had a bump so add gravity
+            ball.velocity += Gravity * dt;
+        }
+        else if (terrainContact.penetration > 0)
         {
             //we've sunk into the ground so correct
             ball.velocity.y = 0.f;
@@ -353,12 +358,7 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
         terrainContact = getTerrain(newPos);
         ball.terrain = terrainContact.terrain;
 
-        if (terrainContact.penetration < 0) //above ground
-        {
-            //we had a bump so add gravity
-            ball.velocity += Gravity * dt;
-        }
-        else if (terrainContact.penetration > 0)
+        if (terrainContact.penetration > 0)
         {
             newPos.y = terrainContact.intersection.y;
             tx.setPosition(newPos);
@@ -399,10 +399,11 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
         }
 
         //finally check to see if we're slow enough to stop
+        constexpr float TimeOut = (BallRollTimeout / 2.f);
         auto len2 = glm::length2(ball.velocity);
         if (len2 < MinVelocitySqr
-            || ((ball.delay < BallRollTimeout) && (len2 < BallTimeoutVelocity))
-            || (ball.delay < (BallRollTimeout * 2.f)))
+            || ((ball.delay < TimeOut) && (len2 < BallTimeoutVelocity))
+            || (ball.delay < (TimeOut * 2.f)))
         {
             switch (terrainContact.terrain)
             {
@@ -570,6 +571,7 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
             if (terrainContact.terrain == TerrainID::Fairway)
             {
                 ball.state = Ball::State::Roll;
+                ball.terrain = TerrainID::Fairway;
                 //ball.delay = 0.f;
                 return;
             }

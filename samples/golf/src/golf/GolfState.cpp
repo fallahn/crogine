@@ -3871,7 +3871,6 @@ void GolfState::buildScene()
     camEnt.getComponent<cro::Camera>().setShadowExpansion(25.f);
     camEnt.addComponent<cro::CommandTarget>().ID = CommandID::SpectatorCam;
     camEnt.addComponent<CameraFollower>().radius = GreenCamRadiusLarge * GreenCamRadiusLarge;
-    camEnt.getComponent<CameraFollower>().targetRadius = 4.f;
     camEnt.getComponent<CameraFollower>().id = CameraID::Green;
     camEnt.getComponent<CameraFollower>().zoom.speed = GreenCamZoomFast;
     camEnt.addComponent<cro::AudioListener>();
