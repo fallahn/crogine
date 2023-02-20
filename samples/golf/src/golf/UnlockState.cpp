@@ -70,6 +70,8 @@ source distribution.
 
 namespace
 {
+#include "UnlockShader.inl"
+
     struct ItemCallbackData final
     {
         enum
@@ -251,6 +253,14 @@ void UnlockState::addSystems()
     m_audioEnts[AudioID::Cheer].addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("unlock");
 
     m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+
+    m_celShader.loadFromString(UnlockVertex, UnlockFragment);
+    m_reflectionShader.loadFromString(UnlockVertex, UnlockFragment, "#define REFLECTION\n");
+    m_cubemap.loadFromFile("assets/golf/images/skybox/billiards/trophy.ccm");
+
+    m_materials[0].setShader(m_celShader);
+    m_materials[1].setShader(m_reflectionShader);
+    m_materials[1].setProperty("u_reflectMap", cro::CubemapID(m_cubemap));
 }
 
 void UnlockState::buildScene()
@@ -545,7 +555,11 @@ void UnlockState::buildUI()
         if (md.loadFromFile(ul::ModelPaths[ul::Items[unlockID].modelID]))
         {
             md.createModel(entity);
-            //TODO set correct material
+            
+            for (auto i = 0u; i < entity.getComponent<cro::Model>().getMeshData().submeshCount; ++i)
+            {
+                entity.getComponent<cro::Model>().setMaterial(i, m_materials[i]);
+            }
 
             //scale all models to more or less the same size
             auto sphere = entity.getComponent<cro::Model>().getBoundingSphere();

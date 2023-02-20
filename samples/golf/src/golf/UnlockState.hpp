@@ -35,6 +35,11 @@ source distribution.
 #include <crogine/audio/AudioScape.hpp>
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/graphics/RenderTexture.hpp>
+#include <crogine/graphics/CubemapTexture.hpp>
+#include <crogine/graphics/MaterialData.hpp>
+#include <crogine/graphics/Shader.hpp>
+
+#include <array>
 
 struct SharedStateData;
 
@@ -91,6 +96,13 @@ private:
     cro::Entity m_particleNode;
 
     cro::RenderTexture m_modelTexture;
+
+    //TODO these would probably be faster to load
+    //in shader resources, and would be more consistent
+    cro::Shader m_celShader;
+    cro::Shader m_reflectionShader;
+    cro::CubemapTexture m_cubemap;
+    std::array<cro::Material::Data, 2u> m_materials = {};
 
     void addSystems();
     void buildScene();
