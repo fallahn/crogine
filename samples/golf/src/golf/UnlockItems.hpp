@@ -51,11 +51,14 @@ namespace ul
         {
             Wood,
             Iron,
+
             BronzeCup,
             SilverCup,
             GoldCup,
             PlatinumCup,
             DiamondCup,
+
+            LevelBadge,
 
             Count
         };
@@ -65,11 +68,12 @@ namespace ul
     {
         std::string("assets/golf/models/club_wood.cmt"),
         std::string("assets/golf/models/club_iron.cmt"),
-        std::string("assets/golf/models/trophies/trophy01.cmt"),
-        std::string("assets/golf/models/trophies/trophy02.cmt"),
-        std::string("assets/golf/models/trophies/trophy03.cmt"),
+        std::string("assets/golf/models/balls/ball_bronze.cmt"),
+        std::string("assets/golf/models/balls/ball_silver.cmt"),
+        std::string("assets/golf/models/balls/ball_gold.cmt"),
         std::string("assets/golf/models/trophies/trophy04.cmt"),
-        std::string("assets/golf/models/trophies/trophy05.cmt")
+        std::string("assets/golf/models/trophies/trophy05.cmt"),
+        std::string("assets/golf/models/trophies/trophy06.cmt"),
     };
 
     //these MUST be in the correct order for unlocking
@@ -89,6 +93,12 @@ namespace ul
             PlatinumBall,
             DiamondBall,
 
+            Level1,
+            Level10,
+            Level20,
+            Level30,
+            Level40,
+            Level50,
 
             Count
         };
@@ -107,5 +117,12 @@ namespace ul
         { ModelID::GoldCup,     "Gold Ball",     "New Golf Ball!" },
         { ModelID::PlatinumCup, "Platinum Ball", "New Golf Ball!" },
         { ModelID::DiamondCup,  "Diamond Ball",  "New Golf Ball!" },
+
+        { ModelID::LevelBadge,  "Level One",     "New Level Reached!" },
+        { ModelID::LevelBadge,  "Level Ten",     "New Level Reached!" },
+        { ModelID::LevelBadge,  "Level Twenty",  "New Level Reached!" },
+        { ModelID::LevelBadge,  "Level Thirty",  "New Level Reached!" },
+        { ModelID::LevelBadge,  "Level Forty",   "New Level Reached!" },
+        { ModelID::LevelBadge,  "Level Fifty",   "New Level Reached!" },
     };
 }
