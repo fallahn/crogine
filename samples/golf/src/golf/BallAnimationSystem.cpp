@@ -57,7 +57,7 @@ void BallAnimationSystem::process(float dt)
             auto len = glm::sqrt(len2);
             auto forward = interp.getVelocity() / len;
 
-            if (auto d = dot(forward, cro::Transform::Y_AXIS);
+            if (auto d = glm::dot(forward, cro::Transform::Y_AXIS);
                 d < 0.9f && d > -0.9f)
             {
                 auto rightVec = glm::cross(cro::Transform::Y_AXIS, forward);

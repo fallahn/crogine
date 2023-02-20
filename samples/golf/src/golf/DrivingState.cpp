@@ -2159,8 +2159,11 @@ void DrivingState::createBall()
 
     //render the ball as a point so no perspective is applied to the scale
     auto material = m_resources.materials.get(ballMaterialID);
+
     cro::ModelDefinition ballDef(m_resources);
     material.setProperty("u_colour", TextNormalColour);
+    bool rollBall = true;
+
     auto ball = std::find_if(m_sharedData.ballModels.begin(), m_sharedData.ballModels.end(),
         [ballID](const SharedStateData::BallInfo& ballPair)
         {
@@ -2170,6 +2173,8 @@ void DrivingState::createBall()
     {
         material.setProperty("u_colour", ball->tint);
         ballDef.loadFromFile(ball->modelPath);
+
+        rollBall = ball->rollAnimation;
     }
     else
     {
@@ -2299,6 +2304,42 @@ void DrivingState::createBall()
     entity.getComponent<cro::Model>().setMaterial(0, m_resources.materials.get(m_materialIDs[MaterialID::Cel]));
     entity.getComponent<cro::Model>().setRenderFlags(~RenderFlags::MiniMap);
     ballEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    if (rollBall)
+    {
+        entity.getComponent<cro::Transform>().move({ 0.f, Ball::Radius, 0.f });
+        entity.getComponent<cro::Transform>().setOrigin({ 0.f, Ball::Radius, 0.f });
+
+        entity.addComponent<cro::Callback>().active = true;
+        entity.getComponent<cro::Callback>().function =
+            [ballEnt](cro::Entity e, float dt)
+        {
+            auto velocity = ballEnt.getComponent<Ball>().velocity;
+            if (auto len2 = glm::length2(velocity); len2 != 0)
+            {
+                auto len = glm::sqrt(len2);
+                auto forward = velocity / len;
+
+                if (auto d = dot(forward, cro::Transform::Y_AXIS);
+                    d < 0.9f && d > -0.9f)
+                {
+                    auto rightVec = glm::cross(cro::Transform::Y_AXIS, forward);
+                    CRO_ASSERT(!std::isnan(rightVec.x), "");
+
+                    rightVec = glm::inverse(glm::toMat3(ballEnt.getComponent<cro::Transform>().getRotation())) * rightVec;
+                    CRO_ASSERT(!std::isnan(rightVec.x), "NaN from parent rotation");
+
+                    rightVec = glm::inverse(glm::toMat3(e.getComponent<cro::Transform>().getRotation())) * rightVec;
+                    CRO_ASSERT(!std::isnan(rightVec.x), "NaN from ball rotation");
+
+                    float rotation = (len / Ball::Radius);
+                    CRO_ASSERT(!std::isnan(rotation), "");
+
+                    e.getComponent<cro::Transform>().rotate(rightVec, rotation * dt);
+                }
+            }
+        };
+    }
 
 #ifdef CRO_DEBUG_
     ballEntity = ballEnt;

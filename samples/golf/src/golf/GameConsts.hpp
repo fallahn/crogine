@@ -335,9 +335,9 @@ static inline glm::quat lookRotation(glm::vec3 eye, glm::vec3 target, glm::vec3 
     CRO_ASSERT(glm::length2(forward) != 0, "");
 
     forward = glm::normalize(forward);
-    auto right = glm::cross(up, forward);
+    auto right = glm::normalize(glm::cross(up, forward));
     CRO_ASSERT(!std::isnan(right.x), "Right vec is NaN");
-    auto upNew = glm::cross(forward, right);
+    auto upNew = glm::normalize(glm::cross(forward, right));
     CRO_ASSERT(!std::isnan(upNew.x), "Up vec is NaN");
 
     glm::mat3 m(right, upNew, forward);
