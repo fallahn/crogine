@@ -89,6 +89,8 @@ namespace
             return false;
         }
     };
+
+    const std::uint32_t PreviewSize = 192;
 }
 
 UnlockState::UnlockState(cro::StateStack& ss, cro::State::Context ctx, SharedStateData& sd)
@@ -197,6 +199,9 @@ bool UnlockState::handleEvent(const cro::Event& evt)
 
 void UnlockState::handleMessage(const cro::Message& msg)
 {
+    //make sure this happens first
+    //because the model scene relies
+    //on the viewScale being set by it
     m_scene.forwardMessage(msg);
     m_modelScene.forwardMessage(msg);
 }
@@ -246,22 +251,25 @@ void UnlockState::addSystems()
     m_audioEnts[AudioID::Cheer].addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("unlock");
 
     m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
-
-
-    m_modelTexture.create(192, 192, true, false, m_sharedData.multisamples);
 }
 
 void UnlockState::buildScene()
 {
-    //entity to play firework particles - TODO might be simpler to move to 3D scene
+    //entity to play firework particles
     auto entity = m_modelScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 0.f, -0.5f, 2.f });
     entity.addComponent<cro::ParticleEmitter>().settings.loadFromFile("assets/golf/particles/firework.cps", m_sharedData.sharedResources->textures);
     m_particleNode = entity;
 
 
-    auto resizeCallback = [](cro::Camera& cam)
+    auto resizeCallback = [&](cro::Camera& cam)
     {
+        auto windowSize = glm::vec2(GolfGame::getActiveTarget()->getSize());
+        auto vpSize = calcVPSize();
+
+        auto size = PreviewSize * static_cast<std::uint32_t>(windowSize.y / vpSize.y);
+        m_modelTexture.create(size, size, true, false, m_sharedData.multisamples);
+
         cam.setPerspective(70.f * cro::Util::Const::degToRad, 1.f, 0.1f, 10.f);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
@@ -375,7 +383,15 @@ void UnlockState::buildUI()
             static constexpr float HoldTime = 10.f;
             static constexpr float OutTime = InTime;
 
+            const float PreviewScale = 1.f / m_viewScale.x;
+            const cro::FloatRect PreviewRect = { glm::vec2(0.f), glm::vec2(m_modelTexture.getSize()) };
+            const glm::vec2 PreviewOrigin(PreviewRect.width / 2.f, PreviewRect.height / 2.f);
+
+            
             auto& collection = m_unlockCollections[m_itemIndex];
+            collection.modelSprite.getComponent<cro::Sprite>().setTextureRect(PreviewRect);
+            collection.modelSprite.getComponent<cro::Transform>().setOrigin(PreviewOrigin);
+
 
             auto& data = e.getComponent<cro::Callback>().getUserData<ItemCallbackData>();
             data.stateTime += dt;
@@ -406,7 +422,7 @@ void UnlockState::buildUI()
                 collection.name.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
 
                 float modelScale = cro::Util::Easing::easeOutExpo(scale);
-                collection.modelSprite.getComponent<cro::Transform>().setScale(glm::vec2(modelScale));
+                collection.modelSprite.getComponent<cro::Transform>().setScale(glm::vec2(modelScale) * PreviewScale);
                 collection.modelNode.getComponent<cro::Transform>().setScale(glm::vec3(modelScale) * collection.modelScale);
                 collection.modelNode.getComponent<cro::Transform>().setRotation(modelScale * cro::Util::Const::TAU * 4.f);
 
@@ -428,6 +444,7 @@ void UnlockState::buildUI()
                     data.stateTime = 0.f;
                     data.state = ItemCallbackData::Out;
                 }
+                collection.modelSprite.getComponent<cro::Transform>().setScale(glm::vec2(PreviewScale));
                 collection.modelNode.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, dt);
                 break;
             case ItemCallbackData::Out:
@@ -452,7 +469,7 @@ void UnlockState::buildUI()
                 collection.modelSprite.getComponent<cro::Transform>().setScale(glm::vec2(bgScale));
 
                 float modelScale = cro::Util::Easing::easeOutExpo(1.f - scale);
-                collection.modelSprite.getComponent<cro::Transform>().setScale(glm::vec2(modelScale));
+                collection.modelSprite.getComponent<cro::Transform>().setScale(glm::vec2(modelScale) * PreviewScale);
                 collection.modelNode.getComponent<cro::Transform>().setScale(glm::vec3(modelScale) * collection.modelScale);
                 collection.modelNode.getComponent<cro::Transform>().setRotation(modelScale * cro::Util::Const::TAU * 4.f);
 
@@ -463,6 +480,7 @@ void UnlockState::buildUI()
                     m_scene.destroyEntity(collection.name);
                     m_scene.destroyEntity(collection.title);
                     m_scene.destroyEntity(collection.modelSprite);
+                    m_modelScene.destroyEntity(collection.modelNode);
 
                     m_itemIndex++;
 
