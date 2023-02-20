@@ -1846,7 +1846,7 @@ void GolfState::loadAssets()
     m_modelDefs[ModelID::PlayerShadow]->loadFromFile("assets/golf/models/player_shadow.cmt");
 
     //ball models - the menu should never have let us get this far if it found no ball files
-    for (const auto& [colour, uid, path, _] : m_sharedData.ballModels)
+    for (const auto& [colour, uid, path, _1, _2] : m_sharedData.ballModels)
     {
         std::unique_ptr<cro::ModelDefinition> def = std::make_unique<cro::ModelDefinition>(m_resources);
         m_ballModels.insert(std::make_pair(uid, std::move(def)));

@@ -280,6 +280,49 @@ void MenuState::createBallScene()
     }
 
 
+    //TODO read in the info for unlockable balls - if valid
+    //info is unlocked add it to ballModels now so it appears
+    //in the preview window
+    //else add it to the list afterwards so it can be rendered
+    //in game, but not selected by the player
+    const std::array SpecialPaths =
+    {
+        std::string("assets/golf/special/10.spec"),
+        std::string("assets/golf/special/20.spec"),
+        std::string("assets/golf/special/30.spec"),
+        //std::string("assets/golf/special/40.spec"),
+        //std::string("assets/golf/special/50.spec")
+    };
+    const auto level = Social::getLevel();
+    std::vector<SharedStateData::BallInfo> delayedEntries;
+    for (auto i = 0u; i < SpecialPaths.size(); ++i)
+    {
+        cro::ConfigFile cfg;
+        if (cfg.loadFromFile(SpecialPaths[i]))
+        {
+            auto info = readBallCfg(cfg);
+
+            //if we didn't find a UID create one from the file name and save it to the cfg
+            if (info.uid == 0)
+            {
+                info.uid = SpookyHash::Hash32(SpecialPaths[i].data(), SpecialPaths[i].size(), 0);
+                cfg.addProperty("uid").setValue(info.uid);
+                cfg.save(SpecialPaths[i]);
+            }
+
+            if (level > (i + 1) * 10)
+            {
+                insertInfo(info, m_sharedData.ballModels, true);
+            }
+            else
+            {
+                info.locked = true;
+                delayedEntries.push_back(info);
+            }
+        }
+    }
+
+
     //load each model for the preview in the player menu
     cro::ModelDefinition ballDef(m_resources);
     cro::ModelDefinition shadowDef(m_resources);
@@ -347,6 +390,12 @@ void MenuState::createBallScene()
             //probably should remove from the ball models vector so that it's completely vetted
             invalidBalls.push_back(m_sharedData.ballModels[i].uid);
         }
+    }
+
+    //add delayed entries for in-game rendering
+    for (const auto& info : delayedEntries)
+    {
+        insertInfo(info, m_sharedData.ballModels, true);
     }
 
     //tidy up bad balls.

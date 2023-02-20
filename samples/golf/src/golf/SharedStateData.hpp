@@ -110,6 +110,7 @@ struct SharedStateData final
         std::uint32_t uid = 0;
         std::string modelPath;
         bool rollAnimation = true;
+        bool locked = false;
         BallInfo() {}
         BallInfo(cro::Colour c, std::uint32_t i, const std::string& str)
             : tint(c), uid(i), modelPath(str) {}

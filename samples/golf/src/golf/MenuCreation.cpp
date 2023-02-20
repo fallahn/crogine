@@ -1588,7 +1588,10 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
                 auto playerIndex = e.getComponent<cro::Callback>().getUserData<std::int32_t>();
 
                 auto idx = m_ballIndices[playerIndex];
-                idx = (idx + (m_sharedData.ballModels.size() - 1)) % m_sharedData.ballModels.size();
+                do
+                {
+                    idx = (idx + (m_sharedData.ballModels.size() - 1)) % m_sharedData.ballModels.size();
+                } while (m_sharedData.ballModels[idx].locked);
                 m_sharedData.localConnectionData.playerData[playerIndex].ballID = m_sharedData.ballModels[idx].uid;
                 m_ballIndices[playerIndex] = idx;
 
@@ -1604,7 +1607,10 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
                 auto playerIndex = e.getComponent<cro::Callback>().getUserData<std::int32_t>();
 
                 auto idx = m_ballIndices[playerIndex];
-                idx = (idx + 1) % m_sharedData.ballModels.size();
+                do
+                {
+                    idx = (idx + 1) % m_sharedData.ballModels.size();
+                } while (m_sharedData.ballModels[idx].locked);
                 m_sharedData.localConnectionData.playerData[playerIndex].ballID = m_sharedData.ballModels[idx].uid;
                 m_ballIndices[playerIndex] = idx;
 
@@ -3589,7 +3595,10 @@ void MenuState::createPlayerConfigMenu()
                     m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
 
                     auto idx = m_ballIndices[m_activePlayerAvatar];
-                    idx = (idx + (m_sharedData.ballModels.size() - 1)) % m_sharedData.ballModels.size();
+                    do
+                    {
+                        idx = (idx + (m_sharedData.ballModels.size() - 1)) % m_sharedData.ballModels.size();
+                    } while (m_sharedData.ballModels[idx].locked);
                     m_sharedData.localConnectionData.playerData[m_activePlayerAvatar].ballID = m_sharedData.ballModels[idx].uid;
                     m_ballIndices[m_activePlayerAvatar] = idx;
 
@@ -3609,7 +3618,10 @@ void MenuState::createPlayerConfigMenu()
                     m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
 
                     auto idx = m_ballIndices[m_activePlayerAvatar];
-                    idx = (idx + 1) % m_sharedData.ballModels.size();
+                    do
+                    {
+                        idx = (idx + 1) % m_sharedData.ballModels.size();
+                    } while (m_sharedData.ballModels[idx].locked);
                     m_sharedData.localConnectionData.playerData[m_activePlayerAvatar].ballID = m_sharedData.ballModels[idx].uid;
                     m_ballIndices[m_activePlayerAvatar] = idx;
 
