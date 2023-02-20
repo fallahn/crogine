@@ -248,14 +248,14 @@ void UnlockState::addSystems()
     m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
 
 
-    m_modelTexture.create(192, 192);
+    m_modelTexture.create(192, 192, true, false, m_sharedData.multisamples);
 }
 
 void UnlockState::buildScene()
 {
     //entity to play firework particles - TODO might be simpler to move to 3D scene
     auto entity = m_modelScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 2.f });
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, -0.5f, 2.f });
     entity.addComponent<cro::ParticleEmitter>().settings.loadFromFile("assets/golf/particles/firework.cps", m_sharedData.sharedResources->textures);
     m_particleNode = entity;
 
@@ -266,7 +266,7 @@ void UnlockState::buildScene()
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
     auto camEnt = m_modelScene.getActiveCamera();
-    camEnt.getComponent<cro::Transform>().setPosition({ 0.f, 0.f, 3.f });
+    camEnt.getComponent<cro::Transform>().setPosition({ 0.f, -0.1f, 3.f });
     camEnt.getComponent<cro::Camera>().resizeCallback = resizeCallback;
     resizeCallback(camEnt.getComponent<cro::Camera>());
 }
@@ -354,6 +354,8 @@ void UnlockState::buildUI()
     auto& largeFont = m_sharedData.sharedResources->fonts.get(FontID::UI);
     auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
 
+    cro::ModelDefinition md(*m_sharedData.sharedResources);
+
     const auto createItem = [&](std::int32_t unlockID)
     {
         auto& collection = m_unlockCollections.emplace_back();
@@ -403,7 +405,10 @@ void UnlockState::buildUI()
                 collection.name.getComponent<cro::Transform>().setPosition(pos);
                 collection.name.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
 
-                collection.model.getComponent<cro::Transform>().setScale(glm::vec2(bgScale));
+                float modelScale = cro::Util::Easing::easeOutExpo(scale);
+                collection.modelSprite.getComponent<cro::Transform>().setScale(glm::vec2(modelScale));
+                collection.modelNode.getComponent<cro::Transform>().setScale(glm::vec3(modelScale) * collection.modelScale);
+                collection.modelNode.getComponent<cro::Transform>().setRotation(modelScale * cro::Util::Const::TAU * 4.f);
 
                 if (data.stateTime > InTime)
                 {
@@ -423,6 +428,7 @@ void UnlockState::buildUI()
                     data.stateTime = 0.f;
                     data.state = ItemCallbackData::Out;
                 }
+                collection.modelNode.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, dt);
                 break;
             case ItemCallbackData::Out:
             {
@@ -443,7 +449,12 @@ void UnlockState::buildUI()
                 pos.x = std::floor(windowWidth * textScale);
                 collection.name.getComponent<cro::Transform>().setPosition(pos);
 
-                collection.model.getComponent<cro::Transform>().setScale(glm::vec2(bgScale));
+                collection.modelSprite.getComponent<cro::Transform>().setScale(glm::vec2(bgScale));
+
+                float modelScale = cro::Util::Easing::easeOutExpo(1.f - scale);
+                collection.modelSprite.getComponent<cro::Transform>().setScale(glm::vec2(modelScale));
+                collection.modelNode.getComponent<cro::Transform>().setScale(glm::vec3(modelScale) * collection.modelScale);
+                collection.modelNode.getComponent<cro::Transform>().setRotation(modelScale * cro::Util::Const::TAU * 4.f);
 
                 if (data.stateTime > OutTime)
                 {
@@ -451,7 +462,7 @@ void UnlockState::buildUI()
                     m_scene.destroyEntity(collection.description);
                     m_scene.destroyEntity(collection.name);
                     m_scene.destroyEntity(collection.title);
-                    m_scene.destroyEntity(collection.model);
+                    m_scene.destroyEntity(collection.modelSprite);
 
                     m_itemIndex++;
 
@@ -486,7 +497,7 @@ void UnlockState::buildUI()
 
         //unlock description
         entity = m_scene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition({ 0.f, 82.f, 0.1f });
+        entity.addComponent<cro::Transform>().setPosition({ 0.f, 82.f, 0.5f });
         entity.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
         entity.addComponent<cro::Drawable2D>();
         entity.addComponent<cro::Text>(largeFont).setString(ul::Items[unlockID].description);
@@ -501,17 +512,35 @@ void UnlockState::buildUI()
         //item preview
         entity = m_scene.createEntity();
         entity.addComponent<cro::Transform>().setScale(glm::vec2(0.f));
-        entity.getComponent<cro::Transform>().setPosition({ 0.f, -30.f, 0.5f });
+        entity.getComponent<cro::Transform>().setPosition({ 0.f, -30.f, 0.2f });
         entity.addComponent<cro::Drawable2D>();
         entity.addComponent<cro::Sprite>(m_modelTexture.getTexture());
         bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
         entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
         m_rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-        collection.model = entity;
+        collection.modelSprite = entity;
+
+
+        //note the model is n a different scene...
+        entity = m_modelScene.createEntity();
+        entity.addComponent<cro::Transform>();
+        if (md.loadFromFile(ul::ModelPaths[ul::Items[unlockID].modelID]))
+        {
+            md.createModel(entity);
+            //TODO set correct material
+
+            //scale all models to more or less the same size
+            auto sphere = entity.getComponent<cro::Model>().getBoundingSphere();
+            float scale = 1.6f / sphere.radius;
+            collection.modelScale = scale;
+            entity.getComponent<cro::Transform>().setScale(glm::vec3(0.f));
+            entity.getComponent<cro::Transform>().setOrigin(sphere.centre);
+        }
+        collection.modelNode = entity;
 
         //unlock name
         entity = m_scene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition({ 0.f, -102.f, 0.1f });
+        entity.addComponent<cro::Transform>().setPosition({ 0.f, -102.f, 0.5f });
         entity.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
         entity.addComponent<cro::Drawable2D>();
         entity.addComponent<cro::Text>(smallFont).setString(ul::Items[unlockID].name);

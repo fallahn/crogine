@@ -50,6 +50,7 @@ source distribution.
 #include "golf/GameConsts.hpp"
 #include "golf/MessageIDs.hpp"
 #include "golf/PacketIDs.hpp"
+#include "golf/UnlockItems.hpp"
 #include "editor/BushState.hpp"
 #include "LoadingScreen.hpp"
 #include "SplashScreenState.hpp"
@@ -635,6 +636,11 @@ bool GolfGame::initialise()
     md.loadFromFile("assets/golf/models/trophies/trophy06.cmt");
     md.loadFromFile("assets/golf/models/trophies/trophy07.cmt");
     md.loadFromFile("assets/golf/models/trophies/trophy08.cmt");
+
+    for (const auto& str : ul::ModelPaths) //models displayed in 'unlock' state
+    {
+        md.loadFromFile(str);
+    }
 
     //set up the post process
     auto windowSize = cro::App::getWindow().getSize();

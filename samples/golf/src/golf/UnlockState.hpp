@@ -65,7 +65,9 @@ private:
         cro::Entity description;
         cro::Entity name;
         cro::Entity title;
-        cro::Entity model;
+        cro::Entity modelSprite;
+        cro::Entity modelNode;
+        float modelScale = 1.f;
     };
     std::size_t m_itemIndex;
     std::vector<UnlockCollection> m_unlockCollections;

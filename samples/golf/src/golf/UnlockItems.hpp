@@ -61,6 +61,17 @@ namespace ul
         };
     };
 
+    static const std::array<std::string, ModelID::Count> ModelPaths = 
+    {
+        std::string("assets/golf/models/club_wood.cmt"),
+        std::string("assets/golf/models/club_iron.cmt"),
+        std::string("assets/golf/models/trophies/trophy01.cmt"),
+        std::string("assets/golf/models/trophies/trophy02.cmt"),
+        std::string("assets/golf/models/trophies/trophy03.cmt"),
+        std::string("assets/golf/models/trophies/trophy04.cmt"),
+        std::string("assets/golf/models/trophies/trophy05.cmt")
+    };
+
     //these MUST be in the correct order for unlocking
     struct UnlockID final
     {
