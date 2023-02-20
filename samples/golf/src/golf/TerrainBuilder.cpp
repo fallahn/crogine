@@ -1048,10 +1048,11 @@ void TerrainBuilder::threadFunc()
                 static constexpr float DashCount = 80.f; //actual div by TAU cos its sin but eh.
                 static constexpr float SlopeSpeed = -30.f;//REMEMBER this const is also used in the slope frag shader
                 static constexpr std::int32_t AvgDistance = 1;
-                static constexpr std::int32_t GridDensity = 2; //grids per metre. Can only be 1,2 or 4 to match Normal Map resolution
+                static constexpr std::int32_t GridDensity = 4; //verts per metre, however grid size is half this. Can only be 1,2 or 4 to match Normal Map resolution
                 static constexpr float GridSpacing = 1.f / GridDensity;
 
-                static constexpr float epsilon = 0.02f; //pushes grid off the surface by this much. TODO push along normals, not upwards
+                static constexpr float SurfaceOffset = 0.02f; //verts are pushed along normal by this much
+
                 for (auto y = 0; y < (SlopeGridSize * GridDensity); ++y)
                 {
                     for (auto x = 0; x < (SlopeGridSize * GridDensity); ++x)
@@ -1071,7 +1072,7 @@ void TerrainBuilder::threadFunc()
                             worldX = startX * GridDensity + x;
                             worldY = startY * GridDensity + y;
 
-                            auto height = (readHeightMap(worldX, worldY, GridDensity) - pinPos.y) + epsilon;
+                            auto height = (readHeightMap(worldX, worldY, GridDensity) - pinPos.y);
                             SlopeVertex vert;
                             vert.position = { posX, height, posZ };
                             vert.normal = readNormal(worldX, worldY, GridDensity);
@@ -1081,12 +1082,12 @@ void TerrainBuilder::threadFunc()
                             vert.texCoord = { 0.f, 0.f };
 
                             glm::vec3 offset(GridSpacing, 0.f, 0.f);
-                            height = (readHeightMap(worldX + 1, worldY, GridDensity) - pinPos.y) + epsilon;
+                            height = (readHeightMap(worldX + 1, worldY, GridDensity) - pinPos.y);
 
                             //because of the low precision of the height map
                             //we average out the slope over a greater distance
                             glm::vec3 avgPosition = vert.position + glm::vec3(AvgDistance, 0.f, 0.f);
-                            avgPosition.y = (readHeightMap(worldX + AvgDistance, worldY, GridDensity) - pinPos.y) + epsilon;
+                            avgPosition.y = (readHeightMap(worldX + AvgDistance, worldY, GridDensity) - pinPos.y);
 
                             SlopeVertex vert2;
                             vert2.position = vert.position + offset;
@@ -1101,10 +1102,10 @@ void TerrainBuilder::threadFunc()
                             auto vert3 = vert;
 
                             offset = glm::vec3(0.f, 0.f, -GridSpacing);
-                            height = (readHeightMap(worldX, worldY + 1, GridDensity) - pinPos.y) + epsilon;
+                            height = (readHeightMap(worldX, worldY + 1, GridDensity) - pinPos.y);
 
                             avgPosition = vert.position + glm::vec3(0.f, 0.f, -AvgDistance);
-                            avgPosition.y = (readHeightMap(worldX, worldY + AvgDistance, GridDensity) - pinPos.y) + epsilon;
+                            avgPosition.y = (readHeightMap(worldX, worldY + AvgDistance, GridDensity) - pinPos.y);
 
                             SlopeVertex vert4;
                             vert4.position = vert.position + offset;
@@ -1113,16 +1114,30 @@ void TerrainBuilder::threadFunc()
                             vert4.texCoord = { DashCount / GridDensity, std::min(glm::dot(glm::vec3(0.f, 1.f, 0.f), glm::normalize(avgPosition - vert3.position)) * SlopeSpeed, 1.f) };
                             vert3.texCoord.y = vert4.texCoord.y;
 
+                            vert.position += vert.normal * SurfaceOffset;
+                            vert2.position += vert2.normal * SurfaceOffset;
+                            vert3.position += vert3.normal * SurfaceOffset;
+                            vert4.position += vert4.normal * SurfaceOffset;
 
                             //do this last once we know everything was modified
-                            m_slopeBuffer.push_back(vert);
-                            m_slopeIndices.push_back(currIndex++);
-                            m_slopeBuffer.push_back(vert2);
-                            m_slopeIndices.push_back(currIndex++);
-                            m_slopeBuffer.push_back(vert3);
-                            m_slopeIndices.push_back(currIndex++);
-                            m_slopeBuffer.push_back(vert4);
-                            m_slopeIndices.push_back(currIndex++);
+                            //TODO this is a lazy addition where we could really skip
+                            //all vert processing entirely when not needed, but it
+                            //doesn't actually make processing time *worse*
+                            if (y % 2)
+                            {
+                                m_slopeBuffer.push_back(vert);
+                                m_slopeIndices.push_back(currIndex++);
+                                m_slopeBuffer.push_back(vert2);
+                                m_slopeIndices.push_back(currIndex++);
+                            }
+
+                            if (x % 2)
+                            {
+                                m_slopeBuffer.push_back(vert3);
+                                m_slopeIndices.push_back(currIndex++);
+                                m_slopeBuffer.push_back(vert4);
+                                m_slopeIndices.push_back(currIndex++);
+                            }
                         }
                     }
                 }
