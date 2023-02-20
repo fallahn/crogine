@@ -50,14 +50,18 @@ source distribution.
 #include <crogine/ecs/components/Camera.hpp>
 #include <crogine/ecs/components/Drawable2D.hpp>
 #include <crogine/ecs/components/AudioEmitter.hpp>
+#include <crogine/ecs/components/ParticleEmitter.hpp>
+#include <crogine/ecs/components/Model.hpp>
 
 #include <crogine/ecs/systems/CommandSystem.hpp>
 #include <crogine/ecs/systems/CallbackSystem.hpp>
 #include <crogine/ecs/systems/SpriteSystem2D.hpp>
 #include <crogine/ecs/systems/SpriteAnimator.hpp>
+#include <crogine/ecs/systems/ParticleSystem.hpp>
 #include <crogine/ecs/systems/TextSystem.hpp>
 #include <crogine/ecs/systems/CameraSystem.hpp>
 #include <crogine/ecs/systems/RenderSystem2D.hpp>
+#include <crogine/ecs/systems/ModelRenderer.hpp>
 #include <crogine/ecs/systems/AudioPlayerSystem.hpp>
 
 #include <crogine/util/Easings.hpp>
@@ -90,12 +94,15 @@ namespace
 UnlockState::UnlockState(cro::StateStack& ss, cro::State::Context ctx, SharedStateData& sd)
     : cro::State(ss, ctx),
     m_scene     (ctx.appInstance.getMessageBus()),
+    m_modelScene(ctx.appInstance.getMessageBus()),
     m_sharedData(sd),
     m_viewScale (2.f)
 {
     ctx.mainWindow.setMouseCaptured(false);
 
+    addSystems();
     buildScene();
+    buildUI();
 }
 
 //public
@@ -184,27 +191,34 @@ bool UnlockState::handleEvent(const cro::Event& evt)
     }
 
     m_scene.forwardEvent(evt);
+    m_modelScene.forwardEvent(evt);
     return false;
 }
 
 void UnlockState::handleMessage(const cro::Message& msg)
 {
     m_scene.forwardMessage(msg);
+    m_modelScene.forwardMessage(msg);
 }
 
 bool UnlockState::simulate(float dt)
 {
     m_scene.simulate(dt);
+    m_modelScene.simulate(dt);
     return true;
 }
 
 void UnlockState::render()
 {
+    m_modelTexture.clear(cro::Colour::Transparent);
+    m_modelScene.render();
+    m_modelTexture.display();
+
     m_scene.render();
 }
 
 //private
-void UnlockState::buildScene()
+void UnlockState::addSystems()
 {
     auto& mb = getContext().appInstance.getMessageBus();
     m_scene.addSystem<cro::CommandSystem>(mb);
@@ -215,6 +229,11 @@ void UnlockState::buildScene()
     m_scene.addSystem<cro::CameraSystem>(mb);
     m_scene.addSystem<cro::RenderSystem2D>(mb);
     m_scene.addSystem<cro::AudioPlayerSystem>(mb);
+
+    m_modelScene.addSystem<cro::CallbackSystem>(mb);
+    m_modelScene.addSystem<cro::CameraSystem>(mb);
+    m_modelScene.addSystem<cro::ModelRenderer>(mb);
+    m_modelScene.addSystem<cro::ParticleSystem>(mb);
 
     m_menuSounds.loadFromFile("assets/golf/sound/menu.xas", m_sharedData.sharedResources->audio);
     m_audioEnts[AudioID::Accept] = m_scene.createEntity();
@@ -228,6 +247,32 @@ void UnlockState::buildScene()
 
     m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
 
+
+    m_modelTexture.create(192, 192);
+}
+
+void UnlockState::buildScene()
+{
+    //entity to play firework particles - TODO might be simpler to move to 3D scene
+    auto entity = m_modelScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 2.f });
+    entity.addComponent<cro::ParticleEmitter>().settings.loadFromFile("assets/golf/particles/firework.cps", m_sharedData.sharedResources->textures);
+    m_particleNode = entity;
+
+
+    auto resizeCallback = [](cro::Camera& cam)
+    {
+        cam.setPerspective(70.f * cro::Util::Const::degToRad, 1.f, 0.1f, 10.f);
+        cam.viewport = { 0.f, 0.f, 1.f, 1.f };
+    };
+    auto camEnt = m_modelScene.getActiveCamera();
+    camEnt.getComponent<cro::Transform>().setPosition({ 0.f, 0.f, 3.f });
+    camEnt.getComponent<cro::Camera>().resizeCallback = resizeCallback;
+    resizeCallback(camEnt.getComponent<cro::Camera>());
+}
+
+void UnlockState::buildUI()
+{
     struct RootCallbackData final
     {
         enum
@@ -342,7 +387,7 @@ void UnlockState::buildScene()
                 
                 const float bgScale = cro::Util::Easing::easeOutElastic(scale);
                 e.getComponent<cro::Transform>().setScale(glm::vec2(bgScale));
-                e.getComponent<cro::Transform>().setRotation(bgScale * cro::Util::Const::TAU);
+                e.getComponent<cro::Transform>().setRotation(bgScale * -cro::Util::Const::TAU);
 
                 collection.title.getComponent<cro::Transform>().setScale(glm::vec2(bgScale));
 
@@ -358,14 +403,16 @@ void UnlockState::buildScene()
                 collection.name.getComponent<cro::Transform>().setPosition(pos);
                 collection.name.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
 
+                collection.model.getComponent<cro::Transform>().setScale(glm::vec2(bgScale));
+
                 if (data.stateTime > InTime)
                 {
                     data.stateTime = 0.f;
                     data.state = ItemCallbackData::Hold;
 
                     //TODO activate other callbacks
-                    //TODO activate fireworks
-
+                    
+                    m_particleNode.getComponent<cro::ParticleEmitter>().start();
                     m_audioEnts[AudioID::Fireworks].getComponent<cro::AudioEmitter>().play();
                 }
             }
@@ -382,7 +429,7 @@ void UnlockState::buildScene()
                 const float scale = std::min(1.f, data.stateTime / OutTime);
                 const float bgScale = cro::Util::Easing::easeOutElastic(1.f - scale);
                 e.getComponent<cro::Transform>().setScale(glm::vec2(bgScale));
-                e.getComponent<cro::Transform>().setRotation(bgScale * cro::Util::Const::TAU);
+                e.getComponent<cro::Transform>().setRotation(bgScale * -cro::Util::Const::TAU);
 
                 collection.title.getComponent<cro::Transform>().setScale(glm::vec2(bgScale));
 
@@ -396,13 +443,15 @@ void UnlockState::buildScene()
                 pos.x = std::floor(windowWidth * textScale);
                 collection.name.getComponent<cro::Transform>().setPosition(pos);
 
+                collection.model.getComponent<cro::Transform>().setScale(glm::vec2(bgScale));
+
                 if (data.stateTime > OutTime)
                 {
                     m_scene.destroyEntity(collection.root);
                     m_scene.destroyEntity(collection.description);
                     m_scene.destroyEntity(collection.name);
                     m_scene.destroyEntity(collection.title);
-                    //TODO tidy up other items in collection
+                    m_scene.destroyEntity(collection.model);
 
                     m_itemIndex++;
 
@@ -431,7 +480,7 @@ void UnlockState::buildScene()
         entity.addComponent<cro::Drawable2D>();
         entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("title");
         bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
-        entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
+        entity.getComponent<cro::Transform>().setOrigin({ std::floor(bounds.width / 2.f), std::floor(bounds.height / 2.f) });
         m_rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
         collection.title = entity;
 
@@ -450,7 +499,15 @@ void UnlockState::buildScene()
         collection.description = entity;
 
         //item preview
-        //TODO
+        entity = m_scene.createEntity();
+        entity.addComponent<cro::Transform>().setScale(glm::vec2(0.f));
+        entity.getComponent<cro::Transform>().setPosition({ 0.f, -30.f, 0.5f });
+        entity.addComponent<cro::Drawable2D>();
+        entity.addComponent<cro::Sprite>(m_modelTexture.getTexture());
+        bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+        entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
+        m_rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+        collection.model = entity;
 
         //unlock name
         entity = m_scene.createEntity();

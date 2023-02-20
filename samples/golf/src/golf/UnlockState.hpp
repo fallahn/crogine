@@ -34,6 +34,7 @@ source distribution.
 #include <crogine/core/State.hpp>
 #include <crogine/audio/AudioScape.hpp>
 #include <crogine/ecs/Scene.hpp>
+#include <crogine/graphics/RenderTexture.hpp>
 
 struct SharedStateData;
 
@@ -55,6 +56,7 @@ public:
 private:
 
     cro::Scene m_scene;
+    cro::Scene m_modelScene;
     SharedStateData& m_sharedData;
 
     struct UnlockCollection final
@@ -63,7 +65,7 @@ private:
         cro::Entity description;
         cro::Entity name;
         cro::Entity title;
-        //TODO other entities
+        cro::Entity model;
     };
     std::size_t m_itemIndex;
     std::vector<UnlockCollection> m_unlockCollections;
@@ -84,7 +86,12 @@ private:
 
     glm::vec2 m_viewScale;
     cro::Entity m_rootNode;
-    void buildScene();
+    cro::Entity m_particleNode;
 
+    cro::RenderTexture m_modelTexture;
+
+    void addSystems();
+    void buildScene();
+    void buildUI();
     void quitState();
 };
