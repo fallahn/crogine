@@ -280,7 +280,7 @@ void MenuState::createBallScene()
     }
 
 
-    //TODO read in the info for unlockable balls - if valid
+    //read in the info for unlockable balls - if valid
     //info is unlocked add it to ballModels now so it appears
     //in the preview window
     //else add it to the list afterwards so it can be rendered
@@ -290,8 +290,8 @@ void MenuState::createBallScene()
         std::string("assets/golf/special/10.spec"),
         std::string("assets/golf/special/20.spec"),
         std::string("assets/golf/special/30.spec"),
-        //std::string("assets/golf/special/40.spec"),
-        //std::string("assets/golf/special/50.spec")
+        std::string("assets/golf/special/40.spec"),
+        std::string("assets/golf/special/50.spec")
     };
     const auto level = Social::getLevel();
     std::vector<SharedStateData::BallInfo> delayedEntries;

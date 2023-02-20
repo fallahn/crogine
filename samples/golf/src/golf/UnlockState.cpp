@@ -469,11 +469,11 @@ void UnlockState::buildUI()
                 const float windowWidth = static_cast<float>(cro::App::getWindow().getSize().x) * 2.f;
                 const float textScale = cro::Util::Easing::easeInExpo(scale);
                 auto pos = collection.description.getComponent<cro::Transform>().getPosition();
-                pos.x = std::floor(-windowWidth * textScale);
+                pos.x = std::floor(windowWidth * textScale);
                 collection.description.getComponent<cro::Transform>().setPosition(pos);
 
                 pos = collection.name.getComponent<cro::Transform>().getPosition();
-                pos.x = std::floor(windowWidth * textScale);
+                pos.x = std::floor(-windowWidth * textScale);
                 collection.name.getComponent<cro::Transform>().setPosition(pos);
 
                 collection.modelSprite.getComponent<cro::Transform>().setScale(glm::vec2(bgScale));

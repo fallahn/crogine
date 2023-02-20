@@ -71,9 +71,9 @@ namespace ul
         std::string("assets/golf/models/balls/ball_bronze.cmt"),
         std::string("assets/golf/models/balls/ball_silver.cmt"),
         std::string("assets/golf/models/balls/ball_gold.cmt"),
-        std::string("assets/golf/models/trophies/trophy04.cmt"),
-        std::string("assets/golf/models/trophies/trophy05.cmt"),
-        std::string("assets/golf/models/trophies/trophy06.cmt"),
+        std::string("assets/golf/models/balls/ball_platinum.cmt"),
+        std::string("assets/golf/models/balls/ball_diamond.cmt"),
+        std::string("assets/golf/models/trophies/level20.cmt"),
     };
 
     //these MUST be in the correct order for unlocking
