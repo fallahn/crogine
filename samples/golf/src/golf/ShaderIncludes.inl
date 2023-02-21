@@ -133,6 +133,7 @@ static inline const std::string HSV = R"(
 
 //requires u_noiseTexture containing 2D noise
 //and u_windData from WIND_BUFFER
+//dirX, strength, dirZ, elapsed time - xyzw
 //localPos is local position of vertex
 //world pos is the root pos of the current mesh
 static inline const std::string WindCalc = R"(
@@ -143,7 +144,7 @@ static inline const std::string WindCalc = R"(
         float strength;
     };
 
-    const float hFreq = 0.025;
+    const float hFreq = 0.035;
     const float hMagnitude = 0.08;
     const float lFreq = 0.008;
     const float lMagnitude = 0.2;
@@ -152,11 +153,13 @@ static inline const std::string WindCalc = R"(
     {
         WindResult retVal = WindResult(vec2(0.0), vec2(0.0), 0.0);
         vec2 uv = localPos;
-        uv.x += u_windData.w * (hFreq + (hFreq * u_windData.y));
+        //uv.x += u_windData.w * (hFreq + (hFreq * u_windData.y));
+        uv.x += u_windData.w * hFreq;
         retVal.highFreq.x = TEXTURE(u_noiseTexture, uv).r;
 
         uv = localPos;
-        uv.y += u_windData.w * (hFreq + (hFreq * u_windData.y));
+        //uv.y += u_windData.w * (hFreq + (hFreq * u_windData.y));
+        uv.y += u_windData.w * hFreq;
         retVal.highFreq.y = TEXTURE(u_noiseTexture, uv).r;
 
         uv = worldPos;
@@ -171,12 +174,14 @@ static inline const std::string WindCalc = R"(
         retVal.highFreq *= 2.0;
         retVal.highFreq -= 1.0;
         retVal.highFreq *= u_windData.y;
-        retVal.highFreq *= hMagnitude;
+        //retVal.highFreq *= hMagnitude;
+        retVal.highFreq *= hMagnitude + (hMagnitude * u_windData.y);
 
         retVal.lowFreq *= 2.0;
         retVal.lowFreq -= 1.0;
         retVal.lowFreq *= (0.6 + (0.4 * u_windData.y));
-        retVal.lowFreq *= lMagnitude;
+        //retVal.lowFreq *= lMagnitude;
+        retVal.lowFreq *= lMagnitude + (lMagnitude * u_windData.y);
 
         retVal.strength = u_windData.y;
         retVal.strength *= dirMagnitude;
