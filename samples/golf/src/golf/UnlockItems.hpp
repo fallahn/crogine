@@ -58,7 +58,12 @@ namespace ul
             PlatinumCup,
             DiamondCup,
 
-            LevelBadge,
+            LevelBadge01,
+            LevelBadge10,
+            LevelBadge20,
+            LevelBadge30,
+            LevelBadge40,
+            LevelBadge50,
 
             Count
         };
@@ -73,6 +78,11 @@ namespace ul
         std::string("assets/golf/models/balls/ball_gold.cmt"),
         std::string("assets/golf/models/balls/ball_platinum.cmt"),
         std::string("assets/golf/models/balls/ball_diamond.cmt"),
+        std::string("assets/golf/models/trophies/level01.cmt"),
+        std::string("assets/golf/models/trophies/level10.cmt"),
+        std::string("assets/golf/models/trophies/level20.cmt"),
+        std::string("assets/golf/models/trophies/level20.cmt"),
+        std::string("assets/golf/models/trophies/level20.cmt"),
         std::string("assets/golf/models/trophies/level20.cmt"),
     };
 
@@ -118,11 +128,11 @@ namespace ul
         { ModelID::PlatinumCup, "Platinum Ball", "New Golf Ball!" },
         { ModelID::DiamondCup,  "Diamond Ball",  "New Golf Ball!" },
 
-        { ModelID::LevelBadge,  "Level One",     "New Level Reached!" },
-        { ModelID::LevelBadge,  "Level Ten",     "New Level Reached!" },
-        { ModelID::LevelBadge,  "Level Twenty",  "New Level Reached!" },
-        { ModelID::LevelBadge,  "Level Thirty",  "New Level Reached!" },
-        { ModelID::LevelBadge,  "Level Forty",   "New Level Reached!" },
-        { ModelID::LevelBadge,  "Level Fifty",   "New Level Reached!" },
+        { ModelID::LevelBadge01,  "Level One",     "New Level Badge!" },
+        { ModelID::LevelBadge10,  "Level Ten",     "New Level Badge!" },
+        { ModelID::LevelBadge20,  "Level Twenty",  "New Level Badge!" },
+        { ModelID::LevelBadge30,  "Level Thirty",  "New Level Badge!" },
+        { ModelID::LevelBadge40,  "Level Forty",   "New Level Badge!" },
+        { ModelID::LevelBadge50,  "Level Fifty",   "New Level Badge!" },
     };
 }

@@ -60,37 +60,77 @@ namespace
         SDL_RWclose(file);
     }
 
-    bool xpLoaded = false;
-    std::int32_t experience = 0;
-    void readExperience()
+    //TODO refactor this to something more coherant
+    //bool xpLoaded = false;
+    //std::int32_t experience = 0;
+    //void readExperience()
+    //{
+    //    if (!xpLoaded)
+    //    {
+    //        readValue(experience, "exp");
+    //    }
+
+    //    xpLoaded = true;
+    //}
+    //void writeExperience()
+    //{
+    //    writeValue(experience, "exp");
+    //}
+
+    //bool clubsetLoaded = false;
+    //std::int32_t clubset = 0;
+    //void readClubset()
+    //{
+    //    if (!clubsetLoaded)
+    //    {
+    //        readValue(clubset, "clb");
+    //    }
+    //    clubsetLoaded = true;
+    //}
+
+    //void writeClubset()
+    //{
+    //    writeValue(clubset, "clb");
+    //}
+
+    //bool ballsetLoaded = false;
+    //std::int32_t ballset = 0;
+    //void readBallset()
+    //{
+    //    if (!ballsetLoaded)
+    //    {
+    //        readValue(ballset, "bls");
+    //    }
+    //    ballsetLoaded = true;
+    //}
+
+    //void writeBallset()
+    //{
+    //    writeValue(ballset, "bls");
+    //}
+
+    struct StoredValue final
     {
-        if (!xpLoaded)
+        bool loaded = false;
+        std::int32_t value = 0;
+        void read(const std::string& ext)
         {
-            readValue(experience, "exp");
+            if (!loaded)
+            {
+                readValue(value, ext);
+                loaded = true;
+            }
         }
-
-        xpLoaded = true;
-    }
-    void writeExperience()
-    {
-        writeValue(experience, "exp");
-    }
-
-    bool clubsetLoaded = false;
-    std::int32_t clubset = 0;
-    void readClubset()
-    {
-        if (!clubsetLoaded)
+        void write(const std::string& ext)
         {
-            readValue(clubset, "clb");
+            writeValue(value, ext);
         }
-        clubsetLoaded = true;
-    }
+    };
+    StoredValue experience;
+    StoredValue clubset;
+    StoredValue ballset;
+    StoredValue levelTrophies;
 
-    void writeClubset()
-    {
-        writeValue(clubset, "clb");
-    }
 
     //XP curve = (level / x) ^ y
     constexpr float XPx = 0.07f;
@@ -113,17 +153,17 @@ void Social::awardXP(std::int32_t amount)
 {
     if (Achievements::getActive())
     {
-        auto oldLevel = getLevelFromXP(experience);
+        auto oldLevel = getLevelFromXP(experience.value);
 
-        experience += amount;
-        writeExperience();
+        experience.value += amount;
+        experience.write("exp");
 
         //raise event to notify players
         auto* msg = cro::App::postMessage<SocialEvent>(MessageID::SocialMessage);
         msg->type = SocialEvent::XPAwarded;
         msg->level = amount;
 
-        auto level = getLevelFromXP(experience);
+        auto level = getLevelFromXP(experience.value);
         if (oldLevel < level)
         {
             auto* msg2 = cro::App::postMessage<SocialEvent>(MessageID::SocialMessage);
@@ -135,20 +175,20 @@ void Social::awardXP(std::int32_t amount)
 
 std::int32_t Social::getXP()
 {
-    readExperience();
-    return experience;
+    experience.read("exp");
+    return experience.value;
 }
 
 std::int32_t Social::getLevel()
 {
-    readExperience();
-    return getLevelFromXP(experience);
+    experience.read("exp");
+    return getLevelFromXP(experience.value);
 }
 
 Social::ProgressData Social::getLevelProgress()
 {
-    readExperience();
-    auto currXP = experience;
+    experience.read("exp");
+    auto currXP = experience.value;
     auto currLevel = getLevelFromXP(currXP);
 
     auto startXP = getXPFromLevel(currLevel);
@@ -194,16 +234,41 @@ void Social::readDrivingStats(std::array<float, 3u>& topScores)
     }
 }
 
-std::int32_t Social::getClubSet()
+std::int32_t Social::getUnlockStatus(UnlockType type)
 {
-    readClubset();
-    return clubset;
+    switch (type)
+    {
+    default: return 0;
+    case UnlockType::Club:
+        clubset.read("clb");
+        return clubset.value;
+    case UnlockType::Ball:
+        ballset.read("bls");
+        return ballset.value;
+    case UnlockType::Level:
+        levelTrophies.read("lvl");
+        return levelTrophies.value;
+    }
 }
 
-void Social::setClubSet(std::int32_t set)
+void Social::setUnlockStatus(UnlockType type, std::int32_t set)
 {
-    clubset = set;
-    writeClubset();
+    switch (type)
+    {
+    default: break;
+    case UnlockType::Ball:
+        ballset.value = set;
+        ballset.write("bls");
+        break;
+    case UnlockType::Club:
+        clubset.value = set;
+        clubset.write("clb");
+        break;
+    case UnlockType::Level:
+        levelTrophies.value = set;
+        levelTrophies.write("lvl");
+        break;
+    }    
 }
 
 std::string Social::getBaseContentPath()

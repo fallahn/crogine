@@ -293,7 +293,7 @@ void MenuState::createBallScene()
         std::string("assets/golf/special/40.spec"),
         std::string("assets/golf/special/50.spec")
     };
-    const auto level = Social::getLevel();
+    const std::uint32_t level = Social::getLevel();
     std::vector<SharedStateData::BallInfo> delayedEntries;
     for (auto i = 0u; i < SpecialPaths.size(); ++i)
     {

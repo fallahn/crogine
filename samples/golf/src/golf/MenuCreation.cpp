@@ -5106,25 +5106,25 @@ void MenuState::updateCourseRuleString()
 
 void MenuState::updateUnlockedItems()
 {
-    auto clubFlags = Social::getClubSet();
+    auto clubFlags = Social::getUnlockStatus(Social::UnlockType::Club);
     if (clubFlags == 0)
     {
         clubFlags = ClubID::DefaultSet;
     }
     auto level = Social::getLevel();
     auto clubCount = std::min(ClubID::LockedSet.size(), static_cast<std::size_t>(level / 5));
-    for (auto i = 0u; i < clubCount; ++i)
+    for (auto i = 0; i < clubCount; ++i)
     {
         auto clubID = ClubID::LockedSet[i];
         if ((clubFlags & ClubID::Flags[clubID]) == 0)
         {
             clubFlags |= ClubID::Flags[clubID];
-            m_sharedData.unlockedItems.push_back(i); //TODO we want a more explicit way of mapping to unlock ID
+            m_sharedData.unlockedItems.push_back(ul::UnlockID::FiveWood + i); //TODO we want a more explicit way of mapping to unlock ID
         }
     }
 
     m_sharedData.inputBinding.clubset = clubFlags;
-    //Social::setClubSet(clubFlags); //TODO enable this
+    //Social::setUnlockStatus(Social::UnlockType::Club, clubFlags); //TODO enable this
 
     if (m_sharedData.inputBinding.clubset == ClubID::FullSet)
     {
@@ -5132,12 +5132,38 @@ void MenuState::updateUnlockedItems()
     }
 
 
-    //TODO ball flags (balls are unlocked every 10 levels)
-    //TODO newly unlocked balls will be expected by the player to be immediately available...
-    //perhaps these could be silently prechecked when loading the state/ball models
-    //and then flagged for includion in this function
+    //ball flags (balls are unlocked every 10 levels)
+    auto ballFlags = Social::getUnlockStatus(Social::UnlockType::Ball);
+    auto ballCount = std::min(5, level / 10);
+    for (auto i = 0; i < ballCount; ++i)
+    {
+        auto flag = (1 << i);
+        if ((ballFlags & flag) == 0)
+        {
+            ballFlags |= flag;
+            m_sharedData.unlockedItems.push_back(ul::UnlockID::BronzeBall + i);
+        }
+    }
 
+    //Social::setUnlockStatus(Social::UnlockType::Ball, ballFlags); //TODO enable this
 
+    if (level > 1)
+    {
+        //levels are same interval as balls + 1st level
+        auto levelCount = ballCount + 1;
+        auto levelFlags = Social::getUnlockStatus(Social::UnlockType::Level);
+
+        for (auto i = 0; i < levelCount; ++i)
+        {
+            auto flag = (1 << i);
+            if ((levelFlags & flag) == 0)
+            {
+                levelFlags |= flag;
+                m_sharedData.unlockedItems.push_back(ul::UnlockID::Level1 + i);
+            }
+        }
+        //Social::setUnlockStatus(Social::UnlockType::Level, levelFlags); //TODO enable this
+    }
 
     if (!m_sharedData.unlockedItems.empty())
     {

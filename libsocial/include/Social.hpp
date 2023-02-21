@@ -112,8 +112,12 @@ public:
     static inline const std::string RSSFeed = "https://fallahn.itch.io/super-video-golf/devlog.rss";
     static inline const std::string WebURL = "https://fallahn.itch.io/super-video-golf";
 
-    static std::int32_t getClubSet();
-    static void setClubSet(std::int32_t);
+    enum class UnlockType
+    {
+        Ball, Club, Level
+    };
+    static std::int32_t getUnlockStatus(UnlockType);
+    static void setUnlockStatus(UnlockType, std::int32_t set);
 
     struct UserContent final
     {
