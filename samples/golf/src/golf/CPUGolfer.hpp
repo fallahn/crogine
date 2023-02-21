@@ -51,20 +51,24 @@ public:
     CPUGolfer(const InputParser&, const ActivePlayer&, const CollisionMesh&);
 
     void handleMessage(const cro::Message&);
-    void activate(glm::vec3);
+    void activate(glm::vec3 target, glm::vec3 fallbackTarget, bool puttFromTee);
     void update(float, glm::vec3, float distanceToPin);
     bool thinking() const { return m_thinking; }
     void setPredictionResult(glm::vec3, std::int32_t);
     glm::vec3 getTarget() const { return m_target; }
+
+    std::size_t getSkillIndex() const;
 
 private:
 
     const InputParser& m_inputParser; //only reads the state - actual commands are send by raising events.
     const ActivePlayer& m_activePlayer;
     const CollisionMesh& m_collisionMesh;
+    bool m_puttFromTee;
     float m_distanceToPin;
     glm::vec3 m_target;
     glm::vec3 m_baseTarget; //this is what was originally set before retargetting potentially updates m_target
+    glm::vec3 m_fallbackTarget; //we try this to see if its still in front if current prediction goes OOB
     std::int32_t m_retargetCount;
 
     bool m_predictionUpdated;
@@ -143,8 +147,6 @@ private:
     std::int32_t m_offsetRotation;
     void calcAccuracy();
     float getOffsetValue() const;
-
-    std::size_t getSkillIndex() const;
 
     //for each pressed event we need a release event the next frame
     std::vector<cro::Event> m_popEvents;

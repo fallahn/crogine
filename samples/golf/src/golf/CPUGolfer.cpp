@@ -110,9 +110,11 @@ CPUGolfer::CPUGolfer(const InputParser& ip, const ActivePlayer& ap, const Collis
     : m_inputParser     (ip),
     m_activePlayer      (ap),
     m_collisionMesh     (cm),
+    m_puttFromTee       (false),
     m_distanceToPin     (1.f),
     m_target            (0.f),
     m_baseTarget        (0.f),
+    m_fallbackTarget    (0.f),
     m_retargetCount     (0),
     m_predictionUpdated (false),
     m_wantsPrediction   (false),
@@ -188,10 +190,13 @@ void CPUGolfer::handleMessage(const cro::Message& msg)
     }
 }
 
-void CPUGolfer::activate(glm::vec3 target)
+void CPUGolfer::activate(glm::vec3 target, glm::vec3 fallback, bool puttFromTee)
 {
     if (m_state == State::Inactive)
     {
+        m_puttFromTee = puttFromTee;
+        m_fallbackTarget = fallback;
+
         m_baseTarget = m_target = target;
         m_retargetCount = 0;
         m_state = State::CalcDistance;
@@ -282,7 +287,19 @@ void CPUGolfer::setPredictionResult(glm::vec3 result, std::int32_t terrain)
         || terrain == TerrainID::Scrub))
     {
         //retarget
-        const float searchDistance = m_activePlayer.terrain == TerrainID::Green ? 0.5f : 2.f;
+        if (m_puttFromTee)
+        {
+            //fall back to default target if it's still in front
+            auto fwd = m_baseTarget - m_activePlayer.position;
+            auto alt = m_fallbackTarget - m_activePlayer.position;
+            if (glm::dot(alt, fwd) > 0)
+            {
+                m_baseTarget = m_fallbackTarget;
+            }
+            m_puttFromTee = false; //saves keep trying this until next activation
+        }
+
+        const float searchDistance = m_activePlayer.terrain == TerrainID::Green ? 0.25f : 2.f;
         auto direction = m_retargetCount % 4;
         auto offset = (glm::normalize(m_baseTarget - m_activePlayer.position) * searchDistance) * static_cast<float>((m_retargetCount % RetargetsPerDirection) + 1);
 
@@ -317,6 +334,17 @@ void CPUGolfer::setPredictionResult(glm::vec3 result, std::int32_t terrain)
         m_predictionResult = result + (glm::vec3(getOffsetValue(), 0.f, -getOffsetValue()) * 0.001f);
         m_predictionUpdated = true;
     }
+}
+
+std::size_t CPUGolfer::getSkillIndex() const
+{
+    std::int32_t offset = m_activePlayer.player % 2;
+    if (m_skillIndex > 2)
+    {
+        offset *= -1;
+    }
+
+    return std::min(static_cast<std::int32_t>(m_skills.size() - 1), static_cast<std::int32_t>(m_skillIndex) + offset);
 }
 
 //private
@@ -1044,17 +1072,6 @@ float CPUGolfer::getOffsetValue() const
     return static_cast<float>(1 - ((m_offsetRotation % 2) * 2))
         * static_cast<float>((m_offsetRotation % (m_skills.size() - getSkillIndex())))
         * multiplier;
-}
-
-std::size_t CPUGolfer::getSkillIndex() const
-{
-    std::int32_t offset = m_activePlayer.player % 2;
-    if (m_skillIndex > 2)
-    {
-        offset *= -1;
-    }
-
-    return std::min(static_cast<std::int32_t>(m_skills.size() - 1), static_cast<std::int32_t>(m_skillIndex) + offset);
 }
 
 void CPUGolfer::sendKeystroke(std::int32_t key, bool autoRelease)

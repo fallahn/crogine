@@ -5854,7 +5854,9 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     m_inputParser.resetPower();
     m_inputParser.setHoleDirection(target - player.position);
     
-    auto rotation = isCPU ? MaxRotation / 3.f : MaxRotation;
+    //we can set the CPU skill extra wide without worrying about
+    //rotating the player model as the aim is hidden anyway
+    auto rotation = isCPU ? m_cpuGolfer.getSkillIndex() > 2 ? cro::Util::Const::PI : MaxRotation / 3.f : MaxRotation;
     m_inputParser.setMaxRotation(m_holeData[m_currentHole].puttFromTee ? MaxPuttRotation : 
         player.terrain == TerrainID::Green ? rotation / 3.f : rotation);
 
@@ -5869,28 +5871,39 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     if (localPlayer
         && isCPU)
     {
-        //if the player can rotate enough prefer the hole as the target
-        auto pin = m_holeData[m_currentHole].pin - player.position;
-        auto targetPoint = target - player.position;
-
-        auto p = glm::normalize(glm::vec2(pin.x, -pin.z));
-        auto t = glm::normalize(glm::vec2(targetPoint.x, -targetPoint.z));
-
-        float dot = glm::dot(p, t);
-        float det = (p.x * t.y) - (p.y * t.x);
-        float targetAngle = std::abs(std::atan2(det, dot));
-
-        if (targetAngle < m_inputParser.getMaxRotation())
+        //if the CPU is smart enough always go for the hole if we can
+        if (m_cpuGolfer.getSkillIndex() > 2
+            && !m_holeData[m_currentHole].puttFromTee)
         {
-            m_cpuGolfer.activate(m_holeData[m_currentHole].pin);
+            //fallback is nothing as we're not putting from the tee
+            m_cpuGolfer.activate(m_holeData[m_currentHole].pin, glm::vec3(0.f), false);
         }
+
         else
         {
-            m_cpuGolfer.activate(target);
-        }
+            //if the player can rotate enough prefer the hole as the target
+            auto pin = m_holeData[m_currentHole].pin - player.position;
+            auto targetPoint = target - player.position;
+
+            auto p = glm::normalize(glm::vec2(pin.x, -pin.z));
+            auto t = glm::normalize(glm::vec2(targetPoint.x, -targetPoint.z));
+
+            float dot = glm::dot(p, t);
+            float det = (p.x * t.y) - (p.y * t.x);
+            float targetAngle = std::abs(std::atan2(det, dot));
+
+            if (targetAngle < m_inputParser.getMaxRotation())
+            {
+                m_cpuGolfer.activate(m_holeData[m_currentHole].pin, m_holeData[m_currentHole].target, m_holeData[m_currentHole].puttFromTee);
+            }
+            else
+            {
+                m_cpuGolfer.activate(target, m_holeData[m_currentHole].target, m_holeData[m_currentHole].puttFromTee);
+            }
 #ifdef CRO_DEBUG_
-        //CPUTarget.getComponent<cro::Transform>().setPosition(m_cpuGolfer.getTarget());
+            //CPUTarget.getComponent<cro::Transform>().setPosition(m_cpuGolfer.getTarget());
 #endif
+        }
     }
 
 
