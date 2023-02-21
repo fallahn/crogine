@@ -3092,20 +3092,20 @@ void GolfState::loadAssets()
     initAudio(theme.treesets.size() > 2);
 
 
-    md.loadFromFile("assets/golf/models/sphere.cmt");
-    auto entity = m_gameScene.createEntity();
-    entity.addComponent<cro::Transform>();
-    md.createModel(entity);
-    entity.addComponent<cro::Callback>().active = true;
-    entity.getComponent<cro::Callback>().function =
-        [&](cro::Entity e, float)
-    {
-        auto cam = m_gameScene.getActiveCamera();
-        if (cam.hasComponent<CameraFollower>())
-        {
-            e.getComponent<cro::Transform>().setPosition(cam.getComponent<CameraFollower>().currentTarget);
-        }
-    };
+    //md.loadFromFile("assets/golf/models/sphere.cmt");
+    //auto entity = m_gameScene.createEntity();
+    //entity.addComponent<cro::Transform>();
+    //md.createModel(entity);
+    //entity.addComponent<cro::Callback>().active = true;
+    //entity.getComponent<cro::Callback>().function =
+    //    [&](cro::Entity e, float)
+    //{
+    //    auto cam = m_gameScene.getActiveCamera();
+    //    if (cam.hasComponent<CameraFollower>())
+    //    {
+    //        e.getComponent<cro::Transform>().setPosition(cam.getComponent<CameraFollower>().currentTarget);
+    //    }
+    //};
 }
 
 void GolfState::loadSpectators()

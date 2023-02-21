@@ -849,10 +849,9 @@ void TrophyState::buildTrophyScene()
         "assets/golf/models/trophies/level01.cmt",
         "assets/golf/models/trophies/level10.cmt",
         "assets/golf/models/trophies/level20.cmt",
-
-        "assets/golf/models/trophies/level01.cmt",
-        "assets/golf/models/trophies/level01.cmt",
-        "assets/golf/models/trophies/level01.cmt",
+        "assets/golf/models/trophies/level30.cmt",
+        "assets/golf/models/trophies/level40.cmt",
+        "assets/golf/models/trophies/level50.cmt",
     };
 
     auto trophyCallback =
