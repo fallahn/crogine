@@ -836,7 +836,7 @@ void TrophyState::buildTrophyScene()
 
     //these ought to be loaded in the same order
     //as TrophyID in AchievementStrings.hpp
-    const std::array<std::string, 8> paths =
+    const std::array<std::string, 14u> paths =
     {
         std::string("assets/golf/models/trophies/trophy01.cmt"),
         "assets/golf/models/trophies/trophy02.cmt",
@@ -846,6 +846,13 @@ void TrophyState::buildTrophyScene()
         "assets/golf/models/trophies/trophy06.cmt",
         "assets/golf/models/trophies/trophy07.cmt",
         "assets/golf/models/trophies/trophy08.cmt",
+        "assets/golf/models/trophies/level01.cmt",
+        "assets/golf/models/trophies/level10.cmt",
+        "assets/golf/models/trophies/level20.cmt",
+
+        "assets/golf/models/trophies/level01.cmt",
+        "assets/golf/models/trophies/level01.cmt",
+        "assets/golf/models/trophies/level01.cmt",
     };
 
     auto trophyCallback =
@@ -911,8 +918,8 @@ void TrophyState::buildTrophyScene()
             md.createModel(entity);
             rotateEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
-            entity.getComponent<cro::Model>().setMaterial(0, shinyMaterial);
-            entity.getComponent<cro::Model>().setMaterial(1, flatMaterial);
+            entity.getComponent<cro::Model>().setMaterial(0, flatMaterial);
+            entity.getComponent<cro::Model>().setMaterial(1, shinyMaterial);
             entity.getComponent<cro::Model>().setHidden(true);
 
             entity.addComponent<cro::Callback>().setUserData<std::pair<float, std::int32_t>>(0.f, 0);
