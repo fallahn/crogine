@@ -60,55 +60,6 @@ namespace
         SDL_RWclose(file);
     }
 
-    //TODO refactor this to something more coherant
-    //bool xpLoaded = false;
-    //std::int32_t experience = 0;
-    //void readExperience()
-    //{
-    //    if (!xpLoaded)
-    //    {
-    //        readValue(experience, "exp");
-    //    }
-
-    //    xpLoaded = true;
-    //}
-    //void writeExperience()
-    //{
-    //    writeValue(experience, "exp");
-    //}
-
-    //bool clubsetLoaded = false;
-    //std::int32_t clubset = 0;
-    //void readClubset()
-    //{
-    //    if (!clubsetLoaded)
-    //    {
-    //        readValue(clubset, "clb");
-    //    }
-    //    clubsetLoaded = true;
-    //}
-
-    //void writeClubset()
-    //{
-    //    writeValue(clubset, "clb");
-    //}
-
-    //bool ballsetLoaded = false;
-    //std::int32_t ballset = 0;
-    //void readBallset()
-    //{
-    //    if (!ballsetLoaded)
-    //    {
-    //        readValue(ballset, "bls");
-    //    }
-    //    ballsetLoaded = true;
-    //}
-
-    //void writeBallset()
-    //{
-    //    writeValue(ballset, "bls");
-    //}
-
     struct StoredValue final
     {
         bool loaded = false;
@@ -138,8 +89,19 @@ namespace
 
     std::int32_t getLevelFromXP(std::int32_t exp)
     {
-        float xp = static_cast<float>(exp);
-        return static_cast<std::int32_t>(XPx * std::sqrt(xp));
+        //cache the level value to reduce calls to sqrt
+        static std::int32_t lastXP = 0;
+        static std::int32_t lastLevel = 0;
+
+        if (exp != lastXP)
+        {
+            lastXP = exp;
+            
+            float xp = static_cast<float>(exp);
+            lastLevel = static_cast<std::int32_t>(XPx * std::sqrt(xp));
+        }
+
+        return lastLevel;
     }
 
     std::int32_t getXPFromLevel(std::int32_t level)

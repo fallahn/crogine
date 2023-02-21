@@ -3791,6 +3791,7 @@ void MenuState::updateLocalAvatars(std::uint32_t mouseEnter, std::uint32_t mouse
         entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
         entity.addComponent<cro::Callback>().setUserData<const std::uint32_t>(i); //just use this to store our index for button callback
         entity.addComponent<cro::UIInput>().area = m_sprites[SpriteID::CPUHighlight].getTextureBounds();
+        entity.getComponent<cro::UIInput>().area.width *= 3.4f; //cover writing too
         entity.getComponent<cro::UIInput>().setGroup(MenuID::Avatar);
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = m_cpuOptionCallbacks[0];
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = m_cpuOptionCallbacks[1];

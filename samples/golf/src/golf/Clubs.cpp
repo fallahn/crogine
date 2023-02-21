@@ -30,8 +30,6 @@ source distribution.
 #include "Clubs.hpp"
 #include <Social.hpp>
 
-
-
 Club::Club(std::int32_t id, const std::string& name, float power, float angle, float target)
     : m_id  (id), 
     m_name  (name), 
@@ -84,9 +82,8 @@ float Club::getPower(float distanceToPin) const
         return getScaledValue(m_power, distanceToPin);
     }
 
-    //TODO check player level and return further distance
-
-    return m_power;
+    //check player level and return further distance
+    return getExperiencedValue(m_power);
 }
 
 float Club::getTarget(float distanceToPin) const
@@ -96,9 +93,8 @@ float Club::getTarget(float distanceToPin) const
         return getScaledValue(m_target, distanceToPin);
     }
 
-    //TODO check player level and return increased distance
-
-    return m_target;
+    //check player level and return increased distance
+    return getExperiencedValue(m_target);
 }
 
 //private
@@ -113,5 +109,51 @@ float Club::getScaledValue(float value, float distanceToPin) const
 
         return value * ShortRange;
     }
+    return value;
+}
+
+float Club::getExperiencedValue(float value) const
+{
+    auto level = Social::getLevel();
+    if (level > 29)
+    {
+        switch (m_id)
+        {
+        default: return value;
+        case ClubID::Driver:
+        case ClubID::ThreeWood:
+        case ClubID::FiveWood:
+            return value * 1.27f;
+        case ClubID::FourIron:
+        case ClubID::FiveIron:
+        case ClubID::SixIron:
+            return value * 1.15f;
+        case ClubID::SevenIron:
+        case ClubID::EightIron:
+        case ClubID::NineIron:
+            return value * 1.4f;
+        }
+    }
+
+    if (level > 14)
+    {
+        switch (m_id)
+        {
+        default: return value;
+        case ClubID::Driver:
+        case ClubID::ThreeWood:
+        case ClubID::FiveWood:
+            return value * 1.15f;
+        case ClubID::FourIron:
+        case ClubID::FiveIron:
+        case ClubID::SixIron:
+            return value * 1.07f;
+        case ClubID::SevenIron:
+        case ClubID::EightIron:
+        case ClubID::NineIron:
+            return value * 1.3f;
+        }
+    }
+
     return value;
 }

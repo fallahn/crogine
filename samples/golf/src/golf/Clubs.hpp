@@ -97,6 +97,7 @@ private:
     static constexpr float TinyRangeThreshold = TinyRange * 0.5f;
 
     float getScaledValue(float v, float dist) const;
+    float getExperiencedValue(float v) const;
 };
 
 static const std::array<Club, ClubID::Count> Clubs =
