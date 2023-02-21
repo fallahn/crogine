@@ -339,6 +339,11 @@ void MenuState::createBallScene()
         {
             auto entity = m_backgroundScene.createEntity();
             entity.addComponent<cro::Transform>().setPosition({ (i * BallSpacing) + RootPoint, 0.f, 0.f });
+
+            auto baseEnt = entity;
+
+            entity = m_backgroundScene.createEntity();
+            entity.addComponent<cro::Transform>();
             ballDef.createModel(entity);
 
             //clamp scale of balls in case someone got funny with a large model
@@ -356,22 +361,36 @@ void MenuState::createBallScene()
                 entity.getComponent<cro::Model>().setMaterial(1, material);
             }
             entity.getComponent<cro::Model>().setRenderFlags(BallRenderFlags);
+            baseEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
             entity.addComponent<cro::Callback>().active = true;
-            entity.getComponent<cro::Callback>().function =
-                [](cro::Entity e, float dt)
+            if (m_sharedData.ballModels[i].rollAnimation)
             {
-                e.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, dt);
-            };
+                entity.getComponent<cro::Callback>().function =
+                    [](cro::Entity e, float dt)
+                {
+                    e.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -dt * 6.f);
+                };
+                entity.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, -cro::Util::Const::PI * 0.85f);
+                entity.getComponent<cro::Transform>().move({ 0.f, Ball::Radius, 0.f });
+                entity.getComponent<cro::Transform>().setOrigin({ 0.f, Ball::Radius, 0.f });
+            }
+            else
+            {
+                entity.getComponent<cro::Callback>().function =
+                    [](cro::Entity e, float dt)
+                {
+                    e.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, dt);
+                };
+            }
 
-            auto ballEnt = entity;
-            
+          
             if (shadow)
             {
                 entity = m_backgroundScene.createEntity();
                 entity.addComponent<cro::Transform>();
                 shadowDef.createModel(entity);
-                ballEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+                baseEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
                 entity.getComponent<cro::Model>().setRenderFlags(BallRenderFlags);
             }
 
@@ -381,7 +400,7 @@ void MenuState::createBallScene()
                 entity.addComponent<cro::Transform>().setPosition({ 0.f, -0.001f, 0.f });
                 entity.getComponent<cro::Transform>().setScale(glm::vec3(5.f));
                 grassDef.createModel(entity);
-                ballEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+                baseEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
                 entity.getComponent<cro::Model>().setRenderFlags(BallRenderFlags);
             }
         }
