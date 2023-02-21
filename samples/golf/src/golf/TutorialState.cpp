@@ -472,7 +472,7 @@ void TutorialState::buildScene()
 
 
     //create the layout depending on the requested tutorial
-    //tutorialSwing(rootNode);
+    //tutorialPutt(rootNode);
     //tutorialThree(rootNode);
     switch (m_sharedData.tutorialIndex)
     {
@@ -1904,10 +1904,19 @@ void TutorialState::tutorialPutt(cro::Entity root)
 
 
     //second tip text
-    /*entity = m_scene.createEntity();
+    entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>().setCroppingArea({ 0.f, 0.f, 0.f, 0.f });
-    entity.addComponent<cro::Text>(font).setString("Use your aim to compensate for the slope.");
+    if (cro::GameController::getControllerCount() != 0)
+    {
+        entity.addComponent<cro::Text>(font).setString("You can move the camera up and down with the right thumbstick.");
+    }
+    else
+    {
+        auto strUp = cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::Up]);
+        auto strDown = cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::Down]);
+        entity.addComponent<cro::Text>(font).setString("You can move the camera up and down with " + strUp + " and " + strDown);
+    }
     entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     centreText(entity);
@@ -1934,7 +1943,7 @@ void TutorialState::tutorialPutt(cro::Entity root)
     root.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     auto text02 = entity;
 
-    m_actionCallbacks.push_back([text02]() mutable { text02.getComponent<cro::Callback>().active = true; });*/
+    m_actionCallbacks.push_back([text02]() mutable { text02.getComponent<cro::Callback>().active = true; });
 
 
     //third tip text
@@ -1945,7 +1954,7 @@ void TutorialState::tutorialPutt(cro::Entity root)
     entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     centreText(entity);
-    entity.addComponent<UIElement>().absolutePosition = { 0.f, /*UIBarHeight*5.5f*/-34.f };
+    entity.addComponent<UIElement>().absolutePosition = { 0.f, /*UIBarHeight*5.5f*/-94.f };
     entity.getComponent<UIElement>().relativePosition = { 0.5f, 0.5f };
     entity.getComponent<UIElement>().depth = 0.01f;
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
@@ -1976,7 +1985,7 @@ void TutorialState::tutorialPutt(cro::Entity root)
     entity.addComponent<cro::Drawable2D>().setCroppingArea({ 0.f, 0.f, 0.f, 0.f });
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("putt_flag");
     entity.addComponent<cro::SpriteAnimation>().play(0);
-    entity.addComponent<UIElement>().absolutePosition = { 0.f, -60.f };
+    entity.addComponent<UIElement>().absolutePosition = { 0.f, -120.f };
     entity.getComponent<UIElement>().relativePosition = { 0.5f, 0.5f };
     entity.getComponent<UIElement>().depth = 0.01f;
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
