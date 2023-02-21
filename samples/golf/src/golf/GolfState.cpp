@@ -3090,6 +3090,22 @@ void GolfState::loadAssets()
     }
 
     initAudio(theme.treesets.size() > 2);
+
+
+    md.loadFromFile("assets/golf/models/sphere.cmt");
+    auto entity = m_gameScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    md.createModel(entity);
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+    {
+        auto cam = m_gameScene.getActiveCamera();
+        if (cam.hasComponent<CameraFollower>())
+        {
+            e.getComponent<cro::Transform>().setPosition(cam.getComponent<CameraFollower>().currentTarget);
+        }
+    };
 }
 
 void GolfState::loadSpectators()
@@ -3968,8 +3984,8 @@ void GolfState::buildScene()
             pos += target;
             pos.y = m_collisionMesh.getTerrain(pos).height + 2.f;
 
-            auto lookAt = glm::lookAt(pos, target, cro::Transform::Y_AXIS);
-            e.getComponent<cro::Transform>().setLocalTransform(glm::inverse(lookAt));
+            e.getComponent<cro::Transform>().setPosition(pos);
+            e.getComponent<cro::Transform>().setRotation(lookRotation(pos, target));
         }
     };
     setPerspective(camEnt.getComponent<cro::Camera>());
@@ -5645,8 +5661,7 @@ void GolfState::setCameraPosition(glm::vec3 position, float height, float viewOf
     camEnt.getComponent<TargetInfo>().finalLookAt = currentCamTarget;
 
     auto oldPos = camEnt.getComponent<cro::Transform>().getPosition();
-    auto lookat = glm::lookAt(oldPos, currentCamTarget, cro::Transform::Y_AXIS);
-    camEnt.getComponent<cro::Transform>().setRotation(glm::inverse(lookat));
+    camEnt.getComponent<cro::Transform>().setRotation(lookRotation(oldPos, currentCamTarget));
 
     auto offset = -camEnt.getComponent<cro::Transform>().getForwardVector();
     camEnt.getComponent<cro::Transform>().move(offset * viewOffset);
@@ -5943,8 +5958,8 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
         auto target = player.position;
         target.y += 1.f;
 
-        auto tx = glm::inverse(glm::lookAt(eye, target, cro::Transform::Y_AXIS));
-        m_cameras[CameraID::Bystander].getComponent<cro::Transform>().setLocalTransform(tx);
+        m_cameras[CameraID::Bystander].getComponent<cro::Transform>().setRotation(lookRotation(eye, target));
+        m_cameras[CameraID::Bystander].getComponent<cro::Transform>().setPosition(eye);
 
         //if this is a CPU player or a remote player, show a bystander cam automatically
         if (player.client != m_sharedData.localConnectionData.connectionID
@@ -6199,8 +6214,8 @@ void GolfState::setGreenCamPosition()
     auto pos = m_cameras[CameraID::Green].getComponent<cro::Transform>().getPosition();
     pos.y = result.height;
 
-    auto tx = glm::inverse(glm::lookAt(pos, m_holeData[m_currentHole].pin, cro::Transform::Y_AXIS));
-    m_cameras[CameraID::Green].getComponent<cro::Transform>().setLocalTransform(tx);
+    m_cameras[CameraID::Green].getComponent<cro::Transform>().setRotation(lookRotation(pos, m_holeData[m_currentHole].pin));
+    m_cameras[CameraID::Green].getComponent<cro::Transform>().setPosition(pos);
 }
 
 void GolfState::predictBall(float powerPct)
@@ -6990,6 +7005,7 @@ void GolfState::setActiveCamera(std::int32_t camID)
 
 void GolfState::updateCameraHeight(float movement)
 {
+    //lets the player move the camera up and down when putting
     if (m_currentCamera == CameraID::Player
         && m_currentPlayer.terrain == TerrainID::Green)
     {
@@ -7013,8 +7029,8 @@ void GolfState::updateCameraHeight(float movement)
         auto& lookAt = m_cameras[CameraID::Player].getComponent<TargetInfo>().finalLookAt;
         lookAt -= movement;
 
-        auto tx = glm::lookAt(camPos, lookAt, cro::Transform::Y_AXIS);
-        m_cameras[CameraID::Player].getComponent<cro::Transform>().setLocalTransform(glm::inverse(tx));
+        m_cameras[CameraID::Player].getComponent<cro::Transform>().setPosition(camPos);
+        m_cameras[CameraID::Player].getComponent<cro::Transform>().setRotation(lookRotation(camPos, lookAt));
     }
 }
 
@@ -7032,6 +7048,8 @@ void GolfState::toggleFreeCam()
 
         auto tx = glm::lookAt(m_currentPlayer.position + glm::vec3(0.f, 3.f, 0.f), m_holeData[m_currentHole].pin, glm::vec3(0.f, 1.f, 0.f));
         m_freeCam.getComponent<cro::Transform>().setLocalTransform(glm::inverse(tx));
+
+
         m_freeCam.getComponent<FpsCamera>().resetOrientation(m_freeCam);
         m_freeCam.getComponent<cro::Camera>().active = true;
 

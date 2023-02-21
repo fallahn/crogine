@@ -182,7 +182,6 @@ void CameraFollowSystem::process(float dt)
             //and if we fall within the camera's radius
             //and if the player isn't standing too close
             const auto& collider = follower.target.getComponent<ClientCollider>();
-            //if (!collider.active) LogI << "flaps" << std::endl;
 
             if ((currentFollower.currentFollowTime < 0)
                 &&
