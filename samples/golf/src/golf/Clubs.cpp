@@ -30,12 +30,47 @@ source distribution.
 #include "Clubs.hpp"
 #include <Social.hpp>
 
-Club::Club(std::int32_t id, const std::string& name, float power, float angle, float target)
+namespace
+{
+    struct Stat final
+    {
+        constexpr Stat() = default;
+        constexpr Stat(float p, float t) : power(p), target(t) {}
+        float power = 0.f; //impulse strength
+        float target = 0.f; //distance target
+    };
+
+    struct ClubStat final
+    {
+        constexpr ClubStat(Stat a, Stat b, Stat c)
+            : stats() { stats = { a, b, c }; }
+        std::array<Stat, 3> stats = {};
+    };
+
+    constexpr std::array<ClubStat, ClubID::Count> ClubStats =
+    {
+        ClubStat({46.32f, 220.f},{46.32f, 250.f},{46.32f, 280.f}),
+        ClubStat({41.8f,  180.f},{46.32f, 210.f},{46.32f, 230.f}),
+        ClubStat({38.15f, 150.f},{46.32f, 175.f},{46.32f, 190.f}),
+        ClubStat({37.11f, 140.f},{46.32f, 150.f},{46.32f, 160.f}),
+        ClubStat({35.82f, 130.f},{46.32f, 140.f},{46.32f, 150.f}),
+        ClubStat({34.4f,  120.f},{46.32f, 130.f},{46.32f, 140.f}),
+        ClubStat({32.98f, 110.f},{46.32f, 120.f},{46.32f, 130.f}),
+        ClubStat({31.5f,  100.f},{46.32f, 110.f},{46.32f, 120.f}),
+        ClubStat({29.9f,  90.f}, {46.32f, 100.f},{46.32f, 110.f}),
+
+        //these don't increase in range
+        ClubStat({26.51f, 70.f}, {26.51f, 70.f}, {26.51f, 70.f}),
+        ClubStat({18.4f,  30.f}, {18.4f,  30.f}, {18.4f,  30.f}),
+        ClubStat({10.65f, 10.f}, {10.65f, 10.f}, {10.65f, 10.f}),
+        ClubStat({9.11f,  10.f}, {9.11f,  10.f}, {9.11f,  10.f}) //except this which is dynamic
+    };
+}
+
+Club::Club(std::int32_t id, const std::string& name, float angle)
     : m_id  (id), 
     m_name  (name), 
-    m_power (power), 
-    m_angle (angle * cro::Util::Const::degToRad), 
-    m_target(target)
+    m_angle (angle * cro::Util::Const::degToRad)
 {
 
 }
@@ -79,81 +114,61 @@ float Club::getPower(float distanceToPin) const
 {
     if (m_id == ClubID::Putter)
     {
-        return getScaledValue(m_power, distanceToPin);
+        return getScaledValue(ClubStats[m_id].stats[0].target, distanceToPin);
     }
 
     //check player level and return further distance
-    return getExperiencedValue(m_power);
+    auto level = Social::getLevel();
+    if (level > 29)
+    {
+        ClubStats[m_id].stats[2].power;
+    }
+
+    if (level > 14)
+    {
+        ClubStats[m_id].stats[1].power;
+    }
+    return ClubStats[m_id].stats[0].power;
 }
 
 float Club::getTarget(float distanceToPin) const
 {
     if (m_id == ClubID::Putter)
     {
-        return getScaledValue(m_target, distanceToPin);
+        return getScaledValue(ClubStats[m_id].stats[0].target, distanceToPin);
     }
 
+    return getBaseTarget();
+}
+
+float Club::getBaseTarget() const
+{
     //check player level and return increased distance
-    return getExperiencedValue(m_target);
+    auto level = Social::getLevel();
+    if (level > 29)
+    {
+        ClubStats[m_id].stats[2].target;
+    }
+
+    if (level > 14)
+    {
+        ClubStats[m_id].stats[1].target;
+    }
+    return ClubStats[m_id].stats[0].target;
 }
 
 //private
 float Club::getScaledValue(float value, float distanceToPin) const
 {
-    if (distanceToPin < m_target * ShortRangeThreshold)
+    auto target = getBaseTarget();
+    if (distanceToPin < target * ShortRangeThreshold)
     {
-        if (distanceToPin < m_target * TinyRangeThreshold)
+        if (distanceToPin < target * TinyRangeThreshold)
         {
             return value * TinyRange;
         }
 
         return value * ShortRange;
     }
-    return value;
-}
-
-float Club::getExperiencedValue(float value) const
-{
-    auto level = Social::getLevel();
-    if (level > 29)
-    {
-        switch (m_id)
-        {
-        default: return value;
-        case ClubID::Driver:
-        case ClubID::ThreeWood:
-        case ClubID::FiveWood:
-            return value * 1.27f;
-        case ClubID::FourIron:
-        case ClubID::FiveIron:
-        case ClubID::SixIron:
-            return value * 1.15f;
-        case ClubID::SevenIron:
-        case ClubID::EightIron:
-        case ClubID::NineIron:
-            return value * 1.4f;
-        }
-    }
-
-    if (level > 14)
-    {
-        switch (m_id)
-        {
-        default: return value;
-        case ClubID::Driver:
-        case ClubID::ThreeWood:
-        case ClubID::FiveWood:
-            return value * 1.15f;
-        case ClubID::FourIron:
-        case ClubID::FiveIron:
-        case ClubID::SixIron:
-            return value * 1.07f;
-        case ClubID::SevenIron:
-        case ClubID::EightIron:
-        case ClubID::NineIron:
-            return value * 1.3f;
-        }
-    }
-
     return value;
 }
