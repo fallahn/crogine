@@ -50,6 +50,52 @@ source distribution.
 
 namespace
 {
+    const std::string CloudVertex = R"(
+    ATTRIBUTE vec4 a_position;
+    ATTRIBUTE vec3 a_normal;
+
+    uniform mat4 u_worldMatrix;
+    uniform mat4 u_viewProjectionMatrix;
+    uniform mat3 u_normalMatrix;
+
+    VARYING_OUT vec3 v_normal;
+
+    void main()
+    {
+        gl_Position = u_viewProjectionMatrix * u_worldMatrix * a_position;
+
+        v_normal = u_normalMatrix * a_normal;
+    })";
+
+    const std::string CloudFragment = R"(
+    OUTPUT
+
+    uniform vec3 u_lightDirection;
+    uniform vec4 u_skyColour;
+
+    VARYING_IN vec3 v_normal;
+
+    const vec4 BaseColour = vec4(1.0);
+    const float PixelSize = 1.0;
+    const float ColourLevels = 2.0;
+
+    void main()
+    {
+        float amount = 1.0 - pow(1.0 - dot(normalize(v_normal), normalize(-u_lightDirection)), 2.0);
+        amount *= ColourLevels;
+        amount = round(amount);
+
+        //float checkAmount = mod(amount, 2.0);
+
+        amount /= ColourLevels;
+
+        //float check = mod((floor(gl_FragCoord.x / PixelSize) + floor(gl_FragCoord.y / PixelSize)), 2.0);
+        //check *= checkAmount;
+
+        //FRAG_OUT = vec4(mix(u_skyColour.rgb, BaseColour.rgb, mix(amount, check, checkAmount)), 1.0);
+        FRAG_OUT = vec4(mix(u_skyColour.rgb, BaseColour.rgb, amount), 1.0);
+    })";
+
     const std::string ShaderVertex = R"(
     ATTRIBUTE vec4 a_position;
     ATTRIBUTE vec4 a_colour;
@@ -105,7 +151,8 @@ namespace
     {
         enum
         {
-            Ball
+            Ball,
+            Cloud
         };
     };
 
@@ -122,6 +169,7 @@ namespace
         enum
         {
             Ball,
+            Cloud,
 
             Count
         };
@@ -235,6 +283,7 @@ void RetroState::addSystems()
 
 void RetroState::loadAssets()
 {
+    //monkey material
     m_paletteTexture.loadFromFile("assets/retro/palette01.png");
     m_paletteTexture.setRepeated(false);
 
@@ -247,9 +296,14 @@ void RetroState::loadAssets()
     MaterialIDs[RetroMaterial::Ball] = m_resources.materials.add(*shader);
 
 
-    m_renderTexture.create(480, 270);
+    //cloud material
+    m_resources.shaders.loadFromString(RetroShader::Cloud, CloudVertex, CloudFragment);
+    shader = &m_resources.shaders.get(RetroShader::Cloud);
+    MaterialIDs[RetroMaterial::Cloud] = m_resources.materials.add(*shader);
+
+    //outptu quad (scales up for chonky pixels)
+    m_renderTexture.create(640, 480);
     m_quad.setTexture(m_renderTexture.getTexture());
-    m_quad.setScale(glm::vec2(4.f));
 }
 
 void RetroState::createScene()
@@ -258,7 +312,7 @@ void RetroState::createScene()
     if (md.loadFromFile("assets/retro/head.cmt"))
     {
         auto entity = m_gameScene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -5.f });
+        entity.addComponent<cro::Transform>().setPosition({ -2.f, -1.f, -5.f });
         md.createModel(entity);
 
         entity.addComponent<cro::Callback>().active = true;
@@ -274,7 +328,24 @@ void RetroState::createScene()
         entity.getComponent<cro::Model>().setMaterial(0, material);
     }
 
+    if (md.loadFromFile("assets/models/cloud.cmt"))
+    {
+        auto entity = m_gameScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ 2.f, 1.f, -5.f });
+        md.createModel(entity);
 
+        entity.addComponent<cro::Callback>().active = true;
+        entity.getComponent<cro::Callback>().function =
+            [](cro::Entity e, float dt)
+        {
+            e.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, dt);
+            e.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, dt / 2.f);
+        };
+
+        auto material = m_resources.materials.get(MaterialIDs[RetroMaterial::Cloud]);
+        material.setProperty("u_skyColour", cro::Colour::CornflowerBlue);
+        entity.getComponent<cro::Model>().setMaterial(0, material);
+    }
 
     //this is called when the window is resized to automatically update the camera's matrices/viewport
     auto camEnt = m_gameScene.getActiveCamera();
@@ -322,6 +393,11 @@ void RetroState::updateView(cro::Camera& cam3D)
     cam3D.setPerspective(50.6f * cro::Util::Const::degToRad, 16.f / 9.f, 0.1f, 140.f);
     cam3D.viewport.bottom = (1.f - size.y) / 2.f;
     cam3D.viewport.height = size.y;
+
+
+    float quadScale = std::floor(windowSize.y / m_renderTexture.getSize().y);
+    m_quad.setScale(glm::vec2(quadScale));
+    m_quad.setPosition((windowSize - (glm::vec2(m_renderTexture.getSize()) * quadScale)) / 2.f);
 
     //update the UI camera to match the new screen size
     //TODO DON'T DO THIS. Each camera wants its own specific
