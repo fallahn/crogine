@@ -1018,6 +1018,7 @@ void BallSystem::updateWind()
 
         resetInterp();
     }
+    //m_windStrengthTarget = 0.f;
 }
 
 void BallSystem::initCollisionWorld(bool drawDebug)

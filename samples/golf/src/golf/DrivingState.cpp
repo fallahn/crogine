@@ -108,6 +108,9 @@ namespace
 #include "ShaderIncludes.inl"
 
 #ifdef CRO_DEBUG_
+    float powerMultiplier = 1.f;
+    
+    
     std::int32_t debugFlags = 0;
     bool useFreeCam = false;
     std::array<glm::mat4, 5u> camTx = {};
@@ -195,11 +198,15 @@ DrivingState::DrivingState(cro::StateStack& stack, cro::State::Context context, 
     Social::setStatus(Social::InfoID::Menu, { "On The Driving Range" });
 
 #ifdef CRO_DEBUG_
+    m_sharedData.inputBinding.clubset = ClubID::FullSet;
     registerWindow([&]()
         {
             if (ImGui::Begin("Window"))
             {
-                static float maxDist = 80.f;
+                ImGui::SliderFloat("Adjust", &powerMultiplier, 0.8f, 1.1f);
+                ImGui::Text("Power %3.3f", Clubs[m_inputParser.getClub()].getPower(0.f) * powerMultiplier);
+
+                /*static float maxDist = 80.f;
                 if (ImGui::SliderFloat("Distance", &maxDist, 1.f, 80.f))
                 {
                     m_gameScene.getActiveCamera().getComponent<cro::Camera>().setMaxShadowDistance(maxDist);
@@ -209,7 +216,7 @@ DrivingState::DrivingState(cro::StateStack& stack, cro::State::Context context, 
                 if (ImGui::SliderFloat("Overshoot", &overshoot, 0.f, 120.f))
                 {
                     m_gameScene.getActiveCamera().getComponent<cro::Camera>().setShadowExpansion(overshoot);
-                }
+                }*/
 
                 //ImGui::Image(m_cameras[CameraID::Player].getComponent<cro::Camera>().shadowMapBuffer.getTexture(), { 256.f, 256.f }, { 0.f, 1.f }, { 1.f, 0.f });
             }
@@ -430,6 +437,7 @@ void DrivingState::handleMessage(const cro::Message& msg)
                 msg2->travelDistance = std::atan2(dir.z, dir.x);
             }
         }
+        //LogI << glm::length(data.position - PlayerPosition) << std::endl;
     }
         break;
     case cro::Message::SkeletalAnimationMessage:

@@ -504,7 +504,7 @@ void GolfState::buildUI()
             //kludge stops the flag recommending too much power            
             if (maxDist == Clubs[ClubID::Putter].getBaseTarget())
             {
-                guestimation *= 0.98f;
+                guestimation *= 0.96f;
             }
             else
             {

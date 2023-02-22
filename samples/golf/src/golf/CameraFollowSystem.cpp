@@ -170,13 +170,13 @@ void CameraFollowSystem::process(float dt)
         {
             auto& tx = entity.getComponent<cro::Transform>();
 
-            auto ballPos = follower.target.getComponent<cro::Transform>().getWorldPosition();
+            auto ballPos = follower.target.getComponent<cro::Transform>().getPosition();
             auto target = ballPos + TargetOffset;
             CRO_ASSERT(!std::isnan(target.x), "Target pos is NaN");
 
             follower.currentTarget = cro::Util::Maths::smoothDamp(follower.currentTarget, target, follower.velocity, CameraTrackTime + ((CameraTrackTime / 2.f) * follower.zoom.progress), dt);
 
-            auto worldPos = tx.getWorldPosition();
+            auto worldPos = tx.getPosition();
             tx.setRotation(lookRotation(worldPos, follower.currentTarget));
 
             //check the distance to the ball, and store it if closer than previous dist
@@ -247,11 +247,11 @@ void CameraFollowSystem::process(float dt)
                 }
 
                 auto& tx = entity.getComponent<cro::Transform>();
-                auto target = follower.target.getComponent<cro::Transform>().getWorldPosition() + TargetOffset;
+                auto target = follower.target.getComponent<cro::Transform>().getPosition() + TargetOffset;
                 follower.currentTarget = cro::Util::Maths::smoothDamp(follower.currentTarget, target, follower.velocity, CameraTrackTime + ((CameraTrackTime / 2.f) * follower.zoom.progress), dt);
 
 
-                tx.setRotation(lookRotation(tx.getWorldPosition(), follower.currentTarget));
+                tx.setRotation(lookRotation(tx.getPosition(), follower.currentTarget));
             }
             break;
         }

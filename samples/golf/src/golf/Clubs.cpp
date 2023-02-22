@@ -49,21 +49,22 @@ namespace
 
     constexpr std::array<ClubStat, ClubID::Count> ClubStats =
     {
-        ClubStat({46.32f, 220.f},{46.32f, 250.f},{46.32f, 280.f}),
-        ClubStat({41.8f,  180.f},{46.32f, 210.f},{46.32f, 230.f}),
-        ClubStat({38.15f, 150.f},{46.32f, 175.f},{46.32f, 190.f}),
-        ClubStat({37.11f, 140.f},{46.32f, 150.f},{46.32f, 160.f}),
-        ClubStat({35.82f, 130.f},{46.32f, 140.f},{46.32f, 150.f}),
-        ClubStat({34.4f,  120.f},{46.32f, 130.f},{46.32f, 140.f}),
-        ClubStat({32.98f, 110.f},{46.32f, 120.f},{46.32f, 130.f}),
-        ClubStat({31.5f,  100.f},{46.32f, 110.f},{46.32f, 120.f}),
-        ClubStat({29.9f,  90.f}, {46.32f, 100.f},{46.32f, 110.f}),
+        ClubStat({44.f,   220.f},{46.88f, 250.f},{50.11f, 280.f}), //123
+        ClubStat({39.6f,  180.f},{42.89f, 210.f},{43.93f, 230.f}), //123
+        ClubStat({36.3f,  150.f},{38.67f, 170.f},{40.76f, 190.f}), //123
+
+        ClubStat({35.44f, 140.f},{36.49f, 150.f},{37.69f, 160.f}), //123
+        ClubStat({34.16f, 130.f},{35.44f, 140.f},{36.49f, 150.f}), //123
+        ClubStat({32.85f, 120.f},{34.16f, 130.f},{35.44f, 140.f}), //123
+        ClubStat({31.33f, 110.f},{32.85f, 120.f},{34.16f, 130.f}), //123
+        ClubStat({29.91f, 100.f},{31.33f, 110.f},{32.85f, 120.f}), //123
+        ClubStat({28.4f,  90.f}, {29.91f, 100.f},{31.33f, 110.f}), //123
 
         //these don't increase in range
-        ClubStat({26.51f, 70.f}, {26.51f, 70.f}, {26.51f, 70.f}),
-        ClubStat({18.4f,  30.f}, {18.4f,  30.f}, {18.4f,  30.f}),
-        ClubStat({10.65f, 10.f}, {10.65f, 10.f}, {10.65f, 10.f}),
-        ClubStat({9.11f,  10.f}, {9.11f,  10.f}, {9.11f,  10.f}) //except this which is dynamic
+        ClubStat({25.2f, 70.f}, {25.2f, 70.f}, {25.2f, 70.f}),
+        ClubStat({17.4f, 30.f}, {17.4f, 30.f}, {17.4f, 30.f}),
+        ClubStat({10.3f, 10.f}, {10.3f, 10.f}, {10.3f, 10.f}),
+        ClubStat({9.11f, 10.f}, {9.11f, 10.f}, {9.11f, 10.f}) //except this which is dynamic
     };
 }
 
@@ -121,12 +122,12 @@ float Club::getPower(float distanceToPin) const
     auto level = Social::getLevel();
     if (level > 29)
     {
-        ClubStats[m_id].stats[2].power;
+        return ClubStats[m_id].stats[2].power;
     }
 
     if (level > 14)
     {
-        ClubStats[m_id].stats[1].power;
+        return ClubStats[m_id].stats[1].power;
     }
     return ClubStats[m_id].stats[0].power;
 }
@@ -147,12 +148,12 @@ float Club::getBaseTarget() const
     auto level = Social::getLevel();
     if (level > 29)
     {
-        ClubStats[m_id].stats[2].target;
+        return ClubStats[m_id].stats[2].target;
     }
 
     if (level > 14)
     {
-        ClubStats[m_id].stats[1].target;
+        return ClubStats[m_id].stats[1].target;
     }
     return ClubStats[m_id].stats[0].target;
 }
