@@ -170,13 +170,14 @@ void CameraFollowSystem::process(float dt)
         {
             auto& tx = entity.getComponent<cro::Transform>();
 
-            auto ballPos = follower.target.getComponent<cro::Transform>().getPosition();
+            auto ballPos = follower.target.getComponent<cro::Transform>().getWorldPosition();
             auto target = ballPos + TargetOffset;
             CRO_ASSERT(!std::isnan(target.x), "Target pos is NaN");
 
             follower.currentTarget = cro::Util::Maths::smoothDamp(follower.currentTarget, target, follower.velocity, CameraTrackTime + ((CameraTrackTime / 2.f) * follower.zoom.progress), dt);
 
-            tx.setRotation(lookRotation(tx.getPosition(), follower.currentTarget));
+            auto worldPos = tx.getWorldPosition();
+            tx.setRotation(lookRotation(worldPos, follower.currentTarget));
 
             //check the distance to the ball, and store it if closer than previous dist
             //and if we fall within the camera's radius
@@ -193,8 +194,8 @@ void CameraFollowSystem::process(float dt)
                     positionMultiplier = 0.79f;
                 }
 
-                auto dist = glm::length2(tx.getPosition() - target);
-                auto dist2 = glm::length2((tx.getPosition() - follower.playerPosition) * positionMultiplier);
+                auto dist = glm::length2(worldPos - target);
+                auto dist2 = glm::length2((worldPos - follower.playerPosition) * positionMultiplier);
                 if (dist < currDist
                     && dist < follower.radius
                     && dist2 > follower.radius
@@ -246,11 +247,11 @@ void CameraFollowSystem::process(float dt)
                 }
 
                 auto& tx = entity.getComponent<cro::Transform>();
-                auto target = follower.target.getComponent<cro::Transform>().getPosition() + TargetOffset;
+                auto target = follower.target.getComponent<cro::Transform>().getWorldPosition() + TargetOffset;
                 follower.currentTarget = cro::Util::Maths::smoothDamp(follower.currentTarget, target, follower.velocity, CameraTrackTime + ((CameraTrackTime / 2.f) * follower.zoom.progress), dt);
 
 
-                tx.setRotation(lookRotation(tx.getPosition(), follower.currentTarget));
+                tx.setRotation(lookRotation(tx.getWorldPosition(), follower.currentTarget));
             }
             break;
         }
