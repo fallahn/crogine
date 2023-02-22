@@ -289,17 +289,16 @@ static const std::string CelFragmentShader = R"(
 
 #if defined (CONTOUR)
     uniform float u_transparency;
-    uniform float u_minHeight = 0.0;
-    uniform float u_maxHeight = 1.0;
+#endif
+
+#if defined(HOLE_HEIGHT)
+    uniform float u_holeHeight = 1.0;
 #endif
 
 #if defined (COMP_SHADE)
     uniform vec4 u_maskColour = vec4(1.0);
     uniform vec4 u_colour = vec4(1.0);
 #endif
-//uniform float u_rim = 65.0;
-//uniform float u_step = 0.8;
-//uniform float u_mm = 1.0;
 
 #if defined (NORMAL_MAP)
     uniform sampler2D u_normalMap;
@@ -489,6 +488,13 @@ static const std::string CelFragmentShader = R"(
 
         colour.rgb = mix(colour.rgb, colour.rgb * SlopeShade, tilt);
 
+#if defined(HOLE_HEIGHT)
+        float minHeight = u_holeHeight - 0.025;
+        float maxHeight = u_holeHeight + 0.08;
+        float height = min((v_worldPosition.y - minHeight) / (maxHeight - minHeight), 1.0);
+        colour.rgb += clamp(height, 0.0, 1.0) * 0.1;
+#endif
+
 
         /*float rim = 1.0 - dot(normal, viewDirection);
         rim = smoothstep(0.9, 1.0, rim);
@@ -615,7 +621,9 @@ static const std::string CelFragmentShader = R"(
     FRAG_OUT.rgb = mix(FRAG_OUT.rgb, contourColour, contourX * fade);
     FRAG_OUT.rgb = mix(FRAG_OUT.rgb, contourColour, contourZ * fade);
 
-    float height = min((v_worldPosition.y - u_minHeight) / (u_maxHeight - u_minHeight), 1.0);
+    float minHeight = u_holeHeight - 0.025;
+    float maxHeight = u_holeHeight + 0.08;
+    float height = min((v_worldPosition.y - minHeight) / (maxHeight - minHeight), 1.0);
     FRAG_OUT.rgb += clamp(height, 0.0, 1.0) * 0.1;
 #endif
 #if defined(TERRAIN_CLIP)

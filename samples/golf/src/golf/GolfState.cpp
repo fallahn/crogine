@@ -1578,8 +1578,8 @@ void GolfState::render()
     skyCam.viewport = oldVP;
 
     //then render scene
-    glUseProgram(m_gridShader.shaderID);
-    glUniform1f(m_gridShader.transparency, m_sharedData.gridTransparency);
+    glUseProgram(m_gridShaders[1].shaderID);
+    glUniform1f(m_gridShaders[1].transparency, m_sharedData.gridTransparency);
     m_gameSceneTexture.clear();
     m_skyScene.render();
     glClear(GL_DEPTH_BUFFER_BIT);
@@ -1594,8 +1594,8 @@ void GolfState::render()
     //update mini green if ball is there
     if (m_currentPlayer.terrain == TerrainID::Green)
     {
-        glUseProgram(m_gridShader.shaderID);
-        glUniform1f(m_gridShader.transparency, 0.f);
+        glUseProgram(m_gridShaders[1].shaderID);
+        glUniform1f(m_gridShaders[1].transparency, 0.f);
 
         auto oldCam = m_gameScene.setActiveCamera(m_greenCam);
         m_greenBuffer.clear();
@@ -1714,16 +1714,26 @@ void GolfState::loadAssets()
     m_windBuffer.addShader(*shader);
     m_materialIDs[MaterialID::Course] = m_resources.materials.add(*shader);
 
-    m_resources.shaders.loadFromString(ShaderID::CourseGrid, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define RX_SHADOWS\n#define CONTOUR\n" + wobble);
+
+    m_resources.shaders.loadFromString(ShaderID::CourseGreen, CelVertexShader, CelFragmentShader, "#define HOLE_HEIGHT\n#define TERRAIN\n#define COMP_SHADE\n#define COLOUR_LEVELS 5.0\n#define TEXTURED\n#define RX_SHADOWS\n" + wobble);
+    shader = &m_resources.shaders.get(ShaderID::CourseGreen);
+    m_scaleBuffer.addShader(*shader);
+    m_resolutionBuffer.addShader(*shader);
+    m_windBuffer.addShader(*shader);
+    auto* greenShader = shader; //greens use wither this or the gridShader below for their material (set after parsing hole data)
+    m_gridShaders[0].shaderID = shader->getGLHandle();
+    m_gridShaders[0].holeHeight = shader->getUniformID("u_holeHeight");
+
+
+    m_resources.shaders.loadFromString(ShaderID::CourseGrid, CelVertexShader, CelFragmentShader, "#define HOLE_HEIGHT\n#define TEXTURED\n#define RX_SHADOWS\n#define CONTOUR\n" + wobble);
     shader = &m_resources.shaders.get(ShaderID::CourseGrid);
     m_scaleBuffer.addShader(*shader);
     m_resolutionBuffer.addShader(*shader);
     m_windBuffer.addShader(*shader);
     auto* gridShader = shader; //used below when testing for putt holes.
-    m_gridShader.shaderID = shader->getGLHandle();
-    m_gridShader.transparency = shader->getUniformID("u_transparency");
-    m_gridShader.minHeight = shader->getUniformID("u_minHeight");
-    m_gridShader.maxHeight = shader->getUniformID("u_maxHeight");
+    m_gridShaders[1].shaderID = shader->getGLHandle();
+    m_gridShaders[1].transparency = shader->getUniformID("u_transparency");
+    m_gridShaders[1].holeHeight = shader->getUniformID("u_holeHeight");
 
     m_resources.shaders.loadFromString(ShaderID::Billboard, BillboardVertexShader, BillboardFragmentShader);
     shader = &m_resources.shaders.get(ShaderID::Billboard);
@@ -3017,7 +3027,7 @@ void GolfState::loadAssets()
         //course by looking to see if the tee is on the green
         hole.puttFromTee = m_collisionMesh.getTerrain(hole.tee).terrain == TerrainID::Green;
 
-        if (hole.puttFromTee)
+        //if (hole.puttFromTee)
         {
             auto& model = hole.modelEntity.getComponent<cro::Model>();
             auto matCount = model.getMeshData().submeshCount;
@@ -3026,7 +3036,14 @@ void GolfState::loadAssets()
                 auto mat = model.getMaterialData(cro::Mesh::IndexData::Final, i);
                 if (mat.name == "green")
                 {
-                    mat.setShader(*gridShader);
+                    if (hole.puttFromTee)
+                    {
+                        mat.setShader(*gridShader);
+                    }
+                    else
+                    {
+                        mat.setShader(*greenShader);
+                    }
                     model.setMaterial(i, mat);
                 }
             }
@@ -5407,9 +5424,11 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo)
 
     //set putting grid values
     float height = m_holeData[m_currentHole].pin.y;
-    glUseProgram(m_gridShader.shaderID);
-    glUniform1f(m_gridShader.minHeight, height - 0.025f);
-    glUniform1f(m_gridShader.maxHeight, height + 0.08f);
+    for (auto& s : m_gridShaders)
+    {
+        glUseProgram(s.shaderID);
+        glUniform1f(s.holeHeight, height);
+    }
     glUseProgram(0);
 
     //map collision data

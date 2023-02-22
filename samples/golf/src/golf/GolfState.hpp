@@ -341,9 +341,9 @@ private:
     {
         std::uint32_t shaderID = 0;
         std::int32_t transparency = -1;
-        std::int32_t minHeight = -1;
-        std::int32_t maxHeight = -1;
-    }m_gridShader;
+        std::int32_t holeHeight = -1;
+    };
+    std::array<GridShader, 2u> m_gridShaders = {};
 
     struct EmoteWheel final
     {

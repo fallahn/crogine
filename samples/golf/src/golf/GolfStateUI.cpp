@@ -698,6 +698,9 @@ void GolfState::buildUI()
                 }
 
                 //update render
+                glUseProgram(m_gridShaders[1].shaderID);
+                glUniform1f(m_gridShaders[1].transparency, 0.f); //hides any putting grid
+
                 auto oldCam = m_gameScene.setActiveCamera(m_mapCam);
                 m_gameScene.getSystem<cro::CameraSystem>()->process(0.f);
                 m_holeData[m_currentHole].modelEntity.getComponent<cro::Transform>().setScale(glm::vec3(m_minimapScale));

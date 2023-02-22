@@ -204,6 +204,7 @@ struct ShaderID final
         Player,
         Hair,
         Course,
+        CourseGreen,
         CourseGrid,
         Ball,
         Slope,
