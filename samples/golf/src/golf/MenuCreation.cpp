@@ -5120,12 +5120,12 @@ void MenuState::updateUnlockedItems()
         if ((clubFlags & ClubID::Flags[clubID]) == 0)
         {
             clubFlags |= ClubID::Flags[clubID];
-            m_sharedData.unlockedItems.push_back(ul::UnlockID::FiveWood + i); //TODO we want a more explicit way of mapping to unlock ID
+            m_sharedData.unlockedItems.push_back(ul::UnlockID::FiveWood + i);
         }
     }
 
     m_sharedData.inputBinding.clubset = clubFlags;
-    //Social::setUnlockStatus(Social::UnlockType::Club, clubFlags); //TODO enable this
+    Social::setUnlockStatus(Social::UnlockType::Club, clubFlags);
 
     if (m_sharedData.inputBinding.clubset == ClubID::FullSet)
     {
@@ -5146,7 +5146,7 @@ void MenuState::updateUnlockedItems()
         }
     }
 
-    //Social::setUnlockStatus(Social::UnlockType::Ball, ballFlags); //TODO enable this
+    Social::setUnlockStatus(Social::UnlockType::Ball, ballFlags);
 
     if (level > 1)
     {
@@ -5163,7 +5163,7 @@ void MenuState::updateUnlockedItems()
                 m_sharedData.unlockedItems.push_back(ul::UnlockID::Level1 + i);
             }
         }
-        //Social::setUnlockStatus(Social::UnlockType::Level, levelFlags); //TODO enable this
+        Social::setUnlockStatus(Social::UnlockType::Level, levelFlags);
     }
 
     if (!m_sharedData.unlockedItems.empty())

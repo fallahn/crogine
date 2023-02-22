@@ -5422,14 +5422,6 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo)
         createDrone();
     }
 
-    //set putting grid values
-    float height = m_holeData[m_currentHole].pin.y;
-    for (auto& s : m_gridShaders)
-    {
-        glUseProgram(s.shaderID);
-        glUniform1f(s.holeHeight, height);
-    }
-    glUseProgram(0);
 
     //map collision data
     m_currentMap.loadFromFile(m_holeData[m_currentHole].mapPath);
@@ -5479,6 +5471,12 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo)
             };
             m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
+            //updates the height shaders on the greens
+            for (auto& s : m_gridShaders)
+            {
+                glUseProgram(s.shaderID);
+                glUniform1f(s.holeHeight, pinPos.y);
+            }
 
             auto teeMove = m_holeData[m_currentHole].tee - m_holeData[m_currentHole - 1].tee;
             auto teePos = m_holeData[m_currentHole - 1].tee + (teeMove * percent);
@@ -5514,6 +5512,13 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo)
 
         if (glm::length2(travel) < 0.0001f)
         {
+            float height = m_holeData[m_currentHole].pin.y;
+            for (auto& s : m_gridShaders)
+            {
+                glUseProgram(s.shaderID);
+                glUniform1f(s.holeHeight, height);
+            }
+
             targetInfo.prevLookAt = targetInfo.currentLookAt = targetInfo.targetLookAt;
             targetInfo.startHeight = targetInfo.targetHeight;
             targetInfo.startOffset = targetInfo.targetOffset;

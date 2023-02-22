@@ -494,7 +494,8 @@ static const std::string CelFragmentShader = R"(
         float height = clamp((v_worldPosition.y - minHeight) / (maxHeight - minHeight), 0.0, 1.0);
         //colour.rgb += clamp(height, 0.0, 1.0) * 0.1;
 
-        colour.rgb = mix(complementaryColour(colour.rgb), colour.rgb, 0.75 + (0.25 * height));
+        //complementaryColour(colour.rgb)
+        colour.rgb = mix(colour.rgb * vec3(0.67, 0.757, 0.41), colour.rgb, 0.65 + (0.35 * height));
         colour.r += smoothstep(0.45, 0.99, height) * 0.01;
         colour.g += smoothstep(0.65, 0.999, height) * 0.01;
 #endif
