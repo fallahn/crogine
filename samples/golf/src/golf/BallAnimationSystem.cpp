@@ -60,13 +60,13 @@ void BallAnimationSystem::process(float dt)
             if (auto d = glm::dot(forward, cro::Transform::Y_AXIS);
                 d < 0.9f && d > -0.9f)
             {
-                auto rightVec = glm::cross(cro::Transform::Y_AXIS, forward);
+                auto rightVec = glm::normalize(glm::cross(cro::Transform::Y_AXIS, forward));
                 CRO_ASSERT(!std::isnan(rightVec.x), "");
 
-                rightVec = glm::inverse(glm::toMat3(animation.parent.getComponent<cro::Transform>().getRotation())) * rightVec;
+                rightVec = glm::inverse(animation.parent.getComponent<cro::Transform>().getRotation()) * rightVec;
                 CRO_ASSERT(!std::isnan(rightVec.x), "NaN from parent rotation");
 
-                rightVec = glm::inverse(glm::toMat3(entity.getComponent<cro::Transform>().getRotation())) * rightVec;
+                rightVec = glm::inverse(entity.getComponent<cro::Transform>().getRotation()) * rightVec;
                 CRO_ASSERT(!std::isnan(rightVec.x), "NaN from ball rotation");
 
                 float rotation = (len / Ball::Radius);

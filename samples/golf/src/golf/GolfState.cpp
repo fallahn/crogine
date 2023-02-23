@@ -6191,7 +6191,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
         setCamTarget(pos);
     }
 
-    if (!m_holeData[m_currentHole].puttFromTee)
+    //if (!m_holeData[m_currentHole].puttFromTee)
     {
         setGreenCamPosition();
     }
@@ -6224,6 +6224,21 @@ void GolfState::setGreenCamPosition()
 {
     auto holePos = m_holeData[m_currentHole].pin;
 
+    if (m_holeData[m_currentHole].puttFromTee)
+    {
+        auto teePos = m_holeData[m_currentHole].tee;
+        auto targetPos = m_holeData[m_currentHole].target;
+
+        if ((glm::length2(m_currentPlayer.position - teePos) <
+            glm::length2(m_currentPlayer.position - holePos))
+            &&
+            (glm::length2(m_currentPlayer.position - targetPos) > 
+                /*glm::length2(m_currentPlayer.position - holePos)*/16.f))
+        {
+            holePos = targetPos;
+        }
+    }
+
     m_cameras[CameraID::Green].getComponent<cro::Transform>().setPosition({ holePos.x, GreenCamHeight, holePos.z });
 
     float heightOffset = GreenCamHeight;
@@ -6233,7 +6248,7 @@ void GolfState::setGreenCamPosition()
         auto direction = holePos - m_holeData[m_currentHole].tee;
         direction = glm::normalize(direction) * 2.f;
         m_cameras[CameraID::Green].getComponent<cro::Transform>().move(direction);
-        m_cameras[CameraID::Green].getComponent<CameraFollower>().radius = 4.5f * 4.5f;
+        m_cameras[CameraID::Green].getComponent<CameraFollower>().radius = 3.5f * 3.5f;
         m_cameras[CameraID::Green].getComponent<CameraFollower>().zoomRadius = 1.f;
         m_cameras[CameraID::Green].getComponent<CameraFollower>().zoom.target = 0.5f;
         m_cameras[CameraID::Green].getComponent<CameraFollower>().zoom.speed = 0.8f;

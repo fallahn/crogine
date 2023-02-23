@@ -5148,7 +5148,7 @@ void MenuState::updateUnlockedItems()
 
     Social::setUnlockStatus(Social::UnlockType::Ball, ballFlags);
 
-    if (level > 1)
+    if (level > 0)
     {
         //levels are same interval as balls + 1st level
         auto levelCount = ballCount + 1;
