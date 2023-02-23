@@ -1068,8 +1068,10 @@ void GolfState::handleMessage(const cro::Message& msg)
             m_drone = {};
 
             m_cameras[CameraID::Sky].getComponent<TargetInfo>().postProcess = &m_resources.shaders.get(ShaderID::Noise);
+            m_cameras[CameraID::Drone].getComponent<TargetInfo>().postProcess = &m_resources.shaders.get(ShaderID::Noise);
 
-            if (m_currentCamera == CameraID::Sky)
+            if (m_currentCamera == CameraID::Sky
+                || m_currentCamera == CameraID::Drone) //although you shouldn't be able to switch to this with the ball moving
             {
                 m_courseEnt.getComponent<cro::Drawable2D>().setShader(&m_resources.shaders.get(ShaderID::Noise));
             }
@@ -4460,21 +4462,34 @@ void GolfState::createDrone()
         targetEnt.getComponent<cro::Callback>().function =
             [&](cro::Entity e, float dt)
         {
-            auto wind = m_windUpdate.currentWindSpeed * (m_windUpdate.currentWindVector * 0.3f);
-            wind += m_windUpdate.currentWindVector * 0.7f;
-
-            e.getComponent<cro::Transform>().move(wind * dt);
-
             if (!m_drone.isValid())
             {
                 e.getComponent<cro::Callback>().active = false;
                 m_gameScene.destroyEntity(e);
+            }
+            else
+            {
+                auto wind = m_windUpdate.currentWindSpeed * (m_windUpdate.currentWindVector * 0.3f);
+                wind += m_windUpdate.currentWindVector * 0.7f;
+
+                auto resetPos = m_drone.getComponent<cro::Callback>().getUserData<DroneCallbackData>().resetPosition;
+
+                //clamp to radius of 50 m
+                if (glm::length2(resetPos - e.getComponent<cro::Transform>().getPosition()) < (50.f * 50.f))
+                {
+                    e.getComponent<cro::Transform>().move(wind * dt);
+                }
+                else
+                {
+                    e.getComponent<cro::Transform>().setPosition(resetPos);
+                }
             }
         };
 
         m_drone.getComponent<cro::Callback>().getUserData<DroneCallbackData>().target = targetEnt;
         m_cameras[CameraID::Sky].getComponent<TargetInfo>().postProcess = nullptr;
     }
+    m_cameras[CameraID::Drone].getComponent<TargetInfo>().postProcess = nullptr;
 }
 
 void GolfState::spawnBall(const ActorInfo& info)
@@ -6187,7 +6202,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     }
     else
     {
-        auto pos = m_holeData[m_currentHole].puttFromTee ? glm::vec3(0.f, SkyCamHeight, 0.f) : DefaultSkycamPosition;
+        auto pos = m_holeData[m_currentHole].puttFromTee ? glm::vec3(160.f, SkyCamHeight, 100.f) : DefaultSkycamPosition;
         setCamTarget(pos);
     }
 
