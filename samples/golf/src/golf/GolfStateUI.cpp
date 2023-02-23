@@ -505,7 +505,7 @@ void GolfState::buildUI()
             if (maxDist == Clubs[ClubID::Putter].getBaseTarget())
             {
                 //guestimation = cro::Util::Easing::easeInSine(guestimation);
-                guestimation *= 0.88f;
+                guestimation *= 0.83f;
             }
             else
             {

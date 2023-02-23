@@ -4474,8 +4474,9 @@ void GolfState::createDrone()
 
                 auto resetPos = m_drone.getComponent<cro::Callback>().getUserData<DroneCallbackData>().resetPosition;
 
-                //clamp to radius of 50 m
-                if (glm::length2(resetPos - e.getComponent<cro::Transform>().getPosition()) < (50.f * 50.f))
+                //clamp to radius
+                const float Radius = m_holeData[m_currentHole].puttFromTee ? 25.f : 50.f;
+                if (glm::length2(resetPos - e.getComponent<cro::Transform>().getPosition()) < (Radius * Radius))
                 {
                     e.getComponent<cro::Transform>().move(wind * dt);
                 }
@@ -6202,8 +6203,8 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     }
     else
     {
-        auto pos = m_holeData[m_currentHole].puttFromTee ? glm::vec3(160.f, SkyCamHeight, 100.f) : DefaultSkycamPosition;
-        setCamTarget(pos);
+       // auto pos = m_holeData[m_currentHole].puttFromTee ? glm::vec3(160.f, SkyCamHeight, -100.f) : DefaultSkycamPosition;
+        setCamTarget(DefaultSkycamPosition);
     }
 
     //if (!m_holeData[m_currentHole].puttFromTee)

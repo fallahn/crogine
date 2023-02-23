@@ -489,15 +489,15 @@ void InputParser::update(float dt, std::int32_t terrainID)
         m_inputAcceleration = 0.f;
     }
 
-    checkControllerInput();
-    checkMouseInput();
-
     if (m_state == State::Drone)
     {
         updateDroneCam(dt);
     }
     else
     {
+        //drone controls handle controller independently
+        checkControllerInput();
+        checkMouseInput();
         updateStroke(dt, terrainID);
     }
 
@@ -772,7 +772,7 @@ void InputParser::updateDroneCam(float dt)
 
         //move more slowly when zoomed in
         float zoomSpeed = 1.f - zd.progress;
-        zoomSpeed = 0.3f + (0.7f * zoomSpeed);
+        zoomSpeed = 0.15f + (0.85f * zoomSpeed);
 
         auto& tx = e.getComponent<cro::Transform>();
         auto invRotation = glm::inverse(tx.getRotation());
