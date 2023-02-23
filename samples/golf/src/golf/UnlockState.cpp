@@ -497,6 +497,11 @@ void UnlockState::buildUI()
                     if (m_itemIndex < m_unlockCollections.size())
                     {
                         m_unlockCollections[m_itemIndex].root.getComponent<cro::Callback>().active = true;
+
+                        if (m_audioEnts[AudioID::Cheer].getComponent<cro::AudioEmitter>().getState() == cro::AudioEmitter::State::Stopped)
+                        {
+                            m_audioEnts[AudioID::Cheer].getComponent<cro::AudioEmitter>().play();
+                        }
                     }
                     else
                     {
@@ -525,7 +530,7 @@ void UnlockState::buildUI()
 
         //unlock description
         entity = m_scene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition({ 0.f, 82.f, 0.5f });
+        entity.addComponent<cro::Transform>().setPosition({ 0.f, 60.f, 0.5f });
         entity.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
         entity.addComponent<cro::Drawable2D>();
         entity.addComponent<cro::Text>(largeFont).setString(ul::Items[unlockID].description);
