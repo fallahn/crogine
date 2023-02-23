@@ -2664,11 +2664,11 @@ void GolfState::buildTrophyScene()
             md.createModel(entity);
 
             //TODO there's no gaurantee that the materials are in this order...
-            auto material = m_resources.materials.get(m_materialIDs[MaterialID::Trophy]);
+            auto material = m_resources.materials.get(m_materialIDs[MaterialID::Ball]); //doesn't pixel fade like Cel does.
             applyMaterialData(md, material);
             entity.getComponent<cro::Model>().setMaterial(0, material);
 
-            material = m_resources.materials.get(m_materialIDs[MaterialID::Ball]); //doesn't pixel fade like Cel does.
+            material = m_resources.materials.get(m_materialIDs[MaterialID::Trophy]);
             applyMaterialData(md, material);
             entity.getComponent<cro::Model>().setMaterial(1, material);
 
