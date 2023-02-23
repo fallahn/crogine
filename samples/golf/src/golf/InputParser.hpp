@@ -39,6 +39,7 @@ source distribution.
 namespace cro
 {
     class MessageBus;
+    class Scene;
 }
 
 struct SharedStateData;
@@ -46,7 +47,7 @@ class InputParser final
 {
 public:
        
-    InputParser(const SharedStateData&, cro::MessageBus&);
+    InputParser(const SharedStateData&, cro::MessageBus&, cro::Scene*);
 
     void handleEvent(const cro::Event&);
     void setHoleDirection(glm::vec3);
@@ -87,6 +88,7 @@ private:
     const SharedStateData& m_sharedData;
     const InputBinding& m_inputBinding;
     cro::MessageBus& m_messageBus;
+    cro::Scene* m_gameScene;
 
     Swingput m_swingput;
 
@@ -121,12 +123,15 @@ private:
     enum class State
     {
         Aim, Power, Stroke,
-        Flight
+        Flight, Drone
     }m_state;
 
     std::int32_t m_currentClub;
     std::int32_t m_firstClub;
     std::int32_t m_clubOffset; //offset ID from first club
+
+    void updateDroneCam(float);
+    void updateStroke(float, std::int32_t);
 
     void rotate(float);
     void checkControllerInput();

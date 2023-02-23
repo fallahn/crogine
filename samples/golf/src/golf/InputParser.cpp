@@ -34,10 +34,14 @@ source distribution.
 #include "Terrain.hpp"
 #include "SharedStateData.hpp"
 #include "GameConsts.hpp"
+#include "CameraFollowSystem.hpp"
+#include "CommandIDs.hpp"
 
 #include <crogine/core/GameController.hpp>
 #include <crogine/detail/glm/gtx/norm.hpp>
 #include <crogine/util/Easings.hpp>
+#include <crogine/ecs/Scene.hpp>
+#include <crogine/ecs/systems/CommandSystem.hpp>
 
 namespace
 {
@@ -52,10 +56,11 @@ namespace
     const cro::Time DoubleTapTime = cro::milliseconds(200);
 }
 
-InputParser::InputParser(const SharedStateData& sd, cro::MessageBus& mb)
+InputParser::InputParser(const SharedStateData& sd, cro::MessageBus& mb, cro::Scene* s)
     : m_sharedData      (sd),
     m_inputBinding      (sd.inputBinding),
     m_messageBus        (mb),
+    m_gameScene         (s),
     m_swingput          (sd),
     m_inputFlags        (0),
     m_prevFlags         (0),
@@ -89,6 +94,28 @@ InputParser::InputParser(const SharedStateData& sd, cro::MessageBus& mb)
 //public
 void InputParser::handleEvent(const cro::Event& evt)
 {
+    const auto toggleDroneCam =
+        [&]()
+    {
+        if (m_gameScene != nullptr) //we don't do this on the driving range
+        {
+            if (m_state == State::Aim)
+            {
+                m_state = State::Drone;
+                auto* msg = cro::App::postMessage<SceneEvent>(MessageID::SceneMessage);
+                msg->type = SceneEvent::RequestSwitchCamera;
+                msg->data = CameraID::Drone;
+            }
+            else if (m_state == State::Drone)
+            {
+                m_state = State::Aim;
+                auto* msg = cro::App::postMessage<SceneEvent>(MessageID::SceneMessage);
+                msg->type = SceneEvent::RequestSwitchCamera;
+                msg->data = CameraID::Player;
+            }
+        }
+    };
+
     if (m_active &&
         !m_swingput.handleEvent(evt))
     {
@@ -140,6 +167,10 @@ void InputParser::handleEvent(const cro::Event& evt)
             {
                 m_inputFlags |= InputFlag::Cancel;
                 cro::App::getWindow().setMouseCaptured(!m_isCPU);
+            }
+            else if (evt.key.keysym.sym == SDLK_KP_MULTIPLY)
+            {
+                toggleDroneCam();
             }
         }
         else if (evt.type == SDL_KEYUP)
@@ -220,6 +251,11 @@ void InputParser::handleEvent(const cro::Event& evt)
                 else if (evt.cbutton.button == cro::GameController::DPadDown)
                 {
                     m_inputFlags |= InputFlag::Down;
+                }
+
+                else if (evt.cbutton.button == cro::GameController::ButtonRightStick)
+                {
+                    toggleDroneCam();
                 }
             }
         }
@@ -453,10 +489,23 @@ void InputParser::update(float dt, std::int32_t terrainID)
         m_inputAcceleration = 0.f;
     }
 
-
     checkControllerInput();
     checkMouseInput();
 
+    if (m_state == State::Drone)
+    {
+        updateDroneCam(dt);
+    }
+    else
+    {
+        updateStroke(dt, terrainID);
+    }
+
+    m_prevFlags = m_inputFlags;
+}
+
+void InputParser::updateStroke(float dt, std::int32_t terrainID)
+{
     //catch the inputs that where filtered by the
     //enable flags so we can raise their own event for them
     auto disabledFlags = (m_inputFlags & ~m_enableFlags);
@@ -650,8 +699,70 @@ void InputParser::update(float dt, std::int32_t terrainID)
         }
     }
 
-    m_prevFlags = m_inputFlags;
     m_prevDisabledFlags = disabledFlags;
+}
+
+void InputParser::updateDroneCam(float dt)
+{
+    glm::vec2 rotation(0.f);
+    if (m_inputFlags & (InputFlag::Left | InputFlag::Right))
+    {
+        if (m_inputFlags & InputFlag::Left)
+        {
+            rotation.y += dt;
+        }
+        if (m_inputFlags & InputFlag::Right)
+        {
+            rotation.y -= dt;
+        }
+    }
+
+    if (m_inputFlags & (InputFlag::Up | InputFlag::Down))
+    {
+        if (m_inputFlags & InputFlag::Down)
+        {
+            rotation.x -= dt;
+        }
+        if (m_inputFlags & InputFlag::Up)
+        {
+            rotation.x += dt;
+        }
+    }
+
+    rotation *= m_analogueAmount;
+    //hmmm we want to read axis inversion from the settings...
+    //but only apply them on controller input
+
+    float zoom = 0.f;
+    if (m_inputFlags & InputFlag::PrevClub)
+    {
+        zoom -= dt;
+    }
+    if (m_inputFlags & InputFlag::NextClub)
+    {
+        zoom += dt;
+    }
+
+    cro::Command cmd;
+    cmd.targetFlags = CommandID::DroneCam;
+    cmd.action = [rotation, zoom](cro::Entity e, float)
+    {
+        auto& tx = e.getComponent<cro::Transform>();
+        auto invRotation = glm::inverse(tx.getRotation());
+        auto up = invRotation * cro::Transform::Y_AXIS;
+
+        e.getComponent<cro::Transform>().rotate(up, rotation.y);
+        e.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, rotation.x);
+
+        if (zoom != 0)
+        {
+            auto& zd = e.getComponent<CameraFollower::ZoomData>();
+            zd.progress = std::clamp(zd.progress + zoom, 0.f, 1.f);
+            zd.fov = glm::mix(1.f, zd.target, cro::Util::Easing::easeOutExpo(cro::Util::Easing::easeInQuad(zd.progress)));
+            e.getComponent<cro::Camera>().resizeCallback(e.getComponent<cro::Camera>());
+        }
+    };
+    m_gameScene->getSystem<cro::CommandSystem>()->sendCommand(cmd);
 }
 
 bool InputParser::inProgress() const

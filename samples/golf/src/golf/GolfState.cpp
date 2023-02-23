@@ -178,7 +178,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     m_uiScene           (context.appInstance.getMessageBus(), 1024),
     m_trophyScene       (context.appInstance.getMessageBus()),
     m_mouseVisible      (true),
-    m_inputParser       (sd, context.appInstance.getMessageBus()),
+    m_inputParser       (sd, context.appInstance.getMessageBus(), &m_gameScene),
     m_cpuGolfer         (m_inputParser, m_currentPlayer, m_collisionMesh),
     m_wantsGameState    (true),
     m_scaleBuffer       ("PixelScale"),
@@ -3888,6 +3888,42 @@ void GolfState::buildScene()
     m_cameras[CameraID::Sky] = camEnt;
 
 
+    //same as sky cam, but conrolled by the active player
+    camEnt = m_gameScene.createEntity();
+    camEnt.addComponent<cro::Transform>().setPosition(DefaultSkycamPosition);
+    camEnt.addComponent<cro::Camera>().resizeCallback =
+        [&, camEnt](cro::Camera& cam)
+    {
+        auto vpSize = glm::vec2(cro::App::getWindow().getSize());
+        cam.setPerspective((m_sharedData.fov * cro::Util::Const::degToRad) * camEnt.getComponent<CameraFollower::ZoomData>().fov,
+            vpSize.x / vpSize.y, 0.1f, static_cast<float>(MapSize.x) * 1.25f,
+            shadowQuality.cascadeCount);
+        cam.viewport = { 0.f, 0.f, 1.f, 1.f };
+
+        //fades billboards with zoom
+        if (m_currentCamera == CameraID::Drone)
+        {
+            m_resolutionUpdate.targetFade = m_currentPlayer.terrain == TerrainID::Green ? GreenFadeDistance : CourseFadeDistance;
+            m_resolutionUpdate.targetFade += (ZoomFadeDistance / 2.f) + (camEnt.getComponent<CameraFollower::ZoomData>().progress * (ZoomFadeDistance / 2.f));
+        }
+    };
+    camEnt.getComponent<cro::Camera>().reflectionBuffer.create(ReflectionMapSize, ReflectionMapSize);
+    camEnt.getComponent<cro::Camera>().reflectionBuffer.setSmooth(true);
+    camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(ShadowMapSize / 2, ShadowMapSize / 2);
+    camEnt.getComponent<cro::Camera>().active = false;
+    camEnt.getComponent<cro::Camera>().setMaxShadowDistance(shadowQuality.shadowFarDistance);
+    camEnt.getComponent<cro::Camera>().setShadowExpansion(25.f);
+    camEnt.addComponent<cro::CommandTarget>().ID = CommandID::DroneCam;
+    camEnt.addComponent<cro::AudioListener>();
+    camEnt.addComponent<CameraFollower::ZoomData>();
+
+    //this holds the water plane ent when active
+    camEnt.addComponent<TargetInfo>();
+    setPerspective(camEnt.getComponent<cro::Camera>());
+    m_cameras[CameraID::Drone] = camEnt;
+
+
+
     //and a green camera
     camEnt = m_gameScene.createEntity();
     camEnt.addComponent<cro::Transform>();
@@ -4400,6 +4436,7 @@ void GolfState::createDrone()
             e.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, currRotation);
 
             m_cameras[CameraID::Sky].getComponent<cro::Transform>().setPosition(e.getComponent<cro::Transform>().getPosition());
+            m_cameras[CameraID::Drone].getComponent<cro::Transform>().setPosition(e.getComponent<cro::Transform>().getPosition());
 
             //update emitter based on velocity
             auto velocity = oldPos - e.getComponent<cro::Transform>().getPosition();
@@ -6159,6 +6196,12 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
         setGreenCamPosition();
     }
 
+    //set the player controlled drone cam to look at the player
+    //(although this will drift as the drone moves)
+    auto orientation = lookRotation(m_cameras[CameraID::Drone].getComponent<cro::Transform>().getPosition(), player.position);
+    m_cameras[CameraID::Drone].getComponent<cro::Transform>().setRotation(orientation);
+
+
     if ((cro::GameController::getControllerCount() > 1
         && (m_sharedData.localConnectionData.playerCount > 1 && !isCPU))
         || m_sharedData.connectionData[1].playerCount != 0) //doesn't account if someone leaves mid-game however
@@ -7018,7 +7061,8 @@ void GolfState::setActiveCamera(std::int32_t camID)
 
         //set scene camera
         m_gameScene.setActiveCamera(m_cameras[camID]);
-        if (camID != CameraID::Sky)
+        if (camID != CameraID::Sky
+            && camID != CameraID::Drone)
         {
             m_gameScene.setActiveListener(m_cameras[camID]);
 
