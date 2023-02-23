@@ -77,7 +77,7 @@ namespace
         0.1f, 0.96f,
         0.986f, 0.1f,
         0.001f, 0.001f,
-        0.998f,
+        0.958f,
         0.f
     };
 
@@ -460,7 +460,7 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
 
 
                 //gravity
-                static constexpr float MinFallVelocity = 2.f;
+                static constexpr float MinFallVelocity = 4.f;// 2.f;
                 float gravityAmount = 1.f - std::min(1.f, glm::length2(ball.velocity) / MinFallVelocity);
 
                 //this is some fudgy non-physics.
@@ -495,8 +495,8 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
                     else
                     {
                         //lets the ball continue travelling, ie overshoot
-                        auto bounceVel = glm::length(ball.velocity) * 0.4f;// 0.2f;
-                        ball.velocity *= 0.45f;// 0.65f;// 0.15f;
+                        auto bounceVel = glm::length(ball.velocity) * 0.5f;// 0.2f;
+                        ball.velocity *= 0.3f;// 0.45f;// 0.65f;// 0.15f;
                         ball.velocity.y = bounceVel;
 
                         position.y = terrainContact.intersection.y;

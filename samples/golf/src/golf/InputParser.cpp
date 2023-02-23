@@ -730,8 +730,8 @@ void InputParser::updateDroneCam(float dt)
     }
 
     auto controllerID = activeControllerID(m_inputBinding.playerID);
-    auto controllerX = cro::GameController::getAxisPosition(controllerID, cro::GameController::AxisLeftX);
-    auto controllerY = cro::GameController::getAxisPosition(controllerID, cro::GameController::AxisLeftY);
+    auto controllerX = cro::GameController::getAxisPosition(controllerID, cro::GameController::AxisRightX);
+    auto controllerY = cro::GameController::getAxisPosition(controllerID, cro::GameController::AxisRightY);
     if (std::abs(controllerX) > LeftThumbDeadZone)
     {
         //hmmm we want to read axis inversion from the settings...
