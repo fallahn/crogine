@@ -709,11 +709,11 @@ void InputParser::updateDroneCam(float dt)
     {
         if (m_inputFlags & InputFlag::Left)
         {
-            rotation.y += dt;
+            rotation.y += 1.f;
         }
         if (m_inputFlags & InputFlag::Right)
         {
-            rotation.y -= dt;
+            rotation.y -= 1.f;
         }
     }
 
@@ -721,17 +721,32 @@ void InputParser::updateDroneCam(float dt)
     {
         if (m_inputFlags & InputFlag::Down)
         {
-            rotation.x -= dt;
+            rotation.x -= 1.f;
         }
         if (m_inputFlags & InputFlag::Up)
         {
-            rotation.x += dt;
+            rotation.x += 1.f;
         }
     }
 
-    rotation *= m_analogueAmount;
-    //hmmm we want to read axis inversion from the settings...
-    //but only apply them on controller input
+    auto controllerID = activeControllerID(m_inputBinding.playerID);
+    auto controllerX = cro::GameController::getAxisPosition(controllerID, cro::GameController::AxisLeftX);
+    auto controllerY = cro::GameController::getAxisPosition(controllerID, cro::GameController::AxisLeftY);
+    if (std::abs(controllerX) > LeftThumbDeadZone)
+    {
+        //hmmm we want to read axis inversion from the settings...
+        rotation.y = -(static_cast<float>(controllerX) / cro::GameController::AxisMax);
+    }
+    if (std::abs(controllerY) > LeftThumbDeadZone)
+    {
+        rotation.x = -(static_cast<float>(controllerY) / cro::GameController::AxisMax);
+    }
+
+
+    if (auto len2 = glm::length2(rotation); len2 != 0)
+    {
+        rotation = glm::normalize(rotation) * std::min(1.f, std::pow(std::sqrt(len2), 5.f));
+    }
 
     float zoom = 0.f;
     if (m_inputFlags & InputFlag::PrevClub)
@@ -745,22 +760,26 @@ void InputParser::updateDroneCam(float dt)
 
     cro::Command cmd;
     cmd.targetFlags = CommandID::DroneCam;
-    cmd.action = [rotation, zoom](cro::Entity e, float)
+    cmd.action = [rotation, zoom](cro::Entity e, float dt)
     {
-        auto& tx = e.getComponent<cro::Transform>();
-        auto invRotation = glm::inverse(tx.getRotation());
-        auto up = invRotation * cro::Transform::Y_AXIS;
-
-        e.getComponent<cro::Transform>().rotate(up, rotation.y);
-        e.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, rotation.x);
-
+        auto& zd = e.getComponent<CameraFollower::ZoomData>();
         if (zoom != 0)
         {
-            auto& zd = e.getComponent<CameraFollower::ZoomData>();
             zd.progress = std::clamp(zd.progress + zoom, 0.f, 1.f);
             zd.fov = glm::mix(1.f, zd.target, cro::Util::Easing::easeOutExpo(cro::Util::Easing::easeInQuad(zd.progress)));
             e.getComponent<cro::Camera>().resizeCallback(e.getComponent<cro::Camera>());
         }
+
+        //move more slowly when zoomed in
+        float zoomSpeed = 1.f - zd.progress;
+        zoomSpeed = 0.3f + (0.7f * zoomSpeed);
+
+        auto& tx = e.getComponent<cro::Transform>();
+        auto invRotation = glm::inverse(tx.getRotation());
+        auto up = invRotation * cro::Transform::Y_AXIS;
+
+        e.getComponent<cro::Transform>().rotate(up, rotation.y * zoomSpeed * dt);
+        e.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, rotation.x * zoomSpeed * dt);
     };
     m_gameScene->getSystem<cro::CommandSystem>()->sendCommand(cmd);
 }
@@ -855,7 +874,7 @@ void InputParser::checkControllerInput()
     static const float MinLen2 = static_cast<float>(LeftThumbDeadZone * LeftThumbDeadZone);
     if (len2 > MinLen2)
     {
-        m_analogueAmount = std::min(1.f, std::pow(std::sqrt(len2) / (cro::GameController::AxisMax /*- LeftThumbDeadZone*/), 5.f));
+        m_analogueAmount = std::min(1.f, std::pow(std::sqrt(len2) / (cro::GameController::AxisMax), 5.f));
     }
 
 
