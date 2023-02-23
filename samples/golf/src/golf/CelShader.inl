@@ -479,7 +479,7 @@ static const std::string CelFragmentShader = R"(
         amount /= COLOUR_LEVELS;
         amount = AMOUNT_MIN + (amount * AMOUNT_MAX);
 
-        vec3 viewDirection = normalize(v_cameraWorldPosition - v_worldPosition.xyz);
+        vec3 viewDirection = v_cameraWorldPosition - v_worldPosition.xyz;
 #if defined(COMP_SHADE)
         float effectAmount = (1.0 - u_maskColour.r);
         float tilt  = dot(normal, vec3(0.0, 1.0, 0.0));
@@ -495,10 +495,15 @@ static const std::string CelFragmentShader = R"(
         //colour.rgb += clamp(height, 0.0, 1.0) * 0.1;
 
         //complementaryColour(colour.rgb)
-        colour.rgb = mix(colour.rgb * vec3(0.67, 0.757, 0.41), colour.rgb, 0.65 + (0.35 * height));
-        colour.r += smoothstep(0.45, 0.99, height) * 0.01;
-        colour.g += smoothstep(0.65, 0.999, height) * 0.01;
+        vec3 holeColour = mix(colour.rgb * vec3(0.67, 0.757, 0.41), colour.rgb, 0.65 + (0.35 * height));
+        holeColour.r += smoothstep(0.45, 0.99, height) * 0.01;
+        holeColour.g += smoothstep(0.65, 0.999, height) * 0.01;
+
+        //distances are sqr
+        float fade = (1.0 - smoothstep(100.0, 400.0, dot(viewDirection, viewDirection)));
+        colour.rgb = mix(colour.rgb, holeColour, fade);
 #endif
+        viewDirection = normalize(viewDirection);
 
 
         /*float rim = 1.0 - dot(normal, viewDirection);
