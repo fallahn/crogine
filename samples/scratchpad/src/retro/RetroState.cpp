@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022
+Matt Marchant 2022 - 2023
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -59,11 +59,15 @@ namespace
     uniform mat3 u_normalMatrix;
 
     VARYING_OUT vec3 v_normal;
+    VARYING_OUT vec3 v_worldPosition;
 
     void main()
     {
-        gl_Position = u_viewProjectionMatrix * u_worldMatrix * a_position;
+        vec4 position = u_worldMatrix * a_position;
+        
+        gl_Position = u_viewProjectionMatrix * position;
 
+        v_worldPosition = position.xyz;
         v_normal = u_normalMatrix * a_normal;
     })";
 
@@ -71,9 +75,12 @@ namespace
     OUTPUT
 
     uniform vec3 u_lightDirection;
-    uniform vec4 u_skyColour;
+    uniform vec4 u_skyColourTop;
+    uniform vec4 u_skyColourBottom;
+    uniform vec3 u_cameraWorldPosition;
 
     VARYING_IN vec3 v_normal;
+    VARYING_IN vec3 v_worldPosition;
 
     const vec4 BaseColour = vec4(1.0);
     const float PixelSize = 1.0;
@@ -81,19 +88,25 @@ namespace
 
     void main()
     {
-        float amount = 1.0 - pow(1.0 - dot(normalize(v_normal), normalize(-u_lightDirection)), 2.0);
-        amount *= ColourLevels;
-        amount = round(amount);
+        vec3 normal = normalize(v_normal);
+        vec3 viewDirection = normalize(u_cameraWorldPosition - v_worldPosition);
+        float rim = smoothstep(0.6, 0.95, 1.0 - dot(normal, viewDirection));
+        float rimAmount = dot(vec3(0.0, -1.0, 0.0), normal);
+        rimAmount += 1.0;
+        rimAmount /= 2.0;
+        rim *= smoothstep(0.5, 0.9, rimAmount);
 
-        //float checkAmount = mod(amount, 2.0);
 
-        amount /= ColourLevels;
+        float colourAmount = pow(1.0 - dot(normal, normalize(-u_lightDirection)), 2.0);
+        colourAmount *= ColourLevels;
+        colourAmount = round(colourAmount);
+        colourAmount /= ColourLevels;
 
-        //float check = mod((floor(gl_FragCoord.x / PixelSize) + floor(gl_FragCoord.y / PixelSize)), 2.0);
-        //check *= checkAmount;
+        vec4 colour = vec4(mix(BaseColour.rgb, u_skyColourTop.rgb, colourAmount * 0.75), 1.0);
+        colour.rgb = mix(colour.rgb, u_skyColourBottom.rgb * 1.5, rim * 0.8);
 
-        //FRAG_OUT = vec4(mix(u_skyColour.rgb, BaseColour.rgb, mix(amount, check, checkAmount)), 1.0);
-        FRAG_OUT = vec4(mix(u_skyColour.rgb, BaseColour.rgb, amount), 1.0);
+        FRAG_OUT = colour;
+
     })";
 
     const std::string ShaderVertex = R"(
@@ -301,18 +314,23 @@ void RetroState::loadAssets()
     shader = &m_resources.shaders.get(RetroShader::Cloud);
     MaterialIDs[RetroMaterial::Cloud] = m_resources.materials.add(*shader);
 
-    //outptu quad (scales up for chonky pixels)
+    //output quad (scales up for chonky pixels)
     m_renderTexture.create(640, 480);
     m_quad.setTexture(m_renderTexture.getTexture());
 }
 
 void RetroState::createScene()
 {
+    m_gameScene.enableSkybox();
+    m_gameScene.setSkyboxColours(cro::Colour::Blue, cro::Colour(0.937f, 0.678f, 0.612f, 1.f), cro::Colour(0.706f, 0.851f, 0.804f, 1.f));
+    //m_gameScene.setSkyboxColours(cro::Colour::Blue, cro::Colour(0.858f, 0.686f, 0.467f, 1.f), cro::Colour(0.663f, 0.729f, 0.753f, 1.f));
+    //m_gameScene.setSkyboxColours(cro::Colour::Blue, cro::Colour(1.f, 0.973f, 0.882f, 1.f), cro::Colour(0.723f, 0.847f, 0.792f, 1.f));
+
     cro::ModelDefinition md(m_resources);
     if (md.loadFromFile("assets/retro/head.cmt"))
     {
         auto entity = m_gameScene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition({ -2.f, -1.f, -5.f });
+        entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -3.f });
         md.createModel(entity);
 
         entity.addComponent<cro::Callback>().active = true;
@@ -328,23 +346,47 @@ void RetroState::createScene()
         entity.getComponent<cro::Model>().setMaterial(0, material);
     }
 
-    if (md.loadFromFile("assets/models/cloud.cmt"))
+    const auto createCloud = [&](glm::vec3 pos)
     {
         auto entity = m_gameScene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition({ 2.f, 1.f, -5.f });
+        entity.addComponent<cro::Transform>().setPosition(pos);
         md.createModel(entity);
 
         entity.addComponent<cro::Callback>().active = true;
         entity.getComponent<cro::Callback>().function =
             [](cro::Entity e, float dt)
         {
-            e.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, dt);
-            e.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, dt / 2.f);
+            e.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, dt / 4.f);
+            //e.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, dt / 2.f);
         };
 
         auto material = m_resources.materials.get(MaterialIDs[RetroMaterial::Cloud]);
-        material.setProperty("u_skyColour", cro::Colour::CornflowerBlue);
+        material.setProperty("u_skyColourTop", m_gameScene.getSkyboxColours().top);
+        material.setProperty("u_skyColourBottom", m_gameScene.getSkyboxColours().middle);
         entity.getComponent<cro::Model>().setMaterial(0, material);
+
+        return entity;
+    };
+
+    if (md.loadFromFile("assets/models/cloud.cmt"))
+    {
+        auto entity = createCloud(glm::vec3(0.f, 2.f, 0.f));
+        entity.getComponent<cro::Transform>().setOrigin({ 0.f, 0.f, 22.f });
+    }
+
+    if (md.loadFromFile("assets/retro/cloud.cmt"))
+    {
+        auto entity = createCloud(glm::vec3(-2.f, 4.f, -10.f));
+        entity.getComponent<cro::Transform>().setScale(glm::vec3(2.f));
+        entity.getComponent<cro::Callback>().function =
+            [](cro::Entity e, float dt)
+        {
+            e.getComponent<cro::Transform>().move({ -0.5f * dt, 0.f, 0.f });
+            if (e.getComponent<cro::Transform>().getPosition().x < -14.f)
+            {
+                e.getComponent<cro::Transform>().move({ 28.f, 0.f, 0.f });
+            }
+        };
     }
 
     //this is called when the window is resized to automatically update the camera's matrices/viewport

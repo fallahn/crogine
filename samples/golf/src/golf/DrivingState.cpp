@@ -1728,6 +1728,8 @@ void DrivingState::createFoliage(cro::Entity terrainEnt)
 void DrivingState::createClouds(const std::string& cloudPath)
 {
     auto spritePath = cloudPath.empty() ? "assets/golf/sprites/clouds.spt" : cloudPath;
+    cro::ModelDefinition md(m_resources);
+    md.loadFromFile("assets/golf/models/cloud.cmt");
 
     cro::SpriteSheet spriteSheet;
     if (spriteSheet.loadFromFile(spritePath, m_resources.textures)
@@ -1767,20 +1769,20 @@ void DrivingState::createClouds(const std::string& cloudPath)
             auto entity = m_gameScene.createEntity();
             entity.addComponent<cro::Transform>().setPosition(cloudPos);
             entity.addComponent<Cloud>().speedMultiplier = static_cast<float>(cro::Util::Random::value(10, 22)) / 100.f;
-            entity.addComponent<cro::Sprite>() = randSprites[cro::Util::Random::value(0u, randSprites.size() - 1)];
+            md.createModel(entity);
+            /*entity.addComponent<cro::Sprite>() = randSprites[cro::Util::Random::value(0u, randSprites.size() - 1)];
             entity.addComponent<cro::Model>();
 
             auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
             bounds.width /= PixelPerMetre;
             bounds.height /= PixelPerMetre;
-            entity.getComponent<cro::Transform>().setOrigin({bounds.width / 2.f, bounds.height / 2.f, 0.f});
+            entity.getComponent<cro::Transform>().setOrigin({bounds.width / 2.f, bounds.height / 2.f, 0.f});*/
 
-            float scale = static_cast<float>(cro::Util::Random::value(4, 10));
+            float scale = static_cast<float>(cro::Util::Random::value/*(4, 10)*/(10, 40));
             entity.getComponent<cro::Transform>().setScale(glm::vec3(scale));
-            entity.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, 90.f * cro::Util::Const::degToRad);
-            //entity.getComponent<cro::Transform>().rotate(cro::Transform::Z_AXIS, 180.f * cro::Util::Const::degToRad);
+            /*entity.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, 90.f * cro::Util::Const::degToRad);
 
-            delayedUpdates.push_back(entity);
+            delayedUpdates.push_back(entity);*/
         }
 
         //this is a work around because changing sprite 3D materials

@@ -1090,7 +1090,8 @@ void GolfState::handleMessage(const cro::Message& msg)
             {
                 static float state = 0.f;
 
-                if (m_currentCamera == CameraID::Sky)
+                if (m_currentCamera == CameraID::Sky
+                    || m_currentCamera == CameraID::Drone)
                 {
                     static float accum = 0.f;
                     accum += dt;
@@ -7083,6 +7084,7 @@ void GolfState::setActiveCamera(std::int32_t camID)
             m_cameras[m_currentCamera].getComponent<TargetInfo>().waterPlane = {};
         }
         m_cameras[m_currentCamera].getComponent<cro::Camera>().active = false;
+
 
         if (camID == CameraID::Player)
         {
