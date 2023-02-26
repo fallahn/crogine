@@ -444,7 +444,7 @@ void ParticleSystem::process(float dt)
             p.position += p.velocity * dt;            
            
             p.lifetime -= dt;
-            p.colour.setAlpha(std::max(p.lifetime / p.maxLifeTime, 0.f));
+            p.colour.setAlpha(std::min(1.f, std::max(p.lifetime / p.maxLifeTime, 0.f)));
 
             p.rotation += emitter.settings.rotationSpeed * dt;
             p.scale += ((p.scale * emitter.settings.scaleModifier) * dt);

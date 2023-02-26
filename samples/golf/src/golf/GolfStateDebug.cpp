@@ -28,6 +28,7 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include "GolfState.hpp"
+#include "CameraFollowSystem.hpp"
 
 #include <crogine/ecs/components/Camera.hpp>
 #include <crogine/core/SysTime.hpp>
@@ -38,11 +39,10 @@ namespace
 {
     const std::array<std::string, CameraID::Count> CameraStrings =
     {
-        "Player", "Bystander", "Sky", "Green", "Transition"
+        "Player", "Bystander", "Sky", "Green", "Transition", "Idle", "Drone"
     };
 }
 
-#ifdef PATH_TRACING
 #include <crogine/graphics/MeshData.hpp>
 #include <crogine/graphics/DynamicMeshBuilder.hpp>
 
@@ -51,6 +51,7 @@ namespace
 
 #include "../ErrorCheck.hpp"
 
+#ifdef PATH_TRACING
 namespace
 {
     cro::Mesh::Data* meshData = nullptr;
@@ -122,6 +123,33 @@ void GolfState::endBallDebug()
 }
 
 #endif
+
+void GolfState::addCameraDebugging()
+{
+#ifdef CAMERA_TRACK
+    auto materialID = m_materialIDs[MaterialID::WireFrame];
+
+    for (auto c : m_cameras)
+    {
+        if (c.hasComponent<CameraFollower>())
+        {
+            auto meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_LINES));
+
+            auto material = m_resources.materials.get(materialID);
+            material.enableDepthTest = false;
+            auto meshData = m_resources.meshes.getMesh(meshID);
+            meshData.boundingBox = { glm::vec3(0.f), glm::vec3(320.f, 100.f, -200.f) };
+            meshData.boundingSphere = meshData.boundingBox;
+
+            auto entity = m_gameScene.createEntity();
+            entity.addComponent<cro::Transform>();
+            entity.addComponent<cro::Model>(meshData, material);
+
+            c.getComponent<CameraFollower>().debugEntity = entity;
+        }
+    }
+#endif
+}
 
 void GolfState::registerDebugWindows()
 {

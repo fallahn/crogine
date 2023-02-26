@@ -409,6 +409,9 @@ bool GolfState::handleEvent(const cro::Event& evt)
         case SDLK_SPACE: //TODO this should read the keymap... but it's not const
             closeMessage();
             break;
+        case SDLK_3:
+            toggleFreeCam();
+            break;
 #ifdef CRO_DEBUG_
         case SDLK_F2:
             m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, std::uint8_t(ServerCommand::NextHole), net::NetFlag::Reliable);
@@ -554,9 +557,6 @@ bool GolfState::handleEvent(const cro::Event& evt)
             };
             m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
         }
-            break;
-        case SDLK_INSERT:
-            toggleFreeCam();
             break;
 #endif
         }
@@ -4088,6 +4088,7 @@ void GolfState::buildScene()
 #ifdef PATH_TRACING
     initBallDebug();
 #endif
+    addCameraDebugging();
 //#endif
 
     //drone model to follow camera
@@ -7150,6 +7151,15 @@ void GolfState::updateCameraHeight(float movement)
 
 void GolfState::toggleFreeCam()
 {
+    if (!m_photoMode)
+    {
+        //only switch if we're the active player and the input is active
+        if (!m_inputParser.getActive() || m_currentCamera != CameraID::Player)
+        {
+            return;
+        }
+    }
+
     cro::Command cmd;
     cmd.targetFlags = CommandID::StrokeArc | CommandID::StrokeIndicator;
 

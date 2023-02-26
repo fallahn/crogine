@@ -425,6 +425,7 @@ private:
     void updateBallDebug(glm::vec3);
     void endBallDebug();
 #endif
+    void addCameraDebugging();
     void registerDebugWindows();
 
     struct Benchmark final

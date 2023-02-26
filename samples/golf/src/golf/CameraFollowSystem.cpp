@@ -33,6 +33,7 @@ source distribution.
 #include "ClientCollisionSystem.hpp"
 #include "BallSystem.hpp"
 #include "InterpolationSystem.hpp"
+#include "../ErrorCheck.hpp"
 
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/ecs/components/Transform.hpp>
@@ -50,7 +51,7 @@ namespace
 {
     const std::array<std::string, CameraID::Count> CamNames =
     {
-        "Player", "Bystander", "Sky", "Green", "Transition"
+        "Player", "Bystander", "Sky", "Green", "Transition", "Idle", "Drone"
     };
 
     const std::array<std::string, 3u> StateNames =
@@ -62,6 +63,64 @@ namespace
     constexpr glm::vec3 TargetOffset(0.f, 0.2f, 0.f);
 
     constexpr float CameraTrackTime = 0.25f; //approx delay in tracking interpolation
+
+    std::array<std::vector<float>, CameraID::Count> DebugBuffers = {};
+    std::array<std::vector<std::uint32_t>, CameraID::Count> DebugIndices = {};
+    std::array<cro::Entity, CameraID::Count> DebugEntities = {};
+
+    void updateBufferData(std::int32_t idx, glm::vec3 start, glm::vec3 end)
+    {
+        //just to alternate the colour each time
+        static std::uint64_t counter = 0;
+
+
+        auto& indexArray = DebugIndices[idx];
+
+        auto& buffer = DebugBuffers[idx];
+        float c = static_cast<float>(counter++ % 2);
+
+        indexArray.push_back(static_cast<std::uint32_t>(indexArray.size()));
+        buffer.push_back(start.x);
+        buffer.push_back(start.y);
+        buffer.push_back(start.z);
+
+        buffer.push_back(c);
+        buffer.push_back(0.f);
+        buffer.push_back(1.f - c);
+        buffer.push_back(1.f);
+
+        indexArray.push_back(static_cast<std::uint32_t>(indexArray.size()));
+        buffer.push_back(end.x);
+        buffer.push_back(end.y);
+        buffer.push_back(end.z);
+
+        buffer.push_back(c);
+        buffer.push_back(0.f);
+        buffer.push_back(1.f - c);
+        buffer.push_back(1.f);
+
+
+        //----------//
+        indexArray.push_back(static_cast<std::uint32_t>(indexArray.size()));
+        buffer.push_back(end.x);
+        buffer.push_back(end.y);
+        buffer.push_back(end.z);
+
+        buffer.push_back(1.f);
+        buffer.push_back(1.f);
+        buffer.push_back(c);
+        buffer.push_back(1.f);
+
+        indexArray.push_back(static_cast<std::uint32_t>(indexArray.size()));
+        buffer.push_back(end.x);
+        buffer.push_back(end.y);
+        buffer.push_back(end.z);
+
+        buffer.push_back(1.f);
+        buffer.push_back(1.f);
+        buffer.push_back(c);
+        buffer.push_back(1.f);
+    }
 }
 
 CameraFollowSystem::CameraFollowSystem(cro::MessageBus& mb)
@@ -104,7 +163,35 @@ void CameraFollowSystem::handleMessage(const cro::Message& msg)
         if (data.type == GolfEvent::SetNewPlayer)
         {
             m_closestCamera = CameraID::Player; //reset to player camera
+
         }
+#ifdef CAMERA_TRACK
+        else if (data.type == GolfEvent::BallLanded)
+        {
+            //upload debug buffers
+            for (auto i = 0u; i < CameraID::Count; ++i)
+            {
+                if (DebugEntities[i].isValid())
+                {
+                    auto* meshData = &DebugEntities[i].getComponent<cro::Model>().getMeshData();
+                    meshData->vertexCount = DebugBuffers[i].size() / 7;
+                    glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData->vbo));
+                    glCheck(glBufferData(GL_ARRAY_BUFFER, meshData->vertexSize * meshData->vertexCount, DebugBuffers[i].data(), GL_STATIC_DRAW));
+                    glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
+
+                    auto* submesh = &meshData->indexData[0];
+                    submesh->indexCount = DebugIndices[i].size();
+                    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->ibo));
+                    glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh->indexCount * sizeof(std::uint32_t), DebugIndices[i].data(), GL_STATIC_DRAW));
+                    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
+
+
+                    DebugBuffers[i].clear();
+                    DebugIndices[i].clear();
+                }
+            }
+        }
+#endif
     }
     else if (msg.id == MessageID::CollisionMessage)
     {
@@ -177,7 +264,18 @@ void CameraFollowSystem::process(float dt)
             follower.currentTarget = cro::Util::Maths::smoothDamp(follower.currentTarget, target, follower.velocity, CameraTrackTime + ((CameraTrackTime / 2.f) * follower.zoom.progress), dt);
 
             auto worldPos = tx.getPosition();
-            tx.setRotation(lookRotation(worldPos, follower.currentTarget));
+            auto rotation = lookRotation(worldPos, follower.currentTarget);
+            tx.setRotation(rotation);
+#ifdef CAMERA_TRACK
+            if (m_currentCamera.getComponent<CameraFollower>().id == follower.id)
+            {
+                //updateBufferData(follower.id, worldPos, follower.currentTarget);
+
+                glm::vec3 t(0.f, 0.f, -glm::length(worldPos - follower.currentTarget));
+                t = rotation * t;
+                updateBufferData(follower.id, worldPos, worldPos + t);
+            }
+#endif
 
             //check the distance to the ball, and store it if closer than previous dist
             //and if we fall within the camera's radius
@@ -250,8 +348,18 @@ void CameraFollowSystem::process(float dt)
                 auto target = follower.target.getComponent<cro::Transform>().getPosition() + TargetOffset;
                 follower.currentTarget = cro::Util::Maths::smoothDamp(follower.currentTarget, target, follower.velocity, CameraTrackTime + ((CameraTrackTime / 2.f) * follower.zoom.progress), dt);
 
+                auto rotation = lookRotation(tx.getPosition(), follower.currentTarget);
+                tx.setRotation(rotation);
+#ifdef CAMERA_TRACK
+                if (m_currentCamera.getComponent<CameraFollower>().id == follower.id)
+                {
+                    //updateBufferData(follower.id, tx.getPosition(), follower.currentTarget);
 
-                tx.setRotation(lookRotation(tx.getPosition(), follower.currentTarget));
+                    glm::vec3 t(0.f, 0.f, -glm::length(tx.getPosition() - follower.currentTarget));
+                    t = rotation * t;
+                    updateBufferData(follower.id, tx.getPosition(), tx.getPosition() + t);
+                }
+#endif
             }
             break;
         }
@@ -298,4 +406,7 @@ void CameraFollowSystem::onEntityAdded(cro::Entity e)
 {
     //we need at least one valid value
     m_currentCamera = e;
+
+    const auto& follower = e.getComponent<CameraFollower>();
+    DebugEntities[follower.id] = follower.debugEntity;
 }

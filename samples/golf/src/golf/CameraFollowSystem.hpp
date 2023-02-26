@@ -107,6 +107,8 @@ struct CameraFollower final
 
         state = CameraFollower::Track;
     }
+
+    cro::Entity debugEntity;
 };
 
 class CameraFollowSystem final : public cro::System, public cro::GuiClient
