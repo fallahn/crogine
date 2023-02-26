@@ -446,19 +446,19 @@ glm::mat4 Transform::getWorldTransform() const
 
 glm::vec3 Transform::getForwardVector() const
 {
-    const auto& tx = getWorldTransform();
+    auto tx = getWorldTransform();
     return -glm::column(tx, 2);
 }
 
 glm::vec3 Transform::getUpVector() const
 {
-    const auto& tx = getWorldTransform();
+    auto tx = getWorldTransform();
     return glm::column(tx, 1);
 }
 
 glm::vec3 Transform::getRightVector() const
 {
-    const auto& tx = getWorldTransform();
+    auto tx = getWorldTransform();
     return glm::column(tx, 0);
 }
 

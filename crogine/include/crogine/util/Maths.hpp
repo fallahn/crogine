@@ -135,8 +135,8 @@ namespace cro
                 {
                     if ((originalDst - src > 0.f) == (retVal > originalDst))
                     {
-                        //currVel = (retVal - originalDst) / dt;
-                        currVel = { 0.f };
+                        currVel = (retVal - originalDst) / dt;
+                        //currVel = { 0.f };
                         retVal = originalDst;
                     }
                 }
@@ -144,8 +144,8 @@ namespace cro
                 {
                     if (glm::dot(startMinusCurr, retMinusStart) > 0)
                     {
-                        //currVel = (retVal - originalDst) / dt;
-                        currVel = T(0.f); //I'm not going mad here, right?
+                        currVel = (retVal - originalDst) / dt;
+                        //currVel = T(0.f); //I'm not going mad here, right?
                         retVal = originalDst;
                     }
                 }

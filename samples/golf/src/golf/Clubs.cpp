@@ -119,7 +119,7 @@ float Club::getPower(float distanceToPin) const
     }
 
     //check player level and return further distance
-    auto level = Social::getLevel();
+    auto level = 1;// Social::getLevel();
     if (level > 29)
     {
         return ClubStats[m_id].stats[2].power;
@@ -145,7 +145,7 @@ float Club::getTarget(float distanceToPin) const
 float Club::getBaseTarget() const
 {
     //check player level and return increased distance
-    auto level = Social::getLevel();
+    auto level = 1;// Social::getLevel();
     if (level > 29)
     {
         return ClubStats[m_id].stats[2].target;
