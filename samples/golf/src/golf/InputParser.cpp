@@ -168,7 +168,7 @@ void InputParser::handleEvent(const cro::Event& evt)
                 m_inputFlags |= InputFlag::Cancel;
                 cro::App::getWindow().setMouseCaptured(!m_isCPU);
             }
-            else if (evt.key.keysym.sym == SDLK_KP_MULTIPLY)
+            else if (evt.key.keysym.sym == SDLK_1)
             {
                 toggleDroneCam();
             }

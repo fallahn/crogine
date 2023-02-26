@@ -435,6 +435,7 @@ void ParticleSystem::process(float dt)
         {
             auto& p = emitter.m_particles[i];
 
+            p.velocity *= p.acceleration;
             p.velocity += p.gravity * dt;
             for (auto f : emitter.settings.forces)
             {

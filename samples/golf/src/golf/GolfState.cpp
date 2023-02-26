@@ -386,7 +386,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
         switch (evt.key.keysym.sym)
         {
         default: break;
-        case SDLK_KP_DIVIDE:
+        case SDLK_2:
             if (m_currentPlayer.client == m_sharedData.localConnectionData.connectionID
                 && !m_sharedData.localConnectionData.playerData[m_currentPlayer.player].isCPU)
             {

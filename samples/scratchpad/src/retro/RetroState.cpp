@@ -52,6 +52,7 @@ namespace
 {
     const std::string CloudVertex = R"(
     ATTRIBUTE vec4 a_position;
+    ATTRIBUTE vec4 a_colour;
     ATTRIBUTE vec3 a_normal;
 
     uniform mat4 u_worldMatrix;
@@ -60,6 +61,7 @@ namespace
 
     VARYING_OUT vec3 v_normal;
     VARYING_OUT vec3 v_worldPosition;
+    VARYING_OUT vec4 v_colour;
 
     void main()
     {
@@ -69,6 +71,7 @@ namespace
 
         v_worldPosition = position.xyz;
         v_normal = u_normalMatrix * a_normal;
+        v_colour = a_colour;
     })";
 
     const std::string CloudFragment = R"(
@@ -81,6 +84,7 @@ namespace
 
     VARYING_IN vec3 v_normal;
     VARYING_IN vec3 v_worldPosition;
+    VARYING_IN vec4 v_colour;
 
     const vec4 BaseColour = vec4(1.0);
     const float PixelSize = 1.0;
@@ -105,7 +109,7 @@ namespace
         vec4 colour = vec4(mix(BaseColour.rgb, u_skyColourTop.rgb, colourAmount * 0.75), 1.0);
         colour.rgb = mix(colour.rgb, u_skyColourBottom.rgb * 1.5, rim * 0.8);
 
-        FRAG_OUT = colour;
+        FRAG_OUT = colour;// * v_colour;
 
     })";
 
@@ -322,15 +326,15 @@ void RetroState::loadAssets()
 void RetroState::createScene()
 {
     m_gameScene.enableSkybox();
-    m_gameScene.setSkyboxColours(cro::Colour::Blue, cro::Colour(0.937f, 0.678f, 0.612f, 1.f), cro::Colour(0.706f, 0.851f, 0.804f, 1.f));
-    //m_gameScene.setSkyboxColours(cro::Colour::Blue, cro::Colour(0.858f, 0.686f, 0.467f, 1.f), cro::Colour(0.663f, 0.729f, 0.753f, 1.f));
-    //m_gameScene.setSkyboxColours(cro::Colour::Blue, cro::Colour(1.f, 0.973f, 0.882f, 1.f), cro::Colour(0.723f, 0.847f, 0.792f, 1.f));
+    m_gameScene.setSkyboxColours(cro::Colour(0.2f,0.31f,0.612f,1.f), cro::Colour(0.937f, 0.678f, 0.612f, 1.f), cro::Colour(0.706f, 0.851f, 0.804f, 1.f));
+    //m_gameScene.setSkyboxColours(cro::Colour(0.2f,0.31f,0.612f,1.f), cro::Colour(0.858f, 0.686f, 0.467f, 1.f), cro::Colour(0.663f, 0.729f, 0.753f, 1.f));
+    //m_gameScene.setSkyboxColours(cro::Colour(0.2f,0.31f,0.612f,1.f), cro::Colour(1.f, 0.973f, 0.882f, 1.f), cro::Colour(0.723f, 0.847f, 0.792f, 1.f));
 
     cro::ModelDefinition md(m_resources);
     if (md.loadFromFile("assets/retro/head.cmt"))
     {
         auto entity = m_gameScene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -3.f });
+        entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -6.f });
         md.createModel(entity);
 
         entity.addComponent<cro::Callback>().active = true;
@@ -356,7 +360,7 @@ void RetroState::createScene()
         entity.getComponent<cro::Callback>().function =
             [](cro::Entity e, float dt)
         {
-            e.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, dt / 4.f);
+            e.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, dt / 40.f);
             //e.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, dt / 2.f);
         };
 
@@ -368,10 +372,10 @@ void RetroState::createScene()
         return entity;
     };
 
-    if (md.loadFromFile("assets/models/cloud.cmt"))
+    if (md.loadFromFile("assets/models/cloud_ring.cmt"))
     {
-        auto entity = createCloud(glm::vec3(0.f, 2.f, 0.f));
-        entity.getComponent<cro::Transform>().setOrigin({ 0.f, 0.f, 22.f });
+        auto entity = createCloud(glm::vec3(0.f, 0.f, 0.f));
+        //entity.getComponent<cro::Transform>().setOrigin({ 0.f, 0.f, 22.f });
     }
 
     if (md.loadFromFile("assets/retro/cloud.cmt"))

@@ -145,13 +145,8 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     
     //launches a loading screen (registered in MyApp.cpp)
     context.mainWindow.loadResources([this]() {
-        //loadAvatars();
-
-        //add systems to scene
         addSystems();
-        //load assets (textures, shaders, models etc)
         loadAssets();
-        //create some entities
         createScene();
     });
  

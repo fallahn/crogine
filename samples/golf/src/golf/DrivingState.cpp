@@ -2331,7 +2331,7 @@ void DrivingState::createBall()
                 auto forward = velocity / len;
 
                 if (auto d = dot(forward, cro::Transform::Y_AXIS);
-                    d < 0.9f && d > -0.9f)
+                    d < 0.99f && d > -0.99f)
                 {
                     auto rightVec = glm::cross(cro::Transform::Y_AXIS, forward);
                     CRO_ASSERT(!std::isnan(rightVec.x), "");
@@ -2339,7 +2339,7 @@ void DrivingState::createBall()
                     rightVec = glm::inverse(glm::toMat3(ballEnt.getComponent<cro::Transform>().getRotation())) * rightVec;
                     CRO_ASSERT(!std::isnan(rightVec.x), "NaN from parent rotation");
 
-                    rightVec = glm::inverse(glm::toMat3(e.getComponent<cro::Transform>().getRotation())) * rightVec;
+                    rightVec = glm::inverse(/*glm::toMat3*/(e.getComponent<cro::Transform>().getRotation())) * rightVec;
                     CRO_ASSERT(!std::isnan(rightVec.x), "NaN from ball rotation");
 
                     float rotation = (len / Ball::Radius);
@@ -2347,7 +2347,20 @@ void DrivingState::createBall()
 
                     e.getComponent<cro::Transform>().rotate(rightVec, rotation * dt);
                 }
+#ifdef CRO_DEBUG_
+                else
+                {
+                    LogI << "dot was " << d << std::endl;
+                }
+#endif
             }
+#ifdef CRO_DEBUG_
+            else if (ballEnt.getComponent<Ball>().state != Ball::State::Idle
+                && ballEnt.getComponent<Ball>().state != Ball::State::Paused)
+            {
+                LogI << "vel len was " << len2 << std::endl;
+            }
+#endif
         };
     }
 

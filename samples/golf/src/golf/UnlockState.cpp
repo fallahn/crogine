@@ -268,7 +268,7 @@ void UnlockState::buildScene()
     //entity to play firework particles
     auto entity = m_modelScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 0.f, -0.5f, 2.f });
-    entity.addComponent<cro::ParticleEmitter>().settings.loadFromFile("assets/golf/particles/firework.cps", m_sharedData.sharedResources->textures);
+    entity.addComponent<cro::ParticleEmitter>().settings.loadFromFile("assets/golf/particles/firework_unlock.cps", m_sharedData.sharedResources->textures);
     m_particleNode = entity;
 
 
