@@ -42,6 +42,7 @@ source distribution.
 #include <crogine/gui/GuiClient.hpp>
 #include <crogine/graphics/ModelDefinition.hpp>
 #include <crogine/graphics/RenderTexture.hpp>
+#include <crogine/graphics/CubemapTexture.hpp>
 #include <crogine/graphics/SimpleQuad.hpp>
 #include <crogine/graphics/UniformBuffer.hpp>
 
@@ -96,6 +97,7 @@ private:
 
     cro::ResourceCollection m_resources;
     cro::RenderTexture m_backgroundTexture;
+    cro::CubemapTexture m_reflectionMap;
 
     cro::UniformBuffer<float> m_scaleBuffer;
     cro::UniformBuffer<ResolutionData> m_resolutionBuffer;
@@ -122,6 +124,7 @@ private:
             WireframeCulled,
             Beacon,
             Horizon,
+            Trophy,
 
             Count
         };

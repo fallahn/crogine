@@ -732,6 +732,8 @@ void DrivingState::addSystems()
 
 void DrivingState::loadAssets()
 {
+    m_reflectionMap.loadFromFile("assets/golf/images/skybox/billiards/trophy.ccm");
+
     std::string wobble;
     if (m_sharedData.vertexSnap)
     {
@@ -750,7 +752,9 @@ void DrivingState::loadAssets()
     m_resources.shaders.loadFromString(ShaderID::Course, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define RX_SHADOWS\n" + wobble);
     m_resources.shaders.loadFromString(ShaderID::Hair, CelVertexShader, CelFragmentShader, "#define FADE_INPUT\n#define USER_COLOUR\n#define NOCHEX\n#define RX_SHADOWS\n" + wobble);
     m_resources.shaders.loadFromString(ShaderID::Billboard, BillboardVertexShader, BillboardFragmentShader);
+    m_resources.shaders.loadFromString(ShaderID::Trophy, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n#define REFLECTIONS\n" + wobble);
 
+   
     //scanline transition
     m_resources.shaders.loadFromString(ShaderID::Transition, MinimapVertex, ScanlineTransition);
 
@@ -788,6 +792,12 @@ void DrivingState::loadAssets()
     noiseTex.setRepeated(true);
     noiseTex.setSmooth(true);
     m_resources.materials.get(m_materialIDs[MaterialID::Billboard]).setProperty("u_noiseTexture", noiseTex);
+
+    shader = &m_resources.shaders.get(ShaderID::Trophy);
+    m_scaleBuffer.addShader(*shader);
+    m_resolutionBuffer.addShader(*shader);
+    m_materialIDs[MaterialID::Trophy] = m_resources.materials.add(*shader);
+    m_resources.materials.get(m_materialIDs[MaterialID::Trophy]).setProperty("u_reflectMap", cro::CubemapID(m_reflectionMap.getGLHandle()));
 
 
     m_resources.shaders.loadFromString(ShaderID::Wireframe, WireframeVertex, WireframeFragment);
@@ -2312,6 +2322,14 @@ void DrivingState::createBall()
     entity.getComponent<cro::Transform>().setScale(glm::vec3(scale));
 
     entity.getComponent<cro::Model>().setMaterial(0, m_resources.materials.get(m_materialIDs[MaterialID::Cel]));
+    if (entity.getComponent<cro::Model>().getMeshData().submeshCount > 1)
+    {
+        //this assumes the model loaded successfully, otherwise
+        //there wouldn't be two submeshes.
+        auto mat = m_resources.materials.get(m_materialIDs[MaterialID::Trophy]);
+        applyMaterialData(md, mat);
+        entity.getComponent<cro::Model>().setMaterial(1, mat);
+    }
     entity.getComponent<cro::Model>().setRenderFlags(~RenderFlags::MiniMap);
     ballEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
