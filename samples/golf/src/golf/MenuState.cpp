@@ -854,6 +854,7 @@ void MenuState::addSystems()
 void MenuState::loadAssets()
 {
     m_backgroundScene.setCubemap("assets/golf/images/skybox/spring/sky.ccm");
+    m_backgroundScene.setSkyboxColours(cro::Colour(0.2f, 0.31f, 0.612f, 1.f), cro::Colour(1.f, 0.973f, 0.882f, 1.f), cro::Colour(0.723f, 0.847f, 0.792f, 1.f));
     m_reflectionMap.loadFromFile("assets/golf/images/skybox/billiards/trophy.ccm");
 
     std::string wobble;
@@ -1289,25 +1290,18 @@ void MenuState::createScene()
 
 void MenuState::createClouds()
 {
-    cro::SpriteSheet spriteSheet;
-    if (spriteSheet.loadFromFile("assets/golf/sprites/clouds.spt", m_resources.textures)
-        && spriteSheet.getSprites().size() > 1)
-    {
-        const auto& sprites = spriteSheet.getSprites();
-        std::vector<cro::Sprite> randSprites;
-        for (auto [_, sprite] : sprites)
-        {
-            randSprites.push_back(sprite);
-        }
+    cro::ModelDefinition md(m_resources);
 
-        m_resources.shaders.loadFromString(ShaderID::Cloud, CloudVertex, CloudFragment, "#define MAX_RADIUS 86\n");
+    if (md.loadFromFile("assets/golf/models/cloud.cmt"))
+    {
+        m_resources.shaders.loadFromString(ShaderID::Cloud, CloudOverheadVertex, CloudOverheadFragment, "#define MAX_RADIUS 86\n#define FEATHER_EDGE\n");
         auto& shader = m_resources.shaders.get(ShaderID::Cloud);
-        m_scaleBuffer.addShader(shader);
 
         auto matID = m_resources.materials.add(shader);
         auto material = m_resources.materials.get(matID);
-        material.blendMode = cro::Material::BlendMode::Alpha;
-        material.setProperty("u_texture", *spriteSheet.getTexture());
+
+        material.setProperty("u_skyColourTop", m_backgroundScene.getSkyboxColours().top);
+        material.setProperty("u_skyColourBottom", m_backgroundScene.getSkyboxColours().middle);
 
         auto seed = static_cast<std::uint32_t>(std::time(nullptr));
         static constexpr std::array MinBounds = { 0.f, 0.f };
@@ -1315,8 +1309,6 @@ void MenuState::createClouds()
         auto positions = pd::PoissonDiskSampling(40.f, MinBounds, MaxBounds, 30u, seed);
 
         auto Offset = 140.f;
-
-        std::vector<cro::Entity> delayedUpdates;
 
         for (const auto& position : positions)
         {
@@ -1327,36 +1319,12 @@ void MenuState::createClouds()
             auto entity = m_backgroundScene.createEntity();
             entity.addComponent<cro::Transform>().setPosition(cloudPos);
             entity.addComponent<Cloud>().speedMultiplier = static_cast<float>(cro::Util::Random::value(10, 22)) / 100.f;
-            entity.addComponent<cro::Sprite>() = randSprites[cro::Util::Random::value(0u, randSprites.size() - 1)];
-            entity.addComponent<cro::Model>();
+            md.createModel(entity);
+            entity.getComponent<cro::Model>().setMaterial(0, material);
 
-            auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
-            bounds.width /= PixelPerMetre;
-            bounds.height /= PixelPerMetre;
-            entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f, 0.f });
-
-            float scale = static_cast<float>(cro::Util::Random::value(4, 10)) / 100.f;
+            float scale = static_cast<float>(cro::Util::Random::value(5, 15));
             entity.getComponent<cro::Transform>().setScale(glm::vec3(scale));
-            entity.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, 90.f * cro::Util::Const::degToRad);
-
-            delayedUpdates.push_back(entity);
         }
-
-        //this is a work around because changing sprite 3D materials
-        //require at least once scene update to be run first.
-        auto entity = m_uiScene.createEntity();
-        entity.addComponent<cro::Callback>().active = true;
-        entity.getComponent<cro::Callback>().function =
-            [&, material, delayedUpdates](cro::Entity e, float)
-        {
-            for (auto en : delayedUpdates)
-            {
-                en.getComponent<cro::Model>().setMaterial(0, material);
-            }
-
-            e.getComponent<cro::Callback>().active = false;
-            m_uiScene.destroyEntity(e);
-        };
     }
 }
 

@@ -109,6 +109,7 @@ namespace
 
 #ifdef CRO_DEBUG_
     float powerMultiplier = 1.f;
+    float maxHeight = 0.f;
     
     
     std::int32_t debugFlags = 0;
@@ -194,7 +195,7 @@ DrivingState::DrivingState(cro::StateStack& stack, cro::State::Context context, 
     });
 
     Achievements::setActive(true);
-
+    sd.inputBinding.clubset = Social::getUnlockStatus(Social::UnlockType::Club);
     Social::setStatus(Social::InfoID::Menu, { "On The Driving Range" });
 
 #ifdef CRO_DEBUG_
@@ -203,8 +204,10 @@ DrivingState::DrivingState(cro::StateStack& stack, cro::State::Context context, 
         {
             if (ImGui::Begin("Window"))
             {
-                ImGui::SliderFloat("Adjust", &powerMultiplier, 0.8f, 1.1f);
-                ImGui::Text("Power %3.3f", Clubs[m_inputParser.getClub()].getPower(0.f) * powerMultiplier);
+                //ImGui::SliderFloat("Adjust", &powerMultiplier, 0.8f, 1.1f);
+                //ImGui::Text("Power %3.3f", Clubs[m_inputParser.getClub()].getPower(0.f) * powerMultiplier);
+
+                ImGui::Text("Max Height %3.3f", maxHeight);
 
                 /*static float maxDist = 80.f;
                 if (ImGui::SliderFloat("Distance", &maxDist, 1.f, 80.f))
@@ -1311,8 +1314,8 @@ void DrivingState::createScene()
     //{
     //    skybox += skyboxes[cro::Util::Random::value(0u, skyboxes.size() - 1)];
     //}
-    auto cloudPath = loadSkybox(skybox, m_skyScene, m_resources, m_materialIDs[MaterialID::Horizon]);
-    createClouds(cloudPath);
+    loadSkybox(skybox, m_skyScene, m_resources, m_materialIDs[MaterialID::Horizon]);
+    createClouds();
 
     //tee marker
     md.loadFromFile("assets/golf/models/tee_balls.cmt");
@@ -1735,31 +1738,19 @@ void DrivingState::createFoliage(cro::Entity terrainEnt)
     }
 }
 
-void DrivingState::createClouds(const std::string& cloudPath)
+void DrivingState::createClouds()
 {
-    auto spritePath = cloudPath.empty() ? "assets/golf/sprites/clouds.spt" : cloudPath;
     cro::ModelDefinition md(m_resources);
-    md.loadFromFile("assets/golf/models/cloud.cmt");
 
-    cro::SpriteSheet spriteSheet;
-    if (spriteSheet.loadFromFile(spritePath, m_resources.textures)
-        && spriteSheet.getSprites().size() > 1)
+    if (md.loadFromFile("assets/golf/models/cloud.cmt"))
     {
-        const auto& sprites = spriteSheet.getSprites();
-        std::vector<cro::Sprite> randSprites;
-        for (auto [_, sprite] : sprites)
-        {
-            randSprites.push_back(sprite);
-        }
-
-        m_resources.shaders.loadFromString(ShaderID::Cloud, CloudVertex, CloudFragment);
+        m_resources.shaders.loadFromString(ShaderID::Cloud, CloudOverheadVertex, CloudOverheadFragment, "#define FEATHER_EDGE\n");
         auto& shader = m_resources.shaders.get(ShaderID::Cloud);
-        m_scaleBuffer.addShader(shader);
 
         auto matID = m_resources.materials.add(shader);
         auto material = m_resources.materials.get(matID);
-        material.blendMode = cro::Material::BlendMode::Alpha;
-        material.setProperty("u_texture", *spriteSheet.getTexture());
+        material.setProperty("u_skyColourTop", m_skyScene.getSkyboxColours().top);
+        material.setProperty("u_skyColourBottom", m_skyScene.getSkyboxColours().middle);
 
         auto seed = static_cast<std::uint32_t>(std::time(nullptr));
         static constexpr std::array MinBounds = { 0.f, 0.f };
@@ -1768,48 +1759,20 @@ void DrivingState::createClouds(const std::string& cloudPath)
 
         auto Offset = 160.f;
 
-        std::vector<cro::Entity> delayedUpdates;
-
         for (const auto& position : positions)
         {
             float height = cro::Util::Random::value(20, 40) + PlaneHeight;
             glm::vec3 cloudPos(position[0] - Offset, height, -position[1] + Offset);
 
-
             auto entity = m_gameScene.createEntity();
             entity.addComponent<cro::Transform>().setPosition(cloudPos);
             entity.addComponent<Cloud>().speedMultiplier = static_cast<float>(cro::Util::Random::value(10, 22)) / 100.f;
             md.createModel(entity);
-            /*entity.addComponent<cro::Sprite>() = randSprites[cro::Util::Random::value(0u, randSprites.size() - 1)];
-            entity.addComponent<cro::Model>();
+            entity.getComponent<cro::Model>().setMaterial(0, material);
 
-            auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
-            bounds.width /= PixelPerMetre;
-            bounds.height /= PixelPerMetre;
-            entity.getComponent<cro::Transform>().setOrigin({bounds.width / 2.f, bounds.height / 2.f, 0.f});*/
-
-            float scale = static_cast<float>(cro::Util::Random::value/*(4, 10)*/(10, 40));
+            float scale = static_cast<float>(cro::Util::Random::value(10, 30));
             entity.getComponent<cro::Transform>().setScale(glm::vec3(scale));
-            /*entity.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, 90.f * cro::Util::Const::degToRad);
-
-            delayedUpdates.push_back(entity);*/
         }
-
-        //this is a work around because changing sprite 3D materials
-        //require at least once scene update to be run first.
-        auto entity = m_uiScene.createEntity();
-        entity.addComponent<cro::Callback>().active = true;
-        entity.getComponent<cro::Callback>().function =
-            [&, material, delayedUpdates](cro::Entity e, float)
-        {
-            for (auto en : delayedUpdates)
-            {
-                en.getComponent<cro::Model>().setMaterial(0, material);
-            }
-
-            e.getComponent<cro::Callback>().active = false;
-            m_uiScene.destroyEntity(e);
-        };
     }
 }
 
@@ -2365,20 +2328,7 @@ void DrivingState::createBall()
 
                     e.getComponent<cro::Transform>().rotate(rightVec, rotation * dt);
                 }
-#ifdef CRO_DEBUG_
-                else
-                {
-                    LogI << "dot was " << d << std::endl;
-                }
-#endif
             }
-#ifdef CRO_DEBUG_
-            else if (ballEnt.getComponent<Ball>().state != Ball::State::Idle
-                && ballEnt.getComponent<Ball>().state != Ball::State::Paused)
-            {
-                LogI << "vel len was " << len2 << std::endl;
-            }
-#endif
         };
     }
 

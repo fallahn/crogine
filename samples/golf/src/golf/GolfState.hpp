@@ -222,7 +222,7 @@ private:
     void initAudio(bool loadTrees);
 
     void createWeather(); //weather.cpp
-    void createClouds(const std::string&);
+    void createClouds();
     void buildBow();
     void createDrone();
     void spawnBall(const struct ActorInfo&);

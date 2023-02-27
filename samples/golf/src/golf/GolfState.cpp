@@ -3083,7 +3083,7 @@ void GolfState::loadAssets()
     shader = &m_resources.shaders.get(ShaderID::Slope);
     m_windBuffer.addShader(*shader);
 
-    createClouds(theme.cloudPath);
+    createClouds();
     if (cro::SysTime::now().months() == 6)
     {
         buildBow();

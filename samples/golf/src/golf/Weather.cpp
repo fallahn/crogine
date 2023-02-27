@@ -234,42 +234,26 @@ void GolfState::createWeather()
     m_scaleBuffer.addShader(shader);
 }
 
-void GolfState::createClouds(const std::string& cloudPath)
+void GolfState::createClouds()
 {
-    auto spritePath = cloudPath.empty() ? "assets/golf/sprites/clouds.spt" : cloudPath;
-
-    cro::SpriteSheet spriteSheet;
-    if (spriteSheet.loadFromFile(spritePath, m_resources.textures)
-        && spriteSheet.getSprites().size() > 1)
+    cro::ModelDefinition md(m_resources);
+    if (md.loadFromFile("assets/golf/models/cloud.cmt"))
     {
-        const auto& sprites = spriteSheet.getSprites();
-        std::vector<cro::Sprite> randSprites;
-        for (auto [_, sprite] : sprites)
-        {
-            randSprites.push_back(sprite);
-        }
-
-        m_resources.shaders.loadFromString(ShaderID::Cloud, CloudVertex, CloudFragment);
+        m_resources.shaders.loadFromString(ShaderID::Cloud, CloudOverheadVertex, CloudOverheadFragment, "#define FEATHER_EDGE\n");
         auto& shader = m_resources.shaders.get(ShaderID::Cloud);
-        m_scaleBuffer.addShader(shader);
-
-        auto centreID = shader.getUniformID("u_worldCentre");
-        glCheck(glUseProgram(shader.getGLHandle()));
-        glCheck(glUniform2f(centreID, 160.f, -100.f));
-
 
         auto matID = m_resources.materials.add(shader);
         auto material = m_resources.materials.get(matID);
-        material.blendMode = cro::Material::BlendMode::Alpha;
-        material.setProperty("u_texture", *spriteSheet.getTexture());
+
+        material.setProperty("u_skyColourTop", m_skyScene.getSkyboxColours().top);
+        material.setProperty("u_skyColourBottom", m_skyScene.getSkyboxColours().middle);
+        material.setProperty("u_worldCentre", glm::vec2(160.f, -100.f));
 
         auto seed = static_cast<std::uint32_t>(std::time(nullptr));
         static constexpr std::array MinBounds = { 0.f, 0.f };
         static constexpr std::array MaxBounds = { 320.f, 320.f };
         auto positions = pd::PoissonDiskSampling(100.f, MinBounds, MaxBounds, 30u, seed);
 
-
-        std::vector<cro::Entity> delayedUpdates;
 
         for (const auto& position : positions)
         {
@@ -280,37 +264,12 @@ void GolfState::createClouds(const std::string& cloudPath)
             auto entity = m_gameScene.createEntity();
             entity.addComponent<cro::Transform>().setPosition(cloudPos);
             entity.addComponent<Cloud>().speedMultiplier = static_cast<float>(cro::Util::Random::value(10, 22)) / 100.f;
-            entity.addComponent<cro::Sprite>() = randSprites[cro::Util::Random::value(0u, randSprites.size() - 1)];
-            entity.addComponent<cro::Model>();
+            md.createModel(entity);
+            entity.getComponent<cro::Model>().setMaterial(0, material);
 
-            auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
-            bounds.width /= PixelPerMetre;
-            bounds.height /= PixelPerMetre;
-            entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f, 0.f });
-
-            float scale = static_cast<float>(cro::Util::Random::value(1, 2));
+            float scale = static_cast<float>(cro::Util::Random::value(10, 30));
             entity.getComponent<cro::Transform>().setScale(glm::vec3(scale));
-            entity.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, 90.f * cro::Util::Const::degToRad);
-            entity.getComponent<cro::Transform>().rotate(cro::Transform::Z_AXIS, 180.f * cro::Util::Const::degToRad);
-
-            delayedUpdates.push_back(entity);
         }
-
-        //this is a work around because changing sprite 3D materials
-        //require at least once scene update to be run first.
-        auto entity = m_uiScene.createEntity();
-        entity.addComponent<cro::Callback>().active = true;
-        entity.getComponent<cro::Callback>().function =
-            [&, material, delayedUpdates](cro::Entity e, float)
-        {
-            for (auto en : delayedUpdates)
-            {
-                en.getComponent<cro::Model>().setMaterial(0, material);
-            }
-
-            e.getComponent<cro::Callback>().active = false;
-            m_uiScene.destroyEntity(e);
-        };
     }
 
     //createSun();

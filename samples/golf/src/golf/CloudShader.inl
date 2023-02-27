@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022
+Matt Marchant 2022 - 2023
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -55,6 +55,41 @@ R"(
     }
 )";
 
+static const std::string CloudFragment =
+R"(
+    OUTPUT
+
+    uniform sampler2D u_texture;
+    uniform vec2 u_worldCentre = vec2(0.0);
+
+#include SCALE_BUFFER
+
+    VARYING_IN vec3 v_worldPos;
+    VARYING_IN vec2 v_texCoord;
+
+#if !defined(MAX_RADIUS)
+    const float MaxDist = 180.0;
+#else
+    const float MaxDist = MAX_RADIUS;
+#endif
+
+#include BAYER_MATRIX
+
+    void main()
+    {
+        FRAG_OUT = TEXTURE(u_texture, v_texCoord);
+
+        float amount = 1.0 - smoothstep(0.7, 1.0, (length(v_worldPos.xz - u_worldCentre) / MaxDist));
+
+        vec2 xy = gl_FragCoord.xy;// / u_pixelScale;
+        int x = int(mod(xy.x, MatrixSize));
+        int y = int(mod(xy.y, MatrixSize));
+        float alpha = findClosest(x, y, amount);
+
+        if(alpha * FRAG_OUT.a < 0.18) discard;
+    }
+)";
+
 static const std::string BowFragment =
 R"(
     VARYING_IN vec4 v_colour;
@@ -104,18 +139,43 @@ R"(
     }
 )";
 
-static const std::string CloudFragment =
-R"(
+
+//updated shader for 3D overhead clouds
+const std::string CloudOverheadVertex = R"(
+    ATTRIBUTE vec4 a_position;
+    ATTRIBUTE vec3 a_normal;
+
+    uniform mat4 u_worldMatrix;
+    uniform mat4 u_viewProjectionMatrix;
+    uniform mat3 u_normalMatrix;
+
+    VARYING_OUT vec3 v_normal;
+    VARYING_OUT vec3 v_worldPosition;
+
+    void main()
+    {
+        vec4 position = u_worldMatrix * a_position;
+        
+        gl_Position = u_viewProjectionMatrix * position;
+
+        v_worldPosition = position.xyz;
+        v_normal = u_normalMatrix * a_normal;
+    })";
+
+const std::string CloudOverheadFragment = R"(
     OUTPUT
 
-    uniform sampler2D u_texture;
     uniform vec2 u_worldCentre = vec2(0.0);
+    uniform vec3 u_lightDirection;
+    uniform vec3 u_cameraWorldPosition;
+    uniform vec4 u_skyColourTop;
+    uniform vec4 u_skyColourBottom;
 
-#include SCALE_BUFFER
+    VARYING_IN vec3 v_normal;
+    VARYING_IN vec3 v_worldPosition;
+    VARYING_IN vec4 v_colour;
 
-    VARYING_IN vec3 v_worldPos;
-    VARYING_IN vec2 v_texCoord;
-
+#if defined (FEATHER_EDGE)
 #if !defined(MAX_RADIUS)
     const float MaxDist = 180.0;
 #else
@@ -123,22 +183,54 @@ R"(
 #endif
 
 #include BAYER_MATRIX
+#endif
+
+    const vec4 BaseColour = vec4(1.0);
+    const float PixelSize = 1.0;
+    const float ColourLevels = 2.0;
 
     void main()
     {
-        FRAG_OUT = TEXTURE(u_texture, v_texCoord);
+        vec3 normal = normalize(v_normal);
+        vec3 viewDirection = normalize(u_cameraWorldPosition - v_worldPosition);
+        float rim = smoothstep(0.6, 0.95, 1.0 - dot(normal, viewDirection));
+        float rimAmount = dot(vec3(0.0, -1.0, 0.0), normal);
+        rimAmount += 1.0;
+        rimAmount /= 2.0;
+        rim *= smoothstep(0.5, 0.9, rimAmount);
 
-        float amount = 1.0 - smoothstep(0.7, 1.0, (length(v_worldPos.xz - u_worldCentre) / MaxDist));
 
-        vec2 xy = gl_FragCoord.xy;// / u_pixelScale;
+        float colourAmount = pow(dot(normal, normalize(-u_lightDirection)), 2.0);
+        colourAmount *= ColourLevels;
+        colourAmount = round(colourAmount);
+        colourAmount /= ColourLevels;
+
+        vec4 colour = vec4(mix(BaseColour.rgb, u_skyColourTop.rgb, colourAmount * 0.6), 1.0);
+        colour.rgb = mix(colour.rgb, u_skyColourBottom.rgb * 1.5, rim * 0.7);
+
+        FRAG_OUT = colour;
+
+
+#if defined(FEATHER_EDGE)
+        float amount = 1.0 - smoothstep(0.7, 1.0, (length(v_worldPosition.xz - u_worldCentre) / MaxDist));
+
+        vec2 xy = gl_FragCoord.xy;
         int x = int(mod(xy.x, MatrixSize));
         int y = int(mod(xy.y, MatrixSize));
         float alpha = findClosest(x, y, amount);
 
-        if(alpha * FRAG_OUT.a < 0.18) discard;
-    }
-)";
+        if(alpha * FRAG_OUT.a < 0.18)
+        {
+            discard;
+        }
+#endif
+    })";
 
+
+
+
+
+//these are used in the course editor (PlaylistState)
 static const std::string CloudVertex3D =
 R"(
 ATTRIBUTE vec4 a_position;
