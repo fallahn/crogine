@@ -114,7 +114,7 @@ public:
 
     enum class UnlockType
     {
-        Ball, Club, Level
+        Ball, Club, Level, Generic
     };
     static std::int32_t getUnlockStatus(UnlockType);
     static void setUnlockStatus(UnlockType, std::int32_t set);

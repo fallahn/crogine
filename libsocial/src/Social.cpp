@@ -81,6 +81,7 @@ namespace
     StoredValue clubset;
     StoredValue ballset;
     StoredValue levelTrophies;
+    StoredValue genericUnlock;
 
 
     //XP curve = (level / x) ^ y
@@ -210,6 +211,9 @@ std::int32_t Social::getUnlockStatus(UnlockType type)
     case UnlockType::Level:
         levelTrophies.read("lvl");
         return levelTrophies.value;
+    case UnlockType::Generic:
+        genericUnlock.read("gnc");
+        return genericUnlock.value;
     }
 }
 
@@ -229,6 +233,10 @@ void Social::setUnlockStatus(UnlockType type, std::int32_t set)
     case UnlockType::Level:
         levelTrophies.value = set;
         levelTrophies.write("lvl");
+        break;
+    case UnlockType::Generic:
+        genericUnlock.value = set;
+        genericUnlock.write("gnc");
         break;
     }    
 }

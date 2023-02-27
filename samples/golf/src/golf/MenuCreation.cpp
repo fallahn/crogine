@@ -5107,6 +5107,7 @@ void MenuState::updateCourseRuleString()
 
 void MenuState::updateUnlockedItems()
 {
+    //clubs
     auto clubFlags = Social::getUnlockStatus(Social::UnlockType::Club);
     if (clubFlags == 0)
     {
@@ -5148,6 +5149,8 @@ void MenuState::updateUnlockedItems()
 
     Social::setUnlockStatus(Social::UnlockType::Ball, ballFlags);
 
+
+    //level up
     if (level > 0)
     {
         //levels are same interval as balls + 1st level
@@ -5165,6 +5168,49 @@ void MenuState::updateUnlockedItems()
         }
         Social::setUnlockStatus(Social::UnlockType::Level, levelFlags);
     }
+
+
+    //generic unlocks from achievements etc
+    auto genericFlags = Social::getUnlockStatus(Social::UnlockType::Generic);
+    constexpr std::int32_t genericBase = ul::UnlockID::RangeExtend01;
+
+    if (level > 14)
+    {
+        //club range is extended at level 15 and 30
+        auto flag = (1 << genericBase);
+        if ((genericFlags & flag) == 0)
+        {
+            genericFlags |= flag;
+            m_sharedData.unlockedItems.push_back(ul::UnlockID::RangeExtend01);
+        }
+        else if (level > 29)
+        {
+            flag = (1 << (ul::UnlockID::RangeExtend02 - genericBase));
+            if ((genericFlags & flag) == 0)
+            {
+                genericFlags |= flag;
+                m_sharedData.unlockedItems.push_back(ul::UnlockID::RangeExtend02);
+            }
+        }
+    }
+
+    auto flag = (1 << (ul::UnlockID::Clubhouse - genericBase));
+    if ((genericFlags & flag) == 0 &&
+        Achievements::getAchievement(AchievementStrings[AchievementID::JoinTheClub])->achieved)
+    {
+        genericFlags |= flag;
+        m_sharedData.unlockedItems.push_back(ul::UnlockID::Clubhouse);
+    }
+
+    flag = (1 << (ul::UnlockID::CourseEditor - genericBase));
+    if ((genericFlags & flag) == 0 &&
+        Achievements::getAchievement(AchievementStrings[AchievementID::GrandTour])->achieved)
+    {
+        genericFlags |= flag;
+        m_sharedData.unlockedItems.push_back(ul::UnlockID::CourseEditor);
+    }
+
+    Social::setUnlockStatus(Social::UnlockType::Generic, genericFlags);
 
     if (!m_sharedData.unlockedItems.empty())
     {

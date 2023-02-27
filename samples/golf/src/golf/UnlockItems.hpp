@@ -65,6 +65,8 @@ namespace ul
             LevelBadge40,
             LevelBadge50,
 
+            Padlock,
+
             Count
         };
     };
@@ -83,6 +85,7 @@ namespace ul
         std::string("assets/golf/models/trophies/level20.cmt"),
         std::string("assets/golf/models/trophies/level30.cmt"),
         std::string("assets/golf/models/trophies/level40.cmt"),
+        std::string("assets/golf/models/trophies/level50.cmt"),
         std::string("assets/golf/models/trophies/level50.cmt"),
     };
 
@@ -110,6 +113,11 @@ namespace ul
             Level40,
             Level50,
 
+            RangeExtend01,
+            RangeExtend02,
+            Clubhouse,
+            CourseEditor,
+
             Count
         };
     };
@@ -134,5 +142,10 @@ namespace ul
         { ModelID::LevelBadge30,  "Level Thirty",  "New Level Badge!" },
         { ModelID::LevelBadge40,  "Level Forty",   "New Level Badge!" },
         { ModelID::LevelBadge50,  "Level Fifty",   "New Level Badge!" },
+
+        { ModelID::Padlock,  "Skill Up!",   "Club Range Extended" },
+        { ModelID::Padlock,  "Skill Up!",   "Club Range Extended" },
+        { ModelID::Padlock,  "Socialiser",  "Clubhouse Unlocked" },
+        { ModelID::Padlock,  "Designer",    "Course Editor Unlocked" },
     };
 }
