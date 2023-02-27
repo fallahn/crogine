@@ -141,7 +141,7 @@ R"(
 
 
 //updated shader for 3D overhead clouds
-const std::string CloudOverheadVertex = R"(
+static const std::string CloudOverheadVertex = R"(
     ATTRIBUTE vec4 a_position;
     ATTRIBUTE vec3 a_normal;
 
@@ -162,7 +162,7 @@ const std::string CloudOverheadVertex = R"(
         v_normal = u_normalMatrix * a_normal;
     })";
 
-const std::string CloudOverheadFragment = R"(
+static const std::string CloudOverheadFragment = R"(
     OUTPUT
 
     uniform vec2 u_worldCentre = vec2(0.0);
@@ -199,14 +199,19 @@ const std::string CloudOverheadFragment = R"(
         rimAmount /= 2.0;
         rim *= smoothstep(0.5, 0.9, rimAmount);
 
+#if defined(POINT_LIGHT)
+        vec3 lightDirection = normalize(v_worldPosition - vec3(u_worldCentre, 0.0));
+#else
+        vec3 lightDirection = normalize(-u_lightDirection);
+#endif
 
-        float colourAmount = pow(dot(normal, normalize(-u_lightDirection)), 2.0);
+        float colourAmount = pow(dot(normal, lightDirection), 2.0);
         colourAmount *= ColourLevels;
         colourAmount = round(colourAmount);
         colourAmount /= ColourLevels;
 
-        vec4 colour = vec4(mix(BaseColour.rgb, u_skyColourTop.rgb, colourAmount * 0.6), 1.0);
-        colour.rgb = mix(colour.rgb, u_skyColourBottom.rgb * 1.5, rim * 0.7);
+        vec4 colour = vec4(mix(BaseColour.rgb, u_skyColourTop.rgb, colourAmount * 0.7), 1.0);
+        colour.rgb = mix(colour.rgb, u_skyColourBottom.rgb * 1.25, rim * 0.7);
 
         FRAG_OUT = colour;
 

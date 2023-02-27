@@ -709,6 +709,23 @@ static inline std::string loadSkybox(const std::string& path, cro::Scene& skySce
     skyScene.enableSkybox();
     skyScene.setSkyboxColours(SkyBottom, skyMid, skyTop);
 
+    if (md.loadFromFile("assets/golf/models/skybox/cloud_ring.cmt"))
+    {
+        auto entity = skyScene.createEntity();
+        entity.addComponent<cro::Transform>();
+        md.createModel(entity);
+
+        const float speed = cro::Util::Const::degToRad / 4.f;
+        entity.addComponent<cro::Callback>().active = true;
+        entity.getComponent<cro::Callback>().setUserData<float>(1.f);
+        entity.getComponent<cro::Callback>().function =
+            [speed](cro::Entity e, float dt)
+        {
+            auto currSpeed = speed * e.getComponent<cro::Callback>().getUserData<float>();
+            e.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, currSpeed * dt);
+        };
+    }
+
     return cloudPath;
 }
 
