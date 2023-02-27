@@ -67,6 +67,7 @@ private:
     struct UnlockCollection final
     {
         cro::Entity root;
+        cro::Entity backgroundInner;
         cro::Entity description;
         cro::Entity name;
         cro::Entity title;

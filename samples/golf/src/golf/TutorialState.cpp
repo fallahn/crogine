@@ -1337,7 +1337,7 @@ void TutorialState::tutorialThree(cro::Entity root)
 
     //hook/slice indicator
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 0.2f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = uiSprites.getSprite("hook_bar");
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
@@ -1502,7 +1502,7 @@ void TutorialState::tutorialThree(cro::Entity root)
 
     //power bar inner
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 5.f, 0.f });;
+    entity.addComponent<cro::Transform>().setPosition({ 5.f, 0.f, 0.1f });;
     entity.addComponent<cro::Drawable2D>().setCroppingArea({ 0.f,0.f,0.f,0.f });
     entity.addComponent<cro::Sprite>() = uiSprites.getSprite("power_bar_inner");
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();

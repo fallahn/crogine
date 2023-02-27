@@ -380,7 +380,7 @@ void UnlockState::buildUI()
 
         auto entity = m_scene.createEntity();
         entity.addComponent<cro::Transform>().setScale(glm::vec2(0.f));
-        entity.getComponent<cro::Transform>().setPosition({ 0.f, -30.f });
+        entity.getComponent<cro::Transform>().setPosition({ 0.f, -30.f, -0.4f });
         entity.addComponent<cro::Drawable2D>();
         entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("background");
         auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
@@ -392,6 +392,7 @@ void UnlockState::buildUI()
             static constexpr float InTime = 0.8f;
             static constexpr float HoldTime = 10.f;
             static constexpr float OutTime = InTime;
+            static float driftRotation = 0.f;
 
             const float PreviewScale = 1.f / m_viewScale.x;
             const cro::FloatRect PreviewRect = { glm::vec2(0.f), glm::vec2(m_modelTexture.getSize()) };
@@ -415,8 +416,9 @@ void UnlockState::buildUI()
                 
                 const float bgScale = cro::Util::Easing::easeOutElastic(scale);
                 e.getComponent<cro::Transform>().setScale(glm::vec2(bgScale));
-                e.getComponent<cro::Transform>().setRotation(bgScale * -cro::Util::Const::TAU);
-
+                e.getComponent<cro::Transform>().setRotation(bgScale * -(cro::Util::Const::TAU + driftRotation));
+                
+                collection.backgroundInner.getComponent<cro::Transform>().setRotation(bgScale * cro::Util::Const::TAU * 2.f);
                 collection.title.getComponent<cro::Transform>().setScale(glm::vec2(bgScale));
 
                 const float windowWidth = static_cast<float>(cro::App::getWindow().getSize().x) * 2.f;
@@ -456,14 +458,18 @@ void UnlockState::buildUI()
                 }
                 collection.modelSprite.getComponent<cro::Transform>().setScale(glm::vec2(PreviewScale));
                 collection.modelNode.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, dt);
+
+                driftRotation += dt * 0.1f;
+                e.getComponent<cro::Transform>().setRotation(-(cro::Util::Const::TAU + driftRotation));
                 break;
             case ItemCallbackData::Out:
             {
                 const float scale = std::min(1.f, data.stateTime / OutTime);
                 const float bgScale = cro::Util::Easing::easeOutElastic(1.f - scale);
                 e.getComponent<cro::Transform>().setScale(glm::vec2(bgScale));
-                e.getComponent<cro::Transform>().setRotation(bgScale * -cro::Util::Const::TAU);
-
+                e.getComponent<cro::Transform>().setRotation(bgScale * -(cro::Util::Const::TAU + driftRotation));
+                
+                collection.backgroundInner.getComponent<cro::Transform>().setRotation(bgScale * cro::Util::Const::TAU * 2.f);
                 collection.title.getComponent<cro::Transform>().setScale(glm::vec2(bgScale));
 
                 const float windowWidth = static_cast<float>(cro::App::getWindow().getSize().x) * 2.f;
@@ -486,6 +492,7 @@ void UnlockState::buildUI()
                 if (data.stateTime > OutTime)
                 {
                     m_scene.destroyEntity(collection.root);
+                    m_scene.destroyEntity(collection.backgroundInner);
                     m_scene.destroyEntity(collection.description);
                     m_scene.destroyEntity(collection.name);
                     m_scene.destroyEntity(collection.title);
@@ -516,6 +523,15 @@ void UnlockState::buildUI()
 
         m_rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
+        //background inner
+        entity = m_scene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, bounds.height / 2.f, 0.f });
+        entity.addComponent<cro::Drawable2D>();
+        entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("background_inner");
+        bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+        entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
+        collection.root.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+        collection.backgroundInner = entity;
 
         //title text
         entity = m_scene.createEntity();
