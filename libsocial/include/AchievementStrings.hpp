@@ -210,7 +210,7 @@ struct TrophyID final
         GoldFigure, SilverFigure, BronzeFigure,
         Pool, Platinum,
         Level01, Level10, Level20,
-        Level30, Level40, Level50
+        Level30, Level40, Level50, Spoon
     };
 };
 
@@ -260,7 +260,7 @@ static constexpr std::array<std::size_t, AchievementID::Count> AchievementTrophi
     TrophyID::Platinum,
     TrophyID::GoldFigure,
     TrophyID::Platinum,
-    TrophyID::BronzeCup,
+    TrophyID::Spoon,
 
     TrophyID::GoldFigure,
     TrophyID::GoldFigure,
