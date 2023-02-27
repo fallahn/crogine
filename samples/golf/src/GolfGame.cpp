@@ -636,6 +636,13 @@ bool GolfGame::initialise()
     md.loadFromFile("assets/golf/models/trophies/trophy06.cmt");
     md.loadFromFile("assets/golf/models/trophies/trophy07.cmt");
     md.loadFromFile("assets/golf/models/trophies/trophy08.cmt");
+    md.loadFromFile("assets/golf/models/trophies/trophy09.cmt");
+    md.loadFromFile("assets/golf/models/trophies/level01.cmt");
+    md.loadFromFile("assets/golf/models/trophies/level10.cmt");
+    md.loadFromFile("assets/golf/models/trophies/level20.cmt");
+    md.loadFromFile("assets/golf/models/trophies/level30.cmt");
+    md.loadFromFile("assets/golf/models/trophies/level40.cmt");
+    md.loadFromFile("assets/golf/models/trophies/level50.cmt");
 
     for (const auto& str : ul::ModelPaths) //models displayed in 'unlock' state
     {
@@ -895,6 +902,16 @@ void GolfGame::loadPreferences()
     if (m_sharedData.inputBinding.keys[InputBinding::CancelShot] == SDLK_UNKNOWN)
     {
         m_sharedData.inputBinding.keys[InputBinding::CancelShot] = SDLK_LSHIFT;
+    }
+
+    //and the ball spin update
+    if (m_sharedData.inputBinding.keys[InputBinding::EmoteMenu] == SDLK_UNKNOWN)
+    {
+        m_sharedData.inputBinding.keys[InputBinding::EmoteMenu] = SDLK_LCTRL;
+    }
+    if (m_sharedData.inputBinding.keys[InputBinding::SpinMenu] == SDLK_UNKNOWN)
+    {
+        m_sharedData.inputBinding.keys[InputBinding::SpinMenu] = SDLK_LALT;
     }
 
     m_sharedData.inputBinding.clubset = ClubID::DefaultSet;

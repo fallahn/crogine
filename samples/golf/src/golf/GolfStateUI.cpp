@@ -2964,16 +2964,15 @@ bool GolfState::EmoteWheel::handleEvent(const cro::Event& evt)
     if (evt.type == SDL_KEYDOWN
         && evt.key.repeat == 0)
     {
-        switch (evt.key.keysym.sym)
+        if (evt.key.keysym.sym == sharedData.inputBinding.keys[InputBinding::EmoteMenu])
         {
-        default: break;
-        case SDLK_LCTRL:
             targetScale = 1.f;
             return true;
         }
 
+
         //stop these getting forwarded to input parser
-        if (evt.key.keysym.mod & KMOD_LCTRL)
+        if (evt.key.keysym.mod & (KMOD_CTRL | KMOD_ALT | KMOD_SHIFT))
         {
             if (evt.key.keysym.sym == sharedData.inputBinding.keys[InputBinding::Up])
             {
@@ -2995,10 +2994,8 @@ bool GolfState::EmoteWheel::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_KEYUP)
     {
-        switch (evt.key.keysym.sym)
+        if (evt.key.keysym.sym == sharedData.inputBinding.keys[InputBinding::EmoteMenu])
         {
-        default: break;
-        case SDLK_LCTRL:
             targetScale = 0.f;
             return true;
         }
