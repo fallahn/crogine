@@ -200,7 +200,7 @@ static const std::string CloudOverheadFragment = R"(
         rim *= smoothstep(0.5, 0.9, rimAmount);
 
 #if defined(POINT_LIGHT)
-        vec3 lightDirection = normalize(v_worldPosition - vec3(u_worldCentre, 0.0));
+        vec3 lightDirection = normalize(v_worldPosition - vec3(u_worldCentre.x, 0.0, u_worldCentre.y));
 #else
         vec3 lightDirection = normalize(-u_lightDirection);
 #endif

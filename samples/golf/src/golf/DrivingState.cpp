@@ -1770,7 +1770,7 @@ void DrivingState::createClouds()
             md.createModel(entity);
             entity.getComponent<cro::Model>().setMaterial(0, material);
 
-            float scale = static_cast<float>(cro::Util::Random::value(10, 30));
+            float scale = static_cast<float>(cro::Util::Random::value(20, 40));
             entity.getComponent<cro::Transform>().setScale(glm::vec3(scale));
         }
     }

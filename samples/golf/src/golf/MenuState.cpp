@@ -1322,7 +1322,7 @@ void MenuState::createClouds()
             md.createModel(entity);
             entity.getComponent<cro::Model>().setMaterial(0, material);
 
-            float scale = static_cast<float>(cro::Util::Random::value(5, 15));
+            float scale = static_cast<float>(cro::Util::Random::value(15, 25));
             entity.getComponent<cro::Transform>().setScale(glm::vec3(scale));
         }
     }
