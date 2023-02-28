@@ -221,24 +221,6 @@ bool RetroState::handleEvent(const cro::Event& evt)
         switch (evt.key.keysym.sym)
         {
         default: break;
-        case SDLK_KP_PLUS:
-            //if (!debugEnt.isValid())
-            {
-                auto debugEnt = m_uiScene.createEntity();
-                debugEnt.addComponent<cro::Transform>().setScale(glm::vec2(10.f));
-                debugEnt.getComponent<cro::Transform>().setPosition({ 0.f, m_sprites.size() * 10.f });
-                debugEnt.addComponent<cro::Drawable2D>();
-                debugEnt.addComponent<cro::Sprite>(m_paletteTexture);
-                m_sprites.push_back(debugEnt);
-            }
-            break;
-        case SDLK_KP_MINUS:
-            if (!m_sprites.empty())
-            {
-                m_uiScene.destroyEntity(m_sprites.back());
-                m_sprites.pop_back();
-            }
-            break;
         case SDLK_BACKSPACE:
         case SDLK_ESCAPE:
             requestStackClear();
@@ -279,6 +261,7 @@ void RetroState::render()
 {
     m_renderTexture.clear();
     m_gameScene.render();
+    updateLensFlare(); //have to do this here because depth test relies on render texture being active.
     m_renderTexture.display();
 
     m_quad.draw();
@@ -293,6 +276,7 @@ void RetroState::addSystems()
     m_gameScene.addSystem<cro::CameraSystem>(mb);
     m_gameScene.addSystem<cro::ModelRenderer>(mb);
 
+    m_uiScene.addSystem<cro::CallbackSystem>(mb);
     m_uiScene.addSystem<cro::SpriteSystem2D>(mb);
     m_uiScene.addSystem<cro::CameraSystem>(mb);
     m_uiScene.addSystem<cro::RenderSystem2D>(mb);
@@ -372,10 +356,31 @@ void RetroState::createScene()
         return entity;
     };
 
-    if (md.loadFromFile("assets/models/cloud_ring.cmt"))
+    if (md.loadFromFile("assets/models/cloud.cmt"))
     {
         auto entity = createCloud(glm::vec3(0.f, 0.f, 0.f));
-        //entity.getComponent<cro::Transform>().setOrigin({ 0.f, 0.f, 22.f });
+        m_lightSource = entity;
+
+        entity.getComponent<cro::Callback>().active = true;
+        entity.getComponent<cro::Callback>().function =
+            [](cro::Entity e, float dt)
+        {
+            static float t = 0.f;
+            t += dt;
+            e.getComponent<cro::Transform>().setPosition({ 0.f, std::sin(t*2.f), -22.f });
+        };
+
+
+        entity = m_gameScene.createEntity();
+        entity.addComponent<cro::Transform>().addChild(m_lightSource.getComponent<cro::Transform>());
+        m_lightRoot = entity;
+
+        /*entity.addComponent<cro::Callback>().active = true;
+        entity.getComponent<cro::Callback>().function =
+            [](cro::Entity e, float dt)
+        {
+            e.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, dt / 2.f);
+        };*/
     }
 
     if (md.loadFromFile("assets/retro/cloud.cmt"))
@@ -405,6 +410,17 @@ void RetroState::createUI()
         {
             if (ImGui::Begin("Window of happiness"))
             {
+                ImGui::Text("World Pos: %3.3f, %3.3f, %3.3f", m_lensFlare.srcPos.x, m_lensFlare.srcPos.y, m_lensFlare.srcPos.z);
+                ImGui::Text("Test Pos: %3.3f, %3.3f, %3.3f", m_lensFlare.testPos.x, m_lensFlare.testPos.y, m_lensFlare.testPos.z);
+                ImGui::Text("Screen Pos: %3.3f, %3.3f", m_lensFlare.screenPos.x, m_lensFlare.screenPos.y);
+                ImGui::Text("Visible: %s", m_lensFlare.visible ? "true" : "false");
+
+                static float rotation = 0.f;
+                if (ImGui::SliderFloat("Rotation", &rotation, -cro::Util::Const::PI, cro::Util::Const::PI))
+                {
+                    m_lightRoot.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, rotation);
+                }
+
                 ImGui::Image(m_paletteTexture, { 256.f, 32.f }, { 0.f, 1.f }, { 1.f, 0.f });
 
                 if (ImGui::Button("Swap Palette"))
@@ -420,12 +436,87 @@ void RetroState::createUI()
 
                     m_paletteTexture.loadFromFile(paths[pathIndex]);
                 }
-
-
-                ImGui::Text("Sprites %lu", m_sprites.size());
             }
             ImGui::End();        
         });
+
+    auto entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>().setVertexData(
+        {
+            cro::Vertex2D(glm::vec2(-10.f,10.f), cro::Colour::Magenta),
+            cro::Vertex2D(glm::vec2(-10.f), cro::Colour::Magenta),
+            cro::Vertex2D(glm::vec2(10.f), cro::Colour::Magenta),
+
+            cro::Vertex2D(glm::vec2(10.f), cro::Colour::Magenta),
+            cro::Vertex2D(glm::vec2(-10.f), cro::Colour::Magenta),
+            cro::Vertex2D(glm::vec2(10.f, -10.f), cro::Colour::Magenta),
+
+
+            cro::Vertex2D(glm::vec2(0.f), cro::Colour::Yellow),
+            cro::Vertex2D(glm::vec2(0.f), cro::Colour::Yellow),
+            cro::Vertex2D(glm::vec2(0.f), cro::Colour::Yellow),
+
+            cro::Vertex2D(glm::vec2(0.f), cro::Colour::Yellow),
+            cro::Vertex2D(glm::vec2(0.f), cro::Colour::Yellow),
+            cro::Vertex2D(glm::vec2(0.f), cro::Colour::Yellow),
+
+
+            cro::Vertex2D(glm::vec2(0.f), cro::Colour::Green),
+            cro::Vertex2D(glm::vec2(0.f), cro::Colour::Green),
+            cro::Vertex2D(glm::vec2(0.f), cro::Colour::Green),
+
+            cro::Vertex2D(glm::vec2(0.f), cro::Colour::Green),
+            cro::Vertex2D(glm::vec2(0.f), cro::Colour::Green),
+            cro::Vertex2D(glm::vec2(0.f), cro::Colour::Green),
+        });
+    entity.getComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLES);
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+    {
+        if (m_lensFlare.visible)
+        {
+            e.getComponent<cro::Transform>().setPosition(m_lensFlare.screenPos);
+            e.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+
+            auto& verts = e.getComponent<cro::Drawable2D>().getVertexData();
+            auto screenCentre = glm::vec2(cro::App::getWindow().getSize()) / 2.f;
+            auto dir = screenCentre - m_lensFlare.screenPos;
+            
+            auto pos = dir * 1.3f;
+            auto scale = glm::length(pos) / glm::length(screenCentre); //TODO optimise
+            const float Size = 20.f;
+
+            float size = Size * scale;
+
+            verts[6].position = pos + glm::vec2(-size, size);
+            verts[7].position = pos + glm::vec2(-size);
+            verts[8].position = pos + glm::vec2(size);
+
+            verts[9].position  = pos + glm::vec2(size);
+            verts[10].position = pos + glm::vec2(-size);
+            verts[11].position = pos + glm::vec2(size, -size);
+
+            pos = dir * 1.6f;
+            scale = glm::length(pos) / glm::length(screenCentre); //TODO optimise
+            size = scale * Size;
+            
+            verts[12].position = pos + glm::vec2(-size, size);
+            verts[13].position = pos + glm::vec2(-size);
+            verts[14].position = pos + glm::vec2(size);
+
+            verts[15].position = pos + glm::vec2(size);
+            verts[16].position = pos + glm::vec2(-size);
+            verts[17].position = pos + glm::vec2(size, -size);
+
+            //pos = dir * 2.f;
+        }
+        else
+        {
+            e.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+        }
+    };
 }
 
 void RetroState::updateView(cro::Camera& cam3D)
@@ -452,4 +543,19 @@ void RetroState::updateView(cro::Camera& cam3D)
     cam2D.viewport = {0.f, 0.f, 1.f, 1.f};
 
     cam2D.setOrthographic(0.f, windowSize.x, 0.f, windowSize.y, -0.1f, 10.f);
+}
+
+//-----------------
+void RetroState::updateLensFlare()
+{
+    if (m_lightSource.isValid())
+    {
+        const auto cam = m_gameScene.getActiveCamera();
+        
+        m_lensFlare.srcPos = m_lightSource.getComponent<cro::Transform>().getWorldPosition();
+        m_lensFlare.screenPos = cam.getComponent<cro::Camera>().coordsToPixel(m_lensFlare.srcPos, m_renderTexture.getSize());
+
+        m_lensFlare.testPos = cam.getComponent<cro::Camera>().pixelToCoords(m_lensFlare.screenPos, m_renderTexture.getSize());
+        m_lensFlare.visible = glm::length2(m_lensFlare.srcPos - m_lensFlare.testPos) < 4.f;
+    }
 }

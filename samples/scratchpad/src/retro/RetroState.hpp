@@ -67,7 +67,16 @@ private:
     cro::RenderTexture m_renderTexture;
     cro::SimpleQuad m_quad;
 
-    std::vector<cro::Entity> m_sprites;
+    cro::Entity m_lightSource;
+    cro::Entity m_lightRoot;
+    struct LensFlare final
+    {
+        glm::vec3 srcPos = glm::vec3(0.f);
+        glm::vec3 testPos = glm::vec3(0.f);
+        glm::vec2 screenPos = glm::vec2(0.f);
+        bool visible = false;
+    }m_lensFlare;
+   void updateLensFlare();
 
     void addSystems();
     void loadAssets();
