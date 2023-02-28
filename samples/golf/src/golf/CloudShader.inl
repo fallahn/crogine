@@ -180,7 +180,7 @@ static const std::string CloudOverheadFragment = R"(
 
 #if defined (FEATHER_EDGE)
 #if !defined(MAX_RADIUS)
-    const float MaxDist = 180.0;
+    const float MaxDist = 200.0;
 #else
     const float MaxDist = MAX_RADIUS;
 #endif
@@ -204,7 +204,7 @@ static const std::string CloudOverheadFragment = R"(
         rim *= smoothstep(0.5, 0.9, rimAmount);
 
 #if defined(POINT_LIGHT)
-        vec3 lightDirection = normalize(vec3(u_worldCentre.x, 0.0, u_worldCentre.y) - v_worldPosition);
+        vec3 lightDirection = normalize(vec3(u_worldCentre.x, 3.0, u_worldCentre.y) - v_worldPosition);
         float colourAmount = 1.0 - pow(dot(normal, lightDirection), 2.0);
 #else
         vec3 lightDirection = normalize(-u_lightDirection);
