@@ -236,10 +236,27 @@ void GolfState::createWeather()
 
 void GolfState::createClouds()
 {
-    cro::ModelDefinition md(m_resources);
-    if (md.loadFromFile("assets/golf/models/cloud.cmt"))
+    const std::array Paths =
     {
-        m_resources.shaders.loadFromString(ShaderID::Cloud, CloudOverheadVertex, CloudOverheadFragment, "#define FEATHER_EDGE\n");
+        std::string("assets/golf/models/cloud.cmt"),
+        std::string("assets/golf/models/cloud02.cmt"),
+        std::string("assets/golf/models/cloud03.cmt"),
+        std::string("assets/golf/models/cloud04.cmt"),
+    };
+
+    cro::ModelDefinition md(m_resources);
+    std::vector<cro::ModelDefinition> definitions;
+    for (const auto& path : Paths)
+    {
+        if (md.loadFromFile(path))
+        {
+            definitions.push_back(md);
+        }
+    }
+
+    if (!definitions.empty())
+    {
+        m_resources.shaders.loadFromString(ShaderID::Cloud, CloudOverheadVertex, CloudOverheadFragment, "#define POINT_LIGHT\n#define FEATHER_EDGE\n");
         auto& shader = m_resources.shaders.get(ShaderID::Cloud);
 
         auto matID = m_resources.materials.add(shader);
@@ -254,6 +271,7 @@ void GolfState::createClouds()
         static constexpr std::array MaxBounds = { 320.f, 320.f };
         auto positions = pd::PoissonDiskSampling(100.f, MinBounds, MaxBounds, 30u, seed);
 
+        std::size_t modelIndex = 0;
 
         for (const auto& position : positions)
         {
@@ -264,11 +282,13 @@ void GolfState::createClouds()
             auto entity = m_gameScene.createEntity();
             entity.addComponent<cro::Transform>().setPosition(cloudPos);
             entity.addComponent<Cloud>().speedMultiplier = static_cast<float>(cro::Util::Random::value(10, 22)) / 100.f;
-            md.createModel(entity);
+            definitions[modelIndex].createModel(entity);
             entity.getComponent<cro::Model>().setMaterial(0, material);
 
-            float scale = static_cast<float>(cro::Util::Random::value(10, 30));
+            float scale = static_cast<float>(cro::Util::Random::value(20, 35));
             entity.getComponent<cro::Transform>().setScale(glm::vec3(scale));
+
+            modelIndex = (modelIndex + 1) % definitions.size();
         }
     }
 

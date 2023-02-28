@@ -132,6 +132,8 @@ The skybox definition file is used to declare the colour of the skybox, as well 
     }
 
 For an example of creating models for a skybox see the `skybox.blend` file. Note that many models include 'fake' reflections modelled directly as part of the mesh, for cases where they are rendered outside the world's reflection plane. The vertex colour of the mesh is used to decide how much 'tint' the model receives in the reflected part to take on the water colour, where 1 (white) is no tint, and 0 (black) is completely water colour.
+As of 1.11.0 the `clouds` property is deprecated and ignored.
+
 
 As of 1.8.0 typing `tree_ed` into the console when at the game menu opens the treeset editor (see below). This can be used to preview and modify skybox files.
 

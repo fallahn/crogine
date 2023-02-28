@@ -195,7 +195,6 @@ DrivingState::DrivingState(cro::StateStack& stack, cro::State::Context context, 
     });
 
     Achievements::setActive(true);
-    sd.inputBinding.clubset = Social::getUnlockStatus(Social::UnlockType::Club);
     Social::setStatus(Social::InfoID::Menu, { "On The Driving Range" });
 
 #ifdef CRO_DEBUG_
@@ -1309,12 +1308,20 @@ void DrivingState::createScene()
 
     //and sky detail
     std::string skybox = "assets/golf/skyboxes/spring.sbf";
-    //auto skyboxes = cro::FileSystem::listFiles(cro::FileSystem::getResourcePath() + skybox);
-    //if (!skyboxes.empty())
-    //{
-    //    skybox += skyboxes[cro::Util::Random::value(0u, skyboxes.size() - 1)];
-    //}
-    loadSkybox(skybox, m_skyScene, m_resources, m_materialIDs[MaterialID::Horizon]);
+
+    auto cloudRing = loadSkybox(skybox, m_skyScene, m_resources, m_materialIDs[MaterialID::Horizon]);
+    if (cloudRing.isValid()
+        && cloudRing.hasComponent<cro::Model>())
+    {
+        m_resources.shaders.loadFromString(ShaderID::CloudRing, CloudOverheadVertex, CloudOverheadFragment, "#define REFLECTION\n#define POINT_LIGHT\n");
+        auto& shader = m_resources.shaders.get(ShaderID::CloudRing);
+
+        auto matID = m_resources.materials.add(shader);
+        auto material = m_resources.materials.get(matID);
+        material.setProperty("u_skyColourTop", m_skyScene.getSkyboxColours().top);
+        material.setProperty("u_skyColourBottom", m_skyScene.getSkyboxColours().middle);
+        cloudRing.getComponent<cro::Model>().setMaterial(0, material);
+    }
     createClouds();
 
     //tee marker
@@ -1740,9 +1747,25 @@ void DrivingState::createFoliage(cro::Entity terrainEnt)
 
 void DrivingState::createClouds()
 {
-    cro::ModelDefinition md(m_resources);
+    const std::array Paths =
+    {
+        std::string("assets/golf/models/cloud.cmt"),
+        std::string("assets/golf/models/cloud02.cmt"),
+        std::string("assets/golf/models/cloud03.cmt"),
+        std::string("assets/golf/models/cloud04.cmt")
+    };
 
-    if (md.loadFromFile("assets/golf/models/cloud.cmt"))
+    cro::ModelDefinition md(m_resources);
+    std::vector<cro::ModelDefinition> definitions;
+    for (const auto& path : Paths)
+    {
+        if (md.loadFromFile(path))
+        {
+            definitions.push_back(md);
+        }
+    }
+
+    if (!definitions.empty())
     {
         m_resources.shaders.loadFromString(ShaderID::Cloud, CloudOverheadVertex, CloudOverheadFragment, "#define FEATHER_EDGE\n");
         auto& shader = m_resources.shaders.get(ShaderID::Cloud);
@@ -1758,6 +1781,7 @@ void DrivingState::createClouds()
         auto positions = pd::PoissonDiskSampling(150.f, MinBounds, MaxBounds, 30u, seed);
 
         auto Offset = 160.f;
+        std::size_t modelIndex = 0;
 
         for (const auto& position : positions)
         {
@@ -1767,11 +1791,13 @@ void DrivingState::createClouds()
             auto entity = m_gameScene.createEntity();
             entity.addComponent<cro::Transform>().setPosition(cloudPos);
             entity.addComponent<Cloud>().speedMultiplier = static_cast<float>(cro::Util::Random::value(10, 22)) / 100.f;
-            md.createModel(entity);
+            definitions[modelIndex].createModel(entity);
             entity.getComponent<cro::Model>().setMaterial(0, material);
 
             float scale = static_cast<float>(cro::Util::Random::value(20, 40));
             entity.getComponent<cro::Transform>().setScale(glm::vec3(scale));
+
+            modelIndex = (modelIndex + 1) % definitions.size();
         }
     }
 }

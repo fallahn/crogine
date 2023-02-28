@@ -200,6 +200,7 @@ struct ShaderID final
         Crowd,
         CrowdShadow,
         Cloud,
+        CloudRing,
         Leaderboard,
         Player,
         Hair,
@@ -587,12 +588,11 @@ static inline cro::Image loadNormalMap(std::vector<glm::vec3>& dst, const std::s
     return img;
 }
 
-//return the path to cloud sprites if it is found
-static inline std::string loadSkybox(const std::string& path, cro::Scene& skyScene, cro::ResourceCollection& resources, std::int32_t materialID, std::int32_t skinMatID = -1)
+//return the entity with the cloud ring (so we can apply material)
+static inline cro::Entity loadSkybox(const std::string& path, cro::Scene& skyScene, cro::ResourceCollection& resources, std::int32_t materialID, std::int32_t skinMatID = -1)
 {
     auto skyTop = SkyTop;
     auto skyMid = TextNormalColour;
-    std::string  cloudPath;
 
     cro::ConfigFile cfg;
 
@@ -620,10 +620,6 @@ static inline std::string loadSkybox(const std::string& path, cro::Scene& skySce
                 else if (name == "sky_bottom")
                 {
                     skyMid = p.getValue<cro::Colour>();
-                }
-                else if (name == "clouds")
-                {
-                    cloudPath = p.getValue<std::string>();
                 }
             }
         }
@@ -709,6 +705,7 @@ static inline std::string loadSkybox(const std::string& path, cro::Scene& skySce
     skyScene.enableSkybox();
     skyScene.setSkyboxColours(SkyBottom, skyMid, skyTop);
 
+    cro::Entity cloudEnt;
     if (md.loadFromFile("assets/golf/models/skybox/cloud_ring.cmt"))
     {
         auto entity = skyScene.createEntity();
@@ -724,9 +721,11 @@ static inline std::string loadSkybox(const std::string& path, cro::Scene& skySce
             auto currSpeed = speed * e.getComponent<cro::Callback>().getUserData<float>();
             e.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, currSpeed * dt);
         };
+
+        cloudEnt = entity;
     }
 
-    return cloudPath;
+    return cloudEnt;
 }
 
 static inline void createFallbackModel(cro::Entity target, cro::ResourceCollection& resources)

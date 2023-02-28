@@ -204,6 +204,10 @@ std::int32_t Social::getUnlockStatus(UnlockType type)
     default: return 0;
     case UnlockType::Club:
         clubset.read("clb");
+        if (clubset.value == 0)
+        {
+            return 3731; //default set flags
+        }
         return clubset.value;
     case UnlockType::Ball:
         ballset.read("bls");

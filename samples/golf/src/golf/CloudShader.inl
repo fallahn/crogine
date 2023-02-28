@@ -143,6 +143,7 @@ R"(
 //updated shader for 3D overhead clouds
 static const std::string CloudOverheadVertex = R"(
     ATTRIBUTE vec4 a_position;
+    ATTRIBUTE vec4 a_colour;
     ATTRIBUTE vec3 a_normal;
 
     uniform mat4 u_worldMatrix;
@@ -151,6 +152,7 @@ static const std::string CloudOverheadVertex = R"(
 
     VARYING_OUT vec3 v_normal;
     VARYING_OUT vec3 v_worldPosition;
+    VARYING_OUT vec4 v_colour;
 
     void main()
     {
@@ -160,6 +162,7 @@ static const std::string CloudOverheadVertex = R"(
 
         v_worldPosition = position.xyz;
         v_normal = u_normalMatrix * a_normal;
+        v_colour = a_colour;
     })";
 
 static const std::string CloudOverheadFragment = R"(
@@ -186,6 +189,7 @@ static const std::string CloudOverheadFragment = R"(
 #endif
 
     const vec4 BaseColour = vec4(1.0);
+    const vec3 WaterColour = vec3(0.02, 0.078, 0.578);
     const float PixelSize = 1.0;
     const float ColourLevels = 2.0;
 
@@ -200,18 +204,23 @@ static const std::string CloudOverheadFragment = R"(
         rim *= smoothstep(0.5, 0.9, rimAmount);
 
 #if defined(POINT_LIGHT)
-        vec3 lightDirection = normalize(v_worldPosition - vec3(u_worldCentre.x, 0.0, u_worldCentre.y));
+        vec3 lightDirection = normalize(vec3(u_worldCentre.x, 0.0, u_worldCentre.y) - v_worldPosition);
+        float colourAmount = 1.0 - pow(dot(normal, lightDirection), 2.0);
 #else
         vec3 lightDirection = normalize(-u_lightDirection);
+        float colourAmount = pow(dot(normal, lightDirection), 2.0);
 #endif
 
-        float colourAmount = pow(dot(normal, lightDirection), 2.0);
         colourAmount *= ColourLevels;
         colourAmount = round(colourAmount);
         colourAmount /= ColourLevels;
 
         vec4 colour = vec4(mix(BaseColour.rgb, u_skyColourTop.rgb, colourAmount * 0.7), 1.0);
         colour.rgb = mix(colour.rgb, u_skyColourBottom.rgb * 1.25, rim * 0.7);
+
+#if defined(REFLECTION)
+        colour.rgb = mix(WaterColour, colour.rgb, v_colour.g);
+#endif
 
         FRAG_OUT = colour;
 

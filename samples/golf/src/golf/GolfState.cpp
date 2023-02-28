@@ -122,6 +122,7 @@ source distribution.
 namespace
 {
 #include "WaterShader.inl"
+#include "CloudShader.inl"
 #include "CelShader.inl"
 #include "MinimapShader.inl"
 #include "WireframeShader.inl"
@@ -2363,7 +2364,19 @@ void GolfState::loadAssets()
         }
     }
 
-    theme.cloudPath = loadSkybox(skyboxPath, m_skyScene, m_resources, m_materialIDs[MaterialID::Horizon], m_materialIDs[MaterialID::CelTexturedSkinned]);
+    auto cloudRing = loadSkybox(skyboxPath, m_skyScene, m_resources, m_materialIDs[MaterialID::Horizon], m_materialIDs[MaterialID::CelTexturedSkinned]);
+    if (cloudRing.isValid()
+        && cloudRing.hasComponent<cro::Model>())
+    {
+        m_resources.shaders.loadFromString(ShaderID::CloudRing, CloudOverheadVertex, CloudOverheadFragment, "#define REFLECTION\n#define POINT_LIGHT\n");
+        auto& shader = m_resources.shaders.get(ShaderID::CloudRing);
+
+        auto matID = m_resources.materials.add(shader);
+        auto material = m_resources.materials.get(matID);
+        material.setProperty("u_skyColourTop", m_skyScene.getSkyboxColours().top);
+        material.setProperty("u_skyColourBottom", m_skyScene.getSkyboxColours().middle);
+        cloudRing.getComponent<cro::Model>().setMaterial(0, material);
+    }
 
 #ifdef CRO_DEBUG_
     auto& colours = m_skyScene.getSkyboxColours();
