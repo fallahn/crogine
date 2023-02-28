@@ -270,7 +270,7 @@ namespace cro
         If a skybox texture or environment map has been set then this does nothing.
         \param bottom The colour for the bottom half of the skybox
         \param middle The colour for the horizon of the skybox
-        \param top The colour for the top half og the skybox
+        \param top The colour for the top half of the skybox
         */
         void setSkyboxColours(Colour bottom, Colour middle, Colour top);
         void setSkyboxColours(SkyColours colours);

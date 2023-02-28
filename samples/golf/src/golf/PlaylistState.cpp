@@ -664,10 +664,11 @@ void PlaylistState::loadAssets()
     m_windBuffer.addShader(*shader);
     m_materialIDs[MaterialID::Water] = m_resources.materials.add(*shader);
 
-    m_resources.shaders.loadFromString(ShaderID::Cloud, CloudVertex3D, CloudFragment3D);
+    m_resources.shaders.loadFromString(ShaderID::Cloud, CloudOverheadVertex, CloudOverheadFragment, "#define REFLECTION\n#define POINT_LIGHT\n");
     shader = &m_resources.shaders.get(ShaderID::Cloud);
-    m_scaleBuffer.addShader(*shader);
+    //m_scaleBuffer.addShader(*shader);
     m_materialIDs[MaterialID::Cloud] = m_resources.materials.add(*shader);
+
 
     std::string wobble;
     if (m_sharedData.vertexSnap)
@@ -1599,10 +1600,20 @@ void PlaylistState::createSkyboxMenu(cro::Entity rootNode, const MenuData& menuD
                         const auto& ents = m_skyboxScene.getSystem<cro::ModelRenderer>()->getEntities();
                         for (auto e : ents)
                         {
-                            m_skyboxScene.destroyEntity(e);
+                            m_skyboxScene.destroyEntity(e); //this includes destroying the active cloud ring
                         }
 
-                        loadSkybox(SkyboxPath + m_skyboxes[i], m_skyboxScene, m_resources, m_materialIDs[MaterialID::Horizon], m_materialIDs[MaterialID::CelTexturedSkinned]);
+                        auto cloudEnt = loadSkybox(SkyboxPath + m_skyboxes[i], m_skyboxScene, m_resources, m_materialIDs[MaterialID::Horizon], m_materialIDs[MaterialID::CelTexturedSkinned]);
+                        if (cloudEnt.isValid())
+                        {
+                            auto material = m_resources.materials.get(m_materialIDs[MaterialID::Cloud]);
+                            material.setProperty("u_skyColourTop", m_skyboxScene.getSkyboxColours().top);
+                            material.setProperty("u_skyColourBottom", m_skyboxScene.getSkyboxColours().middle);
+
+                            m_cloudRing = cloudEnt;
+                            m_cloudRing.getComponent<cro::Model>().setMaterial(0, material);
+                        }
+
                         m_skyboxIndex = i;
                         m_courseData.skyboxPath = SkyboxPath + m_skyboxes[i];
 
@@ -1617,11 +1628,20 @@ void PlaylistState::createSkyboxMenu(cro::Entity rootNode, const MenuData& menuD
     }
 
     //load default skybox if found
+    cro::Entity cloudEnt;
     if (!m_skyboxes.empty())
     {
         m_skyboxIndex = 0;
-        auto cloudPath = loadSkybox(SkyboxPath + m_skyboxes[m_skyboxIndex], m_skyboxScene, m_resources, m_materialIDs[MaterialID::Horizon], m_materialIDs[MaterialID::CelTexturedSkinned]);
-        //TODO load clouds (??)
+        auto ent = loadSkybox(SkyboxPath + m_skyboxes[m_skyboxIndex], m_skyboxScene, m_resources, m_materialIDs[MaterialID::Horizon], m_materialIDs[MaterialID::CelTexturedSkinned]);
+        //we only want one of these
+        if (!cloudEnt.isValid())
+        {
+            cloudEnt = ent;
+        }
+        else
+        {
+            m_skyboxScene.destroyEntity(ent);
+        }
 
         m_courseData.skyboxPath = SkyboxPath + m_skyboxes[m_skyboxIndex];
     }
@@ -4236,9 +4256,19 @@ void PlaylistState::loadCourse()
         const auto& ents = m_skyboxScene.getSystem<cro::ModelRenderer>()->getEntities();
         for (auto e : ents)
         {
-            m_skyboxScene.destroyEntity(e);
+            m_skyboxScene.destroyEntity(e); //this includes destroying the active clouds...
         }
-        loadSkybox(SkyboxPath + m_skyboxes[m_skyboxIndex], m_skyboxScene, m_resources, m_materialIDs[MaterialID::Horizon], m_materialIDs[MaterialID::CelTexturedSkinned]);
+        auto cloudEnt = loadSkybox(SkyboxPath + m_skyboxes[m_skyboxIndex], m_skyboxScene, m_resources, m_materialIDs[MaterialID::Horizon], m_materialIDs[MaterialID::CelTexturedSkinned]);
+        //hum I didn't think this through did I?
+        if (cloudEnt.isValid())
+        {
+            auto material = m_resources.materials.get(m_materialIDs[MaterialID::Cloud]);
+            material.setProperty("u_skyColourTop", m_skyboxScene.getSkyboxColours().top);
+            material.setProperty("u_skyColourBottom", m_skyboxScene.getSkyboxColours().middle);
+
+            m_cloudRing = cloudEnt;
+            m_cloudRing.getComponent<cro::Model>().setMaterial(0, material);
+        }
 
         //apply shrubs
         for (auto& shrub : m_shrubberyModels)

@@ -137,6 +137,7 @@ private:
     }m_courseData;
     std::vector<std::string> m_skyboxes;
     std::size_t m_skyboxIndex;
+    cro::Entity m_cloudRing;
 
     std::vector<glm::vec3> m_grassDistribution;
     std::vector<glm::vec3> m_flowerDistribution;
