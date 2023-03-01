@@ -125,6 +125,8 @@ namespace
 
     float playerXScale = 1.f;
 
+    const cro::Time IdleTime = cro::seconds(30.f);
+
     static constexpr glm::vec3 CameraPosition = PlayerPosition + glm::vec3(0.f, CameraStrokeHeight, CameraStrokeOffset);
 
     static constexpr glm::vec2 BillboardChunk(40.f, 50.f);
@@ -264,8 +266,32 @@ bool DrivingState::handleEvent(const cro::Event& evt)
         m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
     };
 
+    const auto resetIdle = [&]()
+    {
+        m_idleTimer.restart();
+
+        if (m_currentCamera == CameraID::Idle)
+        {
+            setActiveCamera(CameraID::Player);
+            
+            //delay this by a frame - so waking from
+            //idle doesn't start a stroke
+
+            cro::Entity e = m_gameScene.createEntity();
+            e.addComponent<cro::Callback>().active = true;
+            e.getComponent<cro::Callback>().function =
+                [&](cro::Entity ent, float)
+            {
+                ent.getComponent<cro::Callback>().active = false;
+                m_gameScene.destroyEntity(ent);
+                m_inputParser.setSuspended(false);
+            };
+        }
+    };
+
     if (evt.type == SDL_KEYUP)
     {
+        resetIdle();
         cro::App::getWindow().setMouseCaptured(true);
         switch (evt.key.keysym.sym)
         {
@@ -350,6 +376,7 @@ bool DrivingState::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_CONTROLLERAXISMOTION)
     {
+        resetIdle();
         if (evt.caxis.value > LeftThumbDeadZone)
         {
             cro::App::getWindow().setMouseCaptured(true);
@@ -357,6 +384,7 @@ bool DrivingState::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_CONTROLLERBUTTONUP)
     {
+        resetIdle();
         switch (evt.cbutton.button)
         {
         default: break;
@@ -376,6 +404,7 @@ bool DrivingState::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_MOUSEMOTION)
     {
+        resetIdle();
 #ifdef CRO_DEBUG_
         if (!useFreeCam) {
 #endif
@@ -638,6 +667,16 @@ bool DrivingState::simulate(float dt)
     pos.z = 0.f;
     m_skyScene.getActiveCamera().getComponent<cro::Transform>().setPosition(pos);
     m_skyScene.simulate(dt);
+
+
+    if (m_currentCamera == CameraID::Player)
+    {
+        if (m_idleTimer.elapsed() > IdleTime)
+        {
+            setActiveCamera(CameraID::Idle);
+            m_inputParser.setSuspended(true);
+        }
+    }
 
     return true;
 }
@@ -1507,6 +1546,52 @@ void DrivingState::createScene()
     setPerspective(camEnt.getComponent<cro::Camera>());
     m_cameras[CameraID::Green] = camEnt;
 
+
+    //idle cam when player AFKs
+    camEnt = m_gameScene.createEntity();
+    camEnt.addComponent<cro::Transform>().setPosition(PlayerPosition + glm::vec3(0.f, 2.f, 5.f));
+    camEnt.addComponent<cro::Camera>().resizeCallback =
+        [&, camEnt](cro::Camera& cam)
+    {
+        //this cam has a slightly narrower FOV
+        auto zoomFOV = camEnt.getComponent<cro::Callback>().getUserData<CameraFollower::ZoomData>().fov;
+
+        auto vpSize = glm::vec2(cro::App::getWindow().getSize());
+        cam.setPerspective((m_sharedData.fov * cro::Util::Const::degToRad) * zoomFOV * 0.7f,
+            vpSize.x / vpSize.y, 0.1f, static_cast<float>(MapSize.x) * 1.25f,
+            2);
+        cam.viewport = { 0.f, 0.f, 1.f, 1.f };
+    };
+    camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(ShadowMapSize, ShadowMapSize);
+    camEnt.getComponent<cro::Camera>().active = false;
+    camEnt.getComponent<cro::Camera>().setMaxShadowDistance(30.f);
+    camEnt.getComponent<cro::Camera>().setShadowExpansion(35.f);
+    camEnt.addComponent<cro::AudioListener>();
+    camEnt.addComponent<TargetInfo>();
+    camEnt.addComponent<cro::Callback>().setUserData<CameraFollower::ZoomData>();
+    camEnt.getComponent<cro::Callback>().active = true;
+    camEnt.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float dt)
+    {
+        if (e.getComponent<cro::Camera>().active)
+        {
+            static constexpr glm::vec3 TargetOffset(0.f, 1.f, 0.f);
+            auto target = PlayerPosition + TargetOffset;
+
+            static float rads = 0.f;
+            rads += (dt * 0.1f);
+            glm::vec3 pos(std::cos(rads), 0.f, std::sin(rads));
+            pos *= 5.f;
+            pos += target;
+            pos.y = PlayerPosition.y + 2.f; //we probably don't need to read the terrain because the player never moves off flat ground
+
+            e.getComponent<cro::Transform>().setPosition(pos);
+            e.getComponent<cro::Transform>().setRotation(lookRotation(pos, target));
+        }
+    };
+    setPerspective(camEnt.getComponent<cro::Camera>());
+    camEnt.getComponent<cro::Camera>().updateMatrices(camEnt.getComponent<cro::Transform>());
+    m_cameras[CameraID::Idle] = camEnt;
 
 #ifdef CRO_DEBUG_
     camEnt = m_gameScene.createEntity();
@@ -2883,6 +2968,8 @@ void DrivingState::setActiveCamera(std::int32_t camID)
         {
             m_cameras[m_currentCamera].getComponent<CameraFollower>().reset(m_cameras[m_currentCamera]);
         }
+
+        m_idleTimer.restart();
     }
 }
 

@@ -103,6 +103,8 @@ private:
     cro::UniformBuffer<ResolutionData> m_resolutionBuffer;
     cro::UniformBuffer<WindData> m_windBuffer;
 
+    cro::Clock m_idleTimer;
+
     struct WindUpdate final
     {
         float currentWindSpeed = 0.f;
