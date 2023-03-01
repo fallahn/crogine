@@ -1078,13 +1078,13 @@ void TutorialState::tutorialTwo(cro::Entity root)
     entity.addComponent<cro::Drawable2D>().getVertexData() =
     {
         cro::Vertex2D(glm::vec2(-0.5f, 0.f), TextNormalColour),
-        cro::Vertex2D(glm::vec2(-0.5f, -94.f), TextNormalColour),
+        cro::Vertex2D(glm::vec2(-0.5f, -84.f), TextNormalColour),
         cro::Vertex2D(glm::vec2(0.5f, 0.f), TextNormalColour),
-        cro::Vertex2D(glm::vec2(0.5f, -94.f), TextNormalColour)
+        cro::Vertex2D(glm::vec2(0.5f, -84.f), TextNormalColour)
     };
     entity.getComponent<cro::Drawable2D>().updateLocalBounds();
     entity.getComponent<cro::Drawable2D>().setCroppingArea({ 0.f, 0.f, 0.f, 0.f });
-    entity.addComponent<UIElement>().absolutePosition = { WindIndicatorPosition.x, 194.f };
+    entity.addComponent<UIElement>().absolutePosition = { WindIndicatorPosition.x + 3.f, 194.f };
     entity.getComponent<UIElement>().relativePosition = { 0.f, 0.f };
     entity.getComponent<UIElement>().depth = 0.01f;
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
@@ -1502,7 +1502,7 @@ void TutorialState::tutorialThree(cro::Entity root)
 
     //power bar inner
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 5.f, 0.f, 0.1f });;
+    entity.addComponent<cro::Transform>().setPosition({ 5.f, 0.f, 0.1f });
     entity.addComponent<cro::Drawable2D>().setCroppingArea({ 0.f,0.f,0.f,0.f });
     entity.addComponent<cro::Sprite>() = uiSprites.getSprite("power_bar_inner");
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
@@ -1753,7 +1753,7 @@ void TutorialState::tutorialThree(cro::Entity root)
     entity.getComponent<cro::Transform>().addChild(powerbarInner.getComponent<cro::Transform>());
     
     //apply some properties to the hook bar
-    hookBar.getComponent<cro::Transform>().setPosition({ bounds.width / 2.f, bounds.height / 2.f, 0.1f });
+    hookBar.getComponent<cro::Transform>().setPosition({ bounds.width / 2.f, bounds.height / 2.f, 0.2f });
     hookBar.getComponent<cro::Callback>().setUserData<HookData>(bounds.width);
 
     entity.getComponent<cro::Transform>().addChild(hookBar.getComponent<cro::Transform>());
@@ -1985,7 +1985,7 @@ void TutorialState::tutorialPutt(cro::Entity root)
     entity.addComponent<cro::Drawable2D>().setCroppingArea({ 0.f, 0.f, 0.f, 0.f });
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("putt_flag");
     entity.addComponent<cro::SpriteAnimation>().play(0);
-    entity.addComponent<UIElement>().absolutePosition = { 0.f, -120.f };
+    entity.addComponent<UIElement>().absolutePosition = { 0.f, -90.f };
     entity.getComponent<UIElement>().relativePosition = { 0.5f, 0.5f };
     entity.getComponent<UIElement>().depth = 0.01f;
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
