@@ -86,7 +86,7 @@ namespace ul
         std::string("assets/golf/models/trophies/level30.cmt"),
         std::string("assets/golf/models/trophies/level40.cmt"),
         std::string("assets/golf/models/trophies/level50.cmt"),
-        std::string("assets/golf/models/trophies/level50.cmt"),
+        std::string("assets/golf/models/trophies/unlock.cmt"),
     };
 
     //these MUST be in the correct order for unlocking
