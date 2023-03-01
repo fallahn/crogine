@@ -2203,7 +2203,7 @@ void GolfState::loadAssets()
     glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
 
     //used when parsing holes
-    auto addCrowd = [&](HoleData& holeData, glm::vec3 position, float rotation)
+    auto addCrowd = [&](HoleData& holeData, glm::vec3 position, glm::vec3 lookAt, float rotation)
     {
         constexpr auto MapOrigin = glm::vec3(MapSize.x / 2.f, 0.f, -static_cast<float>(MapSize.y) / 2.f);
 
@@ -2218,10 +2218,10 @@ void GolfState::loadAssets()
             auto tx = glm::translate(glm::mat4(1.f), position - MapOrigin);
             tx = glm::translate(tx, offset);
 
-            auto holeDir = holeData.pin - (glm::vec3(tx[3]) + MapOrigin);
-            if (float len = glm::length2(holeDir); len < 1600.f)
+            auto lookDir = lookAt - (glm::vec3(tx[3]) + MapOrigin);
+            if (float len = glm::length2(lookDir); len < 1600.f)
             {
-                rotation = std::atan2(-holeDir.z, holeDir.x) + (90.f * cro::Util::Const::degToRad);
+                rotation = std::atan2(-lookDir.z, lookDir.x) + (90.f * cro::Util::Const::degToRad);
                 tx = glm::rotate(tx, rotation, glm::vec3(0.f, 1.f, 0.f));
             }
             else
@@ -2842,6 +2842,7 @@ void GolfState::loadAssets()
                         const auto& modelProps = obj.getProperties();
                         glm::vec3 position(0.f);
                         float rotation = 0.f;
+                        glm::vec3 lookAt = holeData.pin;
 
                         for (const auto& modelProp : modelProps)
                         {
@@ -2853,6 +2854,10 @@ void GolfState::loadAssets()
                             else if (propName == "rotation")
                             {
                                 rotation = modelProp.getValue<float>();
+                            }
+                            else if (propName == "lookat")
+                            {
+                                lookAt = modelProp.getValue<glm::vec3>();
                             }
                         }
 
@@ -2877,7 +2882,7 @@ void GolfState::loadAssets()
 
                         if (curve.size() < 4)
                         {
-                            addCrowd(holeData, position, rotation);
+                            addCrowd(holeData, position, lookAt, rotation);
                         }
                         else
                         {
