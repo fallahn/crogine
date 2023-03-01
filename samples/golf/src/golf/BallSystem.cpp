@@ -301,9 +301,14 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
             static constexpr float MinWind = 10.f;
             static constexpr float MaxWind = 30.f;
 
-            float dist = glm::length(m_holeData->pin - tx.getPosition());
-            float multiplier = std::clamp((dist - MinWind) / (MaxWind - MinWind), 0.f, 1.f);
-            multiplier = cro::Util::Easing::easeInCubic(multiplier) * 0.5f;
+            static constexpr float MinHeight = 40.f;
+            static constexpr float MaxHeight = 50.f;
+            const float BallHeight = tx.getPosition().y - ball.startPoint.y;
+            const float HeightMultiplier = std::clamp((BallHeight - MinHeight) / (MaxHeight / MinHeight), 0.f, 1.f);
+            const float Dist = glm::length(m_holeData->pin - tx.getPosition());
+
+            float multiplier = std::clamp((Dist - MinWind) / (MaxWind - MinWind), 0.f, 1.f);
+            multiplier = cro::Util::Easing::easeInCubic(multiplier) * (0.5f + (0.5f * HeightMultiplier));
             ball.velocity += m_windDirection * m_windStrength * multiplier * dt;
 
 
