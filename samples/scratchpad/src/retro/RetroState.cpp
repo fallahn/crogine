@@ -50,6 +50,48 @@ source distribution.
 
 namespace
 {
+    const std::string FlareVertex = R"(
+    ATTRIBUTE vec2 a_position;
+    ATTRIBUTE vec4 a_colour;
+    ATTRIBUTE vec2 a_texCoord0;
+
+    uniform mat4 u_worldMatrix;
+    uniform mat4 u_viewProjectionMatrix;
+
+    uniform vec2 u_screenCentre; //in world space
+
+    VARYING_OUT vec4 v_colour;
+    VARYING_OUT vec2 v_texCoord;
+    VARYING_OUT vec2 v_screenOffset;
+
+    void main()
+    {
+        vec4 position = u_worldMatrix * vec4(a_position, 0.0, 1.0);
+        v_screenOffset = (position.xy - u_screenCentre) / u_screenCentre;
+
+        gl_Position = u_viewProjectionMatrix * position;
+        v_colour = a_colour;
+        v_texCoord = a_texCoord0;
+    })";
+
+    const std::string FlareFragment = R"(
+    OUTPUT
+
+    uniform sampler2D u_texture;
+
+    VARYING_IN vec4 v_colour;
+    VARYING_IN vec2 v_texCoord;
+    VARYING_IN vec2 v_screenOffset;
+
+    void main()
+    {
+        float r = TEXTURE(u_texture, v_texCoord + (v_screenOffset * 0.05)).r;
+        float g = TEXTURE(u_texture, v_texCoord + (v_screenOffset * 0.025)).g;
+        float b = TEXTURE(u_texture, v_texCoord).b;
+
+        FRAG_OUT = vec4(r,g,b,1.0) * v_colour;
+    })";
+
     const std::string CloudVertex = R"(
     ATTRIBUTE vec4 a_position;
     ATTRIBUTE vec4 a_colour;
@@ -169,7 +211,8 @@ namespace
         enum
         {
             Ball,
-            Cloud
+            Cloud,
+            Flare
         };
     };
 
@@ -301,6 +344,10 @@ void RetroState::loadAssets()
     m_resources.shaders.loadFromString(RetroShader::Cloud, CloudVertex, CloudFragment);
     shader = &m_resources.shaders.get(RetroShader::Cloud);
     MaterialIDs[RetroMaterial::Cloud] = m_resources.materials.add(*shader);
+
+
+    //lensflare
+    m_resources.shaders.loadFromString(RetroShader::Flare, FlareVertex, FlareFragment);
 
     //output quad (scales up for chonky pixels)
     m_renderTexture.create(640, 480);
@@ -440,37 +487,40 @@ void RetroState::createUI()
             ImGui::End();        
         });
 
+    static constexpr std::int32_t FlareCount = 3;
+    auto& texture = m_resources.textures.get("assets/images/flare.png");
+    texture.setRepeated(false);
+
+    std::vector<cro::Vertex2D> verts =
+    {
+        cro::Vertex2D(glm::vec2(-10.f,10.f), glm::vec2(0.f, 1.f)),
+        cro::Vertex2D(glm::vec2(-10.f), glm::vec2(0.f)),
+        cro::Vertex2D(glm::vec2(10.f), glm::vec2(0.5f, 1.f)),
+
+        cro::Vertex2D(glm::vec2(10.f), glm::vec2(0.5f, 1.f)),
+        cro::Vertex2D(glm::vec2(-10.f), glm::vec2(0.f)),
+        cro::Vertex2D(glm::vec2(10.f, -10.f), glm::vec2(0.5f, 0.f))
+    };
+    for (auto i = 0; i < FlareCount; ++i)
+    {
+        verts.push_back(cro::Vertex2D(glm::vec2(0.f), glm::vec2(0.5f, 1.f)));
+        verts.push_back(cro::Vertex2D(glm::vec2(0.f), glm::vec2(0.5f, 0.f)));
+        verts.push_back(cro::Vertex2D(glm::vec2(0.f), glm::vec2(1.f)));
+
+        verts.push_back(cro::Vertex2D(glm::vec2(0.f), glm::vec2(1.f)));
+        verts.push_back(cro::Vertex2D(glm::vec2(0.f), glm::vec2(0.5f, 0.f)));
+        verts.push_back(cro::Vertex2D(glm::vec2(0.f), glm::vec2(1.f, 0.f)));
+    }
+
+
     auto entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
-    entity.addComponent<cro::Drawable2D>().setVertexData(
-        {
-            cro::Vertex2D(glm::vec2(-10.f,10.f), cro::Colour::Magenta),
-            cro::Vertex2D(glm::vec2(-10.f), cro::Colour::Magenta),
-            cro::Vertex2D(glm::vec2(10.f), cro::Colour::Magenta),
-
-            cro::Vertex2D(glm::vec2(10.f), cro::Colour::Magenta),
-            cro::Vertex2D(glm::vec2(-10.f), cro::Colour::Magenta),
-            cro::Vertex2D(glm::vec2(10.f, -10.f), cro::Colour::Magenta),
-
-
-            cro::Vertex2D(glm::vec2(0.f), cro::Colour::Yellow),
-            cro::Vertex2D(glm::vec2(0.f), cro::Colour::Yellow),
-            cro::Vertex2D(glm::vec2(0.f), cro::Colour::Yellow),
-
-            cro::Vertex2D(glm::vec2(0.f), cro::Colour::Yellow),
-            cro::Vertex2D(glm::vec2(0.f), cro::Colour::Yellow),
-            cro::Vertex2D(glm::vec2(0.f), cro::Colour::Yellow),
-
-
-            cro::Vertex2D(glm::vec2(0.f), cro::Colour::Green),
-            cro::Vertex2D(glm::vec2(0.f), cro::Colour::Green),
-            cro::Vertex2D(glm::vec2(0.f), cro::Colour::Green),
-
-            cro::Vertex2D(glm::vec2(0.f), cro::Colour::Green),
-            cro::Vertex2D(glm::vec2(0.f), cro::Colour::Green),
-            cro::Vertex2D(glm::vec2(0.f), cro::Colour::Green),
-        });
+    entity.addComponent<cro::Drawable2D>().setVertexData(verts);
     entity.getComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLES);
+    entity.getComponent<cro::Drawable2D>().setTexture(&texture);
+    entity.getComponent<cro::Drawable2D>().setShader(&m_resources.shaders.get(RetroShader::Flare));
+    entity.getComponent<cro::Drawable2D>().setBlendMode(cro::Material::BlendMode::Additive);
+    entity.getComponent<cro::Drawable2D>().bindUniform("u_screenCentre", glm::vec2(cro::App::getWindow().getSize()) / 2.f);
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float)
@@ -483,34 +533,27 @@ void RetroState::createUI()
             auto& verts = e.getComponent<cro::Drawable2D>().getVertexData();
             auto screenCentre = glm::vec2(cro::App::getWindow().getSize()) / 2.f;
             auto dir = screenCentre - m_lensFlare.screenPos;
-            
-            auto pos = dir * 1.3f;
-            auto scale = glm::length(pos) / glm::length(screenCentre); //TODO optimise
+            const auto dirStep = dir / static_cast<float>(FlareCount);
+
+            float scale = 1.f;
             const float Size = 20.f;
+            std::int32_t start = 6;
 
-            float size = Size * scale;
+            for (auto i = 0; i < 3; ++i)
+            {
+                dir += dirStep;
+                scale = glm::length(dir) / glm::length(screenCentre);
 
-            verts[6].position = pos + glm::vec2(-size, size);
-            verts[7].position = pos + glm::vec2(-size);
-            verts[8].position = pos + glm::vec2(size);
+                float size = Size * scale;
 
-            verts[9].position  = pos + glm::vec2(size);
-            verts[10].position = pos + glm::vec2(-size);
-            verts[11].position = pos + glm::vec2(size, -size);
+                verts[start++].position = dir + glm::vec2(-size, size);
+                verts[start++].position = dir + glm::vec2(-size);
+                verts[start++].position = dir + glm::vec2(size);
 
-            pos = dir * 1.6f;
-            scale = glm::length(pos) / glm::length(screenCentre); //TODO optimise
-            size = scale * Size;
-            
-            verts[12].position = pos + glm::vec2(-size, size);
-            verts[13].position = pos + glm::vec2(-size);
-            verts[14].position = pos + glm::vec2(size);
-
-            verts[15].position = pos + glm::vec2(size);
-            verts[16].position = pos + glm::vec2(-size);
-            verts[17].position = pos + glm::vec2(size, -size);
-
-            //pos = dir * 2.f;
+                verts[start++].position = dir + glm::vec2(size);
+                verts[start++].position = dir + glm::vec2(-size);
+                verts[start++].position = dir + glm::vec2(size, -size);
+            }
         }
         else
         {
@@ -551,11 +594,20 @@ void RetroState::updateLensFlare()
     if (m_lightSource.isValid())
     {
         const auto cam = m_gameScene.getActiveCamera();
-        
+        auto camPos = cam.getComponent<cro::Transform>().getPosition();
+
         m_lensFlare.srcPos = m_lightSource.getComponent<cro::Transform>().getWorldPosition();
         m_lensFlare.screenPos = cam.getComponent<cro::Camera>().coordsToPixel(m_lensFlare.srcPos, m_renderTexture.getSize());
 
         m_lensFlare.testPos = cam.getComponent<cro::Camera>().pixelToCoords(m_lensFlare.screenPos, m_renderTexture.getSize());
-        m_lensFlare.visible = glm::length2(m_lensFlare.srcPos - m_lensFlare.testPos) < 4.f;
+
+        if (glm::length2(camPos - m_lensFlare.srcPos) > glm::length2(camPos - m_lensFlare.testPos))
+        {
+            m_lensFlare.visible = glm::length2(m_lensFlare.srcPos - m_lensFlare.testPos) < 3.f;
+        }
+        else
+        {
+            m_lensFlare.visible = true; //TODO we could animate this property for smoother alpha fade rather than on/off
+        }
     }
 }

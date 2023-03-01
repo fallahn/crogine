@@ -34,8 +34,8 @@ source distribution.
 namespace cro::Shaders::Sprite
 {
     static const std::string Vertex = R"(
-        uniform mat4 u_worldViewMatrix;
-        uniform mat4 u_projectionMatrix;
+        uniform mat4 u_worldMatrix;
+        uniform mat4 u_viewProjectionMatrix;
 
         ATTRIBUTE vec2 a_position;
         ATTRIBUTE MED vec2 a_texCoord0;
@@ -49,7 +49,7 @@ namespace cro::Shaders::Sprite
 
         void main()
         {
-            gl_Position = u_projectionMatrix * u_worldViewMatrix * vec4(a_position, 0.0, 1.0);
+            gl_Position = u_viewProjectionMatrix * u_worldMatrix * vec4(a_position, 0.0, 1.0);
             v_colour = a_colour;
         #if defined(TEXTURED)
             v_texCoord = a_texCoord0;

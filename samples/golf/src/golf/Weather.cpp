@@ -285,7 +285,7 @@ void GolfState::createClouds()
             definitions[modelIndex].createModel(entity);
             entity.getComponent<cro::Model>().setMaterial(0, material);
 
-            float scale = static_cast<float>(cro::Util::Random::value(20, 35));
+            float scale = static_cast<float>(cro::Util::Random::value(20, 30));
             entity.getComponent<cro::Transform>().setScale(glm::vec3(scale));
 
             modelIndex = (modelIndex + 1) % definitions.size();

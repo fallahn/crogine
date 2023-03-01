@@ -35,25 +35,25 @@ source distribution.
 using namespace cro;
 
 Drawable2D::Drawable2D()
-    : m_texture         (nullptr),
-    m_shader            (nullptr),
-    m_customShader      (false),
-    m_applyDefaultShader(true),
-    m_autoCrop          (true),
-    m_textureUniform    (-1),
-    m_worldViewUniform  (-1),
-    m_projectionUniform (-1),
-    m_facing            (GL_CCW),
-    m_blendMode         (Material::BlendMode::Alpha),
-    m_primitiveType     (GL_TRIANGLE_STRIP),
-    m_vbo               (0),
-    m_vao               (0),
-    m_updateBufferData  (false),
-    m_renderFlags       (DefaultRenderFlag),
-    m_croppingArea      (std::numeric_limits<float>::lowest() / 2.f, std::numeric_limits<float>::lowest() / 2.f,
-                            std::numeric_limits<float>::max(), std::numeric_limits<float>::max()),
-    m_cropped           (false),
-    m_sortCriteria      (0)
+    : m_texture             (nullptr),
+    m_shader                (nullptr),
+    m_customShader          (false),
+    m_applyDefaultShader    (true),
+    m_autoCrop              (true),
+    m_textureUniform        (-1),
+    m_worldUniform          (-1),
+    m_viewProjectionUniform (-1),
+    m_facing                (GL_CCW),
+    m_blendMode             (Material::BlendMode::Alpha),
+    m_primitiveType         (GL_TRIANGLE_STRIP),
+    m_vbo                   (0),
+    m_vao                   (0),
+    m_updateBufferData      (false),
+    m_renderFlags           (DefaultRenderFlag),
+    m_croppingArea          (std::numeric_limits<float>::lowest() / 2.f, std::numeric_limits<float>::lowest() / 2.f,
+                                std::numeric_limits<float>::max(), std::numeric_limits<float>::max()),
+    m_cropped               (false),
+    m_sortCriteria          (0)
 {
 
 }
@@ -257,28 +257,28 @@ void Drawable2D::applyShader()
             m_textureUniform = -1;
         }
 
-        if (m_shader->getUniformMap().count("u_worldViewMatrix") != 0)
+        if (m_shader->getUniformMap().count("u_worldMatrix") != 0)
         {
-            m_worldViewUniform = m_shader->getUniformMap().at("u_worldViewMatrix");
+            m_worldUniform = m_shader->getUniformMap().at("u_worldMatrix");
         }
         else
         {
-            m_worldViewUniform = -1;
-            Logger::log("Missing World View Matrix uniform in Drawable2D shader", Logger::Type::Error);
-
+            m_worldUniform = -1;
+            Logger::log("Missing World Matrix uniform in Drawable2D shader", Logger::Type::Error);
+            assert(true);
             setShader(nullptr);
             return;
         }
 
-        if (m_shader->getUniformMap().count("u_projectionMatrix") != 0)
+        if (m_shader->getUniformMap().count("u_viewProjectionMatrix") != 0)
         {
-            m_projectionUniform = m_shader->getUniformMap().at("u_projectionMatrix");
+            m_viewProjectionUniform = m_shader->getUniformMap().at("u_viewProjectionMatrix");
         }
         else
         {
-            m_projectionUniform = -1;
-            Logger::log("Missing Projection Matrix uniform in Drawable2D shader", Logger::Type::Error);
-
+            m_viewProjectionUniform = -1;
+            Logger::log("Missing View Projection Matrix uniform in Drawable2D shader", Logger::Type::Error);
+            assert(true);
             setShader(nullptr);
             return;
         }
