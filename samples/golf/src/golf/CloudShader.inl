@@ -204,7 +204,7 @@ static const std::string CloudOverheadFragment = R"(
         vec3 lightDirection = normalize(vec3(u_worldCentre.x, 4.0, u_worldCentre.y) - v_worldPosition);
         float colourAmount = 1.0 - pow(dot(normal, lightDirection), 2.0);
 #else
-        float rim = smoothstep(0.8, 0.995, 1.0 - dot(normal, viewDirection));
+        float rim = smoothstep(0.7, 0.95, 1.0 - dot(normal, viewDirection));
 
         vec3 lightDirection = normalize(-u_lightDirection);
         float colourAmount = pow(dot(normal, lightDirection), 2.0);
