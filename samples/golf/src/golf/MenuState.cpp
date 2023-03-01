@@ -1311,7 +1311,7 @@ void MenuState::createClouds()
 
     if (!definitions.empty())
     {
-        m_resources.shaders.loadFromString(ShaderID::Cloud, CloudOverheadVertex, CloudOverheadFragment, "#define MAX_RADIUS 86\n#define FEATHER_EDGE\n");
+        m_resources.shaders.loadFromString(ShaderID::Cloud, CloudOverheadVertex, CloudOverheadFragment, "#define MAX_RADIUS 106\n#define FEATHER_EDGE\n");
         auto& shader = m_resources.shaders.get(ShaderID::Cloud);
 
         auto matID = m_resources.materials.add(shader);

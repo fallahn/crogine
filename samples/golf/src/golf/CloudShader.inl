@@ -197,19 +197,24 @@ static const std::string CloudOverheadFragment = R"(
     {
         vec3 normal = normalize(v_normal);
         vec3 viewDirection = normalize(u_cameraWorldPosition - v_worldPosition);
-        float rim = smoothstep(0.6, 0.95, 1.0 - dot(normal, viewDirection));
+
+#if defined(POINT_LIGHT)
+        float rim = smoothstep(0.1, 0.95, 1.0 - dot(normal, viewDirection));
+
+        vec3 lightDirection = normalize(vec3(u_worldCentre.x, 4.0, u_worldCentre.y) - v_worldPosition);
+        float colourAmount = 1.0 - pow(dot(normal, lightDirection), 2.0);
+#else
+        float rim = smoothstep(0.8, 0.995, 1.0 - dot(normal, viewDirection));
+
+        vec3 lightDirection = normalize(-u_lightDirection);
+        float colourAmount = pow(dot(normal, lightDirection), 2.0);
+#endif
+
         float rimAmount = dot(vec3(0.0, -1.0, 0.0), normal);
         rimAmount += 1.0;
         rimAmount /= 2.0;
         rim *= smoothstep(0.5, 0.9, rimAmount);
 
-#if defined(POINT_LIGHT)
-        vec3 lightDirection = normalize(vec3(u_worldCentre.x, 3.0, u_worldCentre.y) - v_worldPosition);
-        float colourAmount = 1.0 - pow(dot(normal, lightDirection), 2.0);
-#else
-        vec3 lightDirection = normalize(-u_lightDirection);
-        float colourAmount = pow(dot(normal, lightDirection), 2.0);
-#endif
 
         colourAmount *= ColourLevels;
         colourAmount = round(colourAmount);
@@ -226,7 +231,7 @@ static const std::string CloudOverheadFragment = R"(
 
 
 #if defined(FEATHER_EDGE)
-        float amount = 1.0 - smoothstep(0.7, 1.0, (length(v_worldPosition.xz - u_worldCentre) / MaxDist));
+        float amount = 1.0 - smoothstep(0.9, 1.0, (length(v_worldPosition.xz - u_worldCentre) / MaxDist));
 
         vec2 xy = gl_FragCoord.xy;
         int x = int(mod(xy.x, MatrixSize));
