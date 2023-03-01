@@ -1292,10 +1292,10 @@ void MenuState::createClouds()
 {
     const std::array Paths =
     {
-        std::string("assets/golf/models/cloud.cmt"),
-        std::string("assets/golf/models/cloud02.cmt"),
-        std::string("assets/golf/models/cloud03.cmt"),
-        std::string("assets/golf/models/cloud04.cmt")
+        std::string("assets/golf/models/skybox/clouds/cloud01.cmt"),
+        std::string("assets/golf/models/skybox/clouds/cloud02.cmt"),
+        std::string("assets/golf/models/skybox/clouds/cloud03.cmt"),
+        std::string("assets/golf/models/skybox/clouds/cloud04.cmt")
     };
 
     cro::ModelDefinition md(m_resources);

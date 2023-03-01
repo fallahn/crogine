@@ -238,10 +238,9 @@ void GolfState::createClouds()
 {
     const std::array Paths =
     {
-        std::string("assets/golf/models/cloud.cmt"),
-        std::string("assets/golf/models/cloud02.cmt"),
-        std::string("assets/golf/models/cloud03.cmt"),
-        std::string("assets/golf/models/cloud04.cmt"),
+        std::string("assets/golf/models/skybox/clouds/cloud05.cmt"),
+        std::string("assets/golf/models/skybox/clouds/cloud06.cmt"),
+        std::string("assets/golf/models/skybox/clouds/cloud07.cmt"),
     };
 
     cro::ModelDefinition md(m_resources);

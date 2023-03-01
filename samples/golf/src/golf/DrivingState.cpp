@@ -1564,8 +1564,8 @@ void DrivingState::createScene()
     };
     camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(ShadowMapSize, ShadowMapSize);
     camEnt.getComponent<cro::Camera>().active = false;
-    camEnt.getComponent<cro::Camera>().setMaxShadowDistance(30.f);
-    camEnt.getComponent<cro::Camera>().setShadowExpansion(35.f);
+    camEnt.getComponent<cro::Camera>().setMaxShadowDistance(20.f);
+    camEnt.getComponent<cro::Camera>().setShadowExpansion(50.f);
     camEnt.addComponent<cro::AudioListener>();
     camEnt.addComponent<TargetInfo>();
     camEnt.addComponent<cro::Callback>().setUserData<CameraFollower::ZoomData>();
@@ -1834,10 +1834,10 @@ void DrivingState::createClouds()
 {
     const std::array Paths =
     {
-        std::string("assets/golf/models/cloud.cmt"),
-        std::string("assets/golf/models/cloud02.cmt"),
-        std::string("assets/golf/models/cloud03.cmt"),
-        std::string("assets/golf/models/cloud04.cmt")
+        std::string("assets/golf/models/skybox/clouds/cloud01.cmt"),
+        std::string("assets/golf/models/skybox/clouds/cloud02.cmt"),
+        std::string("assets/golf/models/skybox/clouds/cloud03.cmt"),
+        std::string("assets/golf/models/skybox/clouds/cloud04.cmt")
     };
 
     cro::ModelDefinition md(m_resources);
