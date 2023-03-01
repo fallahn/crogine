@@ -111,6 +111,10 @@ def WriteCrowd(file, location, rotation, ob):
     file.write("        rotation = %f\n" % (rotation[2] * (180.0 / 3.141)))
 
 
+    if ob.get('look_at') is not None:
+        file.write("        lookat = %f,%f,%f\n" % (ob['look_at'][0], ob['look_at'][2], -ob['look_at'][1]))
+
+
     if ob.parent is not None and ob.parent.type == 'CURVE':
         WritePath(file, ob.parent)
 
