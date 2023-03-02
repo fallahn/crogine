@@ -501,14 +501,14 @@ void GolfState::handlePlayerInput(const net::NetEvent::Packet& packet, bool pred
             ball.delay += static_cast<float>(m_sharedData.clients[input.clientID].peer.getRoundTripTime()) / 1000.f;
             ball.startPoint = m_playerInfo[0].ballEntity.getComponent<cro::Transform>().getPosition();
 
-            //calc the amount of spin based on if we're going towards the hole
+            //calc the amount of rotation based on if we're going towards the hole
             glm::vec2 pin = { m_holeData[m_currentHole].pin.x, m_holeData[m_currentHole].pin.z };
             glm::vec2 start = { ball.startPoint.x, ball.startPoint.z };
             auto dir = glm::normalize(pin - start);
             auto x = -dir.y;
             dir.y = dir.x;
             dir.x = x;
-            ball.spin = glm::dot(dir, glm::normalize(glm::vec2(ball.velocity.x, ball.velocity.z))) + 0.1f;
+            ball.rotation = glm::dot(dir, glm::normalize(glm::vec2(ball.velocity.x, ball.velocity.z))) + 0.1f;
 
             if (!predict)
             {

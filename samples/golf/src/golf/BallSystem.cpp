@@ -585,10 +585,10 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
             }
 
 
-            //spin based on velocity
+            //rotate based on velocity
             auto vel2 = glm::length2(ball.velocity);
             static constexpr float MaxVel = 2.f; //some arbitrary number. Actual max is ~20.f so smaller is faster spin
-            tx.rotate(cro::Transform::Y_AXIS, cro::Util::Const::TAU * (vel2 / MaxVel) * ball.spin * dt);
+            tx.rotate(cro::Transform::Y_AXIS, cro::Util::Const::TAU * (vel2 / MaxVel) * ball.rotation * dt);
 
 
             //if we've slowed down or fallen more than the
@@ -675,6 +675,8 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
 
         if (ball.delay < 0)
         {
+            ball.spin = { 0.f,0.f };
+
             //move towards player until we find non-water
             std::uint8_t terrain = TerrainID::Water;
 
@@ -752,6 +754,8 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
         ball.delay -= dt;
         if (ball.delay < 0)
         {
+            ball.spin = { 0.f,0.f };
+
             auto position = entity.getComponent<cro::Transform>().getPosition();
             auto len2 = glm::length2(glm::vec2(position.x, position.z) - glm::vec2(m_holeData->pin.x, m_holeData->pin.z));
 

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2022
+Matt Marchant 2021 - 2023
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -60,7 +60,9 @@ struct Ball final
 
     glm::vec3 velocity = glm::vec3(0.f);
     float delay = 0.f;
-    float spin = 0.f;
+    float rotation = 0.f; //animation effect
+
+    glm::vec2 spin = glm::vec2(0.f);
 
     glm::vec3 startPoint = glm::vec3(0.f);
     float lastStrokeDistance = 0.f;

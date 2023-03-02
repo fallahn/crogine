@@ -111,6 +111,7 @@ namespace
     float powerMultiplier = 1.f;
     float maxHeight = 0.f;
     
+    Ball* debugBall = nullptr;
     
     std::int32_t debugFlags = 0;
     bool useFreeCam = false;
@@ -205,10 +206,45 @@ DrivingState::DrivingState(cro::StateStack& stack, cro::State::Context context, 
         {
             if (ImGui::Begin("Window"))
             {
+                if (debugBall)
+                {
+                    float topSpin = std::clamp(debugBall->spin.y, 0.f, 1.f);
+                    ImGui::Text("Top Spin");
+                    ImGui::SameLine();
+                    ImGui::ProgressBar(topSpin);
+
+                    float backSpin = 1.f + std::clamp(debugBall->spin.y, -1.f, 0.f);
+                    ImGui::Text("Back Spin");
+                    ImGui::SameLine();
+
+                    //maybe this is a bug in ImGui? it seems to
+                    //render the fill rect twice but ignores the
+                    //colour setting for the first one
+                    auto outer = ImGui::GetColorU32(ImGuiCol_PlotHistogram);
+                    auto inner = ImGui::GetColorU32(ImGuiCol_FrameBg);
+                    ImGui::PushStyleColor(ImGuiCol_FrameBg, outer);
+                    ImGui::PushStyleColor(ImGuiCol_PlotHistogram, inner);
+                    ImGui::ProgressBar(backSpin);
+                    ImGui::PopStyleColor(2);
+
+                    float rightSpin = std::clamp(debugBall->spin.x, 0.f, 1.f);
+                    ImGui::Text("Right Spin");
+                    ImGui::SameLine();
+                    ImGui::ProgressBar(rightSpin);
+
+                    float leftSpin = 1.f + std::clamp(debugBall->spin.x, -1.f, 0.f);
+                    ImGui::Text("Left Spin");
+                    ImGui::SameLine();
+                    ImGui::PushStyleColor(ImGuiCol_FrameBg, outer);
+                    ImGui::PushStyleColor(ImGuiCol_PlotHistogram, inner);
+                    ImGui::ProgressBar(leftSpin);
+                    ImGui::PopStyleColor(2);
+                }
+
                 //ImGui::SliderFloat("Adjust", &powerMultiplier, 0.8f, 1.1f);
                 //ImGui::Text("Power %3.3f", Clubs[m_inputParser.getClub()].getPower(0.f) * powerMultiplier);
 
-                ImGui::Text("Max Height %3.3f", maxHeight);
+                //ImGui::Text("Max Height %3.3f", maxHeight);
 
                 /*static float maxDist = 80.f;
                 if (ImGui::SliderFloat("Distance", &maxDist, 1.f, 80.f))
@@ -2445,6 +2481,7 @@ void DrivingState::createBall()
 
 #ifdef CRO_DEBUG_
     ballEntity = ballEnt;
+    debugBall = &ballEnt.getComponent<Ball>();
 #endif
 }
 
