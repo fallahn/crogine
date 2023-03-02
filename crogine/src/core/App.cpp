@@ -593,6 +593,7 @@ void App::handleEvents()
                     {
                         Console::show();
                     }
+                    saveSettings();
                 }
                 break;
             }
