@@ -268,7 +268,7 @@ void GolfState::createClouds()
         auto seed = static_cast<std::uint32_t>(std::time(nullptr));
         static constexpr std::array MinBounds = { 0.f, 0.f };
         static constexpr std::array MaxBounds = { 320.f, 320.f };
-        auto positions = pd::PoissonDiskSampling(100.f, MinBounds, MaxBounds, 30u, seed);
+        auto positions = pd::PoissonDiskSampling(80.f, MinBounds, MaxBounds, 30u, seed);
 
         std::size_t modelIndex = 0;
 
@@ -284,7 +284,7 @@ void GolfState::createClouds()
             definitions[modelIndex].createModel(entity);
             entity.getComponent<cro::Model>().setMaterial(0, material);
 
-            float scale = static_cast<float>(cro::Util::Random::value(20, 30));
+            float scale = static_cast<float>(cro::Util::Random::value(24, 30));
             entity.getComponent<cro::Transform>().setScale(glm::vec3(scale));
 
             modelIndex = (modelIndex + 1) % definitions.size();
