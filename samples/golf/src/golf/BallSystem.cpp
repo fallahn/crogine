@@ -112,7 +112,7 @@ namespace
     constexpr std::array SpinDecay =
     {
         0.f,    //idle
-        0.998f, //flight,
+        0.997f, //flight,
         0.7f,   //roll
         0.2f,   //putt
         0.f,    //paused

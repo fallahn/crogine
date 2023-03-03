@@ -1335,7 +1335,6 @@ void GolfState::showCountdown(std::uint8_t seconds)
         }
     }
 
-
     auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
 
     auto entity = m_uiScene.createEntity();

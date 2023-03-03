@@ -89,6 +89,7 @@ public:
     {
         glm::vec3 impulse = glm::vec3(0.f);
         glm::vec2 spin = glm::vec2(0.f);
+        float hook = 0.f;
     };
     StrokeResult getStroke(std::int32_t club, std::int32_t facing, float holeDistance) const; //facing is -1 or 1 to decide on slice/hook
 
@@ -148,4 +149,5 @@ private:
     void rotate(float);
     void checkControllerInput();
     void checkMouseInput();
+    glm::vec2 getRotationalInput(std::int32_t xAxis, std::int32_t yAxis) const; //used for drone cam and spin amount
 };

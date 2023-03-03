@@ -735,49 +735,7 @@ void InputParser::updateStroke(float dt, std::int32_t terrainID)
 
 void InputParser::updateDroneCam(float dt)
 {
-    glm::vec2 rotation(0.f);
-    if (m_inputFlags & (InputFlag::Left | InputFlag::Right))
-    {
-        if (m_inputFlags & InputFlag::Left)
-        {
-            rotation.y += 1.f;
-        }
-        if (m_inputFlags & InputFlag::Right)
-        {
-            rotation.y -= 1.f;
-        }
-    }
-
-    if (m_inputFlags & (InputFlag::Up | InputFlag::Down))
-    {
-        if (m_inputFlags & InputFlag::Down)
-        {
-            rotation.x -= 1.f;
-        }
-        if (m_inputFlags & InputFlag::Up)
-        {
-            rotation.x += 1.f;
-        }
-    }
-
-    auto controllerID = activeControllerID(m_inputBinding.playerID);
-    auto controllerX = cro::GameController::getAxisPosition(controllerID, cro::GameController::AxisRightX);
-    auto controllerY = cro::GameController::getAxisPosition(controllerID, cro::GameController::AxisRightY);
-    if (std::abs(controllerX) > LeftThumbDeadZone)
-    {
-        //hmmm we want to read axis inversion from the settings...
-        rotation.y = -(static_cast<float>(controllerX) / cro::GameController::AxisMax);
-    }
-    if (std::abs(controllerY) > LeftThumbDeadZone)
-    {
-        rotation.x = -(static_cast<float>(controllerY) / cro::GameController::AxisMax);
-    }
-
-
-    if (auto len2 = glm::length2(rotation); len2 != 0)
-    {
-        rotation = glm::normalize(rotation) * std::min(1.f, std::pow(std::sqrt(len2), 5.f));
-    }
+    auto rotation = getRotationalInput(cro::GameController::AxisRightX, cro::GameController::AxisRightY);
 
     float zoom = 0.f;
     if (m_inputFlags & InputFlag::PrevClub)
@@ -817,27 +775,9 @@ void InputParser::updateDroneCam(float dt)
 
 void InputParser::updateSpin(float dt)
 {
-    if (m_inputFlags & InputFlag::Left)
-    {
-        m_spin.x = std::max(-1.f, m_spin.x - dt);
-    }
-
-    if (m_inputFlags & InputFlag::Right)
-    {
-        m_spin.x = std::min(1.f, m_spin.x + dt);
-    }
-
-    if (m_inputFlags & InputFlag::Up)
-    {
-        m_spin.y = std::min(1.f, m_spin.y + dt);
-    }
-
-    if (m_inputFlags & InputFlag::Down)
-    {
-        m_spin.y = std::max(-1.f, m_spin.y - dt);
-    }
-
-    //TODO read left thumbstick.
+    auto rotation = getRotationalInput(cro::GameController::AxisLeftX, cro::GameController::AxisLeftY);
+    m_spin.x = std::clamp(m_spin.x - (rotation.y * dt), -1.f, 1.f);
+    m_spin.y = std::clamp(m_spin.y + (rotation.x * dt), -1.f, 1.f);
 }
 
 bool InputParser::inProgress() const
@@ -918,7 +858,7 @@ InputParser::StrokeResult InputParser::getStroke(std::int32_t club, std::int32_t
 
     //TODO modulate pitch with topspin
 
-    spin *= Clubs[club].getSideSpinMultiplier();
+    spin *= Clubs[club].getSideSpinMultiplier() / 2.f;
     spin.x += sideSpin;
 
     glm::vec3 impulse(1.f, 0.f, 0.f);
@@ -928,7 +868,7 @@ InputParser::StrokeResult InputParser::getStroke(std::int32_t club, std::int32_t
 
     impulse *= power;
 
-    return { impulse, spin };
+    return { impulse, spin, hook };
 }
 
 //private
@@ -1080,4 +1020,52 @@ void InputParser::checkMouseInput()
     //}
     //m_prevMouseMove = m_mouseMove;
     //m_mouseMove = 0;
+}
+
+glm::vec2 InputParser::getRotationalInput(std::int32_t xAxis, std::int32_t yAxis) const
+{
+    glm::vec2 rotation(0.f);
+    if (m_inputFlags & (InputFlag::Left | InputFlag::Right))
+    {
+        if (m_inputFlags & InputFlag::Left)
+        {
+            rotation.y += 1.f;
+        }
+        if (m_inputFlags & InputFlag::Right)
+        {
+            rotation.y -= 1.f;
+        }
+    }
+
+    if (m_inputFlags & (InputFlag::Up | InputFlag::Down))
+    {
+        if (m_inputFlags & InputFlag::Down)
+        {
+            rotation.x -= 1.f;
+        }
+        if (m_inputFlags & InputFlag::Up)
+        {
+            rotation.x += 1.f;
+        }
+    }
+
+    auto controllerID = activeControllerID(m_inputBinding.playerID);
+    auto controllerX = cro::GameController::getAxisPosition(controllerID, xAxis);
+    auto controllerY = cro::GameController::getAxisPosition(controllerID, yAxis);
+    if (std::abs(controllerX) > LeftThumbDeadZone)
+    {
+        //hmmm we want to read axis inversion from the settings...
+        rotation.y = -(static_cast<float>(controllerX) / cro::GameController::AxisMax);
+    }
+    if (std::abs(controllerY) > LeftThumbDeadZone)
+    {
+        rotation.x = -(static_cast<float>(controllerY) / cro::GameController::AxisMax);
+    }
+
+    if (auto len2 = glm::length2(rotation); len2 != 0)
+    {
+        rotation = glm::normalize(rotation) * std::min(1.f, std::pow(std::sqrt(len2), 5.f));
+    }
+
+    return rotation;
 }

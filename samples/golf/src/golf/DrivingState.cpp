@@ -2708,86 +2708,26 @@ void DrivingState::hitBall()
     auto club = m_inputParser.getClub();
     auto facing = cro::Util::Maths::sgn(m_avatar.model.getComponent<cro::Transform>().getScale().x);
 
-    auto pitch = Clubs[m_inputParser.getClub()].getAngle();
-    auto yaw = m_inputParser.getYaw();
-
-    //add hook/slice to yaw
-    auto hook = m_inputParser.getHook();
-    //changing this func changes how accurate a player needs to be
-    //sine, quad, cubic, quart, quint in steepness order
-    if (Achievements::getActive())
-    {
-        auto s = cro::Util::Maths::sgn(hook);
-        auto level = Social::getLevel();
-        switch (level / 10)
-        {
-        default:
-            hook = cro::Util::Easing::easeOutQuint(hook * s) * s;
-            break;
-        case 3:
-            hook = cro::Util::Easing::easeOutQuart(hook * s) * s;
-            break;
-        case 2:
-            hook = cro::Util::Easing::easeOutCubic(hook * s) * s;
-            break;
-        case 1:
-            hook = cro::Util::Easing::easeOutQuad(hook * s) * s;
-            break;
-        case 0:
-            hook = cro::Util::Easing::easeOutSine(hook * s) * s;
-            break;
-        }
-    }
-    yaw += MaxHook * hook;
-
-    float sideSpin = -hook;
-    sideSpin *= Clubs[m_inputParser.getClub()].getSideSpinMultiplier();
-
-    bool slice = (cro::Util::Maths::sgn(hook) * cro::Util::Maths::sgn(m_avatar.model.getComponent<cro::Transform>().getScale().x) == 1);
-    if (!slice)
-    {
-        //hook causes slightly less spin
-        sideSpin *= 0.995f;
-    }
-
-    float accuracy = 1.f - std::abs(hook);
-    auto spin = m_inputParser.getSpin() * accuracy;
-    
-    //TODO modulate pitch with topspin
-    
-    spin *= Clubs[m_inputParser.getClub()].getSideSpinMultiplier();
-    spin.x += sideSpin;
-
-
-    glm::vec3 impulse(1.f, 0.f, 0.f);
-    auto rotation = glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), yaw, cro::Transform::Y_AXIS);
-    rotation = glm::rotate(rotation, pitch, cro::Transform::Z_AXIS);
-    impulse = glm::toMat3(rotation) * impulse;
-
-    impulse *= Clubs[m_inputParser.getClub()].getPower(0.f) * cro::Util::Easing::easeOutSine(m_inputParser.getPower());
-
-    //auto result = m_inputParser.getStroke(club, facing, 0.f);
-    //TODO above needs to include hook in result
-
-    impulse *= Dampening[TerrainID::Fairway];
+    auto result = m_inputParser.getStroke(club, facing, 0.f);
+    result.impulse *= Dampening[TerrainID::Fairway];
 
     //apply impulse to ball component
     cro::Command cmd;
     cmd.targetFlags = CommandID::Ball;
-    cmd.action = [&,impulse, spin](cro::Entity e, float)
+    cmd.action = [&,result](cro::Entity e, float)
     {
         auto& ball = e.getComponent<Ball>();
 
         if (ball.state == Ball::State::Idle)
         {
-            ball.velocity = impulse;
+            ball.velocity = result.impulse;
             ball.state = Ball::State::Flight;
             ball.delay = 0.f;
             ball.startPoint = e.getComponent<cro::Transform>().getPosition();
-            ball.spin = spin;
-            if (glm::length2(impulse) != 0)
+            ball.spin = result.spin;
+            if (glm::length2(result.impulse) != 0)
             {
-                ball.initialSideVector = glm::normalize(glm::cross(impulse, cro::Transform::Y_AXIS));
+                ball.initialSideVector = glm::normalize(glm::cross(result.impulse, cro::Transform::Y_AXIS));
             }
 
 
@@ -2816,10 +2756,11 @@ void DrivingState::hitBall()
 
     //from here the hook value is just used for UI feedback
     //so we want to flip it as appropriate with the current avatar
+    auto hook = result.hook;
     hook *= playerXScale;
 
     //check if we hooked/sliced
-    if (hook < -0.15f)
+    if (hook < -0.15f) //this magic number doesn't match that of the golf state...
     {
         auto* msg2 = cro::App::getInstance().getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
         msg2->type = GolfEvent::HookedBall;

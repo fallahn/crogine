@@ -766,6 +766,8 @@ void GolfState::handleMessage(const cro::Message& msg)
             //check if we hooked/sliced
             if (auto club = getClub(); club != ClubID::Putter)
             {
+                //TODO this doesn't include any easing added when making the stroke
+                //we should be using the value returned by getStroke() in hitBall()
                 auto hook = m_inputParser.getHook() * m_activeAvatar->model.getComponent<cro::Transform>().getScale().x;
                 if (hook < -0.2f)
                 {
@@ -3312,6 +3314,7 @@ void GolfState::buildScene()
     {
         entity.getComponent<cro::Skeleton>().play(0);
     }
+    entity.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniGreen | RenderFlags::MiniMap));
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().setUserData<FlagCallbackData>();
     entity.getComponent<cro::Callback>().function =
@@ -6382,7 +6385,7 @@ void GolfState::hitBall()
     auto club = getClub();
     auto facing = cro::Util::Maths::sgn(m_activeAvatar->model.getComponent<cro::Transform>().getScale().x);
 
-    auto [impulse, spin] = m_inputParser.getStroke(club, facing, m_distanceToHole);
+    auto [impulse, spin, _] = m_inputParser.getStroke(club, facing, m_distanceToHole);
     impulse *= Dampening[m_currentPlayer.terrain];
     impulse *= godmode;
 
