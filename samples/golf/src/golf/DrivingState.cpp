@@ -227,6 +227,9 @@ DrivingState::DrivingState(cro::StateStack& stack, cro::State::Context context, 
                     ImGui::Text("Left Spin");
                     ImGui::SameLine();
                     ImGui::ProgressBar(leftSpin, {-1,0}, nullptr, true);
+
+                    auto spin = m_inputParser.getSpin();
+                    ImGui::SliderFloat2("Input Spin", &spin[0], -1.f, 1.f, "%.3f", ImGuiSliderFlags_NoInput);
                 }
 
                 //ImGui::SliderFloat("Adjust", &powerMultiplier, 0.8f, 1.1f);
@@ -2080,13 +2083,14 @@ void DrivingState::createPlayer(cro::Entity courseEnt)
     entity.getComponent<cro::Callback>().function =
         [&, playerEnt](cro::Entity e, float) mutable
     {
-        e.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, m_inputParser.getYaw());
+        auto rotation = m_inputParser.getYaw() - (cro::Util::Const::PI / 2.f);
+        e.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, rotation);
         
         //fade the player sprite at high angles
         //so we don't obstruct the view of the indicator
 
         //we have to do this here as the player ent has a different callback func.
-        float alpha = std::abs(m_inputParser.getYaw());
+        float alpha = std::abs(rotation);
         alpha = cro::Util::Easing::easeOutQuart(1.f - (alpha / (m_inputParser.getMaxRotation() * 1.06f)));
 
         playerEnt.getComponent<cro::Model>().setMaterialProperty(0, "u_fadeAmount", alpha);
@@ -2222,6 +2226,8 @@ void DrivingState::createPlayer(cro::Entity courseEnt)
     glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->ibo));
     glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh->indexCount * sizeof(std::uint32_t), indices.data(), GL_STATIC_DRAW));
     glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
+
+    m_inputParser.setHoleDirection(-PlayerPosition);
 }
 
 void DrivingState::createBall()
@@ -2455,7 +2461,7 @@ void DrivingState::createBall()
                     rightVec = glm::inverse(glm::toMat3(ballEnt.getComponent<cro::Transform>().getRotation())) * rightVec;
                     CRO_ASSERT(!std::isnan(rightVec.x), "NaN from parent rotation");
 
-                    rightVec = glm::inverse(/*glm::toMat3*/(e.getComponent<cro::Transform>().getRotation())) * rightVec;
+                    rightVec = glm::inverse(glm::toMat3(e.getComponent<cro::Transform>().getRotation())) * rightVec;
                     CRO_ASSERT(!std::isnan(rightVec.x), "NaN from ball rotation");
 
                     float rotation = (len / Ball::Radius);
@@ -2606,6 +2612,7 @@ void DrivingState::createFlag()
                 e.getComponent<cro::ParticleEmitter>().start();
 
                 m_inputParser.setActive(true);
+                m_inputParser.setHoleDirection(-PlayerPosition);
 
                 //show the input bar
                 cro::Command cmd;
@@ -2698,8 +2705,10 @@ void DrivingState::startTransition()
 
 void DrivingState::hitBall()
 {
-    auto pitch = Clubs[m_inputParser.getClub()].getAngle();
+    auto club = m_inputParser.getClub();
+    auto facing = cro::Util::Maths::sgn(m_avatar.model.getComponent<cro::Transform>().getScale().x);
 
+    auto pitch = Clubs[m_inputParser.getClub()].getAngle();
     auto yaw = m_inputParser.getYaw();
 
     //add hook/slice to yaw
@@ -2710,7 +2719,7 @@ void DrivingState::hitBall()
     {
         auto s = cro::Util::Maths::sgn(hook);
         auto level = Social::getLevel();
-        switch (level / 25)
+        switch (level / 10)
         {
         default:
             hook = cro::Util::Easing::easeOutQuint(hook * s) * s;
@@ -2730,7 +2739,6 @@ void DrivingState::hitBall()
         }
     }
     yaw += MaxHook * hook;
-    yaw += cro::Util::Const::PI / 2.f; //can't remember why we have to do this - probably to do with cam rotation in the main mode. This fudges it though.
 
     float sideSpin = -hook;
     sideSpin *= Clubs[m_inputParser.getClub()].getSideSpinMultiplier();
@@ -2742,18 +2750,31 @@ void DrivingState::hitBall()
         sideSpin *= 0.995f;
     }
 
+    float accuracy = 1.f - std::abs(hook);
+    auto spin = m_inputParser.getSpin() * accuracy;
+    
+    //TODO modulate pitch with topspin
+    
+    spin *= Clubs[m_inputParser.getClub()].getSideSpinMultiplier();
+    spin.x += sideSpin;
+
+
     glm::vec3 impulse(1.f, 0.f, 0.f);
     auto rotation = glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), yaw, cro::Transform::Y_AXIS);
     rotation = glm::rotate(rotation, pitch, cro::Transform::Z_AXIS);
     impulse = glm::toMat3(rotation) * impulse;
 
     impulse *= Clubs[m_inputParser.getClub()].getPower(0.f) * cro::Util::Easing::easeOutSine(m_inputParser.getPower());
+
+    //auto result = m_inputParser.getStroke(club, facing, 0.f);
+    //TODO above needs to include hook in result
+
     impulse *= Dampening[TerrainID::Fairway];
 
     //apply impulse to ball component
     cro::Command cmd;
     cmd.targetFlags = CommandID::Ball;
-    cmd.action = [&,impulse, sideSpin](cro::Entity e, float)
+    cmd.action = [&,impulse, spin](cro::Entity e, float)
     {
         auto& ball = e.getComponent<Ball>();
 
@@ -2763,7 +2784,7 @@ void DrivingState::hitBall()
             ball.state = Ball::State::Flight;
             ball.delay = 0.f;
             ball.startPoint = e.getComponent<cro::Transform>().getPosition();
-            ball.spin.x = sideSpin;
+            ball.spin = spin;
             if (glm::length2(impulse) != 0)
             {
                 ball.initialSideVector = glm::normalize(glm::cross(impulse, cro::Transform::Y_AXIS));

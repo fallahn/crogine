@@ -3023,9 +3023,8 @@ bool GolfState::EmoteWheel::handleEvent(const cro::Event& evt)
             return true;
         }
 
-
         //stop these getting forwarded to input parser
-        if (evt.key.keysym.mod & (KMOD_CTRL | KMOD_ALT | KMOD_SHIFT))
+        if (cro::Keyboard::isKeyPressed(sharedData.inputBinding.keys[InputBinding::EmoteMenu]))
         {
             if (evt.key.keysym.sym == sharedData.inputBinding.keys[InputBinding::Up])
             {

@@ -153,6 +153,16 @@ void GolfState::addCameraDebugging()
 
 void GolfState::registerDebugWindows()
 {
+    //registerWindow([&]()
+    //    {
+    //        if (ImGui::Begin("Spin"))
+    //        {
+    //            auto spin = m_inputParser.getSpin();
+    //            ImGui::SliderFloat2("Spin", &spin[0], -1.f, 1.f);
+    //            ImGui::End();
+    //        }
+    //    });
+
     registerWindow([&]()
         {
             if (ImGui::Begin("Target Info"))

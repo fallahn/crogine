@@ -6380,71 +6380,9 @@ void GolfState::predictBall(float powerPct)
 void GolfState::hitBall()
 {
     auto club = getClub();
+    auto facing = cro::Util::Maths::sgn(m_activeAvatar->model.getComponent<cro::Transform>().getScale().x);
 
-    auto pitch = Clubs[club].getAngle(); //TODO lower / raise with top/back spin
-
-    auto yaw = m_inputParser.getYaw();
-
-    auto power = Clubs[club].getPower(m_distanceToHole);
-
-    //add hook/slice to yaw
-    auto hook = m_inputParser.getHook();
-    if (club != ClubID::Putter)
-    {
-        auto s = cro::Util::Maths::sgn(hook);
-        //changing this func changes how accurate a player needs to be
-        //sine, quad, cubic, quart, quint in steepness order
-        if (Achievements::getActive())
-        {
-            auto level = Social::getLevel();
-            switch (level / 25)
-            {
-            default:
-                hook = cro::Util::Easing::easeOutQuint(hook * s) * s;
-                break;
-            case 3:
-                hook = cro::Util::Easing::easeOutQuart(hook * s) * s;
-                break;
-            case 2:
-                hook = cro::Util::Easing::easeOutCubic(hook * s) * s;
-                break;
-            case 1:
-                hook = cro::Util::Easing::easeOutQuad(hook * s) * s;
-                break;
-            case 0:
-                hook = cro::Util::Easing::easeOutSine(hook * s) * s;
-                break;
-            }
-        }
-        else
-        {
-            hook = cro::Util::Easing::easeOutQuad(hook * s) * s;
-        }
-
-        power *= cro::Util::Easing::easeOutSine(m_inputParser.getPower());
-    }
-    else
-    {
-        power *= m_inputParser.getPower();
-    }
-    yaw += MaxHook * hook;
-
-    float sideSpin = -hook;
-    sideSpin *= Clubs[club].getSideSpinMultiplier();
-
-    bool slice = (cro::Util::Maths::sgn(hook) * cro::Util::Maths::sgn(m_activeAvatar->model.getComponent<cro::Transform>().getScale().x) == 1);
-    if (!slice)
-    {
-        //hook causes slightly less spin
-        sideSpin *= 0.995f;
-    }
-
-    glm::vec3 impulse(1.f, 0.f, 0.f);
-    auto rotation = glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), yaw, cro::Transform::Y_AXIS);
-    rotation = glm::rotate(rotation, pitch, cro::Transform::Z_AXIS);
-    impulse = glm::toMat3(rotation) * impulse;
-
-    impulse *= power;
+    auto [impulse, spin] = m_inputParser.getStroke(club, facing, m_distanceToHole);
     impulse *= Dampening[m_currentPlayer.terrain];
     impulse *= godmode;
 
@@ -6452,7 +6390,7 @@ void GolfState::hitBall()
     update.clientID = m_sharedData.localConnectionData.connectionID;
     update.playerID = m_currentPlayer.player;
     update.impulse = impulse;
-    update.spin.x = sideSpin;
+    update.spin = spin;
 
     m_sharedData.clientConnection.netClient.sendPacket(PacketID::InputUpdate, update, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
 

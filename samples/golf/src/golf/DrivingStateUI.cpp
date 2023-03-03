@@ -532,7 +532,7 @@ void DrivingState::createUI()
     entity.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float)
     {
-        e.getComponent<cro::Transform>().setRotation(m_inputParser.getYaw());
+        e.getComponent<cro::Transform>().setRotation(m_inputParser.getYaw() - (cro::Util::Const::PI / 2.f));
     };
     miniEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 

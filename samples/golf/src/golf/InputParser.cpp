@@ -42,6 +42,7 @@ source distribution.
 #include <crogine/util/Easings.hpp>
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/ecs/systems/CommandSystem.hpp>
+#include <crogine/util/Maths.hpp>
 
 namespace
 {
@@ -81,6 +82,7 @@ InputParser::InputParser(const SharedStateData& sd, cro::MessageBus& mb, cro::Sc
     m_power             (0.f),
     m_hook              (0.5f),
     m_powerbarDirection (1.f),
+    m_spin              (0.f),
     m_active            (false),
     m_suspended         (false),
     m_state             (State::Aim),
@@ -97,7 +99,8 @@ void InputParser::handleEvent(const cro::Event& evt)
     const auto toggleDroneCam =
         [&]()
     {
-        if (m_gameScene != nullptr) //we don't do this on the driving range
+        if (m_gameScene != nullptr //we don't do this on the driving range
+            && (m_inputFlags & InputFlag::SpinMenu) == 0) 
         {
             if (m_state == State::Aim)
             {
@@ -168,6 +171,14 @@ void InputParser::handleEvent(const cro::Event& evt)
                 m_inputFlags |= InputFlag::Cancel;
                 cro::App::getWindow().setMouseCaptured(!m_isCPU);
             }
+            else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::SpinMenu])
+            {
+                if (m_state != State::Drone)
+                {
+                    m_inputFlags |= InputFlag::SpinMenu;
+                    cro::App::getWindow().setMouseCaptured(!m_isCPU);
+                }
+            }
             else if (evt.key.keysym.sym == SDLK_1)
             {
                 toggleDroneCam();
@@ -212,6 +223,10 @@ void InputParser::handleEvent(const cro::Event& evt)
             {
                 m_inputFlags &= ~InputFlag::Cancel;
             }
+            else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::SpinMenu])
+            {
+                m_inputFlags &= ~InputFlag::SpinMenu;
+            }
         }
         else if (evt.type == SDL_CONTROLLERBUTTONDOWN)
         {
@@ -234,6 +249,13 @@ void InputParser::handleEvent(const cro::Event& evt)
                 else if (evt.cbutton.button == m_inputBinding.buttons[InputBinding::CancelShot])
                 {
                     m_inputFlags |= InputFlag::Cancel;
+                }
+                else if (evt.cbutton.button == m_inputBinding.buttons[InputBinding::SpinMenu])
+                {
+                    if (m_state != State::Drone)
+                    {
+                        m_inputFlags |= InputFlag::SpinMenu;
+                    }
                 }
 
                 else if (evt.cbutton.button == cro::GameController::DPadLeft)
@@ -280,6 +302,10 @@ void InputParser::handleEvent(const cro::Event& evt)
                 else if (evt.cbutton.button == m_inputBinding.buttons[InputBinding::CancelShot])
                 {
                     m_inputFlags &= ~InputFlag::Cancel;
+                }
+                else if (evt.cbutton.button == m_inputBinding.buttons[InputBinding::SpinMenu])
+                {
+                    m_inputFlags &= ~InputFlag::SpinMenu;
                 }
 
                 else if (evt.cbutton.button == cro::GameController::DPadLeft)
@@ -409,6 +435,7 @@ void InputParser::setActive(bool active, bool isCPU)
     {
         resetPower();
         m_inputFlags = 0;
+        m_spin = glm::vec2(0.f);
 
         m_swingput.setEnabled((m_enableFlags == std::numeric_limits<std::uint16_t>::max()) && !isCPU ? m_inputBinding.playerID : -1);
     }
@@ -489,7 +516,11 @@ void InputParser::update(float dt, std::int32_t terrainID)
         m_inputAcceleration = 0.f;
     }
 
-    if (m_state == State::Drone)
+    if (m_inputFlags & InputFlag::SpinMenu)
+    {
+        updateSpin(dt);
+    }
+    else if (m_state == State::Drone)
     {
         updateDroneCam(dt);
     }
@@ -784,6 +815,31 @@ void InputParser::updateDroneCam(float dt)
     m_gameScene->getSystem<cro::CommandSystem>()->sendCommand(cmd);
 }
 
+void InputParser::updateSpin(float dt)
+{
+    if (m_inputFlags & InputFlag::Left)
+    {
+        m_spin.x = std::max(-1.f, m_spin.x - dt);
+    }
+
+    if (m_inputFlags & InputFlag::Right)
+    {
+        m_spin.x = std::min(1.f, m_spin.x + dt);
+    }
+
+    if (m_inputFlags & InputFlag::Up)
+    {
+        m_spin.y = std::min(1.f, m_spin.y + dt);
+    }
+
+    if (m_inputFlags & InputFlag::Down)
+    {
+        m_spin.y = std::max(-1.f, m_spin.y - dt);
+    }
+
+    //TODO read left thumbstick.
+}
+
 bool InputParser::inProgress() const
 {
     return (m_state == State::Power || m_state == State::Stroke);
@@ -797,6 +853,82 @@ bool InputParser::getActive() const
 void InputParser::setMaxRotation(float rotation)
 {
     m_maxRotation = std::max(0.05f, std::min(cro::Util::Const::PI / 2.f/*MaxRotation*/, rotation));
+}
+
+InputParser::StrokeResult InputParser::getStroke(std::int32_t club, std::int32_t facing, float distanceToHole) const
+{
+    auto pitch = Clubs[club].getAngle();
+    auto yaw = getYaw();
+    auto power = Clubs[club].getPower(distanceToHole);
+
+    //add hook/slice to yaw
+    auto hook = getHook();
+    if (club != ClubID::Putter)
+    {
+        auto s = cro::Util::Maths::sgn(hook);
+        //changing this func changes how accurate a player needs to be
+        //sine, quad, cubic, quart, quint in steepness order
+        if (Achievements::getActive())
+        {
+            auto level = Social::getLevel();
+            switch (level / 10)
+            {
+            default:
+                hook = cro::Util::Easing::easeOutQuint(hook * s) * s;
+                break;
+            case 3:
+                hook = cro::Util::Easing::easeOutQuart(hook * s) * s;
+                break;
+            case 2:
+                hook = cro::Util::Easing::easeOutCubic(hook * s) * s;
+                break;
+            case 1:
+                hook = cro::Util::Easing::easeOutQuad(hook * s) * s;
+                break;
+            case 0:
+                hook = cro::Util::Easing::easeOutSine(hook * s) * s;
+                break;
+            }
+        }
+        else
+        {
+            hook = cro::Util::Easing::easeOutQuad(hook * s) * s;
+        }
+
+        power *= cro::Util::Easing::easeOutSine(getPower());
+    }
+    else
+    {
+        power *= getPower();
+    }
+    yaw += MaxHook * hook;
+
+    float sideSpin = -hook;
+    sideSpin *= Clubs[club].getSideSpinMultiplier();
+
+    bool slice = (cro::Util::Maths::sgn(hook) * facing == 1);
+    if (!slice)
+    {
+        //hook causes slightly less spin
+        sideSpin *= 0.995f;
+    }
+
+    float accuracy = 1.f - std::abs(hook);
+    auto spin = getSpin() * accuracy;
+
+    //TODO modulate pitch with topspin
+
+    spin *= Clubs[club].getSideSpinMultiplier();
+    spin.x += sideSpin;
+
+    glm::vec3 impulse(1.f, 0.f, 0.f);
+    auto rotation = glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), yaw, cro::Transform::Y_AXIS);
+    rotation = glm::rotate(rotation, pitch, cro::Transform::Z_AXIS);
+    impulse = glm::toMat3(rotation) * impulse;
+
+    impulse *= power;
+
+    return { impulse, spin };
 }
 
 //private

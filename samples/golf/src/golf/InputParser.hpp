@@ -80,7 +80,17 @@ public:
     void setMaxRotation(float);
     float getMaxRotation() const { return m_maxRotation; }
 
+    glm::vec2 getSpin() const { return m_spin; }
+    bool isSpinputActive() const { return (m_inputFlags & InputFlag::SpinMenu) != 0; }
+
     const InputBinding getInputBinding() const { return m_inputBinding; }
+
+    struct StrokeResult final
+    {
+        glm::vec3 impulse = glm::vec3(0.f);
+        glm::vec2 spin = glm::vec2(0.f);
+    };
+    StrokeResult getStroke(std::int32_t club, std::int32_t facing, float holeDistance) const; //facing is -1 or 1 to decide on slice/hook
 
     static constexpr std::uint32_t CPU_ID = 1337u;
 
@@ -116,6 +126,7 @@ private:
     float m_power;
     float m_hook;
     float m_powerbarDirection;
+    glm::vec2 m_spin;
 
     bool m_active;
     bool m_suspended;
@@ -130,8 +141,9 @@ private:
     std::int32_t m_firstClub;
     std::int32_t m_clubOffset; //offset ID from first club
 
-    void updateDroneCam(float);
     void updateStroke(float, std::int32_t);
+    void updateDroneCam(float);
+    void updateSpin(float);
 
     void rotate(float);
     void checkControllerInput();
