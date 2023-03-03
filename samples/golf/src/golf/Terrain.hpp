@@ -101,3 +101,9 @@ static constexpr std::array<float, TerrainID::Count> Restitution =
 {
     0.23f, 0.33f, 0.28f, 0.f, 0.f, 0.f, 0.55f, 0.f
 };
+
+//how much the spin is reduced when bouncing on the terrain
+static constexpr std::array<float, TerrainID::Count> SpinReduction =
+{
+    0.5f, 0.8f, 0.9f, 0.f, 0.f, 0.f, 0.99f, 0.f
+};

@@ -63,6 +63,7 @@ struct Ball final
     float rotation = 0.f; //animation effect
 
     glm::vec2 spin = glm::vec2(0.f);
+    glm::vec3 initialSideVector = glm::vec3(0.f); //normalised right vector of velocity when impulse applied
 
     glm::vec3 startPoint = glm::vec3(0.f);
     float lastStrokeDistance = 0.f;

@@ -6429,6 +6429,16 @@ void GolfState::hitBall()
     }
     yaw += MaxHook * hook;
 
+    float sideSpin = -hook;
+    sideSpin *= Clubs[club].getSideSpinMultiplier();
+
+    bool slice = (cro::Util::Maths::sgn(hook) * cro::Util::Maths::sgn(m_activeAvatar->model.getComponent<cro::Transform>().getScale().x) == 1);
+    if (!slice)
+    {
+        //hook causes slightly less spin
+        sideSpin *= 0.995f;
+    }
+
     glm::vec3 impulse(1.f, 0.f, 0.f);
     auto rotation = glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), yaw, cro::Transform::Y_AXIS);
     rotation = glm::rotate(rotation, pitch, cro::Transform::Z_AXIS);
@@ -6442,6 +6452,7 @@ void GolfState::hitBall()
     update.clientID = m_sharedData.localConnectionData.connectionID;
     update.playerID = m_currentPlayer.player;
     update.impulse = impulse;
+    update.spin.x = sideSpin;
 
     m_sharedData.clientConnection.netClient.sendPacket(PacketID::InputUpdate, update, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
 

@@ -107,6 +107,19 @@ namespace
 
     //used when predicting outcome of swing
     GolfBallEvent predictionEvent;
+
+    //these are multipliers
+    constexpr std::array SpinDecay =
+    {
+        0.f,    //idle
+        0.998f, //flight,
+        0.7f,   //roll
+        0.2f,   //putt
+        0.f,    //paused
+        0.f     //reset
+    };
+    constexpr float SideSpinInfluence = 6.f;
+    constexpr float TopSpinInfluence = 6.f;
 }
 
 const std::array<std::string, 5u> Ball::StateStrings = { "Idle", "Flight", "Putt", "Paused", "Reset" };
@@ -276,6 +289,7 @@ GolfBallEvent* BallSystem::postEvent() const
 void BallSystem::processEntity(cro::Entity entity, float dt)
 {
     auto& ball = entity.getComponent<Ball>();
+    ball.spin *= SpinDecay[static_cast<std::int32_t>(ball.state)];
 
     //*sigh* isnan bug
     CRO_ASSERT(!std::isnan(ball.velocity.x), "");
@@ -310,6 +324,9 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
             float multiplier = std::clamp((Dist - MinWind) / (MaxWind - MinWind), 0.f, 1.f);
             multiplier = cro::Util::Easing::easeInCubic(multiplier) * (0.5f + (0.5f * HeightMultiplier));
             ball.velocity += m_windDirection * m_windStrength * multiplier * dt;
+
+            //add spin
+            ball.velocity += ball.initialSideVector * ball.spin.x * SideSpinInfluence * dt;
 
 
             //move by velocity
@@ -754,7 +771,8 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
         ball.delay -= dt;
         if (ball.delay < 0)
         {
-            ball.spin = { 0.f,0.f };
+            ball.spin = { 0.f, 0.f };
+            ball.initialSideVector = { 0.f, 0.f, 0.f };
 
             auto position = entity.getComponent<cro::Transform>().getPosition();
             auto len2 = glm::length2(glm::vec2(position.x, position.z) - glm::vec2(m_holeData->pin.x, m_holeData->pin.z));
@@ -860,6 +878,7 @@ void BallSystem::doCollision(cro::Entity entity)
         case TerrainID::Rough:
             ball.velocity *= Restitution[terrainResult.terrain];
             ball.velocity = glm::reflect(ball.velocity, terrainResult.normal);
+            ball.spin *= SpinReduction[terrainResult.terrain];
             break;
         case TerrainID::Green:
             //if low bounce start rolling
@@ -875,6 +894,7 @@ void BallSystem::doCollision(cro::Entity entity)
             {
                 ball.velocity *= Restitution[terrainResult.terrain];
                 ball.velocity = glm::reflect(ball.velocity, terrainResult.normal);
+                ball.spin *= SpinReduction[terrainResult.terrain];
                 CRO_ASSERT(!std::isnan(ball.velocity.x), "");
             }
             break;

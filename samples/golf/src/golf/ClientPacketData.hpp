@@ -34,6 +34,7 @@ source distribution.
 struct InputUpdate final
 {
     glm::vec3 impulse = glm::vec3(0.f);
+    glm::vec2 spin = glm::vec2(0.f);
     std::uint8_t clientID = 4;
     std::uint8_t playerID = 4;
 };

@@ -213,32 +213,20 @@ DrivingState::DrivingState(cro::StateStack& stack, cro::State::Context context, 
                     ImGui::SameLine();
                     ImGui::ProgressBar(topSpin);
 
-                    float backSpin = 1.f + std::clamp(debugBall->spin.y, -1.f, 0.f);
+                    float backSpin = std::clamp(debugBall->spin.y, -1.f, 0.f) / -1.f;
                     ImGui::Text("Back Spin");
                     ImGui::SameLine();
-
-                    //maybe this is a bug in ImGui? it seems to
-                    //render the fill rect twice but ignores the
-                    //colour setting for the first one
-                    auto outer = ImGui::GetColorU32(ImGuiCol_PlotHistogram);
-                    auto inner = ImGui::GetColorU32(ImGuiCol_FrameBg);
-                    ImGui::PushStyleColor(ImGuiCol_FrameBg, outer);
-                    ImGui::PushStyleColor(ImGuiCol_PlotHistogram, inner);
-                    ImGui::ProgressBar(backSpin);
-                    ImGui::PopStyleColor(2);
+                    ImGui::ProgressBar(backSpin, {-1,0}, nullptr, true);
 
                     float rightSpin = std::clamp(debugBall->spin.x, 0.f, 1.f);
                     ImGui::Text("Right Spin");
                     ImGui::SameLine();
                     ImGui::ProgressBar(rightSpin);
 
-                    float leftSpin = 1.f + std::clamp(debugBall->spin.x, -1.f, 0.f);
+                    float leftSpin = std::clamp(debugBall->spin.x, -1.f, 0.f) / -1.f;
                     ImGui::Text("Left Spin");
                     ImGui::SameLine();
-                    ImGui::PushStyleColor(ImGuiCol_FrameBg, outer);
-                    ImGui::PushStyleColor(ImGuiCol_PlotHistogram, inner);
-                    ImGui::ProgressBar(leftSpin);
-                    ImGui::PopStyleColor(2);
+                    ImGui::ProgressBar(leftSpin, {-1,0}, nullptr, true);
                 }
 
                 //ImGui::SliderFloat("Adjust", &powerMultiplier, 0.8f, 1.1f);
@@ -2742,8 +2730,17 @@ void DrivingState::hitBall()
         }
     }
     yaw += MaxHook * hook;
-
     yaw += cro::Util::Const::PI / 2.f; //can't remember why we have to do this - probably to do with cam rotation in the main mode. This fudges it though.
+
+    float sideSpin = -hook;
+    sideSpin *= Clubs[m_inputParser.getClub()].getSideSpinMultiplier();
+
+    bool slice = (cro::Util::Maths::sgn(hook) * cro::Util::Maths::sgn(m_avatar.model.getComponent<cro::Transform>().getScale().x) == 1);
+    if (!slice)
+    {
+        //hook causes slightly less spin
+        sideSpin *= 0.995f;
+    }
 
     glm::vec3 impulse(1.f, 0.f, 0.f);
     auto rotation = glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), yaw, cro::Transform::Y_AXIS);
@@ -2756,7 +2753,7 @@ void DrivingState::hitBall()
     //apply impulse to ball component
     cro::Command cmd;
     cmd.targetFlags = CommandID::Ball;
-    cmd.action = [&,impulse](cro::Entity e, float)
+    cmd.action = [&,impulse, sideSpin](cro::Entity e, float)
     {
         auto& ball = e.getComponent<Ball>();
 
@@ -2766,6 +2763,12 @@ void DrivingState::hitBall()
             ball.state = Ball::State::Flight;
             ball.delay = 0.f;
             ball.startPoint = e.getComponent<cro::Transform>().getPosition();
+            ball.spin.x = sideSpin;
+            if (glm::length2(impulse) != 0)
+            {
+                ball.initialSideVector = glm::normalize(glm::cross(impulse, cro::Transform::Y_AXIS));
+            }
+
 
             if (m_sharedData.showBallTrail)
             {
