@@ -285,6 +285,7 @@ bool OptionsState::handleEvent(const cro::Event& evt)
     {
 #ifdef CRO_DEBUG_
         static bool temp = false;
+        LogI << "This is debug mode, it's supposed to happen" << std::endl;
         temp = !temp;
         if (temp)
 #else
