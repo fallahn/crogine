@@ -28,6 +28,7 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #pragma once
+//#define CAMERA_TRACK
 
 #include "GameConsts.hpp"
 

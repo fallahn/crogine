@@ -78,6 +78,7 @@ void PropFollowSystem::process(float dt)
                     auto len2 = glm::length2(glm::vec2(dir.x, dir.z));
 
                     point.position += glm::normalize(dir) * follower.speed * dt;
+                    //point.position = cro::Util::Maths::smoothDamp(point.position, targetPos, point.velocity, 0.0125f, dt, follower.speed);
 
                     if (len2 < MinTargetRadSqr)
                     {

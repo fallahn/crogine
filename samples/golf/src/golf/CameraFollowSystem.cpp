@@ -77,16 +77,22 @@ namespace
         auto& indexArray = DebugIndices[idx];
 
         auto& buffer = DebugBuffers[idx];
-        float c = static_cast<float>(counter++ % 2);
+        auto c = counter++ % 3;
+        static constexpr std::array<std::array<float, 3u>, 3u> Colours =
+        {
+            std::array<float, 3u>({1.f, 0.f, 0.f}),
+            std::array<float, 3u>({0.f, 1.f, 0.f}),
+            std::array<float, 3u>({0.f, 0.f, 1.f}),
+        };
 
         indexArray.push_back(static_cast<std::uint32_t>(indexArray.size()));
         buffer.push_back(start.x);
         buffer.push_back(start.y);
         buffer.push_back(start.z);
 
-        buffer.push_back(c);
-        buffer.push_back(0.f);
-        buffer.push_back(1.f - c);
+        buffer.push_back(Colours[c][0]);
+        buffer.push_back(Colours[c][1]);
+        buffer.push_back(Colours[c][2]);
         buffer.push_back(1.f);
 
         indexArray.push_back(static_cast<std::uint32_t>(indexArray.size()));
@@ -94,31 +100,9 @@ namespace
         buffer.push_back(end.y);
         buffer.push_back(end.z);
 
-        buffer.push_back(c);
-        buffer.push_back(0.f);
-        buffer.push_back(1.f - c);
-        buffer.push_back(1.f);
-
-
-        //----------//
-        indexArray.push_back(static_cast<std::uint32_t>(indexArray.size()));
-        buffer.push_back(end.x);
-        buffer.push_back(end.y);
-        buffer.push_back(end.z);
-
-        buffer.push_back(1.f);
-        buffer.push_back(1.f);
-        buffer.push_back(c);
-        buffer.push_back(1.f);
-
-        indexArray.push_back(static_cast<std::uint32_t>(indexArray.size()));
-        buffer.push_back(end.x);
-        buffer.push_back(end.y);
-        buffer.push_back(end.z);
-
-        buffer.push_back(1.f);
-        buffer.push_back(1.f);
-        buffer.push_back(c);
+        buffer.push_back(Colours[c][0]);
+        buffer.push_back(Colours[c][1]);
+        buffer.push_back(Colours[c][2]);
         buffer.push_back(1.f);
     }
 }
@@ -256,12 +240,12 @@ void CameraFollowSystem::process(float dt)
         case CameraFollower::Track:
         {
             auto& tx = entity.getComponent<cro::Transform>();
-
+            
             auto ballPos = follower.target.getComponent<cro::Transform>().getPosition();
             auto target = ballPos + TargetOffset;
             CRO_ASSERT(!std::isnan(target.x), "Target pos is NaN");
 
-            follower.currentTarget = cro::Util::Maths::smoothDamp(follower.currentTarget, target, follower.velocity, CameraTrackTime + ((CameraTrackTime / 2.f) * follower.zoom.progress), dt);
+            follower.currentTarget = cro::Util::Maths::smoothDamp(follower.currentTarget, target, follower.velocity, CameraTrackTime - ((CameraTrackTime * 0.75f) * follower.zoom.progress), dt);
 
             auto worldPos = tx.getPosition();
             auto rotation = lookRotation(worldPos, follower.currentTarget);
@@ -346,7 +330,7 @@ void CameraFollowSystem::process(float dt)
 
                 auto& tx = entity.getComponent<cro::Transform>();
                 auto target = follower.target.getComponent<cro::Transform>().getPosition() + TargetOffset;
-                follower.currentTarget = cro::Util::Maths::smoothDamp(follower.currentTarget, target, follower.velocity, CameraTrackTime + ((CameraTrackTime / 2.f) * follower.zoom.progress), dt);
+                follower.currentTarget = cro::Util::Maths::smoothDamp(follower.currentTarget, target, follower.velocity, CameraTrackTime - ((CameraTrackTime * 0.75f) * follower.zoom.progress), dt);
 
                 auto rotation = lookRotation(tx.getPosition(), follower.currentTarget);
                 tx.setRotation(rotation);

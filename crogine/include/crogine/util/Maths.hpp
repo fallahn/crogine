@@ -99,7 +99,7 @@ namespace cro
                 const float exp = 1.f / (1.f + x + 0.48f * x * x + 0.235f * x * x * x);
 
                 T diff = src - dst;
-                const T originalDst = dst;
+                //const T originalDst = dst;
 
                 //clamp maximum speed - a bit of a fudge here depending
                 //if T is float or a vector
@@ -128,27 +128,27 @@ namespace cro
                 retVal = dst + (diff + temp) * exp;
 
                 //prevent overshoot
-                const T startMinusCurr = originalDst - src;
-                const T retMinusStart = retVal - originalDst;
+                //const T startMinusCurr = originalDst - src;
+                //const T retMinusStart = retVal - originalDst;
 
-                if constexpr (std::is_same<T, float>::value)
-                {
-                    if ((originalDst - src > 0.f) == (retVal > originalDst))
-                    {
-                        currVel = (retVal - originalDst) / dt;
-                        //currVel = { 0.f };
-                        retVal = originalDst;
-                    }
-                }
-                else
-                {
-                    if (glm::dot(startMinusCurr, retMinusStart) > 0)
-                    {
-                        currVel = (retVal - originalDst) / dt;
-                        //currVel = T(0.f); //I'm not going mad here, right?
-                        retVal = originalDst;
-                    }
-                }
+                //if constexpr (std::is_same<T, float>::value)
+                //{
+                //    if ((originalDst - src > 0.f) == (retVal > originalDst))
+                //    {
+                //        currVel = (retVal - originalDst) / dt;
+                //        //currVel = { 0.f };
+                //        retVal = originalDst;
+                //    }
+                //}
+                //else
+                //{
+                //    if (glm::dot(startMinusCurr, retMinusStart) > 0)
+                //    {
+                //        currVel = (retVal - originalDst) / dt;
+                //        //currVel = T(0.f); //I'm not going mad here, right?
+                //        retVal = originalDst;
+                //    }
+                //}
 
                 return retVal;
             }

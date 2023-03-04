@@ -4440,15 +4440,15 @@ void GolfState::createDrone()
             auto movement = target.getComponent<cro::Transform>().getPosition() - oldPos;
             if (auto len2 = glm::length2(movement); len2 > MinRadius)
             {
-                const float len = std::sqrt(len2);
-                movement /= len;
-                movement *= MoveSpeed;
+                //const float len = std::sqrt(len2);
+                //movement /= len;
+                //movement *= MoveSpeed;
 
-                //go slower over short distances
-                const float multiplier = 0.6f + (0.4f * std::min(1.f, len / AccelerationRadius));
+                ////go slower over short distances
+                //const float multiplier = 0.6f + (0.4f * std::min(1.f, len / AccelerationRadius));
 
-                acceleration = std::min(1.f, acceleration + ((dt / 2.f) * multiplier));
-                movement *= cro::Util::Easing::easeInSine(acceleration);
+                //acceleration = std::min(1.f, acceleration + ((dt / 2.f) * multiplier));
+                //movement *= cro::Util::Easing::easeInSine(acceleration);
 
                 currRotation += cro::Util::Maths::shortestRotation(currRotation, rotation) * dt;
             }
@@ -4457,7 +4457,15 @@ void GolfState::createDrone()
                 acceleration = 0.f;
                 currRotation = std::fmod(currRotation + (dt * 0.5f), cro::Util::Const::TAU);
             }
-            e.getComponent<cro::Transform>().move(movement * dt);
+            //e.getComponent<cro::Transform>().move(movement * dt);
+            
+            
+            //---------------
+            static glm::vec3 vel(0.f);
+            auto pos = cro::Util::Maths::smoothDamp(e.getComponent<cro::Transform>().getPosition(), target.getComponent<cro::Transform>().getPosition(), vel, 1.f, dt, 24.f);
+            e.getComponent<cro::Transform>().setPosition(pos);
+            //--------------
+
             e.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, currRotation);
 
             m_cameras[CameraID::Sky].getComponent<cro::Transform>().setPosition(e.getComponent<cro::Transform>().getPosition());
