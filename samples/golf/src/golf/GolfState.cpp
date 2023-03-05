@@ -169,6 +169,8 @@ namespace
 
     constexpr float MaxRotation = 0.3f;// 0.13f;
     constexpr float MaxPuttRotation = 0.4f;// 0.24f;
+
+    bool recordCam = false;
 }
 
 GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, SharedStateData& sd)
@@ -360,8 +362,11 @@ bool GolfState::handleEvent(const cro::Event& evt)
             m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
             //resets the drone which may have drifted while player idled.
-            auto& data = m_drone.getComponent<cro::Callback>().getUserData<DroneCallbackData>();
-            data.target.getComponent<cro::Transform>().setPosition(data.resetPosition);
+            if (m_drone.isValid())
+            {
+                auto& data = m_drone.getComponent<cro::Callback>().getUserData<DroneCallbackData>();
+                data.target.getComponent<cro::Transform>().setPosition(data.resetPosition);
+            }
         }
     };
 
@@ -944,6 +949,13 @@ void GolfState::handleMessage(const cro::Message& msg)
 #ifdef PATH_TRACING
             beginBallDebug();
 #endif
+#ifdef CAMERA_TRACK
+            recordCam = true;
+            for (auto& v : m_cameraDebugPoints)
+            {
+                v.clear();
+            }
+#endif
         }
         break;
         case GolfEvent::ClubChanged:
@@ -1059,6 +1071,9 @@ void GolfState::handleMessage(const cro::Message& msg)
             }
 #ifdef PATH_TRACING
             endBallDebug();
+#endif
+#ifdef CAMERA_TRACK
+            recordCam = false;
 #endif
         }
         break;
@@ -1484,6 +1499,7 @@ bool GolfState::simulate(float dt)
         m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
     }
 
+#ifndef CAMERA_TRACK
     //play avatar sound if player idles
     if (!m_sharedData.tutorial
         && !m_roundEnded)
@@ -1541,6 +1557,20 @@ bool GolfState::simulate(float dt)
             m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
         }
     }
+#else
+    if (recordCam)
+    {
+        const auto& tx = m_gameScene.getActiveCamera().getComponent<cro::Transform>();
+        bool hadUpdate = false;
+        if (m_gameScene.getActiveCamera().hasComponent<CameraFollower>())
+        {
+            hadUpdate = m_gameScene.getActiveCamera().getComponent<CameraFollower>().hadUpdate;
+            m_gameScene.getActiveCamera().getComponent<CameraFollower>().hadUpdate = false;
+        }
+        m_cameraDebugPoints[m_currentCamera].emplace_back(tx.getRotation(), tx.getPosition(), hadUpdate);
+    }
+
+#endif
     return true;
 }
 
@@ -1591,6 +1621,13 @@ void GolfState::render()
     glClear(GL_DEPTH_BUFFER_BIT);
     glCheck(glEnable(GL_LINE_SMOOTH));
     m_gameScene.render();
+#ifdef CAMERA_TRACK
+    //if (recordCam)
+    //{
+    //    const auto& tx = m_gameScene.getActiveCamera().getComponent<cro::Transform>();
+    //    m_cameraDebugPoints[m_currentCamera].emplace_back(tx.getRotation(), tx.getPosition());
+    //}
+#endif
     glCheck(glDisable(GL_LINE_SMOOTH));
 #ifdef CRO_DEBUG_
     //m_collisionMesh.renderDebug(cam.getActivePass().viewProjectionMatrix, m_gameSceneTexture.getSize());
@@ -4462,7 +4499,7 @@ void GolfState::createDrone()
             
             //---------------
             static glm::vec3 vel(0.f);
-            auto pos = cro::Util::Maths::smoothDamp(e.getComponent<cro::Transform>().getPosition(), target.getComponent<cro::Transform>().getPosition(), vel, 1.f, dt, 24.f);
+            auto pos = cro::Util::Maths::smoothDamp(e.getComponent<cro::Transform>().getPosition(), target.getComponent<cro::Transform>().getPosition(), vel, 3.f, dt, 24.f);
             e.getComponent<cro::Transform>().setPosition(pos);
             //--------------
 

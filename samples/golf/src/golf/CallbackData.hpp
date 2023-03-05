@@ -45,7 +45,7 @@ struct DroneCallbackData final
     float rotation = 0.f;
     float acceleration = 0.f;
     cro::Entity target;
-    glm::vec3 resetPosition = glm::vec3(0.f);
+    glm::vec3 resetPosition = glm::vec3(160.f,10.f,-100.f);
 };
 
 //used for expanding the detection radius of the sky cam

@@ -110,6 +110,7 @@ struct CameraFollower final
     }
 
     cro::Entity debugEntity;
+    bool hadUpdate = false;
 };
 
 class CameraFollowSystem final : public cro::System, public cro::GuiClient

@@ -425,6 +425,14 @@ private:
     void updateBallDebug(glm::vec3);
     void endBallDebug();
 #endif
+    struct DebugTx final
+    {
+        glm::quat q = glm::quat(1.f,0.f,0.f,0.f);
+        glm::vec3 pos = glm::vec3(0.f);
+        bool hadUpdate = false;
+        DebugTx(glm::quat r, glm::vec3 p, bool b) :q(r), pos(p), hadUpdate(b) {}
+    };
+    std::vector<std::vector<DebugTx>> m_cameraDebugPoints;
     void addCameraDebugging();
     void registerDebugWindows();
 

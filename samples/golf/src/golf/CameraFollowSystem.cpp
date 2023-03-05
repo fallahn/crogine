@@ -62,7 +62,7 @@ namespace
     //follows just above the target
     constexpr glm::vec3 TargetOffset(0.f, 0.2f, 0.f);
 
-    constexpr float CameraTrackTime = 0.25f; //approx delay in tracking interpolation
+    constexpr float CameraTrackTime = 0.35f; //approx delay in tracking interpolation
 
     std::array<std::vector<float>, CameraID::Count> DebugBuffers = {};
     std::array<std::vector<std::uint32_t>, CameraID::Count> DebugIndices = {};
@@ -84,6 +84,12 @@ namespace
             std::array<float, 3u>({0.f, 1.f, 0.f}),
             std::array<float, 3u>({0.f, 0.f, 1.f}),
         };
+
+        auto v = end - start;
+        v /= 3.f;
+        start += (v * static_cast<float>(c));
+        end = start + v;
+
 
         indexArray.push_back(static_cast<std::uint32_t>(indexArray.size()));
         buffer.push_back(start.x);
@@ -223,7 +229,6 @@ void CameraFollowSystem::process(float dt)
     auto& currentFollower = m_currentCamera.getComponent<CameraFollower>();
     currentFollower.currentFollowTime -= dt;
 
-
     auto& entities = getEntities();
     for (auto entity : entities)
     {
@@ -236,7 +241,8 @@ void CameraFollowSystem::process(float dt)
 
         switch (follower.state)
         {
-        default: break;
+        default:
+            break;
         case CameraFollower::Track:
         {
             auto& tx = entity.getComponent<cro::Transform>();
@@ -249,7 +255,7 @@ void CameraFollowSystem::process(float dt)
 
             auto worldPos = tx.getPosition();
             auto rotation = lookRotation(worldPos, follower.currentTarget);
-            tx.setRotation(rotation);
+            
 #ifdef CAMERA_TRACK
             if (m_currentCamera.getComponent<CameraFollower>().id == follower.id)
             {
@@ -257,9 +263,12 @@ void CameraFollowSystem::process(float dt)
 
                 glm::vec3 t(0.f, 0.f, -glm::length(worldPos - follower.currentTarget));
                 t = rotation * t;
-                updateBufferData(follower.id, worldPos, worldPos + t);
+                updateBufferData(follower.id, worldPos, worldPos + glm::vec3(0.f, 0.1f, 0.f));
+                updateBufferData(follower.id, worldPos + t, worldPos + t + glm::vec3(0.f, 0.1f, 0.f));
             }
+            follower.hadUpdate = true;
 #endif
+            tx.setRotation(rotation);
 
             //check the distance to the ball, and store it if closer than previous dist
             //and if we fall within the camera's radius
@@ -298,7 +307,8 @@ void CameraFollowSystem::process(float dt)
             //zoom if ball goes near the hole
             auto zoomDir = follower.holePosition - ballPos;
             auto dist = glm::length2(zoomDir);
-            if (dist < follower.zoomRadius)
+            if (dist < follower.zoomRadius
+                && !follower.zoom.done)
             {
                 follower.state = CameraFollower::Zoom;
             }
@@ -341,8 +351,12 @@ void CameraFollowSystem::process(float dt)
 
                     glm::vec3 t(0.f, 0.f, -glm::length(tx.getPosition() - follower.currentTarget));
                     t = rotation * t;
-                    updateBufferData(follower.id, tx.getPosition(), tx.getPosition() + t);
+                    
+                    auto worldPos = tx.getPosition();
+                    updateBufferData(follower.id, worldPos, worldPos + glm::vec3(0.f, 0.1f, 0.f));
+                    updateBufferData(follower.id, worldPos + t, worldPos + t + glm::vec3(0.f, 0.1f, 0.f));
                 }
+                follower.hadUpdate = true;
 #endif
             }
             break;

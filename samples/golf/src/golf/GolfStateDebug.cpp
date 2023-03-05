@@ -147,7 +147,82 @@ void GolfState::addCameraDebugging()
 
             c.getComponent<CameraFollower>().debugEntity = entity;
         }
+        m_cameraDebugPoints.emplace_back();
     }
+
+    registerWindow([&]()
+        {
+            if (ImGui::Begin("Camera Points"))
+            {
+                
+                static auto camID = 0;
+                static auto stepIndex = 0;
+                ImGui::Text("%s", CameraStrings[camID].c_str());
+                if (ImGui::InputInt("Camera ID", &camID))
+                {
+                    camID = (camID + CameraID::Count) % CameraID::Count;
+                    stepIndex = 0;
+                }
+                ImGui::Text("%d of %u", stepIndex, m_cameraDebugPoints[camID].size());
+
+                static glm::quat prevQuat = glm::quat(1.f, 0.f, 0.f, 0.f);
+                const auto updateTx = [&]()
+                {
+                    auto [q, p, _] = m_cameraDebugPoints[camID][stepIndex];
+                    m_cameras[CameraID::Player].getComponent<cro::Transform>().setRotation(q);
+                    m_cameras[CameraID::Player].getComponent<cro::Transform>().setPosition(p);
+                    m_cameras[CameraID::Player].getComponent<cro::Camera>().active = true;
+                };
+
+
+                if (ImGui::Button("Step Back"))
+                {
+                    if (!m_cameraDebugPoints[camID].empty())
+                    {
+                        prevQuat = m_cameraDebugPoints[camID][stepIndex].q;
+                        stepIndex = (stepIndex + (m_cameraDebugPoints[camID].size() - 1)) % m_cameraDebugPoints[camID].size();
+                        updateTx();
+
+                    }
+                }
+                ImGui::SameLine();
+                if (ImGui::Button("Step Forward"))
+                {
+                    if (!m_cameraDebugPoints[camID].empty())
+                    {
+                        prevQuat = m_cameraDebugPoints[camID][stepIndex].q;
+                        stepIndex = (stepIndex + 1) % m_cameraDebugPoints[camID].size();
+                        updateTx();
+                    }
+                }
+
+                if (!m_cameraDebugPoints[camID].empty())
+                {
+                    
+                    auto [q, p, b] = m_cameraDebugPoints[camID][stepIndex];
+                    if (q == prevQuat)
+                    {
+                        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.f, 0.f, 0.f, 1.f));
+                    }
+                    else
+                    {
+                        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.f, 1.f, 1.f, 1.f));
+                    }
+                    ImGui::Text("Q: %3.5f, %3.5f, %3.5f, %3.5f", q.x, q.y, q.z, q.w);
+                    ImGui::PopStyleColor();
+                    ImGui::Text("P: %3.3f, %3.3f, %3.3f", p.x, p.y, p.z);
+                    if (b)
+                    {
+                        ImGui::Text("Was Updated");
+                    }
+                    else
+                    {
+                        ImGui::Text("Was NOT Updated");
+                    }
+                }
+            }
+            ImGui::End();
+        });
 #endif
 }
 

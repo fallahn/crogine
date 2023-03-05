@@ -1008,16 +1008,17 @@ void TutorialState::tutorialTwo(cro::Entity root)
     entity.addComponent<cro::Drawable2D>().setCroppingArea({ 0.f, 0.f, 0.f, 0.f });
     if (m_sharedData.imperialMeasurements)
     {
-        entity.addComponent<cro::Text>(font).setString("This is the wind indicator.\nThe strength ranges from\n0 to 2.2 mph.");
+        entity.addComponent<cro::Text>(font).setString("This is the wind indicator.\nThe strength ranges from\n0 to 2.2 mph.\nThe higher your ball goes\nthe more the wind affects it.");
     }
     else
     {
-        entity.addComponent<cro::Text>(font).setString("This is the wind indicator.\nThe strength ranges from\n0 to 3.5 kph.");
+        entity.addComponent<cro::Text>(font).setString("This is the wind indicator.\nThe strength ranges from\n0 to 3.5 kph.\nThe higher your ball goes\nthe more the wind affects it.");
     }
     entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+    //entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     bounds = cro::Text::getLocalBounds(entity);
-    entity.addComponent<UIElement>().absolutePosition = { /*-(bounds.width + 20.f)*/20.f, 230.f };
+    entity.addComponent<UIElement>().absolutePosition = { /*-(bounds.width + 20.f)*/20.f, 252.f };
     entity.getComponent<UIElement>().relativePosition = { 0.f, 0.f };
     entity.getComponent<UIElement>().depth = 0.01f;
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
