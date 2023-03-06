@@ -209,6 +209,8 @@ DrivingState::DrivingState(cro::StateStack& stack, cro::State::Context context, 
                 if (debugBall)
                 {
                     ImGui::Text("State %s", Ball::StateStrings[static_cast<std::int32_t>(debugBall->state)].c_str());
+                    //if (debugBall->state == Ball::State::Roll) LogI << "buns" << std::endl;
+                    //if (debugBall->state == Ball::State::Putt) LogI << "flaps" << std::endl;
 
                     float topSpin = std::clamp(debugBall->spin.y, 0.f, 1.f);
                     ImGui::Text("Top Spin");
@@ -2729,7 +2731,7 @@ void DrivingState::hitBall()
             ball.spin = result.spin;
             if (glm::length2(result.impulse) != 0)
             {
-                ball.initialForwardVector = glm::normalize(result.impulse);
+                ball.initialForwardVector = glm::normalize(glm::vec3(result.impulse.x, 0.f, result.impulse.z));
                 ball.initialSideVector = glm::normalize(glm::cross(ball.initialForwardVector, cro::Transform::Y_AXIS));
             }
 

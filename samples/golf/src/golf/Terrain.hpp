@@ -29,6 +29,8 @@ source distribution.
 
 #pragma once
 
+#include <crogine/detail/glm/vec2.hpp>
+
 #include <array>
 #include <string>
 #include <limits>
@@ -103,13 +105,20 @@ static constexpr std::array<float, TerrainID::Count> Restitution =
 };
 
 //how much the spin is reduced when bouncing on the terrain
-static constexpr std::array<float, TerrainID::Count> SpinReduction =
+static constexpr std::array<glm::vec2, TerrainID::Count> SpinReduction =
 {
-    0.5f, 0.8f, 0.9f, 0.f, 0.f, 0.f, 0.99f, 0.f
+    glm::vec2(0.5f),
+    glm::vec2(0.8f, 0.995f),
+    glm::vec2(0.98f, 0.995f),
+    glm::vec2(0.f),
+    glm::vec2(0.f),
+    glm::vec2(0.f),
+    glm::vec2(0.99f, 0.999f),
+    glm::vec2(0.f)
 };
 
-//how much velocity is added when bouncing from topspin
+//how much velocity is added when rolling from topspin
 static constexpr std::array<float, TerrainID::Count> SpinAddition =
 {
-    0.5f, 0.85f, 0.95f, 0.f, 0.f, 0.f, 0.99f, 0.f
+    0.5f, 0.12f, 0.09f, 0.f, 0.f, 0.f, 0.99f, 0.f
 };

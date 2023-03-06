@@ -67,7 +67,7 @@ namespace
     static constexpr float AngularVelocity = 46.5f; //rad/s at 1m/s vel. Used for rolling animation.
 
     static constexpr float MinVelocitySqr = 0.001f;// 0.005f;//0.04f
-    static constexpr float BallRollTimeout = -8.f;
+    static constexpr float BallRollTimeout = -10.f;
     static constexpr float BallTimeoutVelocity = 0.04f;
 
     static constexpr float MinRollVelocity = -0.25f;
@@ -111,15 +111,15 @@ namespace
     //these are multipliers
     constexpr std::array SpinDecay =
     {
-        0.f,    //idle
-        0.997f, //flight,
-        0.7f,   //roll
-        0.2f,   //putt
-        0.f,    //paused
-        0.f     //reset
+        glm::vec2(0.f),           //idle
+        glm::vec2(0.997f),        //flight,
+        glm::vec2(0.7f, 0.98f),   //roll
+        glm::vec2(0.2f, 0.955f),  //putt
+        glm::vec2(0.f),           //paused
+        glm::vec2(0.f)            //reset
     };
     constexpr float SideSpinInfluence = 6.f;
-    constexpr float TopSpinInfluence = 6.f;
+    constexpr float TopSpinInfluence = 1.f;
 }
 
 const std::array<std::string, 5u> Ball::StateStrings = { "Idle", "Flight", "Putt", "Paused", "Reset" };
@@ -289,7 +289,7 @@ GolfBallEvent* BallSystem::postEvent() const
 void BallSystem::processEntity(cro::Entity entity, float dt)
 {
     auto& ball = entity.getComponent<Ball>();
-    ball.spin.x *= SpinDecay[static_cast<std::int32_t>(ball.state)];
+    ball.spin.x *= SpinDecay[static_cast<std::int32_t>(ball.state)].x;
 
     //*sigh* isnan bug
     CRO_ASSERT(!std::isnan(ball.velocity.x), "");
@@ -351,8 +351,8 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
         auto position = tx.getPosition();
         auto terrainContact = getTerrain(position);
 
-        ball.velocity += ball.spin.y * ball.initialForwardVector * SpinAddition[terrainContact.terrain];
-        ball.spin.y *= SpinDecay[static_cast<std::int32_t>(Ball::State::Roll)];
+        ball.velocity += ball.spin.y * ball.initialForwardVector * SpinAddition[terrainContact.terrain] * TopSpinInfluence;
+        ball.spin.y *= SpinDecay[static_cast<std::int32_t>(ball.state)].y;
 
         if (terrainContact.penetration < 0) //above ground
         {
@@ -465,8 +465,8 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
 
             auto terrainContact = getTerrain(position);
 
-            ball.velocity += ball.spin.y * ball.initialForwardVector * SpinAddition[terrainContact.terrain];
-            ball.spin.y *= SpinDecay[static_cast<std::int32_t>(Ball::State::Roll)];
+            ball.velocity += ball.spin.y * ball.initialForwardVector * SpinAddition[terrainContact.terrain] * TopSpinInfluence;
+            ball.spin.y *= SpinDecay[static_cast<std::int32_t>(ball.state)].y;
 
             //test distance to pin
             auto pinDir = m_holeData->pin - position;
@@ -884,7 +884,7 @@ void BallSystem::doCollision(cro::Entity entity)
         case TerrainID::Rough:
             ball.velocity *= Restitution[terrainResult.terrain];
             ball.velocity = glm::reflect(ball.velocity, terrainResult.normal);
-            ball.velocity += ball.spin.y * ball.initialForwardVector * SpinAddition[terrainResult.terrain];
+            //ball.velocity += ball.spin.y * ball.initialForwardVector * SpinAddition[terrainResult.terrain];
             ball.spin *= SpinReduction[terrainResult.terrain];
             break;
         case TerrainID::Green:
@@ -901,7 +901,7 @@ void BallSystem::doCollision(cro::Entity entity)
             {
                 ball.velocity *= Restitution[terrainResult.terrain];
                 ball.velocity = glm::reflect(ball.velocity, terrainResult.normal);
-                ball.velocity += ball.spin.y * ball.initialForwardVector * SpinAddition[terrainResult.terrain];
+                //ball.velocity += ball.spin.y * ball.initialForwardVector * SpinAddition[terrainResult.terrain];
                 ball.spin *= SpinReduction[terrainResult.terrain];
                 CRO_ASSERT(!std::isnan(ball.velocity.x), "");
             }

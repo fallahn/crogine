@@ -504,7 +504,7 @@ void GolfState::handlePlayerInput(const net::NetEvent::Packet& packet, bool pred
             ball.spin = input.spin;
             if (glm::length2(input.impulse) != 0)
             {
-                ball.initialForwardVector = glm::normalize(input.impulse);
+                ball.initialForwardVector = glm::normalize(glm::vec3(input.impulse.x, 0.f, input.impulse.z));
                 ball.initialSideVector = glm::normalize(glm::cross(ball.initialForwardVector, cro::Transform::Y_AXIS));
             }
 

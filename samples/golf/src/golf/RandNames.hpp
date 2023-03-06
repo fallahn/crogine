@@ -83,5 +83,9 @@ static inline const std::array RandomNames =
     cro::String("Enver"),
     cro::String("Rohese"),
     cro::String("Karla"),
-    cro::String("Varghese")
+    cro::String("Varghese"),
+    cro::String("Richard"),
+    cro::String("Abbie"),
+    cro::String("Daryl"),
+    cro::String("Christopher"),
 };

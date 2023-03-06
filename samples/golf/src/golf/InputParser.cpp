@@ -796,7 +796,7 @@ void InputParser::updateDroneCam(float dt)
 
 void InputParser::updateSpin(float dt)
 {
-    auto rotation = getRotationalInput(cro::GameController::AxisLeftX, cro::GameController::AxisLeftY);
+    auto rotation = getRotationalInput(cro::GameController::AxisLeftX, cro::GameController::AxisLeftY) * 2.f;
     m_spin.x = std::clamp(m_spin.x - (rotation.y * dt), -1.f, 1.f);
     m_spin.y = std::clamp(m_spin.y + (rotation.x * dt), -1.f, 1.f);
 }
@@ -879,7 +879,7 @@ InputParser::StrokeResult InputParser::getStroke(std::int32_t club, std::int32_t
 
     //modulate pitch with topspin
     spin.y *= Clubs[club].getTopSpinMultiplier();
-    pitch -= (15.f * cro::Util::Const::degToRad) * spin.y;
+    pitch -= (4.f * cro::Util::Const::degToRad) * spin.y;
 
     spin.x *= Clubs[club].getSideSpinMultiplier() / 2.f;
     spin.x += sideSpin;
