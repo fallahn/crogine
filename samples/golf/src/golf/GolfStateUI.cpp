@@ -1924,7 +1924,12 @@ void GolfState::updateScoreboard()
         //score columns
         for (auto i = 1u; i < ents.size() - 1; ++i)
         {
-            std::string scoreString = std::to_string(i) + "\n" + std::to_string(m_holeData[i - 1].par);
+            auto holeNumber = i;
+            if (m_sharedData.holeCount == 2)
+            {
+                holeNumber += 9;
+            }
+            std::string scoreString = std::to_string(holeNumber) + "\n" + std::to_string(m_holeData[i - 1].par);
 
             for (auto j = 0u; j < playerCount; ++j)
             {

@@ -5710,8 +5710,14 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo)
     cmd.action =
         [&](cro::Entity e, float)
     {
+        auto holeNumber = m_currentHole + 1;
+        if (m_sharedData.holeCount == 2)
+        {
+            holeNumber += 9;
+        }
+
         auto& data = e.getComponent<cro::Callback>().getUserData<TextCallbackData>();
-        data.string = "Hole: " + std::to_string(m_currentHole + 1);
+        data.string = "Hole: " + std::to_string(holeNumber);
         e.getComponent<cro::Callback>().active = true;
     };
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
