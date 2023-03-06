@@ -47,6 +47,7 @@ Hole files describe which models/assets make up the hole, as well as the positio
         {
             position = -130, 0, -65 //position of the left-most crowd member in world units
             rotation = 180 //rotation about the Y axis at the left-most point
+            lookat = 100, 2.4, 64 //since 1.11 an optional point for the crowd to face. If this is omitted they will look at the hole if it is close enough, or straight forward.
         }
 
         particles

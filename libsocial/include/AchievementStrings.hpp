@@ -91,7 +91,8 @@ static const std::array<std::string, AchievementID::Count> AchievementStrings =
     "into_orbit",
     "bad_sport",
     "full_house",
-    "subscriber"
+    "subscriber",
+    "birds_eye"
 };
 
 //appears on the notification
@@ -141,7 +142,8 @@ static const std::array<std::string, AchievementID::Count> AchievementLabels =
     "Into Orbit",
     "Bad Sport",
     "Full House",
-    "Sub-scriber"
+    "Sub-scriber",
+    "Bird's Eye View"
 };
 
 //description and whether or not the achievement is hidden until it is unlocked
@@ -191,7 +193,8 @@ static const std::array<std::pair<std::string, bool>, AchievementID::Count> Achi
     std::make_pair("Hit the ball over 1500m in a single stroke", true),
     std::make_pair("Ruin the game for everyone", true),
     std::make_pair("Collect a full set of clubs", false),
-    std::make_pair("Subscribe to at least one workshop item", true)
+    std::make_pair("Subscribe to at least one workshop item", true),
+    std::make_pair("Use the drone camera to view the course", true)
 };
 
 //assuming trophies load correctly they are:
@@ -199,7 +202,7 @@ static const std::array<std::pair<std::string, bool>, AchievementID::Count> Achi
 Gold, silver, bronze cup
 Gold, silver, bronze mannequin
 Pool, Platinum,
-Level01 - Level50
+Level01 - Level50, Spoon
 */
 
 struct TrophyID final
@@ -263,7 +266,8 @@ static constexpr std::array<std::size_t, AchievementID::Count> AchievementTrophi
     TrophyID::Spoon,
 
     TrophyID::GoldFigure,
-    TrophyID::GoldFigure,
+    TrophyID::BronzeCup,
+    TrophyID::BronzeCup
 };
 
 //these are indexed by StatID, so do try to get them in the correct order ;)

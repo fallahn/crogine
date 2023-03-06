@@ -37,6 +37,8 @@ source distribution.
 #include "CameraFollowSystem.hpp"
 #include "CommandIDs.hpp"
 
+#include <AchievementStrings.hpp>
+
 #include <crogine/core/GameController.hpp>
 #include <crogine/detail/glm/gtx/norm.hpp>
 #include <crogine/util/Easings.hpp>
@@ -108,6 +110,8 @@ void InputParser::handleEvent(const cro::Event& evt)
                 auto* msg = cro::App::postMessage<SceneEvent>(MessageID::SceneMessage);
                 msg->type = SceneEvent::RequestSwitchCamera;
                 msg->data = CameraID::Drone;
+
+                Achievements::awardAchievement(AchievementStrings[AchievementID::BirdsEyeView]);
             }
             else if (m_state == State::Drone)
             {

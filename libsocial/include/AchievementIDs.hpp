@@ -89,6 +89,7 @@ namespace AchievementID
         BadSport,
         FullHouse,
         Subscriber,
+        BirdsEyeView,
 
         Count
     };
