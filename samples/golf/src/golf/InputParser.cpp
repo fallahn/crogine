@@ -473,6 +473,12 @@ void InputParser::setEnableFlags(std::uint16_t flags)
 
 void InputParser::setMaxClub(float dist)
 {
+    //a fudge to allow a full set on any hole bigger than pitch n putt
+    if (dist > 160.f)
+    {
+        dist = 1000.f;
+    }
+
     m_firstClub = ClubID::SandWedge;
 
     while ((Clubs[m_firstClub].getTarget(dist) * 1.05f) < dist

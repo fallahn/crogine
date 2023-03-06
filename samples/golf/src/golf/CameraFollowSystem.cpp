@@ -251,6 +251,14 @@ void CameraFollowSystem::process(float dt)
             auto target = ballPos + TargetOffset;
             CRO_ASSERT(!std::isnan(target.x), "Target pos is NaN");
 
+
+            const auto& collider = follower.target.getComponent<ClientCollider>();
+            if (collider.state == static_cast<std::uint8_t>(Ball::State::Reset))
+            {
+                //don't follow resetting balls as they have a weird drop to them
+                target.y = follower.currentTarget.y;
+            }
+
             follower.currentTarget = cro::Util::Maths::smoothDamp(follower.currentTarget, target, follower.velocity, CameraTrackTime - ((CameraTrackTime * 0.75f) * follower.zoom.progress), dt);
 
             auto worldPos = tx.getPosition();
@@ -273,7 +281,6 @@ void CameraFollowSystem::process(float dt)
             //check the distance to the ball, and store it if closer than previous dist
             //and if we fall within the camera's radius
             //and if the player isn't standing too close
-            const auto& collider = follower.target.getComponent<ClientCollider>();
 
             if ((currentFollower.currentFollowTime < 0)
                 &&
