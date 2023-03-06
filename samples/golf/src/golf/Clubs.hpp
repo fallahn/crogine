@@ -80,6 +80,8 @@ public:
 
     float getAngle() const { return m_angle; }
 
+    //note distanceToPin only affects the putter so this can be 0
+    //for any of the other clubs
     float getTarget(float distanceToPin) const;
 
     float getBaseTarget() const;

@@ -418,6 +418,118 @@ static inline void saveAvatars(const SharedStateData& sd)
     cfg.save(path);
 }
 
+static inline std::vector<cro::Vertex2D> getStrokeIndicatorVerts()
+{
+    auto endColour = TextGoldColour;
+    endColour.setAlpha(0.f);
+    const cro::Colour Grey(0.419f, 0.435f, 0.447f);
+
+    return
+    {
+        //gold
+        cro::Vertex2D(glm::vec2(0.f, 0.5f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(0.f, -0.5f), TextGoldColour),
+
+        //grey
+        cro::Vertex2D(glm::vec2(0.0575f, 0.5f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(0.0575f, -0.5f), TextGoldColour),
+
+        cro::Vertex2D(glm::vec2(0.0575f, 0.5f), Grey),
+        cro::Vertex2D(glm::vec2(0.0575f, -0.5f), Grey),
+
+        cro::Vertex2D(glm::vec2(0.0675f, 0.5f), Grey),
+        cro::Vertex2D(glm::vec2(0.0675f, -0.5f), Grey),
+
+        cro::Vertex2D(glm::vec2(0.0675f, 0.5f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(0.0675f, -0.5f), TextGoldColour),
+
+
+        //black
+        cro::Vertex2D(glm::vec2(0.12f, 0.5f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(0.12f, -0.5f), TextGoldColour),
+
+        cro::Vertex2D(glm::vec2(0.12f, 0.5f), LeaderboardTextDark),
+        cro::Vertex2D(glm::vec2(0.12f, -0.5f), LeaderboardTextDark),
+
+        cro::Vertex2D(glm::vec2(0.13f, 0.5f), LeaderboardTextDark),
+        cro::Vertex2D(glm::vec2(0.13f, -0.5f), LeaderboardTextDark),
+
+        cro::Vertex2D(glm::vec2(0.13f, 0.5f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(0.13f, -0.5f), TextGoldColour),
+
+        //grey
+        cro::Vertex2D(glm::vec2(0.1825f, 0.5f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(0.1825f, -0.5f), TextGoldColour),
+
+        cro::Vertex2D(glm::vec2(0.1825f, 0.5f), Grey),
+        cro::Vertex2D(glm::vec2(0.1825f, -0.5f), Grey),
+
+        cro::Vertex2D(glm::vec2(0.1925f, 0.5f), Grey),
+        cro::Vertex2D(glm::vec2(0.1925f, -0.5f), Grey),
+
+        cro::Vertex2D(glm::vec2(0.1925f, 0.5f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(0.1925f, -0.5f), TextGoldColour),
+
+        //black
+        cro::Vertex2D(glm::vec2(0.245f, 0.5f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(0.245f, -0.5f), TextGoldColour),
+
+        cro::Vertex2D(glm::vec2(0.245f, 0.5f), LeaderboardTextDark),
+        cro::Vertex2D(glm::vec2(0.245f, -0.5f), LeaderboardTextDark),
+
+        cro::Vertex2D(glm::vec2(0.255f, 0.5f), LeaderboardTextDark),
+        cro::Vertex2D(glm::vec2(0.255f, -0.5f), LeaderboardTextDark),
+
+        cro::Vertex2D(glm::vec2(0.255f, 0.5f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(0.255f, -0.5f), TextGoldColour),
+
+
+        //grey
+        cro::Vertex2D(glm::vec2(0.3075f, 0.5f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(0.3075f, -0.5f), TextGoldColour),
+
+        cro::Vertex2D(glm::vec2(0.3075f, 0.5f), Grey),
+        cro::Vertex2D(glm::vec2(0.3075f, -0.5f), Grey),
+
+        cro::Vertex2D(glm::vec2(0.3175f, 0.5f), Grey),
+        cro::Vertex2D(glm::vec2(0.3175f, -0.5f), Grey),
+
+        cro::Vertex2D(glm::vec2(0.3175f, 0.5f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(0.3175f, -0.5f), TextGoldColour),
+
+
+        //black
+        cro::Vertex2D(glm::vec2(0.37f, 0.5f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(0.37f, -0.5f), TextGoldColour),
+
+        cro::Vertex2D(glm::vec2(0.37f, 0.5f), LeaderboardTextDark),
+        cro::Vertex2D(glm::vec2(0.37f, -0.5f), LeaderboardTextDark),
+
+        cro::Vertex2D(glm::vec2(0.38f, 0.5f), LeaderboardTextDark),
+        cro::Vertex2D(glm::vec2(0.38f, -0.5f), LeaderboardTextDark),
+
+        cro::Vertex2D(glm::vec2(0.38f, 0.5f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(0.38f, -0.5f), TextGoldColour),
+
+        //grey
+        cro::Vertex2D(glm::vec2(0.4325f, 0.5f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(0.4325f, -0.5f), TextGoldColour),
+
+        cro::Vertex2D(glm::vec2(0.4325f, 0.5f), Grey),
+        cro::Vertex2D(glm::vec2(0.4325f, -0.5f), Grey),
+
+        cro::Vertex2D(glm::vec2(0.4425f, 0.5f), Grey),
+        cro::Vertex2D(glm::vec2(0.4425f, -0.5f), Grey),
+
+        cro::Vertex2D(glm::vec2(0.4425f, 0.5f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(0.4425f, -0.5f), TextGoldColour),
+
+        //gold
+        cro::Vertex2D(glm::vec2(0.5f, 0.5f), endColour),
+        cro::Vertex2D(glm::vec2(0.5f, -0.5f), endColour)
+    };
+}
+
 //applies material data loaded in a model definition such as texture info to custom materials
 static inline void applyMaterialData(const cro::ModelDefinition& modelDef, cro::Material::Data& dest, std::size_t matID = 0)
 {

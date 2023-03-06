@@ -38,7 +38,6 @@ source distribution.
 
 namespace cro
 {
-    class MessageBus;
     class Scene;
 }
 
@@ -47,7 +46,7 @@ class InputParser final
 {
 public:
        
-    InputParser(const SharedStateData&, cro::MessageBus&, cro::Scene*);
+    InputParser(const SharedStateData&, cro::Scene*);
 
     void handleEvent(const cro::Event&);
     void setHoleDirection(glm::vec3);
@@ -98,7 +97,6 @@ public:
 private:
     const SharedStateData& m_sharedData;
     const InputBinding& m_inputBinding;
-    cro::MessageBus& m_messageBus;
     cro::Scene* m_gameScene;
 
     Swingput m_swingput;

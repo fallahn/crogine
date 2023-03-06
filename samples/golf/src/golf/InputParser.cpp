@@ -60,10 +60,9 @@ namespace
     const cro::Time DoubleTapTime = cro::milliseconds(200);
 }
 
-InputParser::InputParser(const SharedStateData& sd, cro::MessageBus& mb, cro::Scene* s)
+InputParser::InputParser(const SharedStateData& sd, cro::Scene* s)
     : m_sharedData      (sd),
     m_inputBinding      (sd.inputBinding),
-    m_messageBus        (mb),
     m_gameScene         (s),
     m_swingput          (sd),
     m_inputFlags        (0),
@@ -400,7 +399,7 @@ void InputParser::setClub(float dist)
             && m_currentClub != m_firstClub);//prevent inf loop
     }
 
-    auto* msg = m_messageBus.post<GolfEvent>(MessageID::GolfMessage);
+    auto* msg = cro::App::postMessage<GolfEvent>(MessageID::GolfMessage);
     msg->type = GolfEvent::ClubChanged;
 }
 
@@ -495,7 +494,7 @@ void InputParser::setMaxClub(float dist)
     m_currentClub = m_firstClub;
     m_clubOffset = 0;
 
-    auto* msg = m_messageBus.post<GolfEvent>(MessageID::GolfMessage);
+    auto* msg = cro::App::postMessage<GolfEvent>(MessageID::GolfMessage);
     msg->type = GolfEvent::ClubChanged;
 }
 
@@ -505,7 +504,7 @@ void InputParser::setMaxClub(std::int32_t clubID)
     m_firstClub = m_currentClub = clubID;
     m_clubOffset = 0;
 
-    auto* msg = m_messageBus.post<GolfEvent>(MessageID::GolfMessage);
+    auto* msg = cro::App::postMessage<GolfEvent>(MessageID::GolfMessage);
     msg->type = GolfEvent::ClubChanged;
 }
 
@@ -563,7 +562,7 @@ void InputParser::updateStroke(float dt, std::int32_t terrainID)
             m_powerbarDirection = 1.f;
             m_state = State::Flight;
 
-            auto* msg = m_messageBus.post<GolfEvent>(MessageID::GolfMessage);
+            auto* msg = cro::App::postMessage<GolfEvent>(MessageID::GolfMessage);
             msg->type = GolfEvent::HitBall;
         }
 
@@ -616,7 +615,7 @@ void InputParser::updateStroke(float dt, std::int32_t terrainID)
                     m_currentClub = m_firstClub + m_clubOffset;
                 } while ((m_inputBinding.clubset & ClubID::Flags[m_currentClub]) == 0);
 
-                auto* msg = m_messageBus.post<GolfEvent>(MessageID::GolfMessage);
+                auto* msg = cro::App::postMessage<GolfEvent>(MessageID::GolfMessage);
                 msg->type = GolfEvent::ClubChanged;
                 msg->score = m_isCPU ? 0 : 1; //tag this with a value so we know the input triggered this and should play a sound.
             }
@@ -631,7 +630,7 @@ void InputParser::updateStroke(float dt, std::int32_t terrainID)
                     m_currentClub = m_firstClub + m_clubOffset;
                 } while ((m_inputBinding.clubset & ClubID::Flags[m_currentClub]) == 0);
 
-                auto* msg = m_messageBus.post<GolfEvent>(MessageID::GolfMessage);
+                auto* msg = cro::App::postMessage<GolfEvent>(MessageID::GolfMessage);
                 msg->type = GolfEvent::ClubChanged;
                 msg->score = m_isCPU? 0 : 1;
             }
@@ -680,7 +679,7 @@ void InputParser::updateStroke(float dt, std::int32_t terrainID)
                         //skip the hook bar cos we're on easy mode
                         m_state = State::Flight;
 
-                        auto* msg = m_messageBus.post<GolfEvent>(MessageID::GolfMessage);
+                        auto* msg = cro::App::postMessage<GolfEvent>(MessageID::GolfMessage);
                         msg->type = GolfEvent::HitBall;
                     }
                     else
@@ -721,7 +720,7 @@ void InputParser::updateStroke(float dt, std::int32_t terrainID)
                     m_powerbarDirection = 1.f;
                     m_state = State::Flight;
 
-                    auto* msg = m_messageBus.post<GolfEvent>(MessageID::GolfMessage);
+                    auto* msg = cro::App::postMessage<GolfEvent>(MessageID::GolfMessage);
                     msg->type = GolfEvent::HitBall;
 
                     m_doubleTapClock.restart();
@@ -744,7 +743,7 @@ void InputParser::updateStroke(float dt, std::int32_t terrainID)
                     && (m_prevDisabledFlags & flag) == 0)
                 {
                     //button was pressed
-                    auto* msg = m_messageBus.post<SystemEvent>(MessageID::SystemMessage);
+                    auto* msg = cro::App::postMessage<SystemEvent>(MessageID::SystemMessage);
                     msg->type = SystemEvent::InputActivated;
                     msg->data = flag;
                 }

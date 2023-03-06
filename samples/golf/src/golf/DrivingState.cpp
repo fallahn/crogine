@@ -176,7 +176,7 @@ namespace
 DrivingState::DrivingState(cro::StateStack& stack, cro::State::Context context, SharedStateData& sd)
     : cro::State        (stack, context),
     m_sharedData        (sd),
-    m_inputParser       (sd, context.appInstance.getMessageBus(), nullptr),
+    m_inputParser       (sd, nullptr),
     m_gameScene         (context.appInstance.getMessageBus()),
     m_skyScene          (context.appInstance.getMessageBus()),
     m_uiScene           (context.appInstance.getMessageBus(), 512),

@@ -37,6 +37,7 @@ source distribution.
 #include "CloudSystem.hpp"
 #include "BallSystem.hpp"
 #include "FloatingTextSystem.hpp"
+#include "Clubs.hpp"
 
 #include <Achievements.hpp>
 #include <AchievementStrings.hpp>
@@ -520,19 +521,21 @@ void DrivingState::createUI()
     entity.getComponent<cro::Transform>().move(RangeSize / 4.f);
     auto endColour = TextGoldColour;
     endColour.setAlpha(0.f);
-    entity.addComponent<cro::Drawable2D>().getVertexData() =
-    {
-        cro::Vertex2D(glm::vec2(-0.5f, 18.f), endColour),
-        cro::Vertex2D(glm::vec2(-0.5f), TextGoldColour),
-        cro::Vertex2D(glm::vec2(0.5f, 18.f), endColour),
-        cro::Vertex2D(glm::vec2(0.5f, -0.5f), TextGoldColour)
-    };
+    entity.addComponent<cro::Drawable2D>().getVertexData() = getStrokeIndicatorVerts();
     entity.getComponent<cro::Drawable2D>().updateLocalBounds();
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float)
     {
-        e.getComponent<cro::Transform>().setRotation(m_inputParser.getYaw() - (cro::Util::Const::PI / 2.f));
+        e.getComponent<cro::Transform>().setRotation(m_inputParser.getYaw());
+        if (m_inputParser.getActive())
+        {
+            e.getComponent<cro::Transform>().setScale(glm::vec2(Clubs[m_inputParser.getClub()].getTarget(0.f), 1.f));
+        }
+        else
+        {
+            e.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+        }
     };
     miniEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
