@@ -283,6 +283,7 @@ void GolfState::createClouds()
             entity.addComponent<Cloud>().speedMultiplier = static_cast<float>(cro::Util::Random::value(10, 22)) / 100.f;
             definitions[modelIndex].createModel(entity);
             entity.getComponent<cro::Model>().setMaterial(0, material);
+            entity.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniMap | RenderFlags::MiniGreen));
 
             float scale = static_cast<float>(cro::Util::Random::value(24, 30));
             entity.getComponent<cro::Transform>().setScale(glm::vec3(scale));

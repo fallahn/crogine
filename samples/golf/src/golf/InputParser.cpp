@@ -55,6 +55,7 @@ namespace
     static constexpr float MaxPower = 1.f - MinPower;
 
     static constexpr float MinAcceleration = 0.5f;
+    static constexpr float MinBarSpeed = 0.9f; //base speed of power bar up to level 10
 
     const cro::Time DoubleTapTime = cro::milliseconds(200);
 }
@@ -646,6 +647,12 @@ void InputParser::updateStroke(float dt, std::int32_t terrainID)
             {
                 Speed /= 1.75f;
             }
+            else
+            {
+                //move more slowly for the first 10 levels
+                float increase = std::min(1.f, static_cast<float>(Social::getLevel()) / 10.f);
+                Speed = (Speed * MinBarSpeed) + ((Speed * (1.f - MinBarSpeed)) * increase);
+            }
 
             m_power = std::min(1.f, std::max(0.f, m_power + (Speed * m_powerbarDirection)));
 
@@ -680,6 +687,7 @@ void InputParser::updateStroke(float dt, std::int32_t terrainID)
         }
             break;
         case State::Stroke:
+        {
             if ((m_inputFlags & InputFlag::Cancel) && ((m_prevFlags & InputFlag::Cancel) == 0))
             {
                 m_state = State::Aim;
@@ -687,8 +695,11 @@ void InputParser::updateStroke(float dt, std::int32_t terrainID)
                 break;
             }
 
+            float speed = dt * MinBarSpeed;
+            float increase = std::min(1.f, static_cast<float>(Social::getLevel()) / 10.f);
+            speed += ((dt * (1.f - MinBarSpeed)) * increase);
 
-            m_hook = std::min(1.f, std::max(0.f, m_hook + ((dt * m_powerbarDirection))));
+            m_hook = std::min(1.f, std::max(0.f, m_hook + ((speed * m_powerbarDirection))));
 
             if (m_hook == 1)
             {
@@ -710,6 +721,7 @@ void InputParser::updateStroke(float dt, std::int32_t terrainID)
                     m_doubleTapClock.restart();
                 }
             }
+        }
             break;
         case State::Flight:
             //do nothing, player's turn is complete
