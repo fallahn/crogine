@@ -762,14 +762,15 @@ void GolfState::buildUI()
     entity.getComponent<cro::Drawable2D>().updateLocalBounds();
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function =
-        [&](cro::Entity e, float)
+        [&](cro::Entity e, float dt)
     {
         e.getComponent<cro::Transform>().setRotation(m_inputParser.getYaw() - m_minimapRotation);
         e.getComponent<cro::Transform>().setPosition(glm::vec3(toMinimapCoords(m_currentPlayer.position), 0.5f));
 
+        float scale = e.getComponent<cro::Transform>().getScale().x;
         if (!m_inputParser.getActive())
         {
-            e.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+            scale = std::max(0.f, scale - ((scale * dt) * 8.f));
         }
         else
         {
@@ -777,13 +778,25 @@ void GolfState::buildUI()
             switch (club)
             {
             default: 
-                e.getComponent<cro::Transform>().setScale(glm::vec2(Clubs[club].getTarget(m_distanceToHole) * m_minimapScale, 1.f));
+            {
+                const float targetScale = Clubs[club].getTarget(m_distanceToHole) * m_minimapScale;
+                if (scale < targetScale)
+                {
+                    scale = std::min(scale + (dt * ((targetScale - scale) * 10.f)), targetScale);
+                }
+                else
+                {
+                    scale = std::max(targetScale, scale - ((scale * dt) * 2.f));
+                }
+            }
                 break;
             case ClubID::Putter:
-                e.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+                scale = std::max(0.f, scale - ((scale * dt) * 8.f));
                 break;
             }
         }
+
+        e.getComponent<cro::Transform>().setScale(glm::vec2(scale, 1.f));
     };
     mapEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 

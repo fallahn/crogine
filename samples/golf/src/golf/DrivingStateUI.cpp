@@ -525,17 +525,29 @@ void DrivingState::createUI()
     entity.getComponent<cro::Drawable2D>().updateLocalBounds();
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function =
-        [&](cro::Entity e, float)
+        [&](cro::Entity e, float dt)
     {
         e.getComponent<cro::Transform>().setRotation(m_inputParser.getYaw());
+        float scale = e.getComponent<cro::Transform>().getScale().x;
+
+        //more magic numbers than Ken Dodd's tax return.
         if (m_inputParser.getActive())
         {
-            e.getComponent<cro::Transform>().setScale(glm::vec2(Clubs[m_inputParser.getClub()].getTarget(0.f), 1.f));
+            const auto targetScale = Clubs[m_inputParser.getClub()].getTarget(0.f);
+            if (scale < targetScale)
+            {
+                scale = std::min(scale + (dt * ((targetScale - scale) * 10.f)), targetScale);
+            }
+            else
+            {
+                scale = std::max(targetScale, scale - ((scale * dt) * 2.f));
+            }
         }
         else
         {
-            e.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+            scale = std::max(0.f, scale - ((scale * dt) * 8.f));
         }
+        e.getComponent<cro::Transform>().setScale(glm::vec2(scale, 1.f));
     };
     miniEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
