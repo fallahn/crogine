@@ -201,6 +201,7 @@ struct SharedStateData final
     bool showTutorialTip = true;
     bool showPuttingPower = false;
     bool showBallTrail = false;
+    bool trailBeaconColour = true; //if false defaults to white
     std::int32_t enableRumble = 1;
 
     std::int32_t baseState = 0; //used to tell which state we're returning to from errors etc

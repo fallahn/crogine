@@ -819,7 +819,14 @@ void GolfState::handleMessage(const cro::Message& msg)
                     club < ClubID::GapWedge)
                 {
                     auto& emitter = m_avatars[m_currentPlayer.client][m_currentPlayer.player].ballModel.getComponent<cro::ParticleEmitter>();
-                    emitter.settings.colour = getBeaconColour(m_sharedData.beaconColour);
+                    if (m_sharedData.trailBeaconColour)
+                    {
+                        emitter.settings.colour = getBeaconColour(m_sharedData.beaconColour);
+                    }
+                    else
+                    {
+                        emitter.settings.colour = cro::Colour::White;
+                    }
                     emitter.start();
                 }
 

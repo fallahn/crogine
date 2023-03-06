@@ -2733,7 +2733,14 @@ void DrivingState::hitBall()
 
             if (m_sharedData.showBallTrail)
             {
-                e.getComponent<cro::ParticleEmitter>().settings.colour = getBeaconColour(m_sharedData.beaconColour);
+                if (m_sharedData.trailBeaconColour)
+                {
+                    e.getComponent<cro::ParticleEmitter>().settings.colour = getBeaconColour(m_sharedData.beaconColour);
+                }
+                else
+                {
+                    e.getComponent<cro::ParticleEmitter>().settings.colour = cro::Colour::White;
+                }
                 e.getComponent<cro::ParticleEmitter>().start();
             }
         }

@@ -1228,8 +1228,6 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
     //ball trail label
     createLabel({ 204.f, 114.f }, "Enable       Ball Trail");
     
-
-
     //putting assist
     auto puttingEnt = createLabel({ 204.f, 98.f }, "Enable       Putting Assist");
     puttingEnt.addComponent<cro::Callback>().active = true;
@@ -1816,9 +1814,6 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
 
 
 
-
-
-
     //ball trail checkbox
     entity = createHighlight(glm::vec2(246.f, 105.f));
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
@@ -1850,6 +1845,36 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
         e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
     };
     parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    //trail colour text
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 350.f, 114.f, HighlightOffset });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(font).setString(m_sharedData.trailBeaconColour ? "Beacon" : "White");
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+    centreText(entity);
+    parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    auto trailLabel = entity;
+
+    //prev/next trail colour
+    entity = createHighlight(glm::vec2(313.f, 105.f));
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+        uiSystem.addCallback([&, trailLabel](cro::Entity e, cro::ButtonEvent evt) mutable
+            {
+                if (activated(evt))
+                {
+                    m_sharedData.trailBeaconColour = !m_sharedData.trailBeaconColour;
+                    trailLabel.getComponent<cro::Text>().setString(m_sharedData.trailBeaconColour ? "Beacon" : "White");
+                    centreText(trailLabel);
+
+                    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+                }
+            });
+    //just toggles a bool so share the callback.
+    auto cbID = entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown];
+    entity = createHighlight(glm::vec2(378.f, 105.f));
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = cbID;
 
 
     //putting assist toggle
