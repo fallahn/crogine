@@ -2060,7 +2060,7 @@ void DrivingState::createPlayer(cro::Entity courseEnt)
                 hairEnt.getComponent<cro::Callback>().function =
                     [&](cro::Entity e, float)
                 {
-                    float alpha = std::abs(m_inputParser.getYaw());
+                    float alpha = std::abs(m_inputParser.getYaw() - (cro::Util::Const::PI / 2.f));
                     alpha = cro::Util::Easing::easeOutQuart(1.f - (alpha / (m_inputParser.getMaxRotation() * 1.06f)));
 
                     e.getComponent<cro::Model>().setMaterialProperty(0, "u_fadeAmount", alpha);

@@ -80,7 +80,7 @@ namespace cro
 
             /*
             \brief Smoothly interpolate two vectors over the given time
-            based on Game Programming Gems 4 Chapter 1.10
+            from Game Programming Gems 4 Chapter 1.10
             \param src The current value to start from
             \param dest The value to interpolate towards
             \param currVel The current velocity, to be kept between frames
@@ -91,8 +91,6 @@ namespace cro
             template <typename T>
             T smoothDamp(T src, T dst, T& currVel, float smoothTime, float dt, float maxSpeed = std::numeric_limits<float>::max())
             {
-                T retVal = T(0.f);
-
                 smoothTime = std::max(0.0001f, smoothTime);
                 const float omega = 2.f / smoothTime;
                 const float x = omega * dt;
@@ -125,32 +123,7 @@ namespace cro
 
                 const T temp = (currVel + (diff * omega)) * dt;
                 currVel = (currVel - (temp * omega)) * exp;
-                retVal = dst + (diff + temp) * exp;
-
-                //prevent overshoot
-                //const T startMinusCurr = originalDst - src;
-                //const T retMinusStart = retVal - originalDst;
-
-                //if constexpr (std::is_same<T, float>::value)
-                //{
-                //    if ((originalDst - src > 0.f) == (retVal > originalDst))
-                //    {
-                //        currVel = (retVal - originalDst) / dt;
-                //        //currVel = { 0.f };
-                //        retVal = originalDst;
-                //    }
-                //}
-                //else
-                //{
-                //    if (glm::dot(startMinusCurr, retMinusStart) > 0)
-                //    {
-                //        currVel = (retVal - originalDst) / dt;
-                //        //currVel = T(0.f); //I'm not going mad here, right?
-                //        retVal = originalDst;
-                //    }
-                //}
-
-                return retVal;
+                return dst + (diff + temp) * exp;
             }
         }
     }
