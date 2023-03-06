@@ -67,6 +67,8 @@ static const std::string MinimapFragment = R"(
 const float res = 100.0;// 66.0;
 const float scale = 2.0;
 
+#include BAYER_MATRIX
+
         void main()
         {
             vec2 pos = (round(floor(v_texCoord * res) * scale) / scale) / res;
@@ -76,11 +78,17 @@ const float scale = 2.0;
 
             FRAG_OUT = TEXTURE(u_texture, v_texCoord) * v_colour;
             //FRAG_OUT.rgb = mix(FRAG_OUT.rgb, borderColour, step(borderPos, length2));
-            FRAG_OUT.a = 1.0 - step(stepPos, length2);
+
+            int x = int(mod(gl_FragCoord.x, MatrixSize));
+            int y = int(mod(gl_FragCoord.y, MatrixSize));
+
+            FRAG_OUT.a = findClosest(x, y, 1.0 - smoothstep(stepPos, stepPos + 0.1, length2));
         })";
 
 //minimap as in mini course view
 //well, this is a silly inconsistency...
+//used on a SimpleQuad though, which expects
+//projection matrix, not view projection...
 static const std::string MinimapViewVertex = R"(
         uniform mat4 u_worldMatrix;
         uniform mat4 u_projectionMatrix;
