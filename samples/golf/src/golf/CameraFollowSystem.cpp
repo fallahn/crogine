@@ -62,7 +62,7 @@ namespace
     //follows just above the target
     constexpr glm::vec3 TargetOffset(0.f, 0.2f, 0.f);
 
-    constexpr float CameraTrackTime = 0.35f; //approx delay in tracking interpolation
+    constexpr float CameraTrackTime = 0.38f; //approx delay in tracking interpolation
 
     std::array<std::vector<float>, CameraID::Count> DebugBuffers = {};
     std::array<std::vector<std::uint32_t>, CameraID::Count> DebugIndices = {};
@@ -253,7 +253,8 @@ void CameraFollowSystem::process(float dt)
 
 
             const auto& collider = follower.target.getComponent<ClientCollider>();
-            if (collider.state == static_cast<std::uint8_t>(Ball::State::Reset))
+            if (collider.state == static_cast<std::uint8_t>(Ball::State::Reset)
+                || collider.terrain == TerrainID::Hole)
             {
                 //don't follow resetting balls as they have a weird drop to them
                 target.y = follower.currentTarget.y;

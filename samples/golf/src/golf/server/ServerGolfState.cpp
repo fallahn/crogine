@@ -504,7 +504,8 @@ void GolfState::handlePlayerInput(const net::NetEvent::Packet& packet, bool pred
             ball.spin = input.spin;
             if (glm::length2(input.impulse) != 0)
             {
-                ball.initialSideVector = glm::normalize(glm::cross(input.impulse, cro::Transform::Y_AXIS));
+                ball.initialForwardVector = glm::normalize(input.impulse);
+                ball.initialSideVector = glm::normalize(glm::cross(ball.initialForwardVector, cro::Transform::Y_AXIS));
             }
 
             //calc the amount of rotation based on if we're going towards the hole

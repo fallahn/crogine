@@ -68,11 +68,12 @@ namespace
     };
 }
 
-Club::Club(std::int32_t id, const std::string& name, float angle, float sidespin)
+Club::Club(std::int32_t id, const std::string& name, float angle, float sidespin, float topspin)
     : m_id      (id), 
     m_name      (name), 
     m_angle     (angle * cro::Util::Const::degToRad),
-    m_sidespin  (sidespin)
+    m_sidespin  (sidespin),
+    m_topspin   (topspin)
 {
 
 }

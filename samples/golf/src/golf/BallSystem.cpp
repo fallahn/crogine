@@ -289,7 +289,7 @@ GolfBallEvent* BallSystem::postEvent() const
 void BallSystem::processEntity(cro::Entity entity, float dt)
 {
     auto& ball = entity.getComponent<Ball>();
-    ball.spin *= SpinDecay[static_cast<std::int32_t>(ball.state)];
+    ball.spin.x *= SpinDecay[static_cast<std::int32_t>(ball.state)];
 
     //*sigh* isnan bug
     CRO_ASSERT(!std::isnan(ball.velocity.x), "");
@@ -351,6 +351,8 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
         auto position = tx.getPosition();
         auto terrainContact = getTerrain(position);
 
+        ball.velocity += ball.spin.y * ball.initialForwardVector * SpinAddition[terrainContact.terrain];
+        ball.spin.y *= SpinDecay[static_cast<std::int32_t>(Ball::State::Roll)];
 
         if (terrainContact.penetration < 0) //above ground
         {
@@ -452,6 +454,7 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
         ball.delay -= dt;
         if (ball.delay < 0)
         {
+            
             doBallCollision(entity);
 
             auto& tx = entity.getComponent<cro::Transform>();
@@ -461,6 +464,9 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
             CRO_ASSERT(!std::isnan(position.x), "");
 
             auto terrainContact = getTerrain(position);
+
+            ball.velocity += ball.spin.y * ball.initialForwardVector * SpinAddition[terrainContact.terrain];
+            ball.spin.y *= SpinDecay[static_cast<std::int32_t>(Ball::State::Roll)];
 
             //test distance to pin
             auto pinDir = m_holeData->pin - position;
@@ -878,6 +884,7 @@ void BallSystem::doCollision(cro::Entity entity)
         case TerrainID::Rough:
             ball.velocity *= Restitution[terrainResult.terrain];
             ball.velocity = glm::reflect(ball.velocity, terrainResult.normal);
+            ball.velocity += ball.spin.y * ball.initialForwardVector * SpinAddition[terrainResult.terrain];
             ball.spin *= SpinReduction[terrainResult.terrain];
             break;
         case TerrainID::Green:
@@ -894,6 +901,7 @@ void BallSystem::doCollision(cro::Entity entity)
             {
                 ball.velocity *= Restitution[terrainResult.terrain];
                 ball.velocity = glm::reflect(ball.velocity, terrainResult.normal);
+                ball.velocity += ball.spin.y * ball.initialForwardVector * SpinAddition[terrainResult.terrain];
                 ball.spin *= SpinReduction[terrainResult.terrain];
                 CRO_ASSERT(!std::isnan(ball.velocity.x), "");
             }

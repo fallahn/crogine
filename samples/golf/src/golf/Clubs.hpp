@@ -72,7 +72,7 @@ class Club final
 {
 public:
 
-    Club(std::int32_t id, const std::string& name, float angle, float sidespin);
+    Club(std::int32_t id, const std::string& name, float angle, float sidespin, float topspin);
 
     std::string getName(bool imperial, float distanceToPin) const;
 
@@ -87,12 +87,14 @@ public:
     float getBaseTarget() const;
 
     float getSideSpinMultiplier() const { return m_sidespin; }
+    float getTopSpinMultiplier() const { return m_topspin; }
 
 private:
     const std::int32_t m_id = -1;
     std::string m_name; //displayed in UI
     float m_angle = 0.f; //pitch of shot (should be positive) - not a clubstat as it remains constant with range
     float m_sidespin = 1.f; //multiplier 0-1
+    float m_topspin = 1.f; //multiplier 0-1
 
     //putter below this is rescaled
     static constexpr float ShortRange = 1.f / 3.f;
@@ -105,21 +107,21 @@ private:
 
 static const std::array<Club, ClubID::Count> Clubs =
 {
-    Club(ClubID::Driver,    "Driver ", 45.f, 0.28f), //default set
-    Club(ClubID::ThreeWood, "3 Wood ", 45.f, 0.3f), //default set
-    Club(ClubID::FiveWood,  "5 Wood ", 45.f, 0.4f), //Level 5
+    Club(ClubID::Driver,    "Driver ", 45.f, 0.28f, 0.8f),  //default set
+    Club(ClubID::ThreeWood, "3 Wood ", 45.f, 0.3f,  0.85f), //default set
+    Club(ClubID::FiveWood,  "5 Wood ", 45.f, 0.4f,  0.85f), //Level 5
     
     
-    Club(ClubID::FourIron,  "4 Iron ", 40.f, 0.45f), //Level 10
-    Club(ClubID::FiveIron,  "5 Iron ", 40.f, 0.5f),  //default set
-    Club(ClubID::SixIron,   "6 Iron ", 40.f, 0.55f), //Level 15
-    Club(ClubID::SevenIron, "7 Iron ", 40.f, 0.6f),  //Level 20
-    Club(ClubID::EightIron, "8 Iron ", 40.f, 0.75f), //default set
-    Club(ClubID::NineIron,  "9 Iron ", 40.f, 0.8f),  //Level 25
+    Club(ClubID::FourIron,  "4 Iron ", 40.f, 0.45f, 0.88f), //Level 10
+    Club(ClubID::FiveIron,  "5 Iron ", 40.f, 0.5f,  0.88f), //default set
+    Club(ClubID::SixIron,   "6 Iron ", 40.f, 0.55f, 0.9f),  //Level 15
+    Club(ClubID::SevenIron, "7 Iron ", 40.f, 0.6f,  0.9f),  //Level 20
+    Club(ClubID::EightIron, "8 Iron ", 40.f, 0.75f, 0.95f), //default set
+    Club(ClubID::NineIron,  "9 Iron ", 40.f, 0.8f,  0.95f),  //Level 25
 
     
-    Club(ClubID::PitchWedge, "Pitch Wedge ", 52.f, 0.05f),  //default set
-    Club(ClubID::GapWedge,   "Gap Wedge ",   60.f, 0.05f),  //default set
-    Club(ClubID::SandWedge,  "Sand Wedge ",  60.f, 0.05f),  //default set
-    Club(ClubID::Putter,     "Putter ",      0.f,  0.f)     //default set
+    Club(ClubID::PitchWedge, "Pitch Wedge ", 52.f, 0.05f, 0.9f),  //default set
+    Club(ClubID::GapWedge,   "Gap Wedge ",   60.f, 0.05f, 0.93f), //default set
+    Club(ClubID::SandWedge,  "Sand Wedge ",  60.f, 0.05f, 0.95f), //default set
+    Club(ClubID::Putter,     "Putter ",      0.f,  0.f,   0.f)    //default set
 };

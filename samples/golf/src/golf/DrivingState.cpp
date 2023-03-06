@@ -208,6 +208,8 @@ DrivingState::DrivingState(cro::StateStack& stack, cro::State::Context context, 
             {
                 if (debugBall)
                 {
+                    ImGui::Text("State %s", Ball::StateStrings[static_cast<std::int32_t>(debugBall->state)].c_str());
+
                     float topSpin = std::clamp(debugBall->spin.y, 0.f, 1.f);
                     ImGui::Text("Top Spin");
                     ImGui::SameLine();
@@ -2727,7 +2729,8 @@ void DrivingState::hitBall()
             ball.spin = result.spin;
             if (glm::length2(result.impulse) != 0)
             {
-                ball.initialSideVector = glm::normalize(glm::cross(result.impulse, cro::Transform::Y_AXIS));
+                ball.initialForwardVector = glm::normalize(result.impulse);
+                ball.initialSideVector = glm::normalize(glm::cross(ball.initialForwardVector, cro::Transform::Y_AXIS));
             }
 
 

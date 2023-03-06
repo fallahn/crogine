@@ -877,9 +877,11 @@ InputParser::StrokeResult InputParser::getStroke(std::int32_t club, std::int32_t
     float accuracy = 1.f - std::abs(hook);
     auto spin = getSpin() * accuracy;
 
-    //TODO modulate pitch with topspin
+    //modulate pitch with topspin
+    spin.y *= Clubs[club].getTopSpinMultiplier();
+    pitch -= (15.f * cro::Util::Const::degToRad) * spin.y;
 
-    spin *= Clubs[club].getSideSpinMultiplier() / 2.f;
+    spin.x *= Clubs[club].getSideSpinMultiplier() / 2.f;
     spin.x += sideSpin;
 
     glm::vec3 impulse(1.f, 0.f, 0.f);

@@ -107,3 +107,9 @@ static constexpr std::array<float, TerrainID::Count> SpinReduction =
 {
     0.5f, 0.8f, 0.9f, 0.f, 0.f, 0.f, 0.99f, 0.f
 };
+
+//how much velocity is added when bouncing from topspin
+static constexpr std::array<float, TerrainID::Count> SpinAddition =
+{
+    0.5f, 0.85f, 0.95f, 0.f, 0.f, 0.f, 0.99f, 0.f
+};
