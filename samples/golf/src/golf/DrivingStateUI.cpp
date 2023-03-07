@@ -232,6 +232,64 @@ void DrivingState::createUI()
     entity.getComponent<cro::Text>().setFillColour(LeaderboardTextLight);
     infoEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
+
+    //ball spin indicator - positioned by camera callback
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setScale({ 0.f, 0.f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::SpinBg];
+    bounds = m_sprites[SpriteID::SpinBg].getTextureBounds();
+    entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
+    infoEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    auto spinEnt = entity;
+
+    const auto fgOffset = glm::vec2(spinEnt.getComponent<cro::Transform>().getOrigin());
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(fgOffset);
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::SpinFg];
+    bounds = m_sprites[SpriteID::SpinFg].getTextureBounds();
+    entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f, -0.1f });
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<float>(0.f);
+    entity.getComponent<cro::Callback>().function = //TODO we could recycle this callback with GolfState to save duplication...
+        [&, spinEnt, fgOffset](cro::Entity e, float dt) mutable
+    {
+        auto& scale = e.getComponent<cro::Callback>().getUserData<float>();
+        const float speed = dt * 10.f;
+        if (m_inputParser.isSpinputActive())
+        {
+            scale = std::min(1.f, scale + speed);
+
+            auto size = spinEnt.getComponent<cro::Sprite>().getTextureBounds().width / 2.f;
+
+            auto spin = m_inputParser.getSpin();
+            if (auto len2 = glm::length2(spin); len2 != 0)
+            {
+                auto q = glm::rotate(cro::Transform::QUAT_IDENTITY, -spin.y, cro::Transform::X_AXIS);
+                q = glm::rotate(q, spin.x, cro::Transform::Y_AXIS);
+                auto r = q * cro::Transform::Z_AXIS;
+
+                spin.x = r.x;
+                spin.y = r.y;
+            }
+            spin *= size;
+
+            e.getComponent<cro::Transform>().setPosition(fgOffset + spin);
+        }
+        else
+        {
+            scale = std::max(0.f, scale - speed);
+        }
+        auto s = scale;
+        spinEnt.getComponent<cro::Transform>().setScale({ s,s });
+    };
+
+    spinEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+
+
     //wind strength - this is positioned by the camera's resize callback, below
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
@@ -554,7 +612,7 @@ void DrivingState::createUI()
 
     //ui viewport is set 1:1 with window, then the scene
     //is scaled to best-fit to maintain pixel accuracy of text.
-    auto updateView = [&, rootNode, courseEnt, infoEnt, windEnt, mapEnt](cro::Camera& cam) mutable
+    auto updateView = [&, rootNode, courseEnt, infoEnt, spinEnt, windEnt, mapEnt](cro::Camera& cam) mutable
     {
         auto size = glm::vec2(GolfGame::getActiveTarget()->getSize());
         cam.setOrthographic(0.f, size.x, 0.f, size.y, -2.5f, 2.f);
@@ -577,6 +635,7 @@ void DrivingState::createUI()
         mapEnt.getComponent<cro::Transform>().setPosition({ uiSize.x - mapSize.x - UIBarHeight, uiSize.y - (mapSize.y) - (UIBarHeight * 1.5f) });
 
         windEnt.getComponent<cro::Transform>().setPosition(glm::vec2(/*uiSize.x +*/ WindIndicatorPosition.x, WindIndicatorPosition.y - UIBarHeight));
+        spinEnt.getComponent<cro::Transform>().setPosition(glm::vec2(std::floor(uiSize.x / 2.f), 32.f));
 
         //update the overlay
         auto colour = cro::Colour(0.f, 0.f, 0.f, 0.25f);

@@ -148,6 +148,8 @@ private:
             WindSpeed,
             MessageBoard,
             Stars,
+            SpinBg,
+            SpinFg,
 
             Count
         };
