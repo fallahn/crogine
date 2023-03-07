@@ -2401,8 +2401,14 @@ void DrivingState::createBall()
     entity.getComponent<cro::Callback>().function =
         [&,ballEnt](cro::Entity e, float)
     {
+        auto ballPos = ballEnt.getComponent<cro::Transform>().getPosition();
         float height = ballEnt.getComponent<cro::Callback>().getUserData<float>();
-        height -= ballEnt.getComponent<cro::Transform>().getPosition().y;
+
+        auto c = cro::Colour::White;
+        c.setAlpha(smoothstep(0.2f, 0.8f, (ballPos.y - height) / 0.25f));
+        e.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", c);
+
+        height -= ballPos.y;
         e.getComponent<cro::Transform>().setPosition({ 0.f, height + 0.003f, 0.f });
     };
     ballEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -2435,7 +2441,7 @@ void DrivingState::createBall()
         //this assumes the model loaded successfully, otherwise
         //there wouldn't be two submeshes.
         auto mat = m_resources.materials.get(m_materialIDs[MaterialID::Trophy]);
-        applyMaterialData(md, mat);
+        applyMaterialData(ballDef, mat);
         entity.getComponent<cro::Model>().setMaterial(1, mat);
     }
     entity.getComponent<cro::Model>().setRenderFlags(~RenderFlags::MiniMap);
