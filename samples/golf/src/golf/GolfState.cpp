@@ -1928,6 +1928,8 @@ void GolfState::loadAssets()
     m_sprites[SpriteID::MessageBoard] = spriteSheet.getSprite("message_board");
     m_sprites[SpriteID::Bunker] = spriteSheet.getSprite("bunker");
     m_sprites[SpriteID::Foul] = spriteSheet.getSprite("foul");
+    m_sprites[SpriteID::SpinBg] = spriteSheet.getSprite("spin_bg");
+    m_sprites[SpriteID::SpinFg] = spriteSheet.getSprite("spin_fg");
     auto flagSprite = spriteSheet.getSprite("flag03");
     m_flagQuad.setTexture(*flagSprite.getTexture());
     m_flagQuad.setTextureRect(flagSprite.getTextureRect());

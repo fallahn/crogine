@@ -313,6 +313,61 @@ void GolfState::buildUI()
     };
     infoEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
+    //ball spin indicator - positioned by camera callback
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setScale({ 0.f, 0.f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::SpinBg];
+    bounds = m_sprites[SpriteID::SpinBg].getTextureBounds();
+    entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
+    infoEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    auto spinEnt = entity;
+
+    const auto fgOffset = glm::vec2(spinEnt.getComponent<cro::Transform>().getOrigin());
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(fgOffset);
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::SpinFg];
+    bounds = m_sprites[SpriteID::SpinFg].getTextureBounds();
+    entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f, -0.1f });
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<float>(0.f);
+    entity.getComponent<cro::Callback>().function =
+        [&, spinEnt, fgOffset](cro::Entity e, float dt) mutable
+    {
+        auto& scale = e.getComponent<cro::Callback>().getUserData<float>();
+        const float speed = dt * 10.f;
+        if (getClub() != ClubID::Putter &&
+            m_inputParser.isSpinputActive())
+        {
+            scale = std::min(1.f, scale + speed);
+
+            auto size = spinEnt.getComponent<cro::Sprite>().getTextureBounds().width / 2.f;
+
+            auto spin = m_inputParser.getSpin();
+            if (auto len2 = glm::length2(spin); len2 != 0)
+            {
+                auto q = glm::rotate(cro::Transform::QUAT_IDENTITY, -spin.y, cro::Transform::X_AXIS);
+                q = glm::rotate(q, spin.x, cro::Transform::Y_AXIS);
+                auto r = q * cro::Transform::Z_AXIS;
+
+                spin.x = r.x;
+                spin.y = r.y;
+            }
+            spin *= size;
+
+            e.getComponent<cro::Transform>().setPosition(fgOffset + spin);
+        }
+        else
+        {
+            scale = std::max(0.f, scale - speed);
+        }
+        auto s = /*cro::Util::Easing::easeOutElastic*/(scale);
+        spinEnt.getComponent<cro::Transform>().setScale({ s,s });
+    };
+
+    spinEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
 
 
     //wind strength - this is positioned by the camera's resize callback, below
@@ -532,73 +587,6 @@ void GolfState::buildUI()
         e.getComponent<cro::Transform>().setScale(scale);
     };
     barEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-
-
-    //slope strength - looks OK but difficult to get a useful reading
-    //entity = m_uiScene.createEntity();
-    //entity.addComponent<cro::Transform>().setPosition(glm::vec3(BarWidth + 12.f, 8.f, -0.01f));
-    //bounds = m_sprites[SpriteID::SlopeStrength].getTextureBounds();
-    //entity.getComponent<cro::Transform>().setOrigin({ std::floor(bounds.width / 2.f), 0.f});
-    //entity.addComponent<cro::Drawable2D>();
-    //entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::SlopeStrength];
-    //entity.addComponent<cro::SpriteAnimation>().play(0);
-    //entity.addComponent<cro::Callback>().active = true;
-    //entity.getComponent<cro::Callback>().function = 
-    //    [&](cro::Entity e, float)
-    //{
-    //    if (m_currentPlayer.terrain == TerrainID::Green)
-    //    {
-    //        auto dir = m_holeData[m_currentHole].pin - m_currentPlayer.position;
-    //        auto len2 = glm::length2(dir);
-    //        if (len2 > 0)
-    //        {
-    //            float slope = glm::dot(cro::Transform::Y_AXIS, dir / glm::sqrt(len2));// / m_distanceToHole;
-    //            slope *= std::clamp(len2, 0.f, 1.f); //ball system applies less slope closer to hole
-    //            static constexpr float Step = 1.f / 16.f;
-    //            auto idx = std::round(std::clamp(std::abs(slope / Step), 0.f, 3.f));
-    //            e.getComponent<cro::SpriteAnimation>().play(static_cast<std::int32_t>(idx));
-    //            if (slope > 0)
-    //            {
-    //                e.getComponent<cro::Transform>().setRotation(0.f);
-    //            }
-    //            else
-    //            {
-    //                e.getComponent<cro::Transform>().setRotation(cro::Util::Const::PI);
-    //            }
-    //            e.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
-    //        }
-    //    }
-    //    else
-    //    {
-    //        e.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
-    //    }
-    //};
-    //barEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-
-    //ball speed - nice idea, badly executed.
-    //entity = m_uiScene.createEntity();
-    //entity.addComponent<cro::Transform>().setPosition(glm::vec3(-8.f, 8.f, -0.01f));
-    //bounds = m_sprites[SpriteID::BallSpeed].getTextureBounds();
-    //entity.getComponent<cro::Transform>().setOrigin({ std::floor(bounds.width / 2.f), std::floor(bounds.height / 2.f) });
-    //entity.addComponent<cro::Drawable2D>();
-    //entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::BallSpeed];
-    //entity.addComponent<cro::Callback>().active = true;
-    //entity.getComponent<cro::Callback>().function = 
-    //    [&](cro::Entity e, float dt)
-    //{
-    //    if (m_activeAvatar
-    //        && m_currentPlayer.terrain == TerrainID::Green)
-    //    {
-    //        e.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
-    //        const auto& interp = m_activeAvatar->ballModel.getComponent<InterpolationComponent<InterpolationType::Linear>>();
-    //        e.getComponent<cro::Transform>().rotate(glm::length(interp.getVelocity()) * dt);
-    //    }
-    //    else
-    //    {
-    //        e.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
-    //    }
-    //};
-    //barEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     //hole number
     entity = m_uiScene.createEntity();
@@ -938,7 +926,7 @@ void GolfState::buildUI()
 
 
     //callback for the UI camera when window is resized
-    auto updateView = [&, trophyEnt, courseEnt, infoEnt, windEnt, mapEnt, greenEnt, rootNode](cro::Camera& cam) mutable
+    auto updateView = [&, trophyEnt, courseEnt, infoEnt, spinEnt, windEnt, mapEnt, greenEnt, rootNode](cro::Camera& cam) mutable
     {
         auto size = glm::vec2(GolfGame::getActiveTarget()->getSize());
         cam.setOrthographic(0.f, size.x, 0.f, size.y, -3.5f, 20.f);
@@ -969,6 +957,7 @@ void GolfState::buildUI()
         greenEnt.getComponent<cro::Transform>().move(glm::vec2(static_cast<float>(MapSize.y) / 4.f));
 
         windEnt.getComponent<cro::Transform>().setPosition(glm::vec2(/*uiSize.x + */WindIndicatorPosition.x, WindIndicatorPosition.y));
+        spinEnt.getComponent<cro::Transform>().setPosition(glm::vec2(std::floor(uiSize.x / 2.f), 32.f));
 
         //update the overlay
         auto colour = cro::Colour(0.f, 0.f, 0.f, 0.25f);

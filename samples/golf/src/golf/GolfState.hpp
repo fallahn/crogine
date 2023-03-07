@@ -281,6 +281,8 @@ private:
             EmoteLaugh,
             EmoteSad,
             EmotePulse,
+            SpinBg,
+            SpinFg,
 
             Count
         };
