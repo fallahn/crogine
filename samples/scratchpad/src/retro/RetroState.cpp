@@ -44,167 +44,58 @@ source distribution.
 #include <crogine/ecs/systems/RenderSystem2D.hpp>
 
 #include <crogine/util/Constants.hpp>
+#include <crogine/util/Maths.hpp>
+#include <crogine/util/Random.hpp>
 
 #include <crogine/detail/OpenGL.hpp>
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
 
 namespace
 {
-    const std::string FlareVertex = R"(
-    ATTRIBUTE vec2 a_position;
-    ATTRIBUTE vec4 a_colour;
-    ATTRIBUTE vec2 a_texCoord0;
+#include "RetroShaders.inl"
 
-    uniform mat4 u_worldMatrix;
-    uniform mat4 u_viewProjectionMatrix;
+    const std::string PTZVertex = 
+        R"(
+        ATTRIBUTE vec2 a_position;
+        ATTRIBUTE vec2 a_texCoord0;
+        ATTRIBUTE vec4 a_colour;
 
-    uniform vec2 u_screenCentre; //in world space
+        uniform mat4 u_worldMatrix;
+        uniform mat4 u_viewProjectionMatrix;
 
-    VARYING_OUT vec4 v_colour;
-    VARYING_OUT vec2 v_texCoord;
-    VARYING_OUT vec2 v_screenOffset;
+        uniform mat4 u_coordMatrix = mat4(1.0);
 
-    void main()
-    {
-        vec4 position = u_worldMatrix * vec4(a_position, 0.0, 1.0);
-        v_screenOffset = (position.xy - u_screenCentre) / u_screenCentre;
+        VARYING_OUT vec2 v_texCoord0;
+        VARYING_OUT vec2 v_texCoord1;
+        VARYING_OUT vec4 v_colour;
 
-        gl_Position = u_viewProjectionMatrix * position;
-        v_colour = a_colour;
-        v_texCoord = a_texCoord0;
-    })";
+        void main()
+        {
+            gl_Position = u_viewProjectionMatrix * u_worldMatrix * vec4(a_position, 0.0, 1.0);
+            v_texCoord0 = (u_coordMatrix * vec4(a_texCoord0, 0.0, 1.0)).xy;
+            v_texCoord1 = a_texCoord0;
+            v_colour = a_colour;
+        })";
+    const std::string PTZFragment =
+        R"(
+        OUTPUT
+        uniform sampler2D u_texture;
 
-    const std::string FlareFragment = R"(
-    OUTPUT
+        VARYING_IN vec2 v_texCoord0;
+        VARYING_IN vec2 v_texCoord1;
+        VARYING_IN vec4 v_colour;
 
-    uniform sampler2D u_texture;
+        const float RadiusOuter = (0.48 * 0.48);
+        const float RadiusInner = (0.4 * 0.4);
 
-    VARYING_IN vec4 v_colour;
-    VARYING_IN vec2 v_texCoord;
-    VARYING_IN vec2 v_screenOffset;
+        void main()
+        {
+            FRAG_OUT = TEXTURE(u_texture, v_texCoord0) * v_colour;
 
-    void main()
-    {
-        float r = TEXTURE(u_texture, v_texCoord + (v_screenOffset * 0.05)).r;
-        float g = TEXTURE(u_texture, v_texCoord + (v_screenOffset * 0.025)).g;
-        float b = TEXTURE(u_texture, v_texCoord).b;
-
-        FRAG_OUT = vec4(r,g,b,1.0) * v_colour;
-    })";
-
-    const std::string CloudVertex = R"(
-    ATTRIBUTE vec4 a_position;
-    ATTRIBUTE vec4 a_colour;
-    ATTRIBUTE vec3 a_normal;
-
-    uniform mat4 u_worldMatrix;
-    uniform mat4 u_viewProjectionMatrix;
-    uniform mat3 u_normalMatrix;
-
-    VARYING_OUT vec3 v_normal;
-    VARYING_OUT vec3 v_worldPosition;
-    VARYING_OUT vec4 v_colour;
-
-    void main()
-    {
-        vec4 position = u_worldMatrix * a_position;
-        
-        gl_Position = u_viewProjectionMatrix * position;
-
-        v_worldPosition = position.xyz;
-        v_normal = u_normalMatrix * a_normal;
-        v_colour = a_colour;
-    })";
-
-    const std::string CloudFragment = R"(
-    OUTPUT
-
-    uniform vec3 u_lightDirection;
-    uniform vec4 u_skyColourTop;
-    uniform vec4 u_skyColourBottom;
-    uniform vec3 u_cameraWorldPosition;
-
-    VARYING_IN vec3 v_normal;
-    VARYING_IN vec3 v_worldPosition;
-    VARYING_IN vec4 v_colour;
-
-    const vec4 BaseColour = vec4(1.0);
-    const float PixelSize = 1.0;
-    const float ColourLevels = 2.0;
-
-    void main()
-    {
-        vec3 normal = normalize(v_normal);
-        vec3 viewDirection = normalize(u_cameraWorldPosition - v_worldPosition);
-        float rim = smoothstep(0.6, 0.95, 1.0 - dot(normal, viewDirection));
-        float rimAmount = dot(vec3(0.0, -1.0, 0.0), normal);
-        rimAmount += 1.0;
-        rimAmount /= 2.0;
-        rim *= smoothstep(0.5, 0.9, rimAmount);
-
-
-        float colourAmount = pow(1.0 - dot(normal, normalize(-u_lightDirection)), 2.0);
-        colourAmount *= ColourLevels;
-        colourAmount = round(colourAmount);
-        colourAmount /= ColourLevels;
-
-        vec4 colour = vec4(mix(BaseColour.rgb, u_skyColourTop.rgb, colourAmount * 0.75), 1.0);
-        colour.rgb = mix(colour.rgb, u_skyColourBottom.rgb * 1.5, rim * 0.8);
-
-        FRAG_OUT = colour;// * v_colour;
-
-    })";
-
-    const std::string ShaderVertex = R"(
-    ATTRIBUTE vec4 a_position;
-    ATTRIBUTE vec4 a_colour;
-    ATTRIBUTE vec3 a_normal;
-
-    uniform mat4 u_worldMatrix;
-    uniform mat4 u_viewProjectionMatrix;
-    uniform mat3 u_normalMatrix;
-
-    VARYING_OUT vec3 v_normal;
-    VARYING_OUT float v_colourIndex;
-
-    void main()
-    {
-        gl_Position = u_viewProjectionMatrix * u_worldMatrix * a_position;
-
-        v_normal = u_normalMatrix * a_normal;
-        v_colourIndex = a_colour.r;
-    })";
-
-
-    const std::string ShaderFragment = R"(
-    OUTPUT
-
-    uniform sampler2D u_palette;
-
-    VARYING_IN vec3 v_normal;
-    VARYING_IN float v_colourIndex;
-
-
-    const vec3 LightDir = vec3(1.0, 1.0, 1.0);
-    const float PixelSize = 1.0;
-
-    void main()
-    {
-        float lightAmount = dot(normalize(v_normal), normalize(LightDir));
-        lightAmount *= 2.0;
-        lightAmount = round(lightAmount);
-        lightAmount /= 2.0;
-
-        float check = mod((floor(gl_FragCoord.x / PixelSize) + floor(gl_FragCoord.y / PixelSize)), 2.0);
-        check *= 2.0;
-        check -= 1.0;
-        lightAmount += 0.01 * check; //TODO this magic number should be based on the palette texture size, but it'll do as long as it's enough to push the coord in the correct direction.
-
-        vec2 coord = vec2(v_colourIndex, lightAmount);
-        vec3 colour = TEXTURE(u_palette, coord).rgb;
-
-        FRAG_OUT = vec4(colour, 1.0);
-    })";
+            vec2 pos = v_texCoord1 - vec2(0.5);
+            float len2 = dot(pos, pos);
+            FRAG_OUT.a *= 1.0 - smoothstep(RadiusInner, RadiusOuter, len2);
+        })";
 
     struct RetroShader final
     {
@@ -212,7 +103,8 @@ namespace
         {
             Ball,
             Cloud,
-            Flare
+            Flare,
+            PTZ,
         };
     };
 
@@ -222,7 +114,35 @@ namespace
         std::int32_t palette = -1;
     }shaderProperties;
 
+    struct PTZ final
+    {
+        glm::vec2 pan = glm::vec2(0.f);
+        float tilt = 0.f;
+        float zoom = 1.f;
 
+        std::uint32_t handle = 0;
+        std::int32_t uniform = -1;
+
+        void updateShader(glm::vec2 texSize)
+        {
+            auto pos = pan / texSize;
+
+            static constexpr glm::vec3 centre(0.5f, 0.5f, 0.f);
+            const float aspect = texSize.x / texSize.y;
+
+            glm::mat4 matrix(1.f);
+            matrix = glm::translate(matrix, glm::vec3(pos.x, pos.y, 0.f));
+            matrix = glm::scale(matrix, glm::vec3(1.f / aspect, 1.f, 0.f));
+            matrix = glm::rotate(matrix, -tilt, cro::Transform::Z_AXIS);
+            matrix = glm::scale(matrix, glm::vec3(aspect, 1.f, 0.f));
+            matrix = glm::scale(matrix, glm::vec3(1.f) / glm::vec3(zoom));
+
+            matrix = glm::translate(matrix, -centre);
+
+            glUseProgram(handle);
+            glUniformMatrix4fv(uniform, 1, GL_FALSE, &matrix[0][0]);
+        }
+    }ptz;
 
     struct RetroMaterial final
     {
@@ -348,6 +268,15 @@ void RetroState::loadAssets()
 
     //lensflare
     m_resources.shaders.loadFromString(RetroShader::Flare, FlareVertex, FlareFragment);
+
+
+    //map zoom
+    if (m_resources.shaders.loadFromString(RetroShader::PTZ, PTZVertex, PTZFragment))
+    {
+        const auto& shader = m_resources.shaders.get(RetroShader::PTZ);
+        ptz.handle = shader.getGLHandle();
+        ptz.uniform = shader.getUniformID("u_coordMatrix");
+    }
 
     //output quad (scales up for chonky pixels)
     m_renderTexture.create(640, 480);
@@ -487,6 +416,81 @@ void RetroState::createUI()
             ImGui::End();        
         });
 
+    auto& t = m_resources.textures.get("assets/retro/preview.png");
+    t.setRepeated(true);
+    ptz.pan = t.getSize() / 2u;
+
+    registerWindow([&]()
+        {
+            if (ImGui::Begin("Window of Joy"))
+            {
+                if (ImGui::SliderFloat2("Pan", &ptz.pan[0], -640.f, 640.f))
+                {
+                    ptz.updateShader(t.getSize());
+                }
+
+                if (ImGui::SliderFloat("Tilt", &ptz.tilt, -cro::Util::Const::PI, cro::Util::Const::PI))
+                {
+                    ptz.updateShader(t.getSize());
+                }
+
+                if (ImGui::SliderFloat("Zoom", &ptz.zoom, 0.5f, 2.f))
+                {
+                    ptz.updateShader(t.getSize());
+                }
+
+                static bool enabled = true;
+                if (ImGui::Button("Random"))
+                {
+                    if (enabled)
+                    {
+                        enabled = false;
+
+                        struct CallbackData final
+                        {
+                            glm::vec2 target = glm::vec2(0.f);
+                            float rotation = 0.f;
+                            float zoom = 1.f;
+
+                            float currentTime = 0.f;
+
+                            PTZ start;
+                        }data;
+
+                        data.start = ptz;
+                        data.target.x = static_cast<float>(cro::Util::Random::value(0, 320));
+                        data.target.y = static_cast<float>(cro::Util::Random::value(0, 240));
+                        auto rotation = cro::Util::Random::value(-cro::Util::Const::PI, cro::Util::Const::PI);
+                        data.rotation = cro::Util::Maths::shortestRotation(ptz.tilt, rotation);
+                        data.zoom = cro::Util::Random::value(0.5f, 2.f);
+
+                        auto entity = m_uiScene.createEntity();
+                        entity.addComponent<cro::Callback>().active = true;
+                        entity.getComponent<cro::Callback>().setUserData<CallbackData>(data);
+                        entity.getComponent<cro::Callback>().function =
+                            [&](cro::Entity e, float dt)
+                        {
+                            auto& d = e.getComponent<cro::Callback>().getUserData<CallbackData>();
+                            d.currentTime = std::min(1.f, d.currentTime + (dt * 2.f));
+
+                            ptz.pan = glm::mix(d.start.pan, d.target, d.currentTime);
+                            ptz.tilt = d.start.tilt + (d.rotation * d.currentTime);
+                            ptz.zoom = glm::mix(d.start.zoom, d.zoom, d.currentTime);
+                            ptz.updateShader(t.getSize());
+
+                            if (d.currentTime == 1)
+                            {
+                                e.getComponent<cro::Callback>().active = false;
+                                m_uiScene.destroyEntity(e);
+                                enabled = true;
+                            }
+                        };
+                    }
+                }
+            }
+            ImGui::End();
+        });
+
     static constexpr std::int32_t FlareCount = 3;
     auto& texture = m_resources.textures.get("assets/images/flare.png");
     texture.setRepeated(false);
@@ -560,6 +564,12 @@ void RetroState::createUI()
             e.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
         }
     };
+
+    //PTZ tex - texture is load above so ImGui can capture it
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setScale(glm::vec2(0.5f));
+    entity.addComponent<cro::Drawable2D>().setShader(&m_resources.shaders.get(RetroShader::PTZ));
+    entity.addComponent<cro::Sprite>(t);
 }
 
 void RetroState::updateView(cro::Camera& cam3D)

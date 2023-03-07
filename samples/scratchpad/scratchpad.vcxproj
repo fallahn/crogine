@@ -382,6 +382,7 @@
     <ClInclude Include="src\voxels\VoxelState.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="src\retro\RetroShaders.inl" />
     <None Include="src\voxels\Tables.inl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

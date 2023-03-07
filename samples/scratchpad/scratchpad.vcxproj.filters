@@ -337,5 +337,8 @@
     <None Include="src\voxels\Tables.inl">
       <Filter>Header Files\voxels</Filter>
     </None>
+    <None Include="src\retro\RetroShaders.inl">
+      <Filter>Header Files\retro</Filter>
+    </None>
   </ItemGroup>
 </Project>
