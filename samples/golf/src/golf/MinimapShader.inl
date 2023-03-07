@@ -52,7 +52,7 @@ static const std::string MinimapVertex = R"(
 //minimap as in top down view of green
 static const std::string MinimapFragment = R"(
         uniform sampler2D u_texture;
-
+#include SCALE_BUFFER
         VARYING_IN LOW vec4 v_colour;
         VARYING_IN MED vec2 v_texCoord;
         OUTPUT
@@ -79,10 +79,10 @@ const float scale = 2.0;
             FRAG_OUT = TEXTURE(u_texture, v_texCoord) * v_colour;
             //FRAG_OUT.rgb = mix(FRAG_OUT.rgb, borderColour, step(borderPos, length2));
 
-            int x = int(mod(gl_FragCoord.x, MatrixSize));
-            int y = int(mod(gl_FragCoord.y, MatrixSize));
+            int x = int(mod(gl_FragCoord.x / u_pixelScale, MatrixSize));
+            int y = int(mod(gl_FragCoord.y / u_pixelScale, MatrixSize));
 
-            FRAG_OUT.a = findClosest(x, y, 1.0 - smoothstep(stepPos, stepPos + 0.1, length2));
+            FRAG_OUT.a = findClosest(x, y, smoothstep(stepPos - 0.01, stepPos - 0.05, length2));
         })";
 
 //minimap as in mini course view

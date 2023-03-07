@@ -1872,6 +1872,7 @@ void GolfState::loadAssets()
 
     //minimap - green overhead
     m_resources.shaders.loadFromString(ShaderID::Minimap, MinimapVertex, MinimapFragment);
+    m_scaleBuffer.addShader(m_resources.shaders.get(ShaderID::Minimap));
 
     //minimap - course view
     m_resources.shaders.loadFromString(ShaderID::MinimapView, MinimapViewVertex, MinimapViewFragment);
