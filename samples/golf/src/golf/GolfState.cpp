@@ -6024,11 +6024,11 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
         && isCPU)
     {
         //if the CPU is smart enough always go for the hole if we can
-        if (m_cpuGolfer.getSkillIndex() > 2
-            && !m_holeData[m_currentHole].puttFromTee)
+        if (m_cpuGolfer.getSkillIndex() > 3
+            /*&& !m_holeData[m_currentHole].puttFromTee*/)
         {
-            //fallback is nothing as we're not putting from the tee
-            m_cpuGolfer.activate(m_holeData[m_currentHole].pin, glm::vec3(0.f), false);
+            //fallback is used when repeatedly launching the ball into the woods...
+            m_cpuGolfer.activate(m_holeData[m_currentHole].pin, m_holeData[m_currentHole].target, m_holeData[m_currentHole].puttFromTee);
         }
 
         else

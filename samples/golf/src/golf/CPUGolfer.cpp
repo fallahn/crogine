@@ -68,7 +68,7 @@ namespace
     constexpr float MinSearchDistance = 10.f;
     constexpr float SearchIncrease = 10.f;
     constexpr float Epsilon = 0.005f;
-    constexpr std::int32_t MaxRetargets = 12;
+    constexpr std::int32_t MaxRetargets = 6;// 12;
     constexpr std::int32_t RetargetsPerDirection = 3;
     constexpr std::int32_t MaxPredictions = 20;
 
@@ -88,6 +88,7 @@ namespace
         0.004f, 0.002f, 0.0001f, 0.f
     };
     std::size_t devianceOffset = 0;
+    std::int32_t previousFail = -1; //if the previous shot failed the client/player ID
 }
 
 /*
@@ -185,6 +186,16 @@ void CPUGolfer::handleMessage(const cro::Message& msg)
         {
             m_state = State::Inactive;
             //LOG("CPU is now inactive", cro::Logger::Type::Info);
+
+            if (data.terrain == TerrainID::Scrub
+                || data.terrain == TerrainID::Water)
+            {
+                //switch to fallback target if possible
+                if (getSkillIndex() > 4)
+                {
+                    previousFail = (m_activePlayer.client * 100) + m_activePlayer.player;
+                }
+            }
         }
     }
         break;
@@ -197,8 +208,21 @@ void CPUGolfer::activate(glm::vec3 target, glm::vec3 fallback, bool puttFromTee)
     {
         m_puttFromTee = puttFromTee;
         m_fallbackTarget = fallback;
-
         m_baseTarget = m_target = target;
+
+        //TODO also use fallback if target is out of max range of driver
+        if (previousFail == (m_activePlayer.client * 100) + m_activePlayer.player)
+        {
+            auto fwd = m_baseTarget - m_activePlayer.position;
+            auto alt = m_fallbackTarget - m_activePlayer.position;
+            if (glm::dot(alt, fwd) > 0)
+            {
+                m_baseTarget = m_target = fallback;
+            }
+        }
+        
+        previousFail = -1;
+
         m_retargetCount = 0;
         m_state = State::CalcDistance;
         m_clubID = m_inputParser.getClub();
@@ -209,8 +233,9 @@ void CPUGolfer::activate(glm::vec3 target, glm::vec3 fallback, bool puttFromTee)
         m_offsetRotation++; //causes the offset calc to pick a new number each time a player is selected
 
         //choose skill based on player's XP, increasing every 3 levels
-        auto level = std::min(Social::getLevel(), 20);
+        auto level = std::min(Social::getLevel(), 20) + 2;
         m_skillIndex = level / 4;
+
 
         startThinking(1.6f);
 
@@ -283,7 +308,7 @@ void CPUGolfer::update(float dt, glm::vec3 windVector, float distanceToPin)
 
 void CPUGolfer::setPredictionResult(glm::vec3 result, std::int32_t terrain)
 {
-    if (m_retargetCount < MaxRetargets &&
+    if (m_retargetCount < (MaxRetargets - (MaxRetargets - getSkillIndex())) &&
         (terrain == TerrainID::Water
         || terrain == TerrainID::Scrub))
     {
