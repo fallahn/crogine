@@ -122,9 +122,15 @@ namespace
 
         std::uint32_t handle = 0;
         std::int32_t uniform = -1;
+        glm::mat4 tx = glm::mat4(1.f);
 
         void updateShader(glm::vec2 texSize)
         {
+            if (glm::length2(texSize) == 0)
+            {
+                return;
+            }
+
             auto pos = pan / texSize;
 
             static constexpr glm::vec3 centre(0.5f, 0.5f, 0.f);
@@ -132,15 +138,29 @@ namespace
 
             glm::mat4 matrix(1.f);
             matrix = glm::translate(matrix, glm::vec3(pos.x, pos.y, 0.f));
-            matrix = glm::scale(matrix, glm::vec3(1.f / aspect, 1.f, 0.f));
+            matrix = glm::scale(matrix, glm::vec3(1.f / aspect, 1.f, 1.f));
             matrix = glm::rotate(matrix, -tilt, cro::Transform::Z_AXIS);
-            matrix = glm::scale(matrix, glm::vec3(aspect, 1.f, 0.f));
-            matrix = glm::scale(matrix, glm::vec3(1.f) / glm::vec3(zoom));
+            matrix = glm::scale(matrix, glm::vec3(aspect, 1.f, 1.f));
+            matrix = glm::scale(matrix, glm::vec3(1.f / zoom));
 
             matrix = glm::translate(matrix, -centre);
+            tx = glm::inverse(matrix);
 
             glUseProgram(handle);
             glUniformMatrix4fv(uniform, 1, GL_FALSE, &matrix[0][0]);
+        }
+
+        glm::vec2 toMapCoords(glm::vec3 worldCoord, glm::vec2 texSize)
+        {
+            if (glm::length2(texSize) == 0)
+            {
+                return glm::vec2(0.f);
+            }
+
+            glm::vec2 mapCoord(worldCoord.x, -worldCoord.z);
+            mapCoord /= texSize;
+            mapCoord = glm::vec2(tx * glm::vec4(mapCoord, 0.0, 1.0));
+            return (mapCoord * texSize);
         }
     }ptz;
 
@@ -420,6 +440,9 @@ void RetroState::createUI()
     t.setRepeated(true);
     ptz.pan = t.getSize() / 2u;
 
+    static glm::vec2 markerPos(0.f);
+    static glm::vec3 worldPos(230.f, 40.f, -120.f);
+
     registerWindow([&]()
         {
             if (ImGui::Begin("Window of Joy"))
@@ -438,6 +461,12 @@ void RetroState::createUI()
                 {
                     ptz.updateShader(t.getSize());
                 }
+
+                ImGui::SliderFloat("World X", &worldPos.x, 0.f, 320.f);
+                ImGui::SameLine();
+                ImGui::SliderFloat("World Z", &worldPos.z, 0.f, -200.f);
+
+                ImGui::Text("Marker %3.3f, %3.3f", markerPos.x, markerPos.y);
 
                 static bool enabled = true;
                 if (ImGui::Button("Random"))
@@ -486,6 +515,14 @@ void RetroState::createUI()
                             }
                         };
                     }
+                }
+                ImGui::SameLine();
+                if (ImGui::Button("Reset"))
+                {
+                    ptz.pan = { 320.f, 200.f };
+                    ptz.tilt = 0.f;
+                    ptz.zoom = 1.f;
+                    ptz.updateShader(t.getSize());
                 }
             }
             ImGui::End();
@@ -565,11 +602,33 @@ void RetroState::createUI()
         }
     };
 
-    //PTZ tex - texture is load above so ImGui can capture it
+    //PTZ tex - texture is loaded above so ImGui can capture it
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setScale(glm::vec2(0.5f));
+    entity.getComponent<cro::Transform>().setPosition({ 80.f, 40.f, 0.1f });
     entity.addComponent<cro::Drawable2D>().setShader(&m_resources.shaders.get(RetroShader::PTZ));
     entity.addComponent<cro::Sprite>(t);
+    auto spriteEnt = entity;
+    ptz.updateShader(t.getSize());
+
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setOrigin({ 0.f, 0.f, -0.1f });
+    entity.addComponent<cro::Drawable2D>().setVertexData(
+        {
+            cro::Vertex2D(glm::vec2(-5.f, 5.f), cro::Colour::Green),
+            cro::Vertex2D(glm::vec2(-5.f), cro::Colour::Green),
+            cro::Vertex2D(glm::vec2(5.f), cro::Colour::Green),
+            cro::Vertex2D(glm::vec2(5.f, -5.f), cro::Colour::Green)
+        });
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&, spriteEnt](cro::Entity e, float)
+    {
+        auto position = ptz.toMapCoords(worldPos / spriteEnt.getComponent<cro::Transform>().getScale().x, t.getSize());
+        markerPos = position;
+        e.getComponent<cro::Transform>().setPosition(position);
+    };
+    spriteEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 }
 
 void RetroState::updateView(cro::Camera& cam3D)
@@ -595,7 +654,7 @@ void RetroState::updateView(cro::Camera& cam3D)
     auto& cam2D = m_uiScene.getActiveCamera().getComponent<cro::Camera>();
     cam2D.viewport = {0.f, 0.f, 1.f, 1.f};
 
-    cam2D.setOrthographic(0.f, windowSize.x, 0.f, windowSize.y, -0.1f, 10.f);
+    cam2D.setOrthographic(0.f, windowSize.x, 0.f, windowSize.y, -1.f, 10.f);
 }
 
 //-----------------
