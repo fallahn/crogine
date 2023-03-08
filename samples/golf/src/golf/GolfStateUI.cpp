@@ -541,16 +541,23 @@ void GolfState::buildUI()
     {       
         float vScaleTarget = m_currentPlayer.terrain == TerrainID::Green ? 1.f : 0.f;
 
-        if (m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].holeScores[m_currentHole] == 0)
+        /*if (m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].holeScores[m_currentHole] == 0)
         {
             vScaleTarget = 0.f;
-        }        
+        }*/        
 
         auto scale = e.getComponent<cro::Transform>().getScale();
         if (vScaleTarget > 0)
         {
-            //grow
-            scale.y = std::min(1.f, scale.y + dt);
+            //grow if not the first stroke (CPU players still need power prediction though)
+            if (m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].holeScores[m_currentHole] == 0)
+            {
+                scale.y = 0.f;
+            }
+            else
+            {
+                scale.y = std::min(1.f, scale.y + dt);
+            }
 
             //move to position
             auto maxDist = Clubs[ClubID::Putter].getTarget(m_distanceToHole);
@@ -573,7 +580,9 @@ void GolfState::buildUI()
             {
                 slope = glm::dot(cro::Transform::Y_AXIS, m_holeData[m_currentHole].pin - m_currentPlayer.position) / m_distanceToHole;
             }
-            float hTarget = std::clamp(guestimation + (0.25f * slope), 0.f, 1.f) * BarWidth;
+            float hTarget = std::clamp(guestimation + (0.25f * slope), 0.f, 1.f);
+            m_cpuGolfer.setPuttingPower(hTarget);
+            hTarget *= BarWidth;
 
             auto pos = e.getComponent<cro::Transform>().getPosition();
             pos.x = std::min(pos.x + ((hTarget - pos.x) * dt), BarWidth - 4.f);

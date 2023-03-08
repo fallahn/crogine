@@ -120,6 +120,7 @@ CPUGolfer::CPUGolfer(const InputParser& ip, const ActivePlayer& ap, const Collis
     m_wantsPrediction   (false),
     m_predictionResult  (0.f),
     m_predictionCount   (0),
+    m_puttingPower      (0.f),
     m_skillIndex        (0),
     m_clubID            (ClubID::Driver),
     m_prevClubID        (ClubID::Driver),
@@ -758,8 +759,8 @@ void CPUGolfer::aim(float dt, glm::vec3 windVector)
                 float multiplier = (0.5f * distRatio) + 1.f;
 
                 m_targetPower = std::min(1.f, m_targetPower * multiplier);
+                m_targetPower = std::min(m_targetPower, m_puttingPower);
             }
-
 
             ////due to input lag 0.08 is actually ~0 ie perfectly accurate
             ////so this range lies ~0.04 either side of perfect
