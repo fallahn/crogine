@@ -87,34 +87,37 @@ const float scale = 2.0;
 
 //minimap as in mini course view
 //well, this is a silly inconsistency...
-//used on a SimpleQuad though, which expects
-//projection matrix, not view projection...
 static const std::string MinimapViewVertex = R"(
-        uniform mat4 u_worldMatrix;
-        uniform mat4 u_projectionMatrix;
-
         ATTRIBUTE vec2 a_position;
-        ATTRIBUTE MED vec2 a_texCoord0;
-        ATTRIBUTE LOW vec4 a_colour;
+        ATTRIBUTE vec2 a_texCoord0;
+        ATTRIBUTE vec4 a_colour;
 
-        VARYING_OUT LOW vec4 v_colour;
-        VARYING_OUT MED vec2 v_texCoord;
+        uniform mat4 u_worldMatrix;
+        uniform mat4 u_viewProjectionMatrix;
+
+        uniform mat4 u_coordMatrix = mat4(1.0);
+
+        VARYING_OUT vec2 v_texCoord0;
+        VARYING_OUT vec2 v_texCoord1;
+        VARYING_OUT vec4 v_colour;
 
         void main()
         {
-            gl_Position = u_projectionMatrix * u_worldMatrix * vec4(a_position, 0.0, 1.0);
+            gl_Position = u_viewProjectionMatrix * u_worldMatrix * vec4(a_position, 0.0, 1.0);
+            v_texCoord0 = (u_coordMatrix * vec4(a_texCoord0, 0.0, 1.0)).xy;
+            v_texCoord1 = a_texCoord0;
             v_colour = a_colour;
-            v_texCoord = a_texCoord0;
         })";
 
 static const std::string MinimapViewFragment = R"(
         uniform sampler2D u_texture;
+#include SCALE_BUFFER
 
-        VARYING_IN LOW vec4 v_colour;
-        VARYING_IN MED vec2 v_texCoord;
+        VARYING_IN vec2 v_texCoord0;
+        VARYING_IN vec2 v_texCoord1;
+        VARYING_IN vec4 v_colour;
+
         OUTPUT
-
-        uniform float u_effect = 0.0;
 
 #include BAYER_MATRIX
 
@@ -123,13 +126,12 @@ static const std::string MinimapViewFragment = R"(
 
         void main()
         {
-            FRAG_OUT = TEXTURE(u_texture, v_texCoord) * v_colour;
+            FRAG_OUT = TEXTURE(u_texture, v_texCoord0) * v_colour;
 
-            vec2 pos = v_texCoord - vec2(0.5);
-            float len = dot(pos, pos);
+            vec2 pos = v_texCoord1 - vec2(0.5);
+            float len2 = dot(pos, pos);
 
-            int x = int(mod(gl_FragCoord.x, MatrixSize));
-            int y = int(mod(gl_FragCoord.y, MatrixSize));
-
-            FRAG_OUT.a *= findClosest(x, y, 1.0 - (smoothstep(RadiusInner, RadiusOuter, len) * u_effect));
+            int x = int(mod(gl_FragCoord.x / u_pixelScale, MatrixSize));
+            int y = int(mod(gl_FragCoord.y / u_pixelScale, MatrixSize));
+            //FRAG_OUT.a *= findClosest(x, y, 1.0 - smoothstep(RadiusInner, RadiusOuter, len2));
         })";

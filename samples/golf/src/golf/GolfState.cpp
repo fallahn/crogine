@@ -203,9 +203,6 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     m_scoreColumnCount  (2),
     m_readyQuitFlags    (0),
     m_emoteWheel        (sd, m_currentPlayer),
-    m_minimapScale      (1.f),
-    m_minimapRotation   (0.f),
-    m_minimapOffset     (0.f),
     m_hadFoul           (false)
 {
     godmode = 1.f;
@@ -924,16 +921,6 @@ void GolfState::handleMessage(const cro::Message& msg)
             break;
         case SceneEvent::TransitionComplete:
         {
-            //show miniball
-            cro::Command cmd;
-            cmd.targetFlags = CommandID::UI::MiniBall;
-            cmd.action = [&](cro::Entity e, float)
-            {
-                e.getComponent<cro::Transform>().setScale({ 1.f, 1.f });
-                e.getComponent<cro::Transform>().setPosition(toMinimapCoords(m_holeData[m_currentHole].tee));
-            };
-            m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
-
             m_sharedData.clientConnection.netClient.sendPacket(PacketID::TransitionComplete, m_sharedData.clientConnection.connectionID, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
         }
             break;
@@ -1876,6 +1863,10 @@ void GolfState::loadAssets()
 
     //minimap - course view
     m_resources.shaders.loadFromString(ShaderID::MinimapView, MinimapViewVertex, MinimapViewFragment);
+    shader = &m_resources.shaders.get(ShaderID::MinimapView);
+    m_scaleBuffer.addShader(*shader);
+    m_minimapZoom.shaderID = shader->getGLHandle();
+    m_minimapZoom.uniformID = shader->getUniformID("u_coordMatrix");
 
     //water
     m_resources.shaders.loadFromString(ShaderID::Water, WaterVertex, WaterFragment);
@@ -1921,6 +1912,7 @@ void GolfState::loadAssets()
     m_sprites[SpriteID::HookBar] = spriteSheet.getSprite("hook_bar");
     m_sprites[SpriteID::SlopeStrength] = spriteSheet.getSprite("slope_indicator");
     m_sprites[SpriteID::BallSpeed] = spriteSheet.getSprite("ball_speed");
+    m_sprites[SpriteID::MapFlag] = spriteSheet.getSprite("flag03");
     m_sprites[SpriteID::MiniFlag] = spriteSheet.getSprite("putt_flag");
     m_sprites[SpriteID::WindIndicator] = spriteSheet.getSprite("wind_dir");
     m_sprites[SpriteID::WindSpeed] = spriteSheet.getSprite("wind_speed");
@@ -1930,9 +1922,6 @@ void GolfState::loadAssets()
     m_sprites[SpriteID::Foul] = spriteSheet.getSprite("foul");
     m_sprites[SpriteID::SpinBg] = spriteSheet.getSprite("spin_bg");
     m_sprites[SpriteID::SpinFg] = spriteSheet.getSprite("spin_fg");
-    auto flagSprite = spriteSheet.getSprite("flag03");
-    m_flagQuad.setTexture(*flagSprite.getTexture());
-    m_flagQuad.setTextureRect(flagSprite.getTextureRect());
 
     spriteSheet.loadFromFile("assets/golf/sprites/emotes.spt", m_resources.textures);
     m_sprites[SpriteID::EmoteHappy] = spriteSheet.getSprite("happy_small");
@@ -4856,11 +4845,12 @@ void GolfState::spawnBall(const ActorInfo& info)
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>().getVertexData() =
     {
-        cro::Vertex2D(glm::vec2(-0.5f, 0.5f), miniBallColour),
-        cro::Vertex2D(glm::vec2(-0.5f), miniBallColour),
-        cro::Vertex2D(glm::vec2(0.5f), miniBallColour),
-        cro::Vertex2D(glm::vec2(0.5f, -0.5f), miniBallColour)
+        cro::Vertex2D(glm::vec2(-2.f, 2.f), miniBallColour),
+        cro::Vertex2D(glm::vec2(-2.f), miniBallColour),
+        cro::Vertex2D(glm::vec2(2.f), miniBallColour),
+        cro::Vertex2D(glm::vec2(2.f, -2.f), miniBallColour)
     };
+    entity.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
     entity.getComponent<cro::Drawable2D>().updateLocalBounds();
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::MiniBall;
     entity.addComponent<MiniBall>().playerID = depthOffset;
@@ -6595,6 +6585,7 @@ void GolfState::updateActor(const ActorInfo& update)
         };
         m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
+        
         cmd.targetFlags = CommandID::UI::MiniBall;
         cmd.action =
             [&, update](cro::Entity e, float)
@@ -6602,12 +6593,12 @@ void GolfState::updateActor(const ActorInfo& update)
             auto pid = m_currentPlayer.client * 4 + m_currentPlayer.player;
             if (e.getComponent<MiniBall>().playerID == pid)
             {
-                e.getComponent<cro::Transform>().setPosition(glm::vec3(toMinimapCoords(update.position), 0.1f));
+                e.getComponent<cro::Transform>().setPosition(glm::vec3(m_minimapZoom.toMapCoords(update.position), 0.1f));
 
                 //set scale based on height
                 static constexpr float MaxHeight = 40.f;
-                float scale = 1.f + ((update.position.y / MaxHeight) * 2.f);
-                e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
+                float scale = 1.f + ((update.position.y / MaxHeight));
+                e.getComponent<cro::Transform>().setScale(glm::vec2(scale) * m_minimapZoom.mapScale);
             }
         };
         m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);

@@ -268,6 +268,7 @@ private:
             SlopeStrength,
             BallSpeed,
             MiniFlag,
+            MapFlag,
             WindIndicator,
             WindSpeed,
             Thinking,
@@ -373,16 +374,27 @@ private:
     //-----------
 
     cro::Entity m_mapCam;
-    cro::RenderTexture m_mapBuffer;
     cro::RenderTexture m_mapTexture;
-    cro::SimpleQuad m_mapQuad;
-    cro::SimpleQuad m_flagQuad;
+
     void updateMiniMap();
 
-    float m_minimapScale; //how big the model was when drawn to minimap
-    float m_minimapRotation; //rads cam was rotated when shooting minimap
-    glm::vec3 m_minimapOffset;
-    glm::vec2 toMinimapCoords(glm::vec3) const;
+    struct MinimapZoom final
+    {
+        glm::vec2 pan = glm::vec2(0.f);
+        float tilt = 0.f;
+        float zoom = 1.f;
+
+        glm::mat4 invTx = glm::mat4(1.f);
+        std::uint32_t shaderID = 0u;
+        std::int32_t uniformID = -1;
+
+        glm::vec2 mapScale = glm::vec2(0.f); //this is the size of the texture used in relation to world map, ie pixels per metre
+        glm::vec2 textureSize = glm::vec2(1.f);
+
+        void updateShader();
+        glm::vec2 toMapCoords(glm::vec3 worldPos) const;
+    }m_minimapZoom;
+
 
     cro::Entity m_greenCam;
     cro::RenderTexture m_greenBuffer;
