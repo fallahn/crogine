@@ -5894,6 +5894,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
 
     updateScoreboard();
     showScoreboard(false);
+    retargetMinimap();
 
     auto localPlayer = (player.client == m_sharedData.clientConnection.connectionID);
     auto isCPU = m_sharedData.localConnectionData.playerData[player.player].isCPU;

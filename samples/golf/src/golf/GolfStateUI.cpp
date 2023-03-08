@@ -2677,6 +2677,21 @@ void GolfState::updateMiniMap()
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 }
 
+void GolfState::retargetMinimap()
+{
+    //find vec between player and flag
+
+    //rotate vec and minimap so flag is at top
+
+    //create AABB between flag and player
+
+    //expand box by 1.7 (about 3m around a putting hole)
+
+    //scale zoom on long edge of map by box length and clamp to 3x
+
+    //create a temp ent to interp between start and end values
+}
+
 void GolfState::MinimapZoom::updateShader()
 {
     CRO_ASSERT(glm::length2(textureSize) != 0, "");

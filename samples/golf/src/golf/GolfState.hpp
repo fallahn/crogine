@@ -394,7 +394,7 @@ private:
         void updateShader();
         glm::vec2 toMapCoords(glm::vec3 worldPos) const;
     }m_minimapZoom;
-
+    void retargetMinimap();
 
     cro::Entity m_greenCam;
     cro::RenderTexture m_greenBuffer;
