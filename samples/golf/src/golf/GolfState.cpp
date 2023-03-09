@@ -7004,6 +7004,14 @@ void GolfState::startFlyBy()
     };
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
+    //hide the mini flag
+    cmd.targetFlags = CommandID::UI::MiniFlag;
+    cmd.action = [](cro::Entity e, float)
+    {
+        e.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
+    };
+    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
     //hide hud
     cmd.targetFlags = CommandID::UI::Root;
     cmd.action = [](cro::Entity e, float)

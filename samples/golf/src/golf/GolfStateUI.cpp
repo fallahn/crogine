@@ -695,6 +695,14 @@ void GolfState::buildUI()
                     e.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
                 };
                 m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+                //and mini flag
+                cmd.targetFlags = CommandID::UI::MiniFlag;
+                cmd.action = [](cro::Entity e, float)
+                {
+                    e.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
+                };
+                m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
             }
         }
         e.getComponent<cro::Transform>().setScale(glm::vec2(1.f / ratio, newScale / ratio));
@@ -707,7 +715,8 @@ void GolfState::buildUI()
     //mini flag icon
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setRotation(cro::Util::Const::degToRad * 90.f);
-    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::MiniFlag;
     entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::MapFlag];
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function =
@@ -2783,7 +2792,7 @@ void GolfState::retargetMinimap(bool reset)
 
         auto& data = e.getComponent<cro::Callback>().getUserData<MapZoomData>();
         
-        const auto speed = 0.7f + (2.f * (1.f - std::clamp(glm::length2(data.start.pan - data.end.pan) / (150.f * 150.f), 0.f, 1.f)));
+        const auto speed = 0.7f + (2.f * (1.f - std::clamp(glm::length2(data.start.pan - data.end.pan) / (100.f * 100.f), 0.f, 1.f)));
         data.progress = std::min(1.f, data.progress + (dt * speed));
 
         m_minimapZoom.pan = glm::mix(data.start.pan, data.end.pan, cro::Util::Easing::easeOutExpo(data.progress));
