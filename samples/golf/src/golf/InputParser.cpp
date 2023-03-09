@@ -797,7 +797,7 @@ void InputParser::updateDroneCam(float dt)
 void InputParser::updateSpin(float dt)
 {
     auto rotation = getRotationalInput(cro::GameController::AxisLeftX, cro::GameController::AxisLeftY) * 2.f;
-    m_spin.x = std::clamp(m_spin.x - (rotation.y * dt), -1.f, 1.f);
+    m_spin.x = std::clamp(m_spin.x + (rotation.y * dt), -1.f, 1.f);
     m_spin.y = std::clamp(m_spin.y + (rotation.x * dt), -1.f, 1.f);
 }
 

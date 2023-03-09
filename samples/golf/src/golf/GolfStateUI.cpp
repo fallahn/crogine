@@ -353,7 +353,7 @@ void GolfState::buildUI()
                 q = glm::rotate(q, spin.x, cro::Transform::Y_AXIS);
                 auto r = q * cro::Transform::Z_AXIS;
 
-                spin.x = r.x;
+                spin.x = -r.x;
                 spin.y = r.y;
             }
             spin *= size;
