@@ -2188,6 +2188,14 @@ void DrivingState::showMessage(float range)
                 }
             }
             break;
+        case MessageAnim::Abort:
+            e.getComponent<cro::Callback>().active = false;
+            m_uiScene.destroyEntity(textEnt);
+            m_uiScene.destroyEntity(textEnt2);
+            m_uiScene.destroyEntity(textEnt3);
+            m_uiScene.destroyEntity(imgEnt);
+            m_uiScene.destroyEntity(e);
+            break;
         }
     };
 

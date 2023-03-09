@@ -778,6 +778,7 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
         if (ball.delay < 0)
         {
             ball.spin = { 0.f, 0.f };
+            ball.initialForwardVector = { 0.f, 0.f, 0.f };
             ball.initialSideVector = { 0.f, 0.f, 0.f };
 
             auto position = entity.getComponent<cro::Transform>().getPosition();

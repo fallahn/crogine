@@ -54,7 +54,8 @@ struct MessageAnim final
 {
     enum
     {
-        Delay, Open, Hold, Close
+        Delay, Open, Hold, Close,
+        Abort //used to remove open messages when forcefully restarting
     }state = Delay;
     float currentTime = 0.5f;
 };
@@ -188,6 +189,7 @@ private:
     void hitBall();
     void setHole(std::int32_t);
     void setActiveCamera(std::int32_t);
+    void forceRestart();
     
     //DrivingStateUI.cpp
 #ifdef USE_GNS

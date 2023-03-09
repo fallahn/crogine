@@ -338,6 +338,9 @@ bool DrivingState::handleEvent(const cro::Event& evt)
         case SDLK_F5:
 
             break;
+        case SDLK_PAGEUP:
+            forceRestart();
+            break;
         case SDLK_SPACE:
             closeMessage();
             break;
@@ -2993,6 +2996,55 @@ void DrivingState::setActiveCamera(std::int32_t camID)
 
         m_idleTimer.restart();
     }
+}
+
+void DrivingState::forceRestart()
+{
+    //reset minimap
+    auto oldCam = m_gameScene.setActiveCamera(m_mapCam);
+    m_mapTexture.clear(TextNormalColour);
+    m_gameScene.render();
+    m_mapTexture.display();
+    m_gameScene.setActiveCamera(oldCam);
+
+    m_gameScene.getDirector<DrivingRangeDirector>()->setHoleCount(0);
+    setActiveCamera(CameraID::Player);
+
+    //reset any open messages
+    cro::Command cmd;
+    cmd.targetFlags = CommandID::UI::MessageBoard;
+    cmd.action = [](cro::Entity e, float)
+    {
+        e.getComponent<cro::Callback>().getUserData<MessageAnim>().state = MessageAnim::Abort;
+    };
+    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+    //show the options again
+    cmd.targetFlags = CommandID::UI::DrivingBoard;
+    cmd.action = [](cro::Entity e, float)
+    {
+        e.getComponent<cro::Callback>().active = true;
+    };
+    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+    //TODO darken background
+
+
+    //reset the ball
+    cmd.targetFlags = CommandID::Ball;
+    cmd.action = [](cro::Entity e, float)
+    {
+        auto& ball = e.getComponent<Ball>();
+        ball.state = Ball::State::Idle;
+        ball.spin = { 0.0f, 0.f };
+        ball.velocity = { 0.f, 0.f, 0.f };
+        ball.initialForwardVector = { 0.f, 0.f, 0.f };
+        ball.initialSideVector = { 0.f, 0.f, 0.f };
+
+        e.getComponent<cro::Transform>().setPosition(PlayerPosition);
+    };
+    m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
 }
 
 void DrivingState::loadScores()
