@@ -111,6 +111,7 @@ static const std::string MinimapViewVertex = R"(
 
 static const std::string MinimapViewFragment = R"(
         uniform sampler2D u_texture;
+        uniform float u_fadeAmount = 0.0;
 #include SCALE_BUFFER
 
         VARYING_IN vec2 v_texCoord0;
@@ -121,8 +122,8 @@ static const std::string MinimapViewFragment = R"(
 
 #include BAYER_MATRIX
 
-        const float RadiusOuter = (0.48 * 0.48);
-        const float RadiusInner = (0.4 * 0.4);
+        const float RadiusOuter = (0.495 * 0.495);
+        const float RadiusInner = (0.48 * 0.48);
 
         void main()
         {
@@ -133,5 +134,5 @@ static const std::string MinimapViewFragment = R"(
 
             int x = int(mod(gl_FragCoord.x / u_pixelScale, MatrixSize));
             int y = int(mod(gl_FragCoord.y / u_pixelScale, MatrixSize));
-            //FRAG_OUT.a *= findClosest(x, y, 1.0 - smoothstep(RadiusInner, RadiusOuter, len2));
+            FRAG_OUT.a *= findClosest(x, y, 1.0 - (smoothstep(RadiusInner - (0.08 * u_fadeAmount), RadiusOuter, len2) * u_fadeAmount));
         })";

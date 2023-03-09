@@ -74,6 +74,8 @@ source distribution.
 #include <crogine/util/Random.hpp>
 #include <crogine/util/Wavetable.hpp>
 
+#include <crogine/detail/glm/gtx/rotate_vector.hpp>
+
 namespace
 {
 #include "PostProcess.inl"
@@ -665,6 +667,8 @@ void GolfState::buildUI()
 
                 //disable the cam again
                 m_mapCam.getComponent<cro::Camera>().active = false;
+
+                retargetMinimap(true);
             }
         }
         else
@@ -724,10 +728,11 @@ void GolfState::buildUI()
         [&](cro::Entity e, float dt)
     {
         e.getComponent<cro::Transform>().setPosition(glm::vec3(m_minimapZoom.toMapCoords(m_currentPlayer.position), 0.01f));
-        e.getComponent<cro::Transform>().setRotation(m_inputParser.getYaw() - m_minimapZoom.tilt);
+        e.getComponent<cro::Transform>().setRotation(m_inputParser.getYaw() + m_minimapZoom.tilt);
 
         float& scale = e.getComponent<cro::Callback>().getUserData<float>();
-        if (!m_inputParser.getActive())
+        if (!m_inputParser.getActive()
+            || m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].isCPU)
         {
             scale = std::max(0.f, scale - ((scale * dt) * 8.f));
         }
@@ -738,7 +743,7 @@ void GolfState::buildUI()
             {
             default: 
             {
-                const float targetScale = Clubs[club].getTarget(m_distanceToHole);
+                const float targetScale = Clubs[club].getTarget(m_distanceToHole) * m_minimapZoom.zoom;
                 if (scale < targetScale)
                 {
                     scale = std::min(scale + (dt * ((targetScale - scale) * 10.f)), targetScale);
@@ -755,7 +760,8 @@ void GolfState::buildUI()
             }
         }
 
-        e.getComponent<cro::Transform>().setScale(glm::vec2(scale, 1.f) * 4.f * m_minimapZoom.zoom); //4 is the relative size of the sprite to the texture...
+        //4 is the relative size of the sprite to the texture... need to update this if we make sprite scale dynamic
+        e.getComponent<cro::Transform>().setScale(glm::vec2(scale, 1.f) * 4.f); 
     };
     mapEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
@@ -2686,19 +2692,77 @@ void GolfState::updateMiniMap()
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 }
 
-void GolfState::retargetMinimap()
+void GolfState::retargetMinimap(bool reset)
 {
-    //find vec between player and flag
+    struct MapZoomData final
+    {
+        struct
+        {
+            glm::vec2 pan = glm::vec2(0.f);
+            float tilt = 0.f;
+            float zoom = 1.f;
+        }start, end;
 
-    //rotate vec and minimap so flag is at top
+        float progress = 0.f;
+    }target;
+    
+    target.start.pan = m_minimapZoom.pan;
+    target.start.tilt = m_minimapZoom.tilt;
+    target.start.zoom = m_minimapZoom.zoom;
 
-    //create AABB between flag and player
+    if (reset)
+    {
+        //create a default view around the bounds of the hole model
+        target.end.tilt = 0.f;
 
-    //expand box by 1.7 (about 3m around a putting hole)
+        auto bb = m_holeData[m_currentHole].modelEntity.getComponent<cro::Model>().getAABB();
+        target.end.pan = MapSize;
 
-    //scale zoom on long edge of map by box length and clamp to 3x
+        target.end.zoom = (bb[1].x - bb[0].x) / MapSize.x;
+    }
+    else
+    {
+        //find vec between player and flag
+        auto pin = m_holeData[m_currentHole].pin;
+        auto player = m_currentPlayer.position;
+
+        //rotate minimap so flag is at top
+        glm::vec2 dir(pin.x - player.x, -pin.z + player.z);
+        auto rotation = std::atan2(-dir.y, dir.x) + cro::Util::Const::PI;
+        target.end.tilt = m_minimapZoom.tilt + cro::Util::Maths::shortestRotation(m_minimapZoom.tilt, rotation);
+
+        //centre view between player and flag (pan is in texture coords hum)
+        target.end.pan = glm::vec2(player.x, -player.z) + (dir / 2.f);
+        target.end.pan *= m_minimapZoom.mapScale;
+
+        //get distance between flag and player and expand by 1.7 (about 3m around a putting hole)
+        float viewLength = glm::length(dir) * 1.7f; //remember this is world coords
+
+        //scale zoom on long edge of map by box length and clamp to 16x
+        target.end.zoom = std::clamp(static_cast<float>(MapSize.x) / viewLength, 0.8f, 16.f);
+    }
 
     //create a temp ent to interp between start and end values
+    auto entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<MapZoomData>(target);
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float dt)
+    {
+        auto& data = e.getComponent<cro::Callback>().getUserData<MapZoomData>();
+        data.progress = std::min(1.f, data.progress + (dt * 2.f));
+
+        m_minimapZoom.pan = glm::mix(data.start.pan, data.end.pan, cro::Util::Easing::easeOutExpo(data.progress));
+        m_minimapZoom.tilt = glm::mix(data.start.tilt, data.end.tilt, cro::Util::Easing::easeInOutBack(data.progress));
+        m_minimapZoom.zoom = glm::mix(data.start.zoom, data.end.zoom, cro::Util::Easing::easeOutBack(data.progress));
+        m_minimapZoom.updateShader();
+
+        if (data.progress == 1)
+        {
+            e.getComponent<cro::Callback>().active = false;
+            m_uiScene.destroyEntity(e);
+        }
+    };
 }
 
 void GolfState::MinimapZoom::updateShader()
@@ -2720,8 +2784,11 @@ void GolfState::MinimapZoom::updateShader()
     matrix = glm::translate(matrix, -centre);
     invTx = glm::inverse(matrix);
 
+    float feather = smoothstep(0.25f, 0.3f, zoom / 4.f);
+
     glUseProgram(shaderID);
-    glUniformMatrix4fv(uniformID, 1, GL_FALSE, &matrix[0][0]);
+    glUniformMatrix4fv(matrixUniformID, 1, GL_FALSE, &matrix[0][0]);
+    glUniform1f(featherUniformID, feather);
 }
 
 glm::vec2 GolfState::MinimapZoom::toMapCoords(glm::vec3 worldCoord) const

@@ -1866,7 +1866,8 @@ void GolfState::loadAssets()
     shader = &m_resources.shaders.get(ShaderID::MinimapView);
     m_scaleBuffer.addShader(*shader);
     m_minimapZoom.shaderID = shader->getGLHandle();
-    m_minimapZoom.uniformID = shader->getUniformID("u_coordMatrix");
+    m_minimapZoom.matrixUniformID = shader->getUniformID("u_coordMatrix");
+    m_minimapZoom.featherUniformID = shader->getUniformID("u_fadeAmount");
 
     //water
     m_resources.shaders.loadFromString(ShaderID::Water, WaterVertex, WaterFragment);
@@ -5894,7 +5895,6 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
 
     updateScoreboard();
     showScoreboard(false);
-    retargetMinimap();
 
     auto localPlayer = (player.client == m_sharedData.clientConnection.connectionID);
     auto isCPU = m_sharedData.localConnectionData.playerData[player.player].isCPU;
@@ -6282,10 +6282,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
         setCamTarget(DefaultSkycamPosition);
     }
 
-    //if (!m_holeData[m_currentHole].puttFromTee)
-    {
-        setGreenCamPosition();
-    }
+    setGreenCamPosition();
 
     //set the player controlled drone cam to look at the player
     //(although this will drift as the drone moves)
@@ -6304,11 +6301,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
         cro::GameController::setLEDColour(activeControllerID(player.player), m_sharedData.connectionData[player.client].playerData[player.player].ballTint);
     }
 
-    /*if (player.terrain != TerrainID::Green
-        || m_holeData[m_currentHole].puttFromTee)
-    {
-        updateMiniMap();
-    }*/
+    retargetMinimap(false); //must do this after current player position is set...
 }
 
 void GolfState::setGreenCamPosition()
