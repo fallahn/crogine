@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2022
+Matt Marchant 2021 - 2023
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -32,6 +32,7 @@ source distribution.
 #include "Terrain.hpp"
 #include "GameConsts.hpp"
 #include "BallSystem.hpp"
+#include "Clubs.hpp"
 
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/ecs/components/Transform.hpp>
@@ -127,6 +128,17 @@ void GolfParticleDirector::handleMessage(const cro::Message& msg)
         else if (data.type == GolfEvent::BirdHit)
         {
             getEnt(ParticleID::Bird, data.position).getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, data.travelDistance + (cro::Util::Const::PI / 2.f));
+        }
+        else if (data.type == GolfEvent::BallLanded)
+        {
+            if (data.club == ClubID::Putter &&
+                (data.terrain == TerrainID::Water || data.terrain == TerrainID::Scrub))
+            {
+                //assume we putt off the green on a putting course
+                auto pos = data.position;
+                pos.y += (Ball::Radius * 2.f);
+                getEnt(ParticleID::Puff, pos);
+            }
         }
     }
         break;
