@@ -617,6 +617,8 @@ void GolfState::buildUI()
         std::int32_t state = 0;
         float scale = 1.f;
         float rotation = -1.f;
+
+        float textureRatio = 1.f; //pixels per metre in the minimap texture * 2
     };
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 0.f, 82.f });
@@ -628,7 +630,7 @@ void GolfState::buildUI()
     entity.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float dt)
     {
-        auto& [state, scale, rotation] = e.getComponent<cro::Callback>().getUserData<MinimapData>();
+        auto& [state, scale, rotation, ratio] = e.getComponent<cro::Callback>().getUserData<MinimapData>();
         float speed = dt * 4.f;
         float newScale = 0.f;
         
@@ -695,7 +697,7 @@ void GolfState::buildUI()
                 m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
             }
         }
-        e.getComponent<cro::Transform>().setScale(glm::vec2(0.25f, newScale / 4.f));
+        e.getComponent<cro::Transform>().setScale(glm::vec2(1.f / ratio, newScale / ratio));
     };
     infoEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     auto mapEnt = entity;
@@ -712,7 +714,7 @@ void GolfState::buildUI()
         [&](cro::Entity e, float dt)
     {
         e.getComponent<cro::Transform>().setPosition(glm::vec3(m_minimapZoom.toMapCoords(m_holeData[m_currentHole].pin), 0.02f));
-        e.getComponent<cro::Transform>().setScale(m_minimapZoom.mapScale * 2.f);
+        e.getComponent<cro::Transform>().setScale(m_minimapZoom.mapScale * 4.f);
     };
     mapEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
@@ -821,11 +823,13 @@ void GolfState::buildUI()
     //set up the overhead cam for the mini map
     auto updateMiniView = [&, mapEnt](cro::Camera& miniCam) mutable
     {
-        glm::uvec2 previewSize = MapSize * 2u;
+        glm::uvec2 previewSize = MapSize * 8u;
 
         m_mapTexture.create(previewSize.x, previewSize.y);
+        m_mapTexture.setSmooth(true);
         mapEnt.getComponent<cro::Sprite>().setTexture(m_mapTexture.getTexture());
         mapEnt.getComponent<cro::Transform>().setOrigin({ previewSize.x / 2.f, previewSize.y / 2.f });
+        mapEnt.getComponent<cro::Callback>().getUserData<MinimapData>().textureRatio = 16.f; //TODO this is always double the map size multiplier
         m_minimapZoom.mapScale = previewSize / MapSize;
         m_minimapZoom.pan = previewSize / 2u;
         m_minimapZoom.textureSize = previewSize;
@@ -2716,9 +2720,9 @@ void GolfState::retargetMinimap(bool reset)
         target.end.tilt = 0.f;
 
         auto bb = m_holeData[m_currentHole].modelEntity.getComponent<cro::Model>().getAABB();
-        target.end.pan = MapSize;
+        target.end.pan = m_minimapZoom.textureSize / 2.f;
 
-        target.end.zoom = (bb[1].x - bb[0].x) / MapSize.x;
+        target.end.zoom = std::clamp(static_cast<float>(MapSize.x) / ((bb[1].x - bb[0].x) * 1.5f), 1.f, 16.f);
     }
     else
     {
@@ -2731,9 +2735,36 @@ void GolfState::retargetMinimap(bool reset)
         auto rotation = std::atan2(-dir.y, dir.x) + cro::Util::Const::PI;
         target.end.tilt = m_minimapZoom.tilt + cro::Util::Maths::shortestRotation(m_minimapZoom.tilt, rotation);
 
-        //centre view between player and flag (pan is in texture coords hum)
-        target.end.pan = glm::vec2(player.x, -player.z) + (dir / 2.f);
+        
+        //if we have a tight dogleg, such as on the mini putt
+        //check if the primary target is inbetween and shift
+        //towards it to better centre the hole
+        auto targ = m_holeData[m_currentHole].target;
+        glm::vec2 targDir(targ.x - player.x, -targ.z + player.z);
+        const auto d = glm::dot(dir, targDir);
+        const auto l2 = glm::length2(targDir);
+        if (d > 0 && l2 > 2.25f && l2 < glm::length2(dir))
+        {
+            //project the target onto the current dir
+            //then move half way between projection and
+            //primary target
+            //auto p = dir * d * (1.f / glm::length2(dir));
+
+            //actually just moving towards the target seems to work better
+            auto p = dir / 2.f;
+            p += (targDir - p) / 2.f;
+            target.end.pan = glm::vec2(player.x, -player.z) + p;
+        }
+        else
+        {
+            //centre view between player and flag
+            target.end.pan = glm::vec2(player.x, -player.z) + (dir / 2.f);
+        }
+        //(pan is in texture coords hum)
         target.end.pan *= m_minimapZoom.mapScale;
+
+
+
 
         //get distance between flag and player and expand by 1.7 (about 3m around a putting hole)
         float viewLength = glm::length(dir) * 1.7f; //remember this is world coords
@@ -2749,8 +2780,11 @@ void GolfState::retargetMinimap(bool reset)
     entity.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float dt)
     {
+
         auto& data = e.getComponent<cro::Callback>().getUserData<MapZoomData>();
-        data.progress = std::min(1.f, data.progress + (dt * 2.f));
+        
+        const auto speed = 0.7f + (2.f * (1.f - std::clamp(glm::length2(data.start.pan - data.end.pan) / (150.f * 150.f), 0.f, 1.f)));
+        data.progress = std::min(1.f, data.progress + (dt * speed));
 
         m_minimapZoom.pan = glm::mix(data.start.pan, data.end.pan, cro::Util::Easing::easeOutExpo(data.progress));
         m_minimapZoom.tilt = glm::mix(data.start.tilt, data.end.tilt, cro::Util::Easing::easeInOutBack(data.progress));
@@ -2784,7 +2818,7 @@ void GolfState::MinimapZoom::updateShader()
     matrix = glm::translate(matrix, -centre);
     invTx = glm::inverse(matrix);
 
-    float feather = smoothstep(0.25f, 0.3f, zoom / 4.f);
+    float feather = smoothstep(1.25f, 2.f, zoom);
 
     glUseProgram(shaderID);
     glUniformMatrix4fv(matrixUniformID, 1, GL_FALSE, &matrix[0][0]);
@@ -2800,37 +2834,6 @@ glm::vec2 GolfState::MinimapZoom::toMapCoords(glm::vec3 worldCoord) const
     mapCoord = glm::vec2(invTx * glm::vec4(mapCoord, 0.0, 1.0));
     return (mapCoord * textureSize);
 }
-
-//glm::vec2 GolfState::toMinimapCoords(glm::vec3 worldPos) const
-//{
-//    auto origin = m_holeData[m_currentHole].modelEntity.getComponent<cro::Transform>().getOrigin();
-//    worldPos -= m_minimapOffset;
-//    worldPos -= origin;
-//    worldPos *= m_minimapScale;
-//    worldPos += origin;
-//    worldPos /= 2.f;
-//
-//    glm::vec2 result = { worldPos.x, -worldPos.z };
-//
-//    if (m_minimapRotation)
-//    {
-//        static constexpr glm::vec2 MapCentre(MapSize / 4u);
-//        result -= MapCentre;
-//
-//        //assume we're only ever rotatating 90 deg
-//        if (m_minimapRotation < 0)
-//        {
-//            result = { -result.y, result.x };
-//        }
-//        else
-//        {
-//            result = { result.y, -result.x };
-//        }
-//        result += MapCentre;
-//    }
-//
-//    return result;
-//}
 
 //------emote wheel-----//
 void GolfState::EmoteWheel::build(cro::Entity root, cro::Scene& uiScene, cro::TextureResource& textures)
