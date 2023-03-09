@@ -6999,8 +6999,7 @@ void GolfState::startFlyBy()
     cmd.targetFlags = CommandID::UI::MiniBall;
     cmd.action = [](cro::Entity e, float)
     {
-        e.getComponent<cro::Transform>().setScale({ 0.f, 0.f });
-        e.getComponent<cro::Transform>().setPosition(glm::vec2(-1000.f));
+        e.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
     };
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 

@@ -525,7 +525,7 @@ void GolfState::buildUI()
     entity.getComponent<cro::Callback>().function =
         [&, BarCentre](cro::Entity e, float)
     {
-        glm::vec3 pos(BarCentre + (BarCentre * m_inputParser.getHook()), 8.f, 0.1f);
+        glm::vec3 pos(BarCentre + (BarCentre * m_inputParser.getHook()), 8.f, 0.25f);
         e.getComponent<cro::Transform>().setPosition(pos);
     };
     barEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -723,7 +723,7 @@ void GolfState::buildUI()
         [&](cro::Entity e, float dt)
     {
         e.getComponent<cro::Transform>().setPosition(glm::vec3(m_minimapZoom.toMapCoords(m_holeData[m_currentHole].pin), 0.02f));
-        e.getComponent<cro::Transform>().setScale(m_minimapZoom.mapScale * 4.f);
+        e.getComponent<cro::Transform>().setScale(m_minimapZoom.mapScale * m_viewScale);
     };
     mapEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
@@ -736,7 +736,7 @@ void GolfState::buildUI()
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().setUserData<float>(0.f);
     entity.getComponent<cro::Callback>().function =
-        [&](cro::Entity e, float dt)
+        [&, mapEnt](cro::Entity e, float dt)
     {
         e.getComponent<cro::Transform>().setPosition(glm::vec3(m_minimapZoom.toMapCoords(m_currentPlayer.position), 0.01f));
         e.getComponent<cro::Transform>().setRotation(m_inputParser.getYaw() + m_minimapZoom.tilt);
@@ -772,7 +772,7 @@ void GolfState::buildUI()
         }
 
         //4 is the relative size of the sprite to the texture... need to update this if we make sprite scale dynamic
-        e.getComponent<cro::Transform>().setScale(glm::vec2(scale, 1.f) * 4.f); 
+        e.getComponent<cro::Transform>().setScale(glm::vec2(scale, 1.f) * (1.f / mapEnt.getComponent<cro::Transform>().getScale().x)); 
     };
     mapEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
@@ -835,7 +835,7 @@ void GolfState::buildUI()
         glm::uvec2 previewSize = MapSize * 8u;
 
         m_mapTexture.create(previewSize.x, previewSize.y);
-        m_mapTexture.setSmooth(true);
+
         mapEnt.getComponent<cro::Sprite>().setTexture(m_mapTexture.getTexture());
         mapEnt.getComponent<cro::Transform>().setOrigin({ previewSize.x / 2.f, previewSize.y / 2.f });
         mapEnt.getComponent<cro::Callback>().getUserData<MinimapData>().textureRatio = 16.f; //TODO this is always double the map size multiplier
@@ -2792,7 +2792,7 @@ void GolfState::retargetMinimap(bool reset)
 
         auto& data = e.getComponent<cro::Callback>().getUserData<MapZoomData>();
         
-        const auto speed = 0.7f + (2.f * (1.f - std::clamp(glm::length2(data.start.pan - data.end.pan) / (100.f * 100.f), 0.f, 1.f)));
+        const auto speed = 0.3f + (0.7f * (1.f - std::clamp(glm::length2(data.start.pan - data.end.pan) / (100.f * 100.f), 0.f, 1.f)));
         data.progress = std::min(1.f, data.progress + (dt * speed));
 
         m_minimapZoom.pan = glm::mix(data.start.pan, data.end.pan, cro::Util::Easing::easeOutExpo(data.progress));

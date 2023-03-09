@@ -220,6 +220,10 @@ void CPUGolfer::activate(glm::vec3 target, glm::vec3 fallback, bool puttFromTee)
                 m_baseTarget = m_target = fallback;
             }
         }
+        else if (glm::length(target - m_activePlayer.position) > Clubs[ClubID::Driver].getTarget(0.f))
+        {
+            m_baseTarget = m_target = fallback;
+        }
         
         previousFail = -1;
 
@@ -272,7 +276,14 @@ void CPUGolfer::update(float dt, glm::vec3 windVector, float distanceToPin)
             pickClubDynamic(dt);
             break;
         case State::Aiming:
-            aimDynamic(dt);
+            /*if (m_activePlayer.terrain == TerrainID::Green)
+            {
+                aim(dt, windVector);
+            }
+            else*/
+            {
+                aimDynamic(dt);
+            }
             break;
         case State::UpdatePrediction:
             updatePrediction(dt);
@@ -364,6 +375,7 @@ void CPUGolfer::setPredictionResult(glm::vec3 result, std::int32_t terrain)
 
 std::size_t CPUGolfer::getSkillIndex() const
 {
+    return 0;
     std::int32_t offset = m_activePlayer.player % 2;
     if (m_skillIndex > 2)
     {
@@ -411,7 +423,7 @@ void CPUGolfer::calcDistance(float dt, glm::vec3 windVector)
         //if we're on the green putter should be auto selected
         if (m_activePlayer.terrain == TerrainID::Green)
         {
-            startThinking(1.f);
+            startThinking(0.1f);
             m_state = State::Aiming;
             m_clubID = ClubID::Putter;
             m_prevClubID = m_clubID;
@@ -826,8 +838,12 @@ void CPUGolfer::aimDynamic(float dt)
             if (m_activePlayer.terrain != TerrainID::Green)
             {
                 m_targetAngle += getOffsetValue() * 0.001f;
+                m_wantsPrediction = true; //don't predict when putting, assume we already face the hole
             }
-            m_wantsPrediction = true;
+            else
+            {
+                m_state = State::UpdatePrediction;
+            }
         }
         //or refine based on prediction
         else
@@ -882,6 +898,13 @@ void CPUGolfer::updatePrediction(float dt)
 
             //we need to maintain a min power target incase we're on the lip of the hole
             m_targetPower = std::max(0.1f, std::min(m_targetPower + ((Deviance[devianceOffset] * 0.1f) * devianceMultiplier), 1.f));
+
+            if (m_activePlayer.terrain == TerrainID::Green)
+            {
+                //see if the flag indicator has a better suggestion :)
+                m_targetPower = std::min(m_targetPower, m_puttingPower);
+            }
+
             m_targetAccuracy -= (Deviance[devianceOffset] * 0.05f) * devianceMultiplier;
 
             m_state = State::Stroke;
@@ -891,6 +914,12 @@ void CPUGolfer::updatePrediction(float dt)
             auto* msg = postMessage<AIEvent>(MessageID::AIMessage);
             msg->type = AIEvent::EndThink;
         };
+
+        if (m_activePlayer.terrain == TerrainID::Green)
+        {
+            takeShot();
+            return;
+        }
 
         if (m_predictionUpdated)
         {

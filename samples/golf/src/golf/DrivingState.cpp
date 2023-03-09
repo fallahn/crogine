@@ -376,7 +376,7 @@ bool DrivingState::handleEvent(const cro::Event& evt)
             m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
         }
         break;
-        case SDLK_PAGEUP:
+        case SDLK_DELETE:
         {
             m_summaryScreen.root.getComponent<cro::Callback>().active = true;
             for (auto e : m_summaryScreen.stars)
