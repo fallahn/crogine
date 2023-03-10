@@ -1859,15 +1859,12 @@ void GolfState::loadAssets()
 
     //minimap - green overhead
     m_resources.shaders.loadFromString(ShaderID::Minimap, MinimapVertex, MinimapFragment);
-    m_scaleBuffer.addShader(m_resources.shaders.get(ShaderID::Minimap));
 
     //minimap - course view
     m_resources.shaders.loadFromString(ShaderID::MinimapView, MinimapViewVertex, MinimapViewFragment);
     shader = &m_resources.shaders.get(ShaderID::MinimapView);
-    m_scaleBuffer.addShader(*shader);
     m_minimapZoom.shaderID = shader->getGLHandle();
     m_minimapZoom.matrixUniformID = shader->getUniformID("u_coordMatrix");
-    m_minimapZoom.featherUniformID = shader->getUniformID("u_fadeAmount");
 
     //water
     m_resources.shaders.loadFromString(ShaderID::Water, WaterVertex, WaterFragment);

@@ -615,7 +615,7 @@ void GolfState::buildUI()
     struct MinimapData final
     {
         std::int32_t state = 0;
-        float scale = 1.f;
+        float scale = 0.001f;
         float rotation = -1.f;
 
         float textureRatio = 1.f; //pixels per metre in the minimap texture * 2
@@ -623,6 +623,7 @@ void GolfState::buildUI()
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 0.f, 82.f });
     entity.getComponent<cro::Transform>().setRotation(-90.f * cro::Util::Const::degToRad);
+    entity.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
     entity.addComponent<cro::Drawable2D>().setShader(&m_resources.shaders.get(ShaderID::MinimapView));
     entity.addComponent<cro::Sprite>();
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::MiniMap;
@@ -941,7 +942,7 @@ void GolfState::buildUI()
         const auto uiSize = size / m_viewScale;
         auto mapSize = glm::vec2(MapSize / 2u);
         mapSize /= 2.f;
-        mapEnt.getComponent<cro::Transform>().setPosition({ uiSize.x - mapSize.y, uiSize.y - (mapSize.x) - (UIBarHeight * 1.5f), -0.05f }); //map sprite is rotated 90
+        mapEnt.getComponent<cro::Transform>().setPosition({ uiSize.x - mapSize.y - 2.f, uiSize.y - (mapSize.x) - (UIBarHeight * 1.5f), -0.05f }); //map sprite is rotated 90
 
 
         greenEnt.getComponent<cro::Transform>().setPosition({ 2.f, uiSize.y - (MapSize.y / 2) - UIBarHeight - 2.f, -0.1f });
@@ -2772,9 +2773,6 @@ void GolfState::retargetMinimap(bool reset)
         //(pan is in texture coords hum)
         target.end.pan *= m_minimapZoom.mapScale;
 
-
-
-
         //get distance between flag and player and expand by 1.7 (about 3m around a putting hole)
         float viewLength = glm::length(dir) * 1.7f; //remember this is world coords
 
@@ -2789,7 +2787,6 @@ void GolfState::retargetMinimap(bool reset)
     entity.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float dt)
     {
-
         auto& data = e.getComponent<cro::Callback>().getUserData<MapZoomData>();
         
         const auto speed = 0.3f + (0.7f * (1.f - std::clamp(glm::length2(data.start.pan - data.end.pan) / (100.f * 100.f), 0.f, 1.f)));
@@ -2827,11 +2824,8 @@ void MinimapZoom::updateShader()
     matrix = glm::translate(matrix, -centre);
     invTx = glm::inverse(matrix);
 
-    float feather = smoothstep(1.25f, 2.f, zoom);
-
     glUseProgram(shaderID);
     glUniformMatrix4fv(matrixUniformID, 1, GL_FALSE, &matrix[0][0]);
-    glUniform1f(featherUniformID, feather);
 }
 
 glm::vec2 MinimapZoom::toMapCoords(glm::vec3 worldCoord) const

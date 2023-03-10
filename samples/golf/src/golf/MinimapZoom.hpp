@@ -43,7 +43,6 @@ struct MinimapZoom final
     glm::mat4 invTx = glm::mat4(1.f);
     std::uint32_t shaderID = 0u;
     std::int32_t matrixUniformID = -1;
-    std::int32_t featherUniformID = -1;
 
     glm::vec2 mapScale = glm::vec2(0.f); //this is the size of the texture used in relation to world map, ie pixels per metre
     glm::vec2 textureSize = glm::vec2(1.f);

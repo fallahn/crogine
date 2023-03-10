@@ -52,22 +52,19 @@ static const std::string MinimapVertex = R"(
 //minimap as in top down view of green
 static const std::string MinimapFragment = R"(
         uniform sampler2D u_texture;
-#include SCALE_BUFFER
+
         VARYING_IN LOW vec4 v_colour;
         VARYING_IN MED vec2 v_texCoord;
         OUTPUT
         
-        const float stepPos = (0.44 * 0.44);
-        const float borderPos = (0.48 * 0.48);
-
-        const vec3 borderColour = vec3(0.314,0.157,0.184);
+        const float stepPos = (0.49 * 0.49);
+        const float borderPos = (0.46 * 0.46);
+        const vec4 borderColour = vec4(vec3(0.0), 0.25);
 
 //these ought to be uniforms for texture
 //res and screen scale
 const float res = 100.0;// 66.0;
 const float scale = 2.0;
-
-#include BAYER_MATRIX
 
         void main()
         {
@@ -77,12 +74,9 @@ const float scale = 2.0;
             float length2 = dot(dir,dir);
 
             FRAG_OUT = TEXTURE(u_texture, v_texCoord) * v_colour;
-            //FRAG_OUT.rgb = mix(FRAG_OUT.rgb, borderColour, step(borderPos, length2));
 
-            int x = int(mod(gl_FragCoord.x / u_pixelScale, MatrixSize));
-            int y = int(mod(gl_FragCoord.y / u_pixelScale, MatrixSize));
-
-            FRAG_OUT.a = findClosest(x, y, smoothstep(stepPos - 0.01, stepPos - 0.05, length2));
+            FRAG_OUT = mix(FRAG_OUT, borderColour, step(borderPos, length2));
+            FRAG_OUT.a *= 1.0 - step(stepPos, length2);
         })";
 
 //minimap as in mini course view
@@ -111,8 +105,6 @@ static const std::string MinimapViewVertex = R"(
 
 static const std::string MinimapViewFragment = R"(
         uniform sampler2D u_texture;
-        uniform float u_fadeAmount = 0.0;
-#include SCALE_BUFFER
 
         VARYING_IN vec2 v_texCoord0;
         VARYING_IN vec2 v_texCoord1;
@@ -120,19 +112,26 @@ static const std::string MinimapViewFragment = R"(
 
         OUTPUT
 
-#include BAYER_MATRIX
+        const float RadiusOuter = (0.4995 * 0.4995);
+        const float RadiusInner = (0.47 * 0.47);
 
-        const float RadiusOuter = (0.495 * 0.495);
-        const float RadiusInner = (0.48 * 0.48);
+//these ought to be uniforms for texture
+//res and screen scale
+const vec2 res = vec2(180.0, 100.0);
+const float scale = 2.0;
 
         void main()
         {
             FRAG_OUT = TEXTURE(u_texture, v_texCoord0) * v_colour;
 
-            vec2 pos = v_texCoord1 - vec2(0.5);
+            //vec2 pos = v_texCoord1 - vec2(0.5);
+
+            vec2 pos = (round(floor(v_texCoord1 * res) * scale) / scale) / res;
+            pos -= vec2(0.5);
             float len2 = dot(pos, pos);
 
-            int x = int(mod(gl_FragCoord.x / u_pixelScale, MatrixSize));
-            int y = int(mod(gl_FragCoord.y / u_pixelScale, MatrixSize));
-            FRAG_OUT.a *= findClosest(x, y, 1.0 - (smoothstep(RadiusInner - (0.08 * u_fadeAmount), RadiusOuter, len2) * u_fadeAmount));
+            FRAG_OUT.a *= 1.0 - step(RadiusInner, len2);
+
+            vec4 bgColour = mix(vec4(vec3(0.0), 0.25), vec4(0.0), step(RadiusOuter, len2));
+            FRAG_OUT = mix(bgColour, FRAG_OUT, FRAG_OUT.a);
         })";
