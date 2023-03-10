@@ -113,7 +113,7 @@ void Server::setHostID(std::uint64_t id)
 //private
 void Server::run()
 {
-    if (!m_sharedData.host.start(m_preferredIP, ConstVal::GamePort, ConstVal::MaxClients, 4))
+    if (!m_sharedData.host.start(/*m_preferredIP*/"", ConstVal::GamePort, ConstVal::MaxClients, 4))
     {
         m_running = false;
         cro::Logger::log("Failed to start host service", cro::Logger::Type::Error);

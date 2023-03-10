@@ -1727,6 +1727,10 @@ void MenuState::finaliseGameCreate(const MatchMaking::Message& msgData)
 #endif
 #else
     m_sharedData.clientConnection.connected = m_sharedData.clientConnection.netClient.connect("255.255.255.255", ConstVal::GamePort);
+    if (!m_sharedData.clientConnection.connected)
+    {
+        m_sharedData.clientConnection.connected = m_sharedData.clientConnection.netClient.connect("127.0.0.1", ConstVal::GamePort);
+    }
 #endif
     if (!m_sharedData.clientConnection.connected)
     {

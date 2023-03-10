@@ -47,6 +47,8 @@ struct MinimapZoom final
     glm::vec2 mapScale = glm::vec2(0.f); //this is the size of the texture used in relation to world map, ie pixels per metre
     glm::vec2 textureSize = glm::vec2(1.f);
 
+    cro::Entity activeAnimation;
+
     void updateShader();
     glm::vec2 toMapCoords(glm::vec3 worldPos) const;
 };

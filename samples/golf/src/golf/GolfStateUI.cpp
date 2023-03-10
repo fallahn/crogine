@@ -942,7 +942,7 @@ void GolfState::buildUI()
         const auto uiSize = size / m_viewScale;
         auto mapSize = glm::vec2(MapSize / 2u);
         mapSize /= 2.f;
-        mapEnt.getComponent<cro::Transform>().setPosition({ uiSize.x - mapSize.y - 2.f, uiSize.y - (mapSize.x) - (UIBarHeight * 1.5f), -0.05f }); //map sprite is rotated 90
+        mapEnt.getComponent<cro::Transform>().setPosition({ uiSize.x - mapSize.y - 2.f, uiSize.y - mapSize.x - (UIBarHeight + 2.f), -0.05f }); //map sprite is rotated 90
 
 
         greenEnt.getComponent<cro::Transform>().setPosition({ 2.f, uiSize.y - (MapSize.y / 2) - UIBarHeight - 2.f, -0.1f });
@@ -2708,6 +2708,13 @@ void GolfState::updateMiniMap()
 
 void GolfState::retargetMinimap(bool reset)
 {
+    if (m_minimapZoom.activeAnimation.isValid())
+    {
+        //remove existing animation
+        m_minimapZoom.activeAnimation.getComponent<cro::Callback>().active = false;
+        m_uiScene.destroyEntity(m_minimapZoom.activeAnimation);
+        m_minimapZoom.activeAnimation = {};
+    }
     struct MapZoomData final
     {
         struct
@@ -2719,7 +2726,7 @@ void GolfState::retargetMinimap(bool reset)
 
         float progress = 0.f;
     }target;
-    
+
     target.start.pan = m_minimapZoom.pan;
     target.start.tilt = m_minimapZoom.tilt;
     target.start.zoom = m_minimapZoom.zoom;
@@ -2732,7 +2739,9 @@ void GolfState::retargetMinimap(bool reset)
         auto bb = m_holeData[m_currentHole].modelEntity.getComponent<cro::Model>().getAABB();
         target.end.pan = m_minimapZoom.textureSize / 2.f;
 
-        target.end.zoom = std::clamp(static_cast<float>(MapSize.x) / ((bb[1].x - bb[0].x) * 1.5f), 1.f, 16.f);
+        auto xZoom = std::clamp(static_cast<float>(MapSize.x) / ((bb[1].x - bb[0].x) * 1.6f), 0.9f, 16.f);
+        auto zZoom = std::clamp(static_cast<float>(MapSize.y) / ((bb[1].z - bb[0].z) * 1.6f), 0.9f, 16.f);
+        target.end.zoom = xZoom > zZoom ? xZoom : zZoom;
     }
     else
     {
@@ -2745,7 +2754,7 @@ void GolfState::retargetMinimap(bool reset)
         auto rotation = std::atan2(-dir.y, dir.x) + cro::Util::Const::PI;
         target.end.tilt = m_minimapZoom.tilt + cro::Util::Maths::shortestRotation(m_minimapZoom.tilt, rotation);
 
-        
+
         //if we have a tight dogleg, such as on the mini putt
         //check if the primary target is inbetween and shift
         //towards it to better centre the hole
@@ -2788,8 +2797,8 @@ void GolfState::retargetMinimap(bool reset)
         [&](cro::Entity e, float dt)
     {
         auto& data = e.getComponent<cro::Callback>().getUserData<MapZoomData>();
-        
-        const auto speed = 0.3f + (0.7f * (1.f - std::clamp(glm::length2(data.start.pan - data.end.pan) / (100.f * 100.f), 0.f, 1.f)));
+
+        const auto speed = 0.4f + (0.7f * (1.f - std::clamp(glm::length2(data.start.pan - data.end.pan) / (100.f * 100.f), 0.f, 1.f)));
         data.progress = std::min(1.f, data.progress + (dt * speed));
 
         m_minimapZoom.pan = glm::mix(data.start.pan, data.end.pan, cro::Util::Easing::easeOutExpo(data.progress));
@@ -2799,10 +2808,12 @@ void GolfState::retargetMinimap(bool reset)
 
         if (data.progress == 1)
         {
+            m_minimapZoom.activeAnimation = {};
             e.getComponent<cro::Callback>().active = false;
             m_uiScene.destroyEntity(e);
         }
     };
+    m_minimapZoom.activeAnimation = entity;
 }
 
 void MinimapZoom::updateShader()
