@@ -543,11 +543,6 @@ void GolfState::buildUI()
     {       
         float vScaleTarget = m_currentPlayer.terrain == TerrainID::Green ? 1.f : 0.f;
 
-        /*if (m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].holeScores[m_currentHole] == 0)
-        {
-            vScaleTarget = 0.f;
-        }*/        
-
         auto scale = e.getComponent<cro::Transform>().getScale();
         if (vScaleTarget > 0)
         {
@@ -724,7 +719,7 @@ void GolfState::buildUI()
         [&](cro::Entity e, float dt)
     {
         e.getComponent<cro::Transform>().setPosition(glm::vec3(m_minimapZoom.toMapCoords(m_holeData[m_currentHole].pin), 0.02f));
-        e.getComponent<cro::Transform>().setScale(m_minimapZoom.mapScale * (1.f + ((m_minimapZoom.zoom - 1.f) * 0.25f)) * m_viewScale);
+        e.getComponent<cro::Transform>().setScale(m_minimapZoom.mapScale * 2.f * (1.f + ((m_minimapZoom.zoom - 1.f) * 0.125f)));
     };
     mapEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 

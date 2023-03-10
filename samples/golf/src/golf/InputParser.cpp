@@ -473,7 +473,7 @@ void InputParser::setEnableFlags(std::uint16_t flags)
 void InputParser::setMaxClub(float dist)
 {
     //a fudge to allow a full set on any hole bigger than pitch n putt
-    if (dist > 160.f)
+    if (dist > 115.f)
     {
         dist = 1000.f;
     }
@@ -545,6 +545,100 @@ void InputParser::update(float dt, std::int32_t terrainID)
     m_prevFlags = m_inputFlags;
 }
 
+bool InputParser::inProgress() const
+{
+    return (m_state == State::Power || m_state == State::Stroke);
+}
+
+bool InputParser::getActive() const
+{
+    return m_active;
+}
+
+void InputParser::setMaxRotation(float rotation)
+{
+    m_maxRotation = std::max(0.05f, std::min(cro::Util::Const::PI / 2.f/*MaxRotation*/, rotation));
+}
+
+InputParser::StrokeResult InputParser::getStroke(std::int32_t club, std::int32_t facing, float distanceToHole) const
+{
+    auto pitch = Clubs[club].getAngle();
+    auto yaw = getYaw();
+    auto power = Clubs[club].getPower(distanceToHole);
+
+    //add hook/slice to yaw
+    auto hook = getHook();
+    if (club != ClubID::Putter)
+    {
+        auto s = cro::Util::Maths::sgn(hook);
+        //changing this func changes how accurate a player needs to be
+        //sine, quad, cubic, quart, quint in steepness order
+        if (Achievements::getActive())
+        {
+            auto level = Social::getLevel();
+            switch (level / 10)
+            {
+            default:
+                hook = cro::Util::Easing::easeOutQuint(hook * s) * s;
+                break;
+            case 3:
+                hook = cro::Util::Easing::easeOutQuart(hook * s) * s;
+                break;
+            case 2:
+                hook = cro::Util::Easing::easeOutCubic(hook * s) * s;
+                break;
+            case 1:
+                hook = cro::Util::Easing::easeOutQuad(hook * s) * s;
+                break;
+            case 0:
+                hook = cro::Util::Easing::easeOutSine(hook * s) * s;
+                break;
+            }
+        }
+        else
+        {
+            hook = cro::Util::Easing::easeOutQuad(hook * s) * s;
+        }
+
+        power *= cro::Util::Easing::easeOutSine(getPower());
+    }
+    else
+    {
+        power *= getPower();
+    }
+    yaw += MaxHook * hook;
+
+    float sideSpin = -hook;
+    sideSpin *= Clubs[club].getSideSpinMultiplier();
+
+    bool slice = (cro::Util::Maths::sgn(hook) * facing == 1);
+    if (!slice)
+    {
+        //hook causes slightly less spin
+        sideSpin *= 0.995f;
+    }
+
+    float accuracy = 1.f - std::abs(hook);
+    auto spin = getSpin() * accuracy;
+
+    //modulate pitch with topspin
+    spin.y *= Clubs[club].getTopSpinMultiplier();
+    pitch -= (4.f * cro::Util::Const::degToRad) * spin.y;
+
+    spin.x *= Clubs[club].getSideSpinMultiplier() / 2.f;
+    spin.x += sideSpin;
+
+    glm::vec3 impulse(1.f, 0.f, 0.f);
+    auto rotation = glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), yaw, cro::Transform::Y_AXIS);
+    rotation = glm::rotate(rotation, pitch, cro::Transform::Z_AXIS);
+    impulse = glm::toMat3(rotation) * impulse;
+
+    impulse *= power;
+
+    return { impulse, spin, hook };
+}
+
+//private
 void InputParser::updateStroke(float dt, std::int32_t terrainID)
 {
     //catch the inputs that where filtered by the
@@ -801,100 +895,6 @@ void InputParser::updateSpin(float dt)
     m_spin.y = std::clamp(m_spin.y + (rotation.x * dt), -1.f, 1.f);
 }
 
-bool InputParser::inProgress() const
-{
-    return (m_state == State::Power || m_state == State::Stroke);
-}
-
-bool InputParser::getActive() const
-{
-    return m_active;
-}
-
-void InputParser::setMaxRotation(float rotation)
-{
-    m_maxRotation = std::max(0.05f, std::min(cro::Util::Const::PI / 2.f/*MaxRotation*/, rotation));
-}
-
-InputParser::StrokeResult InputParser::getStroke(std::int32_t club, std::int32_t facing, float distanceToHole) const
-{
-    auto pitch = Clubs[club].getAngle();
-    auto yaw = getYaw();
-    auto power = Clubs[club].getPower(distanceToHole);
-
-    //add hook/slice to yaw
-    auto hook = getHook();
-    if (club != ClubID::Putter)
-    {
-        auto s = cro::Util::Maths::sgn(hook);
-        //changing this func changes how accurate a player needs to be
-        //sine, quad, cubic, quart, quint in steepness order
-        if (Achievements::getActive())
-        {
-            auto level = Social::getLevel();
-            switch (level / 10)
-            {
-            default:
-                hook = cro::Util::Easing::easeOutQuint(hook * s) * s;
-                break;
-            case 3:
-                hook = cro::Util::Easing::easeOutQuart(hook * s) * s;
-                break;
-            case 2:
-                hook = cro::Util::Easing::easeOutCubic(hook * s) * s;
-                break;
-            case 1:
-                hook = cro::Util::Easing::easeOutQuad(hook * s) * s;
-                break;
-            case 0:
-                hook = cro::Util::Easing::easeOutSine(hook * s) * s;
-                break;
-            }
-        }
-        else
-        {
-            hook = cro::Util::Easing::easeOutQuad(hook * s) * s;
-        }
-
-        power *= cro::Util::Easing::easeOutSine(getPower());
-    }
-    else
-    {
-        power *= getPower();
-    }
-    yaw += MaxHook * hook;
-
-    float sideSpin = -hook;
-    sideSpin *= Clubs[club].getSideSpinMultiplier();
-
-    bool slice = (cro::Util::Maths::sgn(hook) * facing == 1);
-    if (!slice)
-    {
-        //hook causes slightly less spin
-        sideSpin *= 0.995f;
-    }
-
-    float accuracy = 1.f - std::abs(hook);
-    auto spin = getSpin() * accuracy;
-
-    //modulate pitch with topspin
-    spin.y *= Clubs[club].getTopSpinMultiplier();
-    pitch -= (4.f * cro::Util::Const::degToRad) * spin.y;
-
-    spin.x *= Clubs[club].getSideSpinMultiplier() / 2.f;
-    spin.x += sideSpin;
-
-    glm::vec3 impulse(1.f, 0.f, 0.f);
-    auto rotation = glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), yaw, cro::Transform::Y_AXIS);
-    rotation = glm::rotate(rotation, pitch, cro::Transform::Z_AXIS);
-    impulse = glm::toMat3(rotation) * impulse;
-
-    impulse *= power;
-
-    return { impulse, spin, hook };
-}
-
-//private
 void InputParser::rotate(float rotation)
 {
     float total = m_rotation + rotation;

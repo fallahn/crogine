@@ -104,7 +104,7 @@ const std::array<CPUGolfer::SkillContext, 6> CPUGolfer::m_skills =
     {CPUGolfer::Skill::Dynamic, 6.f, 0.12f, 5, 6},
     {CPUGolfer::Skill::Dynamic, 4.f, 0.9f, 4, 10},
     {CPUGolfer::Skill::Dynamic, 2.2f, 0.06f, 2, 14},
-    {CPUGolfer::Skill::Dynamic, 2.f, 0.06f, 1, 50}
+    {CPUGolfer::Skill::Dynamic, 2.f, 0.06f, 0, 50}
 };
 
 CPUGolfer::CPUGolfer(const InputParser& ip, const ActivePlayer& ap, const CollisionMesh& cm)
@@ -375,7 +375,6 @@ void CPUGolfer::setPredictionResult(glm::vec3 result, std::int32_t terrain)
 
 std::size_t CPUGolfer::getSkillIndex() const
 {
-    return 0;
     std::int32_t offset = m_activePlayer.player % 2;
     if (m_skillIndex > 2)
     {
@@ -835,14 +834,18 @@ void CPUGolfer::aimDynamic(float dt)
         if (!m_wantsPrediction)
         {
             m_targetAngle = m_aimAngle;
-            if (m_activePlayer.terrain != TerrainID::Green)
+
+
+            if (m_activePlayer.terrain == TerrainID::Green
+                && (!m_puttFromTee || getSkillIndex() < 4))
             {
-                m_targetAngle += getOffsetValue() * 0.001f;
-                m_wantsPrediction = true; //don't predict when putting, assume we already face the hole
+                //don't predict when putting, assume we already face the hole
+                m_state = State::UpdatePrediction;
             }
             else
             {
-                m_state = State::UpdatePrediction;
+                m_targetAngle += getOffsetValue() * 0.001f;
+                m_wantsPrediction = true;
             }
         }
         //or refine based on prediction
@@ -902,7 +905,7 @@ void CPUGolfer::updatePrediction(float dt)
             if (m_activePlayer.terrain == TerrainID::Green)
             {
                 //see if the flag indicator has a better suggestion :)
-                m_targetPower = std::min(m_targetPower, m_puttingPower);
+                m_targetPower = std::min(m_targetPower, m_puttingPower * (1.f + (static_cast<float>(getSkillIndex()) * 0.01f)));
             }
 
             m_targetAccuracy -= (Deviance[devianceOffset] * 0.05f) * devianceMultiplier;
@@ -915,7 +918,8 @@ void CPUGolfer::updatePrediction(float dt)
             msg->type = AIEvent::EndThink;
         };
 
-        if (m_activePlayer.terrain == TerrainID::Green)
+        if (m_activePlayer.terrain == TerrainID::Green
+            && (getSkillIndex() < 4 || !m_puttFromTee))
         {
             takeShot();
             return;
@@ -1082,7 +1086,7 @@ void CPUGolfer::calcAccuracy()
     m_targetAccuracy = 0.08f;
     if (m_skills[getSkillIndex()].strokeAccuracy != 0)
     {
-        m_targetAccuracy += static_cast<float>(-m_skills[getSkillIndex()].strokeAccuracy, m_skills[m_skillIndex].strokeAccuracy) / 100.f;
+        m_targetAccuracy += static_cast<float>(-m_skills[getSkillIndex()].strokeAccuracy/*, m_skills[m_skillIndex].strokeAccuracy*/) / 100.f;
     }
 
     //occasionally make really inaccurate

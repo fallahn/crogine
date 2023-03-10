@@ -7133,7 +7133,7 @@ void GolfState::updateCameraHeight(float movement)
         float distanceToHole = glm::length(m_holeData[m_currentHole].pin - camPos);
         float heightMultiplier = std::clamp(distanceToHole - DistanceIncrease, 0.f, DistanceIncrease);
 
-        const auto MaxOffset = m_cameras[CameraID::Player].getComponent<TargetInfo>().targetHeight;
+        const auto MaxOffset = m_cameras[CameraID::Player].getComponent<TargetInfo>().targetHeight + 0.2f;
         const auto TargetHeight = MaxOffset + m_collisionMesh.getTerrain(camPos).height;
 
         camPos.y = std::clamp(camPos.y + movement, TargetHeight - (MaxOffset * 0.5f), TargetHeight + (MaxOffset * 0.6f) + (heightMultiplier / DistanceIncrease));
