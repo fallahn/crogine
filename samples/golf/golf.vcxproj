@@ -583,6 +583,7 @@
     <ClInclude Include="src\golf\MessageIDs.hpp" />
     <ClInclude Include="src\golf\MessageOverlayState.hpp" />
     <ClInclude Include="src\golf\MiniBallSystem.hpp" />
+    <ClInclude Include="src\golf\MinimapZoom.hpp" />
     <ClInclude Include="src\golf\NameScrollSystem.hpp" />
     <ClInclude Include="src\golf\Networking.hpp" />
     <ClInclude Include="src\golf\NewsState.hpp" />

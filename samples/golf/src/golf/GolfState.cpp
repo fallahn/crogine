@@ -3300,7 +3300,7 @@ void GolfState::addSystems()
     m_uiScene.addSystem<cro::CommandSystem>(mb);
     m_uiScene.addSystem<NotificationSystem>(mb);
     m_uiScene.addSystem<FloatingTextSystem>(mb);
-    m_uiScene.addSystem<MiniBallSystem>(mb);
+    m_uiScene.addSystem<MiniBallSystem>(mb, m_minimapZoom);
     m_uiScene.addSystem<cro::TextSystem>(mb);
     m_uiScene.addSystem<cro::SpriteAnimator>(mb);
     m_uiScene.addSystem<cro::SpriteSystem2D>(mb);
@@ -4655,7 +4655,7 @@ void GolfState::spawnBall(const ActorInfo& info)
                     rayPoint.y = 10.f;
                     auto height = m_collisionMesh.getTerrain(rayPoint).height;
                     c.setAlpha(smoothstep(0.2f, 0.8f, (ballPos.y - height) / 0.25f));
-                    
+
                     ballPos.y = 0.00001f + (height - ballHeight);
                 }
                 e.getComponent<cro::Transform>().setPosition({ 0.f, ballPos.y, 0.f });
@@ -4678,7 +4678,7 @@ void GolfState::spawnBall(const ActorInfo& info)
     //entity.getComponent<cro::Transform>().setScale(glm::vec3(1.3f));
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function =
-        [&,ballEnt](cro::Entity e, float)
+        [&, ballEnt](cro::Entity e, float)
     {
         if (ballEnt.destroyed())
         {
@@ -4751,7 +4751,7 @@ void GolfState::spawnBall(const ActorInfo& info)
     //clamp scale of balls in case someone got funny with a large model
     const float scale = std::min(1.f, MaxBallRadius / entity.getComponent<cro::Model>().getBoundingSphere().radius);
     entity.getComponent<cro::Transform>().setScale(glm::vec3(scale));
-    
+
     entity.getComponent<cro::Model>().setMaterial(0, material);
     if (entity.getComponent<cro::Model>().getMeshData().submeshCount > 1)
     {
@@ -4803,8 +4803,8 @@ void GolfState::spawnBall(const ActorInfo& info)
             if (m_currentPlayer.player == playerID
                 && m_sharedData.clientConnection.connectionID == clientID)
             {
-                 //set target fade to zero
-                colour.setAlpha(std::max(0.f, colour.getAlpha() - dt));               
+                //set target fade to zero
+                colour.setAlpha(std::max(0.f, colour.getAlpha() - dt));
             }
             else
             {
@@ -4855,6 +4855,7 @@ void GolfState::spawnBall(const ActorInfo& info)
     entity.getComponent<cro::Drawable2D>().updateLocalBounds();
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::MiniBall;
     entity.addComponent<MiniBall>().playerID = depthOffset;
+    entity.getComponent<MiniBall>().parent = ballEnt;
 
     m_minimapEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
@@ -5268,7 +5269,7 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
 
 void GolfState::removeClient(std::uint8_t clientID)
 {
-    //tidy up minimap
+    //tidy up minimap - TODO MiniballSystem could now do this through checking parent state, but if it ain't broke...
     for (auto i = 0u; i < m_sharedData.connectionData[clientID].playerCount; ++i)
     {
         auto pid = clientID * 4 + i;
@@ -6576,24 +6577,6 @@ void GolfState::updateActor(const ActorInfo& update)
             auto bounds = cro::Text::getLocalBounds(e);
             bounds.width = std::floor(bounds.width / 2.f);
             e.getComponent<cro::Transform>().setOrigin({ bounds.width, 0.f });
-        };
-        m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
-
-        
-        cmd.targetFlags = CommandID::UI::MiniBall;
-        cmd.action =
-            [&, update](cro::Entity e, float)
-        {
-            auto pid = m_currentPlayer.client * 4 + m_currentPlayer.player;
-            if (e.getComponent<MiniBall>().playerID == pid)
-            {
-                e.getComponent<cro::Transform>().setPosition(glm::vec3(m_minimapZoom.toMapCoords(update.position), 0.1f));
-
-                //set scale based on height
-                static constexpr float MaxHeight = 40.f;
-                float scale = 1.f + ((update.position.y / MaxHeight));
-                e.getComponent<cro::Transform>().setScale(glm::vec2(scale) * m_minimapZoom.mapScale);
-            }
         };
         m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
     }

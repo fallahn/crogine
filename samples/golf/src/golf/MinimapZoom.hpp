@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022 - 2023
+Matt Marchant 2023
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -29,29 +29,25 @@ source distribution.
 
 #pragma once
 
-#include <crogine/ecs/System.hpp>
+#include <crogine/detail/glm/vec2.hpp>
+#include <crogine/detail/glm/mat4x4.hpp>
 
-struct MinimapZoom;
-struct MiniBall final
+#include <cstdint>
+
+struct MinimapZoom final
 {
-    float currentTime = 1.f;
-    std::int32_t playerID = -1; //(client * maxPlayer) + player - used when tidying up disconnecting client
-    cro::Entity parent;
+    glm::vec2 pan = glm::vec2(0.f);
+    float tilt = 0.f;
+    float zoom = 1.f;
 
-    enum
-    {
-        Animating,
-        Idle
-    }state = Idle;
-};
+    glm::mat4 invTx = glm::mat4(1.f);
+    std::uint32_t shaderID = 0u;
+    std::int32_t matrixUniformID = -1;
+    std::int32_t featherUniformID = -1;
 
-class MiniBallSystem final : public cro::System
-{
-public:
-    MiniBallSystem(cro::MessageBus&, const MinimapZoom&);
+    glm::vec2 mapScale = glm::vec2(0.f); //this is the size of the texture used in relation to world map, ie pixels per metre
+    glm::vec2 textureSize = glm::vec2(1.f);
 
-    void process(float) override;
-
-private:
-    const MinimapZoom& m_minimapZoom;
+    void updateShader();
+    glm::vec2 toMapCoords(glm::vec3 worldPos) const;
 };

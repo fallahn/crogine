@@ -2808,7 +2808,7 @@ void GolfState::retargetMinimap(bool reset)
     };
 }
 
-void GolfState::MinimapZoom::updateShader()
+void MinimapZoom::updateShader()
 {
     CRO_ASSERT(glm::length2(textureSize) != 0, "");
 
@@ -2834,7 +2834,7 @@ void GolfState::MinimapZoom::updateShader()
     glUniform1f(featherUniformID, feather);
 }
 
-glm::vec2 GolfState::MinimapZoom::toMapCoords(glm::vec3 worldCoord) const
+glm::vec2 MinimapZoom::toMapCoords(glm::vec3 worldCoord) const
 {
     CRO_ASSERT(glm::length2(textureSize) != 0, "");
 
