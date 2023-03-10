@@ -131,7 +131,8 @@ struct SystemEvent final
         StateRequest,
         InputActivated,
         ShadowQualityChanged,
-        MenuChanged
+        MenuChanged,
+        RestartActiveMode //currently just driving range, but might apply somewhere else one day :)
     }type = PostProcessToggled;
     std::int32_t data = -1;
 };

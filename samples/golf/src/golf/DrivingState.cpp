@@ -320,6 +320,21 @@ bool DrivingState::handleEvent(const cro::Event& evt)
         }
     };
 
+    const auto pauseGame = [&]()
+    {
+        //tells the pause menu to add restart option if round is active
+        if (m_gameScene.getDirector<DrivingRangeDirector>()->roundEnded())
+        {
+            m_sharedData.baseState = -1;
+        }
+        else
+        {
+            m_sharedData.baseState = StateID::DrivingRange;
+        }
+
+        requestStackPush(StateID::Pause);
+    };
+
     if (evt.type == SDL_KEYUP)
     {
         resetIdle();
@@ -331,15 +346,12 @@ bool DrivingState::handleEvent(const cro::Event& evt)
         case SDLK_ESCAPE:
         case SDLK_BACKSPACE:
         case SDLK_PAUSE:
-            requestStackPush(StateID::Pause);
+            pauseGame();
             break;
             //make sure system buttons don't do anything
         case SDLK_F1:
         case SDLK_F5:
 
-            break;
-        case SDLK_PAGEUP:
-            forceRestart();
             break;
         case SDLK_SPACE:
             closeMessage();
@@ -424,7 +436,7 @@ bool DrivingState::handleEvent(const cro::Event& evt)
         default: break;
         case cro::GameController::ButtonStart:
         case cro::GameController::ButtonGuide:
-            requestStackPush(StateID::Pause);
+            pauseGame();
             break;
         case cro::GameController::ButtonA:
             closeMessage();
@@ -453,7 +465,7 @@ bool DrivingState::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_CONTROLLERDEVICEREMOVED)
     {
-        requestStackPush(StateID::Pause);
+        pauseGame();
     }
 #ifdef CRO_DEBUG_
     m_gameScene.getSystem<FpsCameraSystem>()->handleEvent(evt);
@@ -659,6 +671,15 @@ void DrivingState::handleMessage(const cro::Message& msg)
                 };
                 m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
             }
+        }
+    }
+        break;
+    case MessageID::SystemMessage:
+    {
+        const auto& data = msg.getData<SystemEvent>();
+        if (data.type == SystemEvent::RestartActiveMode)
+        {
+            forceRestart();
         }
     }
         break;
@@ -3027,7 +3048,10 @@ void DrivingState::forceRestart()
     };
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
-    //TODO darken background
+    //darken background
+    m_summaryScreen.fadeEnt.getComponent<cro::Callback>().setUserData<float>(BackgroundAlpha);
+    m_summaryScreen.fadeEnt.getComponent<cro::Callback>().active = true;
+    m_summaryScreen.fadeEnt.getComponent<cro::Transform>().setPosition({ 0.f, 0.f, FadeDepth });
 
 
     //reset the ball

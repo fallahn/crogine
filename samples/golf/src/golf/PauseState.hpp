@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021
+Matt Marchant 2021 - 2023
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -71,7 +71,17 @@ private:
 
     glm::vec2 m_viewScale;
     cro::Entity m_rootNode;
-    void buildScene();
+    bool m_requestRestart;
 
+    struct ConfirmType final
+    {
+        enum
+        {
+            Restart, Quit
+        };
+    };
+    std::int32_t m_confirmationType; //used to decide which action the confirmation menu should take
+
+    void buildScene();
     void quitState();
 };
