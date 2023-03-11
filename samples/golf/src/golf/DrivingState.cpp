@@ -133,6 +133,12 @@ namespace
     static constexpr glm::vec2 BillboardChunk(40.f, 50.f);
     static constexpr std::size_t ChunkCount = 5;
 
+    struct FanData final
+    {
+        std::int32_t dir = 1;
+        float progress = 0.f;
+    };
+
     struct FoliageCallback final
     {
         FoliageCallback(float d = 0.f) : delay(d + 8.f) {} //magic number is some delay before effect starts
@@ -2173,11 +2179,7 @@ void DrivingState::createPlayer(cro::Entity courseEnt)
     entity.getComponent<cro::Model>().setHidden(true);
     entity.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniGreen | RenderFlags::MiniMap));
 
-    struct FanData final
-    {
-        std::int32_t dir = 1;
-        float progress = 0.f;
-    };
+
     entity.addComponent<cro::Callback>().setUserData<FanData>();
     entity.getComponent<cro::Callback>().function =
         [indicatorEnt](cro::Entity e, float dt) mutable
@@ -2841,6 +2843,7 @@ void DrivingState::hitBall()
     cmd.targetFlags = CommandID::StrokeArc;
     cmd.action = [](cro::Entity e, float)
     {
+        e.getComponent<cro::Callback>().getUserData<FanData>().dir = 0; //outbound
         e.getComponent<cro::Callback>().active = true;
     };
     m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
@@ -3021,6 +3024,8 @@ void DrivingState::setActiveCamera(std::int32_t camID)
 
 void DrivingState::forceRestart()
 {
+    m_inputParser.setActive(false);
+
     //reset minimap
     auto oldCam = m_gameScene.setActiveCamera(m_mapCam);
     m_mapTexture.clear(TextNormalColour);
@@ -3066,6 +3071,24 @@ void DrivingState::forceRestart()
         ball.initialSideVector = { 0.f, 0.f, 0.f };
 
         e.getComponent<cro::Transform>().setPosition(PlayerPosition);
+    };
+    m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+
+    //hide the power bar
+    cmd.targetFlags = CommandID::UI::Root;
+    cmd.action = [](cro::Entity e, float)
+    {
+        e.getComponent<cro::Callback>().getUserData<std::pair<std::int32_t, float>>().first = 1;
+        e.getComponent<cro::Callback>().active = true;
+    };
+    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+    cmd.targetFlags = CommandID::StrokeArc;
+    cmd.action = [](cro::Entity e, float)
+    {
+        e.getComponent<cro::Callback>().getUserData<FanData>().dir = 0; //outbound
+        e.getComponent<cro::Callback>().active = true;
     };
     m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
