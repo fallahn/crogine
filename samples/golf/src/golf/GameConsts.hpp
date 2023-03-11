@@ -128,6 +128,15 @@ static constexpr std::int16_t LeftThumbDeadZone = 7849;
 static constexpr std::int16_t RightThumbDeadZone = 8689;
 static constexpr std::int16_t TriggerDeadZone = 30;
 
+struct TutorialID
+{
+    //note that these are in order in which they are displayed
+    enum
+    {
+        One, Two, Three,
+        Swing, Spin, Putt
+    };
+};
 
 struct LobbyPager final
 {

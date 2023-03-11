@@ -45,6 +45,16 @@ namespace cro
     struct Camera;
 }
 
+struct ButtonID final
+{
+    enum
+    {
+        A, B, X, Y, Start, Select, LT, RT,
+
+        Count
+    };
+};
+
 class TutorialState final : public cro::State, public cro::GuiClient
 {
 public:
@@ -77,7 +87,7 @@ private:
     std::size_t m_currentAction;
     bool m_actionActive;
 
-    std::array<cro::Sprite, 8> m_buttonSprites = {};
+    std::array<cro::Sprite, ButtonID::Count> m_buttonSprites = {};
 
     void buildScene();
 
@@ -86,6 +96,7 @@ private:
     void tutorialThree(cro::Entity);
     void tutorialPutt(cro::Entity);
     void tutorialSwing(cro::Entity);
+    void tutorialSpin(cro::Entity);
 
     void showContinue();
     void doCurrentAction();

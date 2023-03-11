@@ -526,7 +526,8 @@ void InputParser::update(float dt, std::int32_t terrainID)
         m_inputAcceleration = 0.f;
     }
 
-    if (m_inputFlags & InputFlag::SpinMenu)
+    if ((m_inputFlags & InputFlag::SpinMenu)
+         && (m_enableFlags & InputFlag::SpinMenu))
     {
         updateSpin(dt);
     }
