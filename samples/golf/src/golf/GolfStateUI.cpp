@@ -520,12 +520,12 @@ void GolfState::buildUI()
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::HookBar];
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
-    entity.getComponent<cro::Transform>().setOrigin(glm::vec2(bounds.width / 2.f, bounds.height / 2.f));
+    entity.getComponent<cro::Transform>().setOrigin(glm::vec2(std::floor(bounds.width / 2.f), std::floor(bounds.height / 2.f)));
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function =
         [&, BarCentre](cro::Entity e, float)
     {
-        glm::vec3 pos(BarCentre + (BarCentre * m_inputParser.getHook()), 8.f, 0.25f);
+        glm::vec3 pos(std::round(BarCentre + (BarCentre * m_inputParser.getHook())), 8.f, 0.25f);
         e.getComponent<cro::Transform>().setPosition(pos);
     };
     barEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -1634,7 +1634,7 @@ void GolfState::updateScoreboard()
         std::uint32_t playerCount = 0;
         auto holeCount = m_holeData.size();
         std::uint8_t clientID = 0;
-        for (const auto& client : m_sharedData.connectionData)
+        for (auto& client : m_sharedData.connectionData)
         {
             playerCount += client.playerCount;
 
@@ -1686,6 +1686,8 @@ void GolfState::updateScoreboard()
                         }
                     }
                 }
+                client.playerData[i].parScore = entry.parDiff;
+
                 switch (m_sharedData.scoreType)
                 {
                 default:

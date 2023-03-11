@@ -59,6 +59,7 @@ struct PlayerData final
     std::uint8_t score = 0;
     std::uint8_t matchScore = 0;
     std::uint8_t skinScore = 0;
+    std::int32_t parScore = 0;
     glm::vec3 currentTarget = glm::vec3(0.f);
     cro::Colour ballTint;
 };

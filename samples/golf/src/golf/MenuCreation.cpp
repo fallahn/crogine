@@ -2977,7 +2977,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     {
         std::uint8_t clientID = 0;
         std::uint8_t playerID = 0;
-        std::uint8_t score = 0;
+        std::int8_t score = 0;
     };
 
     std::vector<ScoreInfo> scoreInfo;
@@ -2989,18 +2989,62 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
             auto& info = scoreInfo.emplace_back();
             info.clientID = i;
             info.playerID = j;
-            info.score = m_sharedData.connectionData[i].playerData[j].score;
+            switch (m_sharedData.scoreType)
+            {
+            default:
+            case ScoreType::Stroke:
+                info.score = m_sharedData.connectionData[i].playerData[j].parScore;
+                break;
+            case ScoreType::Match:
+                info.score = m_sharedData.connectionData[i].playerData[j].matchScore;
+                break;
+            case ScoreType::Skins:
+                info.score = m_sharedData.connectionData[i].playerData[j].skinScore;
+                break;
+            }
         }
     }
 
-    std::sort(scoreInfo.begin(), scoreInfo.end(), [](const ScoreInfo& a, const ScoreInfo& b) {return a.score < b.score; });
+    std::sort(scoreInfo.begin(), scoreInfo.end(), 
+        [&](const ScoreInfo& a, const ScoreInfo& b)
+        {
+            if (m_sharedData.scoreType == ScoreType::Stroke)
+            {
+                return a.score < b.score;
+            }
+            else
+            {
+                return a.score > b.score;
+            }
+        });
 
     std::vector<cro::String> names;
     for (const auto& score : scoreInfo)
     {
-        if (score.score != 0)
+        //if (score.score != 0)
         {
             names.push_back(m_sharedData.connectionData[score.clientID].playerData[score.playerID].name);
+            names.back() += ": (" + std::to_string(score.score) + ")";
+            switch (m_sharedData.scoreType)
+            {
+            default:
+            case ScoreType::Stroke:
+                if (score.score < 0)
+                {
+                    names.back() += " Under PAR";
+                }
+                else if (score.score > 0)
+                {
+                    names.back() += " Over PAR";
+                }
+                break;
+            case ScoreType::Skins:
+                names.back() += "Skins";
+                break;
+            case ScoreType::Match:
+                names.back() += "Match Points";
+                break;
+            }
         }
     }
 

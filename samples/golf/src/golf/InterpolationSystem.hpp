@@ -257,9 +257,9 @@ public:
 						entity.template getComponent<cro::Transform>().setRotation(rotation);
 					}
 				}
-#ifdef CRO_DEBUG_
-				else { LogI << "Interp wants buffer" << std::endl; }
-#endif
+//#ifdef CRO_DEBUG_
+//				else { LogI << "Interp wants buffer" << std::endl; }
+//#endif
 			}
 			else
 			{
