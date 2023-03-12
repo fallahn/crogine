@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2022
+Matt Marchant 2020 - 2023
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -52,6 +52,12 @@ struct StateID final
         Playlist,
         MessageOverlay,
         Credits,
-        EventOverlay //consumes events if the overlay is open
+        EventOverlay, //consumes events if the overlay is open
+        Unlock,
+
+
+
+
+        Workshop = 1100
     };
 };

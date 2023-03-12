@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2022
+Matt Marchant 2021 - 2023
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -34,6 +34,7 @@ source distribution.
 #include "MenuConsts.hpp"
 #include "GameConsts.hpp"
 #include "TextAnimCallback.hpp"
+#include "MessageIDs.hpp"
 #include "../GolfGame.hpp"
 
 #include <crogine/core/Window.hpp>
@@ -79,10 +80,12 @@ namespace
 }
 
 PauseState::PauseState(cro::StateStack& ss, cro::State::Context ctx, SharedStateData& sd)
-    : cro::State(ss, ctx),
-    m_scene     (ctx.appInstance.getMessageBus()),
-    m_sharedData(sd),
-    m_viewScale (2.f)
+    : cro::State        (ss, ctx),
+    m_scene             (ctx.appInstance.getMessageBus()),
+    m_sharedData        (sd),
+    m_viewScale         (2.f),
+    m_requestRestart    (false),
+    m_confirmationType  (ConfirmType::Quit)
 {
     ctx.mainWindow.setMouseCaptured(false);
 
@@ -230,7 +233,13 @@ void PauseState::buildScene()
             e.getComponent<cro::Transform>().setScale(m_viewScale * cro::Util::Easing::easeOutQuint(currTime));
             if (currTime == 0)
             {
-                requestStackPop();            
+                requestStackPop();
+
+                if (m_requestRestart)
+                {
+                    auto* msg = postMessage<SystemEvent>(MessageID::SystemMessage);
+                    msg->type = SystemEvent::RestartActiveMode;
+                }
             }
             break;
         }
@@ -329,7 +338,7 @@ void PauseState::buildScene()
     };
 
     //options button
-    entity = createItem(glm::vec2(0.f, 10.f), "Options", menuEntity);
+    entity = createItem(glm::vec2(0.f, 16.f), "Options", menuEntity);
     entity.getComponent<cro::Text>().setFillColour(TextGoldColour);
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Main);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
@@ -342,7 +351,7 @@ void PauseState::buildScene()
             });
 
     //return to game
-    entity = createItem(glm::vec2(0.f), "Return", menuEntity);
+    entity = createItem(glm::vec2(0.f, 6.f), "Return", menuEntity);
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Main);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)
@@ -353,8 +362,27 @@ void PauseState::buildScene()
                 }
             });
 
+    if (m_sharedData.baseState == StateID::DrivingRange)
+    {
+        //restart button
+        entity = createItem(glm::vec2(0.f, -4.f), "Restart Round", menuEntity);
+        entity.getComponent<cro::UIInput>().setGroup(MenuID::Main);
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+            uiSystem.addCallback([&, menuEntity, confirmEntity](cro::Entity e, cro::ButtonEvent evt) mutable
+                {
+                    if (activated(evt))
+                    {
+                        confirmEntity.getComponent<cro::Transform>().setPosition(glm::vec2(0.f));
+                        menuEntity.getComponent<cro::Transform>().setPosition(glm::vec2(-10000.f));
+
+                        m_scene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Confirm);
+                        m_confirmationType = ConfirmType::Restart;
+                    }
+                });
+    }
+
     //quit button
-    entity = createItem(glm::vec2(0.f, -10.f), "Quit To Menu", menuEntity);
+    entity = createItem(glm::vec2(0.f, -14.f), "Quit To Menu", menuEntity);
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Main);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem.addCallback([&, menuEntity, confirmEntity](cro::Entity e, cro::ButtonEvent evt) mutable
@@ -365,6 +393,7 @@ void PauseState::buildScene()
                     menuEntity.getComponent<cro::Transform>().setPosition(glm::vec2(-10000.f));
 
                     m_scene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Confirm);
+                    m_confirmationType = ConfirmType::Quit;
                 }
             });
 
@@ -392,20 +421,28 @@ void PauseState::buildScene()
             {
                 if (activated(evt))
                 {
-                    //this is a kludge which tells the
-                    //menu state to remove any existing connection/server instance
-                    //rather than disconnecting here which would raise an error message
-                    m_sharedData.tutorial = true;
-
-                    requestStackClear();
-                    //requestStackPush(StateID::Menu);
-                    if (m_sharedData.baseState != StateID::Clubhouse)
+                    if (m_confirmationType == ConfirmType::Quit)
                     {
-                        requestStackPush(StateID::Menu);
+                        //this is a kludge which tells the
+                        //menu state to remove any existing connection/server instance
+                        //rather than disconnecting here which would raise an error message
+                        m_sharedData.tutorial = true;
+
+                        requestStackClear();
+                        //requestStackPush(StateID::Menu);
+                        if (m_sharedData.baseState != StateID::Clubhouse)
+                        {
+                            requestStackPush(StateID::Menu);
+                        }
+                        else
+                        {
+                            requestStackPush(StateID::Clubhouse);
+                        }
                     }
                     else
                     {
-                        requestStackPush(StateID::Clubhouse);
+                        m_requestRestart = true;
+                        quitState();
                     }
                 }
             });

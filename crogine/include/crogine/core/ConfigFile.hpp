@@ -226,6 +226,7 @@ namespace cro
         supported, however an array of objects will be parsed into a series
         of objects with the same name as an array. For example:
 
+        \begincode
         "image" : [
           {"width" : 4, "height" : 4, "name" : "potato"},
           {"width" : 12, "height" : 60, "name" : "carrot"}
@@ -246,6 +247,7 @@ namespace cro
             height = 60
             name = "carrot"
         }
+        \endcode
 
         Config files parsed from json will be written in the ConfigFile format
         when written with save()

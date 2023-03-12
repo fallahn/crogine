@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2023
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -35,6 +35,7 @@ source distribution.
 
 #include "Constants.hpp"
 #include <crogine/util/Spline.hpp>
+#include <crogine/detail/glm/gtx/norm.hpp>
 
 #include <type_traits>
 #include <algorithm>
@@ -70,10 +71,59 @@ namespace cro
             if it has no value.
             */
             template <typename T>
-            static inline std::int32_t sgn(T val)
+            std::int32_t sgn(T val)
             {
                 static_assert(std::is_convertible<T, std::int32_t>::value);
                 return (T(0) < val) - (val < T(0));
+            }
+
+
+            /*
+            \brief Smoothly interpolate two vectors over the given time
+            from Game Programming Gems 4 Chapter 1.10
+            \param src The current value to start from
+            \param dest The value to interpolate towards
+            \param currVel The current velocity, to be kept between frames
+            \param smoothTime The target amount of time to take to interpolate
+            \param dt Current frame time
+            \param maxSpeed Maximum velocity of movement
+            */
+            template <typename T>
+            T smoothDamp(T src, T dst, T& currVel, float smoothTime, float dt, float maxSpeed = std::numeric_limits<float>::max())
+            {
+                smoothTime = std::max(0.0001f, smoothTime);
+                const float omega = 2.f / smoothTime;
+                const float x = omega * dt;
+                const float exp = 1.f / (1.f + x + 0.48f * x * x + 0.235f * x * x * x);
+
+                T diff = src - dst;
+                //const T originalDst = dst;
+
+                //clamp maximum speed - a bit of a fudge here depending
+                //if T is float or a vector
+                const float maxDiff = maxSpeed * smoothTime;
+
+                if constexpr (std::is_same<T, float>::value)
+                {
+                    diff = std::clamp(diff, -maxDiff, maxDiff);
+                }
+                else
+                {
+                    const float maxDiff2 = maxDiff * maxDiff;
+                    float len2 = glm::length2(diff);
+                    if (len2 > maxDiff2)
+                    {
+                        auto len = glm::sqrt(len2);
+                        diff /= len;
+                        diff *= maxDiff;
+                    }
+                }
+
+                dst = src - diff;
+
+                const T temp = (currVel + (diff * omega)) * dt;
+                currVel = (currVel - (temp * omega)) * exp;
+                return dst + (diff + temp) * exp;
             }
         }
     }

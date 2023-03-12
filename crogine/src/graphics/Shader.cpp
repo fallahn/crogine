@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2022
+Matt Marchant 2017 - 2023
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -31,6 +31,7 @@ source distribution.
 #include <crogine/core/FileSystem.hpp>
 
 #include <crogine/detail/Types.hpp>
+#include <crogine/util/String.hpp>
 
 #include "../detail/GLCheck.hpp"
 
@@ -73,12 +74,43 @@ namespace
 
         #endif
         )";
+
+    std::string vendorDef;
+    std::string vendorInfo;
 }
 
 Shader::Shader()
     : m_handle  (0),
     m_attribMap ({})
 {
+    if (vendorDef.empty())
+    {
+        //crude but covers most cases
+        std::string vendor = reinterpret_cast<const char*>(glGetString(GL_VENDOR));
+        vendor += " - ";
+        vendor += reinterpret_cast<const char*>(glGetString(GL_RENDERER));
+        vendorInfo = vendor;
+        
+        vendor = Util::String::toLower(vendor);
+        if (vendor.find("amd") != std::string::npos)
+        {
+            vendorDef = "#define GPU_AMD\n";
+        }
+        else if (vendor.find("nvidia") != std::string::npos)
+        {
+            vendorDef = "#define GPU_NVIDIA\n";
+        }
+        else if (vendor.find("intel") != std::string::npos)
+        {
+            vendorDef = "#define GPU_INTEL\n";
+        }
+        else
+        {
+            vendorDef = "#define GPU_UNKNOWN\n";
+        }
+        LOG("Shader " + vendorDef, Logger::Type::Info);
+    }
+
     resetAttribMap();
 }
 
@@ -220,9 +252,11 @@ bool Shader::loadFromSource(const char* vertex, const char* geometry, const char
     GLuint vertID = glCreateShader(GL_VERTEX_SHADER);
 
 #ifdef __ANDROID__
-    const char* src[] = { "#version 100\n#define MOBILE\n", precision.c_str(), defines, vertex };
+    std::string version = "#version 100\n#define MOBILE\n" + vendorDef;
+    const char* src[] = { version.c_str(), precision.c_str(), defines, vertex};
 #else
-    const char* src[] = { "#version 410 core\n", precision.c_str(), defines, vertex };
+    std::string version = "#version 410 core\n" + vendorDef;
+    const char* src[] = { version.c_str(), precision.c_str(), defines, vertex};
 #endif //__ANDROID__
 
     glCheck(glShaderSource(vertID, 4, src, nullptr));
@@ -239,6 +273,7 @@ bool Shader::loadFromSource(const char* vertex, const char* geometry, const char
         std::string str;
         str.resize(resultLength + 1);
         glCheck(glGetShaderInfoLog(vertID, resultLength, nullptr, &str[0]));
+        Logger::log(vendorInfo, Logger::Type::Error);
         Logger::log("Failed compiling vertex shader: " + std::to_string(result) + ", " + str, Logger::Type::Error);
 
         glCheck(glDeleteShader(vertID));
@@ -265,6 +300,7 @@ bool Shader::loadFromSource(const char* vertex, const char* geometry, const char
             std::string str;
             str.resize(resultLength + 1);
             glCheck(glGetShaderInfoLog(geomID, resultLength, nullptr, &str[0]));
+            Logger::log(vendorInfo, Logger::Type::Error);
             Logger::log("Failed compiling geometry shader: " + std::to_string(result) + ", " + str, Logger::Type::Error);
 
             glCheck(glDeleteShader(vertID));
@@ -291,6 +327,7 @@ bool Shader::loadFromSource(const char* vertex, const char* geometry, const char
         std::string str;
         str.resize(resultLength + 1);
         glCheck(glGetShaderInfoLog(fragID, resultLength, nullptr, &str[0]));
+        Logger::log(vendorInfo, Logger::Type::Error);
         Logger::log("Failed compiling fragment shader: " + std::to_string(result) + ", " + str, Logger::Type::Error);
 
         glCheck(glDeleteShader(vertID));
@@ -324,6 +361,7 @@ bool Shader::loadFromSource(const char* vertex, const char* geometry, const char
             std::string str;
             str.resize(resultLength + 1);
             glCheck(glGetProgramInfoLog(m_handle, resultLength, nullptr, &str[0]));
+            Logger::log(vendorInfo, Logger::Type::Error);
             Logger::log("Failed to link shader program: " + std::to_string(result) + ", " + str, Logger::Type::Error);
 
             glCheck(glDetachShader(m_handle, vertID));

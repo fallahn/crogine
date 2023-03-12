@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2022
+Matt Marchant 2021 - 2023
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -37,6 +37,7 @@ source distribution.
 #include "CloudSystem.hpp"
 #include "BallSystem.hpp"
 #include "FloatingTextSystem.hpp"
+#include "Clubs.hpp"
 
 #include <Achievements.hpp>
 #include <AchievementStrings.hpp>
@@ -70,17 +71,6 @@ namespace
     static constexpr float BadScore = 50.f;
     static constexpr float GoodScore = 75.f;
     static constexpr float ExcellentScore = 95.f;
-
-    //callback data for anim/self destruction
-    //of messages / options window
-    struct MessageAnim final
-    {
-        enum
-        {
-            Delay, Open, Hold, Close
-        }state = Delay;
-        float currentTime = 0.5f;
-    };
 
     struct MenuCallback final
     {
@@ -242,6 +232,64 @@ void DrivingState::createUI()
     entity.getComponent<cro::Text>().setFillColour(LeaderboardTextLight);
     infoEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
+
+    //ball spin indicator - positioned by camera callback
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setScale({ 0.f, 0.f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::SpinBg];
+    bounds = m_sprites[SpriteID::SpinBg].getTextureBounds();
+    entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
+    infoEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    auto spinEnt = entity;
+
+    const auto fgOffset = glm::vec2(spinEnt.getComponent<cro::Transform>().getOrigin());
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(fgOffset);
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::SpinFg];
+    bounds = m_sprites[SpriteID::SpinFg].getTextureBounds();
+    entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f, -0.1f });
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<float>(0.f);
+    entity.getComponent<cro::Callback>().function = //TODO we could recycle this callback with GolfState to save duplication...
+        [&, spinEnt, fgOffset](cro::Entity e, float dt) mutable
+    {
+        auto& scale = e.getComponent<cro::Callback>().getUserData<float>();
+        const float speed = dt * 10.f;
+        if (m_inputParser.isSpinputActive())
+        {
+            scale = std::min(1.f, scale + speed);
+
+            auto size = spinEnt.getComponent<cro::Sprite>().getTextureBounds().width / 2.f;
+
+            auto spin = m_inputParser.getSpin();
+            if (auto len2 = glm::length2(spin); len2 != 0)
+            {
+                auto q = glm::rotate(cro::Transform::QUAT_IDENTITY, -spin.y, cro::Transform::X_AXIS);
+                q = glm::rotate(q, spin.x, cro::Transform::Y_AXIS);
+                auto r = q * cro::Transform::Z_AXIS;
+
+                spin.x = -r.x;
+                spin.y = r.y;
+            }
+            spin *= size;
+
+            e.getComponent<cro::Transform>().setPosition(fgOffset + spin);
+        }
+        else
+        {
+            scale = std::max(0.f, scale - speed);
+        }
+        auto s = scale;
+        spinEnt.getComponent<cro::Transform>().setScale({ s,s });
+    };
+
+    spinEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+
+
     //wind strength - this is positioned by the camera's resize callback, below
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
@@ -254,7 +302,7 @@ void DrivingState::createUI()
 
     //wind indicator
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec3(38.f, 20.f, 0.03f));
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(38.f, 26.f, 0.03f));
     entity.addComponent<cro::Drawable2D>().setVertexData(
         {
             cro::Vertex2D(glm::vec2(-1.f, 12.f), LeaderboardTextLight),
@@ -267,7 +315,7 @@ void DrivingState::createUI()
     windEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec3(38.f, 52.f, 0.01f));
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(38.f, 58.f, 0.01f));
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::WindIndicator];
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
@@ -276,6 +324,21 @@ void DrivingState::createUI()
     windEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     auto windDial = entity;
+
+    //text background
+    auto vertColour = cro::Colour(0.f, 0.f, 0.f, 0.25f);
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ -4.f, -14.f, -0.01f });
+    entity.addComponent<cro::Drawable2D>().setVertexData(
+        {
+            cro::Vertex2D(glm::vec2(0.f, 16.f), vertColour),
+            cro::Vertex2D(glm::vec2(0.f, 5.f), vertColour),
+            cro::Vertex2D(glm::vec2(86.f, 16.f), vertColour),
+            cro::Vertex2D(glm::vec2(86.f, 5.f), vertColour)
+        });
+    windEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    //rotating part
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>();
@@ -371,7 +434,7 @@ void DrivingState::createUI()
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::HookBar];
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
-    entity.getComponent<cro::Transform>().setOrigin(glm::vec2(bounds.width / 2.f, bounds.height / 2.f));
+    entity.getComponent<cro::Transform>().setOrigin(glm::vec2(std::floor(bounds.width / 2.f), bounds.height / 2.f));
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function =
         [&, barCentre](cro::Entity e, float)
@@ -516,26 +579,40 @@ void DrivingState::createUI()
     entity.getComponent<cro::Transform>().move(RangeSize / 4.f);
     auto endColour = TextGoldColour;
     endColour.setAlpha(0.f);
-    entity.addComponent<cro::Drawable2D>().getVertexData() =
-    {
-        cro::Vertex2D(glm::vec2(-0.5f, 18.f), endColour),
-        cro::Vertex2D(glm::vec2(-0.5f), TextGoldColour),
-        cro::Vertex2D(glm::vec2(0.5f, 18.f), endColour),
-        cro::Vertex2D(glm::vec2(0.5f, -0.5f), TextGoldColour)
-    };
+    entity.addComponent<cro::Drawable2D>().getVertexData() = getStrokeIndicatorVerts();
     entity.getComponent<cro::Drawable2D>().updateLocalBounds();
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function =
-        [&](cro::Entity e, float)
+        [&](cro::Entity e, float dt)
     {
         e.getComponent<cro::Transform>().setRotation(m_inputParser.getYaw());
+        float scale = e.getComponent<cro::Transform>().getScale().x;
+
+        //more magic numbers than Ken Dodd's tax return.
+        if (m_inputParser.getActive())
+        {
+            const auto targetScale = Clubs[m_inputParser.getClub()].getTarget(0.f);
+            if (scale < targetScale)
+            {
+                scale = std::min(scale + (dt * ((targetScale - scale) * 10.f)), targetScale);
+            }
+            else
+            {
+                scale = std::max(targetScale, scale - ((scale * dt) * 2.f));
+            }
+        }
+        else
+        {
+            scale = std::max(0.f, scale - ((scale * dt) * 8.f));
+        }
+        e.getComponent<cro::Transform>().setScale(glm::vec2(scale, 1.f));
     };
     miniEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
     //ui viewport is set 1:1 with window, then the scene
     //is scaled to best-fit to maintain pixel accuracy of text.
-    auto updateView = [&, rootNode, courseEnt, infoEnt, windEnt, mapEnt](cro::Camera& cam) mutable
+    auto updateView = [&, rootNode, courseEnt, infoEnt, spinEnt, windEnt, mapEnt](cro::Camera& cam) mutable
     {
         auto size = glm::vec2(GolfGame::getActiveTarget()->getSize());
         cam.setOrthographic(0.f, size.x, 0.f, size.y, -2.5f, 2.f);
@@ -558,6 +635,7 @@ void DrivingState::createUI()
         mapEnt.getComponent<cro::Transform>().setPosition({ uiSize.x - mapSize.x - UIBarHeight, uiSize.y - (mapSize.y) - (UIBarHeight * 1.5f) });
 
         windEnt.getComponent<cro::Transform>().setPosition(glm::vec2(/*uiSize.x +*/ WindIndicatorPosition.x, WindIndicatorPosition.y - UIBarHeight));
+        spinEnt.getComponent<cro::Transform>().setPosition(glm::vec2(std::floor(uiSize.x / 2.f), 32.f));
 
         //update the overlay
         auto colour = cro::Colour(0.f, 0.f, 0.f, 0.25f);
@@ -685,7 +763,6 @@ void DrivingState::createSwingMeter(cro::Entity root)
 
     root.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 }
-
 
 void DrivingState::createGameOptions()
 {
@@ -1762,12 +1839,21 @@ void DrivingState::updateWindDisplay(glm::vec3 direction)
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
     cmd.targetFlags = CommandID::UI::WindString;
-    cmd.action = [direction](cro::Entity e, float dt)
+    cmd.action = [&,direction](cro::Entity e, float dt)
     {
         float knots = direction.y * KnotsPerMetre;
+        float speed = direction.y;
+
         std::stringstream ss;
         ss.precision(2);
-        ss << std::fixed << knots << " knots";
+        if (m_sharedData.imperialMeasurements)
+        {
+            ss << " " << std::fixed << speed * MPHPerMetre << " mph";
+        }
+        else
+        {
+            ss << " " << std::fixed << speed * KPHPerMetre << " kph";
+        }
         e.getComponent<cro::Text>().setString(ss.str());
 
         auto bounds = cro::Text::getLocalBounds(e);
@@ -1839,6 +1925,11 @@ void DrivingState::showMessage(float range)
     if (score < BadScore)
     {
         textEnt.getComponent<cro::Text>().setString("Bad Luck!");
+
+        if (m_avatar.animationIDs[AnimationID::Disappoint] != AnimationID::Invalid)
+        {
+            m_avatar.model.getComponent<cro::Skeleton>().play(m_avatar.animationIDs[AnimationID::Disappoint], 1.f, 0.8f);
+        }
     }
     else if (score < GoodScore)
     {
@@ -1857,6 +1948,11 @@ void DrivingState::showMessage(float range)
         textEnt.getComponent<cro::Text>().setString("Excellent!");
         starCount = 3;
         Social::awardXP(XPValues[XPID::Excellent]);
+
+        if (m_avatar.animationIDs[AnimationID::Celebrate] != AnimationID::Invalid)
+        {
+            m_avatar.model.getComponent<cro::Skeleton>().play(m_avatar.animationIDs[AnimationID::Celebrate], 1.f, 0.8f);
+        }
     }
     centreText(textEnt);
     entity.getComponent<cro::Transform>().addChild(textEnt.getComponent<cro::Transform>());
@@ -2091,6 +2187,14 @@ void DrivingState::showMessage(float range)
                     setHole(m_gameScene.getDirector<DrivingRangeDirector>()->getCurrentHole());
                 }
             }
+            break;
+        case MessageAnim::Abort:
+            e.getComponent<cro::Callback>().active = false;
+            m_uiScene.destroyEntity(textEnt);
+            m_uiScene.destroyEntity(textEnt2);
+            m_uiScene.destroyEntity(textEnt3);
+            m_uiScene.destroyEntity(imgEnt);
+            m_uiScene.destroyEntity(e);
             break;
         }
     };

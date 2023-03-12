@@ -73,6 +73,9 @@
     <Filter Include="Header Files\rss">
       <UniqueIdentifier>{0d07744f-6e49-4edb-a849-8597724e7dc3}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\golf\shared">
+      <UniqueIdentifier>{cc15016c-fb7e-48c0-9272-933fa4fc0d7e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\LoadingScreen.cpp">
@@ -314,6 +317,21 @@
     </ClCompile>
     <ClCompile Include="src\golf\TerrainDepthmap.cpp">
       <Filter>Source Files\golf\client</Filter>
+    </ClCompile>
+    <ClCompile Include="src\golf\RayResultCallback.cpp">
+      <Filter>Source Files\golf\shared</Filter>
+    </ClCompile>
+    <ClCompile Include="src\golf\TerrainChunks.cpp">
+      <Filter>Source Files\golf\client</Filter>
+    </ClCompile>
+    <ClCompile Include="src\golf\BallAnimationSystem.cpp">
+      <Filter>Source Files\golf\client\systems</Filter>
+    </ClCompile>
+    <ClCompile Include="src\golf\Clubs.cpp">
+      <Filter>Source Files\golf\shared</Filter>
+    </ClCompile>
+    <ClCompile Include="src\golf\UnlockState.cpp">
+      <Filter>Source Files\golf\client\states</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -635,6 +653,27 @@
     <ClInclude Include="src\golf\TerrainDepthmap.hpp">
       <Filter>Header Files\golf\client</Filter>
     </ClInclude>
+    <ClInclude Include="src\golf\RayResultCallback.hpp">
+      <Filter>Header Files\golf\shared</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\CallbackData.hpp">
+      <Filter>Header Files\golf\client</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\TerrainChunks.hpp">
+      <Filter>Header Files\golf\client</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\BallAnimationSystem.hpp">
+      <Filter>Header Files\golf\client\systems</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\UnlockState.hpp">
+      <Filter>Header Files\golf\client\states</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\UnlockItems.hpp">
+      <Filter>Header Files\golf\client</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\MinimapZoom.hpp">
+      <Filter>Header Files\golf</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="src\golf\WaterShader.inl">
@@ -680,6 +719,9 @@
       <Filter>Header Files\golf\client\shaders</Filter>
     </None>
     <None Include="src\golf\ShaderIncludes.inl">
+      <Filter>Header Files\golf\client\shaders</Filter>
+    </None>
+    <None Include="src\golf\UnlockShader.inl">
       <Filter>Header Files\golf\client\shaders</Filter>
     </None>
   </ItemGroup>

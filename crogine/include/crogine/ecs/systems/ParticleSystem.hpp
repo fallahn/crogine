@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2022
+Matt Marchant 2017 - 2023
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -71,6 +71,8 @@ namespace cro
         using DrawList = std::array<std::vector<Entity>, 2u>;
         //one of these is inserted for each active camera based on the Camera draw list index
         std::vector<DrawList> m_drawLists;
+
+        std::vector<Entity> m_potentiallyVisible; //entities which are in front of at least one camera
 
         void onEntityAdded(Entity) override;
         void onEntityRemoved(Entity) override;

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2022
+Matt Marchant 2021 - 2023
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -33,6 +33,8 @@ source distribution.
 #include "spooky2.hpp"
 #include "BallSystem.hpp"
 
+#include <Social.hpp>
+
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Model.hpp>
 #include <crogine/ecs/components/Callback.hpp>
@@ -43,10 +45,119 @@ source distribution.
 namespace
 {
 #include "RandNames.hpp"
+
+    SharedStateData::BallInfo readBallCfg(const cro::ConfigFile& cfg)
+    {
+        SharedStateData::BallInfo retVal;
+
+        const auto& props = cfg.getProperties();
+        for (const auto& p : props)
+        {
+            const auto& name = p.getName();
+            if (name == "model")
+            {
+                retVal.modelPath = p.getValue<std::string>();
+            }
+            else if (name == "uid")
+            {
+                retVal.uid = p.getValue<std::uint32_t>();
+            }
+            else if (name == "tint")
+            {
+                retVal.tint = p.getValue<cro::Colour>();
+            }
+            else if (name == "roll")
+            {
+                retVal.rollAnimation = p.getValue<bool>();
+            }
+        }
+
+        return retVal;
+    }
+
+    SharedStateData::HairInfo readHairCfg(const cro::ConfigFile& cfg)
+    {
+        SharedStateData::HairInfo retVal;
+
+        const auto& props = cfg.getProperties();
+        for (const auto& p : props)
+        {
+            const auto& name = p.getName();
+            if (name == "model")
+            {
+                retVal.modelPath = p.getValue<std::string>();
+            }
+            else if (name == "uid")
+            {
+                retVal.uid = p.getValue<std::uint32_t>();
+            }
+        }
+
+        return retVal;
+    }
+
+    void insertInfo(SharedStateData::BallInfo info, std::vector<SharedStateData::BallInfo>& dst, bool relPath)
+    {
+        bool exists = relPath ?
+            cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + info.modelPath) :
+            cro::FileSystem::fileExists(info.modelPath);
+
+        if ((!info.modelPath.empty() && exists))
+        {
+            auto ball = std::find_if(dst.begin(), dst.end(),
+                [&info](const SharedStateData::BallInfo& ballPair)
+                {
+                    return ballPair.uid == info.uid;
+                });
+
+            if (ball == dst.end())
+            {
+                dst.emplace_back(info);
+            }
+#ifdef CRO_DEBUG_
+            else
+            {
+                LogW << info.modelPath << ": a ball already exists with UID " << info.uid << std::endl;
+                LogW << info.uid << " has been ignored" << std::endl;
+            }
+#endif
+        }
+    }
+
+    void insertInfo(SharedStateData::HairInfo info, std::vector<SharedStateData::HairInfo>& dst, bool relPath)
+    {
+        bool exists = relPath ?
+            cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + info.modelPath) :
+            cro::FileSystem::fileExists(info.modelPath);
+
+        if ((!info.modelPath.empty() && exists))
+        {
+            auto hair = std::find_if(dst.begin(), dst.end(), [&info](const SharedStateData::HairInfo& h)
+                {
+                    return h.uid == info.uid;
+                });
+
+            if (hair == dst.end())
+            {
+                dst.emplace_back(info);
+            }
+#ifdef CRO_DEBUG_
+            else
+            {
+                LogW << "Duplicate hair " << info.uid << " has been skipped for loading" << std::endl;
+            }
+#endif
+        }
+    }
 }
 
 void MenuState::createBallScene()
 {
+    if (!cro::FileSystem::directoryExists(Social::getBaseContentPath()))
+    {
+        cro::FileSystem::createDirectory(Social::getBaseContentPath());
+    }
+
     static constexpr float RootPoint = 100.f;
     static constexpr float BallSpacing = 0.09f;
 
@@ -70,6 +181,7 @@ void MenuState::createBallScene()
         entity.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -0.03f);
         entity.addComponent<cro::Camera>().setPerspective(0.89f, 2.f, 0.001f, 2.f);
         entity.getComponent<cro::Camera>().viewport = { (i % 2) * 0.5f, (i / 2) * 0.5f, 0.5f, 0.5f };
+        entity.getComponent<cro::Camera>().renderFlags = BallRenderFlags;
         entity.addComponent<cro::Callback>().active = true;
         entity.getComponent<cro::Callback>().setUserData<std::int32_t>(0);
         entity.getComponent<cro::Callback>().function = ballTargetCallback;
@@ -101,10 +213,11 @@ void MenuState::createBallScene()
     m_ballCam.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -0.03f);
     m_ballCam.addComponent<cro::Camera>().setPerspective(1.f, 1.f, 0.001f, 2.f);
     m_ballCam.getComponent<cro::Camera>().resizeCallback = ballTexCallback;
+    m_ballCam.getComponent<cro::Camera>().renderFlags = BallRenderFlags;
     m_ballCam.addComponent<cro::Callback>().active = true;
     m_ballCam.getComponent<cro::Callback>().setUserData<std::int32_t>(0);
     m_ballCam.getComponent<cro::Callback>().function = ballTargetCallback;
-
+    
 
     ballTexCallback(m_ballCam.getComponent<cro::Camera>());
 
@@ -116,67 +229,109 @@ void MenuState::createBallScene()
 
     m_sharedData.ballModels.clear();
 
+    //parse the default ball directory
     for (const auto& file : ballFiles)
     {
         cro::ConfigFile cfg;
         if (cro::FileSystem::getFileExtension(file) == ".ball"
             && cfg.loadFromFile("assets/golf/balls/" + file))
         {
-            std::uint32_t uid = 0;// SpookyHash::Hash32(file.data(), file.size(), 0);
-            std::string modelPath;
-            cro::Colour colour = cro::Colour::White;
-
-            const auto& props = cfg.getProperties();
-            for (const auto& p : props)
-            {
-                const auto& name = p.getName();
-                if (name == "model")
-                {
-                    modelPath = p.getValue<std::string>();
-                }
-                else if (name == "uid")
-                {
-                    uid = p.getValue<std::uint32_t>();
-                }
-                else if (name == "tint")
-                {
-                    colour = p.getValue<cro::Colour>();
-                }
-            }
+            auto info = readBallCfg(cfg);
 
             //if we didn't find a UID create one from the file name and save it to the cfg
-            if (uid == 0)
+            if (info.uid == 0)
             {
-                uid = SpookyHash::Hash32(file.data(), file.size(), 0);
-                cfg.addProperty("uid").setValue(uid);
+                info.uid = SpookyHash::Hash32(file.data(), file.size(), 0);
+                cfg.addProperty("uid").setValue(info.uid);
                 cfg.save("assets/golf/balls/" + file);
             }
 
-            if (/*uid > -1
-                &&*/ (!modelPath.empty() && cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + modelPath)))
-            {
-                auto ball = std::find_if(m_sharedData.ballModels.begin(), m_sharedData.ballModels.end(),
-                    [uid](const SharedStateData::BallInfo& ballPair)
-                    {
-                        return ballPair.uid == uid;
-                    });
+            insertInfo(info, m_sharedData.ballModels, true);
+        }
+    }
 
-                if (ball == m_sharedData.ballModels.end())
+    //look in the user directory - only do this if the default dir is OK?
+    const auto BallUserPath = Social::getUserContentPath(Social::UserContent::Ball);
+    if (cro::FileSystem::directoryExists(BallUserPath))
+    {
+        auto dirList = cro::FileSystem::listDirectories(BallUserPath);
+        for (const auto& dir : dirList)
+        {
+            auto path = BallUserPath + dir + "/" ;
+            auto files = cro::FileSystem::listFiles(path);
+
+            for (auto file : files)
+            {
+                if (cro::FileSystem::getFileExtension(file) == ".ball")
                 {
-                    m_sharedData.ballModels.emplace_back(colour, uid, modelPath);
-                }
-                else
-                {
-                    LogE << file << ": a ball already exists with UID " << uid << std::endl;
+                    cro::ConfigFile cfg;
+                    if (cfg.loadFromFile(path + file, false))
+                    {
+                        auto info = readBallCfg(cfg);
+                        info.modelPath = path + info.modelPath;
+
+                        insertInfo(info, m_sharedData.ballModels, false);
+                    }
+
+                    break; //skip the rest of the file list
                 }
             }
         }
     }
 
-    cro::ModelDefinition ballDef(m_resources);
 
+    //read in the info for unlockable balls - if valid
+    //info is unlocked add it to ballModels now so it appears
+    //in the preview window
+    //else add it to the list afterwards so it can be rendered
+    //in game, but not selected by the player
+    const std::array SpecialPaths =
+    {
+        std::string("assets/golf/special/10.spec"),
+        std::string("assets/golf/special/20.spec"),
+        std::string("assets/golf/special/30.spec"),
+        std::string("assets/golf/special/40.spec"),
+        std::string("assets/golf/special/50.spec")
+    };
+    const std::uint32_t level = Social::getLevel();
+    std::vector<SharedStateData::BallInfo> delayedEntries;
+    for (auto i = 0u; i < SpecialPaths.size(); ++i)
+    {
+        cro::ConfigFile cfg;
+        if (cfg.loadFromFile(SpecialPaths[i]))
+        {
+            auto info = readBallCfg(cfg);
+
+            //if we didn't find a UID create one from the file name and save it to the cfg
+            if (info.uid == 0)
+            {
+                info.uid = SpookyHash::Hash32(SpecialPaths[i].data(), SpecialPaths[i].size(), 0);
+                cfg.addProperty("uid").setValue(info.uid);
+                cfg.save(SpecialPaths[i]);
+            }
+
+            if (level > (i + 1) * 10)
+            {
+                insertInfo(info, m_sharedData.ballModels, true);
+            }
+            else
+            {
+                info.locked = true;
+                delayedEntries.push_back(info);
+            }
+        }
+    }
+
+
+    //load each model for the preview in the player menu
+    cro::ModelDefinition ballDef(m_resources);
     cro::ModelDefinition shadowDef(m_resources);
+    cro::ModelDefinition grassDef(m_resources);
+
     auto shadow = shadowDef.loadFromFile("assets/golf/models/ball_shadow.cmt");
+    auto grass = grassDef.loadFromFile("assets/golf/models/ball_plane.cmt");
+
+    std::vector<std::uint32_t> invalidBalls;
 
     for (auto i = 0u; i < m_sharedData.ballModels.size(); ++i)
     {
@@ -184,29 +339,92 @@ void MenuState::createBallScene()
         {
             auto entity = m_backgroundScene.createEntity();
             entity.addComponent<cro::Transform>().setPosition({ (i * BallSpacing) + RootPoint, 0.f, 0.f });
+
+            auto baseEnt = entity;
+
+            entity = m_backgroundScene.createEntity();
+            entity.addComponent<cro::Transform>();
             ballDef.createModel(entity);
+
+            //clamp scale of balls in case someone got funny with a large model
+            const float scale = std::min(1.f, MaxBallRadius / entity.getComponent<cro::Model>().getBoundingSphere().radius);
+            entity.getComponent<cro::Transform>().setScale(glm::vec3(scale));
 
             //allow for double sided balls.
             auto material = m_resources.materials.get(m_materialIDs[MaterialID::Cel]);
             applyMaterialData(ballDef, material);
             entity.getComponent<cro::Model>().setMaterial(0, material);
+            if (entity.getComponent<cro::Model>().getMeshData().submeshCount > 1)
+            {
+                material = m_resources.materials.get(m_materialIDs[MaterialID::Trophy]);
+                applyMaterialData(ballDef, material);
+                entity.getComponent<cro::Model>().setMaterial(1, material);
+            }
+            entity.getComponent<cro::Model>().setRenderFlags(BallRenderFlags);
+            baseEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
             entity.addComponent<cro::Callback>().active = true;
-            entity.getComponent<cro::Callback>().function =
-                [](cro::Entity e, float dt)
+            if (m_sharedData.ballModels[i].rollAnimation)
             {
-                e.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, /*0.3f **/ dt);
-            };
+                entity.getComponent<cro::Callback>().function =
+                    [](cro::Entity e, float dt)
+                {
+                    e.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -dt * 6.f);
+                };
+                entity.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, -cro::Util::Const::PI * 0.85f);
+                entity.getComponent<cro::Transform>().move({ 0.f, Ball::Radius, 0.f });
+                entity.getComponent<cro::Transform>().setOrigin({ 0.f, Ball::Radius, 0.f });
+            }
+            else
+            {
+                entity.getComponent<cro::Callback>().function =
+                    [](cro::Entity e, float dt)
+                {
+                    e.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, dt);
+                };
+            }
 
+          
             if (shadow)
             {
-                auto ballEnt = entity;
                 entity = m_backgroundScene.createEntity();
                 entity.addComponent<cro::Transform>();
                 shadowDef.createModel(entity);
-                ballEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+                baseEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+                entity.getComponent<cro::Model>().setRenderFlags(BallRenderFlags);
+            }
+
+            if (grass)
+            {
+                entity = m_backgroundScene.createEntity();
+                entity.addComponent<cro::Transform>().setPosition({ 0.f, -0.001f, 0.f });
+                entity.getComponent<cro::Transform>().setScale(glm::vec3(5.f));
+                grassDef.createModel(entity);
+                baseEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+                entity.getComponent<cro::Model>().setRenderFlags(BallRenderFlags);
             }
         }
+        else
+        {
+            //probably should remove from the ball models vector so that it's completely vetted
+            invalidBalls.push_back(m_sharedData.ballModels[i].uid);
+        }
+    }
+
+    //add delayed entries for in-game rendering
+    for (const auto& info : delayedEntries)
+    {
+        insertInfo(info, m_sharedData.ballModels, true);
+    }
+
+    //tidy up bad balls.
+    for (auto uid : invalidBalls)
+    {
+        m_sharedData.ballModels.erase(std::remove_if(m_sharedData.ballModels.begin(), m_sharedData.ballModels.end(),
+            [uid](const SharedStateData::BallInfo& ball)
+            {
+                return ball.uid == uid;
+            }), m_sharedData.ballModels.end());
     }
 }
 
@@ -329,9 +547,8 @@ void MenuState::parseAvatarDirectory()
     }
 
     const std::string HairPath = "assets/golf/avatars/hair/";
-    const auto hairFiles = cro::FileSystem::listFiles(cro::FileSystem::getResourcePath() + HairPath);
+    auto hairFiles = cro::FileSystem::listFiles(cro::FileSystem::getResourcePath() + HairPath);
 
-    cro::ModelDefinition md(m_resources);
     for (const auto& file : hairFiles)
     {
         if (cro::FileSystem::getFileExtension(file) != ".hct")
@@ -342,58 +559,72 @@ void MenuState::parseAvatarDirectory()
         cro::ConfigFile cfg;
         if (cfg.loadFromFile(HairPath + file))
         {
-            std::string modelPath;
-            std::uint32_t uid = 0;
+            auto info = readHairCfg(cfg);
+            insertInfo(info, m_sharedData.hairInfo, true);
 
-            const auto& props = cfg.getProperties();
-            for (const auto& p : props)
+            //if uid is missing write it to cfg - although this doesn't work on apple bundles
+            if (info.uid == 0)
             {
-                const auto& name = p.getName();
-                if (name == "model")
-                {
-                    auto model = p.getValue<std::string>();
-                    if (cro::FileSystem::getFileExtension(model) == ".cmt"
-                        && cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + model))
-                    {
-                        modelPath = model;
-                    }
-                }
-                else if (name == "uid")
-                {
-                    uid = p.getValue<std::uint32_t>();
-                }
+                info.uid = SpookyHash::Hash32(file.data(), file.size(), 0);
+                cfg.addProperty("uid").setValue(info.uid);
+                cfg.save(HairPath + file);
             }
+        }
+    }
 
-            if (md.loadFromFile(modelPath))
+    const auto userHairPath = Social::getUserContentPath(Social::UserContent::Hair);
+    if (cro::FileSystem::directoryExists(userHairPath))
+    {
+        const auto userDirs = cro::FileSystem::listDirectories(userHairPath);
+        for (const auto& userDir : userDirs)
+        {
+            const auto userPath = userHairPath + userDir + "/";
+            hairFiles = cro::FileSystem::listFiles(userPath);
+
+            for (const auto& file : hairFiles)
             {
-                //if uid is missing write it to cfg
-                if (uid == 0)
+                if (cro::FileSystem::getFileExtension(file) != ".hct")
                 {
-                    uid = SpookyHash::Hash32(file.data(), file.size(), 0);
-                    cfg.addProperty("uid").setValue(uid);
-                    cfg.save(HairPath + file);
+                    continue;
                 }
-                m_sharedData.hairInfo.emplace_back(uid, modelPath);
 
-                for (auto& avatar : m_playerAvatars)
+                cro::ConfigFile cfg;
+                if (cfg.loadFromFile(userPath + file, false))
                 {
-                    auto& info = avatar.hairModels.emplace_back();
-                    info.model = m_avatarScene.createEntity();
-                    info.model.addComponent<cro::Transform>();
-                    md.createModel(info.model);
+                    auto info = readHairCfg(cfg);
+                    info.modelPath = userPath + info.modelPath;
 
-                    info.model.getComponent<cro::Model>().setMaterial(0, m_resources.materials.get(m_materialIDs[MaterialID::Hair]));
-                    info.model.getComponent<cro::Model>().setHidden(true);
-
-                    info.uid = uid;
+                    insertInfo(info, m_sharedData.hairInfo, false);
                 }
             }
         }
     }
 
-
+    //these are just used in the player preview window
+    //not in game.
     if (!m_playerAvatars.empty())
     {
+        cro::ModelDefinition md(m_resources);
+        for (const auto& info : m_sharedData.hairInfo)
+        {
+            if (!info.modelPath.empty() && //first entry is 'bald' ie no model
+                md.loadFromFile(info.modelPath))
+            {
+                for (auto& avatar : m_playerAvatars)
+                {
+                    auto& modelInfo = avatar.hairModels.emplace_back();
+                    modelInfo.model = m_avatarScene.createEntity();
+                    modelInfo.model.addComponent<cro::Transform>();
+                    md.createModel(modelInfo.model);
+
+                    modelInfo.model.getComponent<cro::Model>().setMaterial(0, m_resources.materials.get(m_materialIDs[MaterialID::Hair]));
+                    modelInfo.model.getComponent<cro::Model>().setHidden(true);
+
+                    modelInfo.uid = info.uid;
+                }
+            }
+        }
+
         for (auto i = 0u; i < ConnectionData::MaxPlayers; ++i)
         {
             m_avatarIndices[i] = indexFromAvatarID(m_sharedData.localConnectionData.playerData[i].skinID);
@@ -602,6 +833,64 @@ void MenuState::updateThumb(std::size_t index)
     m_avatarThumbs[index].display();
 }
 
+void MenuState::ugcInstalledHandler(std::uint64_t id, std::int32_t type)
+{
+    //called when UGC such as a ball or hair model is received
+    //from a remote player and downloaded locally.
+    if (type == Social::UserContent::Ball)
+    {
+        //these won't appear as selectable until the menu is quit
+        //and reloaded, but that's probably OK. They just need to
+        //exist in the shared data so the main game can find the
+        //models for remote players who have them.
+        const auto BallUserPath = Social::getUserContentPath(Social::UserContent::Ball) + std::to_string(id) + "/";
+        auto files = cro::FileSystem::listFiles(BallUserPath);
+
+        for (const auto& file : files)
+        {
+            if (cro::FileSystem::getFileExtension(file) == ".ball")
+            {
+                cro::ConfigFile cfg;
+                if (cfg.loadFromFile(BallUserPath + file, false))
+                {
+                    auto info = readBallCfg(cfg);
+                    info.modelPath = BallUserPath + info.modelPath;
+
+                    insertInfo(info, m_sharedData.ballModels, false);
+                }
+
+                break; //skip the rest of the file list
+            }
+        }
+    }
+    else if (type == Social::UserContent::Hair)
+    {
+        const auto HairUserPath = Social::getUserContentPath(Social::UserContent::Hair) + std::to_string(id) + "/";
+        auto files = cro::FileSystem::listFiles(HairUserPath);
+
+        for (const auto& file : files)
+        {
+            if (cro::FileSystem::getFileExtension(file) == ".hct")
+            {
+                cro::ConfigFile cfg;
+                if (cfg.loadFromFile(HairUserPath + file, false))
+                {
+                    auto info = readHairCfg(cfg);
+                    info.modelPath = HairUserPath + info.modelPath;
+
+                    insertInfo(info, m_sharedData.hairInfo, false);
+                }
+
+                break; //skip the rest of the file list
+            }
+        }
+    }
+    else
+    {
+        LogE << "Unknown UGC: " << id << ", " << type << std::endl;
+    }
+}
+
 void MenuState::setPreviewModel(std::size_t playerIndex)
 {
     auto index = m_avatarIndices[playerIndex];
@@ -661,6 +950,7 @@ void MenuState::setPreviewModel(std::size_t playerIndex)
 std::int32_t MenuState::indexFromHairID(std::uint32_t id)
 {
     //assumes all avatars contain some list of models...
+    //not sure why we aren't doing this on m_sharedData.hairInfo ? 
     auto hair = std::find_if(m_playerAvatars[0].hairModels.begin(), m_playerAvatars[0].hairModels.end(),
         [id](const PlayerAvatar::HairInfo& h)
         {

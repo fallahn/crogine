@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2022
+Matt Marchant 2017 - 2023
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -33,6 +33,8 @@ source distribution.
 #include <crogine/ecs/components/Skeleton.hpp>
 #include <crogine/graphics/MeshData.hpp>
 
+#include <vector>
+
 namespace cro
 {
     /*!
@@ -45,11 +47,31 @@ namespace cro
 
         void process(float) override;
 
+        //must be drawn inside a window - ie doesn't include begin()/end()
+        void debugUI() const;
+
+        float getPlaybackRate() const;
+
     private:
+        mutable std::vector<glm::mat4> m_mixBuffer; //holds temporary output during animation blending
+        
         void onEntityAdded(Entity) override;
 
-        void interpolate(std::size_t a, std::size_t b, float time, Skeleton& skelteton);
+        struct AnimationContext final
+        {
+            bool useInterpolation = false;
+            glm::mat4 worldTransform = glm::mat4(1.f);
+            float dt = 1.f / 60.f;
+            bool writeOutput = true; //if false the result of interpolation isn't output to the current frame
+        };
 
-        void updateBoundsFromCurrentFrame(Skeleton& dest, const Mesh::Data&);
+        void updateAnimation(SkeletalAnim& anim, Skeleton& skeleton, Entity entity, const AnimationContext& ctx) const;
+
+        //interpolates frames within a single animation (move this to anim struct?)
+        void interpolateAnimation(SkeletalAnim& source, std::size_t targetFrame, float time, Skeleton& skeleton, bool) const;
+
+        void blendAnimations(const SkeletalAnim&, const SkeletalAnim&, float time, Skeleton&) const;
+
+        void updateBoundsFromCurrentFrame(Skeleton& dest, const Mesh::Data&) const;
     };
 }

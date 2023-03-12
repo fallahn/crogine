@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2022
+Matt Marchant 2017 - 2023
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -39,6 +39,7 @@ source distribution.
 #include <crogine/core/Console.hpp>
 #include <crogine/util/Random.hpp>
 #include <crogine/util/Constants.hpp>
+#include <crogine/util/Matrix.hpp>
 
 #include "../../detail/GLCheck.hpp"
 
@@ -287,8 +288,10 @@ ParticleSystem::~ParticleSystem()
 //public
 void ParticleSystem::updateDrawList(Entity cameraEnt)
 {   
-    auto& cam = cameraEnt.getComponent<Camera>();
+    const auto& cam = cameraEnt.getComponent<Camera>();
     auto passCount = cam.reflectionBuffer.available() ? 2 : 1;
+    const auto camPos = cameraEnt.getComponent<cro::Transform>().getWorldPosition();
+    const auto forwardVec = cro::Util::Matrix::getForwardVector(cameraEnt.getComponent<cro::Transform>().getWorldTransform());
 
     if (cam.getDrawListIndex() >= m_drawLists.size())
     {
@@ -305,13 +308,23 @@ void ParticleSystem::updateDrawList(Entity cameraEnt)
     for (auto entity : entities)
     {
         auto& emitter = entity.getComponent<ParticleEmitter>();
+        const auto emitterDirection = entity.getComponent<cro::Transform>().getWorldPosition() - camPos;
+
         for (auto i = 0; i < passCount; ++i)
         {
-            const auto& frustum = cam.getPass(i).getFrustum();
-            if (emitter.m_nextFreeParticle > 0 && inFrustum(frustum, emitter))
+            if (glm::dot(forwardVec, emitterDirection) > 0)
             {
-                emitter.m_visible = true;
-                drawlist[i].push_back(entity);
+                if (!emitter.m_pendingUpdate)
+                {
+                    emitter.m_pendingUpdate = true;
+                    m_potentiallyVisible.push_back(entity);
+                }
+
+                const auto& frustum = cam.getPass(i).getFrustum();
+                if (emitter.m_nextFreeParticle > 0 && inFrustum(frustum, emitter))
+                {
+                    drawlist[i].push_back(entity);
+                }
             }
         }
     }
@@ -321,27 +334,22 @@ void ParticleSystem::updateDrawList(Entity cameraEnt)
 
 void ParticleSystem::process(float dt)
 {
-    for (auto& handle : m_shaderHandles)
+    /*for (auto& handle : m_shaderHandles)
     {
         handle.boundThisFrame = false;
-    }
+    }*/
 
     auto& entities = getEntities();
-    for (auto& e : entities)
+    for (auto& e : entities/*m_potentiallyVisible*/)
     {
-        //TODO this would be better to iterate over the list of
-        //visible entities and only update those, however for
-        //the visibility check to work every entity needs
-        //updating at least once so we have a calculated bounds
-        //with which to perform a visibility check...
-
         //check each emitter to see if it should spawn a new particle
         auto& emitter = e.getComponent<ParticleEmitter>();
-        if (emitter.m_running &&
+        if (/*emitter.m_pendingUpdate &&*/
+            emitter.m_running &&
             emitter.m_emissionClock.elapsed().asSeconds() > (1.f / emitter.settings.emitRate))
         {
             //make sure not to update this again unless it gets marked as visible next frame
-            emitter.m_visible = false;
+            emitter.m_pendingUpdate = false;
             
             //apply fallback texture if one doesn't exist
             //this would be speedier to do once when adding the emitter to the system
@@ -385,7 +393,7 @@ void ParticleSystem::process(float dt)
 
                     //spawn particle in world position
                     auto basePosition = tx.getWorldPosition();
-                    p.position = basePosition;
+                    p.position = basePosition + (settings.initialVelocity * cro::Util::Random::value(0.001f, 0.007f));
 
                     //add random radius placement - TODO how to do with a position table? CAN'T HAVE +- 0!!
                     p.position.x += Util::Random::value(-settings.spawnRadius, settings.spawnRadius + epsilon);
@@ -427,6 +435,7 @@ void ParticleSystem::process(float dt)
         {
             auto& p = emitter.m_particles[i];
 
+            p.velocity *= p.acceleration;
             p.velocity += p.gravity * dt;
             for (auto f : emitter.settings.forces)
             {
@@ -435,7 +444,7 @@ void ParticleSystem::process(float dt)
             p.position += p.velocity * dt;            
            
             p.lifetime -= dt;
-            p.colour.setAlpha(std::max(p.lifetime / p.maxLifeTime, 0.f));
+            p.colour.setAlpha(std::min(1.f, std::max(p.lifetime / p.maxLifeTime, 0.f)));
 
             p.rotation += emitter.settings.rotationSpeed * dt;
             p.scale += ((p.scale * emitter.settings.scaleModifier) * dt);
@@ -511,6 +520,8 @@ void ParticleSystem::process(float dt)
     }
 
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
+
+    m_potentiallyVisible.clear();
 }
 
 void ParticleSystem::render(Entity camera, const RenderTarget& rt)
@@ -551,7 +562,7 @@ void ParticleSystem::render(Entity camera, const RenderTarget& rt)
                 glCheck(glUniform1i(handle.uniformIDs[UniformID::Texture], 0));
                 glCheck(glUniform2f(handle.uniformIDs[UniformID::CameraRange], cam.getNearPlane(), cam.getFarPlane()));
 
-                handle.boundThisFrame = true;
+                //handle.boundThisFrame = true;
             }
 
             glCheck(glUniform1f(handle.uniformIDs[UniformID::ParticleSize], emitter.settings.size));

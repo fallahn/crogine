@@ -59,6 +59,7 @@ struct PlayerData final
     std::uint8_t score = 0;
     std::uint8_t matchScore = 0;
     std::uint8_t skinScore = 0;
+    std::int32_t parScore = 0;
     glm::vec3 currentTarget = glm::vec3(0.f);
     cro::Colour ballTint;
 };
@@ -109,6 +110,9 @@ struct SharedStateData final
         cro::Colour tint;
         std::uint32_t uid = 0;
         std::string modelPath;
+        bool rollAnimation = true;
+        bool locked = false;
+        BallInfo() {}
         BallInfo(cro::Colour c, std::uint32_t i, const std::string& str)
             : tint(c), uid(i), modelPath(str) {}
     };
@@ -128,6 +132,7 @@ struct SharedStateData final
     {
         std::uint32_t uid = 0;
         std::string modelPath;
+        HairInfo() = default;
         HairInfo(std::uint32_t i, const std::string& str)
             :uid(i), modelPath(str) {}
     };
@@ -165,6 +170,9 @@ struct SharedStateData final
     std::int32_t ballSkinIndex = 0; //billiards balls
     std::int32_t tableSkinIndex = 0; //billiards table
 
+    //IDs used by the unlock state to display new unlocks
+    std::vector<std::int32_t> unlockedItems;
+
     //client settings
     bool usePostProcess = false;
     std::int32_t postProcessIndex = 0;
@@ -176,6 +184,7 @@ struct SharedStateData final
     float fov = MinFOV;
     bool vertexSnap = false;
     float mouseSpeed = 1.f;
+    float swingputThreshold = 0.1f;
     bool invertX = false;
     bool invertY = false;
     bool showBeacon = true;
@@ -192,6 +201,8 @@ struct SharedStateData final
     bool showCustomCourses = true;
     bool showTutorialTip = true;
     bool showPuttingPower = false;
+    bool showBallTrail = false;
+    bool trailBeaconColour = true; //if false defaults to white
     std::int32_t enableRumble = 1;
 
     std::int32_t baseState = 0; //used to tell which state we're returning to from errors etc

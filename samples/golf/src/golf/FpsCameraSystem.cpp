@@ -30,6 +30,7 @@ source distribution.
 #include "FpsCameraSystem.hpp"
 
 #include <crogine/core/GameController.hpp>
+#include <crogine/core/Keyboard.hpp>
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
 #include <crogine/util/Constants.hpp>
 #include <crogine/util/Maths.hpp>
@@ -331,6 +332,10 @@ void FpsCameraSystem::process(float dt)
 
         //walking speed in metres per second
         float moveSpeed = controller.moveSpeed * dt;
+        if (cro::Keyboard::isKeyPressed(SDLK_LSHIFT))
+        {
+            moveSpeed *= 0.1f;
+        }
 
         if (controller.flyMode)
         {

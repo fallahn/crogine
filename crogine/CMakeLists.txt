@@ -72,13 +72,17 @@ else()
   find_package(SDL2_mixer REQUIRED)
 endif()
 
+if(MSVC)
+  find_package(DbgHelp REQUIRED)
+endif()
+
 include_directories(
   ${SDL2_INCLUDE_DIR}  
   ${FREETYPE_INCLUDE_DIRS} 
   ${CMAKE_SOURCE_DIR}/crogine/include)
   
 if(MSVC)
-  include_directories(${CMAKE_SOURCE_DIR}/extlibs/openal/include)
+  include_directories(${CMAKE_SOURCE_DIR}/extlibs/openal/include ${DBGHELP_INCLUDE_DIR})
 endif()
 
 SET(PROJECT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
@@ -131,8 +135,8 @@ if(NOT TARGET crogine)
     ${SDL2_MIXER_LIBRARY})
   endif()
 
-  if(WIN32)
-    target_link_libraries(${PROJECT_NAME} winmm ws2_32 IPHLPAPI)
+  if(MSVC)
+    target_link_libraries(${PROJECT_NAME} winmm ws2_32 IPHLPAPI ${DBGHELP_LIBRARIES} shlwapi)
   endif()
 
   target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)

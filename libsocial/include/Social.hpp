@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022
+Matt Marchant 2022 - 2023
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -42,8 +42,9 @@ source distribution.
 //(skybox format changed 150 -> 160)
 //(hole count became game rule 170 -> 180)
 //(connection method changed 190 -> 1100)
-static constexpr std::uint16_t CURRENT_VER = 1100;
-static const std::string StringVer("1.10.0");
+//(terrain vertex data and materials changed 1100 -> 1110)
+static constexpr std::uint16_t CURRENT_VER = 1110;
+static const std::string StringVer("1.11.0");
 
 
 class Social final
@@ -102,11 +103,29 @@ public:
     static ProgressData getLevelProgress();
     static void storeDrivingStats(const std::array<float, 3u>&);
     static void readDrivingStats(std::array<float, 3u>&);
+    static void insertScore(const std::string&, std::uint8_t, std::int32_t) {}
     static std::vector<cro::String> getLeaderboardResults(std::int32_t, std::int32_t) { return {}; }
     static void setStatus(std::int32_t, const std::vector<const char*>&) {}
     static void setGroup(std::uint64_t, std::int32_t = 0) {}
     static void takeScreenShot() { cro::App::getInstance().saveScreenshot(); }
     static constexpr std::uint32_t IconSize = 64;
-    static inline const std::string RSSFeed = "https://fallahn.itch.io/vga-golf/devlog.rss";
-    static inline const std::string WebURL = "https://fallahn.itch.io/vga-golf";
+    static inline const std::string RSSFeed = "https://fallahn.itch.io/super-video-golf/devlog.rss";
+    static inline const std::string WebURL = "https://fallahn.itch.io/super-video-golf";
+
+    enum class UnlockType
+    {
+        Ball, Club, Level, Generic
+    };
+    static std::int32_t getUnlockStatus(UnlockType);
+    static void setUnlockStatus(UnlockType, std::int32_t set);
+
+    struct UserContent final
+    {
+        enum
+        {
+            Ball, Hair, Course
+        };
+    };
+    static std::string getBaseContentPath();
+    static std::string getUserContentPath(std::int32_t);
 };

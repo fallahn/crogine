@@ -258,21 +258,23 @@ namespace cro
         CubemapID getCubemap() const;
 
 
+        struct SkyColours final
+        {
+            cro::Colour bottom;
+            cro::Colour middle;
+            cro::Colour top;
+        };
+
         /*!
         \brief Sets the colours used in the default skybox.
         If a skybox texture or environment map has been set then this does nothing.
         \param bottom The colour for the bottom half of the skybox
         \param middle The colour for the horizon of the skybox
-        \param top The colour for the top half og the skybox
+        \param top The colour for the top half of the skybox
         */
-        void setSkyboxColours(cro::Colour bottom, cro::Colour middle, cro::Colour top);
+        void setSkyboxColours(Colour bottom, Colour middle, Colour top);
+        void setSkyboxColours(SkyColours colours);
 
-        struct SkyColours final
-        {
-            cro::Colour top;
-            cro::Colour middle;
-            cro::Colour bottom;
-        };
         
         /*!
         \brief Returns a reference to a struct containing the current skybox colours
@@ -486,8 +488,10 @@ namespace cro
             Cubemap, Environment, Coloured,
             Count
         };
+        std::array<std::int32_t, 3u> m_skyColourUniforms;
         std::array<Shader, SkyboxType::Count> m_skyboxShaders;
         std::size_t m_shaderIndex;
+        void applySkyboxColours();
 
         //we use a pointer here so we can create an array of just one
         //camera without having to create a vector from it

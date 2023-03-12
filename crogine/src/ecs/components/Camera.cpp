@@ -309,6 +309,7 @@ glm::vec3 Camera::pixelToCoords(glm::vec2 screenPosition, glm::vec2 targetSize) 
     //TODO this triggers an abort trap 6 on mac. No idea why.
     if (!m_orthographic)
     {
+        //ugh this is slow AF
         glCheck(glReadPixels(static_cast<std::int32_t>(winCoords.x), static_cast<std::int32_t>(winCoords.y), 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &winCoords.z));
     }
 

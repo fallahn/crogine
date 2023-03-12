@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2022
+Matt Marchant 2020 - 2023
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -85,7 +85,14 @@ static const std::array<std::string, AchievementID::Count> AchievementStrings =
     "amateur",
     "enthusiast",
     "semi_pro",
-    "pro"
+    "pro",
+    "hot_stuff",
+    "no_ships",
+    "into_orbit",
+    "bad_sport",
+    "full_house",
+    "subscriber",
+    "birds_eye"
 };
 
 //appears on the notification
@@ -129,7 +136,14 @@ static const std::array<std::string, AchievementID::Count> AchievementLabels =
     "Amateur",
     "Enthusiast",
     "Semi-Pro",
-    "Professional"
+    "Professional",
+    "Hot Stuff",
+    "I See No Ships",
+    "Into Orbit",
+    "Bad Sport",
+    "Full House",
+    "Sub-scriber",
+    "Bird's Eye View"
 };
 
 //description and whether or not the achievement is hidden until it is unlocked
@@ -140,8 +154,8 @@ static const std::array<std::pair<std::string, bool>, AchievementID::Count> Achi
     std::make_pair("Complete 10 rounds of golf", false),
     std::make_pair("Putt a total distance of 1km", false),
     std::make_pair("Get a total stroke distance of 12km", false),
-    std::make_pair("Come top of the Leaderboard", false),
-    std::make_pair("Sink a putt greater than 5m", false),
+    std::make_pair("Win a game", false),
+    std::make_pair("Sink a putt greater than 6m", false),
     std::make_pair("Sink a hole from outside the green", false),
     std::make_pair("Get a PAR or better after at least one foul", false),
     std::make_pair("Play a network game with 4 clients", false),
@@ -173,14 +187,22 @@ static const std::array<std::pair<std::string, bool>, AchievementID::Count> Achi
     std::make_pair("Reach Level 20", false),
     std::make_pair("Reach Level 30", false),
     std::make_pair("Reach Level 40", false),
-    std::make_pair("Reach Level 50", false)
+    std::make_pair("Reach Level 50", false),
+    std::make_pair("Hit the ball into the volcano on 4-18", false),
+    std::make_pair("Hit the boat on 8-11", false),
+    std::make_pair("Hit the ball over 1500m in a single stroke", true),
+    std::make_pair("Ruin the game for everyone", true),
+    std::make_pair("Collect a full set of clubs", false),
+    std::make_pair("Subscribe to at least one workshop item", true),
+    std::make_pair("Use the drone camera to view the course", true)
 };
 
 //assuming trophies load correctly they are:
 /*
 Gold, silver, bronze cup
 Gold, silver, bronze mannequin
-Pool, Platinum
+Pool, Platinum,
+Level01 - Level50, Spoon
 */
 
 struct TrophyID final
@@ -189,7 +211,9 @@ struct TrophyID final
     {
         GoldCup, SilverCup, BronzeCup,
         GoldFigure, SilverFigure, BronzeFigure,
-        Pool, Platinum
+        Pool, Platinum,
+        Level01, Level10, Level20,
+        Level30, Level40, Level50, Spoon
     };
 };
 
@@ -227,6 +251,22 @@ static constexpr std::array<std::size_t, AchievementID::Count> AchievementTrophi
     TrophyID::GoldCup,
     TrophyID::BronzeFigure,
     TrophyID::GoldFigure,
+    TrophyID::BronzeCup,
+
+    TrophyID::Level01,
+    TrophyID::Level10,
+    TrophyID::Level20,
+    TrophyID::Level30,
+    TrophyID::Level40,
+    TrophyID::Level50,
+
+    TrophyID::Platinum,
+    TrophyID::GoldFigure,
+    TrophyID::Platinum,
+    TrophyID::Spoon,
+
+    TrophyID::GoldFigure,
+    TrophyID::BronzeCup,
     TrophyID::BronzeCup
 };
 

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2022
+Matt Marchant 2021 - 2023
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -34,52 +34,94 @@ source distribution.
 #include <string>
 #include <array>
 
-struct Club final
-{
-    std::string name; //displayed in UI
-    float power = 0.f; //magnitude of impulse applied to reach target
-    float angle = 0.f; //pitch of shot (should be positive)
-    const float target = 0.f; //the max (approx) distance when hit with 100% power
-
-    Club(const std::string& n, float p, float a, float t)
-        : name(n), power(p), angle(a * cro::Util::Const::degToRad), target(t) {}
-
-    std::string getName(bool imperial) const
-    {
-        if (imperial)
-        {
-            auto dist = static_cast<std::int32_t>(target * 1.094f);
-            return name + std::to_string(dist) + "yds";
-        }
-        else
-        {
-            auto dist = static_cast<std::int32_t>(target);
-            return name + std::to_string(dist) + "m";
-        }
-    }
-};
-
 struct ClubID final
 {
     enum
     {
-        Driver, ThreeWood,
-        FiveIron, NineIron,
+        Driver, ThreeWood, FiveWood,
+        FourIron, FiveIron, SixIron,
+        SevenIron, EightIron, NineIron,
         PitchWedge, GapWedge, SandWedge,
         Putter,
 
         Count
     };
+    
+    static constexpr std::array<std::int32_t, ClubID::Count> Flags =
+    {
+        (1<<0), (1<<1), (1<<2),
+        (1<<3), (1<<4), (1<<5),
+        (1<<6), (1<<7), (1<<8),
+        (1<<9), (1<<10), (1<<11)
+    };
+
+    static constexpr std::array<std::int32_t, 5u> LockedSet =
+    {
+        FiveWood, FourIron, SixIron, SevenIron, NineIron
+    };
+
+    static constexpr std::int32_t DefaultSet =
+        Flags[Driver] | Flags[ThreeWood] | Flags[FiveIron] |
+        Flags[EightIron] | Flags[PitchWedge] | Flags[GapWedge] |
+        Flags[SandWedge] | Flags[Putter];
+
+    static constexpr std::int32_t FullSet = 0x1FFF;
+};
+
+class Club final
+{
+public:
+
+    Club(std::int32_t id, const std::string& name, float angle, float sidespin, float topspin);
+
+    std::string getName(bool imperial, float distanceToPin) const;
+
+    float getPower(float distanceToPin) const;
+
+    float getAngle() const { return m_angle; }
+
+    //note distanceToPin only affects the putter so this can be 0
+    //for any of the other clubs
+    float getTarget(float distanceToPin) const;
+
+    float getBaseTarget() const;
+
+    float getSideSpinMultiplier() const { return m_sidespin; }
+    float getTopSpinMultiplier() const { return m_topspin; }
+
+private:
+    const std::int32_t m_id = -1;
+    std::string m_name; //displayed in UI
+    float m_angle = 0.f; //pitch of shot (should be positive) - not a clubstat as it remains constant with range
+    float m_sidespin = 1.f; //multiplier 0-1
+    float m_topspin = 1.f; //multiplier 0-1
+
+    //putter below this is rescaled
+    static constexpr float ShortRange = 1.f / 3.f;
+    static constexpr float ShortRangeThreshold = ShortRange * 0.65f;
+    static constexpr float TinyRange = 1.f / 10.f;
+    static constexpr float TinyRangeThreshold = TinyRange * 0.5f;
+
+    float getScaledValue(float v, float dist) const;
 };
 
 static const std::array<Club, ClubID::Count> Clubs =
 {
-    Club("Driver ", 44.f, 45.f, 220.f),
-    Club("3 Wood ", 39.5f, 45.f, 180.f),
-    Club("5 Iron ", 35.f, 40.f, 140.f),
-    Club("9 Iron ", 30.1f, 40.f, 100.f),
-    Club("Pitch Wedge ", 25.2f, 52.f, 70.f),
-    Club("Gap Wedge ", 17.4f, 60.f, 30.f),
-    Club("Sand Wedge ", 10.3f, 60.f, 10.f),
-    Club("Putter ", 6.39f, 0.f, 7.f) //make sure to update slope shader in TerrainShader.inl with this as the radius
+    Club(ClubID::Driver,    "Driver ", 45.f, 0.28f, 0.5f),  //default set
+    Club(ClubID::ThreeWood, "3 Wood ", 45.f, 0.3f,  0.55f), //default set
+    Club(ClubID::FiveWood,  "5 Wood ", 45.f, 0.4f,  0.55f), //Level 5
+    
+    
+    Club(ClubID::FourIron,  "4 Iron ", 40.f, 0.45f, 0.78f), //Level 10
+    Club(ClubID::FiveIron,  "5 Iron ", 40.f, 0.5f,  0.78f), //default set
+    Club(ClubID::SixIron,   "6 Iron ", 40.f, 0.55f, 0.8f),  //Level 15
+    Club(ClubID::SevenIron, "7 Iron ", 40.f, 0.6f,  0.8f),  //Level 20
+    Club(ClubID::EightIron, "8 Iron ", 40.f, 0.75f, 0.85f), //default set
+    Club(ClubID::NineIron,  "9 Iron ", 40.f, 0.8f,  0.85f),  //Level 25
+
+    
+    Club(ClubID::PitchWedge, "Pitch Wedge ", 52.f, 0.05f, 0.9f),  //default set
+    Club(ClubID::GapWedge,   "Gap Wedge ",   60.f, 0.05f, 0.93f), //default set
+    Club(ClubID::SandWedge,  "Sand Wedge ",  60.f, 0.05f, 0.95f), //default set
+    Club(ClubID::Putter,     "Putter ",      0.f,  0.f,   0.f)    //default set
 };

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2022
+Matt Marchant 2021 - 2023
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -495,9 +495,6 @@ void TrophyState::buildScene()
 
     auto updateText = [&, titleEnt, descEnt, dateEnt, iconEnt]() mutable
     {
-        titleEnt.getComponent<cro::Text>().setString(AchievementLabels[m_trophyIndex]);
-        centreText(titleEnt);
-
         auto [descString, hidden] = AchievementDesc[m_trophyIndex];
         if (!hidden || Achievements::getAchievement(AchievementStrings[m_trophyIndex])->achieved)
         {
@@ -512,12 +509,16 @@ void TrophyState::buildScene()
                     descString[pos] = '\n';
                 }
             }
+
+            titleEnt.getComponent<cro::Text>().setString(AchievementLabels[m_trophyIndex]);
         }
         else
         {
-            descString = "????";
+            titleEnt.getComponent<cro::Text>().setString("HIDDEN");
+            descString = "????????";
         }
         descEnt.getComponent<cro::Text>().setString(descString);
+        centreText(titleEnt);
 
         auto timestamp = Achievements::getAchievement(AchievementStrings[m_trophyIndex])->timestamp;
         if (timestamp != 0)
@@ -835,7 +836,7 @@ void TrophyState::buildTrophyScene()
 
     //these ought to be loaded in the same order
     //as TrophyID in AchievementStrings.hpp
-    const std::array<std::string, 8> paths =
+    const std::array<std::string, 15u> paths =
     {
         std::string("assets/golf/models/trophies/trophy01.cmt"),
         "assets/golf/models/trophies/trophy02.cmt",
@@ -845,6 +846,13 @@ void TrophyState::buildTrophyScene()
         "assets/golf/models/trophies/trophy06.cmt",
         "assets/golf/models/trophies/trophy07.cmt",
         "assets/golf/models/trophies/trophy08.cmt",
+        "assets/golf/models/trophies/level01.cmt",
+        "assets/golf/models/trophies/level10.cmt",
+        "assets/golf/models/trophies/level20.cmt",
+        "assets/golf/models/trophies/level30.cmt",
+        "assets/golf/models/trophies/level40.cmt",
+        "assets/golf/models/trophies/level50.cmt",
+        "assets/golf/models/trophies/trophy09.cmt",
     };
 
     auto trophyCallback =
@@ -910,8 +918,8 @@ void TrophyState::buildTrophyScene()
             md.createModel(entity);
             rotateEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
-            entity.getComponent<cro::Model>().setMaterial(0, shinyMaterial);
-            entity.getComponent<cro::Model>().setMaterial(1, flatMaterial);
+            entity.getComponent<cro::Model>().setMaterial(0, flatMaterial);
+            entity.getComponent<cro::Model>().setMaterial(1, shinyMaterial);
             entity.getComponent<cro::Model>().setHidden(true);
 
             entity.addComponent<cro::Callback>().setUserData<std::pair<float, std::int32_t>>(0.f, 0);

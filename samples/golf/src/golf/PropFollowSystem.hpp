@@ -40,6 +40,7 @@ struct PropFollower final
     struct Point final
     {
         glm::vec3 position = glm::vec3(0.f);
+        glm::vec3 velocity = glm::vec3(0.f);
         std::int32_t target = 1;
     };
     std::array<Point, 2> axis = {};

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2022
+Matt Marchant 2021 - 2023
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -99,9 +99,16 @@ struct SceneEvent
     {
         TransitionComplete,
         RequestSwitchCamera,
-        PlayerIdle
+        PlayerIdle,
+        PlayerRotate,
+        PlayerBad
     }type = TransitionComplete;
-    std::int32_t data = -1;
+
+    union
+    {
+        std::int32_t data = -1;
+        float rotation;
+    };
 };
 
 struct CollisionEvent final
@@ -124,7 +131,8 @@ struct SystemEvent final
         StateRequest,
         InputActivated,
         ShadowQualityChanged,
-        MenuChanged
+        MenuChanged,
+        RestartActiveMode //currently just driving range, but might apply somewhere else one day :)
     }type = PostProcessToggled;
     std::int32_t data = -1;
 };

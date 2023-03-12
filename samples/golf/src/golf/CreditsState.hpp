@@ -62,7 +62,7 @@ private:
     cro::Scene m_scene;
     SharedStateData& m_sharedData;
     const std::vector<CreditEntry>& m_credits;
-
+    float m_speedMultiplier;
 
     glm::vec2 m_viewScale;
     cro::Entity m_rootNode;

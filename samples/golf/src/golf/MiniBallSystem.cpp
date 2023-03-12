@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022
+Matt Marchant 2022 - 2023
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -28,12 +28,14 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include "MiniBallSystem.hpp"
+#include "MinimapZoom.hpp"
 
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Drawable2D.hpp>
 
-MiniBallSystem::MiniBallSystem(cro::MessageBus& mb)
-    : cro::System(mb, typeid(MiniBallSystem))
+MiniBallSystem::MiniBallSystem(cro::MessageBus& mb, const MinimapZoom& mz)
+    : cro::System(mb, typeid(MiniBallSystem)),
+    m_minimapZoom(mz)
 {
     requireComponent<cro::Transform>();
     requireComponent<cro::Drawable2D>();
@@ -54,7 +56,7 @@ void MiniBallSystem::process(float dt)
 
             static constexpr float MaxScale = 6.f - 1.f;
             float scale = 1.f + (MaxScale * ball.currentTime);
-            entity.getComponent<cro::Transform>().setScale(glm::vec2(scale));
+            entity.getComponent<cro::Transform>().setScale(glm::vec2(scale) * m_minimapZoom.mapScale);
 
             float alpha = 1.f - ball.currentTime;
             auto& verts = entity.getComponent<cro::Drawable2D>().getVertexData();
@@ -67,6 +69,25 @@ void MiniBallSystem::process(float dt)
             {
                 ball.currentTime = 1.f;
                 ball.state = MiniBall::Idle;
+            }
+
+            if (ball.parent.isValid())
+            {
+                auto position = ball.parent.getComponent<cro::Transform>().getPosition();
+                entity.getComponent<cro::Transform>().setPosition(glm::vec3(m_minimapZoom.toMapCoords(position), 0.1f));
+            }
+        }
+        else
+        {
+            if (ball.parent.isValid())
+            {
+                auto position = ball.parent.getComponent<cro::Transform>().getPosition();
+                entity.getComponent<cro::Transform>().setPosition(glm::vec3(m_minimapZoom.toMapCoords(position), 0.1f));
+
+                //set scale based on height
+                static constexpr float MaxHeight = 40.f;
+                float scale = 1.f + (position.y / MaxHeight);
+                entity.getComponent<cro::Transform>().setScale(glm::vec2(scale) * m_minimapZoom.mapScale);
             }
         }
     }

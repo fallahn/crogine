@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2022
+Matt Marchant 2021 - 2023
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -49,9 +49,14 @@ source distribution.
 #include <crogine/graphics/ModelDefinition.hpp>
 #include <crogine/graphics/Font.hpp>
 #include <crogine/graphics/RenderTexture.hpp>
+#include <crogine/graphics/CubemapTexture.hpp>
 #include <crogine/graphics/UniformBuffer.hpp>
+#include <crogine/graphics/VideoPlayer.hpp>
 
 #include <array>
+#include <unordered_map>
+
+static const std::uint32_t BallRenderFlags = (1 << 22);
 
 namespace cro
 {
@@ -91,6 +96,7 @@ private:
     cro::Scene m_uiScene;
     cro::Scene m_backgroundScene;
     cro::Scene m_avatarScene;
+    cro::CubemapTexture m_reflectionMap;
 
     cro::AudioScape m_menuSounds;
     struct AudioID final
@@ -114,7 +120,9 @@ private:
             CelTexturedSkinned,
             Hair,
             Billboard,
+            BillboardShadow,
             Ground,
+            Trophy,
 
             Count
         };
@@ -145,9 +153,11 @@ private:
         std::uint32_t nextCourse = 0;
         std::uint32_t prevHoleCount = 0;
         std::uint32_t nextHoleCount = 0;
-        std::uint32_t toggleUserCourses = 0;
+        std::uint32_t prevHoleType = 0;
+        std::uint32_t nextHoleType = 0;
         std::uint32_t toggleReverseCourse = 0;
         std::uint32_t toggleFriendsOnly = 0;
+        std::uint32_t toggleGameRules = 0;
         std::uint32_t inviteFriends = 0;
         std::uint32_t selected = 0;
         std::uint32_t unselected = 0;
@@ -165,6 +175,18 @@ private:
     std::size_t m_currentMenu; //used by view callback to reposition the root node on window resize
     std::size_t m_prevMenu; //used to resore active menu when completing text entry
     std::array<cro::Entity, MenuID::Count> m_menuEntities = {}; //each menu transform, attatched to root node.
+
+    struct LobbyEntityID final
+    {
+        enum
+        {
+            HoleSelection,
+            HoleThumb,
+
+            Count
+        };
+    };
+    std::array<cro::Entity, LobbyEntityID::Count> m_lobbyWindowEntities = {};
 
     LobbyPager m_lobbyPager;
 
@@ -195,8 +217,24 @@ private:
         bool isUser = false;
     };
     std::vector<CourseData> m_courseData;
-    std::size_t m_activeCourseCount;
-    std::size_t m_officialCourseCount;
+    std::unordered_map<std::string, std::unique_ptr<cro::Texture>> m_courseThumbs;
+    std::unordered_map<std::string, std::string> m_videoPaths;
+    cro::VideoPlayer m_videoPlayer;
+    
+    struct Range final
+    {
+        std::size_t start = 0;
+        std::size_t count = 0;
+
+        enum
+        {
+            Official, Custom, Workshop,
+            Count
+        };
+    };
+    std::int32_t m_currentRange = Range::Official;
+    std::array<Range, Range::Count> m_courseIndices = {};
+
     void parseCourseDirectory(const std::string&, bool isUser);
 
     cro::Entity m_toolTip;
@@ -226,6 +264,7 @@ private:
     void applyAvatarColours(std::size_t);
     void setPreviewModel(std::size_t);
     void updateThumb(std::size_t);
+    void ugcInstalledHandler(std::uint64_t id, std::int32_t type);
 
     
     //index into hair model vector - converted from hairID with indexFromHairID
@@ -260,6 +299,8 @@ private:
     void prevCourse();
     void nextCourse();
     void refreshUI();
+    void updateCourseRuleString();
+    void updateUnlockedItems();
 
     //loading moved to GolfGame.cpp
 

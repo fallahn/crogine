@@ -787,11 +787,11 @@ void ClubhouseState::buildScene()
 
     cro::ModelDefinition md(m_resources);
 
-    auto applyMaterial = [&](cro::Entity entity, std::int32_t id)
+    auto applyMaterial = [&](cro::Entity entity, std::int32_t id, std::size_t idx = 0)
     {
         auto material = m_resources.materials.get(m_materialIDs[id]);
         applyMaterialData(md, material);
-        entity.getComponent<cro::Model>().setMaterial(0, material);
+        entity.getComponent<cro::Model>().setMaterial(idx, material);
     };
 
     if (md.loadFromFile("assets/golf/models/clubhouse_menu.cmt"))
@@ -856,7 +856,7 @@ void ClubhouseState::buildScene()
         entity.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, 90.f * cro::Util::Const::degToRad);
         md.createModel(entity);
 
-        applyMaterial(entity, MaterialID::Trophy);
+        applyMaterial(entity, MaterialID::Trophy, 1);
     }
 
     if (md.loadFromFile("assets/golf/models/trophies/trophy03.cmt"))
@@ -866,7 +866,7 @@ void ClubhouseState::buildScene()
         entity.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, 90.f * cro::Util::Const::degToRad);
         md.createModel(entity);
 
-        applyMaterial(entity, MaterialID::Trophy);
+        applyMaterial(entity, MaterialID::Trophy, 1);
     }
 
     if (md.loadFromFile("assets/golf/models/trophies/trophy04.cmt"))
@@ -876,7 +876,7 @@ void ClubhouseState::buildScene()
         entity.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, 90.f * cro::Util::Const::degToRad);
         md.createModel(entity);
 
-        applyMaterial(entity, MaterialID::Trophy);
+        applyMaterial(entity, MaterialID::Trophy, 1);
     }
 
     if (md.loadFromFile("assets/golf/models/trophies/trophy07.cmt"))
@@ -886,14 +886,14 @@ void ClubhouseState::buildScene()
         entity.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, 91.f * cro::Util::Const::degToRad);
         md.createModel(entity);
 
-        applyMaterial(entity, MaterialID::Trophy);
+        applyMaterial(entity, MaterialID::Trophy, 1);
 
         entity = m_backgroundScene.createEntity();
         entity.addComponent<cro::Transform>().setPosition({ 14.25f, 1.2f, -2.05f });
         entity.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, 89.5f * cro::Util::Const::degToRad);
         md.createModel(entity);
 
-        applyMaterial(entity, MaterialID::Trophy);
+        applyMaterial(entity, MaterialID::Trophy, 1);
     }
 
     if (md.loadFromFile("assets/golf/models/trophies/trophy06.cmt"))
@@ -903,7 +903,7 @@ void ClubhouseState::buildScene()
         entity.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, 90.f * cro::Util::Const::degToRad);
         md.createModel(entity);
 
-        applyMaterial(entity, MaterialID::Trophy);
+        applyMaterial(entity, MaterialID::Trophy, 1);
     }
 
     if (md.loadFromFile("assets/golf/models/trophies/trophy02.cmt"))
@@ -913,7 +913,7 @@ void ClubhouseState::buildScene()
         entity.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, 90.f * cro::Util::Const::degToRad);
         md.createModel(entity);
 
-        applyMaterial(entity, MaterialID::Trophy);
+        applyMaterial(entity, MaterialID::Trophy, 1);
     }
 
     if (md.loadFromFile("assets/golf/models/trophies/trophy01.cmt"))
@@ -923,7 +923,7 @@ void ClubhouseState::buildScene()
         entity.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, 90.f * cro::Util::Const::degToRad);
         md.createModel(entity);
 
-        applyMaterial(entity, MaterialID::Trophy);
+        applyMaterial(entity, MaterialID::Trophy, 1);
     }
 
     if (md.loadFromFile("assets/golf/models/hole_19/snooker_model.cmt"))

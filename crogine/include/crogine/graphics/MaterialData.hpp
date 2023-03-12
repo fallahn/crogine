@@ -264,6 +264,12 @@ namespace cro
             bool deferred = false;
 
             /*!
+            \brief If this material was loaded from a ModelDefinition then
+            the name is copied from the file, if it exists
+            */
+            std::string name;
+
+            /*!
             \brief If this is true then face culling is disabled for the
             material. Default value is false
             */

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2022
+Matt Marchant 2021 - 2023
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -28,10 +28,12 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #pragma once
+//#define CAMERA_TRACK
 
 #include "GameConsts.hpp"
 
 #include <crogine/ecs/System.hpp>
+#include <crogine/ecs/components/Camera.hpp>
 #include <crogine/detail/glm/vec3.hpp>
 #include <crogine/gui/GuiClient.hpp>
 
@@ -42,7 +44,7 @@ struct CameraID final
     enum
     {
         Player, Bystander, Sky, Green,
-        Transition,
+        Transition, Idle, Drone,
         Count
     };
 };
@@ -58,6 +60,8 @@ struct TargetInfo final
     glm::vec3 targetLookAt = glm::vec3(0.f);
     glm::vec3 currentLookAt = glm::vec3(0.f);
     glm::vec3 prevLookAt = glm::vec3(0.f);
+    glm::vec3 finalLookAt = glm::vec3(0.f); //final lookat point with any height offset added (see updateCameraHeight())
+    glm::vec3 finalLookAtOffset = glm::vec3(0.f); //allow moving back by any offset
 
     cro::Entity waterPlane;
     cro::Shader* postProcess = nullptr;
@@ -68,15 +72,19 @@ struct CameraFollower final
     enum State
     {
         Track,
-        Zoom,
-        Reset
+        Zoom
     }state = Track;
 
     cro::Entity target;
     glm::vec3 currentTarget = glm::vec3(0.f); //used to interpolate
-    glm::vec3 holePosition = glm::vec3(0.f);
-    glm::vec3 playerPosition = glm::vec3(0.f);
+    glm::vec3 velocity = glm::vec3(0.f); //used by the interpolation function
+    glm::vec3 holePosition = glm::vec3(0.f); //used to tell if we should zoom
+    glm::vec3 playerPosition = glm::vec3(0.f); //used to tell if we can be active (not if too close to player)
     float radius = 0.f; //camera becomes active when ball within this (should be ^2)
+    float zoomRadius = 25.f; //dist^2 from hole when zoom becomes active
+
+    static constexpr float MinFollowTime = 4.f;
+    float currentFollowTime = 0.f;
 
     glm::vec3 targetOffset = glm::vec3(0.f); //aim is offset by this from target position
 
@@ -90,6 +98,19 @@ struct CameraFollower final
         float speed = 1.f;
         bool done = false;
     }zoom;
+
+    void reset(cro::Entity parent)
+    {
+        zoom.fov = 1.f;
+        zoom.progress = 0.f;
+        zoom.done = false;
+        parent.getComponent<cro::Camera>().resizeCallback(parent.getComponent<cro::Camera>());
+
+        state = CameraFollower::Track;
+    }
+
+    cro::Entity debugEntity;
+    bool hadUpdate = false;
 };
 
 class CameraFollowSystem final : public cro::System, public cro::GuiClient
@@ -105,4 +126,7 @@ public:
 
 private:
     std::int32_t m_closestCamera;
+    cro::Entity m_currentCamera;
+
+    void onEntityAdded(cro::Entity) override;
 };

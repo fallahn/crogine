@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2022
+Matt Marchant 2021 - 2023
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -32,6 +32,7 @@ source distribution.
 #include "HoleData.hpp"
 #include "Billboard.hpp"
 #include "Treeset.hpp"
+#include "TerrainChunks.hpp"
 
 #include <crogine/gui/GuiClient.hpp>
 #include <crogine/ecs/Entity.hpp>
@@ -71,7 +72,7 @@ struct SharedStateData;
 class TerrainBuilder final : public cro::GuiClient
 {
 public:
-    TerrainBuilder(SharedStateData&, const std::vector<HoleData>&);
+    TerrainBuilder(SharedStateData&, const std::vector<HoleData>&, TerrainChunker&);
     ~TerrainBuilder();
 
     TerrainBuilder(const TerrainBuilder&) = delete;
@@ -91,9 +92,15 @@ private:
     const std::vector<HoleData>& m_holeData;
     std::size_t m_currentHole;
 
+    TerrainChunker& m_terrainChunker;
+    std::vector<TerrainChunk> m_chunks;
+
+    static constexpr auto ChunkCount = TerrainChunker::ChunkCountX * TerrainChunker::ChunkCountY;
+
     std::array<cro::Billboard, BillboardID::Count> m_billboardTemplates = {};
     std::vector<cro::Billboard> m_billboardBuffer;
     std::array<cro::Entity, 2u> m_billboardEntities = {};
+    std::array<cro::Entity, 2u> m_propRootEntities = {};
     std::size_t m_swapIndex; //might not swap every hole so we need to track this independently
 
     std::vector<glm::mat4> m_instanceTransforms;
@@ -133,7 +140,7 @@ private:
     struct SlopeVertex final
     {
         glm::vec3 position = glm::vec3(0.f);
-        glm::vec4 colour = glm::vec4(1.f);
+        glm::vec4 colour = glm::vec4(glm::vec3(1.f), 0.7f);
         glm::vec3 normal = glm::vec3(0.f);
         glm::vec2 texCoord = glm::vec2(0.f);
     };

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2022
+Matt Marchant 2020 - 2023
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -64,5 +64,8 @@ namespace sp
         void addSystems();
         void loadAssets();
         void createScene();
+        void createUI();
+
+        bool createStub(const std::string&);
     };
 }

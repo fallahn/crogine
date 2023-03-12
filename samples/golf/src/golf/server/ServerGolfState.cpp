@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2022
+Matt Marchant 2021 - 2023
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -35,6 +35,8 @@ source distribution.
 #include "ServerGolfState.hpp"
 #include "ServerMessages.hpp"
 
+#include <AchievementIDs.hpp>
+
 #include <crogine/core/Log.hpp>
 #include <crogine/core/ConfigFile.hpp>
 
@@ -51,19 +53,23 @@ using namespace sv;
 
 namespace
 {
+    constexpr float MaxScoreboardTime = 10.f;
     constexpr std::uint8_t MaxStrokes = 12;
     const cro::Time TurnTime = cro::seconds(90.f);
 }
 
 GolfState::GolfState(SharedData& sd)
-    : m_returnValue (StateID::Golf),
-    m_sharedData    (sd),
-    m_mapDataValid  (false),
-    m_scene         (sd.messageBus, 512),
-    m_gameStarted   (false),
-    m_allMapsLoaded (false),
-    m_currentHole   (0),
-    m_skinsPot      (1)
+    : m_returnValue         (StateID::Golf),
+    m_sharedData            (sd),
+    m_mapDataValid          (false),
+    m_scene                 (sd.messageBus, 512),
+    m_scoreboardTime        (0.f),
+    m_scoreboardReadyFlags  (0),
+    m_gameStarted           (false),
+    m_allMapsLoaded         (false),
+    m_currentHole           (0),
+    m_skinsPot              (1),
+    m_currentBest           (MaxStrokes)
 {
     if (m_mapDataValid = validateMap(); m_mapDataValid)
     {
@@ -76,6 +82,17 @@ GolfState::GolfState(SharedData& sd)
 
 void GolfState::handleMessage(const cro::Message& msg)
 {
+    const auto sendAchievement = [&](std::uint8_t achID)
+    {
+        //TODO not sure we want to send this blindly to the client
+        //but only the client knows if achievements are currently enabled.
+        std::array<std::uint8_t, 2u> packet =
+        {
+            m_playerInfo[0].client, achID
+        };
+        m_sharedData.host.broadcastPacket(PacketID::ServerAchievement, packet, net::NetFlag::Reliable);
+    };
+
     if (msg.id == sv::MessageID::ConnectionMessage)
     {
         const auto& data = msg.getData<ConnectionEvent>();
@@ -140,6 +157,17 @@ void GolfState::handleMessage(const cro::Message& msg)
                 m_playerInfo[0].distanceToHole = glm::length(data.position - m_holeData[m_currentHole].pin);
             }
             m_playerInfo[0].terrain = data.terrain;
+
+            //if match/skins play check if our score is even with anyone holed already and forfeit
+            if (m_sharedData.scoreType != ScoreType::Stroke)
+            {
+                if (m_playerInfo[0].holeScore[m_currentHole] >= m_currentBest)
+                {
+                    m_playerInfo[0].distanceToHole = 0;
+                    m_playerInfo[0].holeScore[m_currentHole]++;
+                }
+            }
+
             setNextPlayer();
         }
         else if (data.type == GolfBallEvent::Holed)
@@ -149,6 +177,50 @@ void GolfState::handleMessage(const cro::Message& msg)
             m_playerInfo[0].position = m_holeData[m_currentHole].pin;
             m_playerInfo[0].distanceToHole = 0.f;
             m_playerInfo[0].terrain = data.terrain;
+
+
+            //if we're playing match play or skins then
+            //anyone who has a worse score has already lost
+            //so set them to finished.
+            if (m_sharedData.scoreType != ScoreType::Stroke)
+            {
+                //eliminate anyone who can't beat this score
+                for (auto i = 1u; i < m_playerInfo.size(); ++i)
+                {
+                    if ((m_playerInfo[i].holeScore[m_currentHole]) >=
+                        m_playerInfo[0].holeScore[m_currentHole])
+                    {
+                        if (m_playerInfo[i].distanceToHole > 0) //not already holed
+                        {
+                            m_playerInfo[i].distanceToHole = 0.f;
+                            m_playerInfo[i].holeScore[m_currentHole]++; //therefore they lose a stroke and don't draw
+                        }
+                    }
+                }
+
+                //if this is the second hole and it has the same as the current best
+                //force a draw by eliminating anyone who can't beat it
+                if (m_playerInfo[0].holeScore[m_currentHole] == m_currentBest)
+                {
+                    for (auto i = 1u; i < m_playerInfo.size(); ++i)
+                    {
+                        if ((m_playerInfo[i].holeScore[m_currentHole]+1) >=
+                            m_currentBest)
+                        {
+                            if (m_playerInfo[i].distanceToHole > 0)
+                            {
+                                m_playerInfo[i].distanceToHole = 0.f;
+                                m_playerInfo[i].holeScore[m_currentHole] = std::min(m_currentBest, std::uint8_t(m_playerInfo[i].holeScore[m_currentHole] + 1));
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (m_playerInfo[0].holeScore[m_currentHole] < m_currentBest)
+            {
+                m_currentBest = m_playerInfo[0].holeScore[m_currentHole];
+            }
 
             setNextPlayer();
         }
@@ -171,12 +243,46 @@ void GolfState::handleMessage(const cro::Message& msg)
             bu.terrain = data.terrain;
             bu.position = data.position;
             m_sharedData.host.broadcastPacket(PacketID::BallLanded, bu, net::NetFlag::Reliable);
+
+            auto dist = glm::length2(m_playerInfo[0].position - data.position);
+            if (dist > 2250000.f)
+            {
+                //1500m
+                sendAchievement(AchievementID::IntoOrbit);
+            }
         }
         else if (data.type == GolfBallEvent::Gimme)
         {
             m_playerInfo[0].holeScore[m_currentHole]++;
             std::uint16_t inf = (m_playerInfo[0].client << 8) | m_playerInfo[0].player;
             m_sharedData.host.broadcastPacket<std::uint16_t>(PacketID::Gimme, inf, net::NetFlag::Reliable);
+
+            //if match/skins play check if our score is even with anyone holed already and forfeit
+            if (m_sharedData.scoreType != ScoreType::Stroke)
+            {
+                for (auto i = 1u; i < m_playerInfo.size(); ++i)
+                {
+                    if (m_playerInfo[i].distanceToHole == 0
+                        && m_playerInfo[i].holeScore[m_currentHole] < m_playerInfo[0].holeScore[m_currentHole])
+                    {
+                        m_playerInfo[0].distanceToHole = 0;
+                    }
+                }
+            }
+        }
+    }
+    else if (msg.id == sv::MessageID::TriggerMessage)
+    {
+        const auto& data = msg.getData<TriggerEvent>();
+        switch (data.triggerID)
+        {
+        default: break;
+        case TriggerID::Volcano:
+            sendAchievement(AchievementID::HotStuff);
+            break;
+        case TriggerID::Boat:
+            sendAchievement(AchievementID::ISeeNoShips);
+            break;
         }
     }
 
@@ -368,15 +474,26 @@ void GolfState::sendInitialGameState(std::uint8_t clientID)
         {
             if (m_allMapsLoaded)
             {
-                setNextPlayer();
-                e.getComponent<cro::Callback>().active = false;
-                m_scene.destroyEntity(e);
+                m_scoreboardTime += dt;
+
+                if (m_scoreboardTime > MaxScoreboardTime)
+                {
+                    setNextPlayer();
+                    e.getComponent<cro::Callback>().active = false;
+                    m_scene.destroyEntity(e);
+                }
+            }
+            else
+            {
+                m_scoreboardTime = 0.f;
             }
 
             //make sure to keep resetting this to prevent unfairly
             //truncating the next player's turn
             m_turnTimer.restart();
         };
+
+        m_scoreboardReadyFlags = 0;
     }
 }
 
@@ -401,17 +518,26 @@ void GolfState::handlePlayerInput(const net::NetEvent::Packet& packet, bool pred
             //this is a kludge to wait for the anim before hitting the ball
             //Ideally we want to read the frame data from the avatar
             //as well as account for a frame of interp delay on the client
-            ball.delay = ball.terrain == TerrainID::Green ? 0.12f : 1.27f;
+            //at the very least we should add the client ping to this
+            ball.delay = ball.terrain == TerrainID::Green ? 0.05f : 1.17f;
+            ball.delay += static_cast<float>(m_sharedData.clients[input.clientID].peer.getRoundTripTime()) / 1000.f;
             ball.startPoint = m_playerInfo[0].ballEntity.getComponent<cro::Transform>().getPosition();
 
-            //calc the amount of spin based on if we're going towards the hole
+            ball.spin = input.spin;
+            if (glm::length2(input.impulse) != 0)
+            {
+                ball.initialForwardVector = glm::normalize(glm::vec3(input.impulse.x, 0.f, input.impulse.z));
+                ball.initialSideVector = glm::normalize(glm::cross(ball.initialForwardVector, cro::Transform::Y_AXIS));
+            }
+
+            //calc the amount of rotation based on if we're going towards the hole
             glm::vec2 pin = { m_holeData[m_currentHole].pin.x, m_holeData[m_currentHole].pin.z };
             glm::vec2 start = { ball.startPoint.x, ball.startPoint.z };
             auto dir = glm::normalize(pin - start);
             auto x = -dir.y;
             dir.y = dir.x;
             dir.x = x;
-            ball.spin = glm::dot(dir, glm::normalize(glm::vec2(ball.velocity.x, ball.velocity.z))) + 0.1f;
+            ball.rotation = glm::dot(dir, glm::normalize(glm::vec2(ball.velocity.x, ball.velocity.z))) + 0.1f;
 
             if (!predict)
             {
@@ -450,6 +576,17 @@ void GolfState::checkReadyQuit(std::uint8_t clientID)
 {
     if (m_gameStarted)
     {
+        //we might be waiting for others to start new hole
+        m_scoreboardReadyFlags |= (1 << clientID);
+
+        for (auto i = 0u; i < m_playerInfo.size(); ++i)
+        {
+            if ((m_scoreboardReadyFlags & (1 << m_playerInfo[i].client)) == 0)
+            {
+                return;
+            }
+        }
+        m_scoreboardTime = MaxScoreboardTime; //skips ahead to timeout if everyone is ready
         return;
     }
 
@@ -541,6 +678,7 @@ void GolfState::setNextPlayer(bool newHole)
 
 void GolfState::setNextHole()
 {
+    m_currentBest = MaxStrokes;
     m_scene.getSystem<BallSystem>()->forceWindChange();
 
     bool gameFinished = false;
@@ -577,9 +715,10 @@ void GolfState::setNextHole()
                         return a.matchWins > b.matchWins;
                     });
 
-                std::uint32_t scoreDiff = sortData[0].matchWins - sortData[1].matchWins;
-                auto remainingHoles = m_holeData.size() - (m_currentHole + 1);
-                if (scoreDiff > remainingHoles)
+
+                auto remainingHoles = static_cast<std::uint8_t>(m_holeData.size()) - (m_currentHole + 1);
+                //if second place can't beat first even if they win all the holes it's game over
+                if(sortData[1].matchWins + remainingHoles < sortData[0].matchWins)
                 {
                     gameFinished = true;
                 }
@@ -621,6 +760,7 @@ void GolfState::setNextHole()
         client.mapLoaded = false;
     }
     m_allMapsLoaded = false;
+    m_scoreboardTime = 0.f;
 
     m_currentHole++;
     if (m_currentHole < m_holeData.size()
@@ -672,15 +812,26 @@ void GolfState::setNextHole()
         {
             if (m_allMapsLoaded)
             {
-                setNextPlayer(true);
-                e.getComponent<cro::Callback>().active = false;
-                m_scene.destroyEntity(e);
+                m_scoreboardTime += dt;
+
+                if (m_scoreboardTime > MaxScoreboardTime)
+                {
+                    setNextPlayer(true);
+                    e.getComponent<cro::Callback>().active = false;
+                    m_scene.destroyEntity(e);
+                }
+            }
+            else
+            {
+                m_scoreboardTime = 0.f;
             }
 
             //make sure to keep resetting this to prevent unfairly
             //truncating the next player's turn
             m_turnTimer.restart();
         };
+
+        m_scoreboardReadyFlags = 0;
     }
     else
     {

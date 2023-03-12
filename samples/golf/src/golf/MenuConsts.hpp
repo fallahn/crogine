@@ -71,7 +71,7 @@ static const std::array<std::string, 3u> ScoreDesc =
 
 static const std::array<std::string, 3u> GimmeString =
 {
-    "None",
+    "No Gimme",
     "Inside the leather",
     "Inside the putter"
 };
@@ -139,7 +139,7 @@ static constexpr float MinLobbyCropWidth = 96.f;
 static constexpr glm::vec2 LobbyBackgroundPosition(0.5f, 0.62f); //relative
 static constexpr glm::vec2 CourseDescPosition(0.5f, 0.24f); //relative
 static constexpr glm::vec2 ClubTextPosition(0.01f, 1.f); //relative
-static constexpr glm::vec2 WindIndicatorPosition(48.f, 56.f); //absolute from edge of the screen
+static constexpr glm::vec2 WindIndicatorPosition(48.f, 60.f); //absolute from edge of the screen
 
 static const cro::Time MouseHideTime = cro::seconds(3.f);
 

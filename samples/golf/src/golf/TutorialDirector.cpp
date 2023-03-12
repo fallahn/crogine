@@ -32,6 +32,7 @@ source distribution.
 #include "SharedStateData.hpp"
 #include "InputParser.hpp"
 #include "Clubs.hpp"
+#include "GameConsts.hpp"
 #include "Terrain.hpp"
 #include "../StateIDs.hpp"
 
@@ -43,13 +44,17 @@ source distribution.
 Tutorial 1 triggered on scene transition completion
 Tutorial 2 waits for the player to select the driver
 Tutorial 3 lets the player take shots until they land on the green
+
+Tutorial Swing is optional - shown if a controller is connected
+Tutorial Spin explains spin controls
+Tutorial Putt: need I say more? :)
 */
 
 TutorialDirector::TutorialDirector(SharedStateData& sd, InputParser& ip)
     : m_sharedData      (sd),
     m_inputParser       (ip)
 {
-    ip.setEnableFlags(~(InputFlag::Action | InputFlag::Left | InputFlag::Right));
+    ip.setEnableFlags(~(InputFlag::Action | InputFlag::Left | InputFlag::Right | InputFlag::SpinMenu));
 }
 
 //public
@@ -67,7 +72,7 @@ void TutorialDirector::handleMessage(const cro::Message& msg)
         case SceneEvent::TransitionComplete:
         {
             //push first tutorial
-            m_sharedData.tutorialIndex = 0;
+            m_sharedData.tutorialIndex = TutorialID::One;
 
             auto* msg2 = postMessage<SystemEvent>(MessageID::SystemMessage);
             msg2->data = StateID::Tutorial;
@@ -90,13 +95,26 @@ void TutorialDirector::handleMessage(const cro::Message& msg)
             switch (m_sharedData.tutorialIndex)
             {
             default: break;
-            case 2:
+            case TutorialID::Three:
                 //allow aiming
-                m_inputParser.setEnableFlags(~(InputFlag::Action/* | InputFlag::PrevClub | InputFlag::NextClub*/));
+                m_inputParser.setEnableFlags(~(InputFlag::Action | InputFlag::SpinMenu));
                 break;
-            case 3:
+            case TutorialID::Swing:
                 //allow all input
                 m_inputParser.setEnableFlags(InputFlag::All);
+                if (cro::GameController::getControllerCount() == 0)
+                {
+                    //skip to spin if there's no controller
+                    m_sharedData.tutorialIndex = TutorialID::Spin;
+                }
+                break;
+            case TutorialID::Spin:
+            {
+                //we must have come from swingput so show spin immediately;
+                auto* msg2 = postMessage<SystemEvent>(MessageID::SystemMessage);
+                msg2->data = StateID::Tutorial;
+                msg2->type = SystemEvent::StateRequest;
+            }
                 break;
             }
         }
@@ -111,8 +129,8 @@ void TutorialDirector::handleMessage(const cro::Message& msg)
             {
             default: break;
             case InputFlag::Action:
-                if (m_sharedData.tutorialIndex == 1
-                  || m_sharedData.tutorialIndex == 2)
+                if (m_sharedData.tutorialIndex == TutorialID::Two
+                  || m_sharedData.tutorialIndex == TutorialID::Three)
                 {
                     //player pressed action after setting club or setting aim
                     auto* msg2 = postMessage<SystemEvent>(MessageID::SystemMessage);
@@ -132,21 +150,16 @@ void TutorialDirector::handleMessage(const cro::Message& msg)
             switch (m_sharedData.tutorialIndex)
             {
             default: break;
-            case 3:
-                if (cro::GameController::getControllerCount() != 0)
-                {
-                    //swingput tutorial
-                    auto* msg2 = postMessage<SystemEvent>(MessageID::SystemMessage);
-                    msg2->data = StateID::Tutorial;
-                    msg2->type = SystemEvent::StateRequest;
-                }
-                else
-                {
-                    //skip to next
-                    m_sharedData.tutorialIndex++;
-                }
+            case TutorialID::Swing:
+            case TutorialID::Spin:
+                //request tutorial
+            {
+                auto* msg2 = postMessage<SystemEvent>(MessageID::SystemMessage);
+                msg2->data = StateID::Tutorial;
+                msg2->type = SystemEvent::StateRequest;
+            }
                 break;
-            case 4:
+            case TutorialID::Putt:
                 if (data.terrain == TerrainID::Green)
                 {
                     //final tutorial about putting

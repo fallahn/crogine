@@ -28,11 +28,21 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include "GolfState.hpp"
+#include "CameraFollowSystem.hpp"
 
+#include <crogine/ecs/components/Camera.hpp>
 #include <crogine/core/SysTime.hpp>
 #include <crogine/detail/OpenGL.hpp>
+#include <crogine/gui/Gui.hpp>
 
-#ifdef PATH_TRACING
+namespace
+{
+    const std::array<std::string, CameraID::Count> CameraStrings =
+    {
+        "Player", "Bystander", "Sky", "Green", "Transition", "Idle", "Drone"
+    };
+}
+
 #include <crogine/graphics/MeshData.hpp>
 #include <crogine/graphics/DynamicMeshBuilder.hpp>
 
@@ -41,6 +51,7 @@ source distribution.
 
 #include "../ErrorCheck.hpp"
 
+#ifdef PATH_TRACING
 namespace
 {
     cro::Mesh::Data* meshData = nullptr;
@@ -112,6 +123,233 @@ void GolfState::endBallDebug()
 }
 
 #endif
+
+void GolfState::addCameraDebugging()
+{
+#ifdef CAMERA_TRACK
+    auto materialID = m_materialIDs[MaterialID::WireFrame];
+
+    for (auto c : m_cameras)
+    {
+        if (c.hasComponent<CameraFollower>())
+        {
+            auto meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_LINES));
+
+            auto material = m_resources.materials.get(materialID);
+            material.enableDepthTest = false;
+            auto meshData = m_resources.meshes.getMesh(meshID);
+            meshData.boundingBox = { glm::vec3(0.f), glm::vec3(320.f, 100.f, -200.f) };
+            meshData.boundingSphere = meshData.boundingBox;
+
+            auto entity = m_gameScene.createEntity();
+            entity.addComponent<cro::Transform>();
+            entity.addComponent<cro::Model>(meshData, material);
+
+            c.getComponent<CameraFollower>().debugEntity = entity;
+        }
+        m_cameraDebugPoints.emplace_back();
+    }
+
+    registerWindow([&]()
+        {
+            if (ImGui::Begin("Camera Points"))
+            {
+                
+                static auto camID = 0;
+                static auto stepIndex = 0;
+                ImGui::Text("%s", CameraStrings[camID].c_str());
+                if (ImGui::InputInt("Camera ID", &camID))
+                {
+                    camID = (camID + CameraID::Count) % CameraID::Count;
+                    stepIndex = 0;
+                }
+                ImGui::Text("%d of %u", stepIndex, m_cameraDebugPoints[camID].size());
+
+                static glm::quat prevQuat = glm::quat(1.f, 0.f, 0.f, 0.f);
+                const auto updateTx = [&]()
+                {
+                    auto [q, p, _] = m_cameraDebugPoints[camID][stepIndex];
+                    m_cameras[CameraID::Player].getComponent<cro::Transform>().setRotation(q);
+                    m_cameras[CameraID::Player].getComponent<cro::Transform>().setPosition(p);
+                    m_cameras[CameraID::Player].getComponent<cro::Camera>().active = true;
+                };
+
+
+                if (ImGui::Button("Step Back"))
+                {
+                    if (!m_cameraDebugPoints[camID].empty())
+                    {
+                        prevQuat = m_cameraDebugPoints[camID][stepIndex].q;
+                        stepIndex = (stepIndex + (m_cameraDebugPoints[camID].size() - 1)) % m_cameraDebugPoints[camID].size();
+                        updateTx();
+
+                    }
+                }
+                ImGui::SameLine();
+                if (ImGui::Button("Step Forward"))
+                {
+                    if (!m_cameraDebugPoints[camID].empty())
+                    {
+                        prevQuat = m_cameraDebugPoints[camID][stepIndex].q;
+                        stepIndex = (stepIndex + 1) % m_cameraDebugPoints[camID].size();
+                        updateTx();
+                    }
+                }
+
+                if (!m_cameraDebugPoints[camID].empty())
+                {
+                    
+                    auto [q, p, b] = m_cameraDebugPoints[camID][stepIndex];
+                    if (q == prevQuat)
+                    {
+                        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.f, 0.f, 0.f, 1.f));
+                    }
+                    else
+                    {
+                        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.f, 1.f, 1.f, 1.f));
+                    }
+                    ImGui::Text("Q: %3.5f, %3.5f, %3.5f, %3.5f", q.x, q.y, q.z, q.w);
+                    ImGui::PopStyleColor();
+                    ImGui::Text("P: %3.3f, %3.3f, %3.3f", p.x, p.y, p.z);
+                    if (b)
+                    {
+                        ImGui::Text("Was Updated");
+                    }
+                    else
+                    {
+                        ImGui::Text("Was NOT Updated");
+                    }
+                }
+            }
+            ImGui::End();
+        });
+#endif
+}
+
+void GolfState::registerDebugWindows()
+{
+    //registerWindow([&]()
+    //    {
+    //        if (ImGui::Begin("Spin"))
+    //        {
+    //            auto spin = m_inputParser.getSpin();
+    //            ImGui::SliderFloat2("Spin", &spin[0], -1.f, 1.f);
+    //            ImGui::End();
+    //        }
+    //    });
+
+    registerWindow([&]()
+        {
+            if (ImGui::Begin("Target Info"))
+            {
+                auto pos = m_freeCam.getComponent<cro::Transform>().getPosition();
+                auto dir = m_freeCam.getComponent<cro::Transform>().getForwardVector() * 100.f;
+                auto result = m_collisionMesh.getTerrain(pos, dir);
+
+                if (result.wasRayHit)
+                {
+                    ImGui::Text("Terrain: %s", TerrainStrings[result.terrain].c_str());
+                }
+                else
+                {
+                    ImGui::Text("Inf.");
+                }
+
+                ImGui::Text("Current Camera %s", CameraStrings[m_currentCamera].c_str());
+            }        
+            ImGui::End();
+
+            //hacky stand in for reticule :3
+            if (m_gameScene.getActiveCamera() == m_freeCam)
+            {
+                auto size = glm::vec2(cro::App::getWindow().getSize());
+                const glm::vec2 pointSize(6.f);
+
+                auto pos = (size - pointSize) / 2.f;
+                ImGui::SetNextWindowPos({ pos.x, pos.y });
+                ImGui::SetNextWindowSize({ pointSize.x, pointSize.y });
+                ImGui::Begin("Point");
+                ImGui::End();
+            }
+        }, true);
+
+    //registerWindow([&]()
+    //    {
+    //        if (ImGui::Begin("Sun"))
+    //        {
+    //            if (ImGui::SliderFloat("ToD", &m_skyData.tod, 0.f, 1.f))
+    //            {
+    //                float angle = SkyData::MinAngle + (m_skyData.tod * (SkyData::MaxAngle - SkyData::MinAngle));
+    //                m_gameScene.getSunlight().getComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, -angle * cro::Util::Const::degToRad);
+    //                //m_skyData.sunRoot.getComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, -angle * cro::Util::Const::degToRad);
+
+    //                /*if (auto w = m_skyData.sunPalette.getSize().x; w != 0)
+    //                {
+    //                    auto index = (w - 1) * m_skyData.tod;
+    //                    auto* colour = m_skyData.sunPalette.getPixel(static_cast<std::uint32_t>(index), 0);
+    //                    m_skyData.sunModel.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", cro::Colour(colour[0], colour[1], colour[2]));
+    //                }
+
+    //                if (auto w = m_skyData.lightPalette.getSize().x; w != 0)
+    //                {
+    //                    auto index = (w - 1) * m_skyData.tod;
+    //                    auto* colour = m_skyData.sunPalette.getPixel(static_cast<std::uint32_t>(index), 0);
+    //                    
+    //                    glm::vec4 lightColour(static_cast<float>(colour[0]) / 255.f, static_cast<float>(colour[1]) / 255.f, static_cast<float>(colour[3]) / 255.f, 1.f);
+    //                    auto colours = m_skyData.skyColours;
+    //                    colours.top *= lightColour;
+    //                    colours.middle *= lightColour;
+    //                    m_skyScene.setSkyboxColours(colours.bottom, colours.middle, colours.top);
+
+    //                    cro::Colour sLight(colour[0], colour[1], colour[2]);
+    //                    m_skyScene.getSunlight().getComponent<cro::Sunlight>().setColour(sLight);
+    //                    m_gameScene.getSunlight().getComponent<cro::Sunlight>().setColour(sLight);
+    //                }*/
+    //            }
+    //        }
+    //        ImGui::End();
+    //    });
+
+    registerWindow([&]()
+        {
+            if (ImGui::Begin("Depthmap"))
+            {
+                /*for (auto y = 4; y >= 0; --y)
+                {
+                    for (auto x = 0; x < 8; ++x)
+                    {
+                        auto idx = y * 8 + x;
+                        ImGui::Image(m_depthMap.getTextureAt(idx), { 80.f, 80.f }, { 0.f, 1.f }, { 1.f, 0.f });
+                        ImGui::SameLine();
+                    }
+                    ImGui::NewLine();
+                }*/
+
+                const auto& cam = m_gameScene.getActiveCamera().getComponent<cro::Camera>();
+                for (auto i = 0u; i < cam.shadowMapBuffer.getLayerCount(); ++i)
+                {
+                    ImGui::Image(cam.shadowMapBuffer.getTexture(i), { 256.f, 256.f }, { 0.f, 1.f }, { 1.f, 0.f });
+                    ImGui::SameLine();
+                }
+            }
+            ImGui::End();
+        },true);
+
+    //registerWindow([&]()
+    //    {
+    //        if (ImGui::Begin("Network"))
+    //        {
+    //            auto size = m_greenBuffer.getSize();
+    //            ImGui::Text("Buffer Size %u, %u", size.x, size.y);
+
+    //            ImGui::Text("Connection Bitrate: %3.3fkbps", static_cast<float>(bitrate) / 1024.f);
+
+    //            auto terrain = m_collisionMesh.getTerrain(m_freeCam.getComponent<cro::Transform>().getPosition());
+    //            ImGui::Text("Terrain %s", TerrainStrings[terrain.terrain].c_str());
+    //        }
+    //        ImGui::End();
+    //    }, true);
+}
 
 void GolfState::dumpBenchmark()
 {

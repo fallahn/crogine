@@ -273,8 +273,8 @@ namespace cro
         bool m_applyDefaultShader;
         bool m_autoCrop;
         std::int32_t m_textureUniform;
-        std::int32_t m_worldViewUniform;
-        std::int32_t m_projectionUniform;
+        std::int32_t m_worldUniform;
+        std::int32_t m_viewProjectionUniform;
 
         std::uint32_t m_facing;
 

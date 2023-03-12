@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2022
+Matt Marchant 2021 - 2023
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -51,6 +51,18 @@ source distribution.
 #include <crogine/util/Matrix.hpp>
 
 #include <cstdint>
+#include <sstream>
+#include <iomanip>
+
+static constexpr float MaxBallRadius = 0.07f;
+static constexpr float GreenCamRadiusLarge = 45.f;
+static constexpr float GreenCamRadiusMedium = 10.f;
+static constexpr float GreenCamRadiusSmall = 5.7f;
+static constexpr float SkyCamRadius = 80.f;
+
+static constexpr float GreenCamZoomFast = 2.5f;
+static constexpr float GreenCamZoomSlow = 1.8f;
+static constexpr float SkyCamZoomSpeed = 1.1f;// 3.f;
 
 static constexpr glm::uvec2 MapSize(320u, 200u);
 static constexpr glm::vec2 RangeSize(200.f, 250.f);
@@ -67,15 +79,19 @@ static constexpr float GolfZoom = 0.59f;
 
 static constexpr float GreenFadeDistance = 0.8f;
 static constexpr float CourseFadeDistance = 2.f;
+static constexpr float ZoomFadeDistance = 10.f;
 
 static constexpr float GreenCamHeight = 3.f;
 static constexpr float SkyCamHeight = 16.f;
 static constexpr glm::vec3 DefaultSkycamPosition(MapSize.x / 2.f, SkyCamHeight, -static_cast<float>(MapSize.y) / 2.f);
 
 static constexpr float BallPointSize = 1.4f;
+static constexpr float LongPuttDistance = 6.f;
 
 static constexpr float MaxHook = -0.25f;
 static constexpr float KnotsPerMetre = 1.94384f;
+static constexpr float MPHPerMetre = 2.23694f;
+static constexpr float KPHPerMetre = 3.6f;
 static constexpr float HoleRadius = 0.058f;
 
 static constexpr float WaterLevel = -0.02f;
@@ -112,6 +128,15 @@ static constexpr std::int16_t LeftThumbDeadZone = 7849;
 static constexpr std::int16_t RightThumbDeadZone = 8689;
 static constexpr std::int16_t TriggerDeadZone = 30;
 
+struct TutorialID
+{
+    //note that these are in order in which they are displayed
+    enum
+    {
+        One, Two, Three,
+        Swing, Spin, Putt
+    };
+};
 
 struct LobbyPager final
 {
@@ -179,14 +204,17 @@ struct ShaderID final
         CelTexturedInstanced,
         CelTexturedSkinned,
         ShadowMap,
+        ShadowMapInstanced,
         ShadowMapSkinned,
         Crowd,
         CrowdShadow,
         Cloud,
+        CloudRing,
         Leaderboard,
         Player,
         Hair,
         Course,
+        CourseGreen,
         CourseGrid,
         Ball,
         Slope,
@@ -215,8 +243,21 @@ struct AnimationID final
     enum
     {
         Idle, Swing, Chip, Putt,
-        Count
+        Celebrate, Disappoint,
+        Impatient, IdleStand,
+        Count,
+
     };
+    static constexpr std::size_t Invalid = std::numeric_limits<std::size_t>::max();
+};
+
+struct Avatar final
+{
+    bool flipped = false;
+    cro::Entity model;
+    cro::Attachment* hands = nullptr;
+    std::array<std::size_t, AnimationID::Count> animationIDs = {};
+    cro::Entity ballModel;
 };
 
 static const std::array BallTints =
@@ -249,18 +290,20 @@ static inline std::int32_t activeControllerID(std::int32_t bestMatch)
     return -1;
 }
 
-static inline glm::vec3 interpolate(glm::vec3 a, glm::vec3 b, float t)
-{
-    auto diff = b - a;
-    return a + (diff *t);
-}
-
-static inline constexpr float interpolate(float a, float b, float t)
+template <typename T>
+constexpr T interpolate(T a, T b, float t)
 {
     auto diff = b - a;
     return a + (diff * t);
 }
 
+template <typename T>
+constexpr T step(T s, T v)
+{
+    return v < s ? static_cast<T>(0) : static_cast<T>(1);
+}
+
+//WHY do I keep defining this? (It's also in Util::Maths) - the std library has this
 static inline constexpr float clamp(float t)
 {
     return std::min(1.f, std::max(0.f, t));
@@ -295,6 +338,21 @@ static inline glm::mat4 lookFrom(glm::vec3 eye, glm::vec3 target, glm::vec3 up)
     );
 
     return rotation * glm::translate(glm::mat4(1.f), eye);
+}
+
+static inline glm::quat lookRotation(glm::vec3 eye, glm::vec3 target, glm::vec3 up = glm::vec3(0.f, 1.f, 0.f))
+{
+    auto forward = eye - target;
+    CRO_ASSERT(glm::length2(forward) != 0, "");
+
+    forward = glm::normalize(forward);
+    auto right = glm::normalize(glm::cross(up, forward));
+    CRO_ASSERT(!std::isnan(right.x), "Right vec is NaN");
+    auto upNew = glm::normalize(glm::cross(forward, right));
+    CRO_ASSERT(!std::isnan(upNew.x), "Up vec is NaN");
+
+    glm::mat3 m(right, upNew, forward);
+    return glm::normalize(glm::toQuat(m));
 }
 
 static inline glm::vec2 calcVPSize()
@@ -369,6 +427,118 @@ static inline void saveAvatars(const SharedStateData& sd)
     cfg.save(path);
 }
 
+static inline std::vector<cro::Vertex2D> getStrokeIndicatorVerts()
+{
+    auto endColour = TextGoldColour;
+    endColour.setAlpha(0.f);
+    const cro::Colour Grey(0.419f, 0.435f, 0.447f);
+
+    return
+    {
+        //gold
+        cro::Vertex2D(glm::vec2(0.f, 0.5f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(0.f, -0.5f), TextGoldColour),
+
+        //grey
+        cro::Vertex2D(glm::vec2(0.0575f, 0.5f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(0.0575f, -0.5f), TextGoldColour),
+
+        cro::Vertex2D(glm::vec2(0.0575f, 0.5f), Grey),
+        cro::Vertex2D(glm::vec2(0.0575f, -0.5f), Grey),
+
+        cro::Vertex2D(glm::vec2(0.0675f, 0.5f), Grey),
+        cro::Vertex2D(glm::vec2(0.0675f, -0.5f), Grey),
+
+        cro::Vertex2D(glm::vec2(0.0675f, 0.5f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(0.0675f, -0.5f), TextGoldColour),
+
+
+        //black
+        cro::Vertex2D(glm::vec2(0.12f, 0.5f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(0.12f, -0.5f), TextGoldColour),
+
+        cro::Vertex2D(glm::vec2(0.12f, 0.5f), LeaderboardTextDark),
+        cro::Vertex2D(glm::vec2(0.12f, -0.5f), LeaderboardTextDark),
+
+        cro::Vertex2D(glm::vec2(0.13f, 0.5f), LeaderboardTextDark),
+        cro::Vertex2D(glm::vec2(0.13f, -0.5f), LeaderboardTextDark),
+
+        cro::Vertex2D(glm::vec2(0.13f, 0.5f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(0.13f, -0.5f), TextGoldColour),
+
+        //grey
+        cro::Vertex2D(glm::vec2(0.1825f, 0.5f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(0.1825f, -0.5f), TextGoldColour),
+
+        cro::Vertex2D(glm::vec2(0.1825f, 0.5f), Grey),
+        cro::Vertex2D(glm::vec2(0.1825f, -0.5f), Grey),
+
+        cro::Vertex2D(glm::vec2(0.1925f, 0.5f), Grey),
+        cro::Vertex2D(glm::vec2(0.1925f, -0.5f), Grey),
+
+        cro::Vertex2D(glm::vec2(0.1925f, 0.5f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(0.1925f, -0.5f), TextGoldColour),
+
+        //black
+        cro::Vertex2D(glm::vec2(0.245f, 0.5f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(0.245f, -0.5f), TextGoldColour),
+
+        cro::Vertex2D(glm::vec2(0.245f, 0.5f), LeaderboardTextDark),
+        cro::Vertex2D(glm::vec2(0.245f, -0.5f), LeaderboardTextDark),
+
+        cro::Vertex2D(glm::vec2(0.255f, 0.5f), LeaderboardTextDark),
+        cro::Vertex2D(glm::vec2(0.255f, -0.5f), LeaderboardTextDark),
+
+        cro::Vertex2D(glm::vec2(0.255f, 0.5f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(0.255f, -0.5f), TextGoldColour),
+
+
+        //grey
+        cro::Vertex2D(glm::vec2(0.3075f, 0.5f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(0.3075f, -0.5f), TextGoldColour),
+
+        cro::Vertex2D(glm::vec2(0.3075f, 0.5f), Grey),
+        cro::Vertex2D(glm::vec2(0.3075f, -0.5f), Grey),
+
+        cro::Vertex2D(glm::vec2(0.3175f, 0.5f), Grey),
+        cro::Vertex2D(glm::vec2(0.3175f, -0.5f), Grey),
+
+        cro::Vertex2D(glm::vec2(0.3175f, 0.5f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(0.3175f, -0.5f), TextGoldColour),
+
+
+        //black
+        cro::Vertex2D(glm::vec2(0.37f, 0.5f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(0.37f, -0.5f), TextGoldColour),
+
+        cro::Vertex2D(glm::vec2(0.37f, 0.5f), LeaderboardTextDark),
+        cro::Vertex2D(glm::vec2(0.37f, -0.5f), LeaderboardTextDark),
+
+        cro::Vertex2D(glm::vec2(0.38f, 0.5f), LeaderboardTextDark),
+        cro::Vertex2D(glm::vec2(0.38f, -0.5f), LeaderboardTextDark),
+
+        cro::Vertex2D(glm::vec2(0.38f, 0.5f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(0.38f, -0.5f), TextGoldColour),
+
+        //grey
+        cro::Vertex2D(glm::vec2(0.4325f, 0.5f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(0.4325f, -0.5f), TextGoldColour),
+
+        cro::Vertex2D(glm::vec2(0.4325f, 0.5f), Grey),
+        cro::Vertex2D(glm::vec2(0.4325f, -0.5f), Grey),
+
+        cro::Vertex2D(glm::vec2(0.4425f, 0.5f), Grey),
+        cro::Vertex2D(glm::vec2(0.4425f, -0.5f), Grey),
+
+        cro::Vertex2D(glm::vec2(0.4425f, 0.5f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(0.4425f, -0.5f), TextGoldColour),
+
+        //gold
+        cro::Vertex2D(glm::vec2(0.5f, 0.5f), endColour),
+        cro::Vertex2D(glm::vec2(0.5f, -0.5f), endColour)
+    };
+}
+
 //applies material data loaded in a model definition such as texture info to custom materials
 static inline void applyMaterialData(const cro::ModelDefinition& modelDef, cro::Material::Data& dest, std::size_t matID = 0)
 {
@@ -400,6 +570,15 @@ static inline void applyMaterialData(const cro::ModelDefinition& modelDef, cro::
             dest.setProperty("u_colour", colour);
         }
 
+        if (m->properties.count("u_maskColour")
+            && dest.properties.count("u_maskColour"))
+        {
+            const auto* c = m->properties.at("u_maskColour").second.vecValue;
+            glm::vec4 colour(c[0], c[1], c[2], c[3]);
+
+            dest.setProperty("u_maskColour", colour);
+        }
+
         if (m->properties.count("u_subrect"))
         {
             const float* v = m->properties.at("u_subrect").second.vecValue;
@@ -413,6 +592,7 @@ static inline void applyMaterialData(const cro::ModelDefinition& modelDef, cro::
 
         dest.doubleSided = m->doubleSided;
         dest.animation = m->animation;
+        dest.name = m->name;
     }
 }
 
@@ -529,12 +709,11 @@ static inline cro::Image loadNormalMap(std::vector<glm::vec3>& dst, const std::s
     return img;
 }
 
-//return the path to cloud sprites if it is found
-static inline std::string loadSkybox(const std::string& path, cro::Scene& skyScene, cro::ResourceCollection& resources, std::int32_t materialID, std::int32_t skinMatID = -1)
+//return the entity with the cloud ring (so we can apply material)
+static inline cro::Entity loadSkybox(const std::string& path, cro::Scene& skyScene, cro::ResourceCollection& resources, std::int32_t materialID, std::int32_t skinMatID = -1)
 {
     auto skyTop = SkyTop;
     auto skyMid = TextNormalColour;
-    std::string  cloudPath;
 
     cro::ConfigFile cfg;
 
@@ -562,10 +741,6 @@ static inline std::string loadSkybox(const std::string& path, cro::Scene& skySce
                 else if (name == "sky_bottom")
                 {
                     skyMid = p.getValue<cro::Colour>();
-                }
-                else if (name == "clouds")
-                {
-                    cloudPath = p.getValue<std::string>();
                 }
             }
         }
@@ -651,7 +826,27 @@ static inline std::string loadSkybox(const std::string& path, cro::Scene& skySce
     skyScene.enableSkybox();
     skyScene.setSkyboxColours(SkyBottom, skyMid, skyTop);
 
-    return cloudPath;
+    cro::Entity cloudEnt;
+    if (md.loadFromFile("assets/golf/models/skybox/cloud_ring.cmt"))
+    {
+        auto entity = skyScene.createEntity();
+        entity.addComponent<cro::Transform>();
+        md.createModel(entity);
+
+        const float speed = cro::Util::Const::degToRad / 4.f;
+        entity.addComponent<cro::Callback>().active = true;
+        entity.getComponent<cro::Callback>().setUserData<float>(1.f);
+        entity.getComponent<cro::Callback>().function =
+            [speed](cro::Entity e, float dt)
+        {
+            auto currSpeed = speed * e.getComponent<cro::Callback>().getUserData<float>();
+            e.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, currSpeed * dt);
+        };
+
+        cloudEnt = entity;
+    }
+
+    return cloudEnt;
 }
 
 static inline void createFallbackModel(cro::Entity target, cro::ResourceCollection& resources)
@@ -678,13 +873,22 @@ static inline void formatDistanceString(float distance, cro::Text& target, bool 
 
     if (imperial)
     {
-        if (distance > 7) //TODO this should read the putter value
+        if (distance > 7) //TODO this should read the putter value (?)
         {
             auto dist = static_cast<std::int32_t>(std::round(distance * ToYards));
             target.setString("Pin: " + std::to_string(dist) + "yds");
         }
         else
         {
+            /*float dist = std::ceil((distance * ToYards) * 100.f) / 100.f;
+            std::stringstream ss;
+            ss.precision(2);
+            ss << "Distance: ";
+            ss << std::fixed << dist;
+            ss << "yds";
+
+            target.setString(ss.str());*/
+
             distance *= ToFeet;
             if (distance > 1)
             {
@@ -711,4 +915,33 @@ static inline void formatDistanceString(float distance, cro::Text& target, bool 
             target.setString("Distance: " + std::to_string(dist) + "cm");
         }
     }
+}
+
+static inline glm::vec3 rgb2hsv(glm::vec3 c)
+{
+    constexpr glm::vec4 K = glm::vec4(0.f, -1.f / 3.f, 2.f / 3.f, -1.f);
+    const glm::vec4 p = interpolate(glm::vec4(c.b, c.g, K.w, K.z), glm::vec4(c.g, c.b, K.x, K.y), step(c.b, c.g));
+    const glm::vec4 q = interpolate(glm::vec4(p.x, p.y, p.w, c.r), glm::vec4(c.r, p.y, p.z, p.x), step(p.x, c.r));
+
+    const float d = q.x - glm::min(q.w, q.y);
+    constexpr float e = float(1.0e-10);
+    return glm::vec3(glm::abs(q.z + (q.w - q.y) / (6.f * d + e)), d / (q.x + e), q.x);
+}
+
+static inline glm::vec3 hsv2rgb(glm::vec3 c)
+{
+    constexpr glm::vec4 K = glm::vec4(1.f, 2.f / 3.f, 1.f / 3.f, 3.f);
+    const glm::vec3 p = glm::abs(glm::fract(glm::vec3(c.x, c.x, c.x) + glm::vec3(K.x, K.y, K.z)) * 6.f - glm::vec3(K.w, K.w, K.w));
+    
+    return c.z * interpolate(glm::vec3(K.x, K.x, K.x), glm::clamp(p - glm::vec3(K.x, K.x, K.x), 0.f, 1.f), c.y);
+}
+
+static inline cro::Colour getBeaconColour(float rotation)
+{
+    glm::vec3 c(1.f, 0.f, 1.f);
+    c = rgb2hsv(c);
+    c.x += rotation;
+    c = hsv2rgb(c);
+
+    return cro::Colour(c.r, c.g, c.b, 1.f);
 }

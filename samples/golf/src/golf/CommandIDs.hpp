@@ -48,7 +48,8 @@ struct CommandID final
         Beacon          = 0x1000,
         StrokeArc       = 0x2000,
         Spectator       = 0x4000,
-        BeaconColour    = 0x8000
+        BeaconColour    = 0x8000,
+        DroneCam        = 0x10000
     };
 
     struct UI final
@@ -72,10 +73,11 @@ struct CommandID final
             MiniBall             = 0x4000,
             MessageBoard         = 0x8000,
             MiniGreen            = 0x10000,
-            DrivingBoard         = 0x20000,
-            StrengthMeter        = 0x40000,
-            PlayerIcon           = 0x80000,
-            WaitMessage          = 0x100000
+            MiniFlag             = 0x20000,
+            DrivingBoard         = 0x40000,
+            StrengthMeter        = 0x80000,
+            PlayerIcon           = 0x100000,
+            WaitMessage          = 0x200000
         };
     };
 
@@ -100,7 +102,9 @@ struct CommandID final
             ScoreType    = 0x4000,
             ScoreDesc    = 0x8000,
             GimmeDesc    = 0x10000,
-            LobbyText    = 0x20000
+            LobbyText    = 0x20000,
+            CourseRules  = 0x40000,
+            CourseType   = 0x80000
         };
     };
 };

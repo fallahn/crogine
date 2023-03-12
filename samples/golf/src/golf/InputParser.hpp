@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2022
+Matt Marchant 2021 - 2023
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -38,7 +38,7 @@ source distribution.
 
 namespace cro
 {
-    class MessageBus;
+    class Scene;
 }
 
 struct SharedStateData;
@@ -46,12 +46,15 @@ class InputParser final
 {
 public:
        
-    InputParser(const SharedStateData&, cro::MessageBus&);
+    InputParser(const SharedStateData&, cro::Scene*);
 
     void handleEvent(const cro::Event&);
     void setHoleDirection(glm::vec3);
     void setClub(float); //picks closest club to given distance
-    float getYaw() const;
+    float getYaw() const; //yaw in world space (includes facing direction)
+    float getRotation() const; //relative rotation
+    float getDirection() const { return m_holeDirection; }
+    float getCamMotion() const { return m_camMotion; }
 
     float getPower() const; //0-1 multiplied by selected club
     float getHook() const; //-1 to -1 * some angle, club defined
@@ -76,14 +79,25 @@ public:
     void setMaxRotation(float);
     float getMaxRotation() const { return m_maxRotation; }
 
+    glm::vec2 getSpin() const { return m_spin; }
+    bool isSpinputActive() const { return (m_inputFlags & InputFlag::SpinMenu) != 0; }
+
     const InputBinding getInputBinding() const { return m_inputBinding; }
+
+    struct StrokeResult final
+    {
+        glm::vec3 impulse = glm::vec3(0.f);
+        glm::vec2 spin = glm::vec2(0.f);
+        float hook = 0.f;
+    };
+    StrokeResult getStroke(std::int32_t club, std::int32_t facing, float holeDistance) const; //facing is -1 or 1 to decide on slice/hook
 
     static constexpr std::uint32_t CPU_ID = 1337u;
 
 private:
     const SharedStateData& m_sharedData;
     const InputBinding& m_inputBinding;
-    cro::MessageBus& m_messageBus;
+    cro::Scene* m_gameScene;
 
     Swingput m_swingput;
 
@@ -94,6 +108,7 @@ private:
     std::uint16_t m_prevStick;
     float m_analogueAmount;
     float m_inputAcceleration;
+    float m_camMotion;
 
     std::int32_t m_mouseWheel;
     std::int32_t m_prevMouseWheel;
@@ -110,6 +125,7 @@ private:
     float m_power;
     float m_hook;
     float m_powerbarDirection;
+    glm::vec2 m_spin;
 
     bool m_active;
     bool m_suspended;
@@ -117,14 +133,19 @@ private:
     enum class State
     {
         Aim, Power, Stroke,
-        Flight
+        Flight, Drone
     }m_state;
 
     std::int32_t m_currentClub;
     std::int32_t m_firstClub;
     std::int32_t m_clubOffset; //offset ID from first club
 
+    void updateStroke(float, std::int32_t);
+    void updateDroneCam(float);
+    void updateSpin(float);
+
     void rotate(float);
     void checkControllerInput();
     void checkMouseInput();
+    glm::vec2 getRotationalInput(std::int32_t xAxis, std::int32_t yAxis) const; //used for drone cam and spin amount
 };

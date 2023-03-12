@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2022
+Matt Marchant 2021 - 2023
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -31,11 +31,11 @@ source distribution.
 
 #include "Terrain.hpp"
 #include "DebugDraw.hpp"
+#include "RayResultCallback.hpp"
 
 #include <crogine/ecs/System.hpp>
 #include <crogine/core/Clock.hpp>
 
-#include <btBulletCollisionCommon.h>
 #include <BulletCollision/CollisionDispatch/btGhostObject.h>
 
 #include <memory>
@@ -46,21 +46,12 @@ namespace cro
     class Image;
 }
 
-struct RayResultCallback final : public btCollisionWorld::ClosestRayResultCallback
-{
-    RayResultCallback(const btVector3& rayFromWorld, const btVector3& rayToWorld);
-    btScalar addSingleResult(btCollisionWorld::LocalRayResult& rayResult, bool normalInWorldSpace) override;
-
-private:
-    btVector3 getFaceNormal(const btCollisionWorld::LocalRayResult& rayResult) const;
-};
-
 struct Ball final
 {
     static constexpr float Radius = 0.0215f;
     enum class State
     {
-        Idle, Flight, Putt, Paused, Reset
+        Idle, Flight, Roll, Putt, Paused, Reset
     }state = State::Idle;
 
     static const std::array<std::string, 5> StateStrings;
@@ -69,7 +60,11 @@ struct Ball final
 
     glm::vec3 velocity = glm::vec3(0.f);
     float delay = 0.f;
-    float spin = 0.f;
+    float rotation = 0.f; //animation effect
+
+    glm::vec2 spin = glm::vec2(0.f);
+    glm::vec3 initialForwardVector = glm::vec3(0.f); //normalised forward vector of velocity when impulse applied
+    glm::vec3 initialSideVector = glm::vec3(0.f); //normalised right vector of velocity when impulse applied
 
     glm::vec3 startPoint = glm::vec3(0.f);
     float lastStrokeDistance = 0.f;
@@ -98,13 +93,16 @@ public:
     glm::vec3 getWindDirection() const;
     void forceWindChange();
 
-    bool setHoleData(const struct HoleData&, bool rebuildMesh = true);
+    //this will modify the hole data by reading the collision
+    //mesh and correcting the height on the pin property.
+    bool setHoleData(struct HoleData&, bool rebuildMesh = true);
 
     void setGimmeRadius(std::uint8_t);
 
     struct TerrainResult final
     {
         std::uint8_t terrain = TerrainID::Scrub;
+        std::uint8_t trigger = TriggerID::Count;
         glm::vec3 normal = glm::vec3(0.f, 1.f, 0.f);
         glm::vec3 intersection = glm::vec3(0.f);
         float penetration = 0.f; //positive values are down into the ground

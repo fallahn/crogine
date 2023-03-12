@@ -47,6 +47,7 @@ Hole files describe which models/assets make up the hole, as well as the positio
         {
             position = -130, 0, -65 //position of the left-most crowd member in world units
             rotation = 180 //rotation about the Y axis at the left-most point
+            lookat = 100, 2.4, 64 //since 1.11 an optional point for the crowd to face. If this is omitted they will look at the hole if it is close enough, or straight forward.
         }
 
         particles
@@ -132,6 +133,8 @@ The skybox definition file is used to declare the colour of the skybox, as well 
     }
 
 For an example of creating models for a skybox see the `skybox.blend` file. Note that many models include 'fake' reflections modelled directly as part of the mesh, for cases where they are rendered outside the world's reflection plane. The vertex colour of the mesh is used to decide how much 'tint' the model receives in the reflected part to take on the water colour, where 1 (white) is no tint, and 0 (black) is completely water colour.
+As of 1.11.0 the `clouds` property is deprecated and ignored.
+
 
 As of 1.8.0 typing `tree_ed` into the console when at the game menu opens the treeset editor (see below). This can be used to preview and modify skybox files.
 
@@ -188,3 +191,6 @@ Treesets have a few special requirements when creating the model. The trunk part
 The treeset editor is found by launching the game, opening the console with F1 (when the game is on the main menu) and entering the command `tree_ed`. In the new window which opens it is possible to define which parts of the model are assigned the branch material, and which is the leaf material. The leaf material also requires a texture to be loaded for the leaves, and optionally a leaf colour can be picked from the palette window. Once the look has been defined, selecting `save preset` from the file menu will write the treeset file which can be used to define treesets in the `course.data` file. IMPORTANT: as the game allows setting the tree quality in the options menu the game requires a billboard version of each tree which can be used to draw the model on low quality mode. To aid this the Billboard window provides a flat 2D view of the tree model, where an image can be quickly saved by clicking the `save` button, for later editing into the sprite sheet used for this treeset's shrubbery file.
 
 The treeset editor can also be used to open and modify skybox files (see above). To use this feature open the skybox editor window from the `View` menu. Here it is possible to open skybox files, add or remove models from the skybox, set the sky colour, and save the skybox file again.
+
+###### Hole Model Collision Data (since 1.11.0)
+The vertex colours of hole models are used to set the collision data used by the game. Up to version 1.10.0 all three channels represented the terrain type, and were required to match that of the the vertices current material. From 1.11.0 collision data is now set per-triangle and can be defined independently of the material. Terrain type is now also store only in the red channel of the vertex, although the values are the same as the existing TerrainID enum. The green channel is used for special trigger values, which are defined by TriggerID. These values do not overlap those of the terrain for backwards compatibility. The blue channel is used to blend in the colour property of the active material, with that of the texture of the current material. This way transitions can be created between triangles assigned to different materials. Note that the previous values stored in the colour propery used to mask the 'tilt' and 'water level' amount, as introduced in 1.10.0, have been moved to the colour_mask property of materials. This also means that the default terrain material, as seen in the model editor, is now VertexLit, not Unlit, as it was in previous versions.

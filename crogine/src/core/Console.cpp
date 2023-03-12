@@ -565,6 +565,21 @@ void Console::init()
         });
 #endif
 
+    //opens the screenshot directory
+    addCommand("show_screenshots",
+        [](const std::string&)
+        {
+            auto outPath = cro::App::getInstance().getPreferencePath() + "screenshots/";
+            std::replace(outPath.begin(), outPath.end(), '\\', '/');
+
+            if (!cro::FileSystem::directoryExists(outPath))
+            {
+                cro::FileSystem::createDirectory(outPath);
+            }
+
+            cro::Util::String::parseURL(outPath);
+        });
+
     //quits
     addCommand("quit",
         [](const std::string&)

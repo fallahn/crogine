@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021
+Matt Marchant 2021 - 2023
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -32,8 +32,8 @@ source distribution.
 #include <string>
 
 static const std::string TutorialVertexShader = R"(
-        uniform mat4 u_worldViewMatrix;
-        uniform mat4 u_projectionMatrix;
+        uniform mat4 u_worldMatrix;
+        uniform mat4 u_viewProjectionMatrix;
 
         ATTRIBUTE vec2 a_position;
         ATTRIBUTE MED vec2 a_texCoord0;
@@ -44,7 +44,7 @@ static const std::string TutorialVertexShader = R"(
 
         void main()
         {
-            gl_Position = u_projectionMatrix * u_worldViewMatrix * vec4(a_position, 0.0, 1.0);
+            gl_Position = u_viewProjectionMatrix * u_worldMatrix * vec4(a_position, 0.0, 1.0);
             v_colour = a_colour;
             v_position = a_position;
         })";

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2022
+Matt Marchant 2017 - 2023
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -27,6 +27,16 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
+#ifdef _MSC_VER
+#include "../detail/StackDump.hpp"
+#include <signal.h>
+void winAbort(int)
+{
+    StackDump::dump();
+}
+
+#endif
+
 #include <crogine/core/App.hpp>
 #include <crogine/core/Log.hpp>
 #include <crogine/core/Window.hpp>
@@ -43,6 +53,7 @@ source distribution.
 #include <SDL_joystick.h>
 #include <SDL_filesystem.h>
 
+//#include "../detail/backward.hpp"
 #include "../detail/GLCheck.hpp"
 #include "../detail/SDLImageRead.hpp"
 #include "../imgui/imgui_impl_opengl3.h"
@@ -57,7 +68,7 @@ source distribution.
 #include <algorithm>
 
 #ifdef CRO_DEBUG_
-#define DEBUG_NO_CONTROLLER
+//#define DEBUG_NO_CONTROLLER
 #endif // CRO_DEBUG_
 
 using namespace cro;
@@ -210,6 +221,14 @@ App::App(std::uint32_t styleFlags)
 {
     CRO_ASSERT(m_instance == nullptr, "App instance already exists!");
 
+#ifdef _MSC_VER
+#ifndef CRO_DEBUG_
+    //register custom abort which prints the call stack
+    signal(SIGABRT, &winAbort);
+#endif
+#endif
+
+
 #ifdef DEBUG_NO_CONTROLLER
     //urg sometimes some USB driver or something crashes and causes SDL_Init to hang
     //until the PC is restarted - this hacks around it while debugging (but disables controllers)
@@ -229,37 +248,7 @@ App::App(std::uint32_t styleFlags)
 
         std::fill(m_controllers.begin(), m_controllers.end(), ControllerInfo());
         //controllers are automatically connected as the connect events are raised
-        //on start up. Must test if this is true on other platforms
-
-        //for (auto i = 0; i < SDL_NumJoysticks() && i < MaxControllers; ++i)
-        //{
-        //    if (SDL_IsGameController(i))
-        //    {
-        //        //add to game controllers
-        //        ControllerInfo ci;
-        //        ci.controller = SDL_GameControllerOpen(i);
-        //        if (ci.controller)
-        //        {
-        //            ci.haptic = SDL_HapticOpen(i);
-
-        //            if (ci.haptic)
-        //            {
-        //                ci.rumble = (SDL_HapticRumbleInit(ci.haptic) == 0);
-        //            }
-
-        //            //the actual index is different to the id of the event
-        //            auto* j = SDL_GameControllerGetJoystick(ci.controller);
-        //            ci.joystickID = SDL_JoystickInstanceID(j);
-
-        //            m_controllers[i] = ci;
-        //        }
-        //    }
-        //    else
-        //    {
-        //        //add to joysticks
-        //        m_joysticks.insert(std::make_pair(i, SDL_JoystickOpen(i)));
-        //    }
-        //}
+        //on start up
 
         if (!AudioRenderer::init())
         {
@@ -269,6 +258,7 @@ App::App(std::uint32_t styleFlags)
         char* pp = SDL_GetPrefPath(m_orgString.c_str(), m_appString.c_str());
         m_prefPath = std::string(pp);
         SDL_free(pp);
+        std::replace(m_prefPath.begin(), m_prefPath.end(), '\\', '/');
 
 #ifdef WIN32
 #ifdef CRO_DEBUG_
@@ -323,16 +313,16 @@ void App::run()
         if (!gladLoadGLLoader(SDL_GL_GetProcAddress))
 #endif //PLATFORM_MOBILE
         {
-            Logger::log("Failed loading OpenGL", Logger::Type::Error);
+            Logger::log("Failed loading OpenGL", Logger::Type::Error, Logger::Output::All);
             return;
         }
-        
+
         m_window.setMultisamplingEnabled(glIsEnabled(GL_MULTISAMPLE));
 
         ImGui::CreateContext();
         setImguiStyle(&ImGui::GetStyle());
-        ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
-        
+        //ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
+
         ImGui_ImplSDL2_InitForOpenGL(m_window.m_window, m_window.m_mainContext);
 #ifdef PLATFORM_DESKTOP
 #ifdef GL41
@@ -392,11 +382,16 @@ void App::run()
         Logger::log("Failed creating main window", Logger::Type::Error, Logger::Output::All);
         return;
     }
-    
-    
+
+
     HiResTimer frameClock;
     m_frameClock = &frameClock;
     m_running = initialise();
+
+    if (!m_running)
+    {
+        Logger::log("App initialise() returned false.", Logger::Type::Error, Logger::Output::All);
+    }
 
     float timeSinceLastUpdate = 0.f;
 
@@ -499,9 +494,27 @@ void App::saveScreenshot()
     std::replace(filename.begin(), filename.end(), '/', '_');
     std::replace(filename.begin(), filename.end(), ':', '_');
 
+    auto outPath = getPreferencePath()+ "screenshots/";
+    std::replace(outPath.begin(), outPath.end(), '\\', '/');
+
+    if (!FileSystem::directoryExists(outPath))
+    {
+        FileSystem::createDirectory(outPath);
+    }
+
+    filename = outPath + filename;
+
     RaiiRWops out;
     out.file = SDL_RWFromFile(filename.c_str(), "w");
-    stbi_write_png_to_func(image_write_func, out.file, size.x, size.y, 4, buffer.data(), size.x * 4);
+    if (out.file)
+    {
+        stbi_write_png_to_func(image_write_func, out.file, size.x, size.y, 4, buffer.data(), size.x * 4);
+        LogI << "Saved " << filename << std::endl;
+    }
+    else
+    {
+        LogE << SDL_GetError() << std::endl;
+    }
 }
 
 //protected
@@ -516,6 +529,7 @@ void App::setApplicationStrings(const std::string& organisation, const std::stri
     char* pp = SDL_GetPrefPath(m_orgString.c_str(), m_appString.c_str());
     m_prefPath = std::string(pp);
     SDL_free(pp);
+    std::replace(m_prefPath.begin(), m_prefPath.end(), '\\', '/');
 }
 
 //private
@@ -579,6 +593,7 @@ void App::handleEvents()
                     {
                         Console::show();
                     }
+                    saveSettings();
                 }
                 break;
             }

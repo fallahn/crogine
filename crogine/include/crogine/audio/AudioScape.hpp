@@ -46,7 +46,7 @@ namespace cro
     files can be created using the default cro::ConfigFile format
     and parsed with this class. An AudioScape configuration file has
     the following format:
-    
+    \begincode
     audioscape <name>
     {
         emitter <emitter_name>
@@ -71,7 +71,7 @@ namespace cro
             attenuation = <float>
         }
     }
-
+    \endcode
     The AudioScape class works similarly to a SpriteSheet - it requires
     a reference to a valid AudioResource to manage the source files and,
     once loaded, can be used to return AudioEmitter components configured

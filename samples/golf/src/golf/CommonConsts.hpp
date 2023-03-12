@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 -2022
+Matt Marchant 2021 - 2022
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -41,6 +41,9 @@ namespace ConstVal
 {
     static constexpr float MinMouseSpeed = 0.5f;
     static constexpr float MaxMouseSpeed = 2.f;
+
+    static constexpr float MinSwingputThresh = 0.2f;
+    static constexpr float MaxSwingputThresh = 10.f;
 
     //max string vars for name/limiting packet size
     static constexpr std::size_t MaxStringChars = 24;

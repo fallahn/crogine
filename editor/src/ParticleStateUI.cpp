@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2021
+Matt Marchant 2020 - 2023
 http://trederia.blogspot.com
 
 crogine editor - Zlib license.
@@ -281,7 +281,7 @@ void ParticleState::drawInspector()
         label += "2D";
     }
 
-    if (ImGui::Begin(label.c_str(), nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse))
+    if (ImGui::Begin(label.c_str(), nullptr, ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse))
     {
         ImGui::BeginTabBar("Properties");
         if (ImGui::BeginTabItem("Appearance"))
@@ -305,7 +305,7 @@ void ParticleState::drawInspector()
             ImGui::SliderFloat("Size", &m_particleSettings->size, 0.01f, 1.f * m_cameras[m_cameraIndex].scale);
             
             //emit rate
-            ImGui::SliderFloat("Emit Rate", &m_particleSettings->emitRate, 0.1f, 50.f);
+            ImGui::SliderFloat("Emit Rate", &m_particleSettings->emitRate, 0.1f, 100.f);
             
             //rotation speed
             ImGui::SliderFloat("Rotation Speed", &m_particleSettings->rotationSpeed, -180.f, 180.f);
@@ -472,7 +472,7 @@ void ParticleState::drawBrowser()
 
     ImGui::SetNextWindowPos({ pos.x, pos.y });
     ImGui::SetNextWindowSize({ size.x, size.y });
-    if (ImGui::Begin("Browser##Particle", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse))
+    if (ImGui::Begin("Browser##Particle", nullptr, ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse))
     {
         
     }

@@ -75,7 +75,7 @@ public:
             {
                 if (m_animationClock.elapsed() > m_nextAnimTime)
                 {
-                    skel.play(m_animations[AnimID::Random], 1.f, 1.f);
+                    skel.play(m_animations[AnimID::Random], 1.f, 0.5f);
                     m_animationClock.restart();
                     m_nextAnimTime = cro::seconds(cro::Util::Random::value(6.f, 16.f));
                 }
@@ -84,17 +84,19 @@ public:
             {
                 if (skel.getState() == cro::Skeleton::Stopped)
                 {
-                    skel.play(m_animations[AnimID::Idle], 1.f, 1.f);
-                    m_nextAnimTime += cro::seconds(cro::Util::Random::value(2.f, 6.f));
+                    skel.play(m_animations[AnimID::Idle], 1.f, 0.5f);
+                    m_nextAnimTime = cro::seconds(cro::Util::Random::value(6.f, 16.f));
+                    m_animationClock.restart();
                 }
             }
 
-            if (e.getComponent<cro::Callback>().getUserData<bool>())
+            if (auto& clap = e.getComponent<cro::Callback>().getUserData<bool>(); clap)
             {
-                skel.play(m_animations[AnimID::Clap], 1.f, 1.f);
+                skel.play(m_animations[AnimID::Clap], 1.f, 0.5f);
+                m_animationClock.restart();
+                clap = false;
             }
         }
-        e.getComponent<cro::Callback>().setUserData<bool>(false);
     }
 
 private:

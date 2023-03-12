@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022
+Matt Marchant 2022 - 2023
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -51,25 +51,32 @@ public:
     CPUGolfer(const InputParser&, const ActivePlayer&, const CollisionMesh&);
 
     void handleMessage(const cro::Message&);
-    void activate(glm::vec3);
-    void update(float, glm::vec3);
+    void activate(glm::vec3 target, glm::vec3 fallbackTarget, bool puttFromTee);
+    void update(float, glm::vec3, float distanceToPin);
     bool thinking() const { return m_thinking; }
     void setPredictionResult(glm::vec3, std::int32_t);
+    void setPuttingPower(float p) { m_puttingPower = p * 1.01f; }
     glm::vec3 getTarget() const { return m_target; }
+
+    std::size_t getSkillIndex() const;
 
 private:
 
     const InputParser& m_inputParser; //only reads the state - actual commands are send by raising events.
     const ActivePlayer& m_activePlayer;
     const CollisionMesh& m_collisionMesh;
+    bool m_puttFromTee;
+    float m_distanceToPin;
     glm::vec3 m_target;
     glm::vec3 m_baseTarget; //this is what was originally set before retargetting potentially updates m_target
+    glm::vec3 m_fallbackTarget; //we try this to see if its still in front if current prediction goes OOB
     std::int32_t m_retargetCount;
 
     bool m_predictionUpdated;
     bool m_wantsPrediction;
     glm::vec3 m_predictionResult;
     std::int32_t m_predictionCount;
+    float m_puttingPower; //how much poer is predicted by the power bar flag
 
     enum class State
     {
@@ -92,10 +99,10 @@ private:
     struct SkillContext final
     {
         Skill skill = Skill::Amateur;
-        float resultTolerance = 2.f; //how close to the target the prediction will be before we accept
+        float resultTolerance = 2.f; //!< how close to the target the prediction will be before we accept
         float resultTolerancePutt = 0.05f;
-        std::int32_t strokeAccuracy = 0; //the bigger this number the more likely the accuracy will be off, with 0 being perfect
-        std::uint32_t mistakeOdds = 0; //the larger the number the smaller the odds of making a 'mistake'
+        std::int32_t strokeAccuracy = 0; //!< the bigger this number the more likely the accuracy will be off, with 0 being perfect
+        std::uint32_t mistakeOdds = 0; //!< the larger the number the smaller the odds of making a 'mistake'
 
         SkillContext(Skill s, float rt, float rp, std::int32_t sa, std::uint32_t mo)
             : skill(s), resultTolerance(rt), resultTolerancePutt(rp), strokeAccuracy(sa), mistakeOdds(mo) {}
@@ -110,7 +117,7 @@ private:
     float m_targetDistance;
 
     float m_aimDistance;
-    float m_aimAngle; //this is the initial aim angle when the player is places
+    float m_aimAngle; //this is the initial aim angle when the player is placed
 
     float m_targetAngle;
     float m_targetPower;

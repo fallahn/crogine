@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2022
+Matt Marchant 2021 - 2023
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -33,28 +33,25 @@ source distribution.
 #include "ClientCollisionSystem.hpp"
 #include "BallSystem.hpp"
 #include "InterpolationSystem.hpp"
+#include "../ErrorCheck.hpp"
 
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/ecs/components/Transform.hpp>
-#include <crogine/ecs/components/Camera.hpp>
 #include <crogine/ecs/components/Callback.hpp>
 #include <crogine/detail/glm/gtx/norm.hpp>
 #include <crogine/detail/glm/common.hpp>
 
 #include <crogine/util/Easings.hpp>
 #include <crogine/util/Random.hpp>
+#include <crogine/util/Maths.hpp>
 
 #include <crogine/gui/Gui.hpp>
 
 namespace
 {
-    static constexpr float MaxTargetDiff = 25.f; //dist sqr
-
-    static constexpr float MaxOffsetDistance = 2500.f; //dist sqr
-
     const std::array<std::string, CameraID::Count> CamNames =
     {
-        "Player", "Bystander", "Sky", "Green", "Transition"
+        "Player", "Bystander", "Sky", "Green", "Transition", "Idle", "Drone"
     };
 
     const std::array<std::string, 3u> StateNames =
@@ -64,6 +61,56 @@ namespace
 
     //follows just above the target
     constexpr glm::vec3 TargetOffset(0.f, 0.2f, 0.f);
+
+    constexpr float CameraTrackTime = 0.38f; //approx delay in tracking interpolation
+
+    std::array<std::vector<float>, CameraID::Count> DebugBuffers = {};
+    std::array<std::vector<std::uint32_t>, CameraID::Count> DebugIndices = {};
+    std::array<cro::Entity, CameraID::Count> DebugEntities = {};
+
+    void updateBufferData(std::int32_t idx, glm::vec3 start, glm::vec3 end)
+    {
+        //just to alternate the colour each time
+        static std::uint64_t counter = 0;
+
+
+        auto& indexArray = DebugIndices[idx];
+
+        auto& buffer = DebugBuffers[idx];
+        auto c = counter++ % 3;
+        static constexpr std::array<std::array<float, 3u>, 3u> Colours =
+        {
+            std::array<float, 3u>({1.f, 0.f, 0.f}),
+            std::array<float, 3u>({0.f, 1.f, 0.f}),
+            std::array<float, 3u>({0.f, 0.f, 1.f}),
+        };
+
+        auto v = end - start;
+        v /= 3.f;
+        start += (v * static_cast<float>(c));
+        end = start + v;
+
+
+        indexArray.push_back(static_cast<std::uint32_t>(indexArray.size()));
+        buffer.push_back(start.x);
+        buffer.push_back(start.y);
+        buffer.push_back(start.z);
+
+        buffer.push_back(Colours[c][0]);
+        buffer.push_back(Colours[c][1]);
+        buffer.push_back(Colours[c][2]);
+        buffer.push_back(1.f);
+
+        indexArray.push_back(static_cast<std::uint32_t>(indexArray.size()));
+        buffer.push_back(end.x);
+        buffer.push_back(end.y);
+        buffer.push_back(end.z);
+
+        buffer.push_back(Colours[c][0]);
+        buffer.push_back(Colours[c][1]);
+        buffer.push_back(Colours[c][2]);
+        buffer.push_back(1.f);
+    }
 }
 
 CameraFollowSystem::CameraFollowSystem(cro::MessageBus& mb)
@@ -74,21 +121,27 @@ CameraFollowSystem::CameraFollowSystem(cro::MessageBus& mb)
     requireComponent<cro::Camera>();
     requireComponent<CameraFollower>();
 
-    //registerWindow([&]()
-    //    {
-    //        if (ImGui::Begin("Cameras"))
-    //        {
-    //            ImGui::Text("Closest %s", CamNames[m_closestCamera].c_str());
+#ifdef CRO_DEBUG_
+    registerWindow([&]()
+        {
+            if (ImGui::Begin("Cameras"))
+            {
+                ImGui::Text("Closest %s", CamNames[m_closestCamera].c_str());
+                ImGui::Text("Active %s, %3.3f", CamNames[m_currentCamera.getComponent<CameraFollower>().id].c_str(), m_currentCamera.getComponent<CameraFollower>().currentFollowTime);
+                //ImGui::Text("Tracking %s", m_currentCamera.getComponent<CameraFollower>().trackingPaused ? "false" : "true");
 
-    //            const auto& ents = getEntities();
-    //            for (auto ent : ents)
-    //            {
-    //                const auto& cam = ent.getComponent<CameraFollower>();
-    //                ImGui::Text("%s, state %s", CamNames[cam.id].c_str(), StateNames[cam.state].c_str());
-    //            }
-    //        }
-    //        ImGui::End();        
-    //    });
+                ImGui::Separator();
+
+                /*const auto& ents = getEntities();
+                for (auto ent : ents)
+                {
+                    const auto& cam = ent.getComponent<CameraFollower>();
+                    ImGui::Text("%s, state %s", CamNames[cam.id].c_str(), StateNames[cam.state].c_str());
+                }*/
+            }
+            ImGui::End();        
+        },true);
+#endif
 }
 
 //public
@@ -100,7 +153,35 @@ void CameraFollowSystem::handleMessage(const cro::Message& msg)
         if (data.type == GolfEvent::SetNewPlayer)
         {
             m_closestCamera = CameraID::Player; //reset to player camera
+
         }
+#ifdef CAMERA_TRACK
+        else if (data.type == GolfEvent::BallLanded)
+        {
+            //upload debug buffers
+            for (auto i = 0u; i < CameraID::Count; ++i)
+            {
+                if (DebugEntities[i].isValid())
+                {
+                    auto* meshData = &DebugEntities[i].getComponent<cro::Model>().getMeshData();
+                    meshData->vertexCount = DebugBuffers[i].size() / 7;
+                    glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData->vbo));
+                    glCheck(glBufferData(GL_ARRAY_BUFFER, meshData->vertexSize * meshData->vertexCount, DebugBuffers[i].data(), GL_STATIC_DRAW));
+                    glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
+
+                    auto* submesh = &meshData->indexData[0];
+                    submesh->indexCount = DebugIndices[i].size();
+                    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->ibo));
+                    glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh->indexCount * sizeof(std::uint32_t), DebugIndices[i].data(), GL_STATIC_DRAW));
+                    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
+
+
+                    DebugBuffers[i].clear();
+                    DebugIndices[i].clear();
+                }
+            }
+        }
+#endif
     }
     else if (msg.id == MessageID::CollisionMessage)
     {
@@ -141,46 +222,17 @@ void CameraFollowSystem::handleMessage(const cro::Message& msg)
 
 void CameraFollowSystem::process(float dt)
 {
-    const auto snapTarget = [](CameraFollower& follower, glm::vec3 target)
-    {
-        float velocity = 0.f;
-        if (follower.target.hasComponent<Ball>())
-        {
-            //driving range
-            velocity = glm::length2(follower.target.getComponent<Ball>().velocity);
-        }
-        else
-        {
-            //net game
-            velocity = glm::length2(follower.target.getComponent<InterpolationComponent<InterpolationType::Linear>>().getVelocity());
-        }
-        float snapMultiplier = velocity / 1350.f;
-
-        //snap to target if close to reduce stutter
-        if (glm::length2(target - follower.currentTarget) < (0.005f * snapMultiplier))
-        {
-            follower.currentTarget = target;
-        }
-    };
-
     float currDist = std::numeric_limits<float>::max();
     auto lastCam = m_closestCamera;
+    cro::Entity currentCam;
+
+    auto& currentFollower = m_currentCamera.getComponent<CameraFollower>();
+    currentFollower.currentFollowTime -= dt;
 
     auto& entities = getEntities();
     for (auto entity : entities)
     {
         auto& follower = entity.getComponent<CameraFollower>();
-
-        if (follower.state == CameraFollower::Reset)
-        {
-            follower.zoom.fov = 1.f;
-            follower.zoom.progress = 0.f;
-            follower.zoom.done = false;
-            entity.getComponent<cro::Camera>().resizeCallback(entity.getComponent<cro::Camera>());
-
-            follower.state = CameraFollower::Track;
-            continue;
-        }
 
         if (!follower.target.isValid())
         {
@@ -189,33 +241,51 @@ void CameraFollowSystem::process(float dt)
 
         switch (follower.state)
         {
-        default: break;
+        default:
+            break;
         case CameraFollower::Track:
         {
             auto& tx = entity.getComponent<cro::Transform>();
-
-            auto target = follower.target.getComponent<cro::Transform>().getPosition() + TargetOffset;
-            target += follower.targetOffset * std::min(1.f, glm::length2(target - tx.getPosition()) / MaxOffsetDistance);
-
-            auto diff = target - follower.currentTarget;
-
-            float diffMultiplier = std::min(1.f, std::max(0.f, glm::length2(diff) / MaxTargetDiff));
-            diffMultiplier *= 4.f;
-            follower.currentTarget += diff * std::min(1.f, (dt * (diffMultiplier + (4.f * follower.zoom.progress))));
-
-            snapTarget(follower, target);
-
-            //auto lookAt = lookFrom(tx.getPosition(), follower.currentTarget, cro::Transform::Y_AXIS);
-            auto lookAt = glm::lookAt(tx.getPosition(), follower.currentTarget, cro::Transform::Y_AXIS);
-            tx.setLocalTransform(glm::inverse(lookAt));
             
+            auto ballPos = follower.target.getComponent<cro::Transform>().getPosition();
+            auto target = ballPos + TargetOffset;
+            CRO_ASSERT(!std::isnan(target.x), "Target pos is NaN");
+
+
+            const auto& collider = follower.target.getComponent<ClientCollider>();
+            if (collider.state == static_cast<std::uint8_t>(Ball::State::Reset)
+                || collider.terrain == TerrainID::Hole)
+            {
+                //don't follow resetting balls as they have a weird drop to them
+                target.y = follower.currentTarget.y;
+            }
+
+            follower.currentTarget = cro::Util::Maths::smoothDamp(follower.currentTarget, target, follower.velocity, CameraTrackTime - ((CameraTrackTime * 0.75f) * follower.zoom.progress), dt);
+
+            auto worldPos = tx.getPosition();
+            auto rotation = lookRotation(worldPos, follower.currentTarget);
+            
+#ifdef CAMERA_TRACK
+            if (m_currentCamera.getComponent<CameraFollower>().id == follower.id)
+            {
+                //updateBufferData(follower.id, worldPos, follower.currentTarget);
+
+                glm::vec3 t(0.f, 0.f, -glm::length(worldPos - follower.currentTarget));
+                t = rotation * t;
+                updateBufferData(follower.id, worldPos, worldPos + glm::vec3(0.f, 0.1f, 0.f));
+                updateBufferData(follower.id, worldPos + t, worldPos + t + glm::vec3(0.f, 0.1f, 0.f));
+            }
+            follower.hadUpdate = true;
+#endif
+            tx.setRotation(rotation);
 
             //check the distance to the ball, and store it if closer than previous dist
             //and if we fall within the camera's radius
             //and if the player isn't standing too close
-            const auto& collider = follower.target.getComponent<ClientCollider>();
-            if (collider.state == static_cast<std::uint8_t>(Ball::State::Flight)
-                || collider.terrain == TerrainID::Green)
+
+            if ((currentFollower.currentFollowTime < 0)
+                &&
+                (collider.state == static_cast<std::uint8_t>(Ball::State::Flight) || collider.terrain == TerrainID::Green))
             {
                 float positionMultiplier = 1.f;
                 if (follower.id == CameraID::Green)
@@ -223,42 +293,32 @@ void CameraFollowSystem::process(float dt)
                     positionMultiplier = 0.79f;
                 }
 
-                auto dist = glm::length2(tx.getPosition() - target);
-                auto dist2 = glm::length2((tx.getPosition() - follower.playerPosition) * positionMultiplier);
+                auto dist = glm::length2(worldPos - target);
+                auto dist2 = glm::length2((worldPos - follower.playerPosition) * positionMultiplier);
                 if (dist < currDist
                     && dist < follower.radius
                     && dist2 > follower.radius
                     && follower.id > m_closestCamera) //once we reach green don't go back until explicitly reset
                 {
                     currDist = dist;
-                    //m_closestCamera = follower.id;
 
                     //special case to stop the overhead cam when on the green
                     if (collider.terrain != TerrainID::Green ||
                         follower.id == CameraID::Green)
                     {
                         m_closestCamera = follower.id;
+                        currentCam = entity;
                     }
                 }
             }
 
             //zoom if ball goes near the hole
-            static constexpr float ZoomRadius = 3.f;
-            static constexpr float ZoomRadiusSqr = ZoomRadius * ZoomRadius;
-            auto zoomDir = target - follower.holePosition;
-            if (collider.terrain == TerrainID::Green)
-            {
-                zoomDir *= 3.f;
-            }
+            auto zoomDir = follower.holePosition - ballPos;
             auto dist = glm::length2(zoomDir);
-            if (dist < ZoomRadiusSqr)
+            if (dist < follower.zoomRadius
+                && !follower.zoom.done)
             {
                 follower.state = CameraFollower::Zoom;
-            }
-
-            if (m_closestCamera != follower.id)
-            {
-                follower.state = CameraFollower::Reset;
             }
 
             auto& targetInfo = entity.getComponent<TargetInfo>();
@@ -275,6 +335,7 @@ void CameraFollowSystem::process(float dt)
             }
             else
             {
+                follower.currentFollowTime = 20.f;
                 follower.zoom.progress = std::min(1.f, follower.zoom.progress + (dt *  follower.zoom.speed));
                 follower.zoom.fov = glm::mix(1.f, follower.zoom.target, cro::Util::Easing::easeOutExpo(cro::Util::Easing::easeInQuad(follower.zoom.progress)));
                 entity.getComponent<cro::Camera>().resizeCallback(entity.getComponent<cro::Camera>());
@@ -287,26 +348,26 @@ void CameraFollowSystem::process(float dt)
 
                 auto& tx = entity.getComponent<cro::Transform>();
                 auto target = follower.target.getComponent<cro::Transform>().getPosition() + TargetOffset;
-                target += follower.targetOffset * std::min(1.f, glm::length2(target - tx.getPosition()) / MaxOffsetDistance);
+                follower.currentTarget = cro::Util::Maths::smoothDamp(follower.currentTarget, target, follower.velocity, CameraTrackTime - ((CameraTrackTime * 0.75f) * follower.zoom.progress), dt);
 
-                auto diff = target - follower.currentTarget;
-                follower.currentTarget += diff * std::min(1.f, (dt * (2.f + (2.f * follower.zoom.progress))));
+                auto rotation = lookRotation(tx.getPosition(), follower.currentTarget);
+                tx.setRotation(rotation);
+#ifdef CAMERA_TRACK
+                if (m_currentCamera.getComponent<CameraFollower>().id == follower.id)
+                {
+                    //updateBufferData(follower.id, tx.getPosition(), follower.currentTarget);
 
-                snapTarget(follower, target);
-
-                auto lookAt = glm::lookAt(tx.getPosition(), follower.currentTarget, cro::Transform::Y_AXIS);
-                tx.setLocalTransform(glm::inverse(lookAt));
+                    glm::vec3 t(0.f, 0.f, -glm::length(tx.getPosition() - follower.currentTarget));
+                    t = rotation * t;
+                    
+                    auto worldPos = tx.getPosition();
+                    updateBufferData(follower.id, worldPos, worldPos + glm::vec3(0.f, 0.1f, 0.f));
+                    updateBufferData(follower.id, worldPos + t, worldPos + t + glm::vec3(0.f, 0.1f, 0.f));
+                }
+                follower.hadUpdate = true;
+#endif
             }
             break;
-            //we always do this, above.
-        /*case CameraFollower::Reset:
-            follower.zoom.fov = 1.f;
-            follower.zoom.progress = 0.f;
-            follower.zoom.done = false;
-            entity.getComponent<cro::Camera>().resizeCallback(entity.getComponent<cro::Camera>());
-
-            follower.state = CameraFollower::Track;
-            break;*/
         }
     }
 
@@ -316,6 +377,14 @@ void CameraFollowSystem::process(float dt)
         auto* msg = postMessage<SceneEvent>(MessageID::SceneMessage);
         msg->type = SceneEvent::RequestSwitchCamera;
         msg->data = m_closestCamera;
+
+        m_currentCamera.getComponent<CameraFollower>().currentFollowTime = -1.f;
+        m_currentCamera = currentCam;
+    }
+
+    if (m_closestCamera == CameraID::Player)
+    {
+        m_currentCamera.getComponent<CameraFollower>().currentFollowTime = -1.f;
     }
 }
 
@@ -328,11 +397,22 @@ void CameraFollowSystem::resetCamera()
         auto* msg = postMessage<SceneEvent>(MessageID::SceneMessage);
         msg->type = SceneEvent::RequestSwitchCamera;
         msg->data = m_closestCamera;
-
-
-        for (auto entity : getEntities())
-        {
-            entity.getComponent<CameraFollower>().state = CameraFollower::Reset;
-        }
     }
+
+    for (auto entity : getEntities())
+    {
+        entity.getComponent<CameraFollower>().reset(entity);
+        entity.getComponent<CameraFollower>().currentFollowTime = -1.f;
+    }
+    m_currentCamera.getComponent<CameraFollower>().currentFollowTime = -1.f;
+}
+
+//private
+void CameraFollowSystem::onEntityAdded(cro::Entity e)
+{
+    //we need at least one valid value
+    m_currentCamera = e;
+
+    const auto& follower = e.getComponent<CameraFollower>();
+    DebugEntities[follower.id] = follower.debugEntity;
 }

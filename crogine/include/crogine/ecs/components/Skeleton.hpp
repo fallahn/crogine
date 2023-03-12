@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2022
+Matt Marchant 2017 - 2023
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -43,6 +43,10 @@ source distribution.
 
 namespace cro
 {
+    /*
+    Note that the following structs cannot be updated as
+    they are serialised as binary data in model files.    
+    */
     namespace Detail::ModelBinary
     {
         struct SkeletonHeader;
@@ -50,27 +54,10 @@ namespace cro
     }
 
     /*!
-    \brief Describes an animation made up from a series of
-    frames within a skeleton.
-    This is used as part of a Skeleton component, rather than
-    as a stand-alone component itself
-    */
-    struct CRO_EXPORT_API SkeletalAnim final
-    {
-        std::string name;
-        std::uint32_t startFrame = 0;
-        std::uint32_t frameCount = 0;
-        std::uint32_t currentFrame = 0;
-        float frameRate = 12.f;
-        bool looped = false;
-        float playbackRate = 0.f;
-    };
-
-    /*!
     \brief Represents a Joint in the skeleton
     These are used to make up the joints of a key frame.
     Each transform is assumed to *already* be transformed
-    by its parents - done by the model loader when the 
+    by its parents - done by the model loader when the
     key frames were created.
     */
     struct CRO_EXPORT_API Joint final
@@ -99,6 +86,32 @@ namespace cro
         glm::mat4 worldMatrix = glm::mat4(1.f);
     };
 
+    /*!
+    \brief Describes an animation made up from a series of
+    frames within a skeleton.
+    This is used as part of a Skeleton component, rather than
+    as a stand-alone component itself
+    */
+    struct CRO_EXPORT_API SkeletalAnim final
+    {
+        std::string name;
+        std::uint32_t startFrame = 0;
+        std::uint32_t frameCount = 0;
+        std::uint32_t currentFrame = 0;
+        float frameRate = 12.f;
+        bool looped = false;
+        float playbackRate = 0.f;
+        float currentFrameTime = 0.f;
+        float frameTime = 1.f / frameRate;
+
+        //holds the current state of interpolation pre-transform
+        //so it can be mixed with other animations before creating
+        //final output
+        std::vector<Joint> interpolationOutput;
+        void resetInterp(const class Skeleton&);
+    };
+
+    
     /*!
     \brief Represents and attachment on a skeleton.
     Attachments are used for attaching other models,
@@ -242,7 +255,7 @@ namespace cro
         /*!
         \brief Returns the current, normalised, time between frames
         */
-        float getCurrentFrameTime() const { return m_currentFrameTime / m_frameTime; }
+        float getCurrentFrameTime() const;
 
         operator bool() const
         {
@@ -349,12 +362,29 @@ namespace cro
         void setInterpolationEnabled(bool enabled) { m_useInterpolation = enabled; }
 
         /*!
+        \brief Returns whether interpolation between frames is currently enabled
+        \see setInterpolationEnabled
+        */
+        bool getInterpolationEnabled() const { return m_useInterpolation; }
+
+        /*!
         \brief Sets the maximum distance from the camera to use interpolation.
         Models further from this will still animate but the frames will skip
         from one to the next without being interpolated in between.
         Defaults to 50 units
         */
         void setMaxInterpolationDistance(float distance) { m_interpolationDistance = std::max(1.f, distance * distance); }
+
+        /*!
+        \brief Returns the current blend time if blending between two animations
+        */
+        float getCurrentBlendTime() const { return m_blendTime; }
+
+        /*!
+        \brief Returns the index of the currently playing animation and next animation
+        if the animations are currently being blended - else returns -1
+        */
+        std::pair<std::int32_t, std::int32_t> getActiveAnimations() const { return std::make_pair(m_currentAnimation, m_nextAnimation); }
 
     private:
 
@@ -367,8 +397,6 @@ namespace cro
         float m_blendTime;
         float m_currentBlendTime;
 
-        float m_frameTime;
-        float m_currentFrameTime;
         bool m_useInterpolation;
         float m_interpolationDistance;
 
@@ -389,6 +417,7 @@ namespace cro
         std::vector<cro::Box> m_keyFrameBounds; //calc'd on joining the System for each key frame
 
         friend class SkeletalAnimator;
+        friend struct SkeletalAnim;
         friend struct Detail::ModelBinary::SkeletonHeader;
         friend struct Detail::ModelBinary::SkeletonHeaderV2;
 

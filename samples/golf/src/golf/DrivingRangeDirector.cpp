@@ -41,7 +41,7 @@ source distribution.
 
 DrivingRangeDirector::DrivingRangeDirector(std::vector<HoleData>& hd)
     : m_holeData	(hd),
-    m_holeCount		(18),
+    m_holeCount		(0),
     m_totalHoleCount(18),
     m_holeIndex     (-1)
 {
@@ -82,7 +82,7 @@ void DrivingRangeDirector::handleMessage(const cro::Message& msg)
 
             distance += 10.f * difficulty;
 
-            float score = 1.f - std::min(1.f, glm::length(data.position - m_holeData[hole].pin) / distance);
+            float score = 1.f - std::max(0.f, std::min(1.f, glm::length(data.position - m_holeData[hole].pin) / distance));
             m_scores[idx] = cro::Util::Easing::easeOutQuad(score) * 100.f; //grade on a curve
 
             m_holeCount--;

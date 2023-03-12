@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2022
+Matt Marchant 2021 - 2023
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -95,6 +95,7 @@ namespace
 #include "BillboardShader.inl"
 #include "CloudShader.inl"
 #include "ShaderIncludes.inl"
+#include "ShadowMapping.inl"
 
     //constexpr glm::vec3 CameraBasePosition(-22.f, 4.9f, 22.2f);
 
@@ -119,7 +120,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     m_matchMaking           (context.appInstance.getMessageBus()),
     m_cursor                (/*"assets/images/cursor.png", 0, 0*/cro::SystemCursor::Hand),
     m_uiScene               (context.appInstance.getMessageBus(), 512),
-    m_backgroundScene       (context.appInstance.getMessageBus()/*, 128, cro::INFO_FLAG_SYSTEMS_ACTIVE*/),
+    m_backgroundScene       (context.appInstance.getMessageBus(), 512/*, cro::INFO_FLAG_SYSTEMS_ACTIVE*/),
     m_avatarScene           (context.appInstance.getMessageBus()/*, 128, cro::INFO_FLAG_SYSTEMS_ACTIVE*/),
     m_scaleBuffer           ("PixelScale"),
     m_resolutionBuffer      ("ScaledResolution"),
@@ -129,8 +130,6 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     m_currentMenu           (MenuID::Main),
     m_prevMenu              (MenuID::Main),
     m_viewScale             (1.f),
-    m_activeCourseCount     (0),
-    m_officialCourseCount   (0),
     m_activePlayerAvatar    (0)
 {
     std::fill(m_readyState.begin(), m_readyState.end(), false);
@@ -146,13 +145,8 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     
     //launches a loading screen (registered in MyApp.cpp)
     context.mainWindow.loadResources([this]() {
-        //loadAvatars();
-
-        //add systems to scene
         addSystems();
-        //load assets (textures, shaders, models etc)
         loadAssets();
-        //create some entities
         createScene();
     });
  
@@ -710,9 +704,17 @@ void MenuState::handleMessage(const cro::Message& msg)
             if (data.data == MenuID::Lobby)
             {
                 m_uiScene.getActiveCamera().getComponent<cro::Camera>().isStatic = true;
+                updateUnlockedItems();
             }
         }
     }
+#ifdef USE_GNS
+    else if (msg.id == Social::MessageID::UGCMessage)
+    {
+        const auto& data = msg.getData<Social::UGCEvent>();
+        ugcInstalledHandler(data.itemID, data.type);
+    }
+#endif
 
     m_backgroundScene.forwardMessage(msg);
     m_avatarScene.forwardMessage(msg);
@@ -756,6 +758,8 @@ bool MenuState::simulate(float dt)
         m_avatarScene.simulate(dt);
         m_uiScene.simulate(dt);
     }
+
+    m_videoPlayer.update(dt);
 
     return true;
 }
@@ -850,6 +854,8 @@ void MenuState::addSystems()
 void MenuState::loadAssets()
 {
     m_backgroundScene.setCubemap("assets/golf/images/skybox/spring/sky.ccm");
+    m_backgroundScene.setSkyboxColours(cro::Colour(0.2f, 0.31f, 0.612f, 1.f), cro::Colour(1.f, 0.973f, 0.882f, 1.f), cro::Colour(0.723f, 0.847f, 0.792f, 1.f));
+    m_reflectionMap.loadFromFile("assets/golf/images/skybox/billiards/trophy.ccm");
 
     std::string wobble;
     if (m_sharedData.vertexSnap)
@@ -868,6 +874,9 @@ void MenuState::loadAssets()
     m_resources.shaders.loadFromString(ShaderID::CelTexturedSkinned, CelVertexShader, CelFragmentShader, "#define SUBRECT\n#define TEXTURED\n#define SKINNED\n#define NOCHEX\n");
     m_resources.shaders.loadFromString(ShaderID::Hair, CelVertexShader, CelFragmentShader, "#define USER_COLOUR\n#define NOCHEX");
     m_resources.shaders.loadFromString(ShaderID::Billboard, BillboardVertexShader, BillboardFragmentShader);
+    m_resources.shaders.loadFromString(ShaderID::BillboardShadow, BillboardVertexShader, ShadowFragment, "#define SHADOW_MAPPING\n#define ALPHA_CLIP\n");
+    m_resources.shaders.loadFromString(ShaderID::Trophy, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n#define REFLECTIONS\n" + wobble);
+    
 
     auto* shader = &m_resources.shaders.get(ShaderID::Cel);
     m_scaleBuffer.addShader(*shader);
@@ -899,6 +908,18 @@ void MenuState::loadAssets()
     m_scaleBuffer.addShader(*shader);
     m_resolutionBuffer.addShader(*shader);
     m_windBuffer.addShader(*shader);
+
+    shader = &m_resources.shaders.get(ShaderID::BillboardShadow);
+    m_materialIDs[MaterialID::BillboardShadow] = m_resources.materials.add(*shader);
+    m_windBuffer.addShader(*shader);
+    m_resolutionBuffer.addShader(*shader);
+
+    shader = &m_resources.shaders.get(ShaderID::Trophy);
+    m_scaleBuffer.addShader(*shader);
+    m_resolutionBuffer.addShader(*shader);
+    m_materialIDs[MaterialID::Trophy] = m_resources.materials.add(*shader);
+    m_resources.materials.get(m_materialIDs[MaterialID::Trophy]).setProperty("u_reflectMap", cro::CubemapID(m_reflectionMap.getGLHandle()));
+
 
     //load the billboard rects from a sprite sheet and convert to templates
     cro::SpriteSheet spriteSheet;
@@ -983,6 +1004,7 @@ void MenuState::createScene()
         texturedMat = m_resources.materials.get(m_materialIDs[MaterialID::Ground]);
         applyMaterialData(md, texturedMat);
         entity.getComponent<cro::Model>().setMaterial(0, texturedMat);
+        entity.getComponent<cro::Model>().setRenderFlags(~BallRenderFlags);
     }
 
     if (md.loadFromFile("assets/golf/models/phone_box.cmt"))
@@ -1070,6 +1092,11 @@ void MenuState::createScene()
         billboardMat.setProperty("u_noiseTexture", noiseTex);
 
         entity.getComponent<cro::Model>().setMaterial(0, billboardMat);
+
+        billboardMat = m_resources.materials.get(m_materialIDs[MaterialID::BillboardShadow]);
+        applyMaterialData(md, billboardMat);
+        billboardMat.setProperty("u_noiseTexture", noiseTex);
+        entity.getComponent<cro::Model>().setShadowMaterial(0, billboardMat);
 
         if (entity.hasComponent<cro::BillboardCollection>())
         {
@@ -1263,25 +1290,35 @@ void MenuState::createScene()
 
 void MenuState::createClouds()
 {
-    cro::SpriteSheet spriteSheet;
-    if (spriteSheet.loadFromFile("assets/golf/sprites/clouds.spt", m_resources.textures)
-        && spriteSheet.getSprites().size() > 1)
+    const std::array Paths =
     {
-        const auto& sprites = spriteSheet.getSprites();
-        std::vector<cro::Sprite> randSprites;
-        for (auto [_, sprite] : sprites)
-        {
-            randSprites.push_back(sprite);
-        }
+        std::string("assets/golf/models/skybox/clouds/cloud01.cmt"),
+        std::string("assets/golf/models/skybox/clouds/cloud02.cmt"),
+        std::string("assets/golf/models/skybox/clouds/cloud03.cmt"),
+        std::string("assets/golf/models/skybox/clouds/cloud04.cmt")
+    };
 
-        m_resources.shaders.loadFromString(ShaderID::Cloud, CloudVertex, CloudFragment, "#define MAX_RADIUS 86\n");
+    cro::ModelDefinition md(m_resources);
+    std::vector<cro::ModelDefinition> definitions;
+
+    for (const auto& path : Paths)
+    {
+        if (md.loadFromFile(path))
+        {
+            definitions.push_back(md);
+        }
+    }
+
+    if (!definitions.empty())
+    {
+        m_resources.shaders.loadFromString(ShaderID::Cloud, CloudOverheadVertex, CloudOverheadFragment, "#define MAX_RADIUS 106\n#define FEATHER_EDGE\n");
         auto& shader = m_resources.shaders.get(ShaderID::Cloud);
-        m_scaleBuffer.addShader(shader);
 
         auto matID = m_resources.materials.add(shader);
         auto material = m_resources.materials.get(matID);
-        material.blendMode = cro::Material::BlendMode::Alpha;
-        material.setProperty("u_texture", *spriteSheet.getTexture());
+
+        material.setProperty("u_skyColourTop", m_backgroundScene.getSkyboxColours().top);
+        material.setProperty("u_skyColourBottom", m_backgroundScene.getSkyboxColours().middle);
 
         auto seed = static_cast<std::uint32_t>(std::time(nullptr));
         static constexpr std::array MinBounds = { 0.f, 0.f };
@@ -1289,8 +1326,7 @@ void MenuState::createClouds()
         auto positions = pd::PoissonDiskSampling(40.f, MinBounds, MaxBounds, 30u, seed);
 
         auto Offset = 140.f;
-
-        std::vector<cro::Entity> delayedUpdates;
+        std::size_t modelIndex = 0;
 
         for (const auto& position : positions)
         {
@@ -1301,36 +1337,14 @@ void MenuState::createClouds()
             auto entity = m_backgroundScene.createEntity();
             entity.addComponent<cro::Transform>().setPosition(cloudPos);
             entity.addComponent<Cloud>().speedMultiplier = static_cast<float>(cro::Util::Random::value(10, 22)) / 100.f;
-            entity.addComponent<cro::Sprite>() = randSprites[cro::Util::Random::value(0u, randSprites.size() - 1)];
-            entity.addComponent<cro::Model>();
+            definitions[modelIndex].createModel(entity);
+            entity.getComponent<cro::Model>().setMaterial(0, material);
 
-            auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
-            bounds.width /= PixelPerMetre;
-            bounds.height /= PixelPerMetre;
-            entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f, 0.f });
-
-            float scale = static_cast<float>(cro::Util::Random::value(4, 10)) / 100.f;
+            float scale = static_cast<float>(cro::Util::Random::value(5, 10));
             entity.getComponent<cro::Transform>().setScale(glm::vec3(scale));
-            entity.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, 90.f * cro::Util::Const::degToRad);
 
-            delayedUpdates.push_back(entity);
+            modelIndex = (modelIndex + 1) % definitions.size();
         }
-
-        //this is a work around because changing sprite 3D materials
-        //require at least once scene update to be run first.
-        auto entity = m_uiScene.createEntity();
-        entity.addComponent<cro::Callback>().active = true;
-        entity.getComponent<cro::Callback>().function =
-            [&, material, delayedUpdates](cro::Entity e, float)
-        {
-            for (auto en : delayedUpdates)
-            {
-                en.getComponent<cro::Model>().setMaterial(0, material);
-            }
-
-            e.getComponent<cro::Callback>().active = false;
-            m_uiScene.destroyEntity(e);
-        };
     }
 }
 
@@ -1568,6 +1582,31 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
                 {
                     setUnavailable();
                 }
+                updateCourseRuleString();
+
+                static constexpr glm::vec2 ThumbnailSize(138.f, 104.f);
+
+                if (m_videoPaths.count(course) != 0
+                    && m_videoPlayer.loadFromFile(m_videoPaths.at(course)))
+                {
+                    m_videoPlayer.setLooped(true);
+                    m_videoPlayer.play();
+                    m_videoPlayer.update(1.f/30.f);
+
+                    m_lobbyWindowEntities[LobbyEntityID::HoleThumb].getComponent<cro::Sprite>().setTexture(m_videoPlayer.getTexture());
+                    auto scale = ThumbnailSize / glm::vec2(m_videoPlayer.getTexture().getSize());
+                    m_lobbyWindowEntities[LobbyEntityID::HoleThumb].getComponent<cro::Transform>().setScale(scale);
+                }
+                else if (m_courseThumbs.count(course) != 0)
+                {
+                    m_lobbyWindowEntities[LobbyEntityID::HoleThumb].getComponent<cro::Sprite>().setTexture(*m_courseThumbs.at(course));
+                    auto scale = ThumbnailSize / glm::vec2(m_courseThumbs.at(course)->getSize());
+                    m_lobbyWindowEntities[LobbyEntityID::HoleThumb].getComponent<cro::Transform>().setScale(scale);
+                }
+                else
+                {
+                    m_lobbyWindowEntities[LobbyEntityID::HoleThumb].getComponent<cro::Transform>().setScale({0.f, 0.f});
+                }
             }
         }
             break;
@@ -1589,6 +1628,8 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
                     e.getComponent<cro::Text>().setString(ScoreDesc[m_sharedData.scoreType]);
                 };
                 m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+                updateCourseRuleString();
             }
             break;
         case PacketID::GimmeRadius:
@@ -1603,6 +1644,8 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
                 centreText(e);
             };
             m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+            updateCourseRuleString();
         }
             break;
         case PacketID::HoleCount:
@@ -1632,10 +1675,12 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
                 };
             }
             m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+            updateCourseRuleString();
         }
             break;
         case PacketID::ReverseCourse:
             m_sharedData.reverseCourse = evt.packet.as<std::uint8_t>();
+            updateCourseRuleString();
             break;
         case PacketID::ServerError:
             switch (evt.packet.as<std::uint8_t>())
@@ -1682,6 +1727,10 @@ void MenuState::finaliseGameCreate(const MatchMaking::Message& msgData)
 #endif
 #else
     m_sharedData.clientConnection.connected = m_sharedData.clientConnection.netClient.connect("255.255.255.255", ConstVal::GamePort);
+    if (!m_sharedData.clientConnection.connected)
+    {
+        m_sharedData.clientConnection.connected = m_sharedData.clientConnection.netClient.connect("127.0.0.1", ConstVal::GamePort);
+    }
 #endif
     if (!m_sharedData.clientConnection.connected)
     {

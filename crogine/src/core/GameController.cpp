@@ -269,6 +269,11 @@ bool GameController::hasPSLayout(std::int32_t controllerIndex)
     CRO_ASSERT(App::m_instance, "No app running");
     CRO_ASSERT(controllerIndex < MaxControllers, "");
 
+    if (controllerIndex < 0)
+    {
+        return false;
+    }
+
     if (App::m_instance->m_controllers[controllerIndex].controller)
     {
         return App::m_instance->m_controllers[controllerIndex].psLayout;

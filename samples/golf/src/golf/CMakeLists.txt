@@ -1,5 +1,6 @@
 
 set(GOLF_SRC
+  ${PROJECT_DIR}/golf/BallAnimationSystem.cpp
   ${PROJECT_DIR}/golf/BallSystem.cpp
   ${PROJECT_DIR}/golf/BilliardsClientCollision.cpp
   ${PROJECT_DIR}/golf/BilliardsInput.cpp
@@ -12,6 +13,7 @@ set(GOLF_SRC
   ${PROJECT_DIR}/golf/CloudSystem.cpp
   ${PROJECT_DIR}/golf/ClubhouseState.cpp
   ${PROJECT_DIR}/golf/ClubhouseStateUI.cpp
+  ${PROJECT_DIR}/golf/Clubs.cpp
   ${PROJECT_DIR}/golf/CollisionMesh.cpp
   ${PROJECT_DIR}/golf/CPUGolfer.cpp
   ${PROJECT_DIR}/golf/CreditsState.cpp
@@ -54,6 +56,7 @@ set(GOLF_SRC
   ${PROJECT_DIR}/golf/PropFollowSystem.cpp
   #${PROJECT_DIR}/golf/PuttingState.cpp
   #${PROJECT_DIR}/golf/PuttingStateUI.cpp
+  ${PROJECT_DIR}/golf/RayResultCallback.cpp
   ${PROJECT_DIR}/golf/SharedStateData.cpp
   ${PROJECT_DIR}/golf/SoundEffectsDirector.cpp
   ${PROJECT_DIR}/golf/SpectatorSystem.cpp
@@ -61,11 +64,13 @@ set(GOLF_SRC
   ${PROJECT_DIR}/golf/StudioCameraSystem.cpp
   ${PROJECT_DIR}/golf/Swingput.cpp
   ${PROJECT_DIR}/golf/TerrainBuilder.cpp
+  ${PROJECT_DIR}/golf/TerrainChunks.cpp
   ${PROJECT_DIR}/golf/TerrainDepthmap.cpp
   ${PROJECT_DIR}/golf/TrophyDisplaySystem.cpp
   ${PROJECT_DIR}/golf/TrophyState.cpp
   ${PROJECT_DIR}/golf/TutorialDirector.cpp
   ${PROJECT_DIR}/golf/TutorialState.cpp
+  ${PROJECT_DIR}/golf/UnlockState.cpp
   ${PROJECT_DIR}/golf/VatAnimationSystem.cpp
   ${PROJECT_DIR}/golf/VatFile.cpp
   ${PROJECT_DIR}/golf/Weather.cpp

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2022
+Matt Marchant 2021 - 2023
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -39,6 +39,8 @@ source distribution.
 #include "LeaderboardTexture.hpp"
 #include "CPUGolfer.hpp"
 #include "TerrainDepthmap.hpp"
+#include "TerrainChunks.hpp"
+#include "MinimapZoom.hpp"
 #include "server/ServerPacketData.hpp"
 
 #include <crogine/core/State.hpp>
@@ -91,7 +93,6 @@ struct PlayerCallbackData final
 {
     std::int32_t direction = 0; //grow or shrink
     float scale = 0.f;
-    float reflectionOffset = 0.f;
 };
 
 class GolfState final : public cro::State, public cro::GuiClient, public cro::ConsoleClient
@@ -153,8 +154,10 @@ private:
     float m_holeToModelRatio;
     std::vector<HoleData> m_holeData;
     std::uint32_t m_currentHole;
+    float m_distanceToHole;
     ActivePlayer m_currentPlayer;
     CollisionMesh m_collisionMesh;
+    TerrainChunker m_terrainChunker;
 
     TerrainBuilder m_terrainBuilder;
 
@@ -171,6 +174,7 @@ private:
             CelTextured,
             CelTexturedSkinned,
             ShadowMap,
+            ShadowMapInstanced,
             ShadowMapSkinned,
             Leaderboard,
             Player,
@@ -219,14 +223,15 @@ private:
     void initAudio(bool loadTrees);
 
     void createWeather(); //weather.cpp
-    void createClouds(const std::string&);
+    void createClouds();
     void buildBow();
+    void createDrone();
     void spawnBall(const struct ActorInfo&);
 
     void handleNetEvent(const net::NetEvent&);
     void removeClient(std::uint8_t);
 
-    void setCurrentHole(std::uint16_t);
+    void setCurrentHole(std::uint16_t); //(number << 8) | par
     void setCameraPosition(glm::vec3, float, float);
     void requestNextPlayer(const ActivePlayer&);
     void setCurrentPlayer(const ActivePlayer&);
@@ -242,7 +247,7 @@ private:
     std::array<cro::Entity, CameraID::Count> m_cameras = {};
     std::int32_t m_currentCamera;
     void setActiveCamera(std::int32_t);
-    void setPlayerPosition(cro::Entity, glm::vec3);
+    void updateCameraHeight(float);
     void setGreenCamPosition();
 
     cro::Entity m_drone;
@@ -261,7 +266,10 @@ private:
             PowerBar,
             PowerBarInner,
             HookBar,
+            SlopeStrength,
+            BallSpeed,
             MiniFlag,
+            MapFlag,
             WindIndicator,
             WindSpeed,
             Thinking,
@@ -275,20 +283,14 @@ private:
             EmoteLaugh,
             EmoteSad,
             EmotePulse,
+            SpinBg,
+            SpinFg,
 
             Count
         };
     };
     std::array<cro::Sprite, SpriteID::Count> m_sprites = {};
 
-    struct Avatar final
-    {
-        bool flipped = false;
-        cro::Entity model;
-        cro::Attachment* hands = nullptr;
-        std::array<std::size_t, AnimationID::Count> animationIDs = {};
-        cro::Entity ballModel;
-    };
     std::array<std::array<Avatar, ConnectionData::MaxPlayers>, ConstVal::MaxClients> m_avatars;
     Avatar* m_activeAvatar;
 
@@ -300,6 +302,7 @@ private:
 
     float m_camRotation; //used to offset the rotation of the wind indicator
     bool m_roundEnded;
+    bool m_newHole; //prevents closing scoreboard until everyone is ready
     glm::vec2 m_viewScale;
     std::size_t m_scoreColumnCount;
     LeaderboardTexture m_leaderboardTexture;
@@ -307,6 +310,7 @@ private:
     cro::Entity m_courseEnt;
     cro::Entity m_waterEnt;
     cro::Entity m_minimapEnt;
+    cro::Entity m_miniGreenEnt;
     std::uint8_t m_readyQuitFlags;
 
     void buildUI();
@@ -314,7 +318,7 @@ private:
     void showCountdown(std::uint8_t);
     void createScoreboard();
     void updateScoreboard();
-    void showScoreboard(bool);
+    void showScoreboard(bool visible);
     void updateWindDisplay(glm::vec3);
 
     enum class MessageBoardID
@@ -341,9 +345,9 @@ private:
     {
         std::uint32_t shaderID = 0;
         std::int32_t transparency = -1;
-        std::int32_t minHeight = -1;
-        std::int32_t maxHeight = -1;
-    }m_gridShader;
+        std::int32_t holeHeight = -1;
+    };
+    std::array<GridShader, 2u> m_gridShaders = {};
 
     struct EmoteWheel final
     {
@@ -371,16 +375,12 @@ private:
     //-----------
 
     cro::Entity m_mapCam;
-    cro::RenderTexture m_mapBuffer;
     cro::RenderTexture m_mapTexture;
-    cro::SimpleQuad m_mapQuad;
-    cro::SimpleQuad m_flagQuad;
+
     void updateMiniMap();
 
-    float m_minimapScale; //how big the model was when drawn to minimap
-    float m_minimapRotation; //rads cam was rotated when shooting minimap
-    glm::vec3 m_minimapOffset;
-    glm::vec2 toMinimapCoords(glm::vec3) const;
+    MinimapZoom m_minimapZoom;
+    void retargetMinimap(bool reset);
 
     cro::Entity m_greenCam;
     cro::RenderTexture m_greenBuffer;
@@ -425,6 +425,17 @@ private:
     void updateBallDebug(glm::vec3);
     void endBallDebug();
 #endif
+    struct DebugTx final
+    {
+        glm::quat q = glm::quat(1.f,0.f,0.f,0.f);
+        glm::vec3 pos = glm::vec3(0.f);
+        bool hadUpdate = false;
+        DebugTx(glm::quat r, glm::vec3 p, bool b) :q(r), pos(p), hadUpdate(b) {}
+    };
+    std::vector<std::vector<DebugTx>> m_cameraDebugPoints;
+    void addCameraDebugging();
+    void registerDebugWindows();
+
     struct Benchmark final
     {
         float minRate = std::numeric_limits<float>::max();

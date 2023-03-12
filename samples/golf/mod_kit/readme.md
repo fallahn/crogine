@@ -6,20 +6,25 @@ This folder contains Blender files and tools for creating custom balls and golf 
 See http://fallahn.itch.io/vga-golf for more details, or the [Wiki Page](https://github.com/fallahn/crogine/wiki) for guides on how to use this mod kit.
 
 
+attachments.atc - an attachment point file for avatars, loaded with the model converter. This compliments the animations in avatar_animation.blend
+avatar_animation.blend - a Blender project containing the armature and animations for avatars
 avatar_format.md - description of the `*.avt` files used for creating in-game avatars
 avatar_keys.ase - a photoshop palette containing the key colours used by avatars
 ball_format.md - description of the `*.ball` files used to load custom balls. Written in markdown format.
 ball_template.blend - ball template file for Blender
 collision_colours.ase - A Photoshop palette which contains colours for terrain collision. Not an Aseprite file.
 collision_colours.kpl - A Krita palette (importable to Blender) which contains the colours used for terrain type detection.
+collision_colours_MKII.ase - an updated collision colour palette used with version 1.11.0 and higher.
 colordome-32.ase - The main colour palette used by Super Video Golf, created by Polyphorge https://lospec.com/poly-phorge
 course_format.md - describes the .course and .hole files used to create custom courses, as well as the files associated with hole model files. Written in markdown format.
+hair_template.blend - a Blender project file containing an example hair model.
 hole_template.blend - example hole model in Blender format
 placeholders.blend - Blender asset library of prop placeholders for creating hole layouts. Requires Blender 3 and above
 post_process.frag - template fragment shader for creating post process effects.
 prop-export.py - Export script for Blender written in python. Used to export the positions of prop models and crowds in the `*.hole` format.
 shrub_wind_colours.ase - Colour palette containing wind strength values applied to sprites used for shrubbery
 skybox.blend - 3D skybox models.
+trigger_colours.ase - triggerbox information colours, used with Super Video Golf 1.11.0 and higher
 wind_colours.ase - A palette used for painting the vertex data of tree models. See [`course_format.md`](course_format.md)
 
 

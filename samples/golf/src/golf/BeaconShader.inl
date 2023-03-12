@@ -37,9 +37,8 @@ static const std::string BeaconVertex = R"(
     ATTRIBUTE vec4 a_colour;
     ATTRIBUTE vec2 a_texCoord0;
 
-    uniform mat4 u_worldViewMatrix;
     uniform mat4 u_worldMatrix;
-    uniform mat4 u_projectionMatrix;
+    uniform mat4 u_viewProjectionMatrix;
 
     uniform vec4 u_clipPlane;
     uniform float u_colourRotation = 1.0;
@@ -57,7 +56,7 @@ static const std::string BeaconVertex = R"(
         vec4 position = a_position;
 #endif
 
-        gl_Position = u_projectionMatrix * u_worldViewMatrix * position;
+        gl_Position = u_viewProjectionMatrix * u_worldMatrix * position;
 
         v_texCoord = a_texCoord0;
 

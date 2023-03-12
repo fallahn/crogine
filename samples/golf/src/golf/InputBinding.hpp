@@ -33,6 +33,7 @@ source distribution.
 
 #include <array>
 #include <cstdint>
+#include <limits>
 
 namespace InputFlag
 {
@@ -45,8 +46,12 @@ namespace InputFlag
         Action      = 0x10,
         NextClub    = 0x20,
         PrevClub    = 0x40,
-        CamModifier = 0x80,
-        Unused1     = 0x100,
+        SpinMenu    = 0x80,
+        Cancel      = 0x100,
+        EmoteWheel  = 0x200,
+
+        CamModifier = SpinMenu,
+        SwitchView  = EmoteWheel,
 
         All = 0xFFFF
     };
@@ -58,7 +63,14 @@ struct InputBinding final
     //button array as well as the key array
     enum
     {
-        Action, NextClub, PrevClub, CamModifier, SwitchView, Left, Right, Up, Down, Count
+        Action, NextClub, PrevClub, SpinMenu, EmoteMenu, CancelShot, //buttons
+        Left, Right, Up, Down, 
+        
+        Count,
+
+        //aliases for billiards mode
+        CamModifier = SpinMenu,
+        SwitchView = EmoteMenu
     };
 
     std::array<std::int32_t, Count> keys =
@@ -66,21 +78,25 @@ struct InputBinding final
         SDLK_SPACE,
         SDLK_e,
         SDLK_q,
-        SDLK_UNKNOWN,
-        SDLK_UNKNOWN,
+        SDLK_LALT,
+        SDLK_LCTRL,
+        SDLK_LSHIFT,
         SDLK_a,
         SDLK_d,
         SDLK_w,
         SDLK_s
     };
 
-    std::array<std::int32_t, 5u> buttons =
+    std::array<std::int32_t, 6u> buttons =
     {
         SDL_CONTROLLER_BUTTON_A,
         SDL_CONTROLLER_BUTTON_RIGHTSHOULDER,
         SDL_CONTROLLER_BUTTON_LEFTSHOULDER,
         SDL_CONTROLLER_BUTTON_X,
-        SDL_CONTROLLER_BUTTON_Y
+        SDL_CONTROLLER_BUTTON_Y,
+        SDL_CONTROLLER_BUTTON_B
     };
     std::int32_t playerID = 0;
+
+    std::int32_t clubset = std::numeric_limits<std::int32_t>::max();
 };

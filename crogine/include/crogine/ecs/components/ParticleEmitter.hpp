@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2022
+Matt Marchant 2017 - 2023
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -161,20 +161,22 @@ namespace cro
         */
         std::uint64_t getRenderFlags() const { return m_renderFlags; }
 
-        static const std::uint32_t MaxParticles = 1000u;
+        static const std::uint32_t MaxParticles = 10000u;
         EmitterSettings settings;
 
     private:
         std::uint32_t m_vbo;
         std::uint32_t m_vao; //< used on desktop
         
-        std::array<Particle, MaxParticles> m_particles;
+        //std::array<Particle, MaxParticles> m_particles;
+        std::vector<Particle> m_particles;
         std::size_t m_nextFreeParticle;
 
         bool m_running;
         Clock m_emissionClock;
         Sphere m_bounds;
-        bool m_visible;
+
+        bool m_pendingUpdate;
         std::uint64_t m_renderFlags;
 
         std::int32_t m_releaseCount;

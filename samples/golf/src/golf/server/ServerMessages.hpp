@@ -37,7 +37,8 @@ namespace sv::MessageID
     {
         ConnectionMessage = cro::Message::Count,
         GolfMessage,
-        BilliardsMessage
+        BilliardsMessage,
+        TriggerMessage
     };
 }
 
@@ -97,4 +98,9 @@ struct BilliardsEvent final
     std::int8_t first = -1; //ballA or foul reason
     std::int8_t second = -1; //ballB or pocketID
     glm::vec3 position = glm::vec3(0.f); //only for ball placement
+};
+
+struct TriggerEvent final
+{
+    std::uint8_t triggerID = 25;
 };

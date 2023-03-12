@@ -100,6 +100,16 @@ namespace cro::Util::String
     }
 
     /*!
+    \brief Converts the given string to upper case
+    */
+    static inline std::string toUpper(const std::string& str)
+    {
+        std::string retVal(str);
+        std::transform(retVal.begin(), retVal.end(), retVal.begin(), ::toupper);
+        return retVal;
+    }
+
+    /*!
     \brief Emulates the C function fgetc with a RWops file/stream
     */
     static inline int rwgetc(SDL_RWops *file)

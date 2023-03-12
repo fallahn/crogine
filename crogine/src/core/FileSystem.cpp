@@ -246,6 +246,7 @@ bool FileSystem::createDirectory(const std::string& path)
 #ifdef _WIN32
     if (_mkdir(path.c_str()) == 0)
     {
+        LOG("Created directory " + path, cro::Logger::Type::Info);
         return true;
     }
     else
@@ -264,6 +265,7 @@ bool FileSystem::createDirectory(const std::string& path)
 #else
     if (mkdir(path.c_str(), 0777) == 0)
     {
+        LOG("Created directory " + path, cro::Logger::Type::Info);
         return true;
     }
     else

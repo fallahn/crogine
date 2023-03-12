@@ -111,6 +111,13 @@ namespace cro
         bool isSmooth() const;
 
         /*!
+        \brief Applies the given colour as a border clamp colour to the underlying Texture
+        \see Texture::setBorderColour()
+        \param colour A colour object representing the colour to which to set the border
+        */
+        void setBorderColour(Colour colour);
+
+        /*!
         \brief Clears the texture ready for drawing
         \param colour Colour to clear the texture with.
         This should be called to activate the render texture as the current draw target.

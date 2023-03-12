@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2022
+Matt Marchant 2021 - 2023
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -34,6 +34,17 @@ source distribution.
 
 using namespace cro;
 
+void SkeletalAnim::resetInterp(const Skeleton& skel)
+{
+    //make sure the interp output is correct so we can blend with it
+    auto startIndex = currentFrame * skel.m_frameSize;
+    for (auto i = 0u; i < skel.m_frameSize; ++i)
+    {
+        interpolationOutput[i] = skel.m_frames[startIndex + i];
+    }
+}
+
+
 Skeleton::Skeleton()
     : m_playbackRate        (1.f),
     m_currentAnimation      (0),
@@ -41,8 +52,6 @@ Skeleton::Skeleton()
     m_state                 (Stopped),
     m_blendTime             (1.f),
     m_currentBlendTime      (0.f),
-    m_frameTime             (1.f),
-    m_currentFrameTime      (0.f),
     m_useInterpolation      (true),
     m_interpolationDistance (2500.f),
     m_frameSize             (0),
@@ -55,30 +64,47 @@ void Skeleton::play(std::size_t idx, float rate, float blendingTime)
 {
     CRO_ASSERT(idx < m_animations.size(), "Index out of range");
     CRO_ASSERT(rate >= 0, "");
+    CRO_ASSERT(blendingTime >= 0, "");
 
     if (idx >= m_animations.size())
     {
         return;
     }
 
+    m_animations[idx].playbackRate = rate;
+    m_animations[idx].currentFrame = m_animations[idx].startFrame;
+
     if (idx != m_currentAnimation)
     {
-        //blend if we're already playing
-        m_nextAnimation = static_cast<std::int32_t>(idx);
-        m_blendTime = blendingTime;
-        m_currentBlendTime = 0.f;
+        if (blendingTime > 0)
+        {
+            //blend if we're already playing
+            m_nextAnimation = static_cast<std::int32_t>(idx);
+            m_blendTime = blendingTime;
+            m_currentBlendTime = 0.f;
+
+            if (!m_animations[idx].looped)
+            {
+                //clamp the blending time so it's no longer than the incoming animation
+                auto duration = (static_cast<float>(m_animations[idx].frameCount) / m_animations[idx].frameRate) * m_animations[idx].playbackRate;
+                m_blendTime *= std::min(1.f, duration / blendingTime);
+            }
+        }
+        else
+        {
+            //go straight to next anim
+            m_animations[m_currentAnimation].playbackRate = 0.f;
+            m_currentAnimation = static_cast<std::int32_t>(idx);
+        }
+        //reset initial interp frame
+        m_animations[idx].resetInterp(*this);
     }
-    else
-    {
-        m_animations[idx].playbackRate = rate;
-        m_animations[idx].currentFrame = m_animations[idx].startFrame;
-    }
+
     m_playbackRate = rate;
     m_state = Playing;
 }
 
 void Skeleton::prevFrame()
-
 {
     CRO_ASSERT(!m_animations.empty(), "No animations loaded");
 
@@ -86,7 +112,7 @@ void Skeleton::prevFrame()
     auto frame = anim.currentFrame - anim.startFrame;
     frame = (frame + (anim.frameCount - 1)) % anim.frameCount;
     anim.currentFrame = frame + anim.startFrame;
-    m_currentFrameTime = 0.f;
+    anim.currentFrameTime = 0.f;
     buildKeyframe(anim.currentFrame);
 }
 
@@ -97,7 +123,7 @@ void Skeleton::nextFrame()
     auto frame = anim.currentFrame - anim.startFrame;
     frame = (frame + 1) % anim.frameCount;
     anim.currentFrame = frame + anim.startFrame;
-    m_currentFrameTime = 0.f;
+    anim.currentFrameTime = 0.f;
     buildKeyframe(anim.currentFrame);
 }
 
@@ -108,7 +134,7 @@ void Skeleton::gotoFrame(std::uint32_t frame)
     if (frame < anim.frameCount)
     {
         anim.currentFrame = frame + anim.startFrame;
-        m_currentFrameTime = 0.f;
+        anim.currentFrameTime = 0.f;
         buildKeyframe(anim.currentFrame);
     }
 }
@@ -130,6 +156,9 @@ void Skeleton::addAnimation(const SkeletalAnim& anim)
 {
     CRO_ASSERT(m_frameCount >= (anim.startFrame + anim.frameCount), "animation is out of frame range");
     m_animations.push_back(anim);
+    m_animations.back().frameTime = 1.f / m_animations.back().frameRate;
+    m_animations.back().interpolationOutput.resize(m_frameSize);
+    m_animations.back().resetInterp(*this);
 }
 
 void Skeleton::addFrame(const std::vector<Joint>& frame)
@@ -150,6 +179,13 @@ std::size_t Skeleton::getCurrentFrame() const
 {
     CRO_ASSERT(!m_animations.empty(), "");
     return m_animations[m_currentAnimation].currentFrame;
+}
+
+float Skeleton::getCurrentFrameTime() const
+{
+    CRO_ASSERT(!m_animations.empty(), "");
+    CRO_ASSERT(m_animations[m_currentAnimation].frameTime > 0.f, "");
+    return m_animations[m_currentAnimation].currentFrameTime / m_animations[m_currentAnimation].frameTime;
 }
 
 void Skeleton::addNotification(std::size_t frameID, Notification n)
@@ -225,7 +261,6 @@ void Skeleton::buildKeyframe(std::size_t frame)
        m_currentFrame[i] = m_rootTransform * m_frames[offset + i].worldMatrix * m_invBindPose[i];
     }
 }
-
 
 //----attachment struct-----//
 void Attachment::setParent(std::int32_t parent)

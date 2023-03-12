@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022
+Matt Marchant 2022 - 2023
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -86,6 +86,11 @@ static const std::string ShadowVertex = R"(
     #if defined (MOBILE)
         VARYING_OUT vec4 v_position;
     #endif
+
+#if defined (DITHERED)
+    #include RESOLUTION_BUFFER
+        VARYING_OUT float v_ditherAmount;
+#endif
 
     #if defined (ALPHA_CLIP)
         VARYING_OUT vec2 v_texCoord0;
@@ -264,6 +269,18 @@ worldPosition.z += windResult.lowFreq.y;
             v_texCoord0 = a_texCoord0;
         #endif
 
+#if defined(DITHERED)
+        float fadeDistance = u_nearFadeDistance * 2.0;
+        const float farFadeDistance = 360.f;
+
+        vec4 p = worldMatrix * a_position;
+        float d = length(p.xyz - u_cameraWorldPosition);
+
+        v_ditherAmount = pow(clamp((d - u_nearFadeDistance) / fadeDistance, 0.0, 1.0), 2.0);
+        v_ditherAmount *= 1.0 - clamp((d - farFadeDistance) / fadeDistance, 0.0, 1.0);
+#endif
+
+
         })";
 
 const static std::string ShadowGeom = R"(
@@ -306,7 +323,14 @@ const static std::string ShadowGeom = R"(
     })";
 
 const static std::string ShadowFragment = R"(
-        #if defined(ALPHA_CLIP)
+        
+#if defined (DITHERED)
+        in float v_ditherAmount;
+
+    #include BAYER_MATRIX
+#endif
+
+    #if defined(ALPHA_CLIP)
 
         uniform sampler2D u_diffuseMap;
         uniform float u_alphaClip;
@@ -315,6 +339,17 @@ const static std::string ShadowFragment = R"(
 
         void main()
         {
+
+#if defined(DITHERED)
+        vec2 xy = gl_FragCoord.xy;
+        int x = int(mod(xy.x, MatrixSize));
+        int y = int(mod(xy.y, MatrixSize));
+
+        float alpha = findClosest(x, y, smoothstep(0.1, 0.95, v_ditherAmount));
+        if(alpha < 0.5) discard;
+#endif
+
+
 #if defined(LEAF_SIZE)
         vec2 coord = gl_PointCoord;
 #else
@@ -327,6 +362,16 @@ const static std::string ShadowFragment = R"(
         OUTPUT             
         void main()
         {
+
+#if defined(DITHERED)
+        vec2 xy = gl_FragCoord.xy;
+        int x = int(mod(xy.x, MatrixSize));
+        int y = int(mod(xy.y, MatrixSize));
+
+        float alpha = findClosest(x, y, smoothstep(0.1, 0.95, v_ditherAmount));
+        if(alpha < 0.5) discard;
+#endif
+
             FRAG_OUT = vec4(1.0);
         }
         #endif

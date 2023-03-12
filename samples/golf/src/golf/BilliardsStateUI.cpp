@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant - 2022
+Matt Marchant - 2022 - 2023
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -940,11 +940,11 @@ void BilliardsState::createMiniballScenes()
 
         md.createModel(entity);
 
-        auto material = m_resources.materials.get(m_materialIDs[MaterialID::Trophy]);
+        auto material = m_resources.materials.get(m_materialIDs[MaterialID::TrophyBase]);
         applyMaterialData(md, material);
         entity.getComponent<cro::Model>().setMaterial(0, material);
 
-        material = m_resources.materials.get(m_materialIDs[MaterialID::TrophyBase]);
+        material = m_resources.materials.get(m_materialIDs[MaterialID::Trophy]);
         applyMaterialData(md, material);
         entity.getComponent<cro::Model>().setMaterial(1, material);
 

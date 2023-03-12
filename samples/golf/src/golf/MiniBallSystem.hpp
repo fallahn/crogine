@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022
+Matt Marchant 2022 - 2023
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -31,10 +31,12 @@ source distribution.
 
 #include <crogine/ecs/System.hpp>
 
+struct MinimapZoom;
 struct MiniBall final
 {
     float currentTime = 1.f;
-    std::int32_t playerID = -1; //(client * maxPlayer) + player
+    std::int32_t playerID = -1; //(client * maxPlayer) + player - used when tidying up disconnecting client
+    cro::Entity parent;
 
     enum
     {
@@ -46,9 +48,10 @@ struct MiniBall final
 class MiniBallSystem final : public cro::System
 {
 public:
-    explicit MiniBallSystem(cro::MessageBus&);
+    MiniBallSystem(cro::MessageBus&, const MinimapZoom&);
 
     void process(float) override;
 
 private:
+    const MinimapZoom& m_minimapZoom;
 };

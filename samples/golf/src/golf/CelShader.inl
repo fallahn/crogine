@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2022
+Matt Marchant 2021 - 2023
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -241,6 +241,7 @@ static const std::string CelVertexShader = R"(
 
 static const std::string CelFragmentShader = R"(
     uniform vec3 u_lightDirection;
+    uniform vec4 u_lightColour;
 
 #include SCALE_BUFFER
 
@@ -288,11 +289,14 @@ static const std::string CelFragmentShader = R"(
 
 #if defined (CONTOUR)
     uniform float u_transparency;
-    uniform float u_minHeight = 0.0;
-    uniform float u_maxHeight = 1.0;
+#endif
+
+#if defined(HOLE_HEIGHT)
+    uniform float u_holeHeight = 1.0;
 #endif
 
 #if defined (COMP_SHADE)
+    uniform vec4 u_maskColour = vec4(1.0);
     uniform vec4 u_colour = vec4(1.0);
 #endif
 
@@ -318,12 +322,16 @@ static const std::string CelFragmentShader = R"(
     {
         for(int i = 0; i < u_cascadeCount; ++i)
         {
-            if (v_viewDepth >= u_frustumSplits[i])
+#if defined (GPU_AMD)
+            if (v_viewDepth > u_frustumSplits[i] - 15.0) //it might be an AMD driver bug. Wait for the next patch.
+#else
+            if (v_viewDepth > u_frustumSplits[i])
+#endif
             {
                 return min(u_cascadeCount - 1, i);
             }
         }
-        return u_cascadeCount - 1;
+        return 0;//u_cascadeCount - 1;
     }
 
     const float Bias = 0.001; //0.005
@@ -333,14 +341,14 @@ static const std::string CelFragmentShader = R"(
 
         vec3 projectionCoords = lightWorldPos.xyz / lightWorldPos.w;
         projectionCoords = projectionCoords * 0.5 + 0.5;
-        float depthSample = TEXTURE(u_shadowMap, vec3(projectionCoords.xy, cascadeIndex)).r;
         float currDepth = projectionCoords.z - Bias;
 
-        if (currDepth > 1.0)
+        if (projectionCoords.z > 1.0)
         {
             return 1.0;
         }
 
+        float depthSample = TEXTURE(u_shadowMap, vec3(projectionCoords.xy, float(cascadeIndex))).r;
         return (currDepth < depthSample) ? 1.0 : 1.0 - (0.3);
     }
 
@@ -392,8 +400,8 @@ static const std::string CelFragmentShader = R"(
     uniform vec4 u_noiseColour = vec4(0.0,0.0,0.0,1.0);
 
     const float NoisePerMetre = 10.0;
-#include RANDOM
 #endif
+#include RANDOM
 
 #include BAYER_MATRIX
 
@@ -412,6 +420,7 @@ static const std::string CelFragmentShader = R"(
     const float WaterLevel = -0.019;
 
     const vec3 SlopeShade = vec3(0.439, 0.368, 0.223);
+    const vec3 BaseContourColour = vec3(0.827, 0.599, 0.91); //stored as HSV to save on a conversion
 
     void main()
     {
@@ -447,8 +456,10 @@ static const std::string CelFragmentShader = R"(
         float amount = dot(normal, lightDirection);
 
 #if defined (USER_COLOUR)
-        //colour *= mix(u_darkColour, u_hairColour, step(0.5, amount));
-        colour *= u_hairColour;
+        float mixAmount = step(0.95, (v_colour.r + v_colour.g + v_colour.b) / 3.0);        
+        colour.rgb = mix(v_colour.rgb, u_hairColour.rgb, mixAmount);
+
+        //colour *= u_hairColour;// * v_colour;
 #endif
 
         //float checkAmount = step(0.3, 1.0 - amount);
@@ -468,17 +479,39 @@ static const std::string CelFragmentShader = R"(
         amount /= COLOUR_LEVELS;
         amount = AMOUNT_MIN + (amount * AMOUNT_MAX);
 
+        vec3 viewDirection = v_cameraWorldPosition - v_worldPosition.xyz;
 #if defined(COMP_SHADE)
-
+        float effectAmount = (1.0 - u_maskColour.r);
         float tilt  = dot(normal, vec3(0.0, 1.0, 0.0));
-        //tilt = ((smoothstep(0.97, 0.999, tilt) * 0.2)) * (1.0 - u_colour.r);
-        tilt = ((1.0 - smoothstep(0.97, 0.999, tilt)) * 0.2) * (1.0 - u_colour.r);
-
-//tilt *= 20.0;
-//tilt = round(tilt);
-//tilt /= 20.0;
+        //tilt = ((smoothstep(0.97, 0.999, tilt) * 0.2)) * effectAmount;
+        tilt = ((1.0 - smoothstep(0.97, 0.999, tilt)) * 0.2) * effectAmount;
 
         colour.rgb = mix(colour.rgb, colour.rgb * SlopeShade, tilt);
+
+#if defined(HOLE_HEIGHT)
+        float minHeight = u_holeHeight - 0.25;
+        float maxHeight = u_holeHeight + 0.008;
+        float height = clamp((v_worldPosition.y - minHeight) / (maxHeight - minHeight), 0.0, 1.0);
+        //colour.rgb += clamp(height, 0.0, 1.0) * 0.1;
+
+        //complementaryColour(colour.rgb)
+        vec3 holeColour = mix(colour.rgb * vec3(0.67, 0.757, 0.41), colour.rgb, 0.65 + (0.35 * height));
+        holeColour.r += smoothstep(0.45, 0.99, height) * 0.01;
+        holeColour.g += smoothstep(0.65, 0.999, height) * 0.01;
+
+        //distances are sqr
+        float fade = (1.0 - smoothstep(100.0, 400.0, dot(viewDirection, viewDirection)));
+        colour.rgb = mix(colour.rgb, holeColour, fade);
+#endif
+        viewDirection = normalize(viewDirection);
+
+
+        /*float rim = 1.0 - dot(normal, viewDirection);
+        rim = smoothstep(0.9, 1.0, rim);
+        rim = pow(rim, 5.0) * effectAmount;
+
+        colour.rg += rim * 0.08;*/
+
 #else
         colour.rgb *= amount;
 #endif
@@ -493,7 +526,7 @@ static const std::string CelFragmentShader = R"(
         float waterDither = findClosest(texX, texY, waterFade) * waterFade * (1.0 - step(0.96, facing));
 
 #if defined(COMP_SHADE)
-        waterDither *= u_colour.g;
+        waterDither *= u_maskColour.g;
 #endif
 
         colour.rgb = mix(colour.rgb, colour.rgb * SlopeShade, waterDither * 0.5 * step(WaterLevel, v_worldPosition.y));
@@ -510,7 +543,7 @@ static const std::string CelFragmentShader = R"(
         //colour.rgb = mix(complementaryColour(colour.rgb), colour.rgb, amount);
         colour.rgb *= amount;
 #endif
-        vec3 viewDirection = normalize(v_cameraWorldPosition - v_worldPosition.xyz);
+
 #if defined (SPECULAR)
         vec3 reflectDirection = reflect(-lightDirection, normal);
         float spec = pow(max(dot(viewDirection, reflectDirection), 0.50), 256.0);
@@ -526,19 +559,20 @@ static const std::string CelFragmentShader = R"(
 #if defined (RX_SHADOWS)
         int cascadeIndex = getCascadeIndex();
         float shadow = shadowAmount(cascadeIndex);
-        //float shadow = shadowAmountSmooth(cascadeIndex);
+        //float shadow = shadowAmountSoft(cascadeIndex);
         float borderMix = smoothstep(u_frustumSplits[cascadeIndex] + 0.5, u_frustumSplits[cascadeIndex], v_viewDepth);
         if (borderMix > 0)
         {
             int nextIndex = min(cascadeIndex + 1, u_cascadeCount - 1);
             shadow = mix(shadow, shadowAmount(nextIndex), borderMix);
-            //shadow = mix(shadow, shadowAmountSmooth(nextIndex), borderMix);
+            //shadow = mix(shadow, shadowAmountSoft(nextIndex), borderMix);
         }
 
         FRAG_OUT.rgb *= shadow;
 
 //shows cascade boundries
 //vec3 Colours[MAX_CASCADES] = vec3[MAX_CASCADES](vec3(0.2,0.0,0.0), vec3(0.0,0.2,0.0),vec3(0.0,0.0,0.2));
+//FRAG_OUT.rgb += Colours[cascadeIndex];
 //for(int i = 0; i < u_cascadeCount; ++i)
 //{
 //    if (v_lightWorldPosition[i].w > 0.0)
@@ -579,38 +613,27 @@ static const std::string CelFragmentShader = R"(
 #endif
 
 #if defined(CONTOUR)
-    float height = min((v_worldPosition.y - u_minHeight) / (u_maxHeight - u_minHeight), 1.0);
-    vec3 contourColour = mix(vec3(0.0,1.0,0.0), vec3(0.0,0.0,1.0), height * 2.0);
-    //contourColour = mix(contourColour, vec3(1.0,0.0,1.0), max(0.0, height - 0.5) * 2.0);
-
-
-//vec3 contourColour = vec3(1.0 - pow(1.0 - (0.1 + (height * 0.9)), 30.0), pow(1.0 - height, 5.0), 1.0 - pow(1.0 - (0.03 + (height * 0.97)), 40.0));
-
-
     vec3 f = fract(v_worldPosition * 2.0);
     vec3 df = fwidth(v_worldPosition * 2.0);
     vec3 g = step(df * u_pixelScale, f);
-    //////vec3 g = smoothstep(df * 1.0, df * 2.0, f);
-    ////float contour = 1.0 - (g.x * g.y * g.z);
-
-    //vec3 faceNormal = normalize(cross(dFdx(v_worldPosition), dFdy(v_worldPosition))) * 20.0;
 
     float contourX = 1.0 - (g.y * g.z);
-
-    //const float frequency = 40.0;
-    //float dashX = (sin((mod(v_worldPosition.x, 1.0) * frequency) - (u_windData.w * faceNormal.x)) + 1.0) * 0.5;
-    //contourX *= step(0.25, dashX);
-
     float contourZ = 1.0 - (g.y * g.x);
-    //float dashZ = (sin((mod(v_worldPosition.z + 0.5, 1.0) * frequency) - (u_windData.w * faceNormal.z)) + 1.0) * 0.5;
-    //contourZ *= step(0.25, dashZ);
 
     vec3 distance = v_worldPosition.xyz - v_cameraWorldPosition;
-    float fade = (1.0 - smoothstep(36.0, 81.0, dot(distance, distance))) * u_transparency * 0.75;
+    //these magic numbers are distance sqr
+    float fade = (1.0 - smoothstep(81.0, 144.0, dot(distance, distance))) * u_transparency * 0.75;
 
+    vec3 contourColour = BaseContourColour;
+    contourColour.x += mod(v_worldPosition.y * 3.0, 1.0);
+    contourColour = hsv2rgb(contourColour);
 
     FRAG_OUT.rgb = mix(FRAG_OUT.rgb, contourColour, contourX * fade);
     FRAG_OUT.rgb = mix(FRAG_OUT.rgb, contourColour, contourZ * fade);
+
+    float minHeight = u_holeHeight - 0.025;
+    float maxHeight = u_holeHeight + 0.08;
+    float height = min((v_worldPosition.y - minHeight) / (maxHeight - minHeight), 1.0);
     FRAG_OUT.rgb += clamp(height, 0.0, 1.0) * 0.1;
 #endif
 #if defined(TERRAIN_CLIP)
@@ -618,4 +641,6 @@ static const std::string CelFragmentShader = R"(
 
 //if(v_worldPosition.y < WaterLevel) discard;//don't do this, it reveals the hidden trees.
 #endif
+//FRAG_OUT.rgb *= u_lightColour.rgb;
+
     })";

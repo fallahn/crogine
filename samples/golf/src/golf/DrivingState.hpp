@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2022
+Matt Marchant 2021 - 2023
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -42,11 +42,23 @@ source distribution.
 #include <crogine/gui/GuiClient.hpp>
 #include <crogine/graphics/ModelDefinition.hpp>
 #include <crogine/graphics/RenderTexture.hpp>
+#include <crogine/graphics/CubemapTexture.hpp>
 #include <crogine/graphics/SimpleQuad.hpp>
 #include <crogine/graphics/UniformBuffer.hpp>
 
 #include <crogine/detail/glm/vec2.hpp>
-#include <unordered_map>
+
+//callback data for anim/self destruction
+//of messages / options window
+struct MessageAnim final
+{
+    enum
+    {
+        Delay, Open, Hold, Close,
+        Abort //used to remove open messages when forcefully restarting
+    }state = Delay;
+    float currentTime = 0.5f;
+};
 
 struct SharedStateData;
 class DrivingState final : public cro::State, public cro::GuiClient
@@ -86,10 +98,13 @@ private:
 
     cro::ResourceCollection m_resources;
     cro::RenderTexture m_backgroundTexture;
+    cro::CubemapTexture m_reflectionMap;
 
     cro::UniformBuffer<float> m_scaleBuffer;
     cro::UniformBuffer<ResolutionData> m_resolutionBuffer;
     cro::UniformBuffer<WindData> m_windBuffer;
+
+    cro::Clock m_idleTimer;
 
     struct WindUpdate final
     {
@@ -112,6 +127,7 @@ private:
             WireframeCulled,
             Beacon,
             Horizon,
+            Trophy,
 
             Count
         };
@@ -121,7 +137,6 @@ private:
     std::vector<HoleData> m_holeData;
     std::int32_t m_targetIndex;
     std::array<cro::Billboard, BillboardID::Count> m_billboardTemplates = {};
-    std::unordered_map<std::int32_t, std::unique_ptr<cro::ModelDefinition>> m_ballModels;
 
     struct SpriteID final
     {
@@ -134,18 +149,15 @@ private:
             WindSpeed,
             MessageBoard,
             Stars,
+            SpinBg,
+            SpinFg,
 
             Count
         };
     };
     std::array<cro::Sprite, SpriteID::Count> m_sprites = {};
 
-    struct Avatar final
-    {
-        std::array<std::size_t, AnimationID::Count> animationIDs = {};
-        cro::Attachment* handsAttachment = nullptr;
-    }m_avatar;
-
+    Avatar m_avatar;
 
     struct ClubModel final
     {
@@ -168,7 +180,7 @@ private:
     void initAudio();
     void createScene();
     void createFoliage(cro::Entity);
-    void createClouds(const std::string&);
+    void createClouds();
     void createPlayer(cro::Entity);
     void createBall();
     void createFlag();
@@ -177,6 +189,7 @@ private:
     void hitBall();
     void setHole(std::int32_t);
     void setActiveCamera(std::int32_t);
+    void forceRestart();
     
     //DrivingStateUI.cpp
 #ifdef USE_GNS

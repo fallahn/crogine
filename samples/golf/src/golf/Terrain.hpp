@@ -29,6 +29,8 @@ source distribution.
 
 #pragma once
 
+#include <crogine/detail/glm/vec2.hpp>
+
 #include <array>
 #include <string>
 #include <limits>
@@ -65,6 +67,26 @@ struct TerrainID final
     };
 };
 
+//make sure we reserve room for trigger IDs
+static_assert(TerrainID::Count < 14, "MAX VALUE REACHED");
+
+struct TriggerID final
+{
+    //these are stored on the green channel
+    //we start from above the terrain ID to
+    //stop conflicts/backwards compat with
+    //existing terrain models
+    enum
+    {
+        Volcano = 13,
+        Boat,
+
+
+        Count
+    };
+};
+static_assert(TriggerID::Count < 25, "MAX VALUE REACHED");
+
 static const std::array<std::string, TerrainID::Count> TerrainStrings =
 {
     "Rough", "Fairway", "Green", "Bunker", "Water", "Scrub", "Stone", "Hole"
@@ -79,5 +101,24 @@ static constexpr std::array<float, TerrainID::Count> Dampening =
 //how much the velocity of the ball is reduced when colliding
 static constexpr std::array<float, TerrainID::Count> Restitution =
 {
-    0.23f, 0.33f, 0.26f, 0.f, 0.f, 0.f, 0.55f, 0.f
+    0.23f, 0.33f, 0.28f, 0.f, 0.f, 0.f, 0.55f, 0.f
+};
+
+//how much the spin is reduced when bouncing on the terrain
+static constexpr std::array<glm::vec2, TerrainID::Count> SpinReduction =
+{
+    glm::vec2(0.5f),
+    glm::vec2(0.8f, 0.995f),
+    glm::vec2(0.98f, 0.995f),
+    glm::vec2(0.f),
+    glm::vec2(0.f),
+    glm::vec2(0.f),
+    glm::vec2(0.99f, 0.999f),
+    glm::vec2(0.f)
+};
+
+//how much velocity is added when rolling from topspin
+static constexpr std::array<float, TerrainID::Count> SpinAddition =
+{
+    0.5f, 0.12f, 0.09f, 0.f, 0.f, 0.f, 0.99f, 0.f
 };

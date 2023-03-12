@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2022
+Matt Marchant 2017 - 2023
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -37,9 +37,10 @@ using namespace cro;
 ParticleEmitter::ParticleEmitter()
     : m_vbo             (0),
     m_vao               (0),
+    m_particles         (MaxParticles),
     m_nextFreeParticle  (0),
     m_running           (false),
-    m_visible           (true),
+    m_pendingUpdate     (true),
     m_renderFlags       (std::numeric_limits<std::uint64_t>::max()),
     m_releaseCount      (-1)
 {

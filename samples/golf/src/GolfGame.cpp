@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2022
+Matt Marchant 2020 - 2023
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -44,23 +44,29 @@ source distribution.
 #include "golf/NewsState.hpp"
 #include "golf/PlaylistState.hpp"
 #include "golf/CreditsState.hpp"
+#include "golf/UnlockState.hpp"
 #include "golf/EventOverlay.hpp"
 #include "golf/MenuConsts.hpp"
 #include "golf/GameConsts.hpp"
 #include "golf/MessageIDs.hpp"
 #include "golf/PacketIDs.hpp"
+#include "golf/UnlockItems.hpp"
 #include "editor/BushState.hpp"
 #include "LoadingScreen.hpp"
 #include "SplashScreenState.hpp"
 #include "ErrorCheck.hpp"
 #include "icon.hpp"
 #include "Achievements.hpp"
+#include "golf/Clubs.hpp"
 
 #include <AchievementIDs.hpp>
 #include <AchievementStrings.hpp>
 
 #ifdef USE_GNS
 #include <AchievementsImpl.hpp>
+#endif
+#ifdef USE_WORKSHOP
+#include <WorkshopState.hpp>
 #endif
 
 #include <crogine/audio/AudioMixer.hpp>
@@ -163,8 +169,13 @@ GolfGame::GolfGame()
     m_stateStack.registerState<PlaylistState>(StateID::Playlist, m_sharedData);
     m_stateStack.registerState<BushState>(StateID::Bush, m_sharedData);
     m_stateStack.registerState<MessageOverlayState>(StateID::MessageOverlay, m_sharedData);
+    m_stateStack.registerState<UnlockState>(StateID::Unlock, m_sharedData);
     m_stateStack.registerState<CreditsState>(StateID::Credits, m_sharedData, credits);
     m_stateStack.registerState<EventOverlayState>(StateID::EventOverlay);
+
+#ifdef USE_WORKSHOP
+    m_stateStack.registerState<WorkshopState>(StateID::Workshop);
+#endif
 }
 
 //public
@@ -360,7 +371,7 @@ bool GolfGame::initialise()
     loadPreferences();
     loadAvatars();
 
-#ifdef USE_GNS
+#if defined USE_GNS
     m_achievements = std::make_unique<SteamAchievements>(MessageID::AchievementMessage);
 #else
     m_achievements = std::make_unique<DefaultAchievements>();
@@ -371,12 +382,29 @@ bool GolfGame::initialise()
         return false;
     }
 
+#ifdef USE_WORKSHOP
+    registerCommand("workshop",
+        [&](const std::string&)
+        {
+            m_stateStack.clearStates();
+            m_stateStack.pushState(StateID::Workshop);
+        });
+#endif
+
+#ifdef CRO_DEBUG_
+#ifndef USE_GNS
+    m_achievements->clearAchievement(AchievementStrings[AchievementID::IntoOrbit]);
+#endif // !USE_GNS
+#endif
+
+#ifndef USE_GNS
     m_hostAddresses = cro::Util::Net::getLocalAddresses();
     if (m_hostAddresses.empty())
     {
-        LogE << "No suitable host addresses were found" << std::endl;
+        cro::Logger::log("No suitable host addresses were found", cro::Logger::Type::Error, cro::Logger::Output::All);
         return false;
     }
+#endif
 
     parseCredits();
 
@@ -560,9 +588,6 @@ bool GolfGame::initialise()
     cro::AudioMixer::setLabel("Announcer", MixerChannel::Voice);
     cro::AudioMixer::setLabel("Vehicles", MixerChannel::Vehicles);
 
-    //loadPreferences();
-    //loadAvatars();
-
     m_sharedData.clientConnection.netClient.create(ConstVal::MaxClients);
     m_sharedData.sharedResources = std::make_unique<cro::ResourceCollection>();
 
@@ -599,6 +624,7 @@ bool GolfGame::initialise()
     s.loadFromFile("assets/golf/sprites/facilities_menu.spt", m_sharedData.sharedResources->textures);
     s.loadFromFile("assets/golf/sprites/scoreboard.spt", m_sharedData.sharedResources->textures);
     s.loadFromFile("assets/golf/sprites/controller_buttons.spt", m_sharedData.sharedResources->textures);
+    s.loadFromFile("assets/golf/sprites/unlocks.spt", m_sharedData.sharedResources->textures);
     s.loadFromFile("assets/golf/sprites/tutorial.spt", m_sharedData.sharedResources->textures);
 
     cro::ModelDefinition md(*m_sharedData.sharedResources);
@@ -610,6 +636,18 @@ bool GolfGame::initialise()
     md.loadFromFile("assets/golf/models/trophies/trophy06.cmt");
     md.loadFromFile("assets/golf/models/trophies/trophy07.cmt");
     md.loadFromFile("assets/golf/models/trophies/trophy08.cmt");
+    md.loadFromFile("assets/golf/models/trophies/trophy09.cmt");
+    md.loadFromFile("assets/golf/models/trophies/level01.cmt");
+    md.loadFromFile("assets/golf/models/trophies/level10.cmt");
+    md.loadFromFile("assets/golf/models/trophies/level20.cmt");
+    md.loadFromFile("assets/golf/models/trophies/level30.cmt");
+    md.loadFromFile("assets/golf/models/trophies/level40.cmt");
+    md.loadFromFile("assets/golf/models/trophies/level50.cmt");
+
+    for (const auto& str : ul::ModelPaths) //models displayed in 'unlock' state
+    {
+        md.loadFromFile(str);
+    }
 
     //set up the post process
     auto windowSize = cro::App::getWindow().getSize();
@@ -762,6 +800,10 @@ void GolfGame::loadPreferences()
                 {
                     m_sharedData.mouseSpeed = std::max(ConstVal::MinMouseSpeed, std::min(ConstVal::MaxMouseSpeed, prop.getValue<float>()));
                 }
+                else if (name == "swingput_threshold")
+                {
+                    m_sharedData.swingputThreshold = std::max(ConstVal::MinSwingputThresh, std::min(ConstVal::MaxSwingputThresh, prop.getValue<float>()));
+                }
                 else if (name == "invert_x")
                 {
                     m_sharedData.invertX = prop.getValue<bool>();
@@ -820,6 +862,14 @@ void GolfGame::loadPreferences()
                 {
                     m_sharedData.enableRumble = prop.getValue<bool>() ? 1 : 0;
                 }
+                else if (name == "use_trail")
+                {
+                    m_sharedData.showBallTrail = prop.getValue<bool>();
+                }
+                else if (name == "use_beacon_colour")
+                {
+                    m_sharedData.trailBeaconColour = prop.getValue<bool>();
+                }
             }
         }
     }
@@ -851,6 +901,24 @@ void GolfGame::loadPreferences()
     {
         m_sharedData.inputBinding.keys[InputBinding::Down] = SDLK_s;
     }
+
+    //and then the cancel button update
+    if (m_sharedData.inputBinding.keys[InputBinding::CancelShot] == SDLK_UNKNOWN)
+    {
+        m_sharedData.inputBinding.keys[InputBinding::CancelShot] = SDLK_LSHIFT;
+    }
+
+    //and the ball spin update
+    if (m_sharedData.inputBinding.keys[InputBinding::EmoteMenu] == SDLK_UNKNOWN)
+    {
+        m_sharedData.inputBinding.keys[InputBinding::EmoteMenu] = SDLK_LCTRL;
+    }
+    if (m_sharedData.inputBinding.keys[InputBinding::SpinMenu] == SDLK_UNKNOWN)
+    {
+        m_sharedData.inputBinding.keys[InputBinding::SpinMenu] = SDLK_LALT;
+    }
+
+    m_sharedData.inputBinding.clubset = ClubID::DefaultSet;
 }
 
 void GolfGame::savePreferences()
@@ -870,6 +938,7 @@ void GolfGame::savePreferences()
     cfg.addProperty("fov").setValue(m_sharedData.fov);
     cfg.addProperty("vertex_snap").setValue(m_sharedData.vertexSnap);
     cfg.addProperty("mouse_speed").setValue(m_sharedData.mouseSpeed);
+    cfg.addProperty("swingput_threshold").setValue(m_sharedData.swingputThreshold);
     cfg.addProperty("invert_x").setValue(m_sharedData.invertX);
     cfg.addProperty("invert_y").setValue(m_sharedData.invertY);
     cfg.addProperty("show_beacon").setValue(m_sharedData.showBeacon);
@@ -884,6 +953,8 @@ void GolfGame::savePreferences()
     cfg.addProperty("putting_power").setValue(m_sharedData.showPuttingPower);
     cfg.addProperty("multisamples").setValue(m_sharedData.multisamples);
     cfg.addProperty("use_vibration").setValue(m_sharedData.enableRumble == 0 ? false : true);
+    cfg.addProperty("use_trail").setValue(m_sharedData.showBallTrail);
+    cfg.addProperty("use_beacon_colour").setValue(m_sharedData.trailBeaconColour);
     cfg.save(path);
 
 

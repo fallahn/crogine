@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2022
+Matt Marchant 2017 - 2023
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -199,6 +199,10 @@ namespace cro
         */
         void unloadPlugin(StateStack& stack);
 
+        /*!
+        \brief Returns true if a plugin is currently loaded
+        */
+        bool pluginLoaded() const { return m_pluginHandle != nullptr; }
 
     private:
         std::uint32_t m_windowStyleFlags;

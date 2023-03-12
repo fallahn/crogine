@@ -29,6 +29,7 @@ source distribution.
 
 #include "Swingput.hpp"
 #include "GameConsts.hpp"
+#include "SharedStateData.hpp"
 
 #include <crogine/core/App.hpp>
 #include <crogine/core/GameController.hpp>
@@ -48,15 +49,16 @@ namespace
     constexpr float MaxControllerVelocity = 3000.f;
     constexpr float MaxMouseVelocity = 1700.f;
     constexpr float MaxAccuracy = 20.f;
-    constexpr float CommitDistance = 4.f;// 0.01f; //TODO make this user variable
+    //constexpr float CommitDistance = 4.f;// 0.01f; //TODO make this user variable
 
     constexpr float ControllerAxisRange = 32767.f;
     constexpr std::int16_t MinTriggerMove = 16000;
     constexpr std::int16_t MinStickMove = 8000;
 }
 
-Swingput::Swingput()
-    : m_enabled     (false),
+Swingput::Swingput(const SharedStateData& sd)
+    : m_sharedData  (sd),
+    m_enabled       (false),
     m_backPoint     (0.f),
     m_activePoint   (0.f),
     m_frontPoint    (0.f),
@@ -236,10 +238,8 @@ bool Swingput::process(float)
             m_timer.restart();
         }
 
-        //we've done full stroke. TODO commit distance needs
-        //to be changable - stick ranges vary between controllers
-        //and even between sticks on the same controller...
-        if (m_activePoint.y > (MaxSwingputDistance / 2.f) - CommitDistance)
+        //we've done full stroke.
+        if (m_activePoint.y > (MaxSwingputDistance / 2.f) - /*CommitDistance*/m_sharedData.swingputThreshold)
         {
             m_state = State::Summarise;
             m_elapsedTime = m_timer.restart();

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2022
+Matt Marchant 2021 - 2023
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -60,12 +60,16 @@ namespace sv
         cro::Clock m_serverTime; //used in timestamping
         cro::Scene m_scene;
 
+        float m_scoreboardTime; //how long to wait before setting next player active
+        std::uint16_t m_scoreboardReadyFlags;
+
         //game rule stuff. TODO encapsulate somewhere
         bool m_gameStarted;
         bool m_allMapsLoaded;
         std::uint8_t m_currentHole;
         std::vector<PlayerStatus> m_playerInfo; //active players. Sorted by distance so the front position is active player
         std::uint8_t m_skinsPot;
+        std::uint8_t m_currentBest; //current best score for hole, non-stroke games end if no-one can beat it
 
         cro::Clock m_turnTimer;
 

@@ -108,6 +108,7 @@ namespace cro
         */
         const glm::mat4& getProjectionMatrix() const;
 
+
     protected:
         /*!
         \brief Used to track the active frame buffer.

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2023
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -41,6 +41,7 @@ source distribution.
 namespace cro
 {
     class Image;
+    class Colour;
 
     /*!
     \brief Generic texture wrapper for OpenGL RGB or RGBA textures.
@@ -141,6 +142,17 @@ namespace cro
         bool isRepeated() const;
 
         /*!
+        \brief Sets the border colour of the texture, and disables
+        repeating if enabled. This replaces the default CLAMP_TO_EDGE
+        mode with CLAMP_TO_BORDER, although this will reset the repeat
+        mode to CLAMP_TO_EDGE if any updates are made to the texture
+        and the colour will need to be re-applied. This also does
+        nothing if a texture is not yet loaded.
+        \param colour A Colour object used to define the colour of the border
+        */
+        void setBorderColour(Colour colour);
+
+        /*!
         \brief Returns the maximum texture size for the current platform
         */
         static std::uint32_t getMaxTextureSize();
@@ -187,6 +199,6 @@ namespace cro
         bool isFloat(SDL_RWops* file);
         bool loadAsFloat(SDL_RWops* file, bool createMipmaps);
         bool loadAsByte(SDL_RWops* file, bool createMipmaps);
-        void generateMipMaps();
+        void generateMipMaps(const std::uint8_t* = nullptr, URect = {}); //TODO this shouldn't have default params, they exist because of the unused loadAsFloat func
     };
 }

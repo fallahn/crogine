@@ -30,7 +30,9 @@ source distribution.
 #include "CloudSystem.hpp"
 
 #include <crogine/detail/glm/gtx/norm.hpp>
+#include <crogine/ecs/Scene.hpp>
 #include <crogine/ecs/components/Transform.hpp>
+#include <crogine/util/Constants.hpp>
 
 namespace
 {
@@ -59,6 +61,9 @@ void CloudSystem::process(float dt)
     glm::vec3 velocity(m_currentWindSpeed.x, 0.f, m_currentWindSpeed.z);
     velocity *= 10.f * m_currentWindSpeed.y;
 
+    auto camPos = getScene()->getActiveCamera().getComponent<cro::Transform>().getWorldPosition();
+
+
     //process clouds
     const auto& entities = getEntities();
     for (auto entity : entities)
@@ -76,6 +81,9 @@ void CloudSystem::process(float dt)
             auto movement = glm::normalize(velocity) * ResetDistance;
             tx.move(-movement);
         }
+
+        auto facing = glm::vec2(camPos.x, camPos.z) - cloudPos;
+        tx.setRotation(cro::Transform::Y_AXIS, std::atan2(-facing.y, facing.x) - (cro::Util::Const::degToRad * 90.f));
     }
 }
 

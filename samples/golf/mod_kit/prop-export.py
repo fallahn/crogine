@@ -1,7 +1,7 @@
 bl_info = {
     "name": "Export golf hole data",
     "author": "Bald Guy",
-    "version": (2022, 9, 5),
+    "version": (2023, 3, 4),
     "blender": (2, 80, 0),
     "location": "File > Export > Golf Hole",
     "description": "Export position and rotation info of selected objects",
@@ -109,6 +109,10 @@ def WriteCrowd(file, location, rotation, ob):
     file.write("    crowd\n    {\n")
     file.write("        position = %f,%f,%f\n" % (location[0], location[2], -location[1]))
     file.write("        rotation = %f\n" % (rotation[2] * (180.0 / 3.141)))
+
+
+    if ob.get('look_at') is not None:
+        file.write("        lookat = %f,%f,%f\n" % (ob['look_at'][0], ob['look_at'][2], -ob['look_at'][1]))
 
 
     if ob.parent is not None and ob.parent.type == 'CURVE':

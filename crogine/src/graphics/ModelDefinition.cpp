@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2022
+Matt Marchant 2017 - 2023
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -82,11 +82,14 @@ ModelDefinition::ModelDefinition(ResourceCollection& rc, EnvironmentMap* envMap,
     }
 }
 
-bool ModelDefinition::loadFromFile(const std::string& path, bool instanced, bool useDeferredShaders, bool forceReload)
+bool ModelDefinition::loadFromFile(const std::string& inPath, bool instanced, bool useDeferredShaders, bool forceReload)
 {
 #ifdef PLATFORM_MOBILE
     instanced = false
 #endif
+
+    auto path = inPath;
+    std::replace(path.begin(), path.end(), '\\', '/');
 
     if (m_modelLoaded)
     {
@@ -349,6 +352,7 @@ bool ModelDefinition::loadFromFile(const std::string& path, bool instanced, bool
         bool enableDepthTest = true;
         bool doubleSided = false;
         bool createMipmaps = false;
+        std::string materialName;
         Material::Data::Animation animation;
 
         const auto& properties = mat.getProperties();
@@ -488,6 +492,10 @@ bool ModelDefinition::loadFromFile(const std::string& path, bool instanced, bool
                 float rate = std::max(1.f, std::min(60.f, p.getValue<float>()));
                 animation.frameTime = 1.f / rate;
             }
+            else if (name == "name")
+            { 
+                materialName = p.getValue<std::string>();
+            }
         }
 
         if (lockRotation)
@@ -513,6 +521,7 @@ bool ModelDefinition::loadFromFile(const std::string& path, bool instanced, bool
         material.enableDepthTest = enableDepthTest;
         material.doubleSided = doubleSided;
         material.animation = animation;
+        material.name = materialName;
 
         //set a default mask colour - this is overwritten
         //below, if a custom property is found.

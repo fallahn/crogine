@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022
+Matt Marchant 2022 - 2023
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -86,21 +86,29 @@ static inline const std::string BayerMatrix = R"(
         return 1.0;
     })";
 
+//https://gist.github.com/patriciogonzalezvivo/670c22f3966e662d2f83
 static inline const std::string Random = R"(
     float rand(float n)
     {
         return fract(sin(n) * 43758.5453123);
     }
 
+#define noise rand
     float rand(vec2 position)
     {
         return fract(sin(dot(position, vec2(12.9898, 4.1414))) * 43758.5453);
     }
 
-    float noise(vec2 pos)
-    {
-        return fract(sin(dot(pos, vec2(12.9898, 4.1414))) * 43758.5453);
-    })";
+
+
+    //float noise2(vec2 n)
+    //{
+	   // const vec2 d = vec2(0.0, 1.0);
+    //    vec2 b = floor(n), f = smoothstep(vec2(0.0), vec2(1.0), fract(n));
+	   // return mix(mix(rand(b), rand(b + d.yx), f.x), mix(rand(b + d.xy), rand(b + d.yy), f.x), f.y);
+    //}
+
+)";
 
 //https://gist.github.com/yiwenl/745bfea7f04c456e0101
 static inline const std::string HSV = R"(
@@ -125,6 +133,7 @@ static inline const std::string HSV = R"(
 
 //requires u_noiseTexture containing 2D noise
 //and u_windData from WIND_BUFFER
+//dirX, strength, dirZ, elapsed time - xyzw
 //localPos is local position of vertex
 //world pos is the root pos of the current mesh
 static inline const std::string WindCalc = R"(
@@ -135,7 +144,7 @@ static inline const std::string WindCalc = R"(
         float strength;
     };
 
-    const float hFreq = 0.025;
+    const float hFreq = 0.035;
     const float hMagnitude = 0.08;
     const float lFreq = 0.008;
     const float lMagnitude = 0.2;
@@ -144,11 +153,13 @@ static inline const std::string WindCalc = R"(
     {
         WindResult retVal = WindResult(vec2(0.0), vec2(0.0), 0.0);
         vec2 uv = localPos;
-        uv.x += u_windData.w * (hFreq + (hFreq * u_windData.y));
+        //uv.x += u_windData.w * (hFreq + (hFreq * u_windData.y));
+        uv.x += u_windData.w * hFreq;
         retVal.highFreq.x = TEXTURE(u_noiseTexture, uv).r;
 
         uv = localPos;
-        uv.y += u_windData.w * (hFreq + (hFreq * u_windData.y));
+        //uv.y += u_windData.w * (hFreq + (hFreq * u_windData.y));
+        uv.y += u_windData.w * hFreq;
         retVal.highFreq.y = TEXTURE(u_noiseTexture, uv).r;
 
         uv = worldPos;
@@ -163,12 +174,14 @@ static inline const std::string WindCalc = R"(
         retVal.highFreq *= 2.0;
         retVal.highFreq -= 1.0;
         retVal.highFreq *= u_windData.y;
-        retVal.highFreq *= hMagnitude;
+        //retVal.highFreq *= hMagnitude;
+        retVal.highFreq *= hMagnitude + (hMagnitude * u_windData.y);
 
         retVal.lowFreq *= 2.0;
         retVal.lowFreq -= 1.0;
         retVal.lowFreq *= (0.6 + (0.4 * u_windData.y));
-        retVal.lowFreq *= lMagnitude;
+        //retVal.lowFreq *= lMagnitude;
+        retVal.lowFreq *= lMagnitude + (lMagnitude * u_windData.y);
 
         retVal.strength = u_windData.y;
         retVal.strength *= dirMagnitude;

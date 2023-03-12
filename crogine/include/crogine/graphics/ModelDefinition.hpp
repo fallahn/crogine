@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2021
+Matt Marchant 2017 - 2023
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -179,6 +179,11 @@ namespace cro
         \brief Return the number of materials currently loaded in this definition
         */
         std::size_t getMaterialCount() const { return m_materialCount; }
+
+        /*!
+        \brief Returns whether or not a definition has been loaded and can be used to create models
+        */
+        bool isLoaded() const { return m_modelLoaded; }
 
     private:
         ResourceCollection& m_resources;

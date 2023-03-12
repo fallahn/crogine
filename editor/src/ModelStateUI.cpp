@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2022
+Matt Marchant 2020 - 2023
 http://trederia.blogspot.com
 
 crogine editor - Zlib license.
@@ -740,7 +740,7 @@ void ModelState::drawInspector()
 
     ImGui::SetNextWindowPos({ pos.x, pos.y });
     ImGui::SetNextWindowSize({ size.x, size.y });
-    if (ImGui::Begin("Inspector", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_HorizontalScrollbar))
+    if (ImGui::Begin("Inspector", nullptr, ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_HorizontalScrollbar))
     {
         ImGui::BeginTabBar("##a");
 
@@ -1580,7 +1580,7 @@ void ModelState::drawBrowser()
     //ImGui::ShowDemoWindow();
     ImGui::SetNextWindowPos({ pos.x, pos.y });
     ImGui::SetNextWindowSize({ size.x, size.y });
-    if (ImGui::Begin("Browser", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse))
+    if (ImGui::Begin("Browser", nullptr, ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse))
     {
         ImGui::BeginTabBar("##b");
 
@@ -1943,12 +1943,8 @@ void ModelState::drawBrowser()
                     m_attachmentIndex = 0;
                 }
 
-                ImGui::BeginChild("##attachments", {200.f, 0.f}, true);
-                if (ImGui::Button("Add##attachment"))
+                const auto refreshAttachmentView = [&]()
                 {
-                    attachments.emplace_back().setName("attachment" + uniqueID());
-                    m_attachmentAngles.emplace_back(0.f, 0.f, 0.f);
-                    
                     if (attachments[m_attachmentIndex].getModel().isValid())
                     {
                         attachments[m_attachmentIndex].getModel().getComponent<cro::Model>().setHidden(true);
@@ -1958,9 +1954,29 @@ void ModelState::drawBrowser()
 
                     attachments[m_attachmentIndex].setModel(m_attachmentModels[0]);
                     m_attachmentModels[0].getComponent<cro::Model>().setHidden(false);
+                };
+
+                ImGui::BeginChild("##attachments", {260.f, 0.f}, true);
+                if (ImGui::Button("Add##attachment"))
+                {
+                    attachments.emplace_back().setName("attachment" + uniqueID());
+                    m_attachmentAngles.emplace_back(0.f, 0.f, 0.f);
+                    
+                    refreshAttachmentView();
                 }
                 if (!attachments.empty())
                 {
+                    ImGui::SameLine();
+                    if (ImGui::Button("Duplicate##attachment"))
+                    {
+                        auto a = attachments[m_attachmentIndex];
+                        a.setName(a.getName() + uniqueID());
+                        attachments.push_back(a);
+                        m_attachmentAngles.emplace_back(glm::eulerAngles(a.getRotation()) * cro::Util::Const::radToDeg);
+
+                        refreshAttachmentView();
+                    }
+
                     ImGui::SameLine();
                     if (ImGui::Button("Remove##attachment"))
                     {
@@ -2064,7 +2080,7 @@ void ModelState::drawBrowser()
                 }
                 ImGui::SameLine();
                 if (ImGui::Button("Import##attachments")
-                    && cro::FileSystem::showMessageBox("Warning", "This will replace all existing attachement data", cro::FileSystem::OKCancel, cro::FileSystem::Warning))
+                    && cro::FileSystem::showMessageBox("Warning", "This will replace all existing attachment data", cro::FileSystem::OKCancel, cro::FileSystem::Warning))
                 {
                     auto path = cro::FileSystem::openFileDialogue("", "atc");
                     if (!path.empty())
@@ -2196,10 +2212,7 @@ void ModelState::drawBrowser()
                     glm::vec3& rot = m_attachmentAngles[m_attachmentIndex];
                     if (ImGui::DragFloat3("Rotation##attachment", &rot[0], 1.f, -180.f, 180.f, "%3.2f"))
                     {
-                        auto q = glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), rot[2] * cro::Util::Const::degToRad, cro::Transform::Z_AXIS);
-                        q = glm::rotate(q, rot[1] * cro::Util::Const::degToRad, cro::Transform::Y_AXIS);
-                        q = glm::rotate(q, rot[0] * cro::Util::Const::degToRad, cro::Transform::X_AXIS);
-                        ap.setRotation(q);
+                        ap.setRotation(cro::Util::Vector::eulerToQuat(rot * cro::Util::Const::degToRad));
                     }
 
                     if (ImGui::Button("R##scale"))
@@ -2227,6 +2240,7 @@ void ModelState::drawBrowser()
                 ImGui::SameLine();
 
                 ImGui::BeginChild("##attachment_details", { 240.f, 0.f }, true);
+                ImGui::Text("Attachment models (preview)");
                 if (ImGui::Button("Quick Scale"))
                 {
                     glm::vec3 aPos, aScale;
@@ -2765,7 +2779,7 @@ void ModelState::drawImageCombiner()
                             }
                             if (blue)
                             {
-                                outPixel.setGreen(blue[2]);
+                                outPixel.setBlue(blue[2]);
                             }
                             if (alpha && m_combinedImages[3].second.getFormat() == cro::ImageFormat::RGBA)
                             {
