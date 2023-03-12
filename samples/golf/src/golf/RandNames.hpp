@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021
+Matt Marchant 2021 2023
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -54,7 +54,7 @@ static inline const std::array RandomNames =
     cro::String("Daniel-San"),
     cro::String("Tobias"),
     cro::String("Jamz"),
-    cro::String(L"Jean-Sébastien"),
+    //cro::String(L"Jean-Sébastien"),
     cro::String("Stefan"),
     cro::String("Kim"),
     cro::String("Lukas"),
@@ -73,7 +73,7 @@ static inline const std::array RandomNames =
     cro::String("Herobrine"),
     cro::String("Big Bad Jon"),
     cro::String("Frieda"),
-    cro::String(L"Jørgen"),
+    //cro::String(L"Jørgen"),
     cro::String("Luciana"),
     cro::String("Niall"),
     cro::String("Kumuran"),

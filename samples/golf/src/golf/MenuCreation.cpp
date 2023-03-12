@@ -223,7 +223,7 @@ void MenuState::parseCourseDirectory(const std::string& rootDir, bool isUser)
 
         std::unique_ptr<cro::Texture> t = std::make_unique<cro::Texture>();
         if (cro::FileSystem::fileExists(testPath) &&
-            t->loadFromFile(testPath))
+            t->loadFromFile(courseFile))
         {
             m_courseThumbs.insert(std::make_pair(dir, std::move(t)));
         }
@@ -238,7 +238,7 @@ void MenuState::parseCourseDirectory(const std::string& rootDir, bool isUser)
 
         if (cro::FileSystem::fileExists(testPath))
         {
-            m_videoPaths.insert(std::make_pair(dir, testPath));
+            m_videoPaths.insert(std::make_pair(dir, courseFile));
         }
     }
 
