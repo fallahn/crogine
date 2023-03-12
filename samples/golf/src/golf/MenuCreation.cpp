@@ -5160,7 +5160,7 @@ void MenuState::updateUnlockedItems()
     }
     auto level = Social::getLevel();
     auto clubCount = std::min(ClubID::LockedSet.size(), static_cast<std::size_t>(level / 5));
-    for (auto i = 0; i < clubCount; ++i)
+    for (auto i = 0u; i < clubCount; ++i)
     {
         auto clubID = ClubID::LockedSet[i];
         if ((clubFlags & ClubID::Flags[clubID]) == 0)
