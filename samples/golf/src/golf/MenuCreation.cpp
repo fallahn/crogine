@@ -2986,21 +2986,25 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     {
         for (auto j = 0u; j < m_sharedData.connectionData[i].playerCount; ++j)
         {
-            auto& info = scoreInfo.emplace_back();
-            info.clientID = i;
-            info.playerID = j;
-            switch (m_sharedData.scoreType)
+
+            if (!m_sharedData.connectionData[i].playerData[j].name.empty())
             {
-            default:
-            case ScoreType::Stroke:
-                info.score = m_sharedData.connectionData[i].playerData[j].parScore;
-                break;
-            case ScoreType::Match:
-                info.score = m_sharedData.connectionData[i].playerData[j].matchScore;
-                break;
-            case ScoreType::Skins:
-                info.score = m_sharedData.connectionData[i].playerData[j].skinScore;
-                break;
+                auto& info = scoreInfo.emplace_back();
+                info.clientID = i;
+                info.playerID = j;
+                switch (m_sharedData.scoreType)
+                {
+                default:
+                case ScoreType::Stroke:
+                    info.score = m_sharedData.connectionData[i].playerData[j].parScore;
+                    break;
+                case ScoreType::Match:
+                    info.score = m_sharedData.connectionData[i].playerData[j].matchScore;
+                    break;
+                case ScoreType::Skins:
+                    info.score = m_sharedData.connectionData[i].playerData[j].skinScore;
+                    break;
+                }
             }
         }
     }
@@ -3021,30 +3025,27 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     std::vector<cro::String> names;
     for (const auto& score : scoreInfo)
     {
-        //if (score.score != 0)
+        names.push_back(m_sharedData.connectionData[score.clientID].playerData[score.playerID].name);
+        names.back() += ": (" + std::to_string(score.score) + ")";
+        switch (m_sharedData.scoreType)
         {
-            names.push_back(m_sharedData.connectionData[score.clientID].playerData[score.playerID].name);
-            names.back() += ": (" + std::to_string(score.score) + ")";
-            switch (m_sharedData.scoreType)
+        default:
+        case ScoreType::Stroke:
+            if (score.score < 0)
             {
-            default:
-            case ScoreType::Stroke:
-                if (score.score < 0)
-                {
-                    names.back() += " Under PAR";
-                }
-                else if (score.score > 0)
-                {
-                    names.back() += " Over PAR";
-                }
-                break;
-            case ScoreType::Skins:
-                names.back() += "Skins";
-                break;
-            case ScoreType::Match:
-                names.back() += "Match Points";
-                break;
+                names.back() += " Under PAR";
             }
+            else if (score.score > 0)
+            {
+                names.back() += " Over PAR";
+            }
+            break;
+        case ScoreType::Skins:
+            names.back() += "Skins";
+            break;
+        case ScoreType::Match:
+            names.back() += "Match Points";
+            break;
         }
     }
 
