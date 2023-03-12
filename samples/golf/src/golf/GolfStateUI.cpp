@@ -655,11 +655,12 @@ void GolfState::buildUI()
                 auto oldCam = m_gameScene.setActiveCamera(m_mapCam);
                 m_gameScene.getSystem<cro::CameraSystem>()->process(0.f);
 
-                m_mapTexture.clear(cro::Colour::Transparent);
+                cro::Colour c(std::uint8_t(39), 56, 153);
+                m_mapTexture.clear(c);
                 m_gameScene.render();
                 m_mapTexture.display();
                 m_gameScene.setActiveCamera(oldCam);
-                m_mapTexture.setBorderColour(cro::Colour::Transparent);
+                m_mapTexture.setBorderColour(c);
 
                 //and set to grow
                 state = 1;

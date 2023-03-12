@@ -3041,10 +3041,10 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
             }
             break;
         case ScoreType::Skins:
-            names.back() += "Skins";
+            names.back() += " Skins";
             break;
         case ScoreType::Match:
-            names.back() += "Match Points";
+            names.back() += " Match Points";
             break;
         }
     }

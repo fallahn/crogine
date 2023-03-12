@@ -68,7 +68,8 @@ GolfState::GolfState(SharedData& sd)
     m_gameStarted           (false),
     m_allMapsLoaded         (false),
     m_currentHole           (0),
-    m_skinsPot              (1)
+    m_skinsPot              (1),
+    m_currentBest           (MaxStrokes)
 {
     if (m_mapDataValid = validateMap(); m_mapDataValid)
     {
@@ -160,14 +161,10 @@ void GolfState::handleMessage(const cro::Message& msg)
             //if match/skins play check if our score is even with anyone holed already and forfeit
             if (m_sharedData.scoreType != ScoreType::Stroke)
             {
-                for (auto i = 1u; i < m_playerInfo.size(); ++i)
+                if (m_playerInfo[0].holeScore[m_currentHole] >= m_currentBest)
                 {
-                    if (m_playerInfo[i].distanceToHole == 0
-                        && m_playerInfo[i].holeScore[m_currentHole] == m_playerInfo[0].holeScore[m_currentHole])
-                    {
-                        m_playerInfo[0].holeScore[m_currentHole]++;
-                        m_playerInfo[0].distanceToHole = 0;
-                    }
+                    m_playerInfo[0].distanceToHole = 0;
+                    m_playerInfo[0].holeScore[m_currentHole]++;
                 }
             }
 
@@ -181,14 +178,16 @@ void GolfState::handleMessage(const cro::Message& msg)
             m_playerInfo[0].distanceToHole = 0.f;
             m_playerInfo[0].terrain = data.terrain;
 
+
             //if we're playing match play or skins then
             //anyone who has a worse score has already lost
             //so set them to finished.
             if (m_sharedData.scoreType != ScoreType::Stroke)
             {
+                //eliminate anyone who can't beat this score
                 for (auto i = 1u; i < m_playerInfo.size(); ++i)
                 {
-                    if (m_playerInfo[i].holeScore[m_currentHole] >=
+                    if ((m_playerInfo[i].holeScore[m_currentHole]) >=
                         m_playerInfo[0].holeScore[m_currentHole])
                     {
                         if (m_playerInfo[i].distanceToHole > 0) //not already holed
@@ -198,6 +197,29 @@ void GolfState::handleMessage(const cro::Message& msg)
                         }
                     }
                 }
+
+                //if this is the second hole and it has the same as the current best
+                //force a draw by eliminating anyone who can't beat it
+                if (m_playerInfo[0].holeScore[m_currentHole] == m_currentBest)
+                {
+                    for (auto i = 1u; i < m_playerInfo.size(); ++i)
+                    {
+                        if ((m_playerInfo[i].holeScore[m_currentHole]+1) >=
+                            m_currentBest)
+                        {
+                            if (m_playerInfo[i].distanceToHole > 0)
+                            {
+                                m_playerInfo[i].distanceToHole = 0.f;
+                                m_playerInfo[i].holeScore[m_currentHole] = std::min(m_currentBest, std::uint8_t(m_playerInfo[i].holeScore[m_currentHole] + 1));
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (m_playerInfo[0].holeScore[m_currentHole] < m_currentBest)
+            {
+                m_currentBest = m_playerInfo[0].holeScore[m_currentHole];
             }
 
             setNextPlayer();
@@ -656,6 +678,7 @@ void GolfState::setNextPlayer(bool newHole)
 
 void GolfState::setNextHole()
 {
+    m_currentBest = MaxStrokes;
     m_scene.getSystem<BallSystem>()->forceWindChange();
 
     bool gameFinished = false;
