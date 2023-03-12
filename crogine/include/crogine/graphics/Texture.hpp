@@ -41,6 +41,7 @@ source distribution.
 namespace cro
 {
     class Image;
+    class Colour;
 
     /*!
     \brief Generic texture wrapper for OpenGL RGB or RGBA textures.
@@ -139,6 +140,17 @@ namespace cro
         \brief Returns true if texture repeating is enabled
         */
         bool isRepeated() const;
+
+        /*!
+        \brief Sets the border colour of the texture, and disables
+        repeating if enabled. This replaces the default CLAMP_TO_EDGE
+        mode with CLAMP_TO_BORDER, although this will reset the repeat
+        mode to CLAMP_TO_EDGE if any updates are made to the texture
+        and the colour will need to be re-applied. This also does
+        nothing if a texture is not yet loaded.
+        \param colour A Colour object used to define the colour of the border
+        */
+        void setBorderColour(Colour colour);
 
         /*!
         \brief Returns the maximum texture size for the current platform

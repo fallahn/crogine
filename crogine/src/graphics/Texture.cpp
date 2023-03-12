@@ -29,6 +29,7 @@ source distribution.
 
 #include <crogine/graphics/Texture.hpp>
 #include <crogine/graphics/Image.hpp>
+#include <crogine/graphics/Colour.hpp>
 #include <crogine/detail/Assert.hpp>
 
 #include "../detail/GLCheck.hpp"
@@ -386,6 +387,20 @@ void Texture::setRepeated(bool repeat)
 bool Texture::isRepeated() const
 {
     return m_repeated;
+}
+
+void Texture::setBorderColour(Colour colour)
+{
+    if (m_handle)
+    {
+        m_repeated = false;
+
+        glCheck(glBindTexture(GL_TEXTURE_2D, m_handle));
+        glCheck(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER));
+        glCheck(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER));
+        glCheck(glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, colour.asArray()));
+        glCheck(glBindTexture(GL_TEXTURE_2D, 0));
+    }
 }
 
 std::uint32_t Texture::getMaxTextureSize()

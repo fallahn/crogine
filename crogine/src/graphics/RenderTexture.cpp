@@ -209,6 +209,11 @@ bool RenderTexture::isSmooth() const
     return m_texture.isSmooth();
 }
 
+void RenderTexture::setBorderColour(Colour colour)
+{
+    m_texture.setBorderColour(colour);
+}
+
 void RenderTexture::clear(Colour colour)
 {
     CRO_ASSERT(m_fboID, "No FBO created!");
