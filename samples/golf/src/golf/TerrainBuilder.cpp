@@ -281,7 +281,7 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
         }
     };
     entity.addComponent<cro::Model>(resources.meshes.getMesh(meshID), terrainMat);
-    entity.getComponent<cro::Model>().setRenderFlags(~RenderFlags::MiniMap);
+    entity.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniMap | RenderFlags::MiniGreen));
 
     auto* meshData = &entity.getComponent<cro::Model>().getMeshData();
     meshData->vertexCount = static_cast<std::uint32_t>(m_terrainBuffer.size());
