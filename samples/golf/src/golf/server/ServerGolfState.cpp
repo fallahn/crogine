@@ -296,6 +296,9 @@ void GolfState::netEvent(const net::NetEvent& evt)
         switch (evt.packet.getID())
         {
         default: break;
+        case PacketID::SkipTurn:
+            skipCurrentTurn(evt.packet.as<std::uint8_t>());
+            break;
         case PacketID::CPUThink:
             m_sharedData.host.broadcastPacket(PacketID::CPUThink, evt.packet.as<std::uint8_t>(), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
             break;
@@ -873,6 +876,25 @@ void GolfState::setNextHole()
         };
 
         m_gameStarted = false;
+    }
+}
+
+void GolfState::skipCurrentTurn(std::uint8_t clientID)
+{
+    //TODO signal whether we're already doing this or not?
+    //although if we just do it here it should be complete
+    //before the next call anyway...
+    if (m_playerInfo[0].client == clientID)
+    {
+        switch (m_playerInfo[0].ballEntity.getComponent<Ball>().state)
+        {
+        default: break;
+        case Ball::State::Roll:
+        case Ball::State::Flight:
+        case Ball::State::Putt:
+            //presuably same as runPrediction() only with prediction flag false? Or prediction flag set to skip so we know which dummy event to use
+            break;
+        }
     }
 }
 
