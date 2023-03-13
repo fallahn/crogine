@@ -149,7 +149,7 @@ ClubhouseState::ClubhouseState(cro::StateStack& ss, cro::State::Context ctx, Sha
 
         sd.tutorial = false;
         sd.clientConnection.connected = false;
-        sd.clientConnection.connectionID = 4;
+        sd.clientConnection.connectionID = ConstVal::NullValue;
         sd.clientConnection.ready = false;
         sd.clientConnection.netClient.disconnect();
     }

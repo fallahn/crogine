@@ -148,7 +148,7 @@ private:
     };
     std::array<const cro::AudioSource*, AudioID::Count> m_audioSources = {};
 
-    std::array<std::array<std::int32_t, ConnectionData::MaxPlayers>, ConstVal::MaxClients> m_playerIndices = {};
+    std::array<std::array<std::int32_t, ConstVal::MaxPlayers>, ConstVal::MaxClients> m_playerIndices = {};
     std::vector<cro::AudioScape> m_playerVoices;
     std::size_t m_currentClient;
     std::size_t m_currentPlayer;

@@ -2426,7 +2426,7 @@ void GolfState::notifyAchievement(const std::array<std::uint8_t, 2u>& data)
     if (m_sharedData.localConnectionData.connectionID != data[0])
     {
         //this came off the network so better validate it a bit...
-        if (data[0] < 4
+        if (data[0] < ConstVal::MaxClients
             && m_sharedData.connectionData[data[0]].playerCount != 0
             && data[1] < AchievementID::Count - 1)
         {

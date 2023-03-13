@@ -72,7 +72,7 @@ void Server::launch(std::size_t maxConnections, std::int32_t gameMode)
         m_sharedData.messageBus.poll();
     }
 
-    m_maxConnections = std::max(std::size_t(1u), std::min(ConstVal::MaxClients, maxConnections));
+    m_maxConnections = std::max(std::size_t(1u), std::min(std::size_t(ConstVal::MaxClients), maxConnections));
     m_gameMode = gameMode;
 
     m_running = true;

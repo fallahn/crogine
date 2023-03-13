@@ -295,7 +295,7 @@ void ErrorState::quitState()
     m_sharedData.serverInstance.stop();
     m_sharedData.clientConnection.connected = false;
     m_sharedData.clientConnection.netClient.disconnect();
-    m_sharedData.clientConnection.connectionID = 4;
+    m_sharedData.clientConnection.connectionID = ConstVal::NullValue;
     m_sharedData.clientConnection.ready = false;
 
     for (auto& cd : m_sharedData.connectionData)

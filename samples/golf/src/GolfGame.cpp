@@ -980,7 +980,7 @@ void GolfGame::loadAvatars()
         for (const auto& obj : objects)
         {
             if (obj.getName() == "avatar"
-                && i < m_sharedData.localConnectionData.MaxPlayers)
+                && i < ConstVal::MaxPlayers)
             {
                 const auto& props = obj.getProperties();
                 for (const auto& prop : props)

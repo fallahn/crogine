@@ -160,7 +160,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
 
     //remap the selected ball model indices - this is always applied
     //as the avatar IDs are loaded from the config, above
-    for (auto i = 0u; i < ConnectionData::MaxPlayers; ++i)
+    for (auto i = 0u; i < ConstVal::MaxPlayers; ++i)
     {
         auto idx = indexFromBallID(m_sharedData.localConnectionData.playerData[i].ballID);
 
@@ -185,7 +185,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
 
         sd.tutorial = false;
         sd.clientConnection.connected = false;
-        sd.clientConnection.connectionID = 4;
+        sd.clientConnection.connectionID = ConstVal::NullValue;
         sd.clientConnection.ready = false;
         sd.clientConnection.netClient.disconnect();
 

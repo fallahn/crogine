@@ -292,7 +292,7 @@ private:
     };
     std::array<cro::Sprite, SpriteID::Count> m_sprites = {};
 
-    std::array<std::array<Avatar, ConnectionData::MaxPlayers>, ConstVal::MaxClients> m_avatars;
+    std::array<std::array<Avatar, ConstVal::MaxPlayers>, ConstVal::MaxClients> m_avatars;
     Avatar* m_activeAvatar;
 
     struct ClubModel final

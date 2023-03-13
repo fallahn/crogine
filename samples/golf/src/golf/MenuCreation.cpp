@@ -1024,7 +1024,7 @@ void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, s
                 if (activated(evt))
                 {
                     applyTextEdit();
-                    if (m_sharedData.localConnectionData.playerCount < m_sharedData.localConnectionData.MaxPlayers)
+                    if (m_sharedData.localConnectionData.playerCount < ConstVal::MaxPlayers)
                     {
                         auto index = m_sharedData.localConnectionData.playerCount;
                         
@@ -4307,7 +4307,7 @@ void MenuState::updateLobbyAvatars()
         }
 
         auto strClientCount = std::to_string(clientCount);
-        Social::setStatus(Social::InfoID::Lobby, { "Golf", strClientCount.c_str(), "4" });
+        Social::setStatus(Social::InfoID::Lobby, { "Golf", strClientCount.c_str(), std::to_string(ConstVal::MaxClients).c_str() });
         Social::setGroup(m_sharedData.lobbyID, playerCount);
 
 
@@ -4505,7 +4505,7 @@ void MenuState::showPlayerConfig(bool visible, std::uint8_t playerIndex)
 void MenuState::quitLobby()
 {
     m_sharedData.clientConnection.connected = false;
-    m_sharedData.clientConnection.connectionID = 4;
+    m_sharedData.clientConnection.connectionID = ConstVal::NullValue;
     m_sharedData.clientConnection.ready = false;
     m_sharedData.clientConnection.netClient.disconnect();
 

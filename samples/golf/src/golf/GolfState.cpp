@@ -275,7 +275,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
             }
         }
     }
-    if (clientCount == 4)
+    if (clientCount == /*ConstVal::MaxClients*/4)
     {
         Achievements::awardAchievement(AchievementStrings[AchievementID::BetterWithFriends]);
     }
@@ -4774,7 +4774,7 @@ void GolfState::spawnBall(const ActorInfo& info)
 
     auto playerID = info.playerID;
     auto clientID = info.clientID;
-    auto depthOffset = (clientID * 4) + playerID;
+    auto depthOffset = (clientID * ConstVal::MaxPlayers) + playerID;
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setOrigin({ texSize.x / 2.f, 0.f, -0.1f - (0.1f * depthOffset) });
     entity.addComponent<cro::Drawable2D>();
@@ -5276,7 +5276,7 @@ void GolfState::removeClient(std::uint8_t clientID)
     //tidy up minimap - TODO MiniballSystem could now do this through checking parent state, but if it ain't broke...
     for (auto i = 0u; i < m_sharedData.connectionData[clientID].playerCount; ++i)
     {
-        auto pid = clientID * 4 + i;
+        auto pid = clientID * ConstVal::MaxPlayers + i;
         cro::Command cmd;
         cmd.targetFlags = CommandID::UI::MiniBall;
         cmd.action = [&,pid](cro::Entity e, float)
@@ -5540,7 +5540,6 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo)
     };
 
     m_currentHole = hole;
-    //m_inputParser.setMaxRotation(m_holeData[m_currentHole].puttFromTee ? MaxPuttRotation : MaxRotation); //pretty sure this is overridden in setCurrentPlayer()...
     startFlyBy(); //requires current hole
 
     //restore the drone if someone hit it
@@ -5955,9 +5954,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     cmd.action =
         [&,player](cro::Entity e, float)
     {
-        //e.getComponent<cro::Transform>().setPosition(glm::vec3(toMinimapCoords(player.position), 0.1f));
-
-        auto pid = player.client * 4 + player.player;
+        auto pid = player.client * ConstVal::MaxPlayers + player.player;
 
         if (e.getComponent<MiniBall>().playerID == pid)
         {

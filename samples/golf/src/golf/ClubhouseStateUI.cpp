@@ -2244,7 +2244,7 @@ void ClubhouseState::updateLobbyList()
 void ClubhouseState::quitLobby()
 {
     m_sharedData.clientConnection.connected = false;
-    m_sharedData.clientConnection.connectionID = 4;
+    m_sharedData.clientConnection.connectionID = ConstVal::NullValue;
     m_sharedData.clientConnection.ready = false;
     m_sharedData.clientConnection.netClient.disconnect();
 

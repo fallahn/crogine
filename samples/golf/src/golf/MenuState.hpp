@@ -244,7 +244,7 @@ private:
 
 
     //----ball, avatar and hair funcs are in MenuCustomisation.cpp----//
-    std::array<std::size_t, ConnectionData::MaxPlayers> m_ballIndices = {}; //index into the model list, not ballID
+    std::array<std::size_t, ConstVal::MaxPlayers> m_ballIndices = {}; //index into the model list, not ballID
     cro::Entity m_ballCam;
     std::array<cro::Entity, 4u> m_ballThumbCams = {};
     cro::RenderTexture m_ballTexture;
@@ -254,8 +254,8 @@ private:
 
     std::vector<PlayerAvatar> m_playerAvatars;
     //this is the index for each player into m_playerAvatars - skinID is read from PlayerAvatar struct
-    std::array<std::size_t, ConnectionData::MaxPlayers> m_avatarIndices = {};
-    std::array<cro::RenderTexture, ConnectionData::MaxPlayers> m_avatarThumbs = {};
+    std::array<std::size_t, ConstVal::MaxPlayers> m_avatarIndices = {};
+    std::array<cro::RenderTexture, ConstVal::MaxPlayers> m_avatarThumbs = {};
     std::uint8_t m_activePlayerAvatar; //which player is current editing their avatar
     cro::RenderTexture m_avatarTexture;
     void parseAvatarDirectory();
@@ -268,7 +268,7 @@ private:
 
     
     //index into hair model vector - converted from hairID with indexFromHairID
-    std::array<std::size_t, ConnectionData::MaxPlayers> m_hairIndices = {};
+    std::array<std::size_t, ConstVal::MaxPlayers> m_hairIndices = {};
     std::int32_t indexFromHairID(std::uint32_t);
 
 

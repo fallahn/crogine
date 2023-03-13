@@ -133,7 +133,7 @@ bool ConnectionData::deserialise(const net::NetEvent::Packet& packet)
     playerCount = header.playerCount;
 
     if (playerCount == 0
-        || playerCount > MaxPlayers)
+        || playerCount > ConstVal::MaxPlayers)
     {
         return false;
     }

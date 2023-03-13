@@ -31,6 +31,7 @@ source distribution.
 
 #include "InputBinding.hpp"
 #include "Networking.hpp"
+#include "CommonConsts.hpp"
 #include "server/Server.hpp"
 
 #include <crogine/core/String.hpp>
@@ -68,11 +69,10 @@ struct ConnectionData final
 {
     std::uint64_t peerID = 0;
 
-    static constexpr std::uint8_t MaxPlayers = 4;
-    std::uint8_t connectionID = MaxPlayers;
+    std::uint8_t connectionID = ConstVal::NullValue;
 
     std::uint8_t playerCount = 1;
-    std::array<PlayerData, MaxPlayers> playerData = {};
+    std::array<PlayerData, ConstVal::MaxPlayers> playerData = {};
 
     std::uint32_t pingTime = 0;
     std::uint8_t level = 0;
@@ -93,7 +93,7 @@ struct SharedStateData final
         net::NetClient netClient;
         bool connected = false;
         bool ready = false;
-        std::uint8_t connectionID = 4;
+        std::uint8_t connectionID = ConstVal::NullValue;
 
         std::vector<net::NetEvent> eventBuffer; //don't touch this while loading screen is active!!
     }clientConnection;
@@ -143,7 +143,7 @@ struct SharedStateData final
         std::vector<float> holeTimes; //seconds
         float totalTime = 0;
     };
-    std::array<TimeStats, ConnectionData::MaxPlayers> timeStats = {};
+    std::array<TimeStats, ConstVal::MaxPlayers> timeStats = {};
 
     //our local player data
     std::uint64_t lobbyID = 0;

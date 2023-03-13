@@ -29,6 +29,8 @@ source distribution.
 
 #pragma once
 
+#include "../CommonConsts.hpp"
+
 #include <crogine/core/Message.hpp>
 
 namespace sv::MessageID
@@ -44,7 +46,7 @@ namespace sv::MessageID
 
 struct ConnectionEvent final
 {
-    std::uint8_t clientID = 4;
+    std::uint8_t clientID = ConstVal::NullValue;
     enum
     {
         Connected, Disconnected

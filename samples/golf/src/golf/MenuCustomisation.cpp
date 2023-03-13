@@ -625,7 +625,7 @@ void MenuState::parseAvatarDirectory()
             }
         }
 
-        for (auto i = 0u; i < ConnectionData::MaxPlayers; ++i)
+        for (auto i = 0u; i < ConstVal::MaxPlayers; ++i)
         {
             m_avatarIndices[i] = indexFromAvatarID(m_sharedData.localConnectionData.playerData[i].skinID);
             m_hairIndices[i] = indexFromHairID(m_sharedData.localConnectionData.playerData[i].hairID);
