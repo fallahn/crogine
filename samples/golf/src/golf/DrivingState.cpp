@@ -1915,8 +1915,19 @@ void DrivingState::createClouds()
 
     if (!definitions.empty())
     {
-        m_resources.shaders.loadFromString(ShaderID::Cloud, CloudOverheadVertex, CloudOverheadFragment, "#define FEATHER_EDGE\n");
+        std::string wobble;
+        if (m_sharedData.vertexSnap)
+        {
+            wobble = "#define WOBBLE\n";
+        }
+
+        m_resources.shaders.loadFromString(ShaderID::Cloud, CloudOverheadVertex, CloudOverheadFragment, "#define FEATHER_EDGE\n" + wobble);
         auto& shader = m_resources.shaders.get(ShaderID::Cloud);
+
+        if (m_sharedData.vertexSnap)
+        {
+            m_resolutionBuffer.addShader(shader);
+        }
 
         auto matID = m_resources.materials.add(shader);
         auto material = m_resources.materials.get(matID);

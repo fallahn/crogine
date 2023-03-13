@@ -150,6 +150,8 @@ static const std::string CloudOverheadVertex = R"(
     uniform mat4 u_viewProjectionMatrix;
     uniform mat3 u_normalMatrix;
 
+#include RESOLUTION_BUFFER
+
     VARYING_OUT vec3 v_normal;
     VARYING_OUT vec3 v_worldPosition;
     VARYING_OUT vec4 v_colour;
@@ -158,7 +160,18 @@ static const std::string CloudOverheadVertex = R"(
     {
         vec4 position = u_worldMatrix * a_position;
         
+#if defined(WOBBLE)
+        vec4 vertPos = u_viewProjectionMatrix * position;
+
+        vertPos.xyz /= vertPos.w;
+        vertPos.xy = (vertPos.xy + vec2(1.0)) * u_scaledResolution * 0.5;
+        vertPos.xy = floor(vertPos.xy);
+        vertPos.xy = ((vertPos.xy / u_scaledResolution) * 2.0) - 1.0;
+        vertPos.xyz *= vertPos.w;
+        gl_Position = vertPos;
+#else
         gl_Position = u_viewProjectionMatrix * position;
+#endif
 
         v_worldPosition = position.xyz;
         v_normal = u_normalMatrix * a_normal;
