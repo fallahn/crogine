@@ -43,10 +43,18 @@ source distribution.
 
 #include <functional>
 
+namespace
+{
+    constexpr std::int32_t MaxGolfPlayers = 16;
+    constexpr std::int32_t MaxBilliardsPlayers = 2;
+}
+
 Server::Server()
     : m_maxConnections  (ConstVal::MaxClients),
     m_running           (false),
     m_gameMode          (GameMode::None),
+    m_maxPlayers        (MaxGolfPlayers),
+    m_playerCount       (0),
     m_clientCount       (0)
 {
 
@@ -75,6 +83,20 @@ void Server::launch(std::size_t maxConnections, std::int32_t gameMode)
     m_maxConnections = std::max(std::size_t(1u), std::min(std::size_t(ConstVal::MaxClients), maxConnections));
     m_gameMode = gameMode;
 
+    switch (gameMode)
+    {
+    default: 
+        stop();
+        LogE << "Invalid Game Mode: Quitting Server" << std::endl;
+        return;
+    case GameMode::Golf:
+        m_maxPlayers = MaxGolfPlayers;
+        break;
+    case GameMode::Billiards:
+        m_maxPlayers = MaxBilliardsPlayers;
+        break;
+    }
+
     m_running = true;
     m_thread = std::make_unique<std::thread>(&Server::run, this);
 }
@@ -89,6 +111,7 @@ void Server::stop()
         m_thread.reset();
     }
     m_gameMode = GameMode::None;
+    m_playerCount = 0;
 }
 
 bool Server::addLocalConnection(net::NetClient& client)
@@ -188,8 +211,11 @@ void Server::run()
                     }
                     else
                     {
-                        validatePeer(evt.peer);
+                        m_sharedData.host.sendPacket(evt.peer, PacketID::ClientPlayerCount, std::uint8_t(0), net::NetFlag::Reliable);
                     }
+                    break;
+                case PacketID::ClientPlayerCount:
+                    validatePeer(evt.peer, evt.packet.as<std::uint8_t>());
                     break;
                 case PacketID::PlayerXP:
                     m_sharedData.host.broadcastPacket(PacketID::PlayerXP, evt.packet.as<std::uint16_t>(), net::NetFlag::Reliable);
@@ -296,7 +322,7 @@ void Server::checkPending()
         }), m_pendingConnections.end());
 }
 
-void Server::validatePeer(net::NetPeer& peer)
+void Server::validatePeer(net::NetPeer& peer, std::uint8_t playerCount)
 {
     auto result = std::find_if(m_pendingConnections.begin(), m_pendingConnections.end(),
         [&peer](const PendingConnection& pc)
@@ -306,7 +332,7 @@ void Server::validatePeer(net::NetPeer& peer)
 
     if (result != m_pendingConnections.end())
     {
-        if (auto i = addClient(peer); i >= m_maxConnections)
+        if (auto i = addClient(peer, playerCount); i >= m_maxConnections)
         {
             //tell client server is full
             m_sharedData.host.sendPacket(peer, PacketID::ConnectionRefused, std::uint8_t(MessageType::ServerFull), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
@@ -326,33 +352,38 @@ void Server::validatePeer(net::NetPeer& peer)
     }
 }
 
-std::uint8_t Server::addClient(const net::NetPeer& peer)
+std::uint8_t Server::addClient(const net::NetPeer& peer, std::uint8_t playerCount)
 {
-    std::uint8_t i = 0;
-    for (; i < m_sharedData.clients.size(); ++i)
+    if (m_playerCount + playerCount <= m_maxPlayers)
     {
-        if (!m_sharedData.clients[i].connected)
+        std::uint8_t i = 0;
+        for (; i < m_sharedData.clients.size(); ++i)
         {
-            LOG("Added client to server with id " + std::to_string(peer.getID()), cro::Logger::Type::Info);
+            if (!m_sharedData.clients[i].connected)
+            {
+                LOG("Added client to server with id " + std::to_string(peer.getID()), cro::Logger::Type::Info);
 
-            m_sharedData.clients[i].connected = true;
-            m_sharedData.clients[i].peer = peer;
+                m_sharedData.clients[i].connected = true;
+                m_sharedData.clients[i].peer = peer;
 
-            //broadcast to all connected clients
-            //so they can update lobby view.
-            m_sharedData.host.broadcastPacket(PacketID::ClientConnected, i, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                //broadcast to all connected clients
+                //so they can update lobby view.
+                m_sharedData.host.broadcastPacket(PacketID::ClientConnected, i, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
 
-            auto* msg = m_sharedData.messageBus.post<ConnectionEvent>(sv::MessageID::ConnectionMessage);
-            msg->clientID = i;
-            msg->type = ConnectionEvent::Connected;
+                auto* msg = m_sharedData.messageBus.post<ConnectionEvent>(sv::MessageID::ConnectionMessage);
+                msg->clientID = i;
+                msg->type = ConnectionEvent::Connected;
 
-            m_clientCount++;
+                m_clientCount++;
+                m_playerCount += playerCount;
 
-            break;
+                break;
+            }
         }
+        return i;
     }
 
-    return i;
+    return ConstVal::NullValue;
 }
 
 void Server::removeClient(const net::NetEvent& evt)
@@ -372,6 +403,8 @@ void Server::removeClient(const net::NetEvent& evt)
 
     if (result != m_sharedData.clients.end())
     {
+        m_playerCount -= result->playerCount;
+
         *result = sv::ClientConnection(); //resets the data, setting 'connected' to false etc
 
         auto playerID = std::distance(m_sharedData.clients.begin(), result);
