@@ -655,7 +655,8 @@ void GolfState::buildUI()
                 auto oldCam = m_gameScene.setActiveCamera(m_mapCam);
                 m_gameScene.getSystem<cro::CameraSystem>()->process(0.f);
 
-                cro::Colour c(std::uint8_t(39), 56, 153);
+                cro::Colour c = cro::Colour::Transparent;
+                //cro::Colour c(std::uint8_t(39), 56, 153);
                 m_mapTexture.clear(c);
                 m_gameScene.render();
                 m_mapTexture.display();
@@ -2754,14 +2755,16 @@ void GolfState::retargetMinimap(bool reset)
         target.end.tilt = m_minimapZoom.tilt + cro::Util::Maths::shortestRotation(m_minimapZoom.tilt, rotation);
 
 
+        target.end.pan = glm::vec2(player.x, -player.z);
+
         //if we have a tight dogleg, such as on the mini putt
         //check if the primary target is inbetween and shift
         //towards it to better centre the hole
         auto targ = m_holeData[m_currentHole].target;
         glm::vec2 targDir(targ.x - player.x, -targ.z + player.z);
-        const auto d = glm::dot(dir, targDir);
+        const auto d = glm::dot(glm::normalize(dir), glm::normalize(targDir));
         const auto l2 = glm::length2(targDir);
-        if (d > 0 && l2 > 2.25f && l2 < glm::length2(dir))
+        if (d > 0 && d < 0.8f && l2 > 2.25f && l2 < glm::length2(dir))
         {
             //project the target onto the current dir
             //then move half way between projection and
@@ -2771,12 +2774,12 @@ void GolfState::retargetMinimap(bool reset)
             //actually just moving towards the target seems to work better
             auto p = dir / 2.f;
             p += (targDir - p) / 2.f;
-            target.end.pan = glm::vec2(player.x, -player.z) + p;
+            target.end.pan += p;
         }
         else
         {
             //centre view between player and flag
-            target.end.pan = glm::vec2(player.x, -player.z) + (dir / 2.f);
+            target.end.pan += (dir / 2.f);
         }
         //(pan is in texture coords hum)
         target.end.pan *= m_minimapZoom.mapScale;
