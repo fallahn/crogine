@@ -1686,6 +1686,12 @@ void GolfState::loadAssets()
     m_resolutionBuffer.addShader(*shader);
     m_materialIDs[MaterialID::CelSkinned] = m_resources.materials.add(*shader);
 
+    m_resources.shaders.loadFromString(ShaderID::Flag, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n#define SKINNED\n" + wobble);
+    shader = &m_resources.shaders.get(ShaderID::Flag);
+    m_scaleBuffer.addShader(*shader);
+    m_resolutionBuffer.addShader(*shader);
+    m_materialIDs[MaterialID::Flag] = m_resources.materials.add(*shader);
+
     m_resources.shaders.loadFromString(ShaderID::Ball, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n" + wobble);
     shader = &m_resources.shaders.get(ShaderID::Ball);
     m_scaleBuffer.addShader(*shader);
@@ -3346,6 +3352,7 @@ void GolfState::buildScene()
     md.createModel(entity);
     if (md.hasSkeleton())
     {
+        entity.getComponent<cro::Model>().setMaterial(0, m_resources.materials.get(m_materialIDs[MaterialID::Flag]));
         entity.getComponent<cro::Skeleton>().play(0);
     }
     entity.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniGreen | RenderFlags::MiniMap));

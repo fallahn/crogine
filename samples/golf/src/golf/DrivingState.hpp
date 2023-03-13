@@ -119,6 +119,7 @@ private:
         {
             Billboard,
             Cel,
+            CelSkinned,
             CelTextured,
             CelTexturedSkinned,
             Course,

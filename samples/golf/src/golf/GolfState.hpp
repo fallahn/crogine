@@ -185,6 +185,7 @@ private:
             Trophy,
             Beacon,
             PuttAssist,
+            Flag,
 
             Count
         };

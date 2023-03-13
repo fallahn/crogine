@@ -849,6 +849,7 @@ void DrivingState::loadAssets()
 
     //models
     m_resources.shaders.loadFromString(ShaderID::Cel, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n" + wobble);
+    m_resources.shaders.loadFromString(ShaderID::CelSkinned, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n#define SKINNED\n" + wobble);
     m_resources.shaders.loadFromString(ShaderID::CelTextured, CelVertexShader, CelFragmentShader, "#define TEXTURED\n" + wobble);
     m_resources.shaders.loadFromString(ShaderID::CelTexturedSkinned, CelVertexShader, CelFragmentShader, "#define FADE_INPUT\n#define TEXTURED\n#define SKINNED\n#define NOCHEX\n" + wobble);
     m_resources.shaders.loadFromString(ShaderID::Course, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define RX_SHADOWS\n" + wobble);
@@ -866,6 +867,11 @@ void DrivingState::loadAssets()
     m_resolutionBuffer.addShader(*shader);
     m_materialIDs[MaterialID::Cel] = m_resources.materials.add(*shader);
     
+    shader = &m_resources.shaders.get(ShaderID::CelSkinned);
+    m_scaleBuffer.addShader(*shader);
+    m_resolutionBuffer.addShader(*shader);
+    m_materialIDs[MaterialID::CelSkinned] = m_resources.materials.add(*shader);
+
     shader = &m_resources.shaders.get(ShaderID::CelTextured);
     m_scaleBuffer.addShader(*shader);
     m_resolutionBuffer.addShader(*shader);
@@ -2546,6 +2552,7 @@ void DrivingState::createFlag()
     md.createModel(entity);
     if (md.hasSkeleton())
     {
+        entity.getComponent<cro::Model>().setMaterial(0, m_resources.materials.get(m_materialIDs[MaterialID::CelSkinned]));
         entity.getComponent<cro::Skeleton>().play(0);
     }
     
