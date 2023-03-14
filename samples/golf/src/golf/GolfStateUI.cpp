@@ -276,15 +276,41 @@ void GolfState::buildUI()
     entity.getComponent<UIElement>().absolutePosition = { 0.f, -UIBarHeight };
     entity.getComponent<UIElement>().depth = 0.05f;
     entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Callback>().setUserData<std::uint32_t>(0u); //index of button animation
     entity.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
     entity.getComponent<cro::Text>().setFillColour(TextHighlightColour);
     centreText(entity);
     infoEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     auto ffEnt = entity;
+
+    cro::SpriteSheet buttonSprites;
+    buttonSprites.loadFromFile("assets/golf/sprites/controller_buttons.spt", m_resources.textures);
+
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 32.f, -12.f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = buttonSprites.getSprite("button_a");
+    entity.addComponent<cro::SpriteAnimation>();
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [ffEnt](cro::Entity e, float)
+    {
+        if (cro::GameController::getControllerCount() != 0)
+        {
+            e.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+            e.getComponent<cro::SpriteAnimation>().play(ffEnt.getComponent<cro::Callback>().getUserData<std::uint32_t>());
+        }
+        else
+        {
+            e.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+        }
+    };
+    ffEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
     static constexpr glm::vec2 BarSize(30.f, 2.f); //actually half-size
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 0.f, -10.f });
+    entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>().setVertexData(
         {
             cro::Vertex2D(glm::vec2(-BarSize.x, BarSize.y), TextHighlightColour),
@@ -314,10 +340,12 @@ void GolfState::buildUI()
             verts[4].position = { xPos, BarSize.y };
             verts[5].position = { xPos, -BarSize.y };
 
-            e.getComponent<cro::Transform>().setPosition({ ffEnt.getComponent<cro::Transform>().getOrigin().x, -12.f });
+            e.getComponent<cro::Transform>().setPosition({ ffEnt.getComponent<cro::Transform>().getOrigin().x, -14.f });
         }
     };
     ffEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    
 
     //club info
     entity = m_uiScene.createEntity();
@@ -2560,13 +2588,13 @@ void GolfState::updateSkipMessage(float dt)
                         //set correct button icon
                         if (cro::GameController::hasPSLayout(activeControllerID(m_currentPlayer.player)))
                         {
-
+                            e.getComponent<cro::Callback>().setUserData<std::uint32_t>(1); //used as animation ID
                         }
                         else
                         {
-
+                            e.getComponent<cro::Callback>().setUserData<std::uint32_t>(0);
                         }
-                        e.getComponent<cro::Text>().setString("Hold    to Skip");
+                        e.getComponent<cro::Text>().setString("Hold  to Skip");
                     }
                     else
                     {
