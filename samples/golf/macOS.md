@@ -49,7 +49,7 @@ sudo make install
 When the library has installed change to the golf directory
 
 ```shell
-cd ../../samples/golf
+cd ../samples/golf
 ```
 
 And configure CMake
