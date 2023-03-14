@@ -413,6 +413,17 @@ float InputParser::getRotation() const
     return m_rotation;
 }
 
+bool InputParser::getButtonState(std::int32_t binding) const
+{
+    switch (binding)
+    {
+    default: return false;
+    case InputBinding::Action:
+        return (m_inputFlags & InputFlag::Action) != 0;
+        //TODO stop being lazy and implement the rest of these...
+    }
+}
+
 float InputParser::getPower() const
 {
     return MinPower + (MaxPower * cro::Util::Easing::easeInSine(m_power));

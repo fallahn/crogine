@@ -288,7 +288,7 @@ static inline std::int32_t activeControllerID(std::int32_t bestMatch)
             return i;
         }
     }
-    return -1;
+    return 0;
 }
 
 template <typename T>

@@ -55,6 +55,7 @@ public:
     float getRotation() const; //relative rotation
     float getDirection() const { return m_holeDirection; }
     float getCamMotion() const { return m_camMotion; }
+    bool getButtonState(std::int32_t binding) const;
 
     float getPower() const; //0-1 multiplied by selected club
     float getHook() const; //-1 to -1 * some angle, club defined

@@ -881,18 +881,18 @@ void GolfState::setNextHole()
 
 void GolfState::skipCurrentTurn(std::uint8_t clientID)
 {
-    //TODO signal whether we're already doing this or not?
-    //although if we just do it here it should be complete
-    //before the next call anyway...
     if (m_playerInfo[0].client == clientID)
     {
         switch (m_playerInfo[0].ballEntity.getComponent<Ball>().state)
         {
-        default: break;
-        case Ball::State::Roll:
+        default:
+            LogI << "Skipped FF request" << std::endl;            
+            break;
+        //case Ball::State::Roll:
         case Ball::State::Flight:
-        case Ball::State::Putt:
-            //presuably same as runPrediction() only with prediction flag false? Or prediction flag set to skip so we know which dummy event to use
+        //case Ball::State::Putt:
+            m_scene.getSystem<BallSystem>()->fastForward(m_playerInfo[0].ballEntity);
+            LogI << "Ran fast forward" << std::endl;
             break;
         }
     }

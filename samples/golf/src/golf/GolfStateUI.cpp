@@ -42,6 +42,7 @@ source distribution.
 #include "FloatingTextSystem.hpp"
 #include "PacketIDs.hpp"
 #include "MiniBallSystem.hpp"
+#include "BallSystem.hpp"
 #include "CallbackData.hpp"
 #include "InterpolationSystem.hpp"
 #include "../ErrorCheck.hpp"
@@ -196,7 +197,7 @@ void GolfState::buildUI()
     entity.addComponent<cro::Drawable2D>();
     auto infoEnt = entity;
     createSwingMeter(infoEnt);
-    
+
     auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
 
     //player's name
@@ -227,32 +228,32 @@ void GolfState::buildUI()
     entity.addComponent<cro::Callback>().setUserData<std::pair<std::int32_t, float>>(1, 0.f);
     entity.getComponent<cro::Callback>().function =
         [nameEnt](cro::Entity e, float dt)
+    {
+        auto end = nameEnt.getComponent<cro::Drawable2D>().getLocalBounds().width;
+        e.getComponent<cro::Transform>().setPosition({ end + 6.f, 4.f });
+
+        float scale = 0.f;
+        auto& [direction, currTime] = e.getComponent<cro::Callback>().getUserData<std::pair<std::int32_t, float>>();
+        if (direction == 0)
         {
-            auto end = nameEnt.getComponent<cro::Drawable2D>().getLocalBounds().width;
-            e.getComponent<cro::Transform>().setPosition({ end + 6.f, 4.f });
-
-            float scale = 0.f;
-            auto& [direction, currTime] = e.getComponent<cro::Callback>().getUserData<std::pair<std::int32_t, float>>();
-            if (direction == 0)
+            //grow
+            currTime = std::min(1.f, currTime + (dt * 3.f));
+            scale = cro::Util::Easing::easeOutQuint(currTime);
+        }
+        else
+        {
+            //shrink
+            currTime = std::max(0.f, currTime - (dt * 3.f));
+            if (currTime == 0)
             {
-                //grow
-                currTime = std::min(1.f, currTime + (dt * 3.f));
-                scale = cro::Util::Easing::easeOutQuint(currTime);
+                e.getComponent<cro::Callback>().active = false;
             }
-            else
-            {
-                //shrink
-                currTime = std::max(0.f, currTime - (dt * 3.f));
-                if (currTime == 0)
-                {
-                    e.getComponent<cro::Callback>().active = false;
-                }
 
-                scale = cro::Util::Easing::easeInQuint(currTime);
-            }
-            
-            e.getComponent<cro::Transform>().setScale({ scale, scale });
-        };
+            scale = cro::Util::Easing::easeInQuint(currTime);
+        }
+
+        e.getComponent<cro::Transform>().setScale({ scale, scale });
+    };
     nameEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     //hole distance
@@ -265,6 +266,58 @@ void GolfState::buildUI()
     entity.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
     entity.getComponent<cro::Text>().setFillColour(LeaderboardTextLight);
     infoEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+    //fast forward option
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::FastForward | CommandID::UI::UIElement;
+    entity.addComponent<UIElement>().relativePosition = { 0.5f, 1.f };
+    entity.getComponent<UIElement>().absolutePosition = { 0.f, -UIBarHeight };
+    entity.getComponent<UIElement>().depth = 0.05f;
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
+    entity.getComponent<cro::Text>().setFillColour(TextHighlightColour);
+    centreText(entity);
+    infoEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    auto ffEnt = entity;
+    static constexpr glm::vec2 BarSize(30.f, 2.f); //actually half-size
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, -10.f });
+    entity.addComponent<cro::Drawable2D>().setVertexData(
+        {
+            cro::Vertex2D(glm::vec2(-BarSize.x, BarSize.y), TextHighlightColour),
+            cro::Vertex2D(-BarSize, TextHighlightColour),
+
+            cro::Vertex2D(glm::vec2(0.f), TextHighlightColour),
+            cro::Vertex2D(glm::vec2(0.f), TextHighlightColour),
+
+            cro::Vertex2D(glm::vec2(0.f), LeaderboardTextDark),
+            cro::Vertex2D(glm::vec2(0.f), LeaderboardTextDark),
+
+            cro::Vertex2D(BarSize, LeaderboardTextDark),
+            cro::Vertex2D(glm::vec2(BarSize.x, -BarSize.y), LeaderboardTextDark),
+        });
+    entity.getComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLE_STRIP);
+    entity.getComponent<cro::Drawable2D>().updateLocalBounds();
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&, ffEnt](cro::Entity e, float)
+    {
+        if (ffEnt.getComponent<cro::Transform>().getScale().x != 0)
+        {
+            const float xPos = ((BarSize.x * 2.f) * (m_skipState.currentTime / SkipState::SkipTime)) - BarSize.x;
+            auto& verts = e.getComponent<cro::Drawable2D>().getVertexData();
+            verts[2].position = { xPos, BarSize.y };
+            verts[3].position = { xPos, -BarSize.y };
+            verts[4].position = { xPos, BarSize.y };
+            verts[5].position = { xPos, -BarSize.y };
+
+            e.getComponent<cro::Transform>().setPosition({ ffEnt.getComponent<cro::Transform>().getOrigin().x, -12.f });
+        }
+    };
+    ffEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     //club info
     entity = m_uiScene.createEntity();
@@ -2485,6 +2538,87 @@ void GolfState::toggleQuitReady()
             m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
         }
     }
+}
+
+void GolfState::updateSkipMessage(float dt)
+{
+    if (m_skipState.state == static_cast<std::int32_t>(Ball::State::Flight))
+    {
+        if (!m_skipState.wasSkipped)
+        {
+            if (m_skipState.previousState != m_skipState.state)
+            {
+                //state has changed, set visible
+                cro::Command cmd;
+                cmd.targetFlags = CommandID::UI::FastForward;
+                cmd.action = [&](cro::Entity e, float)
+                {
+                    e.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+
+                    if (cro::GameController::getControllerCount() != 0)
+                    {
+                        //set correct button icon
+                        if (cro::GameController::hasPSLayout(activeControllerID(m_currentPlayer.player)))
+                        {
+
+                        }
+                        else
+                        {
+
+                        }
+                        e.getComponent<cro::Text>().setString("Hold    to Skip");
+                    }
+                    else
+                    {
+                        e.getComponent<cro::Text>().setString("Hold " + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::Action]) + " to Skip");
+                    }
+                    centreText(e);
+                };
+                m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+            }
+
+            //read input
+            if (cro::Keyboard::isKeyPressed(m_sharedData.inputBinding.keys[InputBinding::Action])
+                || cro::GameController::isButtonPressed(activeControllerID(m_currentPlayer.player), m_sharedData.inputBinding.buttons[InputBinding::Action]))
+            {
+                m_skipState.currentTime = std::min(SkipState::SkipTime, m_skipState.currentTime + dt);
+                if (m_skipState.currentTime == SkipState::SkipTime)
+                {
+                    m_sharedData.clientConnection.netClient.sendPacket(PacketID::SkipTurn, m_sharedData.localConnectionData.connectionID, net::NetFlag::Reliable);
+                    m_skipState.wasSkipped = true;
+
+                    //hide message
+                    cro::Command cmd;
+                    cmd.targetFlags = CommandID::UI::FastForward;
+                    cmd.action = [](cro::Entity e, float)
+                    {
+                        e.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+                    };
+                    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+                }
+            }
+            else
+            {
+                m_skipState.currentTime = 0.f;
+            }
+        }
+    }
+    else
+    {
+        if (m_skipState.previousState != m_skipState.state)
+        {
+            //state has changed, hide
+            cro::Command cmd;
+            cmd.targetFlags = CommandID::UI::FastForward;
+            cmd.action = [](cro::Entity e, float)
+            {
+                e.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+            };
+            m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+        }
+    }
+
+    m_skipState.previousState = m_skipState.state;
 }
 
 void GolfState::refreshUI()

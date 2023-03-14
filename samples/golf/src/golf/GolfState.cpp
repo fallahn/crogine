@@ -275,7 +275,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
             }
         }
     }
-    if (clientCount == /*ConstVal::MaxClients*/4)
+    if (clientCount == /*ConstVal::MaxClients*/4) //achievement is for 4
     {
         Achievements::awardAchievement(AchievementStrings[AchievementID::BetterWithFriends]);
     }
@@ -429,7 +429,8 @@ bool GolfState::handleEvent(const cro::Event& evt)
             m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, std::uint8_t(ServerCommand::EndGame), net::NetFlag::Reliable);
             break;
         case SDLK_F7:
-            showCountdown(30);
+            m_sharedData.clientConnection.netClient.sendPacket(PacketID::SkipTurn, m_sharedData.localConnectionData.connectionID, net::NetFlag::Reliable);
+            //showCountdown(30);
             //showMessageBoard(MessageBoardID::Scrub);
             //requestStackPush(StateID::Tutorial);
             //showNotification("buns");
@@ -1421,8 +1422,9 @@ bool GolfState::simulate(float dt)
         {
             updateCameraHeight(movement * dt);
         }
-    }
 
+        updateSkipMessage(dt);
+    }
 
     m_emoteWheel.update(dt);
     m_gameScene.simulate(dt);
@@ -5891,6 +5893,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     m_turnTimer.restart();
     m_idleTimer.restart();
     idleTime = cro::seconds(90.f);
+    m_skipState = {};
 
     m_gameScene.getDirector<GolfSoundDirector>()->setActivePlayer(player.client, player.player);
     m_avatars[player.client][player.player].ballModel.getComponent<cro::Transform>().setScale(glm::vec3(1.f));
@@ -6504,10 +6507,7 @@ void GolfState::updateActor(const ActorInfo& update)
             if (active)
             {
                 //cro::Transform::QUAT_IDENTITY;
-                interp.addPoint({ update.position, /*update.velocity*/glm::vec3(0.f), cro::Util::Net::decompressQuat(update.rotation), update.timestamp});
-
-
-                //e.getComponent<cro::Transform>().setPosition(update.position);
+                interp.addPoint({ update.position, glm::vec3(0.f), cro::Util::Net::decompressQuat(update.rotation), update.timestamp});
 
                 //update spectator camera
                 cro::Command cmd2;
@@ -6580,6 +6580,13 @@ void GolfState::updateActor(const ActorInfo& update)
             e.getComponent<cro::Transform>().setOrigin({ bounds.width, 0.f });
         };
         m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+        //set the skip state so we can tell if we're allowed to skip
+        m_skipState.state = update.state;
+    }
+    else
+    {
+        m_skipState.state = -1;
     }
 
 

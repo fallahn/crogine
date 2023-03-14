@@ -114,6 +114,8 @@ public:
     //reducing the timestep runs this faster, though less accurately
     void runPrediction(cro::Entity, float timestep = 1.f/60.f);
 
+    void fastForward(cro::Entity);
+
 #ifdef CRO_DEBUG_
     void setDebugFlags(std::int32_t);
     void renderDebug(const glm::mat4&, glm::uvec2);
@@ -162,7 +164,16 @@ private:
     std::unique_ptr<BulletDebug> m_debugDraw;
 #endif
 
-    bool m_predicting;
+    struct ProcessFlags final
+    {
+        enum
+        {
+            Predicting = (1 << 0),
+            FastForward = (1 << 1)
+        };
+    };
+    std::uint32_t m_processFlags;
+    void fastProcess(cro::Entity, float);
     GolfBallEvent* postEvent() const;
 
     void processEntity(cro::Entity, float);
