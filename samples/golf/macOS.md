@@ -81,3 +81,12 @@ This command requires sudo as it will need to copy the libbullet libraries and m
 ```shell
 sudo chown -Rv $USER Release
 ```
+
+Copy to /Applications/golf.app 
+
+Finally, you'll need to add `golf.app` to the firewall and unblock it so that network connections are allowed
+
+```
+sudo /usr/libexec/ApplicationFirewall/socketfilterfw --add /Applications/golf.app
+sudo /usr/libexec/ApplicationFirewall/socketfilterfw --unblockapp /Applications/golf.app
+```
