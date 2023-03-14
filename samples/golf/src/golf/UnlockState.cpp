@@ -276,7 +276,7 @@ void UnlockState::buildScene()
     {
         auto windowSize = glm::vec2(GolfGame::getActiveTarget()->getSize());
 
-        auto size = PreviewSize * static_cast<std::uint32_t>(windowSize.x / calcVPDivisor());
+        auto size = PreviewSize * static_cast<std::uint32_t>(getViewScale());
         m_modelTexture.create(size, size, true, false, m_sharedData.multisamples);
 
         cam.setPerspective(70.f * cro::Util::Const::degToRad, 1.f, 0.1f, 10.f);
@@ -638,7 +638,7 @@ void UnlockState::buildUI()
         cam.setOrthographic(0.f, size.x, 0.f, size.y, -2.f, 10.f);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
 
-        m_viewScale = glm::vec2(std::floor(size.x / calcVPDivisor()));
+        m_viewScale = glm::vec2(getViewScale());
         rootNode.getComponent<cro::Transform>().setScale(m_viewScale);
         rootNode.getComponent<cro::Transform>().setPosition(size / 2.f);
 

@@ -196,7 +196,7 @@ void MenuState::createBallScene()
 
         auto windowSize = static_cast<float>(cro::App::getWindow().getSize().x);
 
-        float windowScale = std::floor(windowSize / calcVPDivisor());
+        float windowScale = getViewScale();
         float scale = m_sharedData.pixelScale ? windowScale : 1.f;
         
         auto invScale = static_cast<std::uint32_t>((windowScale + 1.f) - scale);
@@ -640,7 +640,7 @@ void MenuState::createAvatarScene()
     {
         auto windowSize = static_cast<float>(cro::App::getWindow().getSize().x);
 
-        float windowScale = std::floor(windowSize / calcVPDivisor());
+        float windowScale = getViewScale();
         float scale = m_sharedData.pixelScale ? windowScale : 1.f;
         auto size = AvatarPreviewSize * static_cast<std::uint32_t>((windowScale + 1.f) - scale);
         m_avatarTexture.create(size.x, size.y);

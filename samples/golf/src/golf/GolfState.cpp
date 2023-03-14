@@ -3827,7 +3827,7 @@ void GolfState::buildScene()
     auto updateView = [&](cro::Camera& cam)
     {
         auto winSize = glm::vec2(cro::App::getWindow().getSize());
-        float maxScale = std::floor(winSize.x / calcVPDivisor());
+        float maxScale = getViewScale();
         float scale = m_sharedData.pixelScale ? maxScale : 1.f;
         auto texSize = winSize / scale;
 

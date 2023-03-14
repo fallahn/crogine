@@ -184,7 +184,7 @@ void LoadingScreen::update()
 
         m_projectionMatrix = glm::ortho(0.f, windowSize.x, 0.f, windowSize.y, -0.1f, 10.f);
 
-        float texSize = static_cast<float>(m_texture.getSize().x) * std::floor(windowSize.x / calcVPDivisor());
+        float texSize = static_cast<float>(m_texture.getSize().x) * getViewScale();
         m_transform = glm::translate(glm::mat4(1.f), { (windowSize.x - texSize) / 2.f, (windowSize.y - texSize) / 2.f, 0.f });
         m_transform = glm::scale(m_transform, { texSize, texSize, 1.f });
 

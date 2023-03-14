@@ -1447,7 +1447,7 @@ void DrivingState::createScene()
     {
 
         auto winSize = glm::vec2(cro::App::getWindow().getSize());
-        auto maxScale = std::floor(winSize.x / calcVPDivisor());
+        auto maxScale = getViewScale();
         float scale = m_sharedData.pixelScale ? maxScale : 1.f;
         auto texSize = winSize / scale;
 

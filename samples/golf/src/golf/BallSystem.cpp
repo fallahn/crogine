@@ -287,8 +287,6 @@ void BallSystem::fastProcess(cro::Entity entity, float dt)
     predictionEvent = {};
     do
     {
-        //TODO this doesn't include any wind changes as it's
-        //not processed (it would affect the wind state)
         processEntity(entity, dt);
     } while (predictionEvent.type == GolfBallEvent::None && --maxTries);
 }

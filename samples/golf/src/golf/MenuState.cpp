@@ -138,7 +138,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     std::fill(m_hairIndices.begin(), m_hairIndices.end(), 0);    
 
     auto size = glm::vec2(GolfGame::getActiveTarget()->getSize());
-    m_viewScale = glm::vec2(std::floor(size.x / calcVPDivisor()));
+    m_viewScale = glm::vec2(getViewScale());
 
     Achievements::setActive(true);
     
@@ -1234,7 +1234,7 @@ void MenuState::createScene()
     auto updateView = [&](cro::Camera& cam)
     {
         auto winSize = glm::vec2(cro::App::getWindow().getSize());
-        float maxScale = std::floor(winSize.x / calcVPDivisor());
+        float maxScale = getViewScale();
         float scale = m_sharedData.pixelScale ? maxScale : 1.f;
         auto texSize = winSize / scale;
 

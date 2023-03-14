@@ -1725,7 +1725,7 @@ void BilliardsState::resizeBuffers()
 {
     glm::vec2 winSize(cro::App::getWindow().getSize());
 
-    float maxScale = std::floor(winSize.x / calcVPDivisor());
+    float maxScale = getViewScale();
     float scale = m_sharedData.pixelScale ? maxScale : 1.f;
     auto texSize = winSize / scale;
 

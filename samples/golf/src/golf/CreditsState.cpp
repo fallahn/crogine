@@ -260,7 +260,7 @@ void CreditsState::buildScene()
    
     glm::vec2 size(GolfGame::getActiveTarget()->getSize());
 
-    auto scale = std::floor(size.x / calcVPDivisor());
+    auto scale = getViewScale();
     auto scrollOffset = ((size.y / scale) / 2.f) + (UITextPosV * 2.f);
 
     auto scrollNode = m_scene.createEntity();
@@ -345,7 +345,7 @@ void CreditsState::buildScene()
         cam.setOrthographic(0.f, size.x, 0.f, size.y, -2.f, 10.f);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
 
-        m_viewScale = glm::vec2(std::floor(size.x / calcVPDivisor()));
+        m_viewScale = glm::vec2(getViewScale());
         rootNode.getComponent<cro::Transform>().setScale(m_viewScale);
         rootNode.getComponent<cro::Transform>().setPosition(size / 2.f);
 

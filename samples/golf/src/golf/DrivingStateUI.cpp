@@ -618,7 +618,7 @@ void DrivingState::createUI()
         cam.setOrthographic(0.f, size.x, 0.f, size.y, -2.5f, 2.f);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
 
-        m_viewScale = glm::vec2(std::floor(size.x / calcVPDivisor()));
+        m_viewScale = glm::vec2(getViewScale());
         m_inputParser.setMouseScale(m_viewScale.x);
 
         glm::vec2 courseScale(m_sharedData.pixelScale ? m_viewScale.x : 1.f);

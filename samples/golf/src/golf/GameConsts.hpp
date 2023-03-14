@@ -353,12 +353,25 @@ static inline glm::quat lookRotation(glm::vec3 eye, glm::vec3 target, glm::vec3 
     return glm::normalize(glm::toQuat(m));
 }
 
-static inline float calcVPDivisor()
+static inline float getViewScale(glm::vec2 size = GolfGame::getActiveTarget()->getSize())
 {
-    glm::vec2 size(GolfGame::getActiveTarget()->getSize());
+    //glm::vec2 size(GolfGame::getActiveTarget()->getSize());
     const float ratio = size.x / size.y;
 
-    return (ratio < 1.7f) ? 512.f : (ratio < 2.37f) ?  540.f : 860.f; //TODO ugh this needs to be 680 for 2560x1080
+    if (ratio < 1.7)
+    {
+        //4:3
+        return std::floor(size.x / 512.f);
+    }
+
+    if (ratio < 2.37f)
+    {
+        //widescreen
+        return std::floor(size.x / 540.f);
+    }
+
+    //ultrawide
+    return std::floor(size.y / 360.f);
 }
 
 //static inline glm::vec2 calcVPSize()

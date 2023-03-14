@@ -853,7 +853,7 @@ void PlaylistState::buildScene()
     auto updateView = [&](cro::Camera& cam)
     {
         auto winSize = glm::vec2(cro::App::getWindow().getSize());
-        float maxScale = std::floor(winSize.x / calcVPDivisor());
+        float maxScale = getViewScale();
         float scale = m_sharedData.pixelScale ? maxScale : 1.f;
         auto texSize = winSize / scale;
 
@@ -1027,7 +1027,7 @@ void PlaylistState::buildUI()
         cam.setOrthographic(0.f, size.x, 0.f, size.y, -2.f, 10.f);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
 
-        m_viewScale = glm::vec2(std::floor(size.x / calcVPDivisor()));
+        m_viewScale = glm::vec2(getViewScale());
         rootNode.getComponent<cro::Transform>().setScale(m_viewScale);
 
         updateNinePatch(ninePatch); //requires scale to be set above

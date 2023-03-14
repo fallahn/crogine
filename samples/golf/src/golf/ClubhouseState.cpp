@@ -1133,7 +1133,7 @@ void ClubhouseState::buildScene()
     auto updateView = [&](cro::Camera& cam)
     {
         auto winSize = glm::vec2(cro::App::getWindow().getSize());
-        float maxScale = std::floor(winSize.x / calcVPDivisor());
+        float maxScale = getViewScale();
         float scale = m_sharedData.pixelScale ? maxScale : 1.f;
         auto texSize = winSize / scale;
 
@@ -1195,7 +1195,7 @@ void ClubhouseState::createTableScene()
         auto texSize = BaseSize;
 
         auto winSize = glm::vec2(cro::App::getWindow().getSize());
-        float viewScale = std::floor(winSize.x / calcVPDivisor());
+        float viewScale = getViewScale();
 
         if (!m_sharedData.pixelScale)
         {
