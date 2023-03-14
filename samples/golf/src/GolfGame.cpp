@@ -690,7 +690,7 @@ bool GolfGame::initialise()
     auto shaderRes = glm::vec2(windowSize);
     glCheck(glUseProgram(m_postShader->getGLHandle()));
     glCheck(glUniform2f(m_postShader->getUniformID("u_resolution"), shaderRes.x, shaderRes.y));
-    float scale = std::floor(shaderRes.y / calcVPSize().y);
+    float scale = std::floor(shaderRes.x / calcVPDivisor());
     glCheck(glUniform2f(m_postShader->getUniformID("u_scale"), scale, scale));
     m_uniformIDs[UniformID::Time] = m_postShader->getUniformID("u_time");
     
@@ -1061,7 +1061,7 @@ void GolfGame::recreatePostProcess()
     glCheck(glUseProgram(m_postShader->getGLHandle()));
     glCheck(glUniform2f(m_postShader->getUniformID("u_resolution"), shaderRes.x, shaderRes.y));
 
-    float scale = std::floor(shaderRes.y / calcVPSize().y);
+    float scale = std::floor(shaderRes.x / calcVPDivisor());
     glCheck(glUniform2f(m_postShader->getUniformID("u_scale"), scale, scale));
 }
 

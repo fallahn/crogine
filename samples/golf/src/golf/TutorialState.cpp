@@ -550,8 +550,7 @@ void TutorialState::buildScene()
         cam.setOrthographic(0.f, size.x, 0.f, size.y, -0.5f, 5.f);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
 
-        auto vpSize = calcVPSize();
-        m_viewScale = glm::vec2(std::floor(size.y / vpSize.y));
+        m_viewScale = glm::vec2(std::floor(size.x / calcVPDivisor()));
         rootNode.getComponent<cro::Transform>().setScale(m_viewScale);
 
         size /= m_viewScale;

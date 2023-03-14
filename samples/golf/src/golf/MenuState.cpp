@@ -138,8 +138,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     std::fill(m_hairIndices.begin(), m_hairIndices.end(), 0);    
 
     auto size = glm::vec2(GolfGame::getActiveTarget()->getSize());
-    auto vpSize = calcVPSize();
-    m_viewScale = glm::vec2(std::floor(size.y / vpSize.y));
+    m_viewScale = glm::vec2(std::floor(size.x / calcVPDivisor()));
 
     Achievements::setActive(true);
     
@@ -1234,10 +1233,8 @@ void MenuState::createScene()
     //update the 3D view
     auto updateView = [&](cro::Camera& cam)
     {
-        auto vpSize = calcVPSize();
-
         auto winSize = glm::vec2(cro::App::getWindow().getSize());
-        float maxScale = std::floor(winSize.y / vpSize.y);
+        float maxScale = std::floor(winSize.x / calcVPDivisor());
         float scale = m_sharedData.pixelScale ? maxScale : 1.f;
         auto texSize = winSize / scale;
 
@@ -1257,7 +1254,7 @@ void MenuState::createScene()
             && m_sharedData.multisamples != 0
             && !m_sharedData.pixelScale;
 
-        cam.setPerspective(m_sharedData.fov * cro::Util::Const::degToRad, texSize.x / texSize.y, 0.1f, vpSize.x);
+        cam.setPerspective(m_sharedData.fov * cro::Util::Const::degToRad, texSize.x / texSize.y, 0.1f, 600.f);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
 

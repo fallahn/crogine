@@ -1445,10 +1445,9 @@ void DrivingState::createScene()
     //update the 3D view
     auto updateView = [&](cro::Camera& cam)
     {
-        auto vpSize = calcVPSize();
 
         auto winSize = glm::vec2(cro::App::getWindow().getSize());
-        auto maxScale = std::floor(winSize.y / vpSize.y);
+        auto maxScale = std::floor(winSize.x / calcVPDivisor());
         float scale = m_sharedData.pixelScale ? maxScale : 1.f;
         auto texSize = winSize / scale;
 

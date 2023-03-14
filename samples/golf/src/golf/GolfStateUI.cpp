@@ -949,7 +949,7 @@ void GolfState::buildUI()
     {
         auto texSize = MapSize.y / 2u;
 
-        auto windowScale = std::floor(cro::App::getWindow().getSize().y / calcVPSize().y);
+        auto windowScale = std::floor(cro::App::getWindow().getSize().x / calcVPDivisor());
         float scale = m_sharedData.pixelScale ? windowScale : 1.f;
         scale = (windowScale + 1.f) - scale;
         texSize *= static_cast<std::uint32_t>(scale);
@@ -1003,8 +1003,7 @@ void GolfState::buildUI()
         cam.setOrthographic(0.f, size.x, 0.f, size.y, -3.5f, 20.f);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
 
-        auto vpSize = calcVPSize();
-        m_viewScale = glm::vec2(std::floor(size.y / vpSize.y));
+        m_viewScale = glm::vec2(std::floor(size.x / calcVPDivisor()));
         m_inputParser.setMouseScale(m_viewScale.x);
 
         glm::vec2 courseScale(m_sharedData.pixelScale ? m_viewScale.x : 1.f);
@@ -2680,10 +2679,8 @@ void GolfState::buildTrophyScene()
 {
     auto updateCam = [&](cro::Camera& cam)
     {
-        auto vpSize = calcVPSize();
-
         auto winSize = glm::vec2(480.f, 360.f);
-        float maxScale = std::floor(static_cast<float>(cro::App::getWindow().getSize().y) / vpSize.y);
+        float maxScale = std::floor(static_cast<float>(cro::App::getWindow().getSize().x) / calcVPDivisor());
         if (!m_sharedData.pixelScale)
         {
             winSize *= maxScale;

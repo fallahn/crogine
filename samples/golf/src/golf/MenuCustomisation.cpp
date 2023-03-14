@@ -194,10 +194,9 @@ void MenuState::createBallScene()
         std::uint32_t samples = m_sharedData.pixelScale ? 0 :
             m_sharedData.antialias ? m_sharedData.multisamples : 0;
 
-        auto vpSize = calcVPSize().y;
-        auto windowSize = static_cast<float>(cro::App::getWindow().getSize().y);
+        auto windowSize = static_cast<float>(cro::App::getWindow().getSize().x);
 
-        float windowScale = std::floor(windowSize / vpSize);
+        float windowScale = std::floor(windowSize / calcVPDivisor());
         float scale = m_sharedData.pixelScale ? windowScale : 1.f;
         
         auto invScale = static_cast<std::uint32_t>((windowScale + 1.f) - scale);
@@ -639,10 +638,9 @@ void MenuState::createAvatarScene()
 {
     auto avatarTexCallback = [&](cro::Camera&)
     {
-        auto vpSize = calcVPSize().y;
-        auto windowSize = static_cast<float>(cro::App::getWindow().getSize().y);
+        auto windowSize = static_cast<float>(cro::App::getWindow().getSize().x);
 
-        float windowScale = std::floor(windowSize / vpSize);
+        float windowScale = std::floor(windowSize / calcVPDivisor());
         float scale = m_sharedData.pixelScale ? windowScale : 1.f;
         auto size = AvatarPreviewSize * static_cast<std::uint32_t>((windowScale + 1.f) - scale);
         m_avatarTexture.create(size.x, size.y);

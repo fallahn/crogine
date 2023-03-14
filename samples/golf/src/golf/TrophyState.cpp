@@ -687,9 +687,7 @@ void TrophyState::buildScene()
         cam.setOrthographic(0.f, size.x, 0.f, size.y, -2.f, 10.f);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
 
-        auto vpSize = calcVPSize();
-
-        m_viewScale = glm::vec2(std::floor(size.y / vpSize.y));
+        m_viewScale = glm::vec2(std::floor(size.x / calcVPDivisor()));
 
         //don't do this unless the fade in callback is complete.
         if (rootNode.getComponent<cro::Callback>().getUserData<RootCallbackData>().state == RootCallbackData::FadeOut)
