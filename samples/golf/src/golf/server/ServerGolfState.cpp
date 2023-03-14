@@ -886,13 +886,11 @@ void GolfState::skipCurrentTurn(std::uint8_t clientID)
         switch (m_playerInfo[0].ballEntity.getComponent<Ball>().state)
         {
         default:
-            LogI << "Skipped FF request" << std::endl;            
             break;
-        //case Ball::State::Roll:
+        case Ball::State::Roll:
         case Ball::State::Flight:
-        //case Ball::State::Putt:
+        case Ball::State::Putt:
             m_scene.getSystem<BallSystem>()->fastForward(m_playerInfo[0].ballEntity);
-            LogI << "Ran fast forward" << std::endl;
             break;
         }
     }

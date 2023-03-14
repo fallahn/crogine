@@ -358,7 +358,7 @@ static inline float calcVPDivisor()
     glm::vec2 size(GolfGame::getActiveTarget()->getSize());
     const float ratio = size.x / size.y;
 
-    return (ratio < 1.7f) ? 512.f : 540.f;
+    return (ratio < 1.7f) ? 512.f : (ratio < 2.37f) ?  540.f : 860.f; //TODO ugh this needs to be 680 for 2560x1080
 }
 
 //static inline glm::vec2 calcVPSize()

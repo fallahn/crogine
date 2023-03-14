@@ -261,7 +261,7 @@ void BallSystem::fastForward(cro::Entity entity)
     m_processFlags = 0;
 
     //still have to raise the final event...
-    auto* msg = postMessage<GolfBallEvent>(MessageID::GolfMessage);
+    auto* msg = postMessage<GolfBallEvent>(sv::MessageID::GolfMessage);
     *msg = predictionEvent;
 }
 
