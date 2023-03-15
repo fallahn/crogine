@@ -288,7 +288,7 @@ void GolfState::buildUI()
     buttonSprites.loadFromFile("assets/golf/sprites/controller_buttons.spt", m_resources.textures);
 
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 32.f, -12.f });
+    entity.addComponent<cro::Transform>().setPosition({ 36.f, -12.f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = buttonSprites.getSprite("button_a");
     entity.addComponent<cro::SpriteAnimation>();
@@ -2593,7 +2593,7 @@ void GolfState::updateSkipMessage(float dt)
                         {
                             e.getComponent<cro::Callback>().setUserData<std::uint32_t>(0);
                         }
-                        e.getComponent<cro::Text>().setString("Hold  to Skip");
+                        e.getComponent<cro::Text>().setString("Hold   to Skip");
                     }
                     else
                     {

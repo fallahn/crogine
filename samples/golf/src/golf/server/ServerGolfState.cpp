@@ -47,6 +47,7 @@ source distribution.
 
 #include <crogine/util/Constants.hpp>
 #include <crogine/util/Network.hpp>
+#include <crogine/util/Random.hpp>
 #include <crogine/detail/glm/vec3.hpp>
 
 using namespace sv;
@@ -1061,6 +1062,8 @@ void GolfState::initScene()
             }
         }
     }
+
+    std::shuffle(m_playerInfo.begin(), m_playerInfo.end(), cro::Util::Random::rndEngine);
 }
 
 void GolfState::buildWorld()
