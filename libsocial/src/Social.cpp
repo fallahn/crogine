@@ -88,6 +88,7 @@ namespace
     StoredValue genericUnlock("gnc");
     StoredValue lastLog("llg");
     StoredValue dayStreak("dsk");
+    StoredValue longestStreak("lsk");
 
 
     //XP curve = (level / x) ^ y
@@ -180,6 +181,8 @@ std::uint32_t Social::getCurrentStreak()
         lastLog.write();
         dayStreak.value = 1;
         dayStreak.write();
+        longestStreak.value = 1;
+        longestStreak.write();
 
         return 1;
     }
@@ -209,6 +212,13 @@ std::uint32_t Social::getCurrentStreak()
     if (dayCount == 1)
     {
         streak++;
+
+        longestStreak.read();
+        if (streak > longestStreak.value)
+        {
+            longestStreak.value = static_cast<std::int32_t>(streak);
+            longestStreak.write();
+        }
     }
     else
     {
@@ -217,7 +227,19 @@ std::uint32_t Social::getCurrentStreak()
     dayStreak.value = static_cast<std::int32_t>(streak);
     dayStreak.write();
 
-    return streak % 7;
+    auto ret = streak % 7;
+    if (ret == 0)
+    {
+        ret = 7;
+    }
+
+    return ret;
+}
+
+std::uint32_t Social::getLongestStreak()
+{
+    longestStreak.read();
+    return longestStreak.value;
 }
 
 void Social::storeDrivingStats(const std::array<float, 3u>& topScores)

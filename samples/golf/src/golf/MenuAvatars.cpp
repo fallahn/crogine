@@ -747,4 +747,5 @@ void MenuState::createProfileLayout(cro::Entity parent, cro::Transform& menuTran
 
     //TODO club status
     //TODO current streak
+    //TODO add longest streak
 }
