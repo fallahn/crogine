@@ -1635,7 +1635,7 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
                 cmd.targetFlags = CommandID::Menu::ScoreDesc;
                 cmd.action = [&](cro::Entity e, float)
                 {
-                    e.getComponent<cro::Text>().setString(ScoreDesc[m_sharedData.scoreType]);
+                    e.getComponent<cro::Text>().setString(RuleDescriptions[m_sharedData.scoreType]);
                 };
                 m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 

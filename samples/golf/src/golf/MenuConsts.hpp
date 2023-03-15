@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2022
+Matt Marchant 2021 - 2023
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -62,18 +62,23 @@ static const std::array<std::string, 3u> ScoreTypes =
     "Stroke Play", "Match Play", "Skins"
 };
 
-static const std::array<std::string, 3u> ScoreDesc =
-{
-    "Player with the fewest total\nstrokes wins",
-    "Holes are scored individually.\nPlayer with the most holes\nwins",
-    "Holes are scored individually.\nWinner of the hole gets the\nskins pot, else the pot\nrolls over to the next hole."
-};
-
 static const std::array<std::string, 3u> GimmeString =
 {
     "No Gimme",
     "Inside the leather",
     "Inside the putter"
+};
+
+static const std::array<std::string, 3u> CourseTypes =
+{
+    "Official Courses", "User Courses", "Workshop Courses"
+};
+
+static const std::array<std::string, 3u> RuleDescriptions =
+{
+    "Player with the fewest total\nstrokes wins",
+    "Holes are scored individually.\nPlayer with the most holes\nwins",
+    "Holes are scored individually.\nWinner of the hole gets the\nskins pot, else the pot\nrolls over to the next hole."
 };
 
 static constexpr std::array<glm::vec3, 4u> EmotePositions =
