@@ -154,3 +154,8 @@ static constexpr std::array<std::int32_t, XPID::Count> XPValues =
     50,  100, 200, 300,
     10,  40,  100
 };
+
+static constexpr std::array<std::int32_t, 7u> StreakXP =
+{
+    5,11,18,26,36,50,100
+};

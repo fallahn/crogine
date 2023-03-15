@@ -101,6 +101,7 @@ public:
     static std::int32_t getXP();
     static std::int32_t getLevel();
     static ProgressData getLevelProgress();
+    static std::uint32_t getCurrentStreak();
     static void storeDrivingStats(const std::array<float, 3u>&);
     static void readDrivingStats(std::array<float, 3u>&);
     static void insertScore(const std::string&, std::uint8_t, std::int32_t) {}

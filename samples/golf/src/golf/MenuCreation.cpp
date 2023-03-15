@@ -5150,6 +5150,14 @@ void MenuState::updateCourseRuleString()
 
 void MenuState::updateUnlockedItems()
 {
+    //current day streak
+    auto streak = Social::getCurrentStreak();
+    LogI << "Current streak " << streak << " days" << std::endl;
+    if (streak != 0)
+    {
+        LogI << StreakXP[streak-1] << " xp awarded" << std::endl;
+    }
+
     //clubs
     auto clubFlags = Social::getUnlockStatus(Social::UnlockType::Club);
     if (clubFlags == 0)
