@@ -63,6 +63,9 @@ struct PlayerData final
     std::int32_t parScore = 0;
     glm::vec3 currentTarget = glm::vec3(0.f);
     cro::Colour ballTint;
+
+    bool saveProfile() const;
+    bool loadProfile(const std::string&);
 };
 
 struct ConnectionData final
@@ -172,6 +175,8 @@ struct SharedStateData final
 
     //IDs used by the unlock state to display new unlocks
     std::vector<std::int32_t> unlockedItems;
+
+    std::vector<PlayerData> playerProfiles;
 
     //client settings
     bool usePostProcess = false;

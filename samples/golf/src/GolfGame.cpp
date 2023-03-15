@@ -81,6 +81,8 @@ source distribution.
 #include <crogine/util/Random.hpp>
 #include <crogine/util/String.hpp>
 
+#include <filesystem>
+
 namespace
 {
 #include "golf/TutorialShaders.inl"
@@ -970,81 +972,123 @@ void GolfGame::savePreferences()
 
 void GolfGame::loadAvatars()
 {
+    //if we're updating attept to read existing profiles and convert them
+    std::vector<PlayerData> oldProfiles;
+
     auto path = cro::App::getPreferencePath() + "avatars.cfg";
     cro::ConfigFile cfg;
     if (cfg.loadFromFile(path, false))
     {
-        std::uint32_t i = 0;
-
         const auto& objects = cfg.getObjects();
         for (const auto& obj : objects)
         {
-            if (obj.getName() == "avatar"
-                && i < ConstVal::MaxPlayers)
+            if (obj.getName() == "avatar")
             {
+                auto& profile = oldProfiles.emplace_back();
+
                 const auto& props = obj.getProperties();
                 for (const auto& prop : props)
                 {
                     const auto& name = prop.getName();
                     if (name == "name")
                     {
-                        m_sharedData.localConnectionData.playerData[i].name = prop.getValue<cro::String>();
+                        profile.name = prop.getValue<cro::String>();
                     }
                     else if (name == "ball_id")
                     {
                         auto id = prop.getValue<std::uint32_t>();
-                        m_sharedData.localConnectionData.playerData[i].ballID = id;
+                        profile.ballID = id;
                     }
                     else if (name == "hair_id")
                     {
                         auto id = prop.getValue<std::uint32_t>();
-                        m_sharedData.localConnectionData.playerData[i].hairID = id;
+                        profile.hairID = id;
                     }
                     else if (name == "skin_id")
                     {
                         auto id = prop.getValue<std::uint32_t>();
-                        m_sharedData.localConnectionData.playerData[i].skinID = id;
+                        profile.skinID = id;
                     }
                     else if (name == "flipped")
                     {
-                        m_sharedData.localConnectionData.playerData[i].flipped = prop.getValue<bool>();
+                        profile.flipped = prop.getValue<bool>();
                     }
 
                     else if (name == "flags0")
                     {
                         auto flag = prop.getValue<std::int32_t>() % pc::PairCounts[0];
-                        m_sharedData.localConnectionData.playerData[i].avatarFlags[0] = static_cast<std::uint8_t>(flag);
+                        profile.avatarFlags[0] = static_cast<std::uint8_t>(flag);
                     }
                     else if (name == "flags1")
                     {
                         auto flag = prop.getValue<std::int32_t>() % pc::PairCounts[1];
-                        m_sharedData.localConnectionData.playerData[i].avatarFlags[1] = static_cast<std::uint8_t>(flag);
+                        profile.avatarFlags[1] = static_cast<std::uint8_t>(flag);
                     }
                     else if (name == "flags2")
                     {
                         auto flag = prop.getValue<std::int32_t>() % pc::PairCounts[2];
-                        m_sharedData.localConnectionData.playerData[i].avatarFlags[2] = static_cast<std::uint8_t>(flag);
+                        profile.avatarFlags[2] = static_cast<std::uint8_t>(flag);
                     }
                     else if (name == "flags3")
                     {
                         auto flag = prop.getValue<std::int32_t>() % pc::PairCounts[3];
-                        m_sharedData.localConnectionData.playerData[i].avatarFlags[3] = static_cast<std::uint8_t>(flag);
+                        profile.avatarFlags[3] = static_cast<std::uint8_t>(flag);
                     }
 
                     else if (name == "cpu")
                     {
-                        m_sharedData.localConnectionData.playerData[i].isCPU = prop.getValue<bool>();
+                        profile.isCPU = prop.getValue<bool>();
                     }
                 }
-
-                i++;
             }
         }
     }
 
-    if (m_sharedData.localConnectionData.playerData[0].name.empty())
+    for (const auto& p : oldProfiles)
     {
-        m_sharedData.localConnectionData.playerData[0].name = RandomNames[cro::Util::Random::value(0u, RandomNames.size() - 1)];
+        p.saveProfile();
+    }
+
+    if (cro::FileSystem::fileExists(path))
+    {
+        //delete the old file
+        std::error_code ec;
+        std::filesystem::remove({ path }, ec);
+    }
+
+    //parse profile dir and load each profile
+    path = Social::getUserContentPath(Social::UserContent::Profile);
+    if (!cro::FileSystem::directoryExists(path))
+    {
+        cro::FileSystem::createDirectory(path);
+    }
+
+    auto profileDirs = cro::FileSystem::listDirectories(path);
+    std::int32_t i = 0;
+    for (const auto& dir : profileDirs)
+    {
+        auto profilePath = path + dir + "/" + dir + ".cfg";
+        if (cro::FileSystem::fileExists(profilePath))
+        {
+            PlayerData pd;
+            if (pd.loadProfile(profilePath))
+            {
+                m_sharedData.playerProfiles.push_back(pd);
+                i++;
+            }
+        }
+
+        //arbitrary limit on profile loading.
+        if (i == 64)
+        {
+            break;
+        }
+    }
+
+    //TODO this doesn't necessesarily mean the favoured profile is at the front...
+    if (!m_sharedData.playerProfiles.empty())
+    {
+        m_sharedData.localConnectionData.playerData[0] = m_sharedData.playerProfiles[0];
     }
 }
 

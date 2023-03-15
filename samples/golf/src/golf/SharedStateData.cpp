@@ -29,6 +29,10 @@ source distribution.
 
 #include "SharedStateData.hpp"
 #include "CommonConsts.hpp"
+#include "PlayerColours.hpp"
+#include "spooky2.hpp"
+
+#include <Social.hpp>
 
 struct PacketHeader final
 {
@@ -45,6 +49,114 @@ struct BoolFlags final
         CPUPlayer = 0x2
     };
 };
+
+bool PlayerData::saveProfile() const
+{
+    cro::ConfigFile cfg("avatar");
+
+    if (!name.empty())
+    {
+        cfg.addProperty("name", name.toAnsiString());
+    }
+    cfg.addProperty("ball_id").setValue(ballID);
+    cfg.addProperty("hair_id").setValue(hairID);
+    cfg.addProperty("skin_id").setValue(skinID);
+    cfg.addProperty("flipped").setValue(flipped);
+    cfg.addProperty("flags0").setValue(avatarFlags[0]);
+    cfg.addProperty("flags1").setValue(avatarFlags[1]);
+    cfg.addProperty("flags2").setValue(avatarFlags[2]);
+    cfg.addProperty("flags3").setValue(avatarFlags[3]);
+    cfg.addProperty("cpu").setValue(isCPU);
+
+    std::uint32_t flipVal = flipped ? 0xf0 : 0x0f;
+    flipVal |= isCPU ? 0xf000 : 0x0f00;
+    std::array<std::uint32_t, 8u> hashData =
+    {
+        ballID, hairID, skinID, flipVal,
+        *reinterpret_cast<const std::uint32_t*>(avatarFlags.data()) //just remember to unbork this when updating palettes later on...
+    };
+    auto uid = std::to_string(SpookyHash::Hash32(hashData.data(), sizeof(std::uint32_t) * hashData.size(), 0));
+
+    auto path = Social::getUserContentPath(Social::UserContent::Profile);
+    if (!cro::FileSystem::directoryExists(path))
+    {
+        cro::FileSystem::createDirectory(path);
+    }
+    path += uid + "/";
+
+    if (!cro::FileSystem::directoryExists(path))
+    {
+        cro::FileSystem::createDirectory(path);
+    }
+
+    path += uid + ".cfg";
+    return cfg.save(path);
+}
+
+bool PlayerData::loadProfile(const std::string& path)
+{
+    cro::ConfigFile cfg;
+    if (cfg.loadFromFile(path, false))
+    {
+        const auto& props = cfg.getProperties();
+        for (const auto& prop : props)
+        {
+            const auto& n = prop.getName();
+            if (n == "name")
+            {
+                name = prop.getValue<cro::String>();
+            }
+            else if (n == "ball_id")
+            {
+                auto id = prop.getValue<std::uint32_t>();
+                ballID = id;
+            }
+            else if (n == "hair_id")
+            {
+                auto id = prop.getValue<std::uint32_t>();
+                hairID = id;
+            }
+            else if (n == "skin_id")
+            {
+                auto id = prop.getValue<std::uint32_t>();
+                skinID = id;
+            }
+            else if (n == "flipped")
+            {
+                flipped = prop.getValue<bool>();
+            }
+
+            else if (n == "flags0")
+            {
+                auto flag = prop.getValue<std::int32_t>() % pc::PairCounts[0];
+                avatarFlags[0] = static_cast<std::uint8_t>(flag);
+            }
+            else if (n == "flags1")
+            {
+                auto flag = prop.getValue<std::int32_t>() % pc::PairCounts[1];
+                avatarFlags[1] = static_cast<std::uint8_t>(flag);
+            }
+            else if (n == "flags2")
+            {
+                auto flag = prop.getValue<std::int32_t>() % pc::PairCounts[2];
+                avatarFlags[2] = static_cast<std::uint8_t>(flag);
+            }
+            else if (n == "flags3")
+            {
+                auto flag = prop.getValue<std::int32_t>() % pc::PairCounts[3];
+                avatarFlags[3] = static_cast<std::uint8_t>(flag);
+            }
+
+            else if (n == "cpu")
+            {
+                isCPU = prop.getValue<bool>();
+            }
+        }
+
+        return true;
+    }
+    return false;
+}
 
 std::vector<std::uint8_t> ConnectionData::serialise() const
 {
