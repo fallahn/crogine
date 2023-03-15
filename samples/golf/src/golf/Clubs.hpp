@@ -65,7 +65,7 @@ struct ClubID final
         Flags[EightIron] | Flags[PitchWedge] | Flags[GapWedge] |
         Flags[SandWedge] | Flags[Putter];
 
-    static constexpr std::int32_t FullSet = 0x1FFF;
+    static constexpr std::int32_t FullSet = 0x0FFF;
 };
 
 class Club final

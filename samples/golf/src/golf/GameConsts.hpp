@@ -355,7 +355,6 @@ static inline glm::quat lookRotation(glm::vec3 eye, glm::vec3 target, glm::vec3 
 
 static inline float getViewScale(glm::vec2 size = GolfGame::getActiveTarget()->getSize())
 {
-    //glm::vec2 size(GolfGame::getActiveTarget()->getSize());
     const float ratio = size.x / size.y;
 
     if (ratio < 1.7)
@@ -373,19 +372,6 @@ static inline float getViewScale(glm::vec2 size = GolfGame::getActiveTarget()->g
     //ultrawide
     return std::floor(size.y / 360.f);
 }
-
-//static inline glm::vec2 calcVPSize()
-//{
-//    static constexpr float ViewportHeight = 360.f;
-//    static constexpr float ViewportHeightWide = 320.f;// 300.f;
-//
-//    glm::vec2 size(GolfGame::getActiveTarget()->getSize());
-//    const float ratio = size.x / size.y;
-//    static constexpr float Widescreen = 16.f / 9.f;
-//    static constexpr float ViewportWidth = 640.f;
-//
-//    return glm::vec2(ViewportWidth, ratio < Widescreen ? ViewportHeightWide : ViewportHeight);
-//}
 
 static inline void togglePixelScale(SharedStateData& sharedData, bool on)
 {
