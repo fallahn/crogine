@@ -1984,8 +1984,8 @@ void DrivingState::createPlayer(cro::Entity courseEnt)
         return 0;
     };
 
-    auto playerIndex = cro::Util::Random::value(0, 3);
-    const auto& playerData = m_sharedData.localConnectionData.playerData[playerIndex];
+    auto playerIndex = cro::Util::Random::value(0u, m_sharedData.playerProfiles.size() - 1);
+    const auto& playerData = m_sharedData.playerProfiles[playerIndex];
     auto idx = indexFromSkinID(playerData.skinID);
 
     //3D Player Model
