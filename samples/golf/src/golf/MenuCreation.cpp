@@ -785,11 +785,20 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
 
 void MenuState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, std::uint32_t mouseExit)
 {
-    if (m_matchMaking.getUserName())
+    if (m_sharedData.localConnectionData.playerData[0].name.empty())
     {
-        auto codePoints = cro::Util::String::getCodepoints(std::string(m_matchMaking.getUserName()));
-        cro::String nameStr = cro::String::fromUtf32(codePoints.begin(), codePoints.end());
-        m_sharedData.localConnectionData.playerData[0].name = nameStr.substr(0, ConstVal::MaxStringChars);
+        if (m_matchMaking.getUserName())
+        {
+            auto codePoints = cro::Util::String::getCodepoints(std::string(m_matchMaking.getUserName()));
+            cro::String nameStr = cro::String::fromUtf32(codePoints.begin(), codePoints.end());
+            m_sharedData.localConnectionData.playerData[0].name = nameStr.substr(0, ConstVal::MaxStringChars);
+        }
+        else
+        {
+            m_sharedData.localConnectionData.playerData[0].name = RandomNames[cro::Util::Random::value(0u, RandomNames.size() - 1)];
+        }
+        m_sharedData.localConnectionData.playerData[0].saveProfile();
+        m_sharedData.playerProfiles.push_back(m_sharedData.localConnectionData.playerData[0]);
     }
 
     auto menuEntity = m_uiScene.createEntity();

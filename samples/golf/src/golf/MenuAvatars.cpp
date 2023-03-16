@@ -65,6 +65,8 @@ void MenuState::createAvatarMenuNew(cro::Entity parent, std::uint32_t mouseEnter
         {
             m_sharedData.localConnectionData.playerData[0].name = RandomNames[cro::Util::Random::value(0u, RandomNames.size() - 1)];
         }
+        m_sharedData.localConnectionData.playerData[0].saveProfile();
+        m_sharedData.playerProfiles.push_back(m_sharedData.localConnectionData.playerData[0]);
     }
 
     auto menuEntity = m_uiScene.createEntity();

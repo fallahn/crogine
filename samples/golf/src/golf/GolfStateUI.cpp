@@ -270,7 +270,7 @@ void GolfState::buildUI()
 
     //fast forward option
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Transform>().setScale(glm::vec2(0.f));
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::FastForward | CommandID::UI::UIElement;
     entity.addComponent<UIElement>().relativePosition = { 0.5f, 1.f };
     entity.getComponent<UIElement>().absolutePosition = { 0.f, -UIBarHeight };
