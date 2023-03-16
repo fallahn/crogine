@@ -1067,11 +1067,18 @@ void GolfGame::loadAvatars()
     std::int32_t i = 0;
     for (const auto& dir : profileDirs)
     {
-        auto profilePath = path + dir + "/" + dir + ".cfg";
-        if (cro::FileSystem::fileExists(profilePath))
+        auto profilePath = path + dir + "/";
+        auto files = cro::FileSystem::listFiles(profilePath);
+        files.erase(std::remove_if(files.begin(), files.end(), 
+            [](const std::string& f)
+            {
+                return cro::FileSystem::getFileExtension(f) != ".avt";
+            }), files.end());
+
+        if (!files.empty())
         {
             PlayerData pd;
-            if (pd.loadProfile(profilePath))
+            if (pd.loadProfile(profilePath + files[0], files[0].substr(0, files[0].size() - 4)))
             {
                 m_sharedData.playerProfiles.push_back(pd);
                 i++;

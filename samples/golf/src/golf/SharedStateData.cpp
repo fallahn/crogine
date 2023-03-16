@@ -89,11 +89,11 @@ bool PlayerData::saveProfile() const
         cro::FileSystem::createDirectory(path);
     }
 
-    path += uid + ".cfg";
+    path += uid + ".avt";
     return cfg.save(path);
 }
 
-bool PlayerData::loadProfile(const std::string& path)
+bool PlayerData::loadProfile(const std::string& path, const std::string& uid)
 {
     cro::ConfigFile cfg;
     if (cfg.loadFromFile(path, false))
@@ -152,6 +152,8 @@ bool PlayerData::loadProfile(const std::string& path)
                 isCPU = prop.getValue<bool>();
             }
         }
+
+        profileID = uid;
 
         return true;
     }

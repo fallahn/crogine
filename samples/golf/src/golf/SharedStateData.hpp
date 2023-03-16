@@ -64,8 +64,9 @@ struct PlayerData final
     glm::vec3 currentTarget = glm::vec3(0.f);
     cro::Colour ballTint;
 
+    std::string profileID;
     bool saveProfile() const;
-    bool loadProfile(const std::string&);
+    bool loadProfile(const std::string& path, const std::string& uid);
 };
 
 struct ConnectionData final
