@@ -321,6 +321,7 @@ private:
     void updateScoreboard();
     void showScoreboard(bool visible);
     void updateWindDisplay(glm::vec3);
+    float estimatePuttPower();
 
     enum class MessageBoardID
     {

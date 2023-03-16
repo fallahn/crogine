@@ -638,27 +638,7 @@ void GolfState::buildUI()
             }
 
             //move to position
-            auto maxDist = Clubs[ClubID::Putter].getTarget(m_distanceToHole);
-            float guestimation = (m_distanceToHole / maxDist);
-            
-            //kludge stops the flag recommending too much power            
-            if (maxDist == Clubs[ClubID::Putter].getBaseTarget())
-            {
-                //guestimation = cro::Util::Easing::easeInSine(guestimation);
-                guestimation *= 0.83f;
-            }
-            else
-            {
-                guestimation = std::min(1.f, guestimation + 0.12f);
-            }
-
-            //add a bit more power if putting uphill
-            float slope = 0.f;
-            if (m_distanceToHole > 0.005f)
-            {
-                slope = glm::dot(cro::Transform::Y_AXIS, m_holeData[m_currentHole].pin - m_currentPlayer.position) / m_distanceToHole;
-            }
-            float hTarget = std::clamp(guestimation + (0.25f * slope), 0.f, 1.f);
+            float hTarget = estimatePuttPower();
             m_cpuGolfer.setPuttingPower(hTarget);
             hTarget *= BarWidth;
 
@@ -2173,6 +2153,31 @@ void GolfState::updateWindDisplay(glm::vec3 direction)
         e.getComponent<cro::Callback>().setUserData<float>(-direction.y);
     };
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+}
+
+float GolfState::estimatePuttPower()
+{
+    auto maxDist = Clubs[ClubID::Putter].getTarget(m_distanceToHole);
+    float guestimation = (m_distanceToHole / maxDist);
+
+    //kludge stops the flag recommending too much power            
+    if (maxDist == Clubs[ClubID::Putter].getBaseTarget())
+    {
+        //guestimation = cro::Util::Easing::easeInSine(guestimation);
+        guestimation *= 0.83f;
+    }
+    else
+    {
+        guestimation = std::min(1.f, guestimation + 0.12f);
+    }
+
+    //add a bit more power if putting uphill
+    float slope = 0.f;
+    if (m_distanceToHole > 0.005f)
+    {
+        slope = glm::dot(cro::Transform::Y_AXIS, m_holeData[m_currentHole].pin - m_currentPlayer.position) / m_distanceToHole;
+    }
+    return std::clamp(guestimation + (0.25f * slope), 0.f, 1.f);
 }
 
 void GolfState::showMessageBoard(MessageBoardID messageType, bool special)

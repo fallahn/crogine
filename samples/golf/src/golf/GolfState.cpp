@@ -3587,8 +3587,13 @@ void GolfState::buildScene()
 
         if (!hidden)
         {
-            float scale = /*cro::Util::Easing::easeOutSine*/(m_inputParser.getPower()) * 0.85f; //bit of a fudge to try making the representation more accurate
-            e.getComponent<cro::Transform>().setScale(glm::vec3(scale));
+            static constexpr float Balance = 1.1f;
+            float scale = /*cro::Util::Easing::easeOutSine*/(m_inputParser.getPower() * Balance); //bit of a fudge to try making the representation more accurate
+            //the putter scales down as it gets closer so we need to compensate
+            float rangeScale = std::clamp((Clubs[ClubID::Putter].getTarget(m_distanceToHole) / Clubs[ClubID::Putter].getTarget(10000.f)) * Balance, 0.f, 1.f);
+
+            scale *= rangeScale;
+            e.getComponent<cro::Transform>().setScale(glm::vec3(/*cro::Util::Easing::easeOutSine*/(scale)));
 
             //fade with proximity to hole
             auto dist = m_holeData[m_currentHole].pin - e.getComponent<cro::Transform>().getWorldPosition();
@@ -3608,7 +3613,7 @@ void GolfState::buildScene()
     auto j = 0u;
     for (auto i = 0.f; i < cro::Util::Const::TAU; i += (cro::Util::Const::TAU / 16.f))
     {
-        auto x = std::cos(i) * Clubs[ClubID::Putter].getTarget(10000.f); //distance isn't calc's yet so make sure it's suitable large
+        auto x = std::cos(i) * Clubs[ClubID::Putter].getTarget(10000.f); //distance isn't calc'd yet so make sure it's suitable large
         auto z = -std::sin(i) * Clubs[ClubID::Putter].getTarget(10000.f);
 
         verts.push_back(x);

@@ -977,7 +977,8 @@ void GolfGame::loadAvatars()
 
     auto path = cro::App::getPreferencePath() + "avatars.cfg";
     cro::ConfigFile cfg;
-    if (cfg.loadFromFile(path, false))
+    if (cro::FileSystem::fileExists(path) &&
+        cfg.loadFromFile(path, false))
     {
         const auto& objects = cfg.getObjects();
         for (const auto& obj : objects)
