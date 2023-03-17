@@ -45,6 +45,8 @@ namespace ConstVal
     static constexpr float MinSwingputThresh = 0.2f;
     static constexpr float MaxSwingputThresh = 10.f;
 
+    static constexpr std::int32_t MaxProfiles = 64;
+
     //max string vars for name/limiting packet size
     static constexpr std::size_t MaxStringChars = 24;
     static constexpr std::size_t MaxNameChars = 12;

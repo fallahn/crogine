@@ -1073,7 +1073,7 @@ void GolfGame::loadAvatars()
         files.erase(std::remove_if(files.begin(), files.end(), 
             [](const std::string& f)
             {
-                return cro::FileSystem::getFileExtension(f) != ".avt";
+                return cro::FileSystem::getFileExtension(f) != ".pfl";
             }), files.end());
 
         if (!files.empty())
@@ -1087,7 +1087,7 @@ void GolfGame::loadAvatars()
         }
 
         //arbitrary limit on profile loading.
-        if (i == 64)
+        if (i == ConstVal::MaxProfiles)
         {
             break;
         }

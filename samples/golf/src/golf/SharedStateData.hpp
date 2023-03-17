@@ -127,6 +127,7 @@ struct SharedStateData final
     {
         std::uint32_t uid = 0;
         std::string modelPath;
+        std::string texturePath;
         std::string audioscape;
     };
     std::vector<AvatarInfo> avatarInfo;

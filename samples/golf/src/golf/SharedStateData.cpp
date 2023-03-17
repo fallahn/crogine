@@ -89,7 +89,7 @@ bool PlayerData::saveProfile() const
         cro::FileSystem::createDirectory(path);
     }
 
-    path += uid + ".avt";
+    path += uid + ".pfl";
     return cfg.save(path);
 }
 

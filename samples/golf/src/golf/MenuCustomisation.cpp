@@ -460,7 +460,6 @@ void MenuState::parseAvatarDirectory()
             if (cfg.loadFromFile(AvatarPath + file))
             {
                 SharedStateData::AvatarInfo info;
-                std::string texturePath;
 
                 const auto& props = cfg.getProperties();
                 for (const auto& prop : props)
@@ -481,7 +480,7 @@ void MenuState::parseAvatarDirectory()
                                     {
                                         if (p.getName() == "diffuse")
                                         {
-                                            texturePath = p.getValue<std::string>();
+                                            info.texturePath = p.getValue<std::string>();
                                         }
                                     }
                                 }
@@ -519,7 +518,7 @@ void MenuState::parseAvatarDirectory()
                     if (result == m_sharedData.avatarInfo.end())
                     {
                         m_sharedData.avatarInfo.push_back(info);
-                        m_playerAvatars.emplace_back(texturePath);
+                        m_playerAvatars.emplace_back(info.texturePath);
                     }
                     else
                     {

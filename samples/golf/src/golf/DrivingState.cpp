@@ -33,6 +33,7 @@ source distribution.
 #include "CommandIDs.hpp"
 #include "MenuConsts.hpp"
 #include "GameConsts.hpp"
+#include "PlayerAvatar.hpp"
 #include "FpsCameraSystem.hpp"
 #include "TextAnimCallback.hpp"
 #include "DrivingRangeDirector.hpp"
@@ -1988,9 +1989,18 @@ void DrivingState::createPlayer(cro::Entity courseEnt)
     const auto& playerData = m_sharedData.playerProfiles[playerIndex];
     auto idx = indexFromSkinID(playerData.skinID);
 
+    PlayerAvatar av(m_sharedData.avatarInfo[idx].texturePath);
+    av.setTarget(m_sharedData.avatarTextures[0][0]);
+    for (auto j = 0u; j < playerData.avatarFlags.size(); ++j)
+    {
+        av.setColour(pc::ColourKey::Index(j), playerData.avatarFlags[j]);
+    }
+    av.apply();
+
     //3D Player Model
     cro::ModelDefinition md(m_resources);
     md.loadFromFile(m_sharedData.avatarInfo[idx].modelPath);
+
     auto entity = m_gameScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(PlayerPosition);
     entity.addComponent<cro::CommandTarget>().ID = CommandID::PlayerAvatar;
@@ -2028,7 +2038,7 @@ void DrivingState::createPlayer(cro::Entity courseEnt)
     //avatar requirement is single material
     auto material = m_resources.materials.get(m_materialIDs[MaterialID::CelTexturedSkinned]);
     applyMaterialData(md, material);
-    material.setProperty("u_diffuseMap", m_sharedData.avatarTextures[0][playerIndex]);
+    material.setProperty("u_diffuseMap", m_sharedData.avatarTextures[0][0]); //there's only ever goingto be one player so just use the first tex
     entity.getComponent<cro::Model>().setMaterial(0, material);
 
     std::fill(m_avatar.animationIDs.begin(), m_avatar.animationIDs.end(), AnimationID::Invalid);
