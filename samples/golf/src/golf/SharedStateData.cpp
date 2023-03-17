@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2022
+Matt Marchant 2021 - 2023
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -167,7 +167,7 @@ std::vector<std::uint8_t> ConnectionData::serialise() const
     //header, sizes[5], data
 
     std::size_t totalSize = sizeof(header);
-    std::array<std::uint8_t, 5u> sizes = { 0,0,0,0,0 };
+    std::array<std::uint8_t, ConstVal::MaxPlayers + 1> sizes = { 0,0,0,0,0 };
     for (auto i = 0u; i < playerCount; ++i)
     {
         sizes[i] = static_cast<std::uint8_t>(std::min(ConstVal::MaxStringDataSize, playerData[i].name.size() * sizeof(std::uint32_t)));
@@ -234,7 +234,7 @@ bool ConnectionData::deserialise(const net::NetEvent::Packet& packet)
     PacketHeader header;
 
     //read header
-    std::array<std::uint8_t, 5u> sizes = { 0,0,0,0,0 };
+    std::array<std::uint8_t, ConstVal::MaxPlayers + 1> sizes = { 0,0,0,0,0 };
     if (packet.getSize() < sizeof(sizes) + sizeof(header))
     {
         return false;

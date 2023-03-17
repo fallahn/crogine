@@ -103,10 +103,10 @@ struct SharedStateData final
     }clientConnection;
 
     //data of all players rx'd from server
-    std::array<ConnectionData, 4u> connectionData = {};
+    std::array<ConnectionData, ConstVal::MaxClients> connectionData = {};
 
-    std::array<std::array<cro::Texture, 4u>, 4u> avatarTextures = {};
-    std::array<cro::RenderTexture, 4u> nameTextures = {};
+    std::array<std::array<cro::Texture, ConstVal::MaxPlayers>, ConstVal::MaxClients> avatarTextures = {};
+    std::array<cro::RenderTexture, ConstVal::MaxClients> nameTextures = {};
 
     //available ball models mapped to ID
     struct BallInfo final

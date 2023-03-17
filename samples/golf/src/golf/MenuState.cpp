@@ -775,13 +775,13 @@ void MenuState::render()
     m_backgroundScene.render();
     m_ballTexture.display();
 
-    m_ballThumbTexture.clear(cro::Colour::Transparent);
+    /*m_ballThumbTexture.clear(cro::Colour::Transparent);
     for (auto i = 0u; i < m_sharedData.localConnectionData.playerCount; ++i)
     {
         m_backgroundScene.setActiveCamera(m_ballThumbCams[i]);
         m_backgroundScene.render();
     }
-    m_ballThumbTexture.display();
+    m_ballThumbTexture.display();*/
 
     //and avatar preview
     m_avatarTexture.clear(cro::Colour::Transparent);

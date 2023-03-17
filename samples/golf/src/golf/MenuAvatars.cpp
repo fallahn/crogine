@@ -91,7 +91,7 @@ void MenuState::createAvatarMenuNew(cro::Entity parent, std::uint32_t mouseEnter
     m_sprites[SpriteID::PlayerEdit] = spriteSheet.getSprite("edit_button");
 
 
-    //this entity has the player edit text ents added to it by updateLocalAvatars
+    //this entity is the background ent with avatar information added to it
     auto avatarEnt = m_uiScene.createEntity();
     avatarEnt.addComponent<cro::Transform>();
     avatarEnt.addComponent<cro::Drawable2D>();
@@ -107,9 +107,20 @@ void MenuState::createAvatarMenuNew(cro::Entity parent, std::uint32_t mouseEnter
     auto& menuTransform = menuEntity.getComponent<cro::Transform>();
     menuTransform.setPosition(-m_menuPositions[MenuID::Avatar]);
 
+    auto& largeFont = m_sharedData.sharedResources->fonts.get(FontID::UI);
+    //team roster
+    auto entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 28.f, 223.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(largeFont).setString(m_sharedData.localConnectionData.playerData[0].name);
+    entity.getComponent<cro::Text>().setFillColour(LeaderboardTextDark);
+    entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
+    entity.getComponent<cro::Text>().setVerticalSpacing(6.f);
+    avatarEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    auto rosterEnt = entity;
 
     //title
-    auto entity = m_uiScene.createEntity();
+    entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<UIElement>().relativePosition = { 0.5f, 0.9f };
     entity.getComponent<UIElement>().depth = 0.1f;
@@ -223,6 +234,20 @@ void MenuState::createAvatarMenuNew(cro::Entity parent, std::uint32_t mouseEnter
     menuTransform.addChild(entity.getComponent<cro::Transform>());
 
 
+    auto updateRoster = [&, rosterEnt]() mutable
+    {
+        auto str = m_sharedData.localConnectionData.playerData[0].name;
+        for (auto i = 1u; i < m_sharedData.localConnectionData.playerCount; ++i)
+        {
+            str += "\n" + m_sharedData.localConnectionData.playerData[i].name;
+        }
+        rosterEnt.getComponent<cro::Text>().setString(str);
+
+        //TODO add profile scroll buttons for each player
+        //TODO add CPU toggle for each player
+    };
+
+
     //add player button
     entity = m_uiScene.createEntity();
     entity.setLabel("Add Player");
@@ -239,7 +264,7 @@ void MenuState::createAvatarMenuNew(cro::Entity parent, std::uint32_t mouseEnter
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = mouseEnterCursor;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         m_uiScene.getSystem<cro::UISystem>()->addCallback(
-            [&, mouseEnter, mouseExit](cro::Entity, const cro::ButtonEvent& evt) mutable
+            [&, updateRoster](cro::Entity, const cro::ButtonEvent& evt) mutable
             {
                 if (activated(evt))
                 {
@@ -248,14 +273,14 @@ void MenuState::createAvatarMenuNew(cro::Entity parent, std::uint32_t mouseEnter
                     {
                         auto index = m_sharedData.localConnectionData.playerCount;
 
-                        //TODO create an array of PlayerData which stores profiles that can
-                        //be selected then added to here
-                        if (m_sharedData.localConnectionData.playerData[index].name.empty())
-                        {
-                            m_sharedData.localConnectionData.playerData[index].name = RandomNames[cro::Util::Random::value(0u, RandomNames.size() - 1)];
-                        }
+                        m_sharedData.localConnectionData.playerData[index] = m_sharedData.playerProfiles[std::min(std::size_t(index), m_sharedData.playerProfiles.size() - 1)];
+                        //TODO track this slot's index into the profile array
+
                         m_sharedData.localConnectionData.playerCount++;
-                        //TODO refresh the current roster
+                        
+                        //refresh the current roster
+                        updateRoster();
+
                         m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
                     }
                 }
@@ -296,7 +321,7 @@ void MenuState::createAvatarMenuNew(cro::Entity parent, std::uint32_t mouseEnter
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = mouseEnterCursor;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         m_uiScene.getSystem<cro::UISystem>()->addCallback(
-            [&, mouseEnter, mouseExit](cro::Entity, const cro::ButtonEvent& evt) mutable
+            [&, updateRoster](cro::Entity, const cro::ButtonEvent& evt) mutable
             {
                 if (activated(evt))
                 {
@@ -306,7 +331,8 @@ void MenuState::createAvatarMenuNew(cro::Entity parent, std::uint32_t mouseEnter
                     {
                         m_sharedData.localConnectionData.playerCount--;
                         
-                        //TODO refresh the roster view
+                        //refresh the roster view
+                        updateRoster();
 
                         m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
                     }

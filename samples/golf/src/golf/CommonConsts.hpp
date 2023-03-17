@@ -58,7 +58,7 @@ namespace ConstVal
 
     static constexpr std::uint16_t GamePort = 16002;
     static constexpr std::uint8_t MaxClients = 4;
-    static constexpr std::uint8_t MaxPlayers = 4;
+    static constexpr std::uint8_t MaxPlayers = 8;
     static constexpr std::uint8_t NullValue = 255;
     static constexpr std::uint8_t NetChannelReliable = 1;
     static constexpr std::uint8_t NetChannelStrings = 2;
