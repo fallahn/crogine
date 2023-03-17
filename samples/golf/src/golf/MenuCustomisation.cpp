@@ -30,6 +30,7 @@ source distribution.
 #include "MenuState.hpp"
 #include "GameConsts.hpp"
 #include "MenuConsts.hpp"
+#include "CommonConsts.hpp"
 #include "spooky2.hpp"
 #include "BallSystem.hpp"
 
@@ -226,6 +227,11 @@ void MenuState::createBallScene()
         LogE << "No ball files were found" << std::endl;
     }
 
+    if (ballFiles.size() > ConstVal::MaxBalls)
+    {
+        ballFiles.resize(ConstVal::MaxBalls);
+    }
+
     m_sharedData.ballModels.clear();
 
     //parse the default ball directory
@@ -254,6 +260,11 @@ void MenuState::createBallScene()
     if (cro::FileSystem::directoryExists(BallUserPath))
     {
         auto dirList = cro::FileSystem::listDirectories(BallUserPath);
+        if (dirList.size() > ConstVal::MaxBalls)
+        {
+            dirList.resize(ConstVal::MaxBalls);
+        }
+
         for (const auto& dir : dirList)
         {
             auto path = BallUserPath + dir + "/" ;
@@ -547,6 +558,11 @@ void MenuState::parseAvatarDirectory()
     const std::string HairPath = "assets/golf/avatars/hair/";
     auto hairFiles = cro::FileSystem::listFiles(cro::FileSystem::getResourcePath() + HairPath);
 
+    if (hairFiles.size() > ConstVal::MaxHeadwear)
+    {
+        hairFiles.resize(ConstVal::MaxHeadwear);
+    }
+
     for (const auto& file : hairFiles)
     {
         if (cro::FileSystem::getFileExtension(file) != ".hct")
@@ -573,7 +589,13 @@ void MenuState::parseAvatarDirectory()
     const auto userHairPath = Social::getUserContentPath(Social::UserContent::Hair);
     if (cro::FileSystem::directoryExists(userHairPath))
     {
-        const auto userDirs = cro::FileSystem::listDirectories(userHairPath);
+        auto userDirs = cro::FileSystem::listDirectories(userHairPath);
+
+        if (userDirs.size() > ConstVal::MaxHeadwear)
+        {
+            userDirs.resize(ConstVal::MaxHeadwear);
+        }
+
         for (const auto& userDir : userDirs)
         {
             const auto userPath = userHairPath + userDir + "/";
@@ -593,6 +615,7 @@ void MenuState::parseAvatarDirectory()
                     info.modelPath = userPath + info.modelPath;
 
                     insertInfo(info, m_sharedData.hairInfo, false);
+                    break; //only load one...
                 }
             }
         }
