@@ -181,6 +181,10 @@ bool UnlockState::handleEvent(const cro::Event& evt)
             quitState();
             return false;
         }
+        else if (evt.button.button == SDL_BUTTON_LEFT)
+        {
+            dismissItem();
+        }
     }
     else if (evt.type == SDL_CONTROLLERAXISMOTION)
     {

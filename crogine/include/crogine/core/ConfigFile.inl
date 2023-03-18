@@ -42,7 +42,7 @@ inline cro::String ConfigProperty::getValue<cro::String>() const
     }
 
     auto cp = cro::Util::String::getCodepoints(m_value);
-    return cro::String::fromUtf32(cp.begin(), cp.end());
+    return cro::String::fromUtf8(m_value.begin(), m_value.end());
 }
 
 template <>

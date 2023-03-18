@@ -70,7 +70,7 @@ bool PlayerData::saveProfile() const
 
     std::uint32_t flipVal = flipped ? 0xf0 : 0x0f;
     flipVal |= isCPU ? 0xf000 : 0x0f00;
-    std::array<std::uint32_t, 8u> hashData =
+    std::array<std::uint32_t, 5u> hashData =
     {
         ballID, hairID, skinID, flipVal,
         *reinterpret_cast<const std::uint32_t*>(avatarFlags.data()) //just remember to unbork this when updating palettes later on...
