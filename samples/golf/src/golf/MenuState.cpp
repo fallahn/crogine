@@ -347,7 +347,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
         {
             if (ImGui::Begin("buns"))
             {
-                ImGui::ColorButton("cb", C);
+                /*ImGui::ColorButton("cb", C);
                 if (ImGui::SliderFloat("Strength", &strength, 0.f, 1.f))
                 {
                     C.x = 1.f - std::pow(1.f - strength, 3.f);
@@ -355,7 +355,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
                     C.z = 1.f - std::pow(1.f - (0.1f + (strength * 0.9f)), 40.f);
                 }
 
-                ImGui::Text("Controller Count %lu", cro::GameController::getControllerCount());
+                ImGui::Text("Controller Count %lu", cro::GameController::getControllerCount());*/
 
                 //auto size = glm::vec2(m_ballThumbTexture.getSize());
                 //ImGui::Image(m_ballThumbTexture.getTexture(), {size.x, size.y}, {0.f, 1.f}, {1.f, 0.f});
@@ -371,19 +371,19 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
                 }
             }
             ImGui::End();
-        }, true);
+        }/*, true*/);
 
     //registerWindow([&]() 
     //    {
     //        if (ImGui::Begin("Debug"))
     //        {
     //            //ImGui::Text("Course Index %u", m_sharedData.courseIndex);
-    //            /*ImGui::Image(m_sharedData.nameTextures[0].getTexture(), { 128, 64 }, { 0,1 }, { 1,0 });
+    //            ImGui::Image(m_sharedData.nameTextures[0].getTexture(), { 128, 64 }, { 0,1 }, { 1,0 });
     //            ImGui::SameLine();
     //            ImGui::Image(m_sharedData.nameTextures[1].getTexture(), { 128, 64 }, { 0,1 }, { 1,0 });
     //            ImGui::Image(m_sharedData.nameTextures[2].getTexture(), { 128, 64 }, { 0,1 }, { 1,0 });
     //            ImGui::SameLine();
-    //            ImGui::Image(m_sharedData.nameTextures[3].getTexture(), { 128, 64 }, { 0,1 }, { 1,0 });*/
+    //            ImGui::Image(m_sharedData.nameTextures[3].getTexture(), { 128, 64 }, { 0,1 }, { 1,0 });
     //            /*float x = static_cast<float>(AvatarThumbSize.x);
     //            float y = static_cast<float>(AvatarThumbSize.y);
     //            ImGui::Image(m_avatarThumbs[0].getTexture(), {x,y}, {0,1}, {1,0});
@@ -395,23 +395,23 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     //            ImGui::Image(m_avatarThumbs[3].getTexture(), { x,y }, { 0,1 }, { 1,0 });*/
     //            //auto pos = m_avatarScene.getActiveCamera().getComponent<cro::Transform>().getPosition();
     //            //ImGui::Text("%3.3f, %3.3f, %3.3f", pos.x, pos.y, pos.z);
-    //            auto& cam = m_backgroundScene.getActiveCamera().getComponent<cro::Camera>();
-    //            float maxDist = cam.getMaxShadowDistance();
-    //            if (ImGui::SliderFloat("Dist", &maxDist, 1.f, cam.getFarPlane()))
-    //            {
-    //                cam.setMaxShadowDistance(maxDist);
-    //            }
+    //            //auto& cam = m_backgroundScene.getActiveCamera().getComponent<cro::Camera>();
+    //            //float maxDist = cam.getMaxShadowDistance();
+    //            //if (ImGui::SliderFloat("Dist", &maxDist, 1.f, cam.getFarPlane()))
+    //            //{
+    //            //    cam.setMaxShadowDistance(maxDist);
+    //            //}
 
-    //            float exp = cam.getShadowExpansion();
-    //            if (ImGui::SliderFloat("Exp", &exp, 0.f, 100.f))
-    //            {
-    //                cam.setShadowExpansion(exp);
-    //            }
+    //            //float exp = cam.getShadowExpansion();
+    //            //if (ImGui::SliderFloat("Exp", &exp, 0.f, 100.f))
+    //            //{
+    //            //    cam.setShadowExpansion(exp);
+    //            //}
 
-    //            ImGui::Image(m_backgroundScene.getActiveCamera().getComponent<cro::Camera>().shadowMapBuffer.getTexture(0), { 256.f, 256.f }, { 0.f, 1.f }, { 1.f, 0.f });
+    //            //ImGui::Image(m_backgroundScene.getActiveCamera().getComponent<cro::Camera>().shadowMapBuffer.getTexture(0), { 256.f, 256.f }, { 0.f, 1.f }, { 1.f, 0.f });
     //        }
     //        ImGui::End();
-    //    }, true);
+    //    }/*, true*/);
 #endif
 }
 

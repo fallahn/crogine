@@ -4784,7 +4784,7 @@ void GolfState::spawnBall(const ActorInfo& info)
     entity.addComponent<cro::Transform>().setOrigin({ texSize.x / 2.f, 0.f, -0.1f - (0.1f * depthOffset) });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>().setTexture(m_sharedData.nameTextures[info.clientID].getTexture());
-    entity.getComponent<cro::Sprite>().setTextureRect({ 0.f, playerID * (texSize.y / 4.f), texSize.x, texSize.y / 4.f });
+    entity.getComponent<cro::Sprite>().setTextureRect({ 0.f, playerID * (texSize.y / ConstVal::MaxPlayers), texSize.x, texSize.y / ConstVal::MaxPlayers });
     entity.getComponent<cro::Sprite>().setColour(cro::Colour(1.f, 1.f, 1.f, 0.f));
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function =
