@@ -2813,7 +2813,7 @@ void GolfState::buildTrophyScene()
             entity.addComponent<cro::Sprite>(m_sharedData.nameTextures[0].getTexture());
             bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
             bounds.height -= LabelIconSize.y;
-            bounds.height /= 4.f;
+            bounds.height /= ConstVal::MaxPlayers;
             bounds.bottom = bounds.height * i;
             entity.getComponent<cro::Sprite>().setTextureRect(bounds);
             entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f, -0.2f });

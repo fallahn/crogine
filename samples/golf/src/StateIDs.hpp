@@ -54,7 +54,7 @@ struct StateID final
         Credits,
         EventOverlay, //consumes events if the overlay is open
         Unlock,
-
+        Profile, 
 
 
 
