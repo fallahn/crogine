@@ -90,26 +90,60 @@ void MenuState::createAvatarMenuNew(cro::Entity parent, std::uint32_t mouseEnter
     m_sprites[SpriteID::CPUHighlight] = spriteSheet.getSprite("check_highlight");
     m_sprites[SpriteID::PlayerEdit] = spriteSheet.getSprite("edit_button");
 
+    auto& menuTransform = menuEntity.getComponent<cro::Transform>();
+    menuTransform.setPosition(-m_menuPositions[MenuID::Avatar]);
+
+    //title
+    auto entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<UIElement>().relativePosition = { 0.5f, 0.9f };
+    entity.getComponent<UIElement>().depth = 0.1f;
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement | CommandID::Menu::TitleText;
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("title");
+    auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.getComponent<cro::Transform>().setOrigin({ std::floor(bounds.width / 2.f), std::floor(bounds.height / 2.f) });
+    entity.addComponent<cro::Callback>().setUserData<float>(0.f);
+    entity.getComponent<cro::Callback>().function = TitleTextCallback();
+    menuTransform.addChild(entity.getComponent<cro::Transform>());
+
+    //rank icon
+    if (Social::getLevel() > 0)
+    {
+        auto iconEnt = m_uiScene.createEntity();
+        iconEnt.addComponent<cro::Transform>();
+        iconEnt.addComponent<cro::Drawable2D>();
+        iconEnt.addComponent<cro::Sprite>() = spriteSheet.getSprite("rank_icon");
+        iconEnt.addComponent<cro::SpriteAnimation>().play(std::min(5, Social::getLevel() / 10));
+        auto bounds = iconEnt.getComponent<cro::Sprite>().getTextureBounds();
+        iconEnt.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
+        iconEnt.addComponent<UIElement>().relativePosition = { 0.5f, 0.f };
+        iconEnt.getComponent<UIElement>().absolutePosition = { 0.f, 24.f };
+        iconEnt.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement;
+        menuTransform.addChild(iconEnt.getComponent<cro::Transform>());
+    }
+
+    spriteSheet.loadFromFile("assets/golf/sprites/avatar_menu.spt", m_resources.textures);
+
 
     //this entity is the background ent with avatar information added to it
     auto avatarEnt = m_uiScene.createEntity();
     avatarEnt.addComponent<cro::Transform>();
     avatarEnt.addComponent<cro::Drawable2D>();
-    avatarEnt.addComponent<cro::Sprite>(m_resources.textures.get("assets/golf/images/avatar_menu.png"));
+    avatarEnt.addComponent<cro::Sprite>() = spriteSheet.getSprite("background");
     avatarEnt.addComponent<UIElement>().relativePosition = { 0.5f, 0.5f };
     avatarEnt.getComponent<UIElement>().depth = -0.2f;
     avatarEnt.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement;
-    auto bounds = avatarEnt.getComponent<cro::Sprite>().getTextureBounds();
+    bounds = avatarEnt.getComponent<cro::Sprite>().getTextureBounds();
     avatarEnt.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
-    menuEntity.getComponent<cro::Transform>().addChild(avatarEnt.getComponent<cro::Transform>());
+    menuTransform.addChild(avatarEnt.getComponent<cro::Transform>());
     m_avatarMenu = avatarEnt;
 
-    auto& menuTransform = menuEntity.getComponent<cro::Transform>();
-    menuTransform.setPosition(-m_menuPositions[MenuID::Avatar]);
+
 
     auto& largeFont = m_sharedData.sharedResources->fonts.get(FontID::UI);
     //team roster
-    auto entity = m_uiScene.createEntity();
+    entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 28.f, 223.f, 0.1f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(largeFont).setString(m_sharedData.localConnectionData.playerData[0].name);
@@ -119,19 +153,7 @@ void MenuState::createAvatarMenuNew(cro::Entity parent, std::uint32_t mouseEnter
     avatarEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     auto rosterEnt = entity;
 
-    //title
-    entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>();
-    entity.addComponent<UIElement>().relativePosition = { 0.5f, 0.9f };
-    entity.getComponent<UIElement>().depth = 0.1f;
-    entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement | CommandID::Menu::TitleText;
-    entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("title");
-    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
-    entity.getComponent<cro::Transform>().setOrigin({ std::floor(bounds.width / 2.f), std::floor(bounds.height / 2.f) });
-    entity.addComponent<cro::Callback>().setUserData<float>(0.f);
-    entity.getComponent<cro::Callback>().function = TitleTextCallback();
-    menuTransform.addChild(entity.getComponent<cro::Transform>());
+
 
     //banner
     entity = m_uiScene.createEntity();
@@ -731,21 +753,6 @@ void MenuState::createProfileLayout(cro::Entity parent, cro::Transform& menuTran
     entity.getComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLES);
     parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
-
-    if (Social::getLevel() > 0)
-    {
-        auto iconEnt = m_uiScene.createEntity();
-        iconEnt.addComponent<cro::Transform>();
-        iconEnt.addComponent<cro::Drawable2D>();
-        iconEnt.addComponent<cro::Sprite>() = spriteSheet.getSprite("rank_icon");
-        iconEnt.addComponent<cro::SpriteAnimation>().play(std::min(5, Social::getLevel() / 10));
-        auto bounds = iconEnt.getComponent<cro::Sprite>().getTextureBounds();
-        iconEnt.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
-        iconEnt.addComponent<UIElement>().relativePosition = { 0.5f, 0.f };
-        iconEnt.getComponent<UIElement>().absolutePosition = { 0.f, 24.f };
-        iconEnt.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement;
-        menuTransform.addChild(iconEnt.getComponent<cro::Transform>());
-    }
 
     auto& font = m_sharedData.sharedResources->fonts.get(FontID::Info);
     auto labelEnt = m_uiScene.createEntity();

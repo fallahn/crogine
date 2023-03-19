@@ -275,8 +275,34 @@ void GolfState::buildUI()
     entity.addComponent<UIElement>().relativePosition = { 0.5f, 1.f };
     entity.getComponent<UIElement>().absolutePosition = { 0.f, -UIBarHeight };
     entity.getComponent<UIElement>().depth = 0.05f;
+    entity.addComponent<cro::Callback>().setUserData<SkipCallbackData>();
+    entity.getComponent<cro::Callback>().function =
+        [](cro::Entity e, float dt)
+    {
+        auto& [progress, direction, _] = e.getComponent<cro::Callback>().getUserData<SkipCallbackData>();
+        const float Speed = dt * 3.f;
+        if (direction == 1)
+        {
+            //bigger!
+            progress = std::min(1.f, progress + Speed);
+            if (progress == 1)
+            {
+                e.getComponent<cro::Callback>().active = false;
+            }
+        }
+        else
+        {
+            progress = std::max(0.f, progress - Speed);
+            if (progress == 0)
+            {
+                e.getComponent<cro::Callback>().active = false;
+            }
+        }
+
+        float scale = cro::Util::Easing::easeOutBack(progress);
+        e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
+    };
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Callback>().setUserData<std::uint32_t>(0u); //index of button animation
     entity.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
     entity.getComponent<cro::Text>().setFillColour(TextHighlightColour);
     centreText(entity);
@@ -299,7 +325,7 @@ void GolfState::buildUI()
         if (cro::GameController::getControllerCount() != 0)
         {
             e.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
-            e.getComponent<cro::SpriteAnimation>().play(ffEnt.getComponent<cro::Callback>().getUserData<std::uint32_t>());
+            e.getComponent<cro::SpriteAnimation>().play(ffEnt.getComponent<cro::Callback>().getUserData<SkipCallbackData>().buttonIndex);
         }
         else
         {
@@ -309,6 +335,8 @@ void GolfState::buildUI()
     ffEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     static constexpr glm::vec2 BarSize(30.f, 2.f); //actually half-size
+    auto darkColour = LeaderboardTextDark;
+    darkColour.setAlpha(0.25f);
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>().setVertexData(
@@ -319,11 +347,11 @@ void GolfState::buildUI()
             cro::Vertex2D(glm::vec2(0.f), TextHighlightColour),
             cro::Vertex2D(glm::vec2(0.f), TextHighlightColour),
 
-            cro::Vertex2D(glm::vec2(0.f), LeaderboardTextDark),
-            cro::Vertex2D(glm::vec2(0.f), LeaderboardTextDark),
+            cro::Vertex2D(glm::vec2(0.f), darkColour),
+            cro::Vertex2D(glm::vec2(0.f), darkColour),
 
-            cro::Vertex2D(BarSize, LeaderboardTextDark),
-            cro::Vertex2D(glm::vec2(BarSize.x, -BarSize.y), LeaderboardTextDark),
+            cro::Vertex2D(BarSize, darkColour),
+            cro::Vertex2D(glm::vec2(BarSize.x, -BarSize.y), darkColour),
         });
     entity.getComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLE_STRIP);
     entity.getComponent<cro::Drawable2D>().updateLocalBounds();
@@ -2585,18 +2613,21 @@ void GolfState::updateSkipMessage(float dt)
                 cmd.targetFlags = CommandID::UI::FastForward;
                 cmd.action = [&](cro::Entity e, float)
                 {
-                    e.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+                    auto& data = e.getComponent<cro::Callback>().getUserData<SkipCallbackData>();
+                    data.direction = 1;
+
+                    e.getComponent<cro::Callback>().active = true;
 
                     if (cro::GameController::getControllerCount() != 0)
                     {
                         //set correct button icon
                         if (cro::GameController::hasPSLayout(activeControllerID(m_currentPlayer.player)))
                         {
-                            e.getComponent<cro::Callback>().setUserData<std::uint32_t>(1); //used as animation ID
+                            data.buttonIndex = 1; //used as animation ID
                         }
                         else
                         {
-                            e.getComponent<cro::Callback>().setUserData<std::uint32_t>(0);
+                            data.buttonIndex = 0;
                         }
                         e.getComponent<cro::Text>().setString("Hold   to Skip");
                     }
@@ -2624,7 +2655,8 @@ void GolfState::updateSkipMessage(float dt)
                     cmd.targetFlags = CommandID::UI::FastForward;
                     cmd.action = [](cro::Entity e, float)
                     {
-                        e.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+                        e.getComponent<cro::Callback>().getUserData<SkipCallbackData>().direction = 0;
+                        e.getComponent<cro::Callback>().active = true;
                     };
                     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
                 }
@@ -2644,7 +2676,8 @@ void GolfState::updateSkipMessage(float dt)
             cmd.targetFlags = CommandID::UI::FastForward;
             cmd.action = [](cro::Entity e, float)
             {
-                e.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+                e.getComponent<cro::Callback>().getUserData<SkipCallbackData>().direction = 0;
+                e.getComponent<cro::Callback>().active = true;
             };
             m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
         }
