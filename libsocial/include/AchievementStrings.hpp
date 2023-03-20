@@ -92,7 +92,10 @@ static const std::array<std::string, AchievementID::Count> AchievementStrings =
     "bad_sport",
     "full_house",
     "subscriber",
-    "birds_eye"
+    "birds_eye",
+    "dedicated",
+    "resident_golfer",
+    "month_of_sundays"
 };
 
 //appears on the notification
@@ -143,7 +146,10 @@ static const std::array<std::string, AchievementID::Count> AchievementLabels =
     "Bad Sport",
     "Full House",
     "Sub-scriber",
-    "Bird's Eye View"
+    "Bird's Eye View",
+    "Dedicated",
+    "Resident Golfer",
+    "Month Of Sundays"
 };
 
 //description and whether or not the achievement is hidden until it is unlocked
@@ -193,8 +199,11 @@ static const std::array<std::pair<std::string, bool>, AchievementID::Count> Achi
     std::make_pair("Hit the ball over 1500m in a single stroke", true),
     std::make_pair("Ruin the game for everyone", true),
     std::make_pair("Collect a full set of clubs", false),
-    std::make_pair("Subscribe to at least one workshop item", true),
-    std::make_pair("Use the drone camera to view the course", true)
+    std::make_pair("Subscribe to at least one workshop item", false),
+    std::make_pair("Use the drone camera to view the course", false),
+    std::make_pair("Play once a day for 7 days", false),
+    std::make_pair("Play once a day for 4 weeks", false),
+    std::make_pair("Play once a day for 30 weeks", false),
 };
 
 //assuming trophies load correctly they are:
@@ -267,7 +276,11 @@ static constexpr std::array<std::size_t, AchievementID::Count> AchievementTrophi
 
     TrophyID::GoldFigure,
     TrophyID::BronzeCup,
-    TrophyID::BronzeCup
+    TrophyID::BronzeCup,
+
+    TrophyID::SilverCup,
+    TrophyID::GoldFigure,
+    TrophyID::Platinum
 };
 
 //these are indexed by StatID, so do try to get them in the correct order ;)

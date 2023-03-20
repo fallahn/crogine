@@ -91,6 +91,10 @@ namespace AchievementID
         Subscriber,
         BirdsEyeView,
 
+        Dedicated,
+        ResidentGolfer,
+        MonthOfSundays,
+
         Count
     };
     static_assert(Count <= 256, "Count exceeds maximum 256 Achievements!");

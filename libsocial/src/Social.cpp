@@ -29,6 +29,7 @@ source distribution.
 
 #include "Social.hpp"
 #include "Achievements.hpp"
+#include "AchievementStrings.hpp"
 
 #include <crogine/core/App.hpp>
 #include <crogine/core/ConfigFile.hpp>
@@ -231,6 +232,20 @@ std::uint32_t Social::getCurrentStreak()
     if (ret == 0)
     {
         ret = 7;
+    }
+
+    switch (streak)
+    {
+    default: break;
+    case 7:
+        Achievements::awardAchievement(AchievementStrings[AchievementID::Dedicated]);
+        break;
+    case 28:
+        Achievements::awardAchievement(AchievementStrings[AchievementID::ResidentGolfer]);
+        break;
+    case 210:
+        Achievements::awardAchievement(AchievementStrings[AchievementID::MonthOfSundays]);
+        break;
     }
 
     return ret;
