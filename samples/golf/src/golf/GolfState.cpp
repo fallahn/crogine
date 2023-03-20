@@ -426,14 +426,21 @@ bool GolfState::handleEvent(const cro::Event& evt)
             m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, std::uint8_t(ServerCommand::GotoGreen), net::NetFlag::Reliable);
             break;
         case SDLK_F6:
-            m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, std::uint8_t(ServerCommand::EndGame), net::NetFlag::Reliable);
+            //m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, std::uint8_t(ServerCommand::EndGame), net::NetFlag::Reliable);
+#ifdef USE_GNS
+            Social::resetAchievement(AchievementStrings[AchievementID::SkinOfYourTeeth]);
+#endif
             break;
         case SDLK_F7:
             //m_sharedData.clientConnection.netClient.sendPacket(PacketID::SkipTurn, m_sharedData.localConnectionData.connectionID, net::NetFlag::Reliable);
+            
+            m_sharedData.connectionData[0].playerData[0].skinScore = 10;
+            m_sharedData.connectionData[0].playerData[1].skinScore = 1;
             showCountdown(30);
             //showMessageBoard(MessageBoardID::Scrub);
             //requestStackPush(StateID::Tutorial);
             //showNotification("buns");
+            //Achievements::awardAchievement(AchievementStrings[AchievementID::SkinOfYourTeeth]);
             break;
         case SDLK_F8:
         {

@@ -1166,7 +1166,7 @@ void GolfState::showCountdown(std::uint8_t seconds)
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
     //show the scores
-    updateScoreboard();
+    updateScoreboard(); //TODO - this is actually delayed by a frame because it's sent by command - which means the statBoardScores are not up to date when below happens.
     showScoreboard(true);
 
     //check if we're the winner
@@ -1811,7 +1811,7 @@ void GolfState::updateScoreboard()
                 {
                     return a.score < b.score;
                 }
-                return a.score > b.score;
+                return b.score < a.score;
             });
         //LOG("Table Update", cro::Logger::Type::Info);
 
@@ -1826,7 +1826,7 @@ void GolfState::updateScoreboard()
                     return a.total < b.total;
                 case ScoreType::Skins:
                 case ScoreType::Match:
-                    return a.total > b.total;
+                    return b.total < a.total;
                 }
             });
 
