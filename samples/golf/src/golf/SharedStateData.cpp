@@ -33,6 +33,7 @@ source distribution.
 #include "spooky2.hpp"
 
 #include <Social.hpp>
+#include <crogine/core/SysTime.hpp>
 
 struct PacketHeader final
 {
@@ -68,28 +69,34 @@ bool PlayerData::saveProfile() const
     cfg.addProperty("flags3").setValue(avatarFlags[3]);
     cfg.addProperty("cpu").setValue(isCPU);
 
-    std::uint32_t flipVal = flipped ? 0xf0 : 0x0f;
-    flipVal |= isCPU ? 0xf000 : 0x0f00;
-    std::array<std::uint32_t, 5u> hashData =
+    //hmmmm is it possible we might accidentally
+    //create the ID of an existing profile?
+    //we're seeding with epoch time to try mitigating this...
+    if (profileID.empty())
     {
-        ballID, hairID, skinID, flipVal,
-        *reinterpret_cast<const std::uint32_t*>(avatarFlags.data()) //just remember to unbork this when updating palettes later on...
-    };
-    auto uid = std::to_string(SpookyHash::Hash32(hashData.data(), sizeof(std::uint32_t) * hashData.size(), 0));
+        std::uint32_t flipVal = flipped ? 0xf0 : 0x0f;
+        flipVal |= isCPU ? 0xf000 : 0x0f00;
+        std::array<std::uint32_t, 5u> hashData =
+        {
+            ballID, hairID, skinID, flipVal,
+            *reinterpret_cast<const std::uint32_t*>(avatarFlags.data()) //just remember to unbork this when updating palettes later on...
+        };
+        profileID = std::to_string(SpookyHash::Hash32(hashData.data(), sizeof(std::uint32_t) * hashData.size(), static_cast<std::uint32_t>(cro::SysTime::epoch())));
+    }
 
     auto path = Social::getUserContentPath(Social::UserContent::Profile);
     if (!cro::FileSystem::directoryExists(path))
     {
         cro::FileSystem::createDirectory(path);
     }
-    path += uid + "/";
+    path += profileID + "/";
 
     if (!cro::FileSystem::directoryExists(path))
     {
         cro::FileSystem::createDirectory(path);
     }
 
-    path += uid + ".pfl";
+    path += profileID + ".pfl";
     return cfg.save(path);
 }
 

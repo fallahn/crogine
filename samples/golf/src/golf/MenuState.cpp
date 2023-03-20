@@ -925,6 +925,16 @@ void MenuState::loadAssets()
     m_billboardTemplates[BillboardID::Tree03] = spriteToBillboard(spriteSheet.getSprite("tree03"));
     m_billboardTemplates[BillboardID::Tree04] = spriteToBillboard(spriteSheet.getSprite("tree04"));
 
+    spriteSheet.loadFromFile("assets/golf/sprites/lobby_menu.spt", m_resources.textures);
+    m_sprites[SpriteID::PrevCourse] = spriteSheet.getSprite("arrow_left");
+    m_sprites[SpriteID::NextCourse] = spriteSheet.getSprite("arrow_right");
+    m_sprites[SpriteID::LobbyCheckbox] = spriteSheet.getSprite("checkbox");
+    m_sprites[SpriteID::LobbyCheckboxHighlight] = spriteSheet.getSprite("checkbox_highlight");
+    m_sprites[SpriteID::LobbyRuleButton] = spriteSheet.getSprite("button");
+    m_sprites[SpriteID::LobbyRuleButtonHighlight] = spriteSheet.getSprite("button_highlight");
+    m_sprites[SpriteID::Envelope] = spriteSheet.getSprite("envelope");
+    m_sprites[SpriteID::LevelBadge] = spriteSheet.getSprite("rank_badge");
+
     m_menuSounds.loadFromFile("assets/golf/sound/menu.xas", m_sharedData.sharedResources->audio);
     m_audioEnts[AudioID::Accept] = m_uiScene.createEntity();
     m_audioEnts[AudioID::Accept].addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("accept");

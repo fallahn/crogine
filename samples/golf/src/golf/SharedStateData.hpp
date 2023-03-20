@@ -64,7 +64,7 @@ struct PlayerData final
     glm::vec3 currentTarget = glm::vec3(0.f);
     cro::Colour ballTint;
 
-    std::string profileID;
+    mutable std::string profileID; //saving file generates this
     bool saveProfile() const;
     bool loadProfile(const std::string& path, const std::string& uid);
 };
@@ -179,6 +179,7 @@ struct SharedStateData final
     std::vector<std::int32_t> unlockedItems;
 
     std::vector<PlayerData> playerProfiles;
+    std::size_t profileIndex = 0;
 
     //client settings
     bool usePostProcess = false;
