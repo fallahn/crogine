@@ -67,6 +67,14 @@ namespace ul
 
             Padlock,
 
+            Streak01,
+            Streak02,
+            Streak03,
+            Streak04,
+            Streak05,
+            Streak06,
+            Streak07,
+
             Count
         };
     };
@@ -87,6 +95,13 @@ namespace ul
         std::string("assets/golf/models/trophies/level40.cmt"),
         std::string("assets/golf/models/trophies/level50.cmt"),
         std::string("assets/golf/models/trophies/unlock.cmt"),
+        std::string("assets/golf/models/trophies/streak01.cmt"),
+        std::string("assets/golf/models/trophies/streak02.cmt"),
+        std::string("assets/golf/models/trophies/streak03.cmt"),
+        std::string("assets/golf/models/trophies/streak04.cmt"),
+        std::string("assets/golf/models/trophies/streak05.cmt"),
+        std::string("assets/golf/models/trophies/streak06.cmt"),
+        std::string("assets/golf/models/trophies/streak07.cmt"),
     };
 
     //these MUST be in the correct order for unlocking
@@ -118,6 +133,14 @@ namespace ul
             Clubhouse,
             CourseEditor,
 
+            Streak01,
+            Streak02,
+            Streak03,
+            Streak04,
+            Streak05,
+            Streak06,
+            Streak07,
+
             Count
         };
     };
@@ -147,5 +170,13 @@ namespace ul
         { ModelID::Padlock,  "Skill Up!",   "Club Range Extended" },
         { ModelID::Padlock,  "Socialiser",  "Clubhouse Unlocked" },
         { ModelID::Padlock,  "Designer",    "Course Editor Unlocked" },
+
+        { ModelID::Streak01,  "1 Day Streak",    "+5XP" },
+        { ModelID::Streak02,  "2 Day Streak",    "+11XP" },
+        { ModelID::Streak03,  "3 Day Streak",    "+18XP" },
+        { ModelID::Streak04,  "4 Day Streak",    "+26XP" },
+        { ModelID::Streak05,  "5 Day Streak",    "+36XP" },
+        { ModelID::Streak06,  "6 Day Streak",    "+50XP" },
+        { ModelID::Streak07,  "7 Day Streak",    "+100XP" },
     };
 }

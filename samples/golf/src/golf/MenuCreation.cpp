@@ -4895,11 +4895,22 @@ void MenuState::updateUnlockedItems()
 {
     //current day streak
     auto streak = Social::getCurrentStreak();
-    LogI << "Current streak " << streak << " days" << std::endl;
+    CRO_ASSERT(streak < 8, "");
+    switch (streak)
+    {
+    default:
+        m_sharedData.unlockedItems.push_back(ul::UnlockID::Streak01 + (streak - 1));
+        break;
+    case 0: //do nothing
+        break;
+    }
+
     if (streak != 0)
     {
-        LogI << StreakXP[streak-1] << " xp awarded" << std::endl;
+        Social::awardXP(StreakXP[streak-1]);
     }
+
+
 
     //clubs
     auto clubFlags = Social::getUnlockStatus(Social::UnlockType::Club);
