@@ -2463,7 +2463,7 @@ void ClubhouseState::addTableSelectButtons()
             checkboxEnt.addComponent<cro::Sprite>() = m_sprites[SpriteID::LobbyCheckbox];
             checkboxEnt.addComponent<cro::CommandTarget>().ID = CommandID::Menu::CourseSelect;
 
-            bounds = m_sprites[SpriteID::LobbyCheckbox].getTextureRect();
+            auto bounds = m_sprites[SpriteID::LobbyCheckbox].getTextureRect();
             checkboxEnt.addComponent<cro::Callback>().active = true;
             checkboxEnt.getComponent<cro::Callback>().function =
                 [&, bounds](cro::Entity en, float)

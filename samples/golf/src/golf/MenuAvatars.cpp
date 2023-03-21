@@ -290,7 +290,7 @@ void MenuState::createAvatarMenuNew(cro::Entity parent, std::uint32_t /*mouseEnt
         entity.addComponent<cro::Drawable2D>();
         entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("profile_highlight");
         entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
-        entity.getComponent<cro::Callback>().setUserData<std::uint32_t>(i);
+        entity.addComponent<cro::Callback>().setUserData<std::uint32_t>(i);
         entity.addComponent<cro::UIInput>().area = spriteSheet.getSprite("profile_highlight").getTextureBounds();
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectionCallback;
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectionCallback;
@@ -444,7 +444,7 @@ void MenuState::createAvatarMenuNew(cro::Entity parent, std::uint32_t /*mouseEnt
 
     //reset stats
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 152.f, 24.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 151.f, 23.f, 0.1f });
     entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("reset_select");
