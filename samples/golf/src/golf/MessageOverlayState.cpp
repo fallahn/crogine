@@ -394,7 +394,7 @@ void MessageOverlayState::buildScene()
                                 //now we wait for the server to send us the map name so we know the tutorial
                                 //course has been set. Then the network event handler launches the game.
                             }
-                        
+
                             //reset the tutorial flag in shared data
                             m_sharedData.showTutorialTip = false;
                         }
@@ -402,7 +402,7 @@ void MessageOverlayState::buildScene()
                 });
         entity = createItem(glm::vec2(28.f, -16.f), "No", menuEntity);
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
-            uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt) mutable
+            uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)
                 {
                     if (activated(evt))
                     {
@@ -447,12 +447,12 @@ void MessageOverlayState::buildScene()
         entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
         bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
         entity.addComponent<cro::UIInput>().area = bounds;
-        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = 
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] =
             uiSystem.addCallback(
-                [](cro::Entity e) 
-            {
-                e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
-            });
+                [](cro::Entity e)
+                {
+                    e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
+                });
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] =
             uiSystem.addCallback(
                 [](cro::Entity e)
@@ -470,6 +470,47 @@ void MessageOverlayState::buildScene()
                 });
 
         menuEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    }
+
+    else if (m_sharedData.errorMessage == "reset_profile")
+    {
+        entity.getComponent<cro::Text>().setString("Are You REALLY Sure?");
+        centreText(entity);
+
+        auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
+        entity = m_scene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition(position + glm::vec2(-82.f, -4.f));
+        entity.addComponent<cro::Drawable2D>();
+        entity.addComponent<cro::Text>(smallFont).setString("This will reset all of your\nprogress including all of\nyour XP and all unlocked items.");
+        entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+        entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+        entity.getComponent<cro::Text>().setVerticalSpacing(-1.f);
+        menuEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+
+        //buttons
+        entity = createItem(glm::vec2(28.f, -26.f), "No", menuEntity);
+        entity.getComponent<cro::Text>().setFillColour(TextGoldColour);
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+            uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)
+                {
+                    if (activated(evt))
+                    {
+                        quitState();
+                    }
+                });
+
+        entity = createItem(glm::vec2(-28.f, -26.f), "Yes", menuEntity);
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+            uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)
+                {
+                    if (activated(evt))
+                    {
+                        requestStackClear();
+                        requestStackPush(StateID::SplashScreen);
+                    }
+                });
 
     }
     else //a generic message

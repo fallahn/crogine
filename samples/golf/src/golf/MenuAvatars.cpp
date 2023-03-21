@@ -296,6 +296,7 @@ void MenuState::createAvatarMenuNew(cro::Entity parent, std::uint32_t /*mouseEnt
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectionCallback;
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = activateCallback;
         entity.getComponent<cro::UIInput>().setGroup(MenuID::Avatar);
+        entity.getComponent<cro::UIInput>().enabled = false;
 
         m_rosterMenu.selectionEntities[i].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
         m_rosterMenu.buttonEntities[i] = entity;
@@ -442,7 +443,28 @@ void MenuState::createAvatarMenuNew(cro::Entity parent, std::uint32_t /*mouseEnt
     avatarEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     //reset stats
-
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 152.f, 24.f, 0.1f });
+    entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("reset_select");
+    entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+    entity.addComponent<cro::SpriteAnimation>();
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.addComponent<cro::UIInput>().area = bounds;
+    entity.getComponent<cro::UIInput>().setGroup(MenuID::Avatar);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectionCallback;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectionCallback;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = uiSystem.addCallback(
+        [&](cro::Entity e, const cro::ButtonEvent& evt)
+        {
+            if (activated(evt))
+            {
+                m_sharedData.errorMessage = "reset_profile";
+                requestStackPush(StateID::MessageOverlay);
+            }
+        });
+    avatarEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
     //banner
