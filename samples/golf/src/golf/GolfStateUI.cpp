@@ -1166,7 +1166,7 @@ void GolfState::showCountdown(std::uint8_t seconds)
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
     //show the scores
-    updateScoreboard(); //TODO - this is actually delayed by a frame because it's sent by command - which means the statBoardScores are not up to date when below happens.
+    updateScoreboard();
     showScoreboard(true);
 
     //check if we're the winner
@@ -1465,6 +1465,7 @@ void GolfState::createScoreboard()
     rootEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     auto bgEnt = entity;
+    m_scoreboardEnt = entity;
 
     auto resizeCentre =
         [](cro::Entity e)
@@ -1663,7 +1664,6 @@ void GolfState::createScoreboard()
     ents.back().getComponent<cro::Transform>().setPosition(glm::vec3(ColumnPositions.back(), 0.5f));
     ents.back().getComponent<UIElement>().absolutePosition = ColumnPositions.back() - glm::vec2(0.f, UITextPosV);
 
-    updateScoreboard();
 
     //net strength icons
     glm::vec3 iconPos(8.f, 235.f, 2.2f);
@@ -1699,14 +1699,16 @@ void GolfState::createScoreboard()
             iconPos.y -= IconSpacing;
         }
     }
+
+    updateScoreboard();
 }
 
 void GolfState::updateScoreboard()
 {
-    cro::Command cmd;
+    /*cro::Command cmd;
     cmd.targetFlags = CommandID::UI::Scoreboard;
-    cmd.action = [&](cro::Entity e, float)
-    {
+    cmd.action = [&](cro::Entity, float) {*/
+
         struct ScoreEntry final
         {
             cro::String name;
@@ -1740,7 +1742,7 @@ void GolfState::updateScoreboard()
                 {
                     auto s = client.playerData[i].holeScores[j];
                     entry.holes.push_back(s);
-                    
+
                     if (s)
                     {
                         entry.parDiff += static_cast<std::int32_t>(s) - m_holeData[j].par;
@@ -1815,7 +1817,7 @@ void GolfState::updateScoreboard()
             });
         //LOG("Table Update", cro::Logger::Type::Info);
 
-        auto& ents = e.getComponent<cro::Callback>().getUserData<std::vector<cro::Entity>>();
+        auto& ents = m_scoreboardEnt.getComponent<cro::Callback>().getUserData<std::vector<cro::Entity>>();
         std::sort(scores.begin(), scores.end(),
             [&](const ScoreEntry& a, const ScoreEntry& b)
             {
@@ -1883,7 +1885,7 @@ void GolfState::updateScoreboard()
                 auto s = scores[j].holes[i - 1];
                 if (s)
                 {
-                     scoreString += std::to_string(s);
+                    scoreString += std::to_string(s);
                 }
             }
 
@@ -1961,7 +1963,7 @@ void GolfState::updateScoreboard()
 
         if (page2)
         {
-            const auto getSeparator = 
+            const auto getSeparator =
                 [](std::int32_t first)
             {
                 std::string str;
@@ -1987,7 +1989,7 @@ void GolfState::updateScoreboard()
             {
                 separator = getSeparator(scores[i].backNine);
                 totalString += "\n" + std::to_string(scores[i].backNine);
-                
+
                 switch (m_sharedData.scoreType)
                 {
                 default:
@@ -2032,8 +2034,9 @@ void GolfState::updateScoreboard()
         ents.back().getComponent<cro::Transform>().setPosition(pos);
 
         m_leaderboardTexture.update(leaderboardEntries);
-    };
-    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+    /*};
+    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);*/
 }
 
 void GolfState::showScoreboard(bool visible)
@@ -2661,7 +2664,7 @@ void GolfState::updateSkipMessage(float dt)
                     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
                     //switch to sky cam after slight delay
-                    auto entity = m_gameScene.createEntity();
+                    /*auto entity = m_gameScene.createEntity();
                     entity.addComponent<cro::Callback>().active = true;
                     entity.getComponent<cro::Callback>().setUserData<float>(1.f);
                     entity.getComponent<cro::Callback>().function =
@@ -2680,7 +2683,7 @@ void GolfState::updateSkipMessage(float dt)
                             ent.getComponent<cro::Callback>().active = false;
                             m_gameScene.destroyEntity(ent);
                         }
-                    };
+                    };*/
                 }
             }
             else

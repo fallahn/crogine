@@ -947,8 +947,10 @@ void GolfState::handleMessage(const cro::Message& msg)
                 {
                     e.getComponent<cro::Model>().setHidden(true); 
                 };
+                m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
             }
-            else if (data.data == CameraID::Player)
+            else if (data.data == CameraID::Player
+                && m_currentCamera == CameraID::Drone)
             {
                 //show the stroke indicator if active player
                 cmd.action = [&](cro::Entity e, float)
@@ -956,8 +958,8 @@ void GolfState::handleMessage(const cro::Message& msg)
                     auto localPlayer = m_currentPlayer.client == m_sharedData.clientConnection.connectionID;
                     e.getComponent<cro::Model>().setHidden(!(localPlayer && !m_sharedData.localConnectionData.playerData[m_currentPlayer.player].isCPU));
                 };
+                m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
             }
-            m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
         }
             break;
         }
