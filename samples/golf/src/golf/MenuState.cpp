@@ -935,6 +935,10 @@ void MenuState::loadAssets()
     m_sprites[SpriteID::Envelope] = spriteSheet.getSprite("envelope");
     m_sprites[SpriteID::LevelBadge] = spriteSheet.getSprite("rank_badge");
 
+    //network icon
+    spriteSheet.loadFromFile("assets/golf/sprites/scoreboard.spt", m_resources.textures);
+    m_sprites[SpriteID::NetStrength] = spriteSheet.getSprite("strength_meter");
+
     m_menuSounds.loadFromFile("assets/golf/sound/menu.xas", m_sharedData.sharedResources->audio);
     m_audioEnts[AudioID::Accept] = m_uiScene.createEntity();
     m_audioEnts[AudioID::Accept].addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("accept");

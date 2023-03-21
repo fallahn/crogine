@@ -271,6 +271,13 @@ private:
     std::array<std::size_t, ConstVal::MaxPlayers> m_hairIndices = {};
     std::int32_t indexFromHairID(std::uint32_t);
 
+    struct Roster final
+    {
+        std::size_t activeIndex = 0;
+        std::array<std::size_t, ConstVal::MaxPlayers> profileIndices = {}; //the index of the profile at this slot
+        std::array<cro::Entity, ConstVal::MaxPlayers> selectionEntities = {}; //entity to show active slot
+        std::array<cro::Entity, ConstVal::MaxPlayers> buttonEntities = {}; //button to select slot
+    }m_rosterMenu;
 
     void createUI();
     void createMainMenu(cro::Entity, std::uint32_t, std::uint32_t);

@@ -2001,14 +2001,6 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
 
     cro::SpriteSheet spriteSheet;
     spriteSheet.loadFromFile("assets/golf/sprites/lobby_menu.spt", m_resources.textures);
-    /*m_sprites[SpriteID::PrevCourse] = spriteSheet.getSprite("arrow_left");
-    m_sprites[SpriteID::NextCourse] = spriteSheet.getSprite("arrow_right");
-    m_sprites[SpriteID::LobbyCheckbox] = spriteSheet.getSprite("checkbox");
-    m_sprites[SpriteID::LobbyCheckboxHighlight] = spriteSheet.getSprite("checkbox_highlight");
-    m_sprites[SpriteID::LobbyRuleButton] = spriteSheet.getSprite("button");
-    m_sprites[SpriteID::LobbyRuleButtonHighlight] = spriteSheet.getSprite("button_highlight");
-    m_sprites[SpriteID::Envelope] = spriteSheet.getSprite("envelope");
-    m_sprites[SpriteID::LevelBadge] = spriteSheet.getSprite("rank_badge");*/
 
     //title
     auto entity = m_uiScene.createEntity();
@@ -2707,10 +2699,6 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
     menuTransform.addChild(entity.getComponent<cro::Transform>());
 #endif
-
-    //network icon
-    spriteSheet.loadFromFile("assets/golf/sprites/scoreboard.spt", m_resources.textures);
-    m_sprites[SpriteID::NetStrength] = spriteSheet.getSprite("strength_meter");
 
 
     //running scores

@@ -2956,7 +2956,7 @@ void GolfState::retargetMinimap(bool reset)
     if (reset)
     {
         //create a default view around the bounds of the hole model
-        target.end.tilt = 0.f;
+        target.end.tilt = 0.f; //TODO this could be wound several times past TAU and should be only fmod this value
 
         auto bb = m_holeData[m_currentHole].modelEntity.getComponent<cro::Model>().getAABB();
         target.end.pan = m_minimapZoom.textureSize / 2.f;
