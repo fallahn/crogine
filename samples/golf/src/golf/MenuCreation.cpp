@@ -4882,7 +4882,7 @@ void MenuState::updateCourseRuleString()
 void MenuState::updateUnlockedItems()
 {
     //current day streak
-    auto streak = Social::getCurrentStreak();
+    auto streak = Social::updateStreak();
     CRO_ASSERT(streak < 8, "");
     switch (streak)
     {

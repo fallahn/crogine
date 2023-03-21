@@ -1069,6 +1069,18 @@ void MenuState::createProfileLayout(cro::Entity parent, cro::Transform& menuTran
 
 
     //TODO club status
-    //TODO current streak
-    //TODO add longest streak
+
+
+
+    //streak info
+    labelEnt = m_uiScene.createEntity();
+    labelEnt.addComponent<cro::Transform>().setPosition({ 22.f, 48.f, 0.1f });
+    labelEnt.addComponent<cro::Drawable2D>();
+    labelEnt.addComponent<cro::Text>(font).setString("Current Streak: " + std::to_string(Social::getCurrentStreak()) 
+                                            + " Days\nLongest Streak: " + std::to_string(Social::getLongestStreak()) + " Days");
+    labelEnt.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+    labelEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    labelEnt.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
+    labelEnt.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+    parent.getComponent<cro::Transform>().addChild(labelEnt.getComponent<cro::Transform>());
 }

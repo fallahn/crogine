@@ -170,6 +170,12 @@ Social::ProgressData Social::getLevelProgress()
 
 std::uint32_t Social::getCurrentStreak()
 {
+    dayStreak.read();
+    return dayStreak.value;
+}
+
+std::uint32_t Social::updateStreak()
+{
     lastLog.read();
     std::int32_t buff = lastLog.value;
 
@@ -255,6 +261,18 @@ std::uint32_t Social::getLongestStreak()
 {
     longestStreak.read();
     return longestStreak.value;
+}
+
+void Social::resetProfile()
+{
+    experience.value = 0;
+    experience.write();
+
+    ballset.value = 0;
+    ballset.write();
+
+    clubset.value = 0;
+    clubset.write();
 }
 
 void Social::storeDrivingStats(const std::array<float, 3u>& topScores)
