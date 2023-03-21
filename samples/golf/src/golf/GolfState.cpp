@@ -933,7 +933,32 @@ void GolfState::handleMessage(const cro::Message& msg)
         }
             break;
         case SceneEvent::RequestSwitchCamera:
+            
+        {
             setActiveCamera(data.data);
+
+            cro::Command cmd;
+            cmd.targetFlags = CommandID::StrokeArc | CommandID::StrokeIndicator;
+
+            if (data.data == CameraID::Drone)
+            {
+                //hide the stroke indicator
+                cmd.action = [](cro::Entity e, float)
+                {
+                    e.getComponent<cro::Model>().setHidden(true); 
+                };
+            }
+            else if (data.data == CameraID::Player)
+            {
+                //show the stroke indicator if active player
+                cmd.action = [&](cro::Entity e, float)
+                {
+                    auto localPlayer = m_currentPlayer.client == m_sharedData.clientConnection.connectionID;
+                    e.getComponent<cro::Model>().setHidden(!(localPlayer && !m_sharedData.localConnectionData.playerData[m_currentPlayer.player].isCPU));
+                };
+            }
+            m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+        }
             break;
         }
     }
@@ -3410,6 +3435,7 @@ void GolfState::buildScene()
     entity.getComponent<cro::Model>().setMaterial(0, beaconMat);
     entity.getComponent<cro::Model>().setHidden(!m_sharedData.showBeacon);
     entity.getComponent<cro::Model>().setMaterialProperty(0, "u_colourRotation", m_sharedData.beaconColour);
+    entity.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniGreen | RenderFlags::MiniMap));
     auto beaconEntity = entity;
 
 #ifdef CRO_DEBUG_
