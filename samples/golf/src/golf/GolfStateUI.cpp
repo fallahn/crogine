@@ -2653,12 +2653,34 @@ void GolfState::updateSkipMessage(float dt)
                     //hide message
                     cro::Command cmd;
                     cmd.targetFlags = CommandID::UI::FastForward;
-                    cmd.action = [](cro::Entity e, float)
+                    cmd.action = [&](cro::Entity e, float)
                     {
                         e.getComponent<cro::Callback>().getUserData<SkipCallbackData>().direction = 0;
                         e.getComponent<cro::Callback>().active = true;
                     };
                     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+                    //switch to sky cam after slight delay
+                    auto entity = m_gameScene.createEntity();
+                    entity.addComponent<cro::Callback>().active = true;
+                    entity.getComponent<cro::Callback>().setUserData<float>(1.f);
+                    entity.getComponent<cro::Callback>().function =
+                        [&](cro::Entity ent, float dt)
+                    {
+                        auto& currTime = ent.getComponent<cro::Callback>().getUserData<float>();
+                        currTime -= dt;
+
+                        if (currTime < 0)
+                        {
+                            if (m_currentCamera == CameraID::Player
+                                || m_currentCamera == CameraID::Bystander)
+                            {
+                                setActiveCamera(CameraID::Sky);
+                            }
+                            ent.getComponent<cro::Callback>().active = false;
+                            m_gameScene.destroyEntity(ent);
+                        }
+                    };
                 }
             }
             else

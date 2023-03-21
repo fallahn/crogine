@@ -4786,7 +4786,7 @@ void GolfState::spawnBall(const ActorInfo& info)
 
     auto playerID = info.playerID;
     auto clientID = info.clientID;
-    auto depthOffset = (clientID * ConstVal::MaxPlayers) + playerID;
+    auto depthOffset = ((clientID * ConstVal::MaxPlayers) + playerID) + 1; //must be at least 1
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setOrigin({ texSize.x / 2.f, 0.f, -0.1f - (0.1f * depthOffset) });
     entity.addComponent<cro::Drawable2D>();
