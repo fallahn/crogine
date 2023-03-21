@@ -1383,6 +1383,9 @@ void ClubhouseState::handleNetEvent(const net::NetEvent& evt)
         switch (evt.packet.getID())
         {
         default: break;
+        case PacketID::ClientPlayerCount:
+            m_sharedData.clientConnection.netClient.sendPacket(PacketID::ClientPlayerCount, m_sharedData.localConnectionData.playerCount, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+            break;
         case PacketID::NewLobbyReady:
             m_matchMaking.joinLobby(evt.packet.as<std::uint64_t>());
             break;

@@ -397,6 +397,12 @@ void ClubhouseState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter
 
 void ClubhouseState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, std::uint32_t mouseExit)
 {
+    if (m_sharedData.localConnectionData.playerData[1].name.empty())
+    {
+        m_sharedData.profileIndex = (m_sharedData.profileIndex + 1) % m_sharedData.playerProfiles.size();
+        m_sharedData.localConnectionData.playerData[1] = m_sharedData.playerProfiles[m_sharedData.profileIndex];
+    }
+
     auto menuEntity = m_uiScene.createEntity();
     menuEntity.addComponent<cro::Transform>().setScale(glm::vec2(0.f));
     menuEntity.addComponent<cro::Callback>().setUserData<MenuData>();
@@ -972,7 +978,7 @@ void ClubhouseState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnt
                 if (activated(evt))
                 {
                     applyTextEdit();
-                    saveAvatars(m_sharedData);
+                    //saveAvatars(m_sharedData);
 
                     m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
 
