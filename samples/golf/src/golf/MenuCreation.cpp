@@ -2071,9 +2071,13 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
         cmd.action = [expansion](cro::Entity e, float)
         {
             //set cropping area
-            auto bounds = cro::Text::getLocalBounds(e);
-            bounds.width = std::min(bounds.width, MinLobbyCropWidth + expansion);
-            e.getComponent<cro::Drawable2D>().setCroppingArea(bounds);
+            if (e.hasComponent<cro::Text>())
+            {
+                auto bounds = cro::Text::getLocalBounds(e);
+                bounds.width = std::min(bounds.width, MinLobbyCropWidth + expansion);
+                e.getComponent<cro::Drawable2D>().setCroppingArea(bounds);
+            }
+
 
             //set offset if on right
             if (auto pos = e.getComponent<cro::Transform>().getPosition(); pos.x > LobbyTextSpacing)
@@ -2249,39 +2253,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     menuTransform.addChild(entity.getComponent<cro::Transform>());
     bgEnt = entity;
 
-    //flag
-    //entity = m_uiScene.createEntity();
-    //entity.addComponent<cro::Transform>().setPosition({ (bounds.width / 2.f), bounds.height });
-    //entity.addComponent<cro::Drawable2D>();
-    //entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::Flag];
-    //entity.addComponent<cro::SpriteAnimation>().play(0);
-    //bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-
-
-    //bouncy ball
-    /*cro::SpriteSheet sheet;
-    sheet.loadFromFile("assets/golf/sprites/bounce.spt", m_resources.textures);
-    entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 14.f, bounds.height - 4.f, 0.3f });
-    entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Sprite>() = sheet.getSprite("bounce");
-    entity.addComponent<cro::SpriteAnimation>().play(0);
-    entity.addComponent<cro::Callback>().active = true;
-    entity.getComponent<cro::Callback>().setUserData<float>(0.f);
-    entity.getComponent<cro::Callback>().function =
-        [](cro::Entity e, float dt)
-    {
-        auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
-        currTime -= dt;
-        if (currTime < 0)
-        {
-            e.getComponent<cro::SpriteAnimation>().play(0);
-            currTime = static_cast<float>(cro::Util::Random::value(30, 60));
-        }
-    };
-    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());*/
-
-    
+   
 
     //course title
     entity = m_uiScene.createEntity();
@@ -2331,22 +2303,6 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     auto bannerEnt = entity;
     menuTransform.addChild(entity.getComponent<cro::Transform>());
 
-
-
-
-    //entity = m_uiScene.createEntity();
-    //entity.addComponent<cro::Transform>();
-    //entity.addComponent<cro::Drawable2D>();
-    //entity.addComponent<cro::Text>(smallFont).setString("Reverse Order");
-    //entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
-    //entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
-    //entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
-    //entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
-    //entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement;
-    //entity.addComponent<UIElement>().absolutePosition = { -73.f, -124.f };
-    //entity.getComponent<UIElement>().relativePosition = CourseDescPosition;
-    //entity.getComponent<UIElement>().depth = 0.01f;
-    //menuTransform.addChild(entity.getComponent<cro::Transform>());
 
 
     //cursor
@@ -2520,7 +2476,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
 
 
 
-    //stash this so we can access it from the even handler (escape to ignore etc)
+    //stash this so we can access it from the event handler (escape to ignore etc)
     quitConfirmCallback = [&, confirmEnt, shadeEnt]() mutable
     {
         confirmEnt.getComponent<cro::Callback>().getUserData<ConfirmationData>().dir = ConfirmationData::Out;
@@ -3705,9 +3661,6 @@ void MenuState::updateLobbyData(const net::NetEvent& evt)
 
 void MenuState::updateLobbyAvatars()
 {
-    //TODO detect only the avatars which changed
-    //so we don't needlessly update textures?
-
     cro::Command cmd;
     cmd.targetFlags = CommandID::Menu::LobbyList;
     cmd.action = [&](cro::Entity e, float)
@@ -3747,7 +3700,6 @@ void MenuState::updateLobbyAvatars()
         cro::Texture iconTexture;
         cro::Image iconImage;
 
-        glm::vec2 textPos(0.f);
         std::int32_t h = 0;
         std::int32_t clientCount = 0;
         std::int32_t playerCount = 0;
@@ -3757,8 +3709,11 @@ void MenuState::updateLobbyAvatars()
         auto& largeFont = m_sharedData.sharedResources->fonts.get(FontID::UI);
         auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
 
+        std::array<cro::String, 2u> stringCols = {};
+
         for (const auto& c : m_sharedData.connectionData)
         {
+            //update the name label texture
             if (c.connectionID < m_sharedData.nameTextures.size())
             {
                 m_sharedData.nameTextures[c.connectionID].clear(cro::Colour::Transparent);
@@ -3792,58 +3747,42 @@ void MenuState::updateLobbyAvatars()
                 m_sharedData.nameTextures[c.connectionID].display();
             }
 
-            //create a list of names on the connected client
-            cro::String str;
-            for (auto i = 0u; i < c.playerCount; ++i)
+            glm::vec2 iconPos(1.f, 0.f);
+            const std::int32_t col = (playerCount / ConstVal::MaxPlayers);
+            const std::int32_t row = (playerCount % ConstVal::MaxPlayers);
+            iconPos.x += (LobbyTextSpacing + m_lobbyExpansion) * col;
+            iconPos.y = row * -14.f; //TODO constify row spacing
+
+            //add list of names on the connected client
+            for (auto i = 0u; i < /*c.playerCount*/3; ++i)
             {
-                str += c.playerData[i].name.substr(0, ConstVal::MaxStringChars) + "\n";
+                stringCols[playerCount / ConstVal::MaxPlayers] += "buns\n";
+
                 auto avatarIndex = indexFromAvatarID(c.playerData[i].skinID);
-                applyTexture(avatarIndex, m_sharedData.avatarTextures[c.connectionID][i], c.playerData[i].avatarFlags);
+                //applyTexture(avatarIndex, m_sharedData.avatarTextures[c.connectionID][i], c.playerData[i].avatarFlags);
+                //stringCols[playerCount / ConstVal::MaxPlayers] += c.playerData[i].name.substr(0, ConstVal::MaxStringChars) + "\n";
 
                 playerCount++;
             }
 
-            if (str.empty())
-            {
-                str = "Empty";
-            }
-            else
+            if (c.playerCount != 0)
             {
                 clientCount++;
             }
 
-            textPos.x = (h % 2) * LobbyTextSpacing;
-            textPos.y = (h / 2) * -74.f;
-
-            textPos.x += 1.f;
-
-            
+            //client icons are attached to this
             auto entity = m_uiScene.createEntity();
-            entity.addComponent<cro::Transform>().setPosition(glm::vec3(textPos, 0.2f));
-            entity.addComponent<cro::Drawable2D>();
-            entity.addComponent<cro::Text>(largeFont).setString(str);
-            entity.getComponent<cro::Text>().setFillColour(LeaderboardTextDark);
-            entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
-            entity.getComponent<cro::Text>().setVerticalSpacing(6.f);
-
-            auto crop = cro::Text::getLocalBounds(entity);
-            crop.width = std::min(crop.width, MinLobbyCropWidth + m_lobbyExpansion);
-            entity.getComponent<cro::Drawable2D>().setCroppingArea(crop);
-            if (textPos.x > LobbyTextSpacing)
-            {
-                entity.getComponent<cro::Transform>().move({ m_lobbyExpansion, 0.f });
-            }
+            entity.addComponent<cro::Transform>().setPosition(glm::vec3(iconPos, 0.2f));
 
             //used to update spacing by resize callback from lobby background ent.
             entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::LobbyText;
             e.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
             children.push_back(entity);
-            auto textEnt = entity;
+            auto iconEnt = entity;
 
-            //add a ready status for that client
-            static constexpr glm::vec2 ReadyOffset(-12.f, -5.f);
+            //add a ready status for that client - TODO move this to bottom of screen
             entity = m_uiScene.createEntity();
-            entity.addComponent<cro::Transform>().setPosition(ReadyOffset);
+            entity.addComponent<cro::Transform>();// .setPosition(ReadyOffset);
             entity.addComponent<cro::Drawable2D>();
             entity.addComponent<cro::Callback>().active = true;
             entity.getComponent<cro::Callback>().function =
@@ -3857,7 +3796,7 @@ void MenuState::updateLobbyAvatars()
                     v.colour = colour;
                 }
             };
-            textEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+            iconEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
             children.push_back(entity);
 
             auto& verts = entity.getComponent<cro::Drawable2D>().getVertexData();
@@ -3870,10 +3809,23 @@ void MenuState::updateLobbyAvatars()
             };
             entity.getComponent<cro::Drawable2D>().updateLocalBounds();
 
+            //status text
+            entity = m_uiScene.createEntity();
+            entity.addComponent<cro::Transform>().setPosition({ 8.f, 6.f, 0.1f });
+            entity.addComponent<cro::Drawable2D>();
+            entity.addComponent<cro::Text>(smallFont).setString(c.playerCount ? "Ready" : "Not Connected");
+            entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+            entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+            entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+            entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
+            iconEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+            children.push_back(entity);
+
+
+
             //rank text
             entity = m_uiScene.createEntity();
-            entity.addComponent<cro::Transform>();// .setPosition({ -textPos.x, -56.f });
-            //entity.getComponent<cro::Transform>().move({ 50.f + (m_lobbyExpansion / 2.f), 0.f });
+            entity.addComponent<cro::Transform>();
             entity.addComponent<cro::Drawable2D>();
             entity.addComponent<cro::Text>(smallFont).setString("Level");
             entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
@@ -3895,10 +3847,10 @@ void MenuState::updateLobbyAvatars()
                     ent.getComponent<cro::Text>().setString("Level " + std::to_string(m_sharedData.connectionData[h].level));
                     
                     float offset = ent.getComponent<cro::Callback>().getUserData<float>();
-                    ent.getComponent<cro::Transform>().setPosition({ std::floor((50.f + (m_lobbyExpansion / 2.f)) - offset), -56.f, 0.1f});
+                    ent.getComponent<cro::Transform>().setPosition({ std::floor((50.f + (m_lobbyExpansion / 2.f)) - offset), /*-56.f*/6.f, 0.1f});
                 }
             };
-            textEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+            iconEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
             children.push_back(entity);
             auto rankEnt = entity;
 
@@ -4005,10 +3957,12 @@ void MenuState::updateLobbyAvatars()
                 rankEnt.getComponent<cro::Callback>().setUserData<float>((bounds.width / 2.f) + 8.f);
             }
 
-            //add a network status icon
+
+
+            //add a network status icon (not attached to icons) - TODO skip if this is host
             entity = m_uiScene.createEntity();
-            entity.addComponent<cro::Transform>().setPosition(ReadyOffset);
-            entity.getComponent<cro::Transform>().move({ -5.f, -64.f });
+            entity.addComponent<cro::Transform>().setPosition(glm::vec3(iconPos, 0.1f));
+            entity.getComponent<cro::Transform>().move({ -17.f, -12.f });
             entity.addComponent<cro::Drawable2D>();
             entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::NetStrength];
             entity.addComponent<cro::SpriteAnimation>();
@@ -4029,16 +3983,50 @@ void MenuState::updateLobbyAvatars()
                 }
             };
 
-            textEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+            e.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
             children.push_back(entity);
 
             h++;
         }
 
+
+
+
+
+        //create tex columns for name lists
+        glm::vec2 textPos(1.f, 0.f);
+        for (const auto& str : stringCols)
+        {
+            if (!str.empty())
+            {
+                auto entity = m_uiScene.createEntity();
+                entity.addComponent<cro::Transform>().setPosition(glm::vec3(textPos, 0.2f));
+                entity.addComponent<cro::Drawable2D>();
+                entity.addComponent<cro::Text>(largeFont).setString(str);
+                entity.getComponent<cro::Text>().setFillColour(LeaderboardTextDark);
+                entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
+                entity.getComponent<cro::Text>().setVerticalSpacing(6.f);
+
+                auto crop = cro::Text::getLocalBounds(entity);
+                crop.width = std::min(crop.width, MinLobbyCropWidth + m_lobbyExpansion);
+                entity.getComponent<cro::Drawable2D>().setCroppingArea(crop);
+                if (textPos.x > LobbyTextSpacing)
+                {
+                    entity.getComponent<cro::Transform>().move({ m_lobbyExpansion, 0.f });
+                }
+
+                //used to update spacing by resize callback from lobby background ent.
+                entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::LobbyText;
+                e.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+                children.push_back(entity);
+            }
+            textPos.x += LobbyTextSpacing;
+        }
+
+
         auto strClientCount = std::to_string(clientCount);
         Social::setStatus(Social::InfoID::Lobby, { "Golf", strClientCount.c_str(), std::to_string(ConstVal::MaxClients).c_str() });
         Social::setGroup(m_sharedData.lobbyID, playerCount);
-
 
         auto temp = m_uiScene.createEntity();
         temp.addComponent<cro::Callback>().active = true;

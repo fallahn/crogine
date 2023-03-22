@@ -169,6 +169,7 @@ void MenuState::createAvatarMenuNew(cro::Entity parent)
     avatarEnt.addComponent<cro::Drawable2D>();
     avatarEnt.addComponent<cro::Sprite>() = spriteSheet.getSprite("background");
     avatarEnt.addComponent<UIElement>().relativePosition = { 0.5f, 0.5f };
+    avatarEnt.getComponent<UIElement>().absolutePosition = { 0.f, 10.f };
     avatarEnt.getComponent<UIElement>().depth = -0.2f;
     avatarEnt.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement;
     bounds = avatarEnt.getComponent<cro::Sprite>().getTextureBounds();
@@ -186,6 +187,18 @@ void MenuState::createAvatarMenuNew(cro::Entity parent)
     auto cursorEnt = entity;
 
     auto& largeFont = m_sharedData.sharedResources->fonts.get(FontID::UI);
+
+    //active profile name
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({382.f, 226.f, 0.1f});
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(largeFont).setString("Buns");
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
+    centreText(entity);
+    avatarEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    auto nameLabel = entity;
+
     //team roster
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 38.f, 225.f, 0.1f });
@@ -197,7 +210,7 @@ void MenuState::createAvatarMenuNew(cro::Entity parent)
     avatarEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     auto rosterEnt = entity;
 
-    auto updateRoster = [&, rosterEnt]() mutable
+    auto updateRoster = [&, rosterEnt, nameLabel]() mutable
     {
         //update the CPU icon, or hide if not added
         for (auto i = 0u; i < ConstVal::MaxPlayers; ++i)
@@ -224,6 +237,9 @@ void MenuState::createAvatarMenuNew(cro::Entity parent)
             m_rosterMenu.buttonEntities[i].getComponent<cro::UIInput>().enabled = true;
         }
         rosterEnt.getComponent<cro::Text>().setString(str);
+
+        nameLabel.getComponent<cro::Text>().setString(m_sharedData.playerProfiles[m_rosterMenu.profileIndices[m_rosterMenu.activeIndex]].name);
+        centreText(nameLabel);
     };
 
 
@@ -239,11 +255,14 @@ void MenuState::createAvatarMenuNew(cro::Entity parent)
         {
             e.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent); 
         });
-    auto activateCallback = uiSystem.addCallback([&](cro::Entity e, const cro::ButtonEvent& evt)
+    auto activateCallback = uiSystem.addCallback([&, nameLabel](cro::Entity e, const cro::ButtonEvent& evt) mutable
         {
             if (activated(evt))
             {
                 m_rosterMenu.activeIndex = e.getComponent<cro::Callback>().getUserData<std::uint32_t>();
+
+                nameLabel.getComponent<cro::Text>().setString(m_sharedData.playerProfiles[m_rosterMenu.profileIndices[m_rosterMenu.activeIndex]].name);
+                centreText(nameLabel);
             }
         });
 
@@ -664,6 +683,8 @@ void MenuState::createAvatarMenuNew(cro::Entity parent)
                         m_sharedData.localConnectionData.playerData[index] = m_sharedData.playerProfiles[index % m_sharedData.playerProfiles.size()];
                         m_sharedData.localConnectionData.playerCount++;
                         
+                        m_rosterMenu.profileIndices[index] = index % m_sharedData.playerProfiles.size();
+
                         //refresh the current roster
                         updateRoster();
 
