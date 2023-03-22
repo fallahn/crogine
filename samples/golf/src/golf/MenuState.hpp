@@ -266,6 +266,7 @@ private:
     void updateThumb(std::size_t);
     void ugcInstalledHandler(std::uint64_t id, std::int32_t type);
 
+    cro::RenderTexture m_clubTexture;
     
     //index into hair model vector - converted from hairID with indexFromHairID
     std::array<std::size_t, ConstVal::MaxPlayers> m_hairIndices = {};

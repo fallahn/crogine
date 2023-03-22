@@ -32,6 +32,7 @@ source distribution.
 #include "MenuConsts.hpp"
 #include "CommandIDs.hpp"
 #include "PacketIDs.hpp"
+#include "Clubs.hpp"
 #include "../ErrorCheck.hpp"
 
 #include <crogine/ecs/components/CommandTarget.hpp>
@@ -40,6 +41,7 @@ source distribution.
 #include <crogine/ecs/components/Drawable2D.hpp>
 
 #include <crogine/graphics/SpriteSheet.hpp>
+#include <crogine/graphics/SimpleText.hpp>
 
 #include <crogine/util/Random.hpp>
 
@@ -1067,8 +1069,68 @@ void MenuState::createProfileLayout(cro::Entity parent, cro::Transform& menuTran
     centreText(labelEnt);
     entity.getComponent<cro::Transform>().addChild(labelEnt.getComponent<cro::Transform>());
 
+    
+    //club status
+    if (m_clubTexture.create(210, 36, false))
+    {
+        auto clubEnt = m_uiScene.createEntity();
+        clubEnt.addComponent<cro::Transform>().setPosition({ 23.f, 57.f, 0.1f });
+        clubEnt.addComponent<cro::Drawable2D>();
+        clubEnt.addComponent<cro::Sprite>(m_clubTexture.getTexture());
+        parent.getComponent<cro::Transform>().addChild(clubEnt.getComponent<cro::Transform>());
 
-    //TODO club status
+        cro::SimpleText text(font);
+        text.setFillColour(TextNormalColour);
+        text.setShadowColour(LeaderboardTextDark);
+        text.setShadowOffset({ 1.f, -1.f });
+        text.setCharacterSize(InfoTextSize);
+
+        glm::vec2 position(2.f, 28.f);
+
+        m_clubTexture.clear(cro::Colour::Transparent);
+
+        static constexpr std::int32_t Col = 4;
+        static constexpr std::int32_t Row = 3;
+
+        const auto flags = Social::getUnlockStatus(Social::UnlockType::Club);
+
+        for (auto i = 0; i < Row; ++i)
+        {
+            for (auto j = 0; j < Col; ++j)
+            {
+                auto idx = i + (j * Row);
+                text.setString(Clubs[idx].getLabel() + " ");
+                text.setPosition(position);
+                
+                if (flags & (1 << idx))
+                {
+                    if (ClubID::DefaultSet & (1 << idx))
+                    {
+                        text.setFillColour(TextNormalColour);
+                    }
+                    else
+                    {
+                        text.setFillColour(TextGoldColour);
+                    }
+                }
+                else
+                {
+                    text.setFillColour(TextHighlightColour);
+                }
+                
+                text.draw();
+                position.x += 49.f;
+            }
+            position.x = 2.f;
+            position.y -= 12.f;
+        }
+
+        m_clubTexture.display();
+    }
+
+
+
+
 
 
 
@@ -1082,5 +1144,21 @@ void MenuState::createProfileLayout(cro::Entity parent, cro::Transform& menuTran
     labelEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
     labelEnt.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
     labelEnt.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+
+    //*sigh* leaderboards are not necessarily up to date because of the time it takes to fetch
+    //(we should really be using a stat) so we have to fudge this in here
+#ifdef USE_GNS
+    labelEnt.addComponent<cro::Callback>().active = true;
+    labelEnt.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+    {
+        if (m_currentMenu == MenuID::Avatar)
+        {
+            e.getComponent<cro::Text>().setString("Current Streak: " + std::to_string(Social::getCurrentStreak())
+                                        + " Days\nLongest Streak: " + std::to_string(Social::getLongestStreak()) + " Days");
+        }
+    };
+#endif
+
     parent.getComponent<cro::Transform>().addChild(labelEnt.getComponent<cro::Transform>());
 }

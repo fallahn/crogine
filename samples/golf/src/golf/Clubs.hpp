@@ -76,6 +76,8 @@ public:
 
     std::string getName(bool imperial, float distanceToPin) const;
 
+    std::string getLabel() const { return m_name; } //doesn't include distance
+
     float getPower(float distanceToPin) const;
 
     float getAngle() const { return m_angle; }
