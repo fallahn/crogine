@@ -3711,6 +3711,15 @@ void MenuState::updateLobbyAvatars()
 
         std::array<cro::String, 2u> stringCols = {};
 
+        const std::array<glm::vec3, 4u> IconPositions =
+        {
+            glm::vec3(1.f, -119.f, 0.1f),
+            glm::vec3(1.f, -132.f, 0.1f),
+            glm::vec3(1.f + LobbyTextSpacing, -119.f, 0.1f),
+            glm::vec3(1.f + LobbyTextSpacing, -132.f, 0.1f)
+        };
+        std::int32_t p = 0;
+
         for (const auto& c : m_sharedData.connectionData)
         {
             //update the name label texture
@@ -3754,13 +3763,13 @@ void MenuState::updateLobbyAvatars()
             iconPos.y = row * -14.f; //TODO constify row spacing
 
             //add list of names on the connected client
-            for (auto i = 0u; i < /*c.playerCount*/3; ++i)
+            for (auto i = 0u; i < c.playerCount; ++i)
             {
-                stringCols[playerCount / ConstVal::MaxPlayers] += "buns\n";
+                //stringCols[playerCount / ConstVal::MaxPlayers] += "buns\n";
 
                 auto avatarIndex = indexFromAvatarID(c.playerData[i].skinID);
-                //applyTexture(avatarIndex, m_sharedData.avatarTextures[c.connectionID][i], c.playerData[i].avatarFlags);
-                //stringCols[playerCount / ConstVal::MaxPlayers] += c.playerData[i].name.substr(0, ConstVal::MaxStringChars) + "\n";
+                applyTexture(avatarIndex, m_sharedData.avatarTextures[c.connectionID][i], c.playerData[i].avatarFlags);
+                stringCols[playerCount / ConstVal::MaxPlayers] += c.playerData[i].name.substr(0, ConstVal::MaxStringChars) + "\n";
 
                 playerCount++;
             }
@@ -3772,7 +3781,7 @@ void MenuState::updateLobbyAvatars()
 
             //client icons are attached to this
             auto entity = m_uiScene.createEntity();
-            entity.addComponent<cro::Transform>().setPosition(glm::vec3(iconPos, 0.2f));
+            entity.addComponent<cro::Transform>().setPosition(IconPositions[p++]);
 
             //used to update spacing by resize callback from lobby background ent.
             entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::LobbyText;
@@ -3780,9 +3789,9 @@ void MenuState::updateLobbyAvatars()
             children.push_back(entity);
             auto iconEnt = entity;
 
-            //add a ready status for that client - TODO move this to bottom of screen
+            //add a ready status for that client
             entity = m_uiScene.createEntity();
-            entity.addComponent<cro::Transform>();// .setPosition(ReadyOffset);
+            entity.addComponent<cro::Transform>();
             entity.addComponent<cro::Drawable2D>();
             entity.addComponent<cro::Callback>().active = true;
             entity.getComponent<cro::Callback>().function =
@@ -3847,7 +3856,7 @@ void MenuState::updateLobbyAvatars()
                     ent.getComponent<cro::Text>().setString("Level " + std::to_string(m_sharedData.connectionData[h].level));
                     
                     float offset = ent.getComponent<cro::Callback>().getUserData<float>();
-                    ent.getComponent<cro::Transform>().setPosition({ std::floor((50.f + (m_lobbyExpansion / 2.f)) - offset), /*-56.f*/6.f, 0.1f});
+                    ent.getComponent<cro::Transform>().setPosition({ std::floor((56.f + (m_lobbyExpansion / 2.f)) - offset), 6.f, 0.1f});
                 }
             };
             iconEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -3959,10 +3968,15 @@ void MenuState::updateLobbyAvatars()
 
 
 
-            //add a network status icon (not attached to icons) - TODO skip if this is host
+            //add a network status icon (not attached to icons)
             entity = m_uiScene.createEntity();
             entity.addComponent<cro::Transform>().setPosition(glm::vec3(iconPos, 0.1f));
             entity.getComponent<cro::Transform>().move({ -17.f, -12.f });
+            if (iconPos.x > LobbyTextSpacing)
+            {
+                //Ican't even remember why I have t odo this any more...
+                entity.getComponent<cro::Transform>().setOrigin({ 17.f, 0.f });
+            }
             entity.addComponent<cro::Drawable2D>();
             entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::NetStrength];
             entity.addComponent<cro::SpriteAnimation>();
@@ -3982,7 +3996,7 @@ void MenuState::updateLobbyAvatars()
                     ent.getComponent<cro::SpriteAnimation>().play(index);
                 }
             };
-
+            entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::LobbyText;
             e.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
             children.push_back(entity);
 

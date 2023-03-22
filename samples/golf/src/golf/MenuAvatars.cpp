@@ -263,6 +263,8 @@ void MenuState::createAvatarMenuNew(cro::Entity parent)
 
                 nameLabel.getComponent<cro::Text>().setString(m_sharedData.playerProfiles[m_rosterMenu.profileIndices[m_rosterMenu.activeIndex]].name);
                 centreText(nameLabel);
+
+                m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
             }
         });
 
@@ -284,7 +286,7 @@ void MenuState::createAvatarMenuNew(cro::Entity parent)
 
         //attach the selection bar 
         entity = m_uiScene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition({ 13.f, 3.f });
+        entity.addComponent<cro::Transform>().setPosition({ 14.f, 2.f });
         entity.addComponent<cro::Drawable2D>();
         entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("profile_select_dark");
         entity.addComponent<cro::Callback>().active = true;
@@ -432,6 +434,8 @@ void MenuState::createAvatarMenuNew(cro::Entity parent)
 
                 m_sharedData.localConnectionData.playerData[m_rosterMenu.activeIndex] = m_sharedData.playerProfiles[i];
                 updateRoster();
+
+                m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
             }
         });
     avatarEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -459,6 +463,8 @@ void MenuState::createAvatarMenuNew(cro::Entity parent)
 
                 m_sharedData.localConnectionData.playerData[m_rosterMenu.activeIndex] = m_sharedData.playerProfiles[i];
                 updateRoster();
+
+                m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
             }
         });
     avatarEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
