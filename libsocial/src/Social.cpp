@@ -35,6 +35,8 @@ source distribution.
 #include <crogine/core/ConfigFile.hpp>
 #include <crogine/core/SysTime.hpp>
 
+#include <ctime>
+
 namespace
 {
     void readValue(std::int32_t& dst, const std::string& fileName)
@@ -198,12 +200,28 @@ std::uint32_t Social::updateStreak()
     const auto diff = ts - prevTs;
 
     static constexpr std::uint32_t Day = 24 * 60 * 60;
-    const auto dayCount = diff / Day;
+    auto dayCount = diff / Day;
 
-    //already logged in today, so return
     if (dayCount == 0)
     {
-        return 0;
+        //do a calendar check to see if it's the next day
+        std::time_t p = prevTs;
+        std::time_t c = ts;
+
+        auto prevTm = std::localtime(&p);
+        auto currTm = std::localtime(&c);
+
+        if ((currTm->tm_yday == 1 //fudge for year wrap around. There are more elegant ways, but brain.
+            && prevTm->tm_yday == 365)
+            || (currTm->tm_yday - prevTm->tm_yday) == 1)
+        {
+            dayCount = 1;
+        }
+        else
+        {
+            //already logged in today, so return
+            return 0;
+        }
     }
 
 
