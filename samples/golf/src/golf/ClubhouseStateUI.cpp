@@ -399,8 +399,7 @@ void ClubhouseState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnt
 {
     if (m_sharedData.localConnectionData.playerData[1].name.empty())
     {
-        m_sharedData.profileIndex = (m_sharedData.profileIndex + 1) % m_sharedData.playerProfiles.size();
-        m_sharedData.localConnectionData.playerData[1] = m_sharedData.playerProfiles[m_sharedData.profileIndex];
+        m_sharedData.localConnectionData.playerData[1] = m_sharedData.playerProfiles[m_sharedData.playerProfiles.size() - 1];
     }
 
     auto menuEntity = m_uiScene.createEntity();

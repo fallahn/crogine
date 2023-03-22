@@ -356,7 +356,7 @@ void MenuState::createUI()
     createPlayerConfigMenu();
     createMainMenu(rootNode, mouseEnterCallback, mouseExitCallback);
     //createAvatarMenu(rootNode, mouseEnterCallback, mouseExitCallback);
-    createAvatarMenuNew(rootNode, mouseEnterCallback, mouseExitCallback);
+    createAvatarMenuNew(rootNode);
 #ifdef USE_GNS
     createBrowserMenu(rootNode, mouseEnterCallback, mouseExitCallback);
 #else

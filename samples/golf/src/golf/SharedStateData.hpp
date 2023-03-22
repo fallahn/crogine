@@ -179,7 +179,7 @@ struct SharedStateData final
     std::vector<std::int32_t> unlockedItems;
 
     std::vector<PlayerData> playerProfiles;
-    std::size_t profileIndex = 0;
+    std::size_t activeProfileIndex = 0; //this indexes into the profile array when editing/deleting profiles
 
     //client settings
     bool usePostProcess = false;

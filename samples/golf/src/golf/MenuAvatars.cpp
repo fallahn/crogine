@@ -50,7 +50,7 @@ namespace
 #include "RandNames.hpp"
 }
 
-void MenuState::createAvatarMenuNew(cro::Entity parent, std::uint32_t /*mouseEnter*/, std::uint32_t /*mouseExit*/)
+void MenuState::createAvatarMenuNew(cro::Entity parent)
 {
     //TODO this could be moved to createUI()
     createMenuCallbacks();
@@ -469,6 +469,98 @@ void MenuState::createAvatarMenuNew(cro::Entity parent, std::uint32_t /*mouseEnt
     avatarEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
+    //create profile
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 265.f, 52.f, 0.1f });
+    entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("profile_edit_select");
+    entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+    entity.addComponent<cro::SpriteAnimation>();
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.addComponent<cro::UIInput>().area = bounds;
+    entity.getComponent<cro::UIInput>().setGroup(MenuID::Avatar);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectionCallback;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectionCallback;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = uiSystem.addCallback(
+        [&](cro::Entity e, const cro::ButtonEvent& evt)
+        {
+            if (activated(evt))
+            {
+                if (m_sharedData.playerProfiles.size() < ConstVal::MaxProfiles)
+                {
+                    m_sharedData.playerProfiles.emplace_back();
+                    m_sharedData.playerProfiles.back().name = RandomNames[cro::Util::Random::value(0u, RandomNames.size() - 1)];
+                    m_sharedData.playerProfiles.back().saveProfile();
+                    m_sharedData.activeProfileIndex = m_sharedData.playerProfiles.size() - 1;
+                    requestStackPush(StateID::Profile);
+                }
+                else
+                {
+                    m_sharedData.errorMessage = "Maximum Profiles Reached.";
+                    requestStackPush(StateID::MessageOverlay);
+                }
+            }
+        });
+    avatarEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    //edit profile
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 265.f, 37.f, 0.1f });
+    entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("profile_edit_select");
+    entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+    entity.addComponent<cro::SpriteAnimation>();
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.addComponent<cro::UIInput>().area = bounds;
+    entity.getComponent<cro::UIInput>().setGroup(MenuID::Avatar);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectionCallback;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectionCallback;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = uiSystem.addCallback(
+        [&](cro::Entity e, const cro::ButtonEvent& evt)
+        {
+            if (activated(evt))
+            {
+                m_sharedData.activeProfileIndex = m_rosterMenu.profileIndices[m_rosterMenu.activeIndex];
+                requestStackPush(StateID::Profile);
+            }
+        });
+    avatarEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    //delete profile
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 265.f, 22.f, 0.1f });
+    entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("profile_edit_select");
+    entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+    entity.addComponent<cro::SpriteAnimation>();
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.addComponent<cro::UIInput>().area = bounds;
+    entity.getComponent<cro::UIInput>().setGroup(MenuID::Avatar);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectionCallback;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectionCallback;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = uiSystem.addCallback(
+        [&](cro::Entity e, const cro::ButtonEvent& evt)
+        {
+            if (activated(evt))
+            {
+                if (m_sharedData.playerProfiles.size() == 1)
+                {
+                    m_sharedData.errorMessage = "This Profile Cannot Be Deleted";
+                }
+                else
+                {
+                    m_sharedData.errorMessage = "delete_profile";
+                    m_sharedData.activeProfileIndex = m_rosterMenu.profileIndices[m_rosterMenu.activeIndex];
+                }
+                requestStackPush(StateID::MessageOverlay);
+            }
+        });
+    avatarEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
     //banner
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 0.f, BannerPosition, -0.1f });
@@ -565,16 +657,11 @@ void MenuState::createAvatarMenuNew(cro::Entity parent, std::uint32_t /*mouseEnt
             {
                 if (activated(evt))
                 {
-                    applyTextEdit();
                     if (m_sharedData.localConnectionData.playerCount < ConstVal::MaxPlayers)
                     {
                         auto index = m_sharedData.localConnectionData.playerCount;
 
-                        m_sharedData.profileIndex = (m_sharedData.profileIndex + 1) % m_sharedData.playerProfiles.size();
-
-                        m_sharedData.localConnectionData.playerData[index] = m_sharedData.playerProfiles[m_sharedData.profileIndex];
-                        //TODO track this slot's profile index
-
+                        m_sharedData.localConnectionData.playerData[index] = m_sharedData.playerProfiles[index % m_sharedData.playerProfiles.size()];
                         m_sharedData.localConnectionData.playerCount++;
                         
                         //refresh the current roster
@@ -624,8 +711,6 @@ void MenuState::createAvatarMenuNew(cro::Entity parent, std::uint32_t /*mouseEnt
             {
                 if (activated(evt))
                 {
-                    applyTextEdit();
-
                     if (m_sharedData.localConnectionData.playerCount > 1)
                     {
                         m_sharedData.localConnectionData.playerCount--;
@@ -1127,11 +1212,6 @@ void MenuState::createProfileLayout(cro::Entity parent, cro::Transform& menuTran
 
         m_clubTexture.display();
     }
-
-
-
-
-
 
 
     //streak info

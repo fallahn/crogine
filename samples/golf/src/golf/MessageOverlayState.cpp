@@ -513,6 +513,68 @@ void MessageOverlayState::buildScene()
                 });
 
     }
+    else if (m_sharedData.errorMessage == "delete_profile")
+    {
+        entity.getComponent<cro::Text>().setString("Are You REALLY Sure?");
+        centreText(entity);
+
+        auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
+        entity = m_scene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({50.f, 10.f, 0.1f});
+        entity.addComponent<cro::Drawable2D>();
+        entity.addComponent<cro::Text>(smallFont).setString("This will remove this\nprofile permanently.");
+        entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+        entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+        entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+        entity.getComponent<cro::Text>().setVerticalSpacing(-1.f);
+        centreText(entity);
+        menuEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+
+        //buttons
+        entity = createItem(glm::vec2(28.f, -26.f), "No", menuEntity);
+        entity.getComponent<cro::Text>().setFillColour(TextGoldColour);
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+            uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)
+                {
+                    if (activated(evt))
+                    {
+                        quitState();
+                    }
+                });
+
+        entity = createItem(glm::vec2(-28.f, -26.f), "Yes", menuEntity);
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+            uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)
+                {
+                    if (activated(evt))
+                    {
+                        auto profileID = m_sharedData.playerProfiles[m_sharedData.activeProfileIndex].profileID;
+                        auto result = std::find_if(m_sharedData.localConnectionData.playerData.begin(),
+                            m_sharedData.localConnectionData.playerData.end(), [&profileID](const PlayerData& pd) {return pd.profileID == profileID; });
+
+                        if (result != m_sharedData.localConnectionData.playerData.end())
+                        {
+                            *result = {};
+                        }
+
+                        m_sharedData.playerProfiles.erase(m_sharedData.playerProfiles.begin() + m_sharedData.activeProfileIndex);
+                        m_sharedData.activeProfileIndex = 0;
+
+                        auto path = Social::getUserContentPath(Social::UserContent::Profile);
+                        path += profileID;
+                        if (cro::FileSystem::directoryExists(path))
+                        {
+                            std::error_code ec;
+                            std::filesystem::remove_all(path, ec);
+                        }
+
+                        requestStackClear();
+                        requestStackPush(StateID::Menu); //TODO we need to find a better way to refresh the avatar list
+                    }
+                });
+    }
     else //a generic message
     {
         //back button

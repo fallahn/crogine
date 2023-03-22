@@ -283,7 +283,7 @@ private:
     void createUI();
     void createMainMenu(cro::Entity, std::uint32_t, std::uint32_t);
     void createAvatarMenu(cro::Entity, std::uint32_t, std::uint32_t);
-    void createAvatarMenuNew(cro::Entity, std::uint32_t, std::uint32_t);
+    void createAvatarMenuNew(cro::Entity);
     void createJoinMenu(cro::Entity, std::uint32_t, std::uint32_t);
     void createBrowserMenu(cro::Entity, std::uint32_t, std::uint32_t);
     void createLobbyMenu(cro::Entity, std::uint32_t, std::uint32_t);
