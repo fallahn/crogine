@@ -280,7 +280,6 @@ void MessageOverlayState::buildScene()
         {
             e.getComponent<cro::Text>().setFillColour(TextGoldColour);
             e.getComponent<cro::AudioEmitter>().play();
-            e.getComponent<cro::Callback>().setUserData<float>(0.f);
             e.getComponent<cro::Callback>().active = true;
         });
     auto unselectedID = uiSystem.addCallback(
@@ -304,8 +303,7 @@ void MessageOverlayState::buildScene()
         e.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectedID;
         e.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectedID;
 
-        e.addComponent<cro::Callback>().setUserData<float>(0.f);
-        e.getComponent<cro::Callback>().function = MenuTextCallback();
+        e.addComponent<cro::Callback>().function = MenuTextCallback();
 
         parent.getComponent<cro::Transform>().addChild(e.getComponent<cro::Transform>());
         return e;
