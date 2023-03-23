@@ -135,9 +135,7 @@ static constexpr float BannerPosition = MenuBottomBorder - 3.f;
 
 static constexpr float NameWidth = 96.f;
 static constexpr glm::uvec2 BallPreviewSize = glm::uvec2(118u, 128u);
-static constexpr glm::uvec2 BallThumbSize = glm::uvec2(40u);
 static constexpr glm::uvec2 AvatarPreviewSize(98, 180);
-static constexpr glm::uvec2 AvatarThumbSize(60, 77);
 
 static constexpr float LobbyTextSpacing = 274.f;
 static constexpr float MinLobbyCropWidth = 96.f;

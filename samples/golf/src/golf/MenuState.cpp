@@ -129,8 +129,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     m_avatarCallbacks       (std::numeric_limits<std::uint32_t>::max(), std::numeric_limits<std::uint32_t>::max()),
     m_currentMenu           (MenuID::Main),
     m_prevMenu              (MenuID::Main),
-    m_viewScale             (1.f),
-    m_activePlayerAvatar    (0)
+    m_viewScale             (1.f)
 {
     std::fill(m_readyState.begin(), m_readyState.end(), false);
     std::fill(m_ballIndices.begin(), m_ballIndices.end(), 0);
@@ -166,7 +165,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
         if (idx > -1)
         {
             m_ballIndices[i] = idx;
-            m_ballThumbCams[i].getComponent<cro::Callback>().setUserData<std::int32_t>(idx);
+            //m_ballThumbCams[i].getComponent<cro::Callback>().setUserData<std::int32_t>(idx);
         }
         else
         {
@@ -424,11 +423,6 @@ bool MenuState::handleEvent(const cro::Event& evt)
         case MenuID::Lobby:
             enterConfirmCallback();
             break;
-        case MenuID::PlayerConfig:
-            applyTextEdit();
-            showPlayerConfig(false, m_activePlayerAvatar);
-            updateLocalAvatars(m_avatarCallbacks.first, m_avatarCallbacks.second);
-            break;
         case MenuID::ConfirmQuit:
             quitConfirmCallback();
             break;
@@ -458,10 +452,10 @@ bool MenuState::handleEvent(const cro::Event& evt)
             break;
 #endif
         case SDLK_F2:
-            showPlayerConfig(true, 0);
+            
             break;
         case SDLK_F3:
-            showPlayerConfig(false, 0);
+            
             break;
         case SDLK_F4:
             //requestStackClear();
@@ -942,11 +936,6 @@ void MenuState::loadAssets()
     m_audioEnts[AudioID::Back].addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("back");
     m_audioEnts[AudioID::Start] = m_uiScene.createEntity();
     m_audioEnts[AudioID::Start].addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("start_game");
-
-    for (auto& thumb : m_avatarThumbs)
-    {
-        thumb.create(AvatarThumbSize.x, AvatarThumbSize.y);
-    }
 }
 
 void MenuState::createScene()

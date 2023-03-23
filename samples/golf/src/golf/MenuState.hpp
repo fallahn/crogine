@@ -247,9 +247,7 @@ private:
     //----ball, avatar and hair funcs are in MenuCustomisation.cpp----//
     std::array<std::size_t, ConstVal::MaxPlayers> m_ballIndices = {}; //index into the model list, not ballID
     cro::Entity m_ballCam;
-    std::array<cro::Entity, 4u> m_ballThumbCams = {};
     cro::RenderTexture m_ballTexture;
-    cro::RenderTexture m_ballThumbTexture;
     void createBallScene();
     std::int32_t indexFromBallID(std::uint32_t);
 
@@ -257,11 +255,7 @@ private:
     std::vector<ProfileTexture> m_profileTextures;
     void updateProfileTextures(); //applies profile colours to each texture
     //this is the index for each player into m_playerAvatars - skinID is read from PlayerAvatar struct
-    
-    //TODO remove these
     std::array<std::size_t, ConstVal::MaxPlayers> m_avatarIndices = {};
-    std::array<cro::RenderTexture, ConstVal::MaxPlayers> m_avatarThumbs = {};
-    std::uint8_t m_activePlayerAvatar; //which player is current editing their avatar
     
     
     cro::RenderTexture m_avatarTexture;
@@ -269,8 +263,6 @@ private:
     void createAvatarScene();
     std::int32_t indexFromAvatarID(std::uint32_t);
     void applyAvatarColours(std::size_t);
-    void setPreviewModel(std::size_t);
-    void updateThumb(std::size_t);
     void ugcInstalledHandler(std::uint64_t id, std::int32_t type);
 
     cro::RenderTexture m_clubTexture;
@@ -289,12 +281,10 @@ private:
 
     void createUI();
     void createMainMenu(cro::Entity, std::uint32_t, std::uint32_t);
-    void createAvatarMenu(cro::Entity, std::uint32_t, std::uint32_t);
-    void createAvatarMenuNew(cro::Entity);
+    void createAvatarMenu(cro::Entity);
     void createJoinMenu(cro::Entity, std::uint32_t, std::uint32_t);
     void createBrowserMenu(cro::Entity, std::uint32_t, std::uint32_t);
     void createLobbyMenu(cro::Entity, std::uint32_t, std::uint32_t);
-    void createPlayerConfigMenu();
     void createMenuCallbacks();
     void createProfileLayout(cro::Entity, cro::Transform&, const cro::SpriteSheet&);//display XP, clubs, streak etc on avatar menu
 
@@ -305,11 +295,9 @@ private:
     void beginTextEdit(cro::Entity, cro::String*, std::size_t);
     void handleTextEdit(const cro::Event&);
     bool applyTextEdit(); //returns true if this consumed event
-    void updateLocalAvatars(std::uint32_t, std::uint32_t);
     void updateLobbyData(const net::NetEvent&);
     void updateLobbyAvatars();
     void updateLobbyList();
-    void showPlayerConfig(bool, std::uint8_t);
     void quitLobby();
     void addCourseSelectButtons();
     void prevHoleCount();

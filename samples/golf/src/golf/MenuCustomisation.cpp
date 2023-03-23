@@ -175,21 +175,6 @@ void MenuState::createBallScene()
         e.getComponent<cro::Camera>().active = (std::abs(diff) > Ball::Radius * 0.1f);
     };
 
-    for (auto i = 0u; i < m_ballThumbCams.size(); ++i)
-    {
-        auto entity = m_backgroundScene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition({ RootPoint - 10.f, 0.045f, 0.095f });
-        entity.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -0.03f);
-        entity.addComponent<cro::Camera>().setPerspective(0.89f, 2.f, 0.001f, 2.f);
-        entity.getComponent<cro::Camera>().viewport = { (i % 2) * 0.5f, (i / 2) * 0.5f, 0.5f, 0.5f };
-        entity.getComponent<cro::Camera>().renderFlags = BallRenderFlags;
-        entity.addComponent<cro::Callback>().active = true;
-        entity.getComponent<cro::Callback>().setUserData<std::int32_t>(0);
-        entity.getComponent<cro::Callback>().function = ballTargetCallback;
-        m_ballThumbCams[i] = entity;
-    }
-
-
     auto ballTexCallback = [&](cro::Camera&)
     {
         std::uint32_t samples = m_sharedData.pixelScale ? 0 :
@@ -203,9 +188,6 @@ void MenuState::createBallScene()
         auto invScale = static_cast<std::uint32_t>((windowScale + 1.f) - scale);
         auto size = BallPreviewSize * invScale;
         m_ballTexture.create(size.x, size.y, true, false, samples);
-
-        size = BallThumbSize * invScale;
-        m_ballThumbTexture.create(size.x * 4, size.y * 2, true, false, samples);
     };
 
     m_ballCam = m_backgroundScene.createEntity();
@@ -864,23 +846,6 @@ void MenuState::applyAvatarColours(std::size_t playerIndex)
     m_playerAvatars[avatarIndex].apply();
 }
 
-void MenuState::updateThumb(std::size_t index)
-{
-    setPreviewModel(index);
-
-    //we have to make sure model data is updated correctly before each
-    //draw call as this func might be called in a loop to update multiple
-    //avatars outside of the main update function.
-    m_avatarScene.simulate(0.f);
-
-    m_resolutionBuffer.bind(0);
-
-    m_avatarThumbs[index].clear(cro::Colour::Transparent);
-    //m_avatarThumbs[index].clear(cro::Colour::Magenta);
-    m_avatarScene.render();
-    m_avatarThumbs[index].display();
-}
-
 void MenuState::ugcInstalledHandler(std::uint64_t id, std::int32_t type)
 {
     //called when UGC such as a ball or hair model is received
@@ -936,62 +901,6 @@ void MenuState::ugcInstalledHandler(std::uint64_t id, std::int32_t type)
     else
     {
         LogE << "Unknown UGC: " << id << ", " << type << std::endl;
-    }
-}
-
-void MenuState::setPreviewModel(std::size_t playerIndex)
-{
-    auto index = m_avatarIndices[playerIndex];
-    auto flipped = m_sharedData.localConnectionData.playerData[playerIndex].flipped;
-
-    //hmm this would be quicker if we just tracked the active model...
-    //in fact it might be contributing to the slow down when entering main lobby.
-    for (auto i = 0u; i < m_playerAvatars.size(); ++i)
-    {
-        if (m_playerAvatars[i].previewModel.isValid()
-            && m_playerAvatars[i].previewModel.hasComponent<cro::Model>())
-        {
-            m_playerAvatars[i].previewModel.getComponent<cro::Model>().setHidden(i != index);
-            m_playerAvatars[i].previewModel.getComponent<cro::Transform>().setScale(glm::vec3(0.f));
-
-            if (i == index)
-            {
-                if (flipped)
-                {
-                    m_playerAvatars[i].previewModel.getComponent<cro::Transform>().setScale({ -1.f, 1.f, 1.f });
-                    m_playerAvatars[i].previewModel.getComponent<cro::Model>().setFacing(cro::Model::Facing::Back);
-                }
-                else
-                {
-                    m_playerAvatars[i].previewModel.getComponent<cro::Transform>().setScale({ 1.f, 1.f, 1.f });
-                    m_playerAvatars[i].previewModel.getComponent<cro::Model>().setFacing(cro::Model::Facing::Front);
-                }
-                auto texID = cro::TextureID(m_sharedData.avatarTextures[0][playerIndex].getGLHandle());
-                m_playerAvatars[i].previewModel.getComponent<cro::Model>().setMaterialProperty(0, "u_diffuseMap", texID);
-
-                //check to see if we have a hair model and apply its properties
-                if (m_playerAvatars[i].hairAttachment != nullptr)
-                {
-                    if (m_playerAvatars[i].hairAttachment->getModel().isValid())
-                    {
-                        m_playerAvatars[i].hairAttachment->getModel().getComponent<cro::Model>().setHidden(true);
-                        m_playerAvatars[i].hairAttachment->getModel().getComponent<cro::Transform>().setScale(glm::vec3(0.f));
-                    }
-
-                    auto hairIndex = m_hairIndices[playerIndex];
-                    m_playerAvatars[i].hairAttachment->setModel(m_playerAvatars[i].hairModels[hairIndex].model);
-
-
-                    if (m_playerAvatars[i].hairModels[hairIndex].model.isValid())
-                    {
-                        m_playerAvatars[i].hairAttachment->getModel().getComponent<cro::Transform>().setScale(glm::vec3(1.f));
-                        m_playerAvatars[i].hairModels[hairIndex].model.getComponent<cro::Model>().setHidden(false);
-                        m_playerAvatars[i].hairModels[hairIndex].model.getComponent<cro::Model>().setMaterialProperty(0, "u_hairColour", m_playerAvatars[i].getColour(pc::ColourKey::Hair).first);
-                        //m_playerAvatars[i].hairModels[hairIndex].model.getComponent<cro::Model>().setMaterialProperty(0, "u_darkColour", m_playerAvatars[i].getColour(pc::ColourKey::Hair).second);
-                    }
-                }
-            }
-        }
     }
 }
 

@@ -50,7 +50,7 @@ namespace
 #include "RandNames.hpp"
 }
 
-void MenuState::createAvatarMenuNew(cro::Entity parent)
+void MenuState::createAvatarMenu(cro::Entity parent)
 {
     //TODO this could be moved to createUI()
     createMenuCallbacks();
@@ -404,8 +404,7 @@ void MenuState::createAvatarMenuNew(cro::Entity parent)
     entity.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float)
     {
-        //TODO track index of active slot
-        cro::Colour c = m_sharedData.localConnectionData.playerData[0].isCPU ? TextGoldColour : cro::Colour::Transparent;
+        cro::Colour c = m_sharedData.localConnectionData.playerData[m_rosterMenu.activeIndex].isCPU ? TextGoldColour : cro::Colour::Transparent;
         auto& verts = e.getComponent<cro::Drawable2D>().getVertexData();
         for (auto& v : verts)
         {
