@@ -41,6 +41,7 @@ source distribution.
 #include <crogine/ecs/components/Callback.hpp>
 #include <crogine/ecs/components/Camera.hpp>
 
+#include <crogine/gui/Gui.hpp>
 #include <crogine/util/Random.hpp>
 
 namespace
@@ -400,6 +401,7 @@ void MenuState::createBallScene()
         {
             //probably should remove from the ball models vector so that it's completely vetted
             invalidBalls.push_back(m_sharedData.ballModels[i].uid);
+            i--; //spacing is based on this and we don't want a gap from a bad ball
         }
     }
 
@@ -433,7 +435,7 @@ std::int32_t MenuState::indexFromBallID(std::uint32_t ballID)
         return static_cast<std::int32_t>(std::distance(m_sharedData.ballModels.begin(), ball));
     }
 
-    return -1;
+    return 0;
 }
 
 void MenuState::updateProfileTextures()
