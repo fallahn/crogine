@@ -226,7 +226,7 @@ void MenuState::createAvatarMenu(cro::Entity parent)
     avatarEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     auto rosterEnt = entity;
 
-    auto showAvatar = [&](std::int32_t profileIndex)
+    auto showAvatar = [&](std::size_t profileIndex)
     {
         const auto& profile = m_sharedData.playerProfiles[profileIndex];
 
@@ -504,7 +504,16 @@ void MenuState::createAvatarMenu(cro::Entity parent)
                 m_sharedData.localConnectionData.playerData[m_rosterMenu.activeIndex] = m_sharedData.playerProfiles[i];
                 updateRoster();
 
-                m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+                auto soundSize = m_playerAvatars[i].previewSounds.size();
+                if (soundSize != 0)
+                {
+                    auto idx = soundSize > 1 ? cro::Util::Random::value(0u, soundSize - 1) : 0;
+                    m_playerAvatars[i].previewSounds[idx].getComponent<cro::AudioEmitter>().play();
+                }
+                else
+                {
+                    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+                }
             }
         });
     avatarEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -533,7 +542,16 @@ void MenuState::createAvatarMenu(cro::Entity parent)
                 m_sharedData.localConnectionData.playerData[m_rosterMenu.activeIndex] = m_sharedData.playerProfiles[i];
                 updateRoster();
 
-                m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+                auto soundSize = m_playerAvatars[i].previewSounds.size();
+                if (soundSize != 0)
+                {
+                    auto idx = soundSize > 1 ? cro::Util::Random::value(0u, soundSize - 1) : 0;
+                    m_playerAvatars[i].previewSounds[idx].getComponent<cro::AudioEmitter>().play();
+                }
+                else
+                {
+                    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+                }
             }
         });
     avatarEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
