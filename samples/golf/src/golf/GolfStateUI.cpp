@@ -838,9 +838,12 @@ void GolfState::buildUI()
         else
         {
             auto club = getClub();
-            switch (club)
+            if (club == ClubID::Putter
+                && !m_sharedData.showPuttingPower)
             {
-            default: 
+                scale = std::max(0.f, scale - ((scale * dt) * 8.f));
+            }
+            else
             {
                 const float targetScale = Clubs[club].getTarget(m_distanceToHole) * m_minimapZoom.zoom;
                 if (scale < targetScale)
@@ -851,11 +854,6 @@ void GolfState::buildUI()
                 {
                     scale = std::max(targetScale, scale - ((scale * dt) * 2.f));
                 }
-            }
-                break;
-            case ClubID::Putter:
-                scale = std::max(0.f, scale - ((scale * dt) * 8.f));
-                break;
             }
         }
 

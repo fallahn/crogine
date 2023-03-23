@@ -1089,7 +1089,7 @@ void OptionsState::buildScene()
     m_tooltips[ToolTipID::BeaconColour] = createToolTip("Display colour of the beacon.");
     m_tooltips[ToolTipID::Units] = createToolTip("Select to display in yards/feet or\nunselect to display in metres/cm");
     m_tooltips[ToolTipID::MouseSpeed] = createToolTip("1.00");
-    m_tooltips[ToolTipID::PuttingPower] = createToolTip("Displays an estimated travel\ndistance when putting");
+    m_tooltips[ToolTipID::PuttingPower] = createToolTip("Decreases the difficulty when\nputting, at the cost of XP");
     m_tooltips[ToolTipID::Video] = createToolTip("Sound & Video Settings");
     m_tooltips[ToolTipID::Controls] = createToolTip("Controls");
     m_tooltips[ToolTipID::Achievements] = createToolTip("Achievements");
