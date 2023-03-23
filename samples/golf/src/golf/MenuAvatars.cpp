@@ -144,6 +144,7 @@ void MenuState::createAvatarMenuNew(cro::Entity parent)
     entity.getComponent<cro::Callback>().function = TitleTextCallback();
     menuTransform.addChild(entity.getComponent<cro::Transform>());
 
+
     //rank icon
     if (Social::getLevel() > 0)
     {
@@ -199,6 +200,20 @@ void MenuState::createAvatarMenuNew(cro::Entity parent)
     avatarEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     auto nameLabel = entity;
 
+    //active profile ball
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 267.f, 76.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>(m_ballTexture.getTexture());
+    avatarEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    //active profile avatar
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 396.f, 24.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>(m_avatarTexture.getTexture());
+    avatarEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
     //team roster
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 38.f, 225.f, 0.1f });
@@ -210,7 +225,45 @@ void MenuState::createAvatarMenuNew(cro::Entity parent)
     avatarEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     auto rosterEnt = entity;
 
-    auto updateRoster = [&, rosterEnt, nameLabel]() mutable
+    auto showAvatar = [&](std::int32_t profileIndex)
+    {
+        const auto& profile = m_sharedData.playerProfiles[profileIndex];
+
+        for (auto e : m_playerAvatars)
+        {
+            e.previewModel.getComponent<cro::Transform>().setScale(glm::vec3(0.f));
+            if(e.hairAttachment != nullptr
+                && e.hairAttachment->getModel().isValid())
+            {
+                e.hairAttachment->getModel().getComponent<cro::Model>().setHidden(true);
+            }
+        }
+        auto idx = indexFromAvatarID(profile.skinID);
+        m_playerAvatars[idx].previewModel.getComponent<cro::Transform>().setScale(glm::vec3(profile.flipped ? -1.f : 1.f, 1.f, 1.f));
+        m_playerAvatars[idx].previewModel.getComponent<cro::Model>().setFacing(profile.flipped ? cro::Model::Facing::Back : cro::Model::Facing::Front);
+
+        //use profile ID to set model texture
+        m_playerAvatars[idx].previewModel.getComponent<cro::Model>().setMaterialProperty(0, "u_diffuseMap", m_profileTextures[profileIndex].getTexture());
+
+        //update hair model
+        if (m_playerAvatars[idx].hairAttachment != nullptr)
+        {
+            auto hID = indexFromHairID(profile.hairID);
+            auto& hair = m_playerAvatars[idx].hairModels[hID];
+            if (hair.model.isValid())
+            {
+                hair.model.getComponent<cro::Model>().setHidden(false);
+                m_playerAvatars[idx].hairAttachment->setModel(hair.model);
+
+                //apply hair colour to material
+                auto hairColour = m_profileTextures[profileIndex].getColour(pc::ColourKey::Hair).first;
+                hair.model.getComponent<cro::Model>().setMaterialProperty(0, "u_hairColour", hairColour);
+            }
+        }
+    };
+
+
+    auto updateRoster = [&, rosterEnt, nameLabel, showAvatar]() mutable
     {
         //update the CPU icon, or hide if not added
         for (auto i = 0u; i < ConstVal::MaxPlayers; ++i)
@@ -240,6 +293,11 @@ void MenuState::createAvatarMenuNew(cro::Entity parent)
 
         nameLabel.getComponent<cro::Text>().setString(m_sharedData.playerProfiles[m_rosterMenu.profileIndices[m_rosterMenu.activeIndex]].name);
         centreText(nameLabel);
+
+        auto idx = m_rosterMenu.profileIndices[m_rosterMenu.activeIndex];
+        m_ballCam.getComponent<cro::Callback>().getUserData<std::int32_t>() = indexFromBallID(m_sharedData.playerProfiles[idx].ballID);
+
+        showAvatar(idx);
     };
 
 
@@ -255,7 +313,7 @@ void MenuState::createAvatarMenuNew(cro::Entity parent)
         {
             e.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent); 
         });
-    auto activateCallback = uiSystem.addCallback([&, nameLabel](cro::Entity e, const cro::ButtonEvent& evt) mutable
+    auto activateCallback = uiSystem.addCallback([&, nameLabel, showAvatar](cro::Entity e, const cro::ButtonEvent& evt) mutable
         {
             if (activated(evt))
             {
@@ -265,6 +323,11 @@ void MenuState::createAvatarMenuNew(cro::Entity parent)
                 centreText(nameLabel);
 
                 m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+
+                auto idx = m_rosterMenu.profileIndices[m_rosterMenu.activeIndex];
+                m_ballCam.getComponent<cro::Callback>().getUserData<std::int32_t>() = indexFromBallID(m_sharedData.playerProfiles[idx].ballID);
+
+                showAvatar(idx);
             }
         });
 

@@ -202,16 +202,16 @@ void MenuState::createBallScene()
         
         auto invScale = static_cast<std::uint32_t>((windowScale + 1.f) - scale);
         auto size = BallPreviewSize * invScale;
-        m_ballTexture.create(size, size, true, false, samples);
+        m_ballTexture.create(size.x, size.y, true, false, samples);
 
         size = BallThumbSize * invScale;
-        m_ballThumbTexture.create(size * 4, size * 2, true, false, samples);
+        m_ballThumbTexture.create(size.x * 4, size.y * 2, true, false, samples);
     };
 
     m_ballCam = m_backgroundScene.createEntity();
     m_ballCam.addComponent<cro::Transform>().setPosition({ RootPoint - 10.f, 0.045f, 0.095f });
     m_ballCam.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -0.03f);
-    m_ballCam.addComponent<cro::Camera>().setPerspective(1.f, 1.f, 0.001f, 2.f);
+    m_ballCam.addComponent<cro::Camera>().setPerspective(1.f, static_cast<float>(BallPreviewSize.x) / BallPreviewSize.y, 0.001f, 2.f);
     m_ballCam.getComponent<cro::Camera>().resizeCallback = ballTexCallback;
     m_ballCam.getComponent<cro::Camera>().renderFlags = BallRenderFlags;
     m_ballCam.addComponent<cro::Callback>().active = true;
@@ -454,6 +454,20 @@ std::int32_t MenuState::indexFromBallID(std::uint32_t ballID)
     return -1;
 }
 
+void MenuState::updateProfileTextures()
+{
+    for (auto i = 0u; i < m_sharedData.playerProfiles.size(); ++i)
+    {
+        const auto& flags = m_sharedData.playerProfiles[i].avatarFlags;
+        m_profileTextures[i].setColour(pc::ColourKey::Bottom, flags[0]);
+        m_profileTextures[i].setColour(pc::ColourKey::Top, flags[1]);
+        m_profileTextures[i].setColour(pc::ColourKey::Skin, flags[2]);
+        m_profileTextures[i].setColour(pc::ColourKey::Hair, flags[3]);
+
+        m_profileTextures[i].apply();
+    }
+}
+
 void MenuState::parseAvatarDirectory()
 {
     m_sharedData.avatarInfo.clear();
@@ -653,6 +667,20 @@ void MenuState::parseAvatarDirectory()
         }
     }
 
+
+    //for every profile create a texture for the preview
+    for (auto& profile : m_sharedData.playerProfiles)
+    {
+        if (profile.skinID = 0)
+        {
+            //use first valid skin
+            profile.skinID = m_sharedData.avatarInfo[0].uid;
+        }
+
+        m_profileTextures.emplace_back(m_sharedData.avatarInfo[indexFromAvatarID(profile.skinID)].texturePath);
+    }
+    updateProfileTextures();
+
     createAvatarScene();
 }
 
@@ -697,7 +725,6 @@ void MenuState::createAvatarScene()
             entity.addComponent<cro::Transform>().setOrigin(glm::vec2(-0.34f, 0.f));
             entity.getComponent<cro::Transform>().setScale(glm::vec3(0.f));
             md.createModel(entity);
-            entity.getComponent<cro::Model>().setHidden(true);
 
             //TODO account for multiple materials? Avatar is set to
             //only update a single image though, so 1 material should
@@ -749,6 +776,7 @@ void MenuState::createAvatarScene()
             }
 
             m_playerAvatars[i].previewModel = entity;
+
         }
         else
         {

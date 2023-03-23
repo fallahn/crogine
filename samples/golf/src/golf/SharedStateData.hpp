@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2022
+Matt Marchant 2021 - 2023
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -32,6 +32,7 @@ source distribution.
 #include "InputBinding.hpp"
 #include "Networking.hpp"
 #include "CommonConsts.hpp"
+#include "PlayerData.hpp"
 #include "server/Server.hpp"
 
 #include <crogine/core/String.hpp>
@@ -44,30 +45,6 @@ source distribution.
 #include <array>
 #include <memory>
 #include <unordered_map>
-
-struct PlayerData final
-{
-    cro::String name;
-    std::array<std::uint8_t, 4u> avatarFlags = {1,0,3,6}; //indices into colour pairs
-    std::uint32_t ballID = 0;
-    std::uint32_t hairID = 0;
-    std::uint32_t skinID = 0; //as loaded from the avatar data file
-    bool flipped = false; //whether or not avatar flipped
-    bool isCPU = false; //these bools are flagged as bits in a single byte when serialised
-
-    //these aren't included in serialise/deserialise
-    std::vector<std::uint8_t> holeScores;
-    std::uint8_t score = 0;
-    std::uint8_t matchScore = 0;
-    std::uint8_t skinScore = 0;
-    std::int32_t parScore = 0;
-    glm::vec3 currentTarget = glm::vec3(0.f);
-    cro::Colour ballTint;
-
-    mutable std::string profileID; //saving file generates this
-    bool saveProfile() const;
-    bool loadProfile(const std::string& path, const std::string& uid);
-};
 
 struct ConnectionData final
 {

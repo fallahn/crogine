@@ -62,6 +62,7 @@ namespace cro
 {
     struct NetEvent;
     struct Camera;
+    class SpriteSheet;
 }
 
 class MenuState;
@@ -253,10 +254,16 @@ private:
     std::int32_t indexFromBallID(std::uint32_t);
 
     std::vector<PlayerAvatar> m_playerAvatars;
+    std::vector<ProfileTexture> m_profileTextures;
+    void updateProfileTextures(); //applies profile colours to each texture
     //this is the index for each player into m_playerAvatars - skinID is read from PlayerAvatar struct
+    
+    //TODO remove these
     std::array<std::size_t, ConstVal::MaxPlayers> m_avatarIndices = {};
     std::array<cro::RenderTexture, ConstVal::MaxPlayers> m_avatarThumbs = {};
     std::uint8_t m_activePlayerAvatar; //which player is current editing their avatar
+    
+    
     cro::RenderTexture m_avatarTexture;
     void parseAvatarDirectory();
     void createAvatarScene();

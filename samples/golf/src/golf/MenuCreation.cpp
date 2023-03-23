@@ -3309,7 +3309,7 @@ void MenuState::createPlayerConfigMenu()
         auto size = glm::vec2(e.getComponent<cro::Sprite>().getTexture()->getSize());
         e.getComponent<cro::Sprite>().setTextureRect({ 0.f, 0.f, size.x, size.y });
 
-        float scale = static_cast<float>(BallPreviewSize) / size.y;
+        float scale = static_cast<float>(BallPreviewSize.y) / size.y;
         e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
     };
     bgNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -3553,7 +3553,7 @@ void MenuState::updateLocalAvatars(std::uint32_t mouseEnter, std::uint32_t mouse
             e.getComponent<cro::Sprite>().setTextureRect(rect);
             e.getComponent<cro::Transform>().setOrigin({ rect.width / 2.f, rect.height / 2.f });
 
-            float scale = static_cast<float>(BallThumbSize) / size.y;
+            float scale = static_cast<float>(BallThumbSize.y) / size.y;
             e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
         };
 
@@ -3718,7 +3718,6 @@ void MenuState::updateLobbyAvatars()
             glm::vec3(1.f + LobbyTextSpacing, -119.f, 0.1f),
             glm::vec3(1.f + LobbyTextSpacing, -132.f, 0.1f)
         };
-        std::int32_t p = 0;
 
         for (const auto& c : m_sharedData.connectionData)
         {
@@ -3781,7 +3780,7 @@ void MenuState::updateLobbyAvatars()
 
             //client icons are attached to this
             auto entity = m_uiScene.createEntity();
-            entity.addComponent<cro::Transform>().setPosition(IconPositions[p++]);
+            entity.addComponent<cro::Transform>().setPosition(IconPositions[h]);
 
             //used to update spacing by resize callback from lobby background ent.
             entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::LobbyText;
@@ -4002,8 +4001,6 @@ void MenuState::updateLobbyAvatars()
 
             h++;
         }
-
-
 
 
 

@@ -755,27 +755,23 @@ void MenuState::render()
     m_windBuffer.bind(2);
 
     //render ball preview first
-    auto oldCam = m_backgroundScene.setActiveCamera(m_ballCam);
-    m_ballTexture.clear(cro::Colour::Magenta);
-    m_backgroundScene.render();
-    m_ballTexture.display();
-
-    /*m_ballThumbTexture.clear(cro::Colour::Transparent);
-    for (auto i = 0u; i < m_sharedData.localConnectionData.playerCount; ++i)
+    if (m_currentMenu == MenuID::Avatar)
     {
-        m_backgroundScene.setActiveCamera(m_ballThumbCams[i]);
+        auto oldCam = m_backgroundScene.setActiveCamera(m_ballCam);
+        m_ballTexture.clear(cro::Colour::Magenta);
         m_backgroundScene.render();
+        m_ballTexture.display();
+
+        //and avatar preview
+        m_avatarTexture.clear(cro::Colour::Transparent);
+        //m_avatarTexture.clear(cro::Colour::Magenta);
+        m_avatarScene.render();
+        m_avatarTexture.display();
+
+        //then background scene
+        m_backgroundScene.setActiveCamera(oldCam);
     }
-    m_ballThumbTexture.display();*/
 
-    //and avatar preview
-    m_avatarTexture.clear(cro::Colour::Transparent);
-    //m_avatarTexture.clear(cro::Colour::Magenta);
-    m_avatarScene.render();
-    m_avatarTexture.display();
-
-    //then background scene
-    m_backgroundScene.setActiveCamera(oldCam);
     m_backgroundTexture.clear();
     m_backgroundScene.render();
     m_backgroundTexture.display();
