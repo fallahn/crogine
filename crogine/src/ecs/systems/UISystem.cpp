@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2022
+Matt Marchant 2017 - 2023
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -464,6 +464,11 @@ void UISystem::setActiveGroup(std::size_t group)
     m_selectedIndex = 0;
 
     select(m_selectedIndex);
+
+    if (!m_groups[m_activeGroup][m_selectedIndex].getComponent<UIInput>().enabled)
+    {
+        selectNext(1);
+    }
 }
 
 void UISystem::setColumnCount(std::size_t count)
