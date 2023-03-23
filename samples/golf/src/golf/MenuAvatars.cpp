@@ -101,7 +101,7 @@ void MenuState::createAvatarMenu(cro::Entity parent)
         }
     }
     m_sharedData.localConnectionData.playerData[0] = m_sharedData.playerProfiles[0];
-
+    
     //map all the active player slots to their profile index
     for (auto i = 0u; i < m_sharedData.localConnectionData.playerCount; ++i)
     {
@@ -112,7 +112,7 @@ void MenuState::createAvatarMenu(cro::Entity parent)
             m_rosterMenu.profileIndices[i] = std::distance(m_sharedData.playerProfiles.begin(), result);
         }
     }
-
+    
 
     auto menuEntity = m_uiScene.createEntity();
     menuEntity.addComponent<cro::Transform>().setScale(glm::vec2(0.f));
@@ -204,13 +204,21 @@ void MenuState::createAvatarMenu(cro::Entity parent)
     //active profile ball
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 267.f, 76.f, 0.1f });
+    if (!m_sharedData.pixelScale)
+    {
+        entity.getComponent<cro::Transform>().setScale(glm::vec2(1.f / getViewScale()));
+    }
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>(m_ballTexture.getTexture());
     avatarEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     //active profile avatar
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 396.f, 24.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 396.f, 76.f, 0.1f });
+    if (!m_sharedData.pixelScale)
+    {
+        entity.getComponent<cro::Transform>().setScale(glm::vec2(1.f / getViewScale()));
+    }
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>(m_avatarTexture.getTexture());
     avatarEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
