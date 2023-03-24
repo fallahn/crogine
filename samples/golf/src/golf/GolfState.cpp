@@ -134,12 +134,14 @@ namespace
 #include "PostProcess.inl"
 #include "ShaderIncludes.inl"
 
+#ifdef CRO_DEBUG_
     std::int32_t debugFlags = 0;
     cro::Entity ballEntity;
     std::size_t bitrate = 0;
     std::size_t bitrateCounter = 0;
     glm::vec4 topSky;
     glm::vec4 bottomSky;
+#endif // CRO_DEBUG_
 
     float godmode = 1.f;
     bool allowAchievements = false;
@@ -1676,7 +1678,7 @@ void GolfState::render()
         m_greenBuffer.display();
         m_gameScene.setActiveCamera(oldCam);
     }
-
+    
 #ifndef CRO_DEBUG_
     if (m_roundEnded /* && !m_sharedData.tutorial */)
 #endif
@@ -3532,7 +3534,7 @@ void GolfState::buildScene()
     glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
 
     entity.getComponent<cro::Model>().setHidden(true);
-    entity.getComponent<cro::Model>().setRenderFlags(~(/*RenderFlags::MiniGreen |*/ RenderFlags::MiniMap | RenderFlags::Reflection));
+    entity.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniGreen | RenderFlags::MiniMap | RenderFlags::Reflection));
 
 
     //a 'fan' which shows max rotation
@@ -4930,7 +4932,10 @@ void GolfState::spawnBall(const ActorInfo& info)
             iconPos += Centre;
 
             e.getComponent<cro::Transform>().setPosition(glm::vec3(iconPos, static_cast<float>(depthOffset) / 100.f));
-
+            if (m_inputParser.getActive())
+            {
+                m_miniGreenIndicatorEnt.getComponent<cro::Transform>().setPosition(glm::vec3(iconPos, 0.05f));
+            }
 
             auto terrain = ballEnt.getComponent<ClientCollider>().terrain;
             float scale = terrain == TerrainID::Green ? m_viewScale.x : 0.f;
