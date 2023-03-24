@@ -687,7 +687,7 @@
       <Filter>Header Files\golf\client\states</Filter>
     </ClInclude>
     <ClInclude Include="src\golf\PlayerData.hpp">
-      <Filter>Header Files\golf</Filter>
+      <Filter>Header Files\golf\client</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

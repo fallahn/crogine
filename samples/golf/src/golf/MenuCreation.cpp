@@ -2281,12 +2281,11 @@ void MenuState::updateLobbyAvatars()
 
         const auto applyTexture = [&](std::size_t idx, cro::Texture& targetTexture, const std::array<uint8_t, 4u>& flags)
         {
-            m_playerAvatars[idx].setTarget(targetTexture);
             for (auto j = 0u; j < flags.size(); ++j)
             {
                 m_playerAvatars[idx].setColour(pc::ColourKey::Index(j), flags[j]);
             }
-            m_playerAvatars[idx].apply();
+            m_playerAvatars[idx].apply(&targetTexture);
         };
         const auto& font = m_sharedData.sharedResources->fonts.get(FontID::Label);
         cro::SimpleText simpleText(font);

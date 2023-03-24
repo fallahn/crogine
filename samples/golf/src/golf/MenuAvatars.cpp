@@ -44,6 +44,7 @@ source distribution.
 #include <crogine/graphics/SpriteSheet.hpp>
 #include <crogine/graphics/SimpleText.hpp>
 
+#include <crogine/gui/Gui.hpp>
 #include <crogine/util/Random.hpp>
 
 namespace
@@ -53,6 +54,27 @@ namespace
 
 void MenuState::createAvatarMenu(cro::Entity parent)
 {
+    //registerWindow([&]() 
+    //    {
+    //        if (ImGui::Begin("buns"))
+    //        {
+    //            for (auto& t : m_sharedData.avatarTextures[0])
+    //            {
+    //                ImGui::Image(t, { 128.f, 128.f }, { 0.f, 1.f }, { 1.f, 0.f });
+    //                ImGui::SameLine();
+    //            }
+    //            ImGui::NewLine();
+
+    //            for (auto& t : m_profileTextures)
+    //            {
+    //                ImGui::Image(t.getTexture(), {128.f, 128.f}, {0.f, 1.f}, {1.f, 0.f});
+    //                ImGui::SameLine();
+    //            }
+    //        }
+    //        ImGui::End();
+    //    });
+
+
     //TODO this could be moved to createUI()
     createMenuCallbacks();
 
@@ -94,9 +116,11 @@ void MenuState::createAvatarMenu(cro::Entity parent)
             if (res != m_sharedData.playerProfiles.end())
             {
                 auto pos = std::distance(m_sharedData.playerProfiles.begin(), res);
-                auto temp = m_sharedData.playerProfiles[0];
-                m_sharedData.playerProfiles[0] = m_sharedData.playerProfiles[pos];
-                m_sharedData.playerProfiles[pos] = temp;
+
+                std::swap(m_sharedData.playerProfiles[0], m_sharedData.playerProfiles[pos]);
+
+                //remember to realign the texture indices!
+                std::swap(m_profileTextures[0], m_profileTextures[pos]);
             }
         }
     }
@@ -238,7 +262,7 @@ void MenuState::createAvatarMenu(cro::Entity parent)
     {
         const auto& profile = m_sharedData.playerProfiles[profileIndex];
 
-        for (auto e : m_playerAvatars)
+        for (auto& e : m_playerAvatars)
         {
             e.previewModel.getComponent<cro::Transform>().setScale(glm::vec3(0.f));
             if(e.hairAttachment != nullptr
@@ -510,6 +534,7 @@ void MenuState::createAvatarMenu(cro::Entity parent)
                 m_rosterMenu.profileIndices[m_rosterMenu.activeIndex] = i;
 
                 m_sharedData.localConnectionData.playerData[m_rosterMenu.activeIndex] = m_sharedData.playerProfiles[i];
+
                 updateRoster();
 
                 auto soundSize = m_playerAvatars[i].previewSounds.size();
@@ -548,6 +573,7 @@ void MenuState::createAvatarMenu(cro::Entity parent)
                 m_rosterMenu.profileIndices[m_rosterMenu.activeIndex] = i;
 
                 m_sharedData.localConnectionData.playerData[m_rosterMenu.activeIndex] = m_sharedData.playerProfiles[i];
+
                 updateRoster();
 
                 auto soundSize = m_playerAvatars[i].previewSounds.size();
@@ -792,11 +818,12 @@ void MenuState::createAvatarMenu(cro::Entity parent)
                     if (m_sharedData.localConnectionData.playerCount < ConstVal::MaxPlayers)
                     {
                         auto index = m_sharedData.localConnectionData.playerCount;
-
-                        m_sharedData.localConnectionData.playerData[index] = m_sharedData.playerProfiles[index % m_sharedData.playerProfiles.size()];
+                        auto profileIndex = index % m_sharedData.playerProfiles.size();
+                        
+                        m_sharedData.localConnectionData.playerData[index] = m_sharedData.playerProfiles[profileIndex];
                         m_sharedData.localConnectionData.playerCount++;
                         
-                        m_rosterMenu.profileIndices[index] = index % m_sharedData.playerProfiles.size();
+                        m_rosterMenu.profileIndices[index] = profileIndex;
 
                         //refresh the current roster
                         updateRoster();

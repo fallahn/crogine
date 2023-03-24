@@ -1989,13 +1989,12 @@ void DrivingState::createPlayer(cro::Entity courseEnt)
     const auto& playerData = m_sharedData.playerProfiles[playerIndex];
     auto idx = indexFromSkinID(playerData.skinID);
 
-    PlayerAvatar av(m_sharedData.avatarInfo[idx].texturePath);
-    av.setTarget(m_sharedData.avatarTextures[0][0]);
+    ProfileTexture av(m_sharedData.avatarInfo[idx].texturePath);
     for (auto j = 0u; j < playerData.avatarFlags.size(); ++j)
     {
         av.setColour(pc::ColourKey::Index(j), playerData.avatarFlags[j]);
     }
-    av.apply();
+    av.apply(&m_sharedData.avatarTextures[0][0]);
 
     //3D Player Model
     cro::ModelDefinition md(m_resources);

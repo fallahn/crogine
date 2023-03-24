@@ -65,7 +65,7 @@ struct PlayerData final
     bool loadProfile(const std::string& path, const std::string& uid);
 };
 
-struct ProfileTexture final
+struct ProfileTexture
 {
     explicit ProfileTexture(const std::string&);
 

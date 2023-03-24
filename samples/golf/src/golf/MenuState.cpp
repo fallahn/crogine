@@ -165,13 +165,12 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
         if (idx > -1)
         {
             m_ballIndices[i] = idx;
-            //m_ballThumbCams[i].getComponent<cro::Callback>().setUserData<std::int32_t>(idx);
         }
         else
         {
             m_sharedData.localConnectionData.playerData[i].ballID = 0;
         }
-        applyAvatarColours(i);
+        //applyAvatarColours(i);
     }
 
     //reset the state if we came from the tutorial (this is

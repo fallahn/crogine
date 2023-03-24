@@ -262,7 +262,6 @@ private:
     void parseAvatarDirectory();
     void createAvatarScene();
     std::int32_t indexFromAvatarID(std::uint32_t);
-    void applyAvatarColours(std::size_t);
     void ugcInstalledHandler(std::uint64_t id, std::int32_t type);
 
     cro::RenderTexture m_clubTexture;

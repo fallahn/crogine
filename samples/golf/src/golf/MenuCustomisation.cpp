@@ -655,7 +655,7 @@ void MenuState::parseAvatarDirectory()
     //for every profile create a texture for the preview
     for (auto& profile : m_sharedData.playerProfiles)
     {
-        if (profile.skinID = 0)
+        if (profile.skinID == 0)
         {
             //use first valid skin
             profile.skinID = m_sharedData.avatarInfo[0].uid;
@@ -832,20 +832,6 @@ std::int32_t MenuState::indexFromAvatarID(std::uint32_t id)
     }
 
     return 0;
-}
-
-void MenuState::applyAvatarColours(std::size_t playerIndex)
-{
-    auto avatarIndex = m_avatarIndices[playerIndex];
-
-    const auto& flags = m_sharedData.localConnectionData.playerData[playerIndex].avatarFlags;
-    m_playerAvatars[avatarIndex].setColour(pc::ColourKey::Bottom, flags[0]);
-    m_playerAvatars[avatarIndex].setColour(pc::ColourKey::Top, flags[1]);
-    m_playerAvatars[avatarIndex].setColour(pc::ColourKey::Skin, flags[2]);
-    m_playerAvatars[avatarIndex].setColour(pc::ColourKey::Hair, flags[3]);
-
-    m_playerAvatars[avatarIndex].setTarget(m_sharedData.avatarTextures[0][playerIndex]);
-    m_playerAvatars[avatarIndex].apply();
 }
 
 void MenuState::ugcInstalledHandler(std::uint64_t id, std::int32_t type)

@@ -6217,7 +6217,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     cmd.targetFlags = CommandID::SlopeIndicator;
     cmd.action = [&,player](cro::Entity e, float)
     {
-        bool hidden = (player.terrain != TerrainID::Green) || m_holeData[m_currentHole].puttFromTee;
+        bool hidden = ((player.terrain != TerrainID::Green)/* && m_distanceToHole > 15.f*/) || m_holeData[m_currentHole].puttFromTee;
 
         if (!hidden)
         {
