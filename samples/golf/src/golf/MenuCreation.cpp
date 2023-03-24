@@ -1953,6 +1953,14 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
                     shadeEnt.getComponent<cro::Callback>().active = true;
                     m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Dummy);
                     m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
+
+                    //restore the rules tab if necessary
+                    float scale = m_lobbyWindowEntities[LobbyEntityID::HoleSelection].getComponent<cro::Transform>().getScale().y;
+                    if (scale == 0)
+                    {
+                        m_lobbyWindowEntities[LobbyEntityID::HoleSelection].getComponent<cro::Transform>().setScale({ 1.f, 1.f });
+                        m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
+                    }
                 }
             });
     centreText(entity);

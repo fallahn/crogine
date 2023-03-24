@@ -171,10 +171,6 @@ void GolfState::buildUI()
     auto courseEnt = entity;
     m_courseEnt = courseEnt;
 
-    /*m_resources.shaders.loadFromString(ShaderID::FXAA, FXAAVertex, FXAAFrag);
-    auto& shader = m_resources.shaders.get(ShaderID::FXAA);
-    m_courseEnt.getComponent<cro::Drawable2D>().setShader(&shader);*/
-
     //displays the trophies on round end - has to be displayed over top of scoreboard
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
@@ -1262,6 +1258,7 @@ void GolfState::showCountdown(std::uint8_t seconds)
     }
 
 
+#ifndef CRO_DEBUG_
     //enter score into leaderboard
     if (m_sharedData.scoreType == ScoreType::Stroke)
     {
@@ -1275,6 +1272,7 @@ void GolfState::showCountdown(std::uint8_t seconds)
             }
         }
     }
+#endif
 
     auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
 
