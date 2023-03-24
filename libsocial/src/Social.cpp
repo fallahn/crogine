@@ -208,12 +208,13 @@ std::uint32_t Social::updateStreak()
         std::time_t p = prevTs;
         std::time_t c = ts;
 
-        auto prevTm = std::localtime(&p);
-        auto currTm = std::localtime(&c);
+        //we have to copy the results else we just get 2 pointers to the same thing.
+        auto prevTm = *std::localtime(&p);
+        auto currTm = *std::localtime(&c);
 
-        if ((currTm->tm_yday == 1 //fudge for year wrap around. There are more elegant ways, but brain.
-            && prevTm->tm_yday == 365)
-            || (currTm->tm_yday - prevTm->tm_yday) == 1)
+        if ((currTm.tm_yday == 1 //fudge for year wrap around. There are more elegant ways, but brain.
+            && prevTm.tm_yday == 365)
+            || (currTm.tm_yday - prevTm.tm_yday) == 1)
         {
             dayCount = 1;
         }
