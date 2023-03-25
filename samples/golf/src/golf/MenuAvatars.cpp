@@ -537,11 +537,12 @@ void MenuState::createAvatarMenu(cro::Entity parent)
 
                 updateRoster();
 
-                auto soundSize = m_playerAvatars[i].previewSounds.size();
+                auto avtIdx = indexFromAvatarID(m_sharedData.playerProfiles[i].skinID);
+                auto soundSize = m_playerAvatars[avtIdx].previewSounds.size();
                 if (soundSize != 0)
                 {
                     auto idx = soundSize > 1 ? cro::Util::Random::value(0u, soundSize - 1) : 0;
-                    m_playerAvatars[i].previewSounds[idx].getComponent<cro::AudioEmitter>().play();
+                    m_playerAvatars[avtIdx].previewSounds[idx].getComponent<cro::AudioEmitter>().play();
                 }
                 else
                 {
@@ -576,11 +577,12 @@ void MenuState::createAvatarMenu(cro::Entity parent)
 
                 updateRoster();
 
-                auto soundSize = m_playerAvatars[i].previewSounds.size();
+                auto avtIdx = indexFromAvatarID(m_sharedData.playerProfiles[i].skinID);
+                auto soundSize = m_playerAvatars[avtIdx].previewSounds.size();
                 if (soundSize != 0)
                 {
                     auto idx = soundSize > 1 ? cro::Util::Random::value(0u, soundSize - 1) : 0;
-                    m_playerAvatars[i].previewSounds[idx].getComponent<cro::AudioEmitter>().play();
+                    m_playerAvatars[avtIdx].previewSounds[idx].getComponent<cro::AudioEmitter>().play();
                 }
                 else
                 {
