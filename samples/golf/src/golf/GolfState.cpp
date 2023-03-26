@@ -141,6 +141,10 @@ namespace
     std::size_t bitrateCounter = 0;
     glm::vec4 topSky;
     glm::vec4 bottomSky;
+
+    glm::vec2 viewScale = glm::vec2(0.f);
+    glm::uvec2 buffSize = glm::uvec2(0u);
+
 #endif // CRO_DEBUG_
 
     float godmode = 1.f;
@@ -285,6 +289,17 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     //glLineWidth(1.5f);
 #ifdef CRO_DEBUG_
     ballEntity = {};
+
+    registerWindow([&]() 
+        {
+            if (ImGui::Begin("Funt"))
+            {
+                ImGui::Text("Scale %3.3f", viewScale.x);
+                ImGui::Text("View Scale %3.3f", m_viewScale.x);
+                ImGui::Text("Tex Size %d, %d", buffSize.x, buffSize.y);
+            }
+            ImGui::End();
+        });
 
     registerDebugWindows();
 
@@ -4911,9 +4926,9 @@ void GolfState::spawnBall(const ActorInfo& info)
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>().getVertexData() =
     {
-        cro::Vertex2D(glm::vec2(-2.5f, 9.5f), miniBallColour),
-        cro::Vertex2D(glm::vec2(0.f,3.f), miniBallColour),
-        cro::Vertex2D(glm::vec2(2.5f, 9.5f), miniBallColour)
+        cro::Vertex2D(glm::vec2(-1.f, 4.5f), miniBallColour),
+        cro::Vertex2D(glm::vec2(0.f,0.5f), miniBallColour),
+        cro::Vertex2D(glm::vec2(1.f, 4.5f), miniBallColour)
     };
     entity.getComponent<cro::Drawable2D>().updateLocalBounds();
     entity.addComponent<cro::Callback>().active = true;
@@ -4925,11 +4940,16 @@ void GolfState::spawnBall(const ActorInfo& info)
             auto pos = ballEnt.getComponent<cro::Transform>().getWorldPosition();
             auto iconPos = m_greenCam.getComponent<cro::Camera>().coordsToPixel(pos, m_greenBuffer.getSize());
 
-            static const glm::vec2 Centre(m_greenBuffer.getSize() / 2u);
+            const glm::vec2 Centre = glm::vec2(m_greenBuffer.getSize() / 2u);
 
             iconPos -= Centre;
             iconPos *= std::min(1.f, Centre.x / glm::length(iconPos));
             iconPos += Centre;
+
+            auto terrain = ballEnt.getComponent<ClientCollider>().terrain;
+            float scale = terrain == TerrainID::Green ? m_viewScale.x / m_miniGreenEnt.getComponent<cro::Transform>().getScale().x : 0.f;
+
+            e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
 
             e.getComponent<cro::Transform>().setPosition(glm::vec3(iconPos, static_cast<float>(depthOffset) / 100.f));
             if (m_inputParser.getActive())
@@ -4937,9 +4957,8 @@ void GolfState::spawnBall(const ActorInfo& info)
                 m_miniGreenIndicatorEnt.getComponent<cro::Transform>().setPosition(glm::vec3(iconPos, 0.05f));
             }
 
-            auto terrain = ballEnt.getComponent<ClientCollider>().terrain;
-            float scale = terrain == TerrainID::Green ? m_viewScale.x : 0.f;
-            e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
+            viewScale = m_miniGreenEnt.getComponent<cro::Transform>().getScale();
+            buffSize = m_greenBuffer.getSize();
         }
     };
 

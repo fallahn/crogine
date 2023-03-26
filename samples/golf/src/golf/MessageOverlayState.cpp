@@ -70,6 +70,8 @@ source distribution.
 
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
 
+#include <filesystem>
+
 namespace
 {
 

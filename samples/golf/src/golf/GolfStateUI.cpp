@@ -916,10 +916,10 @@ void GolfState::buildUI()
     entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 0.1f });
     entity.addComponent<cro::Drawable2D>().setVertexData(
         {
-            cro::Vertex2D(glm::vec2(0.f, 0.75f), startCol),
-            cro::Vertex2D(glm::vec2(0.f, -0.75f), startCol),
-            cro::Vertex2D(glm::vec2(25.f, 0.75f), endCol),
-            cro::Vertex2D(glm::vec2(25.f, -0.75f), endCol),
+            cro::Vertex2D(glm::vec2(0.f, 0.25f), startCol),
+            cro::Vertex2D(glm::vec2(0.f, -0.25f), startCol),
+            cro::Vertex2D(glm::vec2(15.f, 0.25f), endCol),
+            cro::Vertex2D(glm::vec2(15.f, -0.25f), endCol),
         });
     entity.getComponent<cro::Drawable2D>().updateLocalBounds();
     entity.addComponent<cro::Callback>().active = true;
@@ -941,7 +941,7 @@ void GolfState::buildUI()
             currSize = std::max(0.f, currSize - Speed);
         }
         float scale = cro::Util::Easing::easeOutBack(currSize);
-        e.getComponent<cro::Transform>().setScale(glm::vec2(scale) * m_viewScale);
+        e.getComponent<cro::Transform>().setScale(glm::vec2(scale) * (m_viewScale.x / m_miniGreenEnt.getComponent<cro::Transform>().getScale().x));
     };
     m_miniGreenIndicatorEnt = entity;
     greenEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
