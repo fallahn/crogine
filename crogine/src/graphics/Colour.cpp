@@ -52,28 +52,19 @@ const cro::Colour cro::Colour::Plum = cro::Colour(0xDDA0DDFF);
 const cro::Colour cro::Colour::Teal = cro::Colour(0x008080FF);
 
 cro::Colour::Colour()
-    : r(0.f), g(0.f), b(0.f), a(1.f), m_packedVal(0xff)
-{}
+    : r(0.f), g(0.f), b(0.f), a(1.f) {}
 
 cro::Colour::Colour(std::uint8_t red, std::uint8_t green, std::uint8_t blue, std::uint8_t alpha)
-    : r         (static_cast<float>(red) / 255.f),
-    g           (static_cast<float>(green) / 255.f),
-    b           (static_cast<float>(blue) / 255.f),
-    a           (static_cast<float>(alpha) / 255.f),
-    m_packedVal ((red << 24)  | (green << 16) | (blue << 8) | alpha)
-{
-
-}
+    : r(static_cast<float>(red) / 255.f),
+    g(static_cast<float>(green) / 255.f),
+    b(static_cast<float>(blue) / 255.f),
+    a(static_cast<float>(alpha) / 255.f) {}
 
 cro::Colour::Colour(std::uint32_t mask)
-    : r         (static_cast<float>((mask >> 24) & 0xFF) / 255.f),
-    g           (static_cast<float>((mask >> 16) & 0xFF) / 255.f),
-    b           (static_cast<float>((mask >> 8) & 0xFF) / 255.f),
-    a           (static_cast<float>(mask & 0xFF) / 255.f),
-    m_packedVal (mask)
-{
-
-}
+    : r(static_cast<float>((mask >> 24) & 0xFF) / 255.f),
+    g(static_cast<float>((mask >> 16) & 0xFF) / 255.f),
+    b(static_cast<float>((mask >> 8) & 0xFF) / 255.f),
+    a(static_cast<float>(mask & 0xFF) / 255.f) {}
 
 cro::Colour::Colour(float red, float green, float blue, float alpha)
     : r(red), g(green), b(blue), a(alpha)
@@ -82,7 +73,7 @@ cro::Colour::Colour(float red, float green, float blue, float alpha)
 }
 
 cro::Colour::Colour(glm::vec3 vector)
-    : r(0.f), g(0.f), b(0.f), a(1.f), m_packedVal(0xff)
+    : r(0.f), g(0.f), b(0.f), a(1.f)
 {
     setRed(vector.r);
     setGreen(vector.g);
@@ -90,7 +81,7 @@ cro::Colour::Colour(glm::vec3 vector)
 }
 
 cro::Colour::Colour(glm::vec4 vector)
-    : r(0.f), g(0.f), b(0.f), a(0.f), m_packedVal(0)
+    : r(0.f), g(0.f), b(0.f), a(0.f)
 {
     setRed(vector.r);
     setGreen(vector.g);
@@ -104,13 +95,11 @@ cro::Colour& cro::Colour::operator = (std::uint32_t mask)
     g = (static_cast<float>((mask >> 16) & 0xFF) / 255.f);
     b = (static_cast<float>((mask >> 8) & 0xFF) / 255.f);
     a = (static_cast<float>(mask & 0xFF) / 255.f);
-    m_packedVal = mask;
     return *this;
 }
 
 cro::Colour& cro::Colour::operator = (glm::vec3 rhs)
 {
-    m_packedVal = 0xff;
     setRed(rhs.r);
     setGreen(rhs.g);
     setBlue(rhs.b);
@@ -120,7 +109,6 @@ cro::Colour& cro::Colour::operator = (glm::vec3 rhs)
 
 cro::Colour& cro::Colour::operator = (glm::vec4 rhs)
 {
-    m_packedVal = 0;
     setRed(rhs.r);
     setGreen(rhs.g);
     setBlue(rhs.b);
@@ -132,73 +120,65 @@ cro::Colour& cro::Colour::operator = (glm::vec4 rhs)
 void cro::Colour::setRed(std::uint8_t red)
 {
     r = static_cast<float>(red) / 255.f;
-    m_packedVal |= (red << 24);
 }
 
 void cro::Colour::setRed(float red)
 {
     CRO_ASSERT(red >= 0 && red <= 1, "Value must be normalised");
     r = red;
-    m_packedVal |= (static_cast<std::uint8_t>(red * 255.f) << 24);
 }
 
 void cro::Colour::setGreen(std::uint8_t green)
 {
     g = static_cast<float>(green) / 255.f;
-    m_packedVal |= (green << 16);
 }
 
 void cro::Colour::setGreen(float green)
 {
     CRO_ASSERT(green >= 0 && green <= 1, "Value must be normalised");
     g = green;
-    m_packedVal |= (static_cast<std::uint8_t>(green * 255.f) << 16);
 }
 
 void cro::Colour::setBlue(std::uint8_t blue)
 {
     b = static_cast<float>(blue) / 255.f;
-    m_packedVal |= (blue << 8);
 }
 
 void cro::Colour::setBlue(float blue)
 {
     CRO_ASSERT(blue >= 0 && blue <= 1, "Value must be normalised");
     b = blue;
-    m_packedVal |= (static_cast<std::uint8_t>(blue * 255.f) << 8);
 }
 
 void cro::Colour::setAlpha(std::uint8_t alpha)
 {
     a = static_cast<float>(alpha) / 255.f;
-    m_packedVal |= alpha;
 }
 
 void cro::Colour::setAlpha(float alpha)
 {
     CRO_ASSERT(alpha >= 0 && alpha <= 1, "Value must be normalised");
     a = alpha;
-    m_packedVal |= static_cast<std::uint8_t>(alpha * 255.f);
 }
 
 std::uint8_t cro::Colour::getRedByte() const
 {
-    return static_cast<std::uint8_t>((m_packedVal & 0xff000000) >> 24);
+    return static_cast<std::uint8_t>(255.f * r);
 }
 
 std::uint8_t cro::Colour::getGreenByte() const
 {
-    return static_cast<std::uint8_t>((m_packedVal & 0x00ff0000) >> 16);
+    return static_cast<std::uint8_t>(255.f * g);
 }
 
 std::uint8_t cro::Colour::getBlueByte() const
 {
-    return static_cast<std::uint8_t>((m_packedVal & 0x0000ff00) >> 8);
+    return static_cast<std::uint8_t>(255.f * b);
 }
 
 std::uint8_t cro::Colour::getAlphaByte() const
 {
-    return static_cast<std::uint8_t>(m_packedVal & 0xff);
+    return static_cast<std::uint8_t>(255.f * a);
 }
 
 float cro::Colour::getRed() const
@@ -223,7 +203,7 @@ float cro::Colour::getAlpha() const
 
 std::uint32_t cro::Colour::getPacked() const
 {
-    return m_packedVal;
+    return (getRedByte() << 24 | getGreenByte() << 16 | getBlueByte() << 8 | getAlphaByte());
 }
 
 glm::vec4 cro::Colour::getVec4() const
@@ -234,7 +214,10 @@ glm::vec4 cro::Colour::getVec4() const
 //operators
 bool cro::operator == (const Colour& l, const Colour& r)
 {
-    return (l.m_packedVal == r.m_packedVal);
+    return ((l.r == r.r) &&
+        (l.g == r.g) &&
+        (l.b == r.b) &&
+        (l.a == r.a));
 }
 
 bool cro::operator != (const Colour& l, const Colour& r)

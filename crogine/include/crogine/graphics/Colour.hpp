@@ -197,8 +197,6 @@ namespace cro
         float b;
         float a;
 
-        std::uint32_t m_packedVal;
-
         friend CRO_EXPORT_API bool operator == (const Colour&, const Colour&);
         friend CRO_EXPORT_API bool operator != (const Colour&, const Colour&);
         friend CRO_EXPORT_API Colour operator + (const Colour&, const Colour&);
