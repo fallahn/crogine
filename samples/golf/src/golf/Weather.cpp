@@ -85,11 +85,16 @@ namespace
         return sin((i * PI) / 2.0);
     }
 
+    const float FallSpeed = 1.0;
+    const float WindEffect = 40.0;
 #else
     float ease(float i)
     {
-        return sqrt(1.0 - pow(i - 1.0, 2.0));
+        //return sqrt(1.0 - pow(i - 1.0, 2.0));
+        return i;
     }
+    const float FallSpeed = 16.0;
+    const float WindEffect = 10.0;
 #endif
 
     void main()
@@ -97,19 +102,19 @@ namespace
         mat4 wvp = u_projectionMatrix * u_worldViewMatrix;
         vec4 position = a_position;
 
-        float p = position.y - u_windData.w;
+        float p = position.y - (u_windData.w * FallSpeed);
         p = mod(p, SystemHeight);
         //p = ease(0.2 + ((p / SystemHeight) * 0.8));
         p = ease((p / SystemHeight));
 
         position.y  = p * SystemHeight;
 
-        position.x -= p * u_windData.x * u_windData.y * 40.0;
-        position.z -= p * u_windData.z * u_windData.y * 40.0;
+        position.x -= p * u_windData.x * u_windData.y * WindEffect;
+        position.z -= p * u_windData.z * u_windData.y * WindEffect;
 
 
         gl_Position = wvp * position;
-        gl_PointSize = u_projectionMatrix[1][1] / gl_Position.w * 10.0 * u_pixelScale;
+        gl_PointSize = u_projectionMatrix[1][1] / gl_Position.w * 10.0 * u_pixelScale * (FallSpeed);
 
         vec4 worldPos = u_worldMatrix * position;
         v_colour = a_colour;
@@ -123,6 +128,30 @@ namespace
     }
 )";
 
+    static const std::string RainFragment = R"(
+    OUTPUT
+    uniform vec4 u_colour = vec4(1.0);
+
+    VARYING_IN vec4 v_colour;
+
+    float ease(float i)
+    {
+        //return sqrt(pow(i, 2.0));
+        return pow(i, 5.0);
+    }
+
+    void main()
+    {
+        vec4 colour = v_colour * u_colour;
+        colour.rgb += (1.0 - colour.a) * colour.rgb;
+
+        colour.a *= ease(gl_PointCoord.y) * 0.4;
+        colour.a *= step(0.49, gl_PointCoord.x);
+        colour.a *= 1.0 - step(0.51, gl_PointCoord.x);
+
+        FRAG_OUT = colour;
+    }
+)";
 
     constexpr std::array<float, 3u> AreaStart = { 0.f, 0.f, 0.f };
     constexpr std::array<float, 3u> AreaEnd = { 20.f, 80.f, 20.f };
@@ -131,7 +160,7 @@ namespace
     constexpr std::int32_t GridY = 3;
 }
 
-void GolfState::createWeather()
+void GolfState::createWeather(std::int32_t weatherType)
 {
     //cro::Clock clock;
     auto points = pd::PoissonDiskSampling(2.3f, AreaStart, AreaEnd, 30u, static_cast<std::uint32_t>(std::time(nullptr)));
@@ -191,12 +220,23 @@ void GolfState::createWeather()
     meshData->boundingSphere.centre = meshData->boundingBox[0] + ((meshData->boundingBox[1] - meshData->boundingBox[0]) / 2.f);
     meshData->boundingSphere.radius = glm::length((meshData->boundingBox[1] - meshData->boundingBox[0]) / 2.f);
 
-    m_resources.shaders.loadFromString(ShaderID::Weather, "#define EASE_SNOW\n" + WeatherVertex, WireframeFragment);
+    auto weatherColour = LeaderboardTextLight;
+    auto blendMode = cro::Material::BlendMode::None;
+    if (weatherType == WeatherType::Snow)
+    {
+        m_resources.shaders.loadFromString(ShaderID::Weather, WeatherVertex, WireframeFragment, "#define EASE_SNOW\n");
+    }
+    else
+    {
+        m_resources.shaders.loadFromString(ShaderID::Weather, WeatherVertex, RainFragment);
+        weatherColour = SkyTop;
+        blendMode = cro::Material::BlendMode::Alpha;
+    }
     auto& shader = m_resources.shaders.get(ShaderID::Weather);
     auto materialID = m_resources.materials.add(shader);
     auto material = m_resources.materials.get(materialID);
-    material.setProperty("u_colour", LeaderboardTextLight);
-    //material.setProperty("u_colour", WaterColour);
+    material.setProperty("u_colour", weatherColour);
+    material.blendMode = blendMode;
 
     constexpr glm::vec3 Offset(AreaEnd[0] * -1.5f, 0.f, AreaEnd[2] * -1.5f);
     for (auto y = 0; y < GridY; ++y)

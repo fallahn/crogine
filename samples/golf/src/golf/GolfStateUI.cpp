@@ -799,6 +799,7 @@ void GolfState::buildUI()
     //mini flag icon
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setRotation(cro::Util::Const::degToRad * 90.f);
+    entity.getComponent<cro::Transform>().setOrigin({ 0.5f, -0.5f });
     entity.addComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::MiniFlag;
     entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::MapFlag];

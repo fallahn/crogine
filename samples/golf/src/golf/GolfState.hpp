@@ -223,7 +223,14 @@ private:
     void buildScene();
     void initAudio(bool loadTrees);
 
-    void createWeather(); //weather.cpp
+    struct WeatherType final
+    {
+        enum
+        {
+            Snow, Rain
+        };
+    };
+    void createWeather(std::int32_t); //weather.cpp
     void createClouds();
     void buildBow();
     void createDrone();

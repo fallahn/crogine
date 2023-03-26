@@ -142,9 +142,6 @@ namespace
     glm::vec4 topSky;
     glm::vec4 bottomSky;
 
-    glm::vec2 viewScale = glm::vec2(0.f);
-    glm::uvec2 buffSize = glm::uvec2(0u);
-
 #endif // CRO_DEBUG_
 
     float godmode = 1.f;
@@ -290,19 +287,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
 #ifdef CRO_DEBUG_
     ballEntity = {};
 
-    registerWindow([&]() 
-        {
-            if (ImGui::Begin("Funt"))
-            {
-                ImGui::Text("Scale %3.3f", viewScale.x);
-                ImGui::Text("View Scale %3.3f", m_viewScale.x);
-                ImGui::Text("Tex Size %d, %d", buffSize.x, buffSize.y);
-            }
-            ImGui::End();
-        });
-
     registerDebugWindows();
-
 #endif
     cro::App::getInstance().resetFrameTime();
 }
@@ -4222,13 +4207,17 @@ void GolfState::buildScene()
     sunEnt.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, -130.f * cro::Util::Const::degToRad);
     sunEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -75.f * cro::Util::Const::degToRad);
 
-//#ifdef CRO_DEBUG_
-    if (cro::SysTime::now().months() == 12
-        && cro::Util::Random::value(0, 20) == 0)
+    if (cro::SysTime::now().months() == 12)
     {
-        createWeather();
+        if (cro::Util::Random::value(0, 20) == 0)
+        {
+            createWeather(WeatherType::Snow);
+        }
     }
-//#endif
+    //else
+    //{
+    //    createWeather(WeatherType::Rain);
+    //}
 }
 
 void GolfState::initAudio(bool loadTrees)
@@ -4956,9 +4945,6 @@ void GolfState::spawnBall(const ActorInfo& info)
             {
                 m_miniGreenIndicatorEnt.getComponent<cro::Transform>().setPosition(glm::vec3(iconPos, 0.05f));
             }
-
-            viewScale = m_miniGreenEnt.getComponent<cro::Transform>().getScale();
-            buffSize = m_greenBuffer.getSize();
         }
     };
 
