@@ -213,6 +213,25 @@ void WorldState::drawMenuBar()
             ImGui::SameLine();
             uiConst::showToolTip("Convert a 16x16 image to byte array");
 
+            if (ImGui::MenuItem("Image To Array"))
+            {
+                auto path = cro::FileSystem::openFileDialogue("", "png,jpg,bmp");
+                if (!path.empty())
+                {
+                    cro::Image img;
+                    if (img.loadFromFile(path))
+                    {
+                        auto outpath = cro::FileSystem::saveFileDialogue("", "hpp");
+                        if (!outpath.empty() &&
+                            imageToArray(img, outpath))
+                        {
+                            cro::FileSystem::showMessageBox("Success", "Header File Written Successfully");
+                        }
+                    }
+                }
+            }
+            ImGui::SameLine();
+            uiConst::showToolTip("Convert an image to an array of cro::Colour");
 
             if (ImGui::MenuItem("Create Look-up Palette"))
             {
@@ -621,4 +640,69 @@ void WorldState::openModel(const std::string& path)
 
         m_previewScene.destroyEntity(m_previewEntity);
     }
+}
+
+bool WorldState::imageToArray(const cro::Image& img, const std::string& outpath) const
+{
+    auto type = img.getFormat();
+    std::int32_t stride = 0;
+    switch (type)
+    {
+    case cro::ImageFormat::A:
+    case cro::ImageFormat::None:
+    default: return false;
+    case cro::ImageFormat::RGB:
+        stride = 3;
+        break;
+    case cro::ImageFormat::RGBA:
+        stride = 4;
+        break;
+    }
+
+    std::vector<std::uint32_t> colours;
+    auto imageSize = img.getSize().x * img.getSize().y * stride;
+    for (auto i = 0u; i < imageSize; i += stride)
+    {
+        std::uint32_t colour = 0xff;
+        std::int32_t shift = 24;
+
+        for (auto j = 0; j < stride; ++j)
+        {
+            std::uint32_t byte = img.getPixelData()[i + j];
+            colour |= (byte << shift);
+            shift -= 8;
+        }
+
+        if (auto result = std::find_if(colours.begin(), colours.end(), 
+            [colour](std::uint32_t c) 
+            {
+                return c == colour;
+            }); result == colours.end())
+        {
+            colours.push_back(colour);
+        }
+    }
+
+    if (!colours.empty())
+    {
+        std::ofstream file(outpath);
+        if (file.is_open() && file.good())
+        {
+            file << "#pragma once\n\n#include <array>\n#include <crogine/graphics/Colour.hpp>\n\n";
+            file << "static const std::array<cro::Colour, " << colours.size() << "u> Colours =\n{\n";
+
+            for (auto c : colours)
+            {
+                file << "    cro::Colour(0x" << std::hex << c << "),\n";
+            }
+
+            file << "};";
+
+            return true;
+        }
+
+        return false;
+    }
+
+    return false;
 }
