@@ -670,7 +670,7 @@ void MenuState::parseAvatarDirectory()
 
 void MenuState::createAvatarScene()
 {
-    auto avatarTexCallback = [&](cro::Camera&)
+    auto avatarTexCallback = [&](cro::Camera& cam)
     {
         auto windowSize = static_cast<float>(cro::App::getWindow().getSize().x);
 
@@ -678,6 +678,10 @@ void MenuState::createAvatarScene()
         float scale = m_sharedData.pixelScale ? windowScale : 1.f;
         auto size = AvatarPreviewSize * static_cast<std::uint32_t>((windowScale + 1.f) - scale);
         m_avatarTexture.create(size.x, size.y);
+
+        /*static constexpr float ratio = static_cast<float>(AvatarPreviewSize.y) / AvatarPreviewSize.x;
+        cam.setPerspective(70.f, ratio, 0.1f, 10.f);
+        cam.viewport = { 0.f, 0.f, 1.f, 1.f };*/
     };
 
     auto avatarCam = m_avatarScene.createEntity();
@@ -750,6 +754,46 @@ void MenuState::createAvatarScene()
 
                 //TODO fail to load if there's no animations? This shouldn't
                 //be game breaking if there are none, it'll just look wrong.
+
+                /*const auto& animations = entity.getComponent<cro::Skeleton>().getAnimations();
+                std::uint32_t idle = 0;
+                std::uint32_t shrug = 0;
+                for (auto i = 0u; i < animations.size(); ++i)
+                {
+                    if (animations[i].name == "idle")
+                    {
+                        idle = i;
+                    }
+                    else if (animations[i].name == "impatient")
+                    {
+                        shrug = i;
+                    }
+                }
+                entity.addComponent<cro::Callback>().active = true;
+                entity.getComponent<cro::Callback>().setUserData<float>(0.f);
+                entity.getComponent<cro::Callback>().function =
+                    [idle, shrug](cro::Entity e, float dt)
+                {
+                    auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
+                    
+                    if (e.getComponent<cro::Skeleton>().getCurrentAnimation() == idle)
+                    {
+                        currTime -= dt;
+                        if (currTime < 0)
+                        {
+                            currTime = cro::Util::Random::value(6.f, 8.f);
+                            e.getComponent<cro::Skeleton>().play(shrug, 1.f, 1.5f);
+                        }
+                    }
+                    else
+                    {
+                        if (e.getComponent<cro::Skeleton>().getState() == cro::Skeleton::Stopped)
+                        {
+                            currTime = cro::Util::Random::value(6.f, 8.f);
+                            e.getComponent<cro::Skeleton>().play(idle, 1.f, 1.5f);
+                        }
+                    }
+                };*/
             }
             else
             {

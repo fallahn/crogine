@@ -170,7 +170,6 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
         {
             m_sharedData.localConnectionData.playerData[i].ballID = 0;
         }
-        //applyAvatarColours(i);
     }
 
     //reset the state if we came from the tutorial (this is
