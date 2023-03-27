@@ -615,10 +615,21 @@ void MenuState::handleMessage(const cro::Message& msg)
     if (msg.id == cro::Message::StateMessage)
     {
         const auto& data = msg.getData<cro::Message::StateEvent>();
-        if (data.action == cro::Message::StateEvent::Popped
-            && data.id == StateID::Keyboard)
+        if (data.action == cro::Message::StateEvent::Popped)
         {
-            applyTextEdit();
+            switch (data.id)
+            {
+            default:break;
+            case StateID::Keyboard:
+                applyTextEdit();
+                break;
+            case StateID::MessageOverlay:
+                if (m_sharedData.errorMessage == "delete_profile")
+                {
+                    eraseCurrentProfile();
+                }
+                break;
+            }
         }
     }
     else if (msg.id == MatchMaking::MessageID)

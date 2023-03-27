@@ -253,10 +253,10 @@ private:
 
     std::vector<PlayerAvatar> m_playerAvatars;
     std::vector<ProfileTexture> m_profileTextures;
-    void updateProfileTextures(); //applies profile colours to each texture
+    void updateProfileTextures(std::size_t start, std::size_t count); //applies profile colours to each texture
     //this is the index for each player into m_playerAvatars - skinID is read from PlayerAvatar struct
     std::array<std::size_t, ConstVal::MaxPlayers> m_avatarIndices = {};
-    
+    std::function<void()> updateRoster; //refreshes the roster list / avatar preview
     
     cro::RenderTexture m_avatarTexture;
     void parseAvatarDirectory();
@@ -286,6 +286,7 @@ private:
     void createLobbyMenu(cro::Entity, std::uint32_t, std::uint32_t);
     void createMenuCallbacks();
     void createProfileLayout(cro::Entity, cro::Transform&, const cro::SpriteSheet&);//display XP, clubs, streak etc on avatar menu
+    void eraseCurrentProfile();
 
     //message handlers for completing connection
     void finaliseGameCreate(const MatchMaking::Message&);

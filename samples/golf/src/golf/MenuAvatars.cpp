@@ -101,6 +101,8 @@ void MenuState::createAvatarMenu(cro::Entity parent)
         }
         m_sharedData.localConnectionData.playerData[0].saveProfile();
         m_sharedData.playerProfiles.push_back(m_sharedData.localConnectionData.playerData[0]);
+        m_profileTextures.emplace_back(m_sharedData.avatarInfo[indexFromAvatarID(m_sharedData.localConnectionData.playerData[0].skinID)].texturePath);
+        updateProfileTextures(0, m_profileTextures.size());
     }
     else
     {
@@ -352,7 +354,7 @@ void MenuState::createAvatarMenu(cro::Entity parent)
     };
 
 
-    auto updateRoster = [&, rosterEnt, nameLabel, showAvatar]() mutable
+    updateRoster = [&, rosterEnt, nameLabel, showAvatar]() mutable
     {
         //update the CPU icon, or hide if not added
         for (auto i = 0u; i < ConstVal::MaxPlayers; ++i)
@@ -581,7 +583,7 @@ void MenuState::createAvatarMenu(cro::Entity parent)
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = m_courseSelectCallbacks.selected;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = m_courseSelectCallbacks.unselected;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = uiSystem.addCallback(
-        [&, updateRoster](cro::Entity e, const cro::ButtonEvent& evt) mutable
+        [&](cro::Entity e, const cro::ButtonEvent& evt) mutable
         {
             if (activated(evt))
             {
@@ -621,7 +623,7 @@ void MenuState::createAvatarMenu(cro::Entity parent)
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = m_courseSelectCallbacks.selected;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = m_courseSelectCallbacks.unselected;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = uiSystem.addCallback(
-        [&, updateRoster](cro::Entity e, const cro::ButtonEvent& evt) mutable
+        [&](cro::Entity e, const cro::ButtonEvent& evt) mutable
         {
             if (activated(evt))
             {
@@ -700,6 +702,18 @@ void MenuState::createAvatarMenu(cro::Entity parent)
                     m_sharedData.playerProfiles.back().name = RandomNames[cro::Util::Random::value(0u, RandomNames.size() - 1)];
                     m_sharedData.playerProfiles.back().saveProfile();
                     m_sharedData.activeProfileIndex = m_sharedData.playerProfiles.size() - 1;
+
+                    //create profile texture
+                    auto avtIdx = indexFromAvatarID(m_sharedData.playerProfiles.back().skinID);
+                    m_profileTextures.emplace_back(m_sharedData.avatarInfo[avtIdx].texturePath);
+                    updateProfileTextures(m_profileTextures.size() - 1, 1);
+
+                    //set selected roster slot to this profile and refresh view
+                    m_rosterMenu.profileIndices[m_rosterMenu.activeIndex] = m_sharedData.activeProfileIndex;
+                    m_sharedData.localConnectionData.playerData[m_rosterMenu.activeIndex] = m_sharedData.playerProfiles[m_sharedData.activeProfileIndex];
+
+                    updateRoster();
+
                     requestStackPush(StateID::Profile);
                 }
                 else
@@ -761,7 +775,7 @@ void MenuState::createAvatarMenu(cro::Entity parent)
             {
                 if (m_sharedData.playerProfiles.size() == 1)
                 {
-                    m_sharedData.errorMessage = "This Profile Cannot Be Deleted";
+                    m_sharedData.errorMessage = "This Profile\nCannot Be Deleted";
                 }
                 else
                 {
@@ -869,7 +883,7 @@ void MenuState::createAvatarMenu(cro::Entity parent)
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = mouseEnterCursor;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         m_uiScene.getSystem<cro::UISystem>()->addCallback(
-            [&, updateRoster](cro::Entity, const cro::ButtonEvent& evt) mutable
+            [&](cro::Entity, const cro::ButtonEvent& evt) mutable
             {
                 if (activated(evt))
                 {
@@ -926,7 +940,7 @@ void MenuState::createAvatarMenu(cro::Entity parent)
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = mouseEnterCursor;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         m_uiScene.getSystem<cro::UISystem>()->addCallback(
-            [&, updateRoster](cro::Entity, const cro::ButtonEvent& evt) mutable
+            [&](cro::Entity, const cro::ButtonEvent& evt) mutable
             {
                 if (activated(evt))
                 {
@@ -1460,4 +1474,39 @@ void MenuState::createProfileLayout(cro::Entity parent, cro::Transform& menuTran
 #endif
 
     parent.getComponent<cro::Transform>().addChild(labelEnt.getComponent<cro::Transform>());
+}
+
+void MenuState::eraseCurrentProfile()
+{
+    auto profileID = m_sharedData.playerProfiles[m_sharedData.activeProfileIndex].profileID;
+
+    //erase profile first so we know we have valid remaining
+    m_sharedData.playerProfiles.erase(m_sharedData.playerProfiles.begin() + m_sharedData.activeProfileIndex);
+    
+    //set the active profile slot to the first valid profile
+    //remember the erased profile could be assigned to multiple slots..
+    for (auto i = 0u; i < m_sharedData.localConnectionData.playerData.size(); ++i)
+    {
+        if (m_sharedData.localConnectionData.playerData[i].profileID == profileID)
+        {
+            m_rosterMenu.profileIndices[i] = 0;
+            m_sharedData.localConnectionData.playerData[i] = m_sharedData.playerProfiles[0];
+        }
+    }
+
+    m_profileTextures.erase(m_profileTextures.begin() + m_sharedData.activeProfileIndex);
+    m_sharedData.activeProfileIndex = m_rosterMenu.profileIndices[m_rosterMenu.activeIndex];
+
+    //refresh the preview / roster list
+    updateRoster();
+
+
+    //remove the data from disk
+    auto path = Social::getUserContentPath(Social::UserContent::Profile);
+    path += profileID;
+    if (cro::FileSystem::directoryExists(path))
+    {
+        std::error_code ec;
+        std::filesystem::remove_all(path, ec);
+    }
 }

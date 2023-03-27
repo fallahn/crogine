@@ -50,7 +50,7 @@ public:
 
     void render() override;
 
-    cro::StateID getStateID() const override { return StateID::Pause; }
+    cro::StateID getStateID() const override { return StateID::Profile; }
 
 private:
 

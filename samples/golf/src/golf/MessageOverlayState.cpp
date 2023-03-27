@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2022
+Matt Marchant 2021 - 2023
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -540,6 +540,7 @@ void MessageOverlayState::buildScene()
                 {
                     if (activated(evt))
                     {
+                        m_sharedData.errorMessage = "";
                         quitState();
                     }
                 });
@@ -550,28 +551,8 @@ void MessageOverlayState::buildScene()
                 {
                     if (activated(evt))
                     {
-                        auto profileID = m_sharedData.playerProfiles[m_sharedData.activeProfileIndex].profileID;
-                        auto result = std::find_if(m_sharedData.localConnectionData.playerData.begin(),
-                            m_sharedData.localConnectionData.playerData.end(), [&profileID](const PlayerData& pd) {return pd.profileID == profileID; });
-
-                        if (result != m_sharedData.localConnectionData.playerData.end())
-                        {
-                            *result = {};
-                        }
-
-                        m_sharedData.playerProfiles.erase(m_sharedData.playerProfiles.begin() + m_sharedData.activeProfileIndex);
-                        m_sharedData.activeProfileIndex = 0;
-
-                        auto path = Social::getUserContentPath(Social::UserContent::Profile);
-                        path += profileID;
-                        if (cro::FileSystem::directoryExists(path))
-                        {
-                            std::error_code ec;
-                            std::filesystem::remove_all(path, ec);
-                        }
-
-                        requestStackClear();
-                        requestStackPush(StateID::Menu); //TODO we need to find a better way to refresh the avatar list
+                        m_sharedData.errorMessage = "delete_profile"; //used when returning to menu to decide on appropriate action
+                        quitState();
                     }
                 });
     }

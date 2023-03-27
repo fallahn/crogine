@@ -438,9 +438,17 @@ std::int32_t MenuState::indexFromBallID(std::uint32_t ballID)
     return 0;
 }
 
-void MenuState::updateProfileTextures()
+void MenuState::updateProfileTextures(std::size_t start, std::size_t count)
 {
-    for (auto i = 0u; i < m_sharedData.playerProfiles.size(); ++i)
+    if (count == 0)
+    {
+        //we might have passed in 0 as a param if it was derived from an empty vector
+        return;
+    }
+
+    CRO_ASSERT(start < count && count <= m_sharedData.playerProfiles.size(), "");
+
+    for (auto i = start; i < start + count; ++i)
     {
         const auto& flags = m_sharedData.playerProfiles[i].avatarFlags;
         m_profileTextures[i].setColour(pc::ColourKey::Bottom, flags[0]);
@@ -668,7 +676,7 @@ void MenuState::parseAvatarDirectory()
             m_profileTextures.back().setMugshot(profile.mugshot);
         }
     }
-    updateProfileTextures();
+    updateProfileTextures(0, m_profileTextures.size());
 
     createAvatarScene();
 }
