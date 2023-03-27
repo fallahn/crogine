@@ -411,7 +411,11 @@ private:
 
     //------------
 
-    bool m_hadFoul; //tracks 'boomerang' stat
+    struct AchievementTracker final
+    {
+        bool hadFoul = false; //tracks 'boomerang' stat
+        bool hadBackspin = false; //tracks 'spin class'
+    }m_achievementTracker;
 
     //for tracking scoreboard based stats
     struct StatBoardEntry final

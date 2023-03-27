@@ -205,8 +205,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     m_viewScale         (1.f),
     m_scoreColumnCount  (2),
     m_readyQuitFlags    (0),
-    m_emoteWheel        (sd, m_currentPlayer),
-    m_hadFoul           (false)
+    m_emoteWheel        (sd, m_currentPlayer)
 {
     godmode = 1.f;
     registerCommand("god", [](const std::string&)
@@ -5083,12 +5082,12 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
                 break;
             case TerrainID::Scrub:
                 showMessageBoard(MessageBoardID::Scrub);
-                m_hadFoul = (m_currentPlayer.client == m_sharedData.clientConnection.connectionID
+                m_achievementTracker.hadFoul = (m_currentPlayer.client == m_sharedData.clientConnection.connectionID
                     && !m_sharedData.localConnectionData.playerData[m_currentPlayer.player].isCPU);
                 break;
             case TerrainID::Water:
                 showMessageBoard(MessageBoardID::Water);
-                m_hadFoul = (m_currentPlayer.client == m_sharedData.clientConnection.connectionID
+                m_achievementTracker.hadFoul = (m_currentPlayer.client == m_sharedData.clientConnection.connectionID
                     && !m_sharedData.localConnectionData.playerData[m_currentPlayer.player].isCPU);
                 break;
             case TerrainID::Hole:
@@ -5136,6 +5135,12 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
                     {
                         Achievements::awardAchievement(AchievementStrings[AchievementID::TopChip]);
                         Social::awardXP(XPValues[XPID::Special]);
+
+                        if (m_achievementTracker.hadBackspin)
+                        {
+                            Achievements::awardAchievement(AchievementStrings[AchievementID::SpinClass]);
+                            Social::awardXP(XPValues[XPID::Special] * 2);
+                        }
                     }
                 }
                 showMessageBoard(MessageBoardID::HoleScore, special);
@@ -5381,7 +5386,7 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo)
     }
 
     updateScoreboard();
-    m_hadFoul = false;
+    m_achievementTracker.hadFoul = false;
 
     //CRO_ASSERT(hole < m_holeData.size(), "");
     if (hole >= m_holeData.size())
@@ -5938,6 +5943,7 @@ void GolfState::requestNextPlayer(const ActivePlayer& player)
 
 void GolfState::setCurrentPlayer(const ActivePlayer& player)
 {
+    m_achievementTracker.hadBackspin = false;
     m_turnTimer.restart();
     m_idleTimer.restart();
     idleTime = cro::seconds(90.f);
@@ -6497,6 +6503,7 @@ void GolfState::hitBall()
 
     m_inputParser.setActive(false);
     m_restoreInput = false;
+    m_achievementTracker.hadBackspin = (spin.y < 0);
 
     //increase the local stroke count so that the UI is updated
     //the server will set the actual value
