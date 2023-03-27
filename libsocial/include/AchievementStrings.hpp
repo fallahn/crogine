@@ -95,7 +95,18 @@ static const std::array<std::string, AchievementID::Count> AchievementStrings =
     "birds_eye",
     "dedicated",
     "resident_golfer",
-    "month_of_sundays"
+    "month_of_sundays",
+    "spinclass",
+    "course01_complete",
+    "course02_complete",
+    "course03_complete",
+    "course04_complete",
+    "course05_complete",
+    "course06_complete",
+    "course07_complete",
+    "course08_complete",
+    "course09_complete",
+    "course10_complete",
 };
 
 //appears on the notification
@@ -149,7 +160,18 @@ static const std::array<std::string, AchievementID::Count> AchievementLabels =
     "Bird's Eye View",
     "Dedicated",
     "Resident Golfer",
-    "Month Of Sundays"
+    "Month Of Sundays",
+    "Spin Class",
+    "Complete Course 1",
+    "Complete Course 2",
+    "Complete Course 3",
+    "Complete Course 4",
+    "Complete Course 5",
+    "Complete Course 6",
+    "Complete Course 7",
+    "Complete Course 8",
+    "Complete Course 9",
+    "Complete Course 10",
 };
 
 //description and whether or not the achievement is hidden until it is unlocked
@@ -204,6 +226,17 @@ static const std::array<std::pair<std::string, bool>, AchievementID::Count> Achi
     std::make_pair("Play once a day for 7 days", false),
     std::make_pair("Play once a day for 4 weeks", false),
     std::make_pair("Play once a day for 30 weeks", false),
+    std::make_pair("Get the ball in the hole using back spin", false),
+    std::make_pair("Play a full 18 holes on Westington links", false),
+    std::make_pair("Play a full 18 holes on Grove Bank", false),
+    std::make_pair("Play a full 18 holes on Old Stemmer's Lane", false),
+    std::make_pair("Play a full 18 holes on Roving Sands", false),
+    std::make_pair("Play a full 18 holes on Sunny Cove", false),
+    std::make_pair("Play a full 18 holes on Terdiman Cliffs", false),
+    std::make_pair("Play a full 18 holes on Dackel's Run", false),
+    std::make_pair("Play a full 18 holes on Moulin Plage", false),
+    std::make_pair("Play a full 18 holes on Purcitop Pitch 'n' Putt", false),
+    std::make_pair("Play a full 18 holes on Fairland Rock", false),
 };
 
 //assuming trophies load correctly they are:
@@ -280,7 +313,19 @@ static constexpr std::array<std::size_t, AchievementID::Count> AchievementTrophi
 
     TrophyID::SilverCup,
     TrophyID::GoldFigure,
-    TrophyID::Platinum
+    TrophyID::Platinum,
+
+    TrophyID::Platinum,
+    TrophyID::BronzeCup,
+    TrophyID::BronzeCup,
+    TrophyID::BronzeCup,
+    TrophyID::BronzeCup,
+    TrophyID::BronzeCup,
+    TrophyID::BronzeCup,
+    TrophyID::BronzeCup,
+    TrophyID::BronzeCup,
+    TrophyID::BronzeCup,
+    TrophyID::BronzeCup,
 };
 
 //these are indexed by StatID, so do try to get them in the correct order ;)

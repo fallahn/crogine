@@ -95,6 +95,18 @@ namespace AchievementID
         ResidentGolfer,
         MonthOfSundays,
 
+        SpinClass,
+        Complete01,
+        Complete02,
+        Complete03,
+        Complete04,
+        Complete05,
+        Complete06,
+        Complete07,
+        Complete08,
+        Complete09,
+        Complete10,
+
         Count
     };
     static_assert(Count <= 256, "Count exceeds maximum 256 Achievements!");

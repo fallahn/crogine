@@ -815,7 +815,12 @@ void MenuState::addSystems()
         if (Achievements::getStat(StatStrings[i])->value == 0)
         {
             awarded = false;
-            break;
+            //break;
+        }
+        else
+        {
+            //used to retroactively award the achievements
+            Achievements::awardAchievement(AchievementStrings[AchievementID::Complete01 + (i - StatID::Course01Complete)]);
         }
     }
     if (awarded)
