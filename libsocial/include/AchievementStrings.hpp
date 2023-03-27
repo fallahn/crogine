@@ -227,7 +227,7 @@ static const std::array<std::pair<std::string, bool>, AchievementID::Count> Achi
     std::make_pair("Play once a day for 4 weeks", false),
     std::make_pair("Play once a day for 30 weeks", false),
     std::make_pair("Get the ball in the hole using back spin", false),
-    std::make_pair("Play a full 18 holes on Westington links", false),
+    std::make_pair("Play a full 18 holes on Westington Links", false),
     std::make_pair("Play a full 18 holes on Grove Bank", false),
     std::make_pair("Play a full 18 holes on Old Stemmer's Lane", false),
     std::make_pair("Play a full 18 holes on Roving Sands", false),

@@ -47,6 +47,8 @@ source distribution.
 #include <crogine/gui/Gui.hpp>
 #include <crogine/util/Random.hpp>
 
+#include <filesystem>
+
 namespace
 {
 #include "RandNames.hpp"
