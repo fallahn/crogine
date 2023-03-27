@@ -282,6 +282,14 @@ void MenuState::createAvatarMenu(cro::Entity parent)
 
     addCorners(entity);
 
+    //active profile mugshot
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 396.f, 24.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>();
+    avatarEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    auto mugshot = entity;
+
     //team roster
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 38.f, 225.f, 0.1f });
@@ -293,7 +301,7 @@ void MenuState::createAvatarMenu(cro::Entity parent)
     avatarEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     auto rosterEnt = entity;
 
-    auto showAvatar = [&](std::size_t profileIndex)
+    auto showAvatar = [&, mugshot](std::size_t profileIndex) mutable
     {
         const auto& profile = m_sharedData.playerProfiles[profileIndex];
 
@@ -312,6 +320,19 @@ void MenuState::createAvatarMenu(cro::Entity parent)
 
         //use profile ID to set model texture
         m_playerAvatars[idx].previewModel.getComponent<cro::Model>().setMaterialProperty(0, "u_diffuseMap", m_profileTextures[profileIndex].getTexture());
+
+        if (m_profileTextures[profileIndex].getMugshot())
+        {
+            glm::vec2 texSize(m_profileTextures[profileIndex].getMugshot()->getSize());
+            glm::vec2 scale = glm::vec2(98.f, 42.f) / texSize;
+
+            mugshot.getComponent<cro::Transform>().setScale(scale);
+            mugshot.getComponent<cro::Sprite>().setTexture(*m_profileTextures[profileIndex].getMugshot());
+        }
+        else
+        {
+            mugshot.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+        }
 
         //update hair model
         if (m_playerAvatars[idx].hairAttachment != nullptr)

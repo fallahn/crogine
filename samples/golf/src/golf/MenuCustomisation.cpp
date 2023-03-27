@@ -662,6 +662,11 @@ void MenuState::parseAvatarDirectory()
         }
 
         m_profileTextures.emplace_back(m_sharedData.avatarInfo[indexFromAvatarID(profile.skinID)].texturePath);
+
+        if (!profile.mugshot.empty())
+        {
+            m_profileTextures.back().setMugshot(profile.mugshot);
+        }
     }
     updateProfileTextures();
 

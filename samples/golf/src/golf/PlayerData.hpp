@@ -60,6 +60,7 @@ struct PlayerData final
     glm::vec3 currentTarget = glm::vec3(0.f);
     cro::Colour ballTint;
 
+    std::string mugshot; //path to mugshot if it exists
     mutable std::string profileID; //saving file generates this
     bool saveProfile() const;
     bool loadProfile(const std::string& path, const std::string& uid);
@@ -75,11 +76,15 @@ struct ProfileTexture
 
     cro::TextureID getTexture() const { return cro::TextureID(*m_texture); }
 
+    void setMugshot(const std::string&);
+    const cro::Texture* getMugshot() const;
+
 private:
     //make these pointers because this struct is
     //stored in a vector
     std::unique_ptr<cro::Image> m_imageBuffer;
     std::unique_ptr<cro::Texture> m_texture;
+    std::unique_ptr<cro::Texture> m_mugshot;
 
     std::array<std::vector<std::uint32_t>, pc::ColourKey::Count> m_keyIndicesLight;
     std::array<std::vector<std::uint32_t>, pc::ColourKey::Count> m_keyIndicesDark;

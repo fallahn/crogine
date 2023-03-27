@@ -146,6 +146,12 @@ bool PlayerData::loadProfile(const std::string& path, const std::string& uid)
 
         profileID = uid;
 
+        mugshot = cro::FileSystem::getFilePath(path) + "mug.png";
+        if (!cro::FileSystem::fileExists(mugshot))
+        {
+            mugshot.clear();
+        }
+
         return true;
     }
     return false;
@@ -260,4 +266,18 @@ void ProfileTexture::apply(cro::Texture* dst)
     {
         m_texture->loadFromImage(*m_imageBuffer);
     }
+}
+
+void ProfileTexture::setMugshot(const std::string& path)
+{
+    if (cro::FileSystem::fileExists(path))
+    {
+        m_mugshot = std::make_unique<cro::Texture>();
+        m_mugshot->loadFromFile(path);
+    }
+}
+
+const cro::Texture* ProfileTexture::getMugshot() const
+{
+    return m_mugshot.get();
 }
