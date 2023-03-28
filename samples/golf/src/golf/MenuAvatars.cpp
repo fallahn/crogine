@@ -240,12 +240,14 @@ void MenuState::createAvatarMenu(cro::Entity parent)
     entity.addComponent<cro::Sprite>(m_ballTexture.getTexture());
     avatarEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
-    auto addCorners = [&](cro::Entity p)
+    auto addCorners = [&](cro::Entity p, cro::Entity q)
     {
-        bounds = p.getComponent<cro::Sprite>().getTextureBounds();
+        auto bounds = q.getComponent<cro::Sprite>().getTextureBounds();
+        auto offset = q.getComponent<cro::Transform>().getPosition();
         
         auto cornerEnt = m_uiScene.createEntity();
-        cornerEnt.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 0.1f });
+        cornerEnt.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 0.3f });
+        cornerEnt.getComponent<cro::Transform>().move(glm::vec2(offset));
         cornerEnt.addComponent<cro::Drawable2D>();
         cornerEnt.addComponent<cro::Sprite>() = spriteSheet.getSprite("corner_bl");
         p.getComponent<cro::Transform>().addChild(cornerEnt.getComponent<cro::Transform>());
@@ -253,25 +255,28 @@ void MenuState::createAvatarMenu(cro::Entity parent)
         auto cornerBounds = cornerEnt.getComponent<cro::Sprite>().getTextureBounds();
 
         cornerEnt = m_uiScene.createEntity();
-        cornerEnt.addComponent<cro::Transform>().setPosition({ 0.f, bounds.height - cornerBounds.height, 0.1f });
+        cornerEnt.addComponent<cro::Transform>().setPosition({ 0.f, bounds.height - cornerBounds.height, 0.3f });
+        cornerEnt.getComponent<cro::Transform>().move(glm::vec2(offset));
         cornerEnt.addComponent<cro::Drawable2D>();
         cornerEnt.addComponent<cro::Sprite>() = spriteSheet.getSprite("corner_tl");
         p.getComponent<cro::Transform>().addChild(cornerEnt.getComponent<cro::Transform>());
 
         cornerEnt = m_uiScene.createEntity();
-        cornerEnt.addComponent<cro::Transform>().setPosition({ bounds.width - cornerBounds.width, bounds.height - cornerBounds.height, 0.1f });
+        cornerEnt.addComponent<cro::Transform>().setPosition({ bounds.width - cornerBounds.width, bounds.height - cornerBounds.height, 0.3f });
+        cornerEnt.getComponent<cro::Transform>().move(glm::vec2(offset));
         cornerEnt.addComponent<cro::Drawable2D>();
         cornerEnt.addComponent<cro::Sprite>() = spriteSheet.getSprite("corner_tr");
         p.getComponent<cro::Transform>().addChild(cornerEnt.getComponent<cro::Transform>());
 
         cornerEnt = m_uiScene.createEntity();
-        cornerEnt.addComponent<cro::Transform>().setPosition({ bounds.width - cornerBounds.width, 0.f, 0.1f });
+        cornerEnt.addComponent<cro::Transform>().setPosition({ bounds.width - cornerBounds.width, 0.f, 0.3f });
+        cornerEnt.getComponent<cro::Transform>().move(glm::vec2(offset));
         cornerEnt.addComponent<cro::Drawable2D>();
         cornerEnt.addComponent<cro::Sprite>() = spriteSheet.getSprite("corner_br");
         p.getComponent<cro::Transform>().addChild(cornerEnt.getComponent<cro::Transform>());
     };
 
-    addCorners(entity);
+    addCorners(avatarEnt, entity);
 
     //active profile avatar
     entity = m_uiScene.createEntity();
@@ -284,7 +289,7 @@ void MenuState::createAvatarMenu(cro::Entity parent)
     entity.addComponent<cro::Sprite>(m_avatarTexture.getTexture());
     avatarEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
-    addCorners(entity);
+    addCorners(avatarEnt, entity);
 
     //active profile mugshot
     entity = m_uiScene.createEntity();

@@ -75,6 +75,11 @@ class MenuState final : public cro::State, public cro::GuiClient, public cro::Co
 {
 public:
     MenuState(cro::StateStack&, cro::State::Context, SharedStateData&);
+    ~MenuState() { m_sharedData.avatarResources.reset(); }
+    MenuState(const MenuState&) = delete;
+    MenuState(MenuState&&) = delete;
+    const MenuState& operator = (const MenuState&) = delete;
+    MenuState& operator = (MenuState&&) = delete;
 
     cro::StateID getStateID() const override { return StateID::Menu; }
 

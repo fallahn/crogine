@@ -317,7 +317,12 @@ void MenuState::createBallScene()
 
 
     //load each model for the preview in the player menu
-    cro::ModelDefinition ballDef(m_resources);
+    if (!m_sharedData.avatarResources)
+    {
+        m_sharedData.avatarResources = std::make_unique<cro::ResourceCollection>();
+    }
+
+    cro::ModelDefinition ballDef(*m_sharedData.avatarResources);
     cro::ModelDefinition shadowDef(m_resources);
     cro::ModelDefinition grassDef(m_resources);
 
@@ -631,7 +636,7 @@ void MenuState::parseAvatarDirectory()
     //not in game.
     if (!m_playerAvatars.empty())
     {
-        cro::ModelDefinition md(m_resources);
+        cro::ModelDefinition md(*m_sharedData.avatarResources);
         for (const auto& info : m_sharedData.hairInfo)
         {
             if (!info.modelPath.empty() && //first entry is 'bald' ie no model
@@ -717,7 +722,7 @@ void MenuState::createAvatarScene()
     cro::ModelDefinition clubDef(m_resources);
     clubDef.loadFromFile("assets/golf/models/club_iron.cmt");
 
-    cro::ModelDefinition md(m_resources);
+    cro::ModelDefinition md(*m_sharedData.avatarResources);
     for (auto i = 0u; i < m_sharedData.avatarInfo.size(); ++i)
     {
         if (md.loadFromFile(m_sharedData.avatarInfo[i].modelPath))
@@ -767,46 +772,6 @@ void MenuState::createAvatarScene()
 
                 //TODO fail to load if there's no animations? This shouldn't
                 //be game breaking if there are none, it'll just look wrong.
-
-                /*const auto& animations = entity.getComponent<cro::Skeleton>().getAnimations();
-                std::uint32_t idle = 0;
-                std::uint32_t shrug = 0;
-                for (auto i = 0u; i < animations.size(); ++i)
-                {
-                    if (animations[i].name == "idle")
-                    {
-                        idle = i;
-                    }
-                    else if (animations[i].name == "impatient")
-                    {
-                        shrug = i;
-                    }
-                }
-                entity.addComponent<cro::Callback>().active = true;
-                entity.getComponent<cro::Callback>().setUserData<float>(0.f);
-                entity.getComponent<cro::Callback>().function =
-                    [idle, shrug](cro::Entity e, float dt)
-                {
-                    auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
-                    
-                    if (e.getComponent<cro::Skeleton>().getCurrentAnimation() == idle)
-                    {
-                        currTime -= dt;
-                        if (currTime < 0)
-                        {
-                            currTime = cro::Util::Random::value(6.f, 8.f);
-                            e.getComponent<cro::Skeleton>().play(shrug, 1.f, 1.5f);
-                        }
-                    }
-                    else
-                    {
-                        if (e.getComponent<cro::Skeleton>().getState() == cro::Skeleton::Stopped)
-                        {
-                            currTime = cro::Util::Random::value(6.f, 8.f);
-                            e.getComponent<cro::Skeleton>().play(idle, 1.f, 1.5f);
-                        }
-                    }
-                };*/
             }
             else
             {
