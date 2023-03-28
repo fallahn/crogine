@@ -94,6 +94,7 @@ public:
     };
 
     static bool isAvailable() { return false; }
+    static bool isSteamdeck() { return false; }
     static cro::Image getUserIcon(std::uint64_t) { return cro::Image(); }
     static void findFriends() {}
     static void inviteFriends(std::uint64_t) {}

@@ -107,6 +107,17 @@ namespace AchievementID
         Complete09,
         Complete10,
 
+        Master01,
+        Master02,
+        Master03,
+        Master04,
+        Master05,
+        Master06,
+        Master07,
+        Master08,
+        Master09,
+        Master10,
+
         Count
     };
     static_assert(Count <= 256, "Count exceeds maximum 256 Achievements!");

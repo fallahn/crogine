@@ -107,6 +107,16 @@ static const std::array<std::string, AchievementID::Count> AchievementStrings =
     "course08_complete",
     "course09_complete",
     "course10_complete",
+    "course_01_par",
+    "course_02_par",
+    "course_30_par",
+    "course_04_par",
+    "course_05_par",
+    "course_06_par",
+    "course_07_par",
+    "course_08_par",
+    "course_09_par",
+    "course_10_par",
 };
 
 //appears on the notification
@@ -172,6 +182,16 @@ static const std::array<std::string, AchievementID::Count> AchievementLabels =
     "Complete Course 8",
     "Complete Course 9",
     "Complete Course 10",
+    "Master Course 1",
+    "Master Course 2",
+    "Master Course 3",
+    "Master Course 4",
+    "Master Course 5",
+    "Master Course 6",
+    "Master Course 7",
+    "Master Course 8",
+    "Master Course 9",
+    "Master Course 10",
 };
 
 //description and whether or not the achievement is hidden until it is unlocked
@@ -237,6 +257,16 @@ static const std::array<std::pair<std::string, bool>, AchievementID::Count> Achi
     std::make_pair("Play a full 18 holes on Moulin Plage", false),
     std::make_pair("Play a full 18 holes on Purcitop Pitch 'n' Putt", false),
     std::make_pair("Play a full 18 holes on Fairland Rock", false),
+    std::make_pair("Complete Westington Links with par or under", false),
+    std::make_pair("Complete Grove Bank with par or under", false),
+    std::make_pair("Complete Old Stemmer's Lane with par or under", false),
+    std::make_pair("Complete Roving Sands with par or under", false),
+    std::make_pair("Complete Sunny Cove with par or under", false),
+    std::make_pair("Complete Terdiman Cliffs with par or under", false),
+    std::make_pair("Complete Dackel's Run with par or under", false),
+    std::make_pair("Complete Moulin Plage with par or under", false),
+    std::make_pair("Complete Purcitop Pitch 'n' Putt with par or under", false),
+    std::make_pair("Complete Fairland Rock with par or under", false),
 };
 
 //assuming trophies load correctly they are:
@@ -326,6 +356,17 @@ static constexpr std::array<std::size_t, AchievementID::Count> AchievementTrophi
     TrophyID::BronzeCup,
     TrophyID::BronzeCup,
     TrophyID::BronzeCup,
+
+    TrophyID::GoldCup,
+    TrophyID::GoldCup,
+    TrophyID::GoldCup,
+    TrophyID::GoldCup,
+    TrophyID::GoldCup,
+    TrophyID::GoldCup,
+    TrophyID::GoldCup,
+    TrophyID::GoldCup,
+    TrophyID::GoldCup,
+    TrophyID::GoldCup,
 };
 
 //these are indexed by StatID, so do try to get them in the correct order ;)

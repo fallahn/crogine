@@ -81,6 +81,21 @@ namespace
 {
 #include "PostProcess.inl"
 
+    //hack to map course names to achievement IDs
+    const std::unordered_map < std::string, std::int32_t> ParAch =
+    {
+        std::make_pair("course_01", AchievementID::Master01),
+        std::make_pair("course_02", AchievementID::Master02),
+        std::make_pair("course_03", AchievementID::Master03),
+        std::make_pair("course_04", AchievementID::Master04),
+        std::make_pair("course_05", AchievementID::Master05),
+        std::make_pair("course_06", AchievementID::Master06),
+        std::make_pair("course_07", AchievementID::Master07),
+        std::make_pair("course_08", AchievementID::Master08),
+        std::make_pair("course_09", AchievementID::Master09),
+        std::make_pair("course_10", AchievementID::Master10),
+    };
+
     static constexpr float ColumnWidth = 20.f;
     static constexpr float ColumnHeight = 276.f;
     static constexpr float ColumnMargin = 6.f;
@@ -1241,14 +1256,35 @@ void GolfState::showCountdown(std::uint8_t seconds)
         }
     }
 
-    if(m_holeData.size() > 8) //only consider it a round if there are at least 9 holes
+    if (m_holeData.size() > 8) //only consider it a round if there are at least 9 holes
     {
         Achievements::incrementStat(StatStrings[StatID::TotalRounds]);
-    }
 
-    if (m_sharedData.holeCount == 0) //set to ALL - which ought to be 18
-    {
-        Achievements::incrementStat(m_sharedData.mapDirectory);
+        if (m_holeData.size() == 18) //set to ALL - which ought to be 18
+        {
+            Achievements::incrementStat(m_sharedData.mapDirectory);
+
+
+            //if we're stroke play see if we get the achievement
+            //for coming in under par
+            if (m_sharedData.scoreType == ScoreType::Stroke)
+            {
+                for (const auto& p : m_sharedData.connectionData[m_sharedData.localConnectionData.connectionID].playerData)
+                {
+                    if (!p.isCPU)
+                    {
+                        if (p.parScore <= 0)
+                        {
+                            if (ParAch.count(m_sharedData.mapDirectory) != 0)
+                            {
+                                auto id = ParAch.at(m_sharedData.mapDirectory);
+                                Achievements::awardAchievement(AchievementStrings[id]);
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 
     auto trophyCount = std::min(std::size_t(3), m_statBoardScores.size());

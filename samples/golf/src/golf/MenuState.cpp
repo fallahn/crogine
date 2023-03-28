@@ -450,7 +450,7 @@ bool MenuState::handleEvent(const cro::Event& evt)
             break;
 #endif
         case SDLK_F2:
-            
+            requestStackPush(StateID::Profile);
             break;
         case SDLK_F3:
             
