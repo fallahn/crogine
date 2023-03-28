@@ -77,9 +77,12 @@ private:
     glm::vec2 m_viewScale;
     cro::Entity m_rootNode;
 
+    cro::Entity m_avatarCam;
+    cro::Entity m_ballCam;
 
     void addSystems();
     void loadResources();
     void buildScene();
+    void buildPreviewScene();
     void quitState();
 };

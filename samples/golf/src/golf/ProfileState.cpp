@@ -63,6 +63,7 @@ source distribution.
 #include <crogine/ecs/systems/TextSystem.hpp>
 #include <crogine/ecs/systems/CameraSystem.hpp>
 #include <crogine/ecs/systems/RenderSystem2D.hpp>
+#include <crogine/ecs/systems/SkeletalAnimator.hpp>
 #include <crogine/ecs/systems/ModelRenderer.hpp>
 #include <crogine/ecs/systems/AudioPlayerSystem.hpp>
 
@@ -96,6 +97,7 @@ ProfileState::ProfileState(cro::StateStack& ss, cro::State::Context ctx, SharedS
     addSystems();
     loadResources();
     buildScene();
+    buildPreviewScene();
 }
 
 //public
@@ -182,11 +184,13 @@ bool ProfileState::simulate(float dt)
 
 void ProfileState::render()
 {
-    m_ballTexture.clear(cro::Colour::Plum);
+    m_ballTexture.clear(cro::Colour::Transparent);
+    m_modelScene.setActiveCamera(m_ballCam);
     m_modelScene.render();
     m_ballTexture.display();
 
-    m_avatarTexture.clear(cro::Colour::CornflowerBlue);
+    m_avatarTexture.clear(cro::Colour::Transparent);
+    m_modelScene.setActiveCamera(m_avatarCam);
     m_modelScene.render();
     m_avatarTexture.display();
 
@@ -207,6 +211,7 @@ void ProfileState::addSystems()
     m_uiScene.addSystem<cro::RenderSystem2D>(mb);
     m_uiScene.addSystem<cro::AudioPlayerSystem>(mb);
 
+    m_modelScene.addSystem<cro::SkeletalAnimator>(mb);
     m_modelScene.addSystem<cro::CameraSystem>(mb);
     m_modelScene.addSystem<cro::ModelRenderer>(mb);
 }
@@ -225,14 +230,6 @@ void ProfileState::loadResources()
     //preview textures
     m_ballTexture.create(BallTexSize.x, BallTexSize.y);
     m_avatarTexture.create(AvatarTexSize.x, AvatarTexSize.y);
-
-
-    
-    m_sharedData.ballModels;
-
-    m_sharedData.avatarInfo;
-
-    m_sharedData.hairInfo;
 }
 
 void ProfileState::buildScene()
@@ -634,6 +631,56 @@ void ProfileState::buildScene()
     entity.addComponent<cro::Camera>().resizeCallback = updateView;
     m_uiScene.setActiveCamera(entity);
     updateView(entity.getComponent<cro::Camera>());
+}
+
+void ProfileState::buildPreviewScene()
+{
+    cro::ModelDefinition md(*m_sharedData.avatarResources);
+
+    //this has all been parsed by the menu state - so we're assuming
+    //all the model paths etc are fine and load without chicken
+    for (const auto& ballData : m_sharedData.ballModels)
+    {
+        //TODO don't load balls which aren't unlocked
+        md.loadFromFile(ballData.modelPath);
+
+        auto entity = m_modelScene.createEntity();
+        entity.addComponent<cro::Transform>();
+        md.createModel(entity);
+    }
+
+    for (const auto& avatar : m_sharedData.avatarInfo)
+    {
+        md.loadFromFile(avatar.modelPath);
+
+        auto entity = m_modelScene.createEntity();
+        entity.addComponent<cro::Transform>();
+        md.createModel(entity);
+
+
+        //TODO load texture for preview
+    }
+
+    //for (const auto& hair : m_sharedData.hairInfo)
+    //{
+    //    md.loadFromFile(hair.modelPath);
+
+    //    auto entity = m_modelScene.createEntity();
+    //    entity.addComponent<cro::Transform>();
+    //    md.createModel(entity);
+    //}
+
+    m_ballCam = m_modelScene.getActiveCamera();
+    m_ballCam.getComponent<cro::Camera>().setPerspective(70.f * cro::Util::Const::degToRad, static_cast<float>(BallTexSize.x) / BallTexSize.y, 0.1f, 1.f);
+    m_ballCam.getComponent<cro::Transform>().setPosition({ 0.f, 0.04f, 0.07f });
+
+
+    m_avatarCam = m_modelScene.createEntity();
+    m_avatarCam.addComponent<cro::Transform>().setPosition({ -0.8f, 1.f, -2.f });
+    m_avatarCam.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, cro::Util::Const::PI);
+    auto& cam = m_avatarCam.addComponent<cro::Camera>();
+    cam.setPerspective(70.f * cro::Util::Const::degToRad, static_cast<float>(AvatarTexSize.x) / AvatarTexSize.y, 0.1f, 6.f);
+    cam.viewport = { 0.f, 0.f, 1.f ,1.f };
 }
 
 void ProfileState::quitState()
