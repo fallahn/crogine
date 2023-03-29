@@ -416,6 +416,8 @@ private:
         bool hadFoul = false; //tracks 'boomerang' stat
         bool hadBackspin = false; //tracks 'spin class'
     }m_achievementTracker;
+    cro::Clock m_playTimer; //track avg play time stat
+    cro::Time m_playTime;
 
     //for tracking scoreboard based stats
     struct StatBoardEntry final

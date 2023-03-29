@@ -5167,6 +5167,13 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
                 {
                     Achievements::incrementStat(StatStrings[StatID::WaterTrapCount]);
                 }
+
+                //this won't register if player 0 is CPU...
+                if (m_currentPlayer.player == 0
+                    && !m_sharedData.localConnectionData.playerData[0].isCPU)
+                {
+                    m_playTime += m_playTimer.elapsed();
+                }
             }
         }
             break;
@@ -5946,6 +5953,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     m_achievementTracker.hadBackspin = false;
     m_turnTimer.restart();
     m_idleTimer.restart();
+    m_playTimer.restart();
     idleTime = cro::seconds(90.f);
     m_skipState = {};
 

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2022
+Matt Marchant 2020 - 2023
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -87,6 +87,9 @@ public:
     virtual float incrementStat(const std::string&, float) { return 0.f; }
 
     virtual const StatData* getStat(const std::string&) const { return nullptr; }
+
+    virtual void setAvgStat(const std::string&, float v, float d) const = 0;
+    virtual float getAvgStat(const std::string&) const = 0;
 };
 
 //public facing interface
@@ -115,6 +118,10 @@ public:
     static float incrementStat(const std::string&, float);
 
     static const StatData* getStat(const std::string&);
+
+    static void setAvgStat(const std::string&, float, float) {};
+
+    static float getAvgStat(const std::string&) { return 0.f; }
 
     static void setActive(bool);
 

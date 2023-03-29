@@ -1263,7 +1263,7 @@ void GolfState::showCountdown(std::uint8_t seconds)
         if (m_holeData.size() == 18) //set to ALL - which ought to be 18
         {
             Achievements::incrementStat(m_sharedData.mapDirectory);
-
+            Achievements::setAvgStat(m_sharedData.mapDirectory, m_playTime.asSeconds());
 
             //if we're stroke play see if we get the achievement
             //for coming in under par

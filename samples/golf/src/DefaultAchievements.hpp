@@ -65,6 +65,9 @@ public:
     float incrementStat(const std::string&, float) override;
     const StatData* getStat(const std::string&) const override;
 
+    void setAvgStat(const std::string&, float v, float d) const override {};
+    float getAvgStat(const std::string&) const override { return 0.f; };
+
 #ifdef CRO_DEBUG_
     void showTest();
 #endif
