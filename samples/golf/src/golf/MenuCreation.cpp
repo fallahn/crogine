@@ -1528,14 +1528,18 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
         ss << seconds << "s - ";
     }
 
-    ss << "Top Players: " << Social::getTopFive(m_sharedData.mapDirectory, 0);
+    ss << "Top Players: ";
+
+    cro::String scoreStr(ss.str());
+    scoreStr += Social::getTopFive(m_sharedData.mapDirectory, 0);
 
     //scrolls info about the selected course
+    auto& labelFont = m_sharedData.sharedResources->fonts.get(FontID::Label);
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 100.f, 0.f, 0.2f });
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(smallFont).setString(ss.str());
-    entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+    entity.addComponent<cro::Text>(labelFont).setString(scoreStr);
+    entity.getComponent<cro::Text>().setCharacterSize(LabelTextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
     entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
@@ -1549,7 +1553,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
             auto pos = e.getComponent<cro::Transform>().getPosition();
 
             pos.x -= 20.f * dt;
-            pos.y = 15.f;
+            pos.y = 16.f;
             pos.z = 0.3f;
 
             static constexpr float Offset = 150.f;
