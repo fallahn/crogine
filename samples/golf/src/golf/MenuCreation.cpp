@@ -1512,8 +1512,63 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     bounds = entity.getComponent<cro::Drawable2D>().getLocalBounds();
     menuTransform.addChild(entity.getComponent<cro::Transform>());
 
-
     auto bgEnt = entity;
+
+#ifdef USE_GNS
+    std::stringstream ss;
+
+    float playTime = Achievements::getAvgStat(m_sharedData.mapDirectory);
+    if (playTime > 0)
+    {
+        float minutes = playTime / 60.f;
+        float seconds = playTime - (std::round(minutes) * 60.f);
+        ss.precision(2);
+        ss << "Avg. Play Duration: ";
+        ss << minutes << "m ";
+        ss << seconds << "s - ";
+    }
+
+    ss << "Top Players: " << Social::getTopFive(m_sharedData.mapDirectory, 0);
+
+    //scrolls info about the selected course
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 100.f, 0.f, 0.2f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(smallFont).setString(ss.str());
+    entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+    entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
+    auto scrollBounds = cro::Text::getLocalBounds(entity);
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&, scrollBounds, bounds](cro::Entity e, float dt)
+    {
+        if (m_currentMenu == MenuID::Lobby)
+        {
+            auto pos = e.getComponent<cro::Transform>().getPosition();
+
+            pos.x -= 20.f * dt;
+            pos.y = 15.f;
+            pos.z = 0.3f;
+
+            static constexpr float Offset = 150.f;
+            const auto bgWidth = bounds.width;
+            if (pos.x < -scrollBounds.width + Offset)
+            {
+                pos.x = bgWidth;
+                pos.x -= Offset;
+            }
+
+            e.getComponent<cro::Transform>().setPosition(pos);
+
+            cro::FloatRect cropping = { -pos.x + Offset, -16.f, (bgWidth) - (Offset * 2.f), 18.f };
+            e.getComponent<cro::Drawable2D>().setCroppingArea(cropping);
+        }
+    };
+    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    auto scrollEnt = entity;
+#endif
 
     auto textResizeCallback = 
         [&,bgEnt](cro::Entity e)
