@@ -3483,10 +3483,11 @@ void MenuState::updateCourseRuleString()
             cro::String scoreStr(ss.str());
             scoreStr += Social::getTopFive(m_sharedData.mapDirectory, m_sharedData.holeCount);
             m_lobbyWindowEntities[LobbyEntityID::CourseTicker].getComponent<cro::Text>().setString(scoreStr);
+            m_lobbyWindowEntities[LobbyEntityID::CourseTicker].getComponent<cro::Transform>().setScale(glm::vec2(1.f));
         }
         else
         {
-            m_lobbyWindowEntities[LobbyEntityID::CourseTicker].getComponent<cro::Text>().setString("");
+            m_lobbyWindowEntities[LobbyEntityID::CourseTicker].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
         }
     }
 }

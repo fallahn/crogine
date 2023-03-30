@@ -211,6 +211,7 @@ void ProfileState::addSystems()
     m_uiScene.addSystem<cro::RenderSystem2D>(mb);
     m_uiScene.addSystem<cro::AudioPlayerSystem>(mb);
 
+    m_modelScene.addSystem<cro::CallbackSystem>(mb);
     m_modelScene.addSystem<cro::SkeletalAnimator>(mb);
     m_modelScene.addSystem<cro::CameraSystem>(mb);
     m_modelScene.addSystem<cro::ModelRenderer>(mb);
@@ -543,7 +544,7 @@ void ProfileState::buildScene()
 
     auto addCorners = [&](cro::Entity p, cro::Entity q)
     {
-        auto bounds = q.getComponent<cro::Sprite>().getTextureBounds();
+        auto bounds = q.getComponent<cro::Sprite>().getTextureBounds() * q.getComponent<cro::Transform>().getScale().x;
         auto offset = q.getComponent<cro::Transform>().getPosition();
 
         auto cornerEnt = m_uiScene.createEntity();
@@ -581,6 +582,10 @@ void ProfileState::buildScene()
     //avatar preview
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 98.f, 27.f, 0.1f });
+    if (!m_sharedData.pixelScale)
+    {
+        entity.getComponent<cro::Transform>().setScale(glm::vec2(1.f / getViewScale()));
+    }
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>(m_avatarTexture.getTexture());
     bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -590,6 +595,10 @@ void ProfileState::buildScene()
     //ball preview
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 323.f, 83.f, 0.1f });
+    if (!m_sharedData.pixelScale)
+    {
+        entity.getComponent<cro::Transform>().setScale(glm::vec2(1.f / getViewScale()));
+    }
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>(m_ballTexture.getTexture());
     bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -635,44 +644,66 @@ void ProfileState::buildScene()
 
 void ProfileState::buildPreviewScene()
 {
-    cro::ModelDefinition md(*m_sharedData.avatarResources);
+    CRO_ASSERT(!m_sharedData.ballDefs.empty(), "Must load this state on top of menu");
 
     //this has all been parsed by the menu state - so we're assuming
     //all the model paths etc are fine and load without chicken
-    for (const auto& ballData : m_sharedData.ballModels)
+    for (auto& ballDef : m_sharedData.ballDefs)
     {
         //TODO don't load balls which aren't unlocked
-        md.loadFromFile(ballData.modelPath);
-
         auto entity = m_modelScene.createEntity();
-        entity.addComponent<cro::Transform>();
-        md.createModel(entity);
+        entity.addComponent<cro::Transform>().setPosition({ 10.f, 0.f, 0.f });
+        ballDef.createModel(entity);
+        entity.getComponent<cro::Model>().setHidden(true);
+
+        m_ballModels.push_back(entity);
     }
 
-    for (const auto& avatar : m_sharedData.avatarInfo)
+    for (auto& avatar : m_sharedData.avatarDefs)
     {
-        md.loadFromFile(avatar.modelPath);
-
         auto entity = m_modelScene.createEntity();
         entity.addComponent<cro::Transform>();
-        md.createModel(entity);
+        avatar.createModel(entity);
+        entity.getComponent<cro::Model>().setHidden(true);
 
+        auto& avt = m_avatarModels.emplace_back();
+        avt.previewModel = entity;
 
-        //TODO load texture for preview
+        //these are unique models from the menu so we'll 
+        //need to capture their attachment points once again...
+        if (entity.hasComponent<cro::Skeleton>())
+        {
+            //this should never not be true as the models were validated
+            //in the menu state - but 
+            auto id = entity.getComponent<cro::Skeleton>().getAttachmentIndex("head");
+            if (id > -1)
+            {
+                //hair is optional so OK if this doesn't exist
+                avt.hairAttachment = &entity.getComponent<cro::Skeleton>().getAttachments()[id];
+            }
+
+            entity.getComponent<cro::Skeleton>().play(entity.getComponent<cro::Skeleton>().getAnimationIndex("idle_standing"));
+        }
     }
 
-    //for (const auto& hair : m_sharedData.hairInfo)
-    //{
-    //    md.loadFromFile(hair.modelPath);
+    //space texture loading over the next few frames to reduce
+    //the time it takes blocking (we can't really multithread here)
+    createProfileTexture(0);
 
+    //for (auto& hair : m_sharedData.hairDefs)
+    //{
     //    auto entity = m_modelScene.createEntity();
     //    entity.addComponent<cro::Transform>();
-    //    md.createModel(entity);
+    //    hair.createModel(entity);
     //}
 
+    m_avatarModels[indexFromAvatarID(m_sharedData.playerProfiles[m_sharedData.activeProfileIndex].skinID)].previewModel.getComponent<cro::Model>().setHidden(false);
+    m_ballModels[indexFromBallID(m_sharedData.playerProfiles[m_sharedData.activeProfileIndex].ballID)].getComponent<cro::Model>().setHidden(false);
+
+
     m_ballCam = m_modelScene.getActiveCamera();
-    m_ballCam.getComponent<cro::Camera>().setPerspective(70.f * cro::Util::Const::degToRad, static_cast<float>(BallTexSize.x) / BallTexSize.y, 0.1f, 1.f);
-    m_ballCam.getComponent<cro::Transform>().setPosition({ 0.f, 0.04f, 0.07f });
+    m_ballCam.getComponent<cro::Camera>().setPerspective(1.f, static_cast<float>(BallTexSize.x) / BallTexSize.y, 0.001f, 2.f);
+    m_ballCam.getComponent<cro::Transform>().setPosition({ 10.f, 0.045f, 0.095f });
 
 
     m_avatarCam = m_modelScene.createEntity();
@@ -683,8 +714,65 @@ void ProfileState::buildPreviewScene()
     cam.viewport = { 0.f, 0.f, 1.f ,1.f };
 }
 
+void ProfileState::createProfileTexture(std::int32_t index)
+{
+    auto entity = m_modelScene.createEntity();
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&, index](cro::Entity e, float)
+    {
+        auto i = index;
+        auto& t = m_profileTextures.emplace_back(m_sharedData.avatarInfo[i].texturePath);
+        
+        for (auto j = 0; j < pc::ColourKey::Count; ++j)
+        {
+            t.setColour(pc::ColourKey::Index(j), m_sharedData.playerProfiles[m_sharedData.activeProfileIndex].avatarFlags[j]);
+        }
+        t.apply();
+
+        m_avatarModels[i].previewModel.getComponent<cro::Model>().setMaterialProperty(0, "u_diffuseMap", t.getTexture());
+
+        i++;
+        e.getComponent<cro::Callback>().active = false;
+        m_modelScene.destroyEntity(e);
+
+        if (i < m_sharedData.avatarInfo.size())
+        {
+            createProfileTexture(i);
+        }
+    };
+}
+
 void ProfileState::quitState()
 {
     m_rootNode.getComponent<cro::Callback>().active = true;
     m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
+}
+
+std::size_t ProfileState::indexFromAvatarID(std::uint32_t skinID)
+{
+    const auto& avatarInfo = m_sharedData.avatarInfo;
+
+    if (auto result = std::find_if(avatarInfo.cbegin(), avatarInfo.cend(), 
+        [skinID](const SharedStateData::AvatarInfo& a){return a.uid == skinID;}); result != avatarInfo.cend())
+    {
+        return std::distance(avatarInfo.cbegin(), result);
+    }
+
+    return 0;
+}
+
+std::size_t ProfileState::indexFromBallID(std::uint32_t ballID)
+{
+    const auto& ballInfo = m_sharedData.ballModels;
+    if (auto result = std::find_if(ballInfo.cbegin(), ballInfo.cend(),
+        [ballID](const SharedStateData::BallInfo& b)
+        {
+            return b.uid == ballID;
+        }); result != ballInfo.cend())
+    {
+        return std::distance(ballInfo.cbegin(), result);
+    }
+
+    return 0;
 }

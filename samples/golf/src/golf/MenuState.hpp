@@ -75,7 +75,13 @@ class MenuState final : public cro::State, public cro::GuiClient, public cro::Co
 {
 public:
     MenuState(cro::StateStack&, cro::State::Context, SharedStateData&);
-    ~MenuState() { m_sharedData.avatarResources.reset(); }
+    ~MenuState()
+    {
+        //these MUST be cleared as they hold a reference to this state's resources    
+        m_sharedData.ballDefs.clear();
+        m_sharedData.hairDefs.clear();
+        m_sharedData.avatarDefs.clear();
+    }
     MenuState(const MenuState&) = delete;
     MenuState(MenuState&&) = delete;
     const MenuState& operator = (const MenuState&) = delete;

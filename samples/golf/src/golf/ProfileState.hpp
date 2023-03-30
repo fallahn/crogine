@@ -30,6 +30,8 @@ source distribution.
 #pragma once
 
 #include "../StateIDs.hpp"
+#include "PlayerData.hpp"
+#include "PlayerAvatar.hpp"
 
 #include <crogine/core/State.hpp>
 #include <crogine/audio/AudioScape.hpp>
@@ -37,6 +39,12 @@ source distribution.
 #include <crogine/graphics/RenderTexture.hpp>
 
 struct SharedStateData;
+
+struct AvatarPreview final
+{
+    cro::Attachment* hairAttachment = nullptr;
+    cro::Entity previewModel;
+};
 
 class ProfileState final : public cro::State
 {
@@ -80,9 +88,18 @@ private:
     cro::Entity m_avatarCam;
     cro::Entity m_ballCam;
 
+    std::vector<cro::Entity> m_ballModels;
+    std::vector<AvatarPreview> m_avatarModels;
+    std::vector<cro::Entity> m_hairModels;
+    std::vector<ProfileTexture> m_profileTextures;
+
     void addSystems();
     void loadResources();
     void buildScene();
     void buildPreviewScene();
+    void createProfileTexture(std::int32_t);
     void quitState();
+
+    std::size_t indexFromAvatarID(std::uint32_t);
+    std::size_t indexFromBallID(std::uint32_t);
 };

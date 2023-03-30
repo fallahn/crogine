@@ -317,12 +317,7 @@ void MenuState::createBallScene()
 
 
     //load each model for the preview in the player menu
-    if (!m_sharedData.avatarResources)
-    {
-        m_sharedData.avatarResources = std::make_unique<cro::ResourceCollection>();
-    }
-
-    cro::ModelDefinition ballDef(*m_sharedData.avatarResources);
+    cro::ModelDefinition ballDef(m_resources);
     cro::ModelDefinition shadowDef(m_resources);
     cro::ModelDefinition grassDef(m_resources);
 
@@ -382,6 +377,7 @@ void MenuState::createBallScene()
                 };
             }
 
+            m_sharedData.ballDefs.push_back(ballDef); //store this for faster loading in profile editor
           
             if (shadow)
             {
@@ -636,7 +632,7 @@ void MenuState::parseAvatarDirectory()
     //not in game.
     if (!m_playerAvatars.empty())
     {
-        cro::ModelDefinition md(*m_sharedData.avatarResources);
+        cro::ModelDefinition md(m_resources);
         for (const auto& info : m_sharedData.hairInfo)
         {
             if (!info.modelPath.empty() && //first entry is 'bald' ie no model
@@ -654,6 +650,8 @@ void MenuState::parseAvatarDirectory()
 
                     modelInfo.uid = info.uid;
                 }
+
+                m_sharedData.hairDefs.push_back(md);
             }
         }
 
@@ -722,7 +720,7 @@ void MenuState::createAvatarScene()
     cro::ModelDefinition clubDef(m_resources);
     clubDef.loadFromFile("assets/golf/models/club_iron.cmt");
 
-    cro::ModelDefinition md(*m_sharedData.avatarResources);
+    cro::ModelDefinition md(m_resources);
     for (auto i = 0u; i < m_sharedData.avatarInfo.size(); ++i)
     {
         if (md.loadFromFile(m_sharedData.avatarInfo[i].modelPath))
@@ -783,6 +781,7 @@ void MenuState::createAvatarScene()
 
             m_playerAvatars[i].previewModel = entity;
 
+            m_sharedData.avatarDefs.push_back(md);
         }
         else
         {

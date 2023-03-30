@@ -219,6 +219,12 @@ namespace cro
         const std::vector<SkeletalAnim>& getAnimations() const { return m_animations; }
 
         /*!
+        \brief Returns the index of the animation with the given name if it exists
+        else returns 0
+        */
+        std::size_t getAnimationIndex(const std::string& name) const;
+
+        /*!
         \brief Returns the index of the current animation
         */
         std::int32_t getCurrentAnimation() const { return m_currentAnimation; }

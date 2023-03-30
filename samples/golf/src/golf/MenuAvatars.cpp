@@ -1009,10 +1009,11 @@ void MenuState::createAvatarMenu(cro::Entity parent)
                         {
                             m_sharedData.serverInstance.launch(ConstVal::MaxClients, Server::GameMode::Golf);
 
+#ifndef USE_GNS
                             //small delay for server to get ready
                             cro::Clock clock;
                             while (clock.elapsed().asMilliseconds() < 500) {}
-
+#endif
                             m_matchMaking.createGame(ConstVal::MaxClients, Server::GameMode::Golf);
                         }
                     }
