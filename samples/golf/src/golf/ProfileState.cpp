@@ -35,6 +35,7 @@ source distribution.
 #include "GameConsts.hpp"
 #include "TextAnimCallback.hpp"
 #include "MessageIDs.hpp"
+#include "BallSystem.hpp"
 #include "../GolfGame.hpp"
 
 #include <crogine/core/Window.hpp>
@@ -68,6 +69,7 @@ source distribution.
 #include <crogine/ecs/systems/AudioPlayerSystem.hpp>
 
 #include <crogine/util/Easings.hpp>
+#include <crogine/gui/Gui.hpp>
 
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
 
@@ -96,8 +98,35 @@ ProfileState::ProfileState(cro::StateStack& ss, cro::State::Context ctx, SharedS
 
     addSystems();
     loadResources();
-    buildScene();
     buildPreviewScene();
+    buildScene();
+
+    //registerWindow([&]()
+    //    {
+    //        if (ImGui::Begin("Flaps"))
+    //        {
+    //            auto pos = m_avatarCam.getComponent<cro::Transform>().getPosition();
+    //            if (ImGui::SliderFloat("X", &pos.x, -1.f, 1.f))
+    //            {
+    //                m_avatarCam.getComponent<cro::Transform>().setPosition(pos);
+    //            }
+
+    //            if (ImGui::SliderFloat("Y", &pos.y, 0.f, 5.f))
+    //            {
+    //                m_avatarCam.getComponent<cro::Transform>().setPosition(pos);
+    //            }
+    //            ImGui::Text("%3.3f, %3.3f", pos.x, pos.y);
+
+    //            static float rot = 0.f;
+    //            if (ImGui::SliderFloat("Rotation", &rot, -1.f, 1.f))
+    //            {
+    //                m_avatarCam.getComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, rot);
+    //                m_avatarCam.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, cro::Util::Const::PI);
+    //            }
+    //            ImGui::Text("%3.3f", rot);
+    //        }
+    //        ImGui::End();
+    //    });
 }
 
 //public
@@ -227,10 +256,6 @@ void ProfileState::loadResources()
     m_audioEnts[AudioID::Back].addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("back");
 
     m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
-
-    //preview textures
-    m_ballTexture.create(BallTexSize.x, BallTexSize.y);
-    m_avatarTexture.create(AvatarTexSize.x, AvatarTexSize.y);
 }
 
 void ProfileState::buildScene()
@@ -606,6 +631,22 @@ void ProfileState::buildScene()
     addCorners(bgEnt, entity);
 
 
+    //mugshot
+    if (!m_sharedData.playerProfiles[m_sharedData.activeProfileIndex].mugshot.empty())
+    {
+        auto& tex = m_sharedData.sharedResources->textures.get(m_sharedData.playerProfiles[m_sharedData.activeProfileIndex].mugshot);
+        entity = m_uiScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ 396.f, 24.f, 0.1f });
+        entity.addComponent<cro::Drawable2D>();
+        entity.addComponent<cro::Sprite>(tex);
+        
+        glm::vec2 texSize(tex.getSize());
+        glm::vec2 scale = glm::vec2(98.f, 42.f) / texSize;
+        entity.getComponent<cro::Transform>().setScale(scale);
+
+        bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    }
+
     auto updateView = [&, rootNode](cro::Camera& cam) mutable
     {
         glm::vec2 size(GolfGame::getActiveTarget()->getSize());
@@ -647,14 +688,36 @@ void ProfileState::buildPreviewScene()
     CRO_ASSERT(!m_sharedData.ballDefs.empty(), "Must load this state on top of menu");
 
     //this has all been parsed by the menu state - so we're assuming
-    //all the model paths etc are fine and load without chicken
+    //all the models etc are fine and load without chicken
+    std::int32_t i = 0;
     for (auto& ballDef : m_sharedData.ballDefs)
     {
-        //TODO don't load balls which aren't unlocked
         auto entity = m_modelScene.createEntity();
         entity.addComponent<cro::Transform>().setPosition({ 10.f, 0.f, 0.f });
         ballDef.createModel(entity);
         entity.getComponent<cro::Model>().setHidden(true);
+        entity.addComponent<cro::Callback>().active = true;
+
+        if (m_sharedData.ballInfo[i].rollAnimation)
+        {
+            entity.getComponent<cro::Callback>().function =
+                [](cro::Entity e, float dt)
+            {
+                e.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -dt * 6.f);
+            };
+            entity.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, -cro::Util::Const::PI * 0.85f);
+            entity.getComponent<cro::Transform>().move({ 0.f, Ball::Radius, 0.f });
+            entity.getComponent<cro::Transform>().setOrigin({ 0.f, Ball::Radius, 0.f });
+        }
+        else
+        {
+            entity.getComponent<cro::Callback>().function =
+                [](cro::Entity e, float dt)
+            {
+                e.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, dt);
+            };
+        }
+        ++i;
 
         m_ballModels.push_back(entity);
     }
@@ -701,14 +764,33 @@ void ProfileState::buildPreviewScene()
     m_ballModels[indexFromBallID(m_sharedData.playerProfiles[m_sharedData.activeProfileIndex].ballID)].getComponent<cro::Model>().setHidden(false);
 
 
+    auto ballTexCallback = [&](cro::Camera&)
+    {
+        std::uint32_t samples = m_sharedData.pixelScale ? 0 :
+            m_sharedData.antialias ? m_sharedData.multisamples : 0;
+
+        auto windowSize = static_cast<float>(cro::App::getWindow().getSize().x);
+
+        float windowScale = getViewScale();
+        float scale = m_sharedData.pixelScale ? windowScale : 1.f;
+
+        auto invScale = static_cast<std::uint32_t>((windowScale + 1.f) - scale);
+        auto size = BallTexSize * invScale;
+        m_ballTexture.create(size.x, size.y, true, false, samples);
+
+        size = AvatarTexSize * invScale;
+        m_avatarTexture.create(size.x, size.y, true, false, samples);
+    };
     m_ballCam = m_modelScene.getActiveCamera();
     m_ballCam.getComponent<cro::Camera>().setPerspective(1.f, static_cast<float>(BallTexSize.x) / BallTexSize.y, 0.001f, 2.f);
+    m_ballCam.getComponent<cro::Camera>().resizeCallback = ballTexCallback;
     m_ballCam.getComponent<cro::Transform>().setPosition({ 10.f, 0.045f, 0.095f });
-
+    ballTexCallback(m_ballCam.getComponent<cro::Camera>());
 
     m_avatarCam = m_modelScene.createEntity();
-    m_avatarCam.addComponent<cro::Transform>().setPosition({ -0.8f, 1.f, -2.f });
+    m_avatarCam.addComponent<cro::Transform>().setPosition({ -0.867f, 1.325f, -1.68f });
     m_avatarCam.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, cro::Util::Const::PI);
+    m_avatarCam.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -0.157f);
     auto& cam = m_avatarCam.addComponent<cro::Camera>();
     cam.setPerspective(70.f * cro::Util::Const::degToRad, static_cast<float>(AvatarTexSize.x) / AvatarTexSize.y, 0.1f, 6.f);
     cam.viewport = { 0.f, 0.f, 1.f ,1.f };
@@ -764,7 +846,7 @@ std::size_t ProfileState::indexFromAvatarID(std::uint32_t skinID)
 
 std::size_t ProfileState::indexFromBallID(std::uint32_t ballID)
 {
-    const auto& ballInfo = m_sharedData.ballModels;
+    const auto& ballInfo = m_sharedData.ballInfo;
     if (auto result = std::find_if(ballInfo.cbegin(), ballInfo.cend(),
         [ballID](const SharedStateData::BallInfo& b)
         {

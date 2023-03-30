@@ -677,7 +677,7 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
 
 
     if (!m_courseData.empty()
-        && !m_sharedData.ballModels.empty()
+        && !m_sharedData.ballInfo.empty()
         && ! m_sharedData.avatarInfo.empty())
     {
         //host
@@ -734,7 +734,7 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
         {
             str += "No course data found\n";
         }
-        if (m_sharedData.ballModels.empty())
+        if (m_sharedData.ballInfo.empty())
         {
             str += "Missing Ball Data\n";
         }
@@ -2081,6 +2081,20 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
                         if (ready && m_sharedData.clientConnection.connected
                             && m_sharedData.serverInstance.running()) //not running if we're not hosting :)
                         {
+                            //by drawing a black quad over the screen immediately
+                            //gives the impression of responsiveness
+                            auto windowSize = glm::vec2(cro::App::getWindow().getSize());
+                            auto entity = m_uiScene.createEntity();
+                            entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 1.f });
+                            entity.addComponent<cro::Drawable2D>().setVertexData(
+                                {
+                                    cro::Vertex2D(glm::vec2(0.f, windowSize.y), cro::Colour::Black),
+                                    cro::Vertex2D(glm::vec2(0.f), cro::Colour::Black),
+                                    cro::Vertex2D(windowSize, cro::Colour::Black),
+                                    cro::Vertex2D(glm::vec2(windowSize.x, 0.f), cro::Colour::Black)
+                                });
+                            entity.getComponent<cro::Drawable2D>().updateLocalBounds();
+
                             m_sharedData.clientConnection.netClient.sendPacket(PacketID::RequestGameStart, std::uint8_t(sv::StateID::Golf), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
                             m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
                         }

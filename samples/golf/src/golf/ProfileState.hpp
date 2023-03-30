@@ -46,7 +46,7 @@ struct AvatarPreview final
     cro::Entity previewModel;
 };
 
-class ProfileState final : public cro::State
+class ProfileState final : public cro::State, public cro::GuiClient
 {
 public:
     ProfileState(cro::StateStack&, cro::State::Context, SharedStateData&);

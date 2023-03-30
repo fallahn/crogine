@@ -2345,12 +2345,12 @@ void DrivingState::createBall()
     material.setProperty("u_colour", TextNormalColour);
     bool rollBall = true;
 
-    auto ball = std::find_if(m_sharedData.ballModels.begin(), m_sharedData.ballModels.end(),
+    auto ball = std::find_if(m_sharedData.ballInfo.begin(), m_sharedData.ballInfo.end(),
         [ballID](const SharedStateData::BallInfo& ballPair)
         {
             return ballPair.uid == ballID;
         });
-    if (ball != m_sharedData.ballModels.end())
+    if (ball != m_sharedData.ballInfo.end())
     {
         material.setProperty("u_colour", ball->tint);
         ballDef.loadFromFile(ball->modelPath);
@@ -2360,8 +2360,8 @@ void DrivingState::createBall()
     else
     {
         //this should at least line up with the fallback model
-        material.setProperty("u_colour", m_sharedData.ballModels.begin()->tint);
-        ballDef.loadFromFile(m_sharedData.ballModels[0].modelPath);
+        material.setProperty("u_colour", m_sharedData.ballInfo.begin()->tint);
+        ballDef.loadFromFile(m_sharedData.ballInfo[0].modelPath);
     }
 
     auto entity = m_gameScene.createEntity();

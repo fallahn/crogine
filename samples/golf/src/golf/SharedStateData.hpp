@@ -97,7 +97,7 @@ struct SharedStateData final
         BallInfo(cro::Colour c, std::uint32_t i, const std::string& str)
             : tint(c), uid(i), modelPath(str) {}
     };
-    std::vector<BallInfo> ballModels;
+    std::vector<BallInfo> ballInfo;
 
     //available avatar models mapped to ID
     struct AvatarInfo final

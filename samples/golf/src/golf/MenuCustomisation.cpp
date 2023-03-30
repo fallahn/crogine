@@ -215,7 +215,7 @@ void MenuState::createBallScene()
         ballFiles.resize(ConstVal::MaxBalls);
     }
 
-    m_sharedData.ballModels.clear();
+    m_sharedData.ballInfo.clear();
 
     //parse the default ball directory
     for (const auto& file : ballFiles)
@@ -234,7 +234,7 @@ void MenuState::createBallScene()
                 cfg.save("assets/golf/balls/" + file);
             }
 
-            insertInfo(info, m_sharedData.ballModels, true);
+            insertInfo(info, m_sharedData.ballInfo, true);
         }
     }
 
@@ -263,7 +263,7 @@ void MenuState::createBallScene()
                         auto info = readBallCfg(cfg);
                         info.modelPath = path + info.modelPath;
 
-                        insertInfo(info, m_sharedData.ballModels, false);
+                        insertInfo(info, m_sharedData.ballInfo, false);
                     }
 
                     break; //skip the rest of the file list
@@ -305,7 +305,7 @@ void MenuState::createBallScene()
 
             if (level > (i + 1) * 10)
             {
-                insertInfo(info, m_sharedData.ballModels, true);
+                insertInfo(info, m_sharedData.ballInfo, true);
             }
             else
             {
@@ -326,9 +326,9 @@ void MenuState::createBallScene()
 
     std::vector<std::uint32_t> invalidBalls;
 
-    for (auto i = 0u; i < m_sharedData.ballModels.size(); ++i)
+    for (auto i = 0u; i < m_sharedData.ballInfo.size(); ++i)
     {
-        if (ballDef.loadFromFile(m_sharedData.ballModels[i].modelPath))
+        if (ballDef.loadFromFile(m_sharedData.ballInfo[i].modelPath))
         {
             auto entity = m_backgroundScene.createEntity();
             entity.addComponent<cro::Transform>().setPosition({ (i * BallSpacing) + RootPoint, 0.f, 0.f });
@@ -357,7 +357,7 @@ void MenuState::createBallScene()
             baseEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
             entity.addComponent<cro::Callback>().active = true;
-            if (m_sharedData.ballModels[i].rollAnimation)
+            if (m_sharedData.ballInfo[i].rollAnimation)
             {
                 entity.getComponent<cro::Callback>().function =
                     [](cro::Entity e, float dt)
@@ -401,7 +401,7 @@ void MenuState::createBallScene()
         else
         {
             //probably should remove from the ball models vector so that it's completely vetted
-            invalidBalls.push_back(m_sharedData.ballModels[i].uid);
+            invalidBalls.push_back(m_sharedData.ballInfo[i].uid);
             i--; //spacing is based on this and we don't want a gap from a bad ball
         }
     }
@@ -409,31 +409,31 @@ void MenuState::createBallScene()
     //add delayed entries for in-game rendering
     for (const auto& info : delayedEntries)
     {
-        insertInfo(info, m_sharedData.ballModels, true);
+        insertInfo(info, m_sharedData.ballInfo, true);
     }
 
     //tidy up bad balls.
     for (auto uid : invalidBalls)
     {
-        m_sharedData.ballModels.erase(std::remove_if(m_sharedData.ballModels.begin(), m_sharedData.ballModels.end(),
+        m_sharedData.ballInfo.erase(std::remove_if(m_sharedData.ballInfo.begin(), m_sharedData.ballInfo.end(),
             [uid](const SharedStateData::BallInfo& ball)
             {
                 return ball.uid == uid;
-            }), m_sharedData.ballModels.end());
+            }), m_sharedData.ballInfo.end());
     }
 }
 
 std::int32_t MenuState::indexFromBallID(std::uint32_t ballID)
 {
-    auto ball = std::find_if(m_sharedData.ballModels.begin(), m_sharedData.ballModels.end(),
+    auto ball = std::find_if(m_sharedData.ballInfo.begin(), m_sharedData.ballInfo.end(),
         [ballID](const SharedStateData::BallInfo& ballPair)
         {
             return ballPair.uid == ballID;
         });
 
-    if (ball != m_sharedData.ballModels.end())
+    if (ball != m_sharedData.ballInfo.end())
     {
-        return static_cast<std::int32_t>(std::distance(m_sharedData.ballModels.begin(), ball));
+        return static_cast<std::int32_t>(std::distance(m_sharedData.ballInfo.begin(), ball));
     }
 
     return 0;
@@ -878,7 +878,7 @@ void MenuState::ugcInstalledHandler(std::uint64_t id, std::int32_t type)
                     auto info = readBallCfg(cfg);
                     info.modelPath = BallUserPath + info.modelPath;
 
-                    insertInfo(info, m_sharedData.ballModels, false);
+                    insertInfo(info, m_sharedData.ballInfo, false);
                 }
 
                 break; //skip the rest of the file list

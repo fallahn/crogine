@@ -1939,7 +1939,7 @@ void GolfState::loadAssets()
     m_modelDefs[ModelID::PlayerShadow]->loadFromFile("assets/golf/models/player_shadow.cmt");
 
     //ball models - the menu should never have let us get this far if it found no ball files
-    for (const auto& [colour, uid, path, _1, _2] : m_sharedData.ballModels)
+    for (const auto& [colour, uid, path, _1, _2] : m_sharedData.ballInfo)
     {
         std::unique_ptr<cro::ModelDefinition> def = std::make_unique<cro::ModelDefinition>(m_resources);
         m_ballModels.insert(std::make_pair(uid, std::move(def)));
@@ -4618,12 +4618,12 @@ void GolfState::spawnBall(const ActorInfo& info)
     cro::Colour miniBallColour;
     bool rollAnimation = true;
     auto material = m_resources.materials.get(m_ballResources.materialID);
-    auto ball = std::find_if(m_sharedData.ballModels.begin(), m_sharedData.ballModels.end(),
+    auto ball = std::find_if(m_sharedData.ballInfo.begin(), m_sharedData.ballInfo.end(),
         [ballID](const SharedStateData::BallInfo& ballPair)
         {
             return ballPair.uid == ballID;
         });
-    if (ball != m_sharedData.ballModels.end())
+    if (ball != m_sharedData.ballInfo.end())
     {
         material.setProperty("u_colour", ball->tint);
         miniBallColour = ball->tint;
@@ -4632,8 +4632,8 @@ void GolfState::spawnBall(const ActorInfo& info)
     else
     {
         //this should at least line up with the fallback model
-        material.setProperty("u_colour", m_sharedData.ballModels.cbegin()->tint);
-        miniBallColour = m_sharedData.ballModels.cbegin()->tint;
+        material.setProperty("u_colour", m_sharedData.ballInfo.cbegin()->tint);
+        miniBallColour = m_sharedData.ballInfo.cbegin()->tint;
     }
 
     auto entity = m_gameScene.createEntity();
@@ -4763,7 +4763,7 @@ void GolfState::spawnBall(const ActorInfo& info)
         auto& defaultBall = m_ballModels.begin()->second;
         if (!defaultBall->isLoaded())
         {
-            defaultBall->loadFromFile(m_sharedData.ballModels[0].modelPath);
+            defaultBall->loadFromFile(m_sharedData.ballInfo[0].modelPath);
         }
 
         //a bit dangerous assuming we're not empty, but we
@@ -4776,7 +4776,7 @@ void GolfState::spawnBall(const ActorInfo& info)
 
     material = m_resources.materials.get(m_materialIDs[MaterialID::Ball]);
     if (m_ballModels.count(ballID) != 0
-        && ball != m_sharedData.ballModels.end())
+        && ball != m_sharedData.ballInfo.end())
     {
         if (!m_ballModels[ballID]->isLoaded())
         {
