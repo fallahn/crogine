@@ -188,6 +188,7 @@ private:
         {
             HoleSelection,
             HoleThumb,
+            CourseTicker,
 
             Count
         };

@@ -1515,41 +1515,24 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     auto bgEnt = entity;
 
 #ifdef USE_GNS
-    std::stringstream ss;
-
-    float playTime = Achievements::getAvgStat(m_sharedData.mapDirectory);
-    if (playTime > 0)
-    {
-        float minutes = playTime / 60.f;
-        float seconds = playTime - (std::round(minutes) * 60.f);
-        ss.precision(2);
-        ss << "Avg. Play Duration: ";
-        ss << minutes << "m ";
-        ss << seconds << "s - ";
-    }
-
-    ss << "Top Players: ";
-
-    cro::String scoreStr(ss.str());
-    scoreStr += Social::getTopFive(m_sharedData.mapDirectory, 0);
-
     //scrolls info about the selected course
     auto& labelFont = m_sharedData.sharedResources->fonts.get(FontID::Label);
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 100.f, 0.f, 0.2f });
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(labelFont).setString(scoreStr);
+    entity.addComponent<cro::Text>(labelFont);// .setString(scoreStr);
     entity.getComponent<cro::Text>().setCharacterSize(LabelTextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
     entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
-    auto scrollBounds = cro::Text::getLocalBounds(entity);
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function =
-        [&, scrollBounds, bounds](cro::Entity e, float dt)
+        [&, bounds](cro::Entity e, float dt)
     {
         if (m_currentMenu == MenuID::Lobby)
         {
+            auto scrollBounds = cro::Text::getLocalBounds(e);
+
             auto pos = e.getComponent<cro::Transform>().getPosition();
 
             pos.x -= 20.f * dt;
@@ -1571,7 +1554,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
         }
     };
     bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-    auto scrollEnt = entity;
+    m_lobbyWindowEntities[LobbyEntityID::CourseTicker] = entity;
 #endif
 
     auto textResizeCallback = 
@@ -3450,21 +3433,21 @@ void MenuState::refreshUI()
 
 void MenuState::updateCourseRuleString()
 {
+    const auto data = std::find_if(m_courseData.cbegin(), m_courseData.cend(),
+        [&](const CourseData& cd)
+        {
+            return cd.directory == m_sharedData.mapDirectory;
+        });
+
     cro::Command cmd;
     cmd.targetFlags = CommandID::Menu::CourseRules;
-    cmd.action = [&](cro::Entity e, float)
+    cmd.action = [&, data](cro::Entity e, float)
     {
         auto str = ScoreTypes[m_sharedData.scoreType];
         str += ", " + GimmeString[m_sharedData.gimmeRadius];
 
-
-        if (auto data = std::find_if(m_courseData.cbegin(), m_courseData.cend(),
-            [&](const CourseData& cd)
-            {
-                return cd.directory == m_sharedData.mapDirectory;
-            }); data != m_courseData.cend())
+        if (data != m_courseData.end())
         {
-
             str += ", " + data->holeCount[m_sharedData.holeCount];
         }
 
@@ -3477,6 +3460,35 @@ void MenuState::updateCourseRuleString()
         centreText(e);
     };
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+    //update ticker
+    if (m_lobbyWindowEntities[LobbyEntityID::CourseTicker].isValid())
+    {
+        if (!data->isUser)
+        {
+            std::stringstream ss;
+            float playTime = Achievements::getAvgStat(m_sharedData.mapDirectory);
+            if (playTime > 0)
+            {
+                float minutes = playTime / 60.f;
+                float seconds = playTime - (std::round(minutes) * 60.f);
+                ss.precision(2);
+                ss << "Avg. Play Duration: ";
+                ss << minutes << "m ";
+                ss << seconds << "s - ";
+            }
+
+            ss << "Top Players: ";
+
+            cro::String scoreStr(ss.str());
+            scoreStr += Social::getTopFive(m_sharedData.mapDirectory, m_sharedData.holeCount);
+            m_lobbyWindowEntities[LobbyEntityID::CourseTicker].getComponent<cro::Text>().setString(scoreStr);
+        }
+        else
+        {
+            m_lobbyWindowEntities[LobbyEntityID::CourseTicker].getComponent<cro::Text>().setString("");
+        }
+    }
 }
 
 void MenuState::updateUnlockedItems()

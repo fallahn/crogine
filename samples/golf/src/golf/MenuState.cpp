@@ -1526,6 +1526,11 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
                     };
                     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
+                    if (m_lobbyWindowEntities[LobbyEntityID::CourseTicker].isValid())
+                    {
+                        m_lobbyWindowEntities[LobbyEntityID::CourseTicker].getComponent<cro::Text>().setString("");
+                    }
+
                     //un-ready the client to prevent the host launching
                     //if we don't have this course
                     if (!m_sharedData.hosting) //this should be implicit, but hey
