@@ -66,6 +66,7 @@ namespace cro
 }
 
 class MenuState;
+struct SharedProfileData;
 struct MainMenuContext final : public MenuContext
 {
     explicit MainMenuContext(MenuState*);
@@ -74,14 +75,8 @@ struct MainMenuContext final : public MenuContext
 class MenuState final : public cro::State, public cro::GuiClient, public cro::ConsoleClient
 {
 public:
-    MenuState(cro::StateStack&, cro::State::Context, SharedStateData&);
-    ~MenuState()
-    {
-        //these MUST be cleared as they hold a reference to this state's resources    
-        m_sharedData.ballDefs.clear();
-        m_sharedData.hairDefs.clear();
-        m_sharedData.avatarDefs.clear();
-    }
+    MenuState(cro::StateStack&, cro::State::Context, SharedStateData&, SharedProfileData&);
+    ~MenuState();
     MenuState(const MenuState&) = delete;
     MenuState(MenuState&&) = delete;
     const MenuState& operator = (const MenuState&) = delete;
@@ -101,6 +96,8 @@ public:
 
 private:
     SharedStateData& m_sharedData;
+    SharedProfileData& m_profileData;
+
     MatchMaking m_matchMaking;
     cro::Cursor m_cursor;
     cro::ResourceCollection m_resources;

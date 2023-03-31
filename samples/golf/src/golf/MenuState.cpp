@@ -40,6 +40,7 @@ source distribution.
 #include "NameScrollSystem.hpp"
 #include "CloudSystem.hpp"
 #include "MessageIDs.hpp"
+#include "SharedProfileData.hpp"
 #include "spooky2.hpp"
 #include "../ErrorCheck.hpp"
 
@@ -114,9 +115,10 @@ MainMenuContext::MainMenuContext(MenuState* state)
     sharedData = &state->m_sharedData;
 }
 
-MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, SharedStateData& sd)
+MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, SharedStateData& sd, SharedProfileData& sp)
     : cro::State            (stack, context),
     m_sharedData            (sd),
+    m_profileData           (sp),
     m_matchMaking           (context.appInstance.getMessageBus()),
     m_cursor                (/*"assets/images/cursor.png", 0, 0*/cro::SystemCursor::Hand),
     m_uiScene               (context.appInstance.getMessageBus(), 512),
@@ -395,6 +397,16 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     //        ImGui::End();
     //    }/*, true*/);
 #endif
+}
+
+MenuState::~MenuState()
+{
+    //these MUST be cleared as they hold a reference to this state's resources    
+    m_profileData.ballDefs.clear();
+    m_profileData.hairDefs.clear();
+    m_profileData.avatarDefs.clear();
+
+    m_profileData.profileMaterials.reset();
 }
 
 //public
@@ -870,6 +882,7 @@ void MenuState::loadAssets()
     m_scaleBuffer.addShader(*shader);
     m_resolutionBuffer.addShader(*shader);
     m_materialIDs[MaterialID::Cel] = m_resources.materials.add(*shader);
+    m_profileData.profileMaterials.ball = m_resources.materials.get(m_materialIDs[MaterialID::Cel]);
 
     shader = &m_resources.shaders.get(ShaderID::CelTextured);
     m_scaleBuffer.addShader(*shader);
@@ -884,12 +897,14 @@ void MenuState::loadAssets()
     shader = &m_resources.shaders.get(ShaderID::CelTexturedSkinned);
     m_resolutionBuffer.addShader(*shader);
     m_materialIDs[MaterialID::CelTexturedSkinned] = m_resources.materials.add(*shader);
+    m_profileData.profileMaterials.avatar = m_resources.materials.get(m_materialIDs[MaterialID::CelTexturedSkinned]);
 
     shader = &m_resources.shaders.get(ShaderID::Hair);
     m_materialIDs[MaterialID::Hair] = m_resources.materials.add(*shader);
     m_resolutionBuffer.addShader(*shader);
     //fudge this for the previews
     m_resources.materials.get(m_materialIDs[MaterialID::Hair]).doubleSided = true;
+    m_profileData.profileMaterials.hair = m_resources.materials.get(m_materialIDs[MaterialID::Hair]);
 
     shader = &m_resources.shaders.get(ShaderID::Billboard);
     m_materialIDs[MaterialID::Billboard] = m_resources.materials.add(*shader);

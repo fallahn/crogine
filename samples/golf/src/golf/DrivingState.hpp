@@ -61,10 +61,11 @@ struct MessageAnim final
 };
 
 struct SharedStateData;
+struct SharedProfileData;
 class DrivingState final : public cro::State, public cro::GuiClient
 {
 public:
-    DrivingState(cro::StateStack&, cro::State::Context, SharedStateData&);
+    DrivingState(cro::StateStack&, cro::State::Context, SharedStateData&, const SharedProfileData&);
 
     cro::StateID getStateID() const override { return StateID::DrivingRange; }
 
@@ -89,6 +90,7 @@ public:
 
 private:
     SharedStateData& m_sharedData;
+    const SharedProfileData& m_profileData;
     InputParser m_inputParser;
 
     cro::Scene m_gameScene;

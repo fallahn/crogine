@@ -377,7 +377,7 @@ void MenuState::createBallScene()
                 };
             }
 
-            m_sharedData.ballDefs.push_back(ballDef); //store this for faster loading in profile editor
+            m_profileData.ballDefs.push_back(ballDef); //store this for faster loading in profile editor
           
             if (shadow)
             {
@@ -447,11 +447,11 @@ void MenuState::updateProfileTextures(std::size_t start, std::size_t count)
         return;
     }
 
-    CRO_ASSERT(start < count && count <= m_sharedData.playerProfiles.size(), "");
+    CRO_ASSERT(start < count && count <= m_profileData.playerProfiles.size(), "");
 
     for (auto i = start; i < start + count; ++i)
     {
-        const auto& flags = m_sharedData.playerProfiles[i].avatarFlags;
+        const auto& flags = m_profileData.playerProfiles[i].avatarFlags;
         m_profileTextures[i].setColour(pc::ColourKey::Bottom, flags[0]);
         m_profileTextures[i].setColour(pc::ColourKey::Top, flags[1]);
         m_profileTextures[i].setColour(pc::ColourKey::Skin, flags[2]);
@@ -651,7 +651,7 @@ void MenuState::parseAvatarDirectory()
                     modelInfo.uid = info.uid;
                 }
 
-                m_sharedData.hairDefs.push_back(md);
+                m_profileData.hairDefs.push_back(md);
             }
         }
 
@@ -664,7 +664,7 @@ void MenuState::parseAvatarDirectory()
 
 
     //for every profile create a texture for the preview
-    for (auto& profile : m_sharedData.playerProfiles)
+    for (auto& profile : m_profileData.playerProfiles)
     {
         if (profile.skinID == 0)
         {
@@ -781,7 +781,7 @@ void MenuState::createAvatarScene()
 
             m_playerAvatars[i].previewModel = entity;
 
-            m_sharedData.avatarDefs.push_back(md);
+            m_profileData.avatarDefs.push_back(md);
         }
         else
         {

@@ -36,6 +36,7 @@ source distribution.
 #include "TextAnimCallback.hpp"
 #include "MessageIDs.hpp"
 #include "BallSystem.hpp"
+#include "SharedProfileData.hpp"
 #include "../GolfGame.hpp"
 
 #include <crogine/core/Window.hpp>
@@ -87,11 +88,12 @@ namespace
     constexpr glm::uvec2 AvatarTexSize(130u, 202u);
 }
 
-ProfileState::ProfileState(cro::StateStack& ss, cro::State::Context ctx, SharedStateData& sd)
+ProfileState::ProfileState(cro::StateStack& ss, cro::State::Context ctx, SharedStateData& sd, SharedProfileData& sp)
     : cro::State        (ss, ctx),
     m_uiScene           (ctx.appInstance.getMessageBus()),
     m_modelScene        (ctx.appInstance.getMessageBus()),
     m_sharedData        (sd),
+    m_profileData       (sp),
     m_viewScale         (2.f)
 {
     ctx.mainWindow.setMouseCaptured(false);
@@ -558,7 +560,7 @@ void ProfileState::buildScene()
 
     //TODO check for steamdeck and add mugshot button
     //TODO will this also break big picture mode?
-    if (!m_sharedData.playerProfiles[m_sharedData.activeProfileIndex].mugshot.empty())
+    if (!m_profileData.playerProfiles[m_profileData.activeProfileIndex].mugshot.empty())
     {
         entity = m_uiScene.createEntity();
         entity.addComponent<cro::Transform>().setPosition({ 396.f, 24.f, 0.1f });
@@ -632,9 +634,9 @@ void ProfileState::buildScene()
 
 
     //mugshot
-    if (!m_sharedData.playerProfiles[m_sharedData.activeProfileIndex].mugshot.empty())
+    if (!m_profileData.playerProfiles[m_profileData.activeProfileIndex].mugshot.empty())
     {
-        auto& tex = m_sharedData.sharedResources->textures.get(m_sharedData.playerProfiles[m_sharedData.activeProfileIndex].mugshot);
+        auto& tex = m_sharedData.sharedResources->textures.get(m_profileData.playerProfiles[m_profileData.activeProfileIndex].mugshot);
         entity = m_uiScene.createEntity();
         entity.addComponent<cro::Transform>().setPosition({ 396.f, 24.f, 0.1f });
         entity.addComponent<cro::Drawable2D>();
@@ -685,17 +687,18 @@ void ProfileState::buildScene()
 
 void ProfileState::buildPreviewScene()
 {
-    CRO_ASSERT(!m_sharedData.ballDefs.empty(), "Must load this state on top of menu");
+    CRO_ASSERT(!m_profileData.ballDefs.empty(), "Must load this state on top of menu");
 
     //this has all been parsed by the menu state - so we're assuming
     //all the models etc are fine and load without chicken
     std::int32_t i = 0;
-    for (auto& ballDef : m_sharedData.ballDefs)
+    for (auto& ballDef : m_profileData.ballDefs)
     {
         auto entity = m_modelScene.createEntity();
         entity.addComponent<cro::Transform>().setPosition({ 10.f, 0.f, 0.f });
         ballDef.createModel(entity);
         entity.getComponent<cro::Model>().setHidden(true);
+        entity.getComponent<cro::Model>().setMaterial(0, m_profileData.profileMaterials.ball);
         entity.addComponent<cro::Callback>().active = true;
 
         if (m_sharedData.ballInfo[i].rollAnimation)
@@ -722,12 +725,13 @@ void ProfileState::buildPreviewScene()
         m_ballModels.push_back(entity);
     }
 
-    for (auto& avatar : m_sharedData.avatarDefs)
+    for (auto& avatar : m_profileData.avatarDefs)
     {
         auto entity = m_modelScene.createEntity();
         entity.addComponent<cro::Transform>();
         avatar.createModel(entity);
         entity.getComponent<cro::Model>().setHidden(true);
+        entity.getComponent<cro::Model>().setMaterial(0, m_profileData.profileMaterials.avatar);
 
         auto& avt = m_avatarModels.emplace_back();
         avt.previewModel = entity;
@@ -760,8 +764,8 @@ void ProfileState::buildPreviewScene()
     //    hair.createModel(entity);
     //}
 
-    m_avatarModels[indexFromAvatarID(m_sharedData.playerProfiles[m_sharedData.activeProfileIndex].skinID)].previewModel.getComponent<cro::Model>().setHidden(false);
-    m_ballModels[indexFromBallID(m_sharedData.playerProfiles[m_sharedData.activeProfileIndex].ballID)].getComponent<cro::Model>().setHidden(false);
+    m_avatarModels[indexFromAvatarID(m_profileData.playerProfiles[m_profileData.activeProfileIndex].skinID)].previewModel.getComponent<cro::Model>().setHidden(false);
+    m_ballModels[indexFromBallID(m_profileData.playerProfiles[m_profileData.activeProfileIndex].ballID)].getComponent<cro::Model>().setHidden(false);
 
 
     auto ballTexCallback = [&](cro::Camera&)
@@ -794,6 +798,8 @@ void ProfileState::buildPreviewScene()
     auto& cam = m_avatarCam.addComponent<cro::Camera>();
     cam.setPerspective(70.f * cro::Util::Const::degToRad, static_cast<float>(AvatarTexSize.x) / AvatarTexSize.y, 0.1f, 6.f);
     cam.viewport = { 0.f, 0.f, 1.f ,1.f };
+
+    m_modelScene.getSunlight().getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, 96.f * cro::Util::Const::degToRad);
 }
 
 void ProfileState::createProfileTexture(std::int32_t index)
@@ -808,7 +814,7 @@ void ProfileState::createProfileTexture(std::int32_t index)
         
         for (auto j = 0; j < pc::ColourKey::Count; ++j)
         {
-            t.setColour(pc::ColourKey::Index(j), m_sharedData.playerProfiles[m_sharedData.activeProfileIndex].avatarFlags[j]);
+            t.setColour(pc::ColourKey::Index(j), m_profileData.playerProfiles[m_profileData.activeProfileIndex].avatarFlags[j]);
         }
         t.apply();
 

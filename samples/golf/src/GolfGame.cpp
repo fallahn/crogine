@@ -157,24 +157,24 @@ GolfGame::GolfGame()
 
     m_stateStack.registerState<SplashState>(StateID::SplashScreen, m_sharedData);
     m_stateStack.registerState<KeyboardState>(StateID::Keyboard);
-    m_stateStack.registerState<MenuState>(StateID::Menu, m_sharedData);
+    m_stateStack.registerState<NewsState>(StateID::News, m_sharedData);
+    m_stateStack.registerState<MenuState>(StateID::Menu, m_sharedData, m_profileData);
+    m_stateStack.registerState<ProfileState>(StateID::Profile, m_sharedData, m_profileData);
+    m_stateStack.registerState<OptionsState>(StateID::Options, m_sharedData);
+    m_stateStack.registerState<CreditsState>(StateID::Credits, m_sharedData, credits);
+    m_stateStack.registerState<UnlockState>(StateID::Unlock, m_sharedData);
     m_stateStack.registerState<GolfState>(StateID::Golf, m_sharedData);
     m_stateStack.registerState<ErrorState>(StateID::Error, m_sharedData);
-    m_stateStack.registerState<OptionsState>(StateID::Options, m_sharedData);
     m_stateStack.registerState<PauseState>(StateID::Pause, m_sharedData);
-    m_stateStack.registerState<NewsState>(StateID::News, m_sharedData);
     m_stateStack.registerState<TutorialState>(StateID::Tutorial, m_sharedData);
     m_stateStack.registerState<PracticeState>(StateID::Practice, m_sharedData);
-    m_stateStack.registerState<DrivingState>(StateID::DrivingRange, m_sharedData);
-    m_stateStack.registerState<ClubhouseState>(StateID::Clubhouse, m_sharedData);
+    m_stateStack.registerState<DrivingState>(StateID::DrivingRange, m_sharedData, m_profileData);
+    m_stateStack.registerState<ClubhouseState>(StateID::Clubhouse, m_sharedData, m_profileData);
     m_stateStack.registerState<BilliardsState>(StateID::Billiards, m_sharedData);
     m_stateStack.registerState<TrophyState>(StateID::Trophy, m_sharedData);
     m_stateStack.registerState<PlaylistState>(StateID::Playlist, m_sharedData);
     m_stateStack.registerState<BushState>(StateID::Bush, m_sharedData);
     m_stateStack.registerState<MessageOverlayState>(StateID::MessageOverlay, m_sharedData);
-    m_stateStack.registerState<ProfileState>(StateID::Profile, m_sharedData);
-    m_stateStack.registerState<UnlockState>(StateID::Unlock, m_sharedData);
-    m_stateStack.registerState<CreditsState>(StateID::Credits, m_sharedData, credits);
     m_stateStack.registerState<EventOverlayState>(StateID::EventOverlay);
 
 #ifdef USE_WORKSHOP
@@ -1083,7 +1083,7 @@ void GolfGame::loadAvatars()
             PlayerData pd;
             if (pd.loadProfile(profilePath + files[0], files[0].substr(0, files[0].size() - 4)))
             {
-                m_sharedData.playerProfiles.push_back(pd);
+                m_profileData.playerProfiles.push_back(pd);
                 i++;
             }
         }
@@ -1095,10 +1095,9 @@ void GolfGame::loadAvatars()
         }
     }
 
-    //TODO this doesn't necessesarily mean the favoured profile is at the front...
-    if (!m_sharedData.playerProfiles.empty())
+    if (!m_profileData.playerProfiles.empty())
     {
-        m_sharedData.localConnectionData.playerData[0] = m_sharedData.playerProfiles[0];
+        m_sharedData.localConnectionData.playerData[0] = m_profileData.playerProfiles[0];
     }
 }
 

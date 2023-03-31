@@ -39,6 +39,7 @@ source distribution.
 #include <crogine/graphics/RenderTexture.hpp>
 
 struct SharedStateData;
+struct SharedProfileData;
 
 struct AvatarPreview final
 {
@@ -49,7 +50,7 @@ struct AvatarPreview final
 class ProfileState final : public cro::State, public cro::GuiClient
 {
 public:
-    ProfileState(cro::StateStack&, cro::State::Context, SharedStateData&);
+    ProfileState(cro::StateStack&, cro::State::Context, SharedStateData&, SharedProfileData&);
 
     bool handleEvent(const cro::Event&) override;
 
@@ -66,6 +67,7 @@ private:
     cro::Scene m_uiScene;
     cro::Scene m_modelScene;
     SharedStateData& m_sharedData;
+    SharedProfileData& m_profileData;
 
     cro::RenderTexture m_avatarTexture;
     cro::RenderTexture m_ballTexture;

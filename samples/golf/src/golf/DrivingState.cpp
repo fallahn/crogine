@@ -30,6 +30,7 @@ source distribution.
 #include "DrivingState.hpp"
 #include "PoissonDisk.hpp"
 #include "SharedStateData.hpp"
+#include "SharedProfileData.hpp"
 #include "CommandIDs.hpp"
 #include "MenuConsts.hpp"
 #include "GameConsts.hpp"
@@ -180,9 +181,10 @@ namespace
     };
 }
 
-DrivingState::DrivingState(cro::StateStack& stack, cro::State::Context context, SharedStateData& sd)
+DrivingState::DrivingState(cro::StateStack& stack, cro::State::Context context, SharedStateData& sd, const SharedProfileData& sp)
     : cro::State        (stack, context),
     m_sharedData        (sd),
+    m_profileData       (sp),
     m_inputParser       (sd, nullptr),
     m_gameScene         (context.appInstance.getMessageBus()),
     m_skyScene          (context.appInstance.getMessageBus()),
@@ -1985,8 +1987,8 @@ void DrivingState::createPlayer(cro::Entity courseEnt)
         return 0;
     };
 
-    auto playerIndex = cro::Util::Random::value(0u, m_sharedData.playerProfiles.size() - 1);
-    const auto& playerData = m_sharedData.playerProfiles[playerIndex];
+    auto playerIndex = cro::Util::Random::value(0u, m_profileData.playerProfiles.size() - 1);
+    const auto& playerData = m_profileData.playerProfiles[playerIndex];
     auto idx = indexFromSkinID(playerData.skinID);
 
     ProfileTexture av(m_sharedData.avatarInfo[idx].texturePath);

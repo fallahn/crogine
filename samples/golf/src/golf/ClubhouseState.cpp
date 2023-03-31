@@ -29,6 +29,7 @@ source distribution.
 
 #include "ClubhouseState.hpp"
 #include "SharedStateData.hpp"
+#include "SharedProfileData.hpp"
 #include "MenuConsts.hpp"
 #include "PacketIDs.hpp"
 #include "CommandIDs.hpp"
@@ -110,9 +111,10 @@ constexpr std::array<glm::vec2, ClubhouseState::MenuID::Count> ClubhouseState::m
     glm::vec2(-MenuSpacing.x, 0.f)
 };
 
-ClubhouseState::ClubhouseState(cro::StateStack& ss, cro::State::Context ctx, SharedStateData& sd)
+ClubhouseState::ClubhouseState(cro::StateStack& ss, cro::State::Context ctx, SharedStateData& sd, const SharedProfileData& sp)
     : cro::State        (ss, ctx),
     m_sharedData        (sd),
+    m_profileData       (sp),
     m_matchMaking       (ctx.appInstance.getMessageBus()),
     m_backgroundScene   (ctx.appInstance.getMessageBus()),
     m_uiScene           (ctx.appInstance.getMessageBus()),

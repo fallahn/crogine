@@ -102,7 +102,7 @@ void MenuState::createAvatarMenu(cro::Entity parent)
             m_sharedData.localConnectionData.playerData[0].name = RandomNames[cro::Util::Random::value(0u, RandomNames.size() - 1)];
         }
         m_sharedData.localConnectionData.playerData[0].saveProfile();
-        m_sharedData.playerProfiles.push_back(m_sharedData.localConnectionData.playerData[0]);
+        m_profileData.playerProfiles.push_back(m_sharedData.localConnectionData.playerData[0]);
         m_profileTextures.emplace_back(m_sharedData.avatarInfo[indexFromAvatarID(m_sharedData.localConnectionData.playerData[0].skinID)].texturePath);
         updateProfileTextures(0, m_profileTextures.size());
     }
@@ -111,33 +111,33 @@ void MenuState::createAvatarMenu(cro::Entity parent)
         //see if we have a social name and put to the font of the profile list
         if (!socialName.empty())
         {
-            auto res = std::find_if(m_sharedData.playerProfiles.begin(), m_sharedData.playerProfiles.end(),
+            auto res = std::find_if(m_profileData.playerProfiles.begin(), m_profileData.playerProfiles.end(),
                 [&socialName](const PlayerData& pd)
                 {
                     return pd.name == socialName;
                 });
 
-            if (res != m_sharedData.playerProfiles.end())
+            if (res != m_profileData.playerProfiles.end())
             {
-                auto pos = std::distance(m_sharedData.playerProfiles.begin(), res);
+                auto pos = std::distance(m_profileData.playerProfiles.begin(), res);
 
-                std::swap(m_sharedData.playerProfiles[0], m_sharedData.playerProfiles[pos]);
+                std::swap(m_profileData.playerProfiles[0], m_profileData.playerProfiles[pos]);
 
                 //remember to realign the texture indices!
                 std::swap(m_profileTextures[0], m_profileTextures[pos]);
             }
         }
     }
-    m_sharedData.localConnectionData.playerData[0] = m_sharedData.playerProfiles[0];
+    m_sharedData.localConnectionData.playerData[0] = m_profileData.playerProfiles[0];
     
     //map all the active player slots to their profile index
     for (auto i = 0u; i < m_sharedData.localConnectionData.playerCount; ++i)
     {
         const auto& uid = m_sharedData.localConnectionData.playerData[i].profileID;
-        if (auto result = std::find_if(m_sharedData.playerProfiles.begin(), m_sharedData.playerProfiles.end(),
-            [&uid](const PlayerData& pd) {return pd.profileID == uid;}); result != m_sharedData.playerProfiles.end())
+        if (auto result = std::find_if(m_profileData.playerProfiles.begin(), m_profileData.playerProfiles.end(),
+            [&uid](const PlayerData& pd) {return pd.profileID == uid;}); result != m_profileData.playerProfiles.end())
         {
-            m_rosterMenu.profileIndices[i] = std::distance(m_sharedData.playerProfiles.begin(), result);
+            m_rosterMenu.profileIndices[i] = std::distance(m_profileData.playerProfiles.begin(), result);
         }
     }
     
@@ -312,7 +312,7 @@ void MenuState::createAvatarMenu(cro::Entity parent)
 
     auto showAvatar = [&, mugshot](std::size_t profileIndex) mutable
     {
-        const auto& profile = m_sharedData.playerProfiles[profileIndex];
+        const auto& profile = m_profileData.playerProfiles[profileIndex];
 
         for (auto& e : m_playerAvatars)
         {
@@ -389,11 +389,11 @@ void MenuState::createAvatarMenu(cro::Entity parent)
         }
         rosterEnt.getComponent<cro::Text>().setString(str);
 
-        nameLabel.getComponent<cro::Text>().setString(m_sharedData.playerProfiles[m_rosterMenu.profileIndices[m_rosterMenu.activeIndex]].name);
+        nameLabel.getComponent<cro::Text>().setString(m_profileData.playerProfiles[m_rosterMenu.profileIndices[m_rosterMenu.activeIndex]].name);
         centreText(nameLabel);
 
         auto idx = m_rosterMenu.profileIndices[m_rosterMenu.activeIndex];
-        m_ballCam.getComponent<cro::Callback>().getUserData<std::int32_t>() = indexFromBallID(m_sharedData.playerProfiles[idx].ballID);
+        m_ballCam.getComponent<cro::Callback>().getUserData<std::int32_t>() = indexFromBallID(m_profileData.playerProfiles[idx].ballID);
 
         showAvatar(idx);
     };
@@ -418,13 +418,13 @@ void MenuState::createAvatarMenu(cro::Entity parent)
             {
                 m_rosterMenu.activeIndex = e.getComponent<cro::Callback>().getUserData<std::uint32_t>();
 
-                nameLabel.getComponent<cro::Text>().setString(m_sharedData.playerProfiles[m_rosterMenu.profileIndices[m_rosterMenu.activeIndex]].name);
+                nameLabel.getComponent<cro::Text>().setString(m_profileData.playerProfiles[m_rosterMenu.profileIndices[m_rosterMenu.activeIndex]].name);
                 centreText(nameLabel);
 
                 m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
 
                 auto idx = m_rosterMenu.profileIndices[m_rosterMenu.activeIndex];
-                m_ballCam.getComponent<cro::Callback>().getUserData<std::int32_t>() = indexFromBallID(m_sharedData.playerProfiles[idx].ballID);
+                m_ballCam.getComponent<cro::Callback>().getUserData<std::int32_t>() = indexFromBallID(m_profileData.playerProfiles[idx].ballID);
 
                 showAvatar(idx);
             }
@@ -552,8 +552,8 @@ void MenuState::createAvatarMenu(cro::Entity parent)
                 bool isCPU = m_sharedData.localConnectionData.playerData[index].isCPU;
 
                 //write profile with updated settings
-                m_sharedData.playerProfiles[m_rosterMenu.profileIndices[index]].isCPU = isCPU;
-                m_sharedData.playerProfiles[m_rosterMenu.profileIndices[m_rosterMenu.activeIndex]].saveProfile();
+                m_profileData.playerProfiles[m_rosterMenu.profileIndices[index]].isCPU = isCPU;
+                m_profileData.playerProfiles[m_rosterMenu.profileIndices[m_rosterMenu.activeIndex]].saveProfile();
 
                 //update roster
                 m_rosterMenu.selectionEntities[index].getComponent<cro::SpriteAnimation>().play(isCPU ? 5 : 0);
@@ -595,14 +595,14 @@ void MenuState::createAvatarMenu(cro::Entity parent)
             if (activated(evt))
             {
                 auto i = m_rosterMenu.profileIndices[m_rosterMenu.activeIndex];
-                i = (i + (m_sharedData.playerProfiles.size() - 1)) % m_sharedData.playerProfiles.size();
+                i = (i + (m_profileData.playerProfiles.size() - 1)) % m_profileData.playerProfiles.size();
                 m_rosterMenu.profileIndices[m_rosterMenu.activeIndex] = i;
 
-                m_sharedData.localConnectionData.playerData[m_rosterMenu.activeIndex] = m_sharedData.playerProfiles[i];
+                m_sharedData.localConnectionData.playerData[m_rosterMenu.activeIndex] = m_profileData.playerProfiles[i];
 
                 updateRoster();
 
-                auto avtIdx = indexFromAvatarID(m_sharedData.playerProfiles[i].skinID);
+                auto avtIdx = indexFromAvatarID(m_profileData.playerProfiles[i].skinID);
                 auto soundSize = m_playerAvatars[avtIdx].previewSounds.size();
                 if (soundSize != 0)
                 {
@@ -635,14 +635,14 @@ void MenuState::createAvatarMenu(cro::Entity parent)
             if (activated(evt))
             {
                 auto i = m_rosterMenu.profileIndices[m_rosterMenu.activeIndex];
-                i = (i + 1) % m_sharedData.playerProfiles.size();
+                i = (i + 1) % m_profileData.playerProfiles.size();
                 m_rosterMenu.profileIndices[m_rosterMenu.activeIndex] = i;
 
-                m_sharedData.localConnectionData.playerData[m_rosterMenu.activeIndex] = m_sharedData.playerProfiles[i];
+                m_sharedData.localConnectionData.playerData[m_rosterMenu.activeIndex] = m_profileData.playerProfiles[i];
 
                 updateRoster();
 
-                auto avtIdx = indexFromAvatarID(m_sharedData.playerProfiles[i].skinID);
+                auto avtIdx = indexFromAvatarID(m_profileData.playerProfiles[i].skinID);
                 auto soundSize = m_playerAvatars[avtIdx].previewSounds.size();
                 if (soundSize != 0)
                 {
@@ -703,21 +703,21 @@ void MenuState::createAvatarMenu(cro::Entity parent)
         {
             if (activated(evt))
             {
-                if (m_sharedData.playerProfiles.size() < ConstVal::MaxProfiles)
+                if (m_profileData.playerProfiles.size() < ConstVal::MaxProfiles)
                 {
-                    m_sharedData.playerProfiles.emplace_back();
-                    m_sharedData.playerProfiles.back().name = RandomNames[cro::Util::Random::value(0u, RandomNames.size() - 1)];
-                    m_sharedData.playerProfiles.back().saveProfile();
-                    m_sharedData.activeProfileIndex = m_sharedData.playerProfiles.size() - 1;
+                    m_profileData.playerProfiles.emplace_back();
+                    m_profileData.playerProfiles.back().name = RandomNames[cro::Util::Random::value(0u, RandomNames.size() - 1)];
+                    m_profileData.playerProfiles.back().saveProfile();
+                    m_profileData.activeProfileIndex = m_profileData.playerProfiles.size() - 1;
 
                     //create profile texture
-                    auto avtIdx = indexFromAvatarID(m_sharedData.playerProfiles.back().skinID);
+                    auto avtIdx = indexFromAvatarID(m_profileData.playerProfiles.back().skinID);
                     m_profileTextures.emplace_back(m_sharedData.avatarInfo[avtIdx].texturePath);
                     updateProfileTextures(m_profileTextures.size() - 1, 1);
 
                     //set selected roster slot to this profile and refresh view
-                    m_rosterMenu.profileIndices[m_rosterMenu.activeIndex] = m_sharedData.activeProfileIndex;
-                    m_sharedData.localConnectionData.playerData[m_rosterMenu.activeIndex] = m_sharedData.playerProfiles[m_sharedData.activeProfileIndex];
+                    m_rosterMenu.profileIndices[m_rosterMenu.activeIndex] = m_profileData.activeProfileIndex;
+                    m_sharedData.localConnectionData.playerData[m_rosterMenu.activeIndex] = m_profileData.playerProfiles[m_profileData.activeProfileIndex];
 
                     updateRoster();
 
@@ -753,7 +753,7 @@ void MenuState::createAvatarMenu(cro::Entity parent)
         {
             if (activated(evt))
             {
-                m_sharedData.activeProfileIndex = m_rosterMenu.profileIndices[m_rosterMenu.activeIndex];
+                m_profileData.activeProfileIndex = m_rosterMenu.profileIndices[m_rosterMenu.activeIndex];
                 requestStackPush(StateID::Profile);
             }
         });
@@ -780,14 +780,14 @@ void MenuState::createAvatarMenu(cro::Entity parent)
         {
             if (activated(evt))
             {
-                if (m_sharedData.playerProfiles.size() == 1)
+                if (m_profileData.playerProfiles.size() == 1)
                 {
                     m_sharedData.errorMessage = "This Profile\nCannot Be Deleted";
                 }
                 else
                 {
                     m_sharedData.errorMessage = "delete_profile";
-                    m_sharedData.activeProfileIndex = m_rosterMenu.profileIndices[m_rosterMenu.activeIndex];
+                    m_profileData.activeProfileIndex = m_rosterMenu.profileIndices[m_rosterMenu.activeIndex];
                 }
                 requestStackPush(StateID::MessageOverlay);
             }
@@ -897,9 +897,9 @@ void MenuState::createAvatarMenu(cro::Entity parent)
                     if (m_sharedData.localConnectionData.playerCount < ConstVal::MaxPlayers)
                     {
                         auto index = m_sharedData.localConnectionData.playerCount;
-                        auto profileIndex = index % m_sharedData.playerProfiles.size();
+                        auto profileIndex = index % m_profileData.playerProfiles.size();
                         
-                        m_sharedData.localConnectionData.playerData[index] = m_sharedData.playerProfiles[profileIndex];
+                        m_sharedData.localConnectionData.playerData[index] = m_profileData.playerProfiles[profileIndex];
                         m_sharedData.localConnectionData.playerCount++;
                         
                         m_rosterMenu.profileIndices[index] = profileIndex;
@@ -1486,10 +1486,10 @@ void MenuState::createProfileLayout(cro::Entity parent, cro::Transform& menuTran
 
 void MenuState::eraseCurrentProfile()
 {
-    auto profileID = m_sharedData.playerProfiles[m_sharedData.activeProfileIndex].profileID;
+    auto profileID = m_profileData.playerProfiles[m_profileData.activeProfileIndex].profileID;
 
     //erase profile first so we know we have valid remaining
-    m_sharedData.playerProfiles.erase(m_sharedData.playerProfiles.begin() + m_sharedData.activeProfileIndex);
+    m_profileData.playerProfiles.erase(m_profileData.playerProfiles.begin() + m_profileData.activeProfileIndex);
     
     //set the active profile slot to the first valid profile
     //remember the erased profile could be assigned to multiple slots..
@@ -1498,12 +1498,12 @@ void MenuState::eraseCurrentProfile()
         if (m_sharedData.localConnectionData.playerData[i].profileID == profileID)
         {
             m_rosterMenu.profileIndices[i] = 0;
-            m_sharedData.localConnectionData.playerData[i] = m_sharedData.playerProfiles[0];
+            m_sharedData.localConnectionData.playerData[i] = m_profileData.playerProfiles[0];
         }
     }
 
-    m_profileTextures.erase(m_profileTextures.begin() + m_sharedData.activeProfileIndex);
-    m_sharedData.activeProfileIndex = m_rosterMenu.profileIndices[m_rosterMenu.activeIndex];
+    m_profileTextures.erase(m_profileTextures.begin() + m_profileData.activeProfileIndex);
+    m_profileData.activeProfileIndex = m_rosterMenu.profileIndices[m_rosterMenu.activeIndex];
 
     //refresh the preview / roster list
     updateRoster();

@@ -155,9 +155,6 @@ struct SharedStateData final
     //IDs used by the unlock state to display new unlocks
     std::vector<std::int32_t> unlockedItems;
 
-    std::vector<PlayerData> playerProfiles;
-    std::size_t activeProfileIndex = 0; //this indexes into the profile array when editing/deleting profiles
-
     //client settings
     bool usePostProcess = false;
     std::int32_t postProcessIndex = 0;
@@ -193,13 +190,6 @@ struct SharedStateData final
     std::int32_t baseState = 0; //used to tell which state we're returning to from errors etc
     std::unique_ptr<cro::ResourceCollection> sharedResources;
     
-    //be careful here! these stores a reference to the resources from the menu state
-    //however it is used to load models in the profile state - so the profile state
-    //must ALWAYS be loaded on top of the menu!!!
-    std::vector<cro::ModelDefinition> ballDefs;
-    std::vector<cro::ModelDefinition> avatarDefs;
-    std::vector<cro::ModelDefinition> hairDefs;
-
     std::vector<glm::uvec2> resolutions;
     std::vector<std::string> resolutionStrings;
 };
