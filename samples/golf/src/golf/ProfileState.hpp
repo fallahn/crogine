@@ -32,6 +32,7 @@ source distribution.
 #include "../StateIDs.hpp"
 #include "PlayerData.hpp"
 #include "PlayerAvatar.hpp"
+#include "CommonConsts.hpp"
 
 #include <crogine/core/State.hpp>
 #include <crogine/audio/AudioScape.hpp>
@@ -104,4 +105,16 @@ private:
 
     std::size_t indexFromAvatarID(std::uint32_t);
     std::size_t indexFromBallID(std::uint32_t);
+
+
+    struct TextEdit final
+    {
+        cro::String* string = nullptr;
+        cro::Entity entity;
+        std::size_t maxLen = ConstVal::MaxStringChars;
+    }m_textEdit;
+
+    void beginTextEdit(cro::Entity, cro::String*, std::size_t);
+    void handleTextEdit(const cro::Event&);
+    bool applyTextEdit(); //returns true if this consumed event
 };

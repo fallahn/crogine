@@ -29,7 +29,6 @@ source distribution.
 
 #include "ProfileState.hpp"
 #include "SharedStateData.hpp"
-#include "CommonConsts.hpp"
 #include "CommandIDs.hpp"
 #include "MenuConsts.hpp"
 #include "GameConsts.hpp"
@@ -80,7 +79,7 @@ namespace
     {
         enum
         {
-            Main, Confirm
+            Dummy, Main
         };
     };
 
@@ -147,12 +146,16 @@ bool ProfileState::handleEvent(const cro::Event& evt)
             || evt.key.keysym.sym == SDLK_ESCAPE
             || evt.key.keysym.sym == SDLK_p)
         {
-            quitState();
-            return false;
+            if (m_textEdit.string == nullptr)
+            {
+                quitState();
+                return false;
+            }
         }
     }
     else if (evt.type == SDL_KEYDOWN)
     {
+        handleTextEdit(evt);
         switch (evt.key.keysym.sym)
         {
         default: break;
@@ -162,7 +165,19 @@ bool ProfileState::handleEvent(const cro::Event& evt)
         case SDLK_RIGHT:
             cro::App::getWindow().setMouseCaptured(true);
             break;
+        case SDLK_RETURN:
+        case SDLK_RETURN2:
+        case SDLK_KP_ENTER:
+            if (m_textEdit.string)
+            {
+                applyTextEdit();
+            }
+            break;
         }
+    }
+    else if (evt.type == SDL_TEXTINPUT)
+    {
+        handleTextEdit(evt);
     }
     else if (evt.type == SDL_CONTROLLERBUTTONUP)
     {
@@ -180,6 +195,15 @@ bool ProfileState::handleEvent(const cro::Event& evt)
         {
             quitState();
             return false;
+        }
+        else if (evt.button.button == SDL_BUTTON_LEFT)
+        {
+            if (applyTextEdit())
+            {
+                //we applied a text edit so don't update the
+                //UISystem
+                return false;
+            }
         }
     }
     else if (evt.type == SDL_CONTROLLERAXISMOTION)
@@ -202,6 +226,21 @@ bool ProfileState::handleEvent(const cro::Event& evt)
 
 void ProfileState::handleMessage(const cro::Message& msg)
 {
+    if (msg.id == cro::Message::StateMessage)
+    {
+        const auto& data = msg.getData<cro::Message::StateEvent>();
+        if (data.action == cro::Message::StateEvent::Popped)
+        {
+            switch (data.id)
+            {
+            default: break;
+            case StateID::Keyboard:
+                applyTextEdit();
+                break;
+            }
+        }
+    }
+
     m_uiScene.forwardMessage(msg);
     m_modelScene.forwardMessage(msg);
 }
@@ -273,6 +312,7 @@ void ProfileState::buildScene()
 
     auto rootNode = m_uiScene.createEntity();
     rootNode.addComponent<cro::Transform>();
+    rootNode.addComponent<cro::CommandTarget>().ID = CommandID::Menu::RootNode;
     rootNode.addComponent<cro::Callback>().active = true;
     rootNode.getComponent<cro::Callback>().setUserData<RootCallbackData>();
     rootNode.getComponent<cro::Callback>().function =
@@ -290,6 +330,8 @@ void ProfileState::buildScene()
             {
                 state = RootCallbackData::FadeOut;
                 e.getComponent<cro::Callback>().active = false;
+
+                m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Main);
             }
             break;
         case RootCallbackData::FadeOut:
@@ -336,13 +378,18 @@ void ProfileState::buildScene()
         }
     };
 
-   
+    //prevents input when text input is active.
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::UIInput>().setGroup(MenuID::Dummy);
+
+
     //background
     cro::SpriteSheet spriteSheet;
     spriteSheet.loadFromFile("assets/golf/sprites/avatar_edit.spt", m_sharedData.sharedResources->textures);
 
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -0.2f });
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 10.f, -0.2f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("background");
     auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
@@ -350,6 +397,38 @@ void ProfileState::buildScene()
     rootNode.getComponent<cro::Transform >().addChild(entity.getComponent<cro::Transform>());
 
     auto bgEnt = entity;
+
+    auto& largeFont = m_sharedData.sharedResources->fonts.get(FontID::UI);
+
+    //active profile name
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 382.f, 226.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(largeFont).setString(m_profileData.playerProfiles[m_profileData.activeProfileIndex].name);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
+    entity.addComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+    {
+        if (m_textEdit.string != nullptr)
+        {
+            auto str = *m_textEdit.string;
+            if (str.size() == 0)
+            {
+                str += "_";
+            }
+            e.getComponent<cro::Text>().setString(str);
+
+            centreText(e);
+            /*bounds = cro::Text::getLocalBounds(e);
+            bounds.left = (bounds.width - NameWidth) / 2.f;
+            bounds.width = NameWidth;
+            e.getComponent<cro::Drawable2D>().setCroppingArea(bounds);*/
+        }
+    };
+    centreText(entity);
+    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    auto nameEnt = entity;
 
     auto& uiSystem = *m_uiScene.getSystem<cro::UISystem>();
     auto selected = uiSystem.addCallback([&](cro::Entity e)
@@ -373,6 +452,7 @@ void ProfileState::buildScene()
         entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
         entity.addComponent<cro::Callback>().function = MenuTextCallback();
         entity.addComponent<cro::UIInput>().area = bounds;
+        entity.getComponent<cro::UIInput>().setGroup(MenuID::Main);
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selected;
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselected;
         bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -491,12 +571,28 @@ void ProfileState::buildScene()
 
     //name button
     auto nameButton = createButton("name_highlight", glm::vec2(264.f, 213.f));
-    nameButton.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
-        uiSystem.addCallback([&](cro::Entity e, const cro::ButtonEvent& evt)
+    nameButton.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
+        uiSystem.addCallback([&, nameEnt](cro::Entity e, const cro::ButtonEvent& evt) mutable
             {
                 if (activated(evt))
                 {
+                    auto& callback = nameEnt.getComponent<cro::Callback>();
+                    callback.active = !callback.active;
+                    if (callback.active)
+                    {
+                        beginTextEdit(nameEnt, &m_profileData.playerProfiles[m_profileData.activeProfileIndex].name, ConstVal::MaxStringChars);
+                        m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
 
+                        if (evt.type == SDL_CONTROLLERBUTTONUP)
+                        {
+                            requestStackPush(StateID::Keyboard);
+                        }
+                    }
+                    else
+                    {
+                        applyTextEdit();
+                        m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();                
+                    }
                 }
             });
 
@@ -545,7 +641,8 @@ void ProfileState::buildScene()
             {
                 if (activated(evt))
                 {
-
+                    m_profileData.playerProfiles[m_profileData.activeProfileIndex].saveProfile();
+                    quitState();
                 }
             });
     auto quit = createButton("button_highlight", glm::vec2(269.f, 24.f));
@@ -557,6 +654,7 @@ void ProfileState::buildScene()
                     quitState();
                 }
             });
+
 
     //TODO check for steamdeck and add mugshot button
     //TODO will this also break big picture mode?
@@ -731,7 +829,10 @@ void ProfileState::buildPreviewScene()
         entity.addComponent<cro::Transform>();
         avatar.createModel(entity);
         entity.getComponent<cro::Model>().setHidden(true);
-        entity.getComponent<cro::Model>().setMaterial(0, m_profileData.profileMaterials.avatar);
+
+        auto material = m_profileData.profileMaterials.avatar;
+        applyMaterialData(avatar, material);
+        entity.getComponent<cro::Model>().setMaterial(0, material);
 
         auto& avt = m_avatarModels.emplace_back();
         avt.previewModel = entity;
@@ -768,7 +869,7 @@ void ProfileState::buildPreviewScene()
     m_ballModels[indexFromBallID(m_profileData.playerProfiles[m_profileData.activeProfileIndex].ballID)].getComponent<cro::Model>().setHidden(false);
 
 
-    auto ballTexCallback = [&](cro::Camera&)
+    auto ballTexCallback = [&](cro::Camera& cam)
     {
         std::uint32_t samples = m_sharedData.pixelScale ? 0 :
             m_sharedData.antialias ? m_sharedData.multisamples : 0;
@@ -780,13 +881,16 @@ void ProfileState::buildPreviewScene()
 
         auto invScale = static_cast<std::uint32_t>((windowScale + 1.f) - scale);
         auto size = BallTexSize * invScale;
-        m_ballTexture.create(size.x, size.y, true, false, samples);
+        m_ballTexture.create(size.x, size.y, true, false, /*samples*/0);
 
         size = AvatarTexSize * invScale;
-        m_avatarTexture.create(size.x, size.y, true, false, samples);
+        m_avatarTexture.create(size.x, size.y, true, false, /*samples*/0);
+
+
+        cam.setPerspective(1.f, static_cast<float>(BallTexSize.x) / BallTexSize.y, 0.001f, 2.f);
+        cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
     m_ballCam = m_modelScene.getActiveCamera();
-    m_ballCam.getComponent<cro::Camera>().setPerspective(1.f, static_cast<float>(BallTexSize.x) / BallTexSize.y, 0.001f, 2.f);
     m_ballCam.getComponent<cro::Camera>().resizeCallback = ballTexCallback;
     m_ballCam.getComponent<cro::Transform>().setPosition({ 10.f, 0.045f, 0.095f });
     ballTexCallback(m_ballCam.getComponent<cro::Camera>());
@@ -833,6 +937,8 @@ void ProfileState::createProfileTexture(std::int32_t index)
 
 void ProfileState::quitState()
 {
+    applyTextEdit();
+
     m_rootNode.getComponent<cro::Callback>().active = true;
     m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
 }
@@ -863,4 +969,89 @@ std::size_t ProfileState::indexFromBallID(std::uint32_t ballID)
     }
 
     return 0;
+}
+
+void ProfileState::beginTextEdit(cro::Entity stringEnt, cro::String* dst, std::size_t maxChars)
+{
+    *dst = dst->substr(0, maxChars);
+
+    stringEnt.getComponent<cro::Text>().setFillColour(TextEditColour);
+    m_textEdit.string = dst;
+    m_textEdit.entity = stringEnt;
+    m_textEdit.maxLen = maxChars;
+
+    //block input to menu
+    m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Dummy);
+
+    SDL_StartTextInput();
+}
+
+void ProfileState::handleTextEdit(const cro::Event& evt)
+{
+    if (!m_textEdit.string)
+    {
+        return;
+    }
+
+    if (evt.type == SDL_KEYDOWN)
+    {
+        switch (evt.key.keysym.sym)
+        {
+        default: break;
+        case SDLK_BACKSPACE:
+            if (!m_textEdit.string->empty())
+            {
+                m_textEdit.string->erase(m_textEdit.string->size() - 1);
+            }
+            break;
+        }
+    }
+    else if (evt.type == SDL_TEXTINPUT)
+    {
+        if (m_textEdit.string->size() < ConstVal::MaxStringChars
+            && m_textEdit.string->size() < m_textEdit.maxLen)
+        {
+            auto codePoints = cro::Util::String::getCodepoints(evt.text.text);
+            *m_textEdit.string += cro::String::fromUtf32(codePoints.begin(), codePoints.end());
+        }
+    }
+}
+
+bool ProfileState::applyTextEdit()
+{
+    if (m_textEdit.string && m_textEdit.entity.isValid())
+    {
+        if (m_textEdit.string->empty())
+        {
+            *m_textEdit.string = "INVALID";
+        }
+
+        m_textEdit.entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+        m_textEdit.entity.getComponent<cro::Text>().setString(*m_textEdit.string);
+        m_textEdit.entity.getComponent<cro::Callback>().active = false;
+
+
+        //send this as a command to delay it by a frame - doesn't matter who receives it :)
+        cro::Command cmd;
+        cmd.targetFlags = CommandID::Menu::RootNode;
+        cmd.action = [&](cro::Entity, float)
+        {
+            //commandception
+            cro::Command cmd2;
+            cmd2.targetFlags = CommandID::Menu::RootNode;
+            cmd2.action = [&](cro::Entity, float)
+            {
+                m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Main);
+            };
+            m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd2);
+        };
+        m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+
+        SDL_StopTextInput();
+        m_textEdit = {};
+        return true;
+    }
+    m_textEdit = {};
+    return false;
 }

@@ -641,6 +641,11 @@ void MenuState::handleMessage(const cro::Message& msg)
                     eraseCurrentProfile();
                 }
                 break;
+            case StateID::Profile:
+                m_sharedData.localConnectionData.playerData[m_rosterMenu.activeIndex] =
+                    m_profileData.playerProfiles[m_rosterMenu.profileIndices[m_rosterMenu.activeIndex]];
+                updateRoster();
+                break;
             }
         }
     }
