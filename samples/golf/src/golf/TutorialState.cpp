@@ -1851,6 +1851,7 @@ void TutorialState::tutorialPutt(cro::Entity root)
 
     The longer the lines and the bluer they are the strong the effect of the slope.
     */
+    m_sharedData.showPuttingPower = true;
 
     auto& font = m_sharedData.sharedResources->fonts.get(FontID::Info);
 
@@ -2002,10 +2003,11 @@ void TutorialState::tutorialPutt(cro::Entity root)
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>().setCroppingArea({ 0.f, 0.f, 0.f, 0.f });
-    entity.addComponent<cro::Text>(font).setString("Use the flag on the power bar to judge the distance to the hole.");
+    entity.addComponent<cro::Text>(font).setString("With Putting Assist enabled in the Options you can\nuse the flag on the power bar to judge the distance to the hole.");
     entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
-    centreText(entity);
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    //centreText(entity);
     entity.addComponent<UIElement>().absolutePosition = { 0.f, /*UIBarHeight*5.5f*/-94.f };
     entity.getComponent<UIElement>().relativePosition = { 0.5f, 0.5f };
     entity.getComponent<UIElement>().depth = 0.01f;
@@ -2017,7 +2019,7 @@ void TutorialState::tutorialPutt(cro::Entity root)
     {
         auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
         currTime = std::min(1.f, currTime + (dt * 3.f));
-        cro::FloatRect area(0.f, bounds.bottom - (bounds.height * (1.f - currTime)), bounds.width, bounds.height);
+        cro::FloatRect area(bounds.left, bounds.bottom - (bounds.height * (1.f - currTime)), bounds.width, bounds.height);
         e.getComponent<cro::Drawable2D>().setCroppingArea(area);
 
         if (currTime == 1)

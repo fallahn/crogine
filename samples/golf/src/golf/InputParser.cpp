@@ -48,6 +48,8 @@ source distribution.
 
 namespace
 {
+    constexpr float SpeedReduction = 1.4f; //bar speed is dividied by this when putt assist is enabled
+
     static constexpr float RotationSpeed = 1.2f;
     static constexpr float MaxRotation = 0.36f;
 
@@ -752,20 +754,21 @@ void InputParser::updateStroke(float dt, std::int32_t terrainID)
             }
 
             //move level to 1 and back (returning to 0 is a fluff)
-            float Speed = dt * 0.7f;
+            float speed = dt * 0.7f;
             if (terrainID == TerrainID::Green
                 && m_sharedData.showPuttingPower)
             {
-                Speed /= 1.75f;
+                //speed /= SpeedReduction;
+                speed *= 0.96f;
             }
             else
             {
                 //move more slowly for the first 10 levels
                 float increase = std::min(1.f, static_cast<float>(Social::getLevel()) / 10.f);
-                Speed = (Speed * MinBarSpeed) + ((Speed * (1.f - MinBarSpeed)) * increase);
+                speed = (speed * MinBarSpeed) + ((speed * (1.f - MinBarSpeed)) * increase);
             }
 
-            m_power = std::min(1.f, std::max(0.f, m_power + (Speed * m_powerbarDirection)));
+            m_power = std::min(1.f, std::max(0.f, m_power + (speed * m_powerbarDirection)));
 
             if (m_power == 1)
             {
@@ -779,16 +782,16 @@ void InputParser::updateStroke(float dt, std::int32_t terrainID)
                 {
                     m_powerbarDirection = 1.f;
 
-                    if (m_sharedData.showPuttingPower
-                        && terrainID == TerrainID::Green)
-                    {
-                        //skip the hook bar cos we're on easy mode
-                        m_state = State::Flight;
+                    //if (m_sharedData.showPuttingPower
+                    //    && terrainID == TerrainID::Green)
+                    //{
+                    //    //skip the hook bar cos we're on easy mode
+                    //    m_state = State::Flight;
 
-                        auto* msg = cro::App::postMessage<GolfEvent>(MessageID::GolfMessage);
-                        msg->type = GolfEvent::HitBall;
-                    }
-                    else
+                    //    auto* msg = cro::App::postMessage<GolfEvent>(MessageID::GolfMessage);
+                    //    msg->type = GolfEvent::HitBall;
+                    //}
+                    //else
                     {
                         m_state = State::Stroke;
                     }
@@ -807,8 +810,17 @@ void InputParser::updateStroke(float dt, std::int32_t terrainID)
             }
 
             float speed = dt * MinBarSpeed;
-            float increase = std::min(1.f, static_cast<float>(Social::getLevel()) / 10.f);
-            speed += ((dt * (1.f - MinBarSpeed)) * increase);
+            if (terrainID == TerrainID::Green
+                && m_sharedData.showPuttingPower)
+            {
+                //speed /= SpeedReduction;
+                speed *= 0.95f;
+            }
+            else
+            {
+                float increase = std::min(1.f, static_cast<float>(Social::getLevel()) / 10.f);
+                speed += ((dt * (1.f - MinBarSpeed)) * increase);
+            }
 
             m_hook = std::min(1.f, std::max(0.f, m_hook + ((speed * m_powerbarDirection))));
 

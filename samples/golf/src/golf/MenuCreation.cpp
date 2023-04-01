@@ -1536,7 +1536,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
             auto pos = e.getComponent<cro::Transform>().getPosition();
 
             pos.x -= 20.f * dt;
-            pos.y = 16.f;
+            pos.y = 17.f;
             pos.z = 0.3f;
 
             static constexpr float Offset = 150.f;
@@ -3071,7 +3071,7 @@ void MenuState::addCourseSelectButtons()
         checkboxEnt.addComponent<cro::Drawable2D>();
         checkboxEnt.addComponent<cro::Sprite>() = m_sprites[SpriteID::LobbyCheckbox];
         checkboxEnt.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement | CommandID::Menu::CourseSelect;
-        checkboxEnt.addComponent<UIElement>().absolutePosition = { -189.f, -85.f };
+        checkboxEnt.addComponent<UIElement>().absolutePosition = { -189.f, -86.f };
         checkboxEnt.getComponent<UIElement>().relativePosition = LobbyBackgroundPosition;
         checkboxEnt.getComponent<UIElement>().depth = 0.01f;
         checkboxEnt.getComponent<UIElement>().resizeCallback = resizeCallback;
@@ -3099,7 +3099,7 @@ void MenuState::addCourseSelectButtons()
         checkboxEnt.addComponent<cro::Sprite>() = m_sprites[SpriteID::LobbyCheckboxHighlight];
         checkboxEnt.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
         checkboxEnt.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement | CommandID::Menu::CourseSelect;
-        checkboxEnt.addComponent<UIElement>().absolutePosition = { -190.f, -86.f };
+        checkboxEnt.addComponent<UIElement>().absolutePosition = { -190.f, -87.f };
         checkboxEnt.getComponent<UIElement>().relativePosition = LobbyBackgroundPosition;
         checkboxEnt.getComponent<UIElement>().depth = 0.01f;
         checkboxEnt.getComponent<UIElement>().resizeCallback = resizeCallback;
@@ -3120,7 +3120,7 @@ void MenuState::addCourseSelectButtons()
         labelEnt.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
         labelEnt.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
         labelEnt.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement | CommandID::Menu::CourseSelect;
-        labelEnt.addComponent<UIElement>().absolutePosition = { -176.f, -77.f };
+        labelEnt.addComponent<UIElement>().absolutePosition = { -176.f, -79.f };
         labelEnt.getComponent<UIElement>().relativePosition = LobbyBackgroundPosition;
         labelEnt.getComponent<UIElement>().depth = 0.01f;
         labelEnt.getComponent<UIElement>().resizeCallback = resizeCallback;
@@ -3143,7 +3143,7 @@ void MenuState::addCourseSelectButtons()
         labelEnt.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
         labelEnt.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
         labelEnt.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement | CommandID::Menu::CourseSelect;
-        labelEnt.addComponent<UIElement>().absolutePosition = { 156.f, -77.f };
+        labelEnt.addComponent<UIElement>().absolutePosition = { 156.f, -79.f };
         labelEnt.getComponent<UIElement>().relativePosition = LobbyBackgroundPosition;
         labelEnt.getComponent<UIElement>().depth = 0.01f;
         labelEnt.getComponent<UIElement>().resizeCallback = resizeCallbackRight;
@@ -3161,7 +3161,7 @@ void MenuState::addCourseSelectButtons()
         labelEnt.addComponent<cro::Drawable2D>();
         labelEnt.addComponent<cro::Sprite>() = m_sprites[SpriteID::Envelope];
         labelEnt.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement | CommandID::Menu::CourseSelect;
-        labelEnt.addComponent<UIElement>().absolutePosition = { 138.f, -85.f };
+        labelEnt.addComponent<UIElement>().absolutePosition = { 138.f, -86.f };
         labelEnt.getComponent<UIElement>().relativePosition = LobbyBackgroundPosition;
         labelEnt.getComponent<UIElement>().depth = 0.01f;
         labelEnt.getComponent<UIElement>().resizeCallback = resizeCallbackRight;
@@ -3465,6 +3465,7 @@ void MenuState::updateCourseRuleString()
     };
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
+#ifdef USE_GNS
     //update ticker
     if (m_lobbyWindowEntities[LobbyEntityID::CourseTicker].isValid())
     {
@@ -3494,6 +3495,7 @@ void MenuState::updateCourseRuleString()
             m_lobbyWindowEntities[LobbyEntityID::CourseTicker].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
         }
     }
+#endif
 }
 
 void MenuState::updateUnlockedItems()

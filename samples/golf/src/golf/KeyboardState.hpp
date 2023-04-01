@@ -37,10 +37,11 @@ source distribution.
 
 #include <crogine/graphics/TextureResource.hpp>
 
+struct SharedStateData;
 class KeyboardState final : public cro::State
 {
 public:
-    KeyboardState(cro::StateStack&, cro::State::Context);
+    KeyboardState(cro::StateStack&, cro::State::Context, SharedStateData&);
 
     bool handleEvent(const cro::Event&) override;
 
@@ -55,7 +56,7 @@ public:
 private:
 
     cro::Scene m_scene;
-    cro::TextureResource m_textures;
+    SharedStateData& m_sharedData;
     cro::Entity m_keyboardEntity;
     cro::Entity m_highlightEntity;
 

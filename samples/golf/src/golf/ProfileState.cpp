@@ -182,8 +182,7 @@ bool ProfileState::handleEvent(const cro::Event& evt)
     else if (evt.type == SDL_CONTROLLERBUTTONUP)
     {
         cro::App::getWindow().setMouseCaptured(true);
-        if (evt.cbutton.button == cro::GameController::ButtonB
-            || evt.cbutton.button == cro::GameController::ButtonStart)
+        if (evt.cbutton.button == cro::GameController::ButtonB)
         {
             quitState();
             return false;
@@ -904,6 +903,7 @@ void ProfileState::buildPreviewScene()
     cam.viewport = { 0.f, 0.f, 1.f ,1.f };
 
     m_modelScene.getSunlight().getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, 96.f * cro::Util::Const::degToRad);
+    m_modelScene.getSunlight().getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -39.f * cro::Util::Const::degToRad);
 }
 
 void ProfileState::createProfileTexture(std::int32_t index)

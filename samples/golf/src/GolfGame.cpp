@@ -156,7 +156,7 @@ GolfGame::GolfGame()
     setApplicationStrings("Trederia", "golf");
 
     m_stateStack.registerState<SplashState>(StateID::SplashScreen, m_sharedData);
-    m_stateStack.registerState<KeyboardState>(StateID::Keyboard);
+    m_stateStack.registerState<KeyboardState>(StateID::Keyboard, m_sharedData);
     m_stateStack.registerState<NewsState>(StateID::News, m_sharedData);
     m_stateStack.registerState<MenuState>(StateID::Menu, m_sharedData, m_profileData);
     m_stateStack.registerState<ProfileState>(StateID::Profile, m_sharedData, m_profileData);
@@ -630,6 +630,7 @@ bool GolfGame::initialise()
     s.loadFromFile("assets/golf/sprites/controller_buttons.spt", m_sharedData.sharedResources->textures);
     s.loadFromFile("assets/golf/sprites/unlocks.spt", m_sharedData.sharedResources->textures);
     s.loadFromFile("assets/golf/sprites/tutorial.spt", m_sharedData.sharedResources->textures);
+    s.loadFromFile("assets/sprites/osk.spt", m_sharedData.sharedResources->textures);
 
     cro::ModelDefinition md(*m_sharedData.sharedResources);
     md.loadFromFile("assets/golf/models/trophies/trophy01.cmt");

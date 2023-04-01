@@ -28,6 +28,7 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include "KeyboardState.hpp"
+#include "SharedStateData.hpp"
 
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Drawable2D.hpp>
@@ -108,9 +109,10 @@ namespace
     static constexpr std::int32_t GridSize = GridX * GridY;
 }
 
-KeyboardState::KeyboardState(cro::StateStack& ss, cro::State::Context ctx)
+KeyboardState::KeyboardState(cro::StateStack& ss, cro::State::Context ctx, SharedStateData& sd)
     : cro::State    (ss, ctx),
     m_scene         (ctx.appInstance.getMessageBus()),
+    m_sharedData    (sd),
     m_activeLayout  (KeyboardLayout::Lower),
     m_selectedIndex (0)
 {
@@ -171,6 +173,7 @@ bool KeyboardState::handleEvent(const cro::Event& evt)
                 nextLayout();
                 break;
             case cro::GameController::ButtonStart:
+            case cro::GameController::ButtonBack:
                 quitState();
                 break;
             }
@@ -264,7 +267,7 @@ void KeyboardState::buildScene()
     m_scene.addSystem<cro::RenderSystem2D>(mb);
 
     cro::SpriteSheet spriteSheet;
-    spriteSheet.loadFromFile("assets/sprites/osk.spt", m_textures);
+    spriteSheet.loadFromFile("assets/sprites/osk.spt", m_sharedData.sharedResources->textures);
 
     cro::Entity entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>();

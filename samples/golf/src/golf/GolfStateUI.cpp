@@ -667,7 +667,8 @@ void GolfState::buildUI()
         if (vScaleTarget > 0)
         {
             //grow if not the first stroke (CPU players still need power prediction though)
-            if (m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].holeScores[m_currentHole] == 0)
+            if (m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].holeScores[m_currentHole] == 0
+                || !m_sharedData.showPuttingPower)
             {
                 scale.y = 0.f;
             }
@@ -946,7 +947,8 @@ void GolfState::buildUI()
         const float Speed = dt * 4.f;
         auto& currSize = e.getComponent<cro::Callback>().getUserData<float>();
         if (m_inputParser.getActive()
-            && !m_sharedData.localConnectionData.playerData[m_currentPlayer.player].isCPU)
+            && !m_sharedData.localConnectionData.playerData[m_currentPlayer.player].isCPU
+            && m_sharedData.showPuttingPower)
         {
             currSize = std::min(1.f, currSize + Speed);
             const float rotation = m_inputParser.getYaw();
@@ -2356,6 +2358,12 @@ void GolfState::showMessageBoard(MessageBoardID messageType, bool special)
             {
                 xp /= 5;
             }
+
+            if (m_sharedData.showPuttingPower)
+            {
+                xp /= 2;
+            }
+
             Social::awardXP(xp);
         }
 
