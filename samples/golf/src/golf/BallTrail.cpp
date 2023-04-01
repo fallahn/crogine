@@ -49,6 +49,7 @@ namespace
 
 BallTrail::BallTrail()
     : m_meshData    (nullptr),
+    m_baseColour    (1.f),
     m_front         (0),
     m_active        (false)
 {
@@ -78,11 +79,11 @@ void BallTrail::create(cro::Scene& scene, cro::ResourceCollection& resources, st
 
 void BallTrail::addPoint(glm::vec3 position)
 {
-    m_vertexData.emplace_back(position, glm::vec4(0.05f));
+    m_vertexData.emplace_back(position, m_baseColour);
 
     m_indices.push_back(static_cast<std::uint32_t>(m_indices.size()));
 
-    if (!m_active && m_indices.size() > 100)
+    if (!m_active && m_indices.size() > 120)
     {
         m_active = true;
     }
@@ -125,5 +126,17 @@ void BallTrail::update()
             glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh->indexCount * sizeof(std::uint32_t), m_indices.data() + m_front, GL_DYNAMIC_DRAW));
             glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
         }
+    }
+}
+
+void BallTrail::setUseBeaconColour(bool use)
+{
+    if (use)
+    {
+        m_baseColour = glm::vec4(0.8f, 0.f, 0.8f, 1.f);
+    }
+    else
+    {
+        m_baseColour = glm::vec4(0.08f);
     }
 }

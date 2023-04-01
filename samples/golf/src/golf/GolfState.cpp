@@ -1254,6 +1254,7 @@ void GolfState::handleMessage(const cro::Message& msg)
                 m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
                 m_emoteWheel.refreshLabels();
+                m_ballTrail.setUseBeaconColour(m_sharedData.trailBeaconColour);
             }
         }
     }
@@ -1338,7 +1339,7 @@ bool GolfState::simulate(float dt)
     m_waterEnt.getComponent<cro::Transform>().move(move * 10.f * dt);
 #endif
 
-    //m_ballTrail.update();
+    m_ballTrail.update();
 
     //this gets used a lot so we'll save on some calls to length()
     m_distanceToHole = glm::length(m_holeData[m_currentHole].pin - m_currentPlayer.position);
@@ -2284,7 +2285,8 @@ void GolfState::loadAssets()
     glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh->indexCount * sizeof(std::uint32_t), indices.data(), GL_STATIC_DRAW));
     glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
 
-    //m_ballTrail.create(m_gameScene, m_resources, m_materialIDs[MaterialID::PuttAssist]);
+    m_ballTrail.create(m_gameScene, m_resources, m_materialIDs[MaterialID::PuttAssist]);
+    m_ballTrail.setUseBeaconColour(m_sharedData.trailBeaconColour);
 
 
     //used when parsing holes
@@ -4718,12 +4720,11 @@ void GolfState::spawnBall(const ActorInfo& info)
                 e.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", c);
 
 
-                /*if (m_sharedData.showBallTrail
-                    && ballEnt.getComponent<ClientCollider>().state == static_cast<std::uint8_t>(Ball::State::Flight)
-                    && !ballEnt.getComponent<cro::Callback>().active)
+                if (m_sharedData.showBallTrail
+                    && ballEnt.getComponent<ClientCollider>().state == static_cast<std::uint8_t>(Ball::State::Flight))
                 {
                     m_ballTrail.addPoint(ballEnt.getComponent<cro::Transform>().getPosition());
-                }*/
+                }
             }
         }
     };

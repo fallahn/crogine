@@ -52,6 +52,8 @@ public:
 
     void update();
 
+    void setUseBeaconColour(bool);
+
 private:
 
     struct Vertex final
@@ -66,6 +68,7 @@ private:
     cro::Mesh::Data* m_meshData;
     std::vector<Vertex> m_vertexData;
     std::vector<std::uint32_t> m_indices;
+    glm::vec4 m_baseColour;
 
     std::size_t m_front;
     bool m_active;
