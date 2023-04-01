@@ -449,6 +449,7 @@
     <ClCompile Include="src\editor\BushState.cpp" />
     <ClCompile Include="src\golf\BallAnimationSystem.cpp" />
     <ClCompile Include="src\golf\BallSystem.cpp" />
+    <ClCompile Include="src\golf\BallTrail.cpp" />
     <ClCompile Include="src\golf\BilliardsClientCollision.cpp" />
     <ClCompile Include="src\golf\BilliardsInput.cpp" />
     <ClCompile Include="src\golf\BilliardsSoundDirector.cpp" />
@@ -541,6 +542,7 @@
     <ClInclude Include="src\ErrorCheck.hpp" />
     <ClInclude Include="src\golf\BallAnimationSystem.hpp" />
     <ClInclude Include="src\golf\BallSystem.hpp" />
+    <ClInclude Include="src\golf\BallTrail.hpp" />
     <ClInclude Include="src\golf\BeaconCallback.hpp" />
     <ClInclude Include="src\golf\Billboard.hpp" />
     <ClInclude Include="src\golf\BilliardsClientCollision.hpp" />

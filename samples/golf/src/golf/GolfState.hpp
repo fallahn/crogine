@@ -41,6 +41,7 @@ source distribution.
 #include "TerrainDepthmap.hpp"
 #include "TerrainChunks.hpp"
 #include "MinimapZoom.hpp"
+#include "BallTrail.hpp"
 #include "server/ServerPacketData.hpp"
 
 #include <crogine/core/State.hpp>
@@ -211,6 +212,7 @@ private:
         std::size_t ballMeshID = 0;
         std::size_t shadowMeshID = 0;
     }m_ballResources;
+    BallTrail m_ballTrail;
 
     std::string m_audioPath;
     cro::String m_courseTitle;

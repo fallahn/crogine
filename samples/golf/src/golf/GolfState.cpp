@@ -1338,6 +1338,8 @@ bool GolfState::simulate(float dt)
     m_waterEnt.getComponent<cro::Transform>().move(move * 10.f * dt);
 #endif
 
+    //m_ballTrail.update();
+
     //this gets used a lot so we'll save on some calls to length()
     m_distanceToHole = glm::length(m_holeData[m_currentHole].pin - m_currentPlayer.position);
 
@@ -1899,6 +1901,7 @@ void GolfState::loadAssets()
     m_resources.shaders.loadFromString(ShaderID::PuttAssist, WireframeVertex, WireframeFragment, "#define HUE\n");
     m_materialIDs[MaterialID::PuttAssist] = m_resources.materials.add(m_resources.shaders.get(ShaderID::PuttAssist));
     m_resources.materials.get(m_materialIDs[MaterialID::PuttAssist]).blendMode = cro::Material::BlendMode::Additive;
+    m_resources.materials.get(m_materialIDs[MaterialID::PuttAssist]).setProperty("u_colourRotation", m_sharedData.beaconColour);
 
     //minimap - green overhead
     m_resources.shaders.loadFromString(ShaderID::Minimap, MinimapVertex, MinimapFragment);
@@ -2280,6 +2283,9 @@ void GolfState::loadAssets()
     glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->ibo));
     glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh->indexCount * sizeof(std::uint32_t), indices.data(), GL_STATIC_DRAW));
     glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
+
+    //m_ballTrail.create(m_gameScene, m_resources, m_materialIDs[MaterialID::PuttAssist]);
+
 
     //used when parsing holes
     auto addCrowd = [&](HoleData& holeData, glm::vec3 position, glm::vec3 lookAt, float rotation)
@@ -4710,6 +4716,14 @@ void GolfState::spawnBall(const ActorInfo& info)
                 e.getComponent<cro::Transform>().setPosition({ 0.f, ballPos.y, 0.f });
                 e.getComponent<cro::Model>().setHidden((m_currentPlayer.terrain == TerrainID::Green) || ballEnt.getComponent<cro::Model>().isHidden());
                 e.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", c);
+
+
+                /*if (m_sharedData.showBallTrail
+                    && ballEnt.getComponent<ClientCollider>().state == static_cast<std::uint8_t>(Ball::State::Flight)
+                    && !ballEnt.getComponent<cro::Callback>().active)
+                {
+                    m_ballTrail.addPoint(ballEnt.getComponent<cro::Transform>().getPosition());
+                }*/
             }
         }
     };
@@ -6236,7 +6250,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     cmd.targetFlags = CommandID::SlopeIndicator;
     cmd.action = [&,player](cro::Entity e, float)
     {
-        bool hidden = ((player.terrain != TerrainID::Green)/* && m_distanceToHole > 15.f*/) || m_holeData[m_currentHole].puttFromTee;
+        bool hidden = ((player.terrain != TerrainID::Green) /*&& m_distanceToHole > Clubs[ClubID::GapWedge].getBaseTarget()*/) || m_holeData[m_currentHole].puttFromTee;
 
         if (!hidden)
         {

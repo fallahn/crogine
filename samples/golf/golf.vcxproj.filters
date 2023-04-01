@@ -342,6 +342,9 @@
     <ClCompile Include="src\golf\PlayerData.cpp">
       <Filter>Source Files\golf\client</Filter>
     </ClCompile>
+    <ClCompile Include="src\golf\BallTrail.cpp">
+      <Filter>Source Files\golf\client</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ErrorCheck.hpp">
@@ -691,6 +694,9 @@
     </ClInclude>
     <ClInclude Include="src\golf\SharedProfileData.hpp">
       <Filter>Header Files\golf</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\BallTrail.hpp">
+      <Filter>Header Files\golf\client</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
