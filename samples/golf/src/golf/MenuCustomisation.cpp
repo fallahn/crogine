@@ -33,6 +33,7 @@ source distribution.
 #include "CommonConsts.hpp"
 #include "spooky2.hpp"
 #include "BallSystem.hpp"
+#include "CallbackData.hpp"
 
 #include <Social.hpp>
 
@@ -43,6 +44,7 @@ source distribution.
 
 #include <crogine/gui/Gui.hpp>
 #include <crogine/util/Random.hpp>
+#include <crogine/util/Maths.hpp>
 
 namespace
 {
@@ -836,6 +838,58 @@ void MenuState::createAvatarScene()
                 }
             }
         }
+
+        //we add the animation here as we need to captuer the index which may have
+        //changed between loading the model and erasing invalid avatars
+        auto entity = m_playerAvatars[i].previewModel;
+        entity.addComponent<cro::Callback>().setUserData<AvatarAnimCallbackData>();
+        entity.getComponent<cro::Callback>().function =
+            [&,i](cro::Entity e, float dt) mutable
+        {
+            const float Speed = dt * 4.f;
+
+            auto& [direction, progress] = e.getComponent<cro::Callback>().getUserData<AvatarAnimCallbackData>();
+            if (direction == 0)
+            {
+                //grow
+                progress = std::min(1.f, progress + Speed);
+                if (progress == 1)
+                {
+                    direction = 1;
+                    e.getComponent<cro::Callback>().active = false;
+                }
+
+                e.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, cro::Util::Const::TAU * progress);
+            }
+            else
+            {
+                //shrink
+                progress = std::max(0.f, progress - (Speed /** 2.f*/));
+                if (progress == 0)
+                {
+                    direction = 0;
+                    e.getComponent<cro::Callback>().active = false;
+
+                    e.getComponent<cro::Model>().setHidden(true);
+
+                    //hide hair model if it's attached
+                    if (m_playerAvatars[i].hairAttachment != nullptr
+                        && m_playerAvatars[i].hairAttachment->getModel().isValid())
+                    {
+                        m_playerAvatars[i].hairAttachment->getModel().getComponent<cro::Model>().setHidden(true);
+                    }
+                }
+
+                e.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, (cro::Util::Const::TAU * progress) + cro::Util::Const::TAU);
+            }
+
+            auto scale = e.getComponent<cro::Transform>().getScale();
+            auto facing = cro::Util::Maths::sgn(scale.x);
+            scale = { progress * facing, /*progress*/1.f, progress };
+            e.getComponent<cro::Transform>().setScale(scale);
+
+            
+        };
     }
 }
 

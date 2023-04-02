@@ -32,6 +32,7 @@ source distribution.
 #include "MenuConsts.hpp"
 #include "CommandIDs.hpp"
 #include "PacketIDs.hpp"
+#include "CallbackData.hpp"
 #include "Clubs.hpp"
 #include "TextAnimCallback.hpp"
 #include "../ErrorCheck.hpp"
@@ -316,19 +317,19 @@ void MenuState::createAvatarMenu(cro::Entity parent)
 
         for (auto& e : m_playerAvatars)
         {
-            e.previewModel.getComponent<cro::Transform>().setScale(glm::vec3(0.f));
-            if(e.hairAttachment != nullptr
-                && e.hairAttachment->getModel().isValid())
+            if (e.previewModel.getComponent<cro::Callback>().getUserData<AvatarAnimCallbackData>().direction == 1)
             {
-                e.hairAttachment->getModel().getComponent<cro::Model>().setHidden(true);
+                e.previewModel.getComponent<cro::Callback>().active = true;
             }
         }
         auto idx = indexFromAvatarID(profile.skinID);
-        m_playerAvatars[idx].previewModel.getComponent<cro::Transform>().setScale(glm::vec3(profile.flipped ? -1.f : 1.f, 1.f, 1.f));
+        m_playerAvatars[idx].previewModel.getComponent<cro::Transform>().setScale(glm::vec3(profile.flipped ? -0.001f : 0.001f, 0.f, 0.f)); //callback needs to know which way to face
         m_playerAvatars[idx].previewModel.getComponent<cro::Model>().setFacing(profile.flipped ? cro::Model::Facing::Back : cro::Model::Facing::Front);
+        m_playerAvatars[idx].previewModel.getComponent<cro::Callback>().active = true;
 
         //use profile ID to set model texture
         m_playerAvatars[idx].previewModel.getComponent<cro::Model>().setMaterialProperty(0, "u_diffuseMap", m_profileTextures[profileIndex].getTexture());
+        m_playerAvatars[idx].previewModel.getComponent<cro::Model>().setHidden(false);
 
         if (m_profileTextures[profileIndex].getMugshot())
         {

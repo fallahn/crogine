@@ -109,7 +109,7 @@ static const std::array<std::string, AchievementID::Count> AchievementStrings =
     "course10_complete",
     "course_01_par",
     "course_02_par",
-    "course_30_par",
+    "course_03_par",
     "course_04_par",
     "course_05_par",
     "course_06_par",
