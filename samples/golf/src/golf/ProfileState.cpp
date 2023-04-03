@@ -101,6 +101,8 @@ ProfileState::ProfileState(cro::StateStack& ss, cro::State::Context ctx, SharedS
     m_sharedData        (sd),
     m_profileData       (sp),
     m_viewScale         (2.f),
+    m_ballIndex         (0),
+    m_ballHairIndex     (0),
     m_avatarIndex       (0)
 {
     ctx.mainWindow.setMouseCaptured(false);
@@ -788,7 +790,23 @@ void ProfileState::buildScene()
             {
                 if (activated(evt))
                 {
+                    //might be bald
+                    if (m_ballHairModels[m_ballHairIndex].isValid())
+                    {
+                        m_ballModels[m_ballIndex].root.getComponent<cro::Transform>().removeChild(m_ballHairModels[m_ballHairIndex].getComponent<cro::Transform>());
+                    }
+                    m_ballModels[m_ballIndex].ball.getComponent<cro::Model>().setHidden(true);
 
+                    m_ballIndex = (m_ballIndex + (m_ballModels.size() - 1)) % m_ballModels.size();
+
+                    if (m_ballHairModels[m_ballHairIndex].isValid())
+                    {
+                        m_ballModels[m_ballIndex].root.getComponent<cro::Transform>().addChild(m_ballHairModels[m_ballHairIndex].getComponent<cro::Transform>());
+                    }
+                    m_ballModels[m_ballIndex].ball.getComponent<cro::Model>().setHidden(false);
+
+                    m_activeProfile.ballID = m_sharedData.ballInfo[m_ballIndex].uid;
+                    m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
                 }
             });
     auto ballRight = createButton("arrow_right", glm::vec2(440.f, 110.f));
@@ -797,7 +815,23 @@ void ProfileState::buildScene()
             {
                 if (activated(evt))
                 {
+                    //might be bald
+                    if (m_ballHairModels[m_ballHairIndex].isValid())
+                    {
+                        m_ballModels[m_ballIndex].root.getComponent<cro::Transform>().removeChild(m_ballHairModels[m_ballHairIndex].getComponent<cro::Transform>());
+                    }
+                    m_ballModels[m_ballIndex].ball.getComponent<cro::Model>().setHidden(true);
 
+                    m_ballIndex = (m_ballIndex + 1) % m_ballModels.size();
+
+                    if (m_ballHairModels[m_ballHairIndex].isValid())
+                    {
+                        m_ballModels[m_ballIndex].root.getComponent<cro::Transform>().addChild(m_ballHairModels[m_ballHairIndex].getComponent<cro::Transform>());
+                    }
+                    m_ballModels[m_ballIndex].ball.getComponent<cro::Model>().setHidden(false);
+
+                    m_activeProfile.ballID = m_sharedData.ballInfo[m_ballIndex].uid;
+                    m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
                 }
             });
 
@@ -914,12 +948,11 @@ void ProfileState::buildScene()
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({bounds.width / 2.f, 14.f, 0.1f});
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(smallFont);// .setString(XboxString);
+    entity.addComponent<cro::Text>(smallFont);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
     entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
     entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
-    //centreText(entity);
     bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     m_helpText = entity;
 
@@ -969,7 +1002,7 @@ void ProfileState::buildPreviewScene()
     for (auto& ballDef : m_profileData.ballDefs)
     {
         auto entity = m_modelScene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition({ 10.f, 0.f, 0.f });
+        entity.addComponent<cro::Transform>();
         ballDef.createModel(entity);
         entity.getComponent<cro::Model>().setHidden(true);
         entity.getComponent<cro::Model>().setMaterial(0, m_profileData.profileMaterials.ball);
@@ -996,7 +1029,11 @@ void ProfileState::buildPreviewScene()
         }
         ++i;
 
-        m_ballModels.push_back(entity);
+        auto& preview = m_ballModels.emplace_back();
+        preview.ball = entity;
+        preview.root = m_modelScene.createEntity();
+        preview.root.addComponent<cro::Transform>().setPosition({ 10.f, 0.f, 0.f });
+        preview.root.getComponent<cro::Transform>().addChild(preview.ball.getComponent<cro::Transform>());
     }
 
     for (auto& avatar : m_profileData.avatarDefs)
@@ -1057,7 +1094,9 @@ void ProfileState::buildPreviewScene()
 
     m_avatarIndex = indexFromAvatarID(m_activeProfile.skinID);
     m_avatarModels[m_avatarIndex].previewModel.getComponent<cro::Model>().setHidden(false);
-    m_ballModels[indexFromBallID(m_activeProfile.ballID)].getComponent<cro::Model>().setHidden(false);
+
+    m_ballIndex = indexFromBallID(m_activeProfile.ballID);
+    m_ballModels[m_ballIndex].ball.getComponent<cro::Model>().setHidden(false);
 
     if (m_avatarModels[m_avatarIndex].hairAttachment != nullptr)
     {

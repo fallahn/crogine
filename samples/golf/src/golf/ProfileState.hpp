@@ -42,9 +42,15 @@ source distribution.
 struct SharedStateData;
 struct SharedProfileData;
 
+struct BallPreview final
+{
+    cro::Entity root;
+    cro::Entity ball;
+};
+
 struct AvatarPreview final
 {
-    std::size_t hairIndex = 0;
+    std::size_t hairIndex = 0; //TODO this doesn't really need to be per model...
     cro::Attachment* hairAttachment = nullptr;
     cro::Entity previewModel;
 };
@@ -95,12 +101,16 @@ private:
     cro::Entity m_avatarCam;
     cro::Entity m_ballCam;
 
-    std::vector<cro::Entity> m_ballModels;
+    std::vector<BallPreview> m_ballModels;
+    std::vector<cro::Entity> m_ballHairModels;
+    std::size_t m_ballIndex;
+    std::size_t m_ballHairIndex;
+
     std::vector<AvatarPreview> m_avatarModels;
     std::vector<cro::Entity> m_avatarHairModels;
-    std::vector<cro::Entity> m_ballHairModels;
-    std::vector<ProfileTexture> m_profileTextures;
     std::size_t m_avatarIndex;
+
+    std::vector<ProfileTexture> m_profileTextures;
 
     void addSystems();
     void loadResources();
