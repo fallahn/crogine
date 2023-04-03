@@ -317,8 +317,10 @@ void MenuState::createAvatarMenu(cro::Entity parent)
 
         for (auto& e : m_playerAvatars)
         {
-            if (e.previewModel.getComponent<cro::Callback>().getUserData<AvatarAnimCallbackData>().direction == 1)
+            //if (e.previewModel.getComponent<cro::Callback>().getUserData<AvatarAnimCallbackData>().direction == 1)
             {
+                e.previewModel.getComponent<cro::Callback>().getUserData<AvatarAnimCallbackData>().direction = 1;
+                e.previewModel.getComponent<cro::Callback>().getUserData<AvatarAnimCallbackData>().progress = 1.f;
                 e.previewModel.getComponent<cro::Callback>().active = true;
             }
         }
@@ -326,6 +328,8 @@ void MenuState::createAvatarMenu(cro::Entity parent)
         m_playerAvatars[idx].previewModel.getComponent<cro::Transform>().setScale(glm::vec3(profile.flipped ? -0.001f : 0.001f, 0.f, 0.f)); //callback needs to know which way to face
         m_playerAvatars[idx].previewModel.getComponent<cro::Model>().setFacing(profile.flipped ? cro::Model::Facing::Back : cro::Model::Facing::Front);
         m_playerAvatars[idx].previewModel.getComponent<cro::Callback>().active = true;
+        m_playerAvatars[idx].previewModel.getComponent<cro::Callback>().getUserData<AvatarAnimCallbackData>().direction = 0;
+        m_playerAvatars[idx].previewModel.getComponent<cro::Callback>().getUserData<AvatarAnimCallbackData>().progress = 0.f;
 
         //use profile ID to set model texture
         m_playerAvatars[idx].previewModel.getComponent<cro::Model>().setMaterialProperty(0, "u_diffuseMap", m_profileTextures[profileIndex].getTexture());

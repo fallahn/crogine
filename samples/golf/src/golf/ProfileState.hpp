@@ -44,6 +44,7 @@ struct SharedProfileData;
 
 struct AvatarPreview final
 {
+    std::size_t hairIndex = 0;
     cro::Attachment* hairAttachment = nullptr;
     cro::Entity previewModel;
 };
@@ -70,6 +71,8 @@ private:
     SharedStateData& m_sharedData;
     SharedProfileData& m_profileData;
 
+    PlayerData m_activeProfile;
+
     cro::RenderTexture m_avatarTexture;
     cro::RenderTexture m_ballTexture;
 
@@ -93,8 +96,10 @@ private:
 
     std::vector<cro::Entity> m_ballModels;
     std::vector<AvatarPreview> m_avatarModels;
-    std::vector<cro::Entity> m_hairModels;
+    std::vector<cro::Entity> m_avatarHairModels;
+    std::vector<cro::Entity> m_ballHairModels;
     std::vector<ProfileTexture> m_profileTextures;
+    std::size_t m_avatarIndex;
 
     void addSystems();
     void loadResources();
@@ -103,8 +108,9 @@ private:
     void createProfileTexture(std::int32_t);
     void quitState();
 
-    std::size_t indexFromAvatarID(std::uint32_t);
-    std::size_t indexFromBallID(std::uint32_t);
+    std::size_t indexFromAvatarID(std::uint32_t) const;
+    std::size_t indexFromBallID(std::uint32_t) const;
+    std::size_t indexFromHairID(std::uint32_t) const;
 
 
     struct TextEdit final
