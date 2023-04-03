@@ -36,6 +36,7 @@ source distribution.
 #include "MessageIDs.hpp"
 #include "BallSystem.hpp"
 #include "SharedProfileData.hpp"
+#include "CallbackData.hpp"
 #include "../GolfGame.hpp"
 
 #include <crogine/core/Window.hpp>
@@ -661,7 +662,9 @@ void ProfileState::buildScene()
                     {
                         m_avatarModels[m_avatarIndex].hairAttachment->setModel({});
                     }
-                    m_avatarModels[m_avatarIndex].previewModel.getComponent<cro::Model>().setHidden(true);
+                    //m_avatarModels[m_avatarIndex].previewModel.getComponent<cro::Model>().setHidden(true);
+                    m_avatarModels[m_avatarIndex].previewModel.getComponent<cro::Callback>().active = true;
+                    m_avatarModels[m_avatarIndex].previewModel.getComponent<cro::Callback>().getUserData<AvatarAnimCallbackData>().direction = 1;
 
                     m_avatarIndex = (m_avatarIndex + (m_avatarModels.size() - 1)) % m_avatarModels.size();
 
@@ -671,6 +674,8 @@ void ProfileState::buildScene()
                         m_avatarModels[m_avatarIndex].hairIndex = hairIdx;
                     }
                     m_avatarModels[m_avatarIndex].previewModel.getComponent<cro::Model>().setHidden(false);
+                    m_avatarModels[m_avatarIndex].previewModel.getComponent<cro::Callback>().active = true;
+                    m_avatarModels[m_avatarIndex].previewModel.getComponent<cro::Callback>().getUserData<AvatarAnimCallbackData>().direction = 0;
 
                     m_activeProfile.skinID = m_sharedData.avatarInfo[m_avatarIndex].uid;
 
@@ -688,7 +693,9 @@ void ProfileState::buildScene()
                     {
                         m_avatarModels[m_avatarIndex].hairAttachment->setModel({});
                     }
-                    m_avatarModels[m_avatarIndex].previewModel.getComponent<cro::Model>().setHidden(true);
+                    //m_avatarModels[m_avatarIndex].previewModel.getComponent<cro::Model>().setHidden(true);
+                    m_avatarModels[m_avatarIndex].previewModel.getComponent<cro::Callback>().active = true;
+                    m_avatarModels[m_avatarIndex].previewModel.getComponent<cro::Callback>().getUserData<AvatarAnimCallbackData>().direction = 1;
 
                     m_avatarIndex = (m_avatarIndex + 1) % m_avatarModels.size();
 
@@ -698,6 +705,8 @@ void ProfileState::buildScene()
                         m_avatarModels[m_avatarIndex].hairIndex = hairIdx;
                     }
                     m_avatarModels[m_avatarIndex].previewModel.getComponent<cro::Model>().setHidden(false);
+                    m_avatarModels[m_avatarIndex].previewModel.getComponent<cro::Callback>().active = true;
+                    m_avatarModels[m_avatarIndex].previewModel.getComponent<cro::Callback>().getUserData<AvatarAnimCallbackData>().direction = 0;
 
                     m_activeProfile.skinID = m_sharedData.avatarInfo[m_avatarIndex].uid;
 
@@ -1064,6 +1073,46 @@ void ProfileState::buildPreviewScene()
         applyMaterialData(avatar, material);
         entity.getComponent<cro::Model>().setMaterial(0, material);
 
+        entity.addComponent<cro::Callback>().setUserData<AvatarAnimCallbackData>();
+        entity.getComponent<cro::Callback>().function =
+            [&](cro::Entity e, float dt)
+        {
+            auto& [direction, progress] = e.getComponent<cro::Callback>().getUserData<AvatarAnimCallbackData>();
+            const float Speed = dt * 4.f;
+            float rotation = 0.f; //hmm would be nice to rotate in the direction of the index change...
+
+            if (direction == 0)
+            {
+                //grow
+                progress = std::min(1.f, progress + Speed);
+                rotation = -cro::Util::Const::TAU + (cro::Util::Const::TAU * progress);
+
+                if (progress == 1)
+                {
+                    e.getComponent<cro::Callback>().active = false;
+                }
+            }
+            else
+            {
+                //shrink
+                progress = std::max(0.f, progress - Speed);
+                rotation = cro::Util::Const::TAU * (1.f - progress);
+
+                if (progress == 0)
+                {
+                    e.getComponent<cro::Callback>().active = false;
+                    e.getComponent<cro::Model>().setHidden(true);
+                }
+            }
+
+            glm::vec3 scale(progress, 1.f, progress);
+            e.getComponent<cro::Transform>().setScale(scale);
+
+            //TODO we want to add initial rotation here ideally...
+            //however it's not easily extractable from the orientation.
+            e.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, rotation);
+        };
+
         auto& avt = m_avatarModels.emplace_back();
         avt.previewModel = entity;
 
@@ -1121,6 +1170,7 @@ void ProfileState::buildPreviewScene()
 
     m_avatarIndex = indexFromAvatarID(m_activeProfile.skinID);
     m_avatarModels[m_avatarIndex].previewModel.getComponent<cro::Model>().setHidden(false);
+    m_avatarModels[m_avatarIndex].previewModel.getComponent<cro::Callback>().active = true;
 
     m_ballIndex = indexFromBallID(m_activeProfile.ballID);
     m_ballModels[m_ballIndex].ball.getComponent<cro::Transform>().setScale(glm::vec3(1.f));// getComponent<cro::Model>().setHidden(false);
