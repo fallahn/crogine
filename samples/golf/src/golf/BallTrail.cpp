@@ -48,10 +48,8 @@ namespace
 }
 
 BallTrail::BallTrail()
-    : m_meshData    (nullptr),
-    m_baseColour    (1.f),
-    m_front         (0),
-    m_active        (false)
+    : m_bufferIndex (0),
+    m_baseColour    (1.f)
 {
 
 }
@@ -59,72 +57,89 @@ BallTrail::BallTrail()
 //public
 void BallTrail::create(cro::Scene& scene, cro::ResourceCollection& resources, std::int32_t materialID)
 {
-    auto meshID = resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_LINE_STRIP));
 
     auto material = resources.materials.get(materialID);
     material.enableDepthTest = false;
     material.blendMode = cro::Material::BlendMode::Additive;
-    auto meshData = resources.meshes.getMesh(meshID);
-    meshData.boundingBox = { glm::vec3(0.f), glm::vec3(320.f, 100.f, -200.f) };
-    meshData.boundingSphere = meshData.boundingBox;
+    
+    
+    for (auto i = 0u; i < BufferCount; ++i)
+    {
+        auto meshID = resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_LINE_STRIP));
+        auto meshData = resources.meshes.getMesh(meshID);
+        meshData.boundingBox = { glm::vec3(0.f), glm::vec3(320.f, 100.f, -200.f) };
+        meshData.boundingSphere = meshData.boundingBox;
 
-    auto entity = scene.createEntity();
-    entity.addComponent<cro::Transform>();
-    entity.addComponent<cro::Model>(meshData, material);
-    entity.addComponent<cro::CommandTarget>().ID = CommandID::BeaconColour;
-    entity.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniGreen | RenderFlags::MiniMap));
+        auto entity = scene.createEntity();
+        entity.addComponent<cro::Transform>();
+        entity.addComponent<cro::Model>(meshData, material);
+        entity.addComponent<cro::CommandTarget>().ID = CommandID::BeaconColour;
+        entity.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniGreen | RenderFlags::MiniMap));
 
-    m_meshData = &entity.getComponent<cro::Model>().getMeshData();
+        m_trails[i].meshData = &entity.getComponent<cro::Model>().getMeshData();
+    }
+}
+
+void BallTrail::setNext()
+{
+    m_bufferIndex = (m_bufferIndex + 1) % BufferCount;
 }
 
 void BallTrail::addPoint(glm::vec3 position)
 {
-    m_vertexData.emplace_back(position, m_baseColour);
+    m_trails[m_bufferIndex].vertexData.emplace_back(position, m_baseColour);
 
-    m_indices.push_back(static_cast<std::uint32_t>(m_indices.size()));
+    m_trails[m_bufferIndex].indices.push_back(static_cast<std::uint32_t>(m_trails[m_bufferIndex].indices.size()));
 
-    if (!m_active && m_indices.size() > 120)
+    if (!m_trails[m_bufferIndex].active && m_trails[m_bufferIndex].indices.size() > 120)
     {
-        m_active = true;
+        m_trails[m_bufferIndex].active = true;
+
+        //TODO track parent entity and set to shown
     }
 }
 
 void BallTrail::update()
 {
-    if (m_active)
+    for (auto& trail : m_trails)
     {
-        m_front++;
-    }
-
-    if (!m_vertexData.empty())
-    {
-        if (m_front >= m_indices.size())
+        if (trail.active)
         {
-            m_front = 0;
-            m_vertexData.clear();
-            m_indices.clear();
-            m_active = false;
-
-            auto* submesh = &m_meshData->indexData[0];
-            submesh->indexCount = m_indices.size() - m_front;
-            glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->ibo));
-            glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, 0, nullptr, GL_DYNAMIC_DRAW));
-            glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
+            trail.front++;
         }
 
-        else
+        if (!trail.vertexData.empty())
         {
-            //TODO we could sub buffer this and only add what's new
-            m_meshData->vertexCount = m_indices.size();
-            glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_meshData->vbo));
-            glCheck(glBufferData(GL_ARRAY_BUFFER, m_meshData->vertexSize * m_meshData->vertexCount, m_vertexData.data(), GL_DYNAMIC_DRAW));
-            glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
+            if (trail.front >= trail.indices.size())
+            {
+                trail.front = 0;
+                trail.vertexData.clear();
+                trail.indices.clear();
+                trail.active = false;
 
-            auto* submesh = &m_meshData->indexData[0];
-            submesh->indexCount = m_indices.size() - m_front;
-            glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->ibo));
-            glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh->indexCount * sizeof(std::uint32_t), m_indices.data() + m_front, GL_DYNAMIC_DRAW));
-            glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
+                auto* submesh = &trail.meshData->indexData[0];
+                submesh->indexCount = trail.indices.size() - trail.front;
+                glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->ibo));
+                glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, 0, nullptr, GL_DYNAMIC_DRAW));
+                glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
+
+                //TODO track parent entity and set to hidden.
+            }
+
+            else
+            {
+                //TODO we could sub buffer this and only add what's new
+                trail.meshData->vertexCount = trail.indices.size();
+                glCheck(glBindBuffer(GL_ARRAY_BUFFER, trail.meshData->vbo));
+                glCheck(glBufferData(GL_ARRAY_BUFFER, trail.meshData->vertexSize * trail.meshData->vertexCount, trail.vertexData.data(), GL_DYNAMIC_DRAW));
+                glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
+
+                auto* submesh = &trail.meshData->indexData[0];
+                submesh->indexCount = trail.indices.size() - trail.front;
+                glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->ibo));
+                glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh->indexCount * sizeof(std::uint32_t), trail.indices.data() + trail.front, GL_DYNAMIC_DRAW));
+                glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
+            }
         }
     }
 }

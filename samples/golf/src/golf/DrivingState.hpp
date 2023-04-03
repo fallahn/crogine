@@ -35,6 +35,7 @@ source distribution.
 #include "HoleData.hpp"
 #include "Billboard.hpp"
 #include "GameConsts.hpp"
+#include "BallTrail.hpp"
 
 #include <crogine/core/Clock.hpp>
 #include <crogine/core/State.hpp>
@@ -107,6 +108,7 @@ private:
     cro::UniformBuffer<WindData> m_windBuffer;
 
     cro::Clock m_idleTimer;
+    BallTrail m_ballTrail;
 
     struct WindUpdate final
     {

@@ -679,6 +679,8 @@ void DrivingState::handleMessage(const cro::Message& msg)
                     e.getComponent<cro::Transform>().setOrigin({ bounds.width, 0.f });
                 };
                 m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+                m_ballTrail.setUseBeaconColour(m_sharedData.trailBeaconColour);
             }
         }
     }
@@ -697,6 +699,8 @@ void DrivingState::handleMessage(const cro::Message& msg)
 
 bool DrivingState::simulate(float dt)
 {
+    m_ballTrail.update();
+
     auto windDir = m_gameScene.getSystem<BallSystem>()->getWindDirection();
     updateWindDisplay(windDir);
 
@@ -2465,6 +2469,12 @@ void DrivingState::createBall()
 
         height -= ballPos.y;
         e.getComponent<cro::Transform>().setPosition({ 0.f, height + 0.003f, 0.f });
+
+        if (m_sharedData.showBallTrail
+            && ballEnt.getComponent<Ball>().state == Ball::State::Flight)
+        {
+            m_ballTrail.addPoint(ballEnt.getComponent<cro::Transform>().getPosition());
+        }
     };
     ballEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
@@ -2537,6 +2547,11 @@ void DrivingState::createBall()
             }
         };
     }
+
+
+    //init ball trail
+    m_ballTrail.create(m_gameScene, m_resources, m_materialIDs[MaterialID::Beacon]);
+    m_ballTrail.setUseBeaconColour(m_sharedData.trailBeaconColour);
 
 #ifdef CRO_DEBUG_
     ballEntity = ballEnt;

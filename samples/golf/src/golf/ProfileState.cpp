@@ -614,9 +614,16 @@ void ProfileState::buildScene()
                 if (activated(evt))
                 {
                     auto hairIndex = m_avatarModels[m_avatarIndex].hairIndex;
-                    m_avatarHairModels[hairIndex].getComponent<cro::Model>().setHidden(true);
+
+                    if (m_avatarHairModels[hairIndex].isValid())
+                    {
+                        m_avatarHairModels[hairIndex].getComponent<cro::Model>().setHidden(true);
+                    }
                     hairIndex = (hairIndex + (m_avatarHairModels.size() - 1)) % m_avatarHairModels.size();
-                    m_avatarHairModels[hairIndex].getComponent<cro::Model>().setHidden(false);
+                    if (m_avatarHairModels[hairIndex].isValid())
+                    {
+                        m_avatarHairModels[hairIndex].getComponent<cro::Model>().setHidden(false);
+                    }
 
                     if (m_avatarModels[m_avatarIndex].hairAttachment)
                     {
@@ -636,9 +643,15 @@ void ProfileState::buildScene()
                 if (activated(evt))
                 {
                     auto hairIndex = m_avatarModels[m_avatarIndex].hairIndex;
-                    m_avatarHairModels[hairIndex].getComponent<cro::Model>().setHidden(true);
+                    if (m_avatarHairModels[hairIndex].isValid())
+                    {
+                        m_avatarHairModels[hairIndex].getComponent<cro::Model>().setHidden(true);
+                    }
                     hairIndex = (hairIndex + 1) % m_avatarHairModels.size();
-                    m_avatarHairModels[hairIndex].getComponent<cro::Model>().setHidden(false);
+                    if (m_avatarHairModels[hairIndex].isValid())
+                    {
+                        m_avatarHairModels[hairIndex].getComponent<cro::Model>().setHidden(false);
+                    }
 
                     if (m_avatarModels[m_avatarIndex].hairAttachment)
                     {

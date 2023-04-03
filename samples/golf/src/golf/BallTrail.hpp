@@ -33,6 +33,7 @@ source distribution.
 #include <crogine/detail/glm/vec3.hpp>
 
 #include <vector>
+#include <array>
 
 namespace cro
 {
@@ -48,6 +49,7 @@ public:
 
     void create(cro::Scene&, cro::ResourceCollection&, std::int32_t);
 
+    void setNext();
     void addPoint(glm::vec3);
 
     void update();
@@ -65,11 +67,21 @@ private:
         Vertex(glm::vec3 pos, glm::vec4 colour) :p(pos), c(colour) {}
     };
 
-    cro::Mesh::Data* m_meshData;
-    std::vector<Vertex> m_vertexData;
-    std::vector<std::uint32_t> m_indices;
+
+    struct Trail final
+    {
+        std::vector<Vertex> vertexData;
+        std::vector<std::uint32_t> indices;
+        std::size_t front = 0;
+        bool active = false;
+        cro::Mesh::Data* meshData = nullptr;
+    };
+
+
+    static constexpr std::size_t BufferCount = 2;
+    std::array<Trail, BufferCount> m_trails = {};
+    std::size_t m_bufferIndex;
+
     glm::vec4 m_baseColour;
 
-    std::size_t m_front;
-    bool m_active;
 };
