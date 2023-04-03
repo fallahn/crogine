@@ -234,6 +234,7 @@ bool ProfileState::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_MOUSEBUTTONUP)
     {
+        updateHelpString(-1);
         if (evt.button.button == SDL_BUTTON_RIGHT)
         {
             quitState();
@@ -1003,7 +1004,7 @@ void ProfileState::buildPreviewScene()
     //this has all been parsed by the menu state - so we're assuming
     //all the models etc are fine and load without chicken
     std::int32_t i = 0;
-    static constexpr glm::vec3 BallPos({ 10.f, 0.001f, 0.f });
+    static constexpr glm::vec3 BallPos({ 10.f, 0.f, 0.f });
     for (auto& ballDef : m_profileData.ballDefs)
     {
         auto entity = m_modelScene.createEntity();
@@ -1040,14 +1041,21 @@ void ProfileState::buildPreviewScene()
         preview.root.addComponent<cro::Transform>().setPosition(BallPos);
         preview.root.getComponent<cro::Transform>().addChild(preview.ball.getComponent<cro::Transform>());
     }
+    
     auto entity = m_modelScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(BallPos);
     m_profileData.shadowDef->createModel(entity);
 
+    entity = m_modelScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(BallPos);
+    entity.getComponent<cro::Transform>().setScale(glm::vec3(5.f));
+    m_profileData.grassDef->createModel(entity);
+
+    static constexpr glm::vec3 AvatarPos({ CameraBasePosition.x, 0.f, 0.f });
     for (auto& avatar : m_profileData.avatarDefs)
     {
         auto entity = m_modelScene.createEntity();
-        entity.addComponent<cro::Transform>().setOrigin({ CameraBasePosition.x, 0.f, 0.f });
+        entity.addComponent<cro::Transform>().setOrigin(AvatarPos);
         entity.getComponent<cro::Transform>().setPosition(entity.getComponent<cro::Transform>().getOrigin());
         avatar.createModel(entity);
         entity.getComponent<cro::Model>().setHidden(true);
@@ -1077,9 +1085,14 @@ void ProfileState::buildPreviewScene()
     }
 
     entity = m_modelScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ CameraBasePosition.x, 0.001f, 0.f });
-    entity.getComponent<cro::Transform>().setScale(glm::vec3(20.f));
+    entity.addComponent<cro::Transform>().setPosition(AvatarPos + glm::vec3(0.f, 0.f, -0.08f));
+    entity.getComponent<cro::Transform>().setScale(glm::vec3(16.f));
     m_profileData.shadowDef->createModel(entity);
+
+    entity = m_modelScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(AvatarPos);
+    entity.getComponent<cro::Transform>().setScale(glm::vec3(60.f));
+    m_profileData.grassDef->createModel(entity);
     
 
     //space texture loading over the next few frames to reduce

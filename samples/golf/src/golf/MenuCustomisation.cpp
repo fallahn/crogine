@@ -321,10 +321,10 @@ void MenuState::createBallScene()
     //load each model for the preview in the player menu
     cro::ModelDefinition ballDef(m_resources);
     m_profileData.shadowDef = std::make_unique<cro::ModelDefinition>(m_resources);
-    cro::ModelDefinition grassDef(m_resources);
+    m_profileData.grassDef = std::make_unique<cro::ModelDefinition>(m_resources);
 
     auto shadow = m_profileData.shadowDef->loadFromFile("assets/golf/models/ball_shadow.cmt");
-    auto grass = grassDef.loadFromFile("assets/golf/models/ball_plane.cmt");
+    auto grass = m_profileData.grassDef->loadFromFile("assets/golf/models/ball_plane.cmt");
 
     std::vector<std::uint32_t> invalidBalls;
 
@@ -395,7 +395,7 @@ void MenuState::createBallScene()
                 entity = m_backgroundScene.createEntity();
                 entity.addComponent<cro::Transform>().setPosition({ 0.f, -0.001f, 0.f });
                 entity.getComponent<cro::Transform>().setScale(glm::vec3(5.f));
-                grassDef.createModel(entity);
+                m_profileData.grassDef->createModel(entity);
                 baseEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
                 entity.getComponent<cro::Model>().setRenderFlags(BallRenderFlags);
             }

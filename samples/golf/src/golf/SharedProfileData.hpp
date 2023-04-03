@@ -44,6 +44,7 @@ struct SharedProfileData final
     std::vector<cro::ModelDefinition> avatarDefs;
     std::vector<cro::ModelDefinition> hairDefs;
     std::unique_ptr<cro::ModelDefinition> shadowDef;
+    std::unique_ptr<cro::ModelDefinition> grassDef;
 
     struct
     {

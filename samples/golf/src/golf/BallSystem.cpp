@@ -1038,7 +1038,7 @@ void BallSystem::updateWind()
         m_windStrengthSrc = m_windStrength;
 
         m_currentWindInterpTime = 0.f;
-        m_windInterpTime = static_cast<float>(cro::Util::Random::value(50, 75)) / 10.f;
+        m_windInterpTime = static_cast<float>(cro::Util::Random::value(10, 25)) / 10.f;
     };
 
     //update wind direction

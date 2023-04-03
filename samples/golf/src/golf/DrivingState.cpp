@@ -2547,15 +2547,15 @@ void DrivingState::createBall()
 void DrivingState::createFlag()
 {
     cro::ModelDefinition md(m_resources);
-    md.loadFromFile("assets/golf/models/cup.cmt");
+    /*md.loadFromFile("assets/golf/models/cup.cmt");
     auto entity = m_gameScene.createEntity();
     entity.addComponent<cro::Transform>().setScale({ 1.1f, 1.f, 1.1f });
     md.createModel(entity);
 
-    auto holeEntity = entity;
+    auto holeEntity = entity;*/
 
     md.loadFromFile("assets/golf/models/flag.cmt");
-    entity = m_gameScene.createEntity();
+    auto entity = m_gameScene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Flag;
     entity.addComponent<float>() = 0.f;
@@ -2600,7 +2600,7 @@ void DrivingState::createFlag()
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Hole;
     entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), material);
     entity.addComponent<cro::Transform>().setPosition({ 0.f, -FlagCallbackData::MaxDepth, 0.f });
-    entity.getComponent<cro::Transform>().addChild(holeEntity.getComponent<cro::Transform>());
+    //entity.getComponent<cro::Transform>().addChild(holeEntity.getComponent<cro::Transform>());
     entity.getComponent<cro::Transform>().addChild(flagEntity.getComponent<cro::Transform>());
     entity.getComponent<cro::Transform>().addChild(beaconEntity.getComponent<cro::Transform>());
 
