@@ -85,6 +85,13 @@ namespace
 
     constexpr glm::uvec2 BallTexSize(110u, 110u);
     constexpr glm::uvec2 AvatarTexSize(130u, 202u);
+
+    constexpr glm::vec3 CameraBasePosition({ -0.867f, 1.325f, -1.68f });
+    constexpr glm::vec3 CameraZoomPosition({ -0.867f, 1.625f, -0.58f });
+    const glm::vec3 CameraZoomVector = glm::normalize(CameraZoomPosition - CameraBasePosition);
+
+    const cro::String XboxString("LB/LT - RB/RT Rotate/Zoom");
+    const cro::String PSString("L1/L2 - R1/R2 Rotate/Zoom");
 }
 
 ProfileState::ProfileState(cro::StateStack& ss, cro::State::Context ctx, SharedStateData& sd, SharedProfileData& sp)
@@ -143,6 +150,34 @@ bool ProfileState::handleEvent(const cro::Event& evt)
         return false;
     }
 
+    const auto updateHelpString = [&](std::int32_t controllerID)
+    {
+        if (controllerID > -1)
+        {
+            if (cro::GameController::hasPSLayout(controllerID))
+            {
+                m_helpText.getComponent<cro::Text>().setString(PSString);
+            }
+            else
+            {
+                m_helpText.getComponent<cro::Text>().setString(XboxString);
+            }
+        }
+        else
+        {
+            cro::String str(cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::Left]));
+            str += ", ";
+            str += cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::Right]);
+            str += ", ";
+            str += cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::Up]);
+            str += ", ";
+            str += cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::Down]);
+            str += " Rotate/Zoom";
+            m_helpText.getComponent<cro::Text>().setString(str);
+        }
+        centreText(m_helpText);
+    };
+
     if (evt.type == SDL_KEYUP)
     {
         if (evt.key.keysym.sym == SDLK_BACKSPACE
@@ -154,6 +189,10 @@ bool ProfileState::handleEvent(const cro::Event& evt)
                 quitState();
                 return false;
             }
+        }
+        else
+        {
+            updateHelpString(-1);
         }
     }
     else if (evt.type == SDL_KEYDOWN)
@@ -213,6 +252,8 @@ bool ProfileState::handleEvent(const cro::Event& evt)
         if (evt.caxis.value > LeftThumbDeadZone)
         {
             cro::App::getWindow().setMouseCaptured(true);
+
+            updateHelpString(cro::GameController::controllerID(evt.caxis.which));
         }
     }
     else if (evt.type == SDL_MOUSEMOTION)
@@ -249,6 +290,45 @@ void ProfileState::handleMessage(const cro::Message& msg)
 
 bool ProfileState::simulate(float dt)
 {
+    //rotate/zoom avatar
+    float rotation = 0.f;
+    
+    if (cro::GameController::isButtonPressed(0, cro::GameController::ButtonLeftShoulder)
+        || cro::Keyboard::isKeyPressed(m_sharedData.inputBinding.keys[InputBinding::Left]))
+    {
+        rotation -= dt;
+    }
+    if (cro::GameController::isButtonPressed(0, cro::GameController::ButtonRightShoulder)
+        || cro::Keyboard::isKeyPressed(m_sharedData.inputBinding.keys[InputBinding::Right]))
+    {
+        rotation += dt;
+    }
+    m_avatarModels[m_avatarIndex].previewModel.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, rotation);
+
+
+    float zoom = 0.f;
+    if(cro::GameController::getAxisPosition(0, cro::GameController::TriggerLeft) > TriggerDeadZone
+        || cro::Keyboard::isKeyPressed(m_sharedData.inputBinding.keys[InputBinding::Down]))
+    {
+        zoom -= dt;
+    }
+    if (cro::GameController::getAxisPosition(0, cro::GameController::TriggerRight) > TriggerDeadZone
+        || cro::Keyboard::isKeyPressed(m_sharedData.inputBinding.keys[InputBinding::Up]))
+    {
+        zoom += dt;
+    }
+    if (zoom != 0)
+    {
+        auto pos = m_avatarCam.getComponent<cro::Transform>().getPosition();
+        if (glm::dot(CameraZoomPosition - pos, CameraZoomVector) > zoom 
+            && glm::dot(CameraBasePosition - pos, CameraZoomVector) < zoom)
+        {
+            pos += CameraZoomVector * zoom;
+            m_avatarCam.getComponent<cro::Transform>().setPosition(pos);
+        }
+    }
+
+
     m_modelScene.simulate(dt);
     m_uiScene.simulate(dt);
     return true;
@@ -541,6 +621,8 @@ void ProfileState::buildScene()
                     m_avatarModels[m_avatarIndex].hairIndex = hairIndex;
 
                     m_activeProfile.hairID = m_sharedData.hairInfo[hairIndex].uid;
+
+                    m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
                 }
             });
     auto hairRight = createButton("arrow_right", glm::vec2(234.f, 156.f));
@@ -561,6 +643,8 @@ void ProfileState::buildScene()
                     m_avatarModels[m_avatarIndex].hairIndex = hairIndex;
 
                     m_activeProfile.hairID = m_sharedData.hairInfo[hairIndex].uid;
+
+                    m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
                 }
             });
     auto avatarLeft = createButton("arrow_left", glm::vec2(87.f, 110.f));
@@ -586,6 +670,8 @@ void ProfileState::buildScene()
                     m_avatarModels[m_avatarIndex].previewModel.getComponent<cro::Model>().setHidden(false);
 
                     m_activeProfile.skinID = m_sharedData.avatarInfo[m_avatarIndex].uid;
+
+                    m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
                 }
             });
     auto avatarRight = createButton("arrow_right", glm::vec2(234.f, 110.f));
@@ -611,6 +697,8 @@ void ProfileState::buildScene()
                     m_avatarModels[m_avatarIndex].previewModel.getComponent<cro::Model>().setHidden(false);
 
                     m_activeProfile.skinID = m_sharedData.avatarInfo[m_avatarIndex].uid;
+
+                    m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
                 }
             });
 
@@ -622,6 +710,7 @@ void ProfileState::buildScene()
                 if (activated(evt))
                 {
                     m_activeProfile.flipped = !m_activeProfile.flipped;
+                    m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
                 }
             });
     auto innerEnt = m_uiScene.createEntity();
@@ -818,6 +907,22 @@ void ProfileState::buildScene()
         bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     }
 
+
+    //help string
+    bounds = bgEnt.getComponent<cro::Sprite>().getTextureBounds();
+    auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({bounds.width / 2.f, 14.f, 0.1f});
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(smallFont);// .setString(XboxString);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+    entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
+    entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+    //centreText(entity);
+    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_helpText = entity;
+
     auto updateView = [&, rootNode](cro::Camera& cam) mutable
     {
         glm::vec2 size(GolfGame::getActiveTarget()->getSize());
@@ -897,7 +1002,8 @@ void ProfileState::buildPreviewScene()
     for (auto& avatar : m_profileData.avatarDefs)
     {
         auto entity = m_modelScene.createEntity();
-        entity.addComponent<cro::Transform>();
+        entity.addComponent<cro::Transform>().setOrigin({ CameraBasePosition.x, 0.f, 0.f });
+        entity.getComponent<cro::Transform>().setPosition(entity.getComponent<cro::Transform>().getOrigin());
         avatar.createModel(entity);
         entity.getComponent<cro::Model>().setHidden(true);
 
@@ -988,7 +1094,7 @@ void ProfileState::buildPreviewScene()
     ballTexCallback(m_ballCam.getComponent<cro::Camera>());
 
     m_avatarCam = m_modelScene.createEntity();
-    m_avatarCam.addComponent<cro::Transform>().setPosition({ -0.867f, 1.325f, -1.68f });
+    m_avatarCam.addComponent<cro::Transform>().setPosition(CameraBasePosition);
     m_avatarCam.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, cro::Util::Const::PI);
     m_avatarCam.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -0.157f);
     auto& cam = m_avatarCam.addComponent<cro::Camera>();

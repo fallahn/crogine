@@ -90,6 +90,7 @@ private:
 
     glm::vec2 m_viewScale;
     cro::Entity m_rootNode;
+    cro::Entity m_helpText;
 
     cro::Entity m_avatarCam;
     cro::Entity m_ballCam;
