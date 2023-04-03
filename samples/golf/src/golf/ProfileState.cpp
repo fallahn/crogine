@@ -795,7 +795,8 @@ void ProfileState::buildScene()
                     {
                         m_ballModels[m_ballIndex].root.getComponent<cro::Transform>().removeChild(m_ballHairModels[m_ballHairIndex].getComponent<cro::Transform>());
                     }
-                    m_ballModels[m_ballIndex].ball.getComponent<cro::Model>().setHidden(true);
+                    //m_ballModels[m_ballIndex].ball.getComponent<cro::Model>().setHidden(true); //some weird bug stops this working
+                    m_ballModels[m_ballIndex].ball.getComponent<cro::Transform>().setScale(glm::vec3(0.f));
 
                     m_ballIndex = (m_ballIndex + (m_ballModels.size() - 1)) % m_ballModels.size();
 
@@ -803,7 +804,8 @@ void ProfileState::buildScene()
                     {
                         m_ballModels[m_ballIndex].root.getComponent<cro::Transform>().addChild(m_ballHairModels[m_ballHairIndex].getComponent<cro::Transform>());
                     }
-                    m_ballModels[m_ballIndex].ball.getComponent<cro::Model>().setHidden(false);
+                    //m_ballModels[m_ballIndex].ball.getComponent<cro::Model>().setHidden(false);
+                    m_ballModels[m_ballIndex].ball.getComponent<cro::Transform>().setScale(glm::vec3(1.f));
 
                     m_activeProfile.ballID = m_sharedData.ballInfo[m_ballIndex].uid;
                     m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
@@ -820,7 +822,8 @@ void ProfileState::buildScene()
                     {
                         m_ballModels[m_ballIndex].root.getComponent<cro::Transform>().removeChild(m_ballHairModels[m_ballHairIndex].getComponent<cro::Transform>());
                     }
-                    m_ballModels[m_ballIndex].ball.getComponent<cro::Model>().setHidden(true);
+                    //m_ballModels[m_ballIndex].ball.getComponent<cro::Model>().setHidden(true);
+                    m_ballModels[m_ballIndex].ball.getComponent<cro::Transform>().setScale(glm::vec3(0.f));
 
                     m_ballIndex = (m_ballIndex + 1) % m_ballModels.size();
 
@@ -828,7 +831,8 @@ void ProfileState::buildScene()
                     {
                         m_ballModels[m_ballIndex].root.getComponent<cro::Transform>().addChild(m_ballHairModels[m_ballHairIndex].getComponent<cro::Transform>());
                     }
-                    m_ballModels[m_ballIndex].ball.getComponent<cro::Model>().setHidden(false);
+                    //m_ballModels[m_ballIndex].ball.getComponent<cro::Model>().setHidden(false);
+                    m_ballModels[m_ballIndex].ball.getComponent<cro::Transform>().setScale(glm::vec3(1.f));
 
                     m_activeProfile.ballID = m_sharedData.ballInfo[m_ballIndex].uid;
                     m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
@@ -999,12 +1003,13 @@ void ProfileState::buildPreviewScene()
     //this has all been parsed by the menu state - so we're assuming
     //all the models etc are fine and load without chicken
     std::int32_t i = 0;
+    static constexpr glm::vec3 BallPos({ 10.f, 0.001f, 0.f });
     for (auto& ballDef : m_profileData.ballDefs)
     {
         auto entity = m_modelScene.createEntity();
-        entity.addComponent<cro::Transform>();
+        entity.addComponent<cro::Transform>().setScale(glm::vec3(0.f));
         ballDef.createModel(entity);
-        entity.getComponent<cro::Model>().setHidden(true);
+        //entity.getComponent<cro::Model>().setHidden(true); //ugh there's some bug that stops this working but only for balls???
         entity.getComponent<cro::Model>().setMaterial(0, m_profileData.profileMaterials.ball);
         entity.addComponent<cro::Callback>().active = true;
 
@@ -1032,9 +1037,12 @@ void ProfileState::buildPreviewScene()
         auto& preview = m_ballModels.emplace_back();
         preview.ball = entity;
         preview.root = m_modelScene.createEntity();
-        preview.root.addComponent<cro::Transform>().setPosition({ 10.f, 0.f, 0.f });
+        preview.root.addComponent<cro::Transform>().setPosition(BallPos);
         preview.root.getComponent<cro::Transform>().addChild(preview.ball.getComponent<cro::Transform>());
     }
+    auto entity = m_modelScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(BallPos);
+    m_profileData.shadowDef->createModel(entity);
 
     for (auto& avatar : m_profileData.avatarDefs)
     {
@@ -1068,6 +1076,12 @@ void ProfileState::buildPreviewScene()
         }
     }
 
+    entity = m_modelScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ CameraBasePosition.x, 0.001f, 0.f });
+    entity.getComponent<cro::Transform>().setScale(glm::vec3(20.f));
+    m_profileData.shadowDef->createModel(entity);
+    
+
     //space texture loading over the next few frames to reduce
     //the time it takes blocking (we can't really multithread here)
     createProfileTexture(0);
@@ -1096,7 +1110,7 @@ void ProfileState::buildPreviewScene()
     m_avatarModels[m_avatarIndex].previewModel.getComponent<cro::Model>().setHidden(false);
 
     m_ballIndex = indexFromBallID(m_activeProfile.ballID);
-    m_ballModels[m_ballIndex].ball.getComponent<cro::Model>().setHidden(false);
+    m_ballModels[m_ballIndex].ball.getComponent<cro::Transform>().setScale(glm::vec3(1.f));// getComponent<cro::Model>().setHidden(false);
 
     if (m_avatarModels[m_avatarIndex].hairAttachment != nullptr)
     {
@@ -1124,12 +1138,12 @@ void ProfileState::buildPreviewScene()
         m_avatarTexture.create(size.x, size.y, true, false, /*samples*/0);
 
 
-        cam.setPerspective(1.f, static_cast<float>(BallTexSize.x) / BallTexSize.y, 0.001f, 2.f);
+        cam.setPerspective(1.1f, static_cast<float>(BallTexSize.x) / BallTexSize.y, 0.001f, 2.f);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
     m_ballCam = m_modelScene.getActiveCamera();
     m_ballCam.getComponent<cro::Camera>().resizeCallback = ballTexCallback;
-    m_ballCam.getComponent<cro::Transform>().setPosition({ 10.f, 0.045f, 0.095f });
+    m_ballCam.getComponent<cro::Transform>().setPosition({ 10.f, 0.045f, 0.099f });
     ballTexCallback(m_ballCam.getComponent<cro::Camera>());
 
     m_avatarCam = m_modelScene.createEntity();
