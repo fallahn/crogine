@@ -204,6 +204,8 @@ DrivingState::DrivingState(cro::StateStack& stack, cro::State::Context context, 
         addSystems();
         loadAssets();
         createScene();
+
+        cacheState(StateID::Pause);
     });
 
     Achievements::setActive(true);

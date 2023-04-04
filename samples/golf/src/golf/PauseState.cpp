@@ -90,6 +90,8 @@ PauseState::PauseState(cro::StateStack& ss, cro::State::Context ctx, SharedState
     ctx.mainWindow.setMouseCaptured(false);
 
     buildScene();
+
+    cacheState(StateID::Options);
 }
 
 //public
@@ -234,6 +236,8 @@ void PauseState::buildScene()
             if (currTime == 0)
             {
                 requestStackPop();
+
+                state = RootCallbackData::FadeIn;
 
                 if (m_requestRestart)
                 {
@@ -503,6 +507,8 @@ void PauseState::buildScene()
     entity.addComponent<cro::Camera>().resizeCallback = updateView;
     m_scene.setActiveCamera(entity);
     updateView(entity.getComponent<cro::Camera>());
+
+    m_scene.simulate(0.f);
 }
 
 void PauseState::quitState()

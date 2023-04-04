@@ -243,6 +243,8 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
         loadAssets();
         buildTrophyScene();
         buildScene();
+
+        cacheState(StateID::Pause);
         });
 
     createTransition();
