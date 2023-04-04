@@ -823,20 +823,20 @@ void GolfState::handleMessage(const cro::Message& msg)
                 m_activeAvatar->ballModel.getComponent<cro::Model>().setHidden(true);
 
                 //if particles are enabled, start them
-                if (m_sharedData.showBallTrail &&
-                    club < ClubID::GapWedge)
-                {
-                    auto& emitter = m_avatars[m_currentPlayer.client][m_currentPlayer.player].ballModel.getComponent<cro::ParticleEmitter>();
-                    if (m_sharedData.trailBeaconColour)
-                    {
-                        emitter.settings.colour = getBeaconColour(m_sharedData.beaconColour);
-                    }
-                    else
-                    {
-                        emitter.settings.colour = cro::Colour::White;
-                    }
-                    emitter.start();
-                }
+                //if (m_sharedData.showBallTrail &&
+                //    club < ClubID::GapWedge)
+                //{
+                //    auto& emitter = m_avatars[m_currentPlayer.client][m_currentPlayer.player].ballModel.getComponent<cro::ParticleEmitter>();
+                //    /*if (m_sharedData.trailBeaconColour)
+                //    {
+                //        emitter.settings.colour = getBeaconColour(m_sharedData.beaconColour);
+                //    }
+                //    else*/
+                //    {
+                //        emitter.settings.colour = cro::Colour::White;
+                //    }
+                //    emitter.start();
+                //}
 
 
                 //see if we're doing something silly like facing the camera

@@ -2820,7 +2820,7 @@ void DrivingState::hitBall()
             }
 
 
-            if (m_sharedData.showBallTrail)
+            /*if (m_sharedData.showBallTrail)
             {
                 if (m_sharedData.trailBeaconColour)
                 {
@@ -2831,7 +2831,7 @@ void DrivingState::hitBall()
                     e.getComponent<cro::ParticleEmitter>().settings.colour = cro::Colour::White;
                 }
                 e.getComponent<cro::ParticleEmitter>().start();
-            }
+            }*/
         }
     };
     m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);

@@ -49,7 +49,7 @@ namespace
 
 BallTrail::BallTrail()
     : m_bufferIndex (0),
-    m_baseColour    (1.f)
+    m_baseColour    (0.f)
 {
 
 }
@@ -148,7 +148,7 @@ void BallTrail::setUseBeaconColour(bool use)
 {
     if (use)
     {
-        m_baseColour = glm::vec4(0.8f, 0.f, 0.8f, 1.f);
+        m_baseColour = glm::vec4(0.2f, 0.f, 0.2f, 1.f);
     }
     else
     {
