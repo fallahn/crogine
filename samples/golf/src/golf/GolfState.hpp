@@ -185,7 +185,7 @@ private:
             Billboard,
             Trophy,
             Beacon,
-            PuttAssist,
+            BallTrail,
             Flag,
 
             Count

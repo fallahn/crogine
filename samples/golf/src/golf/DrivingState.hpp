@@ -133,6 +133,7 @@ private:
             Beacon,
             Horizon,
             Trophy,
+            BallTrail,
 
             Count
         };

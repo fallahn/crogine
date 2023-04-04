@@ -929,6 +929,11 @@ void DrivingState::loadAssets()
     m_resources.shaders.loadFromString(ShaderID::Horizon, HorizonVert, HorizonFrag);
     m_materialIDs[MaterialID::Horizon] = m_resources.materials.add(m_resources.shaders.get(ShaderID::Horizon));
 
+    m_resources.shaders.loadFromString(ShaderID::BallTrail, WireframeVertex, WireframeFragment, "#define HUE\n");
+    m_materialIDs[MaterialID::BallTrail] = m_resources.materials.add(m_resources.shaders.get(ShaderID::BallTrail));
+    m_resources.materials.get(m_materialIDs[MaterialID::BallTrail]).blendMode = cro::Material::BlendMode::Additive;
+    m_resources.materials.get(m_materialIDs[MaterialID::BallTrail]).setProperty("u_colourRotation", m_sharedData.beaconColour);
+
     //load the billboard rects from a sprite sheet and convert to templates
     cro::SpriteSheet spriteSheet;
     if (m_sharedData.treeQuality == SharedStateData::Classic)
@@ -2550,7 +2555,7 @@ void DrivingState::createBall()
 
 
     //init ball trail
-    m_ballTrail.create(m_gameScene, m_resources, m_materialIDs[MaterialID::Beacon]);
+    m_ballTrail.create(m_gameScene, m_resources, m_materialIDs[MaterialID::BallTrail]);
     m_ballTrail.setUseBeaconColour(m_sharedData.trailBeaconColour);
 
 #ifdef CRO_DEBUG_

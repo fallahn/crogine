@@ -1899,10 +1899,10 @@ void GolfState::loadAssets()
     //shader = &m_resources.shaders.get(ShaderID::WireframeCulled);
     //m_resolutionBuffer.addShader(*shader);
 
-    m_resources.shaders.loadFromString(ShaderID::PuttAssist, WireframeVertex, WireframeFragment, "#define HUE\n");
-    m_materialIDs[MaterialID::PuttAssist] = m_resources.materials.add(m_resources.shaders.get(ShaderID::PuttAssist));
-    m_resources.materials.get(m_materialIDs[MaterialID::PuttAssist]).blendMode = cro::Material::BlendMode::Additive;
-    m_resources.materials.get(m_materialIDs[MaterialID::PuttAssist]).setProperty("u_colourRotation", m_sharedData.beaconColour);
+    m_resources.shaders.loadFromString(ShaderID::BallTrail, WireframeVertex, WireframeFragment, "#define HUE\n");
+    m_materialIDs[MaterialID::BallTrail] = m_resources.materials.add(m_resources.shaders.get(ShaderID::BallTrail));
+    m_resources.materials.get(m_materialIDs[MaterialID::BallTrail]).blendMode = cro::Material::BlendMode::Additive;
+    m_resources.materials.get(m_materialIDs[MaterialID::BallTrail]).setProperty("u_colourRotation", m_sharedData.beaconColour);
 
     //minimap - green overhead
     m_resources.shaders.loadFromString(ShaderID::Minimap, MinimapVertex, MinimapFragment);
@@ -2285,7 +2285,7 @@ void GolfState::loadAssets()
     glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh->indexCount * sizeof(std::uint32_t), indices.data(), GL_STATIC_DRAW));
     glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
 
-    m_ballTrail.create(m_gameScene, m_resources, m_materialIDs[MaterialID::PuttAssist]);
+    m_ballTrail.create(m_gameScene, m_resources, m_materialIDs[MaterialID::BallTrail]);
     m_ballTrail.setUseBeaconColour(m_sharedData.trailBeaconColour);
 
 

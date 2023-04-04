@@ -236,7 +236,7 @@ struct ShaderID final
         TreesetBranch,
         TreesetShadow,
         TreesetLeafShadow,
-        PuttAssist,
+        BallTrail,
         FXAA,
         Flag
     };
