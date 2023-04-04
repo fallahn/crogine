@@ -227,6 +227,9 @@ void PracticeState::buildScene()
             if (currTime == 0)
             {
                 requestStackPop();            
+
+                state = RootCallbackData::FadeIn;
+
             }
             break;
         }

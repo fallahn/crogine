@@ -260,7 +260,7 @@ OptionsState::OptionsState(cro::StateStack& ss, cro::State::Context ctx, SharedS
 
     buildScene();
 
-    //updateActiveCallbacks();
+    cacheState(StateID::Credits);
 }
 
 //public

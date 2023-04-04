@@ -134,6 +134,9 @@ ClubhouseState::ClubhouseState(cro::StateStack& ss, cro::State::Context ctx, Sha
         addSystems();
         loadResources();
         buildScene();
+
+        cacheState(StateID::Options);
+        cacheState(StateID::Trophy);
         });
 
     ctx.mainWindow.setMouseCaptured(false);

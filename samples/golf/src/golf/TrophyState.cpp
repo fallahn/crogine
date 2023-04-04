@@ -110,7 +110,7 @@ TrophyState::TrophyState(cro::StateStack& ss, cro::State::Context ctx, SharedSta
     buildScene();
 
     //delays animation
-    auto entity = m_scene.createEntity();
+    /*auto entity = m_scene.createEntity();
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().setUserData<float>(0.5f);
     entity.getComponent<cro::Callback>().function =
@@ -126,7 +126,7 @@ TrophyState::TrophyState(cro::StateStack& ss, cro::State::Context ctx, SharedSta
             e.getComponent<cro::Callback>().active = false;
             m_scene.destroyEntity(e);
         }
-    };
+    };*/
 
 #ifdef CRO_DEBUG_
     registerWindow([&]() 
@@ -367,10 +367,10 @@ void TrophyState::buildScene()
 
     auto rootNode = m_scene.createEntity();
     rootNode.addComponent<cro::Transform>().setScale({0.f, 0.f});
-    rootNode.addComponent<cro::Callback>();// .active = true;
+    rootNode.addComponent<cro::Callback>().active = true;
     rootNode.getComponent<cro::Callback>().setUserData<RootCallbackData>();
     rootNode.getComponent<cro::Callback>().function =
-        [&, leftDoor, rightDoor](cro::Entity e, float dt) mutable
+        [&, leftDoor, rightDoor, doorVerts](cro::Entity e, float dt) mutable
     {
         auto& [state, currTime] = e.getComponent<cro::Callback>().getUserData<RootCallbackData>();
 
@@ -394,7 +394,21 @@ void TrophyState::buildScene()
             e.getComponent<cro::Transform>().setScale(m_viewScale * cro::Util::Easing::easeOutQuint(currTime));
             if (currTime == 0)
             {
-                requestStackPop();            
+                requestStackPop();
+
+                state = RootCallbackData::FadeIn;
+
+                /*leftDoor.getComponent<cro::Drawable2D>().setVertexData(doorVerts);
+                leftDoor.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
+                leftDoor.getComponent<cro::Callback>().active = false;
+                leftDoor.getComponent<cro::Callback>().setUserData<DoorData>(1.f);
+                leftDoor.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+
+                rightDoor.getComponent<cro::Drawable2D>().setVertexData(doorVerts);
+                rightDoor.addComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
+                rightDoor.getComponent<cro::Callback>().active = false;
+                rightDoor.getComponent<cro::Callback>().setUserData<DoorData>(-1.f);
+                leftDoor.getComponent<cro::Transform>().setScale(glm::vec2(-1.f, 1.f));*/
             }
             break;
         }
