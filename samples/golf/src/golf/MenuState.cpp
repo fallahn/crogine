@@ -150,6 +150,9 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
         loadAssets();
         createScene();
 
+        updateUnlockedItems();
+
+        cacheState(StateID::Unlock);
         cacheState(StateID::Options);
         cacheState(StateID::Profile);
         cacheState(StateID::Practice);
@@ -715,7 +718,32 @@ void MenuState::handleMessage(const cro::Message& msg)
             if (data.data == MenuID::Lobby)
             {
                 m_uiScene.getActiveCamera().getComponent<cro::Camera>().isStatic = true;
-                updateUnlockedItems();
+
+
+                //item list is populated when this state is
+                //loaded so we can cache the unlock state
+                //and then cleared by the state when it quits
+                if (!m_sharedData.unlockedItems.empty())
+                {
+                    //create a timed enitity to delay this a bit
+                    cro::Entity e = m_uiScene.createEntity();
+                    e.addComponent<cro::Callback>().active = true;
+                    e.getComponent<cro::Callback>().setUserData<float>(0.2f);
+                    e.getComponent<cro::Callback>().function =
+                        [&](cro::Entity ent, float dt)
+                    {
+                        auto& currTime = ent.getComponent<cro::Callback>().getUserData<float>();
+                        currTime -= dt;
+
+                        if (currTime < 0)
+                        {
+                            ent.getComponent<cro::Callback>().active = false;
+                            m_uiScene.destroyEntity(ent);
+
+                            requestStackPush(StateID::Unlock);
+                        }
+                    };
+                }
             }
         }
     }

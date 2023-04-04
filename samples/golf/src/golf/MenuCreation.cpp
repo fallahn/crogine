@@ -3623,26 +3623,4 @@ void MenuState::updateUnlockedItems()
     }
 
     Social::setUnlockStatus(Social::UnlockType::Generic, genericFlags);
-
-    if (!m_sharedData.unlockedItems.empty())
-    {
-        //create a timed enitity to delay this a bit
-        cro::Entity e = m_uiScene.createEntity();
-        e.addComponent<cro::Callback>().active = true;
-        e.getComponent<cro::Callback>().setUserData<float>(0.2f);
-        e.getComponent<cro::Callback>().function =
-            [&](cro::Entity ent, float dt)
-        {
-            auto& currTime = ent.getComponent<cro::Callback>().getUserData<float>();
-            currTime -= dt;
-
-            if (currTime < 0)
-            {
-                ent.getComponent<cro::Callback>().active = false;
-                m_uiScene.destroyEntity(ent);
-
-                requestStackPush(StateID::Unlock);
-            }
-        };
-    }
 }

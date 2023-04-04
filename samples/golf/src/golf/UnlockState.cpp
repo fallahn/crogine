@@ -100,6 +100,7 @@ UnlockState::UnlockState(cro::StateStack& ss, cro::State::Context ctx, SharedSta
     m_scene     (ctx.appInstance.getMessageBus()),
     m_modelScene(ctx.appInstance.getMessageBus()),
     m_sharedData(sd),
+    m_itemIndex (0),
     m_viewScale (2.f)
 {
     ctx.mainWindow.setMouseCaptured(false);
@@ -329,7 +330,9 @@ void UnlockState::buildUI()
             e.getComponent<cro::Transform>().setScale(m_viewScale * cro::Util::Easing::easeOutQuint(currTime));
             if (currTime == 0)
             {
-                requestStackPop();            
+                requestStackPop();
+
+                //state = RootCallbackData::FadeIn;
             }
             break;
         }
