@@ -97,6 +97,8 @@ private:
     glm::vec2 m_viewScale;
     cro::Entity m_rootNode;
     cro::Entity m_helpText;
+    cro::Entity m_mugshot;
+    cro::Entity m_nameText;
 
     cro::Entity m_avatarCam;
     cro::Entity m_ballCam;
@@ -123,6 +125,12 @@ private:
     std::size_t indexFromBallID(std::uint32_t) const;
     std::size_t indexFromHairID(std::uint32_t) const;
 
+    void setAvatarIndex(std::size_t);
+    void setHairIndex(std::size_t);
+    void setBallIndex(std::size_t);
+
+    void refreshMugshot();
+    void refreshNameString();
 
     struct TextEdit final
     {

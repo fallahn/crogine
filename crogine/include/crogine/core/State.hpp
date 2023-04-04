@@ -168,11 +168,19 @@ namespace cro
         */
         void cacheState(StateID);
 
-
+        /*!
+        \brief Returns true if this State has been cached.
+        Cached states should NOT call Window::loadResources()
+        as this is likely already active from the state which
+        cached this one.
+        */
+        bool isCached() const { return m_cached; }
     private:
         StateStack& m_stack;
         Context m_context;
+        bool m_cached;
 
         std::vector<std::int32_t> m_cachedIDs;
+        friend class StateStack;
     };
 }

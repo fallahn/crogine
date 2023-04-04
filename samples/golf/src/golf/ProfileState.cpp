@@ -427,16 +427,18 @@ void ProfileState::buildScene()
             }
 
             //assume we launched from a cached state and update
-            //local profile data is necessary
+            //local profile data if necessary
             if (m_activeProfile.profileID != m_profileData.playerProfiles[m_profileData.activeProfileIndex].profileID)
             {
                 m_activeProfile = m_profileData.playerProfiles[m_profileData.activeProfileIndex];
 
-                //TODO refresh the avatar settings
-                //TODO recycle these funcs in the button callbacks
-                //setAvatarIndex()
-                //setHairIndex()
-                //setBallIndex()
+                //refresh the avatar settings
+                setAvatarIndex(indexFromAvatarID(m_activeProfile.skinID));
+                setHairIndex(indexFromHairID(m_activeProfile.hairID));
+                setBallIndex(indexFromBallID(m_activeProfile.ballID));
+                refreshMugshot();
+                refreshNameString();
+                //refreshTextures();
             }
 
             break;
@@ -537,7 +539,7 @@ void ProfileState::buildScene()
     };
     centreText(entity);
     bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-    auto nameEnt = entity;
+    m_nameText = entity;
 
     auto& uiSystem = *m_uiScene.getSystem<cro::UISystem>();
     auto selected = uiSystem.addCallback([&](cro::Entity e)
@@ -636,25 +638,8 @@ void ProfileState::buildScene()
             {
                 if (activated(evt))
                 {
-                    auto hairIndex = m_avatarModels[m_avatarIndex].hairIndex;
-
-                    if (m_avatarHairModels[hairIndex].isValid())
-                    {
-                        m_avatarHairModels[hairIndex].getComponent<cro::Model>().setHidden(true);
-                    }
-                    hairIndex = (hairIndex + (m_avatarHairModels.size() - 1)) % m_avatarHairModels.size();
-                    if (m_avatarHairModels[hairIndex].isValid())
-                    {
-                        m_avatarHairModels[hairIndex].getComponent<cro::Model>().setHidden(false);
-                    }
-
-                    if (m_avatarModels[m_avatarIndex].hairAttachment)
-                    {
-                        m_avatarModels[m_avatarIndex].hairAttachment->setModel(m_avatarHairModels[hairIndex]);
-                    }
-                    m_avatarModels[m_avatarIndex].hairIndex = hairIndex;
-
-                    m_activeProfile.hairID = m_sharedData.hairInfo[hairIndex].uid;
+                    auto hairIndex = (m_avatarModels[m_avatarIndex].hairIndex + (m_avatarHairModels.size() - 1)) % m_avatarHairModels.size();
+                    setHairIndex(hairIndex);
 
                     m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
                 }
@@ -665,25 +650,8 @@ void ProfileState::buildScene()
             {
                 if (activated(evt))
                 {
-                    auto hairIndex = m_avatarModels[m_avatarIndex].hairIndex;
-                    if (m_avatarHairModels[hairIndex].isValid())
-                    {
-                        m_avatarHairModels[hairIndex].getComponent<cro::Model>().setHidden(true);
-                    }
-                    hairIndex = (hairIndex + 1) % m_avatarHairModels.size();
-                    if (m_avatarHairModels[hairIndex].isValid())
-                    {
-                        m_avatarHairModels[hairIndex].getComponent<cro::Model>().setHidden(false);
-                    }
-
-                    if (m_avatarModels[m_avatarIndex].hairAttachment)
-                    {
-                        m_avatarModels[m_avatarIndex].hairAttachment->setModel(m_avatarHairModels[hairIndex]);
-                    }
-                    m_avatarModels[m_avatarIndex].hairIndex = hairIndex;
-
-                    m_activeProfile.hairID = m_sharedData.hairInfo[hairIndex].uid;
-
+                    auto hairIndex = (m_avatarModels[m_avatarIndex].hairIndex + 1) % m_avatarHairModels.size();
+                    setHairIndex(hairIndex);
                     m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
                 }
             });
@@ -693,28 +661,7 @@ void ProfileState::buildScene()
             {
                 if (activated(evt))
                 {
-                    auto hairIdx = m_avatarModels[m_avatarIndex].hairIndex;
-                    if (m_avatarModels[m_avatarIndex].hairAttachment)
-                    {
-                        m_avatarModels[m_avatarIndex].hairAttachment->setModel({});
-                    }
-                    //m_avatarModels[m_avatarIndex].previewModel.getComponent<cro::Model>().setHidden(true);
-                    m_avatarModels[m_avatarIndex].previewModel.getComponent<cro::Callback>().active = true;
-                    m_avatarModels[m_avatarIndex].previewModel.getComponent<cro::Callback>().getUserData<AvatarAnimCallbackData>().direction = 1;
-
-                    m_avatarIndex = (m_avatarIndex + (m_avatarModels.size() - 1)) % m_avatarModels.size();
-
-                    if (m_avatarModels[m_avatarIndex].hairAttachment)
-                    {
-                        m_avatarModels[m_avatarIndex].hairAttachment->setModel(m_avatarHairModels[hairIdx]);
-                        m_avatarModels[m_avatarIndex].hairIndex = hairIdx;
-                    }
-                    m_avatarModels[m_avatarIndex].previewModel.getComponent<cro::Model>().setHidden(false);
-                    m_avatarModels[m_avatarIndex].previewModel.getComponent<cro::Callback>().active = true;
-                    m_avatarModels[m_avatarIndex].previewModel.getComponent<cro::Callback>().getUserData<AvatarAnimCallbackData>().direction = 0;
-
-                    m_activeProfile.skinID = m_sharedData.avatarInfo[m_avatarIndex].uid;
-
+                    setAvatarIndex((m_avatarIndex + (m_avatarModels.size() - 1)) % m_avatarModels.size());
                     m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
                 }
             });
@@ -724,28 +671,7 @@ void ProfileState::buildScene()
             {
                 if (activated(evt))
                 {
-                    auto hairIdx = m_avatarModels[m_avatarIndex].hairIndex;
-                    if (m_avatarModels[m_avatarIndex].hairAttachment)
-                    {
-                        m_avatarModels[m_avatarIndex].hairAttachment->setModel({});
-                    }
-                    //m_avatarModels[m_avatarIndex].previewModel.getComponent<cro::Model>().setHidden(true);
-                    m_avatarModels[m_avatarIndex].previewModel.getComponent<cro::Callback>().active = true;
-                    m_avatarModels[m_avatarIndex].previewModel.getComponent<cro::Callback>().getUserData<AvatarAnimCallbackData>().direction = 1;
-
-                    m_avatarIndex = (m_avatarIndex + 1) % m_avatarModels.size();
-
-                    if (m_avatarModels[m_avatarIndex].hairAttachment)
-                    {
-                        m_avatarModels[m_avatarIndex].hairAttachment->setModel(m_avatarHairModels[hairIdx]);
-                        m_avatarModels[m_avatarIndex].hairIndex = hairIdx;
-                    }
-                    m_avatarModels[m_avatarIndex].previewModel.getComponent<cro::Model>().setHidden(false);
-                    m_avatarModels[m_avatarIndex].previewModel.getComponent<cro::Callback>().active = true;
-                    m_avatarModels[m_avatarIndex].previewModel.getComponent<cro::Callback>().getUserData<AvatarAnimCallbackData>().direction = 0;
-
-                    m_activeProfile.skinID = m_sharedData.avatarInfo[m_avatarIndex].uid;
-
+                    setAvatarIndex((m_avatarIndex + 1) % m_avatarModels.size());
                     m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
                 }
             });
@@ -787,15 +713,15 @@ void ProfileState::buildScene()
     //name button
     auto nameButton = createButton("name_highlight", glm::vec2(264.f, 213.f));
     nameButton.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
-        uiSystem.addCallback([&, nameEnt](cro::Entity e, const cro::ButtonEvent& evt) mutable
+        uiSystem.addCallback([&](cro::Entity e, const cro::ButtonEvent& evt) mutable
             {
                 if (activated(evt))
                 {
-                    auto& callback = nameEnt.getComponent<cro::Callback>();
+                    auto& callback = m_nameText.getComponent<cro::Callback>();
                     callback.active = !callback.active;
                     if (callback.active)
                     {
-                        beginTextEdit(nameEnt, &m_activeProfile.name, ConstVal::MaxStringChars);
+                        beginTextEdit(m_nameText, &m_activeProfile.name, ConstVal::MaxStringChars);
                         m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
 
                         if (evt.type == SDL_CONTROLLERBUTTONUP)
@@ -836,24 +762,7 @@ void ProfileState::buildScene()
             {
                 if (activated(evt))
                 {
-                    //might be bald
-                    if (m_ballHairModels[m_ballHairIndex].isValid())
-                    {
-                        m_ballModels[m_ballIndex].root.getComponent<cro::Transform>().removeChild(m_ballHairModels[m_ballHairIndex].getComponent<cro::Transform>());
-                    }
-                    m_ballModels[m_ballIndex].ball.getComponent<cro::Model>().setHidden(true);
-
-                    m_ballIndex = (m_ballIndex + (m_ballModels.size() - 1)) % m_ballModels.size();
-
-                    if (m_ballHairModels[m_ballHairIndex].isValid())
-                    {
-                        m_ballModels[m_ballIndex].root.getComponent<cro::Transform>().addChild(m_ballHairModels[m_ballHairIndex].getComponent<cro::Transform>());
-                    }
-                    m_ballModels[m_ballIndex].ball.getComponent<cro::Model>().setHidden(false);
-
-                    m_ballModels[m_ballIndex].root.getComponent<cro::ParticleEmitter>().start();
-
-                    m_activeProfile.ballID = m_sharedData.ballInfo[m_ballIndex].uid;
+                    setBallIndex((m_ballIndex + (m_ballModels.size() - 1)) % m_ballModels.size());
                     m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
                 }
             });
@@ -863,24 +772,7 @@ void ProfileState::buildScene()
             {
                 if (activated(evt))
                 {
-                    //might be bald
-                    if (m_ballHairModels[m_ballHairIndex].isValid())
-                    {
-                        m_ballModels[m_ballIndex].root.getComponent<cro::Transform>().removeChild(m_ballHairModels[m_ballHairIndex].getComponent<cro::Transform>());
-                    }
-                    m_ballModels[m_ballIndex].ball.getComponent<cro::Model>().setHidden(true);
-
-                    m_ballIndex = (m_ballIndex + 1) % m_ballModels.size();
-
-                    if (m_ballHairModels[m_ballHairIndex].isValid())
-                    {
-                        m_ballModels[m_ballIndex].root.getComponent<cro::Transform>().addChild(m_ballHairModels[m_ballHairIndex].getComponent<cro::Transform>());
-                    }
-                    m_ballModels[m_ballIndex].ball.getComponent<cro::Model>().setHidden(false);
-
-                    m_ballModels[m_ballIndex].root.getComponent<cro::ParticleEmitter>().start();
-
-                    m_activeProfile.ballID = m_sharedData.ballInfo[m_ballIndex].uid;
+                    setBallIndex((m_ballIndex + 1) % m_ballModels.size());
                     m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
                 }
             });
@@ -976,20 +868,14 @@ void ProfileState::buildScene()
 
 
     //mugshot
-    if (!m_activeProfile.mugshot.empty())
-    {
-        auto& tex = m_sharedData.sharedResources->textures.get(m_activeProfile.mugshot);
-        entity = m_uiScene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition({ 396.f, 24.f, 0.1f });
-        entity.addComponent<cro::Drawable2D>();
-        entity.addComponent<cro::Sprite>(tex);
-        
-        glm::vec2 texSize(tex.getSize());
-        glm::vec2 scale = glm::vec2(98.f, 42.f) / texSize;
-        entity.getComponent<cro::Transform>().setScale(scale);
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 396.f, 24.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>();
+    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_mugshot = entity;
 
-        bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-    }
+    refreshMugshot();
 
 
     //help string
@@ -1340,6 +1226,97 @@ std::size_t ProfileState::indexFromHairID(std::uint32_t hairID) const
         return std::distance(hairInfo.begin(), result);
     }
     return 0;
+}
+
+void ProfileState::setAvatarIndex(std::size_t idx)
+{
+    auto hairIdx = m_avatarModels[m_avatarIndex].hairIndex;
+    if (m_avatarModels[m_avatarIndex].hairAttachment)
+    {
+        m_avatarModels[m_avatarIndex].hairAttachment->setModel({});
+    }
+
+    m_avatarModels[m_avatarIndex].previewModel.getComponent<cro::Callback>().active = true;
+    m_avatarModels[m_avatarIndex].previewModel.getComponent<cro::Callback>().getUserData<AvatarAnimCallbackData>().direction = 1;
+
+    m_avatarIndex = idx;
+
+    if (m_avatarModels[m_avatarIndex].hairAttachment)
+    {
+        m_avatarModels[m_avatarIndex].hairAttachment->setModel(m_avatarHairModels[hairIdx]);
+        m_avatarModels[m_avatarIndex].hairIndex = hairIdx;
+    }
+    m_avatarModels[m_avatarIndex].previewModel.getComponent<cro::Model>().setHidden(false);
+    m_avatarModels[m_avatarIndex].previewModel.getComponent<cro::Callback>().active = true;
+    m_avatarModels[m_avatarIndex].previewModel.getComponent<cro::Callback>().getUserData<AvatarAnimCallbackData>().direction = 0;
+
+    m_activeProfile.skinID = m_sharedData.avatarInfo[m_avatarIndex].uid;
+}
+
+void ProfileState::setHairIndex(std::size_t idx)
+{
+    auto hairIndex = m_avatarModels[m_avatarIndex].hairIndex;
+
+    if (m_avatarHairModels[hairIndex].isValid())
+    {
+        m_avatarHairModels[hairIndex].getComponent<cro::Model>().setHidden(true);
+    }
+    hairIndex = idx;// (hairIndex + (m_avatarHairModels.size() - 1)) % m_avatarHairModels.size();
+    if (m_avatarHairModels[hairIndex].isValid())
+    {
+        m_avatarHairModels[hairIndex].getComponent<cro::Model>().setHidden(false);
+    }
+
+    if (m_avatarModels[m_avatarIndex].hairAttachment)
+    {
+        m_avatarModels[m_avatarIndex].hairAttachment->setModel(m_avatarHairModels[hairIndex]);
+    }
+    m_avatarModels[m_avatarIndex].hairIndex = hairIndex;
+
+    m_activeProfile.hairID = m_sharedData.hairInfo[hairIndex].uid;
+}
+
+void ProfileState::setBallIndex(std::size_t idx)
+{
+    if (m_ballHairModels[m_ballHairIndex].isValid())
+    {
+        m_ballModels[m_ballIndex].root.getComponent<cro::Transform>().removeChild(m_ballHairModels[m_ballHairIndex].getComponent<cro::Transform>());
+    }
+    m_ballModels[m_ballIndex].ball.getComponent<cro::Model>().setHidden(true);
+
+    m_ballIndex = idx;
+
+    if (m_ballHairModels[m_ballHairIndex].isValid())
+    {
+        m_ballModels[m_ballIndex].root.getComponent<cro::Transform>().addChild(m_ballHairModels[m_ballHairIndex].getComponent<cro::Transform>());
+    }
+    m_ballModels[m_ballIndex].ball.getComponent<cro::Model>().setHidden(false);
+
+    m_ballModels[m_ballIndex].root.getComponent<cro::ParticleEmitter>().start();
+
+    m_activeProfile.ballID = m_sharedData.ballInfo[m_ballIndex].uid;
+}
+
+void ProfileState::refreshMugshot()
+{
+    if (!m_activeProfile.mugshot.empty())
+    {
+        auto& tex = m_sharedData.sharedResources->textures.get(m_activeProfile.mugshot);
+
+        glm::vec2 texSize(tex.getSize());
+        glm::vec2 scale = glm::vec2(98.f, 42.f) / texSize;
+        m_mugshot.getComponent<cro::Transform>().setScale(scale);
+    }
+    else
+    {
+        m_mugshot.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+    }
+}
+
+void ProfileState::refreshNameString()
+{
+    m_nameText.getComponent<cro::Text>().setString(m_activeProfile.name);
+    centreText(m_nameText);
 }
 
 void ProfileState::beginTextEdit(cro::Entity stringEnt, cro::String* dst, std::size_t maxChars)

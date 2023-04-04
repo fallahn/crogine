@@ -126,6 +126,7 @@ void StateStack::cacheState(StateID id)
 {
     CRO_ASSERT(m_stateCache.count(id) == 0, "State is already cached");
     m_stateCache.insert(std::make_pair(id, createState(id)));
+    m_stateCache.at(id)->m_cached = true;
 }
 
 void StateStack::uncacheState(StateID id)

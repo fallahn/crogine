@@ -144,7 +144,8 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     Achievements::setActive(true);
     
     //launches a loading screen (registered in MyApp.cpp)
-    context.mainWindow.loadResources([this]() {
+    CRO_ASSERT(!isCached(), "Don't use loading screen on cached states!");
+    context.mainWindow.loadResources([&]() {
         addSystems();
         loadAssets();
         createScene();
@@ -342,7 +343,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
 
     Social::setStatus(Social::InfoID::Menu, { "Main Menu" });
     Social::setGroup(0);
-    m_matchMaking.getUserName();
+
 #ifdef CRO_DEBUG_
 
     registerWindow([&]() 
