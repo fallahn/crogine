@@ -659,6 +659,12 @@ void OptionsState::buildScene()
             if (currTime == 0)
             {
                 requestStackPop();
+
+                m_currentTabFunction = 0;
+                m_tabFunctions[0]();
+
+                state = RootCallbackData::FadeIn;
+                m_scene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Dummy);
             }
             break;
         }
@@ -1146,6 +1152,11 @@ void OptionsState::buildScene()
             m_scene.destroyEntity(e);
         }
     };
+
+
+    //and default to dummy input until loaded
+    m_scene.simulate(0.f);
+    m_scene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Dummy);
 }
 
 void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& spriteSheet)

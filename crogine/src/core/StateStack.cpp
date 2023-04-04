@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2022
+Matt Marchant 2017 - 2023
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -62,19 +62,10 @@ void StateStack::handleEvent(const cro::Event& evt)
 
 void StateStack::handleMessage(const Message& msg)
 {
-    //if (msg.id == Message::Type::UIMessage)
-    //{
-    //    auto& msgData = msg.getData<Message::UIEvent>();
-    //    switch (msgData.type)
-    //    {
-    //    case Message::UIEvent::RequestState:
-    //        pushState(msgData.stateID);
-    //        break;
-    //    default: break;
-    //    }
-    //}
-
-    for (auto& s : m_stack) s->handleMessage(msg);
+    for (auto& s : m_stack)
+    {
+        s->handleMessage(msg);
+    }
 }
 
 void StateStack::simulate(float dt)
@@ -131,6 +122,20 @@ std::int32_t StateStack::getTopmostState() const
 }
 
 //private
+void StateStack::cacheState(StateID id)
+{
+    CRO_ASSERT(m_stateCache.count(id) == 0, "State is already cached");
+    m_stateCache.insert(std::make_pair(id, createState(id)));
+}
+
+void StateStack::uncacheState(StateID id)
+{
+    if (m_stateCache.count(id))
+    {
+        m_stateCache.erase(id);
+    }
+}
+
 bool StateStack::changeExists(Action action, std::int32_t id)
 {
     return std::find_if(m_pendingChanges.begin(), m_pendingChanges.end(),
@@ -165,7 +170,16 @@ void StateStack::applyPendingChanges()
             msg->action = Message::StateEvent::Pushed;
             msg->id = change.id;
 
-            m_stack.emplace_back(createState(change.id));
+            //check if the requested state is already cached
+            //by the currently active state
+            if (m_stateCache.count(change.id) != 0)
+            {
+                m_stack.push_back(m_stateCache.at(change.id));
+            }
+            else
+            {
+                m_stack.emplace_back(createState(change.id));
+            }
         }
             break;
         case Action::Pop:

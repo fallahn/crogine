@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2022
+Matt Marchant 2017 - 2023
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -86,7 +86,7 @@ namespace cro
             static_assert(std::is_base_of<State, T>::value, "Must derive from State class");
             m_factories[id] = [&args..., this]()
             {
-                return std::make_unique<T>(*this, m_context, std::forward<Args>(args)...);
+                return std::make_shared<T>(*this, m_context, std::forward<Args>(args)...);
             };
         }
 
@@ -154,8 +154,8 @@ namespace cro
         struct PendingChange final
         {
             Action action;
-            StateID id;
-            bool suspendPrevious;
+            StateID id = -1;
+            bool suspendPrevious = false;
             PendingChange(Action a, StateID i = -1, bool suspend = false)
                 : action(a), id(i), suspendPrevious(suspend) {}
         };
@@ -168,9 +168,17 @@ namespace cro
         std::map<StateID, std::function<State::Ptr()>> m_factories;
         MessageBus& m_messageBus;
         
+        //used by states to request sub-states be cached.
+        std::map<StateID, State::Ptr> m_stateCache;
+        void cacheState(StateID);
+        void uncacheState(StateID);
+
+
         bool changeExists(Action, std::int32_t = -1);
 
         State::Ptr createState(StateID);
         void applyPendingChanges();
+
+        friend class State;
     };
 }

@@ -148,6 +148,9 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
         addSystems();
         loadAssets();
         createScene();
+
+        cacheState(StateID::Options);
+        cacheState(StateID::Profile);
     });
  
     context.mainWindow.setMouseCaptured(false);

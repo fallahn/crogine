@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2023
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -41,6 +41,15 @@ State::State(StateStack& stack, State::Context context)
 
 }
 
+State::~State()
+{
+    //remove any sub-states we cached.
+    for (auto id : m_cachedIDs)
+    {
+        m_stack.uncacheState(id);
+    }
+}
+
 //protected
 void State::requestStackPush(StateID id)
 {
@@ -65,4 +74,11 @@ State::Context State::getContext() const
 std::size_t State::getStateCount() const
 {
     return m_stack.getStackSize();
+}
+
+void State::cacheState(StateID id)
+{
+    CRO_ASSERT(id != getStateID(), "this won't end well.");
+    m_stack.cacheState(id);
+    m_cachedIDs.push_back(id);
 }

@@ -117,6 +117,9 @@ ProfileState::ProfileState(cro::StateStack& ss, cro::State::Context ctx, SharedS
     buildPreviewScene();
     buildScene();
 
+    m_modelScene.simulate(0.f);
+    m_uiScene.simulate(0.f);
+
     //registerWindow([&]()
     //    {
     //        if (ImGui::Begin("Flaps"))
@@ -422,6 +425,20 @@ void ProfileState::buildScene()
 
                 m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Main);
             }
+
+            //assume we launched from a cached state and update
+            //local profile data is necessary
+            if (m_activeProfile.profileID != m_profileData.playerProfiles[m_profileData.activeProfileIndex].profileID)
+            {
+                m_activeProfile = m_profileData.playerProfiles[m_profileData.activeProfileIndex];
+
+                //TODO refresh the avatar settings
+                //TODO recycle these funcs in the button callbacks
+                //setAvatarIndex()
+                //setHairIndex()
+                //setBallIndex()
+            }
+
             break;
         case RootCallbackData::FadeOut:
             currTime = std::max(0.f, currTime - (dt * 2.f));
@@ -429,6 +446,9 @@ void ProfileState::buildScene()
             if (currTime == 0)
             {
                 requestStackPop();
+
+                state = RootCallbackData::FadeIn;
+                m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Dummy);
             }
             break;
         }
