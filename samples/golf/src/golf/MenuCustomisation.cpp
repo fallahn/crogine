@@ -859,8 +859,6 @@ void MenuState::createAvatarScene()
                     direction = 1;
                     e.getComponent<cro::Callback>().active = false;
                 }
-
-                e.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, cro::Util::Const::TAU * progress);
             }
             else
             {
@@ -880,16 +878,12 @@ void MenuState::createAvatarScene()
                         m_playerAvatars[i].hairAttachment->getModel().getComponent<cro::Model>().setHidden(true);
                     }
                 }
-
-                e.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, (cro::Util::Const::TAU * progress) + cro::Util::Const::TAU);
             }
 
             auto scale = e.getComponent<cro::Transform>().getScale();
             auto facing = cro::Util::Maths::sgn(scale.x);
             scale = { progress * facing, /*progress*/1.f, progress };
             e.getComponent<cro::Transform>().setScale(scale);
-
-            
         };
     }
 }

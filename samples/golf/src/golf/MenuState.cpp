@@ -929,6 +929,7 @@ void MenuState::loadAssets()
     m_resolutionBuffer.addShader(*shader);
     m_materialIDs[MaterialID::Trophy] = m_resources.materials.add(*shader);
     m_resources.materials.get(m_materialIDs[MaterialID::Trophy]).setProperty("u_reflectMap", cro::CubemapID(m_reflectionMap.getGLHandle()));
+    m_profileData.profileMaterials.ballReflection = m_resources.materials.get(m_materialIDs[MaterialID::Trophy]);
 
 
     //load the billboard rects from a sprite sheet and convert to templates

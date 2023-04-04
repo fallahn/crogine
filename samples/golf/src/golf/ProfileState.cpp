@@ -56,6 +56,7 @@ source distribution.
 #include <crogine/ecs/components/Camera.hpp>
 #include <crogine/ecs/components/Drawable2D.hpp>
 #include <crogine/ecs/components/AudioEmitter.hpp>
+#include <crogine/ecs/components/ParticleEmitter.hpp>
 
 #include <crogine/ecs/systems/UISystem.hpp>
 #include <crogine/ecs/systems/CommandSystem.hpp>
@@ -63,6 +64,7 @@ source distribution.
 #include <crogine/ecs/systems/SpriteSystem2D.hpp>
 #include <crogine/ecs/systems/SpriteAnimator.hpp>
 #include <crogine/ecs/systems/TextSystem.hpp>
+#include <crogine/ecs/systems/ParticleSystem.hpp>
 #include <crogine/ecs/systems/CameraSystem.hpp>
 #include <crogine/ecs/systems/RenderSystem2D.hpp>
 #include <crogine/ecs/systems/SkeletalAnimator.hpp>
@@ -371,6 +373,7 @@ void ProfileState::addSystems()
     m_modelScene.addSystem<cro::SkeletalAnimator>(mb);
     m_modelScene.addSystem<cro::CameraSystem>(mb);
     m_modelScene.addSystem<cro::ModelRenderer>(mb);
+    m_modelScene.addSystem<cro::ParticleSystem>(mb);
 }
 
 void ProfileState::loadResources()
@@ -818,8 +821,7 @@ void ProfileState::buildScene()
                     {
                         m_ballModels[m_ballIndex].root.getComponent<cro::Transform>().removeChild(m_ballHairModels[m_ballHairIndex].getComponent<cro::Transform>());
                     }
-                    //m_ballModels[m_ballIndex].ball.getComponent<cro::Model>().setHidden(true); //some weird bug stops this working
-                    m_ballModels[m_ballIndex].ball.getComponent<cro::Transform>().setScale(glm::vec3(0.f));
+                    m_ballModels[m_ballIndex].ball.getComponent<cro::Model>().setHidden(true);
 
                     m_ballIndex = (m_ballIndex + (m_ballModels.size() - 1)) % m_ballModels.size();
 
@@ -827,8 +829,9 @@ void ProfileState::buildScene()
                     {
                         m_ballModels[m_ballIndex].root.getComponent<cro::Transform>().addChild(m_ballHairModels[m_ballHairIndex].getComponent<cro::Transform>());
                     }
-                    //m_ballModels[m_ballIndex].ball.getComponent<cro::Model>().setHidden(false);
-                    m_ballModels[m_ballIndex].ball.getComponent<cro::Transform>().setScale(glm::vec3(1.f));
+                    m_ballModels[m_ballIndex].ball.getComponent<cro::Model>().setHidden(false);
+
+                    m_ballModels[m_ballIndex].root.getComponent<cro::ParticleEmitter>().start();
 
                     m_activeProfile.ballID = m_sharedData.ballInfo[m_ballIndex].uid;
                     m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
@@ -845,8 +848,7 @@ void ProfileState::buildScene()
                     {
                         m_ballModels[m_ballIndex].root.getComponent<cro::Transform>().removeChild(m_ballHairModels[m_ballHairIndex].getComponent<cro::Transform>());
                     }
-                    //m_ballModels[m_ballIndex].ball.getComponent<cro::Model>().setHidden(true);
-                    m_ballModels[m_ballIndex].ball.getComponent<cro::Transform>().setScale(glm::vec3(0.f));
+                    m_ballModels[m_ballIndex].ball.getComponent<cro::Model>().setHidden(true);
 
                     m_ballIndex = (m_ballIndex + 1) % m_ballModels.size();
 
@@ -854,8 +856,9 @@ void ProfileState::buildScene()
                     {
                         m_ballModels[m_ballIndex].root.getComponent<cro::Transform>().addChild(m_ballHairModels[m_ballHairIndex].getComponent<cro::Transform>());
                     }
-                    //m_ballModels[m_ballIndex].ball.getComponent<cro::Model>().setHidden(false);
-                    m_ballModels[m_ballIndex].ball.getComponent<cro::Transform>().setScale(glm::vec3(1.f));
+                    m_ballModels[m_ballIndex].ball.getComponent<cro::Model>().setHidden(false);
+
+                    m_ballModels[m_ballIndex].root.getComponent<cro::ParticleEmitter>().start();
 
                     m_activeProfile.ballID = m_sharedData.ballInfo[m_ballIndex].uid;
                     m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
@@ -1023,6 +1026,9 @@ void ProfileState::buildPreviewScene()
 {
     CRO_ASSERT(!m_profileData.ballDefs.empty(), "Must load this state on top of menu");
 
+    cro::EmitterSettings emitterSettings;
+    emitterSettings.loadFromFile("assets/golf/particles/puff_small.cps", m_sharedData.sharedResources->textures);
+
     //this has all been parsed by the menu state - so we're assuming
     //all the models etc are fine and load without chicken
     std::int32_t i = 0;
@@ -1030,10 +1036,11 @@ void ProfileState::buildPreviewScene()
     for (auto& ballDef : m_profileData.ballDefs)
     {
         auto entity = m_modelScene.createEntity();
-        entity.addComponent<cro::Transform>().setScale(glm::vec3(0.f));
+        entity.addComponent<cro::Transform>();
         ballDef.createModel(entity);
-        //entity.getComponent<cro::Model>().setHidden(true); //ugh there's some bug that stops this working but only for balls???
+        entity.getComponent<cro::Model>().setHidden(true);
         entity.getComponent<cro::Model>().setMaterial(0, m_profileData.profileMaterials.ball);
+        entity.getComponent<cro::Model>().setMaterial(1, m_profileData.profileMaterials.ballReflection);
         entity.addComponent<cro::Callback>().active = true;
 
         if (m_sharedData.ballInfo[i].rollAnimation)
@@ -1062,14 +1069,15 @@ void ProfileState::buildPreviewScene()
         preview.root = m_modelScene.createEntity();
         preview.root.addComponent<cro::Transform>().setPosition(BallPos);
         preview.root.getComponent<cro::Transform>().addChild(preview.ball.getComponent<cro::Transform>());
+        preview.root.addComponent<cro::ParticleEmitter>().settings = emitterSettings;
     }
     
     auto entity = m_modelScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(BallPos);
+    entity.addComponent<cro::Transform>().setPosition(BallPos + glm::vec3(0.f, -0.01f, 0.f));
     m_profileData.shadowDef->createModel(entity);
 
     entity = m_modelScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(BallPos);
+    entity.addComponent<cro::Transform>().setPosition(BallPos + glm::vec3(0.f, -0.15f, 0.f));
     entity.getComponent<cro::Transform>().setScale(glm::vec3(5.f));
     m_profileData.grassDef->createModel(entity);
 
@@ -1147,12 +1155,12 @@ void ProfileState::buildPreviewScene()
     }
 
     entity = m_modelScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(AvatarPos + glm::vec3(0.f, 0.f, -0.08f));
+    entity.addComponent<cro::Transform>().setPosition(AvatarPos + glm::vec3(0.f, -0.1f, -0.08f));
     entity.getComponent<cro::Transform>().setScale(glm::vec3(16.f));
     m_profileData.shadowDef->createModel(entity);
 
     entity = m_modelScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(AvatarPos);
+    entity.addComponent<cro::Transform>().setPosition(AvatarPos + glm::vec3(0.f, -0.15f, 0.f));
     entity.getComponent<cro::Transform>().setScale(glm::vec3(60.f));
     m_profileData.grassDef->createModel(entity);
     
@@ -1174,7 +1182,8 @@ void ProfileState::buildPreviewScene()
         m_avatarHairModels.push_back(entity);
 
         entity = m_modelScene.createEntity();
-        entity.addComponent<cro::Transform>(); //TODO set ball scale / offset
+        entity.addComponent<cro::Transform>().setScale(BallHairScale);
+        entity.getComponent<cro::Transform>().setOrigin(BallHairOffset);
         hair.createModel(entity);
         entity.getComponent<cro::Model>().setMaterial(0, m_profileData.profileMaterials.hair);
         entity.getComponent<cro::Model>().setHidden(true);
@@ -1186,12 +1195,15 @@ void ProfileState::buildPreviewScene()
     m_avatarModels[m_avatarIndex].previewModel.getComponent<cro::Callback>().active = true;
 
     m_ballIndex = indexFromBallID(m_activeProfile.ballID);
-    m_ballModels[m_ballIndex].ball.getComponent<cro::Transform>().setScale(glm::vec3(1.f));// getComponent<cro::Model>().setHidden(false);
+    m_ballModels[m_ballIndex].ball.getComponent<cro::Model>().setHidden(false);
 
     if (m_avatarModels[m_avatarIndex].hairAttachment != nullptr)
     {
         auto hairIdx = indexFromHairID(m_activeProfile.hairID);
-        m_avatarHairModels[hairIdx].getComponent<cro::Model>().setHidden(false);
+        if (m_avatarHairModels[hairIdx].isValid())
+        {
+            m_avatarHairModels[hairIdx].getComponent<cro::Model>().setHidden(false);
+        }
         m_avatarModels[m_avatarIndex].hairAttachment->setModel(m_avatarHairModels[hairIdx]);
         m_avatarModels[m_avatarIndex].hairIndex = hairIdx;
     }
@@ -1217,9 +1229,9 @@ void ProfileState::buildPreviewScene()
         cam.setPerspective(1.1f, static_cast<float>(BallTexSize.x) / BallTexSize.y, 0.001f, 2.f);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
-    m_ballCam = m_modelScene.getActiveCamera();
-    m_ballCam.getComponent<cro::Camera>().resizeCallback = ballTexCallback;
-    m_ballCam.getComponent<cro::Transform>().setPosition({ 10.f, 0.045f, 0.099f });
+    m_ballCam = m_modelScene.createEntity();
+    m_ballCam.addComponent<cro::Transform>().setPosition({ 10.f, 0.045f, 0.099f });
+    m_ballCam.addComponent<cro::Camera>().resizeCallback = ballTexCallback;
     ballTexCallback(m_ballCam.getComponent<cro::Camera>());
 
     m_avatarCam = m_modelScene.createEntity();

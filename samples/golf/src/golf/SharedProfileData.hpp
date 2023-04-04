@@ -50,11 +50,12 @@ struct SharedProfileData final
     {
         cro::Material::Data hair;
         cro::Material::Data ball;
+        cro::Material::Data ballReflection;
         cro::Material::Data avatar;
 
         void reset()
         {
-            hair = ball = avatar = {};
+            hair = ball = ballReflection = avatar = {};
         }
     }profileMaterials;
 
