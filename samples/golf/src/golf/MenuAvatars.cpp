@@ -1480,8 +1480,11 @@ void MenuState::createProfileLayout(cro::Entity parent, cro::Transform& menuTran
     {
         if (m_currentMenu == MenuID::Avatar)
         {
-            e.getComponent<cro::Text>().setString("Current Streak: " + std::to_string(Social::getCurrentStreak())
-                                        + " Days\nLongest Streak: " + std::to_string(Social::getLongestStreak()) + " Days");
+            auto current = Social::getCurrentStreak();
+            auto longest = std::max(current, Social::getLongestStreak());
+
+            e.getComponent<cro::Text>().setString("Current Streak: " + std::to_string(current)
+                                        + " Days\nLongest Streak: " + std::to_string(longest) + " Days");
         }
     };
 #endif
