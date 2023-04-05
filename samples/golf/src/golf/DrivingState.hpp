@@ -51,7 +51,7 @@ source distribution.
 
 //callback data for anim/self destruction
 //of messages / options window
-struct MessageAnim final
+struct PopupAnim final
 {
     enum
     {
@@ -212,6 +212,9 @@ private:
     void updateWindDisplay(glm::vec3);    
     void showMessage(float);
     void floatingMessage(const std::string&);
+
+    SkipState m_skipState;
+    void updateSkipMessage(float);
 
     //create the summary screen with its own
     //encapsulation just to update the text more easily

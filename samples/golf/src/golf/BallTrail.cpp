@@ -144,6 +144,12 @@ void BallTrail::update()
     }
 }
 
+void BallTrail::reset()
+{
+    //forces the buffer to clear on next update because it thinks it's at the end
+    m_trails[m_bufferIndex].front = m_trails[m_bufferIndex].vertexData.size() + 2;
+}
+
 void BallTrail::setUseBeaconColour(bool use)
 {
     if (use)

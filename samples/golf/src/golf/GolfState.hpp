@@ -347,16 +347,8 @@ private:
     void showNotification(const cro::String&);
     void showLevelUp(std::uint64_t);
     void toggleQuitReady();
-    struct SkipState final
-    {
-        std::int32_t state = -1;
-        bool wasSkipped = false;
-
-        static constexpr float SkipTime = 1.f;
-        float currentTime = 0.f;
-
-        std::int32_t previousState = state;
-    }m_skipState;
+    
+    SkipState m_skipState;
     void updateSkipMessage(float);
     void refreshUI();
 

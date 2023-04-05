@@ -150,6 +150,16 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
         loadAssets();
         createScene();
 
+#ifdef USE_GNS
+        //cached menu states depend on steam stats being
+        //up to date so this hacks in a delay and pumps the callback loop
+        cro::Clock cl;
+        while (cl.elapsed().asSeconds() < 3.f)
+        {
+            Achievements::update();
+        }
+#endif
+
         updateUnlockedItems();
 
         cacheState(StateID::Unlock);

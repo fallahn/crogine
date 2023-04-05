@@ -299,8 +299,8 @@ bool DrivingState::handleEvent(const cro::Event& evt)
         cmd.targetFlags = CommandID::UI::MessageBoard;
         cmd.action = [](cro::Entity e, float)
         {
-            auto& [state, currTime] = e.getComponent<cro::Callback>().getUserData<MessageAnim>();
-            if (state == MessageAnim::Hold)
+            auto& [state, currTime] = e.getComponent<cro::Callback>().getUserData<PopupAnim>();
+            if (state == PopupAnim::Hold)
             {
                 currTime = 10.f; //some suitably large number - the callback will clamp it
             }
@@ -702,6 +702,11 @@ void DrivingState::handleMessage(const cro::Message& msg)
 bool DrivingState::simulate(float dt)
 {
     m_ballTrail.update();
+
+    if (getStateCount() == 1)
+    {
+        updateSkipMessage(dt);
+    }
 
     auto windDir = m_gameScene.getSystem<BallSystem>()->getWindDirection();
     updateWindDisplay(windDir);
@@ -2446,6 +2451,7 @@ void DrivingState::createBall()
         ent.getComponent<cro::Callback>().getUserData<float>() = groundHeight;
 
         ent.getComponent<ClientCollider>().state = static_cast<std::uint8_t>(state);
+        m_skipState.state = static_cast<std::int32_t>(state);
     };
 
 
@@ -2714,6 +2720,8 @@ void DrivingState::createFlag()
                     f.getComponent<cro::Callback>().active = true;
                 };
                 m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+                setActiveCamera(CameraID::Player);
             }
         }
 
@@ -2789,6 +2797,8 @@ void DrivingState::startTransition()
 
 void DrivingState::hitBall()
 {
+    m_skipState = {};
+
     auto club = m_inputParser.getClub();
     auto facing = cro::Util::Maths::sgn(m_avatar.model.getComponent<cro::Transform>().getScale().x);
 
@@ -3073,7 +3083,7 @@ void DrivingState::forceRestart()
     cmd.targetFlags = CommandID::UI::MessageBoard;
     cmd.action = [](cro::Entity e, float)
     {
-        e.getComponent<cro::Callback>().getUserData<MessageAnim>().state = MessageAnim::Abort;
+        e.getComponent<cro::Callback>().getUserData<PopupAnim>().state = PopupAnim::Abort;
     };
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 

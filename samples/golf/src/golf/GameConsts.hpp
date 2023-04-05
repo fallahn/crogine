@@ -255,6 +255,17 @@ struct AnimationID final
     static constexpr std::size_t Invalid = std::numeric_limits<std::size_t>::max();
 };
 
+struct SkipState final
+{
+    std::int32_t state = -1;
+    bool wasSkipped = false;
+
+    static constexpr float SkipTime = 1.f;
+    float currentTime = 0.f;
+
+    std::int32_t previousState = state;
+};
+
 struct Avatar final
 {
     bool flipped = false;

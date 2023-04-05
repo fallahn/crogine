@@ -53,7 +53,7 @@ public:
     void addPoint(glm::vec3);
 
     void update();
-
+    void reset();
     void setUseBeaconColour(bool);
 
 private:

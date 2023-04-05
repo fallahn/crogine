@@ -244,10 +244,10 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
         buildTrophyScene();
         buildScene();
 
+        createTransition();
         cacheState(StateID::Pause);
         });
 
-    createTransition();
 
     sd.baseState = StateID::Golf;
 
