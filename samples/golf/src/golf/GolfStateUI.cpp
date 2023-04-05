@@ -2401,6 +2401,19 @@ void GolfState::showMessageBoard(MessageBoardID messageType, bool special)
             msg->score = static_cast<std::uint8_t>(score);
             msg->travelDistance = glm::length2(m_holeData[m_currentHole].pin - m_currentPlayer.position);
             msg->club = getClub();
+
+            if (score <= ScoreID::Par
+                && m_sharedData.showBeacon)
+            {
+                //display ring animation
+                cro::Command cmd;
+                cmd.targetFlags = CommandID::HoleRing;
+                cmd.action = [](cro::Entity e, float)
+                {
+                    e.getComponent<cro::Callback>().active = true;
+                };
+                m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+            }
         }
 
 

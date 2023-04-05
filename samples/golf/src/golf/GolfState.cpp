@@ -192,7 +192,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     m_windBuffer        ("WindValues"),
     m_holeToModelRatio  (1.f),
     m_currentHole       (0),
-    m_distanceToHole    (1.f), //don't init to 0 incase we get div0
+    m_distanceToHole    (1.f), //don't init to 0 in case we get div0
     m_terrainChunker    (m_gameScene),
     m_terrainBuilder    (sd, m_holeData, m_terrainChunker),
     m_audioPath         ("assets/golf/sound/ambience.xas"),
@@ -3596,90 +3596,89 @@ void GolfState::buildScene()
     glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
 
 
-    //when putting this shows the distance/power ratio
-    //material = m_resources.materials.get(m_materialIDs[MaterialID::PuttAssist]);
-    //material.enableDepthTest = true;
-    //material.setProperty("u_colourRotation", m_sharedData.beaconColour);
-    //meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_TRIANGLE_STRIP));
-    //entity = m_gameScene.createEntity();
-    //entity.addComponent<cro::CommandTarget>().ID = CommandID::StrokeArc | CommandID::BeaconColour; //we can recycle this as it behaves (mostly) the same way
-    //entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), material);
-    //entity.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniGreen | RenderFlags::MiniMap | RenderFlags::Reflection));
-    //entity.addComponent<cro::Transform>().setPosition(pos);
-    //entity.addComponent<cro::Callback>().active = true;
-    //entity.getComponent<cro::Callback>().function =
-    //    [&](cro::Entity e, float)
-    //{
-    //    bool hidden = !m_sharedData.showPuttingPower
-    //        || (m_currentPlayer.terrain != TerrainID::Green)
-    //        || m_sharedData.localConnectionData.playerData[m_currentPlayer.player].isCPU;
+    //ring effect when holing par or under
+    material = m_resources.materials.get(m_materialIDs[MaterialID::BallTrail]);
+    material.enableDepthTest = true;
+    material.setProperty("u_colourRotation", m_sharedData.beaconColour);
+    meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_TRIANGLE_STRIP));
+    entity = m_gameScene.createEntity();
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::HoleRing | CommandID::BeaconColour;
+    entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), material);
+    entity.getComponent<cro::Model>().setRenderFlags(~(/*RenderFlags::MiniGreen |*/ RenderFlags::MiniMap | RenderFlags::Reflection));
+    entity.addComponent<cro::Transform>().setScale(glm::vec3(0.f));
+    
+    entity.addComponent<cro::Callback>().setUserData<float>(0.f);
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float dt)
+    {
+        const float Speed = dt;
+        static constexpr float MaxTime = 2.f;
+        auto& progress = e.getComponent<cro::Callback>().getUserData<float>();
+        progress = std::min(MaxTime, progress + Speed);
 
-    //    if (!hidden)
-    //    {
-    //        static constexpr float Balance = 1.1f;
-    //        float scale = /*cro::Util::Easing::easeOutSine*/(m_inputParser.getPower() * Balance); //bit of a fudge to try making the representation more accurate
-    //        //the putter scales down as it gets closer so we need to compensate
-    //        float rangeScale = std::clamp((Clubs[ClubID::Putter].getTarget(m_distanceToHole) / Clubs[ClubID::Putter].getTarget(10000.f)) * Balance, 0.f, 1.f);
+        float scale = cro::Util::Easing::easeOutQuint(progress / MaxTime);
+        e.getComponent<cro::Transform>().setScale(glm::vec3(scale));
 
-    //        scale *= rangeScale;
-    //        e.getComponent<cro::Transform>().setScale(glm::vec3(/*cro::Util::Easing::easeOutSine*/(scale)));
+        float colour = 1.f - cro::Util::Easing::easeOutQuad(progress / MaxTime);
+        e.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", glm::vec4(colour));
 
-    //        //fade with proximity to hole
-    //        auto dist = m_holeData[m_currentHole].pin - e.getComponent<cro::Transform>().getWorldPosition();
-    //        float amount = 0.3f + (smoothstep(0.5f, 2.f, glm::length2(dist)) * 0.7f);
-    //        cro::Colour c(amount, amount, amount); //additive blending so darker == more transparent
-    //        e.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", c);
-    //    }
-    //    e.getComponent<cro::Model>().setHidden(hidden);
-    //};
-    //
-    //verts.clear();
-    //indices.clear();
-    ////vertex colour of the beacon model. I don't remember why I chose this specifically,
-    ////but it needs to match so that the hue rotation in the shader outputs the same result
-    //c = glm::vec3(1.f,0.f,0.781f);
+        if (progress == MaxTime)
+        {
+            progress = 0.f;
+            e.getComponent<cro::Transform>().setScale(glm::vec3(0.f));
+            e.getComponent<cro::Callback>().active = false;
+        }
+    };
+    
+    verts.clear();
+    indices.clear();
+    //vertex colour of the beacon model. I don't remember why I chose this specifically,
+    //but it needs to match so that the hue rotation in the shader outputs the same result
+    c = glm::vec3(1.f,0.f,0.781f);
 
-    //auto j = 0u;
-    //for (auto i = 0.f; i < cro::Util::Const::TAU; i += (cro::Util::Const::TAU / 16.f))
-    //{
-    //    auto x = std::cos(i) * Clubs[ClubID::Putter].getTarget(10000.f); //distance isn't calc'd yet so make sure it's suitable large
-    //    auto z = -std::sin(i) * Clubs[ClubID::Putter].getTarget(10000.f);
+    static constexpr float RingRadius = 1.f;
+    auto j = 0u;
+    for (auto i = 0.f; i < cro::Util::Const::TAU; i += (cro::Util::Const::TAU / 16.f))
+    {
+        auto x = std::cos(i) * RingRadius;
+        auto z = -std::sin(i) * RingRadius;
 
-    //    verts.push_back(x);
-    //    verts.push_back(Ball::Radius);
-    //    verts.push_back(z);
-    //    verts.push_back(c.r);
-    //    verts.push_back(c.g);
-    //    verts.push_back(c.b);
-    //    verts.push_back(1.f);
-    //    indices.push_back(j++);
+        verts.push_back(x);
+        verts.push_back(Ball::Radius);
+        verts.push_back(z);
+        verts.push_back(c.r);
+        verts.push_back(c.g);
+        verts.push_back(c.b);
+        verts.push_back(1.f);
+        indices.push_back(j++);
 
-    //    verts.push_back(x);
-    //    verts.push_back(Ball::Radius + 0.3f);
-    //    verts.push_back(z);
-    //    verts.push_back(0.02f);
-    //    verts.push_back(0.02f);
-    //    verts.push_back(0.02f);
-    //    verts.push_back(1.f);
-    //    indices.push_back(j++);
-    //}
-    //indices.push_back(indices[0]);
-    //indices.push_back(indices[1]);
+        verts.push_back(x);
+        verts.push_back(Ball::Radius + 0.15f);
+        verts.push_back(z);
+        verts.push_back(0.02f);
+        verts.push_back(0.02f);
+        verts.push_back(0.02f);
+        verts.push_back(1.f);
+        indices.push_back(j++);
+    }
+    indices.push_back(indices[0]);
+    indices.push_back(indices[1]);
 
-    //meshData = &entity.getComponent<cro::Model>().getMeshData();
+    meshData = &entity.getComponent<cro::Model>().getMeshData();
 
-    //meshData->vertexCount = verts.size() / vertStride;
-    //glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData->vbo));
-    //glCheck(glBufferData(GL_ARRAY_BUFFER, meshData->vertexSize * meshData->vertexCount, verts.data(), GL_STATIC_DRAW));
-    //glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
+    meshData->vertexCount = verts.size() / vertStride;
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData->vbo));
+    glCheck(glBufferData(GL_ARRAY_BUFFER, meshData->vertexSize * meshData->vertexCount, verts.data(), GL_STATIC_DRAW));
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 
-    //submesh = &meshData->indexData[0];
-    //submesh->indexCount = static_cast<std::uint32_t>(indices.size());
-    //glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->ibo));
-    //glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh->indexCount * sizeof(std::uint32_t), indices.data(), GL_STATIC_DRAW));
-    //glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
-    //meshData->boundingBox = { glm::vec3(-7.f, 0.2f, -0.7f), glm::vec3(7.f, 0.f, 7.f) };
-    //meshData->boundingSphere = meshData->boundingBox;
+    submesh = &meshData->indexData[0];
+    submesh->indexCount = static_cast<std::uint32_t>(indices.size());
+    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->ibo));
+    glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh->indexCount * sizeof(std::uint32_t), indices.data(), GL_STATIC_DRAW));
+    glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
+    meshData->boundingBox = { glm::vec3(-7.f, 0.2f, -0.7f), glm::vec3(7.f, 0.f, 7.f) };
+    meshData->boundingSphere = meshData->boundingBox;
+    auto ringEntity = entity;
 
     //draw the flag pole as a single line which can be
     //seen from a distance - hole and model are also attached to this
@@ -3694,6 +3693,7 @@ void GolfState::buildScene()
     entity.getComponent<cro::Transform>().addChild(flagEntity.getComponent<cro::Transform>());
     entity.getComponent<cro::Transform>().addChild(beaconEntity.getComponent<cro::Transform>());
     entity.getComponent<cro::Transform>().addChild(arrowEntity.getComponent<cro::Transform>());
+    entity.getComponent<cro::Transform>().addChild(ringEntity.getComponent<cro::Transform>());
 
     meshData = &entity.getComponent<cro::Model>().getMeshData();
     verts =
