@@ -822,23 +822,6 @@ void GolfState::handleMessage(const cro::Message& msg)
                 m_activeAvatar->ballModel.getComponent<cro::Callback>().active = true;
                 m_activeAvatar->ballModel.getComponent<cro::Model>().setHidden(true);
 
-                //if particles are enabled, start them
-                //if (m_sharedData.showBallTrail &&
-                //    club < ClubID::GapWedge)
-                //{
-                //    auto& emitter = m_avatars[m_currentPlayer.client][m_currentPlayer.player].ballModel.getComponent<cro::ParticleEmitter>();
-                //    /*if (m_sharedData.trailBeaconColour)
-                //    {
-                //        emitter.settings.colour = getBeaconColour(m_sharedData.beaconColour);
-                //    }
-                //    else*/
-                //    {
-                //        emitter.settings.colour = cro::Colour::White;
-                //    }
-                //    emitter.start();
-                //}
-
-
                 //see if we're doing something silly like facing the camera
                 auto camVec = cro::Util::Matrix::getForwardVector(m_cameras[CameraID::Player].getComponent<cro::Transform>().getWorldTransform());
                 auto rotation = glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), m_inputParser.getYaw(), cro::Transform::Y_AXIS);
@@ -3332,7 +3315,7 @@ void GolfState::addSystems()
     m_gameScene.setSystemActive<FpsCameraSystem>(false);
 #endif
 
-    m_gameScene.addDirector<GolfParticleDirector>(m_resources.textures);
+    m_gameScene.addDirector<GolfParticleDirector>(m_resources.textures, m_sharedData);
     m_gameScene.addDirector<GolfSoundDirector>(m_resources.audio);
 
 
@@ -4672,7 +4655,6 @@ void GolfState::spawnBall(const ActorInfo& info)
     };
     m_avatars[info.clientID][info.playerID].ballModel = entity;
 
-    entity.addComponent<cro::ParticleEmitter>().settings.loadFromFile("assets/golf/particles/trail.cps", m_resources.textures);
 
     //cro::AudioScape propAudio;
     //propAudio.loadFromFile("assets/golf/sound/props.xas", m_resources.audio);
@@ -6630,11 +6612,6 @@ void GolfState::updateActor(const ActorInfo& update)
 
             e.getComponent<ClientCollider>().active = active;
             e.getComponent<ClientCollider>().state = update.state;
-
-            if (update.state != static_cast<std::uint8_t>(Ball::State::Flight))
-            {
-                e.getComponent<cro::ParticleEmitter>().stop();
-            }
         }
     };
     m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);

@@ -33,6 +33,7 @@ source distribution.
 #include "GameConsts.hpp"
 #include "BallSystem.hpp"
 #include "Clubs.hpp"
+#include "SharedStateData.hpp"
 
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/ecs/components/Transform.hpp>
@@ -46,7 +47,8 @@ source distribution.
 #include <crogine/graphics/SpriteSheet.hpp>
 #include <crogine/util/Constants.hpp>
 
-GolfParticleDirector::GolfParticleDirector(cro::TextureResource& tr)
+GolfParticleDirector::GolfParticleDirector(cro::TextureResource& tr, const SharedStateData& sd)
+    : m_sharedData(sd)
 {
     m_emitterSettings[ParticleID::Water].loadFromFile("assets/golf/particles/water.cps", tr);
     m_emitterSettings[ParticleID::Grass].loadFromFile("assets/golf/particles/dirt.cps", tr);
@@ -59,6 +61,7 @@ GolfParticleDirector::GolfParticleDirector(cro::TextureResource& tr)
     m_emitterSettings[ParticleID::Explode].loadFromFile("assets/golf/particles/explode.cps", tr);
     m_emitterSettings[ParticleID::Blades].loadFromFile("assets/golf/particles/blades.cps", tr);
     m_emitterSettings[ParticleID::Puff].loadFromFile("assets/golf/particles/puff.cps", tr);
+    m_emitterSettings[ParticleID::Trail].loadFromFile("assets/golf/particles/trail.cps", tr);
 
     //hmm how to set smoothing on the texture?
     cro::SpriteSheet spriteSheet;
@@ -150,7 +153,12 @@ void GolfParticleDirector::handleMessage(const cro::Message& msg)
         {
             switch (data.terrain)
             {
-            default: break;
+            default: 
+                if (m_sharedData.showBallTrail)
+                {
+                    getEnt(ParticleID::Trail, data.position);
+                }
+                break;
             case TerrainID::Rough:
                 getEnt(ParticleID::GrassDark, data.position);
                 break;

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2022
+Matt Marchant 2021 - 2023
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -41,13 +41,16 @@ namespace cro
     class TextureResource;
 }
 
+struct SharedStateData;
 class GolfParticleDirector final : public ParticleDirector
 {
 public:
-    explicit GolfParticleDirector(cro::TextureResource&);
+    GolfParticleDirector(cro::TextureResource&, const SharedStateData&);
 
     void handleMessage(const cro::Message&) override;
 private:
+
+    const SharedStateData& m_sharedData;
 
     struct ParticleID final
     {
@@ -56,7 +59,7 @@ private:
             Grass, GrassDark, Water, Sand,
             Sparkle, HIO, Bird,
             Drone, Explode, Blades,
-            Puff,
+            Puff, Trail,
 
             Count
         };

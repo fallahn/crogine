@@ -821,7 +821,7 @@ void DrivingState::addSystems()
 
     m_gameScene.addDirector<DrivingRangeDirector>(m_holeData);
     m_gameScene.addDirector<GolfSoundDirector>(m_resources.audio);
-    m_gameScene.addDirector<GolfParticleDirector>(m_resources.textures);
+    m_gameScene.addDirector<GolfParticleDirector>(m_resources.textures, m_sharedData);
 
 
     m_skyScene.addSystem<cro::CameraSystem>(mb);
@@ -2440,10 +2440,7 @@ void DrivingState::createBall()
             m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
         }
-        else
-        {
-            ent.getComponent<cro::ParticleEmitter>().stop();
-        }
+
         pos.y = 3.f;
         auto groundHeight = m_gameScene.getSystem<BallSystem>()->getTerrain(pos).intersection.y;
         ent.getComponent<cro::Callback>().getUserData<float>() = groundHeight;
@@ -2451,7 +2448,6 @@ void DrivingState::createBall()
         ent.getComponent<ClientCollider>().state = static_cast<std::uint8_t>(state);
     };
 
-    entity.addComponent<cro::ParticleEmitter>().settings.loadFromFile("assets/golf/particles/trail.cps", m_resources.textures);
 
     //ball shadow
     auto ballEnt = entity;
@@ -2818,20 +2814,6 @@ void DrivingState::hitBall()
                 ball.initialForwardVector = glm::normalize(glm::vec3(result.impulse.x, 0.f, result.impulse.z));
                 ball.initialSideVector = glm::normalize(glm::cross(ball.initialForwardVector, cro::Transform::Y_AXIS));
             }
-
-
-            /*if (m_sharedData.showBallTrail)
-            {
-                if (m_sharedData.trailBeaconColour)
-                {
-                    e.getComponent<cro::ParticleEmitter>().settings.colour = getBeaconColour(m_sharedData.beaconColour);
-                }
-                else
-                {
-                    e.getComponent<cro::ParticleEmitter>().settings.colour = cro::Colour::White;
-                }
-                e.getComponent<cro::ParticleEmitter>().start();
-            }*/
         }
     };
     m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
