@@ -1070,10 +1070,19 @@ void ProfileState::buildPreviewScene()
     entity.getComponent<cro::Transform>().setScale(glm::vec3(60.f));
     m_profileData.grassDef->createModel(entity);
     
+    //update the model textures with the current colour settings
+    for (auto i = 0u; i < m_sharedData.avatarInfo.size(); ++i)
+    {
+        auto& t = m_profileTextures.emplace_back(m_sharedData.avatarInfo[i].texturePath);
 
-    //space texture loading over the next few frames to reduce
-    //the time it takes blocking (we can't really multithread here)
-    createProfileTexture(0);
+        for (auto j = 0; j < pc::ColourKey::Count; ++j)
+        {
+            t.setColour(pc::ColourKey::Index(j), m_activeProfile.avatarFlags[j]);
+        }
+        t.apply();
+
+        m_avatarModels[i].previewModel.getComponent<cro::Model>().setMaterialProperty(0, "u_diffuseMap", t.getTexture());
+    }
 
     //empty at front for 'bald'
     m_avatarHairModels.push_back({});
@@ -1150,35 +1159,6 @@ void ProfileState::buildPreviewScene()
 
     m_modelScene.getSunlight().getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, 96.f * cro::Util::Const::degToRad);
     m_modelScene.getSunlight().getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -39.f * cro::Util::Const::degToRad);
-}
-
-void ProfileState::createProfileTexture(std::int32_t index)
-{
-    auto entity = m_modelScene.createEntity();
-    entity.addComponent<cro::Callback>().active = true;
-    entity.getComponent<cro::Callback>().function =
-        [&, index](cro::Entity e, float)
-    {
-        auto i = index;
-        auto& t = m_profileTextures.emplace_back(m_sharedData.avatarInfo[i].texturePath);
-        
-        for (auto j = 0; j < pc::ColourKey::Count; ++j)
-        {
-            t.setColour(pc::ColourKey::Index(j), m_activeProfile.avatarFlags[j]);
-        }
-        t.apply();
-
-        m_avatarModels[i].previewModel.getComponent<cro::Model>().setMaterialProperty(0, "u_diffuseMap", t.getTexture());
-
-        i++;
-        e.getComponent<cro::Callback>().active = false;
-        m_modelScene.destroyEntity(e);
-
-        if (i < m_sharedData.avatarInfo.size())
-        {
-            createProfileTexture(i);
-        }
-    };
 }
 
 void ProfileState::quitState()

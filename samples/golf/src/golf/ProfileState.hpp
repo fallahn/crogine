@@ -118,7 +118,6 @@ private:
     void loadResources();
     void buildScene();
     void buildPreviewScene();
-    void createProfileTexture(std::int32_t);
     void quitState();
 
     std::size_t indexFromAvatarID(std::uint32_t) const;
