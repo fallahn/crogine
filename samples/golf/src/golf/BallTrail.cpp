@@ -57,11 +57,10 @@ BallTrail::BallTrail()
 //public
 void BallTrail::create(cro::Scene& scene, cro::ResourceCollection& resources, std::int32_t materialID)
 {
-
     auto material = resources.materials.get(materialID);
     material.enableDepthTest = false;
     material.blendMode = cro::Material::BlendMode::Additive;
-    
+    material.setProperty("u_colour", cro::Colour::White);
     
     for (auto i = 0u; i < BufferCount; ++i)
     {

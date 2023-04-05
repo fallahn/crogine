@@ -37,7 +37,8 @@ using namespace cro;
 State::State(StateStack& stack, State::Context context)
     : m_stack   (stack),
     m_context   (context),
-    m_cached    (false)
+    m_cached    (false),
+    m_inUse     (false)
 {
 
 }

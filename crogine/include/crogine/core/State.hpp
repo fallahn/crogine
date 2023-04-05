@@ -179,6 +179,7 @@ namespace cro
         StateStack& m_stack;
         Context m_context;
         bool m_cached;
+        bool m_inUse; //only relevant if this is a cached state
 
         std::vector<std::int32_t> m_cachedIDs;
         friend class StateStack;

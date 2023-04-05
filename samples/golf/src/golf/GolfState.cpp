@@ -3599,6 +3599,7 @@ void GolfState::buildScene()
     //ring effect when holing par or under
     material = m_resources.materials.get(m_materialIDs[MaterialID::BallTrail]);
     material.enableDepthTest = true;
+    material.doubleSided = true;
     material.setProperty("u_colourRotation", m_sharedData.beaconColour);
     meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_TRIANGLE_STRIP));
     entity = m_gameScene.createEntity();
@@ -3612,7 +3613,7 @@ void GolfState::buildScene()
         [&](cro::Entity e, float dt)
     {
         const float Speed = dt;
-        static constexpr float MaxTime = 2.f;
+        static constexpr float MaxTime = 1.f;
         auto& progress = e.getComponent<cro::Callback>().getUserData<float>();
         progress = std::min(MaxTime, progress + Speed);
 

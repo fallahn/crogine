@@ -66,6 +66,20 @@ void StateStack::handleMessage(const Message& msg)
     {
         s->handleMessage(msg);
     }
+
+    //cached states need to know if we were resized
+    if (msg.id == Message::WindowMessage)
+    {
+        for (auto& [_,s] : m_stateCache)
+        {
+            //if the state is in use (ie on the stack)
+            //it'll already have this message
+            if (!s->m_inUse)
+            {
+                s->handleMessage(msg);
+            }
+        }
+    }
 }
 
 void StateStack::simulate(float dt)
@@ -176,6 +190,7 @@ void StateStack::applyPendingChanges()
             if (m_stateCache.count(change.id) != 0)
             {
                 m_stack.push_back(m_stateCache.at(change.id));
+                m_stack.back()->m_inUse = true;
             }
             else
             {
@@ -191,6 +206,7 @@ void StateStack::applyPendingChanges()
             msg->action = Message::StateEvent::Popped;
             msg->id = id;
 
+            m_stack.back()->m_inUse = false;
             m_stack.pop_back();
 
             if (!m_suspended.empty() && m_suspended.back().first == id)
