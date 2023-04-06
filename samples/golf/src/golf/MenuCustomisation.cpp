@@ -455,10 +455,10 @@ void MenuState::updateProfileTextures(std::size_t start, std::size_t count)
     for (auto i = start; i < start + count; ++i)
     {
         const auto& flags = m_profileData.playerProfiles[i].avatarFlags;
-        m_profileTextures[i].setColour(pc::ColourKey::BottomDark, flags[0]);
-        m_profileTextures[i].setColour(pc::ColourKey::TopDark, flags[1]);
-        m_profileTextures[i].setColour(pc::ColourKey::Skin, flags[2]);
-        m_profileTextures[i].setColour(pc::ColourKey::Hair, flags[3]);
+        for (auto j = 0u; j < pc::ColourKey::Count; ++j)
+        {
+            m_profileTextures[i].setColour(pc::ColourKey::Index(j), flags[j]);
+        }
 
         m_profileTextures[i].apply();
     }

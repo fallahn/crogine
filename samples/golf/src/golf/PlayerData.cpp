@@ -51,6 +51,8 @@ bool PlayerData::saveProfile() const
     cfg.addProperty("flags1").setValue(avatarFlags[1]);
     cfg.addProperty("flags2").setValue(avatarFlags[2]);
     cfg.addProperty("flags3").setValue(avatarFlags[3]);
+    cfg.addProperty("flags4").setValue(avatarFlags[4]);
+    cfg.addProperty("flags5").setValue(avatarFlags[5]);
     cfg.addProperty("cpu").setValue(isCPU);
 
     //hmmmm is it possible we might accidentally
@@ -137,6 +139,16 @@ bool PlayerData::loadProfile(const std::string& path, const std::string& uid)
                 auto flag = prop.getValue<std::int32_t>() % pc::PairCounts[3];
                 avatarFlags[3] = static_cast<std::uint8_t>(flag);
             }
+            else if (n == "flags4")
+            {
+                auto flag = prop.getValue<std::int32_t>() % pc::PairCounts[4];
+                avatarFlags[4] = static_cast<std::uint8_t>(flag);
+            }
+            else if (n == "flags5")
+            {
+                auto flag = prop.getValue<std::int32_t>() % pc::PairCounts[5];
+                avatarFlags[5] = static_cast<std::uint8_t>(flag);
+            }
 
             else if (n == "cpu")
             {
@@ -220,7 +232,6 @@ void ProfileTexture::setColour(pc::ColourKey::Index idx, std::int8_t cIdx)
     //cache the colour and only update if it changed.
     if ( m_colours[idx] != pc::Palette[cIdx])
     {
-
         for (auto i : m_keyIndices[idx])
         {
             //set the colour in the image at this index

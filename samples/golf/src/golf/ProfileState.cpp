@@ -474,7 +474,6 @@ void ProfileState::buildScene()
                 refreshMugshot();
                 refreshNameString();
                 refreshSwatch();
-                //refreshTextures();
             }
 
             break;
@@ -1264,6 +1263,12 @@ void ProfileState::setAvatarIndex(std::size_t idx)
     m_avatarModels[m_avatarIndex].previewModel.getComponent<cro::Callback>().getUserData<AvatarAnimCallbackData>().direction = 0;
 
     m_activeProfile.skinID = m_sharedData.avatarInfo[m_avatarIndex].uid;
+
+    for (auto i = 0u; i < m_activeProfile.avatarFlags.size(); ++i)
+    {
+        m_profileTextures[idx].setColour(pc::ColourKey::Index(i), m_activeProfile.avatarFlags[i]);
+    }
+    m_profileTextures[idx].apply();
 }
 
 void ProfileState::setHairIndex(std::size_t idx)
