@@ -1358,7 +1358,7 @@ void ProfileState::refreshSwatch()
     std::vector<cro::Vertex2D> verts;
     for (auto i = 0u; i < Positions.size(); ++i)
     {
-        cro::Colour c(pc::Palette[m_activeProfile.avatarFlags[i]].light);
+        cro::Colour c = pc::Palette[m_activeProfile.avatarFlags[i]];
         auto pos = Positions[i];
 
         verts.emplace_back(glm::vec2(pos.x, pos.y + SwatchSize.y), c);

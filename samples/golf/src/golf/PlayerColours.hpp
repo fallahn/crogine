@@ -29,82 +29,88 @@ source distribution.
 
 #pragma once
 
+#include <crogine/graphics/Colour.hpp>
+
 #include <cstdint>
 #include <array>
 
-struct ColourPair final
-{
-    const std::uint32_t light = 0x000000FF;
-    const std::uint32_t dark = 0x000000FF;
-
-    constexpr ColourPair(std::uint32_t l, std::uint32_t d)
-        : light(l), dark(d) {}
-};
-
 namespace pc
 {
-    struct ColourID final
+    static inline const std::array<cro::Colour, 40u> Palette =
     {
-        enum
-        {
-            White,
-            Taupe,
-            Grey,
-            Beige,
-            Tan,
-            Brown,
-            Olive,
-            Blue,
-            Green,
-            Yellow,
-            Red,
-            Black,
-
-            Count
-        };
-    };
-
-    static constexpr std::array<ColourPair, ColourID::Count> Palette =
-    {
-        ColourPair(0xfff8e1ff, 0xc8b89fff), //white
-        ColourPair(0x987a68ff, 0x674949ff), //taupe
-        ColourPair(0xadb9b8ff, 0x6b6f72ff), //grey
-        ColourPair(0xdbaf77ff, 0xb77854ff), //beige
-        ColourPair(0xb77854ff, 0x833e35ff), //tan
-        ColourPair(0x833e35ff, 0x50285fff), //brown
-        ColourPair(0x7e6d37ff, 0x65432fff), //olive
-        ColourPair(0x6eb39dff, 0x30555bff), //blue
-        ColourPair(0x6ebe70ff, 0x467e3eff), //green
-        ColourPair(0xf2cf5cff, 0xec773dff), //yellow
-        ColourPair(0xc85287ff, 0xb83530ff), //red
-        ColourPair(0x281721ff, 0x0d0b0dff), //black
+        cro::Colour(0xbe6ebcff),
+        cro::Colour(0x763e7eff),
+        cro::Colour(0x6d2944ff),
+        cro::Colour(0x722030ff),
+        cro::Colour(0xb83530ff),
+        cro::Colour(0xc85257ff),
+        cro::Colour(0xd55c4dff),
+        cro::Colour(0xec9983ff),
+        cro::Colour(0xf2cf5cff),
+        cro::Colour(0xec773dff),
+        cro::Colour(0xadb9b8ff),
+        cro::Colour(0x6b6f72ff),
+        cro::Colour(0x3a3941ff),
+        cro::Colour(0x281721ff),
+        cro::Colour(0x6a52abff),
+        cro::Colour(0x5c7ff2ff),
+        cro::Colour(0x3db1ecff),
+        cro::Colour(0x4dc6d5ff),
+        cro::Colour(0x30b3b8ff),
+        cro::Colour(0x3493b7ff),
+        cro::Colour(0xadd9b7ff),
+        cro::Colour(0x6eb39dff),
+        cro::Colour(0x30555bff),
+        cro::Colour(0x1a1e2dff),
+        cro::Colour(0x284e43ff),
+        cro::Colour(0x467e3eff),
+        cro::Colour(0x93ab52ff),
+        cro::Colour(0x6ebe70ff),
+        cro::Colour(0x207262ff),
+        cro::Colour(0x17281eff),
+        cro::Colour(0xdbaf77ff),
+        cro::Colour(0xb77854ff),
+        cro::Colour(0x833e35ff),
+        cro::Colour(0x50282fff),
+        cro::Colour(0x65432fff),
+        cro::Colour(0x674949ff),
+        cro::Colour(0x987a68ff),
+        cro::Colour(0xc8b89fff),
+        cro::Colour(0xfff8e1ff),
+        cro::Colour(0x7e6d37ff)
     };
 
     struct ColourKey final
     {
         enum Index
         {
-            BottomLight, TopLight,
-            BottomDark, TopDark,
-            Skin, Hair,
+            Hair, Skin,
+            TopLight, TopDark,
+            BottomLight, BottomDark,
 
             Count
         };
     };
 
-    static inline const std::array<std::uint8_t, ColourKey::Count> PairCounts =
+    static inline const std::array<std::size_t, ColourKey::Count> PairCounts =
     {
-        ColourID::Count, ColourID::Count, ColourID::Count, ColourID::Count, ColourID::Count - 3, ColourID::Count
+        Palette.size(),
+        Palette.size(),
+        Palette.size(),
+        Palette.size(),
+        Palette.size(),
+        Palette.size()
     };
 
-    //TODO these are KEY colours - and should be single UNIQUE entries for each colour
-    static constexpr std::array<ColourPair, ColourKey::Count> Keys =
+    static constexpr std::array<std::uint32_t, ColourKey::Count> Keys =
     {
-        ColourPair(0x0a, 0x00), //(0x0a0a0aff, 0x000000ff),
-        ColourPair(0x28, 0x1e), //(0x282828ff, 0x1e1e1eff),
-        ColourPair(0x0a, 0x00), //(0x0a0a0aff, 0x000000ff),
-        ColourPair(0x28, 0x1e), //(0x282828ff, 0x1e1e1eff),
-        ColourPair(0x46, 0x3c), //(0x464646ff, 0x3c3c3cff),
-        ColourPair(0x64, 0x5a)  //(0x646464ff, 0x5a5a5aff)
+        (0x64), //hair
+        (0x46), //skin
+
+        (0x28), //top light
+        (0x1e), //top dark
+
+        (0x0a), //bottom light
+        (0x00), //bottom dark
     };
 }

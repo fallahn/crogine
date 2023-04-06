@@ -359,7 +359,7 @@ void MenuState::createAvatarMenu(cro::Entity parent)
                 m_playerAvatars[idx].hairAttachment->setModel(hair.model);
 
                 //apply hair colour to material
-                auto hairColour = m_profileTextures[profileIndex].getColour(pc::ColourKey::Hair).first;
+                auto hairColour = m_profileTextures[profileIndex].getColour(pc::ColourKey::Hair);
                 hair.model.getComponent<cro::Model>().setMaterialProperty(0, "u_hairColour", hairColour);
             }
         }

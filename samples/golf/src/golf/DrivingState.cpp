@@ -2124,7 +2124,7 @@ void DrivingState::createPlayer(cro::Entity courseEnt)
 
                 //set material and colour
                 auto mat = m_resources.materials.get(m_materialIDs[MaterialID::Hair]);
-                mat.setProperty("u_hairColour", cro::Colour(pc::Palette[playerData.avatarFlags[pc::ColourKey::Hair]].light));
+                mat.setProperty("u_hairColour", pc::Palette[playerData.avatarFlags[pc::ColourKey::Hair]]);
                 hairEnt.getComponent<cro::Model>().setMaterial(0, mat);
 
                 skel.getAttachments()[id].setModel(hairEnt);

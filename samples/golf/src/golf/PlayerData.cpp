@@ -178,32 +178,27 @@ ProfileTexture::ProfileTexture(const std::string& path)
             switch (pixels[i])
             {
             default: break;
-            case pc::Keys[pc::ColourKey::BottomDark].light:
-                if (alpha) m_keyIndicesLight[pc::ColourKey::BottomDark].push_back(i / stride);
+            case pc::Keys[pc::ColourKey::BottomDark]:
+                if (alpha) m_keyIndices[pc::ColourKey::BottomDark].push_back(i / stride);
                 break;
-            case pc::Keys[pc::ColourKey::BottomDark].dark:
-                if (alpha) m_keyIndicesDark[pc::ColourKey::BottomDark].push_back(i / stride);
-                break;
-
-            case pc::Keys[pc::ColourKey::TopDark].light:
-                if (alpha) m_keyIndicesLight[pc::ColourKey::TopDark].push_back(i / stride);
-                break;
-            case pc::Keys[pc::ColourKey::TopDark].dark:
-                if (alpha) m_keyIndicesDark[pc::ColourKey::TopDark].push_back(i / stride);
+            case pc::Keys[pc::ColourKey::BottomLight]:
+                if (alpha) m_keyIndices[pc::ColourKey::BottomLight].push_back(i / stride);
                 break;
 
-            case pc::Keys[pc::ColourKey::Skin].light:
-                if (alpha) m_keyIndicesLight[pc::ColourKey::Skin].push_back(i / stride);
+            case pc::Keys[pc::ColourKey::TopDark]:
+                if (alpha) m_keyIndices[pc::ColourKey::TopDark].push_back(i / stride);
                 break;
-            case pc::Keys[pc::ColourKey::Skin].dark:
-                if (alpha) m_keyIndicesDark[pc::ColourKey::Skin].push_back(i / stride);
+            case pc::Keys[pc::ColourKey::TopLight]:
+                if (alpha) m_keyIndices[pc::ColourKey::TopLight].push_back(i / stride);
                 break;
 
-            case pc::Keys[pc::ColourKey::Hair].light:
-                if (alpha) m_keyIndicesLight[pc::ColourKey::Hair].push_back(i / stride);
+            case pc::Keys[pc::ColourKey::Skin]:
+            case 0x3c: //hack around old textures having two tone skin
+                if (alpha) m_keyIndices[pc::ColourKey::Skin].push_back(i / stride);
                 break;
-            case pc::Keys[pc::ColourKey::Hair].dark:
-                if (alpha) m_keyIndicesDark[pc::ColourKey::Hair].push_back(i / stride);
+
+            case pc::Keys[pc::ColourKey::Hair]:
+                if (alpha) m_keyIndices[pc::ColourKey::Hair].push_back(i / stride);
                 break;
             }
         }
@@ -217,43 +212,30 @@ ProfileTexture::ProfileTexture(const std::string& path)
     }
 }
 
-void ProfileTexture::setColour(pc::ColourKey::Index idx, std::int8_t pairIdx)
+void ProfileTexture::setColour(pc::ColourKey::Index idx, std::int8_t cIdx)
 {
-    CRO_ASSERT(pairIdx < pc::ColourID::Count, "");
+    CRO_ASSERT(cIdx < pc::Palette.size(), "");
 
     const auto imgWidth = m_imageBuffer->getSize().x;
     //cache the colour and only update if it changed.
-    if (auto colour = cro::Colour(pc::Palette[pairIdx].light); m_lightColours[idx] != colour)
+    if ( m_colours[idx] != pc::Palette[cIdx])
     {
 
-        for (auto i : m_keyIndicesLight[idx])
+        for (auto i : m_keyIndices[idx])
         {
             //set the colour in the image at this index
             auto x = i % imgWidth;
             auto y = i / imgWidth;
 
-            m_imageBuffer->setPixel(x, y, colour);
+            m_imageBuffer->setPixel(x, y, pc::Palette[cIdx]);
         }
-        m_lightColours[idx] = colour;
-    }
-
-
-    if (auto colour = cro::Colour(pc::Palette[pairIdx].dark); m_darkColours[idx] != colour)
-    {
-        for (auto i : m_keyIndicesDark[idx])
-        {
-            auto x = i % imgWidth;
-            auto y = i / imgWidth;
-
-            m_imageBuffer->setPixel(x, y, colour);
-        }
-        m_darkColours[idx] = colour;
+        m_colours[idx] = pc::Palette[cIdx];
     }
 }
 
-std::pair<cro::Colour, cro::Colour> ProfileTexture::getColour(pc::ColourKey::Index idx) const
+const cro::Colour& ProfileTexture::getColour(pc::ColourKey::Index idx) const
 {
-    return { m_lightColours[idx], m_darkColours[idx] };
+    return m_colours[idx];
 }
 
 void ProfileTexture::apply(cro::Texture* dst)

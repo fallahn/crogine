@@ -71,7 +71,7 @@ struct ProfileTexture
     explicit ProfileTexture(const std::string&);
 
     void setColour(pc::ColourKey::Index, std::int8_t);
-    std::pair<cro::Colour, cro::Colour> getColour(pc::ColourKey::Index) const;
+    const cro::Colour& getColour(pc::ColourKey::Index) const;
     void apply(cro::Texture* dst = nullptr);
 
     cro::TextureID getTexture() const { return cro::TextureID(*m_texture); }
@@ -86,9 +86,7 @@ private:
     std::unique_ptr<cro::Texture> m_texture;
     std::unique_ptr<cro::Texture> m_mugshot;
 
-    std::array<std::vector<std::uint32_t>, pc::ColourKey::Count> m_keyIndicesLight;
-    std::array<std::vector<std::uint32_t>, pc::ColourKey::Count> m_keyIndicesDark;
+    std::array<std::vector<std::uint32_t>, pc::ColourKey::Count> m_keyIndices;
 
-    std::array<cro::Colour, pc::ColourKey::Count> m_lightColours;
-    std::array<cro::Colour, pc::ColourKey::Count> m_darkColours;
+    std::array<cro::Colour, pc::ColourKey::Count> m_colours;
 };
