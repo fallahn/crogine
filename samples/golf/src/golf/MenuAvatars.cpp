@@ -294,7 +294,7 @@ void MenuState::createAvatarMenu(cro::Entity parent)
 
     //active profile mugshot
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 396.f, 24.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 397.f, 22.f, 0.1f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>();
     avatarEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -338,7 +338,7 @@ void MenuState::createAvatarMenu(cro::Entity parent)
         if (m_profileTextures[profileIndex].getMugshot())
         {
             glm::vec2 texSize(m_profileTextures[profileIndex].getMugshot()->getSize());
-            glm::vec2 scale = glm::vec2(98.f, 42.f) / texSize;
+            glm::vec2 scale = glm::vec2(96.f, 48.f) / texSize;
 
             mugshot.getComponent<cro::Transform>().setScale(scale);
             mugshot.getComponent<cro::Sprite>().setTexture(*m_profileTextures[profileIndex].getMugshot());

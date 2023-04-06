@@ -1280,7 +1280,8 @@ void ProfileState::setHairIndex(std::size_t idx)
         m_avatarHairModels[hairIndex].getComponent<cro::Model>().setHidden(false);
     }
 
-    if (m_avatarModels[m_avatarIndex].hairAttachment)
+    if (m_avatarModels[m_avatarIndex].hairAttachment
+        && m_avatarHairModels[hairIndex].isValid())
     {
         m_avatarModels[m_avatarIndex].hairAttachment->setModel(m_avatarHairModels[hairIndex]);
         m_avatarHairModels[hairIndex].getComponent<cro::Model>().setMaterialProperty(0, "u_hairColour", pc::Palette[m_activeProfile.avatarFlags[0]]);
@@ -1318,8 +1319,9 @@ void ProfileState::refreshMugshot()
         auto& tex = m_sharedData.sharedResources->textures.get(m_activeProfile.mugshot);
 
         glm::vec2 texSize(tex.getSize());
-        glm::vec2 scale = glm::vec2(98.f, 42.f) / texSize;
+        glm::vec2 scale = glm::vec2(96.f, 48.f) / texSize;
         m_menuEntities[EntityID::Mugshot].getComponent<cro::Transform>().setScale(scale);
+        m_menuEntities[EntityID::Mugshot].getComponent<cro::Sprite>().setTexture(tex);
     }
     else
     {
