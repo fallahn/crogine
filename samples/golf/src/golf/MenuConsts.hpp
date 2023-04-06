@@ -175,6 +175,26 @@ static inline bool activated(const cro::ButtonEvent& evt)
     }
 }
 
+static inline bool deactivated(const cro::ButtonEvent& evt)
+{
+    switch (evt.type)
+    {
+    default: return false;
+    case SDL_MOUSEBUTTONUP:
+    case SDL_MOUSEBUTTONDOWN:
+        return evt.button.button == SDL_BUTTON_RIGHT;
+    case SDL_CONTROLLERBUTTONUP:
+    case SDL_CONTROLLERBUTTONDOWN:
+        return evt.cbutton.button == SDL_CONTROLLER_BUTTON_B;
+    case SDL_FINGERUP:
+    case SDL_FINGERDOWN:
+        return false;
+    case SDL_KEYUP:
+    case SDL_KEYDOWN:
+        return ((evt.key.keysym.sym == SDLK_ESCAPE || evt.key.keysym.sym == SDLK_BACKSPACE) && (evt.key.keysym.mod == 0));
+    }
+}
+
 static inline void centreText(cro::Entity entity)
 {
     auto bounds = cro::Text::getLocalBounds(entity);

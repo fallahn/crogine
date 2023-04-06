@@ -30,6 +30,7 @@ source distribution.
 #pragma once
 
 #include "../CommonConsts.hpp"
+#include "../PlayerColours.hpp"
 #include "Networking.hpp"
 
 #include <crogine/core/MessageBus.hpp>
@@ -44,7 +45,7 @@ namespace sv
     struct PlayerInfo final
     {
         cro::String name;
-        std::array<std::uint8_t, 4u> avatarFlags = {}; //not really flags per se, but let's at least keep naming consistent
+        std::array<std::uint8_t, pc::ColourKey::Count> avatarFlags = {}; //not really flags per se, but let's at least keep naming consistent
         std::uint32_t ballID = 0;
         std::uint32_t hairID = 0;
         std::uint32_t skinID = 0;

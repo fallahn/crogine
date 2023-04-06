@@ -737,26 +737,26 @@ void ProfileState::buildScene()
                 }
             });
 
-    //ball arrow buttons
-    auto ballHairLeft = createButton("arrow_left", glm::vec2(311.f, 156.f));
-    ballHairLeft.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
-        uiSystem.addCallback([&](cro::Entity e, const cro::ButtonEvent& evt)
-            {
-                if (activated(evt))
-                {
+    //ball arrow buttons - let's put a pin in this, nobody want hair on their balls.
+    //auto ballHairLeft = createButton("arrow_left", glm::vec2(311.f, 156.f));
+    //ballHairLeft.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+    //    uiSystem.addCallback([&](cro::Entity e, const cro::ButtonEvent& evt)
+    //        {
+    //            if (activated(evt))
+    //            {
 
-                }
-            });
-    auto ballHairRight = createButton("arrow_right", glm::vec2(440.f, 156.f));
-    ballHairRight.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
-        uiSystem.addCallback([&](cro::Entity e, const cro::ButtonEvent& evt)
-            {
-                if (activated(evt))
-                {
+    //            }
+    //        });
+    //auto ballHairRight = createButton("arrow_right", glm::vec2(440.f, 156.f));
+    //ballHairRight.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+    //    uiSystem.addCallback([&](cro::Entity e, const cro::ButtonEvent& evt)
+    //        {
+    //            if (activated(evt))
+    //            {
 
-                }
-            });
-    auto ballLeft = createButton("arrow_left", glm::vec2(311.f, 110.f));
+    //            }
+    //        });
+    auto ballLeft = createButton("arrow_left", glm::vec2(311.f, 134.f)); //+24Y
     ballLeft.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem.addCallback([&](cro::Entity e, const cro::ButtonEvent& evt)
             {
@@ -766,7 +766,7 @@ void ProfileState::buildScene()
                     m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
                 }
             });
-    auto ballRight = createButton("arrow_right", glm::vec2(440.f, 110.f));
+    auto ballRight = createButton("arrow_right", glm::vec2(440.f, 134.f));
     ballRight.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem.addCallback([&](cro::Entity e, const cro::ButtonEvent& evt)
             {

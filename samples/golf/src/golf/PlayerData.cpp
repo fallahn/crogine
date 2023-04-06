@@ -178,18 +178,18 @@ ProfileTexture::ProfileTexture(const std::string& path)
             switch (pixels[i])
             {
             default: break;
-            case pc::Keys[pc::ColourKey::Bottom].light:
-                if (alpha) m_keyIndicesLight[pc::ColourKey::Bottom].push_back(i / stride);
+            case pc::Keys[pc::ColourKey::BottomDark].light:
+                if (alpha) m_keyIndicesLight[pc::ColourKey::BottomDark].push_back(i / stride);
                 break;
-            case pc::Keys[pc::ColourKey::Bottom].dark:
-                if (alpha) m_keyIndicesDark[pc::ColourKey::Bottom].push_back(i / stride);
+            case pc::Keys[pc::ColourKey::BottomDark].dark:
+                if (alpha) m_keyIndicesDark[pc::ColourKey::BottomDark].push_back(i / stride);
                 break;
 
-            case pc::Keys[pc::ColourKey::Top].light:
-                if (alpha) m_keyIndicesLight[pc::ColourKey::Top].push_back(i / stride);
+            case pc::Keys[pc::ColourKey::TopDark].light:
+                if (alpha) m_keyIndicesLight[pc::ColourKey::TopDark].push_back(i / stride);
                 break;
-            case pc::Keys[pc::ColourKey::Top].dark:
-                if (alpha) m_keyIndicesDark[pc::ColourKey::Top].push_back(i / stride);
+            case pc::Keys[pc::ColourKey::TopDark].dark:
+                if (alpha) m_keyIndicesDark[pc::ColourKey::TopDark].push_back(i / stride);
                 break;
 
             case pc::Keys[pc::ColourKey::Skin].light:

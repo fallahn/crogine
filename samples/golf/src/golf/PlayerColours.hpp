@@ -84,7 +84,8 @@ namespace pc
     {
         enum Index
         {
-            Bottom, Top,
+            BottomLight, TopLight,
+            BottomDark, TopDark,
             Skin, Hair,
 
             Count
@@ -93,11 +94,13 @@ namespace pc
 
     static inline const std::array<std::uint8_t, ColourKey::Count> PairCounts =
     {
-        ColourID::Count, ColourID::Count, ColourID::Count - 3, ColourID::Count
+        ColourID::Count, ColourID::Count, ColourID::Count, ColourID::Count, ColourID::Count - 3, ColourID::Count
     };
 
     static constexpr std::array<ColourPair, ColourKey::Count> Keys =
     {
+        ColourPair(0x0a, 0x00), //(0x0a0a0aff, 0x000000ff),
+        ColourPair(0x28, 0x1e), //(0x282828ff, 0x1e1e1eff),
         ColourPair(0x0a, 0x00), //(0x0a0a0aff, 0x000000ff),
         ColourPair(0x28, 0x1e), //(0x282828ff, 0x1e1e1eff),
         ColourPair(0x46, 0x3c), //(0x464646ff, 0x3c3c3cff),

@@ -2325,7 +2325,7 @@ void MenuState::updateLobbyAvatars()
         }
         children.clear();
 
-        const auto applyTexture = [&](std::size_t idx, cro::Texture& targetTexture, const std::array<uint8_t, 4u>& flags)
+        const auto applyTexture = [&](std::size_t idx, cro::Texture& targetTexture, const std::array<uint8_t, pc::ColourKey::Count>& flags)
         {
             for (auto j = 0u; j < flags.size(); ++j)
             {
@@ -3489,6 +3489,7 @@ void MenuState::updateCourseRuleString()
             scoreStr += Social::getTopFive(m_sharedData.mapDirectory, m_sharedData.holeCount);
             m_lobbyWindowEntities[LobbyEntityID::CourseTicker].getComponent<cro::Text>().setString(scoreStr);
             m_lobbyWindowEntities[LobbyEntityID::CourseTicker].getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+            m_lobbyWindowEntities[LobbyEntityID::CourseTicker].getComponent<cro::Transform>().setPosition(glm::vec2(200.f,0.f));
         }
         else
         {
