@@ -1154,16 +1154,7 @@ void ProfileState::buildPreviewScene()
     m_ballIndex = indexFromBallID(m_activeProfile.ballID);
     m_ballModels[m_ballIndex].ball.getComponent<cro::Model>().setHidden(false);
 
-    if (m_avatarModels[m_avatarIndex].hairAttachment != nullptr)
-    {
-        auto hairIdx = indexFromHairID(m_activeProfile.hairID);
-        if (m_avatarHairModels[hairIdx].isValid())
-        {
-            m_avatarHairModels[hairIdx].getComponent<cro::Model>().setHidden(false);
-        }
-        m_avatarModels[m_avatarIndex].hairAttachment->setModel(m_avatarHairModels[hairIdx]);
-        m_avatarModels[m_avatarIndex].hairIndex = hairIdx;
-    }
+    setHairIndex(indexFromHairID(m_activeProfile.hairID));
 
     auto ballTexCallback = [&](cro::Camera& cam)
     {
@@ -1283,7 +1274,7 @@ void ProfileState::setHairIndex(std::size_t idx)
     {
         m_avatarHairModels[hairIndex].getComponent<cro::Model>().setHidden(true);
     }
-    hairIndex = idx;// (hairIndex + (m_avatarHairModels.size() - 1)) % m_avatarHairModels.size();
+    hairIndex = idx;
     if (m_avatarHairModels[hairIndex].isValid())
     {
         m_avatarHairModels[hairIndex].getComponent<cro::Model>().setHidden(false);
@@ -1292,6 +1283,7 @@ void ProfileState::setHairIndex(std::size_t idx)
     if (m_avatarModels[m_avatarIndex].hairAttachment)
     {
         m_avatarModels[m_avatarIndex].hairAttachment->setModel(m_avatarHairModels[hairIndex]);
+        m_avatarHairModels[hairIndex].getComponent<cro::Model>().setMaterialProperty(0, "u_hairColour", pc::Palette[m_activeProfile.avatarFlags[0]]);
     }
     m_avatarModels[m_avatarIndex].hairIndex = hairIndex;
 
@@ -1343,15 +1335,14 @@ void ProfileState::refreshNameString()
 
 void ProfileState::refreshSwatch()
 {
-    //TODO this needs to be in the same order as the avatar flags...
     static constexpr std::array Positions =
     {
         glm::vec2(37.f, 171.f),
         glm::vec2(37.f, 139.f),
         glm::vec2(21.f, 107.f),
         glm::vec2(53.f, 107.f),
-        glm::vec2(21.f, 73.f),
-        glm::vec2(53.f, 73.f)
+        glm::vec2(21.f, 74.f),
+        glm::vec2(53.f, 74.f)
     };
     static constexpr glm::vec2 SwatchSize = glm::vec2(20.f);
 

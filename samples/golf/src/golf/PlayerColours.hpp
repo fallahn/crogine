@@ -36,18 +36,44 @@ source distribution.
 
 namespace pc
 {
+    static inline constexpr std::array<std::array<std::uint32_t, 2u>, 12u> KeyMap =
+    {
+        std::array<std::uint32_t, 2u>({8u, 7u}),
+        std::array<std::uint32_t, 2u>({6u, 5u}),
+        std::array<std::uint32_t, 2u>({20u,21u}),
+        std::array<std::uint32_t, 2u>({0u, 1u}),
+        std::array<std::uint32_t, 2u>({1u, 2u}),
+        std::array<std::uint32_t, 2u>({2u, 3u}),
+        std::array<std::uint32_t, 2u>({9u, 4u}),
+        std::array<std::uint32_t, 2u>({11u,12u}),
+        std::array<std::uint32_t, 2u>({17u,15u}),
+        std::array<std::uint32_t, 2u>({38u,39u}),
+        std::array<std::uint32_t, 2u>({35u,34u}),
+        std::array<std::uint32_t, 2u>({23u,19u})
+    };
+
     static inline const std::array<cro::Colour, 40u> Palette =
     {
-        cro::Colour(0xbe6ebcff),
-        cro::Colour(0x763e7eff),
-        cro::Colour(0x6d2944ff),
-        cro::Colour(0x722030ff),
-        cro::Colour(0xb83530ff),
-        cro::Colour(0xc85257ff),
-        cro::Colour(0xd55c4dff),
-        cro::Colour(0xec9983ff),
-        cro::Colour(0xf2cf5cff),
-        cro::Colour(0xec773dff),
+        cro::Colour(0xdbaf77ff),
+        cro::Colour(0xb77854ff),
+        cro::Colour(0x833e35ff),
+        cro::Colour(0x50282fff),
+        cro::Colour(0x65432fff),
+        cro::Colour(0x674949ff),
+        cro::Colour(0x987a68ff),
+        cro::Colour(0xc8b89fff),
+        cro::Colour(0xfff8e1ff),
+        cro::Colour(0x7e6d37ff),
+        cro::Colour(0xadd9b7ff),
+        cro::Colour(0x6eb39dff),
+        cro::Colour(0x30555bff),
+        cro::Colour(0x1a1e2dff),
+        cro::Colour(0x284e43ff),
+        cro::Colour(0x467e3eff),
+        cro::Colour(0x93ab52ff),
+        cro::Colour(0x6ebe70ff),
+        cro::Colour(0x207262ff),
+        cro::Colour(0xd0b0dff),
         cro::Colour(0xadb9b8ff),
         cro::Colour(0x6b6f72ff),
         cro::Colour(0x3a3941ff),
@@ -58,26 +84,16 @@ namespace pc
         cro::Colour(0x4dc6d5ff),
         cro::Colour(0x30b3b8ff),
         cro::Colour(0x3493b7ff),
-        cro::Colour(0xadd9b7ff),
-        cro::Colour(0x6eb39dff),
-        cro::Colour(0x30555bff),
-        cro::Colour(0x1a1e2dff),
-        cro::Colour(0x284e43ff),
-        cro::Colour(0x467e3eff),
-        cro::Colour(0x93ab52ff),
-        cro::Colour(0x6ebe70ff),
-        cro::Colour(0x207262ff),
-        cro::Colour(0x17281eff),
-        cro::Colour(0xdbaf77ff),
-        cro::Colour(0xb77854ff),
-        cro::Colour(0x833e35ff),
-        cro::Colour(0x50282fff),
-        cro::Colour(0x65432fff),
-        cro::Colour(0x674949ff),
-        cro::Colour(0x987a68ff),
-        cro::Colour(0xc8b89fff),
-        cro::Colour(0xfff8e1ff),
-        cro::Colour(0x7e6d37ff)
+        cro::Colour(0xbe6ebcff),
+        cro::Colour(0x763e7eff),
+        cro::Colour(0x6d2944ff),
+        cro::Colour(0x722030ff),
+        cro::Colour(0xb83530ff),
+        cro::Colour(0xc85257ff),
+        cro::Colour(0xd55c4dff),
+        cro::Colour(0xec9983ff),
+        cro::Colour(0xf2cf5cff),
+        cro::Colour(0xec773dff)
     };
 
     struct ColourKey final
@@ -95,7 +111,7 @@ namespace pc
     static inline const std::array<std::size_t, ColourKey::Count> PairCounts =
     {
         Palette.size(),
-        Palette.size(),
+        8,
         Palette.size(),
         Palette.size(),
         Palette.size(),

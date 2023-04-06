@@ -1020,23 +1020,27 @@ void GolfGame::loadAvatars()
 
                     else if (name == "flags0")
                     {
-                        auto flag = prop.getValue<std::int32_t>() % pc::PairCounts[0];
-                        profile.avatarFlags[0] = static_cast<std::uint8_t>(flag);
+                        auto flag = prop.getValue<std::int32_t>() % pc::PairCounts[3];
+
+                        profile.avatarFlags[4] = static_cast<std::uint8_t>(pc::KeyMap[flag][0]);
+                        profile.avatarFlags[5] = static_cast<std::uint8_t>(pc::KeyMap[flag][1]);
                     }
                     else if (name == "flags1")
                     {
-                        auto flag = prop.getValue<std::int32_t>() % pc::PairCounts[1];
-                        profile.avatarFlags[1] = static_cast<std::uint8_t>(flag);
+                        auto flag = prop.getValue<std::int32_t>() % pc::PairCounts[2];
+                        
+                        profile.avatarFlags[2] = static_cast<std::uint8_t>(pc::KeyMap[flag][0]);
+                        profile.avatarFlags[3] = static_cast<std::uint8_t>(pc::KeyMap[flag][1]);
                     }
                     else if (name == "flags2")
                     {
-                        auto flag = prop.getValue<std::int32_t>() % pc::PairCounts[2];
-                        profile.avatarFlags[2] = static_cast<std::uint8_t>(flag);
+                        auto flag = prop.getValue<std::int32_t>() % pc::PairCounts[1];
+                        profile.avatarFlags[1] = static_cast<std::uint8_t>(pc::KeyMap[flag][0]);
                     }
                     else if (name == "flags3")
                     {
-                        auto flag = prop.getValue<std::int32_t>() % pc::PairCounts[3];
-                        profile.avatarFlags[3] = static_cast<std::uint8_t>(flag);
+                        auto flag = prop.getValue<std::int32_t>() % pc::PairCounts[0];
+                        profile.avatarFlags[0] = static_cast<std::uint8_t>(pc::KeyMap[flag][0]);
                     }
 
                     else if (name == "cpu")
