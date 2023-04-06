@@ -37,10 +37,12 @@ source distribution.
 #include "BallSystem.hpp"
 #include "SharedProfileData.hpp"
 #include "CallbackData.hpp"
+#include "PlayerColours.hpp"
 #include "../GolfGame.hpp"
 
 #include <crogine/core/Window.hpp>
 #include <crogine/core/GameController.hpp>
+#include <crogine/core/Mouse.hpp>
 #include <crogine/graphics/Image.hpp>
 #include <crogine/graphics/SpriteSheet.hpp>
 #include <crogine/gui/Gui.hpp>
@@ -76,13 +78,18 @@ source distribution.
 
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
 
+#include "../ErrorCheck.hpp"
+
 namespace
 {
     struct MenuID final
     {
         enum
         {
-            Dummy, Main
+            Dummy, Main,
+
+            Hair, Skin, TopL, TopD,
+            BottomL, BottomD
         };
     };
 
@@ -124,23 +131,23 @@ ProfileState::ProfileState(cro::StateStack& ss, cro::State::Context ctx, SharedS
     //    {
     //        if (ImGui::Begin("Flaps"))
     //        {
-    //            auto pos = m_avatarCam.getComponent<cro::Transform>().getPosition();
+    //            auto pos = m_cameras[CameraID::Avatar].getComponent<cro::Transform>().getPosition();
     //            if (ImGui::SliderFloat("X", &pos.x, -1.f, 1.f))
     //            {
-    //                m_avatarCam.getComponent<cro::Transform>().setPosition(pos);
+    //                m_cameras[CameraID::Avatar].getComponent<cro::Transform>().setPosition(pos);
     //            }
 
     //            if (ImGui::SliderFloat("Y", &pos.y, 0.f, 5.f))
     //            {
-    //                m_avatarCam.getComponent<cro::Transform>().setPosition(pos);
+    //                m_cameras[CameraID::Avatar].getComponent<cro::Transform>().setPosition(pos);
     //            }
     //            ImGui::Text("%3.3f, %3.3f", pos.x, pos.y);
 
     //            static float rot = 0.f;
     //            if (ImGui::SliderFloat("Rotation", &rot, -1.f, 1.f))
     //            {
-    //                m_avatarCam.getComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, rot);
-    //                m_avatarCam.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, cro::Util::Const::PI);
+    //                m_cameras[CameraID::Avatar].getComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, rot);
+    //                m_cameras[CameraID::Avatar].getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, cro::Util::Const::PI);
     //            }
     //            ImGui::Text("%3.3f", rot);
     //        }
@@ -153,7 +160,7 @@ bool ProfileState::handleEvent(const cro::Event& evt)
 {
     if (ImGui::GetIO().WantCaptureKeyboard
         || ImGui::GetIO().WantCaptureMouse
-        || m_rootNode.getComponent<cro::Callback>().active)
+        || m_menuEntities[EntityID::Root].getComponent<cro::Callback>().active)
     {
         return false;
     }
@@ -164,11 +171,11 @@ bool ProfileState::handleEvent(const cro::Event& evt)
         {
             if (cro::GameController::hasPSLayout(controllerID))
             {
-                m_helpText.getComponent<cro::Text>().setString(PSString);
+                m_menuEntities[EntityID::HelpText].getComponent<cro::Text>().setString(PSString);
             }
             else
             {
-                m_helpText.getComponent<cro::Text>().setString(XboxString);
+                m_menuEntities[EntityID::HelpText].getComponent<cro::Text>().setString(XboxString);
             }
         }
         else
@@ -181,18 +188,18 @@ bool ProfileState::handleEvent(const cro::Event& evt)
             str += ", ";
             str += cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::Down]);
             str += " Rotate/Zoom";
-            m_helpText.getComponent<cro::Text>().setString(str);
+            m_menuEntities[EntityID::HelpText].getComponent<cro::Text>().setString(str);
         }
-        centreText(m_helpText);
+        centreText(m_menuEntities[EntityID::HelpText]);
     };
 
     if (evt.type == SDL_KEYUP)
     {
         if (evt.key.keysym.sym == SDLK_BACKSPACE
-            || evt.key.keysym.sym == SDLK_ESCAPE
-            || evt.key.keysym.sym == SDLK_p)
+            || evt.key.keysym.sym == SDLK_ESCAPE)
         {
-            if (m_textEdit.string == nullptr)
+            if (m_textEdit.string == nullptr
+                && m_uiScene.getSystem<cro::UISystem>()->getActiveGroup() == MenuID::Main)
             {
                 quitState();
                 return false;
@@ -268,6 +275,34 @@ bool ProfileState::handleEvent(const cro::Event& evt)
     else if (evt.type == SDL_MOUSEMOTION)
     {
         cro::App::getWindow().setMouseCaptured(false);
+
+        auto mousePos = m_uiScene.getActiveCamera().getComponent<cro::Camera>().pixelToCoords({ evt.motion.x, evt.motion.y });
+        auto bounds = m_menuEntities[EntityID::AvatarPreview].getComponent<cro::Sprite>().getTextureBounds();
+        bounds = m_menuEntities[EntityID::AvatarPreview].getComponent<cro::Transform>().getWorldTransform() * bounds;
+
+        if (bounds.contains(mousePos)
+            && cro::Mouse::isButtonPressed(cro::Mouse::Button::Left))
+        {
+            m_avatarModels[m_avatarIndex].previewModel.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, static_cast<float>(evt.motion.xrel) * (1.f/60.f));
+        }
+    }
+    else if (evt.type == SDL_MOUSEWHEEL)
+    {
+        auto mousePos = m_uiScene.getActiveCamera().getComponent<cro::Camera>().pixelToCoords(cro::Mouse::getPosition());
+        auto bounds = m_menuEntities[EntityID::AvatarPreview].getComponent<cro::Sprite>().getTextureBounds();
+        bounds = m_menuEntities[EntityID::AvatarPreview].getComponent<cro::Transform>().getWorldTransform() * bounds;
+
+        if (bounds.contains(mousePos))
+        {
+            float zoom = evt.wheel.preciseY * (1.f / 20.f);
+            auto pos = m_cameras[CameraID::Avatar].getComponent<cro::Transform>().getPosition();
+            if (glm::dot(CameraZoomPosition - pos, CameraZoomVector) > zoom
+                && glm::dot(CameraBasePosition - pos, CameraZoomVector) < zoom)
+            {
+                pos += CameraZoomVector * zoom;
+                m_cameras[CameraID::Avatar].getComponent<cro::Transform>().setPosition(pos);
+            }
+        }
     }
 
     m_uiScene.getSystem<cro::UISystem>()->handleEvent(evt);
@@ -328,12 +363,12 @@ bool ProfileState::simulate(float dt)
     }
     if (zoom != 0)
     {
-        auto pos = m_avatarCam.getComponent<cro::Transform>().getPosition();
+        auto pos = m_cameras[CameraID::Avatar].getComponent<cro::Transform>().getPosition();
         if (glm::dot(CameraZoomPosition - pos, CameraZoomVector) > zoom 
             && glm::dot(CameraBasePosition - pos, CameraZoomVector) < zoom)
         {
             pos += CameraZoomVector * zoom;
-            m_avatarCam.getComponent<cro::Transform>().setPosition(pos);
+            m_cameras[CameraID::Avatar].getComponent<cro::Transform>().setPosition(pos);
         }
     }
 
@@ -346,12 +381,12 @@ bool ProfileState::simulate(float dt)
 void ProfileState::render()
 {
     m_ballTexture.clear(cro::Colour::Transparent);
-    m_modelScene.setActiveCamera(m_ballCam);
+    m_modelScene.setActiveCamera(m_cameras[CameraID::Ball]);
     m_modelScene.render();
     m_ballTexture.display();
 
     m_avatarTexture.clear(cro::Colour::Transparent);
-    m_modelScene.setActiveCamera(m_avatarCam);
+    m_modelScene.setActiveCamera(m_cameras[CameraID::Avatar]);
     m_modelScene.render();
     m_avatarTexture.display();
 
@@ -438,6 +473,7 @@ void ProfileState::buildScene()
                 setBallIndex(indexFromBallID(m_activeProfile.ballID));
                 refreshMugshot();
                 refreshNameString();
+                refreshSwatch();
                 //refreshTextures();
             }
 
@@ -457,7 +493,7 @@ void ProfileState::buildScene()
 
     };
 
-    m_rootNode = rootNode;
+    m_menuEntities[EntityID::Root] = rootNode;
 
 
     //quad to darken the screen
@@ -539,7 +575,7 @@ void ProfileState::buildScene()
     };
     centreText(entity);
     bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-    m_nameText = entity;
+    m_menuEntities[EntityID::NameText] = entity;
 
     auto& uiSystem = *m_uiScene.getSystem<cro::UISystem>();
     auto selected = uiSystem.addCallback([&](cro::Entity e)
@@ -574,6 +610,14 @@ void ProfileState::buildScene()
 #ifdef USE_GNS
     //TODO add workshop button
 #endif
+
+    //colour swatch - this has its own update function
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLES);
+    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_menuEntities[EntityID::Swatch] = entity;
+    refreshSwatch();
 
     //colour buttons
     auto hairColour = createButton("colour_highlight", glm::vec2(33.f, 167.f));
@@ -717,11 +761,11 @@ void ProfileState::buildScene()
             {
                 if (activated(evt))
                 {
-                    auto& callback = m_nameText.getComponent<cro::Callback>();
+                    auto& callback = m_menuEntities[EntityID::NameText].getComponent<cro::Callback>();
                     callback.active = !callback.active;
                     if (callback.active)
                     {
-                        beginTextEdit(m_nameText, &m_activeProfile.name, ConstVal::MaxStringChars);
+                        beginTextEdit(m_menuEntities[EntityID::NameText], &m_activeProfile.name, ConstVal::MaxStringChars);
                         m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
 
                         if (evt.type == SDL_CONTROLLERBUTTONUP)
@@ -744,7 +788,6 @@ void ProfileState::buildScene()
     //        {
     //            if (activated(evt))
     //            {
-
     //            }
     //        });
     //auto ballHairRight = createButton("arrow_right", glm::vec2(440.f, 156.f));
@@ -753,7 +796,6 @@ void ProfileState::buildScene()
     //        {
     //            if (activated(evt))
     //            {
-
     //            }
     //        });
     auto ballLeft = createButton("arrow_left", glm::vec2(311.f, 134.f)); //+24Y
@@ -850,7 +892,7 @@ void ProfileState::buildScene()
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>(m_avatarTexture.getTexture());
     bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-
+    m_menuEntities[EntityID::AvatarPreview] = entity;
     addCorners(bgEnt, entity);
 
     //ball preview
@@ -873,7 +915,7 @@ void ProfileState::buildScene()
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>();
     bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-    m_mugshot = entity;
+    m_menuEntities[EntityID::Mugshot] = entity;
 
     refreshMugshot();
 
@@ -890,7 +932,7 @@ void ProfileState::buildScene()
     entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
     entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
     bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-    m_helpText = entity;
+    m_menuEntities[EntityID::HelpText] = entity;
 
     auto updateView = [&, rootNode](cro::Camera& cam) mutable
     {
@@ -1144,16 +1186,16 @@ void ProfileState::buildPreviewScene()
         cam.setPerspective(1.1f, static_cast<float>(BallTexSize.x) / BallTexSize.y, 0.001f, 2.f);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
-    m_ballCam = m_modelScene.createEntity();
-    m_ballCam.addComponent<cro::Transform>().setPosition({ 10.f, 0.045f, 0.099f });
-    m_ballCam.addComponent<cro::Camera>().resizeCallback = ballTexCallback;
-    ballTexCallback(m_ballCam.getComponent<cro::Camera>());
+    m_cameras[CameraID::Ball] = m_modelScene.createEntity();
+    m_cameras[CameraID::Ball].addComponent<cro::Transform>().setPosition({ 10.f, 0.045f, 0.099f });
+    m_cameras[CameraID::Ball].addComponent<cro::Camera>().resizeCallback = ballTexCallback;
+    ballTexCallback(m_cameras[CameraID::Ball].getComponent<cro::Camera>());
 
-    m_avatarCam = m_modelScene.createEntity();
-    m_avatarCam.addComponent<cro::Transform>().setPosition(CameraBasePosition);
-    m_avatarCam.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, cro::Util::Const::PI);
-    m_avatarCam.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -0.157f);
-    auto& cam = m_avatarCam.addComponent<cro::Camera>();
+    m_cameras[CameraID::Avatar] = m_modelScene.createEntity();
+    m_cameras[CameraID::Avatar].addComponent<cro::Transform>().setPosition(CameraBasePosition);
+    m_cameras[CameraID::Avatar].getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, cro::Util::Const::PI);
+    m_cameras[CameraID::Avatar].getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -0.157f);
+    auto& cam = m_cameras[CameraID::Avatar].addComponent<cro::Camera>();
     cam.setPerspective(70.f * cro::Util::Const::degToRad, static_cast<float>(AvatarTexSize.x) / AvatarTexSize.y, 0.1f, 6.f);
     cam.viewport = { 0.f, 0.f, 1.f ,1.f };
 
@@ -1165,7 +1207,7 @@ void ProfileState::quitState()
 {
     applyTextEdit();
 
-    m_rootNode.getComponent<cro::Callback>().active = true;
+    m_menuEntities[EntityID::Root].getComponent<cro::Callback>().active = true;
     m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
 }
 
@@ -1285,18 +1327,49 @@ void ProfileState::refreshMugshot()
 
         glm::vec2 texSize(tex.getSize());
         glm::vec2 scale = glm::vec2(98.f, 42.f) / texSize;
-        m_mugshot.getComponent<cro::Transform>().setScale(scale);
+        m_menuEntities[EntityID::Mugshot].getComponent<cro::Transform>().setScale(scale);
     }
     else
     {
-        m_mugshot.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+        m_menuEntities[EntityID::Mugshot].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
     }
 }
 
 void ProfileState::refreshNameString()
 {
-    m_nameText.getComponent<cro::Text>().setString(m_activeProfile.name);
-    centreText(m_nameText);
+    m_menuEntities[EntityID::NameText].getComponent<cro::Text>().setString(m_activeProfile.name);
+    centreText(m_menuEntities[EntityID::NameText]);
+}
+
+void ProfileState::refreshSwatch()
+{
+    //TODO this needs to be in the same order as the avatar flags...
+    static constexpr std::array Positions =
+    {
+        glm::vec2(37.f, 171.f),
+        glm::vec2(37.f, 139.f),
+        glm::vec2(21.f, 107.f),
+        glm::vec2(53.f, 107.f),
+        glm::vec2(21.f, 73.f),
+        glm::vec2(53.f, 73.f)
+    };
+    static constexpr glm::vec2 SwatchSize = glm::vec2(20.f);
+
+    std::vector<cro::Vertex2D> verts;
+    for (auto i = 0u; i < Positions.size(); ++i)
+    {
+        cro::Colour c(pc::Palette[m_activeProfile.avatarFlags[i]].light);
+        auto pos = Positions[i];
+
+        verts.emplace_back(glm::vec2(pos.x, pos.y + SwatchSize.y), c);
+        verts.emplace_back(pos, c);
+        verts.emplace_back(pos + SwatchSize, c);
+        
+        verts.emplace_back(pos + SwatchSize, c);
+        verts.emplace_back(pos, c);
+        verts.emplace_back(glm::vec2(pos.x + SwatchSize.x, pos.y), c);
+    }
+    m_menuEntities[EntityID::Swatch].getComponent<cro::Drawable2D>().setVertexData(verts);
 }
 
 void ProfileState::beginTextEdit(cro::Entity stringEnt, cro::String* dst, std::size_t maxChars)

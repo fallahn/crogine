@@ -97,6 +97,7 @@ namespace pc
         ColourID::Count, ColourID::Count, ColourID::Count, ColourID::Count, ColourID::Count - 3, ColourID::Count
     };
 
+    //TODO these are KEY colours - and should be single UNIQUE entries for each colour
     static constexpr std::array<ColourPair, ColourKey::Count> Keys =
     {
         ColourPair(0x0a, 0x00), //(0x0a0a0aff, 0x000000ff),

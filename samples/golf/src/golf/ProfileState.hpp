@@ -95,13 +95,30 @@ private:
     std::array<cro::Entity, AudioID::Count> m_audioEnts = {};
 
     glm::vec2 m_viewScale;
-    cro::Entity m_rootNode;
-    cro::Entity m_helpText;
-    cro::Entity m_mugshot;
-    cro::Entity m_nameText;
 
-    cro::Entity m_avatarCam;
-    cro::Entity m_ballCam;
+    struct EntityID final
+    {
+        enum
+        {
+            Root, HelpText,
+            Mugshot, NameText,
+            Swatch, AvatarPreview,
+
+            Count
+        };
+    };
+    std::array<cro::Entity, EntityID::Count> m_menuEntities = {};
+
+    struct CameraID final
+    {
+        enum
+        {
+            Avatar, Ball,
+
+            Count
+        };
+    };
+    std::array<cro::Entity, CameraID::Count> m_cameras;
 
     std::vector<BallPreview> m_ballModels;
     std::vector<cro::Entity> m_ballHairModels;
@@ -130,6 +147,7 @@ private:
 
     void refreshMugshot();
     void refreshNameString();
+    void refreshSwatch();
 
     struct TextEdit final
     {
