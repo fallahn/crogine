@@ -840,7 +840,7 @@ void MenuState::createAvatarScene()
             }
         }
 
-        //we add the animation here as we need to captuer the index which may have
+        //we add the animation here as we need to capture the index which may have
         //changed between loading the model and erasing invalid avatars
         auto entity = m_playerAvatars[i].previewModel;
         entity.addComponent<cro::Callback>().setUserData<AvatarAnimCallbackData>();

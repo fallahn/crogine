@@ -117,7 +117,7 @@ void BallTrail::update()
                 trail.active = false;
 
                 auto* submesh = &trail.meshData->indexData[0];
-                submesh->indexCount = trail.indices.size() - trail.front;
+                submesh->indexCount = static_cast<std::uint32_t>(trail.indices.size() - trail.front);
                 glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->ibo));
                 glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, 0, nullptr, GL_DYNAMIC_DRAW));
                 glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
@@ -127,6 +127,17 @@ void BallTrail::update()
 
             else
             {
+                //fade trail tip
+                static constexpr std::size_t FadeLength = 60;
+                auto start = trail.front;
+                auto end = std::min(trail.front + FadeLength, trail.vertexData.size() - 1);
+                for (auto i = 0u; i < (end - start); ++i)
+                {
+                    float a = static_cast<float>(i) / (end - start);
+                    trail.vertexData[start + i].c = m_baseColour * a;
+                }
+
+
                 //TODO we could sub buffer this and only add what's new
                 trail.meshData->vertexCount = trail.indices.size();
                 glCheck(glBindBuffer(GL_ARRAY_BUFFER, trail.meshData->vbo));
@@ -134,7 +145,7 @@ void BallTrail::update()
                 glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 
                 auto* submesh = &trail.meshData->indexData[0];
-                submesh->indexCount = trail.indices.size() - trail.front;
+                submesh->indexCount = static_cast<std::uint32_t>(trail.indices.size() - trail.front);
                 glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->ibo));
                 glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh->indexCount * sizeof(std::uint32_t), trail.indices.data() + trail.front, GL_DYNAMIC_DRAW));
                 glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));

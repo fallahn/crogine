@@ -3604,7 +3604,7 @@ void GolfState::buildScene()
     entity = m_gameScene.createEntity();
     entity.addComponent<cro::CommandTarget>().ID = CommandID::HoleRing | CommandID::BeaconColour;
     entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), material);
-    entity.getComponent<cro::Model>().setRenderFlags(~(/*RenderFlags::MiniGreen |*/ RenderFlags::MiniMap | RenderFlags::Reflection));
+    entity.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniGreen | RenderFlags::MiniMap | RenderFlags::Reflection));
     entity.addComponent<cro::Transform>().setScale(glm::vec3(0.f));
     
     entity.addComponent<cro::Callback>().setUserData<float>(0.f);

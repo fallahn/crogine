@@ -1126,7 +1126,7 @@ bool BallSystem::updateCollisionMesh(const std::string& modelPath)
     std::int32_t colourOffset = 0;
     for (auto i = 0; i < cro::Mesh::Attribute::Colour; ++i)
     {
-        colourOffset += meshData.attributes[i];
+        colourOffset += static_cast<std::int32_t>(meshData.attributes[i]);
     }
 
     //we have to create a specific object for each sub mesh
@@ -1137,8 +1137,8 @@ bool BallSystem::updateCollisionMesh(const std::string& modelPath)
     {
         btIndexedMesh groundMesh;
         groundMesh.m_vertexBase = reinterpret_cast<std::uint8_t*>(m_vertexData.data());
-        groundMesh.m_numVertices = meshData.vertexCount;
-        groundMesh.m_vertexStride = meshData.vertexSize;
+        groundMesh.m_numVertices = static_cast<int>(meshData.vertexCount);
+        groundMesh.m_vertexStride = static_cast<int>(meshData.vertexSize);
 
         groundMesh.m_numTriangles = meshData.indexData[i].indexCount / 3;
         groundMesh.m_triangleIndexBase = reinterpret_cast<std::uint8_t*>(m_indexData[i].data());

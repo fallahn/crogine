@@ -662,9 +662,15 @@ void MenuState::handleMessage(const cro::Message& msg)
                 }
                 break;
             case StateID::Profile:
+            {
+                auto avtIdx = m_rosterMenu.profileIndices[m_rosterMenu.activeIndex];
+
                 m_sharedData.localConnectionData.playerData[m_rosterMenu.activeIndex] =
-                    m_profileData.playerProfiles[m_rosterMenu.profileIndices[m_rosterMenu.activeIndex]];
+                    m_profileData.playerProfiles[avtIdx];
                 updateRoster();
+
+                //updateProfileTextures(avtIdx, 1);
+            }
                 break;
             }
         }

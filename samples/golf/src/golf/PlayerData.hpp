@@ -44,7 +44,7 @@ source distribution.
 struct PlayerData final
 {
     cro::String name;
-    std::array<std::uint8_t, pc::ColourKey::Count> avatarFlags = { 1,0,1,0,3,6 }; //indices into colour pairs
+    std::array<std::uint8_t, pc::ColourKey::Count> avatarFlags = { 11,12,31,30,3,6 }; //indices into colours
     std::uint32_t ballID = 0;
     std::uint32_t hairID = 0;
     std::uint32_t skinID = 0; //as loaded from the avatar data file
