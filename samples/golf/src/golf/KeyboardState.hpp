@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021
+Matt Marchant 2021 - 2023
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -84,6 +84,18 @@ private:
     std::array<KeyboardLayout, KeyboardLayout::Count> m_keyboardLayouts = {};
     std::size_t m_activeLayout;
     std::int32_t m_selectedIndex;
+
+    struct AudioID final
+    {
+        enum
+        {
+            Move, Select,
+            Space,
+
+            Count
+        };
+    };
+    std::array<cro::Entity, AudioID::Count> m_audioEnts = {};
 
     void buildScene();
     void initCallbacks();

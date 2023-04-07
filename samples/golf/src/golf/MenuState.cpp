@@ -166,6 +166,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
         cacheState(StateID::Options);
         cacheState(StateID::Profile);
         cacheState(StateID::Practice);
+        cacheState(StateID::Keyboard);
     });
  
     context.mainWindow.setMouseCaptured(false);

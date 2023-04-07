@@ -704,7 +704,7 @@ void MenuState::createAvatarScene()
     };
 
     auto avatarCam = m_avatarScene.createEntity();
-    avatarCam.addComponent<cro::Transform>().setPosition({ 0.f, 0.89f, 1.3f });
+    avatarCam.addComponent<cro::Transform>().setPosition({ 0.f, 0.7f, 1.3f });
     //avatarCam.addComponent<cro::Camera>().setPerspective(75.f * cro::Util::Const::degToRad, static_cast<float>(AvatarPreviewSize.x) / AvatarPreviewSize.y, 0.001f, 10.f);
 
     static constexpr float ratio = static_cast<float>(AvatarPreviewSize.y) / AvatarPreviewSize.x;

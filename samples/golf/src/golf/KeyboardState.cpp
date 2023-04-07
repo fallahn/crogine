@@ -29,17 +29,20 @@ source distribution.
 
 #include "KeyboardState.hpp"
 #include "SharedStateData.hpp"
+#include "GameConsts.hpp"
 
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Drawable2D.hpp>
 #include <crogine/ecs/components/Sprite.hpp>
 #include <crogine/ecs/components/Camera.hpp>
 #include <crogine/ecs/components/Callback.hpp>
+#include <crogine/ecs/components/AudioEmitter.hpp>
 
 #include <crogine/ecs/systems/SpriteSystem2D.hpp>
 #include <crogine/ecs/systems/RenderSystem2D.hpp>
 #include <crogine/ecs/systems/CameraSystem.hpp>
 #include <crogine/ecs/systems/CallbackSystem.hpp>
+#include <crogine/ecs/systems/AudioPlayerSystem.hpp>
 
 #include <crogine/graphics/SpriteSheet.hpp>
 #include <crogine/core/GameController.hpp>
@@ -265,6 +268,7 @@ void KeyboardState::buildScene()
     m_scene.addSystem<cro::SpriteSystem2D>(mb);
     m_scene.addSystem<cro::CameraSystem>(mb);
     m_scene.addSystem<cro::RenderSystem2D>(mb);
+    m_scene.addSystem<cro::AudioPlayerSystem>(mb);
 
     cro::SpriteSheet spriteSheet;
     spriteSheet.loadFromFile("assets/sprites/osk.spt", m_sharedData.sharedResources->textures);
@@ -280,7 +284,7 @@ void KeyboardState::buildScene()
     entity.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float dt)
     {
-        const auto& data = e.getComponent<cro::Callback>().getUserData<KeyboardCallbackData>();
+        auto& data = e.getComponent<cro::Callback>().getUserData<KeyboardCallbackData>();
         auto pos = e.getComponent<cro::Transform>().getOrigin();
         float diff = 0.f;
         
@@ -308,7 +312,7 @@ void KeyboardState::buildScene()
 
             if (diff < 0.5f)
             {
-                e.getComponent<cro::Callback>().active = false;
+                data.state = KeyboardCallbackData::In;
                 requestStackPop();
             }
         }
@@ -402,6 +406,33 @@ void KeyboardState::buildScene()
     m_keyboardLayouts[KeyboardLayout::Lower].bounds = spriteSheet.getSprite("lower").getTextureRect();
     m_keyboardLayouts[KeyboardLayout::Upper].bounds = spriteSheet.getSprite("upper").getTextureRect();
     m_keyboardLayouts[KeyboardLayout::Symbol].bounds = spriteSheet.getSprite("symbols").getTextureRect();
+
+
+    auto audioID = m_sharedData.sharedResources->audio.load("assets/sound/kb_enter.wav");
+
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::AudioEmitter>().setSource(m_sharedData.sharedResources->audio.get(audioID));
+    entity.getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Menu);
+    m_audioEnts[AudioID::Select] = entity;
+
+
+    audioID = m_sharedData.sharedResources->audio.load("assets/sound/kb_move.wav");
+
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::AudioEmitter>().setSource(m_sharedData.sharedResources->audio.get(audioID));
+    entity.getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Menu);
+    m_audioEnts[AudioID::Move] = entity;
+
+
+    audioID = m_sharedData.sharedResources->audio.load("assets/sound/kb_space.wav");
+
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::AudioEmitter>().setSource(m_sharedData.sharedResources->audio.get(audioID));
+    entity.getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Menu);
+    m_audioEnts[AudioID::Space] = entity;
 }
 
 void KeyboardState::initCallbacks()
@@ -542,6 +573,7 @@ void KeyboardState::setCursorPosition()
     pos += GridOffset;
 
     m_highlightEntity.getComponent<cro::Transform>().setPosition(glm::vec3(pos, 0.1f));
+    m_audioEnts[AudioID::Move].getComponent<cro::AudioEmitter>().play();
 }
 
 void KeyboardState::left()
@@ -576,6 +608,8 @@ void KeyboardState::activate()
     rect.left = rect.width;
     m_highlightEntity.getComponent<cro::Sprite>().setTextureRect(rect);
     m_highlightEntity.getComponent<cro::Callback>().active = true;
+
+    m_audioEnts[AudioID::Select].getComponent<cro::AudioEmitter>().play();
 }
 
 void KeyboardState::nextLayout()
@@ -606,6 +640,8 @@ void KeyboardState::sendBackspace()
     sendKeystroke(SDLK_BACKSPACE);
     m_buttonEnts[ButtonID::Backspace].getComponent<cro::Callback>().active = true;
     m_buttonEnts[ButtonID::Backspace].getComponent<cro::Callback>().setUserData<float>(1.f);
+
+    m_audioEnts[AudioID::Space].getComponent<cro::AudioEmitter>().play();
 }
 
 void KeyboardState::sendSpace()
@@ -617,4 +653,6 @@ void KeyboardState::sendSpace()
 
     m_buttonEnts[ButtonID::Space].getComponent<cro::Callback>().active = true;
     m_buttonEnts[ButtonID::Space].getComponent<cro::Callback>().setUserData<float>(1.f);
+
+    m_audioEnts[AudioID::Space].getComponent<cro::AudioEmitter>().play();
 }

@@ -367,6 +367,11 @@ void MenuState::createAvatarMenu(cro::Entity parent)
         //update hair model
         if (m_playerAvatars[idx].hairAttachment != nullptr)
         {
+            if (m_playerAvatars[idx].hairAttachment->getModel().isValid())
+            {
+                m_playerAvatars[idx].hairAttachment->getModel().getComponent<cro::Model>().setHidden(true);
+            }
+
             auto hID = indexFromHairID(profile.hairID);
             auto& hair = m_playerAvatars[idx].hairModels[hID];
             if (hair.model.isValid())
