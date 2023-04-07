@@ -420,6 +420,7 @@ bool DrivingState::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_KEYDOWN)
     {
+        m_skipState.displayControllerMessage = false;
         switch (evt.key.keysym.sym)
         {
         default: break;
@@ -442,6 +443,8 @@ bool DrivingState::handleEvent(const cro::Event& evt)
     else if (evt.type == SDL_CONTROLLERBUTTONUP)
     {
         resetIdle();
+        m_skipState.displayControllerMessage = true;
+
         switch (evt.cbutton.button)
         {
         default: break;
@@ -2797,7 +2800,10 @@ void DrivingState::startTransition()
 
 void DrivingState::hitBall()
 {
+    //hack to make this persist...
+    bool controller = m_skipState.displayControllerMessage;
     m_skipState = {};
+    m_skipState.displayControllerMessage = controller;
 
     auto club = m_inputParser.getClub();
     auto facing = cro::Util::Maths::sgn(m_avatar.model.getComponent<cro::Transform>().getScale().x);

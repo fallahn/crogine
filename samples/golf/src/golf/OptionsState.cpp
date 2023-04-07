@@ -1155,8 +1155,8 @@ void OptionsState::buildScene()
 
 
     //and default to dummy input until loaded
-    m_scene.simulate(0.f);
-    m_scene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Dummy);
+    //m_scene.simulate(0.f);
+    //m_scene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Dummy);
 }
 
 void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& spriteSheet)

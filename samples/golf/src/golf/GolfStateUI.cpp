@@ -331,12 +331,15 @@ void GolfState::buildUI()
     entity.addComponent<cro::SpriteAnimation>();
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function =
-        [ffEnt](cro::Entity e, float)
+        [&,ffEnt](cro::Entity e, float)
     {
-        if (cro::GameController::getControllerCount() != 0)
+        auto index = ffEnt.getComponent<cro::Callback>().getUserData<SkipCallbackData>().buttonIndex;
+
+        if (cro::GameController::getControllerCount() != 0
+            && index != std::numeric_limits<std::uint32_t>::max())
         {
             e.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
-            e.getComponent<cro::SpriteAnimation>().play(ffEnt.getComponent<cro::Callback>().getUserData<SkipCallbackData>().buttonIndex);
+            e.getComponent<cro::SpriteAnimation>().play(index);
         }
         else
         {
@@ -2714,7 +2717,8 @@ void GolfState::updateSkipMessage(float dt)
 
                     e.getComponent<cro::Callback>().active = true;
 
-                    if (cro::GameController::getControllerCount() != 0)
+                    if (cro::GameController::getControllerCount() != 0
+                        && m_skipState.displayControllerMessage)
                     {
                         //set correct button icon
                         if (cro::GameController::hasPSLayout(activeControllerID(m_currentPlayer.player)))
@@ -2729,6 +2733,7 @@ void GolfState::updateSkipMessage(float dt)
                     }
                     else
                     {
+                        data.buttonIndex = std::numeric_limits<std::uint32_t>::max();
                         e.getComponent<cro::Text>().setString("Hold " + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::Action]) + " to Skip");
                     }
                     centreText(e);

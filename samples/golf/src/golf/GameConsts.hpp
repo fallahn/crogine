@@ -264,6 +264,7 @@ struct SkipState final
     float currentTime = 0.f;
 
     std::int32_t previousState = state;
+    bool displayControllerMessage = false;
 };
 
 struct Avatar final

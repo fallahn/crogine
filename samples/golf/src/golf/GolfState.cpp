@@ -578,6 +578,8 @@ bool GolfState::handleEvent(const cro::Event& evt)
     else if (evt.type == SDL_KEYDOWN)
     {
         resetIdle();
+        m_skipState.displayControllerMessage = false;
+
         switch (evt.key.keysym.sym)
         {
         default: break;
@@ -611,6 +613,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
     else if (evt.type == SDL_CONTROLLERBUTTONDOWN)
     {
         resetIdle();
+        m_skipState.displayControllerMessage = true;
 
         switch (evt.cbutton.button)
         {
@@ -692,6 +695,8 @@ bool GolfState::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_JOYAXISMOTION)
     {
+        m_skipState.displayControllerMessage = true;
+
         if (std::abs(evt.caxis.value) > 10000)
         {
             hideMouse();
