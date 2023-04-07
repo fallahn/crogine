@@ -1122,7 +1122,7 @@ void ProfileState::buildPreviewScene()
         }
         t.apply();
 
-        m_avatarModels[i].previewModel.getComponent<cro::Model>().setMaterialProperty(0, "u_diffuseMap", t.getTexture());
+        m_avatarModels[i].previewModel.getComponent<cro::Model>().setMaterialProperty(0, "u_diffuseMap", t.getTextureID());
     }
 
     //empty at front for 'bald'

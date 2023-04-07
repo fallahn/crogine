@@ -314,25 +314,41 @@ void MenuState::createAvatarMenu(cro::Entity parent)
     auto showAvatar = [&, mugshot](std::size_t profileIndex) mutable
     {
         const auto& profile = m_profileData.playerProfiles[profileIndex];
+        auto idx = indexFromAvatarID(profile.skinID);
 
+        //TODO if the index is the same as the model already shown
+        //don't play the animation.
         for (auto& e : m_playerAvatars)
         {
-            //if (e.previewModel.getComponent<cro::Callback>().getUserData<AvatarAnimCallbackData>().direction == 1)
+            if (e.previewModel != m_playerAvatars[idx].previewModel)
             {
                 e.previewModel.getComponent<cro::Callback>().getUserData<AvatarAnimCallbackData>().direction = 1;
                 e.previewModel.getComponent<cro::Callback>().getUserData<AvatarAnimCallbackData>().progress = 1.f;
                 e.previewModel.getComponent<cro::Callback>().active = true;
             }
         }
-        auto idx = indexFromAvatarID(profile.skinID);
+        
         m_playerAvatars[idx].previewModel.getComponent<cro::Transform>().setScale(glm::vec3(profile.flipped ? -0.001f : 0.001f, 0.f, 0.f)); //callback needs to know which way to face
         m_playerAvatars[idx].previewModel.getComponent<cro::Model>().setFacing(profile.flipped ? cro::Model::Facing::Back : cro::Model::Facing::Front);
-        m_playerAvatars[idx].previewModel.getComponent<cro::Callback>().active = true;
-        m_playerAvatars[idx].previewModel.getComponent<cro::Callback>().getUserData<AvatarAnimCallbackData>().direction = 0;
-        m_playerAvatars[idx].previewModel.getComponent<cro::Callback>().getUserData<AvatarAnimCallbackData>().progress = 0.f;
+        
+        if (m_playerAvatars[idx].previewModel.getComponent<cro::Transform>().getScale().x != 1)
+        {
+            m_playerAvatars[idx].previewModel.getComponent<cro::Callback>().active = true;
+            m_playerAvatars[idx].previewModel.getComponent<cro::Callback>().getUserData<AvatarAnimCallbackData>().direction = 0;
+            m_playerAvatars[idx].previewModel.getComponent<cro::Callback>().getUserData<AvatarAnimCallbackData>().progress = 0.f;
+        }
+
+
 
         //use profile ID to set model texture
-        m_playerAvatars[idx].previewModel.getComponent<cro::Model>().setMaterialProperty(0, "u_diffuseMap", m_profileTextures[profileIndex].getTexture());
+        const auto& flags = profile.avatarFlags;
+        for (auto i = 0u; i < flags.size(); ++i)
+        {
+            m_playerAvatars[idx].setColour(pc::ColourKey::Index(i), i);
+        }
+        m_playerAvatars[idx].apply(m_profileTextures[profileIndex].getTexture()); //lul, what a mess.
+
+        m_playerAvatars[idx].previewModel.getComponent<cro::Model>().setMaterialProperty(0, "u_diffuseMap", m_profileTextures[profileIndex].getTextureID());
         m_playerAvatars[idx].previewModel.getComponent<cro::Model>().setHidden(false);
 
         if (m_profileTextures[profileIndex].getMugshot())

@@ -74,7 +74,8 @@ struct ProfileTexture
     const cro::Colour& getColour(pc::ColourKey::Index) const;
     void apply(cro::Texture* dst = nullptr);
 
-    cro::TextureID getTexture() const { return cro::TextureID(*m_texture); }
+    cro::TextureID getTextureID() const { return cro::TextureID(*m_texture); }
+    cro::Texture* getTexture() const { return m_texture.get(); }
 
     void setMugshot(const std::string&);
     const cro::Texture* getMugshot() const;

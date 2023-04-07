@@ -668,8 +668,6 @@ void MenuState::handleMessage(const cro::Message& msg)
                 m_sharedData.localConnectionData.playerData[m_rosterMenu.activeIndex] =
                     m_profileData.playerProfiles[avtIdx];
                 updateRoster();
-
-                //updateProfileTextures(avtIdx, 1);
             }
                 break;
             }
