@@ -344,7 +344,7 @@ void MenuState::createAvatarMenu(cro::Entity parent)
         const auto& flags = profile.avatarFlags;
         for (auto i = 0u; i < flags.size(); ++i)
         {
-            m_playerAvatars[idx].setColour(pc::ColourKey::Index(i), i);
+            m_playerAvatars[idx].setColour(pc::ColourKey::Index(i), flags[i]);
         }
         m_playerAvatars[idx].apply(m_profileTextures[profileIndex].getTexture()); //lul, what a mess.
 

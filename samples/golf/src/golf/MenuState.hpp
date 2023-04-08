@@ -254,17 +254,28 @@ private:
 
 
     //----ball, avatar and hair funcs are in MenuCustomisation.cpp----//
-    std::array<std::size_t, ConstVal::MaxPlayers> m_ballIndices = {}; //index into the model list, not ballID
     cro::Entity m_ballCam;
     cro::RenderTexture m_ballTexture;
     void createBallScene();
     std::int32_t indexFromBallID(std::uint32_t);
 
+    /*
+    OK Since the avatar update this has gotten into a bit of a mess:
+    PlayerAvatar represents each one of the avatar models and its texture. (size n where n is number of models available)
+    ProfileTexture represents the texture and mugshot texture for each avatar used when previewing profiles in the
+    roster menu, so is size 1-MaxPlayers
+    HOWEVER as each profile requres a uniqe texture, but multiple profiles may use the SAME avatar then m_playerAvatars
+    (holding the avatar textures) is update with colour settings, but those colours are then applied to m_profileTextures[x]
+
+    On the face of it, it would seem a simple refactor to remove the unused image/colour information from ProfileTexture
+    and the unused texture from PlayerAvatar - if it weren't for the fact PlayerAvatar *inherits* ProfileTexture
+
+    I apologise profusely for this mobius strip of madness.
+    */
     std::vector<PlayerAvatar> m_playerAvatars;
     std::vector<ProfileTexture> m_profileTextures;
     void updateProfileTextures(std::size_t start, std::size_t count); //applies profile colours to each texture
-    //this is the index for each player into m_playerAvatars - skinID is read from PlayerAvatar struct
-    std::array<std::size_t, ConstVal::MaxPlayers> m_avatarIndices = {};
+
     std::function<void()> updateRoster; //refreshes the roster list / avatar preview
     
     cro::RenderTexture m_avatarTexture;
@@ -274,9 +285,6 @@ private:
     void ugcInstalledHandler(std::uint64_t id, std::int32_t type);
 
     cro::RenderTexture m_clubTexture;
-    
-    //index into hair model vector - converted from hairID with indexFromHairID
-    std::array<std::size_t, ConstVal::MaxPlayers> m_hairIndices = {};
     std::int32_t indexFromHairID(std::uint32_t);
 
     struct Roster final

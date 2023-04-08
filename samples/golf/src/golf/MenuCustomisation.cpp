@@ -657,12 +657,6 @@ void MenuState::parseAvatarDirectory()
                 m_profileData.hairDefs.push_back(md);
             }
         }
-
-        for (auto i = 0u; i < ConstVal::MaxPlayers; ++i)
-        {
-            m_avatarIndices[i] = indexFromAvatarID(m_sharedData.localConnectionData.playerData[i].skinID);
-            m_hairIndices[i] = indexFromHairID(m_sharedData.localConnectionData.playerData[i].hairID);
-        }
     }
 
 
@@ -673,6 +667,13 @@ void MenuState::parseAvatarDirectory()
         {
             //use first valid skin
             profile.skinID = m_sharedData.avatarInfo[0].uid;
+        }
+
+        //compare against list of unlocked balls and make sure we're in it
+        auto ballID = indexFromBallID(profile.ballID);
+        if (ballID >= m_profileData.ballDefs.size())
+        {
+            profile.ballID = 0;
         }
 
         m_profileTextures.emplace_back(m_sharedData.avatarInfo[indexFromAvatarID(profile.skinID)].texturePath);

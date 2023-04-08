@@ -134,9 +134,6 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     m_viewScale             (1.f)
 {
     std::fill(m_readyState.begin(), m_readyState.end(), false);
-    std::fill(m_ballIndices.begin(), m_ballIndices.end(), 0);
-    std::fill(m_avatarIndices.begin(), m_avatarIndices.end(), 0);    
-    std::fill(m_hairIndices.begin(), m_hairIndices.end(), 0);    
 
     auto size = glm::vec2(GolfGame::getActiveTarget()->getSize());
     m_viewScale = glm::vec2(getViewScale());
@@ -183,11 +180,8 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     {
         auto idx = indexFromBallID(m_sharedData.localConnectionData.playerData[i].ballID);
 
-        if (idx > -1)
-        {
-            m_ballIndices[i] = idx;
-        }
-        else
+        if(idx == -1
+            || idx >= m_profileData.ballDefs.size()) //checks we're not trying to load a locked ball
         {
             m_sharedData.localConnectionData.playerData[i].ballID = 0;
         }
