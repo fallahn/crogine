@@ -671,7 +671,8 @@ void MenuState::parseAvatarDirectory()
 
         //compare against list of unlocked balls and make sure we're in it
         auto ballID = indexFromBallID(profile.ballID);
-        if (ballID >= m_profileData.ballDefs.size())
+        if (ballID >= m_profileData.ballDefs.size()
+            || ballID == -1)
         {
             profile.ballID = 0;
         }

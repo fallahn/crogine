@@ -74,6 +74,7 @@ source distribution.
 #include <crogine/ecs/systems/AudioPlayerSystem.hpp>
 
 #include <crogine/util/Easings.hpp>
+#include <crogine/util/Random.hpp>
 #include <crogine/gui/Gui.hpp>
 
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
@@ -417,7 +418,7 @@ void ProfileState::addSystems()
 void ProfileState::loadResources()
 {
     //button audio
-    m_menuSounds.loadFromFile("assets/golf/sound/menu.xas", m_sharedData.sharedResources->audio);
+    m_menuSounds.loadFromFile("assets/golf/sound/menu.xas", m_resources.audio);
     m_audioEnts[AudioID::Accept] = m_uiScene.createEntity();
     m_audioEnts[AudioID::Accept].addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("accept");
     m_audioEnts[AudioID::Back] = m_uiScene.createEntity();
@@ -532,7 +533,7 @@ void ProfileState::buildScene()
 
     //background
     cro::SpriteSheet spriteSheet;
-    spriteSheet.loadFromFile("assets/golf/sprites/avatar_edit.spt", m_sharedData.sharedResources->textures);
+    spriteSheet.loadFromFile("assets/golf/sprites/avatar_edit.spt", m_resources.textures);
 
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 0.f, 10.f, -0.2f });
@@ -974,7 +975,7 @@ void ProfileState::buildPreviewScene()
     CRO_ASSERT(!m_profileData.ballDefs.empty(), "Must load this state on top of menu");
 
     cro::EmitterSettings emitterSettings;
-    emitterSettings.loadFromFile("assets/golf/particles/puff_small.cps", m_sharedData.sharedResources->textures);
+    emitterSettings.loadFromFile("assets/golf/particles/puff_small.cps", m_resources.textures);
 
     //this has all been parsed by the menu state - so we're assuming
     //all the models etc are fine and load without chicken
@@ -1112,6 +1113,11 @@ void ProfileState::buildPreviewScene()
     m_profileData.grassDef->createModel(entity);
     
     //update the model textures with the current colour settings
+    //and any available audio
+    const std::array<std::string, 3u> emitterNames =
+    {
+        "bunker", "fairway", "green"
+    };
     for (auto i = 0u; i < m_sharedData.avatarInfo.size(); ++i)
     {
         auto& t = m_profileTextures.emplace_back(m_sharedData.avatarInfo[i].texturePath);
@@ -1123,6 +1129,24 @@ void ProfileState::buildPreviewScene()
         t.apply();
 
         m_avatarModels[i].previewModel.getComponent<cro::Model>().setMaterialProperty(0, "u_diffuseMap", t.getTextureID());
+
+
+        cro::AudioScape as;
+        if (!m_sharedData.avatarInfo[i].audioscape.empty() &&
+            as.loadFromFile(m_sharedData.avatarInfo[i].audioscape, m_resources.audio))
+        {
+            for (const auto& name : emitterNames)
+            {
+                if (as.hasEmitter(name))
+                {
+                    auto entity = m_uiScene.createEntity();
+                    entity.addComponent<cro::Transform>();
+                    entity.addComponent<cro::AudioEmitter>() = as.getEmitter(name);
+                    entity.getComponent<cro::AudioEmitter>().setLooped(false);
+                    m_avatarModels[i].previewAudio.push_back(entity);
+                }
+            }
+        }
     }
 
     //empty at front for 'bald'
@@ -1269,6 +1293,12 @@ void ProfileState::setAvatarIndex(std::size_t idx)
         m_profileTextures[idx].setColour(pc::ColourKey::Index(i), m_activeProfile.avatarFlags[i]);
     }
     m_profileTextures[idx].apply();
+
+
+    if (!m_avatarModels[m_avatarIndex].previewAudio.empty())
+    {
+        m_avatarModels[m_avatarIndex].previewAudio[cro::Util::Random::value(0u, m_avatarModels[m_avatarIndex].previewAudio.size() - 1)].getComponent<cro::AudioEmitter>().play();
+    }
 }
 
 void ProfileState::setHairIndex(std::size_t idx)

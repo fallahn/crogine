@@ -38,6 +38,7 @@ source distribution.
 #include <crogine/audio/AudioScape.hpp>
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/graphics/RenderTexture.hpp>
+#include <crogine/graphics/ModelDefinition.hpp>
 
 struct SharedStateData;
 struct SharedProfileData;
@@ -53,6 +54,7 @@ struct AvatarPreview final
     std::size_t hairIndex = 0; //TODO this doesn't really need to be per model...
     cro::Attachment* hairAttachment = nullptr;
     cro::Entity previewModel;
+    std::vector<cro::Entity> previewAudio;
 };
 
 class ProfileState final : public cro::State, public cro::GuiClient
@@ -81,6 +83,7 @@ private:
 
     cro::RenderTexture m_avatarTexture;
     cro::RenderTexture m_ballTexture;
+    cro::ResourceCollection m_resources;
 
     cro::AudioScape m_menuSounds;
     struct AudioID final
