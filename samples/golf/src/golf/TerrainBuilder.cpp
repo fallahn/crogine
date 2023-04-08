@@ -48,6 +48,7 @@ source distribution.
 #include <crogine/graphics/ModelDefinition.hpp>
 #include <crogine/graphics/SpriteSheet.hpp>
 #include <crogine/graphics/DynamicMeshBuilder.hpp>
+#include <crogine/graphics/ImageArray.hpp>
 
 #include <crogine/gui/Gui.hpp>
 
@@ -490,7 +491,6 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
                 //setup material
                 auto material = resources.materials.get(crowdMaterialID);
                 applyMaterialData(crowdDef, material);
-
 
                 material.setProperty("u_vatsPosition", resources.textures.get(vatFile.getPositionPath()));
                 material.setProperty("u_vatsNormal", resources.textures.get(vatFile.getNormalPath()));

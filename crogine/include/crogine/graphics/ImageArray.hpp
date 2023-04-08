@@ -124,22 +124,22 @@ namespace cro
         CRO_EXPORT_API bool loadFromU16(const std::string& path, std::vector<std::uint16_t>&, glm::ivec2&, std::int32_t&);
         CRO_EXPORT_API bool loadFromFloat(const std::string& path, std::vector<float>&, glm::ivec2&, std::int32_t&);
     }
-}
 
-template<>
-bool cro::ImageArray<std::uint8_t>::loadFromFile(const std::string& path)
-{
-    return cro::Detail::loadFromU8(path, m_data, m_dimensions, m_channels);
-}
+    template<>
+    inline bool ImageArray<std::uint8_t>::loadFromFile(const std::string& path)
+    {
+        return cro::Detail::loadFromU8(path, m_data, m_dimensions, m_channels);
+    }
 
-template<>
-bool cro::ImageArray<std::uint16_t>::loadFromFile(const std::string& path)
-{
-    return cro::Detail::loadFromU16(path, m_data, m_dimensions, m_channels);
-}
+    template<>
+    inline bool ImageArray<std::uint16_t>::loadFromFile(const std::string& path)
+    {
+        return cro::Detail::loadFromU16(path, m_data, m_dimensions, m_channels);
+    }
 
-template<>
-bool cro::ImageArray<float>::loadFromFile(const std::string& path)
-{
-    return cro::Detail::loadFromFloat(path, m_data, m_dimensions, m_channels);
+    template<>
+    inline bool ImageArray<float>::loadFromFile(const std::string& path)
+    {
+        return cro::Detail::loadFromFloat(path, m_data, m_dimensions, m_channels);
+    }
 }
