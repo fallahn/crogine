@@ -3317,6 +3317,7 @@ void GolfState::addSystems()
     m_gameScene.setSystemActive<CameraFollowSystem>(false);
 #ifdef CRO_DEBUG_
     m_gameScene.setSystemActive<FpsCameraSystem>(false);
+    m_gameScene.setSystemActive<cro::ParticleSystem>(false);
 #endif
 
     m_gameScene.addDirector<GolfParticleDirector>(m_resources.textures, m_sharedData);

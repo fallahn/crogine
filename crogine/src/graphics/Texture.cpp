@@ -29,6 +29,7 @@ source distribution.
 
 #include <crogine/graphics/Texture.hpp>
 #include <crogine/graphics/Image.hpp>
+#include <crogine/graphics/ImageArray.hpp>
 #include <crogine/graphics/Colour.hpp>
 #include <crogine/detail/Assert.hpp>
 
@@ -60,6 +61,7 @@ Texture::Texture()
     : m_size        (0),
     m_format        (ImageFormat::None),
     m_handle        (0),
+    m_type          (GL_UNSIGNED_BYTE),
     m_smooth        (false),
     m_repeated      (false),
     m_hasMipMaps    (false)
@@ -70,6 +72,7 @@ Texture::Texture()
 Texture::Texture(Texture&& other) noexcept
     : m_size    (other.m_size),
     m_format    (other.m_format),
+    m_type      (other.m_type),
     m_handle    (other.m_handle),
     m_smooth    (other.m_smooth),
     m_repeated  (other.m_repeated),
@@ -78,6 +81,7 @@ Texture::Texture(Texture&& other) noexcept
     other.m_size = glm::uvec2(0);
     other.m_format = ImageFormat::None;
     other.m_handle = 0;
+    other.m_type = GL_UNSIGNED_BYTE;
     other.m_smooth = false;
     other.m_repeated = false;
     other.m_hasMipMaps = false;
@@ -92,6 +96,7 @@ Texture& Texture::operator=(Texture&& other) noexcept
 
         m_size = other.m_size;
         m_format = other.m_format;
+        m_type = other.m_type;
         m_handle = other.m_handle;
         m_smooth = other.m_smooth;
         m_repeated = other.m_repeated;
@@ -99,6 +104,7 @@ Texture& Texture::operator=(Texture&& other) noexcept
 
         other.m_size = glm::uvec2(0);
         other.m_format = ImageFormat::None;
+        other.m_type = GL_UNSIGNED_BYTE;
         other.m_handle = 0;
         other.m_smooth = false;
         other.m_repeated = false;
@@ -161,11 +167,11 @@ void Texture::create(std::uint32_t width, std::uint32_t height, ImageFormat::Typ
 
     glCheck(glBindTexture(GL_TEXTURE_2D, m_handle));
 //#ifdef GL41
-    glCheck(glTexImage2D(GL_TEXTURE_2D, 0, uploadFormat, width, height, 0, uploadFormat, GL_UNSIGNED_BYTE, buffer.data()));
+    glCheck(glTexImage2D(GL_TEXTURE_2D, 0, uploadFormat, width, height, 0, uploadFormat, m_type, buffer.data()));
 //#else
 //    glCheck(glTexStorage2D(GL_TEXTURE_2D, 1, texFormat, width, height));
 //    glCheck(glBindTexture(GL_TEXTURE_2D, m_handle));
-//    glCheck(glTexSubImage2D(GL_TEXTURE_2D, 0, 0,0,width,height, uploadFormat, GL_UNSIGNED_BYTE, buffer.data()));
+//    glCheck(glTexSubImage2D(GL_TEXTURE_2D, 0, 0,0,width,height, uploadFormat, m_type, buffer.data()));
 //#endif
     glCheck(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrap));
     glCheck(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrap));
@@ -176,33 +182,16 @@ void Texture::create(std::uint32_t width, std::uint32_t height, ImageFormat::Typ
 
 bool Texture::loadFromFile(const std::string& filePath, bool createMipMaps)
 {
-    //TODO leaving this here because one day I might
-    //decide to fix loading textures as floating point
-    
-    //auto path = FileSystem::getResourcePath() + filePath;
+    auto path = FileSystem::getResourcePath() + filePath;
 
-    //auto* file = SDL_RWFromFile(path.c_str(), "rb");
-    //if (!file)
-    //{
-    //    Logger::log("Failed opening " + path, Logger::Type::Error);
-    //    return false;
-    //}
-
-    //if (/*isFloat(file)*/stbi_is_16_bit(filePath.c_str()))
-    //{
-    //    return loadAsFloat(file, createMipMaps);
-    //}
-    //else
-    //{
-    //    return loadAsByte(file, createMipMaps);
-    //}
-
-    Image image;
-    if (image.loadFromFile(filePath))
+    ImageArray<std::uint8_t> arr;
+    if (arr.loadFromFile(path))
     {
-        return loadFromImage(image, createMipMaps);
+        auto size = arr.getDimensions();
+        create(size.x, size.y, arr.getFormat());
+        return update(arr.data(), createMipMaps);
     }
-    
+
     return false;
 }
 
@@ -222,50 +211,14 @@ bool Texture::loadFromImage(const Image& image, bool createMipMaps)
 
 bool Texture::update(const std::uint8_t* pixels, bool createMipMaps, URect area)
 {
-    if (area.left + area.width > m_size.x)
-    {
-        Logger::log("Failed updating image, source pixels too wide", Logger::Type::Error);
-        return false;
-    }
-    if (area.bottom + area.height > m_size.y)
-    {
-        Logger::log("Failed updating image, source pixels too tall", Logger::Type::Error);
-        return false;
-    }
+    m_type = GL_UNSIGNED_BYTE;
+    return update(static_cast<const void*>(pixels), createMipMaps, area);
+}
 
-    if (pixels && m_handle)
-    {
-        if (area.width == 0) area.width = m_size.x;
-        if (area.height == 0) area.height = m_size.y;
-        
-        GLint format = GL_RGBA;
-        if (m_format == ImageFormat::RGB)
-        {
-            format = GL_RGB;
-        }
-        else if (m_format == ImageFormat::A)
-        {
-            format = GL_RED;
-        }
-
-        glCheck(glBindTexture(GL_TEXTURE_2D, m_handle));
-        glCheck(glTexSubImage2D(GL_TEXTURE_2D, 0, area.left, area.bottom, area.width, area.height, format, GL_UNSIGNED_BYTE, pixels));
-        
-        //attempt to generate mip maps and set correct filter
-        if (m_hasMipMaps || createMipMaps)
-        {
-            generateMipMaps(pixels, area);
-        }
-        else
-        {
-            glCheck(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, m_smooth ? GL_LINEAR : GL_NEAREST));
-            m_hasMipMaps = false;
-        }
-        glCheck(glBindTexture(GL_TEXTURE_2D, 0));
-        return true;
-    }
-
-    return false;
+bool Texture::update(const std::uint16_t* pixels, bool createMipMaps, URect area)
+{
+    m_type = GL_UNSIGNED_SHORT;
+    return update(static_cast<const void*>(pixels), createMipMaps, area);
 }
 
 bool Texture::update(const Texture& other, std::uint32_t xPos, std::uint32_t yPos)
@@ -273,6 +226,7 @@ bool Texture::update(const Texture& other, std::uint32_t xPos, std::uint32_t yPo
     CRO_ASSERT(xPos + other.m_size.x <= m_size.x, "Won't fit!");
     CRO_ASSERT(yPos + other.m_size.y <= m_size.y, "Won't fit!");
     CRO_ASSERT(m_format == other.m_format, "Texture formats don't match");
+    CRO_ASSERT(m_type == other.m_type, "Texture types don't match");
 
     if (!m_handle || !other.m_handle || (other.m_handle == m_handle))
     {
@@ -298,7 +252,7 @@ bool Texture::update(const Texture& other, std::uint32_t xPos, std::uint32_t yPo
     //TODO assert this works on GLES too
 #ifdef PLATFORM_DESKTOP
     glCheck(glBindTexture(GL_TEXTURE_2D, other.m_handle));
-    glCheck(glGetTexImage(GL_TEXTURE_2D, 0, format, GL_UNSIGNED_BYTE, buffer.data()));
+    glCheck(glGetTexImage(GL_TEXTURE_2D, 0, format, other.m_type, buffer.data()));
     glCheck(glBindTexture(GL_TEXTURE_2D, 0));
 #else
     //we don't have glGetTexImage on GLES
@@ -311,7 +265,7 @@ bool Texture::update(const Texture& other, std::uint32_t xPos, std::uint32_t yPo
 
         glCheck(glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer));
         glCheck(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, other.m_handle, 0));
-        glCheck(glReadPixels(0, 0, other.m_size.x, other.m_size.y, format, GL_UNSIGNED_BYTE, buffer.data()));
+        glCheck(glReadPixels(0, 0, other.m_size.x, other.m_size.y, format, other.m_type, buffer.data()));
         glCheck(glDeleteFramebuffers(1, &frameBuffer));
 
         glCheck(glBindFramebuffer(GL_FRAMEBUFFER, previousFrameBuffer));
@@ -319,6 +273,7 @@ bool Texture::update(const Texture& other, std::uint32_t xPos, std::uint32_t yPo
 
 #endif //PLATFORM_DESKTOP
 
+    //TODO set buffer type based on other texture data type
     update(buffer.data(), false, { xPos, yPos, other.m_size.x, other.m_size.y });
 
     return true;
@@ -420,6 +375,7 @@ void Texture::swap(Texture& other)
 {
     std::swap(m_size, other.m_size);
     std::swap(m_format, other.m_format);
+    std::swap(m_type, other.m_type);
     std::swap(m_handle, other.m_handle);
     std::swap(m_smooth, other.m_smooth);
     std::swap(m_repeated, other.m_repeated);
@@ -449,6 +405,8 @@ bool Texture::saveToFile(const std::string& path) const
     {
         filePath += ".png";
     }
+
+    CRO_ASSERT(m_type == GL_UNSIGNED_BYTE, "Need to implement writing unsigned short!");
 
     std::vector<GLubyte> buffer(m_size.x * m_size.y * 4);
 
@@ -480,6 +438,8 @@ bool Texture::saveToImage(Image& dst) const
         return false;
     }
 
+    CRO_ASSERT(m_type == GL_UNSIGNED_BYTE, "Unsigned short is not supported");
+
     std::vector<GLubyte> buffer(m_size.x * m_size.y * 4);
 
     glCheck(glBindTexture(GL_TEXTURE_2D, m_handle));
@@ -492,60 +452,36 @@ bool Texture::saveToImage(Image& dst) const
 }
 
 //private
-bool Texture::isFloat(SDL_RWops* file)
+bool Texture::update(const void* pixels, bool createMipMaps, URect area)
 {
-    //TODO figure out why this doesn't work
-    STBIMG_stbio_RWops io;
-    stbi_callback_from_RW(file, &io);
-
-    return stbi_is_16_bit_from_callbacks(&io.stb_cbs, nullptr) != 0;
-}
-
-bool Texture::loadAsFloat(SDL_RWops* file, bool createMipMaps)
-{
-    //rewind file first...
-    SDL_RWseek(file, 0, RW_SEEK_SET);
-
-    STBIMG_stbio_RWops io;
-    stbi_callback_from_RW(file, &io);
-
-    stbi_set_flip_vertically_on_load(1);
-
-    std::int32_t w, h, fmt;
-    auto* img = stbi_loadf_from_callbacks(&io.stb_cbs, &io, &w, &h, &fmt, 0);
-    if (img)
+    if (area.left + area.width > m_size.x)
     {
-        stbi_set_flip_vertically_on_load(0);
+        Logger::log("Failed updating image, source pixels too wide", Logger::Type::Error);
+        return false;
+    }
+    if (area.bottom + area.height > m_size.y)
+    {
+        Logger::log("Failed updating image, source pixels too tall", Logger::Type::Error);
+        return false;
+    }
 
-        GLint internalFormat = GL_R32F;
-        GLint glFormat = GL_RED;
-        m_format = ImageFormat::A;
-        switch (fmt)
+    if (pixels && m_handle)
+    {
+        if (area.width == 0) area.width = m_size.x;
+        if (area.height == 0) area.height = m_size.y;
+
+        GLint format = GL_RGBA;
+        if (m_format == ImageFormat::RGB)
         {
-        default: 
-            stbi_image_free(img);
-            SDL_RWclose(file);
-
-            LogE << fmt << ": unsupported image format" << std::endl;
-
-            return false;
-        case 4:
-            m_format = ImageFormat::Type::RGBA;
-            internalFormat = GL_RGBA32F;
-            glFormat = GL_RGBA;
-            break;
-        case 3:
-            m_format = ImageFormat::Type::RGB;
-            internalFormat = GL_RGB32F;
-            glFormat = GL_RGB;
-            break;
+            format = GL_RGB;
+        }
+        else if (m_format == ImageFormat::A)
+        {
+            format = GL_RED;
         }
 
-
-        create(w, h, m_format);
-
         glCheck(glBindTexture(GL_TEXTURE_2D, m_handle));
-        glCheck(glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, w, h, 0, glFormat, GL_FLOAT, img));
+        glCheck(glTexSubImage2D(GL_TEXTURE_2D, 0, area.left, area.bottom, area.width, area.height, format, m_type, pixels));
 
         //attempt to generate mip maps and set correct filter
         if (m_hasMipMaps || createMipMaps)
@@ -558,72 +494,13 @@ bool Texture::loadAsFloat(SDL_RWops* file, bool createMipMaps)
             m_hasMipMaps = false;
         }
         glCheck(glBindTexture(GL_TEXTURE_2D, 0));
-
-        stbi_image_free(img);
-        SDL_RWclose(file);
-
         return true;
-    }
-    else
-    {
-        SDL_RWclose(file);
-        return false;
     }
 
     return false;
 }
 
-bool Texture::loadAsByte(SDL_RWops* file, bool createMipmaps)
-{
-    SDL_RWseek(file, 0, RW_SEEK_SET);
-
-    STBIMG_stbio_RWops io;
-    stbi_callback_from_RW(file, &io);
-
-    stbi_set_flip_vertically_on_load(1);
-
-    std::int32_t w, h, fmt;
-    auto* img = stbi_load_from_callbacks(&io.stb_cbs, &io, &w, &h, &fmt, 0);
-    if (img)
-    {
-        stbi_set_flip_vertically_on_load(0);
-
-        m_format = ImageFormat::A;
-        switch (fmt)
-        {
-        default:
-            stbi_image_free(img);
-            SDL_RWclose(file);
-
-            LogE << fmt << ": unsupported image format" << std::endl;
-
-            return false;
-        case 4:
-            m_format = ImageFormat::Type::RGBA;
-            break;
-        case 3:
-            m_format = ImageFormat::Type::RGB;
-            break;
-        }
-
-        create(w, h, m_format);
-        update(img, createMipmaps);
-
-        stbi_image_free(img);
-        SDL_RWclose(file);
-
-        return true;
-    }
-    else
-    {
-        SDL_RWclose(file);
-        stbi_set_flip_vertically_on_load(0);
-        return false;
-    }
-    return false;
-}
-
-void Texture::generateMipMaps(const std::uint8_t* pixels, URect area)
+void Texture::generateMipMaps(/*const std::uint8_t* pixels, URect area*/)
 {
 #ifdef CRO_DEBUG_
     std::int32_t result = 0;

@@ -3475,11 +3475,11 @@ void MenuState::updateCourseRuleString()
             float playTime = Achievements::getAvgStat(m_sharedData.mapDirectory);
             if (playTime > 0)
             {
-                float minutes = playTime / 60.f;
-                float seconds = playTime - (std::round(minutes) * 60.f);
+                float minutes = std::round(playTime / 60.f);
+                float seconds = std::round(playTime - (minutes * 60.f));
                 ss.precision(2);
                 ss << "Avg. Play Duration: ";
-                ss << minutes << "m ";
+                ss << minutes << "m";
                 ss << seconds << "s - ";
             }
 

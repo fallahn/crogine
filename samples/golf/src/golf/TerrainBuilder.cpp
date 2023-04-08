@@ -491,6 +491,7 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
                 auto material = resources.materials.get(crowdMaterialID);
                 applyMaterialData(crowdDef, material);
 
+
                 material.setProperty("u_vatsPosition", resources.textures.get(vatFile.getPositionPath()));
                 material.setProperty("u_vatsNormal", resources.textures.get(vatFile.getNormalPath()));
 
