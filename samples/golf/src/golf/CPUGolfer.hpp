@@ -55,7 +55,7 @@ public:
     void update(float, glm::vec3, float distanceToPin);
     bool thinking() const { return m_thinking; }
     void setPredictionResult(glm::vec3, std::int32_t);
-    void setPuttingPower(float p) { m_puttingPower = p * 1.01f; }
+    void setPuttingPower(float p);
     glm::vec3 getTarget() const { return m_target; }
 
     std::size_t getSkillIndex() const;
@@ -76,7 +76,7 @@ private:
     bool m_wantsPrediction;
     glm::vec3 m_predictionResult;
     std::int32_t m_predictionCount;
-    float m_puttingPower; //how much poer is predicted by the power bar flag
+    float m_puttingPower; //how much power is predicted by the power bar flag
 
     enum class State
     {

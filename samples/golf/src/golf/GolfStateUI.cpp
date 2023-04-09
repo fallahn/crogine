@@ -682,7 +682,10 @@ void GolfState::buildUI()
 
             //move to position
             float hTarget = estimatePuttPower();
-            m_cpuGolfer.setPuttingPower(hTarget);
+            if (m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].isCPU)
+            {
+                m_cpuGolfer.setPuttingPower(hTarget);
+            }
             hTarget *= BarWidth;
 
             auto pos = e.getComponent<cro::Transform>().getPosition();

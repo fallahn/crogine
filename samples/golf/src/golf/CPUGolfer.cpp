@@ -373,6 +373,18 @@ void CPUGolfer::setPredictionResult(glm::vec3 result, std::int32_t terrain)
     }
 }
 
+void CPUGolfer::setPuttingPower(float power)
+{
+    m_puttingPower = power * 1.01f; 
+
+    //measure slope in front and increase if necessary
+    float slope = glm::dot(glm::normalize(m_target - m_activePlayer.position), glm::vec3(0.f, 1.f, 0.f));
+    if (slope > 0.01f)
+    {
+        m_puttingPower = std::min(1.f, m_puttingPower * (1.f + slope));
+    }
+}
+
 std::size_t CPUGolfer::getSkillIndex() const
 {
     std::int32_t offset = m_activePlayer.player % 2;
