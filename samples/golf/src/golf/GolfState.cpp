@@ -1638,8 +1638,16 @@ void GolfState::render()
     skyCam.viewport = oldVP;
 
     //then render scene
-    glUseProgram(m_gridShaders[1].shaderID);
-    glUniform1f(m_gridShaders[1].transparency, m_sharedData.gridTransparency);
+    if (m_holeData[m_currentHole].puttFromTee)
+    {
+        glUseProgram(m_gridShaders[1].shaderID);
+        glUniform1f(m_gridShaders[1].transparency, m_sharedData.gridTransparency);
+    }
+    else
+    {
+        glUseProgram(m_gridShaders[0].shaderID);
+        glUniform1f(m_gridShaders[0].transparency, m_sharedData.gridTransparency * (1.f - m_terrainBuilder.getSlopeAlpha()));
+    }    
     m_gameSceneTexture.clear();
     m_skyScene.render();
     glClear(GL_DEPTH_BUFFER_BIT);
@@ -1795,6 +1803,7 @@ void GolfState::loadAssets()
     m_windBuffer.addShader(*shader);
     auto* greenShader = shader; //greens use wither this or the gridShader below for their material (set after parsing hole data)
     m_gridShaders[0].shaderID = shader->getGLHandle();
+    m_gridShaders[0].transparency = shader->getUniformID("u_transparency");
     m_gridShaders[0].holeHeight = shader->getUniformID("u_holeHeight");
 
 

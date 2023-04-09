@@ -573,6 +573,7 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
         }
         glCheck(glUseProgram(m_slopeProperties.shader));
         glCheck(glUniform1f(m_slopeProperties.alphaUniform, alpha));
+        m_slopeProperties.currentAlpha = alpha / m_sharedData.gridTransparency;
     };
 
     m_slopeProperties.meshData = &entity.getComponent<cro::Model>().getMeshData();
@@ -732,6 +733,11 @@ void TerrainBuilder::setSlopePosition(glm::vec3 position)
     glCheck(glUseProgram(m_slopeProperties.shader));
     glCheck(glUniform3f(m_slopeProperties.positionUniform, position.x, position.y, position.z));
     glCheck(glUseProgram(0));
+}
+
+float TerrainBuilder::getSlopeAlpha() const
+{
+    return m_slopeProperties.currentAlpha;
 }
 
 //private

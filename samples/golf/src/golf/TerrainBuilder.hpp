@@ -87,6 +87,8 @@ public:
 
     void setSlopePosition(glm::vec3);
 
+    float getSlopeAlpha() const;
+
 private:
     SharedStateData& m_sharedData;
     const std::vector<HoleData>& m_holeData;
@@ -153,6 +155,7 @@ private:
         std::int32_t alphaUniform = -1;
         std::uint32_t shader = 0;
         cro::Entity entity;
+        float currentAlpha = 0.f;
     }m_slopeProperties;
     std::vector<glm::vec3> m_normalMapBuffer;
 
