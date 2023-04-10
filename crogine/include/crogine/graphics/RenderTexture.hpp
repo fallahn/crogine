@@ -173,6 +173,7 @@ namespace cro
         std::uint32_t m_msTextureID;
 
         std::uint32_t m_depthTextureID;
+        std::uint32_t m_msDepthTextureID;
 
         Texture m_texture;
         std::array<float, 4u> m_lastClearColour = {};

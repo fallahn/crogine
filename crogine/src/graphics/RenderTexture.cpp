@@ -41,6 +41,7 @@ RenderTexture::RenderTexture()
     m_msfboID           (0),
     m_msTextureID       (0),
     m_depthTextureID    (0),
+    m_msDepthTextureID  (0),
     m_hasDepthBuffer    (false),
     m_hasStencilBuffer  (false)
 {
@@ -59,6 +60,11 @@ RenderTexture::~RenderTexture()
     }
     
     if (m_depthTextureID)
+    {
+        glCheck(glDeleteTextures(1, &m_depthTextureID));
+    }
+
+    if (m_msDepthTextureID)
     {
         glCheck(glDeleteTextures(1, &m_depthTextureID));
     }
@@ -84,6 +90,7 @@ RenderTexture::RenderTexture(RenderTexture&& other) noexcept
     m_msfboID = other.m_msfboID;
     m_msTextureID = other.m_msTextureID;
     m_depthTextureID = other.m_depthTextureID;
+    m_msDepthTextureID = other.m_msDepthTextureID;
 
     m_texture = std::move(other.m_texture);
     setViewport(other.getViewport());
@@ -98,6 +105,7 @@ RenderTexture::RenderTexture(RenderTexture&& other) noexcept
     other.m_msfboID = 0;
     other.m_msTextureID = 0;
     other.m_depthTextureID = 0;
+    other.m_msDepthTextureID = 0;
 
     other.setViewport({ 0, 0, 0, 0 });
     other.setView({ 0.f, 0.f });
@@ -120,6 +128,10 @@ RenderTexture& RenderTexture::operator=(RenderTexture&& other) noexcept
         {
             glCheck(glDeleteTextures(1, &m_depthTextureID));
         }
+        if (m_msDepthTextureID)
+        {
+            glCheck(glDeleteTextures(1, &m_msDepthTextureID));
+        }
 
         if (m_fboID)
         {
@@ -138,6 +150,7 @@ RenderTexture& RenderTexture::operator=(RenderTexture&& other) noexcept
         m_msfboID = other.m_msfboID;
         m_msTextureID = other.m_msTextureID;
         m_depthTextureID = other.m_depthTextureID;
+        m_msDepthTextureID = other.m_msDepthTextureID;
 
         m_texture = std::move(other.m_texture);
         setViewport(other.getViewport());
@@ -152,6 +165,7 @@ RenderTexture& RenderTexture::operator=(RenderTexture&& other) noexcept
         other.m_msfboID = 0;
         other.m_msTextureID = 0;
         other.m_depthTextureID = 0;
+        other.m_msDepthTextureID = 0;
 
         other.setViewport({ 0, 0, 0, 0 });
         other.setView({ 0.f, 0.f });
@@ -270,7 +284,7 @@ void RenderTexture::display()
         //then we rely on setActive(false) - below - to restore
         //the correct GL_DRAW_FRAMEBUFFER
         glCheck(glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_msfboID)); //maybe misleading name - contains our regular downsampled texture
-        glCheck(glBlitFramebuffer(0, 0, size.x, size.y, 0, 0, size.x, size.y, GL_COLOR_BUFFER_BIT, GL_NEAREST));
+        glCheck(glBlitFramebuffer(0, 0, size.x, size.y, 0, 0, size.x, size.y, m_clearBits, GL_NEAREST));
 
         glCheck(glDisable(GL_MULTISAMPLE));
     }
@@ -302,6 +316,11 @@ bool RenderTexture::createDefault(RenderTarget::Context ctx)
 
         glCheck(glDeleteTextures(1, &m_msTextureID));
         m_msTextureID = 0;
+
+        if (m_msDepthTextureID)
+        {
+            glCheck(glDeleteTextures(1, &m_msDepthTextureID));
+        }
 
         m_samples = 0;
     }
@@ -352,7 +371,10 @@ bool RenderTexture::createDefault(RenderTarget::Context ctx)
         m_rboID = 0;
     }
 
-    if (m_depthTextureID)
+    //only do this if the new settings
+    //require removal, else we just resize...
+    if ((!ctx.depthBuffer || !ctx.depthTexture)
+        && m_depthTextureID)
     {
         glCheck(glDeleteTextures(1, &m_depthTextureID));
         m_depthTextureID = 0;
@@ -375,6 +397,8 @@ bool RenderTexture::createDefault(RenderTarget::Context ctx)
 
             std::int32_t format = GL_DEPTH_COMPONENT24;
             std::int32_t attachment = GL_DEPTH_ATTACHMENT;
+
+            //TODO why do we only allow stencilling if there's a depth buffer??
             if (ctx.stencilBuffer)
             {
                 format = GL_DEPTH24_STENCIL8;
@@ -382,35 +406,40 @@ bool RenderTexture::createDefault(RenderTarget::Context ctx)
                 m_clearBits |= GL_STENCIL_BUFFER_BIT;
             }
 
-            GLuint rbo;
-            glCheck(glGenRenderbuffers(1, &rbo));
-            if (!rbo)
+
+            
             {
-                Logger::log("Failed creating depth / stencil render buffer", Logger::Type::Error);
-                glCheck(glDeleteFramebuffers(1, &fbo));
+                GLuint rbo;
+                glCheck(glGenRenderbuffers(1, &rbo));
+                if (!rbo)
+                {
+                    Logger::log("Failed creating depth / stencil render buffer", Logger::Type::Error);
+                    glCheck(glDeleteFramebuffers(1, &fbo));
 
-                //tidy up the texture as we won't need it
-                Texture temp;
-                temp.swap(m_texture);
+                    //tidy up the texture as we won't need it
+                    Texture temp;
+                    temp.swap(m_texture);
 
-                return false;
+                    return false;
+                }
+                m_rboID = rbo;
+
+                glCheck(glBindRenderbuffer(GL_RENDERBUFFER, m_rboID));
+                glCheck(glRenderbufferStorage(GL_RENDERBUFFER, format, ctx.width, ctx.height));
+                glCheck(glFramebufferRenderbuffer(GL_FRAMEBUFFER, attachment, GL_RENDERBUFFER, m_rboID));
+                glCheck(glBindRenderbuffer(GL_RENDERBUFFER, 0));
+
             }
-            m_rboID = rbo;
-
-            glCheck(glBindRenderbuffer(GL_RENDERBUFFER, m_rboID));
-            glCheck(glRenderbufferStorage(GL_RENDERBUFFER, format, ctx.width, ctx.height));
-            glCheck(glFramebufferRenderbuffer(GL_FRAMEBUFFER, attachment, GL_RENDERBUFFER, m_rboID));
-            glCheck(glBindRenderbuffer(GL_RENDERBUFFER, 0));
-
 
             //create a depth texture if requested - though only do it here
             //if there's a depth buffer available
-            //TODO if we're using this then an RBO is not strictly necessary - however we
-            //will end up with a complicated set of combinations if also requesting a stencil
-            //buffer....
             if (ctx.depthTexture)
             {
-                glCheck(glGenTextures(1, &m_depthTextureID));
+                if (m_depthTextureID == 0)
+                {
+                    glCheck(glGenTextures(1, &m_depthTextureID));
+                }
+
                 glCheck(glBindTexture(GL_TEXTURE_2D, m_depthTextureID));
                 glCheck(glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, ctx.width, ctx.height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL));
                 glCheck(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST));
@@ -421,7 +450,6 @@ bool RenderTexture::createDefault(RenderTarget::Context ctx)
                 glCheck(glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor));
 
                 glCheck(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, m_depthTextureID, 0));
-                glCheck(glReadBuffer(GL_NONE));
             }
         }
 
@@ -454,8 +482,19 @@ bool RenderTexture::createMultiSampled(RenderTarget::Context ctx)
         //resizing, skip re-creation and return with a
         //resized texture
         if (ctx.depthBuffer == m_hasDepthBuffer
-            && ctx.stencilBuffer == m_hasStencilBuffer)
+            && ctx.stencilBuffer == m_hasStencilBuffer
+            && (ctx.depthTexture == (m_depthTextureID != 0)))
         {
+            if (m_depthTextureID)
+            {
+                glCheck(glBindTexture(GL_TEXTURE_2D, m_depthTextureID));
+                glCheck(glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, ctx.width, ctx.height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL));
+
+                //existence of depth texture implies existence of msDepth
+                glCheck(glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, m_msDepthTextureID));
+                glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, m_samples, GL_DEPTH_COMPONENT, ctx.width, ctx.height, GL_TRUE);
+            }
+            
             glCheck(glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, m_msTextureID));
             glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, m_samples, GL_RGBA, ctx.width, ctx.height, GL_TRUE);
             glCheck(glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, 0));
@@ -478,7 +517,6 @@ bool RenderTexture::createMultiSampled(RenderTarget::Context ctx)
         }
 
         //else delete the buffer and create a fresh one
-        //TODO we could do this in an array but I doubt the hit is noticable
         glCheck(glDeleteFramebuffers(1, &m_fboID));
         glCheck(glDeleteFramebuffers(1, &m_msfboID));
 
@@ -493,6 +531,23 @@ bool RenderTexture::createMultiSampled(RenderTarget::Context ctx)
         glCheck(glDeleteRenderbuffers(1, &m_rboID));
         m_rboID = 0;
     }
+
+    if (!ctx.depthTexture || !ctx.depthBuffer)
+    {
+        //remove unused depth texture if it exists
+        if (m_depthTextureID)
+        {
+            glCheck(glDeleteTextures(1, &m_depthTextureID));
+            m_depthTextureID = 0;
+        }
+
+        if (m_msDepthTextureID)
+        {
+            glCheck(glDeleteTextures(1, &m_msDepthTextureID));
+            m_msDepthTextureID = 0;
+        }
+    }
+
 
     if (m_msTextureID == 0)
     {
@@ -519,7 +574,7 @@ bool RenderTexture::createMultiSampled(RenderTarget::Context ctx)
     {
         glCheck(glBindFramebuffer(GL_FRAMEBUFFER, fbos[1]));
         glCheck(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_texture.getGLHandle(), 0));
-        
+
         glCheck(glBindFramebuffer(GL_FRAMEBUFFER, fbos[0]));
         glCheck(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D_MULTISAMPLE, m_msTextureID, 0));
 
@@ -531,6 +586,9 @@ bool RenderTexture::createMultiSampled(RenderTarget::Context ctx)
 
             std::int32_t format = GL_DEPTH_COMPONENT24;
             std::int32_t attachment = GL_DEPTH_ATTACHMENT;
+            
+            //TODO are stencil buffers only available if depth
+            //is present? Else why are we doing this?
             if (ctx.stencilBuffer)
             {
                 format = GL_DEPTH24_STENCIL8;
@@ -538,28 +596,66 @@ bool RenderTexture::createMultiSampled(RenderTarget::Context ctx)
                 m_clearBits |= GL_STENCIL_BUFFER_BIT;
             }
 
-            GLuint rbo = 0;
-            glCheck(glGenRenderbuffers(1, &rbo));
-            if (!rbo)
+            
             {
-                Logger::log("Failed creating depth / stencil render buffer", Logger::Type::Error);
-                glCheck(glDeleteFramebuffers(2, fbos));
+                GLuint rbo = 0;
+                glCheck(glGenRenderbuffers(1, &rbo));
+                if (!rbo)
+                {
+                    Logger::log("Failed creating depth / stencil render buffer", Logger::Type::Error);
+                    glCheck(glDeleteFramebuffers(2, fbos));
 
-                //tidy up the textures as we won't need it
-                Texture temp;
-                temp.swap(m_texture);
+                    //tidy up the textures as we won't need it
+                    Texture temp;
+                    temp.swap(m_texture);
 
-                glCheck(glDeleteTextures(1, &m_msTextureID));
-                m_msTextureID = 0;
+                    glCheck(glDeleteTextures(1, &m_msTextureID));
+                    m_msTextureID = 0;
 
-                return false;
+                    return false;
+                }
+                m_rboID = rbo;
+
+                glCheck(glBindRenderbuffer(GL_RENDERBUFFER, m_rboID));
+                glCheck(glRenderbufferStorageMultisample(GL_RENDERBUFFER, m_samples, format, ctx.width, ctx.height));
+                glCheck(glFramebufferRenderbuffer(GL_FRAMEBUFFER, attachment, GL_RENDERBUFFER, m_rboID));
             }
-            m_rboID = rbo;
 
-            glCheck(glBindRenderbuffer(GL_RENDERBUFFER, m_rboID));
-            glCheck(glRenderbufferStorageMultisample(GL_RENDERBUFFER, m_samples, format, ctx.width, ctx.height));
-            glCheck(glFramebufferRenderbuffer(GL_FRAMEBUFFER, attachment, GL_RENDERBUFFER, m_rboID));
-            glCheck(glBindRenderbuffer(GL_RENDERBUFFER, 0));
+            if (ctx.depthTexture)
+            {
+                //again, this could be done in an array - but it works so meh, let's not micro-optimise
+                if (m_depthTextureID == 0)
+                {
+                    glCheck(glGenTextures(1, &m_depthTextureID));
+                }
+
+                if (m_msDepthTextureID == 0)
+                {
+                    glCheck(glGenTextures(1, &m_msDepthTextureID));
+                }
+
+                //output texture
+                glCheck(glBindTexture(GL_TEXTURE_2D, m_depthTextureID));
+                glCheck(glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, ctx.width, ctx.height, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL));
+
+                glCheck(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST)); //MSAA depth textures ONLY supports GL_NEAREST
+                glCheck(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST));
+                glCheck(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER));
+                glCheck(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER));
+                const float borderColor[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+                glCheck(glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor));
+
+                glCheck(glBindFramebuffer(GL_FRAMEBUFFER, fbos[1]));
+                glCheck(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, m_depthTextureID, 0));
+
+
+                //ms texture
+                glCheck(glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, m_msDepthTextureID));
+                glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, m_samples, GL_DEPTH_COMPONENT, ctx.width, ctx.height, GL_TRUE);
+
+                glCheck(glBindFramebuffer(GL_FRAMEBUFFER, fbos[0]));
+                glCheck(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D_MULTISAMPLE, m_msDepthTextureID, 0));
+            }
         }
 
         if (glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE)

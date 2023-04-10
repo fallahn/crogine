@@ -148,7 +148,7 @@ void SSAOState::createScene()
 
         //m_renderBuffer.create(buffSize.x / 2u, buffSize.y / 2u);
         //m_colourQuad.setTexture(m_renderBuffer.getTexture(0), m_renderBuffer.getSize());
-        m_renderBuffer.create({ buffSize.x / 2u, buffSize.y / 2u, true, true, false, 0 });
+        m_renderBuffer.create({ buffSize.x / 2u, buffSize.y / 2u, true, true, false, 4 });
         m_colourQuad.setTexture(m_renderBuffer.getTexture());
         m_colourQuad.setPosition({ 0.f, size.y / 2.f });
 
