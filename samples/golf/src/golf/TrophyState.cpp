@@ -270,7 +270,6 @@ void TrophyState::buildScene()
     m_audioEnts[AudioID::Back] = m_scene.createEntity();
     m_audioEnts[AudioID::Back].addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("back");
 
-    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
 
 
     cro::SpriteSheet spriteSheet;

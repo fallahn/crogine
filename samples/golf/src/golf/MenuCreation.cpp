@@ -723,7 +723,7 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
                     if (activated(evt))
                     {
                         requestStackPush(StateID::Practice);
-                        //m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+                        m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
                     }
                 });
     }
