@@ -96,6 +96,7 @@ void SSAOState::render()
 
 
     m_colourQuad.draw();
+    m_depthQuad.draw();
 
     m_uiScene.render();
 }
@@ -145,10 +146,15 @@ void SSAOState::createScene()
         auto buffSize = cro::App::getWindow().getSize();
         auto size = glm::vec2(buffSize);
 
-        m_renderBuffer.create(buffSize.x / 2u, buffSize.y / 2u);
+        //m_renderBuffer.create(buffSize.x / 2u, buffSize.y / 2u);
+        //m_colourQuad.setTexture(m_renderBuffer.getTexture(0), m_renderBuffer.getSize());
+        m_renderBuffer.create({ buffSize.x / 2u, buffSize.y / 2u, true, true, false, 0 });
         m_colourQuad.setTexture(m_renderBuffer.getTexture());
+        m_colourQuad.setPosition({ 0.f, size.y / 2.f });
 
-        cam.setPerspective(0.7f, size.x / size.y, 0.1f, 10.f);
+        m_depthQuad.setTexture(m_renderBuffer.getDepthTexture(), m_renderBuffer.getSize());
+
+        cam.setPerspective(0.7f, size.x / size.y, 2.1f, 7.f);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
     auto camEnt = m_gameScene.getActiveCamera();

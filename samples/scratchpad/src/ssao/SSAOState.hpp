@@ -36,6 +36,7 @@ source distribution.
 #include <crogine/graphics/ModelDefinition.hpp>
 #include <crogine/graphics/EnvironmentMap.hpp>
 #include <crogine/graphics/RenderTexture.hpp>
+#include <crogine/graphics/MultiRenderTexture.hpp>
 #include <crogine/graphics/SimpleQuad.hpp>
 
 #include <crogine/gui/GuiClient.hpp>
@@ -68,6 +69,7 @@ private:
 
     cro::RenderTexture m_renderBuffer;
     cro::SimpleQuad m_colourQuad;
+    cro::SimpleQuad m_depthQuad;
 
     void addSystems();
     void loadAssets();
