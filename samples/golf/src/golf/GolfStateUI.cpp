@@ -1347,11 +1347,11 @@ void GolfState::showCountdown(std::uint8_t seconds)
     if (m_sharedData.scoreType == ScoreType::Stroke)
     {
         const auto& connectionData = m_sharedData.connectionData[m_sharedData.clientConnection.connectionID];
-        for (auto i = 0u; i < connectionData.playerCount; ++i)
+        for (auto k = 0u; k < connectionData.playerCount; ++k)
         {
-            if (!connectionData.playerData[i].isCPU)
+            if (!connectionData.playerData[k].isCPU)
             {
-                Social::insertScore(m_sharedData.mapDirectory, m_sharedData.holeCount, connectionData.playerData[i].score);
+                Social::insertScore(m_sharedData.mapDirectory, m_sharedData.holeCount, connectionData.playerData[k].score);
                 break;
             }
         }

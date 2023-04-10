@@ -85,6 +85,12 @@
     <Filter Include="Source Files\anim_blend">
       <UniqueIdentifier>{0456efab-54e8-4cc8-83db-b45f2e99256a}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\ssao">
+      <UniqueIdentifier>{5598db66-b286-47ef-8405-4dc8a6905ac8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\ssao">
+      <UniqueIdentifier>{167c96e5-3bf4-41c7-8495-81a928e89ae5}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\LoadingScreen.cpp">
@@ -191,6 +197,9 @@
     </ClCompile>
     <ClCompile Include="src\animblend\AnimBlendState.cpp">
       <Filter>Source Files\anim_blend</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ssao\SSAOState.cpp">
+      <Filter>Source Files\ssao</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
