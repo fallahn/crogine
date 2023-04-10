@@ -1342,6 +1342,8 @@ void GolfState::showCountdown(std::uint8_t seconds)
     }
 
 
+    bool personalBest = false;
+
 #ifndef CRO_DEBUG_
     //enter score into leaderboard
     if (m_sharedData.scoreType == ScoreType::Stroke)
@@ -1351,7 +1353,15 @@ void GolfState::showCountdown(std::uint8_t seconds)
         {
             if (!connectionData.playerData[k].isCPU)
             {
-                Social::insertScore(m_sharedData.mapDirectory, m_sharedData.holeCount, connectionData.playerData[k].score);
+                std::int32_t score = connectionData.playerData[k].score;
+
+                if (score < Social::getPersonalBest()
+                    || Social::getPersonalBest() == 0)
+                {
+                    personalBest = true;
+                }
+
+                Social::insertScore(m_sharedData.mapDirectory, m_sharedData.holeCount, score);
                 cro::Logger::log("LEADERBOARD attempting to insert score: " + std::to_string(connectionData.playerData[k].score), cro::Logger::Type::Info, cro::Logger::Output::File);
                 break;
             }
@@ -1412,6 +1422,35 @@ void GolfState::showCountdown(std::uint8_t seconds)
         e.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     };
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+
+    if (personalBest)
+    {
+        entity = m_uiScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ 200.f + scoreboardExpansion, 10.f, 0.8f });
+        entity.addComponent<cro::Drawable2D>();
+        entity.addComponent<UIElement>().absolutePosition = { 200.f, 50.f };
+        entity.getComponent<UIElement>().depth = 2.23f;
+        entity.getComponent<UIElement>().resizeCallback = [](cro::Entity e)
+        {
+            e.getComponent<cro::Transform>().move({ scoreboardExpansion, 0.f });
+        };
+        entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
+        entity.addComponent<cro::Text>(font).setCharacterSize(UITextSize * 2);
+        entity.getComponent<cro::Text>().setFillColour(TextHighlightColour);
+        entity.getComponent<cro::Text>().setString("PERSONAL BEST!");
+        centreText(entity);
+
+        cmd.targetFlags = CommandID::UI::Scoreboard;
+        cmd.action =
+            [entity](cro::Entity e, float) mutable
+        {
+            e.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+        };
+        m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+    }
+
+
 
     //create status icons for each connected client
     //to show vote to skip
