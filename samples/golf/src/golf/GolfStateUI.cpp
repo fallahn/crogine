@@ -1352,9 +1352,14 @@ void GolfState::showCountdown(std::uint8_t seconds)
             if (!connectionData.playerData[k].isCPU)
             {
                 Social::insertScore(m_sharedData.mapDirectory, m_sharedData.holeCount, connectionData.playerData[k].score);
+                cro::Logger::log("LEADERBOARD attempting to insert score: " + std::to_string(connectionData.playerData[k].score), cro::Logger::Type::Info, cro::Logger::Output::File);
                 break;
             }
         }
+    }
+    else
+    {
+        cro::Logger::log("LEADERBOARD failed to insert score: Score Type is not Stroke.", cro::Logger::Type::Error, cro::Logger::Output::File);
     }
 #endif
 

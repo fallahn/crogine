@@ -34,13 +34,15 @@ source distribution.
 #include <crogine/core/State.hpp>
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/graphics/ModelDefinition.hpp>
+#include <crogine/graphics/EnvironmentMap.hpp>
+#include <crogine/gui/GuiClient.hpp>
 
 namespace cro
 {
     struct Camera;
 }
 
-class SSAOState final : public cro::State
+class SSAOState final : public cro::State, public cro::GuiClient
 {
 public:
     SSAOState(cro::StateStack&, cro::State::Context);
@@ -59,6 +61,7 @@ private:
     cro::Scene m_uiScene;
 
     cro::ResourceCollection m_resources;
+    cro::EnvironmentMap m_environmentMap;
 
     void addSystems();
     void loadAssets();

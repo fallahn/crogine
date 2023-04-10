@@ -31,7 +31,14 @@ source distribution.
 
 #include <crogine/gui/Gui.hpp>
 
+#include <crogine/ecs/components/Callback.hpp>
 #include <crogine/ecs/components/Camera.hpp>
+#include <crogine/ecs/components/Model.hpp>
+
+#include <crogine/ecs/systems/CallbackSystem.hpp>
+#include <crogine/ecs/systems/CameraSystem.hpp>
+#include <crogine/ecs/systems/ShadowMapRenderer.hpp>
+#include <crogine/ecs/systems/ModelRenderer.hpp>
 
 #include <crogine/util/Constants.hpp>
 
@@ -91,24 +98,79 @@ void SSAOState::render()
 void SSAOState::addSystems()
 {
     auto& mb = getContext().appInstance.getMessageBus();
-
+    
+    m_gameScene.addSystem<cro::CallbackSystem>(mb);
+    m_gameScene.addSystem<cro::CameraSystem>(mb);
+    m_gameScene.addSystem<cro::ShadowMapRenderer>(mb);
+    m_gameScene.addSystem<cro::ModelRenderer>(mb);
 }
 
 void SSAOState::loadAssets()
 {
-
+    m_environmentMap.loadFromFile("assets/images/hills.hdr");
 }
 
 void SSAOState::createScene()
 {
+    cro::ModelDefinition md(m_resources, &m_environmentMap);
+    if (md.loadFromFile("assets/ssao/cart/cart.cmt"))
+    {
+        auto entity = m_gameScene.createEntity();
+        entity.addComponent<cro::Transform>();
+        md.createModel(entity);
 
+        entity.addComponent<cro::Callback>().active = true;
+        entity.getComponent<cro::Callback>().function =
+            [](cro::Entity e, float dt)
+        {
+            e.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, dt * 0.5f);
+        };
+    }
 
-    //this is called when the window is resized to automatically update the camera's matrices/viewport
+    if (md.loadFromFile("assets/ssao/background/background.cmt"))
+    {
+        auto entity = m_gameScene.createEntity();
+        entity.addComponent<cro::Transform>();
+        md.createModel(entity);
+    }
+
+    auto resizeWindow = [&](cro::Camera& cam)
+    {
+        auto size = glm::vec2(cro::App::getWindow().getSize());
+
+        cam.setPerspective(1.f, size.x / size.y, 0.1f, 10.f);
+        cam.viewport = { 0.f, 0.f, 1.f, 1.f };
+    };
     auto camEnt = m_gameScene.getActiveCamera();
-    
+    camEnt.getComponent<cro::Camera>().resizeCallback = resizeWindow;
+    camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(2048, 2048);
+    camEnt.getComponent<cro::Transform>().setPosition({ 0.f, 2.083f, 3.878f });
+    camEnt.getComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, -0.254f);
+    resizeWindow(camEnt.getComponent<cro::Camera>());
+
+    auto sun = m_gameScene.getSunlight();
+    sun.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -0.3f);
+    sun.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, 0.4f);
 }
 
 void SSAOState::createUI()
 {
+    registerWindow([&]() 
+        {
+            if (ImGui::Begin("Cart of buns"))
+            {
+                /*static glm::vec3 pos(0.f, 0.5f, 3.f);
+                if (ImGui::SliderFloat3("Position", &pos[0], -10.f, 10.f))
+                {
+                    m_gameScene.getActiveCamera().getComponent<cro::Transform>().setPosition(pos);
+                }
 
+                static float rotation = 0.f;
+                if (ImGui::SliderFloat("Rotation", &rotation, -2.f, 2.f))
+                {
+                    m_gameScene.getActiveCamera().getComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, rotation);
+                }*/
+            }
+            ImGui::End();        
+        });
 }

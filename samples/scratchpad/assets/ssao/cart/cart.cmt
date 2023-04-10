@@ -5,7 +5,7 @@ model cart
 
     material PBR
     {
-        mask = "../../crogine/samples/scratchpad/assets/ssao/mask.png"
+        mask = "mask.png"
         name = "Untitled"
         colour = 1.000000,1.000000,1.000000,1.000000
         smooth = true
@@ -19,7 +19,7 @@ model cart
         framerate = 1.000000
         rx_shadows = true
         blendmode = none
-        diffuse = "../../crogine/samples/scratchpad/assets/ssao/albedo.png"
+        diffuse = "albedo.png"
 
     }
 }
