@@ -35,6 +35,9 @@ source distribution.
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/graphics/ModelDefinition.hpp>
 #include <crogine/graphics/EnvironmentMap.hpp>
+#include <crogine/graphics/RenderTexture.hpp>
+#include <crogine/graphics/SimpleQuad.hpp>
+
 #include <crogine/gui/GuiClient.hpp>
 
 namespace cro
@@ -62,6 +65,9 @@ private:
 
     cro::ResourceCollection m_resources;
     cro::EnvironmentMap m_environmentMap;
+
+    cro::RenderTexture m_renderBuffer;
+    cro::SimpleQuad m_colourQuad;
 
     void addSystems();
     void loadAssets();

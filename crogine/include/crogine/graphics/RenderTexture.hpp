@@ -81,6 +81,12 @@ namespace cro
         bool create(std::uint32_t width, std::uint32_t height, bool depthBuffer = true, bool stencilBuffer = false, std::uint32_t samples = 0);
 
         /*!
+        \brief creates (or recreates) the RenderTexture with the given context parameters.
+        \see create()
+        */
+        bool create(RenderTarget::Context context);
+
+        /*!
         \brief Returns the current size in pixels of the render texture (zero if not yet created)
         */
         glm::uvec2 getSize() const override;

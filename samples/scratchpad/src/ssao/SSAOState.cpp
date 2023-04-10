@@ -90,7 +90,13 @@ bool SSAOState::simulate(float dt)
 
 void SSAOState::render()
 {
+    m_renderBuffer.clear(cro::Colour::Plum);
     m_gameScene.render();
+    m_renderBuffer.display();
+
+
+    m_colourQuad.draw();
+
     m_uiScene.render();
 }
 
@@ -136,15 +142,19 @@ void SSAOState::createScene()
 
     auto resizeWindow = [&](cro::Camera& cam)
     {
-        auto size = glm::vec2(cro::App::getWindow().getSize());
+        auto buffSize = cro::App::getWindow().getSize();
+        auto size = glm::vec2(buffSize);
 
-        cam.setPerspective(1.f, size.x / size.y, 0.1f, 10.f);
+        m_renderBuffer.create(buffSize.x / 2u, buffSize.y / 2u);
+        m_colourQuad.setTexture(m_renderBuffer.getTexture());
+
+        cam.setPerspective(0.7f, size.x / size.y, 0.1f, 10.f);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
     auto camEnt = m_gameScene.getActiveCamera();
     camEnt.getComponent<cro::Camera>().resizeCallback = resizeWindow;
     camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(2048, 2048);
-    camEnt.getComponent<cro::Transform>().setPosition({ 0.f, 2.083f, 3.878f });
+    camEnt.getComponent<cro::Transform>().setPosition({ 0.f, 2.f, 3.878f });
     camEnt.getComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, -0.254f);
     resizeWindow(camEnt.getComponent<cro::Camera>());
 

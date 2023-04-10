@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2021
+Matt Marchant 2017 - 2023
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -33,6 +33,7 @@ source distribution.
 #include <crogine/graphics/Rectangle.hpp>
 
 #include <array>
+#include <cstdint>
 
 namespace cro
 {
@@ -43,6 +44,26 @@ namespace cro
     class CRO_EXPORT_API RenderTarget
     {
     public:
+        /*!
+        \brief Utility for passing multiple creation parameters
+        to certain types of render target.
+        \see RenderTexture::create()
+        */
+        struct Context final
+        {
+            std::uint32_t width = 0u; //!< desired width
+            std::uint32_t height = 0u; //!< desired height
+            bool depthBuffer = true; //!< should this target create a depth buffer?
+            bool depthTexture = false; //!< if a depth buffer is enabled so this be rendered to a texture?
+            bool stencilBuffer = false; //!< should this target create a stencil buffer?
+
+            std::uint32_t samples = 0u; //!< if not zero then attempt to create a multi-sampled texture with this many samples
+
+            Context() = default;
+            Context(std::uint32_t w, std::uint32_t h, bool db, bool dt, bool s, std::uint32_t ms)
+                : width(w), height(h), depthBuffer(db), depthTexture(dt), stencilBuffer(s), samples(ms) {}
+        };
+
         virtual ~RenderTarget() = default;
 
         virtual glm::uvec2 getSize() const = 0;

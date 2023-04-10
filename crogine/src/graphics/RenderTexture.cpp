@@ -148,33 +148,38 @@ RenderTexture& RenderTexture::operator=(RenderTexture&& other) noexcept
 //public
 bool RenderTexture::create(std::uint32_t width, std::uint32_t height, bool depthBuffer, bool stencilBuffer, std::uint32_t samples)
 {
+    return create({ width, height, depthBuffer, false, stencilBuffer, samples });
+}
+
+bool RenderTexture::create(RenderTarget::Context ctx)
+{
 #ifdef PLATFORM_MOBILE
-    return createDefault(width, height, depthBuffer, stencilBuffer);
+    return createDefault(ctx.width, ctx.height, ctx.depthBuffer, ctx.stencilBuffer);
 #else
-    if (samples)
+    if (ctx.samples)
     {
         std::int32_t samplesAvailable = 0;
         glCheck(glGetIntegerv(GL_MAX_SAMPLES, &samplesAvailable));
 
-        m_samples = std::min(samples, static_cast<std::uint32_t>(samplesAvailable));
+        m_samples = std::min(ctx.samples, static_cast<std::uint32_t>(samplesAvailable));
 
         if (m_samples == 0)
         {
             LogE << "Multisampled RenderTextures not supported (Max Samples returned was 0)" << std::endl;
             return false;
         }
-        else if (m_samples != samples)
+        else if (m_samples != ctx.samples)
         {
             LogW << "Sample count reduced to " << m_samples << " (max available)" << std::endl;
         }
 
-        return createMultiSampled(width, height, depthBuffer, stencilBuffer);
+        return createMultiSampled(ctx.width, ctx.height, ctx.depthBuffer, ctx.stencilBuffer);
     }
     else
     {
         //this will make sure to reset any extra FBO/Texture used for MSAA
         //if they currently exist
-        return createDefault(width, height, depthBuffer, stencilBuffer);
+        return createDefault(ctx.width, ctx.height, ctx.depthBuffer, ctx.stencilBuffer);
     }
 #endif
 }
