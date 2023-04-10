@@ -282,6 +282,7 @@ private:
             MapFlag,
             WindIndicator,
             WindSpeed,
+            WindSpeedBg,
             Thinking,
             MessageBoard,
             Bunker,
