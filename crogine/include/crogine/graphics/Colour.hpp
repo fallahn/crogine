@@ -209,24 +209,6 @@ namespace cro
         static const Colour Plum;
         static const Colour Teal;
 
-        //static constexpr std::uint32_t Red         = 0xff0000ff;
-        //static constexpr std::uint32_t Green       = 0x00ff00ff;
-        //static constexpr std::uint32_t Blue        = 0x0000ffff;
-        //static constexpr std::uint32_t Cyan        = 0x00ffffff;
-        //static constexpr std::uint32_t Magenta     = 0xff00ffff;
-        //static constexpr std::uint32_t Yellow      = 0xffff00ff;
-        //static constexpr std::uint32_t Black       = 0x000000ff;
-        //static constexpr std::uint32_t White       = 0xffffffff;
-        //static constexpr std::uint32_t Transparent = 0x00000000;
-
-        //static constexpr std::uint32_t AliceBlue      = 0xF0F8FF;
-        //static constexpr std::uint32_t CornflowerBlue = 0x6495EDFF;
-        //static constexpr std::uint32_t DarkGrey       = 0xA9A9A9FF;
-        //static constexpr std::uint32_t Gainsboro      = 0xDCDCDCFF;
-        //static constexpr std::uint32_t LightGrey      = 0xD3D3D3FF;
-        //static constexpr std::uint32_t Plum           = 0xDDA0DDFF;
-        //static constexpr std::uint32_t Teal           = 0x008080FF;
-
         float* asArray() { return &r; }
         const float* asArray() const { return &r; }
 
@@ -258,4 +240,25 @@ namespace cro
     CRO_EXPORT_API Colour& operator += (Colour&, const Colour&);
     CRO_EXPORT_API Colour& operator -= (Colour&, const Colour&);
     CRO_EXPORT_API Colour& operator *= (Colour&, const Colour&);
+
+    namespace Detail
+    {
+        static constexpr std::uint32_t Red            = 0xff0000ff;
+        static constexpr std::uint32_t Green          = 0x00ff00ff;
+        static constexpr std::uint32_t Blue           = 0x0000ffff;
+        static constexpr std::uint32_t Cyan           = 0x00ffffff;
+        static constexpr std::uint32_t Magenta        = 0xff00ffff;
+        static constexpr std::uint32_t Yellow         = 0xffff00ff;
+        static constexpr std::uint32_t Black          = 0x000000ff;
+        static constexpr std::uint32_t White          = 0xffffffff;
+        static constexpr std::uint32_t Transparent    = 0x00000000;
+
+        static constexpr std::uint32_t AliceBlue      = 0x00F0F8FF;
+        static constexpr std::uint32_t CornflowerBlue = 0x6495EDFF;
+        static constexpr std::uint32_t DarkGrey       = 0xA9A9A9FF;
+        static constexpr std::uint32_t Gainsboro      = 0xDCDCDCFF;
+        static constexpr std::uint32_t LightGrey      = 0xD3D3D3FF;
+        static constexpr std::uint32_t Plum           = 0xDDA0DDFF;
+        static constexpr std::uint32_t Teal           = 0x008080FF;
+    }
 }

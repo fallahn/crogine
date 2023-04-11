@@ -61,7 +61,7 @@ namespace cro
 
         glm::vec2 position = glm::vec2(0.f);
         glm::vec2 UV = glm::vec2(0.f);
-        cro::Colour colour = cro::Colour::White;
+        cro::Colour colour = cro::Colour(cro::Detail::White);
 
         static constexpr std::size_t Size = (sizeof(float) * 4) + sizeof(cro::Colour);
     };

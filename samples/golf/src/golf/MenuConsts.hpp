@@ -98,16 +98,16 @@ static constexpr std::uint32_t UITextSize = 8;
 static constexpr std::uint32_t InfoTextSize = 10;
 static constexpr std::uint32_t LabelTextSize = 16;
 
-static const cro::Colour TextNormalColour(0xfff8e1ff);
-static const cro::Colour TextEditColour(0x6eb39dff);
-static const cro::Colour TextHighlightColour(0xb83530ff); //red
+static constexpr cro::Colour TextNormalColour(0xfff8e1ff);
+static constexpr cro::Colour TextEditColour(0x6eb39dff);
+static constexpr cro::Colour TextHighlightColour(0xb83530ff); //red
 //static const cro::Colour TextHighlightColour(0x005ab5ff); //cb blue
 //static const cro::Colour TextHighlightColour(0x006cd1ff); //cb blue 2
-static const cro::Colour TextGoldColour(0xf2cf5cff);
-static const cro::Colour TextOrangeColour(0xec773dff);
-static const cro::Colour TextGreenColour(0x6ebe70ff);
-static const cro::Colour LeaderboardTextDark(0x1a1e2dff);
-static const cro::Colour LeaderboardTextLight(0xfff8e1ff);
+static constexpr cro::Colour TextGoldColour(0xf2cf5cff);
+static constexpr cro::Colour TextOrangeColour(0xec773dff);
+static constexpr cro::Colour TextGreenColour(0x6ebe70ff);
+static constexpr cro::Colour LeaderboardTextDark(0x1a1e2dff);
+static constexpr cro::Colour LeaderboardTextLight(0xfff8e1ff);
 
 static constexpr float LeaderboardTextSpacing = 6.f;
 static constexpr float BackgroundAlpha = 0.7f;
@@ -207,9 +207,9 @@ static inline std::vector<cro::Vertex2D> createMenuBackground(glm::vec2 size)
 {
     //assumes GL_TRIANGLES
     //assumes origin bottom left
-    const cro::Colour Inner(0x64432fff);
-    const cro::Colour Light(0x7e6d37ff);
-    const cro::Colour Dark(0x50282fff);
+    static constexpr cro::Colour Inner(0x64432fff);
+    static constexpr cro::Colour Light(0x7e6d37ff);
+    static constexpr cro::Colour Dark(0x50282fff);
     return
     {
         //left
