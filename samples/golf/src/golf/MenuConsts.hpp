@@ -264,43 +264,44 @@ static inline std::vector<cro::Vertex2D> createMenuHighlight(glm::vec2 size)
     //assumes GL_TRIANGLES
     //assumes origin bottom left
     //assumes one pixel border
+    static constexpr cro::Colour c(cro::Detail::Transparent);
     return
     {
         //left
-        cro::Vertex2D(glm::vec2(-2.f, size.y + 1.f), TextGoldColour),
-        cro::Vertex2D(glm::vec2(-2.f, - 1.f), TextGoldColour),
-        cro::Vertex2D(glm::vec2(-1.f, size.y + 1.f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(-2.f, size.y + 1.f), c),
+        cro::Vertex2D(glm::vec2(-2.f, - 1.f), c),
+        cro::Vertex2D(glm::vec2(-1.f, size.y + 1.f), c),
 
-        cro::Vertex2D(glm::vec2(-1.f, size.y + 1.f), TextGoldColour),
-        cro::Vertex2D(glm::vec2(-2.f, -1.f), TextGoldColour),
-        cro::Vertex2D(glm::vec2(-1.f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(-1.f, size.y + 1.f), c),
+        cro::Vertex2D(glm::vec2(-2.f, -1.f), c),
+        cro::Vertex2D(glm::vec2(-1.f), c),
 
         //right
-        cro::Vertex2D(glm::vec2(size.x + 1.f, size.y + 1.f), TextGoldColour),
-        cro::Vertex2D(glm::vec2(size.x + 1.f, -1.f), TextGoldColour),
-        cro::Vertex2D(glm::vec2(size.x + 2.f, size.y + 1.f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(size.x + 1.f, size.y + 1.f), c),
+        cro::Vertex2D(glm::vec2(size.x + 1.f, -1.f), c),
+        cro::Vertex2D(glm::vec2(size.x + 2.f, size.y + 1.f), c),
 
-        cro::Vertex2D(glm::vec2(size.x + 2.f, size.y + 1.f), TextGoldColour),
-        cro::Vertex2D(glm::vec2(size.x + 1.f, -1.f), TextGoldColour),
-        cro::Vertex2D(glm::vec2(size.x + 2.f, -1.f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(size.x + 2.f, size.y + 1.f), c),
+        cro::Vertex2D(glm::vec2(size.x + 1.f, -1.f), c),
+        cro::Vertex2D(glm::vec2(size.x + 2.f, -1.f), c),
 
         //top
-        cro::Vertex2D(glm::vec2(-1.f, size.y + 2.f), TextGoldColour),
-        cro::Vertex2D(glm::vec2(-1.f, size.y + 1.f), TextGoldColour),
-        cro::Vertex2D(glm::vec2(size.x + 1.f, size.y + 2.f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(-1.f, size.y + 2.f), c),
+        cro::Vertex2D(glm::vec2(-1.f, size.y + 1.f), c),
+        cro::Vertex2D(glm::vec2(size.x + 1.f, size.y + 2.f), c),
 
-        cro::Vertex2D(glm::vec2(size.x + 1.f, size.y + 2.f), TextGoldColour),
-        cro::Vertex2D(glm::vec2(-1.f, size.y + 1.f), TextGoldColour),
-        cro::Vertex2D(glm::vec2(size.x + 1.f, size.y + 1.f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(size.x + 1.f, size.y + 2.f), c),
+        cro::Vertex2D(glm::vec2(-1.f, size.y + 1.f), c),
+        cro::Vertex2D(glm::vec2(size.x + 1.f, size.y + 1.f), c),
 
         //bottom
-        cro::Vertex2D(glm::vec2(-1.f), TextGoldColour),
-        cro::Vertex2D(glm::vec2(-1.f, -2.f), TextGoldColour),
-        cro::Vertex2D(glm::vec2(size.x + 1.f, -1.f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(-1.f), c),
+        cro::Vertex2D(glm::vec2(-1.f, -2.f), c),
+        cro::Vertex2D(glm::vec2(size.x + 1.f, -1.f), c),
 
-        cro::Vertex2D(glm::vec2(size.x + 1.f, -1.f), TextGoldColour),
-        cro::Vertex2D(glm::vec2(-1.f, -2.f), TextGoldColour),
-        cro::Vertex2D(glm::vec2(size.x + 1.f, -2.f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(size.x + 1.f, -1.f), c),
+        cro::Vertex2D(glm::vec2(-1.f, -2.f), c),
+        cro::Vertex2D(glm::vec2(size.x + 1.f, -2.f), c),
     };
 }
 

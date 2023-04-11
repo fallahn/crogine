@@ -644,6 +644,7 @@ void MenuState::createAvatarMenu(cro::Entity parent)
     avatarEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
+
     //profile flyout menu
     auto& nameFont = m_sharedData.sharedResources->fonts.get(FontID::Label);
     entity = m_uiScene.createEntity();
@@ -653,12 +654,15 @@ void MenuState::createAvatarMenu(cro::Entity parent)
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
     entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
+    entity.getComponent<cro::Text>().setVerticalSpacing(1.f);
+
     cro::String nameList;
     /*for (const auto& profile : m_profileData.playerProfiles)
     {
         nameList += profile.name + "\n";
     }*/
-    for (auto i = 0; i < 64; ++i)
+    const std::size_t nameCount = 64; //m_profileData.playerProfiles.size();
+    for (auto i = 0u; i < nameCount; ++i)
     {
         nameList += "buns\n";
     }
@@ -667,39 +671,82 @@ void MenuState::createAvatarMenu(cro::Entity parent)
     entity.getComponent<cro::Transform>().setPosition({ 0.f, bounds.height + 1.f, 0.1f });
 
     auto nameListEnt = entity;
+    const float menuWidth = std::max(bounds.width, 120.f);
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -0.2f });
-    entity.addComponent<cro::Drawable2D>().setVertexData(createMenuBackground({ bounds.width, bounds.height }));
+    entity.addComponent<cro::Transform>().setPosition({ 130.f, 120.f, 0.6f });
+    entity.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+    entity.addComponent<cro::Drawable2D>().setVertexData(createMenuBackground({ menuWidth, bounds.height }));
     entity.getComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLES);
     entity.getComponent<cro::Transform>().addChild(nameListEnt.getComponent<cro::Transform>());
     auto bgEnt = entity;
+    avatarEnt.getComponent<cro::Transform>().addChild(bgEnt.getComponent<cro::Transform>());
 
-    auto itemHeight = std::floor(bounds.height / 64/*m_profileData.playerProfiles.size()*/);
-    auto flyoutEnt = m_uiScene.createEntity();
-    flyoutEnt.addComponent<cro::Transform>().setPosition({ 130.f, 112.f, 0.6f });
-    flyoutEnt.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
-    flyoutEnt.addComponent<cro::Drawable2D>().setVertexData(createMenuHighlight({ bounds.width, itemHeight }));
-    flyoutEnt.getComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLES);
-    flyoutEnt.addComponent<cro::UIInput>().area = { 0.f, 0.f, bounds.width, itemHeight };
-    flyoutEnt.getComponent<cro::UIInput>().setGroup(MenuID::ProfileFlyout);
-    flyoutEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = 
-        uiSystem.addCallback([&, bgEnt, itemHeight](cro::Entity e, const cro::ButtonEvent& evt) mutable
+    static constexpr float ItemHeight = 14.f;
+    auto flyoutSelect = uiSystem.addCallback([&,bgEnt](cro::Entity e) mutable
+        {
+            for (auto& v : e.getComponent<cro::Drawable2D>().getVertexData())
             {
-                if (activated(evt))
-                {
-                    e.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
-                    m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Avatar);
+                v.colour = TextGoldColour;
+            }
+            e.getComponent<cro::Callback>().active = true;
 
-                    //TODO apply profile at index
-                }
-                else if (deactivated(evt))
-                {
-                    e.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
-                    m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Avatar);
-                }
-            });
-    flyoutEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-    avatarEnt.getComponent<cro::Transform>().addChild(flyoutEnt.getComponent<cro::Transform>());
+            auto screenY = static_cast<float>(cro::App::getWindow().getSize().y);
+            auto worldY = e.getComponent<cro::Transform>().getWorldPosition().y;
+            if ((worldY + ItemHeight) / m_viewScale.y > screenY)
+            {
+                bgEnt.getComponent<cro::Transform>().move({ 0.f, -ItemHeight });
+            }
+            else if (worldY < 0)
+            {
+                bgEnt.getComponent<cro::Transform>().move({ 0.f, ItemHeight });
+            }
+        });
+    auto flyoutUnselect = uiSystem.addCallback([](cro::Entity e)
+        {
+            for (auto& v : e.getComponent<cro::Drawable2D>().getVertexData())
+            {
+                v.colour = cro::Colour::Transparent;
+            }
+        });
+    auto flyoutActivate = uiSystem.addCallback([&, bgEnt](cro::Entity e, const cro::ButtonEvent& evt) mutable
+        {
+            if (activated(evt))
+            {
+                bgEnt.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+                m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Avatar);
+
+                //TODO apply profile at index
+                //LogI << m_profileData.playerProfiles[e.getComponent<cro::Callback>().getUserData<std::int32_t>()].name.toAnsiString() << std::endl;
+            }
+            else if (deactivated(evt))
+            {
+                bgEnt.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+                m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Avatar);
+            }
+        });
+
+
+    auto verts = createMenuHighlight({ menuWidth, ItemHeight });
+
+    for (auto i = 0u; i < nameCount; ++i)
+    {
+        entity = m_uiScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ 0.f, (i * ItemHeight) - 2.f, 0.2f });
+        entity.addComponent<cro::Drawable2D>().setVertexData(verts);
+        entity.getComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLES);
+        entity.addComponent<cro::Callback>().function = MenuTextCallback();
+        entity.getComponent<cro::Callback>().setUserData<std::size_t>((nameCount - 1) - i); //store this for the button pressed callback
+        entity.addComponent<cro::UIInput>().area = { 0.f, 0.f, menuWidth, ItemHeight };
+        entity.getComponent<cro::UIInput>().setGroup(MenuID::ProfileFlyout);
+        entity.getComponent<cro::UIInput>().setSelectionIndex((nameCount - 1) - i);
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = flyoutSelect;
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = flyoutUnselect;
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = flyoutActivate;
+
+        entity.getComponent<cro::Transform>().setOrigin({ menuWidth / 2.f, ItemHeight / 2.f });
+        entity.getComponent<cro::Transform>().move(entity.getComponent<cro::Transform>().getOrigin());
+        bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    }
 
     //profile flyout button
     entity = m_uiScene.createEntity();
@@ -715,11 +762,11 @@ void MenuState::createAvatarMenu(cro::Entity parent)
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectionCallback;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectionCallback;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = uiSystem.addCallback(
-        [&, flyoutEnt](cro::Entity e, const cro::ButtonEvent& evt) mutable
+        [&, bgEnt](cro::Entity e, const cro::ButtonEvent& evt) mutable
         {
             if (activated(evt))
             {
-                flyoutEnt.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+                bgEnt.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
                 m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::ProfileFlyout);
             }
         });

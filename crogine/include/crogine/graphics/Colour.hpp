@@ -77,7 +77,8 @@ namespace cro
         constexpr Colour(float red, float green, float blue, float alpha = 1.f)
             : r(red), g(green), b(blue), a(alpha)
         {
-            CRO_ASSERT((r >= 0 && r <= 1) && (g >= 0 && g <= 1) && (b >= 0 && b <= 1) && (a >= 0 && a <= 1), "Values must be normalised");
+            //CRO_ASSERT((r >= 0 && r <= 1) && (g >= 0 && g <= 1) && (b >= 0 && b <= 1) && (a >= 0 && a <= 1), "Values must be normalised");
+            //static_assert((r >= 0 && r <= 1) && (g >= 0 && g <= 1) && (b >= 0 && b <= 1) && (a >= 0 && a <= 1), "");
         }
 
 
