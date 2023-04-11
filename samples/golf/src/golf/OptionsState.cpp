@@ -612,7 +612,7 @@ void OptionsState::buildScene()
 {
     auto& mb = getContext().appInstance.getMessageBus();
 
-    m_scene.addSystem<cro::UISystem>(mb);
+    m_scene.addSystem<cro::UISystem>(mb)->setMouseScrollNavigationEnabled(false);
     m_scene.addSystem<cro::CommandSystem>(mb);
     m_scene.addSystem<cro::CallbackSystem>(mb);
     m_scene.addSystem<cro::SpriteSystem2D>(mb);

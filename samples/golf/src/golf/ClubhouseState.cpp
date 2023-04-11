@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022
+Matt Marchant 2022 - 2023
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -317,14 +317,19 @@ bool ClubhouseState::handleEvent(const cro::Event& evt)
             m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Dummy);
             m_menuEntities[m_currentMenu].getComponent<cro::Callback>().getUserData<MenuData>().targetMenu = MenuID::Main;
             m_menuEntities[m_currentMenu].getComponent<cro::Callback>().active = true;
+
+            m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
             break;
         case MenuID::Join:
             applyTextEdit();
             m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Dummy);
             m_menuEntities[m_currentMenu].getComponent<cro::Callback>().getUserData<MenuData>().targetMenu = MenuID::PlayerSelect;
             m_menuEntities[m_currentMenu].getComponent<cro::Callback>().active = true;
+
+            m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
             break;
         case MenuID::Lobby:
+            m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
             quitLobby();
             break;
         }

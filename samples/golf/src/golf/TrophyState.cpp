@@ -92,6 +92,14 @@ namespace
         };
     };
     std::array<std::int32_t, MaterialID::Count> materialIDs = { 0,0,0 };
+
+    struct MenuID final
+    {
+        enum
+        {
+            Dummy, Main
+        };
+    };
 }
 
 TrophyState::TrophyState(cro::StateStack& ss, cro::State::Context ctx, SharedStateData& sd)
@@ -386,6 +394,8 @@ void TrophyState::buildScene()
 
                 leftDoor.getComponent<cro::Callback>().active = true;
                 rightDoor.getComponent<cro::Callback>().active = true;
+
+                m_scene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Main);
             }
             break;
         case RootCallbackData::FadeOut:
@@ -613,6 +623,7 @@ void TrophyState::buildScene()
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("arrow_left");
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.addComponent<cro::UIInput>().area = bounds;
+    entity.getComponent<cro::UIInput>().setGroup(MenuID::Main);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectedID;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectedID;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown ] =
@@ -636,6 +647,7 @@ void TrophyState::buildScene()
     auto highlightBounds = spriteSheet.getSprite("close_highlight").getTextureRect();
     auto normalBounds = spriteSheet.getSprite("close_button").getTextureRect();
     entity.addComponent<cro::UIInput>().area = bounds;
+    entity.getComponent<cro::UIInput>().setGroup(MenuID::Main);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] =
         uiSystem.addCallback([highlightBounds](cro::Entity e) 
             {
@@ -669,6 +681,7 @@ void TrophyState::buildScene()
     entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.addComponent<cro::UIInput>().area = bounds;
+    entity.getComponent<cro::UIInput>().setGroup(MenuID::Main);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectedID;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectedID;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
@@ -681,6 +694,10 @@ void TrophyState::buildScene()
             });
     backgroundEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
+
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::UIInput>().setGroup(MenuID::Dummy);
 
     //displays trophy render texture
     entity = m_scene.createEntity();
@@ -961,6 +978,8 @@ void TrophyState::buildTrophyScene()
 
 void TrophyState::quitState()
 {
+    m_scene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Dummy);
+
     m_rootNode.getComponent<cro::Callback>().active = true;
     m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
 }

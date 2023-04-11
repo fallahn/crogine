@@ -106,6 +106,8 @@ namespace cro
         std::size_t m_selectionIndex = 0;
         bool m_updateGroup = true; //do order sorting by default
 
+        cro::FloatRect m_worldArea; //cached by transform callback, ie dirty flag optimised
+
         friend class UISystem;
     };
 }

@@ -361,12 +361,9 @@ void UISystem::process(float)
     std::size_t currentIndex = 0;
     for (auto& e : m_groups[m_activeGroup])
     {
-        //TODO probably want to cache these and only update if control moved
-        //especially as we have a transform callback we could take advantage of
-        auto tx = e.getComponent<Transform>().getWorldTransform();
         auto& input = e.getComponent<UIInput>();
 
-        auto area = input.area.transform(tx);
+        auto area = input.m_worldArea;
         bool contains = false;
         if (contains = area.contains(m_eventPosition); contains && input.enabled)
         {
@@ -492,6 +489,13 @@ void UISystem::setActiveGroup(std::size_t group)
     if (!m_groups[m_activeGroup][m_selectedIndex].getComponent<UIInput>().enabled)
     {
         selectNext(1);
+    }
+
+    //refresh transforms in case we came out of some sort of animation
+    for (auto e : m_groups[m_activeGroup])
+    {
+        auto& input = e.getComponent<UIInput>();
+        input.m_worldArea = input.area.transform(e.getComponent<Transform>().getWorldTransform());
     }
 }
 
@@ -663,6 +667,16 @@ void UISystem::onEntityAdded(Entity entity)
     {
         input.m_selectionIndex = m_groups[0].size();
     }
+
+
+    //add a transform callback to only update world TX if input moves/scales
+    auto* worldArea = &input.m_worldArea;
+    *worldArea = input.area.transform(entity.getComponent<Transform>().getWorldTransform()); //remember to set initial value!
+    entity.getComponent<Transform>().addCallback(
+        [entity, worldArea]() mutable
+        {
+            *worldArea = entity.getComponent<UIInput>().area.transform(entity.getComponent<Transform>().getWorldTransform());
+        });
 }
 
 void UISystem::onEntityRemoved(Entity entity)
