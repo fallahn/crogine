@@ -181,6 +181,20 @@ namespace cro
         */
         void setActiveControllerID(std::int32_t id);
 
+        /*!
+        \brief Enables or disables navigation with mouse scroll.
+        By default scrolling the mouse wheel will navigate the selected
+        UIInput to the next available active UIInput. Setting this to false
+        will disabled this behaviour.
+        */
+        void setMouseScrollNavigationEnabled(bool enabled) { m_scrollNavigation = enabled; }
+
+        /*!
+        \brief Returns whether or not mouse scroll navigation is currently enabled.
+        Set to true by default.
+        \see setMouseScrollNavigationEnabled()
+        */
+        bool getMouseScrollNavigationEnabled() const { return m_scrollNavigation; }
     private:
 
         std::vector<ButtonCallback> m_buttonCallbacks;
@@ -212,6 +226,7 @@ namespace cro
             Up = 0x1, Down = 0x2, Left = 0x4, Right = 0x8
         };
 
+        bool m_scrollNavigation;
         std::size_t m_columnCount;
         std::size_t m_selectedIndex;
         void selectNext(std::size_t);

@@ -48,6 +48,7 @@ UISystem::UISystem(MessageBus& mb)
     m_activeControllerID(ActiveControllerAll),
     m_controllerMask    (0),
     m_prevControllerMask(0),
+    m_scrollNavigation  (true),
     m_columnCount       (1),
     m_selectedIndex     (0),
     m_groups            (1),
@@ -69,6 +70,27 @@ void UISystem::handleEvent(const Event& evt)
     switch (evt.type)
     {
     default: break;
+    case SDL_MOUSEWHEEL:
+        if (m_scrollNavigation)
+        {
+            if (evt.wheel.x > 0)
+            {
+                selectNext(1);
+            }
+            else if (evt.wheel.x < 0)
+            {
+                selectPrev(1);
+            }
+            else if (evt.wheel.y > 0)
+            {
+                selectPrev(m_columnCount);
+            }
+            else if (evt.wheel.y < 0)
+            {
+                selectNext(m_columnCount);
+            }
+        }
+        break;
     case SDL_CONTROLLERDEVICEREMOVED:
         //check if this is the active controller and update
         //if necessary to a connected controller
@@ -340,6 +362,7 @@ void UISystem::process(float)
     for (auto& e : m_groups[m_activeGroup])
     {
         //TODO probably want to cache these and only update if control moved
+        //especially as we have a transform callback we could take advantage of
         auto tx = e.getComponent<Transform>().getWorldTransform();
         auto& input = e.getComponent<UIInput>();
 
@@ -357,7 +380,8 @@ void UISystem::process(float)
             }
 
             //only fire these events if the selection actually changed.
-            if (m_selectedIndex != currentIndex)
+            if (m_selectedIndex != currentIndex
+                && glm::length2(m_movementDelta) != 0) //stops the hovering cursor modifying the selection
             {
                 unselect(m_selectedIndex);
                 m_selectedIndex = currentIndex;

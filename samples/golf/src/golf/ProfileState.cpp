@@ -398,7 +398,7 @@ void ProfileState::render()
 void ProfileState::addSystems()
 {
     auto& mb = getContext().appInstance.getMessageBus();
-    m_uiScene.addSystem<cro::UISystem>(mb);
+    m_uiScene.addSystem<cro::UISystem>(mb)->setMouseScrollNavigationEnabled(false);
     m_uiScene.addSystem<cro::CommandSystem>(mb);
     m_uiScene.addSystem<cro::CallbackSystem>(mb);
     m_uiScene.addSystem<cro::SpriteSystem2D>(mb);

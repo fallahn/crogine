@@ -259,12 +259,12 @@ static inline std::vector<cro::Vertex2D> createMenuBackground(glm::vec2 size)
     };
 }
 
-static inline std::vector<cro::Vertex2D> createMenuHighlight(glm::vec2 size)
+static inline std::vector<cro::Vertex2D> createMenuHighlight(glm::vec2 size, cro::Colour c)
 {
     //assumes GL_TRIANGLES
     //assumes origin bottom left
     //assumes one pixel border
-    static constexpr cro::Colour c(cro::Detail::Transparent);
+    //static constexpr cro::Colour c(cro::Detail::Transparent);
     return
     {
         //left

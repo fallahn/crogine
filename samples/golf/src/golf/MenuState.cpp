@@ -433,6 +433,9 @@ bool MenuState::handleEvent(const cro::Event& evt)
         switch (m_currentMenu)
         {
         default: break;
+        case MenuID::ProfileFlyout:
+            //menu handler deals with this
+            break;
         case MenuID::Avatar:
             m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
             m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Dummy);

@@ -664,7 +664,7 @@ void MenuState::createAvatarMenu(cro::Entity parent)
     const std::size_t nameCount = 64; //m_profileData.playerProfiles.size();
     for (auto i = 0u; i < nameCount; ++i)
     {
-        nameList += "buns\n";
+        nameList += "buns " + std::to_string(i) + "\n";
     }
     entity.getComponent<cro::Text>().setString(nameList);
     bounds = cro::Text::getLocalBounds(entity);
@@ -681,66 +681,79 @@ void MenuState::createAvatarMenu(cro::Entity parent)
     auto bgEnt = entity;
     avatarEnt.getComponent<cro::Transform>().addChild(bgEnt.getComponent<cro::Transform>());
 
-    static constexpr float ItemHeight = 14.f;
-    auto flyoutSelect = uiSystem.addCallback([&,bgEnt](cro::Entity e) mutable
-        {
-            for (auto& v : e.getComponent<cro::Drawable2D>().getVertexData())
-            {
-                v.colour = TextGoldColour;
-            }
-            e.getComponent<cro::Callback>().active = true;
 
-            auto screenY = static_cast<float>(cro::App::getWindow().getSize().y);
+    static constexpr float ItemHeight = 14.f;
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
+    entity.getComponent<cro::Transform>().setOrigin({ menuWidth / 2.f, ItemHeight / 2.f });
+    entity.addComponent<cro::Drawable2D>().setVertexData(createMenuHighlight({ menuWidth, ItemHeight }, TextGoldColour));
+    entity.getComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLES);
+    entity.addComponent<cro::Callback>().function = MenuTextCallback();
+    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    auto flyoutSelect = uiSystem.addCallback([&,bgEnt, entity](cro::Entity e) mutable
+        {
+            const auto screenY = static_cast<float>(cro::App::getWindow().getSize().y);
             auto worldY = e.getComponent<cro::Transform>().getWorldPosition().y;
-            if ((worldY + ItemHeight) / m_viewScale.y > screenY)
+            const float itemSize = (ItemHeight * m_viewScale.y);
+            if (worldY + itemSize > screenY)
             {
-                bgEnt.getComponent<cro::Transform>().move({ 0.f, -ItemHeight });
+                bgEnt.getComponent<cro::Transform>().move({ 0.f, -ItemHeight * std::ceil(((worldY + itemSize) - screenY) / itemSize) });
             }
             else if (worldY < 0)
             {
-                bgEnt.getComponent<cro::Transform>().move({ 0.f, ItemHeight });
+                bgEnt.getComponent<cro::Transform>().move({ 0.f, -ItemHeight * std::ceil(worldY / itemSize) });
             }
+
+            entity.getComponent<cro::Transform>().setPosition(e.getComponent<cro::Transform>().getPosition());
+            entity.getComponent<cro::Callback>().function = MenuTextCallback(); //hm is there a less horrible way to reset this?
+            entity.getComponent<cro::Callback>().active = true;
+            entity.getComponent<cro::AudioEmitter>().setPlayingOffset(cro::Time());
+            entity.getComponent<cro::AudioEmitter>().play();
         });
-    auto flyoutUnselect = uiSystem.addCallback([](cro::Entity e)
+    /*auto flyoutUnselect = uiSystem.addCallback([](cro::Entity e)
         {
-            for (auto& v : e.getComponent<cro::Drawable2D>().getVertexData())
-            {
-                v.colour = cro::Colour::Transparent;
-            }
-        });
+
+        });*/
     auto flyoutActivate = uiSystem.addCallback([&, bgEnt](cro::Entity e, const cro::ButtonEvent& evt) mutable
         {
-            if (activated(evt))
+            //wheel within a wheel
+            auto closePopup = [&]() mutable
             {
                 bgEnt.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
                 m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Avatar);
+                m_currentMenu = MenuID::Avatar;
+            };
+
+            if (activated(evt))
+            {
+                closePopup();
+                m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
 
                 //TODO apply profile at index
                 //LogI << m_profileData.playerProfiles[e.getComponent<cro::Callback>().getUserData<std::int32_t>()].name.toAnsiString() << std::endl;
             }
+
             else if (deactivated(evt))
             {
-                bgEnt.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
-                m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Avatar);
+                closePopup();
+                m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
             }
         });
 
 
-    auto verts = createMenuHighlight({ menuWidth, ItemHeight });
+    
 
     for (auto i = 0u; i < nameCount; ++i)
     {
         entity = m_uiScene.createEntity();
         entity.addComponent<cro::Transform>().setPosition({ 0.f, (i * ItemHeight) - 2.f, 0.2f });
-        entity.addComponent<cro::Drawable2D>().setVertexData(verts);
-        entity.getComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLES);
-        entity.addComponent<cro::Callback>().function = MenuTextCallback();
-        entity.getComponent<cro::Callback>().setUserData<std::size_t>((nameCount - 1) - i); //store this for the button pressed callback
         entity.addComponent<cro::UIInput>().area = { 0.f, 0.f, menuWidth, ItemHeight };
         entity.getComponent<cro::UIInput>().setGroup(MenuID::ProfileFlyout);
         entity.getComponent<cro::UIInput>().setSelectionIndex((nameCount - 1) - i);
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = flyoutSelect;
-        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = flyoutUnselect;
+        //entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = flyoutUnselect;
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = flyoutActivate;
 
         entity.getComponent<cro::Transform>().setOrigin({ menuWidth / 2.f, ItemHeight / 2.f });
@@ -768,6 +781,7 @@ void MenuState::createAvatarMenu(cro::Entity parent)
             {
                 bgEnt.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
                 m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::ProfileFlyout);
+                m_currentMenu = MenuID::ProfileFlyout;
             }
         });
     entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
