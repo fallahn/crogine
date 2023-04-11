@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2022
+Matt Marchant 2017 - 2023
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -51,22 +51,22 @@ const cro::Colour cro::Colour::LightGrey = cro::Colour(0xD3D3D3FF);
 const cro::Colour cro::Colour::Plum = cro::Colour(0xDDA0DDFF);
 const cro::Colour cro::Colour::Teal = cro::Colour(0x008080FF);
 
-cro::Colour::Colour()
+constexpr cro::Colour::Colour()
     : r(0.f), g(0.f), b(0.f), a(1.f) {}
 
-cro::Colour::Colour(std::uint8_t red, std::uint8_t green, std::uint8_t blue, std::uint8_t alpha)
+constexpr cro::Colour::Colour(std::uint8_t red, std::uint8_t green, std::uint8_t blue, std::uint8_t alpha)
     : r(static_cast<float>(red) / 255.f),
     g(static_cast<float>(green) / 255.f),
     b(static_cast<float>(blue) / 255.f),
     a(static_cast<float>(alpha) / 255.f) {}
 
-cro::Colour::Colour(std::uint32_t mask)
+constexpr cro::Colour::Colour(std::uint32_t mask)
     : r(static_cast<float>((mask >> 24) & 0xFF) / 255.f),
     g(static_cast<float>((mask >> 16) & 0xFF) / 255.f),
     b(static_cast<float>((mask >> 8) & 0xFF) / 255.f),
     a(static_cast<float>(mask & 0xFF) / 255.f) {}
 
-cro::Colour::Colour(float red, float green, float blue, float alpha)
+constexpr cro::Colour::Colour(float red, float green, float blue, float alpha)
     : r(red), g(green), b(blue), a(alpha)
 {
     CRO_ASSERT((r >= 0 && r <= 1) && (g >= 0 && g <= 1) && (b >= 0 && b <= 1) && (a >= 0 && a <= 1), "Values must be normalised");

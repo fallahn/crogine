@@ -31,6 +31,7 @@ source distribution.
 
 #include <crogine/core/Clock.hpp>
 #include <crogine/graphics/Colour.hpp>
+#include <crogine/graphics/Vertex2D.hpp>
 #include <crogine/ecs/systems/UISystem.hpp>
 #include <crogine/ecs/components/Text.hpp>
 #include <crogine/ecs/components/Transform.hpp>
@@ -200,6 +201,107 @@ static inline void centreText(cro::Entity entity)
     auto bounds = cro::Text::getLocalBounds(entity);
     bounds.width = std::floor(bounds.width / 2.f);
     entity.getComponent<cro::Transform>().setOrigin({ bounds.width, 0.f });
+}
+
+static inline std::vector<cro::Vertex2D> createMenuBackground(glm::vec2 size)
+{
+    //assumes GL_TRIANGLES
+    //assumes origin bottom left
+    const cro::Colour Inner(0x64432fff);
+    const cro::Colour Light(0x7e6d37ff);
+    const cro::Colour Dark(0x50282fff);
+    return
+    {
+        //left
+        cro::Vertex2D(glm::vec2(-2.f, size.y + 1.f), Light),
+        cro::Vertex2D(glm::vec2(-2.f, -1.f), Light),
+        cro::Vertex2D(glm::vec2(-1.f, size.y + 1.f), Light),
+
+        cro::Vertex2D(glm::vec2(-1.f, size.y + 1.f), Light),
+        cro::Vertex2D(glm::vec2(-2.f, -1.f), Light),
+        cro::Vertex2D(glm::vec2(-1.f), Light),
+
+        //right
+        cro::Vertex2D(glm::vec2(size.x + 1.f, size.y + 1.f), Dark),
+        cro::Vertex2D(glm::vec2(size.x + 1.f, -1.f), Dark),
+        cro::Vertex2D(glm::vec2(size.x + 2.f, size.y + 1.f), Dark),
+
+        cro::Vertex2D(glm::vec2(size.x + 2.f, size.y + 1.f), Dark),
+        cro::Vertex2D(glm::vec2(size.x + 1.f, -1.f), Dark),
+        cro::Vertex2D(glm::vec2(size.x + 2.f, -1.f), Dark),
+
+        //top
+        cro::Vertex2D(glm::vec2(-1.f, size.y + 2.f), Light),
+        cro::Vertex2D(glm::vec2(-1.f, size.y + 1.f), Light),
+        cro::Vertex2D(glm::vec2(size.x + 1.f, size.y + 2.f), Light),
+
+        cro::Vertex2D(glm::vec2(size.x + 1.f, size.y + 2.f), Light),
+        cro::Vertex2D(glm::vec2(-1.f, size.y + 1.f), Light),
+        cro::Vertex2D(glm::vec2(size.x + 1.f, size.y + 1.f), Light),
+
+        //bottom
+        cro::Vertex2D(glm::vec2(-1.f), Dark),
+        cro::Vertex2D(glm::vec2(-1.f, -2.f), Dark),
+        cro::Vertex2D(glm::vec2(size.x + 1.f, -1.f), Dark),
+
+        cro::Vertex2D(glm::vec2(size.x + 1.f, -1.f), Dark),
+        cro::Vertex2D(glm::vec2(-1.f, -2.f), Dark),
+        cro::Vertex2D(glm::vec2(size.x + 1.f, -2.f), Dark),
+
+        //inner
+        cro::Vertex2D(glm::vec2(-1.f, size.y +1.f), Inner),
+        cro::Vertex2D(glm::vec2(-1.f), Inner),
+        cro::Vertex2D(size + 1.f, Inner),
+
+        cro::Vertex2D(size + 1.f, Inner),
+        cro::Vertex2D(glm::vec2(-1.f), Inner),
+        cro::Vertex2D(glm::vec2(size.x + 1.f, -1.f), Inner),
+    };
+}
+
+static inline std::vector<cro::Vertex2D> createMenuHighlight(glm::vec2 size)
+{
+    //assumes GL_TRIANGLES
+    //assumes origin bottom left
+    //assumes one pixel border
+    return
+    {
+        //left
+        cro::Vertex2D(glm::vec2(-2.f, size.y + 1.f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(-2.f, - 1.f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(-1.f, size.y + 1.f), TextGoldColour),
+
+        cro::Vertex2D(glm::vec2(-1.f, size.y + 1.f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(-2.f, -1.f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(-1.f), TextGoldColour),
+
+        //right
+        cro::Vertex2D(glm::vec2(size.x + 1.f, size.y + 1.f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(size.x + 1.f, -1.f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(size.x + 2.f, size.y + 1.f), TextGoldColour),
+
+        cro::Vertex2D(glm::vec2(size.x + 2.f, size.y + 1.f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(size.x + 1.f, -1.f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(size.x + 2.f, -1.f), TextGoldColour),
+
+        //top
+        cro::Vertex2D(glm::vec2(-1.f, size.y + 2.f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(-1.f, size.y + 1.f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(size.x + 1.f, size.y + 2.f), TextGoldColour),
+
+        cro::Vertex2D(glm::vec2(size.x + 1.f, size.y + 2.f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(-1.f, size.y + 1.f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(size.x + 1.f, size.y + 1.f), TextGoldColour),
+
+        //bottom
+        cro::Vertex2D(glm::vec2(-1.f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(-1.f, -2.f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(size.x + 1.f, -1.f), TextGoldColour),
+
+        cro::Vertex2D(glm::vec2(size.x + 1.f, -1.f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(-1.f, -2.f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(size.x + 1.f, -2.f), TextGoldColour),
+    };
 }
 
 struct HighlightAnimationCallback final

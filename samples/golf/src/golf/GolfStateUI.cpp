@@ -1350,9 +1350,10 @@ void GolfState::showCountdown(std::uint8_t seconds)
             if (!connectionData.playerData[k].isCPU)
             {
                 std::int32_t score = connectionData.playerData[k].score;
+                auto best = Social::getPersonalBest(m_sharedData.mapDirectory, m_sharedData.holeCount);
 
-                if (score < Social::getPersonalBest()
-                    || Social::getPersonalBest() == 0)
+                if (score < best
+                    || best == 0)
                 {
                     personalBest = true;
                 }

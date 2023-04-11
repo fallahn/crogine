@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2021
+Matt Marchant 2017 - 2023
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -49,22 +49,22 @@ namespace cro
         /*!
         \brief Default constructor. Initialises to black.
         */
-        Colour();
+        constexpr Colour();
         /*!
         \brief Construct the colour from 3 or 4 8-bit values
         */
-        explicit Colour(std::uint8_t red, std::uint8_t green, std::uint8_t blue, std::uint8_t alpha = 255);
+        constexpr explicit Colour(std::uint8_t red, std::uint8_t green, std::uint8_t blue, std::uint8_t alpha = 255);
             
         /*!
         \brief Constructs the colour from a 32bit bitmask of 4 8-bit values
         in RGBA order
         */
-        explicit Colour(std::uint32_t mask);
+        constexpr explicit Colour(std::uint32_t mask);
 
         /*!
         \brief Constructs the colour from 3 or 4 normalised values
         */
-        explicit Colour(float red, float green, float blue, float alpha = 1.f);
+        constexpr explicit Colour(float red, float green, float blue, float alpha = 1.f);
 
         /*!
         \brief Constructs the colour from a vector 3

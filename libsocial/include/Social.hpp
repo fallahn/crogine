@@ -110,7 +110,7 @@ public:
     static void storeDrivingStats(const std::array<float, 3u>&);
     static void readDrivingStats(std::array<float, 3u>&);
     static void insertScore(const std::string&, std::uint8_t, std::int32_t) {}
-    static std::int32_t getPersonalBest() { return -1; }
+    static std::int32_t getPersonalBest(const std::string&, std::uint8_t) { return -1; }
     static std::vector<cro::String> getLeaderboardResults(std::int32_t, std::int32_t) { return {}; }
     static void setStatus(std::int32_t, const std::vector<const char*>&) {}
     static void setGroup(std::uint64_t, std::int32_t = 0) {}
