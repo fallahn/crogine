@@ -62,7 +62,7 @@ void TextSystem::process(float)
                 //don't rebuild the entire array
                 auto& verts = drawable.getVertexData();
 
-                auto secondColour = cro::Colour::Transparent;
+                cro::Colour secondColour = cro::Colour::Transparent;
                 if (text.m_context.outlineThickness != 0)
                 {
                     secondColour = text.m_context.outlineColour;

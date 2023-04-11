@@ -672,6 +672,7 @@ void MenuState::createAvatarMenu(cro::Entity parent)
     entity.addComponent<cro::Drawable2D>().setVertexData(createMenuBackground({ bounds.width, bounds.height }));
     entity.getComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLES);
     entity.getComponent<cro::Transform>().addChild(nameListEnt.getComponent<cro::Transform>());
+    auto bgEnt = entity;
 
     auto itemHeight = std::floor(bounds.height / 64/*m_profileData.playerProfiles.size()*/);
     auto flyoutEnt = m_uiScene.createEntity();
@@ -682,7 +683,7 @@ void MenuState::createAvatarMenu(cro::Entity parent)
     flyoutEnt.addComponent<cro::UIInput>().area = { 0.f, 0.f, bounds.width, itemHeight };
     flyoutEnt.getComponent<cro::UIInput>().setGroup(MenuID::ProfileFlyout);
     flyoutEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = 
-        uiSystem.addCallback([&](cro::Entity e, const cro::ButtonEvent& evt) mutable
+        uiSystem.addCallback([&, bgEnt, itemHeight](cro::Entity e, const cro::ButtonEvent& evt) mutable
             {
                 if (activated(evt))
                 {

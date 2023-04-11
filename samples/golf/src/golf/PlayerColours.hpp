@@ -52,7 +52,7 @@ namespace pc
         std::array<std::uint32_t, 2u>({23u,19u})
     };
 
-    static inline const std::array<cro::Colour, 40u> Palette =
+    static inline constexpr std::array<cro::Colour, 40u> Palette =
     {
         cro::Colour(0xdbaf77ff),
         cro::Colour(0xb77854ff),

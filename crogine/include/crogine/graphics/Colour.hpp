@@ -49,22 +49,37 @@ namespace cro
         /*!
         \brief Default constructor. Initialises to black.
         */
-        constexpr Colour();
+        constexpr Colour()
+            : r(0.f), g(0.f), b(0.f), a(1.f) {}
+
         /*!
         \brief Construct the colour from 3 or 4 8-bit values
         */
-        constexpr explicit Colour(std::uint8_t red, std::uint8_t green, std::uint8_t blue, std::uint8_t alpha = 255);
-            
+        constexpr Colour(std::uint8_t red, std::uint8_t green, std::uint8_t blue, std::uint8_t alpha = 255)
+            : r(static_cast<float>(red) / 255.f),
+            g(static_cast<float>(green) / 255.f),
+            b(static_cast<float>(blue) / 255.f),
+            a(static_cast<float>(alpha) / 255.f) {}
+
         /*!
         \brief Constructs the colour from a 32bit bitmask of 4 8-bit values
         in RGBA order
         */
-        constexpr explicit Colour(std::uint32_t mask);
-
+        constexpr Colour(std::uint32_t mask)
+            : r(static_cast<float>((mask >> 24) & 0xFF) / 255.f),
+            g(static_cast<float>((mask >> 16) & 0xFF) / 255.f),
+            b(static_cast<float>((mask >> 8) & 0xFF) / 255.f),
+            a(static_cast<float>(mask & 0xFF) / 255.f) {}
+        
         /*!
         \brief Constructs the colour from 3 or 4 normalised values
         */
-        constexpr explicit Colour(float red, float green, float blue, float alpha = 1.f);
+        constexpr Colour(float red, float green, float blue, float alpha = 1.f)
+            : r(red), g(green), b(blue), a(alpha)
+        {
+            CRO_ASSERT((r >= 0 && r <= 1) && (g >= 0 && g <= 1) && (b >= 0 && b <= 1) && (a >= 0 && a <= 1), "Values must be normalised");
+        }
+
 
         /*!
         \brief Constructs the colour from a vector 3
@@ -80,7 +95,14 @@ namespace cro
         /*
         \brief Creates a colour by assigning a RGBA packed 32bit integer
         */
-        Colour& operator = (std::uint32_t mask);
+        constexpr Colour& operator = (std::uint32_t mask)
+        {
+            r = (static_cast<float>((mask >> 24) & 0xFF) / 255.f);
+            g = (static_cast<float>((mask >> 16) & 0xFF) / 255.f);
+            b = (static_cast<float>((mask >> 8) & 0xFF) / 255.f);
+            a = (static_cast<float>(mask & 0xFF) / 255.f);
+            return *this;
+        }
 
         /*!
         \brief Assignment operator for glm::vec3
@@ -187,8 +209,27 @@ namespace cro
         static const Colour Plum;
         static const Colour Teal;
 
+        //static constexpr std::uint32_t Red         = 0xff0000ff;
+        //static constexpr std::uint32_t Green       = 0x00ff00ff;
+        //static constexpr std::uint32_t Blue        = 0x0000ffff;
+        //static constexpr std::uint32_t Cyan        = 0x00ffffff;
+        //static constexpr std::uint32_t Magenta     = 0xff00ffff;
+        //static constexpr std::uint32_t Yellow      = 0xffff00ff;
+        //static constexpr std::uint32_t Black       = 0x000000ff;
+        //static constexpr std::uint32_t White       = 0xffffffff;
+        //static constexpr std::uint32_t Transparent = 0x00000000;
+
+        //static constexpr std::uint32_t AliceBlue      = 0xF0F8FF;
+        //static constexpr std::uint32_t CornflowerBlue = 0x6495EDFF;
+        //static constexpr std::uint32_t DarkGrey       = 0xA9A9A9FF;
+        //static constexpr std::uint32_t Gainsboro      = 0xDCDCDCFF;
+        //static constexpr std::uint32_t LightGrey      = 0xD3D3D3FF;
+        //static constexpr std::uint32_t Plum           = 0xDDA0DDFF;
+        //static constexpr std::uint32_t Teal           = 0x008080FF;
+
         float* asArray() { return &r; }
         const float* asArray() const { return &r; }
+
 
     private:
 
