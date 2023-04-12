@@ -250,7 +250,8 @@ bool ProfileState::handleEvent(const cro::Event& evt)
     else if (evt.type == SDL_CONTROLLERBUTTONUP)
     {
         cro::App::getWindow().setMouseCaptured(true);
-        if (evt.cbutton.button == cro::GameController::ButtonB)
+        if (evt.cbutton.button == cro::GameController::ButtonB
+            && m_uiScene.getSystem<cro::UISystem>()->getActiveGroup() == MenuID::Main)
         {
             quitState();
             return false;
@@ -272,25 +273,37 @@ bool ProfileState::handleEvent(const cro::Event& evt)
                 m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Main);
                 m_uiScene.getSystem<cro::UISystem>()->setColumnCount(1);
 
+                //restore model preview colours
+                m_profileTextures[m_avatarIndex].setColour(pc::ColourKey::Index(flyoutID), m_activeProfile.avatarFlags[flyoutID]);
+                m_profileTextures[m_avatarIndex].apply();
+
+                //refresh hair colour
+                if (m_avatarHairModels[m_avatarModels[m_avatarIndex].hairIndex].isValid())
+                {
+                    m_avatarHairModels[m_avatarModels[m_avatarIndex].hairIndex].getComponent<cro::Model>().setMaterialProperty(0, "u_hairColour", pc::Palette[m_activeProfile.avatarFlags[0]]);
+                }
+
                 //don't forward this to the menu system
                 return false;
             }
         }
-
-
-        updateHelpString(-1);
-        if (evt.button.button == SDL_BUTTON_RIGHT)
+        else
         {
-            quitState();
-            return false;
-        }
-        else if (evt.button.button == SDL_BUTTON_LEFT)
-        {
-            if (applyTextEdit())
+
+            updateHelpString(-1);
+            if (evt.button.button == SDL_BUTTON_RIGHT)
             {
-                //we applied a text edit so don't update the
-                //UISystem
+                quitState();
                 return false;
+            }
+            else if (evt.button.button == SDL_BUTTON_LEFT)
+            {
+                if (applyTextEdit())
+                {
+                    //we applied a text edit so don't update the
+                    //UISystem
+                    return false;
+                }
             }
         }
     }
@@ -453,6 +466,9 @@ void ProfileState::loadResources()
     m_audioEnts[AudioID::Accept].addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("accept");
     m_audioEnts[AudioID::Back] = m_uiScene.createEntity();
     m_audioEnts[AudioID::Back].addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("back");
+
+    m_audioEnts[AudioID::Select] = m_uiScene.createEntity();
+    m_audioEnts[AudioID::Select].addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
 
     m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
 }
@@ -651,7 +667,7 @@ void ProfileState::buildScene()
 
     //colour buttons
     auto hairColour = createButton("colour_highlight", glm::vec2(33.f, 167.f));
-    hairColour.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+    hairColour.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         uiSystem.addCallback([&, bgEnt](cro::Entity, const cro::ButtonEvent& evt)
             {
                 if (activated(evt))
@@ -670,7 +686,7 @@ void ProfileState::buildScene()
             });
     
     auto skinColour = createButton("colour_highlight", glm::vec2(33.f, 135.f));
-    skinColour.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+    skinColour.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         uiSystem.addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
             {
                 if (activated(evt))
@@ -687,7 +703,7 @@ void ProfileState::buildScene()
             });
     
     auto topLightColour = createButton("colour_highlight", glm::vec2(17.f, 103.f));
-    topLightColour.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+    topLightColour.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         uiSystem.addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
             {
                 if (activated(evt))
@@ -704,7 +720,7 @@ void ProfileState::buildScene()
             });
     
     auto topDarkColour = createButton("colour_highlight", glm::vec2(49.f, 103.f));
-    topDarkColour.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+    topDarkColour.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         uiSystem.addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
             {
                 if (activated(evt))
@@ -721,8 +737,8 @@ void ProfileState::buildScene()
             });
     
     auto bottomLightColour = createButton("colour_highlight", glm::vec2(17.f, 69.f));
-    bottomLightColour.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
-        uiSystem.addCallback([&](cro::Entity e, const cro::ButtonEvent& evt)
+    bottomLightColour.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
+        uiSystem.addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
             {
                 if (activated(evt))
                 {
@@ -738,7 +754,7 @@ void ProfileState::buildScene()
             });
     
     auto bottomDarkColour = createButton("colour_highlight", glm::vec2(49.f, 69.f));
-    bottomDarkColour.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+    bottomDarkColour.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         uiSystem.addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
             {
                 if (activated(evt))
@@ -756,7 +772,7 @@ void ProfileState::buildScene()
 
     //avatar arrow buttons
     auto hairLeft = createButton("arrow_left", glm::vec2(87.f, 156.f));
-    hairLeft.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+    hairLeft.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         uiSystem.addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
             {
                 if (activated(evt))
@@ -768,7 +784,7 @@ void ProfileState::buildScene()
                 }
             });
     auto hairRight = createButton("arrow_right", glm::vec2(234.f, 156.f));
-    hairRight.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+    hairRight.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         uiSystem.addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
             {
                 if (activated(evt))
@@ -779,7 +795,7 @@ void ProfileState::buildScene()
                 }
             });
     auto avatarLeft = createButton("arrow_left", glm::vec2(87.f, 110.f));
-    avatarLeft.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+    avatarLeft.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         uiSystem.addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
             {
                 if (activated(evt))
@@ -789,7 +805,7 @@ void ProfileState::buildScene()
                 }
             });
     auto avatarRight = createButton("arrow_right", glm::vec2(234.f, 110.f));
-    avatarRight.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+    avatarRight.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         uiSystem.addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
             {
                 if (activated(evt))
@@ -801,7 +817,7 @@ void ProfileState::buildScene()
 
     //checkbox
     auto southPaw = createButton("check_highlight", glm::vec2(17.f, 42.f));
-    southPaw.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+    southPaw.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         uiSystem.addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
             {
                 if (activated(evt))
@@ -878,7 +894,7 @@ void ProfileState::buildScene()
     //            }
     //        });
     auto ballLeft = createButton("arrow_left", glm::vec2(311.f, 134.f)); //+24Y
-    ballLeft.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+    ballLeft.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         uiSystem.addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
             {
                 if (activated(evt))
@@ -888,7 +904,7 @@ void ProfileState::buildScene()
                 }
             });
     auto ballRight = createButton("arrow_right", glm::vec2(440.f, 134.f));
-    ballRight.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+    ballRight.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         uiSystem.addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
             {
                 if (activated(evt))
@@ -900,7 +916,7 @@ void ProfileState::buildScene()
 
     //save/quit buttons
     auto saveQuit = createButton("button_highlight", glm::vec2(269.f, 48.f));
-    saveQuit.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+    saveQuit.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         uiSystem.addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
             {
                 if (activated(evt))
@@ -911,7 +927,7 @@ void ProfileState::buildScene()
                 }
             });
     auto quit = createButton("button_highlight", glm::vec2(269.f, 24.f));
-    quit.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+    quit.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         uiSystem.addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
             {
                 if (activated(evt))
@@ -1363,13 +1379,6 @@ void ProfileState::createPalettes(cro::Entity parent)
                     m_flyouts[i].background.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
                     m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Main);
                     m_uiScene.getSystem<cro::UISystem>()->setColumnCount(1);
-                };
-
-                if (activated(evt))
-                {
-                    quitMenu();
-
-                    m_activeProfile.avatarFlags[i] = e.getComponent<cro::Callback>().getUserData<std::uint8_t>();
 
                     //update texture
                     m_profileTextures[m_avatarIndex].setColour(pc::ColourKey::Index(i), m_activeProfile.avatarFlags[i]);
@@ -1380,22 +1389,39 @@ void ProfileState::createPalettes(cro::Entity parent)
                     {
                         m_avatarHairModels[m_avatarModels[m_avatarIndex].hairIndex].getComponent<cro::Model>().setMaterialProperty(0, "u_hairColour", pc::Palette[m_activeProfile.avatarFlags[0]]);
                     }
+                };
+
+                if (activated(evt))
+                {
+                    m_activeProfile.avatarFlags[i] = e.getComponent<cro::Callback>().getUserData<std::uint8_t>();
+                    quitMenu();
 
                     refreshSwatch();
-                    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
                 }
                 else if (deactivated(evt))
                 {
                     quitMenu();
-
-                    m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
                 }
             });
         m_flyouts[i].selectCallback = m_uiScene.getSystem<cro::UISystem>()->addCallback(
-            [entity](cro::Entity e) mutable
+            [&, entity, i, menuID](cro::Entity e) mutable
             {
+                if (i == PaletteID::Hair)
+                {
+                    if (m_avatarHairModels[m_avatarModels[m_avatarIndex].hairIndex].isValid())
+                    {
+                        m_avatarHairModels[m_avatarModels[m_avatarIndex].hairIndex].getComponent<cro::Model>().setMaterialProperty(0, "u_hairColour", pc::Palette[e.getComponent<cro::Callback>().getUserData<std::uint8_t>()]);
+                    }
+                }
+                else
+                {
+                    m_profileTextures[m_avatarIndex].setColour(pc::ColourKey::Index(i), e.getComponent<cro::Callback>().getUserData<std::uint8_t>());
+                    m_profileTextures[m_avatarIndex].apply();
+                }
+
                 entity.getComponent<cro::Transform>().setPosition(e.getComponent<cro::Transform>().getPosition());
-                //TODO play audio
+                m_audioEnts[AudioID::Select].getComponent<cro::AudioEmitter>().play();
+                m_audioEnts[AudioID::Select].getComponent<cro::AudioEmitter>().setPlayingOffset(cro::Time());
             });
 
         for (auto j = 0u; j < pc::PairCounts[i]; ++j)
@@ -1414,7 +1440,7 @@ void ProfileState::createPalettes(cro::Entity parent)
             entity.addComponent<cro::UIInput>().setGroup(menuID);
             entity.getComponent<cro::UIInput>().area = { glm::vec2(0.f), IconSize };
             entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = m_flyouts[i].selectCallback;
-            entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = m_flyouts[i].activateCallback;
+            entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = m_flyouts[i].activateCallback;
             entity.addComponent<cro::Callback>().setUserData<std::uint8_t>(static_cast<std::uint8_t>((y * PaletteColumnCount) + x));
 
             m_flyouts[i].background.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
