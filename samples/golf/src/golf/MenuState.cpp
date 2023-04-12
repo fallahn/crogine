@@ -619,6 +619,9 @@ bool MenuState::handleEvent(const cro::Event& evt)
                 m_menuEntities[m_currentMenu].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
                 m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Avatar);
                 m_currentMenu = MenuID::Avatar;
+
+                //don't forward this to the menu system
+                return true;
             }
         }
 

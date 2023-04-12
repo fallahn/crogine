@@ -33,6 +33,7 @@ source distribution.
 #include "PlayerData.hpp"
 #include "PlayerAvatar.hpp"
 #include "CommonConsts.hpp"
+#include "MenuConsts.hpp"
 
 #include <crogine/core/State.hpp>
 #include <crogine/audio/AudioScape.hpp>
@@ -134,10 +135,24 @@ private:
 
     std::vector<ProfileTexture> m_profileTextures;
 
+    struct PaletteID final
+    {
+        enum
+        {
+            Hair, Skin,
+            TopL, TopD,
+            BotL, BotD,
+
+            Count
+        };
+    };
+    std::array<FlyoutMenu, PaletteID::Count> m_flyouts = {};
+
     void addSystems();
     void loadResources();
     void buildScene();
     void buildPreviewScene();
+    void createPalettes(cro::Entity);
     void quitState();
 
     std::size_t indexFromAvatarID(std::uint32_t) const;

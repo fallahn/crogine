@@ -208,11 +208,23 @@ static inline std::vector<cro::Vertex2D> createMenuBackground(glm::vec2 size)
 {
     //assumes GL_TRIANGLES
     //assumes origin bottom left
+    static constexpr cro::Colour Background(0x0000003f);
     static constexpr cro::Colour Inner(0x64432fff);
     static constexpr cro::Colour Light(0x7e6d37ff);
     static constexpr cro::Colour Dark(0x50282fff);
+
+    static constexpr float ShadowOffset = 6.f;
     return
     {
+        //background
+        cro::Vertex2D(glm::vec2(0.f, size.y ), Background),
+        cro::Vertex2D(glm::vec2(0.f, -ShadowOffset), Background),
+        cro::Vertex2D(glm::vec2(size.x + ShadowOffset, size.y), Background),
+
+        cro::Vertex2D(glm::vec2(size.x + ShadowOffset, size.y), Background),
+        cro::Vertex2D(glm::vec2(0.f, -ShadowOffset), Background),
+        cro::Vertex2D(glm::vec2(size.x + ShadowOffset, - ShadowOffset), Background),
+
         //left
         cro::Vertex2D(glm::vec2(-2.f, size.y + 1.f), Light),
         cro::Vertex2D(glm::vec2(-2.f, -1.f), Light),

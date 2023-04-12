@@ -708,7 +708,7 @@ void MenuState::createAvatarMenu(cro::Entity parent)
 
     //profile flyout button
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 109.f, 102.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 107.f, 101.f, 0.1f });
     entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("profile_flyout");
