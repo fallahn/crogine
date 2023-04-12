@@ -410,10 +410,10 @@ void Window::loadResources(const std::function<void()>& loader)
 void Window::setMouseCaptured(bool captured)
 {
     SDL_SetRelativeMouseMode(captured ? SDL_TRUE : SDL_FALSE);
-    if (captured)
+    /*if (captured)
     {
         SDL_WarpMouseInWindow(m_window, 1, 1);
-    }
+    }*/
     //auto centre = getSize() / 2u;
     //SDL_WarpMouseInWindow(m_window, centre.x, centre.y);
 

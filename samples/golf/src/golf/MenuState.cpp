@@ -52,6 +52,7 @@ source distribution.
 #include <crogine/audio/AudioMixer.hpp>
 #include <crogine/core/App.hpp>
 #include <crogine/core/GameController.hpp>
+#include <crogine/core/Mouse.hpp>
 #include <crogine/gui/Gui.hpp>
 #include <crogine/detail/GlobalConsts.hpp>
 #include <crogine/graphics/SpriteSheet.hpp>
@@ -608,6 +609,19 @@ bool MenuState::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_MOUSEBUTTONUP)
     {
+        if (m_currentMenu == MenuID::ProfileFlyout)
+        {
+            auto bounds = m_menuEntities[m_currentMenu].getComponent<cro::Drawable2D>().getLocalBounds();
+            bounds = m_menuEntities[m_currentMenu].getComponent<cro::Transform>().getWorldTransform() * bounds;
+
+            if (!bounds.contains(m_uiScene.getActiveCamera().getComponent<cro::Camera>().pixelToCoords(cro::Mouse::getPosition())))
+            {
+                m_menuEntities[m_currentMenu].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+                m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Avatar);
+                m_currentMenu = MenuID::Avatar;
+            }
+        }
+
         if (evt.button.button == SDL_BUTTON_RIGHT)
         {
             quitMenu();

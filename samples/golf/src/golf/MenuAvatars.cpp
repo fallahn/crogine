@@ -680,7 +680,7 @@ void MenuState::createAvatarMenu(cro::Entity parent)
     entity.getComponent<cro::Transform>().addChild(nameListEnt.getComponent<cro::Transform>());
     auto bgEnt = entity;
     avatarEnt.getComponent<cro::Transform>().addChild(bgEnt.getComponent<cro::Transform>());
-
+    m_menuEntities[MenuID::ProfileFlyout] = entity;
 
     static constexpr float ItemHeight = 14.f;
     entity = m_uiScene.createEntity();
