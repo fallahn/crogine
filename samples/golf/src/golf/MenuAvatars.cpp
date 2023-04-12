@@ -693,7 +693,7 @@ void MenuState::createAvatarMenu(cro::Entity parent)
                 closePopup();
                 m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
 
-                setProfileIndex(e.getComponent<cro::UIInput>().getSelectionIndex());
+                setProfileIndex(e.getComponent<cro::UIInput>().getSelectionIndex() - 1); //indices are base 1, not 0
             }
 
             else if (deactivated(evt))
@@ -1690,12 +1690,14 @@ void MenuState::refreshProfileFlyout()
         entity.addComponent<cro::Transform>().setPosition({ 0.f, (i * ProfileItemHeight) - 2.f, 0.2f });
         entity.addComponent<cro::UIInput>().area = { 0.f, 0.f, menuWidth, ProfileItemHeight };
         entity.getComponent<cro::UIInput>().setGroup(MenuID::ProfileFlyout);
-        entity.getComponent<cro::UIInput>().setSelectionIndex((nameCount - 1) - i);
+        entity.getComponent<cro::UIInput>().setSelectionIndex(((nameCount - 1) - i) + 1); //hm, indices of 0 are automatically reassigned by UISystem...
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = m_profileFlyout.selectCallback;
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = m_profileFlyout.activateCallback;
 
         entity.getComponent<cro::Transform>().setOrigin({ menuWidth / 2.f, ProfileItemHeight / 2.f });
         entity.getComponent<cro::Transform>().move(entity.getComponent<cro::Transform>().getOrigin());
         m_profileFlyout.background.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+        m_profileFlyout.items.push_back(entity);
     }
 }
