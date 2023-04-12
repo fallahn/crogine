@@ -616,29 +616,13 @@ void MenuState::createAvatarMenu(cro::Entity parent)
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = m_courseSelectCallbacks.selected;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = m_courseSelectCallbacks.unselected;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = uiSystem.addCallback(
-        [&](cro::Entity e, const cro::ButtonEvent& evt) mutable
+        [&](cro::Entity, const cro::ButtonEvent& evt) mutable
         {
             if (activated(evt))
             {
                 auto i = m_rosterMenu.profileIndices[m_rosterMenu.activeIndex];
                 i = (i + (m_profileData.playerProfiles.size() - 1)) % m_profileData.playerProfiles.size();
-                m_rosterMenu.profileIndices[m_rosterMenu.activeIndex] = i;
-
-                m_sharedData.localConnectionData.playerData[m_rosterMenu.activeIndex] = m_profileData.playerProfiles[i];
-
-                updateRoster();
-
-                auto avtIdx = indexFromAvatarID(m_profileData.playerProfiles[i].skinID);
-                auto soundSize = m_playerAvatars[avtIdx].previewSounds.size();
-                if (soundSize != 0)
-                {
-                    auto idx = soundSize > 1 ? cro::Util::Random::value(0u, soundSize - 1) : 0;
-                    m_playerAvatars[avtIdx].previewSounds[idx].getComponent<cro::AudioEmitter>().play();
-                }
-                else
-                {
-                    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
-                }
+                setProfileIndex(i);
             }
         });
     avatarEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -657,15 +641,12 @@ void MenuState::createAvatarMenu(cro::Entity parent)
     entity.getComponent<cro::Text>().setVerticalSpacing(1.f);
 
     cro::String nameList;
-    /*for (const auto& profile : m_profileData.playerProfiles)
+    for (const auto& profile : m_profileData.playerProfiles)
     {
         nameList += profile.name + "\n";
-    }*/
-    const std::size_t nameCount = 64; //m_profileData.playerProfiles.size();
-    for (auto i = 0u; i < nameCount; ++i)
-    {
-        nameList += "buns " + std::to_string(i) + "\n";
     }
+    const std::size_t nameCount = m_profileData.playerProfiles.size();
+
     entity.getComponent<cro::Text>().setString(nameList);
     bounds = cro::Text::getLocalBounds(entity);
     entity.getComponent<cro::Transform>().setPosition({ 0.f, bounds.height + 1.f, 0.1f });
@@ -712,10 +693,7 @@ void MenuState::createAvatarMenu(cro::Entity parent)
             entity.getComponent<cro::AudioEmitter>().setPlayingOffset(cro::Time());
             entity.getComponent<cro::AudioEmitter>().play();
         });
-    /*auto flyoutUnselect = uiSystem.addCallback([](cro::Entity e)
-        {
 
-        });*/
     auto flyoutActivate = uiSystem.addCallback([&, bgEnt](cro::Entity e, const cro::ButtonEvent& evt) mutable
         {
             //wheel within a wheel
@@ -731,8 +709,7 @@ void MenuState::createAvatarMenu(cro::Entity parent)
                 closePopup();
                 m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
 
-                //TODO apply profile at index
-                //LogI << m_profileData.playerProfiles[e.getComponent<cro::Callback>().getUserData<std::int32_t>()].name.toAnsiString() << std::endl;
+                setProfileIndex(e.getComponent<cro::UIInput>().getSelectionIndex());
             }
 
             else if (deactivated(evt))
@@ -741,8 +718,6 @@ void MenuState::createAvatarMenu(cro::Entity parent)
                 m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
             }
         });
-
-
     
 
     for (auto i = 0u; i < nameCount; ++i)
@@ -753,7 +728,6 @@ void MenuState::createAvatarMenu(cro::Entity parent)
         entity.getComponent<cro::UIInput>().setGroup(MenuID::ProfileFlyout);
         entity.getComponent<cro::UIInput>().setSelectionIndex((nameCount - 1) - i);
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = flyoutSelect;
-        //entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = flyoutUnselect;
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = flyoutActivate;
 
         entity.getComponent<cro::Transform>().setOrigin({ menuWidth / 2.f, ItemHeight / 2.f });
@@ -775,7 +749,7 @@ void MenuState::createAvatarMenu(cro::Entity parent)
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectionCallback;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectionCallback;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = uiSystem.addCallback(
-        [&, bgEnt](cro::Entity e, const cro::ButtonEvent& evt) mutable
+        [&, bgEnt](cro::Entity, const cro::ButtonEvent& evt) mutable
         {
             if (activated(evt))
             {
@@ -801,29 +775,13 @@ void MenuState::createAvatarMenu(cro::Entity parent)
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = m_courseSelectCallbacks.selected;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = m_courseSelectCallbacks.unselected;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = uiSystem.addCallback(
-        [&](cro::Entity e, const cro::ButtonEvent& evt) mutable
+        [&](cro::Entity, const cro::ButtonEvent& evt) mutable
         {
             if (activated(evt))
             {
                 auto i = m_rosterMenu.profileIndices[m_rosterMenu.activeIndex];
                 i = (i + 1) % m_profileData.playerProfiles.size();
-                m_rosterMenu.profileIndices[m_rosterMenu.activeIndex] = i;
-
-                m_sharedData.localConnectionData.playerData[m_rosterMenu.activeIndex] = m_profileData.playerProfiles[i];
-
-                updateRoster();
-
-                auto avtIdx = indexFromAvatarID(m_profileData.playerProfiles[i].skinID);
-                auto soundSize = m_playerAvatars[avtIdx].previewSounds.size();
-                if (soundSize != 0)
-                {
-                    auto idx = soundSize > 1 ? cro::Util::Random::value(0u, soundSize - 1) : 0;
-                    m_playerAvatars[avtIdx].previewSounds[idx].getComponent<cro::AudioEmitter>().play();
-                }
-                else
-                {
-                    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
-                }
+                setProfileIndex(i);
             }
         });
     avatarEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -870,19 +828,27 @@ void MenuState::createAvatarMenu(cro::Entity parent)
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectionCallback;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectionCallback;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = uiSystem.addCallback(
-        [&](cro::Entity e, const cro::ButtonEvent& evt)
+        [&](cro::Entity, const cro::ButtonEvent& evt)
         {
             if (activated(evt))
             {
                 if (m_profileData.playerProfiles.size() < ConstVal::MaxProfiles)
                 {
-                    m_profileData.playerProfiles.emplace_back();
-                    m_profileData.playerProfiles.back().name = RandomNames[cro::Util::Random::value(0u, RandomNames.size() - 1)];
-                    m_profileData.playerProfiles.back().saveProfile();
+                    auto& profile = m_profileData.playerProfiles.emplace_back();
+                    profile.name = RandomNames[cro::Util::Random::value(0u, RandomNames.size() - 1)];
+                    for (auto i = 0u; i < profile.avatarFlags.size(); ++i)
+                    {
+                        profile.avatarFlags[i] = static_cast<std::uint8_t>(cro::Util::Random::value(0u, pc::PairCounts[i] - 1));
+                    }
+                    profile.skinID = m_sharedData.avatarInfo[cro::Util::Random::value(0u, m_sharedData.avatarInfo.size() - 1)].uid;
+                    profile.ballID = m_sharedData.ballInfo[cro::Util::Random::value(0u, m_sharedData.ballInfo.size() - 1)].uid;
+                    profile.hairID = m_sharedData.hairInfo[cro::Util::Random::value(0u, m_sharedData.hairInfo.size() - 1)].uid;
+                    profile.flipped = cro::Util::Random::value(0, 1) == 0 ? false : true;
+                    profile.saveProfile();
                     m_profileData.activeProfileIndex = m_profileData.playerProfiles.size() - 1;
 
                     //create profile texture
-                    auto avtIdx = indexFromAvatarID(m_profileData.playerProfiles.back().skinID);
+                    auto avtIdx = indexFromAvatarID(profile.skinID);
                     m_profileTextures.emplace_back(m_sharedData.avatarInfo[avtIdx].texturePath);
                     updateProfileTextures(m_profileTextures.size() - 1, 1);
 
@@ -1690,5 +1656,26 @@ void MenuState::eraseCurrentProfile()
     {
         std::error_code ec;
         std::filesystem::remove_all(path, ec);
+    }
+}
+
+void MenuState::setProfileIndex(std::size_t i)
+{
+    m_rosterMenu.profileIndices[m_rosterMenu.activeIndex] = i;
+
+    m_sharedData.localConnectionData.playerData[m_rosterMenu.activeIndex] = m_profileData.playerProfiles[i];
+
+    updateRoster();
+
+    auto avtIdx = indexFromAvatarID(m_profileData.playerProfiles[i].skinID);
+    auto soundSize = m_playerAvatars[avtIdx].previewSounds.size();
+    if (soundSize != 0)
+    {
+        auto idx = soundSize > 1 ? cro::Util::Random::value(0u, soundSize - 1) : 0;
+        m_playerAvatars[avtIdx].previewSounds[idx].getComponent<cro::AudioEmitter>().play();
+    }
+    else
+    {
+        m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
     }
 }
