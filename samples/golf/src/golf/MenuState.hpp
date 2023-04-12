@@ -32,6 +32,7 @@ source distribution.
 #include "../StateIDs.hpp"
 #include "CommonConsts.hpp"
 #include "GameConsts.hpp"
+#include "MenuConsts.hpp"
 #include "PlayerAvatar.hpp"
 #include "Billboard.hpp"
 #include "SharedStateData.hpp"
@@ -298,6 +299,8 @@ private:
         std::array<cro::Entity, ConstVal::MaxPlayers> buttonEntities = {}; //button to select slot
     }m_rosterMenu;
 
+    FlyoutMenu m_profileFlyout;
+
     void createUI();
     void createMainMenu(cro::Entity, std::uint32_t, std::uint32_t);
     void createAvatarMenu(cro::Entity);
@@ -308,6 +311,7 @@ private:
     void createProfileLayout(cro::Entity, cro::Transform&, const cro::SpriteSheet&);//display XP, clubs, streak etc on avatar menu
     void eraseCurrentProfile();
     void setProfileIndex(std::size_t);
+    void refreshProfileFlyout();
 
     //message handlers for completing connection
     void finaliseGameCreate(const MatchMaking::Message&);

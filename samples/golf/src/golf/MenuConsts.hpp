@@ -32,6 +32,7 @@ source distribution.
 #include <crogine/core/Clock.hpp>
 #include <crogine/graphics/Colour.hpp>
 #include <crogine/graphics/Vertex2D.hpp>
+#include <crogine/ecs/Entity.hpp>
 #include <crogine/ecs/systems/UISystem.hpp>
 #include <crogine/ecs/components/Text.hpp>
 #include <crogine/ecs/components/Transform.hpp>
@@ -304,6 +305,18 @@ static inline std::vector<cro::Vertex2D> createMenuHighlight(glm::vec2 size, cro
         cro::Vertex2D(glm::vec2(size.x + 1.f, -2.f), c),
     };
 }
+
+static constexpr float ProfileItemHeight = 14.f;
+struct FlyoutMenu final
+{
+    std::uint32_t selectCallback = 0;
+    std::uint32_t activateCallback = 0;
+    std::vector<cro::Entity> items;
+
+    cro::Entity background;
+    cro::Entity detail; //could be text, could be colours
+    cro::Entity highlight;
+};
 
 struct HighlightAnimationCallback final
 {
