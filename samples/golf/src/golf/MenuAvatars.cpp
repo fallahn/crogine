@@ -1005,13 +1005,15 @@ void MenuState::createAvatarMenu(cro::Entity parent)
                 {
                     if (m_sharedData.localConnectionData.playerCount < ConstVal::MaxPlayers)
                     {
-                        auto index = m_sharedData.localConnectionData.playerCount;
-                        auto profileIndex = index % m_profileData.playerProfiles.size();
+                        auto prevProfile = m_rosterMenu.profileIndices[m_rosterMenu.activeIndex];
                         
-                        m_sharedData.localConnectionData.playerData[index] = m_profileData.playerProfiles[profileIndex];
+                        m_rosterMenu.activeIndex = m_sharedData.localConnectionData.playerCount;
+                        auto profileIndex = (prevProfile + 1) % m_profileData.playerProfiles.size();
+                        
+                        m_sharedData.localConnectionData.playerData[m_rosterMenu.activeIndex] = m_profileData.playerProfiles[profileIndex];
                         m_sharedData.localConnectionData.playerCount++;
                         
-                        m_rosterMenu.profileIndices[index] = profileIndex;
+                        m_rosterMenu.profileIndices[m_rosterMenu.activeIndex] = profileIndex;
 
                         //refresh the current roster
                         updateRoster();
