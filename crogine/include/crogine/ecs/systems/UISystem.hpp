@@ -154,6 +154,11 @@ namespace cro
         */
         std::size_t getActiveGroup() const { return m_activeGroup; }
 
+        /*!
+        \brief Returns the number of UIInputs in the active group
+        */
+        std::size_t getGroupSize() const { return m_groups.at(m_activeGroup).size(); }
+
         /*
         \brief Set the number of columns displayed in the active group.
         By default the 'up' and 'down' controls move the selected control index
@@ -195,6 +200,16 @@ namespace cro
         \see setMouseScrollNavigationEnabled()
         */
         bool getMouseScrollNavigationEnabled() const { return m_scrollNavigation; }
+
+        /*!
+        \brief Selects the input at the given index, or the last
+        input if the index exceeds the number of active inputs in the current group
+        \param index The index of the input to select
+        Note that this may not give expected results if multiple inputs
+        have been manually assigned the same selection index with setSelectionIndex()
+        */
+        void selectAt(std::size_t index);
+
     private:
 
         std::vector<ButtonCallback> m_buttonCallbacks;

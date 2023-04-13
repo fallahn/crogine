@@ -1670,7 +1670,7 @@ void MenuState::refreshProfileFlyout()
 
     //resize background
     const float menuWidth = std::max(bounds.width, 120.f);
-    m_profileFlyout.background.getComponent<cro::Drawable2D>().setVertexData(createMenuBackground({ menuWidth, bounds.height }));
+    m_profileFlyout.background.getComponent<cro::Drawable2D>().setVertexData(createMenuBackground({ menuWidth, bounds.height + 2.f }));
 
 
     //resize highlight

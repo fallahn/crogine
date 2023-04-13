@@ -147,6 +147,7 @@ private:
         };
     };
     std::array<FlyoutMenu, PaletteID::Count> m_flyouts = {};
+    std::size_t m_lastSelected;
 
     void addSystems();
     void loadResources();

@@ -139,7 +139,7 @@ std::int32_t StateStack::getTopmostState() const
 void StateStack::cacheState(StateID id)
 {
     CRO_ASSERT(m_stateCache.count(id) == 0, "State is already cached");
-    m_stateCache.insert(std::make_pair(id, createState(id)));
+    m_stateCache.insert(std::make_pair(id, createState(id, true)));
     m_stateCache.at(id)->m_cached = true;
 }
 
@@ -160,10 +160,10 @@ bool StateStack::changeExists(Action action, std::int32_t id)
     }) != m_pendingChanges.end();
 }
 
-State::Ptr StateStack::createState(StateID id)
+State::Ptr StateStack::createState(StateID id, bool isCached)
 {
     CRO_ASSERT(m_factories.count(id) != 0, "State not registered with statestack");
-    return m_factories.find(id)->second();
+    return m_factories.find(id)->second(isCached);
 }
 
 void StateStack::applyPendingChanges()

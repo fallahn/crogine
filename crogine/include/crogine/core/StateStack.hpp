@@ -84,8 +84,14 @@ namespace cro
         void registerState(StateID id, Args&&... args)
         {
             static_assert(std::is_base_of<State, T>::value, "Must derive from State class");
-            m_factories[id] = [&args..., this]()
+            m_factories[id] = [&args..., this](bool isCached)
             {
+#ifdef CRO_DEBUG_
+                if (isCached)
+                {
+                    LogI << "Caching state " << typeid(T).name() << std::endl;
+                }
+#endif
                 return std::make_shared<T>(*this, m_context, std::forward<Args>(args)...);
             };
         }
@@ -165,7 +171,7 @@ namespace cro
         std::vector<PendingChange> m_pendingChanges;
         std::vector<PendingChange> m_activeChanges;
         State::Context m_context;
-        std::map<StateID, std::function<State::Ptr()>> m_factories;
+        std::map<StateID, std::function<State::Ptr(bool)>> m_factories;
         MessageBus& m_messageBus;
         
         //used by states to request sub-states be cached.
@@ -176,7 +182,7 @@ namespace cro
 
         bool changeExists(Action, std::int32_t = -1);
 
-        State::Ptr createState(StateID);
+        State::Ptr createState(StateID, bool = false);
         void applyPendingChanges();
 
         friend class State;

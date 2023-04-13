@@ -515,6 +515,30 @@ void UISystem::setActiveControllerID(std::int32_t id)
     m_controllerMask = 0;
 }
 
+void UISystem::selectAt(std::size_t index)
+{
+    if (index == m_selectedIndex)
+    {
+        return;
+    }
+
+    const auto& entities = m_groups[m_activeGroup];
+    auto old = m_selectedIndex;
+
+    do
+    {
+        m_selectedIndex = (m_selectedIndex + 1) % entities.size();
+    } while (m_selectedIndex != index && m_selectedIndex != old);
+
+    //and do selected callback
+    if (m_selectedIndex != old
+        && entities[m_selectedIndex].getComponent<UIInput>().enabled)
+    {
+        unselect(old);
+        select(m_selectedIndex);
+    }
+}
+
 //private
 glm::vec2 UISystem::toWorldCoords(std::int32_t x, std::int32_t y)
 {
