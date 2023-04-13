@@ -4832,7 +4832,7 @@ void GolfState::spawnBall(const ActorInfo& info)
 
     //name label for the ball's owner
     glm::vec2 texSize(LabelTextureSize);
-    texSize.y -= LabelIconSize.y;
+    texSize.y -= (LabelIconSize.y * 4.f);
 
     auto playerID = info.playerID;
     auto clientID = info.clientID;

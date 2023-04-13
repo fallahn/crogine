@@ -1426,7 +1426,7 @@ void GolfState::showCountdown(std::uint8_t seconds)
         entity = m_uiScene.createEntity();
         entity.addComponent<cro::Transform>().setPosition({ 200.f + scoreboardExpansion, 10.f, 0.8f });
         entity.addComponent<cro::Drawable2D>();
-        entity.addComponent<UIElement>().absolutePosition = { 200.f, 50.f };
+        entity.addComponent<UIElement>().absolutePosition = { 200.f, 150.f };
         entity.getComponent<UIElement>().depth = 2.23f;
         entity.getComponent<UIElement>().resizeCallback = [](cro::Entity e)
         {
@@ -1435,6 +1435,8 @@ void GolfState::showCountdown(std::uint8_t seconds)
         entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
         entity.addComponent<cro::Text>(font).setCharacterSize(UITextSize * 2);
         entity.getComponent<cro::Text>().setFillColour(TextHighlightColour);
+        //entity.getComponent<cro::Text>().setOutlineColour(LeaderboardTextDark);
+        //entity.getComponent<cro::Text>().setOutlineThickness(1.f);
         entity.getComponent<cro::Text>().setString("PERSONAL BEST!");
         centreText(entity);
 
@@ -2979,7 +2981,7 @@ void GolfState::buildTrophyScene()
             entity.addComponent<cro::Drawable2D>();
             entity.addComponent<cro::Sprite>(m_sharedData.nameTextures[0].getTexture());
             bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
-            bounds.height -= LabelIconSize.y;
+            bounds.height -= (LabelIconSize.y * 4.f);
             bounds.height /= ConstVal::MaxPlayers;
             bounds.bottom = bounds.height * i;
             entity.getComponent<cro::Sprite>().setTextureRect(bounds);
@@ -3002,14 +3004,14 @@ void GolfState::buildTrophyScene()
             m_trophyLabels[i] = entity;
 
 
-            //icon if available
+            //icon if available - TODO use player index to choose correct icon
             if (Social::isAvailable())
             {
                 entity = m_uiScene.createEntity();
                 entity.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, bounds.height, 0.1f });
                 entity.addComponent<cro::Drawable2D>();
                 entity.addComponent<cro::Sprite>(m_sharedData.nameTextures[0].getTexture());
-                bounds = { 0.f, LabelTextureSize.y - LabelIconSize.y, LabelIconSize.x, LabelIconSize.y };
+                bounds = { 0.f, LabelTextureSize.y - (LabelIconSize.y * 4.f), LabelIconSize.x, LabelIconSize.y };
                 entity.getComponent<cro::Sprite>().setTextureRect(bounds);
                 entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, -14.f, -0.1f });
                 m_trophyLabels[i].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
