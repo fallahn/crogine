@@ -303,6 +303,7 @@ bool ProfileState::handleEvent(const cro::Event& evt)
     else if (evt.type == SDL_MOUSEMOTION)
     {
         cro::App::getWindow().setMouseCaptured(false);
+        updateHelpString(-1);
 
         auto mousePos = m_uiScene.getActiveCamera().getComponent<cro::Camera>().pixelToCoords({ evt.motion.x, evt.motion.y });
         auto bounds = m_menuEntities[EntityID::AvatarPreview].getComponent<cro::Sprite>().getTextureBounds();
@@ -830,7 +831,7 @@ void ProfileState::buildScene()
             });
 
     //checkbox
-    auto southPaw = createButton("check_highlight", glm::vec2(17.f, 42.f));
+    auto southPaw = createButton("check_highlight", glm::vec2(17.f, 50.f));
     southPaw.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         uiSystem.addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
             {
@@ -841,7 +842,7 @@ void ProfileState::buildScene()
                 }
             });
     auto innerEnt = m_uiScene.createEntity();
-    innerEnt.addComponent<cro::Transform>().setPosition(glm::vec3(19.f, 44.f, 0.1f));
+    innerEnt.addComponent<cro::Transform>().setPosition(glm::vec3(19.f, 52.f, 0.1f));
     innerEnt.addComponent<cro::Drawable2D>().setVertexData(
         {
             cro::Vertex2D(glm::vec2(0.f, 5.f), cro::Colour::Transparent),
@@ -862,6 +863,40 @@ void ProfileState::buildScene()
         }
     };
     bgEnt.getComponent<cro::Transform>().addChild(innerEnt.getComponent<cro::Transform>());
+
+    //randomise button
+    auto randomButton = createButton("random_highlight", { 9.f, 24.f });
+    randomButton.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
+        uiSystem.addCallback([&](cro::Entity e, const cro::ButtonEvent& evt)
+            {
+                if (activated(evt))
+                {
+                    //randomise hair
+                    setHairIndex(cro::Util::Random::value(0u, m_sharedData.hairInfo.size() - 1));
+
+                    //randomise avatar
+                    setAvatarIndex(cro::Util::Random::value(0u, m_sharedData.avatarInfo.size() - 1));
+
+                    //randomise colours
+                    for (auto i = 0; i < PaletteID::Count; ++i)
+                    {
+                        m_activeProfile.avatarFlags[i] = static_cast<std::uint8_t>(cro::Util::Random::value(0u, pc::PairCounts[i] - 1));
+                        m_profileTextures[m_avatarIndex].setColour(pc::ColourKey::Index(i), m_activeProfile.avatarFlags[i]);
+                    }
+
+                    //update texture
+                    m_profileTextures[m_avatarIndex].apply();
+
+                    //update hair
+                    if (m_avatarHairModels[m_avatarModels[m_avatarIndex].hairIndex].isValid())
+                    {
+                        m_avatarHairModels[m_avatarModels[m_avatarIndex].hairIndex].getComponent<cro::Model>().setMaterialProperty(0, "u_hairColour", pc::Palette[m_activeProfile.avatarFlags[0]]);
+                    }
+
+                    //update swatch
+                    refreshSwatch();
+                }
+            });
 
     //name button
     auto nameButton = createButton("name_highlight", glm::vec2(264.f, 213.f));
