@@ -639,7 +639,22 @@ void ProfileState::buildScene()
     };
 
 #ifdef USE_GNS
-    //TODO add workshop button
+    //add workshop button
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 17.f, 202.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("workshop_button");
+    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    entity = createButton("workshop_highlight", { 15.f, 200.f });
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
+        uiSystem.addCallback([&](cro::Entity e, const cro::ButtonEvent& evt) 
+            {
+                if (activated(evt))
+                {
+                    Social::showWorkshop();
+                }
+            });
 #endif
 
     //colour swatch - this has its own update function
