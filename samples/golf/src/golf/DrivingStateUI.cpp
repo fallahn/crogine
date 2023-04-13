@@ -441,16 +441,10 @@ void DrivingState::createUI()
     auto windDial = entity;
 
     //text background
-    auto vertColour = cro::Colour(0.f, 0.f, 0.f, 0.25f);
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ -4.f, -14.f, -0.01f });
-    entity.addComponent<cro::Drawable2D>().setVertexData(
-        {
-            cro::Vertex2D(glm::vec2(0.f, 16.f), vertColour),
-            cro::Vertex2D(glm::vec2(0.f, 5.f), vertColour),
-            cro::Vertex2D(glm::vec2(86.f, 16.f), vertColour),
-            cro::Vertex2D(glm::vec2(86.f, 5.f), vertColour)
-        });
+    entity.addComponent<cro::Transform>().setPosition({ -4.f, -16.f, -0.01f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::WindTextBg];
     windEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     //rotating part

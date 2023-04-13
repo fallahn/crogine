@@ -106,7 +106,9 @@ bool Window::create(std::uint32_t width, std::uint32_t height, const std::string
 
     if (!m_window)
     {
-        cro::Logger::log(SDL_GetError(), Logger::Type::Error, Logger::Output::All);
+        std::string err = SDL_GetError();
+        cro::Logger::log(err, Logger::Type::Error, Logger::Output::All);
+        cro::FileSystem::showMessageBox("Error", err);
         return false;
     }
     else
