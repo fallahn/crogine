@@ -3150,4 +3150,11 @@ void DrivingState::loadScores()
 void DrivingState::saveScores()
 {
     Social::storeDrivingStats(m_topScores);
+
+#ifdef USE_GNS
+    for (auto i = 0u; i < m_tickerStrings.size(); ++i)
+    {
+        m_tickerStrings[i] = Social::getDrivingTopFive(i);
+    }
+#endif
 }

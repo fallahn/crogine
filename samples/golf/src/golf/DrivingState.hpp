@@ -232,6 +232,7 @@ private:
     static constexpr float FadeDepth = 1.f;
 
     std::array<float, 3u> m_topScores = {};
+    std::array<cro::String, 3u> m_tickerStrings = {};
     void loadScores();
     void saveScores();
 

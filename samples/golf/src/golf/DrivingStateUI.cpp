@@ -1041,13 +1041,60 @@ your overall accuracy. Good Luck!
     };
     bgEntity.getComponent<cro::Transform>().addChild(textEnt4.getComponent<cro::Transform>());
 
+    cro::Entity tickerEnt;
+#ifdef USE_GNS
+    //Top 5 ticker
+    for (auto i = 0u; i < m_tickerStrings.size(); ++i)
+    {
+        m_tickerStrings[i] = Social::getDrivingTopFive(i);
+    }
 
+    auto& labelFont = m_sharedData.sharedResources->fonts.get(FontID::Label);
+    tickerEnt = m_uiScene.createEntity();
+    tickerEnt.addComponent<cro::Transform>().setPosition({ 100.f, 0.f, 0.2f });
+    tickerEnt.addComponent<cro::Drawable2D>();
+    tickerEnt.addComponent<cro::Text>(labelFont).setString(m_tickerStrings[0]);
+    tickerEnt.getComponent<cro::Text>().setCharacterSize(LabelTextSize);
+    tickerEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    tickerEnt.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+    tickerEnt.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
+    tickerEnt.addComponent<cro::Callback>().active = true;
+    tickerEnt.getComponent<cro::Callback>().function =
+        [&, bounds, bgEntity](cro::Entity e, float dt)
+    {
+        if (bgEntity.getComponent<cro::Transform>().getScale().x != 0)
+        {
+            auto scrollBounds = cro::Text::getLocalBounds(e);
+
+            auto pos = e.getComponent<cro::Transform>().getPosition();
+
+            pos.x -= 20.f * dt;
+            pos.y = 27.f;
+            pos.z = 0.3f;
+
+            static constexpr float Offset = 6.f;
+            const auto bgWidth = bounds.width;
+            if (pos.x < -scrollBounds.width + Offset)
+            {
+                pos.x = bgWidth;
+                pos.x -= Offset;
+            }
+
+            e.getComponent<cro::Transform>().setPosition(pos);
+
+            cro::FloatRect cropping = { -pos.x + Offset, -16.f, (bgWidth)-(Offset * 2.f), 18.f };
+            e.getComponent<cro::Drawable2D>().setCroppingArea(cropping);
+        }
+    };
+    bgEntity.getComponent<cro::Transform>().addChild(tickerEnt.getComponent<cro::Transform>());
+    
+#endif
 
     //hole count buttons
     auto buttonEnt = createButton("arrow_left", glm::vec2(-3.f, 3.f));
     buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem->addCallback(
-            [&, numberEnt, textEnt4](cro::Entity e, const cro::ButtonEvent& evt) mutable
+            [&, numberEnt, textEnt4, tickerEnt](cro::Entity e, const cro::ButtonEvent& evt) mutable
             {
                 if (activated(evt))
                 {
@@ -1069,6 +1116,14 @@ your overall accuracy. Good Luck!
                     }
                     centreText(textEnt4);
 
+#ifdef USE_GNS
+                    tickerEnt.getComponent<cro::Text>().setString(m_tickerStrings[m_strokeCountIndex]);
+                    auto pos = tickerEnt.getComponent<cro::Transform>().getPosition();
+                    pos.x = 300.f;
+                    tickerEnt.getComponent<cro::Transform>().setPosition(pos);
+                    tickerEnt.getComponent<cro::Callback>().function(tickerEnt, 0.f); //updates the cropping
+#endif
+
                     m_summaryScreen.audioEnt.getComponent<cro::AudioEmitter>().play();
                 }
             });
@@ -1077,7 +1132,7 @@ your overall accuracy. Good Luck!
     buttonEnt = createButton("arrow_right", glm::vec2(35.f, 3.f));
     buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem->addCallback(
-            [&, numberEnt, textEnt4](cro::Entity e, const cro::ButtonEvent& evt) mutable
+            [&, numberEnt, textEnt4, tickerEnt](cro::Entity e, const cro::ButtonEvent& evt) mutable
             {
                 if (activated(evt))
                 {
@@ -1098,6 +1153,14 @@ your overall accuracy. Good Luck!
                         textEnt4.getComponent<cro::Text>().setString("No Score");
                     }
                     centreText(textEnt4);
+
+#ifdef USE_GNS
+                    tickerEnt.getComponent<cro::Text>().setString(m_tickerStrings[m_strokeCountIndex]);
+                    auto pos = tickerEnt.getComponent<cro::Transform>().getPosition();
+                    pos.x = 300.f;
+                    tickerEnt.getComponent<cro::Transform>().setPosition(pos);
+                    tickerEnt.getComponent<cro::Callback>().function(tickerEnt, 0.f); //updates the cropping
+#endif
 
                     m_summaryScreen.audioEnt.getComponent<cro::AudioEmitter>().play();
                 }
@@ -1569,7 +1632,7 @@ your overall accuracy. Good Luck!
     auto selectedBounds = spriteSheet.getSprite("start_highlight").getTextureRect();
     auto unselectedBounds = spriteSheet.getSprite("start_button").getTextureRect();
     auto startButton = m_uiScene.createEntity();
-    startButton.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, 34.f, 0.2f });
+    startButton.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, 36.f, 0.2f });
     startButton.addComponent<cro::Drawable2D>();
     startButton.addComponent<cro::Sprite>() = spriteSheet.getSprite("start_button");
     startButton.addComponent<cro::AudioEmitter>() = as.getEmitter("switch");
