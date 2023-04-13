@@ -196,10 +196,10 @@ void GolfState::buildUI()
     entity.addComponent<cro::Callback>().function = resizeCallback;
 
     auto trophyEnt = entity;
-    for (auto label : m_trophyLabels)
+    for (auto trophy : m_trophies)
     {
-        trophyEnt.getComponent<cro::Transform>().addChild(label.getComponent<cro::Transform>());
-        label.getComponent<cro::Callback>().setUserData<cro::Entity>(trophyEnt);
+        trophyEnt.getComponent<cro::Transform>().addChild(trophy.label.getComponent<cro::Transform>());
+        trophy.label.getComponent<cro::Callback>().setUserData<cro::Entity>(trophyEnt);
     }
 
     //info panel background - vertices are set in resize callback
@@ -1326,15 +1326,21 @@ void GolfState::showCountdown(std::uint8_t seconds)
             }
         }
 
-        m_trophies[i].getComponent<TrophyDisplay>().state = TrophyDisplay::In;
+        m_trophies[i].trophy.getComponent<TrophyDisplay>().state = TrophyDisplay::In;
         //m_trophyLabels[i].getComponent<cro::Callback>().active = true; //this is done by TrophyDisplay (above) to properly delay it
-        m_trophyBadges[i].getComponent<cro::SpriteAnimation>().play(std::min(5, m_sharedData.connectionData[m_statBoardScores[i].client].level / 10));
-        m_trophyBadges[i].getComponent<cro::Model>().setDoubleSided(0, true);
+        m_trophies[i].badge.getComponent<cro::SpriteAnimation>().play(std::min(5, m_sharedData.connectionData[m_statBoardScores[i].client].level / 10));
+        m_trophies[i].badge.getComponent<cro::Model>().setDoubleSided(0, true);
 
-        m_trophyLabels[i].getComponent<cro::Sprite>().setTexture(m_sharedData.nameTextures[m_statBoardScores[i].client].getTexture(), false);
-        auto bounds = m_trophyLabels[i].getComponent<cro::Sprite>().getTextureBounds();
+        m_trophies[i].label.getComponent<cro::Sprite>().setTexture(m_sharedData.nameTextures[m_statBoardScores[i].client].getTexture(), false);
+        auto bounds = m_trophies[i].label.getComponent<cro::Sprite>().getTextureBounds();
         bounds.bottom = bounds.height * m_statBoardScores[i].player;
-        m_trophyLabels[i].getComponent<cro::Sprite>().setTextureRect(bounds);
+        m_trophies[i].label.getComponent<cro::Sprite>().setTextureRect(bounds);
+
+        //choose the relevant player from the sheet
+        bounds = { 0.f, LabelTextureSize.y - (LabelIconSize.x * 4.f), LabelIconSize.x, LabelIconSize.y };
+        bounds.left = LabelIconSize.x * (m_statBoardScores[i].player % 2);
+        bounds.bottom += LabelIconSize.y * (m_statBoardScores[i].player / 2);
+        m_trophies[i].avatar.getComponent<cro::Sprite>().setTextureRect(bounds);
     }
 
 
@@ -2960,7 +2966,7 @@ void GolfState::buildTrophyScene()
             entity.getComponent<cro::AudioEmitter>().setPitch(static_cast<float>(cro::Util::Random::value(8, 11)) / 10.f);
             entity.getComponent<cro::AudioEmitter>().setLooped(false);
 
-            m_trophies[i] = entity;
+            m_trophies[i].trophy = entity;
             auto trophyEnt = entity;
 
             //badge
@@ -2973,7 +2979,7 @@ void GolfState::buildTrophyScene()
             entity.addComponent<cro::Model>();
             entity.addComponent<cro::SpriteAnimation>();
             trophyEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-            m_trophyBadges[i] = entity;
+            m_trophies[i].badge = entity;
 
             //name label
             entity = m_uiScene.createEntity();
@@ -3001,11 +3007,11 @@ void GolfState::buildTrophyScene()
             };
             trophyEnt.getComponent<TrophyDisplay>().label = entity;
 
-            m_trophyLabels[i] = entity;
+            m_trophies[i].label = entity;
 
 
-            //icon if available - TODO use player index to choose correct icon
-            if (Social::isAvailable())
+            //icon if available 
+            //if (Social::isAvailable()) //always do this in case the player profile has an avatar
             {
                 entity = m_uiScene.createEntity();
                 entity.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, bounds.height, 0.1f });
@@ -3014,16 +3020,17 @@ void GolfState::buildTrophyScene()
                 bounds = { 0.f, LabelTextureSize.y - (LabelIconSize.y * 4.f), LabelIconSize.x, LabelIconSize.y };
                 entity.getComponent<cro::Sprite>().setTextureRect(bounds);
                 entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, -14.f, -0.1f });
-                m_trophyLabels[i].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+                m_trophies[i].label.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+                m_trophies[i].avatar = entity;
 
                 entity.addComponent<cro::Callback>().active = true;
                 entity.getComponent<cro::Callback>().setUserData<float>(1.f);
                 entity.getComponent<cro::Callback>().function =
                     [&,i](cro::Entity e, float dt)
                 {
-                    if (m_trophyLabels[i].getComponent<cro::Callback>().active)
+                    if (m_trophies[i].label.getComponent<cro::Callback>().active)
                     {
-                        e.getComponent<cro::Sprite>().setTexture(*m_trophyLabels[i].getComponent<cro::Sprite>().getTexture(), false);
+                        e.getComponent<cro::Sprite>().setTexture(*m_trophies[i].label.getComponent<cro::Sprite>().getTexture(), false);
 
                         static constexpr float BaseScale = 0.25f;
                         static constexpr float SpinCount = 6.f;

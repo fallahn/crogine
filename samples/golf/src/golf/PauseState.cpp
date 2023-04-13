@@ -422,6 +422,8 @@ void PauseState::buildScene()
                     confirmEntity.getComponent<cro::Transform>().setPosition(glm::vec2(-10000.f));
 
                     m_scene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Main);
+
+                    m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
                 }
             });
 
@@ -462,6 +464,7 @@ void PauseState::buildScene()
 
                         quitState();
                     }
+                    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
                 }
             });
 

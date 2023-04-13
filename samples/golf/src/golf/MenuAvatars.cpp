@@ -1690,7 +1690,7 @@ void MenuState::refreshProfileFlyout()
     for (auto i = 0u; i < nameCount; ++i)
     {
         auto entity = m_uiScene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition({ 0.f, (i * ProfileItemHeight) - 2.f, 0.2f });
+        entity.addComponent<cro::Transform>().setPosition({ 0.f, (i * ProfileItemHeight), 0.2f });
         entity.addComponent<cro::UIInput>().area = { 0.f, 0.f, menuWidth, ProfileItemHeight };
         entity.getComponent<cro::UIInput>().setGroup(MenuID::ProfileFlyout);
         entity.getComponent<cro::UIInput>().setSelectionIndex(((nameCount - 1) - i) + 1); //hm, indices of 0 are automatically reassigned by UISystem...

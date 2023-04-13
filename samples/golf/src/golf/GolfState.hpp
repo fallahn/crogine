@@ -354,9 +354,14 @@ private:
     void refreshUI();
 
     void buildTrophyScene();
-    std::array<cro::Entity, 3u> m_trophies = {};
-    std::array<cro::Entity, 3u> m_trophyBadges = {};
-    std::array<cro::Entity, 3u> m_trophyLabels = {};
+    struct Trophy final
+    {
+        cro::Entity trophy;
+        cro::Entity badge;
+        cro::Entity label;
+        cro::Entity avatar;
+    };
+    std::array<Trophy, 3u> m_trophies = {};
 
     struct GridShader final
     {
