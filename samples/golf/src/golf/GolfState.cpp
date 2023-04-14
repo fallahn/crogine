@@ -4841,6 +4841,17 @@ void GolfState::spawnBall(const ActorInfo& info)
     const cro::FloatRect uvRect(0.f, textureRect.bottom / static_cast<float>(LabelTextureSize.y),
                             1.f, textureRect.height / static_cast<float>(LabelTextureSize.y));
 
+    constexpr glm::vec2 AvatarSize(16.f);
+    const glm::vec2 AvatarOffset((textureRect.width - AvatarSize.x) / 2.f, textureRect.height + 2.f);
+    cro::FloatRect avatarUV(0.f, texSize.y / static_cast<float>(LabelTextureSize.y),
+                    LabelIconSize.x / static_cast<float>(LabelTextureSize.x), 
+                    LabelIconSize.y / static_cast<float>(LabelTextureSize.y));
+
+    float xOffset = (playerID % 2) * avatarUV.width;
+    float yOffset = (playerID / 2) * avatarUV.height;
+    avatarUV.left += xOffset;
+    avatarUV.bottom += yOffset;
+
     static constexpr cro::Colour BaseColour(1.f, 1.f, 1.f, 0.f);
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setOrigin({ texSize.x / 2.f, 0.f, -0.1f - (0.1f * depthOffset) });
@@ -4855,6 +4866,15 @@ void GolfState::spawnBall(const ActorInfo& info)
             cro::Vertex2D(glm::vec2(textureRect.width, textureRect.height), glm::vec2(uvRect.width, uvRect.bottom + uvRect.height), BaseColour),
             cro::Vertex2D(glm::vec2(0.f), glm::vec2(0.f, uvRect.bottom), BaseColour),
             cro::Vertex2D(glm::vec2(textureRect.width, 0.f), glm::vec2(uvRect.width, uvRect.bottom), BaseColour),
+
+            //TODO in the non-steam version this is mostly just a waste, unless an avatar has a specific head shot
+            cro::Vertex2D(AvatarOffset + glm::vec2(0.f, AvatarSize.y), glm::vec2(avatarUV.left, avatarUV.bottom + avatarUV.height), BaseColour),
+            cro::Vertex2D(AvatarOffset + glm::vec2(0.f), glm::vec2(avatarUV.left, avatarUV.bottom), BaseColour),
+            cro::Vertex2D(AvatarOffset + AvatarSize, glm::vec2(avatarUV.left + avatarUV.width, avatarUV.bottom + avatarUV.height), BaseColour),
+
+            cro::Vertex2D(AvatarOffset + AvatarSize, glm::vec2(avatarUV.left + avatarUV.width, avatarUV.bottom + avatarUV.height), BaseColour),
+            cro::Vertex2D(AvatarOffset + glm::vec2(0.f), glm::vec2(avatarUV.left, avatarUV.bottom), BaseColour),
+            cro::Vertex2D(AvatarOffset + glm::vec2(AvatarSize.x, 0.f), glm::vec2(avatarUV.left + avatarUV.width, avatarUV.bottom), BaseColour),
         });
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().setUserData<float>(0.f);
