@@ -4834,16 +4834,30 @@ void GolfState::spawnBall(const ActorInfo& info)
     glm::vec2 texSize(LabelTextureSize);
     texSize.y -= (LabelIconSize.y * 4.f);
 
-    auto playerID = info.playerID;
-    auto clientID = info.clientID;
-    auto depthOffset = ((clientID * ConstVal::MaxPlayers) + playerID) + 1; //must be at least 1
+    const auto playerID = info.playerID;
+    const auto clientID = info.clientID;
+    const auto depthOffset = ((clientID * ConstVal::MaxPlayers) + playerID) + 1; //must be at least 1
+    const cro::FloatRect textureRect(0.f, playerID * (texSize.y / ConstVal::MaxPlayers), texSize.x, texSize.y / ConstVal::MaxPlayers);
+    const cro::FloatRect uvRect(0.f, textureRect.bottom / static_cast<float>(LabelTextureSize.y),
+                            1.f, textureRect.height / static_cast<float>(LabelTextureSize.y));
+
+    static constexpr cro::Colour BaseColour(1.f, 1.f, 1.f, 0.f);
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setOrigin({ texSize.x / 2.f, 0.f, -0.1f - (0.1f * depthOffset) });
-    entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Sprite>().setTexture(m_sharedData.nameTextures[info.clientID].getTexture());
-    entity.getComponent<cro::Sprite>().setTextureRect({ 0.f, playerID * (texSize.y / ConstVal::MaxPlayers), texSize.x, texSize.y / ConstVal::MaxPlayers });
-    entity.getComponent<cro::Sprite>().setColour(cro::Colour(1.f, 1.f, 1.f, 0.f));
+    entity.addComponent<cro::Drawable2D>().setTexture(&m_sharedData.nameTextures[info.clientID].getTexture());
+    entity.getComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLES);
+    entity.getComponent<cro::Drawable2D>().setVertexData(
+        {
+            cro::Vertex2D(glm::vec2(0.f, textureRect.height), glm::vec2(0.f, uvRect.bottom + uvRect.height), BaseColour),
+            cro::Vertex2D(glm::vec2(0.f), glm::vec2(0.f, uvRect.bottom), BaseColour),
+            cro::Vertex2D(glm::vec2(textureRect.width, textureRect.height), glm::vec2(uvRect.width, uvRect.bottom + uvRect.height), BaseColour),
+
+            cro::Vertex2D(glm::vec2(textureRect.width, textureRect.height), glm::vec2(uvRect.width, uvRect.bottom + uvRect.height), BaseColour),
+            cro::Vertex2D(glm::vec2(0.f), glm::vec2(0.f, uvRect.bottom), BaseColour),
+            cro::Vertex2D(glm::vec2(textureRect.width, 0.f), glm::vec2(uvRect.width, uvRect.bottom), BaseColour),
+        });
     entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<float>(0.f);
     entity.getComponent<cro::Callback>().function =
         [&, ballEnt, playerID, clientID](cro::Entity e, float dt)
     {
@@ -4854,7 +4868,7 @@ void GolfState::spawnBall(const ActorInfo& info)
         }
 
         auto terrain = ballEnt.getComponent<ClientCollider>().terrain;
-        auto colour = e.getComponent<cro::Sprite>().getColour();
+        auto& colour = e.getComponent<cro::Callback>().getUserData<float>();
 
         auto position = ballEnt.getComponent<cro::Transform>().getPosition();
         position.y += Ball::Radius * 3.f;
@@ -4870,7 +4884,7 @@ void GolfState::spawnBall(const ActorInfo& info)
                 && m_sharedData.clientConnection.connectionID == clientID)
             {
                 //set target fade to zero
-                colour.setAlpha(std::max(0.f, colour.getAlpha() - dt));
+                colour = std::max(0.f, colour - dt);
             }
             else
             {
@@ -4883,21 +4897,28 @@ void GolfState::spawnBall(const ActorInfo& info)
                 float alpha = smoothstep(0.05f, 0.5f, 1.f - std::min(1.f, std::max(0.f, len2 / MinLength)));
 
                 //fade slightly near the centre of the screen
-                //prevent blocking the view
+                //to prevent blocking the view
                 float halfPos = labelPos.x - halfWidth;
                 float amount = std::min(1.f, std::max(0.f, std::abs(halfPos) / halfWidth));
                 amount = 0.1f + (smoothstep(0.12f, 0.26f, amount) * 0.85f); //remember tex size is probably a lot wider than the window
                 alpha *= amount;
 
-                float currentAlpha = colour.getAlpha();
-                colour.setAlpha(std::max(0.f, std::min(1.f, currentAlpha + (dt * cro::Util::Maths::sgn(alpha - currentAlpha)))));
+                float currentAlpha = colour;
+                colour = std::max(0.f, std::min(1.f, currentAlpha + (dt * cro::Util::Maths::sgn(alpha - currentAlpha))));
             }
-            e.getComponent<cro::Sprite>().setColour(colour);
+
+            for (auto& v : e.getComponent<cro::Drawable2D>().getVertexData())
+            {
+                v.colour.setAlpha(colour);
+            }
         }
         else
         {
-            colour.setAlpha(std::max(0.f, colour.getAlpha() - dt));
-            e.getComponent<cro::Sprite>().setColour(colour);
+            colour = std::max(0.f, colour - dt);
+            for (auto& v : e.getComponent<cro::Drawable2D>().getVertexData())
+            {
+                v.colour.setAlpha(colour);
+            }
         }
 
         float scale = m_sharedData.pixelScale ? 1.f : m_viewScale.x;
