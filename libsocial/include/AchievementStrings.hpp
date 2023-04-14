@@ -117,6 +117,12 @@ static const std::array<std::string, AchievementID::Count> AchievementStrings =
     "course_08_par",
     "course_09_par",
     "course_10_par",
+    "road_to_succcess",
+    "no_mistake",
+    "never_give",
+    "greens_in_regulation",
+    "threes_a_crowd",
+    "consistency_is_key"
 };
 
 //appears on the notification
@@ -192,6 +198,12 @@ static const std::array<std::string, AchievementID::Count> AchievementLabels =
     "Master Course 8",
     "Master Course 9",
     "Master Course 10",
+    "Road To Success",
+    "Make No Mistake",
+    "Never Gonna Give You Up",
+    "Greens In Regulation",
+    "Three's A Crowd",
+    "Consistency Is Key"
 };
 
 //description and whether or not the achievement is hidden until it is unlocked
@@ -267,6 +279,12 @@ static const std::array<std::pair<std::string, bool>, AchievementID::Count> Achi
     std::make_pair("Complete Moulin Plage with par or under", false),
     std::make_pair("Complete Purcitop Pitch 'n' Putt with par or under", false),
     std::make_pair("Complete Fairland Rock with par or under", false),
+    std::make_pair("Finish a full course at least 18 under par", false),
+    std::make_pair("Complete a full round with no holes over par", false),
+    std::make_pair("With gimmies enabled never take a gimme in a whole round", false),
+    std::make_pair("In a full round hit the green on each hole with two strokes spare to make par", false),
+    std::make_pair("In a full round take no more than two putts on each hole", false),
+    std::make_pair("Hit the fairway or the green on your first shot of all 18 holes", false),
 };
 
 //assuming trophies load correctly they are:
@@ -367,6 +385,13 @@ static constexpr std::array<std::size_t, AchievementID::Count> AchievementTrophi
     TrophyID::GoldCup,
     TrophyID::GoldCup,
     TrophyID::GoldCup,
+
+    TrophyID::Platinum,
+    TrophyID::GoldCup,
+    TrophyID::GoldFigure,
+    TrophyID::GoldCup,
+    TrophyID::SilverFigure,
+    TrophyID::BronzeCup,
 };
 
 //these are indexed by StatID, so do try to get them in the correct order ;)

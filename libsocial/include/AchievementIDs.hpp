@@ -118,6 +118,13 @@ namespace AchievementID
         Master09,
         Master10,
 
+        RoadToSuccess,
+        NoMistake,
+        NeverGiveUp,
+        GreensInRegulation,
+        ThreesACrowd,
+        ConsistencyIsKey,
+
         Count
     };
     static_assert(Count <= 256, "Count exceeds maximum 256 Achievements!");
