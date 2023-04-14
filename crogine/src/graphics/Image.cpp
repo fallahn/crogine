@@ -44,6 +44,13 @@ source distribution.
 
 using namespace cro;
 
+Image::Image()
+    : m_format  (ImageFormat::None),
+    m_flipped   (false),
+    m_flipOnLoad(false)
+{
+}
+
 Image::Image(bool flipOnLoad)
     : m_format  (ImageFormat::None),
     m_flipped   (false),

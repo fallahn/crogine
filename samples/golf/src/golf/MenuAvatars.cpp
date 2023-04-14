@@ -1786,19 +1786,34 @@ void MenuState::updateLobbyAvatars()
                     simpleText.draw();
                 }
 
-                //TODO check profile for headshot first
-
+                //check profile for headshot first
                 iconImage = Social::getUserIcon(c.peerID);
                 for (auto i = 0u; i < c.playerCount; ++i)
                 {
-                    if (iconImage.getPixelData())
+                    bool hasIcon = false;
+                    glm::vec2 iconScale(1.f);
+
+                    if (c.connectionID == m_sharedData.clientConnection.connectionID
+                        && m_profileData.playerProfiles[i].mugshotData.getPixelData())
+                    {
+                        iconScale = glm::vec2(Social::IconSize) / glm::vec2(m_profileData.playerProfiles[i].mugshotData.getSize());
+                        iconTexture.loadFromImage(m_profileData.playerProfiles[i].mugshotData);
+                        
+                        hasIcon = true;
+                    }
+                    else if (iconImage.getPixelData())
                     {
                         iconTexture.loadFromImage(iconImage);
+                        hasIcon = true;
+                    }
+
+                    if (hasIcon)
+                    {
                         simpleQuad.setTexture(iconTexture);
-                        simpleQuad.setScale({ 1.f, 1.f });
+                        simpleQuad.setScale(iconScale);
                         simpleQuad.setPosition({ (i % 2) * Social::IconSize, textureSize.y + ((i/2) * Social::IconSize) });
-                        simpleQuad.setColour(cro::Colour(std::uint8_t(255), 255 - (i * 31), i * 31));
-                        //simpleQuad.setColour(cro::Colour::White);
+                        //simpleQuad.setColour(cro::Colour(std::uint8_t(255), 255 - (i * 31), i * 31));
+                        simpleQuad.setColour(cro::Colour::White);
                         simpleQuad.draw();
                     }
                 }

@@ -57,7 +57,8 @@ namespace cro
         Images are invalid until either create() or load*() functions have been
         called and returned successfully.
         */
-        explicit Image(bool flipOnLoad = false);
+        Image();
+        explicit Image(bool flipOnLoad);
 
         /*!
         \brief Creates an empty image.

@@ -47,8 +47,8 @@ struct PlayerData final
     std::array<std::uint8_t, pc::ColourKey::Count> avatarFlags = { 11,12,31,30,3,6 }; //indices into colours
     std::uint32_t ballID = 0;
     std::uint32_t hairID = 0;
-    std::uint32_t skinID = 0; //as loaded from the avatar data file
-    bool flipped = false; //whether or not avatar flipped
+    std::uint32_t skinID = 0; //uid as loaded from the avatar data file
+    bool flipped = false; //whether or not avatar flipped/southpaw
     bool isCPU = false; //these bools are flagged as bits in a single byte when serialised
 
     //these aren't included in serialise/deserialise
@@ -60,6 +60,8 @@ struct PlayerData final
     glm::vec3 currentTarget = glm::vec3(0.f);
     cro::Colour ballTint;
 
+    //this is client side profile specific data
+    cro::Image mugshotData; //pixel data of the mugshot for avatar icon
     std::string mugshot; //path to mugshot if it exists
     mutable std::string profileID; //saving file generates this
     bool saveProfile() const;
