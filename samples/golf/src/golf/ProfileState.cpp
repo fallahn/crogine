@@ -1078,6 +1078,25 @@ void ProfileState::buildScene()
 
     refreshMugshot();
 
+    //opens the profile folder for easier adding of mugshot
+    //but only in windowed mode and not on steamdeck
+    if (!Social::isSteamdeck()
+        && !cro::App::getWindow().isFullscreen())
+    {
+        //open the profile folder to copy mugshot image
+        entity = createButton("profile_highlight", {393.f, 21.f});
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
+            uiSystem.addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
+                {
+                    auto path = Social::getUserContentPath(Social::UserContent::Profile) + m_activeProfile.profileID;
+                    if (cro::FileSystem::directoryExists(path)
+                        && !cro::App::getWindow().isFullscreen())
+                    {
+                        cro::Util::String::parseURL(path);
+                    }
+                });
+    }
+
 
     //help string
     bounds = bgEnt.getComponent<cro::Sprite>().getTextureBounds();
