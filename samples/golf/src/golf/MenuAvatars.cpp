@@ -1794,12 +1794,12 @@ void MenuState::updateLobbyAvatars()
                     glm::vec2 iconScale(1.f);
 
                     if (c.connectionID == m_sharedData.clientConnection.connectionID
-                        && !m_profileData.playerProfiles[i].mugshotData.empty())
+                        && !m_sharedData.localConnectionData.playerData[i].mugshotData.empty())
                     {
-                        auto dims = m_profileData.playerProfiles[i].mugshotData.getDimensions();
+                        auto dims = m_sharedData.localConnectionData.playerData[i].mugshotData.getDimensions();
                         iconScale = glm::vec2(Social::IconSize) / glm::vec2(dims);
                         iconTexture.create(dims.x, dims.y);
-                        iconTexture.update(m_profileData.playerProfiles[i].mugshotData.data(), false);
+                        iconTexture.update(m_sharedData.localConnectionData.playerData[i].mugshotData.data(), false);
                         
                         hasIcon = true;
                     }

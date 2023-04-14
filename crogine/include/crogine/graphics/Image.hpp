@@ -138,6 +138,7 @@ namespace cro
 
         bool m_flipOnLoad;
 
-        template <class T = std::uint8_t> friend class ImageArray;
+        template <class T>
+        friend class ImageArray;
     };
 }
