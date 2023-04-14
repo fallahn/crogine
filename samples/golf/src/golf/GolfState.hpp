@@ -415,6 +415,14 @@ private:
     {
         bool hadFoul = false; //tracks 'boomerang' stat
         bool hadBackspin = false; //tracks 'spin class'
+
+        bool noHolesOverPar = true; //no mistake
+        bool noGimmeUsed = true; //never give you up
+        bool twoShotsSpare = true; //greens in regulation
+        bool alwaysOnTheCourse = true; //consistency
+
+        bool underTwoPutts = true;
+        std::int32_t puttCount = 0; //no more than two putts on every hole
     }m_achievementTracker;
     cro::Clock m_playTimer; //track avg play time stat
     cro::Time m_playTime;

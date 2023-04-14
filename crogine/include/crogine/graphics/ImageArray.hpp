@@ -32,6 +32,7 @@ source distribution.
 #include <crogine/Config.hpp>
 #include <crogine/detail/Types.hpp>
 #include <crogine/detail/glm/vec2.hpp>
+#include <crogine/graphics/Image.hpp>
 
 #include <cstdint>
 
@@ -48,6 +49,22 @@ namespace cro
     class ImageArray final
     {
     public:
+
+        ImageArray() = default;
+        ImageArray(const ImageArray&) = default;
+        ImageArray(ImageArray&&) = default;
+        ImageArray& operator = (const ImageArray&) = default;
+        ImageArray& operator = (ImageArray&&) = default;
+
+        ImageArray(Image&&)
+        {
+            static_assert(std::is_same<std::uint8_t, T>::value, "Only 8 bit arrays");
+        }
+
+        ImageArray& operator = (Image&&)
+        {
+            static_assert(std::is_same<std::uint8_t, T>::value, "Only 8 bit arrays");
+        }
 
         /*!
         \brief Attempts to load an image file from the given path
@@ -112,7 +129,6 @@ namespace cro
         }
 
     private:
-
         std::vector<T> m_data;
         glm::ivec2 m_dimensions = glm::ivec2(0u);
         std::int32_t m_channels = 0;
@@ -125,19 +141,82 @@ namespace cro
         CRO_EXPORT_API bool loadFromFloat(const std::string& path, std::vector<float>&, glm::ivec2&, std::int32_t&);
     }
 
-    template<>
+    template <>
+    inline ImageArray<std::uint8_t>::ImageArray(Image&& img)
+    {
+        m_data.clear();
+        m_data.swap(img.m_data);
+
+        m_dimensions = img.m_size;
+        img.m_size = { 0u,0u };
+
+        switch (img.m_format)
+        {
+        default:
+            assert(true);
+            break;
+        case ImageFormat::A:
+            m_channels = 1;
+            break;
+        case ImageFormat::RGB:
+            m_channels = 3;
+            break;
+        case ImageFormat::RGBA:
+            m_channels = 4;
+            break;
+        }
+
+        img.m_format = ImageFormat::None;
+        img.m_flipOnLoad = false;
+        img.m_flipped = false;
+    }
+
+    template <>
+    inline ImageArray<std::uint8_t>& ImageArray<std::uint8_t>::operator = (Image&& img)
+    {
+        //TODO share this code with above but without the hassle of friendship.
+        m_data.clear();
+        m_data.swap(img.m_data);
+
+        m_dimensions = img.m_size;
+        img.m_size = { 0u,0u };
+
+        switch (img.m_format)
+        {
+        default:
+            assert(true);
+            break;
+        case ImageFormat::A:
+            m_channels = 1;
+            break;
+        case ImageFormat::RGB:
+            m_channels = 3;
+            break;
+        case ImageFormat::RGBA:
+            m_channels = 4;
+            break;
+        }
+
+        img.m_format = ImageFormat::None;
+        img.m_flipOnLoad = false;
+        img.m_flipped = false;
+
+        return *this;
+    }
+
+    template <>
     inline bool ImageArray<std::uint8_t>::loadFromFile(const std::string& path)
     {
         return cro::Detail::loadFromU8(path, m_data, m_dimensions, m_channels);
     }
 
-    template<>
+    template <>
     inline bool ImageArray<std::uint16_t>::loadFromFile(const std::string& path)
     {
         return cro::Detail::loadFromU16(path, m_data, m_dimensions, m_channels);
     }
 
-    template<>
+    template <>
     inline bool ImageArray<float>::loadFromFile(const std::string& path)
     {
         return cro::Detail::loadFromFloat(path, m_data, m_dimensions, m_channels);

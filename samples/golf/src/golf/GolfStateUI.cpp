@@ -1271,19 +1271,52 @@ void GolfState::showCountdown(std::uint8_t seconds)
 
             //if we're stroke play see if we get the achievement
             //for coming in under par
-            if (m_sharedData.scoreType == ScoreType::Stroke)
+            //if (m_sharedData.scoreType == ScoreType::Stroke)
             {
                 for (const auto& p : m_sharedData.connectionData[m_sharedData.localConnectionData.connectionID].playerData)
                 {
                     if (!p.isCPU)
                     {
-                        if (p.parScore <= 0)
+                        if (m_sharedData.scoreType == ScoreType::Stroke
+                            && p.parScore <= 0)
                         {
+                            //course specific
                             if (ParAch.count(m_sharedData.mapDirectory) != 0)
                             {
                                 auto id = ParAch.at(m_sharedData.mapDirectory);
                                 Achievements::awardAchievement(AchievementStrings[id]);
                             }
+
+                            //any course
+                            if (p.parScore < -17)
+                            {
+                                Achievements::awardAchievement(AchievementStrings[AchievementID::RoadToSuccess]);
+                            }
+                        }
+
+                        if (m_achievementTracker.alwaysOnTheCourse)
+                        {
+                            Achievements::awardAchievement(AchievementStrings[AchievementID::ConsistencyIsKey]);
+                        }
+
+                        if (m_achievementTracker.noHolesOverPar)
+                        {
+                            Achievements::awardAchievement(AchievementStrings[AchievementID::NoMistake]);
+                        }
+
+                        if (m_achievementTracker.noGimmeUsed)
+                        {
+                            Achievements::awardAchievement(AchievementStrings[AchievementID::NeverGiveUp]);
+                        }
+
+                        if (m_achievementTracker.underTwoPutts)
+                        {
+                            Achievements::awardAchievement(AchievementStrings[AchievementID::ThreesACrowd]);
+                        }
+
+                        if (m_achievementTracker.twoShotsSpare)
+                        {
+                            Achievements::awardAchievement(AchievementStrings[AchievementID::GreensInRegulation]);
                         }
                     }
                 }
@@ -1834,234 +1867,301 @@ void GolfState::createScoreboard()
 
 void GolfState::updateScoreboard()
 {
-    /*cro::Command cmd;
-    cmd.targetFlags = CommandID::UI::Scoreboard;
-    cmd.action = [&](cro::Entity, float) {*/
+    struct ScoreEntry final
+    {
+        cro::String name;
+        std::vector<std::uint8_t> holes;
+        std::int32_t frontNine = 0;
+        std::int32_t backNine = 0;
+        std::int32_t total = 0;
+        std::int32_t parDiff = 0;
+        std::uint8_t client = 0;
+        std::uint8_t player = 0;
+    };
 
-        struct ScoreEntry final
+    std::vector<ScoreEntry> scores;
+    m_statBoardScores.clear();
+
+    std::uint32_t playerCount = 0;
+    auto holeCount = m_holeData.size();
+    std::uint8_t clientID = 0;
+    for (auto& client : m_sharedData.connectionData)
+    {
+        playerCount += client.playerCount;
+
+        for (auto i = 0u; i < client.playerCount; ++i)
         {
-            cro::String name;
-            std::vector<std::uint8_t> holes;
-            std::int32_t frontNine = 0;
-            std::int32_t backNine = 0;
-            std::int32_t total = 0;
-            std::int32_t parDiff = 0;
-            std::uint8_t client = 0;
-            std::uint8_t player = 0;
-        };
+            auto& entry = scores.emplace_back();
+            entry.name = client.playerData[i].name;
+            entry.client = clientID;
+            entry.player = i;
 
-        std::vector<ScoreEntry> scores;
-        m_statBoardScores.clear();
-
-        std::uint32_t playerCount = 0;
-        auto holeCount = m_holeData.size();
-        std::uint8_t clientID = 0;
-        for (auto& client : m_sharedData.connectionData)
-        {
-            playerCount += client.playerCount;
-
-            for (auto i = 0u; i < client.playerCount; ++i)
+            for (auto j = 0u; j < client.playerData[i].holeScores.size(); ++j)
             {
-                auto& entry = scores.emplace_back();
-                entry.name = client.playerData[i].name;
-                entry.client = clientID;
-                entry.player = i;
+                auto s = client.playerData[i].holeScores[j];
+                entry.holes.push_back(s);
 
-                for (auto j = 0u; j < client.playerData[i].holeScores.size(); ++j)
+                if (s)
                 {
-                    auto s = client.playerData[i].holeScores[j];
-                    entry.holes.push_back(s);
+                    entry.parDiff += static_cast<std::int32_t>(s) - m_holeData[j].par;
+                }
 
-                    if (s)
+                if (j < 9)
+                {
+                    if (m_sharedData.scoreType == ScoreType::Stroke)
                     {
-                        entry.parDiff += static_cast<std::int32_t>(s) - m_holeData[j].par;
+                        entry.frontNine += client.playerData[i].holeScores[j];
                     }
-
-                    if (j < 9)
+                    else if (m_sharedData.scoreType == ScoreType::Match)
                     {
-                        if (m_sharedData.scoreType == ScoreType::Stroke)
-                        {
-                            entry.frontNine += client.playerData[i].holeScores[j];
-                        }
-                        else if (m_sharedData.scoreType == ScoreType::Match)
-                        {
-                            entry.frontNine = client.playerData[i].matchScore;
-                        }
-                        else
-                        {
-                            entry.frontNine = client.playerData[i].skinScore;
-                        }
+                        entry.frontNine = client.playerData[i].matchScore;
                     }
                     else
                     {
-                        if (m_sharedData.scoreType == ScoreType::Stroke)
-                        {
-                            entry.backNine += client.playerData[i].holeScores[j];
-                        }
-                        else if (m_sharedData.scoreType == ScoreType::Match)
-                        {
-                            entry.backNine = client.playerData[i].matchScore;
-                        }
-                        else
-                        {
-                            entry.backNine = client.playerData[i].skinScore;
-                        }
+                        entry.frontNine = client.playerData[i].skinScore;
                     }
                 }
-                client.playerData[i].parScore = entry.parDiff;
-
-                switch (m_sharedData.scoreType)
+                else
                 {
-                default:
-                case ScoreType::Stroke:
-                    entry.total = entry.frontNine + entry.backNine;
-                    break;
-                case ScoreType::Skins:
-                    entry.total = client.playerData[i].skinScore;
-                    break;
-                case ScoreType::Match:
-                    //entry.total = entry.frontNine;
-                    entry.total = client.playerData[i].matchScore;
-                    break;
-                }
-
-                //for stat/achievment tracking
-                auto& leaderboardEntry = m_statBoardScores.emplace_back();
-                leaderboardEntry.client = clientID;
-                leaderboardEntry.player = i;
-                leaderboardEntry.score = entry.total;
-            }
-            clientID++;
-        }
-
-        //tracks stats and decides on trophy layout on round end (see showCountdown())
-        std::sort(m_statBoardScores.begin(), m_statBoardScores.end(),
-            [&](const StatBoardEntry& a, const StatBoardEntry& b)
-            {
-                if (m_sharedData.scoreType == ScoreType::Stroke)
-                {
-                    return a.score < b.score;
-                }
-                return b.score < a.score;
-            });
-        //LOG("Table Update", cro::Logger::Type::Info);
-
-        auto& ents = m_scoreboardEnt.getComponent<cro::Callback>().getUserData<std::vector<cro::Entity>>();
-        std::sort(scores.begin(), scores.end(),
-            [&](const ScoreEntry& a, const ScoreEntry& b)
-            {
-                switch (m_sharedData.scoreType)
-                {
-                default:
-                case ScoreType::Stroke:
-                    return a.total < b.total;
-                case ScoreType::Skins:
-                case ScoreType::Match:
-                    return b.total < a.total;
-                }
-            });
-
-
-        std::size_t page2 = 0;
-        static constexpr std::size_t MaxCols = 9;
-        if (holeCount > m_scoreColumnCount)
-        {
-            page2 = std::min(MaxCols, holeCount - m_scoreColumnCount);
-        }
-
-        //store the strings to update the leaderboard texture
-        std::vector<LeaderboardEntry> leaderboardEntries;
-
-        //name column
-        cro::String nameString = "HOLE\nPAR";
-        for (auto i = 0u; i < playerCount; ++i)
-        {
-            nameString += "\n  " + scores[i].name.substr(0, ConstVal::MaxStringChars);
-            m_netStrengthIcons[i].getComponent<cro::Callback>().getUserData<std::pair<std::uint8_t, std::uint8_t>>()
-                = std::make_pair(scores[i].client, scores[i].player);
-        }
-        if (page2)
-        {
-            //pad out for page 2
-            for (auto i = 0u; i < 16u - playerCount; ++i)
-            {
-                nameString += "\n";
-            }
-
-            nameString += "\n\nHOLE\nPAR";
-            for (auto i = 0u; i < playerCount; ++i)
-            {
-                nameString += "\n  " + scores[i].name.substr(0, ConstVal::MaxStringChars);
-            }
-        }
-        ents[0].getComponent<cro::Text>().setString(nameString);
-        leaderboardEntries.emplace_back(ents[0].getComponent<cro::Transform>().getPosition() + glm::vec3(2.f, 0.f, 0.f), nameString);
-
-        //score columns
-        for (auto i = 1u; i < ents.size() - 1; ++i)
-        {
-            auto holeNumber = i;
-            if (m_sharedData.holeCount == 2)
-            {
-                holeNumber += 9;
-            }
-            std::string scoreString = std::to_string(holeNumber) + "\n" + std::to_string(m_holeData[i - 1].par);
-
-            for (auto j = 0u; j < playerCount; ++j)
-            {
-                scoreString += "\n";
-
-                auto s = scores[j].holes[i - 1];
-                if (s)
-                {
-                    scoreString += std::to_string(s);
-                }
-            }
-
-            if (page2)
-            {
-                for (auto j = 0u; j < 16 - playerCount; ++j)
-                {
-                    scoreString += "\n";
-                }
-
-                auto holeIndex = (i + MaxCols) - 1;
-                if (holeIndex < m_holeData.size())
-                {
-                    scoreString += "\n\n" + std::to_string(i + MaxCols) + "\n" + std::to_string(m_holeData[holeIndex].par);
-                    for (auto j = 0u; j < playerCount; ++j)
+                    if (m_sharedData.scoreType == ScoreType::Stroke)
                     {
-                        scoreString += "\n";
-                        auto s = scores[j].holes[holeIndex];
-                        if (s)
-                        {
-                            scoreString += std::to_string(s);
-                        }
+                        entry.backNine += client.playerData[i].holeScores[j];
+                    }
+                    else if (m_sharedData.scoreType == ScoreType::Match)
+                    {
+                        entry.backNine = client.playerData[i].matchScore;
+                    }
+                    else
+                    {
+                        entry.backNine = client.playerData[i].skinScore;
                     }
                 }
             }
+            client.playerData[i].parScore = entry.parDiff;
 
-            ents[i].getComponent<cro::Text>().setString(scoreString);
-            leaderboardEntries.emplace_back(glm::vec3(ents[i].getComponent<UIElement>().absolutePosition - glm::vec2(ColumnMargin, -UITextPosV), 0.f), scoreString);
-        }
-
-        //total column
-        std::int32_t par = 0;
-        for (auto i = 0u; i < MaxCols && i < m_holeData.size(); ++i)
-        {
-            par += m_holeData[i].par;
-        }
-
-        std::string totalString = "TOTAL\n" + std::to_string(par);
-
-        for (auto i = 0u; i < playerCount; ++i)
-        {
-            totalString += "\n" + std::to_string(scores[i].frontNine);
+            //track achievement make no mistake
+            if (client.connectionID == m_sharedData.localConnectionData.connectionID
+                && !client.playerData[i].isCPU
+                && entry.parDiff > 0)
+            {
+                m_achievementTracker.noHolesOverPar = false;
+            }
+            //TODO display achievement progress here?
 
             switch (m_sharedData.scoreType)
             {
             default:
             case ScoreType::Stroke:
+                entry.total = entry.frontNine + entry.backNine;
+                break;
+            case ScoreType::Skins:
+                entry.total = client.playerData[i].skinScore;
+                break;
+            case ScoreType::Match:
+                //entry.total = entry.frontNine;
+                entry.total = client.playerData[i].matchScore;
+                break;
+            }
+
+            //for stat/achievment tracking
+            auto& leaderboardEntry = m_statBoardScores.emplace_back();
+            leaderboardEntry.client = clientID;
+            leaderboardEntry.player = i;
+            leaderboardEntry.score = entry.total;
+        }
+        clientID++;
+    }
+
+    //tracks stats and decides on trophy layout on round end (see showCountdown())
+    std::sort(m_statBoardScores.begin(), m_statBoardScores.end(),
+        [&](const StatBoardEntry& a, const StatBoardEntry& b)
+        {
+            if (m_sharedData.scoreType == ScoreType::Stroke)
+            {
+                return a.score < b.score;
+            }
+            return b.score < a.score;
+        });
+    //LOG("Table Update", cro::Logger::Type::Info);
+
+    auto& ents = m_scoreboardEnt.getComponent<cro::Callback>().getUserData<std::vector<cro::Entity>>();
+    std::sort(scores.begin(), scores.end(),
+        [&](const ScoreEntry& a, const ScoreEntry& b)
+        {
+            switch (m_sharedData.scoreType)
+            {
+            default:
+            case ScoreType::Stroke:
+                return a.total < b.total;
+            case ScoreType::Skins:
+            case ScoreType::Match:
+                return b.total < a.total;
+            }
+        });
+
+
+    std::size_t page2 = 0;
+    static constexpr std::size_t MaxCols = 9;
+    if (holeCount > m_scoreColumnCount)
+    {
+        page2 = std::min(MaxCols, holeCount - m_scoreColumnCount);
+    }
+
+    //store the strings to update the leaderboard texture
+    std::vector<LeaderboardEntry> leaderboardEntries;
+
+    //name column
+    cro::String nameString = "HOLE\nPAR";
+    for (auto i = 0u; i < playerCount; ++i)
+    {
+        nameString += "\n  " + scores[i].name.substr(0, ConstVal::MaxStringChars);
+        m_netStrengthIcons[i].getComponent<cro::Callback>().getUserData<std::pair<std::uint8_t, std::uint8_t>>()
+            = std::make_pair(scores[i].client, scores[i].player);
+    }
+    if (page2)
+    {
+        //pad out for page 2
+        for (auto i = 0u; i < 16u - playerCount; ++i)
+        {
+            nameString += "\n";
+        }
+
+        nameString += "\n\nHOLE\nPAR";
+        for (auto i = 0u; i < playerCount; ++i)
+        {
+            nameString += "\n  " + scores[i].name.substr(0, ConstVal::MaxStringChars);
+        }
+    }
+    ents[0].getComponent<cro::Text>().setString(nameString);
+    leaderboardEntries.emplace_back(ents[0].getComponent<cro::Transform>().getPosition() + glm::vec3(2.f, 0.f, 0.f), nameString);
+
+    //score columns
+    for (auto i = 1u; i < ents.size() - 1; ++i)
+    {
+        auto holeNumber = i;
+        if (m_sharedData.holeCount == 2)
+        {
+            holeNumber += 9;
+        }
+        std::string scoreString = std::to_string(holeNumber) + "\n" + std::to_string(m_holeData[i - 1].par);
+
+        for (auto j = 0u; j < playerCount; ++j)
+        {
+            scoreString += "\n";
+
+            auto s = scores[j].holes[i - 1];
+            if (s)
+            {
+                scoreString += std::to_string(s);
+            }
+        }
+
+        if (page2)
+        {
+            for (auto j = 0u; j < 16 - playerCount; ++j)
+            {
+                scoreString += "\n";
+            }
+
+            auto holeIndex = (i + MaxCols) - 1;
+            if (holeIndex < m_holeData.size())
+            {
+                scoreString += "\n\n" + std::to_string(i + MaxCols) + "\n" + std::to_string(m_holeData[holeIndex].par);
+                for (auto j = 0u; j < playerCount; ++j)
+                {
+                    scoreString += "\n";
+                    auto s = scores[j].holes[holeIndex];
+                    if (s)
+                    {
+                        scoreString += std::to_string(s);
+                    }
+                }
+            }
+        }
+
+        ents[i].getComponent<cro::Text>().setString(scoreString);
+        leaderboardEntries.emplace_back(glm::vec3(ents[i].getComponent<UIElement>().absolutePosition - glm::vec2(ColumnMargin, -UITextPosV), 0.f), scoreString);
+    }
+
+    //total column
+    std::int32_t par = 0;
+    for (auto i = 0u; i < MaxCols && i < m_holeData.size(); ++i)
+    {
+        par += m_holeData[i].par;
+    }
+
+    std::string totalString = "TOTAL\n" + std::to_string(par);
+
+    for (auto i = 0u; i < playerCount; ++i)
+    {
+        totalString += "\n" + std::to_string(scores[i].frontNine);
+
+        switch (m_sharedData.scoreType)
+        {
+        default:
+        case ScoreType::Stroke:
+            if (scores[i].parDiff > 0)
+            {
+                totalString += " (+" + std::to_string(scores[i].parDiff) + ")";
+            }
+            else if (scores[i].parDiff < 0)
+            {
+                totalString += " (" + std::to_string(scores[i].parDiff) + ")";
+            }
+            else
+            {
+                totalString += " (0)";
+            }
+            break;
+        case ScoreType::Match:
+            totalString += " POINTS";
+            break;
+        case ScoreType::Skins:
+            totalString += " SKINS";
+            break;
+        }
+    }
+
+    //pad out for page 2
+    for (auto i = 0u; i < 16u - playerCount; ++i)
+    {
+        totalString += "\n";
+    }
+
+    if (page2)
+    {
+        const auto getSeparator =
+            [](std::int32_t first)
+        {
+            std::string str;
+            if (first < 10)
+            {
+                str += " ";
+            }
+            str += " - ";
+
+            return str;
+        };
+
+        auto frontPar = par;
+        par = 0;
+        for (auto i = MaxCols; i < m_holeData.size(); ++i)
+        {
+            par += m_holeData[i].par;
+        }
+        auto separator = getSeparator(par);
+
+        totalString += "\n\nTOTAL\n" + std::to_string(par) + separator + std::to_string(par + frontPar);
+        for (auto i = 0u; i < playerCount; ++i)
+        {
+            separator = getSeparator(scores[i].backNine);
+            totalString += "\n" + std::to_string(scores[i].backNine);
+
+            switch (m_sharedData.scoreType)
+            {
+            default:
+            case ScoreType::Stroke:
+                totalString += separator + std::to_string(scores[i].total);
                 if (scores[i].parDiff > 0)
                 {
                     totalString += " (+" + std::to_string(scores[i].parDiff) + ")";
@@ -2083,89 +2183,24 @@ void GolfState::updateScoreboard()
                 break;
             }
         }
+    }
 
-        //pad out for page 2
-        for (auto i = 0u; i < 16u - playerCount; ++i)
-        {
-            totalString += "\n";
-        }
+    ents.back().getComponent<cro::Text>().setString(totalString);
+    ents.back().getComponent<cro::Transform>().setPosition(ColumnPositions.back());
+    //gotta admit - I don't know why this works.
+    if (scoreboardExpansion > 0)
+    {
+        float offset = scoreboardExpansion == MaxExpansion ? std::floor(ColumnMargin) : 0.f;
+        ents.back().getComponent<cro::Transform>().move({ std::floor(scoreboardExpansion - offset), 0.f });
+    }
+    leaderboardEntries.emplace_back(glm::vec3(ents.back().getComponent<UIElement>().absolutePosition - glm::vec2(ColumnMargin, -UITextPosV), 0.f), totalString);
 
-        if (page2)
-        {
-            const auto getSeparator =
-                [](std::int32_t first)
-            {
-                std::string str;
-                if (first < 10)
-                {
-                    str += " ";
-                }
-                str += " - ";
+    //for some reason we have to hack this to display and I'm too lazy to debug it
+    auto pos = ents.back().getComponent<cro::Transform>().getPosition();
+    pos.z = 1.5f;
+    ents.back().getComponent<cro::Transform>().setPosition(pos);
 
-                return str;
-            };
-
-            auto frontPar = par;
-            par = 0;
-            for (auto i = MaxCols; i < m_holeData.size(); ++i)
-            {
-                par += m_holeData[i].par;
-            }
-            auto separator = getSeparator(par);
-
-            totalString += "\n\nTOTAL\n" + std::to_string(par) + separator + std::to_string(par + frontPar);
-            for (auto i = 0u; i < playerCount; ++i)
-            {
-                separator = getSeparator(scores[i].backNine);
-                totalString += "\n" + std::to_string(scores[i].backNine);
-
-                switch (m_sharedData.scoreType)
-                {
-                default:
-                case ScoreType::Stroke:
-                    totalString += separator + std::to_string(scores[i].total);
-                    if (scores[i].parDiff > 0)
-                    {
-                        totalString += " (+" + std::to_string(scores[i].parDiff) + ")";
-                    }
-                    else if (scores[i].parDiff < 0)
-                    {
-                        totalString += " (" + std::to_string(scores[i].parDiff) + ")";
-                    }
-                    else
-                    {
-                        totalString += " (0)";
-                    }
-                    break;
-                case ScoreType::Match:
-                    totalString += " POINTS";
-                    break;
-                case ScoreType::Skins:
-                    totalString += " SKINS";
-                    break;
-                }
-            }
-        }
-
-        ents.back().getComponent<cro::Text>().setString(totalString);
-        ents.back().getComponent<cro::Transform>().setPosition(ColumnPositions.back());
-        //gotta admit - I don't know why this works.
-        if (scoreboardExpansion > 0)
-        {
-            float offset = scoreboardExpansion == MaxExpansion ? std::floor(ColumnMargin) : 0.f;
-            ents.back().getComponent<cro::Transform>().move({ std::floor(scoreboardExpansion - offset), 0.f });
-        }
-        leaderboardEntries.emplace_back(glm::vec3(ents.back().getComponent<UIElement>().absolutePosition - glm::vec2(ColumnMargin, -UITextPosV), 0.f), totalString);
-
-        //for some reason we have to hack this to display and I'm too lazy to debug it
-        auto pos = ents.back().getComponent<cro::Transform>().getPosition();
-        pos.z = 1.5f;
-        ents.back().getComponent<cro::Transform>().setPosition(pos);
-
-        m_leaderboardTexture.update(leaderboardEntries);
-
-    /*};
-    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);*/
+    m_leaderboardTexture.update(leaderboardEntries);
 }
 
 void GolfState::showScoreboard(bool visible)

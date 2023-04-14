@@ -34,6 +34,7 @@ source distribution.
 #include <crogine/core/String.hpp>
 #include <crogine/graphics/Colour.hpp>
 #include <crogine/graphics/Image.hpp>
+#include <crogine/graphics/ImageArray.hpp>
 #include <crogine/graphics/Texture.hpp>
 #include <crogine/graphics/MaterialData.hpp>
 #include <crogine/detail/glm/vec3.hpp>
@@ -61,7 +62,7 @@ struct PlayerData final
     cro::Colour ballTint;
 
     //this is client side profile specific data
-    cro::Image mugshotData; //pixel data of the mugshot for avatar icon
+    cro::ImageArray<std::uint8_t> mugshotData; //pixel data of the mugshot for avatar icon
     std::string mugshot; //path to mugshot if it exists
     mutable std::string profileID; //saving file generates this
     bool saveProfile() const;

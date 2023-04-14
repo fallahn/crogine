@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2023
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -57,8 +57,7 @@ namespace cro
         Images are invalid until either create() or load*() functions have been
         called and returned successfully.
         */
-        Image();
-        explicit Image(bool flipOnLoad);
+        explicit Image(bool flipOnLoad = false);
 
         /*!
         \brief Creates an empty image.
@@ -130,6 +129,7 @@ namespace cro
         */
         const std::uint8_t* getPixel(std::size_t x, std::size_t y) const;
 
+
     private:
         glm::uvec2 m_size = glm::uvec2(0);
         ImageFormat::Type m_format;
@@ -137,5 +137,7 @@ namespace cro
         bool m_flipped;
 
         bool m_flipOnLoad;
+
+        template <class T = std::uint8_t> friend class ImageArray;
     };
 }

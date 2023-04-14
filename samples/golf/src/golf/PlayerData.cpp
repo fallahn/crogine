@@ -175,7 +175,8 @@ bool PlayerData::loadProfile(const std::string& path, const std::string& uid)
                 auto inSize = arr.getDimensions();
                 auto outSize = glm::uvec2(inSize.x / 2, inSize.y);
 
-                mugshotData.create(outSize.x, outSize.y, cro::Colour::White);
+                cro::Image tmp;
+                tmp.create(outSize.x, outSize.y, cro::Colour::White);
 
                 //copy only the left half (mugshout *ought* to be 2:1, however we'll scale to square when rendering)
                 for (auto y = 0u; y < outSize.y; ++y)
@@ -196,9 +197,11 @@ bool PlayerData::loadProfile(const std::string& path, const std::string& uid)
                         const float alpha = (1.f - glm::smoothstep(halfSize - 3.5f, halfSize - 1.5f, glm::length(position - glm::vec2(outSize / 2u))));
                         c.setAlpha(alpha);
 
-                        mugshotData.setPixel(x, y, c);
+                        tmp.setPixel(x, y, c);
                     }
                 }
+
+                mugshotData = std::move(tmp);
             }
             else
             {

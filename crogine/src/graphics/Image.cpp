@@ -33,6 +33,7 @@ source distribution.
 #include <SDL_rwops.h>
 
 #include <crogine/graphics/Image.hpp>
+#include <crogine/graphics/ImageArray.hpp>
 #include <crogine/graphics/Colour.hpp>
 
 #include <crogine/detail/Assert.hpp>
@@ -43,13 +44,6 @@ source distribution.
 #include <cstring>
 
 using namespace cro;
-
-Image::Image()
-    : m_format  (ImageFormat::None),
-    m_flipped   (false),
-    m_flipOnLoad(false)
-{
-}
 
 Image::Image(bool flipOnLoad)
     : m_format  (ImageFormat::None),

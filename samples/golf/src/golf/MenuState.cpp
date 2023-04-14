@@ -354,20 +354,6 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     Social::setStatus(Social::InfoID::Menu, { "Main Menu" });
     Social::setGroup(0);
 
-    registerWindow([&]()
-        {
-            if (ImGui::Begin("buns"))
-            {
-                auto size = glm::vec2(LabelTextureSize);
-                for (const auto& t : m_sharedData.nameTextures)
-                {
-                    ImGui::Image(t.getTexture(), { size.x, size.y }, { 0.f, 1.f }, { 1.f, 0.f });
-                    ImGui::SameLine();
-                }
-            }
-            ImGui::End();
-        });
-
 #ifdef CRO_DEBUG_
 
     registerWindow([&]() 

@@ -1056,6 +1056,17 @@ void GolfState::handleMessage(const cro::Message& msg)
                     {
                         m_activeAvatar->model.getComponent<cro::Skeleton>().play(m_activeAvatar->animationIDs[AnimationID::Disappoint], 1.f, 0.4f);
                     }
+
+                    //check if we're still 2 under for achievement
+                    if (m_sharedData.localConnectionData.connectionID == m_currentPlayer.client
+                        && !m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].isCPU)
+                    {
+                        if (m_holeData[m_currentHole].par - m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].score
+                            < 2)
+                        {
+                            m_achievementTracker.twoShotsSpare = false;
+                        }
+                    }
                 }
                 break;
             case TerrainID::Fairway:
@@ -3366,6 +3377,8 @@ void GolfState::addSystems()
 
 void GolfState::buildScene()
 {
+    m_achievementTracker.noGimmeUsed = (m_sharedData.gimmeRadius == 0);
+
     if (m_holeData.empty())
     {
         //use dummy data to get scene standing
@@ -5126,6 +5139,11 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
                     {
                         Achievements::incrementStat(StatStrings[StatID::PutterGimmies]);
                     }
+
+                    if (!m_sharedData.connectionData[client].playerData[player].isCPU)
+                    {
+                        m_achievementTracker.noGimmeUsed = false;
+                    }
                 }
             }
             break;
@@ -5213,6 +5231,7 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
             msg->travelDistance = glm::length2(update.position - m_currentPlayer.position);
             msg->pinDistance = glm::length2(update.position - m_holeData[m_currentHole].pin);
 
+            //update achievements if this is local player
             if (m_currentPlayer.client == m_sharedData.clientConnection.connectionID)
             {
                 m_sharedData.timeStats[m_currentPlayer.player].holeTimes[m_currentHole] += m_turnTimer.elapsed().asSeconds();
@@ -5231,6 +5250,17 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
                     && !m_sharedData.localConnectionData.playerData[0].isCPU)
                 {
                     m_playTime += m_playTimer.elapsed();
+                }
+
+                //track other achievements awarded at the end of the round
+                if (!m_sharedData.localConnectionData.playerData[m_currentPlayer.player].isCPU)
+                {
+                    if ((msg->terrain != TerrainID::Green
+                        && msg->terrain != TerrainID::Fairway)
+                        && m_sharedData.localConnectionData.playerData[m_currentPlayer.player].score == 0) //first stroke
+                    {
+                        m_achievementTracker.alwaysOnTheCourse = false;
+                    }
                 }
             }
         }
@@ -5452,6 +5482,15 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo)
 
     updateScoreboard();
     m_achievementTracker.hadFoul = false;
+    m_achievementTracker.puttCount = 0;
+
+    //can't get these when putting else it's
+    //far too easy (we're technically always on the green)
+    if (m_holeData[hole].puttFromTee)
+    {
+        m_achievementTracker.alwaysOnTheCourse = false;
+        m_achievementTracker.twoShotsSpare = false;
+    }
 
     //CRO_ASSERT(hole < m_holeData.size(), "");
     if (hole >= m_holeData.size())
@@ -6613,6 +6652,16 @@ void GolfState::hitBall()
     {
         //activate the zoom
         m_cameras[CameraID::Bystander].getComponent<cro::Callback>().active = true;
+    }
+
+    //track achievements for not using more than two putts
+    if (!m_sharedData.connectionData[m_sharedData.localConnectionData.connectionID].playerData[m_currentPlayer.player].isCPU)
+    {
+        m_achievementTracker.puttCount++;
+        if (m_achievementTracker.puttCount > 2)
+        {
+            m_achievementTracker.underTwoPutts = false;
+        }
     }
 }
 
