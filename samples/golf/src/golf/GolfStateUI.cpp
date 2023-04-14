@@ -1896,6 +1896,8 @@ void GolfState::updateScoreboard()
             entry.client = clientID;
             entry.player = i;
 
+            bool overPar = false;
+
             for (auto j = 0u; j < client.playerData[i].holeScores.size(); ++j)
             {
                 auto s = client.playerData[i].holeScores[j];
@@ -1903,7 +1905,10 @@ void GolfState::updateScoreboard()
 
                 if (s)
                 {
-                    entry.parDiff += static_cast<std::int32_t>(s) - m_holeData[j].par;
+                    auto diff = static_cast<std::int32_t>(s) - m_holeData[j].par;
+                    entry.parDiff += diff;
+
+                    overPar = (diff > 0);
                 }
 
                 if (j < 9)
@@ -1939,20 +1944,21 @@ void GolfState::updateScoreboard()
             }
             client.playerData[i].parScore = entry.parDiff;
 
-            //track achievement make no mistake
-            if (client.connectionID == m_sharedData.localConnectionData.connectionID
-                && !client.playerData[i].isCPU
-                && entry.parDiff > 0)
-            {
-                m_achievementTracker.noHolesOverPar = false;
-            }
-            //TODO display achievement progress here?
-
+            
             switch (m_sharedData.scoreType)
             {
             default:
             case ScoreType::Stroke:
                 entry.total = entry.frontNine + entry.backNine;
+
+                //track achievement make no mistake
+                if (client.connectionID == m_sharedData.localConnectionData.connectionID
+                    && !client.playerData[i].isCPU
+                    && overPar)
+                {
+                    m_achievementTracker.noHolesOverPar = false;
+                }
+
                 break;
             case ScoreType::Skins:
                 entry.total = client.playerData[i].skinScore;

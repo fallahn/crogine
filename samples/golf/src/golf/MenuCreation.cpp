@@ -1565,9 +1565,9 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
 
     //display the score type
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, 156.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, 159.f, 0.1f });
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<UIElement>().absolutePosition = { bounds.width / 2.f, 156.f };
+    entity.addComponent<UIElement>().absolutePosition = { bounds.width / 2.f, 159.f };
     entity.getComponent<UIElement>().depth = 0.1f;
     entity.getComponent<UIElement>().resizeCallback = textResizeCallback;
     entity.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
@@ -1594,12 +1594,12 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
 
     //gimme radius
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, 82.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, 85.f, 0.1f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     entity.getComponent<cro::Text>().setString("Gimme Radius");
-    entity.addComponent<UIElement>().absolutePosition = { bounds.width / 2.f, 82.f };
+    entity.addComponent<UIElement>().absolutePosition = { bounds.width / 2.f, 85.f };
     entity.getComponent<UIElement>().depth = 0.1f;
     entity.getComponent<UIElement>().resizeCallback = textResizeCallback;
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement;

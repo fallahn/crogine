@@ -1061,7 +1061,7 @@ void GolfState::handleMessage(const cro::Message& msg)
                     if (m_sharedData.localConnectionData.connectionID == m_currentPlayer.client
                         && !m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].isCPU)
                     {
-                        if (m_holeData[m_currentHole].par - m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].score
+                        if (m_holeData[m_currentHole].par - m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].holeScores[m_currentHole]
                             < 2)
                         {
                             m_achievementTracker.twoShotsSpare = false;
@@ -3377,7 +3377,8 @@ void GolfState::addSystems()
 
 void GolfState::buildScene()
 {
-    m_achievementTracker.noGimmeUsed = (m_sharedData.gimmeRadius == 0);
+    m_achievementTracker.noGimmeUsed = (m_sharedData.gimmeRadius != 0);
+    m_achievementTracker.noHolesOverPar = (m_sharedData.scoreType == ScoreType::Stroke);
 
     if (m_holeData.empty())
     {
@@ -5257,7 +5258,7 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
                 {
                     if ((msg->terrain != TerrainID::Green
                         && msg->terrain != TerrainID::Fairway)
-                        && m_sharedData.localConnectionData.playerData[m_currentPlayer.player].score == 0) //first stroke
+                        && m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].holeScores[m_currentHole] == 1) //first stroke
                     {
                         m_achievementTracker.alwaysOnTheCourse = false;
                     }
@@ -6655,7 +6656,8 @@ void GolfState::hitBall()
     }
 
     //track achievements for not using more than two putts
-    if (!m_sharedData.connectionData[m_sharedData.localConnectionData.connectionID].playerData[m_currentPlayer.player].isCPU)
+    if (club == ClubID::Putter &&
+        !m_sharedData.connectionData[m_sharedData.localConnectionData.connectionID].playerData[m_currentPlayer.player].isCPU)
     {
         m_achievementTracker.puttCount++;
         if (m_achievementTracker.puttCount > 2)
