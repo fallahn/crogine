@@ -5424,23 +5424,6 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
 
 void GolfState::removeClient(std::uint8_t clientID)
 {
-    //tidy up minimap - TODO MiniballSystem could now do this through checking parent state, but if it ain't broke...
-    for (auto i = 0u; i < m_sharedData.connectionData[clientID].playerCount; ++i)
-    {
-        auto pid = clientID * ConstVal::MaxPlayers + i;
-        cro::Command cmd;
-        cmd.targetFlags = CommandID::UI::MiniBall;
-        cmd.action = [&,pid](cro::Entity e, float)
-        {
-            if (e.getComponent<MiniBall>().playerID == pid)
-            {
-                m_uiScene.destroyEntity(e);
-            }
-        };
-        m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
-    }
-
-
     cro::String str = m_sharedData.connectionData[clientID].playerData[0].name;
     for (auto i = 1u; i < m_sharedData.connectionData[clientID].playerCount; ++i)
     {
