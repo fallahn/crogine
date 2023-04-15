@@ -2273,22 +2273,16 @@ void MenuState::updateLobbyData(const net::NetEvent& evt)
         //check the new player data for UGC
         for (auto i = 0u; i < cd.playerCount; ++i)
         {
-            if (indexFromBallID(cd.playerData[i].ballID) == -1)
+            if (indexFromBallID(cd.playerData[i].ballID) == 0)
             {
                 //no local ball for this player
                 Social::fetchRemoteContent(cd.peerID, cd.playerData[i].ballID, Social::UserContent::Ball);
             }
 
-            auto id = cd.playerData[i].hairID;
-            auto hair = std::find_if(m_sharedData.hairInfo.begin(), m_sharedData.hairInfo.end(),
-                [id](const SharedStateData::HairInfo& h)
-                {
-                    return h.uid == id;
-                });
-            if (hair == m_sharedData.hairInfo.end())
+            if (indexFromHairID(cd.playerData[i].hairID) == 0)
             {
                 //no local hair model
-                Social::fetchRemoteContent(cd.peerID, id, Social::UserContent::Hair);
+                Social::fetchRemoteContent(cd.peerID, cd.playerData[i].hairID, Social::UserContent::Hair);
             }
         }
 #endif

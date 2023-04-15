@@ -968,7 +968,7 @@ std::int32_t MenuState::indexFromHairID(std::uint32_t id)
 {
     //assumes all avatars contain some list of models...
     //not sure why we aren't doing this on m_sharedData.hairInfo ? 
-    auto hair = std::find_if(m_playerAvatars[0].hairModels.begin(), m_playerAvatars[0].hairModels.end(),
+    /*auto hair = std::find_if(m_playerAvatars[0].hairModels.begin(), m_playerAvatars[0].hairModels.end(),
         [id](const PlayerAvatar::HairInfo& h)
         {
             return h.uid == id;
@@ -977,6 +977,18 @@ std::int32_t MenuState::indexFromHairID(std::uint32_t id)
     if (hair != m_playerAvatars[0].hairModels.end())
     {
         return static_cast<std::int32_t>(std::distance(m_playerAvatars[0].hairModels.begin(), hair));
+    }*/
+
+
+    auto hair = std::find_if(m_sharedData.hairInfo.begin(), m_sharedData.hairInfo.end(),
+        [id](const SharedStateData::HairInfo& h)
+        {
+            return h.uid == id;
+        });
+
+    if (hair != m_sharedData.hairInfo.end())
+    {
+        return static_cast<std::int32_t>(std::distance(m_sharedData.hairInfo.begin(), hair));
     }
 
     return 0;

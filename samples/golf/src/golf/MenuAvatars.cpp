@@ -76,7 +76,6 @@ void MenuState::createAvatarMenu(cro::Entity parent)
     //        ImGui::End();
     //    });
 
-
     //TODO this could be moved to createUI()
     createMenuCallbacks();
 
@@ -128,8 +127,11 @@ void MenuState::createAvatarMenu(cro::Entity parent)
             }
         }
     }
-    m_sharedData.localConnectionData.playerData[0] = m_profileData.playerProfiles[0];
     
+    //hmmmmmm we don't want to reset t his slot if we already played a game, to maintain
+    //the original roster between sessions. Not a game breaker, bt annoying.
+    m_sharedData.localConnectionData.playerData[0] = m_profileData.playerProfiles[0];
+
     //map all the active player slots to their profile index
     for (auto i = 0u; i < m_sharedData.localConnectionData.playerCount; ++i)
     {
