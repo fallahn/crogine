@@ -6750,7 +6750,7 @@ void GolfState::updateActor(const ActorInfo& update)
         m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
         //set the skip state so we can tell if we're allowed to skip
-        m_skipState.state = update.state;
+        m_skipState.state = (m_currentPlayer.client == m_sharedData.localConnectionData.connectionID) ? update.state : -1;
     }
     else
     {
