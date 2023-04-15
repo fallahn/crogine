@@ -81,6 +81,14 @@ void BallTrail::create(cro::Scene& scene, cro::ResourceCollection& resources, st
 
 void BallTrail::setNext()
 {
+    //if we switched before reaching min-index size we need
+    //to activate the old buffer so that it tidies itself up
+    if (!m_trails[m_bufferIndex].active)
+    {
+        m_trails[m_bufferIndex].active = true;
+    }
+
+
     m_bufferIndex = (m_bufferIndex + 1) % BufferCount;
 }
 
