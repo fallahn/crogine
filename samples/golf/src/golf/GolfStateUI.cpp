@@ -860,7 +860,7 @@ void GolfState::buildUI()
             }
             else
             {
-                const float targetScale = Clubs[club].getTarget(m_distanceToHole) * m_minimapZoom.zoom;
+                const float targetScale = m_inputParser.getEstimatedDistance() * m_minimapZoom.zoom;
                 if (scale < targetScale)
                 {
                     scale = std::min(scale + (dt * ((targetScale - scale) * 10.f)), targetScale);

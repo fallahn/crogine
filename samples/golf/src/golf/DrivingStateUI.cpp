@@ -700,7 +700,7 @@ void DrivingState::createUI()
         //more magic numbers than Ken Dodd's tax return.
         if (m_inputParser.getActive())
         {
-            const auto targetScale = Clubs[m_inputParser.getClub()].getTarget(0.f);
+            const auto targetScale = m_inputParser.getEstimatedDistance();
             if (scale < targetScale)
             {
                 scale = std::min(scale + (dt * ((targetScale - scale) * 10.f)), targetScale);

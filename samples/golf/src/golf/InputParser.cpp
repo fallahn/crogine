@@ -693,7 +693,7 @@ void InputParser::updateDistanceEstimation()
     do
     {
         endPos = (totalSteps * stepVel) + ((((totalSteps * totalSteps) + totalSteps) * stepGrav) / 2.f);
-        totalSteps += 15.f;
+        totalSteps += 1.f;
     } while (endPos.y > 0.f);
 
     m_estimatedDistance = glm::length(endPos) * 1.08f; //correction of the average difference of club rating (we're only usin this for the range indicator)
