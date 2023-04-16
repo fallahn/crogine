@@ -186,7 +186,7 @@ DrivingState::DrivingState(cro::StateStack& stack, cro::State::Context context, 
     m_sharedData        (sd),
     m_profileData       (sp),
     m_inputParser       (sd, nullptr),
-    m_gameScene         (context.appInstance.getMessageBus()),
+    m_gameScene         (context.appInstance.getMessageBus(), 512),
     m_skyScene          (context.appInstance.getMessageBus()),
     m_uiScene           (context.appInstance.getMessageBus(), 512),
     m_viewScale         (1.f),
@@ -213,61 +213,61 @@ DrivingState::DrivingState(cro::StateStack& stack, cro::State::Context context, 
 
 #ifdef CRO_DEBUG_
     m_sharedData.inputBinding.clubset = ClubID::FullSet;
-    registerWindow([&]()
-        {
-            if (ImGui::Begin("Window"))
-            {
-                if (debugBall)
-                {
-                    ImGui::Text("State %s", Ball::StateStrings[static_cast<std::int32_t>(debugBall->state)].c_str());
-                    //if (debugBall->state == Ball::State::Roll) LogI << "buns" << std::endl;
-                    //if (debugBall->state == Ball::State::Putt) LogI << "flaps" << std::endl;
+    //registerWindow([&]()
+    //    {
+    //        if (ImGui::Begin("Window"))
+    //        {
+    //            //if (debugBall)
+    //            //{
+    //            //    ImGui::Text("State %s", Ball::StateStrings[static_cast<std::int32_t>(debugBall->state)].c_str());
+    //            //    //if (debugBall->state == Ball::State::Roll) LogI << "buns" << std::endl;
+    //            //    //if (debugBall->state == Ball::State::Putt) LogI << "flaps" << std::endl;
 
-                    float topSpin = std::clamp(debugBall->spin.y, 0.f, 1.f);
-                    ImGui::Text("Top Spin");
-                    ImGui::SameLine();
-                    ImGui::ProgressBar(topSpin);
+    //            //    float topSpin = std::clamp(debugBall->spin.y, 0.f, 1.f);
+    //            //    ImGui::Text("Top Spin");
+    //            //    ImGui::SameLine();
+    //            //    ImGui::ProgressBar(topSpin);
 
-                    float backSpin = std::clamp(debugBall->spin.y, -1.f, 0.f) / -1.f;
-                    ImGui::Text("Back Spin");
-                    ImGui::SameLine();
-                    ImGui::ProgressBar(backSpin, {-1,0}, nullptr, true);
+    //            //    float backSpin = std::clamp(debugBall->spin.y, -1.f, 0.f) / -1.f;
+    //            //    ImGui::Text("Back Spin");
+    //            //    ImGui::SameLine();
+    //            //    ImGui::ProgressBar(backSpin, {-1,0}, nullptr, true);
 
-                    float rightSpin = std::clamp(debugBall->spin.x, 0.f, 1.f);
-                    ImGui::Text("Right Spin");
-                    ImGui::SameLine();
-                    ImGui::ProgressBar(rightSpin);
+    //            //    float rightSpin = std::clamp(debugBall->spin.x, 0.f, 1.f);
+    //            //    ImGui::Text("Right Spin");
+    //            //    ImGui::SameLine();
+    //            //    ImGui::ProgressBar(rightSpin);
 
-                    float leftSpin = std::clamp(debugBall->spin.x, -1.f, 0.f) / -1.f;
-                    ImGui::Text("Left Spin");
-                    ImGui::SameLine();
-                    ImGui::ProgressBar(leftSpin, {-1,0}, nullptr, true);
+    //            //    float leftSpin = std::clamp(debugBall->spin.x, -1.f, 0.f) / -1.f;
+    //            //    ImGui::Text("Left Spin");
+    //            //    ImGui::SameLine();
+    //            //    ImGui::ProgressBar(leftSpin, {-1,0}, nullptr, true);
 
-                    auto spin = m_inputParser.getSpin();
-                    ImGui::SliderFloat2("Input Spin", &spin[0], -1.f, 1.f, "%.3f", ImGuiSliderFlags_NoInput);
-                }
+    //            //    auto spin = m_inputParser.getSpin();
+    //            //    ImGui::SliderFloat2("Input Spin", &spin[0], -1.f, 1.f, "%.3f", ImGuiSliderFlags_NoInput);
+    //            //}
 
-                //ImGui::SliderFloat("Adjust", &powerMultiplier, 0.8f, 1.1f);
-                //ImGui::Text("Power %3.3f", Clubs[m_inputParser.getClub()].getPower(0.f) * powerMultiplier);
+    //            ImGui::SliderFloat("Adjust", &powerMultiplier, 0.8f, 1.1f);
+    //            ImGui::Text("Power %3.3f", Clubs[m_inputParser.getClub()].getPower(0.f) * powerMultiplier);
 
-                //ImGui::Text("Max Height %3.3f", maxHeight);
+    //            //ImGui::Text("Max Height %3.3f", maxHeight);
 
-                /*static float maxDist = 80.f;
-                if (ImGui::SliderFloat("Distance", &maxDist, 1.f, 80.f))
-                {
-                    m_gameScene.getActiveCamera().getComponent<cro::Camera>().setMaxShadowDistance(maxDist);
-                }
+    //            /*static float maxDist = 80.f;
+    //            if (ImGui::SliderFloat("Distance", &maxDist, 1.f, 80.f))
+    //            {
+    //                m_gameScene.getActiveCamera().getComponent<cro::Camera>().setMaxShadowDistance(maxDist);
+    //            }
 
-                float overshoot = m_gameScene.getActiveCamera().getComponent<cro::Camera>().getShadowExpansion();
-                if (ImGui::SliderFloat("Overshoot", &overshoot, 0.f, 120.f))
-                {
-                    m_gameScene.getActiveCamera().getComponent<cro::Camera>().setShadowExpansion(overshoot);
-                }*/
+    //            float overshoot = m_gameScene.getActiveCamera().getComponent<cro::Camera>().getShadowExpansion();
+    //            if (ImGui::SliderFloat("Overshoot", &overshoot, 0.f, 120.f))
+    //            {
+    //                m_gameScene.getActiveCamera().getComponent<cro::Camera>().setShadowExpansion(overshoot);
+    //            }*/
 
-                //ImGui::Image(m_cameras[CameraID::Player].getComponent<cro::Camera>().shadowMapBuffer.getTexture(), { 256.f, 256.f }, { 0.f, 1.f }, { 1.f, 0.f });
-            }
-            ImGui::End();
-        });
+    //            //ImGui::Image(m_cameras[CameraID::Player].getComponent<cro::Camera>().shadowMapBuffer.getTexture(), { 256.f, 256.f }, { 0.f, 1.f }, { 1.f, 0.f });
+    //        }
+    //        ImGui::End();
+    //    });
 #endif
 }
 
@@ -2810,6 +2810,10 @@ void DrivingState::hitBall()
     auto facing = cro::Util::Maths::sgn(m_avatar.model.getComponent<cro::Transform>().getScale().x);
 
     auto result = m_inputParser.getStroke(club, facing, 0.f);
+
+#ifdef CRO_DEBUG_
+    //result.impulse *= powerMultiplier;
+#endif
     result.impulse *= Dampening[TerrainID::Fairway];
 
     //apply impulse to ball component

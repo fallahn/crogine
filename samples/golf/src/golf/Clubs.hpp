@@ -87,6 +87,7 @@ public:
     float getTarget(float distanceToPin) const;
 
     float getBaseTarget() const;
+    float getDefaultTarget() const; //target with no level-shift applied
 
     float getSideSpinMultiplier() const { return m_sidespin; }
     float getTopSpinMultiplier() const { return m_topspin; }

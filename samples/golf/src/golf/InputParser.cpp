@@ -493,7 +493,7 @@ void InputParser::setMaxClub(float dist)
 
     m_firstClub = ClubID::SandWedge;
 
-    while ((Clubs[m_firstClub].getTarget(dist) * 1.05f) < dist
+    while ((Clubs[m_firstClub].getDefaultTarget(/*dist*/) * 1.05f) < dist
         && m_firstClub != ClubID::Driver)
     {
         //this WILL get stuck in an infinite loop if the clubset is 0 for some reason
