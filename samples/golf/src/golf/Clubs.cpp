@@ -68,7 +68,7 @@ namespace
         ClubStat({9.11f, 10.f}, {9.11f, 10.f}, {9.11f, 10.f}) //except this which is dynamic
     };
 
-    constexpr std::size_t DebugLevel = 15;
+    constexpr std::size_t DebugLevel = 35;
 }
 
 Club::Club(std::int32_t id, const std::string& name, float angle, float sidespin, float topspin)

@@ -1455,7 +1455,7 @@ bool GolfState::simulate(float dt)
     if (getStateCount() == 1)
     {
         m_cpuGolfer.update(dt, windVector, m_distanceToHole);
-        m_inputParser.update(dt, m_currentPlayer.terrain);
+        m_inputParser.update(dt);
 
         if (float movement = m_inputParser.getCamMotion(); movement != 0)
         {
@@ -6051,7 +6051,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     auto isCPU = m_sharedData.localConnectionData.playerData[player.player].isCPU;
 
     m_sharedData.inputBinding.playerID = localPlayer ? player.player : 0; //this also affects who can emote, so if we're currently emoting when it's not our turn always be player 0(??)
-    m_inputParser.setActive(localPlayer && !m_photoMode, isCPU);
+    m_inputParser.setActive(localPlayer && !m_photoMode, m_currentPlayer.terrain, isCPU);
     m_restoreInput = localPlayer; //if we're in photo mode should we restore input parser?
     Achievements::setActive(localPlayer && !isCPU && allowAchievements);
 
@@ -6591,7 +6591,7 @@ void GolfState::hitBall()
 
     m_sharedData.clientConnection.netClient.sendPacket(PacketID::InputUpdate, update, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
 
-    m_inputParser.setActive(false);
+    m_inputParser.setActive(false, m_currentPlayer.terrain);
     m_restoreInput = false;
     m_achievementTracker.hadBackspin = (spin.y < 0);
 
@@ -7381,7 +7381,7 @@ void GolfState::toggleFreeCam()
 
     m_gameScene.setSystemActive<FpsCameraSystem>(m_photoMode);
     m_waterEnt.getComponent<cro::Callback>().active = !m_photoMode;
-    m_inputParser.setActive(!m_photoMode && m_restoreInput);
+    m_inputParser.setActive(!m_photoMode && m_restoreInput, m_currentPlayer.terrain);
     cro::App::getWindow().setMouseCaptured(m_photoMode);
 }
 

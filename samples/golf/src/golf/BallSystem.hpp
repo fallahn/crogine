@@ -35,6 +35,7 @@ source distribution.
 
 #include <crogine/ecs/System.hpp>
 #include <crogine/core/Clock.hpp>
+#include <crogine/detail/glm/vec3.hpp>
 
 #include <BulletCollision/CollisionDispatch/btGhostObject.h>
 
@@ -120,6 +121,8 @@ public:
     void setDebugFlags(std::int32_t);
     void renderDebug(const glm::mat4&, glm::uvec2);
 #endif
+
+    static constexpr glm::vec3 Gravity = glm::vec3(0.f, -9.8f, 0.f);
 
 private:
 

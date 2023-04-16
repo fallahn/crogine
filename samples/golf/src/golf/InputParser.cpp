@@ -36,6 +36,7 @@ source distribution.
 #include "GameConsts.hpp"
 #include "CameraFollowSystem.hpp"
 #include "CommandIDs.hpp"
+#include "BallSystem.hpp"
 
 #include <AchievementStrings.hpp>
 
@@ -92,7 +93,9 @@ InputParser::InputParser(const SharedStateData& sd, cro::Scene* s)
     m_state             (State::Aim),
     m_currentClub       (ClubID::Driver),
     m_firstClub         (ClubID::Driver),
-    m_clubOffset        (0)
+    m_clubOffset        (0),
+    m_terrain           (TerrainID::Fairway),
+    m_estimatedDistance (0.f)
 {
 
 }
@@ -403,6 +406,8 @@ void InputParser::setClub(float dist)
 
     auto* msg = cro::App::postMessage<GolfEvent>(MessageID::GolfMessage);
     msg->type = GolfEvent::ClubChanged;
+
+    updateDistanceEstimation();
 }
 
 float InputParser::getYaw() const
@@ -441,9 +446,11 @@ std::int32_t InputParser::getClub() const
     return m_currentClub;
 }
 
-void InputParser::setActive(bool active, bool isCPU)
+void InputParser::setActive(bool active, std::int32_t terrain, bool isCPU)
 {
+    CRO_ASSERT(terrain < TerrainID::Count, "");
     m_active = active;
+    m_terrain = terrain;
     m_isCPU = isCPU;
     m_state = State::Aim;
     //if the parser was suspended when set active then make sure un-suspending it returns the correct state.
@@ -455,6 +462,8 @@ void InputParser::setActive(bool active, bool isCPU)
         m_spin = glm::vec2(0.f);
 
         m_swingput.setEnabled((m_enableFlags == std::numeric_limits<std::uint16_t>::max()) && !isCPU ? m_inputBinding.playerID : -1);
+
+        updateDistanceEstimation();
     }
     else
     {
@@ -473,7 +482,7 @@ void InputParser::setSuspended(bool suspended)
     {
         m_active = m_suspended;
     }
-
+    updateDistanceEstimation();
 }
 
 void InputParser::setEnableFlags(std::uint16_t flags)
@@ -509,6 +518,8 @@ void InputParser::setMaxClub(float dist)
 
     auto* msg = cro::App::postMessage<GolfEvent>(MessageID::GolfMessage);
     msg->type = GolfEvent::ClubChanged;
+
+    updateDistanceEstimation();
 }
 
 void InputParser::setMaxClub(std::int32_t clubID)
@@ -519,6 +530,8 @@ void InputParser::setMaxClub(std::int32_t clubID)
 
     auto* msg = cro::App::postMessage<GolfEvent>(MessageID::GolfMessage);
     msg->type = GolfEvent::ClubChanged;
+
+    updateDistanceEstimation();
 }
 
 void InputParser::resetPower()
@@ -528,7 +541,7 @@ void InputParser::resetPower()
     m_powerbarDirection = 1.f;
 }
 
-void InputParser::update(float dt, std::int32_t terrainID)
+void InputParser::update(float dt)
 {
     if (m_inputFlags & (InputFlag::Left | InputFlag::Right | InputFlag::Up | InputFlag::Down))
     {
@@ -553,7 +566,7 @@ void InputParser::update(float dt, std::int32_t terrainID)
         //drone controls handle controller independently
         checkControllerInput();
         checkMouseInput();
-        updateStroke(dt, terrainID);
+        updateStroke(dt);
     }
 
     m_prevFlags = m_inputFlags;
@@ -653,7 +666,40 @@ InputParser::StrokeResult InputParser::getStroke(std::int32_t club, std::int32_t
 }
 
 //private
-void InputParser::updateStroke(float dt, std::int32_t terrainID)
+void InputParser::updateDistanceEstimation()
+{
+    //https://www.iforce2d.net/b2dtut/projected-trajectory
+
+    auto pitch = Clubs[m_currentClub].getAngle();
+    auto power = Clubs[m_currentClub].getPower(0.f);
+    auto spin = getSpin() *= Clubs[m_currentClub].getTopSpinMultiplier();
+    pitch -= (4.f * cro::Util::Const::degToRad) * spin.y;
+
+    glm::vec3 impulse(1.f, 0.f, 0.f);
+    auto rotation = glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), pitch, cro::Transform::Z_AXIS);
+    impulse = glm::toMat3(rotation) * impulse;
+    impulse *= power;
+
+    //multiply the terrain dampening
+    impulse *= Dampening[m_terrain];
+
+    static constexpr float dt = 1.f / 60.f; //I'm sure we're redefining this...
+    const auto stepVel = impulse * dt;
+    constexpr auto stepGrav = BallSystem::Gravity * dt * dt;
+
+    glm::vec3 endPos(1.f);
+    //run the estimation until we get a time where the final result has a height < 0 again
+    float totalSteps = 1.f;
+    do
+    {
+        endPos = (totalSteps * stepVel) + ((((totalSteps * totalSteps) + totalSteps) * stepGrav) / 2.f);
+        totalSteps += 15.f;
+    } while (endPos.y > 0.f);
+
+    m_estimatedDistance = glm::length(endPos) * 1.08f; //correction of the average difference of club rating (we're only usin this for the range indicator)
+}
+
+void InputParser::updateStroke(float dt)
 {
     //catch the inputs that where filtered by the
     //enable flags so we can raise their own event for them
@@ -726,6 +772,8 @@ void InputParser::updateStroke(float dt, std::int32_t terrainID)
                 auto* msg = cro::App::postMessage<GolfEvent>(MessageID::GolfMessage);
                 msg->type = GolfEvent::ClubChanged;
                 msg->score = m_isCPU ? 0 : 1; //tag this with a value so we know the input triggered this and should play a sound.
+
+                updateDistanceEstimation();
             }
 
             if ((m_prevFlags & InputFlag::NextClub) == 0
@@ -741,6 +789,8 @@ void InputParser::updateStroke(float dt, std::int32_t terrainID)
                 auto* msg = cro::App::postMessage<GolfEvent>(MessageID::GolfMessage);
                 msg->type = GolfEvent::ClubChanged;
                 msg->score = m_isCPU? 0 : 1;
+
+                updateDistanceEstimation();
             }
         }
         break;
@@ -755,7 +805,7 @@ void InputParser::updateStroke(float dt, std::int32_t terrainID)
 
             //move level to 1 and back (returning to 0 is a fluff)
             float speed = dt * 0.7f;
-            if (terrainID == TerrainID::Green
+            if (m_terrain == TerrainID::Green
                 && m_sharedData.showPuttingPower)
             {
                 //speed /= SpeedReduction;
@@ -810,7 +860,7 @@ void InputParser::updateStroke(float dt, std::int32_t terrainID)
             }
 
             float speed = dt * MinBarSpeed;
-            if (terrainID == TerrainID::Green
+            if (m_terrain == TerrainID::Green
                 && m_sharedData.showPuttingPower)
             {
                 //speed /= SpeedReduction;
@@ -917,6 +967,8 @@ void InputParser::updateSpin(float dt)
     auto rotation = getRotationalInput(cro::GameController::AxisLeftX, cro::GameController::AxisLeftY) * 2.f;
     m_spin.x = std::clamp(m_spin.x + (rotation.y * dt), -1.f, 1.f);
     m_spin.y = std::clamp(m_spin.y + (rotation.x * dt), -1.f, 1.f);
+
+    updateDistanceEstimation();
 }
 
 void InputParser::rotate(float rotation)
