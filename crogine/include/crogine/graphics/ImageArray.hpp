@@ -167,8 +167,11 @@ namespace cro
         }
 
         img.m_format = ImageFormat::None;
-        img.m_flipOnLoad = false;
-        img.m_flipped = false;
+        //rather suspiciously this causes some images to be incorrectly
+        //flipped when loaded - presumably because stb_image's flip
+        //property is not correctly restored...
+        //img.m_flipOnLoad = false;
+        //img.m_flipped = false;
     }
 
     template <>
@@ -198,8 +201,8 @@ namespace cro
         }
 
         img.m_format = ImageFormat::None;
-        img.m_flipOnLoad = false;
-        img.m_flipped = false;
+        //img.m_flipOnLoad = false;
+        //img.m_flipped = false;
 
         return *this;
     }

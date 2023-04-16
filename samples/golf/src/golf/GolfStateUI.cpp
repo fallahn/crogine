@@ -986,7 +986,7 @@ void GolfState::buildUI()
         m_minimapZoom.updateShader();
 
         glm::vec2 viewSize(MapSize);
-        miniCam.setOrthographic(-viewSize.x / 2.f, viewSize.x / 2.f, -viewSize.y / 2.f, viewSize.y / 2.f, -0.1f, 40.f);
+        miniCam.setOrthographic(-viewSize.x / 2.f, viewSize.x / 2.f, -viewSize.y / 2.f, viewSize.y / 2.f, -0.1f, 50.f);
         miniCam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
 
