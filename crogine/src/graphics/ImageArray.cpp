@@ -38,7 +38,7 @@ source distribution.
 //TODO we could refactor this for code reuse but... meh
 namespace cro::Detail
 {
-    bool loadFromU8(const std::string& path, std::vector<std::uint8_t>& dst, glm::uvec2& dims, std::uint32_t& channels, bool flipOnLoad)
+    bool loadFromU8(const std::string& path, std::vector<std::uint8_t>& dst, glm::uvec2& dims, std::uint32_t& channels)
     {
         dst.clear();
 
@@ -51,8 +51,6 @@ namespace cro::Detail
 
         STBIMG_stbio_RWops io;
         stbi_callback_from_RW(file, &io);
-
-        stbi_set_flip_vertically_on_load(flipOnLoad ? 1 : 0);
 
         std::int32_t w, h, d;
         auto* img = stbi_load_from_callbacks(&io.stb_cbs, &io, &w, &h, &d, 0);
@@ -67,7 +65,6 @@ namespace cro::Detail
             channels = d;
 
             stbi_image_free(img);
-            stbi_set_flip_vertically_on_load(0);
             SDL_RWclose(file);
 
             return true;
@@ -75,7 +72,6 @@ namespace cro::Detail
         else
         {
             Logger::log("failed to open image: " + path, Logger::Type::Error);
-            stbi_set_flip_vertically_on_load(0);
             SDL_RWclose(file);
 
             return false;
@@ -84,7 +80,7 @@ namespace cro::Detail
         return false;
     }
 
-    bool loadFromU16(const std::string& path, std::vector<std::uint16_t>& dst, glm::uvec2& dims, std::uint32_t& channels, bool flipOnLoad)
+    bool loadFromU16(const std::string& path, std::vector<std::uint16_t>& dst, glm::uvec2& dims, std::uint32_t& channels)
     {
         dst.clear();
 
@@ -97,8 +93,6 @@ namespace cro::Detail
 
         STBIMG_stbio_RWops io;
         stbi_callback_from_RW(file, &io);
-
-        stbi_set_flip_vertically_on_load(flipOnLoad ? 1 : 0);
 
         std::int32_t w, h, d;
         auto* img = stbi_load_16_from_callbacks(&io.stb_cbs, &io, &w, &h, &d, 0);
@@ -113,7 +107,6 @@ namespace cro::Detail
             channels = d;
 
             stbi_image_free(img);
-            stbi_set_flip_vertically_on_load(0);
             SDL_RWclose(file);
 
             return true;
@@ -121,21 +114,18 @@ namespace cro::Detail
         else
         {
             Logger::log("failed to open image: " + path, Logger::Type::Error);
-            stbi_set_flip_vertically_on_load(0);
             SDL_RWclose(file);
 
             return false;
         }
 
-
         return false;
     }
 
-    bool loadFromFloat(const std::string& path, std::vector<float>& dst, glm::uvec2& dims, std::uint32_t& channels, bool flipOnLoad)
+    bool loadFromFloat(const std::string& path, std::vector<float>& dst, glm::uvec2& dims, std::uint32_t& channels)
     {
         dst.clear();
 
-        
         auto* file = SDL_RWFromFile(path.c_str(), "rb");
         if (!file)
         {
@@ -145,8 +135,6 @@ namespace cro::Detail
 
         STBIMG_stbio_RWops io;
         stbi_callback_from_RW(file, &io);
-
-        stbi_set_flip_vertically_on_load(flipOnLoad ? 1 : 0);
 
         std::int32_t w, h, d;
         auto* img = stbi_loadf_from_callbacks(&io.stb_cbs, &io, &w, &h, &d, 0);
@@ -161,7 +149,6 @@ namespace cro::Detail
             channels = d;
 
             stbi_image_free(img);
-            stbi_set_flip_vertically_on_load(0);
             SDL_RWclose(file);
 
             return true;
@@ -169,7 +156,6 @@ namespace cro::Detail
         else
         {
             Logger::log("failed to open image: " + path, Logger::Type::Error);
-            stbi_set_flip_vertically_on_load(0);
             SDL_RWclose(file);
 
             return false;

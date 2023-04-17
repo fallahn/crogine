@@ -136,9 +136,9 @@ namespace cro
 
     namespace Detail
     {
-        CRO_EXPORT_API bool loadFromU8(const std::string& path, std::vector<std::uint8_t>&, glm::uvec2&, std::uint32_t&, bool);
-        CRO_EXPORT_API bool loadFromU16(const std::string& path, std::vector<std::uint16_t>&, glm::uvec2&, std::uint32_t&, bool);
-        CRO_EXPORT_API bool loadFromFloat(const std::string& path, std::vector<float>&, glm::uvec2&, std::uint32_t&, bool);
+        CRO_EXPORT_API bool loadFromU8(const std::string& path, std::vector<std::uint8_t>&, glm::uvec2&, std::uint32_t&);
+        CRO_EXPORT_API bool loadFromU16(const std::string& path, std::vector<std::uint16_t>&, glm::uvec2&, std::uint32_t&);
+        CRO_EXPORT_API bool loadFromFloat(const std::string& path, std::vector<float>&, glm::uvec2&, std::uint32_t&);
     }
 
     template <>
@@ -169,7 +169,7 @@ namespace cro
         img.m_format = ImageFormat::None;
         //rather suspiciously this causes some images to be incorrectly
         //flipped when loaded - presumably because stb_image's flip
-        //property is not correctly restored...
+        //property is not correctly restored... (not thread safe global?)
         //img.m_flipOnLoad = false;
         //img.m_flipped = false;
     }
@@ -210,18 +210,39 @@ namespace cro
     template <>
     inline bool ImageArray<std::uint8_t>::loadFromFile(const std::string& path, bool flipOnLoad)
     {
-        return cro::Detail::loadFromU8(path, m_data, m_dimensions, m_channels, flipOnLoad);
+        auto result = cro::Detail::loadFromU8(path, m_data, m_dimensions, m_channels);
+        if (result && flipOnLoad)
+        {
+            std::vector<std::uint8_t> temp(m_data.size());
+            Image::flipVertically(m_data.data(), temp, m_dimensions.y);
+            m_data.swap(temp);
+        }
+        return result;
     }
 
     template <>
     inline bool ImageArray<std::uint16_t>::loadFromFile(const std::string& path, bool flipOnLoad)
     {
-        return cro::Detail::loadFromU16(path, m_data, m_dimensions, m_channels, flipOnLoad);
+        auto result = cro::Detail::loadFromU16(path, m_data, m_dimensions, m_channels);
+        if (result && flipOnLoad)
+        {
+            std::vector<std::uint16_t> temp(m_data.size());
+            Image::flipVertically(m_data.data(), temp, m_dimensions.y);
+            m_data.swap(temp);
+        }
+        return result;
     }
 
     template <>
     inline bool ImageArray<float>::loadFromFile(const std::string& path, bool flipOnLoad)
     {
-        return cro::Detail::loadFromFloat(path, m_data, m_dimensions, m_channels, flipOnLoad);
+        auto result = cro::Detail::loadFromFloat(path, m_data, m_dimensions, m_channels);
+        if (result && flipOnLoad)
+        {
+            std::vector<float> temp(m_data.size());
+            Image::flipVertically(m_data.data(), temp, m_dimensions.y);
+            m_data.swap(temp);
+        }
+        return result;
     }
 }

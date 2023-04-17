@@ -140,5 +140,20 @@ namespace cro
 
         template <class T>
         friend class ImageArray;
+
+        template <typename T>
+        static void flipVertically(const T* src, std::vector<T>& dst, std::uint32_t height)
+        {
+            //copy row by row starting at bottom
+            const auto rowSize = (dst.size() / height) * sizeof(T);
+            auto d = dst.data();
+            auto s = src + ((dst.size()) - rowSize);
+            for (auto i = 0u; i < height; ++i)
+            {
+                std::memcpy(d, s, rowSize);
+                d += rowSize;
+                s -= rowSize;
+            }
+        }
     };
 }
