@@ -52,6 +52,8 @@ source distribution.
 namespace
 {
 #include "RandNames.hpp"
+
+    bool firstLoad = true; //one of those rare occasions we want this to be static.
 }
 
 void MenuState::createAvatarMenu(cro::Entity parent)
@@ -128,9 +130,14 @@ void MenuState::createAvatarMenu(cro::Entity parent)
         }
     }
     
-    //hmmmmmm we don't want to reset t his slot if we already played a game, to maintain
-    //the original roster between sessions. Not a game breaker, bt annoying.
-    m_sharedData.localConnectionData.playerData[0] = m_profileData.playerProfiles[0];
+    //only use the default profile if this is first loaded
+    //as it may have been changed for a game and we want to maintain
+    //the player's roster throughout.
+    if (firstLoad)
+    {
+        m_sharedData.localConnectionData.playerData[0] = m_profileData.playerProfiles[0];
+        firstLoad = false;
+    }
 
     //map all the active player slots to their profile index
     for (auto i = 0u; i < m_sharedData.localConnectionData.playerCount; ++i)
