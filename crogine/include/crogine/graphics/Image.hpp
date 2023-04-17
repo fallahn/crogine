@@ -35,6 +35,7 @@ source distribution.
 #include <crogine/detail/glm/vec2.hpp>
 
 #include <string>
+#include <cstring>
 #include <vector>
 
 namespace cro
@@ -43,8 +44,7 @@ namespace cro
 
     /*!
     \brief CPU side representation of an image.
-    Images can be loaded from file formats BMP, GIF, JPEG, LBM, PCX, PNG, PNM, TGA
-    (desktop platforms can load all formats supported by SDL2_image).
+    Images can be loaded from file formats JPG, PNG, BMP, HDR and TGA
     Images can have their pixels manipulated directly, but can only be drawn once
     they have been loaded on to the GPU via cro::Texture. Unlike texture Images 
     are copyable - although this is a heavy operation.
@@ -145,7 +145,7 @@ namespace cro
         static void flipVertically(const T* src, std::vector<T>& dst, std::uint32_t height)
         {
             //copy row by row starting at bottom
-            const auto rowSize = (dst.size() / height) * sizeof(T);
+            const auto rowSize = (dst.size() * sizeof(T)) / height;
             auto d = dst.data();
             auto s = src + ((dst.size()) - rowSize);
             for (auto i = 0u; i < height; ++i)

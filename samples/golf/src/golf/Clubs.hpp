@@ -110,9 +110,9 @@ private:
 
 static const std::array<Club, ClubID::Count> Clubs =
 {
-    Club(ClubID::Driver,    "Driver ", 45.f, 0.28f, 0.5f),  //default set
-    Club(ClubID::ThreeWood, "3 Wood ", 45.f, 0.3f,  0.55f), //default set
-    Club(ClubID::FiveWood,  "5 Wood ", 45.f, 0.4f,  0.55f), //Level 5
+    Club(ClubID::Driver,    "Driver ", 45.f, 0.3f,   0.5f),  //default set
+    Club(ClubID::ThreeWood, "3 Wood ", 45.f, 0.35f,  0.55f), //default set
+    Club(ClubID::FiveWood,  "5 Wood ", 45.f, 0.45f,  0.55f), //Level 5
     
     
     Club(ClubID::FourIron,  "4 Iron ", 40.f, 0.45f, 0.78f), //Level 10
