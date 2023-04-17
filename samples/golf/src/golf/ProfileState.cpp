@@ -189,19 +189,28 @@ bool ProfileState::handleEvent(const cro::Event& evt)
 
     if (evt.type == SDL_KEYUP)
     {
-        if (evt.key.keysym.sym == SDLK_BACKSPACE
-            || evt.key.keysym.sym == SDLK_ESCAPE)
+        switch (evt.key.keysym.sym)
         {
+        default:
+            updateHelpString(-1);
+            break;
+        case SDLK_ESCAPE:
+        case SDLK_BACKSPACE:
             if (m_textEdit.string == nullptr
                 && m_uiScene.getSystem<cro::UISystem>()->getActiveGroup() == MenuID::Main)
             {
                 quitState();
                 return false;
             }
-        }
-        else
-        {
-            updateHelpString(-1);
+            break;
+        case SDLK_RETURN:
+        case SDLK_RETURN2:
+        case SDLK_KP_ENTER:
+            if (m_textEdit.string)
+            {
+                applyTextEdit();
+            }
+            break;
         }
     }
     else if (evt.type == SDL_KEYDOWN)
@@ -215,14 +224,6 @@ bool ProfileState::handleEvent(const cro::Event& evt)
         case SDLK_LEFT:
         case SDLK_RIGHT:
             cro::App::getWindow().setMouseCaptured(true);
-            break;
-        case SDLK_RETURN:
-        case SDLK_RETURN2:
-        case SDLK_KP_ENTER:
-            if (m_textEdit.string)
-            {
-                applyTextEdit();
-            }
             break;
         }
     }
