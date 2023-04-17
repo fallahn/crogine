@@ -56,6 +56,7 @@ source distribution.
 #include "SpectatorAnimCallback.hpp"
 #include "MiniBallSystem.hpp"
 #include "CallbackData.hpp"
+#include "XPAwardStrings.hpp"
 
 #include <Achievements.hpp>
 #include <AchievementStrings.hpp>
@@ -741,7 +742,16 @@ void GolfState::handleMessage(const cro::Message& msg)
         }
         else if (data.type == Social::SocialEvent::XPAwarded)
         {
-            floatingMessage(std::to_string(data.level) + " XP");
+            auto xpStr = std::to_string(data.level) + " XP";
+            if (data.reason > -1)
+            {
+                CRO_ASSERT(data.reason < XPStringID::Count, "");
+                floatingMessage(XPStrings[data.reason] + " " + xpStr);
+            }
+            else
+            {
+                floatingMessage(xpStr);
+            }
         }
     }
         break;
@@ -817,7 +827,7 @@ void GolfState::handleMessage(const cro::Message& msg)
                     auto xp = std::clamp(static_cast<std::int32_t>(6.f * dirAmount), 0, 6);
                     if (xp)
                     {
-                        Social::awardXP(xp);
+                        Social::awardXP(xp, XPStringID::GreatAccuracy);
                     }
                 }
 
@@ -1098,7 +1108,7 @@ void GolfState::handleMessage(const cro::Message& msg)
 
             if (data.terrain == TerrainID::Fairway)
             {
-                Social::awardXP(1);
+                Social::awardXP(1, XPStringID::OnTheFairway);
             }
 #ifdef PATH_TRACING
             endBallDebug();
@@ -1111,7 +1121,7 @@ void GolfState::handleMessage(const cro::Message& msg)
         case GolfEvent::DroneHit:
         {
             Achievements::awardAchievement(AchievementStrings[AchievementID::HoleInOneMillion]);
-            Social::awardXP(XPValues[XPID::Special]);
+            Social::awardXP(XPValues[XPID::Special], XPStringID::DroneHit);
 
             m_gameScene.destroyEntity(m_drone);
             m_drone = {};
@@ -5194,7 +5204,7 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
                         //just completed the course
                         Achievements::incrementStat(StatStrings[StatID::HolesPlayed]);
                         Achievements::awardAchievement(AchievementStrings[AchievementID::JoinTheClub]);
-                        Social::awardXP(XPValues[XPID::CompleteCourse]);
+                        Social::awardXP(XPValues[XPID::CompleteCourse], XPStringID::CourseComplete);
                     }
 
                     //check putt distance / if this was in fact a putt
@@ -5204,19 +5214,19 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
                         {
                             Achievements::incrementStat(StatStrings[StatID::LongPutts]);
                             Achievements::awardAchievement(AchievementStrings[AchievementID::PuttStar]);
-                            Social::awardXP(XPValues[XPID::Special] / 2);
+                            Social::awardXP(XPValues[XPID::Special] / 2, XPStringID::LongPutt);
                             special = true;
                         }
                     }
                     else
                     {
                         Achievements::awardAchievement(AchievementStrings[AchievementID::TopChip]);
-                        Social::awardXP(XPValues[XPID::Special]);
+                        Social::awardXP(XPValues[XPID::Special], XPStringID::TopChip);
 
                         if (m_achievementTracker.hadBackspin)
                         {
                             Achievements::awardAchievement(AchievementStrings[AchievementID::SpinClass]);
-                            Social::awardXP(XPValues[XPID::Special] * 2);
+                            Social::awardXP(XPValues[XPID::Special] * 2, XPStringID::BackSpinSkill);
                         }
                     }
                 }

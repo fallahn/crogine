@@ -45,6 +45,7 @@ source distribution.
 #include "BallSystem.hpp"
 #include "CallbackData.hpp"
 #include "InterpolationSystem.hpp"
+#include "XPAwardStrings.hpp"
 #include "../ErrorCheck.hpp"
 
 #include <Achievements.hpp>
@@ -1342,20 +1343,24 @@ void GolfState::showCountdown(std::uint8_t seconds)
                 //against someone with a significantly higher level.
                 float multiplier = std::min(1.f, static_cast<float>(m_statBoardScores.size()) / 4.f);
                 float xp = 0.f;
+                std::int32_t xpReason = -1;
                 switch (i)
                 {
                 default: break;
                 case 0:
                     xp = static_cast<float>(XPValues[XPID::First]) * multiplier;
+                    xpReason = XPStringID::FirstPlace;
                     break;
                 case 1:
                     xp = static_cast<float>(XPValues[XPID::Second]) * multiplier;
+                    xpReason = XPStringID::SecondPlace;
                     break;
                 case 2:
                     xp = static_cast<float>(XPValues[XPID::Third]) * multiplier;
+                    xpReason = XPStringID::ThirdPlace;
                     break;
                 }
-                Social::awardXP(static_cast<std::int32_t>(xp));
+                Social::awardXP(static_cast<std::int32_t>(xp), xpReason);
             }
         }
 
@@ -2460,7 +2465,7 @@ void GolfState::showMessageBoard(MessageBoardID messageType, bool special)
                 xp /= 2;
             }
 
-            Social::awardXP(xp);
+            Social::awardXP(xp, XPStringID::HIO);
         }
 
 
@@ -2518,22 +2523,22 @@ void GolfState::showMessageBoard(MessageBoardID messageType, bool special)
             textEnt.getComponent<cro::Text>().setString(ScoreStrings[score]);
             textEnt.getComponent<cro::Transform>().move({ 0.f, -10.f, 0.f });
 
-            std::int32_t divisor = m_sharedData.showPuttingPower ? 2 : 1;
+            std::int32_t divisor = (m_sharedData.showPuttingPower && getClub() == ClubID::Putter) ? 2 : 1;
 
             switch (score)
             {
             default: break;
             case ScoreID::Albatross:
-                Social::awardXP(XPValues[XPID::Albatross] / divisor);
+                Social::awardXP(XPValues[XPID::Albatross] / divisor, XPStringID::Albatross);
                 break;
             case ScoreID::Eagle:
-                Social::awardXP(XPValues[XPID::Eagle] / divisor);
+                Social::awardXP(XPValues[XPID::Eagle] / divisor, XPStringID::Eagle);
                 break;
             case ScoreID::Birdie:
-                Social::awardXP(XPValues[XPID::Birdie] / divisor);
+                Social::awardXP(XPValues[XPID::Birdie] / divisor, XPStringID::Birdie);
                 break;
             case ScoreID::Par:
-                Social::awardXP(XPValues[XPID::Par] / divisor);
+                Social::awardXP(XPValues[XPID::Par] / divisor, XPStringID::Par);
                 break;
             }
 

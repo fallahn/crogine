@@ -80,6 +80,7 @@ public:
             PlayerAchievement
         }type = LevelUp;
         std::int32_t level = 0;
+        std::int32_t reason = -1;
     };
 
     struct ProgressData final
@@ -99,7 +100,7 @@ public:
     static cro::Image getUserIcon(std::uint64_t) { return cro::Image(); }
     static void findFriends() {}
     static void inviteFriends(std::uint64_t) {}
-    static void awardXP(std::int32_t);
+    static void awardXP(std::int32_t, std::int32_t = -1);
     static std::int32_t getXP();
     static std::int32_t getLevel();
     static ProgressData getLevelProgress();

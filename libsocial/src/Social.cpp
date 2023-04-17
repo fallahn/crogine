@@ -122,7 +122,7 @@ namespace
     }
 }
 
-void Social::awardXP(std::int32_t amount)
+void Social::awardXP(std::int32_t amount, std::int32_t reason)
 {
     if (Achievements::getActive())
     {
@@ -135,6 +135,7 @@ void Social::awardXP(std::int32_t amount)
         auto* msg = cro::App::postMessage<SocialEvent>(MessageID::SocialMessage);
         msg->type = SocialEvent::XPAwarded;
         msg->level = amount;
+        msg->reason = reason;
 
         auto level = getLevelFromXP(experience.value);
         if (oldLevel < level)
