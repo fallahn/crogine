@@ -3073,7 +3073,7 @@ void GolfState::buildTrophyScene()
                     {
                         e.getComponent<cro::Sprite>().setTexture(*m_trophies[i].label.getComponent<cro::Sprite>().getTexture(), false);
 
-                        static constexpr float BaseScale = 0.25f;
+                        static constexpr float BaseScale = 0.5f;
                         static constexpr float SpinCount = 6.f;
                         static constexpr float Duration = 3.f;
 

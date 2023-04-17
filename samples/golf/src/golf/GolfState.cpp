@@ -4850,7 +4850,7 @@ void GolfState::spawnBall(const ActorInfo& info)
 
     const auto playerID = info.playerID;
     const auto clientID = info.clientID;
-    const auto depthOffset = ((clientID * ConstVal::MaxPlayers) + playerID) + 1; //must be at least 1
+    const auto depthOffset = ((clientID * ConstVal::MaxPlayers) + playerID) + 1; //must be at least 1 (if you change this, note that it breaks anything which refers to this uid)
     const cro::FloatRect textureRect(0.f, playerID * (texSize.y / ConstVal::MaxPlayers), texSize.x, texSize.y / ConstVal::MaxPlayers);
     const cro::FloatRect uvRect(0.f, textureRect.bottom / static_cast<float>(LabelTextureSize.y),
                             1.f, textureRect.height / static_cast<float>(LabelTextureSize.y));
@@ -6101,7 +6101,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     cmd.action =
         [&,player](cro::Entity e, float)
     {
-        auto pid = player.client * ConstVal::MaxPlayers + player.player;
+        auto pid = ((player.client * ConstVal::MaxPlayers) + player.player) + 1;
 
         if (e.getComponent<MiniBall>().playerID == pid)
         {
