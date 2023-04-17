@@ -1675,7 +1675,8 @@ void MenuState::refreshProfileFlyout()
 
     m_profileFlyout.detail.getComponent<cro::Text>().setString(nameList);
     auto bounds = cro::Text::getLocalBounds(m_profileFlyout.detail);
-    m_profileFlyout.detail.getComponent<cro::Transform>().setPosition({ 0.f, bounds.height + 1.f, 0.1f });
+    bounds.height = ProfileItemHeight * m_profileData.playerProfiles.size();
+    m_profileFlyout.detail.getComponent<cro::Transform>().setPosition({ 0.f, bounds.height - 1.f, 0.1f });
 
 
     //resize background
