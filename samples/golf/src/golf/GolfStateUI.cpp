@@ -2529,16 +2529,16 @@ void GolfState::showMessageBoard(MessageBoardID messageType, bool special)
             {
             default: break;
             case ScoreID::Albatross:
-                Social::awardXP(XPValues[XPID::Albatross] / divisor, XPStringID::Albatross);
+                Social::awardXP(XPValues[XPID::Albatross] / divisor, XPStringID::Albatross + (divisor - 1));
                 break;
             case ScoreID::Eagle:
-                Social::awardXP(XPValues[XPID::Eagle] / divisor, XPStringID::Eagle);
+                Social::awardXP(XPValues[XPID::Eagle] / divisor, XPStringID::Eagle + (divisor - 1));
                 break;
             case ScoreID::Birdie:
-                Social::awardXP(XPValues[XPID::Birdie] / divisor, XPStringID::Birdie);
+                Social::awardXP(XPValues[XPID::Birdie] / divisor, XPStringID::Birdie + (divisor - 1));
                 break;
             case ScoreID::Par:
-                Social::awardXP(XPValues[XPID::Par] / divisor, XPStringID::Par);
+                Social::awardXP(XPValues[XPID::Par] / divisor, XPStringID::Par + (divisor - 1));
                 break;
             }
 

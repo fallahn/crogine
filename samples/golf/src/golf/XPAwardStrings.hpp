@@ -47,11 +47,16 @@ struct XPStringID final
         FirstPlace,
         SecondPlace,
         ThirdPlace,
+
         HIO,
         Albatross,
+        AlbatrossAssist,
         Eagle,
+        EagleAssist,
         Birdie,
+        BirdieAssist,
         Par,
+        ParAssist,
 
         Count
     };
@@ -60,20 +65,26 @@ struct XPStringID final
 //note that final message appends a space and the XP value.
 static const std::array<std::string, XPStringID::Count> XPStrings =
 {
-    "Nice On!",
+    std::string("Nice On!"),
+
     "Great Accuracy!",
     "Fairway -",
     "Drone Hit!",
     "Course Complete - ",
     "Long Putt!",
     "Top Chip!",
-    "Backspin Skill!"
-    "First Place!"
+    "Backspin Skill!",
+    "First Place!",
     "Second Place - ",
     "Third Place - ",
+
     "Hole In One!!",
+    "Albatross (No Assist)",
     "Albatross!",
+    "Eagle (No Assist)",
     "Eagle!",
+    "Birdie (No Assist)",
     "Birdie!",
-    "Par - "
+    "Par (No Assist) - ",
+    "Par - ",
 };
