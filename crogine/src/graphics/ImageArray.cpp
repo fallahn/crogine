@@ -38,7 +38,7 @@ source distribution.
 //TODO we could refactor this for code reuse but... meh
 namespace cro::Detail
 {
-    bool loadFromU8(const std::string& path, std::vector<std::uint8_t>& dst, glm::ivec2& dims, std::int32_t& channels)
+    bool loadFromU8(const std::string& path, std::vector<std::uint8_t>& dst, glm::uvec2& dims, std::uint32_t& channels, bool flipOnLoad)
     {
         dst.clear();
 
@@ -49,12 +49,10 @@ namespace cro::Detail
             return false;
         }
 
-
-
         STBIMG_stbio_RWops io;
         stbi_callback_from_RW(file, &io);
 
-        stbi_set_flip_vertically_on_load(1);
+        stbi_set_flip_vertically_on_load(flipOnLoad ? 1 : 0);
 
         std::int32_t w, h, d;
         auto* img = stbi_load_from_callbacks(&io.stb_cbs, &io, &w, &h, &d, 0);
@@ -86,10 +84,9 @@ namespace cro::Detail
         return false;
     }
 
-    bool loadFromU16(const std::string& path, std::vector<std::uint16_t>& dst, glm::ivec2& dims, std::int32_t& channels)
+    bool loadFromU16(const std::string& path, std::vector<std::uint16_t>& dst, glm::uvec2& dims, std::uint32_t& channels, bool flipOnLoad)
     {
         dst.clear();
-
 
         auto* file = SDL_RWFromFile(path.c_str(), "rb");
         if (!file)
@@ -98,11 +95,10 @@ namespace cro::Detail
             return false;
         }
 
-
         STBIMG_stbio_RWops io;
         stbi_callback_from_RW(file, &io);
 
-        stbi_set_flip_vertically_on_load(1);
+        stbi_set_flip_vertically_on_load(flipOnLoad ? 1 : 0);
 
         std::int32_t w, h, d;
         auto* img = stbi_load_16_from_callbacks(&io.stb_cbs, &io, &w, &h, &d, 0);
@@ -135,7 +131,7 @@ namespace cro::Detail
         return false;
     }
 
-    bool loadFromFloat(const std::string& path, std::vector<float>& dst, glm::ivec2& dims, std::int32_t& channels)
+    bool loadFromFloat(const std::string& path, std::vector<float>& dst, glm::uvec2& dims, std::uint32_t& channels, bool flipOnLoad)
     {
         dst.clear();
 
@@ -147,12 +143,10 @@ namespace cro::Detail
             return false;
         }
 
-
-
         STBIMG_stbio_RWops io;
         stbi_callback_from_RW(file, &io);
 
-        stbi_set_flip_vertically_on_load(1);
+        stbi_set_flip_vertically_on_load(flipOnLoad ? 1 : 0);
 
         std::int32_t w, h, d;
         auto* img = stbi_loadf_from_callbacks(&io.stb_cbs, &io, &w, &h, &d, 0);

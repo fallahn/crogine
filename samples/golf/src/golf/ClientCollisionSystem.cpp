@@ -199,6 +199,6 @@ void ClientCollisionSystem::process(float)
 
 void ClientCollisionSystem::setMap(std::uint32_t index)
 {
-    m_mapImage.loadFromFile(m_holeData[index].mapPath);
+    m_mapImage.loadFromFile(m_holeData[index].mapPath, true);
     m_holeIndex = index;
 }

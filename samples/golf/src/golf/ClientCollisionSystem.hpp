@@ -39,7 +39,7 @@ deals specifically with golf terrain collision on the client.
 
 #include <crogine/ecs/System.hpp>
 
-#include <crogine/graphics/Image.hpp>
+#include <crogine/graphics/ImageArray.hpp>
 
 #include <crogine/detail/glm/vec3.hpp>
 
@@ -73,7 +73,7 @@ private:
     const CollisionMesh& m_collisionMesh;
     std::int32_t m_club;
 
-    cro::Image m_mapImage;
+    cro::ImageArray<std::uint8_t> m_mapImage;
 
     bool m_waterCollision; //tracking dolphin achievement
 };

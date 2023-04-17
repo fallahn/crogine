@@ -185,7 +185,7 @@ bool Texture::loadFromFile(const std::string& filePath, bool createMipMaps)
     auto path = FileSystem::getResourcePath() + filePath;
 
     ImageArray<std::uint8_t> arr;
-    if (arr.loadFromFile(path))
+    if (arr.loadFromFile(path, true))
     {
         auto size = arr.getDimensions();
         create(size.x, size.y, arr.getFormat());

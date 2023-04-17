@@ -824,8 +824,9 @@ void TerrainBuilder::threadFunc()
 
             //we checked the file validity when the game starts.
             //if the map file is broken now something more drastic happened...
-            cro::Image mapImage;
-            if (mapImage.loadFromFile(m_holeData[m_currentHole].mapPath))
+            //cro::Image mapImage;
+            cro::ImageArray<std::uint8_t> mapImage;
+            if (mapImage.loadFromFile(m_holeData[m_currentHole].mapPath, true))
             {
                 //partition the prop entities;
                 propGrid.clear();
@@ -1005,14 +1006,14 @@ void TerrainBuilder::threadFunc()
                 //result to MaxTerrainHeight, whereas the above returns world coords
                 const auto heightAt = [&](std::uint32_t x, std::uint32_t y)
                 {
-                    auto size = mapImage.getSize();
+                    auto size = mapImage.getDimensions();
 
                     x = std::min(size.x - 1, std::max(0u, x));
                     y = std::min(size.y - 1, std::max(0u, y));
 
                     auto index = y * size.x + x;
                     index *= 4;
-                    return (static_cast<float>(mapImage.getPixelData()[index + 1]) / 255.f) * MaxTerrainHeight;
+                    return (static_cast<float>(mapImage[index + 1]) / 255.f) * MaxTerrainHeight;
                 };
 
                 //update vertex data for scrub terrain mesh

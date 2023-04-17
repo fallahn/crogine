@@ -169,7 +169,7 @@ bool PlayerData::loadProfile(const std::string& path, const std::string& uid)
         {
             //pre-process the image to use as the avatar icon in-game
             cro::ImageArray<std::uint8_t> arr;
-            if (arr.loadFromFile(mugshot)
+            if (arr.loadFromFile(mugshot, true)
                 && arr.getChannels() > 2)
             {
                 auto inSize = arr.getDimensions();

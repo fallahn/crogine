@@ -72,7 +72,7 @@ namespace cro
         so on macOS MUST include getResourcePath() if loading from a bundle.
         \returns true if successful else false
         */
-        bool loadFromFile(const std::string& path)
+        bool loadFromFile(const std::string& path, bool flipOnLoad = false)
         {
             static_assert(sizeof(T) == -1, "Only U8, U16 and float supported");
             return false;
@@ -106,13 +106,13 @@ namespace cro
         /*!
         \brief Returns the width and height of the image if it is loaded
         */
-        glm::ivec2 getDimensions() const { return m_dimensions; }
+        glm::uvec2 getDimensions() const { return m_dimensions; }
 
         /*!
         \brief Returns the number of colour channels in the image
         Usually 1,3 or 4 - or 0 if no image is loaded.
         */
-        std::int32_t getChannels() const { return m_channels; }
+        std::uint32_t getChannels() const { return m_channels; }
 
         /*!
         \brtief Returns the equivalent cro::Image::Format based on the number of channels
@@ -130,15 +130,15 @@ namespace cro
 
     private:
         std::vector<T> m_data;
-        glm::ivec2 m_dimensions = glm::ivec2(0u);
-        std::int32_t m_channels = 0;
+        glm::uvec2 m_dimensions = glm::uvec2(0u);
+        std::uint32_t m_channels = 0;
     };
 
     namespace Detail
     {
-        CRO_EXPORT_API bool loadFromU8(const std::string& path, std::vector<std::uint8_t>&, glm::ivec2&, std::int32_t&);
-        CRO_EXPORT_API bool loadFromU16(const std::string& path, std::vector<std::uint16_t>&, glm::ivec2&, std::int32_t&);
-        CRO_EXPORT_API bool loadFromFloat(const std::string& path, std::vector<float>&, glm::ivec2&, std::int32_t&);
+        CRO_EXPORT_API bool loadFromU8(const std::string& path, std::vector<std::uint8_t>&, glm::uvec2&, std::uint32_t&, bool);
+        CRO_EXPORT_API bool loadFromU16(const std::string& path, std::vector<std::uint16_t>&, glm::uvec2&, std::uint32_t&, bool);
+        CRO_EXPORT_API bool loadFromFloat(const std::string& path, std::vector<float>&, glm::uvec2&, std::uint32_t&, bool);
     }
 
     template <>
@@ -208,20 +208,20 @@ namespace cro
     }
 
     template <>
-    inline bool ImageArray<std::uint8_t>::loadFromFile(const std::string& path)
+    inline bool ImageArray<std::uint8_t>::loadFromFile(const std::string& path, bool flipOnLoad)
     {
-        return cro::Detail::loadFromU8(path, m_data, m_dimensions, m_channels);
+        return cro::Detail::loadFromU8(path, m_data, m_dimensions, m_channels, flipOnLoad);
     }
 
     template <>
-    inline bool ImageArray<std::uint16_t>::loadFromFile(const std::string& path)
+    inline bool ImageArray<std::uint16_t>::loadFromFile(const std::string& path, bool flipOnLoad)
     {
-        return cro::Detail::loadFromU16(path, m_data, m_dimensions, m_channels);
+        return cro::Detail::loadFromU16(path, m_data, m_dimensions, m_channels, flipOnLoad);
     }
 
     template <>
-    inline bool ImageArray<float>::loadFromFile(const std::string& path)
+    inline bool ImageArray<float>::loadFromFile(const std::string& path, bool flipOnLoad)
     {
-        return cro::Detail::loadFromFloat(path, m_data, m_dimensions, m_channels);
+        return cro::Detail::loadFromFloat(path, m_data, m_dimensions, m_channels, flipOnLoad);
     }
 }

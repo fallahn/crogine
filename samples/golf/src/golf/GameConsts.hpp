@@ -43,7 +43,7 @@ source distribution.
 #include <crogine/ecs/components/Callback.hpp>
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/graphics/Colour.hpp>
-#include <crogine/graphics/Image.hpp>
+#include <crogine/graphics/ImageArray.hpp>
 #include <crogine/graphics/ModelDefinition.hpp>
 #include <crogine/graphics/CubeBuilder.hpp>
 #include <crogine/util/Constants.hpp>
@@ -646,26 +646,26 @@ static inline bool planeIntersect(const glm::mat4& camTx, glm::vec3& result)
     return true;
 }
 
-static inline std::pair<std::uint8_t, float> readMap(const cro::Image& img, float px, float py)
+static inline std::pair<std::uint8_t, float> readMap(const cro::ImageArray<std::uint8_t>& img, float px, float py)
 {
-    auto size = glm::vec2(img.getSize());
+    auto size = glm::vec2(img.getDimensions());
     //I forget why our coords are float - this makes for horrible casts :(
     std::uint32_t x = static_cast<std::uint32_t>(std::min(size.x - 1.f, std::max(0.f, std::floor(px))));
     std::uint32_t y = static_cast<std::uint32_t>(std::min(size.y - 1.f, std::max(0.f, std::floor(py))));
 
-    std::uint32_t stride = 4;
+    std::uint32_t stride = img.getChannels();
     //TODO we should have already asserted the format is RGBA elsewhere...
-    if (img.getFormat() == cro::ImageFormat::RGB)
+    /*if (img.getFormat() == cro::ImageFormat::RGB)
     {
         stride = 3;
-    }
+    }*/
 
     auto index = (y * static_cast<std::uint32_t>(size.x) + x) * stride;
 
-    std::uint8_t terrain = img.getPixelData()[index] / 10;
+    std::uint8_t terrain = img[index] / 10;
     terrain = std::min(static_cast<std::uint8_t>(TerrainID::Stone), terrain);
 
-    auto height = static_cast<float>(img.getPixelData()[index + 1]) / 255.f;
+    auto height = static_cast<float>(img[index + 1]) / 255.f;
     height *= MaxTerrainHeight;
 
     return { terrain, height };
