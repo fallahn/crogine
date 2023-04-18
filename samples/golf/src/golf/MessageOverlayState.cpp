@@ -507,6 +507,8 @@ void MessageOverlayState::buildScene()
                 {
                     if (activated(evt))
                     {
+                        Social::resetProfile();
+
                         requestStackClear();
                         requestStackPush(StateID::SplashScreen);
                     }

@@ -1353,6 +1353,7 @@ void MenuState::createMenuCallbacks()
                 m_lobbyWindowEntities[LobbyEntityID::HoleSelection].getComponent<cro::Transform>().setScale({ 1.f, scale });
                 e.getComponent<cro::Sprite>().setTextureRect(rect);
                 e.getComponent<cro::UIInput>().area = area;
+                e.getComponent<cro::Transform>().setRotation(0.f); //fudge to trigger transform callback and update area
             }
         });
 

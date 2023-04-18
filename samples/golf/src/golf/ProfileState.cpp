@@ -1081,8 +1081,7 @@ void ProfileState::buildScene()
 
     //opens the profile folder for easier adding of mugshot
     //but only in windowed mode and not on steamdeck
-    if (!Social::isSteamdeck()
-        && !cro::App::getWindow().isFullscreen())
+    if (!Social::isSteamdeck())
     {
         //open the profile folder to copy mugshot image
         entity = createButton("profile_highlight", {393.f, 21.f});
@@ -1096,6 +1095,17 @@ void ProfileState::buildScene()
                         cro::Util::String::parseURL(path);
                     }
                 });
+
+        //*sigh* entity already has a callback for animation (which by this point should probably be its own system)
+        //so hack around this with another entity that enables the button when !full screen
+        auto b = entity;
+        entity = m_uiScene.createEntity();
+        entity.addComponent<cro::Callback>().active = true;
+        entity.getComponent<cro::Callback>().function =
+            [b](cro::Entity, float) mutable
+        {
+            b.getComponent<cro::UIInput>().enabled = !cro::App::getWindow().isFullscreen();
+        };
     }
 
 
