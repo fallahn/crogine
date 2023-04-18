@@ -167,9 +167,12 @@ namespace cro
         }
 
         img.m_format = ImageFormat::None;
-        //rather suspiciously this causes some images to be incorrectly
-        //flipped when loaded - presumably because stb_image's flip
-        //property is not correctly restored... (not thread safe global?)
+        //design flaw - images are constructed with this
+        //argument, so usage expects it to remain the
+        //same throughout the Image lifetime when repeatedly
+        //calling create() or loadFrom*().... even if the image
+        //was moved.
+        
         //img.m_flipOnLoad = false;
         //img.m_flipped = false;
     }

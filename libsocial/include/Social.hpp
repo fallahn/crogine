@@ -94,10 +94,11 @@ public:
             currentXP(c),
             levelXP(l) {}
     };
+    static cro::Image userIcon;
 
     static bool isAvailable() { return false; }
     static bool isSteamdeck() { return false; }
-    static cro::Image getUserIcon(std::uint64_t) { return cro::Image(); }
+    static cro::Image getUserIcon(std::uint64_t) { return userIcon; }
     static void findFriends() {}
     static void inviteFriends(std::uint64_t) {}
     static void awardXP(std::int32_t, std::int32_t = -1);

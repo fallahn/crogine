@@ -29,6 +29,7 @@ source distribution.
 
 #include "PlayerData.hpp"
 #include "PlayerColours.hpp"
+#include "GameConsts.hpp"
 #include "spooky2.hpp"
 
 #include <Social.hpp>
@@ -168,40 +169,45 @@ bool PlayerData::loadProfile(const std::string& path, const std::string& uid)
         else
         {
             //pre-process the image to use as the avatar icon in-game
-            cro::ImageArray<std::uint8_t> arr;
-            if (arr.loadFromFile(mugshot, true)
-                && arr.getChannels() > 2)
+            //cro::ImageArray<std::uint8_t> arr;
+            //if (arr.loadFromFile(mugshot, true)
+            //    && arr.getChannels() > 2)
+            //{
+            //    auto inSize = arr.getDimensions();
+            //    auto outSize = glm::uvec2(inSize.x / 2, inSize.y);
+
+            //    cro::Image tmp;
+            //    tmp.create(outSize.x, outSize.y, cro::Colour::White);
+
+            //    //copy only the left half (mugshout *ought* to be 2:1, however we'll scale to square when rendering)
+            //    for (auto y = 0u; y < outSize.y; ++y)
+            //    {
+            //        for (auto x = 0u; x < outSize.x; ++x)
+            //        {
+            //            auto i = y * inSize.x + x;
+            //            cro::Colour c =
+            //            {
+            //                arr[i * arr.getChannels()],
+            //                arr[i * arr.getChannels() + 1],
+            //                arr[i * arr.getChannels() + 2]
+            //            };
+
+            //            //transparency outside radius
+            //            glm::vec2 position(x, y);
+            //            const float halfSize = static_cast<float>(outSize.x / 2);
+            //            const float alpha = (1.f - glm::smoothstep(halfSize - 3.5f, halfSize - 1.5f, glm::length(position - glm::vec2(outSize / 2u))));
+            //            c.setAlpha(alpha);
+
+            //            tmp.setPixel(x, y, c);
+            //        }
+            //    }
+
+            //    mugshotData = std::move(tmp);
+            //}
+            //else
+            if (auto img = cropAvatarImage(mugshot); img.getPixelData())
             {
-                auto inSize = arr.getDimensions();
-                auto outSize = glm::uvec2(inSize.x / 2, inSize.y);
-
-                cro::Image tmp;
-                tmp.create(outSize.x, outSize.y, cro::Colour::White);
-
-                //copy only the left half (mugshout *ought* to be 2:1, however we'll scale to square when rendering)
-                for (auto y = 0u; y < outSize.y; ++y)
-                {
-                    for (auto x = 0u; x < outSize.x; ++x)
-                    {
-                        auto i = y * inSize.x + x;
-                        cro::Colour c =
-                        {
-                            arr[i * arr.getChannels()],
-                            arr[i * arr.getChannels() + 1],
-                            arr[i * arr.getChannels() + 2]
-                        };
-
-                        //transparency outside radius
-                        glm::vec2 position(x, y);
-                        const float halfSize = static_cast<float>(outSize.x / 2);
-                        const float alpha = (1.f - glm::smoothstep(halfSize - 3.5f, halfSize - 1.5f, glm::length(position - glm::vec2(outSize / 2u))));
-                        c.setAlpha(alpha);
-
-                        tmp.setPixel(x, y, c);
-                    }
-                }
-
-                mugshotData = std::move(tmp);
+                mugshotData = std::move(img);
             }
             else
             {

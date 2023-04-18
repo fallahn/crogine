@@ -122,6 +122,8 @@ namespace
     }
 }
 
+cro::Image Social::userIcon;
+
 void Social::awardXP(std::int32_t amount, std::int32_t reason)
 {
     if (Achievements::getActive())

@@ -408,6 +408,7 @@ bool GolfGame::initialise()
         cro::Logger::log("No suitable host addresses were found", cro::Logger::Type::Error, cro::Logger::Output::All);
         return false;
     }
+    Social::userIcon = cropAvatarImage("assets/workshop/profile_template.png");
 #endif
 
     parseCredits();

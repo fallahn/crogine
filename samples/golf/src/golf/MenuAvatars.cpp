@@ -1816,6 +1816,8 @@ void MenuState::updateLobbyAvatars()
                     else if (iconImage.getPixelData())
                     {
                         iconTexture.loadFromImage(iconImage);
+                        auto dims = iconImage.getSize();
+                        iconScale = glm::vec2(Social::IconSize) / glm::vec2(dims);
                         hasIcon = true;
                     }
 
@@ -1824,7 +1826,6 @@ void MenuState::updateLobbyAvatars()
                         simpleQuad.setTexture(iconTexture);
                         simpleQuad.setScale(iconScale);
                         simpleQuad.setPosition({ (i % 2) * Social::IconSize, textureSize.y + ((i/2) * Social::IconSize) });
-                        //simpleQuad.setColour(cro::Colour(std::uint8_t(255), 255 - (i * 31), i * 31));
                         simpleQuad.setColour(cro::Colour::White);
                         simpleQuad.draw();
                     }

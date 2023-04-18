@@ -45,6 +45,9 @@ source distribution.
 
 using namespace cro;
 
+//TODO this *shouldn't* be a construction parameter
+//it should be passed to loadFrom*() each time...
+//removing it is going to be a massive pita
 Image::Image(bool flipOnLoad)
     : m_format  (ImageFormat::None),
     m_flipped   (false),
@@ -105,7 +108,7 @@ bool Image::loadFromFile(const std::string& filePath)
     auto* img = stbi_load_from_callbacks(&io.stb_cbs, &io, &w, &h, &fmt, 0);
     if (img)
     {
-        m_flipped = !m_flipOnLoad;// true;
+        m_flipped = !m_flipOnLoad;
 
         ImageFormat::Type format = ImageFormat::A;
         switch (fmt)
