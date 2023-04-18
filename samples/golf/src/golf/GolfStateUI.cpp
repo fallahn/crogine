@@ -3060,7 +3060,7 @@ void GolfState::buildTrophyScene()
             //if (Social::isAvailable()) //always do this in case the player profile has an avatar
             {
                 entity = m_uiScene.createEntity();
-                entity.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, bounds.height, 0.1f });
+                entity.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, bounds.height - 8.f, 0.1f });
                 entity.addComponent<cro::Drawable2D>();
                 entity.addComponent<cro::Sprite>(m_sharedData.nameTextures[0].getTexture());
                 bounds = { 0.f, LabelTextureSize.y - (LabelIconSize.y * 4.f), LabelIconSize.x, LabelIconSize.y };

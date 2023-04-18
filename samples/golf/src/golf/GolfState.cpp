@@ -184,7 +184,6 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     m_skyScene          (context.appInstance.getMessageBus(), 512),
     m_uiScene           (context.appInstance.getMessageBus(), 1024),
     m_trophyScene       (context.appInstance.getMessageBus()),
-    m_mouseVisible      (true),
     m_inputParser       (sd, &m_gameScene),
     m_cpuGolfer         (m_inputParser, m_currentPlayer, m_collisionMesh),
     m_wantsGameState    (true),
@@ -238,18 +237,6 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
 
     shadowQuality.update(sd.hqShadows);
 
-
-    context.mainWindow.loadResources([this]() {
-        addSystems();
-        loadAssets();
-        buildTrophyScene();
-        buildScene();
-
-        createTransition();
-        cacheState(StateID::Pause);
-        });
-
-
     sd.baseState = StateID::Golf;
 
     std::int32_t humanCount = 0;
@@ -265,7 +252,8 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     //This is set when setting active player.
     Achievements::setActive(allowAchievements);
 
-
+    //do this first so scores are reset before scoreboard
+    //is first created.
     std::int32_t clientCount = 0;
     for (auto& c : sd.connectionData)
     {
@@ -284,6 +272,19 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     {
         Achievements::awardAchievement(AchievementStrings[AchievementID::BetterWithFriends]);
     }
+
+
+    context.mainWindow.loadResources([this]() {
+        addSystems();
+        loadAssets();
+        buildTrophyScene();
+        buildScene();
+
+        createTransition();
+        cacheState(StateID::Pause);
+        });
+
+
 
     //glLineWidth(1.5f);
 #ifdef CRO_DEBUG_
@@ -335,10 +336,8 @@ bool GolfState::handleEvent(const cro::Event& evt)
 
     const auto hideMouse = [&]()
     {
-        if (m_mouseVisible
-            && getStateCount() == 1)
+        if (getStateCount() == 1)
         {
-            m_mouseVisible = false; //TODO do we really need to track this?
             cro::App::getWindow().setMouseCaptured(true);
         }
     };
@@ -691,7 +690,6 @@ bool GolfState::handleEvent(const cro::Event& evt)
             && (evt.motion.state & SDL_BUTTON_RMASK) == 0)
         {
             cro::App::getWindow().setMouseCaptured(false);
-            m_mouseVisible = true;
         }
     }
     else if (evt.type == SDL_JOYAXISMOTION)
@@ -6041,6 +6039,7 @@ void GolfState::requestNextPlayer(const ActivePlayer& player)
 
 void GolfState::setCurrentPlayer(const ActivePlayer& player)
 {
+    cro::App::getWindow().setMouseCaptured(true);
     m_achievementTracker.hadBackspin = false;
     m_turnTimer.restart();
     m_idleTimer.restart();

@@ -119,8 +119,6 @@ private:
     cro::Scene m_trophyScene;
     TerrainDepthmap m_depthMap;
 
-    bool m_mouseVisible;
-
     InputParser m_inputParser;
     CPUGolfer m_cpuGolfer;
     cro::Clock m_turnTimer;
