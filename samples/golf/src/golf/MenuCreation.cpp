@@ -2210,10 +2210,10 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     cro::String str;
     if (!names.empty())
     {
-        str = "Last Round's Top Scorers: " + names[0];
+        str = "Last Round's Top Scorers: < " + names[0];
         for (auto i = 1u; i < names.size() && i < 4u; ++i)
         {
-            str += " : " + names[i];
+            str += " >< " + names[i];
         }
     }
     else

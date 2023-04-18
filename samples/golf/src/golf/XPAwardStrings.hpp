@@ -67,16 +67,16 @@ static const std::array<std::string, XPStringID::Count> XPStrings =
 {
     std::string("Nice On!"),
 
-    "Great Accuracy!",
-    "Fairway :",
+    "Great Accuracy",
+    "Fairway",
     "Drone Hit!",
-    "Course Complete : ",
-    "Long Putt!",
+    "Course Complete",
+    "Long Putt",
     "Top Chip!",
     "Backspin Skill!",
     "First Place!",
-    "Second Place : ",
-    "Third Place : ",
+    "Second Place",
+    "Third Place",
 
     "Hole In One!!",
     "Albatross (No Assist)",
@@ -84,7 +84,7 @@ static const std::array<std::string, XPStringID::Count> XPStrings =
     "Eagle (No Assist)",
     "Eagle!",
     "Birdie (No Assist)",
-    "Birdie!",
-    "Par (No Assist) : ",
-    "Par : ",
+    "Birdie",
+    "Par (No Assist)",
+    "Par",
 };
