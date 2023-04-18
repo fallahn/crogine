@@ -3906,8 +3906,15 @@ void GolfState::buildScene()
         std::uint32_t samples = m_sharedData.pixelScale ? 0 :
             m_sharedData.antialias ? m_sharedData.multisamples : 0;
 
+        cro::RenderTarget::Context ctx;
+        ctx.depthBuffer = true;
+        ctx.depthTexture = true;
+        ctx.samples = samples;
+        ctx.width = static_cast<std::uint32_t>(texSize.x);
+        ctx.height = static_cast<std::uint32_t>(texSize.y);
+
         m_sharedData.antialias =
-            m_gameSceneTexture.create(static_cast<std::uint32_t>(texSize.x), static_cast<std::uint32_t>(texSize.y), true, false, samples)
+            m_gameSceneTexture.create(ctx)
             && m_sharedData.multisamples != 0
             && !m_sharedData.pixelScale;
 

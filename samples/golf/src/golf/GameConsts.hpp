@@ -238,6 +238,7 @@ struct ShaderID final
         TreesetLeafShadow,
         BallTrail,
         FXAA,
+        Fog,
         Flag
     };
 };

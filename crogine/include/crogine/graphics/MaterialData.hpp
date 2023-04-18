@@ -56,10 +56,13 @@ namespace cro
 
         TextureID() = default;
         explicit TextureID(std::uint32_t id, bool a = false) : textureID(id), isArray(a) {}
-        explicit TextureID(const cro::Texture&);
+        explicit TextureID(const Texture&);
+        TextureID(const TextureID&) = default;
 
         TextureID& operator = (std::uint32_t id);
         TextureID& operator = (const Texture& t);
+
+        TextureID& operator = (const TextureID&) = default;
     };
 
     /*!

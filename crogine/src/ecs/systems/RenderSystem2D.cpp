@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2022
+Matt Marchant 2017 - 2023
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -250,10 +250,10 @@ void RenderSystem2D::render(Entity cameraEntity, const RenderTarget& rt)
 
                 //apply any custom uniforms
                 std::int32_t j = 1;
-                for (const auto& [uniform, value] : drawable.m_textureBindings)
+                for (const auto& [uniform, value] : drawable.m_textureIDBindings)
                 {
                     glCheck(glActiveTexture(GL_TEXTURE0 + j));
-                    glCheck(glBindTexture(GL_TEXTURE_2D, value->getGLHandle()));
+                    glCheck(glBindTexture(GL_TEXTURE_2D, value));
                     glCheck(glUniform1i(uniform, j));
                 }
                 for (auto [uniform, value] : drawable.m_floatBindings)

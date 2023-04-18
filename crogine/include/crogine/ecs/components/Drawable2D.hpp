@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2021
+Matt Marchant 2017 - 2023
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -187,7 +187,7 @@ namespace cro
         Note that these are reset if the drawable's shader is changed and
         must be re-applied if necessary
         */
-        void bindUniform(const std::string& name, const Texture& texture);
+        void bindUniform(const std::string& name, TextureID texture);
 
         void bindUniform(const std::string& name, float value);
 
@@ -305,7 +305,7 @@ namespace cro
 
         std::int32_t m_sortCriteria; //either Y or Z value depending on system sort mode
 
-        std::vector<std::pair<std::int32_t, const Texture*>> m_textureBindings;
+        std::vector<std::pair<std::int32_t, std::uint32_t>> m_textureIDBindings;
         std::vector<std::pair<std::int32_t, float>> m_floatBindings;
         std::vector<std::pair<std::int32_t, glm::vec2>> m_vec2Bindings;
         std::vector<std::pair<std::int32_t, glm::vec3>> m_vec3Bindings;
