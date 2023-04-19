@@ -50,6 +50,7 @@ source distribution.
 namespace
 {
     constexpr float SpeedReduction = 1.4f; //bar speed is dividied by this when putt assist is enabled
+    constexpr float SideSpinReduction = 0.3f; //power is reduced p * (1.f - (SideSpinReduction * abs(sideSpin)))
 
     static constexpr float RotationSpeed = 1.2f;
     static constexpr float MaxRotation = 0.36f;
@@ -655,6 +656,8 @@ InputParser::StrokeResult InputParser::getStroke(std::int32_t club, std::int32_t
     spin.x *= Clubs[club].getSideSpinMultiplier() / 2.f;
     spin.x += sideSpin;
 
+    power *= (1.f - (SideSpinReduction * std::abs(spin.x)));
+
     glm::vec3 impulse(1.f, 0.f, 0.f);
     auto rotation = glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), yaw, cro::Transform::Y_AXIS);
     rotation = glm::rotate(rotation, pitch, cro::Transform::Z_AXIS);
@@ -670,10 +673,17 @@ void InputParser::updateDistanceEstimation()
 {
     //https://www.iforce2d.net/b2dtut/projected-trajectory
 
+    //really we should be sourcing this the same as getStroke()
+    
     auto pitch = Clubs[m_currentClub].getAngle();
     auto power = Clubs[m_currentClub].getPower(0.f);
-    auto spin = getSpin() *= Clubs[m_currentClub].getTopSpinMultiplier();
+    auto spin = getSpin();
+    spin.y *= Clubs[m_currentClub].getTopSpinMultiplier();
     pitch -= (4.f * cro::Util::Const::degToRad) * spin.y;
+
+    spin.x *= Clubs[m_currentClub].getSideSpinMultiplier() / 2.f;
+
+    power *= (1.f - (SideSpinReduction * std::abs(spin.x)));
 
     glm::vec3 impulse(1.f, 0.f, 0.f);
     auto rotation = glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), pitch, cro::Transform::Z_AXIS);
