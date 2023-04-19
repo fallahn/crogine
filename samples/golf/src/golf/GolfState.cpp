@@ -1037,6 +1037,16 @@ void GolfState::handleMessage(const cro::Message& msg)
                 }
             };
             m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+            if (m_currentPlayer.terrain != TerrainID::Green
+                && m_currentPlayer.client == m_sharedData.localConnectionData.connectionID
+                && !m_sharedData.localConnectionData.playerData[m_currentPlayer.player].isCPU)
+            {
+                if (getClub() > ClubID::SevenIron)
+                {
+                    retargetMinimap(false);
+                }
+            }
         }
         break;
         case GolfEvent::BallLanded:

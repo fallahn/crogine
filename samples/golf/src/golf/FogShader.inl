@@ -56,20 +56,37 @@ R"(
 uniform sampler2D u_texture;
 uniform sampler2D u_depthTexture;
 
+uniform float u_density = 6.0;
+uniform float u_fogStart = 10.0;
+uniform float u_fogEnd = 500.0;
+
+
 VARYING_IN vec2 v_texCoord;
 VARYING_IN vec4 v_colour;
 
 OUTPUT
 
 const float ZNear = 0.1;
-const float ZFar = 320.0;
+//const float ZFar = 320.0;
+const float ZFar = 600.0;
+
+const vec4 FogColour = vec4(0.9,0.96,0.99,1.0);
+
+float fogAmount(float distance)
+{
+    //linear
+    return clamp(smoothstep(u_fogStart, u_fogEnd, distance * ZFar) * u_density, 0.0, 1.0);
+}
 
 void main()
 {
-    float z_b = TEXTURE(u_depthTexture, v_texCoord).x;
-    float z_n = 2.0 * z_b - 1.0;
-    float z_e = 2.0 * ZNear * ZFar / (ZFar + ZNear - z_n * (ZFar - ZNear));
+    vec4 colour = TEXTURE(u_texture, v_texCoord) * v_colour;
+    float depthSample = TEXTURE(u_depthTexture, v_texCoord).x;
 
-    //FRAG_OUT = TEXTURE(u_depthTexture, v_texCoord) * v_colour;
-    FRAG_OUT = vec4(vec3(z_e), 1.0) * v_colour;
+    //although this is "correct" it actually looks wrong.
+    //float d = (2.0 * ZNear * ZFar) / (ZFar + ZNear - depthSample * (ZFar - ZNear));
+    float d = (2.0 * ZNear) / (ZFar + ZNear - depthSample * (ZFar - ZNear));
+
+
+    FRAG_OUT = mix(colour, FogColour, fogAmount(d));
 })";

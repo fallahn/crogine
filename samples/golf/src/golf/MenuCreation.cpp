@@ -339,6 +339,8 @@ void MenuState::createUI()
         glCheck(glUniform2f(uID, texSize.x, texSize.y));*/
     };
     auto courseEnt = entity;
+    courseEnt.getComponent<cro::Drawable2D>().setShader(&m_resources.shaders.get(ShaderID::Fog));
+    courseEnt.getComponent<cro::Drawable2D>().bindUniform("u_depthTexture", m_backgroundTexture.getDepthTexture());
     /*m_resources.shaders.loadFromString(ShaderID::FXAA, FXAAVertex, FXAAFrag);
     auto& shader = m_resources.shaders.get(ShaderID::FXAA);
     courseEnt.getComponent<cro::Drawable2D>().setShader(&shader);*/
