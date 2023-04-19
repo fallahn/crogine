@@ -290,9 +290,6 @@ void MenuState::createUI()
     m_currentRange = Range::Custom;
     parseCourseDirectory(cro::App::getPreferencePath() + ConstVal::UserMapPath, true);
 
-    //TODO workshop path
-
-
     m_currentRange = Range::Official; //make this default
 
     if (!m_courseData.empty())
@@ -331,19 +328,11 @@ void MenuState::createUI()
         e.getComponent<cro::Sprite>().setTextureRect({ glm::vec2(0.f), texSize });
         e.getComponent<cro::Transform>().setOrigin(texSize / 2.f);
         e.getComponent<cro::Callback>().active = false;
-
-        /*auto& shader = m_resources.shaders.get(ShaderID::FXAA);
-        auto handle = shader.getGLHandle();
-        auto uID = shader.getUniformID("u_resolution");
-        glCheck(glUseProgram(handle));
-        glCheck(glUniform2f(uID, texSize.x, texSize.y));*/
     };
     auto courseEnt = entity;
     courseEnt.getComponent<cro::Drawable2D>().setShader(&m_resources.shaders.get(ShaderID::Fog));
     courseEnt.getComponent<cro::Drawable2D>().bindUniform("u_depthTexture", m_backgroundTexture.getDepthTexture());
-    /*m_resources.shaders.loadFromString(ShaderID::FXAA, FXAAVertex, FXAAFrag);
-    auto& shader = m_resources.shaders.get(ShaderID::FXAA);
-    courseEnt.getComponent<cro::Drawable2D>().setShader(&shader);*/
+
 
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();

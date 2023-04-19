@@ -81,7 +81,6 @@ source distribution.
 namespace
 {
 #include "PostProcess.inl"
-#include "FogShader.inl"
 
     //hack to map course names to achievement IDs
     const std::unordered_map < std::string, std::int32_t> ParAch =
@@ -185,17 +184,15 @@ void GolfState::buildUI()
     entity.getComponent<cro::Transform>().setOrigin(glm::vec3(bounds.width / 2.f, bounds.height / 2.f, 0.5f));
     entity.addComponent<cro::Callback>().function = resizeCallback;
 
-    //if (m_resources.shaders.loadFromString(ShaderID::Fog, FogVert, FogFrag))
-    //{
-    //    auto* shader = &m_resources.shaders.get(ShaderID::Fog);
-    //    entity.getComponent<cro::Drawable2D>().setShader(shader);
-    //    entity.getComponent<cro::Drawable2D>().bindUniform("u_depthTexture", m_gameSceneTexture.getDepthTexture());
+    auto* shader = &m_resources.shaders.get(ShaderID::Fog);
+    entity.getComponent<cro::Drawable2D>().setShader(shader);
+    entity.getComponent<cro::Drawable2D>().bindUniform("u_depthTexture", m_gameSceneTexture.getDepthTexture());
+    
+    for (auto cam : m_cameras)
+    {
+        cam.getComponent<TargetInfo>().postProcess = shader;
+    }
 
-    //    for (auto cam : m_cameras)
-    //    {
-    //        cam.getComponent<TargetInfo>().postProcess = shader;
-    //    }
-    //}
 
     auto courseEnt = entity;
     m_courseEnt = courseEnt;

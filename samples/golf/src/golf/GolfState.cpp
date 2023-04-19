@@ -132,6 +132,7 @@ namespace
 #include "ShadowMapping.inl"
 #include "TreeShader.inl"
 #include "BeaconShader.inl"
+#include "FogShader.inl"
 #include "PostProcess.inl"
 #include "ShaderIncludes.inl"
 
@@ -175,6 +176,15 @@ namespace
     constexpr float MaxPuttRotation = 0.4f;// 0.24f;
 
     bool recordCam = false;
+
+    struct Uniform final
+    {
+        std::int32_t id = -1;
+        float value = 0.f;
+    };
+    Uniform fogDensity;
+    Uniform fogStart;
+    Uniform fogEnd;
 }
 
 GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, SharedStateData& sd)
@@ -293,6 +303,35 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     registerDebugWindows();
 #endif
     cro::App::getInstance().resetFrameTime();
+
+    registerWindow([&]()
+        {
+            if (ImGui::Begin("buns"))
+            {
+                
+                if (ImGui::SliderFloat("Density", &fogDensity.value, 0.f, 10.f))
+                {
+                    glUseProgram(m_resources.shaders.get(ShaderID::Fog).getGLHandle());
+                    glUniform1f(fogDensity.id, fogDensity.value);
+                }
+
+                if (ImGui::SliderFloat("Start", &fogStart.value, 0.f, 50.f))
+                {
+                    glUseProgram(m_resources.shaders.get(ShaderID::Fog).getGLHandle());
+                    glUniform1f(fogStart.id, fogStart.value);
+                }
+
+                if (ImGui::SliderFloat("End", &fogEnd.value, 200.f, 320.f))
+                {
+                    glUseProgram(m_resources.shaders.get(ShaderID::Fog).getGLHandle());
+                    glUniform1f(fogEnd.id, fogEnd.value);
+                }
+
+                /*auto size = glm::vec2(m_gameSceneTexture.getSize()) / 4.f;
+                ImGui::Image(m_gameSceneTexture.getDepthTexture(), { size.x, size.y }, { 0.f, 1.f }, { 1.f, 0.f });*/
+            }
+            ImGui::End();
+        });
 }
 
 //public
@@ -1915,6 +1954,15 @@ void GolfState::loadAssets()
     m_scaleBuffer.addShader(*shader);
     m_windBuffer.addShader(*shader);
 
+    //fog
+    m_resources.shaders.loadFromString(ShaderID::Fog, FogVert, FogFrag, "#define ZFAR 320.0\n");
+    shader = &m_resources.shaders.get(ShaderID::Fog);
+    fogDensity.id = shader->getUniformID("u_density");
+    fogDensity.value = 6.f;
+    fogStart.id = shader->getUniformID("u_fogStart");
+    fogStart.value = 10.f;
+    fogEnd.id = shader->getUniformID("u_fogEnd");
+    fogEnd.value = 320.f;
 
     //wireframe
     m_resources.shaders.loadFromString(ShaderID::Wireframe, WireframeVertex, WireframeFragment);
