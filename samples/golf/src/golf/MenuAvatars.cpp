@@ -1811,12 +1811,14 @@ void MenuState::updateLobbyAvatars()
                         iconScale = glm::vec2(Social::IconSize) / glm::vec2(dims);
                         iconTexture.create(dims.x, dims.y);
                         iconTexture.update(m_sharedData.localConnectionData.playerData[i].mugshotData.data(), false);
-                        
+                        iconTexture.setSmooth(true);
+
                         hasIcon = true;
                     }
                     else if (iconImage.getPixelData())
                     {
                         iconTexture.loadFromImage(iconImage);
+                        iconTexture.setSmooth(true);
                         auto dims = iconImage.getSize();
                         iconScale = glm::vec2(Social::IconSize) / glm::vec2(dims);
                         hasIcon = true;
