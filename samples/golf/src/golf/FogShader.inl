@@ -62,8 +62,8 @@ const float ZFar = ZFAR;
 uniform sampler2D u_texture;
 uniform sampler2D u_depthTexture;
 
-uniform float u_density = 10.0;
-uniform float u_fogStart = 10.0;
+uniform float u_density = 0.0;
+uniform float u_fogStart = 0.0;
 uniform float u_fogEnd = ZFAR;
 
 VARYING_IN vec2 v_texCoord;

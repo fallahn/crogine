@@ -229,7 +229,7 @@ void GolfState::createWeather(std::int32_t weatherType)
     else
     {
         m_resources.shaders.loadFromString(ShaderID::Weather, WeatherVertex, RainFragment);
-        weatherColour = SkyTop;
+        weatherColour = SkyTop;// .getVec4() / 4.f;
         blendMode = cro::Material::BlendMode::Alpha;
     }
     auto& shader = m_resources.shaders.get(ShaderID::Weather);
@@ -237,6 +237,7 @@ void GolfState::createWeather(std::int32_t weatherType)
     auto material = m_resources.materials.get(materialID);
     material.setProperty("u_colour", weatherColour);
     material.blendMode = blendMode;
+    //material.enableDepthTest = true;
 
     constexpr glm::vec3 Offset(AreaEnd[0] * -1.5f, 0.f, AreaEnd[2] * -1.5f);
     for (auto y = 0; y < GridY; ++y)

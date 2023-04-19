@@ -304,34 +304,34 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
 #endif
     cro::App::getInstance().resetFrameTime();
 
-    registerWindow([&]()
-        {
-            if (ImGui::Begin("buns"))
-            {
-                
-                if (ImGui::SliderFloat("Density", &fogDensity.value, 0.f, 10.f))
-                {
-                    glUseProgram(m_resources.shaders.get(ShaderID::Fog).getGLHandle());
-                    glUniform1f(fogDensity.id, fogDensity.value);
-                }
+    //registerWindow([&]()
+    //    {
+    //        if (ImGui::Begin("buns"))
+    //        {
+    //            
+    //            if (ImGui::SliderFloat("Density", &fogDensity.value, 0.f, 10.f))
+    //            {
+    //                glUseProgram(m_resources.shaders.get(ShaderID::Fog).getGLHandle());
+    //                glUniform1f(fogDensity.id, fogDensity.value);
+    //            }
 
-                if (ImGui::SliderFloat("Start", &fogStart.value, 0.f, 50.f))
-                {
-                    glUseProgram(m_resources.shaders.get(ShaderID::Fog).getGLHandle());
-                    glUniform1f(fogStart.id, fogStart.value);
-                }
+    //            if (ImGui::SliderFloat("Start", &fogStart.value, 0.f, 50.f))
+    //            {
+    //                glUseProgram(m_resources.shaders.get(ShaderID::Fog).getGLHandle());
+    //                glUniform1f(fogStart.id, fogStart.value);
+    //            }
 
-                if (ImGui::SliderFloat("End", &fogEnd.value, 200.f, 320.f))
-                {
-                    glUseProgram(m_resources.shaders.get(ShaderID::Fog).getGLHandle());
-                    glUniform1f(fogEnd.id, fogEnd.value);
-                }
+    //            if (ImGui::SliderFloat("End", &fogEnd.value, 200.f, 320.f))
+    //            {
+    //                glUseProgram(m_resources.shaders.get(ShaderID::Fog).getGLHandle());
+    //                glUniform1f(fogEnd.id, fogEnd.value);
+    //            }
 
-                /*auto size = glm::vec2(m_gameSceneTexture.getSize()) / 4.f;
-                ImGui::Image(m_gameSceneTexture.getDepthTexture(), { size.x, size.y }, { 0.f, 1.f }, { 1.f, 0.f });*/
-            }
-            ImGui::End();
-        });
+    //            /*auto size = glm::vec2(m_gameSceneTexture.getSize()) / 4.f;
+    //            ImGui::Image(m_gameSceneTexture.getDepthTexture(), { size.x, size.y }, { 0.f, 1.f }, { 1.f, 0.f });*/
+    //        }
+    //        ImGui::End();
+    //    });
 }
 
 //public
@@ -1958,9 +1958,9 @@ void GolfState::loadAssets()
     m_resources.shaders.loadFromString(ShaderID::Fog, FogVert, FogFrag, "#define ZFAR 320.0\n");
     shader = &m_resources.shaders.get(ShaderID::Fog);
     fogDensity.id = shader->getUniformID("u_density");
-    fogDensity.value = 6.f;
+    fogDensity.value = 1.f;
     fogStart.id = shader->getUniformID("u_fogStart");
-    fogStart.value = 10.f;
+    fogStart.value = 0.f;
     fogEnd.id = shader->getUniformID("u_fogEnd");
     fogEnd.value = 320.f;
 
@@ -4701,9 +4701,9 @@ void GolfState::createDrone()
         };
 
         m_drone.getComponent<cro::Callback>().getUserData<DroneCallbackData>().target = targetEnt;
-        m_cameras[CameraID::Sky].getComponent<TargetInfo>().postProcess = nullptr;
+        m_cameras[CameraID::Sky].getComponent<TargetInfo>().postProcess = &m_resources.shaders.get(ShaderID::Fog);
     }
-    m_cameras[CameraID::Drone].getComponent<TargetInfo>().postProcess = nullptr;
+    m_cameras[CameraID::Drone].getComponent<TargetInfo>().postProcess = &m_resources.shaders.get(ShaderID::Fog);
 }
 
 void GolfState::spawnBall(const ActorInfo& info)

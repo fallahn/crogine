@@ -69,6 +69,11 @@ void Drawable2D::setTexture(const Texture* texture)
 
 void Drawable2D::setShader(Shader* shader)
 {
+    if (shader == m_shader)
+    {
+        return;
+    }
+
     m_shader = shader;
     m_customShader = (shader != nullptr);
     m_applyDefaultShader = !m_customShader;
