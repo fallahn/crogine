@@ -1278,60 +1278,57 @@ void GolfState::showCountdown(std::uint8_t seconds)
     {
         Achievements::incrementStat(StatStrings[StatID::TotalRounds]);
 
-        if (m_holeData.size() == 18) //set to ALL - which ought to be 18
+        if (m_holeData.size() == 18)
         {
             Achievements::incrementStat(m_sharedData.mapDirectory);
             Achievements::setAvgStat(m_sharedData.mapDirectory, m_playTime.asSeconds(), 1.f);
 
             //if we're stroke play see if we get the achievement
             //for coming in under par
-            //if (m_sharedData.scoreType == ScoreType::Stroke)
+            for (const auto& p : m_sharedData.connectionData[m_sharedData.localConnectionData.connectionID].playerData)
             {
-                for (const auto& p : m_sharedData.connectionData[m_sharedData.localConnectionData.connectionID].playerData)
+                if (!p.isCPU)
                 {
-                    if (!p.isCPU)
+                    if (m_sharedData.scoreType == ScoreType::Stroke
+                        && p.parScore <= 0)
                     {
-                        if (m_sharedData.scoreType == ScoreType::Stroke
-                            && p.parScore <= 0)
+                        //course specific
+                        if (ParAch.count(m_sharedData.mapDirectory) != 0)
                         {
-                            //course specific
-                            if (ParAch.count(m_sharedData.mapDirectory) != 0)
-                            {
-                                auto id = ParAch.at(m_sharedData.mapDirectory);
-                                Achievements::awardAchievement(AchievementStrings[id]);
-                            }
-
-                            //any course
-                            if (p.parScore < -17)
-                            {
-                                Achievements::awardAchievement(AchievementStrings[AchievementID::RoadToSuccess]);
-                            }
+                            auto id = ParAch.at(m_sharedData.mapDirectory);
+                            Achievements::awardAchievement(AchievementStrings[id]);
                         }
 
-                        if (m_achievementTracker.alwaysOnTheCourse)
+                        //any course
+                        if (p.parScore < -17)
                         {
-                            Achievements::awardAchievement(AchievementStrings[AchievementID::ConsistencyIsKey]);
+                            Achievements::awardAchievement(AchievementStrings[AchievementID::RoadToSuccess]);
                         }
+                    }
 
-                        if (m_achievementTracker.noHolesOverPar)
-                        {
-                            Achievements::awardAchievement(AchievementStrings[AchievementID::NoMistake]);
-                        }
+                    if (m_achievementTracker.alwaysOnTheCourse)
+                    {
+                        Achievements::awardAchievement(AchievementStrings[AchievementID::ConsistencyIsKey]);
+                    }
 
-                        if (m_achievementTracker.noGimmeUsed)
-                        {
-                            Achievements::awardAchievement(AchievementStrings[AchievementID::NeverGiveUp]);
-                        }
+                    if (m_achievementTracker.noHolesOverPar)
+                    {
+                        Achievements::awardAchievement(AchievementStrings[AchievementID::NoMistake]);
+                    }
 
-                        if (m_achievementTracker.underTwoPutts)
-                        {
-                            Achievements::awardAchievement(AchievementStrings[AchievementID::ThreesACrowd]);
-                        }
+                    if (m_achievementTracker.noGimmeUsed)
+                    {
+                        Achievements::awardAchievement(AchievementStrings[AchievementID::NeverGiveUp]);
+                    }
 
-                        if (m_achievementTracker.twoShotsSpare)
-                        {
-                            Achievements::awardAchievement(AchievementStrings[AchievementID::GreensInRegulation]);
-                        }
+                    if (m_achievementTracker.underTwoPutts)
+                    {
+                        Achievements::awardAchievement(AchievementStrings[AchievementID::ThreesACrowd]);
+                    }
+
+                    if (m_achievementTracker.twoShotsSpare)
+                    {
+                        Achievements::awardAchievement(AchievementStrings[AchievementID::GreensInRegulation]);
                     }
                 }
             }

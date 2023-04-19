@@ -143,49 +143,49 @@ void InputParser::handleEvent(const cro::Event& evt)
             if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::Up])
             {
                 m_inputFlags |= InputFlag::Up;
-                cro::App::getWindow().setMouseCaptured(!m_isCPU);
+                //cro::App::getWindow().setMouseCaptured(!m_isCPU);
             }
             else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::Left])
             {
                 m_inputFlags |= InputFlag::Left;
-                cro::App::getWindow().setMouseCaptured(!m_isCPU);
+                //cro::App::getWindow().setMouseCaptured(!m_isCPU);
             }
             else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::Right])
             {
                 m_inputFlags |= InputFlag::Right;
-                cro::App::getWindow().setMouseCaptured(!m_isCPU);
+                //cro::App::getWindow().setMouseCaptured(!m_isCPU);
             }
             else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::Down])
             {
                 m_inputFlags |= InputFlag::Down;
-                cro::App::getWindow().setMouseCaptured(!m_isCPU);
+                //cro::App::getWindow().setMouseCaptured(!m_isCPU);
             }
             else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::Action])
             {
                 m_inputFlags |= InputFlag::Action;
-                cro::App::getWindow().setMouseCaptured(!m_isCPU);
+                //cro::App::getWindow().setMouseCaptured(!m_isCPU);
             }
             else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::NextClub])
             {
                 m_inputFlags |= InputFlag::NextClub;
-                cro::App::getWindow().setMouseCaptured(!m_isCPU);
+                //cro::App::getWindow().setMouseCaptured(!m_isCPU);
             }
             else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::PrevClub])
             {
                 m_inputFlags |= InputFlag::PrevClub;
-                cro::App::getWindow().setMouseCaptured(!m_isCPU);
+                //cro::App::getWindow().setMouseCaptured(!m_isCPU);
             }
             else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::CancelShot])
             {
                 m_inputFlags |= InputFlag::Cancel;
-                cro::App::getWindow().setMouseCaptured(!m_isCPU);
+                //cro::App::getWindow().setMouseCaptured(!m_isCPU);
             }
             else if (evt.key.keysym.sym == m_inputBinding.keys[InputBinding::SpinMenu])
             {
                 if (m_state != State::Drone)
                 {
                     m_inputFlags |= InputFlag::SpinMenu;
-                    cro::App::getWindow().setMouseCaptured(!m_isCPU);
+                    //cro::App::getWindow().setMouseCaptured(!m_isCPU);
                 }
             }
             else if (evt.key.keysym.sym == SDLK_1)

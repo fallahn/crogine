@@ -5076,6 +5076,11 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
             std::uint16_t holeInfo = evt.packet.as<std::uint16_t>();
             std::uint8_t hole = (holeInfo & 0xff00) >> 8;
             m_holeData[hole].par = (holeInfo & 0x00ff);
+
+            if (hole == m_currentHole)
+            {
+                updateScoreboard();
+            }
         }
             break;
         case PacketID::Emote:
@@ -5204,12 +5209,15 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
                         msg->position = m_holeData[m_currentHole].pin;
                     }
 
-                    if (m_currentHole == 17)
+                    if (m_currentHole == m_holeData.size() - 1)
                     {
                         //just completed the course
-                        Achievements::incrementStat(StatStrings[StatID::HolesPlayed]);
-                        Achievements::awardAchievement(AchievementStrings[AchievementID::JoinTheClub]);
-                        Social::awardXP(XPValues[XPID::CompleteCourse], XPStringID::CourseComplete);
+                        if (m_currentHole == 17) //full round
+                        {
+                            Achievements::incrementStat(StatStrings[StatID::HolesPlayed]);
+                            Achievements::awardAchievement(AchievementStrings[AchievementID::JoinTheClub]);
+                        }
+                        Social::awardXP(XPValues[XPID::CompleteCourse] / (18 / m_holeData.size()), XPStringID::CourseComplete);
                     }
 
                     //check putt distance / if this was in fact a putt
@@ -5232,6 +5240,10 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
                         {
                             Achievements::awardAchievement(AchievementStrings[AchievementID::SpinClass]);
                             Social::awardXP(XPValues[XPID::Special] * 2, XPStringID::BackSpinSkill);
+                        }
+                        else if (m_achievementTracker.hadTopspin)
+                        {
+                            Social::awardXP(XPValues[XPID::Special] * 2, XPStringID::TopSpinSkill);
                         }
                     }
                 }
@@ -6048,6 +6060,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
 {
     cro::App::getWindow().setMouseCaptured(true);
     m_achievementTracker.hadBackspin = false;
+    m_achievementTracker.hadTopspin = false;
     m_turnTimer.restart();
     m_idleTimer.restart();
     m_playTimer.restart();
@@ -6610,6 +6623,7 @@ void GolfState::hitBall()
     m_inputParser.setActive(false, m_currentPlayer.terrain);
     m_restoreInput = false;
     m_achievementTracker.hadBackspin = (spin.y < 0);
+    m_achievementTracker.hadTopspin = (spin.y > 0);
 
     //increase the local stroke count so that the UI is updated
     //the server will set the actual value

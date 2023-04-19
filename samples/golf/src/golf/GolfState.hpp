@@ -412,7 +412,8 @@ private:
     struct AchievementTracker final
     {
         bool hadFoul = false; //tracks 'boomerang' stat
-        bool hadBackspin = false; //tracks 'spin class'
+        bool hadBackspin = false; //tracks 'spin class' and xp award
+        bool hadTopspin = false; //tracks XP award
 
         bool noHolesOverPar = true; //no mistake
         bool noGimmeUsed = true; //never give you up
