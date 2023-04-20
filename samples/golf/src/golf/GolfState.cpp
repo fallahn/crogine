@@ -1090,6 +1090,11 @@ void GolfState::handleMessage(const cro::Message& msg)
                         || data.travelDistance > 10000.f)
                     {
                         m_activeAvatar->model.getComponent<cro::Skeleton>().play(m_activeAvatar->animationIDs[AnimationID::Celebrate], 1.f, 1.2f);
+
+                        if (data.pinDistance < 0.5f)
+                        {
+                            Social::awardXP(XPValues[XPID::Special], XPStringID::NiceChip);
+                        }
                     }
                     else if (data.travelDistance < 9.f)
                     {
