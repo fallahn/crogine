@@ -49,6 +49,12 @@ struct CameraID final
     };
 };
 
+struct PostProcess final
+{
+    cro::Shader* shader = nullptr;
+    std::vector<std::pair<std::string, cro::TextureID>> uniforms;
+};
+
 //used to set the camera target
 struct TargetInfo final
 {
@@ -64,7 +70,7 @@ struct TargetInfo final
     glm::vec3 finalLookAtOffset = glm::vec3(0.f); //allow moving back by any offset
 
     cro::Entity waterPlane;
-    cro::Shader* postProcess = nullptr;
+    PostProcess* postProcess = nullptr;
 };
 
 struct CameraFollower final

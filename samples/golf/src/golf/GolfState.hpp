@@ -149,6 +149,16 @@ private:
         float targetFade = 2.f;
     }m_resolutionUpdate;
 
+    struct PostID final
+    {
+        enum
+        {
+            Noise, Fog,
+            Count
+        };
+    };
+    std::array<PostProcess, PostID::Count> m_postProcesses = {};
+
     cro::Image m_currentMap; 
     float m_holeToModelRatio;
     std::vector<HoleData> m_holeData;

@@ -885,7 +885,7 @@ void GolfState::handleMessage(const cro::Message& msg)
                     m_courseEnt.getComponent<cro::Drawable2D>().setShader(shader);
                     for (auto& cam : m_cameras)
                     {
-                        cam.getComponent<TargetInfo>().postProcess = shader;
+                        cam.getComponent<TargetInfo>().postProcess = &m_postProcesses[PostID::Noise];
                     }
 
                     auto entity = m_uiScene.createEntity();
@@ -1173,8 +1173,8 @@ void GolfState::handleMessage(const cro::Message& msg)
             m_gameScene.destroyEntity(m_drone);
             m_drone = {};
 
-            m_cameras[CameraID::Sky].getComponent<TargetInfo>().postProcess = &m_resources.shaders.get(ShaderID::Noise);
-            m_cameras[CameraID::Drone].getComponent<TargetInfo>().postProcess = &m_resources.shaders.get(ShaderID::Noise);
+            m_cameras[CameraID::Sky].getComponent<TargetInfo>().postProcess = &m_postProcesses[PostID::Noise];
+            m_cameras[CameraID::Drone].getComponent<TargetInfo>().postProcess = &m_postProcesses[PostID::Noise];
 
             if (m_currentCamera == CameraID::Sky
                 || m_currentCamera == CameraID::Drone) //although you shouldn't be able to switch to this with the ball moving
@@ -1954,9 +1954,13 @@ void GolfState::loadAssets()
     m_scaleBuffer.addShader(*shader);
     m_windBuffer.addShader(*shader);
 
+    m_postProcesses[PostID::Noise].shader = shader;
+
     //fog
     m_resources.shaders.loadFromString(ShaderID::Fog, FogVert, FogFrag, "#define ZFAR 320.0\n");
     shader = &m_resources.shaders.get(ShaderID::Fog);
+    m_postProcesses[PostID::Fog].shader = shader;
+    //depth uniform is set after creating the UI once we know the render texture is created
     fogDensity.id = shader->getUniformID("u_density");
     fogDensity.value = 1.f;
     fogStart.id = shader->getUniformID("u_fogStart");
@@ -4701,9 +4705,9 @@ void GolfState::createDrone()
         };
 
         m_drone.getComponent<cro::Callback>().getUserData<DroneCallbackData>().target = targetEnt;
-        m_cameras[CameraID::Sky].getComponent<TargetInfo>().postProcess = &m_resources.shaders.get(ShaderID::Fog);
+        m_cameras[CameraID::Sky].getComponent<TargetInfo>().postProcess = &m_postProcesses[PostID::Fog];
     }
-    m_cameras[CameraID::Drone].getComponent<TargetInfo>().postProcess = &m_resources.shaders.get(ShaderID::Fog);
+    m_cameras[CameraID::Drone].getComponent<TargetInfo>().postProcess = &m_postProcesses[PostID::Fog];
 }
 
 void GolfState::spawnBall(const ActorInfo& info)
@@ -7367,7 +7371,12 @@ void GolfState::setActiveCamera(std::int32_t camID)
             m_cameras[m_currentCamera].getComponent<CameraFollower>().reset(m_cameras[m_currentCamera]);
             m_cameras[m_currentCamera].getComponent<CameraFollower>().currentFollowTime = CameraFollower::MinFollowTime;
         }
-        m_courseEnt.getComponent<cro::Drawable2D>().setShader(m_cameras[m_currentCamera].getComponent<TargetInfo>().postProcess);
+        auto* post = m_cameras[m_currentCamera].getComponent<TargetInfo>().postProcess;
+        m_courseEnt.getComponent<cro::Drawable2D>().setShader(post->shader);
+        for (const auto& [name, val] : post->uniforms)
+        {
+            m_courseEnt.getComponent<cro::Drawable2D>().bindUniform(name, val);
+        }
     }
 }
 

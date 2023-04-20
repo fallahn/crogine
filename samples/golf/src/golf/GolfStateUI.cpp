@@ -187,10 +187,11 @@ void GolfState::buildUI()
     auto* shader = &m_resources.shaders.get(ShaderID::Fog);
     entity.getComponent<cro::Drawable2D>().setShader(shader);
     entity.getComponent<cro::Drawable2D>().bindUniform("u_depthTexture", m_gameSceneTexture.getDepthTexture());
+    m_postProcesses[PostID::Fog].uniforms.emplace_back(std::make_pair("u_depthTexture", m_gameSceneTexture.getDepthTexture()));
     
     for (auto cam : m_cameras)
     {
-        cam.getComponent<TargetInfo>().postProcess = shader;
+        cam.getComponent<TargetInfo>().postProcess = &m_postProcesses[PostID::Fog];
     }
 
 
