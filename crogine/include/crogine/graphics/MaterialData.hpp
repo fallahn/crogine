@@ -119,7 +119,8 @@ namespace cro
             None,
             Alpha,
             Multiply,
-            Additive
+            Additive,
+            Custom
         };
 
         struct CRO_EXPORT_API Property final
@@ -299,6 +300,18 @@ namespace cro
             */
             void setShader(const Shader&);
 
+            /*!
+            \brief Allows setting parameters for custom blend mode.
+            Set the blendMode property to BlendMode::Custom to use these
+            values. Must be explicitly initialised to sane values.
+            */
+            struct BlendData final
+            {
+                std::int32_t writeDepthMask = 0; //! < GLboolean
+                std::uint32_t equation = 0; //! < GLenum passed to glBlendEquation()
+                std::array<std::uint32_t, 2u> blendFunc = { 0,0 }; //! < GLenum pair passed to glBlendFunc()
+                std::vector<std::uint32_t> enableProperties; //! < list of GLenum passed to glEnable()
+            }blendData;
 
             /*
             Here be dragons! Don't modify these variables as they are configured

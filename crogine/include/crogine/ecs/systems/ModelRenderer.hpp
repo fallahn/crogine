@@ -104,7 +104,7 @@ namespace cro
         friend class DeferredRenderSystem;
         //these funcs are shared with above system - should probably be free funcs somewhere?
         static void applyProperties(const Material::Data&, const Model&, const Scene&, const Camera&);
-        static void applyBlendMode(Material::BlendMode);
+        static void applyBlendMode(const Material::Data&);
     };
 
     //just to keep it a bit more inline with the new render system naming

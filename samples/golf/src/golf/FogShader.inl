@@ -86,13 +86,22 @@ float fogAmount(float distance)
 
 void main()
 {
+    float desatAmount = clamp(u_density, 0.0, 1.0);
+
     vec4 colour = TEXTURE(u_texture, v_texCoord) * v_colour;
+    vec3 desat = vec3(dot(colour.rgb, vec3(0.299, 0.587, 0.114)));
+    vec3 dimmed = colour.rgb * (1.0 - (0.3 * desatAmount));
+    colour.rgb = mix(dimmed, desat, desatAmount * 0.06);
+
     float depthSample = TEXTURE(u_depthTexture, v_texCoord).r;
 
     //although this is "correct" it actually looks wrong.
     //float d = (2.0 * ZNear * ZFar) / (ZFar + ZNear - depthSample * (ZFar - ZNear));
 
     float d = (2.0 * ZNear) / (ZFar + ZNear - depthSample * (ZFar - ZNear));
-    //FRAG_OUT = mix(colour, vec4(d,d,d,1.0), u_density / 10.0);
     FRAG_OUT = mix(colour, FogColour, fogAmount(d));
+
+
+
+    //FRAG_OUT = mix(colour, vec4(d,d,d,1.0), u_density / 10.0);
 })";

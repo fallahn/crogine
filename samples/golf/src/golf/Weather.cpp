@@ -143,11 +143,15 @@ namespace
     void main()
     {
         vec4 colour = v_colour * u_colour;
+        
+        //if alpha blended
         colour.rgb += (1.0 - colour.a) * colour.rgb;
-
         colour.a *= ease(gl_PointCoord.y) * 0.4;
-        colour.a *= step(0.49, gl_PointCoord.x);
-        colour.a *= 1.0 - step(0.51, gl_PointCoord.x);
+
+        float crop = step(0.49, gl_PointCoord.x);
+        crop *= 1.0 - step(0.51, gl_PointCoord.x);
+
+        if(crop < 0.2) discard;
 
         FRAG_OUT = colour;
     }
@@ -183,26 +187,8 @@ void GolfState::createWeather(std::int32_t weatherType)
         verts.push_back(1.f);
         verts.push_back(1.f);
 
-        /*
-        Problem with 2 verts is that when the first wraps
-        around it stretches to the other still at the top.
-        */
-
-        /*verts.push_back(points[i][0]);
-        verts.push_back(points[i][1] + 0.1f);
-        verts.push_back(points[i][2]);
-        verts.push_back(0.5f);
-        verts.push_back(0.f);
-        verts.push_back(1.f);
-        verts.push_back(1.f);*/
-
         indices.push_back(i);
     }
-
-    //for (auto i = 0u; i < points.size() * 2u; ++i)
-    //{
-    //    indices.push_back(i);
-    //}
 
     meshData->vertexCount = points.size();
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData->vbo));
@@ -230,14 +216,18 @@ void GolfState::createWeather(std::int32_t weatherType)
     {
         m_resources.shaders.loadFromString(ShaderID::Weather, WeatherVertex, RainFragment);
         weatherColour = SkyTop;// .getVec4() / 4.f;
-        blendMode = cro::Material::BlendMode::Alpha;
+        blendMode = cro::Material::BlendMode::Custom;
     }
     auto& shader = m_resources.shaders.get(ShaderID::Weather);
     auto materialID = m_resources.materials.add(shader);
     auto material = m_resources.materials.get(materialID);
     material.setProperty("u_colour", weatherColour);
     material.blendMode = blendMode;
-    //material.enableDepthTest = true;
+    //ignored by snow as it has a different blendmode, but that's fine
+    material.blendData.blendFunc = { GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA };
+    material.blendData.enableProperties = { GL_BLEND, GL_DEPTH_TEST };
+    material.blendData.equation = GL_FUNC_ADD;
+    material.blendData.writeDepthMask = GL_TRUE;
 
     constexpr glm::vec3 Offset(AreaEnd[0] * -1.5f, 0.f, AreaEnd[2] * -1.5f);
     for (auto y = 0; y < GridY; ++y)

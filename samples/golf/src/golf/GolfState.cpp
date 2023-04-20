@@ -304,34 +304,34 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
 #endif
     cro::App::getInstance().resetFrameTime();
 
-    //registerWindow([&]()
-    //    {
-    //        if (ImGui::Begin("buns"))
-    //        {
-    //            
-    //            if (ImGui::SliderFloat("Density", &fogDensity.value, 0.f, 10.f))
-    //            {
-    //                glUseProgram(m_resources.shaders.get(ShaderID::Fog).getGLHandle());
-    //                glUniform1f(fogDensity.id, fogDensity.value);
-    //            }
+    registerWindow([&]()
+        {
+            if (ImGui::Begin("buns"))
+            {
+                
+                if (ImGui::SliderFloat("Density", &fogDensity.value, 0.f, 10.f))
+                {
+                    glUseProgram(m_resources.shaders.get(ShaderID::Fog).getGLHandle());
+                    glUniform1f(fogDensity.id, fogDensity.value);
+                }
 
-    //            if (ImGui::SliderFloat("Start", &fogStart.value, 0.f, 50.f))
-    //            {
-    //                glUseProgram(m_resources.shaders.get(ShaderID::Fog).getGLHandle());
-    //                glUniform1f(fogStart.id, fogStart.value);
-    //            }
+                if (ImGui::SliderFloat("Start", &fogStart.value, 0.f, 50.f))
+                {
+                    glUseProgram(m_resources.shaders.get(ShaderID::Fog).getGLHandle());
+                    glUniform1f(fogStart.id, fogStart.value);
+                }
 
-    //            if (ImGui::SliderFloat("End", &fogEnd.value, 200.f, 320.f))
-    //            {
-    //                glUseProgram(m_resources.shaders.get(ShaderID::Fog).getGLHandle());
-    //                glUniform1f(fogEnd.id, fogEnd.value);
-    //            }
+                if (ImGui::SliderFloat("End", &fogEnd.value, 200.f, 320.f))
+                {
+                    glUseProgram(m_resources.shaders.get(ShaderID::Fog).getGLHandle());
+                    glUniform1f(fogEnd.id, fogEnd.value);
+                }
 
-    //            /*auto size = glm::vec2(m_gameSceneTexture.getSize()) / 4.f;
-    //            ImGui::Image(m_gameSceneTexture.getDepthTexture(), { size.x, size.y }, { 0.f, 1.f }, { 1.f, 0.f });*/
-    //        }
-    //        ImGui::End();
-    //    });
+                /*auto size = glm::vec2(m_gameSceneTexture.getSize()) / 4.f;
+                ImGui::Image(m_gameSceneTexture.getDepthTexture(), { size.x, size.y }, { 0.f, 1.f }, { 1.f, 0.f });*/
+            }
+            ImGui::End();
+        });
 }
 
 //public
@@ -4311,7 +4311,7 @@ void GolfState::buildScene()
     }
     //else
     //{
-    //    createWeather(WeatherType::Rain);
+        createWeather(WeatherType::Rain);
     //}
 }
 
