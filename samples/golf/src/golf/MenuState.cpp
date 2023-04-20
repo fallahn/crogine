@@ -104,15 +104,6 @@ namespace
 
     ImVec4 C(1.f, 1.f, 1.f, 1.f);
     float strength = 0.f;
-
-    struct Uniform final
-    {
-        std::int32_t id = -1;
-        float value = 0.f;
-    };
-    Uniform fogDensity;
-    Uniform fogStart;
-    Uniform fogEnd;
 }
 
 MainMenuContext::MainMenuContext(MenuState* state)
@@ -364,37 +355,19 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     Social::setStatus(Social::InfoID::Menu, { "Main Menu" });
     Social::setGroup(0);
 
-    registerWindow([&]()
-        {
-            if (ImGui::Begin("buns"))
-            {
-                /*auto size = glm::vec2(LabelTextureSize);
-                for (const auto& t : m_sharedData.nameTextures)
-                {
-                    ImGui::Image(t.getTexture(), { size.x, size.y }, { 0.f, 1.f }, { 1.f, 0.f });
-                    ImGui::SameLine();
-                }*/
-                
-                if (ImGui::SliderFloat("Density", &fogDensity.value, 0.f, 10.f))
-                {
-                    glUseProgram(m_resources.shaders.get(ShaderID::Fog).getGLHandle());
-                    glUniform1f(fogDensity.id, fogDensity.value);
-                }
-
-                if (ImGui::SliderFloat("Start", &fogStart.value, 0.f, 50.f))
-                {
-                    glUseProgram(m_resources.shaders.get(ShaderID::Fog).getGLHandle());
-                    glUniform1f(fogStart.id, fogStart.value);
-                }
-
-                if (ImGui::SliderFloat("End", &fogEnd.value, 200.f, 320.f))
-                {
-                    glUseProgram(m_resources.shaders.get(ShaderID::Fog).getGLHandle());
-                    glUniform1f(fogEnd.id, fogEnd.value);
-                }
-            }
-            ImGui::End();
-        });
+    //registerWindow([&]()
+    //    {
+    //        if (ImGui::Begin("buns"))
+    //        {
+    //            auto size = glm::vec2(LabelTextureSize);
+    //            for (const auto& t : m_sharedData.nameTextures)
+    //            {
+    //                ImGui::Image(t.getTexture(), { size.x, size.y }, { 0.f, 1.f }, { 1.f, 0.f });
+    //                ImGui::SameLine();
+    //            }
+    //        }
+    //        ImGui::End();
+    //    });
 
 #ifdef CRO_DEBUG_
 
@@ -987,7 +960,7 @@ void MenuState::loadAssets()
     m_resources.shaders.loadFromString(ShaderID::Billboard, BillboardVertexShader, BillboardFragmentShader);
     m_resources.shaders.loadFromString(ShaderID::BillboardShadow, BillboardVertexShader, ShadowFragment, "#define SHADOW_MAPPING\n#define ALPHA_CLIP\n");
     m_resources.shaders.loadFromString(ShaderID::Trophy, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n#define REFLECTIONS\n" + wobble);
-    m_resources.shaders.loadFromString(ShaderID::Fog, FogVert, FogFrag, "#define ZFAR 600.0\n");
+    //m_resources.shaders.loadFromString(ShaderID::Fog, FogVert, FogFrag, "#define ZFAR 600.0\n");
     
 
     auto* shader = &m_resources.shaders.get(ShaderID::Cel);
@@ -1035,14 +1008,6 @@ void MenuState::loadAssets()
     m_materialIDs[MaterialID::Trophy] = m_resources.materials.add(*shader);
     m_resources.materials.get(m_materialIDs[MaterialID::Trophy]).setProperty("u_reflectMap", cro::CubemapID(m_reflectionMap.getGLHandle()));
     m_profileData.profileMaterials.ballReflection = m_resources.materials.get(m_materialIDs[MaterialID::Trophy]);
-
-    shader = &m_resources.shaders.get(ShaderID::Fog);
-    fogDensity.id = shader->getUniformID("u_density");
-    fogDensity.value = 0.f;
-    fogStart.id = shader->getUniformID("u_fogStart");
-    fogStart.value = 0.f;
-    fogEnd.id = shader->getUniformID("u_fogEnd");
-    fogEnd.value = 320.f;
 
 
     //load the billboard rects from a sprite sheet and convert to templates

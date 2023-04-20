@@ -176,15 +176,6 @@ namespace
     constexpr float MaxPuttRotation = 0.4f;// 0.24f;
 
     bool recordCam = false;
-
-    struct Uniform final
-    {
-        std::int32_t id = -1;
-        float value = 0.f;
-    };
-    Uniform fogDensity;
-    Uniform fogStart;
-    Uniform fogEnd;
 }
 
 GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, SharedStateData& sd)
@@ -242,6 +233,26 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
             else
             {
                 cro::Console::print("noclip OFF");
+            }
+        });
+
+    registerCommand("fog", [&](const std::string& param)
+        {
+            if (param.empty())
+            {
+                cro::Console::print("Usage: fog <0.0 - 1.0>");
+            }
+            else
+            {
+                float f = 0.f;
+                std::stringstream ss;
+                ss << param;
+                ss >> f;
+
+                auto& shader = m_resources.shaders.get(ShaderID::Fog);
+                auto uniform = shader.getUniformID("u_density");
+                glUseProgram(shader.getGLHandle());
+                glUniform1f(uniform, std::clamp(f, 0.f, 1.f));
             }
         });
 
@@ -303,35 +314,6 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     registerDebugWindows();
 #endif
     cro::App::getInstance().resetFrameTime();
-
-    registerWindow([&]()
-        {
-            if (ImGui::Begin("buns"))
-            {
-                
-                if (ImGui::SliderFloat("Density", &fogDensity.value, 0.f, 10.f))
-                {
-                    glUseProgram(m_resources.shaders.get(ShaderID::Fog).getGLHandle());
-                    glUniform1f(fogDensity.id, fogDensity.value);
-                }
-
-                if (ImGui::SliderFloat("Start", &fogStart.value, 0.f, 50.f))
-                {
-                    glUseProgram(m_resources.shaders.get(ShaderID::Fog).getGLHandle());
-                    glUniform1f(fogStart.id, fogStart.value);
-                }
-
-                if (ImGui::SliderFloat("End", &fogEnd.value, 200.f, 320.f))
-                {
-                    glUseProgram(m_resources.shaders.get(ShaderID::Fog).getGLHandle());
-                    glUniform1f(fogEnd.id, fogEnd.value);
-                }
-
-                /*auto size = glm::vec2(m_gameSceneTexture.getSize()) / 4.f;
-                ImGui::Image(m_gameSceneTexture.getDepthTexture(), { size.x, size.y }, { 0.f, 1.f }, { 1.f, 0.f });*/
-            }
-            ImGui::End();
-        });
 }
 
 //public
@@ -1961,12 +1943,6 @@ void GolfState::loadAssets()
     shader = &m_resources.shaders.get(ShaderID::Fog);
     m_postProcesses[PostID::Fog].shader = shader;
     //depth uniform is set after creating the UI once we know the render texture is created
-    fogDensity.id = shader->getUniformID("u_density");
-    fogDensity.value = 1.f;
-    fogStart.id = shader->getUniformID("u_fogStart");
-    fogStart.value = 0.f;
-    fogEnd.id = shader->getUniformID("u_fogEnd");
-    fogEnd.value = 320.f;
 
     //wireframe
     m_resources.shaders.loadFromString(ShaderID::Wireframe, WireframeVertex, WireframeFragment);

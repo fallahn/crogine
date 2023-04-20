@@ -330,8 +330,6 @@ void MenuState::createUI()
         e.getComponent<cro::Callback>().active = false;
     };
     auto courseEnt = entity;
-    courseEnt.getComponent<cro::Drawable2D>().setShader(&m_resources.shaders.get(ShaderID::Fog));
-    courseEnt.getComponent<cro::Drawable2D>().bindUniform("u_depthTexture", m_backgroundTexture.getDepthTexture());
 
 
     entity = m_uiScene.createEntity();
