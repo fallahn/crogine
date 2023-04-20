@@ -334,6 +334,15 @@ void Social::readDrivingStats(std::array<float, 3u>& topScores)
     }
 }
 
+void Social::courseComplete(const std::string& mapName, std::uint8_t holeCount)
+{
+    //holecount is 0,1,2 for all, front, back 9
+    if (holeCount == 0)
+    {
+        Achievements::incrementStat(mapName);
+    }
+}
+
 std::int32_t Social::getUnlockStatus(UnlockType type)
 {
     switch (type)

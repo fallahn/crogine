@@ -1278,7 +1278,6 @@ void GolfState::showCountdown(std::uint8_t seconds)
 
         if (m_holeData.size() == 18)
         {
-            Achievements::incrementStat(m_sharedData.mapDirectory);
             Achievements::setAvgStat(m_sharedData.mapDirectory, m_playTime.asSeconds(), 1.f);
 
             //if we're stroke play see if we get the achievement
@@ -1331,6 +1330,8 @@ void GolfState::showCountdown(std::uint8_t seconds)
                 }
             }
         }
+
+        Social::courseComplete(m_sharedData.mapDirectory, m_sharedData.holeCount);
     }
 
     auto trophyCount = std::min(std::size_t(3), m_statBoardScores.size());
