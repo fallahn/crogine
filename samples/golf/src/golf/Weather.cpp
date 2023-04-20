@@ -146,12 +146,12 @@ namespace
         
         //if alpha blended
         colour.rgb += (1.0 - colour.a) * colour.rgb;
-        colour.a *= ease(gl_PointCoord.y) * 0.4;
+        colour.a *= 0.5 + (0.5 * ease(gl_PointCoord.y));
 
-        float crop = step(0.49, gl_PointCoord.x);
-        crop *= 1.0 - step(0.51, gl_PointCoord.x);
+        float crop = step(0.495, gl_PointCoord.x);
+        crop *= 1.0 - step(0.505, gl_PointCoord.x);
 
-        if(crop < 0.2) discard;
+        if(crop < 0.05) discard;
 
         FRAG_OUT = colour;
     }
@@ -177,7 +177,8 @@ void GolfState::createWeather(std::int32_t weatherType)
     auto* meshData = &m_resources.meshes.getMesh(meshID);
     std::vector<float> verts;
     std::vector<std::uint32_t> indices;
-    for (auto i = 0u; i < points.size(); ++i)
+    std::uint32_t stride = weatherType == WeatherType::Snow ? 1 : 2;
+    for (auto i = 0u; i < points.size(); i += stride)
     {
         verts.push_back(points[i][0]);
         verts.push_back(points[i][1]);
@@ -190,7 +191,7 @@ void GolfState::createWeather(std::int32_t weatherType)
         indices.push_back(i);
     }
 
-    meshData->vertexCount = points.size();
+    meshData->vertexCount = points.size() / stride;
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData->vbo));
     glCheck(glBufferData(GL_ARRAY_BUFFER, meshData->vertexSize * meshData->vertexCount, verts.data(), GL_STATIC_DRAW));
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
@@ -215,7 +216,7 @@ void GolfState::createWeather(std::int32_t weatherType)
     else
     {
         m_resources.shaders.loadFromString(ShaderID::Weather, WeatherVertex, RainFragment);
-        weatherColour = SkyTop;// .getVec4() / 4.f;
+        weatherColour = cro::Colour(0.86f, 0.87f, 0.873f);
         blendMode = cro::Material::BlendMode::Custom;
     }
     auto& shader = m_resources.shaders.get(ShaderID::Weather);

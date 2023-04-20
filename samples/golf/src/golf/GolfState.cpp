@@ -4311,7 +4311,7 @@ void GolfState::buildScene()
     }
     //else
     //{
-        createWeather(WeatherType::Rain);
+    //    createWeather(WeatherType::Rain);
     //}
 }
 
