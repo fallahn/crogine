@@ -2204,6 +2204,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
         {
             str += " >< " + names[i];
         }
+        str += " >";
     }
     else
     {
