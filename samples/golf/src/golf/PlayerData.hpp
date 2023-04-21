@@ -39,13 +39,23 @@ source distribution.
 #include <crogine/graphics/MaterialData.hpp>
 #include <crogine/detail/glm/vec3.hpp>
 
+#include <crogine/util/Random.hpp>
+
 #include <array>
 #include <memory>
 
 struct PlayerData final
 {
     cro::String name;
-    std::array<std::uint8_t, pc::ColourKey::Count> avatarFlags = { 11,12,31,30,3,6 }; //indices into colours
+    std::array<std::uint8_t, pc::ColourKey::Count> avatarFlags = 
+    { 
+        std::uint8_t(cro::Util::Random::value(0u, pc::PairCounts[0] - 1)),
+        std::uint8_t(cro::Util::Random::value(0u, pc::PairCounts[1] - 1)),
+        std::uint8_t(cro::Util::Random::value(0u, pc::PairCounts[2] - 1)),
+        std::uint8_t(cro::Util::Random::value(0u, pc::PairCounts[3] - 1)),
+        std::uint8_t(cro::Util::Random::value(0u, pc::PairCounts[4] - 1)),
+        std::uint8_t(cro::Util::Random::value(0u, pc::PairCounts[5] - 1))    
+    }; //indices into colours
     std::uint32_t ballID = 0;
     std::uint32_t hairID = 0;
     std::uint32_t skinID = 0; //uid as loaded from the avatar data file
