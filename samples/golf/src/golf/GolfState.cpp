@@ -1093,7 +1093,7 @@ void GolfState::handleMessage(const cro::Message& msg)
 
                         if (data.pinDistance < 0.5f)
                         {
-                            Social::awardXP(XPValues[XPID::Special], XPStringID::NiceChip);
+                            Social::awardXP(XPValues[XPID::Special] / 2, XPStringID::NiceChip);
                         }
                     }
                     else if (data.travelDistance < 9.f)
