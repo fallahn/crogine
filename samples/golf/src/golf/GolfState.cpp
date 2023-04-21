@@ -5070,7 +5070,10 @@ void GolfState::spawnBall(const ActorInfo& info)
             e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
 
             e.getComponent<cro::Transform>().setPosition(glm::vec3(iconPos, static_cast<float>(depthOffset) / 100.f));
-            if (m_inputParser.getActive())
+            
+            const auto activePlayer = ((m_currentPlayer.client * ConstVal::MaxPlayers) + m_currentPlayer.player) + 1;
+            if (m_inputParser.getActive()
+                && activePlayer == depthOffset)
             {
                 m_miniGreenIndicatorEnt.getComponent<cro::Transform>().setPosition(glm::vec3(iconPos, 0.05f));
             }
