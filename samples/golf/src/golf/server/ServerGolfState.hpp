@@ -79,6 +79,7 @@ namespace sv
 
         void setNextPlayer(bool newHole = false);
         void setNextHole();
+        void skipCurrentTurn(std::uint8_t);
 
         bool validateMap();
         void initScene();

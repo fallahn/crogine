@@ -56,7 +56,7 @@ namespace cro
         };
 
         FloatRect area; //! < area activated by the mouse cursor, in local coords
-        bool active = false;
+        bool active = false; //! < this is not the same as enabled!!
         bool enabled = true; //! < enables or disables this input temporarily
         std::array<std::uint32_t, CallbackID::Count> callbacks{};
         std::int32_t ID = -1;
@@ -105,6 +105,8 @@ namespace cro
         std::size_t m_group = 0;
         std::size_t m_selectionIndex = 0;
         bool m_updateGroup = true; //do order sorting by default
+
+        cro::FloatRect m_worldArea; //cached by transform callback, ie dirty flag optimised
 
         friend class UISystem;
     };

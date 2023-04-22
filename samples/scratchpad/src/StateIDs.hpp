@@ -45,6 +45,7 @@ namespace States
             MeshCollision,
             Retro,
             Rolling,
+            SSAO,
             Swing,
             Voxels,
             VATs,

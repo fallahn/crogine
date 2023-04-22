@@ -54,8 +54,6 @@ namespace
         return { v.getX(), v.getY(), v.getZ() };
     }
 
-    static constexpr glm::vec3 Gravity(0.f, -9.8f, 0.f);
-
     static constexpr float MinBallDistance = HoleRadius * HoleRadius;
     static constexpr float FallRadius = Ball::Radius * 0.25f;
     static constexpr float MinFallDistance = (HoleRadius - FallRadius) * (HoleRadius - FallRadius);
@@ -139,7 +137,7 @@ BallSystem::BallSystem(cro::MessageBus& mb, bool drawDebug)
     m_holeData              (nullptr),
     m_puttFromTee           (false),
     m_gimmeRadius           (0),
-    m_predicting            (false)
+    m_processFlags          (0)
 {
     requireComponent<cro::Transform>();
     requireComponent<Ball>();
@@ -244,18 +242,25 @@ void BallSystem::runPrediction(cro::Entity entity, float accuracy)
     CRO_ASSERT(entity.hasComponent<cro::Transform>(), "");
     CRO_ASSERT(entity.hasComponent<Ball>(), "");
 
-    m_predicting = true;
+    m_processFlags = ProcessFlags::Predicting;
 
-    std::int32_t maxTries = 600;
-    predictionEvent = {};
-    do
-    {
-        //TODO this doesn't include any wind changes as it's
-        //not processed (it would affect the wind state)
-        processEntity(entity, accuracy);
-    } while (predictionEvent.type == GolfBallEvent::None && --maxTries);
+    fastProcess(entity, accuracy);
 
-    m_predicting = false;
+    m_processFlags = 0;
+}
+
+void BallSystem::fastForward(cro::Entity entity)
+{
+    CRO_ASSERT(entity.hasComponent<cro::Transform>(), "");
+    CRO_ASSERT(entity.hasComponent<Ball>(), "");
+
+    m_processFlags = ProcessFlags::FastForward;
+    fastProcess(entity, 1.f/60.f);
+    m_processFlags = 0;
+
+    //still have to raise the final event...
+    auto* msg = postMessage<GolfBallEvent>(sv::MessageID::GolfMessage);
+    *msg = predictionEvent;
 }
 
 #ifdef CRO_DEBUG_
@@ -274,9 +279,19 @@ void BallSystem::setDebugFlags(std::int32_t flags)
 #endif
 
 //private
+void BallSystem::fastProcess(cro::Entity entity, float dt)
+{
+    std::int32_t maxTries = 600;
+    predictionEvent = {};
+    do
+    {
+        processEntity(entity, dt);
+    } while (predictionEvent.type == GolfBallEvent::None && --maxTries);
+}
+
 GolfBallEvent* BallSystem::postEvent() const
 {
-    if (m_predicting)
+    if (m_processFlags != 0)
     {
         //TODO we might actually need to queue this if there
         //are more than one per prediction frame...
@@ -809,7 +824,7 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
 
 
             //changed this so we force update wind change when hole changes.
-            if (!m_predicting)
+            if (m_processFlags != ProcessFlags::Predicting)
             {
                 m_windStrengthTarget = std::min(cro::Util::Random::value(0.97f, 1.025f) * m_windStrengthTarget, 1.f);
             }
@@ -939,8 +954,9 @@ void BallSystem::doCollision(cro::Entity entity)
             msg->type = CollisionEvent::Begin;
 
             //this might raise an achievement for example
-            //so don't do it during CPU prediction
-            if (!m_predicting)
+            //so don't do it during CPU prediction, or fast forwarding, cos that kinda cheats
+            //or at least means the player misses out on seeing it happen
+            if (m_processFlags == 0)
             {
                 auto* msg2 = postMessage<TriggerEvent>(sv::MessageID::TriggerMessage);
                 msg2->triggerID = terrainResult.trigger;
@@ -1020,7 +1036,7 @@ void BallSystem::updateWind()
         m_windStrengthSrc = m_windStrength;
 
         m_currentWindInterpTime = 0.f;
-        m_windInterpTime = static_cast<float>(cro::Util::Random::value(50, 75)) / 10.f;
+        m_windInterpTime = static_cast<float>(cro::Util::Random::value(10, 25)) / 10.f;
     };
 
     //update wind direction
@@ -1108,7 +1124,7 @@ bool BallSystem::updateCollisionMesh(const std::string& modelPath)
     std::int32_t colourOffset = 0;
     for (auto i = 0; i < cro::Mesh::Attribute::Colour; ++i)
     {
-        colourOffset += meshData.attributes[i];
+        colourOffset += static_cast<std::int32_t>(meshData.attributes[i]);
     }
 
     //we have to create a specific object for each sub mesh
@@ -1119,8 +1135,8 @@ bool BallSystem::updateCollisionMesh(const std::string& modelPath)
     {
         btIndexedMesh groundMesh;
         groundMesh.m_vertexBase = reinterpret_cast<std::uint8_t*>(m_vertexData.data());
-        groundMesh.m_numVertices = meshData.vertexCount;
-        groundMesh.m_vertexStride = meshData.vertexSize;
+        groundMesh.m_numVertices = static_cast<int>(meshData.vertexCount);
+        groundMesh.m_vertexStride = static_cast<int>(meshData.vertexSize);
 
         groundMesh.m_numTriangles = meshData.indexData[i].indexCount / 3;
         groundMesh.m_triangleIndexBase = reinterpret_cast<std::uint8_t*>(m_indexData[i].data());

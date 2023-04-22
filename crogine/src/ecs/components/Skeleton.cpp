@@ -152,6 +152,17 @@ Skeleton::State Skeleton::getState() const
     return m_state;
 }
 
+std::size_t Skeleton::getAnimationIndex(const std::string& name) const
+{
+    if (auto result = std::find_if(m_animations.begin(), m_animations.end(), 
+        [&name](const SkeletalAnim& a) {return a.name == name;}); result != m_animations.end())
+    {
+        return std::distance(m_animations.begin(), result);
+    }
+
+    return 0;
+}
+
 void Skeleton::addAnimation(const SkeletalAnim& anim)
 {
     CRO_ASSERT(m_frameCount >= (anim.startFrame + anim.frameCount), "animation is out of frame range");

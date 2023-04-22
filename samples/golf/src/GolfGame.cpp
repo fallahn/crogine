@@ -45,6 +45,7 @@ source distribution.
 #include "golf/PlaylistState.hpp"
 #include "golf/CreditsState.hpp"
 #include "golf/UnlockState.hpp"
+#include "golf/ProfileState.hpp"
 #include "golf/EventOverlay.hpp"
 #include "golf/MenuConsts.hpp"
 #include "golf/GameConsts.hpp"
@@ -80,6 +81,8 @@ source distribution.
 #include <crogine/util/Network.hpp>
 #include <crogine/util/Random.hpp>
 #include <crogine/util/String.hpp>
+
+#include <filesystem>
 
 namespace
 {
@@ -153,24 +156,25 @@ GolfGame::GolfGame()
     setApplicationStrings("Trederia", "golf");
 
     m_stateStack.registerState<SplashState>(StateID::SplashScreen, m_sharedData);
-    m_stateStack.registerState<KeyboardState>(StateID::Keyboard);
-    m_stateStack.registerState<MenuState>(StateID::Menu, m_sharedData);
+    m_stateStack.registerState<KeyboardState>(StateID::Keyboard, m_sharedData);
+    m_stateStack.registerState<NewsState>(StateID::News, m_sharedData);
+    m_stateStack.registerState<MenuState>(StateID::Menu, m_sharedData, m_profileData);
+    m_stateStack.registerState<ProfileState>(StateID::Profile, m_sharedData, m_profileData);
+    m_stateStack.registerState<OptionsState>(StateID::Options, m_sharedData);
+    m_stateStack.registerState<CreditsState>(StateID::Credits, m_sharedData, credits);
+    m_stateStack.registerState<UnlockState>(StateID::Unlock, m_sharedData);
     m_stateStack.registerState<GolfState>(StateID::Golf, m_sharedData);
     m_stateStack.registerState<ErrorState>(StateID::Error, m_sharedData);
-    m_stateStack.registerState<OptionsState>(StateID::Options, m_sharedData);
     m_stateStack.registerState<PauseState>(StateID::Pause, m_sharedData);
-    m_stateStack.registerState<NewsState>(StateID::News, m_sharedData);
     m_stateStack.registerState<TutorialState>(StateID::Tutorial, m_sharedData);
     m_stateStack.registerState<PracticeState>(StateID::Practice, m_sharedData);
-    m_stateStack.registerState<DrivingState>(StateID::DrivingRange, m_sharedData);
-    m_stateStack.registerState<ClubhouseState>(StateID::Clubhouse, m_sharedData);
+    m_stateStack.registerState<DrivingState>(StateID::DrivingRange, m_sharedData, m_profileData);
+    m_stateStack.registerState<ClubhouseState>(StateID::Clubhouse, m_sharedData, m_profileData);
     m_stateStack.registerState<BilliardsState>(StateID::Billiards, m_sharedData);
     m_stateStack.registerState<TrophyState>(StateID::Trophy, m_sharedData);
     m_stateStack.registerState<PlaylistState>(StateID::Playlist, m_sharedData);
     m_stateStack.registerState<BushState>(StateID::Bush, m_sharedData);
     m_stateStack.registerState<MessageOverlayState>(StateID::MessageOverlay, m_sharedData);
-    m_stateStack.registerState<UnlockState>(StateID::Unlock, m_sharedData);
-    m_stateStack.registerState<CreditsState>(StateID::Credits, m_sharedData, credits);
     m_stateStack.registerState<EventOverlayState>(StateID::EventOverlay);
 
 #ifdef USE_WORKSHOP
@@ -404,6 +408,7 @@ bool GolfGame::initialise()
         cro::Logger::log("No suitable host addresses were found", cro::Logger::Type::Error, cro::Logger::Output::All);
         return false;
     }
+    Social::userIcon = cropAvatarImage("assets/workshop/profile_template.png");
 #endif
 
     parseCredits();
@@ -626,6 +631,7 @@ bool GolfGame::initialise()
     s.loadFromFile("assets/golf/sprites/controller_buttons.spt", m_sharedData.sharedResources->textures);
     s.loadFromFile("assets/golf/sprites/unlocks.spt", m_sharedData.sharedResources->textures);
     s.loadFromFile("assets/golf/sprites/tutorial.spt", m_sharedData.sharedResources->textures);
+    s.loadFromFile("assets/sprites/osk.spt", m_sharedData.sharedResources->textures);
 
     cro::ModelDefinition md(*m_sharedData.sharedResources);
     md.loadFromFile("assets/golf/models/trophies/trophy01.cmt");
@@ -690,7 +696,7 @@ bool GolfGame::initialise()
     auto shaderRes = glm::vec2(windowSize);
     glCheck(glUseProgram(m_postShader->getGLHandle()));
     glCheck(glUniform2f(m_postShader->getUniformID("u_resolution"), shaderRes.x, shaderRes.y));
-    float scale = std::floor(shaderRes.y / calcVPSize().y);
+    float scale = getViewScale(shaderRes);
     glCheck(glUniform2f(m_postShader->getUniformID("u_scale"), scale, scale));
     m_uniformIDs[UniformID::Time] = m_postShader->getUniformID("u_time");
     
@@ -970,81 +976,134 @@ void GolfGame::savePreferences()
 
 void GolfGame::loadAvatars()
 {
+    //if we're updating attept to read existing profiles and convert them
+    std::vector<PlayerData> oldProfiles;
+
     auto path = cro::App::getPreferencePath() + "avatars.cfg";
     cro::ConfigFile cfg;
-    if (cfg.loadFromFile(path, false))
+    if (cro::FileSystem::fileExists(path) &&
+        cfg.loadFromFile(path, false))
     {
-        std::uint32_t i = 0;
-
         const auto& objects = cfg.getObjects();
         for (const auto& obj : objects)
         {
-            if (obj.getName() == "avatar"
-                && i < m_sharedData.localConnectionData.MaxPlayers)
+            if (obj.getName() == "avatar")
             {
+                auto& profile = oldProfiles.emplace_back();
+
                 const auto& props = obj.getProperties();
                 for (const auto& prop : props)
                 {
                     const auto& name = prop.getName();
                     if (name == "name")
                     {
-                        m_sharedData.localConnectionData.playerData[i].name = prop.getValue<cro::String>();
+                        profile.name = prop.getValue<cro::String>();
                     }
                     else if (name == "ball_id")
                     {
                         auto id = prop.getValue<std::uint32_t>();
-                        m_sharedData.localConnectionData.playerData[i].ballID = id;
+                        profile.ballID = id;
                     }
                     else if (name == "hair_id")
                     {
                         auto id = prop.getValue<std::uint32_t>();
-                        m_sharedData.localConnectionData.playerData[i].hairID = id;
+                        profile.hairID = id;
                     }
                     else if (name == "skin_id")
                     {
                         auto id = prop.getValue<std::uint32_t>();
-                        m_sharedData.localConnectionData.playerData[i].skinID = id;
+                        profile.skinID = id;
                     }
                     else if (name == "flipped")
                     {
-                        m_sharedData.localConnectionData.playerData[i].flipped = prop.getValue<bool>();
+                        profile.flipped = prop.getValue<bool>();
                     }
 
                     else if (name == "flags0")
                     {
-                        auto flag = prop.getValue<std::int32_t>() % pc::PairCounts[0];
-                        m_sharedData.localConnectionData.playerData[i].avatarFlags[0] = static_cast<std::uint8_t>(flag);
+                        auto flag = prop.getValue<std::int32_t>() % pc::PairCounts[3];
+
+                        profile.avatarFlags[4] = static_cast<std::uint8_t>(pc::KeyMap[flag][0]);
+                        profile.avatarFlags[5] = static_cast<std::uint8_t>(pc::KeyMap[flag][1]);
                     }
                     else if (name == "flags1")
                     {
-                        auto flag = prop.getValue<std::int32_t>() % pc::PairCounts[1];
-                        m_sharedData.localConnectionData.playerData[i].avatarFlags[1] = static_cast<std::uint8_t>(flag);
+                        auto flag = prop.getValue<std::int32_t>() % pc::PairCounts[2];
+                        
+                        profile.avatarFlags[2] = static_cast<std::uint8_t>(pc::KeyMap[flag][0]);
+                        profile.avatarFlags[3] = static_cast<std::uint8_t>(pc::KeyMap[flag][1]);
                     }
                     else if (name == "flags2")
                     {
-                        auto flag = prop.getValue<std::int32_t>() % pc::PairCounts[2];
-                        m_sharedData.localConnectionData.playerData[i].avatarFlags[2] = static_cast<std::uint8_t>(flag);
+                        auto flag = prop.getValue<std::int32_t>() % pc::PairCounts[1];
+                        profile.avatarFlags[1] = static_cast<std::uint8_t>(pc::KeyMap[flag][0]);
                     }
                     else if (name == "flags3")
                     {
-                        auto flag = prop.getValue<std::int32_t>() % pc::PairCounts[3];
-                        m_sharedData.localConnectionData.playerData[i].avatarFlags[3] = static_cast<std::uint8_t>(flag);
+                        auto flag = prop.getValue<std::int32_t>() % pc::PairCounts[0];
+                        profile.avatarFlags[0] = static_cast<std::uint8_t>(pc::KeyMap[flag][0]);
                     }
 
                     else if (name == "cpu")
                     {
-                        m_sharedData.localConnectionData.playerData[i].isCPU = prop.getValue<bool>();
+                        profile.isCPU = prop.getValue<bool>();
                     }
                 }
-
-                i++;
             }
         }
     }
 
-    if (m_sharedData.localConnectionData.playerData[0].name.empty())
+    for (const auto& p : oldProfiles)
     {
-        m_sharedData.localConnectionData.playerData[0].name = RandomNames[cro::Util::Random::value(0u, RandomNames.size() - 1)];
+        p.saveProfile();
+    }
+
+    if (cro::FileSystem::fileExists(path))
+    {
+        //delete the old file
+        std::error_code ec;
+        std::filesystem::remove({ path }, ec);
+    }
+
+    //parse profile dir and load each profile
+    path = Social::getUserContentPath(Social::UserContent::Profile);
+    if (!cro::FileSystem::directoryExists(path))
+    {
+        cro::FileSystem::createDirectory(path);
+    }
+
+    auto profileDirs = cro::FileSystem::listDirectories(path);
+    std::int32_t i = 0;
+    for (const auto& dir : profileDirs)
+    {
+        auto profilePath = path + dir + "/";
+        auto files = cro::FileSystem::listFiles(profilePath);
+        files.erase(std::remove_if(files.begin(), files.end(), 
+            [](const std::string& f)
+            {
+                return cro::FileSystem::getFileExtension(f) != ".pfl";
+            }), files.end());
+
+        if (!files.empty())
+        {
+            PlayerData pd;
+            if (pd.loadProfile(profilePath + files[0], files[0].substr(0, files[0].size() - 4)))
+            {
+                m_profileData.playerProfiles.push_back(pd);
+                i++;
+            }
+        }
+
+        //arbitrary limit on profile loading.
+        if (i == ConstVal::MaxProfiles)
+        {
+            break;
+        }
+    }
+
+    if (!m_profileData.playerProfiles.empty())
+    {
+        m_sharedData.localConnectionData.playerData[0] = m_profileData.playerProfiles[0];
     }
 }
 
@@ -1061,7 +1120,7 @@ void GolfGame::recreatePostProcess()
     glCheck(glUseProgram(m_postShader->getGLHandle()));
     glCheck(glUniform2f(m_postShader->getUniformID("u_resolution"), shaderRes.x, shaderRes.y));
 
-    float scale = std::floor(shaderRes.y / calcVPSize().y);
+    float scale = getViewScale(shaderRes);
     glCheck(glUniform2f(m_postShader->getUniformID("u_scale"), scale, scale));
 }
 

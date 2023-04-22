@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2022
+Matt Marchant 2021 - 2023
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -189,8 +189,6 @@ void PracticeState::buildScene()
     m_audioEnts[AudioID::Back] = m_scene.createEntity();
     m_audioEnts[AudioID::Back].addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("back");
 
-    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
-
     struct RootCallbackData final
     {
         enum
@@ -227,6 +225,9 @@ void PracticeState::buildScene()
             if (currTime == 0)
             {
                 requestStackPop();            
+
+                state = RootCallbackData::FadeIn;
+
             }
             break;
         }
@@ -298,7 +299,6 @@ void PracticeState::buildScene()
         {
             e.getComponent<cro::Text>().setFillColour(TextGoldColour);
             e.getComponent<cro::AudioEmitter>().play();
-            e.getComponent<cro::Callback>().setUserData<float>(0.f);
             e.getComponent<cro::Callback>().active = true;
         });
     auto unselectedID = uiSystem.addCallback(
@@ -326,8 +326,7 @@ void PracticeState::buildScene()
         e.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectedID;
         e.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectedID;
 
-        e.addComponent<cro::Callback>().setUserData<float>(0.f);
-        e.getComponent<cro::Callback>().function = MenuTextCallback();
+        e.addComponent<cro::Callback>().function = MenuTextCallback();
 
         parent.getComponent<cro::Transform>().addChild(e.getComponent<cro::Transform>());
         return e;
@@ -514,9 +513,7 @@ void PracticeState::buildScene()
         cam.setOrthographic(0.f, size.x, 0.f, size.y, -2.f, 10.f);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
 
-        auto vpSize = calcVPSize();
-
-        m_viewScale = glm::vec2(std::floor(size.y / vpSize.y));
+        m_viewScale = glm::vec2(getViewScale());
         rootNode.getComponent<cro::Transform>().setScale(m_viewScale);
         rootNode.getComponent<cro::Transform>().setPosition(size / 2.f);
 

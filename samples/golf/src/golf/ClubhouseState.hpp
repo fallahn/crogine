@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022
+Matt Marchant 2022 - 2023
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -79,10 +79,11 @@ struct TableClientData final : public TableData
 };
 
 struct SharedStateData;
+struct SharedProfileData;
 class ClubhouseState final : public cro::State, public cro::GuiClient
 {
 public:
-    ClubhouseState(cro::StateStack&, cro::State::Context, SharedStateData&);
+    ClubhouseState(cro::StateStack&, cro::State::Context, SharedStateData&, const SharedProfileData&);
 
     cro::StateID getStateID() const override { return StateID::Clubhouse; }
 
@@ -110,6 +111,7 @@ public:
 private:
 
     SharedStateData& m_sharedData;
+    const SharedProfileData& m_profileData;
     MatchMaking m_matchMaking;
 
     cro::Scene m_backgroundScene;

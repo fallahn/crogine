@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2022
+Matt Marchant 2021 - 2023
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -45,6 +45,10 @@ namespace ConstVal
     static constexpr float MinSwingputThresh = 0.2f;
     static constexpr float MaxSwingputThresh = 10.f;
 
+    static constexpr std::int32_t MaxProfiles = 64;
+    static constexpr std::uint32_t MaxBalls = 64u;
+    static constexpr std::uint32_t MaxHeadwear = 64u;
+
     //max string vars for name/limiting packet size
     static constexpr std::size_t MaxStringChars = 24;
     static constexpr std::size_t MaxNameChars = 12;
@@ -53,9 +57,11 @@ namespace ConstVal
     static constexpr std::size_t MaxStringDataSize = MaxStringChars * sizeof(std::uint32_t);
 
     static constexpr std::uint16_t GamePort = 16002;
-    static constexpr std::size_t MaxClients = 4;
-    static constexpr uint8_t NetChannelReliable = 1;
-    static constexpr uint8_t NetChannelStrings = 2;
+    static constexpr std::uint8_t MaxClients = 4;
+    static constexpr std::uint8_t MaxPlayers = 8;
+    static constexpr std::uint8_t NullValue = 255;
+    static constexpr std::uint8_t NetChannelReliable = 1;
+    static constexpr std::uint8_t NetChannelStrings = 2;
 
     static constexpr std::uint16_t PositionCompressionRange = 4;
     static constexpr std::uint16_t VelocityCompressionRange = 8;

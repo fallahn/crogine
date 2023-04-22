@@ -41,6 +41,7 @@ source distribution.
 #include "rolling/RollingState.hpp"
 #include "swingput/SwingState.hpp"
 #include "animblend/AnimBlendState.hpp"
+#include "ssao/SSAOState.hpp"
 #include "LoadingScreen.hpp"
 
 #include <crogine/core/Clock.hpp>
@@ -120,9 +121,10 @@ bool MyApp::initialise()
     m_stateStack.registerState<RollingState>(States::ScratchPad::Rolling);
     m_stateStack.registerState<SwingState>(States::ScratchPad::Swing);
     m_stateStack.registerState<AnimBlendState>(States::ScratchPad::AnimBlend);
+    m_stateStack.registerState<SSAOState>(States::ScratchPad::SSAO);
 
 #ifdef CRO_DEBUG_
-    m_stateStack.pushState(States::ScratchPad::Retro);
+    m_stateStack.pushState(States::ScratchPad::SSAO);
     //m_stateStack.pushState(States::ScratchPad::MainMenu);
 #else
     m_stateStack.pushState(States::ScratchPad::MainMenu);

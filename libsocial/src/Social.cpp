@@ -29,9 +29,13 @@ source distribution.
 
 #include "Social.hpp"
 #include "Achievements.hpp"
+#include "AchievementStrings.hpp"
 
 #include <crogine/core/App.hpp>
 #include <crogine/core/ConfigFile.hpp>
+#include <crogine/core/SysTime.hpp>
+
+#include <ctime>
 
 namespace
 {
@@ -64,7 +68,8 @@ namespace
     {
         bool loaded = false;
         std::int32_t value = 0;
-        void read(const std::string& ext)
+        const std::string ext;
+        void read()
         {
             if (!loaded)
             {
@@ -72,16 +77,21 @@ namespace
                 loaded = true;
             }
         }
-        void write(const std::string& ext)
+        void write()
         {
             writeValue(value, ext);
         }
+
+        explicit StoredValue(const std::string& e) :ext(e) {}
     };
-    StoredValue experience;
-    StoredValue clubset;
-    StoredValue ballset;
-    StoredValue levelTrophies;
-    StoredValue genericUnlock;
+    StoredValue experience("exp");
+    StoredValue clubset("clb");
+    StoredValue ballset("bls");
+    StoredValue levelTrophies("lvl");
+    StoredValue genericUnlock("gnc");
+    StoredValue lastLog("llg");
+    StoredValue dayStreak("dsk");
+    StoredValue longestStreak("lsk");
 
 
     //XP curve = (level / x) ^ y
@@ -112,19 +122,22 @@ namespace
     }
 }
 
-void Social::awardXP(std::int32_t amount)
+cro::Image Social::userIcon;
+
+void Social::awardXP(std::int32_t amount, std::int32_t reason)
 {
     if (Achievements::getActive())
     {
         auto oldLevel = getLevelFromXP(experience.value);
 
         experience.value += amount;
-        experience.write("exp");
+        experience.write();
 
         //raise event to notify players
         auto* msg = cro::App::postMessage<SocialEvent>(MessageID::SocialMessage);
         msg->type = SocialEvent::XPAwarded;
         msg->level = amount;
+        msg->reason = reason;
 
         auto level = getLevelFromXP(experience.value);
         if (oldLevel < level)
@@ -138,19 +151,19 @@ void Social::awardXP(std::int32_t amount)
 
 std::int32_t Social::getXP()
 {
-    experience.read("exp");
+    experience.read();
     return experience.value;
 }
 
 std::int32_t Social::getLevel()
 {
-    experience.read("exp");
+    experience.read();
     return getLevelFromXP(experience.value);
 }
 
 Social::ProgressData Social::getLevelProgress()
 {
-    experience.read("exp");
+    experience.read();
     auto currXP = experience.value;
     auto currLevel = getLevelFromXP(currXP);
 
@@ -158,6 +171,130 @@ Social::ProgressData Social::getLevelProgress()
     auto endXP = getXPFromLevel(currLevel + 1);
 
     return ProgressData(currXP - startXP, endXP - startXP);
+}
+
+std::uint32_t Social::getCurrentStreak()
+{
+    dayStreak.read();
+    return dayStreak.value;
+}
+
+std::uint32_t Social::updateStreak()
+{
+    lastLog.read();
+    std::int32_t buff = lastLog.value;
+
+    std::uint32_t ts = static_cast<std::uint32_t>( cro::SysTime::epoch());
+
+    if (buff == 0)
+    {
+        //first time log
+        lastLog.value = static_cast<std::int32_t>(ts);
+        lastLog.write();
+        dayStreak.value = 1;
+        dayStreak.write();
+        longestStreak.value = 1;
+        longestStreak.write();
+
+        return 1;
+    }
+
+    const std::uint32_t prevTs = static_cast<std::uint32_t>(buff);
+    const auto diff = ts - prevTs;
+
+    static constexpr std::uint32_t Day = 24 * 60 * 60;
+    auto dayCount = diff / Day;
+
+    if (dayCount == 0)
+    {
+        //do a calendar check to see if it's the next day
+        std::time_t p = prevTs;
+        std::time_t c = ts;
+
+        //we have to copy the results else we just get 2 pointers to the same thing.
+        auto prevTm = *std::localtime(&p);
+        auto currTm = *std::localtime(&c);
+
+        if ((currTm.tm_yday == 1 //fudge for year wrap around. There are more elegant ways, but brain.
+            && prevTm.tm_yday == 365)
+            || (currTm.tm_yday - prevTm.tm_yday) == 1)
+        {
+            dayCount = 1;
+        }
+        else
+        {
+            //already logged in today, so return
+            return 0;
+        }
+    }
+
+
+    //this is a fresh log so store the time stamp
+    lastLog.value =  static_cast<std::int32_t>(ts);
+    lastLog.write();
+
+    //check the streak and increment or reset it
+    dayStreak.read();
+    buff = dayStreak.value;
+
+    std::uint32_t streak = static_cast<std::uint32_t>(buff);
+    if (dayCount == 1)
+    {
+        streak++;
+
+        longestStreak.read();
+        if (streak > longestStreak.value)
+        {
+            longestStreak.value = static_cast<std::int32_t>(streak);
+            longestStreak.write();
+        }
+    }
+    else
+    {
+        streak = 1;
+    }
+    dayStreak.value = static_cast<std::int32_t>(streak);
+    dayStreak.write();
+
+    auto ret = streak % 7;
+    if (ret == 0)
+    {
+        ret = 7;
+    }
+
+    switch (streak)
+    {
+    default: break;
+    case 7:
+        Achievements::awardAchievement(AchievementStrings[AchievementID::Dedicated]);
+        break;
+    case 28:
+        Achievements::awardAchievement(AchievementStrings[AchievementID::ResidentGolfer]);
+        break;
+    case 210:
+        Achievements::awardAchievement(AchievementStrings[AchievementID::MonthOfSundays]);
+        break;
+    }
+
+    return ret;
+}
+
+std::uint32_t Social::getLongestStreak()
+{
+    longestStreak.read();
+    return longestStreak.value;
+}
+
+void Social::resetProfile()
+{
+    experience.value = 0;
+    experience.write();
+
+    ballset.value = 0;
+    ballset.write();
+
+    clubset.value = 0;
+    clubset.write();
 }
 
 void Social::storeDrivingStats(const std::array<float, 3u>& topScores)
@@ -197,26 +334,35 @@ void Social::readDrivingStats(std::array<float, 3u>& topScores)
     }
 }
 
+void Social::courseComplete(const std::string& mapName, std::uint8_t holeCount)
+{
+    //holecount is 0,1,2 for all, front, back 9
+    if (holeCount == 0)
+    {
+        Achievements::incrementStat(mapName);
+    }
+}
+
 std::int32_t Social::getUnlockStatus(UnlockType type)
 {
     switch (type)
     {
     default: return 0;
     case UnlockType::Club:
-        clubset.read("clb");
+        clubset.read();
         if (clubset.value == 0)
         {
             return 3731; //default set flags
         }
         return clubset.value;
     case UnlockType::Ball:
-        ballset.read("bls");
+        ballset.read();
         return ballset.value;
     case UnlockType::Level:
-        levelTrophies.read("lvl");
+        levelTrophies.read();
         return levelTrophies.value;
     case UnlockType::Generic:
-        genericUnlock.read("gnc");
+        genericUnlock.read();
         return genericUnlock.value;
     }
 }
@@ -228,19 +374,19 @@ void Social::setUnlockStatus(UnlockType type, std::int32_t set)
     default: break;
     case UnlockType::Ball:
         ballset.value = set;
-        ballset.write("bls");
+        ballset.write();
         break;
     case UnlockType::Club:
         clubset.value = set;
-        clubset.write("clb");
+        clubset.write();
         break;
     case UnlockType::Level:
         levelTrophies.value = set;
-        levelTrophies.write("lvl");
+        levelTrophies.write();
         break;
     case UnlockType::Generic:
         genericUnlock.value = set;
-        genericUnlock.write("gnc");
+        genericUnlock.write();
         break;
     }    
 }
@@ -263,5 +409,7 @@ std::string Social::getUserContentPath(std::int32_t contentType)
         return getBaseContentPath() + "course/";
     case Social::UserContent::Hair:
         return getBaseContentPath() + "hair/";
+    case Social::UserContent::Profile:
+        return getBaseContentPath() + "profiles/";
     }
 }

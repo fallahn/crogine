@@ -100,6 +100,7 @@ namespace cro
         the entire texture will be updated.
         */
         bool update(const std::uint8_t* pixels, bool createMipMaps = false, URect area = {});
+        bool update(const std::uint16_t* pixels, bool createMipMaps = false, URect area = {});
 
         /*
         \brief Updates the texture with the information stored in the given texture
@@ -127,7 +128,7 @@ namespace cro
         void setSmooth(bool);
 
         /*!
-        \brief Returns true is texture smoothing is enabled
+        \brief Returns true if texture smoothing is enabled
         */
         bool isSmooth() const;
 
@@ -192,13 +193,12 @@ namespace cro
         glm::uvec2 m_size;
         ImageFormat::Type m_format;
         std::uint32_t m_handle;
+        std::uint32_t m_type;
         bool m_smooth;
         bool m_repeated;
         bool m_hasMipMaps;
 
-        bool isFloat(SDL_RWops* file);
-        bool loadAsFloat(SDL_RWops* file, bool createMipmaps);
-        bool loadAsByte(SDL_RWops* file, bool createMipmaps);
-        void generateMipMaps(const std::uint8_t* = nullptr, URect = {}); //TODO this shouldn't have default params, they exist because of the unused loadAsFloat func
+        bool update(const void* pixels, bool createMipMaps, URect area);
+        void generateMipMaps();
     };
 }

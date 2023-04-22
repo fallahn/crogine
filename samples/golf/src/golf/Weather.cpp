@@ -85,11 +85,16 @@ namespace
         return sin((i * PI) / 2.0);
     }
 
+    const float FallSpeed = 1.0;
+    const float WindEffect = 40.0;
 #else
     float ease(float i)
     {
-        return sqrt(1.0 - pow(i - 1.0, 2.0));
+        //return sqrt(1.0 - pow(i - 1.0, 2.0));
+        return i;
     }
+    const float FallSpeed = 16.0;
+    const float WindEffect = 10.0;
 #endif
 
     void main()
@@ -97,19 +102,19 @@ namespace
         mat4 wvp = u_projectionMatrix * u_worldViewMatrix;
         vec4 position = a_position;
 
-        float p = position.y - u_windData.w;
+        float p = position.y - (u_windData.w * FallSpeed);
         p = mod(p, SystemHeight);
         //p = ease(0.2 + ((p / SystemHeight) * 0.8));
         p = ease((p / SystemHeight));
 
         position.y  = p * SystemHeight;
 
-        position.x -= p * u_windData.x * u_windData.y * 40.0;
-        position.z -= p * u_windData.z * u_windData.y * 40.0;
+        position.x -= p * u_windData.x * u_windData.y * WindEffect;
+        position.z -= p * u_windData.z * u_windData.y * WindEffect;
 
 
         gl_Position = wvp * position;
-        gl_PointSize = u_projectionMatrix[1][1] / gl_Position.w * 10.0 * u_pixelScale;
+        gl_PointSize = u_projectionMatrix[1][1] / gl_Position.w * 10.0 * u_pixelScale * (FallSpeed);
 
         vec4 worldPos = u_worldMatrix * position;
         v_colour = a_colour;
@@ -123,6 +128,34 @@ namespace
     }
 )";
 
+    static const std::string RainFragment = R"(
+    OUTPUT
+    uniform vec4 u_colour = vec4(1.0);
+
+    VARYING_IN vec4 v_colour;
+
+    float ease(float i)
+    {
+        //return sqrt(pow(i, 2.0));
+        return pow(i, 5.0);
+    }
+
+    void main()
+    {
+        vec4 colour = v_colour * u_colour;
+        
+        //if alpha blended
+        colour.rgb += (1.0 - colour.a) * colour.rgb;
+        colour.a *= 0.5 + (0.5 * ease(gl_PointCoord.y));
+
+        float crop = step(0.495, gl_PointCoord.x);
+        crop *= 1.0 - step(0.505, gl_PointCoord.x);
+
+        if(crop < 0.05) discard;
+
+        FRAG_OUT = colour;
+    }
+)";
 
     constexpr std::array<float, 3u> AreaStart = { 0.f, 0.f, 0.f };
     constexpr std::array<float, 3u> AreaEnd = { 20.f, 80.f, 20.f };
@@ -131,7 +164,7 @@ namespace
     constexpr std::int32_t GridY = 3;
 }
 
-void GolfState::createWeather()
+void GolfState::createWeather(std::int32_t weatherType)
 {
     //cro::Clock clock;
     auto points = pd::PoissonDiskSampling(2.3f, AreaStart, AreaEnd, 30u, static_cast<std::uint32_t>(std::time(nullptr)));
@@ -144,7 +177,8 @@ void GolfState::createWeather()
     auto* meshData = &m_resources.meshes.getMesh(meshID);
     std::vector<float> verts;
     std::vector<std::uint32_t> indices;
-    for (auto i = 0u; i < points.size(); ++i)
+    std::uint32_t stride = weatherType == WeatherType::Snow ? 1 : 2;
+    for (auto i = 0u; i < points.size(); i += stride)
     {
         verts.push_back(points[i][0]);
         verts.push_back(points[i][1]);
@@ -154,28 +188,10 @@ void GolfState::createWeather()
         verts.push_back(1.f);
         verts.push_back(1.f);
 
-        /*
-        Problem with 2 verts is that when the first wraps
-        around it stretches to the other still at the top.
-        */
-
-        /*verts.push_back(points[i][0]);
-        verts.push_back(points[i][1] + 0.1f);
-        verts.push_back(points[i][2]);
-        verts.push_back(0.5f);
-        verts.push_back(0.f);
-        verts.push_back(1.f);
-        verts.push_back(1.f);*/
-
         indices.push_back(i);
     }
 
-    //for (auto i = 0u; i < points.size() * 2u; ++i)
-    //{
-    //    indices.push_back(i);
-    //}
-
-    meshData->vertexCount = points.size();
+    meshData->vertexCount = points.size() / stride;
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, meshData->vbo));
     glCheck(glBufferData(GL_ARRAY_BUFFER, meshData->vertexSize * meshData->vertexCount, verts.data(), GL_STATIC_DRAW));
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
@@ -191,12 +207,28 @@ void GolfState::createWeather()
     meshData->boundingSphere.centre = meshData->boundingBox[0] + ((meshData->boundingBox[1] - meshData->boundingBox[0]) / 2.f);
     meshData->boundingSphere.radius = glm::length((meshData->boundingBox[1] - meshData->boundingBox[0]) / 2.f);
 
-    m_resources.shaders.loadFromString(ShaderID::Weather, "#define EASE_SNOW\n" + WeatherVertex, WireframeFragment);
+    auto weatherColour = LeaderboardTextLight;
+    auto blendMode = cro::Material::BlendMode::None;
+    if (weatherType == WeatherType::Snow)
+    {
+        m_resources.shaders.loadFromString(ShaderID::Weather, WeatherVertex, WireframeFragment, "#define EASE_SNOW\n");
+    }
+    else
+    {
+        m_resources.shaders.loadFromString(ShaderID::Weather, WeatherVertex, RainFragment);
+        weatherColour = cro::Colour(0.86f, 0.87f, 0.873f);
+        blendMode = cro::Material::BlendMode::Custom;
+    }
     auto& shader = m_resources.shaders.get(ShaderID::Weather);
     auto materialID = m_resources.materials.add(shader);
     auto material = m_resources.materials.get(materialID);
-    material.setProperty("u_colour", LeaderboardTextLight);
-    //material.setProperty("u_colour", WaterColour);
+    material.setProperty("u_colour", weatherColour);
+    material.blendMode = blendMode;
+    //ignored by snow as it has a different blendmode, but that's fine
+    material.blendData.blendFunc = { GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA };
+    material.blendData.enableProperties = { GL_BLEND, GL_DEPTH_TEST };
+    material.blendData.equation = GL_FUNC_ADD;
+    material.blendData.writeDepthMask = GL_TRUE;
 
     constexpr glm::vec3 Offset(AreaEnd[0] * -1.5f, 0.f, AreaEnd[2] * -1.5f);
     for (auto y = 0; y < GridY; ++y)
@@ -255,8 +287,19 @@ void GolfState::createClouds()
 
     if (!definitions.empty())
     {
-        m_resources.shaders.loadFromString(ShaderID::Cloud, CloudOverheadVertex, CloudOverheadFragment, "#define FEATHER_EDGE\n");
+        std::string wobble;
+        if (m_sharedData.vertexSnap)
+        {
+            wobble = "#define WOBBLE\n";
+        }
+
+        m_resources.shaders.loadFromString(ShaderID::Cloud, CloudOverheadVertex, CloudOverheadFragment, "#define FEATHER_EDGE\n" + wobble);
         auto& shader = m_resources.shaders.get(ShaderID::Cloud);
+
+        if (m_sharedData.vertexSnap)
+        {
+            m_resolutionBuffer.addShader(shader);
+        }
 
         auto matID = m_resources.materials.add(shader);
         auto material = m_resources.materials.get(matID);
@@ -318,7 +361,7 @@ void GolfState::buildBow()
     glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 
     auto* submesh = &meshData->indexData[0];
-    submesh->indexCount = indices.size();
+    submesh->indexCount = static_cast<std::uint32_t>(indices.size());
     glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->ibo));
     glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh->indexCount * sizeof(std::uint32_t), indices.data(), GL_STATIC_DRAW));
     glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));

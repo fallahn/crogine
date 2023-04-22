@@ -47,6 +47,7 @@ source distribution.
 
 #include <crogine/util/Constants.hpp>
 #include <crogine/util/Network.hpp>
+#include <crogine/util/Random.hpp>
 #include <crogine/detail/glm/vec3.hpp>
 
 using namespace sv;
@@ -296,6 +297,9 @@ void GolfState::netEvent(const net::NetEvent& evt)
         switch (evt.packet.getID())
         {
         default: break;
+        case PacketID::SkipTurn:
+            skipCurrentTurn(evt.packet.as<std::uint8_t>());
+            break;
         case PacketID::CPUThink:
             m_sharedData.host.broadcastPacket(PacketID::CPUThink, evt.packet.as<std::uint8_t>(), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
             break;
@@ -876,6 +880,23 @@ void GolfState::setNextHole()
     }
 }
 
+void GolfState::skipCurrentTurn(std::uint8_t clientID)
+{
+    if (m_playerInfo[0].client == clientID)
+    {
+        switch (m_playerInfo[0].ballEntity.getComponent<Ball>().state)
+        {
+        default:
+            break;
+        case Ball::State::Roll:
+        case Ball::State::Flight:
+        case Ball::State::Putt:
+            m_scene.getSystem<BallSystem>()->fastForward(m_playerInfo[0].ballEntity);
+            break;
+        }
+    }
+}
+
 bool GolfState::validateMap()
 {
     auto mapDir = m_sharedData.mapDir.toAnsiString();
@@ -1041,6 +1062,8 @@ void GolfState::initScene()
             }
         }
     }
+
+    std::shuffle(m_playerInfo.begin(), m_playerInfo.end(), cro::Util::Random::rndEngine);
 }
 
 void GolfState::buildWorld()

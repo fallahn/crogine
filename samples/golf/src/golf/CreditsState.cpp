@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022
+Matt Marchant 2022 - 2023
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -192,12 +192,14 @@ void CreditsState::buildScene()
         float currTime = 0.f;
     };
 
+    auto scrollNode = m_scene.createEntity(); //see below
+
     auto rootNode = m_scene.createEntity();
     rootNode.addComponent<cro::Transform>();
     rootNode.addComponent<cro::Callback>().active = true;
     rootNode.getComponent<cro::Callback>().setUserData<RootCallbackData>();
     rootNode.getComponent<cro::Callback>().function =
-        [&](cro::Entity e, float dt)
+        [&, scrollNode](cro::Entity e, float dt) mutable
     {
         auto& [state, currTime] = e.getComponent<cro::Callback>().getUserData<RootCallbackData>();
 
@@ -211,6 +213,7 @@ void CreditsState::buildScene()
             {
                 state = RootCallbackData::FadeOut;
                 e.getComponent<cro::Callback>().active = false;
+                scrollNode.getComponent<cro::Callback>().active = true;
             }
             break;
         case RootCallbackData::FadeOut:
@@ -218,7 +221,17 @@ void CreditsState::buildScene()
             e.getComponent<cro::Transform>().setScale(m_viewScale * cro::Util::Easing::easeOutQuint(currTime));
             if (currTime == 0)
             {
-                requestStackPop();            
+                requestStackPop();  
+                state = RootCallbackData::FadeIn;
+
+                //reset scrolling
+                glm::vec2 size(GolfGame::getActiveTarget()->getSize());
+
+                auto scale = getViewScale();
+                auto scrollOffset = ((size.y / scale) / 2.f) + (UITextPosV * 2.f);
+
+                scrollNode.getComponent<cro::Transform>().setPosition({ 0.f, -scrollOffset, 0.1f });
+                scrollNode.getComponent<cro::Callback>().active = false;
             }
             break;
         }
@@ -259,11 +272,10 @@ void CreditsState::buildScene()
 
    
     glm::vec2 size(GolfGame::getActiveTarget()->getSize());
-    auto vpSize = calcVPSize();
-    auto scale = std::floor(size.y / vpSize.y);
+
+    auto scale = getViewScale();
     auto scrollOffset = ((size.y / scale) / 2.f) + (UITextPosV * 2.f);
 
-    auto scrollNode = m_scene.createEntity();
     scrollNode.addComponent<cro::Transform>().setPosition({ 0.f, -scrollOffset, 0.1f });
     scrollNode.addComponent<cro::Callback>().active = true;
     scrollNode.getComponent<cro::Callback>().function =
@@ -345,9 +357,7 @@ void CreditsState::buildScene()
         cam.setOrthographic(0.f, size.x, 0.f, size.y, -2.f, 10.f);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
 
-        auto vpSize = calcVPSize();
-
-        m_viewScale = glm::vec2(std::floor(size.y / vpSize.y));
+        m_viewScale = glm::vec2(getViewScale());
         rootNode.getComponent<cro::Transform>().setScale(m_viewScale);
         rootNode.getComponent<cro::Transform>().setPosition(size / 2.f);
 

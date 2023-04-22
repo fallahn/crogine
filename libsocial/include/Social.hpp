@@ -43,8 +43,9 @@ source distribution.
 //(hole count became game rule 170 -> 180)
 //(connection method changed 190 -> 1100)
 //(terrain vertex data and materials changed 1100 -> 1110)
-static constexpr std::uint16_t CURRENT_VER = 1110;
-static const std::string StringVer("1.11.0");
+//(player avatar data format changed 1110 -> 1120)
+static constexpr std::uint16_t CURRENT_VER = 1120;
+static const std::string StringVer("1.12.0");
 
 
 class Social final
@@ -79,6 +80,7 @@ public:
             PlayerAchievement
         }type = LevelUp;
         std::int32_t level = 0;
+        std::int32_t reason = -1;
     };
 
     struct ProgressData final
@@ -92,19 +94,27 @@ public:
             currentXP(c),
             levelXP(l) {}
     };
+    static cro::Image userIcon;
 
     static bool isAvailable() { return false; }
-    static cro::Image getUserIcon(std::uint64_t) { return cro::Image(); }
+    static bool isSteamdeck() { return false; }
+    static cro::Image getUserIcon(std::uint64_t) { return userIcon; }
     static void findFriends() {}
     static void inviteFriends(std::uint64_t) {}
-    static void awardXP(std::int32_t);
+    static void awardXP(std::int32_t, std::int32_t = -1);
     static std::int32_t getXP();
     static std::int32_t getLevel();
     static ProgressData getLevelProgress();
+    static std::uint32_t getCurrentStreak();
+    static std::uint32_t updateStreak();
+    static std::uint32_t getLongestStreak();
+    static void resetProfile();
     static void storeDrivingStats(const std::array<float, 3u>&);
     static void readDrivingStats(std::array<float, 3u>&);
     static void insertScore(const std::string&, std::uint8_t, std::int32_t) {}
+    static std::int32_t getPersonalBest(const std::string&, std::uint8_t) { return -1; }
     static std::vector<cro::String> getLeaderboardResults(std::int32_t, std::int32_t) { return {}; }
+    static void courseComplete(const std::string&, std::uint8_t);
     static void setStatus(std::int32_t, const std::vector<const char*>&) {}
     static void setGroup(std::uint64_t, std::int32_t = 0) {}
     static void takeScreenShot() { cro::App::getInstance().saveScreenshot(); }
@@ -123,7 +133,8 @@ public:
     {
         enum
         {
-            Ball, Hair, Course
+            Ball, Hair, Course,
+            Profile
         };
     };
     static std::string getBaseContentPath();

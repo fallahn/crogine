@@ -55,7 +55,10 @@ public:
     Server& operator = (const Server&) = delete;
     Server& operator = (Server&&) = delete;
 
-    void launch(std::size_t, std::int32_t);
+    //max connections are not game mode dependent as the
+    //tutorial shares a game mode with golf, but must be
+    //limited to a single connection.
+    void launch(std::size_t maxConnections, std::int32_t gameMode);
     bool running() const { return m_running; }
     void stop();
 
@@ -75,6 +78,10 @@ private:
 
     std::unique_ptr<sv::State> m_currentState;
     std::int32_t m_gameMode;
+    //depending on the game mode we ask the client for how many players
+    //it has and reject or accept the client based on there being enough room
+    std::int32_t m_maxPlayers;
+    std::int32_t m_playerCount;
 
     sv::SharedData m_sharedData;
 
@@ -91,9 +98,9 @@ private:
     void run();
 
     void checkPending();
-    void validatePeer(net::NetPeer&);
+    void validatePeer(net::NetPeer&, std::uint8_t playerCount);
 
     //returns slot index, or >= MaxClients if full
-    std::uint8_t addClient(const net::NetPeer&);
+    std::uint8_t addClient(const net::NetPeer&, std::uint8_t playerCount);
     void removeClient(const net::NetEvent&);
 };

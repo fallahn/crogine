@@ -35,6 +35,7 @@ source distribution.
 #include "HoleData.hpp"
 #include "Billboard.hpp"
 #include "GameConsts.hpp"
+#include "BallTrail.hpp"
 
 #include <crogine/core/Clock.hpp>
 #include <crogine/core/State.hpp>
@@ -50,7 +51,7 @@ source distribution.
 
 //callback data for anim/self destruction
 //of messages / options window
-struct MessageAnim final
+struct PopupAnim final
 {
     enum
     {
@@ -61,10 +62,11 @@ struct MessageAnim final
 };
 
 struct SharedStateData;
+struct SharedProfileData;
 class DrivingState final : public cro::State, public cro::GuiClient
 {
 public:
-    DrivingState(cro::StateStack&, cro::State::Context, SharedStateData&);
+    DrivingState(cro::StateStack&, cro::State::Context, SharedStateData&, const SharedProfileData&);
 
     cro::StateID getStateID() const override { return StateID::DrivingRange; }
 
@@ -89,6 +91,7 @@ public:
 
 private:
     SharedStateData& m_sharedData;
+    const SharedProfileData& m_profileData;
     InputParser m_inputParser;
 
     cro::Scene m_gameScene;
@@ -105,6 +108,7 @@ private:
     cro::UniformBuffer<WindData> m_windBuffer;
 
     cro::Clock m_idleTimer;
+    BallTrail m_ballTrail;
 
     struct WindUpdate final
     {
@@ -119,6 +123,7 @@ private:
         {
             Billboard,
             Cel,
+            CelSkinned,
             CelTextured,
             CelTexturedSkinned,
             Course,
@@ -128,6 +133,7 @@ private:
             Beacon,
             Horizon,
             Trophy,
+            BallTrail,
 
             Count
         };
@@ -146,6 +152,7 @@ private:
             PowerBarInner,
             HookBar,
             WindIndicator,
+            WindTextBg,
             WindSpeed,
             MessageBoard,
             Stars,
@@ -207,6 +214,9 @@ private:
     void showMessage(float);
     void floatingMessage(const std::string&);
 
+    SkipState m_skipState;
+    void updateSkipMessage(float);
+
     //create the summary screen with its own
     //encapsulation just to update the text more easily
     struct SummaryScreen final
@@ -223,6 +233,7 @@ private:
     static constexpr float FadeDepth = 1.f;
 
     std::array<float, 3u> m_topScores = {};
+    std::array<cro::String, 3u> m_tickerStrings = {};
     void loadScores();
     void saveScores();
 

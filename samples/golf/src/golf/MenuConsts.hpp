@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2022
+Matt Marchant 2021 - 2023
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -31,6 +31,8 @@ source distribution.
 
 #include <crogine/core/Clock.hpp>
 #include <crogine/graphics/Colour.hpp>
+#include <crogine/graphics/Vertex2D.hpp>
+#include <crogine/ecs/Entity.hpp>
 #include <crogine/ecs/systems/UISystem.hpp>
 #include <crogine/ecs/components/Text.hpp>
 #include <crogine/ecs/components/Transform.hpp>
@@ -62,18 +64,23 @@ static const std::array<std::string, 3u> ScoreTypes =
     "Stroke Play", "Match Play", "Skins"
 };
 
-static const std::array<std::string, 3u> ScoreDesc =
-{
-    "Player with the fewest total\nstrokes wins",
-    "Holes are scored individually.\nPlayer with the most holes\nwins",
-    "Holes are scored individually.\nWinner of the hole gets the\nskins pot, else the pot\nrolls over to the next hole."
-};
-
 static const std::array<std::string, 3u> GimmeString =
 {
     "No Gimme",
     "Inside the leather",
     "Inside the putter"
+};
+
+static const std::array<std::string, 3u> CourseTypes =
+{
+    "Official Courses", "User Courses", "Workshop Courses"
+};
+
+static const std::array<std::string, 3u> RuleDescriptions =
+{
+    "Player with the fewest total\nstrokes wins",
+    "Holes are scored individually.\nPlayer with the most holes\nwins",
+    "Holes are scored individually.\nWinner of the hole gets the\nskins pot, else the pot\nrolls over to the next hole."
 };
 
 static constexpr std::array<glm::vec3, 4u> EmotePositions =
@@ -92,16 +99,16 @@ static constexpr std::uint32_t UITextSize = 8;
 static constexpr std::uint32_t InfoTextSize = 10;
 static constexpr std::uint32_t LabelTextSize = 16;
 
-static const cro::Colour TextNormalColour(0xfff8e1ff);
-static const cro::Colour TextEditColour(0x6eb39dff);
-static const cro::Colour TextHighlightColour(0xb83530ff); //red
+static constexpr cro::Colour TextNormalColour(0xfff8e1ff);
+static constexpr cro::Colour TextEditColour(0x6eb39dff);
+static constexpr cro::Colour TextHighlightColour(0xb83530ff); //red
 //static const cro::Colour TextHighlightColour(0x005ab5ff); //cb blue
 //static const cro::Colour TextHighlightColour(0x006cd1ff); //cb blue 2
-static const cro::Colour TextGoldColour(0xf2cf5cff);
-static const cro::Colour TextOrangeColour(0xec773dff);
-static const cro::Colour TextGreenColour(0x6ebe70ff);
-static const cro::Colour LeaderboardTextDark(0x1a1e2dff);
-static const cro::Colour LeaderboardTextLight(0xfff8e1ff);
+static constexpr cro::Colour TextGoldColour(0xf2cf5cff);
+static constexpr cro::Colour TextOrangeColour(0xec773dff);
+static constexpr cro::Colour TextGreenColour(0x6ebe70ff);
+static constexpr cro::Colour LeaderboardTextDark(0x1a1e2dff);
+static constexpr cro::Colour LeaderboardTextLight(0xfff8e1ff);
 
 static constexpr float LeaderboardTextSpacing = 6.f;
 static constexpr float BackgroundAlpha = 0.7f;
@@ -129,10 +136,8 @@ static constexpr float MenuBottomBorder = 15.f;
 static constexpr float BannerPosition = MenuBottomBorder - 3.f;
 
 static constexpr float NameWidth = 96.f;
-static constexpr std::uint32_t BallPreviewSize = 64u;
-static constexpr std::uint32_t BallThumbSize = 40u;
-static constexpr glm::uvec2 AvatarPreviewSize(70, 90);
-static constexpr glm::uvec2 AvatarThumbSize(60, 77);
+static constexpr glm::uvec2 BallPreviewSize = glm::uvec2(118u, 128u);
+static constexpr glm::uvec2 AvatarPreviewSize(98, 128);
 
 static constexpr float LobbyTextSpacing = 274.f;
 static constexpr float MinLobbyCropWidth = 96.f;
@@ -172,12 +177,158 @@ static inline bool activated(const cro::ButtonEvent& evt)
     }
 }
 
+static inline bool deactivated(const cro::ButtonEvent& evt)
+{
+    switch (evt.type)
+    {
+    default: return false;
+    case SDL_MOUSEBUTTONUP:
+    case SDL_MOUSEBUTTONDOWN:
+        return evt.button.button == SDL_BUTTON_RIGHT;
+    case SDL_CONTROLLERBUTTONUP:
+    case SDL_CONTROLLERBUTTONDOWN:
+        return evt.cbutton.button == SDL_CONTROLLER_BUTTON_B;
+    case SDL_FINGERUP:
+    case SDL_FINGERDOWN:
+        return false;
+    case SDL_KEYUP:
+    case SDL_KEYDOWN:
+        return ((evt.key.keysym.sym == SDLK_ESCAPE || evt.key.keysym.sym == SDLK_BACKSPACE) && (evt.key.keysym.mod == 0));
+    }
+}
+
 static inline void centreText(cro::Entity entity)
 {
     auto bounds = cro::Text::getLocalBounds(entity);
     bounds.width = std::floor(bounds.width / 2.f);
     entity.getComponent<cro::Transform>().setOrigin({ bounds.width, 0.f });
 }
+
+static inline std::vector<cro::Vertex2D> createMenuBackground(glm::vec2 size)
+{
+    //assumes GL_TRIANGLES
+    //assumes origin bottom left
+    static constexpr cro::Colour Background(0x0000003f);
+    static constexpr cro::Colour Inner(0x64432fff);
+    static constexpr cro::Colour Light(0x7e6d37ff);
+    static constexpr cro::Colour Dark(0x50282fff);
+
+    static constexpr float ShadowOffset = 6.f;
+    return
+    {
+        //background
+        cro::Vertex2D(glm::vec2(0.f, size.y ), Background),
+        cro::Vertex2D(glm::vec2(0.f, -ShadowOffset), Background),
+        cro::Vertex2D(glm::vec2(size.x + ShadowOffset, size.y), Background),
+
+        cro::Vertex2D(glm::vec2(size.x + ShadowOffset, size.y), Background),
+        cro::Vertex2D(glm::vec2(0.f, -ShadowOffset), Background),
+        cro::Vertex2D(glm::vec2(size.x + ShadowOffset, - ShadowOffset), Background),
+
+        //left
+        cro::Vertex2D(glm::vec2(-2.f, size.y + 1.f), Light),
+        cro::Vertex2D(glm::vec2(-2.f, -1.f), Light),
+        cro::Vertex2D(glm::vec2(-1.f, size.y + 1.f), Light),
+
+        cro::Vertex2D(glm::vec2(-1.f, size.y + 1.f), Light),
+        cro::Vertex2D(glm::vec2(-2.f, -1.f), Light),
+        cro::Vertex2D(glm::vec2(-1.f), Light),
+
+        //right
+        cro::Vertex2D(glm::vec2(size.x + 1.f, size.y + 1.f), Dark),
+        cro::Vertex2D(glm::vec2(size.x + 1.f, -1.f), Dark),
+        cro::Vertex2D(glm::vec2(size.x + 2.f, size.y + 1.f), Dark),
+
+        cro::Vertex2D(glm::vec2(size.x + 2.f, size.y + 1.f), Dark),
+        cro::Vertex2D(glm::vec2(size.x + 1.f, -1.f), Dark),
+        cro::Vertex2D(glm::vec2(size.x + 2.f, -1.f), Dark),
+
+        //top
+        cro::Vertex2D(glm::vec2(-1.f, size.y + 2.f), Light),
+        cro::Vertex2D(glm::vec2(-1.f, size.y + 1.f), Light),
+        cro::Vertex2D(glm::vec2(size.x + 1.f, size.y + 2.f), Light),
+
+        cro::Vertex2D(glm::vec2(size.x + 1.f, size.y + 2.f), Light),
+        cro::Vertex2D(glm::vec2(-1.f, size.y + 1.f), Light),
+        cro::Vertex2D(glm::vec2(size.x + 1.f, size.y + 1.f), Light),
+
+        //bottom
+        cro::Vertex2D(glm::vec2(-1.f), Dark),
+        cro::Vertex2D(glm::vec2(-1.f, -2.f), Dark),
+        cro::Vertex2D(glm::vec2(size.x + 1.f, -1.f), Dark),
+
+        cro::Vertex2D(glm::vec2(size.x + 1.f, -1.f), Dark),
+        cro::Vertex2D(glm::vec2(-1.f, -2.f), Dark),
+        cro::Vertex2D(glm::vec2(size.x + 1.f, -2.f), Dark),
+
+        //inner
+        cro::Vertex2D(glm::vec2(-1.f, size.y +1.f), Inner),
+        cro::Vertex2D(glm::vec2(-1.f), Inner),
+        cro::Vertex2D(size + 1.f, Inner),
+
+        cro::Vertex2D(size + 1.f, Inner),
+        cro::Vertex2D(glm::vec2(-1.f), Inner),
+        cro::Vertex2D(glm::vec2(size.x + 1.f, -1.f), Inner),
+    };
+}
+
+static inline std::vector<cro::Vertex2D> createMenuHighlight(glm::vec2 size, cro::Colour c)
+{
+    //assumes GL_TRIANGLES
+    //assumes origin bottom left
+    //assumes one pixel border
+    //static constexpr cro::Colour c(cro::Detail::Transparent);
+    return
+    {
+        //left
+        cro::Vertex2D(glm::vec2(-2.f, size.y + 1.f), c),
+        cro::Vertex2D(glm::vec2(-2.f, - 1.f), c),
+        cro::Vertex2D(glm::vec2(-1.f, size.y + 1.f), c),
+
+        cro::Vertex2D(glm::vec2(-1.f, size.y + 1.f), c),
+        cro::Vertex2D(glm::vec2(-2.f, -1.f), c),
+        cro::Vertex2D(glm::vec2(-1.f), c),
+
+        //right
+        cro::Vertex2D(glm::vec2(size.x + 1.f, size.y + 1.f), c),
+        cro::Vertex2D(glm::vec2(size.x + 1.f, -1.f), c),
+        cro::Vertex2D(glm::vec2(size.x + 2.f, size.y + 1.f), c),
+
+        cro::Vertex2D(glm::vec2(size.x + 2.f, size.y + 1.f), c),
+        cro::Vertex2D(glm::vec2(size.x + 1.f, -1.f), c),
+        cro::Vertex2D(glm::vec2(size.x + 2.f, -1.f), c),
+
+        //top
+        cro::Vertex2D(glm::vec2(-1.f, size.y + 2.f), c),
+        cro::Vertex2D(glm::vec2(-1.f, size.y + 1.f), c),
+        cro::Vertex2D(glm::vec2(size.x + 1.f, size.y + 2.f), c),
+
+        cro::Vertex2D(glm::vec2(size.x + 1.f, size.y + 2.f), c),
+        cro::Vertex2D(glm::vec2(-1.f, size.y + 1.f), c),
+        cro::Vertex2D(glm::vec2(size.x + 1.f, size.y + 1.f), c),
+
+        //bottom
+        cro::Vertex2D(glm::vec2(-1.f), c),
+        cro::Vertex2D(glm::vec2(-1.f, -2.f), c),
+        cro::Vertex2D(glm::vec2(size.x + 1.f, -1.f), c),
+
+        cro::Vertex2D(glm::vec2(size.x + 1.f, -1.f), c),
+        cro::Vertex2D(glm::vec2(-1.f, -2.f), c),
+        cro::Vertex2D(glm::vec2(size.x + 1.f, -2.f), c),
+    };
+}
+
+static constexpr float ProfileItemHeight = 14.f;
+struct FlyoutMenu final
+{
+    std::uint32_t selectCallback = 0;
+    std::uint32_t activateCallback = 0;
+    std::vector<cro::Entity> items;
+
+    cro::Entity background;
+    cro::Entity detail; //could be text, could be colours
+    cro::Entity highlight;
+};
 
 struct HighlightAnimationCallback final
 {

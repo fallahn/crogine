@@ -2,6 +2,7 @@
 set(GOLF_SRC
   ${PROJECT_DIR}/golf/BallAnimationSystem.cpp
   ${PROJECT_DIR}/golf/BallSystem.cpp
+  ${PROJECT_DIR}/golf/BallTrail.cpp
   ${PROJECT_DIR}/golf/BilliardsClientCollision.cpp
   ${PROJECT_DIR}/golf/BilliardsInput.cpp
   ${PROJECT_DIR}/golf/BilliardsSoundDirector.cpp
@@ -35,6 +36,7 @@ set(GOLF_SRC
 #  ${PROJECT_DIR}/golf/InterpolationSystem.cpp
   ${PROJECT_DIR}/golf/KeyboardState.cpp
   ${PROJECT_DIR}/golf/LeaderboardTexture.cpp
+  ${PROJECT_DIR}/golf/MenuAvatars.cpp
   ${PROJECT_DIR}/golf/MenuCallbacks.cpp
   ${PROJECT_DIR}/golf/MenuCreation.cpp
   ${PROJECT_DIR}/golf/MenuCustomisation.cpp
@@ -50,9 +52,11 @@ set(GOLF_SRC
   ${PROJECT_DIR}/golf/ParticleDirector.cpp
   ${PROJECT_DIR}/golf/Path.cpp
   ${PROJECT_DIR}/golf/PlayerAvatar.cpp
+  ${PROJECT_DIR}/golf/PlayerData.cpp
   ${PROJECT_DIR}/golf/PlaylistState.cpp
   ${PROJECT_DIR}/golf/PocketBallSystem.cpp
   ${PROJECT_DIR}/golf/PracticeState.cpp
+  ${PROJECT_DIR}/golf/ProfileState.cpp
   ${PROJECT_DIR}/golf/PropFollowSystem.cpp
   #${PROJECT_DIR}/golf/PuttingState.cpp
   #${PROJECT_DIR}/golf/PuttingStateUI.cpp

@@ -41,6 +41,7 @@ source distribution.
 #include "TerrainDepthmap.hpp"
 #include "TerrainChunks.hpp"
 #include "MinimapZoom.hpp"
+#include "BallTrail.hpp"
 #include "server/ServerPacketData.hpp"
 
 #include <crogine/core/State.hpp>
@@ -118,8 +119,6 @@ private:
     cro::Scene m_trophyScene;
     TerrainDepthmap m_depthMap;
 
-    bool m_mouseVisible;
-
     InputParser m_inputParser;
     CPUGolfer m_cpuGolfer;
     cro::Clock m_turnTimer;
@@ -149,6 +148,16 @@ private:
         ResolutionData resolutionData;
         float targetFade = 2.f;
     }m_resolutionUpdate;
+
+    struct PostID final
+    {
+        enum
+        {
+            Noise, Fog,
+            Count
+        };
+    };
+    std::array<PostProcess, PostID::Count> m_postProcesses = {};
 
     cro::Image m_currentMap; 
     float m_holeToModelRatio;
@@ -184,7 +193,8 @@ private:
             Billboard,
             Trophy,
             Beacon,
-            PuttAssist,
+            BallTrail,
+            Flag,
 
             Count
         };
@@ -210,6 +220,7 @@ private:
         std::size_t ballMeshID = 0;
         std::size_t shadowMeshID = 0;
     }m_ballResources;
+    BallTrail m_ballTrail;
 
     std::string m_audioPath;
     cro::String m_courseTitle;
@@ -222,7 +233,14 @@ private:
     void buildScene();
     void initAudio(bool loadTrees);
 
-    void createWeather(); //weather.cpp
+    struct WeatherType final
+    {
+        enum
+        {
+            Snow, Rain
+        };
+    };
+    void createWeather(std::int32_t); //weather.cpp
     void createClouds();
     void buildBow();
     void createDrone();
@@ -272,6 +290,7 @@ private:
             MapFlag,
             WindIndicator,
             WindSpeed,
+            WindSpeedBg,
             Thinking,
             MessageBoard,
             Bunker,
@@ -291,7 +310,7 @@ private:
     };
     std::array<cro::Sprite, SpriteID::Count> m_sprites = {};
 
-    std::array<std::array<Avatar, ConnectionData::MaxPlayers>, ConstVal::MaxClients> m_avatars;
+    std::array<std::array<Avatar, ConstVal::MaxPlayers>, ConstVal::MaxClients> m_avatars;
     Avatar* m_activeAvatar;
 
     struct ClubModel final
@@ -311,6 +330,8 @@ private:
     cro::Entity m_waterEnt;
     cro::Entity m_minimapEnt;
     cro::Entity m_miniGreenEnt;
+    cro::Entity m_miniGreenIndicatorEnt;
+    cro::Entity m_scoreboardEnt;
     std::uint8_t m_readyQuitFlags;
 
     void buildUI();
@@ -320,6 +341,7 @@ private:
     void updateScoreboard();
     void showScoreboard(bool visible);
     void updateWindDisplay(glm::vec3);
+    float estimatePuttPower();
 
     enum class MessageBoardID
     {
@@ -334,12 +356,20 @@ private:
     void showNotification(const cro::String&);
     void showLevelUp(std::uint64_t);
     void toggleQuitReady();
+    
+    SkipState m_skipState;
+    void updateSkipMessage(float);
     void refreshUI();
 
     void buildTrophyScene();
-    std::array<cro::Entity, 3u> m_trophies = {};
-    std::array<cro::Entity, 3u> m_trophyBadges = {};
-    std::array<cro::Entity, 3u> m_trophyLabels = {};
+    struct Trophy final
+    {
+        cro::Entity trophy;
+        cro::Entity badge;
+        cro::Entity label;
+        cro::Entity avatar;
+    };
+    std::array<Trophy, 3u> m_trophies = {};
 
     struct GridShader final
     {
@@ -389,7 +419,22 @@ private:
 
     //------------
 
-    bool m_hadFoul; //tracks 'boomerang' stat
+    struct AchievementTracker final
+    {
+        bool hadFoul = false; //tracks 'boomerang' stat
+        bool hadBackspin = false; //tracks 'spin class' and xp award
+        bool hadTopspin = false; //tracks XP award
+
+        bool noHolesOverPar = true; //no mistake
+        bool noGimmeUsed = true; //never give you up
+        bool twoShotsSpare = true; //greens in regulation
+        bool alwaysOnTheCourse = true; //consistency
+
+        bool underTwoPutts = true;
+        std::int32_t puttCount = 0; //no more than two putts on every hole
+    }m_achievementTracker;
+    cro::Clock m_playTimer; //track avg play time stat
+    cro::Time m_playTime;
 
     //for tracking scoreboard based stats
     struct StatBoardEntry final

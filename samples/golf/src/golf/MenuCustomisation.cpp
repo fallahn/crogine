@@ -30,8 +30,10 @@ source distribution.
 #include "MenuState.hpp"
 #include "GameConsts.hpp"
 #include "MenuConsts.hpp"
+#include "CommonConsts.hpp"
 #include "spooky2.hpp"
 #include "BallSystem.hpp"
+#include "CallbackData.hpp"
 
 #include <Social.hpp>
 
@@ -40,7 +42,9 @@ source distribution.
 #include <crogine/ecs/components/Callback.hpp>
 #include <crogine/ecs/components/Camera.hpp>
 
+#include <crogine/gui/Gui.hpp>
 #include <crogine/util/Random.hpp>
+#include <crogine/util/Maths.hpp>
 
 namespace
 {
@@ -174,44 +178,25 @@ void MenuState::createBallScene()
         e.getComponent<cro::Camera>().active = (std::abs(diff) > Ball::Radius * 0.1f);
     };
 
-    for (auto i = 0u; i < m_ballThumbCams.size(); ++i)
-    {
-        auto entity = m_backgroundScene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition({ RootPoint - 10.f, 0.045f, 0.095f });
-        entity.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -0.03f);
-        entity.addComponent<cro::Camera>().setPerspective(0.89f, 2.f, 0.001f, 2.f);
-        entity.getComponent<cro::Camera>().viewport = { (i % 2) * 0.5f, (i / 2) * 0.5f, 0.5f, 0.5f };
-        entity.getComponent<cro::Camera>().renderFlags = BallRenderFlags;
-        entity.addComponent<cro::Callback>().active = true;
-        entity.getComponent<cro::Callback>().setUserData<std::int32_t>(0);
-        entity.getComponent<cro::Callback>().function = ballTargetCallback;
-        m_ballThumbCams[i] = entity;
-    }
-
-
     auto ballTexCallback = [&](cro::Camera&)
     {
         std::uint32_t samples = m_sharedData.pixelScale ? 0 :
             m_sharedData.antialias ? m_sharedData.multisamples : 0;
 
-        auto vpSize = calcVPSize().y;
-        auto windowSize = static_cast<float>(cro::App::getWindow().getSize().y);
+        auto windowSize = static_cast<float>(cro::App::getWindow().getSize().x);
 
-        float windowScale = std::floor(windowSize / vpSize);
+        float windowScale = getViewScale();
         float scale = m_sharedData.pixelScale ? windowScale : 1.f;
         
         auto invScale = static_cast<std::uint32_t>((windowScale + 1.f) - scale);
         auto size = BallPreviewSize * invScale;
-        m_ballTexture.create(size, size, true, false, samples);
-
-        size = BallThumbSize * invScale;
-        m_ballThumbTexture.create(size * 4, size * 2, true, false, samples);
+        m_ballTexture.create(size.x, size.y, true, false, samples);
     };
 
     m_ballCam = m_backgroundScene.createEntity();
     m_ballCam.addComponent<cro::Transform>().setPosition({ RootPoint - 10.f, 0.045f, 0.095f });
     m_ballCam.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -0.03f);
-    m_ballCam.addComponent<cro::Camera>().setPerspective(1.f, 1.f, 0.001f, 2.f);
+    m_ballCam.addComponent<cro::Camera>().setPerspective(1.f, static_cast<float>(BallPreviewSize.x) / BallPreviewSize.y, 0.001f, 2.f);
     m_ballCam.getComponent<cro::Camera>().resizeCallback = ballTexCallback;
     m_ballCam.getComponent<cro::Camera>().renderFlags = BallRenderFlags;
     m_ballCam.addComponent<cro::Callback>().active = true;
@@ -227,7 +212,12 @@ void MenuState::createBallScene()
         LogE << "No ball files were found" << std::endl;
     }
 
-    m_sharedData.ballModels.clear();
+    if (ballFiles.size() > ConstVal::MaxBalls)
+    {
+        ballFiles.resize(ConstVal::MaxBalls);
+    }
+
+    m_sharedData.ballInfo.clear();
 
     //parse the default ball directory
     for (const auto& file : ballFiles)
@@ -246,7 +236,7 @@ void MenuState::createBallScene()
                 cfg.save("assets/golf/balls/" + file);
             }
 
-            insertInfo(info, m_sharedData.ballModels, true);
+            insertInfo(info, m_sharedData.ballInfo, true);
         }
     }
 
@@ -255,6 +245,11 @@ void MenuState::createBallScene()
     if (cro::FileSystem::directoryExists(BallUserPath))
     {
         auto dirList = cro::FileSystem::listDirectories(BallUserPath);
+        if (dirList.size() > ConstVal::MaxBalls)
+        {
+            dirList.resize(ConstVal::MaxBalls);
+        }
+
         for (const auto& dir : dirList)
         {
             auto path = BallUserPath + dir + "/" ;
@@ -270,7 +265,7 @@ void MenuState::createBallScene()
                         auto info = readBallCfg(cfg);
                         info.modelPath = path + info.modelPath;
 
-                        insertInfo(info, m_sharedData.ballModels, false);
+                        insertInfo(info, m_sharedData.ballInfo, false);
                     }
 
                     break; //skip the rest of the file list
@@ -312,7 +307,7 @@ void MenuState::createBallScene()
 
             if (level > (i + 1) * 10)
             {
-                insertInfo(info, m_sharedData.ballModels, true);
+                insertInfo(info, m_sharedData.ballInfo, true);
             }
             else
             {
@@ -325,17 +320,17 @@ void MenuState::createBallScene()
 
     //load each model for the preview in the player menu
     cro::ModelDefinition ballDef(m_resources);
-    cro::ModelDefinition shadowDef(m_resources);
-    cro::ModelDefinition grassDef(m_resources);
+    m_profileData.shadowDef = std::make_unique<cro::ModelDefinition>(m_resources);
+    m_profileData.grassDef = std::make_unique<cro::ModelDefinition>(m_resources);
 
-    auto shadow = shadowDef.loadFromFile("assets/golf/models/ball_shadow.cmt");
-    auto grass = grassDef.loadFromFile("assets/golf/models/ball_plane.cmt");
+    auto shadow = m_profileData.shadowDef->loadFromFile("assets/golf/models/ball_shadow.cmt");
+    auto grass = m_profileData.grassDef->loadFromFile("assets/golf/models/ball_plane.cmt");
 
     std::vector<std::uint32_t> invalidBalls;
 
-    for (auto i = 0u; i < m_sharedData.ballModels.size(); ++i)
+    for (auto i = 0u; i < m_sharedData.ballInfo.size(); ++i)
     {
-        if (ballDef.loadFromFile(m_sharedData.ballModels[i].modelPath))
+        if (ballDef.loadFromFile(m_sharedData.ballInfo[i].modelPath))
         {
             auto entity = m_backgroundScene.createEntity();
             entity.addComponent<cro::Transform>().setPosition({ (i * BallSpacing) + RootPoint, 0.f, 0.f });
@@ -364,7 +359,7 @@ void MenuState::createBallScene()
             baseEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
             entity.addComponent<cro::Callback>().active = true;
-            if (m_sharedData.ballModels[i].rollAnimation)
+            if (m_sharedData.ballInfo[i].rollAnimation)
             {
                 entity.getComponent<cro::Callback>().function =
                     [](cro::Entity e, float dt)
@@ -384,12 +379,13 @@ void MenuState::createBallScene()
                 };
             }
 
+            m_profileData.ballDefs.push_back(ballDef); //store this for faster loading in profile editor
           
             if (shadow)
             {
                 entity = m_backgroundScene.createEntity();
                 entity.addComponent<cro::Transform>();
-                shadowDef.createModel(entity);
+                m_profileData.shadowDef->createModel(entity);
                 baseEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
                 entity.getComponent<cro::Model>().setRenderFlags(BallRenderFlags);
             }
@@ -399,7 +395,7 @@ void MenuState::createBallScene()
                 entity = m_backgroundScene.createEntity();
                 entity.addComponent<cro::Transform>().setPosition({ 0.f, -0.001f, 0.f });
                 entity.getComponent<cro::Transform>().setScale(glm::vec3(5.f));
-                grassDef.createModel(entity);
+                m_profileData.grassDef->createModel(entity);
                 baseEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
                 entity.getComponent<cro::Model>().setRenderFlags(BallRenderFlags);
             }
@@ -407,41 +403,65 @@ void MenuState::createBallScene()
         else
         {
             //probably should remove from the ball models vector so that it's completely vetted
-            invalidBalls.push_back(m_sharedData.ballModels[i].uid);
+            invalidBalls.push_back(m_sharedData.ballInfo[i].uid);
+            i--; //spacing is based on this and we don't want a gap from a bad ball
         }
     }
 
     //add delayed entries for in-game rendering
     for (const auto& info : delayedEntries)
     {
-        insertInfo(info, m_sharedData.ballModels, true);
+        insertInfo(info, m_sharedData.ballInfo, true);
     }
 
     //tidy up bad balls.
     for (auto uid : invalidBalls)
     {
-        m_sharedData.ballModels.erase(std::remove_if(m_sharedData.ballModels.begin(), m_sharedData.ballModels.end(),
+        m_sharedData.ballInfo.erase(std::remove_if(m_sharedData.ballInfo.begin(), m_sharedData.ballInfo.end(),
             [uid](const SharedStateData::BallInfo& ball)
             {
                 return ball.uid == uid;
-            }), m_sharedData.ballModels.end());
+            }), m_sharedData.ballInfo.end());
     }
+
 }
 
 std::int32_t MenuState::indexFromBallID(std::uint32_t ballID)
 {
-    auto ball = std::find_if(m_sharedData.ballModels.begin(), m_sharedData.ballModels.end(),
+    auto ball = std::find_if(m_sharedData.ballInfo.begin(), m_sharedData.ballInfo.end(),
         [ballID](const SharedStateData::BallInfo& ballPair)
         {
             return ballPair.uid == ballID;
         });
 
-    if (ball != m_sharedData.ballModels.end())
+    if (ball != m_sharedData.ballInfo.end())
     {
-        return static_cast<std::int32_t>(std::distance(m_sharedData.ballModels.begin(), ball));
+        return static_cast<std::int32_t>(std::distance(m_sharedData.ballInfo.begin(), ball));
     }
 
-    return -1;
+    return 0;
+}
+
+void MenuState::updateProfileTextures(std::size_t start, std::size_t count)
+{
+    if (count == 0)
+    {
+        //we might have passed in 0 as a param if it was derived from an empty vector
+        return;
+    }
+
+    CRO_ASSERT(start < count && count <= m_profileData.playerProfiles.size(), "");
+
+    for (auto i = start; i < start + count; ++i)
+    {
+        const auto& flags = m_profileData.playerProfiles[i].avatarFlags;
+        for (auto j = 0u; j < pc::ColourKey::Count; ++j)
+        {
+            m_profileTextures[i].setColour(pc::ColourKey::Index(j), flags[j]);
+        }
+
+        m_profileTextures[i].apply();
+    }
 }
 
 void MenuState::parseAvatarDirectory()
@@ -461,7 +481,6 @@ void MenuState::parseAvatarDirectory()
             if (cfg.loadFromFile(AvatarPath + file))
             {
                 SharedStateData::AvatarInfo info;
-                std::string texturePath;
 
                 const auto& props = cfg.getProperties();
                 for (const auto& prop : props)
@@ -482,7 +501,7 @@ void MenuState::parseAvatarDirectory()
                                     {
                                         if (p.getName() == "diffuse")
                                         {
-                                            texturePath = p.getValue<std::string>();
+                                            info.texturePath = p.getValue<std::string>();
                                         }
                                     }
                                 }
@@ -520,7 +539,7 @@ void MenuState::parseAvatarDirectory()
                     if (result == m_sharedData.avatarInfo.end())
                     {
                         m_sharedData.avatarInfo.push_back(info);
-                        m_playerAvatars.emplace_back(texturePath);
+                        m_playerAvatars.emplace_back(info.texturePath);
                     }
                     else
                     {
@@ -549,6 +568,11 @@ void MenuState::parseAvatarDirectory()
     const std::string HairPath = "assets/golf/avatars/hair/";
     auto hairFiles = cro::FileSystem::listFiles(cro::FileSystem::getResourcePath() + HairPath);
 
+    if (hairFiles.size() > ConstVal::MaxHeadwear)
+    {
+        hairFiles.resize(ConstVal::MaxHeadwear);
+    }
+
     for (const auto& file : hairFiles)
     {
         if (cro::FileSystem::getFileExtension(file) != ".hct")
@@ -575,7 +599,13 @@ void MenuState::parseAvatarDirectory()
     const auto userHairPath = Social::getUserContentPath(Social::UserContent::Hair);
     if (cro::FileSystem::directoryExists(userHairPath))
     {
-        const auto userDirs = cro::FileSystem::listDirectories(userHairPath);
+        auto userDirs = cro::FileSystem::listDirectories(userHairPath);
+
+        if (userDirs.size() > ConstVal::MaxHeadwear)
+        {
+            userDirs.resize(ConstVal::MaxHeadwear);
+        }
+
         for (const auto& userDir : userDirs)
         {
             const auto userPath = userHairPath + userDir + "/";
@@ -595,6 +625,7 @@ void MenuState::parseAvatarDirectory()
                     info.modelPath = userPath + info.modelPath;
 
                     insertInfo(info, m_sharedData.hairInfo, false);
+                    break; //only load one...
                 }
             }
         }
@@ -622,34 +653,60 @@ void MenuState::parseAvatarDirectory()
 
                     modelInfo.uid = info.uid;
                 }
+
+                m_profileData.hairDefs.push_back(md);
             }
         }
+    }
 
-        for (auto i = 0u; i < ConnectionData::MaxPlayers; ++i)
+
+    //for every profile create a texture for the preview
+    for (auto& profile : m_profileData.playerProfiles)
+    {
+        if (profile.skinID == 0)
         {
-            m_avatarIndices[i] = indexFromAvatarID(m_sharedData.localConnectionData.playerData[i].skinID);
-            m_hairIndices[i] = indexFromHairID(m_sharedData.localConnectionData.playerData[i].hairID);
+            //use first valid skin
+            profile.skinID = m_sharedData.avatarInfo[0].uid;
+        }
+
+        //compare against list of unlocked balls and make sure we're in it
+        auto ballID = indexFromBallID(profile.ballID);
+        if (ballID >= m_profileData.ballDefs.size()
+            || ballID == -1)
+        {
+            profile.ballID = 0;
+        }
+
+        m_profileTextures.emplace_back(m_sharedData.avatarInfo[indexFromAvatarID(profile.skinID)].texturePath);
+
+        if (!profile.mugshot.empty())
+        {
+            m_profileTextures.back().setMugshot(profile.mugshot);
         }
     }
+    updateProfileTextures(0, m_profileTextures.size());
 
     createAvatarScene();
 }
 
 void MenuState::createAvatarScene()
 {
-    auto avatarTexCallback = [&](cro::Camera&)
+    auto avatarTexCallback = [&](cro::Camera& cam)
     {
-        auto vpSize = calcVPSize().y;
-        auto windowSize = static_cast<float>(cro::App::getWindow().getSize().y);
+        auto windowSize = static_cast<float>(cro::App::getWindow().getSize().x);
 
-        float windowScale = std::floor(windowSize / vpSize);
+        float windowScale = getViewScale();
         float scale = m_sharedData.pixelScale ? windowScale : 1.f;
         auto size = AvatarPreviewSize * static_cast<std::uint32_t>((windowScale + 1.f) - scale);
         m_avatarTexture.create(size.x, size.y);
+
+        /*static constexpr float ratio = static_cast<float>(AvatarPreviewSize.y) / AvatarPreviewSize.x;
+        cam.setPerspective(70.f, ratio, 0.1f, 10.f);
+        cam.viewport = { 0.f, 0.f, 1.f, 1.f };*/
     };
 
     auto avatarCam = m_avatarScene.createEntity();
-    avatarCam.addComponent<cro::Transform>().setPosition({ 0.f, 0.649f, 1.3f });
+    avatarCam.addComponent<cro::Transform>().setPosition({ 0.f, 0.7f, 1.3f });
     //avatarCam.addComponent<cro::Camera>().setPerspective(75.f * cro::Util::Const::degToRad, static_cast<float>(AvatarPreviewSize.x) / AvatarPreviewSize.y, 0.001f, 10.f);
 
     static constexpr float ratio = static_cast<float>(AvatarPreviewSize.y) / AvatarPreviewSize.x;
@@ -677,7 +734,6 @@ void MenuState::createAvatarScene()
             entity.addComponent<cro::Transform>().setOrigin(glm::vec2(-0.34f, 0.f));
             entity.getComponent<cro::Transform>().setScale(glm::vec3(0.f));
             md.createModel(entity);
-            entity.getComponent<cro::Model>().setHidden(true);
 
             //TODO account for multiple materials? Avatar is set to
             //only update a single image though, so 1 material should
@@ -729,6 +785,8 @@ void MenuState::createAvatarScene()
             }
 
             m_playerAvatars[i].previewModel = entity;
+
+            m_profileData.avatarDefs.push_back(md);
         }
         else
         {
@@ -783,6 +841,52 @@ void MenuState::createAvatarScene()
                 }
             }
         }
+
+        //we add the animation here as we need to capture the index which may have
+        //changed between loading the model and erasing invalid avatars
+        auto entity = m_playerAvatars[i].previewModel;
+        entity.addComponent<cro::Callback>().setUserData<AvatarAnimCallbackData>();
+        entity.getComponent<cro::Callback>().function =
+            [&,i](cro::Entity e, float dt) mutable
+        {
+            const float Speed = dt * 4.f;
+
+            auto& [direction, progress] = e.getComponent<cro::Callback>().getUserData<AvatarAnimCallbackData>();
+            if (direction == 0)
+            {
+                //grow
+                progress = std::min(1.f, progress + Speed);
+                if (progress == 1)
+                {
+                    direction = 1;
+                    e.getComponent<cro::Callback>().active = false;
+                }
+            }
+            else
+            {
+                //shrink
+                progress = std::max(0.f, progress - (Speed /** 2.f*/));
+                if (progress == 0)
+                {
+                    direction = 0;
+                    e.getComponent<cro::Callback>().active = false;
+
+                    e.getComponent<cro::Model>().setHidden(true);
+
+                    //hide hair model if it's attached
+                    if (m_playerAvatars[i].hairAttachment != nullptr
+                        && m_playerAvatars[i].hairAttachment->getModel().isValid())
+                    {
+                        m_playerAvatars[i].hairAttachment->getModel().getComponent<cro::Model>().setHidden(true);
+                    }
+                }
+            }
+
+            auto scale = e.getComponent<cro::Transform>().getScale();
+            auto facing = cro::Util::Maths::sgn(scale.x);
+            scale = { progress * facing, /*progress*/1.f, progress };
+            e.getComponent<cro::Transform>().setScale(scale);
+        };
     }
 }
 
@@ -800,37 +904,6 @@ std::int32_t MenuState::indexFromAvatarID(std::uint32_t id)
     }
 
     return 0;
-}
-
-void MenuState::applyAvatarColours(std::size_t playerIndex)
-{
-    auto avatarIndex = m_avatarIndices[playerIndex];
-
-    const auto& flags = m_sharedData.localConnectionData.playerData[playerIndex].avatarFlags;
-    m_playerAvatars[avatarIndex].setColour(pc::ColourKey::Bottom, flags[0]);
-    m_playerAvatars[avatarIndex].setColour(pc::ColourKey::Top, flags[1]);
-    m_playerAvatars[avatarIndex].setColour(pc::ColourKey::Skin, flags[2]);
-    m_playerAvatars[avatarIndex].setColour(pc::ColourKey::Hair, flags[3]);
-
-    m_playerAvatars[avatarIndex].setTarget(m_sharedData.avatarTextures[0][playerIndex]);
-    m_playerAvatars[avatarIndex].apply();
-}
-
-void MenuState::updateThumb(std::size_t index)
-{
-    setPreviewModel(index);
-
-    //we have to make sure model data is updated correctly before each
-    //draw call as this func might be called in a loop to update multiple
-    //avatars outside of the main update function.
-    m_avatarScene.simulate(0.f);
-
-    m_resolutionBuffer.bind(0);
-
-    m_avatarThumbs[index].clear(cro::Colour::Transparent);
-    //m_avatarThumbs[index].clear(cro::Colour::Magenta);
-    m_avatarScene.render();
-    m_avatarThumbs[index].display();
 }
 
 void MenuState::ugcInstalledHandler(std::uint64_t id, std::int32_t type)
@@ -856,7 +929,7 @@ void MenuState::ugcInstalledHandler(std::uint64_t id, std::int32_t type)
                     auto info = readBallCfg(cfg);
                     info.modelPath = BallUserPath + info.modelPath;
 
-                    insertInfo(info, m_sharedData.ballModels, false);
+                    insertInfo(info, m_sharedData.ballInfo, false);
                 }
 
                 break; //skip the rest of the file list
@@ -891,67 +964,11 @@ void MenuState::ugcInstalledHandler(std::uint64_t id, std::int32_t type)
     }
 }
 
-void MenuState::setPreviewModel(std::size_t playerIndex)
-{
-    auto index = m_avatarIndices[playerIndex];
-    auto flipped = m_sharedData.localConnectionData.playerData[playerIndex].flipped;
-
-    //hmm this would be quicker if we just tracked the active model...
-    //in fact it might be contributing to the slow down when entering main lobby.
-    for (auto i = 0u; i < m_playerAvatars.size(); ++i)
-    {
-        if (m_playerAvatars[i].previewModel.isValid()
-            && m_playerAvatars[i].previewModel.hasComponent<cro::Model>())
-        {
-            m_playerAvatars[i].previewModel.getComponent<cro::Model>().setHidden(i != index);
-            m_playerAvatars[i].previewModel.getComponent<cro::Transform>().setScale(glm::vec3(0.f));
-
-            if (i == index)
-            {
-                if (flipped)
-                {
-                    m_playerAvatars[i].previewModel.getComponent<cro::Transform>().setScale({ -1.f, 1.f, 1.f });
-                    m_playerAvatars[i].previewModel.getComponent<cro::Model>().setFacing(cro::Model::Facing::Back);
-                }
-                else
-                {
-                    m_playerAvatars[i].previewModel.getComponent<cro::Transform>().setScale({ 1.f, 1.f, 1.f });
-                    m_playerAvatars[i].previewModel.getComponent<cro::Model>().setFacing(cro::Model::Facing::Front);
-                }
-                auto texID = cro::TextureID(m_sharedData.avatarTextures[0][playerIndex].getGLHandle());
-                m_playerAvatars[i].previewModel.getComponent<cro::Model>().setMaterialProperty(0, "u_diffuseMap", texID);
-
-                //check to see if we have a hair model and apply its properties
-                if (m_playerAvatars[i].hairAttachment != nullptr)
-                {
-                    if (m_playerAvatars[i].hairAttachment->getModel().isValid())
-                    {
-                        m_playerAvatars[i].hairAttachment->getModel().getComponent<cro::Model>().setHidden(true);
-                        m_playerAvatars[i].hairAttachment->getModel().getComponent<cro::Transform>().setScale(glm::vec3(0.f));
-                    }
-
-                    auto hairIndex = m_hairIndices[playerIndex];
-                    m_playerAvatars[i].hairAttachment->setModel(m_playerAvatars[i].hairModels[hairIndex].model);
-
-
-                    if (m_playerAvatars[i].hairModels[hairIndex].model.isValid())
-                    {
-                        m_playerAvatars[i].hairAttachment->getModel().getComponent<cro::Transform>().setScale(glm::vec3(1.f));
-                        m_playerAvatars[i].hairModels[hairIndex].model.getComponent<cro::Model>().setHidden(false);
-                        m_playerAvatars[i].hairModels[hairIndex].model.getComponent<cro::Model>().setMaterialProperty(0, "u_hairColour", m_playerAvatars[i].getColour(pc::ColourKey::Hair).first);
-                        //m_playerAvatars[i].hairModels[hairIndex].model.getComponent<cro::Model>().setMaterialProperty(0, "u_darkColour", m_playerAvatars[i].getColour(pc::ColourKey::Hair).second);
-                    }
-                }
-            }
-        }
-    }
-}
-
 std::int32_t MenuState::indexFromHairID(std::uint32_t id)
 {
     //assumes all avatars contain some list of models...
     //not sure why we aren't doing this on m_sharedData.hairInfo ? 
-    auto hair = std::find_if(m_playerAvatars[0].hairModels.begin(), m_playerAvatars[0].hairModels.end(),
+    /*auto hair = std::find_if(m_playerAvatars[0].hairModels.begin(), m_playerAvatars[0].hairModels.end(),
         [id](const PlayerAvatar::HairInfo& h)
         {
             return h.uid == id;
@@ -960,6 +977,18 @@ std::int32_t MenuState::indexFromHairID(std::uint32_t id)
     if (hair != m_playerAvatars[0].hairModels.end())
     {
         return static_cast<std::int32_t>(std::distance(m_playerAvatars[0].hairModels.begin(), hair));
+    }*/
+
+
+    auto hair = std::find_if(m_sharedData.hairInfo.begin(), m_sharedData.hairInfo.end(),
+        [id](const SharedStateData::HairInfo& h)
+        {
+            return h.uid == id;
+        });
+
+    if (hair != m_sharedData.hairInfo.end())
+    {
+        return static_cast<std::int32_t>(std::distance(m_sharedData.hairInfo.begin(), hair));
     }
 
     return 0;

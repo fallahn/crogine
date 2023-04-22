@@ -68,7 +68,7 @@ void winAbort(int)
 #include <algorithm>
 
 #ifdef CRO_DEBUG_
-//#define DEBUG_NO_CONTROLLER
+#define DEBUG_NO_CONTROLLER
 #endif // CRO_DEBUG_
 
 using namespace cro;
@@ -560,6 +560,17 @@ void App::handleEvents()
         switch (evt.type)
         {
         default: break;
+        case SDL_CONTROLLERBUTTONUP:
+            if (Console::isVisible()
+                && (evt.cbutton.button == GameController::ButtonB || evt.cbutton.button == GameController::ButtonBack))
+            {
+                Console::show();
+                if (!Console::isVisible())
+                {
+                    saveSettings();
+                }
+            }
+            break;
         case SDL_KEYUP:
             switch (evt.key.keysym.sym)
             {

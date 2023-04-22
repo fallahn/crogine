@@ -29,12 +29,14 @@ source distribution.
 
 #pragma once
 
+#include "CommonConsts.hpp"
+
 #include <crogine/detail/glm/vec3.hpp>
 
 struct InputUpdate final
 {
     glm::vec3 impulse = glm::vec3(0.f);
     glm::vec2 spin = glm::vec2(0.f);
-    std::uint8_t clientID = 4;
-    std::uint8_t playerID = 4;
+    std::uint8_t clientID = ConstVal::NullValue;
+    std::uint8_t playerID = ConstVal::NullValue;
 };

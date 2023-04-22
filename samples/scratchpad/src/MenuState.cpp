@@ -357,6 +357,19 @@ void MenuState::createScene()
                 }
             });
 
+    //animation blending
+    textPos.y -= MenuSpacing;
+    entity = createButton("SSAO", textPos);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
+        uiSystem->addCallback([&](cro::Entity e, const cro::ButtonEvent& evt)
+            {
+                if (activated(evt))
+                {
+                    requestStackClear();
+                    requestStackPush(States::ScratchPad::SSAO);
+                }
+            });
+
     //load plugin
     textPos.y -= MenuSpacing;
     entity = createButton("Load Plugin", textPos);

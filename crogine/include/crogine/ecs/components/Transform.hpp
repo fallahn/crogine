@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2022
+Matt Marchant 2017 - 2023
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -302,6 +302,7 @@ namespace cro
 
         Transform* m_parent;
         std::vector<Transform*> m_children = {};
+        void doCallbacks() const; //actually mutable - called from getTransform()
 
         std::size_t m_depth;
         void increaseDepth();

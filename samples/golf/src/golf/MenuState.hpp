@@ -32,6 +32,7 @@ source distribution.
 #include "../StateIDs.hpp"
 #include "CommonConsts.hpp"
 #include "GameConsts.hpp"
+#include "MenuConsts.hpp"
 #include "PlayerAvatar.hpp"
 #include "Billboard.hpp"
 #include "SharedStateData.hpp"
@@ -62,9 +63,11 @@ namespace cro
 {
     struct NetEvent;
     struct Camera;
+    class SpriteSheet;
 }
 
 class MenuState;
+struct SharedProfileData;
 struct MainMenuContext final : public MenuContext
 {
     explicit MainMenuContext(MenuState*);
@@ -73,7 +76,12 @@ struct MainMenuContext final : public MenuContext
 class MenuState final : public cro::State, public cro::GuiClient, public cro::ConsoleClient
 {
 public:
-    MenuState(cro::StateStack&, cro::State::Context, SharedStateData&);
+    MenuState(cro::StateStack&, cro::State::Context, SharedStateData&, SharedProfileData&);
+    ~MenuState();
+    MenuState(const MenuState&) = delete;
+    MenuState(MenuState&&) = delete;
+    const MenuState& operator = (const MenuState&) = delete;
+    MenuState& operator = (MenuState&&) = delete;
 
     cro::StateID getStateID() const override { return StateID::Menu; }
 
@@ -84,11 +92,16 @@ public:
 
     enum MenuID
     {
-        Dummy, Main, Avatar, Join, Lobby, PlayerConfig, ConfirmQuit, Count
+        Dummy, 
+        Main, Avatar, Join, Lobby,
+        ProfileFlyout, ConfirmQuit,
+        Count
     };
 
 private:
     SharedStateData& m_sharedData;
+    SharedProfileData& m_profileData;
+
     MatchMaking m_matchMaking;
     cro::Cursor m_cursor;
     cro::ResourceCollection m_resources;
@@ -182,6 +195,7 @@ private:
         {
             HoleSelection,
             HoleThumb,
+            CourseTicker,
 
             Count
         };
@@ -244,41 +258,60 @@ private:
 
 
     //----ball, avatar and hair funcs are in MenuCustomisation.cpp----//
-    std::array<std::size_t, ConnectionData::MaxPlayers> m_ballIndices = {}; //index into the model list, not ballID
     cro::Entity m_ballCam;
-    std::array<cro::Entity, 4u> m_ballThumbCams = {};
     cro::RenderTexture m_ballTexture;
-    cro::RenderTexture m_ballThumbTexture;
     void createBallScene();
     std::int32_t indexFromBallID(std::uint32_t);
 
+    /*
+    OK Since the avatar update this has gotten into a bit of a mess:
+    PlayerAvatar represents each one of the avatar models and its texture. (size n where n is number of models available)
+    ProfileTexture represents the texture and mugshot texture for each avatar used when previewing profiles in the
+    roster menu, so is size 1-MaxPlayers
+    HOWEVER as each profile requres a uniqe texture, but multiple profiles may use the SAME avatar then m_playerAvatars
+    (holding the avatar textures) is update with colour settings, but those colours are then applied to m_profileTextures[x]
+
+    On the face of it, it would seem a simple refactor to remove the unused image/colour information from ProfileTexture
+    and the unused texture from PlayerAvatar - if it weren't for the fact PlayerAvatar *inherits* ProfileTexture
+
+    I apologise profusely for this mobius strip of madness.
+    */
     std::vector<PlayerAvatar> m_playerAvatars;
-    //this is the index for each player into m_playerAvatars - skinID is read from PlayerAvatar struct
-    std::array<std::size_t, ConnectionData::MaxPlayers> m_avatarIndices = {};
-    std::array<cro::RenderTexture, ConnectionData::MaxPlayers> m_avatarThumbs = {};
-    std::uint8_t m_activePlayerAvatar; //which player is current editing their avatar
+    std::vector<ProfileTexture> m_profileTextures;
+    void updateProfileTextures(std::size_t start, std::size_t count); //applies profile colours to each texture
+
+    std::function<void()> updateRoster; //refreshes the roster list / avatar preview
+    
     cro::RenderTexture m_avatarTexture;
     void parseAvatarDirectory();
     void createAvatarScene();
     std::int32_t indexFromAvatarID(std::uint32_t);
-    void applyAvatarColours(std::size_t);
-    void setPreviewModel(std::size_t);
-    void updateThumb(std::size_t);
     void ugcInstalledHandler(std::uint64_t id, std::int32_t type);
 
-    
-    //index into hair model vector - converted from hairID with indexFromHairID
-    std::array<std::size_t, ConnectionData::MaxPlayers> m_hairIndices = {};
+    cro::RenderTexture m_clubTexture;
     std::int32_t indexFromHairID(std::uint32_t);
 
+    struct Roster final
+    {
+        std::size_t activeIndex = 0;
+        std::array<std::size_t, ConstVal::MaxPlayers> profileIndices = {}; //the index of the profile at this slot
+        std::array<cro::Entity, ConstVal::MaxPlayers> selectionEntities = {}; //entity to show active slot
+        std::array<cro::Entity, ConstVal::MaxPlayers> buttonEntities = {}; //button to select slot
+    }m_rosterMenu;
+
+    FlyoutMenu m_profileFlyout;
 
     void createUI();
     void createMainMenu(cro::Entity, std::uint32_t, std::uint32_t);
-    void createAvatarMenu(cro::Entity, std::uint32_t, std::uint32_t);
+    void createAvatarMenu(cro::Entity);
     void createJoinMenu(cro::Entity, std::uint32_t, std::uint32_t);
     void createBrowserMenu(cro::Entity, std::uint32_t, std::uint32_t);
     void createLobbyMenu(cro::Entity, std::uint32_t, std::uint32_t);
-    void createPlayerConfigMenu();
+    void createMenuCallbacks();
+    void createProfileLayout(cro::Entity, cro::Transform&, const cro::SpriteSheet&);//display XP, clubs, streak etc on avatar menu
+    void eraseCurrentProfile();
+    void setProfileIndex(std::size_t);
+    void refreshProfileFlyout();
 
     //message handlers for completing connection
     void finaliseGameCreate(const MatchMaking::Message&);
@@ -287,11 +320,9 @@ private:
     void beginTextEdit(cro::Entity, cro::String*, std::size_t);
     void handleTextEdit(const cro::Event&);
     bool applyTextEdit(); //returns true if this consumed event
-    void updateLocalAvatars(std::uint32_t, std::uint32_t);
     void updateLobbyData(const net::NetEvent&);
     void updateLobbyAvatars();
     void updateLobbyList();
-    void showPlayerConfig(bool, std::uint8_t);
     void quitLobby();
     void addCourseSelectButtons();
     void prevHoleCount();

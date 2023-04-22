@@ -90,6 +90,8 @@ PauseState::PauseState(cro::StateStack& ss, cro::State::Context ctx, SharedState
     ctx.mainWindow.setMouseCaptured(false);
 
     buildScene();
+
+    cacheState(StateID::Options);
 }
 
 //public
@@ -196,7 +198,6 @@ void PauseState::buildScene()
     m_audioEnts[AudioID::Back] = m_scene.createEntity();
     m_audioEnts[AudioID::Back].addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("back");
 
-    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
 
     struct RootCallbackData final
     {
@@ -222,10 +223,19 @@ void PauseState::buildScene()
         case RootCallbackData::FadeIn:
             currTime = std::min(1.f, currTime + (dt * 2.f));
             e.getComponent<cro::Transform>().setScale(m_viewScale * cro::Util::Easing::easeOutQuint(currTime));
+
+            {
+                auto reset = (m_sharedData.baseState == StateID::DrivingRange);
+                m_restartButton.getComponent<cro::UIInput>().enabled = reset;
+                m_restartButton.getComponent<cro::Transform>().setScale(glm::vec2(reset ? 1.f : 0.f));
+            }
+
             if (currTime == 1)
             {
                 state = RootCallbackData::FadeOut;
                 e.getComponent<cro::Callback>().active = false;
+
+                m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
             }
             break;
         case RootCallbackData::FadeOut:
@@ -234,6 +244,8 @@ void PauseState::buildScene()
             if (currTime == 0)
             {
                 requestStackPop();
+
+                state = RootCallbackData::FadeIn;
 
                 if (m_requestRestart)
                 {
@@ -307,7 +319,6 @@ void PauseState::buildScene()
         {
             e.getComponent<cro::Text>().setFillColour(TextGoldColour); 
             e.getComponent<cro::AudioEmitter>().play();
-            e.getComponent<cro::Callback>().setUserData<float>(0.f);
             e.getComponent<cro::Callback>().active = true;
         });
     auto unselectedID = uiSystem.addCallback(
@@ -330,8 +341,7 @@ void PauseState::buildScene()
         e.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectedID;
         e.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectedID;
 
-        e.addComponent<cro::Callback>().setUserData<float>(0.f);
-        e.getComponent<cro::Callback>().function = MenuTextCallback();
+        e.addComponent<cro::Callback>().function = MenuTextCallback();
 
         parent.getComponent<cro::Transform>().addChild(e.getComponent<cro::Transform>());
         return e;
@@ -362,24 +372,26 @@ void PauseState::buildScene()
                 }
             });
 
-    if (m_sharedData.baseState == StateID::DrivingRange)
-    {
-        //restart button
-        entity = createItem(glm::vec2(0.f, -4.f), "Restart Round", menuEntity);
-        entity.getComponent<cro::UIInput>().setGroup(MenuID::Main);
-        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
-            uiSystem.addCallback([&, menuEntity, confirmEntity](cro::Entity e, cro::ButtonEvent evt) mutable
-                {
-                    if (activated(evt))
-                    {
-                        confirmEntity.getComponent<cro::Transform>().setPosition(glm::vec2(0.f));
-                        menuEntity.getComponent<cro::Transform>().setPosition(glm::vec2(-10000.f));
 
-                        m_scene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Confirm);
-                        m_confirmationType = ConfirmType::Restart;
-                    }
-                });
-    }
+    //restart button
+    entity = createItem(glm::vec2(0.f, -4.f), "Restart Round", menuEntity);
+    entity.getComponent<cro::UIInput>().setGroup(MenuID::Main);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+        uiSystem.addCallback([&, menuEntity, confirmEntity](cro::Entity e, cro::ButtonEvent evt) mutable
+            {
+                if (activated(evt))
+                {
+                    confirmEntity.getComponent<cro::Transform>().setPosition(glm::vec2(0.f));
+                    menuEntity.getComponent<cro::Transform>().setPosition(glm::vec2(-10000.f));
+
+                    m_scene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Confirm);
+                    m_confirmationType = ConfirmType::Restart;
+                }
+            });
+    entity.getComponent<cro::UIInput>().enabled = (m_sharedData.baseState == StateID::DrivingRange);
+    entity.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+    m_restartButton = entity;
+
 
     //quit button
     entity = createItem(glm::vec2(0.f, -14.f), "Quit To Menu", menuEntity);
@@ -410,6 +422,8 @@ void PauseState::buildScene()
                     confirmEntity.getComponent<cro::Transform>().setPosition(glm::vec2(-10000.f));
 
                     m_scene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Main);
+
+                    m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
                 }
             });
 
@@ -417,7 +431,7 @@ void PauseState::buildScene()
     entity = createItem(glm::vec2(20.f, -12.f), "Yes", confirmEntity);
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Confirm);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
-        uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)
+        uiSystem.addCallback([&, menuEntity, confirmEntity](cro::Entity e, cro::ButtonEvent evt) mutable
             {
                 if (activated(evt))
                 {
@@ -442,8 +456,15 @@ void PauseState::buildScene()
                     else
                     {
                         m_requestRestart = true;
+
+                        menuEntity.getComponent<cro::Transform>().setPosition(glm::vec2(0.f));
+                        confirmEntity.getComponent<cro::Transform>().setPosition(glm::vec2(-10000.f));
+
+                        m_scene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Main);
+
                         quitState();
                     }
+                    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
                 }
             });
 
@@ -478,9 +499,7 @@ void PauseState::buildScene()
         cam.setOrthographic(0.f, size.x, 0.f, size.y, -2.f, 10.f);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
 
-        auto vpSize = calcVPSize();
-
-        m_viewScale = glm::vec2(std::floor(size.y / vpSize.y));
+        m_viewScale = glm::vec2(getViewScale());
         rootNode.getComponent<cro::Transform>().setScale(m_viewScale);
         rootNode.getComponent<cro::Transform>().setPosition(size / 2.f);
 
@@ -507,6 +526,8 @@ void PauseState::buildScene()
     entity.addComponent<cro::Camera>().resizeCallback = updateView;
     m_scene.setActiveCamera(entity);
     updateView(entity.getComponent<cro::Camera>());
+
+    m_scene.simulate(0.f);
 }
 
 void PauseState::quitState()

@@ -1129,6 +1129,10 @@ void BushState::createThumbnails()
     bufferTexture.create(ThumbnailSize.x, ThumbnailSize.y);
     cro::SimpleQuad bufferQuad(bufferTexture.getTexture());
 
+    auto unlitShader = m_resources.shaders.loadBuiltIn(cro::ShaderResource::BuiltIn::Unlit, cro::ShaderResource::BuiltInFlags::DiffuseMap);
+    auto matID = m_resources.materials.add(m_resources.shaders.get(unlitShader));
+    auto material = m_resources.materials.get(matID);
+
     cro::ModelDefinition md(m_resources);
     auto oldCam = m_gameScene.setActiveCamera(m_thumbnailCamera);
     for(auto i = 0u; i < inPaths.size(); ++i)
@@ -1167,11 +1171,12 @@ void BushState::createThumbnails()
                         entity.getComponent<cro::Model>().setRenderFlags(RenderFlagsThumbnail);
 
                         //because we've started using material colours to affect
-                        //the in-game material properties, we need to reset them
-                        //all to white when rendering thumbs
+                        //the in-game material properties, we need to reset the
+                        //material to the default unlit.
                         for (auto j = 0u; j < entity.getComponent<cro::Model>().getMeshData().submeshCount; ++j)
                         {
-                            entity.getComponent<cro::Model>().setMaterialProperty(j, "u_colour", cro::Colour::White);
+                            applyMaterialData(md, material, j);
+                            entity.getComponent<cro::Model>().setMaterial(j, material);
                         }
 
 

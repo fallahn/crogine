@@ -260,7 +260,7 @@ OptionsState::OptionsState(cro::StateStack& ss, cro::State::Context ctx, SharedS
 
     buildScene();
 
-    //updateActiveCallbacks();
+    cacheState(StateID::Credits);
 }
 
 //public
@@ -612,7 +612,7 @@ void OptionsState::buildScene()
 {
     auto& mb = getContext().appInstance.getMessageBus();
 
-    m_scene.addSystem<cro::UISystem>(mb);
+    m_scene.addSystem<cro::UISystem>(mb)->setMouseScrollNavigationEnabled(false);
     m_scene.addSystem<cro::CommandSystem>(mb);
     m_scene.addSystem<cro::CallbackSystem>(mb);
     m_scene.addSystem<cro::SpriteSystem2D>(mb);
@@ -659,6 +659,12 @@ void OptionsState::buildScene()
             if (currTime == 0)
             {
                 requestStackPop();
+
+                m_currentTabFunction = 0;
+                m_tabFunctions[0]();
+
+                state = RootCallbackData::FadeIn;
+                m_scene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Dummy);
             }
             break;
         }
@@ -1089,7 +1095,7 @@ void OptionsState::buildScene()
     m_tooltips[ToolTipID::BeaconColour] = createToolTip("Display colour of the beacon.");
     m_tooltips[ToolTipID::Units] = createToolTip("Select to display in yards/feet or\nunselect to display in metres/cm");
     m_tooltips[ToolTipID::MouseSpeed] = createToolTip("1.00");
-    m_tooltips[ToolTipID::PuttingPower] = createToolTip("Displays an estimated travel\ndistance when putting");
+    m_tooltips[ToolTipID::PuttingPower] = createToolTip("Decreases the difficulty when\nputting, at the cost of XP");
     m_tooltips[ToolTipID::Video] = createToolTip("Sound & Video Settings");
     m_tooltips[ToolTipID::Controls] = createToolTip("Controls");
     m_tooltips[ToolTipID::Achievements] = createToolTip("Achievements");
@@ -1103,9 +1109,7 @@ void OptionsState::buildScene()
         cam.setOrthographic(0.f, size.x, 0.f, size.y, -2.f, 10.f);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
 
-        auto vpSize = calcVPSize();
-
-        m_viewScale = glm::vec2(std::floor(size.y / vpSize.y));
+        m_viewScale = glm::vec2(getViewScale());
         rootNode.getComponent<cro::Transform>().setScale(m_viewScale);
         rootNode.getComponent<cro::Transform>().setPosition(size / 2.f);
     };
@@ -1148,6 +1152,11 @@ void OptionsState::buildScene()
             m_scene.destroyEntity(e);
         }
     };
+
+
+    //and default to dummy input until loaded
+    //m_scene.simulate(0.f);
+    //m_scene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Dummy);
 }
 
 void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& spriteSheet)

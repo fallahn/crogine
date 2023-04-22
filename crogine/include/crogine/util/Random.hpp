@@ -76,7 +76,7 @@ namespace cro
             */
             static inline std::size_t value(std::size_t begin, std::size_t end)
             {
-                CRO_ASSERT(begin < end, "first value is not less than last value");
+                //CRO_ASSERT(begin < end, "first value is not less than last value");
                 std::uniform_int_distribution<std::size_t> dist(begin, end);
                 return dist(rndEngine);
             }

@@ -1,0 +1,25 @@
+model cart
+{
+    mesh = cart.cmb
+    cast_shadows = true
+
+    material PBR
+    {
+        mask = "mask.png"
+        name = "Untitled"
+        colour = 1.000000,1.000000,1.000000,1.000000
+        smooth = true
+        repeat = true
+        depth_test = true
+        double_sided = true
+        use_mipmaps = false
+        animated = false
+        row_count = 1
+        col_count = 1
+        framerate = 1.000000
+        rx_shadows = true
+        blendmode = none
+        diffuse = "albedo.png"
+
+    }
+}

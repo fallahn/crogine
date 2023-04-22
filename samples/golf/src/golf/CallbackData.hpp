@@ -63,3 +63,18 @@ struct MessageAnim final
     }state = Delay;
     float currentTime = 0.5f;
 };
+
+//used by fastforward/skip message
+struct SkipCallbackData final
+{
+    float progress = 0.f;
+    std::uint32_t direction = 1;
+    std::uint32_t buttonIndex = 0; //sets the button animation to xbox or PS
+};
+
+//used by avatar preview animation
+struct AvatarAnimCallbackData final
+{
+    std::int32_t direction = 0; //in/out
+    float progress = 0.f;
+};

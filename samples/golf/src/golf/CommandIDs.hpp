@@ -49,7 +49,8 @@ struct CommandID final
         StrokeArc       = 0x2000,
         Spectator       = 0x4000,
         BeaconColour    = 0x8000,
-        DroneCam        = 0x10000
+        DroneCam        = 0x10000,
+        HoleRing        = 0x20000
     };
 
     struct UI final
@@ -77,7 +78,8 @@ struct CommandID final
             DrivingBoard         = 0x40000,
             StrengthMeter        = 0x80000,
             PlayerIcon           = 0x100000,
-            WaitMessage          = 0x200000
+            WaitMessage          = 0x200000,
+            FastForward          = 0x400000,
         };
     };
 

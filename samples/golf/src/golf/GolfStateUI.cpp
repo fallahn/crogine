@@ -42,8 +42,10 @@ source distribution.
 #include "FloatingTextSystem.hpp"
 #include "PacketIDs.hpp"
 #include "MiniBallSystem.hpp"
+#include "BallSystem.hpp"
 #include "CallbackData.hpp"
 #include "InterpolationSystem.hpp"
+#include "XPAwardStrings.hpp"
 #include "../ErrorCheck.hpp"
 
 #include <Achievements.hpp>
@@ -79,6 +81,21 @@ source distribution.
 namespace
 {
 #include "PostProcess.inl"
+
+    //hack to map course names to achievement IDs
+    const std::unordered_map < std::string, std::int32_t> ParAch =
+    {
+        std::make_pair("course_01", AchievementID::Master01),
+        std::make_pair("course_02", AchievementID::Master02),
+        std::make_pair("course_03", AchievementID::Master03),
+        std::make_pair("course_04", AchievementID::Master04),
+        std::make_pair("course_05", AchievementID::Master05),
+        std::make_pair("course_06", AchievementID::Master06),
+        std::make_pair("course_07", AchievementID::Master07),
+        std::make_pair("course_08", AchievementID::Master08),
+        std::make_pair("course_09", AchievementID::Master09),
+        std::make_pair("course_10", AchievementID::Master10),
+    };
 
     static constexpr float ColumnWidth = 20.f;
     static constexpr float ColumnHeight = 276.f;
@@ -167,12 +184,19 @@ void GolfState::buildUI()
     entity.getComponent<cro::Transform>().setOrigin(glm::vec3(bounds.width / 2.f, bounds.height / 2.f, 0.5f));
     entity.addComponent<cro::Callback>().function = resizeCallback;
 
+    auto* shader = &m_resources.shaders.get(ShaderID::Fog);
+    entity.getComponent<cro::Drawable2D>().setShader(shader);
+    entity.getComponent<cro::Drawable2D>().bindUniform("u_depthTexture", m_gameSceneTexture.getDepthTexture());
+    m_postProcesses[PostID::Fog].uniforms.emplace_back(std::make_pair("u_depthTexture", m_gameSceneTexture.getDepthTexture()));
+    
+    for (auto cam : m_cameras)
+    {
+        cam.getComponent<TargetInfo>().postProcess = &m_postProcesses[PostID::Fog];
+    }
+
+
     auto courseEnt = entity;
     m_courseEnt = courseEnt;
-
-    /*m_resources.shaders.loadFromString(ShaderID::FXAA, FXAAVertex, FXAAFrag);
-    auto& shader = m_resources.shaders.get(ShaderID::FXAA);
-    m_courseEnt.getComponent<cro::Drawable2D>().setShader(&shader);*/
 
     //displays the trophies on round end - has to be displayed over top of scoreboard
     entity = m_uiScene.createEntity();
@@ -184,10 +208,10 @@ void GolfState::buildUI()
     entity.addComponent<cro::Callback>().function = resizeCallback;
 
     auto trophyEnt = entity;
-    for (auto label : m_trophyLabels)
+    for (auto trophy : m_trophies)
     {
-        trophyEnt.getComponent<cro::Transform>().addChild(label.getComponent<cro::Transform>());
-        label.getComponent<cro::Callback>().setUserData<cro::Entity>(trophyEnt);
+        trophyEnt.getComponent<cro::Transform>().addChild(trophy.label.getComponent<cro::Transform>());
+        trophy.label.getComponent<cro::Callback>().setUserData<cro::Entity>(trophyEnt);
     }
 
     //info panel background - vertices are set in resize callback
@@ -196,7 +220,7 @@ void GolfState::buildUI()
     entity.addComponent<cro::Drawable2D>();
     auto infoEnt = entity;
     createSwingMeter(infoEnt);
-    
+
     auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
 
     //player's name
@@ -227,32 +251,32 @@ void GolfState::buildUI()
     entity.addComponent<cro::Callback>().setUserData<std::pair<std::int32_t, float>>(1, 0.f);
     entity.getComponent<cro::Callback>().function =
         [nameEnt](cro::Entity e, float dt)
+    {
+        auto end = nameEnt.getComponent<cro::Drawable2D>().getLocalBounds().width;
+        e.getComponent<cro::Transform>().setPosition({ end + 6.f, 4.f });
+
+        float scale = 0.f;
+        auto& [direction, currTime] = e.getComponent<cro::Callback>().getUserData<std::pair<std::int32_t, float>>();
+        if (direction == 0)
         {
-            auto end = nameEnt.getComponent<cro::Drawable2D>().getLocalBounds().width;
-            e.getComponent<cro::Transform>().setPosition({ end + 6.f, 4.f });
-
-            float scale = 0.f;
-            auto& [direction, currTime] = e.getComponent<cro::Callback>().getUserData<std::pair<std::int32_t, float>>();
-            if (direction == 0)
+            //grow
+            currTime = std::min(1.f, currTime + (dt * 3.f));
+            scale = cro::Util::Easing::easeOutQuint(currTime);
+        }
+        else
+        {
+            //shrink
+            currTime = std::max(0.f, currTime - (dt * 3.f));
+            if (currTime == 0)
             {
-                //grow
-                currTime = std::min(1.f, currTime + (dt * 3.f));
-                scale = cro::Util::Easing::easeOutQuint(currTime);
+                e.getComponent<cro::Callback>().active = false;
             }
-            else
-            {
-                //shrink
-                currTime = std::max(0.f, currTime - (dt * 3.f));
-                if (currTime == 0)
-                {
-                    e.getComponent<cro::Callback>().active = false;
-                }
 
-                scale = cro::Util::Easing::easeInQuint(currTime);
-            }
-            
-            e.getComponent<cro::Transform>().setScale({ scale, scale });
-        };
+            scale = cro::Util::Easing::easeInQuint(currTime);
+        }
+
+        e.getComponent<cro::Transform>().setScale({ scale, scale });
+    };
     nameEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     //hole distance
@@ -265,6 +289,117 @@ void GolfState::buildUI()
     entity.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
     entity.getComponent<cro::Text>().setFillColour(LeaderboardTextLight);
     infoEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+    //fast forward option
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setScale(glm::vec2(0.f));
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::FastForward | CommandID::UI::UIElement;
+    entity.addComponent<UIElement>().relativePosition = { 0.5f, 1.f };
+    entity.getComponent<UIElement>().absolutePosition = { 0.f, -UIBarHeight };
+    entity.getComponent<UIElement>().depth = 0.05f;
+    entity.addComponent<cro::Callback>().setUserData<SkipCallbackData>();
+    entity.getComponent<cro::Callback>().function =
+        [](cro::Entity e, float dt)
+    {
+        auto& [progress, direction, _] = e.getComponent<cro::Callback>().getUserData<SkipCallbackData>();
+        const float Speed = dt * 3.f;
+        if (direction == 1)
+        {
+            //bigger!
+            progress = std::min(1.f, progress + Speed);
+            if (progress == 1)
+            {
+                e.getComponent<cro::Callback>().active = false;
+            }
+        }
+        else
+        {
+            progress = std::max(0.f, progress - Speed);
+            if (progress == 0)
+            {
+                e.getComponent<cro::Callback>().active = false;
+            }
+        }
+
+        float scale = cro::Util::Easing::easeOutBack(progress);
+        e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
+    };
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
+    entity.getComponent<cro::Text>().setFillColour(TextHighlightColour);
+    centreText(entity);
+    infoEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    auto ffEnt = entity;
+
+    cro::SpriteSheet buttonSprites;
+    buttonSprites.loadFromFile("assets/golf/sprites/controller_buttons.spt", m_resources.textures);
+
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 36.f, -12.f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = buttonSprites.getSprite("button_a");
+    entity.addComponent<cro::SpriteAnimation>();
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&,ffEnt](cro::Entity e, float)
+    {
+        auto index = ffEnt.getComponent<cro::Callback>().getUserData<SkipCallbackData>().buttonIndex;
+
+        if (cro::GameController::getControllerCount() != 0
+            && index != std::numeric_limits<std::uint32_t>::max())
+        {
+            e.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+            e.getComponent<cro::SpriteAnimation>().play(index);
+        }
+        else
+        {
+            e.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+        }
+    };
+    ffEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    static constexpr glm::vec2 BarSize(30.f, 2.f); //actually half-size
+    auto darkColour = LeaderboardTextDark;
+    darkColour.setAlpha(0.25f);
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>().setVertexData(
+        {
+            cro::Vertex2D(glm::vec2(-BarSize.x, BarSize.y), TextHighlightColour),
+            cro::Vertex2D(-BarSize, TextHighlightColour),
+
+            cro::Vertex2D(glm::vec2(0.f), TextHighlightColour),
+            cro::Vertex2D(glm::vec2(0.f), TextHighlightColour),
+
+            cro::Vertex2D(glm::vec2(0.f), darkColour),
+            cro::Vertex2D(glm::vec2(0.f), darkColour),
+
+            cro::Vertex2D(BarSize, darkColour),
+            cro::Vertex2D(glm::vec2(BarSize.x, -BarSize.y), darkColour),
+        });
+    entity.getComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLE_STRIP);
+    entity.getComponent<cro::Drawable2D>().updateLocalBounds();
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&, ffEnt](cro::Entity e, float)
+    {
+        if (ffEnt.getComponent<cro::Transform>().getScale().x != 0)
+        {
+            const float xPos = ((BarSize.x * 2.f) * (m_skipState.currentTime / SkipState::SkipTime)) - BarSize.x;
+            auto& verts = e.getComponent<cro::Drawable2D>().getVertexData();
+            verts[2].position = { xPos, BarSize.y };
+            verts[3].position = { xPos, -BarSize.y };
+            verts[4].position = { xPos, BarSize.y };
+            verts[5].position = { xPos, -BarSize.y };
+
+            e.getComponent<cro::Transform>().setPosition({ ffEnt.getComponent<cro::Transform>().getOrigin().x, -14.f });
+        }
+    };
+    ffEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    
 
     //club info
     entity = m_uiScene.createEntity();
@@ -411,13 +546,9 @@ void GolfState::buildUI()
     auto vertColour = cro::Colour(0.f, 0.f, 0.f, 0.25f);
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ -4.f, -14.f, -0.01f });
-    entity.addComponent<cro::Drawable2D>().setVertexData(
-        {
-            cro::Vertex2D(glm::vec2(0.f, 16.f), vertColour),
-            cro::Vertex2D(glm::vec2(0.f, -6.f), vertColour),
-            cro::Vertex2D(glm::vec2(86.f, 16.f), vertColour),
-            cro::Vertex2D(glm::vec2(86.f, -6.f), vertColour)
-        });
+    entity.getComponent<cro::Transform>().setOrigin({ 0.f, 6.f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::WindSpeedBg];
     windEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     //rotating part of dial
@@ -547,7 +678,8 @@ void GolfState::buildUI()
         if (vScaleTarget > 0)
         {
             //grow if not the first stroke (CPU players still need power prediction though)
-            if (m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].holeScores[m_currentHole] == 0)
+            if (m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].holeScores[m_currentHole] == 0
+                || !m_sharedData.showPuttingPower)
             {
                 scale.y = 0.f;
             }
@@ -557,28 +689,11 @@ void GolfState::buildUI()
             }
 
             //move to position
-            auto maxDist = Clubs[ClubID::Putter].getTarget(m_distanceToHole);
-            float guestimation = (m_distanceToHole / maxDist);
-            
-            //kludge stops the flag recommending too much power            
-            if (maxDist == Clubs[ClubID::Putter].getBaseTarget())
+            float hTarget = estimatePuttPower();
+            if (m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].isCPU)
             {
-                //guestimation = cro::Util::Easing::easeInSine(guestimation);
-                guestimation *= 0.83f;
+                m_cpuGolfer.setPuttingPower(hTarget);
             }
-            else
-            {
-                guestimation = std::min(1.f, guestimation + 0.12f);
-            }
-
-            //add a bit more power if putting uphill
-            float slope = 0.f;
-            if (m_distanceToHole > 0.005f)
-            {
-                slope = glm::dot(cro::Transform::Y_AXIS, m_holeData[m_currentHole].pin - m_currentPlayer.position) / m_distanceToHole;
-            }
-            float hTarget = std::clamp(guestimation + (0.25f * slope), 0.f, 1.f);
-            m_cpuGolfer.setPuttingPower(hTarget);
             hTarget *= BarWidth;
 
             auto pos = e.getComponent<cro::Transform>().getPosition();
@@ -655,7 +770,8 @@ void GolfState::buildUI()
                 auto oldCam = m_gameScene.setActiveCamera(m_mapCam);
                 m_gameScene.getSystem<cro::CameraSystem>()->process(0.f);
 
-                cro::Colour c(std::uint8_t(39), 56, 153);
+                cro::Colour c = cro::Colour::Transparent;
+                //cro::Colour c(std::uint8_t(39), 56, 153);
                 m_mapTexture.clear(c);
                 m_gameScene.render();
                 m_mapTexture.display();
@@ -713,6 +829,7 @@ void GolfState::buildUI()
     //mini flag icon
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setRotation(cro::Util::Const::degToRad * 90.f);
+    entity.getComponent<cro::Transform>().setOrigin({ 0.5f, -0.5f });
     entity.addComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::MiniFlag;
     entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::MapFlag];
@@ -721,7 +838,7 @@ void GolfState::buildUI()
         [&](cro::Entity e, float dt)
     {
         e.getComponent<cro::Transform>().setPosition(glm::vec3(m_minimapZoom.toMapCoords(m_holeData[m_currentHole].pin), 0.02f));
-        e.getComponent<cro::Transform>().setScale(m_minimapZoom.mapScale * 2.f * (1.f + ((m_minimapZoom.zoom - 1.f) * 0.125f)));
+        e.getComponent<cro::Transform>().setScale((m_minimapZoom.mapScale * 2.f * (1.f + ((m_minimapZoom.zoom - 1.f) * 0.125f))) * 0.75f);
     };
     mapEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
@@ -748,11 +865,14 @@ void GolfState::buildUI()
         else
         {
             auto club = getClub();
-            switch (club)
+            if (club == ClubID::Putter
+                /*&& !m_sharedData.showPuttingPower*/)
             {
-            default: 
+                scale = std::max(0.f, scale - ((scale * dt) * 8.f));
+            }
+            else
             {
-                const float targetScale = Clubs[club].getTarget(m_distanceToHole) * m_minimapZoom.zoom;
+                const float targetScale = m_inputParser.getEstimatedDistance() * m_minimapZoom.zoom;
                 if (scale < targetScale)
                 {
                     scale = std::min(scale + (dt * ((targetScale - scale) * 10.f)), targetScale);
@@ -761,11 +881,6 @@ void GolfState::buildUI()
                 {
                     scale = std::max(targetScale, scale - ((scale * dt) * 2.f));
                 }
-            }
-                break;
-            case ClubID::Putter:
-                scale = std::max(0.f, scale - ((scale * dt) * 8.f));
-                break;
             }
         }
 
@@ -824,6 +939,46 @@ void GolfState::buildUI()
     auto greenEnt = entity;
     m_miniGreenEnt = entity;
 
+    //stroke indicator for minigreen
+    const auto startCol = TextGoldColour;
+    auto endCol = startCol;
+    endCol.setAlpha(0.05f);
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>().setVertexData(
+        {
+            cro::Vertex2D(glm::vec2(0.f, 0.25f), startCol),
+            cro::Vertex2D(glm::vec2(0.f, -0.25f), startCol),
+            cro::Vertex2D(glm::vec2(15.f, 0.25f), endCol),
+            cro::Vertex2D(glm::vec2(15.f, -0.25f), endCol),
+        });
+    entity.getComponent<cro::Drawable2D>().updateLocalBounds();
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<float>(1.f);
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float dt)
+    {
+        const float Speed = dt * 4.f;
+        auto& currSize = e.getComponent<cro::Callback>().getUserData<float>();
+        if (m_inputParser.getActive()
+            && !m_sharedData.localConnectionData.playerData[m_currentPlayer.player].isCPU
+            && m_sharedData.showPuttingPower)
+        {
+            currSize = std::min(1.f, currSize + Speed);
+            const float rotation = m_inputParser.getYaw();
+            e.getComponent<cro::Transform>().setRotation(rotation);
+        }
+        else
+        {
+            currSize = std::max(0.f, currSize - Speed);
+        }
+        float scale = cro::Util::Easing::easeOutBack(currSize);
+        e.getComponent<cro::Transform>().setScale(glm::vec2(scale) * (m_viewScale.x / m_miniGreenEnt.getComponent<cro::Transform>().getScale().x));
+    };
+    m_miniGreenIndicatorEnt = entity;
+    greenEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
     createScoreboard();
 
 
@@ -843,12 +998,12 @@ void GolfState::buildUI()
         m_minimapZoom.updateShader();
 
         glm::vec2 viewSize(MapSize);
-        miniCam.setOrthographic(-viewSize.x / 2.f, viewSize.x / 2.f, -viewSize.y / 2.f, viewSize.y / 2.f, -0.1f, 30.f);
+        miniCam.setOrthographic(-viewSize.x / 2.f, viewSize.x / 2.f, -viewSize.y / 2.f, viewSize.y / 2.f, -0.1f, 50.f);
         miniCam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
 
     m_mapCam = m_gameScene.createEntity();
-    m_mapCam.addComponent<cro::Transform>().setPosition({ static_cast<float>(MapSize.x) / 2.f, 10.f, -static_cast<float>(MapSize.y) / 2.f});
+    m_mapCam.addComponent<cro::Transform>().setPosition({ static_cast<float>(MapSize.x) / 2.f, 38.f, -static_cast<float>(MapSize.y) / 2.f});
     m_mapCam.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -90.f * cro::Util::Const::degToRad);
     auto& miniCam = m_mapCam.addComponent<cro::Camera>();
     miniCam.renderFlags = RenderFlags::MiniMap;
@@ -867,7 +1022,7 @@ void GolfState::buildUI()
     {
         auto texSize = MapSize.y / 2u;
 
-        auto windowScale = std::floor(cro::App::getWindow().getSize().y / calcVPSize().y);
+        auto windowScale = getViewScale();
         float scale = m_sharedData.pixelScale ? windowScale : 1.f;
         scale = (windowScale + 1.f) - scale;
         texSize *= static_cast<std::uint32_t>(scale);
@@ -921,8 +1076,7 @@ void GolfState::buildUI()
         cam.setOrthographic(0.f, size.x, 0.f, size.y, -3.5f, 20.f);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
 
-        auto vpSize = calcVPSize();
-        m_viewScale = glm::vec2(std::floor(size.y / vpSize.y));
+        m_viewScale = glm::vec2(getViewScale());
         m_inputParser.setMouseScale(m_viewScale.x);
 
         glm::vec2 courseScale(m_sharedData.pixelScale ? m_viewScale.x : 1.f);
@@ -942,7 +1096,7 @@ void GolfState::buildUI()
         mapEnt.getComponent<cro::Transform>().setPosition({ uiSize.x - mapSize.y - 2.f, uiSize.y - mapSize.x - (UIBarHeight + 2.f), -0.05f }); //map sprite is rotated 90
 
 
-        greenEnt.getComponent<cro::Transform>().setPosition({ 2.f, uiSize.y - std::floor(MapSize.y * 0.6f) - UIBarHeight - 2.f, -0.1f });
+        greenEnt.getComponent<cro::Transform>().setPosition({ 2.f, uiSize.y - std::floor(MapSize.y * 0.6f) - UIBarHeight - 2.f, 0.1f });
         greenEnt.getComponent<cro::Transform>().move(glm::vec2(static_cast<float>(MapSize.y) / 4.f));
 
         windEnt.getComponent<cro::Transform>().setPosition(glm::vec2(/*uiSize.x + */WindIndicatorPosition.x, WindIndicatorPosition.y));
@@ -1118,14 +1272,66 @@ void GolfState::showCountdown(std::uint8_t seconds)
         }
     }
 
-    if(m_holeData.size() > 8) //only consider it a round if there are at least 9 holes
+    if (m_holeData.size() > 8) //only consider it a round if there are at least 9 holes
     {
         Achievements::incrementStat(StatStrings[StatID::TotalRounds]);
-    }
 
-    if (m_sharedData.holeCount == 0) //set to ALL - which ought to be 18
-    {
-        Achievements::incrementStat(m_sharedData.mapDirectory);
+        if (m_holeData.size() == 18)
+        {
+            Achievements::setAvgStat(m_sharedData.mapDirectory, m_playTime.asSeconds(), 1.f);
+
+            //if we're stroke play see if we get the achievement
+            //for coming in under par
+            for (const auto& p : m_sharedData.connectionData[m_sharedData.localConnectionData.connectionID].playerData)
+            {
+                if (!p.isCPU)
+                {
+                    if (m_sharedData.scoreType == ScoreType::Stroke
+                        && p.parScore <= 0)
+                    {
+                        //course specific
+                        if (ParAch.count(m_sharedData.mapDirectory) != 0)
+                        {
+                            auto id = ParAch.at(m_sharedData.mapDirectory);
+                            Achievements::awardAchievement(AchievementStrings[id]);
+                        }
+
+                        //any course
+                        if (p.parScore < -17)
+                        {
+                            Achievements::awardAchievement(AchievementStrings[AchievementID::RoadToSuccess]);
+                        }
+                    }
+
+                    if (m_achievementTracker.alwaysOnTheCourse)
+                    {
+                        Achievements::awardAchievement(AchievementStrings[AchievementID::ConsistencyIsKey]);
+                    }
+
+                    if (m_achievementTracker.noHolesOverPar)
+                    {
+                        Achievements::awardAchievement(AchievementStrings[AchievementID::NoMistake]);
+                    }
+
+                    if (m_achievementTracker.noGimmeUsed)
+                    {
+                        Achievements::awardAchievement(AchievementStrings[AchievementID::NeverGiveUp]);
+                    }
+
+                    if (m_achievementTracker.underTwoPutts)
+                    {
+                        Achievements::awardAchievement(AchievementStrings[AchievementID::ThreesACrowd]);
+                    }
+
+                    if (m_achievementTracker.twoShotsSpare)
+                    {
+                        Achievements::awardAchievement(AchievementStrings[AchievementID::GreensInRegulation]);
+                    }
+                }
+            }
+        }
+
+        Social::courseComplete(m_sharedData.mapDirectory, m_sharedData.holeCount);
     }
 
     auto trophyCount = std::min(std::size_t(3), m_statBoardScores.size());
@@ -1146,48 +1352,76 @@ void GolfState::showCountdown(std::uint8_t seconds)
                 //against someone with a significantly higher level.
                 float multiplier = std::min(1.f, static_cast<float>(m_statBoardScores.size()) / 4.f);
                 float xp = 0.f;
+                std::int32_t xpReason = -1;
                 switch (i)
                 {
                 default: break;
                 case 0:
                     xp = static_cast<float>(XPValues[XPID::First]) * multiplier;
+                    xpReason = XPStringID::FirstPlace;
                     break;
                 case 1:
                     xp = static_cast<float>(XPValues[XPID::Second]) * multiplier;
+                    xpReason = XPStringID::SecondPlace;
                     break;
                 case 2:
                     xp = static_cast<float>(XPValues[XPID::Third]) * multiplier;
+                    xpReason = XPStringID::ThirdPlace;
                     break;
                 }
-                Social::awardXP(static_cast<std::int32_t>(xp));
+                Social::awardXP(static_cast<std::int32_t>(xp), xpReason);
             }
         }
 
-        m_trophies[i].getComponent<TrophyDisplay>().state = TrophyDisplay::In;
+        m_trophies[i].trophy.getComponent<TrophyDisplay>().state = TrophyDisplay::In;
         //m_trophyLabels[i].getComponent<cro::Callback>().active = true; //this is done by TrophyDisplay (above) to properly delay it
-        m_trophyBadges[i].getComponent<cro::SpriteAnimation>().play(std::min(5, m_sharedData.connectionData[m_statBoardScores[i].client].level / 10));
-        m_trophyBadges[i].getComponent<cro::Model>().setDoubleSided(0, true);
+        m_trophies[i].badge.getComponent<cro::SpriteAnimation>().play(std::min(5, m_sharedData.connectionData[m_statBoardScores[i].client].level / 10));
+        m_trophies[i].badge.getComponent<cro::Model>().setDoubleSided(0, true);
 
-        m_trophyLabels[i].getComponent<cro::Sprite>().setTexture(m_sharedData.nameTextures[m_statBoardScores[i].client].getTexture(), false);
-        auto bounds = m_trophyLabels[i].getComponent<cro::Sprite>().getTextureBounds();
+        m_trophies[i].label.getComponent<cro::Sprite>().setTexture(m_sharedData.nameTextures[m_statBoardScores[i].client].getTexture(), false);
+        auto bounds = m_trophies[i].label.getComponent<cro::Sprite>().getTextureBounds();
         bounds.bottom = bounds.height * m_statBoardScores[i].player;
-        m_trophyLabels[i].getComponent<cro::Sprite>().setTextureRect(bounds);
+        m_trophies[i].label.getComponent<cro::Sprite>().setTextureRect(bounds);
+
+        //choose the relevant player from the sheet
+        bounds = { 0.f, LabelTextureSize.y - (LabelIconSize.x * 4.f), LabelIconSize.x, LabelIconSize.y };
+        bounds.left = LabelIconSize.x * (m_statBoardScores[i].player % 2);
+        bounds.bottom += LabelIconSize.y * (m_statBoardScores[i].player / 2);
+        m_trophies[i].avatar.getComponent<cro::Sprite>().setTextureRect(bounds);
     }
 
 
+    bool personalBest = false;
+
+#ifndef CRO_DEBUG_
     //enter score into leaderboard
     if (m_sharedData.scoreType == ScoreType::Stroke)
     {
         const auto& connectionData = m_sharedData.connectionData[m_sharedData.clientConnection.connectionID];
-        for (auto i = 0u; i < connectionData.playerCount; ++i)
+        for (auto k = 0u; k < connectionData.playerCount; ++k)
         {
-            if (!connectionData.playerData[i].isCPU)
+            if (!connectionData.playerData[k].isCPU)
             {
-                Social::insertScore(m_sharedData.mapDirectory, m_sharedData.holeCount, connectionData.playerData[i].score);
+                std::int32_t score = connectionData.playerData[k].score;
+                auto best = Social::getPersonalBest(m_sharedData.mapDirectory, m_sharedData.holeCount);
+
+                if (score < best
+                    || best == 0)
+                {
+                    personalBest = true;
+                }
+
+                Social::insertScore(m_sharedData.mapDirectory, m_sharedData.holeCount, score);
+                cro::Logger::log("LEADERBOARD attempting to insert score: " + std::to_string(connectionData.playerData[k].score), cro::Logger::Type::Info, cro::Logger::Output::File);
                 break;
             }
         }
     }
+    else
+    {
+        cro::Logger::log("LEADERBOARD failed to insert score: Score Type is not Stroke.", cro::Logger::Type::Error, cro::Logger::Output::File);
+    }
+#endif
 
     auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
 
@@ -1238,6 +1472,37 @@ void GolfState::showCountdown(std::uint8_t seconds)
         e.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     };
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+
+    if (personalBest)
+    {
+        entity = m_uiScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ 200.f + scoreboardExpansion, 10.f, 0.8f });
+        entity.addComponent<cro::Drawable2D>();
+        entity.addComponent<UIElement>().absolutePosition = { 200.f, 150.f };
+        entity.getComponent<UIElement>().depth = 2.23f;
+        entity.getComponent<UIElement>().resizeCallback = [](cro::Entity e)
+        {
+            e.getComponent<cro::Transform>().move({ scoreboardExpansion, 0.f });
+        };
+        entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
+        entity.addComponent<cro::Text>(font).setCharacterSize(UITextSize * 2);
+        entity.getComponent<cro::Text>().setFillColour(TextHighlightColour);
+        //entity.getComponent<cro::Text>().setOutlineColour(LeaderboardTextDark);
+        //entity.getComponent<cro::Text>().setOutlineThickness(1.f);
+        entity.getComponent<cro::Text>().setString("PERSONAL BEST!");
+        centreText(entity);
+
+        cmd.targetFlags = CommandID::UI::Scoreboard;
+        cmd.action =
+            [entity](cro::Entity e, float) mutable
+        {
+            e.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+        };
+        m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+    }
+
+
 
     //create status icons for each connected client
     //to show vote to skip
@@ -1376,6 +1641,7 @@ void GolfState::createScoreboard()
     rootEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     auto bgEnt = entity;
+    m_scoreboardEnt = entity;
 
     auto resizeCentre =
         [](cro::Entity e)
@@ -1574,7 +1840,6 @@ void GolfState::createScoreboard()
     ents.back().getComponent<cro::Transform>().setPosition(glm::vec3(ColumnPositions.back(), 0.5f));
     ents.back().getComponent<UIElement>().absolutePosition = ColumnPositions.back() - glm::vec2(0.f, UITextPosV);
 
-    updateScoreboard();
 
     //net strength icons
     glm::vec3 iconPos(8.f, 235.f, 2.2f);
@@ -1610,238 +1875,313 @@ void GolfState::createScoreboard()
             iconPos.y -= IconSpacing;
         }
     }
+
+    updateScoreboard();
 }
 
 void GolfState::updateScoreboard()
 {
-    cro::Command cmd;
-    cmd.targetFlags = CommandID::UI::Scoreboard;
-    cmd.action = [&](cro::Entity e, float)
+    struct ScoreEntry final
     {
-        struct ScoreEntry final
+        cro::String name;
+        std::vector<std::uint8_t> holes;
+        std::int32_t frontNine = 0;
+        std::int32_t backNine = 0;
+        std::int32_t total = 0;
+        std::int32_t parDiff = 0;
+        std::uint8_t client = 0;
+        std::uint8_t player = 0;
+    };
+
+    std::vector<ScoreEntry> scores;
+    m_statBoardScores.clear();
+
+    std::uint32_t playerCount = 0;
+    auto holeCount = m_holeData.size();
+    std::uint8_t clientID = 0;
+    for (auto& client : m_sharedData.connectionData)
+    {
+        playerCount += client.playerCount;
+
+        for (auto i = 0u; i < client.playerCount; ++i)
         {
-            cro::String name;
-            std::vector<std::uint8_t> holes;
-            std::int32_t frontNine = 0;
-            std::int32_t backNine = 0;
-            std::int32_t total = 0;
-            std::int32_t parDiff = 0;
-            std::uint8_t client = 0;
-            std::uint8_t player = 0;
-        };
+            auto& entry = scores.emplace_back();
+            entry.name = client.playerData[i].name;
+            entry.client = clientID;
+            entry.player = i;
 
-        std::vector<ScoreEntry> scores;
-        m_statBoardScores.clear();
+            bool overPar = false;
 
-        std::uint32_t playerCount = 0;
-        auto holeCount = m_holeData.size();
-        std::uint8_t clientID = 0;
-        for (auto& client : m_sharedData.connectionData)
-        {
-            playerCount += client.playerCount;
-
-            for (auto i = 0u; i < client.playerCount; ++i)
+            for (auto j = 0u; j < client.playerData[i].holeScores.size(); ++j)
             {
-                auto& entry = scores.emplace_back();
-                entry.name = client.playerData[i].name;
-                entry.client = clientID;
-                entry.player = i;
+                auto s = client.playerData[i].holeScores[j];
+                entry.holes.push_back(s);
 
-                for (auto j = 0u; j < client.playerData[i].holeScores.size(); ++j)
+                if (s)
                 {
-                    auto s = client.playerData[i].holeScores[j];
-                    entry.holes.push_back(s);
-                    
-                    if (s)
-                    {
-                        entry.parDiff += static_cast<std::int32_t>(s) - m_holeData[j].par;
-                    }
+                    auto diff = static_cast<std::int32_t>(s) - m_holeData[j].par;
+                    entry.parDiff += diff;
 
-                    if (j < 9)
+                    overPar = (diff > 0);
+                }
+
+                if (j < 9)
+                {
+                    if (m_sharedData.scoreType == ScoreType::Stroke)
                     {
-                        if (m_sharedData.scoreType == ScoreType::Stroke)
-                        {
-                            entry.frontNine += client.playerData[i].holeScores[j];
-                        }
-                        else if (m_sharedData.scoreType == ScoreType::Match)
-                        {
-                            entry.frontNine = client.playerData[i].matchScore;
-                        }
-                        else
-                        {
-                            entry.frontNine = client.playerData[i].skinScore;
-                        }
+                        entry.frontNine += client.playerData[i].holeScores[j];
+                    }
+                    else if (m_sharedData.scoreType == ScoreType::Match)
+                    {
+                        entry.frontNine = client.playerData[i].matchScore;
                     }
                     else
                     {
-                        if (m_sharedData.scoreType == ScoreType::Stroke)
-                        {
-                            entry.backNine += client.playerData[i].holeScores[j];
-                        }
-                        else if (m_sharedData.scoreType == ScoreType::Match)
-                        {
-                            entry.backNine = client.playerData[i].matchScore;
-                        }
-                        else
-                        {
-                            entry.backNine = client.playerData[i].skinScore;
-                        }
+                        entry.frontNine = client.playerData[i].skinScore;
                     }
                 }
-                client.playerData[i].parScore = entry.parDiff;
-
-                switch (m_sharedData.scoreType)
+                else
                 {
-                default:
-                case ScoreType::Stroke:
-                    entry.total = entry.frontNine + entry.backNine;
-                    break;
-                case ScoreType::Skins:
-                    entry.total = client.playerData[i].skinScore;
-                    break;
-                case ScoreType::Match:
-                    //entry.total = entry.frontNine;
-                    entry.total = client.playerData[i].matchScore;
-                    break;
+                    if (m_sharedData.scoreType == ScoreType::Stroke)
+                    {
+                        entry.backNine += client.playerData[i].holeScores[j];
+                    }
+                    else if (m_sharedData.scoreType == ScoreType::Match)
+                    {
+                        entry.backNine = client.playerData[i].matchScore;
+                    }
+                    else
+                    {
+                        entry.backNine = client.playerData[i].skinScore;
+                    }
                 }
-
-                //for stat/achievment tracking
-                auto& leaderboardEntry = m_statBoardScores.emplace_back();
-                leaderboardEntry.client = clientID;
-                leaderboardEntry.player = i;
-                leaderboardEntry.score = entry.total;
             }
-            clientID++;
+            client.playerData[i].parScore = entry.parDiff;
+
+            
+            switch (m_sharedData.scoreType)
+            {
+            default:
+            case ScoreType::Stroke:
+                entry.total = entry.frontNine + entry.backNine;
+
+                //track achievement make no mistake
+                if (client.connectionID == m_sharedData.localConnectionData.connectionID
+                    && !client.playerData[i].isCPU
+                    && overPar)
+                {
+                    m_achievementTracker.noHolesOverPar = false;
+                }
+
+                break;
+            case ScoreType::Skins:
+                entry.total = client.playerData[i].skinScore;
+                break;
+            case ScoreType::Match:
+                //entry.total = entry.frontNine;
+                entry.total = client.playerData[i].matchScore;
+                break;
+            }
+
+            //for stat/achievment tracking
+            auto& leaderboardEntry = m_statBoardScores.emplace_back();
+            leaderboardEntry.client = clientID;
+            leaderboardEntry.player = i;
+            leaderboardEntry.score = entry.total;
         }
+        clientID++;
+    }
 
-        //tracks stats and decides on trophy layout on round end (see showCountdown())
-        std::sort(m_statBoardScores.begin(), m_statBoardScores.end(),
-            [&](const StatBoardEntry& a, const StatBoardEntry& b)
-            {
-                if (m_sharedData.scoreType == ScoreType::Stroke)
-                {
-                    return a.score < b.score;
-                }
-                return a.score > b.score;
-            });
-        //LOG("Table Update", cro::Logger::Type::Info);
-
-        auto& ents = e.getComponent<cro::Callback>().getUserData<std::vector<cro::Entity>>();
-        std::sort(scores.begin(), scores.end(),
-            [&](const ScoreEntry& a, const ScoreEntry& b)
-            {
-                switch (m_sharedData.scoreType)
-                {
-                default:
-                case ScoreType::Stroke:
-                    return a.total < b.total;
-                case ScoreType::Skins:
-                case ScoreType::Match:
-                    return a.total > b.total;
-                }
-            });
-
-
-        std::size_t page2 = 0;
-        static constexpr std::size_t MaxCols = 9;
-        if (holeCount > m_scoreColumnCount)
+    //tracks stats and decides on trophy layout on round end (see showCountdown())
+    std::sort(m_statBoardScores.begin(), m_statBoardScores.end(),
+        [&](const StatBoardEntry& a, const StatBoardEntry& b)
         {
-            page2 = std::min(MaxCols, holeCount - m_scoreColumnCount);
+            if (m_sharedData.scoreType == ScoreType::Stroke)
+            {
+                return a.score < b.score;
+            }
+            return b.score < a.score;
+        });
+    //LOG("Table Update", cro::Logger::Type::Info);
+
+    auto& ents = m_scoreboardEnt.getComponent<cro::Callback>().getUserData<std::vector<cro::Entity>>();
+    std::sort(scores.begin(), scores.end(),
+        [&](const ScoreEntry& a, const ScoreEntry& b)
+        {
+            switch (m_sharedData.scoreType)
+            {
+            default:
+            case ScoreType::Stroke:
+                return a.total < b.total;
+            case ScoreType::Skins:
+            case ScoreType::Match:
+                return b.total < a.total;
+            }
+        });
+
+
+    std::size_t page2 = 0;
+    static constexpr std::size_t MaxCols = 9;
+    if (holeCount > m_scoreColumnCount)
+    {
+        page2 = std::min(MaxCols, holeCount - m_scoreColumnCount);
+    }
+
+    //store the strings to update the leaderboard texture
+    std::vector<LeaderboardEntry> leaderboardEntries;
+
+    //name column
+    cro::String nameString = "HOLE\nPAR";
+    for (auto i = 0u; i < playerCount; ++i)
+    {
+        nameString += "\n  " + scores[i].name.substr(0, ConstVal::MaxStringChars);
+        m_netStrengthIcons[i].getComponent<cro::Callback>().getUserData<std::pair<std::uint8_t, std::uint8_t>>()
+            = std::make_pair(scores[i].client, scores[i].player);
+    }
+    if (page2)
+    {
+        //pad out for page 2
+        for (auto i = 0u; i < 16u - playerCount; ++i)
+        {
+            nameString += "\n";
         }
 
-        //store the strings to update the leaderboard texture
-        std::vector<LeaderboardEntry> leaderboardEntries;
-
-        //name column
-        cro::String nameString = "HOLE\nPAR";
+        nameString += "\n\nHOLE\nPAR";
         for (auto i = 0u; i < playerCount; ++i)
         {
             nameString += "\n  " + scores[i].name.substr(0, ConstVal::MaxStringChars);
-            m_netStrengthIcons[i].getComponent<cro::Callback>().getUserData<std::pair<std::uint8_t, std::uint8_t>>()
-                = std::make_pair(scores[i].client, scores[i].player);
         }
+    }
+    ents[0].getComponent<cro::Text>().setString(nameString);
+    leaderboardEntries.emplace_back(ents[0].getComponent<cro::Transform>().getPosition() + glm::vec3(2.f, 0.f, 0.f), nameString);
+
+    //score columns
+    for (auto i = 1u; i < ents.size() - 1; ++i)
+    {
+        auto holeNumber = i;
+        if (m_sharedData.holeCount == 2)
+        {
+            holeNumber += 9;
+        }
+        std::string scoreString = std::to_string(holeNumber) + "\n" + std::to_string(m_holeData[i - 1].par);
+
+        for (auto j = 0u; j < playerCount; ++j)
+        {
+            scoreString += "\n";
+
+            auto s = scores[j].holes[i - 1];
+            if (s)
+            {
+                scoreString += std::to_string(s);
+            }
+        }
+
         if (page2)
         {
-            //pad out for page 2
-            for (auto i = 0u; i < 16u - playerCount; ++i)
-            {
-                nameString += "\n";
-            }
-
-            nameString += "\n\nHOLE\nPAR";
-            for (auto i = 0u; i < playerCount; ++i)
-            {
-                nameString += "\n  " + scores[i].name.substr(0, ConstVal::MaxStringChars);
-            }
-        }
-        ents[0].getComponent<cro::Text>().setString(nameString);
-        leaderboardEntries.emplace_back(ents[0].getComponent<cro::Transform>().getPosition() + glm::vec3(2.f, 0.f, 0.f), nameString);
-
-        //score columns
-        for (auto i = 1u; i < ents.size() - 1; ++i)
-        {
-            auto holeNumber = i;
-            if (m_sharedData.holeCount == 2)
-            {
-                holeNumber += 9;
-            }
-            std::string scoreString = std::to_string(holeNumber) + "\n" + std::to_string(m_holeData[i - 1].par);
-
-            for (auto j = 0u; j < playerCount; ++j)
+            for (auto j = 0u; j < 16 - playerCount; ++j)
             {
                 scoreString += "\n";
-
-                auto s = scores[j].holes[i - 1];
-                if (s)
-                {
-                     scoreString += std::to_string(s);
-                }
             }
 
-            if (page2)
+            auto holeIndex = (i + MaxCols) - 1;
+            if (holeIndex < m_holeData.size())
             {
-                for (auto j = 0u; j < 16 - playerCount; ++j)
+                scoreString += "\n\n" + std::to_string(i + MaxCols) + "\n" + std::to_string(m_holeData[holeIndex].par);
+                for (auto j = 0u; j < playerCount; ++j)
                 {
                     scoreString += "\n";
-                }
-
-                auto holeIndex = (i + MaxCols) - 1;
-                if (holeIndex < m_holeData.size())
-                {
-                    scoreString += "\n\n" + std::to_string(i + MaxCols) + "\n" + std::to_string(m_holeData[holeIndex].par);
-                    for (auto j = 0u; j < playerCount; ++j)
+                    auto s = scores[j].holes[holeIndex];
+                    if (s)
                     {
-                        scoreString += "\n";
-                        auto s = scores[j].holes[holeIndex];
-                        if (s)
-                        {
-                            scoreString += std::to_string(s);
-                        }
+                        scoreString += std::to_string(s);
                     }
                 }
             }
-
-            ents[i].getComponent<cro::Text>().setString(scoreString);
-            leaderboardEntries.emplace_back(glm::vec3(ents[i].getComponent<UIElement>().absolutePosition - glm::vec2(ColumnMargin, -UITextPosV), 0.f), scoreString);
         }
 
-        //total column
-        std::int32_t par = 0;
-        for (auto i = 0u; i < MaxCols && i < m_holeData.size(); ++i)
+        ents[i].getComponent<cro::Text>().setString(scoreString);
+        leaderboardEntries.emplace_back(glm::vec3(ents[i].getComponent<UIElement>().absolutePosition - glm::vec2(ColumnMargin, -UITextPosV), 0.f), scoreString);
+    }
+
+    //total column
+    std::int32_t par = 0;
+    for (auto i = 0u; i < MaxCols && i < m_holeData.size(); ++i)
+    {
+        par += m_holeData[i].par;
+    }
+
+    std::string totalString = "TOTAL\n" + std::to_string(par);
+
+    for (auto i = 0u; i < playerCount; ++i)
+    {
+        totalString += "\n" + std::to_string(scores[i].frontNine);
+
+        switch (m_sharedData.scoreType)
+        {
+        default:
+        case ScoreType::Stroke:
+            if (scores[i].parDiff > 0)
+            {
+                totalString += " (+" + std::to_string(scores[i].parDiff) + ")";
+            }
+            else if (scores[i].parDiff < 0)
+            {
+                totalString += " (" + std::to_string(scores[i].parDiff) + ")";
+            }
+            else
+            {
+                totalString += " (0)";
+            }
+            break;
+        case ScoreType::Match:
+            totalString += " POINTS";
+            break;
+        case ScoreType::Skins:
+            totalString += " SKINS";
+            break;
+        }
+    }
+
+    //pad out for page 2
+    for (auto i = 0u; i < 16u - playerCount; ++i)
+    {
+        totalString += "\n";
+    }
+
+    if (page2)
+    {
+        const auto getSeparator =
+            [](std::int32_t first)
+        {
+            std::string str;
+            if (first < 10)
+            {
+                str += " ";
+            }
+            str += " - ";
+
+            return str;
+        };
+
+        auto frontPar = par;
+        par = 0;
+        for (auto i = MaxCols; i < m_holeData.size(); ++i)
         {
             par += m_holeData[i].par;
         }
+        auto separator = getSeparator(par);
 
-        std::string totalString = "TOTAL\n" + std::to_string(par);
-
+        totalString += "\n\nTOTAL\n" + std::to_string(par) + separator + std::to_string(par + frontPar);
         for (auto i = 0u; i < playerCount; ++i)
         {
-            totalString += "\n" + std::to_string(scores[i].frontNine);
+            separator = getSeparator(scores[i].backNine);
+            totalString += "\n" + std::to_string(scores[i].backNine);
 
             switch (m_sharedData.scoreType)
             {
             default:
             case ScoreType::Stroke:
+                totalString += separator + std::to_string(scores[i].total);
                 if (scores[i].parDiff > 0)
                 {
                     totalString += " (+" + std::to_string(scores[i].parDiff) + ")";
@@ -1863,88 +2203,24 @@ void GolfState::updateScoreboard()
                 break;
             }
         }
+    }
 
-        //pad out for page 2
-        for (auto i = 0u; i < 16u - playerCount; ++i)
-        {
-            totalString += "\n";
-        }
+    ents.back().getComponent<cro::Text>().setString(totalString);
+    ents.back().getComponent<cro::Transform>().setPosition(ColumnPositions.back());
+    //gotta admit - I don't know why this works.
+    if (scoreboardExpansion > 0)
+    {
+        float offset = scoreboardExpansion == MaxExpansion ? std::floor(ColumnMargin) : 0.f;
+        ents.back().getComponent<cro::Transform>().move({ std::floor(scoreboardExpansion - offset), 0.f });
+    }
+    leaderboardEntries.emplace_back(glm::vec3(ents.back().getComponent<UIElement>().absolutePosition - glm::vec2(ColumnMargin, -UITextPosV), 0.f), totalString);
 
-        if (page2)
-        {
-            const auto getSeparator = 
-                [](std::int32_t first)
-            {
-                std::string str;
-                if (first < 10)
-                {
-                    str += " ";
-                }
-                str += " - ";
+    //for some reason we have to hack this to display and I'm too lazy to debug it
+    auto pos = ents.back().getComponent<cro::Transform>().getPosition();
+    pos.z = 1.5f;
+    ents.back().getComponent<cro::Transform>().setPosition(pos);
 
-                return str;
-            };
-
-            auto frontPar = par;
-            par = 0;
-            for (auto i = MaxCols; i < m_holeData.size(); ++i)
-            {
-                par += m_holeData[i].par;
-            }
-            auto separator = getSeparator(par);
-
-            totalString += "\n\nTOTAL\n" + std::to_string(par) + separator + std::to_string(par + frontPar);
-            for (auto i = 0u; i < playerCount; ++i)
-            {
-                separator = getSeparator(scores[i].backNine);
-                totalString += "\n" + std::to_string(scores[i].backNine);
-                
-                switch (m_sharedData.scoreType)
-                {
-                default:
-                case ScoreType::Stroke:
-                    totalString += separator + std::to_string(scores[i].total);
-                    if (scores[i].parDiff > 0)
-                    {
-                        totalString += " (+" + std::to_string(scores[i].parDiff) + ")";
-                    }
-                    else if (scores[i].parDiff < 0)
-                    {
-                        totalString += " (" + std::to_string(scores[i].parDiff) + ")";
-                    }
-                    else
-                    {
-                        totalString += " (0)";
-                    }
-                    break;
-                case ScoreType::Match:
-                    totalString += " POINTS";
-                    break;
-                case ScoreType::Skins:
-                    totalString += " SKINS";
-                    break;
-                }
-            }
-        }
-
-        ents.back().getComponent<cro::Text>().setString(totalString);
-        ents.back().getComponent<cro::Transform>().setPosition(ColumnPositions.back());
-        //gotta admit - I don't know why this works.
-        if (scoreboardExpansion > 0)
-        {
-            float offset = scoreboardExpansion == MaxExpansion ? std::floor(ColumnMargin) : 0.f;
-            ents.back().getComponent<cro::Transform>().move({ std::floor(scoreboardExpansion - offset), 0.f });
-        }
-        leaderboardEntries.emplace_back(glm::vec3(ents.back().getComponent<UIElement>().absolutePosition - glm::vec2(ColumnMargin, -UITextPosV), 0.f), totalString);
-
-        //for some reason we have to hack this to display and I'm too lazy to debug it
-        auto pos = ents.back().getComponent<cro::Transform>().getPosition();
-        pos.z = 1.5f;
-        ents.back().getComponent<cro::Transform>().setPosition(pos);
-
-        m_leaderboardTexture.update(leaderboardEntries);
-    };
-    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+    m_leaderboardTexture.update(leaderboardEntries);
 }
 
 void GolfState::showScoreboard(bool visible)
@@ -2094,6 +2370,31 @@ void GolfState::updateWindDisplay(glm::vec3 direction)
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 }
 
+float GolfState::estimatePuttPower()
+{
+    auto maxDist = Clubs[ClubID::Putter].getTarget(m_distanceToHole);
+    float guestimation = (m_distanceToHole / maxDist);
+
+    //kludge stops the flag recommending too much power            
+    if (maxDist == Clubs[ClubID::Putter].getBaseTarget())
+    {
+        //guestimation = cro::Util::Easing::easeInSine(guestimation);
+        guestimation *= 0.83f;
+    }
+    else
+    {
+        guestimation = std::min(1.f, guestimation + 0.12f);
+    }
+
+    //add a bit more power if putting uphill
+    float slope = 0.f;
+    if (m_distanceToHole > 0.005f)
+    {
+        slope = glm::dot(cro::Transform::Y_AXIS, m_holeData[m_currentHole].pin - m_currentPlayer.position) / m_distanceToHole;
+    }
+    return std::clamp(guestimation + (0.25f * slope), 0.f, 1.f);
+}
+
 void GolfState::showMessageBoard(MessageBoardID messageType, bool special)
 {
     auto bounds = m_sprites[SpriteID::MessageBoard].getTextureBounds();
@@ -2167,14 +2468,20 @@ void GolfState::showMessageBoard(MessageBoardID messageType, bool special)
             {
                 xp /= 5;
             }
-            Social::awardXP(xp);
+
+            if (m_sharedData.showPuttingPower)
+            {
+                xp /= 2;
+            }
+
+            Social::awardXP(xp, XPStringID::HIO);
         }
 
 
         //if this is a local player update achievements
         if (m_currentPlayer.client == m_sharedData.clientConnection.connectionID)
         {
-            if (m_hadFoul && overPar < 1)
+            if (m_achievementTracker.hadFoul && overPar < 1)
             {
                 Achievements::awardAchievement(AchievementStrings[AchievementID::Boomerang]);
             }
@@ -2204,6 +2511,19 @@ void GolfState::showMessageBoard(MessageBoardID messageType, bool special)
             msg->score = static_cast<std::uint8_t>(score);
             msg->travelDistance = glm::length2(m_holeData[m_currentHole].pin - m_currentPlayer.position);
             msg->club = getClub();
+
+            if (score <= ScoreID::Par
+                && m_sharedData.showBeacon)
+            {
+                //display ring animation
+                cro::Command cmd;
+                cmd.targetFlags = CommandID::HoleRing;
+                cmd.action = [](cro::Entity e, float)
+                {
+                    e.getComponent<cro::Callback>().active = true;
+                };
+                m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+            }
         }
 
 
@@ -2212,22 +2532,23 @@ void GolfState::showMessageBoard(MessageBoardID messageType, bool special)
             textEnt.getComponent<cro::Text>().setString(ScoreStrings[score]);
             textEnt.getComponent<cro::Transform>().move({ 0.f, -10.f, 0.f });
 
-            std::int32_t divisor = m_sharedData.showPuttingPower ? 2 : 1;
+            std::int32_t divisor = (m_sharedData.showPuttingPower && getClub() == ClubID::Putter) ? 2 : 1;
+            std::int32_t offset = m_sharedData.showPuttingPower ? 1 : 0;
 
             switch (score)
             {
             default: break;
             case ScoreID::Albatross:
-                Social::awardXP(XPValues[XPID::Albatross] / divisor);
+                Social::awardXP(XPValues[XPID::Albatross] / divisor, XPStringID::Albatross + offset);
                 break;
             case ScoreID::Eagle:
-                Social::awardXP(XPValues[XPID::Eagle] / divisor);
+                Social::awardXP(XPValues[XPID::Eagle] / divisor, XPStringID::Eagle + offset);
                 break;
             case ScoreID::Birdie:
-                Social::awardXP(XPValues[XPID::Birdie] / divisor);
+                Social::awardXP(XPValues[XPID::Birdie] / divisor, XPStringID::Birdie + offset);
                 break;
             case ScoreID::Par:
-                Social::awardXP(XPValues[XPID::Par] / divisor);
+                Social::awardXP(XPValues[XPID::Par] / divisor, XPStringID::Par + offset);
                 break;
             }
 
@@ -2425,7 +2746,7 @@ void GolfState::notifyAchievement(const std::array<std::uint8_t, 2u>& data)
     if (m_sharedData.localConnectionData.connectionID != data[0])
     {
         //this came off the network so better validate it a bit...
-        if (data[0] < 4
+        if (data[0] < ConstVal::MaxClients
             && m_sharedData.connectionData[data[0]].playerCount != 0
             && data[1] < AchievementID::Count - 1)
         {
@@ -2486,6 +2807,116 @@ void GolfState::toggleQuitReady()
     }
 }
 
+void GolfState::updateSkipMessage(float dt)
+{
+    if (m_skipState.state == static_cast<std::int32_t>(Ball::State::Flight))
+    {
+        if (!m_skipState.wasSkipped)
+        {
+            if (m_skipState.previousState != m_skipState.state)
+            {
+                //state has changed, set visible
+                cro::Command cmd;
+                cmd.targetFlags = CommandID::UI::FastForward;
+                cmd.action = [&](cro::Entity e, float)
+                {
+                    auto& data = e.getComponent<cro::Callback>().getUserData<SkipCallbackData>();
+                    data.direction = 1;
+
+                    e.getComponent<cro::Callback>().active = true;
+
+                    if (cro::GameController::getControllerCount() != 0
+                        && m_skipState.displayControllerMessage)
+                    {
+                        //set correct button icon
+                        if (cro::GameController::hasPSLayout(activeControllerID(m_currentPlayer.player)))
+                        {
+                            data.buttonIndex = 1; //used as animation ID
+                        }
+                        else
+                        {
+                            data.buttonIndex = 0;
+                        }
+                        e.getComponent<cro::Text>().setString("Hold   to Skip");
+                    }
+                    else
+                    {
+                        data.buttonIndex = std::numeric_limits<std::uint32_t>::max();
+                        e.getComponent<cro::Text>().setString("Hold " + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::Action]) + " to Skip");
+                    }
+                    centreText(e);
+                };
+                m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+            }
+
+            //read input
+            if (cro::Keyboard::isKeyPressed(m_sharedData.inputBinding.keys[InputBinding::Action])
+                || cro::GameController::isButtonPressed(activeControllerID(m_currentPlayer.player), m_sharedData.inputBinding.buttons[InputBinding::Action]))
+            {
+                m_skipState.currentTime = std::min(SkipState::SkipTime, m_skipState.currentTime + dt);
+                if (m_skipState.currentTime == SkipState::SkipTime)
+                {
+                    m_sharedData.clientConnection.netClient.sendPacket(PacketID::SkipTurn, m_sharedData.localConnectionData.connectionID, net::NetFlag::Reliable);
+                    m_skipState.wasSkipped = true;
+
+                    //hide message
+                    cro::Command cmd;
+                    cmd.targetFlags = CommandID::UI::FastForward;
+                    cmd.action = [&](cro::Entity e, float)
+                    {
+                        e.getComponent<cro::Callback>().getUserData<SkipCallbackData>().direction = 0;
+                        e.getComponent<cro::Callback>().active = true;
+                    };
+                    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+                    //switch to sky cam after slight delay
+                    /*auto entity = m_gameScene.createEntity();
+                    entity.addComponent<cro::Callback>().active = true;
+                    entity.getComponent<cro::Callback>().setUserData<float>(1.f);
+                    entity.getComponent<cro::Callback>().function =
+                        [&](cro::Entity ent, float dt)
+                    {
+                        auto& currTime = ent.getComponent<cro::Callback>().getUserData<float>();
+                        currTime -= dt;
+
+                        if (currTime < 0)
+                        {
+                            if (m_currentCamera == CameraID::Player
+                                || m_currentCamera == CameraID::Bystander)
+                            {
+                                setActiveCamera(CameraID::Sky);
+                            }
+                            ent.getComponent<cro::Callback>().active = false;
+                            m_gameScene.destroyEntity(ent);
+                        }
+                    };*/
+                }
+            }
+            else
+            {
+                m_skipState.currentTime = 0.f;
+            }
+        }
+    }
+    else
+    {
+        if (m_skipState.previousState != m_skipState.state)
+        {
+            //state has changed, hide
+            cro::Command cmd;
+            cmd.targetFlags = CommandID::UI::FastForward;
+            cmd.action = [](cro::Entity e, float)
+            {
+                e.getComponent<cro::Callback>().getUserData<SkipCallbackData>().direction = 0;
+                e.getComponent<cro::Callback>().active = true;
+            };
+            m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+        }
+    }
+
+    m_skipState.previousState = m_skipState.state;
+}
+
 void GolfState::refreshUI()
 {
     auto uiSize = glm::vec2(GolfGame::getActiveTarget()->getSize()) / m_viewScale;
@@ -2517,10 +2948,8 @@ void GolfState::buildTrophyScene()
 {
     auto updateCam = [&](cro::Camera& cam)
     {
-        auto vpSize = calcVPSize();
-
         auto winSize = glm::vec2(480.f, 360.f);
-        float maxScale = std::floor(static_cast<float>(cro::App::getWindow().getSize().y) / vpSize.y);
+        float maxScale = getViewScale();
         if (!m_sharedData.pixelScale)
         {
             winSize *= maxScale;
@@ -2593,7 +3022,7 @@ void GolfState::buildTrophyScene()
             entity.getComponent<cro::AudioEmitter>().setPitch(static_cast<float>(cro::Util::Random::value(8, 11)) / 10.f);
             entity.getComponent<cro::AudioEmitter>().setLooped(false);
 
-            m_trophies[i] = entity;
+            m_trophies[i].trophy = entity;
             auto trophyEnt = entity;
 
             //badge
@@ -2606,7 +3035,7 @@ void GolfState::buildTrophyScene()
             entity.addComponent<cro::Model>();
             entity.addComponent<cro::SpriteAnimation>();
             trophyEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-            m_trophyBadges[i] = entity;
+            m_trophies[i].badge = entity;
 
             //name label
             entity = m_uiScene.createEntity();
@@ -2614,8 +3043,8 @@ void GolfState::buildTrophyScene()
             entity.addComponent<cro::Drawable2D>();
             entity.addComponent<cro::Sprite>(m_sharedData.nameTextures[0].getTexture());
             bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
-            bounds.height -= LabelIconSize.y;
-            bounds.height /= 4.f;
+            bounds.height -= (LabelIconSize.y * 4.f);
+            bounds.height /= ConstVal::MaxPlayers;
             bounds.bottom = bounds.height * i;
             entity.getComponent<cro::Sprite>().setTextureRect(bounds);
             entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f, -0.2f });
@@ -2634,31 +3063,32 @@ void GolfState::buildTrophyScene()
             };
             trophyEnt.getComponent<TrophyDisplay>().label = entity;
 
-            m_trophyLabels[i] = entity;
+            m_trophies[i].label = entity;
 
 
-            //icon if available
-            if (Social::isAvailable())
+            //icon if available 
+            //if (Social::isAvailable()) //always do this in case the player profile has an avatar
             {
                 entity = m_uiScene.createEntity();
-                entity.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, bounds.height, 0.1f });
+                entity.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, bounds.height - 8.f, 0.1f });
                 entity.addComponent<cro::Drawable2D>();
                 entity.addComponent<cro::Sprite>(m_sharedData.nameTextures[0].getTexture());
-                bounds = { 0.f, LabelTextureSize.y - LabelIconSize.y, LabelIconSize.x, LabelIconSize.y };
+                bounds = { 0.f, LabelTextureSize.y - (LabelIconSize.y * 4.f), LabelIconSize.x, LabelIconSize.y };
                 entity.getComponent<cro::Sprite>().setTextureRect(bounds);
                 entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, -14.f, -0.1f });
-                m_trophyLabels[i].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+                m_trophies[i].label.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+                m_trophies[i].avatar = entity;
 
                 entity.addComponent<cro::Callback>().active = true;
                 entity.getComponent<cro::Callback>().setUserData<float>(1.f);
                 entity.getComponent<cro::Callback>().function =
                     [&,i](cro::Entity e, float dt)
                 {
-                    if (m_trophyLabels[i].getComponent<cro::Callback>().active)
+                    if (m_trophies[i].label.getComponent<cro::Callback>().active)
                     {
-                        e.getComponent<cro::Sprite>().setTexture(*m_trophyLabels[i].getComponent<cro::Sprite>().getTexture(), false);
+                        e.getComponent<cro::Sprite>().setTexture(*m_trophies[i].label.getComponent<cro::Sprite>().getTexture(), false);
 
-                        static constexpr float BaseScale = 0.25f;
+                        static constexpr float BaseScale = 0.5f;
                         static constexpr float SpinCount = 6.f;
                         static constexpr float Duration = 3.f;
 
@@ -2733,7 +3163,7 @@ void GolfState::retargetMinimap(bool reset)
     if (reset)
     {
         //create a default view around the bounds of the hole model
-        target.end.tilt = 0.f;
+        target.end.tilt = 0.f; //TODO this could be wound several times past TAU and should be only fmod this value
 
         auto bb = m_holeData[m_currentHole].modelEntity.getComponent<cro::Model>().getAABB();
         target.end.pan = m_minimapZoom.textureSize / 2.f;
@@ -2754,14 +3184,16 @@ void GolfState::retargetMinimap(bool reset)
         target.end.tilt = m_minimapZoom.tilt + cro::Util::Maths::shortestRotation(m_minimapZoom.tilt, rotation);
 
 
+        target.end.pan = glm::vec2(player.x, -player.z);
+
         //if we have a tight dogleg, such as on the mini putt
         //check if the primary target is inbetween and shift
         //towards it to better centre the hole
         auto targ = m_holeData[m_currentHole].target;
         glm::vec2 targDir(targ.x - player.x, -targ.z + player.z);
-        const auto d = glm::dot(dir, targDir);
+        const auto d = glm::dot(glm::normalize(dir), glm::normalize(targDir));
         const auto l2 = glm::length2(targDir);
-        if (d > 0 && l2 > 2.25f && l2 < glm::length2(dir))
+        if (d > 0 && d < 0.8f && l2 > 2.25f && l2 < glm::length2(dir))
         {
             //project the target onto the current dir
             //then move half way between projection and
@@ -2771,18 +3203,18 @@ void GolfState::retargetMinimap(bool reset)
             //actually just moving towards the target seems to work better
             auto p = dir / 2.f;
             p += (targDir - p) / 2.f;
-            target.end.pan = glm::vec2(player.x, -player.z) + p;
+            target.end.pan += p;
         }
         else
         {
             //centre view between player and flag
-            target.end.pan = glm::vec2(player.x, -player.z) + (dir / 2.f);
+            target.end.pan += (dir / 2.f);
         }
         //(pan is in texture coords hum)
         target.end.pan *= m_minimapZoom.mapScale;
 
         //get distance between flag and player and expand by 1.7 (about 3m around a putting hole)
-        float viewLength = glm::length(dir) * 1.7f; //remember this is world coords
+        float viewLength = std::max(glm::length(dir), m_inputParser.getEstimatedDistance()) * 1.7f; //remember this is world coords
 
         //scale zoom on long edge of map by box length and clamp to 16x
         target.end.zoom = std::clamp(static_cast<float>(MapSize.x) / viewLength, 0.8f, 16.f);

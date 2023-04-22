@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2023
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -33,6 +33,7 @@ source distribution.
 #include <SDL_rwops.h>
 
 #include <crogine/graphics/Image.hpp>
+#include <crogine/graphics/ImageArray.hpp>
 #include <crogine/graphics/Colour.hpp>
 
 #include <crogine/detail/Assert.hpp>
@@ -44,6 +45,9 @@ source distribution.
 
 using namespace cro;
 
+//TODO this *shouldn't* be a construction parameter
+//it should be passed to loadFrom*() each time...
+//removing it is going to be a massive pita
 Image::Image(bool flipOnLoad)
     : m_format  (ImageFormat::None),
     m_flipped   (false),
@@ -97,8 +101,6 @@ bool Image::loadFromFile(const std::string& filePath)
         return false;
     }
 
-    stbi_set_flip_vertically_on_load(m_flipOnLoad ? 1 : 0);
-
     STBIMG_stbio_RWops io;
     stbi_callback_from_RW(file, &io);
 
@@ -106,7 +108,7 @@ bool Image::loadFromFile(const std::string& filePath)
     auto* img = stbi_load_from_callbacks(&io.stb_cbs, &io, &w, &h, &fmt, 0);
     if (img)
     {
-        m_flipped = true;
+        m_flipped = !m_flipOnLoad;
 
         ImageFormat::Type format = ImageFormat::A;
         switch (fmt)
@@ -126,16 +128,12 @@ bool Image::loadFromFile(const std::string& filePath)
         stbi_image_free(img);
         SDL_RWclose(file);
 
-        stbi_set_flip_vertically_on_load(0);
-
         return result;
     }
     else
     {
         Logger::log("failed to open image: " + path, Logger::Type::Error);
         SDL_RWclose(file);
-
-        stbi_set_flip_vertically_on_load(0);
 
         return false;
     }
@@ -158,17 +156,7 @@ bool Image::loadFromMemory(const std::uint8_t* px, std::uint32_t width, std::uin
     m_data.resize(size);
     if (m_flipped)
     {
-        //copy row by row starting at bottom
-        const auto rowSize = size / height;
-        auto dst = m_data.data();
-        auto src = px + ((m_data.size()) - rowSize);
-        for (auto i = 0u; i < height; ++i)
-        {
-            std::memcpy(dst, src, rowSize);
-            dst += rowSize;
-            src -= rowSize;
-        }
-
+        flipVertically(px, m_data, height);
         m_flipped = false;
     }
     else

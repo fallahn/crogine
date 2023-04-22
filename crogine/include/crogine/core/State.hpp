@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2022
+Matt Marchant 2017 - 2023
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -56,17 +56,17 @@ namespace cro
     class CRO_EXPORT_API State
     {
     public:
-        using Ptr = std::unique_ptr<State>;
+        using Ptr = std::shared_ptr<State>;
 
         /*!
         \brief Context containing information about the current
         application instance.
+        //TODO deprecate this as members are globally accessible
         */
         struct CRO_EXPORT_API Context
         {
             App& appInstance;
             Window& mainWindow;
-            //TODO handle the default view of the window
             Context(App& a, Window& w) : appInstance(a), mainWindow(w) {}
         };
 
@@ -77,7 +77,7 @@ namespace cro
         \param Context Copy of the current application's Context
         */
         State(StateStack&, Context);
-        virtual ~State() = default;
+        virtual ~State();
 
         State(const State&) = delete;
         State(const State&&) = delete;
@@ -159,8 +159,29 @@ namespace cro
             return m_context.appInstance.getMessageBus().post<T>(id);
         }
 
+        /*!
+        \brief Creates a cached state with the given ID
+        When sub-states such as pause menus require being already
+        loaded, pre-caching them here will prepare them for use.
+        Cached states are automatically unloaded. This should usually
+        be done *after* any loading in this state is complete.
+        */
+        void cacheState(StateID);
+
+        /*!
+        \brief Returns true if this State has been cached.
+        Cached states should NOT call Window::loadResources()
+        as this is likely already active from the state which
+        cached this one.
+        */
+        bool isCached() const { return m_cached; }
     private:
         StateStack& m_stack;
         Context m_context;
+        bool m_cached;
+        bool m_inUse; //only relevant if this is a cached state
+
+        std::vector<std::int32_t> m_cachedIDs;
+        friend class StateStack;
     };
 }

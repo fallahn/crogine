@@ -55,24 +55,26 @@ public:
     float getRotation() const; //relative rotation
     float getDirection() const { return m_holeDirection; }
     float getCamMotion() const { return m_camMotion; }
+    bool getButtonState(std::int32_t binding) const;
 
     float getPower() const; //0-1 multiplied by selected club
     float getHook() const; //-1 to -1 * some angle, club defined
 
     std::int32_t getClub() const;
 
-    void setActive(bool active, bool isCPU = false);
+    // *sigh* be careful with this, the int param can be implicitly converted to bool...
+    void setActive(bool active, std::int32_t terrain, bool isCPU = false);
     void setSuspended(bool);
     void setEnableFlags(std::uint16_t); //bits which are set are *enabled*
     void setMaxClub(float); //based on overall distance of hole
     void setMaxClub(std::int32_t); //force set when only wanting wedges for example
     void resetPower();
-    void update(float, std::int32_t terrain);
+    void update(float);
 
     bool inProgress() const;
     bool getActive() const;
 
-    bool isSwingputActive() const { return m_swingput.isActive(); }
+    bool isSwingputActive() const { return m_swingput.isActive() && m_state != State::Drone; }
     float getSwingputPosition() const { return m_swingput.getActivePoint().y; }
     void setMouseScale(float scale) { CRO_ASSERT(scale > 0, ""); m_swingput.setMouseScale(scale); }
 
@@ -91,6 +93,8 @@ public:
         float hook = 0.f;
     };
     StrokeResult getStroke(std::int32_t club, std::int32_t facing, float holeDistance) const; //facing is -1 or 1 to decide on slice/hook
+
+    float getEstimatedDistance() const { return m_estimatedDistance; } //projected magnitude of distance vector of the current club with the current spin setting
 
     static constexpr std::uint32_t CPU_ID = 1337u;
 
@@ -140,7 +144,11 @@ private:
     std::int32_t m_firstClub;
     std::int32_t m_clubOffset; //offset ID from first club
 
-    void updateStroke(float, std::int32_t);
+    std::int32_t m_terrain;
+    float m_estimatedDistance;
+    void updateDistanceEstimation();
+
+    void updateStroke(float);
     void updateDroneCam(float);
     void updateSpin(float);
 

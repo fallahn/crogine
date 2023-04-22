@@ -111,4 +111,6 @@ private:
     cro::Entity m_previewEntity;
 
     void openModel(const std::string&);
+
+    bool imageToArray(const cro::Image&, const std::string& outpath) const;
 };

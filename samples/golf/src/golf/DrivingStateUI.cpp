@@ -38,6 +38,7 @@ source distribution.
 #include "BallSystem.hpp"
 #include "FloatingTextSystem.hpp"
 #include "Clubs.hpp"
+#include "CallbackData.hpp"
 
 #include <Achievements.hpp>
 #include <AchievementStrings.hpp>
@@ -57,6 +58,8 @@ source distribution.
 #include <crogine/graphics/SpriteSheet.hpp>
 #include <crogine/util/Maths.hpp>
 #include <crogine/util/Random.hpp>
+
+#include "../ErrorCheck.hpp"
 
 namespace
 {
@@ -86,18 +89,18 @@ namespace
             auto size = glm::vec2(GolfGame::getActiveTarget()->getSize());
             auto position = glm::vec3(size.x / 2.f, size.y / 2.f, 1.5f);
 
-            auto& [state, currTime] = e.getComponent<cro::Callback>().getUserData<MessageAnim>();
+            auto& [state, currTime] = e.getComponent<cro::Callback>().getUserData<PopupAnim>();
             switch (state)
             {
             default: break;
-            case MessageAnim::Delay:
+            case PopupAnim::Delay:
                 currTime = std::max(0.f, currTime - dt);
                 if (currTime == 0)
                 {
-                    state = MessageAnim::Open;
+                    state = PopupAnim::Open;
                 }
                 break;
-            case MessageAnim::Open:
+            case PopupAnim::Open:
                 //grow
                 currTime = std::min(1.f, currTime + (dt * 2.f));
                 e.getComponent<cro::Transform>().setPosition(position);
@@ -105,20 +108,20 @@ namespace
                 if (currTime == 1)
                 {
                     currTime = 0;
-                    state = MessageAnim::Hold;
+                    state = PopupAnim::Hold;
 
                     //set UI active
                     uiSystem->setActiveGroup(menuID);
                 }
                 break;
-            case MessageAnim::Hold:
+            case PopupAnim::Hold:
             {
                 //hold - make sure we stay centred
                 e.getComponent<cro::Transform>().setPosition(position);
                 e.getComponent<cro::Transform>().setScale(viewScale);
             }
             break;
-            case MessageAnim::Close:
+            case PopupAnim::Close:
                 //shrink
                 currTime = std::max(0.f, currTime - (dt * 3.f));
                 e.getComponent<cro::Transform>().setScale(glm::vec2(viewScale.x * cro::Util::Easing::easeInCubic(currTime), viewScale.y));
@@ -127,7 +130,7 @@ namespace
                     e.getComponent<cro::Callback>().active = false;
                     e.getComponent<cro::Transform>().setPosition({ -10000.f, -10000.f });
 
-                    state = MessageAnim::Delay;
+                    state = PopupAnim::Delay;
                     currTime = 0.75f;
                 }
                 break;
@@ -211,6 +214,118 @@ void DrivingState::createUI()
     entity.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
     entity.getComponent<cro::Text>().setFillColour(LeaderboardTextLight);
     infoEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+    //fast forward option
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setScale(glm::vec2(0.f));
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::FastForward | CommandID::UI::UIElement;
+    entity.addComponent<UIElement>().relativePosition = { 0.5f, 1.f };
+    entity.getComponent<UIElement>().absolutePosition = { 0.f, -UIBarHeight };
+    entity.getComponent<UIElement>().depth = 0.05f;
+    entity.addComponent<cro::Callback>().setUserData<SkipCallbackData>();
+    entity.getComponent<cro::Callback>().function =
+        [](cro::Entity e, float dt)
+    {
+        auto& [progress, direction, _] = e.getComponent<cro::Callback>().getUserData<SkipCallbackData>();
+        const float Speed = dt * 3.f;
+        if (direction == 1)
+        {
+            //bigger!
+            progress = std::min(1.f, progress + Speed);
+            if (progress == 1)
+            {
+                e.getComponent<cro::Callback>().active = false;
+            }
+        }
+        else
+        {
+            progress = std::max(0.f, progress - Speed);
+            if (progress == 0)
+            {
+                e.getComponent<cro::Callback>().active = false;
+            }
+        }
+
+        float scale = cro::Util::Easing::easeOutBack(progress);
+        e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
+    };
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
+    entity.getComponent<cro::Text>().setFillColour(TextHighlightColour);
+    centreText(entity);
+    infoEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    auto ffEnt = entity;
+
+    cro::SpriteSheet buttonSprites;
+    buttonSprites.loadFromFile("assets/golf/sprites/controller_buttons.spt", m_resources.textures);
+
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 36.f, -12.f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = buttonSprites.getSprite("button_a");
+    entity.addComponent<cro::SpriteAnimation>();
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&,ffEnt](cro::Entity e, float)
+    {
+        auto index = ffEnt.getComponent<cro::Callback>().getUserData<SkipCallbackData>().buttonIndex;
+
+        if (cro::GameController::getControllerCount() != 0
+            && index != std::numeric_limits<std::uint32_t>::max())
+        {
+            e.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+            e.getComponent<cro::SpriteAnimation>().play(index);
+        }
+        else
+        {
+            e.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+        }
+    };
+    ffEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    static constexpr glm::vec2 BarSize(30.f, 2.f); //actually half-size
+    auto darkColour = LeaderboardTextDark;
+    darkColour.setAlpha(0.25f);
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>().setVertexData(
+        {
+            cro::Vertex2D(glm::vec2(-BarSize.x, BarSize.y), TextHighlightColour),
+            cro::Vertex2D(-BarSize, TextHighlightColour),
+
+            cro::Vertex2D(glm::vec2(0.f), TextHighlightColour),
+            cro::Vertex2D(glm::vec2(0.f), TextHighlightColour),
+
+            cro::Vertex2D(glm::vec2(0.f), darkColour),
+            cro::Vertex2D(glm::vec2(0.f), darkColour),
+
+            cro::Vertex2D(BarSize, darkColour),
+            cro::Vertex2D(glm::vec2(BarSize.x, -BarSize.y), darkColour),
+        });
+    entity.getComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLE_STRIP);
+    entity.getComponent<cro::Drawable2D>().updateLocalBounds();
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&, ffEnt](cro::Entity e, float)
+    {
+        if (ffEnt.getComponent<cro::Transform>().getScale().x != 0)
+        {
+            const float xPos = ((BarSize.x * 2.f) * (m_skipState.currentTime / SkipState::SkipTime)) - BarSize.x;
+            auto& verts = e.getComponent<cro::Drawable2D>().getVertexData();
+            verts[2].position = { xPos, BarSize.y };
+            verts[3].position = { xPos, -BarSize.y };
+            verts[4].position = { xPos, BarSize.y };
+            verts[5].position = { xPos, -BarSize.y };
+
+            e.getComponent<cro::Transform>().setPosition({ ffEnt.getComponent<cro::Transform>().getOrigin().x, -14.f });
+        }
+    };
+    ffEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+
 
     //club info
     entity = m_uiScene.createEntity();
@@ -326,16 +441,10 @@ void DrivingState::createUI()
     auto windDial = entity;
 
     //text background
-    auto vertColour = cro::Colour(0.f, 0.f, 0.f, 0.25f);
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ -4.f, -14.f, -0.01f });
-    entity.addComponent<cro::Drawable2D>().setVertexData(
-        {
-            cro::Vertex2D(glm::vec2(0.f, 16.f), vertColour),
-            cro::Vertex2D(glm::vec2(0.f, 5.f), vertColour),
-            cro::Vertex2D(glm::vec2(86.f, 16.f), vertColour),
-            cro::Vertex2D(glm::vec2(86.f, 5.f), vertColour)
-        });
+    entity.addComponent<cro::Transform>().setPosition({ -4.f, -16.f, -0.01f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::WindTextBg];
     windEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     //rotating part
@@ -591,7 +700,7 @@ void DrivingState::createUI()
         //more magic numbers than Ken Dodd's tax return.
         if (m_inputParser.getActive())
         {
-            const auto targetScale = Clubs[m_inputParser.getClub()].getTarget(0.f);
+            const auto targetScale = m_inputParser.getEstimatedDistance();
             if (scale < targetScale)
             {
                 scale = std::min(scale + (dt * ((targetScale - scale) * 10.f)), targetScale);
@@ -618,8 +727,7 @@ void DrivingState::createUI()
         cam.setOrthographic(0.f, size.x, 0.f, size.y, -2.5f, 2.f);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
 
-        auto vpSize = calcVPSize();
-        m_viewScale = glm::vec2(std::floor(size.y / vpSize.y));
+        m_viewScale = glm::vec2(getViewScale());
         m_inputParser.setMouseScale(m_viewScale.x);
 
         glm::vec2 courseScale(m_sharedData.pixelScale ? m_viewScale.x : 1.f);
@@ -807,7 +915,7 @@ void DrivingState::createGameOptions()
     bgEntity.addComponent<cro::Drawable2D>();
     bgEntity.addComponent<cro::Sprite>() = bgSprite;
     bgEntity.addComponent<cro::CommandTarget>().ID = CommandID::UI::DrivingBoard;
-    bgEntity.addComponent<cro::Callback>().setUserData<MessageAnim>();
+    bgEntity.addComponent<cro::Callback>().setUserData<PopupAnim>();
     bgEntity.getComponent<cro::Callback>().function = MenuCallback(m_viewScale, uiSystem, MenuID::Options);
     
     auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
@@ -907,8 +1015,8 @@ your overall accuracy. Good Luck!
     textEnt4.getComponent<cro::Callback>().function = //make sure to update with current high score
         [&, bgEntity](cro::Entity e, float)
     {
-        const auto& data = bgEntity.getComponent<cro::Callback>().getUserData<MessageAnim>();
-        if (data.state == MessageAnim::Open)
+        const auto& data = bgEntity.getComponent<cro::Callback>().getUserData<PopupAnim>();
+        if (data.state == PopupAnim::Open)
         {
             if (m_topScores[m_strokeCountIndex] > 0)
             {
@@ -927,13 +1035,60 @@ your overall accuracy. Good Luck!
     };
     bgEntity.getComponent<cro::Transform>().addChild(textEnt4.getComponent<cro::Transform>());
 
+    cro::Entity tickerEnt;
+#ifdef USE_GNS
+    //Top 5 ticker
+    for (auto i = 0u; i < m_tickerStrings.size(); ++i)
+    {
+        m_tickerStrings[i] = Social::getDrivingTopFive(i);
+    }
 
+    auto& labelFont = m_sharedData.sharedResources->fonts.get(FontID::Label);
+    tickerEnt = m_uiScene.createEntity();
+    tickerEnt.addComponent<cro::Transform>().setPosition({ 100.f, 0.f, 0.2f });
+    tickerEnt.addComponent<cro::Drawable2D>();
+    tickerEnt.addComponent<cro::Text>(labelFont).setString(m_tickerStrings[0]);
+    tickerEnt.getComponent<cro::Text>().setCharacterSize(LabelTextSize);
+    tickerEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    tickerEnt.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+    tickerEnt.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
+    tickerEnt.addComponent<cro::Callback>().active = true;
+    tickerEnt.getComponent<cro::Callback>().function =
+        [&, bounds, bgEntity](cro::Entity e, float dt)
+    {
+        if (bgEntity.getComponent<cro::Transform>().getScale().x != 0)
+        {
+            auto scrollBounds = cro::Text::getLocalBounds(e);
+
+            auto pos = e.getComponent<cro::Transform>().getPosition();
+
+            pos.x -= 20.f * dt;
+            pos.y = 27.f;
+            pos.z = 0.3f;
+
+            static constexpr float Offset = 6.f;
+            const auto bgWidth = bounds.width;
+            if (pos.x < -scrollBounds.width + Offset)
+            {
+                pos.x = bgWidth;
+                pos.x -= Offset;
+            }
+
+            e.getComponent<cro::Transform>().setPosition(pos);
+
+            cro::FloatRect cropping = { -pos.x + Offset, -16.f, (bgWidth)-(Offset * 2.f), 18.f };
+            e.getComponent<cro::Drawable2D>().setCroppingArea(cropping);
+        }
+    };
+    bgEntity.getComponent<cro::Transform>().addChild(tickerEnt.getComponent<cro::Transform>());
+    
+#endif
 
     //hole count buttons
     auto buttonEnt = createButton("arrow_left", glm::vec2(-3.f, 3.f));
     buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem->addCallback(
-            [&, numberEnt, textEnt4](cro::Entity e, const cro::ButtonEvent& evt) mutable
+            [&, numberEnt, textEnt4, tickerEnt](cro::Entity e, const cro::ButtonEvent& evt) mutable
             {
                 if (activated(evt))
                 {
@@ -955,6 +1110,14 @@ your overall accuracy. Good Luck!
                     }
                     centreText(textEnt4);
 
+#ifdef USE_GNS
+                    tickerEnt.getComponent<cro::Text>().setString(m_tickerStrings[m_strokeCountIndex]);
+                    auto pos = tickerEnt.getComponent<cro::Transform>().getPosition();
+                    pos.x = 300.f;
+                    tickerEnt.getComponent<cro::Transform>().setPosition(pos);
+                    tickerEnt.getComponent<cro::Callback>().function(tickerEnt, 0.f); //updates the cropping
+#endif
+
                     m_summaryScreen.audioEnt.getComponent<cro::AudioEmitter>().play();
                 }
             });
@@ -963,7 +1126,7 @@ your overall accuracy. Good Luck!
     buttonEnt = createButton("arrow_right", glm::vec2(35.f, 3.f));
     buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem->addCallback(
-            [&, numberEnt, textEnt4](cro::Entity e, const cro::ButtonEvent& evt) mutable
+            [&, numberEnt, textEnt4, tickerEnt](cro::Entity e, const cro::ButtonEvent& evt) mutable
             {
                 if (activated(evt))
                 {
@@ -984,6 +1147,14 @@ your overall accuracy. Good Luck!
                         textEnt4.getComponent<cro::Text>().setString("No Score");
                     }
                     centreText(textEnt4);
+
+#ifdef USE_GNS
+                    tickerEnt.getComponent<cro::Text>().setString(m_tickerStrings[m_strokeCountIndex]);
+                    auto pos = tickerEnt.getComponent<cro::Transform>().getPosition();
+                    pos.x = 300.f;
+                    tickerEnt.getComponent<cro::Transform>().setPosition(pos);
+                    tickerEnt.getComponent<cro::Callback>().function(tickerEnt, 0.f); //updates the cropping
+#endif
 
                     m_summaryScreen.audioEnt.getComponent<cro::AudioEmitter>().play();
                 }
@@ -1346,8 +1517,8 @@ your overall accuracy. Good Luck!
         uiSystem->addCallback(
             [&, uiSystem, bgEntity, lbEntity, updateDisplay](cro::Entity e, const cro::ButtonEvent& evt) mutable
             {
-                const auto& [state, _] = bgEntity.getComponent<cro::Callback>().getUserData<MessageAnim>();
-                if (state == MessageAnim::Hold
+                const auto& [state, _] = bgEntity.getComponent<cro::Callback>().getUserData<PopupAnim>();
+                if (state == PopupAnim::Hold
                     && activated(evt))
                 {
                     uiSystem->setActiveGroup(MenuID::Dummy);
@@ -1455,7 +1626,7 @@ your overall accuracy. Good Luck!
     auto selectedBounds = spriteSheet.getSprite("start_highlight").getTextureRect();
     auto unselectedBounds = spriteSheet.getSprite("start_button").getTextureRect();
     auto startButton = m_uiScene.createEntity();
-    startButton.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, 34.f, 0.2f });
+    startButton.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, 36.f, 0.2f });
     startButton.addComponent<cro::Drawable2D>();
     startButton.addComponent<cro::Sprite>() = spriteSheet.getSprite("start_button");
     startButton.addComponent<cro::AudioEmitter>() = as.getEmitter("switch");
@@ -1480,11 +1651,11 @@ your overall accuracy. Good Luck!
         uiSystem->addCallback(
             [&, uiSystem, bgEntity](cro::Entity e, const cro::ButtonEvent& evt) mutable
             {
-                auto& [state, timeout] = bgEntity.getComponent<cro::Callback>().getUserData<MessageAnim>();
-                if (state == MessageAnim::Hold
+                auto& [state, timeout] = bgEntity.getComponent<cro::Callback>().getUserData<PopupAnim>();
+                if (state == PopupAnim::Hold
                     && activated(evt))
                 {
-                    state = MessageAnim::Close;
+                    state = PopupAnim::Close;
                     timeout = 1.f;
                     uiSystem->setActiveGroup(MenuID::Dummy);
                     
@@ -1583,7 +1754,7 @@ void DrivingState::createSummary()
     bgEntity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
     bgEntity.addComponent<cro::Drawable2D>();
     bgEntity.addComponent<cro::Sprite>() = bgSprite;
-    bgEntity.addComponent<cro::Callback>().setUserData<MessageAnim>();
+    bgEntity.addComponent<cro::Callback>().setUserData<PopupAnim>();
     bgEntity.getComponent<cro::Callback>().function = MenuCallback(m_viewScale, uiSystem, MenuID::Summary);
     
 
@@ -1728,8 +1899,8 @@ void DrivingState::createSummary()
         uiSystem->addCallback(
             [&, bgEntity](cro::Entity e, const cro::ButtonEvent& evt) mutable
             {
-                auto& [state, timeout] = bgEntity.getComponent<cro::Callback>().getUserData<MessageAnim>();
-                if (state == MessageAnim::Hold
+                auto& [state, timeout] = bgEntity.getComponent<cro::Callback>().getUserData<PopupAnim>();
+                if (state == PopupAnim::Hold
                     && activated(evt))
                 {
                     auto c = TextNormalColour;
@@ -1738,7 +1909,7 @@ void DrivingState::createSummary()
                     m_summaryScreen.bestMessage.getComponent<cro::Callback>().active = false;
 
                     m_summaryScreen.audioEnt.getComponent<cro::AudioEmitter>().play();
-                    state = MessageAnim::Close;
+                    state = PopupAnim::Close;
                     timeout = 1.f;
 
                     for (auto star : m_summaryScreen.stars)
@@ -1789,8 +1960,8 @@ void DrivingState::createSummary()
         uiSystem->addCallback(
             [&, bgEntity](cro::Entity e, const cro::ButtonEvent& evt)
             {
-                auto& [state, timeout] = bgEntity.getComponent<cro::Callback>().getUserData<MessageAnim>();
-                if (state == MessageAnim::Hold
+                auto& [state, timeout] = bgEntity.getComponent<cro::Callback>().getUserData<PopupAnim>();
+                if (state == PopupAnim::Hold
                     && activated(evt))
                 {
                     m_summaryScreen.audioEnt.getComponent<cro::AudioEmitter>().play();
@@ -2008,34 +2179,34 @@ void DrivingState::showMessage(float range)
 
     //callback for anim/self destruction
     entity.addComponent<cro::Callback>().active = true;
-    entity.getComponent<cro::Callback>().setUserData<MessageAnim>();
+    entity.getComponent<cro::Callback>().setUserData<PopupAnim>();
     entity.getComponent<cro::Callback>().function =
         [&, textEnt, textEnt2, textEnt3, imgEnt, starCount](cro::Entity e, float dt) mutable
     {
         static constexpr float HoldTime = 4.f;
-        auto& [state, currTime] = e.getComponent<cro::Callback>().getUserData<MessageAnim>();
+        auto& [state, currTime] = e.getComponent<cro::Callback>().getUserData<PopupAnim>();
         switch (state)
         {
         default: break;
-        case MessageAnim::Delay:
+        case PopupAnim::Delay:
             currTime = std::max(0.f, currTime - dt);
             if (currTime == 0)
             {
-                state = MessageAnim::Open;
+                state = PopupAnim::Open;
             }
             break;
-        case MessageAnim::Open:
+        case PopupAnim::Open:
             //grow
             currTime = std::min(1.f, currTime + (dt * 2.f));
             e.getComponent<cro::Transform>().setScale(glm::vec2(m_viewScale.x, m_viewScale.y * cro::Util::Easing::easeOutQuint(currTime)));
             if (currTime == 1)
             {
                 currTime = 0;
-                state = MessageAnim::Hold;
+                state = PopupAnim::Hold;
                 imgEnt.getComponent<cro::SpriteAnimation>().play(starCount);
             }
             break;
-        case MessageAnim::Hold:
+        case PopupAnim::Hold:
             //hold
             currTime = std::min(HoldTime, currTime + dt);
 
@@ -2048,10 +2219,10 @@ void DrivingState::showMessage(float range)
             if (currTime == HoldTime)
             {
                 currTime = 1.f;
-                state = MessageAnim::Close;
+                state = PopupAnim::Close;
             }
             break;
-        case MessageAnim::Close:
+        case PopupAnim::Close:
             //shrink
             currTime = std::max(0.f, currTime - (dt * 3.f));
             e.getComponent<cro::Transform>().setScale(glm::vec2(m_viewScale.x * cro::Util::Easing::easeInCubic(currTime), m_viewScale.y));
@@ -2188,7 +2359,7 @@ void DrivingState::showMessage(float range)
                 }
             }
             break;
-        case MessageAnim::Abort:
+        case PopupAnim::Abort:
             e.getComponent<cro::Callback>().active = false;
             m_uiScene.destroyEntity(textEnt);
             m_uiScene.destroyEntity(textEnt2);
@@ -2223,4 +2394,133 @@ void DrivingState::floatingMessage(const std::string& msg)
     centreText(entity);
 
     entity.addComponent<FloatingText>().basePos = position;
+}
+
+void DrivingState::updateSkipMessage(float dt)
+{
+    if (m_skipState.state == static_cast<std::int32_t>(Ball::State::Flight))
+    {
+        if (!m_skipState.wasSkipped)
+        {
+            if (m_skipState.previousState != m_skipState.state)
+            {
+                //state has changed, set visible
+                cro::Command cmd;
+                cmd.targetFlags = CommandID::UI::FastForward;
+                cmd.action = [&](cro::Entity e, float)
+                {
+                    auto& data = e.getComponent<cro::Callback>().getUserData<SkipCallbackData>();
+                    data.direction = 1;
+
+                    e.getComponent<cro::Callback>().active = true;
+
+                    if (cro::GameController::getControllerCount() != 0
+                        && m_skipState.displayControllerMessage)
+                    {
+                        //set correct button icon
+                        if (cro::GameController::hasPSLayout(activeControllerID(0)))
+                        {
+                            data.buttonIndex = 1; //used as animation ID
+                        }
+                        else
+                        {
+                            data.buttonIndex = 0;
+                        }
+                        e.getComponent<cro::Text>().setString("Hold   to Skip");
+                    }
+                    else
+                    {
+                        data.buttonIndex = std::numeric_limits<std::uint32_t>::max();
+                        e.getComponent<cro::Text>().setString("Hold " + cro::Keyboard::keyString(m_sharedData.inputBinding.keys[InputBinding::Action]) + " to Skip");
+                    }
+                    centreText(e);
+                };
+                m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+            }
+
+            //read input
+            if (cro::Keyboard::isKeyPressed(m_sharedData.inputBinding.keys[InputBinding::Action])
+                || cro::GameController::isButtonPressed(activeControllerID(0), m_sharedData.inputBinding.buttons[InputBinding::Action]))
+            {
+                m_skipState.currentTime = std::min(SkipState::SkipTime, m_skipState.currentTime + dt);
+                if (m_skipState.currentTime == SkipState::SkipTime)
+                {
+                    //hide message
+                    cro::Command cmd;
+                    cmd.targetFlags = CommandID::UI::FastForward;
+                    cmd.action = [&](cro::Entity e, float)
+                    {
+                        e.getComponent<cro::Callback>().getUserData<SkipCallbackData>().direction = 0;
+                        e.getComponent<cro::Callback>().active = true;
+                    };
+                    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+                    //skip ball forwards
+                    cmd.targetFlags = CommandID::Ball;
+                    cmd.action = [&](cro::Entity e, float)
+                    {
+                        m_gameScene.getSystem<BallSystem>()->fastForward(e);
+
+                        //update minimap with final position
+                        cro::Command cmd2;
+                        cmd2.targetFlags = CommandID::UI::MiniBall;
+                        cmd2.action =
+                            [e](cro::Entity f, float)
+                        {
+                            auto pos = e.getComponent<cro::Transform>().getPosition();
+
+                            auto position = glm::vec3(pos.x, -pos.z, 0.1f) / 2.f;
+                            //need to tie into the fact the mini map is 1/2 scale
+                            //and has the origin in the centre
+                            f.getComponent<cro::Transform>().setPosition(position + glm::vec3(RangeSize / 4.f, 0.f));
+
+                            //set scale based on height
+                            static constexpr float MaxHeight = 40.f;
+                            float scale = 1.f + ((pos.y / MaxHeight) * 2.f);
+                            f.getComponent<cro::Transform>().setScale(glm::vec2(scale));
+                        };
+                        m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd2);
+
+
+                        //and any following cameras
+                        cmd2.targetFlags = CommandID::SpectatorCam;
+                        cmd2.action = [&, e](cro::Entity f, float)
+                        {
+                            f.getComponent<CameraFollower>().target = e;
+                            f.getComponent<CameraFollower>().playerPosition = PlayerPosition;
+                            f.getComponent<CameraFollower>().holePosition = m_holeData[m_gameScene.getDirector<DrivingRangeDirector>()->getCurrentHole()].pin;
+                        };
+                        m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd2);
+
+                        setActiveCamera(CameraID::Green);
+                    };
+                    m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+                    m_ballTrail.reset();
+
+                    m_skipState.wasSkipped = true;
+                }
+            }
+            else
+            {
+                m_skipState.currentTime = 0.f;
+            }
+        }
+    }
+    else
+    {
+        if (m_skipState.previousState != m_skipState.state)
+        {
+            //state has changed, hide
+            cro::Command cmd;
+            cmd.targetFlags = CommandID::UI::FastForward;
+            cmd.action = [](cro::Entity e, float)
+            {
+                e.getComponent<cro::Callback>().getUserData<SkipCallbackData>().direction = 0;
+                e.getComponent<cro::Callback>().active = true;
+            };
+            m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+        }
+    }
+
+    m_skipState.previousState = m_skipState.state;
 }

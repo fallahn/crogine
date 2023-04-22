@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2021
+Matt Marchant 2017 - 2023
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -69,11 +69,16 @@ void Drawable2D::setTexture(const Texture* texture)
 
 void Drawable2D::setShader(Shader* shader)
 {
+    if (shader == m_shader)
+    {
+        return;
+    }
+
     m_shader = shader;
     m_customShader = (shader != nullptr);
     m_applyDefaultShader = !m_customShader;
 
-    m_textureBindings.clear();
+    m_textureIDBindings.clear();
     m_floatBindings.clear();
     m_vec2Bindings.clear();
     m_vec3Bindings.clear();
@@ -183,9 +188,9 @@ void Drawable2D::updateLocalBounds(FloatRect localBounds)
     m_updateBufferData = true;
 }
 
-void Drawable2D::bindUniform(const std::string& name, const Texture& texture)
+void Drawable2D::bindUniform(const std::string& name, TextureID texture)
 {
-    bindUniform(name, &texture, m_textureBindings);
+    bindUniform(name, texture.textureID, m_textureIDBindings);
 }
 
 void Drawable2D::bindUniform(const std::string& name, float value)

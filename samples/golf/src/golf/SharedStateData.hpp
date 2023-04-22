@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2022
+Matt Marchant 2021 - 2023
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -31,6 +31,8 @@ source distribution.
 
 #include "InputBinding.hpp"
 #include "Networking.hpp"
+#include "CommonConsts.hpp"
+#include "PlayerData.hpp"
 #include "server/Server.hpp"
 
 #include <crogine/core/String.hpp>
@@ -44,35 +46,14 @@ source distribution.
 #include <memory>
 #include <unordered_map>
 
-struct PlayerData final
-{
-    cro::String name;
-    std::array<std::uint8_t, 4u> avatarFlags = {1,0,3,6}; //indices into colour pairs
-    std::uint32_t ballID = 0;
-    std::uint32_t hairID = 0;
-    std::uint32_t skinID = 0; //as loaded from the avatar data file
-    bool flipped = false; //whether or not avatar flipped
-    bool isCPU = false; //these bools are flagged as bits in a single byte when serialised
-
-    //these aren't included in serialise/deserialise
-    std::vector<std::uint8_t> holeScores;
-    std::uint8_t score = 0;
-    std::uint8_t matchScore = 0;
-    std::uint8_t skinScore = 0;
-    std::int32_t parScore = 0;
-    glm::vec3 currentTarget = glm::vec3(0.f);
-    cro::Colour ballTint;
-};
-
 struct ConnectionData final
 {
     std::uint64_t peerID = 0;
 
-    static constexpr std::uint8_t MaxPlayers = 4;
-    std::uint8_t connectionID = MaxPlayers;
+    std::uint8_t connectionID = ConstVal::NullValue;
 
     std::uint8_t playerCount = 1;
-    std::array<PlayerData, MaxPlayers> playerData = {};
+    std::array<PlayerData, ConstVal::MaxPlayers> playerData = {};
 
     std::uint32_t pingTime = 0;
     std::uint8_t level = 0;
@@ -93,16 +74,16 @@ struct SharedStateData final
         net::NetClient netClient;
         bool connected = false;
         bool ready = false;
-        std::uint8_t connectionID = 4;
+        std::uint8_t connectionID = ConstVal::NullValue;
 
         std::vector<net::NetEvent> eventBuffer; //don't touch this while loading screen is active!!
     }clientConnection;
 
     //data of all players rx'd from server
-    std::array<ConnectionData, 4u> connectionData = {};
+    std::array<ConnectionData, ConstVal::MaxClients> connectionData = {};
 
-    std::array<std::array<cro::Texture, 4u>, 4u> avatarTextures = {};
-    std::array<cro::RenderTexture, 4u> nameTextures = {};
+    std::array<std::array<cro::Texture, ConstVal::MaxPlayers>, ConstVal::MaxClients> avatarTextures = {};
+    std::array<cro::RenderTexture, ConstVal::MaxClients> nameTextures = {};
 
     //available ball models mapped to ID
     struct BallInfo final
@@ -116,13 +97,14 @@ struct SharedStateData final
         BallInfo(cro::Colour c, std::uint32_t i, const std::string& str)
             : tint(c), uid(i), modelPath(str) {}
     };
-    std::vector<BallInfo> ballModels;
+    std::vector<BallInfo> ballInfo;
 
     //available avatar models mapped to ID
     struct AvatarInfo final
     {
         std::uint32_t uid = 0;
         std::string modelPath;
+        std::string texturePath;
         std::string audioscape;
     };
     std::vector<AvatarInfo> avatarInfo;
@@ -143,7 +125,7 @@ struct SharedStateData final
         std::vector<float> holeTimes; //seconds
         float totalTime = 0;
     };
-    std::array<TimeStats, ConnectionData::MaxPlayers> timeStats = {};
+    std::array<TimeStats, ConstVal::MaxPlayers> timeStats = {};
 
     //our local player data
     std::uint64_t lobbyID = 0;
@@ -207,6 +189,7 @@ struct SharedStateData final
 
     std::int32_t baseState = 0; //used to tell which state we're returning to from errors etc
     std::unique_ptr<cro::ResourceCollection> sharedResources;
+    
     std::vector<glm::uvec2> resolutions;
     std::vector<std::string> resolutionStrings;
 };

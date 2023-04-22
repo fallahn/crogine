@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2022
+Matt Marchant 2021 - 2023
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -69,6 +69,8 @@ source distribution.
 #include <crogine/util/Easings.hpp>
 
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
+
+#include <filesystem>
 
 namespace
 {
@@ -280,7 +282,6 @@ void MessageOverlayState::buildScene()
         {
             e.getComponent<cro::Text>().setFillColour(TextGoldColour);
             e.getComponent<cro::AudioEmitter>().play();
-            e.getComponent<cro::Callback>().setUserData<float>(0.f);
             e.getComponent<cro::Callback>().active = true;
         });
     auto unselectedID = uiSystem.addCallback(
@@ -304,8 +305,7 @@ void MessageOverlayState::buildScene()
         e.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectedID;
         e.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectedID;
 
-        e.addComponent<cro::Callback>().setUserData<float>(0.f);
-        e.getComponent<cro::Callback>().function = MenuTextCallback();
+        e.addComponent<cro::Callback>().function = MenuTextCallback();
 
         parent.getComponent<cro::Transform>().addChild(e.getComponent<cro::Transform>());
         return e;
@@ -394,7 +394,7 @@ void MessageOverlayState::buildScene()
                                 //now we wait for the server to send us the map name so we know the tutorial
                                 //course has been set. Then the network event handler launches the game.
                             }
-                        
+
                             //reset the tutorial flag in shared data
                             m_sharedData.showTutorialTip = false;
                         }
@@ -402,7 +402,7 @@ void MessageOverlayState::buildScene()
                 });
         entity = createItem(glm::vec2(28.f, -16.f), "No", menuEntity);
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
-            uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt) mutable
+            uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)
                 {
                     if (activated(evt))
                     {
@@ -447,12 +447,12 @@ void MessageOverlayState::buildScene()
         entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
         bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
         entity.addComponent<cro::UIInput>().area = bounds;
-        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = 
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] =
             uiSystem.addCallback(
-                [](cro::Entity e) 
-            {
-                e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
-            });
+                [](cro::Entity e)
+                {
+                    e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
+                });
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] =
             uiSystem.addCallback(
                 [](cro::Entity e)
@@ -470,7 +470,93 @@ void MessageOverlayState::buildScene()
                 });
 
         menuEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    }
 
+    else if (m_sharedData.errorMessage == "reset_profile")
+    {
+        entity.getComponent<cro::Text>().setString("Are You REALLY Sure?");
+        centreText(entity);
+
+        auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
+        entity = m_scene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition(position + glm::vec2(-82.f, -4.f));
+        entity.addComponent<cro::Drawable2D>();
+        entity.addComponent<cro::Text>(smallFont).setString("This will reset all of your\nprogress including all of\nyour XP and all unlocked items.");
+        entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+        entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+        entity.getComponent<cro::Text>().setVerticalSpacing(-1.f);
+        menuEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+
+        //buttons
+        entity = createItem(glm::vec2(28.f, -26.f), "No", menuEntity);
+        entity.getComponent<cro::Text>().setFillColour(TextGoldColour);
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+            uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)
+                {
+                    if (activated(evt))
+                    {
+                        quitState();
+                    }
+                });
+
+        entity = createItem(glm::vec2(-28.f, -26.f), "Yes", menuEntity);
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+            uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)
+                {
+                    if (activated(evt))
+                    {
+                        Social::resetProfile();
+
+                        requestStackClear();
+                        requestStackPush(StateID::SplashScreen);
+                    }
+                });
+
+    }
+    else if (m_sharedData.errorMessage == "delete_profile")
+    {
+        entity.getComponent<cro::Text>().setString("Are You REALLY Sure?");
+        centreText(entity);
+
+        auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
+        entity = m_scene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({50.f, 10.f, 0.1f});
+        entity.addComponent<cro::Drawable2D>();
+        entity.addComponent<cro::Text>(smallFont).setString("This will remove this\nprofile permanently.");
+        entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+        entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+        entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+        entity.getComponent<cro::Text>().setVerticalSpacing(-1.f);
+        centreText(entity);
+        menuEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+
+        //buttons
+        entity = createItem(glm::vec2(28.f, -26.f), "No", menuEntity);
+        entity.getComponent<cro::Text>().setFillColour(TextGoldColour);
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+            uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)
+                {
+                    if (activated(evt))
+                    {
+                        m_sharedData.errorMessage = "";
+                        quitState();
+                    }
+                });
+
+        entity = createItem(glm::vec2(-28.f, -26.f), "Yes", menuEntity);
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+            uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)
+                {
+                    if (activated(evt))
+                    {
+                        m_sharedData.errorMessage = "delete_profile"; //used when returning to menu to decide on appropriate action
+                        quitState();
+                    }
+                });
     }
     else //a generic message
     {
@@ -494,9 +580,7 @@ void MessageOverlayState::buildScene()
         cam.setOrthographic(0.f, size.x, 0.f, size.y, -2.f, 10.f);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
 
-        auto vpSize = calcVPSize();
-
-        m_viewScale = glm::vec2(std::floor(size.y / vpSize.y));
+        m_viewScale = glm::vec2(getViewScale());
         rootNode.getComponent<cro::Transform>().setScale(m_viewScale);
         rootNode.getComponent<cro::Transform>().setPosition(size / 2.f);
 

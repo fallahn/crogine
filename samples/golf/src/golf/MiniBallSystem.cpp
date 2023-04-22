@@ -30,6 +30,7 @@ source distribution.
 #include "MiniBallSystem.hpp"
 #include "MinimapZoom.hpp"
 
+#include <crogine/ecs/Scene.hpp>
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Drawable2D.hpp>
 
@@ -49,6 +50,13 @@ void MiniBallSystem::process(float dt)
     for (auto entity : entities)
     {
         auto& ball = entity.getComponent<MiniBall>();
+
+        if (!ball.parent.isValid())
+        {
+            //player left the game and parent was destroyed
+            getScene()->destroyEntity(entity);
+            continue;
+        }
 
         if (ball.state == MiniBall::Animating)
         {

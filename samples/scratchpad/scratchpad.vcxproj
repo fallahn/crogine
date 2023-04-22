@@ -322,6 +322,7 @@
     <ClCompile Include="src\retro\RetroState.cpp" />
     <ClCompile Include="src\rolling\RollingState.cpp" />
     <ClCompile Include="src\rolling\RollingSystem.cpp" />
+    <ClCompile Include="src\ssao\SSAOState.cpp" />
     <ClCompile Include="src\swingput\Swingput.cpp" />
     <ClCompile Include="src\swingput\SwingState.cpp" />
     <ClCompile Include="src\vats\VatFile.cpp" />

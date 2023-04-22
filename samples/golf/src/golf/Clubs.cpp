@@ -49,9 +49,9 @@ namespace
 
     constexpr std::array<ClubStat, ClubID::Count> ClubStats =
     {
-        ClubStat({44.f,   220.f},{46.88f, 250.f},{50.11f, 280.f}), //123
-        ClubStat({39.6f,  180.f},{42.89f, 210.f},{43.93f, 230.f}), //123
-        ClubStat({36.3f,  150.f},{38.67f, 170.f},{40.76f, 190.f}), //123
+        ClubStat({44.f,   220.f},{46.18f, 240.f},{48.2f,  260.f}), //123
+        ClubStat({39.6f,  180.f},{42.08f, 200.f},{44.24f, 220.f}), //123
+        ClubStat({36.3f,  150.f},{37.82f, 160.f},{39.66f, 180.f}), //123
 
         ClubStat({35.44f, 140.f},{36.49f, 150.f},{37.69f, 160.f}), //123
         ClubStat({34.16f, 130.f},{35.44f, 140.f},{36.49f, 150.f}), //123
@@ -60,12 +60,15 @@ namespace
         ClubStat({29.91f, 100.f},{31.33f, 110.f},{32.85f, 120.f}), //123
         ClubStat({28.4f,  90.f}, {29.91f, 100.f},{31.33f, 110.f}), //123
 
-        //these don't increase in range
-        ClubStat({25.2f, 70.f}, {25.2f, 70.f}, {25.2f, 70.f}),
-        ClubStat({17.4f, 30.f}, {17.4f, 30.f}, {17.4f, 30.f}),
+        
+        ClubStat({25.2f, 70.f}, {25.98f, 75.f}, {27.46f, 80.f}),
+        ClubStat({17.4f, 30.f}, {18.53f, 32.f}, {19.14f, 35.f}),
+        //this won't increase in range
         ClubStat({10.3f, 10.f}, {10.3f, 10.f}, {10.3f, 10.f}),
         ClubStat({9.11f, 10.f}, {9.11f, 10.f}, {9.11f, 10.f}) //except this which is dynamic
     };
+
+    constexpr std::size_t DebugLevel = 35;
 }
 
 Club::Club(std::int32_t id, const std::string& name, float angle, float sidespin, float topspin)
@@ -122,6 +125,7 @@ float Club::getPower(float distanceToPin) const
 
     //check player level and return further distance
     auto level = Social::getLevel();
+    //auto level = DebugLevel;
     if (level > 29)
     {
         return ClubStats[m_id].stats[2].power;
@@ -148,6 +152,7 @@ float Club::getBaseTarget() const
 {
     //check player level and return increased distance
     auto level = Social::getLevel();
+    //auto level = DebugLevel;
     if (level > 29)
     {
         return ClubStats[m_id].stats[2].target;
@@ -157,6 +162,11 @@ float Club::getBaseTarget() const
     {
         return ClubStats[m_id].stats[1].target;
     }
+    return ClubStats[m_id].stats[0].target;
+}
+
+float Club::getDefaultTarget() const
+{
     return ClubStats[m_id].stats[0].target;
 }
 

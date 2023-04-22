@@ -42,6 +42,7 @@ include_directories(
 
 SET(PROJECT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
 include(${PROJECT_DIR}/CMakeLists.txt)
+include(${PROJECT_DIR}/animblend/CMakeLists.txt)
 include(${PROJECT_DIR}/batcat/CMakeLists.txt)
 include(${PROJECT_DIR}/billiards/CMakeLists.txt)
 include(${PROJECT_DIR}/bsp/CMakeLists.txt)
@@ -52,10 +53,12 @@ include(${PROJECT_DIR}/retro/CMakeLists.txt)
 include(${PROJECT_DIR}/bush/CMakeLists.txt)
 include(${PROJECT_DIR}/frustum/CMakeLists.txt)
 include(${PROJECT_DIR}/rolling/CMakeLists.txt)
+include(${PROJECT_DIR}/ssao/CMakeLists.txt)
 include(${PROJECT_DIR}/swingput/CMakeLists.txt)
 
 add_executable(${PROJECT_NAME}
                ${PROJECT_SRC}
+               ${BLEND_SRC}
                ${BATCAT_SRC}
                ${BILLIARDS_SRC}
                ${BSP_SRC}
@@ -64,6 +67,7 @@ add_executable(${PROJECT_NAME}
 	             ${RETRO_SRC}
 	             ${BUSH_SRC}
                ${ROLLING_SRC}
+               ${SSAO_SRC}
                ${SWING_SRC}
                ${FRUSTUM_SRC}
                ${VATS_SRC})

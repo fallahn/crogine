@@ -136,6 +136,7 @@
     <ClInclude Include="..\crogine\include\crogine\graphics\FontResource.hpp" />
     <ClInclude Include="..\crogine\include\crogine\graphics\GridMeshBuilder.hpp" />
     <ClInclude Include="..\crogine\include\crogine\graphics\Image.hpp" />
+    <ClInclude Include="..\crogine\include\crogine\graphics\ImageArray.hpp" />
     <ClInclude Include="..\crogine\include\crogine\graphics\IqmBuilder.hpp" />
     <ClInclude Include="..\crogine\include\crogine\graphics\LoadingScreen.hpp" />
     <ClInclude Include="..\crogine\include\crogine\graphics\MaterialData.hpp" />
@@ -334,6 +335,7 @@
     <ClCompile Include="..\crogine\src\graphics\FontResource.cpp" />
     <ClCompile Include="..\crogine\src\graphics\GridMeshBuilder.cpp" />
     <ClCompile Include="..\crogine\src\graphics\Image.cpp" />
+    <ClCompile Include="..\crogine\src\graphics\ImageArray.cpp" />
     <ClCompile Include="..\crogine\src\graphics\IqmBuilder.cpp" />
     <ClCompile Include="..\crogine\src\graphics\MaterialData.cpp" />
     <ClCompile Include="..\crogine\src\graphics\MaterialResource.cpp" />

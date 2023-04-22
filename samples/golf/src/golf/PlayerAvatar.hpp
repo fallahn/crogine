@@ -30,6 +30,7 @@ source distribution.
 #pragma once
 
 #include "PlayerColours.hpp"
+#include "PlayerData.hpp"
 
 #include <crogine/ecs/Entity.hpp>
 #include <crogine/ecs/components/Skeleton.hpp>
@@ -40,15 +41,10 @@ source distribution.
 
 #include <string>
 
-class PlayerAvatar final
+class PlayerAvatar final : public ProfileTexture
 {
 public:
     explicit PlayerAvatar(const std::string&);
-
-    void setTarget(cro::Texture&);
-    void setColour(pc::ColourKey::Index, std::int8_t);
-    std::pair<cro::Colour, cro::Colour> getColour(pc::ColourKey::Index) const;
-    void apply();
 
     cro::Entity previewModel;
 
@@ -63,12 +59,5 @@ public:
     std::vector<cro::Entity> previewSounds;
 
 private:
-    cro::Texture* m_target;
-    cro::Image m_image;
 
-    std::array<std::vector<std::uint32_t>, pc::ColourKey::Count> m_keyIndicesLight;
-    std::array<std::vector<std::uint32_t>, pc::ColourKey::Count> m_keyIndicesDark;
-
-    std::array<cro::Colour, pc::ColourKey::Count> m_lightColours;
-    std::array<cro::Colour, pc::ColourKey::Count> m_darkColours;
 };

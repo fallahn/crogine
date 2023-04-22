@@ -100,6 +100,7 @@ UnlockState::UnlockState(cro::StateStack& ss, cro::State::Context ctx, SharedSta
     m_scene     (ctx.appInstance.getMessageBus()),
     m_modelScene(ctx.appInstance.getMessageBus()),
     m_sharedData(sd),
+    m_itemIndex (0),
     m_viewScale (2.f)
 {
     ctx.mainWindow.setMouseCaptured(false);
@@ -180,6 +181,10 @@ bool UnlockState::handleEvent(const cro::Event& evt)
         {
             quitState();
             return false;
+        }
+        else if (evt.button.button == SDL_BUTTON_LEFT)
+        {
+            dismissItem();
         }
     }
     else if (evt.type == SDL_CONTROLLERAXISMOTION)
@@ -275,9 +280,8 @@ void UnlockState::buildScene()
     auto resizeCallback = [&](cro::Camera& cam)
     {
         auto windowSize = glm::vec2(GolfGame::getActiveTarget()->getSize());
-        auto vpSize = calcVPSize();
 
-        auto size = PreviewSize * static_cast<std::uint32_t>(windowSize.y / vpSize.y);
+        auto size = PreviewSize * static_cast<std::uint32_t>(getViewScale());
         m_modelTexture.create(size, size, true, false, m_sharedData.multisamples);
 
         cam.setPerspective(70.f * cro::Util::Const::degToRad, 1.f, 0.1f, 10.f);
@@ -326,7 +330,9 @@ void UnlockState::buildUI()
             e.getComponent<cro::Transform>().setScale(m_viewScale * cro::Util::Easing::easeOutQuint(currTime));
             if (currTime == 0)
             {
-                requestStackPop();            
+                requestStackPop();
+
+                //state = RootCallbackData::FadeIn;
             }
             break;
         }
@@ -639,9 +645,7 @@ void UnlockState::buildUI()
         cam.setOrthographic(0.f, size.x, 0.f, size.y, -2.f, 10.f);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
 
-        auto vpSize = calcVPSize();
-
-        m_viewScale = glm::vec2(std::floor(size.y / vpSize.y));
+        m_viewScale = glm::vec2(getViewScale());
         rootNode.getComponent<cro::Transform>().setScale(m_viewScale);
         rootNode.getComponent<cro::Transform>().setPosition(size / 2.f);
 

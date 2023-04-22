@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2022
+Matt Marchant 2021 - 2023
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -35,6 +35,7 @@ source distribution.
 #include <Achievements.hpp>
 #endif
 #include "golf/SharedStateData.hpp"
+#include "golf/SharedProfileData.hpp"
 
 #include <crogine/core/App.hpp>
 #include <crogine/core/ConsoleClient.hpp>
@@ -56,6 +57,7 @@ public:
 private:
     
     SharedStateData m_sharedData;
+    SharedProfileData m_profileData;
     cro::StateStack m_stateStack;
 
     std::vector<std::string> m_hostAddresses;

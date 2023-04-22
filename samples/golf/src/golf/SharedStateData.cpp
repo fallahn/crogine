@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2022
+Matt Marchant 2021 - 2023
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -53,7 +53,7 @@ std::vector<std::uint8_t> ConnectionData::serialise() const
     //header, sizes[5], data
 
     std::size_t totalSize = sizeof(header);
-    std::array<std::uint8_t, 5u> sizes = { 0,0,0,0,0 };
+    std::array<std::uint8_t, ConstVal::MaxPlayers + 1> sizes = { 0,0,0,0,0,0,0,0,0 };
     for (auto i = 0u; i < playerCount; ++i)
     {
         sizes[i] = static_cast<std::uint8_t>(std::min(ConstVal::MaxStringDataSize, playerData[i].name.size() * sizeof(std::uint32_t)));
@@ -66,16 +66,11 @@ std::vector<std::uint8_t> ConnectionData::serialise() const
 
         totalSize += sizes[i];
     }
-    //what's stored in sizes[4]??
+    //what's stored in sizes[8]??
 
     std::vector<std::uint8_t> buffer(totalSize + sizeof(sizes));
     std::memcpy(buffer.data(), &header, sizeof(header));
-
-    buffer[sizeof(header) + 0] = sizes[0];
-    buffer[sizeof(header) + 1] = sizes[1];
-    buffer[sizeof(header) + 2] = sizes[2];
-    buffer[sizeof(header) + 3] = sizes[3];
-    buffer[sizeof(header) + 4] = sizes[4];
+    std::memcpy(buffer.data() + sizeof(header), sizes.data(), sizeof(sizes));
 
     std::size_t offset = sizeof(header) + sizes.size();
     for (auto i = 0u; i < playerCount && offset < buffer.size(); ++i)
@@ -120,7 +115,7 @@ bool ConnectionData::deserialise(const net::NetEvent::Packet& packet)
     PacketHeader header;
 
     //read header
-    std::array<std::uint8_t, 5u> sizes = { 0,0,0,0,0 };
+    std::array<std::uint8_t, ConstVal::MaxPlayers + 1> sizes = { 0,0,0,0,0,0,0,0 };
     if (packet.getSize() < sizeof(sizes) + sizeof(header))
     {
         return false;
@@ -133,7 +128,7 @@ bool ConnectionData::deserialise(const net::NetEvent::Packet& packet)
     playerCount = header.playerCount;
 
     if (playerCount == 0
-        || playerCount > MaxPlayers)
+        || playerCount > ConstVal::MaxPlayers)
     {
         return false;
     }

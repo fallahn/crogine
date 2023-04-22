@@ -152,7 +152,7 @@ std::int32_t LobbyState::process(float dt)
 void LobbyState::insertPlayerInfo(const net::NetEvent& evt)
 {
     //find the connection index
-    std::uint8_t connectionID = 4;
+    std::uint8_t connectionID = ConstVal::NullValue;
     for(auto i = 0u; i < ConstVal::MaxClients; ++i)
     {
         if (m_sharedData.clients[i].peer == evt.peer)

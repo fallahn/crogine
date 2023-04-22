@@ -65,7 +65,7 @@ struct ClubID final
         Flags[EightIron] | Flags[PitchWedge] | Flags[GapWedge] |
         Flags[SandWedge] | Flags[Putter];
 
-    static constexpr std::int32_t FullSet = 0x1FFF;
+    static constexpr std::int32_t FullSet = 0x0FFF;
 };
 
 class Club final
@@ -76,6 +76,8 @@ public:
 
     std::string getName(bool imperial, float distanceToPin) const;
 
+    std::string getLabel() const { return m_name; } //doesn't include distance
+
     float getPower(float distanceToPin) const;
 
     float getAngle() const { return m_angle; }
@@ -85,6 +87,7 @@ public:
     float getTarget(float distanceToPin) const;
 
     float getBaseTarget() const;
+    float getDefaultTarget() const; //target with no level-shift applied
 
     float getSideSpinMultiplier() const { return m_sidespin; }
     float getTopSpinMultiplier() const { return m_topspin; }
@@ -107,9 +110,9 @@ private:
 
 static const std::array<Club, ClubID::Count> Clubs =
 {
-    Club(ClubID::Driver,    "Driver ", 45.f, 0.28f, 0.5f),  //default set
-    Club(ClubID::ThreeWood, "3 Wood ", 45.f, 0.3f,  0.55f), //default set
-    Club(ClubID::FiveWood,  "5 Wood ", 45.f, 0.4f,  0.55f), //Level 5
+    Club(ClubID::Driver,    "Driver ", 45.f, 0.3f,   0.5f),  //default set
+    Club(ClubID::ThreeWood, "3 Wood ", 45.f, 0.35f,  0.55f), //default set
+    Club(ClubID::FiveWood,  "5 Wood ", 45.f, 0.45f,  0.55f), //Level 5
     
     
     Club(ClubID::FourIron,  "4 Iron ", 40.f, 0.45f, 0.78f), //Level 10

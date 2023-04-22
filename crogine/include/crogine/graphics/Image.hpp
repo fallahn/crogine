@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2023
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -35,6 +35,7 @@ source distribution.
 #include <crogine/detail/glm/vec2.hpp>
 
 #include <string>
+#include <cstring>
 #include <vector>
 
 namespace cro
@@ -43,8 +44,7 @@ namespace cro
 
     /*!
     \brief CPU side representation of an image.
-    Images can be loaded from file formats BMP, GIF, JPEG, LBM, PCX, PNG, PNM, TGA
-    (desktop platforms can load all formats supported by SDL2_image).
+    Images can be loaded from file formats JPG, PNG, BMP, HDR and TGA
     Images can have their pixels manipulated directly, but can only be drawn once
     they have been loaded on to the GPU via cro::Texture. Unlike texture Images 
     are copyable - although this is a heavy operation.
@@ -129,6 +129,7 @@ namespace cro
         */
         const std::uint8_t* getPixel(std::size_t x, std::size_t y) const;
 
+
     private:
         glm::uvec2 m_size = glm::uvec2(0);
         ImageFormat::Type m_format;
@@ -136,5 +137,23 @@ namespace cro
         bool m_flipped;
 
         bool m_flipOnLoad;
+
+        template <class T>
+        friend class ImageArray;
+
+        template <typename T>
+        static void flipVertically(const T* src, std::vector<T>& dst, std::uint32_t height)
+        {
+            //copy row by row starting at bottom
+            const auto rowSize = (dst.size() * sizeof(T)) / height;
+            auto d = dst.data();
+            auto s = src + ((dst.size()) - rowSize);
+            for (auto i = 0u; i < height; ++i)
+            {
+                std::memcpy(d, s, rowSize);
+                d += rowSize;
+                s -= rowSize;
+            }
+        }
     };
 }

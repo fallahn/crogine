@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2023
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -390,10 +390,7 @@ glm::mat4 Transform::getLocalTransform() const
 
         m_dirtyFlags &= ~Tx;
 
-        for (auto& cb : m_callbacks)
-        {
-            cb();
-        }
+        doCallbacks();
     }
 
     return m_attachmentTransform * m_transform;
@@ -429,10 +426,7 @@ void Transform::setLocalTransform(glm::mat4 transform)
     m_transform = glm::translate(transform, -m_origin);
     m_dirtyFlags &= ~Tx;
 
-    for (auto& cb : m_callbacks)
-    {
-        cb();
-    }
+    doCallbacks();
 }
 
 glm::mat4 Transform::getWorldTransform() const
@@ -542,6 +536,19 @@ void Transform::reset()
 
     m_callbacks.clear();
     m_children.clear();
+}
+
+void Transform::doCallbacks() const
+{
+    for (auto& c : m_callbacks)
+    {
+        c();
+    }
+
+    for (auto c : m_children)
+    {
+        c->doCallbacks();
+    }
 }
 
 void Transform::increaseDepth()

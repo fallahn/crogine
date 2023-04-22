@@ -449,6 +449,7 @@
     <ClCompile Include="src\editor\BushState.cpp" />
     <ClCompile Include="src\golf\BallAnimationSystem.cpp" />
     <ClCompile Include="src\golf\BallSystem.cpp" />
+    <ClCompile Include="src\golf\BallTrail.cpp" />
     <ClCompile Include="src\golf\BilliardsClientCollision.cpp" />
     <ClCompile Include="src\golf\BilliardsInput.cpp" />
     <ClCompile Include="src\golf\BilliardsSoundDirector.cpp" />
@@ -480,6 +481,7 @@
     <ClCompile Include="src\golf\GolfStateUI.cpp" />
     <ClCompile Include="src\golf\KeyboardState.cpp" />
     <ClCompile Include="src\golf\LeaderboardTexture.cpp" />
+    <ClCompile Include="src\golf\MenuAvatars.cpp" />
     <ClCompile Include="src\golf\MenuCallbacks.cpp" />
     <ClCompile Include="src\golf\MenuCreation.cpp" />
     <ClCompile Include="src\golf\MenuCustomisation.cpp" />
@@ -495,9 +497,11 @@
     <ClCompile Include="src\golf\Path.cpp" />
     <ClCompile Include="src\golf\PauseState.cpp" />
     <ClCompile Include="src\golf\PlayerAvatar.cpp" />
+    <ClCompile Include="src\golf\PlayerData.cpp" />
     <ClCompile Include="src\golf\PlaylistState.cpp" />
     <ClCompile Include="src\golf\PocketBallSystem.cpp" />
     <ClCompile Include="src\golf\PracticeState.cpp" />
+    <ClCompile Include="src\golf\ProfileState.cpp" />
     <ClCompile Include="src\golf\PropFollowSystem.cpp" />
     <ClCompile Include="src\golf\RayResultCallback.cpp" />
     <ClCompile Include="src\golf\server\EightballDirector.cpp" />
@@ -538,6 +542,7 @@
     <ClInclude Include="src\ErrorCheck.hpp" />
     <ClInclude Include="src\golf\BallAnimationSystem.hpp" />
     <ClInclude Include="src\golf\BallSystem.hpp" />
+    <ClInclude Include="src\golf\BallTrail.hpp" />
     <ClInclude Include="src\golf\BeaconCallback.hpp" />
     <ClInclude Include="src\golf\Billboard.hpp" />
     <ClInclude Include="src\golf\BilliardsClientCollision.hpp" />
@@ -595,10 +600,12 @@
     <ClInclude Include="src\golf\PauseState.hpp" />
     <ClInclude Include="src\golf\PlayerAvatar.hpp" />
     <ClInclude Include="src\golf\PlayerColours.hpp" />
+    <ClInclude Include="src\golf\PlayerData.hpp" />
     <ClInclude Include="src\golf\PlaylistState.hpp" />
     <ClInclude Include="src\golf\PocketBallSystem.hpp" />
     <ClInclude Include="src\golf\PoissonDisk.hpp" />
     <ClInclude Include="src\golf\PracticeState.hpp" />
+    <ClInclude Include="src\golf\ProfileState.hpp" />
     <ClInclude Include="src\golf\PropFollowSystem.hpp" />
     <ClInclude Include="src\golf\PuttingState.hpp" />
     <ClInclude Include="src\golf\RandNames.hpp" />
@@ -616,6 +623,7 @@
     <ClInclude Include="src\golf\server\ServerPacketData.hpp" />
     <ClInclude Include="src\golf\server\ServerState.hpp" />
     <ClInclude Include="src\golf\server\SnookerDirector.hpp" />
+    <ClInclude Include="src\golf\SharedProfileData.hpp" />
     <ClInclude Include="src\golf\SharedStateData.hpp" />
     <ClInclude Include="src\golf\SoundEffectsDirector.hpp" />
     <ClInclude Include="src\golf\SpectatorAnimCallback.hpp" />
@@ -638,6 +646,7 @@
     <ClInclude Include="src\golf\Utility.hpp" />
     <ClInclude Include="src\golf\VatFile.hpp" />
     <ClInclude Include="src\golf\VatAnimationSystem.hpp" />
+    <ClInclude Include="src\golf\XPAwardStrings.hpp" />
     <ClInclude Include="src\LoadingScreen.hpp" />
     <ClInclude Include="src\GolfGame.hpp" />
     <ClInclude Include="src\rss\Newsfeed.hpp" />
@@ -651,6 +660,7 @@
     <None Include="src\golf\BillboardShader.inl" />
     <None Include="src\golf\CelShader.inl" />
     <None Include="src\golf\CloudShader.inl" />
+    <None Include="src\golf\FogShader.inl" />
     <None Include="src\golf\MinimapShader.inl" />
     <None Include="src\golf\PaletteSwap.inl" />
     <None Include="src\golf\PostProcess.inl" />

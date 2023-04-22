@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022
+Matt Marchant 2022 - 2023
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -228,6 +228,27 @@ void GolfState::addCameraDebugging()
 
 void GolfState::registerDebugWindows()
 {
+    registerWindow([&]()
+        {
+            //if (ImGui::Begin("Ach Track"))
+            //{
+            //    ImGui::Text("No holes over par %s", m_achievementTracker.noHolesOverPar ? "true" : "false");
+            //    ImGui::Text("No gimme used %s", m_achievementTracker.noGimmeUsed ? "true" : "false");
+            //    ImGui::Text("Two shots spare %s", m_achievementTracker.twoShotsSpare ? "true" : "false");
+            //    ImGui::Text("Consistency %s", m_achievementTracker.alwaysOnTheCourse ? "true" : "false");
+            //    ImGui::Text("Under two putts %s", m_achievementTracker.underTwoPutts ? "true" : "false");
+            //    ImGui::Text("Putt count %d", m_achievementTracker.puttCount);
+            //}
+            //ImGui::End();
+
+            if (ImGui::Begin("Depth Map"))
+            {
+                //glm::vec2 size(m_gameSceneTexture.getSize() / 2u);
+                //ImGui::Image(m_gameSceneTexture.getDepthTexture(), { size.x, size.y }, { 0.f, 1.f }, { 1.f, 0.f });
+            }
+            ImGui::End();
+        });
+
     //registerWindow([&]()
     //    {
     //        if (ImGui::Begin("Spin"))
@@ -238,40 +259,40 @@ void GolfState::registerDebugWindows()
     //        }
     //    });
 
-    registerWindow([&]()
-        {
-            if (ImGui::Begin("Target Info"))
-            {
-                auto pos = m_freeCam.getComponent<cro::Transform>().getPosition();
-                auto dir = m_freeCam.getComponent<cro::Transform>().getForwardVector() * 100.f;
-                auto result = m_collisionMesh.getTerrain(pos, dir);
+    //registerWindow([&]()
+    //    {
+    //        if (ImGui::Begin("Target Info"))
+    //        {
+    //            auto pos = m_freeCam.getComponent<cro::Transform>().getPosition();
+    //            auto dir = m_freeCam.getComponent<cro::Transform>().getForwardVector() * 100.f;
+    //            auto result = m_collisionMesh.getTerrain(pos, dir);
 
-                if (result.wasRayHit)
-                {
-                    ImGui::Text("Terrain: %s", TerrainStrings[result.terrain].c_str());
-                }
-                else
-                {
-                    ImGui::Text("Inf.");
-                }
+    //            if (result.wasRayHit)
+    //            {
+    //                ImGui::Text("Terrain: %s", TerrainStrings[result.terrain].c_str());
+    //            }
+    //            else
+    //            {
+    //                ImGui::Text("Inf.");
+    //            }
 
-                ImGui::Text("Current Camera %s", CameraStrings[m_currentCamera].c_str());
-            }        
-            ImGui::End();
+    //            ImGui::Text("Current Camera %s", CameraStrings[m_currentCamera].c_str());
+    //        }        
+    //        ImGui::End();
 
-            //hacky stand in for reticule :3
-            if (m_gameScene.getActiveCamera() == m_freeCam)
-            {
-                auto size = glm::vec2(cro::App::getWindow().getSize());
-                const glm::vec2 pointSize(6.f);
+    //        //hacky stand in for reticule :3
+    //        if (m_gameScene.getActiveCamera() == m_freeCam)
+    //        {
+    //            auto size = glm::vec2(cro::App::getWindow().getSize());
+    //            const glm::vec2 pointSize(6.f);
 
-                auto pos = (size - pointSize) / 2.f;
-                ImGui::SetNextWindowPos({ pos.x, pos.y });
-                ImGui::SetNextWindowSize({ pointSize.x, pointSize.y });
-                ImGui::Begin("Point");
-                ImGui::End();
-            }
-        }, true);
+    //            auto pos = (size - pointSize) / 2.f;
+    //            ImGui::SetNextWindowPos({ pos.x, pos.y });
+    //            ImGui::SetNextWindowSize({ pointSize.x, pointSize.y });
+    //            ImGui::Begin("Point");
+    //            ImGui::End();
+    //        }
+    //    }, true);
 
     //registerWindow([&]()
     //    {

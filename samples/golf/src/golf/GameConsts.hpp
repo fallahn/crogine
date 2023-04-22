@@ -43,7 +43,7 @@ source distribution.
 #include <crogine/ecs/components/Callback.hpp>
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/graphics/Colour.hpp>
-#include <crogine/graphics/Image.hpp>
+#include <crogine/graphics/ImageArray.hpp>
 #include <crogine/graphics/ModelDefinition.hpp>
 #include <crogine/graphics/CubeBuilder.hpp>
 #include <crogine/util/Constants.hpp>
@@ -110,7 +110,7 @@ static constexpr float IndicatorDarkness = 0.002f;
 static constexpr float IndicatorLightness = 0.5f;
 
 static constexpr glm::vec2 LabelIconSize(Social::IconSize);
-static constexpr glm::uvec2 LabelTextureSize(160u, 64u + Social::IconSize);
+static constexpr glm::uvec2 LabelTextureSize(160u, 128u + (Social::IconSize * 4));
 static constexpr glm::vec3 OriginOffset(static_cast<float>(MapSize.x / 2), 0.f, -static_cast<float>(MapSize.y / 2));
 
 static const cro::Colour WaterColour(0.02f, 0.078f, 0.578f);
@@ -127,6 +127,9 @@ static const cro::Colour SwingputLight(std::uint8_t(236), 119, 61);
 static constexpr std::int16_t LeftThumbDeadZone = 7849;
 static constexpr std::int16_t RightThumbDeadZone = 8689;
 static constexpr std::int16_t TriggerDeadZone = 30;
+
+static constexpr glm::vec3 BallHairScale(0.277f);
+static constexpr glm::vec3 BallHairOffset(0.f, 0.04f, -0.007f);
 
 struct TutorialID
 {
@@ -233,8 +236,10 @@ struct ShaderID final
         TreesetBranch,
         TreesetShadow,
         TreesetLeafShadow,
-        PuttAssist,
+        BallTrail,
         FXAA,
+        Fog,
+        Flag
     };
 };
 
@@ -249,6 +254,18 @@ struct AnimationID final
 
     };
     static constexpr std::size_t Invalid = std::numeric_limits<std::size_t>::max();
+};
+
+struct SkipState final
+{
+    std::int32_t state = -1;
+    bool wasSkipped = false;
+
+    static constexpr float SkipTime = 1.f;
+    float currentTime = 0.f;
+
+    std::int32_t previousState = state;
+    bool displayControllerMessage = false;
 };
 
 struct Avatar final
@@ -270,9 +287,6 @@ static const std::array BallTints =
     cro::Colour(0.964f,1.f,0.878f) //snowman
 };
 
-static constexpr float ViewportHeight = 360.f;
-static constexpr float ViewportHeightWide = 320.f;// 300.f;
-
 static inline std::int32_t activeControllerID(std::int32_t bestMatch)
 {
     if (cro::GameController::isConnected(bestMatch))
@@ -287,7 +301,7 @@ static inline std::int32_t activeControllerID(std::int32_t bestMatch)
             return i;
         }
     }
-    return -1;
+    return 0;
 }
 
 template <typename T>
@@ -313,6 +327,46 @@ static inline constexpr float smoothstep(float edge0, float edge1, float x)
 {
     float t = clamp((x - edge0) / (edge1 - edge0));
     return t * t * (3.f - 2.f * t);
+}
+
+static inline cro::Image cropAvatarImage(const std::string& path)
+{
+    cro::ImageArray<std::uint8_t> arr;
+    if (arr.loadFromFile(path, true)
+        && arr.getChannels() > 2)
+    {
+        auto inSize = arr.getDimensions();
+        auto outSize = glm::uvec2(inSize.x / 2, inSize.y);
+
+        cro::Image tmp;
+        tmp.create(outSize.x, outSize.y, cro::Colour::White);
+
+        //copy only the left half (mugshout *ought* to be 2:1, however we'll scale to square when rendering)
+        for (auto y = 0u; y < outSize.y; ++y)
+        {
+            for (auto x = 0u; x < outSize.x; ++x)
+            {
+                auto i = y * inSize.x + x;
+                cro::Colour c =
+                {
+                    arr[i * arr.getChannels()],
+                    arr[i * arr.getChannels() + 1],
+                    arr[i * arr.getChannels() + 2]
+                };
+
+                //transparency outside radius
+                glm::vec2 position(x, y);
+                const float halfSize = static_cast<float>(outSize.x / 2);
+                const float alpha = (1.f - glm::smoothstep(halfSize - 3.5f, halfSize - 1.5f, glm::length(position - glm::vec2(outSize / 2u))));
+                c.setAlpha(alpha);
+
+                tmp.setPixel(x, y, c);
+            }
+        }
+
+        return tmp;
+    }
+    return cro::Image();
 }
 
 static inline glm::quat rotationFromNormal(glm::vec3 normal)
@@ -355,14 +409,24 @@ static inline glm::quat lookRotation(glm::vec3 eye, glm::vec3 target, glm::vec3 
     return glm::normalize(glm::toQuat(m));
 }
 
-static inline glm::vec2 calcVPSize()
+static inline float getViewScale(glm::vec2 size = GolfGame::getActiveTarget()->getSize())
 {
-    glm::vec2 size(GolfGame::getActiveTarget()->getSize());
     const float ratio = size.x / size.y;
-    static constexpr float Widescreen = 16.f / 9.f;
-    static constexpr float ViewportWidth = 640.f;
 
-    return glm::vec2(ViewportWidth, ratio < Widescreen ? ViewportHeightWide : ViewportHeight);
+    if (ratio < 1.7)
+    {
+        //4:3
+        return std::floor(size.x / 512.f);
+    }
+
+    if (ratio < 2.37f)
+    {
+        //widescreen
+        return std::floor(size.x / 540.f);
+    }
+
+    //ultrawide
+    return std::floor(size.y / 360.f);
 }
 
 static inline void togglePixelScale(SharedStateData& sharedData, bool on)
@@ -623,26 +687,26 @@ static inline bool planeIntersect(const glm::mat4& camTx, glm::vec3& result)
     return true;
 }
 
-static inline std::pair<std::uint8_t, float> readMap(const cro::Image& img, float px, float py)
+static inline std::pair<std::uint8_t, float> readMap(const cro::ImageArray<std::uint8_t>& img, float px, float py)
 {
-    auto size = glm::vec2(img.getSize());
+    auto size = glm::vec2(img.getDimensions());
     //I forget why our coords are float - this makes for horrible casts :(
     std::uint32_t x = static_cast<std::uint32_t>(std::min(size.x - 1.f, std::max(0.f, std::floor(px))));
     std::uint32_t y = static_cast<std::uint32_t>(std::min(size.y - 1.f, std::max(0.f, std::floor(py))));
 
-    std::uint32_t stride = 4;
+    std::uint32_t stride = img.getChannels();
     //TODO we should have already asserted the format is RGBA elsewhere...
-    if (img.getFormat() == cro::ImageFormat::RGB)
+    /*if (img.getFormat() == cro::ImageFormat::RGB)
     {
         stride = 3;
-    }
+    }*/
 
     auto index = (y * static_cast<std::uint32_t>(size.x) + x) * stride;
 
-    std::uint8_t terrain = img.getPixelData()[index] / 10;
+    std::uint8_t terrain = img[index] / 10;
     terrain = std::min(static_cast<std::uint8_t>(TerrainID::Stone), terrain);
 
-    auto height = static_cast<float>(img.getPixelData()[index + 1]) / 255.f;
+    auto height = static_cast<float>(img[index + 1]) / 255.f;
     height *= MaxTerrainHeight;
 
     return { terrain, height };

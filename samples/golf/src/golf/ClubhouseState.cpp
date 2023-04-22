@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022
+Matt Marchant 2022 - 2023
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -29,6 +29,7 @@ source distribution.
 
 #include "ClubhouseState.hpp"
 #include "SharedStateData.hpp"
+#include "SharedProfileData.hpp"
 #include "MenuConsts.hpp"
 #include "PacketIDs.hpp"
 #include "CommandIDs.hpp"
@@ -110,9 +111,10 @@ constexpr std::array<glm::vec2, ClubhouseState::MenuID::Count> ClubhouseState::m
     glm::vec2(-MenuSpacing.x, 0.f)
 };
 
-ClubhouseState::ClubhouseState(cro::StateStack& ss, cro::State::Context ctx, SharedStateData& sd)
+ClubhouseState::ClubhouseState(cro::StateStack& ss, cro::State::Context ctx, SharedStateData& sd, const SharedProfileData& sp)
     : cro::State        (ss, ctx),
     m_sharedData        (sd),
+    m_profileData       (sp),
     m_matchMaking       (ctx.appInstance.getMessageBus()),
     m_backgroundScene   (ctx.appInstance.getMessageBus()),
     m_uiScene           (ctx.appInstance.getMessageBus()),
@@ -132,6 +134,9 @@ ClubhouseState::ClubhouseState(cro::StateStack& ss, cro::State::Context ctx, Sha
         addSystems();
         loadResources();
         buildScene();
+
+        cacheState(StateID::Options);
+        cacheState(StateID::Trophy);
         });
 
     ctx.mainWindow.setMouseCaptured(false);
@@ -149,7 +154,7 @@ ClubhouseState::ClubhouseState(cro::StateStack& ss, cro::State::Context ctx, Sha
 
         sd.tutorial = false;
         sd.clientConnection.connected = false;
-        sd.clientConnection.connectionID = 4;
+        sd.clientConnection.connectionID = ConstVal::NullValue;
         sd.clientConnection.ready = false;
         sd.clientConnection.netClient.disconnect();
     }
@@ -312,14 +317,19 @@ bool ClubhouseState::handleEvent(const cro::Event& evt)
             m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Dummy);
             m_menuEntities[m_currentMenu].getComponent<cro::Callback>().getUserData<MenuData>().targetMenu = MenuID::Main;
             m_menuEntities[m_currentMenu].getComponent<cro::Callback>().active = true;
+
+            m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
             break;
         case MenuID::Join:
             applyTextEdit();
             m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Dummy);
             m_menuEntities[m_currentMenu].getComponent<cro::Callback>().getUserData<MenuData>().targetMenu = MenuID::PlayerSelect;
             m_menuEntities[m_currentMenu].getComponent<cro::Callback>().active = true;
+
+            m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
             break;
         case MenuID::Lobby:
+            m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
             quitLobby();
             break;
         }
@@ -1132,10 +1142,8 @@ void ClubhouseState::buildScene()
     //update the 3D view
     auto updateView = [&](cro::Camera& cam)
     {
-        auto vpSize = calcVPSize();
-
         auto winSize = glm::vec2(cro::App::getWindow().getSize());
-        float maxScale = std::floor(winSize.y / vpSize.y);
+        float maxScale = getViewScale();
         float scale = m_sharedData.pixelScale ? maxScale : 1.f;
         auto texSize = winSize / scale;
 
@@ -1195,10 +1203,9 @@ void ClubhouseState::createTableScene()
     auto updateView = [&](cro::Camera& cam)
     {
         auto texSize = BaseSize;
-        
-        auto vpSize = calcVPSize();
+
         auto winSize = glm::vec2(cro::App::getWindow().getSize());
-        float viewScale = std::floor(winSize.y / vpSize.y);
+        float viewScale = getViewScale();
 
         if (!m_sharedData.pixelScale)
         {
@@ -1386,6 +1393,9 @@ void ClubhouseState::handleNetEvent(const net::NetEvent& evt)
         switch (evt.packet.getID())
         {
         default: break;
+        case PacketID::ClientPlayerCount:
+            m_sharedData.clientConnection.netClient.sendPacket(PacketID::ClientPlayerCount, m_sharedData.localConnectionData.playerCount, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+            break;
         case PacketID::NewLobbyReady:
             m_matchMaking.joinLobby(evt.packet.as<std::uint64_t>());
             break;

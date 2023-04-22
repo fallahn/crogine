@@ -107,9 +107,11 @@ namespace PacketID
         TransitionComplete, //< uint8 clientID, signal hole transition completed
         ReadyQuit, //< uint8 clientID - client wants to toggle skip viewing scores
         BallPlaced, //< BilliardBallInput with position in offset member
+        SkipTurn, //< uint8 clientID - requests server fast forward current turn
 
         //both directions
         ClientVersion, //uint16 FROM server on join contains the game mode, TO server CURRENT_VER of client. Clients are kicked if this does not match the server
+        ClientPlayerCount, //uint8_t 0 if from server, client count if from client. Server tracks total players and rejects connections which would exceed maximum players
         TurnReady, //< uint8 clientID - ready to take their turn - rebroadcast by server to tell all clients to clear messages
         MapInfo, //< serialised cro::String containing course directory
         ScoreType, //< uint8 ScoreType of golf game

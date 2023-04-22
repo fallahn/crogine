@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2022
+Matt Marchant 2017 - 2023
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -62,19 +62,24 @@ void StateStack::handleEvent(const cro::Event& evt)
 
 void StateStack::handleMessage(const Message& msg)
 {
-    //if (msg.id == Message::Type::UIMessage)
-    //{
-    //    auto& msgData = msg.getData<Message::UIEvent>();
-    //    switch (msgData.type)
-    //    {
-    //    case Message::UIEvent::RequestState:
-    //        pushState(msgData.stateID);
-    //        break;
-    //    default: break;
-    //    }
-    //}
+    for (auto& s : m_stack)
+    {
+        s->handleMessage(msg);
+    }
 
-    for (auto& s : m_stack) s->handleMessage(msg);
+    //cached states need to know if we were resized
+    if (msg.id == Message::WindowMessage)
+    {
+        for (auto& [_,s] : m_stateCache)
+        {
+            //if the state is in use (ie on the stack)
+            //it'll already have this message
+            if (!s->m_inUse)
+            {
+                s->handleMessage(msg);
+            }
+        }
+    }
 }
 
 void StateStack::simulate(float dt)
@@ -131,6 +136,21 @@ std::int32_t StateStack::getTopmostState() const
 }
 
 //private
+void StateStack::cacheState(StateID id)
+{
+    CRO_ASSERT(m_stateCache.count(id) == 0, "State is already cached");
+    m_stateCache.insert(std::make_pair(id, createState(id, true)));
+    m_stateCache.at(id)->m_cached = true;
+}
+
+void StateStack::uncacheState(StateID id)
+{
+    if (m_stateCache.count(id))
+    {
+        m_stateCache.erase(id);
+    }
+}
+
 bool StateStack::changeExists(Action action, std::int32_t id)
 {
     return std::find_if(m_pendingChanges.begin(), m_pendingChanges.end(),
@@ -140,10 +160,10 @@ bool StateStack::changeExists(Action action, std::int32_t id)
     }) != m_pendingChanges.end();
 }
 
-State::Ptr StateStack::createState(StateID id)
+State::Ptr StateStack::createState(StateID id, bool isCached)
 {
     CRO_ASSERT(m_factories.count(id) != 0, "State not registered with statestack");
-    return m_factories.find(id)->second();
+    return m_factories.find(id)->second(isCached);
 }
 
 void StateStack::applyPendingChanges()
@@ -165,7 +185,17 @@ void StateStack::applyPendingChanges()
             msg->action = Message::StateEvent::Pushed;
             msg->id = change.id;
 
-            m_stack.emplace_back(createState(change.id));
+            //check if the requested state is already cached
+            //by the currently active state
+            if (m_stateCache.count(change.id) != 0)
+            {
+                m_stack.push_back(m_stateCache.at(change.id));
+                m_stack.back()->m_inUse = true;
+            }
+            else
+            {
+                m_stack.emplace_back(createState(change.id));
+            }
         }
             break;
         case Action::Pop:
@@ -176,6 +206,7 @@ void StateStack::applyPendingChanges()
             msg->action = Message::StateEvent::Popped;
             msg->id = id;
 
+            m_stack.back()->m_inUse = false;
             m_stack.pop_back();
 
             if (!m_suspended.empty() && m_suspended.back().first == id)

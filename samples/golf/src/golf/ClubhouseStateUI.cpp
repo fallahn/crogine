@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022
+Matt Marchant 2022 - 2023
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -136,9 +136,7 @@ void ClubhouseState::createUI()
         cam.setOrthographic(0.f, size.x, 0.f, size.y, -2.f, 10.f);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
 
-        auto vpSize = calcVPSize();
-
-        m_viewScale = glm::vec2(std::floor(size.y / vpSize.y));
+        m_viewScale = glm::vec2(getViewScale());
         rootNode.getComponent<cro::Transform>().setScale(m_viewScale);
         rootNode.getComponent<cro::Transform>().setPosition(m_menuPositions[m_currentMenu] * m_viewScale);
 
@@ -362,6 +360,7 @@ void ClubhouseState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter
                 if (activated(evt))
                 {
                     requestStackPush(StateID::Trophy);
+                    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
                 }
             });
 
@@ -399,6 +398,11 @@ void ClubhouseState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter
 
 void ClubhouseState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, std::uint32_t mouseExit)
 {
+    if (m_sharedData.localConnectionData.playerData[1].name.empty())
+    {
+        m_sharedData.localConnectionData.playerData[1] = m_profileData.playerProfiles[m_profileData.playerProfiles.size() - 1];
+    }
+
     auto menuEntity = m_uiScene.createEntity();
     menuEntity.addComponent<cro::Transform>().setScale(glm::vec2(0.f));
     menuEntity.addComponent<cro::Callback>().setUserData<MenuData>();
@@ -974,7 +978,7 @@ void ClubhouseState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnt
                 if (activated(evt))
                 {
                     applyTextEdit();
-                    saveAvatars(m_sharedData);
+                    //saveAvatars(m_sharedData);
 
                     m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
 
@@ -2244,7 +2248,7 @@ void ClubhouseState::updateLobbyList()
 void ClubhouseState::quitLobby()
 {
     m_sharedData.clientConnection.connected = false;
-    m_sharedData.clientConnection.connectionID = 4;
+    m_sharedData.clientConnection.connectionID = ConstVal::NullValue;
     m_sharedData.clientConnection.ready = false;
     m_sharedData.clientConnection.netClient.disconnect();
 
@@ -2459,7 +2463,7 @@ void ClubhouseState::addTableSelectButtons()
             checkboxEnt.addComponent<cro::Sprite>() = m_sprites[SpriteID::LobbyCheckbox];
             checkboxEnt.addComponent<cro::CommandTarget>().ID = CommandID::Menu::CourseSelect;
 
-            bounds = m_sprites[SpriteID::LobbyCheckbox].getTextureRect();
+            auto bounds = m_sprites[SpriteID::LobbyCheckbox].getTextureRect();
             checkboxEnt.addComponent<cro::Callback>().active = true;
             checkboxEnt.getComponent<cro::Callback>().function =
                 [&, bounds](cro::Entity en, float)

@@ -32,6 +32,7 @@ source distribution.
 #include <crogine/graphics/Texture.hpp>
 #include <crogine/graphics/Colour.hpp>
 #include <crogine/graphics/RenderTarget.hpp>
+#include <crogine/graphics/MaterialData.hpp>
 
 #include <array>
 
@@ -81,6 +82,12 @@ namespace cro
         bool create(std::uint32_t width, std::uint32_t height, bool depthBuffer = true, bool stencilBuffer = false, std::uint32_t samples = 0);
 
         /*!
+        \brief creates (or recreates) the RenderTexture with the given context parameters.
+        \see create()
+        */
+        bool create(RenderTarget::Context context);
+
+        /*!
         \brief Returns the current size in pixels of the render texture (zero if not yet created)
         */
         glm::uvec2 getSize() const override;
@@ -89,6 +96,11 @@ namespace cro
         \brief Returns a reference to the colour buffer texture to be used in rendering
         */
         const Texture& getTexture() const;
+
+        /*!
+        \brief Returns a handle to the depth texture, if it is available
+        */
+        TextureID getDepthTexture() const;
 
         /*!
         \brief Sets the underlying texture to repeated when wrapping
@@ -160,14 +172,17 @@ namespace cro
         std::uint32_t m_msfboID;
         std::uint32_t m_msTextureID;
 
+        std::uint32_t m_depthTextureID;
+        std::uint32_t m_msDepthTextureID;
+
         Texture m_texture;
         std::array<float, 4u> m_lastClearColour = {};
 
         bool m_hasDepthBuffer;
         bool m_hasStencilBuffer;
 
-        bool createDefault(std::uint32_t width, std::uint32_t height, bool depthBuffer, bool stencilBuffer);
-        bool createMultiSampled(std::uint32_t width, std::uint32_t height, bool depthBuffer, bool stencilBuffer);
+        bool createDefault(RenderTarget::Context);
+        bool createMultiSampled(RenderTarget::Context);
 
         std::uint32_t getFrameBufferID() const override { return m_fboID; }
     };

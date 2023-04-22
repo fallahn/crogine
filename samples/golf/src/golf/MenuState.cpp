@@ -40,6 +40,7 @@ source distribution.
 #include "NameScrollSystem.hpp"
 #include "CloudSystem.hpp"
 #include "MessageIDs.hpp"
+#include "SharedProfileData.hpp"
 #include "spooky2.hpp"
 #include "../ErrorCheck.hpp"
 
@@ -51,6 +52,7 @@ source distribution.
 #include <crogine/audio/AudioMixer.hpp>
 #include <crogine/core/App.hpp>
 #include <crogine/core/GameController.hpp>
+#include <crogine/core/Mouse.hpp>
 #include <crogine/gui/Gui.hpp>
 #include <crogine/detail/GlobalConsts.hpp>
 #include <crogine/graphics/SpriteSheet.hpp>
@@ -96,6 +98,7 @@ namespace
 #include "CloudShader.inl"
 #include "ShaderIncludes.inl"
 #include "ShadowMapping.inl"
+#include "FogShader.inl"
 
     //constexpr glm::vec3 CameraBasePosition(-22.f, 4.9f, 22.2f);
 
@@ -114,9 +117,10 @@ MainMenuContext::MainMenuContext(MenuState* state)
     sharedData = &state->m_sharedData;
 }
 
-MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, SharedStateData& sd)
+MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, SharedStateData& sd, SharedProfileData& sp)
     : cro::State            (stack, context),
     m_sharedData            (sd),
+    m_profileData           (sp),
     m_matchMaking           (context.appInstance.getMessageBus()),
     m_cursor                (/*"assets/images/cursor.png", 0, 0*/cro::SystemCursor::Hand),
     m_uiScene               (context.appInstance.getMessageBus(), 512),
@@ -129,25 +133,39 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     m_avatarCallbacks       (std::numeric_limits<std::uint32_t>::max(), std::numeric_limits<std::uint32_t>::max()),
     m_currentMenu           (MenuID::Main),
     m_prevMenu              (MenuID::Main),
-    m_viewScale             (1.f),
-    m_activePlayerAvatar    (0)
+    m_viewScale             (1.f)
 {
     std::fill(m_readyState.begin(), m_readyState.end(), false);
-    std::fill(m_ballIndices.begin(), m_ballIndices.end(), 0);
-    std::fill(m_avatarIndices.begin(), m_avatarIndices.end(), 0);    
-    std::fill(m_hairIndices.begin(), m_hairIndices.end(), 0);    
 
     auto size = glm::vec2(GolfGame::getActiveTarget()->getSize());
-    auto vpSize = calcVPSize();
-    m_viewScale = glm::vec2(std::floor(size.y / vpSize.y));
+    m_viewScale = glm::vec2(getViewScale());
 
     Achievements::setActive(true);
     
     //launches a loading screen (registered in MyApp.cpp)
-    context.mainWindow.loadResources([this]() {
+    CRO_ASSERT(!isCached(), "Don't use loading screen on cached states!");
+    context.mainWindow.loadResources([&]() {
         addSystems();
         loadAssets();
         createScene();
+
+#ifdef USE_GNS
+        //cached menu states depend on steam stats being
+        //up to date so this hacks in a delay and pumps the callback loop
+        cro::Clock cl;
+        while (cl.elapsed().asSeconds() < 3.f)
+        {
+            Achievements::update();
+        }
+#endif
+
+        updateUnlockedItems();
+
+        cacheState(StateID::Unlock);
+        cacheState(StateID::Options);
+        cacheState(StateID::Profile);
+        cacheState(StateID::Practice);
+        cacheState(StateID::Keyboard);
     });
  
     context.mainWindow.setMouseCaptured(false);
@@ -160,20 +178,15 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
 
     //remap the selected ball model indices - this is always applied
     //as the avatar IDs are loaded from the config, above
-    for (auto i = 0u; i < ConnectionData::MaxPlayers; ++i)
+    for (auto i = 0u; i < ConstVal::MaxPlayers; ++i)
     {
         auto idx = indexFromBallID(m_sharedData.localConnectionData.playerData[i].ballID);
 
-        if (idx > -1)
-        {
-            m_ballIndices[i] = idx;
-            m_ballThumbCams[i].getComponent<cro::Callback>().setUserData<std::int32_t>(idx);
-        }
-        else
+        if(idx == -1
+            || idx >= m_profileData.ballDefs.size()) //checks we're not trying to load a locked ball
         {
             m_sharedData.localConnectionData.playerData[i].ballID = 0;
         }
-        applyAvatarColours(i);
     }
 
     //reset the state if we came from the tutorial (this is
@@ -185,7 +198,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
 
         sd.tutorial = false;
         sd.clientConnection.connected = false;
-        sd.clientConnection.connectionID = 4;
+        sd.clientConnection.connectionID = ConstVal::NullValue;
         sd.clientConnection.ready = false;
         sd.clientConnection.netClient.disconnect();
 
@@ -341,14 +354,28 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
 
     Social::setStatus(Social::InfoID::Menu, { "Main Menu" });
     Social::setGroup(0);
-    m_matchMaking.getUserName();
+
+    //registerWindow([&]()
+    //    {
+    //        if (ImGui::Begin("buns"))
+    //        {
+    //            auto size = glm::vec2(LabelTextureSize);
+    //            for (const auto& t : m_sharedData.nameTextures)
+    //            {
+    //                ImGui::Image(t.getTexture(), { size.x, size.y }, { 0.f, 1.f }, { 1.f, 0.f });
+    //                ImGui::SameLine();
+    //            }
+    //        }
+    //        ImGui::End();
+    //    });
+
 #ifdef CRO_DEBUG_
 
     registerWindow([&]() 
         {
             if (ImGui::Begin("buns"))
             {
-                ImGui::ColorButton("cb", C);
+                /*ImGui::ColorButton("cb", C);
                 if (ImGui::SliderFloat("Strength", &strength, 0.f, 1.f))
                 {
                     C.x = 1.f - std::pow(1.f - strength, 3.f);
@@ -356,7 +383,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
                     C.z = 1.f - std::pow(1.f - (0.1f + (strength * 0.9f)), 40.f);
                 }
 
-                ImGui::Text("Controller Count %lu", cro::GameController::getControllerCount());
+                ImGui::Text("Controller Count %lu", cro::GameController::getControllerCount());*/
 
                 //auto size = glm::vec2(m_ballThumbTexture.getSize());
                 //ImGui::Image(m_ballThumbTexture.getTexture(), {size.x, size.y}, {0.f, 1.f}, {1.f, 0.f});
@@ -379,41 +406,38 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     //        if (ImGui::Begin("Debug"))
     //        {
     //            //ImGui::Text("Course Index %u", m_sharedData.courseIndex);
-    //            /*ImGui::Image(m_sharedData.nameTextures[0].getTexture(), { 128, 64 }, { 0,1 }, { 1,0 });
-    //            ImGui::SameLine();
-    //            ImGui::Image(m_sharedData.nameTextures[1].getTexture(), { 128, 64 }, { 0,1 }, { 1,0 });
-    //            ImGui::Image(m_sharedData.nameTextures[2].getTexture(), { 128, 64 }, { 0,1 }, { 1,0 });
-    //            ImGui::SameLine();
-    //            ImGui::Image(m_sharedData.nameTextures[3].getTexture(), { 128, 64 }, { 0,1 }, { 1,0 });*/
-    //            /*float x = static_cast<float>(AvatarThumbSize.x);
-    //            float y = static_cast<float>(AvatarThumbSize.y);
-    //            ImGui::Image(m_avatarThumbs[0].getTexture(), {x,y}, {0,1}, {1,0});
-    //            ImGui::SameLine();
-    //            ImGui::Image(m_avatarThumbs[1].getTexture(), { x,y }, { 0,1 }, { 1,0 });
-    //            ImGui::SameLine();
-    //            ImGui::Image(m_avatarThumbs[2].getTexture(), { x,y }, { 0,1 }, { 1,0 });
-    //            ImGui::SameLine();
-    //            ImGui::Image(m_avatarThumbs[3].getTexture(), { x,y }, { 0,1 }, { 1,0 });*/
     //            //auto pos = m_avatarScene.getActiveCamera().getComponent<cro::Transform>().getPosition();
     //            //ImGui::Text("%3.3f, %3.3f, %3.3f", pos.x, pos.y, pos.z);
-    //            auto& cam = m_backgroundScene.getActiveCamera().getComponent<cro::Camera>();
-    //            float maxDist = cam.getMaxShadowDistance();
-    //            if (ImGui::SliderFloat("Dist", &maxDist, 1.f, cam.getFarPlane()))
-    //            {
-    //                cam.setMaxShadowDistance(maxDist);
-    //            }
+    //            //auto& cam = m_backgroundScene.getActiveCamera().getComponent<cro::Camera>();
+    //            //float maxDist = cam.getMaxShadowDistance();
+    //            //if (ImGui::SliderFloat("Dist", &maxDist, 1.f, cam.getFarPlane()))
+    //            //{
+    //            //    cam.setMaxShadowDistance(maxDist);
+    //            //}
 
-    //            float exp = cam.getShadowExpansion();
-    //            if (ImGui::SliderFloat("Exp", &exp, 0.f, 100.f))
-    //            {
-    //                cam.setShadowExpansion(exp);
-    //            }
+    //            //float exp = cam.getShadowExpansion();
+    //            //if (ImGui::SliderFloat("Exp", &exp, 0.f, 100.f))
+    //            //{
+    //            //    cam.setShadowExpansion(exp);
+    //            //}
 
-    //            ImGui::Image(m_backgroundScene.getActiveCamera().getComponent<cro::Camera>().shadowMapBuffer.getTexture(0), { 256.f, 256.f }, { 0.f, 1.f }, { 1.f, 0.f });
+    //            //ImGui::Image(m_backgroundScene.getActiveCamera().getComponent<cro::Camera>().shadowMapBuffer.getTexture(0), { 256.f, 256.f }, { 0.f, 1.f }, { 1.f, 0.f });
     //        }
     //        ImGui::End();
-    //    }, true);
+    //    }/*, true*/);
 #endif
+
+    cro::App::getInstance().resetFrameTime();
+}
+
+MenuState::~MenuState()
+{
+    //these MUST be cleared as they hold a reference to this state's resources    
+    m_profileData.ballDefs.clear();
+    m_profileData.hairDefs.clear();
+    m_profileData.avatarDefs.clear();
+
+    m_profileData.profileMaterials.reset();
 }
 
 //public
@@ -425,6 +449,9 @@ bool MenuState::handleEvent(const cro::Event& evt)
         switch (m_currentMenu)
         {
         default: break;
+        case MenuID::ProfileFlyout:
+            //menu handler deals with this
+            break;
         case MenuID::Avatar:
             m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
             m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Dummy);
@@ -439,11 +466,6 @@ bool MenuState::handleEvent(const cro::Event& evt)
             break;
         case MenuID::Lobby:
             enterConfirmCallback();
-            break;
-        case MenuID::PlayerConfig:
-            applyTextEdit();
-            showPlayerConfig(false, m_activePlayerAvatar);
-            updateLocalAvatars(m_avatarCallbacks.first, m_avatarCallbacks.second);
             break;
         case MenuID::ConfirmQuit:
             quitConfirmCallback();
@@ -474,10 +496,10 @@ bool MenuState::handleEvent(const cro::Event& evt)
             break;
 #endif
         case SDLK_F2:
-            showPlayerConfig(true, 0);
+            requestStackPush(StateID::Profile);
             break;
         case SDLK_F3:
-            showPlayerConfig(false, 0);
+            
             break;
         case SDLK_F4:
             //requestStackClear();
@@ -602,6 +624,22 @@ bool MenuState::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_MOUSEBUTTONUP)
     {
+        if (m_currentMenu == MenuID::ProfileFlyout)
+        {
+            auto bounds = m_menuEntities[m_currentMenu].getComponent<cro::Drawable2D>().getLocalBounds();
+            bounds = m_menuEntities[m_currentMenu].getComponent<cro::Transform>().getWorldTransform() * bounds;
+
+            if (!bounds.contains(m_uiScene.getActiveCamera().getComponent<cro::Camera>().pixelToCoords(cro::Mouse::getPosition())))
+            {
+                m_menuEntities[m_currentMenu].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+                m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Avatar);
+                m_currentMenu = MenuID::Avatar;
+
+                //don't forward this to the menu system
+                return true;
+            }
+        }
+
         if (evt.button.button == SDL_BUTTON_RIGHT)
         {
             quitMenu();
@@ -639,10 +677,30 @@ void MenuState::handleMessage(const cro::Message& msg)
     if (msg.id == cro::Message::StateMessage)
     {
         const auto& data = msg.getData<cro::Message::StateEvent>();
-        if (data.action == cro::Message::StateEvent::Popped
-            && data.id == StateID::Keyboard)
+        if (data.action == cro::Message::StateEvent::Popped)
         {
-            applyTextEdit();
+            switch (data.id)
+            {
+            default:break;
+            case StateID::Keyboard:
+                applyTextEdit();
+                break;
+            case StateID::MessageOverlay:
+                if (m_sharedData.errorMessage == "delete_profile")
+                {
+                    eraseCurrentProfile();
+                }
+                break;
+            case StateID::Profile:
+            {
+                auto avtIdx = m_rosterMenu.profileIndices[m_rosterMenu.activeIndex];
+
+                m_sharedData.localConnectionData.playerData[m_rosterMenu.activeIndex] =
+                    m_profileData.playerProfiles[avtIdx];
+                updateRoster();
+            }
+                break;
+            }
         }
     }
     else if (msg.id == MatchMaking::MessageID)
@@ -704,7 +762,32 @@ void MenuState::handleMessage(const cro::Message& msg)
             if (data.data == MenuID::Lobby)
             {
                 m_uiScene.getActiveCamera().getComponent<cro::Camera>().isStatic = true;
-                updateUnlockedItems();
+
+
+                //item list is populated when this state is
+                //loaded so we can cache the unlock state
+                //and then cleared by the state when it quits
+                if (!m_sharedData.unlockedItems.empty())
+                {
+                    //create a timed enitity to delay this a bit
+                    cro::Entity e = m_uiScene.createEntity();
+                    e.addComponent<cro::Callback>().active = true;
+                    e.getComponent<cro::Callback>().setUserData<float>(0.2f);
+                    e.getComponent<cro::Callback>().function =
+                        [&](cro::Entity ent, float dt)
+                    {
+                        auto& currTime = ent.getComponent<cro::Callback>().getUserData<float>();
+                        currTime -= dt;
+
+                        if (currTime < 0)
+                        {
+                            ent.getComponent<cro::Callback>().active = false;
+                            m_uiScene.destroyEntity(ent);
+
+                            requestStackPush(StateID::Unlock);
+                        }
+                    };
+                }
             }
         }
     }
@@ -771,27 +854,23 @@ void MenuState::render()
     m_windBuffer.bind(2);
 
     //render ball preview first
-    auto oldCam = m_backgroundScene.setActiveCamera(m_ballCam);
-    m_ballTexture.clear(cro::Colour::Magenta);
-    m_backgroundScene.render();
-    m_ballTexture.display();
-
-    m_ballThumbTexture.clear(cro::Colour::Transparent);
-    for (auto i = 0u; i < m_sharedData.localConnectionData.playerCount; ++i)
+    if (m_currentMenu == MenuID::Avatar)
     {
-        m_backgroundScene.setActiveCamera(m_ballThumbCams[i]);
+        auto oldCam = m_backgroundScene.setActiveCamera(m_ballCam);
+        m_ballTexture.clear(cro::Colour::Magenta);
         m_backgroundScene.render();
+        m_ballTexture.display();
+
+        //and avatar preview
+        m_avatarTexture.clear(cro::Colour::Transparent);
+        //m_avatarTexture.clear(cro::Colour::Magenta);
+        m_avatarScene.render();
+        m_avatarTexture.display();
+
+        //then background scene
+        m_backgroundScene.setActiveCamera(oldCam);
     }
-    m_ballThumbTexture.display();
 
-    //and avatar preview
-    m_avatarTexture.clear(cro::Colour::Transparent);
-    //m_avatarTexture.clear(cro::Colour::Magenta);
-    m_avatarScene.render();
-    m_avatarTexture.display();
-
-    //then background scene
-    m_backgroundScene.setActiveCamera(oldCam);
     m_backgroundTexture.clear();
     m_backgroundScene.render();
     m_backgroundTexture.display();
@@ -842,7 +921,12 @@ void MenuState::addSystems()
         if (Achievements::getStat(StatStrings[i])->value == 0)
         {
             awarded = false;
-            break;
+            //break;
+        }
+        else
+        {
+            //used to retroactively award the achievements
+            Achievements::awardAchievement(AchievementStrings[AchievementID::Complete01 + (i - StatID::Course01Complete)]);
         }
     }
     if (awarded)
@@ -876,12 +960,14 @@ void MenuState::loadAssets()
     m_resources.shaders.loadFromString(ShaderID::Billboard, BillboardVertexShader, BillboardFragmentShader);
     m_resources.shaders.loadFromString(ShaderID::BillboardShadow, BillboardVertexShader, ShadowFragment, "#define SHADOW_MAPPING\n#define ALPHA_CLIP\n");
     m_resources.shaders.loadFromString(ShaderID::Trophy, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n#define REFLECTIONS\n" + wobble);
+    //m_resources.shaders.loadFromString(ShaderID::Fog, FogVert, FogFrag, "#define ZFAR 600.0\n");
     
 
     auto* shader = &m_resources.shaders.get(ShaderID::Cel);
     m_scaleBuffer.addShader(*shader);
     m_resolutionBuffer.addShader(*shader);
     m_materialIDs[MaterialID::Cel] = m_resources.materials.add(*shader);
+    m_profileData.profileMaterials.ball = m_resources.materials.get(m_materialIDs[MaterialID::Cel]);
 
     shader = &m_resources.shaders.get(ShaderID::CelTextured);
     m_scaleBuffer.addShader(*shader);
@@ -896,12 +982,14 @@ void MenuState::loadAssets()
     shader = &m_resources.shaders.get(ShaderID::CelTexturedSkinned);
     m_resolutionBuffer.addShader(*shader);
     m_materialIDs[MaterialID::CelTexturedSkinned] = m_resources.materials.add(*shader);
+    m_profileData.profileMaterials.avatar = m_resources.materials.get(m_materialIDs[MaterialID::CelTexturedSkinned]);
 
     shader = &m_resources.shaders.get(ShaderID::Hair);
     m_materialIDs[MaterialID::Hair] = m_resources.materials.add(*shader);
     m_resolutionBuffer.addShader(*shader);
     //fudge this for the previews
     m_resources.materials.get(m_materialIDs[MaterialID::Hair]).doubleSided = true;
+    m_profileData.profileMaterials.hair = m_resources.materials.get(m_materialIDs[MaterialID::Hair]);
 
     shader = &m_resources.shaders.get(ShaderID::Billboard);
     m_materialIDs[MaterialID::Billboard] = m_resources.materials.add(*shader);
@@ -919,6 +1007,7 @@ void MenuState::loadAssets()
     m_resolutionBuffer.addShader(*shader);
     m_materialIDs[MaterialID::Trophy] = m_resources.materials.add(*shader);
     m_resources.materials.get(m_materialIDs[MaterialID::Trophy]).setProperty("u_reflectMap", cro::CubemapID(m_reflectionMap.getGLHandle()));
+    m_profileData.profileMaterials.ballReflection = m_resources.materials.get(m_materialIDs[MaterialID::Trophy]);
 
 
     //load the billboard rects from a sprite sheet and convert to templates
@@ -941,6 +1030,20 @@ void MenuState::loadAssets()
     m_billboardTemplates[BillboardID::Tree03] = spriteToBillboard(spriteSheet.getSprite("tree03"));
     m_billboardTemplates[BillboardID::Tree04] = spriteToBillboard(spriteSheet.getSprite("tree04"));
 
+    spriteSheet.loadFromFile("assets/golf/sprites/lobby_menu.spt", m_resources.textures);
+    m_sprites[SpriteID::PrevCourse] = spriteSheet.getSprite("arrow_left");
+    m_sprites[SpriteID::NextCourse] = spriteSheet.getSprite("arrow_right");
+    m_sprites[SpriteID::LobbyCheckbox] = spriteSheet.getSprite("checkbox");
+    m_sprites[SpriteID::LobbyCheckboxHighlight] = spriteSheet.getSprite("checkbox_highlight");
+    m_sprites[SpriteID::LobbyRuleButton] = spriteSheet.getSprite("button");
+    m_sprites[SpriteID::LobbyRuleButtonHighlight] = spriteSheet.getSprite("button_highlight");
+    m_sprites[SpriteID::Envelope] = spriteSheet.getSprite("envelope");
+    m_sprites[SpriteID::LevelBadge] = spriteSheet.getSprite("rank_badge");
+
+    //network icon
+    spriteSheet.loadFromFile("assets/golf/sprites/scoreboard.spt", m_resources.textures);
+    m_sprites[SpriteID::NetStrength] = spriteSheet.getSprite("strength_meter");
+
     m_menuSounds.loadFromFile("assets/golf/sound/menu.xas", m_sharedData.sharedResources->audio);
     m_audioEnts[AudioID::Accept] = m_uiScene.createEntity();
     m_audioEnts[AudioID::Accept].addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("accept");
@@ -948,11 +1051,6 @@ void MenuState::loadAssets()
     m_audioEnts[AudioID::Back].addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("back");
     m_audioEnts[AudioID::Start] = m_uiScene.createEntity();
     m_audioEnts[AudioID::Start].addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("start_game");
-
-    for (auto& thumb : m_avatarThumbs)
-    {
-        thumb.create(AvatarThumbSize.x, AvatarThumbSize.y);
-    }
 }
 
 void MenuState::createScene()
@@ -1234,10 +1332,8 @@ void MenuState::createScene()
     //update the 3D view
     auto updateView = [&](cro::Camera& cam)
     {
-        auto vpSize = calcVPSize();
-
         auto winSize = glm::vec2(cro::App::getWindow().getSize());
-        float maxScale = std::floor(winSize.y / vpSize.y);
+        float maxScale = getViewScale();
         float scale = m_sharedData.pixelScale ? maxScale : 1.f;
         auto texSize = winSize / scale;
 
@@ -1252,12 +1348,14 @@ void MenuState::createScene()
         std::uint32_t samples = m_sharedData.pixelScale ? 0 :
             m_sharedData.antialias ? m_sharedData.multisamples : 0;
 
+        cro::RenderTarget::Context ctx(static_cast<std::uint32_t>(texSize.x), static_cast<std::uint32_t>(texSize.y), true, true, false, samples);
+
         m_sharedData.antialias = 
-            m_backgroundTexture.create(static_cast<std::uint32_t>(texSize.x), static_cast<std::uint32_t>(texSize.y), true, false, samples) 
+            m_backgroundTexture.create(ctx) 
             && m_sharedData.multisamples != 0
             && !m_sharedData.pixelScale;
 
-        cam.setPerspective(m_sharedData.fov * cro::Util::Const::degToRad, texSize.x / texSize.y, 0.1f, vpSize.x);
+        cam.setPerspective(m_sharedData.fov * cro::Util::Const::degToRad, texSize.x / texSize.y, 0.1f, 600.f);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
 
@@ -1311,8 +1409,18 @@ void MenuState::createClouds()
 
     if (!definitions.empty())
     {
-        m_resources.shaders.loadFromString(ShaderID::Cloud, CloudOverheadVertex, CloudOverheadFragment, "#define MAX_RADIUS 106\n#define FEATHER_EDGE\n");
+        std::string wobble;
+        if (m_sharedData.vertexSnap)
+        {
+            wobble = "#define WOBBLE\n";
+        }
+
+        m_resources.shaders.loadFromString(ShaderID::Cloud, CloudOverheadVertex, CloudOverheadFragment, "#define MAX_RADIUS 106\n#define FEATHER_EDGE\n" + wobble);
         auto& shader = m_resources.shaders.get(ShaderID::Cloud);
+        if (m_sharedData.vertexSnap)
+        {
+            m_resolutionBuffer.addShader(shader);
+        }
 
         auto matID = m_resources.materials.add(shader);
         auto material = m_resources.materials.get(matID);
@@ -1355,6 +1463,9 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
         switch (evt.packet.getID())
         {
         default: break;
+        case PacketID::ClientPlayerCount:
+            m_sharedData.clientConnection.netClient.sendPacket(PacketID::ClientPlayerCount, m_sharedData.localConnectionData.playerCount, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+            break;
         case PacketID::PlayerXP:
         {
             auto value = evt.packet.as<std::uint16_t>();
@@ -1518,6 +1629,11 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
                     };
                     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
+                    if (m_lobbyWindowEntities[LobbyEntityID::CourseTicker].isValid())
+                    {
+                        m_lobbyWindowEntities[LobbyEntityID::CourseTicker].getComponent<cro::Text>().setString("");
+                    }
+
                     //un-ready the client to prevent the host launching
                     //if we don't have this course
                     if (!m_sharedData.hosting) //this should be implicit, but hey
@@ -1625,7 +1741,7 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
                 cmd.targetFlags = CommandID::Menu::ScoreDesc;
                 cmd.action = [&](cro::Entity e, float)
                 {
-                    e.getComponent<cro::Text>().setString(ScoreDesc[m_sharedData.scoreType]);
+                    e.getComponent<cro::Text>().setString(RuleDescriptions[m_sharedData.scoreType]);
                 };
                 m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 

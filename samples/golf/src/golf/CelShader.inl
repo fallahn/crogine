@@ -291,7 +291,10 @@ static const std::string CelFragmentShader = R"(
     uniform float u_transparency;
 #endif
 
-#if defined(HOLE_HEIGHT)
+#if defined (HOLE_HEIGHT)
+#if !defined (CONTOUR)
+    uniform float u_transparency = 0.5;
+#endif
     uniform float u_holeHeight = 1.0;
 #endif
 
@@ -491,17 +494,20 @@ static const std::string CelFragmentShader = R"(
 #if defined(HOLE_HEIGHT)
         float minHeight = u_holeHeight - 0.25;
         float maxHeight = u_holeHeight + 0.008;
-        float height = clamp((v_worldPosition.y - minHeight) / (maxHeight - minHeight), 0.0, 1.0);
+        float holeHeight = clamp((v_worldPosition.y - minHeight) / (maxHeight - minHeight), 0.0, 1.0);
         //colour.rgb += clamp(height, 0.0, 1.0) * 0.1;
 
         //complementaryColour(colour.rgb)
-        vec3 holeColour = mix(colour.rgb * vec3(0.67, 0.757, 0.41), colour.rgb, 0.65 + (0.35 * height));
-        holeColour.r += smoothstep(0.45, 0.99, height) * 0.01;
-        holeColour.g += smoothstep(0.65, 0.999, height) * 0.01;
+        vec3 holeColour = mix(colour.rgb * vec3(0.67, 0.757, 0.41), colour.rgb, 0.65 + (0.35 * holeHeight));
+        holeColour.r += smoothstep(0.45, 0.99, holeHeight) * 0.01;
+        holeColour.g += smoothstep(0.65, 0.999, holeHeight) * 0.01;
 
         //distances are sqr
-        float fade = (1.0 - smoothstep(100.0, 400.0, dot(viewDirection, viewDirection)));
-        colour.rgb = mix(colour.rgb, holeColour, fade);
+        float holeHeightFade = (1.0 - smoothstep(100.0, 400.0, dot(viewDirection, viewDirection)));
+        colour.rgb = mix(colour.rgb, holeColour, holeHeightFade);
+
+        //used for contour grid, below
+        holeHeightFade = (1.0 - smoothstep(625.0, 1225.0, dot(viewDirection, viewDirection)));
 #endif
         viewDirection = normalize(viewDirection);
 
@@ -571,20 +577,22 @@ static const std::string CelFragmentShader = R"(
         FRAG_OUT.rgb *= shadow;
 
 //shows cascade boundries
-//vec3 Colours[MAX_CASCADES] = vec3[MAX_CASCADES](vec3(0.2,0.0,0.0), vec3(0.0,0.2,0.0),vec3(0.0,0.0,0.2));
-//FRAG_OUT.rgb += Colours[cascadeIndex];
-//for(int i = 0; i < u_cascadeCount; ++i)
-//{
-//    if (v_lightWorldPosition[i].w > 0.0)
-//    {
-//        vec2 coords = v_lightWorldPosition[i].xy / v_lightWorldPosition[i].w / 2.0 + 0.5;
-//        if (coords.x > 0 && coords.x < 1 
-//                && coords.y > 0 && coords.y < 1)
-//        {
-//            FRAG_OUT.rgb += Colours[i];
-//        }
-//    }
-//}
+#if defined(SHOW_CASCADES)
+        vec3 Colours[MAX_CASCADES] = vec3[MAX_CASCADES](vec3(0.2,0.0,0.0), vec3(0.0,0.2,0.0),vec3(0.0,0.0,0.2));
+        FRAG_OUT.rgb += Colours[cascadeIndex];
+        for(int i = 0; i < u_cascadeCount; ++i)
+        {
+            if (v_lightWorldPosition[i].w > 0.0)
+            {
+                vec2 coords = v_lightWorldPosition[i].xy / v_lightWorldPosition[i].w / 2.0 + 0.5;
+                if (coords.x > 0 && coords.x < 1 
+                        && coords.y > 0 && coords.y < 1)
+                {
+                    FRAG_OUT.rgb += Colours[i];
+                }
+            }
+        }
+#endif
 #endif
 
 #if defined (ADD_NOISE)
@@ -612,13 +620,38 @@ static const std::string CelFragmentShader = R"(
         if(alpha < 0.1) discard;
 #endif
 
-#if defined(CONTOUR)
+
+
+
+#if defined(HOLE_HEIGHT)
+#if !defined(CONTOUR)
+    vec3 f = fract(v_worldPosition * 0.5);
+    vec3 df = fwidth(v_worldPosition * 0.5);
+    vec3 g = step(df * u_pixelScale, f);
+
+    float contourX = 1.0 - (g.y * g.z);
+    float contourZ = 1.0 - (g.y * g.x);
+    vec3 gridColour = ((FRAG_OUT.rgb * vec3(0.999, 0.95, 0.85))) * (0.8 + (0.4 * holeHeight));
+    
+
+//    float slope = 1.0 - dot(normal, vec3(0.0, 1.0, 0.0));
+//    slope = smoothstep(0.02, 0.04, clamp(slope / 0.05, 0.0, 1.0));
+//    gridColour = mix(gridColour, vec3(1.0, 0.0, 0.0), slope * 0.5);
+
+
+    float transparency = 1.0 - pow(1.0 - u_transparency, 4.0);
+    FRAG_OUT.rgb = mix(FRAG_OUT.rgb, gridColour, contourX * holeHeightFade * transparency);
+    FRAG_OUT.rgb = mix(FRAG_OUT.rgb, gridColour, contourZ * holeHeightFade * transparency);
+
+#else
+
     vec3 f = fract(v_worldPosition * 2.0);
     vec3 df = fwidth(v_worldPosition * 2.0);
     vec3 g = step(df * u_pixelScale, f);
 
     float contourX = 1.0 - (g.y * g.z);
     float contourZ = 1.0 - (g.y * g.x);
+
 
     vec3 distance = v_worldPosition.xyz - v_cameraWorldPosition;
     //these magic numbers are distance sqr
@@ -636,6 +669,10 @@ static const std::string CelFragmentShader = R"(
     float height = min((v_worldPosition.y - minHeight) / (maxHeight - minHeight), 1.0);
     FRAG_OUT.rgb += clamp(height, 0.0, 1.0) * 0.1;
 #endif
+#endif
+
+
+
 #if defined(TERRAIN_CLIP)
     FRAG_OUT.rgb = mix(vec3(0.2, 0.3059, 0.6118), FRAG_OUT.rgb, smoothstep(WaterLevel - 0.001, WaterLevel + 0.001, v_worldPosition.y));
 

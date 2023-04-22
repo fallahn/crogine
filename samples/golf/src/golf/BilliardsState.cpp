@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant - 2022
+Matt Marchant - 2022 - 2023
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -1725,8 +1725,7 @@ void BilliardsState::resizeBuffers()
 {
     glm::vec2 winSize(cro::App::getWindow().getSize());
 
-    auto vpSize = calcVPSize();
-    float maxScale = std::floor(winSize.y / vpSize.y);
+    float maxScale = getViewScale();
     float scale = m_sharedData.pixelScale ? maxScale : 1.f;
     auto texSize = winSize / scale;
 

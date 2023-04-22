@@ -192,7 +192,7 @@ void ModelRenderer::render(Entity camera, const RenderTarget& rt)
                 glCheck(glUniformMatrix4fv(model.m_materials[Mesh::IndexData::Final][i].uniforms[Material::World], 1, GL_FALSE, glm::value_ptr(worldMat)));
                 glCheck(glUniformMatrix3fv(model.m_materials[Mesh::IndexData::Final][i].uniforms[Material::Normal], 1, GL_FALSE, glm::value_ptr(glm::inverseTranspose(glm::mat3(worldMat)))));
 
-                applyBlendMode(model.m_materials[Mesh::IndexData::Final][i].blendMode);
+                applyBlendMode(model.m_materials[Mesh::IndexData::Final][i]/*.blendMode*/);
 
                 glCheck(model.m_materials[Mesh::IndexData::Final][i].doubleSided ? glDisable(GL_CULL_FACE) : glEnable(GL_CULL_FACE));
                 glCheck(model.m_materials[Mesh::IndexData::Final][i].enableDepthTest ? glEnable(GL_DEPTH_TEST) : glDisable(GL_DEPTH_TEST));
@@ -627,13 +627,23 @@ void ModelRenderer::applyProperties(const Material::Data& material, const Model&
     }
 }
 
-void ModelRenderer::applyBlendMode(Material::BlendMode mode)
+void ModelRenderer::applyBlendMode(const Material::Data& material)
 {
     //face culling is set by material 'double sided' property
 
-    switch (mode)
+    switch (material.blendMode)
     {
     default: break;
+    case Material::BlendMode::Custom:
+        CRO_ASSERT(!material.blendData.enableProperties.empty(), "You'll probably want at least GL_BLEND and GL_DEPTH_TEST");
+        for (auto e : material.blendData.enableProperties)
+        {
+            glCheck(glEnable(e));
+        }
+        glCheck(glDepthMask(material.blendData.writeDepthMask));
+        glCheck(glBlendFunc(material.blendData.blendFunc[0], material.blendData.blendFunc[1]));
+        glCheck(glBlendEquation(material.blendData.equation));
+        break;
     case Material::BlendMode::Additive:
         glCheck(glEnable(GL_BLEND));
         glCheck(glEnable(GL_DEPTH_TEST));
@@ -644,9 +654,9 @@ void ModelRenderer::applyBlendMode(Material::BlendMode mode)
     case Material::BlendMode::Alpha:
         //make sure to test existing depth
         //values, just don't write new ones.
+        glCheck(glEnable(GL_BLEND));
         glCheck(glEnable(GL_DEPTH_TEST));
         glCheck(glDepthMask(GL_FALSE));
-        glCheck(glEnable(GL_BLEND));
         glCheck(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
         glCheck(glBlendEquation(GL_FUNC_ADD));
         break;
@@ -658,9 +668,9 @@ void ModelRenderer::applyBlendMode(Material::BlendMode mode)
         glCheck(glBlendEquation(GL_FUNC_ADD));
         break;
     case Material::BlendMode::None:
+        glCheck(glDisable(GL_BLEND));
         glCheck(glEnable(GL_DEPTH_TEST));
         glCheck(glDepthMask(GL_TRUE));
-        glCheck(glDisable(GL_BLEND));
         break;
     }
 }

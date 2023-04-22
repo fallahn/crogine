@@ -273,11 +273,11 @@ Material::Data SpriteSystem3D::createMaterial(const Shader& shader)
     const auto& uniformMap = shader.getUniformMap();
     for (const auto& [uniform, handle] : uniformMap)
     {
-        if (uniform == "u_worldViewMatrix")
+        if (uniform == "u_worldMatrix")
         {
             data.uniforms[Material::WorldView] = handle;
         }
-        else if (uniform == "u_projectionMatrix")
+        else if (uniform == "u_viewProjectionMatrix")
         {
             data.uniforms[Material::Projection] = handle;
         }

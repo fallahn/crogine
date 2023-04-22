@@ -274,9 +274,7 @@ void ErrorState::buildScene()
         cam.setOrthographic(0.f, size.x, 0.f, size.y, -2.f, 10.f);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
 
-        auto vpSize = calcVPSize();
-
-        m_viewScale = glm::vec2(std::floor(size.y / vpSize.y));
+        m_viewScale = glm::vec2(getViewScale());
         rootNode.getComponent<cro::Transform>().setScale(m_viewScale);
         rootNode.getComponent<cro::Transform>().setPosition(size / 2.f);
     };
@@ -295,7 +293,7 @@ void ErrorState::quitState()
     m_sharedData.serverInstance.stop();
     m_sharedData.clientConnection.connected = false;
     m_sharedData.clientConnection.netClient.disconnect();
-    m_sharedData.clientConnection.connectionID = 4;
+    m_sharedData.clientConnection.connectionID = ConstVal::NullValue;
     m_sharedData.clientConnection.ready = false;
 
     for (auto& cd : m_sharedData.connectionData)

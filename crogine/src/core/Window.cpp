@@ -106,7 +106,9 @@ bool Window::create(std::uint32_t width, std::uint32_t height, const std::string
 
     if (!m_window)
     {
-        cro::Logger::log(SDL_GetError(), Logger::Type::Error, Logger::Output::All);
+        std::string err = SDL_GetError();
+        cro::Logger::log(err, Logger::Type::Error, Logger::Output::All);
+        cro::FileSystem::showMessageBox("Error", err);
         return false;
     }
     else
@@ -410,10 +412,10 @@ void Window::loadResources(const std::function<void()>& loader)
 void Window::setMouseCaptured(bool captured)
 {
     SDL_SetRelativeMouseMode(captured ? SDL_TRUE : SDL_FALSE);
-    if (captured)
+    /*if (captured)
     {
         SDL_WarpMouseInWindow(m_window, 1, 1);
-    }
+    }*/
     //auto centre = getSize() / 2u;
     //SDL_WarpMouseInWindow(m_window, centre.x, centre.y);
 

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2022
+Matt Marchant 2017 - 2023
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -48,6 +48,7 @@ UISystem::UISystem(MessageBus& mb)
     m_activeControllerID(ActiveControllerAll),
     m_controllerMask    (0),
     m_prevControllerMask(0),
+    m_scrollNavigation  (true),
     m_columnCount       (1),
     m_selectedIndex     (0),
     m_groups            (1),
@@ -69,6 +70,27 @@ void UISystem::handleEvent(const Event& evt)
     switch (evt.type)
     {
     default: break;
+    case SDL_MOUSEWHEEL:
+        if (m_scrollNavigation)
+        {
+            if (evt.wheel.x > 0)
+            {
+                selectNext(1);
+            }
+            else if (evt.wheel.x < 0)
+            {
+                selectPrev(1);
+            }
+            else if (evt.wheel.y > 0)
+            {
+                selectPrev(m_columnCount);
+            }
+            else if (evt.wheel.y < 0)
+            {
+                selectNext(m_columnCount);
+            }
+        }
+        break;
     case SDL_CONTROLLERDEVICEREMOVED:
         //check if this is the active controller and update
         //if necessary to a connected controller
@@ -339,11 +361,9 @@ void UISystem::process(float)
     std::size_t currentIndex = 0;
     for (auto& e : m_groups[m_activeGroup])
     {
-        //TODO probably want to cache these and only update if control moved
-        auto tx = e.getComponent<Transform>().getWorldTransform();
         auto& input = e.getComponent<UIInput>();
 
-        auto area = input.area.transform(tx);
+        auto area = input.m_worldArea;
         bool contains = false;
         if (contains = area.contains(m_eventPosition); contains && input.enabled)
         {
@@ -357,7 +377,8 @@ void UISystem::process(float)
             }
 
             //only fire these events if the selection actually changed.
-            if (m_selectedIndex != currentIndex)
+            if (m_selectedIndex != currentIndex
+                && glm::length2(m_movementDelta) != 0) //stops the hovering cursor modifying the selection
             {
                 unselect(m_selectedIndex);
                 m_selectedIndex = currentIndex;
@@ -464,6 +485,18 @@ void UISystem::setActiveGroup(std::size_t group)
     m_selectedIndex = 0;
 
     select(m_selectedIndex);
+
+    if (!m_groups[m_activeGroup][m_selectedIndex].getComponent<UIInput>().enabled)
+    {
+        selectNext(1);
+    }
+
+    //refresh transforms in case we came out of some sort of animation
+    for (auto e : m_groups[m_activeGroup])
+    {
+        auto& input = e.getComponent<UIInput>();
+        input.m_worldArea = input.area.transform(e.getComponent<Transform>().getWorldTransform());
+    }
 }
 
 void UISystem::setColumnCount(std::size_t count)
@@ -480,6 +513,30 @@ void UISystem::setActiveControllerID(std::int32_t id)
         m_activeControllerID = id;
     }
     m_controllerMask = 0;
+}
+
+void UISystem::selectAt(std::size_t index)
+{
+    if (index == m_selectedIndex)
+    {
+        return;
+    }
+
+    const auto& entities = m_groups[m_activeGroup];
+    auto old = m_selectedIndex;
+
+    do
+    {
+        m_selectedIndex = (m_selectedIndex + 1) % entities.size();
+    } while (m_selectedIndex != index && m_selectedIndex != old);
+
+    //and do selected callback
+    if (m_selectedIndex != old
+        && entities[m_selectedIndex].getComponent<UIInput>().enabled)
+    {
+        unselect(old);
+        select(m_selectedIndex);
+    }
 }
 
 //private
@@ -634,6 +691,16 @@ void UISystem::onEntityAdded(Entity entity)
     {
         input.m_selectionIndex = m_groups[0].size();
     }
+
+
+    //add a transform callback to only update world TX if input moves/scales
+    auto* worldArea = &input.m_worldArea;
+    *worldArea = input.area.transform(entity.getComponent<Transform>().getWorldTransform()); //remember to set initial value!
+    entity.getComponent<Transform>().addCallback(
+        [entity, worldArea]() mutable
+        {
+            *worldArea = entity.getComponent<UIInput>().area.transform(entity.getComponent<Transform>().getWorldTransform());
+        });
 }
 
 void UISystem::onEntityRemoved(Entity entity)

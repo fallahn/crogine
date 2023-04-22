@@ -35,6 +35,7 @@ source distribution.
 #include "Clubs.hpp"
 #include "CommandIDs.hpp"
 #include "VatAnimationSystem.hpp"
+#include "XPAwardStrings.hpp"
 
 #include <crogine/audio/AudioResource.hpp>
 #include <crogine/audio/AudioMixer.hpp>
@@ -417,7 +418,7 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
                             {
                                 playSoundDelayed(AudioID::Applause, glm::vec3(0.f), 0.8f);
                                 applaud();
-                                Social::awardXP(XPValues[XPID::Par] / 2);
+                                Social::awardXP(XPValues[XPID::Par] / 2, XPStringID::NiceOn);
                             }
                         }
                         break;

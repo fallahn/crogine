@@ -91,6 +91,40 @@ namespace AchievementID
         Subscriber,
         BirdsEyeView,
 
+        Dedicated,
+        ResidentGolfer,
+        MonthOfSundays,
+
+        SpinClass,
+        Complete01,
+        Complete02,
+        Complete03,
+        Complete04,
+        Complete05,
+        Complete06,
+        Complete07,
+        Complete08,
+        Complete09,
+        Complete10,
+
+        Master01,
+        Master02,
+        Master03,
+        Master04,
+        Master05,
+        Master06,
+        Master07,
+        Master08,
+        Master09,
+        Master10,
+
+        RoadToSuccess,
+        NoMistake,
+        NeverGiveUp,
+        GreensInRegulation,
+        ThreesACrowd,
+        ConsistencyIsKey,
+
         Count
     };
     static_assert(Count <= 256, "Count exceeds maximum 256 Achievements!");
@@ -153,4 +187,9 @@ static constexpr std::array<std::int32_t, XPID::Count> XPValues =
     500, 150, 50,  30, 10, 50,
     50,  100, 200, 300,
     10,  40,  100
+};
+
+static constexpr std::array<std::int32_t, 7u> StreakXP =
+{
+    5,11,18,26,36,50,100
 };

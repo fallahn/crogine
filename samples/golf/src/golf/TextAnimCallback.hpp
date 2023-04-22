@@ -79,7 +79,6 @@ struct MenuTextCallback final
 {
     void operator() (cro::Entity e, float dt)
     {
-        auto& data = e.getComponent<cro::Callback>().getUserData<float>();
         data = std::min(1.f, data + (dt * 2.5f));
 
         float scale = 1.f + (0.2f * (1.f - cro::Util::Easing::easeOutElastic(data)));
@@ -88,6 +87,9 @@ struct MenuTextCallback final
         if (data == 1)
         {
             e.getComponent<cro::Callback>().active = false;
+            data = 0.f;
         }
     }
+
+    float data = 0.f;
 };
