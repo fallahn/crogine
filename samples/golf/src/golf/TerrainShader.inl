@@ -163,7 +163,7 @@ R"(
     VARYING_IN vec2 v_texCoord;
     VARYING_IN vec2 v_heightData;
 
-    const vec3 DotColour = vec3(1.0, 0.65, 0.3);
+    const vec3 DotColour = vec3(1.0, 0.85, 0.6);
     const vec3 BaseColour = vec3(0.827, 0.599, 0.91); //stored as HSV to save on a conversion
 
     #include HSV
@@ -183,7 +183,7 @@ R"(
         vec4 colour = vec4(c, v_heightData.x);
 
         colour.a *= u_alpha;
-        colour = mix(vec4(DotColour, smoothstep(0.05, 0.15, v_heightData.x * u_alpha) * 0.8), colour, alpha);
+        colour = mix(vec4(DotColour, /*smoothstep(0.05, 0.15, v_heightData.x * u_alpha) * 0.98*/0.5 + (0.5 * u_alpha)), colour, alpha);
 
         FRAG_OUT = colour;
     }
