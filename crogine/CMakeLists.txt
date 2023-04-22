@@ -1,6 +1,6 @@
+cmake_minimum_required(VERSION 3.2.2)
 project(crogine)
 SET(PROJECT_NAME crogine)
-cmake_minimum_required(VERSION 3.2.2)
 
 if(NOT CMAKE_BUILD_TYPE)
   SET(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build (Debug or Release)" FORCE)

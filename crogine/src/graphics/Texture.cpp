@@ -72,8 +72,8 @@ Texture::Texture()
 Texture::Texture(Texture&& other) noexcept
     : m_size    (other.m_size),
     m_format    (other.m_format),
-    m_type      (other.m_type),
     m_handle    (other.m_handle),
+    m_type      (other.m_type),
     m_smooth    (other.m_smooth),
     m_repeated  (other.m_repeated),
     m_hasMipMaps(other.m_hasMipMaps)
@@ -145,18 +145,18 @@ void Texture::create(std::uint32_t width, std::uint32_t height, ImageFormat::Typ
 
     auto wrap = m_repeated ? GL_REPEAT : GL_CLAMP_TO_EDGE;
     auto smooth = m_smooth ? GL_LINEAR : GL_NEAREST;
-    GLint texFormat = GL_RGB8;
+    //GLint texFormat = GL_RGB8;
     GLint uploadFormat = GL_RGB;
     std::int32_t pixelSize = 3;
     if (format == ImageFormat::RGBA)
     {
-        texFormat = GL_RGBA8;
+        //texFormat = GL_RGBA8;
         uploadFormat = GL_RGBA;
         pixelSize = 4;
     }
     else if(format == ImageFormat::A)
     {
-        texFormat = GL_R8;
+        //texFormat = GL_R8;
         uploadFormat = GL_RED;
         pixelSize = 1;
     }
