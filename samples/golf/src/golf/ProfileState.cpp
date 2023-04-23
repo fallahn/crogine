@@ -503,7 +503,7 @@ void ProfileState::buildScene()
                 //refresh the avatar settings
                 setAvatarIndex(indexFromAvatarID(m_activeProfile.skinID));
                 setHairIndex(indexFromHairID(m_activeProfile.hairID));
-                setBallIndex(indexFromBallID(m_activeProfile.ballID));
+                setBallIndex(indexFromBallID(m_activeProfile.ballID) % m_ballModels.size());
                 refreshMugshot();
                 refreshNameString();
                 refreshSwatch();
@@ -1656,6 +1656,8 @@ void ProfileState::setHairIndex(std::size_t idx)
 
 void ProfileState::setBallIndex(std::size_t idx)
 {
+    CRO_ASSERT(idx < m_ballModels.size(), "");
+
     if (m_ballHairModels[m_ballHairIndex].isValid())
     {
         m_ballModels[m_ballIndex].root.getComponent<cro::Transform>().removeChild(m_ballHairModels[m_ballHairIndex].getComponent<cro::Transform>());

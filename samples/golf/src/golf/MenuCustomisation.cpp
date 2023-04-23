@@ -450,7 +450,7 @@ void MenuState::updateProfileTextures(std::size_t start, std::size_t count)
         return;
     }
 
-    CRO_ASSERT(start < count && count <= m_profileData.playerProfiles.size(), "");
+    CRO_ASSERT(start < m_profileData.playerProfiles.size() && start + count <= m_profileData.playerProfiles.size(), "");
 
     for (auto i = start; i < start + count; ++i)
     {
