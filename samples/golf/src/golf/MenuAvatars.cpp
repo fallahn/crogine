@@ -1613,6 +1613,14 @@ void MenuState::eraseCurrentProfile()
 {
     auto profileID = m_profileData.playerProfiles[m_profileData.activeProfileIndex].profileID;
 
+    //assign a valid texture to the preview model
+    auto idx = indexFromAvatarID(m_profileData.playerProfiles[m_profileData.activeProfileIndex].skinID);
+    m_playerAvatars[idx].previewModel.getComponent<cro::Model>().setMaterialProperty(0, "u_diffuseMap", m_playerAvatars[idx].getTextureID());
+
+    //before we delete the old one...
+    m_profileTextures.erase(m_profileTextures.begin() + m_profileData.activeProfileIndex);
+
+
     //erase profile first so we know we have valid remaining
     m_profileData.playerProfiles.erase(m_profileData.playerProfiles.begin() + m_profileData.activeProfileIndex);
     
@@ -1627,7 +1635,6 @@ void MenuState::eraseCurrentProfile()
         }
     }
 
-    m_profileTextures.erase(m_profileTextures.begin() + m_profileData.activeProfileIndex);
     m_profileData.activeProfileIndex = m_rosterMenu.profileIndices[m_rosterMenu.activeIndex];
 
     //refresh the preview / roster list
