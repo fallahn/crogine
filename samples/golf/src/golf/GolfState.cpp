@@ -148,7 +148,7 @@ namespace
 
     float godmode = 1.f;
     bool allowAchievements = false;
-    const cro::Time DefaultIdleTime = cro::seconds(90.f);
+    const cro::Time DefaultIdleTime = cro::seconds(180.f);
     cro::Time idleTime = DefaultIdleTime;
 
     constexpr std::uint32_t MaxCascades = 4; //actual value is 1 less this - see ShadowQuality::update()

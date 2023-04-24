@@ -69,6 +69,7 @@ source distribution.
 #include <crogine/ecs/systems/AudioPlayerSystem.hpp>
 
 #include <crogine/util/Easings.hpp>
+#include <crogine/util/Rectangle.hpp>
 #include <crogine/util/String.hpp>
 #include <crogine/audio/AudioMixer.hpp>
 
@@ -147,6 +148,9 @@ namespace
     {
         0,2,4,8
     };
+
+    //this needs to be here to be accessed by label callback
+    std::array<cro::Entity, InputBinding::Count> bindingEnts = {}; //buttons to activate key rebinding
 
     struct SliderData final
     {
@@ -2121,11 +2125,11 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
     auto infoEnt = m_scene.createEntity();
     infoEnt.addComponent<cro::Transform>().setPosition(glm::vec3(parentBounds.width / 2.f, parentBounds.height - 8.f, TextOffset));
     infoEnt.addComponent<cro::Drawable2D>();
-    infoEnt.addComponent<cro::Text>(uiFont);// .setString("Info Text");
+    infoEnt.addComponent<cro::Text>(uiFont).setString("Click On A Keybind To Change It");
     infoEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
     infoEnt.getComponent<cro::Text>().setCharacterSize(UITextSize);
     infoEnt.addComponent<cro::CommandTarget>().ID = CommandID::Menu::PlayerConfig; //not the best description, just recycling existing members here...
-
+    centreText(infoEnt);
     infoEnt.addComponent<cro::Callback>().function =
         [](cro::Entity e, float dt)
     {
@@ -2155,7 +2159,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
     auto unselectID = uiSystem.addCallback(
         [infoEnt, buttonChangeEnt](cro::Entity e) mutable
         {
-            infoEnt.getComponent<cro::Text>().setString(" ");
+            infoEnt.getComponent<cro::Text>().setString("Click On A Keybind To Change It");
             centreText(infoEnt);
             buttonChangeEnt.getComponent<cro::Text>().setFillColour(cro::Colour::Transparent);
             e.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
@@ -2196,6 +2200,11 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
             });
 
         parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+        
+        if (keyIndex > -1)
+        {
+            bindingEnts[keyIndex] = entity;
+        }
 
         return entity;
     };
@@ -2501,6 +2510,20 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
 
                 e.getComponent<cro::Text>().setString(str);
                 centreText(e);
+
+                //update the button area to include the text
+                auto pos = e.getComponent<cro::Transform>().getPosition();
+                auto area = cro::Text::getLocalBounds(e);
+                area.left += pos.x;
+                area.bottom += pos.y;
+
+                pos = bindingEnts[labelIndex].getComponent<cro::Transform>().getPosition();
+                area.left -= pos.x;
+                area.bottom -= pos.y;
+
+                //auto buttonArea = bindingEnts[labelIndex].getComponent<cro::Drawable2D>().getLocalBounds();
+                bindingEnts[labelIndex].getComponent<cro::UIInput>().area = area;// cro::Util::Rectangle::combine(area, buttonArea);
+                bindingEnts[labelIndex].getComponent<cro::Transform>().setRotation(0.f);//hack to trigger transform callback
             }
             previousKey = key;
         }
