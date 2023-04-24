@@ -239,7 +239,7 @@ void GolfState::buildUI()
 
     //player avatar
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ -20.f, -10.f });
+    entity.addComponent<cro::Transform>().setPosition({ -21.f, -11.f });
     entity.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>(m_sharedData.nameTextures[0].getTexture());
@@ -248,7 +248,7 @@ void GolfState::buildUI()
     entity.getComponent<cro::Callback>().function =
         [&, nameEnt](cro::Entity e, float)
     {
-        static constexpr auto BaseScale = glm::vec2(16.f) / LabelIconSize;
+        static constexpr auto BaseScale = glm::vec2(14.f) / LabelIconSize;
         if (nameEnt.getComponent<cro::Callback>().active)
         {
             //set scale based on progress
@@ -265,9 +265,7 @@ void GolfState::buildUI()
             {
                 e.getComponent<cro::Sprite>().setTexture(m_sharedData.nameTextures[m_currentPlayer.client].getTexture());
 
-                cro::FloatRect bounds = { 0.f, LabelTextureSize.y - (LabelIconSize.x * 4.f), LabelIconSize.x, LabelIconSize.y };
-                bounds.left = LabelIconSize.x * (m_currentPlayer.player % 2);
-                bounds.bottom += LabelIconSize.y * (m_currentPlayer.player / 2);
+                cro::FloatRect bounds = getAvatarBounds(m_currentPlayer.player);
                 e.getComponent<cro::Sprite>().setTextureRect(bounds);
             }
             prevChar = data.currentChar;
@@ -1424,9 +1422,7 @@ void GolfState::showCountdown(std::uint8_t seconds)
         m_trophies[i].label.getComponent<cro::Sprite>().setTextureRect(bounds);
 
         //choose the relevant player from the sheet
-        bounds = { 0.f, LabelTextureSize.y - (LabelIconSize.x * 4.f), LabelIconSize.x, LabelIconSize.y };
-        bounds.left = LabelIconSize.x * (m_statBoardScores[i].player % 2);
-        bounds.bottom += LabelIconSize.y * (m_statBoardScores[i].player / 2);
+        bounds = getAvatarBounds(m_statBoardScores[i].player);
         m_trophies[i].avatar.getComponent<cro::Sprite>().setTextureRect(bounds);
     }
 
@@ -1911,6 +1907,35 @@ void GolfState::createScoreboard()
             };
             bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
             m_netStrengthIcons.push_back(entity);
+
+            auto barEnt = entity;
+
+
+            cro::FloatRect bounds = getAvatarBounds(j);
+            
+            //player avatar icon
+            entity = m_uiScene.createEntity();
+            entity.addComponent<cro::Transform>().setScale(glm::vec2(14.f) / LabelIconSize);
+            entity.addComponent<cro::Drawable2D>();
+            entity.addComponent<cro::Sprite>(m_sharedData.nameTextures[c.connectionID].getTexture());
+            entity.getComponent<cro::Sprite>().setTextureRect(bounds);
+            entity.addComponent<cro::Callback>().active = true;
+            entity.getComponent<cro::Callback>().function =
+                [&, barEnt](cro::Entity e, float)
+            {
+                if (barEnt.destroyed())
+                {
+                    e.getComponent<cro::Callback>().active = false;
+                    m_uiScene.destroyEntity(e);
+                }
+
+                //these are set on the ent by updating the scoreboard, rather than rearranging entity positions
+                auto [client, player] = barEnt.getComponent<cro::Callback>().getUserData<std::pair<std::uint8_t, std::uint8_t>>();
+                e.getComponent<cro::Sprite>().setTexture(m_sharedData.nameTextures[client].getTexture(), false);
+                e.getComponent<cro::Sprite>().setTextureRect(getAvatarBounds(player));
+                e.getComponent<cro::Transform>().setPosition({ 366.f + (scoreboardExpansion * 2.f), 2.f });
+            };
+            barEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
             iconPos.y -= IconSpacing;
         }

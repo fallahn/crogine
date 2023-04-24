@@ -3390,6 +3390,7 @@ void GolfState::addSystems()
 #ifdef CRO_DEBUG_
     m_gameScene.setSystemActive<FpsCameraSystem>(false);
     m_gameScene.setSystemActive<cro::ParticleSystem>(false);
+    //m_gameScene.setSystemActive<cro::SkeletalAnimator>(false); //can't do this because we rely on player animation events
 #endif
 
     m_gameScene.addDirector<GolfParticleDirector>(m_resources.textures, m_sharedData);
@@ -5841,9 +5842,20 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo)
 
             //randomise the cart positions a bit
             cmd.targetFlags = CommandID::Cart;
-            cmd.action = [](cro::Entity e, float dt)
+            cmd.action = [&](cro::Entity e, float dt)
             {
                 e.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, dt * 0.5f);
+
+                //move to ground level
+                auto pos = e.getComponent<cro::Transform>().getWorldPosition();
+                auto result = m_collisionMesh.getTerrain(pos);
+                float diff = result.height - pos.y;
+
+                e.getComponent<cro::Transform>().move({ 0.f, diff, 0.f });
+
+                //and orientate to slope
+                //auto orientation = lookRotation(pos, pos + result.normal, cro::Transform::Z_AXIS);
+                //e.getComponent<cro::Transform>().setRotation(orientation);
             };
             m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
         }
