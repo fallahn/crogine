@@ -237,7 +237,47 @@ void GolfState::buildUI()
     auto nameEnt = entity;
     infoEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
+    //player avatar
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ -20.f, -10.f });
+    entity.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>(m_sharedData.nameTextures[0].getTexture());
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<std::uint32_t>(1);
+    entity.getComponent<cro::Callback>().function =
+        [&, nameEnt](cro::Entity e, float)
+    {
+        static constexpr auto BaseScale = glm::vec2(16.f) / LabelIconSize;
+        if (nameEnt.getComponent<cro::Callback>().active)
+        {
+            //set scale based on progress
+            const auto& data = nameEnt.getComponent<cro::Callback>().getUserData<TextCallbackData>();
+            float scale = static_cast<float>(data.currentChar) / data.string.size();
 
+            //TODO could probably use the timer to interpolate scale
+            e.getComponent<cro::Transform>().setScale(BaseScale * glm::vec2(scale, 1.f));
+
+            //if the scale is zero set the new texture properties
+            auto& prevChar = e.getComponent<cro::Callback>().getUserData<std::uint32_t>();
+            if (data.currentChar == 0
+                && prevChar != 0)
+            {
+                e.getComponent<cro::Sprite>().setTexture(m_sharedData.nameTextures[m_currentPlayer.client].getTexture());
+
+                cro::FloatRect bounds = { 0.f, LabelTextureSize.y - (LabelIconSize.x * 4.f), LabelIconSize.x, LabelIconSize.y };
+                bounds.left = LabelIconSize.x * (m_currentPlayer.player % 2);
+                bounds.bottom += LabelIconSize.y * (m_currentPlayer.player / 2);
+                e.getComponent<cro::Sprite>().setTextureRect(bounds);
+            }
+            prevChar = data.currentChar;
+        }
+        else
+        {
+
+        }
+    };
+    nameEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     //think bulb displayed when CPU players are thinking
     entity = m_uiScene.createEntity();

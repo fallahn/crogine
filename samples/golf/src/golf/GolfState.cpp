@@ -4574,6 +4574,8 @@ void GolfState::createDrone()
         material.blendMode = cro::Material::BlendMode::Alpha;
         entity.getComponent<cro::Model>().setMaterial(1, material);
 
+        entity.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniGreen | RenderFlags::MiniMap));
+
         entity.addComponent<cro::AudioEmitter>();
 
         cro::AudioScape as;
@@ -6148,6 +6150,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
         auto& data = e.getComponent<cro::Callback>().getUserData<TextCallbackData>();
         data.string = m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].name;
         e.getComponent<cro::Callback>().active = true;
+        e.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
     };
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
@@ -6888,7 +6891,10 @@ void GolfState::createTransition(const ActivePlayer& playerData)
     cmd.action =
         [&](cro::Entity e, float)
     {
-        e.getComponent<cro::Text>().setString(" ");
+        e.getComponent<cro::Transform>().setScale(glm::vec2(0.f)); //also hides attached icon
+        auto& data = e.getComponent<cro::Callback>().getUserData<TextCallbackData>();
+        data.string = " ";
+        e.getComponent<cro::Callback>().active = true;
     };
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
