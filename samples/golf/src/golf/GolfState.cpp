@@ -116,6 +116,7 @@ source distribution.
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
 #include <crogine/detail/glm/gtx/rotate_vector.hpp>
 #include <crogine/detail/glm/gtx/euler_angles.hpp>
+#include <crogine/detail/glm/gtx/quaternion.hpp>
 #include "../ErrorCheck.hpp"
 
 #include <sstream>
@@ -3921,7 +3922,7 @@ void GolfState::buildScene()
     };
 
     //add a cart for each connected client :3
-    for (auto i = 0u; i < m_sharedData.connectionData.size(); ++i)
+    for (auto i = 0u; i < /*m_sharedData.connectionData.size()*/4u; ++i)
     {
         if (m_sharedData.connectionData[i].playerCount > 0)
         {
@@ -5842,10 +5843,8 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo)
 
             //randomise the cart positions a bit
             cmd.targetFlags = CommandID::Cart;
-            cmd.action = [&](cro::Entity e, float dt)
+            cmd.action = [&](cro::Entity e, float)
             {
-                e.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, dt * 0.5f);
-
                 //move to ground level
                 auto pos = e.getComponent<cro::Transform>().getWorldPosition();
                 auto result = m_collisionMesh.getTerrain(pos);
@@ -5854,8 +5853,7 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo)
                 e.getComponent<cro::Transform>().move({ 0.f, diff, 0.f });
 
                 //and orientate to slope
-                //auto orientation = lookRotation(pos, pos + result.normal, cro::Transform::Z_AXIS);
-                //e.getComponent<cro::Transform>().setRotation(orientation);
+                e.getComponent<cro::Transform>().setRotation(glm::rotation(cro::Transform::Y_AXIS, result.normal));
             };
             m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
         }
