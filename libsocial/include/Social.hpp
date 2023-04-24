@@ -74,6 +74,7 @@ public:
     {
         enum
         {
+            AvatarDownloaded,
             LevelUp,
             XPAwarded,
             OverlayActivated,

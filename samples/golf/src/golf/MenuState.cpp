@@ -797,6 +797,18 @@ void MenuState::handleMessage(const cro::Message& msg)
         const auto& data = msg.getData<Social::UGCEvent>();
         ugcInstalledHandler(data.itemID, data.type);
     }
+    else if (msg.id == Social::MessageID::SocialMessage)
+    {
+        const auto& data = msg.getData<Social::SocialEvent>();
+        if (data.type == Social::SocialEvent::AvatarDownloaded
+            && m_currentMenu == MenuID::Lobby)
+        {
+            //TODO we've only updated a specific avatar
+            //so it would be preferable to not update ALL
+            //the textures each time.
+            updateLobbyAvatars();
+        }
+    }
 #endif
 
     m_backgroundScene.forwardMessage(msg);
