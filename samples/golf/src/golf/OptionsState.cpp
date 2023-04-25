@@ -2519,10 +2519,15 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
 
                 pos = bindingEnts[labelIndex].getComponent<cro::Transform>().getPosition();
                 area.left -= pos.x;
+                area.left -= (area.width / 2.f); //compensation for horizontal centering
                 area.bottom -= pos.y;
 
-                //auto buttonArea = bindingEnts[labelIndex].getComponent<cro::Drawable2D>().getLocalBounds();
-                bindingEnts[labelIndex].getComponent<cro::UIInput>().area = area;// cro::Util::Rectangle::combine(area, buttonArea);
+                area.left -= 2.f;
+                area.width += 4.f;
+                area.bottom -= 2.f;
+                area.height += 4.f;
+
+                bindingEnts[labelIndex].getComponent<cro::UIInput>().area = area;
                 bindingEnts[labelIndex].getComponent<cro::Transform>().setRotation(0.f);//hack to trigger transform callback
             }
             previousKey = key;
