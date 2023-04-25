@@ -1889,9 +1889,10 @@ void GolfState::createScoreboard()
             entity.addComponent<cro::Drawable2D>();
             entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("strength_meter");
             entity.addComponent<cro::SpriteAnimation>();
+            //this is set active only when scoreboard is visible
             entity.addComponent<cro::Callback>().setUserData<std::pair<std::uint8_t, std::uint8_t>>(c.connectionID, j);
             entity.getComponent<cro::Callback>().function =
-                [&, bgEnt](cro::Entity e, float)
+                [&, bgEnt, iconPos](cro::Entity e, float)
             {
                 auto [client, player] = e.getComponent<cro::Callback>().getUserData<std::pair<std::uint8_t, std::uint8_t>>();
 
@@ -1904,21 +1905,22 @@ void GolfState::createScoreboard()
                     auto idx = m_sharedData.connectionData[client].pingTime / 30;
                     e.getComponent<cro::SpriteAnimation>().play(std::min(4u, idx));
                 }
+
+                auto pos = iconPos;
+                pos.x += 366.f + (scoreboardExpansion * 2.f);
+                e.getComponent<cro::Transform>().setPosition(pos);
             };
             bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
             m_netStrengthIcons.push_back(entity);
 
             auto barEnt = entity;
 
-
-            cro::FloatRect bounds = getAvatarBounds(j);
-            
             //player avatar icon
             entity = m_uiScene.createEntity();
             entity.addComponent<cro::Transform>().setScale(glm::vec2(14.f) / LabelIconSize);
             entity.addComponent<cro::Drawable2D>();
             entity.addComponent<cro::Sprite>(m_sharedData.nameTextures[c.connectionID].getTexture());
-            entity.getComponent<cro::Sprite>().setTextureRect(bounds);
+            entity.getComponent<cro::Sprite>().setTextureRect(getAvatarBounds(j));
             entity.addComponent<cro::Callback>().active = true;
             entity.getComponent<cro::Callback>().function =
                 [&, barEnt](cro::Entity e, float)
@@ -1933,7 +1935,7 @@ void GolfState::createScoreboard()
                 auto [client, player] = barEnt.getComponent<cro::Callback>().getUserData<std::pair<std::uint8_t, std::uint8_t>>();
                 e.getComponent<cro::Sprite>().setTexture(m_sharedData.nameTextures[client].getTexture(), false);
                 e.getComponent<cro::Sprite>().setTextureRect(getAvatarBounds(player));
-                e.getComponent<cro::Transform>().setPosition({ 366.f + (scoreboardExpansion * 2.f), 2.f });
+                e.getComponent<cro::Transform>().setPosition({ -(367.f + (scoreboardExpansion * 2.f)), 2.f });
             };
             barEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
