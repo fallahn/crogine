@@ -46,6 +46,7 @@ bool AudioScape::loadFromFile(const std::string& path, AudioResource& audioResou
     {
         m_audioResource = &audioResource;
         m_configs.clear();
+        m_name.clear();
 
         const auto& objs = cfg.getObjects();
         for (const auto& obj : objs)
@@ -130,6 +131,7 @@ bool AudioScape::loadFromFile(const std::string& path, AudioResource& audioResou
             LogW << "No valid AudioScape definitions were loaded from " << path << std::endl;
             return false;
         }
+        m_name = cro::FileSystem::getFileName(path);
         return true;
     }
 
