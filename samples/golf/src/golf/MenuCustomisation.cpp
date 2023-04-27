@@ -979,6 +979,16 @@ void MenuState::ugcInstalledHandler(std::uint64_t id, std::int32_t type)
             }
         }
     }
+    else if (type == Social::UserContent::Avatar)
+    {
+        //insert into m_sharedData.avatarInfo so GolfState can find it
+        
+        //seach all remote players (we can skip our own client) for
+        //any who use this skinID, then use a ProfileTexture to load
+        //the avatar image and apply client/player colours to 
+        //m_sharedData.avatarTextures[client][player]
+        
+    }
     else
     {
         LogE << "Unknown UGC: " << id << ", " << type << std::endl;

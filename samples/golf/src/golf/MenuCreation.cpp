@@ -2263,6 +2263,10 @@ void MenuState::updateLobbyData(const net::NetEvent& evt)
         //check the new player data for UGC
         for (auto i = 0u; i < cd.playerCount; ++i)
         {
+            //hmmm using 0 as the return value seems suspicious
+            //as it's not strictly an invalid index - however
+            //we will fall back to this *anyway* if the remote content
+            //is unavailable.
             if (indexFromBallID(cd.playerData[i].ballID) == 0)
             {
                 //no local ball for this player
@@ -2273,6 +2277,12 @@ void MenuState::updateLobbyData(const net::NetEvent& evt)
             {
                 //no local hair model
                 Social::fetchRemoteContent(cd.peerID, cd.playerData[i].hairID, Social::UserContent::Hair);
+            }
+
+            if (indexFromAvatarID(cd.playerData[i].skinID) == 0)
+            {
+                //no local avatar model
+                Social::fetchRemoteContent(cd.peerID, cd.playerData[i].skinID, Social::UserContent::Avatar);
             }
         }
 #endif
