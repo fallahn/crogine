@@ -468,89 +468,110 @@ void MenuState::parseAvatarDirectory()
 {
     m_sharedData.avatarInfo.clear();
 
-    const std::string AvatarPath = "assets/golf/avatars/";
-
-    auto files = cro::FileSystem::listFiles(cro::FileSystem::getResourcePath() + AvatarPath);
-    m_playerAvatars.reserve(files.size());
-
-    for (const auto& file : files)
+    //path strings must include trailing "/"!!
+    const auto processAvatarList = 
+        [&](const std::vector<std::string>& fileList, const std::string& searchPath, const std::string resourcePath = "")
     {
-        if (cro::FileSystem::getFileExtension(file) == ".avt")
+        for (const auto& file : fileList)
         {
-            cro::ConfigFile cfg;
-            if (cfg.loadFromFile(AvatarPath + file))
+            if (cro::FileSystem::getFileExtension(file) == ".avt")
             {
-                SharedStateData::AvatarInfo info;
-
-                const auto& props = cfg.getProperties();
-                for (const auto& prop : props)
+                cro::ConfigFile cfg;
+                if (cfg.loadFromFile(searchPath + file))
                 {
-                    const auto& name = prop.getName();
-                    if (name == "model")
+                    SharedStateData::AvatarInfo info;
+
+                    const auto& props = cfg.getProperties();
+                    for (const auto& prop : props)
                     {
-                        info.modelPath = prop.getValue<std::string>();
-                        if (!info.modelPath.empty())
+                        const auto& name = prop.getName();
+                        if (name == "model")
                         {
-                            cro::ConfigFile modelData;
-                            modelData.loadFromFile(info.modelPath);
-                            for (const auto& o : modelData.getObjects())
+                            info.modelPath = resourcePath + prop.getValue<std::string>();
+                            if (!info.modelPath.empty())
                             {
-                                if (o.getName() == "material")
+                                cro::ConfigFile modelData;
+                                modelData.loadFromFile(info.modelPath);
+                                for (const auto& o : modelData.getObjects())
                                 {
-                                    for (const auto& p : o.getProperties())
+                                    if (o.getName() == "material")
                                     {
-                                        if (p.getName() == "diffuse")
+                                        for (const auto& p : o.getProperties())
                                         {
-                                            info.texturePath = p.getValue<std::string>();
+                                            if (p.getName() == "diffuse")
+                                            {
+                                                info.texturePath = resourcePath + p.getValue<std::string>();
+                                            }
                                         }
                                     }
                                 }
                             }
                         }
-                    }
-                    else if (name == "audio")
-                    {
-                        info.audioscape = prop.getValue<std::string>();
-                    }
-                    else if (name == "uid")
-                    {
-                        info.uid = prop.getValue<std::uint32_t>();
-                    }
-                }
-
-                if (!info.modelPath.empty())
-                {
-                    if (info.uid == 0)
-                    {
-                        //create a uid from the file name and save it to the cfg
-                        //uses Bob Jenkins' spooky hash
-                        info.uid = SpookyHash::Hash32(file.data(), file.size(), 0);
-                        cfg.addProperty("uid").setValue(info.uid);
-                        cfg.save(AvatarPath + file);
-                    }
-
-                    //check uid doesn't exist
-                    auto result = std::find_if(m_sharedData.avatarInfo.begin(), m_sharedData.avatarInfo.end(),
-                        [&info](const SharedStateData::AvatarInfo& i)
+                        else if (name == "audio")
                         {
-                            return info.uid == i.uid;
-                        });
+                            info.audioscape = prop.getValue<std::string>();
+                        }
+                        else if (name == "uid")
+                        {
+                            info.uid = prop.getValue<std::uint32_t>();
+                        }
+                    }
 
-                    if (result == m_sharedData.avatarInfo.end())
+                    if (!info.modelPath.empty())
                     {
-                        m_sharedData.avatarInfo.push_back(info);
-                        m_playerAvatars.emplace_back(info.texturePath);
+                        //TODO we probably want to remove this
+                        //and reject files instead as improperly authored
+                        if (info.uid == 0)
+                        {
+                            //create a uid from the file name and save it to the cfg
+                            //uses Bob Jenkins' spooky hash
+                            info.uid = SpookyHash::Hash32(file.data(), file.size(), 0);
+                            cfg.addProperty("uid").setValue(info.uid);
+                            cfg.save(searchPath + file);
+                        }
+
+                        //check uid doesn't exist
+                        auto result = std::find_if(m_sharedData.avatarInfo.begin(), m_sharedData.avatarInfo.end(),
+                            [&info](const SharedStateData::AvatarInfo& i)
+                            {
+                                return info.uid == i.uid;
+                            });
+
+                        if (result == m_sharedData.avatarInfo.end())
+                        {
+                            m_sharedData.avatarInfo.push_back(info);
+                            m_playerAvatars.emplace_back(info.texturePath);
+                        }
+                        else
+                        {
+                            LogW << "Avatar with UID " << info.uid << " already exists. " << info.modelPath << " will be skipped." << std::endl;
+                        }
                     }
                     else
                     {
-                        LogW << "Avatar with UID " << info.uid << " already exists. " << info.modelPath << " will be skipped." << std::endl;
+                        LogW << "Skipping " << file << ": missing or corrupt data, or not an avatar." << std::endl;
                     }
                 }
-                else
-                {
-                    LogW << "Skipping " << file << ": missing or corrupt data, or not an avatar." << std::endl;
-                }
             }
+        }
+    };
+
+    const std::string AvatarPath = "assets/golf/avatars/";
+    auto files = cro::FileSystem::listFiles(cro::FileSystem::getResourcePath() + AvatarPath);
+    m_playerAvatars.reserve(files.size());
+    processAvatarList(files, AvatarPath);
+
+    //custom avatars
+    auto avatarUserDir = Social::getUserContentPath(Social::UserContent::Avatar);
+    if (cro::FileSystem::directoryExists(avatarUserDir))
+    {
+        auto dirs = cro::FileSystem::listDirectories(avatarUserDir);
+        dirs.resize(std::min(dirs.size(), std::size_t(24)));//arbitrary limit
+        for (const auto& dir : dirs)
+        {
+            auto resourceDir = avatarUserDir + dir + "/";
+            files = cro::FileSystem::listFiles(resourceDir);
+            processAvatarList(files, resourceDir, resourceDir);
         }
     }
 
