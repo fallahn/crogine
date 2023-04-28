@@ -1447,8 +1447,11 @@ void GolfState::showCountdown(std::uint8_t seconds)
                     personalBest = true;
                 }
 
+                //if we weren't the last player to take a turn in a network game
+                //we need to reenable achievements to enter into the leaderboard...
+                Achievements::setActive(m_allowAchievements);
+                cro::Logger::log("LEADERBOARD attempting to insert score: " + std::to_string(score) + "\n", cro::Logger::Type::Info, cro::Logger::Output::File);
                 Social::insertScore(m_sharedData.mapDirectory, m_sharedData.holeCount, score);
-                cro::Logger::log("LEADERBOARD attempting to insert score: " + std::to_string(connectionData.playerData[k].score), cro::Logger::Type::Info, cro::Logger::Output::File);
                 break;
             }
         }
@@ -1538,7 +1541,7 @@ void GolfState::showCountdown(std::uint8_t seconds)
         m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
     }
 
-
+    
 
     //create status icons for each connected client
     //to show vote to skip

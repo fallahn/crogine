@@ -253,7 +253,7 @@ void Drawable2D::applyShader()
             else
             {
                 m_textureUniform = -1;
-                Logger::log("Missing texture uniform in Drawable2D shader", Logger::Type::Error);
+                Logger::log("Missing texture uniform in Drawable2D shader", Logger::Type::Warning);
                 return;
             }
         }

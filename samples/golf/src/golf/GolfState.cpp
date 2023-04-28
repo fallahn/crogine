@@ -148,7 +148,7 @@ namespace
 #endif // CRO_DEBUG_
 
     float godmode = 1.f;
-    bool allowAchievements = false;
+
     const cro::Time DefaultIdleTime = cro::seconds(180.f);
     cro::Time idleTime = DefaultIdleTime;
 
@@ -189,6 +189,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     m_inputParser       (sd, &m_gameScene),
     m_cpuGolfer         (m_inputParser, m_currentPlayer, m_collisionMesh),
     m_wantsGameState    (true),
+    m_allowAchievements (false),
     m_scaleBuffer       ("PixelScale"),
     m_resolutionBuffer  ("ScaledResolution"),
     m_windBuffer        ("WindValues"),
@@ -269,10 +270,10 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
             humanCount++;
         }
     }
-    allowAchievements = humanCount == 1;
+    m_allowAchievements = humanCount == 1;
 
     //This is set when setting active player.
-    Achievements::setActive(allowAchievements);
+    Achievements::setActive(m_allowAchievements);
 
     //do this first so scores are reset before scoreboard
     //is first created.
@@ -6145,7 +6146,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     m_sharedData.inputBinding.playerID = localPlayer ? player.player : 0; //this also affects who can emote, so if we're currently emoting when it's not our turn always be player 0(??)
     m_inputParser.setActive(localPlayer && !m_photoMode, m_currentPlayer.terrain, isCPU);
     m_restoreInput = localPlayer; //if we're in photo mode should we restore input parser?
-    Achievements::setActive(localPlayer && !isCPU && allowAchievements);
+    Achievements::setActive(localPlayer && !isCPU && m_allowAchievements);
 
     if (player.terrain == TerrainID::Bunker)
     {
