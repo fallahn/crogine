@@ -5063,6 +5063,13 @@ void GolfState::spawnBall(const ActorInfo& info)
     entity.getComponent<cro::Callback>().function =
         [&, ballEnt, depthOffset](cro::Entity e, float)
     {
+        if (ballEnt.destroyed())
+        {
+            e.getComponent<cro::Callback>().active = false;
+            m_uiScene.destroyEntity(e);
+            return;
+        }
+
         if (m_currentPlayer.terrain == TerrainID::Green)
         {
             auto pos = ballEnt.getComponent<cro::Transform>().getWorldPosition();
