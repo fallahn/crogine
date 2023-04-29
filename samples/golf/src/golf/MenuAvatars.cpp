@@ -1725,6 +1725,9 @@ void MenuState::refreshProfileFlyout()
 
 void MenuState::updateLobbyAvatars()
 {
+    //TODO we need to refine this so only textures of the most
+    //recently updated client are updated
+
     cro::Command cmd;
     cmd.targetFlags = CommandID::Menu::LobbyList;
     cmd.action = [&](cro::Entity e, float)

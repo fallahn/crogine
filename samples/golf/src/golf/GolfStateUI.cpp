@@ -1932,6 +1932,7 @@ void GolfState::createScoreboard()
                 {
                     e.getComponent<cro::Callback>().active = false;
                     m_uiScene.destroyEntity(e);
+                    return;
                 }
 
                 //these are set on the ent by updating the scoreboard, rather than rearranging entity positions
