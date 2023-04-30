@@ -116,6 +116,7 @@ source distribution.
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
 #include <crogine/detail/glm/gtx/rotate_vector.hpp>
 #include <crogine/detail/glm/gtx/euler_angles.hpp>
+#include <crogine/detail/glm/gtx/quaternion.hpp>
 #include "../ErrorCheck.hpp"
 
 #include <sstream>
@@ -147,8 +148,8 @@ namespace
 #endif // CRO_DEBUG_
 
     float godmode = 1.f;
-    bool allowAchievements = false;
-    const cro::Time DefaultIdleTime = cro::seconds(90.f);
+
+    const cro::Time DefaultIdleTime = cro::seconds(180.f);
     cro::Time idleTime = DefaultIdleTime;
 
     constexpr std::uint32_t MaxCascades = 4; //actual value is 1 less this - see ShadowQuality::update()
@@ -188,6 +189,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     m_inputParser       (sd, &m_gameScene),
     m_cpuGolfer         (m_inputParser, m_currentPlayer, m_collisionMesh),
     m_wantsGameState    (true),
+    m_allowAchievements (false),
     m_scaleBuffer       ("PixelScale"),
     m_resolutionBuffer  ("ScaledResolution"),
     m_windBuffer        ("WindValues"),
@@ -268,10 +270,10 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
             humanCount++;
         }
     }
-    allowAchievements = humanCount == 1;
+    m_allowAchievements = humanCount == 1;
 
     //This is set when setting active player.
-    Achievements::setActive(allowAchievements);
+    Achievements::setActive(m_allowAchievements);
 
     //do this first so scores are reset before scoreboard
     //is first created.
@@ -3390,6 +3392,7 @@ void GolfState::addSystems()
 #ifdef CRO_DEBUG_
     m_gameScene.setSystemActive<FpsCameraSystem>(false);
     m_gameScene.setSystemActive<cro::ParticleSystem>(false);
+    //m_gameScene.setSystemActive<cro::SkeletalAnimator>(false); //can't do this because we rely on player animation events
 #endif
 
     m_gameScene.addDirector<GolfParticleDirector>(m_resources.textures, m_sharedData);
@@ -3920,7 +3923,7 @@ void GolfState::buildScene()
     };
 
     //add a cart for each connected client :3
-    for (auto i = 0u; i < m_sharedData.connectionData.size(); ++i)
+    for (auto i = 0u; i < /*m_sharedData.connectionData.size()*/4u; ++i)
     {
         if (m_sharedData.connectionData[i].playerCount > 0)
         {
@@ -3951,7 +3954,12 @@ void GolfState::buildScene()
 
         cro::RenderTarget::Context ctx;
         ctx.depthBuffer = true;
+#ifdef __APPLE__
+        //*sigh*
+        ctx.depthTexture = false;
+#else
         ctx.depthTexture = true;
+#endif
         ctx.samples = samples;
         ctx.width = static_cast<std::uint32_t>(texSize.x);
         ctx.height = static_cast<std::uint32_t>(texSize.y);
@@ -4574,6 +4582,8 @@ void GolfState::createDrone()
         material.blendMode = cro::Material::BlendMode::Alpha;
         entity.getComponent<cro::Model>().setMaterial(1, material);
 
+        entity.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniGreen | RenderFlags::MiniMap));
+
         entity.addComponent<cro::AudioEmitter>();
 
         cro::AudioScape as;
@@ -4939,7 +4949,6 @@ void GolfState::spawnBall(const ActorInfo& info)
             cro::Vertex2D(glm::vec2(0.f), glm::vec2(0.f, uvRect.bottom), BaseColour),
             cro::Vertex2D(glm::vec2(textureRect.width, 0.f), glm::vec2(uvRect.width, uvRect.bottom), BaseColour),
 
-            //TODO in the non-steam version this is mostly just a waste, unless an avatar has a specific head shot
             cro::Vertex2D(AvatarOffset + glm::vec2(0.f, AvatarSize.y), glm::vec2(avatarUV.left, avatarUV.bottom + avatarUV.height), BaseColour),
             cro::Vertex2D(AvatarOffset + glm::vec2(0.f), glm::vec2(avatarUV.left, avatarUV.bottom), BaseColour),
             cro::Vertex2D(AvatarOffset + AvatarSize, glm::vec2(avatarUV.left + avatarUV.width, avatarUV.bottom + avatarUV.height), BaseColour),
@@ -5053,6 +5062,13 @@ void GolfState::spawnBall(const ActorInfo& info)
     entity.getComponent<cro::Callback>().function =
         [&, ballEnt, depthOffset](cro::Entity e, float)
     {
+        if (ballEnt.destroyed())
+        {
+            e.getComponent<cro::Callback>().active = false;
+            m_uiScene.destroyEntity(e);
+            return;
+        }
+
         if (m_currentPlayer.terrain == TerrainID::Green)
         {
             auto pos = ballEnt.getComponent<cro::Transform>().getWorldPosition();
@@ -5839,9 +5855,17 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo)
 
             //randomise the cart positions a bit
             cmd.targetFlags = CommandID::Cart;
-            cmd.action = [](cro::Entity e, float dt)
+            cmd.action = [&](cro::Entity e, float)
             {
-                e.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, dt * 0.5f);
+                //move to ground level
+                auto pos = e.getComponent<cro::Transform>().getWorldPosition();
+                auto result = m_collisionMesh.getTerrain(pos);
+                float diff = result.height - pos.y;
+
+                e.getComponent<cro::Transform>().move({ 0.f, diff, 0.f });
+
+                //and orientate to slope
+                e.getComponent<cro::Transform>().setRotation(glm::rotation(cro::Transform::Y_AXIS, result.normal));
             };
             m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
         }
@@ -6128,7 +6152,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     m_sharedData.inputBinding.playerID = localPlayer ? player.player : 0; //this also affects who can emote, so if we're currently emoting when it's not our turn always be player 0(??)
     m_inputParser.setActive(localPlayer && !m_photoMode, m_currentPlayer.terrain, isCPU);
     m_restoreInput = localPlayer; //if we're in photo mode should we restore input parser?
-    Achievements::setActive(localPlayer && !isCPU && allowAchievements);
+    Achievements::setActive(localPlayer && !isCPU && m_allowAchievements);
 
     if (player.terrain == TerrainID::Bunker)
     {
@@ -6148,6 +6172,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
         auto& data = e.getComponent<cro::Callback>().getUserData<TextCallbackData>();
         data.string = m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].name;
         e.getComponent<cro::Callback>().active = true;
+        e.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
     };
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
@@ -6888,7 +6913,10 @@ void GolfState::createTransition(const ActivePlayer& playerData)
     cmd.action =
         [&](cro::Entity e, float)
     {
-        e.getComponent<cro::Text>().setString(" ");
+        e.getComponent<cro::Transform>().setScale(glm::vec2(0.f)); //also hides attached icon
+        auto& data = e.getComponent<cro::Callback>().getUserData<TextCallbackData>();
+        data.string = " ";
+        e.getComponent<cro::Callback>().active = true;
     };
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 

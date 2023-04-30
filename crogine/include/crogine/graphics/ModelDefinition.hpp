@@ -170,6 +170,13 @@ namespace cro
         bool hasSkeleton() const { return m_skeleton; }
 
         /*!
+        \brief Return a copy of the Skeleton component
+        Check if the component is valid (models may not always load a skeleton)
+        with hasSkeleton()
+        */
+        const Skeleton& getSkeleton() const { return m_skeleton; }
+
+        /*!
         \brief Returns the assigned material at the given index, if it exists
         else returns nullptr
         */

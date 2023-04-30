@@ -103,8 +103,14 @@ namespace cro
         */
         bool hasEmitter(const std::string& name) const;
 
+        /*!
+        \brief Returns the name from which this AudioScape was loaded, or an empty string
+        */
+        const std::string& getName() const { return m_name; }
+
     private:
         AudioResource* m_audioResource;
+        std::string m_name;
 
         struct AudioConfig final
         {

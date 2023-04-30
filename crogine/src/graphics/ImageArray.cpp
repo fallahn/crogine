@@ -53,9 +53,20 @@ namespace cro::Detail
         stbi_callback_from_RW(file, &io);
 
         std::int32_t w, h, d;
-        auto* img = stbi_load_from_callbacks(&io.stb_cbs, &io, &w, &h, &d, 0);
+        stbi_info_from_callbacks(&io.stb_cbs, &io, &w, &h, &d);
+        file->seek(file, 0, RW_SEEK_SET);
+
+        //if this is RGB pad out to RGBA for row alignment
+        std::int32_t wantedChannels = 0;
+        if (d == 3)
+        {
+            wantedChannels = 4;
+        }
+
+        auto* img = stbi_load_from_callbacks(&io.stb_cbs, &io, &w, &h, &d, wantedChannels);
         if (img)
         {
+            d = (wantedChannels) ? wantedChannels : d;
             auto size = w * h * d;
 
             dst.resize(size);
@@ -95,9 +106,21 @@ namespace cro::Detail
         stbi_callback_from_RW(file, &io);
 
         std::int32_t w, h, d;
-        auto* img = stbi_load_16_from_callbacks(&io.stb_cbs, &io, &w, &h, &d, 0);
+        stbi_info_from_callbacks(&io.stb_cbs, &io, &w, &h, &d);
+        file->seek(file, 0, RW_SEEK_SET);
+
+        //if this is RGB pad out to RGBA for row alignment
+        std::int32_t wantedChannels = 0;
+        if (d == 3)
+        {
+            wantedChannels = 4;
+        }
+
+
+        auto* img = stbi_load_16_from_callbacks(&io.stb_cbs, &io, &w, &h, &d, wantedChannels);
         if (img)
         {
+            d = (wantedChannels) ? wantedChannels : d;
             auto size = w * h * d;
 
             dst.resize(size);
@@ -137,9 +160,20 @@ namespace cro::Detail
         stbi_callback_from_RW(file, &io);
 
         std::int32_t w, h, d;
-        auto* img = stbi_loadf_from_callbacks(&io.stb_cbs, &io, &w, &h, &d, 0);
+        stbi_info_from_callbacks(&io.stb_cbs, &io, &w, &h, &d);
+        file->seek(file, 0, RW_SEEK_SET);
+
+        //if this is RGB pad out to RGBA for row alignment
+        std::int32_t wantedChannels = 0;
+        if (d == 3)
+        {
+            wantedChannels = 4;
+        }
+
+        auto* img = stbi_loadf_from_callbacks(&io.stb_cbs, &io, &w, &h, &d, wantedChannels);
         if (img)
         {
+            d = (wantedChannels) ? wantedChannels : 0;
             auto size = w * h * d;
 
             dst.resize(size);

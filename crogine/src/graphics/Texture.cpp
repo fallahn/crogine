@@ -161,6 +161,7 @@ void Texture::create(std::uint32_t width, std::uint32_t height, ImageFormat::Typ
         pixelSize = 1;
     }
 
+
     //let's fill the texture with known empty values
     std::vector<std::uint8_t> buffer(width * height * pixelSize);
     std::fill(buffer.begin(), buffer.end(), 0);
@@ -187,7 +188,10 @@ bool Texture::loadFromFile(const std::string& filePath, bool createMipMaps)
     ImageArray<std::uint8_t> arr;
     if (arr.loadFromFile(path, true))
     {
+        m_type = GL_UNSIGNED_BYTE;
+
         auto size = arr.getDimensions();
+        CRO_ASSERT(size.x * size.y * arr.getChannels() == arr.size(), "");
         create(size.x, size.y, arr.getFormat());
         return update(arr.data(), createMipMaps);
     }
@@ -470,15 +474,16 @@ bool Texture::update(const void* pixels, bool createMipMaps, URect area)
         if (area.width == 0) area.width = m_size.x;
         if (area.height == 0) area.height = m_size.y;
 
-        GLint format = GL_RGBA;
-        if (m_format == ImageFormat::RGB)
+        GLint format = GL_RGB;
+        if (m_format == ImageFormat::RGBA)
         {
-            format = GL_RGB;
+            format = GL_RGBA;
         }
         else if (m_format == ImageFormat::A)
         {
             format = GL_RED;
         }
+
 
         glCheck(glBindTexture(GL_TEXTURE_2D, m_handle));
         glCheck(glTexSubImage2D(GL_TEXTURE_2D, 0, area.left, area.bottom, area.width, area.height, format, m_type, pixels));

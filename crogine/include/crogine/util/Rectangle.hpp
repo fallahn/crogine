@@ -91,7 +91,7 @@ namespace cro
                 cro::Rectangle<T> ret(std::min(a.left, b.left),
                                     std::min(a.bottom, b.bottom),
                                     std::max(a.left + a.width, b.left + b.width),
-                                    std::max(a.botom + a.height, b.bottom + b.height));
+                                    std::max(a.bottom + a.height, b.bottom + b.height));
                 ret.width -= ret.left;
                 ret.height -= ret.bottom;
 

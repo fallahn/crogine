@@ -124,8 +124,8 @@ bool MyApp::initialise()
     m_stateStack.registerState<SSAOState>(States::ScratchPad::SSAO);
 
 #ifdef CRO_DEBUG_
-    m_stateStack.pushState(States::ScratchPad::SSAO);
-    //m_stateStack.pushState(States::ScratchPad::MainMenu);
+    //m_stateStack.pushState(States::ScratchPad::SSAO);
+    m_stateStack.pushState(States::ScratchPad::MainMenu);
 #else
     m_stateStack.pushState(States::ScratchPad::MainMenu);
 #endif

@@ -329,6 +329,14 @@ static inline constexpr float smoothstep(float edge0, float edge1, float x)
     return t * t * (3.f - 2.f * t);
 }
 
+static inline cro::FloatRect getAvatarBounds(std::uint8_t player)
+{
+    cro::FloatRect bounds = { 0.f, LabelTextureSize.y - (LabelIconSize.x * 4.f), LabelIconSize.x, LabelIconSize.y };
+    bounds.left = LabelIconSize.x * (player % 2);
+    bounds.bottom += LabelIconSize.y * (player / 2);
+    return bounds;
+}
+
 static inline cro::Image cropAvatarImage(const std::string& path)
 {
     cro::ImageArray<std::uint8_t> arr;

@@ -118,7 +118,7 @@ namespace
 ProfileState::ProfileState(cro::StateStack& ss, cro::State::Context ctx, SharedStateData& sd, SharedProfileData& sp)
     : cro::State        (ss, ctx),
     m_uiScene           (ctx.appInstance.getMessageBus(), 384u),
-    m_modelScene        (ctx.appInstance.getMessageBus()),
+    m_modelScene        (ctx.appInstance.getMessageBus(), 384u),
     m_sharedData        (sd),
     m_profileData       (sp),
     m_viewScale         (2.f),

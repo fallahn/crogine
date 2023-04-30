@@ -125,7 +125,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     m_cursor                (/*"assets/images/cursor.png", 0, 0*/cro::SystemCursor::Hand),
     m_uiScene               (context.appInstance.getMessageBus(), 512),
     m_backgroundScene       (context.appInstance.getMessageBus(), 512/*, cro::INFO_FLAG_SYSTEMS_ACTIVE*/),
-    m_avatarScene           (context.appInstance.getMessageBus()/*, 128, cro::INFO_FLAG_SYSTEMS_ACTIVE*/),
+    m_avatarScene           (context.appInstance.getMessageBus(), 384/*, cro::INFO_FLAG_SYSTEMS_ACTIVE*/),
     m_scaleBuffer           ("PixelScale"),
     m_resolutionBuffer      ("ScaledResolution"),
     m_windBuffer            ("WindValues"),
@@ -136,7 +136,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     m_viewScale             (1.f)
 {
     std::fill(m_readyState.begin(), m_readyState.end(), false);
-
+    
     auto size = glm::vec2(GolfGame::getActiveTarget()->getSize());
     m_viewScale = glm::vec2(getViewScale());
 
@@ -359,12 +359,12 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     //    {
     //        if (ImGui::Begin("buns"))
     //        {
-    //            auto size = glm::vec2(LabelTextureSize);
+    //            /*auto size = glm::vec2(LabelTextureSize);
     //            for (const auto& t : m_sharedData.nameTextures)
     //            {
     //                ImGui::Image(t.getTexture(), { size.x, size.y }, { 0.f, 1.f }, { 1.f, 0.f });
     //                ImGui::SameLine();
-    //            }
+    //            }*/
     //        }
     //        ImGui::End();
     //    });
@@ -796,6 +796,18 @@ void MenuState::handleMessage(const cro::Message& msg)
     {
         const auto& data = msg.getData<Social::UGCEvent>();
         ugcInstalledHandler(data.itemID, data.type);
+    }
+    else if (msg.id == Social::MessageID::SocialMessage)
+    {
+        const auto& data = msg.getData<Social::SocialEvent>();
+        if (data.type == Social::SocialEvent::AvatarDownloaded
+            && m_currentMenu == MenuID::Lobby)
+        {
+            //TODO we've only updated a specific avatar
+            //so it would be preferable to not update ALL
+            //the textures each time.
+            updateLobbyAvatars();
+        }
     }
 #endif
 
@@ -1348,7 +1360,7 @@ void MenuState::createScene()
         std::uint32_t samples = m_sharedData.pixelScale ? 0 :
             m_sharedData.antialias ? m_sharedData.multisamples : 0;
 
-        cro::RenderTarget::Context ctx(static_cast<std::uint32_t>(texSize.x), static_cast<std::uint32_t>(texSize.y), true, true, false, samples);
+        cro::RenderTarget::Context ctx(static_cast<std::uint32_t>(texSize.x), static_cast<std::uint32_t>(texSize.y), true, false, false, samples);
 
         m_sharedData.antialias = 
             m_backgroundTexture.create(ctx) 

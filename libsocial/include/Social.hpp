@@ -45,7 +45,7 @@ source distribution.
 //(terrain vertex data and materials changed 1100 -> 1110)
 //(player avatar data format changed 1110 -> 1120)
 static constexpr std::uint16_t CURRENT_VER = 1120;
-static const std::string StringVer("1.12.1");
+static const std::string StringVer("1.12.2");
 
 
 class Social final
@@ -74,6 +74,7 @@ public:
     {
         enum
         {
+            AvatarDownloaded,
             LevelUp,
             XPAwarded,
             OverlayActivated,
@@ -134,7 +135,7 @@ public:
         enum
         {
             Ball, Hair, Course,
-            Profile
+            Profile, Avatar
         };
     };
     static std::string getBaseContentPath();
