@@ -2795,7 +2795,7 @@ void GolfState::loadAssets()
                             }
                         }
 
-                        if (!path.empty()
+                        if (!path.empty() && Social::isValid(path)
                             && cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + path))
                         {
                             if (modelDef.loadFromFile(path))
