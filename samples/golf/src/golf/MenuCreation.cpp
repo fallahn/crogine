@@ -664,8 +664,9 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
         return entity;
     };
 
-
-    if (!m_courseData.empty()
+    auto validData = Social::isValid();
+    if (validData
+        &&!m_courseData.empty()
         && !m_sharedData.ballInfo.empty()
         && ! m_sharedData.avatarInfo.empty())
     {
@@ -719,6 +720,10 @@ void MenuState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter, std
     else
     {
         std::string str = "Error:\n";
+        if (!validData)
+        {
+            str += "Invalid Course Data\n";
+        }
         if (m_courseData.empty())
         {
             str += "No course data found\n";

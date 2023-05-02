@@ -238,7 +238,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
             }
         });
 
-    registerCommand("fog", [&](const std::string& param)
+    /*registerCommand("fog", [&](const std::string& param)
         {
             if (param.empty())
             {
@@ -256,7 +256,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
                 glUseProgram(shader.getGLHandle());
                 glUniform1f(uniform, std::clamp(f, 0.f, 1.f));
             }
-        });
+        });*/
 
     shadowQuality.update(sd.hqShadows);
 
@@ -1946,7 +1946,12 @@ void GolfState::loadAssets()
     m_postProcesses[PostID::Noise].shader = shader;
 
     //fog
-    m_resources.shaders.loadFromString(ShaderID::Fog, FogVert, FogFrag, "#define ZFAR 320.0\n");
+    std::string desat;
+    if (Social::isGreyscale())
+    {
+        desat = "#define DESAT 1.0\n";
+    }
+    m_resources.shaders.loadFromString(ShaderID::Fog, FogVert, FogFrag, "#define ZFAR 320.0\n" + desat);
     shader = &m_resources.shaders.get(ShaderID::Fog);
     m_postProcesses[PostID::Fog].shader = shader;
     //depth uniform is set after creating the UI once we know the render texture is created
@@ -3252,10 +3257,6 @@ void GolfState::loadAssets()
     m_windBuffer.addShader(*shader);
 
     createClouds();
-    if (cro::SysTime::now().months() == 6)
-    {
-        buildBow();
-    }
 
     //reserve the slots for each hole score
     for (auto& client : m_sharedData.connectionData)
@@ -4295,13 +4296,21 @@ void GolfState::buildScene()
     sunEnt.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, -130.f * cro::Util::Const::degToRad);
     sunEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -75.f * cro::Util::Const::degToRad);
 
-    if (cro::SysTime::now().months() == 12)
+    if (auto month = cro::SysTime::now().months(); month == 12)
     {
         if (cro::Util::Random::value(0, 20) == 0)
         {
             createWeather(WeatherType::Snow);
         }
     }
+    else if (month == 6)
+    {
+        if (cro::Util::Random::value(0, 5) == 0)
+        {
+            buildBow();
+        }
+    }
+
     //else
     //{
     //    createWeather(WeatherType::Rain);

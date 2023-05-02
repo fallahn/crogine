@@ -97,6 +97,8 @@ public:
     };
     static cro::Image userIcon;
 
+    static bool isGreyscale() { return false; }
+    static bool isValid() { return true; }
     static bool isAvailable() { return false; }
     static bool isSteamdeck() { return false; }
     static cro::Image getUserIcon(std::uint64_t) { return userIcon; }

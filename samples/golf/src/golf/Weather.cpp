@@ -340,6 +340,18 @@ void GolfState::createClouds()
 
 void GolfState::buildBow()
 {
+    if (Social::isGreyscale())
+    {
+        createWeather(WeatherType::Rain);
+
+        auto& shader = m_resources.shaders.get(ShaderID::Fog);
+        auto uniform = shader.getUniformID("u_density");
+        glUseProgram(shader.getGLHandle());
+        glUniform1f(uniform, 0.89f);
+
+        return;
+    }
+
     auto meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour | cro::VertexProperty::UV0, 1, GL_TRIANGLE_STRIP));
 
     auto* meshData = &m_resources.meshes.getMesh(meshID);
