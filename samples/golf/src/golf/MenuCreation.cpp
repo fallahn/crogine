@@ -3069,7 +3069,7 @@ void MenuState::updateCourseRuleString()
     {
         if (!data->isUser)
         {
-            std::stringstream ss;
+            /*std::stringstream ss;
             float playTime = Achievements::getAvgStat(m_sharedData.mapDirectory);
             if (playTime > 0)
             {
@@ -3084,7 +3084,9 @@ void MenuState::updateCourseRuleString()
             ss << "Top Players: ";
 
             cro::String scoreStr(ss.str());
-            scoreStr += Social::getTopFive(m_sharedData.mapDirectory, m_sharedData.holeCount);
+            scoreStr += Social::getTopFive(m_sharedData.mapDirectory, m_sharedData.holeCount);*/
+
+            auto scoreStr = Social::getTopFive(m_sharedData.mapDirectory, m_sharedData.holeCount);
             m_lobbyWindowEntities[LobbyEntityID::CourseTicker].getComponent<cro::Text>().setString(scoreStr);
             m_lobbyWindowEntities[LobbyEntityID::CourseTicker].getComponent<cro::Transform>().setScale(glm::vec2(1.f));
             m_lobbyWindowEntities[LobbyEntityID::CourseTicker].getComponent<cro::Transform>().setPosition(glm::vec2(200.f,0.f));
