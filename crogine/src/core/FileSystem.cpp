@@ -46,6 +46,7 @@ source distribution.
 #ifdef _WIN32
 #include <Windows.h>
 #include <shlobj.h>
+#include <filesystem> //technically crossplatform but unsupported on the oldest version of macOS which cro supports
 #define PATH_SEPARATOR_CHAR '\\'
 #define PATH_SEPARATOR_STRING "\\"
 #ifdef _MSC_VER
@@ -244,24 +245,37 @@ bool FileSystem::createDirectory(const std::string& path)
 {
     //TODO regex this or at least check for illegal chars
 #ifdef _WIN32
-    if (_mkdir(path.c_str()) == 0)
+    std::error_code ec;
+    if (!std::filesystem::create_directories(path, ec))
     {
-        LOG("Created directory " + path, cro::Logger::Type::Info);
-        return true;
-    }
-    else
-    {
-        auto result = errno;
-        if (result == EEXIST)
+        //this might be 0 if the directory already exists
+        if (ec.value())
         {
-            Logger::log(path + " directory already exists!", Logger::Type::Info);
-        }
-        else if (result == ENOENT)
-        {
-            Logger::log("Unable to create " + path + " directory not found.", Logger::Type::Error);
+            Logger::log(ec.message(), Logger::Type::Error, Logger::Output::All);
+            return false;
         }
     }
-    return false;
+    return true;
+
+
+    //if (_mkdir(path.c_str()) == 0)
+    //{
+    //    LOG("Created directory " + path, cro::Logger::Type::Info);
+    //    return true;
+    //}
+    //else
+    //{
+    //    auto result = errno;
+    //    if (result == EEXIST)
+    //    {
+    //        Logger::log(path + " directory already exists!", Logger::Type::Info);
+    //    }
+    //    else if (result == ENOENT)
+    //    {
+    //        Logger::log("Unable to create " + path + ": parent directory not found.", Logger::Type::Error, Logger::Output::All);
+    //    }
+    //}
+    //return false;
 #else
     if (mkdir(path.c_str(), 0777) == 0)
     {
@@ -280,7 +294,7 @@ bool FileSystem::createDirectory(const std::string& path)
             break;
         case ENOENT:
             {
-                Logger::log("Unable to create " + path + " directory not found.", Logger::Type::Error);
+                Logger::log("Unable to create " + path + ": parent directory not found.", Logger::Type::Error, Logger::Output::All);
             }
             break;
         case EFAULT:

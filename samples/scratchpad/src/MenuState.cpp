@@ -97,6 +97,11 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, MyApp&
         //create ImGui stuff
         createUI();
     });
+
+    std::string a("d:/cleftwhi€tle/assdsd/úsdf");
+    std::string b("d:/cl´ftwhistle");
+    cro::FileSystem::createDirectory(a);
+    cro::FileSystem::createDirectory(b);
 }
 
 //public

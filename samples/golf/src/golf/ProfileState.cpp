@@ -245,7 +245,8 @@ bool ProfileState::handleEvent(const cro::Event& evt)
     {
         auto currentMenu = m_uiScene.getSystem<cro::UISystem>()->getActiveGroup();
 
-        if (currentMenu != MenuID::Main)
+        if (currentMenu != MenuID::Main
+            && currentMenu != MenuID::Dummy)
         {
             auto flyoutID = currentMenu - MenuID::Hair;
             auto bounds = m_flyouts[flyoutID].background.getComponent<cro::Drawable2D>().getLocalBounds();
