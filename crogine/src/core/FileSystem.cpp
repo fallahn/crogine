@@ -246,12 +246,40 @@ bool FileSystem::createDirectory(const std::string& path)
     //TODO regex this or at least check for illegal chars
 #ifdef _WIN32
     std::error_code ec;
-    if (!std::filesystem::create_directories(path, ec))
+    if (!std::filesystem::create_directories(/*std::filesystem::u8path*/(path), ec))
     {
         //this might be 0 if the directory already exists
-        if (ec.value())
+        if (ec.value() != 0)
         {
-            Logger::log(ec.message(), Logger::Type::Error, Logger::Output::All);
+            std::stringstream ss;
+            ss << ec.message() << " - Error Code: " << ec.value();
+
+            //TODO these are WinAPI error codes - haven't tested
+            //MinGW etc to see if these are what they report.
+            switch (ec.value())
+            {
+            default: ss << " (unknown error)"; break;
+            case 1: ss << " (invalid function)"; break;
+            case 2: ss << " (file not found)"; break;
+            case 3: ss << " (path not found)"; break;
+            case 5: ss << " (access denied)"; break;
+            case 8: ss << " (not enough memory)"; break;
+            case 18: ss << " (no more files)"; break;
+            case 32: ss << " (sharing violation)"; break;
+            case 50: ss << " (not supproted)"; break;
+            case 53: ss << " (bad netpath)"; break;
+            case 80: ss << " (file exists)"; break;
+            case 87: ss << " (invalid parameter)"; break;
+            case 122: ss << " (insufficient buffer)"; break;
+            case 123: ss << " (invalid name)"; break;
+            case 145: ss << " (directory not empty)"; break;
+            case 183: ss << " (already exists)"; break;
+            case 206: ss << " (filename exceeds range)"; break;
+            case 267: ss << " (invalid directory name)"; break;
+            case 4393: ss << " (reparse tag invalid)"; break;
+            }
+
+            Logger::log(ss.str(), Logger::Type::Error, Logger::Output::All);
             return false;
         }
     }
