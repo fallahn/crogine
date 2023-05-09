@@ -807,6 +807,8 @@ void MenuState::handleMessage(const cro::Message& msg)
             //so it would be preferable to not update ALL
             //the textures each time.
             updateLobbyAvatars();
+
+            LogI << "Updating remote avatar" << std::endl;
         }
     }
 #endif
