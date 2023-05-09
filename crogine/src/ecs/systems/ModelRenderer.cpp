@@ -246,6 +246,21 @@ void ModelRenderer::render(Entity camera, const RenderTarget& rt)
 }
 }
 
+std::size_t ModelRenderer::getVisibleCount(std::size_t cameraIndex, std::int32_t passIndex) const
+{
+    CRO_ASSERT(m_drawLists.size() < cameraIndex, "");
+    switch (passIndex)
+    {
+    default: return 0;
+    case Camera::Pass::Final:
+    case Camera::Pass::Refraction:
+        return m_drawLists[cameraIndex][Camera::Pass::Final].size();
+    case Camera::Pass::Reflection:
+        return m_drawLists[cameraIndex][Camera::Pass::Reflection].size();
+    }
+    return 0;
+}
+
 void ModelRenderer::onEntityAdded(Entity entity)
 {
     auto& model = entity.getComponent<Model>();

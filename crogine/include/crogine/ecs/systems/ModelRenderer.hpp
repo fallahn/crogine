@@ -83,6 +83,17 @@ namespace cro
         */
         void render(Entity, const RenderTarget&) override;
 
+        /*!
+        \brief Returns the size of the draw list of the given camera for the given pass
+        Camera indices can be retrieved with Camera::getDrawlistIndex(). For example
+        \begincode
+            std::size_t visible = scene.getSystem<cro::ModelRenderer>()->getVisibleCount(camera.getDrawlistIndex(), cro::Camera::Pass::Final);
+        \endcode
+        \param cameraIndex The index of the camera's drawlist
+        \param passIndex the ID of the pass to query
+        */
+        std::size_t getVisibleCount(std::size_t cameraIndex, std::int32_t passIndex) const;
+
         void onEntityAdded(Entity) override;
 
         void onEntityRemoved(Entity) override;
