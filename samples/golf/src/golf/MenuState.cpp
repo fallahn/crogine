@@ -801,7 +801,7 @@ void MenuState::handleMessage(const cro::Message& msg)
     {
         const auto& data = msg.getData<Social::SocialEvent>();
         if (data.type == Social::SocialEvent::AvatarDownloaded
-            && m_currentMenu == MenuID::Lobby)
+            && (m_currentMenu == MenuID::Lobby || m_currentMenu == MenuID::Join))
         {
             //TODO we've only updated a specific avatar
             //so it would be preferable to not update ALL
