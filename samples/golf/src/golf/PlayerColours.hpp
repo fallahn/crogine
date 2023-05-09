@@ -111,7 +111,7 @@ namespace pc
     static inline const std::array<std::size_t, ColourKey::Count> PairCounts =
     {
         Palette.size(),
-        8,
+        16,
         Palette.size(),
         Palette.size(),
         Palette.size(),

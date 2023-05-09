@@ -45,7 +45,7 @@ source distribution.
 //(terrain vertex data and materials changed 1100 -> 1110)
 //(player avatar data format changed 1110 -> 1120)
 static constexpr std::uint16_t CURRENT_VER = 1120;
-static const std::string StringVer("1.12.2");
+static const std::string StringVer("1.12.3");
 
 
 class Social final
@@ -97,6 +97,9 @@ public:
     };
     static cro::Image userIcon;
 
+    static bool isGreyscale() { return false; }
+    static bool isValid() { return true; }
+    static bool isValid(const std::string&) { return true; }
     static bool isAvailable() { return false; }
     static bool isSteamdeck() { return false; }
     static cro::Image getUserIcon(std::uint64_t) { return userIcon; }

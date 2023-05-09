@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.2.2)
 
 #Xcode 10 will default to Mojave (must be done BEFORE project())
 if (APPLE)
- SET(CMAKE_OSX_DEPLOYMENT_TARGET "10.14" CACHE STRING "Minimum OS X deployment version")
+ SET(CMAKE_OSX_DEPLOYMENT_TARGET "10.15" CACHE STRING "Minimum OS X deployment version")
  SET(MACOS_BUNDLE False CACHE BOOL "")
 
   if(MACOS_BUNDLE)

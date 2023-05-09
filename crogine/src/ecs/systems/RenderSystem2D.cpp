@@ -96,7 +96,7 @@ void RenderSystem2D::updateDrawList(Entity camEnt)
     //m_dirtyEnts.clear();
 
     auto& camera = camEnt.getComponent<Camera>();
-    CRO_ASSERT(camera.isOrthographic(), "");
+    CRO_ASSERT(camera.isOrthographic(), "Camera is not orthographic");
 
     if (m_drawLists.size() <= camera.getDrawListIndex())
     {

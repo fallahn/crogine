@@ -59,6 +59,10 @@ const float ZNear = 0.1;
 #endif
 const float ZFar = ZFAR;
 
+#if !defined(DESAT)
+#define DESAT 0.06
+#endif
+
 uniform sampler2D u_texture;
 uniform sampler2D u_depthTexture;
 
@@ -91,7 +95,7 @@ void main()
     vec4 colour = TEXTURE(u_texture, v_texCoord) * v_colour;
     vec3 desat = vec3(dot(colour.rgb, vec3(0.299, 0.587, 0.114)));
     vec3 dimmed = colour.rgb * (1.0 - (0.3 * desatAmount));
-    colour.rgb = mix(dimmed, desat, desatAmount * 0.06);
+    colour.rgb = mix(dimmed, desat, desatAmount * DESAT);
 
     float depthSample = TEXTURE(u_depthTexture, v_texCoord).r;
 

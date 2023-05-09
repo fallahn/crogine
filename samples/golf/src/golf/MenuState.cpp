@@ -359,12 +359,12 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     //    {
     //        if (ImGui::Begin("buns"))
     //        {
-    //            /*auto size = glm::vec2(LabelTextureSize);
+    //            auto size = glm::vec2(LabelTextureSize);
     //            for (const auto& t : m_sharedData.nameTextures)
     //            {
     //                ImGui::Image(t.getTexture(), { size.x, size.y }, { 0.f, 1.f }, { 1.f, 0.f });
     //                ImGui::SameLine();
-    //            }*/
+    //            }
     //        }
     //        ImGui::End();
     //    });
@@ -801,7 +801,7 @@ void MenuState::handleMessage(const cro::Message& msg)
     {
         const auto& data = msg.getData<Social::SocialEvent>();
         if (data.type == Social::SocialEvent::AvatarDownloaded
-            && m_currentMenu == MenuID::Lobby)
+            && (m_currentMenu == MenuID::Lobby || m_currentMenu == MenuID::Join))
         {
             //TODO we've only updated a specific avatar
             //so it would be preferable to not update ALL

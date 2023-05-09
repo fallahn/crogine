@@ -46,6 +46,7 @@ source distribution.
 #ifdef _WIN32
 #include <Windows.h>
 #include <shlobj.h>
+#include <filesystem> //technically crossplatform but unsupported on the oldest version of macOS which cro supports
 #define PATH_SEPARATOR_CHAR '\\'
 #define PATH_SEPARATOR_STRING "\\"
 #ifdef _MSC_VER
@@ -244,24 +245,65 @@ bool FileSystem::createDirectory(const std::string& path)
 {
     //TODO regex this or at least check for illegal chars
 #ifdef _WIN32
-    if (_mkdir(path.c_str()) == 0)
+    std::error_code ec;
+    if (!std::filesystem::create_directories(/*std::filesystem::u8path*/(path), ec))
     {
-        LOG("Created directory " + path, cro::Logger::Type::Info);
-        return true;
-    }
-    else
-    {
-        auto result = errno;
-        if (result == EEXIST)
+        //this might be 0 if the directory already exists
+        if (ec.value() != 0)
         {
-            Logger::log(path + " directory already exists!", Logger::Type::Info);
-        }
-        else if (result == ENOENT)
-        {
-            Logger::log("Unable to create " + path + " directory not found.", Logger::Type::Error);
+            std::stringstream ss;
+            ss << ec.message() << " - Error Code: " << ec.value();
+
+            //TODO these are WinAPI error codes - haven't tested
+            //MinGW etc to see if these are what they report.
+            switch (ec.value())
+            {
+            default: ss << " (unknown error)"; break;
+            case 1: ss << " (invalid function)"; break;
+            case 2: ss << " (file not found)"; break;
+            case 3: ss << " (path not found)"; break;
+            case 5: ss << " (access denied)"; break;
+            case 8: ss << " (not enough memory)"; break;
+            case 18: ss << " (no more files)"; break;
+            case 32: ss << " (sharing violation)"; break;
+            case 50: ss << " (not supproted)"; break;
+            case 53: ss << " (bad netpath)"; break;
+            case 80: ss << " (file exists)"; break;
+            case 87: ss << " (invalid parameter)"; break;
+            case 122: ss << " (insufficient buffer)"; break;
+            case 123: ss << " (invalid name)"; break;
+            case 145: ss << " (directory not empty)"; break;
+            case 183: ss << " (already exists)"; break;
+            case 206: ss << " (filename exceeds range)"; break;
+            case 267: ss << " (invalid directory name)"; break;
+            case 4393: ss << " (reparse tag invalid)"; break;
+            }
+
+            Logger::log(ss.str(), Logger::Type::Error, Logger::Output::All);
+            return false;
         }
     }
-    return false;
+    return true;
+
+
+    //if (_mkdir(path.c_str()) == 0)
+    //{
+    //    LOG("Created directory " + path, cro::Logger::Type::Info);
+    //    return true;
+    //}
+    //else
+    //{
+    //    auto result = errno;
+    //    if (result == EEXIST)
+    //    {
+    //        Logger::log(path + " directory already exists!", Logger::Type::Info);
+    //    }
+    //    else if (result == ENOENT)
+    //    {
+    //        Logger::log("Unable to create " + path + ": parent directory not found.", Logger::Type::Error, Logger::Output::All);
+    //    }
+    //}
+    //return false;
 #else
     if (mkdir(path.c_str(), 0777) == 0)
     {
@@ -280,7 +322,7 @@ bool FileSystem::createDirectory(const std::string& path)
             break;
         case ENOENT:
             {
-                Logger::log("Unable to create " + path + " directory not found.", Logger::Type::Error);
+                Logger::log("Unable to create " + path + ": parent directory not found.", Logger::Type::Error, Logger::Output::All);
             }
             break;
         case EFAULT:
