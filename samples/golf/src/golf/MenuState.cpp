@@ -359,12 +359,12 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     //    {
     //        if (ImGui::Begin("buns"))
     //        {
-    //            /*auto size = glm::vec2(LabelTextureSize);
+    //            auto size = glm::vec2(LabelTextureSize);
     //            for (const auto& t : m_sharedData.nameTextures)
     //            {
     //                ImGui::Image(t.getTexture(), { size.x, size.y }, { 0.f, 1.f }, { 1.f, 0.f });
     //                ImGui::SameLine();
-    //            }*/
+    //            }
     //        }
     //        ImGui::End();
     //    });
@@ -807,8 +807,6 @@ void MenuState::handleMessage(const cro::Message& msg)
             //so it would be preferable to not update ALL
             //the textures each time.
             updateLobbyAvatars();
-
-            LogI << "Updating remote avatar" << std::endl;
         }
     }
 #endif
