@@ -4305,7 +4305,7 @@ void GolfState::buildScene()
     }
     else if (month == 6)
     {
-        if (cro::Util::Random::value(0, 5) == 0)
+        if (cro::Util::Random::value(0, 8) == 0)
         {
             buildBow();
         }

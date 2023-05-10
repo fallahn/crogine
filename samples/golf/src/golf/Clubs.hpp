@@ -101,7 +101,7 @@ private:
 
     //putter below this is rescaled
     static constexpr float ShortRange = 1.f / 3.f;
-    static constexpr float ShortRangeThreshold = ShortRange * 0.65f;
+    static constexpr float ShortRangeThreshold = ShortRange * 0.95f;
     static constexpr float TinyRange = 1.f / 10.f;
     static constexpr float TinyRangeThreshold = TinyRange * 0.5f;
 
