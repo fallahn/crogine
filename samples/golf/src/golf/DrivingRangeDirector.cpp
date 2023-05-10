@@ -108,6 +108,13 @@ void DrivingRangeDirector::setHoleCount(std::int32_t count, std::int32_t holeInd
     {
         std::shuffle(m_holeData.begin(), m_holeData.end(), cro::Util::Random::rndEngine);
     }
+    else
+    {
+        std::sort(m_holeData.begin(), m_holeData.end(), [](const HoleData& a, const HoleData& b)
+            {
+                return a.par < b.par;
+            });
+    }
     std::fill(m_scores.begin(), m_scores.end(), 0.f);
 }
 
