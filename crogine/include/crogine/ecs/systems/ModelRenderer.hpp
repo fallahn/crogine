@@ -92,7 +92,7 @@ namespace cro
         \param cameraIndex The index of the camera's drawlist
         \param passIndex the ID of the pass to query
         */
-        std::size_t getVisibleCount(std::size_t cameraIndex, std::int32_t passIndex) const;
+        std::size_t getVisibleCount(std::size_t cameraIndex, std::int32_t passIndex = 0) const;
 
         void onEntityAdded(Entity) override;
 

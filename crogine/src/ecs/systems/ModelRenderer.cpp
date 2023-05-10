@@ -248,7 +248,7 @@ void ModelRenderer::render(Entity camera, const RenderTarget& rt)
 
 std::size_t ModelRenderer::getVisibleCount(std::size_t cameraIndex, std::int32_t passIndex) const
 {
-    CRO_ASSERT(m_drawLists.size() < cameraIndex, "");
+    CRO_ASSERT(cameraIndex < m_drawLists.size(), "");
     switch (passIndex)
     {
     default: return 0;
