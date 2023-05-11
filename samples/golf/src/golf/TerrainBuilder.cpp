@@ -573,7 +573,7 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
         }
         glCheck(glUseProgram(m_slopeProperties.shader));
         glCheck(glUniform1f(m_slopeProperties.alphaUniform, alpha));
-        m_slopeProperties.currentAlpha = alpha / m_sharedData.gridTransparency;
+        m_slopeProperties.currentAlpha = m_sharedData.gridTransparency == 0 ? 0.f : alpha / m_sharedData.gridTransparency;
     };
 
     m_slopeProperties.meshData = &entity.getComponent<cro::Model>().getMeshData();
