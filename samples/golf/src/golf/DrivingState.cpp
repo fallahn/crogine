@@ -546,7 +546,8 @@ void DrivingState::handleMessage(const cro::Message& msg)
     case sv::MessageID::GolfMessage:
     {
         const auto& data = msg.getData<GolfBallEvent>();
-        if (data.type == GolfBallEvent::TurnEnded)
+        if (data.type == GolfBallEvent::TurnEnded
+            || data.type == GolfBallEvent::Holed)
         {
             //display a message with score
             showMessage(glm::length(PlayerPosition - data.position));
