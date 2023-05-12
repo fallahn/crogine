@@ -555,6 +555,9 @@ glm::vec2 UISystem::toWorldCoords(float x, float y)
 
     //scale to vp
     auto vp = getScene()->getActiveCamera().getComponent<Camera>().viewport;
+    x -= vp.left;
+    x /= vp.width;
+
     y -= vp.bottom;
     y /= vp.height;
 
