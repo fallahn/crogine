@@ -113,7 +113,8 @@ namespace
         "Effects Volume",
         "Menu Volume",
         "Voice Volume",
-        "Vehicle Volume"
+        "Vehicle Volume",
+        "Environment"
     };
     //generally static vars would be a bad idea, but in this case
     //a static index value will remember the last channel between

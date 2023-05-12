@@ -173,7 +173,7 @@ struct MixerChannel final
     enum
     {
         Music, Effects, Menu,
-        Voice, Vehicles,
+        Voice, Vehicles, Environment,
 
         Count
     };

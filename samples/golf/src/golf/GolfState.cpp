@@ -4563,6 +4563,7 @@ void GolfState::initAudio(bool loadTrees)
         progress = std::min(1.f, progress + dt);
 
         cro::AudioMixer::setPrefadeVolume(cro::Util::Easing::easeOutQuad(progress), MixerChannel::Effects);
+        cro::AudioMixer::setPrefadeVolume(cro::Util::Easing::easeOutQuad(progress), MixerChannel::Environment);
 
         if (progress == 1)
         {
