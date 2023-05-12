@@ -68,6 +68,11 @@ namespace
         ClubStat({9.11f, 10.f}, {9.11f, 10.f}, {9.11f, 10.f}) //except this which is dynamic
     };
 
+    static constexpr float ToYards = 1.094f;
+    static constexpr float ToFeet = 3.281f;
+    //static constexpr float ToInches = 12.f;
+
+
     constexpr std::size_t DebugLevel = 35;
 }
 
@@ -88,18 +93,14 @@ std::string Club::getName(bool imperial, float distanceToPin) const
     
     if (imperial)
     {
-        static constexpr float ToYards = 1.094f;
-        static constexpr float ToFeet = 3.281f;
-        //static constexpr float ToInches = 12.f;
-
-        if (getPower(distanceToPin) > 10.f)
+        if (getPower(distanceToPin, imperial) > 10.f)
         {
             auto dist = static_cast<std::int32_t>(t * ToYards);
             return m_name + std::to_string(dist) + "yds";
         }
         else
         {
-            auto dist = static_cast<std::int32_t>(t * ToFeet);
+            auto dist = static_cast<std::int32_t>(std::round(t * ToFeet));
             return m_name + std::to_string(dist) + "ft";
         }
     }
@@ -116,13 +117,23 @@ std::string Club::getName(bool imperial, float distanceToPin) const
     }
 }
 
-float Club::getPower(float distanceToPin) const
+float Club::getPower(float distanceToPin, bool imperial) const
 {
     if (m_id == ClubID::Putter)
     {
         //looks like a bug, but turns out we need the extra power.
-        return getScaledValue(ClubStats[m_id].stats[0].target, distanceToPin);
+        auto p = getScaledValue(ClubStats[m_id].stats[0].target, distanceToPin);
         //return getScaledValue(ClubStats[m_id].stats[0].power, distanceToPin);
+
+        //because imperial display is rounded we need to apply this to the power too
+        //if (imperial
+        //    && p < 10.f) //only diplayed in feet < 10m
+        //{
+        //    p = std::round(p * ToFeet);
+        //    p /= ToFeet; //still need to actually physic in metres
+        //}
+
+        return p;
     }
 
     //check player level and return further distance

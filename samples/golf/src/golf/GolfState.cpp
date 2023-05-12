@@ -1015,7 +1015,7 @@ void GolfState::handleMessage(const cro::Message& msg)
             cmd.targetFlags = CommandID::StrokeIndicator;
             cmd.action = [&](cro::Entity e, float)
             {
-                float scale = std::max(0.25f, Clubs[getClub()].getPower(m_distanceToHole) / Clubs[ClubID::Driver].getPower(m_distanceToHole));
+                float scale = std::max(0.25f, Clubs[getClub()].getPower(m_distanceToHole, m_sharedData.imperialMeasurements) / Clubs[ClubID::Driver].getPower(m_distanceToHole, m_sharedData.imperialMeasurements));
                 e.getComponent<cro::Transform>().setScale({ scale, 1.f });
             };
             m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
@@ -6664,7 +6664,7 @@ void GolfState::predictBall(float powerPct)
     }
     auto pitch = Clubs[club].getAngle();
     auto yaw = m_inputParser.getYaw();
-    auto power = Clubs[club].getPower(m_distanceToHole) * powerPct;
+    auto power = Clubs[club].getPower(m_distanceToHole, m_sharedData.imperialMeasurements) * powerPct;
 
     glm::vec3 impulse(1.f, 0.f, 0.f);
     auto rotation = glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), yaw, cro::Transform::Y_AXIS);

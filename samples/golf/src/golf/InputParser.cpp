@@ -592,7 +592,7 @@ InputParser::StrokeResult InputParser::getStroke(std::int32_t club, std::int32_t
 {
     auto pitch = Clubs[club].getAngle();
     auto yaw = getYaw();
-    auto power = Clubs[club].getPower(distanceToHole);
+    auto power = Clubs[club].getPower(distanceToHole, m_sharedData.imperialMeasurements);
 
     //add hook/slice to yaw
     auto hook = getHook();
@@ -676,7 +676,7 @@ void InputParser::updateDistanceEstimation()
     //really we should be sourcing this the same as getStroke()
     
     auto pitch = Clubs[m_currentClub].getAngle();
-    auto power = Clubs[m_currentClub].getPower(0.f);
+    auto power = Clubs[m_currentClub].getPower(0.f, m_sharedData.imperialMeasurements);
     auto spin = getSpin();
     spin.y *= Clubs[m_currentClub].getTopSpinMultiplier();
     pitch -= (4.f * cro::Util::Const::degToRad) * spin.y;
