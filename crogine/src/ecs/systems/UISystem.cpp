@@ -358,6 +358,10 @@ void UISystem::process(float)
 
     updateGroupAssignments();
 
+    //track this group, if a callback changes it we want to quit the
+    //current loop else new groups have the existing events applied to them...
+    auto currentGroup = m_activeGroup;
+
     std::size_t currentIndex = 0;
     for (auto& e : m_groups[m_activeGroup])
     {
@@ -403,16 +407,19 @@ void UISystem::process(float)
             }
         }
 
+
         //only do mouse/touch events if they're within the bounds of an input
         if (contains && input.enabled)
         {
             for (const auto& f : m_mouseDownEvents)
             {
                 m_buttonCallbacks[input.callbacks[UIInput::ButtonDown]](e, f);
+                if (currentGroup != m_activeGroup) goto updateEnd;
             }
             for (const auto& f : m_mouseUpEvents)
             {
                 m_buttonCallbacks[input.callbacks[UIInput::ButtonUp]](e, f);
+                if (currentGroup != m_activeGroup) goto updateEnd;
             }
         }
 
@@ -421,10 +428,12 @@ void UISystem::process(float)
             for (const auto& f : m_buttonDownEvents)
             {
                 m_buttonCallbacks[input.callbacks[UIInput::ButtonDown]](e, f);
+                if (currentGroup != m_activeGroup) goto updateEnd;
             }
             for (const auto& f : m_buttonUpEvents)
             {
                 m_buttonCallbacks[input.callbacks[UIInput::ButtonUp]](e, f);
+                if (currentGroup != m_activeGroup) goto updateEnd;
             }
         }
 
@@ -433,6 +442,7 @@ void UISystem::process(float)
 
     //DPRINT("Window Pos", std::to_string(m_eventPosition.x) + ", " + std::to_string(m_eventPosition.y));
 
+updateEnd:
     m_previousEventPosition = m_eventPosition;
     m_mouseUpEvents.clear();
     m_buttonUpEvents.clear();
