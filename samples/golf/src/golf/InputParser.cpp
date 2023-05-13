@@ -806,7 +806,8 @@ void InputParser::updateStroke(float dt)
         break;
         case State::Power:
         {
-            if ((m_inputFlags & InputFlag::Cancel) && ((m_prevFlags & InputFlag::Cancel) == 0))
+            if (((m_inputFlags & InputFlag::Cancel) && ((m_prevFlags & InputFlag::Cancel) == 0))
+                || (m_power == 0 && m_powerbarDirection < 0))
             {
                 m_state = State::Aim;
                 resetPower();
@@ -835,8 +836,8 @@ void InputParser::updateStroke(float dt)
                 m_powerbarDirection = -1.f;
             }
 
-            if (m_power == 0
-                || ((m_inputFlags & InputFlag::Action) && ((m_prevFlags & InputFlag::Action) == 0)))
+            if (/*m_power == 0 //this just resets the shot now - see above.
+                ||*/ ((m_inputFlags & InputFlag::Action) && ((m_prevFlags & InputFlag::Action) == 0)))
             {
                 if (m_doubleTapClock.elapsed() > DoubleTapTime)
                 {
