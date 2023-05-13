@@ -365,7 +365,7 @@ void UISystem::process(float)
 
         auto area = input.m_worldArea;
         bool contains = false;
-        if (contains = area.contains(m_eventPosition); contains && input.enabled)
+        if (contains = area.contains(m_eventPosition) && !cro::App::getWindow().getMouseCaptured(); contains && input.enabled)
         {
             if (!input.active)
             {
