@@ -1588,12 +1588,18 @@ bool GolfState::simulate(float dt)
         if (m_idleTimer.elapsed() > idleTime)
         {
             m_idleTimer.restart();
-            idleTime = cro::seconds(std::max(10.f, idleTime.asSeconds() / 2.f));
+            idleTime = cro::seconds(std::max(20.f, idleTime.asSeconds() / 2.f));
 
-            auto* msg = postMessage<SceneEvent>(MessageID::SceneMessage);
-            msg->type = SceneEvent::PlayerIdle;
 
-            gamepadNotify(GamepadNotify::NewPlayer);
+            //horrible hack to make the coughing less frequent
+            static std::int32_t coughCount = 0;
+            if ((coughCount++ % 8) == 0)
+            {
+                auto* msg = postMessage<SceneEvent>(MessageID::SceneMessage);
+                msg->type = SceneEvent::PlayerIdle;
+
+                gamepadNotify(GamepadNotify::NewPlayer);
+            }
 
             auto* skel = &m_activeAvatar->model.getComponent<cro::Skeleton>();
             auto animID = m_activeAvatar->animationIDs[AnimationID::Impatient];
