@@ -53,6 +53,8 @@ source distribution.
 #include <Social.hpp>
 
 #include <crogine/audio/AudioScape.hpp>
+#include <crogine/core/SysTime.hpp>
+#include <crogine/detail/Types.hpp>
 
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Sprite.hpp>
@@ -2321,6 +2323,89 @@ void GolfState::updateScoreboard()
     ents.back().getComponent<cro::Transform>().setPosition(pos);
 
     m_leaderboardTexture.update(leaderboardEntries);
+}
+
+void GolfState::logCSV() const
+{
+    //if (m_roundEnded)
+    {
+        auto courseName = m_courseTitle.toAnsiString();
+        std::replace(courseName.begin(), courseName.end(), ' ', '_');
+        std::replace(courseName.begin(), courseName.end(), ',', '_');
+        if (m_sharedData.holeCount == 1)
+        {
+            courseName += "_front_nine";
+        }
+        else if (m_sharedData.holeCount == 2)
+        {
+            courseName += "_back_nine";
+        }
+
+        std::string fileName = cro::SysTime::dateString() + "-" + cro::SysTime::timeString();
+        std::replace(fileName.begin(), fileName.end(), '/', '-');
+        std::replace(fileName.begin(), fileName.end(), ':', '-');
+        fileName += "_" + courseName + ".csv";
+
+        cro::RaiiRWops out;
+        out.file = SDL_RWFromFile(fileName.c_str(), "w");
+        if (out.file)
+        {
+            std::stringstream ss;
+            ss << "name,h1,h2,h3,h4,h5,h6,h7,h8,h9,h10,h11,h12,h13,h14,h15,h16,h17,h18,total\r\n";
+
+            std::int32_t totalPar = 0;
+            ss << "par,";
+            for (auto hole : m_holeData)
+            {
+                ss << hole.par << ",";
+                totalPar += hole.par;
+            }
+            if (m_holeData.size() < 18u)
+            {
+                for (auto i = m_holeData.size(); i < 18u; ++i)
+                {
+                    ss << "0,";
+                }
+            }
+            ss << totalPar << "\r\n";
+
+            for (auto i = 0u; i < m_sharedData.connectionData.size(); ++i)
+            {
+                for (auto j = 0u; j < m_sharedData.connectionData[i].playerCount; ++j)
+                {
+                    auto scoreCount = m_sharedData.connectionData[i].playerData[j].holeScores.size();
+
+                    ss << m_sharedData.connectionData[i].playerData[j].name.toAnsiString() << ",";
+                    std::int32_t total = 0;
+                    for (auto score : m_sharedData.connectionData[i].playerData[j].holeScores)
+                    {
+                        ss << (int)score << ",";
+                        total += score;
+                    }
+                    if (scoreCount < 18)
+                    {
+                        for (auto k = scoreCount; k < 18u; ++k)
+                        {
+                            ss << "0,";
+                        }
+                    }
+                    ss << total << "\r\n";
+                }
+            }
+            
+            auto str = ss.str();
+            SDL_RWwrite(out.file, str.data(), str.size(), 1);
+            LogI << "Saved " << fileName << std::endl;
+        }
+        else
+        {
+            LogE << "failed to open CSV file for writing: " << fileName << std::endl;
+        }
+    }
+    /*else
+    {
+        LogI << "Can't save CSV - Round not ended." << std::endl;
+    }*/
 }
 
 void GolfState::showScoreboard(bool visible)

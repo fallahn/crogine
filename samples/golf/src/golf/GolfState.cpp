@@ -441,6 +441,9 @@ bool GolfState::handleEvent(const cro::Event& evt)
         case SDLK_3:
             toggleFreeCam();
             break;
+        case SDLK_F6:
+            logCSV();
+            break;
 #ifdef CRO_DEBUG_
         case SDLK_F2:
             m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, std::uint8_t(ServerCommand::NextHole), net::NetFlag::Reliable);
@@ -451,12 +454,12 @@ bool GolfState::handleEvent(const cro::Event& evt)
         case SDLK_F4:
             m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, std::uint8_t(ServerCommand::GotoGreen), net::NetFlag::Reliable);
             break;
-        case SDLK_F6:
-            m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, std::uint8_t(ServerCommand::EndGame), net::NetFlag::Reliable);
-#ifdef USE_GNS
-            //Social::resetAchievement(AchievementStrings[AchievementID::SkinOfYourTeeth]);
-#endif
-            break;
+//        case SDLK_F6: //this is used to log CSV
+//            m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, std::uint8_t(ServerCommand::EndGame), net::NetFlag::Reliable);
+//#ifdef USE_GNS
+//            //Social::resetAchievement(AchievementStrings[AchievementID::SkinOfYourTeeth]);
+//#endif
+//            break;
         case SDLK_F7:
             //m_sharedData.clientConnection.netClient.sendPacket(PacketID::SkipTurn, m_sharedData.localConnectionData.connectionID, net::NetFlag::Reliable);
             
