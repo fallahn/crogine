@@ -552,6 +552,35 @@ void GolfState::buildUI()
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
     entity.getComponent<cro::Text>().setFillColour(LeaderboardTextLight);
+    entity.addComponent<cro::Callback>().setUserData<AvatarAnimCallbackData>(); //happens to have the correct fields
+    entity.getComponent<cro::Callback>().getUserData<AvatarAnimCallbackData>().progress = 1.f; //but not the right default values :3
+    entity.getComponent<cro::Callback>().function =
+        [](cro::Entity e, float  dt)
+    {
+        const float Speed = dt * 3.f;
+        auto& [direction, progress] = e.getComponent<cro::Callback>().getUserData<AvatarAnimCallbackData>();
+        if (direction == 0)
+        {
+            //shrink
+            progress = std::max(0.f, progress - Speed);
+            if (progress == 0)
+            {
+                e.getComponent<cro::Callback>().active = false;
+            }
+        }
+        else
+        {
+            //grow
+            progress = std::min(1.f, progress + Speed);
+            if (progress == 1)
+            {
+                e.getComponent<cro::Callback>().active = false;
+            }
+        }
+
+        float scale = cro::Util::Easing::easeOutQuint(progress);
+        e.getComponent<cro::Transform>().setScale(glm::vec2(1.f, scale));
+    };
     infoEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     auto windEnt = entity;
 
