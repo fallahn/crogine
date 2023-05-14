@@ -67,7 +67,8 @@ void DrivingRangeDirector::handleMessage(const cro::Message& msg)
     case sv::MessageID::GolfMessage:
     {
         const auto& data = msg.getData<GolfBallEvent>();
-        if (data.type == GolfBallEvent::TurnEnded)
+        if (data.type == GolfBallEvent::TurnEnded
+            || data.type == GolfBallEvent::Holed)
         {
             auto hole = getCurrentHole();
             auto idx = m_totalHoleCount - m_holeCount;
@@ -81,6 +82,7 @@ void DrivingRangeDirector::handleMessage(const cro::Message& msg)
             difficulty -= 1.f;
 
             distance += 10.f * difficulty;
+            distance = std::max(0.0001f, distance);
 
             float score = 1.f - std::max(0.f, std::min(1.f, glm::length(data.position - m_holeData[hole].pin) / distance));
             m_scores[idx] = cro::Util::Easing::easeOutQuad(score) * 100.f; //grade on a curve
@@ -107,6 +109,13 @@ void DrivingRangeDirector::setHoleCount(std::int32_t count, std::int32_t holeInd
     if (holeIndex == -1)
     {
         std::shuffle(m_holeData.begin(), m_holeData.end(), cro::Util::Random::rndEngine);
+    }
+    else
+    {
+        std::sort(m_holeData.begin(), m_holeData.end(), [](const HoleData& a, const HoleData& b)
+            {
+                return a.par < b.par;
+            });
     }
     std::fill(m_scores.begin(), m_scores.end(), 0.f);
 }

@@ -668,15 +668,14 @@ void ProfileState::buildScene()
     refreshSwatch();
 
     auto fetchUIIndexFromColour =
-        [&](std::uint8_t colourIndex) 
+        [&](std::uint8_t colourIndex, std::int32_t paletteIndex) 
     {
-        //TODO this doesn't actually ensure colourIndex is within the range...
         const auto rowCount = m_uiScene.getSystem<cro::UISystem>()->getGroupSize() / PaletteColumnCount;
         const auto x = colourIndex % PaletteColumnCount;
         auto y = colourIndex / PaletteColumnCount;
 
         y = (rowCount - 1) - y;
-        return y * PaletteColumnCount + x;
+        return (y * PaletteColumnCount + x) % pc::PairCounts[paletteIndex];
     };
 
     //colour buttons
@@ -694,7 +693,7 @@ void ProfileState::buildScene()
                     //set column/row count for menu
                     m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Hair);
                     m_uiScene.getSystem<cro::UISystem>()->setColumnCount(PaletteColumnCount);
-                    m_uiScene.getSystem<cro::UISystem>()->selectAt(fetchUIIndexFromColour(m_activeProfile.avatarFlags[0]));
+                    m_uiScene.getSystem<cro::UISystem>()->selectAt(fetchUIIndexFromColour(m_activeProfile.avatarFlags[0], pc::ColourKey::Hair));
 
                     m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
 
@@ -714,14 +713,14 @@ void ProfileState::buildScene()
 
                     m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Skin);
                     m_uiScene.getSystem<cro::UISystem>()->setColumnCount(PaletteColumnCount);
-                    m_uiScene.getSystem<cro::UISystem>()->selectAt(fetchUIIndexFromColour(m_activeProfile.avatarFlags[1]));
+                    m_uiScene.getSystem<cro::UISystem>()->selectAt(fetchUIIndexFromColour(m_activeProfile.avatarFlags[1], pc::ColourKey::Skin));
 
                     m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
 
                     m_lastSelected = e.getComponent<cro::UIInput>().getSelectionIndex();
                 }
             });
-    
+
     auto topLightColour = createButton("colour_highlight", glm::vec2(17.f, 103.f));
     topLightColour.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         uiSystem.addCallback([&, fetchUIIndexFromColour](cro::Entity e, const cro::ButtonEvent& evt)
@@ -734,7 +733,7 @@ void ProfileState::buildScene()
 
                     m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::TopL);
                     m_uiScene.getSystem<cro::UISystem>()->setColumnCount(PaletteColumnCount);
-                    m_uiScene.getSystem<cro::UISystem>()->selectAt(fetchUIIndexFromColour(m_activeProfile.avatarFlags[2]));
+                    m_uiScene.getSystem<cro::UISystem>()->selectAt(fetchUIIndexFromColour(m_activeProfile.avatarFlags[2], pc::ColourKey::TopLight));
 
                     m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
 
@@ -754,7 +753,7 @@ void ProfileState::buildScene()
 
                     m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::TopD);
                     m_uiScene.getSystem<cro::UISystem>()->setColumnCount(PaletteColumnCount);
-                    m_uiScene.getSystem<cro::UISystem>()->selectAt(fetchUIIndexFromColour(m_activeProfile.avatarFlags[3]));
+                    m_uiScene.getSystem<cro::UISystem>()->selectAt(fetchUIIndexFromColour(m_activeProfile.avatarFlags[3], pc::ColourKey::TopDark));
 
                     m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
 
@@ -774,7 +773,7 @@ void ProfileState::buildScene()
 
                     m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::BottomL);
                     m_uiScene.getSystem<cro::UISystem>()->setColumnCount(PaletteColumnCount);
-                    m_uiScene.getSystem<cro::UISystem>()->selectAt(fetchUIIndexFromColour(m_activeProfile.avatarFlags[4]));
+                    m_uiScene.getSystem<cro::UISystem>()->selectAt(fetchUIIndexFromColour(m_activeProfile.avatarFlags[4], pc::ColourKey::BottomLight));
 
                     m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
 
@@ -794,7 +793,7 @@ void ProfileState::buildScene()
 
                     m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::BottomD);
                     m_uiScene.getSystem<cro::UISystem>()->setColumnCount(PaletteColumnCount);
-                    m_uiScene.getSystem<cro::UISystem>()->selectAt(fetchUIIndexFromColour(m_activeProfile.avatarFlags[5]));
+                    m_uiScene.getSystem<cro::UISystem>()->selectAt(fetchUIIndexFromColour(m_activeProfile.avatarFlags[5], pc::ColourKey::BottomDark));
 
                     m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
 

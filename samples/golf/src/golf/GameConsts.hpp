@@ -173,7 +173,7 @@ struct MixerChannel final
     enum
     {
         Music, Effects, Menu,
-        Voice, Vehicles,
+        Voice, Vehicles, Environment,
 
         Count
     };
@@ -964,8 +964,16 @@ static inline void formatDistanceString(float distance, cro::Text& target, bool 
             distance *= ToFeet;
             if (distance > 1)
             {
-                auto dist = static_cast<std::int32_t>(distance);
-                target.setString("Distance: " + std::to_string(dist) + "ft");
+                std::stringstream ss;
+                ss.precision(1);
+                ss << "Distance: ";
+                ss << std::fixed << distance;
+                ss << "ft";
+
+                target.setString(ss.str());
+
+                /*auto dist = static_cast<std::int32_t>(distance);
+                target.setString("Distance: " + std::to_string(dist) + "ft");*/
             }
             else
             {

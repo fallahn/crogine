@@ -441,6 +441,9 @@ bool GolfState::handleEvent(const cro::Event& evt)
         case SDLK_3:
             toggleFreeCam();
             break;
+        case SDLK_F6:
+            logCSV();
+            break;
 #ifdef CRO_DEBUG_
         case SDLK_F2:
             m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, std::uint8_t(ServerCommand::NextHole), net::NetFlag::Reliable);
@@ -451,12 +454,12 @@ bool GolfState::handleEvent(const cro::Event& evt)
         case SDLK_F4:
             m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, std::uint8_t(ServerCommand::GotoGreen), net::NetFlag::Reliable);
             break;
-        case SDLK_F6:
-            m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, std::uint8_t(ServerCommand::EndGame), net::NetFlag::Reliable);
-#ifdef USE_GNS
-            //Social::resetAchievement(AchievementStrings[AchievementID::SkinOfYourTeeth]);
-#endif
-            break;
+//        case SDLK_F6: //this is used to log CSV
+//            m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, std::uint8_t(ServerCommand::EndGame), net::NetFlag::Reliable);
+//#ifdef USE_GNS
+//            //Social::resetAchievement(AchievementStrings[AchievementID::SkinOfYourTeeth]);
+//#endif
+//            break;
         case SDLK_F7:
             //m_sharedData.clientConnection.netClient.sendPacket(PacketID::SkipTurn, m_sharedData.localConnectionData.connectionID, net::NetFlag::Reliable);
             
@@ -1015,7 +1018,7 @@ void GolfState::handleMessage(const cro::Message& msg)
             cmd.targetFlags = CommandID::StrokeIndicator;
             cmd.action = [&](cro::Entity e, float)
             {
-                float scale = std::max(0.25f, Clubs[getClub()].getPower(m_distanceToHole) / Clubs[ClubID::Driver].getPower(m_distanceToHole));
+                float scale = std::max(0.25f, Clubs[getClub()].getPower(m_distanceToHole, m_sharedData.imperialMeasurements) / Clubs[ClubID::Driver].getPower(m_distanceToHole, m_sharedData.imperialMeasurements));
                 e.getComponent<cro::Transform>().setScale({ scale, 1.f });
             };
             m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
@@ -1588,12 +1591,18 @@ bool GolfState::simulate(float dt)
         if (m_idleTimer.elapsed() > idleTime)
         {
             m_idleTimer.restart();
-            idleTime = cro::seconds(std::max(10.f, idleTime.asSeconds() / 2.f));
+            idleTime = cro::seconds(std::max(20.f, idleTime.asSeconds() / 2.f));
 
-            auto* msg = postMessage<SceneEvent>(MessageID::SceneMessage);
-            msg->type = SceneEvent::PlayerIdle;
 
-            gamepadNotify(GamepadNotify::NewPlayer);
+            //horrible hack to make the coughing less frequent
+            static std::int32_t coughCount = 0;
+            if ((coughCount++ % 8) == 0)
+            {
+                auto* msg = postMessage<SceneEvent>(MessageID::SceneMessage);
+                msg->type = SceneEvent::PlayerIdle;
+
+                gamepadNotify(GamepadNotify::NewPlayer);
+            }
 
             auto* skel = &m_activeAvatar->model.getComponent<cro::Skeleton>();
             auto animID = m_activeAvatar->animationIDs[AnimationID::Impatient];
@@ -4305,7 +4314,7 @@ void GolfState::buildScene()
     }
     else if (month == 6)
     {
-        if (cro::Util::Random::value(0, 5) == 0)
+        if (cro::Util::Random::value(0, 8) == 0)
         {
             buildBow();
         }
@@ -4563,6 +4572,7 @@ void GolfState::initAudio(bool loadTrees)
         progress = std::min(1.f, progress + dt);
 
         cro::AudioMixer::setPrefadeVolume(cro::Util::Easing::easeOutQuad(progress), MixerChannel::Effects);
+        cro::AudioMixer::setPrefadeVolume(cro::Util::Easing::easeOutQuad(progress), MixerChannel::Environment);
 
         if (progress == 1)
         {
@@ -6463,6 +6473,16 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     };
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
+    //hide this if we're putting
+    cmd.targetFlags = CommandID::UI::WindString;
+    cmd.action = [&](cro::Entity e, float)
+    {
+        std::int32_t dir = getClub() == ClubID::Putter ? 0 : 1;
+        e.getComponent<cro::Callback>().getUserData<AvatarAnimCallbackData>().direction = dir;
+        e.getComponent<cro::Callback>().active = true;
+    };
+    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
 
     m_currentPlayer = player;
 
@@ -6664,7 +6684,7 @@ void GolfState::predictBall(float powerPct)
     }
     auto pitch = Clubs[club].getAngle();
     auto yaw = m_inputParser.getYaw();
-    auto power = Clubs[club].getPower(m_distanceToHole) * powerPct;
+    auto power = Clubs[club].getPower(m_distanceToHole, m_sharedData.imperialMeasurements) * powerPct;
 
     glm::vec3 impulse(1.f, 0.f, 0.f);
     auto rotation = glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), yaw, cro::Transform::Y_AXIS);

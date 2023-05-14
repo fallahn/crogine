@@ -592,7 +592,7 @@ InputParser::StrokeResult InputParser::getStroke(std::int32_t club, std::int32_t
 {
     auto pitch = Clubs[club].getAngle();
     auto yaw = getYaw();
-    auto power = Clubs[club].getPower(distanceToHole);
+    auto power = Clubs[club].getPower(distanceToHole, m_sharedData.imperialMeasurements);
 
     //add hook/slice to yaw
     auto hook = getHook();
@@ -676,7 +676,7 @@ void InputParser::updateDistanceEstimation()
     //really we should be sourcing this the same as getStroke()
     
     auto pitch = Clubs[m_currentClub].getAngle();
-    auto power = Clubs[m_currentClub].getPower(0.f);
+    auto power = Clubs[m_currentClub].getPower(0.f, m_sharedData.imperialMeasurements);
     auto spin = getSpin();
     spin.y *= Clubs[m_currentClub].getTopSpinMultiplier();
     pitch -= (4.f * cro::Util::Const::degToRad) * spin.y;
@@ -806,7 +806,8 @@ void InputParser::updateStroke(float dt)
         break;
         case State::Power:
         {
-            if ((m_inputFlags & InputFlag::Cancel) && ((m_prevFlags & InputFlag::Cancel) == 0))
+            if (((m_inputFlags & InputFlag::Cancel) && ((m_prevFlags & InputFlag::Cancel) == 0))
+                || (m_power == 0 && m_powerbarDirection < 0))
             {
                 m_state = State::Aim;
                 resetPower();
@@ -835,8 +836,8 @@ void InputParser::updateStroke(float dt)
                 m_powerbarDirection = -1.f;
             }
 
-            if (m_power == 0
-                || ((m_inputFlags & InputFlag::Action) && ((m_prevFlags & InputFlag::Action) == 0)))
+            if (/*m_power == 0 //this just resets the shot now - see above.
+                ||*/ ((m_inputFlags & InputFlag::Action) && ((m_prevFlags & InputFlag::Action) == 0)))
             {
                 if (m_doubleTapClock.elapsed() > DoubleTapTime)
                 {

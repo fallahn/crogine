@@ -546,7 +546,8 @@ void DrivingState::handleMessage(const cro::Message& msg)
     case sv::MessageID::GolfMessage:
     {
         const auto& data = msg.getData<GolfBallEvent>();
-        if (data.type == GolfBallEvent::TurnEnded)
+        if (data.type == GolfBallEvent::TurnEnded
+            || data.type == GolfBallEvent::Holed)
         {
             //display a message with score
             showMessage(glm::length(PlayerPosition - data.position));
@@ -580,7 +581,7 @@ void DrivingState::handleMessage(const cro::Message& msg)
             cmd.action = [&](cro::Entity e, float)
             {
                 //distance is zero because we should never select a putter here.
-                float scale = Clubs[m_inputParser.getClub()].getPower(0.f) / Clubs[ClubID::Driver].getPower(0.f);
+                float scale = Clubs[m_inputParser.getClub()].getPower(0.f, m_sharedData.imperialMeasurements) / Clubs[ClubID::Driver].getPower(0.f, m_sharedData.imperialMeasurements);
                 e.getComponent<cro::Transform>().setScale({ scale, 1.f });
             };
             m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
@@ -1250,6 +1251,8 @@ void DrivingState::createScene()
         return;
     }
 
+    std::int32_t holeIndex = 0;
+
     const auto& properties = cfg.getProperties();
     for (const auto& p : properties)
     {
@@ -1260,6 +1263,7 @@ void DrivingState::createScene()
             data.pin = p.getValue<glm::vec3>();
             data.target = data.pin;
             data.tee = PlayerPosition;
+            data.par = holeIndex++; //we use this to sort the hole data back into order if it was shuffled
             //TODO this should be parsed from the cmt file
             data.modelPath = "assets/golf/models/driving_range.cmb"; //needed for ball system to load collision mesh
             //TODO check ball system for which properties are needed
@@ -3086,7 +3090,7 @@ void DrivingState::forceRestart()
     m_mapTexture.display();
     m_gameScene.setActiveCamera(oldCam);
 
-    m_gameScene.getDirector<DrivingRangeDirector>()->setHoleCount(0);
+    m_gameScene.getDirector<DrivingRangeDirector>()->setHoleCount(0, 0); //setting this to 0 makes sure the holes are returned to order if they were shuffled
     setActiveCamera(CameraID::Player);
 
     //reset any open messages

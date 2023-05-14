@@ -182,6 +182,26 @@ glm::vec4 cro::Colour::getVec4() const
 }
 
 //operators
+cro::Colour::operator std::uint32_t() const
+{
+    return (getRedByte() << 24 | getGreenByte() << 16 | getBlueByte() << 8 | getAlphaByte());
+}
+
+cro::Colour::operator glm::vec4() const
+{
+    return { r,g,b,a };
+}
+
+cro::Colour::operator float*()
+{
+    return &r;
+}
+
+cro::Colour::operator const float* () const
+{
+    return &r;
+}
+
 bool cro::operator == (const Colour& l, const Colour& r)
 {
     return ((l.r == r.r) &&

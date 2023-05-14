@@ -340,6 +340,7 @@ private:
     void showCountdown(std::uint8_t);
     void createScoreboard();
     void updateScoreboard();
+    void logCSV() const;
     void showScoreboard(bool visible);
     void updateWindDisplay(glm::vec3);
     float estimatePuttPower();

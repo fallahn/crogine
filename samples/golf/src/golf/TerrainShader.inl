@@ -183,7 +183,7 @@ R"(
         vec4 colour = vec4(c, v_heightData.x);
 
         colour.a *= u_alpha;
-        colour = mix(vec4(DotColour, (0.5 + (0.5 * u_alpha)) * v_heightData.x), colour, alpha);
+        colour = mix(vec4(DotColour, (0.5 + (0.5 * u_alpha)) * v_heightData.x * step(0.001, alpha)), colour, alpha);
 
         FRAG_OUT = colour;
     }

@@ -1069,6 +1069,7 @@ void MenuState::createScene()
 {
     cro::AudioMixer::setPrefadeVolume(0.f, MixerChannel::Music);
     cro::AudioMixer::setPrefadeVolume(0.f, MixerChannel::Effects);
+    cro::AudioMixer::setPrefadeVolume(0.f, MixerChannel::Environment);
 
     //fade in entity
     auto audioEnt = m_backgroundScene.createEntity();
@@ -1085,6 +1086,7 @@ void MenuState::createScene()
         float progress = currTime / MaxTime;
         cro::AudioMixer::setPrefadeVolume(progress, MixerChannel::Music);
         cro::AudioMixer::setPrefadeVolume(progress, MixerChannel::Effects);
+        cro::AudioMixer::setPrefadeVolume(progress, MixerChannel::Environment);
         
         if(currTime == MaxTime)
         {

@@ -78,7 +78,7 @@ public:
 
     std::string getLabel() const { return m_name; } //doesn't include distance
 
-    float getPower(float distanceToPin) const;
+    float getPower(float distanceToPin, bool imperial) const;
 
     float getAngle() const { return m_angle; }
 
@@ -101,7 +101,7 @@ private:
 
     //putter below this is rescaled
     static constexpr float ShortRange = 1.f / 3.f;
-    static constexpr float ShortRangeThreshold = ShortRange * 0.65f;
+    static constexpr float ShortRangeThreshold = ShortRange * 0.8f;
     static constexpr float TinyRange = 1.f / 10.f;
     static constexpr float TinyRangeThreshold = TinyRange * 0.5f;
 

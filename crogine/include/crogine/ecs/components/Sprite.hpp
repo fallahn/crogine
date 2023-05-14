@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2023
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -66,12 +66,25 @@ namespace cro
     class CRO_EXPORT_API Sprite final
     {
     public:
+        /*!
+        \brief Default constructor
+        */
         Sprite();
 
         /*!
-        \brief Construct a sprite with the given Texture
+        \brief Calls the default constructor passing in the desired initial BlendMode
+        By default Sprites use Material::BlendMode::Alpha. This blend mode is applied
+        to any Drawable2D or Model material when the Sprite is first added to the scene.
+
+        To modify the blend mode at runtime use Drawable2D::setBlendMode() or 
+        Model::setMaterial() depending on whether the sprite is 2D or 3D.
         */
-        explicit Sprite(const Texture&);
+        explicit Sprite(Material::BlendMode mode);
+
+        /*!
+        \brief Construct a sprite with the given Texture, and optional BlendMode
+        */
+        explicit Sprite(const Texture&, Material::BlendMode = Material::BlendMode::Alpha);
 
         /*!
         \brief Sets the texture used to render this sprite.

@@ -213,6 +213,10 @@ namespace cro
         float* asArray() { return &r; }
         const float* asArray() const { return &r; }
 
+        explicit operator std::uint32_t() const;
+        explicit operator glm::vec4() const;
+        explicit operator float* ();
+        explicit operator const float* () const;
 
     private:
 

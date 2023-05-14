@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2023
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -42,8 +42,18 @@ Sprite::Sprite()
 
 }
 
-Sprite::Sprite(const Texture& texture)
-    : Sprite()
+Sprite::Sprite(Material::BlendMode mode)
+    : m_texture         (nullptr),
+    m_colour            (Colour::White),
+    m_dirtyFlags        (DirtyFlags::All),
+    m_overrideBlendMode (true),
+    m_blendMode         (mode)
+{
+
+}
+
+Sprite::Sprite(const Texture& texture, Material::BlendMode mode)
+    : Sprite(mode)
 {
     setTexture(texture);
 }

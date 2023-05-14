@@ -113,7 +113,8 @@ namespace
         "Effects Volume",
         "Menu Volume",
         "Voice Volume",
-        "Vehicle Volume"
+        "Vehicle Volume",
+        "Environment"
     };
     //generally static vars would be a bad idea, but in this case
     //a static index value will remember the last channel between
@@ -504,6 +505,14 @@ bool OptionsState::handleEvent(const cro::Event& evt)
 
 void OptionsState::handleMessage(const cro::Message& msg)
 {
+    if (msg.id == MessageID::SystemMessage)
+    {
+        const auto& data = msg.getData<SystemEvent>();
+        if (data.type == SystemEvent::PostProcessToggled)
+        {
+            m_scene.getActiveCamera().getComponent<cro::Camera>().active = true;
+        }
+    }
     m_scene.forwardMessage(msg);
 }
 
@@ -1631,6 +1640,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
                 {
                     togglePixelScale(m_sharedData, !m_sharedData.pixelScale);
                     m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+                    m_scene.getActiveCamera().getComponent<cro::Camera>().active = true;
                 }
             });
 
@@ -1696,6 +1706,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
                 {
                     m_videoSettings.fullScreen = !m_videoSettings.fullScreen;
                     m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+                    m_scene.getActiveCamera().getComponent<cro::Camera>().active = true;
                 }
             });
 
@@ -1836,6 +1847,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
                 {
                     m_sharedData.showBallTrail = !m_sharedData.showBallTrail;
                     m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+                    m_scene.getActiveCamera().getComponent<cro::Camera>().active = true;
                 }
             });
 
@@ -1936,6 +1948,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
                     msg->type = SystemEvent::PostProcessToggled;
 
                     m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+                    m_scene.getActiveCamera().getComponent<cro::Camera>().active = true;
                 }
             });
 
@@ -2006,6 +2019,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
                 {
                     m_sharedData.imperialMeasurements = !m_sharedData.imperialMeasurements;
                     m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+                    m_scene.getActiveCamera().getComponent<cro::Camera>().active = true;
                 }
             });
 
