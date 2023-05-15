@@ -550,7 +550,7 @@ void GolfState::buildUI()
     //wind strength - this is positioned by the camera's resize callback, below
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
-    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::WindString;
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::WindString | CommandID::UI::WindHidden;
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
     entity.getComponent<cro::Text>().setFillColour(LeaderboardTextLight);
@@ -612,7 +612,6 @@ void GolfState::buildUI()
 
     auto windDial = entity;
     //text background
-    auto vertColour = cro::Colour(0.f, 0.f, 0.f, 0.25f);
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ -4.f, -14.f, -0.01f });
     entity.getComponent<cro::Transform>().setOrigin({ 0.f, 6.f });
@@ -788,6 +787,72 @@ void GolfState::buildUI()
     entity.addComponent<cro::Callback>().setUserData<TextCallbackData>();
     entity.getComponent<cro::Callback>().function = TextAnimCallback();
     windEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+
+    //shows hole number when wind indicator is hidden
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setScale(glm::vec2(0.f));
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::WindHidden;
+    entity.addComponent<cro::Callback>().setUserData<AvatarAnimCallbackData>(); //happens to have the correct fields
+    entity.getComponent<cro::Callback>().function =
+        [windEnt](cro::Entity e, float  dt)
+    {
+        auto origin = windEnt.getComponent<cro::Transform>().getOrigin();
+
+        const float Speed = dt * 3.f;
+        auto& [direction, progress] = e.getComponent<cro::Callback>().getUserData<AvatarAnimCallbackData>();
+        if (direction == 1)
+        {
+            //shrink
+            progress = std::max(0.f, progress - Speed);
+            if (progress == 0)
+            {
+                e.getComponent<cro::Callback>().active = false;
+            }
+            origin.y = (1.f - progress) * 120.f;
+        }
+        else
+        {
+            //wait until shrunk
+            if (windEnt.getComponent<cro::Transform>().getScale().y > 0)
+            {
+                return;
+            }
+
+            //grow
+            progress = std::min(1.f, progress + Speed);
+            if (progress == 1)
+            {
+                e.getComponent<cro::Callback>().active = false;
+            }
+        }
+
+        float scale = cro::Util::Easing::easeOutQuint(progress);
+        e.getComponent<cro::Transform>().setScale(glm::vec2(scale, 1.f));
+        e.getComponent<cro::Transform>().setOrigin(origin);
+    };
+    infoEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    auto windEnt2 = entity;
+
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(glm::vec2(38.f, -5.f));
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::HoleNumber;
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
+    entity.getComponent<cro::Text>().setFillColour(LeaderboardTextLight);
+    entity.addComponent<cro::Callback>().setUserData<TextCallbackData>();
+    entity.getComponent<cro::Callback>().function = TextAnimCallback();
+    windEnt2.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ -4.f, -14.f, -0.01f });
+    entity.getComponent<cro::Transform>().setOrigin({ 0.f, 6.f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::WindSpeedBg];
+    windEnt2.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
 
 
     //minimap view
@@ -1139,7 +1204,7 @@ void GolfState::buildUI()
 
 
     //callback for the UI camera when window is resized
-    auto updateView = [&, trophyEnt, courseEnt, infoEnt, spinEnt, windEnt, mapEnt, greenEnt, rootNode](cro::Camera& cam) mutable
+    auto updateView = [&, trophyEnt, courseEnt, infoEnt, spinEnt, windEnt, windEnt2, mapEnt, greenEnt, rootNode](cro::Camera& cam) mutable
     {
         auto size = glm::vec2(GolfGame::getActiveTarget()->getSize());
         cam.setOrthographic(0.f, size.x, 0.f, size.y, -3.5f, 20.f);
@@ -1168,7 +1233,8 @@ void GolfState::buildUI()
         greenEnt.getComponent<cro::Transform>().setPosition({ 2.f, uiSize.y - std::floor(MapSize.y * 0.6f) - UIBarHeight - 2.f, 0.1f });
         greenEnt.getComponent<cro::Transform>().move(glm::vec2(static_cast<float>(MapSize.y) / 4.f));
 
-        windEnt.getComponent<cro::Transform>().setPosition(glm::vec2(/*uiSize.x + */WindIndicatorPosition.x, WindIndicatorPosition.y));
+        windEnt.getComponent<cro::Transform>().setPosition(glm::vec2(WindIndicatorPosition.x, WindIndicatorPosition.y));
+        windEnt2.getComponent<cro::Transform>().setPosition(glm::vec2(WindIndicatorPosition.x, WindIndicatorPosition.y));
         spinEnt.getComponent<cro::Transform>().setPosition(glm::vec2(std::floor(uiSize.x / 2.f), 32.f));
 
         //update the overlay

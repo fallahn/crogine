@@ -80,6 +80,7 @@ struct CommandID final
             PlayerIcon           = 0x100000,
             WaitMessage          = 0x200000,
             FastForward          = 0x400000,
+            WindHidden           = 0x800000, //I can't think of a better name - basically when the wind indicator is hidden during putting
         };
     };
 

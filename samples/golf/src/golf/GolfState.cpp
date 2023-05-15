@@ -6474,7 +6474,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
     //hide this if we're putting
-    cmd.targetFlags = CommandID::UI::WindString;
+    cmd.targetFlags = CommandID::UI::WindHidden;
     cmd.action = [&](cro::Entity e, float)
     {
         std::int32_t dir = getClub() == ClubID::Putter ? 0 : 1;
