@@ -1064,6 +1064,17 @@ void GolfState::handleMessage(const cro::Message& msg)
             };
             m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
+            //hide wind indicator if less than an iron
+            cmd.targetFlags = CommandID::UI::WindHidden;
+            cmd.action = [&](cro::Entity e, float)
+            {
+                std::int32_t dir = getClub() > ClubID::NineIron ? 0 : 1;
+                e.getComponent<cro::Callback>().getUserData<AvatarAnimCallbackData>().direction = dir;
+                e.getComponent<cro::Callback>().active = true;
+            };
+            m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+
             if (m_currentPlayer.terrain != TerrainID::Green
                 && m_currentPlayer.client == m_sharedData.localConnectionData.connectionID
                 && !m_sharedData.localConnectionData.playerData[m_currentPlayer.player].isCPU)
@@ -6473,11 +6484,11 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     };
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
-    //hide this if we're putting
+    //hide this if we're putting/chipping
     cmd.targetFlags = CommandID::UI::WindHidden;
     cmd.action = [&](cro::Entity e, float)
     {
-        std::int32_t dir = getClub() == ClubID::Putter ? 0 : 1;
+        std::int32_t dir = getClub() > ClubID::NineIron ? 0 : 1;
         e.getComponent<cro::Callback>().getUserData<AvatarAnimCallbackData>().direction = dir;
         e.getComponent<cro::Callback>().active = true;
     };
