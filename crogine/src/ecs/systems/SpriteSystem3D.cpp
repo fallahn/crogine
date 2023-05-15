@@ -32,6 +32,7 @@ source distribution.
 #include <crogine/ecs/systems/SpriteSystem3D.hpp>
 #include <crogine/ecs/components/Sprite.hpp>
 #include <crogine/ecs/components/Model.hpp>
+#include <crogine/ecs/components/ShadowCaster.hpp>
 #include <crogine/graphics/Texture.hpp>
 
 #include <crogine/detail/OpenGL.hpp>
@@ -226,7 +227,20 @@ void SpriteSystem3D::onEntityAdded(Entity entity)
         material.blendMode = sprite.m_blendMode;
     }
 
+    auto shadowMat = entity.getComponent<cro::Model>().getMaterialData(cro::Mesh::IndexData::Shadow, 0);
+
     entity.getComponent<Model>() = Model(meshData, material);
+
+    if (entity.hasComponent<cro::ShadowCaster>()
+        /*&& shadowMat.shader != 0*/)
+    {
+        //rebind the shadow casting material
+        if (sprite.getTexture())
+        {
+            shadowMat.setProperty("u_diffuseMap", *sprite.getTexture());
+        }
+        entity.getComponent<cro::Model>().setShadowMaterial(0, shadowMat);
+    }
 }
 
 void SpriteSystem3D::onEntityRemoved(Entity entity)
