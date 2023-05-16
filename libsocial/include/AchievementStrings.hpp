@@ -450,7 +450,7 @@ static const std::array<std::string, StatID::Count> StatLabels =
     "Gimmies Taken Inside The Putter",
     "Total Time Spent On A Course",
     "Long Putts Sunk",
-    "Rounds Where Water Were Traps Hit",
+    "Rounds Where Water Traps Were Hit",
     "Total Water Traps Hit",
     "Total Sand Traps Hit",
     "Number Of Times Course 1 Completed",

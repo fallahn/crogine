@@ -200,6 +200,7 @@ DrivingState::DrivingState(cro::StateStack& stack, cro::State::Context context, 
     std::fill(m_topScores.begin(), m_topScores.end(), 0.f);
     loadScores();   
     
+    m_sharedData.hosting = false; //TODO shouldn't have to do this...
     context.mainWindow.loadResources([this]() {
         addSystems();
         loadAssets();
