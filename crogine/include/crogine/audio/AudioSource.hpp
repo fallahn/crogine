@@ -37,6 +37,8 @@ source distribution.
 
 namespace cro
 {
+    class AudioEmitter;
+
     /*!
     \brief Abstract base class for audio data sources.
     AudioBuffers and AudioStreams are derived from this
