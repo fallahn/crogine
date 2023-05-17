@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2021
+Matt Marchant 2017 - 2023
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -190,6 +190,7 @@ namespace cro
 
         friend class AudioPlayerSystem;
         friend class AudioSystem;
+        friend class AudioSource;
 
         State m_state;
 
@@ -215,5 +216,8 @@ namespace cro
         std::int32_t m_ID;
         std::int32_t m_dataSourceID;
         AudioSource::Type m_sourceType;
+
+        const AudioSource* m_audioSource; //! < used only for ref counting
+        void reset(const AudioSource* parent = nullptr);
     };
 }

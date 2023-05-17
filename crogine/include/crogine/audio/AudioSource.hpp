@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2023
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -33,6 +33,7 @@ source distribution.
 #include <crogine/detail/Types.hpp>
 
 #include <string>
+#include <vector>
 
 namespace cro
 {
@@ -68,7 +69,15 @@ namespace cro
     protected:
         void setID(std::int32_t id) { m_id = id; }
 
+        friend class AudioEmitter;
+
+        //reference counts users so derived classes can tidy up if destroyed while still in use
+        void addUser(AudioEmitter*) const;
+        void removeUser(AudioEmitter*) const;
+        void resetUsers();
+
     private:
         std::int32_t m_id;
+        mutable std::vector<AudioEmitter*> m_users; //! < emitters currently using this source
     };
 }

@@ -240,6 +240,7 @@
     <ClCompile Include="..\crogine\src\audio\AudioRenderer.cpp" />
     <ClCompile Include="..\crogine\src\audio\AudioResource.cpp" />
     <ClCompile Include="..\crogine\src\audio\AudioScape.cpp" />
+    <ClCompile Include="..\crogine\src\audio\AudioSource.cpp" />
     <ClCompile Include="..\crogine\src\audio\AudioStream.cpp" />
     <ClCompile Include="..\crogine\src\audio\OpenALImpl.cpp" />
     <ClCompile Include="..\crogine\src\audio\sound_system\SoundSource.cpp" />

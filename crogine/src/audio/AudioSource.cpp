@@ -27,55 +27,38 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#include "AudioRenderer.hpp"
+#include <crogine/audio/AudioSource.hpp>
 
-#include <crogine/audio/AudioStream.hpp>
+#include <crogine/ecs/components/AudioEmitter.hpp>
 
 using namespace cro;
 
-AudioStream::AudioStream()
+void AudioSource::addUser(AudioEmitter* emitter) const
 {
-
-}
-
-AudioStream::~AudioStream()
-{
-    if (getID() > -1)
+    CRO_ASSERT(emitter != nullptr, "");
+    if (std::find(m_users.begin(), m_users.end(), emitter) == m_users.end())
     {
-        resetUsers();
-
-        AudioRenderer::deleteStream(getID());
-        setID(-1);
+        m_users.push_back(emitter);
     }
+    //LogI << "a user " << emitter << ", " << m_users.size() << std::endl;
 }
 
-AudioStream::AudioStream(AudioStream&& other) noexcept
+void AudioSource::removeUser(AudioEmitter* emitter) const
 {
-    auto id = getID();
-    setID(other.getID());
-    other.setID(id);
+    CRO_ASSERT(emitter != nullptr, "");
+    m_users.erase(std::remove_if(m_users.begin(), m_users.end(), 
+        [emitter](const AudioEmitter* e) 
+        {
+            return e == emitter;
+        }), m_users.end());
+
+    //LogI << "r user " << emitter << ", " << m_users.size() << std::endl;
 }
 
-AudioStream& AudioStream::operator=(AudioStream&& other) noexcept
+void AudioSource::resetUsers()
 {
-    if (&other != this)
+    for (auto* user : m_users)
     {
-        auto id = getID();
-        setID(other.getID());
-        other.setID(id);
+        user->reset(this);
     }
-    return *this;
-}
-
-//public
-bool AudioStream::loadFromFile(const std::string& path)
-{
-    if (getID() > 0)
-    {
-        AudioRenderer::deleteStream(getID());
-        setID(-1);
-    }
-
-    setID(AudioRenderer::requestNewStream(path));
-    return getID() != -1;
 }

@@ -1169,6 +1169,9 @@
     <ClCompile Include="..\crogine\src\graphics\ImageArray.cpp">
       <Filter>Source Files\graphics</Filter>
     </ClCompile>
+    <ClCompile Include="..\crogine\src\audio\AudioSource.cpp">
+      <Filter>Source Files\audio\ecs</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\crogine\include\crogine\ecs\Entity.inl">

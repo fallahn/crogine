@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2021
+Matt Marchant 2017 - 2023
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -50,35 +50,21 @@ AudioEmitter::AudioEmitter()
     m_newDataSource     (false),
     m_ID                (-1),
     m_dataSourceID      (-1),
-    m_sourceType        (AudioSource::Type::None)
+    m_sourceType        (AudioSource::Type::None),
+    m_audioSource       (nullptr)
 {
 
 }
 
 AudioEmitter::AudioEmitter(const AudioSource& dataSource)
-    : m_state           (State::Stopped),
-    m_pitch             (1.f),
-    m_volume            (1.f),
-    m_rolloff           (1.f),
-    m_velocity          (0.f),
-    m_mixerChannel      (0),
-    m_transportFlags    (0),
-    m_newDataSource     (true),
-    m_ID                (-1),
-    m_dataSourceID      (dataSource.getID()),
-    m_sourceType        (dataSource.getType())
+    : AudioEmitter()
 {
-
+    setSource(dataSource);
 }
 
 AudioEmitter::~AudioEmitter()
 {
-    if (m_ID > 0)
-    {
-        stop();
-        AudioRenderer::stopSource(m_ID);
-        AudioRenderer::deleteAudioSource(m_ID);
-    }
+    reset();
 }
 
 AudioEmitter::AudioEmitter(AudioEmitter&& other) noexcept
@@ -86,6 +72,12 @@ AudioEmitter::AudioEmitter(AudioEmitter&& other) noexcept
 {
     m_newDataSource = true;
     other.m_newDataSource = true;
+
+    if (m_audioSource)
+    {
+        m_audioSource->removeUser(this);
+        m_audioSource->addUser(&other);
+    }
 
     std::swap(m_pitch, other.m_pitch);
     std::swap(m_volume, other.m_volume);
@@ -97,12 +89,21 @@ AudioEmitter::AudioEmitter(AudioEmitter&& other) noexcept
     std::swap(m_sourceType, other.m_sourceType);
     std::swap(m_transportFlags, other.m_transportFlags);
     std::swap(m_state, other.m_state);
+    std::swap(m_audioSource, other.m_audioSource);
+
+    if (m_audioSource)
+    {
+        m_audioSource->removeUser(&other);
+        m_audioSource->addUser(this);
+    }
 }
 
 AudioEmitter& AudioEmitter::operator=(AudioEmitter&& other) noexcept
 {
     if (&other != this)
     {
+        reset();
+
         m_newDataSource = true;
         other.m_newDataSource = true;
 
@@ -116,6 +117,13 @@ AudioEmitter& AudioEmitter::operator=(AudioEmitter&& other) noexcept
         std::swap(m_sourceType, other.m_sourceType);
         std::swap(m_transportFlags, other.m_transportFlags);
         std::swap(m_state, other.m_state);
+        std::swap(m_audioSource, other.m_audioSource);
+
+        if (m_audioSource)
+        {
+            m_audioSource->removeUser(&other);
+            m_audioSource->addUser(this);
+        }
     }    
     return *this;
 }
@@ -129,9 +137,18 @@ void AudioEmitter::setSource(const AudioSource& dataSource)
         return;
     }
 
+    //remove from existing source
+    if (m_audioSource)
+    {
+        m_audioSource->removeUser(this);
+    }
+
     m_dataSourceID = dataSource.getID();
     m_sourceType = dataSource.getType();
     m_newDataSource = true;
+
+    dataSource.addUser(this);
+    m_audioSource = &dataSource;
 }
 
 void AudioEmitter::play()
@@ -204,4 +221,43 @@ void AudioEmitter::setMixerChannel(std::uint8_t channel)
 {
     CRO_ASSERT(channel < AudioMixer::MaxChannels, "Channel value out of range");
     m_mixerChannel = channel; 
+}
+
+//private
+void AudioEmitter::reset(const AudioSource* parent)
+{
+    if (m_ID > 0)
+    {
+        stop();
+        AudioRenderer::stopSource(m_ID);
+        AudioRenderer::deleteAudioSource(m_ID);
+    }
+
+    //might have added a source but not yet assigned
+    //our own ID yet
+    //and this might be called from an AudioSource dtor
+    if (m_audioSource 
+        && parent == nullptr)
+    {
+        m_audioSource->removeUser(this);
+        m_audioSource = nullptr;
+    }
+    //this was called by the buffer being removed
+    else if (parent == m_audioSource)
+    {
+        m_audioSource = nullptr;
+    }
+
+    m_state = State::Stopped;
+    m_pitch = 1.f;
+    m_volume = 1.f;
+    m_rolloff = 1.f;
+    m_velocity = glm::vec3(0.f);
+    m_mixerChannel = 0;
+    m_transportFlags = 0;
+    m_newDataSource = false;
+    m_ID = -1;
+    m_dataSourceID = -1;
+    m_sourceType = AudioSource::Type::None;
+    m_playingOffset = seconds(0.f);
 }
