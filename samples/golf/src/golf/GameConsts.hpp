@@ -287,6 +287,19 @@ static const std::array BallTints =
     cro::Colour(0.964f,1.f,0.878f) //snowman
 };
 
+static inline float getWindMultiplier(float ballHeight, float distanceToPin)
+{
+    static constexpr float MinWind = 10.f;
+    static constexpr float MaxWind = 30.f;
+
+    static constexpr float MinHeight = 40.f;
+    static constexpr float MaxHeight = 50.f;
+    const float HeightMultiplier = std::clamp((ballHeight - MinHeight) / (MaxHeight / MinHeight), 0.f, 1.f);
+    
+    float multiplier = std::clamp((distanceToPin - MinWind) / (MaxWind - MinWind), 0.f, 1.f);
+    return cro::Util::Easing::easeInCubic(multiplier) * (0.5f + (0.5f * HeightMultiplier));
+}
+
 static inline std::int32_t activeControllerID(std::int32_t bestMatch)
 {
     if (cro::GameController::isConnected(bestMatch))
