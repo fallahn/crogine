@@ -2415,7 +2415,7 @@ void DrivingState::createBall()
             cmd.action = [&, pos](cro::Entity e, float)
             {
                 //if we're on the green convert to cm
-                float ballDist = 
+                float ballDist =
                     glm::length(pos - m_holeData[m_gameScene.getDirector<DrivingRangeDirector>()->getCurrentHole()].pin);
 
                 formatDistanceString(ballDist, e.getComponent<cro::Text>(), m_sharedData.imperialMeasurements);
@@ -2452,8 +2452,16 @@ void DrivingState::createBall()
                 e.getComponent<CameraFollower>().holePosition = m_holeData[m_gameScene.getDirector<DrivingRangeDirector>()->getCurrentHole()].pin;
             };
             m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
-
         }
+
+        //and wind effect meter
+        cro::Command cmd;
+        cmd.targetFlags = CommandID::UI::WindEffect;
+        cmd.action = [&, ent](cro::Entity e, float)
+        {
+            e.getComponent<cro::Callback>().getUserData<WindCallbackData>().first = ent.getComponent<Ball>().windEffect;
+        };
+        m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);        
 
         pos.y = 3.f;
         auto groundHeight = m_gameScene.getSystem<BallSystem>()->getTerrain(pos).intersection.y;

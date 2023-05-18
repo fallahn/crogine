@@ -201,6 +201,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     m_audioPath         ("assets/golf/sound/ambience.xas"),
     m_currentCamera     (CameraID::Player),
     m_photoMode         (false),
+    m_restoreInput      (false),
     m_activeAvatar      (nullptr),
     m_camRotation       (0.f),
     m_roundEnded        (false),
@@ -306,8 +307,6 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
         createTransition();
         cacheState(StateID::Pause);
         });
-
-
 
     //glLineWidth(1.5f);
 #ifdef CRO_DEBUG_
@@ -1069,7 +1068,7 @@ void GolfState::handleMessage(const cro::Message& msg)
             cmd.action = [&](cro::Entity e, float)
             {
                 std::int32_t dir = (getClub() > ClubID::PitchWedge) && (glm::length(m_holeData[m_currentHole].pin - m_currentPlayer.position) < 30.f) ? 0 : 1;
-                e.getComponent<cro::Callback>().getUserData<AvatarAnimCallbackData>().direction = dir;
+                e.getComponent<cro::Callback>().getUserData<WindHideData>().direction = dir;
                 e.getComponent<cro::Callback>().active = true;
             };
             m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
@@ -6841,6 +6840,14 @@ void GolfState::updateActor(const ActorInfo& update)
 
     if (update == m_currentPlayer)
     {
+        //shows how much effect the wind is currently having
+        cmd.targetFlags = CommandID::UI::WindEffect;
+        cmd.action = [update](cro::Entity e, float) 
+        {
+            e.getComponent<cro::Callback>().getUserData<WindEffectData>().first = update.windEffect;
+        };
+        m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
         //set the green cam zoom as appropriate
         float ballDist = glm::length(update.position - m_holeData[m_currentHole].pin);
 

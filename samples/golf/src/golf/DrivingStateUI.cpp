@@ -417,7 +417,7 @@ void DrivingState::createUI()
 
     //wind indicator
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec3(38.f, 26.f, 0.03f));
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(38.f, 30.f, 0.03f));
     entity.addComponent<cro::Drawable2D>().setVertexData(
         {
             cro::Vertex2D(glm::vec2(-1.f, 12.f), LeaderboardTextLight),
@@ -430,7 +430,7 @@ void DrivingState::createUI()
     windEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec3(38.f, 58.f, 0.01f));
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(38.f, 62.f, 0.01f));
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::WindIndicator];
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
@@ -442,7 +442,8 @@ void DrivingState::createUI()
 
     //text background
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ -4.f, -16.f, -0.01f });
+    entity.addComponent<cro::Transform>().setPosition({ -4.f, -10.f, -0.01f });
+    entity.getComponent<cro::Transform>().setOrigin({ 0.f, 6.f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::WindTextBg];
     windEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -465,6 +466,25 @@ void DrivingState::createUI()
         e.getComponent<cro::Transform>().rotate(speed / 6.f);
     };
     windDial.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    //wind effect strength
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 64.f, 12.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLE_STRIP);
+    entity.getComponent<cro::Drawable2D>().setVertexData(
+        {
+            cro::Vertex2D(glm::vec2(0.f, 32.f), cro::Colour::White),
+            cro::Vertex2D(glm::vec2(0.f, 0.f), cro::Colour::White),
+            cro::Vertex2D(glm::vec2(2.f, 32.f), cro::Colour::White),
+            cro::Vertex2D(glm::vec2(2.f, 0.f), cro::Colour::White)
+        });
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::WindEffect;
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<WindCallbackData>(0.f, 0.f);
+    entity.getComponent<cro::Callback>().function = WindEffectCallback();
+    windEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
 
     //ui is attached to this for relative scaling
     entity = m_uiScene.createEntity();

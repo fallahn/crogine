@@ -554,8 +554,8 @@ void GolfState::buildUI()
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
     entity.getComponent<cro::Text>().setFillColour(LeaderboardTextLight);
-    entity.addComponent<cro::Callback>().setUserData<AvatarAnimCallbackData>(); //happens to have the correct fields
-    entity.getComponent<cro::Callback>().getUserData<AvatarAnimCallbackData>().progress = 1.f; //but not the right default values :3
+    entity.addComponent<cro::Callback>().setUserData<WindHideData>();
+    entity.getComponent<cro::Callback>().getUserData<WindHideData>().progress = 1.f;
     entity.getComponent<cro::Callback>().function =
         [](cro::Entity e, float  dt)
     {
@@ -638,6 +638,23 @@ void GolfState::buildUI()
     entity.getComponent<cro::Transform>().setPosition(windDial.getComponent<cro::Transform>().getOrigin());
     windDial.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     
+    //wind effect strength
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 64.f, 8.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLE_STRIP);
+    entity.getComponent<cro::Drawable2D>().setVertexData(
+        {
+            cro::Vertex2D(glm::vec2(0.f, 32.f), cro::Colour::White),
+            cro::Vertex2D(glm::vec2(0.f, 0.f), cro::Colour::White),
+            cro::Vertex2D(glm::vec2(2.f, 32.f), cro::Colour::White),
+            cro::Vertex2D(glm::vec2(2.f, 0.f), cro::Colour::White)
+        });
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::WindEffect;
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<WindEffectData>(0.f, 0.f);
+    entity.getComponent<cro::Callback>().function = WindEffectCallback();
+    windEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
     //sets the initial cam rotation for the wind indicator compensation
     auto camDir = m_holeData[0].target - m_currentPlayer.position;
     m_camRotation = std::atan2(-camDir.z, camDir.y);
@@ -794,7 +811,7 @@ void GolfState::buildUI()
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setScale(glm::vec2(0.f));
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::WindHidden;
-    entity.addComponent<cro::Callback>().setUserData<AvatarAnimCallbackData>(); //happens to have the correct fields
+    entity.addComponent<cro::Callback>().setUserData<WindHideData>();
     entity.getComponent<cro::Callback>().function =
         [windEnt](cro::Entity e, float  dt)
     {

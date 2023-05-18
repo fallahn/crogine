@@ -368,6 +368,7 @@ void GolfState::netBroadcast()
             info.rotation = cro::Util::Net::compressQuat(ball.getComponent<cro::Transform>().getRotation());
             //info.velocity = cro::Util::Net::compressVec3(ball.getComponent<Ball>().velocity);
             //info.velocity = ball.getComponent<Ball>().velocity;
+            info.windEffect = ball.getComponent<Ball>().windEffect;
             info.timestamp = timestamp;
             info.clientID = player.client;
             info.playerID = player.player;

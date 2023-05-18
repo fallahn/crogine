@@ -61,6 +61,9 @@ struct PopupAnim final
     float currentTime = 0.5f;
 };
 
+//*sigh* multiple structs with the same name and different defs...
+using WindCallbackData = std::pair<float, float>;
+
 struct SharedStateData;
 struct SharedProfileData;
 class DrivingState final : public cro::State, public cro::GuiClient

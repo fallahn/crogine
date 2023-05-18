@@ -305,6 +305,7 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
 {
     auto& ball = entity.getComponent<Ball>();
     ball.spin.x *= SpinDecay[static_cast<std::int32_t>(ball.state)].x;
+    ball.windEffect = 0.f;
 
     //*sigh* isnan bug
     CRO_ASSERT(!std::isnan(ball.velocity.x), "");
@@ -327,20 +328,9 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
             ball.velocity += Gravity * dt;
 
             //add wind
-            /*static constexpr float MinWind = 10.f;
-            static constexpr float MaxWind = 30.f;
-
-            static constexpr float MinHeight = 40.f;
-            static constexpr float MaxHeight = 50.f;
-            const float BallHeight = tx.getPosition().y - ball.startPoint.y;
-            const float HeightMultiplier = std::clamp((BallHeight - MinHeight) / (MaxHeight / MinHeight), 0.f, 1.f);
-            const float Dist = glm::length(m_holeData->pin - tx.getPosition());
-
-            float multiplier = std::clamp((Dist - MinWind) / (MaxWind - MinWind), 0.f, 1.f);
-            multiplier = cro::Util::Easing::easeInCubic(multiplier) * (0.5f + (0.5f * HeightMultiplier));*/
-            
             auto multiplier = getWindMultiplier(tx.getPosition().y - ball.startPoint.y, glm::length(m_holeData->pin - tx.getPosition()));
             ball.velocity += m_windDirection * m_windStrength * multiplier * dt;
+            ball.windEffect = m_windStrength * multiplier;
 
             //add spin
             ball.velocity += ball.initialSideVector * ball.spin.x * SideSpinInfluence * dt;
