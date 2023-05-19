@@ -48,13 +48,26 @@ source distribution.
 
 namespace
 {
+    std::string getBasePath()
+    {
+        auto path = cro::App::getPreferencePath() + "user/";
+        if (!cro::FileSystem::directoryExists(path))
+        {
+            cro::FileSystem::createDirectory(path);
+        }
+        return path;
+    }
 
+    std::string getContentPath()
+    {
+        return getBasePath() + "content/";
+    }
 }
 
 MyApp::MyApp()
     : m_stateStack({*this, getWindow()})
 {
-
+    setApplicationStrings("utf-8", u8"Juan Páblo García");
 }
 
 //public
@@ -80,6 +93,32 @@ void MyApp::handleEvent(const cro::Event& evt)
         case SDLK_ESCAPE:
         case SDLK_AC_BACK:
             App::quit();
+            break;
+        case SDLK_p:
+        {
+            cro::FileSystem::createDirectory(getPreferencePath() + u8"wisp€fun");
+            cro::FileSystem::createDirectory(getBasePath());
+            cro::FileSystem::createDirectory(getContentPath());
+
+            auto dirs = cro::FileSystem::listDirectories(getPreferencePath());
+            for (auto dir : dirs)
+            {
+                std::cout << dir << std::endl;
+                cro::ConfigFile cfg;
+                cfg.save(getPreferencePath() + dir + ".cfg");
+            }
+            LogI << "found " << dirs.size() << " entries" << std::endl;
+
+            auto files = cro::FileSystem::listFiles(getPreferencePath());
+            for (auto file : files)
+            {
+                std::cout << file << std::endl;
+                cro::ConfigFile cfg;
+                cfg.save(getBasePath() + file);
+                cfg.save(getContentPath() + file);
+            }
+            LogI << "found " << files.size() << " files" << std::endl;
+        }
             break;
         }
     }

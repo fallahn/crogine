@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2023
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -67,7 +67,7 @@ source distribution.
 #define MAX_PATH 512
 #include <string.h>
 #include <stdlib.h>
-
+#include <filesystem>
 #elif defined(__APPLE__)
 #define MAX_PATH PATH_MAX
 #include <CoreServices/CoreServices.h>
@@ -98,42 +98,15 @@ std::vector<std::string> FileSystem::listFiles(std::string path)
 {
     std::vector<std::string> results;
 
-#ifdef _WIN32
-    if (path.back() != '/')
+#ifndef __APPLE__
+    std::filesystem::directory_iterator it(std::filesystem::u8path(path));
+    for (const auto& dir : it)
     {
-        path.append("/*");
-    }
-    else
-    {
-        path.append("*");
-    }
-
-    //convert to wide chars for windows
-    std::basic_string<TCHAR> wPath;
-    wPath.assign(path.begin(), path.end());
-
-    WIN32_FIND_DATA findData;
-    HANDLE hFind = FindFirstFile(wPath.c_str(), &findData);
-    if (hFind == INVALID_HANDLE_VALUE)
-    {
-        LogE << "Failed to find file data, invalid file handle returned" << std::endl;
-        return results;
-    }
-
-    do
-    {
-        if ((findData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) == 0) //not a directory
+        if (dir.is_regular_file())
         {
-            //convert from wide char
-            std::basic_string<TCHAR> wName(findData.cFileName);
-            std::string fileName;
-            fileName.assign(wName.begin(), wName.end());
-            results.push_back(fileName);
+            results.push_back(dir.path().filename().u8string());
         }
-
-    }while (FindNextFile(hFind, &findData) != 0);
-    FindClose(hFind);
-
+    }
     return results;
 #else
     if (path.back() != '/')
@@ -168,7 +141,7 @@ std::vector<std::string> FileSystem::listFiles(std::string path)
         closedir(dir);
     }
     return results;
-#endif //_WIN32
+#endif
 }
 
 std::string FileSystem::getFileExtension(const std::string& path)
@@ -235,18 +208,33 @@ std::string FileSystem::getFilePath(const std::string& path)
 
 bool FileSystem::fileExists(const std::string& path)
 {
+#ifndef __APPLE__
+    std::error_code ec;
+    if (!std::filesystem::exists(std::filesystem::u8path(path), ec))
+    {
+#ifdef CRO_DEBUG_
+        LogW << path << ": file not found" << std::endl;
+#endif
+        return false;
+    }
+    return true;
+#else
     std::ifstream file(path);
     bool exists = (file.is_open() && file.good());
     file.close();
     return exists;
+#endif
 }
 
 bool FileSystem::createDirectory(const std::string& path)
 {
     //TODO regex this or at least check for illegal chars
 #ifdef _WIN32
+    //if this throws here check the path passed in.
+    //if at any point a string literal is concatenated to it make sure to
+    //use the u8 prefix - eg someString += u8"dirname"
     std::error_code ec;
-    if (!std::filesystem::create_directories(/*std::filesystem::u8path*/(path), ec))
+    if (!std::filesystem::create_directories(std::filesystem::u8path(path), ec))
     {
         //this might be 0 if the directory already exists
         if (ec.value() != 0)
@@ -284,26 +272,6 @@ bool FileSystem::createDirectory(const std::string& path)
         }
     }
     return true;
-
-
-    //if (_mkdir(path.c_str()) == 0)
-    //{
-    //    LOG("Created directory " + path, cro::Logger::Type::Info);
-    //    return true;
-    //}
-    //else
-    //{
-    //    auto result = errno;
-    //    if (result == EEXIST)
-    //    {
-    //        Logger::log(path + " directory already exists!", Logger::Type::Info);
-    //    }
-    //    else if (result == ENOENT)
-    //    {
-    //        Logger::log("Unable to create " + path + ": parent directory not found.", Logger::Type::Error, Logger::Output::All);
-    //    }
-    //}
-    //return false;
 #else
     if (mkdir(path.c_str(), 0777) == 0)
     {
@@ -353,11 +321,15 @@ bool FileSystem::createDirectory(const std::string& path)
         }
     }
     return false;
-#endif //_WIN32
+#endif
 }
 
 bool FileSystem::directoryExists(const std::string& path)
 {
+#ifndef __APPLE__
+    std::filesystem::directory_entry dir(std::filesystem::u8path(path));
+    return dir.exists();
+#else
     struct stat info;
     if (stat(path.c_str(), &info) != 0)
     {
@@ -369,13 +341,12 @@ bool FileSystem::directoryExists(const std::string& path)
         return true;
     }
     return false;
+#endif
 }
 
 std::vector<std::string> FileSystem::listDirectories(const std::string& path)
 {
     std::vector<std::string> retVal;
-    std::string fullPath = path;
-    std::replace(fullPath.begin(), fullPath.end(), '\\', '/');
 
     //make sure the given path is relative to the working directory
     /*std::string fullPath = getCurrentDirectory();
@@ -383,28 +354,20 @@ std::vector<std::string> FileSystem::listDirectories(const std::string& path)
     if (workingPath.empty() || workingPath[0] != '/') fullPath.push_back('/');
     fullPath += workingPath;*/
 
-#ifdef _WIN32
-
-    WIN32_FIND_DATA findFileData;
-    HANDLE hFind = INVALID_HANDLE_VALUE;
-
-    char fullpath[MAX_PATH];
-    GetFullPathName(fullPath.c_str(), MAX_PATH, fullpath, 0);
-    std::string fp(fullpath);
-
-    hFind = FindFirstFile((LPCSTR)(fp + "\\*").c_str(), &findFileData);
-    if (hFind != INVALID_HANDLE_VALUE)
+#ifndef __APPLE__
+    std::filesystem::directory_iterator it(std::filesystem::u8path(path));
+    for (const auto& dir : it)
     {
-        do
+        if (dir.is_directory())
         {
-            if ((findFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-                && (findFileData.cFileName[0] != '.'))
-            {
-                retVal.emplace_back(findFileData.cFileName);
-            }
-        } while (FindNextFile(hFind, &findFileData) != 0);
+            retVal.push_back(dir.path().stem().u8string());
+        }
     }
+    return retVal;
 #else
+    std::string fullPath = path;
+    std::replace(fullPath.begin(), fullPath.end(), '\\', '/');
+
     DIR *dp = nullptr;
     struct dirent *dirp;
     if ((dp = opendir(fullPath.c_str())) == nullptr)
@@ -439,7 +402,7 @@ std::vector<std::string> FileSystem::listDirectories(const std::string& path)
     }
     closedir(dp);
 
-#endif //_WIN32
+#endif
     return retVal;
 }
 
@@ -512,6 +475,7 @@ std::string FileSystem::getRelativePath(std::string path, const std::string& roo
 
 std::string FileSystem::getConfigDirectory(const std::string& appName)
 {
+    //this is all deprecated.
     if (appName.empty())
     {
         LOG("Unable to get configuration directory, app name cannot be empty", Logger::Type::Error);
