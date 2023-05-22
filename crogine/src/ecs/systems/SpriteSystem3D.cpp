@@ -227,9 +227,16 @@ void SpriteSystem3D::onEntityAdded(Entity entity)
         material.blendMode = sprite.m_blendMode;
     }
 
-    auto shadowMat = entity.getComponent<cro::Model>().getMaterialData(cro::Mesh::IndexData::Shadow, 0);
+    auto& model = entity.getComponent<cro::Model>();
+    auto shadowMat = model.getMaterialData(cro::Mesh::IndexData::Shadow, 0);
+    auto renderFlags = model.getRenderFlags();
+    auto facing = model.getFacing();
+    auto hidden = model.isHidden();
 
-    entity.getComponent<Model>() = Model(meshData, material);
+    model = Model(meshData, material);
+    model.setRenderFlags(renderFlags);
+    model.setFacing(facing);
+    model.setHidden(hidden);
 
     if (entity.hasComponent<cro::ShadowCaster>()
         /*&& shadowMat.shader != 0*/)
