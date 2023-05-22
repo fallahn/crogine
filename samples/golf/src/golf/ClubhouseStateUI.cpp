@@ -342,15 +342,19 @@ void ClubhouseState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter
     }
 
     //arcade
-    /*entity = createButton("Arcade (Soon!)");
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
-        m_uiScene.getSystem<cro::UISystem>()->addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
-            {
-                if (activated(evt))
+    auto pluginList = cro::FileSystem::listDirectories("plugins");
+    if (!pluginList.empty())
+    {
+        entity = createButton("Arcade");
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
+            m_uiScene.getSystem<cro::UISystem>()->addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
                 {
-
-                }
-            });*/
+                    if (activated(evt))
+                    {
+                        m_golfGame.loadPlugin("plugins/drone_drop");
+                    }
+                });
+    }
 
     //trophy shelf
     entity = createButton("Trophy Shelf");
@@ -376,7 +380,7 @@ void ClubhouseState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter
                 }
             });
 
-    textPos.y -= LineSpacing; //remove this when adding back arcade
+    //textPos.y -= LineSpacing; //remove this when adding back arcade
 
     //leave button
     entity = createButton("Leave");

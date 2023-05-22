@@ -111,10 +111,11 @@ constexpr std::array<glm::vec2, ClubhouseState::MenuID::Count> ClubhouseState::m
     glm::vec2(-MenuSpacing.x, 0.f)
 };
 
-ClubhouseState::ClubhouseState(cro::StateStack& ss, cro::State::Context ctx, SharedStateData& sd, const SharedProfileData& sp)
+ClubhouseState::ClubhouseState(cro::StateStack& ss, cro::State::Context ctx, SharedStateData& sd, const SharedProfileData& sp, GolfGame& gg)
     : cro::State        (ss, ctx),
     m_sharedData        (sd),
     m_profileData       (sp),
+    m_golfGame          (gg),
     m_matchMaking       (ctx.appInstance.getMessageBus()),
     m_backgroundScene   (ctx.appInstance.getMessageBus()),
     m_uiScene           (ctx.appInstance.getMessageBus()),
@@ -128,6 +129,9 @@ ClubhouseState::ClubhouseState(cro::StateStack& ss, cro::State::Context ctx, Sha
     m_prevMenu          (MenuID::Main),
     m_gameCreationIndex (0)
 {
+    //if we were returning from arcade this tidies up, else does nothing
+    gg.unloadPlugin();
+    
     std::fill(m_readyState.begin(), m_readyState.end(), false);
 
     ctx.mainWindow.loadResources([this]() {
@@ -276,27 +280,27 @@ ClubhouseState::ClubhouseState(cro::StateStack& ss, cro::State::Context ctx, Sha
     Social::setGroup(0);
 
 #ifdef CRO_DEBUG_
-    registerWindow([&]()
-        {
-            if (ImGui::Begin("Buns"))
-            {
-                float maxDepth = m_backgroundScene.getActiveCamera().getComponent<cro::Camera>().getMaxShadowDistance();
-                if (ImGui::SliderFloat("Depth", &maxDepth, 1.f, 30.f))
-                {
-                    m_backgroundScene.getActiveCamera().getComponent<cro::Camera>().setMaxShadowDistance(maxDepth);
-                }
+    //registerWindow([&]()
+    //    {
+    //        if (ImGui::Begin("Buns"))
+    //        {
+    //            float maxDepth = m_backgroundScene.getActiveCamera().getComponent<cro::Camera>().getMaxShadowDistance();
+    //            if (ImGui::SliderFloat("Depth", &maxDepth, 1.f, 30.f))
+    //            {
+    //                m_backgroundScene.getActiveCamera().getComponent<cro::Camera>().setMaxShadowDistance(maxDepth);
+    //            }
 
-                float ext = m_backgroundScene.getActiveCamera().getComponent<cro::Camera>().getShadowExpansion();
-                if (ImGui::SliderFloat("ext", &ext, 0.f, 30.f))
-                {
-                    m_backgroundScene.getActiveCamera().getComponent<cro::Camera>().setShadowExpansion(ext);
-                }
+    //            float ext = m_backgroundScene.getActiveCamera().getComponent<cro::Camera>().getShadowExpansion();
+    //            if (ImGui::SliderFloat("ext", &ext, 0.f, 30.f))
+    //            {
+    //                m_backgroundScene.getActiveCamera().getComponent<cro::Camera>().setShadowExpansion(ext);
+    //            }
 
-                auto rot = m_backgroundScene.getSunlight().getComponent<cro::Transform>().getRotation();
-                ImGui::Text("%3.3f, %3.3f, %3.3f, %3.3f", rot.x, rot.y, rot.z, rot.w);
-            }
-            ImGui::End();
-        });
+    //            auto rot = m_backgroundScene.getSunlight().getComponent<cro::Transform>().getRotation();
+    //            ImGui::Text("%3.3f, %3.3f, %3.3f, %3.3f", rot.x, rot.y, rot.z, rot.w);
+    //        }
+    //        ImGui::End();
+    //    });
 #endif
 }
 

@@ -83,7 +83,7 @@ struct SharedProfileData;
 class ClubhouseState final : public cro::State, public cro::GuiClient
 {
 public:
-    ClubhouseState(cro::StateStack&, cro::State::Context, SharedStateData&, const SharedProfileData&);
+    ClubhouseState(cro::StateStack&, cro::State::Context, SharedStateData&, const SharedProfileData&, class GolfGame&);
 
     cro::StateID getStateID() const override { return StateID::Clubhouse; }
 
@@ -112,6 +112,7 @@ private:
 
     SharedStateData& m_sharedData;
     const SharedProfileData& m_profileData;
+    GolfGame& m_golfGame;
     MatchMaking m_matchMaking;
 
     cro::Scene m_backgroundScene;

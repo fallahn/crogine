@@ -54,6 +54,9 @@ public:
 
     static cro::RenderTarget* getActiveTarget() { return m_renderTarget; }
 
+    void loadPlugin(const std::string& path) { cro::App::loadPlugin(path, m_stateStack); }
+    void unloadPlugin() { cro::App::unloadPlugin(m_stateStack); }
+
 private:
     
     SharedStateData m_sharedData;
@@ -80,6 +83,7 @@ private:
     std::array<std::int32_t, UniformID::Count> m_uniformIDs = {};
 
     static cro::RenderTarget* m_renderTarget;
+    static cro::App* m_instance;
 
 #ifndef USE_GNS
     //this contains GL resources so we need to control its lifetime with initialise / finialise
