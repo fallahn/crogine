@@ -56,7 +56,8 @@ namespace InputFlag
         All = 0xFFFF
     };
 }
-
+//IMPORTANT if we update this make sure any plugins which copy (yes, *sigh*)
+//this struct also get updated.
 struct InputBinding final
 {
     //buttons come before actions as this indexes into the controller
