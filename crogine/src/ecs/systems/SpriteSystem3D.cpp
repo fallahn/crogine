@@ -202,8 +202,7 @@ void SpriteSystem3D::onEntityAdded(Entity entity)
 
     Material::Data material = entity.getComponent<cro::Model>().getMaterialData(cro::Mesh::IndexData::Final, 0);
     const auto& sprite = entity.getComponent<Sprite>();
-    bool attribsOK = //true; //TODO assert this
-
+    bool attribsOK = 
     (material.attribs[Mesh::Position][1] == 2 &&
     material.attribs[Mesh::Colour][1] == 4 &&
     material.attribs[Mesh::UV0][1] == 2);
@@ -238,8 +237,7 @@ void SpriteSystem3D::onEntityAdded(Entity entity)
     model.setFacing(facing);
     model.setHidden(hidden);
 
-    if (entity.hasComponent<cro::ShadowCaster>()
-        /*&& shadowMat.shader != 0*/)
+    if (entity.hasComponent<cro::ShadowCaster>())
     {
         //rebind the shadow casting material
         if (sprite.getTexture())
@@ -263,6 +261,16 @@ void SpriteSystem3D::onEntityRemoved(Entity entity)
         {
             glCheck(glDeleteBuffers(1, &id.ibo));
         }
+
+#ifdef PLATFORM_DESKTOP
+        for (auto& vao : id.vao)
+        {
+            if (vao)
+            {
+                glCheck(glDeleteVertexArrays(1, &vao));
+            }
+        }
+#endif
     }
     //delete vertex buffer
     if (meshData.vbo)
