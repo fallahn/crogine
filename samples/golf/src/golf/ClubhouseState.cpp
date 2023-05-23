@@ -977,7 +977,7 @@ void ClubhouseState::buildScene()
         applyMaterial(entity, MaterialID::Trophy);
     }
 
-    if (md.loadFromFile("assets/golf/models/arcade_machine.cmt"))
+    if (md.loadFromFile("assets/golf/models/arcade_machine_gvg.cmt"))
     {
         auto entity = m_backgroundScene.createEntity();
         entity.addComponent<cro::Transform>().setPosition({ 14.4f, 0.f, -3.3f });
@@ -994,7 +994,23 @@ void ClubhouseState::buildScene()
         entity.getComponent<cro::Model>().setMaterialProperty(1, "u_diffuseMap", cro::TextureID(m_arcadeVideo.getTexture().getGLHandle()));
     }
 
+    if (md.loadFromFile("assets/golf/models/arcade_machine.cmt"))
+    {
+        auto entity = m_backgroundScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ 14.4f, 0.f, -3.9f });
+        entity.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, 90.f * cro::Util::Const::degToRad);
+        entity.getComponent<cro::Transform>().setScale({ 0.8f, 1.f, 1.f });
+        md.createModel(entity);
 
+        applyMaterial(entity, MaterialID::Cel);
+
+        //TODO this will mostly be off screen to all but ultrawide players
+        /*m_arcadeVideo.loadFromFile("assets/golf/video/arcade.mpg");
+        m_arcadeVideo.setLooped(true);
+        m_arcadeVideo.play();
+
+        entity.getComponent<cro::Model>().setMaterialProperty(1, "u_diffuseMap", cro::TextureID(m_arcadeVideo.getTexture().getGLHandle()));*/
+    }
 
 
     //billboards
