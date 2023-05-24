@@ -44,7 +44,7 @@ shaders via #include directives, as long as the shaders are loaded via a ShaderR
 static const std::string ShadowmapUniformsVert =
 R"(
     #if !defined(MAX_CASCADES)
-    #define MAX_CASCADES 4
+    #define MAX_CASCADES 3
     #endif
         uniform mat4 u_lightViewProjectionMatrix[MAX_CASCADES];
     #if defined (MOBILE)
@@ -75,7 +75,7 @@ R"(
 static const std::string ShadowmapUniformsFrag =
 R"(
     #if !defined(MAX_CASCADES)
-    #define MAX_CASCADES 4
+    #define MAX_CASCADES 3
     #endif
     uniform sampler2DArray u_shadowMap;
     uniform int u_cascadeCount = 1;

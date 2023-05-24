@@ -64,11 +64,7 @@ static const std::string CelVertexShader = R"(
 #endif
 
 #if defined(RX_SHADOWS)
-#if !defined(MAX_CASCADES)
-#define MAX_CASCADES 3
-#endif
-    uniform mat4 u_lightViewProjectionMatrix[MAX_CASCADES];
-    uniform int u_cascadeCount = 1;
+#include SHADOWMAP_UNIFORMS_VERT
 #endif
 
     uniform mat4 u_viewMatrix;
@@ -101,8 +97,9 @@ static const std::string CelVertexShader = R"(
 #endif
 
 #if defined(RX_SHADOWS)
-    VARYING_OUT LOW vec4 v_lightWorldPosition[MAX_CASCADES];
-    VARYING_OUT float v_viewDepth;
+#include SHADOWMAP_OUTPUTS
+    //VARYING_OUT LOW vec4 v_lightWorldPosition[MAX_CASCADES];
+    //VARYING_OUT float v_viewDepth;
 #endif
 
 #if defined (NORMAL_MAP)
@@ -154,11 +151,7 @@ static const std::string CelVertexShader = R"(
     #endif
 
     #if defined (RX_SHADOWS)
-        for(int i = 0; i < u_cascadeCount; i++)
-        {
-            v_lightWorldPosition[i] = u_lightViewProjectionMatrix[i] * worldMatrix * position;
-        }
-        v_viewDepth = (worldViewMatrix * position).z;
+#include SHADOWMAP_VERTEX_PROC
     #endif
 
 
@@ -250,12 +243,7 @@ static const std::string CelFragmentShader = R"(
 
 
 #if defined (RX_SHADOWS)
-#if !defined(MAX_CASCADES)
-#define MAX_CASCADES 3
-#endif
-    uniform sampler2DArray u_shadowMap;
-    uniform int u_cascadeCount = 1;
-    uniform float u_frustumSplits[MAX_CASCADES];
+#include SHADOWMAP_UNIFORMS_FRAG
 #endif
 
 #if defined (TINT)
@@ -318,9 +306,9 @@ static const std::string CelFragmentShader = R"(
     OUTPUT
 
 #if defined(RX_SHADOWS)
-    VARYING_IN LOW vec4 v_lightWorldPosition[MAX_CASCADES];
-    VARYING_IN float v_viewDepth;
+#include SHADOWMAP_INPUTS
 
+//not using PCF so don't bother with include
     int getCascadeIndex()
     {
         for(int i = 0; i < u_cascadeCount; ++i)

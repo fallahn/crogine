@@ -212,9 +212,6 @@ bool FileSystem::fileExists(const std::string& path)
     std::error_code ec;
     if (!std::filesystem::exists(std::filesystem::u8path(path), ec))
     {
-#ifdef CRO_DEBUG_
-        LogW << path << ": file not found" << std::endl;
-#endif
         return false;
     }
     return true;

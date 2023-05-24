@@ -44,11 +44,12 @@ static const std::string TerrainVertexShader = R"(
     uniform mat4 u_viewProjectionMatrix;
 
 #if defined(RX_SHADOWS)
-#if !defined(MAX_CASCADES)
-#define MAX_CASCADES 3
-#endif
-        uniform mat4 u_lightViewProjectionMatrix[MAX_CASCADES];
-        uniform int u_cascadeCount = 1;
+#include SHADOWMAP_UNIFORMS_VERT
+//#if !defined(MAX_CASCADES)
+//#define MAX_CASCADES 3
+//#endif
+//        uniform mat4 u_lightViewProjectionMatrix[MAX_CASCADES];
+//        uniform int u_cascadeCount = 1;
 #endif
 
 
@@ -67,8 +68,9 @@ static const std::string TerrainVertexShader = R"(
     VARYING_OUT vec2 v_texCoord;
 
 #if defined(RX_SHADOWS)
-    VARYING_OUT LOW vec4 v_lightWorldPosition[MAX_CASCADES];
-    VARYING_OUT float v_viewDepth;
+#include SHADOWMAP_OUTPUTS
+    //VARYING_OUT LOW vec4 v_lightWorldPosition[MAX_CASCADES];
+    //VARYING_OUT float v_viewDepth;
 #endif
 
     vec3 lerp(vec3 a, vec3 b, float t)
@@ -94,9 +96,10 @@ static const std::string TerrainVertexShader = R"(
         gl_Position = vertPos;
 
     #if defined (RX_SHADOWS)
+    //note position is already world space
         for(int i = 0; i < u_cascadeCount; i++)
         {
-            v_lightWorldPosition[i] = u_lightViewProjectionMatrix[i] * u_worldMatrix * position;
+            v_lightWorldPosition[i] = u_lightViewProjectionMatrix[i] * position;
         }
         v_viewDepth = (u_viewMatrix * position).z;
     #endif
