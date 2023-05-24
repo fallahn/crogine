@@ -49,9 +49,10 @@ static const std::string CelVertexShader = R"(
 
 #if defined(SKINNED)
     #define MAX_BONES 64
-    ATTRIBUTE vec4 a_boneIndices;
-    ATTRIBUTE vec4 a_boneWeights;
-    uniform mat4 u_boneMatrices[MAX_BONES];
+#include SKIN_UNIFORMS
+    //ATTRIBUTE vec4 a_boneIndices;
+    //ATTRIBUTE vec4 a_boneWeights;
+    //uniform mat4 u_boneMatrices[MAX_BONES];
 #endif
 
 #if defined (VATS)
@@ -98,8 +99,6 @@ static const std::string CelVertexShader = R"(
 
 #if defined(RX_SHADOWS)
 #include SHADOWMAP_OUTPUTS
-    //VARYING_OUT LOW vec4 v_lightWorldPosition[MAX_CASCADES];
-    //VARYING_OUT float v_viewDepth;
 #endif
 
 #if defined (NORMAL_MAP)
@@ -143,10 +142,7 @@ static const std::string CelVertexShader = R"(
     #endif
 
     #if defined(SKINNED)
-        mat4 skinMatrix = a_boneWeights.x * u_boneMatrices[int(a_boneIndices.x)];
-        skinMatrix += a_boneWeights.y * u_boneMatrices[int(a_boneIndices.y)];
-        skinMatrix += a_boneWeights.z * u_boneMatrices[int(a_boneIndices.z)];
-        skinMatrix += a_boneWeights.w * u_boneMatrices[int(a_boneIndices.w)];
+#include SKIN_MATRIX
         position = skinMatrix * position;
     #endif
 
