@@ -353,6 +353,11 @@ void RenderSystem2D::setSortOrder(DepthAxis sortOrder)
     m_sortOrder = sortOrder;
 }
 
+const std::string& RenderSystem2D::getDefaultVertexShader()
+{
+    return Shaders::Sprite::Vertex;
+}
+
 //private
 void RenderSystem2D::applyBlendMode(Material::BlendMode blendMode)
 {

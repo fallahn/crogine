@@ -435,6 +435,11 @@ void SimpleDrawable::drawGeometry(const glm::mat4& worldTransform) const
     glCheck(glUseProgram(0));
 }
 
+const std::string& SimpleDrawable::getDefaultVertexShader()
+{
+    return ShaderVertex;
+}
+
 //private
 #ifdef PLATFORM_DESKTOP
 void SimpleDrawable::updateVAO(const Shader& shader)

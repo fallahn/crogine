@@ -127,6 +127,13 @@ namespace cro
         template <typename T>
         void setUniform(const std::string& name, T value);
 
+        /*!
+        \brief Returns a string containing the default vertex shader
+        Use this to prevent re-writing code when creating shaders with
+        custom fragment code.
+        */
+        static const std::string& getDefaultVertexShader();
+
     protected:
         /*!
         \brief Sets the Texture to be used when rendering
