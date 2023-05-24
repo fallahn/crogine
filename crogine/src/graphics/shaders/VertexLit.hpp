@@ -51,8 +51,7 @@ namespace cro::Shaders::VertexLit
     #endif
 
     #if defined(INSTANCING)
-        ATTRIBUTE mat4 a_instanceWorldMatrix;
-        ATTRIBUTE mat3 a_instanceNormalMatrix;
+#include INSTANCE_ATTRIBS
     #endif
 
     #if defined(SKINNED)
@@ -100,9 +99,7 @@ namespace cro::Shaders::VertexLit
         void main()
         {
         #if defined(INSTANCING)
-            mat4 worldMatrix = u_worldMatrix * a_instanceWorldMatrix;
-            mat4 worldViewMatrix = u_viewMatrix * worldMatrix;
-            mat3 normalMatrix = mat3(u_worldMatrix) * a_instanceNormalMatrix;
+#include INSTANCE_MATRICES
         #else
             mat4 worldMatrix = u_worldMatrix;
             mat4 worldViewMatrix = u_worldViewMatrix;

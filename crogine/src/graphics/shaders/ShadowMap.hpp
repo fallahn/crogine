@@ -41,7 +41,7 @@ namespace cro::Shaders::ShadowMap
     #endif
 
     #if defined(INSTANCING)
-        ATTRIBUTE mat4 a_instanceWorldMatrix;
+#include INSTANCE_ATTRIBS
     #endif
 
     #if defined(SKINNED)
@@ -63,8 +63,7 @@ namespace cro::Shaders::ShadowMap
         void main()
         {
         #if defined(INSTANCING)
-            mat4 worldMatrix = u_worldMatrix * a_instanceWorldMatrix;
-            mat4 worldViewMatrix = u_viewMatrix * worldMatrix;
+#include INSTANCE_MATRICES
         #else
             mat4 worldMatrix = u_worldMatrix;
             mat4 worldViewMatrix = u_worldViewMatrix;
@@ -82,8 +81,6 @@ namespace cro::Shaders::ShadowMap
 
         #if defined (MOBILE)
             v_position = gl_Position;
-
-
 
         #else
             gl_ClipDistance[0] = dot(worldMatrix * position, u_clipPlane);

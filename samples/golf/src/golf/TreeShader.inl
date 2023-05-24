@@ -55,7 +55,7 @@ R"(
     uniform float u_leafSize = 0.25; //world units, in this case metres
     uniform float u_randAmount = 0.2;
 
-uniform sampler2D u_noiseTexture;
+    uniform sampler2D u_noiseTexture;
 
 //dirX, strength, dirZ, elapsedTime
 #include WIND_BUFFER

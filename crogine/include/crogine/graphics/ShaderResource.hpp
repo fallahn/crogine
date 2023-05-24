@@ -61,6 +61,25 @@ namespace cro
         uniform mat4 u_viewMatrix;
 
 
+    #include INSTANCE_ATTRIBS
+    provides:
+        vertex attributes for instanced matrix data:
+        ATTRIBUTE mat4 a_instanceWorldMatrix;
+        ATTRIBUTE mat3 a_instanceNormalMatrix;
+
+    #include INSTANCE_MATRICES
+    provides:
+        mat4 worldMatrix
+        mat4 worldViewMatrix
+        mat3 normalMatrix
+
+        Matrices are created from the given WVP uniforms
+        and instance attributes.
+
+    requires:
+        WVP_UNIFORMS, INSTANCE_ATTRIBS
+
+
     #include SKIN_UNIFORMS
     provides:
         ATTRIBUTE vec4 a_boneIndices;
@@ -78,6 +97,7 @@ namespace cro
         multiply the vertex position and normal data.
     requires:
         SKIN_UNIFORMS
+
 
     #include SHADOWMAP_UNIFORMS_VERT
     provides:

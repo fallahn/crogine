@@ -53,6 +53,24 @@ R"(
 )";
 
 
+
+//#include INSTANCE_ATTRIBS
+static const std::string InstanceAttribs =
+R"(
+    ATTRIBUTE mat4 a_instanceWorldMatrix;
+    ATTRIBUTE mat3 a_instanceNormalMatrix;
+)";
+
+//#include INSTANCE_MATRICES
+static const std::string InstanceMatrices =
+R"(
+    mat4 worldMatrix = u_worldMatrix * a_instanceWorldMatrix;
+    mat4 worldViewMatrix = u_viewMatrix * worldMatrix;
+    mat3 normalMatrix = mat3(u_worldMatrix) * a_instanceNormalMatrix;
+)";
+
+
+
 //#include SKIN_UNIFORMS
 static const std::string SkinUniforms =
 R"(
