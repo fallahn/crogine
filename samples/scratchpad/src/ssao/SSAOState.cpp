@@ -28,6 +28,7 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include "SSAOState.hpp"
+#include "../StateIDs.hpp"
 
 #include <crogine/gui/Gui.hpp>
 
@@ -68,6 +69,18 @@ bool SSAOState::handleEvent(const cro::Event& evt)
     if (cro::ui::wantsMouse() || cro::ui::wantsKeyboard())
     {
         return true;
+    }
+
+    if (evt.type == SDL_KEYUP)
+    {
+        switch (evt.key.keysym.sym)
+        {
+        default: break;
+        case SDLK_BACKSPACE:
+            requestStackClear();
+            requestStackPush(States::ScratchPad::MainMenu);
+            break;
+        }
     }
 
     m_gameScene.forwardEvent(evt);

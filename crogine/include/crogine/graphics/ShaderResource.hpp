@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2022
+Matt Marchant 2017 - 2023
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -41,6 +41,62 @@ namespace cro
 {    
     /*!
     \brief Manages the lifetime of shader programs.
+
+    The shader resource provides a range of pre-defined #include
+    directives which can be used with shaders that are loaded with
+    this resource manager.
+
+
+    Vertex Shader Includes:
+    -----------------------
+    #include SHADOWMAP_UNIFORMS_VERT
+    provides:
+        #define MAX_CASCADES 4 if not otherwise defined
+        uniform mat4 u_lightViewProjectionMatrix[MAX_CASCADES];
+        uniform int u_cascadeCount = 1;
+
+    #include SHADOWMAP_OUTPUTS
+    provides:
+        VARYING_OUT LOW vec4 v_lightWorldPosition[MAX_CASCADES];
+        VARYING_OUT float v_viewDepth;
+
+    #include SHADOWMAP_VERTEX_PROC
+    provides:
+        processing for the vertex data, which should be performed
+        in main()
+
+    requires:
+        SHADOWMAP_UNIFORMS_VERT, SHADOWMAP_OUTPUTS
+        also requires mat4 worldMatrix, mat4 worldViewMatrix and vec4 position
+
+
+    Fragment Shader Includes:
+    -------------------------
+
+    #include SHADOWMAP_UNIFORMS_FRAG
+    provides:
+        #define MAX_CASCADES 4 if not already defined
+        uniform sampler2DArray u_shadowMap;
+        uniform int u_cascadeCount = 1;
+        uniform float u_frustumSplits[MAX_CASCADES];
+
+    #include SHADOWMAP_INPUTS
+    provides:
+        VARYING_IN LOW vec4 v_lightWorldPosition[MAX_CASCADES];
+        VARYING_IN float v_viewDepth;
+
+    #include PCF_SHADOWS
+    provides:
+        int getCascadeIndex()
+        float shadowAmount(int cascadeIndex)
+          or, if PBR is #defined
+        float shadowAmount(int cascadeIndex, SurfaceProperties surfProp)
+
+    requires:
+        SHADOWMAP_UNIFORMS_FRAG, SHADOWMAP_INPUTS (fragment shader)
+
+    \sa addInclude
+
     */
     class CRO_EXPORT_API ShaderResource final : public Detail::SDLResource
     {

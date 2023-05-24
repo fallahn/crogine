@@ -408,6 +408,7 @@
     <None Include="..\crogine\include\crogine\network\NetData.inl" />
     <None Include="..\crogine\include\crogine\network\NetHost.inl" />
     <None Include="..\crogine\src\graphics\postprocess\PostChromeAB.inl" />
+    <None Include="..\crogine\src\graphics\shaders\ShaderIncludes.inl" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="crogine.rc" />
