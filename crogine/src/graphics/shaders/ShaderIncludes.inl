@@ -39,6 +39,23 @@ shaders via #include directives, as long as the shaders are loaded via a ShaderR
 */
 //TODO probably need to be extern to prevent multiple copies with each ShaderResource instance
 
+//#include SKIN_UNIFORMS
+static const std::string SkinUniforms =
+R"(
+    ATTRIBUTE vec4 a_boneIndices;
+    ATTRIBUTE vec4 a_boneWeights;
+    uniform mat4 u_boneMatrices[MAX_BONES];
+)";
+
+//#include SKIN_MATRIX
+static const std::string SkinMatrix =
+R"(
+    mat4 skinMatrix = a_boneWeights.x * u_boneMatrices[int(a_boneIndices.x)];
+    skinMatrix += a_boneWeights.y * u_boneMatrices[int(a_boneIndices.y)];
+    skinMatrix += a_boneWeights.z * u_boneMatrices[int(a_boneIndices.z)];
+    skinMatrix += a_boneWeights.w * u_boneMatrices[int(a_boneIndices.w)];
+)";
+
 
 //#include SHADOWMAP_UNIFORMS_VERT
 static const std::string ShadowmapUniformsVert =

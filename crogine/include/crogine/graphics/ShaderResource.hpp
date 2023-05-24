@@ -49,6 +49,25 @@ namespace cro
 
     Vertex Shader Includes:
     -----------------------
+
+    #include SKIN_UNIFORMS
+    provides:
+        ATTRIBUTE vec4 a_boneIndices;
+        ATTRIBUTE vec4 a_boneWeights;
+        uniform mat4 u_boneMatrices[MAX_BONES];
+
+        Adds both the vertex attributes and matrix uniform
+        required for vertex skinning.
+
+    #include SKIN_MATRIX
+    provides:
+        mat4 skinMatrix
+        The matrix is created from the bone matrices, weights
+        and indices provided by SKIN_UNIFORMS and is used to
+        multiply the vertex position and normal data.
+    requires:
+        SKIN_UNIFORMS
+
     #include SHADOWMAP_UNIFORMS_VERT
     provides:
         #define MAX_CASCADES 4 if not otherwise defined

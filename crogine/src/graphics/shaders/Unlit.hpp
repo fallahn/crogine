@@ -54,9 +54,7 @@ namespace cro::Shaders::Unlit
 
 
     #if defined(SKINNED)
-        ATTRIBUTE vec4 a_boneIndices;
-        ATTRIBUTE vec4 a_boneWeights;
-        uniform mat4 u_boneMatrices[MAX_BONES];
+#include SKIN_UNIFORMS
     #endif
 
     #if defined(PROJECTIONS)
@@ -135,10 +133,7 @@ namespace cro::Shaders::Unlit
         #endif
 
         #if defined(SKINNED)
-            mat4 skinMatrix = a_boneWeights.x * u_boneMatrices[int(a_boneIndices.x)];
-            skinMatrix += a_boneWeights.y * u_boneMatrices[int(a_boneIndices.y)];
-            skinMatrix += a_boneWeights.z * u_boneMatrices[int(a_boneIndices.z)];
-            skinMatrix += a_boneWeights.w * u_boneMatrices[int(a_boneIndices.w)];
+#include SKIN_MATRIX
             position = skinMatrix * position;
         #if defined (RIMMING)
             normal = (skinMatrix * vec4(normal, 0.0)).xyz;

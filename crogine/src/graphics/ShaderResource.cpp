@@ -57,6 +57,9 @@ ShaderResource::ShaderResource()
     }
 
     //register the default includes
+    addInclude("SKIN_UNIFORMS", SkinUniforms.c_str());
+    addInclude("SKIN_MATRIX", SkinMatrix.c_str());
+
     addInclude("SHADOWMAP_UNIFORMS_VERT", ShadowmapUniformsVert.c_str());
     addInclude("SHADOWMAP_OUTPUTS", ShadowmapOutputs.c_str());
     addInclude("SHADOWMAP_VERTEX_PROC", ShadowmapVertProc.c_str());
