@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022
+Matt Marchant 2022 - 2023
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -38,8 +38,7 @@ R"(
     ATTRIBUTE vec3 a_normal;
 
 #if defined(INSTANCING)
-    ATTRIBUTE mat4 a_instanceWorldMatrix;
-    ATTRIBUTE mat3 a_instanceNormalMatrix;
+#include INSTANCE_ATTRIBS
 #else
     uniform mat3 u_normalMatrix;
 #endif
@@ -83,8 +82,7 @@ R"(
         int UID = gl_InstanceID + gl_VertexID;
 
     #if defined (INSTANCING)
-        mat4 worldMatrix = u_worldMatrix * a_instanceWorldMatrix;
-        mat3 normalMatrix = mat3(u_worldMatrix) * a_instanceNormalMatrix;            
+#include INSTANCE_MATRICES
     #else
         mat4 worldMatrix = u_worldMatrix;
         mat3 normalMatrix = u_normalMatrix;
@@ -363,8 +361,7 @@ std::string BranchVertex = R"(
     ATTRIBUTE vec2 a_texCoord0;
 
 #if defined(INSTANCING)
-    ATTRIBUTE mat4 a_instanceWorldMatrix;
-    ATTRIBUTE mat3 a_instanceNormalMatrix;
+#include INSTANCE_ATTRIBS
 #else
     uniform mat3 u_normalMatrix;
 #endif
@@ -392,7 +389,7 @@ std::string BranchVertex = R"(
     {
     #if defined (INSTANCING)
         mat4 worldMatrix = u_worldMatrix * a_instanceWorldMatrix;
-        mat3 normalMatrix = mat3(u_worldMatrix) * a_instanceNormalMatrix;            
+        mat3 normalMatrix = mat3(u_worldMatrix) * a_instanceNormalMatrix;
     #else
         mat4 worldMatrix = u_worldMatrix;
         mat3 normalMatrix = u_normalMatrix;

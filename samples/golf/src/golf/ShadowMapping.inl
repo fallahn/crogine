@@ -46,7 +46,7 @@ static const std::string ShadowVertex = R"(
     #endif
 
     #if defined(INSTANCING)
-        ATTRIBUTE mat4 a_instanceWorldMatrix;
+#include INSTANCE_ATTRIBS
     #endif
 
     #if defined(SKINNED)
@@ -111,8 +111,7 @@ static const std::string ShadowVertex = R"(
         void main()
         {
         #if defined(INSTANCING)
-            mat4 worldMatrix = u_worldMatrix * a_instanceWorldMatrix;
-            mat4 worldViewMatrix = u_viewMatrix * worldMatrix;
+#include INSTANCE_MATRICES
         #else
             mat4 worldMatrix = u_worldMatrix;
             mat4 worldViewMatrix = u_worldViewMatrix;
