@@ -583,6 +583,7 @@ bool ClubhouseState::simulate(float dt)
     m_windBuffer.setData(wind);
 
     m_arcadeVideo.update(dt);
+    m_arcadeVideo2.update(dt);
 
     m_backgroundScene.simulate(dt);
     m_tableScene.simulate(dt);
@@ -1005,11 +1006,11 @@ void ClubhouseState::buildScene()
         applyMaterial(entity, MaterialID::Cel);
 
         //TODO this will mostly be off screen to all but ultrawide players
-        /*m_arcadeVideo.loadFromFile("assets/golf/video/arcade.mpg");
-        m_arcadeVideo.setLooped(true);
-        m_arcadeVideo.play();
+        m_arcadeVideo2.loadFromFile("assets/golf/video/arcade2.mpg");
+        m_arcadeVideo2.setLooped(true);
+        m_arcadeVideo2.play();
 
-        entity.getComponent<cro::Model>().setMaterialProperty(1, "u_diffuseMap", cro::TextureID(m_arcadeVideo.getTexture().getGLHandle()));*/
+        entity.getComponent<cro::Model>().setMaterialProperty(1, "u_diffuseMap", cro::TextureID(m_arcadeVideo2.getTexture().getGLHandle()));
     }
 
 

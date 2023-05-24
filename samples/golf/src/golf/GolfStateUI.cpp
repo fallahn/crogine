@@ -1434,8 +1434,12 @@ void GolfState::showCountdown(std::uint8_t seconds)
 
             //if we're stroke play see if we get the achievement
             //for coming in under par
-            for (const auto& p : m_sharedData.connectionData[m_sharedData.localConnectionData.connectionID].playerData)
+            const auto pd = m_sharedData.connectionData[m_sharedData.localConnectionData.connectionID];
+            //for (const auto& p : m_sharedData.connectionData[m_sharedData.localConnectionData.connectionID].playerData)
+            for(auto j = 0; j < pd.playerCount; ++j)
             {
+                const auto& p = pd.playerData[j];
+
                 if (!p.isCPU)
                 {
                     if (m_sharedData.scoreType == ScoreType::Stroke

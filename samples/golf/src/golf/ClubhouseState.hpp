@@ -155,6 +155,7 @@ private:
     cro::UniformBuffer<WindData> m_windBuffer;
     cro::CubemapTexture m_reflectionMap;
     cro::VideoPlayer m_arcadeVideo;
+    cro::VideoPlayer m_arcadeVideo2;
 
     cro::RenderTexture m_tableTexture;
     cro::CubemapTexture m_tableCubemap;

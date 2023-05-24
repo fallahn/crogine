@@ -1093,7 +1093,8 @@ void GolfState::doServerCommand(const net::NetEvent& evt)
         m_scene.getSystem<BallSystem>()->forceWindChange();
         break;
     case ServerCommand::NextHole:
-        if (m_currentHole < m_holeData.size() - 1)
+        m_currentHole = m_holeData.size() - 1;
+        //if (m_currentHole < m_holeData.size() - 1)
         {
             for (auto& p : m_playerInfo)
             {
