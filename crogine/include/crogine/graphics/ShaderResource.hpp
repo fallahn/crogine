@@ -50,6 +50,17 @@ namespace cro
     Vertex Shader Includes:
     -----------------------
 
+    #include WVP_UNIFORMS
+    provides:
+        uniform mat4 u_worldMatrix;
+        uniform mat4 u_projectionMatrix;
+        and
+        uniform mat4 u_worldViewMatrix;
+        uniform mat3 u_normalMatrix;
+        if INSTANCING is not defined, else
+        uniform mat4 u_viewMatrix;
+
+
     #include SKIN_UNIFORMS
     provides:
         ATTRIBUTE vec4 a_boneIndices;

@@ -57,6 +57,8 @@ ShaderResource::ShaderResource()
     }
 
     //register the default includes
+    addInclude("WVP_UNIFORMS", WVPMatrices.c_str());
+
     addInclude("SKIN_UNIFORMS", SkinUniforms.c_str());
     addInclude("SKIN_MATRIX", SkinMatrix.c_str());
 

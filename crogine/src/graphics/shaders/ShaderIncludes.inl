@@ -39,6 +39,20 @@ shaders via #include directives, as long as the shaders are loaded via a ShaderR
 */
 //TODO probably need to be extern to prevent multiple copies with each ShaderResource instance
 
+//#include WVP_UNIFORMS
+static const std::string WVPMatrices =
+R"(
+#if defined(INSTANCING)
+    uniform mat4 u_viewMatrix;
+#else
+    uniform mat4 u_worldViewMatrix;
+    uniform mat3 u_normalMatrix;
+#endif
+    uniform mat4 u_worldMatrix;
+    uniform mat4 u_projectionMatrix;
+)";
+
+
 //#include SKIN_UNIFORMS
 static const std::string SkinUniforms =
 R"(

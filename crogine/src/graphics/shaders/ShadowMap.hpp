@@ -48,13 +48,8 @@ namespace cro::Shaders::ShadowMap
 #include SKIN_UNIFORMS
     #endif
 
-    #if defined(INSTANCING)
-        uniform mat4 u_viewMatrix;        
-    #else
-        uniform mat4 u_worldViewMatrix;
-    #endif
-        uniform mat4 u_worldMatrix;
-        uniform mat4 u_projectionMatrix;
+#include WVP_UNIFORMS
+
         uniform vec4 u_clipPlane;
 
     #if defined (MOBILE)

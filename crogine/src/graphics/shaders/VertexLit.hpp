@@ -65,14 +65,7 @@ namespace cro::Shaders::VertexLit
         uniform LOW int u_projectionMapCount; //how many to actually draw
     #endif
 
-    #if defined(INSTANCING)
-        uniform mat4 u_viewMatrix;
-    #else
-        uniform mat4 u_worldViewMatrix;
-        uniform mat3 u_normalMatrix;
-    #endif
-        uniform mat4 u_worldMatrix;
-        uniform mat4 u_projectionMatrix;
+#include WVP_UNIFORMS
 
         uniform vec4 u_clipPlane;
 
