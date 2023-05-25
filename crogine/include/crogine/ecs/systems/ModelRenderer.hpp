@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2022
+Matt Marchant 2017 - 2023
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -93,6 +93,18 @@ namespace cro
         \param passIndex the ID of the pass to query
         */
         std::size_t getVisibleCount(std::size_t cameraIndex, std::int32_t passIndex = 0) const;
+
+        /*!
+        \brief Returns the default Vertex shader for 3D models as a string
+        Use this when creating custom materials which only modify the fragment
+        shader.
+        \param useLighting Set this to true if you wish to use the vertex shader
+        with default lighting (provides normal data, light position etc) else
+        false to return the Unlit material vertex shader
+        */
+        static const std::string& getDefaultVertexShader(bool useLighting);
+
+
 
         void onEntityAdded(Entity) override;
 
