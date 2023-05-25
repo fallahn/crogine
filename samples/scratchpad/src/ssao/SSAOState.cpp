@@ -42,12 +42,66 @@ source distribution.
 #include <crogine/ecs/systems/ModelRenderer.hpp>
 
 #include <crogine/util/Constants.hpp>
-
+#include <crogine/detail/OpenGL.hpp>
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
 
 namespace
 {
+    struct ShaderID final
+    {
+        enum
+        {
+            MipmapRender
+        };
+    };
 
+    const std::string MipmapFragment = R"(
+    uniform sampler2D u_texture;
+
+    uniform sampler2D u_depthMap;
+
+    VARYING_IN vec2 v_texCoord;
+    VARYING_IN vec4 v_colour;
+
+    OUTPUT
+
+    void main()
+    {
+        float depth = TEXTURE(u_depthMap, v_texCoord).r;
+
+        FRAG_OUT = textureLod(u_texture, v_texCoord, smoothstep(0.6, 0.8, depth) * 2.0) * v_colour;// * vec4(1.0, 0.0, 0.0, 1.0);
+    })";
+
+
+    const std::string BlurFragment = R"(
+    uniform sampler2D u_texture;
+
+    VARYING_IN vec2 v_texCoord;
+    VARYING_IN vec4 v_colour; 
+
+    OUTPUT
+
+    const float BLUR_OFFSETS[5] = float[](0.0, 1.0, 2.0, 3.0, 4.0);
+    const float BLUR_WEIGHTS[5] = float[](0.2270270270, 0.1945945946, 0.1216216216, 0.0540540541, 0.0162162162);
+
+    vec4 blur(vec2 direction, vec2 texel)
+    {
+        vec4 color = texture(u_texture, v_texCoord) * BLUR_WEIGHTS[0];
+    
+        for (int i = 1; i < 5; i++)
+        { 
+            vec2 offset = texel * direction * BLUR_OFFSETS[i];
+            color += texture(u_texture, v_texCoord + offset) * BLUR_WEIGHTS[i];
+            color += texture(u_texture, v_texCoord - offset) * BLUR_WEIGHTS[i];
+        }
+    
+        return color;
+    }
+
+    void main(void)
+    {
+        FRAG_OUT = blur(vec2(0.0, 1.0), vec2(1.0) / textureSize(u_texture, 0));
+    })";
 }
 
 SSAOState::SSAOState(cro::StateStack& stack, cro::State::Context context)
@@ -107,7 +161,6 @@ void SSAOState::render()
     m_gameScene.render();
     m_renderBuffer.display();
 
-
     m_colourQuad.draw();
     m_depthQuad.draw();
 
@@ -128,6 +181,9 @@ void SSAOState::addSystems()
 void SSAOState::loadAssets()
 {
     m_environmentMap.loadFromFile("assets/images/hills.hdr");
+
+    m_resources.shaders.loadFromString(ShaderID::MipmapRender, cro::SimpleDrawable::getDefaultVertexShader(), BlurFragment);
+
 }
 
 void SSAOState::createScene()
@@ -162,6 +218,8 @@ void SSAOState::createScene()
         //m_renderBuffer.create(buffSize.x / 2u, buffSize.y / 2u);
         //m_colourQuad.setTexture(m_renderBuffer.getTexture(0), m_renderBuffer.getSize());
         m_renderBuffer.create({ buffSize.x / 2u, buffSize.y / 2u, true, true, false, 4 });
+        
+        m_colourQuad.setShader(m_resources.shaders.get(ShaderID::MipmapRender));
         m_colourQuad.setTexture(m_renderBuffer.getTexture());
         m_colourQuad.setPosition({ 0.f, size.y / 2.f });
 

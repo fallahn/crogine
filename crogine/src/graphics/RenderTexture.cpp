@@ -289,7 +289,6 @@ void RenderTexture::display()
         glCheck(glDisable(GL_MULTISAMPLE));
     }
 
-
     //unbind buffer
     setActive(false);
 }
