@@ -122,6 +122,11 @@ void MenuState::parseCourseDirectory(const std::string& rootDir, bool isUser)
         root = cro::FileSystem::getResourcePath() + root;
     }
 
+    if (!cro::FileSystem::directoryExists(root))
+    {
+        cro::FileSystem::createDirectory(root);
+    }
+
     auto directories = cro::FileSystem::listDirectories(root);
 
     //at least be consistent across platforms
