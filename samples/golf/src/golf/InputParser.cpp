@@ -421,6 +421,24 @@ float InputParser::getRotation() const
     return m_rotation;
 }
 
+float InputParser::getRotationSpeed() const
+{
+    return RotationSpeed * m_maxRotation * m_analogueAmount;
+}
+
+float InputParser::getCamRotation() const
+{
+    if (m_active 
+        && m_state == State::Aim
+        && m_inputFlags == 0)
+    {
+        return static_cast<float>(cro::GameController::getAxisPosition(activeControllerID(m_inputBinding.playerID), cro::GameController::AxisRightX))
+                    / cro::GameController::AxisMax;
+    }
+
+    return 0.f;
+}
+
 bool InputParser::getButtonState(std::int32_t binding) const
 {
     switch (binding)
@@ -428,6 +446,10 @@ bool InputParser::getButtonState(std::int32_t binding) const
     default: return false;
     case InputBinding::Action:
         return (m_inputFlags & InputFlag::Action) != 0;
+    case InputBinding::Left:
+        return (m_inputFlags & InputFlag::Left) != 0;
+    case InputBinding::Right:
+        return (m_inputFlags & InputFlag::Right) != 0;
         //TODO stop being lazy and implement the rest of these...
     }
 }
@@ -1006,9 +1028,13 @@ void InputParser::rotate(float rotation)
     {
         m_holeDirection += overspill;
 
-        auto* msg = cro::App::postMessage<SceneEvent>(MessageID::SceneMessage);
-        msg->type = SceneEvent::PlayerRotate;
-        msg->rotation = m_holeDirection - (cro::Util::Const::PI / 2.f); //probably not necessary as we could read this directly? Meh.
+        //if (overspill != 0)
+        {
+            auto* msg = cro::App::postMessage<SceneEvent>(MessageID::SceneMessage);
+            msg->type = SceneEvent::PlayerRotate;
+            msg->rotation = m_holeDirection - (cro::Util::Const::PI / 2.f); //probably not necessary as we could read this directly? Meh.
+            msg->rotationPercent = std::abs(m_rotation) / m_maxRotation;
+        }
     }
 }
 

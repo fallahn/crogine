@@ -1399,10 +1399,40 @@ bool GolfState::simulate(float dt)
     m_waterEnt.getComponent<cro::Transform>().move(move * 10.f * dt);
 #endif
 
+    const auto holeDir = m_holeData[m_currentHole].pin - m_currentPlayer.position;
+
+    float rotation = /*m_inputParser.getCamRotation() **/ dt;
+    if (rotation)
+    {
+        const float holeRot = std::atan2(-holeDir.z, holeDir.x);
+
+        auto& tx = m_cameras[CameraID::Player].getComponent<cro::Transform>();
+        const auto forwardDir = tx.getForwardVector();
+        const float camRot = std::atan2(-forwardDir.z, forwardDir.x);
+
+        //if (std::abs(cro::Util::Maths::shortestRotation(camRot - rotation, holeRot)) < cro::Util::Const::PI / 16.f)
+        {
+            tx.rotate(cro::Transform::Y_AXIS, rotation);
+
+            auto& targetInfo = m_cameras[CameraID::Player].getComponent<TargetInfo>();
+            auto lookDir = targetInfo.currentLookAt - tx.getWorldPosition();
+            lookDir = glm::rotateY(lookDir, rotation);
+            targetInfo.currentLookAt = tx.getWorldPosition() + lookDir;
+            targetInfo.targetLookAt = targetInfo.currentLookAt;
+
+            m_camRotation += rotation;
+        }
+    }
+
+
+
+
+
+
     m_ballTrail.update();
 
     //this gets used a lot so we'll save on some calls to length()
-    m_distanceToHole = glm::length(m_holeData[m_currentHole].pin - m_currentPlayer.position);
+    m_distanceToHole = glm::length(holeDir);
 
     m_depthMap.update(1);
 
