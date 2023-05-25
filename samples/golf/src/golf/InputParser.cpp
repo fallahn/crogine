@@ -432,6 +432,16 @@ float InputParser::getCamRotation() const
         && m_state == State::Aim
         && m_inputFlags == 0)
     {
+        if (cro::Keyboard::isKeyPressed(SDLK_4))
+        {
+            return 1.f;
+        }
+        if (cro::Keyboard::isKeyPressed(SDLK_5))
+        {
+            return -1.f;
+        }
+
+
         return static_cast<float>(cro::GameController::getAxisPosition(activeControllerID(m_inputBinding.playerID), cro::GameController::AxisRightX))
                     / cro::GameController::AxisMax;
     }
