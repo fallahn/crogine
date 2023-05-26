@@ -348,15 +348,32 @@ void ClubhouseState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter
         auto pluginList = cro::FileSystem::listDirectories("plugins");
         if (!pluginList.empty())
         {
-            entity = createButton("Arcade");
-            entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
-                m_uiScene.getSystem<cro::UISystem>()->addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
-                    {
-                        if (activated(evt))
+            std::string pluginPath = "plugins/";
+            for (const auto& pluginDir : pluginList)
+            {
+                if (cro::FileSystem::fileExists(pluginPath + pluginDir + "/croplug.dll"))
+                {
+                    pluginPath += pluginDir;
+                    break;
+                }
+            }
+
+            if (pluginPath != "plugins/")
+            {
+                entity = createButton("Arcade");
+                entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
+                    m_uiScene.getSystem<cro::UISystem>()->addCallback([&, pluginPath](cro::Entity, const cro::ButtonEvent& evt)
                         {
-                            m_golfGame.loadPlugin("plugins/drone_drop");
-                        }
-                    });
+                            if (activated(evt))
+                            {
+                                m_golfGame.loadPlugin(pluginPath);
+                            }
+                        });
+            }
+            else
+            {
+                hasArcade = false;
+            }
         }
     }
 

@@ -441,9 +441,11 @@ float InputParser::getCamRotation() const
             return -1.f;
         }
 
-
-        return static_cast<float>(cro::GameController::getAxisPosition(activeControllerID(m_inputBinding.playerID), cro::GameController::AxisRightX))
-                    / cro::GameController::AxisMax;
+        auto x = cro::GameController::getAxisPosition(activeControllerID(m_inputBinding.playerID), cro::GameController::AxisRightX);
+        if (x < -LeftThumbDeadZone || x > LeftThumbDeadZone)
+        {
+            return std::pow(static_cast<float>(x) / cro::GameController::AxisMax, 5.0);
+        }
     }
 
     return 0.f;
@@ -1066,7 +1068,7 @@ void InputParser::checkControllerInput()
     //left stick
     auto startInput = m_inputFlags;
     float xPos = cro::GameController::getAxisPosition(controllerID, cro::GameController::AxisLeftX);
-    xPos += cro::GameController::getAxisPosition(controllerID, cro::GameController::AxisRightX);
+    //xPos += cro::GameController::getAxisPosition(controllerID, cro::GameController::AxisRightX);
 
     if (xPos < -LeftThumbDeadZone)
     {
