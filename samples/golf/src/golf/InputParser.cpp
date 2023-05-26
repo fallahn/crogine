@@ -430,7 +430,7 @@ float InputParser::getCamRotation() const
 {
     if (m_active 
         && m_state == State::Aim
-        && m_inputFlags == 0)
+        && (m_inputFlags & ~(InputFlag::Up | InputFlag::Down)) == 0) //ignore these as right stick might set them
     {
         if (cro::Keyboard::isKeyPressed(SDLK_4))
         {
@@ -441,10 +441,11 @@ float InputParser::getCamRotation() const
             return -1.f;
         }
 
-        auto x = cro::GameController::getAxisPosition(activeControllerID(m_inputBinding.playerID), cro::GameController::AxisRightX);
-        if (x < -LeftThumbDeadZone || x > LeftThumbDeadZone)
+        auto x = -cro::GameController::getAxisPosition(activeControllerID(m_inputBinding.playerID), cro::GameController::AxisRightX);
+        const auto dz = LeftThumbDeadZone / 4;
+        if (x < -dz || x > dz)
         {
-            return std::pow(static_cast<float>(x) / cro::GameController::AxisMax, 5.0);
+            return std::pow(static_cast<float>(x) / cro::GameController::AxisMax, 5.f);
         }
     }
 

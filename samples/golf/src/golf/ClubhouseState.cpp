@@ -984,6 +984,8 @@ void ClubhouseState::buildScene()
         entity.addComponent<cro::Transform>().setPosition({ 14.4f, 0.f, -3.3f });
         entity.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, 90.f * cro::Util::Const::degToRad);
         entity.getComponent<cro::Transform>().setScale({ 0.8f, 1.f, 1.f });
+        entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("gvg");
+        entity.getComponent<cro::AudioEmitter>().play();
         md.createModel(entity);
 
         applyMaterial(entity, MaterialID::Cel);
