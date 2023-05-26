@@ -67,12 +67,40 @@ private:
     cro::ResourceCollection m_resources;
     cro::EnvironmentMap m_environmentMap;
 
-    cro::RenderTexture m_renderBuffer;
+    cro::MultiRenderTexture m_renderBuffer;
     cro::SimpleQuad m_colourQuad;
+    cro::SimpleQuad m_normalQuad;
+    cro::SimpleQuad m_positionQuad;
     cro::SimpleQuad m_depthQuad;
+
+    cro::RenderTexture m_ssaoBuffer;
+    cro::RenderTexture m_ssaoBlurBuffer;
+    cro::SimpleQuad m_ssaoQuad;
+
+    struct OutputData final
+    {
+        std::uint32_t shader = 0;
+        std::int32_t aoMap = -1;
+    }m_outputData;
+    cro::SimpleQuad m_outputQuad;
 
     void addSystems();
     void loadAssets();
     void createScene();
     void createUI();
+
+    std::vector<glm::vec3> m_sampleKernel;
+    cro::Texture m_noiseTexture;
+    struct SSAOData final
+    {
+        std::uint32_t shader = 0;
+        std::int32_t normal = -1;
+        std::int32_t noise = -1;
+        std::int32_t kernel = -1;
+        std::int32_t projectionMatrix = -1;
+    }m_ssaoData;
+    cro::SimpleQuad m_ssaoBufferQuad;
+    cro::SimpleQuad m_ssaoBlurQuad;
+    void generateSSAOData();
+    void updateSSAOData();
 };

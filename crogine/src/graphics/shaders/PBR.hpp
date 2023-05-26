@@ -15,7 +15,11 @@ namespace cro::Shaders::PBR
     //with the VertexLit type.
     static const std::string Fragment = 
         R"(
-        OUTPUT
+    layout (location = 0) out vec4 FRAG_OUT;
+    layout (location = 1) out vec4 NORM_OUT;
+    layout (location = 2) out vec4 POS_OUT;
+uniform mat4 u_viewMatrix;
+
         #if defined(DIFFUSE_MAP)
         uniform sampler2D u_diffuseMap;
         #endif
@@ -169,6 +173,14 @@ namespace cro::Shaders::PBR
         #else
             surfProp.normalDir = normalize(v_normalVector);
         #endif
+
+//NORM_OUT = vec4(surfProp.normalDir, 1.0);
+//POS_OUT = vec4(v_worldPosition, 1.0);
+
+NORM_OUT = u_viewMatrix * vec4(surfProp.normalDir, 0.0);
+NORM_OUT.a = 1.0;
+POS_OUT = u_viewMatrix * vec4(v_worldPosition, 1.0);
+
             surfProp.viewDir = normalize(u_cameraWorldPosition - v_worldPosition);
 
         #if defined(DIFFUSE_MAP)

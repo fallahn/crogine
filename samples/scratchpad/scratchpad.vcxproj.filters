@@ -341,6 +341,9 @@
     <ClInclude Include="src\animblend\AnimBlendState.hpp">
       <Filter>Header Files\anim_blend</Filter>
     </ClInclude>
+    <ClInclude Include="src\ssao\SSAOState.hpp">
+      <Filter>Header Files\ssao</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="src\voxels\Tables.inl">
@@ -348,6 +351,9 @@
     </None>
     <None Include="src\retro\RetroShaders.inl">
       <Filter>Header Files\retro</Filter>
+    </None>
+    <None Include="src\ssao\BlurShaders.inl">
+      <Filter>Header Files\ssao</Filter>
     </None>
   </ItemGroup>
 </Project>

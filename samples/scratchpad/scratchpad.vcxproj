@@ -371,6 +371,7 @@
     <ClInclude Include="src\rolling\RollingState.hpp" />
     <ClInclude Include="src\rolling\RollingSystem.hpp" />
     <ClInclude Include="src\rolling\Utility.hpp" />
+    <ClInclude Include="src\ssao\SSAOState.hpp" />
     <ClInclude Include="src\StateIDs.hpp" />
     <ClInclude Include="src\swingput\Swingput.hpp" />
     <ClInclude Include="src\swingput\SwingState.hpp" />
@@ -384,6 +385,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="src\retro\RetroShaders.inl" />
+    <None Include="src\ssao\BlurShaders.inl" />
     <None Include="src\voxels\Tables.inl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

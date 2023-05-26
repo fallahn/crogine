@@ -233,6 +233,7 @@ std::int32_t Shader::getUniformID(const std::string& name) const
     {
         return m_uniformMap.at(name);
     }
+    LogW << name << ": uniform not found in shader (Shader::getUniformID())" << std::endl;
     return - 1;
 }
 
