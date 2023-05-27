@@ -861,10 +861,11 @@ void GolfState::handleMessage(const cro::Message& msg)
                 m_activeAvatar->ballModel.getComponent<cro::Model>().setHidden(true);
 
                 //see if we're doing something silly like facing the camera
-                auto camVec = cro::Util::Matrix::getForwardVector(m_cameras[CameraID::Player].getComponent<cro::Transform>().getWorldTransform());
-                auto rotation = glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), m_inputParser.getYaw(), cro::Transform::Y_AXIS);
-                auto ballDir = glm::toMat3(rotation) * cro::Transform::X_AXIS;
-                if (glm::dot(camVec, ballDir) < -0.9f
+                const auto camVec = cro::Util::Matrix::getForwardVector(m_cameras[CameraID::Player].getComponent<cro::Transform>().getWorldTransform());
+                const auto playerVec = m_currentPlayer.position - m_cameras[CameraID::Player].getComponent<cro::Transform>().getWorldPosition();
+                const auto rotation = glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), m_inputParser.getYaw(), cro::Transform::Y_AXIS);
+                const auto ballDir = glm::toMat3(rotation) * cro::Transform::X_AXIS;
+                if (glm::dot(camVec, ballDir) < -0.9f && glm::dot(camVec, playerVec) > 0.f
                     && !Achievements::getAchievement(AchievementStrings[AchievementID::BadSport])->achieved)
                 {
                     auto* shader = &m_resources.shaders.get(ShaderID::Noise);

@@ -233,7 +233,9 @@ std::int32_t Shader::getUniformID(const std::string& name) const
     {
         return m_uniformMap.at(name);
     }
+#ifdef CRO_DEBUG_
     LogW << name << ": uniform not found in shader (Shader::getUniformID())" << std::endl;
+#endif
     return - 1;
 }
 

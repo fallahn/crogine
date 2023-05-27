@@ -85,7 +85,7 @@ namespace
 #include "PostProcess.inl"
 
     //hack to map course names to achievement IDs
-    const std::unordered_map < std::string, std::int32_t> ParAch =
+    const std::unordered_map<std::string, std::int32_t> ParAch =
     {
         std::make_pair("course_01", AchievementID::Master01),
         std::make_pair("course_02", AchievementID::Master02),
@@ -97,6 +97,20 @@ namespace
         std::make_pair("course_08", AchievementID::Master08),
         std::make_pair("course_09", AchievementID::Master09),
         std::make_pair("course_10", AchievementID::Master10),
+    };
+
+    const std::unordered_map<std::string, std::int32_t> CourseIDs =
+    {
+        {"course_01", AchievementID::Complete01},
+        {"course_02", AchievementID::Complete02},
+        {"course_03", AchievementID::Complete03},
+        {"course_04", AchievementID::Complete04},
+        {"course_05", AchievementID::Complete05},
+        {"course_06", AchievementID::Complete06},
+        {"course_07", AchievementID::Complete07},
+        {"course_08", AchievementID::Complete08},
+        {"course_09", AchievementID::Complete09},
+        {"course_20", AchievementID::Complete10},
     };
 
     static constexpr float ColumnWidth = 20.f;
@@ -1431,6 +1445,10 @@ void GolfState::showCountdown(std::uint8_t seconds)
         if (m_holeData.size() == 18)
         {
             Achievements::setAvgStat(m_sharedData.mapDirectory, m_playTime.asSeconds(), 1.f);
+            if (CourseIDs.count(m_sharedData.mapDirectory) != 0)
+            {
+                Achievements::awardAchievement(AchievementStrings[CourseIDs.at(m_sharedData.mapDirectory)]);
+            }
 
             //if we're stroke play see if we get the achievement
             //for coming in under par

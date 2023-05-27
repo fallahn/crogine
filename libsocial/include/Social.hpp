@@ -67,8 +67,17 @@ public:
     {
         enum
         {
-            SocialMessage = 10000
+            SocialMessage = 10000,
+            StatMessage
         };
+    };
+
+    struct StatEvent final
+    {
+        enum
+        {
+            StatsReceived
+        }type = StatsReceived;
     };
 
     struct SocialEvent final
