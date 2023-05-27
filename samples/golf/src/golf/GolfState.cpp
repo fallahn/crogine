@@ -960,8 +960,6 @@ void GolfState::handleMessage(const cro::Message& msg)
         case SceneEvent::RequestSwitchCamera:
             
         {
-            setActiveCamera(data.data);
-
             cro::Command cmd;
             cmd.targetFlags = CommandID::StrokeArc | CommandID::StrokeIndicator;
 
@@ -985,6 +983,8 @@ void GolfState::handleMessage(const cro::Message& msg)
                 };
                 m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
             }
+
+            setActiveCamera(data.data);
         }
             break;
         }
