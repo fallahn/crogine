@@ -101,16 +101,16 @@ namespace
 
     const std::unordered_map<std::string, std::int32_t> CourseIDs =
     {
-        {"course_01", AchievementID::Complete01},
-        {"course_02", AchievementID::Complete02},
-        {"course_03", AchievementID::Complete03},
-        {"course_04", AchievementID::Complete04},
-        {"course_05", AchievementID::Complete05},
-        {"course_06", AchievementID::Complete06},
-        {"course_07", AchievementID::Complete07},
-        {"course_08", AchievementID::Complete08},
-        {"course_09", AchievementID::Complete09},
-        {"course_20", AchievementID::Complete10},
+        std::make_pair("course_01", AchievementID::Complete01),
+        std::make_pair("course_02", AchievementID::Complete02),
+        std::make_pair("course_03", AchievementID::Complete03),
+        std::make_pair("course_04", AchievementID::Complete04),
+        std::make_pair("course_05", AchievementID::Complete05),
+        std::make_pair("course_06", AchievementID::Complete06),
+        std::make_pair("course_07", AchievementID::Complete07),
+        std::make_pair("course_08", AchievementID::Complete08),
+        std::make_pair("course_09", AchievementID::Complete09),
+        std::make_pair("course_10", AchievementID::Complete10),
     };
 
     static constexpr float ColumnWidth = 20.f;
