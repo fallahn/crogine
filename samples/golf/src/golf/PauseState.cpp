@@ -77,6 +77,8 @@ namespace
             Main, Confirm
         };
     };
+
+    std::function<void()> resetConfirmation;
 }
 
 PauseState::PauseState(cro::StateStack& ss, cro::State::Context ctx, SharedStateData& sd)
@@ -243,6 +245,7 @@ void PauseState::buildScene()
             e.getComponent<cro::Transform>().setScale(m_viewScale * cro::Util::Easing::easeOutQuint(currTime));
             if (currTime == 0)
             {
+                resetConfirmation();
                 requestStackPop();
 
                 state = RootCallbackData::FadeIn;
@@ -251,6 +254,8 @@ void PauseState::buildScene()
                 {
                     auto* msg = postMessage<SystemEvent>(MessageID::SystemMessage);
                     msg->type = SystemEvent::RestartActiveMode;
+
+                    m_requestRestart = false;
                 }
             }
             break;
@@ -457,10 +462,11 @@ void PauseState::buildScene()
                     {
                         m_requestRestart = true;
 
-                        menuEntity.getComponent<cro::Transform>().setPosition(glm::vec2(0.f));
+                        //this is done by quitState()
+                        /*menuEntity.getComponent<cro::Transform>().setPosition(glm::vec2(0.f));
                         confirmEntity.getComponent<cro::Transform>().setPosition(glm::vec2(-10000.f));
 
-                        m_scene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Main);
+                        m_scene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Main);*/
 
                         quitState();
                     }
@@ -476,6 +482,17 @@ void PauseState::buildScene()
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     centreText(entity);
     confirmEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+    resetConfirmation = [&, menuEntity, confirmEntity]() mutable
+    {
+        menuEntity.getComponent<cro::Transform>().setPosition(glm::vec2(0.f));
+        confirmEntity.getComponent<cro::Transform>().setPosition(glm::vec2(-10000.f));
+
+        m_scene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Main);
+    };
+
+
 
     if (m_sharedData.hosting
         && !m_sharedData.tutorial)
