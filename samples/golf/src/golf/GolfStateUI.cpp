@@ -1448,6 +1448,19 @@ void GolfState::showCountdown(std::uint8_t seconds)
             if (CourseIDs.count(m_sharedData.mapDirectory) != 0)
             {
                 Achievements::awardAchievement(AchievementStrings[CourseIDs.at(m_sharedData.mapDirectory)]);
+
+                if (Achievements::getActive())
+                {
+                    m_achievementDebug.awardStatus = "Awarded Course Complete: " + m_sharedData.mapDirectory.toAnsiString();
+                }
+                else
+                {
+                    m_achievementDebug.awardStatus = "Tried to award Course Complete but achievements were not active";
+                }
+            }
+            else
+            {
+                m_achievementDebug.awardStatus = "Tried to award Course Complete but ID for " + m_sharedData.mapDirectory.toAnsiString() + " was not found.";
             }
 
             //if we're stroke play see if we get the achievement
@@ -1503,6 +1516,10 @@ void GolfState::showCountdown(std::uint8_t seconds)
                     }
                 }
             }
+        }
+        else
+        {
+            m_achievementDebug.awardStatus = "Did not award Course Complete: there were only " + std::to_string(m_holeData.size()) + " holes.";
         }
 
         Social::courseComplete(m_sharedData.mapDirectory, m_sharedData.holeCount);

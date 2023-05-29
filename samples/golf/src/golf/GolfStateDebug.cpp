@@ -29,6 +29,8 @@ source distribution.
 
 #include "GolfState.hpp"
 #include "CameraFollowSystem.hpp"
+#include "AchievementIDs.hpp"
+#include "AchievementStrings.hpp"
 
 #include <crogine/ecs/components/Camera.hpp>
 #include <crogine/core/SysTime.hpp>
@@ -224,6 +226,89 @@ void GolfState::addCameraDebugging()
             ImGui::End();
         });
 #endif
+}
+
+void GolfState::registerDebugCommands()
+{
+    registerCommand("show_stat_window", 
+        [&](const std::string&)
+        {
+            if (!m_achievementDebug.wasActivated)
+            {
+                if (m_allowAchievements)
+                {
+                    m_achievementDebug.achievementEnableReason = "Single human player found on client";
+                }
+                else
+                {
+                    m_achievementDebug.achievementEnableReason = "Multiple human players found on client";
+                }
+
+                //create the window first time
+                registerWindow([&]() 
+                    {
+                        if (m_achievementDebug.visible)
+                        {
+                            if (ImGui::Begin("Stats & Achievements", &m_achievementDebug.visible))
+                            {
+                                ImGui::Text("Achievements active: ");
+                                ImGui::SameLine();
+                                if (Achievements::getActive())
+                                {
+                                    ImGui::PushStyleColor(ImGuiCol_Text, 0xff00ff00);
+                                    ImGui::Text("True");
+                                    ImGui::PopStyleColor();
+                                }
+                                else
+                                {
+                                    ImGui::PushStyleColor(ImGuiCol_Text, 0xffff00ff);
+                                    ImGui::Text("False");
+                                    ImGui::PopStyleColor();
+                                }
+                                ImGui::Text("Reason: %s", m_achievementDebug.achievementEnableReason.c_str());
+
+                                ImGui::NewLine();
+                                ImGui::Text("Achievment Status:");
+
+                                for (auto i = static_cast<std::int32_t>(AchievementID::Complete01); i <= AchievementID::Complete10; ++i)
+                                {
+                                    ImGui::Text("%s", AchievementLabels[i].c_str());
+                                    ImGui::SameLine();
+                                    if (Achievements::getAchievement(AchievementStrings[i])->achieved)
+                                    {
+                                        ImGui::TextColored({ 0.f, 1.f, 0.f, 1.f }, "Achieved");
+                                    }
+                                    else
+                                    {
+                                        ImGui::TextColored({ 1.f, 0.f, 0.f, 1.f }, "Locked");
+                                    }
+                                }
+
+                                ImGui::NewLine();
+                                ImGui::Text("Stat Count:");
+                                for (auto i = static_cast<std::int32_t>(StatID::Course01Complete); i <= StatID::Course10Complete; ++i)
+                                {
+                                    ImGui::Text("%s: %2.1f", StatLabels[i].c_str(), Achievements::getStat(StatStrings[i])->value);
+                                }
+                                ImGui::NewLine();
+
+                                if (m_achievementDebug.awardStatus.empty())
+                                {
+                                    ImGui::Text("Course not yet completed");
+                                }
+                                else
+                                {
+                                    ImGui::Text("%s", m_achievementDebug.awardStatus.c_str());
+                                }
+                            }
+                            ImGui::End();
+                        }
+                    });
+
+                m_achievementDebug.wasActivated = true;
+            }
+            m_achievementDebug.visible = !m_achievementDebug.visible;
+        });
 }
 
 void GolfState::registerDebugWindows()

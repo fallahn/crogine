@@ -481,7 +481,17 @@ private:
     };
     std::vector<std::vector<DebugTx>> m_cameraDebugPoints;
     void addCameraDebugging();
+    void registerDebugCommands();
     void registerDebugWindows();
+
+    struct AchievementDebugContext final
+    {
+        bool wasActivated = false; //true after the first time and window was registered
+        bool visible = false;
+
+        std::string achievementEnableReason;
+        std::string awardStatus;
+    }m_achievementDebug;
 
     struct Benchmark final
     {

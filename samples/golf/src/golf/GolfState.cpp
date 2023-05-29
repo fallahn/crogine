@@ -314,16 +314,22 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
 
     registerDebugWindows();
 #endif
+
+    registerDebugCommands();
+
     cro::App::getInstance().resetFrameTime();
 }
 
 //public
 bool GolfState::handleEvent(const cro::Event& evt)
 {
-    if (ImGui::GetIO().WantCaptureKeyboard
-        || ImGui::GetIO().WantCaptureMouse)
+    if (evt.type != SDL_MOUSEMOTION)
     {
-        return true;
+        if (ImGui::GetIO().WantCaptureKeyboard
+            || ImGui::GetIO().WantCaptureMouse)
+        {
+            return true;
+        }
     }
 
 
