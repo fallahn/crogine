@@ -1,0 +1,24 @@
+model terrain_chunk
+{
+    mesh = terrain_chunk.cmb
+    cast_shadows = false
+
+    material PBR
+    {
+        mask_colour = 0.000000,1.000000,1.000000,1.000000
+        name = "Untitled"
+        colour = 0.262578,0.606195,0.193124,1.000000
+        smooth = true
+        repeat = true
+        depth_test = true
+        double_sided = false
+        use_mipmaps = false
+        animated = false
+        row_count = 1
+        col_count = 1
+        framerate = 1.000000
+        rx_shadows = true
+        blendmode = none
+
+    }
+}
