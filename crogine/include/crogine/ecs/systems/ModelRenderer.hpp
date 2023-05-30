@@ -94,17 +94,37 @@ namespace cro
         */
         std::size_t getVisibleCount(std::size_t cameraIndex, std::int32_t passIndex = 0) const;
 
+        struct VertexShaderID final
+        {
+            enum
+            {
+                Unlit, VertexLit, PBR
+            };
+        };
+
         /*!
         \brief Returns the default Vertex shader for 3D models as a string
         Use this when creating custom materials which only modify the fragment
         shader.
-        \param useLighting Set this to true if you wish to use the vertex shader
-        with default lighting (provides normal data, light position etc) else
-        false to return the Unlit material vertex shader
+        \param type VertexShaderID type to return. Returns an empty string if this is invalid
         */
-        static const std::string& getDefaultVertexShader(bool useLighting);
+        static const std::string& getDefaultVertexShader(std::int32_t type);
 
-
+        struct FragmentShaderID final
+        {
+            enum
+            {
+                Unlit, VertexLit, PBR
+            };
+        };
+        /*!
+        \brief Returns the requested default fragment shader as a string.
+        Use this to get the default fragment shader for a specific material
+        type when using custom vertex shaders.
+        \param type FragmentShaderID type, Unlit, VertexLit or PBR. Other
+        values will return an empty string.
+        */
+        static const std::string& getDefaultFragmentShader(std::int32_t type);
 
         void onEntityAdded(Entity) override;
 

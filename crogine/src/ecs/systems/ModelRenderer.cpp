@@ -29,6 +29,7 @@ source distribution.
 
 #include "../../graphics/shaders/Unlit.hpp"
 #include "../../graphics/shaders/VertexLit.hpp"
+#include "../../graphics/shaders/PBR.hpp"
 
 #include "../../detail/GLCheck.hpp"
 
@@ -264,13 +265,40 @@ std::size_t ModelRenderer::getVisibleCount(std::size_t cameraIndex, std::int32_t
     return 0;
 }
 
-const std::string& ModelRenderer::getDefaultVertexShader(bool useLighting)
+const std::string& ModelRenderer::getDefaultVertexShader(std::int32_t type)
 {
-    if (useLighting)
+    static const std::string defaultVal;
+    switch (type)
     {
+    default:
+        LogW << type << ": Invalid VertexShaderID" << std::endl;
+        return defaultVal;
+    case VertexShaderID::Unlit:
+        return Shaders::Unlit::Vertex;
+    case VertexShaderID::VertexLit:
+    case VertexShaderID::PBR:
         return Shaders::VertexLit::Vertex;
     }
-    return Shaders::Unlit::Vertex;
+    return {};
+}
+
+const std::string& ModelRenderer::getDefaultFragmentShader(std::int32_t type)
+{
+    static const std::string defaultVal;
+    switch (type)
+    {
+    default: 
+        LogW << type << ": Invalid FragmentShaderID" << std::endl;
+        return defaultVal;
+    case FragmentShaderID::Unlit:
+        return Shaders::Unlit::Fragment;
+    case FragmentShaderID::VertexLit:
+        return Shaders::VertexLit::Fragment;
+    case FragmentShaderID::PBR:
+        return Shaders::PBR::Fragment;
+    }
+
+    return defaultVal;
 }
 
 void ModelRenderer::onEntityAdded(Entity entity)

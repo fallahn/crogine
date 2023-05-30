@@ -7,7 +7,7 @@ model terrain_chunk
     {
         mask_colour = 0.000000,1.000000,1.000000,1.000000
         name = "Untitled"
-        colour = 0.262578,0.606195,0.193124,1.000000
+        colour = 1.000000,0.999990,1.000000,1.000000
         smooth = true
         repeat = true
         depth_test = true
@@ -17,6 +17,7 @@ model terrain_chunk
         row_count = 1
         col_count = 1
         framerate = 1.000000
+        vertex_coloured = true
         rx_shadows = true
         blendmode = none
 
