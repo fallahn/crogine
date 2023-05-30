@@ -8,6 +8,7 @@
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/gui/GuiClient.hpp>
 #include <crogine/graphics/ModelDefinition.hpp>
+#include <crogine/graphics/EnvironmentMap.hpp>
 
 class LogState final : public cro::State, public cro::GuiClient
 {
@@ -26,6 +27,8 @@ private:
     cro::Scene m_gameScene;
     cro::Scene m_uiScene;
     cro::ResourceCollection m_resources;
+
+    cro::EnvironmentMap m_envMap;
 
     void addSystems();
     void loadAssets();
