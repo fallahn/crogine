@@ -316,6 +316,7 @@
     <ClCompile Include="src\collision\RollSystem.cpp" />
     <ClCompile Include="src\frustum\FrustumState.cpp" />
     <ClCompile Include="src\LoadingScreen.cpp" />
+    <ClCompile Include="src\log\LogState.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\MenuState.cpp" />
     <ClCompile Include="src\MyApp.cpp" />
@@ -363,6 +364,7 @@
     <ClInclude Include="src\ErrorCheck.hpp" />
     <ClInclude Include="src\frustum\FrustumState.hpp" />
     <ClInclude Include="src\LoadingScreen.hpp" />
+    <ClInclude Include="src\log\LogState.hpp" />
     <ClInclude Include="src\MenuState.hpp" />
     <ClInclude Include="src\Messages.hpp" />
     <ClInclude Include="src\MyApp.hpp" />

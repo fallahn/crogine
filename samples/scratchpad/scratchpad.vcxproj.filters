@@ -91,6 +91,12 @@
     <Filter Include="Header Files\ssao">
       <UniqueIdentifier>{167c96e5-3bf4-41c7-8495-81a928e89ae5}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\log">
+      <UniqueIdentifier>{97f427b3-b702-4395-a0b1-c74b78a76b5f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\log">
+      <UniqueIdentifier>{018844ae-a528-4c69-b21a-52e9e53bffc9}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\LoadingScreen.cpp">
@@ -200,6 +206,9 @@
     </ClCompile>
     <ClCompile Include="src\ssao\SSAOState.cpp">
       <Filter>Source Files\ssao</Filter>
+    </ClCompile>
+    <ClCompile Include="src\log\LogState.cpp">
+      <Filter>Source Files\log</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -343,6 +352,9 @@
     </ClInclude>
     <ClInclude Include="src\ssao\SSAOState.hpp">
       <Filter>Header Files\ssao</Filter>
+    </ClInclude>
+    <ClInclude Include="src\log\LogState.hpp">
+      <Filter>Header Files\log</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

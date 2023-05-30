@@ -357,7 +357,7 @@ void MenuState::createScene()
                 }
             });
 
-    //animation blending
+    //SSAO
     textPos.y -= MenuSpacing;
     entity = createButton("SSAO", textPos);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
@@ -367,6 +367,19 @@ void MenuState::createScene()
                 {
                     requestStackClear();
                     requestStackPush(States::ScratchPad::SSAO);
+                }
+            });
+
+    //Log rolling
+    textPos.y -= MenuSpacing;
+    entity = createButton("Log Roll", textPos);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
+        uiSystem->addCallback([&](cro::Entity e, const cro::ButtonEvent& evt)
+            {
+                if (activated(evt))
+                {
+                    requestStackClear();
+                    requestStackPush(States::ScratchPad::Log);
                 }
             });
 
