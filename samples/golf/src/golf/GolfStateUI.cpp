@@ -1385,6 +1385,7 @@ void GolfState::createSwingMeter(cro::Entity root)
 void GolfState::showCountdown(std::uint8_t seconds)
 {
     m_roundEnded = true;
+    Achievements::setActive(m_allowAchievements); //make sure these are re-enabled in case CPU player was last
 
     //hide any input
     cro::Command cmd;
