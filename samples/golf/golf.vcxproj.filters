@@ -76,6 +76,12 @@
     <Filter Include="Source Files\golf\shared">
       <UniqueIdentifier>{cc15016c-fb7e-48c0-9272-933fa4fc0d7e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\sqlite">
+      <UniqueIdentifier>{85312517-49cc-40f5-9b1e-8ab1e765d01c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\sqlite">
+      <UniqueIdentifier>{db65c6dd-34b6-4bd9-91b7-166a75834bb0}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\LoadingScreen.cpp">
@@ -344,6 +350,9 @@
     </ClCompile>
     <ClCompile Include="src\golf\BallTrail.cpp">
       <Filter>Source Files\golf\client</Filter>
+    </ClCompile>
+    <ClCompile Include="src\sqlite\SqliteState.cpp">
+      <Filter>Source Files\sqlite</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -700,6 +709,9 @@
     </ClInclude>
     <ClInclude Include="src\golf\XPAwardStrings.hpp">
       <Filter>Header Files\golf\client</Filter>
+    </ClInclude>
+    <ClInclude Include="src\sqlite\SqliteState.hpp">
+      <Filter>Header Files\sqlite</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2023
+Matt Marchant 2023
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -29,35 +29,34 @@ source distribution.
 
 #pragma once
 
-struct StateID final
+#include "../StateIDs.hpp"
+
+#include <crogine/core/State.hpp>
+#include <crogine/ecs/Scene.hpp>
+#include <crogine/gui/GuiClient.hpp>
+#include <crogine/graphics/ModelDefinition.hpp>
+
+class SqliteState final : public cro::State, public cro::GuiClient
 {
-    enum
-    {
-        Menu,
-        Golf,
-        Options,
-        Pause,
-        Error,
-        SplashScreen,
-        Tutorial,
-        Keyboard,
-        Practice,
-        DrivingRange,
-        PuttingRange,
-        Clubhouse,
-        Billiards,
-        Trophy,
-        News,
-        Bush,
-        Playlist,
-        MessageOverlay,
-        Credits,
-        EventOverlay, //consumes events if the overlay is open
-        Unlock,
-        Profile, 
+public:
+    SqliteState(cro::StateStack&, cro::State::Context);
 
+    cro::StateID getStateID() const override { return StateID::SQLite; }
 
-        SQLite, //used for testing SQLite features
-        Workshop = 1100
-    };
+    bool handleEvent(const cro::Event&) override;
+    void handleMessage(const cro::Message&) override;
+    bool simulate(float) override;
+    void render() override;
+
+private:
+
+    cro::Scene m_gameScene;
+    cro::Scene m_uiScene;
+    cro::ResourceCollection m_resources;
+
+    void addSystems();
+    void loadAssets();
+    void createScene();
+    void createUI();
+
 };

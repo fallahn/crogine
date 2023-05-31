@@ -60,6 +60,7 @@ find_package(SDL2 REQUIRED)
 find_package(OpenGL REQUIRED)
 #TODO specify version 2.83
 find_package(Bullet REQUIRED)
+find_package(SQLite REQUIRED)
 
 if(USE_NEWSFEED)
 find_package(CURL REQUIRED)
@@ -79,6 +80,7 @@ include_directories(
   ${SDL2_INCLUDE_DIR}
   ${OPENGL_INCLUDE_DIR}
   ${BULLET_INCLUDE_DIRS}
+  ${SQLITE_INCLUDE_DIRS}
   ${CMAKE_CURRENT_SOURCE_DIR}/../../libsocial/include
   src)
 
@@ -91,9 +93,10 @@ SET(SOCIAL_DIR ${PROJECT_DIR}/../../../libsocial/src)
 include(${PROJECT_DIR}/CMakeLists.txt)
 include(${PROJECT_DIR}/golf/CMakeLists.txt)
 include(${PROJECT_DIR}/editor/CMakeLists.txt)
+include(${PROJECT_DIR}/sqlite/CMakeLists.txt)
 include(${SOCIAL_DIR}/CMakeLists.txt)
 
-SET(GOLF_SRC ${GOLF_SRC} ${SOCIAL_SRC} ${EDITOR_SRC})
+SET(GOLF_SRC ${GOLF_SRC} ${SOCIAL_SRC} ${EDITOR_SRC} ${SQLITE_SRC})
 if(USE_NEWSFEED)
   include(${PROJECT_DIR}/rss/CMakeLists.txt)
   SET(GOLF_SRC ${GOLF_SRC} ${RSS_SRC})
@@ -152,7 +155,8 @@ endif()
 target_link_libraries(${PROJECT_NAME}
   ${CROGINE_LIBRARIES}
   ${SDL2_LIBRARY}
-  ${BULLET_LIBRARIES}  
+  ${BULLET_LIBRARIES}
+  ${SQLITE_LIBRARIES}  
   ${OPENGL_LIBRARIES})
 
 if(USE_NEWSFEED)

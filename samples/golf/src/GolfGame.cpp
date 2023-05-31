@@ -53,6 +53,7 @@ source distribution.
 #include "golf/PacketIDs.hpp"
 #include "golf/UnlockItems.hpp"
 #include "editor/BushState.hpp"
+#include "sqlite/SqliteState.hpp"
 #include "LoadingScreen.hpp"
 #include "SplashScreenState.hpp"
 #include "ErrorCheck.hpp"
@@ -176,6 +177,10 @@ GolfGame::GolfGame()
     m_stateStack.registerState<BushState>(StateID::Bush, m_sharedData);
     m_stateStack.registerState<MessageOverlayState>(StateID::MessageOverlay, m_sharedData);
     m_stateStack.registerState<EventOverlayState>(StateID::EventOverlay);
+
+#ifdef CRO_DEBUG_
+    m_stateStack.registerState<SqliteState>(StateID::SQLite);
+#endif
 
 #ifdef USE_WORKSHOP
     m_stateStack.registerState<WorkshopState>(StateID::Workshop);
@@ -710,9 +715,10 @@ bool GolfGame::initialise()
 #ifdef CRO_DEBUG_
     //m_stateStack.pushState(StateID::DrivingRange); //can't go straight to this because menu needs to parse avatar data
     //m_stateStack.pushState(StateID::Bush);
-    m_stateStack.pushState(StateID::Menu);
     //m_stateStack.pushState(StateID::Clubhouse);
     //m_stateStack.pushState(StateID::SplashScreen);
+    //m_stateStack.pushState(StateID::Menu);
+    m_stateStack.pushState(StateID::SQLite);
 #else
     m_stateStack.pushState(StateID::SplashScreen);
 #endif
