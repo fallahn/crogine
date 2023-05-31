@@ -354,6 +354,9 @@
     <ClCompile Include="src\sqlite\SqliteState.cpp">
       <Filter>Source Files\sqlite</Filter>
     </ClCompile>
+    <ClCompile Include="src\sqlite\ProfileDB.cpp">
+      <Filter>Source Files\sqlite</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ErrorCheck.hpp">
@@ -711,6 +714,9 @@
       <Filter>Header Files\golf\client</Filter>
     </ClInclude>
     <ClInclude Include="src\sqlite\SqliteState.hpp">
+      <Filter>Header Files\sqlite</Filter>
+    </ClInclude>
+    <ClInclude Include="src\sqlite\ProfileDB.hpp">
       <Filter>Header Files\sqlite</Filter>
     </ClInclude>
   </ItemGroup>

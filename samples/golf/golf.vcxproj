@@ -534,6 +534,7 @@
     <ClCompile Include="src\rss\Newsfeed.cpp" />
     <ClCompile Include="src\rss\pugixml.cpp" />
     <ClCompile Include="src\SplashScreenState.cpp" />
+    <ClCompile Include="src\sqlite\ProfileDB.cpp" />
     <ClCompile Include="src\sqlite\SqliteState.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -654,6 +655,7 @@
     <ClInclude Include="src\rss\pugiconfig.hpp" />
     <ClInclude Include="src\rss\pugixml.hpp" />
     <ClInclude Include="src\SplashScreenState.hpp" />
+    <ClInclude Include="src\sqlite\ProfileDB.hpp" />
     <ClInclude Include="src\sqlite\SqliteState.hpp" />
     <ClInclude Include="src\StateIDs.hpp" />
   </ItemGroup>

@@ -137,6 +137,9 @@ void SqliteState::createScene()
 
 void SqliteState::createUI()
 {
+    m_db.open(cro::App::getPreferencePath() + "profile.db3");
+
+
     auto resize = [](cro::Camera& cam)
     {
         glm::vec2 size(cro::App::getWindow().getSize());

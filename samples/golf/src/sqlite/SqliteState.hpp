@@ -30,6 +30,7 @@ source distribution.
 #pragma once
 
 #include "../StateIDs.hpp"
+#include "ProfileDB.hpp"
 
 #include <crogine/core/State.hpp>
 #include <crogine/ecs/Scene.hpp>
@@ -53,6 +54,8 @@ private:
     cro::Scene m_gameScene;
     cro::Scene m_uiScene;
     cro::ResourceCollection m_resources;
+
+    ProfileDB m_db;
 
     void addSystems();
     void loadAssets();
