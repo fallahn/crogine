@@ -47,7 +47,6 @@ source distribution.
 #include "InterpolationSystem.hpp"
 #include "XPAwardStrings.hpp"
 #include "../ErrorCheck.hpp"
-#include "../sqlite/ProfileDB.hpp"
 
 #include <Achievements.hpp>
 #include <AchievementStrings.hpp>
@@ -3585,33 +3584,45 @@ void GolfState::updateProfileDB()
                     if (m_sharedData.reverseCourse)
                     {
                         std::reverse(scores.begin(), scores.end());
+                        std::reverse(m_personalBests[i].begin(), m_personalBests[i].end());
                     }
                     for (auto j = 0; j < 18; ++j)
                     {
                         record.holeScores[j] = scores[j];
                         record.total += scores[j];
+
+                        m_personalBests[i][j].hole = j;
+                        db.insertPersonalBestRecord(m_personalBests[i][j]);
                     }
                     break;
                 case 1:
                     if (m_sharedData.reverseCourse)
                     {
                         std::reverse(scores.begin(), scores.begin() + 9);
+                        std::reverse(m_personalBests[i].begin(), m_personalBests[i].begin() + 9);
                     }
                     for (auto j = 0; j < 9; ++j)
                     {
                         record.holeScores[j] = scores[j];
                         record.total += scores[j];
+
+                        m_personalBests[i][j].hole = j;
+                        db.insertPersonalBestRecord(m_personalBests[i][j]);
                     }
                     break;
                 case 2:
                     if (m_sharedData.reverseCourse)
                     {
                         std::reverse(scores.begin(), scores.begin() + 9);
+                        std::reverse(m_personalBests[i].begin(), m_personalBests[i].begin() + 9);
                     }
                     for (auto j = 0; j < 9; ++j)
                     {
                         record.holeScores[j + 9] = scores[j];
                         record.total += scores[j];
+
+                        m_personalBests[i][j].hole = j + 9;
+                        db.insertPersonalBestRecord(m_personalBests[i][j]);
                     }
                     break;
                 }

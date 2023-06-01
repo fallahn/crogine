@@ -30,6 +30,7 @@ source distribution.
 #pragma once
 
 #include "../StateIDs.hpp"
+#include "../sqlite/ProfileDB.hpp"
 #include "HoleData.hpp"
 #include "GameConsts.hpp"
 #include "InputParser.hpp"
@@ -362,6 +363,8 @@ private:
     SkipState m_skipState;
     void updateSkipMessage(float);
     void refreshUI();
+
+    std::array<std::array<PersonalBestRecord, 18>, ConstVal::MaxPlayers> m_personalBests = {};
     void updateProfileDB();
 
     void buildTrophyScene();
