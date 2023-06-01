@@ -190,15 +190,24 @@ void SqliteState::createUI()
 
 
                 ImGui::Separator();
+                static std::vector<PersonalBestRecord> pbs = m_db.getPersonalBest(0);
                 if (ImGui::Button("Insert PB"))
                 {
                     PersonalBestRecord pb;
-                    pb.hole = 1;
-                    pb.course = 3;
-                    pb.longestDrive = 5.141f;
-                    pb.longestPutt = 6.1337f;
-                    pb.score = 52;
+                    pb.hole = cro::Util::Random::value(0, 17);
+                    pb.course = cro::Util::Random::value(0, 9);
+                    pb.longestDrive = cro::Util::Random::value(5.141f, 10.f);
+                    pb.longestPutt = cro::Util::Random::value(6.1337f, 10.f);
+                    pb.score = cro::Util::Random::value(1, 13);
                     m_db.insertPersonalBestRecord(pb);
+
+                    pbs = m_db.getPersonalBest(pb.course);
+                }
+
+                for (const auto& record : pbs)
+                {
+                    ImGui::Text("Hole: %d, Course: %d, Longest Drive: %3.1f, Longest Putt %3.1f, Score: %d",
+                        record.hole, record.course, record.longestDrive, record.longestPutt, record.score);
                 }
             }
             ImGui::End();

@@ -216,6 +216,18 @@ std::int32_t ProfileDB::getCourseRecordCount(std::int32_t index, std::int32_t ho
 
 bool ProfileDB::insertPersonalBestRecord(const PersonalBestRecord& record)
 {
+    if (record.hole > 17 || record.course > MaxCourse)
+    {
+        LogE << "Could not insert personal best - hole or course index out of range." << std::endl;
+        return false;
+    }
+
+    if (m_connection == nullptr)
+    {
+        LogE << "Could not insert personal best - database not open" << std::endl;
+        return false;
+    }
+
     auto newRecord = record;
     std::string query = "SELECT * FROM PERSONAL_BEST WHERE Hole = " + std::to_string(record.hole) + " AND Course = " + std::to_string(record.course);
 
@@ -272,8 +284,6 @@ bool ProfileDB::insertPersonalBestRecord(const PersonalBestRecord& record)
             }
             sqlite3_step(out);
             sqlite3_finalize(out);
-
-            LogI << "Updated existing personal best" << std::endl;
         }
     }
     else
@@ -299,8 +309,6 @@ bool ProfileDB::insertPersonalBestRecord(const PersonalBestRecord& record)
         }
         sqlite3_step(out);
         sqlite3_finalize(out);
-
-        LogI << "Added new personal best" << std::endl;
     }
 
     return true;
@@ -308,7 +316,51 @@ bool ProfileDB::insertPersonalBestRecord(const PersonalBestRecord& record)
 
 std::vector<PersonalBestRecord> ProfileDB::getPersonalBest(std::int32_t courseIndex) const
 {
-    return {};
+    CRO_ASSERT(courseIndex >= MinCourse && courseIndex <= MaxCourse, "");
+    if (courseIndex < MinCourse || courseIndex > MaxCourse)
+    {
+        LogE << "ProfileDB (SELECT PB) - " << courseIndex << ": out of range course index" << std::endl;
+        return {};
+    }
+
+    if (m_connection == nullptr)
+    {
+        LogE << "ProfileDB (SELECT PB) - Could not fetch records, database not open" << std::endl;
+        return {};
+    }
+
+    std::vector<PersonalBestRecord> retVal;
+    std::string query = "SELECT * FROM PERSONAL_BEST WHERE Course = " + std::to_string(courseIndex) + " ORDER BY Hole";
+
+    sqlite3_stmt* out = nullptr;
+    int result = sqlite3_prepare_v2(m_connection, query.c_str(), -1, &out, nullptr);
+    if (result != SQLITE_OK)
+    {
+        LogE << sqlite3_errmsg(m_connection) << std::endl;
+        sqlite3_finalize(out);
+        return retVal;
+    }
+
+    do
+    {
+        result = sqlite3_step(out);
+
+        if (result == SQLITE_ROW)
+        {
+            auto& record = retVal.emplace_back();
+
+            record.hole = sqlite3_column_int(out, 0);
+            record.course = sqlite3_column_int(out, 1);
+            record.longestDrive = static_cast<float>(sqlite3_column_double(out, 2));
+            record.longestPutt = static_cast<float>(sqlite3_column_double(out, 3));
+            record.score = sqlite3_column_int(out, 4);
+        }
+
+    } while (result == SQLITE_ROW);
+
+    sqlite3_finalize(out);
+
+    return retVal;
 }
 
 //private

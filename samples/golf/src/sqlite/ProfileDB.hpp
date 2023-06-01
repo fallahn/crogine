@@ -53,7 +53,7 @@ struct PersonalBestRecord final
     std::int32_t course = 0;
     float longestDrive = 0.f;
     float longestPutt = 0.f;
-    std::int32_t score = 0;
+    std::int32_t score = 12;
 };
 
 class ProfileDB final
