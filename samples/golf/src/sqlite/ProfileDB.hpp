@@ -34,13 +34,14 @@ source distribution.
 #include <string>
 #include <array>
 #include <vector>
+#include <limits>
 
 struct ProfileRecord final
 {
     std::array<std::int32_t, 18u> holeScores = {};
     std::int32_t total = 0;
     std::int32_t totalPar = 0;
-    std::int32_t holeID = 0;
+    std::int32_t courseIndex = 0;
     std::int32_t holeCount = 0; //all, front, back
     std::int32_t wasCPU = 0; //bool
     std::uint64_t timestamp = 0u;
@@ -66,11 +67,18 @@ public:
     bool insertRecord(const ProfileRecord&);
 
     //returns the requested number of records, or as many exist
-    std::vector<ProfileRecord> getRecords(std::int32_t holeIndex, std::int32_t recordCount = -1);
+    std::vector<ProfileRecord> getRecords(std::int32_t holeIndex, std::int32_t recordCount = std::numeric_limits<std::int32_t>::max());
+
+    std::int32_t getRecordCount(std::int32_t courseIndex, std::int32_t holeCount) const;
 
 private:
     sqlite3* m_connection;
     
+    std::array<std::vector<std::int32_t>, 3u> m_recordCounts;
+
     //creates a new table for the given course ID if it doesn't exist
     bool createTable(std::int32_t id);
+
+    //fetches the record count for the given course index
+    void fetchRecordCount(std::int32_t courseIndex);
 };

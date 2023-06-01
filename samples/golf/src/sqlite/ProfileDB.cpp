@@ -55,7 +55,11 @@ namespace
 ProfileDB::ProfileDB()
     : m_connection(nullptr)
 {
-
+    for (auto& v : m_recordCounts)
+    {
+        v.resize(MaxCourse + 1);
+        std::fill(v.begin(), v.end(), 0);
+    }
 }
 
 ProfileDB::~ProfileDB()
@@ -96,6 +100,7 @@ bool ProfileDB::open(const std::string& path)
     for (auto i = 0; i <= MaxCourse; ++i)
     {
         createTable(i);
+        fetchRecordCount(i);
     }
 
 
@@ -104,13 +109,47 @@ bool ProfileDB::open(const std::string& path)
 
 bool ProfileDB::insertRecord(const ProfileRecord& record)
 {
+    CRO_ASSERT(record.courseIndex >= MinCourse && record.courseIndex <= MaxCourse, "");
+    if (record.courseIndex < MinCourse || record.courseIndex > MaxCourse)
+    {
+        LogE << "ProfileDB (INSERT) - " << record.courseIndex << ": out of range course index" << std::endl;
+        return false;
+    }
+    
     if (m_connection == nullptr)
     {
-        LogE << "ProfileDB - Could not insert record, DB is not open" << std::endl;
+        LogE << "ProfileDB (INSERT) - Could not insert record, DB is not open" << std::endl;
         return false;
     }
 
-    auto ts = cro::SysTime::epoch();
+    auto ts = std::to_string(cro::SysTime::epoch());
+    std::string holeVals;
+    for (auto h : record.holeScores)
+    {
+        holeVals += std::to_string(h) + ",";
+    }
+
+    std::string query = "INSERT INTO " + CourseNames[record.courseIndex]
+        + "(H1,H2,H3,H4,H5,H6,H7,H8,H9,H10,H11,H12,H13,H14,H15,H16,H17,H18,Total,TotalPar,Count,Date,WasCPU)"
+        + "VALUES("
+        + holeVals + std::to_string(record.total) + "," + std::to_string(record.totalPar) + ","
+        + std::to_string(record.holeCount) + "," + ts + "," + std::to_string(record.wasCPU)
+        + ")";
+
+    sqlite3_stmt* out = nullptr;
+    int result = sqlite3_prepare_v2(m_connection, query.c_str(), -1, &out, nullptr);
+    if (result != SQLITE_OK)
+    {
+        LogE << sqlite3_errmsg(m_connection) << std::endl;
+        sqlite3_finalize(out);
+        return false;
+    }
+
+    sqlite3_step(out);
+    sqlite3_finalize(out);
+
+    m_recordCounts[record.holeCount][record.courseIndex]++;
+
     return false;
 }
 
@@ -119,18 +158,60 @@ std::vector<ProfileRecord> ProfileDB::getRecords(std::int32_t courseIndex, std::
     CRO_ASSERT(courseIndex >= MinCourse && courseIndex <= MaxCourse, "");
     if (courseIndex < MinCourse || courseIndex > MaxCourse)
     {
-        LogE << "ProfileDB - " << courseIndex << ": out of range course index" << std::endl;
+        LogE << "ProfileDB (SELECT) - " << courseIndex << ": out of range course index" << std::endl;
         return {};
     }
 
     if (m_connection == nullptr)
     {
-        LogE << "ProfileDB - Could not fetch records, database not open" << std::endl;
+        LogE << "ProfileDB (SELECT) - Could not fetch records, database not open" << std::endl;
         return {};
     }
 
+    std::vector<ProfileRecord> retVal;
 
-    return {};
+    std::string query = "SELECT * FROM " + CourseNames[courseIndex] + " ORDER BY Date DESC";
+    sqlite3_stmt* out = nullptr;
+    int result = sqlite3_prepare_v2(m_connection, query.c_str(), -1, &out, nullptr);
+    if (result != SQLITE_OK)
+    {
+        LogE << sqlite3_errmsg(m_connection) << std::endl;
+        sqlite3_finalize(out);
+        return retVal;
+    }
+
+
+    do
+    {
+        result = sqlite3_step(out);
+        
+        if (result == SQLITE_ROW)
+        {
+            auto& record = retVal.emplace_back();
+            
+            for (auto i = 0; i < 18; ++i)
+            {
+                record.holeScores[i] = sqlite3_column_int(out, i);
+            }
+            record.total = sqlite3_column_int(out, 18);
+            record.totalPar = sqlite3_column_int(out, 19);
+            record.holeCount = sqlite3_column_int(out, 20);
+            record.timestamp = sqlite3_column_int64(out, 21);
+            record.wasCPU = sqlite3_column_int(out, 22);
+        }
+
+    } while (result == SQLITE_ROW && recordCount-- != 0);
+
+    sqlite3_finalize(out);
+
+    return retVal;
+}
+
+std::int32_t ProfileDB::getRecordCount(std::int32_t index, std::int32_t holeCount) const
+{
+    CRO_ASSERT(index < MaxCourse + 1, "");
+    CRO_ASSERT(holeCount < 3, "");
+    return m_recordCounts[holeCount][index];
 }
 
 //private
@@ -158,4 +239,31 @@ bool ProfileDB::createTable(std::int32_t index)
     sqlite3_finalize(out);
 
     return true;
+}
+
+void ProfileDB::fetchRecordCount(std::int32_t courseIndex)
+{
+    for (auto i = 0; i < 3; ++i)
+    {
+        CRO_ASSERT(courseIndex < MaxCourse + 1, "");
+        std::string query = "SELECT COUNT(*) FROM " + CourseNames[courseIndex] + " WHERE Count = " + std::to_string(i);
+
+        sqlite3_stmt* out = nullptr;
+        int result = sqlite3_prepare_v2(m_connection, query.c_str(), -1, &out, nullptr);
+        if (result != SQLITE_OK)
+        {
+            LogE << sqlite3_errmsg(m_connection) << std::endl;
+            sqlite3_finalize(out);
+            continue;
+        }
+
+        result = sqlite3_step(out);
+        if (result == SQLITE_ROW)
+        {
+            m_recordCounts[i][courseIndex] = sqlite3_column_int(out, 0);
+        }
+
+
+        sqlite3_finalize(out);
+    }
 }

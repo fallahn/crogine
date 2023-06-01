@@ -29,6 +29,7 @@ source distribution.
 
 #include "SqliteState.hpp"
 
+#include <crogine/core/SysTime.hpp>
 #include <crogine/gui/Gui.hpp>
 
 #include <crogine/ecs/components/Camera.hpp>
@@ -44,6 +45,7 @@ source distribution.
 #include <crogine/ecs/systems/RenderSystem2D.hpp>
 
 #include <crogine/util/Constants.hpp>
+#include <crogine/util/Random.hpp>
 
 SqliteState::SqliteState(cro::StateStack& stack, cro::State::Context context)
     : cro::State    (stack, context),
@@ -138,6 +140,56 @@ void SqliteState::createScene()
 void SqliteState::createUI()
 {
     m_db.open(cro::App::getPreferencePath() + "profile.db3");
+
+    registerWindow([&]() 
+        {
+            if (ImGui::Begin("DB Window"))
+            {
+                if (ImGui::Button("Insert Random"))
+                {
+                    ProfileRecord record;
+                    for (auto& h : record.holeScores)
+                    {
+                        h = cro::Util::Random::value(2, 5);
+                        record.total += h;
+                    }
+                    record.totalPar = cro::Util::Random::value(-6, 6);
+                    record.holeCount = cro::Util::Random::value(0, 2);
+                    record.courseIndex = cro::Util::Random::value(0, 9);
+                    record.wasCPU = cro::Util::Random::value(0, 4) == 0 ? 1 : 0;
+                    m_db.insertRecord(record);
+                }
+
+                static int32_t currentCourse = 0;
+                static std::vector<ProfileRecord> records = m_db.getRecords(currentCourse);
+
+                ImGui::Text("Course %d", currentCourse + 1);
+                ImGui::SameLine();
+                if (ImGui::Button("-"))
+                {
+                    currentCourse = (currentCourse + 9) % 10;
+                    records = m_db.getRecords(currentCourse);
+                }
+                ImGui::SameLine();
+                if (ImGui::Button("+"))
+                {
+                    currentCourse = (currentCourse + 1) % 10;
+                    records = m_db.getRecords(currentCourse);
+                }
+
+                ImGui::Text("18 Holes: %d records", m_db.getRecordCount(currentCourse, 0));
+                ImGui::Text("Front 9 Holes: %d records", m_db.getRecordCount(currentCourse, 1));
+                ImGui::Text("Back 9 Holes: %d records", m_db.getRecordCount(currentCourse, 2));
+
+                ImGui::Separator();
+
+                for (const auto& record : records)
+                {
+                    ImGui::Text("Hole 1: %d, Hole 18: %d - Total: %d  %s", record.holeScores[0], record.holeScores[17], record.total, cro::SysTime::dateString(record.timestamp).c_str());
+                }
+            }
+            ImGui::End();
+        });
 
 
     auto resize = [](cro::Camera& cam)
