@@ -187,6 +187,19 @@ void SqliteState::createUI()
                 {
                     ImGui::Text("Hole 1: %d, Hole 18: %d - Total: %d  %s", record.holeScores[0], record.holeScores[17], record.total, cro::SysTime::dateString(record.timestamp).c_str());
                 }
+
+
+                ImGui::Separator();
+                if (ImGui::Button("Insert PB"))
+                {
+                    PersonalBestRecord pb;
+                    pb.hole = 1;
+                    pb.course = 3;
+                    pb.longestDrive = 5.141f;
+                    pb.longestPutt = 6.1337f;
+                    pb.score = 52;
+                    m_db.insertPersonalBestRecord(pb);
+                }
             }
             ImGui::End();
         });

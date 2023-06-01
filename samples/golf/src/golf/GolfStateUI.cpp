@@ -3572,10 +3572,9 @@ void GolfState::updateProfileDB()
         ProfileDB db;
         for (auto i = 0u; i < localCount; ++i)
         {
-            auto dbPath = Social::getUserContentPath(Social::UserContent::Profile) + localPlayers[i].profileID + "/profile.db";
+            auto dbPath = Social::getUserContentPath(Social::UserContent::Profile) + localPlayers[i].profileID + "/profile.db3";
             if (db.open(dbPath))
             {
-                LogI << "opened " << dbPath << std::endl;
                 CourseRecord record;
                 auto scores = playerData[i].holeScores;
 
@@ -3596,7 +3595,7 @@ void GolfState::updateProfileDB()
                 case 1:
                     if (m_sharedData.reverseCourse)
                     {
-                        std::reverse(scores.begin(), scores.begin() + 8);
+                        std::reverse(scores.begin(), scores.begin() + 9);
                     }
                     for (auto j = 0; j < 9; ++j)
                     {
@@ -3607,7 +3606,7 @@ void GolfState::updateProfileDB()
                 case 2:
                     if (m_sharedData.reverseCourse)
                     {
-                        std::reverse(scores.begin(), scores.begin() + 8);
+                        std::reverse(scores.begin(), scores.begin() + 9);
                     }
                     for (auto j = 0; j < 9; ++j)
                     {
@@ -3622,10 +3621,7 @@ void GolfState::updateProfileDB()
                 record.courseIndex = courseID;
                 record.wasCPU = localPlayers[i].isCPU ? 1 : 0;
 
-                if (db.insertCourseRecord(record))
-                {
-                    LogI << "inserted record for " << localPlayers[i].profileID << std::endl;
-                }
+                db.insertCourseRecord(record);
             }
         }
     }

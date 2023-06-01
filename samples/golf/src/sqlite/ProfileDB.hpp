@@ -47,6 +47,15 @@ struct CourseRecord final
     std::uint64_t timestamp = 0u;
 };
 
+struct PersonalBestRecord final
+{
+    std::int32_t hole = 0;
+    std::int32_t course = 0;
+    float longestDrive = 0.f;
+    float longestPutt = 0.f;
+    std::int32_t score = 0;
+};
+
 class ProfileDB final
 {
 public:
@@ -68,8 +77,11 @@ public:
 
     //returns the requested number of records, or as many exist
     std::vector<CourseRecord> getCourseRecords(std::int32_t holeIndex, std::int32_t recordCount = std::numeric_limits<std::int32_t>::max());
-
     std::int32_t getCourseRecordCount(std::int32_t courseIndex, std::int32_t holeCount) const;
+
+    bool insertPersonalBestRecord(const PersonalBestRecord&);
+    //returns the personal bests for the given course, sorted by hole number
+    std::vector<PersonalBestRecord> getPersonalBest(std::int32_t courseIndex) const;
 
 private:
     sqlite3* m_connection;
@@ -77,7 +89,8 @@ private:
     std::array<std::vector<std::int32_t>, 3u> m_courseRecordCounts;
 
     //creates a new table for the given course ID if it doesn't exist
-    bool createTable(std::int32_t id);
+    bool createCourseTable(std::int32_t id);
+    void createPersonalBestTable();
 
     //fetches the record count for the given course index
     void fetchRecordCount(std::int32_t courseIndex);

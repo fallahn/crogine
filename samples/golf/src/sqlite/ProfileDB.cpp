@@ -99,9 +99,10 @@ bool ProfileDB::open(const std::string& path)
     //if the layout is not yet created, do so
     for (auto i = 0; i <= MaxCourse; ++i)
     {
-        createTable(i);
+        createCourseTable(i);
         fetchRecordCount(i);
     }
+    createPersonalBestTable();
 
     return true;
 }
@@ -213,8 +214,105 @@ std::int32_t ProfileDB::getCourseRecordCount(std::int32_t index, std::int32_t ho
     return m_courseRecordCounts[holeCount][index];
 }
 
+bool ProfileDB::insertPersonalBestRecord(const PersonalBestRecord& record)
+{
+    auto newRecord = record;
+    std::string query = "SELECT * FROM PERSONAL_BEST WHERE Hole = " + std::to_string(record.hole) + " AND Course = " + std::to_string(record.course);
+
+    sqlite3_stmt* out = nullptr;
+    int result = sqlite3_prepare_v2(m_connection, query.c_str(), -1, &out, nullptr);
+    if (result != SQLITE_OK)
+    {
+        LogE << sqlite3_errmsg(m_connection) << std::endl;
+        sqlite3_finalize(out);
+        return false;
+    }
+
+
+    if (result = sqlite3_step(out); result == SQLITE_ROW)
+    {
+        newRecord.longestDrive = static_cast<float>(sqlite3_column_double(out, 2));
+        newRecord.longestPutt = static_cast<float>(sqlite3_column_double(out, 3));
+        newRecord.score = sqlite3_column_int(out, 4);
+
+        bool updated = false;
+        if (newRecord.longestDrive < record.longestDrive)
+        {
+            newRecord.longestDrive = record.longestDrive;
+            updated = true;
+        }
+        if (newRecord.longestPutt < record.longestPutt)
+        {
+            newRecord.longestPutt = record.longestPutt;
+            updated = true;
+        }
+        if (newRecord.score > record.score)
+        {
+            newRecord.score = record.score;
+            updated = true;
+        }
+
+        sqlite3_finalize(out);
+        out = nullptr;
+
+        if (updated)
+        {
+            //update entry
+            query = "UPDATE PERSONAL_BEST SET LongestDrive = " + std::to_string(newRecord.longestDrive)
+                + ", LongestPutt = " + std::to_string(newRecord.longestPutt)
+                + ", Score = " + std::to_string(newRecord.score)
+                + " WHERE Hole = " + std::to_string(record.hole) + " AND Course = " + std::to_string(record.course);
+
+            result = sqlite3_prepare_v2(m_connection, query.c_str(), -1, &out, nullptr);
+            if (result != SQLITE_OK)
+            {
+                LogE << sqlite3_errmsg(m_connection) << std::endl;
+                sqlite3_finalize(out);
+                return false;
+            }
+            sqlite3_step(out);
+            sqlite3_finalize(out);
+
+            LogI << "Updated existing personal best" << std::endl;
+        }
+    }
+    else
+    {
+        //insert entry
+        sqlite3_finalize(out);
+        out = nullptr;
+
+        query = "INSERT INTO PERSONAL_BEST (Hole, Course, LongestDrive, LongestPutt, Score) VALUES ("
+            + std::to_string(record.hole) + ", "
+            + std::to_string(record.course) + ", "
+            + std::to_string(record.longestDrive) + ", "
+            + std::to_string(record.longestPutt) + ", "
+            + std::to_string(record.score) + ")";
+
+
+        result = sqlite3_prepare_v2(m_connection, query.c_str(), -1, &out, nullptr);
+        if (result != SQLITE_OK)
+        {
+            LogE << sqlite3_errmsg(m_connection) << std::endl;
+            sqlite3_finalize(out);
+            return false;
+        }
+        sqlite3_step(out);
+        sqlite3_finalize(out);
+
+        LogI << "Added new personal best" << std::endl;
+    }
+
+    return true;
+}
+
+std::vector<PersonalBestRecord> ProfileDB::getPersonalBest(std::int32_t courseIndex) const
+{
+    return {};
+}
+
 //private
-bool ProfileDB::createTable(std::int32_t index)
+bool ProfileDB::createCourseTable(std::int32_t index)
 {
     /*
     H1 INT - H18 INTEGER, Total INTEGER, TotalPar INTEGER, Count INTEGER, Date INTEGER WasCPU INTEGER
@@ -238,6 +336,23 @@ bool ProfileDB::createTable(std::int32_t index)
     sqlite3_finalize(out);
 
     return true;
+}
+
+void ProfileDB::createPersonalBestTable()
+{
+    std::string query = "CREATE TABLE IF NOT EXISTS PERSONAL_BEST (Hole INTEGER, Course INTEGER, LongestDrive REAL, LongestPutt REAL, Score INTEGER)";
+
+    sqlite3_stmt* out = nullptr;
+    int result = sqlite3_prepare_v2(m_connection, query.c_str(), -1, &out, nullptr);
+    if (result != SQLITE_OK)
+    {
+        LogE << sqlite3_errmsg(m_connection) << std::endl;
+        sqlite3_finalize(out);
+        return;
+    }
+
+    sqlite3_step(out);
+    sqlite3_finalize(out);
 }
 
 void ProfileDB::fetchRecordCount(std::int32_t courseIndex)
