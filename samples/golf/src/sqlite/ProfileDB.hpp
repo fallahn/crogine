@@ -36,7 +36,7 @@ source distribution.
 #include <vector>
 #include <limits>
 
-struct ProfileRecord final
+struct CourseRecord final
 {
     std::array<std::int32_t, 18u> holeScores = {};
     std::int32_t total = 0;
@@ -64,17 +64,17 @@ public:
     //attempts to insert the record into the db
     //creates a table for the hole ID if it doesn't exist
     //returns false if DB isn't open or creating record fails
-    bool insertRecord(const ProfileRecord&);
+    bool insertCourseRecord(const CourseRecord&);
 
     //returns the requested number of records, or as many exist
-    std::vector<ProfileRecord> getRecords(std::int32_t holeIndex, std::int32_t recordCount = std::numeric_limits<std::int32_t>::max());
+    std::vector<CourseRecord> getCourseRecords(std::int32_t holeIndex, std::int32_t recordCount = std::numeric_limits<std::int32_t>::max());
 
-    std::int32_t getRecordCount(std::int32_t courseIndex, std::int32_t holeCount) const;
+    std::int32_t getCourseRecordCount(std::int32_t courseIndex, std::int32_t holeCount) const;
 
 private:
     sqlite3* m_connection;
     
-    std::array<std::vector<std::int32_t>, 3u> m_recordCounts;
+    std::array<std::vector<std::int32_t>, 3u> m_courseRecordCounts;
 
     //creates a new table for the given course ID if it doesn't exist
     bool createTable(std::int32_t id);

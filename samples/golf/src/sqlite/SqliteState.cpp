@@ -147,7 +147,7 @@ void SqliteState::createUI()
             {
                 if (ImGui::Button("Insert Random"))
                 {
-                    ProfileRecord record;
+                    CourseRecord record;
                     for (auto& h : record.holeScores)
                     {
                         h = cro::Util::Random::value(2, 5);
@@ -157,29 +157,29 @@ void SqliteState::createUI()
                     record.holeCount = cro::Util::Random::value(0, 2);
                     record.courseIndex = cro::Util::Random::value(0, 9);
                     record.wasCPU = cro::Util::Random::value(0, 4) == 0 ? 1 : 0;
-                    m_db.insertRecord(record);
+                    m_db.insertCourseRecord(record);
                 }
 
                 static int32_t currentCourse = 0;
-                static std::vector<ProfileRecord> records = m_db.getRecords(currentCourse);
+                static std::vector<CourseRecord> records = m_db.getCourseRecords(currentCourse);
 
                 ImGui::Text("Course %d", currentCourse + 1);
                 ImGui::SameLine();
                 if (ImGui::Button("-"))
                 {
                     currentCourse = (currentCourse + 9) % 10;
-                    records = m_db.getRecords(currentCourse);
+                    records = m_db.getCourseRecords(currentCourse);
                 }
                 ImGui::SameLine();
                 if (ImGui::Button("+"))
                 {
                     currentCourse = (currentCourse + 1) % 10;
-                    records = m_db.getRecords(currentCourse);
+                    records = m_db.getCourseRecords(currentCourse);
                 }
 
-                ImGui::Text("18 Holes: %d records", m_db.getRecordCount(currentCourse, 0));
-                ImGui::Text("Front 9 Holes: %d records", m_db.getRecordCount(currentCourse, 1));
-                ImGui::Text("Back 9 Holes: %d records", m_db.getRecordCount(currentCourse, 2));
+                ImGui::Text("18 Holes: %d records", m_db.getCourseRecordCount(currentCourse, 0));
+                ImGui::Text("Front 9 Holes: %d records", m_db.getCourseRecordCount(currentCourse, 1));
+                ImGui::Text("Back 9 Holes: %d records", m_db.getCourseRecordCount(currentCourse, 2));
 
                 ImGui::Separator();
 

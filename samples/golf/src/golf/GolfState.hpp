@@ -362,6 +362,7 @@ private:
     SkipState m_skipState;
     void updateSkipMessage(float);
     void refreshUI();
+    void updateProfileDB();
 
     void buildTrophyScene();
     struct Trophy final

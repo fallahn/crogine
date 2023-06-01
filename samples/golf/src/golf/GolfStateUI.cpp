@@ -47,6 +47,7 @@ source distribution.
 #include "InterpolationSystem.hpp"
 #include "XPAwardStrings.hpp"
 #include "../ErrorCheck.hpp"
+#include "../sqlite/ProfileDB.hpp"
 
 #include <Achievements.hpp>
 #include <AchievementStrings.hpp>
@@ -1777,7 +1778,10 @@ void GolfState::showCountdown(std::uint8_t seconds)
         };
     }
 
-
+    if (m_sharedData.scoreType == ScoreType::Stroke)
+    {
+        updateProfileDB();
+    }
     refreshUI();
 }
 
@@ -3553,6 +3557,78 @@ void GolfState::retargetMinimap(bool reset)
         }
     };
     m_minimapZoom.activeAnimation = entity;
+}
+
+void GolfState::updateProfileDB()
+{
+    if (CourseIDs.count(m_sharedData.mapDirectory.toAnsiString()) != 0)
+    {
+        const auto courseID = CourseIDs.at(m_sharedData.mapDirectory.toAnsiString()) - AchievementID::Complete01;
+        const auto localCount = m_sharedData.localConnectionData.playerCount;
+        const auto clientID = m_sharedData.localConnectionData.connectionID;
+        const auto& localPlayers = m_sharedData.localConnectionData.playerData;
+        const auto& playerData = m_sharedData.connectionData[clientID].playerData;
+
+        ProfileDB db;
+        for (auto i = 0u; i < localCount; ++i)
+        {
+            auto dbPath = Social::getUserContentPath(Social::UserContent::Profile) + localPlayers[i].profileID + "/profile.db";
+            if (db.open(dbPath))
+            {
+                LogI << "opened " << dbPath << std::endl;
+                CourseRecord record;
+                auto scores = playerData[i].holeScores;
+
+                switch (m_sharedData.holeCount)
+                {
+                default: continue;
+                case 0:
+                    if (m_sharedData.reverseCourse)
+                    {
+                        std::reverse(scores.begin(), scores.end());
+                    }
+                    for (auto j = 0; j < 18; ++j)
+                    {
+                        record.holeScores[j] = scores[j];
+                        record.total += scores[j];
+                    }
+                    break;
+                case 1:
+                    if (m_sharedData.reverseCourse)
+                    {
+                        std::reverse(scores.begin(), scores.begin() + 8);
+                    }
+                    for (auto j = 0; j < 9; ++j)
+                    {
+                        record.holeScores[j] = scores[j];
+                        record.total += scores[j];
+                    }
+                    break;
+                case 2:
+                    if (m_sharedData.reverseCourse)
+                    {
+                        std::reverse(scores.begin(), scores.begin() + 8);
+                    }
+                    for (auto j = 0; j < 9; ++j)
+                    {
+                        record.holeScores[j + 9] = scores[j];
+                        record.total += scores[j];
+                    }
+                    break;
+                }
+
+                record.totalPar = playerData[i].parScore;
+                record.holeCount = m_sharedData.holeCount;
+                record.courseIndex = courseID;
+                record.wasCPU = localPlayers[i].isCPU ? 1 : 0;
+
+                if (db.insertCourseRecord(record))
+                {
+                    LogI << "inserted record for " << localPlayers[i].profileID << std::endl;
+                }
+            }
+        }
+    }
 }
 
 void MinimapZoom::updateShader()

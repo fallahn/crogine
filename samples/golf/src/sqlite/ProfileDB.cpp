@@ -55,7 +55,7 @@ namespace
 ProfileDB::ProfileDB()
     : m_connection(nullptr)
 {
-    for (auto& v : m_recordCounts)
+    for (auto& v : m_courseRecordCounts)
     {
         v.resize(MaxCourse + 1);
         std::fill(v.begin(), v.end(), 0);
@@ -103,11 +103,10 @@ bool ProfileDB::open(const std::string& path)
         fetchRecordCount(i);
     }
 
-
     return true;
 }
 
-bool ProfileDB::insertRecord(const ProfileRecord& record)
+bool ProfileDB::insertCourseRecord(const CourseRecord& record)
 {
     CRO_ASSERT(record.courseIndex >= MinCourse && record.courseIndex <= MaxCourse, "");
     if (record.courseIndex < MinCourse || record.courseIndex > MaxCourse)
@@ -148,12 +147,12 @@ bool ProfileDB::insertRecord(const ProfileRecord& record)
     sqlite3_step(out);
     sqlite3_finalize(out);
 
-    m_recordCounts[record.holeCount][record.courseIndex]++;
+    m_courseRecordCounts[record.holeCount][record.courseIndex]++;
 
-    return false;
+    return true;
 }
 
-std::vector<ProfileRecord> ProfileDB::getRecords(std::int32_t courseIndex, std::int32_t recordCount)
+std::vector<CourseRecord> ProfileDB::getCourseRecords(std::int32_t courseIndex, std::int32_t recordCount)
 {
     CRO_ASSERT(courseIndex >= MinCourse && courseIndex <= MaxCourse, "");
     if (courseIndex < MinCourse || courseIndex > MaxCourse)
@@ -168,7 +167,7 @@ std::vector<ProfileRecord> ProfileDB::getRecords(std::int32_t courseIndex, std::
         return {};
     }
 
-    std::vector<ProfileRecord> retVal;
+    std::vector<CourseRecord> retVal;
 
     std::string query = "SELECT * FROM " + CourseNames[courseIndex] + " ORDER BY Date DESC";
     sqlite3_stmt* out = nullptr;
@@ -207,11 +206,11 @@ std::vector<ProfileRecord> ProfileDB::getRecords(std::int32_t courseIndex, std::
     return retVal;
 }
 
-std::int32_t ProfileDB::getRecordCount(std::int32_t index, std::int32_t holeCount) const
+std::int32_t ProfileDB::getCourseRecordCount(std::int32_t index, std::int32_t holeCount) const
 {
     CRO_ASSERT(index < MaxCourse + 1, "");
     CRO_ASSERT(holeCount < 3, "");
-    return m_recordCounts[holeCount][index];
+    return m_courseRecordCounts[holeCount][index];
 }
 
 //private
@@ -260,7 +259,7 @@ void ProfileDB::fetchRecordCount(std::int32_t courseIndex)
         result = sqlite3_step(out);
         if (result == SQLITE_ROW)
         {
-            m_recordCounts[i][courseIndex] = sqlite3_column_int(out, 0);
+            m_courseRecordCounts[i][courseIndex] = sqlite3_column_int(out, 0);
         }
 
 
