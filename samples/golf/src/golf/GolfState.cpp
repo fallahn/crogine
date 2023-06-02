@@ -5441,6 +5441,8 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
                 {
                     m_personalBests[m_currentPlayer.player][m_currentHole].longestPutt = 
                         std::max(msg->travelDistance, m_personalBests[m_currentPlayer.player][m_currentHole].longestPutt);
+
+                    m_personalBests[m_currentPlayer.player][m_currentHole].wasPuttAssist = m_sharedData.showPuttingPower ? 1 : 0;
                 }
                 else if (msg->club < ClubID::FourIron)
                 {

@@ -54,6 +54,7 @@ struct PersonalBestRecord final
     float longestDrive = 0.f;
     float longestPutt = 0.f;
     std::int32_t score = 12;
+    std::int32_t wasPuttAssist = 0; //bool
 };
 
 class ProfileDB final
