@@ -1777,9 +1777,10 @@ void GolfState::showCountdown(std::uint8_t seconds)
         };
     }
 
-    if (m_sharedData.scoreType == ScoreType::Stroke)
+    //loading the db can be choppy so spin this off in a thread
+    if (m_courseIndex != -1)
     {
-        updateProfileDB();
+        m_statResult = std::async(std::launch::async, &GolfState::updateProfileDB, this);
     }
     refreshUI();
 }
@@ -3558,7 +3559,7 @@ void GolfState::retargetMinimap(bool reset)
     m_minimapZoom.activeAnimation = entity;
 }
 
-void GolfState::updateProfileDB()
+void GolfState::updateProfileDB() const
 {
     if (CourseIDs.count(m_sharedData.mapDirectory.toAnsiString()) != 0)
     {
@@ -3632,7 +3633,10 @@ void GolfState::updateProfileDB()
                 record.courseIndex = courseID;
                 record.wasCPU = localPlayers[i].isCPU ? 1 : 0;
 
-                db.insertCourseRecord(record);
+                if (m_sharedData.scoreType == ScoreType::Stroke)
+                {
+                    db.insertCourseRecord(record);
+                }
             }
         }
     }

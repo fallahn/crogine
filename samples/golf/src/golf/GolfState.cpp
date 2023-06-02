@@ -177,6 +177,28 @@ namespace
     constexpr float MaxPuttRotation = 0.4f;// 0.24f;
 
     bool recordCam = false;
+
+    const std::array<std::string, 10u> CourseNames =
+    {
+        "course_01",
+        "course_02",
+        "course_03",
+        "course_04",
+        "course_05",
+        "course_06",
+        "course_07",
+        "course_08",
+        "course_09",
+        "course_10",
+    };
+    std::int32_t getCourseIndex(const std::string& name)
+    {
+        if (auto result = std::find(CourseNames.begin(), CourseNames.end(), name); result != CourseNames.end())
+        {
+            return static_cast<std::int32_t>(std::distance(CourseNames.begin(), result));
+        }
+        return -1;
+    }
 }
 
 GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, SharedStateData& sd)
@@ -209,6 +231,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     m_viewScale         (1.f),
     m_scoreColumnCount  (2),
     m_readyQuitFlags    (0),
+    m_courseIndex       (getCourseIndex(sd.mapDirectory.toAnsiString())),
     m_emoteWheel        (sd, m_currentPlayer)
 {
     godmode = 1.f;
@@ -5411,6 +5434,19 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
                         m_achievementTracker.alwaysOnTheCourse = false;
                     }
                 }
+
+                //update profile stats for distance
+                if (msg->club == ClubID::Putter
+                    && msg->terrain == TerrainID::Hole)
+                {
+                    m_personalBests[m_currentPlayer.player][m_currentHole].longestPutt = 
+                        std::max(msg->travelDistance, m_personalBests[m_currentPlayer.player][m_currentHole].longestPutt);
+                }
+                else if (msg->club < ClubID::FourIron)
+                {
+                    m_personalBests[m_currentPlayer.player][m_currentHole].longestDrive =
+                        std::max(msg->travelDistance, m_personalBests[m_currentPlayer.player][m_currentHole].longestDrive);
+                }
             }
         }
             break;
@@ -5489,6 +5525,10 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
                     {
                         Achievements::incrementStat(StatStrings[StatID::StrokeDistance], su.strokeDistance);
                     }
+
+                    m_personalBests[su.player][su.hole].hole = su.hole;
+                    m_personalBests[su.player][su.hole].course = m_courseIndex;
+                    m_personalBests[su.player][su.hole].score = su.stroke;
                 }
             }
         }

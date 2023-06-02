@@ -61,6 +61,7 @@ source distribution.
 #include <crogine/graphics/CubemapTexture.hpp>
 
 #include <array>
+#include <future>
 #include <unordered_map>
 
 #ifdef CRO_DEBUG_
@@ -364,8 +365,11 @@ private:
     void updateSkipMessage(float);
     void refreshUI();
 
-    std::array<std::array<PersonalBestRecord, 18>, ConstVal::MaxPlayers> m_personalBests = {};
-    void updateProfileDB();
+    //hack to allow the profile update to be const.
+    std::int32_t m_courseIndex; //-1 if not an official course
+    mutable std::array<std::array<PersonalBestRecord, 18>, ConstVal::MaxPlayers> m_personalBests = {};
+    std::future<void> m_statResult; //stat updates are async - this makes sure to wait when quitting
+    void updateProfileDB() const;
 
     void buildTrophyScene();
     struct Trophy final
