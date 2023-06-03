@@ -5,6 +5,7 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/audio/AudioResource.cpp
   ${PROJECT_DIR}/audio/AudioRenderer.cpp
   ${PROJECT_DIR}/audio/AudioScape.cpp
+  ${PROJECT_DIR}/audio/AudioSource.cpp
   ${PROJECT_DIR}/audio/AudioStream.cpp
   ${PROJECT_DIR}/audio/stb_vorbis.c
   ${PROJECT_DIR}/audio/VorbisLoader.cpp

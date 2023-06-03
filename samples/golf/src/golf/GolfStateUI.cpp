@@ -85,7 +85,7 @@ namespace
 #include "PostProcess.inl"
 
     //hack to map course names to achievement IDs
-    const std::unordered_map < std::string, std::int32_t> ParAch =
+    const std::unordered_map<std::string, std::int32_t> ParAch =
     {
         std::make_pair("course_01", AchievementID::Master01),
         std::make_pair("course_02", AchievementID::Master02),
@@ -97,6 +97,20 @@ namespace
         std::make_pair("course_08", AchievementID::Master08),
         std::make_pair("course_09", AchievementID::Master09),
         std::make_pair("course_10", AchievementID::Master10),
+    };
+
+    const std::unordered_map<std::string, std::int32_t> CourseIDs =
+    {
+        std::make_pair("course_01", AchievementID::Complete01),
+        std::make_pair("course_02", AchievementID::Complete02),
+        std::make_pair("course_03", AchievementID::Complete03),
+        std::make_pair("course_04", AchievementID::Complete04),
+        std::make_pair("course_05", AchievementID::Complete05),
+        std::make_pair("course_06", AchievementID::Complete06),
+        std::make_pair("course_07", AchievementID::Complete07),
+        std::make_pair("course_08", AchievementID::Complete08),
+        std::make_pair("course_09", AchievementID::Complete09),
+        std::make_pair("course_10", AchievementID::Complete10),
     };
 
     static constexpr float ColumnWidth = 20.f;
@@ -550,12 +564,12 @@ void GolfState::buildUI()
     //wind strength - this is positioned by the camera's resize callback, below
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
-    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::WindString;
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::WindString | CommandID::UI::WindHidden;
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
     entity.getComponent<cro::Text>().setFillColour(LeaderboardTextLight);
-    entity.addComponent<cro::Callback>().setUserData<AvatarAnimCallbackData>(); //happens to have the correct fields
-    entity.getComponent<cro::Callback>().getUserData<AvatarAnimCallbackData>().progress = 1.f; //but not the right default values :3
+    entity.addComponent<cro::Callback>().setUserData<WindHideData>();
+    entity.getComponent<cro::Callback>().getUserData<WindHideData>().progress = 1.f;
     entity.getComponent<cro::Callback>().function =
         [](cro::Entity e, float  dt)
     {
@@ -612,7 +626,6 @@ void GolfState::buildUI()
 
     auto windDial = entity;
     //text background
-    auto vertColour = cro::Colour(0.f, 0.f, 0.f, 0.25f);
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ -4.f, -14.f, -0.01f });
     entity.getComponent<cro::Transform>().setOrigin({ 0.f, 6.f });
@@ -639,6 +652,23 @@ void GolfState::buildUI()
     entity.getComponent<cro::Transform>().setPosition(windDial.getComponent<cro::Transform>().getOrigin());
     windDial.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     
+    //wind effect strength
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 64.f, 8.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLE_STRIP);
+    entity.getComponent<cro::Drawable2D>().setVertexData(
+        {
+            cro::Vertex2D(glm::vec2(0.f, 32.f), cro::Colour::White),
+            cro::Vertex2D(glm::vec2(0.f, 0.f), cro::Colour::White),
+            cro::Vertex2D(glm::vec2(2.f, 32.f), cro::Colour::White),
+            cro::Vertex2D(glm::vec2(2.f, 0.f), cro::Colour::White)
+        });
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::WindEffect;
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<WindEffectData>(0.f, 0.f);
+    entity.getComponent<cro::Callback>().function = WindEffectCallback();
+    windEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
     //sets the initial cam rotation for the wind indicator compensation
     auto camDir = m_holeData[0].target - m_currentPlayer.position;
     m_camRotation = std::atan2(-camDir.z, camDir.y);
@@ -788,6 +818,72 @@ void GolfState::buildUI()
     entity.addComponent<cro::Callback>().setUserData<TextCallbackData>();
     entity.getComponent<cro::Callback>().function = TextAnimCallback();
     windEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+
+    //shows hole number when wind indicator is hidden
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setScale(glm::vec2(0.f));
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::WindHidden;
+    entity.addComponent<cro::Callback>().setUserData<WindHideData>();
+    entity.getComponent<cro::Callback>().function =
+        [windEnt](cro::Entity e, float  dt)
+    {
+        auto origin = windEnt.getComponent<cro::Transform>().getOrigin();
+
+        const float Speed = dt * 3.f;
+        auto& [direction, progress] = e.getComponent<cro::Callback>().getUserData<AvatarAnimCallbackData>();
+        if (direction == 1)
+        {
+            //shrink
+            progress = std::max(0.f, progress - Speed);
+            if (progress == 0)
+            {
+                e.getComponent<cro::Callback>().active = false;
+            }
+            origin.y = (1.f - progress) * 120.f;
+        }
+        else
+        {
+            //wait until shrunk
+            if (windEnt.getComponent<cro::Transform>().getScale().y > 0)
+            {
+                return;
+            }
+
+            //grow
+            progress = std::min(1.f, progress + Speed);
+            if (progress == 1)
+            {
+                e.getComponent<cro::Callback>().active = false;
+            }
+        }
+
+        float scale = cro::Util::Easing::easeOutQuint(progress);
+        e.getComponent<cro::Transform>().setScale(glm::vec2(scale, 1.f));
+        e.getComponent<cro::Transform>().setOrigin(origin);
+    };
+    infoEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    auto windEnt2 = entity;
+
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(glm::vec2(38.f, -5.f));
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::HoleNumber;
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
+    entity.getComponent<cro::Text>().setFillColour(LeaderboardTextLight);
+    entity.addComponent<cro::Callback>().setUserData<TextCallbackData>();
+    entity.getComponent<cro::Callback>().function = TextAnimCallback();
+    windEnt2.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ -4.f, -14.f, -0.01f });
+    entity.getComponent<cro::Transform>().setOrigin({ 0.f, 6.f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::WindSpeedBg];
+    windEnt2.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
 
 
     //minimap view
@@ -1139,7 +1235,7 @@ void GolfState::buildUI()
 
 
     //callback for the UI camera when window is resized
-    auto updateView = [&, trophyEnt, courseEnt, infoEnt, spinEnt, windEnt, mapEnt, greenEnt, rootNode](cro::Camera& cam) mutable
+    auto updateView = [&, trophyEnt, courseEnt, infoEnt, spinEnt, windEnt, windEnt2, mapEnt, greenEnt, rootNode](cro::Camera& cam) mutable
     {
         auto size = glm::vec2(GolfGame::getActiveTarget()->getSize());
         cam.setOrthographic(0.f, size.x, 0.f, size.y, -3.5f, 20.f);
@@ -1168,7 +1264,8 @@ void GolfState::buildUI()
         greenEnt.getComponent<cro::Transform>().setPosition({ 2.f, uiSize.y - std::floor(MapSize.y * 0.6f) - UIBarHeight - 2.f, 0.1f });
         greenEnt.getComponent<cro::Transform>().move(glm::vec2(static_cast<float>(MapSize.y) / 4.f));
 
-        windEnt.getComponent<cro::Transform>().setPosition(glm::vec2(/*uiSize.x + */WindIndicatorPosition.x, WindIndicatorPosition.y));
+        windEnt.getComponent<cro::Transform>().setPosition(glm::vec2(WindIndicatorPosition.x, WindIndicatorPosition.y));
+        windEnt2.getComponent<cro::Transform>().setPosition(glm::vec2(WindIndicatorPosition.x, WindIndicatorPosition.y));
         spinEnt.getComponent<cro::Transform>().setPosition(glm::vec2(std::floor(uiSize.x / 2.f), 32.f));
 
         //update the overlay
@@ -1288,6 +1385,7 @@ void GolfState::createSwingMeter(cro::Entity root)
 void GolfState::showCountdown(std::uint8_t seconds)
 {
     m_roundEnded = true;
+    Achievements::setActive(m_allowAchievements); //make sure these are re-enabled in case CPU player was last
 
     //hide any input
     cro::Command cmd;
@@ -1348,11 +1446,32 @@ void GolfState::showCountdown(std::uint8_t seconds)
         if (m_holeData.size() == 18)
         {
             Achievements::setAvgStat(m_sharedData.mapDirectory, m_playTime.asSeconds(), 1.f);
+            if (CourseIDs.count(m_sharedData.mapDirectory) != 0)
+            {
+                Achievements::awardAchievement(AchievementStrings[CourseIDs.at(m_sharedData.mapDirectory)]);
+
+                if (Achievements::getActive())
+                {
+                    m_achievementDebug.awardStatus = "Awarded Course Complete: " + m_sharedData.mapDirectory.toAnsiString();
+                }
+                else
+                {
+                    m_achievementDebug.awardStatus = "Tried to award Course Complete but achievements were not active";
+                }
+            }
+            else
+            {
+                m_achievementDebug.awardStatus = "Tried to award Course Complete but ID for " + m_sharedData.mapDirectory.toAnsiString() + " was not found.";
+            }
 
             //if we're stroke play see if we get the achievement
             //for coming in under par
-            for (const auto& p : m_sharedData.connectionData[m_sharedData.localConnectionData.connectionID].playerData)
+            const auto pd = m_sharedData.connectionData[m_sharedData.localConnectionData.connectionID];
+            //for (const auto& p : m_sharedData.connectionData[m_sharedData.localConnectionData.connectionID].playerData)
+            for(auto j = 0; j < pd.playerCount; ++j)
             {
+                const auto& p = pd.playerData[j];
+
                 if (!p.isCPU)
                 {
                     if (m_sharedData.scoreType == ScoreType::Stroke
@@ -1398,6 +1517,10 @@ void GolfState::showCountdown(std::uint8_t seconds)
                     }
                 }
             }
+        }
+        else
+        {
+            m_achievementDebug.awardStatus = "Did not award Course Complete: there were only " + std::to_string(m_holeData.size()) + " holes.";
         }
 
         Social::courseComplete(m_sharedData.mapDirectory, m_sharedData.holeCount);
@@ -1654,7 +1777,11 @@ void GolfState::showCountdown(std::uint8_t seconds)
         };
     }
 
-
+    //loading the db can be choppy so spin this off in a thread
+    if (m_courseIndex != -1)
+    {
+        m_statResult = std::async(std::launch::async, &GolfState::updateProfileDB, this);
+    }
     refreshUI();
 }
 
@@ -3430,6 +3557,89 @@ void GolfState::retargetMinimap(bool reset)
         }
     };
     m_minimapZoom.activeAnimation = entity;
+}
+
+void GolfState::updateProfileDB() const
+{
+    if (CourseIDs.count(m_sharedData.mapDirectory.toAnsiString()) != 0)
+    {
+        const auto courseID = CourseIDs.at(m_sharedData.mapDirectory.toAnsiString()) - AchievementID::Complete01;
+        const auto localCount = m_sharedData.localConnectionData.playerCount;
+        const auto clientID = m_sharedData.localConnectionData.connectionID;
+        const auto& localPlayers = m_sharedData.localConnectionData.playerData;
+        const auto& playerData = m_sharedData.connectionData[clientID].playerData;
+
+        ProfileDB db;
+        for (auto i = 0u; i < localCount; ++i)
+        {
+            auto dbPath = Social::getUserContentPath(Social::UserContent::Profile) + localPlayers[i].profileID + "/profile.db3";
+            if (db.open(dbPath))
+            {
+                CourseRecord record;
+                auto scores = playerData[i].holeScores;
+
+                switch (m_sharedData.holeCount)
+                {
+                default: continue;
+                case 0:
+                    if (m_sharedData.reverseCourse)
+                    {
+                        std::reverse(scores.begin(), scores.end());
+                        std::reverse(m_personalBests[i].begin(), m_personalBests[i].end());
+                    }
+                    for (auto j = 0; j < 18; ++j)
+                    {
+                        record.holeScores[j] = scores[j];
+                        record.total += scores[j];
+
+                        m_personalBests[i][j].hole = j;
+                        db.insertPersonalBestRecord(m_personalBests[i][j]);
+                    }
+                    break;
+                case 1:
+                    if (m_sharedData.reverseCourse)
+                    {
+                        std::reverse(scores.begin(), scores.begin() + 9);
+                        std::reverse(m_personalBests[i].begin(), m_personalBests[i].begin() + 9);
+                    }
+                    for (auto j = 0; j < 9; ++j)
+                    {
+                        record.holeScores[j] = scores[j];
+                        record.total += scores[j];
+
+                        m_personalBests[i][j].hole = j;
+                        db.insertPersonalBestRecord(m_personalBests[i][j]);
+                    }
+                    break;
+                case 2:
+                    if (m_sharedData.reverseCourse)
+                    {
+                        std::reverse(scores.begin(), scores.begin() + 9);
+                        std::reverse(m_personalBests[i].begin(), m_personalBests[i].begin() + 9);
+                    }
+                    for (auto j = 0; j < 9; ++j)
+                    {
+                        record.holeScores[j + 9] = scores[j];
+                        record.total += scores[j];
+
+                        m_personalBests[i][j].hole = j + 9;
+                        db.insertPersonalBestRecord(m_personalBests[i][j]);
+                    }
+                    break;
+                }
+
+                record.totalPar = playerData[i].parScore;
+                record.holeCount = m_sharedData.holeCount;
+                record.courseIndex = courseID;
+                record.wasCPU = localPlayers[i].isCPU ? 1 : 0;
+
+                if (m_sharedData.scoreType == ScoreType::Stroke)
+                {
+                    db.insertCourseRecord(record);
+                }
+            }
+        }
+    }
 }
 
 void MinimapZoom::updateShader()

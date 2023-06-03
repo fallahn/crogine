@@ -30,6 +30,7 @@ source distribution.
 #pragma once
 
 #include "../StateIDs.hpp"
+#include "../sqlite/ProfileDB.hpp"
 #include "HoleData.hpp"
 #include "GameConsts.hpp"
 #include "InputParser.hpp"
@@ -60,6 +61,7 @@ source distribution.
 #include <crogine/graphics/CubemapTexture.hpp>
 
 #include <array>
+#include <future>
 #include <unordered_map>
 
 #ifdef CRO_DEBUG_
@@ -363,6 +365,12 @@ private:
     void updateSkipMessage(float);
     void refreshUI();
 
+    //hack to allow the profile update to be const.
+    std::int32_t m_courseIndex; //-1 if not an official course
+    mutable std::array<std::array<PersonalBestRecord, 18>, ConstVal::MaxPlayers> m_personalBests = {};
+    std::future<void> m_statResult; //stat updates are async - this makes sure to wait when quitting
+    void updateProfileDB() const;
+
     void buildTrophyScene();
     struct Trophy final
     {
@@ -481,7 +489,17 @@ private:
     };
     std::vector<std::vector<DebugTx>> m_cameraDebugPoints;
     void addCameraDebugging();
+    void registerDebugCommands();
     void registerDebugWindows();
+
+    struct AchievementDebugContext final
+    {
+        bool wasActivated = false; //true after the first time and window was registered
+        bool visible = false;
+
+        std::string achievementEnableReason;
+        std::string awardStatus;
+    }m_achievementDebug;
 
     struct Benchmark final
     {

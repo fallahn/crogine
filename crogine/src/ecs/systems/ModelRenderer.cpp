@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2022
+Matt Marchant 2017 - 2023
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -26,6 +26,10 @@ and must not be misrepresented as being the original software.
 source distribution.
 
 -----------------------------------------------------------------------*/
+
+#include "../../graphics/shaders/Unlit.hpp"
+#include "../../graphics/shaders/VertexLit.hpp"
+#include "../../graphics/shaders/PBR.hpp"
 
 #include "../../detail/GLCheck.hpp"
 
@@ -259,6 +263,42 @@ std::size_t ModelRenderer::getVisibleCount(std::size_t cameraIndex, std::int32_t
         return m_drawLists[cameraIndex][Camera::Pass::Reflection].size();
     }
     return 0;
+}
+
+const std::string& ModelRenderer::getDefaultVertexShader(std::int32_t type)
+{
+    static const std::string defaultVal;
+    switch (type)
+    {
+    default:
+        LogW << type << ": Invalid VertexShaderID" << std::endl;
+        return defaultVal;
+    case VertexShaderID::Unlit:
+        return Shaders::Unlit::Vertex;
+    case VertexShaderID::VertexLit:
+    case VertexShaderID::PBR:
+        return Shaders::VertexLit::Vertex;
+    }
+    return {};
+}
+
+const std::string& ModelRenderer::getDefaultFragmentShader(std::int32_t type)
+{
+    static const std::string defaultVal;
+    switch (type)
+    {
+    default: 
+        LogW << type << ": Invalid FragmentShaderID" << std::endl;
+        return defaultVal;
+    case FragmentShaderID::Unlit:
+        return Shaders::Unlit::Fragment;
+    case FragmentShaderID::VertexLit:
+        return Shaders::VertexLit::Fragment;
+    case FragmentShaderID::PBR:
+        return Shaders::PBR::Fragment;
+    }
+
+    return defaultVal;
 }
 
 void ModelRenderer::onEntityAdded(Entity entity)

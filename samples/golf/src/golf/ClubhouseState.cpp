@@ -111,10 +111,11 @@ constexpr std::array<glm::vec2, ClubhouseState::MenuID::Count> ClubhouseState::m
     glm::vec2(-MenuSpacing.x, 0.f)
 };
 
-ClubhouseState::ClubhouseState(cro::StateStack& ss, cro::State::Context ctx, SharedStateData& sd, const SharedProfileData& sp)
+ClubhouseState::ClubhouseState(cro::StateStack& ss, cro::State::Context ctx, SharedStateData& sd, const SharedProfileData& sp, GolfGame& gg)
     : cro::State        (ss, ctx),
     m_sharedData        (sd),
     m_profileData       (sp),
+    m_golfGame          (gg),
     m_matchMaking       (ctx.appInstance.getMessageBus()),
     m_backgroundScene   (ctx.appInstance.getMessageBus()),
     m_uiScene           (ctx.appInstance.getMessageBus()),
@@ -128,6 +129,9 @@ ClubhouseState::ClubhouseState(cro::StateStack& ss, cro::State::Context ctx, Sha
     m_prevMenu          (MenuID::Main),
     m_gameCreationIndex (0)
 {
+    //if we were returning from arcade this tidies up, else does nothing
+    gg.unloadPlugin();
+    
     std::fill(m_readyState.begin(), m_readyState.end(), false);
 
     ctx.mainWindow.loadResources([this]() {
@@ -276,27 +280,27 @@ ClubhouseState::ClubhouseState(cro::StateStack& ss, cro::State::Context ctx, Sha
     Social::setGroup(0);
 
 #ifdef CRO_DEBUG_
-    registerWindow([&]()
-        {
-            if (ImGui::Begin("Buns"))
-            {
-                float maxDepth = m_backgroundScene.getActiveCamera().getComponent<cro::Camera>().getMaxShadowDistance();
-                if (ImGui::SliderFloat("Depth", &maxDepth, 1.f, 30.f))
-                {
-                    m_backgroundScene.getActiveCamera().getComponent<cro::Camera>().setMaxShadowDistance(maxDepth);
-                }
+    //registerWindow([&]()
+    //    {
+    //        if (ImGui::Begin("Buns"))
+    //        {
+    //            float maxDepth = m_backgroundScene.getActiveCamera().getComponent<cro::Camera>().getMaxShadowDistance();
+    //            if (ImGui::SliderFloat("Depth", &maxDepth, 1.f, 30.f))
+    //            {
+    //                m_backgroundScene.getActiveCamera().getComponent<cro::Camera>().setMaxShadowDistance(maxDepth);
+    //            }
 
-                float ext = m_backgroundScene.getActiveCamera().getComponent<cro::Camera>().getShadowExpansion();
-                if (ImGui::SliderFloat("ext", &ext, 0.f, 30.f))
-                {
-                    m_backgroundScene.getActiveCamera().getComponent<cro::Camera>().setShadowExpansion(ext);
-                }
+    //            float ext = m_backgroundScene.getActiveCamera().getComponent<cro::Camera>().getShadowExpansion();
+    //            if (ImGui::SliderFloat("ext", &ext, 0.f, 30.f))
+    //            {
+    //                m_backgroundScene.getActiveCamera().getComponent<cro::Camera>().setShadowExpansion(ext);
+    //            }
 
-                auto rot = m_backgroundScene.getSunlight().getComponent<cro::Transform>().getRotation();
-                ImGui::Text("%3.3f, %3.3f, %3.3f, %3.3f", rot.x, rot.y, rot.z, rot.w);
-            }
-            ImGui::End();
-        });
+    //            auto rot = m_backgroundScene.getSunlight().getComponent<cro::Transform>().getRotation();
+    //            ImGui::Text("%3.3f, %3.3f, %3.3f, %3.3f", rot.x, rot.y, rot.z, rot.w);
+    //        }
+    //        ImGui::End();
+    //    });
 #endif
 }
 
@@ -579,6 +583,7 @@ bool ClubhouseState::simulate(float dt)
     m_windBuffer.setData(wind);
 
     m_arcadeVideo.update(dt);
+    m_arcadeVideo2.update(dt);
 
     m_backgroundScene.simulate(dt);
     m_tableScene.simulate(dt);
@@ -973,12 +978,14 @@ void ClubhouseState::buildScene()
         applyMaterial(entity, MaterialID::Trophy);
     }
 
-    if (md.loadFromFile("assets/golf/models/arcade_machine.cmt"))
+    if (md.loadFromFile("assets/golf/models/arcade_machine_gvg.cmt"))
     {
         auto entity = m_backgroundScene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition({ 14.4f, 0.f, -3.3f });
+        entity.addComponent<cro::Transform>().setPosition({ 14.4f, 0.f, -3.f });
         entity.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, 90.f * cro::Util::Const::degToRad);
         entity.getComponent<cro::Transform>().setScale({ 0.8f, 1.f, 1.f });
+        entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("gvg");
+        entity.getComponent<cro::AudioEmitter>().play();
         md.createModel(entity);
 
         applyMaterial(entity, MaterialID::Cel);
@@ -990,7 +997,23 @@ void ClubhouseState::buildScene()
         entity.getComponent<cro::Model>().setMaterialProperty(1, "u_diffuseMap", cro::TextureID(m_arcadeVideo.getTexture().getGLHandle()));
     }
 
+    if (md.loadFromFile("assets/golf/models/arcade_machine.cmt"))
+    {
+        auto entity = m_backgroundScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ 14.4f, 0.f, -3.6f });
+        entity.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, 90.f * cro::Util::Const::degToRad);
+        entity.getComponent<cro::Transform>().setScale({ 0.8f, 1.f, 1.f });
+        md.createModel(entity);
 
+        applyMaterial(entity, MaterialID::Cel);
+
+        //TODO this will mostly be off screen to all but ultrawide players
+        m_arcadeVideo2.loadFromFile("assets/golf/video/arcade2.mpg");
+        m_arcadeVideo2.setLooped(true);
+        m_arcadeVideo2.play();
+
+        entity.getComponent<cro::Model>().setMaterialProperty(1, "u_diffuseMap", cro::TextureID(m_arcadeVideo2.getTexture().getGLHandle()));
+    }
 
 
     //billboards

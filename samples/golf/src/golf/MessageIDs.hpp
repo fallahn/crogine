@@ -104,11 +104,12 @@ struct SceneEvent
         PlayerBad
     }type = TransitionComplete;
 
-    union
-    {
+    //union
+    //{
         std::int32_t data = -1;
-        float rotation;
-    };
+        float rotation = 0.f;
+    //};
+    float rotationPercent = 0.f;
 };
 
 struct CollisionEvent final

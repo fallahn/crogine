@@ -342,15 +342,40 @@ void ClubhouseState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter
     }
 
     //arcade
-    /*entity = createButton("Arcade (Soon!)");
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
-        m_uiScene.getSystem<cro::UISystem>()->addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
+    bool hasArcade = false;
+    if (hasArcade = cro::FileSystem::directoryExists("plugins"); hasArcade)
+    {
+        auto pluginList = cro::FileSystem::listDirectories("plugins");
+        if (!pluginList.empty())
+        {
+            std::string pluginPath = "plugins/";
+            for (const auto& pluginDir : pluginList)
             {
-                if (activated(evt))
+                if (cro::FileSystem::fileExists(pluginPath + pluginDir + "/croplug.dll"))
                 {
-
+                    pluginPath += pluginDir;
+                    break;
                 }
-            });*/
+            }
+
+            if (pluginPath != "plugins/")
+            {
+                entity = createButton("Arcade");
+                entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
+                    m_uiScene.getSystem<cro::UISystem>()->addCallback([&, pluginPath](cro::Entity, const cro::ButtonEvent& evt)
+                        {
+                            if (activated(evt))
+                            {
+                                m_golfGame.loadPlugin(pluginPath);
+                            }
+                        });
+            }
+            else
+            {
+                hasArcade = false;
+            }
+        }
+    }
 
     //trophy shelf
     entity = createButton("Trophy Shelf");
@@ -376,7 +401,10 @@ void ClubhouseState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter
                 }
             });
 
-    textPos.y -= LineSpacing; //remove this when adding back arcade
+    if (!hasArcade)
+    {
+        textPos.y -= LineSpacing; //remove this when adding back arcade
+    }
 
     //leave button
     entity = createButton("Leave");

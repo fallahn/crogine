@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2022
+Matt Marchant 2017 - 2023
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -41,6 +41,112 @@ namespace cro
 {    
     /*!
     \brief Manages the lifetime of shader programs.
+
+    The shader resource provides a range of pre-defined #include
+    directives which can be used with shaders that are loaded with
+    this resource manager.
+
+
+    Vertex Shader Includes:
+    -----------------------
+
+    #include WVP_UNIFORMS
+    provides:
+        uniform mat4 u_worldMatrix;
+        uniform mat4 u_projectionMatrix;
+        and
+        uniform mat4 u_worldViewMatrix;
+        uniform mat3 u_normalMatrix;
+        if INSTANCING is not defined, else
+        uniform mat4 u_viewMatrix;
+
+
+    #include INSTANCE_ATTRIBS
+    provides:
+        vertex attributes for instanced matrix data:
+        ATTRIBUTE mat4 a_instanceWorldMatrix;
+        ATTRIBUTE mat3 a_instanceNormalMatrix;
+
+    #include INSTANCE_MATRICES
+    provides:
+        mat4 worldMatrix
+        mat4 worldViewMatrix
+        mat3 normalMatrix
+
+        Matrices are created from the given WVP uniforms
+        and instance attributes.
+
+    requires:
+        WVP_UNIFORMS, INSTANCE_ATTRIBS
+
+
+    #include SKIN_UNIFORMS
+    provides:
+        ATTRIBUTE vec4 a_boneIndices;
+        ATTRIBUTE vec4 a_boneWeights;
+        uniform mat4 u_boneMatrices[MAX_BONES];
+
+        Adds both the vertex attributes and matrix uniform
+        required for vertex skinning.
+
+    #include SKIN_MATRIX
+    provides:
+        mat4 skinMatrix
+        The matrix is created from the bone matrices, weights
+        and indices provided by SKIN_UNIFORMS and is used to
+        multiply the vertex position and normal data.
+    requires:
+        SKIN_UNIFORMS
+
+
+    #include SHADOWMAP_UNIFORMS_VERT
+    provides:
+        #define MAX_CASCADES 4 if not otherwise defined
+        uniform mat4 u_lightViewProjectionMatrix[MAX_CASCADES];
+        uniform int u_cascadeCount = 1;
+
+    #include SHADOWMAP_OUTPUTS
+    provides:
+        VARYING_OUT LOW vec4 v_lightWorldPosition[MAX_CASCADES];
+        VARYING_OUT float v_viewDepth;
+
+    #include SHADOWMAP_VERTEX_PROC
+    provides:
+        processing for the vertex data, which should be performed
+        in main()
+
+    requires:
+        SHADOWMAP_UNIFORMS_VERT, SHADOWMAP_OUTPUTS
+        also requires mat4 worldMatrix, mat4 worldViewMatrix and vec4 position
+
+
+    Fragment Shader Includes:
+    -------------------------
+
+    #include SHADOWMAP_UNIFORMS_FRAG
+    provides:
+        #define MAX_CASCADES 4 if not already defined
+        uniform sampler2DArray u_shadowMap;
+        uniform int u_cascadeCount = 1;
+        uniform float u_frustumSplits[MAX_CASCADES];
+
+    #include SHADOWMAP_INPUTS
+    provides:
+        VARYING_IN LOW vec4 v_lightWorldPosition[MAX_CASCADES];
+        VARYING_IN float v_viewDepth;
+
+    #include PCF_SHADOWS
+    provides:
+        int getCascadeIndex()
+        float shadowAmount(int cascadeIndex)
+          or, if PBR is #defined
+        float shadowAmount(int cascadeIndex, SurfaceProperties surfProp)
+
+    requires:
+        SHADOWMAP_UNIFORMS_FRAG, SHADOWMAP_INPUTS (fragment shader)
+
+    \sa addInclude
+
     */
     class CRO_EXPORT_API ShaderResource final : public Detail::SDLResource
     {

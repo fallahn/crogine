@@ -227,11 +227,13 @@ std::int32_t OpenALImpl::requestNewStream(const std::string& path)
     auto& stream = m_streams[streamID];
     CRO_ASSERT(!stream.thread, "this shouldn't be running yet!");
 
+    auto filePath = cro::FileSystem::getResourcePath() + path;
+
     auto ext = FileSystem::getFileExtension(path);
     if (ext == ".wav")
     {
         stream.audioFile = std::make_unique<WavLoader>();
-        if (!stream.audioFile->open(path))
+        if (!stream.audioFile->open(filePath))
         {
             stream.audioFile.reset();
             Logger::log("Failed to open " + path, Logger::Type::Error);
@@ -241,7 +243,7 @@ std::int32_t OpenALImpl::requestNewStream(const std::string& path)
     else if (ext == ".ogg")
     {
         stream.audioFile = std::make_unique<VorbisLoader>();
-        if (!stream.audioFile->open(path))
+        if (!stream.audioFile->open(filePath))
         {
             stream.audioFile.reset();
             Logger::log("Failed to open " + path, Logger::Type::Error);

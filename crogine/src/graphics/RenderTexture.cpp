@@ -289,7 +289,6 @@ void RenderTexture::display()
         glCheck(glDisable(GL_MULTISAMPLE));
     }
 
-
     //unbind buffer
     setActive(false);
 }
@@ -584,20 +583,22 @@ bool RenderTexture::createMultiSampled(RenderTarget::Context ctx)
         {
             m_clearBits |= GL_DEPTH_BUFFER_BIT;
 
-            std::int32_t format = GL_DEPTH_COMPONENT24;
-            std::int32_t attachment = GL_DEPTH_ATTACHMENT;
-            
-            //TODO are stencil buffers only available if depth
-            //is present? Else why are we doing this?
-            if (ctx.stencilBuffer)
+            //only use rbo if not using depth texture
+            if (!ctx.depthTexture)
             {
-                format = GL_DEPTH24_STENCIL8;
-                attachment = GL_DEPTH_STENCIL_ATTACHMENT;
-                m_clearBits |= GL_STENCIL_BUFFER_BIT;
-            }
+                std::int32_t format = GL_DEPTH_COMPONENT24;
+                std::int32_t attachment = GL_DEPTH_ATTACHMENT;
+            
+                //TODO are stencil buffers only available if depth
+                //is present? Else why are we doing this?
+                if (ctx.stencilBuffer)
+                {
+                    format = GL_DEPTH24_STENCIL8;
+                    attachment = GL_DEPTH_STENCIL_ATTACHMENT;
+                    m_clearBits |= GL_STENCIL_BUFFER_BIT;
+                }
 
-            
-            {
+
                 GLuint rbo = 0;
                 glCheck(glGenRenderbuffers(1, &rbo));
                 if (!rbo)
@@ -620,8 +621,7 @@ bool RenderTexture::createMultiSampled(RenderTarget::Context ctx)
                 glCheck(glRenderbufferStorageMultisample(GL_RENDERBUFFER, m_samples, format, ctx.width, ctx.height));
                 glCheck(glFramebufferRenderbuffer(GL_FRAMEBUFFER, attachment, GL_RENDERBUFFER, m_rboID));
             }
-
-            if (ctx.depthTexture)
+            else
             {
                 //again, this could be done in an array - but it works so meh, let's not micro-optimise
                 if (m_depthTextureID == 0)
@@ -667,7 +667,7 @@ bool RenderTexture::createMultiSampled(RenderTarget::Context ctx)
             setView(FloatRect(getViewport()));
 
             m_hasDepthBuffer = ctx.depthBuffer;
-            m_hasStencilBuffer = ctx.stencilBuffer;
+            m_hasStencilBuffer = ctx.stencilBuffer && !ctx.depthTexture; //TODO we haven't implemented stencil textures
 
             return true;
         }

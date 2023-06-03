@@ -177,6 +177,28 @@ namespace
     constexpr float MaxPuttRotation = 0.4f;// 0.24f;
 
     bool recordCam = false;
+
+    const std::array<std::string, 10u> CourseNames =
+    {
+        "course_01",
+        "course_02",
+        "course_03",
+        "course_04",
+        "course_05",
+        "course_06",
+        "course_07",
+        "course_08",
+        "course_09",
+        "course_10",
+    };
+    std::int32_t getCourseIndex(const std::string& name)
+    {
+        if (auto result = std::find(CourseNames.begin(), CourseNames.end(), name); result != CourseNames.end())
+        {
+            return static_cast<std::int32_t>(std::distance(CourseNames.begin(), result));
+        }
+        return -1;
+    }
 }
 
 GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, SharedStateData& sd)
@@ -201,6 +223,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     m_audioPath         ("assets/golf/sound/ambience.xas"),
     m_currentCamera     (CameraID::Player),
     m_photoMode         (false),
+    m_restoreInput      (false),
     m_activeAvatar      (nullptr),
     m_camRotation       (0.f),
     m_roundEnded        (false),
@@ -208,6 +231,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     m_viewScale         (1.f),
     m_scoreColumnCount  (2),
     m_readyQuitFlags    (0),
+    m_courseIndex       (getCourseIndex(sd.mapDirectory.toAnsiString())),
     m_emoteWheel        (sd, m_currentPlayer)
 {
     godmode = 1.f;
@@ -307,24 +331,28 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
         cacheState(StateID::Pause);
         });
 
-
-
     //glLineWidth(1.5f);
 #ifdef CRO_DEBUG_
     ballEntity = {};
 
     registerDebugWindows();
 #endif
+
+    registerDebugCommands();
+
     cro::App::getInstance().resetFrameTime();
 }
 
 //public
 bool GolfState::handleEvent(const cro::Event& evt)
 {
-    if (ImGui::GetIO().WantCaptureKeyboard
-        || ImGui::GetIO().WantCaptureMouse)
+    if (evt.type != SDL_MOUSEMOTION)
     {
-        return true;
+        if (ImGui::GetIO().WantCaptureKeyboard
+            || ImGui::GetIO().WantCaptureMouse)
+        {
+            return true;
+        }
     }
 
 
@@ -862,10 +890,11 @@ void GolfState::handleMessage(const cro::Message& msg)
                 m_activeAvatar->ballModel.getComponent<cro::Model>().setHidden(true);
 
                 //see if we're doing something silly like facing the camera
-                auto camVec = cro::Util::Matrix::getForwardVector(m_cameras[CameraID::Player].getComponent<cro::Transform>().getWorldTransform());
-                auto rotation = glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), m_inputParser.getYaw(), cro::Transform::Y_AXIS);
-                auto ballDir = glm::toMat3(rotation) * cro::Transform::X_AXIS;
-                if (glm::dot(camVec, ballDir) < -0.9f
+                const auto camVec = cro::Util::Matrix::getForwardVector(m_cameras[CameraID::Player].getComponent<cro::Transform>().getWorldTransform());
+                const auto playerVec = m_currentPlayer.position - m_cameras[CameraID::Player].getComponent<cro::Transform>().getWorldPosition();
+                const auto rotation = glm::rotate(glm::quat(1.f, 0.f, 0.f, 0.f), m_inputParser.getYaw(), cro::Transform::Y_AXIS);
+                const auto ballDir = glm::toMat3(rotation) * cro::Transform::X_AXIS;
+                if (glm::dot(camVec, ballDir) < -0.9f && glm::dot(camVec, playerVec) > 0.f
                     && !Achievements::getAchievement(AchievementStrings[AchievementID::BadSport])->achieved)
                 {
                     auto* shader = &m_resources.shaders.get(ShaderID::Noise);
@@ -960,8 +989,6 @@ void GolfState::handleMessage(const cro::Message& msg)
         case SceneEvent::RequestSwitchCamera:
             
         {
-            setActiveCamera(data.data);
-
             cro::Command cmd;
             cmd.targetFlags = CommandID::StrokeArc | CommandID::StrokeIndicator;
 
@@ -985,6 +1012,8 @@ void GolfState::handleMessage(const cro::Message& msg)
                 };
                 m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
             }
+
+            setActiveCamera(data.data);
         }
             break;
         }
@@ -1063,6 +1092,17 @@ void GolfState::handleMessage(const cro::Message& msg)
                 }
             };
             m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+            //hide wind indicator if club is less than min wind distance to hole
+            cmd.targetFlags = CommandID::UI::WindHidden;
+            cmd.action = [&](cro::Entity e, float)
+            {
+                std::int32_t dir = (getClub() > ClubID::PitchWedge) && (glm::length(m_holeData[m_currentHole].pin - m_currentPlayer.position) < 30.f) ? 0 : 1;
+                e.getComponent<cro::Callback>().getUserData<WindHideData>().direction = dir;
+                e.getComponent<cro::Callback>().active = true;
+            };
+            m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
 
             if (m_currentPlayer.terrain != TerrainID::Green
                 && m_currentPlayer.client == m_sharedData.localConnectionData.connectionID
@@ -1389,10 +1429,33 @@ bool GolfState::simulate(float dt)
     m_waterEnt.getComponent<cro::Transform>().move(move * 10.f * dt);
 #endif
 
+    const auto holeDir = m_holeData[m_currentHole].pin - m_currentPlayer.position;
+
+    float rotation = m_inputParser.getCamRotation() * dt;
+    if (getClub() != ClubID::Putter
+        && rotation != 0)
+    {
+        auto& tx = m_cameras[CameraID::Player].getComponent<cro::Transform>();
+
+        auto axis = glm::inverse(tx.getRotation()) * cro::Transform::Y_AXIS;
+        tx.rotate(axis, rotation);
+
+        auto& targetInfo = m_cameras[CameraID::Player].getComponent<TargetInfo>();
+        auto lookDir = targetInfo.currentLookAt - tx.getWorldPosition();
+        lookDir = glm::rotate(lookDir, rotation, axis);
+        targetInfo.currentLookAt = tx.getWorldPosition() + lookDir;
+        targetInfo.targetLookAt = targetInfo.currentLookAt;
+
+        m_camRotation += rotation;
+    }
+
+
+
+
     m_ballTrail.update();
 
     //this gets used a lot so we'll save on some calls to length()
-    m_distanceToHole = glm::length(m_holeData[m_currentHole].pin - m_currentPlayer.position);
+    m_distanceToHole = glm::length(holeDir);
 
     m_depthMap.update(1);
 
@@ -5371,6 +5434,21 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
                         m_achievementTracker.alwaysOnTheCourse = false;
                     }
                 }
+
+                //update profile stats for distance
+                if (msg->club == ClubID::Putter
+                    && msg->terrain == TerrainID::Hole)
+                {
+                    m_personalBests[m_currentPlayer.player][m_currentHole].longestPutt = 
+                        std::max(std::sqrt(msg->travelDistance), m_personalBests[m_currentPlayer.player][m_currentHole].longestPutt);
+
+                    m_personalBests[m_currentPlayer.player][m_currentHole].wasPuttAssist = m_sharedData.showPuttingPower ? 1 : 0;
+                }
+                else if (msg->club < ClubID::FourIron)
+                {
+                    m_personalBests[m_currentPlayer.player][m_currentHole].longestDrive =
+                        std::max(std::sqrt(msg->travelDistance), m_personalBests[m_currentPlayer.player][m_currentHole].longestDrive);
+                }
             }
         }
             break;
@@ -5449,6 +5527,10 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
                     {
                         Achievements::incrementStat(StatStrings[StatID::StrokeDistance], su.strokeDistance);
                     }
+
+                    m_personalBests[su.player][su.hole].hole = su.hole;
+                    m_personalBests[su.player][su.hole].course = m_courseIndex;
+                    m_personalBests[su.player][su.hole].score = su.stroke;
                 }
             }
         }
@@ -6473,16 +6555,6 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     };
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
-    //hide this if we're putting
-    cmd.targetFlags = CommandID::UI::WindString;
-    cmd.action = [&](cro::Entity e, float)
-    {
-        std::int32_t dir = getClub() == ClubID::Putter ? 0 : 1;
-        e.getComponent<cro::Callback>().getUserData<AvatarAnimCallbackData>().direction = dir;
-        e.getComponent<cro::Callback>().active = true;
-    };
-    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
-
 
     m_currentPlayer = player;
 
@@ -6840,6 +6912,14 @@ void GolfState::updateActor(const ActorInfo& update)
 
     if (update == m_currentPlayer)
     {
+        //shows how much effect the wind is currently having
+        cmd.targetFlags = CommandID::UI::WindEffect;
+        cmd.action = [update](cro::Entity e, float) 
+        {
+            e.getComponent<cro::Callback>().getUserData<WindEffectData>().first = update.windEffect;
+        };
+        m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
         //set the green cam zoom as appropriate
         float ballDist = glm::length(update.position - m_holeData[m_currentHole].pin);
 

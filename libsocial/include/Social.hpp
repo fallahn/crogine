@@ -44,8 +44,9 @@ source distribution.
 //(connection method changed 190 -> 1100)
 //(terrain vertex data and materials changed 1100 -> 1110)
 //(player avatar data format changed 1110 -> 1120)
-static constexpr std::uint16_t CURRENT_VER = 1120;
-static const std::string StringVer("1.12.4");
+//(ball started sending wind effect 1120 -> 1124)
+static constexpr std::uint16_t CURRENT_VER = 1124;
+static const std::string StringVer("1.12.5");
 
 
 class Social final
@@ -66,8 +67,17 @@ public:
     {
         enum
         {
-            SocialMessage = 10000
+            SocialMessage = 10000,
+            StatMessage
         };
+    };
+
+    struct StatEvent final
+    {
+        enum
+        {
+            StatsReceived
+        }type = StatsReceived;
     };
 
     struct SocialEvent final

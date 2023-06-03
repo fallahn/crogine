@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2021
+Matt Marchant 2017 - 2023
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -41,22 +41,15 @@ namespace cro::Shaders::ShadowMap
     #endif
 
     #if defined(INSTANCING)
-        ATTRIBUTE mat4 a_instanceWorldMatrix;
+#include INSTANCE_ATTRIBS
     #endif
 
     #if defined(SKINNED)
-        ATTRIBUTE vec4 a_boneIndices;
-        ATTRIBUTE vec4 a_boneWeights;
-        uniform mat4 u_boneMatrices[MAX_BONES];
+#include SKIN_UNIFORMS
     #endif
 
-    #if defined(INSTANCING)
-        uniform mat4 u_viewMatrix;        
-    #else
-        uniform mat4 u_worldViewMatrix;
-    #endif
-        uniform mat4 u_worldMatrix;
-        uniform mat4 u_projectionMatrix;
+#include WVP_UNIFORMS
+
         uniform vec4 u_clipPlane;
 
     #if defined (MOBILE)
@@ -70,8 +63,7 @@ namespace cro::Shaders::ShadowMap
         void main()
         {
         #if defined(INSTANCING)
-            mat4 worldMatrix = u_worldMatrix * a_instanceWorldMatrix;
-            mat4 worldViewMatrix = u_viewMatrix * worldMatrix;
+#include INSTANCE_MATRICES
         #else
             mat4 worldMatrix = u_worldMatrix;
             mat4 worldViewMatrix = u_worldViewMatrix;
@@ -81,10 +73,7 @@ namespace cro::Shaders::ShadowMap
             vec4 position = a_position;
 
         #if defined (SKINNED)
-            mat4 skinMatrix = a_boneWeights.x * u_boneMatrices[int(a_boneIndices.x)];
-            skinMatrix += a_boneWeights.y * u_boneMatrices[int(a_boneIndices.y)];
-            skinMatrix += a_boneWeights.z * u_boneMatrices[int(a_boneIndices.z)];
-            skinMatrix += a_boneWeights.w * u_boneMatrices[int(a_boneIndices.w)];
+#include SKIN_MATRIX
             position = skinMatrix * position;
         #endif                    
 
@@ -92,8 +81,6 @@ namespace cro::Shaders::ShadowMap
 
         #if defined (MOBILE)
             v_position = gl_Position;
-
-
 
         #else
             gl_ClipDistance[0] = dot(worldMatrix * position, u_clipPlane);

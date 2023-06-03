@@ -57,7 +57,7 @@ struct StateID final
         Profile, 
 
 
-
+        SQLite, //used for testing SQLite features
         Workshop = 1100
     };
 };

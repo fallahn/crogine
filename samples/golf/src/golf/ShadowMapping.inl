@@ -46,14 +46,12 @@ static const std::string ShadowVertex = R"(
     #endif
 
     #if defined(INSTANCING)
-        ATTRIBUTE mat4 a_instanceWorldMatrix;
+#include INSTANCE_ATTRIBS
     #endif
 
     #if defined(SKINNED)
         #define MAX_BONES 64
-        ATTRIBUTE vec4 a_boneIndices;
-        ATTRIBUTE vec4 a_boneWeights;
-        uniform mat4 u_boneMatrices[MAX_BONES];
+#include SKIN_UNIFORMS
     #endif
 
         uniform mat4 u_viewMatrix;
@@ -113,8 +111,7 @@ static const std::string ShadowVertex = R"(
         void main()
         {
         #if defined(INSTANCING)
-            mat4 worldMatrix = u_worldMatrix * a_instanceWorldMatrix;
-            mat4 worldViewMatrix = u_viewMatrix * worldMatrix;
+#include INSTANCE_MATRICES
         #else
             mat4 worldMatrix = u_worldMatrix;
             mat4 worldViewMatrix = u_worldViewMatrix;
@@ -134,10 +131,7 @@ static const std::string ShadowVertex = R"(
         #endif
 
         #if defined (SKINNED)
-            mat4 skinMatrix = a_boneWeights.x * u_boneMatrices[int(a_boneIndices.x)];
-            skinMatrix += a_boneWeights.y * u_boneMatrices[int(a_boneIndices.y)];
-            skinMatrix += a_boneWeights.z * u_boneMatrices[int(a_boneIndices.z)];
-            skinMatrix += a_boneWeights.w * u_boneMatrices[int(a_boneIndices.w)];
+#include SKIN_MATRIX
             position = skinMatrix * position;
         #endif                    
 

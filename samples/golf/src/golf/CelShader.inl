@@ -43,15 +43,12 @@ static const std::string CelVertexShader = R"(
 #endif
 
 #if defined(INSTANCING)
-    ATTRIBUTE mat4 a_instanceWorldMatrix;
-    ATTRIBUTE mat3 a_instanceNormalMatrix;
+#include INSTANCE_ATTRIBS
 #endif
 
 #if defined(SKINNED)
     #define MAX_BONES 64
-    ATTRIBUTE vec4 a_boneIndices;
-    ATTRIBUTE vec4 a_boneWeights;
-    uniform mat4 u_boneMatrices[MAX_BONES];
+#include SKIN_UNIFORMS
 #endif
 
 #if defined (VATS)
@@ -64,11 +61,7 @@ static const std::string CelVertexShader = R"(
 #endif
 
 #if defined(RX_SHADOWS)
-#if !defined(MAX_CASCADES)
-#define MAX_CASCADES 3
-#endif
-    uniform mat4 u_lightViewProjectionMatrix[MAX_CASCADES];
-    uniform int u_cascadeCount = 1;
+#include SHADOWMAP_UNIFORMS_VERT
 #endif
 
     uniform mat4 u_viewMatrix;
@@ -101,8 +94,7 @@ static const std::string CelVertexShader = R"(
 #endif
 
 #if defined(RX_SHADOWS)
-    VARYING_OUT LOW vec4 v_lightWorldPosition[MAX_CASCADES];
-    VARYING_OUT float v_viewDepth;
+#include SHADOWMAP_OUTPUTS
 #endif
 
 #if defined (NORMAL_MAP)
@@ -125,9 +117,7 @@ static const std::string CelVertexShader = R"(
     void main()
     {
     #if defined (INSTANCING)
-        mat4 worldMatrix = u_worldMatrix * a_instanceWorldMatrix;
-        mat4 worldViewMatrix = u_viewMatrix * worldMatrix;
-        mat3 normalMatrix = mat3(u_worldMatrix) * a_instanceNormalMatrix;            
+#include INSTANCE_MATRICES
     #else
         mat4 worldMatrix = u_worldMatrix;
         mat4 worldViewMatrix = u_worldViewMatrix;
@@ -146,19 +136,12 @@ static const std::string CelVertexShader = R"(
     #endif
 
     #if defined(SKINNED)
-        mat4 skinMatrix = a_boneWeights.x * u_boneMatrices[int(a_boneIndices.x)];
-        skinMatrix += a_boneWeights.y * u_boneMatrices[int(a_boneIndices.y)];
-        skinMatrix += a_boneWeights.z * u_boneMatrices[int(a_boneIndices.z)];
-        skinMatrix += a_boneWeights.w * u_boneMatrices[int(a_boneIndices.w)];
+#include SKIN_MATRIX
         position = skinMatrix * position;
     #endif
 
     #if defined (RX_SHADOWS)
-        for(int i = 0; i < u_cascadeCount; i++)
-        {
-            v_lightWorldPosition[i] = u_lightViewProjectionMatrix[i] * worldMatrix * position;
-        }
-        v_viewDepth = (worldViewMatrix * position).z;
+#include SHADOWMAP_VERTEX_PROC
     #endif
 
 
@@ -250,12 +233,7 @@ static const std::string CelFragmentShader = R"(
 
 
 #if defined (RX_SHADOWS)
-#if !defined(MAX_CASCADES)
-#define MAX_CASCADES 3
-#endif
-    uniform sampler2DArray u_shadowMap;
-    uniform int u_cascadeCount = 1;
-    uniform float u_frustumSplits[MAX_CASCADES];
+#include SHADOWMAP_UNIFORMS_FRAG
 #endif
 
 #if defined (TINT)
@@ -318,9 +296,9 @@ static const std::string CelFragmentShader = R"(
     OUTPUT
 
 #if defined(RX_SHADOWS)
-    VARYING_IN LOW vec4 v_lightWorldPosition[MAX_CASCADES];
-    VARYING_IN float v_viewDepth;
+#include SHADOWMAP_INPUTS
 
+//not using PCF so don't bother with include
     int getCascadeIndex()
     {
         for(int i = 0; i < u_cascadeCount; ++i)

@@ -70,6 +70,7 @@ struct ActorInfo final
     //glm::vec3 velocity = glm::vec3(0.f);
     std::array<std::int16_t, 4u> rotation = {};
     //std::array<std::int16_t, 3u> velocity = {};
+    float windEffect = 0.f;
     std::uint32_t serverID = 0;
     std::int32_t timestamp = 0;
     std::uint8_t clientID = 0;

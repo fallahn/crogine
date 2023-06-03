@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021
+Matt Marchant 2021 - 2023
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -73,20 +73,27 @@ void DrivingRangeDirector::handleMessage(const cro::Message& msg)
             auto hole = getCurrentHole();
             auto idx = m_totalHoleCount - m_holeCount;
 
-            static constexpr float MinDistance = 20.f;
 
-            float distance = MinDistance;
-            //allow some leighway for longer shots
-            float difficulty = std::min(1.f, glm::length(PlayerPosition - data.position) / 250.f);
-            difficulty *= 2.f;
-            difficulty -= 1.f;
+            if (data.type == GolfBallEvent::TurnEnded)
+            {
+                static constexpr float MinDistance = 20.f;
 
-            distance += 10.f * difficulty;
-            distance = std::max(0.0001f, distance);
+                float distance = MinDistance;
+                //allow some leighway for longer shots
+                float difficulty = std::min(1.f, glm::length(PlayerPosition - data.position) / 250.f);
+                difficulty *= 2.f;
+                difficulty -= 1.f;
 
-            float score = 1.f - std::max(0.f, std::min(1.f, glm::length(data.position - m_holeData[hole].pin) / distance));
-            m_scores[idx] = cro::Util::Easing::easeOutQuad(score) * 100.f; //grade on a curve
+                distance += 10.f * difficulty;
+                distance = std::max(0.0001f, distance);
 
+                float score = 1.f - std::max(0.f, std::min(1.f, glm::length(data.position - m_holeData[hole].pin) / distance));
+                m_scores[idx] = cro::Util::Easing::easeOutQuad(score) * 100.f; //grade on a curve
+            }
+            else
+            {
+                m_scores[idx] = 100.f;
+            }
             m_holeCount--;
         }
     }

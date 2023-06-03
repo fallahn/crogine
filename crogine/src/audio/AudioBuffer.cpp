@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2023
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -44,6 +44,8 @@ AudioBuffer::~AudioBuffer()
 {
     if (getID() > 0)
     {
+        resetUsers();
+
         AudioRenderer::deleteBuffer(getID());
         setID(-1);
     }

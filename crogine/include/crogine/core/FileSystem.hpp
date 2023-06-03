@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2023
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -40,12 +40,17 @@ namespace cro
 {
     /*!
     \brief Utilities for manipulating the current file system
+    Where possible these functions try to maintain utf8 file paths
+    using std::filesystem - although this isn't true on macOS < 10.15
     */
     class CRO_EXPORT_API FileSystem final
     {
     public:
         /*!
         \brief Lists all the files in the given directory
+        Note that when concatinating string literals make sure
+        to include the utf-8 prefix
+        EG: path += u8"/subdir";
         */
         static std::vector<std::string> listFiles(std::string path);
         /*!
@@ -67,31 +72,47 @@ namespace cro
         \brief Returns true if a file exists with the name at the given path
         Note that when calling this from an app running in a macOS bundle
         that the path should be prefixed with a call to getResourcePath()
+        
+        Note that when concatinating string literals make sure
+        to include the utf-8 prefix
+        EG: path += u8"/subdir";
         */
-        static bool fileExists(const std::string&);
+        static bool fileExists(const std::string& path);
         /*!
         \brief Tries to create a directory relative to the executable
         or via an absolute path.
         \returns false if creation fails and attempts to log the reason,
         else returns true.
-        \param std::string Path to create.
+        \param std::string path Path to create.
+
+        Note that when concatinating string literals make sure
+        to include the utf-8 prefix
+        EG: path += u8"/subdir";
         */
-        static bool createDirectory(const std::string&);
+        static bool createDirectory(const std::string& path);
         /*!
         \brief Attempts to determine if a directory at the given path exists.
         Note that when calling this from an app running in a macOS bundle
         that the path should be prefixed with a call to getResourcePath()
         \returns true if the directory exists, else false. Attempts to log any
         errors to the console.
+
+        Note that when concatinating string literals make sure
+        to include the utf-8 prefix
+        EG: path += u8"/subdir";
         */
-        static bool directoryExists(const std::string&);
+        static bool directoryExists(const std::string& path);
         /*!
         \brief Returns a vector of strings containing the names of directories
         found in the given path.
         Note that when calling this from an app running in a macOS bundle
         that the path should be prefixed with a call to getResourcePath()
+
+        Note that when concatinating string literals make sure
+        to include the utf-8 prefix
+        EG: path += u8"/subdir";
         */
-        static std::vector<std::string> listDirectories(const std::string&);
+        static std::vector<std::string> listDirectories(const std::string& path);
         /*!
         \brief Returns the absolute path of the current working directory
         */

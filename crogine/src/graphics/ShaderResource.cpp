@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2022
+Matt Marchant 2017 - 2023
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -28,6 +28,7 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include <crogine/graphics/ShaderResource.hpp>
+
 #include "shaders/Default.hpp"
 #include "shaders/Unlit.hpp"
 #include "shaders/Billboard.hpp"
@@ -44,6 +45,7 @@ using namespace cro;
 
 namespace
 {
+#include "shaders/ShaderIncludes.inl"
     std::int32_t MAX_BONES = 0;
 }
 
@@ -53,6 +55,22 @@ ShaderResource::ShaderResource()
     {
         Logger::log("FAILED LOADING DEFAULT SHADER, SHADER RESOURCE INVALID STATE", Logger::Type::Error);
     }
+
+    //register the default includes
+    addInclude("WVP_UNIFORMS", WVPMatrices.c_str());
+
+    addInclude("INSTANCE_ATTRIBS", InstanceAttribs.c_str());
+    addInclude("INSTANCE_MATRICES", InstanceMatrices.c_str());
+
+    addInclude("SKIN_UNIFORMS", SkinUniforms.c_str());
+    addInclude("SKIN_MATRIX", SkinMatrix.c_str());
+
+    addInclude("SHADOWMAP_UNIFORMS_VERT", ShadowmapUniformsVert.c_str());
+    addInclude("SHADOWMAP_OUTPUTS", ShadowmapOutputs.c_str());
+    addInclude("SHADOWMAP_VERTEX_PROC", ShadowmapVertProc.c_str());
+    addInclude("SHADOWMAP_UNIFORMS_FRAG", ShadowmapUniformsFrag.c_str());
+    addInclude("SHADOWMAP_INPUTS", ShadowmapInputs.c_str());
+    addInclude("PCF_SHADOWS", PCFShadows.c_str());
 }
 
 //public

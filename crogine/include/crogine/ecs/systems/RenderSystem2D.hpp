@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2021
+Matt Marchant 2017 - 2023
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -110,6 +110,15 @@ namespace cro
         */
         void setSortOrder(DepthAxis order);
 
+        /*!
+        \brief Returns the default Vertex shader for Drawable2D components
+        Use the string returned by this function to create the vertex part
+        of custom shaders which don't use modified vertex properties. By
+        default this only forwards the colour property of vertices to the
+        fragment shader, add the define TEXTURED when compiling shaders to
+        include the texture coords of the sprite
+        */
+        static const std::string& getDefaultVertexShader();
 
     private:
 

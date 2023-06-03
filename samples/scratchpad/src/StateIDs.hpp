@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2022
+Matt Marchant 2020 - 2023
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -42,6 +42,7 @@ namespace States
             Bush,
             BSP,
             Frustum,
+            Log,
             MeshCollision,
             Retro,
             Rolling,

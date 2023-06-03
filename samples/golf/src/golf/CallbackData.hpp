@@ -31,6 +31,9 @@ source distribution.
 
 #include <crogine/ecs/Entity.hpp>
 
+#include <crogine/ecs/components/Callback.hpp>
+#include <crogine/ecs/components/Drawable2D.hpp>
+
 //used to move the flag as the player approaches
 struct FlagCallbackData final
 {
@@ -38,6 +41,38 @@ struct FlagCallbackData final
     float targetHeight = 0.f;
     float currentHeight = 0.f;
 };
+using WindEffectData = std::pair<float, float>;
+
+//bar to show the current wind effect on the ball
+struct WindEffectCallback final
+{
+    void operator () (cro::Entity e, float dt)
+    {
+        const float Speed = dt / 4.f;
+        auto& [target, current] = e.getComponent<cro::Callback>().getUserData<WindEffectData>();
+        if (target < current)
+        {
+            current = std::max(target, current - Speed);
+        }
+        else
+        {
+            current = std::min(target, current + Speed);
+        }
+        cro::FloatRect crop(0.f, 0.f, 2.f, 32.f * current); //TODO constify this once we settle on size
+        e.getComponent<cro::Drawable2D>().setCroppingArea(crop);
+
+        if (current > 0)
+        {
+            auto colour = glm::mix(static_cast<glm::vec4>(TextGoldColour), static_cast<glm::vec4>(TextHighlightColour), current);
+            auto& verts = e.getComponent<cro::Drawable2D>().getVertexData();
+            for (auto& v : verts)
+            {
+                v.colour = colour;
+            }
+        }
+    };
+};
+
 
 //used for drone targeting
 struct DroneCallbackData final
@@ -78,3 +113,4 @@ struct AvatarAnimCallbackData final
     std::int32_t direction = 0; //in/out
     float progress = 0.f;
 };
+using WindHideData = AvatarAnimCallbackData;

@@ -15,7 +15,11 @@ namespace cro::Shaders::PBR
     //with the VertexLit type.
     static const std::string Fragment = 
         R"(
-        OUTPUT
+    layout (location = 0) out vec4 FRAG_OUT;
+    layout (location = 1) out vec4 NORM_OUT;
+    layout (location = 2) out vec4 POS_OUT;
+uniform mat4 u_viewMatrix;
+
         #if defined(DIFFUSE_MAP)
         uniform sampler2D u_diffuseMap;
         #endif
@@ -36,12 +40,7 @@ namespace cro::Shaders::PBR
         #endif
 
         #if defined (RX_SHADOWS)
-        #if !defined(MAX_CASCADES)
-        #define MAX_CASCADES 4
-        #endif
-        uniform sampler2DArray u_shadowMap;
-        uniform int u_cascadeCount = 1;
-        uniform float u_frustumSplits[MAX_CASCADES];
+#include SHADOWMAP_UNIFORMS_FRAG
         #endif
 
         uniform vec3 u_lightDirection;
@@ -84,66 +83,12 @@ namespace cro::Shaders::PBR
         };
 
         #if defined(RX_SHADOWS)
-        VARYING_IN LOW vec4 v_lightWorldPosition[MAX_CASCADES];
-        VARYING_IN float v_viewDepth;
+#include SHADOWMAP_INPUTS
 
-        int getCascadeIndex()
-        {
-            for(int i = 0; i < u_cascadeCount; ++i)
-            {
-                if (v_viewDepth >= u_frustumSplits[i])
-                {
-                    return min(u_cascadeCount - 1, i);
-                }
-            }
-            return u_cascadeCount - 1;
-        }
 
-        const vec2 kernel[16] = vec2[](
-            vec2(-0.94201624, -0.39906216),
-            vec2(0.94558609, -0.76890725),
-            vec2(-0.094184101, -0.92938870),
-            vec2(0.34495938, 0.29387760),
-            vec2(-0.91588581, 0.45771432),
-            vec2(-0.81544232, -0.87912464),
-            vec2(-0.38277543, 0.27676845),
-            vec2(0.97484398, 0.75648379),
-            vec2(0.44323325, -0.97511554),
-            vec2(0.53742981, -0.47373420),
-            vec2(-0.26496911, -0.41893023),
-            vec2(0.79197514, 0.19090188),
-            vec2(-0.24188840, 0.99706507),
-            vec2(-0.81409955, 0.91437590),
-            vec2(0.19984126, 0.78641367),
-            vec2(0.14383161, -0.14100790)
-        );
-        const int filterSize = 3;
-        float shadowAmount(int cascadeIndex, SurfaceProperties surfProp)
-        {
-            vec4 lightWorldPos = v_lightWorldPosition[cascadeIndex];
+#define PBR //affects the shadow include, below
+#include PCF_SHADOWS
 
-            vec3 projectionCoords = lightWorldPos.xyz / lightWorldPos.w;
-            projectionCoords = projectionCoords * 0.5 + 0.5;
-
-            if(projectionCoords.z > 1.0) return 1.0;
-
-            float slope = dot(surfProp.normalDir, surfProp.lightDir);
-
-            float bias = max(0.008 * (1.0 - slope), 0.001);
-            //float bias = 0.004;
-
-            float shadow = 0.0;
-            vec2 texelSize = 1.0 / textureSize(u_shadowMap, 0).xy;
-            for(int x = 0; x < filterSize; ++x)
-            {
-                for(int y = 0; y < filterSize; ++y)
-                {
-                    float pcfDepth = TEXTURE(u_shadowMap, vec3(projectionCoords.xy + kernel[y * filterSize + x] * texelSize, cascadeIndex)).r;
-                    shadow += (projectionCoords.z - bias) > pcfDepth ? 0.4 : 0.0;
-                }
-            }
-            return 1.0 - ((shadow / 9.0) * clamp(slope, 0.0, 1.0));
-        }
         #endif
 
 
@@ -228,6 +173,14 @@ namespace cro::Shaders::PBR
         #else
             surfProp.normalDir = normalize(v_normalVector);
         #endif
+
+//NORM_OUT = vec4(surfProp.normalDir, 1.0);
+//POS_OUT = vec4(v_worldPosition, 1.0);
+
+NORM_OUT = u_viewMatrix * vec4(surfProp.normalDir, 0.0);
+NORM_OUT.a = 1.0;
+POS_OUT = u_viewMatrix * vec4(v_worldPosition, 1.0);
+
             surfProp.viewDir = normalize(u_cameraWorldPosition - v_worldPosition);
 
         #if defined(DIFFUSE_MAP)

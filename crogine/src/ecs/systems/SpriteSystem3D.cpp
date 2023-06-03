@@ -32,6 +32,7 @@ source distribution.
 #include <crogine/ecs/systems/SpriteSystem3D.hpp>
 #include <crogine/ecs/components/Sprite.hpp>
 #include <crogine/ecs/components/Model.hpp>
+#include <crogine/ecs/components/ShadowCaster.hpp>
 #include <crogine/graphics/Texture.hpp>
 
 #include <crogine/detail/OpenGL.hpp>
@@ -201,8 +202,7 @@ void SpriteSystem3D::onEntityAdded(Entity entity)
 
     Material::Data material = entity.getComponent<cro::Model>().getMaterialData(cro::Mesh::IndexData::Final, 0);
     const auto& sprite = entity.getComponent<Sprite>();
-    bool attribsOK = //true; //TODO assert this
-
+    bool attribsOK = 
     (material.attribs[Mesh::Position][1] == 2 &&
     material.attribs[Mesh::Colour][1] == 4 &&
     material.attribs[Mesh::UV0][1] == 2);
@@ -226,7 +226,26 @@ void SpriteSystem3D::onEntityAdded(Entity entity)
         material.blendMode = sprite.m_blendMode;
     }
 
-    entity.getComponent<Model>() = Model(meshData, material);
+    auto& model = entity.getComponent<cro::Model>();
+    auto shadowMat = model.getMaterialData(cro::Mesh::IndexData::Shadow, 0);
+    auto renderFlags = model.getRenderFlags();
+    auto facing = model.getFacing();
+    auto hidden = model.isHidden();
+
+    model = Model(meshData, material);
+    model.setRenderFlags(renderFlags);
+    model.setFacing(facing);
+    model.setHidden(hidden);
+
+    if (entity.hasComponent<cro::ShadowCaster>())
+    {
+        //rebind the shadow casting material
+        if (sprite.getTexture())
+        {
+            shadowMat.setProperty("u_diffuseMap", *sprite.getTexture());
+        }
+        entity.getComponent<cro::Model>().setShadowMaterial(0, shadowMat);
+    }
 }
 
 void SpriteSystem3D::onEntityRemoved(Entity entity)
@@ -242,6 +261,16 @@ void SpriteSystem3D::onEntityRemoved(Entity entity)
         {
             glCheck(glDeleteBuffers(1, &id.ibo));
         }
+
+#ifdef PLATFORM_DESKTOP
+        for (auto& vao : id.vao)
+        {
+            if (vao)
+            {
+                glCheck(glDeleteVertexArrays(1, &vao));
+            }
+        }
+#endif
     }
     //delete vertex buffer
     if (meshData.vbo)
