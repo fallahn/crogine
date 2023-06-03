@@ -437,17 +437,17 @@ static inline float getViewScale(glm::vec2 size = GolfGame::getActiveTarget()->g
     if (ratio < 1.7)
     {
         //4:3
-        return std::floor(size.x / 512.f);
+        return std::min(4.f, std::floor(size.x / 512.f));
     }
 
     if (ratio < 2.37f)
     {
         //widescreen
-        return std::floor(size.x / 540.f);
+        return std::min(4.f, std::floor(size.x / 540.f));
     }
 
     //ultrawide
-    return std::floor(size.y / 360.f);
+    return std::min(4.f, std::floor(size.y / 360.f));
 }
 
 static inline void togglePixelScale(SharedStateData& sharedData, bool on)

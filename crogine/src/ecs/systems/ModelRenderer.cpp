@@ -279,7 +279,7 @@ const std::string& ModelRenderer::getDefaultVertexShader(std::int32_t type)
     case VertexShaderID::PBR:
         return Shaders::VertexLit::Vertex;
     }
-    return {};
+    return defaultVal;
 }
 
 const std::string& ModelRenderer::getDefaultFragmentShader(std::int32_t type)
