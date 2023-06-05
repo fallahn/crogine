@@ -79,10 +79,12 @@ set(GOLF_SRC
   ${PROJECT_DIR}/golf/VatFile.cpp
   ${PROJECT_DIR}/golf/Weather.cpp
 
+  #${PROJECT_DIR}/golf/server/GolfDefaultDirector.cpp
   ${PROJECT_DIR}/golf/server/EightballDirector.cpp
   ${PROJECT_DIR}/golf/server/NineballDirector.cpp
   ${PROJECT_DIR}/golf/server/Server.cpp
   ${PROJECT_DIR}/golf/server/ServerBilliardsState.cpp
+  ${PROJECT_DIR}/golf/server/ServerGolfRules.cpp
   ${PROJECT_DIR}/golf/server/ServerGolfState.cpp
   ${PROJECT_DIR}/golf/server/ServerLobbyState.cpp
   ${PROJECT_DIR}/golf/server/SnookerDirector.cpp)
