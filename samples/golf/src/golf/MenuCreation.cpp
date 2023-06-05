@@ -1557,7 +1557,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<UIElement>().absolutePosition = { 20.f, bounds.height - 25.f };
+    entity.addComponent<UIElement>().absolutePosition = { 21.f, bounds.height - 28.f };
     entity.getComponent<UIElement>().depth = 0.2f;
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement | CommandID::Menu::LobbyList;
     entity.addComponent<cro::Callback>().setUserData<std::vector<cro::Entity>>(); //abuse this component to store handles to the text children.
@@ -2664,8 +2664,8 @@ void MenuState::addCourseSelectButtons()
         labelEnt.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
         labelEnt.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
         labelEnt.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement | CommandID::Menu::CourseSelect;
-        labelEnt.addComponent<UIElement>().absolutePosition = { 156.f, -79.f };
-        labelEnt.getComponent<UIElement>().relativePosition = LobbyBackgroundPosition;
+        labelEnt.addComponent<UIElement>().absolutePosition = { 56.f, 79.f };
+        //labelEnt.getComponent<UIElement>().relativePosition = LobbyBackgroundPosition;
         labelEnt.getComponent<UIElement>().depth = 0.01f;
         labelEnt.getComponent<UIElement>().resizeCallback = resizeCallbackRight;
         bounds = cro::Text::getLocalBounds(labelEnt);
@@ -2682,8 +2682,8 @@ void MenuState::addCourseSelectButtons()
         labelEnt.addComponent<cro::Drawable2D>();
         labelEnt.addComponent<cro::Sprite>() = m_sprites[SpriteID::Envelope];
         labelEnt.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement | CommandID::Menu::CourseSelect;
-        labelEnt.addComponent<UIElement>().absolutePosition = { 138.f, -86.f };
-        labelEnt.getComponent<UIElement>().relativePosition = LobbyBackgroundPosition;
+        labelEnt.addComponent<UIElement>().absolutePosition = { 38.f, 86.f };
+        //labelEnt.getComponent<UIElement>().relativePosition = LobbyBackgroundPosition;
         labelEnt.getComponent<UIElement>().depth = 0.01f;
         labelEnt.getComponent<UIElement>().resizeCallback = resizeCallbackRight;
         m_menuEntities[MenuID::Lobby].getComponent<cro::Transform>().addChild(labelEnt.getComponent<cro::Transform>());
