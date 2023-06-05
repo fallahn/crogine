@@ -1505,7 +1505,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<UIElement>().absolutePosition = { 366.f, 210.f };
+    entity.addComponent<UIElement>().absolutePosition = { 364.f, 210.f };
     entity.getComponent<UIElement>().depth = 0.1f;
     entity.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
@@ -1519,7 +1519,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity.addComponent<cro::Transform>().setOrigin({ 74.f, 0.f });
     entity.getComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<UIElement>().absolutePosition = { 366.f, 190.f };
+    entity.addComponent<UIElement>().absolutePosition = { 364.f, 190.f };
     entity.getComponent<UIElement>().depth = 0.1f;
     entity.addComponent<cro::Text>(smallFont).setCharacterSize(InfoTextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
@@ -1535,7 +1535,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     entity.getComponent<cro::Text>().setString(GimmeString[m_sharedData.gimmeRadius]);
-    entity.addComponent<UIElement>().absolutePosition = {366.f, 100.f };
+    entity.addComponent<UIElement>().absolutePosition = {364.f, 100.f };
     entity.getComponent<UIElement>().depth = 0.1f;
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::GimmeDesc | CommandID::Menu::UIElement;
     centreText(entity);
@@ -1545,7 +1545,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity.addComponent<cro::Transform>().setOrigin({ 74.f, 0.f });
     entity.getComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<UIElement>().absolutePosition = { 366.f, 80.f };
+    entity.addComponent<UIElement>().absolutePosition = { 364.f, 80.f };
     entity.getComponent<UIElement>().depth = 0.1f;
     entity.addComponent<cro::Text>(smallFont).setCharacterSize(InfoTextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
