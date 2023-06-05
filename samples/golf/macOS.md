@@ -49,13 +49,18 @@ sudo make install
 When the library has installed change to the golf directory
 
 ```shell
-cd ../../samples/golf
+cd ../samples/golf
 ```
 
 And configure CMake
 
 ```shell
 mkdir build && cd build
+cmake .. -D MACOS_BUNDLE=true -G Xcode
+```
+
+Alternatively you might have some luck with
+```
 cmake .. -D MACOS_BUNDLE=true -G Xcode -D CMAKE_C_COMPILER="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/cc" -D CMAKE_CXX_COMPILER="/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/c++"
 ```
 
@@ -75,4 +80,13 @@ This command requires sudo as it will need to copy the libbullet libraries and m
 
 ```shell
 sudo chown -Rv $USER Release
+```
+
+Copy to /Applications/golf.app 
+
+Finally, you'll need to add `golf.app` to the firewall and unblock it so that network connections are allowed
+
+```
+sudo /usr/libexec/ApplicationFirewall/socketfilterfw --add /Applications/golf.app
+sudo /usr/libexec/ApplicationFirewall/socketfilterfw --unblockapp /Applications/golf.app
 ```
