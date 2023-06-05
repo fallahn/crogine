@@ -1420,6 +1420,9 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     cro::SpriteSheet spriteSheet;
     spriteSheet.loadFromFile("assets/golf/sprites/lobby_menu.spt", m_resources.textures);
 
+    cro::SpriteSheet spriteSheetV2;
+    spriteSheetV2.loadFromFile("assets/golf/sprites/lobby_menu_v2.spt", m_resources.textures);
+
     //title
     auto entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
@@ -1438,79 +1441,16 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>();
-    auto bgSprite = spriteSheet.getSprite("background");
+    entity.addComponent<cro::Sprite>() = spriteSheetV2.getSprite("background");
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement;
-    entity.addComponent<UIElement>().relativePosition = LobbyBackgroundPosition;
+    entity.addComponent<UIElement>().relativePosition = { 0.5f, 0.5f };
+    entity.getComponent<UIElement>().absolutePosition = { 0.f, 10.f };
     entity.getComponent<UIElement>().depth = -0.2f;
-    entity.getComponent<UIElement>().resizeCallback =
-        [&, bgSprite](cro::Entity e)
-    {
-        auto baseSize = glm::vec2(cro::App::getWindow().getSize()) / m_viewScale;
-        constexpr float EdgeOffset = 50.f; //this much from outside before splitting
-        
-        e.getComponent<cro::Drawable2D>().setTexture(bgSprite.getTexture());
-        auto bounds = bgSprite.getTextureBounds();
-        auto rect = bgSprite.getTextureRectNormalised();
-
-        //how much bigger to get either side in wider views
-        float expansion = std::min(100.f, std::floor((baseSize.x - bounds.width) / 2.f));
-        //only needs > 0 really but this gives a little leeway
-        expansion = (baseSize.x - bounds.width > 10) ? expansion : 0.f;
-        float edgeOffsetNorm = (EdgeOffset / bgSprite.getTexture()->getSize().x);
-
-        bounds.width += expansion * 2.f;
-
-        e.getComponent<cro::Drawable2D>().setVertexData(
-            {
-                cro::Vertex2D(glm::vec2(0.f, bounds.height), glm::vec2(rect.left, rect.bottom + rect.height)),
-                cro::Vertex2D(glm::vec2(0.f), glm::vec2(rect.left, rect.bottom)),
-
-                cro::Vertex2D(glm::vec2(EdgeOffset, bounds.height), glm::vec2(rect.left + edgeOffsetNorm, rect.bottom + rect.height)),
-                cro::Vertex2D(glm::vec2(EdgeOffset, 0.f), glm::vec2(rect.left + edgeOffsetNorm, rect.bottom)),
-                cro::Vertex2D(glm::vec2(EdgeOffset + expansion, bounds.height), glm::vec2(rect.left + edgeOffsetNorm, rect.bottom + rect.height)),
-                cro::Vertex2D(glm::vec2(EdgeOffset + expansion, 0.f), glm::vec2(rect.left + edgeOffsetNorm, rect.bottom)),
-
-
-                cro::Vertex2D(glm::vec2(bounds.width - EdgeOffset - expansion, bounds.height), glm::vec2((rect.left + rect.width) - edgeOffsetNorm, rect.bottom + rect.height)),
-                cro::Vertex2D(glm::vec2(bounds.width - EdgeOffset - expansion, 0.f), glm::vec2((rect.left + rect.width) - edgeOffsetNorm, rect.bottom)),
-                cro::Vertex2D(glm::vec2(bounds.width - EdgeOffset, bounds.height), glm::vec2((rect.left + rect.width) - edgeOffsetNorm, rect.bottom + rect.height)),
-                cro::Vertex2D(glm::vec2(bounds.width - EdgeOffset, 0.f), glm::vec2((rect.left + rect.width) - edgeOffsetNorm, rect.bottom)),
-
-
-                cro::Vertex2D(glm::vec2(bounds.width, bounds.height), glm::vec2(rect.left + rect.width, rect.bottom + rect.height)),
-                cro::Vertex2D(glm::vec2(bounds.width, 0.f), glm::vec2(rect.left + rect.width, rect.bottom))
-            });
-    
-        e.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
-        m_lobbyExpansion = expansion;
-
-        cro::Command cmd;
-        cmd.targetFlags = CommandID::Menu::LobbyText;
-        cmd.action = [expansion](cro::Entity e, float)
-        {
-            //set cropping area
-            if (e.hasComponent<cro::Text>())
-            {
-                auto bounds = cro::Text::getLocalBounds(e);
-                bounds.width = std::min(bounds.width, MinLobbyCropWidth + expansion);
-                e.getComponent<cro::Drawable2D>().setCroppingArea(bounds);
-            }
-
-
-            //set offset if on right
-            if (auto pos = e.getComponent<cro::Transform>().getPosition(); pos.x > LobbyTextSpacing)
-            {
-                pos.x = LobbyTextSpacing + expansion + 1.f;
-                e.getComponent<cro::Transform>().setPosition(pos);
-            }
-        };
-        m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
-    };
-    entity.getComponent<UIElement>().resizeCallback(entity);
-    entity.getComponent<cro::Drawable2D>().updateLocalBounds();
-    bounds = entity.getComponent<cro::Drawable2D>().getLocalBounds();
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
     menuTransform.addChild(entity.getComponent<cro::Transform>());
 
+    m_menuEntities[MenuID::LobbyBackground] = entity;
     auto bgEnt = entity;
 
 #ifdef USE_GNS
@@ -1519,7 +1459,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 100.f, 0.f, 0.2f });
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(labelFont);// .setString(scoreStr);
+    entity.addComponent<cro::Text>(labelFont);
     entity.getComponent<cro::Text>().setCharacterSize(LabelTextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
@@ -1535,20 +1475,19 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
             auto pos = e.getComponent<cro::Transform>().getPosition();
 
             pos.x -= 20.f * dt;
-            pos.y = 17.f;
+            pos.y = 23.f;
             pos.z = 0.3f;
 
-            static constexpr float Offset = 150.f;
+            static constexpr float Offset = 232.f;
             const auto bgWidth = bounds.width;
             if (pos.x < -scrollBounds.width + Offset)
             {
                 pos.x = bgWidth;
-                pos.x -= Offset;
             }
 
             e.getComponent<cro::Transform>().setPosition(pos);
 
-            cro::FloatRect cropping = { -pos.x + Offset, -16.f, (bgWidth) - (Offset * 2.f), 18.f };
+            cro::FloatRect cropping = { -pos.x + Offset, -16.f, (bgWidth) - (Offset + 10.f), 18.f };
             e.getComponent<cro::Drawable2D>().setCroppingArea(cropping);
         }
     };
@@ -1556,19 +1495,18 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     m_lobbyWindowEntities[LobbyEntityID::CourseTicker] = entity;
 #endif
 
-    auto textResizeCallback = 
+    /*auto textResizeCallback = 
         [&,bgEnt](cro::Entity e)
     {
         e.getComponent<cro::Transform>().setPosition({ bgEnt.getComponent<cro::Transform>().getOrigin().x , e.getComponent<UIElement>().absolutePosition.y, e.getComponent<UIElement>().depth });
-    };
+    };*/
 
     //display the score type
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, 159.f, 0.1f });
+    entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<UIElement>().absolutePosition = { bounds.width / 2.f, 159.f };
+    entity.addComponent<UIElement>().absolutePosition = { 366.f, 210.f };
     entity.getComponent<UIElement>().depth = 0.1f;
-    entity.getComponent<UIElement>().resizeCallback = textResizeCallback;
     entity.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     entity.getComponent<cro::Text>().setString(ScoreTypes[m_sharedData.scoreType]);
@@ -1579,11 +1517,10 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     //and score description
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setOrigin({ 74.f, 0.f });
-    entity.getComponent<cro::Transform>().setPosition({(bounds.width / 2.f), 140.f, 0.1f});
+    entity.getComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<UIElement>().absolutePosition = { bounds.width / 2.f, 140.f };
+    entity.addComponent<UIElement>().absolutePosition = { 366.f, 190.f };
     entity.getComponent<UIElement>().depth = 0.1f;
-    entity.getComponent<UIElement>().resizeCallback = textResizeCallback;
     entity.addComponent<cro::Text>(smallFont).setCharacterSize(InfoTextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     entity.getComponent<cro::Text>().setString(RuleDescriptions[m_sharedData.scoreType]);
@@ -1593,38 +1530,23 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
 
     //gimme radius
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, 85.f, 0.1f });
+    entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
-    entity.getComponent<cro::Text>().setString("Gimme Radius");
-    entity.addComponent<UIElement>().absolutePosition = { bounds.width / 2.f, 85.f };
-    entity.getComponent<UIElement>().depth = 0.1f;
-    entity.getComponent<UIElement>().resizeCallback = textResizeCallback;
-    entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement;
-    centreText(entity);
-    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-
-    entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ (bounds.width / 2.f), 66.f, 0.1f });
-    entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(smallFont).setCharacterSize(InfoTextSize);
-    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     entity.getComponent<cro::Text>().setString(GimmeString[m_sharedData.gimmeRadius]);
-    entity.addComponent<UIElement>().absolutePosition = { bounds.width / 2.f, 66.f };
+    entity.addComponent<UIElement>().absolutePosition = {366.f, 100.f };
     entity.getComponent<UIElement>().depth = 0.1f;
-    entity.getComponent<UIElement>().resizeCallback = textResizeCallback;
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::GimmeDesc | CommandID::Menu::UIElement;
     centreText(entity);
     bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setOrigin({ 74.f, 0.f });
-    entity.getComponent<cro::Transform>().setPosition({ (bounds.width / 2.f), 50.f, 0.1f });
+    entity.getComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<UIElement>().absolutePosition = { bounds.width / 2.f, 50.f };
+    entity.addComponent<UIElement>().absolutePosition = { 366.f, 80.f };
     entity.getComponent<UIElement>().depth = 0.1f;
-    entity.getComponent<UIElement>().resizeCallback = textResizeCallback;
     entity.addComponent<cro::Text>(smallFont).setCharacterSize(InfoTextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     entity.getComponent<cro::Text>().setString("The ball is considered holed\nwhen it's within this radius");
@@ -1644,12 +1566,12 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
 
     //displays the thumbnails for the selected course
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Transform>().setScale({ 0.f, 0.f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("thumbnail_window");
     entity.addComponent<UIElement>().absolutePosition = { bounds.width / 2.f, bounds.height / 2.f };
     entity.getComponent<UIElement>().depth = 1.2f;
-    entity.getComponent<UIElement>().resizeCallback = textResizeCallback;
+    //entity.getComponent<UIElement>().resizeCallback = textResizeCallback;
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement;
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.getComponent<cro::Transform>().setOrigin({ std::floor(bounds.width / 2.f), std::floor(bounds.height / 2.f) });
@@ -1702,7 +1624,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
 
     //background for course info
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Transform>().setScale({ 0.f, 0.f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("course_desc");
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement;
@@ -2471,8 +2393,7 @@ void MenuState::addCourseSelectButtons()
     buttonEnt.addComponent<cro::Sprite>() = m_sprites[SpriteID::PrevCourse];
     buttonEnt.addComponent<cro::SpriteAnimation>();
     buttonEnt.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement | CommandID::Menu::CourseSelect;
-    buttonEnt.addComponent<UIElement>().absolutePosition = { -62.f, 59.f };
-    buttonEnt.getComponent<UIElement>().relativePosition = LobbyBackgroundPosition;
+    buttonEnt.addComponent<UIElement>().absolutePosition = { 366.f-85.f, 206.f };
     buttonEnt.getComponent<UIElement>().depth = 0.01f;
     auto bounds = buttonEnt.getComponent<cro::Sprite>().getTextureBounds();
     buttonEnt.addComponent<cro::UIInput>().area = bounds;
@@ -2489,7 +2410,7 @@ void MenuState::addCourseSelectButtons()
     };
     buttonEnt.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
 
-    m_menuEntities[MenuID::Lobby].getComponent<cro::Transform>().addChild(buttonEnt.getComponent<cro::Transform>());
+    m_menuEntities[MenuID::LobbyBackground].getComponent<cro::Transform>().addChild(buttonEnt.getComponent<cro::Transform>());
 
 
     buttonEnt = m_uiScene.createEntity();
@@ -2499,8 +2420,7 @@ void MenuState::addCourseSelectButtons()
     buttonEnt.addComponent<cro::Sprite>() = m_sprites[SpriteID::NextCourse];
     buttonEnt.addComponent<cro::SpriteAnimation>();
     buttonEnt.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement | CommandID::Menu::CourseSelect;
-    buttonEnt.addComponent<UIElement>().absolutePosition = { 63.f, 59.f };
-    buttonEnt.getComponent<UIElement>().relativePosition = LobbyBackgroundPosition;
+    buttonEnt.addComponent<UIElement>().absolutePosition = { 366.f+82.f, 206.f };
     buttonEnt.getComponent<UIElement>().depth = 0.01f;
     bounds = buttonEnt.getComponent<cro::Sprite>().getTextureBounds();
     buttonEnt.addComponent<cro::UIInput>().area = bounds;
@@ -2517,7 +2437,7 @@ void MenuState::addCourseSelectButtons()
     };
     buttonEnt.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
 
-    m_menuEntities[MenuID::Lobby].getComponent<cro::Transform>().addChild(buttonEnt.getComponent<cro::Transform>());
+    m_menuEntities[MenuID::LobbyBackground].getComponent<cro::Transform>().addChild(buttonEnt.getComponent<cro::Transform>());
 
 
     //choose gimme radius
@@ -2528,8 +2448,7 @@ void MenuState::addCourseSelectButtons()
     buttonEnt.addComponent<cro::Sprite>() = m_sprites[SpriteID::PrevCourse];
     buttonEnt.addComponent<cro::SpriteAnimation>();
     buttonEnt.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement | CommandID::Menu::CourseSelect;
-    buttonEnt.addComponent<UIElement>().absolutePosition = { -62.f, -15.f };
-    buttonEnt.getComponent<UIElement>().relativePosition = LobbyBackgroundPosition;
+    buttonEnt.addComponent<UIElement>().absolutePosition = { 366.f - 85.f, 95.f };
     buttonEnt.getComponent<UIElement>().depth = 0.01f;
     bounds = buttonEnt.getComponent<cro::Sprite>().getTextureBounds();
     buttonEnt.addComponent<cro::UIInput>().area = bounds;
@@ -2546,7 +2465,7 @@ void MenuState::addCourseSelectButtons()
     };
     buttonEnt.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
 
-    m_menuEntities[MenuID::Lobby].getComponent<cro::Transform>().addChild(buttonEnt.getComponent<cro::Transform>());
+    m_menuEntities[MenuID::LobbyBackground].getComponent<cro::Transform>().addChild(buttonEnt.getComponent<cro::Transform>());
 
 
     buttonEnt = m_uiScene.createEntity();
@@ -2556,8 +2475,7 @@ void MenuState::addCourseSelectButtons()
     buttonEnt.addComponent<cro::Sprite>() = m_sprites[SpriteID::NextCourse];
     buttonEnt.addComponent<cro::SpriteAnimation>();
     buttonEnt.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement | CommandID::Menu::CourseSelect;
-    buttonEnt.addComponent<UIElement>().absolutePosition = { 63.f, -15.f };
-    buttonEnt.getComponent<UIElement>().relativePosition = LobbyBackgroundPosition;
+    buttonEnt.addComponent<UIElement>().absolutePosition = { 366.f + 82.f, 95.f };
     buttonEnt.getComponent<UIElement>().depth = 0.01f;
     bounds = buttonEnt.getComponent<cro::Sprite>().getTextureBounds();
     buttonEnt.addComponent<cro::UIInput>().area = bounds;
@@ -2574,7 +2492,7 @@ void MenuState::addCourseSelectButtons()
     };
     buttonEnt.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
 
-    m_menuEntities[MenuID::Lobby].getComponent<cro::Transform>().addChild(buttonEnt.getComponent<cro::Transform>());
+    m_menuEntities[MenuID::LobbyBackground].getComponent<cro::Transform>().addChild(buttonEnt.getComponent<cro::Transform>());
 
 
 

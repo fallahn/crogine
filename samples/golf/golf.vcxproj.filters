@@ -357,9 +357,6 @@
     <ClCompile Include="src\sqlite\ProfileDB.cpp">
       <Filter>Source Files\sqlite</Filter>
     </ClCompile>
-    <ClCompile Include="src\golf\server\GolfDefaultDirector.cpp">
-      <Filter>Source Files\golf\server\directors</Filter>
-    </ClCompile>
     <ClCompile Include="src\golf\server\ServerGolfRules.cpp">
       <Filter>Source Files\golf\server</Filter>
     </ClCompile>
@@ -724,12 +721,6 @@
     </ClInclude>
     <ClInclude Include="src\sqlite\ProfileDB.hpp">
       <Filter>Header Files\sqlite</Filter>
-    </ClInclude>
-    <ClInclude Include="src\golf\server\GolfDirector.hpp">
-      <Filter>Header Files\golf\server\directors</Filter>
-    </ClInclude>
-    <ClInclude Include="src\golf\server\GolfDefaultDirector.hpp">
-      <Filter>Header Files\golf\server\directors</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
