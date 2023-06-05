@@ -96,7 +96,6 @@ public:
         Main, Avatar, Join, Lobby,
         ProfileFlyout, ConfirmQuit,
 
-        LobbyBackground,
         Count
     };
 
@@ -198,6 +197,7 @@ private:
             HoleSelection,
             HoleThumb,
             CourseTicker,
+            Background,
 
             Count
         };
