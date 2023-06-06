@@ -67,8 +67,8 @@ static const std::array<std::string, 3u> ScoreTypes =
 static const std::array<std::string, 3u> GimmeString =
 {
     "No Gimme",
-    "Inside the leather",
-    "Inside the putter"
+    "Inside The Leather",
+    "Inside The Putter"
 };
 
 static const std::array<std::string, 3u> CourseTypes =
