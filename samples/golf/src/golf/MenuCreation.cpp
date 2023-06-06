@@ -2653,12 +2653,6 @@ void MenuState::addCourseSelectButtons()
         m_lobbyWindowEntities[LobbyEntityID::HoleSelection].getComponent<cro::Transform>().addChild(labelEnt.getComponent<cro::Transform>());
         checkboxEnt.getComponent<cro::UIInput>().area.width += cro::Text::getLocalBounds(labelEnt).width;
 
-        /*auto resizeCallbackRight =
-            [&](cro::Entity e)
-        {
-            e.getComponent<cro::Transform>().move({ m_lobbyExpansion, 0.f });
-        };*/
-
         labelEnt = m_uiScene.createEntity();
         labelEnt.addComponent<cro::Transform>();
         labelEnt.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
@@ -2669,7 +2663,7 @@ void MenuState::addCourseSelectButtons()
         labelEnt.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
         labelEnt.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
         labelEnt.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement | CommandID::Menu::CourseSelect;
-        labelEnt.addComponent<UIElement>().absolutePosition = { 212.f, 109.f };
+        labelEnt.addComponent<UIElement>().absolutePosition = { 212.f, 107.f };
         labelEnt.getComponent<UIElement>().depth = 0.01f;
         bounds = cro::Text::getLocalBounds(labelEnt);
         labelEnt.addComponent<cro::UIInput>().area = bounds;
@@ -2685,7 +2679,7 @@ void MenuState::addCourseSelectButtons()
         labelEnt.addComponent<cro::Drawable2D>();
         labelEnt.addComponent<cro::Sprite>() = m_sprites[SpriteID::Envelope];
         labelEnt.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement | CommandID::Menu::CourseSelect;
-        labelEnt.addComponent<UIElement>().absolutePosition = { 194.f, 102.f };
+        labelEnt.addComponent<UIElement>().absolutePosition = { 194.f, 100.f };
         labelEnt.getComponent<UIElement>().depth = 0.01f;
         m_lobbyWindowEntities[LobbyEntityID::HoleSelection].getComponent<cro::Transform>().addChild(labelEnt.getComponent<cro::Transform>());
     }
@@ -2740,66 +2734,66 @@ void MenuState::addCourseSelectButtons()
 
     if (m_courseData.size() > m_courseIndices[Range::Official].count)
     {
-        //add arrows to scroll through course list sub indices.
-        buttonEnt = m_uiScene.createEntity();
-        buttonEnt.addComponent<cro::Transform>();
-        buttonEnt.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
-        buttonEnt.addComponent<cro::Drawable2D>();
-        buttonEnt.addComponent<cro::Sprite>() = m_sprites[SpriteID::PrevCourse];
-        buttonEnt.addComponent<cro::SpriteAnimation>();
-        buttonEnt.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement | CommandID::Menu::CourseSelect;
-        buttonEnt.addComponent<UIElement>().absolutePosition = { -68.f, -34.f };
-        buttonEnt.getComponent<UIElement>().relativePosition = CourseDescPosition;
-        buttonEnt.getComponent<UIElement>().depth = 0.01f;
-        bounds = buttonEnt.getComponent<cro::Sprite>().getTextureBounds();
-        buttonEnt.addComponent<cro::UIInput>().area = bounds;
-        buttonEnt.getComponent<cro::UIInput>().setGroup(MenuID::Lobby);
-        buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = m_courseSelectCallbacks.selected;
-        buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = m_courseSelectCallbacks.unselected;
-        buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = m_courseSelectCallbacks.prevHoleType;
-        buttonEnt.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
-        m_menuEntities[MenuID::Lobby].getComponent<cro::Transform>().addChild(buttonEnt.getComponent<cro::Transform>());
+        checkboxEnt = m_uiScene.createEntity();
+        checkboxEnt.addComponent<cro::Transform>();
+        checkboxEnt.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
+        checkboxEnt.addComponent<cro::Drawable2D>();
+        checkboxEnt.addComponent<cro::Sprite>() = m_sprites[SpriteID::LobbyCheckboxHighlight];
+        checkboxEnt.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+        checkboxEnt.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement | CommandID::Menu::CourseSelect;
+        checkboxEnt.addComponent<UIElement>().absolutePosition = { 175.f, 127.f };
+        checkboxEnt.getComponent<UIElement>().depth = 0.01f;
+        bounds = checkboxEnt.getComponent<cro::Sprite>().getTextureBounds();
+        bounds.width += 78.f; //wild stab at the width of the text (it's not here to measure...)
+        checkboxEnt.addComponent<cro::UIInput>().area = bounds;
+        checkboxEnt.getComponent<cro::UIInput>().setGroup(MenuID::Lobby);
+        checkboxEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = m_courseSelectCallbacks.selectHighlight;
+        checkboxEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = m_courseSelectCallbacks.unselectHighlight;
+        checkboxEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = m_courseSelectCallbacks.prevHoleType;
+        checkboxEnt.addComponent<cro::Callback>().active = true;
+        checkboxEnt.getComponent<cro::Callback>().function =
+            [&](cro::Entity e, float)
+        {
+            e.getComponent<cro::UIInput>().enabled =
+                m_lobbyWindowEntities[LobbyEntityID::HoleSelection].getComponent<cro::Transform>().getScale().y != 0;
+        };
+        m_lobbyWindowEntities[LobbyEntityID::HoleSelection].getComponent<cro::Transform>().addChild(checkboxEnt.getComponent<cro::Transform>());
         
+        
+        checkboxEnt = m_uiScene.createEntity();
+        checkboxEnt.addComponent<cro::Transform>();
+        checkboxEnt.addComponent<cro::Drawable2D>();
+        checkboxEnt.addComponent<cro::Sprite>() = m_sprites[SpriteID::LobbyCheckbox];
+        checkboxEnt.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement | CommandID::Menu::CourseSelect;
+        checkboxEnt.addComponent<UIElement>().absolutePosition = { 176.f, 128.f };
+        checkboxEnt.getComponent<UIElement>().depth = 0.01f;
 
+        bounds = m_sprites[SpriteID::LobbyCheckbox].getTextureRect();
+        checkboxEnt.addComponent<cro::Callback>().active = true;
+        checkboxEnt.getComponent<cro::Callback>().function =
+            [&, bounds](cro::Entity e, float)
+        {
+            auto b = bounds;
+            if (m_currentRange != Range::Official)
+            {
+                b.bottom -= bounds.height;
+            }
+            e.getComponent<cro::Sprite>().setTextureRect(b);
+        };
 
-
-        buttonEnt = m_uiScene.createEntity();
-        buttonEnt.addComponent<cro::Transform>();
-        buttonEnt.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
-        buttonEnt.addComponent<cro::Drawable2D>();
-        buttonEnt.addComponent<cro::Sprite>() = m_sprites[SpriteID::NextCourse];
-        buttonEnt.addComponent<cro::SpriteAnimation>();
-        buttonEnt.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement | CommandID::Menu::CourseSelect;
-        buttonEnt.addComponent<UIElement>().absolutePosition = { 68.f, -34.f };
-        buttonEnt.getComponent<UIElement>().relativePosition = CourseDescPosition;
-        buttonEnt.getComponent<UIElement>().depth = 0.01f;
-        bounds = buttonEnt.getComponent<cro::Sprite>().getTextureBounds();
-        buttonEnt.addComponent<cro::UIInput>().area = bounds;
-        buttonEnt.getComponent<cro::UIInput>().setGroup(MenuID::Lobby);
-        buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = m_courseSelectCallbacks.selected;
-        buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = m_courseSelectCallbacks.unselected;
-        buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = m_courseSelectCallbacks.nextHoleType;
-
-        buttonEnt.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
-
-        m_menuEntities[MenuID::Lobby].getComponent<cro::Transform>().addChild(buttonEnt.getComponent<cro::Transform>());
+        m_lobbyWindowEntities[LobbyEntityID::HoleSelection].getComponent<cro::Transform>().addChild(checkboxEnt.getComponent<cro::Transform>());
 
 
         auto labelEnt = m_uiScene.createEntity();
         labelEnt.addComponent<cro::Transform>();
         labelEnt.addComponent<cro::Drawable2D>();
-        labelEnt.addComponent<cro::Text>(font).setString(CourseTypes[m_currentRange]);
+        labelEnt.addComponent<cro::Text>(font).setString("User Courses");
         labelEnt.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
         labelEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
-        labelEnt.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
-        labelEnt.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
-        labelEnt.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement | CommandID::Menu::CourseSelect | CommandID::Menu::CourseType;;
-        labelEnt.addComponent<UIElement>().absolutePosition = { 0.f, -30.f };
-        labelEnt.getComponent<UIElement>().relativePosition = CourseDescPosition;
+        labelEnt.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement | CommandID::Menu::CourseSelect;
+        labelEnt.addComponent<UIElement>().absolutePosition = { 187.f, 135.f };
         labelEnt.getComponent<UIElement>().depth = 0.1f;
-
-        centreText(labelEnt);
-        m_menuEntities[MenuID::Lobby].getComponent<cro::Transform>().addChild(labelEnt.getComponent<cro::Transform>());
+        m_lobbyWindowEntities[LobbyEntityID::HoleSelection].getComponent<cro::Transform>().addChild(labelEnt.getComponent<cro::Transform>());
     }
 }
 
