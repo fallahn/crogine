@@ -188,13 +188,14 @@ void MenuState::parseCourseDirectory(const std::string& rootDir, bool isUser)
                 auto& data = m_courseData.emplace_back();
                 if (!title.empty())
                 {
-                    data.title = std::to_string(courseNumber) + ". " + title;
+                    data.title = title;
                 }
                 if (!description.empty())
                 {
                     data.description = description;
                 }
                 data.directory = dir;
+                data.courseNumber = courseNumber;
                 data.isUser = isUser;
                 data.holeCount[0] = "All " + std::to_string(std::min(holeCount, 18)) + " holes";
                 data.holeCount[1] = "Front " + std::to_string(std::max(holeCount / 2, 1));
@@ -1422,6 +1423,9 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
 
     cro::SpriteSheet spriteSheetV2;
     spriteSheetV2.loadFromFile("assets/golf/sprites/lobby_menu_v2.spt", m_resources.textures);
+    m_sprites[SpriteID::ReadyStatus] = spriteSheetV2.getSprite("ready_indicator");
+    m_sprites[SpriteID::LobbyLeft] = spriteSheetV2.getSprite("prev_course");
+    m_sprites[SpriteID::LobbyRight] = spriteSheetV2.getSprite("next_course");
 
     //title
     auto entity = m_uiScene.createEntity();
@@ -1495,12 +1499,6 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     m_lobbyWindowEntities[LobbyEntityID::CourseTicker] = entity;
 #endif
 
-    /*auto textResizeCallback = 
-        [&,bgEnt](cro::Entity e)
-    {
-        e.getComponent<cro::Transform>().setPosition({ bgEnt.getComponent<cro::Transform>().getOrigin().x , e.getComponent<UIElement>().absolutePosition.y, e.getComponent<UIElement>().depth });
-    };*/
-
     //display the score type
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
@@ -1517,7 +1515,6 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     //and score description
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setOrigin({ 74.f, 0.f });
-    entity.getComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<UIElement>().absolutePosition = { 364.f, 190.f };
     entity.getComponent<UIElement>().depth = 0.1f;
@@ -1543,7 +1540,6 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
 
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setOrigin({ 74.f, 0.f });
-    entity.getComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<UIElement>().absolutePosition = { 364.f, 80.f };
     entity.getComponent<UIElement>().depth = 0.1f;
@@ -1552,6 +1548,31 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity.getComponent<cro::Text>().setString("The ball is considered holed\nwhen it's within this radius");
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement;
     bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    //button for course selection
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheetV2.getSprite("course_highlight");
+    entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+    entity.addComponent<UIElement>().absolutePosition = { 335.f, 35.f };
+    entity.getComponent<UIElement>().depth = 0.1f;
+    entity.addComponent<cro::UIInput>().area = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.getComponent<cro::UIInput>().setGroup(MenuID::Lobby);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = m_courseSelectCallbacks.selectHighlight;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = m_courseSelectCallbacks.unselectHighlight;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = m_courseSelectCallbacks.toggleGameRules;
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement;
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+    {
+        //hack to disable the button when course selction is visible
+        e.getComponent<cro::UIInput>().enabled =
+            m_lobbyWindowEntities[LobbyEntityID::HoleSelection].getComponent<cro::Transform>().getScale().y == 0;
+    };
+    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
 
     //display lobby members - updateLobbyAvatars() adds the text ents to this.
     entity = m_uiScene.createEntity();
@@ -1617,7 +1638,21 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     };
     thumbBgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
-
+    //button for rule selection
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheetV2.getSprite("rules_highlight");
+    entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+    entity.addComponent<UIElement>().absolutePosition = { 110.f, 4.f };
+    entity.getComponent<UIElement>().depth = 0.1f;
+    entity.addComponent<cro::UIInput>().area = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.getComponent<cro::UIInput>().setGroup(MenuID::Lobby);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = m_courseSelectCallbacks.selectHighlight;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = m_courseSelectCallbacks.unselectHighlight;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = m_courseSelectCallbacks.toggleGameRules;
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement;
+    thumbBgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     //course title
     entity = m_uiScene.createEntity();
@@ -1639,7 +1674,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
 
     //current rules
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 180.f, 90.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 170.f, 80.f, 0.1f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::CourseRules;
     entity.addComponent<cro::Text>(smallFont).setCharacterSize(InfoTextSize);
@@ -2375,7 +2410,7 @@ void MenuState::addCourseSelectButtons()
     buttonEnt.addComponent<cro::Sprite>() = m_sprites[SpriteID::PrevCourse];
     buttonEnt.addComponent<cro::SpriteAnimation>();
     buttonEnt.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement | CommandID::Menu::CourseSelect;
-    buttonEnt.addComponent<UIElement>().absolutePosition = { 366.f-85.f, 206.f };
+    buttonEnt.addComponent<UIElement>().absolutePosition = { 364.f-91.f, 206.f };
     buttonEnt.getComponent<UIElement>().depth = 0.01f;
     auto bounds = buttonEnt.getComponent<cro::Sprite>().getTextureBounds();
     buttonEnt.addComponent<cro::UIInput>().area = bounds;
@@ -2402,7 +2437,7 @@ void MenuState::addCourseSelectButtons()
     buttonEnt.addComponent<cro::Sprite>() = m_sprites[SpriteID::NextCourse];
     buttonEnt.addComponent<cro::SpriteAnimation>();
     buttonEnt.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement | CommandID::Menu::CourseSelect;
-    buttonEnt.addComponent<UIElement>().absolutePosition = { 366.f+82.f, 206.f };
+    buttonEnt.addComponent<UIElement>().absolutePosition = { 364.f+92.f, 206.f };
     buttonEnt.getComponent<UIElement>().depth = 0.01f;
     bounds = buttonEnt.getComponent<cro::Sprite>().getTextureBounds();
     buttonEnt.addComponent<cro::UIInput>().area = bounds;
@@ -2430,7 +2465,7 @@ void MenuState::addCourseSelectButtons()
     buttonEnt.addComponent<cro::Sprite>() = m_sprites[SpriteID::PrevCourse];
     buttonEnt.addComponent<cro::SpriteAnimation>();
     buttonEnt.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement | CommandID::Menu::CourseSelect;
-    buttonEnt.addComponent<UIElement>().absolutePosition = { 366.f - 85.f, 95.f };
+    buttonEnt.addComponent<UIElement>().absolutePosition = { 364.f - 91.f, 95.f };
     buttonEnt.getComponent<UIElement>().depth = 0.01f;
     bounds = buttonEnt.getComponent<cro::Sprite>().getTextureBounds();
     buttonEnt.addComponent<cro::UIInput>().area = bounds;
@@ -2457,7 +2492,7 @@ void MenuState::addCourseSelectButtons()
     buttonEnt.addComponent<cro::Sprite>() = m_sprites[SpriteID::NextCourse];
     buttonEnt.addComponent<cro::SpriteAnimation>();
     buttonEnt.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement | CommandID::Menu::CourseSelect;
-    buttonEnt.addComponent<UIElement>().absolutePosition = { 366.f + 82.f, 95.f };
+    buttonEnt.addComponent<UIElement>().absolutePosition = { 364.f + 92.f, 95.f };
     buttonEnt.getComponent<UIElement>().depth = 0.01f;
     bounds = buttonEnt.getComponent<cro::Sprite>().getTextureBounds();
     buttonEnt.addComponent<cro::UIInput>().area = bounds;
@@ -2704,67 +2739,18 @@ void MenuState::addCourseSelectButtons()
     buttonEnt.addComponent<cro::Transform>();
     buttonEnt.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
     buttonEnt.addComponent<cro::Drawable2D>();
-    buttonEnt.addComponent<cro::Sprite>() = m_sprites[SpriteID::PrevCourse];
-    buttonEnt.addComponent<cro::SpriteAnimation>();
+    buttonEnt.addComponent<cro::Sprite>() = m_sprites[SpriteID::LobbyLeft];
+    buttonEnt.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
     buttonEnt.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement | CommandID::Menu::CourseSelect;
-    buttonEnt.addComponent<UIElement>().absolutePosition = { -108.f, -22.f };
-    buttonEnt.getComponent<UIElement>().relativePosition = CourseDescPosition;
+    buttonEnt.addComponent<UIElement>().absolutePosition = { 6.f, 101.f };
     buttonEnt.getComponent<UIElement>().depth = 0.01f;
     bounds = buttonEnt.getComponent<cro::Sprite>().getTextureBounds();
     buttonEnt.addComponent<cro::UIInput>().area = bounds;
-    buttonEnt.getComponent<cro::UIInput>().setGroup(MenuID::Lobby);
-    buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = m_courseSelectCallbacks.selected;
-    buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = m_courseSelectCallbacks.unselected;
-    buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = m_courseSelectCallbacks.prevCourse;
-    buttonEnt.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
-    m_menuEntities[MenuID::Lobby].getComponent<cro::Transform>().addChild(buttonEnt.getComponent<cro::Transform>());
-
-
-
-    //rules button
-    buttonEnt = m_uiScene.createEntity();
-    buttonEnt.addComponent<cro::Transform>();
-    buttonEnt.addComponent<cro::Drawable2D>();
-    buttonEnt.addComponent<cro::Sprite>() = m_sprites[SpriteID::LobbyRuleButton];
-    buttonEnt.addComponent<cro::SpriteAnimation>();
-    buttonEnt.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement | CommandID::Menu::CourseSelect;
-    buttonEnt.addComponent<UIElement>().absolutePosition = { 0.f, -19.f };
-    buttonEnt.getComponent<UIElement>().relativePosition = CourseDescPosition;
-    buttonEnt.getComponent<UIElement>().depth = 0.01f;
-    bounds = buttonEnt.getComponent<cro::Sprite>().getTextureBounds();
-    buttonEnt.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
-    buttonEnt.addComponent<cro::Callback>().active = true;
-    buttonEnt.getComponent<cro::Callback>().function =
-        [&](cro::Entity e, float)
-    {
-        //hax.
-        e.getComponent<cro::SpriteAnimation>().play(static_cast<std::int32_t>(
-            m_lobbyWindowEntities[LobbyEntityID::HoleSelection].getComponent<cro::Transform>().getScale().y));
-    };
-    m_menuEntities[MenuID::Lobby].getComponent<cro::Transform>().addChild(buttonEnt.getComponent<cro::Transform>());
-
-    buttonEnt = m_uiScene.createEntity();
-    buttonEnt.addComponent<cro::Transform>();
-    buttonEnt.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
-    buttonEnt.addComponent<cro::Drawable2D>();
-    buttonEnt.addComponent<cro::Sprite>() = m_sprites[SpriteID::LobbyRuleButtonHighlight];
-    buttonEnt.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
-    buttonEnt.addComponent<cro::SpriteAnimation>();
-    buttonEnt.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement | CommandID::Menu::CourseSelect;
-    buttonEnt.addComponent<UIElement>().absolutePosition = { 0.f, -19.f };
-    buttonEnt.getComponent<UIElement>().relativePosition = CourseDescPosition;
-    buttonEnt.getComponent<UIElement>().depth = 0.025f;
-    bounds = buttonEnt.getComponent<cro::Sprite>().getTextureBounds();
-    auto area = bounds;
-    area.width /= 2.f;
-    area.left += area.width;
-    buttonEnt.addComponent<cro::UIInput>().area = area;
     buttonEnt.getComponent<cro::UIInput>().setGroup(MenuID::Lobby);
     buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = m_courseSelectCallbacks.selectHighlight;
     buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = m_courseSelectCallbacks.unselectHighlight;
-    buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = m_courseSelectCallbacks.toggleGameRules;
-    buttonEnt.getComponent<cro::Transform>().setOrigin({ std::floor(bounds.width / 2.f), std::floor(bounds.height / 2.f) });
-    m_menuEntities[MenuID::Lobby].getComponent<cro::Transform>().addChild(buttonEnt.getComponent<cro::Transform>());
+    buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = m_courseSelectCallbacks.prevCourse;
+    m_lobbyWindowEntities[LobbyEntityID::HoleSelection].getComponent<cro::Transform>().addChild(buttonEnt.getComponent<cro::Transform>());
 
 
 
@@ -2772,22 +2758,19 @@ void MenuState::addCourseSelectButtons()
     buttonEnt.addComponent<cro::Transform>();
     buttonEnt.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
     buttonEnt.addComponent<cro::Drawable2D>();
-    buttonEnt.addComponent<cro::Sprite>() = m_sprites[SpriteID::NextCourse];
-    buttonEnt.addComponent<cro::SpriteAnimation>();
+    buttonEnt.addComponent<cro::Sprite>() = m_sprites[SpriteID::LobbyRight];
+    buttonEnt.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
     buttonEnt.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement | CommandID::Menu::CourseSelect;
-    buttonEnt.addComponent<UIElement>().absolutePosition = { 108.f, -22.f };
-    buttonEnt.getComponent<UIElement>().relativePosition = CourseDescPosition;
+    buttonEnt.addComponent<UIElement>().absolutePosition = { 159.f, 101.f };
     buttonEnt.getComponent<UIElement>().depth = 0.01f;
     bounds = buttonEnt.getComponent<cro::Sprite>().getTextureBounds();
     buttonEnt.addComponent<cro::UIInput>().area = bounds;
     buttonEnt.getComponent<cro::UIInput>().setGroup(MenuID::Lobby);
-    buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = m_courseSelectCallbacks.selected;
-    buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = m_courseSelectCallbacks.unselected;
+    buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = m_courseSelectCallbacks.selectHighlight;
+    buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = m_courseSelectCallbacks.unselectHighlight;
     buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = m_courseSelectCallbacks.nextCourse;
 
-    buttonEnt.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
-
-    m_menuEntities[MenuID::Lobby].getComponent<cro::Transform>().addChild(buttonEnt.getComponent<cro::Transform>());
+    m_lobbyWindowEntities[LobbyEntityID::HoleSelection].getComponent<cro::Transform>().addChild(buttonEnt.getComponent<cro::Transform>());
 
 
 
@@ -2950,17 +2933,24 @@ void MenuState::updateCourseRuleString()
     cmd.targetFlags = CommandID::Menu::CourseRules;
     cmd.action = [&, data](cro::Entity e, float)
     {
-        auto str = ScoreTypes[m_sharedData.scoreType];
-        str += ", " + GimmeString[m_sharedData.gimmeRadius];
+        std::string str;
+        if (data != m_courseData.end()
+            && !data->isUser)
+        {
+            str = "Course " + std::to_string(data->courseNumber) + "\n";
+        }
+
+        str += ScoreTypes[m_sharedData.scoreType];
+        str += ",\n" + GimmeString[m_sharedData.gimmeRadius];
 
         if (data != m_courseData.end())
         {
-            str += ", " + data->holeCount[m_sharedData.holeCount];
+            str += ",\n" + data->holeCount[m_sharedData.holeCount];
         }
 
         if (m_sharedData.reverseCourse)
         {
-            str += ", Reversed";
+            str += ",\nReversed";
         }
         
         e.getComponent<cro::Text>().setString(str);

@@ -228,7 +228,8 @@ private:
     {
         cro::String directory;
         cro::String title = "Untitled";
-        cro::String description = "No Description"; 
+        cro::String description = "No Description";
+        std::int32_t courseNumber = 0; //base 1
         std::array<cro::String, 3u> holeCount = {};
         bool isUser = false;
     };

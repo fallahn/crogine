@@ -1331,29 +1331,19 @@ void MenuState::createMenuCallbacks()
         {
             if (activated(evt))
             {
-                auto rect = e.getComponent<cro::Sprite>().getTextureRect();
-                auto area = e.getComponent<cro::UIInput>().area;
-
                 float scale = m_lobbyWindowEntities[LobbyEntityID::HoleSelection].getComponent<cro::Transform>().getScale().y;
                 if (scale == 0)
                 {
                     scale = 1.f;
-                    rect.bottom -= 16.f;
-                    area.left += area.width;
                     m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
                 }
                 else
                 {
                     scale = 0.f;
-                    rect.bottom += 16.f;
-                    area.left -= area.width;
                     m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
                 }
 
                 m_lobbyWindowEntities[LobbyEntityID::HoleSelection].getComponent<cro::Transform>().setScale({ 1.f, scale });
-                e.getComponent<cro::Sprite>().setTextureRect(rect);
-                e.getComponent<cro::UIInput>().area = area;
-                e.getComponent<cro::Transform>().setRotation(0.f); //fudge to trigger transform callback and update area
             }
         });
 
@@ -1859,34 +1849,21 @@ void MenuState::updateLobbyAvatars()
             {
                 clientCount++;
 
-                //add a ready status for that client - TODO replace this with animated sprite
+                //add a ready status for that client
                 auto entity = m_uiScene.createEntity();
-                entity.addComponent<cro::Transform>().setPosition({ -11.f, iconPos.y - 6.f });
+                entity.addComponent<cro::Transform>().setPosition({ -11.f, iconPos.y - 7.f });
                 entity.addComponent<cro::Drawable2D>();
+                entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::ReadyStatus];
+                entity.addComponent<cro::SpriteAnimation>();
                 entity.addComponent<cro::Callback>().active = true;
                 entity.getComponent<cro::Callback>().function =
                     [&, h](cro::Entity e2, float)
                 {
-                    cro::Colour colour = m_readyState[h] ? TextGreenColour : LeaderboardTextDark;
-
-                    auto& verts = e2.getComponent<cro::Drawable2D>().getVertexData();
-                    for (auto& v : verts)
-                    {
-                        v.colour = colour;
-                    }
+                    auto index = m_readyState[h] ? 1 : 0;
+                    e2.getComponent<cro::SpriteAnimation>().play(index);
                 };
                 e.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
                 children.push_back(entity);
-
-                auto& verts = entity.getComponent<cro::Drawable2D>().getVertexData();
-                verts =
-                {
-                    cro::Vertex2D(glm::vec2(0.f)),
-                    cro::Vertex2D(glm::vec2(5.f, 0.f)),
-                    cro::Vertex2D(glm::vec2(0.f, 5.f)),
-                    cro::Vertex2D(glm::vec2(5.f))
-                };
-                entity.getComponent<cro::Drawable2D>().updateLocalBounds();
 
 
                 //rank text
