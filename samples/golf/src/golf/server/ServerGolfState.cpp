@@ -307,8 +307,8 @@ void GolfState::netEvent(const net::NetEvent& evt)
         case PacketID::FastCPU:
             if (evt.peer.getID() == m_sharedData.hostID)
             {
-                m_sharedData.scoreType = evt.packet.as<std::uint8_t>();
-                m_sharedData.host.broadcastPacket(PacketID::FastCPU, m_sharedData.scoreType, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                m_sharedData.fastCPU = evt.packet.as<std::uint8_t>();
+                m_sharedData.host.broadcastPacket(PacketID::FastCPU, m_sharedData.fastCPU, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
 
                 //this checks current player is CPU and launch a move if inactive
                 makeCPUMove();
