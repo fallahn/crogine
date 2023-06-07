@@ -88,6 +88,7 @@ public:
 
     float getBaseTarget() const;
     float getDefaultTarget() const; //target with no level-shift applied
+    float getTargetAtLevel(std::int32_t level) const;
 
     float getSideSpinMultiplier() const { return m_sidespin; }
     float getTopSpinMultiplier() const { return m_topspin; }

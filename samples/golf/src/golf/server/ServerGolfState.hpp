@@ -72,6 +72,7 @@ namespace sv
         std::uint8_t m_currentBest; //current best score for hole, non-stroke games end if no-one can beat it
 
         cro::Clock m_turnTimer;
+        std::int32_t m_skillIndex; //< base skill for CPU players based on host's current level
 
         void sendInitialGameState(std::uint8_t);
         void handlePlayerInput(const net::NetEvent::Packet&, bool predict);
@@ -86,6 +87,7 @@ namespace sv
         void buildWorld();
 
         void makeCPUMove();
+        void calcCPUPosition();
         void handleDefaultRules(const struct GolfBallEvent&);
         bool summariseDefaultRules();
 

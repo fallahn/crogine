@@ -1998,7 +1998,7 @@ void MenuState::updateLobbyAvatars()
                     rankEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
                     children.push_back(entity);
 
-                    rankEnt.getComponent<cro::Callback>().setUserData<float>((BarWidth / 2.f) - 7.f);
+                    //rankEnt.getComponent<cro::Callback>().setUserData<float>((BarWidth / 2.f) - 7.f);
                 }
                 //else
                 //{

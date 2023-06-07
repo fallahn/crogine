@@ -178,6 +178,11 @@ float Club::getBaseTarget() const
     return ClubStats[m_id].stats[0].target;
 }
 
+float Club::getTargetAtLevel(std::int32_t level) const
+{
+    return ClubStats[m_id].stats[level].target;
+}
+
 float Club::getDefaultTarget() const
 {
     return ClubStats[m_id].stats[0].target;

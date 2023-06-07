@@ -264,6 +264,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
             }
         });
 
+#ifdef CRO_DEBUG_
     registerCommand("fast_cpu", [&](const std::string& param)
         {
             if (m_sharedData.hosting)
@@ -314,6 +315,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
                 glUniform1f(uniform, std::clamp(f, 0.f, 1.f));
             }
         });*/
+#endif
 
     shadowQuality.update(sd.hqShadows);
 
@@ -6517,7 +6519,8 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
         if (player.client != m_sharedData.localConnectionData.connectionID
             || 
             (player.client == m_sharedData.localConnectionData.connectionID &&
-            m_sharedData.localConnectionData.playerData[player.player].isCPU))
+            m_sharedData.localConnectionData.playerData[player.player].isCPU &&
+                !m_sharedData.fastCPU))
         {
             static constexpr float MinCamDist = 25.f;
             if (cro::Util::Random::value(0,2) != 0 &&
@@ -6527,7 +6530,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
                 entity.addComponent<cro::Callback>().active = true;
                 entity.getComponent<cro::Callback>().setUserData<float>(2.7f);
                 entity.getComponent<cro::Callback>().function =
-                    [&/*, player, playerRotation*/](cro::Entity e, float dt)
+                    [&](cro::Entity e, float dt)
                 {
                     auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
                     currTime -= dt;
@@ -6602,6 +6605,14 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     msg2->type = GolfEvent::SetNewPlayer;
 
     m_sharedData.clientConnection.netClient.sendPacket<std::uint8_t>(PacketID::NewPlayer, 0, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+    //if we're using fast CPU we need to pre-increment stroke so
+    //that the UI displays correct score while waiting for the
+    //arbiter score from the server.
+    if (isCPU && m_sharedData.fastCPU)
+    {
+        m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].holeScores[m_currentHole]++;
+    }
+
 
     //this is just so that the particle director knows if we're on a new hole
     if (m_currentPlayer.position == m_holeData[m_currentHole].tee)

@@ -36,6 +36,7 @@ source distribution.
 #include "ServerMessages.hpp"
 
 #include <AchievementIDs.hpp>
+#include <Social.hpp>
 
 #include <crogine/core/Log.hpp>
 #include <crogine/core/ConfigFile.hpp>
@@ -70,12 +71,16 @@ GolfState::GolfState(SharedData& sd)
     m_allMapsLoaded         (false),
     m_currentHole           (0),
     m_skinsPot              (1),
-    m_currentBest           (MaxStrokes)
+    m_currentBest           (MaxStrokes),
+    m_skillIndex            (0)
 {
     if (m_mapDataValid = validateMap(); m_mapDataValid)
     {
         initScene();
         buildWorld();
+
+        auto level = std::min(Social::getLevel(), 20) + 2;
+        m_skillIndex = level / 4;
     }
 
     LOG("Entered Server Golf State", cro::Logger::Type::Info);
@@ -899,7 +904,7 @@ bool GolfState::validateMap()
             return false;
         }
 
-        static constexpr std::int32_t MaxProps = 4;
+        static constexpr std::int32_t MaxProps = 5;
         std::int32_t propCount = 0;
         auto& holeData = m_holeData.emplace_back();
 
@@ -921,6 +926,13 @@ bool GolfState::validateMap()
                 holeData.tee = holeProp.getValue<glm::vec3>();
                 holeData.tee.x = glm::clamp(holeData.tee.x, 0.f, 320.f);
                 holeData.tee.z = glm::clamp(holeData.tee.z, -200.f, 0.f);
+                propCount++;
+            }
+            else if (name == "target")
+            {
+                holeData.target = holeProp.getValue<glm::vec3>();
+                holeData.target.x = glm::clamp(holeData.target.x, 0.f, 320.f);
+                holeData.target.z = glm::clamp(holeData.target.z, -200.f, 0.f);
                 propCount++;
             }
             else if (name == "par")
