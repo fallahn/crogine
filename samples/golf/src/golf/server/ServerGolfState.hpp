@@ -85,6 +85,7 @@ namespace sv
         void initScene();
         void buildWorld();
 
+        void makeCPUMove();
         void handleDefaultRules(const struct GolfBallEvent&);
         bool summariseDefaultRules();
 

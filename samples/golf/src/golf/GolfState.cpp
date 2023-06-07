@@ -234,6 +234,8 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     m_courseIndex       (getCourseIndex(sd.mapDirectory.toAnsiString())),
     m_emoteWheel        (sd, m_currentPlayer)
 {
+    m_cpuGolfer.setFastCPU(m_sharedData.fastCPU);
+
     godmode = 1.f;
     registerCommand("god", [](const std::string&)
         {
@@ -259,6 +261,37 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
             else
             {
                 cro::Console::print("noclip OFF");
+            }
+        });
+
+    registerCommand("fast_cpu", [&](const std::string& param)
+        {
+            if (m_sharedData.hosting)
+            {
+                const auto sendCmd = [&]()
+                {
+                    m_sharedData.clientConnection.netClient.sendPacket<std::uint8_t>(PacketID::FastCPU, m_sharedData.fastCPU ? 1 : 0, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+
+                    m_cpuGolfer.setFastCPU(m_sharedData.fastCPU);
+
+                    //TODO set active or not if current player is CPU
+                    
+                };
+
+                if (param == "0")
+                {
+                    m_sharedData.fastCPU = false;
+                    sendCmd();
+                }
+                else if (param == "1")
+                {
+                    m_sharedData.fastCPU = true;
+                    sendCmd();
+                }
+                else
+                {
+                    cro::Console::print("Usage: fast_cpu <0|1>");
+                }
             }
         });
 
@@ -5195,6 +5228,10 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
         switch (evt.packet.getID())
         {
         default: break;
+        case PacketID::FastCPU:
+            m_sharedData.fastCPU = evt.packet.as<std::uint8_t>() != 0;
+            m_cpuGolfer.setFastCPU(m_sharedData.fastCPU);
+            break;
         case PacketID::PlayerXP:
         {
             auto value = evt.packet.as<std::uint16_t>();
@@ -6563,6 +6600,8 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     msg2->position = m_currentPlayer.position;
     msg2->terrain = m_currentPlayer.terrain;
     msg2->type = GolfEvent::SetNewPlayer;
+
+    m_sharedData.clientConnection.netClient.sendPacket<std::uint8_t>(PacketID::NewPlayer, 0, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
 
     //this is just so that the particle director knows if we're on a new hole
     if (m_currentPlayer.position == m_holeData[m_currentHole].tee)

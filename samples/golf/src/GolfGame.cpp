@@ -885,6 +885,10 @@ void GolfGame::loadPreferences()
                 {
                     m_sharedData.trailBeaconColour = prop.getValue<bool>();
                 }
+                else if (name == "fast_cpu")
+                {
+                    m_sharedData.fastCPU = prop.getValue<bool>();
+                }
             }
         }
     }
@@ -970,6 +974,7 @@ void GolfGame::savePreferences()
     cfg.addProperty("use_vibration").setValue(m_sharedData.enableRumble == 0 ? false : true);
     cfg.addProperty("use_trail").setValue(m_sharedData.showBallTrail);
     cfg.addProperty("use_beacon_colour").setValue(m_sharedData.trailBeaconColour);
+    cfg.addProperty("fast_cpu").setValue(m_sharedData.fastCPU);
     cfg.save(path);
 
 

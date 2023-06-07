@@ -107,6 +107,13 @@ void LobbyState::netEvent(const net::NetEvent& evt)
                 m_sharedData.host.broadcastPacket(PacketID::ScoreType, m_sharedData.scoreType, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
             }
             break;
+        case PacketID::FastCPU:
+            if (evt.peer.getID() == m_sharedData.hostID)
+            {
+                m_sharedData.scoreType = evt.packet.as<std::uint8_t>();
+                m_sharedData.host.broadcastPacket(PacketID::FastCPU, m_sharedData.scoreType, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+            }
+            break;
         case PacketID::GimmeRadius:
             if (evt.peer.getID() == m_sharedData.hostID)
             {

@@ -111,6 +111,7 @@ CPUGolfer::CPUGolfer(const InputParser& ip, const ActivePlayer& ap, const Collis
     : m_inputParser     (ip),
     m_activePlayer      (ap),
     m_collisionMesh     (cm),
+    m_fastCPU           (false),
     m_puttFromTee       (false),
     m_distanceToPin     (1.f),
     m_target            (0.f),
@@ -204,7 +205,8 @@ void CPUGolfer::handleMessage(const cro::Message& msg)
 
 void CPUGolfer::activate(glm::vec3 target, glm::vec3 fallback, bool puttFromTee)
 {
-    if (m_state == State::Inactive)
+    if (!m_fastCPU &&
+        m_state == State::Inactive)
     {
         m_puttFromTee = puttFromTee;
         m_fallbackTarget = fallback;

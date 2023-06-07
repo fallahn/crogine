@@ -60,11 +60,13 @@ public:
 
     std::size_t getSkillIndex() const;
 
+    void setFastCPU(bool fast) { m_fastCPU = fast; }
 private:
 
     const InputParser& m_inputParser; //only reads the state - actual commands are send by raising events.
     const ActivePlayer& m_activePlayer;
     const CollisionMesh& m_collisionMesh;
+    bool m_fastCPU;
     bool m_puttFromTee;
     float m_distanceToPin;
     glm::vec3 m_target;

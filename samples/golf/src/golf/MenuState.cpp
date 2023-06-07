@@ -1795,6 +1795,9 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
                 updateCourseRuleString();
             }
             break;
+        case PacketID::FastCPU:
+            m_sharedData.fastCPU = evt.packet.as<std::uint8_t>() != 0;
+            break;
         case PacketID::GimmeRadius:
         {
             m_sharedData.gimmeRadius = evt.packet.as<std::uint8_t>();

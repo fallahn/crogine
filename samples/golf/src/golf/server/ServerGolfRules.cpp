@@ -1,9 +1,56 @@
 #include "../PacketIDs.hpp"
+#include "../BallSystem.hpp"
 
 #include "ServerMessages.hpp"
 #include "ServerGolfState.hpp"
 
+#include <crogine/ecs/components/Transform.hpp>
+#include <crogine/ecs/components/Callback.hpp>
+
 using namespace sv;
+void GolfState::makeCPUMove()
+{
+    if(m_sharedData.fastCPU
+        && m_sharedData.clients[m_playerInfo[0].client].playerData[m_playerInfo[0].player].isCPU)
+    {
+        auto& ball = m_playerInfo[0].ballEntity.getComponent<Ball>();
+        if (ball.state == Ball::State::Idle)
+        {
+            //wrap in an ent so we can add a small delay
+            auto entity = m_scene.createEntity();
+            entity.addComponent<cro::Callback>().active = true;
+            entity.getComponent<cro::Callback>().setUserData<float>(2.5f);
+            entity.getComponent<cro::Callback>().function =
+                [&](cro::Entity e, float dt)
+            {
+                auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
+                currTime -= dt;
+
+                if (currTime < 0)
+                {
+                    //TODO pick a position based on CPU skill and current target
+                    //TODO pick a position offset based on CPU skill / accuracy
+                    //TODO test terrain height and correct final position
+
+                    auto pos = m_playerInfo[0].position - m_holeData[m_currentHole].pin;
+                    pos = glm::normalize(pos) * 6.f;
+
+                    m_playerInfo[0].ballEntity.getComponent<cro::Transform>().setPosition(pos + m_holeData[m_currentHole].pin);
+                    ball.terrain = TerrainID::Green;
+                    ball.state = Ball::State::Paused;
+
+
+                    m_sharedData.host.broadcastPacket<std::uint8_t>(PacketID::CPUThink, 1, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                    e.getComponent<cro::Callback>().active = false;
+                    m_scene.destroyEntity(e);
+                }
+            };
+
+            m_sharedData.host.broadcastPacket<std::uint8_t>(PacketID::CPUThink, 0, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+        }
+    }
+}
+
 void GolfState::handleDefaultRules(const GolfBallEvent& data)
 {
     if (data.type == GolfBallEvent::TurnEnded)
