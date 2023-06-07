@@ -1326,6 +1326,18 @@ void MenuState::createMenuCallbacks()
             }
         });
 
+    m_courseSelectCallbacks.toggleFastCPU = m_uiScene.getSystem<cro::UISystem>()->addCallback(
+        [&](cro::Entity, const cro::ButtonEvent& evt)
+        {
+            if (activated(evt))
+            {
+                //we rely on the server reply to actually set shared data value
+                m_sharedData.clientConnection.netClient.sendPacket<std::uint8_t>(PacketID::FastCPU, m_sharedData.fastCPU ? 0 : 1, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+
+                m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
+            }
+        });
+
     m_courseSelectCallbacks.toggleGameRules = m_uiScene.getSystem<cro::UISystem>()->addCallback(
         [&](cro::Entity e, const cro::ButtonEvent& evt)
         {

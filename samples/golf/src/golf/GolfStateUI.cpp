@@ -898,6 +898,7 @@ void GolfState::buildUI()
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 0.f, 82.f });
     entity.getComponent<cro::Transform>().setRotation(-90.f * cro::Util::Const::degToRad);
+    entity.getComponent<cro::Transform>().setOrigin({ 0.f, 0.f, 0.1f });
     entity.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
     entity.addComponent<cro::Drawable2D>().setShader(&m_resources.shaders.get(ShaderID::MinimapView));
     entity.addComponent<cro::Sprite>();
