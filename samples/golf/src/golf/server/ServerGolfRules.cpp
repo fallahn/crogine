@@ -105,7 +105,6 @@ void GolfState::calcCPUPosition()
         {
             //always target pin if its closer
             pos = m_holeData[m_currentHole].pin;
-            LogI << pos << " (pin) - pin closer than target" << std::endl;
         }
 
         //target the pin if its in range of our longest club
@@ -114,7 +113,6 @@ void GolfState::calcCPUPosition()
             &&*/ m_skillIndex > 2)
         {
             pos = m_holeData[m_currentHole].pin;
-            LogI << pos << " (pin) - skill increased distance" << std::endl;
         }
 
         else
@@ -124,12 +122,10 @@ void GolfState::calcCPUPosition()
             if (targetDist < MinDist) //remember this in len2
             {
                 pos = m_holeData[m_currentHole].pin;
-                LogI << pos << " (pin) - target was too close" << std::endl;
             }
             else
             {
                 pos = m_holeData[m_currentHole].target;
-                LogI << pos << " (target)" << std::endl;
             }
         }
     }
@@ -137,7 +133,6 @@ void GolfState::calcCPUPosition()
     {
         //else set the pin as the target
         pos = m_holeData[m_currentHole].pin;
-        LogI << pos << " (pin) - target behind player" << std::endl;
     }
 
     //reduce the target distance so that it's in range of our longest club
@@ -146,7 +141,6 @@ void GolfState::calcCPUPosition()
     {
         const float reduction = clubDist / std::sqrt(len2);
         pos = ((pos - m_playerInfo[0].position) * reduction) + m_playerInfo[0].position;
-        LogI << pos << " reduced by " << reduction << std::endl;
     }
     
     //make sure there's only a slim chance of getting it in the hole
@@ -158,7 +152,6 @@ void GolfState::calcCPUPosition()
         {
             //add target offset
             pos += randomNormal() * cro::Util::Random::value(0.05f, 0.2f);
-            LogI << pos << " offset on green" << std::endl;
             CRO_ASSERT(!std::isnan(pos.x), "");
         }
     }
@@ -171,7 +164,6 @@ void GolfState::calcCPUPosition()
             {
                 //add offset
                 pos += randomNormal() * static_cast<float>(cro::Util::Random::value(6, 70)) / 10.f;
-                LogI << pos << " offset on approach" << std::endl;
                 CRO_ASSERT(!std::isnan(pos.x), "");
             }
         }
@@ -182,7 +174,7 @@ void GolfState::calcCPUPosition()
 
             //TODO we need a good bounce as a percentage value...
             constexpr float BouncePercent = 1.05f;
-            pos = ((pos - m_playerInfo[0].position) * BouncePercent);// +m_playerInfo[0].position;
+            pos = ((pos - m_playerInfo[0].position) * BouncePercent);
 
             auto step = pos / 5.f;
             pos = m_playerInfo[0].position + step;
@@ -193,7 +185,7 @@ void GolfState::calcCPUPosition()
                 step += glm::vec3(wind.x, 0.f, wind.z) * wind.y * (0.1f * (6 - skill));
                 pos += step;
             }
-            LogI << pos << " offset from drive" << std::endl;
+
             CRO_ASSERT(!std::isnan(pos.x), "");
         }
     }
@@ -203,8 +195,6 @@ void GolfState::calcCPUPosition()
     //test terrain height and correct final position
     auto result = m_scene.getSystem<BallSystem>()->getTerrain(pos);
     pos.y = result.intersection.y;
-
-    LogI << pos << " height adjusted to " << result.intersection.y << std::endl;
 
     CRO_ASSERT(!std::isnan(pos.x), "");
     CRO_ASSERT(!std::isnan(pos.y), "");
@@ -223,10 +213,12 @@ void GolfState::calcCPUPosition()
     case TerrainID::Bunker:
     case TerrainID::Rough:
         ball.state = Ball::State::Flight;
+        ball.velocity.x = 0.001f; //add a tiny bit of velocity to prevent div0/nan in BallSystem
         break;
     case TerrainID::Green:
     case TerrainID::Hole:
         ball.state = Ball::State::Putt;
+        ball.velocity.x = 0.001f;
         break;
     case TerrainID::Scrub:
     case TerrainID::Stone:
