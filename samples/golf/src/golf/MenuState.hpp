@@ -179,8 +179,6 @@ private:
         std::uint32_t unselectHighlight = 0;
         std::uint32_t selectText = 0;
         std::uint32_t unselectText = 0;
-        std::uint32_t showTip = 0;
-        std::uint32_t hideTip = 0;
     }m_courseSelectCallbacks;
     std::array<std::uint32_t, 4u> m_avatarEditCallbacks = {};
 
