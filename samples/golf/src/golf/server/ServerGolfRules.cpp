@@ -94,9 +94,29 @@ void GolfState::calcCPUPosition()
     }
     const float clubDist = Clubs[clubID].getTargetAtLevel(std::min(2, skill / 3));
 
+    const auto pickTarget = [&](float dp)
+    {
+        if (m_holeData[m_currentHole].puttFromTee)
+        {
+            if (dp > 0.98f)
+            {
+                return m_holeData[m_currentHole].pin;
+            }
+            else
+            {
+                return m_holeData[m_currentHole].target;
+            }
+        }
+        else
+        {
+            LogI << "putt from tee is false" << std::endl;
+            return m_holeData[m_currentHole].pin;
+        }
+    };
+
 
     //if both the pin and the target are in front of the player
-    if (glm::dot(glm::normalize(targetDir), glm::normalize(pinDir)) > 0.4)
+    if (auto dp = glm::dot(glm::normalize(targetDir), glm::normalize(pinDir)); dp > 0.4)
     {
         //set the target depending on how close it is
         const auto pinDist = glm::length2(pinDir);
@@ -104,15 +124,14 @@ void GolfState::calcCPUPosition()
         if (pinDist < targetDist)
         {
             //always target pin if its closer
-            pos = m_holeData[m_currentHole].pin;
+            pos = pickTarget(dp);
         }
 
         //target the pin if its in range of our longest club
         //and CPU skill > something
-        else if (/*pinDist < (clubDist * clubDist)
-            &&*/ m_skillIndex > 2)
+        else if (m_skillIndex > 2)
         {
-            pos = m_holeData[m_currentHole].pin;
+            pos = pickTarget(dp);
         }
 
         else
@@ -132,7 +151,7 @@ void GolfState::calcCPUPosition()
     else
     {
         //else set the pin as the target
-        pos = m_holeData[m_currentHole].pin;
+        pos = pickTarget(dp);
     }
 
     //reduce the target distance so that it's in range of our longest club

@@ -899,7 +899,7 @@ void GolfState::buildUI()
     entity.addComponent<cro::Transform>().setPosition({ 0.f, 82.f });
     entity.getComponent<cro::Transform>().setRotation(-90.f * cro::Util::Const::degToRad);
     entity.getComponent<cro::Transform>().setOrigin({ 0.f, 0.f, 0.1f });
-    entity.getComponent<cro::Transform>().setScale(glm::vec2(0.01f));
+    entity.getComponent<cro::Transform>().setScale(glm::vec2(0.05f, 0.f));
     entity.addComponent<cro::Drawable2D>().setShader(&m_resources.shaders.get(ShaderID::MinimapView));
     entity.addComponent<cro::Sprite>();
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::MiniMap;
@@ -1604,8 +1604,8 @@ void GolfState::showCountdown(std::uint8_t seconds)
 
                 //if we weren't the last player to take a turn in a network game
                 //we need to reenable achievements to enter into the leaderboard...
-                Achievements::setActive(m_allowAchievements);
-                cro::Logger::log("LEADERBOARD attempting to insert score: " + std::to_string(score) + "\n", cro::Logger::Type::Info, cro::Logger::Output::File);
+                //Achievements::setActive(m_allowAchievements); //moved to beginning of showCountdown();
+                //cro::Logger::log("LEADERBOARD attempting to insert score: " + std::to_string(score) + "\n", cro::Logger::Type::Info, cro::Logger::Output::File);
                 Social::insertScore(m_sharedData.mapDirectory, m_sharedData.holeCount, score);
                 break;
             }

@@ -759,6 +759,13 @@ bool GolfState::handleEvent(const cro::Event& evt)
         }
         resetIdle();
     }
+    else if (evt.type == SDL_MOUSEBUTTONDOWN)
+    {
+        if (evt.button.button == SDL_BUTTON_RIGHT)
+        {
+            closeMessage();
+        }
+    }
 
     else if (evt.type == SDL_CONTROLLERDEVICEREMOVED)
     {
