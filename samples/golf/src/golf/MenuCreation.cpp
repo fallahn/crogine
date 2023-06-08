@@ -1556,7 +1556,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheetV2.getSprite("course_highlight");
     entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
-    entity.addComponent<UIElement>().absolutePosition = { 275.f, 36.f };
+    entity.addComponent<UIElement>().absolutePosition = { 232.f, 33.f };
     entity.getComponent<UIElement>().depth = 0.1f;
     entity.addComponent<cro::UIInput>().area = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Lobby);
@@ -1669,7 +1669,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheetV2.getSprite("rules_highlight");
     entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
-    entity.addComponent<UIElement>().absolutePosition = { 185.f, 5.f };
+    entity.addComponent<UIElement>().absolutePosition = { 92.f, 2.f };
     entity.getComponent<UIElement>().depth = 0.1f;
     entity.addComponent<cro::UIInput>().area = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Lobby);
