@@ -1568,6 +1568,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity.getComponent<UIElement>().depth = 0.1f;
     entity.addComponent<cro::UIInput>().area = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Lobby);
+    entity.getComponent<cro::UIInput>().setSelectionIndex(1);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = m_courseSelectCallbacks.selectHighlight;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = m_courseSelectCallbacks.unselectHighlight;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = m_uiScene.getSystem<cro::UISystem>()->addCallback(
@@ -1599,6 +1600,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity.getComponent<UIElement>().depth = 0.1f;
     entity.addComponent<cro::UIInput>().area = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Lobby);
+    entity.getComponent<cro::UIInput>().setSelectionIndex(2);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = m_courseSelectCallbacks.selectHighlight;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = m_courseSelectCallbacks.unselectHighlight;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = m_uiScene.getSystem<cro::UISystem>()->addCallback(
@@ -1726,6 +1728,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity.getComponent<UIElement>().depth = 0.1f;
     entity.addComponent<cro::UIInput>().area = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Lobby);
+    entity.getComponent<cro::UIInput>().setSelectionIndex(1);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = m_courseSelectCallbacks.selectHighlight;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = m_courseSelectCallbacks.unselectHighlight;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = m_uiScene.getSystem<cro::UISystem>()->addCallback(
@@ -1757,6 +1760,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity.getComponent<UIElement>().depth = 0.1f;
     entity.addComponent<cro::UIInput>().area = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Lobby);
+    entity.getComponent<cro::UIInput>().setSelectionIndex(2);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = m_courseSelectCallbacks.selectHighlight;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = m_courseSelectCallbacks.unselectHighlight;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = m_uiScene.getSystem<cro::UISystem>()->addCallback(
@@ -1825,7 +1829,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     const auto infoButtonEnable =
         [&](cro::Entity e, float)
     {
-        e.getComponent<cro::UIInput>().active =
+        e.getComponent<cro::UIInput>().enabled =
             m_lobbyWindowEntities[LobbyEntityID::Info].getComponent<cro::Transform>().getScale().y != 0.f;
     };
 
@@ -1840,6 +1844,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity.getComponent<UIElement>().depth = 0.1f;
     entity.addComponent<cro::UIInput>().area = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Lobby);
+    entity.getComponent<cro::UIInput>().setSelectionIndex(2);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = m_courseSelectCallbacks.selectHighlight;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = m_courseSelectCallbacks.unselectHighlight;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = m_uiScene.getSystem<cro::UISystem>()->addCallback(
@@ -1871,6 +1876,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity.getComponent<UIElement>().depth = 0.1f;
     entity.addComponent<cro::UIInput>().area = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Lobby);
+    entity.getComponent<cro::UIInput>().setSelectionIndex(1);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = m_courseSelectCallbacks.selectHighlight;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = m_courseSelectCallbacks.unselectHighlight;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = m_uiScene.getSystem<cro::UISystem>()->addCallback(
@@ -2179,6 +2185,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::PrevMenu];
     entity.addComponent<cro::UIInput>().area = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Lobby);
+    entity.getComponent<cro::UIInput>().setSelectionIndex(0);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = mouseEnterHighlight;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = mouseExitHighlight;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
@@ -2203,6 +2210,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::ReadyUp]; //which sprite is set by sending a message to this ent when we know if we're hosting or joining
     entity.addComponent<cro::UIInput>().area = m_sprites[SpriteID::ReadyUp].getTextureBounds();
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Lobby);
+    entity.getComponent<cro::UIInput>().setSelectionIndex(3);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = mouseEnter;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = mouseExit;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
@@ -2630,6 +2638,7 @@ void MenuState::addCourseSelectButtons()
     auto bounds = buttonEnt.getComponent<cro::Sprite>().getTextureBounds();
     buttonEnt.addComponent<cro::UIInput>().area = bounds;
     buttonEnt.getComponent<cro::UIInput>().setGroup(MenuID::Lobby);
+    buttonEnt.getComponent<cro::UIInput>().setSelectionIndex(4);
     buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = m_courseSelectCallbacks.selected;
     buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = m_courseSelectCallbacks.unselected;
     buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = m_courseSelectCallbacks.prevRules;
@@ -2653,6 +2662,7 @@ void MenuState::addCourseSelectButtons()
     bounds = buttonEnt.getComponent<cro::Sprite>().getTextureBounds();
     buttonEnt.addComponent<cro::UIInput>().area = bounds;
     buttonEnt.getComponent<cro::UIInput>().setGroup(MenuID::Lobby);
+    buttonEnt.getComponent<cro::UIInput>().setSelectionIndex(5);
     buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = m_courseSelectCallbacks.selected;
     buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = m_courseSelectCallbacks.unselected;
     buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = m_courseSelectCallbacks.nextRules;
@@ -2676,6 +2686,7 @@ void MenuState::addCourseSelectButtons()
     bounds = buttonEnt.getComponent<cro::Sprite>().getTextureBounds();
     buttonEnt.addComponent<cro::UIInput>().area = bounds;
     buttonEnt.getComponent<cro::UIInput>().setGroup(MenuID::Lobby);
+    buttonEnt.getComponent<cro::UIInput>().setSelectionIndex(6);
     buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = m_courseSelectCallbacks.selected;
     buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = m_courseSelectCallbacks.unselected;
     buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = m_courseSelectCallbacks.prevRadius;
@@ -2698,6 +2709,7 @@ void MenuState::addCourseSelectButtons()
     bounds = buttonEnt.getComponent<cro::Sprite>().getTextureBounds();
     buttonEnt.addComponent<cro::UIInput>().area = bounds;
     buttonEnt.getComponent<cro::UIInput>().setGroup(MenuID::Lobby);
+    buttonEnt.getComponent<cro::UIInput>().setSelectionIndex(7);
     buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = m_courseSelectCallbacks.selected;
     buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = m_courseSelectCallbacks.unselected;
     buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = m_courseSelectCallbacks.nextRadius;
@@ -2727,6 +2739,7 @@ void MenuState::addCourseSelectButtons()
     bounds = buttonEnt.getComponent<cro::Sprite>().getTextureBounds();
     buttonEnt.addComponent<cro::UIInput>().area = bounds;
     buttonEnt.getComponent<cro::UIInput>().setGroup(MenuID::Lobby);
+    buttonEnt.getComponent<cro::UIInput>().setSelectionIndex(10);
     buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = m_courseSelectCallbacks.selected;
     buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = m_courseSelectCallbacks.unselected;
     buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = m_courseSelectCallbacks.prevHoleCount;
@@ -2748,6 +2761,7 @@ void MenuState::addCourseSelectButtons()
     bounds = buttonEnt.getComponent<cro::Sprite>().getTextureBounds();
     buttonEnt.addComponent<cro::UIInput>().area = bounds;
     buttonEnt.getComponent<cro::UIInput>().setGroup(MenuID::Lobby);
+    buttonEnt.getComponent<cro::UIInput>().setSelectionIndex(11);
     buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = m_courseSelectCallbacks.selected;
     buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = m_courseSelectCallbacks.unselected;
     buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = m_courseSelectCallbacks.nextHoleCount;
@@ -2772,6 +2786,7 @@ void MenuState::addCourseSelectButtons()
     bounds.width += 78.f; //wild stab at the width of the text (it's not here to measure...)
     checkboxEnt.addComponent<cro::UIInput>().area = bounds;
     checkboxEnt.getComponent<cro::UIInput>().setGroup(MenuID::Lobby);
+    checkboxEnt.getComponent<cro::UIInput>().setSelectionIndex(4);
     checkboxEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = m_courseSelectCallbacks.selectHighlight;
     checkboxEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = m_courseSelectCallbacks.unselectHighlight;
     checkboxEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = m_courseSelectCallbacks.toggleReverseCourse;
@@ -2794,6 +2809,7 @@ void MenuState::addCourseSelectButtons()
     bounds.width += 78.f;
     checkboxEnt.addComponent<cro::UIInput>().area = bounds;
     checkboxEnt.getComponent<cro::UIInput>().setGroup(MenuID::Lobby);
+    checkboxEnt.getComponent<cro::UIInput>().setSelectionIndex(7);
     checkboxEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = m_courseSelectCallbacks.selectHighlight;
     checkboxEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = m_courseSelectCallbacks.unselectHighlight;
     checkboxEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = m_courseSelectCallbacks.toggleFastCPU;
@@ -2844,6 +2860,7 @@ void MenuState::addCourseSelectButtons()
         bounds = checkboxEnt.getComponent<cro::Sprite>().getTextureBounds();
         checkboxEnt.addComponent<cro::UIInput>().area = bounds;
         checkboxEnt.getComponent<cro::UIInput>().setGroup(MenuID::Lobby);
+        checkboxEnt.getComponent<cro::UIInput>().setSelectionIndex(6);
         checkboxEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = m_courseSelectCallbacks.selectHighlight;
         checkboxEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = m_courseSelectCallbacks.unselectHighlight;
         checkboxEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = m_courseSelectCallbacks.toggleFriendsOnly;
@@ -2917,6 +2934,7 @@ void MenuState::addCourseSelectButtons()
     bounds.height += 12.f;
     buttonEnt.addComponent<cro::UIInput>().area = bounds;
     buttonEnt.getComponent<cro::UIInput>().setGroup(MenuID::Lobby);
+    buttonEnt.getComponent<cro::UIInput>().setSelectionIndex(8);
     buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = m_courseSelectCallbacks.selectHighlight;
     buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = m_courseSelectCallbacks.unselectHighlight;
     buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = m_courseSelectCallbacks.prevCourse;
@@ -2940,6 +2958,7 @@ void MenuState::addCourseSelectButtons()
     bounds.height += 12.f;
     buttonEnt.addComponent<cro::UIInput>().area = bounds;
     buttonEnt.getComponent<cro::UIInput>().setGroup(MenuID::Lobby);
+    buttonEnt.getComponent<cro::UIInput>().setSelectionIndex(9);
     buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = m_courseSelectCallbacks.selectHighlight;
     buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = m_courseSelectCallbacks.unselectHighlight;
     buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = m_courseSelectCallbacks.nextCourse;
@@ -2965,6 +2984,7 @@ void MenuState::addCourseSelectButtons()
         bounds.width += 78.f; //wild stab at the width of the text (it's not here to measure...)
         checkboxEnt.addComponent<cro::UIInput>().area = bounds;
         checkboxEnt.getComponent<cro::UIInput>().setGroup(MenuID::Lobby);
+        checkboxEnt.getComponent<cro::UIInput>().setSelectionIndex(5);
         checkboxEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = m_courseSelectCallbacks.selectHighlight;
         checkboxEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = m_courseSelectCallbacks.unselectHighlight;
         checkboxEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = m_courseSelectCallbacks.prevHoleType;
