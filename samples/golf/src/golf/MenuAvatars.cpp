@@ -1338,27 +1338,6 @@ void MenuState::createMenuCallbacks()
             }
         });
 
-    m_courseSelectCallbacks.toggleGameRules = m_uiScene.getSystem<cro::UISystem>()->addCallback(
-        [&](cro::Entity e, const cro::ButtonEvent& evt)
-        {
-            if (activated(evt))
-            {
-                float scale = m_lobbyWindowEntities[LobbyEntityID::HoleSelection].getComponent<cro::Transform>().getScale().y;
-                if (scale == 0)
-                {
-                    scale = 1.f;
-                    m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
-                }
-                else
-                {
-                    scale = 0.f;
-                    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
-                }
-
-                m_lobbyWindowEntities[LobbyEntityID::HoleSelection].getComponent<cro::Transform>().setScale({ 1.f, scale });
-            }
-        });
-
     m_courseSelectCallbacks.inviteFriends = m_uiScene.getSystem<cro::UISystem>()->addCallback(
         [&](cro::Entity, const cro::ButtonEvent& evt)
         {
