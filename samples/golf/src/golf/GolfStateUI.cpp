@@ -935,6 +935,7 @@ void GolfState::buildUI()
 
                 auto oldCam = m_gameScene.setActiveCamera(m_mapCam);
                 m_gameScene.getSystem<cro::CameraSystem>()->process(0.f);
+                //m_gameScene.simulate(0.f);
 
                 cro::Colour c = cro::Colour::Transparent;
                 //cro::Colour c(std::uint8_t(39), 56, 153);
@@ -1164,14 +1165,15 @@ void GolfState::buildUI()
         m_minimapZoom.updateShader();
 
         glm::vec2 viewSize(MapSize);
-        miniCam.setOrthographic(-viewSize.x / 2.f, viewSize.x / 2.f, -viewSize.y / 2.f, viewSize.y / 2.f, -0.1f, 50.f);
+        miniCam.setOrthographic(-viewSize.x / 2.f, viewSize.x / 2.f, -viewSize.y / 2.f, viewSize.y / 2.f, -0.1f, 60.f);
         miniCam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
 
     m_mapCam = m_gameScene.createEntity();
-    m_mapCam.addComponent<cro::Transform>().setPosition({ static_cast<float>(MapSize.x) / 2.f, 38.f, -static_cast<float>(MapSize.y) / 2.f});
+    m_mapCam.addComponent<cro::Transform>().setPosition({ static_cast<float>(MapSize.x) / 2.f, /*38.f*/36.f, -static_cast<float>(MapSize.y) / 2.f});
     m_mapCam.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -90.f * cro::Util::Const::degToRad);
     auto& miniCam = m_mapCam.addComponent<cro::Camera>();
+    updateMiniView(miniCam);
     miniCam.renderFlags = RenderFlags::MiniMap;
     miniCam.active = false;
     //this is a hack to stop the entire terrain being drawn in shadow
@@ -1179,7 +1181,6 @@ void GolfState::buildUI()
     miniCam.shadowMapBuffer.clear();
     miniCam.shadowMapBuffer.display();
     //miniCam.resizeCallback = updateMiniView; //don't do this on resize as recreating the buffer clears it..
-    updateMiniView(miniCam);
 
 
 
@@ -1583,6 +1584,7 @@ void GolfState::showCountdown(std::uint8_t seconds)
 
 
     bool personalBest = false;
+    cro::String bestString("PERSONAL BEST!");
 
 #ifndef CRO_DEBUG_
     //enter score into leaderboard
@@ -1600,6 +1602,19 @@ void GolfState::showCountdown(std::uint8_t seconds)
                     || best == 0)
                 {
                     personalBest = true;
+                }
+
+                if (!personalBest)
+                {
+                    //see if we at least got a new monthly score
+                    best = Social::getMonthlyBest(m_sharedData.mapDirectory, m_sharedData.holeCount);
+
+                    if (score < best
+                        || best == 0)
+                    {
+                        personalBest = true;
+                        bestString = "MONTHLY BEST!";
+                    }
                 }
 
                 //if we weren't the last player to take a turn in a network game
@@ -1684,7 +1699,7 @@ void GolfState::showCountdown(std::uint8_t seconds)
         entity.getComponent<cro::Text>().setFillColour(TextHighlightColour);
         //entity.getComponent<cro::Text>().setOutlineColour(LeaderboardTextDark);
         //entity.getComponent<cro::Text>().setOutlineThickness(1.f);
-        entity.getComponent<cro::Text>().setString("PERSONAL BEST!");
+        entity.getComponent<cro::Text>().setString(bestString);
         centreText(entity);
 
         cmd.targetFlags = CommandID::UI::Scoreboard;
