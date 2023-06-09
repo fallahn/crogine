@@ -139,8 +139,9 @@ std::int32_t StateStack::getTopmostState() const
 void StateStack::cacheState(StateID id)
 {
     CRO_ASSERT(m_stateCache.count(id) == 0, "State is already cached");
-    m_stateCache.insert(std::make_pair(id, createState(id, true)));
-    m_stateCache.at(id)->m_cached = true;
+    auto& state = m_stateCache.insert(std::make_pair(id, createState(id, true))).first->second;
+    state->m_cached = true;
+    state->simulate(0.f);
 }
 
 void StateStack::uncacheState(StateID id)

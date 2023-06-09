@@ -3428,6 +3428,10 @@ void OptionsState::createButtons(cro::Entity parent, std::int32_t menuID, std::u
                     cro::App::getWindow().setSize(m_sharedData.resolutions[m_videoSettings.resolutionIndex]);
                 }
                 m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+
+                auto& cam = m_scene.getActiveCamera().getComponent<cro::Camera>();
+                cam.active = true;
+                cam.resizeCallback(cam);
             }
         });
     entity.addComponent<cro::Callback>().active = true;
