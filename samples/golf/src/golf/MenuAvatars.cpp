@@ -1745,6 +1745,7 @@ void MenuState::updateLobbyAvatars()
 
         cro::String nameString;
 
+        constexpr float RowSpacing = -14.f;
         for (const auto& c : m_sharedData.connectionData)
         {
             //update the name label texture
@@ -1809,7 +1810,7 @@ void MenuState::updateLobbyAvatars()
 
             glm::vec2 iconPos(1.f, 0.f);
             const std::int32_t row = playerCount;
-            iconPos.y = row * -14.f; //TODO constify row spacing
+            iconPos.y = row * RowSpacing;
 
             //add list of names on the connected client
             for (auto i = 0u; i < c.playerCount; ++i)
@@ -1825,8 +1826,6 @@ void MenuState::updateLobbyAvatars()
 
             if (c.playerCount != 0)
             {
-                clientCount++;
-
                 //add a ready status for that client
                 auto entity = m_uiScene.createEntity();
                 entity.addComponent<cro::Transform>().setPosition({ -11.f, iconPos.y - 7.f });
@@ -1846,7 +1845,7 @@ void MenuState::updateLobbyAvatars()
 
                 //rank text
                 entity = m_uiScene.createEntity();
-                entity.addComponent<cro::Transform>().setPosition({ 100.f, iconPos.y + 198.f, 0.3f });
+                entity.addComponent<cro::Transform>().setPosition({ 100.f, (RowSpacing * clientCount) + 198.f, 0.3f });
                 entity.addComponent<cro::Drawable2D>();
                 entity.addComponent<cro::Text>(smallFont).setString("Level");
                 entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
@@ -2022,11 +2021,10 @@ void MenuState::updateLobbyAvatars()
                 //    //auto bounds = cro::Text::getLocalBounds(rankEnt);
                 //    //rankEnt.getComponent<cro::Callback>().setUserData<float>((bounds.width / 2.f) + 8.f);
                 //}
+                clientCount++;
             }
             h++;
         }
-
-
 
         //create text for name list
         if (!nameString.empty())
