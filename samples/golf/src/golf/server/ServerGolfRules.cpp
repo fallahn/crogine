@@ -76,40 +76,60 @@ void GolfState::calcCPUPosition()
     }
     skill += offset;
 
-    //get longest range available
-    auto dist = glm::length(m_holeData[m_currentHole].tee - m_holeData[m_currentHole].pin);
-    if (dist > 115.f) //forces a cut-off for pitch n putt
-    {
-        dist = 1000.f;
-    }
+    auto& ball = m_playerInfo[0].ballEntity.getComponent<Ball>();
+    std::int32_t clubID = ClubID::Putter;
 
-    std::int32_t clubID = ClubID::SandWedge;
-    while ((Clubs[clubID].getDefaultTarget() * 1.05f) < dist
-        && clubID != ClubID::Driver)
+    //get longest range available
+    if (ball.terrain != TerrainID::Green)
     {
-        do
+        auto dist = glm::length(m_holeData[m_currentHole].tee - m_holeData[m_currentHole].pin);
+        if (dist > 115.f) //forces a cut-off for pitch n putt
         {
-            clubID--;
-        } while (clubID != ClubID::Driver);
+            dist = 1000.f;
+        }
+
+        clubID = ClubID::SandWedge;
+        while ((Clubs[clubID].getDefaultTarget() * 1.05f) < dist
+            && clubID != ClubID::Driver)
+        {
+            do
+            {
+                clubID--;
+            } while (clubID != ClubID::Driver);
+        }
     }
     const float clubDist = Clubs[clubID].getTargetAtLevel(std::min(2, skill / 3));
+    
+    const auto pinDist = glm::length2(pinDir);
+    const auto targetDist = glm::length2(targetDir);
+    const float MinDist = m_scene.getSystem<BallSystem>()->getPuttFromTee() ? 9.f : 2500.f;
 
     const auto pickTarget = [&](float dp)
     {
-        if (m_holeData[m_currentHole].puttFromTee)
+        if (m_scene.getSystem<BallSystem>()->getPuttFromTee())
         {
-            if (dp > 0.98f)
+            //LogI << "Putt from tee is true" << std::endl;
+            if (dp > 0.97f)
             {
+                //LogI << "returning pin (dp is " << dp << ")" << std::endl;
                 return m_holeData[m_currentHole].pin;
             }
             else
             {
+                if (targetDist < MinDist
+                    || pinDist < targetDist)
+                {
+                    //LogI << "returning pin (target too close, or pin is closer)" << std::endl;
+                    return m_holeData[m_currentHole].pin;
+                }
+
+                //LogI << "returning target" << std::endl;
                 return m_holeData[m_currentHole].target;
             }
         }
         else
         {
-            LogI << "putt from tee is false" << std::endl;
+            //LogI << "putt from tee is false" << std::endl;
             return m_holeData[m_currentHole].pin;
         }
     };
@@ -119,8 +139,6 @@ void GolfState::calcCPUPosition()
     if (auto dp = glm::dot(glm::normalize(targetDir), glm::normalize(pinDir)); dp > 0.4)
     {
         //set the target depending on how close it is
-        const auto pinDist = glm::length2(pinDir);
-        const auto targetDist = glm::length2(targetDir);
         if (pinDist < targetDist)
         {
             //always target pin if its closer
@@ -137,7 +155,6 @@ void GolfState::calcCPUPosition()
         else
         {
             //target the pin if the target is too close
-            const float MinDist = m_holeData[m_currentHole].puttFromTee ? 9.f : 2500.f;
             if (targetDist < MinDist) //remember this in len2
             {
                 pos = m_holeData[m_currentHole].pin;
@@ -164,7 +181,6 @@ void GolfState::calcCPUPosition()
     
     //make sure there's only a slim chance of getting it in the hole
     //if club is not a putter, and VERY slim chance if not a wedge
-    auto& ball = m_playerInfo[0].ballEntity.getComponent<Ball>();
     if (ball.terrain == TerrainID::Green)
     {
         if (cro::Util::Random::value(0, 3 + skill) == 0)
@@ -173,6 +189,27 @@ void GolfState::calcCPUPosition()
             pos += randomNormal() * cro::Util::Random::value(0.05f, 0.2f);
             CRO_ASSERT(!std::isnan(pos.x), "");
         }
+
+        //add offset based on length of putt
+        const auto len2 = glm::length2(pos - m_playerInfo[0].position);
+        const auto length = std::min(1.f, len2 / (10.f * 10.f));
+        auto accuracy = length * (1.f - (static_cast<float>(skill) / 10.f));
+        accuracy /= 4.f;
+
+        //lower skill has more chance of going off
+        if (cro::Util::Random::value(0, 3 + skill) == 0)
+        {
+            accuracy *= 1.6f + (3 - (std::min(skill, 3)));
+        }
+
+        //higher skill has more chance of being accurate
+        if (cro::Util::Random::value(0, 3 + skill) > 3)
+        {
+            accuracy /= 2.f;
+        }
+
+        pos += randomNormal() * accuracy;
+        LogI << "accuracy is " << accuracy << ", distance " << glm::length(pos - m_playerInfo[0].position) << std::endl;
     }
     else
     {
@@ -222,6 +259,8 @@ void GolfState::calcCPUPosition()
     m_playerInfo[0].ballEntity.getComponent<cro::Transform>().setPosition(pos);
     m_playerInfo[0].holeScore[m_currentHole]++;
 
+    const auto velOffset = glm::normalize(pos - m_playerInfo[0].position) * 0.001f;
+
     ball.terrain = result.terrain;
     switch (result.terrain)
     {
@@ -232,12 +271,12 @@ void GolfState::calcCPUPosition()
     case TerrainID::Bunker:
     case TerrainID::Rough:
         ball.state = Ball::State::Flight;
-        ball.velocity.x = 0.001f; //add a tiny bit of velocity to prevent div0/nan in BallSystem
+        ball.velocity = velOffset; //add a tiny bit of velocity to prevent div0/nan in BallSystem
         break;
     case TerrainID::Green:
     case TerrainID::Hole:
         ball.state = Ball::State::Putt;
-        ball.velocity.x = 0.001f;
+        ball.velocity = velOffset;
         break;
     case TerrainID::Scrub:
     case TerrainID::Stone:
