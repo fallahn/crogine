@@ -144,7 +144,7 @@ void StateStack::cacheState(StateID id)
 
     //do one update to make sure the scene is properly initialised and ready
     //this fixes instances where resize callbacks aren't applied to cached
-    //states which haven't been openeed and have no fully registered their cameras
+    //states which haven't been opened and have not fully registered their cameras
     state->simulate(0.f);
 }
 

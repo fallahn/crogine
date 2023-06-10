@@ -61,6 +61,7 @@ void CameraSystem::handleMessage(const Message& msg)
                 if (camera.resizeCallback)
                 {
                     camera.resizeCallback(camera);
+                    camera.active = true;
                 }
                 resizeGBuffer(entity);
             }
