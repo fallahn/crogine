@@ -392,9 +392,9 @@ void MenuState::createUI()
         refreshUI();
     };
 
-    entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>();
-    entity.addComponent<cro::Camera>().resizeCallback = updateView;
+    entity = m_uiScene.getActiveCamera();
+    entity.getComponent<cro::Transform>();
+    entity.getComponent<cro::Camera>().resizeCallback = updateView;
     m_uiScene.setActiveCamera(entity);
     updateView(entity.getComponent<cro::Camera>());
 }

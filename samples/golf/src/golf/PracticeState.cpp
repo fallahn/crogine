@@ -183,6 +183,8 @@ void PracticeState::buildScene()
     m_scene.addSystem<cro::RenderSystem2D>(mb);
     m_scene.addSystem<cro::AudioPlayerSystem>(mb);
 
+    m_scene.setSystemActive<cro::UISystem>(false);
+
     m_menuSounds.loadFromFile("assets/golf/sound/menu.xas", m_sharedData.sharedResources->audio);
     m_audioEnts[AudioID::Accept] = m_scene.createEntity();
     m_audioEnts[AudioID::Accept].addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("accept");
@@ -217,6 +219,8 @@ void PracticeState::buildScene()
             {
                 state = RootCallbackData::FadeOut;
                 e.getComponent<cro::Callback>().active = false;
+
+                m_scene.setSystemActive<cro::UISystem>(true);
             }
             break;
         case RootCallbackData::FadeOut:
@@ -544,6 +548,8 @@ void PracticeState::buildScene()
 
 void PracticeState::quitState()
 {
+    m_scene.setSystemActive<cro::UISystem>(false);
+
     m_rootNode.getComponent<cro::Callback>().active = true;
     m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
 }

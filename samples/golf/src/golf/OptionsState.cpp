@@ -634,6 +634,9 @@ void OptionsState::buildScene()
     m_scene.addSystem<cro::RenderSystem2D>(mb);
     m_scene.addSystem<cro::AudioPlayerSystem>(mb);
 
+    m_scene.setSystemActive<cro::UISystem>(false);
+
+
     struct RootCallbackData final
     {
         enum
@@ -663,6 +666,7 @@ void OptionsState::buildScene()
                 state = RootCallbackData::FadeOut;
                 e.getComponent<cro::Callback>().active = false;
 
+                m_scene.setSystemActive<cro::UISystem>(true);
                 m_scene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Video);
             }
             break;
@@ -1127,9 +1131,9 @@ void OptionsState::buildScene()
         rootNode.getComponent<cro::Transform>().setPosition(size / 2.f);
     };
 
-    entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, CameraDepth });
-    entity.addComponent<cro::Camera>().resizeCallback = updateView;
+    entity = m_scene.getActiveCamera();
+    entity.getComponent<cro::Transform>().setPosition({ 0.f, 0.f, CameraDepth });
+    entity.getComponent<cro::Camera>().resizeCallback = updateView;
     m_scene.setActiveCamera(entity);
     updateView(entity.getComponent<cro::Camera>());
 
@@ -3514,6 +3518,7 @@ void OptionsState::updateActiveCallbacks()
 
 void OptionsState::quitState()
 {
+    m_scene.setSystemActive<cro::UISystem>(false);
     m_rootNode.getComponent<cro::Callback>().active = true;
     m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
 }

@@ -438,6 +438,8 @@ void ProfileState::addSystems()
     m_uiScene.addSystem<cro::RenderSystem2D>(mb);
     m_uiScene.addSystem<cro::AudioPlayerSystem>(mb);
 
+    m_uiScene.setSystemActive<cro::UISystem>(false);
+
     m_modelScene.addSystem<cro::CallbackSystem>(mb);
     m_modelScene.addSystem<cro::SkeletalAnimator>(mb);
     m_modelScene.addSystem<cro::CameraSystem>(mb);
@@ -492,6 +494,7 @@ void ProfileState::buildScene()
                 state = RootCallbackData::FadeOut;
                 e.getComponent<cro::Callback>().active = false;
 
+                m_uiScene.setSystemActive<cro::UISystem>(true);
                 m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Main);
             }
 
@@ -1551,6 +1554,7 @@ void ProfileState::quitState()
         m_menuEntities[EntityID::Root].getComponent<cro::Callback>().active = true;
         m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
     }
+    m_uiScene.setSystemActive<cro::UISystem>(false);
 }
 
 std::size_t ProfileState::indexFromAvatarID(std::uint32_t skinID) const
