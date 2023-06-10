@@ -634,7 +634,7 @@ void OptionsState::buildScene()
     m_scene.addSystem<cro::RenderSystem2D>(mb);
     m_scene.addSystem<cro::AudioPlayerSystem>(mb);
 
-    m_scene.setSystemActive<cro::UISystem>(false);
+    m_scene.setSystemActive<cro::AudioPlayerSystem>(false);
 
 
     struct RootCallbackData final
@@ -666,7 +666,7 @@ void OptionsState::buildScene()
                 state = RootCallbackData::FadeOut;
                 e.getComponent<cro::Callback>().active = false;
 
-                m_scene.setSystemActive<cro::UISystem>(true);
+                m_scene.setSystemActive<cro::AudioPlayerSystem>(true);
                 m_scene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Video);
             }
             break;
@@ -3518,7 +3518,7 @@ void OptionsState::updateActiveCallbacks()
 
 void OptionsState::quitState()
 {
-    m_scene.setSystemActive<cro::UISystem>(false);
+    m_scene.setSystemActive<cro::AudioPlayerSystem>(false);
     m_rootNode.getComponent<cro::Callback>().active = true;
     m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
 }

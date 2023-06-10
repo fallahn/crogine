@@ -272,6 +272,8 @@ void TrophyState::buildScene()
     m_scene.addSystem<cro::RenderSystem2D>(mb);
     m_scene.addSystem<cro::AudioPlayerSystem>(mb);
 
+    m_scene.setSystemActive<cro::AudioPlayerSystem>(false);
+
     m_menuSounds.loadFromFile("assets/golf/sound/menu.xas", m_sharedData.sharedResources->audio);
     m_audioEnts[AudioID::Accept] = m_scene.createEntity();
     m_audioEnts[AudioID::Accept].addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("accept");
@@ -395,6 +397,7 @@ void TrophyState::buildScene()
                 leftDoor.getComponent<cro::Callback>().active = true;
                 rightDoor.getComponent<cro::Callback>().active = true;
 
+                m_scene.setSystemActive<cro::AudioPlayerSystem>(true);
                 m_scene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Main);
             }
             break;
@@ -406,6 +409,7 @@ void TrophyState::buildScene()
                 requestStackPop();
 
                 state = RootCallbackData::FadeIn;
+                m_scene.setSystemActive<cro::AudioPlayerSystem>(true);
 
                 /*leftDoor.getComponent<cro::Drawable2D>().setVertexData(doorVerts);
                 leftDoor.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
