@@ -53,7 +53,7 @@ public:
 
     void addAudioScape(const std::string& path, cro::AudioResource& resource);
     void setPlayerIndex(std::size_t client, std::size_t player, std::int32_t index);
-    void setActivePlayer(std::size_t client, std::size_t player);
+    void setActivePlayer(std::size_t client, std::size_t player, bool skipAudio);
 
 private:
     struct AudioID final

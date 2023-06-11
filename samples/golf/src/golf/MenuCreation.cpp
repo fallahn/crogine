@@ -2345,11 +2345,11 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
         case ScoreType::Stroke:
             if (score.score < 0)
             {
-                names.back() += " Under PAR";
+                names.back() += " Under Par";
             }
             else if (score.score > 0)
             {
-                names.back() += " Over PAR";
+                names.back() += " Over Par";
             }
             break;
         case ScoreType::Skins:

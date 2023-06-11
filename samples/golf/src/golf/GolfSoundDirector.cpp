@@ -542,15 +542,16 @@ void GolfSoundDirector::setPlayerIndex(std::size_t client, std::size_t player, s
     m_playerIndices[client][player] = index;
 }
 
-void GolfSoundDirector::setActivePlayer(std::size_t client, std::size_t player)
+void GolfSoundDirector::setActivePlayer(std::size_t client, std::size_t player, bool skipAudio)
 {
     m_currentClient = client;
     m_currentPlayer = player;
-
+    
     if (m_newHole)
     {
         std::int32_t honour = (client << 8) | player;
-        if (honour != m_honourID)
+        if (honour != m_honourID
+            && !skipAudio) //don't play this if fast CPU as it overlaps other audio
         {
             playSoundDelayed(AudioID::Honour, glm::vec3(0.f), 1.f, 1.f, MixerChannel::Voice);
         }

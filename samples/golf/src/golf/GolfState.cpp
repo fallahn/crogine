@@ -6285,7 +6285,11 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     m_skipState = {};
     m_ballTrail.setNext();
 
-    m_gameScene.getDirector<GolfSoundDirector>()->setActivePlayer(player.client, player.player);
+
+    auto localPlayer = (player.client == m_sharedData.clientConnection.connectionID);
+    auto isCPU = m_sharedData.localConnectionData.playerData[player.player].isCPU;
+
+    m_gameScene.getDirector<GolfSoundDirector>()->setActivePlayer(player.client, player.player, isCPU && m_sharedData.fastCPU);
     m_avatars[player.client][player.player].ballModel.getComponent<cro::Transform>().setScale(glm::vec3(1.f));
 
     m_resolutionUpdate.targetFade = player.terrain == TerrainID::Green ? GreenFadeDistance : CourseFadeDistance;
@@ -6293,8 +6297,6 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     updateScoreboard();
     showScoreboard(false);
 
-    auto localPlayer = (player.client == m_sharedData.clientConnection.connectionID);
-    auto isCPU = m_sharedData.localConnectionData.playerData[player.player].isCPU;
 
     m_sharedData.inputBinding.playerID = localPlayer ? player.player : 0; //this also affects who can emote, so if we're currently emoting when it's not our turn always be player 0(??)
     m_inputParser.setActive(localPlayer && !m_photoMode, m_currentPlayer.terrain, isCPU);
