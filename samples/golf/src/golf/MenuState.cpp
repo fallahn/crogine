@@ -181,12 +181,13 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
 #endif
 
         updateUnlockedItems();
-
+#ifndef CRO_DEBUG_
         cacheState(StateID::Unlock);
         cacheState(StateID::Options);
         cacheState(StateID::Profile);
         cacheState(StateID::Practice);
         cacheState(StateID::Keyboard);
+#endif
     });
  
     context.mainWindow.setMouseCaptured(false);

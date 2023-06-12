@@ -6175,6 +6175,9 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo)
         m_depthMap.forceSwap(); //make sure we're reading the correct texture anyway
     }
     m_waterEnt.getComponent<cro::Model>().setMaterialProperty(0, "u_depthMap", m_depthMap.getTexture());
+
+
+    m_gameScene.getDirector<GolfSoundDirector>()->setCrowdPositions(m_holeData[m_currentHole].crowdPositions);
 }
 
 void GolfState::setCameraPosition(glm::vec3 position, float height, float viewOffset)

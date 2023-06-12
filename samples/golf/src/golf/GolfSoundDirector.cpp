@@ -54,13 +54,17 @@ source distribution.
 namespace
 {
     constexpr float VoiceDelay = 0.5f;
+
+    const cro::Time MinCrowdTime = cro::seconds(43.f);
 }
 
 GolfSoundDirector::GolfSoundDirector(cro::AudioResource& ar)
     : m_currentClient   (0),
     m_currentPlayer     (0),
     m_honourID          (0),
-    m_newHole           (false)
+    m_newHole           (false),
+    m_crowdPositions    (nullptr),
+    m_crowdTime         (MinCrowdTime)
 {
     //this must match with AudioID enum
     static const std::array<std::string, AudioID::Count> FilePaths =
@@ -149,6 +153,10 @@ GolfSoundDirector::GolfSoundDirector(cro::AudioResource& ar)
         "assets/golf/sound/ambience/foot04.wav",
 
         "assets/golf/sound/bad.wav",
+
+        "assets/golf/sound/ambience/crowd_clear_throat.wav",
+        "assets/golf/sound/ambience/crowd_cough.wav",
+        "assets/golf/sound/ambience/crowd_sigh.wav",
     };
 
     std::fill(m_audioSources.begin(), m_audioSources.end(), nullptr);
@@ -163,6 +171,7 @@ GolfSoundDirector::GolfSoundDirector(cro::AudioResource& ar)
         {
             //get a default sound so we at least don't have nullptr
             m_audioSources[i] = &ar.get(1010101);
+            LogW << "Failed opening " << FilePaths[i] << std::endl;
         }
     }
 
@@ -527,6 +536,29 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
         }
         break;
         }
+    }
+}
+
+void GolfSoundDirector::process(float)
+{
+    if (m_crowdTimer.elapsed() > m_crowdTime)
+    {
+        if (m_crowdPositions)
+        {
+            const auto& cp = *m_crowdPositions;
+            if (!cp.empty())
+            {
+                auto pos = glm::vec3((cp[cro::Util::Random::value(0u, cp.size() - 1)][3]));
+                auto& emitter = playSound(AudioID::CrowdClearThroat + cro::Util::Random::value(0, 2), pos).getComponent<cro::AudioEmitter>();
+                emitter.setMixerChannel(MixerChannel::Environment);
+                //emitter.setRolloff(0.5f);
+
+                LogI << "Crowd sound at " << pos << std::endl;
+            }
+        }
+
+        m_crowdTimer.restart();
+        m_crowdTime = cro::seconds(5.f);// MinCrowdTime + cro::seconds(static_cast<float>(cro::Util::Random::value(-5, 25)));
     }
 }
 
