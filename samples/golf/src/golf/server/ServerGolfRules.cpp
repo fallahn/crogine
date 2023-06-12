@@ -69,13 +69,16 @@ void GolfState::calcCPUPosition()
 
     glm::vec3 pos = glm::vec3(0.f);
     std::int32_t skill = m_skillIndex;
-    std::int32_t offset = m_playerInfo[0].player % 2;
-    if (m_skillIndex > 2)
-    {
-        offset *= -1;
-    }
-    skill = std::clamp(skill + offset, 0, 6);
-    //skill += offset;
+    //std::int32_t offset = m_playerInfo[0].player % 2;
+    //if (m_skillIndex > 2)
+    //{
+    //    offset *= -1;
+    //}
+
+    std::int32_t offset = ((m_playerInfo[0].player + 2) % 3) * 2;
+
+    skill = std::clamp((skill - offset), 0, 6);
+
 
     //std::int32_t skill = m_playerInfo[0].player * 3;
 
@@ -226,11 +229,16 @@ void GolfState::calcCPUPosition()
                     }
                 }
 
-                if (cro::Util::Random::value(0, 4 + skill) < 8)
+                if (cro::Util::Random::value(0, 4 + skill) < 9)
                 {
                     //add offset based on how close we are to the pin/target
                     pos += randomNormal() * (static_cast<float>(cro::Util::Random::value(6, 70)) / 10.f) * std::min(0.2f, std::max(1.f, std::sqrt(l2) / 100.f));
                     CRO_ASSERT(!std::isnan(pos.x), "");
+                }
+                else
+                {
+                    //even if we have the skill reduce the chance of it going in
+                    pos += randomNormal() * static_cast<float>(cro::Util::Random::value(1, 30)) / 10.f;
                 }
 
                 //more likely to overshoot with distance and lower skill
@@ -248,7 +256,7 @@ void GolfState::calcCPUPosition()
 
                 //TODO we need a good bounce as a percentage value...
                 constexpr float BouncePercent = 1.05f;
-                pos = ((pos - m_playerInfo[0].position) * BouncePercent);
+                pos = ((pos - m_playerInfo[0].position) * (BouncePercent - (static_cast<float>((m_playerInfo[0].player % 3) * 2) / 100.f)));
 
                 auto step = pos / 5.f;
                 pos = m_playerInfo[0].position + step;
@@ -256,7 +264,7 @@ void GolfState::calcCPUPosition()
                 for (auto i = 0; i < 4; ++i)
                 {
                     const auto wind = m_scene.getSystem<BallSystem>()->getWindDirection();
-                    step += glm::vec3(wind.x, 0.f, wind.z) * wind.y * (0.1f * (7 - skill));
+                    step += glm::vec3(wind.x, 0.f, wind.z) * wind.y * (0.15f * (7 - skill));
                     pos += step;
                 }
 
