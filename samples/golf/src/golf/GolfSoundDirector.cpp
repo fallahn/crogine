@@ -539,8 +539,10 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
     }
 }
 
-void GolfSoundDirector::process(float)
+void GolfSoundDirector::process(float dt)
 {
+    SoundEffectsDirector::process(dt);
+
     if (m_crowdTimer.elapsed() > m_crowdTime)
     {
         if (m_crowdPositions)

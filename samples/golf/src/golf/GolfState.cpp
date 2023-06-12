@@ -6103,9 +6103,14 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo)
         [&](cro::Entity e, float)
     {
         auto holeNumber = m_currentHole + 1;
+        if (m_sharedData.reverseCourse)
+        {
+            holeNumber = (m_holeData.size() + 1) - holeNumber;
+        }
+
         if (m_sharedData.holeCount == 2)
         {
-            holeNumber += 9;
+            holeNumber += m_holeData.size();// 9;
         }
 
         auto& data = e.getComponent<cro::Callback>().getUserData<TextCallbackData>();
