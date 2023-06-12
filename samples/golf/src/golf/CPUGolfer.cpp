@@ -389,13 +389,17 @@ void CPUGolfer::setPuttingPower(float power)
 
 std::size_t CPUGolfer::getSkillIndex() const
 {
-    std::int32_t offset = m_activePlayer.player % 2;
-    if (m_skillIndex > 2)
-    {
-        offset *= -1;
-    }
+    //std::int32_t offset = m_activePlayer.player % 2;
+    //if (m_skillIndex > 2)
+    //{
+    //    offset *= -1;
+    //}
 
-    return std::min(static_cast<std::int32_t>(m_skills.size() - 1), static_cast<std::int32_t>(m_skillIndex) + offset);
+    std::int32_t offset = ((m_activePlayer.player + 2) % 3) * 2;
+
+    return std::clamp((static_cast<std::int32_t>(m_skillIndex) - offset), 0, 5);
+
+    //return std::min(static_cast<std::int32_t>(m_skills.size() - 1), static_cast<std::int32_t>(m_skillIndex) + offset);
 }
 
 //private

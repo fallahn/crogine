@@ -1128,7 +1128,7 @@ void MenuState::createAvatarMenu(cro::Entity parent)
                     {
                         if (!m_sharedData.clientConnection.connected)
                         {
-                            m_sharedData.serverInstance.launch(ConstVal::MaxClients, Server::GameMode::Golf);
+                            m_sharedData.serverInstance.launch(ConstVal::MaxClients, Server::GameMode::Golf, m_sharedData.fastCPU);
 
 #ifndef USE_GNS
                             //small delay for server to get ready

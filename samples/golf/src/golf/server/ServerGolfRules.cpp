@@ -1,6 +1,7 @@
 #include "../PacketIDs.hpp"
 #include "../BallSystem.hpp"
 #include "../Clubs.hpp"
+#include "../GameConsts.hpp"
 
 #include "ServerMessages.hpp"
 #include "ServerGolfState.hpp"
@@ -83,6 +84,9 @@ void GolfState::calcCPUPosition()
     //std::int32_t skill = m_playerInfo[0].player * 3;
 
     auto& ball = m_playerInfo[0].ballEntity.getComponent<Ball>();
+    auto animID = ball.terrain == TerrainID::Green ? AnimationID::Putt : AnimationID::Swing;
+    m_sharedData.host.broadcastPacket(PacketID::ActorAnimation, std::uint8_t(animID), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+
     std::int32_t clubID = ClubID::Putter;
 
     //get longest range available

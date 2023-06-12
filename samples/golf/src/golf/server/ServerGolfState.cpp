@@ -79,7 +79,7 @@ GolfState::GolfState(SharedData& sd)
         initScene();
         buildWorld();
 
-        auto level = std::min(Social::getLevel(), 20) + 2;
+        auto level = std::min(Social::getLevel(), 24) + 2;
         m_skillIndex = level / 4;
     }
 

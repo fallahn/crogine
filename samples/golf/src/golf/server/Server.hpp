@@ -58,7 +58,7 @@ public:
     //max connections are not game mode dependent as the
     //tutorial shares a game mode with golf, but must be
     //limited to a single connection.
-    void launch(std::size_t maxConnections, std::int32_t gameMode);
+    void launch(std::size_t maxConnections, std::int32_t gameMode, bool fastCPU);
     bool running() const { return m_running; }
     void stop();
 

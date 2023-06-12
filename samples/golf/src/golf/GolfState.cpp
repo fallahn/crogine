@@ -979,7 +979,7 @@ void GolfState::handleMessage(const cro::Message& msg)
                 }
             }
 
-            m_gameScene.setSystemActive<CameraFollowSystem>(true);
+            m_gameScene.setSystemActive<CameraFollowSystem>(!m_sharedData.fastCPU);
         }
         else if (data.userType == cro::Message::SkeletalAnimationEvent::Stopped)
         {
