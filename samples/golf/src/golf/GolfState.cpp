@@ -5542,7 +5542,17 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
                     }
                 }*/
 
-                m_activeAvatar->model.getComponent<cro::Skeleton>().play(m_activeAvatar->animationIDs[animID], 1.f, 0.4f);
+                /*bool isCPU = m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].isCPU
+                    && m_sharedData.fastCPU;*/
+
+                auto anim = m_activeAvatar->animationIDs[animID];
+                auto& skel = m_activeAvatar->model.getComponent<cro::Skeleton>();
+
+                if (skel.getState() == cro::Skeleton::Stopped
+                    || skel.getActiveAnimations().second != anim)
+                {
+                    skel.play(anim, /*isCPU ? 2.f :*/ 1.f, 0.4f);
+                }
             }
         }
             break;

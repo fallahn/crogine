@@ -550,16 +550,14 @@ void GolfSoundDirector::process(float dt)
             if (!cp.empty())
             {
                 auto pos = glm::vec3((cp[cro::Util::Random::value(0u, cp.size() - 1)][3]));
-                auto& emitter = playSound(AudioID::CrowdClearThroat + cro::Util::Random::value(0, 2), pos).getComponent<cro::AudioEmitter>();
+                auto& emitter = playSound(AudioID::CrowdClearThroat + cro::Util::Random::value(0, 2), pos, 1.6f).getComponent<cro::AudioEmitter>();
                 emitter.setMixerChannel(MixerChannel::Environment);
-                //emitter.setRolloff(0.5f);
-
-                LogI << "Crowd sound at " << pos << std::endl;
+                emitter.setRolloff(0.45f);
             }
         }
 
         m_crowdTimer.restart();
-        m_crowdTime = cro::seconds(5.f);// MinCrowdTime + cro::seconds(static_cast<float>(cro::Util::Random::value(-5, 25)));
+        m_crowdTime = MinCrowdTime + cro::seconds(static_cast<float>(cro::Util::Random::value(-5, 25)));
     }
 }
 

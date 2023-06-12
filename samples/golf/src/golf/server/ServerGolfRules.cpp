@@ -41,7 +41,7 @@ void GolfState::makeCPUMove()
             //wrap in an ent so we can add a small delay
             auto entity = m_scene.createEntity();
             entity.addComponent<cro::Callback>().active = true;
-            entity.getComponent<cro::Callback>().setUserData<float>(1.f);
+            entity.getComponent<cro::Callback>().setUserData<float>(1.2f);
             entity.getComponent<cro::Callback>().function =
                 [&](cro::Entity e, float dt)
             {
@@ -89,8 +89,7 @@ void GolfState::calcCPUPosition()
     //std::int32_t skill = m_playerInfo[0].player * 3;
 
     auto& ball = m_playerInfo[0].ballEntity.getComponent<Ball>();
-    auto animID = ball.terrain == TerrainID::Green ? AnimationID::Putt : AnimationID::Swing;
-    m_sharedData.host.broadcastPacket(PacketID::ActorAnimation, std::uint8_t(animID), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+    auto animID = ball.terrain == TerrainID::Green ? AnimationID::Putt : AnimationID::Celebrate;
 
     std::int32_t clubID = ClubID::Putter;
 
@@ -353,9 +352,11 @@ void GolfState::calcCPUPosition()
     default:
         ball.state = Ball::State::Paused;
         break;
-    case TerrainID::Fairway:
     case TerrainID::Bunker:
     case TerrainID::Rough:
+        animID = AnimationID::Disappoint;
+        [[fallthrough]];
+    case TerrainID::Fairway:
         ball.state = Ball::State::Flight;
         ball.velocity = velOffset; //add a tiny bit of velocity to prevent div0/nan in BallSystem
         break;
@@ -368,8 +369,11 @@ void GolfState::calcCPUPosition()
     case TerrainID::Stone:
     case TerrainID::Water:
         ball.state = Ball::State::Reset;
+        animID = AnimationID::Disappoint;
         break;
     }
+
+    m_sharedData.host.broadcastPacket(PacketID::ActorAnimation, std::uint8_t(animID), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
 }
 
 void GolfState::handleDefaultRules(const GolfBallEvent& data)
