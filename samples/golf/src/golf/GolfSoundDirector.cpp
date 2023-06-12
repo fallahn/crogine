@@ -171,7 +171,6 @@ GolfSoundDirector::GolfSoundDirector(cro::AudioResource& ar)
         {
             //get a default sound so we at least don't have nullptr
             m_audioSources[i] = &ar.get(1010101);
-            LogW << "Failed opening " << FilePaths[i] << std::endl;
         }
     }
 

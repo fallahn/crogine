@@ -876,8 +876,9 @@ void GolfState::handleMessage(const cro::Message& msg)
 
             m_gameScene.getSystem<ClientCollisionSystem>()->setActiveClub(getClub());
 
+            auto isCPU = m_sharedData.localConnectionData.playerData[m_currentPlayer.player].isCPU;
             if (m_currentPlayer.client == m_sharedData.localConnectionData.connectionID
-                && !m_sharedData.localConnectionData.playerData[m_currentPlayer.player].isCPU)
+                && !isCPU)
             {
                 auto strLow = static_cast<std::uint16_t>(50000.f * m_inputParser.getPower()) * m_sharedData.enableRumble;
                 auto strHigh = static_cast<std::uint16_t>(35000.f * m_inputParser.getPower()) * m_sharedData.enableRumble;
@@ -979,7 +980,7 @@ void GolfState::handleMessage(const cro::Message& msg)
                 }
             }
 
-            m_gameScene.setSystemActive<CameraFollowSystem>(!m_sharedData.fastCPU);
+            m_gameScene.setSystemActive<CameraFollowSystem>(!(isCPU && m_sharedData.fastCPU));
         }
         else if (data.userType == cro::Message::SkeletalAnimationEvent::Stopped)
         {

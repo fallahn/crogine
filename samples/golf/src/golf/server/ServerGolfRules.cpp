@@ -77,8 +77,13 @@ void GolfState::calcCPUPosition()
     //}
 
     std::int32_t offset = ((m_playerInfo[0].player + 2) % 3) * 2;
-
     skill = std::clamp((skill - offset), 0, 6);
+
+    //randomly invert skill
+    if (cro::Util::Random::value(0, 49) == 25)
+    {
+        skill = (skill + 3) % 6;
+    }
 
 
     //std::int32_t skill = m_playerInfo[0].player * 3;
@@ -191,7 +196,7 @@ void GolfState::calcCPUPosition()
         //if club is not a putter, and VERY slim chance if not a wedge
         if (ball.terrain == TerrainID::Green)
         {
-            if (cro::Util::Random::value(0, 3 + (skill / 2)) == 0)
+            if (cro::Util::Random::value(0, 3 + (skill / 2)) == (m_playerInfo[0].player % 4))
             {
                 //add target offset
                 pos += randomNormal() * cro::Util::Random::value(0.05f, 0.2f);
@@ -227,7 +232,7 @@ void GolfState::calcCPUPosition()
                 //if len > 20 almost always add offset so we don't hole the ball
                 if (l2 > (20.f * 20.f))
                 {
-                    if (cro::Util::Random::value(0, 100 - (skill * 10)) != 0)
+                    if (cro::Util::Random::value(0, 100 - (skill * 10)) != m_playerInfo[0].player)
                     {
                         pos += randomNormal() * static_cast<float>(cro::Util::Random::value(3, 10)) / 10.f;
                     }
