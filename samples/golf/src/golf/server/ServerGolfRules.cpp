@@ -27,6 +27,25 @@ namespace
         return { v.x, 0.f, -v.y };
         //return { 1.f, 0.f, 0.f };
     }
+
+    float getClub(float dist)
+    {
+        if (dist > 115.f) //forces a cut-off for pitch n putt
+        {
+            dist = 1000.f;
+        }
+
+        std::int32_t clubID = ClubID::SandWedge;
+        while ((Clubs[clubID].getDefaultTarget() * 1.05f) < dist
+            && clubID != ClubID::Driver)
+        {
+            do
+            {
+                clubID--;
+            } while (clubID != ClubID::Driver);
+        }
+        return clubID;
+    }
 }
 
 using namespace sv;
@@ -50,7 +69,79 @@ void GolfState::makeCPUMove()
 
                 if (currTime < 0)
                 {
-                    calcCPUPosition();
+                    //TODO check if we're putting and use other calc if needed
+                    auto& ball = m_playerInfo[0].ballEntity.getComponent<Ball>();
+                    auto animID = ball.terrain == TerrainID::Green ? AnimationID::Putt : AnimationID::Celebrate;
+                    
+                    auto pos = calcCPUPosition(); //TODO just use this for putting
+
+
+                    //test terrain height and correct final position
+                    auto result = m_scene.getSystem<BallSystem>()->getTerrain(pos);
+
+                    //technically this means CPU players never make really bad shots
+                    //but otherwise they just get stuck in a loop
+                    switch (result.terrain)
+                    {
+                    case TerrainID::Water:
+                    case TerrainID::Stone:
+                    case TerrainID::Scrub:
+                    {
+                        std::int32_t tries = 300;
+                        auto dir = glm::normalize(pos - m_playerInfo[0].position);
+                        do
+                        {
+                            pos -= dir;
+                            result = m_scene.getSystem<BallSystem>()->getTerrain(pos);
+                        } while (tries--
+                            && (result.terrain == TerrainID::Water || result.terrain == TerrainID::Stone || result.terrain == TerrainID::Scrub)
+                            && glm::length2(pos) > 1);
+                    }
+                    break;
+                    default: break;
+                    }
+
+                    pos.y = result.intersection.y;
+
+                    CRO_ASSERT(!std::isnan(pos.x), "");
+                    CRO_ASSERT(!std::isnan(pos.y), "");
+                    CRO_ASSERT(!std::isnan(pos.z), "");
+
+                    m_playerInfo[0].ballEntity.getComponent<cro::Transform>().setPosition(pos);
+                    m_playerInfo[0].holeScore[m_currentHole]++;
+
+                    const auto velOffset = glm::normalize(pos - m_playerInfo[0].position) * 0.001f;
+
+                    ball.terrain = result.terrain;
+                    switch (result.terrain)
+                    {
+                    default:
+                        ball.state = Ball::State::Paused;
+                        break;
+                    case TerrainID::Bunker:
+                    case TerrainID::Rough:
+                        animID = AnimationID::Disappoint;
+                        [[fallthrough]];
+                    case TerrainID::Fairway:
+                        ball.state = Ball::State::Flight;
+                        ball.velocity = velOffset; //add a tiny bit of velocity to prevent div0/nan in BallSystem
+                        break;
+                    case TerrainID::Green:
+                    case TerrainID::Hole:
+                        ball.state = Ball::State::Putt;
+                        ball.velocity = velOffset;
+                        break;
+                    case TerrainID::Scrub:
+                    case TerrainID::Stone:
+                    case TerrainID::Water:
+                        ball.state = Ball::State::Reset;
+                        animID = AnimationID::Disappoint;
+                        break;
+                    }
+
+                    m_sharedData.host.broadcastPacket(PacketID::ActorAnimation, std::uint8_t(animID), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+
+
 
                     m_sharedData.host.broadcastPacket<std::uint8_t>(PacketID::CPUThink, 1, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
                     e.getComponent<cro::Callback>().active = false;
@@ -63,18 +154,13 @@ void GolfState::makeCPUMove()
     }
 }
 
-void GolfState::calcCPUPosition()
+glm::vec3 GolfState::calcCPUPosition()
 {
     auto targetDir = m_holeData[m_currentHole].target - m_playerInfo[0].position;
     auto pinDir = m_holeData[m_currentHole].pin - m_playerInfo[0].position;
 
     glm::vec3 pos = glm::vec3(0.f);
     std::int32_t skill = m_skillIndex;
-    //std::int32_t offset = m_playerInfo[0].player % 2;
-    //if (m_skillIndex > 2)
-    //{
-    //    offset *= -1;
-    //}
 
     std::int32_t offset = ((m_playerInfo[0].player + 2) % 3) * 2;
     skill = std::clamp((skill - offset), 0, 6);
@@ -89,28 +175,13 @@ void GolfState::calcCPUPosition()
     //std::int32_t skill = m_playerInfo[0].player * 3;
 
     auto& ball = m_playerInfo[0].ballEntity.getComponent<Ball>();
-    auto animID = ball.terrain == TerrainID::Green ? AnimationID::Putt : AnimationID::Celebrate;
-
     std::int32_t clubID = ClubID::Putter;
 
     //get longest range available
     if (ball.terrain != TerrainID::Green)
     {
         auto dist = glm::length(m_holeData[m_currentHole].tee - m_holeData[m_currentHole].pin);
-        if (dist > 115.f) //forces a cut-off for pitch n putt
-        {
-            dist = 1000.f;
-        }
-
-        clubID = ClubID::SandWedge;
-        while ((Clubs[clubID].getDefaultTarget() * 1.05f) < dist
-            && clubID != ClubID::Driver)
-        {
-            do
-            {
-                clubID--;
-            } while (clubID != ClubID::Driver);
-        }
+        clubID = getClub(dist);
     }
     const float clubDist = Clubs[clubID].getTargetAtLevel(std::min(2, skill / 3));
     
@@ -303,77 +374,11 @@ void GolfState::calcCPUPosition()
         }
     }
     
-    
-    
-    
+
     pos.x = std::clamp(pos.x, 0.f, 320.f);
     pos.z = std::clamp(pos.z, -200.f, 0.f);
 
-    //test terrain height and correct final position
-    auto result = m_scene.getSystem<BallSystem>()->getTerrain(pos);
-
-    //technically this means CPU players never make really bad shots
-    //but otherwise they just get stuck in a loop
-    switch (result.terrain)
-    {
-    case TerrainID::Water:
-    case TerrainID::Stone:
-    case TerrainID::Scrub:
-    {
-        std::int32_t tries = 300;
-        auto dir = glm::normalize(pos - m_playerInfo[0].position);
-        do
-        {
-            pos -= dir;
-            result = m_scene.getSystem<BallSystem>()->getTerrain(pos);
-        } while (tries-- 
-            && (result.terrain == TerrainID::Water || result.terrain == TerrainID::Stone || result.terrain == TerrainID::Scrub)
-            && glm::length2(pos) > 1);
-    }
-        break;
-    default: break;
-    }
-
-
-    pos.y = result.intersection.y;
-
-    CRO_ASSERT(!std::isnan(pos.x), "");
-    CRO_ASSERT(!std::isnan(pos.y), "");
-    CRO_ASSERT(!std::isnan(pos.z), "");
-
-    m_playerInfo[0].ballEntity.getComponent<cro::Transform>().setPosition(pos);
-    m_playerInfo[0].holeScore[m_currentHole]++;
-
-    const auto velOffset = glm::normalize(pos - m_playerInfo[0].position) * 0.001f;
-
-    ball.terrain = result.terrain;
-    switch (result.terrain)
-    {
-    default:
-        ball.state = Ball::State::Paused;
-        break;
-    case TerrainID::Bunker:
-    case TerrainID::Rough:
-        animID = AnimationID::Disappoint;
-        [[fallthrough]];
-    case TerrainID::Fairway:
-        ball.state = Ball::State::Flight;
-        ball.velocity = velOffset; //add a tiny bit of velocity to prevent div0/nan in BallSystem
-        break;
-    case TerrainID::Green:
-    case TerrainID::Hole:
-        ball.state = Ball::State::Putt;
-        ball.velocity = velOffset;
-        break;
-    case TerrainID::Scrub:
-    case TerrainID::Stone:
-    case TerrainID::Water:
-        ball.state = Ball::State::Reset;
-        animID = AnimationID::Disappoint;
-        break;
-    }
-
-    m_sharedData.host.broadcastPacket(PacketID::ActorAnimation, std::uint8_t(animID), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+    return pos;
 }
 
 void GolfState::handleDefaultRules(const GolfBallEvent& data)
