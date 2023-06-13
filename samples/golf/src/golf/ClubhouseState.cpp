@@ -127,7 +127,8 @@ ClubhouseState::ClubhouseState(cro::StateStack& ss, cro::State::Context ctx, Sha
     m_viewScale         (2.f),
     m_currentMenu       (MenuID::Main),
     m_prevMenu          (MenuID::Main),
-    m_gameCreationIndex (0)
+    m_gameCreationIndex (0),
+    m_arcadeIndex       (0)
 {
     //if we were returning from arcade this tidies up, else does nothing
     gg.unloadPlugin();
@@ -280,27 +281,28 @@ ClubhouseState::ClubhouseState(cro::StateStack& ss, cro::State::Context ctx, Sha
     Social::setGroup(0);
 
 #ifdef CRO_DEBUG_
-    //registerWindow([&]()
-    //    {
-    //        if (ImGui::Begin("Buns"))
-    //        {
-    //            float maxDepth = m_backgroundScene.getActiveCamera().getComponent<cro::Camera>().getMaxShadowDistance();
-    //            if (ImGui::SliderFloat("Depth", &maxDepth, 1.f, 30.f))
-    //            {
-    //                m_backgroundScene.getActiveCamera().getComponent<cro::Camera>().setMaxShadowDistance(maxDepth);
-    //            }
+    registerWindow([&]()
+        {
+            if (ImGui::Begin("Buns"))
+            {
+                ImGui::Text("Index %u", m_arcadeIndex);
+                //float maxDepth = m_backgroundScene.getActiveCamera().getComponent<cro::Camera>().getMaxShadowDistance();
+                //if (ImGui::SliderFloat("Depth", &maxDepth, 1.f, 30.f))
+                //{
+                //    m_backgroundScene.getActiveCamera().getComponent<cro::Camera>().setMaxShadowDistance(maxDepth);
+                //}
 
-    //            float ext = m_backgroundScene.getActiveCamera().getComponent<cro::Camera>().getShadowExpansion();
-    //            if (ImGui::SliderFloat("ext", &ext, 0.f, 30.f))
-    //            {
-    //                m_backgroundScene.getActiveCamera().getComponent<cro::Camera>().setShadowExpansion(ext);
-    //            }
+                //float ext = m_backgroundScene.getActiveCamera().getComponent<cro::Camera>().getShadowExpansion();
+                //if (ImGui::SliderFloat("ext", &ext, 0.f, 30.f))
+                //{
+                //    m_backgroundScene.getActiveCamera().getComponent<cro::Camera>().setShadowExpansion(ext);
+                //}
 
-    //            auto rot = m_backgroundScene.getSunlight().getComponent<cro::Transform>().getRotation();
-    //            ImGui::Text("%3.3f, %3.3f, %3.3f, %3.3f", rot.x, rot.y, rot.z, rot.w);
-    //        }
-    //        ImGui::End();
-    //    });
+                //auto rot = m_backgroundScene.getSunlight().getComponent<cro::Transform>().getRotation();
+                //ImGui::Text("%3.3f, %3.3f, %3.3f, %3.3f", rot.x, rot.y, rot.z, rot.w);
+            }
+            ImGui::End();
+        });
 #endif
 }
 
@@ -321,7 +323,7 @@ bool ClubhouseState::handleEvent(const cro::Event& evt)
             m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Dummy);
             m_menuEntities[m_currentMenu].getComponent<cro::Callback>().getUserData<MenuData>().targetMenu = MenuID::Main;
             m_menuEntities[m_currentMenu].getComponent<cro::Callback>().active = true;
-
+            m_currentMenu = MenuID::Dummy;
             m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
             break;
         case MenuID::Join:
@@ -329,12 +331,19 @@ bool ClubhouseState::handleEvent(const cro::Event& evt)
             m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Dummy);
             m_menuEntities[m_currentMenu].getComponent<cro::Callback>().getUserData<MenuData>().targetMenu = MenuID::PlayerSelect;
             m_menuEntities[m_currentMenu].getComponent<cro::Callback>().active = true;
-
+            m_currentMenu = MenuID::Dummy;
             m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
             break;
         case MenuID::Lobby:
             m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
             quitLobby();
+            break;
+        case MenuID::HallOfFame:
+            m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Dummy);
+            m_menuEntities[m_currentMenu].getComponent<cro::Callback>().getUserData<HOFCallbackData>().state = 2;
+            m_menuEntities[m_currentMenu].getComponent<cro::Callback>().active = true;
+            m_currentMenu = MenuID::Dummy;
+            m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
             break;
         }
     };
@@ -343,10 +352,33 @@ bool ClubhouseState::handleEvent(const cro::Event& evt)
     {
         switch (evt.key.keysym.sym)
         {
-        default: break;
+        default: 
+            if (m_arcadeIndex < Arcade.size())
+            {
+                if (evt.key.keysym.sym == Arcade[m_arcadeIndex])
+                {
+                    m_arcadeIndex++;
+                    if (m_arcadeIndex == Arcade.size())
+                    {
+                        //MAGIC
+                        if (m_arcadeEnt.isValid())
+                        {
+                            m_arcadeEnt.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+                            m_arcadeEnt.getComponent<cro::UIInput>().enabled = true;
+                        }
+                    }
+                }
+                else
+                {
+                    m_arcadeIndex = 0;
+                }
+            }
+            
+            break;
         case SDLK_RETURN:
         case SDLK_RETURN2:
         case SDLK_KP_ENTER:
+            m_arcadeIndex = 0;
             applyTextEdit();
             break;
         case SDLK_ESCAPE:

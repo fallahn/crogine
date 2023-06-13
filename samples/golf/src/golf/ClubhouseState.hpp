@@ -78,6 +78,12 @@ struct TableClientData final : public TableData
     std::int32_t ballSkinIndex = 0;
 };
 
+struct HOFCallbackData final
+{
+    std::int32_t state = 0; //in,hold,out
+    float progress = 0.f;
+};
+
 struct SharedStateData;
 struct SharedProfileData;
 class ClubhouseState final : public cro::State, public cro::GuiClient
@@ -102,6 +108,7 @@ public:
             Dummy,
             Main, PlayerSelect,
             Join, Lobby,
+            HallOfFame,
             Inactive,
 
             Count
@@ -196,6 +203,20 @@ private:
 
     LobbyPager m_lobbyPager;
 
+    static constexpr std::array<std::int32_t, 8u> Arcade =
+    {
+        SDLK_UP,
+        SDLK_UP,
+        SDLK_DOWN,
+        SDLK_DOWN,
+        SDLK_LEFT,
+        SDLK_RIGHT,
+        SDLK_LEFT,
+        SDLK_RIGHT,
+    };
+    std::size_t m_arcadeIndex;
+    cro::Entity m_arcadeEnt;
+
     void addSystems();
     void loadResources();
     void validateTables();
@@ -208,6 +229,7 @@ private:
     void createJoinMenu(cro::Entity, std::uint32_t, std::uint32_t);
     void createBrowserMenu(cro::Entity, std::uint32_t, std::uint32_t);
     void createLobbyMenu(cro::Entity, std::uint32_t, std::uint32_t);
+    void createStatMenu(cro::Entity, std::uint32_t, std::uint32_t);
 
     void updateLobbyData(const net::NetEvent&);
     void updateLobbyList();
