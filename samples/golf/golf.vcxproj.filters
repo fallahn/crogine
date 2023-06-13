@@ -728,6 +728,9 @@
     <ClInclude Include="src\golf\LeaderboardState.hpp">
       <Filter>Header Files\golf\client\states</Filter>
     </ClInclude>
+    <ClInclude Include="src\golf\server\CPUStats.hpp">
+      <Filter>Header Files\golf\server</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="src\golf\WaterShader.inl">
