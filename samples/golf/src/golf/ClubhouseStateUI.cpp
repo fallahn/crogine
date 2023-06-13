@@ -2375,7 +2375,20 @@ void ClubhouseState::createStatMenu(cro::Entity parent, std::uint32_t mouseEnter
     
 
     //leaderboards
+#ifdef USE_GNS
     entity = createButton("Leaderboards");
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
+        m_uiScene.getSystem<cro::UISystem>()->addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
+            {
+                if (activated(evt))
+                {
+                    requestStackPush(StateID::Leaderboard);
+                    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+                }
+            });
+#else
+    textPos.y -= LineSpacing;
+#endif
     textPos.y -= LineSpacing;
     
     //back
