@@ -366,6 +366,8 @@ bool ClubhouseState::handleEvent(const cro::Event& evt)
                         {
                             m_arcadeEnt.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
                             m_arcadeEnt.getComponent<cro::UIInput>().enabled = true;
+
+                            m_audioEnts[AudioID::Win].getComponent<cro::AudioEmitter>().play();
                         }
                     }
                 }
@@ -766,6 +768,8 @@ void ClubhouseState::loadResources()
     m_audioEnts[AudioID::Accept].addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("accept");
     m_audioEnts[AudioID::Back] = m_uiScene.createEntity();
     m_audioEnts[AudioID::Back].addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("back");
+    m_audioEnts[AudioID::Win] = m_uiScene.createEntity();
+    m_audioEnts[AudioID::Win].addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("star");
 
 
     validateTables();

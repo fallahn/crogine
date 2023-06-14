@@ -220,7 +220,8 @@ glm::vec3 GolfState::calcCPUPosition()
                 dp > 0.4 && dp < 0.97f) //target in front, but not the same dir as pin
             {
                 //don't use if too close
-                if (glm::length2(targetDir) > (3.f * 3.f))
+                if (glm::length2(targetDir) > (3.f * 3.f)
+                    && glm::length2(pinDir) > glm::length2(targetDir))
                 {
                     pos = m_holeData[m_currentHole].target;
                 }
@@ -365,7 +366,7 @@ glm::vec3 GolfState::calcCPUPosition()
 
         //if we're really close to the hole plop it in based on stroke accuracy
         if (glm::length2(pos - m_holeData[m_currentHole].pin) < (0.15f * 0.15f) &&
-            cro::Util::Random::value(1, 100) > CPUStats[cpuID][CPUStat::StrokeAccuracy] * 20)
+            cro::Util::Random::value(1, 100) > CPUStats[cpuID][CPUStat::StrokeAccuracy] * 10)
         {
             pos = m_holeData[m_currentHole].pin;
         }

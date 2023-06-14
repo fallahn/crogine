@@ -5533,6 +5533,16 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
             if (m_activeAvatar)
             {
                 auto animID = evt.packet.as<std::uint8_t>();
+                if (animID == AnimationID::Celebrate)
+                {
+                    m_clubModels[ClubModel::Wood].getComponent<cro::Transform>().setScale(glm::vec3(0.f));
+                    m_clubModels[ClubModel::Iron].getComponent<cro::Transform>().setScale(glm::vec3(0.f));
+                }
+                else
+                {
+                    m_clubModels[ClubModel::Wood].getComponent<cro::Transform>().setScale(glm::vec3(1.f));
+                    m_clubModels[ClubModel::Iron].getComponent<cro::Transform>().setScale(glm::vec3(1.f));
+                }
 
                 /*if (animID == AnimationID::Swing)
                 {
@@ -5542,14 +5552,13 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
                     }
                 }*/
 
-                /*bool isCPU = m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].isCPU
-                    && m_sharedData.fastCPU;*/
+                //TODO scale club model to zero if not idle or swing
 
                 auto anim = m_activeAvatar->animationIDs[animID];
                 auto& skel = m_activeAvatar->model.getComponent<cro::Skeleton>();
 
                 if (skel.getState() == cro::Skeleton::Stopped
-                    || skel.getActiveAnimations().second != anim)
+                    || (skel.getActiveAnimations().first != anim && skel.getActiveAnimations().second != anim))
                 {
                     skel.play(anim, /*isCPU ? 2.f :*/ 1.f, 0.4f);
                 }

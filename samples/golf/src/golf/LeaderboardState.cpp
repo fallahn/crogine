@@ -240,18 +240,9 @@ void LeaderboardState::buildScene()
             e.getComponent<cro::Transform>().setScale(m_viewScale * cro::Util::Easing::easeOutQuint(currTime));
             if (currTime == 0)
             {
-                resetConfirmation();
                 requestStackPop();
 
                 state = RootCallbackData::FadeIn;
-
-                if (m_requestRestart)
-                {
-                    auto* msg = postMessage<SystemEvent>(MessageID::SystemMessage);
-                    msg->type = SystemEvent::RestartActiveMode;
-
-                    m_requestRestart = false;
-                }
             }
             break;
         }

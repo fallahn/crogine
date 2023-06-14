@@ -132,6 +132,7 @@ private:
         enum
         {
             Accept, Back,
+            Win,
 
             Count
         };
