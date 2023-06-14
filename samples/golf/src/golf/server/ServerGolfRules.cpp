@@ -28,7 +28,7 @@ namespace
         //return { 1.f, 0.f, 0.f };
     }
 
-    float getClub(float dist)
+    std::int32_t getClub(float dist)
     {
         if (dist > 115.f) //forces a cut-off for pitch n putt
         {

@@ -630,14 +630,16 @@ bool MenuState::handleEvent(const cro::Event& evt)
             break;
         case cro::GameController::ButtonRightShoulder:
             if (m_sharedData.hosting
-                && m_currentMenu == MenuID::Lobby)
+                && m_currentMenu == MenuID::Lobby
+                && m_lobbyWindowEntities[LobbyEntityID::HoleSelection].getComponent<cro::Transform>().getScale().x != 0)
             {
                 nextCourse();
             }
             break;
         case cro::GameController::ButtonLeftShoulder:
             if (m_sharedData.hosting
-                && m_currentMenu == MenuID::Lobby)
+                && m_currentMenu == MenuID::Lobby
+                && m_lobbyWindowEntities[LobbyEntityID::HoleSelection].getComponent<cro::Transform>().getScale().x != 0)
             {
                 prevCourse();
             }

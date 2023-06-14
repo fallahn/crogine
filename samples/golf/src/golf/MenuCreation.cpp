@@ -1897,6 +1897,35 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity.getComponent<cro::Callback>().function = infoButtonEnable;
     infoBgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
+    //button to show leaderboards
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheetV2.getSprite("leaderboard_highlight");
+    entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+    entity.addComponent<UIElement>().absolutePosition = { 80.f, 17.f };
+    entity.getComponent<UIElement>().depth = 0.1f;
+    entity.addComponent<cro::UIInput>().area = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.getComponent<cro::UIInput>().setGroup(MenuID::Lobby);
+    entity.getComponent<cro::UIInput>().setSelectionIndex(5);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = m_courseSelectCallbacks.selectHighlight;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = m_courseSelectCallbacks.unselectHighlight;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = m_uiScene.getSystem<cro::UISystem>()->addCallback(
+        [&](cro::Entity, const cro::ButtonEvent& evt)
+        {
+            if (activated(evt))
+            {
+                requestStackPush(StateID::Leaderboard);
+                m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+            }
+        }
+    );
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement;
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function = infoButtonEnable;
+    infoBgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
     //banner
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 0.f, BannerPosition, -0.1f });

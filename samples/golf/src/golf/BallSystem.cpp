@@ -341,7 +341,7 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
 
             //test collision
             doCollision(entity);
-            doBallCollision(entity);
+            //doBallCollision(entity);
 
             CRO_ASSERT(!std::isnan(tx.getPosition().x), "");
             CRO_ASSERT(!std::isnan(ball.velocity.x), "");
@@ -352,7 +352,7 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
     {
         ball.delay -= dt;
 
-        doBallCollision(entity);
+        //doBallCollision(entity);
 
         auto& tx = entity.getComponent<cro::Transform>();
         auto position = tx.getPosition();
@@ -462,7 +462,7 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
         if (ball.delay < 0)
         {
             
-            doBallCollision(entity);
+            //doBallCollision(entity);
 
             auto& tx = entity.getComponent<cro::Transform>();
             auto position = tx.getPosition();
@@ -784,6 +784,10 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
         ball.delay -= dt;
         if (ball.delay < 0)
         {
+            //do the ball collision here to separate any balls which were overlapping when they came to rest
+            doBallCollision(entity);
+
+
             ball.spin = { 0.f, 0.f };
             ball.initialForwardVector = { 0.f, 0.f, 0.f };
             ball.initialSideVector = { 0.f, 0.f, 0.f };
