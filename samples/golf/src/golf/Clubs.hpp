@@ -93,6 +93,8 @@ public:
     float getSideSpinMultiplier() const { return m_sidespin; }
     float getTopSpinMultiplier() const { return m_topspin; }
 
+    static std::int32_t getClubLevel(); //0-2 for range
+
 private:
     const std::int32_t m_id = -1;
     std::string m_name; //displayed in UI

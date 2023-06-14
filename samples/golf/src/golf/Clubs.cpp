@@ -163,19 +163,7 @@ float Club::getTarget(float distanceToPin) const
 
 float Club::getBaseTarget() const
 {
-    //check player level and return increased distance
-    auto level = Social::getLevel();
-    //auto level = DebugLevel;
-    if (level > 29)
-    {
-        return ClubStats[m_id].stats[2].target;
-    }
-
-    if (level > 14)
-    {
-        return ClubStats[m_id].stats[1].target;
-    }
-    return ClubStats[m_id].stats[0].target;
+    return ClubStats[m_id].stats[getClubLevel()].target;
 }
 
 float Club::getTargetAtLevel(std::int32_t level) const
@@ -186,6 +174,25 @@ float Club::getTargetAtLevel(std::int32_t level) const
 float Club::getDefaultTarget() const
 {
     return ClubStats[m_id].stats[0].target;
+}
+
+std::int32_t Club::getClubLevel()
+{
+    //check player level and return increased distance
+    auto level = Social::getLevel();
+    //auto level = DebugLevel;
+
+    if (level > 29)
+    {
+        return 2;
+    }
+
+    if (level > 14)
+    {
+        return 1;
+    }
+
+    return 0;
 }
 
 //private

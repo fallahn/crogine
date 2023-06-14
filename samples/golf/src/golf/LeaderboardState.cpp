@@ -226,12 +226,6 @@ void LeaderboardState::buildScene()
             currTime = std::min(1.f, currTime + (dt * 2.f));
             e.getComponent<cro::Transform>().setScale(m_viewScale * cro::Util::Easing::easeOutQuint(currTime));
 
-            {
-                auto reset = (m_sharedData.baseState == StateID::DrivingRange);
-                m_restartButton.getComponent<cro::UIInput>().enabled = reset;
-                m_restartButton.getComponent<cro::Transform>().setScale(glm::vec2(reset ? 1.f : 0.f));
-            }
-
             if (currTime == 1)
             {
                 state = RootCallbackData::FadeOut;
@@ -354,7 +348,7 @@ void LeaderboardState::buildScene()
     };
 
     //options button
-    entity = createItem(glm::vec2(0.f, 16.f), "Options", menuEntity);
+    entity = createItem(glm::vec2(0.f, 16.f), "Hello", menuEntity);
     entity.getComponent<cro::Text>().setFillColour(TextGoldColour);
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Main);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
@@ -362,7 +356,7 @@ void LeaderboardState::buildScene()
             {
                 if (activated(evt))
                 {
-                    requestStackPush(StateID::Options);
+                    
                 }            
             });
 
@@ -377,137 +371,6 @@ void LeaderboardState::buildScene()
                     quitState();
                 }
             });
-
-
-    //restart button
-    entity = createItem(glm::vec2(0.f, -4.f), "Restart Round", menuEntity);
-    entity.getComponent<cro::UIInput>().setGroup(MenuID::Main);
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
-        uiSystem.addCallback([&, menuEntity, confirmEntity](cro::Entity e, cro::ButtonEvent evt) mutable
-            {
-                if (activated(evt))
-                {
-                    confirmEntity.getComponent<cro::Transform>().setPosition(glm::vec2(0.f));
-                    menuEntity.getComponent<cro::Transform>().setPosition(glm::vec2(-10000.f));
-
-                    m_scene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Confirm);
-                    m_confirmationType = ConfirmType::Restart;
-                }
-            });
-    entity.getComponent<cro::UIInput>().enabled = (m_sharedData.baseState == StateID::DrivingRange);
-    entity.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
-    m_restartButton = entity;
-
-
-    //quit button
-    entity = createItem(glm::vec2(0.f, -14.f), "Quit To Menu", menuEntity);
-    entity.getComponent<cro::UIInput>().setGroup(MenuID::Main);
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
-        uiSystem.addCallback([&, menuEntity, confirmEntity](cro::Entity e, cro::ButtonEvent evt) mutable
-            {
-                if (activated(evt))
-                {
-                    confirmEntity.getComponent<cro::Transform>().setPosition(glm::vec2(0.f));
-                    menuEntity.getComponent<cro::Transform>().setPosition(glm::vec2(-10000.f));
-
-                    m_scene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Confirm);
-                    m_confirmationType = ConfirmType::Quit;
-                }
-            });
-
-
-    //confirmation buttons
-    entity = createItem(glm::vec2(-20.f, -12.f), "No", confirmEntity);
-    entity.getComponent<cro::UIInput>().setGroup(MenuID::Confirm);
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
-        uiSystem.addCallback([&,menuEntity, confirmEntity](cro::Entity e, cro::ButtonEvent evt) mutable
-            {
-                if (activated(evt))
-                {
-                    menuEntity.getComponent<cro::Transform>().setPosition(glm::vec2(0.f));
-                    confirmEntity.getComponent<cro::Transform>().setPosition(glm::vec2(-10000.f));
-
-                    m_scene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Main);
-
-                    m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
-                }
-            });
-
-
-    entity = createItem(glm::vec2(20.f, -12.f), "Yes", confirmEntity);
-    entity.getComponent<cro::UIInput>().setGroup(MenuID::Confirm);
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
-        uiSystem.addCallback([&, menuEntity, confirmEntity](cro::Entity e, cro::ButtonEvent evt) mutable
-            {
-                if (activated(evt))
-                {
-                    if (m_confirmationType == ConfirmType::Quit)
-                    {
-                        //this is a kludge which tells the
-                        //menu state to remove any existing connection/server instance
-                        //rather than disconnecting here which would raise an error message
-                        m_sharedData.tutorial = true;
-
-                        requestStackClear();
-                        //requestStackPush(StateID::Menu);
-                        if (m_sharedData.baseState != StateID::Clubhouse)
-                        {
-                            requestStackPush(StateID::Menu);
-                        }
-                        else
-                        {
-                            requestStackPush(StateID::Clubhouse);
-                        }
-                    }
-                    else
-                    {
-                        m_requestRestart = true;
-
-                        //this is done by quitState()
-                        /*menuEntity.getComponent<cro::Transform>().setPosition(glm::vec2(0.f));
-                        confirmEntity.getComponent<cro::Transform>().setPosition(glm::vec2(-10000.f));
-
-                        m_scene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Main);*/
-
-                        quitState();
-                    }
-                    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
-                }
-            });
-
-    entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(glm::vec2(0.f, 12.f));
-    entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
-    entity.getComponent<cro::Text>().setString("Are You Sure?");
-    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
-    centreText(entity);
-    confirmEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-
-
-    resetConfirmation = [&, menuEntity, confirmEntity]() mutable
-    {
-        menuEntity.getComponent<cro::Transform>().setPosition(glm::vec2(0.f));
-        confirmEntity.getComponent<cro::Transform>().setPosition(glm::vec2(-10000.f));
-
-        m_scene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Main);
-    };
-
-
-
-    if (m_sharedData.hosting
-        && !m_sharedData.tutorial)
-    {
-        auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
-        entity = m_scene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition(glm::vec2(0.f, 2.f));
-        entity.addComponent<cro::Drawable2D>();
-        entity.addComponent<cro::Text>(smallFont).setCharacterSize(InfoTextSize);
-        entity.getComponent<cro::Text>().setString("This Will Kick All Players");
-        entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
-        centreText(entity);
-        confirmEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-    }
 
 
     auto updateView = [&, rootNode](cro::Camera& cam) mutable

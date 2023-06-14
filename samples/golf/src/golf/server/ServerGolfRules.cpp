@@ -3,6 +3,7 @@
 #include "../Clubs.hpp"
 #include "../GameConsts.hpp"
 
+#include "CPUStats.hpp"
 #include "ServerMessages.hpp"
 #include "ServerGolfState.hpp"
 
@@ -69,11 +70,11 @@ void GolfState::makeCPUMove()
 
                 if (currTime < 0)
                 {
-                    //TODO check if we're putting and use other calc if needed
                     auto& ball = m_playerInfo[0].ballEntity.getComponent<Ball>();
                     auto animID = ball.terrain == TerrainID::Green ? AnimationID::Putt : AnimationID::Celebrate;
-                    
-                    auto pos = calcCPUPosition(); //TODO just use this for putting
+                 
+                    //this is just separated out so we can swap calcs more easily
+                    auto pos = calcCPUPosition();
 
 
                     //test terrain height and correct final position
@@ -155,6 +156,69 @@ void GolfState::makeCPUMove()
 }
 
 glm::vec3 GolfState::calcCPUPosition()
+{
+    const auto targetDir = m_holeData[m_currentHole].target - m_playerInfo[0].position;
+    const auto pinDir = m_holeData[m_currentHole].pin - m_playerInfo[0].position;
+    auto pos = m_holeData[m_currentHole].pin; //always prefer the pin as the target unless blocked for some reason
+    
+    const auto cpuID = m_cpuProfileIndices[m_playerInfo[0].client * ConstVal::MaxPlayers + m_playerInfo[0].player];
+    CRO_ASSERT(cpuID != -1, "");
+
+    const std::int32_t skill = CPUStats[cpuID][CPUStat::Skill];
+
+    auto& ball = m_playerInfo[0].ballEntity.getComponent<Ball>();
+    std::int32_t clubID = ClubID::Putter;
+
+    //get longest range available
+    if (ball.terrain != TerrainID::Green)
+    {
+        auto dist = glm::length(pinDir);
+        clubID = getClub(dist);
+
+        //check to see if the club range can hit the ball into a valid area,
+        //by reducing pos to max range
+        const float clubDist = Clubs[clubID].getTargetAtLevel(skill);
+        if (auto len2 = glm::length2(pinDir); 
+            len2 > (clubDist * clubDist))
+        {
+            const float reduction = clubDist / std::sqrt(len2);
+            pos = (pinDir * reduction) + m_playerInfo[0].position;
+        }
+
+        auto result = m_scene.getSystem<BallSystem>()->getTerrain(pos);
+        switch (result.terrain)
+        {
+        default: break;
+        case TerrainID::Water:
+        case TerrainID::Stone:
+        case TerrainID::Scrub:
+            //else use the target point instead of the pin
+            pos = m_holeData[m_currentHole].target;
+            break;
+        }
+
+    }
+    //else if we're on a mini-putt course see if there's a dog-leg
+    else if (m_scene.getSystem<BallSystem>()->getPuttFromTee())
+    {
+        if (auto dp = glm::dot(glm::normalize(targetDir), glm::normalize(pinDir)); 
+            dp > 0.4 && dp < 0.97f) //target in front, but not the same dir as pin
+        {
+            //don't use if too close
+            if (glm::length2(targetDir) > (3.f * 3.f))
+            {
+                pos = m_holeData[m_currentHole].target;
+            }
+        }
+    }
+
+
+
+
+    return pos;
+}
+
+glm::vec3 GolfState::calcCPUPositionOld()
 {
     auto targetDir = m_holeData[m_currentHole].target - m_playerInfo[0].position;
     auto pinDir = m_holeData[m_currentHole].pin - m_playerInfo[0].position;
