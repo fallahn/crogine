@@ -781,13 +781,13 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
     break;
     case Ball::State::Paused:
     {
+        //do the ball collision here to separate any balls which were overlapping when they came to rest
+        //we do this outside the time out, else the server won't send the updated position until the next turn
+        doBallCollision(entity);
+
         ball.delay -= dt;
         if (ball.delay < 0)
         {
-            //do the ball collision here to separate any balls which were overlapping when they came to rest
-            doBallCollision(entity);
-
-
             ball.spin = { 0.f, 0.f };
             ball.initialForwardVector = { 0.f, 0.f, 0.f };
             ball.initialSideVector = { 0.f, 0.f, 0.f };
@@ -989,13 +989,12 @@ void BallSystem::doBallCollision(cro::Entity entity)
 
     //don't collide until we moved from our start position
     if (ball.terrain != TerrainID::Hole &&
-        glm::length2(ball.startPoint - tx.getPosition()) > MinDist &&
+        /*glm::length2(ball.startPoint - tx.getPosition()) > MinDist &&*/
         glm::length2(m_holeData->pin - tx.getPosition()) > MinAttractRadius)
     {
         //ball centre is actually pos.y + radius
         glm::vec3 ballPos = entity.getComponent<cro::Transform>().getPosition();
         ballPos.y += Ball::Radius;
-
         const auto& others = getEntities();
         for (auto other : others)
         {
@@ -1017,6 +1016,13 @@ void BallSystem::doBallCollision(cro::Entity entity)
 
                     CRO_ASSERT(!std::isnan(tx.getPosition().x), "");
                     CRO_ASSERT(!std::isnan(ball.velocity.x), "");
+                }
+                else if (testDist == 0)
+                {
+                    //by some chance we're directly on top of each other
+                    //(this might happen in fast CPU play)
+                    tx.move({ Ball::Radius, 0.f, 0.f });
+                    ball.velocity = glm::vec3(0.f);
                 }
             }
         }
