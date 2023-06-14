@@ -41,7 +41,7 @@ struct CPUStat final
         WindAccuracy, //rand values +/- this in lookup table max 5
         PowerAccuracy, //max 3
         StrokeAccuracy, //max 4
-        MistakeLikelyhood, //this in 10 chance of a mistake
+        MistakeLikelyhood, //this in 10 chance of a mistake - set to no more than 8 so we can add up to 2 for putting distance
         MistakeAccuracy, //+/- rand this in lookup table max 3 (could be power, stroke or both)
         PerfectionLikelyhood, //this in 100 chance of possible perfection
 
@@ -88,25 +88,25 @@ static constexpr std::array<std::array<std::int32_t, CPUStat::Count>, 28> CPUSta
 //when applying wind multiply its effect by this
 static constexpr std::array<float, 11> WindOffsets =
 {
-    -0.5f, -0.4f, -0.3f, -0.2f, -0.1f, 0.01f, 0.1f , 0.2f, 0.3f, 0.4f, 0.5f
+    30.f, 22.5f, 15.f, 10.75f, 7.5f, 0.1f, 7.5f , 10.75f, 15.f, 22.5f, 30.f
 };
 
 //when calculating power offset, multiply this by club power
 static constexpr std::array<float, 7> PowerOffsets =
 {
-    -3.f, -2.f, -1.f, -0.04f, 1.f, 2.f, 3.f
+    -10.f, -5.f, -1.f, -0.04f, 5.f, 10.f, 30.f
 };
 
 static constexpr std::array<float, 9> AccuracyOffsets =
 {
-    -8.f, -4.f, -2.f, -1.f, 0.f, 1.f, 2.f, 4.f, 8.f
+    -16.f, -8.f, -2.f, -0.5f, 0.001f, 0.5f, 2.f, 8.f, 16.f
 };
 
 template <std::size_t S>
 float getOffset(const std::array<float, S>& vals, std::int32_t accuracy)
 {
     CRO_ASSERT(accuracy != 0, "");
-    auto idx = (S / 2) + cro::Util::Random(-accuracy, accuracy);
+    auto idx = (static_cast<std::int32_t>(S) / 2) + cro::Util::Random::value(-accuracy, accuracy);
 
     CRO_ASSERT(idx < S, "");
     return vals[idx];
