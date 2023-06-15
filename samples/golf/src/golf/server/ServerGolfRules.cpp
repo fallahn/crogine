@@ -161,7 +161,7 @@ void GolfState::makeCPUMove()
     }
 }
 
-glm::vec3 GolfState::calcCPUPosition()
+glm::vec3 GolfState::calcCPUPosition() const
 {
     const auto targetDir = m_holeData[m_currentHole].target - m_playerInfo[0].position;
     const auto pinDir = m_holeData[m_currentHole].pin - m_playerInfo[0].position;
@@ -259,14 +259,13 @@ glm::vec3 GolfState::calcCPUPosition()
         windEffect = getOffset(WindOffsets, CPUStats[cpuID][CPUStat::WindAccuracy]);
         windEffect *= Clubs[clubID].getBaseTarget() / Clubs[ClubID::Driver].getBaseTarget();
 
-        LogI << "Wind effect " << windEffect << std::endl;
+        //LogI << "Wind effect " << windEffect << std::endl;
     }
     auto wind = m_scene.getSystem<BallSystem>()->getWindDirection();
     wind = (glm::vec3(wind.x, 0.f, wind.z) * wind.y * windEffect);
     wind /= stepCount;
 
-    //TODO this should use CPU skill level not the default player level
-    const auto clubMultiplier = (Clubs[clubID].getTarget(totalDist) / Clubs[ClubID::Driver].getTarget(totalDist));
+    const auto clubMultiplier = (Clubs[clubID].getTarget(totalDist) / Clubs[ClubID::Driver].getTargetAtLevel(CPUStats[cpuID][CPUStat::Skill]));
     auto dirNorm = glm::normalize(stepDir);
 
     const float overShoot = getOffset(PowerOffsets, CPUStats[cpuID][CPUStat::PowerAccuracy]);
@@ -295,20 +294,20 @@ glm::vec3 GolfState::calcCPUPosition()
     {
         //TODO check these values so we don't accidentally
         //undo existing power/accuracy and improve them...
-        LogI << "Made a mistake!" << std::endl;
+        //LogI << "Made a mistake!" << std::endl;
         switch (cro::Util::Random::value(0, 2))
         {
         default: 
         case 0:
-            LogI << "Fluffed power" << std::endl;
+            //LogI << "Fluffed power" << std::endl;
             overShootDir *= 1.001f;
             break;
         case 1:
-            LogI << "Fluffed accuracy" << std::endl;
+            //LogI << "Fluffed accuracy" << std::endl;
             accuracyDir *= 1.001f;
             break;
         case 2:
-            LogI << "Fluffed power and accuracy" << std::endl;
+            //LogI << "Fluffed power and accuracy" << std::endl;
             accuracyDir *= 1.002f;
             overShootDir *= 0.9999f;
             break;

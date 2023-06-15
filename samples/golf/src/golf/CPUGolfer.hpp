@@ -155,4 +155,6 @@ private:
     //for each pressed event we need a release event the next frame
     std::vector<cro::Event> m_popEvents;
     void sendKeystroke(std::int32_t, bool autoRelease = true);
+
+    glm::vec3 getRandomOffset(glm::vec3) const;
 };

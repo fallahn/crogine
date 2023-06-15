@@ -33,6 +33,7 @@ source distribution.
 #include "Clubs.hpp"
 #include "CollisionMesh.hpp"
 #include "server/ServerPacketData.hpp"
+#include "server/CPUStats.hpp"
 
 #include <Social.hpp>
 
@@ -205,6 +206,9 @@ void CPUGolfer::handleMessage(const cro::Message& msg)
 
 void CPUGolfer::activate(glm::vec3 target, glm::vec3 fallback, bool puttFromTee)
 {
+    target += getRandomOffset(target - m_activePlayer.position);
+    fallback += getRandomOffset(fallback - m_activePlayer.position);
+
     if (!m_fastCPU &&
         m_state == State::Inactive)
     {
@@ -212,7 +216,8 @@ void CPUGolfer::activate(glm::vec3 target, glm::vec3 fallback, bool puttFromTee)
         m_fallbackTarget = fallback;
         m_baseTarget = m_target = target;
 
-        //TODO also use fallback if target is out of max range of driver
+        //previous fail is set to the last ID of the player which went OOB
+        //so if it matches our current then the last shot was bad
         if (previousFail == (m_activePlayer.client * 100) + m_activePlayer.player)
         {
             auto fwd = m_baseTarget - m_activePlayer.position;
@@ -222,9 +227,28 @@ void CPUGolfer::activate(glm::vec3 target, glm::vec3 fallback, bool puttFromTee)
                 m_baseTarget = m_target = fallback;
             }
         }
-        else if (glm::length(target - m_activePlayer.position) > Clubs[ClubID::Driver].getTarget(0.f))
+        //otherwise check if the target is in max range - if not shorten
+        //the target (so we prefer the pin still, just fall short) unless
+        //the shortened target is out of bounds, in which case use the fallback
+        else if (auto len = glm::length(target - m_activePlayer.position);
+                    len > Clubs[ClubID::Driver].getTarget(0.f))
         {
-            m_baseTarget = m_target = fallback;
+            const float reduction = (Clubs[ClubID::Driver].getTarget(0.f) / len) * 0.95f;
+            auto newDir = (target - m_activePlayer.position) * reduction;
+            newDir += m_activePlayer.position;
+
+            const auto terrain = m_collisionMesh.getTerrain(newDir);
+            switch (terrain.terrain)
+            {
+            default:
+                m_baseTarget = m_target = newDir;
+                break;
+            case TerrainID::Water:
+            case TerrainID::Scrub:
+            case TerrainID::Stone:
+                m_baseTarget = m_target = fallback;
+                break;
+            }
         }
         
         previousFail = -1;
@@ -389,17 +413,8 @@ void CPUGolfer::setPuttingPower(float power)
 
 std::size_t CPUGolfer::getSkillIndex() const
 {
-    //std::int32_t offset = m_activePlayer.player % 2;
-    //if (m_skillIndex > 2)
-    //{
-    //    offset *= -1;
-    //}
-
     std::int32_t offset = ((m_activePlayer.player + 2) % 3) * 2;
-
     return std::clamp((static_cast<std::int32_t>(m_skillIndex) - offset), 0, 5);
-
-    //return std::min(static_cast<std::int32_t>(m_skills.size() - 1), static_cast<std::int32_t>(m_skillIndex) + offset);
 }
 
 //private
@@ -1173,3 +1188,40 @@ void CPUGolfer::sendKeystroke(std::int32_t key, bool autoRelease)
         m_popEvents.push_back(evt);
     }
 };
+
+glm::vec3 CPUGolfer::getRandomOffset(glm::vec3 baseDir) const
+{
+    std::int32_t indexOffset = 0;
+    switch (Club::getClubLevel())
+    {
+    default: break;
+    case 0:
+        indexOffset = 12;
+        break;
+    case 1:
+        indexOffset = 4;
+        break;
+    case 2:
+
+        break;
+    }
+
+    indexOffset += ((m_activePlayer.player / 4) + 1) * m_activePlayer.player;
+    CRO_ASSERT(indexOffset < CPUStats.size(), "");
+
+    const auto baseLength = glm::length(baseDir);
+    auto normDir = baseDir / baseLength;
+
+    const auto& cpuStat = CPUStats[indexOffset];
+    const float maxDist = Clubs[ClubID::Driver].getTargetAtLevel(cpuStat[CPUStat::Skill]);
+    const float resultMultiplier = std::max(1.f, baseLength / maxDist);
+
+    const float powerOffset = getOffset(PowerOffsets, cpuStat[CPUStat::PowerAccuracy]);
+    auto retVal = normDir * powerOffset * (resultMultiplier * resultMultiplier);
+
+    normDir = { -normDir.z, normDir.y, normDir.x };
+    const float accuracyOffset = getOffset(AccuracyOffsets, cpuStat[CPUStat::StrokeAccuracy]);
+    retVal += normDir * accuracyOffset * resultMultiplier;
+
+    return retVal * (static_cast<float>(indexOffset) / CPUStats.size()) * 0.05f;
+}
