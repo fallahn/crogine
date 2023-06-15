@@ -73,8 +73,8 @@ GolfState::GolfState(SharedData& sd)
     m_allMapsLoaded         (false),
     m_currentHole           (0),
     m_skinsPot              (1),
-    m_currentBest           (MaxStrokes),
-    m_skillIndex            (0)
+    m_currentBest           (MaxStrokes)/*,
+    m_skillIndex            (0)*/
 {
     std::fill(m_cpuProfileIndices.begin(), m_cpuProfileIndices.end(), -1);
     if (m_mapDataValid = validateMap(); m_mapDataValid)
@@ -82,8 +82,8 @@ GolfState::GolfState(SharedData& sd)
         initScene();
         buildWorld();
 
-        auto level = std::min(Social::getLevel(), 24) + 2;
-        m_skillIndex = level / 4;
+        /*auto level = std::min(Social::getLevel(), 24) + 2;
+        m_skillIndex = level / 4;*/
     }
 
     LOG("Entered Server Golf State", cro::Logger::Type::Info);
@@ -1014,12 +1014,13 @@ void GolfState::initScene()
     //based on host's club set and CPU count
     std::int32_t baseCPUIndex = 0;
     std::int32_t stride = 1;
+
     switch (Club::getClubLevel())
     {
     default: break;
     case 0:
         baseCPUIndex = 12;
-        stride = 16 / cpuCount; //even distribution throu 16x level 0
+        stride = 16 / cpuCount; //even distribution through 16x level 0
         break;
     case 1:
         baseCPUIndex = 8;
@@ -1031,6 +1032,8 @@ void GolfState::initScene()
             27 / cpuCount;
         break;
     }
+
+
     CRO_ASSERT(baseCPUIndex + (stride * (cpuCount - 1)) < CPUStats.size(), "");
 
     for (auto i = 0u; i < m_sharedData.clients.size(); ++i)

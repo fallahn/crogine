@@ -1845,7 +1845,7 @@ void MenuState::updateLobbyAvatars()
 
                 //rank text
                 entity = m_uiScene.createEntity();
-                entity.addComponent<cro::Transform>().setPosition({ 100.f, (RowSpacing * clientCount) + 198.f, 0.3f });
+                entity.addComponent<cro::Transform>().setPosition({ 100.f, (RowSpacing * clientCount) + 180.f, 0.3f });
                 entity.addComponent<cro::Drawable2D>();
                 entity.addComponent<cro::Text>(smallFont).setString("Level");
                 entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
