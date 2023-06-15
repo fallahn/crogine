@@ -132,7 +132,7 @@ ClubhouseState::ClubhouseState(cro::StateStack& ss, cro::State::Context ctx, Sha
 {
     //if we were returning from arcade this tidies up, else does nothing
     gg.unloadPlugin();
-    
+
     std::fill(m_readyState.begin(), m_readyState.end(), false);
 
     ctx.mainWindow.loadResources([this]() {

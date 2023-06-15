@@ -89,7 +89,7 @@ LeaderboardState::LeaderboardState(cro::StateStack& ss, cro::State::Context ctx,
     m_requestRestart    (false),
     m_confirmationType  (ConfirmType::Quit)
 {
-    ctx.mainWindow.setMouseCaptured(false);
+    Social::updateHallOfFame();
 
     buildScene();
 }
@@ -164,6 +164,15 @@ bool LeaderboardState::handleEvent(const cro::Event& evt)
 
 void LeaderboardState::handleMessage(const cro::Message& msg)
 {
+    if (msg.id == Social::MessageID::StatsMessage)
+    {
+        const auto& data = msg.getData<Social::StatEvent>();
+        if (data.type == Social::StatEvent::HOFReceived)
+        {
+            LogI << data.index << ", " << data.page << ", " << data.holeCount << std::endl;
+        }
+    }
+
     m_scene.forwardMessage(msg);
 }
 
