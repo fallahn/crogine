@@ -105,6 +105,12 @@ namespace cstat
         -16.f, -8.f, -2.f, -0.5f, 0.01f, 0.5f, 2.f, 8.f, 16.f
     };
 
+    //how much of the missing 'mistake vector' is added back
+    static constexpr std::array<float, 7> MistakeCorrection =
+    {
+        0.24f, 0.43f, 0.65f, 0.95f, 0.8f, 0.45f, 0.25f
+    };
+
     template <std::size_t S>
     float getOffset(const std::array<float, S>& vals, std::int32_t accuracy)
     {

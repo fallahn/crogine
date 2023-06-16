@@ -29,12 +29,15 @@ source distribution.
 
 #pragma once
 
+#include "CommonConsts.hpp"
+
 #include <crogine/core/Clock.hpp>
 #include <crogine/detail/Types.hpp>
 #include <crogine/detail/glm/vec3.hpp>
 #include <crogine/gui/GuiClient.hpp>
 
 #include <vector>
+#include <array>
 
 namespace cro
 {
@@ -61,6 +64,7 @@ public:
     std::size_t getSkillIndex() const;
 
     void setFastCPU(bool fast) { m_fastCPU = fast; }
+    void setCPUCount(std::int32_t, const struct SharedStateData&);
 private:
 
     const InputParser& m_inputParser; //only reads the state - actual commands are send by raising events.
@@ -79,6 +83,8 @@ private:
     glm::vec3 m_predictionResult;
     std::int32_t m_predictionCount;
     float m_puttingPower; //how much power is predicted by the power bar flag
+
+    std::array<std::int32_t, ConstVal::MaxClients * ConstVal::MaxPlayers> m_cpuProfileIndices = {};
 
     enum class State
     {

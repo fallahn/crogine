@@ -178,6 +178,12 @@ namespace
 
     bool recordCam = false;
 
+    bool isFastCPU(const SharedStateData& sd, const ActivePlayer& activePlayer)
+    {
+        return sd.connectionData[activePlayer.client].playerData[activePlayer.player].isCPU
+            && sd.fastCPU;
+    }
+
     const std::array<std::string, 10u> CourseNames =
     {
         "course_01",
@@ -337,6 +343,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     //do this first so scores are reset before scoreboard
     //is first created.
     std::int32_t clientCount = 0;
+    std::int32_t cpuCount = 0;
     for (auto& c : sd.connectionData)
     {
         if (c.playerCount != 0)
@@ -347,6 +354,11 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
             {
                 c.playerData[i].matchScore = 0;
                 c.playerData[i].skinScore = 0;
+
+                if (c.playerData[i].isCPU)
+                {
+                    cpuCount++;
+                }
             }
         }
     }
@@ -354,7 +366,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     {
         Achievements::awardAchievement(AchievementStrings[AchievementID::BetterWithFriends]);
     }
-
+    m_cpuGolfer.setCPUCount(cpuCount, sd);
 
     context.mainWindow.loadResources([this]() {
         addSystems();
@@ -1166,7 +1178,8 @@ void GolfState::handleMessage(const cro::Message& msg)
             case TerrainID::Bunker:
             case TerrainID::Scrub:
             case TerrainID::Water:
-                if (data.travelDistance > 100.f)
+                if (data.travelDistance > 100.f
+                    && !isFastCPU(m_sharedData, m_currentPlayer))
                 {
                     m_activeAvatar->model.getComponent<cro::Skeleton>().play(m_activeAvatar->animationIDs[AnimationID::Disappoint], 1.f, 0.2f);
                 }
@@ -1174,8 +1187,9 @@ void GolfState::handleMessage(const cro::Message& msg)
             case TerrainID::Green:
                 if (getClub() != ClubID::Putter)
                 {
-                    if (data.pinDistance < 1.f
+                    if ((data.pinDistance < 1.f
                         || data.travelDistance > 10000.f)
+                        && !isFastCPU(m_sharedData, m_currentPlayer))
                     {
                         m_activeAvatar->model.getComponent<cro::Skeleton>().play(m_activeAvatar->animationIDs[AnimationID::Celebrate], 1.f, 1.2f);
 
@@ -1184,7 +1198,8 @@ void GolfState::handleMessage(const cro::Message& msg)
                             Social::awardXP(XPValues[XPID::Special] / 2, XPStringID::NiceChip);
                         }
                     }
-                    else if (data.travelDistance < 9.f)
+                    else if (data.travelDistance < 9.f
+                        && !isFastCPU(m_sharedData, m_currentPlayer))
                     {
                         m_activeAvatar->model.getComponent<cro::Skeleton>().play(m_activeAvatar->animationIDs[AnimationID::Disappoint], 1.f, 0.4f);
                     }
@@ -1202,7 +1217,8 @@ void GolfState::handleMessage(const cro::Message& msg)
                 }
                 break;
             case TerrainID::Fairway:
-                if (data.travelDistance < 16.f)
+                if (data.travelDistance < 16.f
+                    && !isFastCPU(m_sharedData, m_currentPlayer))
                 {
                     m_activeAvatar->model.getComponent<cro::Skeleton>().play(m_activeAvatar->animationIDs[AnimationID::Disappoint], 1.f, 0.4f);
                 }

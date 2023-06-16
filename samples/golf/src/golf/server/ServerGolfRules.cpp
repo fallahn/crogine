@@ -232,7 +232,7 @@ glm::vec3 GolfState::calcCPUPosition() const
         if (m_scene.getSystem<BallSystem>()->getPuttFromTee())
         {
             if (auto dp = glm::dot(glm::normalize(targetDir), glm::normalize(pinDir));
-                dp > 0.4 && dp < 0.97f) //target in front, but not the same dir as pin
+                dp > 0.4 && dp < 0.98f) //target in front, but not the same dir as pin
             {
                 //don't use if too close
                 if (glm::length2(targetDir) > (3.f * 3.f)
@@ -253,7 +253,7 @@ glm::vec3 GolfState::calcCPUPosition() const
     }
 
 
-    auto playerName = [&]()
+    const auto playerName = [&]()
     {
         return m_sharedData.clients[m_playerInfo[0].client].playerData[m_playerInfo[0].player].name.toAnsiString();
     };
@@ -304,11 +304,15 @@ glm::vec3 GolfState::calcCPUPosition() const
     std::int32_t puttingOdds = 0;
     if (ball.terrain == TerrainID::Green)
     {
-        float odds = std::min(1.f, totalDist / 12.f) * 2.f;
+        float odds = std::pow(std::min(1.f, totalDist / 5.f), 2.f);
+
+        accuracyDir *= (1.f + odds);
+        odds *= 2.f;
+
         puttingOdds = static_cast<std::int32_t>(std::round(odds));
     }
 
-    if (cro::Util::Random::value(0, 9) < CPUStats[cpuID][CPUStat::MistakeLikelyhood] + puttingOdds)
+    if (cro::Util::Random::value(0, 14) < CPUStats[cpuID][CPUStat::MistakeLikelyhood] + puttingOdds)
     {
         //TODO check these values so we don't accidentally
         //undo existing power/accuracy and improve them...
@@ -318,17 +322,25 @@ glm::vec3 GolfState::calcCPUPosition() const
         default: 
         case 0:
             LogI << playerName() << " Fluffed power" << std::endl;
-            overShootDir *= 1.01f;
+            overShootDir *= 2.56f;
             break;
         case 1:
             LogI << playerName() << " Fluffed accuracy" << std::endl;
-            accuracyDir *= 1.01f;
+            accuracyDir *= 1.78f;
             break;
         case 2:
             LogI << playerName() << " Fluffed power and accuracy" << std::endl;
-            accuracyDir *= 1.02f;
-            overShootDir *= 0.999f;
+            accuracyDir *= 1.92f;
+            overShootDir *= 1.98f;
             break;
+        }
+
+        if (cro::Util::Random::value(0, 29) < CPUStats[cpuID][CPUStat::MistakeLikelyhood] + (puttingOdds * 2))
+        {
+            LogI << playerName() << " made uber mistake" << std::endl;
+            stepDir /= 2.f;
+
+            stepDir += (stepDir * getOffset(MistakeCorrection, CPUStats[cpuID][CPUStat::MistakeAccuracy]));
         }
     }
 
@@ -379,6 +391,9 @@ glm::vec3 GolfState::calcCPUPosition() const
             pos += wind;
             pos += overShootDir;
             pos += accuracyDir;
+
+            //TODO check each step for terrain to see if we
+            //accidentally cut corners
         }
 
         //if we're really close to the hole plop it in based on stroke accuracy

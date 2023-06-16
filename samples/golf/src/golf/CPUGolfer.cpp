@@ -44,30 +44,6 @@ source distribution.
 
 namespace
 {
-    std::int32_t getCPUID(const ActivePlayer& player)
-    {
-        std::int32_t indexOffset = 0;
-        switch (Club::getClubLevel())
-        {
-        default: break;
-        case 0:
-            indexOffset = 12;
-            break;
-        case 1:
-            indexOffset = 4;
-            break;
-        case 2:
-
-            break;
-        }
-
-        indexOffset += ((player.player / 4) + 1) * player.player;
-        CRO_ASSERT(indexOffset < CPUStats.size(), "");
-
-        return indexOffset;
-    }
-
-
     const std::array StateStrings =
     {
         std::string("Inactive"),
@@ -441,8 +417,52 @@ std::size_t CPUGolfer::getSkillIndex() const
     //std::int32_t offset = ((m_activePlayer.player + 2) % 3) * 2;
     //return std::clamp((static_cast<std::int32_t>(m_skillIndex) - offset), 0, 5);
 
-    auto id = getCPUID(m_activePlayer);
+    auto id = m_cpuProfileIndices[m_activePlayer.client * ConstVal::MaxPlayers + m_activePlayer.player];
     return std::clamp((static_cast<std::int32_t>(CPUStats.size()) - id) / 5, 0, 5);
+}
+
+void CPUGolfer::setCPUCount(std::int32_t cpuCount, const SharedStateData& sharedData)
+{
+    std::fill(m_cpuProfileIndices.begin(), m_cpuProfileIndices.end(), -1);
+
+    std::int32_t baseCPUIndex = 0;
+    std::int32_t stride = 1;
+
+    switch (Club::getClubLevel())
+    {
+    default: break;
+    case 0:
+        baseCPUIndex = 12;
+        stride = 16 / cpuCount; //even distribution through 16x level 0
+        break;
+    case 1:
+        baseCPUIndex = 8;
+        stride = cpuCount > 4 ? 2 : 23 / cpuCount; //every other profile unless more than 4
+        break;
+    case 2:
+        stride = cpuCount < 3 ? 1 :
+            cpuCount < 8 ? 2 :
+            27 / cpuCount;
+        break;
+    }
+
+
+    CRO_ASSERT(baseCPUIndex + (stride * (cpuCount - 1)) < CPUStats.size(), "");
+
+    for (auto i = 0u; i < sharedData.connectionData.size(); ++i)
+    {
+        for (auto j = 0u; j < sharedData.connectionData[i].playerCount; ++j)
+        {
+            if (sharedData.connectionData[i].playerData[j].isCPU)
+            {
+                CRO_ASSERT(baseCPUIndex < CPUStats.size(), "");
+
+                auto cpuIndex = i * ConstVal::MaxPlayers + j;
+                m_cpuProfileIndices[cpuIndex] = baseCPUIndex;
+                baseCPUIndex += stride;
+            }
+        }
+    }
 }
 
 //private
@@ -956,7 +976,8 @@ void CPUGolfer::updatePrediction(float dt)
             {
                 //see if the flag indicator has a better suggestion :)
                 //m_targetPower = std::min(m_targetPower, m_puttingPower * (1.f + (static_cast<float>(getSkillIndex()) * 0.01f)));
-                m_targetPower = std::min(m_targetPower, m_puttingPower * (1.f + (static_cast<float>((CPUStats.size() - getCPUID(m_activePlayer)) / 2) * 0.01f)));
+                auto cpuID = m_cpuProfileIndices[m_activePlayer.client * ConstVal::MaxPlayers + m_activePlayer.player];
+                m_targetPower = std::min(m_targetPower, m_puttingPower * (1.f + (static_cast<float>((CPUStats.size() - cpuID) / 2) * 0.01f)));
             }
 
             m_targetAccuracy -= (Deviance[devianceOffset] * 0.05f) * devianceMultiplier;
@@ -1140,7 +1161,7 @@ void CPUGolfer::calcAccuracy()
     //    m_targetAccuracy += static_cast<float>(-m_skills[getSkillIndex()].strokeAccuracy) / 100.f;
     //}
 
-    const auto& Stat = CPUStats[getCPUID(m_activePlayer)];
+    const auto& Stat = CPUStats[m_cpuProfileIndices[m_activePlayer.client * ConstVal::MaxPlayers + m_activePlayer.player]];
     m_targetAccuracy += cstat::getOffset(cstat::AccuracyOffsets, Stat[CPUStat::StrokeAccuracy]) * 0.00375f; //scales max value to 0.06
 
 
@@ -1177,9 +1198,9 @@ void CPUGolfer::calcAccuracy()
 
     if (m_clubID != ClubID::Putter)
     {
-        /*m_targetPower = std::min(1.f, m_targetPower + (1 - (cro::Util::Random::value(0, 1) * 2)) * (static_cast<float>(m_offsetRotation % 4) / 50.f));
+        m_targetPower = std::min(1.f, m_targetPower + (1 - (cro::Util::Random::value(0, 1) * 2)) * (static_cast<float>(m_offsetRotation % 4) / 50.f));
 
-        if (m_skills[getSkillIndex()].mistakeOdds != 0)
+        /*if (m_skills[getSkillIndex()].mistakeOdds != 0)
         {
             if (cro::Util::Random::value(0, m_skills[getSkillIndex()].mistakeOdds) == 0)
             {
@@ -1237,7 +1258,7 @@ void CPUGolfer::sendKeystroke(std::int32_t key, bool autoRelease)
 
 glm::vec3 CPUGolfer::getRandomOffset(glm::vec3 baseDir) const
 {
-    auto indexOffset = getCPUID(m_activePlayer);
+    auto indexOffset = m_cpuProfileIndices[m_activePlayer.client * ConstVal::MaxPlayers + m_activePlayer.player];
 
     const auto baseLength = glm::length(baseDir);
     auto normDir = baseDir / baseLength;
