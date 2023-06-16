@@ -81,9 +81,6 @@ GolfState::GolfState(SharedData& sd)
     {
         initScene();
         buildWorld();
-
-        /*auto level = std::min(Social::getLevel(), 24) + 2;
-        m_skillIndex = level / 4;*/
     }
 
     LOG("Entered Server Golf State", cro::Logger::Type::Info);
@@ -1027,8 +1024,8 @@ void GolfState::initScene()
         stride = cpuCount > 4 ? 2 : 23 / cpuCount; //every other profile unless more than 4
         break;
     case 2:
-        stride = cpuCount < 5 ? 1 :
-            cpuCount < 13 ? 2 :
+        stride = cpuCount < 3 ? 1 :
+            cpuCount < 8 ? 2 :
             27 / cpuCount;
         break;
     }

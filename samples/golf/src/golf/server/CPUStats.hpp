@@ -33,6 +33,7 @@ source distribution.
 
 #include <array>
 
+
 struct CPUStat final
 {
     enum
@@ -85,29 +86,32 @@ static constexpr std::array<std::array<std::int32_t, CPUStat::Count>, 28> CPUSta
     }
 };
 
-//when applying wind multiply its effect by this
-static constexpr std::array<float, 11> WindOffsets =
+namespace cstat
 {
-    30.f, 22.5f, 15.f, 10.75f, 7.5f, 0.1f, 7.5f , 10.75f, 15.f, 22.5f, 30.f
-};
+    //when applying wind multiply its effect by this
+    static constexpr std::array<float, 11> WindOffsets =
+    {
+        30.f, 22.5f, 15.f, 10.75f, 7.5f, 0.1f, 7.5f , 10.75f, 15.f, 22.5f, 30.f
+    };
 
-//when calculating power offset, multiply this by club power
-static constexpr std::array<float, 7> PowerOffsets =
-{
-    -10.f, -5.f, -1.f, -0.04f, 5.f, 10.f, 30.f
-};
+    //when calculating power offset, multiply this by club power
+    static constexpr std::array<float, 7> PowerOffsets =
+    {
+        -10.f, -5.f, -1.f, -0.5f, 5.f, 10.f, 30.f
+    };
 
-static constexpr std::array<float, 9> AccuracyOffsets =
-{
-    -16.f, -8.f, -2.f, -0.5f, 0.001f, 0.5f, 2.f, 8.f, 16.f
-};
+    static constexpr std::array<float, 9> AccuracyOffsets =
+    {
+        -16.f, -8.f, -2.f, -0.5f, 0.01f, 0.5f, 2.f, 8.f, 16.f
+    };
 
-template <std::size_t S>
-float getOffset(const std::array<float, S>& vals, std::int32_t accuracy)
-{
-    CRO_ASSERT(accuracy != 0, "");
-    auto idx = (static_cast<std::int32_t>(S) / 2) + cro::Util::Random::value(-accuracy, accuracy);
+    template <std::size_t S>
+    float getOffset(const std::array<float, S>& vals, std::int32_t accuracy)
+    {
+        CRO_ASSERT(accuracy != 0, "");
+        auto idx = (static_cast<std::int32_t>(S) / 2) + cro::Util::Random::value(-accuracy, accuracy);
 
-    CRO_ASSERT(idx < S, "");
-    return vals[idx];
+        CRO_ASSERT(idx < S, "");
+        return vals[idx];
+    }
 }

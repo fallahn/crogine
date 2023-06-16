@@ -72,7 +72,6 @@ namespace sv
         std::uint8_t m_currentBest; //current best score for hole, non-stroke games end if no-one can beat it
 
         cro::Clock m_turnTimer;
-        //std::int32_t m_skillIndex; //< base skill for CPU players based on host's current level TODO remove this
 
         std::array<std::int32_t, ConstVal::MaxClients* ConstVal::MaxPlayers> m_cpuProfileIndices = {};
 
@@ -90,7 +89,6 @@ namespace sv
 
         void makeCPUMove();
         glm::vec3 calcCPUPosition() const;
-        //glm::vec3 calcCPUPositionOld();
         void handleDefaultRules(const struct GolfBallEvent&);
         bool summariseDefaultRules();
 
