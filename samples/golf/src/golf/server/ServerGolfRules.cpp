@@ -206,8 +206,14 @@ glm::vec3 GolfState::calcCPUPosition() const
         if (auto len2 = glm::length2(pinDir); 
             len2 > (clubDist * clubDist))
         {
-            const float reduction = clubDist / std::sqrt(len2);
-            pos = (pinDir * reduction) + m_playerInfo[0].position;
+            //rather than move back toward the player (which might put us in the rough)
+            //head towards the target point which in theory should aim us towards the fairway
+            const auto len = std::sqrt(len2) - clubDist;
+            const auto correctionDir = glm::normalize(m_holeData[m_currentHole].target - m_holeData[m_currentHole].pin) * len;
+            pos = m_holeData[m_currentHole].pin + correctionDir;
+
+            //const float reduction = clubDist / std::sqrt(len2);
+            //pos = (pinDir * reduction) + m_playerInfo[0].position;
         }
 
         auto result = m_scene.getSystem<BallSystem>()->getTerrain(pos);
@@ -295,6 +301,7 @@ glm::vec3 GolfState::calcCPUPosition() const
     dirNorm = { -dirNorm.z, dirNorm.y, dirNorm.x }; //perpendicular
     const float strokeAccuracy = getOffset(AccuracyOffsets, CPUStats[cpuID][CPUStat::StrokeAccuracy]);
     auto accuracyDir = dirNorm * strokeAccuracy * clubMultiplier;
+    if (puttFromTee) accuracyDir *= 0.5f;
     accuracyDir /= stepCount;
 
     //TODO include offset for rough or bunker terrain - this should probably be another stat

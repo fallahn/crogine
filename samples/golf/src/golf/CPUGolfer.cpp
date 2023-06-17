@@ -234,9 +234,20 @@ void CPUGolfer::activate(glm::vec3 target, glm::vec3 fallback, bool puttFromTee)
         else if (auto len = glm::length(target - m_activePlayer.position);
                     len > Clubs[ClubID::Driver].getTarget(0.f))
         {
-            const float reduction = (Clubs[ClubID::Driver].getTarget(0.f) / len) * 0.95f;
-            auto newDir = (target - m_activePlayer.position) * reduction;
-            newDir += m_activePlayer.position;
+            glm::vec3 newDir(0.f);
+            if (target != fallback)
+            {
+                len -= Clubs[ClubID::Driver].getTarget(0.f);
+                const auto correctionDir = glm::normalize(fallback - target) * (len * 1.05f);
+                newDir = target + correctionDir;
+            }
+            else
+            {
+                //just move back towards the player
+                const float reduction = (Clubs[ClubID::Driver].getTarget(0.f) / len) * 0.95f;
+                newDir = (target - m_activePlayer.position) * reduction;
+                newDir += m_activePlayer.position;
+            }
 
             const auto terrain = m_collisionMesh.getTerrain(newDir);
             switch (terrain.terrain)
