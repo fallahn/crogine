@@ -128,7 +128,8 @@ ClubhouseState::ClubhouseState(cro::StateStack& ss, cro::State::Context ctx, Sha
     m_currentMenu       (MenuID::Main),
     m_prevMenu          (MenuID::Main),
     m_gameCreationIndex (0),
-    m_arcadeIndex       (0)
+    m_arcadeIndexKey    (0),
+    m_arcadeIndexJoy    (0)
 {
     //if we were returning from arcade this tidies up, else does nothing
     gg.unloadPlugin();
@@ -354,12 +355,12 @@ bool ClubhouseState::handleEvent(const cro::Event& evt)
         switch (evt.key.keysym.sym)
         {
         default: 
-            if (m_arcadeIndex < Arcade.size())
+            if (m_arcadeIndexKey < ArcadeKey.size())
             {
-                if (evt.key.keysym.sym == Arcade[m_arcadeIndex])
+                if (evt.key.keysym.sym == ArcadeKey[m_arcadeIndexKey])
                 {
-                    m_arcadeIndex++;
-                    if (m_arcadeIndex == Arcade.size())
+                    m_arcadeIndexKey++;
+                    if (m_arcadeIndexKey == ArcadeKey.size())
                     {
                         //MAGIC
                         if (m_arcadeEnt.isValid())
@@ -373,7 +374,7 @@ bool ClubhouseState::handleEvent(const cro::Event& evt)
                 }
                 else
                 {
-                    m_arcadeIndex = 0;
+                    m_arcadeIndexKey = 0;
                 }
             }
             
@@ -381,7 +382,7 @@ bool ClubhouseState::handleEvent(const cro::Event& evt)
         case SDLK_RETURN:
         case SDLK_RETURN2:
         case SDLK_KP_ENTER:
-            m_arcadeIndex = 0;
+            m_arcadeIndexKey = 0;
             applyTextEdit();
             break;
         case SDLK_ESCAPE:
@@ -422,7 +423,32 @@ bool ClubhouseState::handleEvent(const cro::Event& evt)
         cro::App::getWindow().setMouseCaptured(true);
         switch (evt.cbutton.button)
         {
-        default: break;
+        default: 
+            if (m_arcadeIndexJoy < ArcadeJoy.size())
+            {
+                if (evt.cbutton.button == ArcadeJoy[m_arcadeIndexJoy])
+                {
+                    m_arcadeIndexJoy++;
+                    if (m_arcadeIndexJoy == ArcadeJoy.size())
+                    {
+                        //MAGIC
+                        if (m_arcadeEnt.isValid())
+                        {
+                            m_arcadeEnt.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+                            m_arcadeEnt.getComponent<cro::UIInput>().enabled = true;
+
+                            m_audioEnts[AudioID::Win].getComponent<cro::AudioEmitter>().play();
+                        }
+                    }
+                }
+                else
+                {
+                    m_arcadeIndexJoy = 0;
+                }
+            }
+            
+            
+            break;
             //leave the current menu when B is pressed.
         case cro::GameController::ButtonB:
             quitMenu();

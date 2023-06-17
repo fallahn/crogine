@@ -204,7 +204,7 @@ private:
 
     LobbyPager m_lobbyPager;
 
-    static constexpr std::array<std::int32_t, 8u> Arcade =
+    static constexpr std::array<std::int32_t, 8u> ArcadeKey =
     {
         SDLK_UP,
         SDLK_UP,
@@ -215,7 +215,19 @@ private:
         SDLK_LEFT,
         SDLK_RIGHT,
     };
-    std::size_t m_arcadeIndex;
+    static constexpr std::array<std::int32_t, 8u> ArcadeJoy =
+    {
+        SDL_CONTROLLER_BUTTON_DPAD_UP,
+        SDL_CONTROLLER_BUTTON_DPAD_UP,
+        SDL_CONTROLLER_BUTTON_DPAD_DOWN,
+        SDL_CONTROLLER_BUTTON_DPAD_DOWN,
+        SDL_CONTROLLER_BUTTON_DPAD_LEFT,
+        SDL_CONTROLLER_BUTTON_DPAD_RIGHT,
+        SDL_CONTROLLER_BUTTON_DPAD_LEFT,
+        SDL_CONTROLLER_BUTTON_DPAD_RIGHT,
+    };
+    std::size_t m_arcadeIndexKey;
+    std::size_t m_arcadeIndexJoy;
     cro::Entity m_arcadeEnt;
 
     void addSystems();
