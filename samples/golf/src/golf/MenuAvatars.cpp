@@ -797,13 +797,17 @@ void MenuState::createAvatarMenu(cro::Entity parent)
 
     //create profile
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 265.f, 52.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 265.f, 53.f, 0.1f });
     entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("profile_edit_select");
     entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
     entity.addComponent<cro::Callback>().function = MenuTextCallback();
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    bounds.left += 2.f;
+    bounds.bottom += 2.f;
+    bounds.width -= 4.f;
+    bounds.height -= 4.f;
     entity.addComponent<cro::UIInput>().area = bounds;
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Avatar);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectionCallback;
@@ -856,13 +860,17 @@ void MenuState::createAvatarMenu(cro::Entity parent)
 
     //edit profile
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 265.f, 37.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 265.f, 36.f, 0.1f });
     entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("profile_edit_select");
     entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
     entity.addComponent<cro::Callback>().function = MenuTextCallback();
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    bounds.left += 2.f;
+    bounds.bottom += 2.f;
+    bounds.width -= 4.f;
+    bounds.height -= 4.f;
     entity.addComponent<cro::UIInput>().area = bounds;
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Avatar);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectionCallback;
@@ -883,13 +891,17 @@ void MenuState::createAvatarMenu(cro::Entity parent)
 
     //delete profile
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 265.f, 22.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 265.f, 19.f, 0.1f });
     entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("profile_edit_select");
     entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
     entity.addComponent<cro::Callback>().function = MenuTextCallback();
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    bounds.left += 2.f;
+    bounds.bottom += 2.f;
+    bounds.width -= 4.f;
+    bounds.height -= 4.f;
     entity.addComponent<cro::UIInput>().area = bounds;
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Avatar);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectionCallback;

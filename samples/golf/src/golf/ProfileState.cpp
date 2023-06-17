@@ -982,8 +982,33 @@ void ProfileState::buildScene()
                 }
             });
 
+
+    //updates the profile icon
+    auto profileIcon = createButton("button_highlight", glm::vec2(269.f, 55.f));
+    bounds = profileIcon.getComponent<cro::Sprite>().getTextureBounds();
+    bounds.left += 2.f;
+    bounds.bottom += 2.f;
+    bounds.width -= 4.f;
+    bounds.height -= 4.f;
+    profileIcon.getComponent<cro::UIInput>().area = bounds;
+    profileIcon.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
+        uiSystem.addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
+            {
+                if (activated(evt))
+                {
+
+                }
+            });
+
+
     //save/quit buttons
-    auto saveQuit = createButton("button_highlight", glm::vec2(269.f, 48.f));
+    auto saveQuit = createButton("button_highlight", glm::vec2(269.f, 38.f));
+    bounds = saveQuit.getComponent<cro::Sprite>().getTextureBounds();
+    bounds.left += 2.f;
+    bounds.bottom += 2.f;
+    bounds.width -= 4.f;
+    bounds.height -= 4.f;
+    saveQuit.getComponent<cro::UIInput>().area = bounds;
     saveQuit.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         uiSystem.addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
             {
@@ -994,7 +1019,14 @@ void ProfileState::buildScene()
                     quitState();
                 }
             });
-    auto quit = createButton("button_highlight", glm::vec2(269.f, 24.f));
+    
+    auto quit = createButton("button_highlight", glm::vec2(269.f, 21.f));
+    bounds = quit.getComponent<cro::Sprite>().getTextureBounds();
+    bounds.left += 2.f;
+    bounds.bottom += 2.f;
+    bounds.width -= 4.f;
+    bounds.height -= 4.f;
+    quit.getComponent<cro::UIInput>().area = bounds;
     quit.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         uiSystem.addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
             {
@@ -1005,8 +1037,7 @@ void ProfileState::buildScene()
             });
 
 
-    //TODO check for steamdeck and add mugshot button
-    //TODO will this also break big picture mode?
+
 
     auto addCorners = [&](cro::Entity p, cro::Entity q)
     {
