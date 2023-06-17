@@ -707,64 +707,88 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
         {
             ball.spin = { 0.f,0.f };
 
-            //move towards player until we find non-water
+
             std::uint8_t terrain = TerrainID::Water;
-
-            //make sure ball height is level with target
-            //else moving it may cause the collision test
-            //to miss if the terrain is much higher than
-            //the water level.
-
-            glm::vec3 dir = ball.startPoint - ballPos;
-            ballPos.y = ball.startPoint.y;
-
-            auto length = glm::length(dir);
-            dir /= length;
-            std::int32_t maxDist = static_cast<std::int32_t>(length /*- 10.f*/);
-
-            //if we're on a putting course take smaller steps for better accuracy
             if (m_puttFromTee)
             {
-                dir /= 4.f;
-                maxDist *= 4;
-            }
+                //just place at the nearest tee or target
 
-            for (auto i = 0; i < maxDist; ++i)
-            {
-                ballPos += dir;
-                auto res = getTerrain(ballPos);
-                terrain = res.terrain;
-
-                const auto slope = dot(res.normal, glm::vec3(0.f, 1.f, 0.f));
-
-                if (terrain != TerrainID::Water
-                    && terrain != TerrainID::Scrub
-                    && terrain != TerrainID::Stone
-                    && slope > 0.996f)
+                terrain = TerrainID::Green;
+                if (glm::length2(tx.getPosition() - m_holeData->tee) <
+                    glm::length2(tx.getPosition() - m_holeData->target))
                 {
-                    //move the ball a bit closer so we're not balancing on the edge
-                    //but only if we're not on the green else we might get placed in the hole :)
-                    if (res.terrain != TerrainID::Green)
-                    {
-                        ballPos += dir * 1.5f;
-                        res = getTerrain(ballPos);
-                    }
+                    tx.setPosition(m_holeData->tee);
+                }
+                else
+                {
+                    tx.setPosition(m_holeData->target);
+                }
+            }
+            else
+            {
 
-                    ballPos = res.intersection;
-                    tx.setPosition(ballPos);
-                    break;
+                //move towards player until we find non-water
+
+                //make sure ball height is level with target
+                //else moving it may cause the collision test
+                //to miss if the terrain is much higher than
+                //the water level.
+
+                glm::vec3 dir = ball.startPoint - ballPos;
+                ballPos.y = ball.startPoint.y;
+
+                auto length = glm::length(dir);
+                dir /= length;
+                std::int32_t maxDist = static_cast<std::int32_t>(length /*- 10.f*/);
+
+                //if we're on a putting course take smaller steps for better accuracy
+                if (m_puttFromTee)
+                {
+                    dir /= 4.f;
+                    maxDist *= 4;
+                }
+
+                for (auto i = 0; i < maxDist; ++i)
+                {
+                    ballPos += dir;
+                    auto res = getTerrain(ballPos);
+                    terrain = res.terrain;
+
+                    const auto slope = dot(res.normal, glm::vec3(0.f, 1.f, 0.f));
+
+                    if (terrain != TerrainID::Water
+                        && terrain != TerrainID::Scrub
+                        && terrain != TerrainID::Stone
+                        && slope > 0.996f)
+                    {
+                        //move the ball a bit closer so we're not balancing on the edge
+                        //but only if we're not on the green else we might get placed in the hole :)
+                        if (res.terrain != TerrainID::Green)
+                        {
+                            ballPos += dir * 1.5f;
+                            res = getTerrain(ballPos);
+                        }
+
+                        ballPos = res.intersection;
+                        tx.setPosition(ballPos);
+                        break;
+                    }
+                }
+
+                //if for some reason we never got out the water, put the ball back at the start
+                if (terrain == TerrainID::Water
+                    || terrain == TerrainID::Scrub)
+                {
+                    //this is important else we'll end up trying to drive
+                    //down a putting course :facepalm:
+                    terrain = m_puttFromTee ? TerrainID::Green : TerrainID::Fairway;
+                    tx.setPosition(m_holeData->tee);
                 }
             }
 
-            //if for some reason we never got out the water, put the ball back at the start
-            if (terrain == TerrainID::Water
-                || terrain == TerrainID::Scrub)
-            {
-                //this is important else we'll end up trying to drive
-                //down a putting course :facepalm:
-                terrain = m_puttFromTee ? TerrainID::Green : TerrainID::Fairway;
-                tx.setPosition(m_holeData->tee);
-            }
+
+
+
 
             //raise message to say player should be penalised
             auto* msg = postEvent();

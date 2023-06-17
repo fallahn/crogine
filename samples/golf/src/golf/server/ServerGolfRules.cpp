@@ -95,7 +95,7 @@ void GolfState::makeCPUMove()
                     case TerrainID::Stone:
                     case TerrainID::Scrub:
                     {
-                        std::int32_t tries = 300;
+                        /*std::int32_t tries = 300;
                         auto dir = glm::normalize(pos - m_playerInfo[0].position);
                         do
                         {
@@ -103,7 +103,7 @@ void GolfState::makeCPUMove()
                             result = m_scene.getSystem<BallSystem>()->getTerrain(pos);
                         } while (tries--
                             && (result.terrain == TerrainID::Water || result.terrain == TerrainID::Stone || result.terrain == TerrainID::Scrub)
-                            && glm::length2(pos) > 1);
+                            && glm::length2(pos) > 1);*/
                     }
                     break;
                     default: break;
@@ -177,6 +177,8 @@ glm::vec3 GolfState::calcCPUPosition() const
     const auto pinDir = m_holeData[m_currentHole].pin - m_playerInfo[0].position;
     auto pos = m_holeData[m_currentHole].pin; //always prefer the pin as the target unless blocked for some reason
     
+    const auto puttFromTee = m_scene.getSystem<BallSystem>()->getPuttFromTee();
+
     const auto cpuID = m_cpuProfileIndices[m_playerInfo[0].client * ConstVal::MaxPlayers + m_playerInfo[0].player];
     CRO_ASSERT(cpuID != -1, "");
 
@@ -229,7 +231,7 @@ glm::vec3 GolfState::calcCPUPosition() const
     else 
     {
         //else if we're on a mini-putt course see if there's a dog-leg
-        if (m_scene.getSystem<BallSystem>()->getPuttFromTee())
+        if (puttFromTee)
         {
             if (auto dp = glm::dot(glm::normalize(targetDir), glm::normalize(pinDir));
                 dp > 0.4 && dp < 0.98f) //target in front, but not the same dir as pin
@@ -316,26 +318,27 @@ glm::vec3 GolfState::calcCPUPosition() const
     {
         //TODO check these values so we don't accidentally
         //undo existing power/accuracy and improve them...
-        LogI << " Made a mistake!" << std::endl;
+        LogI << playerName() << " Made a mistake!" << std::endl;
         switch (cro::Util::Random::value(0, 2))
         {
         default: 
         case 0:
             LogI << playerName() << " Fluffed power" << std::endl;
-            overShootDir *= 2.56f;
+            overShootDir *= puttFromTee ? 1.3f : 2.56f;
             break;
         case 1:
             LogI << playerName() << " Fluffed accuracy" << std::endl;
-            accuracyDir *= 1.78f;
+            accuracyDir *= puttFromTee ? 1.01f : 1.78f;
             break;
         case 2:
             LogI << playerName() << " Fluffed power and accuracy" << std::endl;
-            accuracyDir *= 1.92f;
-            overShootDir *= 1.98f;
+            accuracyDir *= puttFromTee ? 1.02f : 1.92f;
+            overShootDir *= puttFromTee ? 1.25f : 1.98f;
             break;
         }
 
-        if (cro::Util::Random::value(0, 29) < CPUStats[cpuID][CPUStat::MistakeLikelyhood] + (puttingOdds * 2))
+        if (glm::length2(m_holeData[m_currentHole].pin - m_playerInfo[0].position) > (2.f * 2.f) &&
+            cro::Util::Random::value(0, 29) < CPUStats[cpuID][CPUStat::MistakeLikelyhood] + (puttingOdds * 2))
         {
             LogI << playerName() << " made uber mistake" << std::endl;
             stepDir /= 2.f;
@@ -366,6 +369,27 @@ glm::vec3 GolfState::calcCPUPosition() const
         if(perfect && 
             totalDist < Clubs[clubID].getBaseTarget())
         {
+            if (puttFromTee)
+            {
+                //check for corner cutting
+                auto dir = m_holeData[m_currentHole].pin - m_playerInfo[0].position;
+                dir /= stepCount;
+
+                pos = m_playerInfo[0].position;
+
+                for (auto i = 0; i < stepCount; ++i)
+                {
+                    pos += dir;
+                    auto terrain = m_scene.getSystem<BallSystem>()->getTerrain(pos);
+                    if (terrain.terrain != TerrainID::Green)
+                    {
+                        LogI << "Perfect shot would cut corner" << std::endl;
+                        perfect = false;
+                        break;
+                    }
+                }
+            }
+
             LogI << playerName() << " Got a PERFECT shot" << std::endl;
             pos = m_holeData[m_currentHole].pin;
         }
@@ -392,9 +416,34 @@ glm::vec3 GolfState::calcCPUPosition() const
             pos += overShootDir;
             pos += accuracyDir;
 
-            //TODO check each step for terrain to see if we
+            //check each step for terrain to see if we
             //accidentally cut corners
+            if (puttFromTee)
+            {
+                auto terrain = m_scene.getSystem<BallSystem>()->getTerrain(pos);
+                if (terrain.terrain != TerrainID::Green)
+                {
+                    break;
+                }
+            }
         }
+
+        //one final check that we're not toooo close to the hole after
+        //a long shot else we get too many chip-ins without the 'perfect' requirement
+        if (glm::length2(pos - m_playerInfo[0].position) > (5.f * 5.f))
+        {
+            if (!puttFromTee || cro::Util::Random::value(0, 9) < CPUStats[cpuID][CPUStat::MistakeLikelyhood])
+            {
+                if (auto l2 = glm::length2(pos - m_holeData[m_currentHole].pin); l2 < (0.15f * 0.15f))
+                {
+                    auto dir = (pos - m_holeData[m_currentHole].pin) / std::sqrt(l2);
+                    dir *= getOffset(HoleCorrection, CPUStats[cpuID][CPUStat::MistakeAccuracy]);
+                    pos += dir;
+                    LogI << playerName() << " Corrected for too much perfection." << std::endl;
+                }
+            }
+        }
+
 
         //if we're really close to the hole plop it in based on stroke accuracy
         if (glm::length2(pos - m_holeData[m_currentHole].pin) < (0.15f * 0.15f) &&

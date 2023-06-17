@@ -1198,6 +1198,24 @@ void ClubhouseState::buildScene()
         }
     };
 
+    //unlock
+    entity = m_backgroundScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 14.4f, 0.f, -3.f });
+    entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("unlock");
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<float>(45.f);
+    entity.getComponent<cro::Callback>().function =
+        [](cro::Entity e, float dt)
+    {
+        auto& f = e.getComponent<cro::Callback>().getUserData<float>();
+        f -= dt;
+        if (f < 0.f)
+        {
+            f += 65.f;
+            e.getComponent<cro::AudioEmitter>().play();
+        }
+    };
+
 
     //update the 3D view
     auto updateView = [&](cro::Camera& cam)

@@ -70,7 +70,7 @@ static constexpr std::array<std::array<std::int32_t, CPUStat::Count>, 28> CPUSta
     {0, 3, 2, 3, 3, 2, 40},
     {0, 2, 1, 4, 6, 3, 26},
     {0, 2, 2, 2, 3, 2, 29},
-    {0, 1, 3, 5, 2, 2, 32},
+    {0, 1, 3, 4, 2, 2, 32},
     {0, 2, 1, 2, 2, 3, 44},
     {0, 2, 1, 2, 2, 2, 27},
     {0, 3, 2, 1, 3, 2, 30},
@@ -109,6 +109,12 @@ namespace cstat
     static constexpr std::array<float, 7> MistakeCorrection =
     {
         0.24f, 0.43f, 0.65f, 0.95f, 0.8f, 0.45f, 0.25f
+    };
+
+    //how much to move away from the hole if we're too close after a long shot
+    static constexpr std::array<float, 7> HoleCorrection =
+    {
+        0.5f, 0.4f, 0.25f, 0.1f, 0.2f, 0.35f, 0.48f
     };
 
     template <std::size_t S>
