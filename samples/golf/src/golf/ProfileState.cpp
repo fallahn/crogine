@@ -93,7 +93,7 @@ namespace
         };
     };
 
-    constexpr glm::uvec2 BallTexSize(110u, 110u);
+    constexpr glm::uvec2 BallTexSize(96u, 110u);
     constexpr glm::uvec2 AvatarTexSize(130u, 202u);
 
     constexpr glm::vec3 CameraBasePosition({ -0.867f, 1.325f, -1.68f });
@@ -961,7 +961,7 @@ void ProfileState::buildScene()
     //            {
     //            }
     //        });
-    auto ballLeft = createButton("arrow_left", glm::vec2(311.f, 134.f)); //+24Y
+    auto ballLeft = createButton("arrow_left", glm::vec2(267.f, 134.f)); //+24Y
     ballLeft.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         uiSystem.addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
             {
@@ -971,7 +971,7 @@ void ProfileState::buildScene()
                     m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
                 }
             });
-    auto ballRight = createButton("arrow_right", glm::vec2(440.f, 134.f));
+    auto ballRight = createButton("arrow_right", glm::vec2(382.f, 134.f));
     ballRight.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         uiSystem.addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
             {
@@ -1091,7 +1091,7 @@ void ProfileState::buildScene()
 
     //ball preview
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 323.f, 83.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 279.f, 83.f, 0.1f });
     if (!m_sharedData.pixelScale)
     {
         entity.getComponent<cro::Transform>().setScale(glm::vec2(1.f / getViewScale()));
