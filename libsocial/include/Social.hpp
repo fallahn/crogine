@@ -68,7 +68,7 @@ public:
         enum
         {
             SocialMessage = 10000,
-            StatMessage
+            StatsMessage
         };
     };
 
@@ -76,8 +76,12 @@ public:
     {
         enum
         {
-            StatsReceived
+            StatsReceived,
+            HOFReceived
         }type = StatsReceived;
+        std::int32_t index = -1;
+        std::int32_t page = -1;
+        std::int32_t holeCount = -1;
     };
 
     struct SocialEvent final
@@ -136,6 +140,7 @@ public:
     static constexpr std::uint32_t IconSize = 64;
     static inline const std::string RSSFeed = "https://fallahn.itch.io/super-video-golf/devlog.rss";
     static inline const std::string WebURL = "https://fallahn.itch.io/super-video-golf";
+    static void updateHallOfFame() {}
 
     enum class UnlockType
     {

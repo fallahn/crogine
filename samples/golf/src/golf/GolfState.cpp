@@ -678,7 +678,10 @@ bool GolfState::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_KEYDOWN)
     {
-        resetIdle();
+        if (evt.key.keysym.sym != SDLK_F12) //default screenshot key
+        {
+            resetIdle();
+        }
         m_skipState.displayControllerMessage = false;
 
         switch (evt.key.keysym.sym)
@@ -909,7 +912,8 @@ void GolfState::handleMessage(const cro::Message& msg)
             }
 
             //check if we hooked/sliced
-            if (auto club = getClub(); club != ClubID::Putter)
+            if (auto club = getClub(); club != ClubID::Putter
+                && (!isCPU && !m_sharedData.fastCPU))
             {
                 //TODO this doesn't include any easing added when making the stroke
                 //we should be using the value returned by getStroke() in hitBall()

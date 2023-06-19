@@ -1009,43 +1009,46 @@ void GolfState::initScene()
 
     //assign indices into the CPU profile array
     //based on host's club set and CPU count
-    std::int32_t baseCPUIndex = 0;
-    std::int32_t stride = 1;
-
-    switch (Club::getClubLevel())
+    if (cpuCount)
     {
-    default: break;
-    case 0:
-        baseCPUIndex = 12;
-        stride = 16 / cpuCount; //even distribution through 16x level 0
-        break;
-    case 1:
-        baseCPUIndex = 8;
-        stride = cpuCount > 4 ? 2 : 23 / cpuCount; //every other profile unless more than 4
-        break;
-    case 2:
-        stride = cpuCount < 3 ? 1 :
-            cpuCount < 8 ? 2 :
-            27 / cpuCount;
-        break;
-    }
+        std::int32_t baseCPUIndex = 0;
+        std::int32_t stride = 1;
 
-
-    CRO_ASSERT(baseCPUIndex + (stride * (cpuCount - 1)) < CPUStats.size(), "");
-
-    for (auto i = 0u; i < m_sharedData.clients.size(); ++i)
-    {
-        if (m_sharedData.clients[i].connected)
+        switch (Club::getClubLevel())
         {
-            for (auto j = 0u; j < m_sharedData.clients[i].playerCount; ++j)
-            {
-                if (m_sharedData.clients[i].playerData[j].isCPU)
-                {
-                    CRO_ASSERT(baseCPUIndex < CPUStats.size(), "");
+        default: break;
+        case 0:
+            baseCPUIndex = 12;
+            stride = 16 / cpuCount; //even distribution through 16x level 0
+            break;
+        case 1:
+            baseCPUIndex = 8;
+            stride = cpuCount > 4 ? 2 : 23 / cpuCount; //every other profile unless more than 4
+            break;
+        case 2:
+            stride = cpuCount < 3 ? 1 :
+                cpuCount < 8 ? 2 :
+                27 / cpuCount;
+            break;
+        }
 
-                    auto cpuIndex = i * ConstVal::MaxPlayers + j;
-                    m_cpuProfileIndices[cpuIndex] = baseCPUIndex;
-                    baseCPUIndex += stride;
+
+        CRO_ASSERT(baseCPUIndex + (stride * (cpuCount - 1)) < CPUStats.size(), "");
+
+        for (auto i = 0u; i < m_sharedData.clients.size(); ++i)
+        {
+            if (m_sharedData.clients[i].connected)
+            {
+                for (auto j = 0u; j < m_sharedData.clients[i].playerCount; ++j)
+                {
+                    if (m_sharedData.clients[i].playerData[j].isCPU)
+                    {
+                        CRO_ASSERT(baseCPUIndex < CPUStats.size(), "");
+
+                        auto cpuIndex = i * ConstVal::MaxPlayers + j;
+                        m_cpuProfileIndices[cpuIndex] = baseCPUIndex;
+                        baseCPUIndex += stride;
+                    }
                 }
             }
         }

@@ -436,41 +436,44 @@ void CPUGolfer::setCPUCount(std::int32_t cpuCount, const SharedStateData& shared
 {
     std::fill(m_cpuProfileIndices.begin(), m_cpuProfileIndices.end(), -1);
 
-    std::int32_t baseCPUIndex = 0;
-    std::int32_t stride = 1;
-
-    switch (Club::getClubLevel())
+    if (cpuCount)
     {
-    default: break;
-    case 0:
-        baseCPUIndex = 12;
-        stride = 16 / cpuCount; //even distribution through 16x level 0
-        break;
-    case 1:
-        baseCPUIndex = 8;
-        stride = cpuCount > 4 ? 2 : 23 / cpuCount; //every other profile unless more than 4
-        break;
-    case 2:
-        stride = cpuCount < 3 ? 1 :
-            cpuCount < 8 ? 2 :
-            27 / cpuCount;
-        break;
-    }
+        std::int32_t baseCPUIndex = 0;
+        std::int32_t stride = 1;
 
-
-    CRO_ASSERT(baseCPUIndex + (stride * (cpuCount - 1)) < CPUStats.size(), "");
-
-    for (auto i = 0u; i < sharedData.connectionData.size(); ++i)
-    {
-        for (auto j = 0u; j < sharedData.connectionData[i].playerCount; ++j)
+        switch (Club::getClubLevel())
         {
-            if (sharedData.connectionData[i].playerData[j].isCPU)
-            {
-                CRO_ASSERT(baseCPUIndex < CPUStats.size(), "");
+        default: break;
+        case 0:
+            baseCPUIndex = 12;
+            stride = 16 / cpuCount; //even distribution through 16x level 0
+            break;
+        case 1:
+            baseCPUIndex = 8;
+            stride = cpuCount > 4 ? 2 : 23 / cpuCount; //every other profile unless more than 4
+            break;
+        case 2:
+            stride = cpuCount < 3 ? 1 :
+                cpuCount < 8 ? 2 :
+                27 / cpuCount;
+            break;
+        }
 
-                auto cpuIndex = i * ConstVal::MaxPlayers + j;
-                m_cpuProfileIndices[cpuIndex] = baseCPUIndex;
-                baseCPUIndex += stride;
+
+        CRO_ASSERT(baseCPUIndex + (stride * (cpuCount - 1)) < CPUStats.size(), "");
+
+        for (auto i = 0u; i < sharedData.connectionData.size(); ++i)
+        {
+            for (auto j = 0u; j < sharedData.connectionData[i].playerCount; ++j)
+            {
+                if (sharedData.connectionData[i].playerData[j].isCPU)
+                {
+                    CRO_ASSERT(baseCPUIndex < CPUStats.size(), "");
+
+                    auto cpuIndex = i * ConstVal::MaxPlayers + j;
+                    m_cpuProfileIndices[cpuIndex] = baseCPUIndex;
+                    baseCPUIndex += stride;
+                }
             }
         }
     }
@@ -1182,9 +1185,11 @@ void CPUGolfer::calcAccuracy()
     }
 
     //new ver
-    //const auto& Stat = CPUStats[m_cpuProfileIndices[m_activePlayer.client * ConstVal::MaxPlayers + m_activePlayer.player]];
-    //m_targetAccuracy += cstat::getOffset(cstat::AccuracyOffsets, Stat[CPUStat::StrokeAccuracy]) * 0.00375f; //scales max value to 0.06
-
+    const auto& Stat = CPUStats[m_cpuProfileIndices[m_activePlayer.client * ConstVal::MaxPlayers + m_activePlayer.player]];
+    if (m_puttFromTee)
+    {
+        m_targetAccuracy += cstat::getOffset(cstat::AccuracyOffsets, Stat[CPUStat::StrokeAccuracy]) * 0.00375f; //scales max value to 0.06
+    }
 
     //occasionally make really inaccurate
     //... or maybe even perfect? :)
@@ -1222,19 +1227,20 @@ void CPUGolfer::calcAccuracy()
     {
         m_targetPower = std::min(1.f, m_targetPower + (1 - (cro::Util::Random::value(0, 1) * 2)) * (static_cast<float>(m_offsetRotation % 4) / 50.f));
 
-        if (m_skills[getSkillIndex()].mistakeOdds != 0)
+        //old ver
+        /*if (m_skills[getSkillIndex()].mistakeOdds != 0)
         {
             if (cro::Util::Random::value(0, m_skills[getSkillIndex()].mistakeOdds) == 0)
             {
                 m_targetPower += static_cast<float>(cro::Util::Random::value(-6, 6)) / 1000.f;
             }
-        }
+        }*/
 
         //new ver
-        /*if (cro::Util::Random::value(0, 9) < Stat[CPUStat::MistakeLikelyhood])
+        if (cro::Util::Random::value(0, 9) < Stat[CPUStat::MistakeLikelyhood])
         {
-            m_targetPower += cstat::getOffset(cstat::PowerOffsets, Stat[CPUStat::PowerAccuracy]) * 0.00002f;
-        }*/
+            m_targetPower += cstat::getOffset(cstat::PowerOffsets, Stat[CPUStat::PowerAccuracy]) * 0.00001f;
+        }
 
         m_targetPower = std::min(1.f, m_targetPower);
     }

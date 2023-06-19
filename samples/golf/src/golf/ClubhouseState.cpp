@@ -283,28 +283,28 @@ ClubhouseState::ClubhouseState(cro::StateStack& ss, cro::State::Context ctx, Sha
     Social::setGroup(0);
 
 #ifdef CRO_DEBUG_
-    registerWindow([&]()
-        {
-            if (ImGui::Begin("Buns"))
-            {
-                ImGui::Text("Index %u", m_arcadeIndex);
-                //float maxDepth = m_backgroundScene.getActiveCamera().getComponent<cro::Camera>().getMaxShadowDistance();
-                //if (ImGui::SliderFloat("Depth", &maxDepth, 1.f, 30.f))
-                //{
-                //    m_backgroundScene.getActiveCamera().getComponent<cro::Camera>().setMaxShadowDistance(maxDepth);
-                //}
+    //registerWindow([&]()
+    //    {
+    //        if (ImGui::Begin("Buns"))
+    //        {
+    //            //ImGui::Text("Index %u", m_arcadeIndexJoy);
+    //            //float maxDepth = m_backgroundScene.getActiveCamera().getComponent<cro::Camera>().getMaxShadowDistance();
+    //            //if (ImGui::SliderFloat("Depth", &maxDepth, 1.f, 30.f))
+    //            //{
+    //            //    m_backgroundScene.getActiveCamera().getComponent<cro::Camera>().setMaxShadowDistance(maxDepth);
+    //            //}
 
-                //float ext = m_backgroundScene.getActiveCamera().getComponent<cro::Camera>().getShadowExpansion();
-                //if (ImGui::SliderFloat("ext", &ext, 0.f, 30.f))
-                //{
-                //    m_backgroundScene.getActiveCamera().getComponent<cro::Camera>().setShadowExpansion(ext);
-                //}
+    //            //float ext = m_backgroundScene.getActiveCamera().getComponent<cro::Camera>().getShadowExpansion();
+    //            //if (ImGui::SliderFloat("ext", &ext, 0.f, 30.f))
+    //            //{
+    //            //    m_backgroundScene.getActiveCamera().getComponent<cro::Camera>().setShadowExpansion(ext);
+    //            //}
 
-                //auto rot = m_backgroundScene.getSunlight().getComponent<cro::Transform>().getRotation();
-                //ImGui::Text("%3.3f, %3.3f, %3.3f, %3.3f", rot.x, rot.y, rot.z, rot.w);
-            }
-            ImGui::End();
-        });
+    //            //auto rot = m_backgroundScene.getSunlight().getComponent<cro::Transform>().getRotation();
+    //            //ImGui::Text("%3.3f, %3.3f, %3.3f, %3.3f", rot.x, rot.y, rot.z, rot.w);
+    //        }
+    //        ImGui::End();
+    //    });
 #endif
 }
 
