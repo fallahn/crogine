@@ -51,7 +51,7 @@ class CPUGolfer final : public cro::GuiClient
 {
 public:
 
-    CPUGolfer(const InputParser&, const ActivePlayer&, const CollisionMesh&);
+    CPUGolfer(InputParser&, const ActivePlayer&, const CollisionMesh&);
 
     void handleMessage(const cro::Message&);
     void activate(glm::vec3 target, glm::vec3 fallbackTarget, bool puttFromTee);
@@ -67,7 +67,7 @@ public:
     void setCPUCount(std::int32_t, const struct SharedStateData&);
 private:
 
-    const InputParser& m_inputParser; //only reads the state - actual commands are send by raising events.
+    InputParser& m_inputParser;
     const ActivePlayer& m_activePlayer;
     const CollisionMesh& m_collisionMesh;
     bool m_fastCPU;

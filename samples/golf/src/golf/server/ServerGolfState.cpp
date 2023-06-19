@@ -263,7 +263,7 @@ void GolfState::netEvent(const net::NetEvent& evt)
         default: break;
         case PacketID::NewPlayer:
             //checks if player is CPU and requires fast move
-            makeCPUMove();
+            //makeCPUMove();
             break;
         case PacketID::SkipTurn:
             skipCurrentTurn(evt.packet.as<std::uint8_t>());
@@ -311,7 +311,7 @@ void GolfState::netEvent(const net::NetEvent& evt)
                 m_sharedData.host.broadcastPacket(PacketID::FastCPU, m_sharedData.fastCPU, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
 
                 //this checks current player is CPU and launch a move if inactive
-                makeCPUMove();
+                //makeCPUMove();
             }
             break;
         }

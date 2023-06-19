@@ -703,6 +703,18 @@ InputParser::StrokeResult InputParser::getStroke(std::int32_t club, std::int32_t
     return { impulse, spin, hook };
 }
 
+void InputParser::doFastStroke(float accuracy, float power)
+{
+    m_hook = (accuracy + 1.f) / 2.f;
+    m_power = cro::Util::Easing::easeOutSine(power); //gets eased in on getPower();
+    
+    m_powerbarDirection = 1.f;
+    m_state = State::Flight;
+
+    auto* msg = cro::App::postMessage<GolfEvent>(MessageID::GolfMessage);
+    msg->type = GolfEvent::HitBall;
+}
+
 //private
 void InputParser::updateDistanceEstimation()
 {
@@ -851,6 +863,7 @@ void InputParser::updateStroke(float dt)
 
             //move level to 1 and back (returning to 0 is a fluff)
             float speed = dt * 0.7f;
+            
             if (m_terrain == TerrainID::Green
                 && m_sharedData.showPuttingPower)
             {

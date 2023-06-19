@@ -97,7 +97,7 @@ result tolerance
 result tolerance putting
 stroke accuracy
 mistake odds
-TODO this is more or less deprecated in favour of sharing stats with fast CPU
+
 */
 const std::array<CPUGolfer::SkillContext, 6> CPUGolfer::m_skills =
 {
@@ -109,7 +109,7 @@ const std::array<CPUGolfer::SkillContext, 6> CPUGolfer::m_skills =
     {CPUGolfer::Skill::Dynamic, 2.f, 0.06f, 0, 50}
 };
 
-CPUGolfer::CPUGolfer(const InputParser& ip, const ActivePlayer& ap, const CollisionMesh& cm)
+CPUGolfer::CPUGolfer(InputParser& ip, const ActivePlayer& ap, const CollisionMesh& cm)
     : m_inputParser     (ip),
     m_activePlayer      (ap),
     m_collisionMesh     (cm),
@@ -210,7 +210,7 @@ void CPUGolfer::activate(glm::vec3 target, glm::vec3 fallback, bool puttFromTee)
     //target += getRandomOffset(target - m_activePlayer.position);
     //fallback += getRandomOffset(fallback - m_activePlayer.position);
 
-    if (!m_fastCPU &&
+    if (/*!m_fastCPU &&*/
         m_state == State::Inactive)
     {
         m_puttFromTee = puttFromTee;
@@ -425,8 +425,8 @@ void CPUGolfer::setPuttingPower(float power)
 
 std::size_t CPUGolfer::getSkillIndex() const
 {
-    //std::int32_t offset = ((m_activePlayer.player + 2) % 3) * 2;
-    //return std::clamp((static_cast<std::int32_t>(m_skillIndex) - offset), 0, 5);
+    /*std::int32_t offset = ((m_activePlayer.player + 2) % 3) * 2;
+    return std::clamp((static_cast<std::int32_t>(m_skillIndex) - offset), 0, 5);*/
 
     auto id = m_cpuProfileIndices[m_activePlayer.client * ConstVal::MaxPlayers + m_activePlayer.player];
     return std::clamp((static_cast<std::int32_t>(CPUStats.size()) - id) / 5, 0, 5);
@@ -986,9 +986,9 @@ void CPUGolfer::updatePrediction(float dt)
             if (m_activePlayer.terrain == TerrainID::Green)
             {
                 //see if the flag indicator has a better suggestion :)
-                //m_targetPower = std::min(m_targetPower, m_puttingPower * (1.f + (static_cast<float>(getSkillIndex()) * 0.01f)));
-                auto cpuID = m_cpuProfileIndices[m_activePlayer.client * ConstVal::MaxPlayers + m_activePlayer.player];
-                m_targetPower = std::min(m_targetPower, m_puttingPower * (1.f + (static_cast<float>((CPUStats.size() - cpuID) / 2) * 0.01f)));
+                m_targetPower = std::min(m_targetPower, m_puttingPower * (1.f + (static_cast<float>(getSkillIndex()) * 0.01f)));
+                //auto cpuID = m_cpuProfileIndices[m_activePlayer.client * ConstVal::MaxPlayers + m_activePlayer.player];
+                //m_targetPower = std::min(m_targetPower, m_puttingPower * (1.f + (static_cast<float>((CPUStats.size() - cpuID) / 2) * 0.01f)));
             }
 
             m_targetAccuracy -= (Deviance[devianceOffset] * 0.05f) * devianceMultiplier;
@@ -1117,44 +1117,53 @@ void CPUGolfer::stroke(float dt)
     }
     else
     {
-        if (!m_inputParser.inProgress())
+        if (m_fastCPU)
         {
-            //start the stroke
-            sendKeystroke(m_inputParser.getInputBinding().keys[InputBinding::Action]);
-
-            m_strokeState = StrokeState::Power;
-            m_prevPower = 0.f;
-            m_prevAccuracy = -1.f;
-
-            devianceOffset = (devianceOffset + 1 + m_activePlayer.player) % Deviance.size();
-            //TODO this actually happens twice because of the delay of the
-            //event queue, how ever doesn't appear to be a problem as long
-            //as the 'double-tap' prevention works
+            //just apply our values and raise a stroke message
+            m_inputParser.doFastStroke(m_targetAccuracy, m_targetPower);
+            m_state = State::Watching;
         }
         else
         {
-            if (m_strokeState == StrokeState::Power)
+            if (!m_inputParser.inProgress())
             {
-                auto power = m_inputParser.getPower();
-                if ((m_targetPower - power) < 0.02f
-                    && m_prevPower < power)
-                {
-                    sendKeystroke(m_inputParser.getInputBinding().keys[InputBinding::Action]);
-                    m_strokeState = StrokeState::Accuracy;
-                }
-                m_prevPower = power;
+                //start the stroke
+                sendKeystroke(m_inputParser.getInputBinding().keys[InputBinding::Action]);
+
+                m_strokeState = StrokeState::Power;
+                m_prevPower = 0.f;
+                m_prevAccuracy = -1.f;
+
+                devianceOffset = (devianceOffset + 1 + m_activePlayer.player) % Deviance.size();
+                //TODO this actually happens twice because of the delay of the
+                //event queue, how ever doesn't appear to be a problem as long
+                //as the 'double-tap' prevention works
             }
             else
             {
-                auto accuracy = m_inputParser.getHook();
-                if (accuracy < m_targetAccuracy
-                    && m_prevAccuracy > accuracy)
+                if (m_strokeState == StrokeState::Power)
                 {
-                    sendKeystroke(m_inputParser.getInputBinding().keys[InputBinding::Action]);
-                    m_state = State::Watching;
-                    return;
+                    auto power = m_inputParser.getPower();
+                    if ((m_targetPower - power) < 0.02f
+                        && m_prevPower < power)
+                    {
+                        sendKeystroke(m_inputParser.getInputBinding().keys[InputBinding::Action]);
+                        m_strokeState = StrokeState::Accuracy;
+                    }
+                    m_prevPower = power;
                 }
-                m_prevAccuracy = accuracy;
+                else
+                {
+                    auto accuracy = m_inputParser.getHook();
+                    if (accuracy < m_targetAccuracy
+                        && m_prevAccuracy > accuracy)
+                    {
+                        sendKeystroke(m_inputParser.getInputBinding().keys[InputBinding::Action]);
+                        m_state = State::Watching;
+                        return;
+                    }
+                    m_prevAccuracy = accuracy;
+                }
             }
         }
     }
@@ -1167,27 +1176,29 @@ void CPUGolfer::calcAccuracy()
     m_targetAccuracy = 0.08f;
 
     //old ver
-    //if (m_skills[getSkillIndex()].strokeAccuracy != 0)
-    //{
-    //    m_targetAccuracy += static_cast<float>(-m_skills[getSkillIndex()].strokeAccuracy) / 100.f;
-    //}
+    if (m_skills[getSkillIndex()].strokeAccuracy != 0)
+    {
+        m_targetAccuracy += static_cast<float>(-m_skills[getSkillIndex()].strokeAccuracy) / 100.f;
+    }
 
-    const auto& Stat = CPUStats[m_cpuProfileIndices[m_activePlayer.client * ConstVal::MaxPlayers + m_activePlayer.player]];
-    m_targetAccuracy += cstat::getOffset(cstat::AccuracyOffsets, Stat[CPUStat::StrokeAccuracy]) * 0.00375f; //scales max value to 0.06
+    //new ver
+    //const auto& Stat = CPUStats[m_cpuProfileIndices[m_activePlayer.client * ConstVal::MaxPlayers + m_activePlayer.player]];
+    //m_targetAccuracy += cstat::getOffset(cstat::AccuracyOffsets, Stat[CPUStat::StrokeAccuracy]) * 0.00375f; //scales max value to 0.06
 
 
     //occasionally make really inaccurate
     //... or maybe even perfect? :)
     //old version
-    //if (m_skills[getSkillIndex()].mistakeOdds != 0)
-    //{
-    //    if (cro::Util::Random::value(0, m_skills[getSkillIndex()].mistakeOdds) == 0)
-    //    {
-    //        m_targetAccuracy += static_cast<float>(cro::Util::Random::value(-16, 16)) / 100.f;
-    //    }
-    //}
+    if (m_skills[getSkillIndex()].mistakeOdds != 0)
+    {
+        if (cro::Util::Random::value(0, m_skills[getSkillIndex()].mistakeOdds) == 0)
+        {
+            m_targetAccuracy += static_cast<float>(cro::Util::Random::value(-16, 16)) / 100.f;
+        }
+    }
 
-    std::int32_t puttingOdds = 0;
+    //new version
+    /*std::int32_t puttingOdds = 0;
     if (m_activePlayer.terrain == TerrainID::Green)
     {
         float odds = std::min(1.f, glm::length(m_target - m_activePlayer.position) / 12.f) * 2.f;
@@ -1197,32 +1208,33 @@ void CPUGolfer::calcAccuracy()
     if (cro::Util::Random::value(0, 9) < Stat[CPUStat::MistakeLikelyhood] + puttingOdds)
     {
         m_targetAccuracy += cstat::getOffset(cstat::AccuracyOffsets, Stat[CPUStat::StrokeAccuracy]) / 100.f;
-    }
+    }*/
 
 
 
     //to prevent multiple players making the same decision offset the accuracy a small amount
     //based on their client and player number
     //old version
-    //auto offset = (m_offsetRotation % 4) * 10;
-    //m_targetAccuracy += (static_cast<float>(cro::Util::Random::value(-(offset / 2), (offset / 2) + 1)) / 500.f) * getOffsetValue();
+    auto offset = (m_offsetRotation % 4) * 10;
+    m_targetAccuracy += (static_cast<float>(cro::Util::Random::value(-(offset / 2), (offset / 2) + 1)) / 500.f) * getOffsetValue();
 
     if (m_clubID != ClubID::Putter)
     {
         m_targetPower = std::min(1.f, m_targetPower + (1 - (cro::Util::Random::value(0, 1) * 2)) * (static_cast<float>(m_offsetRotation % 4) / 50.f));
 
-        /*if (m_skills[getSkillIndex()].mistakeOdds != 0)
+        if (m_skills[getSkillIndex()].mistakeOdds != 0)
         {
             if (cro::Util::Random::value(0, m_skills[getSkillIndex()].mistakeOdds) == 0)
             {
                 m_targetPower += static_cast<float>(cro::Util::Random::value(-6, 6)) / 1000.f;
             }
-        }*/
+        }
 
-        if (cro::Util::Random::value(0, 9) < Stat[CPUStat::MistakeLikelyhood])
+        //new ver
+        /*if (cro::Util::Random::value(0, 9) < Stat[CPUStat::MistakeLikelyhood])
         {
             m_targetPower += cstat::getOffset(cstat::PowerOffsets, Stat[CPUStat::PowerAccuracy]) * 0.00002f;
-        }
+        }*/
 
         m_targetPower = std::min(1.f, m_targetPower);
     }
@@ -1240,7 +1252,7 @@ float CPUGolfer::getOffsetValue() const
     float multiplier = m_activePlayer.terrain == TerrainID::Green ? smoothstep(0.2f, 0.95f, glm::length(m_target - m_activePlayer.position) / Clubs[ClubID::Putter].getTarget(m_distanceToPin)) : 1.f;
 
     return static_cast<float>(1 - ((m_offsetRotation % 2) * 2))
-        //* static_cast<float>((m_offsetRotation % (m_skills.size() - getSkillIndex())))
+        * static_cast<float>((m_offsetRotation % (m_skills.size() - getSkillIndex())))
         * multiplier;
 }
 
@@ -1269,21 +1281,23 @@ void CPUGolfer::sendKeystroke(std::int32_t key, bool autoRelease)
 
 glm::vec3 CPUGolfer::getRandomOffset(glm::vec3 baseDir) const
 {
-    auto indexOffset = m_cpuProfileIndices[m_activePlayer.client * ConstVal::MaxPlayers + m_activePlayer.player];
+    return glm::vec3(0.f);
 
-    const auto baseLength = glm::length(baseDir);
-    auto normDir = baseDir / baseLength;
+    //auto indexOffset = m_cpuProfileIndices[m_activePlayer.client * ConstVal::MaxPlayers + m_activePlayer.player];
 
-    const auto& cpuStat = CPUStats[indexOffset];
-    const float maxDist = Clubs[ClubID::Driver].getTargetAtLevel(cpuStat[CPUStat::Skill]);
-    const float resultMultiplier = std::max(1.f, baseLength / maxDist);
+    //const auto baseLength = glm::length(baseDir);
+    //auto normDir = baseDir / baseLength;
 
-    const float powerOffset = cstat::getOffset(cstat::PowerOffsets, cpuStat[CPUStat::PowerAccuracy]);
-    auto retVal = normDir * powerOffset * (resultMultiplier * resultMultiplier);
+    //const auto& cpuStat = CPUStats[indexOffset];
+    //const float maxDist = Clubs[ClubID::Driver].getTargetAtLevel(cpuStat[CPUStat::Skill]);
+    //const float resultMultiplier = std::max(1.f, baseLength / maxDist);
 
-    normDir = { -normDir.z, normDir.y, normDir.x };
-    const float accuracyOffset = cstat::getOffset(cstat::AccuracyOffsets, cpuStat[CPUStat::StrokeAccuracy]);
-    retVal += normDir * accuracyOffset * resultMultiplier;
+    //const float powerOffset = cstat::getOffset(cstat::PowerOffsets, cpuStat[CPUStat::PowerAccuracy]);
+    //auto retVal = normDir * powerOffset * (resultMultiplier * resultMultiplier);
 
-    return retVal * (static_cast<float>(indexOffset) / CPUStats.size()) * 0.05f;
+    //normDir = { -normDir.z, normDir.y, normDir.x };
+    //const float accuracyOffset = cstat::getOffset(cstat::AccuracyOffsets, cpuStat[CPUStat::StrokeAccuracy]);
+    //retVal += normDir * accuracyOffset * resultMultiplier;
+
+    //return retVal * (static_cast<float>(indexOffset) / CPUStats.size()) * 0.05f;
 }

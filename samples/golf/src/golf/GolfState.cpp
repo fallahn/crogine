@@ -898,6 +898,16 @@ void GolfState::handleMessage(const cro::Message& msg)
                 cro::GameController::rumbleStart(activeControllerID(m_sharedData.inputBinding.playerID), strLow, strHigh, 200);
             }
 
+            //auto skip if fast CPU is on
+            if (m_sharedData.fastCPU && isCPU)
+            {
+                if (m_currentPlayer.client == m_sharedData.localConnectionData.connectionID)
+                {
+                    m_sharedData.clientConnection.netClient.sendPacket(PacketID::SkipTurn, m_sharedData.localConnectionData.connectionID, net::NetFlag::Reliable);
+                    m_skipState.wasSkipped = true;
+                }
+            }
+
             //check if we hooked/sliced
             if (auto club = getClub(); club != ClubID::Putter)
             {
@@ -6661,10 +6671,10 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     //if we're using fast CPU we need to pre-increment stroke so
     //that the UI displays correct score while waiting for the
     //arbiter score from the server.
-    if (isCPU && m_sharedData.fastCPU)
+    /*if (isCPU && m_sharedData.fastCPU)
     {
         m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].holeScores[m_currentHole]++;
-    }
+    }*/
 
 
     //this is just so that the particle director knows if we're on a new hole
