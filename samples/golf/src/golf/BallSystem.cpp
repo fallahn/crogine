@@ -204,6 +204,11 @@ bool BallSystem::setHoleData(HoleData& holeData, bool rebuildMesh)
     auto result = rebuildMesh ? updateCollisionMesh(holeData.modelPath) : true;
     holeData.pin.y = getTerrain(holeData.pin).intersection.y;
 
+    for (auto entity : getEntities())
+    {
+        entity.getComponent<cro::Transform>().setPosition(holeData.tee);
+    }
+
     return result;
 }
 

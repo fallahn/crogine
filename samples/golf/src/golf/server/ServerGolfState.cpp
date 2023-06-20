@@ -707,7 +707,7 @@ void GolfState::setNextHole()
         }
 
         //reset player positions/strokes
-        for (auto& player : m_playerInfo)
+        /*for (auto& player : m_playerInfo)
         {
             player.position = m_holeData[m_currentHole].tee;
             player.distanceToHole = glm::length(m_holeData[m_currentHole].tee - m_holeData[m_currentHole].pin);
@@ -716,19 +716,21 @@ void GolfState::setNextHole()
             auto ball = player.ballEntity;
             ball.getComponent<Ball>().terrain = player.terrain;
             ball.getComponent<Ball>().velocity = glm::vec3(0.f);
-            ball.getComponent<cro::Transform>().setPosition(player.position);
+            ball.getComponent<cro::Transform>().setPosition(m_holeData[m_currentHole].tee);
 
             auto timestamp = m_serverTime.elapsed().asMilliseconds();
 
             ActorInfo info;
             info.serverID = static_cast<std::uint32_t>(ball.getIndex());
             info.position = ball.getComponent<cro::Transform>().getPosition();
+            info.rotation = cro::Util::Net::compressQuat(ball.getComponent<cro::Transform>().getRotation());
+            info.windEffect = ball.getComponent<Ball>().windEffect;
             info.timestamp = timestamp;
             info.clientID = player.client;
             info.playerID = player.player;
             info.state = static_cast<std::uint8_t>(ball.getComponent<Ball>().state);
             m_sharedData.host.broadcastPacket(PacketID::ActorUpdate, info, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
-        }
+        }*/
 
         //tell clients to set up next hole
         std::uint16_t newHole = (m_currentHole << 8) | std::uint8_t(m_holeData[m_currentHole].par);
@@ -740,7 +742,7 @@ void GolfState::setNextHole()
         entity.addComponent<cro::Transform>();
         entity.addComponent<cro::Callback>().active = true;
         entity.getComponent<cro::Callback>().function =
-            [&](cro::Entity e, float dt)
+            [&, ballSystem](cro::Entity e, float dt)
         {
             if (m_allMapsLoaded)
             {
@@ -756,6 +758,32 @@ void GolfState::setNextHole()
             else
             {
                 m_scoreboardTime = 0.f;
+
+                //apparently we have to do this here else the client just ignores it
+                for (auto& player : m_playerInfo)
+                {
+                    player.position = m_holeData[m_currentHole].tee;
+                    player.distanceToHole = glm::length(m_holeData[m_currentHole].tee - m_holeData[m_currentHole].pin);
+                    player.terrain = ballSystem->getTerrain(player.position).terrain;
+
+                    auto ball = player.ballEntity;
+                    ball.getComponent<Ball>().terrain = player.terrain;
+                    ball.getComponent<Ball>().velocity = glm::vec3(0.f);
+                    ball.getComponent<cro::Transform>().setPosition(m_holeData[m_currentHole].tee);
+
+                    auto timestamp = m_serverTime.elapsed().asMilliseconds();
+
+                    ActorInfo info;
+                    info.serverID = static_cast<std::uint32_t>(ball.getIndex());
+                    info.position = ball.getComponent<cro::Transform>().getPosition();
+                    info.rotation = cro::Util::Net::compressQuat(ball.getComponent<cro::Transform>().getRotation());
+                    info.windEffect = ball.getComponent<Ball>().windEffect;
+                    info.timestamp = timestamp;
+                    info.clientID = player.client;
+                    info.playerID = player.player;
+                    info.state = static_cast<std::uint8_t>(ball.getComponent<Ball>().state);
+                    m_sharedData.host.broadcastPacket(PacketID::ActorUpdate, info, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                }
             }
 
             //make sure to keep resetting this to prevent unfairly
