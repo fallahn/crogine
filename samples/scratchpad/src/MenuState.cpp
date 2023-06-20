@@ -45,6 +45,8 @@ source distribution.
 #include <crogine/ecs/systems/CameraSystem.hpp>
 #include <crogine/ecs/systems/RenderSystem2D.hpp>
 
+#include <crogine/util/Easings.hpp>
+
 #include <fstream>
 #include <iomanip>
 
@@ -97,6 +99,26 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, MyApp&
         //create ImGui stuff
         createUI();
     });
+
+    float buns = 0.1f;
+    for (auto i = 0; i < 9; ++i)
+    {
+        LogI << "buns " << buns << std::endl;
+        
+        auto bunsIn = cro::Util::Easing::easeInSine(buns);
+        LogI << "buns in " << bunsIn << std::endl;
+
+        //1.f - std::cos((t * Const::PI) / 2.f);
+
+        auto invSine = [](float x)
+        {
+            return (std::acos(1.f - x) / cro::Util::Const::PI) * 2.f;
+        };
+        LogI << "buns out " << invSine(bunsIn) << std::endl;
+
+        buns += 0.1f;
+    }
+
 }
 
 //public

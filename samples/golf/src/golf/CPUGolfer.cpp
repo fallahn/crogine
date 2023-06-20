@@ -207,12 +207,12 @@ void CPUGolfer::handleMessage(const cro::Message& msg)
 
 void CPUGolfer::activate(glm::vec3 target, glm::vec3 fallback, bool puttFromTee)
 {
-    //target += getRandomOffset(target - m_activePlayer.position);
-    //fallback += getRandomOffset(fallback - m_activePlayer.position);
 
     if (/*!m_fastCPU &&*/
         m_state == State::Inactive)
     {
+        const auto& Stat = CPUStats[m_cpuProfileIndices[m_activePlayer.client * ConstVal::MaxPlayers + m_activePlayer.player]];
+
         m_puttFromTee = puttFromTee;
         m_fallbackTarget = fallback;
         m_baseTarget = m_target = target;
@@ -258,7 +258,28 @@ void CPUGolfer::activate(glm::vec3 target, glm::vec3 fallback, bool puttFromTee)
             case TerrainID::Water:
             case TerrainID::Scrub:
             case TerrainID::Stone:
-                m_baseTarget = m_target = fallback;
+                if (cro::Util::Random::value(0, 9) > Stat[CPUStat::MistakeLikelyhood])
+                {
+                    m_baseTarget = m_target = fallback;
+                }
+                break;
+            }
+        }
+        else
+        {
+            //just check the target is in bounds
+            const auto terrain = m_collisionMesh.getTerrain(m_target);
+            switch (terrain.terrain)
+            {
+            default:
+                break;
+            case TerrainID::Water:
+            case TerrainID::Scrub:
+            case TerrainID::Stone:
+                if (cro::Util::Random::value(0, 9) > Stat[CPUStat::MistakeLikelyhood])
+                {
+                    m_baseTarget = m_target = fallback;
+                }
                 break;
             }
         }

@@ -164,8 +164,8 @@ bool MyApp::initialise()
     m_stateStack.registerState<LogState>(States::ScratchPad::Log);
 
 #ifdef CRO_DEBUG_
-    m_stateStack.pushState(States::ScratchPad::Log);
-    //m_stateStack.pushState(States::ScratchPad::MainMenu);
+    //m_stateStack.pushState(States::ScratchPad::Log);
+    m_stateStack.pushState(States::ScratchPad::MainMenu);
 #else
     m_stateStack.pushState(States::ScratchPad::MainMenu);
 #endif

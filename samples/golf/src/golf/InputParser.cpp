@@ -705,8 +705,17 @@ InputParser::StrokeResult InputParser::getStroke(std::int32_t club, std::int32_t
 
 void InputParser::doFastStroke(float accuracy, float power)
 {
+    //this ONLY works with the CPU because it's been estimating
+    //the suppplied power value based on getPower() which has been
+    //appplying easeInSine() - and we need to invert that to get the
+    //base power value again...
+    const auto invSine = [](float x)
+    {
+        return (std::acos(1.f - x) / cro::Util::Const::PI) * 2.f;
+    };
+
     m_hook = (accuracy + 1.f) / 2.f;
-    m_power = cro::Util::Easing::easeOutSine(power); //gets eased in on getPower();
+    m_power = invSine(power); //gets eased in on getPower();
     
     m_powerbarDirection = 1.f;
     m_state = State::Flight;
