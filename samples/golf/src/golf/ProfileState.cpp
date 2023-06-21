@@ -80,6 +80,8 @@ source distribution.
 
 #include "../ErrorCheck.hpp"
 
+#include <sstream>
+
 namespace
 {
     struct MenuID final
@@ -102,6 +104,11 @@ namespace
 
     const cro::String XboxString("LB/LT - RB/RT Rotate/Zoom");
     const cro::String PSString("L1/L2 - R1/R2 Rotate/Zoom");
+
+    constexpr cro::FloatRect BioCrop =
+    {
+        0.f, -107.f, 96.f, 110.f
+    };
 
     constexpr std::size_t PaletteColumnCount = 8;
     constexpr std::array SwatchPositions =
@@ -139,14 +146,24 @@ ProfileState::ProfileState(cro::StateStack& ss, cro::State::Context ctx, SharedS
     m_modelScene.simulate(0.f);
     m_uiScene.simulate(0.f);
 
-    /*registerWindow([&]()
+    registerWindow([&]()
         {
             if (ImGui::Begin("Flaps"))
             {
-                ImGui::Text("Palette Index %u, UI Index %u", pIndex, sIndex);
+                //ImGui::Text("Palette Index %u, UI Index %u", pIndex, sIndex);
+                auto org = m_menuEntities[EntityID::BioText].getComponent<cro::Transform>().getOrigin();
+                if (ImGui::SliderFloat("Bottom", &org.y, -400.f, 0.f))
+                {
+                    auto bounds = cro::Text::getLocalBounds(m_menuEntities[EntityID::BioText]);
+                    org.y = std::clamp(org.y, -bounds.height - BioCrop.bottom, 0.f);
+                    auto rect = BioCrop;
+                    rect.bottom += org.y;
+                    m_menuEntities[EntityID::BioText].getComponent<cro::Drawable2D>().setCroppingArea(rect);
+                    m_menuEntities[EntityID::BioText].getComponent<cro::Transform>().setOrigin(org);
+                }
             }
             ImGui::End();
-        });*/
+        });
 }
 
 //public
@@ -210,6 +227,14 @@ bool ProfileState::handleEvent(const cro::Event& evt)
             {
                 applyTextEdit();
             }
+            break;
+        case SDLK_k:
+            m_menuEntities[EntityID::BioText].getComponent<cro::Callback>().getUserData<std::int32_t>()++;
+            m_menuEntities[EntityID::BioText].getComponent<cro::Callback>().active = true;
+            break;
+        case SDLK_l:
+            m_menuEntities[EntityID::BioText].getComponent<cro::Callback>().getUserData<std::int32_t>()--;
+            m_menuEntities[EntityID::BioText].getComponent<cro::Callback>().active = true;
             break;
         }
     }
@@ -1143,9 +1168,50 @@ void ProfileState::buildScene()
     }
 
 
+    auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
+
+    //bio string
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 400.f, 190.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(smallFont);// .setString("Cleftwhistle");
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+    entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
+    entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+    
+    entity.addComponent<cro::Callback>().setUserData<std::int32_t>(0);
+    entity.getComponent<cro::Callback>().function =
+        [](cro::Entity e, float dt)
+    {
+        static constexpr float RowHeight = 8.f;
+        const auto bounds = cro::Text::getLocalBounds(e);
+        const auto maxHeight = -bounds.height - BioCrop.bottom;
+
+        auto& idx = e.getComponent<cro::Callback>().getUserData<std::int32_t>();
+        idx = std::clamp(idx, 0, static_cast<std::int32_t>(maxHeight / RowHeight));
+
+        const float target = idx * -RowHeight;
+        auto org = e.getComponent<cro::Transform>().getOrigin();
+        org.y = std::min(target, org.y - (target - org.y) * dt);
+
+        auto rect = BioCrop;
+        rect.bottom += org.y;
+        e.getComponent<cro::Drawable2D>().setCroppingArea(rect);
+        e.getComponent<cro::Transform>().setOrigin(org);
+
+        if (org.y == target)
+        {
+            e.getComponent<cro::Callback>().active = false;
+        }
+    };
+
+    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_menuEntities[EntityID::BioText] = entity;
+    setBioString(generateRandomBio());
+
     //help string
     bounds = bgEnt.getComponent<cro::Sprite>().getTextureBounds();
-    auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({bounds.width / 2.f, 14.f, 0.1f});
     entity.addComponent<cro::Drawable2D>();
@@ -1839,4 +1905,41 @@ bool ProfileState::applyTextEdit()
     }
     m_textEdit = {};
     return false;
+}
+
+std::string ProfileState::generateRandomBio() const
+{
+    return 
+R"(With a firm grip on the biggest wood and a pair of dimpled balls cupped in their hands, 
+this is one player who's always ready to tug at the shaft of their favourite club, withdrawing it from the sheath
+of the enveloping golf bag... preparing to drive one home as hard and as far as they can go.)";
+}
+
+void ProfileState::setBioString(const std::string& s)
+{
+    static constexpr std::size_t MaxChars = 512;
+    static constexpr std::size_t MaxWidth = 18;
+
+    cro::String output;
+    std::string tmp;
+
+    std::size_t currentWidth = 0;
+
+    //wordwrap string
+    std::stringstream ss(s.c_str());
+    while (std::getline(ss, tmp, ' ')
+        && output.size() < MaxChars)
+    {
+        if (currentWidth + tmp.size() >= MaxWidth)
+        {
+            output.replace(output.size() - 1, 1, "\n");
+            currentWidth = 0;
+        }
+        output += cro::String::fromUtf8(tmp.begin(), tmp.end()) + " ";
+        currentWidth += tmp.size() + 1;
+    }
+
+    m_menuEntities[EntityID::BioText].getComponent<cro::Transform>().setOrigin({ 0.f, -0.f });
+    m_menuEntities[EntityID::BioText].getComponent<cro::Text>().setString(output);
+    m_menuEntities[EntityID::BioText].getComponent<cro::Drawable2D>().setCroppingArea(BioCrop);
 }

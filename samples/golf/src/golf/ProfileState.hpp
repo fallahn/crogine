@@ -107,6 +107,7 @@ private:
             Root, HelpText,
             Mugshot, NameText,
             Swatch, AvatarPreview,
+            BioText,
 
             Count
         };
@@ -178,4 +179,7 @@ private:
     void beginTextEdit(cro::Entity, cro::String*, std::size_t);
     void handleTextEdit(const cro::Event&);
     bool applyTextEdit(); //returns true if this consumed event
+
+    std::string generateRandomBio() const;
+    void setBioString(const std::string&);
 };
