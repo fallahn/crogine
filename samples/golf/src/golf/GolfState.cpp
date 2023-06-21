@@ -4920,14 +4920,14 @@ void GolfState::spawnBall(const ActorInfo& info)
     material.setProperty("u_colour", cro::Colour::White);
     //material.blendMode = cro::Material::BlendMode::Multiply; //causes shadow to actually get darker as alpha reaches zero.. duh
 
-
+    bool showTrail = !(m_sharedData.connectionData[info.clientID].playerData[info.playerID].isCPU && m_sharedData.fastCPU);
 
     //point shadow seen from distance
     entity = m_gameScene.createEntity();
     entity.addComponent<cro::Transform>();// .setPosition(info.position);
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function =
-        [&, ballEnt, info](cro::Entity e, float)
+        [&, ballEnt, info, showTrail](cro::Entity e, float)
     {
         if (ballEnt.destroyed())
         {
@@ -4958,11 +4958,13 @@ void GolfState::spawnBall(const ActorInfo& info)
                 e.getComponent<cro::Model>().setHidden((m_currentPlayer.terrain == TerrainID::Green) || ballEnt.getComponent<cro::Model>().isHidden());
                 e.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", c);
 
-
-                if (m_sharedData.showBallTrail && (info.playerID == m_currentPlayer.player && info.clientID == m_currentPlayer.client)
-                    && ballEnt.getComponent<ClientCollider>().state == static_cast<std::uint8_t>(Ball::State::Flight))
+                if (showTrail)
                 {
-                    m_ballTrail.addPoint(ballEnt.getComponent<cro::Transform>().getPosition());
+                    if (m_sharedData.showBallTrail && (info.playerID == m_currentPlayer.player && info.clientID == m_currentPlayer.client)
+                        && ballEnt.getComponent<ClientCollider>().state == static_cast<std::uint8_t>(Ball::State::Flight))
+                    {
+                        m_ballTrail.addPoint(ballEnt.getComponent<cro::Transform>().getPosition());
+                    }
                 }
             }
         }
