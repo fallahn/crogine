@@ -65,12 +65,14 @@ public:
 
     void setFastCPU(bool fast) { m_fastCPU = fast; }
     void setCPUCount(std::int32_t, const struct SharedStateData&);
+    void suspend(bool);
 private:
 
     InputParser& m_inputParser;
     const ActivePlayer& m_activePlayer;
     const CollisionMesh& m_collisionMesh;
     bool m_fastCPU;
+    bool m_suspended;
     bool m_puttFromTee;
     float m_distanceToPin;
     glm::vec3 m_target;

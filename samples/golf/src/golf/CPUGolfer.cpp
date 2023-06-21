@@ -114,6 +114,7 @@ CPUGolfer::CPUGolfer(InputParser& ip, const ActivePlayer& ap, const CollisionMes
     m_activePlayer      (ap),
     m_collisionMesh     (cm),
     m_fastCPU           (false),
+    m_suspended         (false),
     m_puttFromTee       (false),
     m_distanceToPin     (1.f),
     m_target            (0.f),
@@ -207,7 +208,6 @@ void CPUGolfer::handleMessage(const cro::Message& msg)
 
 void CPUGolfer::activate(glm::vec3 target, glm::vec3 fallback, bool puttFromTee)
 {
-
     if (/*!m_fastCPU &&*/
         m_state == State::Inactive)
     {
@@ -314,6 +314,11 @@ void CPUGolfer::update(float dt, glm::vec3 windVector, float distanceToPin)
 {
     m_distanceToPin = distanceToPin;
 
+    if (m_suspended)
+    {
+        return;
+    }
+
     for (auto& evt : m_popEvents)
     {
         SDL_PushEvent(&evt);
@@ -382,8 +387,11 @@ void CPUGolfer::setPredictionResult(glm::vec3 result, std::int32_t terrain)
         (terrain == TerrainID::Water
         || terrain == TerrainID::Scrub))
     {
+        const auto& Stat = CPUStats[m_cpuProfileIndices[m_activePlayer.client * ConstVal::MaxPlayers + m_activePlayer.player]];
+
         //retarget
-        if (m_puttFromTee)
+        //if (m_puttFromTee)
+        if (cro::Util::Random::value(0, 9) > Stat[CPUStat::MistakeLikelyhood])
         {
             //fall back to default target if it's still in front
             auto fwd = m_baseTarget - m_activePlayer.position;
@@ -395,7 +403,7 @@ void CPUGolfer::setPredictionResult(glm::vec3 result, std::int32_t terrain)
             m_puttFromTee = false; //saves keep trying this until next activation
         }
 
-        const float searchDistance = m_activePlayer.terrain == TerrainID::Green ? 0.25f : 2.f;
+        const float searchDistance = m_activePlayer.terrain == TerrainID::Green ? 0.25f : 5.f;
         auto direction = m_retargetCount % 4;
         auto offset = (glm::normalize(m_baseTarget - m_activePlayer.position) * searchDistance) * static_cast<float>((m_retargetCount % RetargetsPerDirection) + 1);
 
@@ -497,6 +505,20 @@ void CPUGolfer::setCPUCount(std::int32_t cpuCount, const SharedStateData& shared
                 }
             }
         }
+    }
+}
+
+void CPUGolfer::suspend(bool suspend)
+{
+    //can't suspend during stroke
+    //else we'll mess up the CPUs shot
+    if (m_state != State::Stroke)
+    {
+        m_suspended = suspend;
+    }
+    else
+    {
+        m_suspended = false;
     }
 }
 

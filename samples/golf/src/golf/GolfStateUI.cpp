@@ -2576,6 +2576,8 @@ void GolfState::showScoreboard(bool visible)
         visible = true;
     }
 
+    m_cpuGolfer.suspend(visible);
+
     auto target = visible ? 0 : 1; //when 1 board is moved 1x screen size from centre
 
     cro::Command cmd;
