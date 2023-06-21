@@ -14,454 +14,453 @@
 
 namespace
 {
-    glm::vec3 randomNormal()
-    {
-        glm::vec2 v(
-            static_cast<float>(cro::Util::Random::value(1, 10)) / 10.f,
-            static_cast<float>(cro::Util::Random::value(1, 10)) / 10.f);
+    //glm::vec3 randomNormal()
+    //{
+    //    glm::vec2 v(
+    //        static_cast<float>(cro::Util::Random::value(1, 10)) / 10.f,
+    //        static_cast<float>(cro::Util::Random::value(1, 10)) / 10.f);
 
-        v.x *= cro::Util::Random::value(0, 1) == 0 ? -1.f : 1.f;
-        v.y *= cro::Util::Random::value(0, 1) == 0 ? -1.f : 1.f;
-        v = glm::normalize(v);
+    //    v.x *= cro::Util::Random::value(0, 1) == 0 ? -1.f : 1.f;
+    //    v.y *= cro::Util::Random::value(0, 1) == 0 ? -1.f : 1.f;
+    //    v = glm::normalize(v);
 
-        CRO_ASSERT(!std::isnan(v.x), "");
-        return { v.x, 0.f, -v.y };
-        //return { 1.f, 0.f, 0.f };
-    }
+    //    CRO_ASSERT(!std::isnan(v.x), "");
+    //    return { v.x, 0.f, -v.y };
+    //}
 
-    std::int32_t getClub(float dist)
-    {
-        if (dist > 115.f) //forces a cut-off for pitch n putt
-        {
-            dist = 1000.f;
-        }
+    //std::int32_t getClub(float dist)
+    //{
+    //    if (dist > 115.f) //forces a cut-off for pitch n putt
+    //    {
+    //        dist = 1000.f;
+    //    }
 
-        std::int32_t clubID = ClubID::SandWedge;
-        while ((Clubs[clubID].getDefaultTarget() * 1.05f) < dist
-            && clubID != ClubID::Driver)
-        {
-            clubID--;
-        }
-        return clubID;
-    }
+    //    std::int32_t clubID = ClubID::SandWedge;
+    //    while ((Clubs[clubID].getDefaultTarget() * 1.05f) < dist
+    //        && clubID != ClubID::Driver)
+    //    {
+    //        clubID--;
+    //    }
+    //    return clubID;
+    //}
 }
 
 using namespace sv;
-using namespace cstat;
-void GolfState::makeCPUMove()
-{
-    if(m_sharedData.fastCPU
-        && m_sharedData.clients[m_playerInfo[0].client].playerData[m_playerInfo[0].player].isCPU)
-    {
-        auto& ball = m_playerInfo[0].ballEntity.getComponent<Ball>();
-        if (ball.state == Ball::State::Idle)
-        {
-            //wrap in an ent so we can add a small delay
-            auto entity = m_scene.createEntity();
-            entity.addComponent<cro::Callback>().active = true;
-            entity.getComponent<cro::Callback>().setUserData<float>(1.2f);
-            entity.getComponent<cro::Callback>().function =
-                [&](cro::Entity e, float dt)
-            {
-                auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
-                currTime -= dt;
-
-                if (currTime < 0)
-                {
-                    auto& ball = m_playerInfo[0].ballEntity.getComponent<Ball>();
-                    auto animID = ball.terrain == TerrainID::Green ? AnimationID::Putt : AnimationID::Celebrate;
-                 
-                    //this is just separated out so we can swap calcs more easily
-                    auto pos = calcCPUPosition();
-
-
-                    //test terrain height and correct final position
-                    auto result = m_scene.getSystem<BallSystem>()->getTerrain(pos);
-
-                    //technically this means CPU players never make really bad shots
-                    //but otherwise they just get stuck in a loop
-                    switch (result.terrain)
-                    {
-                    case TerrainID::Water:
-                        //use mistake odds to occasionally hit the water
-                    {
-                        const auto cpuID = m_cpuProfileIndices[m_playerInfo[0].client * ConstVal::MaxPlayers + m_playerInfo[0].player];
-                        if (cro::Util::Random::value(0, 9) < CPUStats[cpuID][CPUStat::MistakeLikelyhood])
-                        {
-                            break;
-                        }
-                    }
-                        [[fallthrough]];
-                    case TerrainID::Stone:
-                    case TerrainID::Scrub:
-                    {
-                        /*std::int32_t tries = 300;
-                        auto dir = glm::normalize(pos - m_playerInfo[0].position);
-                        do
-                        {
-                            pos -= dir;
-                            result = m_scene.getSystem<BallSystem>()->getTerrain(pos);
-                        } while (tries--
-                            && (result.terrain == TerrainID::Water || result.terrain == TerrainID::Stone || result.terrain == TerrainID::Scrub)
-                            && glm::length2(pos) > 1);*/
-                    }
-                    break;
-                    default: break;
-                    }
-
-                    pos.y = result.intersection.y;
-
-                    CRO_ASSERT(!std::isnan(pos.x), "");
-                    CRO_ASSERT(!std::isnan(pos.y), "");
-                    CRO_ASSERT(!std::isnan(pos.z), "");
-
-                    m_playerInfo[0].ballEntity.getComponent<cro::Transform>().setPosition(pos);
-                    m_playerInfo[0].holeScore[m_currentHole]++;
-
-                    //TODO this case should never happen...
-                    auto velOffset = pos - m_playerInfo[0].position;
-                    if (glm::length2(velOffset) == 0)
-                    {
-                        velOffset.x = 0.0001f;
-                    }
-                    velOffset = glm::normalize(velOffset) * 0.001f;
-
-                    //const auto velOffset = glm::normalize(pos - m_playerInfo[0].position) * 0.001f;
-                    
-                    //LogI << velOffset << std::endl;
-                    ball.terrain = result.terrain;
-                    switch (result.terrain)
-                    {
-                    default:
-                        ball.state = Ball::State::Paused;
-                        break;
-                    case TerrainID::Bunker:
-                    case TerrainID::Rough:
-                        animID = AnimationID::Disappoint;
-                        [[fallthrough]];
-                    case TerrainID::Fairway:
-                        ball.state = Ball::State::Flight;
-                        ball.velocity = velOffset; //add a tiny bit of velocity to prevent div0/nan in BallSystem
-                        break;
-                    case TerrainID::Green:
-                    case TerrainID::Hole:
-                        ball.state = Ball::State::Putt;
-                        ball.velocity = velOffset;
-                        break;
-                    case TerrainID::Scrub:
-                    case TerrainID::Stone:
-                    case TerrainID::Water:
-                        ball.state = Ball::State::Reset;
-                        animID = AnimationID::Disappoint;
-                        break;
-                    }
-
-                    m_sharedData.host.broadcastPacket(PacketID::ActorAnimation, std::uint8_t(animID), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
-
-
-
-                    m_sharedData.host.broadcastPacket<std::uint8_t>(PacketID::CPUThink, 1, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
-                    e.getComponent<cro::Callback>().active = false;
-                    m_scene.destroyEntity(e);
-                }
-            };
-
-            m_sharedData.host.broadcastPacket<std::uint8_t>(PacketID::CPUThink, 0, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
-        }
-    }
-}
-
-glm::vec3 GolfState::calcCPUPosition() const
-{
-    const auto targetDir = m_holeData[m_currentHole].target - m_playerInfo[0].position;
-    const auto pinDir = m_holeData[m_currentHole].pin - m_playerInfo[0].position;
-    auto pos = m_holeData[m_currentHole].pin; //always prefer the pin as the target unless blocked for some reason
-    
-    const auto puttFromTee = m_scene.getSystem<BallSystem>()->getPuttFromTee();
-
-    const auto cpuID = m_cpuProfileIndices[m_playerInfo[0].client * ConstVal::MaxPlayers + m_playerInfo[0].player];
-    CRO_ASSERT(cpuID != -1, "");
-
-    const std::int32_t skill = CPUStats[cpuID][CPUStat::Skill];
-
-    auto& ball = m_playerInfo[0].ballEntity.getComponent<Ball>();
-    std::int32_t clubID = ClubID::Putter;
-
-    //get longest range available
-    if (ball.terrain != TerrainID::Green)
-    {
-        if (ball.terrain == TerrainID::Bunker)
-        {
-            clubID = ClubID::PitchWedge;
-        }
-        else
-        {
-            auto dist = glm::length(pinDir);
-            clubID = getClub(dist);
-        }
-
-        //check to see if the club range can hit the ball into a valid area,
-        //by reducing pos to max range
-        const float clubDist = Clubs[clubID].getTargetAtLevel(skill);
-        if (auto len2 = glm::length2(pinDir); 
-            len2 > (clubDist * clubDist))
-        {
-            //rather than move back toward the player (which might put us in the rough)
-            //head towards the target point which in theory should aim us towards the fairway
-            const auto len = std::sqrt(len2) - clubDist;
-            const auto correctionDir = glm::normalize(m_holeData[m_currentHole].target - m_holeData[m_currentHole].pin) * len;
-            pos = m_holeData[m_currentHole].pin + correctionDir;
-
-            //const float reduction = clubDist / std::sqrt(len2);
-            //pos = (pinDir * reduction) + m_playerInfo[0].position;
-        }
-
-        auto result = m_scene.getSystem<BallSystem>()->getTerrain(pos);
-        switch (result.terrain)
-        {
-        default: break;
-        case TerrainID::Water:
-            //use the mistake odds to sometimes accept this target
-            if (cro::Util::Random::value(0, 9) < CPUStats[cpuID][CPUStat::MistakeLikelyhood])
-            {
-                break;
-            }
-            [[fallthrough]];
-        case TerrainID::Stone:
-        case TerrainID::Scrub:
-            //else use the target point instead of the pin
-            pos = m_holeData[m_currentHole].target;
-            break;
-        }
-    }
-    else 
-    {
-        //else if we're on a mini-putt course see if there's a dog-leg
-        if (puttFromTee)
-        {
-            if (auto dp = glm::dot(glm::normalize(targetDir), glm::normalize(pinDir));
-                dp > 0.4 && dp < 0.98f) //target in front, but not the same dir as pin
-            {
-                //don't use if too close
-                if (glm::length2(targetDir) > (3.f * 3.f)
-                    && glm::length2(pinDir) > glm::length2(targetDir))
-                {
-                    pos = m_holeData[m_currentHole].target;
-                }
-            }
-        }
-        else
-        {
-            //regular putting - assume we go in the hole under 20cm
-            if (glm::length2(pinDir) < (0.2f * 0.2f))
-            {
-                return m_holeData[m_currentHole].pin;
-            }
-        }
-    }
-
-
-    const auto playerName = [&]()
-    {
-        return m_sharedData.clients[m_playerInfo[0].client].playerData[m_playerInfo[0].player].name.toAnsiString();
-    };
-
-
-    auto stepDir = pos - m_playerInfo[0].position;
-    const auto totalDist = glm::length(stepDir);
-    std::int32_t stepCount = std::max(1, static_cast<std::int32_t>(totalDist));
-    
-    //use smaller steps when putting
-    if (ball.terrain == TerrainID::Green)
-    {
-        stepCount *= 2;
-    }
-    stepDir /= stepCount;
-
-    //using the CPU stats calculate some sort of offset from the target.
-    float windEffect = 0.f;
-    if (clubID < ClubID::SandWedge)
-    {
-        windEffect = getOffset(WindOffsets, CPUStats[cpuID][CPUStat::WindAccuracy]);
-        windEffect *= Clubs[clubID].getBaseTarget() / Clubs[ClubID::Driver].getBaseTarget();
-
-        //LogI << "Wind effect " << windEffect << std::endl;
-    }
-    auto wind = m_scene.getSystem<BallSystem>()->getWindDirection();
-    wind = (glm::vec3(wind.x, 0.f, wind.z) * wind.y * windEffect);
-    wind /= stepCount;
-
-    const auto clubMultiplier = (Clubs[clubID].getTarget(totalDist) / Clubs[ClubID::Driver].getTargetAtLevel(CPUStats[cpuID][CPUStat::Skill]));
-    auto dirNorm = glm::normalize(stepDir);
-
-    const float overShoot = getOffset(PowerOffsets, CPUStats[cpuID][CPUStat::PowerAccuracy]);
-    auto overShootDir = dirNorm * overShoot * (clubMultiplier * clubMultiplier);
-    overShootDir /= stepCount;
-
-    dirNorm = { -dirNorm.z, dirNorm.y, dirNorm.x }; //perpendicular
-    const float strokeAccuracy = getOffset(AccuracyOffsets, CPUStats[cpuID][CPUStat::StrokeAccuracy]);
-    auto accuracyDir = dirNorm * strokeAccuracy * clubMultiplier;
-    if (puttFromTee) accuracyDir *= 0.5f;
-    accuracyDir /= stepCount;
-
-    //TODO include offset for rough or bunker terrain - this should probably be another stat
-    //for how well CPU compensates
-
-
-    //calculate mistake odds - increase this with distance when putting
-    bool perfect = false;
-    std::int32_t puttingOdds = 0;
-    if (ball.terrain == TerrainID::Green)
-    {
-        float odds = std::pow(std::min(1.f, totalDist / 5.f), 2.f);
-
-        accuracyDir *= (1.f + odds);
-        odds *= 2.f;
-
-        puttingOdds = static_cast<std::int32_t>(std::round(odds));
-    }
-
-    if (cro::Util::Random::value(0, 14) < CPUStats[cpuID][CPUStat::MistakeLikelyhood] + puttingOdds)
-    {
-        //TODO check these values so we don't accidentally
-        //undo existing power/accuracy and improve them...
-        LogI << playerName() << " Made a mistake!" << std::endl;
-        switch (cro::Util::Random::value(0, 2))
-        {
-        default: 
-        case 0:
-            LogI << playerName() << " Fluffed power" << std::endl;
-            overShootDir *= puttFromTee ? 1.3f : 2.56f;
-            break;
-        case 1:
-            LogI << playerName() << " Fluffed accuracy" << std::endl;
-            accuracyDir *= puttFromTee ? 1.01f : 1.78f;
-            break;
-        case 2:
-            LogI << playerName() << " Fluffed power and accuracy" << std::endl;
-            accuracyDir *= puttFromTee ? 1.02f : 1.92f;
-            overShootDir *= puttFromTee ? 1.25f : 1.98f;
-            break;
-        }
-
-        if (glm::length2(m_holeData[m_currentHole].pin - m_playerInfo[0].position) > (2.f * 2.f) &&
-            cro::Util::Random::value(0, 29) < CPUStats[cpuID][CPUStat::MistakeLikelyhood] + (puttingOdds * 2))
-        {
-            LogI << playerName() << " made uber mistake" << std::endl;
-            stepDir /= 2.f;
-
-            stepDir += (stepDir * getOffset(MistakeCorrection, CPUStats[cpuID][CPUStat::MistakeAccuracy]));
-        }
-    }
-
-    //calculate perfection odds only if we didn't make a mistake
-    else if (cro::Util::Random::value(0, 99) < CPUStats[cpuID][CPUStat::PerfectionLikelyhood])
-    {
-        if (totalDist < 20.f)
-        {
-            perfect = cro::Util::Random::value(1, 10) == CPUStats[cpuID][CPUStat::PerfectionLikelyhood] / 10;
-        }
-        else if (totalDist < 100.f)
-        {
-            perfect = cro::Util::Random::value(1, 50) == CPUStats[cpuID][CPUStat::PerfectionLikelyhood] / 2;
-        }
-        else
-        {
-            perfect = cro::Util::Random::value(1, 100) == CPUStats[cpuID][CPUStat::PerfectionLikelyhood];
-        }
-
-
-
-
-        if(perfect && 
-            totalDist < Clubs[clubID].getBaseTarget())
-        {
-            if (puttFromTee)
-            {
-                //check for corner cutting
-                auto dir = m_holeData[m_currentHole].pin - m_playerInfo[0].position;
-                dir /= stepCount;
-
-                pos = m_playerInfo[0].position;
-
-                for (auto i = 0; i < stepCount; ++i)
-                {
-                    pos += dir;
-                    auto terrain = m_scene.getSystem<BallSystem>()->getTerrain(pos);
-                    if (terrain.terrain != TerrainID::Green)
-                    {
-                        LogI << "Perfect shot would cut corner" << std::endl;
-                        perfect = false;
-                        break;
-                    }
-                }
-            }
-
-            LogI << playerName() << " Got a PERFECT shot" << std::endl;
-            pos = m_holeData[m_currentHole].pin;
-        }
-        else
-        {
-            perfect = false; //need to do the calc below if we're not in range
-        }
-    }
-
-    CRO_ASSERT(glm::length2(stepDir), "");
-    //CRO_ASSERT(glm::length2(wind), "");
-    CRO_ASSERT(glm::length2(overShootDir), "");
-    CRO_ASSERT(glm::length2(accuracyDir), "");
-    CRO_ASSERT(stepCount != 0, "");
-
-    //if not perfect
-    if (!perfect)
-    {
-        pos = m_playerInfo[0].position;
-        for (auto i = 0; i < stepCount; ++i)
-        {
-            pos += stepDir;
-            pos += wind;
-            pos += overShootDir;
-            pos += accuracyDir;
-
-            //check each step for terrain to see if we
-            //accidentally cut corners
-            if (puttFromTee)
-            {
-                auto terrain = m_scene.getSystem<BallSystem>()->getTerrain(pos);
-                if (terrain.terrain != TerrainID::Green)
-                {
-                    break;
-                }
-            }
-        }
-
-        //one final check that we're not toooo close to the hole after
-        //a long shot else we get too many chip-ins without the 'perfect' requirement
-        if (glm::length2(pos - m_playerInfo[0].position) > (5.f * 5.f))
-        {
-            if (!puttFromTee || cro::Util::Random::value(0, 9) < CPUStats[cpuID][CPUStat::MistakeLikelyhood])
-            {
-                if (auto l2 = glm::length2(pos - m_holeData[m_currentHole].pin); l2 < (0.15f * 0.15f))
-                {
-                    auto dir = (pos - m_holeData[m_currentHole].pin) / std::sqrt(l2);
-                    dir *= getOffset(HoleCorrection, CPUStats[cpuID][CPUStat::MistakeAccuracy]);
-                    pos += dir;
-                    LogI << playerName() << " Corrected for too much perfection." << std::endl;
-                }
-            }
-        }
-
-
-        //if we're really close to the hole plop it in based on stroke accuracy
-        if (glm::length2(pos - m_holeData[m_currentHole].pin) < (0.15f * 0.15f) &&
-            cro::Util::Random::value(1, 100) > CPUStats[cpuID][CPUStat::StrokeAccuracy] * 10)
-        {
-            pos = m_holeData[m_currentHole].pin;
-        }
-    }
-
-    return pos;
-}
+//using namespace cstat;
+//void GolfState::makeCPUMove()
+//{
+//    if(m_sharedData.fastCPU
+//        && m_sharedData.clients[m_playerInfo[0].client].playerData[m_playerInfo[0].player].isCPU)
+//    {
+//        auto& ball = m_playerInfo[0].ballEntity.getComponent<Ball>();
+//        if (ball.state == Ball::State::Idle)
+//        {
+//            //wrap in an ent so we can add a small delay
+//            auto entity = m_scene.createEntity();
+//            entity.addComponent<cro::Callback>().active = true;
+//            entity.getComponent<cro::Callback>().setUserData<float>(1.2f);
+//            entity.getComponent<cro::Callback>().function =
+//                [&](cro::Entity e, float dt)
+//            {
+//                auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
+//                currTime -= dt;
+//
+//                if (currTime < 0)
+//                {
+//                    auto& ball = m_playerInfo[0].ballEntity.getComponent<Ball>();
+//                    auto animID = ball.terrain == TerrainID::Green ? AnimationID::Putt : AnimationID::Celebrate;
+//                 
+//                    //this is just separated out so we can swap calcs more easily
+//                    auto pos = calcCPUPosition();
+//
+//
+//                    //test terrain height and correct final position
+//                    auto result = m_scene.getSystem<BallSystem>()->getTerrain(pos);
+//
+//                    //technically this means CPU players never make really bad shots
+//                    //but otherwise they just get stuck in a loop
+//                    switch (result.terrain)
+//                    {
+//                    case TerrainID::Water:
+//                        //use mistake odds to occasionally hit the water
+//                    {
+//                        const auto cpuID = m_cpuProfileIndices[m_playerInfo[0].client * ConstVal::MaxPlayers + m_playerInfo[0].player];
+//                        if (cro::Util::Random::value(0, 9) < CPUStats[cpuID][CPUStat::MistakeLikelyhood])
+//                        {
+//                            break;
+//                        }
+//                    }
+//                        [[fallthrough]];
+//                    case TerrainID::Stone:
+//                    case TerrainID::Scrub:
+//                    {
+//                        /*std::int32_t tries = 300;
+//                        auto dir = glm::normalize(pos - m_playerInfo[0].position);
+//                        do
+//                        {
+//                            pos -= dir;
+//                            result = m_scene.getSystem<BallSystem>()->getTerrain(pos);
+//                        } while (tries--
+//                            && (result.terrain == TerrainID::Water || result.terrain == TerrainID::Stone || result.terrain == TerrainID::Scrub)
+//                            && glm::length2(pos) > 1);*/
+//                    }
+//                    break;
+//                    default: break;
+//                    }
+//
+//                    pos.y = result.intersection.y;
+//
+//                    CRO_ASSERT(!std::isnan(pos.x), "");
+//                    CRO_ASSERT(!std::isnan(pos.y), "");
+//                    CRO_ASSERT(!std::isnan(pos.z), "");
+//
+//                    m_playerInfo[0].ballEntity.getComponent<cro::Transform>().setPosition(pos);
+//                    m_playerInfo[0].holeScore[m_currentHole]++;
+//
+//                    //TODO this case should never happen...
+//                    auto velOffset = pos - m_playerInfo[0].position;
+//                    if (glm::length2(velOffset) == 0)
+//                    {
+//                        velOffset.x = 0.0001f;
+//                    }
+//                    velOffset = glm::normalize(velOffset) * 0.001f;
+//
+//                    //const auto velOffset = glm::normalize(pos - m_playerInfo[0].position) * 0.001f;
+//                    
+//                    //LogI << velOffset << std::endl;
+//                    ball.terrain = result.terrain;
+//                    switch (result.terrain)
+//                    {
+//                    default:
+//                        ball.state = Ball::State::Paused;
+//                        break;
+//                    case TerrainID::Bunker:
+//                    case TerrainID::Rough:
+//                        animID = AnimationID::Disappoint;
+//                        [[fallthrough]];
+//                    case TerrainID::Fairway:
+//                        ball.state = Ball::State::Flight;
+//                        ball.velocity = velOffset; //add a tiny bit of velocity to prevent div0/nan in BallSystem
+//                        break;
+//                    case TerrainID::Green:
+//                    case TerrainID::Hole:
+//                        ball.state = Ball::State::Putt;
+//                        ball.velocity = velOffset;
+//                        break;
+//                    case TerrainID::Scrub:
+//                    case TerrainID::Stone:
+//                    case TerrainID::Water:
+//                        ball.state = Ball::State::Reset;
+//                        animID = AnimationID::Disappoint;
+//                        break;
+//                    }
+//
+//                    m_sharedData.host.broadcastPacket(PacketID::ActorAnimation, std::uint8_t(animID), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+//
+//
+//
+//                    m_sharedData.host.broadcastPacket<std::uint8_t>(PacketID::CPUThink, 1, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+//                    e.getComponent<cro::Callback>().active = false;
+//                    m_scene.destroyEntity(e);
+//                }
+//            };
+//
+//            m_sharedData.host.broadcastPacket<std::uint8_t>(PacketID::CPUThink, 0, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+//        }
+//    }
+//}
+//
+//glm::vec3 GolfState::calcCPUPosition() const
+//{
+//    const auto targetDir = m_holeData[m_currentHole].target - m_playerInfo[0].position;
+//    const auto pinDir = m_holeData[m_currentHole].pin - m_playerInfo[0].position;
+//    auto pos = m_holeData[m_currentHole].pin; //always prefer the pin as the target unless blocked for some reason
+//    
+//    const auto puttFromTee = m_scene.getSystem<BallSystem>()->getPuttFromTee();
+//
+//    const auto cpuID = m_cpuProfileIndices[m_playerInfo[0].client * ConstVal::MaxPlayers + m_playerInfo[0].player];
+//    CRO_ASSERT(cpuID != -1, "");
+//
+//    const std::int32_t skill = CPUStats[cpuID][CPUStat::Skill];
+//
+//    auto& ball = m_playerInfo[0].ballEntity.getComponent<Ball>();
+//    std::int32_t clubID = ClubID::Putter;
+//
+//    //get longest range available
+//    if (ball.terrain != TerrainID::Green)
+//    {
+//        if (ball.terrain == TerrainID::Bunker)
+//        {
+//            clubID = ClubID::PitchWedge;
+//        }
+//        else
+//        {
+//            auto dist = glm::length(pinDir);
+//            clubID = getClub(dist);
+//        }
+//
+//        //check to see if the club range can hit the ball into a valid area,
+//        //by reducing pos to max range
+//        const float clubDist = Clubs[clubID].getTargetAtLevel(skill);
+//        if (auto len2 = glm::length2(pinDir); 
+//            len2 > (clubDist * clubDist))
+//        {
+//            //rather than move back toward the player (which might put us in the rough)
+//            //head towards the target point which in theory should aim us towards the fairway
+//            const auto len = std::sqrt(len2) - clubDist;
+//            const auto correctionDir = glm::normalize(m_holeData[m_currentHole].target - m_holeData[m_currentHole].pin) * len;
+//            pos = m_holeData[m_currentHole].pin + correctionDir;
+//
+//            //const float reduction = clubDist / std::sqrt(len2);
+//            //pos = (pinDir * reduction) + m_playerInfo[0].position;
+//        }
+//
+//        auto result = m_scene.getSystem<BallSystem>()->getTerrain(pos);
+//        switch (result.terrain)
+//        {
+//        default: break;
+//        case TerrainID::Water:
+//            //use the mistake odds to sometimes accept this target
+//            if (cro::Util::Random::value(0, 9) < CPUStats[cpuID][CPUStat::MistakeLikelyhood])
+//            {
+//                break;
+//            }
+//            [[fallthrough]];
+//        case TerrainID::Stone:
+//        case TerrainID::Scrub:
+//            //else use the target point instead of the pin
+//            pos = m_holeData[m_currentHole].target;
+//            break;
+//        }
+//    }
+//    else 
+//    {
+//        //else if we're on a mini-putt course see if there's a dog-leg
+//        if (puttFromTee)
+//        {
+//            if (auto dp = glm::dot(glm::normalize(targetDir), glm::normalize(pinDir));
+//                dp > 0.4 && dp < 0.98f) //target in front, but not the same dir as pin
+//            {
+//                //don't use if too close
+//                if (glm::length2(targetDir) > (3.f * 3.f)
+//                    && glm::length2(pinDir) > glm::length2(targetDir))
+//                {
+//                    pos = m_holeData[m_currentHole].target;
+//                }
+//            }
+//        }
+//        else
+//        {
+//            //regular putting - assume we go in the hole under 20cm
+//            if (glm::length2(pinDir) < (0.2f * 0.2f))
+//            {
+//                return m_holeData[m_currentHole].pin;
+//            }
+//        }
+//    }
+//
+//
+//    const auto playerName = [&]()
+//    {
+//        return m_sharedData.clients[m_playerInfo[0].client].playerData[m_playerInfo[0].player].name.toAnsiString();
+//    };
+//
+//
+//    auto stepDir = pos - m_playerInfo[0].position;
+//    const auto totalDist = glm::length(stepDir);
+//    std::int32_t stepCount = std::max(1, static_cast<std::int32_t>(totalDist));
+//    
+//    //use smaller steps when putting
+//    if (ball.terrain == TerrainID::Green)
+//    {
+//        stepCount *= 2;
+//    }
+//    stepDir /= stepCount;
+//
+//    //using the CPU stats calculate some sort of offset from the target.
+//    float windEffect = 0.f;
+//    if (clubID < ClubID::SandWedge)
+//    {
+//        windEffect = getOffset(WindOffsets, CPUStats[cpuID][CPUStat::WindAccuracy]);
+//        windEffect *= Clubs[clubID].getBaseTarget() / Clubs[ClubID::Driver].getBaseTarget();
+//
+//        //LogI << "Wind effect " << windEffect << std::endl;
+//    }
+//    auto wind = m_scene.getSystem<BallSystem>()->getWindDirection();
+//    wind = (glm::vec3(wind.x, 0.f, wind.z) * wind.y * windEffect);
+//    wind /= stepCount;
+//
+//    const auto clubMultiplier = (Clubs[clubID].getTarget(totalDist) / Clubs[ClubID::Driver].getTargetAtLevel(CPUStats[cpuID][CPUStat::Skill]));
+//    auto dirNorm = glm::normalize(stepDir);
+//
+//    const float overShoot = getOffset(PowerOffsets, CPUStats[cpuID][CPUStat::PowerAccuracy]);
+//    auto overShootDir = dirNorm * overShoot * (clubMultiplier * clubMultiplier);
+//    overShootDir /= stepCount;
+//
+//    dirNorm = { -dirNorm.z, dirNorm.y, dirNorm.x }; //perpendicular
+//    const float strokeAccuracy = getOffset(AccuracyOffsets, CPUStats[cpuID][CPUStat::StrokeAccuracy]);
+//    auto accuracyDir = dirNorm * strokeAccuracy * clubMultiplier;
+//    if (puttFromTee) accuracyDir *= 0.5f;
+//    accuracyDir /= stepCount;
+//
+//    //TODO include offset for rough or bunker terrain - this should probably be another stat
+//    //for how well CPU compensates
+//
+//
+//    //calculate mistake odds - increase this with distance when putting
+//    bool perfect = false;
+//    std::int32_t puttingOdds = 0;
+//    if (ball.terrain == TerrainID::Green)
+//    {
+//        float odds = std::pow(std::min(1.f, totalDist / 5.f), 2.f);
+//
+//        accuracyDir *= (1.f + odds);
+//        odds *= 2.f;
+//
+//        puttingOdds = static_cast<std::int32_t>(std::round(odds));
+//    }
+//
+//    if (cro::Util::Random::value(0, 14) < CPUStats[cpuID][CPUStat::MistakeLikelyhood] + puttingOdds)
+//    {
+//        //TODO check these values so we don't accidentally
+//        //undo existing power/accuracy and improve them...
+//        LogI << playerName() << " Made a mistake!" << std::endl;
+//        switch (cro::Util::Random::value(0, 2))
+//        {
+//        default: 
+//        case 0:
+//            LogI << playerName() << " Fluffed power" << std::endl;
+//            overShootDir *= puttFromTee ? 1.3f : 2.56f;
+//            break;
+//        case 1:
+//            LogI << playerName() << " Fluffed accuracy" << std::endl;
+//            accuracyDir *= puttFromTee ? 1.01f : 1.78f;
+//            break;
+//        case 2:
+//            LogI << playerName() << " Fluffed power and accuracy" << std::endl;
+//            accuracyDir *= puttFromTee ? 1.02f : 1.92f;
+//            overShootDir *= puttFromTee ? 1.25f : 1.98f;
+//            break;
+//        }
+//
+//        if (glm::length2(m_holeData[m_currentHole].pin - m_playerInfo[0].position) > (2.f * 2.f) &&
+//            cro::Util::Random::value(0, 29) < CPUStats[cpuID][CPUStat::MistakeLikelyhood] + (puttingOdds * 2))
+//        {
+//            LogI << playerName() << " made uber mistake" << std::endl;
+//            stepDir /= 2.f;
+//
+//            stepDir += (stepDir * getOffset(MistakeCorrection, CPUStats[cpuID][CPUStat::MistakeAccuracy]));
+//        }
+//    }
+//
+//    //calculate perfection odds only if we didn't make a mistake
+//    else if (cro::Util::Random::value(0, 99) < CPUStats[cpuID][CPUStat::PerfectionLikelyhood])
+//    {
+//        if (totalDist < 20.f)
+//        {
+//            perfect = cro::Util::Random::value(1, 10) == CPUStats[cpuID][CPUStat::PerfectionLikelyhood] / 10;
+//        }
+//        else if (totalDist < 100.f)
+//        {
+//            perfect = cro::Util::Random::value(1, 50) == CPUStats[cpuID][CPUStat::PerfectionLikelyhood] / 2;
+//        }
+//        else
+//        {
+//            perfect = cro::Util::Random::value(1, 100) == CPUStats[cpuID][CPUStat::PerfectionLikelyhood];
+//        }
+//
+//
+//
+//
+//        if(perfect && 
+//            totalDist < Clubs[clubID].getBaseTarget())
+//        {
+//            if (puttFromTee)
+//            {
+//                //check for corner cutting
+//                auto dir = m_holeData[m_currentHole].pin - m_playerInfo[0].position;
+//                dir /= stepCount;
+//
+//                pos = m_playerInfo[0].position;
+//
+//                for (auto i = 0; i < stepCount; ++i)
+//                {
+//                    pos += dir;
+//                    auto terrain = m_scene.getSystem<BallSystem>()->getTerrain(pos);
+//                    if (terrain.terrain != TerrainID::Green)
+//                    {
+//                        LogI << "Perfect shot would cut corner" << std::endl;
+//                        perfect = false;
+//                        break;
+//                    }
+//                }
+//            }
+//
+//            LogI << playerName() << " Got a PERFECT shot" << std::endl;
+//            pos = m_holeData[m_currentHole].pin;
+//        }
+//        else
+//        {
+//            perfect = false; //need to do the calc below if we're not in range
+//        }
+//    }
+//
+//    CRO_ASSERT(glm::length2(stepDir), "");
+//    //CRO_ASSERT(glm::length2(wind), "");
+//    CRO_ASSERT(glm::length2(overShootDir), "");
+//    CRO_ASSERT(glm::length2(accuracyDir), "");
+//    CRO_ASSERT(stepCount != 0, "");
+//
+//    //if not perfect
+//    if (!perfect)
+//    {
+//        pos = m_playerInfo[0].position;
+//        for (auto i = 0; i < stepCount; ++i)
+//        {
+//            pos += stepDir;
+//            pos += wind;
+//            pos += overShootDir;
+//            pos += accuracyDir;
+//
+//            //check each step for terrain to see if we
+//            //accidentally cut corners
+//            if (puttFromTee)
+//            {
+//                auto terrain = m_scene.getSystem<BallSystem>()->getTerrain(pos);
+//                if (terrain.terrain != TerrainID::Green)
+//                {
+//                    break;
+//                }
+//            }
+//        }
+//
+//        //one final check that we're not toooo close to the hole after
+//        //a long shot else we get too many chip-ins without the 'perfect' requirement
+//        if (glm::length2(pos - m_playerInfo[0].position) > (5.f * 5.f))
+//        {
+//            if (!puttFromTee || cro::Util::Random::value(0, 9) < CPUStats[cpuID][CPUStat::MistakeLikelyhood])
+//            {
+//                if (auto l2 = glm::length2(pos - m_holeData[m_currentHole].pin); l2 < (0.15f * 0.15f))
+//                {
+//                    auto dir = (pos - m_holeData[m_currentHole].pin) / std::sqrt(l2);
+//                    dir *= getOffset(HoleCorrection, CPUStats[cpuID][CPUStat::MistakeAccuracy]);
+//                    pos += dir;
+//                    LogI << playerName() << " Corrected for too much perfection." << std::endl;
+//                }
+//            }
+//        }
+//
+//
+//        //if we're really close to the hole plop it in based on stroke accuracy
+//        if (glm::length2(pos - m_holeData[m_currentHole].pin) < (0.15f * 0.15f) &&
+//            cro::Util::Random::value(1, 100) > CPUStats[cpuID][CPUStat::StrokeAccuracy] * 10)
+//        {
+//            pos = m_holeData[m_currentHole].pin;
+//        }
+//    }
+//
+//    return pos;
+//}
 
 void GolfState::handleDefaultRules(const GolfBallEvent& data)
 {

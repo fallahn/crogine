@@ -87,8 +87,8 @@ namespace sv
         void initScene();
         void buildWorld();
 
-        void makeCPUMove();
-        glm::vec3 calcCPUPosition() const;
+        //void makeCPUMove();
+        //glm::vec3 calcCPUPosition() const;
         void handleDefaultRules(const struct GolfBallEvent&);
         bool summariseDefaultRules();
 

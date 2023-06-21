@@ -6420,9 +6420,12 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
 
     //show ui if this is our client    
     cmd.targetFlags = CommandID::UI::Root;
-    cmd.action = [&,localPlayer](cro::Entity e, float)
+    cmd.action = [&,localPlayer, isCPU](cro::Entity e, float)
     {
-        e.getComponent<cro::Callback>().getUserData<std::pair<std::int32_t, float>>().first = localPlayer ? 0 : 1;
+        //only show CPU power to beginners
+        std::int32_t show = localPlayer && (!isCPU || Social::getLevel() < 10) ? 0 : 1;
+
+        e.getComponent<cro::Callback>().getUserData<std::pair<std::int32_t, float>>().first = show;
         e.getComponent<cro::Callback>().active = true;
     };
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
