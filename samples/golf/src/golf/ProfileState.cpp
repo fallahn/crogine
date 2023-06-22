@@ -94,13 +94,15 @@ namespace
             BottomL, BottomD
         };
     };
-
+    
     constexpr glm::uvec2 BallTexSize(96u, 110u);
     constexpr glm::uvec2 AvatarTexSize(130u, 202u);
+    constexpr glm::uvec2 MugshotTexSize(192u, 96u);
 
     constexpr glm::vec3 CameraBasePosition({ -0.867f, 1.325f, -1.68f });
     constexpr glm::vec3 CameraZoomPosition({ -0.867f, 1.625f, -0.58f });
     const glm::vec3 CameraZoomVector = glm::normalize(CameraZoomPosition - CameraBasePosition);
+    constexpr glm::vec3 MugCameraPosition({ -0.867f, 1.6f, -0.3f });
 
     const cro::String XboxString("LB/LT - RB/RT Rotate/Zoom");
     const cro::String PSString("L1/L2 - R1/R2 Rotate/Zoom");
@@ -133,7 +135,8 @@ ProfileState::ProfileState(cro::StateStack& ss, cro::State::Context ctx, SharedS
     m_ballIndex         (0),
     m_ballHairIndex     (0),
     m_avatarIndex       (0),
-    m_lastSelected      (0)
+    m_lastSelected      (0),
+    m_mugshotUpdated    (false)
 {
     ctx.mainWindow.setMouseCaptured(false);
 
@@ -147,24 +150,27 @@ ProfileState::ProfileState(cro::StateStack& ss, cro::State::Context ctx, SharedS
     m_modelScene.simulate(0.f);
     m_uiScene.simulate(0.f);
 
-    //registerWindow([&]()
-    //    {
-    //        if (ImGui::Begin("Flaps"))
-    //        {
-    //            //ImGui::Text("Palette Index %u, UI Index %u", pIndex, sIndex);
-    //            auto org = m_menuEntities[EntityID::BioText].getComponent<cro::Transform>().getOrigin();
-    //            if (ImGui::SliderFloat("Bottom", &org.y, -400.f, 0.f))
-    //            {
-    //                auto bounds = cro::Text::getLocalBounds(m_menuEntities[EntityID::BioText]);
-    //                org.y = std::clamp(org.y, -bounds.height - BioCrop.bottom, 0.f);
-    //                auto rect = BioCrop;
-    //                rect.bottom += org.y;
-    //                m_menuEntities[EntityID::BioText].getComponent<cro::Drawable2D>().setCroppingArea(rect);
-    //                m_menuEntities[EntityID::BioText].getComponent<cro::Transform>().setOrigin(org);
-    //            }
-    //        }
-    //        ImGui::End();
-    //    });
+    registerWindow([&]()
+        {
+            if (ImGui::Begin("Flaps"))
+            {
+                if (m_mugshotTexture.available())
+                {
+                    ImGui::Image(m_mugshotTexture.getTexture(), { 192.f, 96.f }, { 0.f, 1.f }, { 1.f, 0.f });
+                }
+
+                /*auto pos = m_cameras[CameraID::Mugshot].getComponent<cro::Transform>().getPosition();
+                if (ImGui::SliderFloat("Height", &pos.y, 0.f, 2.f))
+                {
+                    m_cameras[CameraID::Mugshot].getComponent<cro::Transform>().setPosition(pos);
+                }
+                if (ImGui::SliderFloat("Depth", &pos.z, -2.f, 4.f))
+                {
+                    m_cameras[CameraID::Mugshot].getComponent<cro::Transform>().setPosition(pos);
+                }*/
+            }
+            ImGui::End();
+        });
 }
 
 //public
@@ -460,6 +466,7 @@ void ProfileState::render()
     m_avatarTexture.display();
 
     m_uiScene.render();
+
 }
 
 //private
@@ -498,6 +505,9 @@ void ProfileState::loadResources()
     m_audioEnts[AudioID::Select].addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
 
     m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+
+
+    m_mugshotTexture.create(MugshotTexSize.x, MugshotTexSize.y);
 }
 
 void ProfileState::buildScene()
@@ -1034,7 +1044,7 @@ void ProfileState::buildScene()
             {
                 if (activated(evt))
                 {
-
+                    generateMugshot();
                 }
             });
 
@@ -1054,6 +1064,19 @@ void ProfileState::buildScene()
                 {
                     m_profileData.playerProfiles[m_profileData.activeProfileIndex] = m_activeProfile;
                     m_profileData.playerProfiles[m_profileData.activeProfileIndex].saveProfile();
+
+                    if (m_mugshotUpdated)
+                    {
+                        auto path = Social::getUserContentPath(Social::UserContent::Profile) + m_activeProfile.profileID + "/mug.png";
+                        m_mugshotTexture.getTexture().saveToFile(path);
+
+                        m_activeProfile.mugshot = path;
+                        m_profileData.playerProfiles[m_profileData.activeProfileIndex].mugshot = path;
+                        m_profileData.playerProfiles[m_profileData.activeProfileIndex].saveProfile();
+
+                        m_mugshotUpdated = false;
+                    }
+
                     quitState();
                 }
             });
@@ -1436,6 +1459,7 @@ void ProfileState::buildPreviewScene()
     entity.addComponent<cro::Transform>().setPosition(AvatarPos + glm::vec3(0.f, -0.15f, 0.f));
     entity.getComponent<cro::Transform>().setScale(glm::vec3(60.f));
     m_profileData.grassDef->createModel(entity);
+    entity.getComponent<cro::Model>().setRenderFlags((1 << 1));
     
     //update the model textures with the current colour settings
     //and any available audio
@@ -1536,7 +1560,17 @@ void ProfileState::buildPreviewScene()
     m_cameras[CameraID::Avatar].getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -0.157f);
     auto& cam = m_cameras[CameraID::Avatar].addComponent<cro::Camera>();
     cam.setPerspective(70.f * cro::Util::Const::degToRad, static_cast<float>(AvatarTexSize.x) / AvatarTexSize.y, 0.1f, 6.f);
-    cam.viewport = { 0.f, 0.f, 1.f ,1.f };
+    cam.viewport = { 0.f, 0.f, 1.f, 1.f };
+
+    m_cameras[CameraID::Mugshot] = m_modelScene.createEntity();
+    m_cameras[CameraID::Mugshot].addComponent<cro::Transform>().setPosition(MugCameraPosition);
+    m_cameras[CameraID::Mugshot].getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, cro::Util::Const::PI);
+    //m_cameras[CameraID::Mugshot].getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -0.157f);
+    auto& cam2 = m_cameras[CameraID::Mugshot].addComponent<cro::Camera>();
+    cam2.setPerspective(70.f * cro::Util::Const::degToRad, 1.f, 0.1f, 6.f);
+    cam2.viewport = { 0.f, 0.f, 0.5f, 1.f };
+    cam2.renderFlags = ~(1 << 1);
+
 
     m_modelScene.getSunlight().getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, 96.f * cro::Util::Const::degToRad);
     m_modelScene.getSunlight().getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -39.f * cro::Util::Const::degToRad);
@@ -2060,4 +2094,28 @@ void ProfileState::setBioString(const std::string& s)
     m_menuEntities[EntityID::BioText].getComponent<cro::Transform>().setOrigin({ 0.f, -0.f });
     m_menuEntities[EntityID::BioText].getComponent<cro::Text>().setString(output);
     m_menuEntities[EntityID::BioText].getComponent<cro::Drawable2D>().setCroppingArea(BioCrop);
+}
+
+void ProfileState::generateMugshot()
+{
+    m_mugshotTexture.clear(TextNormalColour);
+    auto& cam = m_cameras[CameraID::Mugshot].getComponent<cro::Camera>();
+    cam.viewport = { 0.f, 0.f, 0.5f, 1.f };
+    m_cameras[CameraID::Mugshot].getComponent<cro::Transform>().setPosition(MugCameraPosition);
+    m_cameras[CameraID::Mugshot].getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, cro::Util::Const::PI);
+    m_cameras[CameraID::Mugshot].getComponent<cro::Camera>().updateMatrices(m_cameras[CameraID::Mugshot].getComponent<cro::Transform>());
+    m_modelScene.setActiveCamera(m_cameras[CameraID::Mugshot]);
+    m_modelScene.render();
+
+    cam.viewport = { 0.5f, 0.f, 0.5f, 1.f };
+    m_cameras[CameraID::Mugshot].getComponent<cro::Transform>().setPosition(MugCameraPosition + glm::vec3(-MugCameraPosition.z + 0.1f, 0.f, -MugCameraPosition.z));
+    m_cameras[CameraID::Mugshot].getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, cro::Util::Const::PI / 2.f);
+    m_cameras[CameraID::Mugshot].getComponent<cro::Camera>().updateMatrices(m_cameras[CameraID::Mugshot].getComponent<cro::Transform>());
+    m_modelScene.render();
+
+    m_mugshotTexture.display();
+
+    m_mugshotUpdated = true;
+    m_menuEntities[EntityID::Mugshot].getComponent<cro::Sprite>().setTexture(m_mugshotTexture.getTexture());
+    m_menuEntities[EntityID::Mugshot].getComponent<cro::Transform>().setScale(glm::vec2(1.f));
 }

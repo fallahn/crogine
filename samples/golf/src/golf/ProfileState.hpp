@@ -118,7 +118,7 @@ private:
     {
         enum
         {
-            Avatar, Ball,
+            Avatar, Ball, Mugshot,
 
             Count
         };
@@ -183,4 +183,8 @@ private:
 
     std::string generateRandomBio() const;
     void setBioString(const std::string&);
+
+    cro::RenderTexture m_mugshotTexture;
+    bool m_mugshotUpdated;
+    void generateMugshot();
 };
