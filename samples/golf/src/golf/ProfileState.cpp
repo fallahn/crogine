@@ -102,7 +102,7 @@ namespace
     constexpr glm::vec3 CameraBasePosition({ -0.867f, 1.325f, -1.68f });
     constexpr glm::vec3 CameraZoomPosition({ -0.867f, 1.625f, -0.58f });
     const glm::vec3 CameraZoomVector = glm::normalize(CameraZoomPosition - CameraBasePosition);
-    constexpr glm::vec3 MugCameraPosition({ -0.867f, 1.6f, -0.3f });
+    constexpr glm::vec3 MugCameraPosition({ -0.854f, 1.6f, -0.32f });
 
     const cro::String XboxString("LB/LT - RB/RT Rotate/Zoom");
     const cro::String PSString("L1/L2 - R1/R2 Rotate/Zoom");
@@ -150,27 +150,27 @@ ProfileState::ProfileState(cro::StateStack& ss, cro::State::Context ctx, SharedS
     m_modelScene.simulate(0.f);
     m_uiScene.simulate(0.f);
 
-    registerWindow([&]()
-        {
-            if (ImGui::Begin("Flaps"))
-            {
-                if (m_mugshotTexture.available())
-                {
-                    ImGui::Image(m_mugshotTexture.getTexture(), { 192.f, 96.f }, { 0.f, 1.f }, { 1.f, 0.f });
-                }
+    //registerWindow([&]()
+    //    {
+    //        if (ImGui::Begin("Flaps"))
+    //        {
+    //            if (m_mugshotTexture.available())
+    //            {
+    //                ImGui::Image(m_mugshotTexture.getTexture(), { 192.f, 96.f }, { 0.f, 1.f }, { 1.f, 0.f });
+    //            }
 
-                /*auto pos = m_cameras[CameraID::Mugshot].getComponent<cro::Transform>().getPosition();
-                if (ImGui::SliderFloat("Height", &pos.y, 0.f, 2.f))
-                {
-                    m_cameras[CameraID::Mugshot].getComponent<cro::Transform>().setPosition(pos);
-                }
-                if (ImGui::SliderFloat("Depth", &pos.z, -2.f, 4.f))
-                {
-                    m_cameras[CameraID::Mugshot].getComponent<cro::Transform>().setPosition(pos);
-                }*/
-            }
-            ImGui::End();
-        });
+    //            /*auto pos = m_cameras[CameraID::Mugshot].getComponent<cro::Transform>().getPosition();
+    //            if (ImGui::SliderFloat("Height", &pos.y, 0.f, 2.f))
+    //            {
+    //                m_cameras[CameraID::Mugshot].getComponent<cro::Transform>().setPosition(pos);
+    //            }
+    //            if (ImGui::SliderFloat("Depth", &pos.z, -2.f, 4.f))
+    //            {
+    //                m_cameras[CameraID::Mugshot].getComponent<cro::Transform>().setPosition(pos);
+    //            }*/
+    //        }
+    //        ImGui::End();
+    //    });
 }
 
 //public
@@ -2098,7 +2098,7 @@ void ProfileState::setBioString(const std::string& s)
 
 void ProfileState::generateMugshot()
 {
-    m_mugshotTexture.clear(TextNormalColour);
+    m_mugshotTexture.clear({0xa9c0afff});
     auto& cam = m_cameras[CameraID::Mugshot].getComponent<cro::Camera>();
     cam.viewport = { 0.f, 0.f, 0.5f, 1.f };
     m_cameras[CameraID::Mugshot].getComponent<cro::Transform>().setPosition(MugCameraPosition);
@@ -2108,7 +2108,7 @@ void ProfileState::generateMugshot()
     m_modelScene.render();
 
     cam.viewport = { 0.5f, 0.f, 0.5f, 1.f };
-    m_cameras[CameraID::Mugshot].getComponent<cro::Transform>().setPosition(MugCameraPosition + glm::vec3(-MugCameraPosition.z + 0.1f, 0.f, -MugCameraPosition.z));
+    m_cameras[CameraID::Mugshot].getComponent<cro::Transform>().setPosition(MugCameraPosition + glm::vec3(-MugCameraPosition.z + 0.05f, 0.f, -MugCameraPosition.z));
     m_cameras[CameraID::Mugshot].getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, cro::Util::Const::PI / 2.f);
     m_cameras[CameraID::Mugshot].getComponent<cro::Camera>().updateMatrices(m_cameras[CameraID::Mugshot].getComponent<cro::Transform>());
     m_modelScene.render();
@@ -2117,5 +2117,5 @@ void ProfileState::generateMugshot()
 
     m_mugshotUpdated = true;
     m_menuEntities[EntityID::Mugshot].getComponent<cro::Sprite>().setTexture(m_mugshotTexture.getTexture());
-    m_menuEntities[EntityID::Mugshot].getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+    m_menuEntities[EntityID::Mugshot].getComponent<cro::Transform>().setScale(glm::vec2(0.5f));
 }
