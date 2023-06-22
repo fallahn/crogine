@@ -168,6 +168,7 @@ private:
     void refreshMugshot();
     void refreshNameString();
     void refreshSwatch();
+    void refreshBio();
 
     struct TextEdit final
     {

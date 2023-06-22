@@ -458,7 +458,7 @@ std::size_t CPUGolfer::getSkillIndex() const
     return std::clamp((static_cast<std::int32_t>(m_skillIndex) - offset), 0, 5);*/
 
     auto id = m_cpuProfileIndices[m_activePlayer.client * ConstVal::MaxPlayers + m_activePlayer.player];
-    return std::clamp((static_cast<std::int32_t>(CPUStats.size()) - id) / 5, 1, 5);
+    return std::clamp((static_cast<std::int32_t>(CPUStats.size()) - id) / 5, 0, 5);
 }
 
 void CPUGolfer::setCPUCount(std::int32_t cpuCount, const SharedStateData& sharedData)

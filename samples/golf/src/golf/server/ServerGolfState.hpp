@@ -73,8 +73,6 @@ namespace sv
 
         cro::Clock m_turnTimer;
 
-        std::array<std::int32_t, ConstVal::MaxClients* ConstVal::MaxPlayers> m_cpuProfileIndices = {};
-
         void sendInitialGameState(std::uint8_t);
         void handlePlayerInput(const net::NetEvent::Packet&, bool predict);
         void checkReadyQuit(std::uint8_t);
@@ -87,8 +85,6 @@ namespace sv
         void initScene();
         void buildWorld();
 
-        //void makeCPUMove();
-        //glm::vec3 calcCPUPosition() const;
         void handleDefaultRules(const struct GolfBallEvent&);
         bool summariseDefaultRules();
 

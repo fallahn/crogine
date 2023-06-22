@@ -76,7 +76,6 @@ GolfState::GolfState(SharedData& sd)
     m_currentBest           (MaxStrokes)/*,
     m_skillIndex            (0)*/
 {
-    std::fill(m_cpuProfileIndices.begin(), m_cpuProfileIndices.end(), -1);
     if (m_mapDataValid = validateMap(); m_mapDataValid)
     {
         initScene();
@@ -706,32 +705,6 @@ void GolfState::setNextHole()
             return;
         }
 
-        //reset player positions/strokes
-        /*for (auto& player : m_playerInfo)
-        {
-            player.position = m_holeData[m_currentHole].tee;
-            player.distanceToHole = glm::length(m_holeData[m_currentHole].tee - m_holeData[m_currentHole].pin);
-            player.terrain = ballSystem->getTerrain(player.position).terrain;
-
-            auto ball = player.ballEntity;
-            ball.getComponent<Ball>().terrain = player.terrain;
-            ball.getComponent<Ball>().velocity = glm::vec3(0.f);
-            ball.getComponent<cro::Transform>().setPosition(m_holeData[m_currentHole].tee);
-
-            auto timestamp = m_serverTime.elapsed().asMilliseconds();
-
-            ActorInfo info;
-            info.serverID = static_cast<std::uint32_t>(ball.getIndex());
-            info.position = ball.getComponent<cro::Transform>().getPosition();
-            info.rotation = cro::Util::Net::compressQuat(ball.getComponent<cro::Transform>().getRotation());
-            info.windEffect = ball.getComponent<Ball>().windEffect;
-            info.timestamp = timestamp;
-            info.clientID = player.client;
-            info.playerID = player.player;
-            info.state = static_cast<std::uint8_t>(ball.getComponent<Ball>().state);
-            m_sharedData.host.broadcastPacket(PacketID::ActorUpdate, info, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
-        }*/
-
         //tell clients to set up next hole
         std::uint16_t newHole = (m_currentHole << 8) | std::uint8_t(m_holeData[m_currentHole].par);
         m_sharedData.host.broadcastPacket(PacketID::SetHole, newHole, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
@@ -1011,7 +984,6 @@ void GolfState::initScene()
     m_mapDataValid = m_scene.addSystem<BallSystem>(mb)->setHoleData(m_holeData[0]);
     m_scene.getSystem<BallSystem>()->setGimmeRadius(m_sharedData.gimmeRadius);
     
-    std::int32_t cpuCount = 0;
     for (auto i = 0u; i < m_sharedData.clients.size(); ++i)
     {
         if (m_sharedData.clients[i].connected)
@@ -1023,64 +995,10 @@ void GolfState::initScene()
                 player.player = j;
                 player.position = m_holeData[0].tee;
                 player.distanceToHole = glm::length(m_holeData[0].tee - m_holeData[0].pin);
-
-                //do this regardless of fastCPU setting - it'll just get ignored if not used.
-                if (m_sharedData.clients[i].playerData[j].isCPU)
-                {
-                    cpuCount++;
-                }
             }
         }
     }
     std::shuffle(m_playerInfo.begin(), m_playerInfo.end(), cro::Util::Random::rndEngine);
-
-
-    //assign indices into the CPU profile array
-    //based on host's club set and CPU count
-    if (cpuCount)
-    {
-        std::int32_t baseCPUIndex = 0;
-        std::int32_t stride = 1;
-
-        switch (Club::getClubLevel())
-        {
-        default: break;
-        case 0:
-            baseCPUIndex = 12;
-            stride = 16 / cpuCount; //even distribution through 16x level 0
-            break;
-        case 1:
-            baseCPUIndex = 8;
-            stride = cpuCount > 4 ? 2 : 23 / cpuCount; //every other profile unless more than 4
-            break;
-        case 2:
-            stride = cpuCount < 3 ? 1 :
-                cpuCount < 8 ? 2 :
-                27 / cpuCount;
-            break;
-        }
-
-
-        CRO_ASSERT(baseCPUIndex + (stride * (cpuCount - 1)) < CPUStats.size(), "");
-
-        for (auto i = 0u; i < m_sharedData.clients.size(); ++i)
-        {
-            if (m_sharedData.clients[i].connected)
-            {
-                for (auto j = 0u; j < m_sharedData.clients[i].playerCount; ++j)
-                {
-                    if (m_sharedData.clients[i].playerData[j].isCPU)
-                    {
-                        CRO_ASSERT(baseCPUIndex < CPUStats.size(), "");
-
-                        auto cpuIndex = i * ConstVal::MaxPlayers + j;
-                        m_cpuProfileIndices[cpuIndex] = baseCPUIndex;
-                        baseCPUIndex += stride;
-                    }
-                }
-            }
-        }
-    }
 }
 
 void GolfState::buildWorld()
