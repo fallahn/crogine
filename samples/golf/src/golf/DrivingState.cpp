@@ -552,6 +552,16 @@ void DrivingState::handleMessage(const cro::Message& msg)
         {
             //display a message with score
             showMessage(glm::length(PlayerPosition - data.position));
+
+            //does fireworks at pin
+            if (data.type == GolfBallEvent::Holed)
+            {
+                auto* msg2 = postMessage<GolfEvent>(MessageID::GolfMessage);
+                msg2->type = GolfEvent::HoleInOne;
+                msg2->position = data.position;
+
+                //TODO raise achievement
+            }
         }
     }
         break;
