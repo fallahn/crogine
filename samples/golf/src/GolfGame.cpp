@@ -62,6 +62,8 @@ source distribution.
 #include "Achievements.hpp"
 #include "golf/Clubs.hpp"
 
+#include "ImTheme.hpp"
+
 #include <AchievementIDs.hpp>
 #include <AchievementStrings.hpp>
 
@@ -551,15 +553,6 @@ bool GolfGame::initialise()
             {
                 cro::Util::String::parseURL(Social::WebURL);
             }
-            ImGui::NewLine();
-            ImGui::NewLine();
-            ImGui::NewLine();
-            ImGui::NewLine();
-            ImGui::NewLine();
-            ImGui::NewLine();
-            ImGui::NewLine();
-            ImGui::NewLine();
-            ImGui::Text("In memory of Liesbeth Penning");
         });
 
     registerCommand("log_benchmark", 
@@ -724,6 +717,8 @@ bool GolfGame::initialise()
 #else
     m_stateStack.pushState(StateID::SplashScreen);
 #endif
+
+    applyImGuiStyle();
 
     return true;
 }
