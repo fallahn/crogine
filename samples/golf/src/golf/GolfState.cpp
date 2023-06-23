@@ -6511,7 +6511,15 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
             }
             else
             {
-                m_cpuGolfer.activate(target, m_holeData[m_currentHole].target, m_holeData[m_currentHole].puttFromTee);
+                //aim for whichever is closer (target or pin)
+                if (glm::length2(target - player.position) < glm::length2(m_holeData[m_currentHole].pin - player.position))
+                {
+                    m_cpuGolfer.activate(target, m_holeData[m_currentHole].target, m_holeData[m_currentHole].puttFromTee);
+                }
+                else
+                {
+                    m_cpuGolfer.activate(m_holeData[m_currentHole].pin, target, m_holeData[m_currentHole].puttFromTee);
+                }
             }
 #ifdef CRO_DEBUG_
             //CPUTarget.getComponent<cro::Transform>().setPosition(m_cpuGolfer.getTarget());

@@ -275,6 +275,7 @@ void CPUGolfer::activate(glm::vec3 target, glm::vec3 fallback, bool puttFromTee)
                 break;
             case TerrainID::Water:
             case TerrainID::Scrub:
+            case TerrainID::Bunker:
             case TerrainID::Stone:
                 if (cro::Util::Random::value(0, 9) > Stat[CPUStat::MistakeLikelyhood])
                 {
@@ -385,7 +386,8 @@ void CPUGolfer::setPredictionResult(glm::vec3 result, std::int32_t terrain)
 {
     if (m_retargetCount < (MaxRetargets - (MaxRetargets - getSkillIndex())) &&
         (terrain == TerrainID::Water
-        || terrain == TerrainID::Scrub))
+        || terrain == TerrainID::Scrub
+            || terrain == TerrainID::Bunker))
     {
         const auto& Stat = CPUStats[m_cpuProfileIndices[m_activePlayer.client * ConstVal::MaxPlayers + m_activePlayer.player]];
 
