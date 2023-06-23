@@ -2000,6 +2000,10 @@ void GolfState::createScoreboard()
             crop.height += 1.f;
             crop.bottom = -(bgCrop.height - 1.f) - pos.y;
             ent.getComponent<cro::Drawable2D>().setCroppingArea(crop);
+            if (ent.hasComponent<cro::Entity>())
+            {
+                ent.getComponent<cro::Entity>().getComponent<cro::Drawable2D>().setCroppingArea(crop); //red text
+            }
         }
         //TODO these values need to be rounded to
         //the nearest scaled pixel ie nearest 2,3 or whatever viewScale is
@@ -2045,6 +2049,17 @@ void GolfState::createScoreboard()
                     ent.getComponent<cro::Transform>().move({ std::floor(scoreboardExpansion - offset), 0.f});
                 }
             };
+
+
+            //child ent for red score text
+            auto f = m_uiScene.createEntity();
+            f.addComponent<cro::Transform>().setPosition({ 0.f, -7.f, 0.f });;
+            f.addComponent<cro::Drawable2D>();
+            f.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
+            f.getComponent<cro::Text>().setVerticalSpacing(LeaderboardTextSpacing);
+            f.getComponent<cro::Text>().setFillColour(TextHighlightColour);
+            e.getComponent<cro::Transform>().addChild(f.getComponent<cro::Transform>());
+            e.addComponent<cro::Entity>() = f;
         }
 
         scrollEnt.getComponent<cro::Transform>().addChild(e.getComponent<cro::Transform>());
@@ -2309,15 +2324,25 @@ void GolfState::updateScoreboard()
             holeNumber += 9;
         }
         std::string scoreString = std::to_string(holeNumber) + "\n" + std::to_string(m_holeData[i - 1].par);
+        std::string redScoreString = "\n";
 
         for (auto j = 0u; j < playerCount; ++j)
         {
             scoreString += "\n";
+            redScoreString += "\n";
 
             auto s = scores[j].holes[i - 1];
             if (s)
             {
-                scoreString += std::to_string(s);
+                if (s > m_holeData[i - 1].par)
+                {
+                    //add to red column
+                    redScoreString += std::to_string(s);
+                }
+                else
+                {
+                    scoreString += std::to_string(s);
+                }
             }
         }
 
@@ -2326,25 +2351,37 @@ void GolfState::updateScoreboard()
             for (auto j = 0u; j < 16 - playerCount; ++j)
             {
                 scoreString += "\n";
+                redScoreString += "\n";
             }
 
             auto holeIndex = (i + MaxCols) - 1;
             if (holeIndex < m_holeData.size())
             {
                 scoreString += "\n\n" + std::to_string(i + MaxCols) + "\n" + std::to_string(m_holeData[holeIndex].par);
+                redScoreString += "\n\n\n";
                 for (auto j = 0u; j < playerCount; ++j)
                 {
                     scoreString += "\n";
+                    redScoreString += "\n";
                     auto s = scores[j].holes[holeIndex];
                     if (s)
                     {
-                        scoreString += std::to_string(s);
+                        if (s > m_holeData[holeIndex].par)
+                        {
+                            //add to red column
+                            redScoreString += std::to_string(s);
+                        }
+                        else
+                        {
+                            scoreString += std::to_string(s);
+                        }
                     }
                 }
             }
         }
 
         ents[i].getComponent<cro::Text>().setString(scoreString);
+        ents[i].getComponent<cro::Entity>().getComponent<cro::Text>().setString(redScoreString); //yes there's an entity as a component.
         leaderboardEntries.emplace_back(glm::vec3(ents[i].getComponent<UIElement>().absolutePosition - glm::vec2(ColumnMargin, -UITextPosV), 0.f), scoreString);
     }
 
