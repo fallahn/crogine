@@ -153,6 +153,9 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/imgui/imgui_stdlib.cpp
   ${PROJECT_DIR}/imgui/imgui_widgets.cpp
   ${PROJECT_DIR}/imgui/ImGuizmo.cpp
+  ${PROJECT_DIR}/imgui/implot.cpp
+  ${PROJECT_DIR}/imgui/implot_demo.cpp
+  ${PROJECT_DIR}/imgui/implot_items.cpp
   ${PROJECT_DIR}/imgui/ImSequencer.cpp
 
   ${PROJECT_DIR}/network/NetClient.cpp

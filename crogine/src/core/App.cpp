@@ -320,6 +320,7 @@ void App::run()
         m_window.setMultisamplingEnabled(glIsEnabled(GL_MULTISAMPLE));
 
         ImGui::CreateContext();
+        ImPlot::CreateContext();
         setImguiStyle(&ImGui::GetStyle());
         //ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
 
@@ -427,6 +428,7 @@ void App::run()
     finalise();
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplSDL2_Shutdown();
+    ImPlot::DestroyContext();
     ImGui::DestroyContext();
     m_window.close();
 }
