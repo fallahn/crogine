@@ -321,7 +321,7 @@ void MenuState::createAvatarMenu(cro::Entity parent)
 
     auto showAvatar = [&, mugshot](std::size_t profileIndex) mutable
     {
-        const auto& profile = m_profileData.playerProfiles[profileIndex];
+        auto& profile = m_profileData.playerProfiles[profileIndex];
         auto idx = indexFromAvatarID(profile.skinID);
 
         //TODO if the index is the same as the model already shown
@@ -358,6 +358,20 @@ void MenuState::createAvatarMenu(cro::Entity parent)
 
         m_playerAvatars[idx].previewModel.getComponent<cro::Model>().setMaterialProperty(0, "u_diffuseMap", m_profileTextures[profileIndex].getTextureID());
         m_playerAvatars[idx].previewModel.getComponent<cro::Model>().setHidden(false);
+        
+
+        //reload the mugshot data - TODO how do we do this only if
+        //the data changed?
+        if (!profile.mugshot.empty())
+        {
+            m_profileTextures[profileIndex].setMugshot(profile.mugshot);
+
+            if (auto img = cropAvatarImage(profile.mugshot); img.getPixelData())
+            {
+                //profile.mugshotData = std::move(img);
+                m_sharedData.localConnectionData.playerData[m_rosterMenu.activeIndex].mugshotData = std::move(img);
+            }
+        }
 
         if (m_profileTextures[profileIndex].getMugshot())
         {
