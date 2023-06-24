@@ -268,7 +268,6 @@ void CPUGolfer::activate(glm::vec3 target, glm::vec3 fallback, bool puttFromTee)
                 if (glm::dot(alt, fwd) > 0)
                 {
                     m_baseTarget = m_target = fallback;
-                    count = std::max(0, count - 1);
                     LogI << "set to fallback on activate" << std::endl;
                 }
             }
@@ -428,8 +427,26 @@ void CPUGolfer::update(float dt, glm::vec3 windVector, float distanceToPin)
 void CPUGolfer::setPredictionResult(glm::vec3 result, std::int32_t terrain)
 {
     //TODO should we be compensating for overshoot?
+    if (auto& count = failCounts[m_activePlayer.client * ConstVal::MaxPlayers + m_activePlayer.player]; count != 0)
+    {
+        count = std::max(0, count - 1);
 
-    if (m_retargetCount < (MaxRetargets - (MaxRetargets - getSkillIndex())) &&
+        auto fwd = m_baseTarget - m_activePlayer.position;
+        auto alt = m_fallbackTarget - m_activePlayer.position;
+        if (glm::dot(alt, fwd) > 0
+            && glm::length2(alt) < glm::length2(fwd))
+        {
+            m_baseTarget = m_fallbackTarget;
+            m_target = m_baseTarget;
+        }
+        m_state = State::CalcDistance;
+        m_wantsPrediction = false;
+
+        LogI << "Falling back - fail count was " << (count + 1) << std::endl;
+    }
+
+
+    else if (m_retargetCount < (MaxRetargets - (MaxRetargets - getSkillIndex())) &&
         (terrain == TerrainID::Water
         || terrain == TerrainID::Scrub
             || terrain == TerrainID::Bunker))
@@ -569,7 +586,7 @@ void CPUGolfer::setCPUCount(std::int32_t cpuCount, const SharedStateData& shared
         std::int32_t baseCPUIndex = 0;
         std::int32_t stride = 1;
 
-        switch (/*Social::getClubLevel()*/2) //TODO replace this with chosen set from options
+        switch (Social::getClubLevel()) //TODO replace this with chosen set from options
         {
         default: break;
         case 0:
