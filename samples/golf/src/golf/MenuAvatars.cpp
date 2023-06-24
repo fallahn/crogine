@@ -783,7 +783,7 @@ void MenuState::createAvatarMenu(cro::Entity parent)
 
     //reset stats
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 151.f, 23.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 158.f, 25.f, 0.1f });
     entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("reset_select");

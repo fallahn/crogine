@@ -219,6 +219,8 @@ void CPUGolfer::activate(glm::vec3 target, glm::vec3 fallback, bool puttFromTee)
 
         //previous fail is set to the last ID of the player which went OOB
         //so if it matches our current then the last shot was bad
+        //TODO this is a daft way of doing it - especially with a lot of players.
+        //CPU players really should maintain some sort of state
         if (previousFail == (m_activePlayer.client * 100) + m_activePlayer.player)
         {
             auto fwd = m_baseTarget - m_activePlayer.position;
@@ -232,19 +234,19 @@ void CPUGolfer::activate(glm::vec3 target, glm::vec3 fallback, bool puttFromTee)
         //the target (so we prefer the pin still, just fall short) unless
         //the shortened target is out of bounds, in which case use the fallback
         else if (auto len = glm::length(target - m_activePlayer.position);
-                    len > Clubs[ClubID::Driver].getTarget(0.f))
+                    len > Clubs[ClubID::Driver].getTargetAtLevel(Stat[CPUStat::Skill]))
         {
             glm::vec3 newDir(0.f);
             if (target != fallback)
             {
-                len -= Clubs[ClubID::Driver].getTarget(0.f);
+                len -= Clubs[ClubID::Driver].getTargetAtLevel(Stat[CPUStat::Skill]);
                 const auto correctionDir = glm::normalize(fallback - target) * (len * 1.05f);
                 newDir = target + correctionDir;
             }
             else
             {
                 //just move back towards the player
-                const float reduction = (Clubs[ClubID::Driver].getTarget(0.f) / len) * 0.95f;
+                const float reduction = (Clubs[ClubID::Driver].getTargetAtLevel(Stat[CPUStat::Skill]) / len) * 0.95f;
                 newDir = (target - m_activePlayer.position) * reduction;
                 newDir += m_activePlayer.position;
             }
@@ -392,7 +394,6 @@ void CPUGolfer::setPredictionResult(glm::vec3 result, std::int32_t terrain)
         const auto& Stat = CPUStats[m_cpuProfileIndices[m_activePlayer.client * ConstVal::MaxPlayers + m_activePlayer.player]];
 
         //retarget
-        //if (m_puttFromTee)
         if (cro::Util::Random::value(0, 9) > Stat[CPUStat::MistakeLikelyhood])
         {
             //fall back to default target if it's still in front
@@ -463,6 +464,11 @@ std::size_t CPUGolfer::getSkillIndex() const
     return std::clamp((static_cast<std::int32_t>(CPUStats.size()) - id) / 5, 0, 5);
 }
 
+std::int32_t CPUGolfer::getClubLevel() const
+{
+    return CPUStats[m_cpuProfileIndices[m_activePlayer.client * ConstVal::MaxPlayers + m_activePlayer.player]][CPUStat::Skill];
+}
+
 void CPUGolfer::setCPUCount(std::int32_t cpuCount, const SharedStateData& sharedData)
 {
     std::fill(m_cpuProfileIndices.begin(), m_cpuProfileIndices.end(), -1);
@@ -472,7 +478,7 @@ void CPUGolfer::setCPUCount(std::int32_t cpuCount, const SharedStateData& shared
         std::int32_t baseCPUIndex = 0;
         std::int32_t stride = 1;
 
-        switch (Club::getClubLevel())
+        switch (/*Social::getClubLevel()*/2) //TODO replace this with chosen set from options
         {
         default: break;
         case 0:
@@ -591,9 +597,10 @@ void CPUGolfer::calcDistance(float dt, glm::vec3 windVector)
         {
             //we want to aim a bit further if we went
             //off the fairway, so we hit a bit harder.
+            const auto& Stat = CPUStats[m_cpuProfileIndices[m_activePlayer.client * ConstVal::MaxPlayers * m_activePlayer.player]];
 
             //but not too much if we're near the hole
-            float multiplier = absDistance / Clubs[ClubID::PitchWedge].getTarget(m_distanceToPin);
+            float multiplier = absDistance / Clubs[ClubID::PitchWedge].getTargetAtLevel(Stat[CPUStat::Skill]);
             targetDistance += 20.f * multiplier; //TODO reduce this if we're close to the green
         }
         m_searchDistance = targetDistance;
@@ -612,7 +619,7 @@ void CPUGolfer::pickClub(float dt)
     {
         auto absDistance = glm::length(m_target - m_activePlayer.position);
 
-        auto club = m_inputParser.getClub();
+        auto club = m_inputParser.getClub(); //this should never really be the putter here?
         float clubDistance = Clubs[club].getTarget(m_distanceToPin);
 
         const auto acceptClub = [&]()
@@ -728,8 +735,10 @@ void CPUGolfer::pickClubDynamic(float dt)
 
         //find the first club whose target exceeds this distance
         //else use the most powerful club available
+        const auto& Stat = CPUStats[m_cpuProfileIndices[m_activePlayer.client * ConstVal::MaxPlayers * m_activePlayer.player]];
+
         auto club = m_inputParser.getClub();
-        float clubDistance = Clubs[club].getTarget(m_distanceToPin);
+        float clubDistance = Clubs[club].getTargetAtLevel(Stat[CPUStat::Skill]);
         float diff = targetDistance - clubDistance;
 
         const auto acceptClub = [&]()
@@ -739,7 +748,7 @@ void CPUGolfer::pickClubDynamic(float dt)
             m_aimTimer.restart();
 
             //guestimate power based on club (this gets refined from predictions)
-            m_targetPower = std::min(1.f, targetDistance / Clubs[m_clubID].getTarget(m_distanceToPin));
+            m_targetPower = std::min(1.f, targetDistance / Clubs[m_clubID].getTargetAtLevel(Stat[CPUStat::Skill]));
             m_targetPower = std::min(1.f, m_targetPower + (getOffsetValue() / 100.f));
         };
 
@@ -754,7 +763,7 @@ void CPUGolfer::pickClubDynamic(float dt)
 
 
         //if the new club has looped switch back and accept it (it's the longest we have)
-        if (m_searchDirection == 1 && clubDistance < Clubs[m_prevClubID].getTarget(m_distanceToPin))
+        if (m_searchDirection == 1 && clubDistance < Clubs[m_prevClubID].getTargetAtLevel(Stat[CPUStat::Skill]))
         {
             sendKeystroke(m_inputParser.getInputBinding().keys[InputBinding::PrevClub]);
             m_clubID = m_prevClubID;
@@ -763,7 +772,7 @@ void CPUGolfer::pickClubDynamic(float dt)
             return;
         }
 
-        if (m_searchDirection == -1 && clubDistance > Clubs[m_prevClubID].getTarget(m_distanceToPin))
+        if (m_searchDirection == -1 && clubDistance > Clubs[m_prevClubID].getTargetAtLevel(Stat[CPUStat::Skill]))
         {
             sendKeystroke(m_inputParser.getInputBinding().keys[InputBinding::NextClub]);
             m_clubID = m_prevClubID;
@@ -893,6 +902,8 @@ void CPUGolfer::aim(float dt, glm::vec3 windVector)
             sendKeystroke(m_inputParser.getInputBinding().keys[InputBinding::Left], false);
         }
 
+        const auto& Stat = CPUStats[m_cpuProfileIndices[m_activePlayer.client * ConstVal::MaxPlayers * m_activePlayer.player]];
+
         //if angle correct then calc a target power
         if (std::abs(m_inputParser.getYaw() - targetAngle) < 0.01f
             || m_aimTimer.elapsed() > MaxAimTime) //get out clause if aim calculation is out of bounds.
@@ -908,7 +919,7 @@ void CPUGolfer::aim(float dt, glm::vec3 windVector)
                 //power is not actually linear - ie half the distance is not
                 //half the power, so we need to pull back a little to stop
                 //overshooting long drives
-                m_targetPower = m_aimDistance / Clubs[m_clubID].getTarget(m_distanceToPin);
+                m_targetPower = m_aimDistance / Clubs[m_clubID].getTarget(m_distanceToPin); //these aren't particularly extended anyway so leave this
                 //if (Clubs[m_clubID].target > m_aimDistance)
                 {
                     //the further we try to drive the bigger the reduction
@@ -918,7 +929,7 @@ void CPUGolfer::aim(float dt, glm::vec3 windVector)
             }
             else
             {
-                m_targetPower = (distanceToTarget * 1.12f) / Clubs[m_clubID].getTarget(m_distanceToPin);
+                m_targetPower = (distanceToTarget * 1.12f) / Clubs[m_clubID].getTargetAtLevel(Stat[CPUStat::Skill]);
             }
             m_targetPower += ((0.06f * (-dot * windVector.y)) * greenCompensation) * m_targetPower;
 
@@ -1106,8 +1117,10 @@ void CPUGolfer::updatePrediction(float dt)
                 if (float resultPrecision = glm::length2(predictDir - targetDir);
                     resultPrecision > precSqr && m_targetPower < 1.f)
                 {
+                    const auto& Stat = CPUStats[m_cpuProfileIndices[m_activePlayer.client * ConstVal::MaxPlayers * m_activePlayer.player]];
+
                     float precDiff = std::sqrt(resultPrecision);
-                    float change = (precDiff / Clubs[m_clubID].getTarget(m_distanceToPin)) / 2.f;
+                    float change = (precDiff / Clubs[m_clubID].getTargetAtLevel(Stat[CPUStat::Skill])) / 2.f;
                     change += getOffsetValue() / 60.f;
 
                     if (glm::length2(predictDir) < glm::length2(targetDir))

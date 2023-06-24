@@ -2002,6 +2002,7 @@ void GolfState::createScoreboard()
             ent.getComponent<cro::Drawable2D>().setCroppingArea(crop);
             if (ent.hasComponent<cro::Entity>())
             {
+                crop.width += 10.f;
                 ent.getComponent<cro::Entity>().getComponent<cro::Drawable2D>().setCroppingArea(crop); //red text
             }
         }

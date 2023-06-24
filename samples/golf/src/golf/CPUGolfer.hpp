@@ -62,6 +62,7 @@ public:
     glm::vec3 getTarget() const { return m_target; }
 
     std::size_t getSkillIndex() const;
+    std::int32_t getClubLevel() const; //remember we have to set the active player FIRST
 
     void setFastCPU(bool fast) { m_fastCPU = fast; }
     void setCPUCount(std::int32_t, const struct SharedStateData&);

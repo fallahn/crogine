@@ -3577,6 +3577,8 @@ void GolfState::addSystems()
 
 void GolfState::buildScene()
 {
+    Club::setClubLevel(m_sharedData.tutorial ? 0 : Social::getClubLevel());
+
     m_achievementTracker.noGimmeUsed = (m_sharedData.gimmeRadius != 0);
     m_achievementTracker.noHolesOverPar = (m_sharedData.scoreType == ScoreType::Stroke);
 
@@ -6316,6 +6318,7 @@ void GolfState::requestNextPlayer(const ActivePlayer& player)
     if (!m_sharedData.tutorial)
     {
         m_currentPlayer = player;
+        Club::setClubLevel(0); //always use the default set for the tutorial
         //setCurrentPlayer() is called when the sign closes
 
         showMessageBoard(MessageBoardID::PlayerName);
@@ -6505,7 +6508,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
             float det = (p.x * t.y) - (p.y * t.x);
             float targetAngle = std::abs(std::atan2(det, dot));
 
-            if (targetAngle < m_inputParser.getMaxRotation())
+            if (targetAngle < /*m_inputParser.getMaxRotation()*/cro::Util::Const::PI / 2.f)
             {
                 m_cpuGolfer.activate(m_holeData[m_currentHole].pin, m_holeData[m_currentHole].target, m_holeData[m_currentHole].puttFromTee);
             }
@@ -6677,6 +6680,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
 
 
     m_currentPlayer = player;
+    Club::setClubLevel(isCPU ? m_cpuGolfer.getClubLevel() : Social::getClubLevel());//TODO use the selected club range from options
 
     //announce player has changed
     auto* msg2 = getContext().appInstance.getMessageBus().post<GolfEvent>(MessageID::GolfMessage);

@@ -122,6 +122,7 @@ public:
     static void awardXP(std::int32_t, std::int32_t = -1);
     static std::int32_t getXP();
     static std::int32_t getLevel();
+    static std::int32_t getClubLevel();
     static ProgressData getLevelProgress();
     static std::uint32_t getCurrentStreak();
     static std::uint32_t updateStreak();

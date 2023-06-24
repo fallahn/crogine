@@ -94,6 +94,7 @@ public:
     float getTopSpinMultiplier() const { return m_topspin; }
 
     static std::int32_t getClubLevel(); //0-2 for range
+    static void setClubLevel(std::int32_t);
 
 private:
     const std::int32_t m_id = -1;

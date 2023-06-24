@@ -30,6 +30,8 @@ source distribution.
 #include "Clubs.hpp"
 #include <Social.hpp>
 
+#include <crogine/detail/Assert.hpp>
+
 namespace
 {
     struct Stat final
@@ -74,6 +76,7 @@ namespace
 
 
     constexpr std::size_t DebugLevel = 35;
+    std::int32_t playerLevel = -1;
 }
 
 Club::Club(std::int32_t id, const std::string& name, float angle, float sidespin, float topspin)
@@ -178,21 +181,15 @@ float Club::getDefaultTarget() const
 
 std::int32_t Club::getClubLevel()
 {
-    //check player level and return increased distance
-    auto level = Social::getLevel();
-    //auto level = DebugLevel;
+    CRO_ASSERT(playerLevel > -1 && playerLevel < 3, "");
 
-    if (level > 29)
-    {
-        return 2;
-    }
+    return playerLevel;
+}
 
-    if (level > 14)
-    {
-        return 1;
-    }
-
-    return 0;
+void Club::setClubLevel(std::int32_t level)
+{
+    playerLevel = level;
+    CRO_ASSERT(playerLevel > -1 && playerLevel < 3, "");
 }
 
 //private

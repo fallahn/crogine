@@ -161,6 +161,24 @@ std::int32_t Social::getLevel()
     return getLevelFromXP(experience.value);
 }
 
+std::int32_t Social::getClubLevel()
+{
+    //check player level and return increased distance
+    auto level = getLevel();
+
+    if (level > 29)
+    {
+        return 2;
+    }
+
+    if (level > 14)
+    {
+        return 1;
+    }
+
+    return 0;
+}
+
 Social::ProgressData Social::getLevelProgress()
 {
     experience.read();

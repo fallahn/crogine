@@ -3180,7 +3180,8 @@ void MenuState::updateCourseRuleString()
 
 #ifdef USE_GNS
     //update ticker
-    if (m_lobbyWindowEntities[LobbyEntityID::CourseTicker].isValid())
+    if (!m_sharedData.tutorial && //data will be courseDAta.cend()
+        m_lobbyWindowEntities[LobbyEntityID::CourseTicker].isValid())
     {
         if (!data->isUser)
         {
