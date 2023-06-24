@@ -89,7 +89,8 @@ namespace
         0.004f, 0.002f, 0.0001f, 0.f
     };
     std::size_t devianceOffset = 0;
-    std::int32_t previousFail = -1; //if the previous shot failed the client/player ID
+    //std::int32_t previousFail = -1; //if the previous shot failed the client/player ID
+    std::array<std::int32_t, ConstVal::MaxClients* ConstVal::MaxPlayers> failCounts = {};
 }
 
 /*
@@ -143,6 +144,7 @@ CPUGolfer::CPUGolfer(InputParser& ip, const ActivePlayer& ap, const CollisionMes
     m_thinkTime         (0.f),
     m_offsetRotation    (cro::Util::Random::value(0, 1024))
 {
+    std::fill(failCounts.begin(), failCounts.end(), 0);
 #ifdef CRO_DEBUG_
     registerWindow([&]()
         {
@@ -195,10 +197,7 @@ void CPUGolfer::handleMessage(const cro::Message& msg)
                 || data.terrain == TerrainID::Water)
             {
                 //switch to fallback target if possible
-                if (getSkillIndex() > 4)
-                {
-                    previousFail = (m_activePlayer.client * 100) + m_activePlayer.player;
-                }
+                failCounts[m_activePlayer.client * ConstVal::MaxPlayers + m_activePlayer.player]++;
             }
         }
     }
@@ -217,17 +216,61 @@ void CPUGolfer::activate(glm::vec3 target, glm::vec3 fallback, bool puttFromTee)
         m_fallbackTarget = fallback;
         m_baseTarget = m_target = target;
 
-        //previous fail is set to the last ID of the player which went OOB
-        //so if it matches our current then the last shot was bad
-        //TODO this is a daft way of doing it - especially with a lot of players.
-        //CPU players really should maintain some sort of state
-        if (previousFail == (m_activePlayer.client * 100) + m_activePlayer.player)
+        //if previous fail then the last shot was bad (stops meltdowns on doglegs)
+        if (auto& count = failCounts[m_activePlayer.client * ConstVal::MaxPlayers + m_activePlayer.player]; count != 0)
         {
-            auto fwd = m_baseTarget - m_activePlayer.position;
-            auto alt = m_fallbackTarget - m_activePlayer.position;
-            if (glm::dot(alt, fwd) > 0)
+            //try moving to fallback if possible
+            if (count == 1)
             {
-                m_baseTarget = m_target = fallback;
+                if (m_target != m_fallbackTarget)
+                {
+                    const auto moveDir = glm::normalize(m_fallbackTarget - m_target);
+                    auto newDir = moveDir;
+
+                    auto terrain = m_collisionMesh.getTerrain(m_baseTarget + newDir).terrain;
+                    auto i = 0;
+                    while ((terrain == TerrainID::Water
+                        || terrain == TerrainID::Scrub
+                        || terrain == TerrainID::Bunker)
+                        && i++ < 3)
+                    {
+                        newDir += moveDir;
+                        terrain = m_collisionMesh.getTerrain(m_baseTarget + newDir).terrain;
+                    }
+                    LogI << "stepped towards fallback on activate" << std::endl;
+
+
+                    if (terrain == TerrainID::Water
+                        || terrain == TerrainID::Scrub)
+                    {
+                        //else snap to it if it's still in front
+                        auto fwd = m_baseTarget - m_activePlayer.position;
+                        auto alt = m_fallbackTarget - m_activePlayer.position;
+                        if (glm::dot(alt, fwd) > 0)
+                        {
+                            m_baseTarget = m_target = fallback;
+                            count = std::max(0, count - 1);
+                            LogI << "set to fallback on activate (couldn't find good alternative)" << std::endl;
+                        }
+                    }
+                    else
+                    {
+                        m_baseTarget += newDir;
+                        m_target = m_baseTarget;
+                    }
+                }
+            }
+            else
+            {
+                //else snap to it if it's still in front
+                auto fwd = m_baseTarget - m_activePlayer.position;
+                auto alt = m_fallbackTarget - m_activePlayer.position;
+                if (glm::dot(alt, fwd) > 0)
+                {
+                    m_baseTarget = m_target = fallback;
+                    count = std::max(0, count - 1);
+                    LogI << "set to fallback on activate" << std::endl;
+                }
             }
         }
         //otherwise check if the target is in max range - if not shorten
@@ -286,8 +329,6 @@ void CPUGolfer::activate(glm::vec3 target, glm::vec3 fallback, bool puttFromTee)
                 break;
             }
         }
-        
-        previousFail = -1;
 
         m_retargetCount = 0;
         m_state = State::CalcDistance;
@@ -386,6 +427,8 @@ void CPUGolfer::update(float dt, glm::vec3 windVector, float distanceToPin)
 
 void CPUGolfer::setPredictionResult(glm::vec3 result, std::int32_t terrain)
 {
+    //TODO should we be compensating for overshoot?
+
     if (m_retargetCount < (MaxRetargets - (MaxRetargets - getSkillIndex())) &&
         (terrain == TerrainID::Water
         || terrain == TerrainID::Scrub
@@ -394,44 +437,92 @@ void CPUGolfer::setPredictionResult(glm::vec3 result, std::int32_t terrain)
         const auto& Stat = CPUStats[m_cpuProfileIndices[m_activePlayer.client * ConstVal::MaxPlayers + m_activePlayer.player]];
 
         //retarget
-        if (cro::Util::Random::value(0, 9) > Stat[CPUStat::MistakeLikelyhood])
+        if ((cro::Util::Random::value(0, 9) > Stat[CPUStat::MistakeLikelyhood] && terrain != TerrainID::Bunker)
+            || (cro::Util::Random::value(0, 9) < Stat[CPUStat::MistakeLikelyhood] && terrain == TerrainID::Bunker)) //more likely to hit bunker 
         {
-            //fall back to default target if it's still in front
-            auto fwd = m_baseTarget - m_activePlayer.position;
-            auto alt = m_fallbackTarget - m_activePlayer.position;
-            if (glm::dot(alt, fwd) > 0)
+            if (m_retargetCount < 2)
             {
-                m_baseTarget = m_fallbackTarget;
+                //try moving towards the fallback from the pin
+                if (m_target != m_fallbackTarget)
+                {
+                    const auto moveDir = /*glm::normalize*/(m_fallbackTarget - m_target) / 8.f;
+                    auto newDir = moveDir;
+
+                    LogI << "stepped towards fallback on prediction result, would hit terrain " << TerrainStrings[terrain] << std::endl;
+                    terrain = m_collisionMesh.getTerrain(m_baseTarget + newDir).terrain;
+
+                    auto i = 0;
+                    while ((terrain == TerrainID::Water
+                        || terrain == TerrainID::Scrub
+                        || terrain == TerrainID::Bunker)
+                        && i++ < 3)
+                    {
+                        newDir += moveDir;
+                        terrain = m_collisionMesh.getTerrain(m_baseTarget + newDir).terrain;
+                    }
+
+                    if (terrain == TerrainID::Water
+                        || terrain == TerrainID::Scrub)
+                    {
+                        m_baseTarget = m_fallbackTarget;
+                        LogI << "Set to fall back target: failed to get out of " << TerrainStrings[terrain] << std::endl;
+                    }
+                    else
+                    {
+                        m_baseTarget += newDir;
+                    }
+                }
+            }
+
+            else
+            {
+                //fall back to default target if it's still in front
+                auto fwd = m_baseTarget - m_activePlayer.position;
+                auto alt = m_fallbackTarget - m_activePlayer.position;
+                if (glm::dot(alt, fwd) > 0)
+                {
+                    m_baseTarget = m_fallbackTarget;
+                    LogI << "set to fallback target on prediction result, would hit terrain " << TerrainStrings[terrain] << std::endl;
+                }
             }
             m_puttFromTee = false; //saves keep trying this until next activation
         }
-
-        const float searchDistance = m_activePlayer.terrain == TerrainID::Green ? 0.25f : 5.f;
-        auto direction = m_retargetCount % 4;
-        auto offset = (glm::normalize(m_baseTarget - m_activePlayer.position) * searchDistance) * static_cast<float>((m_retargetCount % RetargetsPerDirection) + 1);
-
-        //TODO decide on some optimal priority for this?
-        switch (direction)
+        else
         {
-        default:
-        case 0:
-            //move away
-            break;
-        case 1:
-            //move towards
-            offset *= -1.f;
-            break;
-        case 2:
-            //move right
-            offset = { -offset.z, offset.y, offset.x };
-            break;
-        case 3:
-            //move right
-            offset = { offset.z, offset.y, -offset.x };
-            break;
+            LogI << "accepted we'll probably hit " << TerrainStrings[terrain] << std::endl;
+            m_retargetCount = 100; // don't try any more, we accepted potential failure.
+
+            m_predictionResult = result + (glm::vec3(getOffsetValue(), 0.f, -getOffsetValue()) * 0.001f);
+            m_predictionUpdated = true;
+            return;
         }
 
-        m_target = m_baseTarget + offset;
+        //const float searchDistance = m_activePlayer.terrain == TerrainID::Green ? 0.25f : 5.f;
+        //auto direction = m_retargetCount % 4;
+        //auto offset = (glm::normalize(m_baseTarget - m_activePlayer.position) * searchDistance) * static_cast<float>((m_retargetCount % RetargetsPerDirection) + 1);
+
+        //TODO decide on some optimal priority for this?
+        //switch (direction)
+        //{
+        //default:
+        //case 0:
+        //    //move away
+        //    break;
+        //case 1:
+        //    //move towards
+        //    offset *= -1.f;
+        //    break;
+        //case 2:
+        //    //move right
+        //    offset = { -offset.z, offset.y, offset.x };
+        //    break;
+        //case 3:
+        //    //move right
+        //    offset = { offset.z, offset.y, -offset.x };
+        //    break;
+        //}
+
+        m_target = m_baseTarget;// +offset;
         m_state = State::CalcDistance;
         m_wantsPrediction = false;
         m_retargetCount++;
@@ -1252,16 +1343,16 @@ void CPUGolfer::calcAccuracy()
     //occasionally make really inaccurate
     //... or maybe even perfect? :)
     //old version
-    if (m_skills[getSkillIndex()].mistakeOdds != 0)
+    /*if (m_skills[getSkillIndex()].mistakeOdds != 0)
     {
         if (cro::Util::Random::value(0, m_skills[getSkillIndex()].mistakeOdds) == 0)
         {
             m_targetAccuracy += static_cast<float>(cro::Util::Random::value(-16, 16)) / 100.f;
         }
-    }
+    }*/
 
     //new version
-    /*std::int32_t puttingOdds = 0;
+    std::int32_t puttingOdds = 0;
     if (m_activePlayer.terrain == TerrainID::Green)
     {
         float odds = std::min(1.f, glm::length(m_target - m_activePlayer.position) / 12.f) * 2.f;
@@ -1271,7 +1362,7 @@ void CPUGolfer::calcAccuracy()
     if (cro::Util::Random::value(0, 9) < Stat[CPUStat::MistakeLikelyhood] + puttingOdds)
     {
         m_targetAccuracy += cstat::getOffset(cstat::AccuracyOffsets, Stat[CPUStat::StrokeAccuracy]) / 100.f;
-    }*/
+    }
 
 
 
