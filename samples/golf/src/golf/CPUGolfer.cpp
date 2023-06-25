@@ -216,6 +216,26 @@ void CPUGolfer::activate(glm::vec3 target, glm::vec3 fallback, bool puttFromTee)
         m_fallbackTarget = fallback;
         m_baseTarget = m_target = target;
 
+
+        //check the pin target isn't around a corner on putting course
+        if (m_puttFromTee
+            && m_baseTarget != m_fallbackTarget)
+        {
+            auto fwd = m_baseTarget - m_activePlayer.position;
+            auto alt = m_fallbackTarget - m_activePlayer.position;
+            if (glm::dot(alt, fwd) > 0
+                && glm::dot(glm::normalize(alt), glm::normalize(fwd)) < 0.97f)
+            {
+                if (glm::length2(alt) > 9.f)
+                {
+                    m_target = m_baseTarget = m_fallbackTarget;
+                    LogI << "switched to fallback, pin around corner (activate)" << std::endl;
+                }
+            }
+        }
+
+
+
         //if previous fail then the last shot was bad (stops meltdowns on doglegs)
         if (auto& count = failCounts[m_activePlayer.client * ConstVal::MaxPlayers + m_activePlayer.player]; count != 0)
         {
@@ -350,6 +370,14 @@ void CPUGolfer::activate(glm::vec3 target, glm::vec3 fallback, bool puttFromTee)
         msg->type = AIEvent::EndThink;
 
         //LOG("CPU is now active", cro::Logger::Type::Info);
+        if (m_target == m_fallbackTarget)
+        {
+            LogI << "Using fallback (activation)" << std::endl;
+        }
+        else
+        {
+            LogI << "Using target (activation)" << std::endl;
+        }
     }
 }
 
@@ -426,6 +454,21 @@ void CPUGolfer::update(float dt, glm::vec3 windVector, float distanceToPin)
 
 void CPUGolfer::setPredictionResult(glm::vec3 result, std::int32_t terrain)
 {
+    //check the pin target isn't around a corner on putting course
+    if (m_puttFromTee
+        && m_baseTarget != m_fallbackTarget)
+    {
+        auto fwd = m_baseTarget - m_activePlayer.position;
+        auto alt = m_fallbackTarget - m_activePlayer.position;
+        if (glm::dot(alt, fwd) > 0
+            && glm::dot(glm::normalize(alt), glm::normalize(fwd)) < 0.97f)
+        {
+            m_baseTarget = m_fallbackTarget;
+            LogI << "switched to fallback, pin around corner (prediction)" << std::endl;
+        }
+    }
+
+
     //TODO should we be compensating for overshoot?
     if (auto& count = failCounts[m_activePlayer.client * ConstVal::MaxPlayers + m_activePlayer.player]; count != 0)
     {
@@ -434,10 +477,15 @@ void CPUGolfer::setPredictionResult(glm::vec3 result, std::int32_t terrain)
         auto fwd = m_baseTarget - m_activePlayer.position;
         auto alt = m_fallbackTarget - m_activePlayer.position;
         if (glm::dot(alt, fwd) > 0
-            && glm::length2(alt) < glm::length2(fwd))
+            && glm::length2(alt) < glm::length2(fwd)) // has to be closer than the pin
         {
-            m_baseTarget = m_fallbackTarget;
-            m_target = m_baseTarget;
+            //but not if it's like 3 feet in front...
+            const float minDist = m_puttFromTee ? (9.f) : (2500.f);
+            if (glm::length2(alt) > minDist)
+            {
+                m_baseTarget = m_fallbackTarget;
+                m_target = m_baseTarget;
+            }
         }
         m_state = State::CalcDistance;
         m_wantsPrediction = false;
@@ -539,6 +587,7 @@ void CPUGolfer::setPredictionResult(glm::vec3 result, std::int32_t terrain)
         //    break;
         //}
 
+
         m_target = m_baseTarget;// +offset;
         m_state = State::CalcDistance;
         m_wantsPrediction = false;
@@ -548,6 +597,15 @@ void CPUGolfer::setPredictionResult(glm::vec3 result, std::int32_t terrain)
     {
         m_predictionResult = result + (glm::vec3(getOffsetValue(), 0.f, -getOffsetValue()) * 0.001f);
         m_predictionUpdated = true;
+    }
+
+    if (m_target == m_fallbackTarget)
+    {
+        LogI << "Using fallback (prediction)" << std::endl;
+    }
+    else
+    {
+        LogI << "Using target (prediction)" << std::endl;
     }
 }
 
@@ -1352,35 +1410,39 @@ void CPUGolfer::calcAccuracy()
 
     //new ver
     const auto& Stat = CPUStats[m_cpuProfileIndices[m_activePlayer.client * ConstVal::MaxPlayers + m_activePlayer.player]];
-    if (m_puttFromTee)
-    {
-        m_targetAccuracy += cstat::getOffset(cstat::AccuracyOffsets, Stat[CPUStat::StrokeAccuracy]) * 0.00375f; //scales max value to 0.06
-    }
+    //if (m_puttFromTee)
+    //{
+    //    m_targetAccuracy += cstat::getOffset(cstat::AccuracyOffsets, Stat[CPUStat::StrokeAccuracy]) * 0.00375f; //scales max value to 0.06
+    //}
 
     //occasionally make really inaccurate
     //... or maybe even perfect? :)
     //old version
-    /*if (m_skills[getSkillIndex()].mistakeOdds != 0)
+    if (m_puttFromTee)
     {
-        if (cro::Util::Random::value(0, m_skills[getSkillIndex()].mistakeOdds) == 0)
+        if (m_skills[getSkillIndex()].mistakeOdds != 0)
         {
-            m_targetAccuracy += static_cast<float>(cro::Util::Random::value(-16, 16)) / 100.f;
+            if (cro::Util::Random::value(0, m_skills[getSkillIndex()].mistakeOdds) == 0)
+            {
+                m_targetAccuracy += static_cast<float>(cro::Util::Random::value(-16, 16)) / 100.f;
+            }
         }
-    }*/
-
-    //new version
-    std::int32_t puttingOdds = 0;
-    if (m_activePlayer.terrain == TerrainID::Green)
-    {
-        float odds = std::min(1.f, glm::length(m_target - m_activePlayer.position) / 12.f) * 2.f;
-        puttingOdds = static_cast<std::int32_t>(std::round(odds));
     }
-
-    if (cro::Util::Random::value(0, 9) < Stat[CPUStat::MistakeLikelyhood] + puttingOdds)
+    else
     {
-        m_targetAccuracy += cstat::getOffset(cstat::AccuracyOffsets, Stat[CPUStat::StrokeAccuracy]) / 100.f;
-    }
+        //new version
+        std::int32_t puttingOdds = 0;
+        if (m_activePlayer.terrain == TerrainID::Green)
+        {
+            float odds = std::min(1.f, glm::length(m_target - m_activePlayer.position) / 12.f) * 2.f;
+            puttingOdds = static_cast<std::int32_t>(std::round(odds));
+        }
 
+        if (cro::Util::Random::value(0, 9) < Stat[CPUStat::MistakeLikelyhood] + puttingOdds)
+        {
+            m_targetAccuracy += cstat::getOffset(cstat::AccuracyOffsets, Stat[CPUStat::StrokeAccuracy]) / 100.f;
+        }
+    }
 
 
     //to prevent multiple players making the same decision offset the accuracy a small amount
@@ -1394,19 +1456,19 @@ void CPUGolfer::calcAccuracy()
         m_targetPower = std::min(1.f, m_targetPower + (1 - (cro::Util::Random::value(0, 1) * 2)) * (static_cast<float>(m_offsetRotation % 4) / 50.f));
 
         //old ver
-        /*if (m_skills[getSkillIndex()].mistakeOdds != 0)
+        if (m_skills[getSkillIndex()].mistakeOdds != 0)
         {
             if (cro::Util::Random::value(0, m_skills[getSkillIndex()].mistakeOdds) == 0)
             {
                 m_targetPower += static_cast<float>(cro::Util::Random::value(-6, 6)) / 1000.f;
             }
-        }*/
+        }
 
         //new ver
-        if (cro::Util::Random::value(0, 9) < Stat[CPUStat::MistakeLikelyhood])
+        /*if (cro::Util::Random::value(0, 9) < Stat[CPUStat::MistakeLikelyhood])
         {
             m_targetPower += cstat::getOffset(cstat::PowerOffsets, Stat[CPUStat::PowerAccuracy]) * 0.00001f;
-        }
+        }*/
 
         m_targetPower = std::min(1.f, m_targetPower);
     }

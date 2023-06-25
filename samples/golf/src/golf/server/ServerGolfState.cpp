@@ -60,6 +60,22 @@ namespace
     constexpr float MaxScoreboardTime = 10.f;
     constexpr std::uint8_t MaxStrokes = 12;
     const cro::Time TurnTime = cro::seconds(90.f);
+
+    glm::vec3 randomOffset3()
+    {
+        auto x = cro::Util::Random::value(0, 1) * 2;
+        auto y = cro::Util::Random::value(0, 1) * 2;
+
+        x -= 1;
+        y -= 1;
+
+        x *= cro::Util::Random::value(3, 8);
+        y *= cro::Util::Random::value(3, 8);
+
+        glm::vec3 ret(x, 0.f, y);
+        ret = glm::normalize(ret) *= cro::Util::Random::value(3.f, 5.f);
+        return ret / 100.f;
+    };
 }
 
 GolfState::GolfState(SharedData& sd)
@@ -709,13 +725,19 @@ void GolfState::setNextHole()
         std::uint16_t newHole = (m_currentHole << 8) | std::uint8_t(m_holeData[m_currentHole].par);
         m_sharedData.host.broadcastPacket(PacketID::SetHole, newHole, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
 
+        std::vector<glm::vec3> offsets(m_playerInfo.size());
+        for (auto& v : offsets)
+        {
+            v = randomOffset3();
+        }
+
         //create an ent which waits for all clients to load the next hole
         //which include playing the transition animation.
         auto entity = m_scene.createEntity();
         entity.addComponent<cro::Transform>();
         entity.addComponent<cro::Callback>().active = true;
         entity.getComponent<cro::Callback>().function =
-            [&, ballSystem](cro::Entity e, float dt)
+            [&, ballSystem, offsets](cro::Entity e, float dt)
         {
             if (m_allMapsLoaded)
             {
@@ -733,16 +755,18 @@ void GolfState::setNextHole()
                 m_scoreboardTime = 0.f;
 
                 //apparently we have to do this here else the client just ignores it
-                for (auto& player : m_playerInfo)
+                for (auto i = 0u; i < m_playerInfo.size(); ++i)
                 {
-                    player.position = m_holeData[m_currentHole].tee;
-                    player.distanceToHole = glm::length(m_holeData[m_currentHole].tee - m_holeData[m_currentHole].pin);
+
+                    auto& player = m_playerInfo[i];
+                    player.position = m_holeData[m_currentHole].tee + offsets[i];
+                    player.distanceToHole = glm::length(player.position - m_holeData[m_currentHole].pin);
                     player.terrain = ballSystem->getTerrain(player.position).terrain;
 
                     auto ball = player.ballEntity;
                     ball.getComponent<Ball>().terrain = player.terrain;
                     ball.getComponent<Ball>().velocity = glm::vec3(0.f);
-                    ball.getComponent<cro::Transform>().setPosition(m_holeData[m_currentHole].tee);
+                    ball.getComponent<cro::Transform>().setPosition(player.position);
 
                     auto timestamp = m_serverTime.elapsed().asMilliseconds();
 
@@ -993,7 +1017,7 @@ void GolfState::initScene()
                 auto& player = m_playerInfo.emplace_back();
                 player.client = i;
                 player.player = j;
-                player.position = m_holeData[0].tee;
+                player.position = m_holeData[0].tee + randomOffset3();
                 player.distanceToHole = glm::length(m_holeData[0].tee - m_holeData[0].pin);
             }
         }

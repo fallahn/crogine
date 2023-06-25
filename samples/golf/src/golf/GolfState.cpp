@@ -6508,21 +6508,21 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
             float det = (p.x * t.y) - (p.y * t.x);
             float targetAngle = std::abs(std::atan2(det, dot));
 
-            if (targetAngle < /*m_inputParser.getMaxRotation()*/cro::Util::Const::PI / 2.f)
+            if (targetAngle < m_inputParser.getMaxRotation()/*cro::Util::Const::PI / 2.f*/)
             {
                 m_cpuGolfer.activate(m_holeData[m_currentHole].pin, m_holeData[m_currentHole].target, m_holeData[m_currentHole].puttFromTee);
             }
             else
             {
                 //aim for whichever is closer (target or pin)
-                if (glm::length2(target - player.position) < glm::length2(m_holeData[m_currentHole].pin - player.position))
+                //if (glm::length2(target - player.position) < glm::length2(m_holeData[m_currentHole].pin - player.position))
                 {
                     m_cpuGolfer.activate(target, m_holeData[m_currentHole].target, m_holeData[m_currentHole].puttFromTee);
                 }
-                else
+                /*else
                 {
                     m_cpuGolfer.activate(m_holeData[m_currentHole].pin, target, m_holeData[m_currentHole].puttFromTee);
-                }
+                }*/
             }
 #ifdef CRO_DEBUG_
             //CPUTarget.getComponent<cro::Transform>().setPosition(m_cpuGolfer.getTarget());
@@ -6689,17 +6689,11 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     msg2->type = GolfEvent::SetNewPlayer;
 
     m_sharedData.clientConnection.netClient.sendPacket<std::uint8_t>(PacketID::NewPlayer, 0, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
-    //if we're using fast CPU we need to pre-increment stroke so
-    //that the UI displays correct score while waiting for the
-    //arbiter score from the server.
-    /*if (isCPU && m_sharedData.fastCPU)
-    {
-        m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].holeScores[m_currentHole]++;
-    }*/
+
 
 
     //this is just so that the particle director knows if we're on a new hole
-    if (m_currentPlayer.position == m_holeData[m_currentHole].tee)
+    if (glm::length2(m_currentPlayer.position - m_holeData[m_currentHole].tee) < (0.05f * 0.05f))
     {
         msg2->travelDistance = -1.f;
     }
