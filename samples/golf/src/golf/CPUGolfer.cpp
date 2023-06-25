@@ -103,11 +103,11 @@ mistake odds
 const std::array<CPUGolfer::SkillContext, 6> CPUGolfer::m_skills =
 {
     CPUGolfer::SkillContext(CPUGolfer::Skill::Amateur, 0.f, 0.f, 4, 0),
-    {CPUGolfer::Skill::Dynamic, 10.f, 0.12f, 6, 6},
-    {CPUGolfer::Skill::Dynamic, 6.f, 0.12f, 5, 6},
-    {CPUGolfer::Skill::Dynamic, 4.f, 0.9f, 4, 10},
+    {CPUGolfer::Skill::Dynamic, 6.f, 0.12f, 6, 6},
+    {CPUGolfer::Skill::Dynamic, 5.f, 0.12f, 5, 6},
+    {CPUGolfer::Skill::Dynamic, 3.f, 0.9f, 4, 10},
     {CPUGolfer::Skill::Dynamic, 2.2f, 0.06f, 2, 14},
-    {CPUGolfer::Skill::Dynamic, 2.f, 0.06f, 0, 50}
+    {CPUGolfer::Skill::Dynamic, 1.f, 0.06f, 0, 50}
 };
 
 CPUGolfer::CPUGolfer(InputParser& ip, const ActivePlayer& ap, const CollisionMesh& cm)
@@ -229,7 +229,7 @@ void CPUGolfer::activate(glm::vec3 target, glm::vec3 fallback, bool puttFromTee)
                 if (glm::length2(alt) > 9.f)
                 {
                     m_target = m_baseTarget = m_fallbackTarget;
-                    LogI << "switched to fallback, pin around corner (activate)" << std::endl;
+                    //LogI << "switched to fallback, pin around corner (activate)" << std::endl;
                 }
             }
         }
@@ -257,7 +257,7 @@ void CPUGolfer::activate(glm::vec3 target, glm::vec3 fallback, bool puttFromTee)
                         newDir += moveDir;
                         terrain = m_collisionMesh.getTerrain(m_baseTarget + newDir).terrain;
                     }
-                    LogI << "stepped towards fallback on activate" << std::endl;
+                    //LogI << "stepped towards fallback on activate" << std::endl;
 
 
                     if (terrain == TerrainID::Water
@@ -270,7 +270,7 @@ void CPUGolfer::activate(glm::vec3 target, glm::vec3 fallback, bool puttFromTee)
                         {
                             m_baseTarget = m_target = fallback;
                             count = std::max(0, count - 1);
-                            LogI << "set to fallback on activate (couldn't find good alternative)" << std::endl;
+                            //LogI << "set to fallback on activate (couldn't find good alternative)" << std::endl;
                         }
                     }
                     else
@@ -370,14 +370,14 @@ void CPUGolfer::activate(glm::vec3 target, glm::vec3 fallback, bool puttFromTee)
         msg->type = AIEvent::EndThink;
 
         //LOG("CPU is now active", cro::Logger::Type::Info);
-        if (m_target == m_fallbackTarget)
+        /*if (m_target == m_fallbackTarget)
         {
             LogI << "Using fallback (activation)" << std::endl;
         }
         else
         {
             LogI << "Using target (activation)" << std::endl;
-        }
+        }*/
     }
 }
 
@@ -464,7 +464,7 @@ void CPUGolfer::setPredictionResult(glm::vec3 result, std::int32_t terrain)
             && glm::dot(glm::normalize(alt), glm::normalize(fwd)) < 0.97f)
         {
             m_baseTarget = m_fallbackTarget;
-            LogI << "switched to fallback, pin around corner (prediction)" << std::endl;
+            //LogI << "switched to fallback, pin around corner (prediction)" << std::endl;
         }
     }
 
@@ -490,7 +490,7 @@ void CPUGolfer::setPredictionResult(glm::vec3 result, std::int32_t terrain)
         m_state = State::CalcDistance;
         m_wantsPrediction = false;
 
-        LogI << "Falling back - fail count was " << (count + 1) << std::endl;
+        //LogI << "Falling back - fail count was " << (count + 1) << std::endl;
     }
 
 
@@ -508,12 +508,12 @@ void CPUGolfer::setPredictionResult(glm::vec3 result, std::int32_t terrain)
             if (m_retargetCount < 2)
             {
                 //try moving towards the fallback from the pin
-                if (m_target != m_fallbackTarget)
+                if (m_baseTarget != m_fallbackTarget)
                 {
                     const auto moveDir = /*glm::normalize*/(m_fallbackTarget - m_target) / 8.f;
                     auto newDir = moveDir;
 
-                    LogI << "stepped towards fallback on prediction result, would hit terrain " << TerrainStrings[terrain] << std::endl;
+                    //LogI << "stepped towards fallback on prediction result, would hit terrain " << TerrainStrings[terrain] << std::endl;
                     terrain = m_collisionMesh.getTerrain(m_baseTarget + newDir).terrain;
 
                     auto i = 0;
@@ -530,7 +530,7 @@ void CPUGolfer::setPredictionResult(glm::vec3 result, std::int32_t terrain)
                         || terrain == TerrainID::Scrub)
                     {
                         m_baseTarget = m_fallbackTarget;
-                        LogI << "Set to fall back target: failed to get out of " << TerrainStrings[terrain] << std::endl;
+                        //LogI << "Set to fall back target: failed to get out of " << TerrainStrings[terrain] << std::endl;
                     }
                     else
                     {
@@ -547,14 +547,14 @@ void CPUGolfer::setPredictionResult(glm::vec3 result, std::int32_t terrain)
                 if (glm::dot(alt, fwd) > 0)
                 {
                     m_baseTarget = m_fallbackTarget;
-                    LogI << "set to fallback target on prediction result, would hit terrain " << TerrainStrings[terrain] << std::endl;
+                    //LogI << "set to fallback target on prediction result, would hit terrain " << TerrainStrings[terrain] << std::endl;
                 }
             }
             m_puttFromTee = false; //saves keep trying this until next activation
         }
         else
         {
-            LogI << "accepted we'll probably hit " << TerrainStrings[terrain] << std::endl;
+            //LogI << "accepted we'll probably hit " << TerrainStrings[terrain] << std::endl;
             m_retargetCount = 100; // don't try any more, we accepted potential failure.
 
             m_predictionResult = result + (glm::vec3(getOffsetValue(), 0.f, -getOffsetValue()) * 0.001f);
@@ -562,33 +562,7 @@ void CPUGolfer::setPredictionResult(glm::vec3 result, std::int32_t terrain)
             return;
         }
 
-        //const float searchDistance = m_activePlayer.terrain == TerrainID::Green ? 0.25f : 5.f;
-        //auto direction = m_retargetCount % 4;
-        //auto offset = (glm::normalize(m_baseTarget - m_activePlayer.position) * searchDistance) * static_cast<float>((m_retargetCount % RetargetsPerDirection) + 1);
-
-        //TODO decide on some optimal priority for this?
-        //switch (direction)
-        //{
-        //default:
-        //case 0:
-        //    //move away
-        //    break;
-        //case 1:
-        //    //move towards
-        //    offset *= -1.f;
-        //    break;
-        //case 2:
-        //    //move right
-        //    offset = { -offset.z, offset.y, offset.x };
-        //    break;
-        //case 3:
-        //    //move right
-        //    offset = { offset.z, offset.y, -offset.x };
-        //    break;
-        //}
-
-
-        m_target = m_baseTarget;// +offset;
+        m_target = m_baseTarget;
         m_state = State::CalcDistance;
         m_wantsPrediction = false;
         m_retargetCount++;
@@ -599,14 +573,14 @@ void CPUGolfer::setPredictionResult(glm::vec3 result, std::int32_t terrain)
         m_predictionUpdated = true;
     }
 
-    if (m_target == m_fallbackTarget)
-    {
-        LogI << "Using fallback (prediction)" << std::endl;
-    }
-    else
-    {
-        LogI << "Using target (prediction)" << std::endl;
-    }
+    //if (m_target == m_fallbackTarget)
+    //{
+    //    LogI << "Using fallback (prediction)" << std::endl;
+    //}
+    //else
+    //{
+    //    LogI << "Using target (prediction)" << std::endl;
+    //}
 }
 
 void CPUGolfer::setPuttingPower(float power)
@@ -915,7 +889,7 @@ void CPUGolfer::pickClubDynamic(float dt)
 
             //guestimate power based on club (this gets refined from predictions)
             m_targetPower = std::min(1.f, targetDistance / Clubs[m_clubID].getTargetAtLevel(Stat[CPUStat::Skill]));
-            m_targetPower = std::min(1.f, m_targetPower + (getOffsetValue() / 100.f));
+            //m_targetPower = std::min(1.f, m_targetPower + (getOffsetValue() / 100.f));
         };
 
         if (diff < 0)
@@ -1287,7 +1261,7 @@ void CPUGolfer::updatePrediction(float dt)
 
                     float precDiff = std::sqrt(resultPrecision);
                     float change = (precDiff / Clubs[m_clubID].getTargetAtLevel(Stat[CPUStat::Skill])) / 2.f;
-                    change += getOffsetValue() / 60.f;
+                    change += getOffsetValue() / 50.f;
 
                     if (glm::length2(predictDir) < glm::length2(targetDir))
                     {
@@ -1432,11 +1406,11 @@ void CPUGolfer::calcAccuracy()
     {
         //new version
         std::int32_t puttingOdds = 0;
-        if (m_activePlayer.terrain == TerrainID::Green)
+        /*if (m_activePlayer.terrain == TerrainID::Green)
         {
             float odds = std::min(1.f, glm::length(m_target - m_activePlayer.position) / 12.f) * 2.f;
             puttingOdds = static_cast<std::int32_t>(std::round(odds));
-        }
+        }*/
 
         if (cro::Util::Random::value(0, 9) < Stat[CPUStat::MistakeLikelyhood] + puttingOdds)
         {
@@ -1486,7 +1460,7 @@ float CPUGolfer::getOffsetValue() const
     float multiplier = m_activePlayer.terrain == TerrainID::Green ? smoothstep(0.2f, 0.95f, glm::length(m_target - m_activePlayer.position) / Clubs[ClubID::Putter].getTarget(m_distanceToPin)) : 1.f;
 
     return static_cast<float>(1 - ((m_offsetRotation % 2) * 2))
-        * static_cast<float>((m_offsetRotation % (m_skills.size() - getSkillIndex())))
+        //* static_cast<float>((m_offsetRotation % (m_skills.size() - getSkillIndex())))
         * multiplier;
 }
 

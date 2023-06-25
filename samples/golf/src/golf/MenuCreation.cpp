@@ -41,6 +41,8 @@ source distribution.
 #include "UnlockItems.hpp"
 #include "../ErrorCheck.hpp"
 #include "server/ServerPacketData.hpp"
+#include "../../buildnumber.h"
+#include "../version/VersionNumber.hpp"
 
 #include <AchievementStrings.hpp>
 #include <Social.hpp>
@@ -80,6 +82,22 @@ namespace
 {
 #include "RandNames.hpp"
 #include "PostProcess.inl"
+
+    const char VersionNumber[] =
+    {
+        ' ',
+        BUILD_YEAR_CH0, BUILD_YEAR_CH1, BUILD_YEAR_CH2, BUILD_YEAR_CH3,
+        BUILD_MONTH_CH0, BUILD_MONTH_CH1,
+        BUILD_DAY_CH0, BUILD_DAY_CH1,
+        '.',
+        BUILD_HOUR_CH0, BUILD_HOUR_CH1,
+        BUILD_MIN_CH0, BUILD_MIN_CH1,
+        BUILD_SEC_CH0, BUILD_SEC_CH1,
+        '.',
+        '\0'
+    };
+
+
 
     struct CursorAnimationCallback final
     {
@@ -361,7 +379,7 @@ void MenuState::createUI()
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 2.f, 10.f, 1.f });
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(m_sharedData.sharedResources->fonts.get(FontID::Info)).setString("Version: " + StringVer);
+    entity.addComponent<cro::Text>(m_sharedData.sharedResources->fonts.get(FontID::Info)).setString("Version: " + StringVer + VersionNumber + BUILDNUMBER_STR);
     entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     auto versionEnt = entity;

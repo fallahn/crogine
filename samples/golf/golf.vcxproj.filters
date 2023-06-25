@@ -734,6 +734,9 @@
     <ClInclude Include="src\ImTheme.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="VersionNumber.hpp">
+      <Filter>Header Files\golf</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="src\golf\WaterShader.inl">
