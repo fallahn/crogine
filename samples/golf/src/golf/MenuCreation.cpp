@@ -3372,6 +3372,7 @@ void MenuState::createPreviousScoreCard()
 {
     static constexpr float OffscreenPos = -300.f;
 
+    //background image
     auto& tex = m_resources.textures.get("assets/golf/images/lobby_scoreboard.png");
     auto entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
@@ -3380,7 +3381,7 @@ void MenuState::createPreviousScoreCard()
     auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
     bounds = m_lobbyWindowEntities[LobbyEntityID::Background].getComponent<cro::Sprite>().getTextureBounds();
-    entity.getComponent<cro::Transform>().setPosition({ bounds.width / 2.f, OffscreenPos, 1.5f });
+    entity.getComponent<cro::Transform>().setPosition({ bounds.width / 2.f, OffscreenPos, 1.6f });
 
     const float targetPos = bounds.height / 2.f;
     entity.addComponent<cro::Callback>().setUserData<ScorecardCallbackData>();
@@ -3426,6 +3427,42 @@ void MenuState::createPreviousScoreCard()
 
     m_lobbyWindowEntities[LobbyEntityID::Background].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     m_lobbyWindowEntities[LobbyEntityID::Scorecard] = entity;
+
+
+    //background fade
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(m_lobbyWindowEntities[LobbyEntityID::Scorecard].getComponent<cro::Transform>().getOrigin());
+    entity.getComponent<cro::Transform>().move({ 0.f, 0.f, -0.06f });
+    entity.addComponent<cro::Drawable2D>().setVertexData(
+        {
+            cro::Vertex2D(glm::vec2(-0.5f, 0.5f), cro::Colour::Black),
+            cro::Vertex2D(glm::vec2(-0.5f), cro::Colour::Black),
+            cro::Vertex2D(glm::vec2(0.5f), cro::Colour::Black),
+            cro::Vertex2D(glm::vec2(0.5f, -0.5f), cro::Colour::Black),
+        }
+    );
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&, targetPos](cro::Entity e, float)
+    {
+        auto pos = m_lobbyWindowEntities[LobbyEntityID::Scorecard].getComponent<cro::Transform>().getPosition().y;
+        pos -= OffscreenPos;
+        pos /= (targetPos - OffscreenPos);
+
+        e.getComponent<cro::Transform>().setScale(glm::vec2(cro::App::getWindow().getSize()) * pos * 1.1f);
+        pos = cro::Util::Easing::easeInExpo(pos);
+        for (auto& v : e.getComponent<cro::Drawable2D>().getVertexData())
+        {
+            v.colour.setAlpha(BackgroundAlpha * pos);
+        }
+    };
+    m_lobbyWindowEntities[LobbyEntityID::Scorecard].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+
+
+
+
 
     //fills with dummy data for testing  - must remove this!
     for (auto i = 0u; i < ConstVal::MaxClients; ++i)
@@ -3626,6 +3663,7 @@ void MenuState::createPreviousScoreCard()
             bounds.height /= 2.f;
             bounds.bottom += bounds.height;
             entity.getComponent<cro::Drawable2D>().setCroppingArea(bounds);
+            bounds.bottom -= 7.f;
             redEnt.getComponent<cro::Drawable2D>().setCroppingArea(bounds); //this *ought* to be the same...
         }
 
