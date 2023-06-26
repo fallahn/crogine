@@ -1721,6 +1721,7 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
                         || (data->isUser && m_sharedData.hosting))
                     {
                         m_sharedData.mapDirectory = course;
+                        m_sharedData.courseIndex = std::distance(m_courseData.cbegin(), data);
 
                         //update UI
                         cro::Command cmd;

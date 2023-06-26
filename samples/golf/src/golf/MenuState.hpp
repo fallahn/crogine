@@ -233,6 +233,7 @@ private:
         cro::String description = "No Description";
         std::int32_t courseNumber = 0; //base 1
         std::array<cro::String, 3u> holeCount = {};
+        std::vector<std::int32_t> parVals;
         bool isUser = false;
     };
     std::vector<CourseData> m_courseData;

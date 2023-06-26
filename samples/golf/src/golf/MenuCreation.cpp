@@ -178,6 +178,7 @@ void MenuState::parseCourseDirectory(const std::string& rootDir, bool isUser)
             cro::String title;
             std::string description;
             std::int32_t holeCount = 0;
+            std::vector<std::int32_t> parVals;
 
             cro::ConfigFile cfg;
             cfg.loadFromFile(courseFile, !isUser);
@@ -192,7 +193,16 @@ void MenuState::parseCourseDirectory(const std::string& rootDir, bool isUser)
                 }
                 else if (propName == "hole")
                 {
-                    holeCount++;
+                    cro::ConfigFile hole;
+                    if (hole.loadFromFile(prop.getValue<std::string>()))
+                    {
+                        if (auto parProp = hole.findProperty("par"); parProp != nullptr)
+                        {
+                            parVals.push_back(parProp->getValue<std::int32_t>());
+                        }
+
+                        holeCount++;
+                    }
                 }
                 else if (propName == "title")
                 {
@@ -222,6 +232,7 @@ void MenuState::parseCourseDirectory(const std::string& rootDir, bool isUser)
                 data.holeCount[0] = "All " + std::to_string(std::min(holeCount, 18)) + " holes";
                 data.holeCount[1] = "Front " + std::to_string(std::max(holeCount / 2, 1));
                 data.holeCount[2] = "Back " + std::to_string(std::min(holeCount - (holeCount / 2), 9));
+                data.parVals.swap(parVals);
 
                 courseNumber++;
                 m_courseIndices[m_currentRange].count++;
@@ -3479,7 +3490,17 @@ void MenuState::createPreviousScoreCard()
         }
     }
 
-    //TODO we need to get the last hole data (par etc) AND the scoring type
+
+
+
+
+
+    //this should still be set from the last round (it'll be modified if the
+    //host changes settings but we'll already have built this by now)
+    const auto& courseData = m_courseData[m_sharedData.courseIndex];
+    auto holeCount = static_cast<std::int32_t>(courseData.parVals.size());
+    auto frontCount = std::max(holeCount / 2, 1);
+    auto backCount = std::min(holeCount - (holeCount / 2), 9);    
 
     struct Entry final
     {
@@ -3491,6 +3512,7 @@ void MenuState::createPreviousScoreCard()
     };
 
     std::vector<Entry> scoreEntries;
+    LogI << __FILE__ << ", " << __LINE__ << " set correct loop params!" << std::endl;
     for (auto i = 0u; i < /*ConstVal::MaxClients*/2; ++i)
     {
         //if (m_sharedData.connectionData[i].playerCount != 0)
@@ -3502,6 +3524,9 @@ void MenuState::createPreviousScoreCard()
                 entry.player = j;
 
                 //TODO this needs to be done based on score type
+                //TODO this needs to ignore the front or back 9
+                //TODO check this isn't all reset to zero before we're done building the scoreboard
+                //TODO this is a vector, is it only as big as the number of holes played? I can't remember...
                 auto k = 0;
                 for (auto score : m_sharedData.connectionData[i].playerData[j].holeScores)
                 {
@@ -3582,9 +3607,24 @@ void MenuState::createPreviousScoreCard()
 
     //hole columns
     cro::String redStr;
-    //TODO get hole count from hole data
     //TODO do we need to reverse the hole scores if course was played in reverse?
-    auto holeCount = 18;
+    std::int32_t parOffset = 0;
+    std::int32_t parTotal = 0;
+    std::int32_t parTotalFront = 0;
+    std::int32_t parTotalBack = 0;
+    switch (m_sharedData.holeCount)
+    {
+    default: break;
+    case 1:
+        holeCount = frontCount;
+        break;
+    case 2:
+        //back 9
+        parOffset = frontCount;
+        holeCount = backCount;
+        break;
+    }
+
     float colStart = 196.f;
     const float colWidth = 20.f;
     for (auto i = 0; i < std::min(9, holeCount); ++i)
@@ -3608,14 +3648,17 @@ void MenuState::createPreviousScoreCard()
         textEntities.push_back(redEnt);
 
         str = std::to_string(i + 1);
-        str += "\np?"; //TODO fetch par value
+        str += "\n" + std::to_string(courseData.parVals[parOffset + i]);
+
+        parTotal += courseData.parVals[parOffset + i];
+        parTotalFront += courseData.parVals[parOffset + i];
 
         redStr = "\n";
 
         for (const auto& entry : scoreEntries)
         {
             auto score = m_sharedData.connectionData[entry.client].playerData[entry.player].holeScores[i];
-            if (score > 4) //TODO make this par
+            if (score > courseData.parVals[parOffset + i])
             {
                 str += "\n";
                 redStr += "\n" + std::to_string(score);
@@ -3630,19 +3673,22 @@ void MenuState::createPreviousScoreCard()
         if (page2)
         {
             //pad remaining rows
-            for (auto i = 0u; i < 16u - scoreEntries.size(); ++i)
+            for (auto j = 0u; j < 16u - scoreEntries.size(); ++j)
             {
                 str += "\n";
                 redStr += "\n";
             }
 
-            str += "\n\n" + std::to_string(i + 10) + "\np?";
+            parTotal += courseData.parVals[parOffset + i + 9];
+            parTotalBack += courseData.parVals[parOffset + i + 9];
+
+            str += "\n\n" + std::to_string(i + 10) + "\n" + std::to_string(courseData.parVals[parOffset + i + 9]);
             redStr += "\n\n\n";
             for (const auto& entry : scoreEntries)
             {
                 auto score = m_sharedData.connectionData[entry.client].playerData[entry.player].holeScores[i + 9];
 
-                if (score > 4) //TODO par
+                if (score > courseData.parVals[parOffset + i + 9])
                 {
                     str += "\n";
                     redStr += "\n" + std::to_string(score);
@@ -3663,7 +3709,7 @@ void MenuState::createPreviousScoreCard()
             bounds.height /= 2.f;
             bounds.bottom += bounds.height;
             entity.getComponent<cro::Drawable2D>().setCroppingArea(bounds);
-            bounds.bottom -= 7.f;
+            bounds.bottom -= 7.f; //again this random offset creeps in...
             redEnt.getComponent<cro::Drawable2D>().setCroppingArea(bounds); //this *ought* to be the same...
         }
 
@@ -3681,7 +3727,7 @@ void MenuState::createPreviousScoreCard()
     rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     textEntities.push_back(entity);
 
-    str = "Total\nt?"; //TODO total par (f9)
+    str = "Total\n" + std::to_string(parTotalFront);
     for (const auto& entry : scoreEntries)
     {
         //TODO check score type
@@ -3697,7 +3743,7 @@ void MenuState::createPreviousScoreCard()
             str += "\n";
         }
 
-        str += "\n\nTotal\nt?"; //TODO total par (b9, f9+b9)
+        str += "\n\nTotal\n" + std::to_string(parTotalBack) + " (" + std::to_string(parTotal) + ")";
         for (const auto& entry : scoreEntries)
         {
             str += "\n" + std::to_string(entry.totalBack) + " (" + std::to_string(entry.total) + ")";
