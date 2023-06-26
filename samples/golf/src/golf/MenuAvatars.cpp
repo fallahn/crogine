@@ -1303,6 +1303,7 @@ void MenuState::createMenuCallbacks()
                 cmd.action = [&](cro::Entity e, float)
                 {
                     e.getComponent<cro::Text>().setString(CourseTypes[m_currentRange]);
+                    m_uiScene.getActiveCamera().getComponent<cro::Camera>().active = true; //refresh view
                 };
                 m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
             }
@@ -1325,6 +1326,7 @@ void MenuState::createMenuCallbacks()
                 cmd.action = [&](cro::Entity e, float)
                 {
                     e.getComponent<cro::Text>().setString(CourseTypes[m_currentRange]);
+                    m_uiScene.getActiveCamera().getComponent<cro::Camera>().active = true; //refresh view
                 };
                 m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
             }

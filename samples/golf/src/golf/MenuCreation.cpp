@@ -97,7 +97,11 @@ namespace
         '\0'
     };
 
-
+    struct ScorecardCallbackData final
+    {
+        std::int32_t direction = 0;
+        std::size_t targetMenuID = MenuState::MenuID::Dummy;
+    };
 
     struct CursorAnimationCallback final
     {
@@ -315,6 +319,10 @@ void MenuState::createUI()
     parseCourseDirectory(cro::App::getPreferencePath() + ConstVal::UserMapPath, true);
 
     m_currentRange = Range::Official; //make this default
+    if (m_sharedData.courseIndex == m_courseIndices[Range::Custom].start)
+    {
+        m_currentRange = Range::Custom;
+    }
 
     if (!m_courseData.empty())
     {
@@ -3016,7 +3024,7 @@ void MenuState::addCourseSelectButtons()
     m_lobbyWindowEntities[LobbyEntityID::HoleSelection].getComponent<cro::Transform>().addChild(buttonEnt.getComponent<cro::Transform>());
 
 
-
+    //checkbox to show user created courses
     if (m_courseData.size() > m_courseIndices[Range::Official].count)
     {
         checkboxEnt = m_uiScene.createEntity();
@@ -3358,4 +3366,311 @@ void MenuState::updateUnlockedItems()
     }
 
     Social::setUnlockStatus(Social::UnlockType::Generic, genericFlags);
+}
+
+void MenuState::createPreviousScoreCard()
+{
+    static constexpr float OffscreenPos = -300.f;
+
+    auto& tex = m_resources.textures.get("assets/golf/images/lobby_scoreboard.png");
+    auto entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>(tex);
+    auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
+    bounds = m_lobbyWindowEntities[LobbyEntityID::Background].getComponent<cro::Sprite>().getTextureBounds();
+    entity.getComponent<cro::Transform>().setPosition({ bounds.width / 2.f, OffscreenPos, 1.5f });
+
+    const float targetPos = bounds.height / 2.f;
+    entity.addComponent<cro::Callback>().setUserData<ScorecardCallbackData>();
+    entity.getComponent<cro::Callback>().function =
+        [&, targetPos](cro::Entity e, float dt)
+    {
+        const float Speed = dt * 6.f;
+
+        auto pos = e.getComponent<cro::Transform>().getPosition();
+        auto& [dir, dest] = e.getComponent<cro::Callback>().getUserData<ScorecardCallbackData>();
+        if (dir == 0)
+        {
+            //moving out
+            pos.y = std::max(OffscreenPos, pos.y + ((OffscreenPos - pos.y) * Speed) - 0.1f);
+
+            if (pos.y == OffscreenPos)
+            {
+                //only set the active menu if the dest is Lobby
+                if (dest == MenuID::Lobby)
+                {
+                    m_currentMenu = MenuID::Lobby;
+                    m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Lobby);
+                    dest = MenuID::Dummy;
+                }
+                e.getComponent<cro::Callback>().active = false;
+            }
+        }
+        else
+        {
+            //move in
+            pos.y = std::min(targetPos, pos.y + ((targetPos - pos.y) * Speed) + 0.1f);
+            
+            if (pos.y == targetPos)
+            {
+                dest = MenuID::Lobby;
+                e.getComponent<cro::Callback>().active = false;
+            }
+        }
+        m_uiScene.getActiveCamera().getComponent<cro::Camera>().active = true;
+        e.getComponent<cro::Transform>().setPosition(pos);
+    };
+
+    m_lobbyWindowEntities[LobbyEntityID::Background].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_lobbyWindowEntities[LobbyEntityID::Scorecard] = entity;
+
+    //fills with dummy data for testing  - must remove this!
+    for (auto i = 0u; i < ConstVal::MaxClients; ++i)
+    {
+        for (auto j = 0u; j < ConstVal::MaxPlayers; ++j)
+        {
+            m_sharedData.connectionData[i].playerData[j].name = RandomNames[cro::Util::Random::value(0u, RandomNames.size() - 1)];
+
+            m_sharedData.connectionData[i].playerData[j].holeScores.resize(18);
+            for (auto& score : m_sharedData.connectionData[i].playerData[j].holeScores)
+            {
+                score = cro::Util::Random::value(1, 5);
+            }
+        }
+    }
+
+    //TODO we need to get the last hole data (par etc) AND the scoring type
+
+    struct Entry final
+    {
+        std::uint32_t client = 0; //use this to index directly into score/name data, save making a copy
+        std::uint32_t player = 0;
+        std::int32_t total = 0;
+        std::int32_t totalFront = 0;
+        std::int32_t totalBack = 0;
+    };
+
+    std::vector<Entry> scoreEntries;
+    for (auto i = 0u; i < /*ConstVal::MaxClients*/2; ++i)
+    {
+        //if (m_sharedData.connectionData[i].playerCount != 0)
+        {
+            for (auto j = 0u; j < /*m_sharedData.connectionData[i].playerCount*/8; ++j)
+            {
+                auto& entry = scoreEntries.emplace_back();
+                entry.client = i;
+                entry.player = j;
+
+                //TODO this needs to be done based on score type
+                auto k = 0;
+                for (auto score : m_sharedData.connectionData[i].playerData[j].holeScores)
+                {
+                    entry.total += score;
+                    if (k++ < 9)
+                    {
+                        entry.totalFront += score;
+                    }
+                    else
+                    {
+                        entry.totalBack += score;
+                    }
+                }
+            }
+        }
+    }
+
+    //TODO this needs to be done based on score type
+    std::sort(scoreEntries.begin(), scoreEntries.end(), [](const Entry& a, const Entry& b)
+        {
+            return a.total < b.total;
+        });
+
+
+    auto rootNode = m_uiScene.createEntity(); //TODO use this for paging
+    rootNode.addComponent<cro::Transform>().setPosition({ 10.f, 269.f, 0.1f });
+    m_lobbyWindowEntities[LobbyEntityID::Scorecard].getComponent<cro::Transform>().addChild(rootNode.getComponent<cro::Transform>());
+
+    auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
+
+    //name column
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
+    entity.getComponent<cro::Text>().setVerticalSpacing(LeaderboardTextSpacing);
+    entity.getComponent<cro::Text>().setFillColour(LeaderboardTextDark);
+    rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    //TODO we could do all the updates in one iter over the Entries
+    //but this is all in the loading screen so... meh
+
+    bool page2 = scoreEntries.size() > 9;
+
+    cro::String str("HOLE\nPAR");
+    for (const auto& entry : scoreEntries)
+    {
+        str += "\n " + m_sharedData.connectionData[entry.client].playerData[entry.player].name.substr(0, ConstVal::MaxStringChars);
+    }
+
+    if (page2)
+    {
+        //pad remaining rows
+        for (auto i = 0u; i < 16u - scoreEntries.size(); ++i)
+        {
+            str += "\n";
+        }
+        
+        str += "\n\nHOLE\nPAR";
+        for (const auto& entry : scoreEntries)
+        {
+            str += "\n " + m_sharedData.connectionData[entry.client].playerData[entry.player].name.substr(0, ConstVal::MaxStringChars);
+        }
+    }
+
+    entity.getComponent<cro::Text>().setString(str);
+
+    //hole columns
+    cro::String redStr;
+    //TODO get hole count from hole data
+    //TODO do we need to reverse the hole scores if course was played in reverse?
+    auto holeCount = 18;
+    float colStart = 196.f;
+    const float colWidth = 20.f;
+    for (auto i = 0; i < std::min(9, holeCount); ++i)
+    {
+        entity = m_uiScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ colStart, 0.f });
+        entity.addComponent<cro::Drawable2D>();
+        entity.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
+        entity.getComponent<cro::Text>().setVerticalSpacing(LeaderboardTextSpacing);
+        entity.getComponent<cro::Text>().setFillColour(LeaderboardTextDark);
+        rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+        auto redEnt = m_uiScene.createEntity();
+        redEnt.addComponent<cro::Transform>().setPosition({ colStart, -7.f }); //not sure where the 7 comes from :S
+        redEnt.addComponent<cro::Drawable2D>();
+        redEnt.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
+        redEnt.getComponent<cro::Text>().setVerticalSpacing(LeaderboardTextSpacing);
+        redEnt.getComponent<cro::Text>().setFillColour(TextHighlightColour);
+        rootNode.getComponent<cro::Transform>().addChild(redEnt.getComponent<cro::Transform>());
+
+        str = std::to_string(i + 1);
+        str += "\np?"; //TODO fetch par value
+
+        redStr = "\n";
+
+        for (const auto& entry : scoreEntries)
+        {
+            auto score = m_sharedData.connectionData[entry.client].playerData[entry.player].holeScores[i];
+            if (score > 4) //TODO make this par
+            {
+                str += "\n";
+                redStr += "\n" + std::to_string(score);
+            }
+            else
+            {
+                str += "\n" + std::to_string(score);
+                redStr += "\n";
+            }
+        }
+
+        if (page2)
+        {
+            //pad remaining rows
+            for (auto i = 0u; i < 16u - scoreEntries.size(); ++i)
+            {
+                str += "\n";
+                redStr += "\n";
+            }
+
+            str += "\n\n" + std::to_string(i + 10) + "\np?";
+            redStr += "\n\n\n";
+            for (const auto& entry : scoreEntries)
+            {
+                auto score = m_sharedData.connectionData[entry.client].playerData[entry.player].holeScores[i + 9];
+
+                if (score > 4) //TODO par
+                {
+                    str += "\n";
+                    redStr += "\n" + std::to_string(score);
+                }
+                else
+                {
+                    str += "\n" + std::to_string(score);
+                    redStr += "\n";
+                }
+            }
+        }
+        entity.getComponent<cro::Text>().setString(str);
+        redEnt.getComponent<cro::Text>().setString(redStr);
+
+
+        colStart += colWidth;
+    }
+
+
+    //total column
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ colStart, 0.f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
+    entity.getComponent<cro::Text>().setVerticalSpacing(LeaderboardTextSpacing);
+    entity.getComponent<cro::Text>().setFillColour(LeaderboardTextDark);
+    rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    str = "Total\nt?"; //TODO total par (f9)
+    for (const auto& entry : scoreEntries)
+    {
+        //TODO check score type
+        str += "\n" + std::to_string(entry.totalFront);
+        //std::to_string(m_sharedData.connectionData[entry.client].playerData[entry.player].parScore);
+    }
+
+    if (page2)
+    {
+        //pad remaining rows
+        for (auto i = 0u; i < 16u - scoreEntries.size(); ++i)
+        {
+            str += "\n";
+        }
+
+        str += "\n\nTotal\nt?"; //TODO total par (b9, f9+b9)
+        for (const auto& entry : scoreEntries)
+        {
+            str += "\n" + std::to_string(entry.totalBack) + " (" + std::to_string(entry.total) + ")";
+            //std::to_string(m_sharedData.connectionData[entry.client].playerData[entry.player].parScore);
+        }
+    }
+    entity.getComponent<cro::Text>().setString(str);
+
+
+    //TODO crop top/bottom based on active page
+
+    //TODO add buttons if more than one page
+}
+
+void MenuState::togglePreviousScoreCard()
+{
+    if (m_lobbyWindowEntities[LobbyEntityID::Scorecard].isValid()
+        && !m_lobbyWindowEntities[LobbyEntityID::Scorecard].getComponent<cro::Callback>().active)
+    {
+        if (m_currentMenu == MenuID::Lobby)
+        {
+            m_currentMenu = MenuID::Dummy;
+            m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Dummy);
+
+            m_lobbyWindowEntities[LobbyEntityID::Scorecard].getComponent<cro::Callback>().getUserData<ScorecardCallbackData>().direction = 1;
+            m_lobbyWindowEntities[LobbyEntityID::Scorecard].getComponent<cro::Callback>().active = true;
+        }
+        else
+        {
+            //doesn't matter where we are, just hide the menu
+            //remember to only switch back to lobby if we did anything though...
+            m_lobbyWindowEntities[LobbyEntityID::Scorecard].getComponent<cro::Callback>().getUserData<ScorecardCallbackData>().direction = 0;
+            m_lobbyWindowEntities[LobbyEntityID::Scorecard].getComponent<cro::Callback>().active = true;
+        }
+    }
 }

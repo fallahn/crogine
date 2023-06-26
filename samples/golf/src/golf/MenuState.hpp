@@ -198,6 +198,8 @@ private:
             Background,
             Info,
 
+            Scorecard,
+
             Count
         };
     };
@@ -336,7 +338,8 @@ private:
     void updateCourseRuleString();
     void updateUnlockedItems();
 
-    //loading moved to GolfGame.cpp
+    void createPreviousScoreCard();
+    void togglePreviousScoreCard();
 
     void handleNetEvent(const net::NetEvent&);
 
