@@ -1907,7 +1907,7 @@ void MenuState::updateLobbyAvatars()
 
                 //add a rank badge
                 entity = m_uiScene.createEntity();
-                entity.addComponent<cro::Transform>().setPosition({ -18.f, -12.f, 0.2f });
+                entity.addComponent<cro::Transform>().setPosition({ -18.f, -12.f, 0.15f });
                 entity.addComponent<cro::Drawable2D>();
                 entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::LevelBadge];
                 entity.addComponent<cro::SpriteAnimation>();
@@ -1933,7 +1933,7 @@ void MenuState::updateLobbyAvatars()
 
                 //add an avatar icon
                 entity = m_uiScene.createEntity();
-                entity.addComponent<cro::Transform>().setPosition({ -98.f, -11.f, 0.2f });
+                entity.addComponent<cro::Transform>().setPosition({ -98.f, -11.f, 0.15f });
                 entity.getComponent<cro::Transform>().setScale({ 0.2f, 0.2f });
                 entity.addComponent<cro::Drawable2D>();
                 entity.addComponent<cro::Sprite>(m_sharedData.nameTextures[h].getTexture());

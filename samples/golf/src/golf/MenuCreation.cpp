@@ -1857,7 +1857,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheetV2.getSprite("info_background");
     entity.addComponent<UIElement>().absolutePosition = { 230.f, 31.f };
-    entity.getComponent<UIElement>().depth = 1.3f;
+    entity.getComponent<UIElement>().depth = 1.25f;
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement;
     bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     auto infoBgEnt = entity;
@@ -1941,7 +1941,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheetV2.getSprite("leaderboard_highlight");
     entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
-    entity.addComponent<UIElement>().absolutePosition = { 79.f, 17.f };
+    entity.addComponent<UIElement>().absolutePosition = { 13.f, 17.f };
     entity.getComponent<UIElement>().depth = 0.1f;
     entity.addComponent<cro::UIInput>().area = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Lobby);
@@ -3392,7 +3392,7 @@ void MenuState::createPreviousScoreCard()
     auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
     bounds = m_lobbyWindowEntities[LobbyEntityID::Background].getComponent<cro::Sprite>().getTextureBounds();
-    entity.getComponent<cro::Transform>().setPosition({ bounds.width / 2.f, OffscreenPos, 1.6f });
+    entity.getComponent<cro::Transform>().setPosition({ bounds.width / 2.f, OffscreenPos, 1.7f });
 
     const float targetPos = bounds.height / 2.f;
     entity.addComponent<cro::Callback>().setUserData<ScorecardCallbackData>();
@@ -3843,6 +3843,13 @@ void MenuState::createPreviousScoreCard()
                 });
         m_lobbyWindowEntities[LobbyEntityID::Scorecard].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     }
+
+
+
+    //add a button to the lobby page to display the score card
+    // 138,18
+    //m_lobbyWindowEntities[LobbyEntityID::Info].getComponent<cro::Transform>().addChild();
+    //m_menuSounds.getEmitter("switch")
 }
 
 void MenuState::togglePreviousScoreCard()
