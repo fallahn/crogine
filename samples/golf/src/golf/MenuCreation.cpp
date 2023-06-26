@@ -3415,6 +3415,7 @@ void MenuState::createPreviousScoreCard()
             
             if (pos.y == targetPos)
             {
+                m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Scorecard);
                 dest = MenuID::Lobby;
                 e.getComponent<cro::Callback>().active = false;
             }
@@ -3488,9 +3489,12 @@ void MenuState::createPreviousScoreCard()
         });
 
 
-    auto rootNode = m_uiScene.createEntity(); //TODO use this for paging
-    rootNode.addComponent<cro::Transform>().setPosition({ 10.f, 269.f, 0.1f });
+    static constexpr glm::vec3 RootPosition(10.f, 269.f, 0.1f);
+    auto rootNode = m_uiScene.createEntity(); //use this for paging
+    rootNode.addComponent<cro::Transform>().setPosition(RootPosition);
     m_lobbyWindowEntities[LobbyEntityID::Scorecard].getComponent<cro::Transform>().addChild(rootNode.getComponent<cro::Transform>());
+
+    std::vector<cro::Entity> textEntities;
 
     auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
 
@@ -3501,6 +3505,7 @@ void MenuState::createPreviousScoreCard()
     entity.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
     entity.getComponent<cro::Text>().setVerticalSpacing(LeaderboardTextSpacing);
     entity.getComponent<cro::Text>().setFillColour(LeaderboardTextDark);
+    textEntities.push_back(entity);
     rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     //TODO we could do all the updates in one iter over the Entries
@@ -3528,8 +3533,15 @@ void MenuState::createPreviousScoreCard()
             str += "\n " + m_sharedData.connectionData[entry.client].playerData[entry.player].name.substr(0, ConstVal::MaxStringChars);
         }
     }
-
     entity.getComponent<cro::Text>().setString(str);
+
+    if (page2)
+    {
+        bounds = cro::Text::getLocalBounds(entity);
+        bounds.height /= 2.f;
+        bounds.bottom += bounds.height;
+        entity.getComponent<cro::Drawable2D>().setCroppingArea(bounds);
+    }
 
     //hole columns
     cro::String redStr;
@@ -3547,7 +3559,7 @@ void MenuState::createPreviousScoreCard()
         entity.getComponent<cro::Text>().setVerticalSpacing(LeaderboardTextSpacing);
         entity.getComponent<cro::Text>().setFillColour(LeaderboardTextDark);
         rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-
+        textEntities.push_back(entity);
 
         auto redEnt = m_uiScene.createEntity();
         redEnt.addComponent<cro::Transform>().setPosition({ colStart, -7.f }); //not sure where the 7 comes from :S
@@ -3556,6 +3568,7 @@ void MenuState::createPreviousScoreCard()
         redEnt.getComponent<cro::Text>().setVerticalSpacing(LeaderboardTextSpacing);
         redEnt.getComponent<cro::Text>().setFillColour(TextHighlightColour);
         rootNode.getComponent<cro::Transform>().addChild(redEnt.getComponent<cro::Transform>());
+        textEntities.push_back(redEnt);
 
         str = std::to_string(i + 1);
         str += "\np?"; //TODO fetch par value
@@ -3607,6 +3620,14 @@ void MenuState::createPreviousScoreCard()
         entity.getComponent<cro::Text>().setString(str);
         redEnt.getComponent<cro::Text>().setString(redStr);
 
+        if (page2)
+        {
+            bounds = cro::Text::getLocalBounds(entity);
+            bounds.height /= 2.f;
+            bounds.bottom += bounds.height;
+            entity.getComponent<cro::Drawable2D>().setCroppingArea(bounds);
+            redEnt.getComponent<cro::Drawable2D>().setCroppingArea(bounds); //this *ought* to be the same...
+        }
 
         colStart += colWidth;
     }
@@ -3620,6 +3641,7 @@ void MenuState::createPreviousScoreCard()
     entity.getComponent<cro::Text>().setVerticalSpacing(LeaderboardTextSpacing);
     entity.getComponent<cro::Text>().setFillColour(LeaderboardTextDark);
     rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    textEntities.push_back(entity);
 
     str = "Total\nt?"; //TODO total par (f9)
     for (const auto& entry : scoreEntries)
@@ -3646,10 +3668,97 @@ void MenuState::createPreviousScoreCard()
     }
     entity.getComponent<cro::Text>().setString(str);
 
+    if (page2)
+    {
+        bounds = cro::Text::getLocalBounds(entity);
+        bounds.height /= 2.f;
+        bounds.bottom += bounds.height;
+        entity.getComponent<cro::Drawable2D>().setCroppingArea(bounds);
 
-    //TODO crop top/bottom based on active page
+        auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
+        entity = m_uiScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ 253.f, 14.f, 0.1f });
+        entity.addComponent<cro::Drawable2D>();
+        entity.addComponent<cro::Text>(smallFont).setString("Front 9");
+        entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+        entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+        entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+        entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
+        centreText(entity);
+        m_lobbyWindowEntities[LobbyEntityID::Scorecard].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+        auto labelEnt = entity;
 
-    //TODO add buttons if more than one page
+        //add buttons if more than one page
+        cro::SpriteSheet spriteSheet;
+        spriteSheet.loadFromFile("assets/golf/sprites/lobby_menu.spt", m_resources.textures);
+        
+        auto selected = m_uiScene.getSystem<cro::UISystem>()->addCallback([&](cro::Entity e)
+            {
+                e.getComponent<cro::SpriteAnimation>().play(1); 
+                m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+            });
+        auto unselected = m_uiScene.getSystem<cro::UISystem>()->addCallback([](cro::Entity e) {e.getComponent<cro::SpriteAnimation>().play(0); });
+
+        entity = m_uiScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({190.f, 6.f, 0.1f});
+        entity.addComponent<cro::Drawable2D>();
+        entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("arrow_left");
+        entity.addComponent<cro::SpriteAnimation>();
+        entity.addComponent<cro::UIInput>().setGroup(MenuID::Scorecard);
+        entity.getComponent<cro::UIInput>().area = entity.getComponent<cro::Sprite>().getTextureBounds();
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selected;
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselected;
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+            m_uiScene.getSystem<cro::UISystem>()->addCallback(
+                [&, labelEnt, rootNode, textEntities](cro::Entity, const cro::ButtonEvent& evt) mutable
+                {
+                    if (activated(evt)
+                        && rootNode.getComponent<cro::Transform>().getPosition().y > RootPosition.y)
+                    {
+                        labelEnt.getComponent<cro::Text>().setString("Front 9");
+                        centreText(labelEnt);
+
+                        rootNode.getComponent<cro::Transform>().setPosition(RootPosition);
+                        for (auto e : textEntities)
+                        {
+                            auto bounds = e.getComponent<cro::Drawable2D>().getCroppingArea();
+                            bounds.bottom += bounds.height;
+                            e.getComponent<cro::Drawable2D>().setCroppingArea(bounds);
+                        }
+                    }
+                });
+        m_lobbyWindowEntities[LobbyEntityID::Scorecard].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+        entity = m_uiScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ 292.f, 6.f, 0.1f });
+        entity.addComponent<cro::Drawable2D>();
+        entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("arrow_right");
+        entity.addComponent<cro::SpriteAnimation>();
+        entity.addComponent<cro::UIInput>().setGroup(MenuID::Scorecard);
+        entity.getComponent<cro::UIInput>().area = entity.getComponent<cro::Sprite>().getTextureBounds();
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selected;
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselected;
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+            m_uiScene.getSystem<cro::UISystem>()->addCallback(
+                [&, labelEnt, rootNode, textEntities](cro::Entity, const cro::ButtonEvent& evt) mutable
+                {
+                    if (activated(evt)
+                        && rootNode.getComponent<cro::Transform>().getPosition().y < (RootPosition.y + 1.f))
+                    {
+                        labelEnt.getComponent<cro::Text>().setString("Back 9");
+                        centreText(labelEnt);
+
+                        rootNode.getComponent<cro::Transform>().setPosition(RootPosition + glm::vec3(0.f, 266.f, 0.f));
+                        for (auto e : textEntities)
+                        {
+                            auto bounds = e.getComponent<cro::Drawable2D>().getCroppingArea();
+                            bounds.bottom -= bounds.height;
+                            e.getComponent<cro::Drawable2D>().setCroppingArea(bounds);
+                        }
+                    }
+                });
+        m_lobbyWindowEntities[LobbyEntityID::Scorecard].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    }
 }
 
 void MenuState::togglePreviousScoreCard()

@@ -95,6 +95,7 @@ public:
         Dummy, 
         Main, Avatar, Join, Lobby,
         ProfileFlyout, ConfirmQuit,
+        Scorecard,
 
         Count
     };
