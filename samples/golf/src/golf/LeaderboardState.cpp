@@ -289,6 +289,7 @@ void LeaderboardState::buildScene()
                 m_displayContext.courseIndex = m_sharedData.courseIndex;
                 m_displayContext.holeCount = m_sharedData.holeCount;
                 m_displayContext.page = 0;
+                Social::refreshHallOfFame(CourseStrings[m_sharedData.courseIndex].first);
                 refreshDisplay();
             }
             break;
@@ -369,11 +370,12 @@ void LeaderboardState::buildScene()
 
     //personal best
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 12.f, 58.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ bgCentre, 76.f, 0.1f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(font).setString("No Personal Score");
     entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
-    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setFillColour(LeaderboardTextDark);
+    centreText(entity);
     bgNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     m_displayContext.personalBest = entity;
 
@@ -509,6 +511,7 @@ void LeaderboardState::buildScene()
                 if (activated(evt))
                 {
                     m_displayContext.courseIndex = (m_displayContext.courseIndex + (CourseStrings.size() - 1)) % CourseStrings.size();
+                    Social::refreshHallOfFame(CourseStrings[m_displayContext.courseIndex].first);
                     refreshDisplay();
                 }
             });
@@ -562,6 +565,7 @@ void LeaderboardState::buildScene()
                 if (activated(evt))
                 {
                     m_displayContext.courseIndex = (m_displayContext.courseIndex + 1) % CourseStrings.size();
+                    Social::refreshHallOfFame(CourseStrings[m_displayContext.courseIndex].first);
                     refreshDisplay();
                 }
             });
@@ -616,13 +620,23 @@ void LeaderboardState::buildScene()
 
 void LeaderboardState::refreshDisplay()
 {
-    const auto& entry = Social::getHallOfFame(CourseStrings[m_displayContext.courseIndex].first, m_displayContext.page, m_displayContext.holeCount);
     const auto& title = CourseStrings[m_displayContext.courseIndex].second;
 
     m_displayContext.courseTitle.getComponent<cro::Text>().setString(cro::String::fromUtf8(title.begin(), title.end()));
     centreText(m_displayContext.courseTitle);
-    m_displayContext.leaderboardText.getComponent<cro::Text>().setString(entry.topTen);
+
+
+    const auto& entry = Social::getHallOfFame(CourseStrings[m_displayContext.courseIndex].first, m_displayContext.page, m_displayContext.holeCount);
+    if (entry.topTen.empty())
+    {
+        m_displayContext.leaderboardText.getComponent<cro::Text>().setString("Fetching Scores...");
+    }
+    else
+    {
+        m_displayContext.leaderboardText.getComponent<cro::Text>().setString(entry.topTen);
+    }
     m_displayContext.personalBest.getComponent<cro::Text>().setString(entry.personalBest);
+    centreText(m_displayContext.personalBest);
 };
 
 void LeaderboardState::quitState()

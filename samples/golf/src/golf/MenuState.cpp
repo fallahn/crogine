@@ -190,7 +190,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
         cacheState(StateID::Profile);
         cacheState(StateID::Practice);
         cacheState(StateID::Keyboard);
-    
+        cacheState(StateID::Leaderboard);    
  
         context.mainWindow.setMouseCaptured(false);
     

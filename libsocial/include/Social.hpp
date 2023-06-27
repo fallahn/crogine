@@ -48,6 +48,11 @@ source distribution.
 static constexpr std::uint16_t CURRENT_VER = 1130;
 static const std::string StringVer("1.13.0");
 
+struct HallEntry final
+{
+    cro::String topTen;
+    cro::String personalBest;
+};
 
 class Social final
 {
@@ -142,6 +147,8 @@ public:
     static inline const std::string RSSFeed = "https://fallahn.itch.io/super-video-golf/devlog.rss";
     static inline const std::string WebURL = "https://fallahn.itch.io/super-video-golf";
     static void updateHallOfFame() {}
+    static void refreshHallOfFame(const std::string&) {}
+    static const HallEntry& getHallOfFame(const std::string&, std::int32_t, std::int32_t) {}
 
     enum class UnlockType
     {
