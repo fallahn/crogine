@@ -85,6 +85,10 @@ private:
         std::int32_t holeCount = 0;
     }m_displayContext;
 
+    std::vector<std::pair<std::string, cro::String>> m_courseStrings;
+    std::vector<const cro::Texture*> m_courseThumbs;
+
+    void parseCourseDirectory();
     void buildScene();
     void refreshDisplay();
     void quitState();

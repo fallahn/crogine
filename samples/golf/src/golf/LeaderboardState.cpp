@@ -81,21 +81,6 @@ namespace
         };
     };
 
-    //hmmm wish I didn't have to keep doing this...
-    const std::array<std::pair<std::string, std::string>, 10u> CourseStrings =
-    {
-        std::make_pair("course_01", "1. Westington Links, Isle Of Pendale"),
-        {"course_02", "2. Grove Bank, Mont Torville"},
-        {"course_03", "3. Old Stemmer's Lane Pitch 'n' Putt"},
-        {"course_04", "4. Roving Sands, East Nerringham"},
-        {"course_05", "5. Sunny Cove, Weald & Hedgeways"},
-        {"course_06", "6. Terdiman Cliffs Putting Course"},
-        {"course_07", "7. Dackel's Run, Beneslavia"},
-        {"course_08", u8"8. Moulin Plage, Île du Coulée"},
-        {"course_09", "9. Purcitop Pitch 'n' Putt"},
-        {"course_10", "10. Fairland Rock, Kingsfield"},
-    };
-
     const std::array<std::string, 13u> PageNames =
     {
         "All Time",
@@ -126,9 +111,7 @@ LeaderboardState::LeaderboardState(cro::StateStack& ss, cro::State::Context ctx,
     m_viewScale         (2.f)
 {
     Social::updateHallOfFame();
-
-    //TODO read the data files to populate the CourseStrings array
-
+    parseCourseDirectory();
     buildScene();
 }
 
@@ -207,7 +190,6 @@ void LeaderboardState::handleMessage(const cro::Message& msg)
         const auto& data = msg.getData<Social::StatEvent>();
         if (data.type == Social::StatEvent::HOFReceived)
         {
-            //LogI << data.index << ", " << data.page << ", " << data.holeCount << std::endl;
             refreshDisplay();
         }
     }
@@ -227,6 +209,37 @@ void LeaderboardState::render()
 }
 
 //private
+void LeaderboardState::parseCourseDirectory()
+{
+    const std::string coursePath = cro::FileSystem::getResourcePath() + "assets/golf/courses/";
+    auto dirs = cro::FileSystem::listDirectories(coursePath);
+    
+    std::sort(dirs.begin(), dirs.end());
+
+    for (const auto& dir : dirs)
+    {
+        if (dir.find("course_") != std::string::npos)
+        {
+            auto filePath = coursePath + dir + "/course.data";
+            if (cro::FileSystem::fileExists(filePath))
+            {
+                cro::ConfigFile cfg;
+                cfg.loadFromFile(filePath);
+                if (auto* prop = cfg.findProperty("title"); prop != nullptr)
+                {
+                    const auto courseTitle = prop->getValue<std::string>();
+                    m_courseStrings.emplace_back(std::make_pair(dir, cro::String::fromUtf8(courseTitle.begin(), courseTitle.end())));
+
+
+                    filePath = coursePath + dir + "/preview.png";
+                    //if this fails we still need the fallback to pad the vector
+                    m_courseThumbs.push_back(&m_resources.textures.get(filePath));
+                }
+            }
+        }
+    }
+}
+
 void LeaderboardState::buildScene()
 {
     auto& mb = getContext().appInstance.getMessageBus();
@@ -289,7 +302,7 @@ void LeaderboardState::buildScene()
                 m_displayContext.courseIndex = m_sharedData.courseIndex;
                 m_displayContext.holeCount = m_sharedData.holeCount;
                 m_displayContext.page = 0;
-                Social::refreshHallOfFame(CourseStrings[m_sharedData.courseIndex].first);
+                Social::refreshHallOfFame(m_courseStrings[m_sharedData.courseIndex].first);
                 refreshDisplay();
             }
             break;
@@ -510,8 +523,8 @@ void LeaderboardState::buildScene()
             {
                 if (activated(evt))
                 {
-                    m_displayContext.courseIndex = (m_displayContext.courseIndex + (CourseStrings.size() - 1)) % CourseStrings.size();
-                    Social::refreshHallOfFame(CourseStrings[m_displayContext.courseIndex].first);
+                    m_displayContext.courseIndex = (m_displayContext.courseIndex + (m_courseStrings.size() - 1)) % m_courseStrings.size();
+                    Social::refreshHallOfFame(m_courseStrings[m_displayContext.courseIndex].first);
                     refreshDisplay();
                 }
             });
@@ -564,8 +577,8 @@ void LeaderboardState::buildScene()
             {
                 if (activated(evt))
                 {
-                    m_displayContext.courseIndex = (m_displayContext.courseIndex + 1) % CourseStrings.size();
-                    Social::refreshHallOfFame(CourseStrings[m_displayContext.courseIndex].first);
+                    m_displayContext.courseIndex = (m_displayContext.courseIndex + 1) % m_courseStrings.size();
+                    Social::refreshHallOfFame(m_courseStrings[m_displayContext.courseIndex].first);
                     refreshDisplay();
                 }
             });
@@ -620,13 +633,13 @@ void LeaderboardState::buildScene()
 
 void LeaderboardState::refreshDisplay()
 {
-    const auto& title = CourseStrings[m_displayContext.courseIndex].second;
+    const auto& title = m_courseStrings[m_displayContext.courseIndex].second;
 
-    m_displayContext.courseTitle.getComponent<cro::Text>().setString(cro::String::fromUtf8(title.begin(), title.end()));
+    m_displayContext.courseTitle.getComponent<cro::Text>().setString(title);
     centreText(m_displayContext.courseTitle);
 
 
-    const auto& entry = Social::getHallOfFame(CourseStrings[m_displayContext.courseIndex].first, m_displayContext.page, m_displayContext.holeCount);
+    const auto& entry = Social::getHallOfFame(m_courseStrings[m_displayContext.courseIndex].first, m_displayContext.page, m_displayContext.holeCount);
     if (entry.topTen.empty())
     {
         m_displayContext.leaderboardText.getComponent<cro::Text>().setString("Fetching Scores...");
