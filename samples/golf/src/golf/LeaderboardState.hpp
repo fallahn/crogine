@@ -34,6 +34,7 @@ source distribution.
 #include <crogine/core/State.hpp>
 #include <crogine/audio/AudioScape.hpp>
 #include <crogine/ecs/Scene.hpp>
+#include <crogine/graphics/ModelDefinition.hpp>
 
 struct SharedStateData;
 
@@ -56,6 +57,7 @@ private:
 
     cro::Scene m_scene;
     SharedStateData& m_sharedData;
+    cro::ResourceCollection m_resources;
 
     cro::AudioScape m_menuSounds;
     struct AudioID final
@@ -71,18 +73,19 @@ private:
 
     glm::vec2 m_viewScale;
     cro::Entity m_rootNode;
-    cro::Entity m_restartButton;
-    bool m_requestRestart;
 
-    struct ConfirmType final
+    struct DisplayContext final
     {
-        enum
-        {
-            Restart, Quit
-        };
-    };
-    std::int32_t m_confirmationType; //used to decide which action the confirmation menu should take
+        cro::Entity courseTitle;
+        cro::Entity leaderboardText;
+        cro::Entity personalBest;
+
+        std::size_t courseIndex = 0;
+        std::int32_t page = 0;
+        std::int32_t holeCount = 0;
+    }m_displayContext;
 
     void buildScene();
+    void refreshDisplay();
     void quitState();
 };

@@ -618,6 +618,9 @@ bool MenuState::handleEvent(const cro::Event& evt)
         case SDLK_TAB:
             togglePreviousScoreCard();
             break;
+        case SDLK_F8:
+            requestStackPush(StateID::Leaderboard);
+            break;
         }
     }
     else if (evt.type == SDL_TEXTINPUT)
