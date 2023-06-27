@@ -229,13 +229,11 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
             sd.mapDirectory = "course_01";
         }
 
-        createPreviousScoreCard();
-
         //we returned from a previous game
         if (sd.clientConnection.connected)
         {
             updateLobbyAvatars();
-            //createPreviousScoreCard();
+            createPreviousScoreCard();
 
             //switch to lobby view - send as a command
             //to ensure it's delayed by a frame

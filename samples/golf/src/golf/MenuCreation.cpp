@@ -3476,7 +3476,7 @@ void MenuState::createPreviousScoreCard()
 
 
     //fills with dummy data for testing  - must remove this!
-    for (auto i = 0u; i < ConstVal::MaxClients; ++i)
+    /*for (auto i = 0u; i < ConstVal::MaxClients; ++i)
     {
         for (auto j = 0u; j < ConstVal::MaxPlayers; ++j)
         {
@@ -3488,8 +3488,7 @@ void MenuState::createPreviousScoreCard()
                 score = cro::Util::Random::value(1, 5);
             }
         }
-    }
-
+    }*/
 
 
 
@@ -3509,24 +3508,38 @@ void MenuState::createPreviousScoreCard()
         std::int32_t total = 0;
         std::int32_t totalFront = 0;
         std::int32_t totalBack = 0;
+        std::int32_t roundScore = 0; //rule type, ie par diff or match points
     };
 
     std::vector<Entry> scoreEntries;
-    LogI << __FILE__ << ", " << __LINE__ << " set correct loop params!" << std::endl;
-    for (auto i = 0u; i < /*ConstVal::MaxClients*/2; ++i)
+    //LogI << __FILE__ << ", " << __LINE__ << " set correct loop params!" << std::endl;
+    for (auto i = 0u; i < ConstVal::MaxClients; ++i)
     {
-        //if (m_sharedData.connectionData[i].playerCount != 0)
+        if (m_sharedData.connectionData[i].playerCount != 0)
         {
-            for (auto j = 0u; j < /*m_sharedData.connectionData[i].playerCount*/8; ++j)
+            for (auto j = 0u; j < m_sharedData.connectionData[i].playerCount; ++j)
             {
                 auto& entry = scoreEntries.emplace_back();
                 entry.client = i;
                 entry.player = j;
 
-                //TODO this needs to be done based on score type
-                //TODO this needs to ignore the front or back 9
-                //TODO check this isn't all reset to zero before we're done building the scoreboard
-                //TODO this is a vector, is it only as big as the number of holes played? I can't remember...
+                switch (m_sharedData.scoreType)
+                {
+                default:
+                case ScoreType::Stroke:
+                    entry.roundScore = m_sharedData.connectionData[i].playerData[j].parScore;
+                    break;
+                case ScoreType::Match:
+                    entry.roundScore = m_sharedData.connectionData[i].playerData[j].matchScore;
+                    break;
+                case ScoreType::Skins:
+                    entry.roundScore = m_sharedData.connectionData[i].playerData[j].skinScore;
+                    break;
+                }
+
+                //These should be fine from the last round as they aren't
+                //cleared and resized until the beginning of the next one
+                //also means there are only as many scores as there are holes.
                 auto k = 0;
                 for (auto score : m_sharedData.connectionData[i].playerData[j].holeScores)
                 {
@@ -3544,10 +3557,13 @@ void MenuState::createPreviousScoreCard()
         }
     }
 
-    //TODO this needs to be done based on score type
-    std::sort(scoreEntries.begin(), scoreEntries.end(), [](const Entry& a, const Entry& b)
+    std::sort(scoreEntries.begin(), scoreEntries.end(), [&](const Entry& a, const Entry& b)
         {
-            return a.total < b.total;
+            if (m_sharedData.scoreType == ScoreType::Stroke)
+            {
+                return a.total < b.total;
+            }
+            return a.roundScore > b.roundScore;
         });
 
 
@@ -3607,7 +3623,7 @@ void MenuState::createPreviousScoreCard()
 
     //hole columns
     cro::String redStr;
-    //TODO do we need to reverse the hole scores if course was played in reverse?
+
     std::int32_t parOffset = 0;
     std::int32_t parTotal = 0;
     std::int32_t parTotalFront = 0;
@@ -3730,9 +3746,24 @@ void MenuState::createPreviousScoreCard()
     str = "Total\n" + std::to_string(parTotalFront);
     for (const auto& entry : scoreEntries)
     {
-        //TODO check score type
         str += "\n" + std::to_string(entry.totalFront);
-        //std::to_string(m_sharedData.connectionData[entry.client].playerData[entry.player].parScore);
+
+        switch (m_sharedData.scoreType)
+        {
+        default:
+        case ScoreType::Stroke:
+        {
+            auto pTotal = entry.totalFront - parTotalFront;
+            str += " (" + std::to_string(pTotal) + ")";
+        }
+            break;
+        case ScoreType::Match:
+            str += " - " + std::to_string(entry.roundScore) + " Points";
+            break;
+        case ScoreType::Skins:
+            str += " - " + std::to_string(entry.roundScore) + " Skins";
+            break;
+        }
     }
 
     if (page2)
@@ -3746,8 +3777,24 @@ void MenuState::createPreviousScoreCard()
         str += "\n\nTotal\n" + std::to_string(parTotalBack) + " (" + std::to_string(parTotal) + ")";
         for (const auto& entry : scoreEntries)
         {
-            str += "\n" + std::to_string(entry.totalBack) + " (" + std::to_string(entry.total) + ")";
-            //std::to_string(m_sharedData.connectionData[entry.client].playerData[entry.player].parScore);
+            str += "\n" + std::to_string(entry.totalBack);// +" (" + std::to_string(entry.total) + ")";
+
+            switch (m_sharedData.scoreType)
+            {
+            default:
+            case ScoreType::Stroke:
+            {
+                auto pTotal = entry.total - parTotal;
+                str += " (" + std::to_string(pTotal) + ")";
+            }
+                break;
+            case ScoreType::Match:
+                str += " - " + std::to_string(entry.roundScore) + " Points";
+                break;
+            case ScoreType::Skins:
+                str += " - " + std::to_string(entry.roundScore) + " Skins";
+                break;
+            }
         }
     }
     entity.getComponent<cro::Text>().setString(str);
@@ -3845,11 +3892,50 @@ void MenuState::createPreviousScoreCard()
     }
 
 
+    cro::SpriteSheet spriteSheet;
+    spriteSheet.loadFromFile("assets/golf/sprites/lobby_menu_v2.spt", m_resources.textures);
 
     //add a button to the lobby page to display the score card
-    // 138,18
-    //m_lobbyWindowEntities[LobbyEntityID::Info].getComponent<cro::Transform>().addChild();
-    //m_menuSounds.getEmitter("switch")
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("score_button");
+    entity.addComponent<UIElement>().absolutePosition = { 137.f, 19.f };
+    entity.getComponent<UIElement>().depth = 0.1f;
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement;
+    m_lobbyWindowEntities[LobbyEntityID::Info].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("score_button_highlight");
+    entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+    entity.addComponent<UIElement>().absolutePosition = { 135.f, 17.f };
+    entity.getComponent<UIElement>().depth = 0.1f;
+    entity.addComponent<cro::UIInput>().area = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.getComponent<cro::UIInput>().setGroup(MenuID::Lobby);
+    entity.getComponent<cro::UIInput>().setSelectionIndex(6);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = m_courseSelectCallbacks.selectHighlight;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = m_courseSelectCallbacks.unselectHighlight;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = m_uiScene.getSystem<cro::UISystem>()->addCallback(
+        [&](cro::Entity, const cro::ButtonEvent& evt)
+        {
+            if (activated(evt))
+            {
+                togglePreviousScoreCard();
+                m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+            }
+        }
+    );
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement;
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function = [&](cro::Entity e, float)
+    {
+        e.getComponent<cro::UIInput>().enabled =
+            m_lobbyWindowEntities[LobbyEntityID::Info].getComponent<cro::Transform>().getScale().y != 0.f;
+    };
+    m_lobbyWindowEntities[LobbyEntityID::Info].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 }
 
 void MenuState::togglePreviousScoreCard()
