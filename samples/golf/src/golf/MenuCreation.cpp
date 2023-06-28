@@ -3763,10 +3763,10 @@ void MenuState::createPreviousScoreCard()
         }
             break;
         case ScoreType::Match:
-            str += " - " + std::to_string(entry.roundScore) + " Points";
+            str += " - " + std::to_string(entry.roundScore) + " POINTS";
             break;
         case ScoreType::Skins:
-            str += " - " + std::to_string(entry.roundScore) + " Skins";
+            str += " - " + std::to_string(entry.roundScore) + " SKINS";
             break;
         }
     }

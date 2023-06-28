@@ -954,11 +954,11 @@ void CPUGolfer::aim(float dt, glm::vec3 windVector)
         //check someone hasn't pressed the keyboard already
         //and started the power bar. In which case break from this
         //TODO could play avatar disappointed sound? :)
-        if (m_inputParser.inProgress())
+        /*if (m_inputParser.inProgress())
         {
             m_state = State::Watching;
             return;
-        }
+        }*/
 
         //putting is a special case where wind effect is lower
         //but we also need to deal with the slope of the green
@@ -1361,6 +1361,7 @@ void CPUGolfer::stroke(float dt)
                     {
                         sendKeystroke(m_inputParser.getInputBinding().keys[InputBinding::Action]);
                         m_state = State::Watching;
+
                         return;
                     }
                     m_prevAccuracy = accuracy;

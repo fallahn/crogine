@@ -172,6 +172,8 @@ bool LeaderboardState::handleEvent(const cro::Event& evt)
                 m_displayContext.courseIndex = (m_displayContext.courseIndex + (m_courseStrings.size() - 1)) % m_courseStrings.size();
                 Social::refreshHallOfFame(m_courseStrings[m_displayContext.courseIndex].first);
                 refreshDisplay();
+
+                m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
             }
             break;
         case cro::GameController::ButtonRightShoulder:
@@ -180,6 +182,8 @@ bool LeaderboardState::handleEvent(const cro::Event& evt)
                 m_displayContext.courseIndex = (m_displayContext.courseIndex + 1) % m_courseStrings.size();
                 Social::refreshHallOfFame(m_courseStrings[m_displayContext.courseIndex].first);
                 refreshDisplay();
+
+                m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
             }
             break;
         }
@@ -218,6 +222,11 @@ void LeaderboardState::handleMessage(const cro::Message& msg)
         {
             refreshDisplay();
         }
+        /*else if (data.type == Social::StatEvent::StatUnavailable)
+        {
+            m_displayContext.leaderboardText.getComponent<cro::Text>().setString("No Scores Set");
+            m_displayContext.personalBest.getComponent<cro::Text>().setString(" ");
+        }*/
     }
 
     m_scene.forwardMessage(msg);
@@ -327,12 +336,17 @@ void LeaderboardState::buildScene()
 
                 //apply the selected course data from shared data
                 //so we get the current leaderboards eg from the lobby
-                m_displayContext.courseIndex = m_sharedData.courseIndex;
+                m_displayContext.courseIndex = m_sharedData.courseIndex % m_courseStrings.size();
                 m_displayContext.holeCount = m_sharedData.holeCount;
                 m_displayContext.page = 0;
+
+                m_displayContext.holeText.getComponent<cro::Text>().setString(HoleNames[m_displayContext.holeCount]);
+                centreText(m_displayContext.holeText);
+
                 m_displayContext.monthText.getComponent<cro::Text>().setString(PageNames[0]);
                 centreText(m_displayContext.monthText);
-                Social::refreshHallOfFame(m_courseStrings[m_sharedData.courseIndex].first);
+
+                Social::refreshHallOfFame(m_courseStrings[m_displayContext.courseIndex].first);
                 refreshDisplay();
             }
             break;
@@ -470,7 +484,7 @@ void LeaderboardState::buildScene()
     entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
     bgNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     centreText(entity);
-    auto textEnt = entity;
+    m_displayContext.holeText = entity;
 
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 423.f, 94.f, 0.1f });
@@ -488,14 +502,16 @@ void LeaderboardState::buildScene()
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectedID;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectedID;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
-        uiSystem.addCallback([&, textEnt](cro::Entity, const cro::ButtonEvent& evt) mutable
+        uiSystem.addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
             {
                 if (activated(evt))
                 {
                     m_displayContext.holeCount = (m_displayContext.holeCount + 1) % 3;
-                    textEnt.getComponent<cro::Text>().setString(HoleNames[m_displayContext.holeCount]);
-                    centreText(textEnt);
+                    m_displayContext.holeText.getComponent<cro::Text>().setString(HoleNames[m_displayContext.holeCount]);
+                    centreText(m_displayContext.holeText);
                     refreshDisplay();
+
+                    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
                 }
             });
 
@@ -606,6 +622,8 @@ void LeaderboardState::buildScene()
                     m_displayContext.courseIndex = (m_displayContext.courseIndex + (m_courseStrings.size() - 1)) % m_courseStrings.size();
                     Social::refreshHallOfFame(m_courseStrings[m_displayContext.courseIndex].first);
                     refreshDisplay();
+
+                    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
                 }
             });
 
@@ -660,6 +678,8 @@ void LeaderboardState::buildScene()
                     m_displayContext.courseIndex = (m_displayContext.courseIndex + 1) % m_courseStrings.size();
                     Social::refreshHallOfFame(m_courseStrings[m_displayContext.courseIndex].first);
                     refreshDisplay();
+
+                    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
                 }
             });
 
@@ -762,10 +782,14 @@ void LeaderboardState::createFlyout(cro::Entity parent)
                 centreText(m_displayContext.monthText);
                 refreshDisplay();
 
+                m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+
                 quitMenu();
             }
             else if (deactivated(evt))
             {
+                m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
+
                 quitMenu();
             }
         });

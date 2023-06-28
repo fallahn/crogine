@@ -91,6 +91,7 @@ private:
         cro::Entity leaderboardText;
         cro::Entity personalBest;
         cro::Entity thumbnail;
+        cro::Entity holeText;
         cro::Entity monthText;
 
         std::size_t courseIndex = 0;
