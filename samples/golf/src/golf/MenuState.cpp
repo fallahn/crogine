@@ -156,10 +156,6 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     m_prevMenu              (MenuID::Main),
     m_viewScale             (1.f)
 {
-    registerWindow([]() 
-        {
-            ImPlot::ShowDemoWindow();
-        });
     std::fill(m_readyState.begin(), m_readyState.end(), false);
     
     auto size = glm::vec2(GolfGame::getActiveTarget()->getSize());
@@ -600,6 +596,9 @@ bool MenuState::handleEvent(const cro::Event& evt)
         case SDLK_ESCAPE:
         case SDLK_BACKSPACE:
             quitMenu();
+            break;
+        case SDLK_F8:
+            requestStackPush(StateID::Leaderboard);
             break;
         }
     }

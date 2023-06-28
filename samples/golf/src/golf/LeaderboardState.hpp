@@ -35,10 +35,11 @@ source distribution.
 #include <crogine/audio/AudioScape.hpp>
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/graphics/ModelDefinition.hpp>
+#include <crogine/gui/GuiClient.hpp>
 
 struct SharedStateData;
 
-class LeaderboardState final : public cro::State
+class LeaderboardState final : public cro::State, public cro::GuiClient
 {
 public:
     LeaderboardState(cro::StateStack&, cro::State::Context, SharedStateData&);
@@ -74,15 +75,28 @@ private:
     glm::vec2 m_viewScale;
     cro::Entity m_rootNode;
 
+    struct BoardIndex final
+    {
+        enum
+        {
+            Course,
+            Hio, Rank, Streak
+        };
+    };
+
     struct DisplayContext final
     {
         cro::Entity courseTitle;
         cro::Entity leaderboardText;
         cro::Entity personalBest;
+        cro::Entity thumbnail;
 
         std::size_t courseIndex = 0;
         std::int32_t page = 0;
         std::int32_t holeCount = 0;
+        bool showNearest = false;
+
+        std::int32_t boardIndex = BoardIndex::Course;
     }m_displayContext;
 
     std::vector<std::pair<std::string, cro::String>> m_courseStrings;

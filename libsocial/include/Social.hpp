@@ -51,6 +51,7 @@ static const std::string StringVer("1.13.0");
 struct HallEntry final
 {
     cro::String topTen;
+    cro::String nearestTen;
     cro::String personalBest;
 };
 

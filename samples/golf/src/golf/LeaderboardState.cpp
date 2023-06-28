@@ -113,6 +113,15 @@ LeaderboardState::LeaderboardState(cro::StateStack& ss, cro::State::Context ctx,
     Social::updateHallOfFame();
     parseCourseDirectory();
     buildScene();
+
+    //registerWindow([&]()
+    //    {
+    //        if (ImGui::Begin("Stats"))
+    //        {
+    //            ImGui::Text("Hole count %d", m_displayContext.holeCount);
+    //        }
+    //        ImGui::End();
+    //    });
 }
 
 //public
@@ -151,11 +160,29 @@ bool LeaderboardState::handleEvent(const cro::Event& evt)
     else if (evt.type == SDL_CONTROLLERBUTTONUP)
     {
         cro::App::getWindow().setMouseCaptured(true);
-        if (evt.cbutton.button == cro::GameController::ButtonB
-            || evt.cbutton.button == cro::GameController::ButtonStart)
+        switch (evt.cbutton.button)
         {
+        default: break;
+        case cro::GameController::ButtonB:
+        case cro::GameController::ButtonStart:
             quitState();
             return false;
+        case cro::GameController::ButtonLeftShoulder:
+            if (m_displayContext.boardIndex == BoardIndex::Course)
+            {
+                m_displayContext.courseIndex = (m_displayContext.courseIndex + (m_courseStrings.size() - 1)) % m_courseStrings.size();
+                Social::refreshHallOfFame(m_courseStrings[m_displayContext.courseIndex].first);
+                refreshDisplay();
+            }
+            break;
+        case cro::GameController::ButtonRightShoulder:
+            if (m_displayContext.boardIndex == BoardIndex::Course)
+            {
+                m_displayContext.courseIndex = (m_displayContext.courseIndex + 1) % m_courseStrings.size();
+                Social::refreshHallOfFame(m_courseStrings[m_displayContext.courseIndex].first);
+                refreshDisplay();
+            }
+            break;
         }
     }
     else if (evt.type == SDL_MOUSEBUTTONUP)
@@ -211,6 +238,8 @@ void LeaderboardState::render()
 //private
 void LeaderboardState::parseCourseDirectory()
 {
+    m_resources.textures.setFallbackColour(cro::Colour::Transparent);
+
     const std::string coursePath = cro::FileSystem::getResourcePath() + "assets/golf/courses/";
     auto dirs = cro::FileSystem::listDirectories(coursePath);
     
@@ -383,7 +412,7 @@ void LeaderboardState::buildScene()
 
     //personal best
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ bgCentre, 76.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 182.f, 76.f, 0.1f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(font).setString("No Personal Score");
     entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
@@ -404,6 +433,16 @@ void LeaderboardState::buildScene()
     m_displayContext.leaderboardText = entity;
 
 
+    //course thumbnail
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 356.f, 116.f, 0.1f });
+    entity.getComponent<cro::Transform>().setScale(glm::vec2(0.2125f)); //yeah IDK
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>(*m_courseThumbs[0]);
+    bgNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_displayContext.thumbnail = entity;
+
+
     auto& uiSystem = *m_scene.getSystem<cro::UISystem>();
 
     auto selectedID = uiSystem.addCallback(
@@ -422,16 +461,17 @@ void LeaderboardState::buildScene()
     
     //button to set hole count index / refresh
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 453.f, 56.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 424.f, 101.f, 0.1f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(font).setString("All Holes");
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
     bgNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     centreText(entity);
+    auto textEnt = entity;
 
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 452.f, 43.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 423.f, 88.f, 0.1f });
     entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("flyout_highlight");
@@ -446,11 +486,14 @@ void LeaderboardState::buildScene()
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectedID;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectedID;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
-        uiSystem.addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
+        uiSystem.addCallback([&, textEnt](cro::Entity, const cro::ButtonEvent& evt) mutable
             {
                 if (activated(evt))
                 {
-                    
+                    m_displayContext.holeCount = (m_displayContext.holeCount + 1) % 3;
+                    textEnt.getComponent<cro::Text>().setString(HoleNames[m_displayContext.holeCount]);
+                    centreText(textEnt);
+                    refreshDisplay();
                 }
             });
 
@@ -461,7 +504,7 @@ void LeaderboardState::buildScene()
 
     //button to set month index / refresh
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 453.f, 39.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 424.f, 84.f, 0.1f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(font).setString("September");
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
@@ -470,7 +513,7 @@ void LeaderboardState::buildScene()
     centreText(entity);
 
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 452.f, 26.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 423.f, 71.f, 0.1f });
     entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("flyout_highlight");
@@ -630,26 +673,66 @@ void LeaderboardState::buildScene()
     m_scene.simulate(0.f);
 }
 
-
 void LeaderboardState::refreshDisplay()
 {
-    const auto& title = m_courseStrings[m_displayContext.courseIndex].second;
+    switch (m_displayContext.boardIndex)
+    {
+    default:
+    case BoardIndex::Course:
+    {
+        const auto& title = m_courseStrings[m_displayContext.courseIndex].second;
 
-    m_displayContext.courseTitle.getComponent<cro::Text>().setString(title);
+        m_displayContext.courseTitle.getComponent<cro::Text>().setString(title);
+        m_displayContext.thumbnail.getComponent<cro::Sprite>().setTexture(*m_courseThumbs[m_displayContext.courseIndex]);
+
+        const auto& entry = Social::getHallOfFame(m_courseStrings[m_displayContext.courseIndex].first, m_displayContext.page, m_displayContext.holeCount);
+        
+        if (!m_displayContext.showNearest)
+        {
+            if (entry.nearestTen.empty())
+            {
+                m_displayContext.leaderboardText.getComponent<cro::Text>().setString("No Attempt.");
+            }
+            else
+            {
+                m_displayContext.leaderboardText.getComponent<cro::Text>().setString(entry.nearestTen);
+            }
+        }
+        else
+        {
+            if (entry.topTen.empty())
+            {
+                m_displayContext.leaderboardText.getComponent<cro::Text>().setString("Fetching Scores...");
+            }
+            else
+            {
+                m_displayContext.leaderboardText.getComponent<cro::Text>().setString(entry.topTen);
+            }
+        }
+
+        if (!entry.personalBest.empty())
+        {
+            m_displayContext.personalBest.getComponent<cro::Text>().setString(entry.personalBest);
+        }
+        else
+        {
+            m_displayContext.personalBest.getComponent<cro::Text>().setString("No Personal Best");
+        }
+        centreText(m_displayContext.personalBest);
+    }
+        break;
+    case BoardIndex::Hio:
+        m_displayContext.courseTitle.getComponent<cro::Text>().setString("Most Holes In One");
+        break;
+    case BoardIndex::Rank:
+        m_displayContext.courseTitle.getComponent<cro::Text>().setString("Highest Ranked Players");
+        break;
+    case BoardIndex::Streak:
+        m_displayContext.courseTitle.getComponent<cro::Text>().setString("Longest Daily Streak");
+        break;
+
+    }
     centreText(m_displayContext.courseTitle);
-
-
-    const auto& entry = Social::getHallOfFame(m_courseStrings[m_displayContext.courseIndex].first, m_displayContext.page, m_displayContext.holeCount);
-    if (entry.topTen.empty())
-    {
-        m_displayContext.leaderboardText.getComponent<cro::Text>().setString("Fetching Scores...");
-    }
-    else
-    {
-        m_displayContext.leaderboardText.getComponent<cro::Text>().setString(entry.topTen);
-    }
-    m_displayContext.personalBest.getComponent<cro::Text>().setString(entry.personalBest);
-    centreText(m_displayContext.personalBest);
 };
 
 void LeaderboardState::quitState()
