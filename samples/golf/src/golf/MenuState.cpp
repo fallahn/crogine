@@ -1776,12 +1776,14 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
                     m_lobbyWindowEntities[LobbyEntityID::HoleThumb].getComponent<cro::Sprite>().setTexture(m_videoPlayer.getTexture());
                     auto scale = ThumbnailSize / glm::vec2(m_videoPlayer.getTexture().getSize());
                     m_lobbyWindowEntities[LobbyEntityID::HoleThumb].getComponent<cro::Transform>().setScale(scale);
+                    m_uiScene.getActiveCamera().getComponent<cro::Camera>().active = true;
                 }
                 else if (m_courseThumbs.count(course) != 0)
                 {
                     m_lobbyWindowEntities[LobbyEntityID::HoleThumb].getComponent<cro::Sprite>().setTexture(*m_courseThumbs.at(course));
                     auto scale = ThumbnailSize / glm::vec2(m_courseThumbs.at(course)->getSize());
                     m_lobbyWindowEntities[LobbyEntityID::HoleThumb].getComponent<cro::Transform>().setScale(scale);
+                    m_uiScene.getActiveCamera().getComponent<cro::Camera>().active = true;
                 }
                 else
                 {

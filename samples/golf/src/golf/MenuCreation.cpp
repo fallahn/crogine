@@ -3732,6 +3732,11 @@ void MenuState::createPreviousScoreCard()
         colStart += colWidth;
     }
 
+    //make sure to pad the column count if less than 9 holes
+    for (auto i = holeCount; i < 9; ++i)
+    {
+        colStart += colWidth;
+    }
 
     //total column
     entity = m_uiScene.createEntity();
@@ -3890,7 +3895,13 @@ void MenuState::createPreviousScoreCard()
                 });
         m_lobbyWindowEntities[LobbyEntityID::Scorecard].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     }
-
+    else
+    {
+        //add a dummy button to allow the menu group to switch
+        entity = m_uiScene.createEntity();
+        entity.addComponent<cro::Transform>();
+        entity.addComponent<cro::UIInput>().setGroup(MenuID::Scorecard);
+    }
 
     cro::SpriteSheet spriteSheet;
     spriteSheet.loadFromFile("assets/golf/sprites/lobby_menu_v2.spt", m_resources.textures);
