@@ -31,7 +31,6 @@ source distribution.
 #include "SharedStateData.hpp"
 #include "CommonConsts.hpp"
 #include "CommandIDs.hpp"
-#include "MenuConsts.hpp"
 #include "GameConsts.hpp"
 #include "TextAnimCallback.hpp"
 #include "MessageIDs.hpp"
@@ -67,7 +66,7 @@ source distribution.
 #include <crogine/ecs/systems/AudioPlayerSystem.hpp>
 
 #include <crogine/util/Easings.hpp>
-
+#include <crogine/detail/OpenGL.hpp>
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
 
 namespace
@@ -331,6 +330,8 @@ void LeaderboardState::buildScene()
                 m_displayContext.courseIndex = m_sharedData.courseIndex;
                 m_displayContext.holeCount = m_sharedData.holeCount;
                 m_displayContext.page = 0;
+                m_displayContext.monthText.getComponent<cro::Text>().setString(PageNames[0]);
+                centreText(m_displayContext.monthText);
                 Social::refreshHallOfFame(m_courseStrings[m_sharedData.courseIndex].first);
                 refreshDisplay();
             }
@@ -442,6 +443,7 @@ void LeaderboardState::buildScene()
     bgNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     m_displayContext.thumbnail = entity;
 
+    createFlyout(bgNode);
 
     auto& uiSystem = *m_scene.getSystem<cro::UISystem>();
 
@@ -461,7 +463,7 @@ void LeaderboardState::buildScene()
     
     //button to set hole count index / refresh
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 424.f, 101.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 424.f, 107.f, 0.1f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(font).setString("All Holes");
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
@@ -471,7 +473,7 @@ void LeaderboardState::buildScene()
     auto textEnt = entity;
 
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 423.f, 88.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 423.f, 94.f, 0.1f });
     entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("flyout_highlight");
@@ -504,16 +506,17 @@ void LeaderboardState::buildScene()
 
     //button to set month index / refresh
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 424.f, 84.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 424.f, 87.f, 0.1f });
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(font).setString("September");
+    entity.addComponent<cro::Text>(font).setString(PageNames[0]);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
     bgNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     centreText(entity);
+    m_displayContext.monthText = entity;
 
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 423.f, 71.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 423.f, 74.f, 0.1f });
     entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("flyout_highlight");
@@ -527,12 +530,19 @@ void LeaderboardState::buildScene()
     entity.getComponent<cro::UIInput>().area = bounds;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectedID;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectedID;
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         uiSystem.addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
             {
                 if (activated(evt))
                 {
+                    m_flyout.background.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
 
+                    //set column/row count for menu
+                    m_scene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::MonthSelect);
+                    m_scene.getSystem<cro::UISystem>()->setColumnCount(3);
+                    m_scene.getSystem<cro::UISystem>()->selectAt(std::max(12, m_displayContext.page - 1));
+
+                    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
                 }
             });
 
@@ -543,8 +553,35 @@ void LeaderboardState::buildScene()
 
 
     //button to enable nearest scores / refresh
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 365.f ,65.f, 0.1f });
+    entity.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("checkbox_centre");
+    bgNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    auto innerEnt = entity;
 
-
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 363.f ,63.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("checkbox_highlight");
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.addComponent<cro::UIInput>().area = bounds;
+    entity.getComponent<cro::UIInput>().setGroup(MenuID::Leaderboard);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectedID;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectedID;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+        uiSystem.addCallback([&, innerEnt](cro::Entity, const cro::ButtonEvent& evt) mutable
+            {
+                if (activated(evt))
+                {
+                    m_displayContext.showNearest = !m_displayContext.showNearest;
+                    float scale = m_displayContext.showNearest ? 1.f : 0.f;
+                    innerEnt.getComponent<cro::Transform>().setScale(glm::vec2(scale));
+                    refreshDisplay();
+                }
+            });
+    bgNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
     //prev button - decrement course index and selectCourse()
@@ -673,6 +710,123 @@ void LeaderboardState::buildScene()
     m_scene.simulate(0.f);
 }
 
+void LeaderboardState::createFlyout(cro::Entity parent)
+{
+    static constexpr glm::vec2 TextPadding(2.f, 10.f);
+    static constexpr glm::vec2 IconSize(68.f, 12.f);
+    static constexpr float IconPadding = 4.f;
+
+    static constexpr std::int32_t ColumnCount = 3;
+    static constexpr std::int32_t RowCount = 4;
+
+    static constexpr float BgWidth = (ColumnCount * (IconSize.x + IconPadding)) + IconPadding;
+    static constexpr float BgHeight = ((RowCount + 1.f) * IconSize.y) + (RowCount * IconPadding) + IconPadding;
+
+    //background
+    auto entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(138.f, 88.f, 0.2f));
+    entity.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+    entity.addComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLES);
+
+    auto verts = createMenuBackground({ BgWidth, BgHeight });
+    entity.getComponent<cro::Drawable2D>().setVertexData(verts);
+
+    m_flyout.background = entity;
+    parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+    //highlight
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ IconPadding, IconPadding, 0.1f });
+    entity.addComponent<cro::Drawable2D>().setVertexData(createMenuHighlight(IconSize, TextGoldColour));
+    entity.getComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLES);
+
+    m_flyout.highlight = entity;
+    m_flyout.background.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    //buttons/menu items
+    m_flyout.activateCallback = m_scene.getSystem<cro::UISystem>()->addCallback(
+        [&](cro::Entity e, const cro::ButtonEvent& evt) mutable
+        {
+            auto quitMenu = [&]()
+            {
+                m_flyout.background.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+                m_scene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Leaderboard);
+                m_scene.getSystem<cro::UISystem>()->setColumnCount(1);
+            };
+
+            if (activated(evt))
+            {
+                m_displayContext.page = e.getComponent<cro::Callback>().getUserData<std::uint8_t>();
+                m_displayContext.monthText.getComponent<cro::Text>().setString(PageNames[m_displayContext.page]);
+                centreText(m_displayContext.monthText);
+                refreshDisplay();
+
+                quitMenu();
+            }
+            else if (deactivated(evt))
+            {
+                quitMenu();
+            }
+        });
+    m_flyout.selectCallback = m_scene.getSystem<cro::UISystem>()->addCallback(
+        [&](cro::Entity e)
+        {
+            m_flyout.highlight.getComponent<cro::Transform>().setPosition(e.getComponent<cro::Transform>().getPosition() - glm::vec3(TextPadding, 0.f));
+            e.getComponent<cro::AudioEmitter>().play();
+        });
+
+    auto& font = m_sharedData.sharedResources->fonts.get(FontID::Info);
+    for (auto j = 0u; j < 12u; ++j)
+    {
+        //the Y order is reversed so that the navigation
+        //direction of keys/controller is correct in the grid
+        std::size_t x = j % ColumnCount;
+        std::size_t y = (RowCount - 1) - (j / ColumnCount);
+
+        glm::vec2 pos = { x * (IconSize.x + IconPadding), y * (IconSize.y + IconPadding) };
+        pos += TextPadding;
+        pos += IconPadding;
+
+        entity = m_scene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition(glm::vec3(pos, 0.1f));
+        entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
+        entity.addComponent<cro::Drawable2D>();
+        entity.addComponent<cro::Text>(font).setString(PageNames[(j + 1)]);
+        entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+        entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+        entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+        entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
+
+        entity.addComponent<cro::UIInput>().setGroup(MenuID::MonthSelect);
+        entity.getComponent<cro::UIInput>().area = { -TextPadding, IconSize };
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = m_flyout.selectCallback;
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = m_flyout.activateCallback;
+        entity.addComponent<cro::Callback>().setUserData<std::uint8_t>(j + 1);
+
+        m_flyout.background.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    }
+
+    //add 'all' option
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(78.f, 76.f, 0.1f));
+    entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(font).setString(PageNames[0]);
+    entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+    entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
+
+    entity.addComponent<cro::UIInput>().setGroup(MenuID::MonthSelect);
+    entity.getComponent<cro::UIInput>().area = { -TextPadding, IconSize };
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = m_flyout.selectCallback;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = m_flyout.activateCallback;
+    entity.addComponent<cro::Callback>().setUserData<std::uint8_t>(0);
+
+    m_flyout.background.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+}
+
 void LeaderboardState::refreshDisplay()
 {
     switch (m_displayContext.boardIndex)
@@ -687,38 +841,46 @@ void LeaderboardState::refreshDisplay()
 
         const auto& entry = Social::getHallOfFame(m_courseStrings[m_displayContext.courseIndex].first, m_displayContext.page, m_displayContext.holeCount);
         
-        if (!m_displayContext.showNearest)
+        if (entry.hasData)
         {
-            if (entry.nearestTen.empty())
+            if (m_displayContext.showNearest)
             {
-                m_displayContext.leaderboardText.getComponent<cro::Text>().setString("No Attempt.");
+                if (entry.nearestTen.empty())
+                {
+                    m_displayContext.leaderboardText.getComponent<cro::Text>().setString("No Attempt");
+                }
+                else
+                {
+                    m_displayContext.leaderboardText.getComponent<cro::Text>().setString(entry.nearestTen);
+                }
             }
             else
             {
-                m_displayContext.leaderboardText.getComponent<cro::Text>().setString(entry.nearestTen);
+                if (entry.topTen.empty())
+                {
+                    m_displayContext.leaderboardText.getComponent<cro::Text>().setString("No Scores");
+                }
+                else
+                {
+                    m_displayContext.leaderboardText.getComponent<cro::Text>().setString(entry.topTen);
+                }
             }
-        }
-        else
-        {
-            if (entry.topTen.empty())
-            {
-                m_displayContext.leaderboardText.getComponent<cro::Text>().setString("Fetching Scores...");
-            }
-            else
-            {
-                m_displayContext.leaderboardText.getComponent<cro::Text>().setString(entry.topTen);
-            }
-        }
 
-        if (!entry.personalBest.empty())
-        {
-            m_displayContext.personalBest.getComponent<cro::Text>().setString(entry.personalBest);
+            if (!entry.personalBest.empty())
+            {
+                m_displayContext.personalBest.getComponent<cro::Text>().setString(entry.personalBest);
+            }
+            else
+            {
+                m_displayContext.personalBest.getComponent<cro::Text>().setString("No Personal Best");
+            }
+            centreText(m_displayContext.personalBest);
         }
         else
         {
-            m_displayContext.personalBest.getComponent<cro::Text>().setString("No Personal Best");
+            m_displayContext.personalBest.getComponent<cro::Text>().setString(" ");
+            m_displayContext.leaderboardText.getComponent<cro::Text>().setString("Waiting...");
         }
-        centreText(m_displayContext.personalBest);
     }
         break;
     case BoardIndex::Hio:

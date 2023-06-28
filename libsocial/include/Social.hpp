@@ -53,6 +53,7 @@ struct HallEntry final
     cro::String topTen;
     cro::String nearestTen;
     cro::String personalBest;
+    bool hasData = false;
 };
 
 class Social final

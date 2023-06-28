@@ -30,6 +30,7 @@ source distribution.
 #pragma once
 
 #include "../StateIDs.hpp"
+#include "MenuConsts.hpp"
 
 #include <crogine/core/State.hpp>
 #include <crogine/audio/AudioScape.hpp>
@@ -90,6 +91,7 @@ private:
         cro::Entity leaderboardText;
         cro::Entity personalBest;
         cro::Entity thumbnail;
+        cro::Entity monthText;
 
         std::size_t courseIndex = 0;
         std::int32_t page = 0;
@@ -102,8 +104,12 @@ private:
     std::vector<std::pair<std::string, cro::String>> m_courseStrings;
     std::vector<const cro::Texture*> m_courseThumbs;
 
+    FlyoutMenu m_flyout;
+
     void parseCourseDirectory();
     void buildScene();
+    void createFlyout(cro::Entity);
+
     void refreshDisplay();
     void quitState();
 };
