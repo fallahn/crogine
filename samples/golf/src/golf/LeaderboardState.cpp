@@ -99,7 +99,7 @@ namespace
 
     const std::array<std::string, 3u> HoleNames =
     {
-        "All Holes", "Front 9", "Back 9"
+        "18 Holes", "Front 9", "Back 9"
     };
 }
 
@@ -678,7 +678,7 @@ void LeaderboardState::buildScene()
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 424.f, 91.f, 0.1f });
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(font).setString("All Holes");
+    entity.addComponent<cro::Text>(font).setString("18 Holes");
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
     bgNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -790,16 +790,40 @@ void LeaderboardState::buildScene()
     bgNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
+    selectedID = uiSystem.addCallback([](cro::Entity e) 
+        {
+            e.getComponent<cro::SpriteAnimation>().play(1);
+            e.getComponent<cro::AudioEmitter>().play();
+        });
+    unselectedID = uiSystem.addCallback([](cro::Entity e)
+        {
+            e.getComponent<cro::SpriteAnimation>().play(0);
+        });
+    spriteSheet.loadFromFile("assets/golf/sprites/lobby_menu.spt", m_resources.textures);
 
+    auto enableCallback = [&](cro::Entity e, float)
+    {
+        if (m_displayContext.boardIndex == BoardIndex::Course)
+        {
+            e.getComponent<cro::UIInput>().enabled = true;
+            e.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+        }
+        else
+        {
+            e.getComponent<cro::UIInput>().enabled = false;
+            e.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+        }
+    };
 
     //prev button - decrement course index and selectCourse()
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ bgCentre - 42.f, 10.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 40.f, 68.f, 0.1f });
     entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("arrow_highlight");
-    entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
-    entity.addComponent<cro::Callback>().function = HighlightAnimationCallback();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("arrow_left");
+    entity.addComponent<cro::SpriteAnimation>();
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function = enableCallback;
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.getComponent<cro::Transform>().setOrigin({ std::floor(bounds.width / 2.f), 0.f });
     entity.addComponent<cro::UIInput>().setGroup(MenuID::Leaderboard);
@@ -825,12 +849,13 @@ void LeaderboardState::buildScene()
 
     //next button - increment course index and select course
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ bgCentre + 41.f, 10.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 322.f, 68.f, 0.1f });
     entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("arrow_highlight");
-    entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
-    entity.addComponent<cro::Callback>().function = HighlightAnimationCallback();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("arrow_right");
+    entity.addComponent<cro::SpriteAnimation>();
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function = enableCallback;
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.getComponent<cro::Transform>().setOrigin({ std::floor(bounds.width / 2.f), 0.f });
     entity.addComponent<cro::UIInput>().setGroup(MenuID::Leaderboard);
