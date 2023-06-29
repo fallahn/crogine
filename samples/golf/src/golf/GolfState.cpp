@@ -5095,7 +5095,7 @@ void GolfState::spawnBall(const ActorInfo& info)
 
     static constexpr cro::Colour BaseColour(1.f, 1.f, 1.f, 0.f);
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setOrigin({ texSize.x / 2.f, 0.f, -0.1f - (0.1f * depthOffset) });
+    entity.addComponent<cro::Transform>().setOrigin({ texSize.x / 2.f, 0.f, -0.1f - (0.01f * depthOffset) });
     entity.addComponent<cro::Drawable2D>().setTexture(&m_sharedData.nameTextures[info.clientID].getTexture());
     entity.getComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLES);
     entity.getComponent<cro::Drawable2D>().setVertexData(
@@ -5162,6 +5162,9 @@ void GolfState::spawnBall(const ActorInfo& info)
                 float amount = std::min(1.f, std::max(0.f, std::abs(halfPos) / halfWidth));
                 amount = 0.1f + (smoothstep(0.12f, 0.26f, amount) * 0.85f); //remember tex size is probably a lot wider than the window
                 alpha *= amount;
+
+                //and hide if near the tee
+                alpha *= std::min(1.f, glm::length2(m_holeData[m_currentHole].tee - position));
 
                 float currentAlpha = colour;
                 colour = std::max(0.f, std::min(1.f, currentAlpha + (dt * cro::Util::Maths::sgn(alpha - currentAlpha))));

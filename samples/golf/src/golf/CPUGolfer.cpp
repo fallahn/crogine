@@ -107,7 +107,7 @@ const std::array<CPUGolfer::SkillContext, 6> CPUGolfer::m_skills =
     {CPUGolfer::Skill::Dynamic, 5.f, 0.12f, 5, 6},
     {CPUGolfer::Skill::Dynamic, 3.f, 0.9f, 4, 10},
     {CPUGolfer::Skill::Dynamic, 2.2f, 0.06f, 2, 14},
-    {CPUGolfer::Skill::Dynamic, 2.f, 0.06f, 0, 50}
+    {CPUGolfer::Skill::Dynamic, 1.f, 0.06f, 0, 50}
 };
 
 CPUGolfer::CPUGolfer(InputParser& ip, const ActivePlayer& ap, const CollisionMesh& cm)
