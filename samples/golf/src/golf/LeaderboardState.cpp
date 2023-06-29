@@ -299,6 +299,10 @@ void LeaderboardState::buildScene()
     m_audioEnts[AudioID::Back].addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("back");
 
 
+    cro::SpriteSheet spriteSheet;
+    spriteSheet.loadFromFile("assets/golf/sprites/leaderboard_browser.spt", m_resources.textures);
+
+
     struct RootCallbackData final
     {
         enum
@@ -367,6 +371,15 @@ void LeaderboardState::buildScene()
     m_rootNode = rootNode;
 
 
+    //title text
+    auto title = m_scene.createEntity();
+    title.addComponent<cro::Transform>();
+    title.addComponent<cro::Drawable2D>();
+    title.addComponent<cro::Sprite>() = spriteSheet.getSprite("title");
+    auto origin = title.getComponent<cro::Sprite>().getTextureBounds();
+    title.getComponent<cro::Transform>().setOrigin({ origin.width / 2.f, origin.height / 2.f });
+    rootNode.getComponent<cro::Transform>().addChild(title.getComponent<cro::Transform>());
+
     //quad to darken the screen
     auto entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -0.4f });
@@ -380,11 +393,13 @@ void LeaderboardState::buildScene()
     entity.getComponent<cro::Drawable2D>().updateLocalBounds();
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function =
-        [&, rootNode](cro::Entity e, float)
+        [&, rootNode, title](cro::Entity e, float) mutable
     {
         auto size = glm::vec2(GolfGame::getActiveTarget()->getSize());
         e.getComponent<cro::Transform>().setScale(size);
-        e.getComponent<cro::Transform>().setPosition(size / 2.f);
+        
+        size /= 2.f;
+        e.getComponent<cro::Transform>().setPosition(size);
 
         auto scale = rootNode.getComponent<cro::Transform>().getScale().x;
         scale = std::min(1.f, scale / m_viewScale.x);
@@ -394,19 +409,24 @@ void LeaderboardState::buildScene()
         {
             v.colour.setAlpha(BackgroundAlpha * scale);
         }
+
+        size.y *= 0.73f;
+        size.y = std::round(size.y);
+
+        scale = cro::Util::Easing::easeOutBounce(scale);
+
+        title.getComponent<cro::Transform>().setPosition(glm::vec3(0.f, size.y / m_viewScale.y, 0.3f));
+        title.getComponent<cro::Transform>().setScale(glm::vec2(scale));
     };
 
    
     //background
-    cro::SpriteSheet spriteSheet;
-    spriteSheet.loadFromFile("assets/golf/sprites/leaderboard_browser.spt", m_resources.textures);
-
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -0.2f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("background");
     auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
-    entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, (bounds.height / 2.f) - 10.f });
+    entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, (bounds.height / 2.f) + 10.f });
     rootNode.getComponent<cro::Transform >().addChild(entity.getComponent<cro::Transform>());
     const float bgCentre = bounds.width / 2.f;
     auto bgNode = entity;
@@ -459,6 +479,16 @@ void LeaderboardState::buildScene()
 
     createFlyout(bgNode);
 
+
+    //tab sprite
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 8.f, 38.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("tabs");
+    entity.addComponent<cro::SpriteAnimation>();
+    bgNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    auto tabSprite = entity;
+
     auto& uiSystem = *m_scene.getSystem<cro::UISystem>();
 
     auto selectedID = uiSystem.addCallback(
@@ -475,9 +505,174 @@ void LeaderboardState::buildScene()
         });
     
     
+    //tab buttons
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 50.f, 45.f, 0.2f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("tab_highlight");
+    entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+    {
+        e.getComponent<cro::UIInput>().enabled = m_displayContext.boardIndex != BoardIndex::Course;
+    };
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
+    auto tabArea = bounds;
+    tabArea.left += 2.f;
+    tabArea.width -= 4.f;
+    entity.addComponent<cro::UIInput>().area = tabArea;
+    entity.getComponent<cro::UIInput>().setGroup(MenuID::Leaderboard);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectedID;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectedID;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+        uiSystem.addCallback(
+            [&, tabSprite](cro::Entity, const cro::ButtonEvent& evt) mutable
+            {
+                if (activated(evt))
+                {
+                    m_displayContext.boardIndex = BoardIndex::Course;
+                    tabSprite.getComponent<cro::SpriteAnimation>().play(BoardIndex::Course);
+                    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+                    refreshDisplay();
+                }
+            });
+    bgNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 134.f, 45.f, 0.2f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("tab_highlight");
+    entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+    {
+        e.getComponent<cro::UIInput>().enabled = m_displayContext.boardIndex != BoardIndex::Hio;
+    };
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
+    entity.addComponent<cro::UIInput>().area = tabArea;
+    entity.getComponent<cro::UIInput>().setGroup(MenuID::Leaderboard);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectedID;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectedID;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+        uiSystem.addCallback(
+            [&, tabSprite](cro::Entity, const cro::ButtonEvent& evt) mutable
+            {
+                if (activated(evt))
+                {
+                    m_displayContext.boardIndex = BoardIndex::Hio;
+                    tabSprite.getComponent<cro::SpriteAnimation>().play(BoardIndex::Hio);
+                    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+                    refreshDisplay();
+                }
+            });
+    bgNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 218.f, 45.f, 0.2f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("tab_highlight");
+    entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+    {
+        e.getComponent<cro::UIInput>().enabled = m_displayContext.boardIndex != BoardIndex::Rank;
+    };
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
+    entity.addComponent<cro::UIInput>().area = tabArea;
+    entity.getComponent<cro::UIInput>().setGroup(MenuID::Leaderboard);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectedID;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectedID;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+        uiSystem.addCallback(
+            [&, tabSprite](cro::Entity, const cro::ButtonEvent& evt) mutable
+            {
+                if (activated(evt))
+                {
+                    m_displayContext.boardIndex = BoardIndex::Rank;
+                    tabSprite.getComponent<cro::SpriteAnimation>().play(BoardIndex::Rank);
+                    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+                    refreshDisplay();
+                }
+            });
+    bgNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 302.f, 45.f, 0.2f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("tab_highlight");
+    entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+    {
+        e.getComponent<cro::UIInput>().enabled = m_displayContext.boardIndex != BoardIndex::Streak;
+    };
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
+    entity.addComponent<cro::UIInput>().area = tabArea;
+    entity.getComponent<cro::UIInput>().setGroup(MenuID::Leaderboard);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectedID;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectedID;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+        uiSystem.addCallback(
+            [&, tabSprite](cro::Entity, const cro::ButtonEvent& evt) mutable
+            {
+                if (activated(evt))
+                {
+                    m_displayContext.boardIndex = BoardIndex::Streak;
+                    tabSprite.getComponent<cro::SpriteAnimation>().play(BoardIndex::Streak);
+                    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+                    refreshDisplay();
+                }
+            });
+    bgNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+
+    //button to enable nearest scores / refresh
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 365.f, 102.f, 0.1f });
+    entity.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("checkbox_centre");
+    bgNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    auto innerEnt = entity;
+
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 363.f, 100.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("checkbox_highlight");
+    entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.addComponent<cro::UIInput>().area = bounds;
+    entity.getComponent<cro::UIInput>().setGroup(MenuID::Leaderboard);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectedID;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectedID;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+        uiSystem.addCallback([&, innerEnt](cro::Entity, const cro::ButtonEvent& evt) mutable
+            {
+                if (activated(evt))
+                {
+                    m_displayContext.showNearest = !m_displayContext.showNearest;
+                    float scale = m_displayContext.showNearest ? 1.f : 0.f;
+                    innerEnt.getComponent<cro::Transform>().setScale(glm::vec2(scale));
+                    refreshDisplay();
+                }
+            });
+    bgNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+
     //button to set hole count index / refresh
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 424.f, 107.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 424.f, 91.f, 0.1f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(font).setString("All Holes");
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
@@ -487,14 +682,14 @@ void LeaderboardState::buildScene()
     m_displayContext.holeText = entity;
 
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 423.f, 94.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 423.f, 87.f, 0.1f });
     entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("flyout_highlight");
     entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
     entity.addComponent<cro::Callback>().function = HighlightAnimationCallback();
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
-    entity.getComponent<cro::Transform>().setOrigin({ std::floor(bounds.width / 2.f), 0.f });
+    entity.getComponent<cro::Transform>().setOrigin({ std::floor(bounds.width / 2.f), bounds.height / 2.f });
     entity.addComponent<cro::UIInput>().setGroup(MenuID::Leaderboard);
     bounds.bottom += 4.f;
     bounds.height -= 8.f;
@@ -522,7 +717,7 @@ void LeaderboardState::buildScene()
 
     //button to set month index / refresh
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 424.f, 87.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 424.f, 70.f, 0.1f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(font).setString(PageNames[0]);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
@@ -532,14 +727,14 @@ void LeaderboardState::buildScene()
     m_displayContext.monthText = entity;
 
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 423.f, 74.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 423.f, 66.f, 0.1f });
     entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("flyout_highlight");
     entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
     entity.addComponent<cro::Callback>().function = HighlightAnimationCallback();
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
-    entity.getComponent<cro::Transform>().setOrigin({ std::floor(bounds.width / 2.f), 0.f });
+    entity.getComponent<cro::Transform>().setOrigin({ std::floor(bounds.width / 2.f), bounds.height / 2.f });
     entity.addComponent<cro::UIInput>().setGroup(MenuID::Leaderboard);
     bounds.bottom += 4.f;
     bounds.height -= 8.f;
@@ -566,38 +761,31 @@ void LeaderboardState::buildScene()
 
 
 
-
-
-    //button to enable nearest scores / refresh
+    //close button
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 365.f ,65.f, 0.1f });
-    entity.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+    entity.addComponent<cro::Transform>().setPosition({ 423.f, 45.f, 0.1f });
+    entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("checkbox_centre");
-    bgNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-    auto innerEnt = entity;
-
-    entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 363.f ,63.f, 0.1f });
-    entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("checkbox_highlight");
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("flyout_highlight");
+    entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+    entity.addComponent<cro::Callback>().function = HighlightAnimationCallback();
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
-    entity.addComponent<cro::UIInput>().area = bounds;
-    entity.getComponent<cro::UIInput>().setGroup(MenuID::Leaderboard);
+    entity.addComponent<cro::UIInput>().setGroup(MenuID::Leaderboard);
+    entity.getComponent<cro::UIInput>().area = bounds;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectedID;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectedID;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
-        uiSystem.addCallback([&, innerEnt](cro::Entity, const cro::ButtonEvent& evt) mutable
+        uiSystem.addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
             {
                 if (activated(evt))
                 {
-                    m_displayContext.showNearest = !m_displayContext.showNearest;
-                    float scale = m_displayContext.showNearest ? 1.f : 0.f;
-                    innerEnt.getComponent<cro::Transform>().setScale(glm::vec2(scale));
-                    refreshDisplay();
+                    quitState();
                 }
             });
+    entity.getComponent<cro::Transform>().setOrigin({ std::floor(bounds.width / 2.f), bounds.height / 2.f });
     bgNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
 
 
     //prev button - decrement course index and selectCourse()
@@ -627,31 +815,6 @@ void LeaderboardState::buildScene()
                 }
             });
 
-    bgNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-
-    //close button
-    entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ bgCentre, 10.f, 0.1f });
-    entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
-    entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("close_highlight");
-    entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
-    entity.addComponent<cro::Callback>().function = HighlightAnimationCallback();
-    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
-    entity.addComponent<cro::UIInput>().setGroup(MenuID::Leaderboard);
-    entity.getComponent<cro::UIInput>().area = bounds;
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectedID;
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectedID;
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
-        uiSystem.addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
-            { 
-                if (activated(evt))
-                {
-                    quitState();
-                }
-            });
-
-    entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, 0.f });
     bgNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
@@ -684,6 +847,9 @@ void LeaderboardState::buildScene()
             });
 
     bgNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+
 
 
     //dummy ent for dummy menu

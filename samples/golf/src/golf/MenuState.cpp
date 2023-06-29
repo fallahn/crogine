@@ -597,6 +597,9 @@ bool MenuState::handleEvent(const cro::Event& evt)
         case SDLK_BACKSPACE:
             quitMenu();
             break;
+        case SDLK_F6:
+            m_uiScene.getActiveCamera().getComponent<cro::Camera>().active = true;
+            break;
         case SDLK_F8:
             requestStackPush(StateID::Leaderboard);
             break;
