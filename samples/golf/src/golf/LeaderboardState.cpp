@@ -451,7 +451,7 @@ void LeaderboardState::buildScene()
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(font).setString("No Personal Score");
     entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
-    entity.getComponent<cro::Text>().setFillColour(LeaderboardTextDark);
+    entity.getComponent<cro::Text>().setFillColour(TextHighlightColour);
     centreText(entity);
     bgNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     m_displayContext.personalBest = entity;
@@ -535,6 +535,7 @@ void LeaderboardState::buildScene()
                     m_displayContext.boardIndex = BoardIndex::Course;
                     tabSprite.getComponent<cro::SpriteAnimation>().play(BoardIndex::Course);
                     m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+                    Social::refreshHallOfFame(m_courseStrings[m_displayContext.courseIndex].first);
                     refreshDisplay();
                 }
             });
@@ -566,6 +567,7 @@ void LeaderboardState::buildScene()
                     m_displayContext.boardIndex = BoardIndex::Hio;
                     tabSprite.getComponent<cro::SpriteAnimation>().play(BoardIndex::Hio);
                     m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+                    Social::refreshGlobalBoard(0);
                     refreshDisplay();
                 }
             });
@@ -598,6 +600,7 @@ void LeaderboardState::buildScene()
                     m_displayContext.boardIndex = BoardIndex::Rank;
                     tabSprite.getComponent<cro::SpriteAnimation>().play(BoardIndex::Rank);
                     m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+                    Social::refreshGlobalBoard(1);
                     refreshDisplay();
                 }
             });
@@ -629,6 +632,7 @@ void LeaderboardState::buildScene()
                     m_displayContext.boardIndex = BoardIndex::Streak;
                     tabSprite.getComponent<cro::SpriteAnimation>().play(BoardIndex::Streak);
                     m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+                    Social::refreshGlobalBoard(2);
                     refreshDisplay();
                 }
             });
@@ -1019,6 +1023,44 @@ void LeaderboardState::createFlyout(cro::Entity parent)
 
 void LeaderboardState::refreshDisplay()
 {
+    const auto refreshGlobalBoard = [&]()
+    {
+        const auto& entry = Social::getGlobalBoard(m_displayContext.boardIndex - 1);
+
+        if (entry.hasData)
+        {
+            if (m_displayContext.showNearest)
+            {
+                if (entry.nearestTen.empty())
+                {
+                    m_displayContext.leaderboardText.getComponent<cro::Text>().setString("No Score Entered");
+                }
+                else
+                {
+                    m_displayContext.leaderboardText.getComponent<cro::Text>().setString(entry.nearestTen);
+                }
+            }
+            else
+            {
+                if (entry.topTen.empty())
+                {
+                    m_displayContext.leaderboardText.getComponent<cro::Text>().setString("Waiting...");
+                }
+                else
+                {
+                    m_displayContext.leaderboardText.getComponent<cro::Text>().setString(entry.topTen);
+                }
+            }
+            m_displayContext.personalBest.getComponent<cro::Text>().setString(entry.personalBest);
+            centreText(m_displayContext.personalBest);
+        }
+        else
+        {
+            m_displayContext.personalBest.getComponent<cro::Text>().setString(" ");
+            m_displayContext.leaderboardText.getComponent<cro::Text>().setString("Waiting...");
+        }
+    };
+
     switch (m_displayContext.boardIndex)
     {
     default:
@@ -1075,12 +1117,15 @@ void LeaderboardState::refreshDisplay()
         break;
     case BoardIndex::Hio:
         m_displayContext.courseTitle.getComponent<cro::Text>().setString("Most Holes In One");
+        refreshGlobalBoard();
         break;
     case BoardIndex::Rank:
         m_displayContext.courseTitle.getComponent<cro::Text>().setString("Highest Ranked Players");
+        refreshGlobalBoard();
         break;
     case BoardIndex::Streak:
         m_displayContext.courseTitle.getComponent<cro::Text>().setString("Longest Daily Streak");
+        refreshGlobalBoard();
         break;
 
     }

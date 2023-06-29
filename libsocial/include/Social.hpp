@@ -150,7 +150,9 @@ public:
     static inline const std::string WebURL = "https://fallahn.itch.io/super-video-golf";
     static void updateHallOfFame() {}
     static void refreshHallOfFame(const std::string&) {}
-    static const HallEntry& getHallOfFame(const std::string&, std::int32_t, std::int32_t) {}
+    static HallEntry getHallOfFame(const std::string&, std::int32_t, std::int32_t) { return {}; }
+    static void refreshGlobalBoard(std::int32_t) {}
+    static HallEntry getGlobalBoard(std::int32_t) { return {}; }
 
     enum class UnlockType
     {
