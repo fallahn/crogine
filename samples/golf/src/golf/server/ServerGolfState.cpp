@@ -666,6 +666,18 @@ void GolfState::setNextPlayer(bool newHole)
     else
     {
         //go to next player
+
+        //if we're on a putting course and this is the player's first turn
+        //offset them from the tee a little
+        //TODO WHHHYYYY does this add a vertical offset to the camera??
+        /*if (m_scene.getSystem<BallSystem>()->getPuttFromTee()
+            && m_playerInfo[0].holeScore[m_currentHole] == 0)
+        {
+            m_playerInfo[0].position += randomOffset3();
+            m_playerInfo[0].ballEntity.getComponent<cro::Transform>().setPosition(m_playerInfo[0].position);
+            LogI << "added offset" << std::endl;
+        }*/
+
         ActivePlayer player = m_playerInfo[0]; //deliberate slice.
         m_sharedData.host.broadcastPacket(PacketID::SetPlayer, player, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
         m_sharedData.host.broadcastPacket(PacketID::ActorAnimation, std::uint8_t(AnimationID::Idle), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
@@ -725,19 +737,13 @@ void GolfState::setNextHole()
         std::uint16_t newHole = (m_currentHole << 8) | std::uint8_t(m_holeData[m_currentHole].par);
         m_sharedData.host.broadcastPacket(PacketID::SetHole, newHole, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
 
-        std::vector<glm::vec3> offsets(m_playerInfo.size());
-        for (auto& v : offsets)
-        {
-            v = randomOffset3();
-        }
-
         //create an ent which waits for all clients to load the next hole
         //which include playing the transition animation.
         auto entity = m_scene.createEntity();
         entity.addComponent<cro::Transform>();
         entity.addComponent<cro::Callback>().active = true;
         entity.getComponent<cro::Callback>().function =
-            [&, ballSystem, offsets](cro::Entity e, float dt)
+            [&, ballSystem](cro::Entity e, float dt)
         {
             if (m_allMapsLoaded)
             {
@@ -759,7 +765,7 @@ void GolfState::setNextHole()
                 {
 
                     auto& player = m_playerInfo[i];
-                    player.position = m_holeData[m_currentHole].tee + offsets[i];
+                    player.position = m_holeData[m_currentHole].tee;
                     player.distanceToHole = glm::length(player.position - m_holeData[m_currentHole].pin);
                     player.terrain = ballSystem->getTerrain(player.position).terrain;
 
@@ -1017,7 +1023,7 @@ void GolfState::initScene()
                 auto& player = m_playerInfo.emplace_back();
                 player.client = i;
                 player.player = j;
-                player.position = m_holeData[0].tee + randomOffset3();
+                player.position = m_holeData[0].tee;
                 player.distanceToHole = glm::length(m_holeData[0].tee - m_holeData[0].pin);
             }
         }

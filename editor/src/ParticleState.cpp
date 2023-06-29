@@ -41,8 +41,10 @@ source distribution.
 #include <crogine/ecs/components/Camera.hpp>
 #include <crogine/ecs/components/Model.hpp>
 #include <crogine/ecs/components/ParticleEmitter.hpp>
+#include <crogine/ecs/components/Callback.hpp>
 
 #include <crogine/ecs/systems/CameraSystem.hpp>
+#include <crogine/ecs/systems/CallbackSystem.hpp>
 #include <crogine/ecs/systems/ParticleSystem.hpp>
 #include <crogine/ecs/systems/ModelRenderer.hpp>
 #include <crogine/ecs/systems/SkeletalAnimator.hpp>
@@ -305,8 +307,9 @@ void ParticleState::addSystems()
 {
     auto& mb = getContext().appInstance.getMessageBus();
 
-    m_scene.addSystem<cro::CameraSystem>(mb);
+    m_scene.addSystem<cro::CallbackSystem>(mb);
     m_scene.addSystem<cro::SkeletalAnimator>(mb);
+    m_scene.addSystem<cro::CameraSystem>(mb);
     m_scene.addSystem<cro::ShadowMapRenderer>(mb);
     m_scene.addSystem<cro::ModelRenderer>(mb);
     m_scene.addSystem<cro::ParticleSystem>(mb);
@@ -351,6 +354,13 @@ void ParticleState::setupScene()
     m_cameras[CameraID::ThreeDee].emitter = m_scene.createEntity();
     m_cameras[CameraID::ThreeDee].emitter.addComponent<cro::Transform>();
     m_cameras[CameraID::ThreeDee].emitter.addComponent<cro::ParticleEmitter>();
+
+    /*m_cameras[CameraID::ThreeDee].emitter.addComponent<cro::Callback>().active = true;
+    m_cameras[CameraID::ThreeDee].emitter.getComponent<cro::Callback>().function = 
+        [](cro::Entity e, float dt)
+    {
+        e.getComponent<cro::Transform>().rotate(cro::Transform::Z_AXIS, dt);
+    };*/
 
     m_entities[EntityID::ArcBall] = m_scene.createEntity();
     m_entities[EntityID::ArcBall].addComponent<cro::Transform>().setPosition(DefaultArcballPosition);
