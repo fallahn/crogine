@@ -828,6 +828,11 @@ void MenuState::handleMessage(const cro::Message& msg)
                     };
                 }
             }
+            /*else
+            {
+                m_uiScene.getActiveCamera().getComponent<cro::Camera>().isStatic = false;
+                m_uiScene.getActiveCamera().getComponent<cro::Camera>().active = true;
+            }*/
         }
     }
 #ifdef USE_GNS

@@ -263,6 +263,9 @@ void GolfState::handleMessage(const cro::Message& msg)
         case TriggerID::Boat:
             sendAchievement(AchievementID::ISeeNoShips);
             break;
+        case TriggerID::TennisCourt:
+            LogI << "Deuce!" << std::endl;
+            break;
         }
     }
 

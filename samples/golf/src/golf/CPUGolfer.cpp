@@ -103,9 +103,9 @@ mistake odds
 const std::array<CPUGolfer::SkillContext, 6> CPUGolfer::m_skills =
 {
     CPUGolfer::SkillContext(CPUGolfer::Skill::Amateur, 0.f, 0.f, 4, 0),
-    {CPUGolfer::Skill::Dynamic, 6.f, 0.12f, 6, 6},
-    {CPUGolfer::Skill::Dynamic, 5.f, 0.12f, 5, 6},
-    {CPUGolfer::Skill::Dynamic, 3.f, 0.9f, 4, 10},
+    {CPUGolfer::Skill::Dynamic, 3.2f, 0.12f, 4, 6},
+    {CPUGolfer::Skill::Dynamic, 3.f, 0.12f, 4, 6},
+    {CPUGolfer::Skill::Dynamic, 2.8f, 0.1f, 3, 10},
     {CPUGolfer::Skill::Dynamic, 2.2f, 0.06f, 2, 14},
     {CPUGolfer::Skill::Dynamic, 1.f, 0.06f, 0, 50}
 };

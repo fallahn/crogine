@@ -3394,6 +3394,12 @@ void MenuState::createPreviousScoreCard()
     bounds = m_lobbyWindowEntities[LobbyEntityID::Background].getComponent<cro::Sprite>().getTextureBounds();
     entity.getComponent<cro::Transform>().setPosition({ bounds.width / 2.f, OffscreenPos, 1.7f });
 
+    //entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement;
+    //entity.addComponent<UIElement>().relativePosition = { 0.5f, -0.5f };
+    //entity.getComponent<UIElement>().absolutePosition = { 0.f, 10.f };
+    //entity.getComponent<UIElement>().depth = 1.7f;
+
+
     const float targetPos = bounds.height / 2.f;
     entity.addComponent<cro::Callback>().setUserData<ScorecardCallbackData>();
     entity.getComponent<cro::Callback>().function =
@@ -3418,6 +3424,7 @@ void MenuState::createPreviousScoreCard()
                     dest = MenuID::Dummy;
                 }
                 e.getComponent<cro::Callback>().active = false;
+                //e.getComponent<UIElement>().relativePosition = { 0.5f, -0.5f };
             }
         }
         else
@@ -3430,6 +3437,8 @@ void MenuState::createPreviousScoreCard()
                 m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Scorecard);
                 dest = MenuID::Lobby;
                 e.getComponent<cro::Callback>().active = false;
+
+                //e.getComponent<UIElement>().relativePosition = { 0.5f, 0.5f };
             }
         }
         m_uiScene.getActiveCamera().getComponent<cro::Camera>().active = true;

@@ -6069,7 +6069,9 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo)
                 e.getComponent<cro::Transform>().move({ 0.f, diff, 0.f });
 
                 //and orientate to slope
-                e.getComponent<cro::Transform>().setRotation(glm::rotation(cro::Transform::Y_AXIS, result.normal));
+                auto r = glm::rotation(cro::Transform::Y_AXIS, result.normal);
+                e.getComponent<cro::Transform>().setRotation(r);
+                e.getComponent<cro::Transform>().rotate(glm::inverse(r) * cro::Transform::Y_AXIS, cro::Util::Const::PI);
             };
             m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
         }
