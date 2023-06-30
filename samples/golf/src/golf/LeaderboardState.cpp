@@ -878,8 +878,39 @@ void LeaderboardState::buildScene()
     bgNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
+    //scrolling text
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 100.f, 0.f, 0.f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(font).setString(Social::getTickerMessage());
+    entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    bounds = cro::Text::getLocalBounds(entity);
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&, bounds, bgCentre](cro::Entity e, float dt)
+    {
+        auto pos = e.getComponent<cro::Transform>().getPosition();
+        const auto bgWidth = bgCentre * 2.f;
+
+        pos.x -= 20.f * dt;
+        pos.y = 23.f;
+        pos.z = 0.3f;
+
+        static constexpr float Offset = 10.f;
+        if (pos.x < -bounds.width + Offset)
+        {
+            pos.x = bgWidth;
+            pos.x -= Offset;
+        }
+
+        e.getComponent<cro::Transform>().setPosition(pos);
 
 
+        cro::FloatRect cropping = { -pos.x + Offset, -16.f, bgWidth - (Offset * 2.f), 18.f };
+        e.getComponent<cro::Drawable2D>().setCroppingArea(cropping);
+    };
+    bgNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     //dummy ent for dummy menu
     entity = m_scene.createEntity();

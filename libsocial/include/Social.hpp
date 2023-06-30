@@ -153,6 +153,7 @@ public:
     static HallEntry getHallOfFame(const std::string&, std::int32_t, std::int32_t) { return {}; }
     static void refreshGlobalBoard(std::int32_t) {}
     static HallEntry getGlobalBoard(std::int32_t) { return {}; }
+    static cro::String getTickerMessage() { return {}; }
 
     enum class UnlockType
     {

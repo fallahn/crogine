@@ -601,7 +601,7 @@ bool MenuState::handleEvent(const cro::Event& evt)
             m_uiScene.getActiveCamera().getComponent<cro::Camera>().active = true;
             break;
         case SDLK_F8:
-            requestStackPush(StateID::Leaderboard);
+            //requestStackPush(StateID::Leaderboard);
             break;
         }
     }
