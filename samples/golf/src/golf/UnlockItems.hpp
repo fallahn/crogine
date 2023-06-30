@@ -75,6 +75,9 @@ namespace ul
             Streak06,
             Streak07,
 
+            GolfBag01,
+            GolfBag02,
+
             Count
         };
     };
@@ -102,6 +105,8 @@ namespace ul
         std::string("assets/golf/models/trophies/streak05.cmt"),
         std::string("assets/golf/models/trophies/streak06.cmt"),
         std::string("assets/golf/models/trophies/streak07.cmt"),
+        std::string("assets/golf/models/golfbag01.cmt"),
+        std::string("assets/golf/models/golfbag02.cmt"),
     };
 
     //these MUST be in the correct order for unlocking
@@ -166,8 +171,8 @@ namespace ul
         { ModelID::LevelBadge40,  "Level Forty",   "New Level Badge!" },
         { ModelID::LevelBadge50,  "Level Fifty",   "New Level Badge!" },
 
-        { ModelID::Padlock,  "Skill Up!",   "Club Range Extended" },
-        { ModelID::Padlock,  "Skill Up!",   "Club Range Extended" },
+        { ModelID::GolfBag01,  "Expert Clubs Available!",   "Club Range Extended" },
+        { ModelID::GolfBag02,  "Pro Clubs Available!",   "Club Range Extended" },
         { ModelID::Padlock,  "Socialiser",  "Clubhouse Unlocked" },
         { ModelID::Padlock,  "Designer",    "Course Editor Unlocked" },
 

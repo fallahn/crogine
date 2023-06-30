@@ -2444,10 +2444,6 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
             str += " >";
         }
     }
-    //else
-    //{
-    //    str = "Welcome To Super Video Golf!";
-    //}
 
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 100.f, 0.f, 0.f });
@@ -2674,6 +2670,11 @@ void MenuState::quitLobby()
     m_menuEntities[m_currentMenu].getComponent<cro::Callback>().getUserData<MenuData>().targetMenu = MenuID::Main;
     m_menuEntities[m_currentMenu].getComponent<cro::Callback>().active = true;
 
+
+    //reset the lobby tabs
+    m_lobbyWindowEntities[LobbyEntityID::HoleSelection].getComponent<cro::Transform>().setScale({ 1.f, 1.f });
+    m_lobbyWindowEntities[LobbyEntityID::Info].getComponent<cro::Transform>().setScale({ 0.f, 0.f });
+    
 
     //delete the course selection entities as they'll be re-created as needed
     cro::Command cmd;
