@@ -218,19 +218,55 @@ void CPUGolfer::activate(glm::vec3 target, glm::vec3 fallback, bool puttFromTee)
 
 
         //check the pin target isn't around a corner on putting course
-        if (m_puttFromTee
-            && m_baseTarget != m_fallbackTarget)
+        //TODO we need to actually ASSERT this is the pin and not the fallback
+        if (m_puttFromTee)
         {
-            auto fwd = m_baseTarget - m_activePlayer.position;
-            auto alt = m_fallbackTarget - m_activePlayer.position;
-            if (glm::dot(alt, fwd) > 0
-                && glm::dot(glm::normalize(alt), glm::normalize(fwd)) < 0.97f)
+            //add some offset to the fallback target to stop
+            //players all aiming for exactly the same point
+            glm::vec3 dir(0.f);
+            switch (/*cro::Util::Random::value(0, 3)*/m_activePlayer.player % 4)
             {
-                if (glm::length2(alt) > 9.f)
+            default:
+            case 0:
+                dir = glm::normalize(target - fallback);
+                dir = glm::vec3(-dir.z, dir.y, dir.x);
+                break;
+            case 1:
+                dir = glm::normalize(target - fallback);
+                dir = glm::vec3(dir.z, dir.y, -dir.x);
+                break;
+            case 2:
+                //perpendicular
+                dir = glm::normalize(m_activePlayer.position - fallback);
+                dir = glm::vec3(-dir.z, dir.y, dir.x);
+                break;
+            case 3:
+                dir = glm::normalize(m_activePlayer.position - fallback);
+                dir = glm::vec3(dir.z, dir.y, -dir.x);
+                break;
+            }
+            float amount = static_cast<float>(cro::Util::Random::value(5 + (m_activePlayer.player % 4), 35) + (m_activePlayer.player % 3)) / 100.f;
+            m_fallbackTarget += dir * amount;
+
+            if (target != fallback)
+            {
+                auto fwd = m_baseTarget - m_activePlayer.position;
+                auto alt = m_fallbackTarget - m_activePlayer.position;
+                if (glm::dot(alt, fwd) > 0
+                    && glm::dot(glm::normalize(alt), glm::normalize(fwd)) < 0.97f)
                 {
-                    m_target = m_baseTarget = m_fallbackTarget;
-                    //LogI << "switched to fallback, pin around corner (activate)" << std::endl;
+                    if (glm::length2(alt) > 9.f
+                        && glm::length2(alt / 2.f) < glm::length2(fwd))
+                    {
+                        m_target = m_baseTarget = m_fallbackTarget;
+                        //LogI << "switched to fallback, pin around corner (activate)" << std::endl;
+                    }
                 }
+            }
+            else
+            {
+                //apply the updated fallback
+                m_target = m_baseTarget = m_fallbackTarget;
             }
         }
 
