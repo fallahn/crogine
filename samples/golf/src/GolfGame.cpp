@@ -886,6 +886,10 @@ void GolfGame::loadPreferences()
                 {
                     m_sharedData.fastCPU = prop.getValue<bool>();
                 }
+                else if (name == "clubset")
+                {
+                    m_sharedData.clubSet = std::clamp(prop.getValue<std::int32_t>(), 0, 2);
+                }
             }
         }
     }
@@ -972,6 +976,7 @@ void GolfGame::savePreferences()
     cfg.addProperty("use_trail").setValue(m_sharedData.showBallTrail);
     cfg.addProperty("use_beacon_colour").setValue(m_sharedData.trailBeaconColour);
     cfg.addProperty("fast_cpu").setValue(m_sharedData.fastCPU);
+    cfg.addProperty("clubset").setValue(m_sharedData.clubSet);
     cfg.save(path);
 
 

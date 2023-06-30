@@ -6685,7 +6685,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
 
 
     m_currentPlayer = player;
-    Club::setClubLevel(isCPU ? m_cpuGolfer.getClubLevel() : Social::getClubLevel());//TODO use the selected club range from options
+    Club::setClubLevel(isCPU ? m_cpuGolfer.getClubLevel() : /*Social::getClubLevel()*/m_sharedData.clubSet);
 
     //announce player has changed
     auto* msg2 = getContext().appInstance.getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
