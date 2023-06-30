@@ -2359,88 +2359,95 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     };
 
     std::vector<ScoreInfo> scoreInfo;
+    cro::String str = "Welcome To Super Video Golf!";
 
-    for (auto i = 0u; i < m_sharedData.connectionData.size(); ++i)
+    //only tally scores if we returned from a previous game
+    //rather than quitting one, or completing the tutorial
+    if (m_sharedData.clientConnection.connected)
     {
-        for (auto j = 0u; j < m_sharedData.connectionData[i].playerCount; ++j)
+        for (auto i = 0u; i < m_sharedData.connectionData.size(); ++i)
         {
-
-            if (!m_sharedData.connectionData[i].playerData[j].name.empty())
+            for (auto j = 0u; j < m_sharedData.connectionData[i].playerCount; ++j)
             {
-                auto& info = scoreInfo.emplace_back();
-                info.clientID = i;
-                info.playerID = j;
-                switch (m_sharedData.scoreType)
+
+                if (!m_sharedData.connectionData[i].playerData[j].name.empty())
                 {
-                default:
-                case ScoreType::Stroke:
-                    info.score = m_sharedData.connectionData[i].playerData[j].parScore;
-                    break;
-                case ScoreType::Match:
-                    info.score = m_sharedData.connectionData[i].playerData[j].matchScore;
-                    break;
-                case ScoreType::Skins:
-                    info.score = m_sharedData.connectionData[i].playerData[j].skinScore;
-                    break;
+                    auto& info = scoreInfo.emplace_back();
+                    info.clientID = i;
+                    info.playerID = j;
+                    switch (m_sharedData.scoreType)
+                    {
+                    default:
+                    case ScoreType::Stroke:
+                        info.score = m_sharedData.connectionData[i].playerData[j].parScore;
+                        break;
+                    case ScoreType::Match:
+                        info.score = m_sharedData.connectionData[i].playerData[j].matchScore;
+                        break;
+                    case ScoreType::Skins:
+                        info.score = m_sharedData.connectionData[i].playerData[j].skinScore;
+                        break;
+                    }
                 }
             }
         }
-    }
 
-    std::sort(scoreInfo.begin(), scoreInfo.end(), 
-        [&](const ScoreInfo& a, const ScoreInfo& b)
-        {
-            if (m_sharedData.scoreType == ScoreType::Stroke)
+        std::sort(scoreInfo.begin(), scoreInfo.end(),
+            [&](const ScoreInfo& a, const ScoreInfo& b)
             {
-                return a.score < b.score;
-            }
-            else
-            {
-                return a.score > b.score;
-            }
-        });
+                if (m_sharedData.scoreType == ScoreType::Stroke)
+                {
+                    return a.score < b.score;
+                }
+                else
+                {
+                    return a.score > b.score;
+                }
+            });
 
-    std::vector<cro::String> names;
-    for (const auto& score : scoreInfo)
-    {
-        names.push_back(m_sharedData.connectionData[score.clientID].playerData[score.playerID].name);
-        names.back() += ": (" + std::to_string(score.score) + ")";
-        switch (m_sharedData.scoreType)
+
+        std::vector<cro::String> names;
+        for (const auto& score : scoreInfo)
         {
-        default:
-        case ScoreType::Stroke:
-            if (score.score < 0)
+            names.push_back(m_sharedData.connectionData[score.clientID].playerData[score.playerID].name);
+            names.back() += ": (" + std::to_string(score.score) + ")";
+            switch (m_sharedData.scoreType)
             {
-                names.back() += " Under Par";
+            default:
+            case ScoreType::Stroke:
+                if (score.score < 0)
+                {
+                    names.back() += " Under Par";
+                }
+                else if (score.score > 0)
+                {
+                    names.back() += " Over Par";
+                }
+                break;
+            case ScoreType::Skins:
+                names.back() += " Skins";
+                break;
+            case ScoreType::Match:
+                names.back() += " Match Points";
+                break;
             }
-            else if (score.score > 0)
+        }
+
+        cro::String str;
+        if (!names.empty())
+        {
+            str = "Last Round's Top Scorers: < " + names[0];
+            for (auto i = 1u; i < names.size() && i < 4u; ++i)
             {
-                names.back() += " Over Par";
+                str += " >< " + names[i];
             }
-            break;
-        case ScoreType::Skins:
-            names.back() += " Skins";
-            break;
-        case ScoreType::Match:
-            names.back() += " Match Points";
-            break;
+            str += " >";
         }
     }
-
-    cro::String str;
-    if (!names.empty())
-    {
-        str = "Last Round's Top Scorers: < " + names[0];
-        for (auto i = 1u; i < names.size() && i < 4u; ++i)
-        {
-            str += " >< " + names[i];
-        }
-        str += " >";
-    }
-    else
-    {
-        str = "Welcome To Super Video Golf!";
-    }
+    //else
+    //{
+    //    str = "Welcome To Super Video Golf!";
+    //}
 
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 100.f, 0.f, 0.f });
