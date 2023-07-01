@@ -3823,7 +3823,12 @@ void MenuState::createPreviousScoreCard()
         case ScoreType::Stroke:
         {
             auto pTotal = entry.totalFront - parTotalFront;
-            str += " (" + std::to_string(pTotal) + ")";
+            str += " (";
+            if (pTotal > 0)
+            {
+                str += "+";
+            }
+            str += std::to_string(pTotal) + ")";
         }
             break;
         case ScoreType::Match:
@@ -3846,7 +3851,7 @@ void MenuState::createPreviousScoreCard()
         str += "\n\nTotal\n" + std::to_string(parTotalBack) + " (" + std::to_string(parTotal) + ")";
         for (const auto& entry : scoreEntries)
         {
-            str += "\n" + std::to_string(entry.totalBack);// +" (" + std::to_string(entry.total) + ")";
+            str += "\n" + std::to_string(entry.totalBack);
 
             switch (m_sharedData.scoreType)
             {
@@ -3854,7 +3859,12 @@ void MenuState::createPreviousScoreCard()
             case ScoreType::Stroke:
             {
                 auto pTotal = entry.total - parTotal;
-                str += " (" + std::to_string(pTotal) + ")";
+                str += " (";
+                if (pTotal > 0)
+                {
+                    str += "+";
+                }
+                str += std::to_string(pTotal) + ")";
             }
                 break;
             case ScoreType::Match:

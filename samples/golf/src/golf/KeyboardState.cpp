@@ -270,7 +270,7 @@ void KeyboardState::buildScene()
     m_scene.addSystem<cro::RenderSystem2D>(mb);
     m_scene.addSystem<cro::AudioPlayerSystem>(mb);
 
-    m_scene.setSystemActive<cro::UISystem>(false);
+    //m_scene.setSystemActive<cro::UISystem>(false);
 
     cro::SpriteSheet spriteSheet;
     spriteSheet.loadFromFile("assets/sprites/osk.spt", m_sharedData.sharedResources->textures);
@@ -305,7 +305,7 @@ void KeyboardState::buildScene()
                 e.getComponent<cro::Transform>().setOrigin(pos);
                 m_highlightEntity.getComponent<cro::Sprite>().setColour(cro::Colour::White);
 
-                m_scene.setSystemActive<cro::UISystem>(true);
+                //m_scene.setSystemActive<cro::UISystem>(true);
             }
         }
             break;

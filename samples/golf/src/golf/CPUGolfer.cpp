@@ -188,10 +188,10 @@ void CPUGolfer::handleMessage(const cro::Message& msg)
     case MessageID::GolfMessage:
     {
         const auto& data = msg.getData<GolfEvent>();
-        if (data.type == GolfEvent::BallLanded)
+        if (data.type == GolfEvent::BallLanded
+            || data.type == GolfEvent::Gimme)
         {
             m_state = State::Inactive;
-            //LOG("CPU is now inactive", cro::Logger::Type::Info);
 
             if (data.terrain == TerrainID::Scrub
                 || data.terrain == TerrainID::Water)
@@ -1397,7 +1397,6 @@ void CPUGolfer::stroke(float dt)
                     {
                         sendKeystroke(m_inputParser.getInputBinding().keys[InputBinding::Action]);
                         m_state = State::Watching;
-
                         return;
                     }
                     m_prevAccuracy = accuracy;
