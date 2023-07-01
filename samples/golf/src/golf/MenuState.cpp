@@ -486,14 +486,31 @@ bool MenuState::handleEvent(const cro::Event& evt)
             m_menuEntities[m_currentMenu].getComponent<cro::Callback>().active = true;
             break;
         case MenuID::Lobby:
-            enterConfirmCallback();
+            //TODO the active menu might be a sub-group of the lobby
+            //however m_currentMenu is still set tl Lobby as this is
+            //used by the window resize callback (which I can't find
+            //any more...) so we have to test for the actual active menu
+            switch (m_uiScene.getSystem<cro::UISystem>()->getActiveGroup())
+            {
+            default:
+            case MenuID::Lobby:
+                enterConfirmCallback();
+                break;
+            case MenuID::ConfirmQuit:
+                quitConfirmCallback();
+                break;
+            case MenuID::Scorecard:
+            case MenuID::Dummy:
+                togglePreviousScoreCard();
+                break;
+            }
             break;
-        case MenuID::ConfirmQuit:
+        /*case MenuID::ConfirmQuit:
             quitConfirmCallback();
-            break;
+            break;*/
         case MenuID::Dummy:
             //this does nothing if the scorecard is not visible
-            togglePreviousScoreCard();
+            //togglePreviousScoreCard();
             break;
         }
     };

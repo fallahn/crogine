@@ -74,6 +74,7 @@ source distribution.
 #include <crogine/util/Wavetable.hpp>
 
 #include <crogine/detail/OpenGL.hpp>
+#include <crogine/gui/Gui.hpp>
 
 #include <cstring>
 #include <iomanip>
@@ -1636,6 +1637,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
                 {
                     m_sharedData.clubSet = (m_sharedData.clubSet + 1) % (Social::getClubLevel() + 1);
                     buttonEnt.getComponent<cro::SpriteAnimation>().play(m_sharedData.clubSet);
+                    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
                 }
             });
 
@@ -2116,7 +2118,9 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
             {
                 e.getComponent<cro::Callback>().active = false;
                 m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::ConfirmQuit);
-                m_currentMenu = MenuID::ConfirmQuit;
+                //TODO this needs to be updated so the resize handler correctly
+                //accounts for this and the scorecard menu
+                m_currentMenu = MenuID::Lobby;// MenuID::ConfirmQuit;
             }
         }
         else
@@ -2414,7 +2418,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
 
     //only tally scores if we returned from a previous game
     //rather than quitting one, or completing the tutorial
-    if (m_sharedData.clientConnection.connected)
+    if (!m_sharedData.tutorial) //at this point (when the menu is built) this will be set if we're returning from a tutorial or quit menu
     {
         for (auto i = 0u; i < m_sharedData.connectionData.size(); ++i)
         {
@@ -2484,7 +2488,6 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
             }
         }
 
-        cro::String str;
         if (!names.empty())
         {
             str = "Last Round's Top Scorers: < " + names[0];
@@ -3453,11 +3456,6 @@ void MenuState::createPreviousScoreCard()
     bounds = m_lobbyWindowEntities[LobbyEntityID::Background].getComponent<cro::Sprite>().getTextureBounds();
     entity.getComponent<cro::Transform>().setPosition({ bounds.width / 2.f, OffscreenPos, 1.7f });
 
-    //entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement;
-    //entity.addComponent<UIElement>().relativePosition = { 0.5f, -0.5f };
-    //entity.getComponent<UIElement>().absolutePosition = { 0.f, 10.f };
-    //entity.getComponent<UIElement>().depth = 1.7f;
-
 
     const float targetPos = bounds.height / 2.f;
     entity.addComponent<cro::Callback>().setUserData<ScorecardCallbackData>();
@@ -3483,7 +3481,6 @@ void MenuState::createPreviousScoreCard()
                     dest = MenuID::Dummy;
                 }
                 e.getComponent<cro::Callback>().active = false;
-                //e.getComponent<UIElement>().relativePosition = { 0.5f, -0.5f };
             }
         }
         else
@@ -3496,8 +3493,7 @@ void MenuState::createPreviousScoreCard()
                 m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Scorecard);
                 dest = MenuID::Lobby;
                 e.getComponent<cro::Callback>().active = false;
-
-                //e.getComponent<UIElement>().relativePosition = { 0.5f, 0.5f };
+                m_currentMenu = MenuID::Lobby;// needs to be set to this to correctly resize the window TODO fins out where resizez is handled and include correct menu IDs in the condition...
             }
         }
         m_uiScene.getActiveCamera().getComponent<cro::Camera>().active = true;
@@ -4024,10 +4020,19 @@ void MenuState::togglePreviousScoreCard()
     {
         if (m_currentMenu == MenuID::Lobby)
         {
-            m_currentMenu = MenuID::Dummy;
-            m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Dummy);
+            if (m_uiScene.getSystem<cro::UISystem>()->getActiveGroup() == MenuID::Lobby)
+            {
+                m_currentMenu = MenuID::Dummy;
+                m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Dummy);
 
-            m_lobbyWindowEntities[LobbyEntityID::Scorecard].getComponent<cro::Callback>().getUserData<ScorecardCallbackData>().direction = 1;
+                m_lobbyWindowEntities[LobbyEntityID::Scorecard].getComponent<cro::Callback>().getUserData<ScorecardCallbackData>().direction = 1;
+            }
+            else
+            {
+                //we're already on a different menu so hide the score card
+                m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
+                m_lobbyWindowEntities[LobbyEntityID::Scorecard].getComponent<cro::Callback>().getUserData<ScorecardCallbackData>().direction = 0;
+            }
             m_lobbyWindowEntities[LobbyEntityID::Scorecard].getComponent<cro::Callback>().active = true;
         }
         else

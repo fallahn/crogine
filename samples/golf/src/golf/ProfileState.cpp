@@ -500,6 +500,8 @@ void ProfileState::loadResources()
     m_audioEnts[AudioID::Accept].addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("accept");
     m_audioEnts[AudioID::Back] = m_uiScene.createEntity();
     m_audioEnts[AudioID::Back].addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("back");
+    m_audioEnts[AudioID::Snap] = m_uiScene.createEntity();
+    m_audioEnts[AudioID::Snap].addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("snapshot");
 
     m_audioEnts[AudioID::Select] = m_uiScene.createEntity();
     m_audioEnts[AudioID::Select].addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
@@ -1045,6 +1047,7 @@ void ProfileState::buildScene()
                 if (activated(evt))
                 {
                     generateMugshot();
+                    m_audioEnts[AudioID::Snap].getComponent<cro::AudioEmitter>().play();
                 }
             });
 

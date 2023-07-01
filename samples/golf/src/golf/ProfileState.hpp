@@ -91,7 +91,7 @@ private:
     {
         enum
         {
-            Accept, Back, Select,
+            Accept, Back, Select, Snap,
 
             Count
         };
