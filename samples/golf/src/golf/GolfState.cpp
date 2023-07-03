@@ -3577,7 +3577,7 @@ void GolfState::addSystems()
 
 void GolfState::buildScene()
 {
-    Club::setClubLevel(m_sharedData.tutorial ? 0 : Social::getClubLevel());
+    Club::setClubLevel(m_sharedData.tutorial ? 0 : m_sharedData.clubSet);
 
     m_achievementTracker.noGimmeUsed = (m_sharedData.gimmeRadius != 0);
     m_achievementTracker.noHolesOverPar = (m_sharedData.scoreType == ScoreType::Stroke);
@@ -6685,7 +6685,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
 
 
     m_currentPlayer = player;
-    Club::setClubLevel(isCPU ? m_cpuGolfer.getClubLevel() : /*Social::getClubLevel()*/m_sharedData.clubSet);
+    Club::setClubLevel(isCPU ? m_cpuGolfer.getClubLevel() : m_sharedData.clubSet);
 
     //announce player has changed
     auto* msg2 = getContext().appInstance.getMessageBus().post<GolfEvent>(MessageID::GolfMessage);

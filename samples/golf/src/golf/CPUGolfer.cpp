@@ -654,7 +654,7 @@ void CPUGolfer::setCPUCount(std::int32_t cpuCount, const SharedStateData& shared
         std::int32_t baseCPUIndex = 0;
         std::int32_t stride = 1;
 
-        switch (/*Social::getClubLevel()*/sharedData.clubSet)
+        switch (Social::getClubLevel()/*sharedData.clubSet*/) //always scale to user level regardless of their chosen set
         {
         default: break;
         case 0:
