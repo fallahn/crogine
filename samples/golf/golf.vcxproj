@@ -520,6 +520,7 @@
     <ClCompile Include="src\golf\SoundEffectsDirector.cpp" />
     <ClCompile Include="src\golf\SpectatorSystem.cpp" />
     <ClCompile Include="src\golf\spooky2.cpp" />
+    <ClCompile Include="src\golf\StatsState.cpp" />
     <ClCompile Include="src\golf\StudioCameraSystem.cpp" />
     <ClCompile Include="src\golf\Swingput.cpp" />
     <ClCompile Include="src\golf\TerrainBuilder.cpp" />
@@ -638,6 +639,7 @@
     <ClInclude Include="src\golf\SpectatorAnimCallback.hpp" />
     <ClInclude Include="src\golf\SpectatorSystem.hpp" />
     <ClInclude Include="src\golf\spooky2.hpp" />
+    <ClInclude Include="src\golf\StatsState.hpp" />
     <ClInclude Include="src\golf\StudioCameraSystem.hpp" />
     <ClInclude Include="src\golf\Swingput.hpp" />
     <ClInclude Include="src\golf\Terrain.hpp" />

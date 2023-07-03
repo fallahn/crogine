@@ -1585,7 +1585,7 @@ bool GolfState::simulate(float dt)
     if (m_resolutionUpdate.targetFade != m_resolutionUpdate.resolutionData.nearFadeDistance)
     {
         float diff = m_resolutionUpdate.targetFade - m_resolutionUpdate.resolutionData.nearFadeDistance;
-        if (std::fabs(diff) > 0.001f)
+        if (std::abs(diff) > 0.0001f)
         {
             m_resolutionUpdate.resolutionData.nearFadeDistance += (diff * (dt * 1.2f));
         }
@@ -6362,7 +6362,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
 
     m_resolutionUpdate.targetFade = player.terrain == TerrainID::Green ? GreenFadeDistance : CourseFadeDistance;
 
-    updateScoreboard();
+    updateScoreboard(false);
     showScoreboard(false);
 
 
@@ -7613,7 +7613,7 @@ void GolfState::setActiveCamera(std::int32_t camID)
 
             //reset the fade distance which may have been modified by a zooming follower.
             m_resolutionUpdate.targetFade = m_currentPlayer.terrain == TerrainID::Green ? GreenFadeDistance : CourseFadeDistance;
-            m_resolutionUpdate.resolutionData.nearFadeDistance = m_resolutionUpdate.targetFade - 0.01f;
+            //m_resolutionUpdate.resolutionData.nearFadeDistance = m_resolutionUpdate.targetFade - 0.01f;
         }
         m_currentCamera = camID;
 

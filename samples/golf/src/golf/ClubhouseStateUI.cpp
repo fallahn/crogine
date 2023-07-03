@@ -2370,8 +2370,17 @@ void ClubhouseState::createStatMenu(cro::Entity parent, std::uint32_t mouseEnter
 
     //personal stats
     entity = createButton("Personal Stats");
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
+        m_uiScene.getSystem<cro::UISystem>()->addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
+            {
+                if (activated(evt))
+                {
+                    requestStackPush(StateID::Stats);
+                    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+                }
+            });
 
-    //monthly challenge - move to personal stats?
+    //TODO current monthly challenge
     
 
     //leaderboards

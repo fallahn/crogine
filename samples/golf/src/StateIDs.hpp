@@ -56,6 +56,7 @@ struct StateID final
         Unlock,
         Profile, 
         Leaderboard,
+        Stats,
 
 
         SQLite, //used for testing SQLite features

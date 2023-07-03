@@ -341,7 +341,7 @@ private:
     void createSwingMeter(cro::Entity);
     void showCountdown(std::uint8_t);
     void createScoreboard();
-    void updateScoreboard();
+    void updateScoreboard(bool updatePardiff = true);
     void logCSV() const;
     void showScoreboard(bool visible);
     void updateWindDisplay(glm::vec3);

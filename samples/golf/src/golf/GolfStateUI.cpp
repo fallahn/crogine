@@ -2140,7 +2140,7 @@ void GolfState::createScoreboard()
     updateScoreboard();
 }
 
-void GolfState::updateScoreboard()
+void GolfState::updateScoreboard(bool updateParDiff)
 {
     struct ScoreEntry final
     {
@@ -2178,12 +2178,18 @@ void GolfState::updateScoreboard()
                 auto s = client.playerData[i].holeScores[j];
                 entry.holes.push_back(s);
 
+                //this needs to ignore the current hole
+                //as the mid-point score looks confusing... however
+                //we still want to count the current number of strokes...
                 if (s)
                 {
-                    auto diff = static_cast<std::int32_t>(s) - m_holeData[j].par;
-                    entry.parDiff += diff;
+                    if (updateParDiff || j < (m_currentHole - 1))
+                    {
+                        auto diff = static_cast<std::int32_t>(s) - m_holeData[j].par;
+                        entry.parDiff += diff;
 
-                    overPar = (diff > 0);
+                        overPar = (diff > 0);
+                    }
                 }
 
                 if (j < 9)

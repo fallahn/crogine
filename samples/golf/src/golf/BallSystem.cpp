@@ -728,6 +728,10 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
                 {
                     tx.setPosition(m_holeData->target);
                 }
+                auto pos = tx.getPosition();
+                auto height = getTerrain(pos).intersection.y;
+                pos.y = height;
+                tx.setPosition(pos);
             }
             else
             {
