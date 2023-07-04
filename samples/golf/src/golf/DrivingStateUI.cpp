@@ -2442,6 +2442,9 @@ void DrivingState::showMessage(float range)
                         m_summaryScreen.bestMessage.getComponent<cro::Text>().setFillColour(c);
                     }
 
+#ifdef USE_GNS
+                    Social::insertDrivingScore(m_targetIndex, m_strokeCountIndex, totalScore);
+#endif
 
                     //reset the minimap
                     auto oldCam = m_gameScene.setActiveCamera(m_mapCam);
