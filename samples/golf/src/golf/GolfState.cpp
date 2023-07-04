@@ -384,7 +384,6 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
 
     registerDebugWindows();
 #endif
-
     registerDebugCommands();
 
     cro::App::getInstance().resetFrameTime();
@@ -1585,9 +1584,13 @@ bool GolfState::simulate(float dt)
     if (m_resolutionUpdate.targetFade != m_resolutionUpdate.resolutionData.nearFadeDistance)
     {
         float diff = m_resolutionUpdate.targetFade - m_resolutionUpdate.resolutionData.nearFadeDistance;
-        if (std::abs(diff) > 0.0001f)
+        if (diff > 0.0001f)
         {
             m_resolutionUpdate.resolutionData.nearFadeDistance += (diff * (dt * 1.2f));
+        }
+        else if (diff < 0.0001f)
+        {
+            m_resolutionUpdate.resolutionData.nearFadeDistance += (diff * (dt * 3.6f));
         }
         else
         {
@@ -6240,7 +6243,8 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo)
     }
     m_waterEnt.getComponent<cro::Model>().setMaterialProperty(0, "u_depthMap", m_depthMap.getTexture());
 
-
+    m_sharedData.minimapData.teePos = m_holeData[m_currentHole].tee;
+    m_sharedData.minimapData.pinPos = m_holeData[m_currentHole].pin;
     m_gameScene.getDirector<GolfSoundDirector>()->setCrowdPositions(m_holeData[m_currentHole].crowdPositions);
 }
 

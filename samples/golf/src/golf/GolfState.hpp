@@ -416,6 +416,7 @@ private:
 
     cro::Entity m_mapCam;
     cro::RenderTexture m_mapTexture;
+    cro::MultiRenderTexture m_mapTextureMRT; //hack to create images for map explorer
 
     void updateMiniMap();
 

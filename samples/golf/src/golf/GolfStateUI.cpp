@@ -942,6 +942,9 @@ void GolfState::buildUI()
                 m_mapTexture.clear(c);
                 m_gameScene.render();
                 m_mapTexture.display();
+                m_mapTextureMRT.clear(c);
+                m_gameScene.render();
+                m_mapTextureMRT.display();
                 m_gameScene.setActiveCamera(oldCam);
                 m_mapTexture.setBorderColour(c);
 
@@ -1155,6 +1158,8 @@ void GolfState::buildUI()
         glm::uvec2 previewSize = MapSize * 8u;
 
         m_mapTexture.create(previewSize.x, previewSize.y);
+        m_mapTextureMRT.create(previewSize.x, previewSize.y, 3);
+        m_sharedData.minimapData.mrt = &m_mapTextureMRT;
 
         mapEnt.getComponent<cro::Sprite>().setTexture(m_mapTexture.getTexture());
         mapEnt.getComponent<cro::Transform>().setOrigin({ previewSize.x / 2.f, previewSize.y / 2.f });

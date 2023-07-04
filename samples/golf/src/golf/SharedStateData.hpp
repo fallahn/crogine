@@ -46,6 +46,11 @@ source distribution.
 #include <memory>
 #include <unordered_map>
 
+namespace cro
+{
+    class MultiRenderTexture;
+}
+
 struct ConnectionData final
 {
     std::uint64_t peerID = 0;
@@ -67,6 +72,13 @@ static constexpr float MaxFOV = 90.f;
 
 struct SharedStateData final
 {
+    struct MinimapData final
+    {
+        cro::MultiRenderTexture* mrt = nullptr;
+        glm::vec3 teePos = glm::vec3(0.f);
+        glm::vec3 pinPos = glm::vec3(0.f);
+    }minimapData;
+
     Server serverInstance;
 
     struct ClientConnection final

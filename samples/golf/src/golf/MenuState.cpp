@@ -157,6 +157,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     m_viewScale             (1.f)
 {
     std::fill(m_readyState.begin(), m_readyState.end(), false);
+    sd.minimapData = {};
     
     auto size = glm::vec2(GolfGame::getActiveTarget()->getSize());
     m_viewScale = glm::vec2(getViewScale());
