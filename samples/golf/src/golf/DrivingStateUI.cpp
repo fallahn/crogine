@@ -1028,7 +1028,7 @@ score based on your overall accuracy. Good Luck!
 
     //high score text
     auto textEnt4 = m_uiScene.createEntity();
-    textEnt4.addComponent<cro::Transform>().setPosition({ bounds.width / 5.f, 63.f, 0.02f });
+    textEnt4.addComponent<cro::Transform>().setPosition({ std::floor(bounds.width / 5.f), 63.f, 0.02f });
     textEnt4.addComponent<cro::Drawable2D>();
     textEnt4.addComponent<cro::Text>(smallFont).setCharacterSize(InfoTextSize);
     textEnt4.getComponent<cro::Text>().setFillColour(TextNormalColour);
@@ -1272,7 +1272,7 @@ score based on your overall accuracy. Good Luck!
 
     //target select
     countEnt = m_uiScene.createEntity();
-    countEnt.addComponent<cro::Transform>().setPosition({ /*bounds.width - (bounds.width / 5.f)*/std::floor((bounds.width / 7.f) * 2.f), 74.f, 0.1f});
+    countEnt.addComponent<cro::Transform>().setPosition({ std::floor((bounds.width / 7.f) * 2.f), 74.f, 0.1f});
     countEnt.addComponent<cro::Drawable2D>();
     countEnt.addComponent<cro::Sprite>() = spriteSheet.getSprite("stroke_select");
     strokeBounds = spriteSheet.getSprite("stroke_select").getTextureBounds();
@@ -1354,7 +1354,7 @@ score based on your overall accuracy. Good Luck!
     if (Social::getClubLevel())
     {
         auto labelEnt = m_uiScene.createEntity();
-        labelEnt.addComponent<cro::Transform>().setPosition({ sBounds.width / 2.f, 12.f, 0.1f });
+        labelEnt.addComponent<cro::Transform>().setPosition({ std::floor(sBounds.width / 2.f), 12.f, 0.1f });
         labelEnt.addComponent<cro::Drawable2D>();
         labelEnt.addComponent<cro::Text>(smallFont).setFillColour(TextNormalColour);
         labelEnt.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
@@ -1439,7 +1439,7 @@ score based on your overall accuracy. Good Luck!
     entity.addComponent<cro::Sprite>() = leaderSheet.getSprite("board");
     auto b = entity.getComponent<cro::Sprite>().getTextureRect();
     entity.getComponent<cro::Transform>().setOrigin({ b.width / 2.f, b.height / 2.f });
-    entity.getComponent<cro::Transform>().move({ (bgBounds.width) / 2.f, b.height / 2.f });
+    entity.getComponent<cro::Transform>().move({ std::floor(bgBounds.width / 2.f), b.height / 2.f });
     entity.addComponent<cro::Callback>().setUserData<LeaderboardData>();
     entity.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float dt)
@@ -1624,7 +1624,7 @@ score based on your overall accuracy. Good Luck!
     bgEntity.getComponent<cro::Transform>().addChild(textEnt4.getComponent<cro::Transform>());
 
     auto labelEnt = m_uiScene.createEntity();
-    labelEnt.addComponent<cro::Transform>().setPosition({ sBounds.width / 2.f, 12.f, 0.1f });
+    labelEnt.addComponent<cro::Transform>().setPosition({ std::floor(sBounds.width / 2.f), 12.f, 0.1f });
     labelEnt.addComponent<cro::Drawable2D>();
     labelEnt.addComponent<cro::Text>(smallFont).setString("View Leaderboards");
     labelEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);

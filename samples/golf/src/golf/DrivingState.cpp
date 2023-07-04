@@ -280,20 +280,6 @@ bool DrivingState::handleEvent(const cro::Event& evt)
         return true;
     }
 
-#ifdef USE_GNS
-    const auto closeLeaderboard = [&]()
-    {
-        auto* uiSystem = m_uiScene.getSystem<cro::UISystem>();
-        if (uiSystem->getActiveGroup() == MenuID::Leaderboard)
-        {
-            uiSystem->setActiveGroup(MenuID::Dummy);
-            m_leaderboardEntity.getComponent<cro::Callback>().active = true;
-
-            m_summaryScreen.audioEnt.getComponent<cro::AudioEmitter>().play();
-        }
-    };
-#endif
-
     const auto closeMessage = [&]()
     {
         cro::Command cmd;
@@ -346,6 +332,25 @@ bool DrivingState::handleEvent(const cro::Event& evt)
 
         requestStackPush(StateID::Pause);
     };
+
+#ifdef USE_GNS
+    const auto closeLeaderboard = [&]()
+    {
+        auto* uiSystem = m_uiScene.getSystem<cro::UISystem>();
+        if (uiSystem->getActiveGroup() == MenuID::Leaderboard)
+        {
+            uiSystem->setActiveGroup(MenuID::Dummy);
+            m_leaderboardEntity.getComponent<cro::Callback>().active = true;
+
+            m_summaryScreen.audioEnt.getComponent<cro::AudioEmitter>().play();
+        }
+        else if (m_gameScene.getDirector<DrivingRangeDirector>()->roundEnded())
+        {
+            pauseGame();
+        }
+    };
+#endif
+
 
     if (evt.type == SDL_KEYUP)
     {
@@ -456,11 +461,16 @@ bool DrivingState::handleEvent(const cro::Event& evt)
         case cro::GameController::ButtonA:
             closeMessage();
             break;
-#ifdef USE_GNS
         case cro::GameController::ButtonB:
-            closeLeaderboard();
-            break;
+#ifdef USE_GNS
+            closeLeaderboard(); //this deals with the case below but checks for leaderboard view first
+#else
+            if (m_gameScene.getDirector<DrivingRangeDirector>()->roundEnded())
+            {
+                pauseGame();
+            }
 #endif
+            break;
         }
     }
     else if (evt.type == SDL_MOUSEMOTION)
@@ -477,6 +487,14 @@ bool DrivingState::handleEvent(const cro::Event& evt)
         }
 #endif // CRO_DEBUG_
 
+    }
+    else if (evt.type == SDL_MOUSEBUTTONUP)
+    {
+        if (evt.button.button == SDL_BUTTON_RIGHT &&
+            m_gameScene.getDirector<DrivingRangeDirector>()->roundEnded())
+        {
+            pauseGame();
+        }
     }
     else if (evt.type == SDL_CONTROLLERDEVICEREMOVED)
     {
