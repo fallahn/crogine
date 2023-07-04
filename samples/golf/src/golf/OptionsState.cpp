@@ -1986,7 +1986,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
             {
                 if (activated(evt))
                 {
-                    m_sharedData.postProcessIndex = (m_sharedData.postProcessIndex + (ShaderNames.size() - 1)) % ShaderNames.size();
+                    m_sharedData.postProcessIndex = static_cast<std::int32_t>((m_sharedData.postProcessIndex + (ShaderNames.size() - 1)) % ShaderNames.size());
                     auto* msg = getContext().appInstance.getMessageBus().post<SystemEvent>(MessageID::SystemMessage);
                     msg->type = SystemEvent::PostProcessIndexChanged;
 

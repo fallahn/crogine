@@ -38,6 +38,7 @@ set(GOLF_SRC
   ${PROJECT_DIR}/golf/LeaderboardState.cpp
   ${PROJECT_DIR}/golf/LeaderboardTexture.cpp
   ${PROJECT_DIR}/golf/MenuAvatars.cpp
+  ${PROJECT_DIR}/golf/MapOverviewState.cpp
   ${PROJECT_DIR}/golf/MenuCallbacks.cpp
   ${PROJECT_DIR}/golf/MenuCreation.cpp
   ${PROJECT_DIR}/golf/MenuCustomisation.cpp

@@ -3184,7 +3184,7 @@ void PlaylistState::addSaveFileItem(std::size_t i, glm::vec2 position)
                     }
                     else if (pos.y > (m_croppingArea.bottom + m_croppingArea.height))
                     {
-                        m_saveFileScrollNode.getComponent<cro::Callback>().getUserData<ScrollData>().targetIndex = i;
+                        m_saveFileScrollNode.getComponent<cro::Callback>().getUserData<ScrollData>().targetIndex = static_cast<std::int32_t>(i);
                     }
                 }
                 m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();

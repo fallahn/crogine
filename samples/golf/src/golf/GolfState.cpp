@@ -376,6 +376,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
 
         createTransition();
         cacheState(StateID::Pause);
+        cacheState(StateID::MapOverview);
         });
 
     //glLineWidth(1.5f);
@@ -483,6 +484,14 @@ bool GolfState::handleEvent(const cro::Event& evt)
         m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
     };
 
+    const auto showMapOverview = [&]()
+    {
+        if (m_mapTextureMRT.available())
+        {
+            requestStackPush(StateID::MapOverview);
+        }
+    };
+
     if (evt.type == SDL_KEYUP)
     {
         //hideMouse(); //TODO this should only react to current keybindings
@@ -506,14 +515,17 @@ bool GolfState::handleEvent(const cro::Event& evt)
                 }
             }
             break;
+        case SDLK_3:
+            toggleFreeCam();
+            break;
+        case SDLK_4:
+            showMapOverview();
+            break;
         case SDLK_TAB:
             showScoreboard(false);
             break;
         case SDLK_SPACE: //TODO this should read the keymap... but it's not const
             closeMessage();
-            break;
-        case SDLK_3:
-            toggleFreeCam();
             break;
         case SDLK_F6:
             logCSV();
@@ -721,6 +733,9 @@ bool GolfState::handleEvent(const cro::Event& evt)
         switch (evt.cbutton.button)
         {
         default: break;
+        case cro::GameController::ButtonLeftStick:
+            showMapOverview();
+            break;
         case cro::GameController::ButtonBack:
             showScoreboard(true);
             break;
@@ -6167,12 +6182,12 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo)
         auto holeNumber = m_currentHole + 1;
         if (m_sharedData.reverseCourse)
         {
-            holeNumber = (m_holeData.size() + 1) - holeNumber;
+            holeNumber = static_cast<std::uint32_t>(m_holeData.size() + 1) - holeNumber;
         }
 
         if (m_sharedData.holeCount == 2)
         {
-            holeNumber += m_holeData.size();// 9;
+            holeNumber += static_cast<std::uint32_t>(m_holeData.size());
         }
 
         auto& data = e.getComponent<cro::Callback>().getUserData<TextCallbackData>();

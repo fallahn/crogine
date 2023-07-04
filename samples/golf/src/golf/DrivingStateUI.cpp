@@ -2502,7 +2502,7 @@ void DrivingState::showMessage(float range)
                     }
 
 #ifdef USE_GNS
-                    Social::insertDrivingScore(m_targetIndex, m_strokeCountIndex, totalScore);
+                    Social::insertDrivingScore(m_targetIndex, static_cast<std::int32_t>(m_strokeCountIndex), totalScore);
 #endif
 
                     //reset the minimap
