@@ -64,7 +64,8 @@ source distribution.
 namespace
 {
     //used as indices when scrolling through leaderboards
-    std::int32_t leaderboardID = 0;
+    std::int32_t leaderboardTryCount = 0;
+    std::int32_t leaderboardHoleIndex = 0;
     std::int32_t leaderboardFilter = 0;
     constexpr std::int32_t MaxLeaderboardFilter = 3;
 
@@ -1547,13 +1548,23 @@ score based on your overall accuracy. Good Luck!
     
     //id display
     textEnt4 = m_uiScene.createEntity();
-    textEnt4.addComponent<cro::Transform>().setPosition({ b.width / 2.f, 11.f, 0.12f });
+    textEnt4.addComponent<cro::Transform>().setPosition({ std::floor(b.width / 2.f) - 98.f, 11.f, 0.12f });
     textEnt4.addComponent<cro::Drawable2D>();
     textEnt4.addComponent<cro::Text>(largeFont).setCharacterSize(UITextSize);
     textEnt4.getComponent<cro::Text>().setFillColour(LeaderboardTextDark);
     textEnt4.getComponent<cro::Text>().setString("Best of 5");
     lbEntity.getComponent<cro::Transform>().addChild(textEnt4.getComponent<cro::Transform>());
     auto scoreType = textEnt4;
+
+    //hole index
+    textEnt4 = m_uiScene.createEntity();
+    textEnt4.addComponent<cro::Transform>().setPosition({ std::floor(b.width / 2.f) + 98.f, 11.f, 0.12f });
+    textEnt4.addComponent<cro::Drawable2D>();
+    textEnt4.addComponent<cro::Text>(largeFont).setCharacterSize(UITextSize);
+    textEnt4.getComponent<cro::Text>().setFillColour(LeaderboardTextDark);
+    textEnt4.getComponent<cro::Text>().setString("Random Target");
+    lbEntity.getComponent<cro::Transform>().addChild(textEnt4.getComponent<cro::Transform>());
+    auto holeIndex = textEnt4;
 
     //rank display
     textEnt4 = m_uiScene.createEntity();
@@ -1566,7 +1577,7 @@ score based on your overall accuracy. Good Luck!
     lbEntity.getComponent<cro::Transform>().addChild(textEnt4.getComponent<cro::Transform>());
     auto rankType = textEnt4;
 
-    auto updateDisplay = [nameColumn, scoreColumn, rankColumn, scoreType, rankType]() mutable
+    auto updateDisplay = [nameColumn, scoreColumn, rankColumn, scoreType, holeIndex, rankType]() mutable
     {
         const std::array ScoreStrings =
         {
@@ -1580,12 +1591,32 @@ score based on your overall accuracy. Good Luck!
             "Nearest",
             "Friends"
         };
-        scoreType.getComponent<cro::Text>().setString(ScoreStrings[leaderboardID]);
+        const std::array HoleStrings =
+        {
+            "Random",
+            "Target 1",
+            "Target 2",
+            "Target 3",
+            "Target 4",
+            "Target 5",
+            "Target 6",
+            "Target 7",
+            "Target 8",
+            "Target 9",
+            "Target 10",
+            "Target 11",
+            "Target 12",
+            "Target 13",
+        };
+
+        scoreType.getComponent<cro::Text>().setString(ScoreStrings[leaderboardTryCount]);
+        holeIndex.getComponent<cro::Text>().setString(HoleStrings[leaderboardHoleIndex]);
         rankType.getComponent<cro::Text>().setString(RankStrings[leaderboardFilter]);
         centreText(scoreType);
+        centreText(holeIndex);
         centreText(rankType);
 
-        auto scores = Social::getLeaderboardResults(leaderboardID, leaderboardFilter);
+        auto scores = Social::getDrivingRangeResults(leaderboardHoleIndex, leaderboardTryCount, leaderboardFilter);
         rankColumn.getComponent<cro::Text>().setString(scores[0]);
         nameColumn.getComponent<cro::Text>().setString(scores[1]);
         scoreColumn.getComponent<cro::Text>().setString(scores[2]);
@@ -1693,28 +1724,56 @@ score based on your overall accuracy. Good Luck!
             });
 
     //score left
-    entity = createArrow(glm::vec2(193.f, -2.f), "arrow_left");
+    entity = createArrow(glm::vec2(95.f, -2.f), "arrow_left");
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem->addCallback(
             [&, updateDisplay](cro::Entity e, const cro::ButtonEvent& evt) mutable
             {
                 if (activated(evt))
                 {
-                    leaderboardID = (leaderboardID + (MaxLeaderboardFilter - 1)) % MaxLeaderboardFilter;
+                    leaderboardTryCount = (leaderboardTryCount + (MaxLeaderboardFilter - 1)) % MaxLeaderboardFilter;
                     m_summaryScreen.audioEnt.getComponent<cro::AudioEmitter>().play();
                     updateDisplay();
                 }
             });
 
     //score right
-    entity =createArrow(glm::vec2(285.f, -2.f), "arrow_right");
+    entity = createArrow(glm::vec2(187.f, -2.f), "arrow_right");
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem->addCallback(
             [&, updateDisplay](cro::Entity e, const cro::ButtonEvent& evt) mutable
             {
                 if (activated(evt))
                 {
-                    leaderboardID = (leaderboardID + 1) % MaxLeaderboardFilter;
+                    leaderboardTryCount = (leaderboardTryCount + 1) % MaxLeaderboardFilter;
+                    m_summaryScreen.audioEnt.getComponent<cro::AudioEmitter>().play();
+                    updateDisplay();
+                }
+            });
+
+    //index left
+    entity = createArrow(glm::vec2(291.f, -2.f), "arrow_left");
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+        uiSystem->addCallback(
+            [&, updateDisplay](cro::Entity e, const cro::ButtonEvent& evt) mutable
+            {
+                if (activated(evt))
+                {
+                    leaderboardHoleIndex = (leaderboardHoleIndex + 13) % 14;
+                    m_summaryScreen.audioEnt.getComponent<cro::AudioEmitter>().play();
+                    updateDisplay();
+                }
+            });
+
+    //index right
+    entity = createArrow(glm::vec2(383.f, -2.f), "arrow_right");
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+        uiSystem->addCallback(
+            [&, updateDisplay](cro::Entity e, const cro::ButtonEvent& evt) mutable
+            {
+                if (activated(evt))
+                {
+                    leaderboardHoleIndex = (leaderboardHoleIndex + 1) % 14;
                     m_summaryScreen.audioEnt.getComponent<cro::AudioEmitter>().play();
                     updateDisplay();
                 }

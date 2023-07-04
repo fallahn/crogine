@@ -76,7 +76,7 @@ namespace
 
 
     constexpr std::size_t DebugLevel = 35;
-    std::int32_t playerLevel = -1;
+    std::int32_t playerLevel = 0;
 }
 
 Club::Club(std::int32_t id, const std::string& name, float angle, float sidespin, float topspin)

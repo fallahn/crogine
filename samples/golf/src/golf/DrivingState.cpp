@@ -197,6 +197,9 @@ DrivingState::DrivingState(cro::StateStack& stack, cro::State::Context context, 
     m_strokeCountIndex  (0),
     m_currentCamera     (CameraID::Player)
 {
+    sd.clubSet = std::clamp(sd.clubSet, 0, 2);
+    Club::setClubLevel(sd.clubSet);
+
     std::fill(m_topScores.begin(), m_topScores.end(), 0.f);
     loadScores();   
     
