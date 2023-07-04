@@ -486,7 +486,8 @@ bool GolfState::handleEvent(const cro::Event& evt)
 
     const auto showMapOverview = [&]()
     {
-        if (m_mapTextureMRT.available())
+        if (m_mapTextureMRT.available()
+            && m_currentCamera != CameraID::Transition)
         {
             requestStackPush(StateID::MapOverview);
         }
@@ -518,7 +519,8 @@ bool GolfState::handleEvent(const cro::Event& evt)
         case SDLK_3:
             toggleFreeCam();
             break;
-        case SDLK_4:
+            //4&5 rotate camera
+        case SDLK_6:
             showMapOverview();
             break;
         case SDLK_TAB:
@@ -6260,6 +6262,8 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo)
 
     m_sharedData.minimapData.teePos = m_holeData[m_currentHole].tee;
     m_sharedData.minimapData.pinPos = m_holeData[m_currentHole].pin;
+    m_sharedData.minimapData.holeNumber = m_currentHole;
+    m_sharedData.minimapData.courseName = "Set course name and correct hole number";
     m_gameScene.getDirector<GolfSoundDirector>()->setCrowdPositions(m_holeData[m_currentHole].crowdPositions);
 }
 

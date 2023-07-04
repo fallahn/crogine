@@ -471,8 +471,8 @@ void GolfState::buildUI()
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
-    entity.addComponent<UIElement>().relativePosition = { 0.61f, 0.f };
-    entity.getComponent<UIElement>().absolutePosition = { 12.f, 0.f };
+    entity.addComponent<UIElement>().relativePosition = { 0.62f, 0.f };
+    entity.getComponent<UIElement>().absolutePosition = { 32.f, 0.f };
     entity.getComponent<UIElement>().depth = 0.05f;
     entity.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
     entity.getComponent<cro::Text>().setFillColour(LeaderboardTextLight);
@@ -683,11 +683,16 @@ void GolfState::buildUI()
     {
         auto& [dir, currTime] = e.getComponent<cro::Callback>().getUserData<std::pair<std::int32_t, float>>();
 
+#ifdef USE_GNS
+        const float ScaleMultiplier = Social::isSteamdeck() ? 2.f : 1.f;
+#else
+        const float ScaleMultiplier = 1.f;
+#endif
         if (dir == 0)
         {
             //grow
             currTime = std::min(1.f, currTime + dt);
-            const float scale = cro::Util::Easing::easeOutElastic(currTime);
+            const float scale = cro::Util::Easing::easeOutElastic(currTime) * ScaleMultiplier;
 
             e.getComponent<cro::Transform>().setScale({ scale, scale });
 
@@ -701,9 +706,9 @@ void GolfState::buildUI()
         {
             //shrink
             currTime = std::max(0.f, currTime - (dt * 2.f));
-            const float scale = cro::Util::Easing::easeOutBack(currTime);
+            const float scale = cro::Util::Easing::easeOutBack(currTime * ScaleMultiplier);
 
-            e.getComponent<cro::Transform>().setScale({ scale, 1.f });
+            e.getComponent<cro::Transform>().setScale({ scale, ScaleMultiplier });
 
             if (currTime == 0)
             {
@@ -1302,6 +1307,13 @@ void GolfState::buildUI()
 
         //relocate the power bar
         auto uiPos = glm::vec2(uiSize.x / 2.f, UIBarHeight / 2.f);
+#ifdef USE_GNS
+        if (Social::isSteamdeck())
+        {
+            uiPos.y *= 2.f;
+            spinEnt.getComponent<cro::Transform>().move({ 0.f, 32.f, 0.f });
+        }
+#endif
         rootNode.getComponent<cro::Transform>().setPosition(uiPos);
 
         //this calls the update for the scoreboard render texture

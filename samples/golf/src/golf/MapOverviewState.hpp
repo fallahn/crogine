@@ -34,6 +34,7 @@ source distribution.
 #include <crogine/core/State.hpp>
 #include <crogine/audio/AudioScape.hpp>
 #include <crogine/ecs/Scene.hpp>
+#include <crogine/graphics/SimpleQuad.hpp>
 
 struct SharedStateData;
 
@@ -71,17 +72,8 @@ private:
 
     glm::vec2 m_viewScale;
     cro::Entity m_rootNode;
-    cro::Entity m_restartButton;
-    bool m_requestRestart;
 
-    struct ConfirmType final
-    {
-        enum
-        {
-            Restart, Quit
-        };
-    };
-    std::int32_t m_confirmationType; //used to decide which action the confirmation menu should take
+    cro::SimpleQuad m_mapQuad;
 
     void buildScene();
     void quitState();
