@@ -471,7 +471,7 @@ void GolfState::buildUI()
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
-    entity.addComponent<UIElement>().relativePosition = { 0.62f, 0.f };
+    entity.addComponent<UIElement>().relativePosition = { 0.64f, 0.f };
     entity.getComponent<UIElement>().absolutePosition = { 32.f, 0.f };
     entity.getComponent<UIElement>().depth = 0.05f;
     entity.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
