@@ -35,9 +35,9 @@ source distribution.
 #include "TextAnimCallback.hpp"
 #include "MessageIDs.hpp"
 #include "../GolfGame.hpp"
-
+#ifdef USE_GNS
 #include <HallOfFame.hpp>
-
+#endif
 #include <crogine/core/Window.hpp>
 #include <crogine/core/GameController.hpp>
 #include <crogine/graphics/Image.hpp>

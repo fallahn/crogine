@@ -83,6 +83,13 @@ FloatRect Detail::Text::updateVertices(std::vector<Vertex2D>& dst, TextContext& 
     };
     const auto eol = [&]()
     {
+        if (rowStart == characterVerts.size())
+        {
+            //newline was at the end of the string
+            //so do nothing
+            return;
+        }
+
         if (context.alignment == std::int32_t(cro::Text::Alignment::Centre))
         {
             float diff = std::floor((characterVerts.back().position.x - characterVerts[rowStart].position.x) / 2.f);
