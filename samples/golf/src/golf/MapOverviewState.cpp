@@ -96,7 +96,7 @@ namespace
                 return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
             }
 
-
+            const float ColourStep = 6.0;
             void main()
             {
                 vec4 colour = texture(u_texture, v_texCoord) * v_colour;
@@ -109,6 +109,7 @@ namespace
                 c.x += mod(pos.y / 8.0, 1.0);
                 c = hsv2rgb(c);
 
+                c = floor(c * ColourStep) / (ColourStep - 1.0);
                 FRAG_OUT.rgb = mix(FRAG_OUT.rgb, c, 0.5);
             }
         )";
@@ -287,20 +288,49 @@ bool MapOverviewState::simulate(float dt)
     }
     
     auto len2 = glm::length2(movement);
-    if (len2 == 0)
-    {
-        //TODO check controller analogue
-    }
-
     if (len2 > 1)
     {
         movement /= std::sqrt(len2);
     }
+
+    if (len2 == 0)
+    {
+        auto controllerID = activeControllerID(m_sharedData.inputBinding.playerID);
+
+        //check controller analogue
+        auto x = cro::GameController::getAxisPosition(controllerID, cro::GameController::AxisLeftX);
+        if (x > LeftThumbDeadZone || x < -LeftThumbDeadZone)
+        {
+            movement.x = static_cast<float>(x) / cro::GameController::AxisMax;
+        }
+
+        auto y = cro::GameController::getAxisPosition(controllerID, cro::GameController::AxisLeftY);
+        if (y > LeftThumbDeadZone || y < -LeftThumbDeadZone)
+        {
+            movement.y = -static_cast<float>(y) / cro::GameController::AxisMax;
+        }
+        len2 = glm::length2(movement);
+        if (len2 != 0)
+        {
+            movement = glm::normalize(movement) * std::min(1.f, std::pow(std::sqrt(len2), 5.f));
+        }
+
+
+        auto zoom = -cro::GameController::getAxisPosition(controllerID, cro::GameController::AxisRightY);
+        if (zoom < -LeftThumbDeadZone || zoom > LeftThumbDeadZone)
+        {
+            zoom /= cro::GameController::AxisMax;
+            m_zoomScale = std::clamp(m_zoomScale + (2.f * zoom * m_zoomScale * dt), MinZoom, MaxZoom);
+            rescaleMap();
+        }
+    }
+
+
     
     if (len2 != 0)
     {
         auto origin = m_mapEnt.getComponent<cro::Transform>().getOrigin();
-        origin += (glm::vec3(movement, 0.f) * 650.f * (1.f / m_zoomScale)) * dt;
+        origin += (glm::vec3(movement, 0.f) * 1650.f * (1.f / m_zoomScale)) * dt;
         glm::vec2 bounds(m_renderBuffer.getSize());
         
         origin.x = std::clamp(origin.x, 0.f, bounds.x);
