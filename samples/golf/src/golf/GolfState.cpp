@@ -1520,27 +1520,6 @@ bool GolfState::simulate(float dt)
 
     const auto holeDir = m_holeData[m_currentHole].pin - m_currentPlayer.position;
 
-    float rotation = m_inputParser.getCamRotation() * dt;
-    if (getClub() != ClubID::Putter
-        && rotation != 0)
-    {
-        auto& tx = m_cameras[CameraID::Player].getComponent<cro::Transform>();
-
-        auto axis = glm::inverse(tx.getRotation()) * cro::Transform::Y_AXIS;
-        tx.rotate(axis, rotation);
-
-        auto& targetInfo = m_cameras[CameraID::Player].getComponent<TargetInfo>();
-        auto lookDir = targetInfo.currentLookAt - tx.getWorldPosition();
-        lookDir = glm::rotate(lookDir, rotation, axis);
-        targetInfo.currentLookAt = tx.getWorldPosition() + lookDir;
-        targetInfo.targetLookAt = targetInfo.currentLookAt;
-
-        m_camRotation += rotation;
-    }
-
-
-
-
     m_ballTrail.update();
 
     //this gets used a lot so we'll save on some calls to length()
@@ -1665,6 +1644,25 @@ bool GolfState::simulate(float dt)
         if (float movement = m_inputParser.getCamMotion(); movement != 0)
         {
             updateCameraHeight(movement * dt);
+        }
+
+
+        float rotation = m_inputParser.getCamRotation() * dt;
+        if (getClub() != ClubID::Putter
+            && rotation != 0)
+        {
+            auto& tx = m_cameras[CameraID::Player].getComponent<cro::Transform>();
+
+            auto axis = glm::inverse(tx.getRotation()) * cro::Transform::Y_AXIS;
+            tx.rotate(axis, rotation);
+
+            auto& targetInfo = m_cameras[CameraID::Player].getComponent<TargetInfo>();
+            auto lookDir = targetInfo.currentLookAt - tx.getWorldPosition();
+            lookDir = glm::rotate(lookDir, rotation, axis);
+            targetInfo.currentLookAt = tx.getWorldPosition() + lookDir;
+            targetInfo.targetLookAt = targetInfo.currentLookAt;
+
+            m_camRotation += rotation;
         }
 
         updateSkipMessage(dt);
@@ -6263,7 +6261,27 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo)
     m_sharedData.minimapData.teePos = m_holeData[m_currentHole].tee;
     m_sharedData.minimapData.pinPos = m_holeData[m_currentHole].pin;
     m_sharedData.minimapData.holeNumber = m_currentHole;
-    m_sharedData.minimapData.courseName = "Set course name and correct hole number";
+    
+    if (m_sharedData.reverseCourse)
+    {
+        if (m_sharedData.holeCount == 0)
+        {
+            m_sharedData.minimapData.holeNumber = 17 - m_sharedData.minimapData.holeNumber;
+        }
+        else
+        {
+            m_sharedData.minimapData.holeNumber = 8 - m_sharedData.minimapData.holeNumber;
+        }
+    }
+    if (m_sharedData.holeCount == 2)
+    {
+        m_sharedData.minimapData.holeNumber += 9;
+    }
+
+
+    m_sharedData.minimapData.courseName = m_courseTitle;
+    m_sharedData.minimapData.courseName += "\n\nHole: " + std::to_string(m_sharedData.minimapData.holeNumber + 1);
+    m_sharedData.minimapData.courseName += "\nPar: " + std::to_string(m_holeData[m_currentHole].par);
     m_gameScene.getDirector<GolfSoundDirector>()->setCrowdPositions(m_holeData[m_currentHole].crowdPositions);
 }
 

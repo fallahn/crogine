@@ -67,23 +67,52 @@ source distribution.
 #include <crogine/util/Easings.hpp>
 
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
+#include <crogine/detail/OpenGL.hpp>
 
 namespace
 {
+    const std::string MinimapFragment = 
+        R"(
+            uniform sampler2D u_texture;
 
+            uniform sampler2D u_worldPos;
+            uniform sampler2D u_normal;
+
+            VARYING_IN vec2 v_texCoord;
+            VARYING_IN vec4 v_colour;
+
+            OUTPUT
+
+            #define TAU 6.283185
+
+            const vec4 ContourColour = vec4(1.0, 0.0, 0.0, 1.0);
+            const float ContourSpacing = 2.0 * TAU;
+
+            void main()
+            {
+                vec4 colour = texture(u_texture, v_texCoord) * v_colour;
+                vec3 pos = texture(u_worldPos, v_texCoord).rgb;
+
+                float contourAmount = step(0.99, sin(pos.y * ContourSpacing));
+                FRAG_OUT = mix(colour, ContourColour, contourAmount);
+            }
+        )";
 }
 
 MapOverviewState::MapOverviewState(cro::StateStack& ss, cro::State::Context ctx, SharedStateData& sd)
     : cro::State        (ss, ctx),
     m_scene             (ctx.appInstance.getMessageBus()),
     m_sharedData        (sd),
-    m_viewScale         (2.f)
+    m_previousMap       (-1),
+    m_viewScale         (2.f),
+    m_zoomScale         (1.f)
 {
     ctx.mainWindow.setMouseCaptured(false);
 
+    CRO_ASSERT(sd.minimapData.mrt, "");
+    addSystems();
+    loadAssets();
     buildScene();
-
-    cacheState(StateID::Options);
 }
 
 //public
@@ -98,10 +127,23 @@ bool MapOverviewState::handleEvent(const cro::Event& evt)
 
     if (evt.type == SDL_KEYUP)
     {
-        if (evt.key.keysym.sym == SDLK_BACKSPACE
-            || evt.key.keysym.sym == SDLK_ESCAPE
-            || evt.key.keysym.sym == SDLK_p)
+        switch (evt.key.keysym.sym)
         {
+        default: 
+            if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::NextClub])
+            {
+                //TODO increment effect
+                refreshMap();
+            }
+            else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::PrevClub])
+            {
+                //TODO increment effect
+                refreshMap();
+            }
+            break;
+        case SDLK_BACKSPACE:
+        case SDLK_ESCAPE:
+        case SDLK_6:
             quitState();
             return false;
         }
@@ -130,6 +172,10 @@ bool MapOverviewState::handleEvent(const cro::Event& evt)
         case cro::GameController::ButtonLeftStick:
             quitState();
             return false;
+        case cro::GameController::ButtonRightShoulder:
+        case cro::GameController::ButtonLeftShoulder:
+            refreshMap();
+            break;
         }
     }
     else if (evt.type == SDL_MOUSEBUTTONUP)
@@ -150,6 +196,30 @@ bool MapOverviewState::handleEvent(const cro::Event& evt)
     else if (evt.type == SDL_MOUSEMOTION)
     {
         cro::App::getWindow().setMouseCaptured(false);
+        if (evt.motion.state & SDL_BUTTON_MIDDLE)
+        {
+            const float Scale = 1.f / m_mapEnt.getComponent<cro::Transform>().getScale().x;
+
+            auto position = m_mapEnt.getComponent<cro::Transform>().getOrigin();
+            position.x -= static_cast<float>(evt.motion.xrel) * Scale;
+            position.y += static_cast<float>(evt.motion.yrel) * Scale;
+
+            position.x = std::floor(position.x);
+            position.y = std::floor(position.y);
+
+            glm::vec2 bounds(m_renderBuffer.getSize());
+
+            position.x = std::clamp(position.x, 0.f, bounds.x);
+            position.y = std::clamp(position.y, 0.f, bounds.y);
+
+            m_mapEnt.getComponent<cro::Transform>().setOrigin(position);
+        }
+    }
+    else if (evt.type == SDL_MOUSEWHEEL)
+    {
+        const auto amount = evt.wheel.preciseY;
+        m_zoomScale = std::clamp(m_zoomScale + amount, 1.f, 8.f);
+        rescaleMap();
     }
 
     m_scene.forwardEvent(evt);
@@ -163,18 +233,58 @@ void MapOverviewState::handleMessage(const cro::Message& msg)
 
 bool MapOverviewState::simulate(float dt)
 {
+    glm::vec2 movement(0.f);
+    if (cro::Keyboard::isKeyPressed(m_sharedData.inputBinding.keys[InputBinding::Left]))
+    {
+        movement.x -= 1.f;
+    }
+    if (cro::Keyboard::isKeyPressed(m_sharedData.inputBinding.keys[InputBinding::Right]))
+    {
+        movement.x += 1.f;
+    }
+    if (cro::Keyboard::isKeyPressed(m_sharedData.inputBinding.keys[InputBinding::Up]))
+    {
+        movement.y += 1.f;
+    }
+    if (cro::Keyboard::isKeyPressed(m_sharedData.inputBinding.keys[InputBinding::Down]))
+    {
+        movement.y -= 1.f;
+    }
+    
+    auto len2 = glm::length2(movement);
+    if (len2 == 0)
+    {
+        //TODO check controller analogue
+    }
+
+    if (len2 > 1)
+    {
+        movement /= std::sqrt(len2);
+    }
+    
+    if (len2 != 0)
+    {
+        auto origin = m_mapEnt.getComponent<cro::Transform>().getOrigin();
+        origin += (glm::vec3(movement, 0.f) * 650.f * (1.f / m_zoomScale)) * dt;
+        glm::vec2 bounds(m_renderBuffer.getSize());
+        
+        origin.x = std::clamp(origin.x, 0.f, bounds.x);
+        origin.y = std::clamp(origin.y, 0.f, bounds.y);
+        m_mapEnt.getComponent<cro::Transform>().setOrigin(origin);
+    }
+
+
     m_scene.simulate(dt);
     return true;
 }
 
 void MapOverviewState::render()
 {
-    m_mapQuad.draw();
     m_scene.render();
 }
 
 //private
-void MapOverviewState::buildScene()
+void MapOverviewState::addSystems()
 {
     auto& mb = getContext().appInstance.getMessageBus();
     m_scene.addSystem<cro::CommandSystem>(mb);
@@ -187,14 +297,28 @@ void MapOverviewState::buildScene()
     m_scene.addSystem<cro::AudioPlayerSystem>(mb);
 
     m_scene.setSystemActive<cro::AudioPlayerSystem>(false);
+}
 
+void MapOverviewState::loadAssets()
+{
     m_menuSounds.loadFromFile("assets/golf/sound/menu.xas", m_sharedData.sharedResources->audio);
     m_audioEnts[AudioID::Accept] = m_scene.createEntity();
     m_audioEnts[AudioID::Accept].addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("accept");
     m_audioEnts[AudioID::Back] = m_scene.createEntity();
     m_audioEnts[AudioID::Back].addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("back");
 
+    auto buffSize = m_sharedData.minimapData.mrt->getSize();
+    m_renderBuffer.create(buffSize.x, buffSize.y, false);
 
+    m_mapShader.loadFromString(cro::SimpleQuad::getDefaultVertexShader(), MinimapFragment);
+    m_shaderUniforms.posMap = m_mapShader.getUniformID("u_worldPos");
+
+    m_mapQuad.setTexture(m_sharedData.minimapData.mrt->getTexture(0), m_renderBuffer.getSize());
+    m_mapQuad.setShader(m_mapShader);
+}
+
+void MapOverviewState::buildScene()
+{
     struct RootCallbackData final
     {
         enum
@@ -222,16 +346,23 @@ void MapOverviewState::buildScene()
 
             if (currTime == 1)
             {
-                m_mapQuad.setColour(cro::Colour::White);
-                m_mapQuad.setTexture(m_sharedData.minimapData.mrt->getTexture(0), m_sharedData.minimapData.mrt->getSize());
-                auto scale = glm::vec2(m_mapQuad.getSize()) / glm::vec2(cro::App::getWindow().getSize());
-                m_mapQuad.setScale(scale);
-
                 state = RootCallbackData::FadeOut;
                 e.getComponent<cro::Callback>().active = false;
 
                 m_scene.setSystemActive<cro::AudioPlayerSystem>(true);
                 m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+
+                //check hole number and compare with the last time this
+                //menu was opened - then recentre the map if it's a new hole.
+                if (m_previousMap != m_sharedData.minimapData.holeNumber)
+                {
+                    m_mapText.getComponent<cro::Text>().setString(m_sharedData.minimapData.courseName);
+
+                    recentreMap();
+                    m_previousMap = m_sharedData.minimapData.holeNumber;
+                }
+
+                refreshMap();
             }
             break;
         case RootCallbackData::FadeOut:
@@ -280,8 +411,17 @@ void MapOverviewState::buildScene()
         }
     };
 
-   
-    //background
+    //map entity
+    refreshMap();
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>(m_renderBuffer.getTexture());
+    rootNode.getComponent<cro::Transform >().addChild(entity.getComponent<cro::Transform>());
+    m_mapEnt = entity;
+    recentreMap();
+
+    //menu background
     cro::SpriteSheet spriteSheet;
     spriteSheet.loadFromFile("assets/golf/sprites/ui.spt", m_sharedData.sharedResources->textures);
 
@@ -289,21 +429,23 @@ void MapOverviewState::buildScene()
     entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -0.2f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("message_board");
-    entity.addComponent<UIElement>().relativePosition = { -0.49f, -0.49f };
+    auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, 0.f });
+    entity.addComponent<UIElement>().relativePosition = {0.f, -0.49f };
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement;
     auto bgNode = entity;
     rootNode.getComponent<cro::Transform >().addChild(entity.getComponent<cro::Transform>());
 
-
     auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 4.f, 40.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ std::floor(bounds.width / 2.f), 56.f, 0.1f });
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(font).setString("Hello");
+    entity.addComponent<cro::Text>(font).setVerticalSpacing(2.f);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
     bgNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-
+    m_mapText = entity;
 
     auto updateView = [&, rootNode](cro::Camera& cam) mutable
     {
@@ -332,6 +474,8 @@ void MapOverviewState::buildScene()
             e.getComponent<cro::Transform>().setPosition(glm::vec3(pos, element.depth));
         };
         m_scene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+        rescaleMap();
     };
 
     entity = m_scene.createEntity();
@@ -345,9 +489,41 @@ void MapOverviewState::buildScene()
 
 void MapOverviewState::quitState()
 {
-    m_mapQuad.setColour(cro::Colour::Transparent);
-
     m_scene.setSystemActive<cro::AudioPlayerSystem>(false);
     m_rootNode.getComponent<cro::Callback>().active = true;
     m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
+}
+
+void MapOverviewState::recentreMap()
+{
+    glm::vec2 windowSize(cro::App::getWindow().getSize());
+    glm::vec2 mapSize(m_renderBuffer.getSize());
+
+    m_mapEnt.getComponent<cro::Transform>().setOrigin(mapSize / 2.f);
+    m_mapEnt.getComponent<cro::Transform>().setScale(glm::vec2(windowSize.x / mapSize.x) / m_viewScale.x);
+    m_zoomScale = 1.f;
+}
+
+void MapOverviewState::rescaleMap()
+{
+    glm::vec2 windowSize(cro::App::getWindow().getSize());
+    glm::vec2 mapSize(m_renderBuffer.getSize());
+
+    const float baseScale = (windowSize.x / mapSize.x) / m_viewScale.x;
+    m_mapEnt.getComponent<cro::Transform>().setScale(glm::vec2(baseScale * m_zoomScale));
+}
+
+void MapOverviewState::refreshMap()
+{
+    static constexpr std::int32_t PosSlot = 6;
+
+    glActiveTexture(GL_TEXTURE0 + PosSlot);
+    glBindTexture(GL_TEXTURE_2D, m_sharedData.minimapData.mrt->getTexture(1).textureID);
+
+    glUseProgram(m_mapShader.getGLHandle());
+    glUniform1i(m_shaderUniforms.posMap, PosSlot);
+
+    m_renderBuffer.clear(cro::Colour::Transparent);
+    m_mapQuad.draw();
+    m_renderBuffer.display();
 }

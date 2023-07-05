@@ -92,8 +92,6 @@ StatsState::StatsState(cro::StateStack& ss, cro::State::Context ctx, SharedState
     ctx.mainWindow.setMouseCaptured(false);
 
     buildScene();
-
-    cacheState(StateID::Options);
 }
 
 //public

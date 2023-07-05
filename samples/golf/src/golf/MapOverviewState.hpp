@@ -34,6 +34,7 @@ source distribution.
 #include <crogine/core/State.hpp>
 #include <crogine/audio/AudioScape.hpp>
 #include <crogine/ecs/Scene.hpp>
+#include <crogine/graphics/RenderTexture.hpp>
 #include <crogine/graphics/SimpleQuad.hpp>
 
 struct SharedStateData;
@@ -58,6 +59,8 @@ private:
     cro::Scene m_scene;
     SharedStateData& m_sharedData;
 
+    std::int32_t m_previousMap;
+
     cro::AudioScape m_menuSounds;
     struct AudioID final
     {
@@ -72,9 +75,26 @@ private:
 
     glm::vec2 m_viewScale;
     cro::Entity m_rootNode;
+    cro::Entity m_mapEnt;
+    cro::Entity m_mapText;
 
+    cro::RenderTexture m_renderBuffer;
     cro::SimpleQuad m_mapQuad;
+    cro::Shader m_mapShader;
+    struct ShaderUniforms final
+    {
+        std::int32_t posMap = -1;
+        std::int32_t normalMap = -1;
+    }m_shaderUniforms;
 
+    float m_zoomScale;
+
+    void addSystems();
+    void loadAssets();
     void buildScene();
     void quitState();
+
+    void recentreMap();
+    void rescaleMap();
+    void refreshMap();
 };
