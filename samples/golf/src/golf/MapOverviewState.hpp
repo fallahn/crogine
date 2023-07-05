@@ -77,14 +77,17 @@ private:
     cro::Entity m_rootNode;
     cro::Entity m_mapEnt;
     cro::Entity m_mapText;
+    cro::Entity m_mapNormals;
 
     cro::RenderTexture m_renderBuffer;
     cro::SimpleQuad m_mapQuad;
     cro::Shader m_mapShader;
+    cro::Shader m_slopeShader;
+
     struct ShaderUniforms final
     {
         std::int32_t posMap = -1;
-        std::int32_t normalMap = -1;
+        std::int32_t transparency = -1;
     }m_shaderUniforms;
 
     float m_zoomScale;
@@ -97,4 +100,5 @@ private:
     void recentreMap();
     void rescaleMap();
     void refreshMap();
+    void updateNormals();
 };

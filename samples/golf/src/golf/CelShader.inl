@@ -297,6 +297,7 @@ static const std::string CelFragmentShader = R"(
     layout (location = 0) out vec4 FRAG_OUT;
     layout (location = 1) out vec4 o_pos;
     layout (location = 2) out vec4 o_normal;
+    layout (location = 3) out vec4 o_terrain;
 
 #if defined(RX_SHADOWS)
 #include SHADOWMAP_INPUTS
@@ -438,6 +439,7 @@ static const std::string CelFragmentShader = R"(
 #endif
         o_normal = vec4(normal, 1.0);
         o_pos = vec4(v_worldPosition, 1.0);
+        o_terrain = vec4(vec3(1.0 - step(0.174, v_colour.r)), 1.0);
 
         vec3 lightDirection = normalize(-u_lightDirection);
         float amount = dot(normal, lightDirection);

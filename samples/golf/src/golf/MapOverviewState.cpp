@@ -88,15 +88,50 @@ namespace
             const vec4 ContourColour = vec4(1.0, 0.0, 0.0, 1.0);
             const float ContourSpacing = 2.0 * TAU;
 
+            const vec3 BaseColour = vec3(0.827, 0.599, 0.91); //stored as HSV to save on a conversion
+            vec3 hsv2rgb(vec3 c)
+            {
+                vec4 K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
+                vec3 p = abs(fract(c.xxx + K.xyz) * 6.0 - K.www);
+                return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
+            }
+
+
             void main()
             {
                 vec4 colour = texture(u_texture, v_texCoord) * v_colour;
                 vec3 pos = texture(u_worldPos, v_texCoord).rgb;
 
-                float contourAmount = step(0.99, sin(pos.y * ContourSpacing));
+                float contourAmount = step(0.9, sin(pos.z * ContourSpacing));
                 FRAG_OUT = mix(colour, ContourColour, contourAmount);
+
+                vec3 c = BaseColour;
+                c.x += mod(pos.y / 8.0, 1.0);
+                c = hsv2rgb(c);
+
+                FRAG_OUT.rgb = mix(FRAG_OUT.rgb, c, 0.5);
             }
         )";
+
+    const std::string MiniSlopeFragment = 
+        R"(
+            OUTPUT
+
+            uniform float u_transparency;
+
+            VARYING_IN vec4 v_colour;
+
+            void main()
+            {
+                vec4 colour = v_colour;
+                colour.a *= u_transparency;
+
+                FRAG_OUT = colour;
+            }
+        )";
+
+    constexpr float MaxZoom = 12.f;
+    constexpr float MinZoom = 1.f;
 }
 
 MapOverviewState::MapOverviewState(cro::StateStack& ss, cro::State::Context ctx, SharedStateData& sd)
@@ -218,7 +253,7 @@ bool MapOverviewState::handleEvent(const cro::Event& evt)
     else if (evt.type == SDL_MOUSEWHEEL)
     {
         const auto amount = evt.wheel.preciseY;
-        m_zoomScale = std::clamp(m_zoomScale + amount, 1.f, 8.f);
+        m_zoomScale = std::clamp(m_zoomScale + amount, MinZoom, MaxZoom);
         rescaleMap();
     }
 
@@ -273,6 +308,10 @@ bool MapOverviewState::simulate(float dt)
         m_mapEnt.getComponent<cro::Transform>().setOrigin(origin);
     }
 
+    //update shader properties
+    glUseProgram(m_slopeShader.getGLHandle());
+    glUniform1f(m_shaderUniforms.transparency, m_zoomScale / MaxZoom);
+
 
     m_scene.simulate(dt);
     return true;
@@ -315,6 +354,9 @@ void MapOverviewState::loadAssets()
 
     m_mapQuad.setTexture(m_sharedData.minimapData.mrt->getTexture(0), m_renderBuffer.getSize());
     m_mapQuad.setShader(m_mapShader);
+
+    m_slopeShader.loadFromString(cro::RenderSystem2D::getDefaultVertexShader(), MiniSlopeFragment);
+    m_shaderUniforms.transparency = m_slopeShader.getUniformID("u_transparency");
 }
 
 void MapOverviewState::buildScene()
@@ -359,6 +401,7 @@ void MapOverviewState::buildScene()
                     m_mapText.getComponent<cro::Text>().setString(m_sharedData.minimapData.courseName);
 
                     recentreMap();
+                    updateNormals();
                     m_previousMap = m_sharedData.minimapData.holeNumber;
                 }
 
@@ -426,12 +469,13 @@ void MapOverviewState::buildScene()
     spriteSheet.loadFromFile("assets/golf/sprites/ui.spt", m_sharedData.sharedResources->textures);
 
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -0.2f });
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 1.6f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("message_board");
     auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, 0.f });
     entity.addComponent<UIElement>().relativePosition = {0.f, -0.49f };
+    entity.getComponent<UIElement>().depth = 0.6f;
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement;
     auto bgNode = entity;
     rootNode.getComponent<cro::Transform >().addChild(entity.getComponent<cro::Transform>());
@@ -446,6 +490,15 @@ void MapOverviewState::buildScene()
     entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
     bgNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     m_mapText = entity;
+
+    //draws the slope based on normals
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>().setPrimitiveType(GL_LINES);
+    entity.getComponent<cro::Drawable2D>().setShader(&m_slopeShader);
+
+    m_mapEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_mapNormals = entity;
 
     auto updateView = [&, rootNode](cro::Camera& cam) mutable
     {
@@ -526,4 +579,50 @@ void MapOverviewState::refreshMap()
     m_renderBuffer.clear(cro::Colour::Transparent);
     m_mapQuad.draw();
     m_renderBuffer.display();
+}
+
+void MapOverviewState::updateNormals()
+{
+    const auto imageSize = m_renderBuffer.getSize();
+
+    //so much for doing this all in the shader...
+    std::vector<float> image(imageSize.x * imageSize.y * 4);
+    glBindTexture(GL_TEXTURE_2D, m_sharedData.minimapData.mrt->getTexture(2).textureID);
+    glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_FLOAT, image.data());
+
+    //TODO we already have an image mask stored from which we could get the terrain
+    std::vector<float> mask(imageSize.x * imageSize.y);
+    glBindTexture(GL_TEXTURE_2D, m_sharedData.minimapData.mrt->getTexture(3).textureID);
+    glGetTexImage(GL_TEXTURE_2D, 0, GL_RED, GL_FLOAT, mask.data());
+
+
+    const auto PixelsPerMetre = imageSize.x / MapSize.x;
+    const auto Stride = 4 * PixelsPerMetre;
+
+    //TODO remind ourself how to do the vert building with std::async
+    std::vector<cro::Vertex2D> verts;
+    for (auto y = 0u; y < imageSize.y; y += PixelsPerMetre)
+    {
+        for (auto x = 0u; x < (imageSize.x * 4); x += Stride)
+        {
+            const auto index = y * (imageSize.x * 4) + x;
+
+            if (mask[index / 4] > 0.5f &&
+                image[index + 1] < 0.9999f) //more than this we kinda assume the normal is vertical and skip it
+            {
+                glm::vec2 normal = glm::vec2(image[index], -image[index + 2]) * 50.f;
+                glm::vec2 position(x / 4, y);
+
+                //TODO how do we clamp the length without normalising?
+
+                auto c = cro::Colour::Yellow;
+                verts.emplace_back(position, c);
+                float g = 1.f - std::min(1.f, glm::length2(normal) / (8.f * 8.f));
+                c.setGreen(g);
+                verts.emplace_back((position + normal), c);
+            }
+        }
+    }
+
+    m_mapNormals.getComponent<cro::Drawable2D>().setVertexData(verts);
 }
