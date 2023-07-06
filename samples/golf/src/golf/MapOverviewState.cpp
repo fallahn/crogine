@@ -133,12 +133,12 @@ FRAG_OUT = colour + (gridColour * contourAmount * u_gridAmount);
 
 
                 vec3 c = BaseHeatColour;
-                c.x += mod(pos.y / 8.0, 1.0);
+                c.x += mod(pos.y / (8.0 - (u_gridScale / 3.0)), 1.0); //6.0 is MaxZoom, 8.0 is just a magic number
                 c = hsv2rgb(c);
 
                 c *= clamp(dot(colour.rgb, vec3(0.299, 0.587, 0.114)) * 3.0, 0.0, 1.0); //luma of colour
 
-                c = floor(c * ColourStep) / (ColourStep - 1.0);
+                c = floor(c * (ColourStep * u_gridScale)) / ((ColourStep * u_gridScale) - 1.0);
                 FRAG_OUT.rgb = mix(FRAG_OUT.rgb, c, u_heatAmount);
             }
         )";
@@ -546,12 +546,12 @@ void MapOverviewState::buildScene()
 
     //menu background
     cro::SpriteSheet spriteSheet;
-    spriteSheet.loadFromFile("assets/golf/sprites/ui.spt", m_sharedData.sharedResources->textures);
+    spriteSheet.loadFromFile("assets/golf/sprites/controller_buttons.spt", m_sharedData.sharedResources->textures);
 
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 1.6f });
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("message_board");
+    entity.addComponent<cro::Sprite>(m_sharedData.sharedResources->textures.get("assets/golf/images/overview.png"));
     auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, 0.f });
     entity.addComponent<UIElement>().relativePosition = {0.f, -0.49f };
@@ -668,9 +668,9 @@ void MapOverviewState::refreshMap()
     glUniform1i(m_shaderUniforms.maskMap, MaskSlot);
     glUniform1i(m_shaderUniforms.normalMap, NormalSlot);
 
-    //glUniform1f(m_shaderUniforms.heatAmount, m_shaderValues[m_shaderValueIndex].first);
+    //glUniform1f(m_shaderUniforms.gridAmount, m_shaderValues[m_shaderValueIndex].first);
     glUniform1f(m_shaderUniforms.heatAmount, m_shaderValues[m_shaderValueIndex].second);
-    glUniform1f(m_shaderUniforms.gridScale, std::ceil(m_zoomScale / 4.f));
+    glUniform1f(m_shaderUniforms.gridScale, /*std::ceil(m_zoomScale / 4.f)*/std::round(m_zoomScale));
 
     const float MapScale = static_cast<float>(m_renderBuffer.getSize().x) / MapSize.x;
 
@@ -696,7 +696,7 @@ void MapOverviewState::refreshMap()
     m_mapString.setPosition(teePos * MapScale);
     m_mapString.draw();
     
-    m_mapString.setString("F");
+    m_mapString.setString("P");
     m_mapString.setPosition(pinPos * MapScale);
     m_mapString.draw();
 
@@ -743,11 +743,16 @@ void MapOverviewState::updateNormals()
                 c.setGreen(g);
                 verts.emplace_back((position + normal), c);
 
+                auto endPoint = verts.back().position;
+
                 normal *= 0.8f;
                 glm::vec2 cross(-normal.y, normal.x);
                 cross *= 0.2f;
                 verts.emplace_back(position + normal + cross, c);
-                cross *= -1.f;
+                verts.emplace_back(position + normal - cross, c);
+                verts.emplace_back(position + normal - cross, c);
+                verts.emplace_back(endPoint, c);
+                verts.emplace_back(endPoint, c);
                 verts.emplace_back(position + normal + cross, c);
             }
         }
