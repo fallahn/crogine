@@ -74,21 +74,23 @@ namespace
     const std::string MinimapFragment = 
         R"(
             uniform sampler2D u_texture;
-
             uniform sampler2D u_worldPos;
-            uniform sampler2D u_normal;
+            uniform sampler2D u_maskMap;
+            uniform sampler2D u_normalMap;
+
+            uniform float u_heatAmount = 0.0;
+            uniform float u_gridAmount = 0.0;
+            uniform float u_gridScale = 1.0;
 
             VARYING_IN vec2 v_texCoord;
             VARYING_IN vec4 v_colour;
 
             OUTPUT
 
-            #define TAU 6.283185
+#define TAU 6.283185
+const float ContourSpacing = 2.0 * TAU;
 
-            const vec4 ContourColour = vec4(1.0, 0.0, 0.0, 1.0);
-            const float ContourSpacing = 2.0 * TAU;
-
-            const vec3 BaseColour = vec3(0.827, 0.599, 0.91); //stored as HSV to save on a conversion
+            const vec3 BaseHeatColour = vec3(0.827, 0.599, 0.91); //stored as HSV to save on a conversion
             vec3 hsv2rgb(vec3 c)
             {
                 vec4 K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
@@ -97,20 +99,47 @@ namespace
             }
 
             const float ColourStep = 6.0;
+            const float GridThickness = 0.03;
             void main()
             {
                 vec4 colour = texture(u_texture, v_texCoord) * v_colour;
                 vec3 pos = texture(u_worldPos, v_texCoord).rgb;
 
-                float contourAmount = step(0.9, sin(pos.z * ContourSpacing));
-                FRAG_OUT = mix(colour, ContourColour, contourAmount);
+float heightIntensity = smoothstep(0.1, 5.0, pos.y);
+heightIntensity = 0.05 + (0.95 * heightIntensity);
 
-                vec3 c = BaseColour;
+vec4 gridColour = vec4(vec3(0.8, 0.7, 0.2) * heightIntensity, colour.a);
+
+
+
+
+//vec2 gridRes = vec2(320.0, 200.0) * GridThickness * u_gridScale;
+//float gridThickness = GridThickness / u_gridScale;
+//
+//vec2 grid = fract(v_texCoord * gridRes);
+//float gridAmount = 1.0 - (step(gridThickness, grid.x) * step(gridThickness, grid.y));
+
+
+
+float contourAmount = smoothstep(1.0 - (0.12 / u_gridScale), 1.0 - (0.1 / u_gridScale), fract(pos.y * u_gridScale));
+contourAmount *= texture(u_maskMap, v_texCoord).r;
+
+//stops contours 'spreading' over almost flat areas
+vec3 normal = texture(u_normalMap, v_texCoord).rgb;
+contourAmount *= 1.0 - step(0.995, dot(vec3(0.0, 1.0, 0.0), normal));
+
+FRAG_OUT = colour + (gridColour * contourAmount * u_gridAmount);
+
+
+
+                vec3 c = BaseHeatColour;
                 c.x += mod(pos.y / 8.0, 1.0);
                 c = hsv2rgb(c);
 
+                c *= clamp(dot(colour.rgb, vec3(0.299, 0.587, 0.114)) * 3.0, 0.0, 1.0); //luma of colour
+
                 c = floor(c * ColourStep) / (ColourStep - 1.0);
-                FRAG_OUT.rgb = mix(FRAG_OUT.rgb, c, 0.5);
+                FRAG_OUT.rgb = mix(FRAG_OUT.rgb, c, u_heatAmount);
             }
         )";
 
@@ -140,6 +169,7 @@ MapOverviewState::MapOverviewState(cro::StateStack& ss, cro::State::Context ctx,
     m_scene             (ctx.appInstance.getMessageBus()),
     m_sharedData        (sd),
     m_previousMap       (-1),
+    m_shaderValueIndex  (0),
     m_viewScale         (2.f),
     m_zoomScale         (1.f)
 {
@@ -168,12 +198,12 @@ bool MapOverviewState::handleEvent(const cro::Event& evt)
         default: 
             if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::NextClub])
             {
-                //TODO increment effect
+                m_shaderValueIndex = (m_shaderValueIndex + 1) % m_shaderValues.size();
                 refreshMap();
             }
             else if (evt.key.keysym.sym == m_sharedData.inputBinding.keys[InputBinding::PrevClub])
             {
-                //TODO increment effect
+                m_shaderValueIndex = (m_shaderValueIndex + (m_shaderValues.size() - 1)) % m_shaderValues.size();
                 refreshMap();
             }
             break;
@@ -209,7 +239,11 @@ bool MapOverviewState::handleEvent(const cro::Event& evt)
             quitState();
             return false;
         case cro::GameController::ButtonRightShoulder:
+            m_shaderValueIndex = (m_shaderValueIndex + 1) % m_shaderValues.size();
+            refreshMap();
+            break;
         case cro::GameController::ButtonLeftShoulder:
+            m_shaderValueIndex = (m_shaderValueIndex + (m_shaderValues.size() - 1)) % m_shaderValues.size();
             refreshMap();
             break;
         }
@@ -236,9 +270,13 @@ bool MapOverviewState::handleEvent(const cro::Event& evt)
         {
             const float Scale = 1.f / m_mapEnt.getComponent<cro::Transform>().getScale().x;
 
+            glm::vec2 movement(0.f);
+            movement.x -= static_cast<float>(evt.motion.xrel) * Scale;
+            movement.y += static_cast<float>(evt.motion.yrel) * Scale;
+            movement /= m_viewScale;
+            
             auto position = m_mapEnt.getComponent<cro::Transform>().getOrigin();
-            position.x -= static_cast<float>(evt.motion.xrel) * Scale;
-            position.y += static_cast<float>(evt.motion.yrel) * Scale;
+            position += glm::vec3(movement, 0.f);
 
             position.x = std::floor(position.x);
             position.y = std::floor(position.y);
@@ -340,7 +378,7 @@ bool MapOverviewState::simulate(float dt)
 
     //update shader properties
     glUseProgram(m_slopeShader.getGLHandle());
-    glUniform1f(m_shaderUniforms.transparency, m_zoomScale / MaxZoom);
+    glUniform1f(m_shaderUniforms.transparency, (m_zoomScale / MaxZoom) * (1.f - (m_shaderValues[m_shaderValueIndex].first + m_shaderValues[m_shaderValueIndex].second)));
 
 
     m_scene.simulate(dt);
@@ -381,12 +419,24 @@ void MapOverviewState::loadAssets()
 
     m_mapShader.loadFromString(cro::SimpleQuad::getDefaultVertexShader(), MinimapFragment);
     m_shaderUniforms.posMap = m_mapShader.getUniformID("u_worldPos");
+    m_shaderUniforms.maskMap = m_mapShader.getUniformID("u_maskMap");
+    m_shaderUniforms.normalMap = m_mapShader.getUniformID("u_normalMap");
+    m_shaderUniforms.heatAmount = m_mapShader.getUniformID("u_heatAmount");
+    m_shaderUniforms.gridAmount = m_mapShader.getUniformID("u_gridAmount");
+    m_shaderUniforms.gridScale = m_mapShader.getUniformID("u_gridScale");
 
     m_mapQuad.setTexture(m_sharedData.minimapData.mrt->getTexture(0), m_renderBuffer.getSize());
     m_mapQuad.setShader(m_mapShader);
 
     m_slopeShader.loadFromString(cro::RenderSystem2D::getDefaultVertexShader(), MiniSlopeFragment);
     m_shaderUniforms.transparency = m_slopeShader.getUniformID("u_transparency");
+
+    m_mapString.setFont(m_sharedData.sharedResources->fonts.get(FontID::Label));
+    m_mapString.setFillColour(TextNormalColour);
+    m_mapString.setShadowColour(LeaderboardTextDark);
+    m_mapString.setShadowOffset({ 8.f, -8.f });
+    m_mapString.setCharacterSize(LabelTextSize * 8); //really should be reading the texture scale
+    m_mapString.setAlignment(2);
 }
 
 void MapOverviewState::buildScene()
@@ -594,20 +644,62 @@ void MapOverviewState::rescaleMap()
 
     const float baseScale = (windowSize.x / mapSize.x) / m_viewScale.x;
     m_mapEnt.getComponent<cro::Transform>().setScale(glm::vec2(baseScale * m_zoomScale));
+
+    refreshMap();
 }
 
 void MapOverviewState::refreshMap()
 {
     static constexpr std::int32_t PosSlot = 6;
+    static constexpr std::int32_t MaskSlot = 7;
+    static constexpr std::int32_t NormalSlot = 8;
 
     glActiveTexture(GL_TEXTURE0 + PosSlot);
     glBindTexture(GL_TEXTURE_2D, m_sharedData.minimapData.mrt->getTexture(1).textureID);
 
+    glActiveTexture(GL_TEXTURE0 + MaskSlot);
+    glBindTexture(GL_TEXTURE_2D, m_sharedData.minimapData.mrt->getTexture(3).textureID);
+
+    glActiveTexture(GL_TEXTURE0 + NormalSlot);
+    glBindTexture(GL_TEXTURE_2D, m_sharedData.minimapData.mrt->getTexture(2).textureID);
+
     glUseProgram(m_mapShader.getGLHandle());
     glUniform1i(m_shaderUniforms.posMap, PosSlot);
+    glUniform1i(m_shaderUniforms.maskMap, MaskSlot);
+    glUniform1i(m_shaderUniforms.normalMap, NormalSlot);
+
+    //glUniform1f(m_shaderUniforms.heatAmount, m_shaderValues[m_shaderValueIndex].first);
+    glUniform1f(m_shaderUniforms.heatAmount, m_shaderValues[m_shaderValueIndex].second);
+    glUniform1f(m_shaderUniforms.gridScale, std::ceil(m_zoomScale / 4.f));
+
+    const float MapScale = static_cast<float>(m_renderBuffer.getSize().x) / MapSize.x;
+
+    glm::vec2 teePos = 
+    {
+        std::round(m_sharedData.minimapData.teePos.x),
+        std::round(- m_sharedData.minimapData.teePos.z)
+    };
+    glm::vec2 pinPos =
+    {
+        std::round(m_sharedData.minimapData.pinPos.x),
+        std::round(- m_sharedData.minimapData.pinPos.z),
+    };
+
+    auto charScale = std::round(MaxZoom - (m_zoomScale - MinZoom));
+    charScale = std::round((charScale / MaxZoom) * 8.f);
+    m_mapString.setCharacterSize(LabelTextSize * charScale);
+    m_mapString.setShadowOffset({ charScale, -charScale });
 
     m_renderBuffer.clear(cro::Colour::Transparent);
     m_mapQuad.draw();
+    m_mapString.setString("T");
+    m_mapString.setPosition(teePos * MapScale);
+    m_mapString.draw();
+    
+    m_mapString.setString("F");
+    m_mapString.setPosition(pinPos * MapScale);
+    m_mapString.draw();
+
     m_renderBuffer.display();
 }
 
@@ -650,6 +742,13 @@ void MapOverviewState::updateNormals()
                 float g = 1.f - std::min(1.f, glm::length2(normal) / (8.f * 8.f));
                 c.setGreen(g);
                 verts.emplace_back((position + normal), c);
+
+                normal *= 0.8f;
+                glm::vec2 cross(-normal.y, normal.x);
+                cross *= 0.2f;
+                verts.emplace_back(position + normal + cross, c);
+                cross *= -1.f;
+                verts.emplace_back(position + normal + cross, c);
             }
         }
     }

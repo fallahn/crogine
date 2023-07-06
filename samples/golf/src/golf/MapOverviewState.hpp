@@ -36,6 +36,7 @@ source distribution.
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/graphics/RenderTexture.hpp>
 #include <crogine/graphics/SimpleQuad.hpp>
+#include <crogine/graphics/SimpleText.hpp>
 
 struct SharedStateData;
 
@@ -81,14 +82,28 @@ private:
 
     cro::RenderTexture m_renderBuffer;
     cro::SimpleQuad m_mapQuad;
+    cro::SimpleText m_mapString;
     cro::Shader m_mapShader;
     cro::Shader m_slopeShader;
 
     struct ShaderUniforms final
     {
         std::int32_t posMap = -1;
+        std::int32_t maskMap = -1;
+        std::int32_t normalMap = -1;
         std::int32_t transparency = -1;
+        std::int32_t gridAmount = -1;
+        std::int32_t gridScale = -1;
+        std::int32_t heatAmount = -1;
     }m_shaderUniforms;
+
+    static constexpr std::array<std::pair<float, float>, 2u> m_shaderValues =
+    {
+        std::make_pair<float, float>(0.f, 0.f),
+        std::make_pair<float, float>(0.f, 1.f),
+        //std::make_pair<float, float>(1.f, 0.f)
+    };
+    std::size_t m_shaderValueIndex;
 
     float m_zoomScale;
 
