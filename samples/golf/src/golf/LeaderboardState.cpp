@@ -65,6 +65,7 @@ source distribution.
 #include <crogine/ecs/systems/RenderSystem2D.hpp>
 #include <crogine/ecs/systems/AudioPlayerSystem.hpp>
 
+#include <crogine/ecs/InfoFlags.hpp>
 #include <crogine/util/Easings.hpp>
 #include <crogine/detail/OpenGL.hpp>
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
@@ -105,7 +106,7 @@ namespace
 
 LeaderboardState::LeaderboardState(cro::StateStack& ss, cro::State::Context ctx, SharedStateData& sd)
     : cro::State        (ss, ctx),
-    m_scene             (ctx.appInstance.getMessageBus()),
+    m_scene             (ctx.appInstance.getMessageBus(), 256, cro::INFO_FLAG_SYSTEMS_ACTIVE),
     m_sharedData        (sd),
     m_viewScale         (2.f)
 {
@@ -508,6 +509,7 @@ void LeaderboardState::buildScene()
     //tab buttons
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 50.f, 45.f, 0.2f });
+    entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("tab_highlight");
     entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
@@ -543,6 +545,7 @@ void LeaderboardState::buildScene()
 
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 134.f, 45.f, 0.2f });
+    entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("tab_highlight");
     entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
@@ -576,6 +579,7 @@ void LeaderboardState::buildScene()
 
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 218.f, 45.f, 0.2f });
+    entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("tab_highlight");
     entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
@@ -608,6 +612,7 @@ void LeaderboardState::buildScene()
 
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 302.f, 45.f, 0.2f });
+    entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("tab_highlight");
     entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
@@ -651,10 +656,14 @@ void LeaderboardState::buildScene()
 
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 363.f, 100.f, 0.1f });
+    entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("checkbox_highlight");
     entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+    entity.addComponent<cro::Callback>().function = HighlightAnimationCallback();
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
+    entity.getComponent<cro::Transform>().move(entity.getComponent<cro::Transform>().getOrigin());
     entity.addComponent<cro::UIInput>().area = bounds;
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Leaderboard);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectedID;
