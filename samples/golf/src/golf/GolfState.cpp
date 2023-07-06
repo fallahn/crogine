@@ -5410,6 +5410,12 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
                     if (!m_sharedData.connectionData[client].playerData[player].isCPU)
                     {
                         m_achievementTracker.noGimmeUsed = false;
+                        m_achievementTracker.gimmes++;
+
+                        if (m_achievementTracker.gimmes == 18)
+                        {
+                            //TODO implement achievement
+                        }
                     }
                 }
             }
@@ -5434,8 +5440,6 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
                     && !m_sharedData.localConnectionData.playerData[m_currentPlayer.player].isCPU);
                 break;
             case TerrainID::Hole:
-                
-
                 if (m_sharedData.tutorial)
                 {
                     Achievements::awardAchievement(AchievementStrings[AchievementID::CluedUp]);

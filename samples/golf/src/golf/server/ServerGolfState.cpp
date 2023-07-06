@@ -61,6 +61,8 @@ namespace
     constexpr std::uint8_t MaxStrokes = 12;
     const cro::Time TurnTime = cro::seconds(90.f);
 
+    bool hadTennisBounce = false;
+
     glm::vec3 randomOffset3()
     {
         auto x = cro::Util::Random::value(0, 1) * 2;
@@ -236,6 +238,11 @@ void GolfState::handleMessage(const cro::Message& msg)
                 //1500m
                 sendAchievement(AchievementID::IntoOrbit);
             }
+
+            if (hadTennisBounce && data.terrain == TerrainID::Fairway)
+            {
+                //send tennis achievement (how to check this is our player? - Let the client decide?)
+            }
         }
         else if (data.type == GolfBallEvent::Gimme)
         {
@@ -265,6 +272,7 @@ void GolfState::handleMessage(const cro::Message& msg)
             break;
         case TriggerID::TennisCourt:
             LogI << "Deuce!" << std::endl;
+            hadTennisBounce = true;
             break;
         }
     }
@@ -626,6 +634,8 @@ void GolfState::checkReadyQuit(std::uint8_t clientID)
 
 void GolfState::setNextPlayer(bool newHole)
 {
+    hadTennisBounce = false;
+
     //broadcast current player's score first
     ScoreUpdate su;
     su.strokeDistance = m_playerInfo[0].ballEntity.getComponent<Ball>().lastStrokeDistance;

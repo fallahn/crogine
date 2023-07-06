@@ -1406,6 +1406,12 @@ void GolfState::showCountdown(std::uint8_t seconds)
     m_roundEnded = true;
     Achievements::setActive(m_allowAchievements); //make sure these are re-enabled in case CPU player was last
 
+    if (m_achievementTracker.eagles > 1
+        && m_achievementTracker.birdies > 2)
+    {
+        //TODO award nested achievement
+    }
+
     //hide any input
     cro::Command cmd;
     cmd.targetFlags = CommandID::UI::Root;
@@ -2887,10 +2893,18 @@ void GolfState::showMessageBoard(MessageBoardID messageType, bool special)
             default: break;
             case ScoreID::Birdie:
                 Achievements::incrementStat(StatStrings[StatID::Birdies]);
+                if (!m_sharedData.localConnectionData.playerData[m_currentPlayer.player].isCPU)
+                {
+                    m_achievementTracker.birdies++;
+                }
                 break;
             case ScoreID::Eagle:
                 Achievements::incrementStat(StatStrings[StatID::Eagles]);
                 Achievements::awardAchievement(AchievementStrings[AchievementID::Soaring]);
+                if (!m_sharedData.localConnectionData.playerData[m_currentPlayer.player].isCPU)
+                {
+                    m_achievementTracker.eagles++;
+                }
                 break;
             case ScoreID::HIO:
                 Achievements::incrementStat(StatStrings[StatID::HIOs]);
