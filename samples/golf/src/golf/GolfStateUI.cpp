@@ -1895,6 +1895,11 @@ void GolfState::createScoreboard()
 
     if (!m_courseTitle.empty())
     {
+        auto str = m_courseTitle;
+#ifdef USE_GNS
+        str += " - " + Social::getLeader(m_sharedData.mapDirectory, m_sharedData.holeCount);
+#endif
+
         entity = m_uiScene.createEntity();
         entity.addComponent<cro::Transform>();
         entity.addComponent<cro::Drawable2D>();
@@ -1902,7 +1907,7 @@ void GolfState::createScoreboard()
         entity.addComponent<UIElement>().absolutePosition = { 200.f, 11.f };
         entity.getComponent<UIElement>().depth = 0.5f;
         entity.getComponent<UIElement>().resizeCallback = resizeCentre;
-        entity.addComponent<cro::Text>(font).setString(m_courseTitle);
+        entity.addComponent<cro::Text>(font).setString(str);
         entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
         entity.getComponent<cro::Text>().setFillColour(LeaderboardTextDark);
         centreText(entity);

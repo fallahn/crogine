@@ -6280,7 +6280,11 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo)
 
 
     m_sharedData.minimapData.courseName = m_courseTitle;
-    m_sharedData.minimapData.courseName += "\n\nHole: " + std::to_string(m_sharedData.minimapData.holeNumber + 1);
+    m_sharedData.minimapData.courseName += "\n";
+#ifdef USE_GNS
+    m_sharedData.minimapData.courseName += Social::getLeader(m_sharedData.mapDirectory, m_sharedData.holeCount);
+#endif
+    m_sharedData.minimapData.courseName += "\nHole: " + std::to_string(m_sharedData.minimapData.holeNumber + 1);
     m_sharedData.minimapData.courseName += "\nPar: " + std::to_string(m_holeData[m_currentHole].par);
     m_gameScene.getDirector<GolfSoundDirector>()->setCrowdPositions(m_holeData[m_currentHole].crowdPositions);
 }
