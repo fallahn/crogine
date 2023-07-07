@@ -487,7 +487,8 @@ bool GolfState::handleEvent(const cro::Event& evt)
     const auto showMapOverview = [&]()
     {
         if (m_mapTextureMRT.available()
-            && m_currentCamera != CameraID::Transition)
+            && m_currentCamera != CameraID::Transition
+            && !m_holeData[m_currentHole].puttFromTee)
         {
             requestStackPush(StateID::MapOverview);
         }
@@ -7335,6 +7336,10 @@ void GolfState::createTransition(const ActivePlayer& playerData)
             m_gameScene.getActiveListener().getComponent<cro::AudioListener>().setVelocity(travel * Speed);
         }
     };
+
+
+    auto* msg = postMessage<SceneEvent>(MessageID::SceneMessage);
+    msg->type = SceneEvent::TransitionStart;
 }
 
 void GolfState::startFlyBy()

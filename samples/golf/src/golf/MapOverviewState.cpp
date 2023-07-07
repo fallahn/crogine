@@ -302,6 +302,15 @@ bool MapOverviewState::handleEvent(const cro::Event& evt)
 
 void MapOverviewState::handleMessage(const cro::Message& msg)
 {
+    //hide this state if the map transition started.
+    if (msg.id == MessageID::SceneMessage)
+    {
+        const auto& data = msg.getData<SceneEvent>();
+        if (data.type == SceneEvent::TransitionStart)
+        {
+            requestStackPop();
+        }
+    }
     m_scene.forwardMessage(msg);
 }
 
@@ -718,7 +727,7 @@ void MapOverviewState::updateNormals()
     glGetTexImage(GL_TEXTURE_2D, 0, GL_RED, GL_FLOAT, mask.data());
 
 
-    const auto PixelsPerMetre = imageSize.x / MapSize.x;
+    const auto PixelsPerMetre = (imageSize.x / MapSize.x) * 2;
     const auto Stride = 4 * PixelsPerMetre;
 
     //TODO remind ourself how to do the vert building with std::async

@@ -439,7 +439,10 @@ static const std::string CelFragmentShader = R"(
 #endif
         o_normal = vec4(normal, 1.0);
         o_pos = vec4(v_worldPosition, 1.0);
-        o_terrain = vec4(vec3(1.0 - step(0.174, v_colour.r)), 1.0);
+
+float greenTerrain = step(0.065, v_colour.r) * (1.0 - step(0.13, v_colour.r));
+
+        o_terrain = vec4(vec3(greenTerrain), 1.0);
 
         vec3 lightDirection = normalize(-u_lightDirection);
         float amount = dot(normal, lightDirection);

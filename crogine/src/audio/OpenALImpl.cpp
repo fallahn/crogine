@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2021
+Matt Marchant 2017 - 2023
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -36,6 +36,7 @@ source distribution.
 #include <crogine/util/String.hpp>
 #include <crogine/core/App.hpp>
 #include <crogine/core/FileSystem.hpp>
+#include <crogine/gui/Gui.hpp>
 
 //oh apple you so quirky
 #ifdef __APPLE__
@@ -67,6 +68,8 @@ namespace
             return AL_FORMAT_STEREO16;
         }
     }
+
+    //std::int32_t soundSourceCount = 0;
 }
 
 OpenALImpl::OpenALImpl()
@@ -346,6 +349,7 @@ std::int32_t OpenALImpl::requestAudioSource(std::int32_t buffer, bool streaming)
             alCheck(alSourceQueueBuffers(source, static_cast<ALsizei>(stream.buffers.size()), stream.buffers.data()));
             stream.accessed = false;
         }
+        //soundSourceCount++;
         return source;
     }
     return -1;
@@ -417,7 +421,7 @@ void OpenALImpl::deleteAudioSource(std::int32_t source)
     }
 
     alCheck(alDeleteSources(1, &src));
-
+    //soundSourceCount--;
     //LOG("Deleted audio source", Logger::Type::Info);
 }
 
