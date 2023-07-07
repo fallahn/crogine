@@ -68,14 +68,13 @@ namespace
             return AL_FORMAT_STEREO16;
         }
     }
-
-    //std::int32_t soundSourceCount = 0;
 }
 
 OpenALImpl::OpenALImpl()
     : m_device          (nullptr),
     m_context           (nullptr),
-    m_nextFreeStream    (0)
+    m_nextFreeStream    (0),
+    m_nextFreeSource    (0)
 {
     for (auto i = 0u; i < m_streamIDs.size(); ++i)
     {
@@ -109,6 +108,12 @@ bool OpenALImpl::init()
 
 void OpenALImpl::shutdown()
 {
+    for (auto i = 0u; i < m_nextFreeSource; ++i)
+    {
+        deleteAudioSource(m_sourcePool[i]);
+    }
+    alCheck(alDeleteSources(static_cast<ALsizei>(m_sourcePool.size()), m_sourcePool.data()));
+
     //make sure to close any open streams
     for (auto i = 0u; i < m_streams.size(); ++i)
     {
@@ -330,8 +335,7 @@ std::int32_t OpenALImpl::requestAudioSource(std::int32_t buffer, bool streaming)
 {
     CRO_ASSERT(buffer > -1, "Invalid audio buffer");
 
-    ALuint source;
-    alCheck(alGenSources(1, &source));
+    ALuint source = getSource();
     if (source > 0)
     {
         if (!streaming)
@@ -349,7 +353,7 @@ std::int32_t OpenALImpl::requestAudioSource(std::int32_t buffer, bool streaming)
             alCheck(alSourceQueueBuffers(source, static_cast<ALsizei>(stream.buffers.size()), stream.buffers.data()));
             stream.accessed = false;
         }
-        //soundSourceCount++;
+
         return source;
     }
     return -1;
@@ -420,9 +424,7 @@ void OpenALImpl::deleteAudioSource(std::int32_t source)
         deleteStream(idx);
     }
 
-    alCheck(alDeleteSources(1, &src));
-    //soundSourceCount--;
-    //LOG("Deleted audio source", Logger::Type::Info);
+    freeSource(src);
 }
 
 void OpenALImpl::playSource(std::int32_t source, bool looped)
@@ -549,6 +551,49 @@ void OpenALImpl::setDopplerFactor(float factor)
 void OpenALImpl::setSpeedOfSound(float speed)
 {
     alCheck(alSpeedOfSound(speed));
+}
+
+//private
+ALuint OpenALImpl::getSource()
+{
+    if (m_nextFreeSource == 256)
+    {
+        return 0;
+    }
+
+    if (m_nextFreeSource == m_sourcePool.size())
+    {
+        //does the actual allocation
+        resizeSourcePool();
+    }
+
+    return m_sourcePool[m_nextFreeSource++];
+}
+
+void OpenALImpl::freeSource(ALuint source)
+{
+    for (auto i = 0u; i < m_nextFreeSource; ++i)
+    {
+        if (m_sourcePool[i] == source)
+        {
+            m_nextFreeSource--;
+            m_sourcePool[i] = m_sourcePool[m_nextFreeSource];
+            m_sourcePool[m_nextFreeSource] = source;
+            break;
+        }
+    }
+}
+
+void OpenALImpl::resizeSourcePool()
+{
+    auto startIndex = m_sourcePool.size();
+
+    if (startIndex < 256u) //OpenAL-soft limit
+    {
+        m_sourcePool.resize(m_sourcePool.size() + SourceResizeCount);
+
+        alCheck(alGenSources(SourceResizeCount, &m_sourcePool[startIndex]));
+    }
 }
 
 //stream thread function

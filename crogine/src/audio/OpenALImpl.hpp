@@ -118,6 +118,14 @@ namespace cro
             std::array<OpenALStream, MaxStreams> m_streams = {};
             std::array<std::int32_t, MaxStreams> m_streamIDs = {};
             std::size_t m_nextFreeStream;
+
+            static constexpr std::size_t SourceResizeCount = 32;
+            std::vector<ALuint> m_sourcePool;
+            std::size_t m_nextFreeSource;
+
+            ALuint getSource();
+            void freeSource(ALuint);
+            void resizeSourcePool();
         };
     }
 }

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021
+Matt Marchant 2021 - 2023
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -54,6 +54,5 @@ namespace cro
 
     private:
 
-        void onEntityAdded(Entity) override;
     };
 }

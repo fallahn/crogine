@@ -701,13 +701,13 @@ void MapOverviewState::refreshMap()
 
     m_renderBuffer.clear(cro::Colour::Transparent);
     m_mapQuad.draw();
-    m_mapString.setString("T");
-    m_mapString.setPosition(teePos * MapScale);
-    m_mapString.draw();
-    
-    m_mapString.setString("P");
-    m_mapString.setPosition(pinPos * MapScale);
-    m_mapString.draw();
+    //m_mapString.setString("T");
+    //m_mapString.setPosition(teePos * MapScale);
+    //m_mapString.draw();
+    //
+    //m_mapString.setString("P");
+    //m_mapString.setPosition(pinPos * MapScale);
+    //m_mapString.draw();
 
     m_renderBuffer.display();
 }
