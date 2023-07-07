@@ -39,6 +39,8 @@ source distribution.
 #include "NameScrollSystem.hpp"
 #include "MessageIDs.hpp"
 
+#include <Achievements.hpp>
+#include <AchievementStrings.hpp>
 #include <Social.hpp>
 
 #include <crogine/ecs/components/Transform.hpp>
@@ -280,6 +282,7 @@ ClubhouseState::ClubhouseState(cro::StateStack& ss, cro::State::Context ctx, Sha
     m_sharedData.inviteID = 0;
     m_sharedData.lobbyID = 0;
 
+    Achievements::setActive(true);
     Social::setStatus(Social::InfoID::Menu, { "Clubhouse" });
     Social::setGroup(0);
 
@@ -370,6 +373,7 @@ bool ClubhouseState::handleEvent(const cro::Event& evt)
                             m_arcadeEnt.getComponent<cro::UIInput>().enabled = true;
 
                             m_audioEnts[AudioID::Win].getComponent<cro::AudioEmitter>().play();
+                            Achievements::awardAchievement(AchievementStrings[AchievementID::Gamer]);
                         }
                     }
                 }
@@ -439,6 +443,8 @@ bool ClubhouseState::handleEvent(const cro::Event& evt)
                             m_arcadeEnt.getComponent<cro::UIInput>().enabled = true;
 
                             m_audioEnts[AudioID::Win].getComponent<cro::AudioEmitter>().play();
+
+                            Achievements::awardAchievement(AchievementStrings[AchievementID::Gamer]);
                         }
                     }
                 }

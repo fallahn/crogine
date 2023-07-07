@@ -109,9 +109,9 @@ void GolfState::handleMessage(const cro::Message& msg)
     {
         //TODO not sure we want to send this blindly to the client
         //but only the client knows if achievements are currently enabled.
-        std::array<std::uint8_t, 2u> packet =
+        std::array<std::uint8_t, 3u> packet =
         {
-            m_playerInfo[0].client, achID
+            m_playerInfo[0].client, m_playerInfo[0].player, achID
         };
         m_sharedData.host.broadcastPacket(PacketID::ServerAchievement, packet, net::NetFlag::Reliable);
     };
@@ -241,7 +241,8 @@ void GolfState::handleMessage(const cro::Message& msg)
 
             if (hadTennisBounce && data.terrain == TerrainID::Fairway)
             {
-                //send tennis achievement (how to check this is our player? - Let the client decide?)
+                //send tennis achievement
+                sendAchievement(AchievementID::CauseARacket);
             }
         }
         else if (data.type == GolfBallEvent::Gimme)

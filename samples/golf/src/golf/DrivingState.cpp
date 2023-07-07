@@ -55,6 +55,7 @@ source distribution.
 #include "../ErrorCheck.hpp"
 
 #include <Achievements.hpp>
+#include <AchievementStrings.hpp>
 #include <Social.hpp>
 
 #include <crogine/audio/AudioMixer.hpp>
@@ -581,7 +582,7 @@ void DrivingState::handleMessage(const cro::Message& msg)
                 msg2->type = GolfEvent::HoleInOne;
                 msg2->position = data.position;
 
-                //TODO raise achievement
+                Achievements::awardAchievement(AchievementStrings[AchievementID::DriveItHome]);
             }
         }
     }

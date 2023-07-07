@@ -1409,7 +1409,7 @@ void GolfState::showCountdown(std::uint8_t seconds)
     if (m_achievementTracker.eagles > 1
         && m_achievementTracker.birdies > 2)
     {
-        //TODO award nested achievement
+        Achievements::awardAchievement(AchievementStrings[AchievementID::Nested]);
     }
 
     //hide any input

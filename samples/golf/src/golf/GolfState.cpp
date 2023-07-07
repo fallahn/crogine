@@ -5373,8 +5373,9 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
             break;
         case PacketID::ServerAchievement:
         {
-            auto [client, achID] = evt.packet.as<std::array<std::uint8_t, 2u>>();
+            auto [client, player, achID] = evt.packet.as<std::array<std::uint8_t, 3u>>();
             if (client == m_sharedData.localConnectionData.connectionID
+                && !m_sharedData.localConnectionData.playerData[player].isCPU
                 && achID < AchievementID::Count)
             {
                 Achievements::awardAchievement(AchievementStrings[achID]);
@@ -5415,7 +5416,7 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
 
                         if (m_achievementTracker.gimmes == 18)
                         {
-                            //TODO implement achievement
+                            Achievements::awardAchievement(AchievementStrings[AchievementID::GimmeGimmeGimme]);
                         }
                     }
                 }
