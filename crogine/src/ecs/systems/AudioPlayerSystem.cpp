@@ -49,7 +49,7 @@ void AudioPlayerSystem::process(float)
         return;
     }
 
-    auto listnenerPosition = AudioRenderer::getListenerPosition();
+    auto listenerPosition = AudioRenderer::getListenerPosition();
 
     auto entities = getEntities();
     for (auto entity : entities)
@@ -97,8 +97,10 @@ void AudioPlayerSystem::process(float)
         {
             AudioRenderer::stopSource(audioSource.m_ID);
 
-            AudioRenderer::deleteAudioSource(audioSource.m_ID);
-            audioSource.m_ID = 0;
+            //we wait until the renderer says the source has actually
+            //stopped (below)
+            /*AudioRenderer::deleteAudioSource(audioSource.m_ID);
+            audioSource.m_ID = 0;*/
         }
 
         if (audioSource.m_transportFlags & AudioEmitter::GotoOffset)
@@ -118,7 +120,13 @@ void AudioPlayerSystem::process(float)
             //hmm these are static funcs so could be called directly by component setters, no?
             AudioRenderer::setSourcePitch(audioSource.m_ID, audioSource.m_pitch);
             AudioRenderer::setSourceVolume(audioSource.m_ID, audioSource.m_volume * AudioMixer::m_channels[audioSource.m_mixerChannel] * AudioMixer::m_prefadeChannels[audioSource.m_mixerChannel]);
-            AudioRenderer::setSourcePosition(audioSource.m_ID, listnenerPosition);
+            AudioRenderer::setSourcePosition(audioSource.m_ID, listenerPosition);
+        }
+        else if (audioSource.m_state == AudioEmitter::State::Stopped)
+        {
+            //tidy up so we can recycle the handles
+            AudioRenderer::deleteAudioSource(audioSource.m_ID);
+            audioSource.m_ID = 0;
         }
     }
 }

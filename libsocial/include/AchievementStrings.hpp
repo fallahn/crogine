@@ -122,7 +122,7 @@ static const std::array<std::string, AchievementID::Count> AchievementStrings =
     "never_give",
     "greens_in_regulation",
     "threes_a_crowd",
-    "consistency_is_key"
+    "consistency_is_key",
     "nested",
     "gimmegimmegimme",
     "drive_it_home",
@@ -208,7 +208,7 @@ static const std::array<std::string, AchievementID::Count> AchievementLabels =
     "Never Gonna Give You Up",
     "Greens In Regulation",
     "Three's A Crowd",
-    "Consistency Is Key"
+    "Consistency Is Key",
     "Nested",
     "Gimme Gimme Gimme",
     "Drive It Home",
