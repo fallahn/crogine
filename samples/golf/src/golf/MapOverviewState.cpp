@@ -310,6 +310,11 @@ void MapOverviewState::handleMessage(const cro::Message& msg)
         {
             requestStackPop();
         }
+        else if (data.type == SceneEvent::MinimapUpdated)
+        {
+            refreshMap();
+            recentreMap();
+        }
     }
     m_scene.forwardMessage(msg);
 }
@@ -472,7 +477,7 @@ void MapOverviewState::buildScene()
         {
         default: break;
         case RootCallbackData::FadeIn:
-            currTime = std::min(1.f, currTime + (dt * 2.f));
+            currTime = std::min(1.f, currTime + (dt * 5.f));
             e.getComponent<cro::Transform>().setScale(m_viewScale * cro::Util::Easing::easeOutQuint(currTime));
 
             if (currTime == 1)
@@ -498,7 +503,7 @@ void MapOverviewState::buildScene()
             }
             break;
         case RootCallbackData::FadeOut:
-            currTime = std::max(0.f, currTime - (dt * 2.f));
+            currTime = std::max(0.f, currTime - (dt * 5.f));
             e.getComponent<cro::Transform>().setScale(m_viewScale * cro::Util::Easing::easeOutQuint(currTime));
             if (currTime == 0)
             {
@@ -701,9 +706,9 @@ void MapOverviewState::refreshMap()
 
     m_renderBuffer.clear(cro::Colour::Transparent);
     m_mapQuad.draw();
-    //m_mapString.setString("T");
-    //m_mapString.setPosition(teePos * MapScale);
-    //m_mapString.draw();
+    m_mapString.setString("T");
+    m_mapString.setPosition(teePos * MapScale);
+    m_mapString.draw();
     //
     //m_mapString.setString("P");
     //m_mapString.setPosition(pinPos * MapScale);

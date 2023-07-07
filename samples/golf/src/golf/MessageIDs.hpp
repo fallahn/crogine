@@ -102,7 +102,8 @@ struct SceneEvent
         RequestSwitchCamera,
         PlayerIdle,
         PlayerRotate,
-        PlayerBad
+        PlayerBad,
+        MinimapUpdated
     }type = TransitionComplete;
 
     //union

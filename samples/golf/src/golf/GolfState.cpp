@@ -7337,10 +7337,6 @@ void GolfState::createTransition(const ActivePlayer& playerData)
             m_gameScene.getActiveListener().getComponent<cro::AudioListener>().setVelocity(travel * Speed);
         }
     };
-
-
-    auto* msg = postMessage<SceneEvent>(MessageID::SceneMessage);
-    msg->type = SceneEvent::TransitionStart;
 }
 
 void GolfState::startFlyBy()
@@ -7605,6 +7601,9 @@ void GolfState::startFlyBy()
         e.getComponent<cro::Transform>().setScale(glm::vec3(0.f));
     };
     m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+    auto* msg = postMessage<SceneEvent>(MessageID::SceneMessage);
+    msg->type = SceneEvent::TransitionStart;
 }
 
 std::int32_t GolfState::getClub() const

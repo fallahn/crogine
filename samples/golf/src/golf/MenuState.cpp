@@ -180,7 +180,6 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
             Achievements::update();
         }
 #endif
-
         updateUnlockedItems();
         cacheState(StateID::Unlock);
         cacheState(StateID::Options);

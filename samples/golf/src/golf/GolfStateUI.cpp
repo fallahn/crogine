@@ -960,6 +960,9 @@ void GolfState::buildUI()
                 m_mapCam.getComponent<cro::Camera>().active = false;
 
                 retargetMinimap(true);
+
+                auto* msg = postMessage<SceneEvent>(MessageID::SceneMessage);
+                msg->type = SceneEvent::MinimapUpdated;
             }
         }
         else
