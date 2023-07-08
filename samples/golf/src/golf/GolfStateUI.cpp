@@ -1906,7 +1906,11 @@ void GolfState::createScoreboard()
     {
         auto str = m_courseTitle;
 #ifdef USE_GNS
-        str += " - " + Social::getLeader(m_sharedData.mapDirectory, m_sharedData.holeCount);
+        auto leader = Social::getLeader(m_sharedData.mapDirectory, m_sharedData.holeCount);
+        if (!leader.empty())
+        {
+            str += " - " + leader;
+        }
 #endif
 
         entity = m_uiScene.createEntity();
@@ -2320,9 +2324,9 @@ void GolfState::updateScoreboard(bool updateParDiff)
 
     std::size_t page2 = 0;
     static constexpr std::size_t MaxCols = 9;
-    if (holeCount > m_scoreColumnCount)
+    if (holeCount > /*m_scoreColumnCount*/MaxCols)
     {
-        page2 = std::min(MaxCols, holeCount - m_scoreColumnCount);
+        page2 = std::min(MaxCols, holeCount - /*m_scoreColumnCount*/MaxCols);
     }
 
     //store the strings to update the leaderboard texture
