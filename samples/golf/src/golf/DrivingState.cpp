@@ -494,10 +494,16 @@ bool DrivingState::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_MOUSEBUTTONUP)
     {
-        if (evt.button.button == SDL_BUTTON_RIGHT &&
-            m_gameScene.getDirector<DrivingRangeDirector>()->roundEnded())
+        if (evt.button.button == SDL_BUTTON_RIGHT)
         {
-            pauseGame();
+#ifdef USE_GNS
+            closeLeaderboard();
+#else
+            if(m_gameScene.getDirector<DrivingRangeDirector>()->roundEnded())
+            {
+                pauseGame();
+            }
+#endif
         }
     }
     else if (evt.type == SDL_CONTROLLERDEVICEREMOVED)

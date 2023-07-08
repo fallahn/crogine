@@ -925,9 +925,8 @@ void DrivingState::createGameOptions()
     cro::SpriteSheet spriteSheet;
     spriteSheet.loadFromFile("assets/golf/sprites/scoreboard.spt", m_resources.textures);
     m_sprites[SpriteID::Stars] = spriteSheet.getSprite("orbs");
-    //auto bgSprite = spriteSheet.getSprite("border");
 
-    auto bounds = cro::FloatRect(glm::vec2(0.f), glm::vec2(tex.getSize()));// bgSprite.getTextureBounds();
+    auto bounds = cro::FloatRect(glm::vec2(0.f), glm::vec2(tex.getSize()));
     auto size = glm::vec2(GolfGame::getActiveTarget()->getSize());
     auto position = glm::vec3(size.x / 2.f, size.y / 2.f, 1.5f);
 
@@ -1118,6 +1117,8 @@ score based on your overall accuracy. Good Luck!
                     numberEnt.getComponent<cro::Text>().setString(std::to_string(m_strokeCounts[m_strokeCountIndex]));
                     centreText(numberEnt);
 
+                    leaderboardTryCount = m_strokeCountIndex;
+
                     if (m_topScores[m_strokeCountIndex] > 0)
                     {
                         std::stringstream s;
@@ -1155,6 +1156,8 @@ score based on your overall accuracy. Good Luck!
                     m_strokeCountIndex = (m_strokeCountIndex + 1) % m_strokeCounts.size();
                     numberEnt.getComponent<cro::Text>().setString(std::to_string(m_strokeCounts[m_strokeCountIndex]));
                     centreText(numberEnt);
+
+                    leaderboardTryCount = m_strokeCountIndex;
 
                     if (m_topScores[m_strokeCountIndex] > 0)
                     {
@@ -1314,6 +1317,8 @@ score based on your overall accuracy. Good Luck!
                     numberEnt.getComponent<cro::Text>().setString(str);
                     centreText(numberEnt);
 
+                    leaderboardHoleIndex = m_targetIndex;
+
                     m_summaryScreen.audioEnt.getComponent<cro::AudioEmitter>().play();
                 }
             });
@@ -1330,6 +1335,8 @@ score based on your overall accuracy. Good Luck!
                     std::string str = (m_targetIndex - 1) < 0 ? "?" : std::to_string(m_targetIndex);
                     numberEnt.getComponent<cro::Text>().setString(str);
                     centreText(numberEnt);
+
+                    leaderboardHoleIndex = m_targetIndex;
 
                     m_summaryScreen.audioEnt.getComponent<cro::AudioEmitter>().play();
                 }
@@ -1442,35 +1449,7 @@ score based on your overall accuracy. Good Luck!
     entity.getComponent<cro::Transform>().setOrigin({ b.width / 2.f, b.height / 2.f });
     entity.getComponent<cro::Transform>().move({ std::floor(bgBounds.width / 2.f), b.height / 2.f });
     entity.addComponent<cro::Callback>().setUserData<LeaderboardData>();
-    entity.getComponent<cro::Callback>().function =
-        [&](cro::Entity e, float dt)
-    {
-        const float Speed = dt * 4.f;
-        auto& [progress, direction] = e.getComponent<cro::Callback>().getUserData<LeaderboardData>();
-        if (direction == 0)
-        {
-            //grow
-            progress = std::min(1.f, progress + Speed);
-            if (progress == 1)
-            {
-                direction = 1;
-                e.getComponent<cro::Callback>().active = false;
-                m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Leaderboard);
-            }
-        }
-        else
-        {
-            //shrink
-            progress = std::max(0.f, progress - Speed);
-            if (progress == 0)
-            {
-                direction = 0;
-                e.getComponent<cro::Callback>().active = false;
-                m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Options);
-            }
-        }
-        e.getComponent<cro::Transform>().setScale({ cro::Util::Easing::easeOutQuad(progress), 1.f });
-    };
+    //callback is added below so we can captch upDisplay lambda
     bgEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     auto lbEntity = entity;
@@ -1622,6 +1601,40 @@ score based on your overall accuracy. Good Luck!
         scoreColumn.getComponent<cro::Text>().setString(scores[2]);
     };
     
+
+    lbEntity.getComponent<cro::Callback>().function =
+        [&, updateDisplay](cro::Entity e, float dt) mutable
+    {
+        const float Speed = dt * 4.f;
+        auto& [progress, direction] = e.getComponent<cro::Callback>().getUserData<LeaderboardData>();
+        if (direction == 0)
+        {
+            //grow
+            progress = std::min(1.f, progress + Speed);
+            if (progress == 1)
+            {
+                direction = 1;
+                e.getComponent<cro::Callback>().active = false;
+                m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Leaderboard);
+
+                updateDisplay();
+            }
+        }
+        else
+        {
+            //shrink
+            progress = std::max(0.f, progress - Speed);
+            if (progress == 0)
+            {
+                direction = 0;
+                e.getComponent<cro::Callback>().active = false;
+                m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Options);
+            }
+        }
+        e.getComponent<cro::Transform>().setScale({ cro::Util::Easing::easeOutQuad(progress), 1.f });
+    };
+
+
 
     //browse leaderboards
     textEnt4 = m_uiScene.createEntity();
@@ -1901,7 +1914,7 @@ void DrivingState::createSummary()
     //background
     cro::SpriteSheet spriteSheet;
     spriteSheet.loadFromFile("assets/golf/sprites/scoreboard.spt", m_resources.textures);
-    auto bgSprite = spriteSheet.getSprite("border");
+    auto bgSprite = cro::Sprite(m_resources.textures.get("assets/golf/images/driving_range_menu.png"));
 
     auto bounds = bgSprite.getTextureBounds();
     auto size = glm::vec2(GolfGame::getActiveTarget()->getSize());
