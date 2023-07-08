@@ -3540,19 +3540,19 @@ void MenuState::createPreviousScoreCard()
 
 
     //fills with dummy data for testing  - must remove this!
-    /*for (auto i = 0u; i < ConstVal::MaxClients; ++i)
-    {
-        for (auto j = 0u; j < ConstVal::MaxPlayers; ++j)
-        {
-            m_sharedData.connectionData[i].playerData[j].name = RandomNames[cro::Util::Random::value(0u, RandomNames.size() - 1)];
+    //for (auto i = 0u; i < ConstVal::MaxClients; ++i)
+    //{
+    //    for (auto j = 0u; j < ConstVal::MaxPlayers; ++j)
+    //    {
+    //        m_sharedData.connectionData[i].playerData[j].name = RandomNames[cro::Util::Random::value(0u, RandomNames.size() - 1)];
 
-            m_sharedData.connectionData[i].playerData[j].holeScores.resize(18);
-            for (auto& score : m_sharedData.connectionData[i].playerData[j].holeScores)
-            {
-                score = cro::Util::Random::value(1, 5);
-            }
-        }
-    }*/
+    //        m_sharedData.connectionData[i].playerData[j].holeScores.resize(18);
+    //        for (auto& score : m_sharedData.connectionData[i].playerData[j].holeScores)
+    //        {
+    //            score = cro::Util::Random::value(1, 5);
+    //        }
+    //    }
+    //}
 
 
 
@@ -3653,7 +3653,7 @@ void MenuState::createPreviousScoreCard()
     //TODO we could do all the updates in one iter over the Entries
     //but this is all in the loading screen so... meh
 
-    bool page2 = scoreEntries.size() > 9;
+    bool page2 = holeCount > 9;
 
     cro::String str("HOLE\nPAR");
     for (const auto& entry : scoreEntries)
@@ -3692,6 +3692,7 @@ void MenuState::createPreviousScoreCard()
     std::int32_t parTotal = 0;
     std::int32_t parTotalFront = 0;
     std::int32_t parTotalBack = 0;
+
     switch (m_sharedData.holeCount)
     {
     default: break;
@@ -3759,24 +3760,27 @@ void MenuState::createPreviousScoreCard()
                 redStr += "\n";
             }
 
-            parTotal += courseData.parVals[parOffset + i + 9];
-            parTotalBack += courseData.parVals[parOffset + i + 9];
-
-            str += "\n\n" + std::to_string(i + 10) + "\n" + std::to_string(courseData.parVals[parOffset + i + 9]);
-            redStr += "\n\n\n";
-            for (const auto& entry : scoreEntries)
+            if (i < (holeCount - 9))
             {
-                auto score = m_sharedData.connectionData[entry.client].playerData[entry.player].holeScores[i + 9];
+                parTotal += courseData.parVals[parOffset + i + 9];
+                parTotalBack += courseData.parVals[parOffset + i + 9];
 
-                if (score > courseData.parVals[parOffset + i + 9])
+                str += "\n\n" + std::to_string(i + 10) + "\n" + std::to_string(courseData.parVals[parOffset + i + 9]);
+                redStr += "\n\n\n";
+                for (const auto& entry : scoreEntries)
                 {
-                    str += "\n";
-                    redStr += "\n" + std::to_string(score);
-                }
-                else
-                {
-                    str += "\n" + std::to_string(score);
-                    redStr += "\n";
+                    auto score = m_sharedData.connectionData[entry.client].playerData[entry.player].holeScores[i + 9];
+
+                    if (score > courseData.parVals[parOffset + i + 9])
+                    {
+                        str += "\n";
+                        redStr += "\n" + std::to_string(score);
+                    }
+                    else
+                    {
+                        str += "\n" + std::to_string(score);
+                        redStr += "\n";
+                    }
                 }
             }
         }

@@ -3343,7 +3343,10 @@ void PlaylistState::loadShrubbery(const std::string& path)
                     applyMaterialData(md, billboardShadowMat);
                     billboardShadowMat.doubleSided = true; //do this second because applyMaterial() overwrites it
                     entity.getComponent<cro::Model>().setShadowMaterial(0, billboardShadowMat);
-                    entity.addComponent<cro::ShadowCaster>();
+                    if (!entity.hasComponent<cro::ShadowCaster>())
+                    {
+                        entity.addComponent<cro::ShadowCaster>();
+                    }
 
                     //trees are separate as we might want treesets instead
                     md.loadFromFile(modelPath); //reload to create unique VBO
@@ -3353,7 +3356,10 @@ void PlaylistState::loadShrubbery(const std::string& path)
                     entity.getComponent<cro::Model>().setMaterial(0, billboardMat);
 
                     entity.getComponent<cro::Model>().setShadowMaterial(0, billboardShadowMat);
-                    entity.addComponent<cro::ShadowCaster>();
+                    if (!entity.hasComponent<cro::ShadowCaster>())
+                    {
+                        entity.addComponent<cro::ShadowCaster>();
+                    }
                     
                     if (entity.hasComponent<cro::BillboardCollection>())
                     {
