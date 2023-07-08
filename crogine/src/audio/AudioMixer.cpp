@@ -126,3 +126,8 @@ bool AudioMixer::hasAudioRenderer()
 {
     return AudioRenderer::isValid();
 }
+
+void AudioMixer::printDebug()
+{
+    AudioRenderer::printDebug();
+}

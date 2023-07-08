@@ -553,6 +553,12 @@ void OpenALImpl::setSpeedOfSound(float speed)
     alCheck(alSpeedOfSound(speed));
 }
 
+void OpenALImpl::printDebug()
+{
+    ImGui::Text("Source Cache Size %u", m_sourcePool.size());
+    ImGui::Text("Sources In Use %u", m_nextFreeSource);
+}
+
 //private
 ALuint OpenALImpl::getSource()
 {

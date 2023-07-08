@@ -110,6 +110,8 @@ namespace cro
             void setDopplerFactor(float) override;
             void setSpeedOfSound(float) override;
 
+            void printDebug() override;
+
         private:
             ALCdevice* m_device;
             ALCcontext* m_context;
