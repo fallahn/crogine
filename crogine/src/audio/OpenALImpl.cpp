@@ -335,7 +335,17 @@ std::int32_t OpenALImpl::requestAudioSource(std::int32_t buffer, bool streaming)
 {
     CRO_ASSERT(buffer > -1, "Invalid audio buffer");
 
-    ALuint source = getSource();
+    ALuint source = 0;
+    
+    if (!streaming)
+    {
+        source = getSource();
+    }
+    else
+    {
+        alCheck(alGenSources(1, &source));
+    }
+
     if (source > 0)
     {
         if (!streaming)
@@ -422,9 +432,12 @@ void OpenALImpl::deleteAudioSource(std::int32_t source)
     {
         std::int32_t idx = static_cast<std::int32_t>(std::distance(std::begin(m_streams), result));
         deleteStream(idx);
+        alCheck(alDeleteSources(1, &src));
     }
-
-    freeSource(src);
+    else
+    {
+        freeSource(src);
+    }
 }
 
 void OpenALImpl::playSource(std::int32_t source, bool looped)
@@ -578,6 +591,10 @@ ALuint OpenALImpl::getSource()
 
 void OpenALImpl::freeSource(ALuint source)
 {
+    //need to reset params incase we get recycled
+    alCheck(alSourcei(source, AL_LOOPING, AL_FALSE));
+
+
     for (auto i = 0u; i < m_nextFreeSource; ++i)
     {
         if (m_sourcePool[i] == source)

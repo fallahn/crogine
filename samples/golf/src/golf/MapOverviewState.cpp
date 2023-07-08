@@ -480,6 +480,18 @@ void MapOverviewState::buildScene()
             currTime = std::min(1.f, currTime + (dt * 5.f));
             e.getComponent<cro::Transform>().setScale(m_viewScale * cro::Util::Easing::easeOutQuint(currTime));
 
+            //check hole number and compare with the last time this
+            //menu was opened - then recentre the map if it's a new hole.
+            if (m_previousMap != m_sharedData.minimapData.holeNumber)
+            {
+                m_mapText.getComponent<cro::Text>().setString(m_sharedData.minimapData.courseName);
+
+                recentreMap();
+                updateNormals();
+                m_previousMap = m_sharedData.minimapData.holeNumber;
+            }
+
+
             if (currTime == 1)
             {
                 state = RootCallbackData::FadeOut;
@@ -487,17 +499,6 @@ void MapOverviewState::buildScene()
 
                 m_scene.setSystemActive<cro::AudioPlayerSystem>(true);
                 m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
-
-                //check hole number and compare with the last time this
-                //menu was opened - then recentre the map if it's a new hole.
-                if (m_previousMap != m_sharedData.minimapData.holeNumber)
-                {
-                    m_mapText.getComponent<cro::Text>().setString(m_sharedData.minimapData.courseName);
-
-                    recentreMap();
-                    updateNormals();
-                    m_previousMap = m_sharedData.minimapData.holeNumber;
-                }
 
                 refreshMap();
             }

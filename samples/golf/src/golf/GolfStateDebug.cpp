@@ -314,27 +314,27 @@ void GolfState::registerDebugCommands()
 
 void GolfState::registerDebugWindows()
 {
-    //registerWindow([&]()
-    //    {
-    //        //if (ImGui::Begin("Ach Track"))
-    //        //{
-    //        //    ImGui::Text("No holes over par %s", m_achievementTracker.noHolesOverPar ? "true" : "false");
-    //        //    ImGui::Text("No gimme used %s", m_achievementTracker.noGimmeUsed ? "true" : "false");
-    //        //    ImGui::Text("Two shots spare %s", m_achievementTracker.twoShotsSpare ? "true" : "false");
-    //        //    ImGui::Text("Consistency %s", m_achievementTracker.alwaysOnTheCourse ? "true" : "false");
-    //        //    ImGui::Text("Under two putts %s", m_achievementTracker.underTwoPutts ? "true" : "false");
-    //        //    ImGui::Text("Putt count %d", m_achievementTracker.puttCount);
-    //        //}
-    //        //ImGui::End();
+    registerWindow([&]()
+        {
+            //if (ImGui::Begin("Ach Track"))
+            //{
+            //    ImGui::Text("No holes over par %s", m_achievementTracker.noHolesOverPar ? "true" : "false");
+            //    ImGui::Text("No gimme used %s", m_achievementTracker.noGimmeUsed ? "true" : "false");
+            //    ImGui::Text("Two shots spare %s", m_achievementTracker.twoShotsSpare ? "true" : "false");
+            //    ImGui::Text("Consistency %s", m_achievementTracker.alwaysOnTheCourse ? "true" : "false");
+            //    ImGui::Text("Under two putts %s", m_achievementTracker.underTwoPutts ? "true" : "false");
+            //    ImGui::Text("Putt count %d", m_achievementTracker.puttCount);
+            //}
+            //ImGui::End();
 
-    //        if (ImGui::Begin("Depth Map"))
-    //        {
-    //            //glm::vec2 size(m_gameSceneTexture.getSize() / 2u);
-    //            //ImGui::Image(m_gameSceneTexture.getDepthTexture(), { size.x, size.y }, { 0.f, 1.f }, { 1.f, 0.f });
-    //            cro::AudioMixer::printDebug();
-    //        }
-    //        ImGui::End();
-    //    });
+            if (ImGui::Begin("Depth Map"))
+            {
+                //glm::vec2 size(m_gameSceneTexture.getSize() / 2u);
+                //ImGui::Image(m_gameSceneTexture.getDepthTexture(), { size.x, size.y }, { 0.f, 1.f }, { 1.f, 0.f });
+                cro::AudioMixer::printDebug();
+            }
+            ImGui::End();
+        });
 
     //registerWindow([&]()
     //    {
