@@ -2016,7 +2016,7 @@ void DrivingState::createSummary()
 
     //high score text
     auto textEnt4 = m_uiScene.createEntity();
-    textEnt4.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, 32.f, 0.02f });
+    textEnt4.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, 134.f, 0.02f });
     textEnt4.addComponent<cro::Drawable2D>();
     textEnt4.addComponent<cro::Text>(smallFont).setCharacterSize(InfoTextSize);
     textEnt4.getComponent<cro::Text>().setFillColour(TextNormalColour);
