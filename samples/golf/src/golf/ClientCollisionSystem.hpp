@@ -67,11 +67,15 @@ public:
 
     void setMap(std::uint32_t);
 
+    void setPinPosition(glm::vec3 p) { m_pinPosition = p; }
+
 private:
     const std::vector<HoleData>& m_holeData;
     std::uint32_t m_holeIndex;
     const CollisionMesh& m_collisionMesh;
     std::int32_t m_club;
+
+    glm::vec3 m_pinPosition;
 
     cro::ImageArray<std::uint8_t> m_mapImage;
 

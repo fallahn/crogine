@@ -870,6 +870,38 @@ void BallSystem::doCollision(cro::Entity entity)
     auto pos = tx.getPosition();
     CRO_ASSERT(!std::isnan(pos.x), "");
 
+
+    //fudge in some psuedo flag collision - this assumes 
+    //that the collision is only done when ball is in flight
+    auto holePos = m_holeData->pin;
+    static constexpr float FlagRadius = 0.01f;
+    static constexpr float CollisionRadius = FlagRadius + Ball::Radius;
+    if (pos.y - holePos.y < 2.f) //flag is 2m tall
+    {
+        const glm::vec2 holeCollision = { holePos.x, -holePos.z };
+        const glm::vec2 ballCollision = { pos.x, -pos.z };
+        auto dir = ballCollision - holeCollision;
+        if (auto l2 = glm::length2(dir); l2 < (CollisionRadius * CollisionRadius))
+        {
+            const auto len = std::sqrt(l2);
+            const auto overlap = (CollisionRadius - len) + Ball::Radius;
+
+            dir /= len;
+            tx.move(dir * overlap);
+
+            auto& ball = entity.getComponent<Ball>();
+            ball.velocity = glm::reflect(ball.velocity, glm::vec3(dir.x, 0.f, -dir.y));
+            ball.velocity *= 0.5f;
+
+            auto* msg = postMessage<CollisionEvent>(MessageID::CollisionMessage);
+            msg->terrain = -1;
+            msg->position = pos;
+            msg->type = CollisionEvent::Begin;
+        }
+    }
+
+
+
     const auto resetBall = [&](Ball& ball, Ball::State state, std::uint8_t terrain)
     {
         ball.velocity = glm::vec3(0.f);

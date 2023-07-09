@@ -1587,7 +1587,7 @@ bool GolfState::simulate(float dt)
         }
         else if (diff < 0.0001f)
         {
-            m_resolutionUpdate.resolutionData.nearFadeDistance += (diff * (dt * 3.6f));
+            m_resolutionUpdate.resolutionData.nearFadeDistance += (diff * (dt * 8.f));
         }
         else
         {
@@ -5803,6 +5803,7 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo)
 
     m_terrainBuilder.update(hole);
     m_gameScene.getSystem<ClientCollisionSystem>()->setMap(hole);
+    m_gameScene.getSystem<ClientCollisionSystem>()->setPinPosition(m_holeData[hole].pin);
     m_collisionMesh.updateCollisionMesh(m_holeData[hole].modelEntity.getComponent<cro::Model>().getMeshData());
 
     //create hole model transition

@@ -86,6 +86,7 @@ GolfSoundDirector::GolfSoundDirector(cro::AudioResource& ar)
         "assets/golf/sound/ball/drop.wav",
         "assets/golf/sound/ball/scrub.wav",
         "assets/golf/sound/ball/stone.wav",
+        "assets/golf/sound/ball/pole.wav",
 
         "assets/golf/sound/holes/albatross.wav",
         "assets/golf/sound/holes/birdie.wav",
@@ -473,6 +474,9 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
             {
                 switch (data.terrain)
                 {
+                case -1:
+                    playSound(AudioID::Pole, data.position).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
+                    break;
                 default:
                     playSound(AudioID::Ground, data.position).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
                     break;

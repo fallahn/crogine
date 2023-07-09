@@ -53,6 +53,7 @@ ClientCollisionSystem::ClientCollisionSystem(cro::MessageBus& mb, const std::vec
     m_holeIndex     (0),
     m_collisionMesh (cm),
     m_club          (-1),
+    m_pinPosition   (0.f),
     m_waterCollision(false)
 {
     requireComponent<cro::Transform>();
@@ -75,6 +76,29 @@ void ClientCollisionSystem::process(float)
         {
             continue;
         }
+
+        if (collider.state == static_cast<std::uint8_t>(Ball::State::Flight))
+        {
+            auto holePos = m_pinPosition;
+            static constexpr float FlagRadius = 0.05f;
+            static constexpr float CollisionRadius = FlagRadius + Ball::Radius;
+            if (position.y - holePos.y < 2.f) //flag is 2m tall
+            {
+                const glm::vec2 holeCollision = { holePos.x, -holePos.z };
+                const glm::vec2 ballCollision = { position.x, -position.z };
+                auto dir = ballCollision - holeCollision;
+                if (auto l2 = glm::length2(dir); l2 < (CollisionRadius * CollisionRadius))
+                {
+                    auto* msg = postMessage<CollisionEvent>(MessageID::CollisionMessage);
+                    msg->terrain = -1;
+                    msg->position = position;
+                    msg->type = CollisionEvent::Begin;
+                }
+            }
+        }
+
+
+
 
         auto result = m_collisionMesh.getTerrain(position);
         if (!result.wasRayHit)

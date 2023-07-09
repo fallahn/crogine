@@ -66,6 +66,7 @@ public:
     CollisionMesh& operator = (CollisionMesh&&) = delete;
 
     void updateCollisionMesh(const cro::Mesh::Data&);
+
     TerrainResult getTerrain(glm::vec3 position) const;
     TerrainResult getTerrain(glm::vec3 rayStart, glm::vec3 rayEnd) const;
 

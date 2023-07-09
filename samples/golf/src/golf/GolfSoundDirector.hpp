@@ -79,6 +79,7 @@ private:
             Ground,
             Scrub,
             Stone,
+            Pole,
 
             ScoreAlbatross,
             ScoreBirdie,
