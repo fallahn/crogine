@@ -230,6 +230,7 @@ private:
         cro::Entity text02;
         cro::Entity summary;
         cro::Entity bestMessage;
+        cro::Entity roundName;
         std::array<cro::Entity, 3u> stars = {};
         cro::Entity audioEnt;
     }m_summaryScreen;

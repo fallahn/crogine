@@ -137,6 +137,14 @@ public:
     static void resetProfile();
     static void storeDrivingStats(const std::array<float, 3u>&);
     static void readDrivingStats(std::array<float, 3u>&);
+    struct BoardType final
+    {
+        enum
+        {
+            DrivingRange, Courses
+        };
+    };
+    static void findLeaderboards(std::int32_t) {}
     static void insertScore(const std::string&, std::uint8_t, std::int32_t) {}
     static std::int32_t getPersonalBest(const std::string&, std::uint8_t) { return -1; }
     static std::int32_t getMonthlyBest(const std::string&, std::uint8_t) { return -1; }

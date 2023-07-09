@@ -206,6 +206,16 @@ DrivingState::DrivingState(cro::StateStack& stack, cro::State::Context context, 
     
     m_sharedData.hosting = false; //TODO shouldn't have to do this...
     context.mainWindow.loadResources([this]() {
+#ifdef USE_GNS
+        Social::findLeaderboards(Social::BoardType::DrivingRange);
+
+        //pump the queue a bit to make sure leaderboards are up to date before building the menu
+        cro::Clock cl;
+        while (cl.elapsed().asSeconds() < 3.f)
+        {
+            Achievements::update();
+        }
+#endif
         addSystems();
         loadAssets();
         createScene();

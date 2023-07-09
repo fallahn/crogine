@@ -6416,6 +6416,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     updateScoreboard(false);
     showScoreboard(false);
 
+    Club::setClubLevel(isCPU ? m_cpuGolfer.getClubLevel() : m_sharedData.clubSet); //do this first else setActive has the wrong estimation distance
 
     m_sharedData.inputBinding.playerID = localPlayer ? player.player : 0; //this also affects who can emote, so if we're currently emoting when it's not our turn always be player 0(??)
     m_inputParser.setActive(localPlayer && !m_photoMode, m_currentPlayer.terrain, isCPU);
@@ -6736,7 +6737,6 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
 
 
     m_currentPlayer = player;
-    Club::setClubLevel(isCPU ? m_cpuGolfer.getClubLevel() : m_sharedData.clubSet);
 
     //announce player has changed
     auto* msg2 = getContext().appInstance.getMessageBus().post<GolfEvent>(MessageID::GolfMessage);

@@ -69,6 +69,36 @@ namespace
     std::int32_t leaderboardFilter = 0;
     constexpr std::int32_t MaxLeaderboardFilter = 3;
 
+    const std::array<std::string, 3u> ScoreStrings =
+    {
+        "Best Of 5",
+        "Best Of 9",
+        "Best Of 18",
+    };
+    const std::array<std::string, 3u> RankStrings =
+    {
+        "Global",
+        "Nearest",
+        "Friends"
+    };
+    const std::array<std::string, 14u> HoleStrings =
+    {
+        "Random",
+        "Target 1",
+        "Target 2",
+        "Target 3",
+        "Target 4",
+        "Target 5",
+        "Target 6",
+        "Target 7",
+        "Target 8",
+        "Target 9",
+        "Target 10",
+        "Target 11",
+        "Target 12",
+        "Target 13",
+    };
+
     static constexpr float SummaryOffset = 54.f;
     static constexpr float SummaryHeight = 254.f;
 
@@ -1558,36 +1588,6 @@ score based on your overall accuracy. Good Luck!
 
     auto updateDisplay = [nameColumn, scoreColumn, rankColumn, scoreType, holeIndex, rankType]() mutable
     {
-        const std::array ScoreStrings =
-        {
-            "Best Of 5",
-            "Best Of 9",
-            "Best Of 18",
-        };
-        const std::array RankStrings =
-        {
-            "Global",
-            "Nearest",
-            "Friends"
-        };
-        const std::array HoleStrings =
-        {
-            "Random",
-            "Target 1",
-            "Target 2",
-            "Target 3",
-            "Target 4",
-            "Target 5",
-            "Target 6",
-            "Target 7",
-            "Target 8",
-            "Target 9",
-            "Target 10",
-            "Target 11",
-            "Target 12",
-            "Target 13",
-        };
-
         scoreType.getComponent<cro::Text>().setString(ScoreStrings[leaderboardTryCount]);
         holeIndex.getComponent<cro::Text>().setString(HoleStrings[leaderboardHoleIndex]);
         rankType.getComponent<cro::Text>().setString(RankStrings[leaderboardFilter]);
@@ -1842,6 +1842,10 @@ score based on your overall accuracy. Good Luck!
                     m_summaryScreen.fadeEnt.getComponent<cro::Callback>().setUserData<float>(0.f);
                     m_summaryScreen.fadeEnt.getComponent<cro::Callback>().active = true;
 
+                    //set the round title
+                    m_summaryScreen.roundName.getComponent<cro::Text>().setString(ScoreStrings[m_strokeCountIndex] + ", " + HoleStrings[m_targetIndex]);
+                    centreText(m_summaryScreen.roundName);
+
                     m_mapTexture.clear(cro::Colour::Transparent);
                     m_mapTexture.display();
 
@@ -1942,6 +1946,16 @@ void DrivingState::createSummary()
     titleText.getComponent<cro::Text>().setString("Summary");
     centreText(titleText);
     bgEntity.getComponent<cro::Transform>().addChild(titleText.getComponent<cro::Transform>());
+
+    auto rangeText = m_uiScene.createEntity();
+    rangeText.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, 26.f, 0.02f });
+    rangeText.addComponent<cro::Drawable2D>();
+    rangeText.addComponent<cro::Text>(largeFont).setCharacterSize(UITextSize);
+    rangeText.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    rangeText.getComponent<cro::Text>().setString("Game Over Man");
+    centreText(rangeText);
+    bgEntity.getComponent<cro::Transform>().addChild(rangeText.getComponent<cro::Transform>());
+    m_summaryScreen.roundName = rangeText;
 
 
     //info text

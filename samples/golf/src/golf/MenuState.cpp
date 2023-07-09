@@ -42,6 +42,7 @@ source distribution.
 #include "MessageIDs.hpp"
 #include "SharedProfileData.hpp"
 #include "spooky2.hpp"
+#include "Clubs.hpp"
 #include "../ErrorCheck.hpp"
 
 #include <Achievements.hpp>
@@ -156,6 +157,9 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     m_prevMenu              (MenuID::Main),
     m_viewScale             (1.f)
 {
+    sd.clubSet = std::clamp(sd.clubSet, 0, 2);
+    Club::setClubLevel(sd.clubSet);
+    
     std::fill(m_readyState.begin(), m_readyState.end(), false);
     sd.minimapData = {};
     
@@ -172,6 +176,8 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
         createScene();
 
 #ifdef USE_GNS
+        Social::findLeaderboards(Social::BoardType::Courses);
+        
         //cached menu states depend on steam stats being
         //up to date so this hacks in a delay and pumps the callback loop
         cro::Clock cl;
