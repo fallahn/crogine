@@ -82,7 +82,7 @@ void ClientCollisionSystem::process(float)
             auto holePos = m_pinPosition;
             static constexpr float FlagRadius = 0.05f;
             static constexpr float CollisionRadius = FlagRadius + Ball::Radius;
-            if (position.y - holePos.y < 2.f) //flag is 2m tall
+            if (position.y - holePos.y < 1.9f) //flag is 2m tall
             {
                 const glm::vec2 holeCollision = { holePos.x, -holePos.z };
                 const glm::vec2 ballCollision = { position.x, -position.z };

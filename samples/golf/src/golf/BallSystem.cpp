@@ -876,7 +876,7 @@ void BallSystem::doCollision(cro::Entity entity)
     auto holePos = m_holeData->pin;
     static constexpr float FlagRadius = 0.01f;
     static constexpr float CollisionRadius = FlagRadius + Ball::Radius;
-    if (pos.y - holePos.y < 2.f) //flag is 2m tall
+    if (pos.y - holePos.y < 1.9f) //flag is 2m tall
     {
         const glm::vec2 holeCollision = { holePos.x, -holePos.z };
         const glm::vec2 ballCollision = { pos.x, -pos.z };
@@ -887,11 +887,21 @@ void BallSystem::doCollision(cro::Entity entity)
             const auto overlap = (CollisionRadius - len) + Ball::Radius;
 
             dir /= len;
-            tx.move(dir * overlap);
 
+            glm::vec3 worldDir(dir.x, 0.f, -dir.y);
+            tx.move(worldDir * overlap);
+
+            //check if the collision is on the right or left
+            //of the velocity vector and impart more spin the
+            //greater the velocity and the steeper the angle
             auto& ball = entity.getComponent<Ball>();
-            ball.velocity = glm::reflect(ball.velocity, glm::vec3(dir.x, 0.f, -dir.y));
-            ball.velocity *= 0.5f;
+            const glm::vec3 rightVec(ball.velocity.z, ball.velocity.y, -ball.velocity.x); //yeah, yeah...
+            const float spinOffset = glm::dot(glm::normalize(rightVec), -worldDir);
+            ball.spin.x += spinOffset * std::clamp(glm::length2(ball.velocity) / 2500.f, 0.f, 1.f) * 10.f;
+            ball.spin.y += std::pow(cro::Util::Random::value(-1.f, 1.f), 5.f);
+
+            ball.velocity = glm::reflect(ball.velocity, worldDir);
+            ball.velocity *= (0.4f + static_cast<float>(cro::Util::Random::value(0, 2)) / 10.f);
 
             auto* msg = postMessage<CollisionEvent>(MessageID::CollisionMessage);
             msg->terrain = -1;
