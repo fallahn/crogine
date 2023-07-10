@@ -31,6 +31,7 @@ source distribution.
 #include "ALCheck.hpp"
 #include "WavLoader.hpp"
 #include "VorbisLoader.hpp"
+#include "Mp3Loader.hpp"
 
 #include <crogine/detail/Assert.hpp>
 #include <crogine/util/String.hpp>
@@ -181,6 +182,14 @@ std::int32_t OpenALImpl::requestNewBuffer(const std::string& filePath)
             data = loader->getData();
         }
     }
+    else if (ext == ".mp3")
+    {
+        loader = std::make_unique<Mp3Loader>();
+        if (loader->open(path))
+        {
+            data = loader->getData();
+        }
+    }
     else
     {
         Logger::log(ext + ": format not supported", Logger::Type::Error);
@@ -251,6 +260,16 @@ std::int32_t OpenALImpl::requestNewStream(const std::string& path)
     else if (ext == ".ogg")
     {
         stream.audioFile = std::make_unique<VorbisLoader>();
+        if (!stream.audioFile->open(filePath))
+        {
+            stream.audioFile.reset();
+            Logger::log("Failed to open " + path, Logger::Type::Error);
+            return -1;
+        }
+    }
+    else if (ext == ".mp3")
+    {
+        stream.audioFile = std::make_unique<Mp3Loader>();
         if (!stream.audioFile->open(filePath))
         {
             stream.audioFile.reset();

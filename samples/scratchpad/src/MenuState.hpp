@@ -32,6 +32,7 @@ source distribution.
 #include "StateIDs.hpp"
 #include <crogine/graphics/VideoPlayer.hpp>
 
+#include <crogine/audio/AudioStream.hpp>
 #include <crogine/core/State.hpp>
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/graphics/Font.hpp>
@@ -58,6 +59,7 @@ namespace sp
 
         cro::Scene m_scene;
         cro::Font m_font;
+        cro::AudioStream m_audioSource;
 
         cro::VideoPlayer m_video;
 

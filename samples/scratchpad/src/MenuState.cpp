@@ -39,11 +39,13 @@ source distribution.
 #include <crogine/ecs/components/Text.hpp>
 #include <crogine/ecs/components/UIInput.hpp>
 #include <crogine/ecs/components/Camera.hpp>
+#include <crogine/ecs/components/AudioEmitter.hpp>
 
 #include <crogine/ecs/systems/TextSystem.hpp>
 #include <crogine/ecs/systems/UISystem.hpp>
 #include <crogine/ecs/systems/CameraSystem.hpp>
 #include <crogine/ecs/systems/RenderSystem2D.hpp>
+#include <crogine/ecs/systems/AudioSystem.hpp>
 
 #include <crogine/util/Easings.hpp>
 
@@ -99,26 +101,6 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, MyApp&
         //create ImGui stuff
         createUI();
     });
-
-    float buns = 0.1f;
-    for (auto i = 0; i < 9; ++i)
-    {
-        LogI << "buns " << buns << std::endl;
-        
-        auto bunsIn = cro::Util::Easing::easeInSine(buns);
-        LogI << "buns in " << bunsIn << std::endl;
-
-        //1.f - std::cos((t * Const::PI) / 2.f);
-
-        auto invSine = [](float x)
-        {
-            return (std::acos(1.f - x) / cro::Util::Const::PI) * 2.f;
-        };
-        LogI << "buns out " << invSine(bunsIn) << std::endl;
-
-        buns += 0.1f;
-    }
-
 }
 
 //public
@@ -162,11 +144,14 @@ void MenuState::addSystems()
     m_scene.addSystem<cro::UISystem>(mb);
     m_scene.addSystem<cro::CameraSystem>(mb);
     m_scene.addSystem<cro::RenderSystem2D>(mb);
+    m_scene.addSystem<cro::AudioSystem>(mb);
 }
 
 void MenuState::loadAssets()
 {
     m_font.loadFromFile("assets/fonts/VeraMono.ttf");
+    m_audioSource.loadFromFile("assets/bass_loop.mp3");
+    
 }
 
 void MenuState::createScene()
@@ -183,7 +168,9 @@ void MenuState::createScene()
     };
     entity.getComponent<cro::Drawable2D>().updateLocalBounds();
  
-
+    entity.addComponent<cro::AudioEmitter>().setSource(m_audioSource);
+    entity.getComponent<cro::AudioEmitter>().setLooped(true);
+    entity.getComponent<cro::AudioEmitter>().play();
 
     //menu
     entity = m_scene.createEntity();

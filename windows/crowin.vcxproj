@@ -198,6 +198,7 @@
     <ClInclude Include="..\crogine\src\audio\ALCheck.hpp" />
     <ClInclude Include="..\crogine\src\audio\AudioFile.hpp" />
     <ClInclude Include="..\crogine\src\audio\AudioRenderer.hpp" />
+    <ClInclude Include="..\crogine\src\audio\Mp3Loader.hpp" />
     <ClInclude Include="..\crogine\src\audio\NullImpl.hpp" />
     <ClInclude Include="..\crogine\src\audio\OpenALImpl.hpp" />
     <ClInclude Include="..\crogine\src\audio\PCMData.hpp" />
@@ -243,6 +244,7 @@
     <ClCompile Include="..\crogine\src\audio\AudioScape.cpp" />
     <ClCompile Include="..\crogine\src\audio\AudioSource.cpp" />
     <ClCompile Include="..\crogine\src\audio\AudioStream.cpp" />
+    <ClCompile Include="..\crogine\src\audio\Mp3Loader.cpp" />
     <ClCompile Include="..\crogine\src\audio\OpenALImpl.cpp" />
     <ClCompile Include="..\crogine\src\audio\sound_system\SoundSource.cpp" />
     <ClCompile Include="..\crogine\src\audio\sound_system\SoundStream.cpp" />
