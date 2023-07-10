@@ -70,6 +70,16 @@ namespace cro
             \returns true if seek is successful, else false if out of bounds
             */
             virtual bool seek(cro::Time) = 0;
+
+            /*!
+            \brief Returns the format of any loaded audio file
+            */
+            virtual PCMData::Format getFormat() const = 0;
+
+            /*!
+            \brief Returns the sample rate in hertz  of any loaded file
+            */
+            virtual std::int32_t getSampleRate() const = 0;
         };
     }
 }

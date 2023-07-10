@@ -74,6 +74,8 @@ bool WavLoader::open(const std::string& path)
     {
         SDL_RWclose(m_file.file);
         m_file.file = nullptr;
+
+        m_dataChunk = {};
     }
     
     m_file.file = SDL_RWFromFile(path.c_str(), "rb");

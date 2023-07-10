@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2023
+Matt Marchant 2023
 http://trederia.blogspot.com
 
 crogine application - Zlib license.
@@ -29,45 +29,42 @@ source distribution.
 
 #pragma once
 
-#include "StateIDs.hpp"
-#include <crogine/graphics/VideoPlayer.hpp>
-#include <crogine/audio/sound_system/MusicPlayer.hpp>
+#include <crogine/audio/sound_system/SoundStream.hpp>
 
-#include <crogine/core/State.hpp>
-#include <crogine/ecs/Scene.hpp>
-#include <crogine/graphics/Font.hpp>
-#include <crogine/gui/GuiClient.hpp>
+#include <memory>
 
-class MyApp;
-namespace sp
+namespace cro
 {
-    class MenuState final : public cro::State, public cro::GuiClient
+    namespace Detail
+    {
+        class AudioFile;
+    }
+
+    /*!
+    \brief Streaming music player.
+    Supports playing audio from mono or stereo *ogg, *.mp3 and wav files.
+    Requires the OpenAL AudioRenderer to be available.
+    */
+    class CRO_EXPORT_API MusicPlayer final : public SoundStream
     {
     public:
-        MenuState(cro::StateStack&, cro::State::Context, MyApp&);
-        ~MenuState() = default;
+        MusicPlayer();
+        ~MusicPlayer();
 
-        cro::StateID getStateID() const override { return States::ScratchPad::MainMenu; }
-
-        bool handleEvent(const cro::Event&) override;
-        void handleMessage(const cro::Message&) override;
-        bool simulate(float) override;
-        void render() override;
+        /*!
+        \brief Attempts to load the file at the given path.
+        Supported types are *.wav, *.mp3 and *.ogg
+        \param path A string containing the path to the file to open
+        \returns true on success, else false.
+        */
+        bool loadFromFile(const std::string& path);
 
     private:
-        MyApp& m_gameInstance;
+        std::unique_ptr<Detail::AudioFile> m_audioFile;
+        std::int32_t m_bytesPerSample;
 
-        cro::Scene m_scene;
-        cro::Font m_font;
+        bool onGetData(cro::SoundStream::Chunk&) override;
+        void onSeek(std::int32_t) override;
 
-        cro::VideoPlayer m_video;
-        cro::MusicPlayer m_music;
-
-        void addSystems();
-        void loadAssets();
-        void createScene();
-        void createUI();
-
-        bool createStub(const std::string&);
     };
 }

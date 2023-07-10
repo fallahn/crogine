@@ -70,6 +70,8 @@ bool Mp3Loader::open(const std::string& path)
 
         //TODO do we really need to do this?
         m_decoder.reset();
+
+        m_dataChunk = {};
     }
 
     //read header

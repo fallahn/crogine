@@ -705,6 +705,9 @@
     <ClInclude Include="..\crogine\src\audio\Mp3Loader.hpp">
       <Filter>Header Files\audio\ecs</Filter>
     </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\audio\sound_system\MusicPlayer.hpp">
+      <Filter>Header Files\audio\sound system</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\crogine\src\ecs\Entity.cpp">
@@ -1189,6 +1192,9 @@
     </ClCompile>
     <ClCompile Include="..\crogine\src\audio\Mp3Loader.cpp">
       <Filter>Source Files\audio\ecs</Filter>
+    </ClCompile>
+    <ClCompile Include="..\crogine\src\audio\sound_system\MusicPlayer.cpp">
+      <Filter>Source Files\audio\sound system</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

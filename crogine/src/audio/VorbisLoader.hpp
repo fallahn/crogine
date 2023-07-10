@@ -50,15 +50,19 @@ namespace cro
             ~VorbisLoader();
 
             VorbisLoader(const VorbisLoader&) = delete;
-            VorbisLoader(VorbisLoader&&) = delete;
+            VorbisLoader(VorbisLoader&&) noexcept = delete;
             const VorbisLoader& operator = (const VorbisLoader&) = delete;
-            VorbisLoader& operator = (VorbisLoader&&) = delete;
+            VorbisLoader& operator = (VorbisLoader&&) noexcept = delete;
 
             bool open(const std::string&) override;
 
             const PCMData& getData(std::size_t = 0, bool looped = false) const override;
 
             bool seek(cro::Time) override;
+
+            PCMData::Format getFormat() const override { return m_dataChunk.format; }
+
+            std::int32_t getSampleRate() const override { return m_dataChunk.frequency; }
 
         private:
             RaiiRWops m_file;

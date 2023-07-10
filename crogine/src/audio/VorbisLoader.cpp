@@ -62,6 +62,8 @@ bool VorbisLoader::open(const std::string& path)
     {
         SDL_RWclose(m_file.file);
         m_file.file = nullptr;
+
+        m_dataChunk = {};
     }
     if (m_vorbisFile)
     {

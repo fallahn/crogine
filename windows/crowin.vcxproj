@@ -42,6 +42,7 @@
     <ClInclude Include="..\crogine\include\crogine\audio\AudioMixer.hpp" />
     <ClInclude Include="..\crogine\include\crogine\audio\AudioResource.hpp" />
     <ClInclude Include="..\crogine\include\crogine\audio\AudioStream.hpp" />
+    <ClInclude Include="..\crogine\include\crogine\audio\sound_system\MusicPlayer.hpp" />
     <ClInclude Include="..\crogine\include\crogine\audio\sound_system\SoundSource.hpp" />
     <ClInclude Include="..\crogine\include\crogine\audio\sound_system\SoundStream.hpp" />
     <ClInclude Include="..\crogine\include\crogine\Config.hpp" />
@@ -246,6 +247,7 @@
     <ClCompile Include="..\crogine\src\audio\AudioStream.cpp" />
     <ClCompile Include="..\crogine\src\audio\Mp3Loader.cpp" />
     <ClCompile Include="..\crogine\src\audio\OpenALImpl.cpp" />
+    <ClCompile Include="..\crogine\src\audio\sound_system\MusicPlayer.cpp" />
     <ClCompile Include="..\crogine\src\audio\sound_system\SoundSource.cpp" />
     <ClCompile Include="..\crogine\src\audio\sound_system\SoundStream.cpp" />
     <ClCompile Include="..\crogine\src\audio\stb_vorbis.c" />

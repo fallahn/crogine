@@ -147,6 +147,9 @@ void MenuState::addSystems()
 void MenuState::loadAssets()
 {
     m_font.loadFromFile("assets/fonts/VeraMono.ttf");
+
+    m_music.loadFromFile("assets/avatar_voices.mp3");
+    m_music.play();
 }
 
 void MenuState::createScene()

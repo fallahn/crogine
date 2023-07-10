@@ -49,15 +49,19 @@ namespace cro
 
             ~Mp3Loader();
             Mp3Loader(const Mp3Loader&) = delete;
-            Mp3Loader(Mp3Loader&&) = delete;
+            Mp3Loader(Mp3Loader&&) noexcept = delete;
             const Mp3Loader& operator = (const Mp3Loader&) = delete;
-            Mp3Loader& operator = (Mp3Loader&&) = delete;
+            Mp3Loader& operator = (Mp3Loader&&) noexcept = delete;
 
             bool open(const std::string&) override;
 
             const PCMData& getData(std::size_t = 0, bool looped = false) const override;
 
             bool seek(cro::Time) override;
+
+            PCMData::Format getFormat() const override { return m_dataChunk.format; }
+
+            std::int32_t getSampleRate() const override { return m_dataChunk.frequency; }
 
         private:
             std::unique_ptr<mp3dec_ex_t> m_decoder;

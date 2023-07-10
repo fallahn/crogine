@@ -56,9 +56,9 @@ namespace cro
         };
 
         SoundStream(const SoundStream&) = delete;
-        SoundStream(SoundStream&&) = delete;
+        SoundStream(SoundStream&&) noexcept = delete;
         SoundStream& operator = (const SoundStream&) = delete;
-        SoundStream& operator = (SoundStream&&) = delete;
+        SoundStream& operator = (SoundStream&&) noexcept = delete;
 
         virtual ~SoundStream() noexcept;
 
@@ -147,6 +147,13 @@ namespace cro
         */
         void setProcessingInterval(std::int32_t interval);
 
+
+        /*!
+        \brief Returns the current processing interval in milliseconds
+        This can be used to calculate the chunk size required from the
+        source buffers when onGetData() is called
+        */
+        std::int32_t getProcessingInterval() const { return m_processingInterval; }
 
         /*!
         \brief Returns loop position if looped or -1 if no loop

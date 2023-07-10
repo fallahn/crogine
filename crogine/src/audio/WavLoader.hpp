@@ -79,6 +79,10 @@ namespace cro
             */
             bool seek(cro::Time) override;
 
+            PCMData::Format getFormat() const override { return m_dataChunk.format; }
+
+            std::int32_t getSampleRate() const override { return m_dataChunk.frequency; }
+
         private:
             RaiiRWops m_file;
 
