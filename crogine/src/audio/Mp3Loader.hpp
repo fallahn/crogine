@@ -46,7 +46,12 @@ namespace cro
         {
         public:
             Mp3Loader();
+
             ~Mp3Loader();
+            Mp3Loader(const Mp3Loader&) = delete;
+            Mp3Loader(Mp3Loader&&) = delete;
+            const Mp3Loader& operator = (const Mp3Loader&) = delete;
+            Mp3Loader& operator = (Mp3Loader&&) = delete;
 
             bool open(const std::string&) override;
 
@@ -55,7 +60,6 @@ namespace cro
             bool seek(cro::Time) override;
 
         private:
-            //RaiiRWops m_file;
             std::unique_ptr<mp3dec_ex_t> m_decoder;
             std::int32_t m_channelCount;
 

@@ -39,13 +39,11 @@ source distribution.
 #include <crogine/ecs/components/Text.hpp>
 #include <crogine/ecs/components/UIInput.hpp>
 #include <crogine/ecs/components/Camera.hpp>
-#include <crogine/ecs/components/AudioEmitter.hpp>
 
 #include <crogine/ecs/systems/TextSystem.hpp>
 #include <crogine/ecs/systems/UISystem.hpp>
 #include <crogine/ecs/systems/CameraSystem.hpp>
 #include <crogine/ecs/systems/RenderSystem2D.hpp>
-#include <crogine/ecs/systems/AudioSystem.hpp>
 
 #include <crogine/util/Easings.hpp>
 
@@ -144,14 +142,11 @@ void MenuState::addSystems()
     m_scene.addSystem<cro::UISystem>(mb);
     m_scene.addSystem<cro::CameraSystem>(mb);
     m_scene.addSystem<cro::RenderSystem2D>(mb);
-    m_scene.addSystem<cro::AudioSystem>(mb);
 }
 
 void MenuState::loadAssets()
 {
     m_font.loadFromFile("assets/fonts/VeraMono.ttf");
-    m_audioSource.loadFromFile("assets/bass_loop.mp3");
-    
 }
 
 void MenuState::createScene()
@@ -168,9 +163,7 @@ void MenuState::createScene()
     };
     entity.getComponent<cro::Drawable2D>().updateLocalBounds();
  
-    entity.addComponent<cro::AudioEmitter>().setSource(m_audioSource);
-    entity.getComponent<cro::AudioEmitter>().setLooped(true);
-    entity.getComponent<cro::AudioEmitter>().play();
+
 
     //menu
     entity = m_scene.createEntity();

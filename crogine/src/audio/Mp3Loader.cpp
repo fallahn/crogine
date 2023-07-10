@@ -27,6 +27,13 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
+//disable a bunch of warnings we can't fix from mp3 decoder
+#ifdef _MSC_VER
+#pragma warning (disable : 4244) //uint64_t to int
+#pragma warning (disable : 4267) //size_t to int
+#pragma warning (disable : 4456) //shadowing vars
+#endif
+
 #define MINIMP3_IMPLEMENTATION
 #include "minimp3_ex.h"
 
@@ -50,19 +57,13 @@ Mp3Loader::Mp3Loader()
 
 Mp3Loader::~Mp3Loader()
 {
-
+    //prevents error on MSVC about not being able to
+    //delete the forward declared type in the unique_ptr
 }
 
 //public
 bool Mp3Loader::open(const std::string& path)
 {
-    //close any open files
-    //if (m_file.file)
-    //{
-    //    SDL_RWclose(m_file.file);
-    //    m_file.file = nullptr;
-    //}
-    
     if (m_decoder)
     {
         mp3dec_ex_close(m_decoder.get());
@@ -71,35 +72,18 @@ bool Mp3Loader::open(const std::string& path)
         m_decoder.reset();
     }
 
-    //m_file.file = SDL_RWFromFile(path.c_str(), "rb");
-    //if (!m_file.file)
-    //{
-    //    Logger::log("Failed opening " + path, Logger::Type::Error);
-    //    return false;
-    //}
-
-
     //read header
     m_decoder = std::make_unique<mp3dec_ex_t>();
     mp3dec_ex_open(m_decoder.get(), path.c_str(), MP3D_SEEK_TO_SAMPLE);
     
     if (!m_decoder->samples)
     {
-        /*SDL_RWclose(m_file.file);
-        m_file.file = nullptr;*/
-
         Logger::log("Failed opening mp3 file, error "/* + std::to_string(err)*/, Logger::Type::Error);
         return false;
     }
 
     if (m_decoder->info.channels > 2)
     {
-        /*SDL_RWclose(m_file.file);
-        m_file.file = nullptr;
-
-        stb_vorbis_close(m_vorbisFile);
-        m_vorbisFile = nullptr;*/
-
         mp3dec_ex_close(m_decoder.get());
 
         //TODO do we really need to do this?

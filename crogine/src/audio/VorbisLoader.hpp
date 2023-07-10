@@ -49,6 +49,11 @@ namespace cro
             VorbisLoader();
             ~VorbisLoader();
 
+            VorbisLoader(const VorbisLoader&) = delete;
+            VorbisLoader(VorbisLoader&&) = delete;
+            const VorbisLoader& operator = (const VorbisLoader&) = delete;
+            VorbisLoader& operator = (VorbisLoader&&) = delete;
+
             bool open(const std::string&) override;
 
             const PCMData& getData(std::size_t = 0, bool looped = false) const override;
