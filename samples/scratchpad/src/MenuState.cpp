@@ -78,6 +78,7 @@ namespace
     }
 
     bool showVideoPlayer = false;
+    bool showMusicPlayer = false;
     bool showBoilerplate = false;
 }
 
@@ -99,6 +100,8 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, MyApp&
         //create ImGui stuff
         createUI();
     });
+
+    m_musicName = "No File";
 }
 
 //public
@@ -147,9 +150,6 @@ void MenuState::addSystems()
 void MenuState::loadAssets()
 {
     m_font.loadFromFile("assets/fonts/VeraMono.ttf");
-
-    m_music.loadFromFile("assets/avatar_voices.mp3");
-    m_music.play();
 }
 
 void MenuState::createScene()
@@ -470,6 +470,11 @@ void MenuState::createUI()
                         showVideoPlayer = true;
                     }
 
+                    if (ImGui::MenuItem("Music Player"))
+                    {
+                        showMusicPlayer = true;
+                    }
+
                     if (ImGui::MenuItem("Generate Boilerplate"))
                     {
                         showBoilerplate = true;
@@ -534,6 +539,74 @@ void MenuState::createUI()
                     if (ImGui::Button("Jump"))
                     {
                         m_video.seek(100.f);
+                    }
+                }
+                ImGui::End();
+            }
+
+            if (showMusicPlayer)
+            {
+                if (ImGui::Begin("Music Player", &showMusicPlayer))
+                {
+                    if (ImGui::Button("Open##music"))
+                    {
+                        auto path = cro::FileSystem::openFileDialogue("", "wav,ogg,mp3");
+                        if (!path.empty())
+                        {
+                            if (!m_music.loadFromFile(path))
+                            {
+                                cro::FileSystem::showMessageBox("Error", "Failed to open music file");
+                            }
+                            else
+                            {
+                                m_musicName = cro::FileSystem::getFileName(path);
+                            }
+                        }
+                    }
+
+                    ImGui::SameLine();
+
+                    if (m_music.getStatus() == cro::SoundStream::Status::Playing)
+                    {
+                        if (ImGui::Button("Pause##music"))
+                        {
+                            m_music.pause();
+                        }
+                    }
+                    else
+                    {
+                        if (ImGui::Button("Play##music"))
+                        {
+                            m_music.play();
+                        }
+                    }
+                    ImGui::SameLine();
+
+                    if (ImGui::Button("Stop##music"))
+                    {
+                        m_music.stop();
+                    }
+                    ImGui::SameLine();
+                    bool loop = m_music.isLooped();
+                    if (ImGui::Checkbox("Loop##music", &loop))
+                    {
+                        m_music.setLooped(loop);
+                    }
+
+                    ImGui::SameLine();
+                    ImGui::Text("%s", m_musicName.c_str());
+
+                    float ts = m_music.getPlayingPosition().asSeconds();
+                    float l = m_music.getDuration().asSeconds();
+                    ImGui::Text("Position %3.2f/%3.2f", ts, l);
+
+                    ImGui::ProgressBar(ts / l);
+
+                    float vol = m_music.getVolume();
+                    if (ImGui::SliderFloat("Vol", &vol, 0.f, 1.f))
+                    {
+                        vol = std::clamp(vol, 0.f, 1.f);
+                        m_music.setVolume(vol);
                     }
                 }
                 ImGui::End();

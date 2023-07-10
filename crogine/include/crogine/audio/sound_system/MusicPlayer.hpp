@@ -51,6 +51,11 @@ namespace cro
         MusicPlayer();
         ~MusicPlayer();
 
+        MusicPlayer(const MusicPlayer&) = delete;
+        MusicPlayer(MusicPlayer&&) = delete;
+        const MusicPlayer& operator = (const MusicPlayer&) = delete;
+        MusicPlayer& operator = (MusicPlayer&&) = delete;
+
         /*!
         \brief Attempts to load the file at the given path.
         Supported types are *.wav, *.mp3 and *.ogg
@@ -58,6 +63,8 @@ namespace cro
         \returns true on success, else false.
         */
         bool loadFromFile(const std::string& path);
+
+        Time getDuration() const;
 
     private:
         std::unique_ptr<Detail::AudioFile> m_audioFile;

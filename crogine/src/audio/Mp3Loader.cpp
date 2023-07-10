@@ -50,7 +50,8 @@ namespace
 }
 
 Mp3Loader::Mp3Loader()
-    : m_channelCount(0)
+    : m_channelCount(0),
+    m_sampleCount   (0)
 {
 
 }
@@ -71,6 +72,8 @@ bool Mp3Loader::open(const std::string& path)
         //TODO do we really need to do this?
         m_decoder.reset();
 
+        m_channelCount = 0;
+        m_sampleCount = 0;
         m_dataChunk = {};
     }
 
@@ -99,7 +102,8 @@ bool Mp3Loader::open(const std::string& path)
     m_dataChunk.format = (m_decoder->info.channels == 1) ? PCMData::Format::MONO16 : PCMData::Format::STEREO16;
     m_dataChunk.frequency = m_decoder->info.hz;
     m_channelCount = m_decoder->info.channels;
-
+    m_sampleCount = m_decoder->samples;
+    
     return true;
 }
 

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2023
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -64,10 +64,13 @@ namespace cro
 
             std::int32_t getSampleRate() const override { return m_dataChunk.frequency; }
 
+            std::uint64_t getSampleCount() const override { return m_sampleCount; }
+
         private:
             RaiiRWops m_file;
             stb_vorbis* m_vorbisFile;
             std::int32_t m_channelCount;
+            std::uint64_t m_sampleCount;
 
             mutable PCMData m_dataChunk;
             mutable std::vector<std::int16_t> m_buffer;

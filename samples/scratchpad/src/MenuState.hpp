@@ -62,6 +62,7 @@ namespace sp
 
         cro::VideoPlayer m_video;
         cro::MusicPlayer m_music;
+        std::string m_musicName;
 
         void addSystems();
         void loadAssets();

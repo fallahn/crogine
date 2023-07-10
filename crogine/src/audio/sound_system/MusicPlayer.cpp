@@ -123,21 +123,39 @@ bool MusicPlayer::loadFromFile(const std::string& path)
         break;
     }
 
-    initialise(channelCount, m_audioFile->getSampleRate());
+    initialise(channelCount, m_audioFile->getSampleRate(), m_audioFile->getSampleCount());
 
     return true;
+}
+
+Time MusicPlayer::getDuration() const
+{
+    if (!m_audioFile)
+    {
+        return milliseconds(0);
+    }
+
+    auto channels = getChannelCount();
+    auto rate = getSampleRate();
+    auto sampleCount = getSampleCount();
+    if (channels == 0 || rate == 0 || sampleCount == 0)
+    {
+        return milliseconds(0);
+    }
+
+    return seconds(static_cast<float>(sampleCount) / static_cast<float>(channels) / static_cast<float>(rate));
 }
 
 //private
 bool MusicPlayer::onGetData(cro::SoundStream::Chunk& chunk)
 {
-    auto chunkSize = (m_audioFile->getSampleRate() / 1000) * getProcessingInterval() * getChannelCount() * 2;
-    auto data = m_audioFile->getData(chunkSize);
+    auto chunkSize = (m_audioFile->getSampleRate() / 1000) * getProcessingInterval() * getChannelCount() * 10; //we increase this by 10x just to make sure we fill the buffer
+    auto data = m_audioFile->getData(chunkSize, /*isLooped()*/false); //don't use the loop buffer here as the Stream class will take care of it
 
     chunk.sampleCount = data.size / m_bytesPerSample;
     chunk.samples = static_cast<std::int16_t*>(data.data);
 
-    return true;
+    return data.size == chunkSize; //if returned data was smaller we reached the end
 }
 
 void MusicPlayer::onSeek(std::int32_t position)

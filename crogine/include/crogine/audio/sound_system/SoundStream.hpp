@@ -30,6 +30,7 @@ source distribution.
 #pragma once
 
 #include <crogine/audio/sound_system/SoundSource.hpp>
+#include <crogine/core/Clock.hpp>
 
 #include <array>
 #include <thread>
@@ -95,6 +96,34 @@ namespace cro
         */
         std::uint32_t getSampleRate() const;
 
+        /*!
+        \brief Returns the total number of samples in the stream
+        This may be zero if the total length is unknown
+        */
+        std::uint64_t getSampleCount() const { return m_sampleCount; }
+
+        /*!
+        \brief Sets the stream to loop to the beginning once it has played
+        or to stop.
+        */
+        void setLooped(bool loop) { m_loop = loop; }
+
+        /*!
+        \brief Returns whether or not this stream is set to loop when playback
+        reaches the end
+        */
+        bool isLooped() const { return m_loop; }
+
+        /*!
+        \brief Sets the playing position based on the given time offset
+        */
+        void setPlayingPosition(Time);
+
+        /*!
+        \brief Returns the current time offset
+        */
+        Time getPlayingPosition() const;
+
     protected:
 
         static constexpr std::int32_t NoLoop = -1;
@@ -113,8 +142,9 @@ namespace cro
 
         \param channelCount - The number of audio channels in the stream
         \param sampleRate - The stream sample rate.
+        \param sampleCountn - Total number of samples, if known (can be 0)
         */
-        void initialise(std::uint32_t channelCount, std::uint32_t sampleRate);
+        void initialise(std::uint32_t channelCount, std::uint32_t sampleRate, std::uint64_t sampleCount);
 
 
         /*!
@@ -172,6 +202,7 @@ namespace cro
         std::array<std::uint32_t, BufferCount> m_buffers = {};
         std::uint32_t m_channelCount;
         std::uint32_t m_sampleRate;
+        std::uint64_t m_sampleCount;
         std::int32_t m_format;
         bool m_loop;
         std::uint64_t m_samplesProcessed;

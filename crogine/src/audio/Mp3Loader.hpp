@@ -63,9 +63,12 @@ namespace cro
 
             std::int32_t getSampleRate() const override { return m_dataChunk.frequency; }
 
+            std::uint64_t getSampleCount() const override { return m_sampleCount; }
+
         private:
             std::unique_ptr<mp3dec_ex_t> m_decoder;
             std::int32_t m_channelCount;
+            std::uint64_t m_sampleCount;
 
             mutable PCMData m_dataChunk;
             mutable std::vector<std::int16_t> m_buffer;
