@@ -4662,6 +4662,8 @@ void GolfState::initAudio(bool loadTrees)
         m_gameScene.getActiveCamera().addComponent<cro::AudioEmitter>();
         LogE << "Invalid AudioScape file was found" << std::endl;
     }
+    createMusicPlayer(m_gameScene, m_sharedData, m_gameScene.getActiveCamera());
+
 
     if (loadTrees)
     {
@@ -4730,6 +4732,7 @@ void GolfState::initAudio(bool loadTrees)
 
         cro::AudioMixer::setPrefadeVolume(cro::Util::Easing::easeOutQuad(progress), MixerChannel::Effects);
         cro::AudioMixer::setPrefadeVolume(cro::Util::Easing::easeOutQuad(progress), MixerChannel::Environment);
+        cro::AudioMixer::setPrefadeVolume(cro::Util::Easing::easeOutQuad(progress), MixerChannel::UserMusic);
 
         if (progress == 1)
         {

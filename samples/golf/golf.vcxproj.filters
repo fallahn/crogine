@@ -369,6 +369,9 @@
     <ClCompile Include="src\golf\MapOverviewState.cpp">
       <Filter>Source Files\golf\client\states</Filter>
     </ClCompile>
+    <ClCompile Include="src\M3UPlaylist.cpp">
+      <Filter>Source Files\golf</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ErrorCheck.hpp">
@@ -748,6 +751,9 @@
     </ClInclude>
     <ClInclude Include="src\golf\MapOverviewState.hpp">
       <Filter>Header Files\golf\client\states</Filter>
+    </ClInclude>
+    <ClInclude Include="src\M3UPlaylist.hpp">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

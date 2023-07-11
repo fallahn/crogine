@@ -36,12 +36,14 @@ source distribution.
 
 #include <Social.hpp>
 
+#include <crogine/audio/AudioMixer.hpp>
 #include <crogine/core/ConfigFile.hpp>
 #include <crogine/core/GameController.hpp>
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/ecs/components/Model.hpp>
 #include <crogine/ecs/components/Callback.hpp>
 #include <crogine/ecs/components/Transform.hpp>
+#include <crogine/ecs/components/AudioEmitter.hpp>
 #include <crogine/graphics/Colour.hpp>
 #include <crogine/graphics/ImageArray.hpp>
 #include <crogine/graphics/ModelDefinition.hpp>
@@ -174,6 +176,7 @@ struct MixerChannel final
     {
         Music, Effects, Menu,
         Voice, Vehicles, Environment,
+        UserMusic,
 
         Count
     };
@@ -678,6 +681,55 @@ static inline void applyMaterialData(const cro::ModelDefinition& modelDef, cro::
         dest.doubleSided = m->doubleSided;
         dest.animation = m->animation;
         dest.name = m->name;
+    }
+}
+
+static inline void createMusicPlayer(cro::Scene& scene, SharedStateData& sharedData, cro::Entity gameMusic)
+{
+    if (sharedData.m3uPlaylist->getTrackCount() != 0)
+    {
+        //this is a fudge because there's a bug preventing reassigning streams
+        //so we just delete the old entity when done playing and create a new one
+        const auto& trackPath = sharedData.m3uPlaylist->getCurrentTrack();
+        sharedData.m3uPlaylist->nextTrack();
+
+        auto id = sharedData.sharedResources->audio.load(trackPath, true);
+
+        auto entity = scene.createEntity();
+        entity.addComponent<cro::Transform>();
+        entity.addComponent<cro::AudioEmitter>().setSource(sharedData.sharedResources->audio.get(id));
+        entity.getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::UserMusic);
+        entity.getComponent<cro::AudioEmitter>().play();
+        entity.addComponent<cro::Callback>().active = true;
+        entity.getComponent<cro::Callback>().function =
+            [&, gameMusic](cro::Entity e, float dt)
+        {
+            //set the mixer channel to inverse valaue of main music channel
+            //while the incidental music is playing
+            if (gameMusic.isValid())
+            {
+                const float target = gameMusic.getComponent<cro::AudioEmitter>().getState() == cro::AudioEmitter::State::Playing ? 1.f - std::ceil(cro::AudioMixer::getVolume(MixerChannel::Music)) : 1.f;
+                float vol = cro::AudioMixer::getPrefadeVolume(MixerChannel::UserMusic);
+                if (target < vol)
+                {
+                    vol = std::max(0.f, vol - (dt * 2.f));
+                }
+                else
+                {
+                    vol = std::min(1.f, vol + dt);
+                }
+                cro::AudioMixer::setPrefadeVolume(vol, MixerChannel::UserMusic);
+            }
+
+
+            if (e.getComponent<cro::AudioEmitter>().getState() == cro::AudioEmitter::State::Stopped)
+            {
+                e.getComponent<cro::Callback>().active = false;
+                scene.destroyEntity(e);
+
+                createMusicPlayer(scene, sharedData, gameMusic);
+            }
+        };
     }
 }
 

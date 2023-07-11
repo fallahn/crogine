@@ -1268,6 +1268,7 @@ void DrivingState::initAudio()
         progress = std::min(1.f, progress + dt);
 
         cro::AudioMixer::setPrefadeVolume(cro::Util::Easing::easeOutQuad(progress), MixerChannel::Effects);
+        cro::AudioMixer::setPrefadeVolume(cro::Util::Easing::easeOutQuad(progress), MixerChannel::UserMusic);
 
         if (progress == 1)
         {
@@ -1275,6 +1276,8 @@ void DrivingState::initAudio()
             m_gameScene.destroyEntity(e);
         }
     };
+
+    createMusicPlayer(m_gameScene, m_sharedData, m_gameScene.getActiveCamera());
 }
 
 void DrivingState::createScene()

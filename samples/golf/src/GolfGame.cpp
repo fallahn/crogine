@@ -597,6 +597,7 @@ bool GolfGame::initialise()
     cro::AudioMixer::setLabel("Announcer", MixerChannel::Voice);
     cro::AudioMixer::setLabel("Vehicles", MixerChannel::Vehicles);
     cro::AudioMixer::setLabel("Environment", MixerChannel::Environment);
+    cro::AudioMixer::setLabel("User Music", MixerChannel::UserMusic);
 
     m_sharedData.clientConnection.netClient.create(ConstVal::MaxClients);
     m_sharedData.sharedResources = std::make_unique<cro::ResourceCollection>();
@@ -943,6 +944,8 @@ void GolfGame::loadPreferences()
     }
 
     m_sharedData.inputBinding.clubset = ClubID::DefaultSet;
+
+    m_sharedData.m3uPlaylist = std::make_unique<M3UPlaylist>(Social::getBaseContentPath() + "music/");
 }
 
 void GolfGame::savePreferences()

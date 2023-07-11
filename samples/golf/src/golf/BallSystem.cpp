@@ -837,6 +837,7 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
             {
                 //we're in the hole
                 msg->type = GolfBallEvent::Holed;
+                msg->position = m_holeData->pin;
                 //LogI << "Ball Holed" << std::endl;
             }
             else
@@ -876,7 +877,7 @@ void BallSystem::doCollision(cro::Entity entity)
     auto holePos = m_holeData->pin;
     static constexpr float FlagRadius = 0.01f;
     static constexpr float CollisionRadius = FlagRadius + Ball::Radius;
-    if (pos.y - holePos.y < 1.9f) //flag is 2m tall
+    if (auto ballHeight = pos.y - holePos.y; ballHeight < 1.9f) //flag is 2m tall
     {
         const glm::vec2 holeCollision = { holePos.x, -holePos.z };
         const glm::vec2 ballCollision = { pos.x, -pos.z };
@@ -901,7 +902,11 @@ void BallSystem::doCollision(cro::Entity entity)
             ball.spin.y += std::pow(cro::Util::Random::value(-1.f, 1.f), 5.f);
 
             ball.velocity = glm::reflect(ball.velocity, worldDir);
-            ball.velocity *= (0.4f + static_cast<float>(cro::Util::Random::value(0, 2)) / 10.f);
+            ball.velocity *= (0.5f + static_cast<float>(cro::Util::Random::value(0, 1)) / 10.f);
+
+            //reduce the velocity more nearer the top as the flag is bendier (??)
+            ball.velocity *= (0.5f + (0.2f * (1.f - (ballHeight / 1.9f))));
+
 
             auto* msg = postMessage<CollisionEvent>(MessageID::CollisionMessage);
             msg->terrain = -1;
