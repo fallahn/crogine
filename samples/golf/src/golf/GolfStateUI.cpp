@@ -706,7 +706,7 @@ void GolfState::buildUI()
         {
             //shrink
             currTime = std::max(0.f, currTime - (dt * 2.f));
-            const float scale = cro::Util::Easing::easeOutBack(currTime * ScaleMultiplier);
+            const float scale = cro::Util::Easing::easeOutBack(currTime) * ScaleMultiplier;
 
             e.getComponent<cro::Transform>().setScale({ scale, ScaleMultiplier });
 
