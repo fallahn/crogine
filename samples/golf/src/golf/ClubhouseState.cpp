@@ -137,6 +137,9 @@ ClubhouseState::ClubhouseState(cro::StateStack& ss, cro::State::Context ctx, Sha
     gg.unloadPlugin();
 
     std::fill(m_readyState.begin(), m_readyState.end(), false);
+    
+    sd.baseState = StateID::Clubhouse;
+    sd.mapDirectory = "pool";
 
     ctx.mainWindow.loadResources([this]() {
         addSystems();
@@ -151,9 +154,6 @@ ClubhouseState::ClubhouseState(cro::StateStack& ss, cro::State::Context ctx, Sha
 
     ctx.mainWindow.setMouseCaptured(false);
 
-    //sd.inputBinding.controllerID = 0;
-    sd.baseState = StateID::Clubhouse;
-    sd.mapDirectory = "pool";
 
     //this is actually set as a flag from the pause menu
     //to say we want to quit
