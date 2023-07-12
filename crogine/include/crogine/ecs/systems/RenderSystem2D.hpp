@@ -126,10 +126,8 @@ namespace cro
         Shader m_texturedShader;
 
         DepthAxis m_sortOrder;
+        bool m_needsSort;
         std::vector<std::vector<Entity>> m_drawLists;
-
-        Detail::QuadTree m_quadTree;
-        std::vector<Entity> m_dirtyEnts; //transform callback marks these as needing to be moved in the quad tree
 
         void applyBlendMode(Material::BlendMode);
         glm::ivec2 mapCoordsToPixel(glm::vec2, const glm::mat4& viewProjMat, IntRect) const;
