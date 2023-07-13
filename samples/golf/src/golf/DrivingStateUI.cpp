@@ -1405,7 +1405,7 @@ score based on your overall accuracy. Good Luck!
     if (Social::getClubLevel())
     {
         auto labelEnt = m_uiScene.createEntity();
-        labelEnt.addComponent<cro::Transform>().setPosition({ std::floor(sBounds.width / 2.f), 12.f, 0.1f });
+        labelEnt.addComponent<cro::Transform>().setPosition({ std::floor(sBounds.width / 2.f), 13.f, 0.1f });
         labelEnt.addComponent<cro::Drawable2D>();
         labelEnt.addComponent<cro::Text>(smallFont).setFillColour(TextNormalColour);
         labelEnt.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
@@ -1681,7 +1681,7 @@ score based on your overall accuracy. Good Luck!
     bgEntity.getComponent<cro::Transform>().addChild(textEnt4.getComponent<cro::Transform>());
 
     auto labelEnt = m_uiScene.createEntity();
-    labelEnt.addComponent<cro::Transform>().setPosition({ std::floor(sBounds.width / 2.f), 12.f, 0.1f });
+    labelEnt.addComponent<cro::Transform>().setPosition({ std::floor(sBounds.width / 2.f), 13.f, 0.1f });
     labelEnt.addComponent<cro::Drawable2D>();
     labelEnt.addComponent<cro::Text>(smallFont).setString("View Leaderboards");
     labelEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);

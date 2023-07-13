@@ -307,6 +307,13 @@ private:
             EmotePulse,
             SpinBg,
             SpinFg,
+            BirdieLeft,
+            BirdieRight,
+            EagleLeft,
+            EagleRight,
+            AlbatrossLeft,
+            AlbatrossRight,
+            BounceAnim,
 
             Count
         };

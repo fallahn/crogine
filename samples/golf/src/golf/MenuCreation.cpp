@@ -1622,7 +1622,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
         entity.getComponent<UIElement>().depth = 0.1f;
         entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement;
         entity.addComponent<cro::Drawable2D>();
-        entity.addComponent<cro::Sprite>() = spriteSheetV2.getSprite("score_button_highlight");
+        entity.addComponent<cro::Sprite>() = spriteSheetV2.getSprite("clubset_highlight");
         entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
         bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
         entity.addComponent<cro::UIInput>().area = bounds;

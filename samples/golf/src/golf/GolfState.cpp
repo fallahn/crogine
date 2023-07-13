@@ -626,7 +626,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
         }
             break;
         case SDLK_KP_MULTIPLY:
-
+            showMessageBoard(MessageBoardID::HoleScore);
             break;
         case SDLK_PAGEUP:
         {
@@ -2200,6 +2200,16 @@ void GolfState::loadAssets()
     m_sprites[SpriteID::Foul] = spriteSheet.getSprite("foul");
     m_sprites[SpriteID::SpinBg] = spriteSheet.getSprite("spin_bg");
     m_sprites[SpriteID::SpinFg] = spriteSheet.getSprite("spin_fg");
+    m_sprites[SpriteID::BirdieLeft] = spriteSheet.getSprite("birdie_left");
+    m_sprites[SpriteID::BirdieRight] = spriteSheet.getSprite("birdie_right");
+    m_sprites[SpriteID::EagleLeft] = spriteSheet.getSprite("eagle_left");
+    m_sprites[SpriteID::EagleRight] = spriteSheet.getSprite("eagle_right");
+    m_sprites[SpriteID::AlbatrossLeft] = spriteSheet.getSprite("albatross_left");
+    m_sprites[SpriteID::AlbatrossRight] = spriteSheet.getSprite("albatross_right");
+
+    spriteSheet.loadFromFile("assets/golf/sprites/bounce.spt", m_resources.textures);
+    m_sprites[SpriteID::BounceAnim] = spriteSheet.getSprite("bounce");
+
 
     spriteSheet.loadFromFile("assets/golf/sprites/emotes.spt", m_resources.textures);
     m_sprites[SpriteID::EmoteHappy] = spriteSheet.getSprite("happy_small");

@@ -119,7 +119,7 @@ namespace cro
 
         /*!
         \brief Returns the normalised texture rect based on the current
-        texture, or and empty rectangle if not texture exists
+        texture, or and empty rectangle if no texture exists
         */
         FloatRect getTextureRectNormalised() const;
 

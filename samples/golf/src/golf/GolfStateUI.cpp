@@ -2949,23 +2949,80 @@ void GolfState::showMessageBoard(MessageBoardID messageType, bool special)
             textEnt.getComponent<cro::Text>().setString(ScoreStrings[score]);
             textEnt.getComponent<cro::Transform>().move({ 0.f, -10.f, 0.f });
 
+
+            auto addIcon = [&](std::int32_t left, std::int32_t right) mutable
+            {
+                auto e = m_uiScene.createEntity();
+                e.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, bounds.height / 2.f, 0.05f });
+                e.addComponent<cro::Callback>().active = true;
+                e.getComponent<cro::Callback>().function =
+                    [&,entity](cro::Entity f, float)
+                {
+                    if (entity.destroyed())
+                    {
+                        f.getComponent<cro::Callback>().active = false;
+                        m_uiScene.destroyEntity(f);
+                    }
+                };
+                const auto leftBounds = m_sprites[left].getTextureBounds();
+                const auto leftRect = m_sprites[left].getTextureRectNormalised();
+                const auto rightRect = m_sprites[right].getTextureRectNormalised();
+                constexpr float Spacing = 50.f;
+                const glm::vec2 leftPos(-Spacing - leftBounds.width, -std::floor(leftBounds.height / 2.f));
+                const glm::vec2 rightPos(Spacing, -std::floor(leftBounds.height / 2.f));
+
+                e.addComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLES);
+                e.getComponent<cro::Drawable2D>().setVertexData({
+                    cro::Vertex2D(glm::vec2(leftPos.x, leftPos.y + leftBounds.height), glm::vec2(leftRect.left, leftRect.bottom + leftRect.height)),                                     //0-------2
+                    cro::Vertex2D(leftPos, glm::vec2(leftRect.left, leftRect.bottom)),                                                                                                   //|
+                    cro::Vertex2D(glm::vec2(leftPos.x + leftBounds.width, leftPos.y + leftBounds.height), glm::vec2(leftRect.left + leftRect.width, leftRect.bottom + leftRect.height)), //1
+
+                    cro::Vertex2D(glm::vec2(leftPos.x + leftBounds.width, leftPos.y + leftBounds.height), glm::vec2(leftRect.left + leftRect.width, leftRect.bottom + leftRect.height)), //        3
+                    cro::Vertex2D(leftPos, glm::vec2(leftRect.left, leftRect.bottom)),                                                                                                   //        |
+                    cro::Vertex2D(glm::vec2(leftPos.x + leftBounds.width, leftPos.y), glm::vec2(leftRect.left + leftRect.width, leftRect.bottom)),                                       //4-------5
+
+                    
+                    cro::Vertex2D(glm::vec2(rightPos.x, rightPos.y + leftBounds.height), glm::vec2(rightRect.left, rightRect.bottom + rightRect.height)),
+                    cro::Vertex2D(rightPos, glm::vec2(rightRect.left, rightRect.bottom)),
+                    cro::Vertex2D(glm::vec2(rightPos.x + leftBounds.width, rightPos.y + leftBounds.height), glm::vec2(rightRect.left + rightRect.width, rightRect.bottom + rightRect.height)),
+
+                    cro::Vertex2D(glm::vec2(rightPos.x + leftBounds.width, rightPos.y + leftBounds.height), glm::vec2(rightRect.left + rightRect.width, rightRect.bottom + rightRect.height)),
+                    cro::Vertex2D(rightPos, glm::vec2(rightRect.left, rightRect.bottom)),
+                    cro::Vertex2D(glm::vec2(rightPos.x + leftBounds.width, rightPos.y), glm::vec2(rightRect.left + rightRect.width, rightRect.bottom))                    
+                    });
+                e.getComponent<cro::Drawable2D>().setTexture(m_sprites[left].getTexture());
+                entity.getComponent<cro::Transform>().addChild(e.getComponent<cro::Transform>());
+            };
+
+
+
             std::int32_t divisor = (m_sharedData.showPuttingPower && getClub() == ClubID::Putter) ? 2 : 1;
             std::int32_t offset = m_sharedData.showPuttingPower ? 1 : 0;
 
             switch (score)
             {
-            default: break;
             case ScoreID::Albatross:
                 Social::awardXP(XPValues[XPID::Albatross] / divisor, XPStringID::Albatross + offset);
+                addIcon(SpriteID::AlbatrossLeft, SpriteID::AlbatrossRight);
                 break;
             case ScoreID::Eagle:
                 Social::awardXP(XPValues[XPID::Eagle] / divisor, XPStringID::Eagle + offset);
+                addIcon(SpriteID::EagleLeft, SpriteID::EagleRight);
+                textEnt.getComponent<cro::Text>().setCharacterSize(UITextSize * 2);
+                textEnt.getComponent<cro::Transform>().move({ 0.f, 2.f, 0.f });
                 break;
             case ScoreID::Birdie:
                 Social::awardXP(XPValues[XPID::Birdie] / divisor, XPStringID::Birdie + offset);
+                addIcon(SpriteID::BirdieLeft, SpriteID::BirdieRight);
+                textEnt.getComponent<cro::Text>().setCharacterSize(UITextSize * 2);
+                textEnt.getComponent<cro::Transform>().move({ 0.f, 2.f, 0.f });
                 break;
             case ScoreID::Par:
                 Social::awardXP(XPValues[XPID::Par] / divisor, XPStringID::Par + offset);
+                textEnt.getComponent<cro::Text>().setCharacterSize(UITextSize * 2);
+                textEnt.getComponent<cro::Transform>().move({ 0.f, 2.f, 0.f });
+                break;
+            default:
                 break;
             }
 
@@ -2977,6 +3034,16 @@ void GolfState::showMessageBoard(MessageBoardID messageType, bool special)
 
                 textEnt.getComponent<cro::Transform>().move({ 0.f, 2.f, 0.f });
             }
+
+            imgEnt.addComponent<cro::Sprite>() = m_sprites[SpriteID::BounceAnim];
+            imgEnt.addComponent<cro::SpriteAnimation>().play(0);
+            imgEnt.getComponent<cro::Transform>().setPosition({ 86.f, 25.f, 0.1f });
+            if (cro::Util::Random::value(0, 1) == 0)
+            {
+                imgEnt.getComponent<cro::Transform>().setScale({ -1.f, 1.f });
+                imgEnt.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
+            }
+            bounds = m_sprites[SpriteID::BounceAnim].getTextureBounds();
         }
         else
         {
