@@ -66,6 +66,8 @@ void winAbort(int)
 #include "../audio/AudioRenderer.hpp"
 
 #include <algorithm>
+#include <iomanip>
+#include <sstream>
 
 #ifdef CRO_DEBUG_
 #define DEBUG_NO_CONTROLLER
@@ -490,7 +492,14 @@ void App::saveScreenshot()
     //flip row order
     stbi_flip_vertically_on_write(1);
 
-    std::string filename = "screenshot_" + SysTime::dateString() + "_" + SysTime::timeString() + ".png";
+    auto d = SysTime::now();
+    std::stringstream ss;
+    ss << std::setw(2) << std::setfill('0') << d.year() << "/"
+        << std::setw(2) << std::setfill('0') << d.months() << "/"
+        << d.days();
+    
+        
+    std::string filename = "screenshot_" + ss.str() + "_" + SysTime::timeString() + ".png";
     std::replace(filename.begin(), filename.end(), '/', '_');
     std::replace(filename.begin(), filename.end(), ':', '_');
 

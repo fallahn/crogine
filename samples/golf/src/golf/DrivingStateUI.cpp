@@ -1993,7 +1993,7 @@ void DrivingState::createSummary()
 
     //info text
     auto infoEnt = m_uiScene.createEntity();
-    infoEnt.addComponent<cro::Transform>().setPosition({ SummaryOffset, SummaryHeight, 0.02f });
+    infoEnt.addComponent<cro::Transform>().setPosition({ /*SummaryOffset*/std::floor(bounds.width / 3.f) - 25.f, SummaryHeight, 0.02f});
     infoEnt.addComponent<cro::Drawable2D>();
     infoEnt.addComponent<cro::Text>(smallFont).setString("Sample Text\n1\n1\n1\n1\n1\n1\n1\n1");
     infoEnt.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
@@ -2002,7 +2002,7 @@ void DrivingState::createSummary()
     m_summaryScreen.text01 = infoEnt;
 
     infoEnt = m_uiScene.createEntity();
-    infoEnt.addComponent<cro::Transform>().setPosition({ (bounds.width / 2.f) + SummaryOffset, SummaryHeight, 0.02f });
+    infoEnt.addComponent<cro::Transform>().setPosition({ (bounds.width / 2.f) + 18.f/* SummaryOffset*/, SummaryHeight, 0.02f });
     infoEnt.addComponent<cro::Drawable2D>();
     infoEnt.addComponent<cro::Text>(smallFont).setString("Sample Text\n1\n1\n1\n1\n1\n1\n1\n1");
     infoEnt.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
@@ -2019,74 +2019,6 @@ void DrivingState::createSummary()
     centreText(summaryEnt);
     bgEntity.getComponent<cro::Transform>().addChild(summaryEnt.getComponent<cro::Transform>());
     m_summaryScreen.summary = summaryEnt;
-
-
-
-    //displays the overview map
-    auto entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ std::floor(bounds.width / 6.f), 152.f, 0.3f });
-    entity.getComponent<cro::Transform>().setOrigin(RangeSize / 4.f);
-    entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Sprite>(m_mapTexture.getTexture());
-    bgEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-
-    auto mapEnt = entity;
-    entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition(mapEnt.getComponent<cro::Transform>().getOrigin());
-    entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("minimap");
-    auto border = entity.getComponent<cro::Sprite>().getTextureBounds();
-    entity.getComponent<cro::Transform>().setOrigin({ border.width / 2.f, border.height / 2.f, 0.1f });
-    mapEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-
-    cro::SpriteSheet flagSheet;
-    flagSheet.loadFromFile("assets/golf/sprites/ui.spt", m_resources.textures);
-    auto flagEnt = m_uiScene.createEntity();
-    flagEnt.addComponent<cro::Transform>().setOrigin({ 0.f, 0.f, -0.1f });
-    flagEnt.addComponent<cro::Drawable2D>();
-    flagEnt.addComponent<cro::Sprite>() = flagSheet.getSprite("flag03");
-
-    flagEnt.addComponent<cro::Callback>().active = !m_holeData.empty();
-    flagEnt.getComponent<cro::Callback>().setUserData<float>(0.f);
-    flagEnt.getComponent<cro::Callback>().function =
-        [&](cro::Entity e, float dt)
-    {
-        static constexpr glm::vec2 Offset(RangeSize / 4.f);
-        glm::vec2 flagPos(0.f);
-
-        if (m_targetIndex == 0)
-        {
-            auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
-            currTime -= dt;
-
-            if (currTime < 0.f)
-            {
-                currTime += 0.5f;
-
-                static std::size_t idx = 0;
-                idx = (idx + cro::Util::Random::value(1, 3)) % m_holeData.size();
-
-                auto pos = m_holeData[idx].pin / 2.f;
-                flagPos = { pos.x, -pos.z };
-
-                flagPos += Offset;
-                e.getComponent<cro::Transform>().setPosition(flagPos);
-            }
-        }
-        else
-        {
-            auto pos = m_holeData[m_targetIndex - 1].pin / 2.f;
-            flagPos = { pos.x, -pos.z };
-
-            flagPos += Offset;
-            e.getComponent<cro::Transform>().setPosition(flagPos);
-        }
-    };
-
-    mapEnt.getComponent<cro::Transform>().addChild(flagEnt.getComponent<cro::Transform>());
-
-
-
 
 
 
@@ -2161,7 +2093,7 @@ void DrivingState::createSummary()
     auto selectedBounds = spriteSheet.getSprite("yes_highlight").getTextureRect();
     auto unselectedBounds = spriteSheet.getSprite("yes_button").getTextureRect();
 
-    entity = m_uiScene.createEntity();
+    auto entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ (bounds.width / 2.f) - 22.f, 48.f, 0.2f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("yes_button");
@@ -2541,16 +2473,21 @@ void DrivingState::showMessage(float range)
                     float totalScore = 0.f;
 
                     std::string summary;
-                    for (auto i = 0; i < std::min(9, scoreCount); ++i)
+                    auto j = 0;
+                    for (j = 0; j < std::min(9, scoreCount); ++j)
                     {
-                        float score = director->getScore(i);
+                        float score = director->getScore(j);
 
                         std::stringstream s;
                         s.precision(3);
-                        s << "Turn " << i + 1 << ":      " << score << "%\n";
+                        s << "Turn " << j + 1 << ":      " << score << "%\n";
                         summary += s.str();
 
                         totalScore += score;
+                    }
+                    for (; j < 9; ++j)
+                    {
+                        summary += "Turn " + std::to_string(j) + ":       N/A\n";
                     }
                     m_summaryScreen.text01.getComponent<cro::Text>().setString(summary);
                     summary.clear();
@@ -2569,24 +2506,28 @@ void DrivingState::showMessage(float range)
 
                             totalScore += score;
                         }
-                        m_summaryScreen.text02.getComponent<cro::Text>().setString(summary);
+                        /*m_summaryScreen.text02.getComponent<cro::Text>().setString(summary);
 
                         auto& tx = m_summaryScreen.text01.getComponent<cro::Transform>();
                         auto pos = tx.getPosition();
                         pos.x = SummaryOffset;
                         tx.setPosition(pos);
-                        tx.setOrigin({ 0.f, 0.f });
+                        tx.setOrigin({ 0.f, 0.f });*/
                     }
                     else
                     {
-                        auto& tx = m_summaryScreen.text01.getComponent<cro::Transform>();
-                        auto pos = tx.getPosition();
-                        pos.x = 200.f; //TODO this should be half background width
-                        tx.setPosition(pos);
-                        centreText(m_summaryScreen.text01);
+                        for (auto i = 10; i < 19; ++i)
+                        {
+                            summary += "Turn " + std::to_string(i) + ":       N/A\n";
+                        }
 
-                        m_summaryScreen.text02.getComponent<cro::Text>().setString(" ");
+                        //auto& tx = m_summaryScreen.text01.getComponent<cro::Transform>();
+                        //auto pos = tx.getPosition();
+                        //pos.x = 200.f; //TODO this should be half background width
+                        //tx.setPosition(pos);
+                        //centreText(m_summaryScreen.text01);
                     }
+                    m_summaryScreen.text02.getComponent<cro::Text>().setString(summary);
 
                     totalScore /= scoreCount;
                     std::stringstream s;
