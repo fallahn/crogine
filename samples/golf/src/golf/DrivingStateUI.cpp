@@ -2171,6 +2171,15 @@ void DrivingState::createSummary()
     centreSprite(entity);
     bgEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
+
+    spriteSheet.loadFromFile("assets/golf/sprites/large_flag.spt", m_resources.textures);
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 380.f, 48.f, 0.2f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("flag");
+    entity.addComponent<cro::SpriteAnimation>().play(0);
+    bgEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
     m_summaryScreen.root = bgEntity;
 }
 

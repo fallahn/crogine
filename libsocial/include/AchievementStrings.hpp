@@ -410,7 +410,7 @@ static constexpr std::array<std::size_t, AchievementID::Count> AchievementTrophi
 
     TrophyID::SilverCup,
     TrophyID::SilverFigure,
-    TrophyID::GoldFigure,
+    TrophyID::Platinum,
     TrophyID::GoldCup,
     TrophyID::BronzeCup,
 };
