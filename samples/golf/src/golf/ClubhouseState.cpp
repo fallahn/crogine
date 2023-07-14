@@ -73,6 +73,7 @@ namespace
 #include "CelShader.inl"
 #include "BillboardShader.inl"
 #include "ShaderIncludes.inl"
+#include "TVShader.inl"
 
     const std::array<cro::String, TableData::Rules::Count> TableStrings =
     {
@@ -670,6 +671,10 @@ void ClubhouseState::render()
     m_backgroundScene.render();
     m_backgroundTexture.display();
 
+    m_pictureTexture.clear(cro::Colour::Magenta);
+    m_pictureQuad.draw();
+    m_pictureTexture.display();
+
 #ifndef CRO_DEBUG_
     if (m_currentMenu == MenuID::Dummy
         || m_currentMenu == MenuID::Lobby)
@@ -768,9 +773,17 @@ void ClubhouseState::loadResources()
     m_resolutionBuffer.addShader(*shader);
     m_materialIDs[MaterialID::Ball] = m_resources.materials.add(*shader);
 
+
+    //TV shader
+    m_resources.shaders.loadFromString(ShaderID::TV, CelVertexShader, TVFragment, "#define REFLECTIONS\n#define TEXTURED\n");
+    shader = &m_resources.shaders.get(ShaderID::TV);
+    m_materialIDs[MaterialID::TV] = m_resources.materials.add(*shader);
+
+
     if (m_tableCubemap.loadFromFile("assets/golf/images/skybox/billiards/sky.ccm"))
     {
         m_resources.materials.get(m_materialIDs[MaterialID::Ball]).setProperty("u_reflectMap", cro::CubemapID(m_reflectionMap.getGLHandle()));
+        m_resources.materials.get(m_materialIDs[MaterialID::TV]).setProperty("u_reflectMap", cro::CubemapID(m_reflectionMap.getGLHandle()));
     }
 
 
@@ -1112,7 +1125,7 @@ void ClubhouseState::buildScene()
         }
     }
 
-    m_pictureTexture.create(128, 128, false);
+    m_pictureTexture.create(256, 256, false);
     if (md.loadFromFile("assets/golf/models/picture_frame.cmt"))
     {
         auto entity = m_backgroundScene.createEntity();
@@ -1123,7 +1136,7 @@ void ClubhouseState::buildScene()
 
         applyMaterial(entity, MaterialID::Cel, 0);
         applyMaterial(entity, MaterialID::Ball, 1);
-        applyMaterial(entity, MaterialID::Ball, 2);
+        applyMaterial(entity, MaterialID::TV, 2);
 
         entity.getComponent<cro::Model>().setMaterialProperty(2, "u_diffuseMap", cro::TextureID(m_pictureTexture.getTexture().getGLHandle()));
     }
@@ -1318,6 +1331,10 @@ void ClubhouseState::buildScene()
             m_backgroundTexture.create(static_cast<std::uint32_t>(texSize.x), static_cast<std::uint32_t>(texSize.y), true, false, samples)
             && m_sharedData.multisamples != 0
             && !m_sharedData.pixelScale;
+
+        m_pictureQuad.setTexture(m_backgroundTexture.getTexture());
+        auto pictureScale = glm::vec2(m_pictureTexture.getSize()) / glm::vec2(m_backgroundTexture.getSize());
+        m_pictureQuad.setScale(pictureScale);
 
         cam.setPerspective(m_sharedData.fov * cro::Util::Const::degToRad, texSize.x / texSize.y, 0.1f, 85.f);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };

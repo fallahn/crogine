@@ -47,6 +47,7 @@ source distribution.
 #include <crogine/graphics/CubemapTexture.hpp>
 #include <crogine/graphics/UniformBuffer.hpp>
 #include <crogine/graphics/VideoPlayer.hpp>
+#include <crogine/graphics/SimpleQuad.hpp>
 #include <crogine/detail/glm/vec2.hpp>
 
 #include <vector>
@@ -149,6 +150,7 @@ private:
             Shelf,
             Billboard,
             Ball,
+            TV,
 
             Count
         };
@@ -165,6 +167,7 @@ private:
     cro::VideoPlayer m_arcadeVideo;
     cro::VideoPlayer m_arcadeVideo2;
     cro::RenderTexture m_pictureTexture;
+    cro::SimpleQuad m_pictureQuad;
 
     cro::RenderTexture m_tableTexture;
     cro::CubemapTexture m_tableCubemap;

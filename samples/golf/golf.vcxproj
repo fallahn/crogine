@@ -690,6 +690,7 @@
     <None Include="src\golf\TransitionShader.inl" />
     <None Include="src\golf\TreeShader.inl" />
     <None Include="src\golf\TutorialShaders.inl" />
+    <None Include="src\golf\TVShader.inl" />
     <None Include="src\golf\UnlockShader.inl" />
     <None Include="src\golf\WaterShader.inl" />
     <None Include="src\golf\WireframeShader.inl" />

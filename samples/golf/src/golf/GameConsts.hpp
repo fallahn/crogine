@@ -242,7 +242,8 @@ struct ShaderID final
         BallTrail,
         FXAA,
         Fog,
-        Flag
+        Flag,
+        TV
     };
 };
 
