@@ -1085,6 +1085,52 @@ void ClubhouseState::buildScene()
         entity.getComponent<cro::Model>().setMaterialProperty(1, "u_diffuseMap", cro::TextureID(m_arcadeVideo2.getTexture().getGLHandle()));
     }
 
+    if (md.loadFromFile("assets/golf/models/pool_lights.cmt"))
+    {
+        auto entity = m_backgroundScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ 17.1f, 2.7f, -1.8f });
+        md.createModel(entity);
+
+        applyMaterial(entity, MaterialID::Trophy);
+
+        auto lights = entity;
+
+        if (md.loadFromFile("assets/golf/models/pool_fan.cmt"))
+        {
+            entity = m_backgroundScene.createEntity();
+            entity.addComponent<cro::Transform>();
+            md.createModel(entity);
+            applyMaterial(entity, MaterialID::Trophy);
+            lights.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+            entity.addComponent<cro::Callback>().active = true;
+            entity.getComponent<cro::Callback>().function =
+                [](cro::Entity e, float dt)
+            {
+                e.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, -dt * 3.f);
+            };
+        }
+    }
+
+    m_pictureTexture.create(128, 128, false);
+    if (md.loadFromFile("assets/golf/models/picture_frame.cmt"))
+    {
+        auto entity = m_backgroundScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ 14.1f, 2.35f, -3.2f });
+        entity.getComponent<cro::Transform>().setRotation(cro::Transform::Z_AXIS, -10.f * cro::Util::Const::degToRad);
+        md.createModel(entity);
+
+
+        applyMaterial(entity, MaterialID::Cel, 0);
+        applyMaterial(entity, MaterialID::Ball, 1);
+        applyMaterial(entity, MaterialID::Ball, 2);
+
+        entity.getComponent<cro::Model>().setMaterialProperty(2, "u_diffuseMap", cro::TextureID(m_pictureTexture.getTexture().getGLHandle()));
+    }
+
+    m_pictureTexture.clear(cro::Colour::Magenta);
+    m_pictureTexture.display();
+
 
     //billboards
     auto shrubPath = m_sharedData.treeQuality == SharedStateData::Classic ?
