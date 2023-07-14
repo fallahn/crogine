@@ -985,6 +985,7 @@ void DrivingState::createGameOptions()
     
     auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
     auto& largeFont = m_sharedData.sharedResources->fonts.get(FontID::UI);
+    auto& labelFont = m_sharedData.sharedResources->fonts.get(FontID::Label);
 
     //title
     auto titleText = m_uiScene.createEntity();
@@ -1041,6 +1042,19 @@ will be given a score based on your overall accuracy. Good Luck!
 
         return buttonEnt;
     };
+
+
+    //current record holder
+    auto recordEnt = m_uiScene.createEntity();
+    recordEnt.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, 270.f, 0.1f });
+    recordEnt.addComponent<cro::Drawable2D>();
+    recordEnt.addComponent<cro::Text>(labelFont).setString(Social::getDrivingLeader(m_targetIndex, m_strokeCountIndex));
+    recordEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    recordEnt.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+    recordEnt.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
+    recordEnt.getComponent<cro::Text>().setCharacterSize(LabelTextSize);
+    centreText(recordEnt);
+    bgEntity.getComponent<cro::Transform>().addChild(recordEnt.getComponent<cro::Transform>());
 
 
     //hole count
@@ -1114,7 +1128,6 @@ will be given a score based on your overall accuracy. Good Luck!
         m_tickerStrings[i] = Social::getDrivingTopFive(i);
     }
 
-    auto& labelFont = m_sharedData.sharedResources->fonts.get(FontID::Label);
     tickerEnt = m_uiScene.createEntity();
     tickerEnt.addComponent<cro::Transform>().setPosition({ 100.f, 0.f, 0.2f });
     tickerEnt.addComponent<cro::Drawable2D>();
@@ -1159,7 +1172,7 @@ will be given a score based on your overall accuracy. Good Luck!
     auto buttonEnt = createButton("arrow_left", glm::vec2(-3.f, 3.f));
     buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem->addCallback(
-            [&, numberEnt, textEnt4, tickerEnt](cro::Entity e, const cro::ButtonEvent& evt) mutable
+            [&, numberEnt, textEnt4, tickerEnt, recordEnt](cro::Entity e, const cro::ButtonEvent& evt) mutable
             {
                 if (activated(evt))
                 {
@@ -1189,6 +1202,9 @@ will be given a score based on your overall accuracy. Good Luck!
                     pos.x = 300.f;
                     tickerEnt.getComponent<cro::Transform>().setPosition(pos);
                     tickerEnt.getComponent<cro::Callback>().function(tickerEnt, 0.f); //updates the cropping
+
+                    recordEnt.getComponent<cro::Text>().setString(Social::getDrivingLeader(m_targetIndex, m_strokeCountIndex));
+                    centreText(recordEnt);
 #endif
 
                     m_summaryScreen.audioEnt.getComponent<cro::AudioEmitter>().play();
@@ -1199,7 +1215,7 @@ will be given a score based on your overall accuracy. Good Luck!
     buttonEnt = createButton("arrow_right", glm::vec2(35.f, 3.f));
     buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem->addCallback(
-            [&, numberEnt, textEnt4, tickerEnt](cro::Entity e, const cro::ButtonEvent& evt) mutable
+            [&, numberEnt, textEnt4, tickerEnt, recordEnt](cro::Entity e, const cro::ButtonEvent& evt) mutable
             {
                 if (activated(evt))
                 {
@@ -1229,6 +1245,9 @@ will be given a score based on your overall accuracy. Good Luck!
                     pos.x = 300.f;
                     tickerEnt.getComponent<cro::Transform>().setPosition(pos);
                     tickerEnt.getComponent<cro::Callback>().function(tickerEnt, 0.f); //updates the cropping
+
+                    recordEnt.getComponent<cro::Text>().setString(Social::getDrivingLeader(m_targetIndex, m_strokeCountIndex));
+                    centreText(recordEnt);
 #endif
 
                     m_summaryScreen.audioEnt.getComponent<cro::AudioEmitter>().play();
@@ -1361,7 +1380,7 @@ will be given a score based on your overall accuracy. Good Luck!
     buttonEnt = createButton("arrow_left", glm::vec2(-3.f, 3.f));
     buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem->addCallback(
-            [&, numberEnt](cro::Entity e, const cro::ButtonEvent& evt) mutable
+            [&, numberEnt, recordEnt](cro::Entity e, const cro::ButtonEvent& evt) mutable
             {
                 if (activated(evt))
                 {
@@ -1373,6 +1392,10 @@ will be given a score based on your overall accuracy. Good Luck!
                     leaderboardHoleIndex = m_targetIndex;
 
                     m_summaryScreen.audioEnt.getComponent<cro::AudioEmitter>().play();
+#ifdef USE_GNS
+                    recordEnt.getComponent<cro::Text>().setString(Social::getDrivingLeader(m_targetIndex, m_strokeCountIndex));
+                    centreText(recordEnt);
+#endif
                 }
             });
     countEnt.getComponent<cro::Transform>().addChild(buttonEnt.getComponent<cro::Transform>());
@@ -1380,7 +1403,7 @@ will be given a score based on your overall accuracy. Good Luck!
     buttonEnt = createButton("arrow_right", glm::vec2(35.f, 3.f));
     buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem->addCallback(
-            [&, numberEnt](cro::Entity e, const cro::ButtonEvent& evt) mutable
+            [&, numberEnt, recordEnt](cro::Entity e, const cro::ButtonEvent& evt) mutable
             {
                 if (activated(evt))
                 {
@@ -1392,6 +1415,11 @@ will be given a score based on your overall accuracy. Good Luck!
                     leaderboardHoleIndex = m_targetIndex;
 
                     m_summaryScreen.audioEnt.getComponent<cro::AudioEmitter>().play();
+
+#ifdef USE_GNS
+                    recordEnt.getComponent<cro::Text>().setString(Social::getDrivingLeader(m_targetIndex, m_strokeCountIndex));
+                    centreText(recordEnt);
+#endif
                 }
             });
     countEnt.getComponent<cro::Transform>().addChild(buttonEnt.getComponent<cro::Transform>());

@@ -137,6 +137,7 @@ public:
     static void resetProfile();
     static void storeDrivingStats(const std::array<float, 3u>&);
     static void readDrivingStats(std::array<float, 3u>&);
+    static cro::String getDrivingLeader(std::int32_t holeIndex, std::int32_t tryCount) { return {}; }
     struct BoardType final
     {
         enum
