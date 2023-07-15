@@ -36,6 +36,9 @@ R"(
 uniform sampler2D u_diffuseMap;
 uniform samplerCube u_reflectMap;
 
+//dirX, strength, dirZ, elapsedTime
+#include WIND_BUFFER
+
 VARYING_IN vec2 v_texCoord;
 VARYING_IN vec3 v_normal;
 VARYING_IN vec3 v_cameraWorldPosition;
@@ -45,13 +48,23 @@ OUTPUT
 
 const float LineCount = 6.28 * 256.0;
 
+float rand(vec2 pos)
+{
+    return fract(sin(dot(pos, vec2(12.9898, 4.1414) + (u_windData.w * 0.1))) * 43758.5453);
+}
+
 void main()
 {
-    vec4 colour = TEXTURE(u_diffuseMap, v_texCoord);
+    float band = smoothstep(0.9951, 0.9992, sin((v_texCoord.y * 4.0) + (u_windData.w * 0.2))) * 0.06;
+    vec2 coord = v_texCoord;
+    coord.x += band * 0.1;
+
+    vec4 colour = TEXTURE(u_diffuseMap, coord);
 
 	vec3 grey = vec3(dot(vec3(0.299, 0.587, 0.114), colour.rgb));
-	colour.rgb = mix(grey, colour.rgb, 0.6);
+	colour.rgb = mix(grey, colour.rgb, 0.6 - (band * 5.0));
 
+    colour.rgb = mix(grey, colour.rgb, rand(gl_FragCoord.xy));
 
     float scanline = 1.0 - (0.1 * mod(gl_FragCoord.y, 2.0));
     colour.rgb *= scanline;
@@ -62,6 +75,8 @@ void main()
 
 
     colour.rgb *= 1.1;
+
+
 
 
     vec3 viewDirection = v_cameraWorldPosition - v_worldPosition.xyz;

@@ -2951,7 +2951,7 @@ void ClubhouseState::TVTopFive::update(float dt)
 
             scale = std::max(0.f, scale - (dt * 5.f));
 
-            icon.setScale({ cro::Util::Easing::easeInQuad(scale), 1.f });
+            icon.setScale({ cro::Util::Easing::easeInQuad(scale) * 0.8f, 1.f });
 
             if (scale == 0)
             {
@@ -2963,7 +2963,7 @@ void ClubhouseState::TVTopFive::update(float dt)
                 state = State::TransitionIn;
 
                 name.setString(profileNames[index]);
-                name.setPosition({ static_cast<float>(TVPictureSize.x), 20.f });
+                name.setPosition({ static_cast<float>(TVPictureSize.x), 18.f });
             }
             break;
         case State::TransitionIn:
@@ -2971,7 +2971,7 @@ void ClubhouseState::TVTopFive::update(float dt)
 
             scale = std::min(1.f, scale + (dt * 5.f));
 
-            icon.setScale({ cro::Util::Easing::easeInQuad(scale), 1.f });
+            icon.setScale({ cro::Util::Easing::easeInQuad(scale) * 0.8f, 1.f });
 
             if (scale == 1)
             {

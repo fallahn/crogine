@@ -251,6 +251,7 @@ private:
         std::vector<cro::String> profileNames;
         cro::Texture profileIcons;
 
+        cro::SimpleQuad overlay;
         cro::SimpleQuad icon;
         cro::SimpleText name;
 

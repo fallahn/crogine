@@ -65,6 +65,7 @@ source distribution.
 
 #include <crogine/util/Constants.hpp>
 #include <crogine/util/Random.hpp>
+#include <crogine/util/Wavetable.hpp>
 #include <crogine/gui/Gui.hpp>
 #include <crogine/graphics/SpriteSheet.hpp>
 
@@ -654,6 +655,7 @@ bool ClubhouseState::simulate(float dt)
     //{
     //    movement = glm::normalize(movement);
     //    tx.move(movement * dt);
+    //    LogI << tx.getPosition() << std::endl;
     //}
 
     //if (rotation != 0)
@@ -699,6 +701,7 @@ void ClubhouseState::render()
 
     m_pictureTexture.clear(cro::Colour::Magenta);
     m_pictureQuad.draw();
+    m_tvTopFive.overlay.draw();
     m_tvTopFive.icon.draw();
     m_tvTopFive.name.draw();
     m_pictureTexture.display();
@@ -806,7 +809,7 @@ void ClubhouseState::loadResources()
     m_resources.shaders.loadFromString(ShaderID::TV, CelVertexShader, TVFragment, "#define REFLECTIONS\n#define TEXTURED\n");
     shader = &m_resources.shaders.get(ShaderID::TV);
     m_materialIDs[MaterialID::TV] = m_resources.materials.add(*shader);
-
+    m_windBuffer.addShader(*shader);
 
     if (m_tableCubemap.loadFromFile("assets/golf/images/skybox/billiards/sky.ccm"))
     {
@@ -854,6 +857,8 @@ void ClubhouseState::loadResources()
 
     m_tvTopFive.icon.setOrigin({ 92.f, 92.f });
     m_tvTopFive.icon.setPosition(TVPictureSize / 2u);
+
+    m_tvTopFive.overlay.setTexture(m_resources.textures.get("assets/golf/images/tv_overlay.png"));
 
     validateTables();
 }
@@ -965,6 +970,7 @@ void ClubhouseState::buildScene()
         md.createModel(entity);
 
         applyMaterial(entity, MaterialID::Cel);
+        applyMaterial(entity, MaterialID::Trophy, 1);
     }
 
     if (md.loadFromFile("assets/golf/models/trophies/shelf.cmt"))
@@ -1140,8 +1146,29 @@ void ClubhouseState::buildScene()
         auto entity = m_backgroundScene.createEntity();
         entity.addComponent<cro::Transform>().setPosition({ 17.1f, 2.7f, -1.8f });
         md.createModel(entity);
-
         applyMaterial(entity, MaterialID::Trophy);
+
+
+        entity.addComponent<cro::Callback>().active = true;
+        entity.getComponent<cro::Callback>().function =
+            [](cro::Entity e, float)
+        {
+            static constexpr float BaseX = 17.1f; //see position, above
+
+            static const auto highFreq = cro::Util::Wavetable::sine(5.f, 0.005f);
+            static std::size_t highFreqIndex = 0;
+
+            static const auto lowFreq = cro::Util::Wavetable::sine(0.0001f);
+            static std::size_t lowFreqIndex = 0;
+
+            auto pos = e.getComponent<cro::Transform>().getPosition();
+            pos.x = BaseX + (highFreq[highFreqIndex] * cro::Util::Easing::easeInCubic((lowFreq[lowFreqIndex] + 1.f) / 2.f));
+            e.getComponent<cro::Transform>().setPosition(pos);
+
+            highFreqIndex = (highFreqIndex + 1) % highFreq.size();
+            lowFreqIndex = (lowFreqIndex + 1) % lowFreq.size();
+        };
+
 
         auto lights = entity;
 
@@ -1172,10 +1199,9 @@ void ClubhouseState::buildScene()
 
 
         applyMaterial(entity, MaterialID::Cel, 0);
-        applyMaterial(entity, MaterialID::Ball, 1);
-        applyMaterial(entity, MaterialID::TV, 2);
+        applyMaterial(entity, MaterialID::TV, 1);
 
-        entity.getComponent<cro::Model>().setMaterialProperty(2, "u_diffuseMap", cro::TextureID(m_pictureTexture.getTexture().getGLHandle()));
+        entity.getComponent<cro::Model>().setMaterialProperty(1, "u_diffuseMap", cro::TextureID(m_pictureTexture.getTexture().getGLHandle()));
     }
 
     m_pictureTexture.clear(cro::Colour::Magenta);
@@ -1378,11 +1404,8 @@ void ClubhouseState::buildScene()
     };
 
     auto camEnt = m_backgroundScene.getActiveCamera();
-    /*camEnt.getComponent<cro::Transform>().setPosition({ 24.f, 1.6f, -4.3f });
-    camEnt.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, 127.f * cro::Util::Const::degToRad);
-    camEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -0.8f * cro::Util::Const::degToRad);
-    camEnt.getComponent<cro::Transform>().move(camEnt.getComponent<cro::Transform>().getForwardVector());*/
-    camEnt.getComponent<cro::Transform>().setPosition({ 19.187f, 1.54f, -4.37f });
+    //camEnt.getComponent<cro::Transform>().setPosition({ 19.187f, 1.54f, -4.37f });
+    camEnt.getComponent<cro::Transform>().setPosition({ 18.9f, 1.54f, -4.58f });
     camEnt.getComponent<cro::Transform>().setRotation(glm::quat(-0.31f, 0.004f, -0.95f, 0.0057f));
 
     auto shadowRes = m_sharedData.hqShadows ? 4096 : 2048;
