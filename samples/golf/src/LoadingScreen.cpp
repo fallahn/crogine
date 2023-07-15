@@ -31,6 +31,8 @@ source distribution.
 #include "golf/GameConsts.hpp"
 #include "golf/SharedStateData.hpp"
 
+#include <Social.hpp>
+
 #include <crogine/core/App.hpp>
 #include <crogine/detail/OpenGL.hpp>
 #include <crogine/graphics/Image.hpp>
@@ -151,6 +153,8 @@ LoadingScreen::~LoadingScreen()
 //public
 void LoadingScreen::launch()
 {
+    Social::setStatus(Social::InfoID::Menu, { "Loading..." });
+
     if (!m_vao)
     {
         CRO_ASSERT(m_vbo, "");

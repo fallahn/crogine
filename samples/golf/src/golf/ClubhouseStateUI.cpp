@@ -165,9 +165,8 @@ void ClubhouseState::createUI()
         m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
     };
 
-    entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>();
-    entity.addComponent<cro::Camera>().resizeCallback = updateView;
+    entity = m_uiScene.getActiveCamera();
+    entity.getComponent<cro::Camera>().resizeCallback = updateView;
     m_uiScene.setActiveCamera(entity);
     updateView(entity.getComponent<cro::Camera>());
 

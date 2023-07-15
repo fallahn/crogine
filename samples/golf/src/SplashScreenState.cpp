@@ -31,6 +31,8 @@ source distribution.
 #include "ErrorCheck.hpp"
 #include "golf/SharedStateData.hpp"
 
+#include <Social.hpp>
+
 #include <crogine/gui/Gui.hpp>
 
 #include <crogine/ecs/components/Camera.hpp>
@@ -148,6 +150,8 @@ SplashState::SplashState(cro::StateStack& stack, cro::State::Context context, Sh
     m_timeUniform       (-1),
     m_scanlineUniform   (-1)
 {
+    Social::setStatus(Social::InfoID::Menu, { "Watching The Intro" });
+
     addSystems();
     loadAssets();
     createUI();
