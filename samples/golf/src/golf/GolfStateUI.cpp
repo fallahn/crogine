@@ -2826,6 +2826,8 @@ void GolfState::showMessageBoard(MessageBoardID messageType, bool special)
     textEnt.addComponent<cro::Drawable2D>();
     textEnt.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
     textEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    textEnt.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+    textEnt.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
 
     auto textEnt2 = m_uiScene.createEntity();
     textEnt2.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, 26.f, 0.02f });
@@ -3009,18 +3011,27 @@ void GolfState::showMessageBoard(MessageBoardID messageType, bool special)
                 Social::awardXP(XPValues[XPID::Eagle] / divisor, XPStringID::Eagle + offset);
                 addIcon(SpriteID::EagleLeft, SpriteID::EagleRight);
                 textEnt.getComponent<cro::Text>().setCharacterSize(UITextSize * 2);
+                textEnt.getComponent<cro::Text>().setFillColour(TextGoldColour);
                 textEnt.getComponent<cro::Transform>().move({ 0.f, 2.f, 0.f });
                 break;
             case ScoreID::Birdie:
                 Social::awardXP(XPValues[XPID::Birdie] / divisor, XPStringID::Birdie + offset);
                 addIcon(SpriteID::BirdieLeft, SpriteID::BirdieRight);
                 textEnt.getComponent<cro::Text>().setCharacterSize(UITextSize * 2);
+                textEnt.getComponent<cro::Text>().setFillColour({0xadd9b7ff});
                 textEnt.getComponent<cro::Transform>().move({ 0.f, 2.f, 0.f });
                 break;
             case ScoreID::Par:
                 Social::awardXP(XPValues[XPID::Par] / divisor, XPStringID::Par + offset);
                 textEnt.getComponent<cro::Text>().setCharacterSize(UITextSize * 2);
                 textEnt.getComponent<cro::Transform>().move({ 0.f, 2.f, 0.f });
+                break;
+            case ScoreID::Bogie:
+                textEnt.getComponent<cro::Text>().setCharacterSize(UITextSize * 2);
+                [[fallthrough]];
+            case ScoreID::DoubleBogie:
+            case ScoreID::TripleBogie:
+                textEnt.getComponent<cro::Text>().setFillColour(TextHighlightColour);
                 break;
             default:
                 break;
