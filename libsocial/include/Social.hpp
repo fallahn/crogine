@@ -103,6 +103,7 @@ public:
         }type = LevelUp;
         std::int32_t level = 0;
         std::int32_t reason = -1;
+        std::uint64_t id = 0;
     };
 
     struct ProgressData final
@@ -149,6 +150,7 @@ public:
     static void insertScore(const std::string&, std::uint8_t, std::int32_t) {}
     static std::int32_t getPersonalBest(const std::string&, std::uint8_t) { return -1; }
     static std::int32_t getMonthlyBest(const std::string&, std::uint8_t) { return -1; }
+    static void getRandomBest() {}
     static std::vector<cro::String> getLeaderboardResults(std::int32_t, std::int32_t) { return {}; }
     static void courseComplete(const std::string&, std::uint8_t);
     static void setStatus(std::int32_t, const std::vector<const char*>&) {}

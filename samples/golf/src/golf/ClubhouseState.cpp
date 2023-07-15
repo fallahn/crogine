@@ -147,6 +147,18 @@ ClubhouseState::ClubhouseState(cro::StateStack& ss, cro::State::Context ctx, Sha
         loadResources();
         buildScene();
 
+#ifdef USE_GNS
+        Social::findLeaderboards(Social::BoardType::Courses);
+
+        //cached menu states depend on steam stats being
+        //up to date so this hacks in a delay and pumps the callback loop
+        cro::Clock cl;
+        while (cl.elapsed().asSeconds() < 3.f)
+        {
+            Achievements::update();
+        }
+#endif
+
         cacheState(StateID::Options);
         cacheState(StateID::Trophy);
         cacheState(StateID::Leaderboard);
@@ -286,12 +298,15 @@ ClubhouseState::ClubhouseState(cro::StateStack& ss, cro::State::Context ctx, Sha
     Achievements::setActive(true);
     Social::setStatus(Social::InfoID::Menu, { "Clubhouse" });
     Social::setGroup(0);
+    Social::getRandomBest();
 
 #ifdef CRO_DEBUG_
     //registerWindow([&]()
     //    {
     //        if (ImGui::Begin("Buns"))
     //        {
+    //            auto size = glm::vec2(m_tvTopFive.profileIcons.getSize());
+    //            ImGui::Image(m_tvTopFive.profileIcons, { size.x, size.y }, { 0.f, 1.f }, { 1.f, 0.f });
     //            //ImGui::Text("Index %u", m_arcadeIndexJoy);
     //            //float maxDepth = m_backgroundScene.getActiveCamera().getComponent<cro::Camera>().getMaxShadowDistance();
     //            //if (ImGui::SliderFloat("Depth", &maxDepth, 1.f, 30.f))
@@ -569,6 +584,15 @@ void ClubhouseState::handleMessage(const cro::Message& msg)
             m_backgroundScene.getActiveCamera().getComponent<cro::Camera>().shadowMapBuffer.create(shadowRes, shadowRes);
         }
     }
+    else if (msg.id == Social::MessageID::SocialMessage)
+    {
+        const auto& data = msg.getData<Social::SocialEvent>();
+        if (data.type == Social::SocialEvent::AvatarDownloaded)
+        {
+            //this must be our random top 5 entry
+            m_tvTopFive.addProfile(data.playerID);
+        }
+    }
 
     m_backgroundScene.forwardMessage(msg);
     m_tableScene.forwardMessage(msg);
@@ -654,6 +678,8 @@ bool ClubhouseState::simulate(float dt)
     m_arcadeVideo.update(dt);
     m_arcadeVideo2.update(dt);
 
+    m_tvTopFive.update(dt);
+
     m_backgroundScene.simulate(dt);
     m_tableScene.simulate(dt);
     m_uiScene.simulate(dt);
@@ -673,6 +699,8 @@ void ClubhouseState::render()
 
     m_pictureTexture.clear(cro::Colour::Magenta);
     m_pictureQuad.draw();
+    m_tvTopFive.icon.draw();
+    m_tvTopFive.name.draw();
     m_pictureTexture.display();
 
 #ifndef CRO_DEBUG_
@@ -817,6 +845,15 @@ void ClubhouseState::loadResources()
     m_audioEnts[AudioID::Win] = m_uiScene.createEntity();
     m_audioEnts[AudioID::Win].addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("star");
 
+
+    m_tvTopFive.name.setFont(m_sharedData.sharedResources->fonts.get(FontID::Label));
+    m_tvTopFive.name.setCharacterSize(LabelTextSize * 2);
+    m_tvTopFive.name.setFillColour(TextNormalColour);
+    m_tvTopFive.name.setShadowColour(LeaderboardTextDark);
+    m_tvTopFive.name.setShadowOffset({ 2.f, -2.f });
+
+    m_tvTopFive.icon.setOrigin({ 92.f, 92.f });
+    m_tvTopFive.icon.setPosition(TVPictureSize / 2u);
 
     validateTables();
 }
@@ -1125,7 +1162,7 @@ void ClubhouseState::buildScene()
         }
     }
 
-    m_pictureTexture.create(256, 256, false);
+    m_pictureTexture.create(TVPictureSize.x, TVPictureSize.y, false);
     if (md.loadFromFile("assets/golf/models/picture_frame.cmt"))
     {
         auto entity = m_backgroundScene.createEntity();

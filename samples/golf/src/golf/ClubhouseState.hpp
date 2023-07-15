@@ -48,6 +48,7 @@ source distribution.
 #include <crogine/graphics/UniformBuffer.hpp>
 #include <crogine/graphics/VideoPlayer.hpp>
 #include <crogine/graphics/SimpleQuad.hpp>
+#include <crogine/graphics/SimpleText.hpp>
 #include <crogine/detail/glm/vec2.hpp>
 
 #include <vector>
@@ -240,6 +241,35 @@ private:
     void buildScene();
     void createTableScene();
     void createUI();
+
+    static constexpr glm::uvec2 TVPictureSize = glm::uvec2(256u, 256u);
+    struct TVTopFive final
+    {
+        static constexpr std::uint32_t ImageWidth = 184; //default size of icon - returned icon may be smaller...
+        static constexpr std::size_t MaxProfiles = 5;
+
+        std::vector<cro::String> profileNames;
+        cro::Texture profileIcons;
+
+        cro::SimpleQuad icon;
+        cro::SimpleText name;
+
+        struct State final
+        {
+            enum
+            {
+                Idle, Scroll, TransitionOut,
+                TransitionIn
+            };
+        };
+        std::size_t index = 0;
+        std::int32_t state = 0;
+        float scale = 0.f;
+
+        void addProfile(std::uint64_t);
+        void update(float);
+    }m_tvTopFive;
+
 
     void createMainMenu(cro::Entity, std::uint32_t, std::uint32_t);
     void createAvatarMenu(cro::Entity, std::uint32_t, std::uint32_t);

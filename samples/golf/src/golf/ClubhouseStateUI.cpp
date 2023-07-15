@@ -2896,3 +2896,88 @@ void ClubhouseState::updateBallTexture()
     m_previewBalls[0].getComponent<cro::Model>().setMaterialProperty(0, "u_diffuseMap", ballTex);
     m_previewBalls[1].getComponent<cro::Model>().setMaterialProperty(0, "u_diffuseMap", ballTex);
 }
+
+void ClubhouseState::TVTopFive::addProfile(std::uint64_t profileID)
+{
+    if (profileIcons.getSize().x == 0)
+    {
+        profileIcons.create(MaxProfiles * ImageWidth, ImageWidth);
+    }
+
+    if (profileNames.size() == MaxProfiles)
+    {
+        return;
+    }
+#ifdef USE_GNS
+    auto img = Social::getUserIcon(profileID);
+
+    auto startX = static_cast<std::uint32_t>(profileNames.size()) * ImageWidth;
+    auto startY = 0u;
+
+    //center icon if smaller than exepcted size
+    startX += (img.getSize().x  - ImageWidth) / 2;
+    startY += (img.getSize().y  - ImageWidth) / 2;
+
+    profileIcons.update(img.getPixelData(), false, { startX, startY, img.getSize().x, img.getSize().y });
+
+    profileNames.push_back(Social::getUserAlias(profileID));
+#else
+    //TODO use random local profiles
+#endif
+}
+
+void ClubhouseState::TVTopFive::update(float dt)
+{    
+    static constexpr float ScrollSpeed = -50.f;
+
+
+    if (!profileNames.empty())
+    {
+        switch (state)
+        {
+        default: break;
+        case State::Idle:
+            state = State::TransitionOut;
+            break;
+        case State::Scroll:
+            name.move({ ScrollSpeed * dt, 0.f });
+            if (name.getPosition().x < -name.getLocalBounds().width)
+            {
+                state = State::TransitionOut;
+            }
+            break;
+
+        case State::TransitionOut:
+
+            scale = std::max(0.f, scale - (dt * 5.f));
+
+            icon.setScale({ cro::Util::Easing::easeInQuad(scale), 1.f });
+
+            if (scale == 0)
+            {
+                index = (index + 1) % profileNames.size();
+                cro::FloatRect rect(index * 184.f, 0.f, 184.f, 184.f);
+                icon.setTexture(profileIcons);
+                icon.setTextureRect(rect);
+
+                state = State::TransitionIn;
+
+                name.setString(profileNames[index]);
+                name.setPosition({ static_cast<float>(TVPictureSize.x), 20.f });
+            }
+            break;
+        case State::TransitionIn:
+            name.move({ ScrollSpeed * dt, 0.f });
+
+            scale = std::min(1.f, scale + (dt * 5.f));
+
+            icon.setScale({ cro::Util::Easing::easeInQuad(scale), 1.f });
+
+            if (scale == 1)
+            {
+                state = State::Scroll;
+            }
+            break;
+        }
+    }
+}
