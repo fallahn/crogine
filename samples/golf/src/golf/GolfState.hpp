@@ -313,6 +313,7 @@ private:
             EagleRight,
             AlbatrossLeft,
             AlbatrossRight,
+            Hio,
             BounceAnim,
 
             Count

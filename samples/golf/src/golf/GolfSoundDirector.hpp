@@ -135,6 +135,7 @@ private:
             NicePutt02,
             Gimme,
 
+            Firework,
             Burst,
             Airmail,
             Birds,

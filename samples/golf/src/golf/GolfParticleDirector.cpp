@@ -34,6 +34,7 @@ source distribution.
 #include "BallSystem.hpp"
 #include "Clubs.hpp"
 #include "SharedStateData.hpp"
+#include "PoissonDisk.hpp"
 
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/ecs/components/Transform.hpp>
@@ -62,6 +63,8 @@ GolfParticleDirector::GolfParticleDirector(cro::TextureResource& tr, const Share
     m_emitterSettings[ParticleID::Blades].loadFromFile("assets/golf/particles/blades.cps", tr);
     m_emitterSettings[ParticleID::Puff].loadFromFile("assets/golf/particles/puff.cps", tr);
     m_emitterSettings[ParticleID::Trail].loadFromFile("assets/golf/particles/trail.cps", tr);
+    m_emitterSettings[ParticleID::Firework].loadFromFile("assets/golf/particles/firework.cps", tr);
+    m_emitterSettings[ParticleID::Firework].blendmode = cro::EmitterSettings::BlendMode::Add;
 
     //hmm how to set smoothing on the texture?
     cro::SpriteSheet spriteSheet;
@@ -69,6 +72,15 @@ GolfParticleDirector::GolfParticleDirector(cro::TextureResource& tr, const Share
     {
         m_ringSprite = spriteSheet.getSprite("rings");
         const_cast<cro::Texture*>(m_ringSprite.getTexture())->setSmooth(false); //yucky.
+    }
+
+    //offsets from the camera when launching fireworks
+    constexpr std::array<float, 3u> MinBounds = { -2.f, 0.f, -2.f };
+    constexpr std::array<float, 3u> MaxBounds = { 2.f, 2.f, 2.f };
+    auto pos = pd::PoissonDiskSampling(1.5f, MinBounds, MaxBounds);
+    for (auto i = 0u; i < std::min(std::size_t(30u), pos.size()); ++i)
+    {
+        m_fireworkPositions.emplace_back(pos[i][0], pos[i][1], pos[i][2]);
     }
 }
 
@@ -121,6 +133,8 @@ void GolfParticleDirector::handleMessage(const cro::Message& msg)
         else if (data.type == GolfEvent::HoleInOne)
         {
             getEnt(ParticleID::HIO, data.position);
+
+            launchFireworks();
         }
         else if (data.type == GolfEvent::DroneHit)
         {
@@ -197,6 +211,54 @@ void GolfParticleDirector::spawnRings(glm::vec3 position)
         if (!e.getComponent<cro::SpriteAnimation>().playing)
         {
             getScene().destroyEntity(e);
+        }
+    };
+}
+
+void GolfParticleDirector::launchFireworks()
+{
+    struct CallbackData final
+    {
+        float elapsedTime = 0.f;
+        std::size_t idx = 0;
+    };
+
+    const auto& tx = getScene().getActiveCamera().getComponent<cro::Transform>();
+    const auto camPos = tx.getWorldPosition() + (tx.getForwardVector() * 2.f);
+
+
+    auto entity = getScene().createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<CallbackData>();
+    entity.getComponent<cro::Callback>().function =
+        [&, camPos](cro::Entity e, float dt)
+    {
+        auto& [currTime, idx] = e.getComponent<cro::Callback>().getUserData<CallbackData>();
+
+        currTime -= dt;
+
+        if (currTime < 0)
+        {
+            auto f = getNextEntity();
+            f.getComponent<cro::Transform>().setPosition(camPos + m_fireworkPositions[idx]);
+            f.getComponent<cro::ParticleEmitter>().settings = m_emitterSettings[ParticleID::Firework];
+            f.getComponent<cro::ParticleEmitter>().start();
+
+
+            auto* msg = postMessage<CollisionEvent>(MessageID::CollisionMessage);
+            msg->type = CollisionEvent::Begin;
+            msg->terrain = -2; //OI stop keep doing these and enumerate them properly (-1 is also flag collision)
+            msg->position = f.getComponent<cro::Transform>().getPosition();
+
+            idx++;
+            currTime = static_cast<float>(cro::Util::Random::value(1, 3)) / 10.f;
+
+            if (idx == m_fireworkPositions.size())
+            {
+                e.getComponent<cro::Callback>().active = false;
+                getScene().destroyEntity(e);
+            }
         }
     };
 }

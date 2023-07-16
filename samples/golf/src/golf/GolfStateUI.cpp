@@ -2884,8 +2884,9 @@ void GolfState::showMessageBoard(MessageBoardID messageType, bool special)
             {
                 xp /= 2;
             }
-
+#ifndef CRO_DEBUG_
             Social::awardXP(xp, XPStringID::HIO);
+#endif
         }
 
 
@@ -2966,10 +2967,14 @@ void GolfState::showMessageBoard(MessageBoardID messageType, bool special)
                         m_uiScene.destroyEntity(f);
                     }
                 };
+                if (left == SpriteID::Hio)
+                {
+                    e.getComponent<cro::Transform>().move(glm::vec2(0.f, -4.f));
+                }
                 const auto leftBounds = m_sprites[left].getTextureBounds();
                 const auto leftRect = m_sprites[left].getTextureRectNormalised();
                 const auto rightRect = m_sprites[right].getTextureRectNormalised();
-                constexpr float Spacing = 50.f;
+                const float Spacing = left == SpriteID::Hio ? 30.f : 50.f;
                 const glm::vec2 leftPos(-Spacing - leftBounds.width, -std::floor(leftBounds.height / 2.f));
                 const glm::vec2 rightPos(Spacing, -std::floor(leftBounds.height / 2.f));
 
@@ -3033,11 +3038,18 @@ void GolfState::showMessageBoard(MessageBoardID messageType, bool special)
             case ScoreID::TripleBogie:
                 textEnt.getComponent<cro::Text>().setFillColour(TextHighlightColour);
                 break;
+            case ScoreID::HIO:
+                addIcon(SpriteID::Hio, SpriteID::Hio);
+                textEnt.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+                textEnt.getComponent<cro::Text>().setVerticalSpacing(3.f);
+                textEnt.getComponent<cro::Transform>().move({ 0.f, 4.f, 0.f });
+                break;
             default:
                 break;
             }
 
-            if (special)
+            if (special
+                && score != ScoreID::HIO)
             {
                 textEnt3.getComponent<cro::Text>().setString("Nice Putt!");
                 textEnt3.getComponent<cro::Text>().setFillColour(TextGoldColour);
@@ -3085,7 +3097,10 @@ void GolfState::showMessageBoard(MessageBoardID messageType, bool special)
     }
     imgEnt.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f, 0.f });
 
-    centreText(textEnt);
+    if (textEnt.getComponent<cro::Text>().getAlignment() != cro::Text::Alignment::Centre)
+    {
+        centreText(textEnt);
+    }
     centreText(textEnt2);
     centreText(textEnt3);
     

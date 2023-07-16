@@ -626,6 +626,11 @@ bool GolfState::handleEvent(const cro::Event& evt)
         }
             break;
         case SDLK_KP_MULTIPLY:
+        {
+            auto* msg = postMessage<GolfEvent>(MessageID::GolfMessage);
+            msg->type = GolfEvent::HoleInOne;
+            msg->position = m_holeData[m_currentHole].pin;
+        }
             showMessageBoard(MessageBoardID::HoleScore);
             break;
         case SDLK_PAGEUP:
@@ -2206,6 +2211,7 @@ void GolfState::loadAssets()
     m_sprites[SpriteID::EagleRight] = spriteSheet.getSprite("eagle_right");
     m_sprites[SpriteID::AlbatrossLeft] = spriteSheet.getSprite("albatross_left");
     m_sprites[SpriteID::AlbatrossRight] = spriteSheet.getSprite("albatross_right");
+    m_sprites[SpriteID::Hio] = spriteSheet.getSprite("hio");
 
     spriteSheet.loadFromFile("assets/golf/sprites/bounce.spt", m_resources.textures);
     m_sprites[SpriteID::BounceAnim] = spriteSheet.getSprite("bounce");
@@ -5469,7 +5475,7 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
                     {
                         //achievement is awarded in showMessageBoard() where other achievements/stats are updated.
                         //Achievements::awardAchievement(AchievementStrings[AchievementID::HoleInOne]);
-                        auto* msg = getContext().appInstance.getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
+                        auto* msg = postMessage<GolfEvent>(MessageID::GolfMessage);
                         msg->type = GolfEvent::HoleInOne;
                         msg->position = m_holeData[m_currentHole].pin;
                     }

@@ -142,6 +142,7 @@ GolfSoundDirector::GolfSoundDirector(cro::AudioResource& ar)
         "assets/golf/sound/kudos/putt01.wav",
         "assets/golf/sound/holes/gimme.wav",
 
+        "assets/golf/sound/ambience/firework.wav",
         "assets/golf/sound/ambience/burst.wav",
         "assets/golf/sound/holes/airmail.wav",
         "assets/golf/sound/ambience/birds01.wav",
@@ -474,7 +475,17 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
             {
                 switch (data.terrain)
                 {
+                    //TODO enumerate these properly
+                case -2:
+                    //firework
+                {
+                    auto e = playSound(AudioID::Firework, data.position);
+                    e.getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
+                    e.getComponent<cro::AudioEmitter>().setPitch(cro::Util::Random::value(0.95f, 1.2f));
+                }
+                    break;
                 case -1:
+                    //flag pole
                     playSound(AudioID::Pole, data.position).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
                     break;
                 default:
