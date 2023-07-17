@@ -83,7 +83,8 @@ StatsState::StatsState(cro::StateStack& ss, cro::State::Context ctx, SharedState
     : cro::State        (ss, ctx),
     m_scene             (ctx.appInstance.getMessageBus()),
     m_sharedData        (sd),
-    m_viewScale         (2.f)
+    m_viewScale         (2.f),
+    m_currentTab        (0)
 {
     ctx.mainWindow.setMouseCaptured(false);
 
@@ -126,11 +127,20 @@ bool StatsState::handleEvent(const cro::Event& evt)
     else if (evt.type == SDL_CONTROLLERBUTTONUP)
     {
         cro::App::getWindow().setMouseCaptured(true);
-        if (evt.cbutton.button == cro::GameController::ButtonB
-            || evt.cbutton.button == cro::GameController::ButtonStart)
+
+        switch (evt.cbutton.button)
         {
+        default: break;
+        case cro::GameController::ButtonB:
+        case cro::GameController::ButtonStart:
             quitState();
             return false;
+        case cro::GameController::ButtonRightShoulder:
+            activateTab((m_currentTab + 1) % TabID::Max);
+            break;
+        case cro::GameController::ButtonLeftShoulder:
+            activateTab((m_currentTab + (TabID::Max - 1)) % TabID::Max);
+            break;
         }
     }
     else if (evt.type == SDL_MOUSEBUTTONUP)
@@ -290,7 +300,76 @@ void StatsState::buildScene()
     entity.getComponent<cro::Transform>().setOrigin({ std::floor(bounds.width / 2.f), std::floor(bounds.height / 2.f) });
     rootNode.getComponent<cro::Transform >().addChild(entity.getComponent<cro::Transform>());
 
-   
+    auto bgNode = entity;
+
+    //tab buttons
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("club_stats_button");
+    bgNode.getComponent<cro::Transform >().addChild(entity.getComponent<cro::Transform>());
+
+    m_tabEntity = entity;
+
+    auto selectedID = m_scene.getSystem<cro::UISystem>()->addCallback(
+        [&](cro::Entity e)
+        {
+            e.getComponent<cro::Callback>().active = true;
+            e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
+            m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
+        });
+    auto unselectedID = m_scene.getSystem<cro::UISystem>()->addCallback(
+        [](cro::Entity e)
+        {
+            e.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+        });
+
+
+
+    //const float bgWidth = bounds.width;
+    const float stride = 102.f;
+    auto sprite = spriteSheet.getSprite("button_highlight");
+    bounds = sprite.getTextureBounds();
+    const float offset = 52.f;
+
+    for (auto i = 0; i < TabID::Max; ++i)
+    {
+        entity = m_scene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ (stride * i) + offset, 13.f, 0.5f });
+        entity.getComponent<cro::Transform>().setOrigin({ std::floor(bounds.width / 2.f), std::floor(bounds.height / 2.f) });
+        entity.getComponent<cro::Transform>().move(entity.getComponent<cro::Transform>().getOrigin());
+        entity.addComponent<cro::Drawable2D>();
+        entity.addComponent<cro::Sprite>() = sprite;
+        entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+
+        entity.addComponent<cro::UIInput>().area = bounds;
+        entity.getComponent<cro::UIInput>().enabled = i != m_currentTab;
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectedID;
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectedID;
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = 
+            m_scene.getSystem<cro::UISystem>()->addCallback(
+                [&, i](cro::Entity e, const cro::ButtonEvent& evt) 
+                {
+                    if (activated(evt))
+                    {
+                        activateTab(i);
+                        e.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+                    }                
+                });
+
+        entity.addComponent<cro::Callback>().function = MenuTextCallback();
+
+        bgNode.getComponent<cro::Transform >().addChild(entity.getComponent<cro::Transform>());
+
+        m_tabButtons[i] = entity;
+    }
+
+
+    createClubStatsTab(bgNode, spriteSheet);
+    createPerformanceTab(bgNode, spriteSheet);
+    createHistoryTab(bgNode);
+    createAwardsTab(bgNode);
+
     auto updateView = [&, rootNode](cro::Camera& cam) mutable
     {
         glm::vec2 size(GolfGame::getActiveTarget()->getSize());
@@ -325,6 +404,86 @@ void StatsState::buildScene()
     updateView(entity.getComponent<cro::Camera>());
 
     m_scene.simulate(0.f);
+}
+
+void StatsState::createClubStatsTab(cro::Entity parent, const cro::SpriteSheet& spriteSheet)
+{
+    m_tabNodes[TabID::ClubStats] = m_scene.createEntity();
+    m_tabNodes[TabID::ClubStats].addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 0.2f });
+    parent.getComponent<cro::Transform>().addChild(m_tabNodes[TabID::ClubStats].getComponent<cro::Transform>());
+
+    const auto centre = parent.getComponent<cro::Sprite>().getTextureBounds().width / 2.f;
+
+    auto entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ centre, 36.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("club_stats");
+    entity.getComponent<cro::Transform>().move(glm::vec2(-entity.getComponent<cro::Sprite>().getTextureBounds().width / 2.f, 0.f));
+    m_tabNodes[TabID::ClubStats].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+}
+
+void StatsState::createPerformanceTab(cro::Entity parent, const cro::SpriteSheet& spriteSheet)
+{
+    m_tabNodes[TabID::Performance] = m_scene.createEntity();
+    m_tabNodes[TabID::Performance].addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 0.2f });
+    m_tabNodes[TabID::Performance].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+    parent.getComponent<cro::Transform>().addChild(m_tabNodes[TabID::Performance].getComponent<cro::Transform>());
+
+    const auto centre = parent.getComponent<cro::Sprite>().getTextureBounds().width / 2.f;
+
+    auto entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ centre, 38.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("performance");
+    entity.getComponent<cro::Transform>().move(glm::vec2(-entity.getComponent<cro::Sprite>().getTextureBounds().width / 2.f, 0.f));
+    m_tabNodes[TabID::Performance].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+}
+
+void StatsState::createHistoryTab(cro::Entity parent)
+{
+    m_tabNodes[TabID::History] = m_scene.createEntity();
+    m_tabNodes[TabID::History].addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 0.2f });
+    m_tabNodes[TabID::History].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+    parent.getComponent<cro::Transform>().addChild(m_tabNodes[TabID::History].getComponent<cro::Transform>());
+}
+
+void StatsState::createAwardsTab(cro::Entity parent)
+{
+    m_tabNodes[TabID::Awards] = m_scene.createEntity();
+    m_tabNodes[TabID::Awards].addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 0.2f });
+    m_tabNodes[TabID::Awards].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+    parent.getComponent<cro::Transform>().addChild(m_tabNodes[TabID::Awards].getComponent<cro::Transform>());
+
+    auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
+    auto entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 18.f, 200.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(font).setString("No Awards... sad :(");
+    entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+
+    m_tabNodes[TabID::Awards].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+}
+
+void StatsState::activateTab(std::int32_t tabID)
+{
+    //update old
+    m_tabButtons[m_currentTab].getComponent<cro::UIInput>().enabled = true;
+    m_tabNodes[m_currentTab].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+
+    //update index
+    m_currentTab = tabID;
+
+    //update new
+    m_tabButtons[m_currentTab].getComponent<cro::UIInput>().enabled = false;
+    m_tabNodes[m_currentTab].getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+
+    //update the button selection graphic
+    auto bounds = m_tabEntity.getComponent<cro::Sprite>().getTextureRect();
+    bounds.bottom = bounds.height * m_currentTab;
+    m_tabEntity.getComponent<cro::Sprite>().setTextureRect(bounds);
+
+    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
 }
 
 void StatsState::quitState()

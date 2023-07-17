@@ -36,6 +36,10 @@ source distribution.
 #include <crogine/ecs/Scene.hpp>
 
 struct SharedStateData;
+namespace cro
+{
+    class SpriteSheet;
+}
 
 class StatsState final : public cro::State
 {
@@ -72,6 +76,26 @@ private:
     glm::vec2 m_viewScale;
     cro::Entity m_rootNode;
 
+    struct TabID final
+    {
+        enum
+        {
+            ClubStats, Performance, History, Awards,
+
+            Count
+        };
+        static constexpr std::int32_t Max = 4;
+    };
+    std::int32_t m_currentTab;
+    cro::Entity m_tabEntity;
+    std::array<cro::Entity, TabID::Count> m_tabButtons = {};   
+    std::array<cro::Entity, TabID::Count> m_tabNodes = {};   
+
     void buildScene();
+    void createClubStatsTab(cro::Entity, const cro::SpriteSheet&);
+    void createPerformanceTab(cro::Entity, const cro::SpriteSheet&);
+    void createHistoryTab(cro::Entity);
+    void createAwardsTab(cro::Entity);
+    void activateTab(std::int32_t);
     void quitState();
 };
