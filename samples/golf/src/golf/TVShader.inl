@@ -42,7 +42,7 @@ uniform samplerCube u_reflectMap;
 VARYING_IN vec2 v_texCoord;
 VARYING_IN vec3 v_normal;
 VARYING_IN vec3 v_cameraWorldPosition;
-VARYING_IN vec4 v_worldPosition;
+VARYING_IN vec3 v_worldPosition;
 
 OUTPUT
 
@@ -57,7 +57,7 @@ void main()
 {
     float band = smoothstep(0.9951, 0.9992, sin((v_texCoord.y * 4.0) + (u_windData.w * 0.2))) * 0.06;
     vec2 coord = v_texCoord;
-    coord.x += band * 0.1;
+    coord.x = (band * 0.1) + coord.x;
 
     vec4 colour = TEXTURE(u_diffuseMap, coord);
 
@@ -69,8 +69,8 @@ void main()
     float scanline = 1.0 - (0.1 * mod(gl_FragCoord.y, 2.0));
     colour.rgb *= scanline;
 
-    scanline = sin(v_texCoord.y * LineCount) + 1.0 / 2.0;
-    scanline = 0.9 + (0.1 * scanline);
+    scanline = (sin(v_texCoord.y * LineCount) + 1.0) * 0.5;
+    scanline = (0.1 * scanline) + 0.9;
     colour.rgb *= scanline;
 
 
@@ -79,7 +79,7 @@ void main()
 
 
 
-    vec3 viewDirection = v_cameraWorldPosition - v_worldPosition.xyz;
+    vec3 viewDirection = v_cameraWorldPosition - v_worldPosition;
     viewDirection = normalize(viewDirection);
 
     vec3 normal = normalize(v_normal);

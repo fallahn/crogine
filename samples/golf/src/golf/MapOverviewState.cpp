@@ -692,12 +692,12 @@ void MapOverviewState::refreshMap()
     glm::vec2 teePos = 
     {
         std::round(m_sharedData.minimapData.teePos.x),
-        std::round(- m_sharedData.minimapData.teePos.z)
+        std::round(-m_sharedData.minimapData.teePos.z)
     };
     glm::vec2 pinPos =
     {
         std::round(m_sharedData.minimapData.pinPos.x),
-        std::round(- m_sharedData.minimapData.pinPos.z),
+        std::round(-m_sharedData.minimapData.pinPos.z),
     };
 
     auto charScale = std::round(MaxZoom - (m_zoomScale - MinZoom));

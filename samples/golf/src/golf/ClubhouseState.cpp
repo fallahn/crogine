@@ -411,6 +411,11 @@ bool ClubhouseState::handleEvent(const cro::Event& evt)
         case SDLK_BACKSPACE:
             quitMenu();
             break;
+#ifdef CRO_DEBUG_
+        case SDLK_KP_9:
+            requestStackPush(StateID::Stats);
+            break;
+#endif
         }
     }
     else if (evt.type == SDL_KEYDOWN)
