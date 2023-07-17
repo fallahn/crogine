@@ -336,7 +336,7 @@ void StatsState::buildScene()
     const float stride = 102.f;
     auto sprite = spriteSheet.getSprite("button_highlight");
     bounds = sprite.getTextureBounds();
-    const float offset = 52.f;
+    const float offset = 51.f;
 
     for (auto i = 0; i < TabID::Max; ++i)
     {
@@ -512,7 +512,7 @@ void StatsState::createClubStatsTab(cro::Entity parent, const cro::SpriteSheet& 
         label += "Top/Side";
 
         labelEnt = m_scene.createEntity();
-        labelEnt.addComponent<cro::Transform>().setPosition({ 4.f, -12.f, 0.3f });
+        labelEnt.addComponent<cro::Transform>().setPosition({ 4.f, -11.f, 0.3f });
         labelEnt.addComponent<cro::Drawable2D>();
         labelEnt.addComponent<cro::Text>(font).setString(label);
         labelEnt.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
