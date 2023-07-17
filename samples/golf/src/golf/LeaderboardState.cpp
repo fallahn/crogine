@@ -353,6 +353,13 @@ void LeaderboardState::buildScene()
 
                 Social::refreshHallOfFame(m_courseStrings[m_displayContext.courseIndex].first);
                 refreshDisplay();
+
+                if (m_sharedData.baseState == StateID::Clubhouse)
+                {
+                    //ideally we always want to set this but returning to lobby and
+                    //fining the correct tag is a faff. I might do this one day :)
+                    Social::setStatus(Social::InfoID::Menu, { "Viewing Leaderboards" });
+                }
             }
             break;
         case RootCallbackData::FadeOut:
@@ -363,6 +370,11 @@ void LeaderboardState::buildScene()
                 requestStackPop();
 
                 state = RootCallbackData::FadeIn;
+
+                if (m_sharedData.baseState == StateID::Clubhouse)
+                {
+                    Social::setStatus(Social::InfoID::Menu, { "Clubhouse" });
+                }
             }
             break;
         }

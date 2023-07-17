@@ -35,7 +35,10 @@ source distribution.
 #include "GameConsts.hpp"
 #include "TextAnimCallback.hpp"
 #include "MessageIDs.hpp"
+#include "Clubs.hpp"
 #include "../GolfGame.hpp"
+
+#include <Social.hpp>
 
 #include <crogine/core/Window.hpp>
 #include <crogine/core/GameController.hpp>
@@ -66,6 +69,7 @@ source distribution.
 
 #include <crogine/util/Easings.hpp>
 
+#include <crogine/detail/OpenGL.hpp>
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
 
 namespace
@@ -188,7 +192,7 @@ void StatsState::render()
 void StatsState::buildScene()
 {
     auto& mb = getContext().appInstance.getMessageBus();
-    m_scene.addSystem<cro::UISystem>(mb);// ->setActiveControllerID(m_sharedData.inputBinding.controllerID);
+    m_scene.addSystem<cro::UISystem>(mb);
     m_scene.addSystem<cro::CommandSystem>(mb);
     m_scene.addSystem<cro::CallbackSystem>(mb);
     m_scene.addSystem<cro::SpriteSystem2D>(mb);
@@ -239,6 +243,8 @@ void StatsState::buildScene()
 
                 m_scene.setSystemActive<cro::AudioPlayerSystem>(true);
                 m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+
+                Social::setStatus(Social::InfoID::Menu, { "Browsing Stats" });
             }
             break;
         case RootCallbackData::FadeOut:
@@ -249,6 +255,8 @@ void StatsState::buildScene()
                 requestStackPop();
 
                 state = RootCallbackData::FadeIn;
+
+                Social::setStatus(Social::InfoID::Menu, { "Clubhouse" });
             }
             break;
         }
@@ -325,8 +333,6 @@ void StatsState::buildScene()
         });
 
 
-
-    //const float bgWidth = bounds.width;
     const float stride = 102.f;
     auto sprite = spriteSheet.getSprite("button_highlight");
     bounds = sprite.getTextureBounds();
@@ -420,6 +426,152 @@ void StatsState::createClubStatsTab(cro::Entity parent, const cro::SpriteSheet& 
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("club_stats");
     entity.getComponent<cro::Transform>().move(glm::vec2(-entity.getComponent<cro::Sprite>().getTextureBounds().width / 2.f, 0.f));
     m_tabNodes[TabID::ClubStats].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    const auto& font = m_sharedData.sharedResources->fonts.get(FontID::Info);
+
+    constexpr glm::vec2 BasePos(76.f, 302.f);
+    constexpr glm::vec2 StatSpacing(160.f, 64.f);
+    constexpr std::int32_t RowCount = 4;
+    constexpr float MaxBarWidth = StatSpacing.x - 56.f;
+    constexpr float BarHeight = 10.f;
+    constexpr std::array BarColours =
+    {
+        cro::Colour(0xb83530ff), //red
+        cro::Colour(0x467e3eff), //green
+        cro::Colour(0x6eb39dff), //blue
+        cro::Colour(0xf2cf5cff) //yellow
+    };
+    struct ColourID final
+    {
+        enum
+        {
+            Novice, Expert, Pro, Spin
+        };
+    };
+
+    auto playerLevel = Social::getLevel();
+    auto clubFlags = Social::getUnlockStatus(Social::UnlockType::Club);
+
+    const auto createStat = [&](std::int32_t clubID)
+    {
+        glm::vec2 statPos = BasePos;
+        statPos.x += StatSpacing.x * (clubID / RowCount);
+        statPos.y -= StatSpacing.y * (clubID % RowCount);
+
+        //TODO check if this club is unlocked for current user
+        //else mark at which level is unlocked
+        //max range level 0,1,2 and spin influence
+        auto statNode = m_scene.createEntity();
+        statNode.addComponent<cro::Transform>().setPosition(statPos);
+        m_tabNodes[TabID::ClubStats].getComponent<cro::Transform>().addChild(statNode.getComponent<cro::Transform>());
+
+        //TODO we need to be able to refresh these labels if the user switch
+        //to imperial measurements
+        cro::String label = Clubs[clubID].getLabel() + "\n";
+        label += Clubs[clubID].getDistanceLabel(m_sharedData.imperialMeasurements, 0) + "\n";
+        label += Clubs[clubID].getDistanceLabel(m_sharedData.imperialMeasurements, 1) + "\n";
+        label += Clubs[clubID].getDistanceLabel(m_sharedData.imperialMeasurements, 2) + "\n";
+        
+        std::stringstream ss;
+        ss.precision(2);
+        ss << Clubs[clubID].getTopSpinMultiplier() << "/" << Clubs[clubID].getSideSpinMultiplier();
+        label += ss.str();
+
+        auto labelEnt = m_scene.createEntity();
+        labelEnt.addComponent<cro::Transform>();
+        labelEnt.addComponent<cro::Drawable2D>();
+        labelEnt.addComponent<cro::Text>(font).setString(label);
+        labelEnt.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+        labelEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
+        labelEnt.getComponent<cro::Text>().setVerticalSpacing(-1.f);
+        labelEnt.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Right);
+        statNode.getComponent<cro::Transform>().addChild(labelEnt.getComponent<cro::Transform>());
+
+        auto unlockLevel = ClubID::getUnlockLevel(clubID);
+
+        label = ((clubFlags & ClubID::Flags[clubID]) == 0) ? "Level " + std::to_string(unlockLevel) : "|";
+        label += "\n";
+
+        if ((playerLevel < 15) || (clubFlags & ClubID::Flags[clubID]) == 0)
+        {
+            auto l = std::max(15, unlockLevel);
+            label += "Level " + std::to_string(l) + "\n";
+        }
+        else
+        {
+            label += "|\n";
+        }
+        if ((playerLevel < 30) || (clubFlags & ClubID::Flags[clubID]) == 0)
+        {
+            label += "Level 30\n";
+        }
+        else
+        {
+            label += "|\n";
+        }
+        label += "Top/Side";
+
+        labelEnt = m_scene.createEntity();
+        labelEnt.addComponent<cro::Transform>().setPosition({ 4.f, -12.f, 0.3f });
+        labelEnt.addComponent<cro::Drawable2D>();
+        labelEnt.addComponent<cro::Text>(font).setString(label);
+        labelEnt.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+        labelEnt.getComponent<cro::Text>().setFillColour(LeaderboardTextDark);
+        labelEnt.getComponent<cro::Text>().setVerticalSpacing(-1.f);
+        statNode.getComponent<cro::Transform>().addChild(labelEnt.getComponent<cro::Transform>());
+
+
+        std::vector<cro::Vertex2D> verts;
+
+        float barPos = -10.f;
+        const auto createBar = [&](float width, std::int32_t colourIndex)
+        {
+            //fudgenstein.
+            auto c = BarColours[colourIndex];
+            if (colourIndex == 2 && playerLevel < 30
+                || colourIndex == 1 && playerLevel < 15)
+            {
+                c.setAlpha(0.15f);
+            }
+
+            if ((clubFlags & ClubID::Flags[clubID]) == 0)
+            {
+                c.setAlpha(0.15f);
+            }
+
+            verts.emplace_back(glm::vec2(0.f, barPos), c);
+            verts.emplace_back(glm::vec2(0.f, barPos - BarHeight), c);
+            verts.emplace_back(glm::vec2(width, barPos), c);
+            verts.emplace_back(glm::vec2(width, barPos), c);
+            verts.emplace_back(glm::vec2(0.f, barPos - BarHeight), c);
+            verts.emplace_back(glm::vec2(width, barPos - BarHeight), c);
+
+            barPos -= (BarHeight + 1.f);
+        };
+
+        //each level
+        for (auto i = 0; i < 3; ++i)
+        {
+            const float barWidth = MaxBarWidth * (Clubs[clubID].getTargetAtLevel(i) / Clubs[ClubID::Driver].getTargetAtLevel(2));
+            createBar(std::round(barWidth), i);
+        }
+
+        //and spin influence
+        createBar(std::round(MaxBarWidth * Clubs[clubID].getSpinInfluence()), ColourID::Spin);
+
+
+        //draw all the bars with one entity
+        auto barEnt = m_scene.createEntity();
+        barEnt.addComponent<cro::Transform>().setPosition({ 3.f, 0.f, 0.f });
+        barEnt.addComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLES);
+        barEnt.getComponent<cro::Drawable2D>().setVertexData(verts);
+        statNode.getComponent<cro::Transform>().addChild(barEnt.getComponent<cro::Transform>());
+    };
+
+    for (auto i = 0; i < ClubID::Putter; ++i)
+    {
+        createStat(i);
+    }
 }
 
 void StatsState::createPerformanceTab(cro::Entity parent, const cro::SpriteSheet& spriteSheet)
@@ -432,11 +584,31 @@ void StatsState::createPerformanceTab(cro::Entity parent, const cro::SpriteSheet
     const auto centre = parent.getComponent<cro::Sprite>().getTextureBounds().width / 2.f;
 
     auto entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ centre, 38.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ centre, 56.f, 0.1f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("performance");
     entity.getComponent<cro::Transform>().move(glm::vec2(-entity.getComponent<cro::Sprite>().getTextureBounds().width / 2.f, 0.f));
     m_tabNodes[TabID::Performance].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+    //TODO ideally we want to use a menu group to disable
+    //these - but then this breaks our tab buttons
+    //(oh if only we used bitflags to set multiple groups
+    //on any given button....)
+
+    //TODO we could also pad this out with disabled inputs
+    //so that the column/row count properly matches.
+
+    //cpu checkbox
+
+    //previous course
+
+    //next course
+
+    //previous profile
+
+    //next profile
+
 }
 
 void StatsState::createHistoryTab(cro::Entity parent)
@@ -445,6 +617,9 @@ void StatsState::createHistoryTab(cro::Entity parent)
     m_tabNodes[TabID::History].addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 0.2f });
     m_tabNodes[TabID::History].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
     parent.getComponent<cro::Transform>().addChild(m_tabNodes[TabID::History].getComponent<cro::Transform>());
+
+    //TODO pie charts - left side number of times personally played a course
+    //right side aggregated stats from steam of course plays
 }
 
 void StatsState::createAwardsTab(cro::Entity parent)
@@ -454,14 +629,16 @@ void StatsState::createAwardsTab(cro::Entity parent)
     m_tabNodes[TabID::Awards].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
     parent.getComponent<cro::Transform>().addChild(m_tabNodes[TabID::Awards].getComponent<cro::Transform>());
 
-    auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
+    const auto centre = parent.getComponent<cro::Sprite>().getTextureBounds().width / 2.f;
+
+    const auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
     auto entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 18.f, 200.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ centre, 240.f, 0.1f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(font).setString("No Awards... sad :(");
     entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
-
+    centreText(entity);
     m_tabNodes[TabID::Awards].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 }
 
@@ -482,6 +659,9 @@ void StatsState::activateTab(std::int32_t tabID)
     auto bounds = m_tabEntity.getComponent<cro::Sprite>().getTextureRect();
     bounds.bottom = bounds.height * m_currentTab;
     m_tabEntity.getComponent<cro::Sprite>().setTextureRect(bounds);
+
+    //TODO set column count to make performance menu more intuitive when
+    //navigating with a controller / steam deck
 
     m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
 }

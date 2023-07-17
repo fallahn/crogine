@@ -120,6 +120,37 @@ std::string Club::getName(bool imperial, float distanceToPin) const
     }
 }
 
+std::string Club::getDistanceLabel(bool imperial, std::int32_t level) const
+{
+    CRO_ASSERT(level > -1 && level < 3, "");
+
+    auto t = getTargetAtLevel(level);
+    if (imperial)
+    {
+        if (getPower(/*distanceToPin*/10.f, imperial) > 10.f)
+        {
+            auto dist = static_cast<std::int32_t>(t * ToYards);
+            return m_name + std::to_string(dist) + "y";
+        }
+        else
+        {
+            auto dist = static_cast<std::int32_t>(std::round(t * ToFeet));
+            return std::to_string(dist) + "\'";
+        }
+    }
+    else
+    {
+        if (t < 1.f)
+        {
+            t *= 100.f;
+            auto dist = static_cast<std::int32_t>(t);
+            return std::to_string(dist) + "cm";
+        }
+        auto dist = static_cast<std::int32_t>(t);
+        return std::to_string(dist) + "m";
+    }
+}
+
 float Club::getPower(float distanceToPin, bool imperial) const
 {
     if (m_id == ClubID::Putter)
