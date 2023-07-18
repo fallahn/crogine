@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022
+Matt Marchant 2022 - 2023
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -108,7 +108,9 @@ struct CommandID final
             GimmeDesc    = 0x10000,
             LobbyText    = 0x20000,
             CourseRules  = 0x40000,
-            CourseType   = 0x80000
+            CourseType   = 0x80000,
+            MetricClub   = 0x100000, //used in the stats viewer for club labels
+            ImperialClub = 0x200000,
         };
     };
 };

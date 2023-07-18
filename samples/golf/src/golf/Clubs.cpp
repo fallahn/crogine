@@ -130,7 +130,7 @@ std::string Club::getDistanceLabel(bool imperial, std::int32_t level) const
         if (getPower(/*distanceToPin*/10.f, imperial) > 10.f)
         {
             auto dist = static_cast<std::int32_t>(t * ToYards);
-            return m_name + std::to_string(dist) + "y";
+            return std::to_string(dist) + "y";
         }
         else
         {

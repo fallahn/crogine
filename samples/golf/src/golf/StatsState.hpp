@@ -91,6 +91,8 @@ private:
     std::array<cro::Entity, TabID::Count> m_tabButtons = {};   
     std::array<cro::Entity, TabID::Count> m_tabNodes = {};   
 
+    bool m_imperialMeasurements;
+
     void buildScene();
     void createClubStatsTab(cro::Entity, const cro::SpriteSheet&);
     void createPerformanceTab(cro::Entity, const cro::SpriteSheet&);

@@ -84,11 +84,12 @@ namespace
 }
 
 StatsState::StatsState(cro::StateStack& ss, cro::State::Context ctx, SharedStateData& sd)
-    : cro::State        (ss, ctx),
-    m_scene             (ctx.appInstance.getMessageBus()),
-    m_sharedData        (sd),
-    m_viewScale         (2.f),
-    m_currentTab        (0)
+    : cro::State            (ss, ctx),
+    m_scene                 (ctx.appInstance.getMessageBus()),
+    m_sharedData            (sd),
+    m_viewScale             (2.f),
+    m_currentTab            (0),
+    m_imperialMeasurements  (sd.imperialMeasurements)
 {
     ctx.mainWindow.setMouseCaptured(false);
 
@@ -235,6 +236,28 @@ void StatsState::buildScene()
         case RootCallbackData::FadeIn:
             currTime = std::min(1.f, currTime + (dt * 2.f));
             e.getComponent<cro::Transform>().setScale(m_viewScale * cro::Util::Easing::easeOutQuint(currTime));
+
+            //check if the user switched measurements in the options
+            if (m_imperialMeasurements != m_sharedData.imperialMeasurements)
+            {
+                const float scale = m_sharedData.imperialMeasurements ? 1.f : 0.f;
+                m_imperialMeasurements = m_sharedData.imperialMeasurements;
+
+                cro::Command cmd;
+                cmd.targetFlags = CommandID::Menu::MetricClub | CommandID::Menu::ImperialClub;
+                cmd.action = [scale](cro::Entity e, float)
+                {
+                    if (e.getComponent<cro::CommandTarget>().ID == CommandID::Menu::ImperialClub)
+                    {
+                        e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
+                    }
+                    else
+                    {
+                        e.getComponent<cro::Transform>().setScale(glm::vec2(1.f - scale));
+                    }
+                };
+                m_scene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+            }
 
             if (currTime == 1)
             {
@@ -430,7 +453,7 @@ void StatsState::createClubStatsTab(cro::Entity parent, const cro::SpriteSheet& 
     const auto& font = m_sharedData.sharedResources->fonts.get(FontID::Info);
 
     constexpr glm::vec2 BasePos(76.f, 302.f);
-    constexpr glm::vec2 StatSpacing(160.f, 64.f);
+    constexpr glm::vec2 StatSpacing(156.f, 64.f);
     constexpr std::int32_t RowCount = 4;
     constexpr float MaxBarWidth = StatSpacing.x - 56.f;
     constexpr float BarHeight = 10.f;
@@ -439,13 +462,14 @@ void StatsState::createClubStatsTab(cro::Entity parent, const cro::SpriteSheet& 
         cro::Colour(0xb83530ff), //red
         cro::Colour(0x467e3eff), //green
         cro::Colour(0x6eb39dff), //blue
-        cro::Colour(0xf2cf5cff) //yellow
+        cro::Colour(0xf2cf5cff), //yellow
+        cro::Colour(0xec773dff), //orange
     };
     struct ColourID final
     {
         enum
         {
-            Novice, Expert, Pro, Spin
+            Novice, Expert, Pro, TopSpin, SideSpin
         };
     };
 
@@ -458,34 +482,49 @@ void StatsState::createClubStatsTab(cro::Entity parent, const cro::SpriteSheet& 
         statPos.x += StatSpacing.x * (clubID / RowCount);
         statPos.y -= StatSpacing.y * (clubID % RowCount);
 
-        //TODO check if this club is unlocked for current user
-        //else mark at which level is unlocked
         //max range level 0,1,2 and spin influence
         auto statNode = m_scene.createEntity();
         statNode.addComponent<cro::Transform>().setPosition(statPos);
         m_tabNodes[TabID::ClubStats].getComponent<cro::Transform>().addChild(statNode.getComponent<cro::Transform>());
 
-        //TODO we need to be able to refresh these labels if the user switch
-        //to imperial measurements
+        //we need to be able to refresh these labels if the user switched
+        //to imperial measurements, so make two versions and hide the unneeded one
         cro::String label = Clubs[clubID].getLabel() + "\n";
-        label += Clubs[clubID].getDistanceLabel(m_sharedData.imperialMeasurements, 0) + "\n";
-        label += Clubs[clubID].getDistanceLabel(m_sharedData.imperialMeasurements, 1) + "\n";
-        label += Clubs[clubID].getDistanceLabel(m_sharedData.imperialMeasurements, 2) + "\n";
-        
-        std::stringstream ss;
-        ss.precision(2);
-        ss << Clubs[clubID].getTopSpinMultiplier() << "/" << Clubs[clubID].getSideSpinMultiplier();
-        label += ss.str();
+        label += Clubs[clubID].getDistanceLabel(false, 0) + "\n";
+        label += Clubs[clubID].getDistanceLabel(false, 1) + "\n";
+        label += Clubs[clubID].getDistanceLabel(false, 2) + "\n";
+        const float labelScale = m_sharedData.imperialMeasurements ? 0.f : 1.f;
 
         auto labelEnt = m_scene.createEntity();
-        labelEnt.addComponent<cro::Transform>();
+        labelEnt.addComponent<cro::Transform>().setScale(glm::vec2(labelScale));
         labelEnt.addComponent<cro::Drawable2D>();
         labelEnt.addComponent<cro::Text>(font).setString(label);
         labelEnt.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
         labelEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
         labelEnt.getComponent<cro::Text>().setVerticalSpacing(-1.f);
         labelEnt.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Right);
+        labelEnt.addComponent<cro::CommandTarget>().ID = CommandID::Menu::MetricClub;
         statNode.getComponent<cro::Transform>().addChild(labelEnt.getComponent<cro::Transform>());
+
+
+        label = Clubs[clubID].getLabel() + "\n";
+        label += Clubs[clubID].getDistanceLabel(true, 0) + "\n";
+        label += Clubs[clubID].getDistanceLabel(true, 1) + "\n";
+        label += Clubs[clubID].getDistanceLabel(true, 2) + "\n";
+
+        labelEnt = m_scene.createEntity();
+        labelEnt.addComponent<cro::Transform>().setScale(glm::vec2(1.f - labelScale));
+        labelEnt.addComponent<cro::Drawable2D>();
+        labelEnt.addComponent<cro::Text>(font).setString(label);
+        labelEnt.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+        labelEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
+        labelEnt.getComponent<cro::Text>().setVerticalSpacing(-1.f);
+        labelEnt.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Right);
+        labelEnt.addComponent<cro::CommandTarget>().ID = CommandID::Menu::ImperialClub;
+        statNode.getComponent<cro::Transform>().addChild(labelEnt.getComponent<cro::Transform>());
+
+
+
 
         auto unlockLevel = ClubID::getUnlockLevel(clubID);
 
@@ -556,8 +595,31 @@ void StatsState::createClubStatsTab(cro::Entity parent, const cro::SpriteSheet& 
             createBar(std::round(barWidth), i);
         }
 
-        //and spin influence
-        createBar(std::round(MaxBarWidth * Clubs[clubID].getSpinInfluence()), ColourID::Spin);
+        //and spin influence - this bar is slightly different as it's split into two
+        auto c = BarColours[ColourID::TopSpin];
+        auto d = BarColours[ColourID::SideSpin];
+        if ((clubFlags & ClubID::Flags[clubID]) == 0)
+        {
+            c.setAlpha(0.15f);
+            d.setAlpha(0.15f);
+        }
+
+        float width = MaxBarWidth * Clubs[clubID].getTopSpinMultiplier();
+        verts.emplace_back(glm::vec2(0.f, barPos), c);
+        verts.emplace_back(glm::vec2(0.f, barPos - (BarHeight / 2.f)), c);
+        verts.emplace_back(glm::vec2(width, barPos), c);
+        verts.emplace_back(glm::vec2(width, barPos), c);
+        verts.emplace_back(glm::vec2(0.f, barPos - (BarHeight / 2.f)), c);
+        verts.emplace_back(glm::vec2(width, barPos - (BarHeight / 2.f)), c);
+
+        barPos -= (BarHeight / 2.f);
+        width = MaxBarWidth * Clubs[clubID].getSideSpinMultiplier();
+        verts.emplace_back(glm::vec2(0.f, barPos), d);
+        verts.emplace_back(glm::vec2(0.f, barPos - (BarHeight / 2.f)), d);
+        verts.emplace_back(glm::vec2(width, barPos), d);
+        verts.emplace_back(glm::vec2(width, barPos), d);
+        verts.emplace_back(glm::vec2(0.f, barPos - (BarHeight / 2.f)), d);
+        verts.emplace_back(glm::vec2(width, barPos - (BarHeight / 2.f)), d);
 
 
         //draw all the bars with one entity
