@@ -586,6 +586,13 @@ bool GolfGame::initialise()
             }
         });
 
+    registerCommand("show_userdir",
+        [](const std::string&)
+        {
+            //this assumes that the directory was successfully creates already...
+            cro::Util::String::parseURL(Social::getBaseContentPath());
+        });
+
     getWindow().setLoadingScreen<LoadingScreen>(m_sharedData);
     getWindow().setTitle("Super Video Golf - " + StringVer);
     getWindow().setIcon(icon);
@@ -944,6 +951,11 @@ void GolfGame::loadPreferences()
     }
 
     m_sharedData.inputBinding.clubset = ClubID::DefaultSet;
+
+    if (!cro::FileSystem::directoryExists(Social::getBaseContentPath() + u8"music"))
+    {
+        cro::FileSystem::createDirectory(Social::getBaseContentPath() + u8"music");
+    }
 
     m_sharedData.m3uPlaylist = std::make_unique<M3UPlaylist>(Social::getBaseContentPath() + "music/");
 }
