@@ -461,7 +461,7 @@ void StatsState::parseCourseData()
                 if (auto* prop = cfg.findProperty("title"); prop != nullptr)
                 {
                     const auto courseTitle = prop->getValue<std::string>();
-                    m_courseStrings.emplace_back(cro::String::fromUtf8(courseTitle.begin(), courseTitle.end()));
+                    m_courseStrings.emplace_back(std::make_pair(dir, cro::String::fromUtf8(courseTitle.begin(), courseTitle.end())));
                 }
             }
         }
@@ -497,6 +497,7 @@ void StatsState::createClubStatsTab(cro::Entity parent, const cro::SpriteSheet& 
         cro::Colour(0x6eb39dff), //blue
         cro::Colour(0xf2cf5cff), //yellow
         cro::Colour(0xec773dff), //orange
+        //CD32::Colours[CD32::OrangeDirt]
     };
     struct ColourID final
     {
@@ -581,14 +582,14 @@ void StatsState::createClubStatsTab(cro::Entity parent, const cro::SpriteSheet& 
         {
             label += "|\n";
         }
-        label += "Top/Side";
+        //label += "Top/Side";
 
         labelEnt = m_scene.createEntity();
         labelEnt.addComponent<cro::Transform>().setPosition({ 4.f, -11.f, 0.3f });
         labelEnt.addComponent<cro::Drawable2D>();
         labelEnt.addComponent<cro::Text>(font).setString(label);
         labelEnt.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
-        labelEnt.getComponent<cro::Text>().setFillColour(LeaderboardTextDark);
+        labelEnt.getComponent<cro::Text>().setFillColour(CD32::Colours[CD32::BlueLight]);
         labelEnt.getComponent<cro::Text>().setVerticalSpacing(-1.f);
         statNode.getComponent<cro::Transform>().addChild(labelEnt.getComponent<cro::Transform>());
 
@@ -716,17 +717,25 @@ void StatsState::createHistoryTab(cro::Entity parent)
     //TODO call for a global refresh when opening menu
     //TODO add message handler to refresh the pie charts when new data received
 
-    //pie charts - left side number of times personally played a course
-    //right side aggregated stats from steam of course plays
+    //pie charts - number of times personally played a course
+    //and aggregated stats from steam of course plays
+    for (std::int32_t i = StatID::Course01Complete; i < StatID::Course10Complete + 1; ++i)
+    {
+        m_pieCharts[0].addValue(Achievements::getStat(StatStrings[i])->value);
+        m_pieCharts[1].addValue(Achievements::getGlobalStat(StatStrings[i])->value);
+    }
 
     const auto& font = m_sharedData.sharedResources->fonts.get(FontID::Info);
+    const auto& labelFont = m_sharedData.sharedResources->fonts.get(FontID::Label);
 
+    //our pie
     auto entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 120.f, 230.f, 0.2f });
+    entity.addComponent<cro::Transform>().setPosition({ 116.f, 230.f, 0.2f });
     entity.addComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLES);
     m_tabNodes[TabID::History].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     m_pieCharts[0].setEntity(entity);
 
+    //our pie title
     auto pie = entity;
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 0.f, PieRadius + 12.f, 0.1f });
@@ -739,12 +748,27 @@ void StatsState::createHistoryTab(cro::Entity parent)
     centreText(entity);
     pie.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
+    //our pie total
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 120.f, 100.f, 0.2f });
+    entity.addComponent<cro::Transform>().setPosition({ -(PieRadius + 28.f), 10.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(labelFont).setString(std::to_string(static_cast<std::int32_t>(m_pieCharts[0].getTotal())) + "\nRounds");
+    entity.getComponent<cro::Text>().setCharacterSize(LabelTextSize);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+    entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    pie.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+    //global pie
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 116.f, 100.f, 0.2f });
     entity.addComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLES);
     m_tabNodes[TabID::History].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     m_pieCharts[1].setEntity(entity);
 
+    //global pie title
     pie = entity;
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 0.f, PieRadius + 12.f, 0.1f });
@@ -757,12 +781,17 @@ void StatsState::createHistoryTab(cro::Entity parent)
     centreText(entity);
     pie.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
-
-    for (std::int32_t i = StatID::Course01Complete; i < StatID::Course10Complete + 1; ++i)
-    {
-        m_pieCharts[0].addValue(Achievements::getStat(StatStrings[i])->value);
-        m_pieCharts[1].addValue(Achievements::getGlobalStat(StatStrings[i])->value);
-    }
+    //global pie total
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ -(PieRadius + 28.f), 10.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(labelFont).setString(std::to_string(static_cast<std::int32_t>(m_pieCharts[1].getTotal())) + "\nRounds");
+    entity.getComponent<cro::Text>().setCharacterSize(LabelTextSize);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+    entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    pie.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     m_pieCharts[0].updateVerts();
     m_pieCharts[1].updateVerts();
@@ -785,6 +814,7 @@ void StatsState::createHistoryTab(cro::Entity parent)
     //are not easily refreshable...
 
     cro::String nameList;
+    cro::String countList;
     std::vector<cro::Vertex2D> verts;
     const float VerticalSpacing = -17.f;
     glm::vec2 vertPos = glm::vec2(0.f);
@@ -793,13 +823,13 @@ void StatsState::createHistoryTab(cro::Entity parent)
 
     for (auto i = 0u; i < m_courseStrings.size(); ++i)
     {
-        /*std::stringstream ss;
-        ss.precision(1);
-        ss << m_pieCharts[0].getPercentage(i) << "% - ";
-        ss.precision(1);
-        ss << m_pieCharts[1].getPercentage(1) << "%      ";
-        nameList += ss.str() + m_courseStrings[i] + "\n";*/
-        nameList += m_courseStrings[i] + "\n";
+        m_playTimeChart.addBar(Achievements::getAvgStat(m_courseStrings[i].first));
+
+        std::stringstream ss;
+        ss << std::int32_t(m_pieCharts[0].getValue(i)) << "|" << std::int32_t(m_pieCharts[1].getValue(i));
+        countList += ss.str() + "\n";
+
+        nameList += m_courseStrings[i].second + "\n";
 
         verts.emplace_back(glm::vec2(-ColourSize.x, ColourSize.y) + vertPos, CD32::Colours[colourIndex]);
         verts.emplace_back(-ColourSize + vertPos, CD32::Colours[colourIndex]);
@@ -813,9 +843,9 @@ void StatsState::createHistoryTab(cro::Entity parent)
         colourIndex++;
     }
 
-    const auto& labelFont = m_sharedData.sharedResources->fonts.get(FontID::Label);
+    //course name list
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 230.f, 264.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 248.f, 282.f, 0.1f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(labelFont).setString(nameList);
     entity.getComponent<cro::Text>().setCharacterSize(LabelTextSize);
@@ -825,12 +855,75 @@ void StatsState::createHistoryTab(cro::Entity parent)
     entity.getComponent<cro::Text>().setVerticalSpacing(4.f);
     m_tabNodes[TabID::History].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
+    //colours
     auto strEnt = entity;
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ -12.f, -5.f, 0.f });
+    entity.addComponent<cro::Transform>().setPosition({ -11.f, -5.f, 0.f });
     entity.addComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLES);
     entity.getComponent<cro::Drawable2D>().setVertexData(verts);
     strEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+    //play count list
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 223.f, 282.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(labelFont).setString(countList);
+    entity.getComponent<cro::Text>().setCharacterSize(LabelTextSize);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+    entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
+    entity.getComponent<cro::Text>().setVerticalSpacing(4.f);
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Right);
+    m_tabNodes[TabID::History].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+
+
+
+    //bar chart for play time
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 224.f, 98.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(largeFont).setString("Your Average Play Duration");
+    entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+    entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
+    m_tabNodes[TabID::History].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 242.f, 40.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLES);
+    m_tabNodes[TabID::History].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    
+    m_playTimeChart.setEntity(entity);
+    m_playTimeChart.updateVerts();
+
+    cro::String timeString;
+    const float playTime = m_playTimeChart.getMaxValue();
+    if (playTime > 60.f)
+    {
+        auto secs = static_cast<std::int32_t>(playTime);
+        auto mins = secs / 60;
+        secs %= 60;
+
+        timeString = std::to_string(mins) + "m " + std::to_string(secs) + "s";
+    }
+    else
+    {
+        timeString = std::to_string(static_cast<std::int32_t>(playTime)) + "s";
+    }
+    timeString += "\n|\n|\n0s";
+
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 390.f, 84.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(labelFont).setString(timeString);
+    entity.getComponent<cro::Text>().setCharacterSize(LabelTextSize);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+    m_tabNodes[TabID::History].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 }
 
 void StatsState::createAwardsTab(cro::Entity parent)
@@ -969,4 +1062,60 @@ float PieChart::getPercentage(std::uint32_t index) const
         return (m_values[index] / m_total) * 100.f;
     }
     return 0.f;
+}
+
+
+/////-----------------/////
+
+
+BarChart::BarChart()
+    : m_maxValue(0.f)
+{
+
+}
+
+//public
+void BarChart::addBar(float value)
+{
+    m_maxValue = std::max(value, m_maxValue);
+    m_values.push_back(value);
+}
+
+void BarChart::updateVerts()
+{
+    if (m_maxValue != 0
+        && m_entity.isValid()
+        && m_entity.hasComponent<cro::Drawable2D>())
+    {
+        constexpr float BarWidth = 12.f;
+        constexpr float Stride = BarWidth + 1.f;
+        std::int32_t colourIndex = PieBaseColour;
+
+        std::vector<cro::Vertex2D> verts;
+
+        float xPos = 0.f;
+        for (auto v : m_values)
+        {
+            const float barHeight = std::round(MaxHeight * (v / m_maxValue)) + 1.f;
+
+            verts.emplace_back(glm::vec2(xPos + BarWidth, barHeight), CD32::Colours[colourIndex]);
+            verts.emplace_back(glm::vec2(xPos, barHeight), CD32::Colours[colourIndex]);
+            verts.emplace_back(glm::vec2(xPos, 0.f), CD32::Colours[colourIndex]);
+
+            verts.emplace_back(glm::vec2(xPos, 0.f), CD32::Colours[colourIndex]);
+            verts.emplace_back(glm::vec2(xPos + BarWidth, 0.f), CD32::Colours[colourIndex]);
+            verts.emplace_back(glm::vec2(xPos + BarWidth, barHeight), CD32::Colours[colourIndex]);
+
+            xPos += Stride;
+            colourIndex++;
+        }
+
+
+        m_entity.getComponent<cro::Drawable2D>().setVertexData(verts);
+    }
+}
+
+void BarChart::setEntity(cro::Entity e)
+{
+    m_entity = e;
 }

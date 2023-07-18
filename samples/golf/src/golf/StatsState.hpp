@@ -53,11 +53,30 @@ public:
     void setEntity(cro::Entity); //entity with drawable to update
 
     float getPercentage(std::uint32_t) const;
+    float getTotal() const { return m_total; }
+    float getValue(std::uint32_t i) { return m_values[i]; }
 
 private:
     float m_total;
     std::vector<float> m_values;
     cro::Entity m_entity;
+};
+
+class BarChart final
+{
+public:
+    BarChart();
+
+    void addBar(float);
+    void updateVerts();
+    void setEntity(cro::Entity);
+    float getMaxValue() const { return m_maxValue; }
+
+private:
+    float m_maxValue;
+    std::vector<float> m_values;
+    cro::Entity m_entity;
+    static constexpr float MaxHeight = 36.f;
 };
 
 class StatsState final : public cro::State
@@ -112,8 +131,8 @@ private:
 
     bool m_imperialMeasurements;
     std::array<PieChart, 2u> m_pieCharts = {};
-
-    std::vector<cro::String> m_courseStrings;
+    BarChart m_playTimeChart;
+    std::vector<std::pair<std::string, cro::String>> m_courseStrings;
 
     void buildScene();
     void parseCourseData();
