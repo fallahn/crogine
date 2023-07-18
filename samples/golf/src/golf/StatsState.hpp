@@ -41,6 +41,25 @@ namespace cro
     class SpriteSheet;
 }
 
+class PieChart final
+{
+public:
+    PieChart();
+
+    void reset(); //removes all values
+    void addValue(float); 
+
+    void updateVerts(); //recalcs the verts based on current values
+    void setEntity(cro::Entity); //entity with drawable to update
+
+    float getPercentage(std::uint32_t) const;
+
+private:
+    float m_total;
+    std::vector<float> m_values;
+    cro::Entity m_entity;
+};
+
 class StatsState final : public cro::State
 {
 public:
@@ -92,8 +111,12 @@ private:
     std::array<cro::Entity, TabID::Count> m_tabNodes = {};   
 
     bool m_imperialMeasurements;
+    std::array<PieChart, 2u> m_pieCharts = {};
+
+    std::vector<cro::String> m_courseStrings;
 
     void buildScene();
+    void parseCourseData();
     void createClubStatsTab(cro::Entity, const cro::SpriteSheet&);
     void createPerformanceTab(cro::Entity, const cro::SpriteSheet&);
     void createHistoryTab(cro::Entity);

@@ -119,6 +119,8 @@ public:
 
     static const StatData* getStat(const std::string&);
 
+    static const StatData* getGlobalStat(const std::string&) { return nullptr; }
+
     static void setAvgStat(const std::string&, float, float) {};
 
     static float getAvgStat(const std::string&) { return 0.f; }

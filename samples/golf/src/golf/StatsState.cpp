@@ -37,8 +37,12 @@ source distribution.
 #include "MessageIDs.hpp"
 #include "Clubs.hpp"
 #include "../GolfGame.hpp"
+#include "../Colordome-32.hpp"
 
 #include <Social.hpp>
+#include <AchievementIDs.hpp>
+#include <AchievementStrings.hpp>
+#include <Achievements.hpp>
 
 #include <crogine/core/Window.hpp>
 #include <crogine/core/GameController.hpp>
@@ -74,6 +78,9 @@ source distribution.
 
 namespace
 {
+    constexpr float PieRadius = 50.f;
+    constexpr std::int32_t PieBaseColour = CD32::BlueLight;
+
     struct MenuID final
     {
         enum
@@ -393,7 +400,7 @@ void StatsState::buildScene()
         m_tabButtons[i] = entity;
     }
 
-
+    parseCourseData();
     createClubStatsTab(bgNode, spriteSheet);
     createPerformanceTab(bgNode, spriteSheet);
     createHistoryTab(bgNode);
@@ -433,6 +440,32 @@ void StatsState::buildScene()
     updateView(entity.getComponent<cro::Camera>());
 
     m_scene.simulate(0.f);
+}
+
+void StatsState::parseCourseData()
+{
+    const std::string coursePath = cro::FileSystem::getResourcePath() + "assets/golf/courses/";
+    auto dirs = cro::FileSystem::listDirectories(coursePath);
+
+    std::sort(dirs.begin(), dirs.end());
+
+    for (const auto& dir : dirs)
+    {
+        if (dir.find("course_") != std::string::npos)
+        {
+            auto filePath = coursePath + dir + "/course.data";
+            if (cro::FileSystem::fileExists(filePath))
+            {
+                cro::ConfigFile cfg;
+                cfg.loadFromFile(filePath);
+                if (auto* prop = cfg.findProperty("title"); prop != nullptr)
+                {
+                    const auto courseTitle = prop->getValue<std::string>();
+                    m_courseStrings.emplace_back(cro::String::fromUtf8(courseTitle.begin(), courseTitle.end()));
+                }
+            }
+        }
+    }
 }
 
 void StatsState::createClubStatsTab(cro::Entity parent, const cro::SpriteSheet& spriteSheet)
@@ -680,8 +713,124 @@ void StatsState::createHistoryTab(cro::Entity parent)
     m_tabNodes[TabID::History].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
     parent.getComponent<cro::Transform>().addChild(m_tabNodes[TabID::History].getComponent<cro::Transform>());
 
-    //TODO pie charts - left side number of times personally played a course
+    //TODO call for a global refresh when opening menu
+    //TODO add message handler to refresh the pie charts when new data received
+
+    //pie charts - left side number of times personally played a course
     //right side aggregated stats from steam of course plays
+
+    const auto& font = m_sharedData.sharedResources->fonts.get(FontID::Info);
+
+    auto entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 120.f, 230.f, 0.2f });
+    entity.addComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLES);
+    m_tabNodes[TabID::History].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_pieCharts[0].setEntity(entity);
+
+    auto pie = entity;
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, PieRadius + 12.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(font).setString("Your Play Count");
+    entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+    entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
+    centreText(entity);
+    pie.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 120.f, 100.f, 0.2f });
+    entity.addComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLES);
+    m_tabNodes[TabID::History].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_pieCharts[1].setEntity(entity);
+
+    pie = entity;
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, PieRadius + 12.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(font).setString("Global Play Count");
+    entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+    entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
+    centreText(entity);
+    pie.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+    for (std::int32_t i = StatID::Course01Complete; i < StatID::Course10Complete + 1; ++i)
+    {
+        m_pieCharts[0].addValue(Achievements::getStat(StatStrings[i])->value);
+        m_pieCharts[1].addValue(Achievements::getGlobalStat(StatStrings[i])->value);
+    }
+
+    m_pieCharts[0].updateVerts();
+    m_pieCharts[1].updateVerts();
+
+
+    //title
+    const auto& largeFont = m_sharedData.sharedResources->fonts.get(FontID::UI);
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 253.f, 304.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(largeFont).setString("Course Play History");
+    entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+    entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
+    centreText(entity);
+    m_tabNodes[TabID::History].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    //list of course names and corresponding colours - hmm percentages here
+    //are not easily refreshable...
+
+    cro::String nameList;
+    std::vector<cro::Vertex2D> verts;
+    const float VerticalSpacing = -17.f;
+    glm::vec2 vertPos = glm::vec2(0.f);
+    constexpr glm::vec2 ColourSize(5.f); //actually half size
+    std::int32_t colourIndex = PieBaseColour;
+
+    for (auto i = 0u; i < m_courseStrings.size(); ++i)
+    {
+        /*std::stringstream ss;
+        ss.precision(1);
+        ss << m_pieCharts[0].getPercentage(i) << "% - ";
+        ss.precision(1);
+        ss << m_pieCharts[1].getPercentage(1) << "%      ";
+        nameList += ss.str() + m_courseStrings[i] + "\n";*/
+        nameList += m_courseStrings[i] + "\n";
+
+        verts.emplace_back(glm::vec2(-ColourSize.x, ColourSize.y) + vertPos, CD32::Colours[colourIndex]);
+        verts.emplace_back(-ColourSize + vertPos, CD32::Colours[colourIndex]);
+        verts.emplace_back(ColourSize + vertPos, CD32::Colours[colourIndex]);
+
+        verts.emplace_back(ColourSize + vertPos, CD32::Colours[colourIndex]);
+        verts.emplace_back(-ColourSize + vertPos, CD32::Colours[colourIndex]);
+        verts.emplace_back(glm::vec2(ColourSize.x, -ColourSize.y) + vertPos, CD32::Colours[colourIndex]);
+
+        vertPos.y += VerticalSpacing;
+        colourIndex++;
+    }
+
+    const auto& labelFont = m_sharedData.sharedResources->fonts.get(FontID::Label);
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 230.f, 264.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(labelFont).setString(nameList);
+    entity.getComponent<cro::Text>().setCharacterSize(LabelTextSize);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+    entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
+    entity.getComponent<cro::Text>().setVerticalSpacing(4.f);
+    m_tabNodes[TabID::History].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    auto strEnt = entity;
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ -12.f, -5.f, 0.f });
+    entity.addComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLES);
+    entity.getComponent<cro::Drawable2D>().setVertexData(verts);
+    strEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 }
 
 void StatsState::createAwardsTab(cro::Entity parent)
@@ -733,4 +882,91 @@ void StatsState::quitState()
     m_scene.setSystemActive<cro::AudioPlayerSystem>(false);
     m_rootNode.getComponent<cro::Callback>().active = true;
     m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
+}
+
+
+/////-------------------------/////
+
+
+PieChart::PieChart()
+    : m_total(0.f)
+{
+
+}
+
+//public
+void PieChart::reset()
+{
+    m_total = 0.f;
+    m_values.clear();
+}
+
+void PieChart::addValue(float value)
+{
+    m_total += value;
+    m_values.push_back(value);
+}
+
+void PieChart::updateVerts()
+{
+    if (m_total == 0)
+    {
+        return;
+    }
+
+    if (m_entity.isValid()
+        && m_entity.hasComponent<cro::Drawable2D>())
+    {
+        constexpr float SegmentCount = 32.f; //could be more/less as segments per value are rounded
+        std::vector<cro::Vertex2D> verts;
+
+        std::int32_t colourIndex = PieBaseColour;
+
+        float currentAngle = 0.f;
+        for (auto v : m_values)
+        {
+            //number of rads this wedge occupies
+            const auto percent = (v / m_total);
+            const float totalAngle = cro::Util::Const::TAU * percent;
+
+            //number of segments for this wedge
+            const float wedgeSegments = std::ceil(SegmentCount * percent);
+            const float segmentAngle = totalAngle / wedgeSegments;
+
+            std::vector<glm::vec2> wedgePoints;
+            for (auto i = 0.f; i < wedgeSegments; i++)
+            {
+                wedgePoints.emplace_back(-std::cos(currentAngle), std::sin(currentAngle));
+                currentAngle += segmentAngle;
+            }
+            wedgePoints.emplace_back(-std::cos(currentAngle), std::sin(currentAngle));
+
+            for (auto i = 0; i < wedgePoints.size() - 1; ++i)
+            {
+                verts.emplace_back(glm::vec2(0.f), CD32::Colours[colourIndex]);
+                verts.emplace_back(wedgePoints[i+1] * PieRadius, CD32::Colours[colourIndex]);
+                verts.emplace_back(wedgePoints[i] * PieRadius, CD32::Colours[colourIndex]);
+            }
+
+            colourIndex++;
+            //unlikely to make more that 24 courses - but who knows? :)
+            CRO_ASSERT(colourIndex < 32, "Ran out of colours!");
+        }
+
+        m_entity.getComponent<cro::Drawable2D>().setVertexData(verts);
+    }
+}
+
+void PieChart::setEntity(cro::Entity e)
+{
+    m_entity = e;
+}
+
+float PieChart::getPercentage(std::uint32_t index) const
+{
+    if (m_total != 0)
+    {
+        return (m_values[index] / m_total) * 100.f;
+    }
+    return 0.f;
 }
