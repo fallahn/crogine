@@ -722,17 +722,11 @@ void StatsState::createHistoryTab(cro::Entity parent)
 
     //pie charts - number of times personally played a course
     //and aggregated stats from steam of course plays
-    for (std::int32_t i = StatID::Course01Complete; i < StatID::Course10Complete + 1; ++i)
+    for (const auto& [course, _] : m_courseStrings)
     {
-        m_pieCharts[0].addValue(Achievements::getStat(StatStrings[i])->value);
-        m_pieCharts[1].addValue(Achievements::getGlobalStat(StatStrings[i])->value);
+        m_pieCharts[0].addValue(Social::getCompletionCount(course, false));
+        m_pieCharts[1].addValue(Social::getCompletionCount(course, true));
     }
-
-    //TODO find out why this always returns zero (also f/b9 hole stats are probably empty)
-    /*for (const auto& [course, _] : m_courseStrings)
-    {
-        m_pieCharts[0].addValue(Social::getCompletionCount(course));
-    }*/
 
     const auto& font = m_sharedData.sharedResources->fonts.get(FontID::Info);
     const auto& labelFont = m_sharedData.sharedResources->fonts.get(FontID::Label);
