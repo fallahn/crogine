@@ -1551,6 +1551,7 @@ void GolfState::showCountdown(std::uint8_t seconds)
             m_achievementDebug.awardStatus = "Did not award Course Complete: there were only " + std::to_string(m_holeData.size()) + " holes.";
         }
 
+        //this increments all the aggregated stats
         Social::courseComplete(m_sharedData.mapDirectory, m_sharedData.holeCount);
     }
 

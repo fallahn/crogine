@@ -54,7 +54,7 @@ public:
 
     float getPercentage(std::uint32_t) const;
     float getTotal() const { return m_total; }
-    float getValue(std::uint32_t i) { return m_values[i]; }
+    float getValue(std::uint32_t i) { return i < m_values.size() ? m_values[i] : 0.f; }
 
 private:
     float m_total;

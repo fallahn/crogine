@@ -527,6 +527,8 @@ void StatsState::createClubStatsTab(cro::Entity parent, const cro::SpriteSheet& 
         label += Clubs[clubID].getDistanceLabel(false, 0) + "\n";
         label += Clubs[clubID].getDistanceLabel(false, 1) + "\n";
         label += Clubs[clubID].getDistanceLabel(false, 2) + "\n";
+        label += "Top/Side";
+
         const float labelScale = m_sharedData.imperialMeasurements ? 0.f : 1.f;
 
         auto labelEnt = m_scene.createEntity();
@@ -545,6 +547,7 @@ void StatsState::createClubStatsTab(cro::Entity parent, const cro::SpriteSheet& 
         label += Clubs[clubID].getDistanceLabel(true, 0) + "\n";
         label += Clubs[clubID].getDistanceLabel(true, 1) + "\n";
         label += Clubs[clubID].getDistanceLabel(true, 2) + "\n";
+        label += "Top/Side";
 
         labelEnt = m_scene.createEntity();
         labelEnt.addComponent<cro::Transform>().setScale(glm::vec2(1.f - labelScale));
@@ -724,6 +727,12 @@ void StatsState::createHistoryTab(cro::Entity parent)
         m_pieCharts[0].addValue(Achievements::getStat(StatStrings[i])->value);
         m_pieCharts[1].addValue(Achievements::getGlobalStat(StatStrings[i])->value);
     }
+
+    //TODO find out why this always returns zero (also f/b9 hole stats are probably empty)
+    /*for (const auto& [course, _] : m_courseStrings)
+    {
+        m_pieCharts[0].addValue(Social::getCompletionCount(course));
+    }*/
 
     const auto& font = m_sharedData.sharedResources->fonts.get(FontID::Info);
     const auto& labelFont = m_sharedData.sharedResources->fonts.get(FontID::Label);
@@ -972,7 +981,7 @@ void StatsState::activateTab(std::int32_t tabID)
 
 void StatsState::quitState()
 {
-    m_scene.setSystemActive<cro::AudioPlayerSystem>(false);
+    //m_scene.setSystemActive<cro::AudioPlayerSystem>(false);
     m_rootNode.getComponent<cro::Callback>().active = true;
     m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
 }
