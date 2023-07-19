@@ -81,6 +81,35 @@ namespace
     constexpr float PieRadius = 48.f;
     constexpr std::int32_t PieBaseColour = CD32::BlueLight;
 
+    //indices into the colour palette for each hole graph
+    constexpr std::array<std::int32_t, 18> PerformanceColours =
+    {
+        CD32::GreenMid,
+        CD32::GreenLight,
+        CD32::Yellow,
+        CD32::TanLight,
+        CD32::PinkLight,
+        CD32::Pink,
+        CD32::Red,
+        CD32::OrangeDirt,
+        CD32::Orange,
+
+        CD32::Yellow,
+        CD32::GreenLight,
+        CD32::GreenMid,
+        CD32::GreenDark,
+        CD32::BlueDark,
+        CD32::BlueMid,
+        CD32::BlueLight,
+        CD32::GreyLight,
+        CD32::GreyMid,
+    };
+
+    const std::array<cro::String, 3u> RangeStrings =
+    {
+        "Week" , "Month" , "Year"
+    };
+
     struct MenuID final
     {
         enum
@@ -96,7 +125,10 @@ StatsState::StatsState(cro::StateStack& ss, cro::State::Context ctx, SharedState
     m_sharedData            (sd),
     m_viewScale             (2.f),
     m_currentTab            (0),
-    m_imperialMeasurements  (sd.imperialMeasurements)
+    m_imperialMeasurements  (sd.imperialMeasurements),
+    m_profileIndex          (0),
+    m_courseIndex           (0),
+    m_showCPUStat           (true)
 {
     ctx.mainWindow.setMouseCaptured(false);
 
@@ -403,6 +435,7 @@ void StatsState::buildScene()
     }
 
     parseCourseData();
+    parseProfileData();
     createClubStatsTab(bgNode, spriteSheet);
     createPerformanceTab(bgNode, spriteSheet);
     createHistoryTab(bgNode);
@@ -466,6 +499,48 @@ void StatsState::parseCourseData()
                     m_courseStrings.emplace_back(std::make_pair(dir, cro::String::fromUtf8(courseTitle.begin(), courseTitle.end())));
                 }
             }
+        }
+    }
+}
+
+void StatsState::parseProfileData()
+{
+    //this assumes the startup was successful and profile paths were created - we might
+    //want to do some checkin here just to prevent crashes if paths don't exist
+    auto path = Social::getUserContentPath(Social::UserContent::Profile);
+    if (!cro::FileSystem::directoryExists(path))
+    {
+        return;
+    }
+
+    auto profileDirs = cro::FileSystem::listDirectories(path);
+    std::int32_t i = 0;
+    for (const auto& dir : profileDirs)
+    {
+        auto profilePath = path + dir + "/";
+        auto files = cro::FileSystem::listFiles(profilePath);
+        files.erase(std::remove_if(files.begin(), files.end(),
+            [](const std::string& f)
+            {
+                return cro::FileSystem::getFileExtension(f) != ".pfl";
+            }), files.end());
+
+        if (!files.empty())
+        {
+            PlayerData pd;
+            if (pd.loadProfile(profilePath + files[0], files[0].substr(0, files[0].size() - 4))
+                && cro::FileSystem::fileExists(profilePath + "profile.db3"))
+            {
+                auto& pf = m_profileData.emplace_back();
+                pf.name = pd.name;
+                pf.dbPath = profilePath + "profile.db3";
+            }
+        }
+
+        //arbitrary limit on profile loading.
+        if (i == ConstVal::MaxProfiles)
+        {
+            break;
         }
     }
 }
@@ -693,15 +768,9 @@ void StatsState::createPerformanceTab(cro::Entity parent, const cro::SpriteSheet
 
     auto performanceEnt = entity;
 
-    //TODO ideally we want to use a menu group to disable
-    //these - but then this breaks our tab buttons
-    //(oh if only we used bitflags to set multiple groups
-    //on any given button....)
-
-
     const auto& largeFont = m_sharedData.sharedResources->fonts.get(FontID::UI);
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ centre, 304.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ centre, 296.f, 0.1f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(largeFont).setString(m_courseStrings[0].second);
     entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
@@ -712,18 +781,18 @@ void StatsState::createPerformanceTab(cro::Entity parent, const cro::SpriteSheet
     m_tabNodes[TabID::Performance].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     auto titleText = entity;
-    auto buttonCallback = [&](cro::Entity e, float)
+    const auto buttonCallback = [&](cro::Entity e, float)
     {
         e.getComponent<cro::UIInput>().enabled =
             m_tabNodes[TabID::Performance].getComponent<cro::Transform>().getScale().x != 0;
     };
-    auto selectedID = m_scene.getSystem<cro::UISystem>()->addCallback(
+    const auto selectedID = m_scene.getSystem<cro::UISystem>()->addCallback(
         [](cro::Entity e)
         {
             e.getComponent<cro::SpriteAnimation>().play(1);
             e.getComponent<cro::AudioEmitter>().play();
         });
-    auto unselectedID = m_scene.getSystem<cro::UISystem>()->addCallback(
+    const auto unselectedID = m_scene.getSystem<cro::UISystem>()->addCallback(
         [](cro::Entity e) 
         {
             e.getComponent<cro::SpriteAnimation>().play(0);
@@ -738,7 +807,7 @@ void StatsState::createPerformanceTab(cro::Entity parent, const cro::SpriteSheet
 
     //previous course - 33
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 100.f, 294.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 100.f, 286.f, 0.1f });
     entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("arrow_left");
@@ -748,13 +817,28 @@ void StatsState::createPerformanceTab(cro::Entity parent, const cro::SpriteSheet
     entity.getComponent<cro::UIInput>().setSelectionIndex(33);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectedID;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectedID;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+        m_scene.getSystem<cro::UISystem>()->addCallback(
+            [&, titleText](cro::Entity e, const cro::ButtonEvent& evt) mutable
+            {
+                if (activated(evt))
+                {
+                    m_courseIndex = (m_courseIndex + (m_courseStrings.size() - 1)) % m_courseStrings.size();
+                    titleText.getComponent<cro::Text>().setString(m_courseStrings[m_courseIndex].second);
+                    centreText(titleText);
+
+                    refreshPerformanceTab(false);
+
+                    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+                }
+            });
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function = buttonCallback;
     m_tabNodes[TabID::Performance].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     //next course - 34 
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 406.f - 13.f, 294.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 406.f - 13.f, 286.f, 0.1f });
     entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("arrow_right");
@@ -763,6 +847,21 @@ void StatsState::createPerformanceTab(cro::Entity parent, const cro::SpriteSheet
     entity.getComponent<cro::UIInput>().setSelectionIndex(34);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectedID;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectedID;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+        m_scene.getSystem<cro::UISystem>()->addCallback(
+            [&, titleText](cro::Entity e, const cro::ButtonEvent& evt) mutable
+            {
+                if (activated(evt))
+                {
+                    m_courseIndex = (m_courseIndex + 1) % m_courseStrings.size();
+                    titleText.getComponent<cro::Text>().setString(m_courseStrings[m_courseIndex].second);
+                    centreText(titleText);
+
+                    refreshPerformanceTab(false);
+
+                    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+                }
+            });
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function = buttonCallback;
     m_tabNodes[TabID::Performance].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -776,9 +875,19 @@ void StatsState::createPerformanceTab(cro::Entity parent, const cro::SpriteSheet
     m_tabNodes[TabID::Performance].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
+    const auto spriteSelected = m_scene.getSystem<cro::UISystem>()->addCallback([](cro::Entity e)
+        {
+            e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
+            e.getComponent<cro::AudioEmitter>().play();
+        });
+    const auto spriteUnselected = m_scene.getSystem<cro::UISystem>()->addCallback([](cro::Entity e)
+        {
+            e.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+        });
+
     //cpu checkbox - 36
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 22.f, 0.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 13.f, 1.f, 0.1f });
     entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("checkbox_highlight");
@@ -786,30 +895,49 @@ void StatsState::createPerformanceTab(cro::Entity parent, const cro::SpriteSheet
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.addComponent<cro::UIInput>().area = bounds;
     entity.getComponent<cro::UIInput>().setSelectionIndex(36);
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = 
-        m_scene.getSystem<cro::UISystem>()->addCallback([](cro::Entity e) 
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = spriteSelected;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = spriteUnselected;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+        m_scene.getSystem<cro::UISystem>()->addCallback(
+            [&](cro::Entity e, const cro::ButtonEvent& evt)
             {
-                e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
-                e.getComponent<cro::AudioEmitter>().play();
-            });
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = 
-        m_scene.getSystem<cro::UISystem>()->addCallback([](cro::Entity e) 
-            {
-                e.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+                if (activated(evt))
+                {
+                    m_showCPUStat = !m_showCPUStat;
+                    refreshPerformanceTab(false);
+
+                    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+                }
             });
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function = buttonCallback;
     performanceEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
-    //TODO inner checkbox
-
+    //inner checkbox
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 15.f, 3.f, 0.2f });
+    entity.addComponent<cro::Drawable2D>().setVertexData(
+        {
+            cro::Vertex2D(glm::vec2(0.f, 5.f), CD32::Colours[CD32::Yellow]),
+            cro::Vertex2D(glm::vec2(0.f), CD32::Colours[CD32::Yellow]),
+            cro::Vertex2D(glm::vec2(5.f), CD32::Colours[CD32::Yellow]),
+            cro::Vertex2D(glm::vec2(5.f, 0.f), CD32::Colours[CD32::Yellow])
+        });
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+    {
+        float scale = m_showCPUStat ? 1.f : 0.f;
+        e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
+    };
+    performanceEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
     //profile name
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ std::floor(performanceEnt.getComponent<cro::Sprite>().getTextureBounds().width / 2.f) + 20.f, 8.f, 0.1f});
+    entity.addComponent<cro::Transform>().setPosition({ std::floor(performanceEnt.getComponent<cro::Sprite>().getTextureBounds().width / 2.f), 8.f, 0.1f});
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(largeFont).setString("Profile Name111111111111");
+    entity.addComponent<cro::Text>(largeFont).setString(m_profileData.empty() ? "No Profiles" : m_profileData[0].name);
     entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
@@ -822,7 +950,7 @@ void StatsState::createPerformanceTab(cro::Entity parent, const cro::SpriteSheet
 
     //previous profile - 37
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 132.f, -2.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 112.f, -2.f, 0.1f });
     entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("arrow_left");
@@ -830,37 +958,130 @@ void StatsState::createPerformanceTab(cro::Entity parent, const cro::SpriteSheet
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.addComponent<cro::UIInput>().area = bounds;
     entity.getComponent<cro::UIInput>().setSelectionIndex(37);
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectedID;
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectedID;
-    entity.addComponent<cro::Callback>().active = true;
-    entity.getComponent<cro::Callback>().function = buttonCallback;
+    if (!m_profileData.empty())
+    {
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectedID;
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectedID;
+
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+            m_scene.getSystem<cro::UISystem>()->addCallback(
+                [&, profileName](cro::Entity e, const cro::ButtonEvent& evt) mutable
+                {
+                    if (activated(evt))
+                    {
+                        m_profileIndex = (m_profileIndex + (m_profileData.size() - 1)) % m_profileData.size();
+                        profileName.getComponent<cro::Text>().setString(m_profileData[m_profileIndex].name);
+                        centreText(profileName);
+
+                        refreshPerformanceTab(true);
+
+                        m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+                    }
+                });
+
+        entity.addComponent<cro::Callback>().active = true;
+        entity.getComponent<cro::Callback>().function = buttonCallback;
+    }
+    else
+    {
+        entity.getComponent<cro::UIInput>().enabled = false;
+    }
     performanceEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
     //next profile - 38
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 340.f, -2.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 320.f, -2.f, 0.1f });
     entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("arrow_right");
     entity.addComponent<cro::SpriteAnimation>();
     entity.addComponent<cro::UIInput>().area = bounds;
     entity.getComponent<cro::UIInput>().setSelectionIndex(38);
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectedID;
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectedID;
-    entity.addComponent<cro::Callback>().active = true;
-    entity.getComponent<cro::Callback>().function = buttonCallback;
+    if (!m_profileData.empty())
+    {
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectedID;
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectedID;
+
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+            m_scene.getSystem<cro::UISystem>()->addCallback(
+                [&, profileName](cro::Entity e, const cro::ButtonEvent& evt) mutable
+                {
+                    if (activated(evt))
+                    {
+                        m_profileIndex = (m_profileIndex + 1) % m_profileData.size();
+                        profileName.getComponent<cro::Text>().setString(m_profileData[m_profileIndex].name);
+                        centreText(profileName);
+
+                        refreshPerformanceTab(true);
+
+                        m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+                    }
+                });
+
+        entity.addComponent<cro::Callback>().active = true;
+        entity.getComponent<cro::Callback>().function = buttonCallback;
+    }
+    else
+    {
+        entity.getComponent<cro::UIInput>().enabled = false;
+    }
     performanceEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
-
-
-    //dummy - 39 TODO could replace this with a single button to cycle week/month/year
+    //range button sprite
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>();
-    entity.addComponent<cro::UIInput>().enabled = false;
+    entity.addComponent<cro::Transform>().setPosition({ 360.f, -2.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("range_button");
+    performanceEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    auto buttonEnt = entity;
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+
+    //range button text
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, 10.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(largeFont).setString(RangeStrings[0]);
+    entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    centreText(entity);
+    buttonEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    auto rangeText = entity;
+
+    //range button - 39
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ -2.f, -2.f, 0.1f });
+    entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("range_highlight");
+    entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.addComponent<cro::UIInput>().area = bounds;
     entity.getComponent<cro::UIInput>().setSelectionIndex(39);
-    m_tabNodes[TabID::Performance].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = spriteSelected;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = spriteUnselected;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+        m_scene.getSystem<cro::UISystem>()->addCallback(
+            [&, rangeText](cro::Entity e, const cro::ButtonEvent& evt) mutable
+            {
+                if (activated(evt))
+                {
+                    m_dateRange = (m_dateRange + 1) % DateRange::Count;
+                    rangeText.getComponent<cro::Text>().setString(RangeStrings[m_dateRange]);
+                    centreText(rangeText);
+
+                    refreshPerformanceTab(false);
+
+                    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+                }
+            });
+
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function = buttonCallback;
+    buttonEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 }
 
 void StatsState::createHistoryTab(cro::Entity parent)
@@ -1124,6 +1345,11 @@ void StatsState::activateTab(std::int32_t tabID)
     //navigating with a controller / steam deck
 
     m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+}
+
+void StatsState::refreshPerformanceTab(bool newProfile)
+{
+    //TODO quit if profiles empty
 }
 
 void StatsState::quitState()

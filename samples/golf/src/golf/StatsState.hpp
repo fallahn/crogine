@@ -134,12 +134,29 @@ private:
     BarChart m_playTimeChart;
     std::vector<std::pair<std::string, cro::String>> m_courseStrings;
 
+    struct ProfileData final
+    {
+        cro::String name;
+        std::string dbPath;
+    };
+    std::vector<ProfileData> m_profileData;
+    std::size_t m_profileIndex;
+    std::size_t m_courseIndex;
+    bool m_showCPUStat;
+    struct DateRange final
+    {
+        enum {Week, Month, Year, Count};
+    };
+    std::int32_t m_dateRange = DateRange::Week;
+
     void buildScene();
     void parseCourseData();
+    void parseProfileData();
     void createClubStatsTab(cro::Entity, const cro::SpriteSheet&);
     void createPerformanceTab(cro::Entity, const cro::SpriteSheet&);
     void createHistoryTab(cro::Entity);
     void createAwardsTab(cro::Entity);
     void activateTab(std::int32_t);
+    void refreshPerformanceTab(bool newProfile);
     void quitState();
 };
