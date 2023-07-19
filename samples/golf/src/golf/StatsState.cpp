@@ -80,6 +80,8 @@ namespace
 {
     constexpr float PieRadius = 48.f;
     constexpr std::int32_t PieBaseColour = CD32::BlueLight;
+    constexpr glm::vec2 PerformanceBoardArea = glm::vec2(416.f, 88.f);
+    constexpr float PerformanceVerticalOffset = 2.f; //each graph offset by this to reduce overlap
 
     //indices into the colour palette for each hole graph
     constexpr std::array<std::int32_t, 18> PerformanceColours =
@@ -1082,6 +1084,46 @@ void StatsState::createPerformanceTab(cro::Entity parent, const cro::SpriteSheet
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function = buttonCallback;
     buttonEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+    //create and attach empty ents to hold the graphs, updated by refreshPerformanceTab()
+    float yPos = 144.f;
+    for (auto i = 0u; i < 18; ++i)
+    {
+        entity = m_scene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ 28.f, yPos, 0.2f });
+        entity.addComponent<cro::Drawable2D>().setPrimitiveType(GL_LINE_STRIP);
+        entity.getComponent<cro::Drawable2D>().setVertexData(
+            {
+                cro::Vertex2D(glm::vec2(0.f), CD32::Colours[PerformanceColours[i]]),
+                cro::Vertex2D(glm::vec2(PerformanceBoardArea.x, 0.f), CD32::Colours[PerformanceColours[i]]),
+            });
+
+        performanceEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+        m_graphEntities[i] = entity;
+
+        yPos -= PerformanceVerticalOffset;
+
+        if (i == 8)
+        {
+            yPos -= 90.f; //gap in front/back area
+        }
+    }
+
+    //and the personal best text in the middle
+    const auto& infoFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ centre, 176.f, 0.2f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(infoFont).setString("0 Records Found. No Personal Best");
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+    centreText(entity);
+    m_tabNodes[TabID::Performance].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    m_personalBestEntity = entity;
+
+    refreshPerformanceTab(true);
 }
 
 void StatsState::createHistoryTab(cro::Entity parent)
@@ -1349,7 +1391,72 @@ void StatsState::activateTab(std::int32_t tabID)
 
 void StatsState::refreshPerformanceTab(bool newProfile)
 {
-    //TODO quit if profiles empty
+    if (m_profileData.empty())
+    {
+        return;
+    }
+
+    if (newProfile)
+    {
+        if (!m_profileDB.open(m_profileData[m_profileIndex].dbPath))
+        {
+            LogE << "Failed opening " << m_profileData[m_profileIndex].dbPath << std::endl;
+            return;
+        }
+    }
+
+    constexpr std::size_t MaxPoints = 52; //8px apart
+
+    //set a max number of entries in a given period
+    //then average the number of results if greater
+    //TODO apply the time range
+    //TODO apply the CPU filter
+    auto records = m_profileDB.getCourseRecords(m_courseIndex);
+    if (records.empty())
+    {
+        //reset the graph
+        for (auto e : m_graphEntities)
+        {
+            e.getComponent<cro::Drawable2D>().getVertexData().clear();
+        }
+        m_personalBestEntity.getComponent<cro::Text>().setString("No Records Found.");
+        centreText(m_personalBestEntity);
+        return;
+    }
+    const auto stride = std::max(std::size_t(1), records.size() / MaxPoints);
+    //TODO this only shows up to half the results if, say, the record count is ~100
+    //really we want to take a floating point stride then alternate it by average
+    //eg 1/2 1/2 over the course of the record collection
+
+
+    //TODO build the vert arrays async, then check the results
+    //in the process() loop and apply them when found
+
+    const auto PointCount = std::min(MaxPoints, records.size());
+    const float HorizontalPixelStride = PerformanceBoardArea.x / PointCount;
+    //there's a 12 stroke limit, but each graph is also offset by 2px
+    const float VerticalPixelStride = (PerformanceBoardArea.y / 12.f) - PerformanceVerticalOffset; 
+    std::vector<cro::Vertex2D> verts;
+    for (auto j = 0; j < 18; ++j)
+    {
+        for (auto i = 0u; i < PointCount; i += stride)
+        {
+            auto score = records[i].holeScores[j];
+            verts.emplace_back(glm::vec2(i * HorizontalPixelStride, (score * VerticalPixelStride) + (j * PerformanceVerticalOffset)), CD32::Colours[PerformanceColours[j]]);
+        }
+
+
+        auto score = records.back().holeScores[j];
+        verts.emplace_back(glm::vec2(PerformanceBoardArea.x, (score * VerticalPixelStride) + (j * PerformanceVerticalOffset)), CD32::Colours[PerformanceColours[j]]);
+
+        m_graphEntities[j].getComponent<cro::Drawable2D>().setVertexData(verts);
+        verts.clear();
+    }
+
+    //TODO apply the personal best text to centre of the layout, along with record count
+    //auto personalBest = m_profileDB.getPersonalBest(m_courseIndex); //hm this is for each hole, not the course
+    m_personalBestEntity.getComponent<cro::Text>().setString(std::to_string(records.size()) + " Records Available");
+    centreText(m_personalBestEntity);
 }
 
 void StatsState::quitState()

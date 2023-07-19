@@ -30,6 +30,7 @@ source distribution.
 #pragma once
 
 #include "../StateIDs.hpp"
+#include "../sqlite/ProfileDB.hpp"
 
 #include <crogine/core/State.hpp>
 #include <crogine/audio/AudioScape.hpp>
@@ -148,6 +149,10 @@ private:
         enum {Week, Month, Year, Count};
     };
     std::int32_t m_dateRange = DateRange::Week;
+    std::array<cro::Entity, 18u> m_graphEntities;
+    cro::Entity m_personalBestEntity;
+
+    ProfileDB m_profileDB;
 
     void buildScene();
     void parseCourseData();

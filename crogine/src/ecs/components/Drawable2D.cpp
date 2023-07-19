@@ -179,6 +179,14 @@ void Drawable2D::updateLocalBounds()
     m_localBounds.width = xExtremes.second->position.x - m_localBounds.left;
     m_localBounds.height = yExtremes.second->position.y - m_localBounds.bottom;
 
+    //if one or other is empty (say we're drawing a perfectly
+    //straight line) add a small amount so we don't get culled
+    if (m_localBounds.width + m_localBounds.height != 0)
+    {
+        m_localBounds.width += 0.001f;
+        m_localBounds.height += 0.001f;
+    }
+
     m_updateBufferData = true; //tells the system we have new data to upload
 }
 
