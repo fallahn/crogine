@@ -78,7 +78,7 @@ source distribution.
 
 namespace
 {
-    constexpr float PieRadius = 50.f;
+    constexpr float PieRadius = 48.f;
     constexpr std::int32_t PieBaseColour = CD32::BlueLight;
 
     struct MenuID final
@@ -733,7 +733,7 @@ void StatsState::createHistoryTab(cro::Entity parent)
 
     //our pie
     auto entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 116.f, 230.f, 0.2f });
+    entity.addComponent<cro::Transform>().setPosition({ 111.f, 230.f, 0.2f });
     entity.addComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLES);
     m_tabNodes[TabID::History].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     m_pieCharts[0].setEntity(entity);
@@ -753,7 +753,7 @@ void StatsState::createHistoryTab(cro::Entity parent)
 
     //our pie total
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ -(PieRadius + 28.f), 10.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ -(PieRadius + 26.f), 10.f, 0.1f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(labelFont).setString(std::to_string(static_cast<std::int32_t>(m_pieCharts[0].getTotal())) + "\nRounds");
     entity.getComponent<cro::Text>().setCharacterSize(LabelTextSize);
@@ -766,7 +766,7 @@ void StatsState::createHistoryTab(cro::Entity parent)
 
     //global pie
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 116.f, 100.f, 0.2f });
+    entity.addComponent<cro::Transform>().setPosition({ 111.f, 100.f, 0.2f });
     entity.addComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLES);
     m_tabNodes[TabID::History].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     m_pieCharts[1].setEntity(entity);
@@ -786,7 +786,7 @@ void StatsState::createHistoryTab(cro::Entity parent)
 
     //global pie total
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ -(PieRadius + 28.f), 10.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ -(PieRadius + 26.f), 10.f, 0.1f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(labelFont).setString(std::to_string(static_cast<std::int32_t>(m_pieCharts[1].getTotal())) + "\nRounds");
     entity.getComponent<cro::Text>().setCharacterSize(LabelTextSize);
@@ -869,7 +869,7 @@ void StatsState::createHistoryTab(cro::Entity parent)
 
     //play count list
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 223.f, 282.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 225.f, 282.f, 0.1f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(labelFont).setString(countList);
     entity.getComponent<cro::Text>().setCharacterSize(LabelTextSize);
@@ -886,7 +886,7 @@ void StatsState::createHistoryTab(cro::Entity parent)
 
     //bar chart for play time
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 224.f, 98.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 218.f, 98.f, 0.1f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(largeFont).setString("Your Average Play Duration");
     entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
@@ -896,7 +896,7 @@ void StatsState::createHistoryTab(cro::Entity parent)
     m_tabNodes[TabID::History].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 242.f, 40.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 236.f, 40.f, 0.1f });
     entity.addComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLES);
     m_tabNodes[TabID::History].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     
@@ -920,7 +920,7 @@ void StatsState::createHistoryTab(cro::Entity parent)
     timeString += "\n|\n|\n0s";
 
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 390.f, 84.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 384.f, 84.f, 0.1f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(labelFont).setString(timeString);
     entity.getComponent<cro::Text>().setCharacterSize(LabelTextSize);

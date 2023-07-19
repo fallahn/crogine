@@ -121,13 +121,15 @@ public:
 
     static const StatData* getGlobalStat(const std::string&) { return nullptr; }
 
-    static void setAvgStat(const std::string&, float, float) {};
+    static void setAvgStat(const std::string&, float, float) {}
 
     static float getAvgStat(const std::string&) { return 0.f; }
 
     static void setActive(bool);
 
-    static bool getActive() { return m_active; };
+    static bool getActive() { return m_active; }
+
+    static void refreshGlobalStats() {}
 
 private:
     static AchievementImpl* m_impl;
