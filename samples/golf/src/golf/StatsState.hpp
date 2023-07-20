@@ -152,9 +152,17 @@ private:
     std::int32_t m_dateRange = DateRange::Week;
     std::array<cro::Entity, 18u> m_graphEntities = {};
     cro::Entity m_gridEntity;
-    cro::Entity m_personalBestEntity;
+    cro::Entity m_recordCountEntity;
     bool m_holeDetailSelected;
     std::array<cro::Entity, 18u> m_holeDetailEntities = {};
+
+    struct HoleDetail final
+    {
+        cro::Entity background;
+        cro::Entity text;
+        static constexpr glm::vec2 Bottom = glm::vec2(27.f, 18.f);
+        static constexpr glm::vec2 Top = glm::vec2(27.f, 126.f);
+    }m_holeDetail;
 
     ProfileDB m_profileDB;
 

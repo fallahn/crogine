@@ -121,6 +121,7 @@ namespace
         static constexpr float MinAlpha = 0.1f;
 
         std::int32_t graphIndex = 0;
+        cro::String detailString;
     };
 
     struct MenuID final
@@ -149,6 +150,32 @@ StatsState::StatsState(cro::StateStack& ss, cro::State::Context ctx, SharedState
     buildScene();
 
 #ifdef CRO_DEBUG_
+    registerCommand("build_dummy_best", [](const std::string&)
+        {
+            auto path = Social::getUserContentPath(Social::UserContent::Profile);
+            auto dirs = cro::FileSystem::listDirectories(path);
+            ProfileDB db;
+            std::int32_t recordCount = 0;
+            for (const auto& dir : dirs)
+            {
+                db.open(path + dir + "/profile.db3");
+                for (auto i = 0; i < 10; ++i)
+                {
+                    for (auto j = 0; j < 18; ++j)
+                    {
+                        PersonalBestRecord pb;
+                        pb.course = i;
+                        pb.hole = j;
+                        pb.longestDrive = static_cast<float>(cro::Util::Random::value(20000, 30000)) / 100.f;
+                        pb.longestPutt = static_cast<float>(cro::Util::Random::value(300, 1000)) / 100.f;
+                        pb.score = cro::Util::Random::value(1, 6);
+                        pb.wasPuttAssist = cro::Util::Random::value(0, 1);
+                        db.insertPersonalBestRecord(pb);
+                    }
+                }
+                LogI << "created pb for " << dir << std::endl;
+            }
+        });
     registerCommand("build_dummy_data", [](const std::string&) 
         {
             auto path = Social::getUserContentPath(Social::UserContent::Profile);
@@ -160,7 +187,7 @@ StatsState::StatsState(cro::StateStack& ss, cro::State::Context ctx, SharedState
                 db.open(path + dir + "/profile.db3");
 
                 //just over a year
-                auto ts = cro::SysTime::epoch();
+                auto ts = cro::SysTime::epoch(); //note by default this is overwritten with current time when inserted to DB
                 for (auto i = 0; i < 190; ++i)
                 {
                     for (auto j = 0; j < 10; ++j)
@@ -1151,6 +1178,35 @@ void StatsState::createPerformanceTab(cro::Entity parent, const cro::SpriteSheet
     buttonEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
+    //background for showing personal best when a hole is highlighted
+    auto c = CD32::Colours[CD32::TanDarkest];
+    c.setAlpha(0.5f);
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(HoleDetail::Top, 0.6f));
+    entity.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+    entity.addComponent<cro::Drawable2D>().setVertexData(
+        {
+            cro::Vertex2D(glm::vec2(0.f, PerformanceBoardArea.y), c),
+            cro::Vertex2D(glm::vec2(0.f), c),
+            cro::Vertex2D(PerformanceBoardArea, c),
+            cro::Vertex2D(glm::vec2(PerformanceBoardArea.x, 0.f), c)
+        });
+    performanceEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_holeDetail.background = entity;
+    //and personal best text
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ PerformanceBoardArea.x / 2.f, PerformanceBoardArea.y - 14.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(largeFont).setString("Hole 1\n\nNo Personal Best");
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
+    entity.getComponent<cro::Text>().setVerticalSpacing(2.f);
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    m_holeDetail.background.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_holeDetail.text = entity;
+
+
+
     //create and attach empty ents to hold the graphs, updated by refreshPerformanceTab()
     //and mouse-over buttons to dim them
 
@@ -1196,6 +1252,18 @@ void StatsState::createPerformanceTab(cro::Entity parent, const cro::SpriteSheet
             e.getComponent<cro::AudioEmitter>().play();
             e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
             e.getComponent<cro::Callback>().getUserData<GraphFadeData>().target = 1.f;
+            auto index = e.getComponent<cro::Callback>().getUserData<GraphFadeData>().graphIndex;
+
+            if (index < 9)
+            {
+                m_holeDetail.background.getComponent<cro::Transform>().setPosition(HoleDetail::Bottom);
+            }
+            else
+            {
+                m_holeDetail.background.getComponent<cro::Transform>().setPosition(HoleDetail::Top);
+            }
+            m_holeDetail.background.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+            m_holeDetail.text.getComponent<cro::Text>().setString(e.getComponent<cro::Callback>().getUserData<GraphFadeData>().detailString);
 
             m_holeDetailSelected = true;
         });
@@ -1204,6 +1272,8 @@ void StatsState::createPerformanceTab(cro::Entity parent, const cro::SpriteSheet
         {
             e.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
             e.getComponent<cro::Callback>().getUserData<GraphFadeData>().target = 0.f;
+
+            m_holeDetail.background.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
 
             m_holeDetailSelected = false;
         });
@@ -1277,18 +1347,18 @@ void StatsState::createPerformanceTab(cro::Entity parent, const cro::SpriteSheet
     performanceEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     m_gridEntity = entity;
 
-    //and the personal best text in the middle
+    //and the record count text in the middle
     const auto& infoFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ centre, 176.f, 0.2f });
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(infoFont).setString("0 Records Found. No Personal Best");
+    entity.addComponent<cro::Text>(infoFont).setString("No Records Found.");
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
     centreText(entity);
     m_tabNodes[TabID::Performance].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
-    m_personalBestEntity = entity;
+    m_recordCountEntity = entity;
 
     refreshPerformanceTab(true);
 }
@@ -1609,8 +1679,8 @@ void StatsState::refreshPerformanceTab(bool newProfile)
             e.getComponent<cro::Drawable2D>().getVertexData().clear();
         }
         m_gridEntity.getComponent<cro::Drawable2D>().getVertexData().clear();
-        m_personalBestEntity.getComponent<cro::Text>().setString("No Records Found.");
-        centreText(m_personalBestEntity);
+        m_recordCountEntity.getComponent<cro::Text>().setString("No Records Found.");
+        centreText(m_recordCountEntity);
         return;
     }
     maxPoints = std::min(records.size(), maxPoints);
@@ -1625,8 +1695,7 @@ void StatsState::refreshPerformanceTab(bool newProfile)
     //in the process() loop and apply them when found
 
     const float HorizontalPixelStride = PerformanceBoardArea.x / maxPoints;
-    //there's a 12 stroke limit, but each graph is also offset by 2px
-    //TODO start from newest and work backwards right to left
+    //there's a 12 stroke limit, but each graph is also offset by PerformanceVerticalOffset
     const float VerticalPixelStride = (PerformanceBoardArea.y / 12.f) - PerformanceVerticalOffset; 
     std::vector<cro::Vertex2D> verts;
     std::vector<cro::Vertex2D> gridVerts;
@@ -1657,10 +1726,65 @@ void StatsState::refreshPerformanceTab(bool newProfile)
     }
     m_gridEntity.getComponent<cro::Drawable2D>().setVertexData(gridVerts);
 
-    //TODO apply the personal best text to centre of the layout, along with record count
-    //auto personalBest = m_profileDB.getPersonalBest(m_courseIndex); //hm this is for each hole, not the course
-    m_personalBestEntity.getComponent<cro::Text>().setString("Previous Hole Scores: " + std::to_string(records.size()) + " Records Available");
-    centreText(m_personalBestEntity);
+    m_recordCountEntity.getComponent<cro::Text>().setString("Previous Hole Scores: " + std::to_string(records.size()) + " Records Available");
+    centreText(m_recordCountEntity);
+
+
+    //personal best info for each hole
+    auto personalBest = m_profileDB.getPersonalBest(m_courseIndex);
+    for (auto i = 0u; i < m_holeDetailEntities.size(); ++i)
+    {
+        m_holeDetailEntities[i].getComponent<cro::Callback>().getUserData<GraphFadeData>().detailString = "Hole " +std::to_string(i+1) +"\n\nNo Hole Information";
+    }
+
+    if (!personalBest.empty())
+    {
+        for (const auto& pb : personalBest)
+        {
+            if (pb.hole >= 0 && pb.hole < 18)
+            {
+                float drive = pb.longestDrive;
+                float putt = pb.longestPutt;
+                std::stringstream sd;
+                sd << std::fixed << std::setprecision(2);
+                std::stringstream sp;
+                sp << std::fixed << std::setprecision(2);
+
+                if (m_sharedData.imperialMeasurements)
+                {
+                    drive *= 1.09361f; //to yards
+                    putt *= 1.09361f;
+                    putt *= 3.f; //to feet
+
+                    sd << drive << " yards";
+                    sp << putt << " feet";
+                }
+                else
+                {
+                    sd << drive << " metres";
+                    if (putt < 1)
+                    {
+                        putt *= 100.f;
+                        sp << putt << " centimetres";
+                    }
+                    else
+                    {
+                        sp << putt << " metres";
+                    }
+                }
+
+                std::string str = "Hole " + std::to_string(pb.hole + 1);
+                str += "\n\nLongest Drive: " + sd.str();
+                str += "\nLongest Putt: " + sp.str();
+                str += "\nBest Score: " + std::to_string(pb.score);
+                if (pb.wasPuttAssist)
+                {
+                    str += " (Using Putt Assist)";
+                }
+                m_holeDetailEntities[pb.hole].getComponent<cro::Callback>().getUserData<GraphFadeData>().detailString = str;
+            }
+        }
+    }
 }
 
 void StatsState::quitState()
