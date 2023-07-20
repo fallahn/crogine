@@ -114,6 +114,15 @@ namespace
         "1 Week" , "1 Month", "3 Months", "6 Months" , "1 Year"
     };
 
+    struct GraphFadeData final
+    {
+        float progress = 0.f;
+        float target = 1.f;
+        static constexpr float MinAlpha = 0.1f;
+
+        std::int32_t graphIndex = 0;
+    };
+
     struct MenuID final
     {
         enum
@@ -125,14 +134,15 @@ namespace
 
 StatsState::StatsState(cro::StateStack& ss, cro::State::Context ctx, SharedStateData& sd)
     : cro::State            (ss, ctx),
-    m_scene                 (ctx.appInstance.getMessageBus()),
+    m_scene                 (ctx.appInstance.getMessageBus(), 480),
     m_sharedData            (sd),
     m_viewScale             (2.f),
     m_currentTab            (0),
     m_imperialMeasurements  (sd.imperialMeasurements),
     m_profileIndex          (0),
     m_courseIndex           (0),
-    m_showCPUStat           (true)
+    m_showCPUStat           (true),
+    m_holeDetailSelected    (false)
 {
     ctx.mainWindow.setMouseCaptured(false);
 
@@ -465,7 +475,7 @@ void StatsState::buildScene()
 
         entity.addComponent<cro::UIInput>().area = bounds;
         entity.getComponent<cro::UIInput>().enabled = i != m_currentTab;
-        entity.getComponent<cro::UIInput>().setSelectionIndex(40 + i); //make sure these are always indexed as if at the bottom
+        entity.getComponent<cro::UIInput>().setSelectionIndex(180 + i); //make sure these are always indexed as if at the bottom
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectedID;
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectedID;
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = 
@@ -939,7 +949,10 @@ void StatsState::createPerformanceTab(cro::Entity parent, const cro::SpriteSheet
             e.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
         });
 
-    //cpu checkbox - 36
+    //each hole highlight button (and dummies) happen here
+    //so checkbox index is bumped by 120
+
+    //cpu checkbox - 156
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 13.f, 1.f, 0.1f });
     entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
@@ -948,7 +961,7 @@ void StatsState::createPerformanceTab(cro::Entity parent, const cro::SpriteSheet
     entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.addComponent<cro::UIInput>().area = bounds;
-    entity.getComponent<cro::UIInput>().setSelectionIndex(36);
+    entity.getComponent<cro::UIInput>().setSelectionIndex(156);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = spriteSelected;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = spriteUnselected;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
@@ -1002,7 +1015,7 @@ void StatsState::createPerformanceTab(cro::Entity parent, const cro::SpriteSheet
     auto profileName = entity;
 
 
-    //previous profile - 37
+    //previous profile - 157
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 112.f, -2.f, 0.1f });
     entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
@@ -1011,7 +1024,7 @@ void StatsState::createPerformanceTab(cro::Entity parent, const cro::SpriteSheet
     entity.addComponent<cro::SpriteAnimation>();
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.addComponent<cro::UIInput>().area = bounds;
-    entity.getComponent<cro::UIInput>().setSelectionIndex(37);
+    entity.getComponent<cro::UIInput>().setSelectionIndex(157);
     if (!m_profileData.empty())
     {
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectedID;
@@ -1043,7 +1056,7 @@ void StatsState::createPerformanceTab(cro::Entity parent, const cro::SpriteSheet
     performanceEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
-    //next profile - 38
+    //next profile - 158
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 320.f, -2.f, 0.1f });
     entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
@@ -1051,7 +1064,7 @@ void StatsState::createPerformanceTab(cro::Entity parent, const cro::SpriteSheet
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("arrow_right");
     entity.addComponent<cro::SpriteAnimation>();
     entity.addComponent<cro::UIInput>().area = bounds;
-    entity.getComponent<cro::UIInput>().setSelectionIndex(38);
+    entity.getComponent<cro::UIInput>().setSelectionIndex(158);
     if (!m_profileData.empty())
     {
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectedID;
@@ -1105,7 +1118,7 @@ void StatsState::createPerformanceTab(cro::Entity parent, const cro::SpriteSheet
 
     auto rangeText = entity;
 
-    //range button - 39
+    //range button - 159
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ -2.f, -2.f, 0.1f });
     entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
@@ -1114,7 +1127,7 @@ void StatsState::createPerformanceTab(cro::Entity parent, const cro::SpriteSheet
     entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.addComponent<cro::UIInput>().area = bounds;
-    entity.getComponent<cro::UIInput>().setSelectionIndex(39);
+    entity.getComponent<cro::UIInput>().setSelectionIndex(159);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = spriteSelected;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = spriteUnselected;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
@@ -1139,6 +1152,70 @@ void StatsState::createPerformanceTab(cro::Entity parent, const cro::SpriteSheet
 
 
     //create and attach empty ents to hold the graphs, updated by refreshPerformanceTab()
+    //and mouse-over buttons to dim them
+
+    const auto fadeFunction = 
+        [&](cro::Entity e, float dt)
+    {
+        e.getComponent<cro::UIInput>().enabled =
+            m_tabNodes[TabID::Performance].getComponent<cro::Transform>().getScale().x != 0;
+
+        auto& data = e.getComponent<cro::Callback>().getUserData<GraphFadeData>();
+        if (!m_holeDetailSelected)
+        {
+            data.target = 1.f;
+        }
+
+        if (data.target > data.progress)
+        {
+            data.progress = std::min(data.target, data.progress + (dt * 3.f));
+        }
+        else if (data.target < data.progress)
+        {
+            data.progress = std::max(data.target, data.progress - (dt * 3.f));
+        }
+
+        float alpha = ((1.f - data.MinAlpha) * data.progress) + data.MinAlpha;
+        alpha = std::clamp(alpha, 0.f, 1.f);
+
+        auto& verts = m_graphEntities[data.graphIndex].getComponent<cro::Drawable2D>().getVertexData();
+        for (auto& v : verts)
+        {
+            v.colour.setAlpha(alpha);
+        }
+    };
+    auto holeSelect = m_scene.getSystem<cro::UISystem>()->addCallback(
+        [&](cro::Entity e)
+        {
+            //fade out other entities if nothing was selected yet
+            for (auto ent : m_holeDetailEntities)
+            {
+                ent.getComponent<cro::Callback>().getUserData<GraphFadeData>().target = 0.f;
+            }
+
+            e.getComponent<cro::AudioEmitter>().play();
+            e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
+            e.getComponent<cro::Callback>().getUserData<GraphFadeData>().target = 1.f;
+
+            m_holeDetailSelected = true;
+        });
+    auto holeUnselect = m_scene.getSystem<cro::UISystem>()->addCallback(
+        [&](cro::Entity e)
+        {
+            e.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+            e.getComponent<cro::Callback>().getUserData<GraphFadeData>().target = 0.f;
+
+            m_holeDetailSelected = false;
+        });
+
+    auto selectionIndex = 36;
+    glm::vec3 mouseOverPos(-6.f, 201.f, 0.1f);
+    bounds = spriteSheet.getSprite("hole_over").getTextureBounds();
+    bounds.left -= 3.f;
+    bounds.width += 22.f;
+    bounds.bottom -= 1.f;
+    bounds.height += 2.f;
+
     float yPos = 155.f;
     for (auto i = 0u; i < 18; ++i)
     {
@@ -1154,11 +1231,43 @@ void StatsState::createPerformanceTab(cro::Entity parent, const cro::SpriteSheet
         performanceEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
         m_graphEntities[i] = entity;
 
+
+        //mouse-over button
+        entity = m_scene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition(mouseOverPos);
+        entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
+        entity.addComponent<cro::Drawable2D>();
+        entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("hole_over");
+        entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+        entity.addComponent<cro::UIInput>().area = bounds;
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = holeSelect;
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = holeUnselect;
+        entity.getComponent<cro::UIInput>().setSelectionIndex(selectionIndex);
+        GraphFadeData fd;
+        fd.graphIndex = i;
+        entity.addComponent<cro::Callback>().active = true;
+        entity.getComponent<cro::Callback>().setUserData<GraphFadeData>(fd);
+        entity.getComponent<cro::Callback>().function = fadeFunction;
+        performanceEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+        m_holeDetailEntities[i] = entity;
+        selectionIndex++;
+
+        //dummy ents to pack columns
+        for (auto d = 0; d < 3; ++d)
+        {
+            entity = m_scene.createEntity();
+            entity.addComponent<cro::Transform>();
+            entity.addComponent<cro::UIInput>().enabled = false;
+            entity.getComponent<cro::UIInput>().setSelectionIndex(selectionIndex++);
+        }
+
+        mouseOverPos.y -= 9.f;
         yPos -= PerformanceVerticalOffset;
 
         if (i == 8)
         {
             yPos -= 81.f; //gap in front/back area
+            mouseOverPos.y -= 27.f;
         }
     }
     //grid lines
