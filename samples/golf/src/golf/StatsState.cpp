@@ -49,6 +49,7 @@ source distribution.
 #include <crogine/graphics/Image.hpp>
 #include <crogine/graphics/SpriteSheet.hpp>
 #include <crogine/gui/Gui.hpp>
+#include <crogine/core/SysTime.hpp>
 
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/UIInput.hpp>
@@ -81,7 +82,8 @@ namespace
     constexpr float PieRadius = 48.f;
     constexpr std::int32_t PieBaseColour = CD32::BlueLight;
     constexpr glm::vec2 PerformanceBoardArea = glm::vec2(416.f, 88.f);
-    constexpr float PerformanceVerticalOffset = 2.f; //each graph offset by this to reduce overlap
+    constexpr float PerformanceBoardGap = 20.f;
+    constexpr float PerformanceVerticalOffset = 3.f; //each graph offset by this to reduce overlap
 
     //indices into the colour palette for each hole graph
     constexpr std::array<std::int32_t, 18> PerformanceColours =
@@ -107,9 +109,9 @@ namespace
         CD32::GreyMid,
     };
 
-    const std::array<cro::String, 3u> RangeStrings =
+    const std::array<cro::String, 5u> RangeStrings =
     {
-        "Week" , "Month" , "Year"
+        "1 Week" , "1 Month", "3 Months", "6 Months" , "1 Year"
     };
 
     struct MenuID final
@@ -135,6 +137,54 @@ StatsState::StatsState(cro::StateStack& ss, cro::State::Context ctx, SharedState
     ctx.mainWindow.setMouseCaptured(false);
 
     buildScene();
+
+#ifdef CRO_DEBUG_
+    registerCommand("build_dummy_data", [](const std::string&) 
+        {
+            auto path = Social::getUserContentPath(Social::UserContent::Profile);
+            auto dirs = cro::FileSystem::listDirectories(path);
+            ProfileDB db;
+            std::int32_t recordCount = 0;
+            for (const auto& dir : dirs)
+            {
+                db.open(path + dir + "/profile.db3");
+
+                //just over a year
+                auto ts = cro::SysTime::epoch();
+                for (auto i = 0; i < 190; ++i)
+                {
+                    for (auto j = 0; j < 10; ++j)
+                    {
+                        CourseRecord record;
+                        record.courseIndex = j;
+                        record.holeCount = 0;
+                        record.timestamp = ts;
+                        record.wasCPU = cro::Util::Random::value(0, 1);
+
+                        for (auto& score : record.holeScores)
+                        {
+                            score = cro::Util::Random::value(2, 4);
+                            if (cro::Util::Random::value(0, 16) == 0)
+                            {
+                                score -= 1;
+                            }
+                            if (cro::Util::Random::value(0, 60) == 0)
+                            {
+                                score = 13 - score;
+                            }
+                            record.total += score;
+                        }
+                        db.insertCourseRecord(record);
+                        recordCount++;
+                    }
+                    ts -= std::uint64_t(60 * 60 * 24) * 2;
+                }
+                LogI << "Wrote profile DB for " << dir << std::endl;
+            }
+
+            cro::Console::print("Inserted " + std::to_string(recordCount) + " records into " + std::to_string(dirs.size()) + " profiles");
+        });
+#endif
 }
 
 //public
@@ -453,6 +503,8 @@ void StatsState::buildScene()
         m_viewScale = glm::vec2(getViewScale());
         rootNode.getComponent<cro::Transform>().setScale(m_viewScale);
         rootNode.getComponent<cro::Transform>().setPosition(size / 2.f);
+
+        glLineWidth(m_viewScale.x);
 
         //updates any text objects / buttons with a relative position
         cro::Command cmd;
@@ -1087,11 +1139,11 @@ void StatsState::createPerformanceTab(cro::Entity parent, const cro::SpriteSheet
 
 
     //create and attach empty ents to hold the graphs, updated by refreshPerformanceTab()
-    float yPos = 144.f;
+    float yPos = 155.f;
     for (auto i = 0u; i < 18; ++i)
     {
         entity = m_scene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition({ 28.f, yPos, 0.2f });
+        entity.addComponent<cro::Transform>().setPosition({ 27.f, yPos, 0.2f + (0.01f * i)});
         entity.addComponent<cro::Drawable2D>().setPrimitiveType(GL_LINE_STRIP);
         entity.getComponent<cro::Drawable2D>().setVertexData(
             {
@@ -1106,9 +1158,15 @@ void StatsState::createPerformanceTab(cro::Entity parent, const cro::SpriteSheet
 
         if (i == 8)
         {
-            yPos -= 90.f; //gap in front/back area
+            yPos -= 81.f; //gap in front/back area
         }
     }
+    //grid lines
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 27.f, 19.f, 0.05f });
+    entity.addComponent<cro::Drawable2D>().setPrimitiveType(GL_LINES);
+    performanceEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_gridEntity = entity;
 
     //and the personal best text in the middle
     const auto& infoFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
@@ -1405,13 +1463,35 @@ void StatsState::refreshPerformanceTab(bool newProfile)
         }
     }
 
-    constexpr std::size_t MaxPoints = 52; //8px apart
+    std::size_t maxPoints = 52; //8px apart
 
     //set a max number of entries in a given period
     //then average the number of results if greater
-    //TODO apply the time range
-    //TODO apply the CPU filter
-    auto records = m_profileDB.getCourseRecords(m_courseIndex);
+    auto ts = cro::SysTime::epoch();
+    static constexpr std::uint64_t Day = 60 * 60 * 24;
+    switch (m_dateRange)
+    {
+    default:
+    case DateRange::Week:
+        ts -= (Day * 7);
+        maxPoints /= 2;
+        break;
+    case DateRange::Month:
+        ts -= (Day * 28);
+        break;
+    case DateRange::Quarter:
+        ts -= (Day * 84);
+        break;
+    case DateRange::Half:
+        ts -= (Day * 168);
+        break;
+    case DateRange::Year:
+        ts -= (Day * 365);
+        maxPoints *= 2;
+        break;
+    }
+
+    auto records = m_profileDB.getCourseRecords(m_courseIndex, ts, m_showCPUStat);
     if (records.empty())
     {
         //reset the graph
@@ -1419,11 +1499,14 @@ void StatsState::refreshPerformanceTab(bool newProfile)
         {
             e.getComponent<cro::Drawable2D>().getVertexData().clear();
         }
+        m_gridEntity.getComponent<cro::Drawable2D>().getVertexData().clear();
         m_personalBestEntity.getComponent<cro::Text>().setString("No Records Found.");
         centreText(m_personalBestEntity);
         return;
     }
-    const auto stride = std::max(std::size_t(1), records.size() / MaxPoints);
+    maxPoints = std::min(records.size(), maxPoints);
+    const auto stride = records.size() / maxPoints;
+
     //TODO this only shows up to half the results if, say, the record count is ~100
     //really we want to take a floating point stride then alternate it by average
     //eg 1/2 1/2 over the course of the record collection
@@ -1432,30 +1515,42 @@ void StatsState::refreshPerformanceTab(bool newProfile)
     //TODO build the vert arrays async, then check the results
     //in the process() loop and apply them when found
 
-    const auto PointCount = std::min(MaxPoints, records.size());
-    const float HorizontalPixelStride = PerformanceBoardArea.x / PointCount;
+    const float HorizontalPixelStride = PerformanceBoardArea.x / maxPoints;
     //there's a 12 stroke limit, but each graph is also offset by 2px
+    //TODO start from newest and work backwards right to left
     const float VerticalPixelStride = (PerformanceBoardArea.y / 12.f) - PerformanceVerticalOffset; 
     std::vector<cro::Vertex2D> verts;
+    std::vector<cro::Vertex2D> gridVerts;
     for (auto j = 0; j < 18; ++j)
     {
-        for (auto i = 0u; i < PointCount; i += stride)
+        std::int32_t score = 0;
+        for (auto i = 0u; i < maxPoints; ++i)
         {
-            auto score = records[i].holeScores[j];
-            verts.emplace_back(glm::vec2(i * HorizontalPixelStride, (score * VerticalPixelStride) + (j * PerformanceVerticalOffset)), CD32::Colours[PerformanceColours[j]]);
+            score = (i * stride < records.size()) ? records[i * stride].holeScores[j] : 0;
+            float xPos = PerformanceBoardArea.x - (i * HorizontalPixelStride);
+            verts.emplace_back(glm::vec2(xPos, (score * VerticalPixelStride)), CD32::Colours[PerformanceColours[j]]);
+
+            //if we're on the first hole update the grid verts too
+            if (j == 0)
+            {
+                xPos = std::round(xPos);
+                gridVerts.emplace_back(glm::vec2(xPos, 0.f), CD32::Colours[CD32::GreyDark]);
+                gridVerts.emplace_back(glm::vec2(xPos, PerformanceBoardArea.y), CD32::Colours[CD32::GreyDark]);
+                gridVerts.emplace_back(glm::vec2(xPos, PerformanceBoardArea.y + PerformanceBoardGap), CD32::Colours[CD32::GreyDark]);
+                gridVerts.emplace_back(glm::vec2(xPos, (PerformanceBoardArea.y * 2.f) + PerformanceBoardGap), CD32::Colours[CD32::GreyDark]);
+            }
         }
 
-
-        auto score = records.back().holeScores[j];
-        verts.emplace_back(glm::vec2(PerformanceBoardArea.x, (score * VerticalPixelStride) + (j * PerformanceVerticalOffset)), CD32::Colours[PerformanceColours[j]]);
+        verts.emplace_back(glm::vec2(0.f, (score * VerticalPixelStride)), CD32::Colours[PerformanceColours[j]]);
 
         m_graphEntities[j].getComponent<cro::Drawable2D>().setVertexData(verts);
         verts.clear();
     }
+    m_gridEntity.getComponent<cro::Drawable2D>().setVertexData(gridVerts);
 
     //TODO apply the personal best text to centre of the layout, along with record count
     //auto personalBest = m_profileDB.getPersonalBest(m_courseIndex); //hm this is for each hole, not the course
-    m_personalBestEntity.getComponent<cro::Text>().setString(std::to_string(records.size()) + " Records Available");
+    m_personalBestEntity.getComponent<cro::Text>().setString("Previous Hole Scores: " + std::to_string(records.size()) + " Records Available");
     centreText(m_personalBestEntity);
 }
 

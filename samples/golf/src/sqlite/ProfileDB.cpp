@@ -153,7 +153,7 @@ bool ProfileDB::insertCourseRecord(const CourseRecord& record)
     return true;
 }
 
-std::vector<CourseRecord> ProfileDB::getCourseRecords(std::int32_t courseIndex, std::int32_t recordCount)
+std::vector<CourseRecord> ProfileDB::getCourseRecords(std::int32_t courseIndex, std::uint64_t oldestTimeStamp, bool getCPU, std::int32_t recordCount)
 {
     CRO_ASSERT(courseIndex >= MinCourse && courseIndex <= MaxCourse, "");
     if (courseIndex < MinCourse || courseIndex > MaxCourse)
@@ -169,8 +169,17 @@ std::vector<CourseRecord> ProfileDB::getCourseRecords(std::int32_t courseIndex, 
     }
 
     std::vector<CourseRecord> retVal;
+    std::string oldestRecord = std::to_string(oldestTimeStamp);
 
-    std::string query = "SELECT * FROM " + CourseNames[courseIndex] + " ORDER BY Date DESC";
+    std::string query;
+    if (getCPU)
+    {
+        query = "SELECT * FROM " + CourseNames[courseIndex] + " WHERE Date >= " + oldestRecord + " ORDER BY Date DESC";
+    }
+    else
+    {
+        query = "SELECT * FROM " + CourseNames[courseIndex] + " WHERE Date >= " + oldestRecord + " AND wasCPU = 0 ORDER BY Date DESC";
+    }
     sqlite3_stmt* out = nullptr;
     int result = sqlite3_prepare_v2(m_connection, query.c_str(), -1, &out, nullptr);
     if (result != SQLITE_OK)

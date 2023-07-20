@@ -33,6 +33,7 @@ source distribution.
 #include "../sqlite/ProfileDB.hpp"
 
 #include <crogine/core/State.hpp>
+#include <crogine/core/ConsoleClient.hpp>
 #include <crogine/audio/AudioScape.hpp>
 #include <crogine/ecs/Scene.hpp>
 
@@ -80,7 +81,7 @@ private:
     static constexpr float MaxHeight = 36.f;
 };
 
-class StatsState final : public cro::State
+class StatsState final : public cro::State, public cro::ConsoleClient
 {
 public:
     StatsState(cro::StateStack&, cro::State::Context, SharedStateData&);
@@ -146,10 +147,11 @@ private:
     bool m_showCPUStat;
     struct DateRange final
     {
-        enum {Week, Month, Year, Count};
+        enum {Week, Month, Quarter, Half, Year, Count};
     };
     std::int32_t m_dateRange = DateRange::Week;
     std::array<cro::Entity, 18u> m_graphEntities;
+    cro::Entity m_gridEntity;
     cro::Entity m_personalBestEntity;
 
     ProfileDB m_profileDB;
