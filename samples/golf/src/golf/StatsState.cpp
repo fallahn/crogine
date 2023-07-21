@@ -1342,7 +1342,7 @@ void StatsState::createPerformanceTab(cro::Entity parent, const cro::SpriteSheet
     }
     //grid lines
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 27.f, 19.f, 0.05f });
+    entity.addComponent<cro::Transform>().setPosition({ 26.f, 19.f, 0.05f });
     entity.addComponent<cro::Drawable2D>().setPrimitiveType(GL_LINES);
     performanceEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     m_gridEntity = entity;

@@ -79,7 +79,8 @@ struct SharedStateData final
         glm::vec3 teePos = glm::vec3(0.f);
         glm::vec3 pinPos = glm::vec3(0.f);
         cro::String courseName;
-        std::int32_t holeNumber = 0;
+        std::int32_t holeNumber = -1;
+        bool active = false;
     }minimapData;
 
     Server serverInstance;

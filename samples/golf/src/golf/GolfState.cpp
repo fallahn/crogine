@@ -486,9 +486,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
 
     const auto showMapOverview = [&]()
     {
-        if (m_mapTextureMRT.available()
-            && m_currentCamera != CameraID::Transition
-            && !m_holeData[m_currentHole].puttFromTee)
+        if (m_sharedData.minimapData.active)
         {
             requestStackPush(StateID::MapOverview);
         }
@@ -742,7 +740,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
         {
         default: break;
         case cro::GameController::ButtonLeftStick:
-            showMapOverview();
+            //showMapOverview();
             break;
         case cro::GameController::ButtonBack:
             showScoreboard(true);
@@ -6286,7 +6284,7 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo)
 
     m_sharedData.minimapData.teePos = m_holeData[m_currentHole].tee;
     m_sharedData.minimapData.pinPos = m_holeData[m_currentHole].pin;
-    m_sharedData.minimapData.holeNumber = m_currentHole;
+    //m_sharedData.minimapData.holeNumber = m_currentHole;
     
     if (m_sharedData.reverseCourse)
     {
@@ -7639,6 +7637,8 @@ std::int32_t GolfState::getClub() const
 
 void GolfState::setActiveCamera(std::int32_t camID)
 {
+    m_sharedData.minimapData.active = (camID == CameraID::Player && !m_holeData[m_currentHole].puttFromTee);
+
     if (m_photoMode)
     {
         return;

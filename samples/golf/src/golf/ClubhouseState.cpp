@@ -1122,6 +1122,7 @@ void ClubhouseState::buildScene()
         md.createModel(entity);
 
         applyMaterial(entity, MaterialID::Cel);
+        //applyMaterial(entity, MaterialID::TV, 1);
 
         m_arcadeVideo.loadFromFile("assets/golf/video/arcade.mpg");
         m_arcadeVideo.setLooped(true);
@@ -1139,8 +1140,8 @@ void ClubhouseState::buildScene()
         md.createModel(entity);
 
         applyMaterial(entity, MaterialID::Cel);
+        //applyMaterial(entity, MaterialID::TV, 1);
 
-        //TODO this will mostly be off screen to all but ultrawide players
         m_arcadeVideo2.loadFromFile("assets/golf/video/arcade2.mpg");
         m_arcadeVideo2.setLooped(true);
         m_arcadeVideo2.play();

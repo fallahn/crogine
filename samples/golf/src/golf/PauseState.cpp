@@ -234,6 +234,11 @@ void PauseState::buildScene()
                 m_restartButton.getComponent<cro::Transform>().setScale(glm::vec2(reset ? 1.f : 0.f));
             }
 
+            {
+                auto active = m_sharedData.minimapData.active;
+                m_minimapButton.getComponent<cro::UIInput>().enabled = active;
+                m_minimapButton.getComponent<cro::Transform>().setScale(glm::vec2(active ? 1.f : 0.f));
+            }
             if (currTime == 1)
             {
                 state = RootCallbackData::FadeOut;
@@ -399,6 +404,22 @@ void PauseState::buildScene()
     entity.getComponent<cro::UIInput>().enabled = (m_sharedData.baseState == StateID::DrivingRange);
     entity.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
     m_restartButton = entity;
+
+
+    //minimap button
+    entity = createItem(glm::vec2(0.f, -4.f), "Hole Overview", menuEntity);
+    entity.getComponent<cro::UIInput>().setGroup(MenuID::Main);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+        uiSystem.addCallback([&, menuEntity, confirmEntity](cro::Entity e, cro::ButtonEvent evt) mutable
+            {
+                if (activated(evt))
+                {
+                    requestStackPush(StateID::MapOverview);
+                }
+            });
+    entity.getComponent<cro::UIInput>().enabled = false;
+    entity.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+    m_minimapButton = entity;
 
 
     //quit button

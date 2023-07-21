@@ -953,6 +953,10 @@ void GolfState::buildUI()
                 m_gameScene.setActiveCamera(oldCam);
                 m_mapTexture.setBorderColour(c);
 
+                //this triggers a map refresh so don't set it until
+                //we know the texture is up to date.
+                m_sharedData.minimapData.holeNumber = m_currentHole;
+
                 //and set to grow
                 state = 1;
 
