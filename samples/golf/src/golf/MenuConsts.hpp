@@ -193,7 +193,7 @@ static inline bool deactivated(const cro::ButtonEvent& evt)
         return false;
     case SDL_KEYUP:
     case SDL_KEYDOWN:
-        return ((evt.key.keysym.sym == SDLK_ESCAPE || evt.key.keysym.sym == SDLK_BACKSPACE) && (evt.key.keysym.mod == 0));
+        return (((evt.key.keysym.sym == SDLK_ESCAPE || evt.key.keysym.sym == SDLK_BACKSPACE)) && ((evt.key.keysym.mod & ~KMOD_NUM) == 0));
     }
 }
 

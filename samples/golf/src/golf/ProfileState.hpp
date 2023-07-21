@@ -129,6 +129,7 @@ private:
     std::vector<cro::Entity> m_ballHairModels;
     std::size_t m_ballIndex;
     std::size_t m_ballHairIndex;
+    cro::RenderTexture m_ballThumbs;
 
     std::vector<AvatarPreview> m_avatarModels;
     std::vector<cro::Entity> m_avatarHairModels;
@@ -144,6 +145,8 @@ private:
             TopL, TopD,
             BotL, BotD,
 
+            BallThumb,
+
             Count
         };
     };
@@ -155,6 +158,8 @@ private:
     void buildScene();
     void buildPreviewScene();
     void createPalettes(cro::Entity);
+    void createBallFlyout(cro::Entity);
+    void createBallThumbs();
     void quitState();
 
     std::size_t indexFromAvatarID(std::uint32_t) const;

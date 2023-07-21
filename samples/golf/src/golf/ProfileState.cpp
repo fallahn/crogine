@@ -38,6 +38,7 @@ source distribution.
 #include "CallbackData.hpp"
 #include "PlayerColours.hpp"
 #include "../GolfGame.hpp"
+#include "../Colordome-32.hpp"
 
 #include <crogine/core/Window.hpp>
 #include <crogine/core/GameController.hpp>
@@ -91,13 +92,18 @@ namespace
             Dummy, Main,
 
             Hair, Skin, TopL, TopD,
-            BottomL, BottomD
+            BottomL, BottomD,
+
+            BallThumb
         };
     };
     
     constexpr glm::uvec2 BallTexSize(96u, 110u);
     constexpr glm::uvec2 AvatarTexSize(130u, 202u);
     constexpr glm::uvec2 MugshotTexSize(192u, 96u);
+
+    constexpr std::size_t BallColCount = 6;
+    constexpr glm::uvec2 BallThumbSize = BallTexSize / 2u;
 
     constexpr glm::vec3 CameraBasePosition({ -0.867f, 1.325f, -1.68f });
     constexpr glm::vec3 CameraZoomPosition({ -0.867f, 1.625f, -0.58f });
@@ -154,10 +160,16 @@ ProfileState::ProfileState(cro::StateStack& ss, cro::State::Context ctx, SharedS
     //    {
     //        if (ImGui::Begin("Flaps"))
     //        {
-    //            if (m_mugshotTexture.available())
+    //            if (m_ballThumbs.available())
+    //            {
+    //                glm::vec2 size(m_ballThumbs.getSize());
+    //                ImGui::Image(m_ballThumbs.getTexture(), { size.x, size.y }, { 0.f, 1.f }, { 1.f, 0.f });
+    //            }
+    //            
+    //            /*if (m_mugshotTexture.available())
     //            {
     //                ImGui::Image(m_mugshotTexture.getTexture(), { 192.f, 96.f }, { 0.f, 1.f }, { 1.f, 0.f });
-    //            }
+    //            }*/
 
     //            /*auto pos = m_cameras[CameraID::Mugshot].getComponent<cro::Transform>().getPosition();
     //            if (ImGui::SliderFloat("Height", &pos.y, 0.f, 2.f))
@@ -277,8 +289,48 @@ bool ProfileState::handleEvent(const cro::Event& evt)
     {
         auto currentMenu = m_uiScene.getSystem<cro::UISystem>()->getActiveGroup();
 
-        if (currentMenu != MenuID::Main
-            && currentMenu != MenuID::Dummy)
+        switch (currentMenu)
+        {
+        default:
+        {
+            updateHelpString(-1);
+            if (evt.button.button == SDL_BUTTON_RIGHT)
+            {
+                quitState();
+                return false;
+            }
+            else if (evt.button.button == SDL_BUTTON_LEFT)
+            {
+                if (applyTextEdit())
+                {
+                    //we applied a text edit so don't update the
+                    //UISystem
+                    return false;
+                }
+            }
+        }
+            break;
+        case MenuID::BallThumb:
+        {
+            auto bounds = m_flyouts[PaletteID::BallThumb].background.getComponent<cro::Drawable2D>().getLocalBounds();
+            bounds = m_flyouts[PaletteID::BallThumb].background.getComponent<cro::Transform>().getWorldTransform() * bounds;
+
+            if (!bounds.contains(m_uiScene.getActiveCamera().getComponent<cro::Camera>().pixelToCoords(cro::Mouse::getPosition())))
+            {
+                m_flyouts[PaletteID::BallThumb].background.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+                m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Main);
+                m_uiScene.getSystem<cro::UISystem>()->setColumnCount(1);
+                m_uiScene.getSystem<cro::UISystem>()->selectAt(m_lastSelected);
+                return false;
+            }
+        }
+        break;
+        case MenuID::Hair:
+        case MenuID::BottomD:
+        case MenuID::BottomL:
+        case MenuID::Skin:
+        case MenuID::TopL:
+        case MenuID::TopD:
         {
             auto flyoutID = currentMenu - MenuID::Hair;
             auto bounds = m_flyouts[flyoutID].background.getComponent<cro::Drawable2D>().getLocalBounds();
@@ -305,25 +357,8 @@ bool ProfileState::handleEvent(const cro::Event& evt)
                 return false;
             }
         }
-        else
-        {
-
-            updateHelpString(-1);
-            if (evt.button.button == SDL_BUTTON_RIGHT)
-            {
-                quitState();
-                return false;
-            }
-            else if (evt.button.button == SDL_BUTTON_LEFT)
-            {
-                if (applyTextEdit())
-                {
-                    //we applied a text edit so don't update the
-                    //UISystem
-                    return false;
-                }
-            }
-        }
+            break;
+        }        
     }
     else if (evt.type == SDL_CONTROLLERAXISMOTION)
     {
@@ -677,7 +712,7 @@ void ProfileState::buildScene()
         auto bounds = spriteSheet.getSprite(spriteID).getTextureBounds();
 
         auto entity = m_uiScene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition(glm::vec3(position, 0.1f));
+        entity.addComponent<cro::Transform>().setPosition(glm::vec3(position, 0.4f));
         entity.getComponent<cro::Transform>().setOrigin({ std::floor(bounds.width / 2.f), std::floor(bounds.height / 2.f) });
         entity.getComponent<cro::Transform>().move(entity.getComponent<cro::Transform>().getOrigin());
         entity.addComponent<cro::Drawable2D>();
@@ -994,24 +1029,8 @@ void ProfileState::buildScene()
                 }
             });
 
-    //ball arrow buttons - let's put a pin in this, nobody want hair on their balls.
-    //auto ballHairLeft = createButton("arrow_left", glm::vec2(311.f, 156.f));
-    //ballHairLeft.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
-    //    uiSystem.addCallback([&](cro::Entity e, const cro::ButtonEvent& evt)
-    //        {
-    //            if (activated(evt))
-    //            {
-    //            }
-    //        });
-    //auto ballHairRight = createButton("arrow_right", glm::vec2(440.f, 156.f));
-    //ballHairRight.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
-    //    uiSystem.addCallback([&](cro::Entity e, const cro::ButtonEvent& evt)
-    //        {
-    //            if (activated(evt))
-    //            {
-    //            }
-    //        });
-    auto ballLeft = createButton("arrow_left", glm::vec2(267.f, 134.f)); //+24Y
+    //ball arrow buttons
+    auto ballLeft = createButton("arrow_left", glm::vec2(267.f, 134.f));
     ballLeft.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         uiSystem.addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
             {
@@ -1021,6 +1040,29 @@ void ProfileState::buildScene()
                     m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
                 }
             });
+
+    //toggles the preview to display ball thumbs
+    auto ballThumb = createButton("ballthumb_highlight", { 279.f , 83.f });
+    ballThumb.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
+        uiSystem.addCallback([&](cro::Entity e, const cro::ButtonEvent& evt)
+            {
+                if (activated(evt))
+                {
+                    applyTextEdit();
+
+                    m_flyouts[PaletteID::BallThumb].background.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+
+                    m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::BallThumb);
+                    m_uiScene.getSystem<cro::UISystem>()->setColumnCount(BallColCount);
+                    m_uiScene.getSystem<cro::UISystem>()->selectAt(m_ballIndex);
+
+                    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+
+                    m_lastSelected = e.getComponent<cro::UIInput>().getSelectionIndex();
+                }
+            });
+
+
     auto ballRight = createButton("arrow_right", glm::vec2(382.f, 134.f));
     ballRight.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         uiSystem.addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
@@ -1284,6 +1326,7 @@ void ProfileState::buildScene()
 
 
     createPalettes(bgEnt);
+    createBallFlyout(bgEnt);
 
     auto updateView = [&, rootNode](cro::Camera& cam) mutable
     {
@@ -1557,6 +1600,8 @@ void ProfileState::buildPreviewScene()
     m_cameras[CameraID::Ball].addComponent<cro::Camera>().resizeCallback = ballTexCallback;
     ballTexCallback(m_cameras[CameraID::Ball].getComponent<cro::Camera>());
 
+    createBallThumbs();
+
     m_cameras[CameraID::Avatar] = m_modelScene.createEntity();
     m_cameras[CameraID::Avatar].addComponent<cro::Transform>().setPosition(CameraBasePosition);
     m_cameras[CameraID::Avatar].getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, cro::Util::Const::PI);
@@ -1587,7 +1632,7 @@ void ProfileState::createPalettes(cro::Entity parent)
 
     static constexpr float BgWidth = (PaletteColumnCount * (IconSize.x + IconPadding)) + IconPadding;
 
-    for (auto i = 0u; i < PaletteID::Count; ++i)
+    for (auto i = 0u; i < PaletteID::BallThumb; ++i)
     {
         const auto RowCount = (pc::PairCounts[i] / PaletteColumnCount);
         const float BgHeight = (RowCount * IconSize.y) + (RowCount * IconPadding) + IconPadding;
@@ -1709,6 +1754,202 @@ void ProfileState::createPalettes(cro::Entity parent)
             m_flyouts[i].background.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
         }
     }
+}
+
+void ProfileState::createBallFlyout(cro::Entity parent)
+{
+    static constexpr glm::vec2 IconSize(BallThumbSize);
+    static constexpr float IconPadding = 4.f;
+
+    static constexpr float BgWidth = (BallColCount * (IconSize.x + IconPadding)) + IconPadding;
+
+    const auto RowCount = (m_ballModels.size() / BallColCount) + 1;
+    const float BgHeight = (RowCount * IconSize.y) + (RowCount * IconPadding) + IconPadding;
+
+    //background
+    auto entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(200.f, 46.f, 0.5f));
+    entity.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+    entity.addComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLES);
+
+    auto verts = createMenuBackground({ BgWidth, BgHeight });
+
+    entity.getComponent<cro::Drawable2D>().setVertexData(verts);
+
+    m_flyouts[PaletteID::BallThumb].background = entity;
+    parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    verts.clear();
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLES);
+    entity.getComponent<cro::Drawable2D>().setTexture(&m_ballThumbs.getTexture());
+
+    const glm::vec2 TexSize(m_ballThumbs.getSize());
+    cro::FloatRect textureBounds = { 0.f, 0.f, static_cast<float>(BallThumbSize.x) / TexSize.x, static_cast<float>(BallThumbSize.y) / TexSize.y };
+
+    for (auto j = 0u; j < m_ballModels.size(); ++j)
+    {
+        std::size_t x = j % BallColCount;
+        std::size_t y = j / BallColCount;
+        textureBounds.left = x * textureBounds.width;
+        textureBounds.bottom = y * textureBounds.height;
+
+        glm::vec2 pos = { x * (IconSize.x + IconPadding), ((RowCount - y) - 1) * (IconSize.y + IconPadding) };
+        pos += IconPadding;
+
+        verts.emplace_back(glm::vec2(pos.x, pos.y + IconSize.y), glm::vec2(textureBounds.left, textureBounds.bottom + textureBounds.height));
+        verts.emplace_back(pos, glm::vec2(textureBounds.left, textureBounds.bottom));
+        verts.emplace_back(pos + IconSize, glm::vec2(textureBounds.left + textureBounds.width, textureBounds.bottom + textureBounds.height));
+
+        verts.emplace_back(pos + IconSize, glm::vec2(textureBounds.left + textureBounds.width, textureBounds.bottom + textureBounds.height));
+        verts.emplace_back(pos, glm::vec2(textureBounds.left, textureBounds.bottom));
+        verts.emplace_back(glm::vec2(pos.x + IconSize.x, pos.y), glm::vec2(textureBounds.left + textureBounds.width, textureBounds.bottom));
+    }
+    entity.getComponent<cro::Drawable2D>().setVertexData(verts);
+    m_flyouts[PaletteID::BallThumb].background.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+
+    //highlight
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ IconPadding, IconPadding, 0.1f });
+    entity.addComponent<cro::Drawable2D>().setVertexData(createMenuHighlight(IconSize, TextGoldColour));
+    entity.getComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLES);
+
+    m_flyouts[PaletteID::BallThumb].highlight = entity;
+    m_flyouts[PaletteID::BallThumb].background.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+    //buttons
+    auto menuID = MenuID::BallThumb;
+
+    m_flyouts[PaletteID::BallThumb].activateCallback = m_uiScene.getSystem<cro::UISystem>()->addCallback(
+        [&](cro::Entity e, const cro::ButtonEvent& evt)
+        {
+            auto quitMenu = [&]()
+            {
+                m_flyouts[PaletteID::BallThumb].background.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+                m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Main);
+                m_uiScene.getSystem<cro::UISystem>()->setColumnCount(1);
+                m_uiScene.getSystem<cro::UISystem>()->selectAt(m_lastSelected);
+            };
+
+            if (activated(evt))
+            {
+                //apply selection
+                setBallIndex(e.getComponent<cro::Callback>().getUserData<std::uint8_t>());
+                quitMenu();
+            }
+            else if (deactivated(evt))
+            {
+                quitMenu();
+            }
+        });
+    m_flyouts[PaletteID::BallThumb].selectCallback = m_uiScene.getSystem<cro::UISystem>()->addCallback(
+        [&, entity](cro::Entity e) mutable
+        {
+            //test if we intersect the edge of the screen and scroll the flyout vertically
+            auto point = e.getComponent<cro::Transform>().getWorldPosition();
+            auto screenPos = m_uiScene.getActiveCamera().getComponent<cro::Camera>().coordsToPixel(point);
+            while (screenPos.y < 0)
+            {
+                m_flyouts[PaletteID::BallThumb].background.getComponent<cro::Transform>().move({0.f, (IconSize.y + IconPadding)});
+
+                point = e.getComponent<cro::Transform>().getWorldPosition();
+                screenPos = m_uiScene.getActiveCamera().getComponent<cro::Camera>().coordsToPixel(point);
+            }
+
+            point = e.getComponent<cro::Transform>().getWorldPosition();
+            point.y += IconSize.y;
+            screenPos = m_uiScene.getActiveCamera().getComponent<cro::Camera>().coordsToPixel(point);
+                
+            while (screenPos.y > cro::App::getWindow().getSize().y)
+            {
+                m_flyouts[PaletteID::BallThumb].background.getComponent<cro::Transform>().move({ 0.f, -(IconSize.y + IconPadding) });
+                    
+                point = e.getComponent<cro::Transform>().getWorldPosition();
+                point.y += IconSize.y;
+                screenPos = m_uiScene.getActiveCamera().getComponent<cro::Camera>().coordsToPixel(point);
+            }
+
+            entity.getComponent<cro::Transform>().setPosition(e.getComponent<cro::Transform>().getPosition());
+            m_audioEnts[AudioID::Select].getComponent<cro::AudioEmitter>().play();
+            m_audioEnts[AudioID::Select].getComponent<cro::AudioEmitter>().setPlayingOffset(cro::Time());
+        });
+
+    for (auto j = 0u; j < m_ballModels.size(); ++j)
+    {
+        //the Y order is reversed so that the navigation
+        //direction of keys/controller is correct in the grid
+        std::size_t x = j % BallColCount;
+        std::size_t y = (RowCount - 1) - (j / BallColCount);
+
+        glm::vec2 pos = { x * (IconSize.x + IconPadding), y * (IconSize.y + IconPadding) };
+        pos += IconPadding;
+
+        entity = m_uiScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition(glm::vec3(pos, 0.1f));
+        entity.addComponent<cro::UIInput>().setGroup(menuID);
+        entity.getComponent<cro::UIInput>().area = { glm::vec2(0.f), IconSize };
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = m_flyouts[PaletteID::BallThumb].selectCallback;
+        entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = m_flyouts[PaletteID::BallThumb].activateCallback;
+        entity.addComponent<cro::Callback>().setUserData<std::uint8_t>(static_cast<std::uint8_t>((((RowCount - y) - 1) * BallColCount) + x));
+
+        m_flyouts[PaletteID::BallThumb].background.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    }
+
+    //pad out missing cols to make column count work
+    const auto PadCount = (BallColCount - (m_ballModels.size() % BallColCount));
+    for (auto j = 0; j < PadCount; ++j)
+    {
+        entity = m_uiScene.createEntity();
+        entity.addComponent<cro::Transform>();
+        entity.addComponent<cro::UIInput>().setGroup(menuID);
+        entity.getComponent<cro::UIInput>().enabled = false;
+
+        m_flyouts[PaletteID::BallThumb].background.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    }
+}
+
+void ProfileState::createBallThumbs()
+{
+    //I don't even.. wtf
+    const glm::uvec2 TexSize(std::min(BallColCount, m_ballModels.size()) * BallThumbSize.x, ((m_ballModels.size() / BallColCount) + 1) * BallThumbSize.y);
+
+    cro::FloatRect vp = { 0.f, 0.f, static_cast<float>(BallThumbSize.x) / TexSize.x, static_cast<float>(BallThumbSize.y) / TexSize.y };
+    auto& cam = m_cameras[CameraID::Ball].getComponent<cro::Camera>();
+
+    auto oldIndex = m_ballIndex;
+    
+    const auto showBall = [&](std::size_t idx)
+    {
+        m_ballModels[m_ballIndex].ball.getComponent<cro::Model>().setHidden(true);
+        m_ballIndex = idx;
+        m_ballModels[m_ballIndex].ball.getComponent<cro::Model>().setHidden(false);
+    };
+    
+    m_modelScene.setActiveCamera(m_cameras[CameraID::Ball]);
+    m_modelScene.simulate(0.f);
+
+    m_ballThumbs.create(TexSize.x, TexSize.y);
+    m_ballThumbs.clear(CD32::Colours[CD32::BlueLight]);
+
+    for (auto i = 0u; i < m_ballModels.size(); ++i)
+    {
+        vp.left = (i % BallColCount) * vp.width;
+        vp.bottom = (i / BallColCount) * vp.height;
+        cam.viewport = vp;
+
+        showBall(i);
+        m_modelScene.simulate(0.f);
+        m_modelScene.render();
+    }
+
+    m_ballThumbs.display();
+
+    cam.viewport = { 0.f, 0.f , 1.f, 1.f };
+    showBall(oldIndex);
 }
 
 void ProfileState::quitState()
