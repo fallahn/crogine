@@ -1878,6 +1878,7 @@ void ProfileState::createBallFlyout(cro::Entity parent)
             m_audioEnts[AudioID::Select].getComponent<cro::AudioEmitter>().setPlayingOffset(cro::Time());
         });
 
+    constexpr std::size_t IndexOffset = 100;
     for (auto j = 0u; j < m_ballModels.size(); ++j)
     {
         //the Y order is reversed so that the navigation
@@ -1888,13 +1889,31 @@ void ProfileState::createBallFlyout(cro::Entity parent)
         glm::vec2 pos = { x * (IconSize.x + IconPadding), y * (IconSize.y + IconPadding) };
         pos += IconPadding;
 
+        auto inputIndex = (((RowCount - y) - 1) * BallColCount) + x;
+
         entity = m_uiScene.createEntity();
         entity.addComponent<cro::Transform>().setPosition(glm::vec3(pos, 0.1f));
         entity.addComponent<cro::UIInput>().setGroup(menuID);
         entity.getComponent<cro::UIInput>().area = { glm::vec2(0.f), IconSize };
+        entity.getComponent<cro::UIInput>().setSelectionIndex(IndexOffset + inputIndex);
+        if (x == 0)
+        {
+            auto prevIndex = std::min(inputIndex + (BallColCount - 1), m_ballModels.size() - 1);
+            entity.getComponent<cro::UIInput>().setPrevIndex(IndexOffset + prevIndex);
+        }
+        else if (x == (BallColCount - 1))
+        {
+            entity.getComponent<cro::UIInput>().setNextIndex(IndexOffset + (inputIndex - (BallColCount - 1)));
+        }
+        else if (y == 0 
+            && x == (m_ballModels.size() % BallColCount) - 1)
+        {
+            auto nextIndex = inputIndex - ((m_ballModels.size() % BallColCount) - 1);
+            entity.getComponent<cro::UIInput>().setNextIndex(IndexOffset + nextIndex);
+        }
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = m_flyouts[PaletteID::BallThumb].selectCallback;
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = m_flyouts[PaletteID::BallThumb].activateCallback;
-        entity.addComponent<cro::Callback>().setUserData<std::uint8_t>(static_cast<std::uint8_t>((((RowCount - y) - 1) * BallColCount) + x));
+        entity.addComponent<cro::Callback>().setUserData<std::uint8_t>(static_cast<std::uint8_t>(inputIndex));
 
         m_flyouts[PaletteID::BallThumb].background.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     }
