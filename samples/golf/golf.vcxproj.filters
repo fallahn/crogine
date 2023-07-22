@@ -811,6 +811,9 @@
     <None Include="src\golf\TVShader.inl">
       <Filter>Header Files\golf\client\shaders</Filter>
     </None>
+    <None Include="src\golf\OptionsEnum.inl">
+      <Filter>Header Files\golf\client\states</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="golf.rc">

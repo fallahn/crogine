@@ -477,7 +477,7 @@ void MapOverviewState::buildScene()
         {
         default: break;
         case RootCallbackData::FadeIn:
-            currTime = std::min(1.f, currTime + (dt * 5.f));
+            currTime = std::min(1.f, currTime + (dt * 2.f));
             e.getComponent<cro::Transform>().setScale(m_viewScale * cro::Util::Easing::easeOutQuint(currTime));
 
             //check hole number and compare with the last time this
@@ -504,7 +504,7 @@ void MapOverviewState::buildScene()
             }
             break;
         case RootCallbackData::FadeOut:
-            currTime = std::max(0.f, currTime - (dt * 5.f));
+            currTime = std::max(0.f, currTime - (dt * 2.f));
             e.getComponent<cro::Transform>().setScale(m_viewScale * cro::Util::Easing::easeOutQuint(currTime));
             if (currTime == 0)
             {

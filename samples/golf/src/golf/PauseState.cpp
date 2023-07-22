@@ -245,7 +245,7 @@ void PauseState::buildScene()
                 e.getComponent<cro::Callback>().active = false;
 
                 m_scene.setSystemActive<cro::AudioPlayerSystem>(true);
-                m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+                //m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
             }
             break;
         case RootCallbackData::FadeOut:
@@ -255,6 +255,8 @@ void PauseState::buildScene()
             {
                 resetConfirmation();
                 requestStackPop();
+
+                m_scene.setSystemActive<cro::AudioPlayerSystem>(false);
 
                 state = RootCallbackData::FadeIn;
 
@@ -573,7 +575,7 @@ void PauseState::buildScene()
 
 void PauseState::quitState()
 {
-    m_scene.setSystemActive<cro::AudioPlayerSystem>(false);
+    //m_scene.setSystemActive<cro::AudioPlayerSystem>(false);
     m_rootNode.getComponent<cro::Callback>().active = true;
     m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
 }
