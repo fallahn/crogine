@@ -1756,6 +1756,9 @@ void StatsState::refreshAwardsTab(std::int32_t page)
             auto y = (i - start) / ColCount;
 
             glm::vec2 position((x * StrideX) + StartX + (StrideX / 2.f), (y * StrideY) + StartY);
+            position.x = std::round(position.x);
+            position.y = std::round(position.y);
+
             m_awardsText.setPosition(position);
             m_awardsText.setString(awards[i].description);
             m_awardsText.draw();
