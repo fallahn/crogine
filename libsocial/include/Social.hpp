@@ -84,7 +84,8 @@ public:
         enum
         {
             StatsReceived,
-            HOFReceived
+            HOFReceived,
+            AwardsReceived
         }type = StatsReceived;
         std::int32_t index = -1;
         std::int32_t page = -1;
@@ -165,6 +166,20 @@ public:
     static void refreshGlobalBoard(std::int32_t) {}
     static HallEntry getGlobalBoard(std::int32_t) { return {}; }
     static cro::String getTickerMessage() { return {}; }
+
+    //awards (inventory items) to display in clubhouse
+    struct Award final
+    {
+        //dictates appearance
+        enum
+        {
+            MonthlyGold, MonthlySilver, MonthlyBronze
+        };
+        std::int32_t type;
+        cro::String description;
+    };
+    static void refreshAwards() {};
+    static const std::vector<Award>& getAwards() { return {}; }
 
     enum class UnlockType
     {

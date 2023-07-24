@@ -37,6 +37,10 @@ source distribution.
 #include <crogine/audio/AudioScape.hpp>
 #include <crogine/ecs/Scene.hpp>
 
+#include <crogine/graphics/RenderTexture.hpp>
+#include <crogine/graphics/SimpleQuad.hpp>
+#include <crogine/graphics/SimpleText.hpp>
+
 struct SharedStateData;
 namespace cro
 {
@@ -166,13 +170,21 @@ private:
 
     ProfileDB m_profileDB;
 
+    cro::RenderTexture m_awardsTexture;
+    cro::SimpleQuad m_awardsQuad;
+    cro::SimpleText m_awardsText;
+
+    std::int32_t m_awardPageIndex;
+    std::int32_t m_awardPageCount;
+
     void buildScene();
     void parseCourseData();
     void parseProfileData();
     void createClubStatsTab(cro::Entity, const cro::SpriteSheet&);
     void createPerformanceTab(cro::Entity, const cro::SpriteSheet&);
     void createHistoryTab(cro::Entity);
-    void createAwardsTab(cro::Entity);
+    void createAwardsTab(cro::Entity, const cro::SpriteSheet&);
+    void refreshAwardsTab(std::int32_t page);
     void activateTab(std::int32_t);
     void refreshPerformanceTab(bool newProfile);
     void quitState();

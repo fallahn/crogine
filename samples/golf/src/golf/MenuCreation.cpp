@@ -3653,7 +3653,7 @@ void MenuState::createPreviousScoreCard()
     //TODO we could do all the updates in one iter over the Entries
     //but this is all in the loading screen so... meh
 
-    bool page2 = holeCount > 9;
+    bool page2 = m_sharedData.holeCount == 0;// holeCount > 9;
 
     cro::String str("HOLE\nPAR");
     for (const auto& entry : scoreEntries)
