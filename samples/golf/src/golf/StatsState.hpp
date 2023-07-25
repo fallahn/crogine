@@ -36,6 +36,7 @@ source distribution.
 #include <crogine/core/ConsoleClient.hpp>
 #include <crogine/audio/AudioScape.hpp>
 #include <crogine/ecs/Scene.hpp>
+#include <crogine/ecs/components/Sprite.hpp>
 
 #include <crogine/graphics/RenderTexture.hpp>
 #include <crogine/graphics/SimpleQuad.hpp>
@@ -171,11 +172,36 @@ private:
     ProfileDB m_profileDB;
 
     cro::RenderTexture m_awardsTexture;
-    cro::SimpleQuad m_awardsQuad;
-    cro::SimpleText m_awardsText;
+    cro::SimpleQuad m_awardQuad;
+    cro::SimpleText m_awardText;
 
     std::int32_t m_awardPageIndex;
     std::int32_t m_awardPageCount;
+
+    struct AwardNavigation final
+    {
+        cro::Entity label;
+        cro::Entity buttonLeft;
+        cro::Entity buttonRight;
+    }m_awardNavigation;
+
+    struct SpriteID final
+    {
+        enum
+        {
+            BronzeShield,
+            SilverShield,
+            GoldShield,
+            BronzeSpike,
+            SilverSpike,
+            GoldSpike,
+            TeeBall,
+
+            Count
+        };
+    };
+    std::array<cro::Sprite, SpriteID::Count> m_awardSprites = {};
+
 
     void buildScene();
     void parseCourseData();
