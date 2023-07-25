@@ -594,7 +594,8 @@ void UISystem::selectNext(std::size_t stride, std::int32_t direction)
                 return e.getComponent<UIInput>().getSelectionIndex() == targetSelection;
             });
 
-        if (result != entities.cend())
+        if (result != entities.cend()
+            /*&& result->getComponent<cro::UIInput>().enabled*/)
         {
             m_selectedIndex = std::distance(entities.cbegin(), result);
         }
@@ -635,7 +636,8 @@ void UISystem::selectPrev(std::size_t stride, std::int32_t direction)
                 return e.getComponent<UIInput>().getSelectionIndex() == targetSelection;
             });
 
-        if (result != entities.cend())
+        if (result != entities.cend()
+            /*&& result->getComponent<cro::UIInput>().enabled*/)
         {
             m_selectedIndex = std::distance(entities.cbegin(), result);
         }

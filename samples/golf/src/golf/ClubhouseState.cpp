@@ -415,7 +415,7 @@ bool ClubhouseState::handleEvent(const cro::Event& evt)
             break;
 #ifdef CRO_DEBUG_
         case SDLK_KP_9:
-            requestStackPush(StateID::Stats);
+            requestStackPush(StateID::Leaderboard);
             break;
 #endif
         }

@@ -102,6 +102,24 @@ namespace
     {
         "18 Holes", "Front 9", "Back 9"
     };
+
+    struct ButtonID final
+    {
+        enum
+        {
+            Nearest = 100,
+            HoleCount,
+            DateRange,
+            Close,
+            Course,
+            HIO,
+            Rank,
+            Streak,
+
+            NextCourse,
+            PrevCourse
+        };
+    };
 }
 
 LeaderboardState::LeaderboardState(cro::StateStack& ss, cro::State::Context ctx, SharedStateData& sd)
@@ -538,6 +556,9 @@ void LeaderboardState::buildScene()
     tabArea.width -= 4.f;
     entity.addComponent<cro::UIInput>().area = tabArea;
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Leaderboard);
+    entity.getComponent<cro::UIInput>().setSelectionIndex(ButtonID::Course);
+    entity.getComponent<cro::UIInput>().setNextIndex(ButtonID::HIO, ButtonID::HIO);
+    entity.getComponent<cro::UIInput>().setPrevIndex(ButtonID::Close, ButtonID::Close);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectedID;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectedID;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
@@ -571,6 +592,9 @@ void LeaderboardState::buildScene()
     entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
     entity.addComponent<cro::UIInput>().area = tabArea;
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Leaderboard);
+    entity.getComponent<cro::UIInput>().setSelectionIndex(ButtonID::HIO);
+    entity.getComponent<cro::UIInput>().setNextIndex(ButtonID::Rank, ButtonID::Rank);
+    entity.getComponent<cro::UIInput>().setPrevIndex(ButtonID::Course, ButtonID::PrevCourse);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectedID;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectedID;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
@@ -605,6 +629,9 @@ void LeaderboardState::buildScene()
     entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
     entity.addComponent<cro::UIInput>().area = tabArea;
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Leaderboard);
+    entity.getComponent<cro::UIInput>().setSelectionIndex(ButtonID::Rank);
+    entity.getComponent<cro::UIInput>().setNextIndex(ButtonID::Streak, ButtonID::Streak);
+    entity.getComponent<cro::UIInput>().setPrevIndex(ButtonID::HIO, ButtonID::HIO);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectedID;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectedID;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
@@ -638,6 +665,9 @@ void LeaderboardState::buildScene()
     entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
     entity.addComponent<cro::UIInput>().area = tabArea;
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Leaderboard);
+    entity.getComponent<cro::UIInput>().setSelectionIndex(ButtonID::Streak);
+    entity.getComponent<cro::UIInput>().setNextIndex(ButtonID::Close, ButtonID::Close);
+    entity.getComponent<cro::UIInput>().setPrevIndex(ButtonID::Rank, ButtonID::NextCourse);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectedID;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectedID;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
@@ -678,6 +708,9 @@ void LeaderboardState::buildScene()
     entity.getComponent<cro::Transform>().move(entity.getComponent<cro::Transform>().getOrigin());
     entity.addComponent<cro::UIInput>().area = bounds;
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Leaderboard);
+    entity.getComponent<cro::UIInput>().setSelectionIndex(ButtonID::Nearest);
+    entity.getComponent<cro::UIInput>().setNextIndex(ButtonID::HoleCount, ButtonID::HoleCount);
+    entity.getComponent<cro::UIInput>().setPrevIndex(ButtonID::Close, ButtonID::Close);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectedID;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectedID;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
@@ -716,6 +749,9 @@ void LeaderboardState::buildScene()
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.getComponent<cro::Transform>().setOrigin({ std::floor(bounds.width / 2.f), bounds.height / 2.f });
     entity.addComponent<cro::UIInput>().setGroup(MenuID::Leaderboard);
+    entity.getComponent<cro::UIInput>().setSelectionIndex(ButtonID::HoleCount);
+    entity.getComponent<cro::UIInput>().setNextIndex(ButtonID::DateRange, ButtonID::DateRange);
+    entity.getComponent<cro::UIInput>().setPrevIndex(ButtonID::Nearest, ButtonID::Nearest);
     bounds.bottom += 4.f;
     bounds.height -= 8.f;
     entity.getComponent<cro::UIInput>().area = bounds;
@@ -761,6 +797,9 @@ void LeaderboardState::buildScene()
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.getComponent<cro::Transform>().setOrigin({ std::floor(bounds.width / 2.f), bounds.height / 2.f });
     entity.addComponent<cro::UIInput>().setGroup(MenuID::Leaderboard);
+    entity.getComponent<cro::UIInput>().setSelectionIndex(ButtonID::DateRange);
+    entity.getComponent<cro::UIInput>().setNextIndex(ButtonID::PrevCourse, ButtonID::Close);
+    entity.getComponent<cro::UIInput>().setPrevIndex(ButtonID::NextCourse, ButtonID::HoleCount);
     bounds.bottom += 4.f;
     bounds.height -= 8.f;
     entity.getComponent<cro::UIInput>().area = bounds;
@@ -796,6 +835,9 @@ void LeaderboardState::buildScene()
     entity.addComponent<cro::Callback>().function = HighlightAnimationCallback();
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.addComponent<cro::UIInput>().setGroup(MenuID::Leaderboard);
+    entity.getComponent<cro::UIInput>().setSelectionIndex(ButtonID::Close);
+    entity.getComponent<cro::UIInput>().setNextIndex(ButtonID::Course, ButtonID::Nearest);
+    entity.getComponent<cro::UIInput>().setPrevIndex(ButtonID::Streak, ButtonID::DateRange);
     entity.getComponent<cro::UIInput>().area = bounds;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectedID;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectedID;
@@ -848,6 +890,9 @@ void LeaderboardState::buildScene()
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.getComponent<cro::Transform>().setOrigin({ std::floor(bounds.width / 2.f), 0.f });
     entity.addComponent<cro::UIInput>().setGroup(MenuID::Leaderboard);
+    entity.getComponent<cro::UIInput>().setSelectionIndex(ButtonID::PrevCourse);
+    entity.getComponent<cro::UIInput>().setNextIndex(ButtonID::NextCourse, ButtonID::HIO);
+    entity.getComponent<cro::UIInput>().setPrevIndex(ButtonID::DateRange, ButtonID::HIO);
     entity.getComponent<cro::UIInput>().area = bounds;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectedID;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectedID;
@@ -880,6 +925,9 @@ void LeaderboardState::buildScene()
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.getComponent<cro::Transform>().setOrigin({ std::floor(bounds.width / 2.f), 0.f });
     entity.addComponent<cro::UIInput>().setGroup(MenuID::Leaderboard);
+    entity.getComponent<cro::UIInput>().setSelectionIndex(ButtonID::NextCourse);
+    entity.getComponent<cro::UIInput>().setNextIndex(ButtonID::DateRange, ButtonID::Streak);
+    entity.getComponent<cro::UIInput>().setPrevIndex(ButtonID::PrevCourse, ButtonID::Streak);
     entity.getComponent<cro::UIInput>().area = bounds;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectedID;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectedID;
