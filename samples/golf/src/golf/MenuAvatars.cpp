@@ -440,7 +440,7 @@ void MenuState::createAvatarMenu(cro::Entity parent)
         }
         m_rosterMenu.buttonEntities[m_sharedData.localConnectionData.playerCount - 1].getComponent<cro::UIInput>().setNextIndex(PlayerProfile, PlayerProfile);
         
-        //TODO we need to set the prev taget of CPU, prefProf profile and nextProf to whichever button was last activated.
+        //TODO we need to set the prev target of CPU, prefProf profile and nextProf to whichever button was last activated.
         
         rosterEnt.getComponent<cro::Text>().setString(str);
 

@@ -81,9 +81,14 @@ private:
         enum
         {
             Course,
-            Hio, Rank, Streak
+            Hio, Rank, Streak,
+
+            Count
         };
     };
+    cro::Entity m_HIOButton;
+    cro::Entity m_streakButton;
+    cro::Entity m_dateButton;
 
     struct DisplayContext final
     {
@@ -112,5 +117,6 @@ private:
     void createFlyout(cro::Entity);
 
     void refreshDisplay();
+    void updateButtonIndices();
     void quitState();
 };

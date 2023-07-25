@@ -299,7 +299,7 @@ void LeaderboardState::parseCourseDirectory()
 void LeaderboardState::buildScene()
 {
     auto& mb = getContext().appInstance.getMessageBus();
-    m_scene.addSystem<cro::UISystem>(mb);// ->setActiveControllerID(m_sharedData.inputBinding.controllerID);
+    m_scene.addSystem<cro::UISystem>(mb);
     m_scene.addSystem<cro::CommandSystem>(mb);
     m_scene.addSystem<cro::CallbackSystem>(mb);
     m_scene.addSystem<cro::SpriteSystem2D>(mb);
@@ -572,6 +572,7 @@ void LeaderboardState::buildScene()
                     m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
                     Social::refreshHallOfFame(m_courseStrings[m_displayContext.courseIndex].first);
                     refreshDisplay();
+                    updateButtonIndices();
                 }
             });
     bgNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -594,7 +595,7 @@ void LeaderboardState::buildScene()
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Leaderboard);
     entity.getComponent<cro::UIInput>().setSelectionIndex(ButtonID::HIO);
     entity.getComponent<cro::UIInput>().setNextIndex(ButtonID::Rank, ButtonID::Rank);
-    entity.getComponent<cro::UIInput>().setPrevIndex(ButtonID::Course, ButtonID::PrevCourse);
+    entity.getComponent<cro::UIInput>().setPrevIndex(ButtonID::Close, ButtonID::PrevCourse);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectedID;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectedID;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
@@ -608,10 +609,11 @@ void LeaderboardState::buildScene()
                     m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
                     Social::refreshGlobalBoard(0);
                     refreshDisplay();
+                    updateButtonIndices();
                 }
             });
     bgNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-
+    m_HIOButton = entity;
 
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 218.f, 45.f, 0.2f });
@@ -645,6 +647,7 @@ void LeaderboardState::buildScene()
                     m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
                     Social::refreshGlobalBoard(1);
                     refreshDisplay();
+                    updateButtonIndices();
                 }
             });
     bgNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -681,10 +684,11 @@ void LeaderboardState::buildScene()
                     m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
                     Social::refreshGlobalBoard(2);
                     refreshDisplay();
+                    updateButtonIndices();
                 }
             });
     bgNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-
+    m_streakButton = entity;
 
 
     //button to enable nearest scores / refresh
@@ -822,7 +826,7 @@ void LeaderboardState::buildScene()
             });
 
     bgNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-
+    m_dateButton = entity;
 
 
     //close button
@@ -1256,6 +1260,27 @@ void LeaderboardState::refreshDisplay()
     }
     centreText(m_displayContext.courseTitle);
 };
+
+void LeaderboardState::updateButtonIndices()
+{
+    if (m_displayContext.boardIndex == BoardIndex::Course)
+    {
+        //prev/next arrows are available
+        m_HIOButton.getComponent<cro::UIInput>().setPrevIndex(ButtonID::Close, ButtonID::PrevCourse);
+        m_streakButton.getComponent<cro::UIInput>().setPrevIndex(ButtonID::Rank, ButtonID::NextCourse);
+
+        m_dateButton.getComponent<cro::UIInput>().setNextIndex(ButtonID::PrevCourse, ButtonID::Close);
+        m_dateButton.getComponent<cro::UIInput>().setPrevIndex(ButtonID::NextCourse, ButtonID::HoleCount);
+    }
+    else
+    {
+        m_HIOButton.getComponent<cro::UIInput>().setPrevIndex(ButtonID::Course, ButtonID::Course);
+        m_streakButton.getComponent<cro::UIInput>().setPrevIndex(ButtonID::Rank, ButtonID::Rank);
+
+        m_dateButton.getComponent<cro::UIInput>().setNextIndex(ButtonID::Close, ButtonID::Close);
+        m_dateButton.getComponent<cro::UIInput>().setPrevIndex(ButtonID::HoleCount, ButtonID::HoleCount);
+    }
+}
 
 void LeaderboardState::quitState()
 {
