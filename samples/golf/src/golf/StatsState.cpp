@@ -126,12 +126,41 @@ namespace
         cro::String detailString;
     };
 
-    struct MenuID final
+    enum ButtonIndex
     {
-        enum
-        {
-            Main
-        };
+        PerfPrevCourse = 300,
+        PerfNextCourse,
+        PerfCPU,
+        PerfPrevProf,
+        PerfNextProf,
+        PerfDate,
+
+        Perf01,
+        Perf02,
+        Perf03,
+        Perf04,
+        Perf05,
+        Perf06,
+        Perf07,
+        Perf08,
+        Perf09,
+        Perf10,
+        Perf11,
+        Perf12,
+        Perf13,
+        Perf14,
+        Perf15,
+        Perf16,
+        Perf17,
+        Perf18,
+
+        AwardPrevious = 400,
+        AwardNext,
+
+        ButtonClubset = 600,
+        ButtonPerformance,
+        ButtonHistory,
+        ButtonAwards
     };
 }
 
@@ -334,7 +363,7 @@ void StatsState::render()
 void StatsState::buildScene()
 {
     auto& mb = getContext().appInstance.getMessageBus();
-    m_scene.addSystem<cro::UISystem>(mb)->setColumnCount(4);
+    m_scene.addSystem<cro::UISystem>(mb);
     m_scene.addSystem<cro::CommandSystem>(mb);
     m_scene.addSystem<cro::CallbackSystem>(mb);
     m_scene.addSystem<cro::SpriteSystem2D>(mb);
@@ -516,7 +545,7 @@ void StatsState::buildScene()
 
         entity.addComponent<cro::UIInput>().area = bounds;
         entity.getComponent<cro::UIInput>().enabled = i != m_currentTab;
-        entity.getComponent<cro::UIInput>().setSelectionIndex(180 + i); //make sure these are always indexed as if at the bottom
+        entity.getComponent<cro::UIInput>().setSelectionIndex(ButtonClubset + i);
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectedID;
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectedID;
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = 
@@ -579,7 +608,10 @@ void StatsState::buildScene()
     entity.getComponent<cro::Camera>().resizeCallback = updateView;
     updateView(entity.getComponent<cro::Camera>());
 
-    m_scene.simulate(0.f);
+    m_scene.simulate(0.f); //updates all the group IDs
+
+    //makes sure to set correct selection indices
+    activateTab(m_currentTab);
 }
 
 void StatsState::parseCourseData()
@@ -903,14 +935,8 @@ void StatsState::createPerformanceTab(cro::Entity parent, const cro::SpriteSheet
             e.getComponent<cro::SpriteAnimation>().play(0);
         });
 
-    //dummy - 32
-    entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>();
-    entity.addComponent<cro::UIInput>().enabled = false;
-    entity.getComponent<cro::UIInput>().setSelectionIndex(32);
-    m_tabNodes[TabID::Performance].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
-    //previous course - 33
+    //previous course
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 100.f, 286.f, 0.1f });
     entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
@@ -919,7 +945,10 @@ void StatsState::createPerformanceTab(cro::Entity parent, const cro::SpriteSheet
     entity.addComponent<cro::SpriteAnimation>();
     auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.addComponent<cro::UIInput>().area = bounds;
-    entity.getComponent<cro::UIInput>().setSelectionIndex(33);
+    entity.getComponent<cro::UIInput>().setSelectionIndex(PerfPrevCourse);
+    entity.getComponent<cro::UIInput>().setNextIndex(PerfNextCourse, PerfPrevProf);
+    entity.getComponent<cro::UIInput>().setPrevIndex(Perf01, PerfPrevProf);
+
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectedID;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectedID;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
@@ -941,7 +970,7 @@ void StatsState::createPerformanceTab(cro::Entity parent, const cro::SpriteSheet
     entity.getComponent<cro::Callback>().function = buttonCallback;
     m_tabNodes[TabID::Performance].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
-    //next course - 34 
+    //next course
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 406.f - 13.f, 286.f, 0.1f });
     entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
@@ -949,7 +978,10 @@ void StatsState::createPerformanceTab(cro::Entity parent, const cro::SpriteSheet
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("arrow_right");
     entity.addComponent<cro::SpriteAnimation>();
     entity.addComponent<cro::UIInput>().area = bounds;
-    entity.getComponent<cro::UIInput>().setSelectionIndex(34);
+    entity.getComponent<cro::UIInput>().setSelectionIndex(PerfNextCourse);
+    entity.getComponent<cro::UIInput>().setNextIndex(PerfPrevCourse, PerfDate);
+    entity.getComponent<cro::UIInput>().setPrevIndex(PerfPrevCourse, ButtonAwards);
+
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectedID;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectedID;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
@@ -972,14 +1004,6 @@ void StatsState::createPerformanceTab(cro::Entity parent, const cro::SpriteSheet
     m_tabNodes[TabID::Performance].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
-    //dummy - 35
-    entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>();
-    entity.addComponent<cro::UIInput>().enabled = false;
-    entity.getComponent<cro::UIInput>().setSelectionIndex(35);
-    m_tabNodes[TabID::Performance].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-
-
     const auto spriteSelected = m_scene.getSystem<cro::UISystem>()->addCallback([](cro::Entity e)
         {
             e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
@@ -990,10 +1014,7 @@ void StatsState::createPerformanceTab(cro::Entity parent, const cro::SpriteSheet
             e.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
         });
 
-    //each hole highlight button (and dummies) happen here
-    //so checkbox index is bumped by 120
-
-    //cpu checkbox - 156
+    //cpu checkbox
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 13.f, 1.f, 0.1f });
     entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
@@ -1002,7 +1023,10 @@ void StatsState::createPerformanceTab(cro::Entity parent, const cro::SpriteSheet
     entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.addComponent<cro::UIInput>().area = bounds;
-    entity.getComponent<cro::UIInput>().setSelectionIndex(156);
+    entity.getComponent<cro::UIInput>().setSelectionIndex(PerfCPU);
+    entity.getComponent<cro::UIInput>().setNextIndex(PerfPrevProf, ButtonClubset);
+    entity.getComponent<cro::UIInput>().setPrevIndex(Perf18, Perf18);
+
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = spriteSelected;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = spriteUnselected;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
@@ -1056,7 +1080,7 @@ void StatsState::createPerformanceTab(cro::Entity parent, const cro::SpriteSheet
     auto profileName = entity;
 
 
-    //previous profile - 157
+    //previous profile
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 112.f, -2.f, 0.1f });
     entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
@@ -1065,7 +1089,10 @@ void StatsState::createPerformanceTab(cro::Entity parent, const cro::SpriteSheet
     entity.addComponent<cro::SpriteAnimation>();
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.addComponent<cro::UIInput>().area = bounds;
-    entity.getComponent<cro::UIInput>().setSelectionIndex(157);
+    entity.getComponent<cro::UIInput>().setSelectionIndex(PerfPrevProf);
+    entity.getComponent<cro::UIInput>().setNextIndex(PerfNextProf, PerfPrevCourse);
+    entity.getComponent<cro::UIInput>().setPrevIndex(PerfCPU, PerfPrevCourse);
+
     if (!m_profileData.empty())
     {
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectedID;
@@ -1097,7 +1124,7 @@ void StatsState::createPerformanceTab(cro::Entity parent, const cro::SpriteSheet
     performanceEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
-    //next profile - 158
+    //next profile
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 320.f, -2.f, 0.1f });
     entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
@@ -1105,7 +1132,10 @@ void StatsState::createPerformanceTab(cro::Entity parent, const cro::SpriteSheet
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("arrow_right");
     entity.addComponent<cro::SpriteAnimation>();
     entity.addComponent<cro::UIInput>().area = bounds;
-    entity.getComponent<cro::UIInput>().setSelectionIndex(158);
+    entity.getComponent<cro::UIInput>().setSelectionIndex(PerfNextProf);
+    entity.getComponent<cro::UIInput>().setNextIndex(PerfDate, ButtonHistory);
+    entity.getComponent<cro::UIInput>().setPrevIndex(PerfPrevProf, PerfNextCourse);
+
     if (!m_profileData.empty())
     {
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectedID;
@@ -1159,7 +1189,7 @@ void StatsState::createPerformanceTab(cro::Entity parent, const cro::SpriteSheet
 
     auto rangeText = entity;
 
-    //range button - 159
+    //range button
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ -2.f, -2.f, 0.1f });
     entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
@@ -1168,7 +1198,10 @@ void StatsState::createPerformanceTab(cro::Entity parent, const cro::SpriteSheet
     entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.addComponent<cro::UIInput>().area = bounds;
-    entity.getComponent<cro::UIInput>().setSelectionIndex(159);
+    entity.getComponent<cro::UIInput>().setSelectionIndex(PerfDate);
+    entity.getComponent<cro::UIInput>().setNextIndex(PerfCPU, ButtonAwards);
+    entity.getComponent<cro::UIInput>().setPrevIndex(PerfNextProf, PerfNextCourse);
+
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = spriteSelected;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = spriteUnselected;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
@@ -1292,13 +1325,17 @@ void StatsState::createPerformanceTab(cro::Entity parent, const cro::SpriteSheet
             m_holeDetailSelected = false;
         });
 
-    auto selectionIndex = 36;
+
     glm::vec3 mouseOverPos(-6.f, 201.f, 0.1f);
     bounds = spriteSheet.getSprite("hole_over").getTextureBounds();
     bounds.left -= 3.f;
     bounds.width += 22.f;
     bounds.bottom -= 1.f;
     bounds.height += 2.f;
+
+    //stash these so we can set correct selection indices
+    cro::Entity firstHole;
+    cro::Entity lastHole;
 
     float yPos = 155.f;
     for (auto i = 0u; i < 18; ++i)
@@ -1326,7 +1363,10 @@ void StatsState::createPerformanceTab(cro::Entity parent, const cro::SpriteSheet
         entity.addComponent<cro::UIInput>().area = bounds;
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = holeSelect;
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = holeUnselect;
-        entity.getComponent<cro::UIInput>().setSelectionIndex(selectionIndex);
+        entity.getComponent<cro::UIInput>().setSelectionIndex(Perf01 + i);
+        entity.getComponent<cro::UIInput>().setNextIndex(Perf01 + i + 1, Perf01 + i + 1);
+        entity.getComponent<cro::UIInput>().setPrevIndex(Perf01 + i - 1, Perf01 + i - 1);
+
         GraphFadeData fd;
         fd.graphIndex = i;
         entity.addComponent<cro::Callback>().active = true;
@@ -1334,26 +1374,30 @@ void StatsState::createPerformanceTab(cro::Entity parent, const cro::SpriteSheet
         entity.getComponent<cro::Callback>().function = fadeFunction;
         performanceEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
         m_holeDetailEntities[i] = entity;
-        selectionIndex++;
-
-        //dummy ents to pack columns
-        for (auto d = 0; d < 3; ++d)
-        {
-            entity = m_scene.createEntity();
-            entity.addComponent<cro::Transform>();
-            entity.addComponent<cro::UIInput>().enabled = false;
-            entity.getComponent<cro::UIInput>().setSelectionIndex(selectionIndex++);
-        }
 
         mouseOverPos.y -= 9.f;
         yPos -= PerformanceVerticalOffset;
 
-        if (i == 8)
+        switch(i)
         {
+        default: break;
+        case 0:
+            firstHole = entity;
+            break;
+        case 8:
             yPos -= 81.f; //gap in front/back area
             mouseOverPos.y -= 27.f;
+            break;
+        case 17:
+            lastHole = entity;
+            break;
         }
     }
+    //set correct selection indices for first and last hole
+    firstHole.getComponent<cro::UIInput>().setNextIndex(PerfPrevCourse, Perf02);
+    firstHole.getComponent<cro::UIInput>().setPrevIndex(PerfPrevCourse, PerfPrevCourse);
+    lastHole.getComponent<cro::UIInput>().setNextIndex(PerfCPU, PerfCPU);
+
     //grid lines
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 26.f, 18.f, 0.05f });
@@ -1680,7 +1724,9 @@ void StatsState::createAwardsTab(cro::Entity parent, const cro::SpriteSheet& spr
     entity.addComponent<cro::SpriteAnimation>();
     auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.addComponent<cro::UIInput>().area = bounds;
-    entity.getComponent<cro::UIInput>().setSelectionIndex(157);
+    entity.getComponent<cro::UIInput>().setSelectionIndex(AwardPrevious);
+    entity.getComponent<cro::UIInput>().setNextIndex(AwardNext, ButtonPerformance);
+    entity.getComponent<cro::UIInput>().setPrevIndex(AwardNext, ButtonPerformance);
 
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectedID;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectedID;
@@ -1711,7 +1757,9 @@ void StatsState::createAwardsTab(cro::Entity parent, const cro::SpriteSheet& spr
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("arrow_right");
     entity.addComponent<cro::SpriteAnimation>();
     entity.addComponent<cro::UIInput>().area = bounds;
-    entity.getComponent<cro::UIInput>().setSelectionIndex(158);
+    entity.getComponent<cro::UIInput>().setSelectionIndex(AwardNext);
+    entity.getComponent<cro::UIInput>().setNextIndex(AwardPrevious, ButtonHistory);
+    entity.getComponent<cro::UIInput>().setPrevIndex(AwardPrevious, ButtonHistory);
 
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectedID;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectedID;
@@ -1866,23 +1914,80 @@ void StatsState::refreshAwardsTab(std::int32_t page)
 
 void StatsState::activateTab(std::int32_t tabID)
 {
-    //update old
-    m_tabButtons[m_currentTab].getComponent<cro::UIInput>().enabled = true;
-    m_tabNodes[m_currentTab].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+    if (tabID != m_currentTab)
+    {
+        //update old
+        m_tabButtons[m_currentTab].getComponent<cro::UIInput>().enabled = true;
+        m_tabNodes[m_currentTab].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
 
-    //update index
-    m_currentTab = tabID;
+        //update index
+        m_currentTab = tabID;
 
-    //update new
-    m_tabButtons[m_currentTab].getComponent<cro::UIInput>().enabled = false;
-    m_tabNodes[m_currentTab].getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+        //update new
+        m_tabButtons[m_currentTab].getComponent<cro::UIInput>().enabled = false;
+        m_tabNodes[m_currentTab].getComponent<cro::Transform>().setScale(glm::vec2(1.f));
 
-    //update the button selection graphic
-    auto bounds = m_tabEntity.getComponent<cro::Sprite>().getTextureRect();
-    bounds.bottom = bounds.height * m_currentTab;
-    m_tabEntity.getComponent<cro::Sprite>().setTextureRect(bounds);
+        //update the button selection graphic
+        auto bounds = m_tabEntity.getComponent<cro::Sprite>().getTextureRect();
+        bounds.bottom = bounds.height * m_currentTab;
+        m_tabEntity.getComponent<cro::Sprite>().setTextureRect(bounds);
 
-    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+        m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+    }
+
+    //update the selection order depending on which page we're on
+    switch (tabID)
+    {
+    default: break;
+    case TabID::ClubStats:
+        m_tabButtons[TabID::Performance].getComponent<cro::UIInput>().setNextIndex(ButtonHistory, ButtonHistory);
+        m_tabButtons[TabID::Performance].getComponent<cro::UIInput>().setPrevIndex(ButtonAwards, ButtonAwards);
+
+        m_tabButtons[TabID::History].getComponent<cro::UIInput>().setNextIndex(ButtonAwards, ButtonAwards);
+        m_tabButtons[TabID::History].getComponent<cro::UIInput>().setPrevIndex(ButtonPerformance, ButtonPerformance);
+
+        m_tabButtons[TabID::Awards].getComponent<cro::UIInput>().setNextIndex(ButtonPerformance, ButtonPerformance);
+        m_tabButtons[TabID::Awards].getComponent<cro::UIInput>().setPrevIndex(ButtonHistory, ButtonHistory);
+
+        m_scene.getSystem<cro::UISystem>()->selectAt(ButtonPerformance);
+        break;
+    case TabID::Performance:
+        m_tabButtons[TabID::ClubStats].getComponent<cro::UIInput>().setNextIndex(ButtonHistory, Perf01);
+        m_tabButtons[TabID::ClubStats].getComponent<cro::UIInput>().setPrevIndex(ButtonAwards, PerfCPU);
+
+        m_tabButtons[TabID::History].getComponent<cro::UIInput>().setNextIndex(ButtonAwards, PerfNextCourse);
+        m_tabButtons[TabID::History].getComponent<cro::UIInput>().setPrevIndex(ButtonClubset, PerfNextProf);
+
+        m_tabButtons[TabID::Awards].getComponent<cro::UIInput>().setNextIndex(ButtonClubset, PerfDate);
+        m_tabButtons[TabID::Awards].getComponent<cro::UIInput>().setPrevIndex(ButtonHistory, PerfDate);
+        
+        m_scene.getSystem<cro::UISystem>()->selectAt(ButtonHistory);
+        break;
+    case TabID::History:
+        m_tabButtons[TabID::ClubStats].getComponent<cro::UIInput>().setNextIndex(ButtonPerformance, ButtonPerformance);
+        m_tabButtons[TabID::ClubStats].getComponent<cro::UIInput>().setPrevIndex(ButtonAwards, ButtonAwards);
+
+        m_tabButtons[TabID::Performance].getComponent<cro::UIInput>().setNextIndex(ButtonAwards, ButtonAwards);
+        m_tabButtons[TabID::Performance].getComponent<cro::UIInput>().setPrevIndex(ButtonClubset, ButtonClubset);
+
+        m_tabButtons[TabID::Awards].getComponent<cro::UIInput>().setNextIndex(ButtonClubset, ButtonClubset);
+        m_tabButtons[TabID::Awards].getComponent<cro::UIInput>().setPrevIndex(ButtonPerformance, ButtonPerformance);
+
+        m_scene.getSystem<cro::UISystem>()->selectAt(ButtonAwards);
+        break;
+    case TabID::Awards:
+        m_tabButtons[TabID::ClubStats].getComponent<cro::UIInput>().setNextIndex(ButtonPerformance, ButtonPerformance);
+        m_tabButtons[TabID::ClubStats].getComponent<cro::UIInput>().setPrevIndex(ButtonHistory, ButtonHistory);
+        
+        m_tabButtons[TabID::Performance].getComponent<cro::UIInput>().setNextIndex(ButtonHistory, AwardPrevious);
+        m_tabButtons[TabID::Performance].getComponent<cro::UIInput>().setPrevIndex(ButtonClubset, AwardPrevious);
+
+        m_tabButtons[TabID::History].getComponent<cro::UIInput>().setNextIndex(ButtonClubset, AwardNext);
+        m_tabButtons[TabID::History].getComponent<cro::UIInput>().setPrevIndex(ButtonPerformance, AwardNext);
+
+        m_scene.getSystem<cro::UISystem>()->selectAt(ButtonClubset);
+        break;
+    }
 }
 
 void StatsState::refreshPerformanceTab(bool newProfile)
