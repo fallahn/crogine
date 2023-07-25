@@ -1469,7 +1469,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     auto entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<UIElement>().relativePosition = { 0.5f, 0.9f };
-    entity.getComponent<UIElement>().depth = 1.75f;
+    entity.getComponent<UIElement>().depth = 1.7f;
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement | CommandID::Menu::TitleText;
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("title");
@@ -3454,7 +3454,7 @@ void MenuState::createPreviousScoreCard()
     auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
     bounds = m_lobbyWindowEntities[LobbyEntityID::Background].getComponent<cro::Sprite>().getTextureBounds();
-    entity.getComponent<cro::Transform>().setPosition({ bounds.width / 2.f, OffscreenPos, 1.85f });
+    entity.getComponent<cro::Transform>().setPosition({ bounds.width / 2.f, OffscreenPos, 1.95f });
 
 
     const float targetPos = bounds.height / 2.f;
@@ -3493,11 +3493,22 @@ void MenuState::createPreviousScoreCard()
                 m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Scorecard);
                 dest = MenuID::Lobby;
                 e.getComponent<cro::Callback>().active = false;
-                m_currentMenu = MenuID::Lobby;// needs to be set to this to correctly resize the window TODO fins out where resizez is handled and include correct menu IDs in the condition...
+                m_currentMenu = MenuID::Lobby;// needs to be set to this to correctly resize the window TODO find out where resize is handled and include correct menu IDs in the condition...
             }
         }
         m_uiScene.getActiveCamera().getComponent<cro::Camera>().active = true;
         e.getComponent<cro::Transform>().setPosition(pos);
+
+
+        //send command to lobby title to hide out the way
+        float scale = 1.f - std::clamp((pos.y - OffscreenPos) / (targetPos - OffscreenPos), 0.f, 1.f);
+        cro::Command cmd;
+        cmd.targetFlags = CommandID::Menu::TitleText;
+        cmd.action = [scale](cro::Entity f, float)
+        {
+            f.getComponent<cro::Transform>().setScale(glm::vec2(scale));
+        };
+        m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
     };
 
     m_lobbyWindowEntities[LobbyEntityID::Background].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());

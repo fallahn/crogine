@@ -70,9 +70,11 @@ enum MenuIndex
     CourseNext,
     CourseHolePrev,
     CourseHoleNext,
+    CourseInviteFriend,
     CourseReverse,
     CourseUser,
     CourseCPUSkip,
+    CourseFriendsOnly,
 
     RulesPrevious,
     RulesNext,
