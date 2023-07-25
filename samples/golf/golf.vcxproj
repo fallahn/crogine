@@ -681,6 +681,7 @@
     <None Include="src\golf\CelShader.inl" />
     <None Include="src\golf\CloudShader.inl" />
     <None Include="src\golf\FogShader.inl" />
+    <None Include="src\golf\MenuEnum.inl" />
     <None Include="src\golf\MinimapShader.inl" />
     <None Include="src\golf\OptionsEnum.inl" />
     <None Include="src\golf\PaletteSwap.inl" />

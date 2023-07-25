@@ -55,6 +55,8 @@ SimpleQuad& SimpleQuad::operator = (const Sprite& sprite)
     setTexture(*sprite.getTexture());
     setTextureRect(sprite.getTextureRect());
     setColour(sprite.getColour());
+
+    return *this;
 }
 
 //public

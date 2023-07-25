@@ -34,6 +34,7 @@ source distribution.
 #include "spooky2.hpp"
 #include "BallSystem.hpp"
 #include "CallbackData.hpp"
+#include "MenuEnum.inl"
 
 #include <Social.hpp>
 

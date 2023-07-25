@@ -1081,6 +1081,12 @@ void OptionsState::buildScene()
                 mousePos.y = std::floor(mousePos.y);
                 mousePos.z = 2.f;
 
+                //need to refresh the view if the tip was previously hidden
+                if (m_tooltips[tipID].getComponent<cro::Transform>().getScale().x == 0)
+                {
+                    m_scene.getActiveCamera().getComponent<cro::Camera>().active = true;
+                }
+                
                 m_tooltips[tipID].getComponent<cro::Transform>().setPosition(mousePos + (ToolTipOffset * m_viewScale.x));
                 m_tooltips[tipID].getComponent<cro::Transform>().setScale(m_viewScale);
             }
@@ -1378,6 +1384,11 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
             mousePos.y = std::floor(mousePos.y);
             mousePos.z = ToolTipDepth / 2.f;
             
+            if (m_tooltips[ToolTipID::Volume].getComponent<cro::Transform>().getScale().x == 0)
+            {
+                m_scene.getActiveCamera().getComponent<cro::Camera>().active = true;
+            }
+
             m_tooltips[ToolTipID::Volume].getComponent<cro::Transform>().setPosition(mousePos + (ToolTipOffset * m_viewScale.x));
             m_tooltips[ToolTipID::Volume].getComponent<cro::Transform>().setScale(m_viewScale);
 
@@ -1439,6 +1450,11 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
             mousePos.x = std::floor(mousePos.x);
             mousePos.y = std::floor(mousePos.y);
             mousePos.z = ToolTipDepth;
+
+            if (m_tooltips[ToolTipID::FOV].getComponent<cro::Transform>().getScale().x == 0)
+            {
+                m_scene.getActiveCamera().getComponent<cro::Camera>().active = true;
+            }
 
             m_tooltips[ToolTipID::FOV].getComponent<cro::Transform>().setPosition(mousePos + (ToolTipOffset * m_viewScale.x));
             m_tooltips[ToolTipID::FOV].getComponent<cro::Transform>().setScale(m_viewScale);
@@ -3887,6 +3903,11 @@ void OptionsState::updateToolTip(cro::Entity e, std::int32_t tipID)
         if (!m_tooltips[tipID].getComponent<ToolTip>().target.isValid()
             || m_tooltips[tipID].getComponent<ToolTip>().target == e)
         {
+            if (m_tooltips[tipID].getComponent<cro::Transform>().getScale().x == 0)
+            {
+                m_scene.getActiveCamera().getComponent<cro::Camera>().active = true;
+            }
+
             m_tooltips[tipID].getComponent<cro::Transform>().setPosition(mousePos + (ToolTipOffset * m_viewScale.x));
             m_tooltips[tipID].getComponent<cro::Transform>().setScale(m_viewScale);
 
