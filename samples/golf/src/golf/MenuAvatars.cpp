@@ -33,6 +33,7 @@ source distribution.
 #include "CallbackData.hpp"
 #include "Clubs.hpp"
 #include "TextAnimCallback.hpp"
+#include "MenuEnum.inl"
 #include "../ErrorCheck.hpp"
 
 #include <crogine/ecs/components/CommandTarget.hpp>
@@ -427,6 +428,7 @@ void MenuState::createAvatarMenu(cro::Entity parent)
 
         //then update the display string
         m_rosterMenu.buttonEntities[0].getComponent<cro::UIInput>().enabled = m_sharedData.localConnectionData.playerCount > 1;
+        m_rosterMenu.buttonEntities[0].getComponent<cro::UIInput>().setNextIndex(Player02, Player02);
 
         auto str = m_sharedData.localConnectionData.playerData[0].name;
         for (auto i = 1u; i < m_sharedData.localConnectionData.playerCount; ++i)
@@ -434,7 +436,12 @@ void MenuState::createAvatarMenu(cro::Entity parent)
             str += "\n" + m_sharedData.localConnectionData.playerData[i].name;
 
             m_rosterMenu.buttonEntities[i].getComponent<cro::UIInput>().enabled = true;
+            m_rosterMenu.buttonEntities[i].getComponent<cro::UIInput>().setNextIndex(Player01 + i + 1, Player01 + i + 1);
         }
+        m_rosterMenu.buttonEntities[m_sharedData.localConnectionData.playerCount - 1].getComponent<cro::UIInput>().setNextIndex(PlayerProfile, PlayerProfile);
+        
+        //TODO we need to set the prev taget of CPU, prefProf profile and nextProf to whichever button was last activated.
+        
         rosterEnt.getComponent<cro::Text>().setString(str);
 
         nameLabel.getComponent<cro::Text>().setString(m_profileData.playerProfiles[m_rosterMenu.profileIndices[m_rosterMenu.activeIndex]].name);
@@ -530,6 +537,9 @@ void MenuState::createAvatarMenu(cro::Entity parent)
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectionCallback;
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = activateCallback;
         entity.getComponent<cro::UIInput>().setGroup(MenuID::Avatar);
+        entity.getComponent<cro::UIInput>().setSelectionIndex(Player01 + i);
+        entity.getComponent<cro::UIInput>().setNextIndex(Player01 + i + 1, Player01 + i + 1);
+        entity.getComponent<cro::UIInput>().setPrevIndex(Player01 + i - 1, Player01 + i - 1);
         entity.getComponent<cro::UIInput>().enabled = false;
 
         bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
@@ -539,6 +549,7 @@ void MenuState::createAvatarMenu(cro::Entity parent)
         m_rosterMenu.selectionEntities[i].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
         m_rosterMenu.buttonEntities[i] = entity;
     }
+    m_rosterMenu.buttonEntities[0].getComponent<cro::UIInput>().setPrevIndex(PlayerAdd, PlayerAdd);
 
 
     //CPU toggle
@@ -579,6 +590,10 @@ void MenuState::createAvatarMenu(cro::Entity parent)
     entity.addComponent<cro::UIInput>().area = m_sprites[SpriteID::CPUHighlight].getTextureBounds();
     entity.getComponent<cro::UIInput>().area.width *= 3.4f; //cover writing too
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Avatar);
+    entity.getComponent<cro::UIInput>().setSelectionIndex(PlayerCPU);
+    entity.getComponent<cro::UIInput>().setNextIndex(PlayerPrevProf, PlayerAdd);
+    entity.getComponent<cro::UIInput>().setPrevIndex(PlayerLeaveMenu, Player01);
+
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = 
         uiSystem.addCallback([&, cursorEnt](cro::Entity e) mutable
         {
@@ -637,6 +652,9 @@ void MenuState::createAvatarMenu(cro::Entity parent)
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.addComponent<cro::UIInput>().area = bounds;
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Avatar);
+    entity.getComponent<cro::UIInput>().setSelectionIndex(PlayerPrevProf);
+    entity.getComponent<cro::UIInput>().setNextIndex(PlayerProfile, PlayerAdd);
+    entity.getComponent<cro::UIInput>().setPrevIndex(PlayerCPU, Player01);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = m_courseSelectCallbacks.selected;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = m_courseSelectCallbacks.unselected;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = uiSystem.addCallback(
@@ -743,6 +761,9 @@ void MenuState::createAvatarMenu(cro::Entity parent)
     entity.addComponent<cro::Callback>().function = MenuTextCallback();
     entity.addComponent<cro::UIInput>().area = bounds;
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Avatar);
+    entity.getComponent<cro::UIInput>().setSelectionIndex(PlayerProfile);
+    entity.getComponent<cro::UIInput>().setNextIndex(PlayerNextProf, PlayerAdd);
+    entity.getComponent<cro::UIInput>().setPrevIndex(PlayerPrevProf, Player01);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectionCallback;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectionCallback;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = uiSystem.addCallback(
@@ -769,6 +790,9 @@ void MenuState::createAvatarMenu(cro::Entity parent)
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.addComponent<cro::UIInput>().area = bounds;
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Avatar);
+    entity.getComponent<cro::UIInput>().setSelectionIndex(PlayerNextProf);
+    entity.getComponent<cro::UIInput>().setNextIndex(PlayerReset, PlayerReset);
+    entity.getComponent<cro::UIInput>().setPrevIndex(PlayerProfile, Player01);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = m_courseSelectCallbacks.selected;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = m_courseSelectCallbacks.unselected;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = uiSystem.addCallback(
@@ -796,6 +820,9 @@ void MenuState::createAvatarMenu(cro::Entity parent)
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.addComponent<cro::UIInput>().area = bounds;
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Avatar);
+    entity.getComponent<cro::UIInput>().setSelectionIndex(PlayerReset);
+    entity.getComponent<cro::UIInput>().setNextIndex(PlayerEdit, PlayerEdit);
+    entity.getComponent<cro::UIInput>().setPrevIndex(PlayerNextProf, PlayerNextProf);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectionCallback;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectionCallback;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = uiSystem.addCallback(
@@ -828,6 +855,9 @@ void MenuState::createAvatarMenu(cro::Entity parent)
     bounds.height -= 4.f;
     entity.addComponent<cro::UIInput>().area = bounds;
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Avatar);
+    entity.getComponent<cro::UIInput>().setSelectionIndex(PlayerCreate);
+    entity.getComponent<cro::UIInput>().setNextIndex(PlayerEdit, PlayerEdit);
+    entity.getComponent<cro::UIInput>().setPrevIndex(PlayerReset, PlayerRemove);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectionCallback;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectionCallback;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = uiSystem.addCallback(
@@ -891,6 +921,9 @@ void MenuState::createAvatarMenu(cro::Entity parent)
     bounds.height -= 4.f;
     entity.addComponent<cro::UIInput>().area = bounds;
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Avatar);
+    entity.getComponent<cro::UIInput>().setSelectionIndex(PlayerEdit);
+    entity.getComponent<cro::UIInput>().setNextIndex(PlayerDelete, PlayerDelete);
+    entity.getComponent<cro::UIInput>().setPrevIndex(PlayerReset, PlayerCreate);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectionCallback;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectionCallback;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = uiSystem.addCallback(
@@ -922,6 +955,9 @@ void MenuState::createAvatarMenu(cro::Entity parent)
     bounds.height -= 4.f;
     entity.addComponent<cro::UIInput>().area = bounds;
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Avatar);
+    entity.getComponent<cro::UIInput>().setSelectionIndex(PlayerDelete);
+    entity.getComponent<cro::UIInput>().setNextIndex(PlayerRemove, PlayerRemove);
+    entity.getComponent<cro::UIInput>().setPrevIndex(PlayerReset, PlayerEdit);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectionCallback;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectionCallback;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = uiSystem.addCallback(
@@ -1002,6 +1038,9 @@ void MenuState::createAvatarMenu(cro::Entity parent)
     entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::PrevMenu];
     entity.addComponent<cro::UIInput>().area = m_sprites[SpriteID::PrevMenu].getTextureBounds();
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Avatar);
+    entity.getComponent<cro::UIInput>().setSelectionIndex(PlayerLeaveMenu);
+    entity.getComponent<cro::UIInput>().setNextIndex(PlayerAdd, Player01);
+    entity.getComponent<cro::UIInput>().setPrevIndex(PlayerNextMenu, PlayerCPU);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = mouseEnterHighlight;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = mouseExitHighlight;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
@@ -1036,6 +1075,9 @@ void MenuState::createAvatarMenu(cro::Entity parent)
     bounds = m_sprites[SpriteID::AddPlayer].getTextureBounds();
     entity.addComponent<cro::UIInput>().area = bounds;
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Avatar);
+    entity.getComponent<cro::UIInput>().setSelectionIndex(PlayerAdd);
+    entity.getComponent<cro::UIInput>().setNextIndex(PlayerRemove, Player01);
+    entity.getComponent<cro::UIInput>().setPrevIndex(PlayerLeaveMenu, PlayerProfile);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = mouseEnterCursor;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         m_uiScene.getSystem<cro::UISystem>()->addCallback(
@@ -1095,6 +1137,9 @@ void MenuState::createAvatarMenu(cro::Entity parent)
     bounds = m_sprites[SpriteID::RemovePlayer].getTextureBounds();
     entity.addComponent<cro::UIInput>().area = bounds;
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Avatar);
+    entity.getComponent<cro::UIInput>().setSelectionIndex(PlayerRemove);
+    entity.getComponent<cro::UIInput>().setNextIndex(PlayerNextMenu, PlayerCreate);
+    entity.getComponent<cro::UIInput>().setPrevIndex(PlayerAdd, PlayerDelete);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = mouseEnterCursor;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         m_uiScene.getSystem<cro::UISystem>()->addCallback(
@@ -1141,6 +1186,9 @@ void MenuState::createAvatarMenu(cro::Entity parent)
     bounds = m_sprites[SpriteID::NextMenu].getTextureBounds();
     entity.addComponent<cro::UIInput>().area = bounds;
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Avatar);
+    entity.getComponent<cro::UIInput>().setSelectionIndex(PlayerNextMenu);
+    entity.getComponent<cro::UIInput>().setNextIndex(PlayerLeaveMenu, PlayerLeaveMenu);
+    entity.getComponent<cro::UIInput>().setPrevIndex(PlayerRemove, PlayerRemove);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = mouseEnterHighlight;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = mouseExitHighlight;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
