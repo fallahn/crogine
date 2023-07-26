@@ -55,6 +55,17 @@ namespace
 #include "RandNames.hpp"
 
     bool firstLoad = true; //one of those rare occasions we want this to be static.
+
+    struct DButton final
+    {
+        enum
+        {
+            CPU, PrevProf, Profile, NextProf,
+
+            Count
+        };
+    };
+    std::array<cro::Entity, DButton::Count> DynamicButtons = {};
 }
 
 void MenuState::createAvatarMenu(cro::Entity parent)
@@ -440,7 +451,13 @@ void MenuState::createAvatarMenu(cro::Entity parent)
         }
         m_rosterMenu.buttonEntities[m_sharedData.localConnectionData.playerCount - 1].getComponent<cro::UIInput>().setNextIndex(PlayerProfile, PlayerProfile);
         
-        //TODO we need to set the prev target of CPU, prefProf profile and nextProf to whichever button was last activated.
+        std::int32_t prevIndex = m_sharedData.localConnectionData.playerCount == 1 ? PlayerAdd : Player01 + (m_sharedData.localConnectionData.playerCount - 1);
+
+        //we need to set the prev target of CPU, prefProf profile and nextProf to whichever button was last enabled
+        DynamicButtons[DButton::CPU].getComponent<cro::UIInput>().setPrevIndex(PlayerLeaveMenu, prevIndex);
+        DynamicButtons[DButton::PrevProf].getComponent<cro::UIInput>().setPrevIndex(PlayerCPU, prevIndex);
+        DynamicButtons[DButton::Profile].getComponent<cro::UIInput>().setPrevIndex(PlayerPrevProf, prevIndex);
+        DynamicButtons[DButton::NextProf].getComponent<cro::UIInput>().setPrevIndex(PlayerProfile, prevIndex);
         
         rosterEnt.getComponent<cro::Text>().setString(str);
 
@@ -635,7 +652,7 @@ void MenuState::createAvatarMenu(cro::Entity parent)
             showToolTip("Make this a computer controlled player");
         });
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Exit] = hideTT;
-        
+    DynamicButtons[DButton::CPU] = entity;
     avatarEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
@@ -668,7 +685,7 @@ void MenuState::createAvatarMenu(cro::Entity parent)
             }
         });
     avatarEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-
+    DynamicButtons[DButton::PrevProf] = entity;
 
 
     //profile flyout menu
@@ -779,6 +796,7 @@ void MenuState::createAvatarMenu(cro::Entity parent)
     entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
     entity.getComponent<cro::Transform>().move(entity.getComponent<cro::Transform>().getOrigin());
     avatarEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    DynamicButtons[DButton::Profile] = entity;
 
     //next profile
     entity = m_uiScene.createEntity();
@@ -806,7 +824,7 @@ void MenuState::createAvatarMenu(cro::Entity parent)
             }
         });
     avatarEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-
+    DynamicButtons[DButton::NextProf] = entity;
 
 
     //reset stats
