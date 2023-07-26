@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2023
+Matt Marchant 2023
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -62,9 +62,12 @@ enum MenuIndex
     Lobby = 400,
     LobbyQuit,
     LobbyStart,
-    LobbyCourse,
-    LobbyRules,
-    LobbyInfo,
+    LobbyCourseA,
+    LobbyCourseB,
+    LobbyRulesA,
+    LobbyRulesB,
+    LobbyInfoA,
+    LobbyInfoB,
 
     CoursePrev,
     CourseNext,
