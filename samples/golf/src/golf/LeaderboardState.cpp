@@ -576,6 +576,7 @@ void LeaderboardState::buildScene()
                 }
             });
     bgNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_buttons[DynamicButton::Course] = entity;
 
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 134.f, 45.f, 0.2f });
@@ -613,7 +614,7 @@ void LeaderboardState::buildScene()
                 }
             });
     bgNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-    m_HIOButton = entity;
+    m_buttons[DynamicButton::HIO] = entity;
 
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 218.f, 45.f, 0.2f });
@@ -651,6 +652,7 @@ void LeaderboardState::buildScene()
                 }
             });
     bgNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_buttons[DynamicButton::Rank] = entity;
 
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 302.f, 45.f, 0.2f });
@@ -688,7 +690,7 @@ void LeaderboardState::buildScene()
                 }
             });
     bgNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-    m_streakButton = entity;
+    m_buttons[DynamicButton::Streak] = entity;
 
 
     //button to enable nearest scores / refresh
@@ -826,7 +828,7 @@ void LeaderboardState::buildScene()
             });
 
     bgNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-    m_dateButton = entity;
+    m_buttons[DynamicButton::Date] = entity;
 
 
     //close button
@@ -855,7 +857,7 @@ void LeaderboardState::buildScene()
             });
     entity.getComponent<cro::Transform>().setOrigin({ std::floor(bounds.width / 2.f), bounds.height / 2.f });
     bgNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-
+    m_buttons[DynamicButton::Close] = entity;
 
     selectedID = uiSystem.addCallback([](cro::Entity e) 
         {
@@ -1027,6 +1029,7 @@ void LeaderboardState::buildScene()
     updateView(entity.getComponent<cro::Camera>());
 
     m_scene.simulate(0.f);
+    updateButtonIndices();
 }
 
 void LeaderboardState::createFlyout(cro::Entity parent)
@@ -1263,22 +1266,85 @@ void LeaderboardState::refreshDisplay()
 
 void LeaderboardState::updateButtonIndices()
 {
-    if (m_displayContext.boardIndex == BoardIndex::Course)
+    switch (m_displayContext.boardIndex)
     {
-        //prev/next arrows are available
-        m_HIOButton.getComponent<cro::UIInput>().setPrevIndex(ButtonID::Close, ButtonID::PrevCourse);
-        m_streakButton.getComponent<cro::UIInput>().setPrevIndex(ButtonID::Rank, ButtonID::NextCourse);
+    default: break;
+    case BoardIndex::Course:
+        m_buttons[DynamicButton::Course].getComponent<cro::UIInput>().setNextIndex(ButtonID::HIO, ButtonID::PrevCourse);
+        m_buttons[DynamicButton::Course].getComponent<cro::UIInput>().setPrevIndex(ButtonID::Close, ButtonID::PrevCourse);
+        
+        m_buttons[DynamicButton::HIO].getComponent<cro::UIInput>().setNextIndex(ButtonID::Rank, ButtonID::PrevCourse);
+        m_buttons[DynamicButton::HIO].getComponent<cro::UIInput>().setPrevIndex(ButtonID::Close, ButtonID::PrevCourse);
 
-        m_dateButton.getComponent<cro::UIInput>().setNextIndex(ButtonID::PrevCourse, ButtonID::Close);
-        m_dateButton.getComponent<cro::UIInput>().setPrevIndex(ButtonID::NextCourse, ButtonID::HoleCount);
-    }
-    else
-    {
-        m_HIOButton.getComponent<cro::UIInput>().setPrevIndex(ButtonID::Course, ButtonID::Course);
-        m_streakButton.getComponent<cro::UIInput>().setPrevIndex(ButtonID::Rank, ButtonID::Rank);
+        m_buttons[DynamicButton::Rank].getComponent<cro::UIInput>().setNextIndex(ButtonID::Streak, ButtonID::Streak);
+        m_buttons[DynamicButton::Rank].getComponent<cro::UIInput>().setPrevIndex(ButtonID::HIO, ButtonID::HIO);
 
-        m_dateButton.getComponent<cro::UIInput>().setNextIndex(ButtonID::Close, ButtonID::Close);
-        m_dateButton.getComponent<cro::UIInput>().setPrevIndex(ButtonID::HoleCount, ButtonID::HoleCount);
+        m_buttons[DynamicButton::Streak].getComponent<cro::UIInput>().setNextIndex(ButtonID::Close, ButtonID::NextCourse);
+        m_buttons[DynamicButton::Streak].getComponent<cro::UIInput>().setPrevIndex(ButtonID::Rank, ButtonID::NextCourse);
+
+        m_buttons[DynamicButton::Date].getComponent<cro::UIInput>().setNextIndex(ButtonID::PrevCourse, ButtonID::Close);
+        m_buttons[DynamicButton::Date].getComponent<cro::UIInput>().setPrevIndex(ButtonID::NextCourse, ButtonID::HoleCount);
+
+        m_buttons[DynamicButton::Close].getComponent<cro::UIInput>().setNextIndex(ButtonID::HIO, ButtonID::Nearest);
+        m_buttons[DynamicButton::Close].getComponent<cro::UIInput>().setPrevIndex(ButtonID::Streak, ButtonID::DateRange);
+        break;
+    case BoardIndex::Hio:
+        m_buttons[DynamicButton::Course].getComponent<cro::UIInput>().setNextIndex(ButtonID::Rank, ButtonID::Rank);
+        m_buttons[DynamicButton::Course].getComponent<cro::UIInput>().setPrevIndex(ButtonID::Close, ButtonID::Close);
+
+        m_buttons[DynamicButton::HIO].getComponent<cro::UIInput>().setNextIndex(ButtonID::Rank, ButtonID::Rank);
+        m_buttons[DynamicButton::HIO].getComponent<cro::UIInput>().setPrevIndex(ButtonID::Course, ButtonID::Course);
+
+        m_buttons[DynamicButton::Rank].getComponent<cro::UIInput>().setNextIndex(ButtonID::Streak, ButtonID::Streak);
+        m_buttons[DynamicButton::Rank].getComponent<cro::UIInput>().setPrevIndex(ButtonID::Course, ButtonID::Course);
+        
+        m_buttons[DynamicButton::Streak].getComponent<cro::UIInput>().setNextIndex(ButtonID::Close, ButtonID::Close);
+        m_buttons[DynamicButton::Streak].getComponent<cro::UIInput>().setPrevIndex(ButtonID::Rank, ButtonID::Rank);
+
+        m_buttons[DynamicButton::Date].getComponent<cro::UIInput>().setNextIndex(ButtonID::Close, ButtonID::Close);
+        m_buttons[DynamicButton::Date].getComponent<cro::UIInput>().setPrevIndex(ButtonID::HoleCount, ButtonID::HoleCount);
+
+        m_buttons[DynamicButton::Close].getComponent<cro::UIInput>().setNextIndex(ButtonID::Course, ButtonID::Nearest);
+        m_buttons[DynamicButton::Close].getComponent<cro::UIInput>().setPrevIndex(ButtonID::Streak, ButtonID::DateRange);
+        break;
+    case BoardIndex::Rank:
+        m_buttons[DynamicButton::Course].getComponent<cro::UIInput>().setNextIndex(ButtonID::HIO, ButtonID::HIO);
+        m_buttons[DynamicButton::Course].getComponent<cro::UIInput>().setPrevIndex(ButtonID::Close, ButtonID::Close);
+        
+        m_buttons[DynamicButton::HIO].getComponent<cro::UIInput>().setNextIndex(ButtonID::Streak, ButtonID::Streak);
+        m_buttons[DynamicButton::HIO].getComponent<cro::UIInput>().setPrevIndex(ButtonID::Course, ButtonID::Course);
+
+        m_buttons[DynamicButton::Rank].getComponent<cro::UIInput>().setNextIndex(ButtonID::Streak, ButtonID::Streak);
+        m_buttons[DynamicButton::Rank].getComponent<cro::UIInput>().setPrevIndex(ButtonID::HIO, ButtonID::HIO);
+
+        m_buttons[DynamicButton::Streak].getComponent<cro::UIInput>().setNextIndex(ButtonID::Close, ButtonID::Close);
+        m_buttons[DynamicButton::Streak].getComponent<cro::UIInput>().setPrevIndex(ButtonID::HIO, ButtonID::HIO);
+
+        m_buttons[DynamicButton::Date].getComponent<cro::UIInput>().setNextIndex(ButtonID::Close, ButtonID::Close);
+        m_buttons[DynamicButton::Date].getComponent<cro::UIInput>().setPrevIndex(ButtonID::HoleCount, ButtonID::HoleCount);
+
+        m_buttons[DynamicButton::Close].getComponent<cro::UIInput>().setNextIndex(ButtonID::Course, ButtonID::Nearest);
+        m_buttons[DynamicButton::Close].getComponent<cro::UIInput>().setPrevIndex(ButtonID::Streak, ButtonID::DateRange);
+        break;
+    case BoardIndex::Streak:
+        m_buttons[DynamicButton::Course].getComponent<cro::UIInput>().setNextIndex(ButtonID::HIO, ButtonID::HIO);
+        m_buttons[DynamicButton::Course].getComponent<cro::UIInput>().setPrevIndex(ButtonID::Close, ButtonID::Close);
+        
+        m_buttons[DynamicButton::HIO].getComponent<cro::UIInput>().setNextIndex(ButtonID::Rank, ButtonID::Rank);
+        m_buttons[DynamicButton::HIO].getComponent<cro::UIInput>().setPrevIndex(ButtonID::Course, ButtonID::Course);
+
+        m_buttons[DynamicButton::Rank].getComponent<cro::UIInput>().setNextIndex(ButtonID::Close, ButtonID::Close);
+        m_buttons[DynamicButton::Rank].getComponent<cro::UIInput>().setPrevIndex(ButtonID::HIO, ButtonID::HIO);
+
+        m_buttons[DynamicButton::Streak].getComponent<cro::UIInput>().setNextIndex(ButtonID::Close, ButtonID::Close);
+        m_buttons[DynamicButton::Streak].getComponent<cro::UIInput>().setPrevIndex(ButtonID::Rank, ButtonID::Rank);
+
+        m_buttons[DynamicButton::Date].getComponent<cro::UIInput>().setNextIndex(ButtonID::Close, ButtonID::Close);
+        m_buttons[DynamicButton::Date].getComponent<cro::UIInput>().setPrevIndex(ButtonID::HoleCount, ButtonID::HoleCount);
+
+        m_buttons[DynamicButton::Close].getComponent<cro::UIInput>().setNextIndex(ButtonID::Course, ButtonID::Nearest);
+        m_buttons[DynamicButton::Close].getComponent<cro::UIInput>().setPrevIndex(ButtonID::Rank, ButtonID::DateRange);
+        break;
     }
 }
 

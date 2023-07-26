@@ -86,9 +86,21 @@ private:
             Count
         };
     };
-    cro::Entity m_HIOButton;
-    cro::Entity m_streakButton;
-    cro::Entity m_dateButton;
+    struct DynamicButton final
+    {
+        enum
+        {
+            Close,
+            Course,
+            HIO,
+            Rank,
+            Streak,
+            Date,
+
+            Count
+        };
+    };
+    std::array<cro::Entity, DynamicButton::Count> m_buttons = {};
 
     struct DisplayContext final
     {
