@@ -686,6 +686,7 @@
     <None Include="src\golf\OptionsEnum.inl" />
     <None Include="src\golf\PaletteSwap.inl" />
     <None Include="src\golf\PostProcess.inl" />
+    <None Include="src\golf\ProfileEnum.inl" />
     <None Include="src\golf\ShaderIncludes.inl" />
     <None Include="src\golf\ShadowMapping.inl" />
     <None Include="src\golf\TerrainShader.inl" />

@@ -37,6 +37,7 @@ source distribution.
 #include "SharedProfileData.hpp"
 #include "CallbackData.hpp"
 #include "PlayerColours.hpp"
+#include "ProfileEnum.inl"
 #include "../GolfGame.hpp"
 #include "../Colordome-32.hpp"
 
@@ -707,7 +708,7 @@ void ProfileState::buildScene()
         });
     auto unselected = uiSystem.addCallback([](cro::Entity e) {e.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent); });
 
-    const auto createButton = [&](const std::string& spriteID, glm::vec2 position)
+    const auto createButton = [&](const std::string& spriteID, glm::vec2 position, std::int32_t selectionIndex)
     {
         auto bounds = spriteSheet.getSprite(spriteID).getTextureBounds();
 
@@ -721,6 +722,7 @@ void ProfileState::buildScene()
         entity.addComponent<cro::Callback>().function = MenuTextCallback();
         entity.addComponent<cro::UIInput>().area = bounds;
         entity.getComponent<cro::UIInput>().setGroup(MenuID::Main);
+        entity.getComponent<cro::UIInput>().setSelectionIndex(selectionIndex);
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selected;
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselected;
         bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -736,7 +738,7 @@ void ProfileState::buildScene()
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("workshop_button");
     bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
-    entity = createButton("workshop_highlight", { 15.f, 200.f });
+    entity = createButton("workshop_highlight", { 15.f, 200.f }, ButtonWorkshop);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         uiSystem.addCallback([&](cro::Entity e, const cro::ButtonEvent& evt) 
             {
@@ -745,6 +747,9 @@ void ProfileState::buildScene()
                     Social::showWorkshop();
                 }
             });
+
+    entity.getComponent<cro::UIInput>().setNextIndex(ButtonName, ButtonHairColour);
+    entity.getComponent<cro::UIInput>().setPrevIndex(ButtonName, ButtonRandomise);
 #endif
 
     //colour swatch - this has its own update function
@@ -767,7 +772,7 @@ void ProfileState::buildScene()
     };
 
     //colour buttons
-    auto hairColour = createButton("colour_highlight", glm::vec2(33.f, 167.f));
+    auto hairColour = createButton("colour_highlight", glm::vec2(33.f, 167.f), ButtonHairColour);
     hairColour.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         uiSystem.addCallback([&, fetchUIIndexFromColour](cro::Entity e, const cro::ButtonEvent& evt)
             {
@@ -788,8 +793,14 @@ void ProfileState::buildScene()
                     m_lastSelected = e.getComponent<cro::UIInput>().getSelectionIndex();
                 }
             });
-    
-    auto skinColour = createButton("colour_highlight", glm::vec2(33.f, 135.f));
+    hairColour.getComponent<cro::UIInput>().setNextIndex(ButtonPrevHair, ButtonSkinTone);
+#ifdef USE_GNS
+    hairColour.getComponent<cro::UIInput>().setPrevIndex(ButtonDescUp, ButtonWorkshop);
+#else
+    hairColour.getComponent<cro::UIInput>().setPrevIndex(ButtonDescUp, ButtonRandomise);
+#endif
+
+    auto skinColour = createButton("colour_highlight", glm::vec2(33.f, 135.f), ButtonSkinTone);
     skinColour.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         uiSystem.addCallback([&, fetchUIIndexFromColour](cro::Entity e, const cro::ButtonEvent& evt)
             {
@@ -808,8 +819,11 @@ void ProfileState::buildScene()
                     m_lastSelected = e.getComponent<cro::UIInput>().getSelectionIndex();
                 }
             });
+    skinColour.getComponent<cro::UIInput>().setNextIndex(ButtonPrevBall, ButtonTopLight);
+    skinColour.getComponent<cro::UIInput>().setPrevIndex(ButtonNextBall, ButtonHairColour);
 
-    auto topLightColour = createButton("colour_highlight", glm::vec2(17.f, 103.f));
+
+    auto topLightColour = createButton("colour_highlight", glm::vec2(17.f, 103.f), ButtonTopLight);
     topLightColour.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         uiSystem.addCallback([&, fetchUIIndexFromColour](cro::Entity e, const cro::ButtonEvent& evt)
             {
@@ -828,8 +842,11 @@ void ProfileState::buildScene()
                     m_lastSelected = e.getComponent<cro::UIInput>().getSelectionIndex();
                 }
             });
-    
-    auto topDarkColour = createButton("colour_highlight", glm::vec2(49.f, 103.f));
+    topLightColour.getComponent<cro::UIInput>().setNextIndex(ButtonTopDark, ButtonBottomLight);
+    topLightColour.getComponent<cro::UIInput>().setPrevIndex(ButtonNextBall, ButtonSkinTone);
+
+
+    auto topDarkColour = createButton("colour_highlight", glm::vec2(49.f, 103.f), ButtonTopDark);
     topDarkColour.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         uiSystem.addCallback([&, fetchUIIndexFromColour](cro::Entity e, const cro::ButtonEvent& evt)
             {
@@ -848,8 +865,11 @@ void ProfileState::buildScene()
                     m_lastSelected = e.getComponent<cro::UIInput>().getSelectionIndex();
                 }
             });
-    
-    auto bottomLightColour = createButton("colour_highlight", glm::vec2(17.f, 69.f));
+    topDarkColour.getComponent<cro::UIInput>().setNextIndex(ButtonPrevBody, ButtonBottomDark);
+    topDarkColour.getComponent<cro::UIInput>().setPrevIndex(ButtonTopLight, ButtonSkinTone);
+
+
+    auto bottomLightColour = createButton("colour_highlight", glm::vec2(17.f, 69.f), ButtonBottomLight);
     bottomLightColour.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         uiSystem.addCallback([&, fetchUIIndexFromColour](cro::Entity e, const cro::ButtonEvent& evt)
             {
@@ -868,8 +888,10 @@ void ProfileState::buildScene()
                     m_lastSelected = e.getComponent<cro::UIInput>().getSelectionIndex();
                 }
             });
-    
-    auto bottomDarkColour = createButton("colour_highlight", glm::vec2(49.f, 69.f));
+    bottomLightColour.getComponent<cro::UIInput>().setNextIndex(ButtonBottomDark, ButtonSouthPaw);
+    bottomLightColour.getComponent<cro::UIInput>().setPrevIndex(ButtonDescDown, ButtonTopLight);
+
+    auto bottomDarkColour = createButton("colour_highlight", glm::vec2(49.f, 69.f), ButtonBottomDark);
     bottomDarkColour.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         uiSystem.addCallback([&, fetchUIIndexFromColour](cro::Entity e, const cro::ButtonEvent& evt)
             {
@@ -888,9 +910,12 @@ void ProfileState::buildScene()
                     m_lastSelected = e.getComponent<cro::UIInput>().getSelectionIndex();
                 }
             });
+    bottomDarkColour.getComponent<cro::UIInput>().setNextIndex(ButtonDescDown, ButtonRandomise);
+    bottomDarkColour.getComponent<cro::UIInput>().setPrevIndex(ButtonBottomLight, ButtonTopDark);
+
 
     //avatar arrow buttons
-    auto hairLeft = createButton("arrow_left", glm::vec2(87.f, 156.f));
+    auto hairLeft = createButton("arrow_left", glm::vec2(87.f, 156.f), ButtonPrevHair);
     hairLeft.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         uiSystem.addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
             {
@@ -902,7 +927,10 @@ void ProfileState::buildScene()
                     m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
                 }
             });
-    auto hairRight = createButton("arrow_right", glm::vec2(234.f, 156.f));
+    hairLeft.getComponent<cro::UIInput>().setNextIndex(ButtonNextHair, ButtonPrevBody);
+    hairLeft.getComponent<cro::UIInput>().setPrevIndex(ButtonHairColour, ButtonPrevBody);
+    
+    auto hairRight = createButton("arrow_right", glm::vec2(234.f, 156.f), ButtonNextHair);
     hairRight.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         uiSystem.addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
             {
@@ -913,7 +941,10 @@ void ProfileState::buildScene()
                     m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
                 }
             });
-    auto avatarLeft = createButton("arrow_left", glm::vec2(87.f, 110.f));
+    hairRight.getComponent<cro::UIInput>().setNextIndex(ButtonPrevBall, ButtonNextBody);
+    hairRight.getComponent<cro::UIInput>().setPrevIndex(ButtonPrevHair, ButtonNextBody);
+    
+    auto avatarLeft = createButton("arrow_left", glm::vec2(87.f, 110.f), ButtonPrevBody);
     avatarLeft.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         uiSystem.addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
             {
@@ -923,7 +954,10 @@ void ProfileState::buildScene()
                     m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
                 }
             });
-    auto avatarRight = createButton("arrow_right", glm::vec2(234.f, 110.f));
+    avatarLeft.getComponent<cro::UIInput>().setNextIndex(ButtonNextBody, ButtonPrevHair);
+    avatarLeft.getComponent<cro::UIInput>().setPrevIndex(ButtonTopDark, ButtonPrevHair);
+    
+    auto avatarRight = createButton("arrow_right", glm::vec2(234.f, 110.f), ButtonNextBody);
     avatarRight.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         uiSystem.addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
             {
@@ -933,9 +967,12 @@ void ProfileState::buildScene()
                     m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
                 }
             });
+    avatarRight.getComponent<cro::UIInput>().setNextIndex(ButtonPrevBall, ButtonNextHair);
+    avatarRight.getComponent<cro::UIInput>().setPrevIndex(ButtonPrevBody, ButtonNextHair);
+
 
     //checkbox
-    auto southPaw = createButton("check_highlight", glm::vec2(17.f, 50.f));
+    auto southPaw = createButton("check_highlight", glm::vec2(17.f, 50.f), ButtonSouthPaw);
     southPaw.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         uiSystem.addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
             {
@@ -945,6 +982,9 @@ void ProfileState::buildScene()
                     m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
                 }
             });
+    southPaw.getComponent<cro::UIInput>().setNextIndex(ButtonSaveClose, ButtonRandomise);
+    southPaw.getComponent<cro::UIInput>().setPrevIndex(ButtonSaveClose, ButtonBottomLight);
+    
     auto innerEnt = m_uiScene.createEntity();
     innerEnt.addComponent<cro::Transform>().setPosition(glm::vec3(19.f, 52.f, 0.1f));
     innerEnt.addComponent<cro::Drawable2D>().setVertexData(
@@ -969,7 +1009,7 @@ void ProfileState::buildScene()
     bgEnt.getComponent<cro::Transform>().addChild(innerEnt.getComponent<cro::Transform>());
 
     //randomise button
-    auto randomButton = createButton("random_highlight", { 9.f, 24.f });
+    auto randomButton = createButton("random_highlight", { 9.f, 24.f }, ButtonRandomise);
     randomButton.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         uiSystem.addCallback([&](cro::Entity e, const cro::ButtonEvent& evt)
             {
@@ -1001,9 +1041,22 @@ void ProfileState::buildScene()
                     refreshSwatch();
                 }
             });
+#ifdef USE_GNS
+    randomButton.getComponent<cro::UIInput>().setNextIndex(ButtonCancel, ButtonWorkshop);
+#else
+    entity.getComponent<cro::UIInput>().setNextIndex(ButtonCancel, ButtonHairColour);
+#endif
+    if (!Social::isSteamdeck())
+    {
+        randomButton.getComponent<cro::UIInput>().setPrevIndex(ButtonMugshot, ButtonSouthPaw);
+    }
+    else
+    {
+        randomButton.getComponent<cro::UIInput>().setPrevIndex(ButtonCancel, ButtonSouthPaw);
+    }
 
     //name button
-    auto nameButton = createButton("name_highlight", glm::vec2(264.f, 213.f));
+    auto nameButton = createButton("name_highlight", glm::vec2(264.f, 213.f), ButtonName);
     nameButton.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         uiSystem.addCallback([&](cro::Entity, const cro::ButtonEvent& evt) mutable
             {
@@ -1028,9 +1081,16 @@ void ProfileState::buildScene()
                     }
                 }
             });
+#ifdef USE_GNS
+    nameButton.getComponent<cro::UIInput>().setNextIndex(ButtonWorkshop, ButtonBallSelect);
+    nameButton.getComponent<cro::UIInput>().setPrevIndex(ButtonWorkshop, ButtonCancel);
+#else
+    entity.getComponent<cro::UIInput>().setNextIndex(ButtonDescUp, ButtonBallSelect);
+    entity.getComponent<cro::UIInput>().setPrevIndex(ButtonNextHair, ButtonBallSelect);
+#endif
 
     //ball arrow buttons
-    auto ballLeft = createButton("arrow_left", glm::vec2(267.f, 134.f));
+    auto ballLeft = createButton("arrow_left", glm::vec2(267.f, 134.f), ButtonPrevBall);
     ballLeft.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         uiSystem.addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
             {
@@ -1040,9 +1100,12 @@ void ProfileState::buildScene()
                     m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
                 }
             });
+    ballLeft.getComponent<cro::UIInput>().setNextIndex(ButtonBallSelect, ButtonUpdateIcon);
+    ballLeft.getComponent<cro::UIInput>().setPrevIndex(ButtonNextHair, ButtonName);
+
 
     //toggles the preview to display ball thumbs
-    auto ballThumb = createButton("ballthumb_highlight", { 279.f , 83.f });
+    auto ballThumb = createButton("ballthumb_highlight", { 279.f , 83.f }, ButtonBallSelect);
     ballThumb.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         uiSystem.addCallback([&](cro::Entity e, const cro::ButtonEvent& evt)
             {
@@ -1054,16 +1117,17 @@ void ProfileState::buildScene()
 
                     m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::BallThumb);
                     m_uiScene.getSystem<cro::UISystem>()->setColumnCount(BallColCount);
-                    m_uiScene.getSystem<cro::UISystem>()->selectAt(m_ballIndex);
+                    m_uiScene.getSystem<cro::UISystem>()->selectAt(m_ballIndex + 1);
 
                     m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
 
                     m_lastSelected = e.getComponent<cro::UIInput>().getSelectionIndex();
                 }
             });
+    ballThumb.getComponent<cro::UIInput>().setNextIndex(ButtonNextBall, ButtonUpdateIcon);
+    ballThumb.getComponent<cro::UIInput>().setPrevIndex(ButtonPrevBall, ButtonName);
 
-
-    auto ballRight = createButton("arrow_right", glm::vec2(382.f, 134.f));
+    auto ballRight = createButton("arrow_right", glm::vec2(382.f, 134.f), ButtonNextBall);
     ballRight.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         uiSystem.addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
             {
@@ -1073,10 +1137,11 @@ void ProfileState::buildScene()
                     m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
                 }
             });
-
+    ballRight.getComponent<cro::UIInput>().setNextIndex(ButtonDescUp, ButtonUpdateIcon);
+    ballRight.getComponent<cro::UIInput>().setPrevIndex(ButtonBallSelect, ButtonName);
 
     //updates the profile icon
-    auto profileIcon = createButton("button_highlight", glm::vec2(269.f, 55.f));
+    auto profileIcon = createButton("button_highlight", glm::vec2(269.f, 55.f), ButtonUpdateIcon);
     bounds = profileIcon.getComponent<cro::Sprite>().getTextureBounds();
     bounds.left += 2.f;
     bounds.bottom += 2.f;
@@ -1092,10 +1157,11 @@ void ProfileState::buildScene()
                     m_audioEnts[AudioID::Snap].getComponent<cro::AudioEmitter>().play();
                 }
             });
-
+    profileIcon.getComponent<cro::UIInput>().setNextIndex(ButtonDescDown, ButtonSaveClose);
+    profileIcon.getComponent<cro::UIInput>().setPrevIndex(ButtonSouthPaw, ButtonBallSelect);
 
     //save/quit buttons
-    auto saveQuit = createButton("button_highlight", glm::vec2(269.f, 38.f));
+    auto saveQuit = createButton("button_highlight", glm::vec2(269.f, 38.f), ButtonSaveClose);
     bounds = saveQuit.getComponent<cro::Sprite>().getTextureBounds();
     bounds.left += 2.f;
     bounds.bottom += 2.f;
@@ -1125,8 +1191,11 @@ void ProfileState::buildScene()
                     quitState();
                 }
             });
-    
-    auto quit = createButton("button_highlight", glm::vec2(269.f, 21.f));
+    saveQuit.getComponent<cro::UIInput>().setNextIndex(ButtonSouthPaw, ButtonCancel);
+    saveQuit.getComponent<cro::UIInput>().setPrevIndex(ButtonSouthPaw, ButtonUpdateIcon);
+
+
+    auto quit = createButton("button_highlight", glm::vec2(269.f, 21.f), ButtonCancel);
     bounds = quit.getComponent<cro::Sprite>().getTextureBounds();
     bounds.left += 2.f;
     bounds.bottom += 2.f;
@@ -1141,7 +1210,15 @@ void ProfileState::buildScene()
                     quitState();
                 }
             });
-
+    if (!Social::isSteamdeck())
+    {
+        quit.getComponent<cro::UIInput>().setNextIndex(ButtonMugshot, ButtonName);
+    }
+    else
+    {
+        quit.getComponent<cro::UIInput>().setNextIndex(ButtonRandomise, ButtonName);
+    }
+    quit.getComponent<cro::UIInput>().setPrevIndex(ButtonRandomise, ButtonSaveClose);
 
 
 
@@ -1224,7 +1301,7 @@ void ProfileState::buildScene()
     if (!Social::isSteamdeck())
     {
         //open the profile folder to copy mugshot image
-        entity = createButton("profile_highlight", {393.f, 21.f});
+        entity = createButton("profile_highlight", {393.f, 21.f}, ButtonMugshot);
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
             uiSystem.addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
                 {
@@ -1235,6 +1312,9 @@ void ProfileState::buildScene()
                         cro::Util::String::parseURL(path);
                     }
                 });
+        entity.getComponent<cro::UIInput>().setNextIndex(ButtonRandomise, ButtonName);
+        entity.getComponent<cro::UIInput>().setPrevIndex(ButtonCancel, ButtonDescDown);
+
 
         //*sigh* entity already has a callback for animation (which by this point should probably be its own system)
         //so hack around this with another entity that enables the button when !full screen
@@ -1248,7 +1328,7 @@ void ProfileState::buildScene()
         };
     }
 
-    entity = createButton("scroll_up", { 441.f, 192.f });
+    entity = createButton("scroll_up", { 441.f, 192.f }, ButtonDescUp);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         uiSystem.addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
             {
@@ -1258,7 +1338,10 @@ void ProfileState::buildScene()
                     m_menuEntities[EntityID::BioText].getComponent<cro::Callback>().active = true;
                 }
             });
-    entity = createButton("scroll_down", { 441.f, 81.f });
+    entity.getComponent<cro::UIInput>().setNextIndex(ButtonHairColour, ButtonDescDown);
+    entity.getComponent<cro::UIInput>().setPrevIndex(ButtonNextBall, ButtonName);
+
+    entity = createButton("scroll_down", { 441.f, 81.f }, ButtonDescDown);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         uiSystem.addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
             {
@@ -1268,6 +1351,15 @@ void ProfileState::buildScene()
                     m_menuEntities[EntityID::BioText].getComponent<cro::Callback>().active = true;
                 }
             });
+    if (!Social::isSteamdeck())
+    {
+        entity.getComponent<cro::UIInput>().setNextIndex(ButtonBottomLight, ButtonMugshot);
+    }
+    else
+    {
+        entity.getComponent<cro::UIInput>().setNextIndex(ButtonBottomLight, ButtonDescUp);
+    }
+    entity.getComponent<cro::UIInput>().setPrevIndex(ButtonNextBall, ButtonDescUp);
 
     auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
 
@@ -1679,6 +1771,7 @@ void ProfileState::createPalettes(cro::Entity parent)
 
         //buttons/menu items
         auto menuID = i + MenuID::Hair;
+        std::size_t IndexOffset = (i * 100) + 200;
 
         m_flyouts[i].activateCallback = m_uiScene.getSystem<cro::UISystem>()->addCallback(
             [&, i](cro::Entity e, const cro::ButtonEvent& evt) mutable
@@ -1743,12 +1836,34 @@ void ProfileState::createPalettes(cro::Entity parent)
             glm::vec2 pos = { x * (IconSize.x + IconPadding), y * (IconSize.y + IconPadding) };
             pos += IconPadding;
 
+            auto inputIndex = (((RowCount - y) - 1) * PaletteColumnCount) + x;
+
             entity = m_uiScene.createEntity();
             entity.addComponent<cro::Transform>().setPosition(glm::vec3(pos, 0.1f));
             entity.addComponent<cro::UIInput>().setGroup(menuID);
             entity.getComponent<cro::UIInput>().area = { glm::vec2(0.f), IconSize };
             entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = m_flyouts[i].selectCallback;
             entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = m_flyouts[i].activateCallback;
+
+
+            entity.getComponent<cro::UIInput>().setSelectionIndex(IndexOffset + inputIndex);
+            if (x == 0)
+            {
+                auto prevIndex = std::min(inputIndex + (PaletteColumnCount - 1), pc::PairCounts[i] - 1);
+                entity.getComponent<cro::UIInput>().setPrevIndex(IndexOffset + prevIndex);
+            }
+            else if (x == (PaletteColumnCount - 1))
+            {
+                entity.getComponent<cro::UIInput>().setNextIndex(IndexOffset + (inputIndex - (PaletteColumnCount - 1)));
+            }
+            else if (y == 0
+                && x == (pc::PairCounts[i] % PaletteColumnCount) - 1)
+            {
+                auto nextIndex = inputIndex - ((pc::PairCounts[i] % PaletteColumnCount) - 1);
+                entity.getComponent<cro::UIInput>().setNextIndex(IndexOffset + nextIndex);
+            }
+
+
             entity.addComponent<cro::Callback>().setUserData<std::uint8_t>(static_cast<std::uint8_t>((y * PaletteColumnCount) + x));
 
             m_flyouts[i].background.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
