@@ -104,7 +104,7 @@ public:
         }type = LevelUp;
         std::int32_t level = 0;
         std::int32_t reason = -1;
-        std::uint64_t id = 0;
+        std::uint64_t playerID = 0;
     };
 
     struct ProgressData final
@@ -166,6 +166,8 @@ public:
     static void refreshGlobalBoard(std::int32_t) {}
     static HallEntry getGlobalBoard(std::int32_t) { return {}; }
     static cro::String getTickerMessage() { return {}; }
+
+    static float getCompletionCount(const std::string&, bool);
 
     //awards (inventory items) to display in clubhouse
     struct Award final

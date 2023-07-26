@@ -345,7 +345,7 @@ void ClubhouseState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter
     
 
     //trophy shelf
-#ifdef USE_GNS
+//#ifdef USE_GNS
     entity = createButton("Hall Of Fame");
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         m_uiScene.getSystem<cro::UISystem>()->addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
@@ -362,18 +362,18 @@ void ClubhouseState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter
                     m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
                 }
             });
-#else
-    entity = createButton("Trophy Shelf");
-    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
-        m_uiScene.getSystem<cro::UISystem>()->addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
-            {
-                if (activated(evt))
-                {
-                    requestStackPush(StateID::Trophy);
-                    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
-                }
-            });
-#endif
+//#else
+//    entity = createButton("Trophy Shelf");
+//    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
+//        m_uiScene.getSystem<cro::UISystem>()->addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
+//            {
+//                if (activated(evt))
+//                {
+//                    requestStackPush(StateID::Trophy);
+//                    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+//                }
+//            });
+//#endif
 
 
     //options

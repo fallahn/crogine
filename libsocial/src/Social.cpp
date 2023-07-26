@@ -433,3 +433,9 @@ std::string Social::getUserContentPath(std::int32_t contentType)
         return getBaseContentPath() + "avatars/";
     }
 }
+
+float Social::getCompletionCount(const std::string& course, bool)
+{
+    return Achievements::getStat(course)->value;
+    //return std::max(1.f, Achievements::getStat(/*StatStrings[StatID::Course01Complete]*/course)->value);
+}

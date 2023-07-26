@@ -1593,7 +1593,7 @@ void StatsState::createHistoryTab(cro::Entity parent)
 
 
 
-
+#ifdef USE_GNS
 
     //bar chart for play time
     entity = m_scene.createEntity();
@@ -1638,6 +1638,7 @@ void StatsState::createHistoryTab(cro::Entity parent)
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
     m_tabNodes[TabID::History].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+#endif
 }
 
 void StatsState::createAwardsTab(cro::Entity parent, const cro::SpriteSheet& spriteSheet)
@@ -1795,6 +1796,10 @@ void StatsState::createAwardsTab(cro::Entity parent, const cro::SpriteSheet& spr
     m_awardQuad = m_awardSprites[SpriteID::BronzeShield];
     auto size = m_awardQuad.getSize();
     m_awardQuad.setOrigin(size / 2.f);
+
+#ifndef USE_GNS
+    refreshAwardsTab(0);
+#endif
 }
 
 void StatsState::refreshAwardsTab(std::int32_t page)
@@ -1819,7 +1824,11 @@ void StatsState::refreshAwardsTab(std::int32_t page)
         a.type = cro::Util::Random::value(0, 2);
     }
 #else
+#ifdef USE_GNS
     const auto& awards = Social::getAwards();
+#else
+    std::vector<Social::Award> awards;
+#endif
 #endif
 
     const auto drawPaddingIcons = 
@@ -2183,15 +2192,38 @@ void PieChart::addValue(float value)
 
 void PieChart::updateVerts()
 {
+    constexpr float SegmentCount = 32.f; //could be more/less as segments per value are rounded
+
     if (m_total == 0)
     {
+        if (m_entity.isValid()
+            && m_entity.hasComponent<cro::Drawable2D>())
+        {
+            m_entity.getComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLE_FAN);
+            auto c = cro::Colour::Black;
+            c.setAlpha(0.2f);
+
+            std::vector<cro::Vertex2D> verts;
+            verts.emplace_back(glm::vec2(0.f), c);
+
+            const float SegmentAngle = cro::Util::Const::TAU / SegmentCount;
+            for (auto i = 0; i < 33; ++i)
+            {
+                float angle = i * SegmentAngle;
+                verts.emplace_back(glm::vec2(-std::cos(angle), std::sin(angle)) * PieRadius, c);
+            }
+
+            m_entity.getComponent<cro::Drawable2D>().setVertexData(verts);
+            m_entity.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
+        }
+
         return;
     }
 
     if (m_entity.isValid()
         && m_entity.hasComponent<cro::Drawable2D>())
     {
-        constexpr float SegmentCount = 32.f; //could be more/less as segments per value are rounded
+
         std::vector<cro::Vertex2D> verts;
 
         std::int32_t colourIndex = PieBaseColour;
