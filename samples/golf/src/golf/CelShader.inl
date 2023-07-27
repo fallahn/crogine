@@ -128,7 +128,7 @@ static const std::string CelVertexShader = R"(
         vec2 texCoord = a_texCoord1;
         float scale = texCoord.y;
         float instanceOffset = mod(gl_InstanceID, MAX_INSTANCE) * u_offsetMultiplier;
-        texCoord.y = mod(u_time + (0.15 * instanceOffset), u_maxTime);
+        texCoord.y = mod((0.15 * instanceOffset)+ u_time, u_maxTime);
 
         vec4 position = vec4(decodeVector(u_vatsPosition, texCoord) * scale, 1.0);
     #else
@@ -203,7 +203,7 @@ static const std::string CelVertexShader = R"(
         v_texCoord = a_texCoord0;
 #if defined (VATS)
         v_texCoord.x /= MAX_INSTANCE;
-        v_texCoord.x += (1.0 / MAX_INSTANCE) * mod(gl_InstanceID, MAX_INSTANCE);
+        v_texCoord.x = ((1.0 / MAX_INSTANCE) * mod(gl_InstanceID, MAX_INSTANCE)) + v_texCoord.x;
 #endif
 #endif
 
@@ -371,7 +371,7 @@ static const std::string CelFragmentShader = R"(
         {
             for(int y = 0; y < filterSize; ++y)
             {
-                float pcfDepth = TEXTURE(u_shadowMap, vec3(projectionCoords.xy + kernel[y * filterSize + x] * texelSize, cascadeIndex)).r;
+                float pcfDepth = TEXTURE(u_shadowMap, vec3((kernel[y * filterSize + x] * texelSize) + projectionCoords.xy, cascadeIndex)).r;
                 shadow += (projectionCoords.z - 0.001) > pcfDepth ? 0.4 : 0.0;
             }
         }
@@ -488,8 +488,8 @@ float greenTerrain = step(0.065, v_colour.r) * (1.0 - step(0.13, v_colour.r));
 
         //complementaryColour(colour.rgb)
         vec3 holeColour = mix(colour.rgb * vec3(0.67, 0.757, 0.41), colour.rgb, 0.65 + (0.35 * holeHeight));
-        holeColour.r += smoothstep(0.45, 0.99, holeHeight) * 0.01;
-        holeColour.g += smoothstep(0.65, 0.999, holeHeight) * 0.01;
+        holeColour.r = (smoothstep(0.45, 0.99, holeHeight) * 0.01) + holeColour.r;
+        holeColour.g = (smoothstep(0.65, 0.999, holeHeight) * 0.01) + holeColour.g;
 
         //distances are sqr
         float holeHeightFade = (1.0 - smoothstep(100.0, 400.0, dot(viewDirection, viewDirection)));
@@ -517,7 +517,7 @@ float greenTerrain = step(0.065, v_colour.r) * (1.0 - step(0.13, v_colour.r));
         int texY = int(mod(texCheck.y, MatrixSize));
 
         float facing = dot(normal, vec3(0.0, 1.0, 0.0));
-        float waterFade = (1.0 - smoothstep(WaterLevel, WaterLevel + (1.15 * (1.0 - smoothstep(0.89, 0.99, facing))), v_worldPosition.y));
+        float waterFade = (1.0 - smoothstep(WaterLevel, (1.15 * (1.0 - smoothstep(0.89, 0.99, facing))) + WaterLevel, v_worldPosition.y));
         float waterDither = findClosest(texX, texY, waterFade) * waterFade * (1.0 - step(0.96, facing));
 
 #if defined(COMP_SHADE)
@@ -546,7 +546,7 @@ float greenTerrain = step(0.065, v_colour.r) * (1.0 - step(0.13, v_colour.r));
 #endif
 
 #if defined(REFLECTIONS)
-        colour.rgb += TEXTURE_CUBE(u_reflectMap, reflect(-viewDirection, normal)).rgb * 0.25;
+        colour.rgb = (TEXTURE_CUBE(u_reflectMap, reflect(-viewDirection, normal)).rgb * 0.25) + colour.rgb;
 #endif
 
         FRAG_OUT = vec4(colour.rgb, 1.0);

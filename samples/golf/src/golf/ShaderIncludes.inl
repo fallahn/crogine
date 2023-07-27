@@ -125,7 +125,7 @@ static inline const std::string HSV = R"(
 
     vec3 hsv2rgb(vec3 c)
     {
-        vec4 K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
+        vec4 K = vec4(1.0, 0.666667, 0.333333, 3.0);
         vec3 p = abs(fract(c.xxx + K.xyz) * 6.0 - K.www);
         return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
     }
@@ -154,12 +154,12 @@ static inline const std::string WindCalc = R"(
         WindResult retVal = WindResult(vec2(0.0), vec2(0.0), 0.0);
         vec2 uv = localPos;
         //uv.x += u_windData.w * (hFreq + (hFreq * u_windData.y));
-        uv.x += u_windData.w * hFreq;
+        uv.x = (u_windData.w * hFreq) + uv.x;
         retVal.highFreq.x = TEXTURE(u_noiseTexture, uv).r;
 
         uv = localPos;
         //uv.y += u_windData.w * (hFreq + (hFreq * u_windData.y));
-        uv.y += u_windData.w * hFreq;
+        uv.y = (u_windData.w * hFreq) + uv.y;
         retVal.highFreq.y = TEXTURE(u_noiseTexture, uv).r;
 
         uv = worldPos;
@@ -175,13 +175,13 @@ static inline const std::string WindCalc = R"(
         retVal.highFreq -= 1.0;
         retVal.highFreq *= u_windData.y;
         //retVal.highFreq *= hMagnitude;
-        retVal.highFreq *= hMagnitude + (hMagnitude * u_windData.y);
+        retVal.highFreq *= (hMagnitude * u_windData.y) + hMagnitude;
 
         retVal.lowFreq *= 2.0;
         retVal.lowFreq -= 1.0;
-        retVal.lowFreq *= (0.6 + (0.4 * u_windData.y));
+        retVal.lowFreq *= ((0.4 * u_windData.y)+ 0.6);
         //retVal.lowFreq *= lMagnitude;
-        retVal.lowFreq *= lMagnitude + (lMagnitude * u_windData.y);
+        retVal.lowFreq *= (lMagnitude * u_windData.y) + lMagnitude;
 
         retVal.strength = u_windData.y;
         retVal.strength *= dirMagnitude;

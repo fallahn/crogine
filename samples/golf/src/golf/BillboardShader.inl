@@ -97,9 +97,9 @@ static const std::string BillboardVertexShader = R"(
 #endif
         vec3 camRight = vec3(viewMatrix[0][0], viewMatrix[1][0], viewMatrix[2][0]);
         vec3 camUp = vec3(0.0, 1.0, 0.0);
-        position = position + camRight * relPos.x
-                            + camUp * relPos.y
-                            + cross(camRight, camUp) * relPos.z;
+        position = position + (camRight * relPos.x)
+                            + (camUp * relPos.y)
+                            + (cross(camRight, camUp) * relPos.z);
 
 
         //---generic wind added to tall billboards---//
@@ -118,21 +118,21 @@ static const std::string BillboardVertexShader = R"(
 
 
         vec2 uv = a_normal.xz;
-        uv.x += u_windData.w * xFreq;
+        uv.x = (u_windData.w * xFreq) + uv.x;
         float windX = TEXTURE(u_noiseTexture, uv).r;
         windX *= 2.0;
         windX -= 1.0;
 
         uv = a_normal.xz;
-        uv.y += u_windData.w * yFreq;
+        uv.y = (u_windData.w * yFreq) + uv.y;
         float windZ = TEXTURE(u_noiseTexture, uv).r;
         windZ *= 2.0;
         windZ -= 1.0;
 
 
-        position.x += windX * totalScale;
-        position.z += windZ * totalScale;
-        position.xz += (u_windData.xz * strength * 2.0) * totalScale;
+        position.x = (windX * totalScale) + position.x;
+        position.z = (windZ * totalScale) + position.z;
+        position.xz = ((u_windData.xz * strength * 2.0) * totalScale) + position.xz;
         //------------------------------//
 
         //wind from billboard vertex colour (above)
@@ -149,6 +149,7 @@ static const std::string BillboardVertexShader = R"(
         vertPos.xy = floor(vertPos.xy);
         vertPos.xy = ((vertPos.xy / u_scaledResolution) * 2.0) - 1.0;
         vertPos.xyz *= vertPos.w;*/
+
         gl_Position = vertPos;
 
         v_texCoord0 = a_texCoord0;

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2022
+Matt Marchant 2021 - 2023
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -119,7 +119,7 @@ uniform sampler2DArray u_depthMap;
         const float zNear = 10.02; //note these have to match the near/far plane of the depthmap camera
         const float zFar = 10.48;
 
-        return zNear * zFar / (zFar + d * (zNear - zFar));
+        return zNear * zFar / ((d * (zNear - zFar)) + zFar);
     }
 
 #if !defined(NO_DEPTH)
@@ -133,7 +133,7 @@ uniform sampler2DArray u_depthMap;
         float index = clamp((y * ColCount) + x, 0.0, 39.0);
 
         float u = (v_worldPosition.x - (x * MetresPerTexture)) / MetresPerTexture;
-        float v = -(v_worldPosition.z + (y * MetresPerTexture)) / MetresPerTexture;
+        float v = -((y * MetresPerTexture) + v_worldPosition.z) / MetresPerTexture;
 
         float stepX = step(0.0, v_worldPosition.x) * (1.0 - step(320.0, v_worldPosition.x));
         float stepY = step(0.0, -v_worldPosition.z) * (1.0 - step(200.0, -v_worldPosition.z));
@@ -151,11 +151,11 @@ uniform sampler2DArray u_depthMap;
 
         vec2 pixelCoord = floor(mod(coord, 1.0) * PixelCount);
         float wave = noise(pixelCoord);
-        wave *= sin(waveSpeed + (wave * 300.0)) + 1.0 / 2.0;
+        wave *= sin(waveSpeed + (wave * 300.0)) + 1.0 * 0.5;
         wave = smoothstep(0.25, 1.0, wave);
         
 
-        float coordOffset = sin(((u_windData.w * 15.0) / 4.0) + (gl_FragCoord.z * 325.0)) * 0.0002;
+        float coordOffset = sin(((u_windData.w * 15.0) * 0.25) + (gl_FragCoord.z * 325.0)) * 0.0002;
         coordOffset += wave * 0.002;
 
         //reflection
@@ -169,14 +169,14 @@ uniform sampler2DArray u_depthMap;
 
         float fresnel = dot(reflect(-eyeDirection, normal), normal);
         const float bias = 0.6;
-        fresnel = bias + (fresnel * (1.0 - bias));
+        fresnel = (fresnel * (1.0 - bias)) + bias;
 
         vec3 blendedColour = mix(reflectColour.rgb, WaterColour.rgb, fresnel);
 
         float edgeWave = wave;
 
         //wave *= 0.2 * pow(reflectCoords.y, 4.0);
-        wave *= 0.01 + (0.19 * pow(reflectCoords.y, 4.0));
+        wave *= (0.19 * pow(reflectCoords.y, 4.0)) + 0.01;
 
         blendedColour.rgb += wave;
 
@@ -202,8 +202,8 @@ uniform sampler2DArray u_depthMap;
         depth *= findClosest(x,y,pow(depth, 3.0));
         
         edgeWave *= 0.07;
-        blendedColour += edgeWave * depth;
-        blendedColour += depth * 0.18;
+        blendedColour = (edgeWave * depth) + blendedColour;
+        blendedColour = (depth * 0.18) + blendedColour;
 #endif
         FRAG_OUT = vec4(blendedColour, 1.0);
     })";

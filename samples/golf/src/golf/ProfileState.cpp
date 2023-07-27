@@ -1044,7 +1044,7 @@ void ProfileState::buildScene()
 #ifdef USE_GNS
     randomButton.getComponent<cro::UIInput>().setNextIndex(ButtonCancel, ButtonWorkshop);
 #else
-    entity.getComponent<cro::UIInput>().setNextIndex(ButtonCancel, ButtonHairColour);
+    randomButton.getComponent<cro::UIInput>().setNextIndex(ButtonCancel, ButtonHairColour);
 #endif
     if (!Social::isSteamdeck())
     {
@@ -1085,8 +1085,8 @@ void ProfileState::buildScene()
     nameButton.getComponent<cro::UIInput>().setNextIndex(ButtonWorkshop, ButtonBallSelect);
     nameButton.getComponent<cro::UIInput>().setPrevIndex(ButtonWorkshop, ButtonCancel);
 #else
-    entity.getComponent<cro::UIInput>().setNextIndex(ButtonDescUp, ButtonBallSelect);
-    entity.getComponent<cro::UIInput>().setPrevIndex(ButtonNextHair, ButtonBallSelect);
+    nameButton.getComponent<cro::UIInput>().setNextIndex(ButtonDescUp, ButtonBallSelect);
+    nameButton.getComponent<cro::UIInput>().setPrevIndex(ButtonNextHair, ButtonBallSelect);
 #endif
 
     //ball arrow buttons
