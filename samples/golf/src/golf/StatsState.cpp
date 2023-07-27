@@ -1944,6 +1944,21 @@ void StatsState::activateTab(std::int32_t tabID)
         m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
     }
 
+    //for reasons I've given up trying to understand, we need to
+    //delay the selection by one frame.
+    const auto selectNext = [&](std::int32_t idx)
+    {
+        auto e = m_scene.createEntity();
+        e.addComponent<cro::Callback>().active = true;
+        e.getComponent<cro::Callback>().function =
+            [&, idx](cro::Entity f, float)
+        {
+            m_scene.getSystem<cro::UISystem>()->selectByIndex(idx);
+            f.getComponent<cro::Callback>().active = false;
+            m_scene.destroyEntity(f);
+        };
+    };
+
     //update the selection order depending on which page we're on
     switch (tabID)
     {
@@ -1958,7 +1973,7 @@ void StatsState::activateTab(std::int32_t tabID)
         m_tabButtons[TabID::Awards].getComponent<cro::UIInput>().setNextIndex(ButtonPerformance, ButtonPerformance);
         m_tabButtons[TabID::Awards].getComponent<cro::UIInput>().setPrevIndex(ButtonHistory, ButtonHistory);
 
-        m_scene.getSystem<cro::UISystem>()->selectAt(ButtonPerformance);
+        selectNext(ButtonPerformance);
         break;
     case TabID::Performance:
         m_tabButtons[TabID::ClubStats].getComponent<cro::UIInput>().setNextIndex(ButtonHistory, Perf01);
@@ -1970,7 +1985,7 @@ void StatsState::activateTab(std::int32_t tabID)
         m_tabButtons[TabID::Awards].getComponent<cro::UIInput>().setNextIndex(ButtonClubset, PerfDate);
         m_tabButtons[TabID::Awards].getComponent<cro::UIInput>().setPrevIndex(ButtonHistory, PerfDate);
         
-        m_scene.getSystem<cro::UISystem>()->selectAt(ButtonHistory);
+        selectNext(ButtonHistory);
         break;
     case TabID::History:
         m_tabButtons[TabID::ClubStats].getComponent<cro::UIInput>().setNextIndex(ButtonPerformance, ButtonPerformance);
@@ -1982,7 +1997,7 @@ void StatsState::activateTab(std::int32_t tabID)
         m_tabButtons[TabID::Awards].getComponent<cro::UIInput>().setNextIndex(ButtonClubset, ButtonClubset);
         m_tabButtons[TabID::Awards].getComponent<cro::UIInput>().setPrevIndex(ButtonPerformance, ButtonPerformance);
 
-        m_scene.getSystem<cro::UISystem>()->selectAt(ButtonAwards);
+        selectNext(ButtonAwards);
         break;
     case TabID::Awards:
         m_tabButtons[TabID::ClubStats].getComponent<cro::UIInput>().setNextIndex(ButtonPerformance, ButtonPerformance);
@@ -1994,7 +2009,7 @@ void StatsState::activateTab(std::int32_t tabID)
         m_tabButtons[TabID::History].getComponent<cro::UIInput>().setNextIndex(ButtonClubset, AwardNext);
         m_tabButtons[TabID::History].getComponent<cro::UIInput>().setPrevIndex(ButtonPerformance, AwardNext);
 
-        m_scene.getSystem<cro::UISystem>()->selectAt(ButtonClubset);
+        selectNext(ButtonClubset);
         break;
     }
 }

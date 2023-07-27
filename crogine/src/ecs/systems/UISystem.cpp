@@ -548,6 +548,25 @@ void UISystem::selectAt(std::size_t index)
     }
 }
 
+void UISystem::selectByIndex(std::size_t index)
+{
+    const auto& entities = m_groups[m_activeGroup];
+    auto old = m_selectedIndex;
+
+    do
+    {
+        m_selectedIndex = (m_selectedIndex + 1) % entities.size();
+    } while (entities[m_selectedIndex].getComponent<cro::UIInput>().getSelectionIndex() != index && m_selectedIndex != old);
+
+    //and do selected callback
+    if (m_selectedIndex != old
+        && entities[m_selectedIndex].getComponent<UIInput>().enabled)
+    {
+        unselect(old);
+        select(m_selectedIndex);
+    }
+}
+
 //private
 glm::vec2 UISystem::toWorldCoords(std::int32_t x, std::int32_t y)
 {

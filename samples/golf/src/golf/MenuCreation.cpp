@@ -1629,10 +1629,10 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
         entity.addComponent<cro::UIInput>().area = bounds;
         entity.getComponent<cro::UIInput>().setGroup(MenuID::Lobby);
         entity.getComponent<cro::UIInput>().setSelectionIndex(RulesClubset);
-        //TODO update this if hosting
+
         entity.getComponent<cro::UIInput>().setNextIndex(LobbyInfoA, LobbyInfoA);
         entity.getComponent<cro::UIInput>().setPrevIndex(LobbyCourseA, LobbyCourseA);
-
+        m_lobbyButtonContext.rulesClubset = entity;
 
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = m_courseSelectCallbacks.selectHighlight;
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = m_courseSelectCallbacks.unselectHighlight;
@@ -1654,7 +1654,20 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
 
     //updates start/quit buttons with correct navigation indices
     static std::function<void(std::int32_t)> navigationUpdate;
+    navigationUpdate = nullptr; //we're using nasty static hack so make sure to reset this
 
+    const auto selectNext = [&](std::int32_t idx)
+    {
+        auto e = m_uiScene.createEntity();
+        e.addComponent<cro::Callback>().active = true;
+        e.getComponent<cro::Callback>().function =
+            [&, idx](cro::Entity f, float)
+        {
+            m_uiScene.getSystem<cro::UISystem>()->selectByIndex(idx);
+            f.getComponent<cro::Callback>().active = false;
+            m_uiScene.destroyEntity(f);
+        };
+    };
 
     //button for course selection
     entity = m_uiScene.createEntity();
@@ -1673,7 +1686,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = m_courseSelectCallbacks.selectHighlight;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = m_courseSelectCallbacks.unselectHighlight;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = m_uiScene.getSystem<cro::UISystem>()->addCallback(
-        [&](cro::Entity, const cro::ButtonEvent& evt)
+        [&, selectNext](cro::Entity, const cro::ButtonEvent& evt)
         {
             if (activated(evt))
             {
@@ -1684,6 +1697,8 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
                 m_uiScene.getActiveCamera().getComponent<cro::Camera>().active = true; //forces a visibility refresh
 
                 navigationUpdate(LobbyCourseA);
+
+                selectNext(LobbyRulesA);
             }
         }
     );
@@ -1691,6 +1706,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function = ruleButtonEnable;
     bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_lobbyButtonContext.lobbyCourseA = entity;
 
     //button for lobby info
     entity = m_uiScene.createEntity();
@@ -1709,7 +1725,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = m_courseSelectCallbacks.selectHighlight;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = m_courseSelectCallbacks.unselectHighlight;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = m_uiScene.getSystem<cro::UISystem>()->addCallback(
-        [&](cro::Entity, const cro::ButtonEvent& evt)
+        [&, selectNext](cro::Entity, const cro::ButtonEvent& evt)
         {
             if (activated(evt))
             {
@@ -1720,6 +1736,8 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
                 m_uiScene.getActiveCamera().getComponent<cro::Camera>().active = true; //forces a visibility refresh
 
                 navigationUpdate(LobbyInfoA);
+
+                selectNext(LobbyCourseB);
             }
         }
     );
@@ -1727,7 +1745,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function = ruleButtonEnable;
     bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-
+    m_lobbyButtonContext.lobbyInfoA = entity;
 
 
     //display lobby members - updateLobbyAvatars() adds the text ents to this.
@@ -1841,7 +1859,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = m_courseSelectCallbacks.selectHighlight;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = m_courseSelectCallbacks.unselectHighlight;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = m_uiScene.getSystem<cro::UISystem>()->addCallback(
-        [&](cro::Entity, const cro::ButtonEvent& evt)
+        [&, selectNext](cro::Entity, const cro::ButtonEvent& evt)
         {
             if (activated(evt))
             {
@@ -1852,6 +1870,8 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
                 m_uiScene.getActiveCamera().getComponent<cro::Camera>().active = true; //forces a visibility refresh
 
                 navigationUpdate(LobbyRulesA);
+
+                selectNext(LobbyCourseA);
             }
         }
     );
@@ -1859,6 +1879,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function = courseButtonEnable;
     thumbBgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_lobbyButtonContext.lobbyRulesA = entity;
 
     //button for info page
     entity = m_uiScene.createEntity();
@@ -1877,7 +1898,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = m_courseSelectCallbacks.selectHighlight;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = m_courseSelectCallbacks.unselectHighlight;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = m_uiScene.getSystem<cro::UISystem>()->addCallback(
-        [&](cro::Entity, const cro::ButtonEvent& evt)
+        [&, selectNext](cro::Entity, const cro::ButtonEvent& evt)
         {
             if (activated(evt))
             {
@@ -1888,6 +1909,8 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
                 m_uiScene.getActiveCamera().getComponent<cro::Camera>().active = true; //forces a visibility refresh
 
                 navigationUpdate(LobbyInfoB);
+
+                selectNext(LobbyCourseB);
             }
         }
     );
@@ -1895,7 +1918,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function = courseButtonEnable;
     thumbBgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-
+    m_lobbyButtonContext.lobbyInfoB = entity;
 
 
     //course title
@@ -1965,7 +1988,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = m_courseSelectCallbacks.selectHighlight;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = m_courseSelectCallbacks.unselectHighlight;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = m_uiScene.getSystem<cro::UISystem>()->addCallback(
-        [&](cro::Entity, const cro::ButtonEvent& evt)
+        [&, selectNext](cro::Entity, const cro::ButtonEvent& evt)
         {
             if (activated(evt))
             {
@@ -1976,6 +1999,8 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
                 m_uiScene.getActiveCamera().getComponent<cro::Camera>().active = true; //forces a visibility refresh
 
                 navigationUpdate(LobbyRulesB);
+
+                selectNext(LobbyCourseA);
             }
         }
     );
@@ -1983,6 +2008,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function = infoButtonEnable;
     infoBgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_lobbyButtonContext.lobbyRulesB = entity;
 
     //button for course selection
     entity = m_uiScene.createEntity();
@@ -2001,7 +2027,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = m_courseSelectCallbacks.selectHighlight;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = m_courseSelectCallbacks.unselectHighlight;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = m_uiScene.getSystem<cro::UISystem>()->addCallback(
-        [&](cro::Entity, const cro::ButtonEvent& evt)
+        [&, selectNext](cro::Entity, const cro::ButtonEvent& evt)
         {
             if (activated(evt))
             {
@@ -2012,6 +2038,8 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
                 m_uiScene.getActiveCamera().getComponent<cro::Camera>().active = true; //forces a visibility refresh
 
                 navigationUpdate(LobbyCourseB);
+
+                selectNext(LobbyRulesA);
             }
         }
     );
@@ -2036,6 +2064,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity.getComponent<cro::UIInput>().setPrevIndex(LobbyCourseB, LobbyCourseB); // and this
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = m_courseSelectCallbacks.selectHighlight;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = m_courseSelectCallbacks.unselectHighlight;
+#ifdef USE_GNS
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = m_uiScene.getSystem<cro::UISystem>()->addCallback(
         [&](cro::Entity, const cro::ButtonEvent& evt)
         {
@@ -2046,10 +2075,12 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
             }
         }
     );
+#endif
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement;
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function = infoButtonEnable;
     infoBgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_lobbyButtonContext.infoLeaderboard = entity;
 
     //banner
     entity = m_uiScene.createEntity();
@@ -2431,28 +2462,35 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
 
     auto lobbyStart = entity;
 
-    navigationUpdate = [lobbyQuit, lobbyStart](std::int32_t callerID) mutable
+    navigationUpdate = [&, lobbyQuit, lobbyStart](std::int32_t callerID) mutable
     {
         switch (callerID)
         {
         default: break;
+        //we can pair these up because they're switching to the same menu
         case LobbyCourseA:
+        case LobbyCourseB:
+            lobbyQuit.getComponent<cro::UIInput>().setNextIndex(LobbyStart, LobbyStart);
+            lobbyQuit.getComponent<cro::UIInput>().setPrevIndex(LobbyStart, LobbyRulesA);
 
+            lobbyStart.getComponent<cro::UIInput>().setNextIndex(LobbyQuit, LobbyQuit);
+            lobbyStart.getComponent<cro::UIInput>().setPrevIndex(LobbyQuit, LobbyInfoB);
             break;
         case LobbyRulesA:
+        case LobbyRulesB:
+            lobbyQuit.getComponent<cro::UIInput>().setNextIndex(LobbyStart, m_sharedData.hosting ? RulesPrevious : LobbyStart);
+            lobbyQuit.getComponent<cro::UIInput>().setPrevIndex(LobbyStart, LobbyCourseA);
 
+            lobbyStart.getComponent<cro::UIInput>().setNextIndex(LobbyQuit, m_sharedData.hosting ? RulesNext : LobbyQuit);
+            lobbyStart.getComponent<cro::UIInput>().setPrevIndex(LobbyQuit, LobbyInfoA);
             break;
         case LobbyInfoA:
-
-            break;
-        case LobbyCourseB:
-
-            break;
-        case LobbyRulesB:
-
-            break;
         case LobbyInfoB:
+            lobbyQuit.getComponent<cro::UIInput>().setNextIndex(LobbyStart, LobbyStart);
+            lobbyQuit.getComponent<cro::UIInput>().setPrevIndex(LobbyStart, LobbyCourseB);
 
+            lobbyStart.getComponent<cro::UIInput>().setNextIndex(LobbyQuit, m_lobbyButtonContext.hasScoreCard ? InfoScorecard : LobbyQuit);
+            lobbyStart.getComponent<cro::UIInput>().setPrevIndex(LobbyQuit, LobbyRulesB);
             break;
         }
     };
@@ -2603,6 +2641,8 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     };
 
     bannerEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    refreshLobbyButtons();
 }
 
 void MenuState::updateLobbyData(const net::NetEvent& evt)
@@ -3083,8 +3123,8 @@ void MenuState::addCourseSelectButtons()
         checkboxEnt.addComponent<cro::UIInput>().area = bounds;
         checkboxEnt.getComponent<cro::UIInput>().setGroup(MenuID::Lobby);
         checkboxEnt.getComponent<cro::UIInput>().setSelectionIndex(CourseFriendsOnly);
-        checkboxEnt.getComponent<cro::UIInput>().setNextIndex(CourseHolePrev, LobbyInfoB);
-        checkboxEnt.getComponent<cro::UIInput>().setPrevIndex(CourseHoleNext, CourseCPUSkip);
+        checkboxEnt.getComponent<cro::UIInput>().setNextIndex(CoursePrev, LobbyInfoB);
+        checkboxEnt.getComponent<cro::UIInput>().setPrevIndex(CourseNext, CourseCPUSkip);
         checkboxEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = m_courseSelectCallbacks.selectHighlight;
         checkboxEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = m_courseSelectCallbacks.unselectHighlight;
         checkboxEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = m_courseSelectCallbacks.toggleFriendsOnly;
@@ -3122,7 +3162,7 @@ void MenuState::addCourseSelectButtons()
         labelEnt.addComponent<cro::UIInput>().area = bounds;
         labelEnt.getComponent<cro::UIInput>().setGroup(MenuID::Lobby);
         labelEnt.getComponent<cro::UIInput>().setSelectionIndex(CourseInviteFriend);
-        labelEnt.getComponent<cro::UIInput>().setNextIndex(LobbyRulesA, LobbyQuit);
+        labelEnt.getComponent<cro::UIInput>().setNextIndex(LobbyRulesA, LobbyRulesA);
         labelEnt.getComponent<cro::UIInput>().setPrevIndex(LobbyInfoB, CourseHolePrev);
         labelEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = m_courseSelectCallbacks.selectText;
         labelEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = m_courseSelectCallbacks.unselectText;
@@ -3163,7 +3203,11 @@ void MenuState::addCourseSelectButtons()
     buttonEnt.getComponent<cro::UIInput>().setGroup(MenuID::Lobby);
     buttonEnt.getComponent<cro::UIInput>().setSelectionIndex(CoursePrev);
     buttonEnt.getComponent<cro::UIInput>().setNextIndex(CourseNext, CourseHolePrev);
+#ifdef USE_GNS
+    buttonEnt.getComponent<cro::UIInput>().setPrevIndex(CourseFriendsOnly, LobbyQuit);
+#else
     buttonEnt.getComponent<cro::UIInput>().setPrevIndex(CourseCPUSkip, LobbyQuit);
+#endif
     buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = m_courseSelectCallbacks.selectHighlight;
     buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = m_courseSelectCallbacks.unselectHighlight;
     buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = m_courseSelectCallbacks.prevCourse;
@@ -3188,7 +3232,11 @@ void MenuState::addCourseSelectButtons()
     buttonEnt.addComponent<cro::UIInput>().area = bounds;
     buttonEnt.getComponent<cro::UIInput>().setGroup(MenuID::Lobby);
     buttonEnt.getComponent<cro::UIInput>().setSelectionIndex(CourseNext);
+#ifdef USE_GNS
+    buttonEnt.getComponent<cro::UIInput>().setNextIndex(CourseFriendsOnly, CourseHoleNext);
+#else
     buttonEnt.getComponent<cro::UIInput>().setNextIndex(CourseCPUSkip, CourseHoleNext);
+#endif
     buttonEnt.getComponent<cro::UIInput>().setPrevIndex(CoursePrev, LobbyRulesA);
     buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = m_courseSelectCallbacks.selectHighlight;
     buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = m_courseSelectCallbacks.unselectHighlight;
@@ -4142,6 +4190,8 @@ void MenuState::createPreviousScoreCard()
             m_lobbyWindowEntities[LobbyEntityID::Info].getComponent<cro::Transform>().getScale().y != 0.f;
     };
     m_lobbyWindowEntities[LobbyEntityID::Info].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    m_lobbyButtonContext.hasScoreCard = true;
 }
 
 void MenuState::togglePreviousScoreCard()
@@ -4173,5 +4223,70 @@ void MenuState::togglePreviousScoreCard()
             m_lobbyWindowEntities[LobbyEntityID::Scorecard].getComponent<cro::Callback>().getUserData<ScorecardCallbackData>().direction = 0;
             m_lobbyWindowEntities[LobbyEntityID::Scorecard].getComponent<cro::Callback>().active = true;
         }
+    }
+}
+
+void MenuState::refreshLobbyButtons()
+{
+    if (m_sharedData.hosting)
+    {
+        m_lobbyButtonContext.lobbyCourseA.getComponent<cro::UIInput>().setNextIndex(LobbyInfoA, LobbyQuit);
+        m_lobbyButtonContext.lobbyCourseA.getComponent<cro::UIInput>().setPrevIndex(LobbyInfoA, Social::getClubLevel() ? RulesClubset : RulesGimmePrev);
+
+        m_lobbyButtonContext.lobbyInfoA.getComponent<cro::UIInput>().setNextIndex(LobbyCourseA, LobbyStart);
+        m_lobbyButtonContext.lobbyInfoA.getComponent<cro::UIInput>().setPrevIndex(LobbyCourseA, Social::getClubLevel() ? RulesClubset : RulesGimmeNext);
+
+        m_lobbyButtonContext.lobbyInfoB.getComponent<cro::UIInput>().setNextIndex(LobbyRulesA, LobbyStart);
+#ifdef USE_GNS
+        m_lobbyButtonContext.lobbyInfoB.getComponent<cro::UIInput>().setPrevIndex(LobbyRulesA, CourseFriendsOnly);
+#else
+        m_lobbyButtonContext.lobbyInfoB.getComponent<cro::UIInput>().setPrevIndex(LobbyRulesA, CourseCPUSkip);
+#endif
+
+        m_lobbyButtonContext.lobbyRulesA.getComponent<cro::UIInput>().setNextIndex(LobbyInfoB, LobbyQuit);
+        m_lobbyButtonContext.lobbyRulesA.getComponent<cro::UIInput>().setPrevIndex(LobbyInfoB, CourseNext);
+
+        if (m_lobbyButtonContext.rulesClubset.isValid())
+        {
+            m_lobbyButtonContext.rulesClubset.getComponent<cro::UIInput>().setNextIndex(LobbyInfoA, LobbyInfoA);
+            m_lobbyButtonContext.rulesClubset.getComponent<cro::UIInput>().setPrevIndex(LobbyCourseA, RulesGimmePrev);
+        }
+    }
+    else
+    {
+        m_lobbyButtonContext.lobbyCourseA.getComponent<cro::UIInput>().setNextIndex(LobbyInfoA, LobbyQuit);
+        m_lobbyButtonContext.lobbyCourseA.getComponent<cro::UIInput>().setPrevIndex(LobbyInfoA, LobbyQuit);
+
+        m_lobbyButtonContext.lobbyInfoA.getComponent<cro::UIInput>().setNextIndex(LobbyCourseA, LobbyStart);
+        m_lobbyButtonContext.lobbyInfoA.getComponent<cro::UIInput>().setPrevIndex(LobbyCourseA, LobbyStart);
+
+        m_lobbyButtonContext.lobbyInfoB.getComponent<cro::UIInput>().setNextIndex(LobbyRulesA, LobbyStart);
+        m_lobbyButtonContext.lobbyInfoB.getComponent<cro::UIInput>().setPrevIndex(LobbyRulesA, LobbyStart);
+
+        m_lobbyButtonContext.lobbyRulesA.getComponent<cro::UIInput>().setNextIndex(LobbyInfoB, LobbyQuit);
+        m_lobbyButtonContext.lobbyRulesA.getComponent<cro::UIInput>().setPrevIndex(LobbyInfoB, LobbyQuit);
+
+        if (m_lobbyButtonContext.rulesClubset.isValid())
+        {
+            m_lobbyButtonContext.rulesClubset.getComponent<cro::UIInput>().setNextIndex(LobbyInfoA, LobbyInfoA);
+            m_lobbyButtonContext.rulesClubset.getComponent<cro::UIInput>().setPrevIndex(LobbyCourseA, LobbyCourseA);
+        }
+    }
+
+    if (m_lobbyButtonContext.hasScoreCard)
+    {
+        m_lobbyButtonContext.lobbyRulesB.getComponent<cro::UIInput>().setNextIndex(LobbyCourseB, LobbyStart);
+        m_lobbyButtonContext.lobbyRulesB.getComponent<cro::UIInput>().setPrevIndex(LobbyCourseB, InfoScorecard);
+
+        m_lobbyButtonContext.infoLeaderboard.getComponent<cro::UIInput>().setNextIndex(InfoScorecard, LobbyCourseB);
+        m_lobbyButtonContext.infoLeaderboard.getComponent<cro::UIInput>().setPrevIndex(InfoScorecard, LobbyQuit);
+    }
+    else
+    {
+        m_lobbyButtonContext.lobbyRulesB.getComponent<cro::UIInput>().setNextIndex(LobbyCourseB, LobbyStart);
+        m_lobbyButtonContext.lobbyRulesB.getComponent<cro::UIInput>().setPrevIndex(LobbyCourseB, LobbyStart);
+
+        m_lobbyButtonContext.infoLeaderboard.getComponent<cro::UIInput>().setNextIndex(LobbyRulesB, LobbyCourseB);
+        m_lobbyButtonContext.infoLeaderboard.getComponent<cro::UIInput>().setPrevIndex(LobbyRulesB, LobbyQuit);
     }
 }

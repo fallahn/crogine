@@ -211,8 +211,16 @@ namespace cro
         \param index The index of the input to select
         Note that this may not give expected results if multiple inputs
         have been manually assigned the same selection index with setSelectionIndex()
+        or the index is not in range of the group size - in which case prefer
+        selectByIndex()
         */
         void selectAt(std::size_t index);
+
+        /*!
+        \brief Selects at a specific index if a UIInput component has been provided
+        with one via setSelectionIndex() - otherwise prefer selectAt()
+        */
+        void selectByIndex(std::size_t index);
 
     private:
 

@@ -298,7 +298,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
                 spriteID = SpriteID::ReadyUp;
                 connectionString = "Connected to: " + m_sharedData.targetIP + ":" + std::to_string(ConstVal::GamePort);
             }
-
+            refreshLobbyButtons(); //makes sure indices point to correct target
 
             cmd.targetFlags = CommandID::Menu::ReadyButton;
             cmd.action = [&, spriteID](cro::Entity e, float)
@@ -2008,6 +2008,7 @@ void MenuState::finaliseGameCreate(const MatchMaking::Message& msgData)
 
         //enable the course selection in the lobby
         addCourseSelectButtons();
+        refreshLobbyButtons();
 
         //send a UI refresh to correctly place buttons
         glm::vec2 size(GolfGame::getActiveTarget()->getSize());
@@ -2075,6 +2076,8 @@ void MenuState::finaliseGameJoin(const MatchMaking::Message& data)
         m_uiScene.destroyEntity(e);
     };
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+    refreshLobbyButtons(); //makes sure buttons point to correct target when navigating
 }
 
 void MenuState::beginTextEdit(cro::Entity stringEnt, cro::String* dst, std::size_t maxChars)

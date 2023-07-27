@@ -320,6 +320,22 @@ private:
     void setProfileIndex(std::size_t);
     void refreshProfileFlyout();
 
+    //allows updating the target indices
+    //of lobby buttons based on whether the
+    //user is hosting or not
+    struct LobbyButtonContext final
+    {
+        cro::Entity infoLeaderboard;
+        cro::Entity lobbyCourseA;
+        cro::Entity lobbyInfoA;
+        cro::Entity lobbyInfoB;
+        cro::Entity lobbyRulesA;
+        cro::Entity lobbyRulesB;
+        cro::Entity rulesClubset;
+        bool hasScoreCard = false;
+    }m_lobbyButtonContext;
+    void refreshLobbyButtons();
+
     //message handlers for completing connection
     void finaliseGameCreate(const MatchMaking::Message&);
     void finaliseGameJoin(const MatchMaking::Message&);

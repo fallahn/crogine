@@ -535,7 +535,6 @@ void LeaderboardState::buildScene()
             e.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
         });
     
-    
     //tab buttons
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 50.f, 45.f, 0.2f });
@@ -1266,6 +1265,19 @@ void LeaderboardState::refreshDisplay()
 
 void LeaderboardState::updateButtonIndices()
 {
+    const auto selectNext = [&](std::int32_t idx)
+    {
+        auto e = m_scene.createEntity();
+        e.addComponent<cro::Callback>().active = true;
+        e.getComponent<cro::Callback>().function =
+            [&, idx](cro::Entity f, float)
+        {
+            m_scene.getSystem<cro::UISystem>()->selectByIndex(idx);
+            f.getComponent<cro::Callback>().active = false;
+            m_scene.destroyEntity(f);
+        };
+    };
+
     switch (m_displayContext.boardIndex)
     {
     default: break;
@@ -1287,6 +1299,8 @@ void LeaderboardState::updateButtonIndices()
 
         m_buttons[DynamicButton::Close].getComponent<cro::UIInput>().setNextIndex(ButtonID::HIO, ButtonID::Nearest);
         m_buttons[DynamicButton::Close].getComponent<cro::UIInput>().setPrevIndex(ButtonID::Streak, ButtonID::DateRange);
+
+        selectNext(ButtonID::HIO);
         break;
     case BoardIndex::Hio:
         m_buttons[DynamicButton::Course].getComponent<cro::UIInput>().setNextIndex(ButtonID::Rank, ButtonID::Rank);
@@ -1306,6 +1320,8 @@ void LeaderboardState::updateButtonIndices()
 
         m_buttons[DynamicButton::Close].getComponent<cro::UIInput>().setNextIndex(ButtonID::Course, ButtonID::Nearest);
         m_buttons[DynamicButton::Close].getComponent<cro::UIInput>().setPrevIndex(ButtonID::Streak, ButtonID::DateRange);
+
+        selectNext(ButtonID::Rank);
         break;
     case BoardIndex::Rank:
         m_buttons[DynamicButton::Course].getComponent<cro::UIInput>().setNextIndex(ButtonID::HIO, ButtonID::HIO);
@@ -1325,6 +1341,8 @@ void LeaderboardState::updateButtonIndices()
 
         m_buttons[DynamicButton::Close].getComponent<cro::UIInput>().setNextIndex(ButtonID::Course, ButtonID::Nearest);
         m_buttons[DynamicButton::Close].getComponent<cro::UIInput>().setPrevIndex(ButtonID::Streak, ButtonID::DateRange);
+
+        selectNext(ButtonID::Streak);
         break;
     case BoardIndex::Streak:
         m_buttons[DynamicButton::Course].getComponent<cro::UIInput>().setNextIndex(ButtonID::HIO, ButtonID::HIO);
@@ -1344,6 +1362,8 @@ void LeaderboardState::updateButtonIndices()
 
         m_buttons[DynamicButton::Close].getComponent<cro::UIInput>().setNextIndex(ButtonID::Course, ButtonID::Nearest);
         m_buttons[DynamicButton::Close].getComponent<cro::UIInput>().setPrevIndex(ButtonID::Rank, ButtonID::DateRange);
+
+        selectNext(ButtonID::Course);
         break;
     }
 }
