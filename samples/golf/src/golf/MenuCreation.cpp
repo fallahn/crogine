@@ -2159,6 +2159,8 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
             In, Out
         }dir = In;
         bool quitWhenDone = false;
+
+        bool startGame = false;
     };
 
     entity = m_uiScene.createEntity();
@@ -2187,6 +2189,11 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
                 //TODO this needs to be updated so the resize handler correctly
                 //accounts for this and the scorecard menu
                 m_currentMenu = MenuID::Lobby;// MenuID::ConfirmQuit;
+
+                if (data.startGame)
+                {
+                    m_uiScene.getSystem<cro::UISystem>()->selectAt(1);
+                }
             }
         }
         else
@@ -2262,7 +2269,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     centreText(entity);
     confirmEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-
+    auto messageTitleEnt = entity;
 
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, 44.f, 0.1f });
@@ -2328,19 +2335,28 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
             {
                 if (activated(evt))
                 {
-                    confirmEnt.getComponent<cro::Callback>().getUserData<ConfirmationData>().dir = ConfirmationData::Out;
-                    confirmEnt.getComponent<cro::Callback>().getUserData<ConfirmationData>().quitWhenDone = true;
-                    confirmEnt.getComponent<cro::Callback>().active = true;
-                    shadeEnt.getComponent<cro::Callback>().active = true;
-                    m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Dummy);
-                    m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
+                    auto& data = confirmEnt.getComponent<cro::Callback>().getUserData<ConfirmationData>();
 
-                    //restore the rules tab if necessary
-                    float scale = m_lobbyWindowEntities[LobbyEntityID::HoleSelection].getComponent<cro::Transform>().getScale().y;
-                    if (scale == 0)
+                    if (!data.startGame)
                     {
-                        m_lobbyWindowEntities[LobbyEntityID::HoleSelection].getComponent<cro::Transform>().setScale({ 1.f, 1.f });
+                        data.dir = ConfirmationData::Out;
+                        data.quitWhenDone = true;
+                        confirmEnt.getComponent<cro::Callback>().active = true;
+                        shadeEnt.getComponent<cro::Callback>().active = true;
+                        m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Dummy);
                         m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
+
+                        //restore the rules tab if necessary
+                        float scale = m_lobbyWindowEntities[LobbyEntityID::HoleSelection].getComponent<cro::Transform>().getScale().y;
+                        if (scale == 0)
+                        {
+                            m_lobbyWindowEntities[LobbyEntityID::HoleSelection].getComponent<cro::Transform>().setScale({ 1.f, 1.f });
+                            m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
+                        }
+                    }
+                    else
+                    {
+                        m_sharedData.clientConnection.netClient.sendPacket(PacketID::RequestGameStart, std::uint8_t(sv::StateID::Golf), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
                     }
                 }
             });
@@ -2348,18 +2364,30 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     confirmEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
-
     //back
-    enterConfirmCallback = [&, confirmEnt, shadeEnt, messageEnt]() mutable
+    enterConfirmCallback = [&, confirmEnt, shadeEnt, messageEnt, messageTitleEnt](bool quit) mutable
     {
         m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Dummy);
         confirmEnt.getComponent<cro::Callback>().getUserData<ConfirmationData>().dir = ConfirmationData::In;
         confirmEnt.getComponent<cro::Callback>().getUserData<ConfirmationData>().quitWhenDone = false;
+        confirmEnt.getComponent<cro::Callback>().getUserData<ConfirmationData>().startGame = !quit;
         confirmEnt.getComponent<cro::Callback>().active = true;
         shadeEnt.getComponent<cro::Callback>().active = true;
 
-        messageEnt.getComponent<cro::Text>().setFillColour(m_sharedData.hosting ? TextNormalColour : cro::Colour::Transparent);
+        if (quit)
+        {
+            messageTitleEnt.getComponent<cro::Text>().setString("Are You Sure?");
+            centreText(messageTitleEnt);
+            messageEnt.getComponent<cro::Text>().setFillColour(m_sharedData.hosting ? TextNormalColour : cro::Colour::Transparent);
+        }
+        else
+        {
+            //continue message
+            messageEnt.getComponent<cro::Text>().setFillColour(cro::Colour::Transparent);
 
+            messageTitleEnt.getComponent<cro::Text>().setString("Ready?");
+            centreText(messageTitleEnt);
+        }
         m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
     };
 
@@ -2383,7 +2411,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
             {
                 if (activated(evt))
                 {
-                    enterConfirmCallback();
+                    enterConfirmCallback(true);
                 }
             });
     menuTransform.addChild(entity.getComponent<cro::Transform>());
@@ -2415,25 +2443,32 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
                     {
                         //check all members ready
                         bool ready = true;
+                        std::int32_t clientCount = 0;
                         for (auto i = 0u; i < ConstVal::MaxClients; ++i)
                         {
-                            if (m_sharedData.connectionData[i].playerCount != 0
-                                && !m_readyState[i])
+                            if (m_sharedData.connectionData[i].playerCount != 0)
                             {
-                                ready = false;
-                                break;
+                                clientCount++;
+                                if (!m_readyState[i])
+                                {
+                                    ready = false;
+                                    break;
+                                }
                             }
                         }
 
                         if (ready && m_sharedData.clientConnection.connected
                             && m_sharedData.serverInstance.running()) //not running if we're not hosting :)
                         {
-                            //by drawing a black quad over the screen immediately
-                            //gives the impression of responsiveness
-                            glClear(GL_COLOR_BUFFER_BIT);
-
-                            m_sharedData.clientConnection.netClient.sendPacket(PacketID::RequestGameStart, std::uint8_t(sv::StateID::Golf), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
-                            m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+                            if (clientCount > 1)
+                            {
+                                m_sharedData.clientConnection.netClient.sendPacket(PacketID::RequestGameStart, std::uint8_t(sv::StateID::Golf), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                                m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+                            }
+                            else
+                            {
+                                enterConfirmCallback(false);
+                            }
                         }
                     }
                     else

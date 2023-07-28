@@ -502,7 +502,7 @@ bool MenuState::handleEvent(const cro::Event& evt)
             {
             default:
             case MenuID::Lobby:
-                enterConfirmCallback();
+                enterConfirmCallback(true);
                 break;
             case MenuID::ConfirmQuit:
                 quitConfirmCallback();

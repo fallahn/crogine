@@ -32,6 +32,12 @@ source distribution.
 enum MenuIndex
 {
     Player = 200,
+
+    PlayerLeaveMenu,
+    PlayerAdd,
+    PlayerRemove,
+    PlayerNextMenu,
+
     Player01,
     Player02,
     Player03,
@@ -50,12 +56,6 @@ enum MenuIndex
     PlayerCreate,
     PlayerEdit,
     PlayerDelete,
-
-    PlayerLeaveMenu,
-    PlayerAdd,
-    PlayerRemove,
-    PlayerNextMenu,
-
 
 
 

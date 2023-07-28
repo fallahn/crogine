@@ -209,7 +209,7 @@ private:
     LobbyPager m_lobbyPager;
 
     //hack to quit the lobby confirm menu from event input
-    std::function<void()> enterConfirmCallback;
+    std::function<void(bool)> enterConfirmCallback;
     std::function<void()> quitConfirmCallback;
 
     struct TextEdit final
