@@ -728,9 +728,18 @@ void GolfState::buildUI()
     bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.getComponent<cro::Transform>().setOrigin(glm::vec3(bounds.width / 2.f, bounds.height / 2.f, -0.05f));
     rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    auto barEnt = entity;
+
+    const auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ bounds.width + 2.f, 12.f, 0.f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(smallFont).setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::PuttPower;
+    barEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     //power bar
-    auto barEnt = entity;
     const auto BarCentre = bounds.width / 2.f;
     const auto BarWidth = bounds.width - 8.f;
     const auto BarHeight = bounds.height;

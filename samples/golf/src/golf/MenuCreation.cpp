@@ -2385,7 +2385,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
             //continue message
             messageEnt.getComponent<cro::Text>().setFillColour(cro::Colour::Transparent);
 
-            messageTitleEnt.getComponent<cro::Text>().setString("Ready?");
+            messageTitleEnt.getComponent<cro::Text>().setString("Start Game?");
             centreText(messageTitleEnt);
         }
         m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
