@@ -154,7 +154,7 @@ private:
     {
         enum {Week, Month, Quarter, Half, Year, Count};
     };
-    std::int32_t m_dateRange = DateRange::Week;
+    std::int32_t m_dateRange;
     std::array<cro::Entity, 18u> m_graphEntities = {};
     cro::Entity m_gridEntity;
     cro::Entity m_recordCountEntity;

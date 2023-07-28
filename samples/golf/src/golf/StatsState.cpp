@@ -173,6 +173,7 @@ StatsState::StatsState(cro::StateStack& ss, cro::State::Context ctx, SharedState
     m_imperialMeasurements  (sd.imperialMeasurements),
     m_profileIndex          (0),
     m_courseIndex           (0),
+    m_dateRange             (DateRange::Quarter),
     m_showCPUStat           (true),
     m_holeDetailSelected    (false),
     m_awardPageIndex        (0),
@@ -680,6 +681,25 @@ void StatsState::parseProfileData()
             break;
         }
     }
+
+    //check to see if we have a social (Steam) name and move that to the front
+    cro::String socialName = Social::getPlayerName();
+    
+    if (!socialName.empty())
+    {
+        auto res = std::find_if(m_profileData.begin(), m_profileData.end(),
+            [&socialName](const ProfileData& pd)
+            {
+                return pd.name == socialName;
+            });
+
+        if (res != m_profileData.end())
+        {
+            auto pos = std::distance(m_profileData.begin(), res);
+
+            std::swap(m_profileData[0], m_profileData[pos]);
+        }
+    }
 }
 
 void StatsState::createClubStatsTab(cro::Entity parent, const cro::SpriteSheet& spriteSheet)
@@ -1181,7 +1201,7 @@ void StatsState::createPerformanceTab(cro::Entity parent, const cro::SpriteSheet
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, 10.f, 0.1f });
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(largeFont).setString(RangeStrings[0]);
+    entity.addComponent<cro::Text>(largeFont).setString(RangeStrings[m_dateRange]);
     entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     centreText(entity);

@@ -120,6 +120,8 @@ public:
     };
     static cro::Image userIcon;
 
+    static cro::String getPlayerName() { return {}; }
+
     static bool isGreyscale() { return false; }
     static bool isValid() { return true; }
     static bool isValid(const std::string&) { return true; }
