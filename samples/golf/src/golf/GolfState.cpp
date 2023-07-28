@@ -5676,6 +5676,7 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
                     m_personalBests[su.player][su.hole].course = m_courseIndex;
                     m_personalBests[su.player][su.hole].score = su.stroke;
                 }
+                updateScoreboard(false);
             }
         }
             break;
