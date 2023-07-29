@@ -730,9 +730,15 @@ void GolfState::buildUI()
     rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     auto barEnt = entity;
 
+    //displays the range of the selected putter
     const auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ bounds.width + 2.f, 12.f, 0.f });
+    if (Social::isSteamdeck())
+    {
+        entity.getComponent<cro::Transform>().setScale({ 0.5f, 0.5f });
+        entity.getComponent<cro::Transform>().move({ -2.f, -6.f });
+    }
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(smallFont).setFillColour(TextNormalColour);
     entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
