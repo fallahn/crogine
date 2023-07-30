@@ -1305,11 +1305,14 @@ void ProfileState::buildScene()
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
             uiSystem.addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
                 {
-                    auto path = Social::getUserContentPath(Social::UserContent::Profile) + m_activeProfile.profileID;
-                    if (cro::FileSystem::directoryExists(path)
-                        && !cro::App::getWindow().isFullscreen())
+                    if (activated(evt))
                     {
-                        cro::Util::String::parseURL(path);
+                        auto path = Social::getUserContentPath(Social::UserContent::Profile) + m_activeProfile.profileID;
+                        if (cro::FileSystem::directoryExists(path)
+                            && !cro::App::getWindow().isFullscreen())
+                        {
+                            cro::Util::String::parseURL(path);
+                        }
                     }
                 });
         entity.getComponent<cro::UIInput>().setNextIndex(ButtonRandomise, ButtonName);
