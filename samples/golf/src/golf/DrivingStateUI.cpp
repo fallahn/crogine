@@ -190,6 +190,25 @@ namespace
             }
         }
     };
+
+    struct ButtonID final
+    {
+        enum
+        {
+            Null = 100,
+            CountPrev, CountNext,
+            TargetPrev, TargetNext,
+
+            Clubset,
+            Leaderboard,
+            Begin,
+
+            LBFilterPrev, LBFilterNext,
+            LBCountPrev, LBCountNext,
+            LBTargetPrev, LBTargetNext,
+            LBClose
+        };
+    };
 }
 
 void DrivingState::createUI()
@@ -947,7 +966,7 @@ void DrivingState::createGameOptions()
     auto* uiSystem = m_uiScene.getSystem<cro::UISystem>();
     auto buttonSelect = uiSystem->addCallback([](cro::Entity e)
         {
-            e.getComponent<cro::Sprite>().setColour(cro::Colour::White); 
+            e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
             e.getComponent<cro::AudioEmitter>().play();
         });
     auto buttonUnselect = uiSystem->addCallback([](cro::Entity e) { e.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent); });
@@ -982,7 +1001,7 @@ void DrivingState::createGameOptions()
     bgEntity.addComponent<cro::CommandTarget>().ID = CommandID::UI::DrivingBoard;
     bgEntity.addComponent<cro::Callback>().setUserData<PopupAnim>();
     bgEntity.getComponent<cro::Callback>().function = MenuCallback(m_viewScale, uiSystem, MenuID::Options);
-    
+
     auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
     auto& largeFont = m_sharedData.sharedResources->fonts.get(FontID::UI);
     auto& labelFont = m_sharedData.sharedResources->fonts.get(FontID::Label);
@@ -1027,7 +1046,7 @@ will be given a score based on your overall accuracy. Good Luck!
     bgEntity.getComponent<cro::Transform>().addChild(infoText.getComponent<cro::Transform>());
 
 
-    const auto createButton = [&](const std::string& sprite, glm::vec2 position)
+    const auto createButton = [&](const std::string& sprite, glm::vec2 position, std::int32_t selectionIndex)
     {
         auto buttonEnt = m_uiScene.createEntity();
         buttonEnt.addComponent<cro::Transform>().setPosition(glm::vec3(position, 0.4f));
@@ -1038,6 +1057,7 @@ will be given a score based on your overall accuracy. Good Luck!
         buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = buttonSelect;
         buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = buttonUnselect;
         buttonEnt.getComponent<cro::UIInput>().setGroup(MenuID::Options);
+        buttonEnt.getComponent<cro::UIInput>().setSelectionIndex(selectionIndex);
         buttonEnt.addComponent<cro::AudioEmitter>() = as.getEmitter("switch");
 
         return buttonEnt;
@@ -1165,11 +1185,24 @@ will be given a score based on your overall accuracy. Good Luck!
         }
     };
     bgEntity.getComponent<cro::Transform>().addChild(tickerEnt.getComponent<cro::Transform>());
-    
+
 #endif
 
     //hole count buttons
-    auto buttonEnt = createButton("arrow_left", glm::vec2(-3.f, 3.f));
+    auto buttonEnt = createButton("arrow_left", glm::vec2(-3.f, 3.f), ButtonID::CountPrev);
+    if (Social::getClubLevel())
+    {
+        buttonEnt.getComponent<cro::UIInput>().setNextIndex(ButtonID::CountNext, ButtonID::Clubset);
+    }
+    else
+    {
+#ifdef USE_GNS
+        buttonEnt.getComponent<cro::UIInput>().setNextIndex(ButtonID::CountNext, ButtonID::Leaderboard);
+#else
+        buttonEnt.getComponent<cro::UIInput>().setNextIndex(ButtonID::CountNext, ButtonID::Begin);
+#endif
+    }
+    buttonEnt.getComponent<cro::UIInput>().setPrevIndex(ButtonID::TargetNext, ButtonID::Begin);
     buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem->addCallback(
             [&, numberEnt, textEnt4, tickerEnt, recordEnt](cro::Entity e, const cro::ButtonEvent& evt) mutable
@@ -1212,7 +1245,20 @@ will be given a score based on your overall accuracy. Good Luck!
             });
     countEnt.getComponent<cro::Transform>().addChild(buttonEnt.getComponent<cro::Transform>());
 
-    buttonEnt = createButton("arrow_right", glm::vec2(35.f, 3.f));
+    buttonEnt = createButton("arrow_right", glm::vec2(35.f, 3.f), ButtonID::CountNext);
+    if (Social::getClubLevel())
+    {
+        buttonEnt.getComponent<cro::UIInput>().setNextIndex(ButtonID::TargetPrev, ButtonID::Clubset);
+    }
+    else
+    {
+#ifdef USE_GNS
+        buttonEnt.getComponent<cro::UIInput>().setNextIndex(ButtonID::TargetPrev, ButtonID::Leaderboard);
+#else
+        buttonEnt.getComponent<cro::UIInput>().setNextIndex(ButtonID::TargetPrev, ButtonID::Begin);
+#endif
+    }
+    buttonEnt.getComponent<cro::UIInput>().setPrevIndex(ButtonID::CountPrev, ButtonID::Begin);
     buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem->addCallback(
             [&, numberEnt, textEnt4, tickerEnt, recordEnt](cro::Entity e, const cro::ButtonEvent& evt) mutable
@@ -1299,7 +1345,7 @@ will be given a score based on your overall accuracy. Good Luck!
     cro::SpriteSheet flagSheet;
     flagSheet.loadFromFile("assets/golf/sprites/ui.spt", m_resources.textures);
     auto flagEnt = m_uiScene.createEntity();
-    flagEnt.addComponent<cro::Transform>().setOrigin({0.f, 0.f, -0.1f});
+    flagEnt.addComponent<cro::Transform>().setOrigin({ 0.f, 0.f, -0.1f });
     flagEnt.addComponent<cro::Drawable2D>();
     flagEnt.addComponent<cro::Sprite>() = flagSheet.getSprite("flag03");
 
@@ -1345,7 +1391,7 @@ will be given a score based on your overall accuracy. Good Luck!
 
     //target select
     countEnt = m_uiScene.createEntity();
-    countEnt.addComponent<cro::Transform>().setPosition({ std::floor((bounds.width / 2.f) + 42.f), 134.f, 0.1f});
+    countEnt.addComponent<cro::Transform>().setPosition({ std::floor((bounds.width / 2.f) + 42.f), 134.f, 0.1f });
     countEnt.addComponent<cro::Drawable2D>();
     countEnt.addComponent<cro::Sprite>() = spriteSheet.getSprite("stroke_select");
     strokeBounds = spriteSheet.getSprite("stroke_select").getTextureBounds();
@@ -1377,7 +1423,20 @@ will be given a score based on your overall accuracy. Good Luck!
 
 
     //target select buttons
-    buttonEnt = createButton("arrow_left", glm::vec2(-3.f, 3.f));
+    buttonEnt = createButton("arrow_left", glm::vec2(-3.f, 3.f), ButtonID::TargetPrev);
+    if (Social::getClubLevel())
+    {
+        buttonEnt.getComponent<cro::UIInput>().setNextIndex(ButtonID::TargetNext, ButtonID::Clubset);
+    }
+    else
+    {
+#ifdef USE_GNS
+        buttonEnt.getComponent<cro::UIInput>().setNextIndex(ButtonID::TargetNext, ButtonID::Leaderboard);
+#else
+        buttonEnt.getComponent<cro::UIInput>().setNextIndex(ButtonID::TargetNext, ButtonID::Begin);
+#endif
+    }
+    buttonEnt.getComponent<cro::UIInput>().setPrevIndex(ButtonID::CountNext, ButtonID::Begin);
     buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem->addCallback(
             [&, numberEnt, recordEnt](cro::Entity e, const cro::ButtonEvent& evt) mutable
@@ -1400,7 +1459,20 @@ will be given a score based on your overall accuracy. Good Luck!
             });
     countEnt.getComponent<cro::Transform>().addChild(buttonEnt.getComponent<cro::Transform>());
 
-    buttonEnt = createButton("arrow_right", glm::vec2(35.f, 3.f));
+    buttonEnt = createButton("arrow_right", glm::vec2(35.f, 3.f), ButtonID::TargetNext);
+    if (Social::getClubLevel())
+    {
+        buttonEnt.getComponent<cro::UIInput>().setNextIndex(ButtonID::CountPrev, ButtonID::Clubset);
+    }
+    else
+    {
+#ifdef USE_GNS
+        buttonEnt.getComponent<cro::UIInput>().setNextIndex(ButtonID::CountPrev, ButtonID::Leaderboard);
+#else
+        buttonEnt.getComponent<cro::UIInput>().setNextIndex(ButtonID::CountPrev, ButtonID::Begin);
+#endif
+    }
+    buttonEnt.getComponent<cro::UIInput>().setPrevIndex(ButtonID::TargetPrev, ButtonID::Begin);
     buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem->addCallback(
             [&, numberEnt, recordEnt](cro::Entity e, const cro::ButtonEvent& evt) mutable
@@ -1472,6 +1544,13 @@ will be given a score based on your overall accuracy. Good Luck!
         textEnt4.addComponent<cro::AudioEmitter>() = as.getEmitter("switch");
         textEnt4.addComponent<cro::UIInput>().setGroup(MenuID::Options);
         textEnt4.getComponent<cro::UIInput>().area = buttonBounds;
+        textEnt4.getComponent<cro::UIInput>().setSelectionIndex(ButtonID::Clubset);
+#ifdef USE_GNS
+        textEnt4.getComponent<cro::UIInput>().setNextIndex(ButtonID::Leaderboard, ButtonID::Leaderboard);
+#else
+        textEnt4.getComponent<cro::UIInput>().setNextIndex(ButtonID::Begin, ButtonID::Begin);
+#endif
+        textEnt4.getComponent<cro::UIInput>().setPrevIndex(ButtonID::CountPrev, ButtonID::CountPrev);
         textEnt4.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = lbuttonSelected;
         textEnt4.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = lbuttonUnselected;
         textEnt4.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
@@ -1559,6 +1638,9 @@ will be given a score based on your overall accuracy. Good Luck!
     auto textBounds = cro::Text::getLocalBounds(textEnt4);
     textEnt4.addComponent<cro::AudioEmitter>() = as.getEmitter("switch");
     textEnt4.addComponent<cro::UIInput>().setGroup(MenuID::Leaderboard);
+    textEnt4.getComponent<cro::UIInput>().setSelectionIndex(ButtonID::LBClose);
+    textEnt4.getComponent<cro::UIInput>().setNextIndex(ButtonID::LBCountPrev, ButtonID::LBFilterNext);
+    textEnt4.getComponent<cro::UIInput>().setPrevIndex(ButtonID::LBTargetNext, ButtonID::LBFilterNext);
     textEnt4.getComponent<cro::UIInput>().area = textBounds;
     textEnt4.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = textSelected;
     textEnt4.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = textUnselected;
@@ -1575,7 +1657,7 @@ will be given a score based on your overall accuracy. Good Luck!
                 }
             });
     lbEntity.getComponent<cro::Transform>().addChild(textEnt4.getComponent<cro::Transform>());
-    
+
     //name column
     textEnt4 = m_uiScene.createEntity();
     textEnt4.addComponent<cro::Transform>().setPosition({ 94.f, 234.f, 0.12f });
@@ -1605,7 +1687,7 @@ will be given a score based on your overall accuracy. Good Luck!
     textEnt4.getComponent<cro::Text>().setVerticalSpacing(LeaderboardTextSpacing);
     lbEntity.getComponent<cro::Transform>().addChild(textEnt4.getComponent<cro::Transform>());
     auto scoreColumn = textEnt4;
-    
+
     //id display
     textEnt4 = m_uiScene.createEntity();
     textEnt4.addComponent<cro::Transform>().setPosition({ std::floor(b.width / 2.f) - 98.f, 11.f, 0.12f });
@@ -1651,7 +1733,7 @@ will be given a score based on your overall accuracy. Good Luck!
         nameColumn.getComponent<cro::Text>().setString(scores[1]);
         scoreColumn.getComponent<cro::Text>().setString(scores[2]);
     };
-    
+
 
     lbEntity.getComponent<cro::Callback>().function =
         [&, updateDisplay](cro::Entity e, float dt) mutable
@@ -1697,8 +1779,18 @@ will be given a score based on your overall accuracy. Good Luck!
     textEnt4.getComponent<cro::Transform>().setOrigin({ std::floor(buttonBounds.width / 2.f), buttonBounds.height });
     textEnt4.addComponent<cro::AudioEmitter>() = as.getEmitter("switch");
     textEnt4.addComponent<cro::UIInput>().setGroup(MenuID::Options);
+    textEnt4.getComponent<cro::UIInput>().setSelectionIndex(ButtonID::Leaderboard);
+    textEnt4.getComponent<cro::UIInput>().setNextIndex(ButtonID::Begin, ButtonID::Begin);
+    if (Social::getClubLevel())
+    {
+        textEnt4.getComponent<cro::UIInput>().setPrevIndex(ButtonID::Clubset, ButtonID::Clubset);
+    }
+    else
+    {
+        textEnt4.getComponent<cro::UIInput>().setPrevIndex(ButtonID::CountPrev, ButtonID::CountPrev);
+    }
     textEnt4.getComponent<cro::UIInput>().area = buttonBounds;
-    textEnt4.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = lbuttonSelected;        
+    textEnt4.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = lbuttonSelected;
     textEnt4.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = lbuttonUnselected;
     textEnt4.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem->addCallback(
@@ -1741,10 +1833,10 @@ will be given a score based on your overall accuracy. Good Luck!
         });
 
     auto createArrow =
-        [&](glm::vec2 position, const std::string& spriteName)
+        [&](glm::vec2 position, const std::string& spriteName, std::int32_t selectionIndex)
     {
         auto e = m_uiScene.createEntity();
-        e.addComponent<cro::Transform>().setPosition(glm::vec3(position , 0.1f));
+        e.addComponent<cro::Transform>().setPosition(glm::vec3(position, 0.1f));
         e.addComponent<cro::AudioEmitter>() = as.getEmitter("switch");
         e.addComponent<cro::Drawable2D>();
         e.addComponent<cro::Sprite>() = leaderSheet.getSprite(spriteName);
@@ -1752,6 +1844,7 @@ will be given a score based on your overall accuracy. Good Luck!
         auto b = e.getComponent<cro::Sprite>().getTextureBounds();
         e.addComponent<cro::UIInput>().area = b;
         e.getComponent<cro::UIInput>().setGroup(MenuID::Leaderboard);
+        e.getComponent<cro::UIInput>().setSelectionIndex(selectionIndex);
         e.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = buttonSelected;
         e.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = buttonUnselected;
 
@@ -1760,7 +1853,9 @@ will be given a score based on your overall accuracy. Good Luck!
         return e;
     };
     //filter left
-    entity = createArrow(glm::vec2(193.f, 250.f), "arrow_left");
+    entity = createArrow(glm::vec2(193.f, 250.f), "arrow_left", ButtonID::LBFilterPrev);
+    entity.getComponent<cro::UIInput>().setNextIndex(ButtonID::LBFilterNext, ButtonID::LBCountNext);
+    entity.getComponent<cro::UIInput>().setPrevIndex(ButtonID::LBFilterNext, ButtonID::LBCountNext);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem->addCallback(
             [&, updateDisplay](cro::Entity e, const cro::ButtonEvent& evt) mutable
@@ -1774,7 +1869,9 @@ will be given a score based on your overall accuracy. Good Luck!
             });
 
     //filter right
-    entity = createArrow(glm::vec2(285.f, 250.f), "arrow_right");
+    entity = createArrow(glm::vec2(285.f, 250.f), "arrow_right", ButtonID::LBFilterNext);
+    entity.getComponent<cro::UIInput>().setNextIndex(ButtonID::LBFilterPrev, ButtonID::LBTargetPrev);
+    entity.getComponent<cro::UIInput>().setPrevIndex(ButtonID::LBFilterPrev, ButtonID::LBTargetPrev);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem->addCallback(
             [&, updateDisplay](cro::Entity e, const cro::ButtonEvent& evt) mutable
@@ -1788,7 +1885,9 @@ will be given a score based on your overall accuracy. Good Luck!
             });
 
     //score left
-    entity = createArrow(glm::vec2(95.f, -2.f), "arrow_left");
+    entity = createArrow(glm::vec2(95.f, -2.f), "arrow_left", ButtonID::LBCountPrev);
+    entity.getComponent<cro::UIInput>().setNextIndex(ButtonID::LBCountNext, ButtonID::LBFilterPrev);
+    entity.getComponent<cro::UIInput>().setPrevIndex(ButtonID::LBClose, ButtonID::LBFilterPrev);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem->addCallback(
             [&, updateDisplay](cro::Entity e, const cro::ButtonEvent& evt) mutable
@@ -1802,7 +1901,9 @@ will be given a score based on your overall accuracy. Good Luck!
             });
 
     //score right
-    entity = createArrow(glm::vec2(187.f, -2.f), "arrow_right");
+    entity = createArrow(glm::vec2(187.f, -2.f), "arrow_right", ButtonID::LBCountNext);
+    entity.getComponent<cro::UIInput>().setNextIndex(ButtonID::LBTargetPrev, ButtonID::LBFilterPrev);
+    entity.getComponent<cro::UIInput>().setPrevIndex(ButtonID::LBCountPrev, ButtonID::LBFilterPrev);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem->addCallback(
             [&, updateDisplay](cro::Entity e, const cro::ButtonEvent& evt) mutable
@@ -1816,7 +1917,9 @@ will be given a score based on your overall accuracy. Good Luck!
             });
 
     //index left
-    entity = createArrow(glm::vec2(291.f, -2.f), "arrow_left");
+    entity = createArrow(glm::vec2(291.f, -2.f), "arrow_left", ButtonID::LBTargetPrev);
+    entity.getComponent<cro::UIInput>().setNextIndex(ButtonID::LBTargetNext, ButtonID::LBFilterNext);
+    entity.getComponent<cro::UIInput>().setPrevIndex(ButtonID::LBCountNext, ButtonID::LBFilterNext);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem->addCallback(
             [&, updateDisplay](cro::Entity e, const cro::ButtonEvent& evt) mutable
@@ -1830,7 +1933,9 @@ will be given a score based on your overall accuracy. Good Luck!
             });
 
     //index right
-    entity = createArrow(glm::vec2(383.f, -2.f), "arrow_right");
+    entity = createArrow(glm::vec2(383.f, -2.f), "arrow_right", ButtonID::LBTargetNext);
+    entity.getComponent<cro::UIInput>().setNextIndex(ButtonID::LBClose, ButtonID::LBFilterNext);
+    entity.getComponent<cro::UIInput>().setPrevIndex(ButtonID::LBTargetPrev, ButtonID::LBFilterNext);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem->addCallback(
             [&, updateDisplay](cro::Entity e, const cro::ButtonEvent& evt) mutable
@@ -1854,6 +1959,20 @@ will be given a score based on your overall accuracy. Good Luck!
     startButton.addComponent<cro::Sprite>() = spriteSheet.getSprite("start_button");
     startButton.addComponent<cro::AudioEmitter>() = as.getEmitter("switch");
     startButton.addComponent<cro::UIInput>().setGroup(MenuID::Options);
+    startButton.getComponent<cro::UIInput>().setSelectionIndex(ButtonID::Begin);
+    startButton.getComponent<cro::UIInput>().setNextIndex(ButtonID::CountPrev, ButtonID::CountPrev);
+#ifdef USE_GNS
+    startButton.getComponent<cro::UIInput>().setPrevIndex(ButtonID::Leaderboard, ButtonID::Leaderboard);
+#else
+    if (Social::getClubLevel())
+    {
+        startButton.getComponent<cro::UIInput>().setNextIndex(ButtonID::Clubset, ButtonID::Clubset);
+    }
+    else
+    {
+        startButton.getComponent<cro::UIInput>().setNextIndex(ButtonID::CountPrev, ButtonID::CountPrev);
+    }
+#endif
     startButton.getComponent<cro::UIInput>().area = startButton.getComponent<cro::Sprite>().getTextureBounds();
     startButton.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] =
         uiSystem->addCallback(
