@@ -66,6 +66,8 @@ struct AchievementImage final
     cro::FloatRect textureRect;
 };
 
+class MonthlyChallenge;
+
 //base class for different implementations
 class AchievementImpl
 {
@@ -130,6 +132,8 @@ public:
     static bool getActive() { return m_active; }
 
     static void refreshGlobalStats() {}
+
+    static MonthlyChallenge* getMonthlyChallenge() { return nullptr; }
 
 private:
     static AchievementImpl* m_impl;

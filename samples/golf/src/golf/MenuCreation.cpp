@@ -2064,18 +2064,20 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity.getComponent<cro::UIInput>().setPrevIndex(LobbyCourseB, LobbyCourseB); // and this
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = m_courseSelectCallbacks.selectHighlight;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = m_courseSelectCallbacks.unselectHighlight;
-#ifdef USE_GNS
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = m_uiScene.getSystem<cro::UISystem>()->addCallback(
         [&](cro::Entity, const cro::ButtonEvent& evt)
         {
             if (activated(evt))
             {
+#ifdef USE_GNS
                 requestStackPush(StateID::Leaderboard);
+#else
+                cro::Util::String::parseURL("https://steamcommunity.com/stats/2173760/leaderboards/10082641/");
+#endif
                 m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
             }
         }
     );
-#endif
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement;
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function = infoButtonEnable;

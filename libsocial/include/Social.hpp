@@ -100,11 +100,12 @@ public:
             LevelUp,
             XPAwarded,
             OverlayActivated,
-            PlayerAchievement
+            PlayerAchievement, //as in we should cheer, not an actual achievement
+            MonthlyProgress
         }type = LevelUp;
-        std::int32_t level = 0;
-        std::int32_t reason = -1;
-        std::uint64_t playerID = 0;
+        std::int32_t level = 0; //if monthly progress then current value
+        std::int32_t reason = -1; //if monthly progress then target value
+        std::uint64_t playerID = 0; //id of monthly challenge
     };
 
     struct ProgressData final
