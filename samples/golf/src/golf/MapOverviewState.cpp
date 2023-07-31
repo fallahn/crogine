@@ -165,13 +165,15 @@ FRAG_OUT = colour + (gridColour * contourAmount * u_gridAmount);
 }
 
 MapOverviewState::MapOverviewState(cro::StateStack& ss, cro::State::Context ctx, SharedStateData& sd)
-    : cro::State        (ss, ctx),
-    m_scene             (ctx.appInstance.getMessageBus()),
-    m_sharedData        (sd),
-    m_previousMap       (-1),
-    m_shaderValueIndex  (0),
-    m_viewScale         (2.f),
-    m_zoomScale         (1.f)
+    : cro::State                (ss, ctx),
+    m_scene                     (ctx.appInstance.getMessageBus()),
+    m_sharedData                (sd),
+    m_previousMap               (-1),
+    m_shaderValueIndex          (0),
+    m_viewScale                 (2.f),
+    m_zoomScale                 (1.f),
+    m_previousTrackpadPosition  (0.f),
+    m_trackpadVelocity          (0.f)
 {
     ctx.mainWindow.setMouseCaptured(false);
 
@@ -235,7 +237,7 @@ bool MapOverviewState::handleEvent(const cro::Event& evt)
         default: break;
         case cro::GameController::ButtonB:
         case cro::GameController::ButtonStart:
-        case cro::GameController::ButtonLeftStick:
+        case cro::GameController::ButtonTrackpad:
             quitState();
             return false;
         case cro::GameController::ButtonRightShoulder:
@@ -262,6 +264,20 @@ bool MapOverviewState::handleEvent(const cro::Event& evt)
         {
             cro::App::getWindow().setMouseCaptured(true);
         }
+    }
+    else if (evt.type == SDL_CONTROLLERTOUCHPADDOWN)
+    {
+        m_previousTrackpadPosition = { evt.ctouchpad.x, 1.f - evt.ctouchpad.y };
+    }
+    else if (evt.type == SDL_CONTROLLERTOUCHPADUP)
+    {
+        m_trackpadVelocity = { 0.f ,0.f };
+    }
+    else if (evt.type == SDL_CONTROLLERTOUCHPADMOTION)
+    {
+        glm::vec2 pos({ evt.ctouchpad.x, 1.f - evt.ctouchpad.y });
+        m_trackpadVelocity = pos - m_previousTrackpadPosition;
+        m_previousTrackpadPosition = pos;
     }
     else if (evt.type == SDL_MOUSEMOTION)
     {
@@ -339,6 +355,7 @@ bool MapOverviewState::simulate(float dt)
         movement.y -= 1.f;
     }
     
+
     auto len2 = glm::length2(movement);
     if (len2 > 1)
     {

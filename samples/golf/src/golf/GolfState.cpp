@@ -767,6 +767,9 @@ bool GolfState::handleEvent(const cro::Event& evt)
         switch (evt.cbutton.button)
         {
         default: break;
+        case cro::GameController::ButtonTrackpad:
+            showMapOverview();
+            break;
         case cro::GameController::ButtonBack:
             showScoreboard(false);
             break;

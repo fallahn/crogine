@@ -107,6 +107,9 @@ private:
 
     float m_zoomScale;
 
+    glm::vec2 m_previousTrackpadPosition;
+    glm::vec2 m_trackpadVelocity;
+
     void addSystems();
     void loadAssets();
     void buildScene();
