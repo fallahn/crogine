@@ -1937,6 +1937,8 @@ void ClubhouseState::finaliseGameCreate()
         auto data = serialiseString(m_sharedData.mapDirectory);
         m_sharedData.clientConnection.netClient.sendPacket(PacketID::MapInfo, data.data(), data.size(), net::NetFlag::Reliable, ConstVal::NetChannelStrings);
     }
+
+    refreshLobbyButtons();
 }
 
 void ClubhouseState::finaliseGameJoin(const MatchMaking::Message& data)
@@ -1974,4 +1976,6 @@ void ClubhouseState::finaliseGameJoin(const MatchMaking::Message& data)
         m_uiScene.destroyEntity(e);
     };
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+    refreshLobbyButtons();
 }

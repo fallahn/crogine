@@ -272,6 +272,12 @@ private:
     }m_tvTopFive;
 
 
+    struct LobbyButtonContext final
+    {
+        cro::Entity backButton;
+        cro::Entity startButton;
+    }m_lobbyButtonContext;
+
     void createMainMenu(cro::Entity, std::uint32_t, std::uint32_t);
     void createAvatarMenu(cro::Entity, std::uint32_t, std::uint32_t);
     void createJoinMenu(cro::Entity, std::uint32_t, std::uint32_t);
@@ -287,6 +293,7 @@ private:
     void handleTextEdit(const cro::Event&);
     bool applyTextEdit(); //returns true if this consumed event
     void addTableSelectButtons();
+    void refreshLobbyButtons();
     void updateLobbyAvatars();
     void updateBallTexture();
 

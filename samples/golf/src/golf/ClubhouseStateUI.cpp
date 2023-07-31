@@ -72,7 +72,8 @@ namespace
             TablePrev, TableNext,
             BallPrev, BallNext,
             GamePrev, GameNext,
-            LBack, LStart
+            LBack, LStart,
+            FriendsOnly
         };
     };
 }
@@ -1911,6 +1912,8 @@ void ClubhouseState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnte
     entity.addComponent<cro::UIInput>().area = bounds;
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Lobby);
     entity.getComponent<cro::UIInput>().setSelectionIndex(ButtonID::BallPrev);
+    entity.getComponent<cro::UIInput>().setNextIndex(ButtonID::BallNext, ButtonID::LBack);
+    entity.getComponent<cro::UIInput>().setPrevIndex(ButtonID::BallNext, ButtonID::TablePrev);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = m_tableSelectCallbacks.mouseEnter;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = m_tableSelectCallbacks.mouseExit;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
@@ -1948,6 +1951,8 @@ void ClubhouseState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnte
     entity.addComponent<cro::UIInput>().area = bounds;
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Lobby);
     entity.getComponent<cro::UIInput>().setSelectionIndex(ButtonID::BallNext);
+    entity.getComponent<cro::UIInput>().setNextIndex(ButtonID::BallPrev, ButtonID::LBack);
+    entity.getComponent<cro::UIInput>().setPrevIndex(ButtonID::BallPrev, ButtonID::TablePrev);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = m_tableSelectCallbacks.mouseEnter;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = m_tableSelectCallbacks.mouseExit;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
@@ -1988,6 +1993,8 @@ void ClubhouseState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnte
     entity.addComponent<cro::UIInput>().area = bounds;
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Lobby);
     entity.getComponent<cro::UIInput>().setSelectionIndex(ButtonID::TablePrev);
+    entity.getComponent<cro::UIInput>().setNextIndex(ButtonID::TableNext, ButtonID::BallNext);
+    entity.getComponent<cro::UIInput>().setPrevIndex(ButtonID::TableNext, ButtonID::LBack);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = m_tableSelectCallbacks.mouseEnter;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = m_tableSelectCallbacks.mouseExit;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
@@ -2025,6 +2032,8 @@ void ClubhouseState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnte
     entity.addComponent<cro::UIInput>().area = bounds;
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Lobby);
     entity.getComponent<cro::UIInput>().setSelectionIndex(ButtonID::TableNext);
+    entity.getComponent<cro::UIInput>().setNextIndex(ButtonID::TablePrev, ButtonID::LStart);
+    entity.getComponent<cro::UIInput>().setPrevIndex(ButtonID::TablePrev, ButtonID::LStart);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = m_tableSelectCallbacks.mouseEnter;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = m_tableSelectCallbacks.mouseExit;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
@@ -2140,6 +2149,8 @@ void ClubhouseState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnte
     entity.addComponent<cro::UIInput>().area = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Lobby);
     entity.getComponent<cro::UIInput>().setSelectionIndex(ButtonID::LBack);
+    entity.getComponent<cro::UIInput>().setNextIndex(ButtonID::LStart, ButtonID::TablePrev);
+    entity.getComponent<cro::UIInput>().setPrevIndex(ButtonID::LStart, ButtonID::BallNext);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = mouseEnterHighlight;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = mouseExitHighlight;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
@@ -2152,6 +2163,7 @@ void ClubhouseState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnte
                 }
             });
     menuTransform.addChild(entity.getComponent<cro::Transform>());
+    m_lobbyButtonContext.backButton = entity;
 
     //start
     entity = m_uiScene.createEntity();
@@ -2164,7 +2176,9 @@ void ClubhouseState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnte
     entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::ReadyUp]; //which sprite is set by sending a message to this ent when we know if we're hosting or joining
     entity.addComponent<cro::UIInput>().area = m_sprites[SpriteID::ReadyUp].getTextureBounds();
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Lobby);
-    entity.getComponent<cro::UIInput>().setSelectionIndex(ButtonID::LStart); //table selection will be assigned 6/7 if hosting
+    entity.getComponent<cro::UIInput>().setSelectionIndex(ButtonID::LStart);
+    entity.getComponent<cro::UIInput>().setNextIndex(ButtonID::LBack, ButtonID::TableNext);
+    entity.getComponent<cro::UIInput>().setPrevIndex(ButtonID::LBack, ButtonID::TableNext);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = mouseEnter;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = mouseExit;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
@@ -2211,6 +2225,7 @@ void ClubhouseState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnte
                 }
             });
     menuTransform.addChild(entity.getComponent<cro::Transform>());
+    m_lobbyButtonContext.startButton = entity;
 
 #ifndef USE_GNS
     //server info message
@@ -2752,7 +2767,9 @@ void ClubhouseState::addTableSelectButtons()
     auto bounds = buttonEnt.getComponent<cro::Sprite>().getTextureBounds();
     buttonEnt.addComponent<cro::UIInput>().area = bounds;
     buttonEnt.getComponent<cro::UIInput>().setGroup(MenuID::Lobby);
-    buttonEnt.getComponent<cro::UIInput>().setSelectionIndex(ButtonID::TablePrev);
+    buttonEnt.getComponent<cro::UIInput>().setSelectionIndex(ButtonID::GamePrev);
+    buttonEnt.getComponent<cro::UIInput>().setNextIndex(ButtonID::GameNext, ButtonID::TablePrev);
+    buttonEnt.getComponent<cro::UIInput>().setPrevIndex(ButtonID::LBack, ButtonID::BallNext);
     buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = m_tableSelectCallbacks.mouseEnter;
     buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = m_tableSelectCallbacks.mouseExit;
     buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = m_tableSelectCallbacks.prevTable;
@@ -2784,7 +2801,9 @@ void ClubhouseState::addTableSelectButtons()
     bounds = buttonEnt.getComponent<cro::Sprite>().getTextureBounds();
     buttonEnt.addComponent<cro::UIInput>().area = bounds;
     buttonEnt.getComponent<cro::UIInput>().setGroup(MenuID::Lobby);
-    buttonEnt.getComponent<cro::UIInput>().setSelectionIndex(ButtonID::TableNext);
+    buttonEnt.getComponent<cro::UIInput>().setSelectionIndex(ButtonID::GameNext);
+    buttonEnt.getComponent<cro::UIInput>().setNextIndex(ButtonID::LStart, ButtonID::TableNext);
+    buttonEnt.getComponent<cro::UIInput>().setPrevIndex(ButtonID::GamePrev, ButtonID::TableNext);
     buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = m_tableSelectCallbacks.mouseEnter;
     buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = m_tableSelectCallbacks.mouseExit;
     buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = m_tableSelectCallbacks.nextTable;
@@ -2805,7 +2824,7 @@ void ClubhouseState::addTableSelectButtons()
     {
         cro::Command cmd;
         cmd.targetFlags = CommandID::Menu::LobbyList;
-        cmd.action = [&](cro::Entity e, float)
+        cmd.action = [&, buttonEnt](cro::Entity e, float) mutable
         {
 
             auto& font = m_sharedData.sharedResources->fonts.get(FontID::Info);
@@ -2843,6 +2862,9 @@ void ClubhouseState::addTableSelectButtons()
             bounds = checkboxEnt.getComponent<cro::Sprite>().getTextureBounds();
             checkboxEnt.addComponent<cro::UIInput>().area = bounds;
             checkboxEnt.getComponent<cro::UIInput>().setGroup(MenuID::Lobby);
+            checkboxEnt.getComponent<cro::UIInput>().setSelectionIndex(ButtonID::FriendsOnly);
+            checkboxEnt.getComponent<cro::UIInput>().setNextIndex(ButtonID::BallPrev, ButtonID::GameNext);
+            checkboxEnt.getComponent<cro::UIInput>().setPrevIndex(ButtonID::BallNext, ButtonID::TableNext);
             checkboxEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = m_tableSelectCallbacks.selectHighlight;
             checkboxEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = m_tableSelectCallbacks.unselectHighlight;
             checkboxEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = m_tableSelectCallbacks.toggleFriendsOnly;
@@ -2856,8 +2878,26 @@ void ClubhouseState::addTableSelectButtons()
             labelEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
             labelEnt.addComponent<cro::CommandTarget>().ID = CommandID::Menu::CourseSelect;
             e.getComponent<cro::Transform>().addChild(labelEnt.getComponent<cro::Transform>());
+
+
+            //make sure we can get to this from the GameNext button
+            buttonEnt.getComponent<cro::UIInput>().setPrevIndex(ButtonID::GamePrev, ButtonID::FriendsOnly);
         };
         m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+    }
+}
+
+void ClubhouseState::refreshLobbyButtons()
+{
+    if (m_sharedData.hosting)
+    {
+        m_lobbyButtonContext.backButton.getComponent<cro::UIInput>().setNextIndex(ButtonID::GamePrev, ButtonID::TablePrev);
+        m_lobbyButtonContext.startButton.getComponent<cro::UIInput>().setPrevIndex(ButtonID::GameNext, ButtonID::FriendsOnly);
+    }
+    else
+    {
+        m_lobbyButtonContext.backButton.getComponent<cro::UIInput>().setNextIndex(ButtonID::LStart, ButtonID::TablePrev);
+        m_lobbyButtonContext.startButton.getComponent<cro::UIInput>().setPrevIndex(ButtonID::LBack, ButtonID::TableNext);
     }
 }
 
