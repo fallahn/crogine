@@ -274,6 +274,7 @@ bool MapOverviewState::handleEvent(const cro::Event& evt)
             m_trackpadFingers[evt.ctouchpad.finger].prevPosition = { evt.ctouchpad.x, 1.f - evt.ctouchpad.y };
             m_trackpadFingers[evt.ctouchpad.finger].currPosition = { evt.ctouchpad.x, 1.f - evt.ctouchpad.y };
         }
+        //LogI << "Finger count " << m_fingerCount << " finger id " << evt.ctouchpad.finger << std::endl;
     }
     else if (evt.type == SDL_CONTROLLERTOUCHPADUP)
     {
@@ -283,6 +284,7 @@ bool MapOverviewState::handleEvent(const cro::Event& evt)
             //this effectively resets the velocity to 0
             m_trackpadFingers[evt.ctouchpad.finger].currPosition = m_trackpadFingers[evt.ctouchpad.finger].prevPosition;
         }
+        //LogI << "Finger count " << m_fingerCount << " finger id " << evt.ctouchpad.finger << std::endl;
     }
     else if (evt.type == SDL_CONTROLLERTOUCHPADMOTION)
     {
@@ -412,60 +414,60 @@ bool MapOverviewState::simulate(float dt)
 
 
     //check for touchpad input
-    if (m_fingerCount == 1)
-    {
-        const auto doPan = [&](std::int32_t finger)
-        {
-            //map finger to screen space (correct for aspect ratio? pad is not necessarily a fixed shape)
-            glm::vec2 screenMotion = glm::vec2(cro::App::getWindow().getSize()) * (m_trackpadFingers[finger].currPosition - m_trackpadFingers[finger].prevPosition);
+    //if (m_fingerCount == 1)
+    //{
+    //    const auto doPan = [&](std::int32_t finger)
+    //    {
+    //        //map finger to screen space (correct for aspect ratio? pad is not necessarily a fixed shape)
+    //        glm::vec2 screenMotion = glm::vec2(cro::App::getWindow().getSize()) * (m_trackpadFingers[finger].prevPosition - m_trackpadFingers[finger].currPosition);
 
-            //convert screen space to world coords
-            const float Scale = 1.f / m_mapEnt.getComponent<cro::Transform>().getScale().x;
-            screenMotion *= Scale;
-            screenMotion /= m_viewScale;
+    //        //convert screen space to world coords
+    //        const float Scale = 1.f / m_mapEnt.getComponent<cro::Transform>().getScale().x;
+    //        screenMotion *= Scale;
+    //        screenMotion /= m_viewScale;
 
-            //pan as if mouse movement
-            pan(screenMotion);
-        };
+    //        //pan as if mouse movement
+    //        pan(screenMotion);
+    //    };
 
-        //pan
-        if (auto vel = m_trackpadFingers[0].currPosition - m_trackpadFingers[0].prevPosition; glm::length2(vel) != 0)
-        {
-            doPan(0);
-        }
-        else
-        {
-            vel = m_trackpadFingers[1].currPosition - m_trackpadFingers[1].prevPosition;
-            doPan(1);
-        }
-    }
-    else if (m_fingerCount == 2)
-    {
-        //zoom - move the position of the second finger
-        //relative to the first and adjust velocity
-        glm::vec2 f2 = m_trackpadFingers[1].currPosition - m_trackpadFingers[0].currPosition;
-        glm::vec2 f2v = (m_trackpadFingers[1].currPosition - m_trackpadFingers[1].prevPosition) - (m_trackpadFingers[0].currPosition - m_trackpadFingers[0].prevPosition);
+    //    //pan
+    //    if (auto vel = m_trackpadFingers[0].currPosition - m_trackpadFingers[0].prevPosition; glm::length2(vel) != 0)
+    //    {
+    //        doPan(0);
+    //    }
+    //    else
+    //    {
+    //        vel = m_trackpadFingers[1].currPosition - m_trackpadFingers[1].prevPosition;
+    //        doPan(1);
+    //    }
+    //}
+    //else if (m_fingerCount == 2)
+    //{
+    //    //zoom - move the position of the second finger
+    //    //relative to the first and adjust velocity
+    //    glm::vec2 f2 = m_trackpadFingers[1].currPosition - m_trackpadFingers[0].currPosition;
+    //    glm::vec2 f2v = (m_trackpadFingers[1].currPosition - m_trackpadFingers[1].prevPosition) - (m_trackpadFingers[0].currPosition - m_trackpadFingers[0].prevPosition);
 
-        //then test to see if new velocity moves towards
-        //the first finger, or away
-        float amount = 0.f;
-        if (glm::length2(f2 + f2v) > glm::length2(f2))
-        {
-            //moving away
-            amount = 1.f;
-        }
-        else
-        {
-            //moving towards each other
-            amount = -1.f;
-        }
+    //    //then test to see if new velocity moves towards
+    //    //the first finger, or away
+    //    float amount = 0.f;
+    //    if (glm::length2(f2 + f2v) > glm::length2(f2))
+    //    {
+    //        //moving away
+    //        amount = 0.1f;
+    //    }
+    //    else
+    //    {
+    //        //moving towards each other
+    //        amount = -0.1f;
+    //    }
 
-        if (amount != 0)
-        {
-            m_zoomScale = std::clamp(m_zoomScale + amount, MinZoom, MaxZoom);
-            rescaleMap();
-        }
-    }
+    //    if (amount != 0)
+    //    {
+    //        m_zoomScale = std::clamp(m_zoomScale + amount, MinZoom, MaxZoom);
+    //        rescaleMap();
+    //    }
+    //}
 
     //update shader properties
     glUseProgram(m_slopeShader.getGLHandle());
