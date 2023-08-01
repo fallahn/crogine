@@ -3213,8 +3213,10 @@ void GolfState::floatingMessage(const std::string& msg)
 {
     auto& font = m_sharedData.sharedResources->fonts.get(FontID::Info);
 
+    const float offsetScale = Social::isSteamdeck() ? 2.f : 1.f;
+
     glm::vec2 size = glm::vec2(GolfGame::getActiveTarget()->getSize());
-    glm::vec3 position((size.x / 2.f), (UIBarHeight + 14.f) * m_viewScale.y, 0.2f);
+    glm::vec3 position((size.x / 2.f), (UIBarHeight + (14.f * offsetScale)) * m_viewScale.y, 0.2f);
 
     auto entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(position);
