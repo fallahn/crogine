@@ -398,6 +398,9 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     //    });
 
 #ifdef CRO_DEBUG_
+#ifdef USE_GNS
+    registerCommand("dump_monthly", [](const std::string&) {Social::dumpMonthlyToText(); });
+#endif
 
     registerWindow([&]() 
         {
