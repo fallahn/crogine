@@ -40,6 +40,13 @@ source distribution.
 
 struct SharedStateData;
 
+//TODO move this to own file if we use it elsewhere
+struct TrackpadFinger final
+{
+    glm::vec2 prevPosition = glm::vec2(0.f);
+    glm::vec2 currPosition = glm::vec2(0.f);
+};
+
 class MapOverviewState final : public cro::State
 {
 public:
@@ -107,8 +114,8 @@ private:
 
     float m_zoomScale;
 
-    glm::vec2 m_previousTrackpadPosition;
-    glm::vec2 m_trackpadVelocity;
+    std::array<TrackpadFinger, 2u> m_trackpadFingers = {};
+    std::int32_t m_fingerCount;
 
     void addSystems();
     void loadAssets();
@@ -119,4 +126,6 @@ private:
     void rescaleMap();
     void refreshMap();
     void updateNormals();
+
+    void pan(glm::vec2);
 };

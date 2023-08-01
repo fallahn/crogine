@@ -162,18 +162,19 @@ FRAG_OUT = colour + (gridColour * contourAmount * u_gridAmount);
 
     constexpr float MaxZoom = 12.f;
     constexpr float MinZoom = 1.f;
+    constexpr float BaseScaleMultiplier = 0.9f;
+    constexpr std::int32_t MaxFingers = 2;
 }
 
 MapOverviewState::MapOverviewState(cro::StateStack& ss, cro::State::Context ctx, SharedStateData& sd)
-    : cro::State                (ss, ctx),
-    m_scene                     (ctx.appInstance.getMessageBus()),
-    m_sharedData                (sd),
-    m_previousMap               (-1),
-    m_shaderValueIndex          (0),
-    m_viewScale                 (2.f),
-    m_zoomScale                 (1.f),
-    m_previousTrackpadPosition  (0.f),
-    m_trackpadVelocity          (0.f)
+    : cro::State        (ss, ctx),
+    m_scene             (ctx.appInstance.getMessageBus()),
+    m_sharedData        (sd),
+    m_previousMap       (-1),
+    m_shaderValueIndex  (0),
+    m_viewScale         (2.f),
+    m_zoomScale         (1.f),
+    m_fingerCount       (0)
 {
     ctx.mainWindow.setMouseCaptured(false);
 
@@ -267,17 +268,30 @@ bool MapOverviewState::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_CONTROLLERTOUCHPADDOWN)
     {
-        m_previousTrackpadPosition = { evt.ctouchpad.x, 1.f - evt.ctouchpad.y };
+        m_fingerCount++;
+        if (evt.ctouchpad.finger < MaxFingers)
+        {
+            m_trackpadFingers[evt.ctouchpad.finger].prevPosition = { evt.ctouchpad.x, 1.f - evt.ctouchpad.y };
+            m_trackpadFingers[evt.ctouchpad.finger].currPosition = { evt.ctouchpad.x, 1.f - evt.ctouchpad.y };
+        }
     }
     else if (evt.type == SDL_CONTROLLERTOUCHPADUP)
     {
-        m_trackpadVelocity = { 0.f ,0.f };
+        m_fingerCount--;
+        if (evt.ctouchpad.finger < MaxFingers)
+        {
+            //this effectively resets the velocity to 0
+            m_trackpadFingers[evt.ctouchpad.finger].currPosition = m_trackpadFingers[evt.ctouchpad.finger].prevPosition;
+        }
     }
     else if (evt.type == SDL_CONTROLLERTOUCHPADMOTION)
     {
-        glm::vec2 pos({ evt.ctouchpad.x, 1.f - evt.ctouchpad.y });
-        m_trackpadVelocity = pos - m_previousTrackpadPosition;
-        m_previousTrackpadPosition = pos;
+        if (evt.ctouchpad.finger < MaxFingers)
+        {
+            glm::vec2 pos({ evt.ctouchpad.x, 1.f - evt.ctouchpad.y });
+            m_trackpadFingers[evt.ctouchpad.finger].prevPosition = m_trackpadFingers[evt.ctouchpad.finger].currPosition;
+            m_trackpadFingers[evt.ctouchpad.finger].currPosition = pos;
+        }
     }
     else if (evt.type == SDL_MOUSEMOTION)
     {
@@ -291,18 +305,7 @@ bool MapOverviewState::handleEvent(const cro::Event& evt)
             movement.y += static_cast<float>(evt.motion.yrel) * Scale;
             movement /= m_viewScale;
             
-            auto position = m_mapEnt.getComponent<cro::Transform>().getOrigin();
-            position += glm::vec3(movement, 0.f);
-
-            position.x = std::floor(position.x);
-            position.y = std::floor(position.y);
-
-            glm::vec2 bounds(m_renderBuffer.getSize());
-
-            position.x = std::clamp(position.x, 0.f, bounds.x);
-            position.y = std::clamp(position.y, 0.f, bounds.y);
-
-            m_mapEnt.getComponent<cro::Transform>().setOrigin(position);
+            pan(movement);
         }
     }
     else if (evt.type == SDL_MOUSEWHEEL)
@@ -395,7 +398,6 @@ bool MapOverviewState::simulate(float dt)
     }
 
 
-    
     if (len2 != 0)
     {
         auto origin = m_mapEnt.getComponent<cro::Transform>().getOrigin();
@@ -405,6 +407,64 @@ bool MapOverviewState::simulate(float dt)
         origin.x = std::clamp(origin.x, 0.f, bounds.x);
         origin.y = std::clamp(origin.y, 0.f, bounds.y);
         m_mapEnt.getComponent<cro::Transform>().setOrigin(origin);
+    }
+
+
+
+    //check for touchpad input
+    if (m_fingerCount == 1)
+    {
+        const auto doPan = [&](std::int32_t finger)
+        {
+            //map finger to screen space (correct for aspect ratio? pad is not necessarily a fixed shape)
+            glm::vec2 screenMotion = glm::vec2(cro::App::getWindow().getSize()) * (m_trackpadFingers[finger].currPosition - m_trackpadFingers[finger].prevPosition);
+
+            //convert screen space to world coords
+            const float Scale = 1.f / m_mapEnt.getComponent<cro::Transform>().getScale().x;
+            screenMotion *= Scale;
+            screenMotion /= m_viewScale;
+
+            //pan as if mouse movement
+            pan(screenMotion);
+        };
+
+        //pan
+        if (auto vel = m_trackpadFingers[0].currPosition - m_trackpadFingers[0].prevPosition; glm::length2(vel) != 0)
+        {
+            doPan(0);
+        }
+        else
+        {
+            vel = m_trackpadFingers[1].currPosition - m_trackpadFingers[1].prevPosition;
+            doPan(1);
+        }
+    }
+    else if (m_fingerCount == 2)
+    {
+        //zoom - move the position of the second finger
+        //relative to the first and adjust velocity
+        glm::vec2 f2 = m_trackpadFingers[1].currPosition - m_trackpadFingers[0].currPosition;
+        glm::vec2 f2v = (m_trackpadFingers[1].currPosition - m_trackpadFingers[1].prevPosition) - (m_trackpadFingers[0].currPosition - m_trackpadFingers[0].prevPosition);
+
+        //then test to see if new velocity moves towards
+        //the first finger, or away
+        float amount = 0.f;
+        if (glm::length2(f2 + f2v) > glm::length2(f2))
+        {
+            //moving away
+            amount = 1.f;
+        }
+        else
+        {
+            //moving towards each other
+            amount = -1.f;
+        }
+
+        if (amount != 0)
+        {
+            m_zoomScale = std::clamp(m_zoomScale + amount, MinZoom, MaxZoom);
+            rescaleMap();
+        }
     }
 
     //update shader properties
@@ -665,7 +725,7 @@ void MapOverviewState::recentreMap()
     glm::vec2 mapSize(m_renderBuffer.getSize());
 
     m_mapEnt.getComponent<cro::Transform>().setOrigin(mapSize / 2.f);
-    m_mapEnt.getComponent<cro::Transform>().setScale(glm::vec2(windowSize.x / mapSize.x) / m_viewScale.x);
+    m_mapEnt.getComponent<cro::Transform>().setScale((glm::vec2(windowSize.x / mapSize.x) / m_viewScale.x) * BaseScaleMultiplier);
     m_zoomScale = 1.f;
 }
 
@@ -674,7 +734,7 @@ void MapOverviewState::rescaleMap()
     glm::vec2 windowSize(cro::App::getWindow().getSize());
     glm::vec2 mapSize(m_renderBuffer.getSize());
 
-    const float baseScale = (windowSize.x / mapSize.x) / m_viewScale.x;
+    const float baseScale = ((windowSize.x / mapSize.x) / m_viewScale.x) * BaseScaleMultiplier;
     m_mapEnt.getComponent<cro::Transform>().setScale(glm::vec2(baseScale * m_zoomScale));
 
     refreshMap();
@@ -791,4 +851,20 @@ void MapOverviewState::updateNormals()
     }
 
     m_mapNormals.getComponent<cro::Drawable2D>().setVertexData(verts);
+}
+
+void MapOverviewState::pan(glm::vec2 movement)
+{
+    auto position = m_mapEnt.getComponent<cro::Transform>().getOrigin();
+    position += glm::vec3(movement, 0.f);
+
+    position.x = std::floor(position.x);
+    position.y = std::floor(position.y);
+
+    glm::vec2 bounds(m_renderBuffer.getSize());
+
+    position.x = std::clamp(position.x, 0.f, bounds.x);
+    position.y = std::clamp(position.y, 0.f, bounds.y);
+
+    m_mapEnt.getComponent<cro::Transform>().setOrigin(position);
 }
