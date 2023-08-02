@@ -141,6 +141,7 @@
     <ClInclude Include="include\AchievementStrings.hpp" />
     <ClInclude Include="include\Input.hpp" />
     <ClInclude Include="include\MatchMaking.hpp" />
+    <ClInclude Include="include\MonthlyChallenge.hpp" />
     <ClInclude Include="include\Social.hpp" />
   </ItemGroup>
   <ItemGroup>

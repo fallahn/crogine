@@ -340,6 +340,10 @@ void GolfGame::handleMessage(const cro::Message& msg)
                 m_stateStack.pushState(StateID::EventOverlay);
             }
         }
+        else if (data.type == Social::SocialEvent::MonthlyProgress)
+        {
+            m_progressIcon->show(static_cast<std::int32_t>(data.playerID), data.level, data.reason);
+        }
     }
 
     m_stateStack.handleMessage(msg);
