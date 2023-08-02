@@ -2439,41 +2439,7 @@ void ProfileState::setBioString(const std::string& s)
 
     static constexpr std::size_t MaxWidth = 17;
 
-    cro::String output;
-    std::string tmp;
-
-    std::size_t currentWidth = 0;
-
-    //wordwrap string
-    std::size_t searchStart = 0;
-    while (searchStart < MaxBioChars //&& searchStart < s.size()
-        && output.size() < MaxBioChars)
-    {
-        auto nextSpace = s.find(" ", searchStart);
-        if (nextSpace == std::string::npos)
-        {
-            break;
-        }
-
-        tmp = s.substr(searchStart, nextSpace - searchStart);
-        searchStart = nextSpace + 1;
-
-        if (currentWidth + (tmp.size() + 1) > MaxWidth)
-        {
-            output.replace(output.size() - 1, 1, "\n");
-            currentWidth = 0;
-        }
-        output += cro::String::fromUtf8(tmp.begin(), tmp.end()) + " ";
-        currentWidth += tmp.size() + 1;
-    }
-
-    if (currentWidth + (tmp.size() + 1) > MaxWidth)
-    {
-        output.replace(output.size() - 1, 1, "\n");
-        currentWidth = 0;
-    }
-    tmp = s.substr(searchStart);
-    output += cro::String::fromUtf8(tmp.begin(), tmp.end());
+    auto output = cro::Util::String::wordWrap(s, MaxWidth, MaxBioChars);
 
     m_menuEntities[EntityID::BioText].getComponent<cro::Transform>().setOrigin({ 0.f, -0.f });
     m_menuEntities[EntityID::BioText].getComponent<cro::Text>().setString(output);
