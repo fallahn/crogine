@@ -419,6 +419,7 @@ bool MapOverviewState::simulate(float dt)
     //    const auto doPan = [&](std::int32_t finger)
     //    {
     //        //map finger to screen space (correct for aspect ratio? pad is not necessarily a fixed shape)
+
     //        glm::vec2 screenMotion = glm::vec2(cro::App::getWindow().getSize()) * (m_trackpadFingers[finger].prevPosition - m_trackpadFingers[finger].currPosition);
 
     //        //convert screen space to world coords

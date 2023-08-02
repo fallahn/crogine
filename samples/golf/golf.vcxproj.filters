@@ -372,6 +372,9 @@
     <ClCompile Include="src\M3UPlaylist.cpp">
       <Filter>Source Files\golf</Filter>
     </ClCompile>
+    <ClCompile Include="src\golf\ProgressIcon.cpp">
+      <Filter>Source Files\golf\client</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ErrorCheck.hpp">
@@ -754,6 +757,9 @@
     </ClInclude>
     <ClInclude Include="src\M3UPlaylist.hpp">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\ProgressIcon.hpp">
+      <Filter>Header Files\golf\client</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

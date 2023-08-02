@@ -340,6 +340,10 @@ void GolfGame::handleMessage(const cro::Message& msg)
                 m_stateStack.pushState(StateID::EventOverlay);
             }
         }
+        else if (data.type == Social::SocialEvent::MonthlyProgress)
+        {
+            m_progressIcon->show(static_cast<std::int32_t>(data.playerID), data.level, data.reason);
+        }
     }
 
     m_stateStack.handleMessage(msg);
@@ -360,6 +364,7 @@ void GolfGame::simulate(float dt)
     m_stateStack.simulate(dt);
 
     Achievements::update();
+    m_progressIcon->update(dt);
 }
 
 void GolfGame::render()
@@ -380,6 +385,7 @@ void GolfGame::render()
 #ifndef USE_GNS
     m_achievements->drawOverlay();
 #endif
+    m_progressIcon->draw();
 }
 
 bool GolfGame::initialise()
@@ -667,6 +673,9 @@ bool GolfGame::initialise()
     {
         md.loadFromFile(str);
     }
+
+    //icon for challenge progress
+    m_progressIcon = std::make_unique<ProgressIcon>(m_sharedData.sharedResources->fonts.get(FontID::Label));
 
     //set up the post process
     auto windowSize = cro::App::getWindow().getSize();
