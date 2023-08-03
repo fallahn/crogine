@@ -97,6 +97,12 @@
     <Filter Include="Source Files\log">
       <UniqueIdentifier>{018844ae-a528-4c69-b21a-52e9e53bffc9}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\gc">
+      <UniqueIdentifier>{a3891728-5ef9-4dbc-a171-26e24f2d1048}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\gc">
+      <UniqueIdentifier>{3d37093a-b41e-4736-96d6-952fb4ca1a14}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\LoadingScreen.cpp">
@@ -209,6 +215,9 @@
     </ClCompile>
     <ClCompile Include="src\log\LogState.cpp">
       <Filter>Source Files\log</Filter>
+    </ClCompile>
+    <ClCompile Include="src\gc\GcState.cpp">
+      <Filter>Source Files\gc</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -355,6 +364,9 @@
     </ClInclude>
     <ClInclude Include="src\log\LogState.hpp">
       <Filter>Header Files\log</Filter>
+    </ClInclude>
+    <ClInclude Include="src\gc\GcState.hpp">
+      <Filter>Header Files\gc</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -42,6 +42,7 @@ namespace States
             Bush,
             BSP,
             Frustum,
+            GC,
             Log,
             MeshCollision,
             Retro,

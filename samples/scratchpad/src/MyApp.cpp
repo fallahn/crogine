@@ -43,6 +43,7 @@ source distribution.
 #include "animblend/AnimBlendState.hpp"
 #include "ssao/SSAOState.hpp"
 #include "log/LogState.hpp"
+#include "gc/GcState.hpp"
 #include "LoadingScreen.hpp"
 
 #include <crogine/core/Clock.hpp>
@@ -162,9 +163,10 @@ bool MyApp::initialise()
     m_stateStack.registerState<AnimBlendState>(States::ScratchPad::AnimBlend);
     m_stateStack.registerState<SSAOState>(States::ScratchPad::SSAO);
     m_stateStack.registerState<LogState>(States::ScratchPad::Log);
+    m_stateStack.registerState<GCState>(States::ScratchPad::GC);
 
 #ifdef CRO_DEBUG_
-    m_stateStack.pushState(States::ScratchPad::BatCat);
+    m_stateStack.pushState(States::ScratchPad::GC);
     //m_stateStack.pushState(States::ScratchPad::MainMenu);
 #else
     m_stateStack.pushState(States::ScratchPad::MainMenu);
