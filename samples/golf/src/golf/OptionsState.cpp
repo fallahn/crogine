@@ -457,10 +457,10 @@ bool OptionsState::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_CONTROLLERAXISMOTION)
     {
-        toggleControllerIcon(cro::GameController::controllerID(evt.caxis.which));
-
         if (std::abs(evt.caxis.value) > LeftThumbDeadZone)
         {
+            toggleControllerIcon(cro::GameController::controllerID(evt.caxis.which));
+
             cro::App::getWindow().setMouseCaptured(true);
 
             if (evt.caxis.axis == cro::GameController::AxisRightY)

@@ -166,7 +166,7 @@ void BilliardsInput::handleEvent(const cro::Event& evt)
     
     else if (evt.type == SDL_CONTROLLERBUTTONDOWN)
     {
-        if (evt.cbutton.which == activeControllerID(inputBinding.playerID))
+        if (evt.cbutton.which == cro::GameController::deviceID(activeControllerID(inputBinding.playerID)))
         {
             if (evt.cbutton.button == inputBinding.buttons[InputBinding::Action])
             {
@@ -205,7 +205,7 @@ void BilliardsInput::handleEvent(const cro::Event& evt)
     }
     else if (evt.type == SDL_CONTROLLERBUTTONUP)
     {
-        if (evt.cbutton.which == activeControllerID(inputBinding.playerID))
+        if (evt.cbutton.which == cro::GameController::deviceID(activeControllerID(inputBinding.playerID)))
         {
             if (evt.cbutton.button == inputBinding.buttons[InputBinding::Action])
             {
