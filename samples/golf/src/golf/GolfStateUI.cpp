@@ -2238,7 +2238,7 @@ void GolfState::updateScoreboard(bool updateParDiff)
                 //we still want to count the current number of strokes...
                 if (s)
                 {
-                    if (updateParDiff || j < (m_currentHole - 1))
+                    if (updateParDiff || j < (m_currentHole/* - 1*/))
                     {
                         auto diff = static_cast<std::int32_t>(s) - m_holeData[j].par;
                         entry.parDiff += diff;

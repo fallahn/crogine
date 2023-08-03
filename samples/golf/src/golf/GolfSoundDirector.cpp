@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2022
+Matt Marchant 2021 - 2023
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -64,7 +64,8 @@ GolfSoundDirector::GolfSoundDirector(cro::AudioResource& ar)
     m_honourID          (0),
     m_newHole           (false),
     m_crowdPositions    (nullptr),
-    m_crowdTime         (MinCrowdTime)
+    m_crowdTime         (MinCrowdTime),
+    m_flagSoundTime     (0.f)
 {
     //this must match with AudioID enum
     static const std::array<std::string, AudioID::Count> FilePaths =
@@ -486,7 +487,11 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
                     break;
                 case -1:
                     //flag pole
-                    playSound(AudioID::Pole, data.position).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
+                    if (m_flagSoundTime < 0)
+                    {
+                        playSound(AudioID::Pole, data.position).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
+                        m_flagSoundTime = 2.f;
+                    }
                     break;
                 default:
                     playSound(AudioID::Ground, data.position).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
@@ -556,6 +561,8 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
 void GolfSoundDirector::process(float dt)
 {
     SoundEffectsDirector::process(dt);
+
+    m_flagSoundTime -= dt;
 
     if (m_crowdTimer.elapsed() > m_crowdTime)
     {

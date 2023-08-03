@@ -4282,7 +4282,7 @@ void GolfState::buildScene()
     {
         auto vpSize = glm::vec2(cro::App::getWindow().getSize());
         cam.setPerspective((m_sharedData.fov * cro::Util::Const::degToRad) * camEnt.getComponent<CameraFollower>().zoom.fov,
-            vpSize.x / vpSize.y, /*0.1f*/10.f, static_cast<float>(MapSize.x) * 1.25f,
+            vpSize.x / vpSize.y, 0.1f, static_cast<float>(MapSize.x) * 1.35f,
             shadowQuality.cascadeCount);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
 

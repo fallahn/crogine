@@ -167,6 +167,9 @@ private:
     cro::Clock m_crowdTimer;
     cro::Time m_crowdTime;
 
+    //fudge to stop double flag collision sound
+    float m_flagSoundTime;
+
     cro::Entity playSound(std::int32_t, glm::vec3, float = 1.f);
     void playSoundDelayed(std::int32_t, glm::vec3, float, float = 1.f, std::uint8_t = 1/*MixerChannel::Effects*/);
     cro::Entity playAvatarSound(std::int32_t, const std::string&, glm::vec3);
