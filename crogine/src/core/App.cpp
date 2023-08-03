@@ -70,7 +70,7 @@ void winAbort(int)
 #include <sstream>
 
 #ifdef CRO_DEBUG_
-#define DEBUG_NO_CONTROLLER
+//#define DEBUG_NO_CONTROLLER
 #endif // CRO_DEBUG_
 
 using namespace cro;
@@ -895,6 +895,7 @@ bool Detail::isPSLayout(SDL_GameController* gc)
         std::string("ps5"),
         std::string("psx"),
         std::string("dualshock"),
+        std::string("dualsense"),
         std::string("playstation"),
         std::string("sony"),
     };
