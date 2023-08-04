@@ -1303,7 +1303,7 @@ void MenuState::createMenuCallbacks()
         {
             if (activated(evt))
             {
-                m_sharedData.gimmeRadius = (m_sharedData.gimmeRadius + (ScoreType::Count - 1)) % ScoreType::Count;
+                m_sharedData.gimmeRadius = (m_sharedData.gimmeRadius + (GimmeSize::Count - 1)) % GimmeSize::Count;
                 m_sharedData.clientConnection.netClient.sendPacket(PacketID::GimmeRadius, m_sharedData.gimmeRadius, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
 
                 m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
@@ -1314,7 +1314,7 @@ void MenuState::createMenuCallbacks()
         {
             if (activated(evt))
             {
-                m_sharedData.gimmeRadius = (m_sharedData.gimmeRadius + 1) % ScoreType::Count;
+                m_sharedData.gimmeRadius = (m_sharedData.gimmeRadius + 1) % GimmeSize::Count;
                 m_sharedData.clientConnection.netClient.sendPacket(PacketID::GimmeRadius, m_sharedData.gimmeRadius, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
 
                 m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();

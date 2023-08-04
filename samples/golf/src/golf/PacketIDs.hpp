@@ -42,6 +42,15 @@ namespace ScoreType
     };
 }
 
+namespace GimmeSize
+{
+    enum
+    {
+        None, Leather, Putter,
+        Count
+    };
+}
+
 namespace MessageType
 {
     enum

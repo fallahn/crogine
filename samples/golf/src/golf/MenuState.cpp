@@ -1610,6 +1610,13 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
 
                 if (m_sharedData.tutorial)
                 {
+                    //hmmm is this going to get in soon enough?
+                    m_sharedData.gimmeRadius = GimmeSize::None;
+                    m_sharedData.clientConnection.netClient.sendPacket(PacketID::GimmeRadius, m_sharedData.gimmeRadius, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                    
+                    m_sharedData.scoreType = ScoreType::Stroke;
+                    m_sharedData.clientConnection.netClient.sendPacket(PacketID::ScoreType, m_sharedData.scoreType, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+
                     m_sharedData.clientConnection.netClient.sendPacket(PacketID::RequestGameStart, std::uint8_t(sv::StateID::Golf), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
                 }
                 else
