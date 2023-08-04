@@ -1652,8 +1652,10 @@ void DrivingState::createScene()
     camEnt.addComponent<cro::Camera>().resizeCallback =
         [&, camEnt](cro::Camera& cam) //use explicit callback so we can capture the entity and use it to zoom via CamFollowSystem
     {
+        const float farPlane = static_cast<float>(RangeSize.y) * 2.5f;
+
         auto vpSize = glm::vec2(cro::App::getWindow().getSize());
-        cam.setPerspective((m_sharedData.fov* cro::Util::Const::degToRad) * camEnt.getComponent<CameraFollower>().zoom.fov, vpSize.x / vpSize.y, 0.1f, vpSize.x, 2);
+        cam.setPerspective((m_sharedData.fov * cro::Util::Const::degToRad) * camEnt.getComponent<CameraFollower>().zoom.fov, vpSize.x / vpSize.y, 0.1f, farPlane, 2);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
     camEnt.getComponent<cro::Camera>().setMaxShadowDistance(80.f);
@@ -2627,7 +2629,7 @@ void DrivingState::createBall()
 
 
     //init ball trail
-    m_ballTrail.create(m_gameScene, m_resources, m_materialIDs[MaterialID::BallTrail]);
+    m_ballTrail.create(m_gameScene, m_resources, m_materialIDs[MaterialID::BallTrail], false);
     m_ballTrail.setUseBeaconColour(m_sharedData.trailBeaconColour);
 
 #ifdef CRO_DEBUG_
