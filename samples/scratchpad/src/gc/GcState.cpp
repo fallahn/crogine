@@ -166,11 +166,18 @@ void GCState::createScene()
         }
     }
 
+    if (md.loadFromFile("assets/golf/models/stage.cmt"))
+    {
+        auto entity = m_gameScene.createEntity();
+        entity.addComponent<cro::Transform>();
+        md.createModel(entity);
+    }
+
     auto resize = [](cro::Camera& cam)
     {
         glm::vec2 size(cro::App::getWindow().getSize());
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
-        cam.setPerspective(70.f * cro::Util::Const::degToRad, size.x / size.y, 0.1f, 10.f);
+        cam.setPerspective(70.f * cro::Util::Const::degToRad, size.x / size.y, 0.1f, 20.f);
     };
 
     auto& cam = m_gameScene.getActiveCamera().getComponent<cro::Camera>();
@@ -244,7 +251,9 @@ void GCState::createScene()
             }
         }        
 
-        float rotation = ((cro::Util::Const::PI * 0.5f) * cro::Util::Easing::easeInOutQuad(progress)) - (cro::Util::Const::PI * 0.25f);
+        constexpr float StartAngle = cro::Util::Const::PI * 0.4f;
+        constexpr float MaxRotation = cro::Util::Const::PI - (StartAngle * 2.f);
+        float rotation = (MaxRotation * cro::Util::Easing::easeInOutQuad(progress)) -(MaxRotation / 2.f);
         axisEnt.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, rotation);
     };
 
@@ -305,6 +314,9 @@ void GCState::createScene()
             setNextCam();
         }
     };
+
+
+    m_gameScene.getSunlight().getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -0.4f);
 }
 
 void GCState::createUI()
