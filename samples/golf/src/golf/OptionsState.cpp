@@ -3943,7 +3943,7 @@ void OptionsState::updateActiveCallbacks()
 
 void OptionsState::quitState()
 {
-    m_scene.setSystemActive<cro::AudioPlayerSystem>(false);
+    //m_scene.setSystemActive<cro::AudioPlayerSystem>(false);
     m_rootNode.getComponent<cro::Callback>().active = true;
     m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
 }

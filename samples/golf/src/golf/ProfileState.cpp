@@ -1022,7 +1022,7 @@ void ProfileState::buildScene()
                     setAvatarIndex(cro::Util::Random::value(0u, m_sharedData.avatarInfo.size() - 1));
 
                     //randomise colours
-                    for (auto i = 0; i < PaletteID::Count; ++i)
+                    for (auto i = 0; i < PaletteID::BallThumb; ++i)
                     {
                         m_activeProfile.avatarFlags[i] = static_cast<std::uint8_t>(cro::Util::Random::value(0u, pc::PairCounts[i] - 1));
                         m_profileTextures[m_avatarIndex].setColour(pc::ColourKey::Index(i), m_activeProfile.avatarFlags[i]);

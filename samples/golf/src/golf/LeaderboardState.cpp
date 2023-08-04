@@ -1370,7 +1370,7 @@ void LeaderboardState::updateButtonIndices()
 
 void LeaderboardState::quitState()
 {
-    m_scene.setSystemActive<cro::AudioPlayerSystem>(false);
+    //m_scene.setSystemActive<cro::AudioPlayerSystem>(false);
     m_rootNode.getComponent<cro::Callback>().active = true;
     m_scene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Dummy);
     m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
