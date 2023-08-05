@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2023
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -40,8 +40,9 @@ namespace
 }
 
 VorbisLoader::VorbisLoader()
-    : m_vorbisFile(nullptr),
-    m_channelCount(0)
+    : m_vorbisFile  (nullptr),
+    m_channelCount  (0),
+    m_sampleCount   (0)
 {
 
 }
@@ -62,6 +63,10 @@ bool VorbisLoader::open(const std::string& path)
     {
         SDL_RWclose(m_file.file);
         m_file.file = nullptr;
+
+        m_dataChunk = {};
+        m_channelCount = 0;
+        m_sampleCount = 0;
     }
     if (m_vorbisFile)
     {
@@ -106,6 +111,7 @@ bool VorbisLoader::open(const std::string& path)
     m_dataChunk.format = (info.channels == 1) ? PCMData::Format::MONO16 : PCMData::Format::STEREO16;
     m_dataChunk.frequency = info.sample_rate;
     m_channelCount = info.channels;
+    m_sampleCount = stb_vorbis_stream_length_in_samples(m_vorbisFile) * m_channelCount;
 
     return true;
 }

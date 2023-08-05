@@ -53,21 +53,25 @@ namespace cro
         /*!
         \see ImGui::Begin()
         */
+        [[deprecated("Use ImGui directly")]]
         CRO_EXPORT_API void begin(const std::string& title, bool* open = nullptr);
 
         /*!
         \see ImGui::CheckBox()
         */
+        [[deprecated("Use ImGui directly")]]
         CRO_EXPORT_API void checkbox(const std::string& title, bool* value);
 
         /*!
         \see ImGui::FloatSlider()
         */
+        [[deprecated("Use ImGui directly")]]
         CRO_EXPORT_API void slider(const std::string& title, float& value, float min, float max);
 
         /*!
         \see ImGui::End()
         */
+        [[deprecated("Use ImGui directly")]]
         CRO_EXPORT_API void end();
 
         /*!

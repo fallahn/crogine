@@ -129,6 +129,7 @@
     <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
+    <EnableASAN>false</EnableASAN>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release-asan|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
@@ -422,6 +423,9 @@
       <AdditionalLibraryDirectories>$(SolutionDir)$(Platform)\Release;$(SolutionDir)$(Platform)\$(Configuration);$(SolutionDir)extlibs\sdl2\lib\x64;$(SolutionDir)extlibs\bullet\lib\x64\Release;$(SolutionDir)..\libgns\x64\Release;$(SolutionDir)..\libgns\extlibs\steam\bin;$(SolutionDir)..\libgns\golf_workshop\lib;$(SolutionDir)extlibs\sqlite\bin</AdditionalLibraryDirectories>
       <AdditionalDependencies>libgns.lib;crogine.lib;SDL2.lib;SDL2main.lib;BulletCollision.lib;BulletDynamics.lib;LinearMath.lib;steam_api64.lib;golf_ach.lib;workshop-gns.lib;sqlite3.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PreBuildEvent>
+      <Command>"$(ProjectDir)src/version/buildnumber.exe"</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release-asan|x64'">
     <ClCompile>
@@ -480,7 +484,9 @@
     <ClCompile Include="src\golf\InputParser.cpp" />
     <ClCompile Include="src\golf\GolfStateUI.cpp" />
     <ClCompile Include="src\golf\KeyboardState.cpp" />
+    <ClCompile Include="src\golf\LeaderboardState.cpp" />
     <ClCompile Include="src\golf\LeaderboardTexture.cpp" />
+    <ClCompile Include="src\golf\MapOverviewState.cpp" />
     <ClCompile Include="src\golf\MenuAvatars.cpp" />
     <ClCompile Include="src\golf\MenuCallbacks.cpp" />
     <ClCompile Include="src\golf\MenuCreation.cpp" />
@@ -502,12 +508,14 @@
     <ClCompile Include="src\golf\PocketBallSystem.cpp" />
     <ClCompile Include="src\golf\PracticeState.cpp" />
     <ClCompile Include="src\golf\ProfileState.cpp" />
+    <ClCompile Include="src\golf\ProgressIcon.cpp" />
     <ClCompile Include="src\golf\PropFollowSystem.cpp" />
     <ClCompile Include="src\golf\RayResultCallback.cpp" />
     <ClCompile Include="src\golf\server\EightballDirector.cpp" />
     <ClCompile Include="src\golf\server\NineballDirector.cpp" />
     <ClCompile Include="src\golf\server\Server.cpp" />
     <ClCompile Include="src\golf\server\ServerBilliardsState.cpp" />
+    <ClCompile Include="src\golf\server\ServerGolfRules.cpp" />
     <ClCompile Include="src\golf\server\ServerGolfState.cpp" />
     <ClCompile Include="src\golf\server\ServerLobbyState.cpp" />
     <ClCompile Include="src\golf\server\SnookerDirector.cpp" />
@@ -515,6 +523,7 @@
     <ClCompile Include="src\golf\SoundEffectsDirector.cpp" />
     <ClCompile Include="src\golf\SpectatorSystem.cpp" />
     <ClCompile Include="src\golf\spooky2.cpp" />
+    <ClCompile Include="src\golf\StatsState.cpp" />
     <ClCompile Include="src\golf\StudioCameraSystem.cpp" />
     <ClCompile Include="src\golf\Swingput.cpp" />
     <ClCompile Include="src\golf\TerrainBuilder.cpp" />
@@ -529,6 +538,7 @@
     <ClCompile Include="src\golf\VatFile.cpp" />
     <ClCompile Include="src\golf\Weather.cpp" />
     <ClCompile Include="src\LoadingScreen.cpp" />
+    <ClCompile Include="src\M3UPlaylist.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\GolfGame.cpp" />
     <ClCompile Include="src\rss\Newsfeed.cpp" />
@@ -582,7 +592,9 @@
     <ClInclude Include="src\golf\InputParser.hpp" />
     <ClInclude Include="src\golf\InterpolationSystem.hpp" />
     <ClInclude Include="src\golf\KeyboardState.hpp" />
+    <ClInclude Include="src\golf\LeaderboardState.hpp" />
     <ClInclude Include="src\golf\LeaderboardTexture.hpp" />
+    <ClInclude Include="src\golf\MapOverviewState.hpp" />
     <ClInclude Include="src\golf\MenuCallbacks.hpp" />
     <ClInclude Include="src\golf\MenuConsts.hpp" />
     <ClInclude Include="src\golf\MenuSoundDirector.hpp" />
@@ -608,12 +620,14 @@
     <ClInclude Include="src\golf\PoissonDisk.hpp" />
     <ClInclude Include="src\golf\PracticeState.hpp" />
     <ClInclude Include="src\golf\ProfileState.hpp" />
+    <ClInclude Include="src\golf\ProgressIcon.hpp" />
     <ClInclude Include="src\golf\PropFollowSystem.hpp" />
     <ClInclude Include="src\golf\PuttingState.hpp" />
     <ClInclude Include="src\golf\RandNames.hpp" />
     <ClInclude Include="src\golf\RayResultCallback.hpp" />
     <ClInclude Include="src\golf\ScoreStrings.hpp" />
     <ClInclude Include="src\golf\server\BilliardsDirector.hpp" />
+    <ClInclude Include="src\golf\server\CPUStats.hpp" />
     <ClInclude Include="src\golf\server\EightballDirector.hpp" />
     <ClInclude Include="src\golf\server\Networking.hpp" />
     <ClInclude Include="src\golf\server\NineballDirector.hpp" />
@@ -631,6 +645,7 @@
     <ClInclude Include="src\golf\SpectatorAnimCallback.hpp" />
     <ClInclude Include="src\golf\SpectatorSystem.hpp" />
     <ClInclude Include="src\golf\spooky2.hpp" />
+    <ClInclude Include="src\golf\StatsState.hpp" />
     <ClInclude Include="src\golf\StudioCameraSystem.hpp" />
     <ClInclude Include="src\golf\Swingput.hpp" />
     <ClInclude Include="src\golf\Terrain.hpp" />
@@ -649,8 +664,10 @@
     <ClInclude Include="src\golf\VatFile.hpp" />
     <ClInclude Include="src\golf\VatAnimationSystem.hpp" />
     <ClInclude Include="src\golf\XPAwardStrings.hpp" />
+    <ClInclude Include="src\ImTheme.hpp" />
     <ClInclude Include="src\LoadingScreen.hpp" />
     <ClInclude Include="src\GolfGame.hpp" />
+    <ClInclude Include="src\M3UPlaylist.hpp" />
     <ClInclude Include="src\rss\Newsfeed.hpp" />
     <ClInclude Include="src\rss\pugiconfig.hpp" />
     <ClInclude Include="src\rss\pugixml.hpp" />
@@ -658,6 +675,7 @@
     <ClInclude Include="src\sqlite\ProfileDB.hpp" />
     <ClInclude Include="src\sqlite\SqliteState.hpp" />
     <ClInclude Include="src\StateIDs.hpp" />
+    <ClInclude Include="VersionNumber.hpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="src\golf\BeaconShader.inl" />
@@ -665,15 +683,19 @@
     <None Include="src\golf\CelShader.inl" />
     <None Include="src\golf\CloudShader.inl" />
     <None Include="src\golf\FogShader.inl" />
+    <None Include="src\golf\MenuEnum.inl" />
     <None Include="src\golf\MinimapShader.inl" />
+    <None Include="src\golf\OptionsEnum.inl" />
     <None Include="src\golf\PaletteSwap.inl" />
     <None Include="src\golf\PostProcess.inl" />
+    <None Include="src\golf\ProfileEnum.inl" />
     <None Include="src\golf\ShaderIncludes.inl" />
     <None Include="src\golf\ShadowMapping.inl" />
     <None Include="src\golf\TerrainShader.inl" />
     <None Include="src\golf\TransitionShader.inl" />
     <None Include="src\golf\TreeShader.inl" />
     <None Include="src\golf\TutorialShaders.inl" />
+    <None Include="src\golf\TVShader.inl" />
     <None Include="src\golf\UnlockShader.inl" />
     <None Include="src\golf\WaterShader.inl" />
     <None Include="src\golf\WireframeShader.inl" />

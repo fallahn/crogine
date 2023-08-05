@@ -55,6 +55,7 @@ source distribution.
 #include "../ErrorCheck.hpp"
 
 #include <Achievements.hpp>
+#include <AchievementStrings.hpp>
 #include <Social.hpp>
 
 #include <crogine/audio/AudioMixer.hpp>
@@ -197,11 +198,24 @@ DrivingState::DrivingState(cro::StateStack& stack, cro::State::Context context, 
     m_strokeCountIndex  (0),
     m_currentCamera     (CameraID::Player)
 {
+    sd.clubSet = std::clamp(sd.clubSet, 0, 2);
+    Club::setClubLevel(sd.clubSet);
+
     std::fill(m_topScores.begin(), m_topScores.end(), 0.f);
     loadScores();   
     
     m_sharedData.hosting = false; //TODO shouldn't have to do this...
     context.mainWindow.loadResources([this]() {
+#ifdef USE_GNS
+        Social::findLeaderboards(Social::BoardType::DrivingRange);
+
+        //pump the queue a bit to make sure leaderboards are up to date before building the menu
+        cro::Clock cl;
+        while (cl.elapsed().asSeconds() < 3.f)
+        {
+            Achievements::update();
+        }
+#endif
         addSystems();
         loadAssets();
         createScene();
@@ -280,20 +294,6 @@ bool DrivingState::handleEvent(const cro::Event& evt)
         return true;
     }
 
-#ifdef USE_GNS
-    const auto closeLeaderboard = [&]()
-    {
-        auto* uiSystem = m_uiScene.getSystem<cro::UISystem>();
-        if (uiSystem->getActiveGroup() == MenuID::Leaderboard)
-        {
-            uiSystem->setActiveGroup(MenuID::Dummy);
-            m_leaderboardEntity.getComponent<cro::Callback>().active = true;
-
-            m_summaryScreen.audioEnt.getComponent<cro::AudioEmitter>().play();
-        }
-    };
-#endif
-
     const auto closeMessage = [&]()
     {
         cro::Command cmd;
@@ -346,6 +346,25 @@ bool DrivingState::handleEvent(const cro::Event& evt)
 
         requestStackPush(StateID::Pause);
     };
+
+#ifdef USE_GNS
+    const auto closeLeaderboard = [&]()
+    {
+        auto* uiSystem = m_uiScene.getSystem<cro::UISystem>();
+        if (uiSystem->getActiveGroup() == MenuID::Leaderboard)
+        {
+            uiSystem->setActiveGroup(MenuID::Dummy);
+            m_leaderboardEntity.getComponent<cro::Callback>().active = true;
+
+            m_summaryScreen.audioEnt.getComponent<cro::AudioEmitter>().play();
+        }
+        else if (m_gameScene.getDirector<DrivingRangeDirector>()->roundEnded())
+        {
+            pauseGame();
+        }
+    };
+#endif
+
 
     if (evt.type == SDL_KEYUP)
     {
@@ -456,11 +475,16 @@ bool DrivingState::handleEvent(const cro::Event& evt)
         case cro::GameController::ButtonA:
             closeMessage();
             break;
-#ifdef USE_GNS
         case cro::GameController::ButtonB:
-            closeLeaderboard();
-            break;
+#ifdef USE_GNS
+            closeLeaderboard(); //this deals with the case below but checks for leaderboard view first
+#else
+            if (m_gameScene.getDirector<DrivingRangeDirector>()->roundEnded())
+            {
+                pauseGame();
+            }
 #endif
+            break;
         }
     }
     else if (evt.type == SDL_MOUSEMOTION)
@@ -477,6 +501,20 @@ bool DrivingState::handleEvent(const cro::Event& evt)
         }
 #endif // CRO_DEBUG_
 
+    }
+    else if (evt.type == SDL_MOUSEBUTTONUP)
+    {
+        if (evt.button.button == SDL_BUTTON_RIGHT)
+        {
+#ifdef USE_GNS
+            closeLeaderboard();
+#else
+            if(m_gameScene.getDirector<DrivingRangeDirector>()->roundEnded())
+            {
+                pauseGame();
+            }
+#endif
+        }
     }
     else if (evt.type == SDL_CONTROLLERDEVICEREMOVED)
     {
@@ -552,6 +590,16 @@ void DrivingState::handleMessage(const cro::Message& msg)
         {
             //display a message with score
             showMessage(glm::length(PlayerPosition - data.position));
+
+            //does fireworks at pin
+            if (data.type == GolfBallEvent::Holed)
+            {
+                auto* msg2 = postMessage<GolfEvent>(MessageID::GolfMessage);
+                msg2->type = GolfEvent::HoleInOne;
+                msg2->position = data.position;
+
+                Achievements::awardAchievement(AchievementStrings[AchievementID::DriveItHome]);
+            }
         }
     }
         break;
@@ -1220,6 +1268,7 @@ void DrivingState::initAudio()
         progress = std::min(1.f, progress + dt);
 
         cro::AudioMixer::setPrefadeVolume(cro::Util::Easing::easeOutQuad(progress), MixerChannel::Effects);
+        cro::AudioMixer::setPrefadeVolume(cro::Util::Easing::easeOutQuad(progress), MixerChannel::UserMusic);
 
         if (progress == 1)
         {
@@ -1227,6 +1276,8 @@ void DrivingState::initAudio()
             m_gameScene.destroyEntity(e);
         }
     };
+
+    createMusicPlayer(m_gameScene, m_sharedData, m_gameScene.getActiveCamera());
 }
 
 void DrivingState::createScene()
@@ -1601,8 +1652,10 @@ void DrivingState::createScene()
     camEnt.addComponent<cro::Camera>().resizeCallback =
         [&, camEnt](cro::Camera& cam) //use explicit callback so we can capture the entity and use it to zoom via CamFollowSystem
     {
+        const float farPlane = static_cast<float>(RangeSize.y) * 2.5f;
+
         auto vpSize = glm::vec2(cro::App::getWindow().getSize());
-        cam.setPerspective((m_sharedData.fov* cro::Util::Const::degToRad) * camEnt.getComponent<CameraFollower>().zoom.fov, vpSize.x / vpSize.y, 0.1f, vpSize.x, 2);
+        cam.setPerspective((m_sharedData.fov * cro::Util::Const::degToRad) * camEnt.getComponent<CameraFollower>().zoom.fov, vpSize.x / vpSize.y, 0.1f, farPlane, 2);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
     camEnt.getComponent<cro::Camera>().setMaxShadowDistance(80.f);
@@ -2576,7 +2629,7 @@ void DrivingState::createBall()
 
 
     //init ball trail
-    m_ballTrail.create(m_gameScene, m_resources, m_materialIDs[MaterialID::BallTrail]);
+    m_ballTrail.create(m_gameScene, m_resources, m_materialIDs[MaterialID::BallTrail], false);
     m_ballTrail.setUseBeaconColour(m_sharedData.trailBeaconColour);
 
 #ifdef CRO_DEBUG_

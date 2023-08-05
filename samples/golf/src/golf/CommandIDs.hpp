@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022
+Matt Marchant 2022 - 2023
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -81,7 +81,8 @@ struct CommandID final
             WaitMessage          = 0x200000,
             FastForward          = 0x400000,
             WindHidden           = 0x800000, //I can't think of a better name - basically when the wind indicator is hidden during putting
-            WindEffect           = 0x1000000
+            WindEffect           = 0x1000000,
+            PuttPower            = 0x2000000
         };
     };
 
@@ -108,7 +109,9 @@ struct CommandID final
             GimmeDesc    = 0x10000,
             LobbyText    = 0x20000,
             CourseRules  = 0x40000,
-            CourseType   = 0x80000
+            CourseType   = 0x80000,
+            MetricClub   = 0x100000, //used in the stats viewer for club labels
+            ImperialClub = 0x200000,
         };
     };
 };

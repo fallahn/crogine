@@ -137,26 +137,26 @@ TrophyState::TrophyState(cro::StateStack& ss, cro::State::Context ctx, SharedSta
     };*/
 
 #ifdef CRO_DEBUG_
-    registerWindow([&]() 
-        {
-            if (ImGui::Begin("buns"))
-            {
-                static float overshoot = 0.f;
-                if (ImGui::SliderFloat("expansion", &overshoot, 0.f, 15.f))
-                {
-                    m_trophyScene.getActiveCamera().getComponent<cro::Camera>().setShadowExpansion(overshoot);
-                }
-
-                static float maxDistance = 10.f;
-                if (ImGui::SliderFloat("max dist", &maxDistance, 0.4f, 10.f))
-                {
-                    m_trophyScene.getActiveCamera().getComponent<cro::Camera>().setMaxShadowDistance(maxDistance);
-                }
-
-                ImGui::Image(m_trophyScene.getActiveCamera().getComponent<cro::Camera>().shadowMapBuffer.getTexture(), { 256.f, 256.f }, { 0.f, 1.f }, { 1.f, 0.f });
-            }
-            ImGui::End();
-        });
+//    registerWindow([&]() 
+//        {
+//            if (ImGui::Begin("buns"))
+//            {
+//                static float overshoot = 0.f;
+//                if (ImGui::SliderFloat("expansion", &overshoot, 0.f, 15.f))
+//                {
+//                    m_trophyScene.getActiveCamera().getComponent<cro::Camera>().setShadowExpansion(overshoot);
+//                }
+//
+//                static float maxDistance = 10.f;
+//                if (ImGui::SliderFloat("max dist", &maxDistance, 0.4f, 10.f))
+//                {
+//                    m_trophyScene.getActiveCamera().getComponent<cro::Camera>().setMaxShadowDistance(maxDistance);
+//                }
+//
+//                ImGui::Image(m_trophyScene.getActiveCamera().getComponent<cro::Camera>().shadowMapBuffer.getTexture(), { 256.f, 256.f }, { 0.f, 1.f }, { 1.f, 0.f });
+//            }
+//            ImGui::End();
+//        });
 #endif
 }
 
@@ -271,6 +271,8 @@ void TrophyState::buildScene()
     m_scene.addSystem<cro::CameraSystem>(mb);
     m_scene.addSystem<cro::RenderSystem2D>(mb);
     m_scene.addSystem<cro::AudioPlayerSystem>(mb);
+
+    m_scene.setSystemActive<cro::AudioPlayerSystem>(false);
 
     m_menuSounds.loadFromFile("assets/golf/sound/menu.xas", m_sharedData.sharedResources->audio);
     m_audioEnts[AudioID::Accept] = m_scene.createEntity();
@@ -395,6 +397,7 @@ void TrophyState::buildScene()
                 leftDoor.getComponent<cro::Callback>().active = true;
                 rightDoor.getComponent<cro::Callback>().active = true;
 
+                m_scene.setSystemActive<cro::AudioPlayerSystem>(true);
                 m_scene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Main);
             }
             break;
@@ -406,6 +409,7 @@ void TrophyState::buildScene()
                 requestStackPop();
 
                 state = RootCallbackData::FadeIn;
+                m_scene.setSystemActive<cro::AudioPlayerSystem>(true);
 
                 /*leftDoor.getComponent<cro::Drawable2D>().setVertexData(doorVerts);
                 leftDoor.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);

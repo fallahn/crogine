@@ -194,6 +194,8 @@ void PauseState::buildScene()
     m_scene.addSystem<cro::RenderSystem2D>(mb);
     m_scene.addSystem<cro::AudioPlayerSystem>(mb);
 
+    m_scene.setSystemActive<cro::AudioPlayerSystem>(false);
+
     m_menuSounds.loadFromFile("assets/golf/sound/menu.xas", m_sharedData.sharedResources->audio);
     m_audioEnts[AudioID::Accept] = m_scene.createEntity();
     m_audioEnts[AudioID::Accept].addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("accept");
@@ -232,12 +234,18 @@ void PauseState::buildScene()
                 m_restartButton.getComponent<cro::Transform>().setScale(glm::vec2(reset ? 1.f : 0.f));
             }
 
+            {
+                auto active = m_sharedData.minimapData.active;
+                m_minimapButton.getComponent<cro::UIInput>().enabled = active;
+                m_minimapButton.getComponent<cro::Transform>().setScale(glm::vec2(active ? 1.f : 0.f));
+            }
             if (currTime == 1)
             {
                 state = RootCallbackData::FadeOut;
                 e.getComponent<cro::Callback>().active = false;
 
-                m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+                m_scene.setSystemActive<cro::AudioPlayerSystem>(true);
+                //m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
             }
             break;
         case RootCallbackData::FadeOut:
@@ -247,6 +255,8 @@ void PauseState::buildScene()
             {
                 resetConfirmation();
                 requestStackPop();
+
+                m_scene.setSystemActive<cro::AudioPlayerSystem>(false);
 
                 state = RootCallbackData::FadeIn;
 
@@ -396,6 +406,22 @@ void PauseState::buildScene()
     entity.getComponent<cro::UIInput>().enabled = (m_sharedData.baseState == StateID::DrivingRange);
     entity.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
     m_restartButton = entity;
+
+
+    //minimap button
+    entity = createItem(glm::vec2(0.f, -4.f), "Hole Overview", menuEntity);
+    entity.getComponent<cro::UIInput>().setGroup(MenuID::Main);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+        uiSystem.addCallback([&, menuEntity, confirmEntity](cro::Entity e, cro::ButtonEvent evt) mutable
+            {
+                if (activated(evt))
+                {
+                    requestStackPush(StateID::MapOverview);
+                }
+            });
+    entity.getComponent<cro::UIInput>().enabled = false;
+    entity.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+    m_minimapButton = entity;
 
 
     //quit button
@@ -549,6 +575,7 @@ void PauseState::buildScene()
 
 void PauseState::quitState()
 {
+    //m_scene.setSystemActive<cro::AudioPlayerSystem>(false);
     m_rootNode.getComponent<cro::Callback>().active = true;
     m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
 }

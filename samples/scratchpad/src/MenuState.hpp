@@ -31,6 +31,7 @@ source distribution.
 
 #include "StateIDs.hpp"
 #include <crogine/graphics/VideoPlayer.hpp>
+#include <crogine/audio/sound_system/MusicPlayer.hpp>
 
 #include <crogine/core/State.hpp>
 #include <crogine/ecs/Scene.hpp>
@@ -60,6 +61,8 @@ namespace sp
         cro::Font m_font;
 
         cro::VideoPlayer m_video;
+        cro::MusicPlayer m_music;
+        std::string m_musicName;
 
         void addSystems();
         void loadAssets();

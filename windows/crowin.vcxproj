@@ -42,6 +42,7 @@
     <ClInclude Include="..\crogine\include\crogine\audio\AudioMixer.hpp" />
     <ClInclude Include="..\crogine\include\crogine\audio\AudioResource.hpp" />
     <ClInclude Include="..\crogine\include\crogine\audio\AudioStream.hpp" />
+    <ClInclude Include="..\crogine\include\crogine\audio\sound_system\MusicPlayer.hpp" />
     <ClInclude Include="..\crogine\include\crogine\audio\sound_system\SoundSource.hpp" />
     <ClInclude Include="..\crogine\include\crogine\audio\sound_system\SoundStream.hpp" />
     <ClInclude Include="..\crogine\include\crogine\Config.hpp" />
@@ -198,6 +199,7 @@
     <ClInclude Include="..\crogine\src\audio\ALCheck.hpp" />
     <ClInclude Include="..\crogine\src\audio\AudioFile.hpp" />
     <ClInclude Include="..\crogine\src\audio\AudioRenderer.hpp" />
+    <ClInclude Include="..\crogine\src\audio\Mp3Loader.hpp" />
     <ClInclude Include="..\crogine\src\audio\NullImpl.hpp" />
     <ClInclude Include="..\crogine\src\audio\OpenALImpl.hpp" />
     <ClInclude Include="..\crogine\src\audio\PCMData.hpp" />
@@ -230,6 +232,7 @@
     <ClInclude Include="..\crogine\src\imgui\imgui_impl_opengl3.h" />
     <ClInclude Include="..\crogine\src\imgui\imgui_impl_sdl.h" />
     <ClInclude Include="..\crogine\src\imgui\imgui_internal.h" />
+    <ClInclude Include="..\crogine\src\imgui\implot_internal.h" />
     <ClInclude Include="..\crogine\src\network\NetConf.hpp" />
     <ClInclude Include="resource.h" />
   </ItemGroup>
@@ -242,7 +245,9 @@
     <ClCompile Include="..\crogine\src\audio\AudioScape.cpp" />
     <ClCompile Include="..\crogine\src\audio\AudioSource.cpp" />
     <ClCompile Include="..\crogine\src\audio\AudioStream.cpp" />
+    <ClCompile Include="..\crogine\src\audio\Mp3Loader.cpp" />
     <ClCompile Include="..\crogine\src\audio\OpenALImpl.cpp" />
+    <ClCompile Include="..\crogine\src\audio\sound_system\MusicPlayer.cpp" />
     <ClCompile Include="..\crogine\src\audio\sound_system\SoundSource.cpp" />
     <ClCompile Include="..\crogine\src\audio\sound_system\SoundStream.cpp" />
     <ClCompile Include="..\crogine\src\audio\stb_vorbis.c" />
@@ -380,6 +385,9 @@
     <ClCompile Include="..\crogine\src\imgui\imgui_impl_sdl.cpp" />
     <ClCompile Include="..\crogine\src\imgui\imgui_stdlib.cpp" />
     <ClCompile Include="..\crogine\src\imgui\imgui_widgets.cpp" />
+    <ClCompile Include="..\crogine\src\imgui\implot.cpp" />
+    <ClCompile Include="..\crogine\src\imgui\implot_demo.cpp" />
+    <ClCompile Include="..\crogine\src\imgui\implot_items.cpp" />
     <ClCompile Include="..\crogine\src\imgui\ImSequencer.cpp" />
     <ClCompile Include="..\crogine\src\network\NetClient.cpp" />
     <ClCompile Include="..\crogine\src\network\NetConf.cpp" />
@@ -588,7 +596,7 @@
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
-      <AdditionalLibraryDirectories>$(SolutionDir)extlibs\freetype\win64;$(SolutionDir)extlibs\sdl2\lib\x64;$(SolutionDir)extlibs\openal\msvc\x64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)extlibs\freetype\win64;$(SolutionDir)extlibs\sdl2\lib\x64;$(SolutionDir)extlibs\openal\msvc\x64\debug;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>SDL2.lib;freetype.lib;ws2_32.lib;winmm.lib;IPHLPAPI.lib;%(AdditionalDependencies);openal32.lib;DbgHelp.lib;Shlwapi.lib</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>

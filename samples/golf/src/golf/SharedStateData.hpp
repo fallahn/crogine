@@ -29,6 +29,7 @@ source distribution.
 
 #pragma once
 
+#include "../M3UPlaylist.hpp"
 #include "InputBinding.hpp"
 #include "Networking.hpp"
 #include "CommonConsts.hpp"
@@ -45,6 +46,11 @@ source distribution.
 #include <array>
 #include <memory>
 #include <unordered_map>
+
+namespace cro
+{
+    class MultiRenderTexture;
+}
 
 struct ConnectionData final
 {
@@ -67,6 +73,16 @@ static constexpr float MaxFOV = 90.f;
 
 struct SharedStateData final
 {
+    struct MinimapData final
+    {
+        cro::MultiRenderTexture* mrt = nullptr;
+        glm::vec3 teePos = glm::vec3(0.f);
+        glm::vec3 pinPos = glm::vec3(0.f);
+        cro::String courseName;
+        std::int32_t holeNumber = -1;
+        bool active = false;
+    }minimapData;
+
     Server serverInstance;
 
     struct ClientConnection final
@@ -185,11 +201,15 @@ struct SharedStateData final
     bool showPuttingPower = false;
     bool showBallTrail = false;
     bool trailBeaconColour = true; //if false defaults to white
+    bool fastCPU = true;
     std::int32_t enableRumble = 1;
+    std::int32_t clubSet = 0;
 
     std::int32_t baseState = 0; //used to tell which state we're returning to from errors etc
     std::unique_ptr<cro::ResourceCollection> sharedResources;
     
     std::vector<glm::uvec2> resolutions;
     std::vector<std::string> resolutionStrings;
+
+    std::unique_ptr<M3UPlaylist> m3uPlaylist;
 };

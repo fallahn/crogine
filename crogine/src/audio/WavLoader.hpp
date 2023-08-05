@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2023
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -79,6 +79,12 @@ namespace cro
             */
             bool seek(cro::Time) override;
 
+            PCMData::Format getFormat() const override { return m_dataChunk.format; }
+
+            std::int32_t getSampleRate() const override { return m_dataChunk.frequency; }
+
+            std::uint64_t getSampleCount() const override { return m_sampleCount; }
+
         private:
             RaiiRWops m_file;
 
@@ -106,6 +112,7 @@ namespace cro
             std::int64_t m_dataStart;
             std::uint32_t m_dataSize;
             std::uint64_t m_bytesPerSecond;
+            std::uint64_t m_sampleCount;
 
             mutable PCMData m_dataChunk;
             mutable std::vector<std::uint8_t> m_sampleBuffer;

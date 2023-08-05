@@ -89,6 +89,7 @@ SoundStream::SoundStream()
     m_isStreaming       (false),
     m_channelCount      (0),
     m_sampleRate        (0),
+    m_sampleCount       (0),
     m_format            (0),
     m_loop              (false),
     m_samplesProcessed  (0),
@@ -130,7 +131,7 @@ void SoundStream::play()
         return;
     }
     //else stop (and rewind)
-    else if (isStreaming && (startState == Status::Playing))
+    else //if (isStreaming && (startState == Status::Playing))
     {
         stop();
     }
@@ -187,11 +188,46 @@ std::uint32_t SoundStream::getSampleRate() const
     return m_sampleRate;
 }
 
+void SoundStream::setPlayingPosition(Time timeOffset)
+{
+    Status oldStatus = getStatus();
+
+    stop();
+
+    onSeek(timeOffset.asMilliseconds());
+
+    m_samplesProcessed = static_cast<std::uint64_t>(timeOffset.asSeconds() * static_cast<float>(m_sampleRate)) * m_channelCount;
+
+    if (oldStatus == Status::Stopped)
+    {
+        return;
+    }
+
+    launchThread(oldStatus);
+}
+
+
+Time SoundStream::getPlayingPosition() const
+{
+    if (m_sampleRate && m_channelCount)
+    {
+        ALfloat secs = 0.f;
+        alCheck(alGetSourcef(m_alSource, AL_SEC_OFFSET, &secs));
+
+        return seconds(secs + static_cast<float>(m_samplesProcessed) / static_cast<float>(m_sampleRate) / static_cast<float>(m_channelCount));
+    }
+    else
+    {
+        return milliseconds(0);
+    }
+}
+
 //protected
-void SoundStream::initialise(std::uint32_t channelCount, std::uint32_t sampleRate)
+void SoundStream::initialise(std::uint32_t channelCount, std::uint32_t sampleRate, std::uint64_t sampleCount)
 {
     m_channelCount = channelCount;
     m_sampleRate = sampleRate;
+    m_sampleCount = sampleCount;
     m_samplesProcessed = 0;
     m_isStreaming = false;
 

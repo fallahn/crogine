@@ -103,6 +103,8 @@ struct SpriteID final
         LobbyCheckboxHighlight,
         LobbyRuleButton,
         LobbyRuleButtonHighlight,
+        LobbyLeft,
+        LobbyRight,
         Envelope,
         LevelBadge,
 

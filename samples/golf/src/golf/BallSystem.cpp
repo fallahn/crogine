@@ -204,6 +204,11 @@ bool BallSystem::setHoleData(HoleData& holeData, bool rebuildMesh)
     auto result = rebuildMesh ? updateCollisionMesh(holeData.modelPath) : true;
     holeData.pin.y = getTerrain(holeData.pin).intersection.y;
 
+    for (auto entity : getEntities())
+    {
+        entity.getComponent<cro::Transform>().setPosition(holeData.tee);
+    }
+
     return result;
 }
 
@@ -341,7 +346,7 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
 
             //test collision
             doCollision(entity);
-            doBallCollision(entity);
+            //doBallCollision(entity);
 
             CRO_ASSERT(!std::isnan(tx.getPosition().x), "");
             CRO_ASSERT(!std::isnan(ball.velocity.x), "");
@@ -352,7 +357,7 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
     {
         ball.delay -= dt;
 
-        doBallCollision(entity);
+        //doBallCollision(entity);
 
         auto& tx = entity.getComponent<cro::Transform>();
         auto position = tx.getPosition();
@@ -462,7 +467,7 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
         if (ball.delay < 0)
         {
             
-            doBallCollision(entity);
+            //doBallCollision(entity);
 
             auto& tx = entity.getComponent<cro::Transform>();
             auto position = tx.getPosition();
@@ -707,64 +712,92 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
         {
             ball.spin = { 0.f,0.f };
 
-            //move towards player until we find non-water
+
             std::uint8_t terrain = TerrainID::Water;
-
-            //make sure ball height is level with target
-            //else moving it may cause the collision test
-            //to miss if the terrain is much higher than
-            //the water level.
-
-            glm::vec3 dir = ball.startPoint - ballPos;
-            ballPos.y = ball.startPoint.y;
-
-            auto length = glm::length(dir);
-            dir /= length;
-            std::int32_t maxDist = static_cast<std::int32_t>(length /*- 10.f*/);
-
-            //if we're on a putting course take smaller steps for better accuracy
             if (m_puttFromTee)
             {
-                dir /= 4.f;
-                maxDist *= 4;
-            }
+                //just place at the nearest tee or target
 
-            for (auto i = 0; i < maxDist; ++i)
-            {
-                ballPos += dir;
-                auto res = getTerrain(ballPos);
-                terrain = res.terrain;
-
-                const auto slope = dot(res.normal, glm::vec3(0.f, 1.f, 0.f));
-
-                if (terrain != TerrainID::Water
-                    && terrain != TerrainID::Scrub
-                    && terrain != TerrainID::Stone
-                    && slope > 0.996f)
+                terrain = TerrainID::Green;
+                if (glm::length2(tx.getPosition() - m_holeData->tee) <
+                    glm::length2(tx.getPosition() - m_holeData->target))
                 {
-                    //move the ball a bit closer so we're not balancing on the edge
-                    //but only if we're not on the green else we might get placed in the hole :)
-                    if (res.terrain != TerrainID::Green)
-                    {
-                        ballPos += dir * 1.5f;
-                        res = getTerrain(ballPos);
-                    }
+                    tx.setPosition(m_holeData->tee);
+                }
+                else
+                {
+                    tx.setPosition(m_holeData->target);
+                }
+                auto pos = tx.getPosition();
+                auto height = getTerrain(pos).intersection.y;
+                pos.y = height;
+                tx.setPosition(pos);
+            }
+            else
+            {
 
-                    ballPos = res.intersection;
-                    tx.setPosition(ballPos);
-                    break;
+                //move towards player until we find non-water
+
+                //make sure ball height is level with target
+                //else moving it may cause the collision test
+                //to miss if the terrain is much higher than
+                //the water level.
+
+                glm::vec3 dir = ball.startPoint - ballPos;
+                ballPos.y = ball.startPoint.y;
+
+                auto length = glm::length(dir);
+                dir /= length;
+                std::int32_t maxDist = static_cast<std::int32_t>(length /*- 10.f*/);
+
+                //if we're on a putting course take smaller steps for better accuracy
+                if (m_puttFromTee)
+                {
+                    dir /= 4.f;
+                    maxDist *= 4;
+                }
+
+                for (auto i = 0; i < maxDist; ++i)
+                {
+                    ballPos += dir;
+                    auto res = getTerrain(ballPos);
+                    terrain = res.terrain;
+
+                    const auto slope = dot(res.normal, glm::vec3(0.f, 1.f, 0.f));
+
+                    if (terrain != TerrainID::Water
+                        && terrain != TerrainID::Scrub
+                        && terrain != TerrainID::Stone
+                        && slope > 0.996f)
+                    {
+                        //move the ball a bit closer so we're not balancing on the edge
+                        //but only if we're not on the green else we might get placed in the hole :)
+                        if (res.terrain != TerrainID::Green)
+                        {
+                            ballPos += dir * 1.5f;
+                            res = getTerrain(ballPos);
+                        }
+
+                        ballPos = res.intersection;
+                        tx.setPosition(ballPos);
+                        break;
+                    }
+                }
+
+                //if for some reason we never got out the water, put the ball back at the start
+                if (terrain == TerrainID::Water
+                    || terrain == TerrainID::Scrub)
+                {
+                    //this is important else we'll end up trying to drive
+                    //down a putting course :facepalm:
+                    terrain = m_puttFromTee ? TerrainID::Green : TerrainID::Fairway;
+                    tx.setPosition(m_holeData->tee);
                 }
             }
 
-            //if for some reason we never got out the water, put the ball back at the start
-            if (terrain == TerrainID::Water
-                || terrain == TerrainID::Scrub)
-            {
-                //this is important else we'll end up trying to drive
-                //down a putting course :facepalm:
-                terrain = m_puttFromTee ? TerrainID::Green : TerrainID::Fairway;
-                tx.setPosition(m_holeData->tee);
-            }
+
+
+
 
             //raise message to say player should be penalised
             auto* msg = postEvent();
@@ -781,6 +814,10 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
     break;
     case Ball::State::Paused:
     {
+        //do the ball collision here to separate any balls which were overlapping when they came to rest
+        //we do this outside the time out, else the server won't send the updated position until the next turn
+        doBallCollision(entity);
+
         ball.delay -= dt;
         if (ball.delay < 0)
         {
@@ -800,6 +837,7 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
             {
                 //we're in the hole
                 msg->type = GolfBallEvent::Holed;
+                msg->position = m_holeData->pin;
                 //LogI << "Ball Holed" << std::endl;
             }
             else
@@ -832,6 +870,52 @@ void BallSystem::doCollision(cro::Entity entity)
     auto& tx = entity.getComponent<cro::Transform>();
     auto pos = tx.getPosition();
     CRO_ASSERT(!std::isnan(pos.x), "");
+
+
+    //fudge in some psuedo flag collision - this assumes 
+    //that the collision is only done when ball is in flight
+    auto holePos = m_holeData->pin;
+    static constexpr float FlagRadius = 0.01f;
+    static constexpr float CollisionRadius = FlagRadius + Ball::Radius;
+    if (auto ballHeight = pos.y - holePos.y; ballHeight < 1.9f) //flag is 2m tall
+    {
+        const glm::vec2 holeCollision = { holePos.x, -holePos.z };
+        const glm::vec2 ballCollision = { pos.x, -pos.z };
+        auto dir = ballCollision - holeCollision;
+        if (auto l2 = glm::length2(dir); l2 < (CollisionRadius * CollisionRadius))
+        {
+            const auto len = std::sqrt(l2);
+            const auto overlap = (CollisionRadius - len) + Ball::Radius;
+
+            dir /= len;
+
+            glm::vec3 worldDir(dir.x, 0.f, -dir.y);
+            tx.move(worldDir * overlap);
+
+            //check if the collision is on the right or left
+            //of the velocity vector and impart more spin the
+            //greater the velocity and the steeper the angle
+            auto& ball = entity.getComponent<Ball>();
+            const glm::vec3 rightVec(ball.velocity.z, ball.velocity.y, -ball.velocity.x); //yeah, yeah...
+            const float spinOffset = glm::dot(glm::normalize(rightVec), -worldDir);
+            ball.spin.x += spinOffset * std::clamp(glm::length2(ball.velocity) / 2500.f, 0.f, 1.f) * 10.f;
+            ball.spin.y += std::pow(cro::Util::Random::value(-1.f, 1.f), 5.f);
+
+            ball.velocity = glm::reflect(ball.velocity, worldDir);
+            ball.velocity *= (0.5f + static_cast<float>(cro::Util::Random::value(0, 1)) / 10.f);
+
+            //reduce the velocity more nearer the top as the flag is bendier (??)
+            ball.velocity *= (0.5f + (0.2f * (1.f - (ballHeight / 1.9f))));
+
+
+            auto* msg = postMessage<CollisionEvent>(MessageID::CollisionMessage);
+            msg->terrain = -1;
+            msg->position = pos;
+            msg->type = CollisionEvent::Begin;
+        }
+    }
+
+
 
     const auto resetBall = [&](Ball& ball, Ball::State state, std::uint8_t terrain)
     {
@@ -985,13 +1069,12 @@ void BallSystem::doBallCollision(cro::Entity entity)
 
     //don't collide until we moved from our start position
     if (ball.terrain != TerrainID::Hole &&
-        glm::length2(ball.startPoint - tx.getPosition()) > MinDist &&
+        /*glm::length2(ball.startPoint - tx.getPosition()) > MinDist &&*/
         glm::length2(m_holeData->pin - tx.getPosition()) > MinAttractRadius)
     {
         //ball centre is actually pos.y + radius
         glm::vec3 ballPos = entity.getComponent<cro::Transform>().getPosition();
         ballPos.y += Ball::Radius;
-
         const auto& others = getEntities();
         for (auto other : others)
         {
@@ -1013,6 +1096,13 @@ void BallSystem::doBallCollision(cro::Entity entity)
 
                     CRO_ASSERT(!std::isnan(tx.getPosition().x), "");
                     CRO_ASSERT(!std::isnan(ball.velocity.x), "");
+                }
+                else if (testDist == 0)
+                {
+                    //by some chance we're directly on top of each other
+                    //(this might happen in fast CPU play)
+                    tx.move({ Ball::Radius, 0.f, 0.f });
+                    ball.velocity = glm::vec3(0.f);
                 }
             }
         }

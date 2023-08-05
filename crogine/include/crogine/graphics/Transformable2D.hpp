@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022
+Matt Marchant 2022 - 2023
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -93,11 +93,22 @@ namespace cro
         void scale(glm::vec2 amount);
 
         /*!
+        \brief Set the origin of the transform
+        */
+        void setOrigin(glm::vec2 origin);
+
+        /*!
+        \brief Return the current origin offset
+        */
+        glm::vec2 getOrigin() const { return m_origin; }
+
+        /*!
         \brief Returns the combined transform
         */
         const glm::mat4& getTransform() const;
 
     private:
+        glm::vec2 m_origin;
         glm::vec2 m_position;
         float m_rotation;
         glm::vec2 m_scale;

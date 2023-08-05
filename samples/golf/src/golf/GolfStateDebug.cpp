@@ -32,6 +32,7 @@ source distribution.
 #include "AchievementIDs.hpp"
 #include "AchievementStrings.hpp"
 
+#include <crogine/audio/AudioMixer.hpp>
 #include <crogine/ecs/components/Camera.hpp>
 #include <crogine/core/SysTime.hpp>
 #include <crogine/detail/OpenGL.hpp>
@@ -330,6 +331,7 @@ void GolfState::registerDebugWindows()
             {
                 //glm::vec2 size(m_gameSceneTexture.getSize() / 2u);
                 //ImGui::Image(m_gameSceneTexture.getDepthTexture(), { size.x, size.y }, { 0.f, 1.f }, { 1.f, 0.f });
+                cro::AudioMixer::printDebug();
             }
             ImGui::End();
         });
@@ -377,7 +379,7 @@ void GolfState::registerDebugWindows()
     //            ImGui::Begin("Point");
     //            ImGui::End();
     //        }
-    //    }, true);
+    //    });
 
     //registerWindow([&]()
     //    {
@@ -416,30 +418,30 @@ void GolfState::registerDebugWindows()
     //        ImGui::End();
     //    });
 
-    registerWindow([&]()
-        {
-            if (ImGui::Begin("Depthmap"))
-            {
-                /*for (auto y = 4; y >= 0; --y)
-                {
-                    for (auto x = 0; x < 8; ++x)
-                    {
-                        auto idx = y * 8 + x;
-                        ImGui::Image(m_depthMap.getTextureAt(idx), { 80.f, 80.f }, { 0.f, 1.f }, { 1.f, 0.f });
-                        ImGui::SameLine();
-                    }
-                    ImGui::NewLine();
-                }*/
+    //registerWindow([&]()
+    //    {
+    //        if (ImGui::Begin("Depthmap"))
+    //        {
+    //            /*for (auto y = 4; y >= 0; --y)
+    //            {
+    //                for (auto x = 0; x < 8; ++x)
+    //                {
+    //                    auto idx = y * 8 + x;
+    //                    ImGui::Image(m_depthMap.getTextureAt(idx), { 80.f, 80.f }, { 0.f, 1.f }, { 1.f, 0.f });
+    //                    ImGui::SameLine();
+    //                }
+    //                ImGui::NewLine();
+    //            }*/
 
-                const auto& cam = m_gameScene.getActiveCamera().getComponent<cro::Camera>();
-                for (auto i = 0u; i < cam.shadowMapBuffer.getLayerCount(); ++i)
-                {
-                    ImGui::Image(cam.shadowMapBuffer.getTexture(i), { 256.f, 256.f }, { 0.f, 1.f }, { 1.f, 0.f });
-                    ImGui::SameLine();
-                }
-            }
-            ImGui::End();
-        },true);
+    //            const auto& cam = m_gameScene.getActiveCamera().getComponent<cro::Camera>();
+    //            for (auto i = 0u; i < cam.shadowMapBuffer.getLayerCount(); ++i)
+    //            {
+    //                ImGui::Image(cam.shadowMapBuffer.getTexture(i), { 256.f, 256.f }, { 0.f, 1.f }, { 1.f, 0.f });
+    //                ImGui::SameLine();
+    //            }
+    //        }
+    //        ImGui::End();
+    //    },true);
 
     //registerWindow([&]()
     //    {

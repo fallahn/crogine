@@ -311,7 +311,7 @@ void PlayerSystem::updateDying(cro::Entity entity, float dt)
     if (tx.getWorldPosition().y < -3.f)
     {
         tx.setPosition(initialPosition);
-        tx.setRotation(cro::Transform::QUAT_IDENTY);
+        tx.setRotation(cro::Transform::QUAT_IDENTITY);
         entity.getComponent<Velocity>().velocity = glm::vec3(0.f);
         entity.getComponent<PlayerInfo>().state = PlayerInfo::State::Dead;
         m_respawnTime = 1.f;

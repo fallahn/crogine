@@ -47,6 +47,8 @@ source distribution.
 #include <crogine/graphics/CubemapTexture.hpp>
 #include <crogine/graphics/UniformBuffer.hpp>
 #include <crogine/graphics/VideoPlayer.hpp>
+#include <crogine/graphics/SimpleQuad.hpp>
+#include <crogine/graphics/SimpleText.hpp>
 #include <crogine/detail/glm/vec2.hpp>
 
 #include <vector>
@@ -78,6 +80,12 @@ struct TableClientData final : public TableData
     std::int32_t ballSkinIndex = 0;
 };
 
+struct HOFCallbackData final
+{
+    std::int32_t state = 0; //in,hold,out
+    float progress = 0.f;
+};
+
 struct SharedStateData;
 struct SharedProfileData;
 class ClubhouseState final : public cro::State, public cro::GuiClient
@@ -102,6 +110,7 @@ public:
             Dummy,
             Main, PlayerSelect,
             Join, Lobby,
+            HallOfFame,
             Inactive,
 
             Count
@@ -125,6 +134,7 @@ private:
         enum
         {
             Accept, Back,
+            Win,
 
             Count
         };
@@ -141,6 +151,7 @@ private:
             Shelf,
             Billboard,
             Ball,
+            TV,
 
             Count
         };
@@ -156,6 +167,8 @@ private:
     cro::CubemapTexture m_reflectionMap;
     cro::VideoPlayer m_arcadeVideo;
     cro::VideoPlayer m_arcadeVideo2;
+    cro::RenderTexture m_pictureTexture;
+    cro::SimpleQuad m_pictureQuad;
 
     cro::RenderTexture m_tableTexture;
     cro::CubemapTexture m_tableCubemap;
@@ -196,6 +209,32 @@ private:
 
     LobbyPager m_lobbyPager;
 
+    static constexpr std::array<std::int32_t, 8u> ArcadeKey =
+    {
+        SDLK_UP,
+        SDLK_UP,
+        SDLK_DOWN,
+        SDLK_DOWN,
+        SDLK_LEFT,
+        SDLK_RIGHT,
+        SDLK_LEFT,
+        SDLK_RIGHT,
+    };
+    static constexpr std::array<std::int32_t, 8u> ArcadeJoy =
+    {
+        SDL_CONTROLLER_BUTTON_DPAD_UP,
+        SDL_CONTROLLER_BUTTON_DPAD_UP,
+        SDL_CONTROLLER_BUTTON_DPAD_DOWN,
+        SDL_CONTROLLER_BUTTON_DPAD_DOWN,
+        SDL_CONTROLLER_BUTTON_DPAD_LEFT,
+        SDL_CONTROLLER_BUTTON_DPAD_RIGHT,
+        SDL_CONTROLLER_BUTTON_DPAD_LEFT,
+        SDL_CONTROLLER_BUTTON_DPAD_RIGHT,
+    };
+    std::size_t m_arcadeIndexKey;
+    std::size_t m_arcadeIndexJoy;
+    cro::Entity m_arcadeEnt;
+
     void addSystems();
     void loadResources();
     void validateTables();
@@ -203,11 +242,48 @@ private:
     void createTableScene();
     void createUI();
 
+    static constexpr glm::uvec2 TVPictureSize = glm::uvec2(256u, 256u);
+    struct TVTopFive final
+    {
+        static constexpr std::uint32_t ImageWidth = 184; //default size of icon - returned icon may be smaller...
+        static constexpr std::size_t MaxProfiles = 5;
+
+        std::vector<cro::String> profileNames;
+        cro::Texture profileIcons;
+
+        cro::SimpleQuad overlay;
+        cro::SimpleQuad icon;
+        cro::SimpleText name;
+
+        struct State final
+        {
+            enum
+            {
+                Idle, Scroll, TransitionOut,
+                TransitionIn
+            };
+        };
+        std::size_t index = 0;
+        std::int32_t state = 0;
+        float scale = 0.f;
+
+        void addProfile(std::uint64_t);
+        void update(float);
+    }m_tvTopFive;
+
+
+    struct LobbyButtonContext final
+    {
+        cro::Entity backButton;
+        cro::Entity startButton;
+    }m_lobbyButtonContext;
+
     void createMainMenu(cro::Entity, std::uint32_t, std::uint32_t);
     void createAvatarMenu(cro::Entity, std::uint32_t, std::uint32_t);
     void createJoinMenu(cro::Entity, std::uint32_t, std::uint32_t);
     void createBrowserMenu(cro::Entity, std::uint32_t, std::uint32_t);
     void createLobbyMenu(cro::Entity, std::uint32_t, std::uint32_t);
+    void createStatMenu(cro::Entity, std::uint32_t, std::uint32_t);
 
     void updateLobbyData(const net::NetEvent&);
     void updateLobbyList();
@@ -217,6 +293,7 @@ private:
     void handleTextEdit(const cro::Event&);
     bool applyTextEdit(); //returns true if this consumed event
     void addTableSelectButtons();
+    void refreshLobbyButtons();
     void updateLobbyAvatars();
     void updateBallTexture();
 

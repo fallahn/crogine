@@ -59,7 +59,7 @@ private:
             Grass, GrassDark, Water, Sand,
             Sparkle, HIO, Bird,
             Drone, Explode, Blades,
-            Puff, Trail,
+            Puff, Trail, Firework,
 
             Count
         };
@@ -70,4 +70,7 @@ private:
     //TODO recycle these - or do we use so few it doesn't matter?
     cro::Sprite m_ringSprite;
     void spawnRings(glm::vec3);
+
+    std::vector<glm::vec3> m_fireworkPositions;
+    void launchFireworks();
 };

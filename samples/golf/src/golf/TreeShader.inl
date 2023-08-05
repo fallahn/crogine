@@ -92,7 +92,7 @@ R"(
         float offset = randVal * u_randAmount;
         vec4 position = a_position;
     #if defined(HQ)
-        position.xyz += (a_normal * offset);
+        position.xyz = (a_normal * offset) + position.xyz;
     #endif
 
         v_data.normal = normalMatrix * a_normal;
@@ -101,16 +101,16 @@ R"(
     #if !defined(HQ)
         float t = (u_windData.w * 15.0) + gl_InstanceID + gl_VertexID;
         float highFreq = sin(t) * Amp * a_colour.r;
-        position.y += highFreq * (0.2 + (0.8 * u_windData.y));
+        position.y = (highFreq * ((0.8 * u_windData.y) + 0.2)) + position.y;
     #endif
 
         vec4 worldPosition = worldMatrix * position;
 
 //wind
     #if defined (HQ)
-WindResult windResult = getWindData(position.xz, worldPosition.xz);
-windResult.lowFreq *= 0.5 + (0.5 * u_windData.y);
-windResult.highFreq *= 0.5 + (0.5 * u_windData.y);
+        WindResult windResult = getWindData(position.xz, worldPosition.xz);
+        windResult.lowFreq *= (0.5 * u_windData.y) + 0.5;
+        windResult.highFreq *= (0.5 * u_windData.y) + 0.5;
 
         float x = windResult.highFreq.x;
         float y = windResult.lowFreq.y;
@@ -125,27 +125,27 @@ windResult.highFreq *= 0.5 + (0.5 * u_windData.y);
         v_data.rotation[1]= rot;
 
         dirStrength += 1.0;
-        dirStrength /= 2.0;
+        dirStrength *= 0.5;
 
 
         windOffset += windDir * u_windData.y * dirStrength * 2.0;
         worldPosition.xyz += windOffset * MaxWindOffset * u_windData.y;
 
-worldPosition.x += windResult.lowFreq.x;
-worldPosition.z += windResult.lowFreq.y;
+        worldPosition.x += windResult.lowFreq.x;
+        worldPosition.z += windResult.lowFreq.y;
 
     #else
         float time = (u_windData.w * 15.0) + gl_InstanceID;
-        float x = sin(time * 2.0) / 8.0;
-        float y = cos(time) / 2.0;
+        float x = sin(time * 2.0) * 0.125;
+        float y = cos(time) * 0.5;
         vec3 windOffset = vec3(x, y, x) * a_colour.b * 0.1;
 
 
         vec3 windDir = normalize(vec3(u_windData.x, 0.f, u_windData.z));
         float dirStrength = a_colour.b;
 
-        windOffset += windDir * u_windData.y * dirStrength;
-        worldPosition.xyz += windOffset * MaxWindOffset * u_windData.y;
+        windOffset = (windDir * u_windData.y * dirStrength) + windOffset;
+        worldPosition.xyz = (windOffset * MaxWindOffset * u_windData.y) + worldPosition.xyz;
     #endif
 
 #if defined(WOBBLE)
@@ -166,16 +166,16 @@ worldPosition.z += windResult.lowFreq.y;
 
     #if defined(HQ)
         float variation = rand(-vec2(gl_VertexID));
-        variation = 0.5 + (0.5 * variation);
+        variation = (0.5 * variation) + 0.5;
 
-        float pointSize = u_leafSize + ((u_leafSize * 2.0) * offset);
+        float pointSize = ((u_leafSize * 2.0) * offset) + u_leafSize;
         pointSize *= variation;
 
         vec3 camForward = vec3(u_viewMatrix[0][2], u_viewMatrix[1][2], u_viewMatrix[2][2]);
         vec3 eyeDir = normalize(u_cameraWorldPosition - worldPosition.xyz);
             
         float facingAmount = dot(v_data.normal, camForward);
-        pointSize *= 0.8 + (0.2 * facingAmount);
+        pointSize *= (0.2 * facingAmount) + 0.8;
             
         //shrink 'backfacing' to zero
         //pointSize *= step(0.0, facingAmount);
@@ -323,8 +323,8 @@ R"(
         float amount = dot(normalize(v_data.normal), -u_lightDirection);
         amount *= 2.0;
         amount = round(amount);
-        amount /= 2.0;
-        amount = 0.4 + (amount * 0.6);
+        amount *= 0.5;
+        amount = (amount * 0.6) + 0.4;
 #if defined(VERTEX_COLOURED)
         vec3 colour = mix(complementaryColour(v_data.colour.rgb), v_data.colour.rgb, amount);
 #else
@@ -468,8 +468,8 @@ std::string BranchFragment = R"(
         float amount = dot(normalize(v_normal), -u_lightDirection);
         amount *= 2.0;
         amount = round(amount);
-        amount /= 2.0;
-        amount = 0.6 + (amount * 0.4);
+        amount *= 0.5;
+        amount = (amount * 0.4) + 0.6;
 
         colour.rgb *= amount * v_darkenAmount;
         FRAG_OUT = colour;

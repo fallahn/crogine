@@ -40,8 +40,8 @@ namespace cro
         {
             enum class Format
             {
-                MONO8, MONO16, STEREO8, STEREO16
-            }format = Format::MONO16;
+                MONO8, MONO16, STEREO8, STEREO16, NONE
+            }format = Format::NONE;
             std::uint32_t size = 0;
             std::uint32_t frequency = 0;
             void* data = nullptr;

@@ -635,7 +635,7 @@ void PlaylistState::addSystems()
     m_gameScene.addSystem<cro::ModelRenderer>(mb);
     m_gameScene.addSystem<cro::AudioSystem>(mb);
 
-    m_uiScene.addSystem<cro::UISystem>(mb);
+    m_uiScene.addSystem<cro::UISystem>(mb)->setMouseScrollNavigationEnabled(false);
     m_uiScene.addSystem<cro::CallbackSystem>(mb);
     m_uiScene.addSystem<cro::CommandSystem>(mb);
     m_uiScene.addSystem<cro::TextSystem>(mb);
@@ -3184,7 +3184,7 @@ void PlaylistState::addSaveFileItem(std::size_t i, glm::vec2 position)
                     }
                     else if (pos.y > (m_croppingArea.bottom + m_croppingArea.height))
                     {
-                        m_saveFileScrollNode.getComponent<cro::Callback>().getUserData<ScrollData>().targetIndex = i;
+                        m_saveFileScrollNode.getComponent<cro::Callback>().getUserData<ScrollData>().targetIndex = static_cast<std::int32_t>(i);
                     }
                 }
                 m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
@@ -3343,7 +3343,10 @@ void PlaylistState::loadShrubbery(const std::string& path)
                     applyMaterialData(md, billboardShadowMat);
                     billboardShadowMat.doubleSided = true; //do this second because applyMaterial() overwrites it
                     entity.getComponent<cro::Model>().setShadowMaterial(0, billboardShadowMat);
-                    entity.addComponent<cro::ShadowCaster>();
+                    if (!entity.hasComponent<cro::ShadowCaster>())
+                    {
+                        entity.addComponent<cro::ShadowCaster>();
+                    }
 
                     //trees are separate as we might want treesets instead
                     md.loadFromFile(modelPath); //reload to create unique VBO
@@ -3353,7 +3356,10 @@ void PlaylistState::loadShrubbery(const std::string& path)
                     entity.getComponent<cro::Model>().setMaterial(0, billboardMat);
 
                     entity.getComponent<cro::Model>().setShadowMaterial(0, billboardShadowMat);
-                    entity.addComponent<cro::ShadowCaster>();
+                    if (!entity.hasComponent<cro::ShadowCaster>())
+                    {
+                        entity.addComponent<cro::ShadowCaster>();
+                    }
                     
                     if (entity.hasComponent<cro::BillboardCollection>())
                     {

@@ -34,7 +34,6 @@ source distribution.
 #include <crogine/ecs/systems/UISystem.hpp>
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Camera.hpp>
-#include <crogine/ecs/components/UIInput.hpp>
 #include <crogine/ecs/Scene.hpp>
 
 #include <crogine/detail/glm/vec2.hpp>
@@ -182,16 +181,16 @@ void UISystem::handleEvent(const Event& evt)
         }
             break;
         case SDLK_LEFT:
-            selectPrev(1);
+            selectPrev(1, UIInput::Index::Left);
             break;
         case SDLK_RIGHT:
-            selectNext(1);
+            selectNext(1, UIInput::Index::Right);
             break;
         case SDLK_UP:
-            selectPrev(m_columnCount);
+            selectPrev(m_columnCount, UIInput::Index::Up);
             break;
         case SDLK_DOWN:
-            selectNext(m_columnCount);
+            selectNext(m_columnCount, UIInput::Index::Down);
             break;
         }
     }
@@ -338,16 +337,16 @@ void UISystem::process(float)
                 {
                 default: break;
                 case ControllerBits::Left:
-                    selectPrev(1);
+                    selectPrev(1, UIInput::Index::Left);
                     break;
                 case ControllerBits::Up:
-                    selectPrev(m_columnCount);
+                    selectPrev(m_columnCount, UIInput::Index::Up);
                     break;
                 case ControllerBits::Right:
-                    selectNext(1);
+                    selectNext(1, UIInput::Index::Right);
                     break;
                 case ControllerBits::Down:
-                    selectNext(m_columnCount);
+                    selectNext(m_columnCount, UIInput::Index::Down);
                     break;
                 }
             }
@@ -549,6 +548,25 @@ void UISystem::selectAt(std::size_t index)
     }
 }
 
+void UISystem::selectByIndex(std::size_t index)
+{
+    const auto& entities = m_groups[m_activeGroup];
+    auto old = m_selectedIndex;
+
+    do
+    {
+        m_selectedIndex = (m_selectedIndex + 1) % entities.size();
+    } while (entities[m_selectedIndex].getComponent<cro::UIInput>().getSelectionIndex() != index && m_selectedIndex != old);
+
+    //and do selected callback
+    if (m_selectedIndex != old
+        && entities[m_selectedIndex].getComponent<UIInput>().enabled)
+    {
+        unselect(old);
+        select(m_selectedIndex);
+    }
+}
+
 //private
 glm::vec2 UISystem::toWorldCoords(std::int32_t x, std::int32_t y)
 {
@@ -580,15 +598,38 @@ glm::vec2 UISystem::toWorldCoords(float x, float y)
     return { worldPos };
 }
 
-void UISystem::selectNext(std::size_t stride)
+void UISystem::selectNext(std::size_t stride, std::int32_t direction)
 {
     const auto& entities = m_groups[m_activeGroup];
     auto old = m_selectedIndex;
 
-    do
+    auto targetSelection = entities[m_selectedIndex].getComponent<UIInput>().m_neighbourIndices[direction];
+    if (targetSelection != std::numeric_limits<std::size_t>::max())
     {
-        m_selectedIndex = (m_selectedIndex + stride) % entities.size();
-    } while (m_selectedIndex != old && !entities[m_selectedIndex].getComponent<UIInput>().enabled);
+        //check if any of the entities in this groupd have the requested index
+        auto result = std::find_if(entities.cbegin(), entities.cend(),
+            [targetSelection](const Entity& e)
+            {
+                return e.getComponent<UIInput>().getSelectionIndex() == targetSelection;
+            });
+
+        if (result != entities.cend()
+            /*&& result->getComponent<cro::UIInput>().enabled*/)
+        {
+            m_selectedIndex = std::distance(entities.cbegin(), result);
+        }
+    }
+
+
+    //if it's the same we didn't find anything
+    //or some bright spark tried to set the target component as itself...
+    if (old == m_selectedIndex)
+    {
+        do
+        {
+            m_selectedIndex = (m_selectedIndex + stride) % entities.size();
+        } while (m_selectedIndex != old && !entities[m_selectedIndex].getComponent<UIInput>().enabled);
+    }
 
     //and do selected callback
     if (m_selectedIndex != old)
@@ -598,17 +639,39 @@ void UISystem::selectNext(std::size_t stride)
     }
 }
 
-void UISystem::selectPrev(std::size_t stride)
+void UISystem::selectPrev(std::size_t stride, std::int32_t direction)
 {
     const auto& entities = m_groups[m_activeGroup];
 
     auto old = m_selectedIndex;
 
-    //get new index
-    do
+    auto targetSelection = entities[m_selectedIndex].getComponent<UIInput>().m_neighbourIndices[direction];
+    if (targetSelection != std::numeric_limits<std::size_t>::max())
     {
-        m_selectedIndex = (m_selectedIndex + (entities.size() - stride)) % entities.size();
-    } while (m_selectedIndex != old && !entities[m_selectedIndex].getComponent<UIInput>().enabled);
+        //check if any of the entities in this groupd have the requested index
+        auto result = std::find_if(entities.cbegin(), entities.cend(),
+            [targetSelection](const Entity& e)
+            {
+                return e.getComponent<UIInput>().getSelectionIndex() == targetSelection;
+            });
+
+        if (result != entities.cend()
+            /*&& result->getComponent<cro::UIInput>().enabled*/)
+        {
+            m_selectedIndex = std::distance(entities.cbegin(), result);
+        }
+    }
+
+    //if it's the same we didn't find anything
+    //or some bright spark tried to set the target component as itself...
+    if (old == m_selectedIndex)
+    {
+        //get new index
+        do
+        {
+            m_selectedIndex = (m_selectedIndex + (entities.size() - stride)) % entities.size();
+        } while (m_selectedIndex != old && !entities[m_selectedIndex].getComponent<UIInput>().enabled);
+    }
 
     //and do selected callback
     if (m_selectedIndex != old)

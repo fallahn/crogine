@@ -100,6 +100,9 @@ public:
 
     static constexpr std::uint32_t CPU_ID = 1337u;
 
+    void doFastStroke(float hook, float power); //performed by 'fast' CPU
+
+
 private:
     const SharedStateData& m_sharedData;
     const InputBinding& m_inputBinding;

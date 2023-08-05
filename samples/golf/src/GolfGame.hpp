@@ -36,6 +36,7 @@ source distribution.
 #endif
 #include "golf/SharedStateData.hpp"
 #include "golf/SharedProfileData.hpp"
+#include "golf/ProgressIcon.hpp"
 
 #include <crogine/core/App.hpp>
 #include <crogine/core/ConsoleClient.hpp>
@@ -64,6 +65,8 @@ private:
     cro::StateStack m_stateStack;
 
     std::vector<std::string> m_hostAddresses;
+
+    std::unique_ptr<ProgressIcon> m_progressIcon;
 
     std::unique_ptr<cro::RenderTexture> m_postBuffer;
     std::unique_ptr<cro::SimpleQuad> m_postQuad;

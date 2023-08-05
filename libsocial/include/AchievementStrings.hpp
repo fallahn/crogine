@@ -122,7 +122,12 @@ static const std::array<std::string, AchievementID::Count> AchievementStrings =
     "never_give",
     "greens_in_regulation",
     "threes_a_crowd",
-    "consistency_is_key"
+    "consistency_is_key",
+    "nested",
+    "gimmegimmegimme",
+    "drive_it_home",
+    "gamer",
+    "cause_a_racket"
 };
 
 //appears on the notification
@@ -203,7 +208,12 @@ static const std::array<std::string, AchievementID::Count> AchievementLabels =
     "Never Gonna Give You Up",
     "Greens In Regulation",
     "Three's A Crowd",
-    "Consistency Is Key"
+    "Consistency Is Key",
+    "Nested",
+    "Gimme Gimme Gimme",
+    "Drive It Home",
+    "Gamer",
+    "Cause A Racket"
 };
 
 //description and whether or not the achievement is hidden until it is unlocked
@@ -285,6 +295,11 @@ static const std::array<std::pair<std::string, bool>, AchievementID::Count> Achi
     std::make_pair("In a full round hit the green on each hole with two strokes spare to make par", false),
     std::make_pair("In a full round take no more than two putts on each hole", false),
     std::make_pair("Hit the fairway or the green on your first shot of all 18 holes", false),
+    std::make_pair("Get 2 Eagles and 3 Birdies in one round", false),
+    std::make_pair("Finish all 18 holes with a Gimme", false),
+    std::make_pair("Land on the flag on the Driving Range", false),
+    std::make_pair("Unlock the arcade", false),
+    std::make_pair("Hit the tennis court then land on the fairway of Course 5, Hole 18", false),
 };
 
 //assuming trophies load correctly they are:
@@ -391,6 +406,12 @@ static constexpr std::array<std::size_t, AchievementID::Count> AchievementTrophi
     TrophyID::GoldFigure,
     TrophyID::GoldCup,
     TrophyID::SilverFigure,
+    TrophyID::BronzeCup,
+
+    TrophyID::SilverCup,
+    TrophyID::SilverFigure,
+    TrophyID::Platinum,
+    TrophyID::GoldCup,
     TrophyID::BronzeCup,
 };
 

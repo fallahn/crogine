@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2022
+Matt Marchant 2017 - 2023
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -32,6 +32,8 @@ source distribution.
 #include <crogine/graphics/Texture.hpp>
 #include <crogine/graphics/Vertex2D.hpp>
 
+#include <crogine/ecs/components/Sprite.hpp>
+
 using namespace cro;
 
 SimpleQuad::SimpleQuad()
@@ -45,6 +47,16 @@ SimpleQuad::SimpleQuad(const cro::Texture& texture)
     : SimpleQuad()
 {
     setTexture(texture);
+}
+
+SimpleQuad& SimpleQuad::operator = (const Sprite& sprite)
+{
+    CRO_ASSERT(sprite.getTexture(), "Sprite has no texture");
+    setTexture(*sprite.getTexture());
+    setTextureRect(sprite.getTextureRect());
+    setColour(sprite.getColour());
+
+    return *this;
 }
 
 //public

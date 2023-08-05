@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2022
+Matt Marchant 2017 - 2023
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -30,6 +30,7 @@ source distribution.
 #pragma once
 
 #include <crogine/ecs/System.hpp>
+#include <crogine/ecs/components/UIInput.hpp>
 #include <crogine/graphics/Rectangle.hpp>
 
 #include <crogine/detail/glm/mat4x4.hpp>
@@ -172,6 +173,9 @@ namespace cro
         that has a different number of columns, this function should be used to
         set the new active value.
 
+        Note that this is ignored for any UIInput components which has a specific
+        previous or next index set on them.
+
         \param count The number of columns in the display (or number of indices to
         skip when moving up/down). Must be greater than zero.
         */
@@ -207,8 +211,16 @@ namespace cro
         \param index The index of the input to select
         Note that this may not give expected results if multiple inputs
         have been manually assigned the same selection index with setSelectionIndex()
+        or the index is not in range of the group size - in which case prefer
+        selectByIndex()
         */
         void selectAt(std::size_t index);
+
+        /*!
+        \brief Selects at a specific index if a UIInput component has been provided
+        with one via setSelectionIndex() - otherwise prefer selectAt()
+        */
+        void selectByIndex(std::size_t index);
 
     private:
 
@@ -244,8 +256,8 @@ namespace cro
         bool m_scrollNavigation;
         std::size_t m_columnCount;
         std::size_t m_selectedIndex;
-        void selectNext(std::size_t);
-        void selectPrev(std::size_t);
+        void selectNext(std::size_t, std::int32_t = UIInput::Index::Right);
+        void selectPrev(std::size_t, std::int32_t = UIInput::Index::Left);
 
         void unselect(std::size_t);
         void select(std::size_t);

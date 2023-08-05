@@ -95,6 +95,8 @@ public:
         Dummy, 
         Main, Avatar, Join, Lobby,
         ProfileFlyout, ConfirmQuit,
+        Scorecard,
+
         Count
     };
 
@@ -170,7 +172,7 @@ private:
         std::uint32_t nextHoleType = 0;
         std::uint32_t toggleReverseCourse = 0;
         std::uint32_t toggleFriendsOnly = 0;
-        std::uint32_t toggleGameRules = 0;
+        std::uint32_t toggleFastCPU = 0;
         std::uint32_t inviteFriends = 0;
         std::uint32_t selected = 0;
         std::uint32_t unselected = 0;
@@ -178,8 +180,6 @@ private:
         std::uint32_t unselectHighlight = 0;
         std::uint32_t selectText = 0;
         std::uint32_t unselectText = 0;
-        std::uint32_t showTip = 0;
-        std::uint32_t hideTip = 0;
     }m_courseSelectCallbacks;
     std::array<std::uint32_t, 4u> m_avatarEditCallbacks = {};
 
@@ -196,6 +196,10 @@ private:
             HoleSelection,
             HoleThumb,
             CourseTicker,
+            Background,
+            Info,
+
+            Scorecard,
 
             Count
         };
@@ -205,7 +209,7 @@ private:
     LobbyPager m_lobbyPager;
 
     //hack to quit the lobby confirm menu from event input
-    std::function<void()> enterConfirmCallback;
+    std::function<void(bool)> enterConfirmCallback;
     std::function<void()> quitConfirmCallback;
 
     struct TextEdit final
@@ -226,8 +230,10 @@ private:
     {
         cro::String directory;
         cro::String title = "Untitled";
-        cro::String description = "No Description"; 
+        cro::String description = "No Description";
+        std::int32_t courseNumber = 0; //base 1
         std::array<cro::String, 3u> holeCount = {};
+        std::vector<std::int32_t> parVals;
         bool isUser = false;
     };
     std::vector<CourseData> m_courseData;
@@ -314,6 +320,22 @@ private:
     void setProfileIndex(std::size_t);
     void refreshProfileFlyout();
 
+    //allows updating the target indices
+    //of lobby buttons based on whether the
+    //user is hosting or not
+    struct LobbyButtonContext final
+    {
+        cro::Entity infoLeaderboard;
+        cro::Entity lobbyCourseA;
+        cro::Entity lobbyInfoA;
+        cro::Entity lobbyInfoB;
+        cro::Entity lobbyRulesA;
+        cro::Entity lobbyRulesB;
+        cro::Entity rulesClubset;
+        bool hasScoreCard = false;
+    }m_lobbyButtonContext;
+    void refreshLobbyButtons();
+
     //message handlers for completing connection
     void finaliseGameCreate(const MatchMaking::Message&);
     void finaliseGameJoin(const MatchMaking::Message&);
@@ -334,7 +356,8 @@ private:
     void updateCourseRuleString();
     void updateUnlockedItems();
 
-    //loading moved to GolfGame.cpp
+    void createPreviousScoreCard();
+    void togglePreviousScoreCard();
 
     void handleNetEvent(const net::NetEvent&);
 

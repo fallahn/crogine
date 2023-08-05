@@ -7,10 +7,12 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/audio/AudioScape.cpp
   ${PROJECT_DIR}/audio/AudioSource.cpp
   ${PROJECT_DIR}/audio/AudioStream.cpp
+  ${PROJECT_DIR}/audio/Mp3Loader.cpp
   ${PROJECT_DIR}/audio/stb_vorbis.c
   ${PROJECT_DIR}/audio/VorbisLoader.cpp
   ${PROJECT_DIR}/audio/WavLoader.cpp
 
+  ${PROJECT_DIR}/audio/sound_system/MusicPlayer.cpp
   ${PROJECT_DIR}/audio/sound_system/SoundSource.cpp
   ${PROJECT_DIR}/audio/sound_system/SoundStream.cpp
   
@@ -153,6 +155,9 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/imgui/imgui_stdlib.cpp
   ${PROJECT_DIR}/imgui/imgui_widgets.cpp
   ${PROJECT_DIR}/imgui/ImGuizmo.cpp
+  ${PROJECT_DIR}/imgui/implot.cpp
+  ${PROJECT_DIR}/imgui/implot_demo.cpp
+  ${PROJECT_DIR}/imgui/implot_items.cpp
   ${PROJECT_DIR}/imgui/ImSequencer.cpp
 
   ${PROJECT_DIR}/network/NetClient.cpp

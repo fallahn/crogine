@@ -327,31 +327,47 @@ bool BilliardsState::handleEvent(const cro::Event& evt)
             sendReadyNotify();
         }
     }
-    else if (evt.type == SDL_CONTROLLERBUTTONDOWN
-        && evt.cbutton.which == activeControllerID(m_sharedData.inputBinding.playerID))
+    else if (evt.type == SDL_CONTROLLERBUTTONDOWN)
     {
-        switch (evt.cbutton.button)
+        if (evt.cbutton.which == cro::GameController::deviceID(activeControllerID(m_sharedData.inputBinding.playerID)))
         {
-        default: break;
-        case cro::GameController::ButtonA:
-            toggleQuitReady();
-            sendReadyNotify();
-            break;
-        case cro::GameController::ButtonY:
-            toggleOverhead();
-            break;
+            switch (evt.cbutton.button)
+            {
+            default: break;
+            case cro::GameController::ButtonA:
+                toggleQuitReady();
+                sendReadyNotify();
+                break;
+            case cro::GameController::ButtonY:
+                toggleOverhead();
+                break;
+            }
         }
+//#ifdef CRO_DEBUG_
+//        else
+//        {
+//            LogI << "Event button ID " << evt.cbutton.which << ", controller ID " << cro::GameController::deviceID(activeControllerID(m_sharedData.inputBinding.playerID)) << std::endl;
+//        }
+//#endif
     }
-    else if (evt.type == SDL_CONTROLLERBUTTONUP
-        && evt.cbutton.which == activeControllerID(m_sharedData.inputBinding.playerID))
+    else if (evt.type == SDL_CONTROLLERBUTTONUP)
     {
-        switch (evt.cbutton.button)
+        if (evt.cbutton.which == cro::GameController::deviceID(activeControllerID(m_sharedData.inputBinding.playerID)))
         {
-        default: break;
-        case cro::GameController::ButtonStart:
-            requestStackPush(StateID::Pause);
-            break;
+            switch (evt.cbutton.button)
+            {
+            default: break;
+            case cro::GameController::ButtonStart:
+                requestStackPush(StateID::Pause);
+                break;
+            }
         }
+//#ifdef CRO_DEBUG_
+//        else
+//        {
+//            LogI << "Event button ID " << evt.cbutton.which << ", controller ID " << cro::GameController::deviceID(activeControllerID(m_sharedData.inputBinding.playerID)) << std::endl;
+//        }
+//#endif
     }
 
     else if (evt.type == SDL_MOUSEBUTTONDOWN)

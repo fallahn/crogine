@@ -64,9 +64,40 @@ source distribution.
 namespace
 {
     //used as indices when scrolling through leaderboards
-    std::int32_t leaderboardID = 0;
+    std::int32_t leaderboardTryCount = 0;
+    std::int32_t leaderboardHoleIndex = 0;
     std::int32_t leaderboardFilter = 0;
     constexpr std::int32_t MaxLeaderboardFilter = 3;
+
+    const std::array<std::string, 3u> ScoreStrings =
+    {
+        "Best Of 5",
+        "Best Of 9",
+        "Best Of 18",
+    };
+    const std::array<std::string, 3u> RankStrings =
+    {
+        "Global",
+        "Nearest",
+        "Friends"
+    };
+    const std::array<std::string, 14u> HoleStrings =
+    {
+        "Random",
+        "Target 1",
+        "Target 2",
+        "Target 3",
+        "Target 4",
+        "Target 5",
+        "Target 6",
+        "Target 7",
+        "Target 8",
+        "Target 9",
+        "Target 10",
+        "Target 11",
+        "Target 12",
+        "Target 13",
+    };
 
     static constexpr float SummaryOffset = 54.f;
     static constexpr float SummaryHeight = 254.f;
@@ -158,6 +189,25 @@ namespace
                 e.getComponent<cro::AudioEmitter>().play();
             }
         }
+    };
+
+    struct ButtonID final
+    {
+        enum
+        {
+            Null = 100,
+            CountPrev, CountNext,
+            TargetPrev, TargetNext,
+
+            Clubset,
+            Leaderboard,
+            Begin,
+
+            LBFilterPrev, LBFilterNext,
+            LBCountPrev, LBCountNext,
+            LBTargetPrev, LBTargetNext,
+            LBClose
+        };
     };
 }
 
@@ -497,11 +547,17 @@ void DrivingState::createUI()
     {
         auto& [dir, currTime] = e.getComponent<cro::Callback>().getUserData<std::pair<std::int32_t, float>>();
 
+#ifdef USE_GNS
+        const float ScaleMultiplier = Social::isSteamdeck() ? 2.f : 1.f;
+#else
+        const float ScaleMultiplier = 1.f;
+#endif
+
         if (dir == 0)
         {
             //grow
             currTime = std::min(1.f, currTime + dt);
-            const float scale = cro::Util::Easing::easeOutElastic(currTime);
+            const float scale = cro::Util::Easing::easeOutElastic(currTime) * ScaleMultiplier;
 
             e.getComponent<cro::Transform>().setScale({ scale, scale });
 
@@ -515,9 +571,9 @@ void DrivingState::createUI()
         {
             //shrink
             currTime = std::max(0.f, currTime - (dt * 2.f));
-            const float scale = cro::Util::Easing::easeOutBack(currTime);
+            const float scale = cro::Util::Easing::easeOutBack(currTime) * ScaleMultiplier;
 
-            e.getComponent<cro::Transform>().setScale({ scale, 1.f });
+            e.getComponent<cro::Transform>().setScale({ scale, ScaleMultiplier });
 
             if (currTime == 0)
             {
@@ -807,6 +863,13 @@ void DrivingState::createUI()
 
         //relocate the power bar
         auto uiPos = glm::vec2(uiSize.x / 2.f, UIBarHeight / 2.f);
+#ifdef USE_GNS
+        if (Social::isSteamdeck())
+        {
+            uiPos.y *= 2.f;
+            spinEnt.getComponent<cro::Transform>().move({ 0.f, 32.f, 0.f });
+        }
+#endif
         rootNode.getComponent<cro::Transform>().setPosition(uiPos);
     };
 
@@ -903,7 +966,7 @@ void DrivingState::createGameOptions()
     auto* uiSystem = m_uiScene.getSystem<cro::UISystem>();
     auto buttonSelect = uiSystem->addCallback([](cro::Entity e)
         {
-            e.getComponent<cro::Sprite>().setColour(cro::Colour::White); 
+            e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
             e.getComponent<cro::AudioEmitter>().play();
         });
     auto buttonUnselect = uiSystem->addCallback([](cro::Entity e) { e.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent); });
@@ -919,12 +982,13 @@ void DrivingState::createGameOptions()
 
 
     //background
+    auto& tex = m_resources.textures.get("assets/golf/images/driving_range_menu.png");
+
     cro::SpriteSheet spriteSheet;
     spriteSheet.loadFromFile("assets/golf/sprites/scoreboard.spt", m_resources.textures);
     m_sprites[SpriteID::Stars] = spriteSheet.getSprite("orbs");
-    auto bgSprite = spriteSheet.getSprite("border");
 
-    auto bounds = bgSprite.getTextureBounds();
+    auto bounds = cro::FloatRect(glm::vec2(0.f), glm::vec2(tex.getSize()));
     auto size = glm::vec2(GolfGame::getActiveTarget()->getSize());
     auto position = glm::vec3(size.x / 2.f, size.y / 2.f, 1.5f);
 
@@ -933,13 +997,14 @@ void DrivingState::createGameOptions()
     bgEntity.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
     bgEntity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
     bgEntity.addComponent<cro::Drawable2D>();
-    bgEntity.addComponent<cro::Sprite>() = bgSprite;
+    bgEntity.addComponent<cro::Sprite>(tex);// = bgSprite;
     bgEntity.addComponent<cro::CommandTarget>().ID = CommandID::UI::DrivingBoard;
     bgEntity.addComponent<cro::Callback>().setUserData<PopupAnim>();
     bgEntity.getComponent<cro::Callback>().function = MenuCallback(m_viewScale, uiSystem, MenuID::Options);
-    
+
     auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
     auto& largeFont = m_sharedData.sharedResources->fonts.get(FontID::UI);
+    auto& labelFont = m_sharedData.sharedResources->fonts.get(FontID::Label);
 
     //title
     auto titleText = m_uiScene.createEntity();
@@ -957,6 +1022,8 @@ void DrivingState::createGameOptions()
     headerText.addComponent<cro::Drawable2D>();
     headerText.addComponent<cro::Text>(largeFont).setCharacterSize(UITextSize);
     headerText.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    headerText.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+    headerText.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
     headerText.getComponent<cro::Text>().setString("How To Play");
     bgEntity.getComponent<cro::Transform>().addChild(headerText.getComponent<cro::Transform>());
 
@@ -966,19 +1033,20 @@ void DrivingState::createGameOptions()
     infoText.addComponent<cro::Drawable2D>();
     infoText.addComponent<cro::Text>(smallFont).setCharacterSize(InfoTextSize);
     infoText.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    infoText.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+    infoText.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
     const std::string helpString =
         R"(
-Pick the number of strokes you wish to take. Hit the ball as close
-as possible to the target by selecting the appropriate club. When 
-all of your strokes are taken you will be given a score based on 
-your overall accuracy. Good Luck!
+Pick the number of strokes you wish to take. Hit the ball as close as possible to the
+target by selecting the appropriate club. When all of your strokes are taken you
+will be given a score based on your overall accuracy. Good Luck!
     )";
 
     infoText.getComponent<cro::Text>().setString(helpString);
     bgEntity.getComponent<cro::Transform>().addChild(infoText.getComponent<cro::Transform>());
 
 
-    const auto createButton = [&](const std::string& sprite, glm::vec2 position)
+    const auto createButton = [&](const std::string& sprite, glm::vec2 position, std::int32_t selectionIndex)
     {
         auto buttonEnt = m_uiScene.createEntity();
         buttonEnt.addComponent<cro::Transform>().setPosition(glm::vec3(position, 0.4f));
@@ -989,15 +1057,29 @@ your overall accuracy. Good Luck!
         buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = buttonSelect;
         buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = buttonUnselect;
         buttonEnt.getComponent<cro::UIInput>().setGroup(MenuID::Options);
+        buttonEnt.getComponent<cro::UIInput>().setSelectionIndex(selectionIndex);
         buttonEnt.addComponent<cro::AudioEmitter>() = as.getEmitter("switch");
 
         return buttonEnt;
     };
 
 
+    //current record holder
+    auto recordEnt = m_uiScene.createEntity();
+    recordEnt.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, 270.f, 0.1f });
+    recordEnt.addComponent<cro::Drawable2D>();
+    recordEnt.addComponent<cro::Text>(labelFont).setString(Social::getDrivingLeader(m_targetIndex, m_strokeCountIndex));
+    recordEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    recordEnt.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+    recordEnt.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
+    recordEnt.getComponent<cro::Text>().setCharacterSize(LabelTextSize);
+    centreText(recordEnt);
+    bgEntity.getComponent<cro::Transform>().addChild(recordEnt.getComponent<cro::Transform>());
+
+
     //hole count
     auto countEnt = m_uiScene.createEntity();
-    countEnt.addComponent<cro::Transform>().setPosition({ bounds.width / 5.f, 74.f, 0.1f });
+    countEnt.addComponent<cro::Transform>().setPosition({ std::floor(bounds.width / 2.f) - 42.f, 134.f, 0.1f });
     countEnt.addComponent<cro::Drawable2D>();
     countEnt.addComponent<cro::Sprite>() = spriteSheet.getSprite("stroke_select");
     auto strokeBounds = spriteSheet.getSprite("stroke_select").getTextureBounds();
@@ -1009,6 +1091,9 @@ your overall accuracy. Good Luck!
     strokeTextEnt.addComponent<cro::Drawable2D>();
     strokeTextEnt.addComponent<cro::Text>(largeFont).setString("Strokes\nTo Play");
     strokeTextEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    strokeTextEnt.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+    strokeTextEnt.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
+    //strokeTextEnt.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
     strokeTextEnt.getComponent<cro::Text>().setCharacterSize(UITextSize);
     strokeTextEnt.getComponent<cro::Text>().setVerticalSpacing(2.f);
     centreText(strokeTextEnt);
@@ -1027,7 +1112,7 @@ your overall accuracy. Good Luck!
 
     //high score text
     auto textEnt4 = m_uiScene.createEntity();
-    textEnt4.addComponent<cro::Transform>().setPosition({ bounds.width / 5.f, 63.f, 0.02f });
+    textEnt4.addComponent<cro::Transform>().setPosition({ std::floor(bounds.width / 2.f), 123.f, 0.02f });
     textEnt4.addComponent<cro::Drawable2D>();
     textEnt4.addComponent<cro::Text>(smallFont).setCharacterSize(InfoTextSize);
     textEnt4.getComponent<cro::Text>().setFillColour(TextNormalColour);
@@ -1063,7 +1148,6 @@ your overall accuracy. Good Luck!
         m_tickerStrings[i] = Social::getDrivingTopFive(i);
     }
 
-    auto& labelFont = m_sharedData.sharedResources->fonts.get(FontID::Label);
     tickerEnt = m_uiScene.createEntity();
     tickerEnt.addComponent<cro::Transform>().setPosition({ 100.f, 0.f, 0.2f });
     tickerEnt.addComponent<cro::Drawable2D>();
@@ -1101,14 +1185,27 @@ your overall accuracy. Good Luck!
         }
     };
     bgEntity.getComponent<cro::Transform>().addChild(tickerEnt.getComponent<cro::Transform>());
-    
+
 #endif
 
     //hole count buttons
-    auto buttonEnt = createButton("arrow_left", glm::vec2(-3.f, 3.f));
+    auto buttonEnt = createButton("arrow_left", glm::vec2(-3.f, 3.f), ButtonID::CountPrev);
+    if (Social::getClubLevel())
+    {
+        buttonEnt.getComponent<cro::UIInput>().setNextIndex(ButtonID::CountNext, ButtonID::Clubset);
+    }
+    else
+    {
+#ifdef USE_GNS
+        buttonEnt.getComponent<cro::UIInput>().setNextIndex(ButtonID::CountNext, ButtonID::Leaderboard);
+#else
+        buttonEnt.getComponent<cro::UIInput>().setNextIndex(ButtonID::CountNext, ButtonID::Begin);
+#endif
+    }
+    buttonEnt.getComponent<cro::UIInput>().setPrevIndex(ButtonID::TargetNext, ButtonID::Begin);
     buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem->addCallback(
-            [&, numberEnt, textEnt4, tickerEnt](cro::Entity e, const cro::ButtonEvent& evt) mutable
+            [&, numberEnt, textEnt4, tickerEnt, recordEnt](cro::Entity e, const cro::ButtonEvent& evt) mutable
             {
                 if (activated(evt))
                 {
@@ -1116,6 +1213,8 @@ your overall accuracy. Good Luck!
                     numberEnt.getComponent<cro::Text>().setString(std::to_string(m_strokeCounts[m_strokeCountIndex]));
                     centreText(numberEnt);
 
+                    leaderboardTryCount = m_strokeCountIndex;
+
                     if (m_topScores[m_strokeCountIndex] > 0)
                     {
                         std::stringstream s;
@@ -1136,6 +1235,9 @@ your overall accuracy. Good Luck!
                     pos.x = 300.f;
                     tickerEnt.getComponent<cro::Transform>().setPosition(pos);
                     tickerEnt.getComponent<cro::Callback>().function(tickerEnt, 0.f); //updates the cropping
+
+                    recordEnt.getComponent<cro::Text>().setString(Social::getDrivingLeader(m_targetIndex, m_strokeCountIndex));
+                    centreText(recordEnt);
 #endif
 
                     m_summaryScreen.audioEnt.getComponent<cro::AudioEmitter>().play();
@@ -1143,16 +1245,31 @@ your overall accuracy. Good Luck!
             });
     countEnt.getComponent<cro::Transform>().addChild(buttonEnt.getComponent<cro::Transform>());
 
-    buttonEnt = createButton("arrow_right", glm::vec2(35.f, 3.f));
+    buttonEnt = createButton("arrow_right", glm::vec2(35.f, 3.f), ButtonID::CountNext);
+    if (Social::getClubLevel())
+    {
+        buttonEnt.getComponent<cro::UIInput>().setNextIndex(ButtonID::TargetPrev, ButtonID::Clubset);
+    }
+    else
+    {
+#ifdef USE_GNS
+        buttonEnt.getComponent<cro::UIInput>().setNextIndex(ButtonID::TargetPrev, ButtonID::Leaderboard);
+#else
+        buttonEnt.getComponent<cro::UIInput>().setNextIndex(ButtonID::TargetPrev, ButtonID::Begin);
+#endif
+    }
+    buttonEnt.getComponent<cro::UIInput>().setPrevIndex(ButtonID::CountPrev, ButtonID::Begin);
     buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem->addCallback(
-            [&, numberEnt, textEnt4, tickerEnt](cro::Entity e, const cro::ButtonEvent& evt) mutable
+            [&, numberEnt, textEnt4, tickerEnt, recordEnt](cro::Entity e, const cro::ButtonEvent& evt) mutable
             {
                 if (activated(evt))
                 {
                     m_strokeCountIndex = (m_strokeCountIndex + 1) % m_strokeCounts.size();
                     numberEnt.getComponent<cro::Text>().setString(std::to_string(m_strokeCounts[m_strokeCountIndex]));
                     centreText(numberEnt);
+
+                    leaderboardTryCount = m_strokeCountIndex;
 
                     if (m_topScores[m_strokeCountIndex] > 0)
                     {
@@ -1174,6 +1291,9 @@ your overall accuracy. Good Luck!
                     pos.x = 300.f;
                     tickerEnt.getComponent<cro::Transform>().setPosition(pos);
                     tickerEnt.getComponent<cro::Callback>().function(tickerEnt, 0.f); //updates the cropping
+
+                    recordEnt.getComponent<cro::Text>().setString(Social::getDrivingLeader(m_targetIndex, m_strokeCountIndex));
+                    centreText(recordEnt);
 #endif
 
                     m_summaryScreen.audioEnt.getComponent<cro::AudioEmitter>().play();
@@ -1207,7 +1327,7 @@ your overall accuracy. Good Luck!
     };
 
     auto entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, 110.f, 0.3f });
+    entity.addComponent<cro::Transform>().setPosition({ bounds.width / 5.f, 120.f, 0.3f });
     entity.getComponent<cro::Transform>().setOrigin(RangeSize / 4.f);
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>(m_mapTexture.getTexture());
@@ -1225,7 +1345,7 @@ your overall accuracy. Good Luck!
     cro::SpriteSheet flagSheet;
     flagSheet.loadFromFile("assets/golf/sprites/ui.spt", m_resources.textures);
     auto flagEnt = m_uiScene.createEntity();
-    flagEnt.addComponent<cro::Transform>().setOrigin({0.f, 0.f, -0.1f});
+    flagEnt.addComponent<cro::Transform>().setOrigin({ 0.f, 0.f, -0.1f });
     flagEnt.addComponent<cro::Drawable2D>();
     flagEnt.addComponent<cro::Sprite>() = flagSheet.getSprite("flag03");
 
@@ -1271,7 +1391,7 @@ your overall accuracy. Good Luck!
 
     //target select
     countEnt = m_uiScene.createEntity();
-    countEnt.addComponent<cro::Transform>().setPosition({ bounds.width - (bounds.width / 5.f), 74.f, 0.1f });
+    countEnt.addComponent<cro::Transform>().setPosition({ std::floor((bounds.width / 2.f) + 42.f), 134.f, 0.1f });
     countEnt.addComponent<cro::Drawable2D>();
     countEnt.addComponent<cro::Sprite>() = spriteSheet.getSprite("stroke_select");
     strokeBounds = spriteSheet.getSprite("stroke_select").getTextureBounds();
@@ -1283,6 +1403,9 @@ your overall accuracy. Good Luck!
     strokeTextEnt.addComponent<cro::Drawable2D>();
     strokeTextEnt.addComponent<cro::Text>(largeFont).setString("Select\nTarget");
     strokeTextEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    strokeTextEnt.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+    strokeTextEnt.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
+    //strokeTextEnt.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
     strokeTextEnt.getComponent<cro::Text>().setCharacterSize(UITextSize);
     strokeTextEnt.getComponent<cro::Text>().setVerticalSpacing(2.f);
     centreText(strokeTextEnt);
@@ -1300,10 +1423,23 @@ your overall accuracy. Good Luck!
 
 
     //target select buttons
-    buttonEnt = createButton("arrow_left", glm::vec2(-3.f, 3.f));
+    buttonEnt = createButton("arrow_left", glm::vec2(-3.f, 3.f), ButtonID::TargetPrev);
+    if (Social::getClubLevel())
+    {
+        buttonEnt.getComponent<cro::UIInput>().setNextIndex(ButtonID::TargetNext, ButtonID::Clubset);
+    }
+    else
+    {
+#ifdef USE_GNS
+        buttonEnt.getComponent<cro::UIInput>().setNextIndex(ButtonID::TargetNext, ButtonID::Leaderboard);
+#else
+        buttonEnt.getComponent<cro::UIInput>().setNextIndex(ButtonID::TargetNext, ButtonID::Begin);
+#endif
+    }
+    buttonEnt.getComponent<cro::UIInput>().setPrevIndex(ButtonID::CountNext, ButtonID::Begin);
     buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem->addCallback(
-            [&, numberEnt](cro::Entity e, const cro::ButtonEvent& evt) mutable
+            [&, numberEnt, recordEnt](cro::Entity e, const cro::ButtonEvent& evt) mutable
             {
                 if (activated(evt))
                 {
@@ -1312,15 +1448,34 @@ your overall accuracy. Good Luck!
                     numberEnt.getComponent<cro::Text>().setString(str);
                     centreText(numberEnt);
 
+                    leaderboardHoleIndex = m_targetIndex;
+
                     m_summaryScreen.audioEnt.getComponent<cro::AudioEmitter>().play();
+#ifdef USE_GNS
+                    recordEnt.getComponent<cro::Text>().setString(Social::getDrivingLeader(m_targetIndex, m_strokeCountIndex));
+                    centreText(recordEnt);
+#endif
                 }
             });
     countEnt.getComponent<cro::Transform>().addChild(buttonEnt.getComponent<cro::Transform>());
 
-    buttonEnt = createButton("arrow_right", glm::vec2(35.f, 3.f));
+    buttonEnt = createButton("arrow_right", glm::vec2(35.f, 3.f), ButtonID::TargetNext);
+    if (Social::getClubLevel())
+    {
+        buttonEnt.getComponent<cro::UIInput>().setNextIndex(ButtonID::CountPrev, ButtonID::Clubset);
+    }
+    else
+    {
+#ifdef USE_GNS
+        buttonEnt.getComponent<cro::UIInput>().setNextIndex(ButtonID::CountPrev, ButtonID::Leaderboard);
+#else
+        buttonEnt.getComponent<cro::UIInput>().setNextIndex(ButtonID::CountPrev, ButtonID::Begin);
+#endif
+    }
+    buttonEnt.getComponent<cro::UIInput>().setPrevIndex(ButtonID::TargetPrev, ButtonID::Begin);
     buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem->addCallback(
-            [&, numberEnt](cro::Entity e, const cro::ButtonEvent& evt) mutable
+            [&, numberEnt, recordEnt](cro::Entity e, const cro::ButtonEvent& evt) mutable
             {
                 if (activated(evt))
                 {
@@ -1329,10 +1484,107 @@ your overall accuracy. Good Luck!
                     numberEnt.getComponent<cro::Text>().setString(str);
                     centreText(numberEnt);
 
+                    leaderboardHoleIndex = m_targetIndex;
+
                     m_summaryScreen.audioEnt.getComponent<cro::AudioEmitter>().play();
+
+#ifdef USE_GNS
+                    recordEnt.getComponent<cro::Text>().setString(Social::getDrivingLeader(m_targetIndex, m_strokeCountIndex));
+                    centreText(recordEnt);
+#endif
                 }
             });
     countEnt.getComponent<cro::Transform>().addChild(buttonEnt.getComponent<cro::Transform>());
+
+
+    //clubset select
+    auto uBounds = spriteSheet.getSprite("leaderboard_button").getTextureRect();
+    auto sBounds = spriteSheet.getSprite("leaderboard_highlight").getTextureRect();
+    const auto lbuttonSelected = uiSystem->addCallback(
+        [sBounds](cro::Entity e)
+        {
+            e.getComponent<cro::Sprite>().setTextureRect(sBounds);
+            e.getComponent<cro::AudioEmitter>().play();
+        });
+    const auto lbuttonUnselected = uiSystem->addCallback(
+        [uBounds](cro::Entity e)
+        {
+            e.getComponent<cro::Sprite>().setTextureRect(uBounds);
+        });
+
+    if (Social::getClubLevel())
+    {
+        auto labelEnt = m_uiScene.createEntity();
+        labelEnt.addComponent<cro::Transform>().setPosition({ std::floor(sBounds.width / 2.f), 13.f, 0.1f });
+        labelEnt.addComponent<cro::Drawable2D>();
+        labelEnt.addComponent<cro::Text>(smallFont).setFillColour(TextNormalColour);
+        labelEnt.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+        switch (m_sharedData.clubSet)
+        {
+        default:
+        case 0:
+            labelEnt.getComponent<cro::Text>().setString("Clubset: Novice");
+            break;
+        case 1:
+            labelEnt.getComponent<cro::Text>().setString("Clubset: Expert");
+            break;
+        case 2:
+            labelEnt.getComponent<cro::Text>().setString("Clubset: Pro");
+            break;
+        }
+        centreText(labelEnt);
+
+        textEnt4 = m_uiScene.createEntity();
+        textEnt4.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, 108.f, 0.02f });
+        textEnt4.addComponent<cro::Drawable2D>();
+        textEnt4.addComponent<cro::Sprite>() = spriteSheet.getSprite("leaderboard_button");
+
+        auto buttonBounds = textEnt4.getComponent<cro::Sprite>().getTextureBounds();
+        textEnt4.getComponent<cro::Transform>().setOrigin({ std::floor(buttonBounds.width / 2.f), buttonBounds.height });
+        textEnt4.addComponent<cro::AudioEmitter>() = as.getEmitter("switch");
+        textEnt4.addComponent<cro::UIInput>().setGroup(MenuID::Options);
+        textEnt4.getComponent<cro::UIInput>().area = buttonBounds;
+        textEnt4.getComponent<cro::UIInput>().setSelectionIndex(ButtonID::Clubset);
+#ifdef USE_GNS
+        textEnt4.getComponent<cro::UIInput>().setNextIndex(ButtonID::Leaderboard, ButtonID::Leaderboard);
+#else
+        textEnt4.getComponent<cro::UIInput>().setNextIndex(ButtonID::Begin, ButtonID::Begin);
+#endif
+        textEnt4.getComponent<cro::UIInput>().setPrevIndex(ButtonID::CountPrev, ButtonID::CountPrev);
+        textEnt4.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = lbuttonSelected;
+        textEnt4.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = lbuttonUnselected;
+        textEnt4.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+            uiSystem->addCallback(
+                [&, bgEntity, labelEnt](cro::Entity e, const cro::ButtonEvent& evt) mutable
+                {
+                    const auto& [state, _] = bgEntity.getComponent<cro::Callback>().getUserData<PopupAnim>();
+                    if (state == PopupAnim::Hold
+                        && activated(evt))
+                    {
+                        m_sharedData.clubSet = (m_sharedData.clubSet + 1) % (Social::getClubLevel() + 1);
+                        switch (m_sharedData.clubSet)
+                        {
+                        default:
+                        case 0:
+                            labelEnt.getComponent<cro::Text>().setString("Clubset: Novice");
+                            break;
+                        case 1:
+                            labelEnt.getComponent<cro::Text>().setString("Clubset: Expert");
+                            break;
+                        case 2:
+                            labelEnt.getComponent<cro::Text>().setString("Clubset: Pro");
+                            break;
+                        }
+                    }
+                    Club::setClubLevel(m_sharedData.clubSet);
+                    centreText(labelEnt);
+                });
+
+        bgEntity.getComponent<cro::Transform>().addChild(textEnt4.getComponent<cro::Transform>());
+        textEnt4.getComponent<cro::Transform>().addChild(labelEnt.getComponent<cro::Transform>());
+    }
+
+
 
 #ifdef USE_GNS
 
@@ -1345,45 +1597,19 @@ your overall accuracy. Good Luck!
         int direction = 0;
     };
 
+    auto bgBounds = bgEntity.getComponent<cro::Sprite>().getTextureBounds();
+
     //scoreboard window
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 6.f, 13.f, 0.8f });
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 13.f, 0.8f });
     entity.getComponent<cro::Transform>().setScale({ 0.f, 0.f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = leaderSheet.getSprite("board");
     auto b = entity.getComponent<cro::Sprite>().getTextureRect();
     entity.getComponent<cro::Transform>().setOrigin({ b.width / 2.f, b.height / 2.f });
-    entity.getComponent<cro::Transform>().move(entity.getComponent<cro::Transform>().getOrigin());
+    entity.getComponent<cro::Transform>().move({ std::floor(bgBounds.width / 2.f), b.height / 2.f });
     entity.addComponent<cro::Callback>().setUserData<LeaderboardData>();
-    entity.getComponent<cro::Callback>().function =
-        [&](cro::Entity e, float dt)
-    {
-        const float Speed = dt * 4.f;
-        auto& [progress, direction] = e.getComponent<cro::Callback>().getUserData<LeaderboardData>();
-        if (direction == 0)
-        {
-            //grow
-            progress = std::min(1.f, progress + Speed);
-            if (progress == 1)
-            {
-                direction = 1;
-                e.getComponent<cro::Callback>().active = false;
-                m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Leaderboard);
-            }
-        }
-        else
-        {
-            //shrink
-            progress = std::max(0.f, progress - Speed);
-            if (progress == 0)
-            {
-                direction = 0;
-                e.getComponent<cro::Callback>().active = false;
-                m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Options);
-            }
-        }
-        e.getComponent<cro::Transform>().setScale({ cro::Util::Easing::easeOutQuad(progress), 1.f });
-    };
+    //callback is added below so we can captch upDisplay lambda
     bgEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     auto lbEntity = entity;
@@ -1404,7 +1630,7 @@ your overall accuracy. Good Luck!
 
     //close leaderboards
     textEnt4 = m_uiScene.createEntity();
-    textEnt4.addComponent<cro::Transform>().setPosition({ 352.f, 11.f, 0.12f });
+    textEnt4.addComponent<cro::Transform>().setPosition({ 442.f, 11.f, 0.12f });
     textEnt4.addComponent<cro::Drawable2D>();
     textEnt4.addComponent<cro::Text>(largeFont).setCharacterSize(UITextSize);
     textEnt4.getComponent<cro::Text>().setFillColour(LeaderboardTextDark);
@@ -1412,6 +1638,9 @@ your overall accuracy. Good Luck!
     auto textBounds = cro::Text::getLocalBounds(textEnt4);
     textEnt4.addComponent<cro::AudioEmitter>() = as.getEmitter("switch");
     textEnt4.addComponent<cro::UIInput>().setGroup(MenuID::Leaderboard);
+    textEnt4.getComponent<cro::UIInput>().setSelectionIndex(ButtonID::LBClose);
+    textEnt4.getComponent<cro::UIInput>().setNextIndex(ButtonID::LBCountPrev, ButtonID::LBFilterNext);
+    textEnt4.getComponent<cro::UIInput>().setPrevIndex(ButtonID::LBTargetNext, ButtonID::LBFilterNext);
     textEnt4.getComponent<cro::UIInput>().area = textBounds;
     textEnt4.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = textSelected;
     textEnt4.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = textUnselected;
@@ -1428,7 +1657,7 @@ your overall accuracy. Good Luck!
                 }
             });
     lbEntity.getComponent<cro::Transform>().addChild(textEnt4.getComponent<cro::Transform>());
-    
+
     //name column
     textEnt4 = m_uiScene.createEntity();
     textEnt4.addComponent<cro::Transform>().setPosition({ 94.f, 234.f, 0.12f });
@@ -1451,23 +1680,33 @@ your overall accuracy. Good Luck!
 
     //score column
     textEnt4 = m_uiScene.createEntity();
-    textEnt4.addComponent<cro::Transform>().setPosition({ 294.f, 234.f, 0.12f });
+    textEnt4.addComponent<cro::Transform>().setPosition({ 364.f, 234.f, 0.12f });
     textEnt4.addComponent<cro::Drawable2D>();
     textEnt4.addComponent<cro::Text>(largeFont).setCharacterSize(UITextSize);
     textEnt4.getComponent<cro::Text>().setFillColour(LeaderboardTextDark);
     textEnt4.getComponent<cro::Text>().setVerticalSpacing(LeaderboardTextSpacing);
     lbEntity.getComponent<cro::Transform>().addChild(textEnt4.getComponent<cro::Transform>());
     auto scoreColumn = textEnt4;
-    
+
     //id display
     textEnt4 = m_uiScene.createEntity();
-    textEnt4.addComponent<cro::Transform>().setPosition({ b.width / 2.f, 11.f, 0.12f });
+    textEnt4.addComponent<cro::Transform>().setPosition({ std::floor(b.width / 2.f) - 98.f, 11.f, 0.12f });
     textEnt4.addComponent<cro::Drawable2D>();
     textEnt4.addComponent<cro::Text>(largeFont).setCharacterSize(UITextSize);
     textEnt4.getComponent<cro::Text>().setFillColour(LeaderboardTextDark);
     textEnt4.getComponent<cro::Text>().setString("Best of 5");
     lbEntity.getComponent<cro::Transform>().addChild(textEnt4.getComponent<cro::Transform>());
     auto scoreType = textEnt4;
+
+    //hole index
+    textEnt4 = m_uiScene.createEntity();
+    textEnt4.addComponent<cro::Transform>().setPosition({ std::floor(b.width / 2.f) + 98.f, 11.f, 0.12f });
+    textEnt4.addComponent<cro::Drawable2D>();
+    textEnt4.addComponent<cro::Text>(largeFont).setCharacterSize(UITextSize);
+    textEnt4.getComponent<cro::Text>().setFillColour(LeaderboardTextDark);
+    textEnt4.getComponent<cro::Text>().setString("Random Target");
+    lbEntity.getComponent<cro::Transform>().addChild(textEnt4.getComponent<cro::Transform>());
+    auto holeIndex = textEnt4;
 
     //rank display
     textEnt4 = m_uiScene.createEntity();
@@ -1480,59 +1719,79 @@ your overall accuracy. Good Luck!
     lbEntity.getComponent<cro::Transform>().addChild(textEnt4.getComponent<cro::Transform>());
     auto rankType = textEnt4;
 
-    auto updateDisplay = [nameColumn, scoreColumn, rankColumn, scoreType, rankType]() mutable
+    auto updateDisplay = [nameColumn, scoreColumn, rankColumn, scoreType, holeIndex, rankType]() mutable
     {
-        const std::array ScoreStrings =
-        {
-            "Best Of 5",
-            "Best Of 9",
-            "Best Of 18",
-        };
-        const std::array RankStrings =
-        {
-            "Global",
-            "Nearest",
-            "Friends"
-        };
-        scoreType.getComponent<cro::Text>().setString(ScoreStrings[leaderboardID]);
+        scoreType.getComponent<cro::Text>().setString(ScoreStrings[leaderboardTryCount]);
+        holeIndex.getComponent<cro::Text>().setString(HoleStrings[leaderboardHoleIndex]);
         rankType.getComponent<cro::Text>().setString(RankStrings[leaderboardFilter]);
         centreText(scoreType);
+        centreText(holeIndex);
         centreText(rankType);
 
-        auto scores = Social::getLeaderboardResults(leaderboardID, leaderboardFilter);
+        auto scores = Social::getDrivingRangeResults(leaderboardHoleIndex, leaderboardTryCount, leaderboardFilter);
         rankColumn.getComponent<cro::Text>().setString(scores[0]);
         nameColumn.getComponent<cro::Text>().setString(scores[1]);
         scoreColumn.getComponent<cro::Text>().setString(scores[2]);
     };
-    
+
+
+    lbEntity.getComponent<cro::Callback>().function =
+        [&, updateDisplay](cro::Entity e, float dt) mutable
+    {
+        const float Speed = dt * 4.f;
+        auto& [progress, direction] = e.getComponent<cro::Callback>().getUserData<LeaderboardData>();
+        if (direction == 0)
+        {
+            //grow
+            progress = std::min(1.f, progress + Speed);
+            if (progress == 1)
+            {
+                direction = 1;
+                e.getComponent<cro::Callback>().active = false;
+                m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Leaderboard);
+
+                updateDisplay();
+            }
+        }
+        else
+        {
+            //shrink
+            progress = std::max(0.f, progress - Speed);
+            if (progress == 0)
+            {
+                direction = 0;
+                e.getComponent<cro::Callback>().active = false;
+                m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Options);
+            }
+        }
+        e.getComponent<cro::Transform>().setScale({ cro::Util::Easing::easeOutQuad(progress), 1.f });
+    };
+
+
 
     //browse leaderboards
     textEnt4 = m_uiScene.createEntity();
-    textEnt4.addComponent<cro::Transform>().setPosition({ (bounds.width / 5.f) * 4.f, 67.f, 0.02f });
+    textEnt4.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, 88.f, 0.02f });
     textEnt4.addComponent<cro::Drawable2D>();
     textEnt4.addComponent<cro::Sprite>() = spriteSheet.getSprite("leaderboard_button");
 
-    auto uBounds = spriteSheet.getSprite("leaderboard_button").getTextureRect();
-    auto sBounds = spriteSheet.getSprite("leaderboard_highlight").getTextureRect();
     auto buttonBounds = textEnt4.getComponent<cro::Sprite>().getTextureBounds();
     textEnt4.getComponent<cro::Transform>().setOrigin({ std::floor(buttonBounds.width / 2.f), buttonBounds.height });
     textEnt4.addComponent<cro::AudioEmitter>() = as.getEmitter("switch");
     textEnt4.addComponent<cro::UIInput>().setGroup(MenuID::Options);
+    textEnt4.getComponent<cro::UIInput>().setSelectionIndex(ButtonID::Leaderboard);
+    textEnt4.getComponent<cro::UIInput>().setNextIndex(ButtonID::Begin, ButtonID::Begin);
+    if (Social::getClubLevel())
+    {
+        textEnt4.getComponent<cro::UIInput>().setPrevIndex(ButtonID::Clubset, ButtonID::Clubset);
+    }
+    else
+    {
+        textEnt4.getComponent<cro::UIInput>().setPrevIndex(ButtonID::CountPrev, ButtonID::CountPrev);
+    }
     textEnt4.getComponent<cro::UIInput>().area = buttonBounds;
-    textEnt4.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] =
-        uiSystem->addCallback(
-            [sBounds](cro::Entity e)
-            {
-                e.getComponent<cro::Sprite>().setTextureRect(sBounds);
-                e.getComponent<cro::AudioEmitter>().play();
-            });
-        
-    textEnt4.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] =
-        uiSystem->addCallback(
-            [uBounds](cro::Entity e)
-            {
-                e.getComponent<cro::Sprite>().setTextureRect(uBounds);
-            });
+    textEnt4.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = lbuttonSelected;
+    textEnt4.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = lbuttonUnselected;
     textEnt4.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem->addCallback(
             [&, uiSystem, bgEntity, lbEntity, updateDisplay](cro::Entity e, const cro::ButtonEvent& evt) mutable
@@ -1551,6 +1810,14 @@ your overall accuracy. Good Luck!
 
     bgEntity.getComponent<cro::Transform>().addChild(textEnt4.getComponent<cro::Transform>());
 
+    auto labelEnt = m_uiScene.createEntity();
+    labelEnt.addComponent<cro::Transform>().setPosition({ std::floor(sBounds.width / 2.f), 13.f, 0.1f });
+    labelEnt.addComponent<cro::Drawable2D>();
+    labelEnt.addComponent<cro::Text>(smallFont).setString("View Leaderboards");
+    labelEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    labelEnt.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+    centreText(labelEnt);
+    textEnt4.getComponent<cro::Transform>().addChild(labelEnt.getComponent<cro::Transform>());
 
     //arrow buttons
     auto buttonSelected = uiSystem->addCallback(
@@ -1566,10 +1833,10 @@ your overall accuracy. Good Luck!
         });
 
     auto createArrow =
-        [&](glm::vec2 position, const std::string& spriteName)
+        [&](glm::vec2 position, const std::string& spriteName, std::int32_t selectionIndex)
     {
         auto e = m_uiScene.createEntity();
-        e.addComponent<cro::Transform>().setPosition(glm::vec3(position , 0.1f));
+        e.addComponent<cro::Transform>().setPosition(glm::vec3(position, 0.1f));
         e.addComponent<cro::AudioEmitter>() = as.getEmitter("switch");
         e.addComponent<cro::Drawable2D>();
         e.addComponent<cro::Sprite>() = leaderSheet.getSprite(spriteName);
@@ -1577,6 +1844,7 @@ your overall accuracy. Good Luck!
         auto b = e.getComponent<cro::Sprite>().getTextureBounds();
         e.addComponent<cro::UIInput>().area = b;
         e.getComponent<cro::UIInput>().setGroup(MenuID::Leaderboard);
+        e.getComponent<cro::UIInput>().setSelectionIndex(selectionIndex);
         e.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = buttonSelected;
         e.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = buttonUnselected;
 
@@ -1585,7 +1853,9 @@ your overall accuracy. Good Luck!
         return e;
     };
     //filter left
-    entity = createArrow(glm::vec2(140.f, 250.f), "arrow_left");
+    entity = createArrow(glm::vec2(193.f, 250.f), "arrow_left", ButtonID::LBFilterPrev);
+    entity.getComponent<cro::UIInput>().setNextIndex(ButtonID::LBFilterNext, ButtonID::LBCountNext);
+    entity.getComponent<cro::UIInput>().setPrevIndex(ButtonID::LBFilterNext, ButtonID::LBCountNext);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem->addCallback(
             [&, updateDisplay](cro::Entity e, const cro::ButtonEvent& evt) mutable
@@ -1599,7 +1869,9 @@ your overall accuracy. Good Luck!
             });
 
     //filter right
-    entity = createArrow(glm::vec2(232.f, 250.f), "arrow_right");
+    entity = createArrow(glm::vec2(285.f, 250.f), "arrow_right", ButtonID::LBFilterNext);
+    entity.getComponent<cro::UIInput>().setNextIndex(ButtonID::LBFilterPrev, ButtonID::LBTargetPrev);
+    entity.getComponent<cro::UIInput>().setPrevIndex(ButtonID::LBFilterPrev, ButtonID::LBTargetPrev);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem->addCallback(
             [&, updateDisplay](cro::Entity e, const cro::ButtonEvent& evt) mutable
@@ -1613,28 +1885,64 @@ your overall accuracy. Good Luck!
             });
 
     //score left
-    entity = createArrow(glm::vec2(140.f, -2.f), "arrow_left");
+    entity = createArrow(glm::vec2(95.f, -2.f), "arrow_left", ButtonID::LBCountPrev);
+    entity.getComponent<cro::UIInput>().setNextIndex(ButtonID::LBCountNext, ButtonID::LBFilterPrev);
+    entity.getComponent<cro::UIInput>().setPrevIndex(ButtonID::LBClose, ButtonID::LBFilterPrev);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem->addCallback(
             [&, updateDisplay](cro::Entity e, const cro::ButtonEvent& evt) mutable
             {
                 if (activated(evt))
                 {
-                    leaderboardID = (leaderboardID + (MaxLeaderboardFilter - 1)) % MaxLeaderboardFilter;
+                    leaderboardTryCount = (leaderboardTryCount + (MaxLeaderboardFilter - 1)) % MaxLeaderboardFilter;
                     m_summaryScreen.audioEnt.getComponent<cro::AudioEmitter>().play();
                     updateDisplay();
                 }
             });
 
     //score right
-    entity =createArrow(glm::vec2(232.f, -2.f), "arrow_right");
+    entity = createArrow(glm::vec2(187.f, -2.f), "arrow_right", ButtonID::LBCountNext);
+    entity.getComponent<cro::UIInput>().setNextIndex(ButtonID::LBTargetPrev, ButtonID::LBFilterPrev);
+    entity.getComponent<cro::UIInput>().setPrevIndex(ButtonID::LBCountPrev, ButtonID::LBFilterPrev);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem->addCallback(
             [&, updateDisplay](cro::Entity e, const cro::ButtonEvent& evt) mutable
             {
                 if (activated(evt))
                 {
-                    leaderboardID = (leaderboardID + 1) % MaxLeaderboardFilter;
+                    leaderboardTryCount = (leaderboardTryCount + 1) % MaxLeaderboardFilter;
+                    m_summaryScreen.audioEnt.getComponent<cro::AudioEmitter>().play();
+                    updateDisplay();
+                }
+            });
+
+    //index left
+    entity = createArrow(glm::vec2(291.f, -2.f), "arrow_left", ButtonID::LBTargetPrev);
+    entity.getComponent<cro::UIInput>().setNextIndex(ButtonID::LBTargetNext, ButtonID::LBFilterNext);
+    entity.getComponent<cro::UIInput>().setPrevIndex(ButtonID::LBCountNext, ButtonID::LBFilterNext);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+        uiSystem->addCallback(
+            [&, updateDisplay](cro::Entity e, const cro::ButtonEvent& evt) mutable
+            {
+                if (activated(evt))
+                {
+                    leaderboardHoleIndex = (leaderboardHoleIndex + 13) % 14;
+                    m_summaryScreen.audioEnt.getComponent<cro::AudioEmitter>().play();
+                    updateDisplay();
+                }
+            });
+
+    //index right
+    entity = createArrow(glm::vec2(383.f, -2.f), "arrow_right", ButtonID::LBTargetNext);
+    entity.getComponent<cro::UIInput>().setNextIndex(ButtonID::LBClose, ButtonID::LBFilterNext);
+    entity.getComponent<cro::UIInput>().setPrevIndex(ButtonID::LBTargetPrev, ButtonID::LBFilterNext);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
+        uiSystem->addCallback(
+            [&, updateDisplay](cro::Entity e, const cro::ButtonEvent& evt) mutable
+            {
+                if (activated(evt))
+                {
+                    leaderboardHoleIndex = (leaderboardHoleIndex + 1) % 14;
                     m_summaryScreen.audioEnt.getComponent<cro::AudioEmitter>().play();
                     updateDisplay();
                 }
@@ -1646,11 +1954,25 @@ your overall accuracy. Good Luck!
     auto selectedBounds = spriteSheet.getSprite("start_highlight").getTextureRect();
     auto unselectedBounds = spriteSheet.getSprite("start_button").getTextureRect();
     auto startButton = m_uiScene.createEntity();
-    startButton.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, 36.f, 0.2f });
+    startButton.addComponent<cro::Transform>().setPosition({ std::floor(bounds.width / 2.f), 58.f, 0.2f });
     startButton.addComponent<cro::Drawable2D>();
     startButton.addComponent<cro::Sprite>() = spriteSheet.getSprite("start_button");
     startButton.addComponent<cro::AudioEmitter>() = as.getEmitter("switch");
     startButton.addComponent<cro::UIInput>().setGroup(MenuID::Options);
+    startButton.getComponent<cro::UIInput>().setSelectionIndex(ButtonID::Begin);
+    startButton.getComponent<cro::UIInput>().setNextIndex(ButtonID::CountPrev, ButtonID::CountPrev);
+#ifdef USE_GNS
+    startButton.getComponent<cro::UIInput>().setPrevIndex(ButtonID::Leaderboard, ButtonID::Leaderboard);
+#else
+    if (Social::getClubLevel())
+    {
+        startButton.getComponent<cro::UIInput>().setNextIndex(ButtonID::Clubset, ButtonID::Clubset);
+    }
+    else
+    {
+        startButton.getComponent<cro::UIInput>().setNextIndex(ButtonID::CountPrev, ButtonID::CountPrev);
+    }
+#endif
     startButton.getComponent<cro::UIInput>().area = startButton.getComponent<cro::Sprite>().getTextureBounds();
     startButton.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] =
         uiSystem->addCallback(
@@ -1690,6 +2012,10 @@ your overall accuracy. Good Luck!
                     m_summaryScreen.fadeEnt.getComponent<cro::Callback>().setUserData<float>(0.f);
                     m_summaryScreen.fadeEnt.getComponent<cro::Callback>().active = true;
 
+                    //set the round title
+                    m_summaryScreen.roundName.getComponent<cro::Text>().setString(ScoreStrings[m_strokeCountIndex] + ", " + HoleStrings[m_targetIndex]);
+                    centreText(m_summaryScreen.roundName);
+
                     m_mapTexture.clear(cro::Colour::Transparent);
                     m_mapTexture.display();
 
@@ -1699,6 +2025,16 @@ your overall accuracy. Good Luck!
             });
     centreSprite(startButton);
     bgEntity.getComponent<cro::Transform>().addChild(startButton.getComponent<cro::Transform>());
+
+
+
+    spriteSheet.loadFromFile("assets/golf/sprites/large_flag.spt", m_resources.textures);
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 380.f, 48.f, 0.01f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("flag");
+    entity.addComponent<cro::SpriteAnimation>().play(0);
+    bgEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
     //wang this in here so we can debug easier
@@ -1762,7 +2098,7 @@ void DrivingState::createSummary()
     //background
     cro::SpriteSheet spriteSheet;
     spriteSheet.loadFromFile("assets/golf/sprites/scoreboard.spt", m_resources.textures);
-    auto bgSprite = spriteSheet.getSprite("border");
+    auto bgSprite = cro::Sprite(m_resources.textures.get("assets/golf/images/driving_range_menu.png"));
 
     auto bounds = bgSprite.getTextureBounds();
     auto size = glm::vec2(GolfGame::getActiveTarget()->getSize());
@@ -1791,10 +2127,20 @@ void DrivingState::createSummary()
     centreText(titleText);
     bgEntity.getComponent<cro::Transform>().addChild(titleText.getComponent<cro::Transform>());
 
+    auto rangeText = m_uiScene.createEntity();
+    rangeText.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, 26.f, 0.02f });
+    rangeText.addComponent<cro::Drawable2D>();
+    rangeText.addComponent<cro::Text>(largeFont).setCharacterSize(UITextSize);
+    rangeText.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    rangeText.getComponent<cro::Text>().setString("Game Over Man");
+    centreText(rangeText);
+    bgEntity.getComponent<cro::Transform>().addChild(rangeText.getComponent<cro::Transform>());
+    m_summaryScreen.roundName = rangeText;
+
 
     //info text
     auto infoEnt = m_uiScene.createEntity();
-    infoEnt.addComponent<cro::Transform>().setPosition({ SummaryOffset, SummaryHeight, 0.02f });
+    infoEnt.addComponent<cro::Transform>().setPosition({ /*SummaryOffset*/std::floor(bounds.width / 3.f) - 25.f, SummaryHeight, 0.02f});
     infoEnt.addComponent<cro::Drawable2D>();
     infoEnt.addComponent<cro::Text>(smallFont).setString("Sample Text\n1\n1\n1\n1\n1\n1\n1\n1");
     infoEnt.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
@@ -1803,7 +2149,7 @@ void DrivingState::createSummary()
     m_summaryScreen.text01 = infoEnt;
 
     infoEnt = m_uiScene.createEntity();
-    infoEnt.addComponent<cro::Transform>().setPosition({ (bounds.width / 2.f) + SummaryOffset, SummaryHeight, 0.02f });
+    infoEnt.addComponent<cro::Transform>().setPosition({ (bounds.width / 2.f) + 18.f/* SummaryOffset*/, SummaryHeight, 0.02f });
     infoEnt.addComponent<cro::Drawable2D>();
     infoEnt.addComponent<cro::Text>(smallFont).setString("Sample Text\n1\n1\n1\n1\n1\n1\n1\n1");
     infoEnt.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
@@ -1820,6 +2166,7 @@ void DrivingState::createSummary()
     centreText(summaryEnt);
     bgEntity.getComponent<cro::Transform>().addChild(summaryEnt.getComponent<cro::Transform>());
     m_summaryScreen.summary = summaryEnt;
+
 
 
     cro::AudioScape as;
@@ -1850,7 +2197,7 @@ void DrivingState::createSummary()
 
     //high score text
     auto textEnt4 = m_uiScene.createEntity();
-    textEnt4.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, 32.f, 0.02f });
+    textEnt4.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, 134.f, 0.02f });
     textEnt4.addComponent<cro::Drawable2D>();
     textEnt4.addComponent<cro::Text>(smallFont).setCharacterSize(InfoTextSize);
     textEnt4.getComponent<cro::Text>().setFillColour(TextNormalColour);
@@ -1991,6 +2338,16 @@ void DrivingState::createSummary()
             });
     centreSprite(entity);
     bgEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+    spriteSheet.loadFromFile("assets/golf/sprites/large_flag.spt", m_resources.textures);
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 380.f, 48.f, 0.2f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("flag");
+    entity.addComponent<cro::SpriteAnimation>().play(0);
+    bgEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
 
     m_summaryScreen.root = bgEntity;
 }
@@ -2263,16 +2620,21 @@ void DrivingState::showMessage(float range)
                     float totalScore = 0.f;
 
                     std::string summary;
-                    for (auto i = 0; i < std::min(9, scoreCount); ++i)
+                    auto j = 0;
+                    for (j = 0; j < std::min(9, scoreCount); ++j)
                     {
-                        float score = director->getScore(i);
+                        float score = director->getScore(j);
 
                         std::stringstream s;
                         s.precision(3);
-                        s << "Turn " << i + 1 << ":      " << score << "%\n";
+                        s << "Turn " << j + 1 << ":      " << score << "%\n";
                         summary += s.str();
 
                         totalScore += score;
+                    }
+                    for (; j < 9; ++j)
+                    {
+                        summary += "Turn " + std::to_string(j) + ":       N/A\n";
                     }
                     m_summaryScreen.text01.getComponent<cro::Text>().setString(summary);
                     summary.clear();
@@ -2291,24 +2653,28 @@ void DrivingState::showMessage(float range)
 
                             totalScore += score;
                         }
-                        m_summaryScreen.text02.getComponent<cro::Text>().setString(summary);
+                        /*m_summaryScreen.text02.getComponent<cro::Text>().setString(summary);
 
                         auto& tx = m_summaryScreen.text01.getComponent<cro::Transform>();
                         auto pos = tx.getPosition();
                         pos.x = SummaryOffset;
                         tx.setPosition(pos);
-                        tx.setOrigin({ 0.f, 0.f });
+                        tx.setOrigin({ 0.f, 0.f });*/
                     }
                     else
                     {
-                        auto& tx = m_summaryScreen.text01.getComponent<cro::Transform>();
-                        auto pos = tx.getPosition();
-                        pos.x = 200.f; //TODO this should be half background width
-                        tx.setPosition(pos);
-                        centreText(m_summaryScreen.text01);
+                        for (auto i = 10; i < 19; ++i)
+                        {
+                            summary += "Turn " + std::to_string(i) + ":       N/A\n";
+                        }
 
-                        m_summaryScreen.text02.getComponent<cro::Text>().setString(" ");
+                        //auto& tx = m_summaryScreen.text01.getComponent<cro::Transform>();
+                        //auto pos = tx.getPosition();
+                        //pos.x = 200.f; //TODO this should be half background width
+                        //tx.setPosition(pos);
+                        //centreText(m_summaryScreen.text01);
                     }
+                    m_summaryScreen.text02.getComponent<cro::Text>().setString(summary);
 
                     totalScore /= scoreCount;
                     std::stringstream s;
@@ -2362,6 +2728,9 @@ void DrivingState::showMessage(float range)
                         m_summaryScreen.bestMessage.getComponent<cro::Text>().setFillColour(c);
                     }
 
+#ifdef USE_GNS
+                    Social::insertDrivingScore(m_targetIndex, static_cast<std::int32_t>(m_strokeCountIndex), totalScore);
+#endif
 
                     //reset the minimap
                     auto oldCam = m_gameScene.setActiveCamera(m_mapCam);
@@ -2401,8 +2770,10 @@ void DrivingState::floatingMessage(const std::string& msg)
 {
     auto& font = m_sharedData.sharedResources->fonts.get(FontID::Info);
 
+    const float offsetScale = Social::isSteamdeck() ? 2.f : 1.f;
+
     glm::vec2 size = glm::vec2(GolfGame::getActiveTarget()->getSize());
-    glm::vec3 position((size.x / 2.f), (UIBarHeight + 14.f) * m_viewScale.y, 0.2f);
+    glm::vec3 position((size.x / 2.f), (UIBarHeight + (14.f * offsetScale)) * m_viewScale.y, 0.2f);
 
     auto entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(position);

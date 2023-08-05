@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2021
+Matt Marchant 2017 - 2023
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -31,11 +31,13 @@ source distribution.
 #include "ALCheck.hpp"
 #include "WavLoader.hpp"
 #include "VorbisLoader.hpp"
+#include "Mp3Loader.hpp"
 
 #include <crogine/detail/Assert.hpp>
 #include <crogine/util/String.hpp>
 #include <crogine/core/App.hpp>
 #include <crogine/core/FileSystem.hpp>
+#include <crogine/gui/Gui.hpp>
 
 //oh apple you so quirky
 #ifdef __APPLE__
@@ -72,7 +74,8 @@ namespace
 OpenALImpl::OpenALImpl()
     : m_device          (nullptr),
     m_context           (nullptr),
-    m_nextFreeStream    (0)
+    m_nextFreeStream    (0),
+    m_nextFreeSource    (0)
 {
     for (auto i = 0u; i < m_streamIDs.size(); ++i)
     {
@@ -106,6 +109,12 @@ bool OpenALImpl::init()
 
 void OpenALImpl::shutdown()
 {
+    for (auto i = 0u; i < m_nextFreeSource; ++i)
+    {
+        deleteAudioSource(m_sourcePool[i]);
+    }
+    alCheck(alDeleteSources(static_cast<ALsizei>(m_sourcePool.size()), m_sourcePool.data()));
+
     //make sure to close any open streams
     for (auto i = 0u; i < m_streams.size(); ++i)
     {
@@ -168,6 +177,14 @@ std::int32_t OpenALImpl::requestNewBuffer(const std::string& filePath)
     else if (ext == ".ogg")
     {
         loader = std::make_unique<VorbisLoader>();
+        if (loader->open(path))
+        {
+            data = loader->getData();
+        }
+    }
+    else if (ext == ".mp3")
+    {
+        loader = std::make_unique<Mp3Loader>();
         if (loader->open(path))
         {
             data = loader->getData();
@@ -243,6 +260,16 @@ std::int32_t OpenALImpl::requestNewStream(const std::string& path)
     else if (ext == ".ogg")
     {
         stream.audioFile = std::make_unique<VorbisLoader>();
+        if (!stream.audioFile->open(filePath))
+        {
+            stream.audioFile.reset();
+            Logger::log("Failed to open " + path, Logger::Type::Error);
+            return -1;
+        }
+    }
+    else if (ext == ".mp3")
+    {
+        stream.audioFile = std::make_unique<Mp3Loader>();
         if (!stream.audioFile->open(filePath))
         {
             stream.audioFile.reset();
@@ -327,8 +354,17 @@ std::int32_t OpenALImpl::requestAudioSource(std::int32_t buffer, bool streaming)
 {
     CRO_ASSERT(buffer > -1, "Invalid audio buffer");
 
-    ALuint source;
-    alCheck(alGenSources(1, &source));
+    ALuint source = 0;
+    
+    if (!streaming)
+    {
+        source = getSource();
+    }
+    else
+    {
+        alCheck(alGenSources(1, &source));
+    }
+
     if (source > 0)
     {
         if (!streaming)
@@ -346,6 +382,7 @@ std::int32_t OpenALImpl::requestAudioSource(std::int32_t buffer, bool streaming)
             alCheck(alSourceQueueBuffers(source, static_cast<ALsizei>(stream.buffers.size()), stream.buffers.data()));
             stream.accessed = false;
         }
+
         return source;
     }
     return -1;
@@ -414,11 +451,12 @@ void OpenALImpl::deleteAudioSource(std::int32_t source)
     {
         std::int32_t idx = static_cast<std::int32_t>(std::distance(std::begin(m_streams), result));
         deleteStream(idx);
+        alCheck(alDeleteSources(1, &src));
     }
-
-    alCheck(alDeleteSources(1, &src));
-
-    //LOG("Deleted audio source", Logger::Type::Info);
+    else
+    {
+        freeSource(src);
+    }
 }
 
 void OpenALImpl::playSource(std::int32_t source, bool looped)
@@ -545,6 +583,59 @@ void OpenALImpl::setDopplerFactor(float factor)
 void OpenALImpl::setSpeedOfSound(float speed)
 {
     alCheck(alSpeedOfSound(speed));
+}
+
+void OpenALImpl::printDebug()
+{
+    ImGui::Text("Source Cache Size %u", m_sourcePool.size());
+    ImGui::Text("Sources In Use %u", m_nextFreeSource);
+}
+
+//private
+ALuint OpenALImpl::getSource()
+{
+    if (m_nextFreeSource == 256)
+    {
+        return 0;
+    }
+
+    if (m_nextFreeSource == m_sourcePool.size())
+    {
+        //does the actual allocation
+        resizeSourcePool();
+    }
+
+    return m_sourcePool[m_nextFreeSource++];
+}
+
+void OpenALImpl::freeSource(ALuint source)
+{
+    //need to reset params incase we get recycled
+    alCheck(alSourcei(source, AL_LOOPING, AL_FALSE));
+
+
+    for (auto i = 0u; i < m_nextFreeSource; ++i)
+    {
+        if (m_sourcePool[i] == source)
+        {
+            m_nextFreeSource--;
+            m_sourcePool[i] = m_sourcePool[m_nextFreeSource];
+            m_sourcePool[m_nextFreeSource] = source;
+            break;
+        }
+    }
+}
+
+void OpenALImpl::resizeSourcePool()
+{
+    auto startIndex = m_sourcePool.size();
+
+    if (startIndex < 256u) //OpenAL-soft limit
+    {
+        m_sourcePool.resize(m_sourcePool.size() + SourceResizeCount);
+
+        alCheck(alGenSources(SourceResizeCount, &m_sourcePool[startIndex]));
+    }
 }
 
 //stream thread function

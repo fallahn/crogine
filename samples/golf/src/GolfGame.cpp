@@ -46,6 +46,9 @@ source distribution.
 #include "golf/CreditsState.hpp"
 #include "golf/UnlockState.hpp"
 #include "golf/ProfileState.hpp"
+#include "golf/LeaderboardState.hpp"
+#include "golf/StatsState.hpp"
+#include "golf/MapOverviewState.hpp"
 #include "golf/EventOverlay.hpp"
 #include "golf/MenuConsts.hpp"
 #include "golf/GameConsts.hpp"
@@ -60,6 +63,8 @@ source distribution.
 #include "icon.hpp"
 #include "Achievements.hpp"
 #include "golf/Clubs.hpp"
+
+#include "ImTheme.hpp"
 
 #include <AchievementIDs.hpp>
 #include <AchievementStrings.hpp>
@@ -174,6 +179,9 @@ GolfGame::GolfGame()
     m_stateStack.registerState<BilliardsState>(StateID::Billiards, m_sharedData);
     m_stateStack.registerState<TrophyState>(StateID::Trophy, m_sharedData);
     m_stateStack.registerState<PlaylistState>(StateID::Playlist, m_sharedData);
+    m_stateStack.registerState<LeaderboardState>(StateID::Leaderboard, m_sharedData);
+    m_stateStack.registerState<StatsState>(StateID::Stats, m_sharedData);
+    m_stateStack.registerState<MapOverviewState>(StateID::MapOverview, m_sharedData);
     m_stateStack.registerState<BushState>(StateID::Bush, m_sharedData);
     m_stateStack.registerState<MessageOverlayState>(StateID::MessageOverlay, m_sharedData);
     m_stateStack.registerState<EventOverlayState>(StateID::EventOverlay);
@@ -332,6 +340,10 @@ void GolfGame::handleMessage(const cro::Message& msg)
                 m_stateStack.pushState(StateID::EventOverlay);
             }
         }
+        else if (data.type == Social::SocialEvent::MonthlyProgress)
+        {
+            m_progressIcon->show(static_cast<std::int32_t>(data.playerID), data.level, data.reason);
+        }
     }
 
     m_stateStack.handleMessage(msg);
@@ -352,6 +364,7 @@ void GolfGame::simulate(float dt)
     m_stateStack.simulate(dt);
 
     Achievements::update();
+    m_progressIcon->update(dt);
 }
 
 void GolfGame::render()
@@ -372,6 +385,7 @@ void GolfGame::render()
 #ifndef USE_GNS
     m_achievements->drawOverlay();
 #endif
+    m_progressIcon->draw();
 }
 
 bool GolfGame::initialise()
@@ -549,15 +563,6 @@ bool GolfGame::initialise()
             {
                 cro::Util::String::parseURL(Social::WebURL);
             }
-            ImGui::NewLine();
-            ImGui::NewLine();
-            ImGui::NewLine();
-            ImGui::NewLine();
-            ImGui::NewLine();
-            ImGui::NewLine();
-            ImGui::NewLine();
-            ImGui::NewLine();
-            ImGui::Text("In memory of Liesbeth Penning");
         });
 
     registerCommand("log_benchmark", 
@@ -587,6 +592,13 @@ bool GolfGame::initialise()
             }
         });
 
+    registerCommand("show_userdir",
+        [](const std::string&)
+        {
+            //this assumes that the directory was successfully creates already...
+            cro::Util::String::parseURL(Social::getBaseContentPath());
+        });
+
     getWindow().setLoadingScreen<LoadingScreen>(m_sharedData);
     getWindow().setTitle("Super Video Golf - " + StringVer);
     getWindow().setIcon(icon);
@@ -598,6 +610,7 @@ bool GolfGame::initialise()
     cro::AudioMixer::setLabel("Announcer", MixerChannel::Voice);
     cro::AudioMixer::setLabel("Vehicles", MixerChannel::Vehicles);
     cro::AudioMixer::setLabel("Environment", MixerChannel::Environment);
+    cro::AudioMixer::setLabel("User Music", MixerChannel::UserMusic);
 
     m_sharedData.clientConnection.netClient.create(ConstVal::MaxClients);
     m_sharedData.sharedResources = std::make_unique<cro::ResourceCollection>();
@@ -661,6 +674,9 @@ bool GolfGame::initialise()
         md.loadFromFile(str);
     }
 
+    //icon for challenge progress
+    m_progressIcon = std::make_unique<ProgressIcon>(m_sharedData.sharedResources->fonts.get(FontID::Label));
+
     //set up the post process
     auto windowSize = cro::App::getWindow().getSize();
     m_postBuffer = std::make_unique<cro::RenderTexture>();
@@ -722,6 +738,8 @@ bool GolfGame::initialise()
 #else
     m_stateStack.pushState(StateID::SplashScreen);
 #endif
+
+    applyImGuiStyle();
 
     return true;
 }
@@ -885,6 +903,14 @@ void GolfGame::loadPreferences()
                 {
                     m_sharedData.trailBeaconColour = prop.getValue<bool>();
                 }
+                else if (name == "fast_cpu")
+                {
+                    m_sharedData.fastCPU = prop.getValue<bool>();
+                }
+                else if (name == "clubset")
+                {
+                    m_sharedData.clubSet = std::clamp(prop.getValue<std::int32_t>(), 0, 2);
+                }
             }
         }
     }
@@ -934,6 +960,13 @@ void GolfGame::loadPreferences()
     }
 
     m_sharedData.inputBinding.clubset = ClubID::DefaultSet;
+
+    if (!cro::FileSystem::directoryExists(Social::getBaseContentPath() + u8"music"))
+    {
+        cro::FileSystem::createDirectory(Social::getBaseContentPath() + u8"music");
+    }
+
+    m_sharedData.m3uPlaylist = std::make_unique<M3UPlaylist>(Social::getBaseContentPath() + "music/");
 }
 
 void GolfGame::savePreferences()
@@ -970,6 +1003,8 @@ void GolfGame::savePreferences()
     cfg.addProperty("use_vibration").setValue(m_sharedData.enableRumble == 0 ? false : true);
     cfg.addProperty("use_trail").setValue(m_sharedData.showBallTrail);
     cfg.addProperty("use_beacon_colour").setValue(m_sharedData.trailBeaconColour);
+    cfg.addProperty("fast_cpu").setValue(m_sharedData.fastCPU);
+    cfg.addProperty("clubset").setValue(m_sharedData.clubSet);
     cfg.save(path);
 
 

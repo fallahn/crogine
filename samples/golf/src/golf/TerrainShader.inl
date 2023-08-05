@@ -73,16 +73,11 @@ static const std::string TerrainVertexShader = R"(
     //VARYING_OUT float v_viewDepth;
 #endif
 
-    vec3 lerp(vec3 a, vec3 b, float t)
-    {
-        return a + ((b - a) * t);
-    }
-
     void main()
     {
         v_cameraWorldPosition = u_cameraWorldPosition;
 
-        vec4 position = u_worldMatrix * vec4(lerp(a_position.xyz, a_tangent, u_morphTime), 1.0);
+        vec4 position = u_worldMatrix * vec4(mix(a_position.xyz, a_tangent, u_morphTime), 1.0);
         //gl_Position = u_viewProjectionMatrix * position;
 
         vec4 vertPos = u_viewProjectionMatrix * position;
@@ -105,7 +100,7 @@ static const std::string TerrainVertexShader = R"(
     #endif
 
         //this should be a slerp really but lerp is good enough for low spec shenanigans
-        v_normal = u_normalMatrix * lerp(a_normal, a_bitangent, u_morphTime);
+        v_normal = u_normalMatrix * mix(a_normal, a_bitangent, u_morphTime);
         v_colour = a_colour;
         v_worldPosition = position.xyz;
         v_texCoord = vec2(position.x / 100.0, position.z / -62.5);

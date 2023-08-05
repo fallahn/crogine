@@ -121,6 +121,12 @@ namespace cro
         */
         static bool hasAudioRenderer();
 
+        /*!
+        \brief Prints the debug output of the active audio renderer, if it has
+        been implemented. Call this between the begin/end of your own ImGui window
+        */
+        static void printDebug();
+
 
         static constexpr std::size_t MaxChannels = 16;
 

@@ -62,7 +62,7 @@ namespace cro
         /*!
         \brief Attempts to load a file from the given path.
         Currently supported formats are PCM wav files (mono or stereo)
-        or *.ogg vorbis files (mono or stereo).
+        or *.ogg vorbis files (mono or stereo) or *.mp3 files (mono or stereo)
         \returns true on success, else false
         */
         bool loadFromFile(const std::string&) override;

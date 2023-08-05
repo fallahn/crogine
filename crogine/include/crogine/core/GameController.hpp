@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2022
+Matt Marchant 2017 - 2023
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -105,7 +105,8 @@ namespace cro
             DPadUp = SDL_CONTROLLER_BUTTON_DPAD_UP,
             DPadDown = SDL_CONTROLLER_BUTTON_DPAD_DOWN,
             DPadLeft = SDL_CONTROLLER_BUTTON_DPAD_LEFT,
-            DPadRight = SDL_CONTROLLER_BUTTON_DPAD_RIGHT
+            DPadRight = SDL_CONTROLLER_BUTTON_DPAD_RIGHT,
+            ButtonTrackpad = SDL_CONTROLLER_BUTTON_TOUCHPAD
         };
 
         static constexpr std::int16_t AxisMax = 32767;

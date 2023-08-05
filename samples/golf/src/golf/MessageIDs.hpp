@@ -97,11 +97,13 @@ struct SceneEvent
 {
     enum
     {
+        TransitionStart,
         TransitionComplete,
         RequestSwitchCamera,
         PlayerIdle,
         PlayerRotate,
-        PlayerBad
+        PlayerBad,
+        MinimapUpdated
     }type = TransitionComplete;
 
     //union

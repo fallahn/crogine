@@ -33,6 +33,7 @@ source distribution.
 #include "Clubs.hpp"
 #include "CollisionMesh.hpp"
 #include "server/ServerPacketData.hpp"
+#include "server/CPUStats.hpp"
 
 #include <Social.hpp>
 
@@ -88,7 +89,8 @@ namespace
         0.004f, 0.002f, 0.0001f, 0.f
     };
     std::size_t devianceOffset = 0;
-    std::int32_t previousFail = -1; //if the previous shot failed the client/player ID
+    //std::int32_t previousFail = -1; //if the previous shot failed the client/player ID
+    std::array<std::int32_t, ConstVal::MaxClients* ConstVal::MaxPlayers> failCounts = {};
 }
 
 /*
@@ -96,21 +98,24 @@ result tolerance
 result tolerance putting
 stroke accuracy
 mistake odds
+
 */
 const std::array<CPUGolfer::SkillContext, 6> CPUGolfer::m_skills =
 {
     CPUGolfer::SkillContext(CPUGolfer::Skill::Amateur, 0.f, 0.f, 4, 0),
-    {CPUGolfer::Skill::Dynamic, 10.f, 0.12f, 6, 6},
-    {CPUGolfer::Skill::Dynamic, 6.f, 0.12f, 5, 6},
-    {CPUGolfer::Skill::Dynamic, 4.f, 0.9f, 4, 10},
+    {CPUGolfer::Skill::Dynamic, 3.2f, 0.12f, 4, 6},
+    {CPUGolfer::Skill::Dynamic, 3.f, 0.12f, 4, 6},
+    {CPUGolfer::Skill::Dynamic, 2.8f, 0.1f, 3, 10},
     {CPUGolfer::Skill::Dynamic, 2.2f, 0.06f, 2, 14},
-    {CPUGolfer::Skill::Dynamic, 2.f, 0.06f, 0, 50}
+    {CPUGolfer::Skill::Dynamic, 1.f, 0.06f, 0, 50}
 };
 
-CPUGolfer::CPUGolfer(const InputParser& ip, const ActivePlayer& ap, const CollisionMesh& cm)
+CPUGolfer::CPUGolfer(InputParser& ip, const ActivePlayer& ap, const CollisionMesh& cm)
     : m_inputParser     (ip),
     m_activePlayer      (ap),
     m_collisionMesh     (cm),
+    m_fastCPU           (false),
+    m_suspended         (false),
     m_puttFromTee       (false),
     m_distanceToPin     (1.f),
     m_target            (0.f),
@@ -139,6 +144,7 @@ CPUGolfer::CPUGolfer(const InputParser& ip, const ActivePlayer& ap, const Collis
     m_thinkTime         (0.f),
     m_offsetRotation    (cro::Util::Random::value(0, 1024))
 {
+    std::fill(failCounts.begin(), failCounts.end(), 0);
 #ifdef CRO_DEBUG_
     registerWindow([&]()
         {
@@ -182,19 +188,16 @@ void CPUGolfer::handleMessage(const cro::Message& msg)
     case MessageID::GolfMessage:
     {
         const auto& data = msg.getData<GolfEvent>();
-        if (data.type == GolfEvent::BallLanded)
+        if (data.type == GolfEvent::BallLanded
+            || data.type == GolfEvent::Gimme)
         {
             m_state = State::Inactive;
-            //LOG("CPU is now inactive", cro::Logger::Type::Info);
 
             if (data.terrain == TerrainID::Scrub
                 || data.terrain == TerrainID::Water)
             {
                 //switch to fallback target if possible
-                if (getSkillIndex() > 4)
-                {
-                    previousFail = (m_activePlayer.client * 100) + m_activePlayer.player;
-                }
+                failCounts[m_activePlayer.client * ConstVal::MaxPlayers + m_activePlayer.player]++;
             }
         }
     }
@@ -204,28 +207,183 @@ void CPUGolfer::handleMessage(const cro::Message& msg)
 
 void CPUGolfer::activate(glm::vec3 target, glm::vec3 fallback, bool puttFromTee)
 {
-    if (m_state == State::Inactive)
+    if (/*!m_fastCPU &&*/
+        m_state == State::Inactive)
     {
+        const auto& Stat = CPUStats[m_cpuProfileIndices[m_activePlayer.client * ConstVal::MaxPlayers + m_activePlayer.player]];
+
         m_puttFromTee = puttFromTee;
         m_fallbackTarget = fallback;
         m_baseTarget = m_target = target;
 
-        //TODO also use fallback if target is out of max range of driver
-        if (previousFail == (m_activePlayer.client * 100) + m_activePlayer.player)
+
+        //check the pin target isn't around a corner on putting course
+        //TODO we need to actually ASSERT this is the pin and not the fallback
+        if (m_puttFromTee)
         {
-            auto fwd = m_baseTarget - m_activePlayer.position;
-            auto alt = m_fallbackTarget - m_activePlayer.position;
-            if (glm::dot(alt, fwd) > 0)
+            //add some offset to the fallback target to stop
+            //players all aiming for exactly the same point
+            glm::vec3 dir(0.f);
+            switch (/*cro::Util::Random::value(0, 3)*/m_activePlayer.player % 4)
             {
-                m_baseTarget = m_target = fallback;
+            default:
+            case 0:
+                dir = glm::normalize(target - fallback);
+                dir = glm::vec3(-dir.z, dir.y, dir.x);
+                break;
+            case 1:
+                dir = glm::normalize(target - fallback);
+                dir = glm::vec3(dir.z, dir.y, -dir.x);
+                break;
+            case 2:
+                //perpendicular
+                dir = glm::normalize(m_activePlayer.position - fallback);
+                dir = glm::vec3(-dir.z, dir.y, dir.x);
+                break;
+            case 3:
+                dir = glm::normalize(m_activePlayer.position - fallback);
+                dir = glm::vec3(dir.z, dir.y, -dir.x);
+                break;
+            }
+            float amount = static_cast<float>(cro::Util::Random::value(5 + (m_activePlayer.player % 4), 35) + (m_activePlayer.player % 3)) / 100.f;
+            m_fallbackTarget += dir * amount;
+
+            if (target != fallback)
+            {
+                auto fwd = m_baseTarget - m_activePlayer.position;
+                auto alt = m_fallbackTarget - m_activePlayer.position;
+                if (glm::dot(alt, fwd) > 0
+                    && glm::dot(glm::normalize(alt), glm::normalize(fwd)) < 0.97f)
+                {
+                    if (glm::length2(alt) > 9.f
+                        && glm::length2(alt / 2.f) < glm::length2(fwd))
+                    {
+                        m_target = m_baseTarget = m_fallbackTarget;
+                        //LogI << "switched to fallback, pin around corner (activate)" << std::endl;
+                    }
+                }
+            }
+            else
+            {
+                //apply the updated fallback
+                m_target = m_baseTarget = m_fallbackTarget;
             }
         }
-        else if (glm::length(target - m_activePlayer.position) > Clubs[ClubID::Driver].getTarget(0.f))
+
+
+
+        //if previous fail then the last shot was bad (stops meltdowns on doglegs)
+        if (auto& count = failCounts[m_activePlayer.client * ConstVal::MaxPlayers + m_activePlayer.player]; count != 0)
         {
-            m_baseTarget = m_target = fallback;
+            //try moving to fallback if possible
+            if (count == 1)
+            {
+                if (m_target != m_fallbackTarget)
+                {
+                    const auto moveDir = glm::normalize(m_fallbackTarget - m_target);
+                    auto newDir = moveDir;
+
+                    auto terrain = m_collisionMesh.getTerrain(m_baseTarget + newDir).terrain;
+                    auto i = 0;
+                    while ((terrain == TerrainID::Water
+                        || terrain == TerrainID::Scrub
+                        || terrain == TerrainID::Bunker)
+                        && i++ < 3)
+                    {
+                        newDir += moveDir;
+                        terrain = m_collisionMesh.getTerrain(m_baseTarget + newDir).terrain;
+                    }
+                    //LogI << "stepped towards fallback on activate" << std::endl;
+
+
+                    if (terrain == TerrainID::Water
+                        || terrain == TerrainID::Scrub)
+                    {
+                        //else snap to it if it's still in front
+                        auto fwd = m_baseTarget - m_activePlayer.position;
+                        auto alt = m_fallbackTarget - m_activePlayer.position;
+                        if (glm::dot(alt, fwd) > 0)
+                        {
+                            m_baseTarget = m_target = fallback;
+                            count = std::max(0, count - 1);
+                            //LogI << "set to fallback on activate (couldn't find good alternative)" << std::endl;
+                        }
+                    }
+                    else
+                    {
+                        m_baseTarget += newDir;
+                        m_target = m_baseTarget;
+                    }
+                }
+            }
+            else
+            {
+                //else snap to it if it's still in front
+                auto fwd = m_baseTarget - m_activePlayer.position;
+                auto alt = m_fallbackTarget - m_activePlayer.position;
+                if (glm::dot(alt, fwd) > 0)
+                {
+                    m_baseTarget = m_target = fallback;
+                    LogI << "set to fallback on activate" << std::endl;
+                }
+            }
         }
-        
-        previousFail = -1;
+        //otherwise check if the target is in max range - if not shorten
+        //the target (so we prefer the pin still, just fall short) unless
+        //the shortened target is out of bounds, in which case use the fallback
+        else if (auto len = glm::length(target - m_activePlayer.position);
+                    len > Clubs[ClubID::Driver].getTargetAtLevel(Stat[CPUStat::Skill]))
+        {
+            glm::vec3 newDir(0.f);
+            if (target != fallback)
+            {
+                len -= Clubs[ClubID::Driver].getTargetAtLevel(Stat[CPUStat::Skill]);
+                const auto correctionDir = glm::normalize(fallback - target) * (len * 1.05f);
+                newDir = target + correctionDir;
+            }
+            else
+            {
+                //just move back towards the player
+                const float reduction = (Clubs[ClubID::Driver].getTargetAtLevel(Stat[CPUStat::Skill]) / len) * 0.95f;
+                newDir = (target - m_activePlayer.position) * reduction;
+                newDir += m_activePlayer.position;
+            }
+
+            const auto terrain = m_collisionMesh.getTerrain(newDir);
+            switch (terrain.terrain)
+            {
+            default:
+                m_baseTarget = m_target = newDir;
+                break;
+            case TerrainID::Water:
+            case TerrainID::Scrub:
+            case TerrainID::Stone:
+                if (cro::Util::Random::value(0, 9) > Stat[CPUStat::MistakeLikelyhood])
+                {
+                    m_baseTarget = m_target = fallback;
+                }
+                break;
+            }
+        }
+        else
+        {
+            //just check the target is in bounds
+            const auto terrain = m_collisionMesh.getTerrain(m_target);
+            switch (terrain.terrain)
+            {
+            default:
+                break;
+            case TerrainID::Water:
+            case TerrainID::Scrub:
+            case TerrainID::Bunker:
+            case TerrainID::Stone:
+                if (cro::Util::Random::value(0, 9) > Stat[CPUStat::MistakeLikelyhood])
+                {
+                    m_baseTarget = m_target = fallback;
+                }
+                break;
+            }
+        }
 
         m_retargetCount = 0;
         m_state = State::CalcDistance;
@@ -248,12 +406,25 @@ void CPUGolfer::activate(glm::vec3 target, glm::vec3 fallback, bool puttFromTee)
         msg->type = AIEvent::EndThink;
 
         //LOG("CPU is now active", cro::Logger::Type::Info);
+        /*if (m_target == m_fallbackTarget)
+        {
+            LogI << "Using fallback (activation)" << std::endl;
+        }
+        else
+        {
+            LogI << "Using target (activation)" << std::endl;
+        }*/
     }
 }
 
 void CPUGolfer::update(float dt, glm::vec3 windVector, float distanceToPin)
 {
     m_distanceToPin = distanceToPin;
+
+    if (m_suspended)
+    {
+        return;
+    }
 
     for (auto& evt : m_popEvents)
     {
@@ -319,49 +490,115 @@ void CPUGolfer::update(float dt, glm::vec3 windVector, float distanceToPin)
 
 void CPUGolfer::setPredictionResult(glm::vec3 result, std::int32_t terrain)
 {
-    if (m_retargetCount < (MaxRetargets - (MaxRetargets - getSkillIndex())) &&
-        (terrain == TerrainID::Water
-        || terrain == TerrainID::Scrub))
+    //check the pin target isn't around a corner on putting course
+    if (m_puttFromTee
+        && m_baseTarget != m_fallbackTarget)
     {
-        //retarget
-        if (m_puttFromTee)
+        auto fwd = m_baseTarget - m_activePlayer.position;
+        auto alt = m_fallbackTarget - m_activePlayer.position;
+        if (glm::dot(alt, fwd) > 0
+            && glm::dot(glm::normalize(alt), glm::normalize(fwd)) < 0.97f)
         {
-            //fall back to default target if it's still in front
-            auto fwd = m_baseTarget - m_activePlayer.position;
-            auto alt = m_fallbackTarget - m_activePlayer.position;
-            if (glm::dot(alt, fwd) > 0)
+            m_baseTarget = m_fallbackTarget;
+            //LogI << "switched to fallback, pin around corner (prediction)" << std::endl;
+        }
+    }
+
+
+    //TODO should we be compensating for overshoot?
+    if (auto& count = failCounts[m_activePlayer.client * ConstVal::MaxPlayers + m_activePlayer.player]; count != 0)
+    {
+        count = std::max(0, count - 1);
+
+        auto fwd = m_baseTarget - m_activePlayer.position;
+        auto alt = m_fallbackTarget - m_activePlayer.position;
+        if (glm::dot(alt, fwd) > 0
+            && glm::length2(alt) < glm::length2(fwd)) // has to be closer than the pin
+        {
+            //but not if it's like 3 feet in front...
+            const float minDist = m_puttFromTee ? (9.f) : (2500.f);
+            if (glm::length2(alt) > minDist)
             {
                 m_baseTarget = m_fallbackTarget;
+                m_target = m_baseTarget;
+            }
+        }
+        m_state = State::CalcDistance;
+        m_wantsPrediction = false;
+
+        //LogI << "Falling back - fail count was " << (count + 1) << std::endl;
+    }
+
+
+    else if (m_retargetCount < (MaxRetargets - (MaxRetargets - getSkillIndex())) &&
+        (terrain == TerrainID::Water
+        || terrain == TerrainID::Scrub
+            || terrain == TerrainID::Bunker))
+    {
+        const auto& Stat = CPUStats[m_cpuProfileIndices[m_activePlayer.client * ConstVal::MaxPlayers + m_activePlayer.player]];
+
+        //retarget
+        if ((cro::Util::Random::value(0, 9) > Stat[CPUStat::MistakeLikelyhood] && terrain != TerrainID::Bunker)
+            /*|| (cro::Util::Random::value(0, 9) < Stat[CPUStat::MistakeLikelyhood] && terrain == TerrainID::Bunker)*/) //more likely to hit bunker 
+        {
+            if (m_retargetCount < 2)
+            {
+                //try moving towards the fallback from the pin
+                if (m_baseTarget != m_fallbackTarget)
+                {
+                    const auto moveDir = /*glm::normalize*/(m_fallbackTarget - m_target) / 8.f;
+                    auto newDir = moveDir;
+
+                    //LogI << "stepped towards fallback on prediction result, would hit terrain " << TerrainStrings[terrain] << std::endl;
+                    terrain = m_collisionMesh.getTerrain(m_baseTarget + newDir).terrain;
+
+                    auto i = 0;
+                    while ((terrain == TerrainID::Water
+                        || terrain == TerrainID::Scrub
+                        || terrain == TerrainID::Bunker)
+                        && i++ < 3)
+                    {
+                        newDir += moveDir;
+                        terrain = m_collisionMesh.getTerrain(m_baseTarget + newDir).terrain;
+                    }
+
+                    if (terrain == TerrainID::Water
+                        || terrain == TerrainID::Scrub)
+                    {
+                        m_baseTarget = m_fallbackTarget;
+                        //LogI << "Set to fall back target: failed to get out of " << TerrainStrings[terrain] << std::endl;
+                    }
+                    else
+                    {
+                        m_baseTarget += newDir;
+                    }
+                }
+            }
+            else if (terrain == TerrainID::Bunker) {}
+            else
+            {
+                //fall back to default target if it's still in front
+                auto fwd = m_baseTarget - m_activePlayer.position;
+                auto alt = m_fallbackTarget - m_activePlayer.position;
+                if (glm::dot(alt, fwd) > 0)
+                {
+                    m_baseTarget = m_fallbackTarget;
+                    //LogI << "set to fallback target on prediction result, would hit terrain " << TerrainStrings[terrain] << std::endl;
+                }
             }
             m_puttFromTee = false; //saves keep trying this until next activation
         }
-
-        const float searchDistance = m_activePlayer.terrain == TerrainID::Green ? 0.25f : 2.f;
-        auto direction = m_retargetCount % 4;
-        auto offset = (glm::normalize(m_baseTarget - m_activePlayer.position) * searchDistance) * static_cast<float>((m_retargetCount % RetargetsPerDirection) + 1);
-
-        //TODO decide on some optimal priority for this?
-        switch (direction)
+        else
         {
-        default:
-        case 0:
-            //move away
-            break;
-        case 1:
-            //move towards
-            offset *= -1.f;
-            break;
-        case 2:
-            //move right
-            offset = { -offset.z, offset.y, offset.x };
-            break;
-        case 3:
-            //move right
-            offset = { offset.z, offset.y, -offset.x };
-            break;
+            //LogI << "accepted we'll probably hit " << TerrainStrings[terrain] << std::endl;
+            m_retargetCount = 100; // don't try any more, we accepted potential failure.
+
+            m_predictionResult = result + (glm::vec3(getOffsetValue(), 0.f, -getOffsetValue()) * 0.001f);
+            m_predictionUpdated = true;
+            return;
         }
 
-        m_target = m_baseTarget + offset;
+        m_target = m_baseTarget;
         m_state = State::CalcDistance;
         m_wantsPrediction = false;
         m_retargetCount++;
@@ -371,6 +608,15 @@ void CPUGolfer::setPredictionResult(glm::vec3 result, std::int32_t terrain)
         m_predictionResult = result + (glm::vec3(getOffsetValue(), 0.f, -getOffsetValue()) * 0.001f);
         m_predictionUpdated = true;
     }
+
+    //if (m_target == m_fallbackTarget)
+    //{
+    //    LogI << "Using fallback (prediction)" << std::endl;
+    //}
+    //else
+    //{
+    //    LogI << "Using target (prediction)" << std::endl;
+    //}
 }
 
 void CPUGolfer::setPuttingPower(float power)
@@ -387,13 +633,77 @@ void CPUGolfer::setPuttingPower(float power)
 
 std::size_t CPUGolfer::getSkillIndex() const
 {
-    std::int32_t offset = m_activePlayer.player % 2;
-    if (m_skillIndex > 2)
-    {
-        offset *= -1;
-    }
+    /*std::int32_t offset = ((m_activePlayer.player + 2) % 3) * 2;
+    return std::clamp((static_cast<std::int32_t>(m_skillIndex) - offset), 0, 5);*/
 
-    return std::min(static_cast<std::int32_t>(m_skills.size() - 1), static_cast<std::int32_t>(m_skillIndex) + offset);
+    auto id = m_cpuProfileIndices[m_activePlayer.client * ConstVal::MaxPlayers + m_activePlayer.player];
+    return std::clamp((static_cast<std::int32_t>(CPUStats.size()) - id) / 5, 0, 5);
+}
+
+std::int32_t CPUGolfer::getClubLevel() const
+{
+    return CPUStats[m_cpuProfileIndices[m_activePlayer.client * ConstVal::MaxPlayers + m_activePlayer.player]][CPUStat::Skill];
+}
+
+void CPUGolfer::setCPUCount(std::int32_t cpuCount, const SharedStateData& sharedData)
+{
+    std::fill(m_cpuProfileIndices.begin(), m_cpuProfileIndices.end(), -1);
+
+    if (cpuCount)
+    {
+        std::int32_t baseCPUIndex = 0;
+        std::int32_t stride = 1;
+
+        switch (Social::getClubLevel()/*sharedData.clubSet*/) //always scale to user level regardless of their chosen set
+        {
+        default: break;
+        case 0:
+            baseCPUIndex = 12;
+            stride = 16 / cpuCount; //even distribution through 16x level 0
+            break;
+        case 1:
+            baseCPUIndex = 8;
+            stride = cpuCount > 4 ? 2 : 23 / cpuCount; //every other profile unless more than 4
+            break;
+        case 2:
+            stride = cpuCount < 3 ? 1 :
+                cpuCount < 8 ? 2 :
+                27 / cpuCount;
+            break;
+        }
+
+
+        CRO_ASSERT(baseCPUIndex + (stride * (cpuCount - 1)) < CPUStats.size(), "");
+
+        for (auto i = 0u; i < sharedData.connectionData.size(); ++i)
+        {
+            for (auto j = 0u; j < sharedData.connectionData[i].playerCount; ++j)
+            {
+                if (sharedData.connectionData[i].playerData[j].isCPU)
+                {
+                    CRO_ASSERT(baseCPUIndex < CPUStats.size(), "");
+
+                    auto cpuIndex = i * ConstVal::MaxPlayers + j;
+                    m_cpuProfileIndices[cpuIndex] = baseCPUIndex;
+                    baseCPUIndex += stride;
+                }
+            }
+        }
+    }
+}
+
+void CPUGolfer::suspend(bool suspend)
+{
+    //can't suspend during stroke
+    //else we'll mess up the CPUs shot
+    if (m_state != State::Stroke)
+    {
+        m_suspended = suspend;
+    }
+    else
+    {
+        m_suspended = false;
+    }
 }
 
 //private
@@ -463,9 +773,10 @@ void CPUGolfer::calcDistance(float dt, glm::vec3 windVector)
         {
             //we want to aim a bit further if we went
             //off the fairway, so we hit a bit harder.
+            const auto& Stat = CPUStats[m_cpuProfileIndices[m_activePlayer.client * ConstVal::MaxPlayers * m_activePlayer.player]];
 
             //but not too much if we're near the hole
-            float multiplier = absDistance / Clubs[ClubID::PitchWedge].getTarget(m_distanceToPin);
+            float multiplier = absDistance / Clubs[ClubID::PitchWedge].getTargetAtLevel(Stat[CPUStat::Skill]);
             targetDistance += 20.f * multiplier; //TODO reduce this if we're close to the green
         }
         m_searchDistance = targetDistance;
@@ -484,7 +795,7 @@ void CPUGolfer::pickClub(float dt)
     {
         auto absDistance = glm::length(m_target - m_activePlayer.position);
 
-        auto club = m_inputParser.getClub();
+        auto club = m_inputParser.getClub(); //this should never really be the putter here?
         float clubDistance = Clubs[club].getTarget(m_distanceToPin);
 
         const auto acceptClub = [&]()
@@ -600,8 +911,10 @@ void CPUGolfer::pickClubDynamic(float dt)
 
         //find the first club whose target exceeds this distance
         //else use the most powerful club available
+        const auto& Stat = CPUStats[m_cpuProfileIndices[m_activePlayer.client * ConstVal::MaxPlayers * m_activePlayer.player]];
+
         auto club = m_inputParser.getClub();
-        float clubDistance = Clubs[club].getTarget(m_distanceToPin);
+        float clubDistance = Clubs[club].getTargetAtLevel(Stat[CPUStat::Skill]);
         float diff = targetDistance - clubDistance;
 
         const auto acceptClub = [&]()
@@ -611,8 +924,8 @@ void CPUGolfer::pickClubDynamic(float dt)
             m_aimTimer.restart();
 
             //guestimate power based on club (this gets refined from predictions)
-            m_targetPower = std::min(1.f, targetDistance / Clubs[m_clubID].getTarget(m_distanceToPin));
-            m_targetPower = std::min(1.f, m_targetPower + (getOffsetValue() / 100.f));
+            m_targetPower = std::min(1.f, targetDistance / Clubs[m_clubID].getTargetAtLevel(Stat[CPUStat::Skill]));
+            //m_targetPower = std::min(1.f, m_targetPower + (getOffsetValue() / 100.f));
         };
 
         if (diff < 0)
@@ -626,7 +939,7 @@ void CPUGolfer::pickClubDynamic(float dt)
 
 
         //if the new club has looped switch back and accept it (it's the longest we have)
-        if (m_searchDirection == 1 && clubDistance < Clubs[m_prevClubID].getTarget(m_distanceToPin))
+        if (m_searchDirection == 1 && clubDistance < Clubs[m_prevClubID].getTargetAtLevel(Stat[CPUStat::Skill]))
         {
             sendKeystroke(m_inputParser.getInputBinding().keys[InputBinding::PrevClub]);
             m_clubID = m_prevClubID;
@@ -635,7 +948,7 @@ void CPUGolfer::pickClubDynamic(float dt)
             return;
         }
 
-        if (m_searchDirection == -1 && clubDistance > Clubs[m_prevClubID].getTarget(m_distanceToPin))
+        if (m_searchDirection == -1 && clubDistance > Clubs[m_prevClubID].getTargetAtLevel(Stat[CPUStat::Skill]))
         {
             sendKeystroke(m_inputParser.getInputBinding().keys[InputBinding::NextClub]);
             m_clubID = m_prevClubID;
@@ -677,11 +990,11 @@ void CPUGolfer::aim(float dt, glm::vec3 windVector)
         //check someone hasn't pressed the keyboard already
         //and started the power bar. In which case break from this
         //TODO could play avatar disappointed sound? :)
-        if (m_inputParser.inProgress())
+        /*if (m_inputParser.inProgress())
         {
             m_state = State::Watching;
             return;
-        }
+        }*/
 
         //putting is a special case where wind effect is lower
         //but we also need to deal with the slope of the green
@@ -765,6 +1078,8 @@ void CPUGolfer::aim(float dt, glm::vec3 windVector)
             sendKeystroke(m_inputParser.getInputBinding().keys[InputBinding::Left], false);
         }
 
+        const auto& Stat = CPUStats[m_cpuProfileIndices[m_activePlayer.client * ConstVal::MaxPlayers * m_activePlayer.player]];
+
         //if angle correct then calc a target power
         if (std::abs(m_inputParser.getYaw() - targetAngle) < 0.01f
             || m_aimTimer.elapsed() > MaxAimTime) //get out clause if aim calculation is out of bounds.
@@ -780,7 +1095,7 @@ void CPUGolfer::aim(float dt, glm::vec3 windVector)
                 //power is not actually linear - ie half the distance is not
                 //half the power, so we need to pull back a little to stop
                 //overshooting long drives
-                m_targetPower = m_aimDistance / Clubs[m_clubID].getTarget(m_distanceToPin);
+                m_targetPower = m_aimDistance / Clubs[m_clubID].getTarget(m_distanceToPin); //these aren't particularly extended anyway so leave this
                 //if (Clubs[m_clubID].target > m_aimDistance)
                 {
                     //the further we try to drive the bigger the reduction
@@ -790,7 +1105,7 @@ void CPUGolfer::aim(float dt, glm::vec3 windVector)
             }
             else
             {
-                m_targetPower = (distanceToTarget * 1.12f) / Clubs[m_clubID].getTarget(m_distanceToPin);
+                m_targetPower = (distanceToTarget * 1.12f) / Clubs[m_clubID].getTargetAtLevel(Stat[CPUStat::Skill]);
             }
             m_targetPower += ((0.06f * (-dot * windVector.y)) * greenCompensation) * m_targetPower;
 
@@ -809,17 +1124,6 @@ void CPUGolfer::aim(float dt, glm::vec3 windVector)
                 m_targetPower = std::min(1.f, m_targetPower * multiplier);
                 m_targetPower = std::min(m_targetPower, m_puttingPower);
             }
-
-            ////due to input lag 0.08 is actually ~0 ie perfectly accurate
-            ////so this range lies ~0.04 either side of perfect
-            //m_targetAccuracy = static_cast<float>(cro::Util::Random::value(4, 12)) / 100.f;
-
-            ////occasionally make really inaccurate
-            ////... or maybe even perfect? :)
-            //if (cro::Util::Random::value(0, 8) == 0)
-            //{
-            //    m_targetAccuracy += static_cast<float>(cro::Util::Random::value(-8, 4)) / 100.f;
-            //}
 
             calcAccuracy();
 
@@ -918,6 +1222,8 @@ void CPUGolfer::updatePrediction(float dt)
             {
                 //see if the flag indicator has a better suggestion :)
                 m_targetPower = std::min(m_targetPower, m_puttingPower * (1.f + (static_cast<float>(getSkillIndex()) * 0.01f)));
+                //auto cpuID = m_cpuProfileIndices[m_activePlayer.client * ConstVal::MaxPlayers + m_activePlayer.player];
+                //m_targetPower = std::min(m_targetPower, m_puttingPower * (1.f + (static_cast<float>((CPUStats.size() - cpuID) / 2) * 0.01f)));
             }
 
             m_targetAccuracy -= (Deviance[devianceOffset] * 0.05f) * devianceMultiplier;
@@ -987,9 +1293,11 @@ void CPUGolfer::updatePrediction(float dt)
                 if (float resultPrecision = glm::length2(predictDir - targetDir);
                     resultPrecision > precSqr && m_targetPower < 1.f)
                 {
+                    const auto& Stat = CPUStats[m_cpuProfileIndices[m_activePlayer.client * ConstVal::MaxPlayers * m_activePlayer.player]];
+
                     float precDiff = std::sqrt(resultPrecision);
-                    float change = (precDiff / Clubs[m_clubID].getTarget(m_distanceToPin)) / 2.f;
-                    change += getOffsetValue() / 60.f;
+                    float change = (precDiff / Clubs[m_clubID].getTargetAtLevel(Stat[CPUStat::Skill])) / 2.f;
+                    change += getOffsetValue() / 50.f;
 
                     if (glm::length2(predictDir) < glm::length2(targetDir))
                     {
@@ -1046,44 +1354,53 @@ void CPUGolfer::stroke(float dt)
     }
     else
     {
-        if (!m_inputParser.inProgress())
+        if (m_fastCPU)
         {
-            //start the stroke
-            sendKeystroke(m_inputParser.getInputBinding().keys[InputBinding::Action]);
-
-            m_strokeState = StrokeState::Power;
-            m_prevPower = 0.f;
-            m_prevAccuracy = -1.f;
-
-            devianceOffset = (devianceOffset + 1 + m_activePlayer.player) % Deviance.size();
-            //TODO this actually happens twice because of the delay of the
-            //event queue, how ever doesn't appear to be a problem as long
-            //as the 'double-tap' prevention works
+            //just apply our values and raise a stroke message
+            m_inputParser.doFastStroke(m_targetAccuracy, m_targetPower);
+            m_state = State::Watching;
         }
         else
         {
-            if (m_strokeState == StrokeState::Power)
+            if (!m_inputParser.inProgress())
             {
-                auto power = m_inputParser.getPower();
-                if ((m_targetPower - power) < 0.02f
-                    && m_prevPower < power)
-                {
-                    sendKeystroke(m_inputParser.getInputBinding().keys[InputBinding::Action]);
-                    m_strokeState = StrokeState::Accuracy;
-                }
-                m_prevPower = power;
+                //start the stroke
+                sendKeystroke(m_inputParser.getInputBinding().keys[InputBinding::Action]);
+
+                m_strokeState = StrokeState::Power;
+                m_prevPower = 0.f;
+                m_prevAccuracy = -1.f;
+
+                devianceOffset = (devianceOffset + 1 + m_activePlayer.player) % Deviance.size();
+                //TODO this actually happens twice because of the delay of the
+                //event queue, how ever doesn't appear to be a problem as long
+                //as the 'double-tap' prevention works
             }
             else
             {
-                auto accuracy = m_inputParser.getHook();
-                if (accuracy < m_targetAccuracy
-                    && m_prevAccuracy > accuracy)
+                if (m_strokeState == StrokeState::Power)
                 {
-                    sendKeystroke(m_inputParser.getInputBinding().keys[InputBinding::Action]);
-                    m_state = State::Watching;
-                    return;
+                    auto power = m_inputParser.getPower();
+                    if ((m_targetPower - power) < 0.02f
+                        && m_prevPower < power)
+                    {
+                        sendKeystroke(m_inputParser.getInputBinding().keys[InputBinding::Action]);
+                        m_strokeState = StrokeState::Accuracy;
+                    }
+                    m_prevPower = power;
                 }
-                m_prevAccuracy = accuracy;
+                else
+                {
+                    auto accuracy = m_inputParser.getHook();
+                    if (accuracy < m_targetAccuracy
+                        && m_prevAccuracy > accuracy)
+                    {
+                        sendKeystroke(m_inputParser.getInputBinding().keys[InputBinding::Action]);
+                        m_state = State::Watching;
+                        return;
+                    }
+                    m_prevAccuracy = accuracy;
+                }
             }
         }
     }
@@ -1092,27 +1409,55 @@ void CPUGolfer::stroke(float dt)
 void CPUGolfer::calcAccuracy()
 {
     //due to input lag 0.08 is actually ~0 ie perfectly accurate
-    //so this range lies ~0.04 either side of perfect
-    //m_targetAccuracy = static_cast<float>(cro::Util::Random::value(4, 12)) / 100.f;
 
     m_targetAccuracy = 0.08f;
+
+    //old ver
     if (m_skills[getSkillIndex()].strokeAccuracy != 0)
     {
-        m_targetAccuracy += static_cast<float>(-m_skills[getSkillIndex()].strokeAccuracy/*, m_skills[m_skillIndex].strokeAccuracy*/) / 100.f;
+        m_targetAccuracy += static_cast<float>(-m_skills[getSkillIndex()].strokeAccuracy) / 100.f;
     }
+
+    //new ver
+    const auto& Stat = CPUStats[m_cpuProfileIndices[m_activePlayer.client * ConstVal::MaxPlayers + m_activePlayer.player]];
+    //if (m_puttFromTee)
+    //{
+    //    m_targetAccuracy += cstat::getOffset(cstat::AccuracyOffsets, Stat[CPUStat::StrokeAccuracy]) * 0.00375f; //scales max value to 0.06
+    //}
 
     //occasionally make really inaccurate
     //... or maybe even perfect? :)
-    if (m_skills[getSkillIndex()].mistakeOdds != 0)
+    //old version
+    if (m_puttFromTee)
     {
-        if (cro::Util::Random::value(0, m_skills[getSkillIndex()].mistakeOdds) == 0)
+        if (m_skills[getSkillIndex()].mistakeOdds != 0)
         {
-            m_targetAccuracy += static_cast<float>(cro::Util::Random::value(-16, 16)) / 100.f;
+            if (cro::Util::Random::value(0, m_skills[getSkillIndex()].mistakeOdds) == 0)
+            {
+                m_targetAccuracy += static_cast<float>(cro::Util::Random::value(-16, 16)) / 100.f;
+            }
+        }
+    }
+    else
+    {
+        //new version
+        std::int32_t puttingOdds = 0;
+        /*if (m_activePlayer.terrain == TerrainID::Green)
+        {
+            float odds = std::min(1.f, glm::length(m_target - m_activePlayer.position) / 12.f) * 2.f;
+            puttingOdds = static_cast<std::int32_t>(std::round(odds));
+        }*/
+
+        if (cro::Util::Random::value(0, 9) < Stat[CPUStat::MistakeLikelyhood] + puttingOdds)
+        {
+            m_targetAccuracy += cstat::getOffset(cstat::AccuracyOffsets, Stat[CPUStat::StrokeAccuracy]) / 100.f;
         }
     }
 
+
     //to prevent multiple players making the same decision offset the accuracy a small amount
     //based on their client and player number
+    //old version
     auto offset = (m_offsetRotation % 4) * 10;
     m_targetAccuracy += (static_cast<float>(cro::Util::Random::value(-(offset / 2), (offset / 2) + 1)) / 500.f) * getOffsetValue();
 
@@ -1120,6 +1465,7 @@ void CPUGolfer::calcAccuracy()
     {
         m_targetPower = std::min(1.f, m_targetPower + (1 - (cro::Util::Random::value(0, 1) * 2)) * (static_cast<float>(m_offsetRotation % 4) / 50.f));
 
+        //old ver
         if (m_skills[getSkillIndex()].mistakeOdds != 0)
         {
             if (cro::Util::Random::value(0, m_skills[getSkillIndex()].mistakeOdds) == 0)
@@ -1127,12 +1473,21 @@ void CPUGolfer::calcAccuracy()
                 m_targetPower += static_cast<float>(cro::Util::Random::value(-6, 6)) / 1000.f;
             }
         }
+
+        //new ver
+        /*if (cro::Util::Random::value(0, 9) < Stat[CPUStat::MistakeLikelyhood])
+        {
+            m_targetPower += cstat::getOffset(cstat::PowerOffsets, Stat[CPUStat::PowerAccuracy]) * 0.00001f;
+        }*/
+
         m_targetPower = std::min(1.f, m_targetPower);
     }
     else
     {
         //hack to make the ball putt a little further
         m_targetPower = std::min(1.f, m_targetPower * 0.98f /*+ (static_cast<float>(m_skillIndex) * 0.01f)*/);
+
+        //uhhh this actually shortens the power?? leaving this here though because it apparently works...
     }
 }
 
@@ -1141,7 +1496,7 @@ float CPUGolfer::getOffsetValue() const
     float multiplier = m_activePlayer.terrain == TerrainID::Green ? smoothstep(0.2f, 0.95f, glm::length(m_target - m_activePlayer.position) / Clubs[ClubID::Putter].getTarget(m_distanceToPin)) : 1.f;
 
     return static_cast<float>(1 - ((m_offsetRotation % 2) * 2))
-        * static_cast<float>((m_offsetRotation % (m_skills.size() - getSkillIndex())))
+        //* static_cast<float>((m_offsetRotation % (m_skills.size() - getSkillIndex())))
         * multiplier;
 }
 
@@ -1167,3 +1522,26 @@ void CPUGolfer::sendKeystroke(std::int32_t key, bool autoRelease)
         m_popEvents.push_back(evt);
     }
 };
+
+glm::vec3 CPUGolfer::getRandomOffset(glm::vec3 baseDir) const
+{
+    return glm::vec3(0.f);
+
+    //auto indexOffset = m_cpuProfileIndices[m_activePlayer.client * ConstVal::MaxPlayers + m_activePlayer.player];
+
+    //const auto baseLength = glm::length(baseDir);
+    //auto normDir = baseDir / baseLength;
+
+    //const auto& cpuStat = CPUStats[indexOffset];
+    //const float maxDist = Clubs[ClubID::Driver].getTargetAtLevel(cpuStat[CPUStat::Skill]);
+    //const float resultMultiplier = std::max(1.f, baseLength / maxDist);
+
+    //const float powerOffset = cstat::getOffset(cstat::PowerOffsets, cpuStat[CPUStat::PowerAccuracy]);
+    //auto retVal = normDir * powerOffset * (resultMultiplier * resultMultiplier);
+
+    //normDir = { -normDir.z, normDir.y, normDir.x };
+    //const float accuracyOffset = cstat::getOffset(cstat::AccuracyOffsets, cpuStat[CPUStat::StrokeAccuracy]);
+    //retVal += normDir * accuracyOffset * resultMultiplier;
+
+    //return retVal * (static_cast<float>(indexOffset) / CPUStats.size()) * 0.05f;
+}

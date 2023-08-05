@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2023
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -31,6 +31,7 @@ source distribution.
 
 #include <crogine/detail/Assert.hpp>
 #include <crogine/detail/Types.hpp>
+#include <crogine/core/String.hpp>
 
 #include <SDL_rwops.h>
 
@@ -46,6 +47,52 @@ source distribution.
 
 namespace cro::Util::String
 {
+    /*!
+    \brief Takes a utf8 encoded std::string and returns
+    a word-wrapped cro::String based on the max character
+    width
+    */
+    static inline cro::String wordWrap(const std::string& s, std::size_t MaxWidth, std::size_t MaxChar)
+    {
+        cro::String output;
+        std::string tmp;
+
+        std::size_t currentWidth = 0;
+
+        //wordwrap string
+        std::size_t searchStart = 0;
+        while (searchStart < MaxChar //&& searchStart < s.size()
+            && output.size() < MaxChar)
+        {
+            auto nextSpace = s.find(" ", searchStart);
+            if (nextSpace == std::string::npos)
+            {
+                break;
+            }
+
+            tmp = s.substr(searchStart, nextSpace - searchStart);
+            searchStart = nextSpace + 1;
+
+            if (currentWidth + (tmp.size() + 1) > MaxWidth)
+            {
+                output.replace(output.size() - 1, 1, "\n");
+                currentWidth = 0;
+            }
+            output += cro::String::fromUtf8(tmp.begin(), tmp.end()) + " ";
+            currentWidth += tmp.size() + 1;
+        }
+
+        if (currentWidth + (tmp.size() + 1) > MaxWidth)
+        {
+            output.replace(output.size() - 1, 1, "\n");
+            currentWidth = 0;
+        }
+        tmp = s.substr(searchStart);
+        output += cro::String::fromUtf8(tmp.begin(), tmp.end());
+
+        return output;
+    }
+
     /*!
     \brief Remove all instances of c from line
     */

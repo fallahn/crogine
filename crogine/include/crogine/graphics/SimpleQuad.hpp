@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2022
+Matt Marchant 2017 - 2023
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -36,6 +36,7 @@ source distribution.
 namespace cro
 {
     class Texture;
+    class Sprite;
 
     /*
     \brief Simple Quad drawable.
@@ -56,6 +57,13 @@ namespace cro
         The quad is automatically set to the size of the given texture, in pixels.
         */
         explicit SimpleQuad(const Texture& texture);
+
+        /*!
+        \brief Assignment operator
+        Allows setting the quad properties from a Sprite, eg when
+        loaded from a SpriteSheet
+        */
+        SimpleQuad& operator = (const Sprite&);
 
         /*!
         \brief Sets a new texture for the quad.

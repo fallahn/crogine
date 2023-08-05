@@ -538,7 +538,7 @@ void InputParser::setMaxClub(float dist)
 
     m_firstClub = ClubID::SandWedge;
 
-    while ((Clubs[m_firstClub].getDefaultTarget(/*dist*/) * 1.05f) < dist
+    while ((Clubs[m_firstClub].getBaseTarget(/*dist*/) * 1.05f) < dist
         && m_firstClub != ClubID::Driver)
     {
         //this WILL get stuck in an infinite loop if the clubset is 0 for some reason
@@ -548,6 +548,9 @@ void InputParser::setMaxClub(float dist)
         } while ((m_inputBinding.clubset & ClubID::Flags[m_firstClub]) == 0
             && m_firstClub != ClubID::Driver);
     }
+
+    //this isn't perfect so give one extra club wiggle room
+    m_firstClub = std::max(0, m_firstClub - 1);
 
     m_currentClub = m_firstClub;
     m_clubOffset = 0;
@@ -703,6 +706,27 @@ InputParser::StrokeResult InputParser::getStroke(std::int32_t club, std::int32_t
     return { impulse, spin, hook };
 }
 
+void InputParser::doFastStroke(float accuracy, float power)
+{
+    //this ONLY works with the CPU because it's been estimating
+    //the suppplied power value based on getPower() which has been
+    //appplying easeInSine() - and we need to invert that to get the
+    //base power value again...
+    const auto invSine = [](float x)
+    {
+        return (std::acos(1.f - x) / cro::Util::Const::PI) * 2.f;
+    };
+
+    m_hook = (accuracy + 1.f) / 2.f;
+    m_power = invSine(power); //gets eased in on getPower();
+    
+    m_powerbarDirection = 1.f;
+    m_state = State::Flight;
+
+    auto* msg = cro::App::postMessage<GolfEvent>(MessageID::GolfMessage);
+    msg->type = GolfEvent::HitBall;
+}
+
 //private
 void InputParser::updateDistanceEstimation()
 {
@@ -851,6 +875,7 @@ void InputParser::updateStroke(float dt)
 
             //move level to 1 and back (returning to 0 is a fluff)
             float speed = dt * 0.7f;
+            
             if (m_terrain == TerrainID::Green
                 && m_sharedData.showPuttingPower)
             {

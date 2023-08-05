@@ -30,6 +30,8 @@ source distribution.
 #include "Clubs.hpp"
 #include <Social.hpp>
 
+#include <crogine/detail/Assert.hpp>
+
 namespace
 {
     struct Stat final
@@ -74,6 +76,7 @@ namespace
 
 
     constexpr std::size_t DebugLevel = 35;
+    std::int32_t playerLevel = 0;
 }
 
 Club::Club(std::int32_t id, const std::string& name, float angle, float sidespin, float topspin)
@@ -117,6 +120,37 @@ std::string Club::getName(bool imperial, float distanceToPin) const
     }
 }
 
+std::string Club::getDistanceLabel(bool imperial, std::int32_t level) const
+{
+    CRO_ASSERT(level > -1 && level < 3, "");
+
+    auto t = getTargetAtLevel(level);
+    if (imperial)
+    {
+        if (getPower(/*distanceToPin*/10.f, imperial) > 10.f)
+        {
+            auto dist = static_cast<std::int32_t>(t * ToYards);
+            return std::to_string(dist) + "y";
+        }
+        else
+        {
+            auto dist = static_cast<std::int32_t>(std::round(t * ToFeet));
+            return std::to_string(dist) + "\'";
+        }
+    }
+    else
+    {
+        if (t < 1.f)
+        {
+            t *= 100.f;
+            auto dist = static_cast<std::int32_t>(t);
+            return std::to_string(dist) + "cm";
+        }
+        auto dist = static_cast<std::int32_t>(t);
+        return std::to_string(dist) + "m";
+    }
+}
+
 float Club::getPower(float distanceToPin, bool imperial) const
 {
     if (m_id == ClubID::Putter)
@@ -137,18 +171,7 @@ float Club::getPower(float distanceToPin, bool imperial) const
     }
 
     //check player level and return further distance
-    auto level = Social::getLevel();
-    //auto level = DebugLevel;
-    if (level > 29)
-    {
-        return ClubStats[m_id].stats[2].power;
-    }
-
-    if (level > 14)
-    {
-        return ClubStats[m_id].stats[1].power;
-    }
-    return ClubStats[m_id].stats[0].power;
+    return ClubStats[m_id].stats[getClubLevel()].power;
 }
 
 float Club::getTarget(float distanceToPin) const
@@ -163,24 +186,30 @@ float Club::getTarget(float distanceToPin) const
 
 float Club::getBaseTarget() const
 {
-    //check player level and return increased distance
-    auto level = Social::getLevel();
-    //auto level = DebugLevel;
-    if (level > 29)
-    {
-        return ClubStats[m_id].stats[2].target;
-    }
+    return ClubStats[m_id].stats[getClubLevel()].target;
+}
 
-    if (level > 14)
-    {
-        return ClubStats[m_id].stats[1].target;
-    }
-    return ClubStats[m_id].stats[0].target;
+float Club::getTargetAtLevel(std::int32_t level) const
+{
+    return ClubStats[m_id].stats[level].target;
 }
 
 float Club::getDefaultTarget() const
 {
     return ClubStats[m_id].stats[0].target;
+}
+
+std::int32_t Club::getClubLevel()
+{
+    CRO_ASSERT(playerLevel > -1 && playerLevel < 3, "");
+
+    return playerLevel;
+}
+
+void Club::setClubLevel(std::int32_t level)
+{
+    playerLevel = level;
+    CRO_ASSERT(playerLevel > -1 && playerLevel < 3, "");
 }
 
 //private

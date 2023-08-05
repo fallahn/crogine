@@ -53,5 +53,5 @@ struct ScoreID final
 
 static const std::array<std::string, ScoreID::Count> ScoreStrings =
 {
-    "Hole In One", "Albatross", "Eagle", "Birdie", "Par", "Bogey", "Double Bogey", "Triple Bogey"
+    "Hole\nIn\nOne!", "Albatross", "Eagle", "Birdie", "Par", "Bogey", "Double Bogey", "Triple Bogey"
 };

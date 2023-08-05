@@ -55,7 +55,9 @@ struct StateID final
         EventOverlay, //consumes events if the overlay is open
         Unlock,
         Profile, 
-
+        Leaderboard,
+        Stats,
+        MapOverview,
 
         SQLite, //used for testing SQLite features
         Workshop = 1100

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022
+Matt Marchant 2022 - 2023
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -35,7 +35,8 @@ source distribution.
 using namespace cro;
 
 Transformable2D::Transformable2D()
-    : m_position    (0.f),
+    : m_origin      (0.f),
+    m_position      (0.f),
     m_rotation      (0.f),
     m_scale         (1.f),
     m_modelMatrix   (1.f),
@@ -86,6 +87,12 @@ void Transformable2D::scale(glm::vec2 amount)
     m_dirty = true;
 }
 
+void Transformable2D::setOrigin(glm::vec2 origin)
+{
+    m_origin = origin;
+    m_dirty = true;
+}
+
 const glm::mat4& Transformable2D::getTransform() const
 {
     if (m_dirty)
@@ -102,4 +109,5 @@ void Transformable2D::updateTransform() const
     m_modelMatrix = glm::translate(glm::mat4(1.f), glm::vec3(m_position, 0.f));
     m_modelMatrix = glm::rotate(m_modelMatrix, m_rotation, cro::Transform::Z_AXIS);
     m_modelMatrix = glm::scale(m_modelMatrix, glm::vec3(m_scale, 1.f));
+    m_modelMatrix = glm::translate(m_modelMatrix, glm::vec3(-m_origin.x, -m_origin.y, 0.f));
 }

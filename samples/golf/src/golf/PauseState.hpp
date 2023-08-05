@@ -83,6 +83,8 @@ private:
     };
     std::int32_t m_confirmationType; //used to decide which action the confirmation menu should take
 
+    cro::Entity m_minimapButton;
+
     void buildScene();
     void quitState();
 };

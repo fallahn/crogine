@@ -512,7 +512,6 @@ void DefaultAchievements::AchievementIcon::update(float dt)
     }
 }
 
-//private
 void DefaultAchievements::AchievementIcon::draw(const glm::mat4& parentTx)
 {
     auto tx = getTransform() * parentTx;

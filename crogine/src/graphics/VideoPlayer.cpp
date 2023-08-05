@@ -438,7 +438,7 @@ bool VideoPlayer::AudioStream::onGetData(cro::SoundStream::Chunk& chunk)
 void VideoPlayer::AudioStream::init(std::uint32_t channels, std::uint32_t sampleRate)
 {
     stop();
-    initialise(channels, sampleRate);
+    initialise(channels, sampleRate, 0);
 }
 
 void VideoPlayer::AudioStream::pushData(float* data)

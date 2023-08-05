@@ -102,7 +102,7 @@ namespace cro::Shaders::Billboard
 
             gl_Position = viewProj * vec4(position, 1.0);
             gl_Position /= gl_Position.w;
-            gl_Position.xy += a_position.xy * (a_texCoord1 / u_screenSize);
+            gl_Position.xy = (a_position.xy * (a_texCoord1 / u_screenSize)) + gl_Position.xy;
 
             #if defined (VERTEX_LIT)
             v_normalVector = vec3(viewMatrix[0][2], viewMatrix[1][2], viewMatrix[2][2]);
@@ -115,8 +115,8 @@ namespace cro::Shaders::Billboard
 #else
             vec3 camUp = vec3(viewMatrix[0][1], viewMatrix[1][1], viewMatrix[2][1]) * -u_clipPlane.y;
 #endif
-            position = position + camRight * a_position.x
-                                + camUp * a_position.y;
+            position = position + (camRight * a_position.x)
+                                + (camUp * a_position.y);
 
             gl_Position = viewProj * vec4(position, 1.0);
 
@@ -300,7 +300,7 @@ namespace cro::Shaders::Billboard
             {
                 for(int y = 0; y < filterSize; ++y)
                 {
-                    float pcfDepth = TEXTURE(u_shadowMap, vec3(projectionCoords.xy + kernel[y * filterSize + x] * texelSize, cascadeIndex)).r;
+                    float pcfDepth = TEXTURE(u_shadowMap, vec3((kernel[y * filterSize + x] * texelSize) + projectionCoords.xy, cascadeIndex)).r;
                     shadow += (projectionCoords.z - 0.001) > pcfDepth ? 0.4 : 0.0;
                 }
             }

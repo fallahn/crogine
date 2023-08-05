@@ -83,9 +83,11 @@ R"(
 static const std::string SkinMatrix =
 R"(
     mat4 skinMatrix = a_boneWeights.x * u_boneMatrices[int(a_boneIndices.x)];
-    skinMatrix += a_boneWeights.y * u_boneMatrices[int(a_boneIndices.y)];
-    skinMatrix += a_boneWeights.z * u_boneMatrices[int(a_boneIndices.z)];
-    skinMatrix += a_boneWeights.w * u_boneMatrices[int(a_boneIndices.w)];
+
+    skinMatrix = a_boneWeights.y * u_boneMatrices[int(a_boneIndices.y)] + skinMatrix;
+    skinMatrix = a_boneWeights.z * u_boneMatrices[int(a_boneIndices.z)] + skinMatrix;
+    skinMatrix = a_boneWeights.w * u_boneMatrices[int(a_boneIndices.w)] + skinMatrix;
+
 )";
 
 
@@ -194,7 +196,7 @@ R"(
         {
             for(int y = 0; y < filterSize; ++y)
             {
-                float pcfDepth = TEXTURE(u_shadowMap, vec3(projectionCoords.xy + kernel[y * filterSize + x] * texelSize, cascadeIndex)).r;
+                float pcfDepth = TEXTURE(u_shadowMap, vec3((kernel[y * filterSize + x] * texelSize) + projectionCoords.xy, cascadeIndex)).r;
                 shadow += (projectionCoords.z - bias) > pcfDepth ? 0.4 : 0.0;
             }
         }
@@ -216,7 +218,7 @@ R"(
             {
                 for(int y = 0; y < filterSize; ++y)
                 {
-                    float pcfDepth = TEXTURE(u_shadowMap, vec3(projectionCoords.xy + kernel[y * filterSize + x] * texelSize, cascadeIndex)).r;
+                    float pcfDepth = TEXTURE(u_shadowMap, vec3((kernel[y * filterSize + x] * texelSize) + projectionCoords.xy, cascadeIndex)).r;
                     shadow += (projectionCoords.z - 0.001) > pcfDepth ? 0.4 : 0.0;
                 }
             }

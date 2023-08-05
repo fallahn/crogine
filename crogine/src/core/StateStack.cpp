@@ -139,8 +139,13 @@ std::int32_t StateStack::getTopmostState() const
 void StateStack::cacheState(StateID id)
 {
     CRO_ASSERT(m_stateCache.count(id) == 0, "State is already cached");
-    m_stateCache.insert(std::make_pair(id, createState(id, true)));
-    m_stateCache.at(id)->m_cached = true;
+    auto& state = m_stateCache.insert(std::make_pair(id, createState(id, true))).first->second;
+    state->m_cached = true;
+
+    //do one update to make sure the scene is properly initialised and ready
+    //this fixes instances where resize callbacks aren't applied to cached
+    //states which haven't been opened and have not fully registered their cameras
+    state->simulate(0.f);
 }
 
 void StateStack::uncacheState(StateID id)

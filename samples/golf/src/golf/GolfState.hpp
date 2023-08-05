@@ -307,6 +307,14 @@ private:
             EmotePulse,
             SpinBg,
             SpinFg,
+            BirdieLeft,
+            BirdieRight,
+            EagleLeft,
+            EagleRight,
+            AlbatrossLeft,
+            AlbatrossRight,
+            Hio,
+            BounceAnim,
 
             Count
         };
@@ -341,7 +349,7 @@ private:
     void createSwingMeter(cro::Entity);
     void showCountdown(std::uint8_t);
     void createScoreboard();
-    void updateScoreboard();
+    void updateScoreboard(bool updatePardiff = true);
     void logCSV() const;
     void showScoreboard(bool visible);
     void updateWindDisplay(glm::vec3);
@@ -416,6 +424,7 @@ private:
 
     cro::Entity m_mapCam;
     cro::RenderTexture m_mapTexture;
+    cro::MultiRenderTexture m_mapTextureMRT; //hack to create images for map explorer
 
     void updateMiniMap();
 
@@ -442,6 +451,10 @@ private:
 
         bool underTwoPutts = true;
         std::int32_t puttCount = 0; //no more than two putts on every hole
+
+        std::int32_t eagles = 0;
+        std::int32_t birdies = 0; //nested achievement
+        std::int32_t gimmes = 0; //gimme gimme gimme
     }m_achievementTracker;
     cro::Clock m_playTimer; //track avg play time stat
     cro::Time m_playTime;

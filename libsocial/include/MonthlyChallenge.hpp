@@ -1,0 +1,147 @@
+/*-----------------------------------------------------------------------
+
+Matt Marchant 2023
+http://trederia.blogspot.com
+
+Super Video Golf - zlib licence.
+
+This software is provided 'as-is', without any express or
+implied warranty.In no event will the authors be held
+liable for any damages arising from the use of this software.
+
+Permission is granted to anyone to use this software for any purpose,
+including commercial applications, and to alter it and redistribute
+it freely, subject to the following restrictions :
+
+1. The origin of this software must not be misrepresented;
+you must not claim that you wrote the original software.
+If you use this software in a product, an acknowledgment
+in the product documentation would be appreciated but
+is not required.
+
+2. Altered source versions must be plainly marked as such,
+and must not be misrepresented as being the original software.
+
+3. This notice may not be removed or altered from any
+source distribution.
+
+-----------------------------------------------------------------------*/
+
+#pragma once
+
+#include <array>
+#include <string>
+
+struct ChallengeID final
+{
+    enum
+    {
+        Zero,
+        One,
+        Two,
+        Three,
+        Four,
+        Five,
+        Six,
+        Seven,
+        Eight,
+        Nine,
+        Ten,
+        Eleven,
+
+        Count
+    };
+};
+
+//names of the stats
+static const std::array<std::string, ChallengeID::Count> ChallengeStrings =
+{
+    "monthly_00",
+    "monthly_01",
+    "monthly_02",
+    "monthly_03",
+    "monthly_04",
+    "monthly_05",
+    "monthly_06",
+    "monthly_07",
+    "monthly_08",
+    "monthly_09",
+    "monthly_10",
+    "monthly_11",
+};
+
+static const std::array<std::string, ChallengeID::Count> ChallengeDescriptions =
+{
+    "Make 25 So Close chips on to the green",
+    "Make 50 Nice Putts",
+    "Hit 15 random bull's eyes",
+    "Play 18 holes in every game mode at least once",
+    "Play 9 holes on each course with at least 4 human or CPU players",
+    "Get 10 Boomerangs",
+    "Get 99% or better on each target on the Driving Range",
+    "Take 25 gimmies resulting from a near miss",
+    "Make 50 shots with Great Accuracy",
+    "Score 2 birdies on the front 9 of each course",
+    "Score 1 eagle on the back 9 of each course",
+    "Implement me."
+};
+
+struct Challenge final
+{
+    enum
+    {
+        //bitflags or incrementing value
+        Flag, Counter
+    };
+
+    const std::uint32_t targetValue = 0;
+    std::int32_t type = Counter;
+    std::uint32_t value = 0;
+
+    explicit Challenge(std::uint32_t target, std::int32_t t = Counter, std::uint32_t v = 0)
+        : targetValue(target), value(v), type(t) {}
+};
+
+class MonthlyChallenge final
+{
+public:
+    MonthlyChallenge() {}; //fetch the current active month
+
+    //ignores the value if id != m_month
+    //else increments counter (ignoring value)
+    //or sets value as flag.
+    //raises a message to show progress or completion
+    void updateChallenge(std::int32_t id, std::int32_t value) {};
+
+    //refreshes the status of the current month's stat
+    //or resets other month's stats. TODO much check
+    //we have a valid month, else we'll reset ALL progress...
+    void refresh() {}; //call from game start, driving start and clubhouse.
+
+    struct Progress final
+    {
+        std::int32_t value = 0;
+        std::int32_t target = 0;
+        std::int32_t index = -1;
+    };
+    Progress getProgress() const {};
+
+private:
+    std::array<Challenge, ChallengeID::Count> m_challenges =
+    {
+        Challenge(25, Challenge::Counter),
+        Challenge(50, Challenge::Counter),
+        Challenge(15, Challenge::Counter),
+        Challenge(0x7, Challenge::Flag), //TODO update this with new game modes
+        Challenge(0x3ff, Challenge::Flag), //(1 << 0) - (1 << 9)
+        Challenge(10, Challenge::Counter),
+        Challenge(0x1fff, Challenge::Flag), //(1 << 0) - (1 << 12)
+        Challenge(25, Challenge::Counter),
+        Challenge(50, Challenge::Counter),
+        Challenge(0x3ff, Challenge::Flag),
+        Challenge(0x3ff, Challenge::Flag),
+        Challenge(0),
+    };
+
+    std::int32_t m_month = -1;
+};

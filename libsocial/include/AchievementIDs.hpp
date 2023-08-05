@@ -125,6 +125,12 @@ namespace AchievementID
         ThreesACrowd,
         ConsistencyIsKey,
 
+        Nested,
+        GimmeGimmeGimme,
+        DriveItHome,
+        Gamer,
+        CauseARacket,
+
         Count
     };
     static_assert(Count <= 256, "Count exceeds maximum 256 Achievements!");

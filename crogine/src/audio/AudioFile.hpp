@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2023
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -70,6 +70,22 @@ namespace cro
             \returns true if seek is successful, else false if out of bounds
             */
             virtual bool seek(cro::Time) = 0;
+
+            /*!
+            \brief Returns the format of any loaded audio file
+            */
+            virtual PCMData::Format getFormat() const = 0;
+
+            /*!
+            \brief Returns the sample rate in hertz of any loaded file
+            */
+            virtual std::int32_t getSampleRate() const = 0;
+
+            /*!
+            \brief Returns the total number of samples in the file
+            or 0 if no file is open
+            */
+            virtual std::uint64_t getSampleCount() const = 0;
         };
     }
 }

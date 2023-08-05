@@ -225,7 +225,7 @@ static const std::string CloudOverheadFragment = R"(
 
         float rimAmount = dot(vec3(0.0, -1.0, 0.0), normal);
         rimAmount += 1.0;
-        rimAmount /= 2.0;
+        rimAmount *= 0.5;
         rim *= smoothstep(0.5, 0.9, rimAmount);
 
 
@@ -306,7 +306,7 @@ void main()
     check *= 2.0;
     check -= 1.0;
     
-    lightAmount += (0.05 * check);
+    lightAmount = (0.05 * check) + lightAmount;
 
     FRAG_OUT = mix(u_colourA, u_colourB, step(0.5, lightAmount));
 })";

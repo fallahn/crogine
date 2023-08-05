@@ -47,7 +47,7 @@ class BallTrail final
 public:
     BallTrail();
 
-    void create(cro::Scene&, cro::ResourceCollection&, std::int32_t);
+    void create(cro::Scene&, cro::ResourceCollection&, std::int32_t, bool courseSize = true);
 
     void setNext();
     void addPoint(glm::vec3);

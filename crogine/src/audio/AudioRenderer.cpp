@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2021
+Matt Marchant 2017 - 2023
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -219,4 +219,9 @@ void AudioRenderer::setSpeedOfSound(float speed)
 {
     CRO_ASSERT(speed > 0, "Must be more than 0");
     m_impl->setSpeedOfSound(std::max(0.01f, speed));
+}
+
+void AudioRenderer::printDebug()
+{
+    m_impl->printDebug();
 }

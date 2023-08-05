@@ -66,6 +66,8 @@ struct AchievementImage final
     cro::FloatRect textureRect;
 };
 
+class MonthlyChallenge;
+
 //base class for different implementations
 class AchievementImpl
 {
@@ -119,13 +121,19 @@ public:
 
     static const StatData* getStat(const std::string&);
 
-    static void setAvgStat(const std::string&, float, float) {};
+    static const StatData* getGlobalStat(const std::string&) { return nullptr; }
+
+    static void setAvgStat(const std::string&, float, float) {}
 
     static float getAvgStat(const std::string&) { return 0.f; }
 
     static void setActive(bool);
 
-    static bool getActive() { return m_active; };
+    static bool getActive() { return m_active; }
+
+    static void refreshGlobalStats() {}
+
+    static MonthlyChallenge* getMonthlyChallenge() { return nullptr; }
 
 private:
     static AchievementImpl* m_impl;

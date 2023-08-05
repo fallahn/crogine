@@ -45,9 +45,16 @@ source distribution.
 //(terrain vertex data and materials changed 1100 -> 1110)
 //(player avatar data format changed 1110 -> 1120)
 //(ball started sending wind effect 1120 -> 1124)
-static constexpr std::uint16_t CURRENT_VER = 1124;
-static const std::string StringVer("1.12.5");
+static constexpr std::uint16_t CURRENT_VER = 1130;
+static const std::string StringVer("1.13.0");
 
+struct HallEntry final
+{
+    cro::String topTen;
+    cro::String nearestTen;
+    cro::String personalBest;
+    bool hasData = false;
+};
 
 class Social final
 {
@@ -68,7 +75,7 @@ public:
         enum
         {
             SocialMessage = 10000,
-            StatMessage
+            StatsMessage
         };
     };
 
@@ -76,8 +83,13 @@ public:
     {
         enum
         {
-            StatsReceived
+            StatsReceived,
+            HOFReceived,
+            AwardsReceived
         }type = StatsReceived;
+        std::int32_t index = -1;
+        std::int32_t page = -1;
+        std::int32_t holeCount = -1;
     };
 
     struct SocialEvent final
@@ -88,10 +100,12 @@ public:
             LevelUp,
             XPAwarded,
             OverlayActivated,
-            PlayerAchievement
+            PlayerAchievement, //as in we should cheer, not an actual achievement
+            MonthlyProgress
         }type = LevelUp;
-        std::int32_t level = 0;
-        std::int32_t reason = -1;
+        std::int32_t level = 0; //if monthly progress then current value
+        std::int32_t reason = -1; //if monthly progress then target value
+        std::uint64_t playerID = 0; //id of monthly challenge
     };
 
     struct ProgressData final
@@ -107,6 +121,8 @@ public:
     };
     static cro::Image userIcon;
 
+    static cro::String getPlayerName() { return {}; }
+
     static bool isGreyscale() { return false; }
     static bool isValid() { return true; }
     static bool isValid(const std::string&) { return true; }
@@ -118,6 +134,7 @@ public:
     static void awardXP(std::int32_t, std::int32_t = -1);
     static std::int32_t getXP();
     static std::int32_t getLevel();
+    static std::int32_t getClubLevel();
     static ProgressData getLevelProgress();
     static std::uint32_t getCurrentStreak();
     static std::uint32_t updateStreak();
@@ -125,8 +142,19 @@ public:
     static void resetProfile();
     static void storeDrivingStats(const std::array<float, 3u>&);
     static void readDrivingStats(std::array<float, 3u>&);
+    static cro::String getDrivingLeader(std::int32_t holeIndex, std::int32_t tryCount) { return {}; }
+    struct BoardType final
+    {
+        enum
+        {
+            DrivingRange, Courses
+        };
+    };
+    static void findLeaderboards(std::int32_t) {}
     static void insertScore(const std::string&, std::uint8_t, std::int32_t) {}
     static std::int32_t getPersonalBest(const std::string&, std::uint8_t) { return -1; }
+    static std::int32_t getMonthlyBest(const std::string&, std::uint8_t) { return -1; }
+    static void getRandomBest() {}
     static std::vector<cro::String> getLeaderboardResults(std::int32_t, std::int32_t) { return {}; }
     static void courseComplete(const std::string&, std::uint8_t);
     static void setStatus(std::int32_t, const std::vector<const char*>&) {}
@@ -135,6 +163,28 @@ public:
     static constexpr std::uint32_t IconSize = 64;
     static inline const std::string RSSFeed = "https://fallahn.itch.io/super-video-golf/devlog.rss";
     static inline const std::string WebURL = "https://fallahn.itch.io/super-video-golf";
+    static void updateHallOfFame() {}
+    static void refreshHallOfFame(const std::string&) {}
+    static HallEntry getHallOfFame(const std::string&, std::int32_t, std::int32_t) { return {}; }
+    static void refreshGlobalBoard(std::int32_t) {}
+    static HallEntry getGlobalBoard(std::int32_t) { return {}; }
+    static cro::String getTickerMessage() { return {}; }
+
+    static float getCompletionCount(const std::string&, bool);
+
+    //awards (inventory items) to display in clubhouse
+    struct Award final
+    {
+        //dictates appearance
+        enum
+        {
+            MonthlyGold, MonthlySilver, MonthlyBronze
+        };
+        std::int32_t type;
+        cro::String description;
+    };
+    static void refreshAwards() {};
+    static const std::vector<Award>& getAwards() { return {}; }
 
     enum class UnlockType
     {

@@ -357,6 +357,24 @@
     <ClCompile Include="src\sqlite\ProfileDB.cpp">
       <Filter>Source Files\sqlite</Filter>
     </ClCompile>
+    <ClCompile Include="src\golf\server\ServerGolfRules.cpp">
+      <Filter>Source Files\golf\server</Filter>
+    </ClCompile>
+    <ClCompile Include="src\golf\LeaderboardState.cpp">
+      <Filter>Source Files\golf\client\states</Filter>
+    </ClCompile>
+    <ClCompile Include="src\golf\StatsState.cpp">
+      <Filter>Source Files\golf\client\states</Filter>
+    </ClCompile>
+    <ClCompile Include="src\golf\MapOverviewState.cpp">
+      <Filter>Source Files\golf\client\states</Filter>
+    </ClCompile>
+    <ClCompile Include="src\M3UPlaylist.cpp">
+      <Filter>Source Files\golf</Filter>
+    </ClCompile>
+    <ClCompile Include="src\golf\ProgressIcon.cpp">
+      <Filter>Source Files\golf\client</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ErrorCheck.hpp">
@@ -719,6 +737,30 @@
     <ClInclude Include="src\sqlite\ProfileDB.hpp">
       <Filter>Header Files\sqlite</Filter>
     </ClInclude>
+    <ClInclude Include="src\golf\LeaderboardState.hpp">
+      <Filter>Header Files\golf\client\states</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\server\CPUStats.hpp">
+      <Filter>Header Files\golf\server</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ImTheme.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="VersionNumber.hpp">
+      <Filter>Header Files\golf</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\StatsState.hpp">
+      <Filter>Header Files\golf\client\states</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\MapOverviewState.hpp">
+      <Filter>Header Files\golf\client\states</Filter>
+    </ClInclude>
+    <ClInclude Include="src\M3UPlaylist.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\ProgressIcon.hpp">
+      <Filter>Header Files\golf\client</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="src\golf\WaterShader.inl">
@@ -771,6 +813,18 @@
     </None>
     <None Include="src\golf\FogShader.inl">
       <Filter>Header Files\golf\client\shaders</Filter>
+    </None>
+    <None Include="src\golf\TVShader.inl">
+      <Filter>Header Files\golf\client\shaders</Filter>
+    </None>
+    <None Include="src\golf\OptionsEnum.inl">
+      <Filter>Header Files\golf\client\states</Filter>
+    </None>
+    <None Include="src\golf\MenuEnum.inl">
+      <Filter>Header Files\golf\client\states</Filter>
+    </None>
+    <None Include="src\golf\ProfileEnum.inl">
+      <Filter>Header Files\golf\client\states</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>

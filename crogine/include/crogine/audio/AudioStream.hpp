@@ -39,7 +39,7 @@ namespace cro
     \brief An AudioSource which streams data from storage.
     When playing longer audio files such as music it is recommended
     that an AudioEmitter component use an AudioStream as its data
-    source rather than a buffer. Streams will stream either *.wav
+    source rather than a buffer. Streams will stream either *.wav, *mp3
     or *.ogg data from disk, as opposed to attempting to load the
     entire file into memory.
     As with AudioBuffers, AudioStreams must live at least as long as
@@ -59,7 +59,7 @@ namespace cro
         AudioStream& operator = (AudioStream&&) noexcept;
 
         /*!
-        \brief Attempts to open the *.ogg or *.wav file from the given path.
+        \brief Attempts to open the *.ogg, *.mp3 or *.wav file from the given path.
         \returns true on success else false.
         */
         bool loadFromFile(const std::string& path) override;

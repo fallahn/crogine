@@ -60,6 +60,19 @@ struct ClubID final
         FiveWood, FourIron, SixIron, SevenIron, NineIron
     };
 
+    static inline std::int32_t getUnlockLevel(std::int32_t id)
+    {
+        for (auto i = 0; i < LockedSet.size(); ++i)
+        {
+            if (LockedSet[i] == id)
+            {
+                return (i + 1) * 5;
+            }
+        }
+
+        return 0;
+    }
+
     static constexpr std::int32_t DefaultSet =
         Flags[Driver] | Flags[ThreeWood] | Flags[FiveIron] |
         Flags[EightIron] | Flags[PitchWedge] | Flags[GapWedge] |
@@ -78,6 +91,8 @@ public:
 
     std::string getLabel() const { return m_name; } //doesn't include distance
 
+    std::string getDistanceLabel(bool imperial, std::int32_t level) const;
+
     float getPower(float distanceToPin, bool imperial) const;
 
     float getAngle() const { return m_angle; }
@@ -88,9 +103,14 @@ public:
 
     float getBaseTarget() const;
     float getDefaultTarget() const; //target with no level-shift applied
+    float getTargetAtLevel(std::int32_t level) const;
 
     float getSideSpinMultiplier() const { return m_sidespin; }
     float getTopSpinMultiplier() const { return m_topspin; }
+    float getSpinInfluence() const { return (m_topspin + m_sidespin) / 2.f; } //an average just used for printing stats
+
+    static std::int32_t getClubLevel(); //0-2 for range
+    static void setClubLevel(std::int32_t);
 
 private:
     const std::int32_t m_id = -1;

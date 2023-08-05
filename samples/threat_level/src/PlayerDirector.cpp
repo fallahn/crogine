@@ -173,7 +173,7 @@ void PlayerDirector::handleMessage(const cro::Message& msg)
                     {
                         pi.state = PlayerInfo::State::Dead;
 
-                        entity.getComponent<cro::Transform>().setRotation(cro::Transform::QUAT_IDENTY);
+                        entity.getComponent<cro::Transform>().setRotation(cro::Transform::QUAT_IDENTITY);
                         entity.getComponent<cro::Transform>().setPosition({ -15.4f, 0.f, -9.3f });
                         entity.getComponent<Velocity>().velocity = glm::vec3();
                         entity.getComponent<cro::ParticleEmitter>().stop();

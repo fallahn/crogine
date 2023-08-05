@@ -29,12 +29,15 @@ source distribution.
 
 #pragma once
 
+#include "CommonConsts.hpp"
+
 #include <crogine/core/Clock.hpp>
 #include <crogine/detail/Types.hpp>
 #include <crogine/detail/glm/vec3.hpp>
 #include <crogine/gui/GuiClient.hpp>
 
 #include <vector>
+#include <array>
 
 namespace cro
 {
@@ -48,7 +51,7 @@ class CPUGolfer final : public cro::GuiClient
 {
 public:
 
-    CPUGolfer(const InputParser&, const ActivePlayer&, const CollisionMesh&);
+    CPUGolfer(InputParser&, const ActivePlayer&, const CollisionMesh&);
 
     void handleMessage(const cro::Message&);
     void activate(glm::vec3 target, glm::vec3 fallbackTarget, bool puttFromTee);
@@ -59,12 +62,18 @@ public:
     glm::vec3 getTarget() const { return m_target; }
 
     std::size_t getSkillIndex() const;
+    std::int32_t getClubLevel() const; //remember we have to set the active player FIRST
 
+    void setFastCPU(bool fast) { m_fastCPU = fast; }
+    void setCPUCount(std::int32_t, const struct SharedStateData&);
+    void suspend(bool);
 private:
 
-    const InputParser& m_inputParser; //only reads the state - actual commands are send by raising events.
+    InputParser& m_inputParser;
     const ActivePlayer& m_activePlayer;
     const CollisionMesh& m_collisionMesh;
+    bool m_fastCPU;
+    bool m_suspended;
     bool m_puttFromTee;
     float m_distanceToPin;
     glm::vec3 m_target;
@@ -77,6 +86,8 @@ private:
     glm::vec3 m_predictionResult;
     std::int32_t m_predictionCount;
     float m_puttingPower; //how much power is predicted by the power bar flag
+
+    std::array<std::int32_t, ConstVal::MaxClients * ConstVal::MaxPlayers> m_cpuProfileIndices = {};
 
     enum class State
     {
@@ -153,4 +164,6 @@ private:
     //for each pressed event we need a release event the next frame
     std::vector<cro::Event> m_popEvents;
     void sendKeystroke(std::int32_t, bool autoRelease = true);
+
+    glm::vec3 getRandomOffset(glm::vec3) const;
 };

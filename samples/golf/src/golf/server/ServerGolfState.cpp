@@ -32,10 +32,13 @@ source distribution.
 #include "../GameConsts.hpp"
 #include "../ClientPacketData.hpp"
 #include "../BallSystem.hpp"
+#include "../Clubs.hpp"
+#include "CPUStats.hpp"
 #include "ServerGolfState.hpp"
 #include "ServerMessages.hpp"
 
 #include <AchievementIDs.hpp>
+#include <Social.hpp>
 
 #include <crogine/core/Log.hpp>
 #include <crogine/core/ConfigFile.hpp>
@@ -57,6 +60,24 @@ namespace
     constexpr float MaxScoreboardTime = 10.f;
     constexpr std::uint8_t MaxStrokes = 12;
     const cro::Time TurnTime = cro::seconds(90.f);
+
+    bool hadTennisBounce = false;
+
+    glm::vec3 randomOffset3()
+    {
+        auto x = cro::Util::Random::value(0, 1) * 2;
+        auto y = cro::Util::Random::value(0, 1) * 2;
+
+        x -= 1;
+        y -= 1;
+
+        x *= cro::Util::Random::value(3, 8);
+        y *= cro::Util::Random::value(3, 8);
+
+        glm::vec3 ret(x, 0.f, y);
+        ret = glm::normalize(ret) *= cro::Util::Random::value(3.f, 5.f);
+        return ret / 100.f;
+    };
 }
 
 GolfState::GolfState(SharedData& sd)
@@ -70,7 +91,8 @@ GolfState::GolfState(SharedData& sd)
     m_allMapsLoaded         (false),
     m_currentHole           (0),
     m_skinsPot              (1),
-    m_currentBest           (MaxStrokes)
+    m_currentBest           (MaxStrokes)/*,
+    m_skillIndex            (0)*/
 {
     if (m_mapDataValid = validateMap(); m_mapDataValid)
     {
@@ -87,9 +109,9 @@ void GolfState::handleMessage(const cro::Message& msg)
     {
         //TODO not sure we want to send this blindly to the client
         //but only the client knows if achievements are currently enabled.
-        std::array<std::uint8_t, 2u> packet =
+        std::array<std::uint8_t, 3u> packet =
         {
-            m_playerInfo[0].client, achID
+            m_playerInfo[0].client, m_playerInfo[0].player, achID
         };
         m_sharedData.host.broadcastPacket(PacketID::ServerAchievement, packet, net::NetFlag::Reliable);
     };
@@ -159,14 +181,11 @@ void GolfState::handleMessage(const cro::Message& msg)
             }
             m_playerInfo[0].terrain = data.terrain;
 
-            //if match/skins play check if our score is even with anyone holed already and forfeit
-            if (m_sharedData.scoreType != ScoreType::Stroke)
+            switch (m_sharedData.scoreType)
             {
-                if (m_playerInfo[0].holeScore[m_currentHole] >= m_currentBest)
-                {
-                    m_playerInfo[0].distanceToHole = 0;
-                    m_playerInfo[0].holeScore[m_currentHole]++;
-                }
+            default:
+                handleDefaultRules(data);
+                break;
             }
 
             setNextPlayer();
@@ -179,44 +198,12 @@ void GolfState::handleMessage(const cro::Message& msg)
             m_playerInfo[0].distanceToHole = 0.f;
             m_playerInfo[0].terrain = data.terrain;
 
-
-            //if we're playing match play or skins then
-            //anyone who has a worse score has already lost
-            //so set them to finished.
-            if (m_sharedData.scoreType != ScoreType::Stroke)
+            switch (m_sharedData.scoreType)
             {
-                //eliminate anyone who can't beat this score
-                for (auto i = 1u; i < m_playerInfo.size(); ++i)
-                {
-                    if ((m_playerInfo[i].holeScore[m_currentHole]) >=
-                        m_playerInfo[0].holeScore[m_currentHole])
-                    {
-                        if (m_playerInfo[i].distanceToHole > 0) //not already holed
-                        {
-                            m_playerInfo[i].distanceToHole = 0.f;
-                            m_playerInfo[i].holeScore[m_currentHole]++; //therefore they lose a stroke and don't draw
-                        }
-                    }
-                }
-
-                //if this is the second hole and it has the same as the current best
-                //force a draw by eliminating anyone who can't beat it
-                if (m_playerInfo[0].holeScore[m_currentHole] == m_currentBest)
-                {
-                    for (auto i = 1u; i < m_playerInfo.size(); ++i)
-                    {
-                        if ((m_playerInfo[i].holeScore[m_currentHole]+1) >=
-                            m_currentBest)
-                        {
-                            if (m_playerInfo[i].distanceToHole > 0)
-                            {
-                                m_playerInfo[i].distanceToHole = 0.f;
-                                m_playerInfo[i].holeScore[m_currentHole] = std::min(m_currentBest, std::uint8_t(m_playerInfo[i].holeScore[m_currentHole] + 1));
-                            }
-                        }
-                    }
-                }
-            }
+            default:
+                handleDefaultRules(data);
+                break;
+            }            
 
             if (m_playerInfo[0].holeScore[m_currentHole] < m_currentBest)
             {
@@ -251,6 +238,12 @@ void GolfState::handleMessage(const cro::Message& msg)
                 //1500m
                 sendAchievement(AchievementID::IntoOrbit);
             }
+
+            if (hadTennisBounce && data.terrain == TerrainID::Fairway)
+            {
+                //send tennis achievement
+                sendAchievement(AchievementID::CauseARacket);
+            }
         }
         else if (data.type == GolfBallEvent::Gimme)
         {
@@ -258,17 +251,11 @@ void GolfState::handleMessage(const cro::Message& msg)
             std::uint16_t inf = (m_playerInfo[0].client << 8) | m_playerInfo[0].player;
             m_sharedData.host.broadcastPacket<std::uint16_t>(PacketID::Gimme, inf, net::NetFlag::Reliable);
 
-            //if match/skins play check if our score is even with anyone holed already and forfeit
-            if (m_sharedData.scoreType != ScoreType::Stroke)
+            switch (m_sharedData.scoreType)
             {
-                for (auto i = 1u; i < m_playerInfo.size(); ++i)
-                {
-                    if (m_playerInfo[i].distanceToHole == 0
-                        && m_playerInfo[i].holeScore[m_currentHole] < m_playerInfo[0].holeScore[m_currentHole])
-                    {
-                        m_playerInfo[0].distanceToHole = 0;
-                    }
-                }
+            default:
+                handleDefaultRules(data);
+                break;
             }
         }
     }
@@ -284,6 +271,10 @@ void GolfState::handleMessage(const cro::Message& msg)
         case TriggerID::Boat:
             sendAchievement(AchievementID::ISeeNoShips);
             break;
+        case TriggerID::TennisCourt:
+            LogI << "Deuce!" << std::endl;
+            hadTennisBounce = true;
+            break;
         }
     }
 
@@ -297,6 +288,10 @@ void GolfState::netEvent(const net::NetEvent& evt)
         switch (evt.packet.getID())
         {
         default: break;
+        case PacketID::NewPlayer:
+            //checks if player is CPU and requires fast move
+            //makeCPUMove();
+            break;
         case PacketID::SkipTurn:
             skipCurrentTurn(evt.packet.as<std::uint8_t>());
             break;
@@ -335,6 +330,16 @@ void GolfState::netEvent(const net::NetEvent& evt)
             break;
         case PacketID::ReadyQuit:
             checkReadyQuit(evt.packet.as<std::uint8_t>());
+            break;
+        case PacketID::FastCPU:
+            if (evt.peer.getID() == m_sharedData.hostID)
+            {
+                m_sharedData.fastCPU = evt.packet.as<std::uint8_t>();
+                m_sharedData.host.broadcastPacket(PacketID::FastCPU, m_sharedData.fastCPU, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+
+                //this checks current player is CPU and launch a move if inactive
+                //makeCPUMove();
+            }
             break;
         }
     }
@@ -630,6 +635,8 @@ void GolfState::checkReadyQuit(std::uint8_t clientID)
 
 void GolfState::setNextPlayer(bool newHole)
 {
+    hadTennisBounce = false;
+
     //broadcast current player's score first
     ScoreUpdate su;
     su.strokeDistance = m_playerInfo[0].ballEntity.getComponent<Ball>().lastStrokeDistance;
@@ -673,6 +680,18 @@ void GolfState::setNextPlayer(bool newHole)
     else
     {
         //go to next player
+
+        //if we're on a putting course and this is the player's first turn
+        //offset them from the tee a little
+        //TODO WHHHYYYY does this add a vertical offset to the camera??
+        /*if (m_scene.getSystem<BallSystem>()->getPuttFromTee()
+            && m_playerInfo[0].holeScore[m_currentHole] == 0)
+        {
+            m_playerInfo[0].position += randomOffset3();
+            m_playerInfo[0].ballEntity.getComponent<cro::Transform>().setPosition(m_playerInfo[0].position);
+            LogI << "added offset" << std::endl;
+        }*/
+
         ActivePlayer player = m_playerInfo[0]; //deliberate slice.
         m_sharedData.host.broadcastPacket(PacketID::SetPlayer, player, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
         m_sharedData.host.broadcastPacket(PacketID::ActorAnimation, std::uint8_t(AnimationID::Idle), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
@@ -686,61 +705,10 @@ void GolfState::setNextHole()
     m_currentBest = MaxStrokes;
     m_scene.getSystem<BallSystem>()->forceWindChange();
 
-    bool gameFinished = false;
 
     //update player skins/match scores
-    if (m_playerInfo.size() > 1)
-    {
-        auto sortData = m_playerInfo;
-        std::sort(sortData.begin(), sortData.end(),
-            [&](const PlayerStatus& a, const PlayerStatus& b)
-            {
-                return a.holeScore[m_currentHole] < b.holeScore[m_currentHole];
-            });
-
-        //only score if no player tied
-        if (sortData[0].holeScore[m_currentHole] != sortData[1].holeScore[m_currentHole])
-        {
-            auto player = std::find_if(m_playerInfo.begin(), m_playerInfo.end(), [&sortData](const PlayerStatus& p)
-                {
-                    return p.client == sortData[0].client && p.player == sortData[0].player;
-                });
-
-            player->matchWins++;
-            player->skins += m_skinsPot;
-            m_skinsPot = 1;
-
-            //check the match score and end the game if this is the mode we're in
-            if (m_sharedData.scoreType == ScoreType::Match)
-            {
-                sortData[0].matchWins++;
-                std::sort(sortData.begin(), sortData.end(),
-                    [&](const PlayerStatus& a, const PlayerStatus& b)
-                    {
-                        return a.matchWins > b.matchWins;
-                    });
-
-
-                auto remainingHoles = static_cast<std::uint8_t>(m_holeData.size()) - (m_currentHole + 1);
-                //if second place can't beat first even if they win all the holes it's game over
-                if(sortData[1].matchWins + remainingHoles < sortData[0].matchWins)
-                {
-                    gameFinished = true;
-                }
-            }
-
-            //send notification packet to clients that player won the hole
-            std::uint16_t data = (player->client << 8) | player->player;
-            m_sharedData.host.broadcastPacket(PacketID::HoleWon, data, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
-        }
-        else
-        {
-            m_skinsPot++;
-
-            std::uint16_t data = 0xff00 | m_skinsPot;
-            m_sharedData.host.broadcastPacket(PacketID::HoleWon, data, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
-        }
-    }
+    auto gameFinished = summariseDefaultRules();
+    
 
     //broadcast all scores to make sure everyone is up to date
     for (auto& player : m_playerInfo)
@@ -779,30 +747,6 @@ void GolfState::setNextHole()
             return;
         }
 
-        //reset player positions/strokes
-        for (auto& player : m_playerInfo)
-        {
-            player.position = m_holeData[m_currentHole].tee;
-            player.distanceToHole = glm::length(m_holeData[m_currentHole].tee - m_holeData[m_currentHole].pin);
-            player.terrain = ballSystem->getTerrain(player.position).terrain;
-
-            auto ball = player.ballEntity;
-            ball.getComponent<Ball>().terrain = player.terrain;
-            ball.getComponent<Ball>().velocity = glm::vec3(0.f);
-            ball.getComponent<cro::Transform>().setPosition(player.position);
-
-            auto timestamp = m_serverTime.elapsed().asMilliseconds();
-
-            ActorInfo info;
-            info.serverID = static_cast<std::uint32_t>(ball.getIndex());
-            info.position = ball.getComponent<cro::Transform>().getPosition();
-            info.timestamp = timestamp;
-            info.clientID = player.client;
-            info.playerID = player.player;
-            info.state = static_cast<std::uint8_t>(ball.getComponent<Ball>().state);
-            m_sharedData.host.broadcastPacket(PacketID::ActorUpdate, info, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
-        }
-
         //tell clients to set up next hole
         std::uint16_t newHole = (m_currentHole << 8) | std::uint8_t(m_holeData[m_currentHole].par);
         m_sharedData.host.broadcastPacket(PacketID::SetHole, newHole, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
@@ -813,7 +757,7 @@ void GolfState::setNextHole()
         entity.addComponent<cro::Transform>();
         entity.addComponent<cro::Callback>().active = true;
         entity.getComponent<cro::Callback>().function =
-            [&](cro::Entity e, float dt)
+            [&, ballSystem](cro::Entity e, float dt)
         {
             if (m_allMapsLoaded)
             {
@@ -829,6 +773,34 @@ void GolfState::setNextHole()
             else
             {
                 m_scoreboardTime = 0.f;
+
+                //apparently we have to do this here else the client just ignores it
+                for (auto i = 0u; i < m_playerInfo.size(); ++i)
+                {
+
+                    auto& player = m_playerInfo[i];
+                    player.position = m_holeData[m_currentHole].tee;
+                    player.distanceToHole = glm::length(player.position - m_holeData[m_currentHole].pin);
+                    player.terrain = ballSystem->getTerrain(player.position).terrain;
+
+                    auto ball = player.ballEntity;
+                    ball.getComponent<Ball>().terrain = player.terrain;
+                    ball.getComponent<Ball>().velocity = glm::vec3(0.f);
+                    ball.getComponent<cro::Transform>().setPosition(player.position);
+
+                    auto timestamp = m_serverTime.elapsed().asMilliseconds();
+
+                    ActorInfo info;
+                    info.serverID = static_cast<std::uint32_t>(ball.getIndex());
+                    info.position = ball.getComponent<cro::Transform>().getPosition();
+                    info.rotation = cro::Util::Net::compressQuat(ball.getComponent<cro::Transform>().getRotation());
+                    info.windEffect = ball.getComponent<Ball>().windEffect;
+                    info.timestamp = timestamp;
+                    info.clientID = player.client;
+                    info.playerID = player.player;
+                    info.state = static_cast<std::uint8_t>(ball.getComponent<Ball>().state);
+                    m_sharedData.host.broadcastPacket(PacketID::ActorUpdate, info, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                }
             }
 
             //make sure to keep resetting this to prevent unfairly
@@ -977,7 +949,7 @@ bool GolfState::validateMap()
             return false;
         }
 
-        static constexpr std::int32_t MaxProps = 4;
+        static constexpr std::int32_t MaxProps = 5;
         std::int32_t propCount = 0;
         auto& holeData = m_holeData.emplace_back();
 
@@ -999,6 +971,13 @@ bool GolfState::validateMap()
                 holeData.tee = holeProp.getValue<glm::vec3>();
                 holeData.tee.x = glm::clamp(holeData.tee.x, 0.f, 320.f);
                 holeData.tee.z = glm::clamp(holeData.tee.z, -200.f, 0.f);
+                propCount++;
+            }
+            else if (name == "target")
+            {
+                holeData.target = holeProp.getValue<glm::vec3>();
+                holeData.target.x = glm::clamp(holeData.target.x, 0.f, 320.f);
+                holeData.target.z = glm::clamp(holeData.target.z, -200.f, 0.f);
                 propCount++;
             }
             else if (name == "par")
@@ -1063,7 +1042,6 @@ void GolfState::initScene()
             }
         }
     }
-
     std::shuffle(m_playerInfo.begin(), m_playerInfo.end(), cro::Util::Random::rndEngine);
 }
 

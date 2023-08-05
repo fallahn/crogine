@@ -30,6 +30,7 @@ source distribution.
 #include "BallTrail.hpp"
 #include "CommandIDs.hpp"
 #include "Terrain.hpp"
+#include "GameConsts.hpp"
 
 #include <crogine/ecs/Scene.hpp>
 
@@ -55,18 +56,32 @@ BallTrail::BallTrail()
 }
 
 //public
-void BallTrail::create(cro::Scene& scene, cro::ResourceCollection& resources, std::int32_t materialID)
+void BallTrail::create(cro::Scene& scene, cro::ResourceCollection& resources, std::int32_t materialID, bool courseSize)
 {
     auto material = resources.materials.get(materialID);
     material.enableDepthTest = false;
     material.blendMode = cro::Material::BlendMode::Additive;
     material.setProperty("u_colour", cro::Colour::White);
     
+
+    cro::Box boundingBox;
+    if (courseSize)
+    {
+        glm::vec2 mapSize(MapSize);
+        boundingBox = { glm::vec3(0.f), glm::vec3(mapSize.x, 100.f, -mapSize.y) };
+    }
+    else
+    {
+        //this is the driving range
+        glm::vec2 rangeSize(RangeSize);
+        boundingBox = { glm::vec3(-rangeSize.x, 100.f, rangeSize.y), glm::vec3(rangeSize.x, 100.f, -rangeSize.y) };
+    }
+
     for (auto i = 0u; i < BufferCount; ++i)
     {
         auto meshID = resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour, 1, GL_LINE_STRIP));
         auto meshData = resources.meshes.getMesh(meshID);
-        meshData.boundingBox = { glm::vec3(0.f), glm::vec3(320.f, 100.f, -200.f) };
+        meshData.boundingBox = boundingBox;
         meshData.boundingSphere = meshData.boundingBox;
 
         auto entity = scene.createEntity();

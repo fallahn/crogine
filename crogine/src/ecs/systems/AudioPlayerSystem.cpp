@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021
+Matt Marchant 2021 - 2023
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -44,7 +44,12 @@ AudioPlayerSystem::AudioPlayerSystem(cro::MessageBus& mb)
 //public
 void AudioPlayerSystem::process(float)
 {
-    auto listnenerPosition = AudioRenderer::getListenerPosition();
+    if (!AudioRenderer::isValid())
+    {
+        return;
+    }
+
+    auto listenerPosition = AudioRenderer::getListenerPosition();
 
     auto entities = getEntities();
     for (auto entity : entities)
@@ -57,25 +62,30 @@ void AudioPlayerSystem::process(float)
         }
 
         //check its flags and update
-        if (audioSource.m_newDataSource)
+        //if (audioSource.m_newDataSource)
+        //{
+        //    if (audioSource.m_ID < 1)
+        //    {
+        //        //request a new source if this emitter is not yet used
+        //        audioSource.m_ID = AudioRenderer::requestAudioSource(audioSource.m_dataSourceID, (audioSource.m_sourceType == AudioSource::Type::Stream));
+        //    }
+        //    else
+        //    {
+        //        //update the existing source
+        //        AudioRenderer::updateAudioSource(audioSource.m_ID, audioSource.m_dataSourceID, (audioSource.m_sourceType == AudioSource::Type::Stream));
+        //    }
+        //    audioSource.m_newDataSource = false;
+        //}
+
+
+        if ((audioSource.m_transportFlags & AudioEmitter::Play))
         {
+            //we'll already have a source if we're paused
             if (audioSource.m_ID < 1)
             {
-                //request a new source if this emitter is not yet used
                 audioSource.m_ID = AudioRenderer::requestAudioSource(audioSource.m_dataSourceID, (audioSource.m_sourceType == AudioSource::Type::Stream));
             }
-            else
-            {
-                //update the existing source
-                AudioRenderer::updateAudioSource(audioSource.m_ID, audioSource.m_dataSourceID, (audioSource.m_sourceType == AudioSource::Type::Stream));
-            }
-            audioSource.m_newDataSource = false;
-        }
 
-
-        if ((audioSource.m_transportFlags & AudioEmitter::Play)
-            /*&& audioSource.m_state != AudioEmitter::State::Playing*/)
-        {
             bool loop = (audioSource.m_transportFlags & AudioEmitter::Looped);
             AudioRenderer::playSource(audioSource.m_ID, loop);
         }
@@ -86,6 +96,11 @@ void AudioPlayerSystem::process(float)
         else if (audioSource.m_transportFlags & AudioEmitter::Stop)
         {
             AudioRenderer::stopSource(audioSource.m_ID);
+
+            //we wait until the renderer says the source has actually
+            //stopped (below)
+            /*AudioRenderer::deleteAudioSource(audioSource.m_ID);
+            audioSource.m_ID = 0;*/
         }
 
         if (audioSource.m_transportFlags & AudioEmitter::GotoOffset)
@@ -105,32 +120,13 @@ void AudioPlayerSystem::process(float)
             //hmm these are static funcs so could be called directly by component setters, no?
             AudioRenderer::setSourcePitch(audioSource.m_ID, audioSource.m_pitch);
             AudioRenderer::setSourceVolume(audioSource.m_ID, audioSource.m_volume * AudioMixer::m_channels[audioSource.m_mixerChannel] * AudioMixer::m_prefadeChannels[audioSource.m_mixerChannel]);
-            //AudioRenderer::setSourceRolloff(audioSource.m_ID, audioSource.m_rolloff);
-            //AudioRenderer::setSourceVelocity(audioSource.m_ID, audioSource.m_velocity);
-            AudioRenderer::setSourcePosition(audioSource.m_ID, listnenerPosition);
+            AudioRenderer::setSourcePosition(audioSource.m_ID, listenerPosition);
         }
-    }
-}
-
-//private
-void AudioPlayerSystem::onEntityAdded(Entity entity)
-{
-    //check if buffer already added and summon new audio source
-    auto& audioSource = entity.getComponent<AudioEmitter>();
-    if (AudioRenderer::isValid())
-    {
-        if (audioSource.m_newDataSource)
+        else if (audioSource.m_state == AudioEmitter::State::Stopped)
         {
-            if (audioSource.m_ID < 1)
-            {
-                //request a new source if this emitter is not yet used
-                audioSource.m_ID = AudioRenderer::requestAudioSource(audioSource.m_dataSourceID, (audioSource.m_sourceType == AudioSource::Type::Stream));
-            }
-            audioSource.m_newDataSource = false;
+            //tidy up so we can recycle the handles
+            AudioRenderer::deleteAudioSource(audioSource.m_ID);
+            audioSource.m_ID = 0;
         }
-    }
-    else
-    {
-        getEntities().pop_back(); //no entity for you!
     }
 }

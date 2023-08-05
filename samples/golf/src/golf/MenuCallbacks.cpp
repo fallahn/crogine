@@ -59,13 +59,13 @@ void MenuCallback::operator()(cro::Entity e, float dt)
             *menuContext.currentMenu = menuData.targetMenu;
 
             //if we're hosting a lobby update the stride
-            if ((menuData.targetMenu == MenuState::MenuID::Lobby
-                && menuContext.sharedData->hosting)
-                /*|| menuData.targetMenu == MenuState::MenuID::Avatar*/)
-            {
-                menuContext.uiScene->getSystem<cro::UISystem>()->setColumnCount(2);
-            }
-            else
+            //if ((menuData.targetMenu == MenuState::MenuID::Lobby
+            //    && menuContext.sharedData->hosting)
+            //    /*|| menuData.targetMenu == MenuState::MenuID::Avatar*/)
+            //{
+            //    menuContext.uiScene->getSystem<cro::UISystem>()->setColumnCount(2);
+            //}
+            //else
             {
                 menuContext.uiScene->getSystem<cro::UISystem>()->setColumnCount(1);
             }

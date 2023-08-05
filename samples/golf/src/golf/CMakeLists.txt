@@ -35,8 +35,10 @@ set(GOLF_SRC
 #  ${PROJECT_DIR}/golf/InterpolationComponent.cpp
 #  ${PROJECT_DIR}/golf/InterpolationSystem.cpp
   ${PROJECT_DIR}/golf/KeyboardState.cpp
+  ${PROJECT_DIR}/golf/LeaderboardState.cpp
   ${PROJECT_DIR}/golf/LeaderboardTexture.cpp
   ${PROJECT_DIR}/golf/MenuAvatars.cpp
+  ${PROJECT_DIR}/golf/MapOverviewState.cpp
   ${PROJECT_DIR}/golf/MenuCallbacks.cpp
   ${PROJECT_DIR}/golf/MenuCreation.cpp
   ${PROJECT_DIR}/golf/MenuCustomisation.cpp
@@ -57,6 +59,7 @@ set(GOLF_SRC
   ${PROJECT_DIR}/golf/PocketBallSystem.cpp
   ${PROJECT_DIR}/golf/PracticeState.cpp
   ${PROJECT_DIR}/golf/ProfileState.cpp
+  ${PROJECT_DIR}/golf/ProgressIcon.cpp
   ${PROJECT_DIR}/golf/PropFollowSystem.cpp
   #${PROJECT_DIR}/golf/PuttingState.cpp
   #${PROJECT_DIR}/golf/PuttingStateUI.cpp
@@ -65,6 +68,7 @@ set(GOLF_SRC
   ${PROJECT_DIR}/golf/SoundEffectsDirector.cpp
   ${PROJECT_DIR}/golf/SpectatorSystem.cpp
   ${PROJECT_DIR}/golf/spooky2.cpp
+  ${PROJECT_DIR}/golf/StatsState.cpp
   ${PROJECT_DIR}/golf/StudioCameraSystem.cpp
   ${PROJECT_DIR}/golf/Swingput.cpp
   ${PROJECT_DIR}/golf/TerrainBuilder.cpp
@@ -79,10 +83,12 @@ set(GOLF_SRC
   ${PROJECT_DIR}/golf/VatFile.cpp
   ${PROJECT_DIR}/golf/Weather.cpp
 
+  #${PROJECT_DIR}/golf/server/GolfDefaultDirector.cpp
   ${PROJECT_DIR}/golf/server/EightballDirector.cpp
   ${PROJECT_DIR}/golf/server/NineballDirector.cpp
   ${PROJECT_DIR}/golf/server/Server.cpp
   ${PROJECT_DIR}/golf/server/ServerBilliardsState.cpp
+  ${PROJECT_DIR}/golf/server/ServerGolfRules.cpp
   ${PROJECT_DIR}/golf/server/ServerGolfState.cpp
   ${PROJECT_DIR}/golf/server/ServerLobbyState.cpp
   ${PROJECT_DIR}/golf/server/SnookerDirector.cpp)

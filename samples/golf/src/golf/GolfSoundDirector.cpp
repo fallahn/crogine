@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2022
+Matt Marchant 2021 - 2023
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -54,13 +54,18 @@ source distribution.
 namespace
 {
     constexpr float VoiceDelay = 0.5f;
+
+    const cro::Time MinCrowdTime = cro::seconds(43.f);
 }
 
 GolfSoundDirector::GolfSoundDirector(cro::AudioResource& ar)
     : m_currentClient   (0),
     m_currentPlayer     (0),
     m_honourID          (0),
-    m_newHole           (false)
+    m_newHole           (false),
+    m_crowdPositions    (nullptr),
+    m_crowdTime         (MinCrowdTime),
+    m_flagSoundTime     (0.f)
 {
     //this must match with AudioID enum
     static const std::array<std::string, AudioID::Count> FilePaths =
@@ -82,6 +87,7 @@ GolfSoundDirector::GolfSoundDirector(cro::AudioResource& ar)
         "assets/golf/sound/ball/drop.wav",
         "assets/golf/sound/ball/scrub.wav",
         "assets/golf/sound/ball/stone.wav",
+        "assets/golf/sound/ball/pole.wav",
 
         "assets/golf/sound/holes/albatross.wav",
         "assets/golf/sound/holes/birdie.wav",
@@ -137,6 +143,7 @@ GolfSoundDirector::GolfSoundDirector(cro::AudioResource& ar)
         "assets/golf/sound/kudos/putt01.wav",
         "assets/golf/sound/holes/gimme.wav",
 
+        "assets/golf/sound/ambience/firework.wav",
         "assets/golf/sound/ambience/burst.wav",
         "assets/golf/sound/holes/airmail.wav",
         "assets/golf/sound/ambience/birds01.wav",
@@ -149,6 +156,10 @@ GolfSoundDirector::GolfSoundDirector(cro::AudioResource& ar)
         "assets/golf/sound/ambience/foot04.wav",
 
         "assets/golf/sound/bad.wav",
+
+        "assets/golf/sound/ambience/crowd_clear_throat.wav",
+        "assets/golf/sound/ambience/crowd_cough.wav",
+        "assets/golf/sound/ambience/crowd_sigh.wav",
     };
 
     std::fill(m_audioSources.begin(), m_audioSources.end(), nullptr);
@@ -465,6 +476,23 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
             {
                 switch (data.terrain)
                 {
+                    //TODO enumerate these properly
+                case -2:
+                    //firework
+                {
+                    auto e = playSound(AudioID::Firework, data.position);
+                    e.getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
+                    e.getComponent<cro::AudioEmitter>().setPitch(cro::Util::Random::value(0.95f, 1.2f));
+                }
+                    break;
+                case -1:
+                    //flag pole
+                    if (m_flagSoundTime < 0)
+                    {
+                        playSound(AudioID::Pole, data.position).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
+                        m_flagSoundTime = 2.f;
+                    }
+                    break;
                 default:
                     playSound(AudioID::Ground, data.position).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
                     break;
@@ -530,6 +558,31 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
     }
 }
 
+void GolfSoundDirector::process(float dt)
+{
+    SoundEffectsDirector::process(dt);
+
+    m_flagSoundTime -= dt;
+
+    if (m_crowdTimer.elapsed() > m_crowdTime)
+    {
+        if (m_crowdPositions)
+        {
+            const auto& cp = *m_crowdPositions;
+            if (!cp.empty())
+            {
+                auto pos = glm::vec3((cp[cro::Util::Random::value(0u, cp.size() - 1)][3]));
+                auto& emitter = playSound(AudioID::CrowdClearThroat + cro::Util::Random::value(0, 2), pos, 1.6f).getComponent<cro::AudioEmitter>();
+                emitter.setMixerChannel(MixerChannel::Environment);
+                emitter.setRolloff(0.45f);
+            }
+        }
+
+        m_crowdTimer.restart();
+        m_crowdTime = MinCrowdTime + cro::seconds(static_cast<float>(cro::Util::Random::value(-5, 25)));
+    }
+}
+
 void GolfSoundDirector::addAudioScape(const std::string& path, cro::AudioResource& resource)
 {
     //we emplace back even if it fails/has empty path so indices match the player indices.
@@ -542,15 +595,16 @@ void GolfSoundDirector::setPlayerIndex(std::size_t client, std::size_t player, s
     m_playerIndices[client][player] = index;
 }
 
-void GolfSoundDirector::setActivePlayer(std::size_t client, std::size_t player)
+void GolfSoundDirector::setActivePlayer(std::size_t client, std::size_t player, bool skipAudio)
 {
     m_currentClient = client;
     m_currentPlayer = player;
-
+    
     if (m_newHole)
     {
         std::int32_t honour = (client << 8) | player;
-        if (honour != m_honourID)
+        if (honour != m_honourID
+            && !skipAudio) //don't play this if fast CPU as it overlaps other audio
         {
             playSoundDelayed(AudioID::Honour, glm::vec3(0.f), 1.f, 1.f, MixerChannel::Voice);
         }

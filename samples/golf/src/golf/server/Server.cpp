@@ -69,7 +69,7 @@ Server::~Server()
 }
 
 //public
-void Server::launch(std::size_t maxConnections, std::int32_t gameMode)
+void Server::launch(std::size_t maxConnections, std::int32_t gameMode, bool fastCPU)
 {
     //stop any existing instance first
     stop();
@@ -97,6 +97,7 @@ void Server::launch(std::size_t maxConnections, std::int32_t gameMode)
         break;
     }
 
+    m_sharedData.fastCPU = fastCPU;
     m_running = true;
     m_thread = std::make_unique<std::thread>(&Server::run, this);
 }

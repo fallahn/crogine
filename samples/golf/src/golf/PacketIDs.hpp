@@ -42,6 +42,15 @@ namespace ScoreType
     };
 }
 
+namespace GimmeSize
+{
+    enum
+    {
+        None, Leather, Putter,
+        Count
+    };
+}
+
 namespace MessageType
 {
     enum
@@ -93,7 +102,7 @@ namespace PacketID
         Gimme, //< uint16 client << 8 | player turn was ended on a gimme
         TableInfo, //< TableInfo struct
         TargetID, //< uint16 billiards player OR'd ball ID to update the UI
-        ServerAchievement, //< uint8 client, uint8 achievement id - up to client to decide if to award
+        ServerAchievement, //< uint8 client, uint8 player, uint8 achievement id - up to client to decide if to award
 
         EntityRemoved, //< uint32 entity ID
         ReadyQuitStatus, //< uint8 flags containing status of ready/quit at round end
@@ -105,6 +114,7 @@ namespace PacketID
         PlayerInfo, //< ConnectionData array
         ServerCommand, //< uint8_t command type
         TransitionComplete, //< uint8 clientID, signal hole transition completed
+        NewPlayer, //< animation completed on the client and new player active
         ReadyQuit, //< uint8 clientID - client wants to toggle skip viewing scores
         BallPlaced, //< BilliardBallInput with position in offset member
         SkipTurn, //< uint8 clientID - requests server fast forward current turn
@@ -115,6 +125,7 @@ namespace PacketID
         TurnReady, //< uint8 clientID - ready to take their turn - rebroadcast by server to tell all clients to clear messages
         MapInfo, //< serialised cro::String containing course directory
         ScoreType, //< uint8 ScoreType of golf game
+        FastCPU, //< uint8 0 false else true
         GimmeRadius, //< uint8 gimme radius of golf
         HoleCount, //< uint8 0 - 2: all, front or back
         ReverseCourse, //< uint8 0 false else true

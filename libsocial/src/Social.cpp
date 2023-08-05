@@ -161,6 +161,24 @@ std::int32_t Social::getLevel()
     return getLevelFromXP(experience.value);
 }
 
+std::int32_t Social::getClubLevel()
+{
+    //check player level and return increased distance
+    auto level = getLevel();
+
+    if (level > 29)
+    {
+        return 2;
+    }
+
+    if (level > 14)
+    {
+        return 1;
+    }
+
+    return 0;
+}
+
 Social::ProgressData Social::getLevelProgress()
 {
     experience.read();
@@ -414,4 +432,10 @@ std::string Social::getUserContentPath(std::int32_t contentType)
     case Social::UserContent::Avatar:
         return getBaseContentPath() + "avatars/";
     }
+}
+
+float Social::getCompletionCount(const std::string& course, bool)
+{
+    return Achievements::getStat(course)->value;
+    //return std::max(1.f, Achievements::getStat(/*StatStrings[StatID::Course01Complete]*/course)->value);
 }

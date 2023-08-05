@@ -77,7 +77,10 @@ public:
     bool insertCourseRecord(const CourseRecord&);
 
     //returns the requested number of records, or as many exist
-    std::vector<CourseRecord> getCourseRecords(std::int32_t holeIndex, std::int32_t recordCount = std::numeric_limits<std::int32_t>::max());
+    std::vector<CourseRecord> getCourseRecords(std::int32_t holeIndex, 
+        std::uint64_t oldestTimestamp = 0,
+        bool cpu = true,
+        std::int32_t recordCount = std::numeric_limits<std::int32_t>::max());
     std::int32_t getCourseRecordCount(std::int32_t courseIndex, std::int32_t holeCount) const;
 
     bool insertPersonalBestRecord(const PersonalBestRecord&);

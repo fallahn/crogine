@@ -42,6 +42,7 @@ source distribution.
 #include "MessageIDs.hpp"
 #include "SharedProfileData.hpp"
 #include "spooky2.hpp"
+#include "Clubs.hpp"
 #include "../ErrorCheck.hpp"
 
 #include <Achievements.hpp>
@@ -146,7 +147,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     m_cursor                (/*"assets/images/cursor.png", 0, 0*/cro::SystemCursor::Hand),
     m_uiScene               (context.appInstance.getMessageBus(), 512),
     m_backgroundScene       (context.appInstance.getMessageBus(), 512/*, cro::INFO_FLAG_SYSTEMS_ACTIVE*/),
-    m_avatarScene           (context.appInstance.getMessageBus(), 384/*, cro::INFO_FLAG_SYSTEMS_ACTIVE*/),
+    m_avatarScene           (context.appInstance.getMessageBus(), 640/*, cro::INFO_FLAG_SYSTEMS_ACTIVE*/),
     m_scaleBuffer           ("PixelScale"),
     m_resolutionBuffer      ("ScaledResolution"),
     m_windBuffer            ("WindValues"),
@@ -156,7 +157,11 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     m_prevMenu              (MenuID::Main),
     m_viewScale             (1.f)
 {
+    sd.clubSet = std::clamp(sd.clubSet, 0, 2);
+    Club::setClubLevel(sd.clubSet);
+    
     std::fill(m_readyState.begin(), m_readyState.end(), false);
+    sd.minimapData = {};
     
     auto size = glm::vec2(GolfGame::getActiveTarget()->getSize());
     m_viewScale = glm::vec2(getViewScale());
@@ -171,6 +176,8 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
         createScene();
 
 #ifdef USE_GNS
+        Social::findLeaderboards(Social::BoardType::Courses);
+        
         //cached menu states depend on steam stats being
         //up to date so this hacks in a delay and pumps the callback loop
         cro::Clock cl;
@@ -179,156 +186,156 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
             Achievements::update();
         }
 #endif
-
         updateUnlockedItems();
-
         cacheState(StateID::Unlock);
         cacheState(StateID::Options);
         cacheState(StateID::Profile);
         cacheState(StateID::Practice);
         cacheState(StateID::Keyboard);
-    });
+        cacheState(StateID::Leaderboard);    
  
-    context.mainWindow.setMouseCaptured(false);
+        context.mainWindow.setMouseCaptured(false);
     
-    //sd.inputBinding.controllerID = 0;
-    sd.baseState = StateID::Menu;
-    sd.mapDirectory = "course_01";
-
-    sd.clientConnection.ready = false;
-
-    //remap the selected ball model indices - this is always applied
-    //as the avatar IDs are loaded from the config, above
-    for (auto i = 0u; i < ConstVal::MaxPlayers; ++i)
-    {
-        auto idx = indexFromBallID(m_sharedData.localConnectionData.playerData[i].ballID);
-
-        if(idx == -1
-            || idx >= m_profileData.ballDefs.size()) //checks we're not trying to load a locked ball
-        {
-            m_sharedData.localConnectionData.playerData[i].ballID = 0;
-        }
-    }
-
-    //reset the state if we came from the tutorial (this is
-    //also set if the player quit the game from the pause menu)
-    if (sd.tutorial)
-    {
-        sd.serverInstance.stop();
-        sd.hosting = false;
-
-        sd.tutorial = false;
-        sd.clientConnection.connected = false;
-        sd.clientConnection.connectionID = ConstVal::NullValue;
-        sd.clientConnection.ready = false;
-        sd.clientConnection.netClient.disconnect();
-
+        //sd.inputBinding.controllerID = 0;
+        sd.baseState = StateID::Menu;
         sd.mapDirectory = "course_01";
-    }
 
-    //we returned from a previous game
-    if (sd.clientConnection.connected)
-    {
-        updateLobbyAvatars();
+        sd.clientConnection.ready = false;
 
-        //switch to lobby view - send as a command
-        //to ensure it's delayed by a frame
-        cro::Command cmd;
-        cmd.targetFlags = CommandID::Menu::RootNode;
-        cmd.action = [&](cro::Entity e, float)
+        //remap the selected ball model indices - this is always applied
+        //as the avatar IDs are loaded from the config, above
+        for (auto i = 0u; i < ConstVal::MaxPlayers; ++i)
         {
-            m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Dummy);
-            m_menuEntities[m_currentMenu].getComponent<cro::Callback>().getUserData<MenuData>().targetMenu = MenuID::Lobby;
-            m_menuEntities[m_currentMenu].getComponent<cro::Callback>().active = true;
-        };
-        m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+            auto idx = indexFromBallID(m_sharedData.localConnectionData.playerData[i].ballID);
 
-        std::int32_t spriteID = 0;
-        cro::String connectionString;
-
-        if (m_sharedData.hosting)
-        {
-            spriteID = SpriteID::StartGame;
-            connectionString = "Hosting on: localhost:" + std::to_string(ConstVal::GamePort);
-
-            //auto ready up if host
-            m_sharedData.clientConnection.netClient.sendPacket(
-                PacketID::LobbyReady, std::uint16_t(m_sharedData.clientConnection.connectionID << 8 | std::uint8_t(1)),
-                net::NetFlag::Reliable, ConstVal::NetChannelReliable);
-
-
-            //set the course selection menu
-            addCourseSelectButtons();
-
-            //send a UI refresh to correctly place buttons
-            glm::vec2 size(GolfGame::getActiveTarget()->getSize());
-            cmd.targetFlags = CommandID::Menu::UIElement;
-            cmd.action =
-                [&, size](cro::Entity e, float)
+            if(idx == -1
+                || idx >= m_profileData.ballDefs.size()) //checks we're not trying to load a locked ball
             {
-                const auto& element = e.getComponent<UIElement>();
-                auto pos = element.absolutePosition;
-                pos += element.relativePosition * size / m_viewScale;
+                m_sharedData.localConnectionData.playerData[i].ballID = 0;
+            }
+        }
 
-                pos.x = std::floor(pos.x);
-                pos.y = std::floor(pos.y);
+        //reset the state if we came from the tutorial (this is
+        //also set if the player quit the game from the pause menu)
+        if (sd.tutorial)
+        {
+            sd.serverInstance.stop();
+            sd.hosting = false;
 
-                e.getComponent<cro::Transform>().setPosition(glm::vec3(pos, element.depth));
+            sd.tutorial = false;
+            sd.clientConnection.connected = false;
+            sd.clientConnection.connectionID = ConstVal::NullValue;
+            sd.clientConnection.ready = false;
+            sd.clientConnection.netClient.disconnect();
+
+            sd.mapDirectory = "course_01";
+        }
+
+
+        //we returned from a previous game
+        if (sd.clientConnection.connected)
+        {
+            updateLobbyAvatars();
+            createPreviousScoreCard();
+
+            //switch to lobby view - send as a command
+            //to ensure it's delayed by a frame
+            cro::Command cmd;
+            cmd.targetFlags = CommandID::Menu::RootNode;
+            cmd.action = [&](cro::Entity e, float)
+            {
+                m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Dummy);
+                m_menuEntities[m_currentMenu].getComponent<cro::Callback>().getUserData<MenuData>().targetMenu = MenuID::Lobby;
+                m_menuEntities[m_currentMenu].getComponent<cro::Callback>().active = true;
             };
             m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
+            std::int32_t spriteID = 0;
+            cro::String connectionString;
 
-            //send the initially selected map/course
-            m_sharedData.mapDirectory = m_courseData[m_sharedData.courseIndex].directory;
-            auto data = serialiseString(m_sharedData.mapDirectory);
-            m_sharedData.clientConnection.netClient.sendPacket(PacketID::MapInfo, data.data(), data.size(), net::NetFlag::Reliable, ConstVal::NetChannelStrings);
+            if (m_sharedData.hosting)
+            {
+                spriteID = SpriteID::StartGame;
+                connectionString = "Hosting on: localhost:" + std::to_string(ConstVal::GamePort);
 
-            //create a new lobby - message handler makes sure everyone joins it
-            m_matchMaking.createLobby(ConstVal::MaxClients, Server::GameMode::Golf);
+                //auto ready up if host
+                m_sharedData.clientConnection.netClient.sendPacket(
+                    PacketID::LobbyReady, std::uint16_t(m_sharedData.clientConnection.connectionID << 8 | std::uint8_t(1)),
+                    net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+
+
+                //set the course selection menu
+                addCourseSelectButtons();
+
+                //send a UI refresh to correctly place buttons
+                glm::vec2 size(GolfGame::getActiveTarget()->getSize());
+                cmd.targetFlags = CommandID::Menu::UIElement;
+                cmd.action =
+                    [&, size](cro::Entity e, float)
+                {
+                    const auto& element = e.getComponent<UIElement>();
+                    auto pos = element.absolutePosition;
+                    pos += element.relativePosition * size / m_viewScale;
+
+                    pos.x = std::floor(pos.x);
+                    pos.y = std::floor(pos.y);
+
+                    e.getComponent<cro::Transform>().setPosition(glm::vec3(pos, element.depth));
+                };
+                m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+
+                //send the initially selected map/course
+                m_sharedData.mapDirectory = m_courseData[m_sharedData.courseIndex].directory;
+                auto data = serialiseString(m_sharedData.mapDirectory);
+                m_sharedData.clientConnection.netClient.sendPacket(PacketID::MapInfo, data.data(), data.size(), net::NetFlag::Reliable, ConstVal::NetChannelStrings);
+
+                //create a new lobby - message handler makes sure everyone joins it
+                m_matchMaking.createLobby(ConstVal::MaxClients, Server::GameMode::Golf);
+            }
+            else
+            {
+                spriteID = SpriteID::ReadyUp;
+                connectionString = "Connected to: " + m_sharedData.targetIP + ":" + std::to_string(ConstVal::GamePort);
+            }
+            refreshLobbyButtons(); //makes sure indices point to correct target
+
+            cmd.targetFlags = CommandID::Menu::ReadyButton;
+            cmd.action = [&, spriteID](cro::Entity e, float)
+            {
+                e.getComponent<cro::Sprite>() = m_sprites[spriteID];
+            };
+            m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+            cmd.targetFlags = CommandID::Menu::ServerInfo;
+            cmd.action = [connectionString](cro::Entity e, float)
+            {
+                e.getComponent<cro::Text>().setString(connectionString);
+            };
+            m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
         }
         else
         {
-            spriteID = SpriteID::ReadyUp;
-            connectionString = "Connected to: " + m_sharedData.targetIP + ":" + std::to_string(ConstVal::GamePort);
+            //we ought to be resetting previous data here?
+            for (auto& cd : m_sharedData.connectionData)
+            {
+                cd.playerCount = 0;
+            }
+            m_sharedData.hosting = false;
+
+            //we might have switched here from an invite received while in the clubhouse
+            if (m_sharedData.inviteID)
+            {
+                //do this via message handler to allow state to fully load
+                auto* msg = postMessage<MatchMaking::Message>(MatchMaking::MessageID);
+                msg->gameType = Server::GameMode::Golf;
+                msg->hostID = m_sharedData.inviteID;
+                msg->type = MatchMaking::Message::LobbyInvite;
+            }
         }
-
-
-        cmd.targetFlags = CommandID::Menu::ReadyButton;
-        cmd.action = [&, spriteID](cro::Entity e, float)
-        {
-            e.getComponent<cro::Sprite>() = m_sprites[spriteID];
-        };
-        m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
-
-        cmd.targetFlags = CommandID::Menu::ServerInfo;
-        cmd.action = [connectionString](cro::Entity e, float)
-        {
-            e.getComponent<cro::Text>().setString(connectionString);
-        };
-        m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
-    }
-    else
-    {
-        //we ought to be resetting previous data here?
-        for (auto& cd : m_sharedData.connectionData)
-        {
-            cd.playerCount = 0;
-        }
-        m_sharedData.hosting = false;
-
-        //we might have switched here from an invite received while in the clubhouse
-        if (m_sharedData.inviteID)
-        {
-            //do this via message handler to allow state to fully load
-            auto* msg = postMessage<MatchMaking::Message>(MatchMaking::MessageID);
-            msg->gameType = Server::GameMode::Golf;
-            msg->hostID = m_sharedData.inviteID;
-            msg->type = MatchMaking::Message::LobbyInvite;
-        }
-    }
-    m_sharedData.inviteID = 0;
-    m_sharedData.lobbyID = 0;
-
+        m_sharedData.inviteID = 0;
+        m_sharedData.lobbyID = 0;
+    });
     //for some reason this immediately unsets itself
     //cro::App::getWindow().setCursor(&m_cursor);
 
@@ -380,17 +387,20 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     //    {
     //        if (ImGui::Begin("buns"))
     //        {
-    //            auto size = glm::vec2(LabelTextureSize);
+    //            /*auto size = glm::vec2(LabelTextureSize);
     //            for (const auto& t : m_sharedData.nameTextures)
     //            {
     //                ImGui::Image(t.getTexture(), { size.x, size.y }, { 0.f, 1.f }, { 1.f, 0.f });
     //                ImGui::SameLine();
-    //            }
+    //            }*/
     //        }
     //        ImGui::End();
     //    });
 
 #ifdef CRO_DEBUG_
+#ifdef USE_GNS
+    registerCommand("dump_monthly", [](const std::string&) {Social::dumpMonthlyToText(); });
+#endif
 
     registerWindow([&]() 
         {
@@ -443,6 +453,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     //            //}
 
     //            //ImGui::Image(m_backgroundScene.getActiveCamera().getComponent<cro::Camera>().shadowMapBuffer.getTexture(0), { 256.f, 256.f }, { 0.f, 1.f }, { 1.f, 0.f });
+    //            cro::AudioMixer::printDebug();
     //        }
     //        ImGui::End();
     //    }/*, true*/);
@@ -486,10 +497,31 @@ bool MenuState::handleEvent(const cro::Event& evt)
             m_menuEntities[m_currentMenu].getComponent<cro::Callback>().active = true;
             break;
         case MenuID::Lobby:
-            enterConfirmCallback();
+            //TODO the active menu might be a sub-group of the lobby
+            //however m_currentMenu is still set tl Lobby as this is
+            //used by the window resize callback (which I can't find
+            //any more...) so we have to test for the actual active menu
+            switch (m_uiScene.getSystem<cro::UISystem>()->getActiveGroup())
+            {
+            default:
+            case MenuID::Lobby:
+                enterConfirmCallback(true);
+                break;
+            case MenuID::ConfirmQuit:
+                quitConfirmCallback();
+                break;
+            case MenuID::Scorecard:
+            case MenuID::Dummy:
+                togglePreviousScoreCard();
+                break;
+            }
             break;
-        case MenuID::ConfirmQuit:
+        /*case MenuID::ConfirmQuit:
             quitConfirmCallback();
+            break;*/
+        case MenuID::Dummy:
+            //this does nothing if the scorecard is not visible
+            //togglePreviousScoreCard();
             break;
         }
     };
@@ -593,6 +625,12 @@ bool MenuState::handleEvent(const cro::Event& evt)
         case SDLK_BACKSPACE:
             quitMenu();
             break;
+        case SDLK_F6:
+            m_uiScene.getActiveCamera().getComponent<cro::Camera>().active = true;
+            break;
+        case SDLK_F8:
+            //requestStackPush(StateID::Leaderboard);
+            break;
         }
     }
     else if (evt.type == SDL_KEYDOWN)
@@ -606,6 +644,9 @@ bool MenuState::handleEvent(const cro::Event& evt)
         case SDLK_LEFT:
         case SDLK_RIGHT:
             cro::App::getWindow().setMouseCaptured(true);
+            break;
+        case SDLK_TAB:
+            togglePreviousScoreCard();
             break;
         }
     }
@@ -629,17 +670,22 @@ bool MenuState::handleEvent(const cro::Event& evt)
             break;
         case cro::GameController::ButtonRightShoulder:
             if (m_sharedData.hosting
-                && m_currentMenu == MenuID::Lobby)
+                && m_currentMenu == MenuID::Lobby
+                && m_lobbyWindowEntities[LobbyEntityID::HoleSelection].getComponent<cro::Transform>().getScale().x != 0)
             {
                 nextCourse();
             }
             break;
         case cro::GameController::ButtonLeftShoulder:
             if (m_sharedData.hosting
-                && m_currentMenu == MenuID::Lobby)
+                && m_currentMenu == MenuID::Lobby
+                && m_lobbyWindowEntities[LobbyEntityID::HoleSelection].getComponent<cro::Transform>().getScale().x != 0)
             {
                 prevCourse();
             }
+            break;
+        case cro::GameController::ButtonGuide:
+            togglePreviousScoreCard();
             break;
         }
     }
@@ -810,6 +856,11 @@ void MenuState::handleMessage(const cro::Message& msg)
                     };
                 }
             }
+            /*else
+            {
+                m_uiScene.getActiveCamera().getComponent<cro::Camera>().isStatic = false;
+                m_uiScene.getActiveCamera().getComponent<cro::Camera>().active = true;
+            }*/
         }
     }
 #ifdef USE_GNS
@@ -1559,6 +1610,13 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
 
                 if (m_sharedData.tutorial)
                 {
+                    //hmmm is this going to get in soon enough?
+                    m_sharedData.gimmeRadius = GimmeSize::None;
+                    m_sharedData.clientConnection.netClient.sendPacket(PacketID::GimmeRadius, m_sharedData.gimmeRadius, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                    
+                    m_sharedData.scoreType = ScoreType::Stroke;
+                    m_sharedData.clientConnection.netClient.sendPacket(PacketID::ScoreType, m_sharedData.scoreType, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+
                     m_sharedData.clientConnection.netClient.sendPacket(PacketID::RequestGameStart, std::uint8_t(sv::StateID::Golf), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
                 }
                 else
@@ -1703,6 +1761,7 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
                         || (data->isUser && m_sharedData.hosting))
                     {
                         m_sharedData.mapDirectory = course;
+                        m_sharedData.courseIndex = std::distance(m_courseData.cbegin(), data);
 
                         //update UI
                         cro::Command cmd;
@@ -1749,6 +1808,25 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
 
                 static constexpr glm::vec2 ThumbnailSize(138.f, 104.f);
 
+                const auto delayRefresh = [&]()
+                {
+                    auto e = m_uiScene.createEntity();
+                    e.addComponent<cro::Callback>().active = true;
+                    e.getComponent<cro::Callback>().setUserData<float>(0.5f);
+                    e.getComponent<cro::Callback>().function =
+                        [&](cro::Entity f, float dt) 
+                    {
+                        auto& t = f.getComponent<cro::Callback>().getUserData<float>();
+                        t -= dt;
+                        if (t < 0)
+                        {
+                            m_uiScene.getActiveCamera().getComponent<cro::Camera>().active = true;
+                            f.getComponent<cro::Callback>().active = false;
+                            m_uiScene.destroyEntity(f);
+                        }
+                    };
+                };
+
                 if (m_videoPaths.count(course) != 0
                     && m_videoPlayer.loadFromFile(m_videoPaths.at(course)))
                 {
@@ -1759,12 +1837,18 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
                     m_lobbyWindowEntities[LobbyEntityID::HoleThumb].getComponent<cro::Sprite>().setTexture(m_videoPlayer.getTexture());
                     auto scale = ThumbnailSize / glm::vec2(m_videoPlayer.getTexture().getSize());
                     m_lobbyWindowEntities[LobbyEntityID::HoleThumb].getComponent<cro::Transform>().setScale(scale);
+
+                    m_uiScene.getActiveCamera().getComponent<cro::Camera>().active = true;
+                    delayRefresh();
                 }
                 else if (m_courseThumbs.count(course) != 0)
                 {
                     m_lobbyWindowEntities[LobbyEntityID::HoleThumb].getComponent<cro::Sprite>().setTexture(*m_courseThumbs.at(course));
                     auto scale = ThumbnailSize / glm::vec2(m_courseThumbs.at(course)->getSize());
                     m_lobbyWindowEntities[LobbyEntityID::HoleThumb].getComponent<cro::Transform>().setScale(scale);
+                    
+                    m_uiScene.getActiveCamera().getComponent<cro::Camera>().active = true;
+                    delayRefresh();
                 }
                 else
                 {
@@ -1794,6 +1878,9 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
 
                 updateCourseRuleString();
             }
+            break;
+        case PacketID::FastCPU:
+            m_sharedData.fastCPU = evt.packet.as<std::uint8_t>() != 0;
             break;
         case PacketID::GimmeRadius:
         {
@@ -1931,6 +2018,7 @@ void MenuState::finaliseGameCreate(const MatchMaking::Message& msgData)
 
         //enable the course selection in the lobby
         addCourseSelectButtons();
+        refreshLobbyButtons();
 
         //send a UI refresh to correctly place buttons
         glm::vec2 size(GolfGame::getActiveTarget()->getSize());
@@ -1998,6 +2086,8 @@ void MenuState::finaliseGameJoin(const MatchMaking::Message& data)
         m_uiScene.destroyEntity(e);
     };
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+    refreshLobbyButtons(); //makes sure buttons point to correct target when navigating
 }
 
 void MenuState::beginTextEdit(cro::Entity stringEnt, cro::String* dst, std::size_t maxChars)

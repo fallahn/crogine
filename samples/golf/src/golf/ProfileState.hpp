@@ -91,7 +91,7 @@ private:
     {
         enum
         {
-            Accept, Back, Select,
+            Accept, Back, Select, Snap,
 
             Count
         };
@@ -107,6 +107,7 @@ private:
             Root, HelpText,
             Mugshot, NameText,
             Swatch, AvatarPreview,
+            BioText,
 
             Count
         };
@@ -117,7 +118,7 @@ private:
     {
         enum
         {
-            Avatar, Ball,
+            Avatar, Ball, Mugshot,
 
             Count
         };
@@ -128,6 +129,7 @@ private:
     std::vector<cro::Entity> m_ballHairModels;
     std::size_t m_ballIndex;
     std::size_t m_ballHairIndex;
+    cro::RenderTexture m_ballThumbs;
 
     std::vector<AvatarPreview> m_avatarModels;
     std::vector<cro::Entity> m_avatarHairModels;
@@ -143,6 +145,8 @@ private:
             TopL, TopD,
             BotL, BotD,
 
+            BallThumb,
+
             Count
         };
     };
@@ -154,6 +158,8 @@ private:
     void buildScene();
     void buildPreviewScene();
     void createPalettes(cro::Entity);
+    void createBallFlyout(cro::Entity);
+    void createBallThumbs();
     void quitState();
 
     std::size_t indexFromAvatarID(std::uint32_t) const;
@@ -167,6 +173,7 @@ private:
     void refreshMugshot();
     void refreshNameString();
     void refreshSwatch();
+    void refreshBio();
 
     struct TextEdit final
     {
@@ -178,4 +185,11 @@ private:
     void beginTextEdit(cro::Entity, cro::String*, std::size_t);
     void handleTextEdit(const cro::Event&);
     bool applyTextEdit(); //returns true if this consumed event
+
+    std::string generateRandomBio() const;
+    void setBioString(const std::string&);
+
+    cro::RenderTexture m_mugshotTexture;
+    bool m_mugshotUpdated;
+    void generateMugshot();
 };

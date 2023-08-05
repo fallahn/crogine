@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2023
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -38,10 +38,10 @@ using namespace cro::Detail;
 
 namespace
 {
-    const std::uint32_t riffID = 0x46464952;//"RIFF"
-    const std::uint32_t formatID = 0x45564157;//"WAVE" 
-    const std::uint32_t subchunk1ID = 0x20746D66;//"fmt " 
-    const std::uint32_t dataID = 0x61746164; //"DATA"
+    constexpr std::uint32_t riffID = 0x46464952;//"RIFF"
+    constexpr std::uint32_t formatID = 0x45564157;//"WAVE" 
+    constexpr std::uint32_t subchunk1ID = 0x20746D66;//"fmt " 
+    constexpr std::uint32_t dataID = 0x61746164; //"DATA"
 
     std::uint32_t asUint(const std::array<std::int8_t, 4>& data)
     {
@@ -62,7 +62,8 @@ namespace
 WavLoader::WavLoader()
     : m_dataStart   (0),
     m_dataSize      (0),
-    m_bytesPerSecond(0)
+    m_bytesPerSecond(0),
+    m_sampleCount   (0)
 {
 
 }
@@ -74,6 +75,13 @@ bool WavLoader::open(const std::string& path)
     {
         SDL_RWclose(m_file.file);
         m_file.file = nullptr;
+
+        m_dataChunk = {};
+
+        m_dataStart = 0;
+        m_dataSize = 0;
+        m_bytesPerSecond = 0;
+        m_sampleCount = 0;
     }
     
     m_file.file = SDL_RWFromFile(path.c_str(), "rb");
@@ -180,6 +188,7 @@ bool WavLoader::open(const std::string& path)
         }
 
         m_bytesPerSecond = m_header.sampleRate * m_header.channelCount * (m_header.bitsPerSample / 8);
+        m_sampleCount = m_dataSize / (m_header.bitsPerSample / 8);
 
         return true;
     }

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2022
+Matt Marchant 2017 - 2023
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -100,11 +100,49 @@ namespace cro
         */
         std::size_t getSelectionIndex() const { return m_selectionIndex; }
 
+        /*!
+        \brief Override the default selection index of the next UIInput to be selected
+        \param next The next index to select when pressing right
+        \param down The next index to select when pressing down
+        */
+        void setNextIndex(std::size_t next, std::size_t down = std::numeric_limits<std::size_t>::max())
+        {
+            m_neighbourIndices[1] = next;
+            m_neighbourIndices[3] = down;
+        }
+
+        /*!
+        \brief Override the default selection index of the next UIInput to be selected
+        \param prev The next index to select when pressing left
+        \param up The next index to select when pressing up
+        */
+        void setPrevIndex(std::size_t prev, std::size_t up = std::numeric_limits<std::size_t>::max())
+        {
+            m_neighbourIndices[0] = prev;
+            m_neighbourIndices[2] = up;
+        }
+
     private:
         std::size_t m_previousGroup = 0;
         std::size_t m_group = 0;
         std::size_t m_selectionIndex = 0;
         bool m_updateGroup = true; //do order sorting by default
+
+        struct Index final
+        {
+            enum
+            {
+                Left, Right, Up, Down,
+                Count
+            };
+        };
+        std::array<std::size_t, Index::Count> m_neighbourIndices =
+        {
+            std::numeric_limits<std::size_t>::max() ,
+            std::numeric_limits<std::size_t>::max() ,
+            std::numeric_limits<std::size_t>::max() ,
+            std::numeric_limits<std::size_t>::max() 
+        };
 
         cro::FloatRect m_worldArea; //cached by transform callback, ie dirty flag optimised
 
