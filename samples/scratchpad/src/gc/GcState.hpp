@@ -9,6 +9,7 @@
 #include <crogine/gui/GuiClient.hpp>
 #include <crogine/graphics/ModelDefinition.hpp>
 #include <crogine/graphics/EnvironmentMap.hpp>
+#include <crogine/audio/sound_system/MusicPlayer.hpp>
 
 class GCState final : public cro::State, public cro::GuiClient
 {
@@ -30,6 +31,7 @@ private:
 
     cro::EnvironmentMap m_environmentMap;
     cro::Entity m_fadeEnt;
+    cro::MusicPlayer m_music;
 
     struct CameraID final
     {

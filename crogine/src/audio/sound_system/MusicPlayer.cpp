@@ -45,7 +45,7 @@ MusicPlayer::MusicPlayer()
 
 MusicPlayer::~MusicPlayer()
 {
-    //prevents error for forward decl of AudioFile
+    stop();
 }
 
 //public

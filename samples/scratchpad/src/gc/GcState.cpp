@@ -106,6 +106,11 @@ void GCState::handleMessage(const cro::Message& msg)
 
 bool GCState::simulate(float dt)
 {
+    if (m_music.getStatus() == cro::MusicPlayer::Status::Stopped)
+    {
+        quitState();
+    }
+
     m_gameScene.simulate(dt);
     m_uiScene.simulate(dt);
     return true;
@@ -136,6 +141,9 @@ void GCState::addSystems()
 void GCState::loadAssets()
 {
     m_environmentMap.loadFromFile("assets/images/hills.hdr");
+    m_music.loadFromFile("assets/golf/sound/stage.ogg");
+    m_music.setVolume(0.f);
+    m_music.play();
 }
 
 void GCState::createScene()
@@ -177,7 +185,7 @@ void GCState::createScene()
     {
         glm::vec2 size(cro::App::getWindow().getSize());
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
-        cam.setPerspective(70.f * cro::Util::Const::degToRad, size.x / size.y, 0.1f, 20.f);
+        cam.setPerspective(70.f * cro::Util::Const::degToRad, size.x / size.y, 0.1f, 15.f);
     };
 
     auto& cam = m_gameScene.getActiveCamera().getComponent<cro::Camera>();
@@ -211,10 +219,13 @@ void GCState::createScene()
 
     for (auto i = 0; i < CameraID::Count; ++i)
     {
+        //TODO read shadow map size from settings
+        std::uint32_t ShadowSize = 4096;
+
         auto entity = m_gameScene.createEntity();
         entity.addComponent<cro::Transform>();
         entity.addComponent<cro::Camera>().resizeCallback = resize;
-        entity.getComponent<cro::Camera>().shadowMapBuffer.create(2048, 2048);
+        entity.getComponent<cro::Camera>().shadowMapBuffer.create(ShadowSize, ShadowSize);
         entity.getComponent<cro::Camera>().active = false;
         resize(entity.getComponent<cro::Camera>());
         m_cameras[i] = entity;
@@ -362,7 +373,8 @@ void GCState::createUI()
         {
             v.colour.setAlpha(alpha);
         }
-        //TODO also set music volume
+        
+        m_music.setVolume(1.f - progress);
 
         glm::vec2 size(cro::App::getWindow().getSize());
         e.getComponent<cro::Transform>().setScale(size);
