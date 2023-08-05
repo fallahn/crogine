@@ -306,7 +306,7 @@ void MenuState::createBallScene()
                 cfg.save(SpecialPaths[i]);
             }
 
-            if (level > (i + 1) * 10)
+            if (level >= (i + 1) * 10)
             {
                 insertInfo(info, m_sharedData.ballInfo, true);
             }
