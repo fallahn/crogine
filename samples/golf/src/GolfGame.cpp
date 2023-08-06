@@ -405,14 +405,14 @@ bool GolfGame::initialise()
         return false;
     }
 
-#ifdef USE_WORKSHOP
-    registerCommand("workshop",
-        [&](const std::string&)
-        {
-            m_stateStack.clearStates();
-            m_stateStack.pushState(StateID::Workshop);
-        });
-#endif
+//#ifdef USE_WORKSHOP
+//    registerCommand("workshop",
+//        [&](const std::string&)
+//        {
+//            m_stateStack.clearStates();
+//            m_stateStack.pushState(StateID::Workshop);
+//        });
+//#endif
 
 #ifdef CRO_DEBUG_
 #ifndef USE_GNS
@@ -734,7 +734,7 @@ bool GolfGame::initialise()
     //m_stateStack.pushState(StateID::Clubhouse);
     //m_stateStack.pushState(StateID::SplashScreen);
     m_stateStack.pushState(StateID::Menu);
-    //m_stateStack.pushState(StateID::SQLite);
+    //m_stateStack.pushState(StateID::Workshop);
 #else
     m_stateStack.pushState(StateID::SplashScreen);
 #endif

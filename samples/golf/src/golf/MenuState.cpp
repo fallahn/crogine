@@ -380,6 +380,15 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
             }
         });
 
+#ifdef USE_WORKSHOP
+    registerCommand("workshop",
+        [&](const std::string&)
+        {
+            requestStackClear();
+            requestStackPush(StateID::Workshop);
+        });
+#endif
+
     Social::setStatus(Social::InfoID::Menu, { "Main Menu" });
     Social::setGroup(0);
 

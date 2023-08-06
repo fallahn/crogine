@@ -162,7 +162,7 @@ FRAG_OUT = colour + (gridColour * contourAmount * u_gridAmount);
 
     constexpr float MaxZoom = 12.f;
     constexpr float MinZoom = 1.f;
-    constexpr float BaseScaleMultiplier = 0.9f;
+    constexpr float BaseScaleMultiplier = 0.8f;
     constexpr std::int32_t MaxFingers = 2;
 }
 
