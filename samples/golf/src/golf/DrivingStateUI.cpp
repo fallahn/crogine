@@ -2632,7 +2632,8 @@ void DrivingState::showMessage(float range)
 
                         totalScore += score;
                     }
-                    for (; j < 9; ++j)
+                    j++;
+                    for (; j < 10; ++j)
                     {
                         summary += "Turn " + std::to_string(j) + ":       N/A\n";
                     }
