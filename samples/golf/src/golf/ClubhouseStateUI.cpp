@@ -37,6 +37,8 @@ source distribution.
 #include "NameScrollSystem.hpp"
 #include "../GolfGame.hpp"
 
+#include <Social.hpp>
+
 #include <crogine/ecs/components/Camera.hpp>
 #include <crogine/ecs/components/Callback.hpp>
 #include <crogine/ecs/components/Sprite.hpp>
@@ -2491,6 +2493,20 @@ void ClubhouseState::createStatMenu(cro::Entity parent, std::uint32_t mouseEnter
                     m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
                 }
             });
+
+
+    //cheese this in here for now until we decide where to place it
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, -10.f, 0.f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(font).setString(Social::getMonthlyChallenge().getProgressString());
+    entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setVerticalSpacing(2.f);;
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    boardEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
 }
 
 void ClubhouseState::updateLobbyData(const net::NetEvent& evt)

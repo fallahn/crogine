@@ -339,6 +339,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
 
     //This is set when setting active player.
     Achievements::setActive(m_allowAchievements);
+    Social::getMonthlyChallenge().refresh();
 
     //do this first so scores are reset before scoreboard
     //is first created.

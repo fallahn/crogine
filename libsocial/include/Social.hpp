@@ -29,6 +29,8 @@ source distribution.
 
 #pragma once
 
+#include "MonthlyChallenge.hpp"
+
 #include <crogine/graphics/Image.hpp>
 #include <crogine/core/App.hpp>
 #include <crogine/core/String.hpp>
@@ -205,4 +207,6 @@ public:
     };
     static std::string getBaseContentPath();
     static std::string getUserContentPath(std::int32_t);
+
+    static MonthlyChallenge& getMonthlyChallenge();
 };

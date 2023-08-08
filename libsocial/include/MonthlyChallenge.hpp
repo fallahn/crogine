@@ -32,6 +32,8 @@ source distribution.
 #include <array>
 #include <string>
 
+#include <crogine/core/String.hpp>
+
 struct ChallengeID final
 {
     enum
@@ -105,18 +107,18 @@ struct Challenge final
 class MonthlyChallenge final
 {
 public:
-    MonthlyChallenge() {}; //fetch the current active month
+    MonthlyChallenge(); //fetch the current active month
 
     //ignores the value if id != m_month
     //else increments counter (ignoring value)
     //or sets value as flag.
     //raises a message to show progress or completion
-    void updateChallenge(std::int32_t id, std::int32_t value) {};
+    void updateChallenge(std::int32_t id, std::int32_t value);
 
     //refreshes the status of the current month's stat
     //or resets other month's stats. TODO much check
     //we have a valid month, else we'll reset ALL progress...
-    void refresh() {}; //call from game start, driving start and clubhouse.
+    void refresh(); //call from game start, driving start and clubhouse.
 
     struct Progress final
     {
@@ -124,7 +126,8 @@ public:
         std::int32_t target = 0;
         std::int32_t index = -1;
     };
-    Progress getProgress() const {};
+    Progress getProgress() const;
+    cro::String getProgressString() const;
 
 private:
     std::array<Challenge, ChallengeID::Count> m_challenges =

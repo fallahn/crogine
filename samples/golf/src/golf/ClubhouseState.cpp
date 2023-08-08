@@ -144,6 +144,7 @@ ClubhouseState::ClubhouseState(cro::StateStack& ss, cro::State::Context ctx, Sha
     sd.mapDirectory = "pool";
 
     Achievements::refreshGlobalStats();
+    Social::getMonthlyChallenge().refresh();
 
     ctx.mainWindow.loadResources([this]() {
         addSystems();

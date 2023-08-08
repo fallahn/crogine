@@ -439,3 +439,9 @@ float Social::getCompletionCount(const std::string& course, bool)
     return Achievements::getStat(course)->value;
     //return std::max(1.f, Achievements::getStat(/*StatStrings[StatID::Course01Complete]*/course)->value);
 }
+
+MonthlyChallenge& Social::getMonthlyChallenge()
+{
+    static MonthlyChallenge mc;
+    return mc;
+}
