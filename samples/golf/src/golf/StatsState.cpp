@@ -1812,6 +1812,11 @@ void StatsState::createAwardsTab(cro::Entity parent, const cro::SpriteSheet& spr
     m_awardSprites[SpriteID::SilverSpike] = spriteSheet.getSprite("silver_spike");
     m_awardSprites[SpriteID::GoldSpike] = spriteSheet.getSprite("gold_spike");
     m_awardSprites[SpriteID::TeeBall] = spriteSheet.getSprite("tee_ball");
+    m_awardSprites[SpriteID::BronzeBall] = spriteSheet.getSprite("bronze_ball");
+    m_awardSprites[SpriteID::SilverBall] = spriteSheet.getSprite("silver_ball");
+    m_awardSprites[SpriteID::GoldBall] = spriteSheet.getSprite("gold_ball");
+    m_awardSprites[SpriteID::PlatinumBall] = spriteSheet.getSprite("platinum_ball");
+    m_awardSprites[SpriteID::DiamondBall] = spriteSheet.getSprite("diamond_ball");
     
     m_awardQuad = m_awardSprites[SpriteID::BronzeShield];
     auto size = m_awardQuad.getSize();
@@ -1836,13 +1841,14 @@ void StatsState::refreshAwardsTab(std::int32_t page)
     constexpr float StrideY = 120.f;
 
 #ifdef CRO_DEBUG_
-    std::vector<Social::Award> awards;
+    /*std::vector<Social::Award> awards;
     for (auto i = 0; i < 43; ++i)
     {
         auto& a = awards.emplace_back();
         a.description = "Monthly Winner\nJuly 200" + std::to_string(i%10);
         a.type = cro::Util::Random::value(0, 2);
-    }
+    }*/
+    const auto& awards = Social::getAwards();
 #else
 #ifdef USE_GNS
     const auto& awards = Social::getAwards();
@@ -1904,6 +1910,21 @@ void StatsState::refreshAwardsTab(std::int32_t page)
                 break;
             case Social::Award::MonthlyGold:
                 m_awardQuad = m_awardSprites[SpriteID::GoldShield];
+                break;
+            case Social::Award::Level10:
+                m_awardQuad = m_awardSprites[SpriteID::BronzeBall];
+                break;
+            case Social::Award::Level20:
+                m_awardQuad = m_awardSprites[SpriteID::SilverBall];
+                break;
+            case Social::Award::Level30:
+                m_awardQuad = m_awardSprites[SpriteID::GoldBall];
+                break;
+            case Social::Award::Level40:
+                m_awardQuad = m_awardSprites[SpriteID::PlatinumBall];
+                break;
+            case Social::Award::Level50:
+                m_awardQuad = m_awardSprites[SpriteID::DiamondBall];
                 break;
             }
             m_awardQuad.draw();

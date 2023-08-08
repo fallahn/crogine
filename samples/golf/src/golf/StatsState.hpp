@@ -197,6 +197,12 @@ private:
             GoldSpike,
             TeeBall,
 
+            BronzeBall,
+            SilverBall,
+            GoldBall,
+            PlatinumBall,
+            DiamondBall,
+
             Count
         };
     };

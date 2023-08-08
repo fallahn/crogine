@@ -178,7 +178,9 @@ public:
         //dictates appearance
         enum
         {
-            MonthlyGold, MonthlySilver, MonthlyBronze
+            MonthlyGold, MonthlySilver, MonthlyBronze,
+
+            Level10, Level20, Level30, Level40, Level50
         };
         std::int32_t type;
         cro::String description;
