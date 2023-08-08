@@ -973,6 +973,7 @@ void GolfState::handleMessage(const cro::Message& msg)
                     if (xp)
                     {
                         Social::awardXP(xp, XPStringID::GreatAccuracy);
+                        Social::getMonthlyChallenge().updateChallenge(ChallengeID::Eight, 0);
                     }
                 }
 
@@ -1257,6 +1258,7 @@ void GolfState::handleMessage(const cro::Message& msg)
                         if (data.pinDistance < 0.5f)
                         {
                             Social::awardXP(XPValues[XPID::Special] / 2, XPStringID::NiceChip);
+                            Social::getMonthlyChallenge().updateChallenge(ChallengeID::Zero, 0);
                         }
                     }
                     else if (data.travelDistance < 9.f
@@ -5547,6 +5549,7 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
                             Achievements::incrementStat(StatStrings[StatID::LongPutts]);
                             Achievements::awardAchievement(AchievementStrings[AchievementID::PuttStar]);
                             Social::awardXP(XPValues[XPID::Special] / 2, XPStringID::LongPutt);
+                            Social::getMonthlyChallenge().updateChallenge(ChallengeID::One, 0);
                             special = true;
                         }
                     }

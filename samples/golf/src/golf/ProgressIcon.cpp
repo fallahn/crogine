@@ -140,7 +140,7 @@ void ProgressIcon::show(std::int32_t index, std::int32_t progress, std::int32_t 
 
     if (progress == total)
     {
-        m_titleText.setString("CHALLENGE COMPLETE!");
+        m_titleText.setString("CHALLENGE COMPLETE! 500XP");
     }
     else
     {

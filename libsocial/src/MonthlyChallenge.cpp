@@ -45,36 +45,43 @@ void MonthlyChallenge::updateChallenge(std::int32_t id, std::int32_t value)
     if (m_month != -1 && id == m_month
         && Achievements::getActive())
     {
-        if (m_challenges[id].type == Challenge::Counter)
+        //make sure we're not already complete else the completion
+        //message will get raised mutliple times...
+        auto progress = getProgress();
+        if (progress.value != progress.target)
         {
-            m_challenges[id].value = std::min(m_challenges[id].value + 1, m_challenges[id].targetValue);
 
-            auto* msg = cro::App::postMessage<Social::SocialEvent>(Social::MessageID::SocialMessage);
-            msg->type = Social::SocialEvent::MonthlyProgress;
-            msg->level = m_challenges[id].value;
-            msg->reason = m_challenges[id].targetValue;
-            msg->playerID = id;
-        }
-        else if (m_challenges[id].type == Challenge::Flag
-            && value < 32)
-        {
-            auto oldVal = m_challenges[id].value;
-            m_challenges[id].value |= (1 << value);
-
-            if (oldVal != m_challenges[id].value)
+            if (m_challenges[id].type == Challenge::Counter)
             {
-                std::bitset<sizeof(Challenge::value)> value(m_challenges[id].value);
-                std::bitset<sizeof(Challenge::targetValue)> target(m_challenges[id].targetValue);
+                m_challenges[id].value = std::min(m_challenges[id].value + 1, m_challenges[id].targetValue);
 
                 auto* msg = cro::App::postMessage<Social::SocialEvent>(Social::MessageID::SocialMessage);
                 msg->type = Social::SocialEvent::MonthlyProgress;
-                msg->level = static_cast<std::int32_t>(value.count());
-                msg->reason = static_cast<std::int32_t>(target.count());
+                msg->level = m_challenges[id].value;
+                msg->reason = m_challenges[id].targetValue;
                 msg->playerID = id;
             }
-        }
+            else if (m_challenges[id].type == Challenge::Flag
+                && value < 32)
+            {
+                auto oldVal = m_challenges[id].value;
+                m_challenges[id].value |= (1 << value);
 
-        //TODO write stat to storage
+                if (oldVal != m_challenges[id].value)
+                {
+                    std::bitset<sizeof(Challenge::value)> value(m_challenges[id].value);
+                    std::bitset<sizeof(Challenge::targetValue)> target(m_challenges[id].targetValue);
+
+                    auto* msg = cro::App::postMessage<Social::SocialEvent>(Social::MessageID::SocialMessage);
+                    msg->type = Social::SocialEvent::MonthlyProgress;
+                    msg->level = static_cast<std::int32_t>(value.count());
+                    msg->reason = static_cast<std::int32_t>(target.count());
+                    msg->playerID = id;
+                }
+            }
+
+            //TODO write stat to storage
+        }
     }
 }
 

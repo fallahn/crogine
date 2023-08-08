@@ -32,6 +32,8 @@ source distribution.
 #include "server/ServerMessages.hpp"
 #include "CommandIDs.hpp"
 
+#include <Social.hpp>
+
 #include <crogine/ecs/components/Text.hpp>
 #include <crogine/ecs/systems/CommandSystem.hpp>
 
@@ -95,6 +97,11 @@ void DrivingRangeDirector::handleMessage(const cro::Message& msg)
                 m_scores[idx] = 100.f;
             }
             m_holeCount--;
+
+            if (m_scores[idx] > 99.f)
+            {
+                Social::getMonthlyChallenge().updateChallenge(ChallengeID::Six, hole);
+            }
         }
     }
         break;

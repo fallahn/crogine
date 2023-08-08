@@ -210,6 +210,9 @@ void GolfGame::handleEvent(const cro::Event& evt)
         case SDLK_AC_BACK:
             App::quit();
             break;
+        /*case SDLK_KP_PERIOD:
+            m_progressIcon->show(0, 10, 10);
+            break;*/
 #ifndef USE_GNS
         case SDLK_t:
             m_achievements->showTest();
@@ -343,6 +346,11 @@ void GolfGame::handleMessage(const cro::Message& msg)
         else if (data.type == Social::SocialEvent::MonthlyProgress)
         {
             m_progressIcon->show(static_cast<std::int32_t>(data.playerID), data.level, data.reason);
+
+            if (data.level == data.reason)
+            {
+                Social::awardXP(500);
+            }
         }
     }
 

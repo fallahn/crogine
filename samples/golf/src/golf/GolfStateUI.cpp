@@ -1490,12 +1490,20 @@ void GolfState::showCountdown(std::uint8_t seconds)
     {
         Achievements::incrementStat(StatStrings[StatID::TotalRounds]);
 
+        if (m_statBoardScores.size() > 3
+            && CourseIDs.count(m_sharedData.mapDirectory) != 0)
+        {
+            //this assumes 4 players or more... is this right?
+            Social::getMonthlyChallenge().updateChallenge(ChallengeID::Four, CourseIDs.at(m_sharedData.mapDirectory) - AchievementID::Complete01);
+        }
+
         if (m_holeData.size() == 18)
         {
             Achievements::setAvgStat(m_sharedData.mapDirectory, m_playTime.asSeconds(), 1.f);
             if (CourseIDs.count(m_sharedData.mapDirectory) != 0)
             {
                 Achievements::awardAchievement(AchievementStrings[CourseIDs.at(m_sharedData.mapDirectory)]);
+                Social::getMonthlyChallenge().updateChallenge(ChallengeID::Three, m_sharedData.scoreType);
 
                 if (Achievements::getActive())
                 {
@@ -2916,6 +2924,7 @@ void GolfState::showMessageBoard(MessageBoardID messageType, bool special)
             if (m_achievementTracker.hadFoul && overPar < 1)
             {
                 Achievements::awardAchievement(AchievementStrings[AchievementID::Boomerang]);
+                Social::getMonthlyChallenge().updateChallenge(ChallengeID::Five, 0);
             }
 
             switch (score)
