@@ -1911,6 +1911,9 @@ void StatsState::refreshAwardsTab(std::int32_t page)
             case Social::Award::MonthlyGold:
                 m_awardQuad = m_awardSprites[SpriteID::GoldShield];
                 break;
+            case Social::Award::MonthlyChallenge:
+                m_awardQuad = m_awardSprites[SpriteID::GoldSpike];
+                break;
             case Social::Award::Level10:
                 m_awardQuad = m_awardSprites[SpriteID::BronzeBall];
                 break;
