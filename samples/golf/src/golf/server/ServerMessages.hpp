@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2022
+Matt Marchant 2021 - 2023
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -40,7 +40,8 @@ namespace sv::MessageID
         ConnectionMessage = cro::Message::Count,
         GolfMessage,
         BilliardsMessage,
-        TriggerMessage
+        TriggerMessage,
+        BullsEyeMessage
     };
 }
 
@@ -105,4 +106,9 @@ struct BilliardsEvent final
 struct TriggerEvent final
 {
     std::uint8_t triggerID = 25;
+};
+
+struct BullsEyeEvent final
+{
+    float accuracy = 0.f;
 };

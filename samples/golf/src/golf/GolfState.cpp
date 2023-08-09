@@ -5423,6 +5423,9 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
         switch (evt.packet.getID())
         {
         default: break;
+        case PacketID::BullHit:
+            handleBullHit(evt.packet.as<BullHit>());
+            break;
         case PacketID::BullsEye:
         {
             spawnBullsEye(evt.packet.as<BullsEye>());
@@ -5881,6 +5884,20 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
     }
 }
 
+void GolfState::handleBullHit(const BullHit& bh)
+{
+    if (bh.client == m_sharedData.localConnectionData.connectionID
+        //&& bh.player == m_currentPlayer.player
+        && !m_sharedData.localConnectionData.playerData[bh.player].isCPU)
+    {
+        if (!m_achievementTracker.bullseyeChallenge)
+        {
+            Social::getMonthlyChallenge().updateChallenge(ChallengeID::Two, 0);
+        }
+        m_achievementTracker.bullseyeChallenge = true;
+    }
+}
+
 void GolfState::removeClient(std::uint8_t clientID)
 {
     cro::String str = m_sharedData.connectionData[clientID].playerData[0].name;
@@ -5925,6 +5942,7 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo)
 
     updateScoreboard();
     m_achievementTracker.hadFoul = false;
+    m_achievementTracker.bullseyeChallenge = false;
     m_achievementTracker.puttCount = 0;
 
     //can't get these when putting else it's

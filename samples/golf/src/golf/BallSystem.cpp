@@ -976,6 +976,8 @@ void BallSystem::doCollision(cro::Entity entity)
             ball.velocity *= Restitution[terrainResult.terrain];
             break;
         case TerrainID::Fairway:
+            doBullsEyeCollision(tx.getPosition());
+            [[fallthrough]];
         case TerrainID::Stone: //bouncy :)
             if (ball.velocity.y > MinRollVelocity)
             {
@@ -1117,6 +1119,29 @@ void BallSystem::doBallCollision(cro::Entity entity)
                     ball.velocity = glm::vec3(0.f);
                 }
             }
+        }
+    }
+}
+
+void BallSystem::doBullsEyeCollision(glm::vec3 ballPos)
+{
+    if (m_bullsEye.spawn)
+    {
+        const glm::vec2 p1(ballPos.x, ballPos.z);
+        const glm::vec2 p2(m_bullsEye.position.x, m_bullsEye.position.z);
+
+        const float BullRad = m_bullsEye.diametre / 2.f;
+
+        if (auto len2 = glm::length2(p2 - p1); len2 < (BullRad * BullRad))
+        {
+            //unlikely, but will upset sqrt
+            if (len2 == 0)
+            {
+                len2 = 0.000001f;
+            }
+
+            auto* msg = postMessage<BullsEyeEvent>(sv::MessageID::BullsEyeMessage);
+            msg->accuracy = std::clamp(1.f - (std::sqrt(len2) / BullRad), 0.f, 1.f);
         }
     }
 }

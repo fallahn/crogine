@@ -69,6 +69,7 @@ source distribution.
 #endif
 
 struct BullsEye;
+struct BullHit;
 namespace cro
 {
     struct NetEvent;
@@ -252,6 +253,7 @@ private:
     void spawnBullsEye(const BullsEye&);
 
     void handleNetEvent(const net::NetEvent&);
+    void handleBullHit(const BullHit&);
     void removeClient(std::uint8_t);
 
     void setCurrentHole(std::uint16_t); //(number << 8) | par
@@ -460,6 +462,7 @@ private:
 
         std::int32_t birdieChallenge = 0; //monthly challenge only incremented on front 9
         bool nearMissChallenge = false;
+        bool bullseyeChallenge = false;
     }m_achievementTracker;
     cro::Clock m_playTimer; //track avg play time stat
     cro::Time m_playTime;

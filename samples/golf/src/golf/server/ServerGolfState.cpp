@@ -277,6 +277,15 @@ void GolfState::handleMessage(const cro::Message& msg)
             break;
         }
     }
+    else if (msg.id == sv::MessageID::BullsEyeMessage)
+    {
+        const auto& data = msg.getData<BullsEyeEvent>();
+        BullHit bh;
+        bh.accuracy = data.accuracy;
+        bh.player = m_playerInfo[0].player;
+        bh.client = m_playerInfo[0].client;
+        m_sharedData.host.broadcastPacket(PacketID::BullHit, bh, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+    }
 
     m_scene.forwardMessage(msg);
 }
@@ -421,10 +430,9 @@ std::int32_t GolfState::process(float dt)
             if (allReady)
             {
                 //if the game mode requires or challenge requires
-                //spawn the bullseye. TODO what if the game mode
-                //is played during challenge month?? I suppose
-                //only stroke play contributes to challenges?
-                //if (Social::getMonth() == 2 && cro::Util::Random::value(0, 9) == 0)
+                //spawn the bullseye.
+                if ((Social::getMonth() == 2 && cro::Util::Random::value(0, 9) == 0)
+                  || m_sharedData.scoreType == ScoreType::MultiTarget)
                 {
                     const auto& b = m_scene.getSystem<BallSystem>()->spawnBullsEye();
                     if (b.spawn)

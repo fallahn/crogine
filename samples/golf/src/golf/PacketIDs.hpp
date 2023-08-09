@@ -38,7 +38,13 @@ namespace ScoreType
     {
         Stroke, Match, Skins,
 
-        Count
+        Count,
+
+        Stableford,
+        ShortRound,
+        NearestThePin,
+        LongestDrive,
+        MultiTarget,
     };
 }
 
@@ -107,6 +113,7 @@ namespace PacketID
         EntityRemoved, //< uint32 entity ID
         ReadyQuitStatus, //< uint8 flags containing status of ready/quit at round end
         BullsEye, //< bullseye struct
+        BullHit, //< BullHit struct
 
         //from client
         RequestGameStart, //uint8 sv::State, ie Golf to start golf, Billiards to start billiards etc

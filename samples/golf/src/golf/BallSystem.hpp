@@ -54,6 +54,13 @@ struct BullsEye final
     bool spawn = false; //if rx packet is false, delete the current target
 };
 
+struct BullHit final
+{
+    float accuracy = 0;
+    std::uint8_t client = 0;
+    std::uint8_t player = 0;
+};
+
 struct Ball final
 {
     static constexpr float Radius = 0.0215f;
@@ -164,6 +171,7 @@ private:
 
     void doCollision(cro::Entity);
     void doBallCollision(cro::Entity);
+    void doBullsEyeCollision(glm::vec3);
     void updateWind();
 
     std::unique_ptr<btDefaultCollisionConfiguration> m_collisionCfg;
