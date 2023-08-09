@@ -330,6 +330,8 @@ ClubhouseState::ClubhouseState(cro::StateStack& ss, cro::State::Context ctx, Sha
     //        ImGui::End();
     //    });
 #endif
+
+    cro::App::getInstance().resetFrameTime();
 }
 
 //public

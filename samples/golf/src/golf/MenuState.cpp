@@ -467,8 +467,6 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     //        ImGui::End();
     //    }/*, true*/);
 #endif
-
-    cro::App::getInstance().resetFrameTime();
 }
 
 MenuState::~MenuState()

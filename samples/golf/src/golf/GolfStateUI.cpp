@@ -1490,11 +1490,10 @@ void GolfState::showCountdown(std::uint8_t seconds)
     {
         Achievements::incrementStat(StatStrings[StatID::TotalRounds]);
 
-        if (m_statBoardScores.size() > 3
-            && CourseIDs.count(m_sharedData.mapDirectory) != 0)
+        if (m_statBoardScores.size() > 3 //this assumes 4 players or more... is this right?
+            && m_courseIndex != -1)
         {
-            //this assumes 4 players or more... is this right?
-            Social::getMonthlyChallenge().updateChallenge(ChallengeID::Four, CourseIDs.at(m_sharedData.mapDirectory) - AchievementID::Complete01);
+            Social::getMonthlyChallenge().updateChallenge(ChallengeID::Four, m_courseIndex);
         }
 
         if (m_holeData.size() == 18)
@@ -2935,6 +2934,17 @@ void GolfState::showMessageBoard(MessageBoardID messageType, bool special)
                 if (!m_sharedData.localConnectionData.playerData[m_currentPlayer.player].isCPU)
                 {
                     m_achievementTracker.birdies++;
+
+                    if (m_sharedData.holeCount != 2
+                        && m_currentHole < 9)
+                    {
+                        m_achievementTracker.birdieChallenge++;
+                        if (m_achievementTracker.birdieChallenge == 2
+                            && m_courseIndex != -1)
+                        {
+                            Social::getMonthlyChallenge().updateChallenge(ChallengeID::Nine, m_courseIndex);
+                        }
+                    }
                 }
                 break;
             case ScoreID::Eagle:
@@ -2943,6 +2953,15 @@ void GolfState::showMessageBoard(MessageBoardID messageType, bool special)
                 if (!m_sharedData.localConnectionData.playerData[m_currentPlayer.player].isCPU)
                 {
                     m_achievementTracker.eagles++;
+
+                    if (m_sharedData.holeCount == 2
+                        || (m_sharedData.holeCount == 0 && m_currentHole > 8))
+                    {
+                        if (m_courseIndex != -1)
+                        {
+                            Social::getMonthlyChallenge().updateChallenge(ChallengeID::Ten, m_courseIndex);
+                        }
+                    }
                 }
                 break;
             case ScoreID::HIO:

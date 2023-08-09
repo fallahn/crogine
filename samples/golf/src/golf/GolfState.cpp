@@ -1534,6 +1534,11 @@ void GolfState::handleMessage(const cro::Message& msg)
                 msg2->travelDistance = rot;
             }
         }
+
+        if (data.type == CollisionEvent::NearMiss)
+        {
+            m_achievementTracker.nearMissChallenge = true;
+        }
     }
         break;
     }
@@ -5487,6 +5492,12 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
                         {
                             Achievements::awardAchievement(AchievementStrings[AchievementID::GimmeGimmeGimme]);
                         }
+
+                        if (m_achievementTracker.nearMissChallenge)
+                        {
+                            Social::getMonthlyChallenge().updateChallenge(ChallengeID::Seven, 0);
+                            m_achievementTracker.nearMissChallenge = false;
+                        }
                     }
                 }
             }
@@ -6471,6 +6482,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     cro::App::getWindow().setMouseCaptured(true);
     m_achievementTracker.hadBackspin = false;
     m_achievementTracker.hadTopspin = false;
+    m_achievementTracker.nearMissChallenge = false;
     m_turnTimer.restart();
     m_idleTimer.restart();
     m_playTimer.restart();

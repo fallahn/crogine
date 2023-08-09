@@ -455,6 +455,9 @@ private:
         std::int32_t eagles = 0;
         std::int32_t birdies = 0; //nested achievement
         std::int32_t gimmes = 0; //gimme gimme gimme
+
+        std::int32_t birdieChallenge = 0; //monthly challenge only incremented on front 9
+        bool nearMissChallenge = false;
     }m_achievementTracker;
     cro::Clock m_playTimer; //track avg play time stat
     cro::Time m_playTime;
