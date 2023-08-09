@@ -5384,8 +5384,11 @@ void GolfState::spawnBullsEye(const BullsEye& b)
                 if (progress == 1)
                 {
                     direction = 1;
-                    e.getComponent<cro::Callback>().active = false;
                 }
+            }
+            else if (direction == 1)
+            {
+                //idle while rotating
             }
             else
             {
@@ -5399,6 +5402,7 @@ void GolfState::spawnBullsEye(const BullsEye& b)
 
             float scale = cro::Util::Easing::easeOutElastic(progress) * targetScale;
             e.getComponent<cro::Transform>().setScale(glm::vec3(scale));
+            e.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, dt * 0.2f);
         };
     }
     else
@@ -5408,7 +5412,7 @@ void GolfState::spawnBullsEye(const BullsEye& b)
         cmd.targetFlags = CommandID::BullsEye;
         cmd.action = [](cro::Entity e, float)
         {
-            e.getComponent<cro::Callback>().getUserData<BullsEyeData>().direction = 1;
+            e.getComponent<cro::Callback>().getUserData<BullsEyeData>().direction = 2;
             e.getComponent<cro::Callback>().active = true;
         };
         m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);

@@ -200,6 +200,7 @@ private:
     void setHole(std::int32_t);
     void setActiveCamera(std::int32_t);
     void forceRestart();
+    void triggerGC();
     
     //DrivingStateUI.cpp
 #ifdef USE_GNS

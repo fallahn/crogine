@@ -95,6 +95,7 @@ source distribution.
 #include <crogine/util/Constants.hpp>
 #include <crogine/util/Random.hpp>
 #include <crogine/util/Maths.hpp>
+#include <crogine/util/Wavetable.hpp>
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
 
 namespace
@@ -126,6 +127,10 @@ namespace
 #else
 #define DEBUG_DRAW false
 #endif
+
+    cro::Box BillBox;
+    bool prevBillBox = false;
+    std::vector<float> noiseTable;
 
     float playerXScale = 1.f;
 
@@ -198,6 +203,9 @@ DrivingState::DrivingState(cro::StateStack& stack, cro::State::Context context, 
     m_strokeCountIndex  (0),
     m_currentCamera     (CameraID::Player)
 {
+    prevBillBox = false;
+    noiseTable = cro::Util::Wavetable::noise(2.f);
+    
     sd.clubSet = std::clamp(sd.clubSet, 0, 2);
     Club::setClubLevel(sd.clubSet);
 
@@ -434,7 +442,7 @@ bool DrivingState::handleEvent(const cro::Event& evt)
         }
         break;
         case SDLK_KP_MULTIPLY:
-
+            triggerGC();
             break;
 #endif
         }
@@ -1387,6 +1395,20 @@ void DrivingState::createScene()
 
                 //not sure we need to set all submeshes - for one thing it breaks the cart shadow
                 auto material = m_resources.materials.get(m_materialIDs[MaterialID::CelTextured]);
+
+                if (md.hasSkeleton())
+                {
+                    material = m_resources.materials.get(m_materialIDs[MaterialID::CelTexturedSkinned]);
+                    entity.getComponent<cro::Skeleton>().play(0);
+
+                    if (path.find("billboard") != std::string::npos)
+                    {
+                        BillBox = entity.getComponent<cro::Model>().getAABB();
+                        BillBox = entity.getComponent<cro::Transform>().getLocalTransform() * BillBox;
+                        LogI << "Found billbox" << std::endl;
+                    }
+                }
+
                 applyMaterialData(md, material);
                 entity.getComponent<cro::Model>().setMaterial(0, material);
                 entity.getComponent<cro::Model>().setRenderFlags(~RenderFlags::MiniMap);
@@ -2506,6 +2528,14 @@ void DrivingState::createBall()
                 e.getComponent<CameraFollower>().holePosition = m_holeData[m_gameScene.getDirector<DrivingRangeDirector>()->getCurrentHole()].pin;
             };
             m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+            auto b = BillBox.contains(pos);
+            if (b && !prevBillBox)
+            {
+                //clonk
+                triggerGC();
+            }
+            prevBillBox = b;
         }
 
         //and wind effect meter
@@ -3211,6 +3241,11 @@ void DrivingState::forceRestart()
         e.getComponent<cro::Callback>().active = true;
     };
     m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+}
+
+void DrivingState::triggerGC()
+{
 
 }
 

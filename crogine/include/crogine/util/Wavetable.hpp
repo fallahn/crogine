@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2020
+Matt Marchant 2017 - 2023
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -122,6 +122,30 @@ namespace cro
                     }
                 }
                 return retval;
+            }
+
+            /*!
+            \brief Returns a vector containing a table of 1D noise
+            for the given duration at the given sample rate
+            \param duration Number of seconds the noise table should last for
+            \param amplitude The maxmium value of the voise table. Defaults to 1
+            \param sampleRate The rate at which this table will be iterated in fps. Defaults to 60
+            */
+            static inline std::vector<float> noise(float duration, float amplitude = 1.f, float sampleRate = 60.f)
+            {
+                //static const auto fract = [](float f) {return f - static_cast<long>(f); };
+                static const auto rand = [](float n) { return glm::fract(std::sin(n) * 43758.5453123f); };
+
+                std::vector<float> retVal;
+                const float step = 1.f / (duration * sampleRate);
+                float position = 0.f;
+                for (auto i = 0; i < (duration * sampleRate); ++i)
+                {
+                    retVal.push_back(glm::mix(rand(0.f), rand(1.f), position) * amplitude);
+
+                    position += step;
+                }
+                return retVal;
             }
         }
     }

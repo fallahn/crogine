@@ -10,6 +10,7 @@
 #include <crogine/ecs/components/Skeleton.hpp>
 #include <crogine/ecs/components/Drawable2D.hpp>
 #include <crogine/ecs/components/Sprite.hpp>
+#include <crogine/ecs/components/ParticleEmitter.hpp>
 
 #include <crogine/ecs/systems/CameraSystem.hpp>
 #include <crogine/ecs/systems/CallbackSystem.hpp>
@@ -18,6 +19,7 @@
 #include <crogine/ecs/systems/ModelRenderer.hpp>
 #include <crogine/ecs/systems/SpriteSystem2D.hpp>
 #include <crogine/ecs/systems/RenderSystem2D.hpp>
+#include <crogine/ecs/systems/ParticleSystem.hpp>
 
 #include <crogine/util/Constants.hpp>
 #include <crogine/util/Easings.hpp>
@@ -113,7 +115,7 @@ bool GCState::simulate(float dt)
 
     m_gameScene.simulate(dt);
     m_uiScene.simulate(dt);
-    return true;
+    return false;
 }
 
 void GCState::render()
@@ -131,6 +133,7 @@ void GCState::addSystems()
     m_gameScene.addSystem<cro::CameraSystem>(mb);
     m_gameScene.addSystem<cro::ShadowMapRenderer>(mb);
     m_gameScene.addSystem<cro::ModelRenderer>(mb);
+    m_gameScene.addSystem<cro::ParticleSystem>(mb);
 
     m_uiScene.addSystem<cro::CallbackSystem>(mb);
     m_uiScene.addSystem<cro::SpriteSystem2D>(mb);
@@ -180,6 +183,48 @@ void GCState::createScene()
         entity.addComponent<cro::Transform>();
         md.createModel(entity);
     }
+
+    cro::EmitterSettings particles;
+    particles.loadFromFile("assets/golf/particles/hio.cps", m_resources.textures);
+    const std::array Positions =
+    {
+        glm::vec3(-5.f, 0.f, -0.2f),
+        glm::vec3(5.f, 0.f, -0.2f),
+
+        glm::vec3(-3.f, 0.f, 3.8f),
+        glm::vec3(3.f, 0.f, 3.8f),
+    };
+
+    for (auto p : Positions)
+    {
+        static constexpr float RotationAmount = cro::Util::Const::PI / 8.f;
+        float rotation = -RotationAmount;
+
+        for (auto i = 0; i < 3; ++i)
+        {
+            auto entity = m_gameScene.createEntity();
+            entity.addComponent<cro::Transform>().setPosition(p);
+            entity.getComponent<cro::Transform>().setRotation(cro::Transform::Z_AXIS, rotation);
+            entity.addComponent<cro::ParticleEmitter>().settings = particles;
+            entity.addComponent<cro::Callback>().active = true;
+            entity.getComponent<cro::Callback>().setUserData<float>(5.f);
+            entity.getComponent<cro::Callback>().function =
+                [](cro::Entity e, float dt)
+                {
+                    auto& t = e.getComponent<cro::Callback>().getUserData<float>();
+                    t -= dt;
+
+                    if (t < 0)
+                    {
+                        t += 8.f;
+                        e.getComponent<cro::ParticleEmitter>().start();
+                    }
+                };
+
+            rotation += RotationAmount;
+        }
+    }
+
 
     auto resize = [](cro::Camera& cam)
     {
