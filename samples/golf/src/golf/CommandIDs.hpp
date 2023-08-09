@@ -50,7 +50,8 @@ struct CommandID final
         Spectator       = 0x4000,
         BeaconColour    = 0x8000,
         DroneCam        = 0x10000,
-        HoleRing        = 0x20000
+        HoleRing        = 0x20000,
+        BullsEye        = 0x40000
     };
 
     struct UI final

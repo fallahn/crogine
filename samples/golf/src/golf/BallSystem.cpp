@@ -199,6 +199,9 @@ void BallSystem::forceWindChange()
 
 bool BallSystem::setHoleData(HoleData& holeData, bool rebuildMesh)
 {
+    m_bullsEye.position = glm::vec3(0.f);
+    m_bullsEye.diametre = 0.f;
+
     m_holeData = &holeData;
 
     auto result = rebuildMesh ? updateCollisionMesh(holeData.modelPath) : true;
@@ -215,6 +218,15 @@ bool BallSystem::setHoleData(HoleData& holeData, bool rebuildMesh)
 void BallSystem::setGimmeRadius(std::uint8_t rad)
 {
     m_gimmeRadius = std::min(std::uint8_t(2), rad);
+}
+
+const BullsEye& BallSystem::spawnBullsEye()
+{
+    //TODO how do we decide on a radius?
+    m_bullsEye.diametre = static_cast<float>(cro::Util::Random::value(5, 8));
+    m_bullsEye.position = m_holeData->target;
+    m_bullsEye.spawn = !m_puttFromTee;
+    return m_bullsEye;
 }
 
 BallSystem::TerrainResult BallSystem::getTerrain(glm::vec3 pos) const

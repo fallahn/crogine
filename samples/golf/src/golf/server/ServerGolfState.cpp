@@ -417,6 +417,22 @@ std::int32_t GolfState::process(float dt)
                 }
             }
             m_allMapsLoaded = allReady;
+
+            if (allReady)
+            {
+                //if the game mode requires or challenge requires
+                //spawn the bullseye. TODO what if the game mode
+                //is played during challenge month?? I suppose
+                //only stroke play contributes to challenges?
+                //if (Social::getMonth() == 2 && cro::Util::Random::value(0, 9) == 0)
+                {
+                    const auto& b = m_scene.getSystem<BallSystem>()->spawnBullsEye();
+                    if (b.spawn)
+                    {
+                        m_sharedData.host.broadcastPacket(PacketID::BullsEye, b, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                    }
+                }
+            }
         }
     }
 
@@ -746,6 +762,9 @@ void GolfState::setNextHole()
             m_sharedData.host.broadcastPacket(PacketID::ServerError, static_cast<std::uint8_t>(MessageType::MapNotFound), net::NetFlag::Reliable);
             return;
         }
+
+        //tell clients to remove any bulls eye target
+        m_sharedData.host.broadcastPacket(PacketID::BullsEye, BullsEye(), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
 
         //tell clients to set up next hole
         std::uint16_t newHole = (m_currentHole << 8) | std::uint8_t(m_holeData[m_currentHole].par);

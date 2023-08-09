@@ -68,7 +68,7 @@ source distribution.
 //#define PATH_TRACING
 #endif
 
-
+struct BullsEye;
 namespace cro
 {
     struct NetEvent;
@@ -210,6 +210,7 @@ private:
         {
             BallShadow,
             PlayerShadow,
+            BullsEye,
 
             Count
         };
@@ -248,6 +249,7 @@ private:
     void buildBow();
     void createDrone();
     void spawnBall(const struct ActorInfo&);
+    void spawnBullsEye(const BullsEye&);
 
     void handleNetEvent(const net::NetEvent&);
     void removeClient(std::uint8_t);

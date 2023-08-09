@@ -445,3 +445,8 @@ MonthlyChallenge& Social::getMonthlyChallenge()
     static MonthlyChallenge mc;
     return mc;
 }
+
+std::int32_t Social::getMonth()
+{
+    return cro::SysTime::now().months() - 1; //we're using this as an index
+}

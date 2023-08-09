@@ -114,3 +114,4 @@ struct AvatarAnimCallbackData final
     float progress = 0.f;
 };
 using WindHideData = AvatarAnimCallbackData;
+using BullsEyeData = AvatarAnimCallbackData;

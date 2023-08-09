@@ -2233,6 +2233,7 @@ void GolfState::loadAssets()
     }
     m_modelDefs[ModelID::BallShadow]->loadFromFile("assets/golf/models/ball_shadow.cmt");
     m_modelDefs[ModelID::PlayerShadow]->loadFromFile("assets/golf/models/player_shadow.cmt");
+    m_modelDefs[ModelID::BullsEye]->loadFromFile("assets/golf/models/target.cmt"); //TODO we can only load this if challenge month or game mode requires
 
     //ball models - the menu should never have let us get this far if it found no ball files
     for (const auto& [colour, uid, path, _1, _2] : m_sharedData.ballInfo)
@@ -5360,6 +5361,60 @@ void GolfState::spawnBall(const ActorInfo& info)
 #endif
 }
 
+void GolfState::spawnBullsEye(const BullsEye& b)
+{
+    if (b.spawn)
+    {
+        auto targetScale = b.diametre;
+
+        //create new model
+        auto entity = m_gameScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition(b.position);
+        entity.addComponent<cro::CommandTarget>().ID = CommandID::BullsEye;
+        m_modelDefs[ModelID::BullsEye]->createModel(entity);
+        entity.addComponent<cro::Callback>().active = true;
+        entity.getComponent<cro::Callback>().setUserData<BullsEyeData>();
+        entity.getComponent<cro::Callback>().function =
+            [&, targetScale](cro::Entity e, float dt)
+        {
+            auto& [direction, progress] = e.getComponent<cro::Callback>().getUserData<BullsEyeData>();
+            if (direction == 0)
+            {
+                progress = std::min(1.f, progress + dt);
+                if (progress == 1)
+                {
+                    direction = 1;
+                    e.getComponent<cro::Callback>().active = false;
+                }
+            }
+            else
+            {
+                progress = std::max(0.f, progress - dt);
+                if (progress == 0)
+                {
+                    e.getComponent<cro::Callback>().active = false;
+                    m_gameScene.destroyEntity(e);
+                }
+            }
+
+            float scale = cro::Util::Easing::easeOutElastic(progress) * targetScale;
+            e.getComponent<cro::Transform>().setScale(glm::vec3(scale));
+        };
+    }
+    else
+    {
+        //remove existing
+        cro::Command cmd;
+        cmd.targetFlags = CommandID::BullsEye;
+        cmd.action = [](cro::Entity e, float)
+        {
+            e.getComponent<cro::Callback>().getUserData<BullsEyeData>().direction = 1;
+            e.getComponent<cro::Callback>().active = true;
+        };
+        m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+    }
+}
+
 void GolfState::handleNetEvent(const net::NetEvent& evt)
 {
     switch (evt.type)
@@ -5368,6 +5423,11 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
         switch (evt.packet.getID())
         {
         default: break;
+        case PacketID::BullsEye:
+        {
+            spawnBullsEye(evt.packet.as<BullsEye>());
+        }
+            break;
         case PacketID::FastCPU:
             m_sharedData.fastCPU = evt.packet.as<std::uint8_t>() != 0;
             m_cpuGolfer.setFastCPU(m_sharedData.fastCPU);

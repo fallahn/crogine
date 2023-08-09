@@ -209,4 +209,5 @@ public:
     static std::string getUserContentPath(std::int32_t);
 
     static MonthlyChallenge& getMonthlyChallenge();
+    static std::int32_t getMonth();
 };
