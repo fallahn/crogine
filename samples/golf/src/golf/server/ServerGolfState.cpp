@@ -59,6 +59,7 @@ namespace
 {
     constexpr float MaxScoreboardTime = 10.f;
     constexpr std::uint8_t MaxStrokes = 12;
+    constexpr std::uint8_t MaxRandomTargets = 2;
     const cro::Time TurnTime = cro::seconds(90.f);
 
     bool hadTennisBounce = false;
@@ -91,8 +92,8 @@ GolfState::GolfState(SharedData& sd)
     m_allMapsLoaded         (false),
     m_currentHole           (0),
     m_skinsPot              (1),
-    m_currentBest           (MaxStrokes)/*,
-    m_skillIndex            (0)*/
+    m_currentBest           (MaxStrokes),
+    m_randomTargetCount     (0)
 {
     if (m_mapDataValid = validateMap(); m_mapDataValid)
     {
@@ -429,10 +430,28 @@ std::int32_t GolfState::process(float dt)
 
             if (allReady)
             {
+                const auto createTarget =
+                [&]()
+                {
+                    if (m_sharedData.scoreType == ScoreType::MultiTarget)
+                    {
+                        return true;
+                    }
+
+                    if (Social::getMonth() == 2)
+                    {
+                        if (cro::Util::Random::value(0, 9) == 0)
+                        {
+                            return m_randomTargetCount++ < MaxRandomTargets;
+                        }
+                    }
+
+                    return false;
+                };
+
                 //if the game mode requires or challenge requires
                 //spawn the bullseye.
-                if ((Social::getMonth() == 2 && cro::Util::Random::value(0, 9) == 0)
-                  || m_sharedData.scoreType == ScoreType::MultiTarget)
+                if (createTarget())
                 {
                     const auto& b = m_scene.getSystem<BallSystem>()->spawnBullsEye();
                     if (b.spawn)

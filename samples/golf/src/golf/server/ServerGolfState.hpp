@@ -70,6 +70,7 @@ namespace sv
         std::vector<PlayerStatus> m_playerInfo; //active players. Sorted by distance so the front position is active player
         std::uint8_t m_skinsPot;
         std::uint8_t m_currentBest; //current best score for hole, non-stroke games end if no-one can beat it
+        std::uint8_t m_randomTargetCount;
 
         cro::Clock m_turnTimer;
 
