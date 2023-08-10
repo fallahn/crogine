@@ -476,6 +476,7 @@
     <ClCompile Include="src\golf\ErrorState.cpp" />
     <ClCompile Include="src\golf\FloatingTextSystem.cpp" />
     <ClCompile Include="src\golf\FpsCameraSystem.cpp" />
+    <ClCompile Include="src\golf\GcState.cpp" />
     <ClCompile Include="src\golf\GolfCartSystem.cpp" />
     <ClCompile Include="src\golf\GolfParticleDirector.cpp" />
     <ClCompile Include="src\golf\GolfSoundDirector.cpp" />
@@ -583,6 +584,7 @@
     <ClInclude Include="src\golf\FloatingTextSystem.hpp" />
     <ClInclude Include="src\golf\FpsCameraSystem.hpp" />
     <ClInclude Include="src\golf\GameConsts.hpp" />
+    <ClInclude Include="src\golf\GcState.hpp" />
     <ClInclude Include="src\golf\GolfCartSystem.hpp" />
     <ClInclude Include="src\golf\GolfParticleDirector.hpp" />
     <ClInclude Include="src\golf\GolfSoundDirector.hpp" />

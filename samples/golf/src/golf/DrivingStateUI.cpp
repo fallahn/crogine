@@ -231,6 +231,7 @@ void DrivingState::createUI()
         e.getComponent<cro::Callback>().active = false;
     };
     auto courseEnt = entity;
+    m_courseEntity = entity;
     createPlayer(courseEnt);
     createBall(); //hmmm should probably be in createScene()?
 

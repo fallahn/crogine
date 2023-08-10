@@ -25,6 +25,7 @@ set(GOLF_SRC
   ${PROJECT_DIR}/golf/ErrorState.cpp
   ${PROJECT_DIR}/golf/FloatingTextSystem.cpp
   ${PROJECT_DIR}/golf/FpsCameraSystem.cpp
+  ${PROJECT_DIR}/golf/GcState.cpp
   ${PROJECT_DIR}/golf/GolfCartSystem.cpp
   ${PROJECT_DIR}/golf/GolfParticleDirector.cpp
   ${PROJECT_DIR}/golf/GolfSoundDirector.cpp

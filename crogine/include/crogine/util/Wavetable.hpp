@@ -142,7 +142,7 @@ namespace cro
                 //TODO we could vary this size with a frequency value
                 //although you'd get incorrect results once the frequency >= sample rate
                 //and dubious results >= sampleRate/2 (nystrom wossit)
-                static constexpr float Frequency = 10.f;
+                static constexpr float Frequency = 20.f;
                 const auto KeyFrameCount = std::max(1.f, std::floor(Frequency * duration));
 
                 std::vector<float> keyFrames; 

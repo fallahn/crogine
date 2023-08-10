@@ -58,6 +58,7 @@ struct StateID final
         Leaderboard,
         Stats,
         MapOverview,
+        GC,
 
         SQLite, //used for testing SQLite features
         Workshop = 1100

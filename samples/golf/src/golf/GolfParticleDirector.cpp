@@ -183,6 +183,9 @@ void GolfParticleDirector::handleMessage(const cro::Message& msg)
                 getEnt(ParticleID::Water, data.position);
                 spawnRings(data.position);
                 break;
+            case CollisionEvent::Billboard:
+                getEnt(ParticleID::Explode, data.position);
+                break;
             }
         }
     }
@@ -248,7 +251,7 @@ void GolfParticleDirector::launchFireworks()
 
             auto* msg = postMessage<CollisionEvent>(MessageID::CollisionMessage);
             msg->type = CollisionEvent::Begin;
-            msg->terrain = -2; //OI stop keep doing these and enumerate them properly (-1 is also flag collision)
+            msg->terrain = CollisionEvent::Firework;
             msg->position = f.getComponent<cro::Transform>().getPosition();
 
             idx++;

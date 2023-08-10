@@ -131,6 +131,35 @@ namespace
     cro::Box BillBox;
     bool prevBillBox = false;
     std::vector<float> noiseTable;
+    std::size_t noiseIndex = 0;
+
+    const std::string SaturationFrag = 
+        R"(
+            uniform sampler2D u_texture;
+            uniform float u_amount;
+
+            VARYING_IN vec2 v_texCoord;
+            VARYING_IN vec4 v_colour;
+
+            OUTPUT
+
+            const vec4 White = vec4(1.0);
+
+            void main()
+            {
+                vec4 colour = TEXTURE(u_texture, v_texCoord) * v_colour;
+
+                //float leftEdge = step(0.5 - (0.5 * u_amount), v_texCoord.x);
+                //float rightEdge = 1.0 - step((0.5 * u_amount) + 0.5, v_texCoord.x);
+
+                //vec4 fadeColour = mix(colour, White, leftEdge * rightEdge);
+
+                //FRAG_OUT = mix(colour, fadeColour, u_amount);
+
+
+                FRAG_OUT = mix(colour, White, u_amount);
+            })";
+
 
     float playerXScale = 1.f;
 
@@ -201,7 +230,8 @@ DrivingState::DrivingState(cro::StateStack& stack, cro::State::Context context, 
     m_windBuffer        ("WindValues"),
     m_targetIndex       (0),
     m_strokeCountIndex  (0),
-    m_currentCamera     (CameraID::Player)
+    m_currentCamera     (CameraID::Player),
+    m_saturationUniform (-1)
 {
     prevBillBox = false;
     noiseTable = cro::Util::Wavetable::noise(2.f, 10.f);
@@ -229,6 +259,7 @@ DrivingState::DrivingState(cro::StateStack& stack, cro::State::Context context, 
         createScene();
 
         cacheState(StateID::Pause);
+        cacheState(StateID::GC);
     });
 
     Achievements::setActive(true);
@@ -442,7 +473,7 @@ bool DrivingState::handleEvent(const cro::Event& evt)
         }
         break;
         case SDLK_KP_MULTIPLY:
-            triggerGC();
+            triggerGC(PlayerPosition);
             break;
 #endif
         }
@@ -746,6 +777,37 @@ void DrivingState::handleMessage(const cro::Message& msg)
 
                 m_ballTrail.setUseBeaconColour(m_sharedData.trailBeaconColour);
             }
+            else if (data.id == StateID::GC)
+            {
+                if (m_courseEntity.getComponent<cro::Drawable2D>().getShader())
+                {
+                    auto entity = m_uiScene.createEntity();
+                    entity.addComponent<cro::Callback>().active = true;
+                    entity.getComponent<cro::Callback>().setUserData<float>(1.f);
+                    entity.getComponent<cro::Callback>().function =
+                        [&](cro::Entity e, float dt)
+                    {
+                        auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
+                        currTime = std::max(0.f, currTime - dt);
+
+                        float amount = cro::Util::Easing::easeOutQuint(currTime);
+                        glCheck(glUseProgram(m_saturationShader.getGLHandle()));
+                        glCheck(glUniform1f(m_saturationUniform, amount));
+
+                        cro::AudioMixer::setPrefadeVolume(1.f - amount, MixerChannel::Environment);
+                        cro::AudioMixer::setPrefadeVolume(1.f - amount, MixerChannel::UserMusic);
+                        cro::AudioMixer::setPrefadeVolume(1.f - amount, MixerChannel::Music);
+                        cro::AudioMixer::setPrefadeVolume(1.f - amount, MixerChannel::Voice);
+
+                        if (currTime == 0)
+                        {
+                            m_courseEntity.getComponent<cro::Drawable2D>().setShader(nullptr);
+                            e.getComponent<cro::Callback>().active = false;
+                            m_uiScene.destroyEntity(e);
+                        }
+                    };
+                }
+            }
         }
     }
         break;
@@ -1041,6 +1103,9 @@ void DrivingState::loadAssets()
     auto flagSprite = spriteSheet.getSprite("flag03");
     m_flagQuad.setTexture(*flagSprite.getTexture());
     m_flagQuad.setTextureRect(flagSprite.getTextureRect());
+
+    m_saturationShader.loadFromString(cro::RenderSystem2D::getDefaultVertexShader(), SaturationFrag, "#define TEXTURED\n");
+    m_saturationUniform = m_saturationShader.getUniformID("u_amount");
 
     //club models
     cro::ModelDefinition md(m_resources);
@@ -1405,7 +1470,6 @@ void DrivingState::createScene()
                     {
                         BillBox = entity.getComponent<cro::Model>().getAABB();
                         BillBox = entity.getComponent<cro::Transform>().getLocalTransform() * BillBox;
-                        LogI << "Found billbox" << std::endl;
                     }
                 }
 
@@ -2533,7 +2597,7 @@ void DrivingState::createBall()
             if (b && !prevBillBox)
             {
                 //clonk
-                triggerGC();
+                triggerGC(pos);
             }
             prevBillBox = b;
         }
@@ -3244,9 +3308,81 @@ void DrivingState::forceRestart()
 
 }
 
-void DrivingState::triggerGC()
+void DrivingState::triggerGC(glm::vec3 position)
 {
+    //set a limit on the number of times this can trigger
+    //we don't want to do this more than once per game run
+#ifndef CRO_DEBUG_
+    static std::int32_t triggerCount = 0;
+    if (triggerCount++)
+    {
+        return;
+    }
+#endif
 
+    auto basePos = m_courseEntity.getComponent<cro::Transform>().getPosition();
+    m_courseEntity.getComponent<cro::Drawable2D>().setShader(&m_saturationShader);
+
+    cro::Entity entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<float>(0.f);
+    entity.getComponent<cro::Callback>().function =
+        [&, basePos](cro::Entity e, float dt)
+    {
+        auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
+        currTime = std::min(1.f, currTime + (dt * 0.25f));
+
+        const float offsetX = noiseTable[noiseIndex];
+        const float offsetY = noiseTable[(noiseIndex + (noiseIndex / 2)) % noiseTable.size()];
+        noiseIndex = (noiseIndex + 1) % noiseTable.size();
+
+
+        const float amplitude = cro::Util::Easing::easeInSine(currTime);
+        const glm::vec3 offset = (glm::vec3(offsetX, offsetY, 0.f) * amplitude) / m_viewScale.x;
+
+        const float scale = (0.1f * amplitude) + 1.f;
+
+        glCheck(glUseProgram(m_saturationShader.getGLHandle()));
+        glCheck(glUniform1f(m_saturationUniform, amplitude));
+
+        m_courseEntity.getComponent<cro::Transform>().setScale(glm::vec2(scale));
+        m_courseEntity.getComponent<cro::Transform>().setPosition(basePos + offset);
+
+        cro::AudioMixer::setPrefadeVolume(1.f - amplitude, MixerChannel::Environment);
+        cro::AudioMixer::setPrefadeVolume(1.f - amplitude, MixerChannel::UserMusic);
+        cro::AudioMixer::setPrefadeVolume(1.f - amplitude, MixerChannel::Music);
+        cro::AudioMixer::setPrefadeVolume(1.f - amplitude, MixerChannel::Voice);
+
+        if (currTime == 1)
+        {
+            requestStackPush(StateID::GC);
+
+            //create a delayed ent to reset the scene output
+            auto f = m_uiScene.createEntity();
+            f.addComponent<cro::Callback>().active = true;
+            f.getComponent<cro::Callback>().setUserData<std::int32_t>(60);
+            f.getComponent<cro::Callback>().function =
+                [&, basePos](cro::Entity g, float)
+            {
+                auto& counter = g.getComponent<cro::Callback>().getUserData<std::int32_t>();
+                if (counter-- == 0)
+                {
+                    m_courseEntity.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+                    m_courseEntity.getComponent<cro::Transform>().setPosition(basePos);
+                    
+                    g.getComponent<cro::Callback>().active = false;
+                    m_uiScene.destroyEntity(g);
+                }
+            };
+
+            e.getComponent<cro::Callback>().active = false;
+            m_uiScene.destroyEntity(e);
+        }
+    };
+
+    auto* msg = postMessage<CollisionEvent>(MessageID::CollisionMessage);
+    msg->terrain = CollisionEvent::Billboard;
+    msg->position = position;
 }
 
 void DrivingState::loadScores()

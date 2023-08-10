@@ -90,7 +90,7 @@ void ClientCollisionSystem::process(float)
                 if (auto l2 = glm::length2(dir); l2 < (CollisionRadius * CollisionRadius))
                 {
                     auto* msg = postMessage<CollisionEvent>(MessageID::CollisionMessage);
-                    msg->terrain = -1;
+                    msg->terrain = CollisionEvent::FlagPole;
                     msg->position = position;
                     msg->type = CollisionEvent::Begin;
                 }

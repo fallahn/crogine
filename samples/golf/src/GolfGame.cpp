@@ -39,6 +39,7 @@ source distribution.
 #include "golf/PracticeState.hpp"
 #include "golf/DrivingState.hpp"
 #include "golf/ClubhouseState.hpp"
+#include "golf/GcState.hpp"
 #include "golf/MessageOverlayState.hpp"
 #include "golf/TrophyState.hpp"
 #include "golf/NewsState.hpp"
@@ -185,6 +186,7 @@ GolfGame::GolfGame()
     m_stateStack.registerState<BushState>(StateID::Bush, m_sharedData);
     m_stateStack.registerState<MessageOverlayState>(StateID::MessageOverlay, m_sharedData);
     m_stateStack.registerState<EventOverlayState>(StateID::EventOverlay);
+    m_stateStack.registerState<GCState>(StateID::GC);
 
 #ifdef CRO_DEBUG_
     m_stateStack.registerState<SqliteState>(StateID::SQLite);
