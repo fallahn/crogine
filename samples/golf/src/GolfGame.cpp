@@ -64,6 +64,7 @@ source distribution.
 #include "icon.hpp"
 #include "Achievements.hpp"
 #include "golf/Clubs.hpp"
+#include "golf/XPAwardStrings.hpp"
 
 #include "ImTheme.hpp"
 
@@ -351,7 +352,8 @@ void GolfGame::handleMessage(const cro::Message& msg)
 
             if (data.level == data.reason)
             {
-                Social::awardXP(500);
+                Social::awardXP(500, XPStringID::ChallengeComplete);
+                Achievements::awardAchievement(AchievementStrings[AchievementID::UpForTheChallenge]);
             }
         }
     }

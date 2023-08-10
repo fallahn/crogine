@@ -197,7 +197,8 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
         case Social::MessageID::SocialMessage:
         {
             const auto& data = msg.getData<Social::SocialEvent>();
-            if (data.type == Social::SocialEvent::LevelUp)
+            if (data.type == Social::SocialEvent::LevelUp
+                || (data.type == Social::SocialEvent::XPAwarded && data.reason == XPStringID::ChallengeComplete))
             {
                 playSound(AudioID::ApplausePlus, glm::vec3(0.f)).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
             }

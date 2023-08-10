@@ -229,15 +229,20 @@ const BullsEye& BallSystem::spawnBullsEye()
     return m_bullsEye;
 }
 
-BallSystem::TerrainResult BallSystem::getTerrain(glm::vec3 pos) const
+BallSystem::TerrainResult BallSystem::getTerrain(glm::vec3 pos, glm::vec3 forward, float rayLength) const
 {
+    CRO_ASSERT(glm::length2(forward) != 0, "");
+    //TODO how do we assert forward is a normal vec without normalising?
+
     TerrainResult retVal;
 
-    //casts a vertical ray 10m above/below the ball
-    static const btVector3 RayLength = { 0.f, -20.f, 0.f };
+    //casts a ray in front/behind the ball
+    //static constexpr float RayLength = 20.f;
+    const auto f = btVector3(forward.x, forward.y, forward.z) * rayLength;
+
     btVector3 rayStart = { pos.x, pos.y, pos.z };
-    rayStart -= (RayLength / 2.f);
-    auto rayEnd = rayStart + RayLength;
+    rayStart -= (f / 2.f);
+    auto rayEnd = rayStart + f;
 
     RayResultCallback res(rayStart, rayEnd);
 
@@ -606,6 +611,23 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
 
             //move by velocity
             tx.move(ball.velocity * dt);
+
+
+            //check for wall collision
+            /*if (auto l2 = glm::length2(ball.velocity); l2 != 0
+                && glm::dot(ball.velocity, cro::Transform::Y_AXIS) > 0)
+            {
+                //the problem with this is that the ray *shouldn't* be cast from behind the ball in this case.
+                auto wallResult = getTerrain(tx.getPosition(), ball.velocity / std::sqrt(l2) * (Ball::Radius * 4.f));
+                if (wallResult.penetration > 0)
+                {
+                    tx.move(wallResult.normal * wallResult.penetration);
+                    ball.velocity = glm::reflect(ball.velocity, wallResult.normal);
+                    LogI << "Bounced off wall" << std::endl;
+                }
+            }*/
+
+
 
             auto newPos = tx.getPosition();
             terrainContact = getTerrain(newPos);
