@@ -1538,6 +1538,7 @@ void GolfState::handleMessage(const cro::Message& msg)
         if (data.type == CollisionEvent::NearMiss)
         {
             m_achievementTracker.nearMissChallenge = true;
+            Social::awardXP(1, XPStringID::NearMiss);
         }
     }
         break;

@@ -33,6 +33,8 @@ private:
     cro::Entity m_fadeEnt;
     cro::MusicPlayer m_music;
 
+    bool m_processReturn;
+
     struct CameraID final
     {
         enum

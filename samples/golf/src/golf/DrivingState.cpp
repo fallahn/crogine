@@ -204,7 +204,7 @@ DrivingState::DrivingState(cro::StateStack& stack, cro::State::Context context, 
     m_currentCamera     (CameraID::Player)
 {
     prevBillBox = false;
-    noiseTable = cro::Util::Wavetable::noise(2.f);
+    noiseTable = cro::Util::Wavetable::noise(2.f, 10.f);
     
     sd.clubSet = std::clamp(sd.clubSet, 0, 2);
     Club::setClubLevel(sd.clubSet);

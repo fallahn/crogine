@@ -28,7 +28,8 @@ GCState::GCState(cro::StateStack& stack, cro::State::Context context)
     : cro::State    (stack, context),
     m_gameScene     (context.appInstance.getMessageBus()),
     m_uiScene       (context.appInstance.getMessageBus()),
-    m_cameraIndex   (0)
+    m_cameraIndex   (0),
+    m_processReturn (true)
 {
     context.mainWindow.loadResources([this]() {
         addSystems();
@@ -115,7 +116,7 @@ bool GCState::simulate(float dt)
 
     m_gameScene.simulate(dt);
     m_uiScene.simulate(dt);
-    return false;
+    return m_processReturn;
 }
 
 void GCState::render()
@@ -411,6 +412,10 @@ void GCState::createUI()
                 requestStackPop();
             }
         }
+
+        //any time the fade is active update the underlying
+        //state to allow it to complete any transition effect
+        m_processReturn = progress != 0;
 
         const float alpha = cro::Util::Easing::easeOutQuint(progress);
         auto& verts = e.getComponent<cro::Drawable2D>().getVertexData();

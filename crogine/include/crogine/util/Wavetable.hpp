@@ -31,6 +31,7 @@ source distribution.
 
 #include <crogine/detail/Assert.hpp>
 #include <crogine/util/Constants.hpp>
+#include <crogine/util/Random.hpp>
 
 #include <vector>
 #include <cmath>
@@ -125,7 +126,7 @@ namespace cro
             }
 
             /*!
-            \brief Returns a vector containing a table of 1D noise
+            \brief Returns a vector containing a looping table of 1D noise
             for the given duration at the given sample rate
             \param duration Number of seconds the noise table should last for
             \param amplitude The maxmium value of the voise table. Defaults to 1
@@ -133,18 +134,37 @@ namespace cro
             */
             static inline std::vector<float> noise(float duration, float amplitude = 1.f, float sampleRate = 60.f)
             {
-                //static const auto fract = [](float f) {return f - static_cast<long>(f); };
-                static const auto rand = [](float n) { return glm::fract(std::sin(n) * 43758.5453123f); };
+                CRO_ASSERT(duration > 0.f, "Must be greater than 0");
+                CRO_ASSERT(amplitude > 0.f, "Must be greater than 0");
+                CRO_ASSERT(sampleRate > 0.f, "Must be greater than 0");
 
-                std::vector<float> retVal;
-                const float step = 1.f / (duration * sampleRate);
-                float position = 0.f;
-                for (auto i = 0; i < (duration * sampleRate); ++i)
+
+                //TODO we could vary this size with a frequency value
+                //although you'd get incorrect results once the frequency >= sample rate
+                //and dubious results >= sampleRate/2 (nystrom wossit)
+                static constexpr float Frequency = 10.f;
+                const auto KeyFrameCount = std::max(1.f, std::floor(Frequency * duration));
+
+                std::vector<float> keyFrames; 
+                for (auto i = 0; i < KeyFrameCount; ++i)
                 {
-                    retVal.push_back(glm::mix(rand(0.f), rand(1.f), position) * amplitude);
-
-                    position += step;
+                    keyFrames.push_back(cro::Util::Random::value(-amplitude, amplitude));
                 }
+                keyFrames.push_back(keyFrames[0]); //smooth looping
+
+                const auto FrameCount = duration * sampleRate;
+                const auto StepCount = std::max(1.f, std::floor(FrameCount / KeyFrameCount));
+
+                //interp keyframes into output
+                std::vector<float> retVal;
+                for (auto i = 0u; i < keyFrames.size() - 1; ++i)
+                {
+                    for (float j = 0.f; j < StepCount; ++j)
+                    {
+                        retVal.push_back(glm::mix(keyFrames[i], keyFrames[i + 1], j / StepCount));
+                    }
+                }
+
                 return retVal;
             }
         }
