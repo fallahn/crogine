@@ -187,8 +187,8 @@ public:
         std::int32_t type;
         cro::String description;
     };
-    static void refreshAwards() {};
-    static const std::vector<Award>& getAwards() { return {}; }
+    static void refreshAwards();
+    static const std::vector<Award>& getAwards();
 
     enum class UnlockType
     {
