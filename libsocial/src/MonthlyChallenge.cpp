@@ -30,15 +30,36 @@ source distribution.
 #include <MonthlyChallenge.hpp>
 #include <Social.hpp>
 #include <Achievements.hpp>
+#include <StoredValue.hpp>
 
 #include <crogine/core/SysTime.hpp>
 
 #include <bitset>
 
-constexpr std::array<std::int32_t, 12u> MonthDays =
+namespace
 {
-    31,28,31,30,31,30,31,31,30,31,30,31
-};
+    std::array<StoredValue, 12u> StoredValues =
+    {
+        StoredValue("m00"),
+        StoredValue("m01"),
+        StoredValue("m02"),
+        StoredValue("m03"),
+        StoredValue("m04"),
+        StoredValue("m05"),
+        StoredValue("m06"),
+        StoredValue("m07"),
+        StoredValue("m08"),
+        StoredValue("m09"),
+        StoredValue("m10"),
+        StoredValue("m11"),
+    };
+
+    constexpr std::array<std::int32_t, 12u> MonthDays =
+    {
+        31,28,31,30,31,30,31,31,30,31,30,31
+    };
+}
+
 
 MonthlyChallenge::MonthlyChallenge()
     : m_month   (-1),
@@ -97,7 +118,9 @@ void MonthlyChallenge::updateChallenge(std::int32_t id, std::int32_t value)
                 }
             }
 
-            //TODO write stat to storage
+            //write stat to storage
+            StoredValues[m_month].value = static_cast<std::int32_t>(m_challenges[id].value);
+            StoredValues[m_month].write();
         }
     }
 }
@@ -110,12 +133,15 @@ void MonthlyChallenge::refresh()
         {
             if (i == m_month)
             {
-                //TODO fetch current value
-                //m_challenges[i].value = v;
+                //fetch current value
+                StoredValues[i].read();
+                m_challenges[i].value = StoredValues[i].value;
             }
             else
             {
-                //TODO reset stat
+                //reset stat
+                StoredValues[i].value = 0;
+                StoredValues[i].write();
             }
         }
     }

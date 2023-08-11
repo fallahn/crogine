@@ -30,6 +30,7 @@ source distribution.
 #include "Social.hpp"
 #include "Achievements.hpp"
 #include "AchievementStrings.hpp"
+#include "StoredValue.hpp"
 
 #include <crogine/core/App.hpp>
 #include <crogine/core/ConfigFile.hpp>
@@ -39,51 +40,6 @@ source distribution.
 
 namespace
 {
-    void readValue(std::int32_t& dst, const std::string& fileName)
-    {
-        auto path = cro::App::getPreferencePath() + fileName;
-        if (cro::FileSystem::fileExists(path))
-        {
-            auto* file = SDL_RWFromFile(path.c_str(), "rb");
-            if (file)
-            {
-                SDL_RWread(file, &dst, sizeof(dst), 1);
-            }
-            SDL_RWclose(file);
-        }
-    }
-
-    void writeValue(std::int32_t src, const std::string& fileName)
-    {
-        auto path = cro::App::getPreferencePath() + fileName;
-        auto* file = SDL_RWFromFile(path.c_str(), "wb");
-        if (file)
-        {
-            SDL_RWwrite(file, &src, sizeof(src), 1);
-        }
-        SDL_RWclose(file);
-    }
-
-    struct StoredValue final
-    {
-        bool loaded = false;
-        std::int32_t value = 0;
-        const std::string ext;
-        void read()
-        {
-            if (!loaded)
-            {
-                readValue(value, ext);
-                loaded = true;
-            }
-        }
-        void write()
-        {
-            writeValue(value, ext);
-        }
-
-        explicit StoredValue(const std::string& e) :ext(e) {}
-    };
     StoredValue experience("exp");
     StoredValue clubset("clb");
     StoredValue ballset("bls");

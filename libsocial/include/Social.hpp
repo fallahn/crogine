@@ -181,7 +181,7 @@ public:
         enum
         {
             MonthlyGold, MonthlySilver, MonthlyBronze,
-
+            MonthlyChallenge,
             Level10, Level20, Level30, Level40, Level50
         };
         std::int32_t type;
