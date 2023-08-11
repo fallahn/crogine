@@ -31,12 +31,29 @@ source distribution.
 #include <Social.hpp>
 #include <Achievements.hpp>
 
+#include <crogine/core/SysTime.hpp>
+
 #include <bitset>
 
-MonthlyChallenge::MonthlyChallenge()
-    : m_month(-1)
+constexpr std::array<std::int32_t, 12u> MonthDays =
 {
+    31,28,31,30,31,30,31,31,30,31,30,31
+};
 
+MonthlyChallenge::MonthlyChallenge()
+    : m_month   (-1),
+    m_day       (0),
+    m_leapYear  (false)
+{
+    //fetch the current month
+    auto ts = static_cast<std::time_t>(cro::SysTime::epoch());
+    auto td = std::localtime(&ts);
+
+    m_month = td->tm_mon;
+    m_day = td->tm_mday;
+
+    auto year = 1900 + td->tm_year;
+    m_leapYear = ((year % 4 == 0 && year % 100 != 0) || year % 400 == 0);
 }
 
 //public
@@ -98,7 +115,7 @@ void MonthlyChallenge::refresh()
             }
             else
             {
-                //TODO reset steam stat
+                //TODO reset stat
             }
         }
     }
@@ -140,6 +157,22 @@ cro::String MonthlyChallenge::getProgressString() const
         if (progress.value != progress.target)
         {
             ret += "Progress: " + std::to_string(progress.value) + "/" + std::to_string(progress.target);
+
+            auto monthDays = MonthDays[m_month - 1];
+            if (m_month == 2 && m_leapYear)
+            {
+                monthDays++;
+            }
+
+            const auto remain = monthDays - m_day;
+            if (remain == 0)
+            {
+                ret += "\nFinal Day!";
+            }
+            else
+            {
+                ret += "\n" + std::to_string(remain) + " days remaining";
+            }
         }
         else
         {

@@ -3310,9 +3310,19 @@ void DrivingState::forceRestart()
 
 void DrivingState::triggerGC(glm::vec3 position)
 {
+    auto* msg = postMessage<CollisionEvent>(MessageID::CollisionMessage);
+    msg->terrain = CollisionEvent::Billboard;
+    msg->position = position;
+
+
     //set a limit on the number of times this can trigger
     //we don't want to do this more than once per game run
 #ifndef CRO_DEBUG_
+    if (cro::Util::Random::value(0, 5) != 0)
+    {
+        return;
+    }
+    
     static std::int32_t triggerCount = 0;
     if (triggerCount++)
     {
@@ -3379,10 +3389,6 @@ void DrivingState::triggerGC(glm::vec3 position)
             m_uiScene.destroyEntity(e);
         }
     };
-
-    auto* msg = postMessage<CollisionEvent>(MessageID::CollisionMessage);
-    msg->terrain = CollisionEvent::Billboard;
-    msg->position = position;
 }
 
 void DrivingState::loadScores()

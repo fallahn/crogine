@@ -76,15 +76,15 @@ static const std::array<std::string, ChallengeID::Count> ChallengeDescriptions =
 {
     "Make 25 So Close chips on to the green",
     "Make 50 Nice Putts",
-    "Hit 15 random bull's eyes",
+    "Hit 25 random bull's eyes",
     "Play 18 holes in every game mode at least once",
-    "Play 9 holes on each course with at least 4 human or CPU players",
-    "Get 10 Boomerangs",
+    "Play 9 holes on each course with at least 3 human or CPU players",
+    "Get the equivalent of 10 Boomerang achievements",
     "Get 99% or better on each target on the Driving Range",
     "Take 25 gimmies resulting from a near miss",
-    "Make 50 shots with Great Accuracy",
-    "Score 2 birdies on the front 9 of each course",
-    "Score 1 eagle on the back 9 of each course",
+    "Make 250 shots with Great Accuracy",
+    "Score 2 birdies in one round on the front 9 of each course",
+    "Score 1 eagle in one round on the back 9 of each course",
     "Implement me."
 };
 
@@ -134,17 +134,19 @@ private:
     {
         Challenge(25, Challenge::Counter),
         Challenge(50, Challenge::Counter),
-        Challenge(15, Challenge::Counter),
+        Challenge(25, Challenge::Counter),
         Challenge(0x7, Challenge::Flag), //TODO update this with new game modes
         Challenge(0x3ff, Challenge::Flag), //(1 << 0) - (1 << 9)
         Challenge(10, Challenge::Counter),
         Challenge(0x1fff, Challenge::Flag), //(1 << 0) - (1 << 12)
         Challenge(25, Challenge::Counter),
-        Challenge(50, Challenge::Counter),
+        Challenge(250, Challenge::Counter),
         Challenge(0x3ff, Challenge::Flag),
         Challenge(0x3ff, Challenge::Flag),
         Challenge(0),
     };
 
-    std::int32_t m_month = -1;
+    std::int32_t m_month;
+    std::int32_t m_day;
+    bool m_leapYear;
 };
