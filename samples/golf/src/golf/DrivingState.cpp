@@ -1468,7 +1468,7 @@ void DrivingState::createScene()
 
                     if (path.find("billboard") != std::string::npos)
                     {
-                        BillBox = entity.getComponent<cro::Model>().getAABB();
+                        BillBox = entity.getComponent<cro::Model>().getMeshData().boundingBox;
                         BillBox = entity.getComponent<cro::Transform>().getLocalTransform() * BillBox;
                     }
                 }

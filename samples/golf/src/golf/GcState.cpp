@@ -219,12 +219,20 @@ void GCState::createScene()
         md.createModel(entity);
     }
 
+    if (md.loadFromFile("assets/golf/models/phone.cmt"))
+    {
+        auto entity = m_gameScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ -5.8f, 0.f, 0.3f });
+        entity.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, 2.f);
+        md.createModel(entity);
+    }
+
     cro::EmitterSettings particles;
     particles.loadFromFile("assets/golf/particles/hio.cps", m_resources.textures);
     const std::array Positions =
     {
-        glm::vec3(-5.f, 0.f, -0.2f),
-        glm::vec3(5.f, 0.f, -0.2f),
+        glm::vec3(-3.2f, 0.f, 0.2f),
+        glm::vec3(3.2f, 0.f, 0.2f),
 
         glm::vec3(-3.f, 0.f, 3.8f),
         glm::vec3(3.f, 0.f, 3.8f),
