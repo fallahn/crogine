@@ -29,6 +29,7 @@ source distribution.
 
 #include "GcState.hpp"
 #include "GameConsts.hpp"
+#include "MessageIDs.hpp"
 
 #include <crogine/gui/Gui.hpp>
 
@@ -50,15 +51,14 @@ source distribution.
 #include <crogine/ecs/systems/SpriteSystem2D.hpp>
 #include <crogine/ecs/systems/RenderSystem2D.hpp>
 #include <crogine/ecs/systems/ParticleSystem.hpp>
+#include <crogine/ecs/systems/AudioSystem.hpp>
 
 #include <crogine/util/Constants.hpp>
 #include <crogine/util/Easings.hpp>
 
 namespace
 {
-    //fudge this here - can't play the music
-    //immediately as this state is cached
-    bool musicStarted = false;
+
 }
 
 GCState::GCState(cro::StateStack& stack, cro::State::Context context)
@@ -140,6 +140,28 @@ bool GCState::handleEvent(const cro::Event& evt)
 
 void GCState::handleMessage(const cro::Message& msg)
 {
+    if (msg.id == cro::Message::StateMessage)
+    {
+        const auto& data = msg.getData<cro::Message::StateEvent>();
+        if (data.action == cro::Message::StateEvent::Pushed
+            && data.id == StateID::GC)
+        {
+            m_music.play();
+
+
+            auto entity = m_uiScene.createEntity();
+            entity.addComponent<cro::Callback>().active = true;
+            entity.getComponent<cro::Callback>().function =
+                [&](cro::Entity, float)
+                {
+                    if (m_music.getStatus() == cro::MusicPlayer::Status::Stopped)
+                    {
+                        quitState();
+                    }
+                };            
+        }
+    }
+
     m_gameScene.forwardMessage(msg);
     m_uiScene.forwardMessage(msg);
 }
@@ -222,10 +244,40 @@ void GCState::createScene()
     if (md.loadFromFile("assets/golf/models/phone.cmt"))
     {
         auto entity = m_gameScene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition({ -5.8f, 0.f, 0.3f });
+        entity.addComponent<cro::Transform>().setPosition({ -4.8f, 0.f, 0.3f });
         entity.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, 2.f);
+        entity.getComponent<cro::Transform>().setScale(glm::vec3(0.6667f));
         md.createModel(entity);
     }
+
+
+    auto dancerRoot = m_gameScene.createEntity();
+    dancerRoot.addComponent<cro::Transform>().setPosition({ 4.f, 0.f, 1.2f });
+    dancerRoot.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, -0.8f);
+
+    if (md.loadFromFile("assets/golf/models/cc01.cmt"))
+    {
+        auto entity = m_gameScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ -0.75f, 0.f, 0.f });
+        md.createModel(entity);
+        if (md.hasSkeleton())
+        {
+            entity.getComponent<cro::Skeleton>().play(0);
+        }
+        dancerRoot.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    }
+    if (md.loadFromFile("assets/golf/models/cc02.cmt"))
+    {
+        auto entity = m_gameScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ 0.75f, 0.f, 0.f });
+        md.createModel(entity);
+        if (md.hasSkeleton())
+        {
+            entity.getComponent<cro::Skeleton>().play(0);
+        }
+        dancerRoot.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    }
+
 
     cro::EmitterSettings particles;
     particles.loadFromFile("assets/golf/particles/hio.cps", m_resources.textures);
@@ -442,12 +494,6 @@ void GCState::createUI()
         {
             //fade out
             progress = std::max(0.f, progress - Speed);
-
-            if (!musicStarted)
-            {
-                m_music.play();
-                musicStarted = true;
-            }
         }
         else
         {
@@ -456,7 +502,8 @@ void GCState::createUI()
 
             if (progress == 1)
             {
-                musicStarted = false;
+                m_music.stop();
+                direction = 0;
                 e.getComponent<cro::Callback>().active = false;
                 requestStackPop();
             }
@@ -479,18 +526,6 @@ void GCState::createUI()
         e.getComponent<cro::Transform>().setScale(size);
     };
     m_fadeEnt = entity;
-
-
-    entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Callback>().active = true;
-    entity.getComponent<cro::Callback>().function =
-        [&](cro::Entity, float)
-    {
-        if (m_music.getStatus() == cro::MusicPlayer::Status::Stopped)
-        {
-            quitState();
-        }
-    };
 
 
     auto resize = [](cro::Camera& cam)

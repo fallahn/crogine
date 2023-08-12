@@ -2527,7 +2527,7 @@ void ClubhouseState::createStatMenu(cro::Entity parent, std::uint32_t mouseEnter
     const float progress = static_cast<float>(value) / target;
 
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 0.f, -23.f,-0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, -22.f,-0.1f });
     std::vector<cro::Vertex2D> verts = 
         {
             cro::Vertex2D(glm::vec2(-BarWidth, BarHeight), LeaderboardTextDark),

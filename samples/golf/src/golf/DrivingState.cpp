@@ -1469,6 +1469,9 @@ void DrivingState::createScene()
                     if (path.find("billboard") != std::string::npos)
                     {
                         BillBox = entity.getComponent<cro::Model>().getMeshData().boundingBox;
+                        BillBox[0].x += 1.f;
+                        BillBox[1].x += 2.5f;
+                        BillBox[1].z += 1.4f;
                         BillBox = entity.getComponent<cro::Transform>().getLocalTransform() * BillBox;
                     }
                 }
@@ -3318,7 +3321,7 @@ void DrivingState::triggerGC(glm::vec3 position)
     //set a limit on the number of times this can trigger
     //we don't want to do this more than once per game run
 #ifndef CRO_DEBUG_
-    if (cro::Util::Random::value(0, 5) != 0)
+    if (cro::Util::Random::value(0, 3) != 0)
     {
         return;
     }
