@@ -40,8 +40,9 @@ namespace ScoreType
 
         Count,
 
-        Stableford,
         ShortRound,
+        Stableford,
+        StablefordPro,
         NearestThePin,
         LongestDrive,
         MultiTarget,

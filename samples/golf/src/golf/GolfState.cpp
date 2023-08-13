@@ -5813,45 +5813,7 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
         }
             break;
         case PacketID::HoleWon:
-        if(m_sharedData.scoreType != ScoreType::Stroke)
-        {
-            std::uint16_t data = evt.packet.as<std::uint16_t>();
-            auto client = (data & 0xff00) >> 8;
-            auto player = (data & 0x00ff);
-
-            if (client == 255)
-            {
-                if (m_sharedData.scoreType == ScoreType::Skins)
-                {
-                    showNotification("Skins pot increased to " + std::to_string(player));
-                }
-                else
-                {
-                    showNotification("Hole was drawn");
-                }
-
-                auto* msg = getContext().appInstance.getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
-                msg->type = GolfEvent::HoleDrawn;
-            }
-            else
-            {
-                auto txt = m_sharedData.connectionData[client].playerData[player].name;
-                if (m_sharedData.scoreType == ScoreType::Match)
-                {
-                    txt += " has won the hole!";
-                }
-                else
-                {
-                    txt += " has won the pot!";
-                }
-                showNotification(txt);
-
-                auto* msg = getContext().appInstance.getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
-                msg->type = GolfEvent::HoleWon;
-                msg->player = player;
-                msg->client = client;
-            }
-        }
+            updateHoleScore(evt.packet.as<std::uint16_t>());
         break;
         case PacketID::GameEnd:
             showCountdown(evt.packet.as<std::uint8_t>());

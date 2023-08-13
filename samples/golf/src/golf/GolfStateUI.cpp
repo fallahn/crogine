@@ -1641,48 +1641,7 @@ void GolfState::showCountdown(std::uint8_t seconds)
 
 #ifndef CRO_DEBUG_
     //enter score into leaderboard
-    if (m_sharedData.scoreType == ScoreType::Stroke)
-    {
-        const auto& connectionData = m_sharedData.connectionData[m_sharedData.clientConnection.connectionID];
-        for (auto k = 0u; k < connectionData.playerCount; ++k)
-        {
-            if (!connectionData.playerData[k].isCPU)
-            {
-                std::int32_t score = connectionData.playerData[k].score;
-                auto best = Social::getPersonalBest(m_sharedData.mapDirectory, m_sharedData.holeCount);
-
-                if (score < best
-                    || best == 0)
-                {
-                    personalBest = true;
-                }
-
-                if (!personalBest)
-                {
-                    //see if we at least got a new monthly score
-                    best = Social::getMonthlyBest(m_sharedData.mapDirectory, m_sharedData.holeCount);
-
-                    if (score < best
-                        || best == 0)
-                    {
-                        personalBest = true;
-                        bestString = "MONTHLY BEST!";
-                    }
-                }
-
-                //if we weren't the last player to take a turn in a network game
-                //we need to reenable achievements to enter into the leaderboard...
-                //Achievements::setActive(m_allowAchievements); //moved to beginning of showCountdown();
-                //cro::Logger::log("LEADERBOARD attempting to insert score: " + std::to_string(score) + "\n", cro::Logger::Type::Info, cro::Logger::Output::File);
-                Social::insertScore(m_sharedData.mapDirectory, m_sharedData.holeCount, score);
-                break;
-            }
-        }
-    }
-    else
-    {
-        cro::Logger::log("LEADERBOARD failed to insert score: Score Type is not Stroke.", cro::Logger::Type::Error, cro::Logger::Output::File);
-    }
+    updateLeaderboardScore(personalBest, bestString);
 #endif
 
     auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
@@ -2256,32 +2215,35 @@ void GolfState::updateScoreboard(bool updateParDiff)
 
                 if (j < 9)
                 {
-                    if (m_sharedData.scoreType == ScoreType::Stroke)
+                    switch (m_sharedData.scoreType)
                     {
+                    default: break;
+                    case ScoreType::Stroke:
                         entry.frontNine += client.playerData[i].holeScores[j];
-                    }
-                    else if (m_sharedData.scoreType == ScoreType::Match)
-                    {
+                        break;
+                    case ScoreType::Match:
                         entry.frontNine = client.playerData[i].matchScore;
-                    }
-                    else
-                    {
+                        break;
+                    case ScoreType::Skins:
                         entry.frontNine = client.playerData[i].skinScore;
+                        break;
                     }
+
                 }
                 else
                 {
-                    if (m_sharedData.scoreType == ScoreType::Stroke)
+                    switch (m_sharedData.scoreType)
                     {
+                    default: break;
+                    case ScoreType::Stroke:
                         entry.backNine += client.playerData[i].holeScores[j];
-                    }
-                    else if (m_sharedData.scoreType == ScoreType::Match)
-                    {
+                        break;
+                    case ScoreType::Match:
                         entry.backNine = client.playerData[i].matchScore;
-                    }
-                    else
-                    {
+                        break;
+                    case ScoreType::Skins:
                         entry.backNine = client.playerData[i].skinScore;
+                        break;
                     }
                 }
             }
