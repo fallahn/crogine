@@ -166,6 +166,7 @@ private:
     const HoleData* m_holeData;
     bool m_puttFromTee;
     std::uint8_t m_gimmeRadius;
+    std::uint8_t m_activeGimme;
 
     BullsEye m_bullsEye;
 

@@ -139,6 +139,7 @@ BallSystem::BallSystem(cro::MessageBus& mb, bool drawDebug)
     m_holeData              (nullptr),
     m_puttFromTee           (false),
     m_gimmeRadius           (0),
+    m_activeGimme           (0),
     m_processFlags          (0)
 {
     requireComponent<cro::Transform>();
@@ -206,8 +207,11 @@ bool BallSystem::setHoleData(HoleData& holeData, bool rebuildMesh)
 
     m_holeData = &holeData;
 
+    //updating the collision mesh sets m_puttFromTee too
     auto result = rebuildMesh ? updateCollisionMesh(holeData.modelPath) : true;
     holeData.pin.y = getTerrain(holeData.pin).intersection.y;
+
+    m_gimmeRadius = m_puttFromTee ? 0 : m_activeGimme;
 
     for (auto entity : getEntities())
     {
@@ -220,6 +224,7 @@ bool BallSystem::setHoleData(HoleData& holeData, bool rebuildMesh)
 void BallSystem::setGimmeRadius(std::uint8_t rad)
 {
     m_gimmeRadius = std::min(std::uint8_t(2), rad);
+    m_activeGimme = m_gimmeRadius;
 }
 
 const BullsEye& BallSystem::spawnBullsEye()

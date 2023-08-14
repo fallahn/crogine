@@ -1085,8 +1085,8 @@ void GolfState::initScene()
 {
     auto& mb = m_sharedData.messageBus;
     m_scene.addSystem<cro::CallbackSystem>(mb);
-    m_mapDataValid = m_scene.addSystem<BallSystem>(mb)->setHoleData(m_holeData[0]);
-    m_scene.getSystem<BallSystem>()->setGimmeRadius(m_sharedData.gimmeRadius);
+    m_scene.addSystem<BallSystem>(mb)->setGimmeRadius(m_sharedData.gimmeRadius);
+    m_mapDataValid = m_scene.getSystem<BallSystem>()->setHoleData(m_holeData[0]);
     
     for (auto i = 0u; i < m_sharedData.clients.size(); ++i)
     {
