@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2022
+Matt Marchant 2021 - 2023
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -33,6 +33,7 @@ source distribution.
 #include "BallSystem.hpp"
 #include "CollisionMesh.hpp"
 #include "BallSystem.hpp"
+#include "Clubs.hpp"
 
 #include <crogine/ecs/components/Transform.hpp>
 
@@ -132,10 +133,11 @@ void ClientCollisionSystem::process(float)
             }
 
             //or a near miss
-            if (oldNear 
+            else if (oldNear 
                 && !collider.nearHole 
-                && collider.terrain == TerrainID::Green
-                && position.y > m_holeData[m_holeIndex].pin.y
+                //&& collider.terrain == TerrainID::Green
+                && m_club == ClubID::Putter
+                //&& position.y > m_holeData[m_holeIndex].pin.y
                 /*&& result.height >= (position.y - (Ball::Radius / 2.f))*/)
             {
                 auto* msg = postMessage<CollisionEvent>(MessageID::CollisionMessage);
