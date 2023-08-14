@@ -232,7 +232,9 @@ void ClubhouseState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter
     m_sprites[SpriteID::ReadyUp] = spriteSheet.getSprite("ready_up");
     m_sprites[SpriteID::StartGame] = spriteSheet.getSprite("start_game");
     m_sprites[SpriteID::Connect] = spriteSheet.getSprite("connect");
-
+    auto bannerSprite = spriteSheet.getSprite("banner");
+    auto headerSprite = spriteSheet.getSprite("header");
+    auto footerSprite = spriteSheet.getSprite("footer");
 
     //cursor
     auto entity = m_uiScene.createEntity();
@@ -279,45 +281,113 @@ void ClubhouseState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter
     titleEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
-    //text background
+    //menu text background
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({12.f, 10.f, 0.f});
-    entity.getComponent<cro::Transform>().setScale({ 0.f, 1.f });
-    entity.getComponent<cro::Transform>().addChild(cursorEnt.getComponent<cro::Transform>());
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 26.f, 0.f });
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("menu_background");
-    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
-    entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
-    entity.getComponent<cro::Transform>().move(entity.getComponent<cro::Transform>().getOrigin());
+    entity.addComponent<cro::Sprite>() = bannerSprite;
+    auto textureRect = entity.getComponent<cro::Sprite>().getTextureRect();
     entity.addComponent<cro::Callback>().active = true;
-    entity.getComponent<cro::Callback>().setUserData<float>(-1.5f);
+    entity.getComponent<cro::Callback>().setUserData<std::pair<float, std::int32_t>>(0.f, 0);
     entity.getComponent<cro::Callback>().function =
-        [&](cro::Entity e, float dt)
-    {
-        auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
-        currTime = std::min(1.f, currTime + (dt * 2.f));
-
-        float progress = std::max(0.f, currTime);
-        float xScale = cro::Util::Easing::easeOutSine(progress);
-        float yScale = 0.f;// std::cos((/*0.5f + */(0.5f * progress)) * cro::Util::Const::PI) * 0.1f;
-
-        e.getComponent<cro::Transform>().setScale({ xScale, 1.f + yScale });
-
-        if (progress == 1)
+        [&, textureRect](cro::Entity e, float dt)
         {
-            e.getComponent<cro::Transform>().setScale({ 1.f, 1.f });
-            e.getComponent<cro::Callback>().active = false;
+            auto& [currTime, state] = e.getComponent<cro::Callback>().getUserData<std::pair<float, std::int32_t>>();
+            if (state == 0)
+            {
+                //intro anim
+                currTime = std::min(1.f, currTime + dt);
+                float scale = cro::Util::Easing::easeOutQuint(currTime);
+                e.getComponent<cro::Transform>().setScale(glm::vec2(1.f, scale));
 
-            m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Main);
-        }
-    };
+                auto rect = textureRect;
+                rect.width = currTime * (static_cast<float>(GolfGame::getActiveTarget()->getSize().x) / m_viewScale.x);
+                e.getComponent<cro::Sprite>().setTextureRect(rect);
+
+                if (currTime == 1)
+                {
+                    state = 1;
+                    e.getComponent<cro::Callback>().active = false;
+
+                    //only set this if we're not already connected
+                    //else we'll be going straight to the lobby
+                    //if (!m_sharedData.clientConnection.connected)
+                    {
+                        m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Main);
+                    }
+                }
+            }
+            else
+            {
+                //fit to size
+                auto rect = textureRect;
+                rect.width = static_cast<float>(GolfGame::getActiveTarget()->getSize().x) / m_viewScale.x;
+                e.getComponent<cro::Sprite>().setTextureRect(rect);
+                e.getComponent<cro::Callback>().active = false;
+            }
+        };
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIBanner;
     menuTransform.addChild(entity.getComponent<cro::Transform>());
+    auto bannerEnt = entity;
 
-    auto boardEntity = entity;
+    //banner header
+    bounds = headerSprite.getTextureBounds();
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ textureRect.width / 2.f, textureRect.height - bounds.height, -0.1f });
+    entity.getComponent<cro::Transform>().setOrigin({ std::floor(bounds.width / 2.f), 0.f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = headerSprite;
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [bannerEnt, textureRect](cro::Entity e, float dt)
+        {
+            float width = bannerEnt.getComponent<cro::Sprite>().getTextureRect().width;
+            auto position = e.getComponent<cro::Transform>().getPosition();
+            position.x = width / 2.f;
 
-    static constexpr float TextOffset = 28.f;
+            if (!bannerEnt.getComponent<cro::Callback>().active)
+            {
+                float diff = textureRect.height - position.y;
+                position.y += diff * (dt * 2.f);
+            }
+
+            e.getComponent<cro::Transform>().setPosition(position);
+        };
+    bannerEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    //banner footer
+    bounds = footerSprite.getTextureBounds();
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ textureRect.width / 2.f, 0.f, -0.3f });
+    entity.getComponent<cro::Transform>().setOrigin({ std::floor(bounds.width / 2.f), 0.f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = footerSprite;
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [bannerEnt, bounds](cro::Entity e, float dt)
+        {
+            float width = bannerEnt.getComponent<cro::Sprite>().getTextureRect().width;
+            auto position = e.getComponent<cro::Transform>().getPosition();
+            position.x = width / 2.f;
+
+            if (!bannerEnt.getComponent<cro::Callback>().active)
+            {
+                float diff = -bounds.height - position.y;
+                position.y += diff * (dt * 2.f);
+            }
+
+            e.getComponent<cro::Transform>().setPosition(position);
+        };
+    bannerEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    bannerEnt.getComponent<cro::Transform>().addChild(cursorEnt.getComponent<cro::Transform>());
+
+
+
+
+
+    static constexpr float TextOffset = 26.f;
     static constexpr float LineSpacing = 10.f;
-    glm::vec3 textPos = { TextOffset, 62.f, 0.1f };
+    glm::vec3 textPos = { TextOffset, 54.f, 0.1f };
 
     auto createButton = [&](const std::string& label)
     {
@@ -333,7 +403,7 @@ void ClubhouseState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = mouseEnter;
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = mouseExit;
 
-        boardEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+        bannerEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
         textPos.y -= LineSpacing;
 
         return entity;
@@ -363,9 +433,7 @@ void ClubhouseState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter
     }
 
     
-
     //trophy shelf
-//#ifdef USE_GNS
     entity = createButton("Hall Of Fame");
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         m_uiScene.getSystem<cro::UISystem>()->addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
@@ -382,19 +450,6 @@ void ClubhouseState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter
                     m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
                 }
             });
-//#else
-//    entity = createButton("Trophy Shelf");
-//    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
-//        m_uiScene.getSystem<cro::UISystem>()->addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
-//            {
-//                if (activated(evt))
-//                {
-//                    requestStackPush(StateID::Trophy);
-//                    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
-//                }
-//            });
-//#endif
-
 
     //options
     entity = createButton("Options");
@@ -407,8 +462,6 @@ void ClubhouseState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter
                     m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
                 }
             });
-
-
 
     //arcade
     bool hasArcade = false;
@@ -472,6 +525,97 @@ void ClubhouseState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter
                     requestStackPush(StateID::Menu);
                 }
             });
+
+
+
+    const auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
+
+    //monthly challenge status
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 43.f, 0.2f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(smallFont).setString(Social::getMonthlyChallenge().getProgressString());
+    entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setVerticalSpacing(2.f);
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&, bannerEnt](cro::Entity e, float)
+    {
+        const auto xPos = std::floor(bannerEnt.getComponent<cro::Sprite>().getTextureRect().width * 0.5f);
+        auto pos = e.getComponent<cro::Transform>().getPosition();
+        pos.x = xPos;
+        e.getComponent<cro::Transform>().setPosition(pos);
+    };
+
+    bannerEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    auto textEnt = entity;
+
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 11.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(font).setString("Bonus Challenge!");
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+    entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
+    entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    textEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    static constexpr float BarWidth = 60.f;
+    static constexpr float BarHeight = 12.f;
+    auto [value, target, _] = Social::getMonthlyChallenge().getProgress();
+    const float progress = static_cast<float>(value) / target;
+
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, -24.f,-0.1f });
+    std::vector<cro::Vertex2D> verts =
+    {
+        cro::Vertex2D(glm::vec2(-BarWidth, BarHeight), LeaderboardTextDark),
+        cro::Vertex2D(glm::vec2(-BarWidth, 0.f), LeaderboardTextDark),
+        cro::Vertex2D(glm::vec2(BarWidth, BarHeight), LeaderboardTextDark),
+
+        cro::Vertex2D(glm::vec2(BarWidth, BarHeight), LeaderboardTextDark),
+        cro::Vertex2D(glm::vec2(-BarWidth, 0.f), LeaderboardTextDark),
+        cro::Vertex2D(glm::vec2(BarWidth, 0.f), LeaderboardTextDark),
+
+
+
+        cro::Vertex2D(glm::vec2(-BarWidth, BarHeight), TextHighlightColour),
+        cro::Vertex2D(glm::vec2(-BarWidth, 0.f), TextHighlightColour),
+        cro::Vertex2D(glm::vec2(((BarWidth * 2.f) * progress) - BarWidth, BarHeight), TextHighlightColour),
+
+        cro::Vertex2D(glm::vec2(((BarWidth * 2.f) * progress) - BarWidth, BarHeight), TextHighlightColour),
+        cro::Vertex2D(glm::vec2(-BarWidth, 0.f), TextHighlightColour),
+        cro::Vertex2D(glm::vec2(((BarWidth * 2.f) * progress) - BarWidth, 0.f), TextHighlightColour),
+    };
+
+    //corners
+    constexpr std::array<glm::vec2, 4u> CornerPos =
+    {
+        glm::vec2(0.f, (BarHeight / 6.f) * 5.f),
+        glm::vec2(0.f),
+        glm::vec2((BarWidth * 2.f) - 2.f, (BarHeight / 6.f) * 5.f),
+        glm::vec2((BarWidth * 2.f) - 2.f, 0.f)
+    };
+    const auto cd = CD32::Colours[CD32::Brown];
+    for (auto i = 0; i < 4; ++i)
+    {
+        verts.emplace_back(glm::vec2(-BarWidth, BarHeight / 6.f) + CornerPos[i], cd);
+        verts.emplace_back(glm::vec2(-BarWidth, 0.f) + CornerPos[i], cd);
+        verts.emplace_back(glm::vec2(-BarWidth + 2.f, BarHeight / 6.f) + CornerPos[i], cd);
+
+        verts.emplace_back(glm::vec2(-BarWidth + 2.f, BarHeight / 6.f) + CornerPos[i], cd);
+        verts.emplace_back(glm::vec2(-BarWidth, 0.f) + CornerPos[i], cd);
+        verts.emplace_back(glm::vec2(-BarWidth + 2.f, 0.f) + CornerPos[i], cd);
+    }
+
+    entity.addComponent<cro::Drawable2D>().setVertexData(verts);
+    entity.getComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLES);
+    textEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
 }
 
 void ClubhouseState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnter, std::uint32_t mouseExit)
@@ -2494,84 +2638,84 @@ void ClubhouseState::createStatMenu(cro::Entity parent, std::uint32_t mouseEnter
             });
 
 
-    auto& tex = m_resources.textures.get("assets/golf/images/monthly_challenge.png");
+    //auto& tex = m_resources.textures.get("assets/golf/images/monthly_challenge.png");
 
-    //state of the current monthly challenge
-    const float offset = bounds.width / 2.f;
-    entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>();
-    entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<UIElement>().absolutePosition = { offset, 56.f };
-    entity.getComponent<UIElement>().relativePosition = { 0.f, -0.5f };
-    entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement;
-    entity.addComponent<cro::Sprite>(tex);
-    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
-    entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, 0.f, 0.f });
-    boardEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-    auto bgEnt = entity;
+    ////state of the current monthly challenge
+    //const float offset = bounds.width / 2.f;
+    //entity = m_uiScene.createEntity();
+    //entity.addComponent<cro::Transform>();
+    //entity.addComponent<cro::Drawable2D>();
+    //entity.addComponent<UIElement>().absolutePosition = { offset, 56.f };
+    //entity.getComponent<UIElement>().relativePosition = { 0.f, -0.5f };
+    //entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement;
+    //entity.addComponent<cro::Sprite>(tex);
+    //bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    //entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, 0.f, 0.f });
+    //boardEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    //auto bgEnt = entity;
 
-    entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, 41.f, 0.2f });
-    entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(font).setString(Social::getMonthlyChallenge().getProgressString());
-    entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
-    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
-    entity.getComponent<cro::Text>().setVerticalSpacing(4.f);
-    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
-    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    //entity = m_uiScene.createEntity();
+    //entity.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, 41.f, 0.2f });
+    //entity.addComponent<cro::Drawable2D>();
+    //entity.addComponent<cro::Text>(font).setString(Social::getMonthlyChallenge().getProgressString());
+    //entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
+    //entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    //entity.getComponent<cro::Text>().setVerticalSpacing(4.f);
+    //entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    //bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
-    auto textEnt = entity;
-    static constexpr float BarWidth = 100.f;
-    static constexpr float BarHeight = 12.f;
-    auto [value, target, _] = Social::getMonthlyChallenge().getProgress();
-    const float progress = static_cast<float>(value) / target;
+    //auto textEnt = entity;
+    //static constexpr float BarWidth = 100.f;
+    //static constexpr float BarHeight = 12.f;
+    //auto [value, target, _] = Social::getMonthlyChallenge().getProgress();
+    //const float progress = static_cast<float>(value) / target;
 
-    entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 0.f, -22.f,-0.1f });
-    std::vector<cro::Vertex2D> verts = 
-        {
-            cro::Vertex2D(glm::vec2(-BarWidth, BarHeight), LeaderboardTextDark),
-            cro::Vertex2D(glm::vec2(-BarWidth, 0.f), LeaderboardTextDark),
-            cro::Vertex2D(glm::vec2(BarWidth, BarHeight), LeaderboardTextDark),
+    //entity = m_uiScene.createEntity();
+    //entity.addComponent<cro::Transform>().setPosition({ 0.f, -22.f,-0.1f });
+    //std::vector<cro::Vertex2D> verts = 
+    //    {
+    //        cro::Vertex2D(glm::vec2(-BarWidth, BarHeight), LeaderboardTextDark),
+    //        cro::Vertex2D(glm::vec2(-BarWidth, 0.f), LeaderboardTextDark),
+    //        cro::Vertex2D(glm::vec2(BarWidth, BarHeight), LeaderboardTextDark),
 
-            cro::Vertex2D(glm::vec2(BarWidth, BarHeight), LeaderboardTextDark),
-            cro::Vertex2D(glm::vec2(-BarWidth, 0.f), LeaderboardTextDark),
-            cro::Vertex2D(glm::vec2(BarWidth, 0.f), LeaderboardTextDark),
+    //        cro::Vertex2D(glm::vec2(BarWidth, BarHeight), LeaderboardTextDark),
+    //        cro::Vertex2D(glm::vec2(-BarWidth, 0.f), LeaderboardTextDark),
+    //        cro::Vertex2D(glm::vec2(BarWidth, 0.f), LeaderboardTextDark),
 
 
 
-            cro::Vertex2D(glm::vec2(-BarWidth, BarHeight), TextHighlightColour),
-            cro::Vertex2D(glm::vec2(-BarWidth, 0.f), TextHighlightColour),
-            cro::Vertex2D(glm::vec2(((BarWidth * 2.f) * progress) - BarWidth, BarHeight), TextHighlightColour),
+    //        cro::Vertex2D(glm::vec2(-BarWidth, BarHeight), TextHighlightColour),
+    //        cro::Vertex2D(glm::vec2(-BarWidth, 0.f), TextHighlightColour),
+    //        cro::Vertex2D(glm::vec2(((BarWidth * 2.f) * progress) - BarWidth, BarHeight), TextHighlightColour),
 
-            cro::Vertex2D(glm::vec2(((BarWidth * 2.f) * progress) - BarWidth, BarHeight), TextHighlightColour),
-            cro::Vertex2D(glm::vec2(-BarWidth, 0.f), TextHighlightColour),
-            cro::Vertex2D(glm::vec2(((BarWidth * 2.f) * progress) - BarWidth, 0.f), TextHighlightColour),
-    };
+    //        cro::Vertex2D(glm::vec2(((BarWidth * 2.f) * progress) - BarWidth, BarHeight), TextHighlightColour),
+    //        cro::Vertex2D(glm::vec2(-BarWidth, 0.f), TextHighlightColour),
+    //        cro::Vertex2D(glm::vec2(((BarWidth * 2.f) * progress) - BarWidth, 0.f), TextHighlightColour),
+    //};
 
-    //corners
-    constexpr std::array<glm::vec2, 4u> CornerPos =
-    {
-        glm::vec2(0.f, (BarHeight / 6.f) * 5.f),
-        glm::vec2(0.f),
-        glm::vec2((BarWidth * 2.f) - 2.f, (BarHeight / 6.f) * 5.f),
-        glm::vec2((BarWidth * 2.f) - 2.f, 0.f)
-    };
-    const auto cd = CD32::Colours[CD32::Brown];
-    for (auto i = 0; i < 4; ++i)
-    {
-        verts.emplace_back(glm::vec2(-BarWidth, BarHeight / 6.f) + CornerPos[i], cd);
-        verts.emplace_back(glm::vec2(-BarWidth, 0.f) + CornerPos[i], cd);
-        verts.emplace_back(glm::vec2(-BarWidth + 2.f, BarHeight / 6.f) + CornerPos[i], cd);
+    ////corners
+    //constexpr std::array<glm::vec2, 4u> CornerPos =
+    //{
+    //    glm::vec2(0.f, (BarHeight / 6.f) * 5.f),
+    //    glm::vec2(0.f),
+    //    glm::vec2((BarWidth * 2.f) - 2.f, (BarHeight / 6.f) * 5.f),
+    //    glm::vec2((BarWidth * 2.f) - 2.f, 0.f)
+    //};
+    //const auto cd = CD32::Colours[CD32::Brown];
+    //for (auto i = 0; i < 4; ++i)
+    //{
+    //    verts.emplace_back(glm::vec2(-BarWidth, BarHeight / 6.f) + CornerPos[i], cd);
+    //    verts.emplace_back(glm::vec2(-BarWidth, 0.f) + CornerPos[i], cd);
+    //    verts.emplace_back(glm::vec2(-BarWidth + 2.f, BarHeight / 6.f) + CornerPos[i], cd);
 
-        verts.emplace_back(glm::vec2(-BarWidth + 2.f, BarHeight / 6.f) + CornerPos[i], cd);
-        verts.emplace_back(glm::vec2(-BarWidth, 0.f) + CornerPos[i], cd);
-        verts.emplace_back(glm::vec2(-BarWidth + 2.f, 0.f) + CornerPos[i], cd);
-    }
+    //    verts.emplace_back(glm::vec2(-BarWidth + 2.f, BarHeight / 6.f) + CornerPos[i], cd);
+    //    verts.emplace_back(glm::vec2(-BarWidth, 0.f) + CornerPos[i], cd);
+    //    verts.emplace_back(glm::vec2(-BarWidth + 2.f, 0.f) + CornerPos[i], cd);
+    //}
 
-    entity.addComponent<cro::Drawable2D>().setVertexData(verts);
-    entity.getComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLES);
-    textEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    //entity.addComponent<cro::Drawable2D>().setVertexData(verts);
+    //entity.getComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLES);
+    //textEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 }
 

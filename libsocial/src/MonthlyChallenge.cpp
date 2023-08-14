@@ -187,18 +187,20 @@ cro::String MonthlyChallenge::getProgressString() const
     if (m_month != -1)
     {
         auto progress = getProgress();
+        auto monthDays = MonthDays[m_month - 1];
+        if (m_month == 2 && m_leapYear)
+        {
+            monthDays++;
+        }
+
+        const auto remain = monthDays - m_day;
+
+
         ret = ChallengeDescriptions[m_month] + "\n";
         if (progress.value != progress.target)
         {
             ret += "Progress: " + std::to_string(progress.value) + "/" + std::to_string(progress.target);
 
-            auto monthDays = MonthDays[m_month - 1];
-            if (m_month == 2 && m_leapYear)
-            {
-                monthDays++;
-            }
-
-            const auto remain = monthDays - m_day;
             if (remain == 0)
             {
                 ret += "\nFinal Day!";
@@ -210,7 +212,7 @@ cro::String MonthlyChallenge::getProgressString() const
         }
         else
         {
-            ret += "Completed!";
+            ret += "Completed! New challenge in " + std::to_string(remain + 1) + " days";
         }
     }
 

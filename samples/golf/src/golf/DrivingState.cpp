@@ -609,6 +609,10 @@ void DrivingState::handleMessage(const cro::Message& msg)
                 msg2->travelDistance = std::atan2(dir.z, dir.x);
             }
         }
+        /*else if (data.terrain == CollisionEvent::FlagPole)
+        {
+            Social::getMonthlyChallenge().updateChallenge(ChallengeID::Eleven, 0);
+        }*/
         //LogI << glm::length(data.position - PlayerPosition) << std::endl;
     }
         break;
