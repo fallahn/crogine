@@ -1892,11 +1892,24 @@ void GolfState::createScoreboard()
     {
         auto str = m_courseTitle;
 #ifdef USE_GNS
-        auto leader = Social::getLeader(m_sharedData.mapDirectory, m_sharedData.holeCount);
-        if (!leader.empty())
+        if (m_sharedData.scoreType == ScoreType::Stroke)
         {
-            str += " - " + leader;
+            auto leader = Social::getLeader(m_sharedData.mapDirectory, m_sharedData.holeCount);
+            if (!leader.empty())
+            {
+                str += " - " + leader;
+            }
+            else
+            {
+                str += " - " + ScoreTypes[m_sharedData.scoreType];
+            }
         }
+        else
+        {
+            str += " - " + ScoreTypes[m_sharedData.scoreType];
+        }
+#else
+        str += " - " + ScoreTypes[m_sharedData.scoreType];
 #endif
 
         entity = m_uiScene.createEntity();
