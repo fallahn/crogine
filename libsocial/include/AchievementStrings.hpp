@@ -454,6 +454,7 @@ static const std::array<std::string, StatID::Count> StatStrings =
     "course_08",
     "course_09",
     "course_10",
+    "albatrosses"
 };
 
 static const std::array<std::string, StatID::Count> StatLabels =
@@ -489,6 +490,7 @@ static const std::array<std::string, StatID::Count> StatLabels =
     "Number Of Times Course 8 Completed",
     "Number Of Times Course 9 Completed",
     "Number Of Times Course 10 Completed",
+    "Albatrosses Scored"
 };
 
 struct StatType final
@@ -518,6 +520,7 @@ static constexpr std::array<std::int32_t, StatID::Count> StatTypes =
     StatType::Integer,
     StatType::Integer,
     StatType::Time,
+    StatType::Integer,
     StatType::Integer,
     StatType::Integer,
     StatType::Integer,

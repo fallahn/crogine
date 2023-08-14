@@ -2868,13 +2868,20 @@ void GolfState::showMessageBoard(MessageBoardID messageType, bool special)
             score++;
         }
 
+        //if this is a HIO we want to track birdie/eagle/albatross too
+        std::int32_t statScore = 0;
+
         if (score > 1)
         {
             score -= m_holeData[m_currentHole].par;
             score += ScoreID::ScoreOffset;
+            statScore = score;
         }
         else
         {
+            statScore = score - m_holeData[m_currentHole].par;
+            statScore += ScoreID::ScoreOffset;
+
             //hio is also technically an eagle or birdie
             //etc, so we need to differentiate
             score = ScoreID::HIO;
@@ -2892,7 +2899,10 @@ void GolfState::showMessageBoard(MessageBoardID messageType, bool special)
             Social::awardXP(xp, XPStringID::HIO);
 #endif
         }
-
+        
+        //used to calculate the amount of XP based on player settings
+        std::int32_t divisor = (m_sharedData.showPuttingPower && getClub() == ClubID::Putter) ? 2 : 1;
+        std::int32_t offset = m_sharedData.showPuttingPower ? 1 : 0;
 
         //if this is a local player update achievements
         if (m_currentPlayer.client == m_sharedData.clientConnection.connectionID)
@@ -2903,7 +2913,7 @@ void GolfState::showMessageBoard(MessageBoardID messageType, bool special)
                 Social::getMonthlyChallenge().updateChallenge(ChallengeID::Five, 0);
             }
 
-            switch (score)
+            switch (statScore)
             {
             default: break;
             case ScoreID::Birdie:
@@ -2941,10 +2951,31 @@ void GolfState::showMessageBoard(MessageBoardID messageType, bool special)
                     }
                 }
                 break;
-            case ScoreID::HIO:
+            case ScoreID::Albatross:
+                Achievements::incrementStat(StatStrings[StatID::Albatrosses]);
+                break;
+            }
+
+            if (score == ScoreID::HIO)
+            {
                 Achievements::incrementStat(StatStrings[StatID::HIOs]);
                 Achievements::awardAchievement(AchievementStrings[AchievementID::HoleInOne]);
-                break;
+
+                //award supplimentary XP
+                switch (statScore)
+                {
+                default: break;
+                case ScoreID::Albatross:
+                    Social::awardXP(XPValues[XPID::Albatross] / divisor, XPStringID::Albatross + offset);
+                    break;
+                case ScoreID::Eagle:
+                    Social::awardXP(XPValues[XPID::Eagle] / divisor, XPStringID::Eagle + offset);
+                    break;
+                case ScoreID::Birdie:
+                    Social::awardXP(XPValues[XPID::Birdie] / divisor, XPStringID::Birdie + offset);
+                    break;
+                //would we ever have a HIO which is also par? :)
+                }
             }
         }
 
@@ -3026,10 +3057,6 @@ void GolfState::showMessageBoard(MessageBoardID messageType, bool special)
                 entity.getComponent<cro::Transform>().addChild(e.getComponent<cro::Transform>());
             };
 
-
-
-            std::int32_t divisor = (m_sharedData.showPuttingPower && getClub() == ClubID::Putter) ? 2 : 1;
-            std::int32_t offset = m_sharedData.showPuttingPower ? 1 : 0;
 
             switch (score)
             {

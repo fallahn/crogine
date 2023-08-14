@@ -173,6 +173,7 @@ namespace StatID
         Course08Complete,
         Course09Complete,
         Course10Complete,
+        Albatrosses,
 
         Count
     };
