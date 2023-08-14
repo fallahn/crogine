@@ -2481,6 +2481,8 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
                                 enterConfirmCallback(false);
                             }
                         }
+
+                        LogI << "Shared Data set to Hosting" << std::endl;
                     }
                     else
                     {
@@ -2500,6 +2502,10 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
                             {
                                 m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
                             }
+                        }
+                        else
+                        {
+                            LogI << "Shared Data Map Directory Is Empty" << std::endl;
                         }
                     }
                 }
