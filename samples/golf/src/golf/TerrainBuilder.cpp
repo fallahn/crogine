@@ -61,6 +61,8 @@ source distribution.
 
 #include <chrono>
 
+using namespace cl;
+
 namespace
 {
 #include "TerrainShader.inl"

@@ -41,6 +41,8 @@ source distribution.
 #include <crogine/util/Easings.hpp>
 #include <crogine/detail/glm/gtx/norm.hpp>
 
+using namespace cl;
+
 DrivingRangeDirector::DrivingRangeDirector(std::vector<HoleData>& hd)
     : m_holeData	(hd),
     m_holeCount		(0),

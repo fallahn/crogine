@@ -69,6 +69,8 @@ source distribution.
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
 #include <crogine/detail/OpenGL.hpp>
 
+using namespace cl;
+
 namespace
 {
     const std::string MinimapFragment = 

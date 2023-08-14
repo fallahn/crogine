@@ -58,6 +58,8 @@ namespace
     {
         31,28,31,30,31,30,31,31,30,31,30,31
     };
+
+    const cro::Time MinRepeatTime = cro::seconds(0.5f);
 }
 
 
@@ -80,6 +82,12 @@ MonthlyChallenge::MonthlyChallenge()
 //public
 void MonthlyChallenge::updateChallenge(std::int32_t id, std::int32_t value)
 {
+    if (m_repeatClock.elapsed() < MinRepeatTime)
+    {
+        return;
+    }
+    m_repeatClock.restart();
+
     if (m_month != -1 && id == m_month
         && Achievements::getActive())
     {

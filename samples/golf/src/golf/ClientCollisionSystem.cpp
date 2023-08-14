@@ -41,6 +41,8 @@ source distribution.
 #include <Achievements.hpp>
 #include <AchievementStrings.hpp>
 
+using namespace cl;
+
 namespace
 {
     static constexpr float MinBallDist = (HoleRadius * 1.2f) * (HoleRadius * 1.2f);

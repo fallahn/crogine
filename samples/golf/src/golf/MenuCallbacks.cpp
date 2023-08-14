@@ -40,6 +40,8 @@ source distribution.
 
 #include <crogine/util/Easings.hpp>
 
+using namespace cl;
+
 void MenuCallback::operator()(cro::Entity e, float dt)
 {
     static constexpr float Speed = 2.f;

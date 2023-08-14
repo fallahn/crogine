@@ -40,6 +40,8 @@ source distribution.
 #include <crogine/ecs/components/Callback.hpp>
 #include <crogine/core/GameController.hpp>
 
+using namespace cl;
+
 /*
 Tutorial 1 triggered on scene transition completion
 Tutorial 2 waits for the player to select the driver

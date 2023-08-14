@@ -33,6 +33,7 @@ source distribution.
 #include "../ClientPacketData.hpp"
 #include "../BallSystem.hpp"
 #include "../Clubs.hpp"
+#include "../MessageIDs.hpp"
 #include "CPUStats.hpp"
 #include "ServerGolfState.hpp"
 #include "ServerMessages.hpp"
@@ -286,6 +287,19 @@ void GolfState::handleMessage(const cro::Message& msg)
         bh.player = m_playerInfo[0].player;
         bh.client = m_playerInfo[0].client;
         m_sharedData.host.broadcastPacket(PacketID::BullHit, bh, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+    }
+    else if (msg.id == cl::MessageID::CollisionMessage)
+    {
+        const auto& data = msg.getData<CollisionEvent>();
+        if (data.terrain == CollisionEvent::FlagPole)
+        {
+            BullHit pkt;
+            pkt.client = m_playerInfo[0].client;
+            pkt.player = m_playerInfo[0].player;
+            //only needs to go to the relevant client
+            //as this is for stat tracking
+            m_sharedData.host.sendPacket(m_sharedData.clients[pkt.client].peer, PacketID::FlagHit, pkt, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+        }
     }
 
     m_scene.forwardMessage(msg);

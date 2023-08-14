@@ -98,6 +98,8 @@ source distribution.
 #include <crogine/util/Wavetable.hpp>
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
 
+using namespace cl;
+
 namespace
 {
 #include "CelShader.inl"

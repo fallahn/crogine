@@ -54,6 +54,8 @@ source distribution.
 
 #include <crogine/util/Wavetable.hpp>
 
+using namespace cl;
+
 namespace
 {
     constexpr glm::vec3 TopSpinPosition(50.f, 0.f, 0.f);

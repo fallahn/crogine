@@ -80,6 +80,8 @@ source distribution.
 
 #include <crogine/detail/glm/gtx/rotate_vector.hpp>
 
+using namespace cl;
+
 namespace
 {
 #include "PostProcess.inl"

@@ -31,6 +31,7 @@ source distribution.
 #include "PacketIDs.hpp"
 #include "MessageIDs.hpp"
 
+using namespace cl;
 
 void GolfState::updateHoleScore(std::uint16_t data)
 {

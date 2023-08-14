@@ -32,7 +32,7 @@ source distribution.
 #include <crogine/core/Message.hpp>
 #include <crogine/detail/glm/vec3.hpp>
 
-namespace MessageID
+namespace cl::MessageID
 {
     enum
     {

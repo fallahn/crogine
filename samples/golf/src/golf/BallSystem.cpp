@@ -47,6 +47,8 @@ source distribution.
 #include <crogine/detail/Types.hpp>
 #include <crogine/detail/glm/gtx/norm.hpp>
 
+using namespace cl;
+
 namespace
 {
     glm::vec3 btToGlm(btVector3 v)
@@ -943,7 +945,7 @@ void BallSystem::doCollision(cro::Entity entity)
 
 
             auto* msg = postMessage<CollisionEvent>(MessageID::CollisionMessage);
-            msg->terrain = -1;
+            msg->terrain = CollisionEvent::FlagPole;
             msg->position = pos;
             msg->type = CollisionEvent::Begin;
         }

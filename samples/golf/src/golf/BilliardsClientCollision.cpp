@@ -36,6 +36,8 @@ source distribution.
 #include <crogine/detail/ModelBinary.hpp>
 #include <crogine/gui/Gui.hpp>
 
+using namespace cl;
+
 namespace
 {
     std::int32_t collisionCount = 0;

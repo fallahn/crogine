@@ -42,6 +42,8 @@ source distribution.
 #include <crogine/util/Maths.hpp>
 #include <crogine/detail/glm/gtx/norm.hpp>
 
+using namespace cl;
+
 namespace
 {
     const std::array StateStrings =

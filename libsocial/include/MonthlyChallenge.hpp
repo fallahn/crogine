@@ -32,6 +32,7 @@ source distribution.
 #include <array>
 #include <string>
 
+#include <crogine/core/Clock.hpp>
 #include <crogine/core/String.hpp>
 
 struct ChallengeID final
@@ -85,7 +86,7 @@ static const std::array<std::string, ChallengeID::Count> ChallengeDescriptions =
     "Make 250 shots with Great Accuracy",
     "Score 2 birdies in one round on the front 9 of each course",
     "Score 1 eagle in one round on the back 9 of each course",
-    "Implement me."
+    "Hit the flag stick 50 times"
 };
 
 struct Challenge final
@@ -143,10 +144,12 @@ private:
         Challenge(250, Challenge::Counter),
         Challenge(0x3ff, Challenge::Flag),
         Challenge(0x3ff, Challenge::Flag),
-        Challenge(0),
+        Challenge(50, Challenge::Counter),
     };
 
     std::int32_t m_month;
     std::int32_t m_day;
     bool m_leapYear;
+
+    cro::Clock m_repeatClock;
 };

@@ -77,6 +77,8 @@ source distribution.
 #include <crogine/detail/OpenGL.hpp>
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
 
+using namespace cl;
+
 namespace
 {
     constexpr float PieRadius = 48.f;

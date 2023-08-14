@@ -92,6 +92,8 @@ source distribution.
 
 #include <filesystem>
 
+using namespace cl;
+
 namespace
 {
 #include "golf/TutorialShaders.inl"

@@ -82,6 +82,8 @@ source distribution.
 
 #include <Achievements.hpp>
 
+using namespace cl;
+
 namespace
 {
 #include "WireframeShader.inl"

@@ -81,6 +81,8 @@ source distribution.
 
 #include "OptionsEnum.inl"
 
+using namespace cl;
+
 namespace
 {
     constexpr float CameraDepth = 3.f;

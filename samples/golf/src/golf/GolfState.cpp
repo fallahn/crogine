@@ -121,6 +121,8 @@ source distribution.
 
 #include <sstream>
 
+using namespace cl;
+
 namespace
 {
 #include "WaterShader.inl"
@@ -5428,6 +5430,16 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
         switch (evt.packet.getID())
         {
         default: break;
+        case PacketID::FlagHit:
+        {
+            auto data = evt.packet.as<BullHit>();
+            data.player = std::clamp(data.player, std::uint8_t(0), ConstVal::MaxPlayers);
+            if (!m_sharedData.localConnectionData.playerData[data.player].isCPU)
+            {
+                Social::getMonthlyChallenge().updateChallenge(ChallengeID::Eleven, 0);
+            }
+        }
+            break;
         case PacketID::BullHit:
             handleBullHit(evt.packet.as<BullHit>());
             break;

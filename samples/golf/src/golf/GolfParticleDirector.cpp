@@ -48,6 +48,8 @@ source distribution.
 #include <crogine/graphics/SpriteSheet.hpp>
 #include <crogine/util/Constants.hpp>
 
+using namespace cl;
+
 GolfParticleDirector::GolfParticleDirector(cro::TextureResource& tr, const SharedStateData& sd)
     : m_sharedData(sd)
 {

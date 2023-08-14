@@ -42,6 +42,8 @@ source distribution.
 #include <stdio.h>
 #include <sys/stat.h>
 
+using namespace cl;
+
 namespace
 {
     const std::string FileName = "progress.stats";

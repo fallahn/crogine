@@ -51,6 +51,8 @@ source distribution.
 #include <AchievementStrings.hpp>
 #include <Social.hpp>
 
+using namespace cl;
+
 namespace
 {
     constexpr float VoiceDelay = 0.5f;

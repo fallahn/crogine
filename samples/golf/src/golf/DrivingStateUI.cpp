@@ -61,6 +61,8 @@ source distribution.
 
 #include "../ErrorCheck.hpp"
 
+using namespace cl;
+
 namespace
 {
     //used as indices when scrolling through leaderboards

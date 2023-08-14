@@ -92,6 +92,8 @@ source distribution.
 
 #include <cstring>
 
+using namespace cl;
+
 namespace
 {
 #include "CelShader.inl"

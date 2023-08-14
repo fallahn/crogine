@@ -47,6 +47,8 @@ source distribution.
 #include <crogine/ecs/systems/CommandSystem.hpp>
 #include <crogine/util/Maths.hpp>
 
+using namespace cl;
+
 namespace
 {
     constexpr float SpeedReduction = 1.4f; //bar speed is dividied by this when putt assist is enabled

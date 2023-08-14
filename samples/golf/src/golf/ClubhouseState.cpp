@@ -69,6 +69,8 @@ source distribution.
 #include <crogine/gui/Gui.hpp>
 #include <crogine/graphics/SpriteSheet.hpp>
 
+using namespace cl;
+
 namespace
 {
 #include "CelShader.inl"

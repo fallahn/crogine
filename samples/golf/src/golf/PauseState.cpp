@@ -68,6 +68,8 @@ source distribution.
 
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
 
+using namespace cl;
+
 namespace
 {
     struct MenuID final
