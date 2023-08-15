@@ -1597,12 +1597,13 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
 
     //and score description
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setOrigin({ 74.f, 0.f });
+    entity.addComponent<cro::Transform>();// .setOrigin({ 74.f, 0.f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<UIElement>().absolutePosition = { 364.f, 190.f };
     entity.getComponent<UIElement>().depth = 0.1f;
     entity.addComponent<cro::Text>(smallFont).setCharacterSize(InfoTextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
     entity.getComponent<cro::Text>().setString(RuleDescriptions[m_sharedData.scoreType]);
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::ScoreDesc | CommandID::Menu::UIElement;
     bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -1622,12 +1623,13 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setOrigin({ 74.f, 0.f });
+    entity.addComponent<cro::Transform>();// .setOrigin({ 74.f, 0.f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<UIElement>().absolutePosition = { 364.f, 96.f };
     entity.getComponent<UIElement>().depth = 0.1f;
     entity.addComponent<cro::Text>(smallFont).setCharacterSize(InfoTextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
     entity.getComponent<cro::Text>().setString("The ball is considered holed\nwhen it's within this radius");
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement;
     bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -2636,6 +2638,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
                     {
                     default:
                     case ScoreType::Stroke:
+                    case ScoreType::ShortRound:
                         info.score = m_sharedData.connectionData[i].playerData[j].parScore;
                         break;
                     case ScoreType::Match:
@@ -2657,6 +2660,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
                 default:
                     return a.score > b.score;
                 case ScoreType::Stroke:
+                case ScoreType::ShortRound:
                     return a.score < b.score;
                 }
             });
@@ -2670,6 +2674,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
             switch (m_sharedData.scoreType)
             {
             default:
+            case ScoreType::ShortRound:
             case ScoreType::Stroke:
                 if (score.score < 0)
                 {
@@ -3848,6 +3853,7 @@ void MenuState::createPreviousScoreCard()
                 {
                 default:
                 case ScoreType::Stroke:
+                case ScoreType::ShortRound:
                     entry.roundScore = m_sharedData.connectionData[i].playerData[j].parScore;
                     break;
                 case ScoreType::Match:
@@ -3885,6 +3891,7 @@ void MenuState::createPreviousScoreCard()
             default:
                 return a.roundScore > b.roundScore;
             case ScoreType::Stroke:
+            case ScoreType::ShortRound:
                 return a.total < b.total;
             }
         });
@@ -4084,6 +4091,7 @@ void MenuState::createPreviousScoreCard()
         {
         default:
         case ScoreType::Stroke:
+        case ScoreType::ShortRound:
         {
             auto pTotal = entry.totalFront - parTotalFront;
             str += " (";
@@ -4119,6 +4127,7 @@ void MenuState::createPreviousScoreCard()
             switch (m_sharedData.scoreType)
             {
             default:
+            case ScoreType::ShortRound:
             case ScoreType::Stroke:
             {
                 auto pTotal = entry.total - parTotal;

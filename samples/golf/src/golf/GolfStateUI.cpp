@@ -2234,6 +2234,7 @@ void GolfState::updateScoreboard(bool updateParDiff)
                     {
                     default: break;
                     case ScoreType::Stroke:
+                    case ScoreType::ShortRound:
                         entry.frontNine += client.playerData[i].holeScores[j];
                         break;
                     case ScoreType::Match:
@@ -2251,6 +2252,7 @@ void GolfState::updateScoreboard(bool updateParDiff)
                     {
                     default: break;
                     case ScoreType::Stroke:
+                    case ScoreType::ShortRound:
                         entry.backNine += client.playerData[i].holeScores[j];
                         break;
                     case ScoreType::Match:
@@ -2269,6 +2271,7 @@ void GolfState::updateScoreboard(bool updateParDiff)
             {
             default:
             case ScoreType::Stroke:
+            case ScoreType::ShortRound:
                 entry.total = entry.frontNine + entry.backNine;
 
                 //track achievement make no mistake
@@ -2307,6 +2310,7 @@ void GolfState::updateScoreboard(bool updateParDiff)
             default:
                 return b.score < a.score;
             case ScoreType::Stroke:
+            case ScoreType::ShortRound:
                 return a.score < b.score;
             }
         });
@@ -2320,6 +2324,7 @@ void GolfState::updateScoreboard(bool updateParDiff)
             {
             default:
             case ScoreType::Stroke:
+            case ScoreType::ShortRound:
                 return a.total < b.total;
             case ScoreType::Skins:
             case ScoreType::Match:
@@ -2449,6 +2454,7 @@ void GolfState::updateScoreboard(bool updateParDiff)
         switch (m_sharedData.scoreType)
         {
         default:
+        case ScoreType::ShortRound:
         case ScoreType::Stroke:
             if (scores[i].parDiff > 0)
             {
@@ -2510,6 +2516,7 @@ void GolfState::updateScoreboard(bool updateParDiff)
             switch (m_sharedData.scoreType)
             {
             default:
+            case ScoreType::ShortRound:
             case ScoreType::Stroke:
                 totalString += separator + std::to_string(scores[i].total);
                 if (scores[i].parDiff > 0)

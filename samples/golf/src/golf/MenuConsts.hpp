@@ -64,9 +64,9 @@ struct FontID final
 static const std::array<std::string, ScoreType::Count> ScoreTypes =
 {
     "Stroke Play", "Match Play", "Skins",
-
+    "Short Round",
     /*
-    "Short Round", "Stableford", "Stableford Pro",
+     "Stableford", "Stableford Pro",
     "Nearest the Pin", "Longest Drive", "Multi-target"
     */
 };
@@ -87,9 +87,9 @@ static const std::array<std::string, ScoreType::Count> RuleDescriptions =
 {
     "Player with the fewest total\nstrokes wins",
     "Holes are scored individually.\nPlayer with the most holes\nwins",
-    "Holes are scored individually.\nWinner of the hole gets the\nskins pot, else the pot\nrolls over to the next hole."
+    "Holes are scored individually.\nWinner of the hole gets the\nskins pot, else the pot\nrolls over to the next hole.",
+    "As stroke play, but the tee is\nmoved closer to the pin and\neach hole's par is reduced\nby one. Achievements are disabled.",
     /*
-    "As stroke play, but the tee is\nmoved closer to the pin and\neach hole's par is reduced\nby one.",
     "As stroke play, however par is\nscored at 2 points, with one\nextra point awarded for\nevery stroke under par.",
     "Stableford rules, however one\npoint for every stroke over\npar is penalised.",
     "Each player has one stroke to\nget as near to the pin as possible.",
