@@ -85,7 +85,7 @@ static const std::array<std::string, ChallengeID::Count> ChallengeDescriptions =
     "Take 50 gimmies resulting from a Near Miss",
     "Make 250 shots with Great Accuracy",
     "Score 2 Birdies in one round on the front 9 of each course",
-    "Score 1 Eagle in one round on the back 9 of each course",
+    "Score 1 Eagle on the back 9 of each course",
     "Hit the flag stick 50 times"
 };
 

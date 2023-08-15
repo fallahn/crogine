@@ -36,13 +36,15 @@ namespace ScoreType
 {
     enum
     {
-        Stroke, Match, Skins,
+        Stroke, 
+        Stableford,
+        StablefordPro,
+        
+        Match, Skins,
 
         Count,
         ShortRound,
 
-        Stableford,
-        StablefordPro,
         NearestThePin,
         LongestDrive,
         MultiTarget,

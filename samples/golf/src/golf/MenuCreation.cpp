@@ -2638,6 +2638,8 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
                     {
                     default:
                     case ScoreType::Stroke:
+                    case ScoreType::Stableford:
+                    case ScoreType::StablefordPro:
                     case ScoreType::ShortRound:
                         info.score = m_sharedData.connectionData[i].playerData[j].parScore;
                         break;
@@ -2660,6 +2662,8 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
                 default:
                     return a.score > b.score;
                 case ScoreType::Stroke:
+                case ScoreType::Stableford:
+                case ScoreType::StablefordPro:
                 case ScoreType::ShortRound:
                     return a.score < b.score;
                 }
@@ -2684,6 +2688,10 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
                 {
                     names.back() += " Over Par";
                 }
+                break;
+            case ScoreType::Stableford:
+            case ScoreType::StablefordPro:
+                names.back() += " FIXME3";
                 break;
             case ScoreType::Skins:
                 names.back() += " Skins";
@@ -3838,7 +3846,6 @@ void MenuState::createPreviousScoreCard()
     };
 
     std::vector<Entry> scoreEntries;
-    //LogI << __FILE__ << ", " << __LINE__ << " set correct loop params!" << std::endl;
     for (auto i = 0u; i < ConstVal::MaxClients; ++i)
     {
         if (m_sharedData.connectionData[i].playerCount != 0)
@@ -3852,6 +3859,10 @@ void MenuState::createPreviousScoreCard()
                 switch (m_sharedData.scoreType)
                 {
                 default:
+                case ScoreType::StablefordPro:
+                case ScoreType::Stableford:
+                    //do nothing, we re-calc below
+                    break;
                 case ScoreType::Stroke:
                 case ScoreType::ShortRound:
                     entry.roundScore = m_sharedData.connectionData[i].playerData[j].parScore;
@@ -3870,15 +3881,40 @@ void MenuState::createPreviousScoreCard()
                 auto k = 0;
                 for (auto score : m_sharedData.connectionData[i].playerData[j].holeScores)
                 {
-                    entry.total += score;
-                    if (k++ < 9)
+                    if (m_sharedData.scoreType == ScoreType::Stableford
+                        || m_sharedData.scoreType == ScoreType::StablefordPro)
                     {
-                        entry.totalFront += score;
+                        auto diff = static_cast<std::int32_t>(score) - courseData.parVals[k];
+                        auto stableScore = 2 - diff;
+
+                        if (m_sharedData.scoreType == ScoreType::Stableford)
+                        {
+                            stableScore = std::max(0, stableScore);
+                        }
+
+                        entry.total += stableScore;
+                        if (k < 9)
+                        {
+                            entry.totalFront += stableScore;
+                        }
+                        else
+                        {
+                            entry.totalBack += stableScore;
+                        }
                     }
                     else
                     {
-                        entry.totalBack += score;
+                        entry.total += score;
+                        if (k < 9)
+                        {
+                            entry.totalFront += score;
+                        }
+                        else
+                        {
+                            entry.totalBack += score;
+                        }
                     }
+                    k++;
                 }
             }
         }
@@ -3890,6 +3926,9 @@ void MenuState::createPreviousScoreCard()
             {
             default:
                 return a.roundScore > b.roundScore;
+            case ScoreType::Stableford:
+            case ScoreType::StablefordPro:
+                return a.total > b.total;
             case ScoreType::Stroke:
             case ScoreType::ShortRound:
                 return a.total < b.total;
@@ -4102,6 +4141,10 @@ void MenuState::createPreviousScoreCard()
             str += std::to_string(pTotal) + ")";
         }
             break;
+        case ScoreType::Stableford:
+        case ScoreType::StablefordPro:
+            str += " - " + std::to_string(entry.total) + " POINTS";
+            break;
         case ScoreType::Match:
             str += " - " + std::to_string(entry.roundScore) + " POINTS";
             break;
@@ -4139,11 +4182,15 @@ void MenuState::createPreviousScoreCard()
                 str += std::to_string(pTotal) + ")";
             }
                 break;
+            case ScoreType::Stableford:
+            case ScoreType::StablefordPro:
+                str += " - " + std::to_string(entry.total) + " POINTS";
+                break;
             case ScoreType::Match:
-                str += " - " + std::to_string(entry.roundScore) + " Points";
+                str += " - " + std::to_string(entry.roundScore) + " POINTS";
                 break;
             case ScoreType::Skins:
-                str += " - " + std::to_string(entry.roundScore) + " Skins";
+                str += " - " + std::to_string(entry.roundScore) + " SKINS";
                 break;
             }
         }

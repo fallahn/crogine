@@ -1462,7 +1462,7 @@ void GolfState::showCountdown(std::uint8_t seconds)
 
                 switch (m_sharedData.scoreType)
                 {
-                default:
+                default: break;
                 case ScoreType::Stroke:
                     Achievements::awardAchievement(AchievementStrings[AchievementID::StrokeOfGenius]);
                     break;
@@ -2181,7 +2181,7 @@ void GolfState::updateScoreboard(bool updateParDiff)
     struct ScoreEntry final
     {
         cro::String name;
-        std::vector<std::uint8_t> holes;
+        std::vector<std::int32_t> holes;
         std::int32_t frontNine = 0;
         std::int32_t backNine = 0;
         std::int32_t total = 0;
@@ -2214,17 +2214,21 @@ void GolfState::updateScoreboard(bool updateParDiff)
                 auto s = client.playerData[i].holeScores[j];
                 entry.holes.push_back(s);
 
+                std::int32_t stableScore = 0;
+
                 //this needs to ignore the current hole
                 //as the mid-point score looks confusing... however
                 //we still want to count the current number of strokes...
                 if (s)
                 {
-                    if (updateParDiff || j < (m_currentHole/* - 1*/))
+                    if (updateParDiff || j < (m_currentHole))
                     {
                         auto diff = static_cast<std::int32_t>(s) - m_holeData[j].par;
                         entry.parDiff += diff;
 
                         overPar = (diff > 0);
+
+                        stableScore = 2 - diff;
                     }
                 }
 
@@ -2233,6 +2237,13 @@ void GolfState::updateScoreboard(bool updateParDiff)
                     switch (m_sharedData.scoreType)
                     {
                     default: break;
+                    case ScoreType::Stableford:
+                        stableScore = std::max(0, stableScore);
+                        [[fallthrough]];
+                    case ScoreType::StablefordPro:
+                        entry.frontNine += stableScore;
+                        entry.holes.back() = stableScore;
+                        break;
                     case ScoreType::Stroke:
                     case ScoreType::ShortRound:
                         entry.frontNine += client.playerData[i].holeScores[j];
@@ -2251,6 +2262,13 @@ void GolfState::updateScoreboard(bool updateParDiff)
                     switch (m_sharedData.scoreType)
                     {
                     default: break;
+                    case ScoreType::Stableford:
+                        stableScore = std::max(0, stableScore);
+                        [[fallthrough]];
+                    case ScoreType::StablefordPro:
+                        entry.backNine += stableScore;
+                        entry.holes.back() = stableScore;
+                        break;
                     case ScoreType::Stroke:
                     case ScoreType::ShortRound:
                         entry.backNine += client.playerData[i].holeScores[j];
@@ -2272,7 +2290,6 @@ void GolfState::updateScoreboard(bool updateParDiff)
             default:
             case ScoreType::Stroke:
             case ScoreType::ShortRound:
-                entry.total = entry.frontNine + entry.backNine;
 
                 //track achievement make no mistake
                 if (client.connectionID == m_sharedData.localConnectionData.connectionID
@@ -2281,6 +2298,12 @@ void GolfState::updateScoreboard(bool updateParDiff)
                 {
                     m_achievementTracker.noHolesOverPar = false;
                 }
+
+                [[fallthrough]];
+            case ScoreType::Stableford:
+            case ScoreType::StablefordPro:
+
+                entry.total = entry.frontNine + entry.backNine;
 
                 break;
             case ScoreType::Skins:
@@ -2308,6 +2331,8 @@ void GolfState::updateScoreboard(bool updateParDiff)
             switch (m_sharedData.scoreType)
             {
             default:
+            case ScoreType::Stableford:
+            case ScoreType::StablefordPro:
                 return b.score < a.score;
             case ScoreType::Stroke:
             case ScoreType::ShortRound:
@@ -2326,6 +2351,8 @@ void GolfState::updateScoreboard(bool updateParDiff)
             case ScoreType::Stroke:
             case ScoreType::ShortRound:
                 return a.total < b.total;
+            case ScoreType::Stableford:
+            case ScoreType::StablefordPro:
             case ScoreType::Skins:
             case ScoreType::Match:
                 return b.total < a.total;
@@ -2469,6 +2496,8 @@ void GolfState::updateScoreboard(bool updateParDiff)
                 totalString += " (0)";
             }
             break;
+        case ScoreType::Stableford:
+        case ScoreType::StablefordPro:
         case ScoreType::Match:
             totalString += " POINTS";
             break;
@@ -2532,6 +2561,8 @@ void GolfState::updateScoreboard(bool updateParDiff)
                     totalString += " (0)";
                 }
                 break;
+            case ScoreType::Stableford:
+            case ScoreType::StablefordPro:
             case ScoreType::Match:
                 totalString += " POINTS";
                 break;
