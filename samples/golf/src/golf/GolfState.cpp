@@ -339,6 +339,16 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     }
     m_allowAchievements = (humanCount == 1) && (getCourseIndex(sd.mapDirectory) != -1);
 
+    switch (sd.scoreType)
+    {
+    default:
+        m_allowAchievements = m_allowAchievements;
+        break;
+    case ScoreType::ShortRound:
+        m_allowAchievements = false;
+        break;
+    }
+
     //This is set when setting active player.
     Achievements::setActive(m_allowAchievements);
     Social::getMonthlyChallenge().refresh();
@@ -944,13 +954,13 @@ void GolfState::handleMessage(const cro::Message& msg)
                 //TODO this doesn't include any easing added when making the stroke
                 //we should be using the value returned by getStroke() in hitBall()
                 auto hook = m_inputParser.getHook() * m_activeAvatar->model.getComponent<cro::Transform>().getScale().x;
-                if (hook < -0.05f)
+                if (hook < -0.08f)
                 {
                     auto* msg3 = cro::App::getInstance().getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
                     msg3->type = GolfEvent::HookedBall;
                     floatingMessage("Hook");
                 }
-                else if (hook > 0.05f)
+                else if (hook > 0.08f)
                 {
                     auto* msg3 = cro::App::getInstance().getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
                     msg3->type = GolfEvent::SlicedBall;
@@ -3442,26 +3452,40 @@ void GolfState::loadAssets()
         //course by looking to see if the tee is on the green
         hole.puttFromTee = m_collisionMesh.getTerrain(hole.tee).terrain == TerrainID::Green;
 
-        //if (hole.puttFromTee)
+        //update the green material with grid shader
+        auto& model = hole.modelEntity.getComponent<cro::Model>();
+        auto matCount = model.getMeshData().submeshCount;
+        for (auto i = 0u; i < matCount; ++i)
         {
-            auto& model = hole.modelEntity.getComponent<cro::Model>();
-            auto matCount = model.getMeshData().submeshCount;
-            for (auto i = 0u; i < matCount; ++i)
+            auto mat = model.getMaterialData(cro::Mesh::IndexData::Final, i);
+            if (mat.name == "green")
             {
-                auto mat = model.getMaterialData(cro::Mesh::IndexData::Final, i);
-                if (mat.name == "green")
+                if (hole.puttFromTee)
                 {
-                    if (hole.puttFromTee)
-                    {
-                        mat.setShader(*gridShader);
-                    }
-                    else
-                    {
-                        mat.setShader(*greenShader);
-                    }
-                    model.setMaterial(i, mat);
+                    mat.setShader(*gridShader);
                 }
+                else
+                {
+                    mat.setShader(*greenShader);
+                }
+                model.setMaterial(i, mat);
             }
+        }
+
+        //if we're playing a short round, move the tee
+        if (m_sharedData.scoreType == ScoreType::ShortRound
+            && !hole.puttFromTee)
+        {
+            hole.par = std::min(3, hole.par);
+
+            auto dir = hole.target - hole.tee;
+            hole.tee += dir * 0.5f;
+
+            dir = hole.pin - hole.target;
+            hole.target += dir * 0.5f;
+
+            hole.tee.y = m_collisionMesh.getTerrain(hole.tee).height;
+            hole.target.y = m_collisionMesh.getTerrain(hole.target).height;
         }
     }
 

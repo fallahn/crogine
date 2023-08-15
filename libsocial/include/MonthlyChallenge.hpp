@@ -75,7 +75,7 @@ static const std::array<std::string, ChallengeID::Count> ChallengeStrings =
 
 static const std::array<std::string, ChallengeID::Count> ChallengeDescriptions =
 {
-    "Make 25 So Close chips on to the green",
+    "Make 50 So Close chips on to the green",
     "Make 50 Nice Putts",
     "Hit 25 random bull's eyes",
     "Play 18 holes in every game mode at least once",
@@ -117,9 +117,8 @@ public:
     void updateChallenge(std::int32_t id, std::int32_t value);
 
     //refreshes the status of the current month's stat
-    //or resets other month's stats. TODO much check
-    //we have a valid month, else we'll reset ALL progress...
-    void refresh(); //call from game start, driving start and clubhouse.
+    //or resets other month's stats.
+    void refresh();
 
     struct Progress final
     {
@@ -133,7 +132,7 @@ public:
 private:
     std::array<Challenge, ChallengeID::Count> m_challenges =
     {
-        Challenge(25, Challenge::Counter),
+        Challenge(50, Challenge::Counter),
         Challenge(50, Challenge::Counter),
         Challenge(25, Challenge::Counter),
         Challenge(0x7, Challenge::Flag), //TODO update this with new game modes

@@ -38,8 +38,8 @@ namespace ScoreType
     {
         Stroke, Match, Skins,
 
-        ShortRound,
         Count,
+        ShortRound,
 
         Stableford,
         StablefordPro,

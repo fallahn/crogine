@@ -210,6 +210,7 @@ bool BallSystem::setHoleData(HoleData& holeData, bool rebuildMesh)
     //updating the collision mesh sets m_puttFromTee too
     auto result = rebuildMesh ? updateCollisionMesh(holeData.modelPath) : true;
     holeData.pin.y = getTerrain(holeData.pin).intersection.y;
+    holeData.puttFromTee = m_puttFromTee;
 
     //m_gimmeRadius = m_puttFromTee ? 0 : m_activeGimme;
 

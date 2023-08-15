@@ -452,7 +452,8 @@ std::int32_t GolfState::process(float dt)
                         return true;
                     }
 
-                    if (Social::getMonth() == 2)
+                    if (Social::getMonth() == 2
+                        && m_sharedData.scoreType == ScoreType::Stroke)
                     {
                         if (cro::Util::Random::value(0, 9) == 0)
                         {
@@ -1086,6 +1087,27 @@ void GolfState::initScene()
     auto& mb = m_sharedData.messageBus;
     m_scene.addSystem<cro::CallbackSystem>(mb);
     m_scene.addSystem<BallSystem>(mb)->setGimmeRadius(m_sharedData.gimmeRadius);
+
+    //check for putt from tee and update any rule properties
+    for (auto& hole : m_holeData)
+    {
+        m_scene.getSystem<BallSystem>()->setHoleData(hole); //applies putt from tee
+        if (m_sharedData.scoreType == ScoreType::ShortRound
+            && !hole.puttFromTee)
+        {
+            hole.par = std::min(3, hole.par);
+
+            auto dir = hole.target - hole.tee;
+            hole.tee += dir * 0.5f;
+
+            dir = hole.pin - hole.target;
+            hole.target += dir * 0.5f;
+
+            hole.tee.y = m_scene.getSystem<BallSystem>()->getTerrain(hole.tee).intersection.y;
+            hole.target.y = m_scene.getSystem<BallSystem>()->getTerrain(hole.target).intersection.y;
+        }
+    }
+
     m_mapDataValid = m_scene.getSystem<BallSystem>()->setHoleData(m_holeData[0]);
     
     for (auto i = 0u; i < m_sharedData.clients.size(); ++i)
