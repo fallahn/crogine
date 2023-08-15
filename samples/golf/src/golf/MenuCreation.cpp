@@ -1262,6 +1262,12 @@ void MenuState::createBrowserMenu(cro::Entity parent, std::uint32_t mouseEnter, 
         }
     };
 
+    struct ButtonIndex final
+    {
+
+    };
+
+
     //button left
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 13.f, 5.f });
@@ -2646,13 +2652,12 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
         std::sort(scoreInfo.begin(), scoreInfo.end(),
             [&](const ScoreInfo& a, const ScoreInfo& b)
             {
-                if (m_sharedData.scoreType == ScoreType::Stroke)
+                switch (m_sharedData.scoreType)
                 {
-                    return a.score < b.score;
-                }
-                else
-                {
+                default:
                     return a.score > b.score;
+                case ScoreType::Stroke:
+                    return a.score < b.score;
                 }
             });
 
@@ -3875,11 +3880,13 @@ void MenuState::createPreviousScoreCard()
 
     std::sort(scoreEntries.begin(), scoreEntries.end(), [&](const Entry& a, const Entry& b)
         {
-            if (m_sharedData.scoreType == ScoreType::Stroke)
+            switch (m_sharedData.scoreType)
             {
+            default:
+                return a.roundScore > b.roundScore;
+            case ScoreType::Stroke:
                 return a.total < b.total;
             }
-            return a.roundScore > b.roundScore;
         });
 
 

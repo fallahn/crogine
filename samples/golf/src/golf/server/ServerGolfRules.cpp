@@ -24,22 +24,30 @@ void GolfState::handleDefaultRules(const GolfBallEvent& data)
     if (data.type == GolfBallEvent::TurnEnded)
     {
         //if match/skins play check if our score is even with anyone holed already and forfeit
-        if (m_sharedData.scoreType != ScoreType::Stroke)
+        switch (m_sharedData.scoreType)
         {
+        default: break;
+        case ScoreType::Match:
+        case ScoreType::Skins:
             if (m_playerInfo[0].holeScore[m_currentHole] >= m_currentBest)
             {
                 m_playerInfo[0].distanceToHole = 0;
                 m_playerInfo[0].holeScore[m_currentHole]++;
             }
+            break;
         }
     }
     else if (data.type == GolfBallEvent::Holed)
     {
         //if we're playing match play or skins then
-                    //anyone who has a worse score has already lost
-                    //so set them to finished.
-        if (m_sharedData.scoreType != ScoreType::Stroke)
+        //anyone who has a worse score has already lost
+        //so set them to finished.
+
+        switch (m_sharedData.scoreType)
         {
+        default: break;
+        case ScoreType::Match:
+        case ScoreType::Skins:
             //eliminate anyone who can't beat this score
             for (auto i = 1u; i < m_playerInfo.size(); ++i)
             {
@@ -71,13 +79,17 @@ void GolfState::handleDefaultRules(const GolfBallEvent& data)
                     }
                 }
             }
+            break;
         }
     }
     else if (data.type == GolfBallEvent::Gimme)
     {
         //if match/skins play check if our score is even with anyone holed already and forfeit
-        if (m_sharedData.scoreType != ScoreType::Stroke)
+        switch (m_sharedData.scoreType)
         {
+        default: break;
+        case ScoreType::Match:
+        case ScoreType::Skins:
             for (auto i = 1u; i < m_playerInfo.size(); ++i)
             {
                 if (m_playerInfo[i].distanceToHole == 0
@@ -86,6 +98,7 @@ void GolfState::handleDefaultRules(const GolfBallEvent& data)
                     m_playerInfo[0].distanceToHole = 0;
                 }
             }
+            break;
         }
     }
 }

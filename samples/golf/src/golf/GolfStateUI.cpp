@@ -2302,11 +2302,13 @@ void GolfState::updateScoreboard(bool updateParDiff)
     std::sort(m_statBoardScores.begin(), m_statBoardScores.end(),
         [&](const StatBoardEntry& a, const StatBoardEntry& b)
         {
-            if (m_sharedData.scoreType == ScoreType::Stroke)
+            switch (m_sharedData.scoreType)
             {
+            default:
+                return b.score < a.score;
+            case ScoreType::Stroke:
                 return a.score < b.score;
             }
-            return b.score < a.score;
         });
     //LOG("Table Update", cro::Logger::Type::Info);
 
