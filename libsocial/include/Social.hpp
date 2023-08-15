@@ -210,4 +210,6 @@ public:
 
     static MonthlyChallenge& getMonthlyChallenge();
     static std::int32_t getMonth();
+
+    static void showWebPage(const std::string&) {}
 };

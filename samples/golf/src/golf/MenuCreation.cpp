@@ -1307,6 +1307,7 @@ void MenuState::createBrowserMenu(cro::Entity parent, std::uint32_t mouseEnter, 
     m_lobbyPager.rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     m_lobbyPager.buttonLeft[1] = entity;
 
+    auto* uiSystem = m_uiScene.getSystem<cro::UISystem>();
 
     //friends overlay
     entity = m_uiScene.createEntity();
@@ -1325,7 +1326,7 @@ void MenuState::createBrowserMenu(cro::Entity parent, std::uint32_t mouseEnter, 
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = arrowSelected;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = arrowUnselected;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
-        m_uiScene.getSystem<cro::UISystem>()->addCallback([&, menuEntity](cro::Entity, const cro::ButtonEvent& evt) mutable
+        uiSystem->addCallback([&, menuEntity](cro::Entity, const cro::ButtonEvent& evt) mutable
             {
                 if (activated(evt))
                 {
@@ -1335,6 +1336,42 @@ void MenuState::createBrowserMenu(cro::Entity parent, std::uint32_t mouseEnter, 
             });
     entity.addComponent<cro::Callback>().function = HighlightAnimationCallback();
     m_lobbyPager.rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+    const auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
+
+    //opens to steam group
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 300.f, 15.f, 0.1f });
+    entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(smallFont).setString("Meet New Players");
+    entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    bounds = cro::Text::getLocalBounds(entity);
+    entity.addComponent<cro::UIInput>().area = bounds;
+    entity.getComponent<cro::UIInput>().setGroup(MenuID::Join);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] =
+        uiSystem->addCallback([](cro::Entity e) 
+            {
+                e.getComponent<cro::Text>().setFillColour(TextGoldColour);
+                e.getComponent<cro::AudioEmitter>().play();
+            });
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] =
+        uiSystem->addCallback([](cro::Entity e) 
+            {
+                e.getComponent<cro::Text>().setFillColour(TextNormalColour);
+            });
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
+        uiSystem->addCallback([](cro::Entity e, const cro::ButtonEvent& evt)
+            {
+                if (activated(evt))
+                {
+                    Social::showWebPage("https://steamcommunity.com/groups/supervideoclubhouse");
+                }
+            });
+    m_lobbyPager.rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
 
     //button right
     entity = m_uiScene.createEntity();
