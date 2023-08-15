@@ -211,7 +211,7 @@ bool BallSystem::setHoleData(HoleData& holeData, bool rebuildMesh)
     auto result = rebuildMesh ? updateCollisionMesh(holeData.modelPath) : true;
     holeData.pin.y = getTerrain(holeData.pin).intersection.y;
 
-    m_gimmeRadius = m_puttFromTee ? 0 : m_activeGimme;
+    //m_gimmeRadius = m_puttFromTee ? 0 : m_activeGimme;
 
     for (auto entity : getEntities())
     {
@@ -709,7 +709,8 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
 
                     ball.terrain = TerrainID::Hole;
                 }
-                else if (len2 < GimmeRadii[m_gimmeRadius])
+                else if (len2 < GimmeRadii[m_gimmeRadius]
+                    && ball.terrain == TerrainID::Green) //this might be OOB on a putting course
                 {
                     auto* msg2 = postEvent();
                     msg2->type = GolfBallEvent::Gimme;

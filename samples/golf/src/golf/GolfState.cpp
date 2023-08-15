@@ -337,7 +337,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
             humanCount++;
         }
     }
-    m_allowAchievements = humanCount == 1;
+    m_allowAchievements = (humanCount == 1) && (getCourseIndex(sd.mapDirectory) != -1);
 
     //This is set when setting active player.
     Achievements::setActive(m_allowAchievements);
