@@ -2182,6 +2182,7 @@ void GolfState::updateScoreboard(bool updateParDiff)
     {
         cro::String name;
         std::vector<std::int32_t> holes;
+        std::vector<bool> holeComplete;
         std::int32_t frontNine = 0;
         std::int32_t backNine = 0;
         std::int32_t total = 0;
@@ -2213,6 +2214,7 @@ void GolfState::updateScoreboard(bool updateParDiff)
             {
                 auto s = client.playerData[i].holeScores[j];
                 entry.holes.push_back(s);
+                entry.holeComplete.push_back(client.playerData[i].holeComplete[j]);
 
                 std::int32_t stableScore = 0;
 
@@ -2239,8 +2241,15 @@ void GolfState::updateScoreboard(bool updateParDiff)
                     default: break;
                     case ScoreType::Stableford:
                         stableScore = std::max(0, stableScore);
-                        [[fallthrough]];
+                        entry.frontNine += stableScore;
+                        entry.holes.back() = stableScore;
+                        break;
                     case ScoreType::StablefordPro:
+                        //TODO only do this is the player has holed out
+                        if (stableScore < 2)
+                        {
+                            stableScore -= 2;
+                        }
                         entry.frontNine += stableScore;
                         entry.holes.back() = stableScore;
                         break;
@@ -2264,8 +2273,14 @@ void GolfState::updateScoreboard(bool updateParDiff)
                     default: break;
                     case ScoreType::Stableford:
                         stableScore = std::max(0, stableScore);
-                        [[fallthrough]];
+                        entry.backNine += stableScore;
+                        entry.holes.back() = stableScore;
+                        break;
                     case ScoreType::StablefordPro:
+                        if (stableScore < 2)
+                        {
+                            stableScore -= 2;
+                        }
                         entry.backNine += stableScore;
                         entry.holes.back() = stableScore;
                         break;
@@ -2302,9 +2317,7 @@ void GolfState::updateScoreboard(bool updateParDiff)
                 [[fallthrough]];
             case ScoreType::Stableford:
             case ScoreType::StablefordPro:
-
                 entry.total = entry.frontNine + entry.backNine;
-
                 break;
             case ScoreType::Skins:
                 entry.total = client.playerData[i].skinScore;
@@ -2411,10 +2424,14 @@ void GolfState::updateScoreboard(bool updateParDiff)
             scoreString += "\n";
             redScoreString += "\n";
 
-            auto s = scores[j].holes[i - 1];
+            auto holeIndex = i - 1;
+            auto s = scores[j].holes[holeIndex];
+            switch (m_sharedData.scoreType)
+            {
+            default:
             if (s)
             {
-                if (s > m_holeData[i - 1].par)
+                if (s > m_holeData[holeIndex].par)
                 {
                     //add to red column
                     redScoreString += std::to_string(s);
@@ -2423,6 +2440,22 @@ void GolfState::updateScoreboard(bool updateParDiff)
                 {
                     scoreString += std::to_string(s);
                 }
+            }            
+            break;
+            case ScoreType::Stableford:
+            case ScoreType::StablefordPro:
+                if (scores[j].holeComplete[holeIndex])
+                {
+                    if (s > 0)
+                    {
+                        scoreString += std::to_string(s);
+                    }
+                    else
+                    {
+                        redScoreString += std::to_string(s);
+                    }
+                }
+                break;
             }
         }
 
@@ -2444,17 +2477,38 @@ void GolfState::updateScoreboard(bool updateParDiff)
                     scoreString += "\n";
                     redScoreString += "\n";
                     auto s = scores[j].holes[holeIndex];
-                    if (s)
+
+                    switch (m_sharedData.scoreType)
                     {
-                        if (s > m_holeData[holeIndex].par)
+
+                    default:
+                        if (s)
                         {
-                            //add to red column
-                            redScoreString += std::to_string(s);
+                            if (s > m_holeData[holeIndex].par)
+                            {
+                                //add to red column
+                                redScoreString += std::to_string(s);
+                            }
+                            else
+                            {
+                                scoreString += std::to_string(s);
+                            }
                         }
-                        else
+                        break;
+                    case ScoreType::Stableford:
+                    case ScoreType::StablefordPro:
+                        if (scores[j].holeComplete[holeIndex])
                         {
-                            scoreString += std::to_string(s);
+                            if (s > 0)
+                            {
+                                scoreString += std::to_string(s);
+                            }
+                            else
+                            {
+                                redScoreString += std::to_string(s);
+                            }
                         }
+                        break;
                     }
                 }
             }

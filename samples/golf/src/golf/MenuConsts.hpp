@@ -97,7 +97,7 @@ static const std::array<std::string, ScoreType::Count> RuleDescriptions =
     "As stroke play, but the tee is\nmoved closer to the pin and\neach hole's par is reduced\nby one. Achievements are disabled.",
     "Each player has one stroke to\nget as near to the pin as possible.",
     "Each player has one stroke to\nmake the longest drive possible\nwhile staying on the\nfairway.",
-    "Stroke play, but each player\nmust hit the mid-point target\nbefore reaching the green.\nMissing the target foreits the hole.",
+    "Stroke play, but each player\nmust hit the mid-point target\nbefore reaching the green.\nMissing the target forfeits the hole.",
 
     */
 };

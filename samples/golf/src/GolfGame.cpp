@@ -73,6 +73,7 @@ source distribution.
 
 #ifdef USE_GNS
 #include <AchievementsImpl.hpp>
+#include <Social.hpp>
 #endif
 #ifdef USE_WORKSHOP
 #include <WorkshopState.hpp>

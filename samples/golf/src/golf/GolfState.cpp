@@ -3530,6 +3530,10 @@ void GolfState::loadAssets()
             player.holeScores.clear();
             player.holeScores.resize(holeStrings.size());
             std::fill(player.holeScores.begin(), player.holeScores.end(), 0);
+
+            player.holeComplete.clear();
+            player.holeComplete.resize(holeStrings.size());
+            std::fill(player.holeComplete.begin(), player.holeComplete.end(), false);
         }
     }
 
@@ -3542,7 +3546,6 @@ void GolfState::loadAssets()
     }
 
     initAudio(theme.treesets.size() > 2);
-
 
     //md.loadFromFile("assets/golf/models/sphere.cmt");
     //auto entity = m_gameScene.createEntity();
@@ -5513,6 +5516,7 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
             break;
         case PacketID::MaxStrokes:
             showNotification("Stroke Limit Reached.");
+            m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].holeComplete[m_currentHole] = true;
             {
                 auto* msg = postMessage<Social::SocialEvent>(Social::MessageID::SocialMessage);
                 msg->type = Social::SocialEvent::PlayerAchievement;
@@ -5685,6 +5689,7 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
                     }
                 }
                 showMessageBoard(MessageBoardID::HoleScore, special);
+                m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].holeComplete[m_currentHole] = true;
 
                 break;
             }

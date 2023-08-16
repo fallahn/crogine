@@ -2618,6 +2618,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     };
 
     std::vector<ScoreInfo> scoreInfo;
+    const auto& courseData = m_courseData[m_sharedData.courseIndex];
     cro::String str = "Welcome To Super Video Golf!";
 
     //only tally scores if we returned from a previous game
@@ -2637,9 +2638,25 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
                     switch (m_sharedData.scoreType)
                     {
                     default:
-                    case ScoreType::Stroke:
                     case ScoreType::Stableford:
                     case ScoreType::StablefordPro:
+                        for (auto k = 0; k < m_sharedData.connectionData[i].playerData[j].holeScores.size(); ++k)
+                        {
+                            auto diff = static_cast<std::int32_t>(m_sharedData.connectionData[i].playerData[j].holeScores[k]) - courseData.parVals[k];
+                            auto stableScore = 2 - diff;
+
+                            if (m_sharedData.scoreType == ScoreType::Stableford)
+                            {
+                                stableScore = std::max(0, stableScore);
+                            }
+                            else if (stableScore < 2)
+                            {
+                                stableScore -= 2;
+                            }
+                            info.score += stableScore;
+                        }
+                        break;
+                    case ScoreType::Stroke:
                     case ScoreType::ShortRound:
                         info.score = m_sharedData.connectionData[i].playerData[j].parScore;
                         break;
@@ -2660,10 +2677,10 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
                 switch (m_sharedData.scoreType)
                 {
                 default:
-                    return a.score > b.score;
-                case ScoreType::Stroke:
                 case ScoreType::Stableford:
                 case ScoreType::StablefordPro:
+                    return a.score > b.score;
+                case ScoreType::Stroke:
                 case ScoreType::ShortRound:
                     return a.score < b.score;
                 }
@@ -2691,7 +2708,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
                 break;
             case ScoreType::Stableford:
             case ScoreType::StablefordPro:
-                names.back() += " FIXME3";
+                names.back() += " Points";
                 break;
             case ScoreType::Skins:
                 names.back() += " Skins";
@@ -3890,6 +3907,10 @@ void MenuState::createPreviousScoreCard()
                         if (m_sharedData.scoreType == ScoreType::Stableford)
                         {
                             stableScore = std::max(0, stableScore);
+                        }
+                        else if (stableScore < 2)
+                        {
+                            stableScore -= 2;
                         }
 
                         entry.total += stableScore;
