@@ -176,6 +176,10 @@ void GolfState::handleMessage(const cro::Message& msg)
                 m_playerInfo[0].position = m_holeData[m_currentHole].pin;
                 m_playerInfo[0].distanceToHole = 0.f;
 
+                if (m_sharedData.scoreType == ScoreType::Stableford)
+                {
+                    m_playerInfo[0].holeScore[m_currentHole]++;
+                }
                 m_sharedData.host.broadcastPacket(PacketID::MaxStrokes, std::uint8_t(0), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
             }
             else
