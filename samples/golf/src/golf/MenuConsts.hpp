@@ -89,10 +89,10 @@ static const std::array<std::string, 3u> CourseTypes =
 static const std::array<std::string, ScoreType::Count> RuleDescriptions =
 {
     "The player with the fewest total strokes wins.",
-    "As stroke play, however par is scored at 2 points,\nwith one extra point awarded for every\nstroke under par.\nThe player with the most points wins.",
-    "Stableford rules, however one point for every\nstroke over par is deducted.\nThe player with the most points wins.",
-    "Holes are scored individually and one point is\nawarded for each hole won.\nThe player with the most points wins.",
-    "Holes are scored individually.\nThe winner of the hole gets the skins pot,\nelse the pot rolls over to the next hole.",
+    "As stroke play, however par is scored at 2 points,\nwith one extra point awarded for every stroke\nunder par. Max strokes are reached when there\nare no more points available.\nThe player with the most points wins.",
+    "Stableford rules, however one point for every\nstroke over par is deducted instead of reaching\nthe stroke limit.\nThe player with the most points wins.",
+    "Holes are scored individually by fewest strokes\n and one point is awarded for each hole won.\nThe player with the most points wins.",
+    "Holes are scored individually by fewest strokes.\nThe winner of the hole gets the skins pot,\nelse the pot rolls over to the next hole.",
     /*
     "As stroke play, but the tee is\nmoved closer to the pin and\neach hole's par is reduced\nby one. Achievements are disabled.",
     "Each player has one stroke to\nget as near to the pin as possible.",

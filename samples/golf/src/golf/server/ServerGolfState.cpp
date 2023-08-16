@@ -167,7 +167,9 @@ void GolfState::handleMessage(const cro::Message& msg)
         if (data.type == GolfBallEvent::TurnEnded)
         {
             //check if we reached max strokes
-            auto maxStrokes = m_scene.getSystem<BallSystem>()->getPuttFromTee() ? MaxStrokes / 2 : MaxStrokes;
+            auto maxStrokes = m_sharedData.scoreType == ScoreType::Stableford ? m_holeData[m_currentHole].par + 1 :
+                m_scene.getSystem<BallSystem>()->getPuttFromTee() ? MaxStrokes / 2 : MaxStrokes;
+
             if (m_playerInfo[0].holeScore[m_currentHole] >= maxStrokes)
             {
                 //set the player as having holed the ball
