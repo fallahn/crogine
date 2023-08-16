@@ -4275,6 +4275,8 @@ void MenuState::createPreviousScoreCard()
                             bounds.bottom += bounds.height;
                             e.getComponent<cro::Drawable2D>().setCroppingArea(bounds);
                         }
+
+                        m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
                     }
                 });
         m_lobbyWindowEntities[LobbyEntityID::Scorecard].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -4305,6 +4307,8 @@ void MenuState::createPreviousScoreCard()
                             bounds.bottom -= bounds.height;
                             e.getComponent<cro::Drawable2D>().setCroppingArea(bounds);
                         }
+
+                        m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
                     }
                 });
         m_lobbyWindowEntities[LobbyEntityID::Scorecard].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());

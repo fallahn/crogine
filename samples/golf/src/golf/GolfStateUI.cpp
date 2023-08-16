@@ -3037,7 +3037,7 @@ void GolfState::showMessageBoard(MessageBoardID messageType, bool special)
                     m_achievementTracker.eagles++;
 
                     if (m_sharedData.holeCount == 2
-                        || (m_sharedData.holeCount == 0 && m_currentHole > 8))
+                        || m_currentHole > 8)
                     {
                         if (m_courseIndex != -1)
                         {
