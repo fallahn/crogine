@@ -775,7 +775,7 @@ void CPUGolfer::calcDistance(float dt, glm::vec3 windVector)
         {
             //we want to aim a bit further if we went
             //off the fairway, so we hit a bit harder.
-            const auto& Stat = CPUStats[m_cpuProfileIndices[m_activePlayer.client * ConstVal::MaxPlayers * m_activePlayer.player]];
+            const auto& Stat = CPUStats[m_cpuProfileIndices[m_activePlayer.client * ConstVal::MaxPlayers + m_activePlayer.player]];
 
             //but not too much if we're near the hole
             float multiplier = absDistance / Clubs[ClubID::PitchWedge].getTargetAtLevel(Stat[CPUStat::Skill]);
@@ -913,7 +913,7 @@ void CPUGolfer::pickClubDynamic(float dt)
 
         //find the first club whose target exceeds this distance
         //else use the most powerful club available
-        const auto& Stat = CPUStats[m_cpuProfileIndices[m_activePlayer.client * ConstVal::MaxPlayers * m_activePlayer.player]];
+        const auto& Stat = CPUStats[m_cpuProfileIndices[m_activePlayer.client * ConstVal::MaxPlayers + m_activePlayer.player]];
 
         auto club = m_inputParser.getClub();
         float clubDistance = Clubs[club].getTargetAtLevel(Stat[CPUStat::Skill]);
@@ -1080,7 +1080,7 @@ void CPUGolfer::aim(float dt, glm::vec3 windVector)
             sendKeystroke(m_inputParser.getInputBinding().keys[InputBinding::Left], false);
         }
 
-        const auto& Stat = CPUStats[m_cpuProfileIndices[m_activePlayer.client * ConstVal::MaxPlayers * m_activePlayer.player]];
+        const auto& Stat = CPUStats[m_cpuProfileIndices[m_activePlayer.client * ConstVal::MaxPlayers + m_activePlayer.player]];
 
         //if angle correct then calc a target power
         if (std::abs(m_inputParser.getYaw() - targetAngle) < 0.01f
@@ -1295,7 +1295,7 @@ void CPUGolfer::updatePrediction(float dt)
                 if (float resultPrecision = glm::length2(predictDir - targetDir);
                     resultPrecision > precSqr && m_targetPower < 1.f)
                 {
-                    const auto& Stat = CPUStats[m_cpuProfileIndices[m_activePlayer.client * ConstVal::MaxPlayers * m_activePlayer.player]];
+                    const auto& Stat = CPUStats[m_cpuProfileIndices[m_activePlayer.client * ConstVal::MaxPlayers + m_activePlayer.player]];
 
                     float precDiff = std::sqrt(resultPrecision);
                     float change = (precDiff / Clubs[m_clubID].getTargetAtLevel(Stat[CPUStat::Skill])) / 2.f;
