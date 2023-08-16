@@ -2640,7 +2640,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
                     default:
                     case ScoreType::Stableford:
                     case ScoreType::StablefordPro:
-                        for (auto k = 0; k < m_sharedData.connectionData[i].playerData[j].holeScores.size(); ++k)
+                        for (auto k = 0u; k < m_sharedData.connectionData[i].playerData[j].holeScores.size(); ++k)
                         {
                             auto diff = static_cast<std::int32_t>(m_sharedData.connectionData[i].playerData[j].holeScores[k]) - courseData.parVals[k];
                             auto stableScore = 2 - diff;

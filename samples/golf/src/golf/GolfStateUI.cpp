@@ -2245,8 +2245,8 @@ void GolfState::updateScoreboard(bool updateParDiff)
                         entry.holes.back() = stableScore;
                         break;
                     case ScoreType::StablefordPro:
-                        //TODO only do this is the player has holed out
-                        if (stableScore < 2)
+                        if (stableScore < 2
+                            && entry.holeComplete.back())
                         {
                             stableScore -= 2;
                         }
@@ -2277,7 +2277,8 @@ void GolfState::updateScoreboard(bool updateParDiff)
                         entry.holes.back() = stableScore;
                         break;
                     case ScoreType::StablefordPro:
-                        if (stableScore < 2)
+                        if (stableScore < 2
+                            && entry.holeComplete.back())
                         {
                             stableScore -= 2;
                         }
