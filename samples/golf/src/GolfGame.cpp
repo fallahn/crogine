@@ -405,14 +405,14 @@ bool GolfGame::initialise()
         return false;
     }
 
-#ifdef USE_WORKSHOP
-    registerCommand("workshop",
-        [&](const std::string&)
-        {
-            m_stateStack.clearStates();
-            m_stateStack.pushState(StateID::Workshop);
-        });
-#endif
+//#ifdef USE_WORKSHOP
+//    registerCommand("workshop",
+//        [&](const std::string&)
+//        {
+//            m_stateStack.clearStates();
+//            m_stateStack.pushState(StateID::Workshop);
+//        });
+//#endif
 
 #ifdef CRO_DEBUG_
 #ifndef USE_GNS
