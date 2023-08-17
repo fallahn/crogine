@@ -1597,7 +1597,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
 
     //and score description
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>();// .setOrigin({ 74.f, 0.f });
+    entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<UIElement>().absolutePosition = { 364.f, 194.f };
     entity.getComponent<UIElement>().depth = 0.1f;
@@ -1623,14 +1623,14 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>();// .setOrigin({ 74.f, 0.f });
+    entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<UIElement>().absolutePosition = { 364.f, 100.f };
     entity.getComponent<UIElement>().depth = 0.1f;
     entity.addComponent<cro::Text>(smallFont).setCharacterSize(InfoTextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
-    entity.getComponent<cro::Text>().setString("The ball is considered holed\nwhen it's within this radius");
+    entity.getComponent<cro::Text>().setString("For faster game play the ball is considered holed\nwhen it's within this radius");
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement;
     bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 

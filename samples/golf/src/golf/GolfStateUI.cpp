@@ -118,18 +118,19 @@ namespace
     static constexpr float ColumnWidth = 20.f;
     static constexpr float ColumnHeight = 276.f;
     static constexpr float ColumnMargin = 6.f;
+    static constexpr float RightAdj = 14.f;
     static constexpr std::array ColumnPositions =
     {
         glm::vec2(8.f, ColumnHeight),
-        glm::vec2((ColumnWidth * 6.f) + ColumnMargin, ColumnHeight),
-        glm::vec2((ColumnWidth * 7.f) + ColumnMargin, ColumnHeight),
-        glm::vec2((ColumnWidth * 8.f) + ColumnMargin, ColumnHeight),
-        glm::vec2((ColumnWidth * 9.f) + ColumnMargin, ColumnHeight),
-        glm::vec2((ColumnWidth * 10.f) + ColumnMargin, ColumnHeight),
-        glm::vec2((ColumnWidth * 11.f) + ColumnMargin, ColumnHeight),
-        glm::vec2((ColumnWidth * 12.f) + ColumnMargin, ColumnHeight),
-        glm::vec2((ColumnWidth * 13.f) + ColumnMargin, ColumnHeight),
-        glm::vec2((ColumnWidth * 14.f) + ColumnMargin, ColumnHeight),
+        glm::vec2((ColumnWidth * 6.f) + ColumnMargin + RightAdj, ColumnHeight),
+        glm::vec2((ColumnWidth * 7.f) + ColumnMargin + RightAdj, ColumnHeight),
+        glm::vec2((ColumnWidth * 8.f) + ColumnMargin + RightAdj, ColumnHeight),
+        glm::vec2((ColumnWidth * 9.f) + ColumnMargin + RightAdj, ColumnHeight),
+        glm::vec2((ColumnWidth * 10.f) + ColumnMargin + RightAdj, ColumnHeight),
+        glm::vec2((ColumnWidth * 11.f) + ColumnMargin + RightAdj, ColumnHeight),
+        glm::vec2((ColumnWidth * 12.f) + ColumnMargin + RightAdj, ColumnHeight),
+        glm::vec2((ColumnWidth * 13.f) + ColumnMargin + RightAdj, ColumnHeight),
+        glm::vec2((ColumnWidth * 14.f) + ColumnMargin + RightAdj, ColumnHeight),
         glm::vec2((ColumnWidth * 15.f) + ColumnMargin, ColumnHeight),
     };
 
@@ -2032,6 +2033,7 @@ void GolfState::createScoreboard()
         {
             auto crop = cro::Text::getLocalBounds(ent);
             crop.width = std::min(crop.width, MinLobbyCropWidth + 16.f + scoreboardExpansion);
+            crop.width += RightAdj;
             crop.height = bgCrop.height;
             crop.height += 1.f;
             crop.bottom = -(bgCrop.height - 1.f) - pos.y;
@@ -2097,6 +2099,12 @@ void GolfState::createScoreboard()
             f.getComponent<cro::Text>().setFillColour(TextHighlightColour);
             e.getComponent<cro::Transform>().addChild(f.getComponent<cro::Transform>());
             e.addComponent<cro::Entity>() = f;
+
+            if (e != ents.back())
+            {
+                e.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Right);
+                f.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Right);
+            }
         }
 
         scrollEnt.getComponent<cro::Transform>().addChild(e.getComponent<cro::Transform>());
