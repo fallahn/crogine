@@ -4174,6 +4174,8 @@ void MenuState::createPreviousScoreCard()
         colStart += colWidth;
     }
 
+    colStart -= 14.f; //magic number because final column isn't right-aligned
+
     //total column
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ colStart, 0.f });
