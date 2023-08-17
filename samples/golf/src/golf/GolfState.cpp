@@ -5578,6 +5578,7 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
                 //inflate this so that the message board is correct - the update will come
                 //in to assert this is correct afterwards
                 m_sharedData.connectionData[client].playerData[player].holeScores[m_currentHole]++;
+                m_sharedData.connectionData[client].playerData[player].holeComplete[m_currentHole] = true;
                 showMessageBoard(MessageBoardID::Gimme);
 
                 if (client == m_sharedData.localConnectionData.connectionID)

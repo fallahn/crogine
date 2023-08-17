@@ -2041,6 +2041,7 @@ void GolfState::createScoreboard()
             if (ent.hasComponent<cro::Entity>())
             {
                 crop.width += 10.f;
+                crop.left -= RightAdj;
                 ent.getComponent<cro::Entity>().getComponent<cro::Drawable2D>().setCroppingArea(crop); //red text
             }
         }

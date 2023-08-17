@@ -4035,7 +4035,7 @@ void MenuState::createPreviousScoreCard()
         break;
     }
 
-    float colStart = 196.f;
+    float colStart = 210.f;
     const float colWidth = 20.f;
     for (auto i = 0; i < std::min(9, holeCount); ++i)
     {
@@ -4045,6 +4045,7 @@ void MenuState::createPreviousScoreCard()
         entity.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
         entity.getComponent<cro::Text>().setVerticalSpacing(LeaderboardTextSpacing);
         entity.getComponent<cro::Text>().setFillColour(LeaderboardTextDark);
+        entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Right);
         rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
         textEntities.push_back(entity);
 
@@ -4054,6 +4055,7 @@ void MenuState::createPreviousScoreCard()
         redEnt.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
         redEnt.getComponent<cro::Text>().setVerticalSpacing(LeaderboardTextSpacing);
         redEnt.getComponent<cro::Text>().setFillColour(TextHighlightColour);
+        redEnt.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Right);
         rootNode.getComponent<cro::Transform>().addChild(redEnt.getComponent<cro::Transform>());
         textEntities.push_back(redEnt);
 
