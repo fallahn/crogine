@@ -3854,8 +3854,9 @@ void MenuState::createPreviousScoreCard()
 
     struct Entry final
     {
-        std::uint32_t client = 0; //use this to index directly into score/name data, save making a copy
+        std::uint32_t client = 0; //use this to index directly into name data, save making a copy
         std::uint32_t player = 0;
+        std::array<std::int32_t, 18> holeScores = {};
         std::int32_t total = 0;
         std::int32_t totalFront = 0;
         std::int32_t totalBack = 0;
@@ -3913,6 +3914,7 @@ void MenuState::createPreviousScoreCard()
                             stableScore -= 2;
                         }
 
+                        entry.holeScores[k] = stableScore;
                         entry.total += stableScore;
                         if (k < 9)
                         {
@@ -3925,6 +3927,7 @@ void MenuState::createPreviousScoreCard()
                     }
                     else
                     {
+                        entry.holeScores[k] = score;
                         entry.total += score;
                         if (k < 9)
                         {
@@ -4064,16 +4067,35 @@ void MenuState::createPreviousScoreCard()
 
         for (const auto& entry : scoreEntries)
         {
-            auto score = m_sharedData.connectionData[entry.client].playerData[entry.player].holeScores[i];
-            if (score > courseData.parVals[parOffset + i])
+            auto score = entry.holeScores[i];
+
+            switch (m_sharedData.scoreType)
             {
-                str += "\n";
-                redStr += "\n" + std::to_string(score);
-            }
-            else
-            {
-                str += "\n" + std::to_string(score);
-                redStr += "\n";
+            default:
+                if (score > courseData.parVals[parOffset + i])
+                {
+                    str += "\n";
+                    redStr += "\n" + std::to_string(score);
+                }
+                else
+                {
+                    str += "\n" + std::to_string(score);
+                    redStr += "\n";
+                }
+                break;
+            case ScoreType::Stableford:
+            case ScoreType::StablefordPro:
+                if (score > 0)
+                {
+                    str += "\n" + std::to_string(score);
+                    redStr += "\n";
+                }
+                else
+                {
+                    str += "\n";
+                    redStr += "\n" + std::to_string(score);
+                }
+                break;
             }
         }
 
@@ -4095,17 +4117,35 @@ void MenuState::createPreviousScoreCard()
                 redStr += "\n\n\n";
                 for (const auto& entry : scoreEntries)
                 {
-                    auto score = m_sharedData.connectionData[entry.client].playerData[entry.player].holeScores[i + 9];
+                    auto score = entry.holeScores[i + 9];
 
-                    if (score > courseData.parVals[parOffset + i + 9])
+                    switch (m_sharedData.scoreType)
                     {
-                        str += "\n";
-                        redStr += "\n" + std::to_string(score);
-                    }
-                    else
-                    {
-                        str += "\n" + std::to_string(score);
-                        redStr += "\n";
+                    default:
+                        if (score > courseData.parVals[parOffset + i + 9])
+                        {
+                            str += "\n";
+                            redStr += "\n" + std::to_string(score);
+                        }
+                        else
+                        {
+                            str += "\n" + std::to_string(score);
+                            redStr += "\n";
+                        }
+                        break;
+                    case ScoreType::Stableford:
+                    case ScoreType::StablefordPro:
+                        if (score > 0)
+                        {
+                            str += "\n" + std::to_string(score);
+                            redStr += "\n";
+                        }
+                        else
+                        {
+                            str += "\n";
+                            redStr += "\n" + std::to_string(score);
+                        }
+                        break;
                     }
                 }
             }
