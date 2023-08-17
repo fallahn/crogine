@@ -58,6 +58,7 @@ struct PlayerStatus final : public ActivePlayer
     cro::Entity ballEntity;
     float distanceToHole = 0.f; //used for sorting
     std::vector<std::uint8_t> holeScore;
+    std::vector<float> distanceScore;
     std::uint8_t totalScore = 0;
     std::uint8_t skins = 0;
     std::uint8_t matchWins = 0;
@@ -86,6 +87,7 @@ static inline bool operator == (const ActorInfo& actor, const ActivePlayer& play
 struct ScoreUpdate final
 {
     float strokeDistance = 0.f;
+    float distanceScore = 0.f;
     std::uint8_t client = 0;
     std::uint8_t player = 0;
     std::uint8_t stroke = 0;

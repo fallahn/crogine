@@ -65,6 +65,7 @@ struct PlayerData final
     //these aren't included in serialise/deserialise
     std::vector<std::uint8_t> holeScores;
     std::vector<bool> holeComplete;
+    std::vector<float> distanceScores;
     std::uint8_t score = 0;
     std::uint8_t matchScore = 0;
     std::uint8_t skinScore = 0;

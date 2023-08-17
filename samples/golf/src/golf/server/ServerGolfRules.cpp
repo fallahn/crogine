@@ -19,7 +19,7 @@ namespace
 
 using namespace sv;
 
-void GolfState::handleDefaultRules(const GolfBallEvent& data)
+void GolfState::handleRules(const GolfBallEvent& data)
 {
     if (data.type == GolfBallEvent::TurnEnded)
     {
@@ -33,6 +33,37 @@ void GolfState::handleDefaultRules(const GolfBallEvent& data)
             {
                 m_playerInfo[0].distanceToHole = 0;
                 m_playerInfo[0].holeScore[m_currentHole]++;
+            }
+            break;
+        case ScoreType::NearestThePin:
+            //we may be in the hole so make sure we dont sqrt(0)
+            if (data.terrain < TerrainID::Water
+                || data.terrain == TerrainID::Hole)
+            {
+                auto l2 = glm::length(data.position - m_holeData[m_currentHole].pin);
+                if (l2 != 0)
+                {
+                    m_playerInfo[0].distanceScore[m_currentHole] = std::sqrt(l2);
+                }
+            }
+            else
+            {
+                m_playerInfo[0].distanceScore[m_currentHole] = 666.f;
+            }
+            break;
+        case ScoreType::LongestDrive:
+            if (data.terrain == TerrainID::Fairway)
+            {
+                //rounding here saves on messing with string formatting
+                auto d = glm::length(data.position - m_holeData[m_currentHole].tee);
+                d = std::round(d * 10.f);
+                d /= 10.f;
+
+                m_playerInfo[0].distanceScore[m_currentHole] = d;
+            }
+            else
+            {
+                m_playerInfo[0].distanceScore[m_currentHole] = 0.f;
             }
             break;
         }

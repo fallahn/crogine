@@ -167,8 +167,24 @@ void GolfState::handleMessage(const cro::Message& msg)
         if (data.type == GolfBallEvent::TurnEnded)
         {
             //check if we reached max strokes
-            auto maxStrokes = m_sharedData.scoreType == ScoreType::Stableford ? m_holeData[m_currentHole].par + 1 :
-                m_scene.getSystem<BallSystem>()->getPuttFromTee() ? MaxStrokes / 2 : MaxStrokes;
+            auto maxStrokes = MaxStrokes;
+            switch (m_sharedData.scoreType)
+            {
+            default:
+                if (m_scene.getSystem<BallSystem>()->getPuttFromTee())
+                {
+                    maxStrokes /= 2;
+                }
+                break;
+            case ScoreType::Stableford:
+                maxStrokes = m_holeData[m_currentHole].par + 1;
+                break;
+            case ScoreType::NearestThePin:
+            case ScoreType::LongestDrive:
+                //each player only has one turn
+                maxStrokes = 1;
+                break;
+            }
 
             if (m_playerInfo[0].holeScore[m_currentHole] >= maxStrokes)
             {
@@ -189,13 +205,8 @@ void GolfState::handleMessage(const cro::Message& msg)
             }
             m_playerInfo[0].terrain = data.terrain;
 
-            switch (m_sharedData.scoreType)
-            {
-            default:
-                handleDefaultRules(data);
-                break;
-            }
-
+            handleRules(data);
+            
             setNextPlayer();
         }
         else if (data.type == GolfBallEvent::Holed)
@@ -206,12 +217,7 @@ void GolfState::handleMessage(const cro::Message& msg)
             m_playerInfo[0].distanceToHole = 0.f;
             m_playerInfo[0].terrain = data.terrain;
 
-            switch (m_sharedData.scoreType)
-            {
-            default:
-                handleDefaultRules(data);
-                break;
-            }            
+            handleRules(data);           
 
             if (m_playerInfo[0].holeScore[m_currentHole] < m_currentBest)
             {
@@ -259,12 +265,7 @@ void GolfState::handleMessage(const cro::Message& msg)
             std::uint16_t inf = (m_playerInfo[0].client << 8) | m_playerInfo[0].player;
             m_sharedData.host.broadcastPacket<std::uint16_t>(PacketID::Gimme, inf, net::NetFlag::Reliable);
 
-            switch (m_sharedData.scoreType)
-            {
-            default:
-                handleDefaultRules(data);
-                break;
-            }
+            handleRules(data);
         }
     }
     else if (msg.id == sv::MessageID::TriggerMessage)
@@ -708,6 +709,7 @@ void GolfState::setNextPlayer(bool newHole)
     su.player = m_playerInfo[0].player;
     su.score = m_playerInfo[0].totalScore;
     su.stroke = m_playerInfo[0].holeScore[m_currentHole];
+    su.distanceScore = m_playerInfo[0].distanceScore[m_currentHole];
     su.matchScore = m_playerInfo[0].matchWins;
     su.skinsScore = m_playerInfo[0].skins;
     su.hole = m_currentHole;
@@ -1145,7 +1147,9 @@ void GolfState::buildWorld()
         player.ballEntity.addComponent<Ball>().terrain = player.terrain;
 
         player.holeScore.resize(m_holeData.size());
+        player.distanceScore.resize(m_holeData.size());
         std::fill(player.holeScore.begin(), player.holeScore.end(), 0);
+        std::fill(player.distanceScore.begin(), player.distanceScore.end(), 0.f);
     }
 }
 

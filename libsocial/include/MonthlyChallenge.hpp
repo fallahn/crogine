@@ -135,7 +135,7 @@ private:
         Challenge(50, Challenge::Counter),
         Challenge(50, Challenge::Counter),
         Challenge(25, Challenge::Counter),
-        Challenge(0x7, Challenge::Flag), //TODO update this with new game modes
+        Challenge(0x1F, Challenge::Flag), //TODO update this with new game modes
         Challenge(0x3ff, Challenge::Flag), //(1 << 0) - (1 << 9)
         Challenge(10, Challenge::Counter),
         Challenge(0x1fff, Challenge::Flag), //(1 << 0) - (1 << 12)

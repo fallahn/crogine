@@ -3534,6 +3534,10 @@ void GolfState::loadAssets()
             player.holeComplete.clear();
             player.holeComplete.resize(holeStrings.size());
             std::fill(player.holeComplete.begin(), player.holeComplete.end(), false);
+
+            player.distanceScores.clear();
+            player.distanceScores.resize(holeStrings.size());
+            std::fill(player.distanceScores.begin(), player.distanceScores.end(), 0.f);
         }
     }
 
@@ -5515,9 +5519,12 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
             showEmote(evt.packet.as<std::uint32_t>());
             break;
         case PacketID::MaxStrokes:
-            showNotification("Stroke Limit Reached.");
             m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].holeComplete[m_currentHole] = true;
+            if (m_sharedData.scoreType != ScoreType::LongestDrive
+                && m_sharedData.scoreType != ScoreType::NearestThePin)
             {
+                showNotification("Stroke Limit Reached.");
+
                 auto* msg = postMessage<Social::SocialEvent>(Social::MessageID::SocialMessage);
                 msg->type = Social::SocialEvent::PlayerAchievement;
                 msg->level = 1; //sad sound
@@ -5834,6 +5841,7 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
                 player.matchScore = su.matchScore;
                 player.skinScore = su.skinsScore;
                 player.holeScores[su.hole] = su.stroke;
+                player.distanceScores[su.hole] = su.distanceScore;
 
                 if (su.client == m_sharedData.localConnectionData.connectionID)
                 {
