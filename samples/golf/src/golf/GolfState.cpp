@@ -5435,15 +5435,15 @@ void GolfState::spawnBullsEye(const BullsEye& b)
             [&, targetScale](cro::Entity e, float dt)
         {
             auto& [direction, progress] = e.getComponent<cro::Callback>().getUserData<BullsEyeData>();
-            if (direction == 0)
+            if (direction == AnimDirection::Grow)
             {
                 progress = std::min(1.f, progress + dt);
                 if (progress == 1)
                 {
-                    direction = 1;
+                    direction = AnimDirection::Hold;
                 }
             }
-            else if (direction == 1)
+            else if (direction == AnimDirection::Hold)
             {
                 //idle while rotating
             }
@@ -5453,11 +5453,16 @@ void GolfState::spawnBullsEye(const BullsEye& b)
                 if (progress == 0)
                 {
                     e.getComponent<cro::Callback>().active = false;
-                    m_gameScene.destroyEntity(e);
+                    
+                    //setting to 2 just hides
+                    if (direction == AnimDirection::Destroy)
+                    {
+                        m_gameScene.destroyEntity(e);
+                    }
                 }
             }
 
-            float scale = cro::Util::Easing::easeOutElastic(progress) * targetScale;
+            float scale = cro::Util::Easing::easeInElastic(progress) * targetScale;
             e.getComponent<cro::Transform>().setScale(glm::vec3(scale));
             e.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, dt * 0.2f);
         };
@@ -5469,7 +5474,7 @@ void GolfState::spawnBullsEye(const BullsEye& b)
         cmd.targetFlags = CommandID::BullsEye;
         cmd.action = [](cro::Entity e, float)
         {
-            e.getComponent<cro::Callback>().getUserData<BullsEyeData>().direction = 2;
+            e.getComponent<cro::Callback>().getUserData<BullsEyeData>().direction = AnimDirection::Destroy;
             e.getComponent<cro::Callback>().active = true;
         };
         m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
@@ -5918,30 +5923,68 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
 
 void GolfState::handleBullHit(const BullHit& bh)
 {
-    if (bh.client == m_sharedData.localConnectionData.connectionID
-        && !m_sharedData.localConnectionData.playerData[bh.player].isCPU)
+    if (bh.client == m_sharedData.localConnectionData.connectionID)
     {
-        if (!m_achievementTracker.bullseyeChallenge
-            && m_sharedData.scoreType != ScoreType::MultiTarget)
+        if (!m_sharedData.localConnectionData.playerData[bh.player].isCPU)
         {
-            Social::getMonthlyChallenge().updateChallenge(ChallengeID::Two, 0);
-        }
-        m_achievementTracker.bullseyeChallenge = true;
-    
-        if (!m_sharedData.connectionData[bh.client].playerData[bh.player].targetHit)
-        {
-            auto xp = static_cast<std::int32_t>(50.f * bh.accuracy);
-            if (xp)
+            if (!m_achievementTracker.bullseyeChallenge
+                && m_sharedData.scoreType != ScoreType::MultiTarget)
             {
-                Social::awardXP(xp, XPStringID::BullsEyeHit);
+                Social::getMonthlyChallenge().updateChallenge(ChallengeID::Two, 0);
+            }
+            m_achievementTracker.bullseyeChallenge = true;
+
+            if (!m_sharedData.connectionData[bh.client].playerData[bh.player].targetHit)
+            {
+                auto xp = static_cast<std::int32_t>(50.f * bh.accuracy);
+                if (xp)
+                {
+                    Social::awardXP(xp, XPStringID::BullsEyeHit);
+                }
+                else
+                {
+                    floatingMessage("Target Hit!");
+                }
+            }
+        }
+        else if (!m_sharedData.connectionData[bh.client].playerData[bh.player].targetHit)
+        {
+            if (m_sharedData.fastCPU)
+            {
+                //delay this as we probably arrived before the animation played
+                auto entity = m_gameScene.createEntity();
+                entity.addComponent<cro::Callback>().active = true;
+                entity.getComponent<cro::Callback>().setUserData<float>(4.f);
+                entity.getComponent<cro::Callback>().function =
+                    [&](cro::Entity e, float dt)
+                    {
+                        auto& t = e.getComponent<cro::Callback>().getUserData<float>();
+                        t -= dt;
+                        if (t < 0)
+                        {
+                            floatingMessage("Target Hit!");
+                            e.getComponent<cro::Callback>().active = false;
+                            m_gameScene.destroyEntity(e);
+                        }
+                    };
             }
             else
             {
-                floatingMessage("Target Hit");
+                floatingMessage("Target Hit!");
             }
-        }    
+        }
     }
     
+    //hide the target
+    cro::Command cmd;
+    cmd.targetFlags = CommandID::BullsEye;
+    cmd.action = [](cro::Entity e, float)
+        {
+            e.getComponent<cro::Callback>().getUserData<BullsEyeData>().direction = AnimDirection::Shrink;
+            e.getComponent<cro::Callback>().active = true;
+        };
+    m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
     m_sharedData.connectionData[bh.client].playerData[bh.player].targetHit = true;
 }
 
@@ -6784,13 +6827,20 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
 
 
     //set this separately because target might not necessarily be the pin.
-    //if (m_currentPlayer != player)
-    {
-        bool isMultiTarget = (m_sharedData.scoreType == ScoreType::MultiTarget
-            && !m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].targetHit);
-        auto clubTarget = isMultiTarget ? m_holeData[m_currentHole].target : m_holeData[m_currentHole].pin;
-        m_inputParser.setClub(glm::length(clubTarget - player.position));
-    }
+    bool isMultiTarget = (m_sharedData.scoreType == ScoreType::MultiTarget
+        && !m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].targetHit);
+    auto clubTarget = isMultiTarget ? m_holeData[m_currentHole].target : m_holeData[m_currentHole].pin;
+    m_inputParser.setClub(glm::length(clubTarget - player.position));
+
+
+    cmd.targetFlags = CommandID::BullsEye;
+    cmd.action = [isMultiTarget](cro::Entity e, float)
+        {
+            e.getComponent<cro::Callback>().getUserData<BullsEyeData>().direction = isMultiTarget ? AnimDirection::Grow : AnimDirection::Shrink;
+            e.getComponent<cro::Callback>().active = true;
+        };
+    m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
 
     //check if input is CPU
     if (localPlayer
@@ -6801,13 +6851,13 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
             /*&& !m_holeData[m_currentHole].puttFromTee*/)
         {
             //fallback is used when repeatedly launching the ball into the woods...
-            m_cpuGolfer.activate(m_holeData[m_currentHole].pin, m_holeData[m_currentHole].target, m_holeData[m_currentHole].puttFromTee);
+            m_cpuGolfer.activate(/*m_holeData[m_currentHole].pin*/clubTarget, m_holeData[m_currentHole].target, m_holeData[m_currentHole].puttFromTee);
         }
 
         else
         {
             //if the player can rotate enough prefer the hole as the target
-            auto pin = m_holeData[m_currentHole].pin - player.position;
+            auto pin = /*m_holeData[m_currentHole].pin*/clubTarget - player.position;
             auto targetPoint = target - player.position;
 
             auto p = glm::normalize(glm::vec2(pin.x, -pin.z));
@@ -6819,7 +6869,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
 
             if (targetAngle < m_inputParser.getMaxRotation()/*cro::Util::Const::PI / 2.f*/)
             {
-                m_cpuGolfer.activate(m_holeData[m_currentHole].pin, m_holeData[m_currentHole].target, m_holeData[m_currentHole].puttFromTee);
+                m_cpuGolfer.activate(/*m_holeData[m_currentHole].pin*/clubTarget, m_holeData[m_currentHole].target, m_holeData[m_currentHole].puttFromTee);
             }
             else
             {
