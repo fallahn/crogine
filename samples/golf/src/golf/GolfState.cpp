@@ -5530,16 +5530,7 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
             showEmote(evt.packet.as<std::uint32_t>());
             break;
         case PacketID::MaxStrokes:
-            m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].holeComplete[m_currentHole] = true;
-            if (m_sharedData.scoreType != ScoreType::LongestDrive
-                && m_sharedData.scoreType != ScoreType::NearestThePin)
-            {
-                showNotification("Stroke Limit Reached.");
-
-                auto* msg = postMessage<Social::SocialEvent>(Social::MessageID::SocialMessage);
-                msg->type = Social::SocialEvent::PlayerAchievement;
-                msg->level = 1; //sad sound
-            }
+            handleMaxStrokes(evt.packet.as<std::uint8_t>());
             break;
         case PacketID::PingTime:
         {
@@ -5939,6 +5930,35 @@ void GolfState::handleBullHit(const BullHit& bh)
     }
     
     m_sharedData.connectionData[bh.client].playerData[bh.player].targetHit = true;
+}
+
+void GolfState::handleMaxStrokes(std::uint8_t reason)
+{
+    m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].holeComplete[m_currentHole] = true;
+    switch (m_sharedData.scoreType)
+    {
+    default:
+        showNotification("Stroke Limit Reached.");
+        break;
+    case ScoreType::MultiTarget:
+        if (reason == MaxStrokeID::Forfeit)
+        {
+            showNotification("Hole Forfeit: No Target Hit.");
+        }
+        else
+        {
+            showNotification("Stroke Limit Reached.");
+        }
+        break;
+    case ScoreType::LongestDrive:
+    case ScoreType::NearestThePin:
+        //do nothing, this is integral behavior
+        return;
+    }
+
+    auto* msg = postMessage<Social::SocialEvent>(Social::MessageID::SocialMessage);
+    msg->type = Social::SocialEvent::PlayerAchievement;
+    msg->level = 1; //sad sound
 }
 
 void GolfState::removeClient(std::uint8_t clientID)

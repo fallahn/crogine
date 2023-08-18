@@ -254,6 +254,7 @@ private:
 
     void handleNetEvent(const net::NetEvent&);
     void handleBullHit(const BullHit&);
+    void handleMaxStrokes(std::uint8_t reason);
     void removeClient(std::uint8_t);
 
     void setCurrentHole(std::uint16_t); //(number << 8) | par

@@ -168,6 +168,7 @@ void GolfState::handleMessage(const cro::Message& msg)
         {
             //check if we reached max strokes
             auto maxStrokes = MaxStrokes;
+            std::uint8_t reason = MaxStrokeID::Default;
             switch (m_sharedData.scoreType)
             {
             default:
@@ -184,6 +185,16 @@ void GolfState::handleMessage(const cro::Message& msg)
                 //each player only has one turn
                 maxStrokes = 1;
                 break;
+            case ScoreType::MultiTarget:
+                if (!m_scene.getSystem<BallSystem>()->getPuttFromTee()
+                    && data.terrain == TerrainID::Green
+                    && !m_playerInfo[0].targetHit)
+                {
+                    //player forfeits because they didn't hit the target
+                    maxStrokes = m_playerInfo[0].holeScore[m_currentHole];
+                    reason = MaxStrokeID::Forfeit;
+                }
+                break;
             }
 
             if (m_playerInfo[0].holeScore[m_currentHole] >= maxStrokes)
@@ -192,11 +203,18 @@ void GolfState::handleMessage(const cro::Message& msg)
                 m_playerInfo[0].position = m_holeData[m_currentHole].pin;
                 m_playerInfo[0].distanceToHole = 0.f;
 
-                if (m_sharedData.scoreType == ScoreType::Stableford)
+                //and penalise based on game mode
+                switch (m_sharedData.scoreType)
                 {
+                default: break;
+                case ScoreType::Stableford:
                     m_playerInfo[0].holeScore[m_currentHole]++;
+                    break;
+                case ScoreType::MultiTarget:
+                    m_playerInfo[0].holeScore[m_currentHole] = m_scene.getSystem<BallSystem>()->getPuttFromTee() ? MaxStrokes / 2 : MaxStrokes;
+                    break;
                 }
-                m_sharedData.host.broadcastPacket(PacketID::MaxStrokes, std::uint8_t(0), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                m_sharedData.host.broadcastPacket(PacketID::MaxStrokes, reason, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
             }
             else
             {

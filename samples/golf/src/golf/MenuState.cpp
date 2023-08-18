@@ -382,6 +382,11 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
             }
         });
 
+    registerCommand("let_me_fetch_my_shovel", [](const std::string&)
+        {
+            bunnage();
+        });
+
 #ifdef USE_WORKSHOP
     registerCommand("workshop",
         [&](const std::string&)
