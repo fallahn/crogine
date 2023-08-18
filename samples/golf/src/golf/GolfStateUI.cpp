@@ -2969,23 +2969,17 @@ void GolfState::showMessageBoard(MessageBoardID messageType, bool special)
         //display type is correct.
         if (m_currentPlayer.client != m_sharedData.clientConnection.connectionID)
         {
-            if (m_sharedData.scoreType == ScoreType::MultiTarget)
-            {
-                if (!m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].targetHit)
-                {
-                    //this is a forfeit
-                    score = m_holeData[m_currentHole].puttFromTee ? 6 : 12;
-                }
-                else
-                {
-                    score++;
-                }
-            }
-            else
-            {
                 score++;
-            }
         }
+
+        //if this is forfeit we won't have received the score yet either
+        if (m_sharedData.scoreType == ScoreType::MultiTarget
+            && !m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].targetHit)
+        {
+            //this is a forfeit
+            score = m_holeData[m_currentHole].puttFromTee ? 6 : 12;
+        }
+
 
         //if this is a HIO we want to track birdie/eagle/albatross too
         std::int32_t statScore = 0;
@@ -3223,6 +3217,17 @@ void GolfState::showMessageBoard(MessageBoardID messageType, bool special)
                 && score != ScoreID::HIO)
             {
                 textEnt3.getComponent<cro::Text>().setString("Nice Putt!");
+                textEnt3.getComponent<cro::Text>().setFillColour(TextGoldColour);
+                textEnt3.getComponent<cro::Transform>().move({ 0.f, -10.f });
+
+                textEnt.getComponent<cro::Transform>().move({ 0.f, 2.f, 0.f });
+            }
+
+            //overwrite special text if this is a forfeit
+            if (m_sharedData.scoreType == ScoreType::MultiTarget
+                && !m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].targetHit)
+            {
+                textEnt3.getComponent<cro::Text>().setString("Target Not Hit");
                 textEnt3.getComponent<cro::Text>().setFillColour(TextGoldColour);
                 textEnt3.getComponent<cro::Transform>().move({ 0.f, -10.f });
 

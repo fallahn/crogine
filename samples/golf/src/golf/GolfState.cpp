@@ -5698,6 +5698,7 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
                         }
                     }
                 }
+
                 showMessageBoard(MessageBoardID::HoleScore, special);
                 m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].holeComplete[m_currentHole] = true;
 
