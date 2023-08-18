@@ -122,6 +122,6 @@ void GolfState::updateLeaderboardScore(bool& personalBest, cro::String& bestStri
     }
     else
     {
-        cro::Logger::log("LEADERBOARD failed to insert score: Score Type is not Stroke.", cro::Logger::Type::Error, cro::Logger::Output::File);
+        cro::Logger::log("LEADERBOARD did not insert score: Score Type is not Stroke.", cro::Logger::Type::Info, cro::Logger::Output::File);
     }
 }

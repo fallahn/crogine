@@ -69,9 +69,9 @@ static const std::array<std::string, ScoreType::Count> ScoreTypes =
     
     "Match Play", "Skins",
 
-    "Nearest the Pin",
-    /*
     "Multi-target"
+    /*
+    "Nearest the Pin",
     "Longest Drive",
     "Short Round",
     */
@@ -96,9 +96,9 @@ static const std::array<std::string, ScoreType::Count> RuleDescriptions =
     "Stableford rules, however one point for every\nstroke over par is deducted instead of reaching\nthe stroke limit.\nThe player with the most points wins.",
     "Holes are scored individually by fewest strokes\n and one point is awarded for each hole won.\nThe player with the most points wins.",
     "Holes are scored individually by fewest strokes.\nThe winner of the hole gets the skins pot,\nelse the pot rolls over to the next hole.",
-    "Each player has one stroke to get as near to the\npin as possible. The winner is the player with the\nshortest total distance.\nGreat for casual play.",
-    /*
     "Stroke play, but each player must hit the mid-point\ntarget before reaching the green.\nMissing the target forfeits the hole.\nPar is increased by one.",
+    /*
+    "Each player has one stroke to get as near to the\npin as possible. The winner is the player with the\nshortest total distance.\nGreat for casual play.",
     "Each player has one stroke to make the longest\ndrive possible while staying on the fairway.\nThe winner is the player with the longest total\ndistance.",
     "As stroke play, but the tee is\nmoved closer to the pin and\neach hole's par is reduced\nby one. Achievements are disabled.",
     */

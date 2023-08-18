@@ -41,10 +41,10 @@ namespace ScoreType
         StablefordPro,
         
         Match, Skins,
-        NearestThePin,
+        MultiTarget,
 
         Count,
-        MultiTarget,
+        NearestThePin,
         LongestDrive,
         ShortRound,
     };

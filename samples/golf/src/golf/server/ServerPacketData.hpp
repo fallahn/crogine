@@ -59,6 +59,7 @@ struct PlayerStatus final : public ActivePlayer
     float distanceToHole = 0.f; //used for sorting
     std::vector<std::uint8_t> holeScore;
     std::vector<float> distanceScore;
+    bool targetHit = false;
     std::uint8_t totalScore = 0;
     std::uint8_t skins = 0;
     std::uint8_t matchWins = 0;

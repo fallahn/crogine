@@ -232,8 +232,13 @@ const BullsEye& BallSystem::spawnBullsEye()
 {
     //TODO how do we decide on a radius?
     m_bullsEye.diametre = static_cast<float>(cro::Util::Random::value(5, 8));
+    if (m_puttFromTee)
+    {
+        m_bullsEye.diametre *= 0.04f;
+    }
+        
     m_bullsEye.position = m_holeData->target;
-    m_bullsEye.spawn = !m_puttFromTee;
+    m_bullsEye.spawn = true;// !m_puttFromTee;
     return m_bullsEye;
 }
 
@@ -667,6 +672,11 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
             static constexpr float MaxVel = 2.f; //some arbitrary number. Actual max is ~20.f so smaller is faster spin
             tx.rotate(cro::Transform::Y_AXIS, cro::Util::Const::TAU * (vel2 / MaxVel) * ball.rotation * dt);
 
+            //check for target
+            if (vel2 != 0)
+            {
+                doBullsEyeCollision(tx.getPosition());
+            }
 
             //if we've slowed down or fallen more than the
             //ball's diameter (radius??) stop the ball

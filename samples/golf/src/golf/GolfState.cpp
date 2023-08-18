@@ -3472,20 +3472,31 @@ void GolfState::loadAssets()
             }
         }
 
-        //if we're playing a short round, move the tee
-        if (m_sharedData.scoreType == ScoreType::ShortRound
-            && !hole.puttFromTee)
+
+        switch (m_sharedData.scoreType)
         {
-            hole.par = std::min(3, hole.par);
+        default: break;
+        case ScoreType::ShortRound:
+            //if we're playing a short round, move the tee
+            if (!hole.puttFromTee)
+            {
+                hole.par = std::min(3, hole.par);
 
-            auto dir = hole.target - hole.tee;
-            hole.tee += dir * 0.5f;
+                //TODO fix this in the map because wildy
+                //guessing is too unreliable
+                auto dir = hole.target - hole.tee;
+                hole.tee += dir * 0.5f;
 
-            dir = hole.pin - hole.target;
-            hole.target += dir * 0.5f;
+                dir = hole.pin - hole.target;
+                hole.target += dir * 0.5f;
 
-            hole.tee.y = m_collisionMesh.getTerrain(hole.tee).height;
-            hole.target.y = m_collisionMesh.getTerrain(hole.target).height;
+                hole.tee.y = m_collisionMesh.getTerrain(hole.tee).height;
+                hole.target.y = m_collisionMesh.getTerrain(hole.target).height;
+            }
+            break;
+        case ScoreType::MultiTarget:
+            hole.par++;
+            break;
         }
     }
 
@@ -5904,15 +5915,30 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
 void GolfState::handleBullHit(const BullHit& bh)
 {
     if (bh.client == m_sharedData.localConnectionData.connectionID
-        //&& bh.player == m_currentPlayer.player
         && !m_sharedData.localConnectionData.playerData[bh.player].isCPU)
     {
-        if (!m_achievementTracker.bullseyeChallenge)
+        if (!m_achievementTracker.bullseyeChallenge
+            && m_sharedData.scoreType != ScoreType::MultiTarget)
         {
             Social::getMonthlyChallenge().updateChallenge(ChallengeID::Two, 0);
         }
         m_achievementTracker.bullseyeChallenge = true;
+    
+        if (!m_sharedData.connectionData[bh.client].playerData[bh.player].targetHit)
+        {
+            auto xp = static_cast<std::int32_t>(50.f * bh.accuracy);
+            if (xp)
+            {
+                Social::awardXP(xp, XPStringID::BullsEyeHit);
+            }
+            else
+            {
+                floatingMessage("Target Hit");
+            }
+        }    
     }
+    
+    m_sharedData.connectionData[bh.client].playerData[bh.player].targetHit = true;
 }
 
 void GolfState::removeClient(std::uint8_t clientID)
@@ -5955,6 +5981,15 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo)
         m_sharedData.timeStats[i].totalTime += m_sharedData.timeStats[i].holeTimes[m_currentHole];
 
         Achievements::incrementStat(StatStrings[StatID::TimeOnTheCourse], m_sharedData.timeStats[i].holeTimes[m_currentHole]);
+    }
+
+    //update the look-at target in mutlti-target mode
+    for (auto& client : m_sharedData.connectionData)
+    {
+        for (auto& player : client.playerData)
+        {
+            player.targetHit = false;
+        }
     }
 
     updateScoreboard();
@@ -7422,40 +7457,48 @@ void GolfState::createTransition(const ActivePlayer& playerData)
     auto pinDir = m_holeData[m_currentHole].pin - playerData.position;
     targetInfo.prevLookAt = targetInfo.currentLookAt = targetInfo.targetLookAt;
     
-    //if both the pin and the target are in front of the player
-    if (glm::dot(glm::normalize(targetDir), glm::normalize(pinDir)) > 0.4)
+    //always look at the target in mult-target mode and target not yet hit
+    if (m_sharedData.scoreType == ScoreType::MultiTarget
+        && !m_sharedData.connectionData[playerData.client].playerData[playerData.player].targetHit)
     {
-        //set the target depending on how close it is
-        auto pinDist = glm::length2(pinDir);
-        auto targetDist = glm::length2(targetDir);
-        if (pinDist < targetDist)
+        targetInfo.targetLookAt = m_holeData[m_currentHole].target;
+    }
+    else
+    {
+        //if both the pin and the target are in front of the player
+        if (glm::dot(glm::normalize(targetDir), glm::normalize(pinDir)) > 0.4)
         {
-            //always target pin if its closer
-            targetInfo.targetLookAt = m_holeData[m_currentHole].pin;
-        }
-        else
-        {
-            //target the pin if the target is too close
-            //TODO this is really to do with whether or not we're putting
-            //when this check happens, but it's unlikely to have
-            //a target on the green in other cases.
-            const float MinDist = m_holeData[m_currentHole].puttFromTee ? 9.f : 2500.f;
-            if (targetDist < MinDist) //remember this in len2
+            //set the target depending on how close it is
+            auto pinDist = glm::length2(pinDir);
+            auto targetDist = glm::length2(targetDir);
+            if (pinDist < targetDist)
             {
+                //always target pin if its closer
                 targetInfo.targetLookAt = m_holeData[m_currentHole].pin;
             }
             else
             {
-                targetInfo.targetLookAt = m_holeData[m_currentHole].target;
+                //target the pin if the target is too close
+                //TODO this is really to do with whether or not we're putting
+                //when this check happens, but it's unlikely to have
+                //a target on the green in other cases.
+                const float MinDist = m_holeData[m_currentHole].puttFromTee ? 9.f : 2500.f;
+                if (targetDist < MinDist) //remember this in len2
+                {
+                    targetInfo.targetLookAt = m_holeData[m_currentHole].pin;
+                }
+                else
+                {
+                    targetInfo.targetLookAt = m_holeData[m_currentHole].target;
+                }
             }
         }
+        else
+        {
+            //else set the pin as the target
+            targetInfo.targetLookAt = m_holeData[m_currentHole].pin;
+        }
     }
-    else
-    {
-        //else set the pin as the target
-        targetInfo.targetLookAt = m_holeData[m_currentHole].pin;
-    }
-
 
     //creates an entity which calls setCamPosition() in an
     //interpolated manner until we reach the dest,

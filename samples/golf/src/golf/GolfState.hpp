@@ -283,7 +283,7 @@ private:
     void toggleFreeCam();
     void applyShadowQuality();
 
-    //scoring related stuff in GolfStateScoreing.cpp
+    //scoring related stuff in GolfStateScoring.cpp
     void updateHoleScore(std::uint16_t); //< diplays result of a hole win/loss
     void updateLeaderboardScore(bool&, cro::String&); //updates the params with personal best from current leaderboard
 

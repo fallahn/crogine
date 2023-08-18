@@ -73,7 +73,6 @@ void GolfState::handleRules(const GolfBallEvent& data)
         //if we're playing match play or skins then
         //anyone who has a worse score has already lost
         //so set them to finished.
-
         switch (m_sharedData.scoreType)
         {
         default: break;
@@ -109,6 +108,13 @@ void GolfState::handleRules(const GolfBallEvent& data)
                         }
                     }
                 }
+            }
+            break;
+        case ScoreType::MultiTarget:
+            if (!m_playerInfo[0].targetHit)
+            {
+                //forfeit the hole
+                m_playerInfo[0].holeScore[m_currentHole] = m_scene.getSystem<BallSystem>()->getPuttFromTee() ? 6 : 12;
             }
             break;
         }

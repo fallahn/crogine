@@ -294,6 +294,8 @@ void GolfState::handleMessage(const cro::Message& msg)
         bh.player = m_playerInfo[0].player;
         bh.client = m_playerInfo[0].client;
         m_sharedData.host.broadcastPacket(PacketID::BullHit, bh, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+
+        m_playerInfo[0].targetHit = true;
     }
     else if (msg.id == cl::MessageID::CollisionMessage)
     {
@@ -780,6 +782,7 @@ void GolfState::setNextHole()
     for (auto& player : m_playerInfo)
     {
         player.totalScore += player.holeScore[m_currentHole];
+        player.targetHit = false;
 
         ScoreUpdate su;
         su.client = player.client;
@@ -1100,19 +1103,28 @@ void GolfState::initScene()
     for (auto& hole : m_holeData)
     {
         m_scene.getSystem<BallSystem>()->setHoleData(hole); //applies putt from tee
-        if (m_sharedData.scoreType == ScoreType::ShortRound
-            && !hole.puttFromTee)
+
+        switch (m_sharedData.scoreType)
         {
-            hole.par = std::min(3, hole.par);
+        default: break;
+        case ScoreType::ShortRound:
+            if (!hole.puttFromTee)
+            {
+                hole.par = std::min(3, hole.par);
 
-            auto dir = hole.target - hole.tee;
-            hole.tee += dir * 0.5f;
+                auto dir = hole.target - hole.tee;
+                hole.tee += dir * 0.5f;
 
-            dir = hole.pin - hole.target;
-            hole.target += dir * 0.5f;
+                dir = hole.pin - hole.target;
+                hole.target += dir * 0.5f;
 
-            hole.tee.y = m_scene.getSystem<BallSystem>()->getTerrain(hole.tee).intersection.y;
-            hole.target.y = m_scene.getSystem<BallSystem>()->getTerrain(hole.target).intersection.y;
+                hole.tee.y = m_scene.getSystem<BallSystem>()->getTerrain(hole.tee).intersection.y;
+                hole.target.y = m_scene.getSystem<BallSystem>()->getTerrain(hole.target).intersection.y;
+            }
+            break;
+        case ScoreType::MultiTarget:
+            hole.par++;
+            break;
         }
     }
 

@@ -2969,7 +2969,22 @@ void GolfState::showMessageBoard(MessageBoardID messageType, bool special)
         //display type is correct.
         if (m_currentPlayer.client != m_sharedData.clientConnection.connectionID)
         {
-            score++;
+            if (m_sharedData.scoreType == ScoreType::MultiTarget)
+            {
+                if (!m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].targetHit)
+                {
+                    //this is a forfeit
+                    score = m_holeData[m_currentHole].puttFromTee ? 6 : 12;
+                }
+                else
+                {
+                    score++;
+                }
+            }
+            else
+            {
+                score++;
+            }
         }
 
         //if this is a HIO we want to track birdie/eagle/albatross too
