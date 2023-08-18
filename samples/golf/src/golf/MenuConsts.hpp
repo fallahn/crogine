@@ -96,7 +96,7 @@ static const std::array<std::string, ScoreType::Count> RuleDescriptions =
     "Stableford rules, however one point for every\nstroke over par is deducted instead of reaching\nthe stroke limit.\nThe player with the most points wins.",
     "Holes are scored individually by fewest strokes\n and one point is awarded for each hole won.\nThe player with the most points wins.",
     "Holes are scored individually by fewest strokes.\nThe winner of the hole gets the skins pot,\nelse the pot rolls over to the next hole.",
-    "Stroke play, but each player must hit the mid-point\ntarget before reaching the green.\nMissing the target forfeits the hole.\nPar is increased by one.",
+    "Stroke play, but each player must hit the mid-point\ntarget before reaching the green. Not hitting the\ntarget forfeits the hole.\nPar is increased by one on larger courses.",
     /*
     "Each player has one stroke to get as near to the\npin as possible. The winner is the player with the\nshortest total distance.\nGreat for casual play.",
     "Each player has one stroke to make the longest\ndrive possible while staying on the fairway.\nThe winner is the player with the longest total\ndistance.",

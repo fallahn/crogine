@@ -2269,6 +2269,7 @@ void GolfState::loadAssets()
     m_sprites[SpriteID::SlopeStrength] = spriteSheet.getSprite("slope_indicator");
     m_sprites[SpriteID::BallSpeed] = spriteSheet.getSprite("ball_speed");
     m_sprites[SpriteID::MapFlag] = spriteSheet.getSprite("flag03");
+    m_sprites[SpriteID::MapTarget] = spriteSheet.getSprite("multitarget");
     m_sprites[SpriteID::MiniFlag] = spriteSheet.getSprite("putt_flag");
     m_sprites[SpriteID::WindIndicator] = spriteSheet.getSprite("wind_dir");
     m_sprites[SpriteID::WindSpeed] = spriteSheet.getSprite("wind_speed");
@@ -6785,7 +6786,10 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     //set this separately because target might not necessarily be the pin.
     //if (m_currentPlayer != player)
     {
-        m_inputParser.setClub(glm::length(m_holeData[m_currentHole].pin - player.position));
+        bool isMultiTarget = (m_sharedData.scoreType == ScoreType::MultiTarget
+            && !m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].targetHit);
+        auto clubTarget = isMultiTarget ? m_holeData[m_currentHole].target : m_holeData[m_currentHole].pin;
+        m_inputParser.setClub(glm::length(clubTarget - player.position));
     }
 
     //check if input is CPU
@@ -7353,7 +7357,10 @@ void GolfState::updateActor(const ActorInfo& update)
         m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
         //set the green cam zoom as appropriate
-        float ballDist = glm::length(update.position - m_holeData[m_currentHole].pin);
+        bool isMultiTarget = (m_sharedData.scoreType == ScoreType::MultiTarget
+            && !m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].targetHit);
+        auto ballTarget = isMultiTarget ? m_holeData[m_currentHole].target : m_holeData[m_currentHole].pin;
+        float ballDist = glm::length(update.position - ballTarget);
 
 #ifdef PATH_TRACING
         updateBallDebug(update.position);
@@ -7364,9 +7371,9 @@ void GolfState::updateActor(const ActorInfo& update)
 
         //this is the active ball so update the UI
         cmd.targetFlags = CommandID::UI::PinDistance;
-        cmd.action = [&, ballDist](cro::Entity e, float)
+        cmd.action = [&, ballDist, isMultiTarget](cro::Entity e, float)
         {
-            formatDistanceString(ballDist, e.getComponent<cro::Text>(), m_sharedData.imperialMeasurements);
+            formatDistanceString(ballDist, e.getComponent<cro::Text>(), m_sharedData.imperialMeasurements, isMultiTarget);
 
             auto bounds = cro::Text::getLocalBounds(e);
             bounds.width = std::floor(bounds.width / 2.f);

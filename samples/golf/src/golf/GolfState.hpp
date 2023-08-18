@@ -300,6 +300,7 @@ private:
             BallSpeed,
             MiniFlag,
             MapFlag,
+            MapTarget,
             WindIndicator,
             WindSpeed,
             WindSpeedBg,

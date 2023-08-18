@@ -1042,6 +1042,26 @@ void GolfState::buildUI()
     };
     mapEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
+    //target icon in multitarget mode
+    if (m_sharedData.scoreType == ScoreType::MultiTarget)
+    {
+        auto tBounds = m_sprites[SpriteID::MapTarget].getTextureBounds();
+
+        entity = m_uiScene.createEntity();
+        entity.addComponent<cro::Transform>().setOrigin({ tBounds.width / 2.f, tBounds.height / 2.f });
+        entity.addComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
+        entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::MiniFlag;
+        entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::MapTarget]; //used to show/hide so can share with flag
+        entity.addComponent<cro::Callback>().active = true;
+        entity.getComponent<cro::Callback>().function =
+            [&](cro::Entity e, float dt)
+            {
+                e.getComponent<cro::Transform>().setPosition(glm::vec3(m_minimapZoom.toMapCoords(m_holeData[m_currentHole].target), 0.02f));
+                e.getComponent<cro::Transform>().setScale((m_minimapZoom.mapScale * 2.f * (1.f + ((m_minimapZoom.zoom - 1.f) * 0.125f))) * 0.75f);
+            };
+        mapEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    }
+
 
     //stroke indicator
     entity = m_uiScene.createEntity();
@@ -3865,8 +3885,11 @@ void GolfState::retargetMinimap(bool reset)
     }
     else
     {
+        bool isMultiTarget = (m_sharedData.scoreType == ScoreType::MultiTarget 
+            && !m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].targetHit);
+
         //find vec between player and flag
-        auto pin = m_holeData[m_currentHole].pin;
+        auto pin = isMultiTarget ? m_holeData[m_currentHole].target : m_holeData[m_currentHole].pin;
         auto player = m_currentPlayer.position;
 
         //rotate minimap so flag is at top
@@ -3884,7 +3907,8 @@ void GolfState::retargetMinimap(bool reset)
         glm::vec2 targDir(targ.x - player.x, -targ.z + player.z);
         const auto d = glm::dot(glm::normalize(dir), glm::normalize(targDir));
         const auto l2 = glm::length2(targDir);
-        if (d > 0 && d < 0.8f && l2 > 2.25f && l2 < glm::length2(dir))
+        if (!isMultiTarget &&
+            (d > 0 && d < 0.8f && l2 > 2.25f && l2 < glm::length2(dir)))
         {
             //project the target onto the current dir
             //then move half way between projection and
