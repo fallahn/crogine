@@ -1141,7 +1141,10 @@ void GolfState::initScene()
             }
             break;
         case ScoreType::MultiTarget:
-            hole.par++;
+            if (!hole.puttFromTee)
+            {
+                hole.par++;
+            }
             break;
         }
     }

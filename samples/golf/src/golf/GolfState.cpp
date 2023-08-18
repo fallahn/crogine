@@ -1592,7 +1592,12 @@ bool GolfState::simulate(float dt)
     m_waterEnt.getComponent<cro::Transform>().move(move * 10.f * dt);
 #endif
 
-    const auto holeDir = m_holeData[m_currentHole].pin - m_currentPlayer.position;
+    auto holeDir = m_holeData[m_currentHole].pin - m_currentPlayer.position;
+    if (m_sharedData.scoreType == ScoreType::MultiTarget
+        && !m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].targetHit)
+    {
+        holeDir = m_holeData[m_currentHole].target - m_currentPlayer.position;
+    }
 
     m_ballTrail.update();
 
@@ -3495,7 +3500,10 @@ void GolfState::loadAssets()
             }
             break;
         case ScoreType::MultiTarget:
-            hole.par++;
+            if (!hole.puttFromTee)
+            {
+                hole.par++;
+            }
             break;
         }
     }
@@ -5412,9 +5420,12 @@ void GolfState::spawnBullsEye(const BullsEye& b)
     {
         auto targetScale = b.diametre;
 
+        auto position = b.position;
+        position.y = m_collisionMesh.getTerrain(b.position).height;
+
         //create new model
         auto entity = m_gameScene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition(b.position);
+        entity.addComponent<cro::Transform>().setPosition(position);
         entity.addComponent<cro::CommandTarget>().ID = CommandID::BullsEye;
         m_modelDefs[ModelID::BullsEye]->createModel(entity);
         entity.addComponent<cro::Callback>().active = true;

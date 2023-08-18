@@ -2889,8 +2889,11 @@ void GolfState::updateWindDisplay(glm::vec3 direction)
 
 float GolfState::estimatePuttPower()
 {
-    auto maxDist = Clubs[ClubID::Putter].getTarget(m_distanceToHole);
-    float guestimation = (m_distanceToHole / maxDist);
+    auto target = m_holeData[m_currentHole].pin;
+    auto targetDist = m_distanceToHole;
+        
+    auto maxDist = Clubs[ClubID::Putter].getTarget(targetDist);
+    float guestimation = (targetDist / maxDist);
 
     //kludge stops the flag recommending too much power            
     if (maxDist == Clubs[ClubID::Putter].getBaseTarget())
@@ -2905,9 +2908,9 @@ float GolfState::estimatePuttPower()
 
     //add a bit more power if putting uphill
     float slope = 0.f;
-    if (m_distanceToHole > 0.005f)
+    if (targetDist > 0.005f)
     {
-        slope = glm::dot(cro::Transform::Y_AXIS, m_holeData[m_currentHole].pin - m_currentPlayer.position) / m_distanceToHole;
+        slope = glm::dot(cro::Transform::Y_AXIS, target - m_currentPlayer.position) / targetDist;
     }
     return std::clamp(guestimation + (0.25f * slope), 0.f, 1.f);
 }
