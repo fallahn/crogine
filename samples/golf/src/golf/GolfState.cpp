@@ -5462,7 +5462,7 @@ void GolfState::spawnBullsEye(const BullsEye& b)
                 }
             }
 
-            float scale = cro::Util::Easing::easeInElastic(progress) * targetScale;
+            float scale = cro::Util::Easing::easeOutElastic(progress) * targetScale;
             e.getComponent<cro::Transform>().setScale(glm::vec3(scale));
             e.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, dt * 0.2f);
         };
@@ -5949,29 +5949,8 @@ void GolfState::handleBullHit(const BullHit& bh)
         }
         else if (!m_sharedData.connectionData[bh.client].playerData[bh.player].targetHit)
         {
-            if (m_sharedData.fastCPU)
-            {
-                //delay this as we probably arrived before the animation played
-                auto entity = m_gameScene.createEntity();
-                entity.addComponent<cro::Callback>().active = true;
-                entity.getComponent<cro::Callback>().setUserData<float>(4.f);
-                entity.getComponent<cro::Callback>().function =
-                    [&](cro::Entity e, float dt)
-                    {
-                        auto& t = e.getComponent<cro::Callback>().getUserData<float>();
-                        t -= dt;
-                        if (t < 0)
-                        {
-                            floatingMessage("Target Hit!");
-                            e.getComponent<cro::Callback>().active = false;
-                            m_gameScene.destroyEntity(e);
-                        }
-                    };
-            }
-            else
-            {
-                floatingMessage("Target Hit!");
-            }
+
+            floatingMessage("Target Hit!");
         }
     }
     

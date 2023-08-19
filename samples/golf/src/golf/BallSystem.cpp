@@ -1166,7 +1166,7 @@ void BallSystem::doBallCollision(cro::Entity entity)
 
 void BallSystem::doBullsEyeCollision(glm::vec3 ballPos)
 {
-    if (m_bullsEye.spawn)
+    if (m_bullsEye.spawn && m_processFlags != ProcessFlags::Predicting)
     {
         const glm::vec2 p1(ballPos.x, ballPos.z);
         const glm::vec2 p2(m_bullsEye.position.x, m_bullsEye.position.z);
