@@ -306,6 +306,7 @@ void GolfState::handleMessage(const cro::Message& msg)
         const auto& data = msg.getData<BullsEyeEvent>();
         BullHit bh;
         bh.accuracy = data.accuracy;
+        bh.position = data.position;
         bh.player = m_playerInfo[0].player;
         bh.client = m_playerInfo[0].client;
         m_sharedData.host.broadcastPacket(PacketID::BullHit, bh, net::NetFlag::Reliable, ConstVal::NetChannelReliable);

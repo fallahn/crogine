@@ -1190,6 +1190,7 @@ void BallSystem::doBullsEyeCollision(glm::vec3 ballPos)
 
             auto* msg = postMessage<BullsEyeEvent>(sv::MessageID::BullsEyeMessage);
             msg->accuracy = std::clamp(1.f - (std::sqrt(len2) / BullRad), 0.f, 1.f);
+            msg->position = ballPos;
         }
     }
 }

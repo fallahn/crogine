@@ -56,6 +56,7 @@ struct BullsEye final
 
 struct BullHit final
 {
+    glm::vec3 position = glm::vec3(0.f);
     float accuracy = 0;
     std::uint8_t client = 0;
     std::uint8_t player = 0;

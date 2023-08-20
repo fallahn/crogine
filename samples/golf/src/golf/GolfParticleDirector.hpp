@@ -59,7 +59,7 @@ private:
             Grass, GrassDark, Water, Sand,
             Sparkle, HIO, Bird,
             Drone, Explode, Blades,
-            Puff, Trail, Firework,
+            Puff, Star, Trail, Firework,
 
             Count
         };

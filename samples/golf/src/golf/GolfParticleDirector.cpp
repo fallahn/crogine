@@ -64,6 +64,7 @@ GolfParticleDirector::GolfParticleDirector(cro::TextureResource& tr, const Share
     m_emitterSettings[ParticleID::Explode].loadFromFile("assets/golf/particles/explode.cps", tr);
     m_emitterSettings[ParticleID::Blades].loadFromFile("assets/golf/particles/blades.cps", tr);
     m_emitterSettings[ParticleID::Puff].loadFromFile("assets/golf/particles/puff.cps", tr);
+    m_emitterSettings[ParticleID::Star].loadFromFile("assets/golf/particles/star.cps", tr);
     m_emitterSettings[ParticleID::Trail].loadFromFile("assets/golf/particles/trail.cps", tr);
     m_emitterSettings[ParticleID::Firework].loadFromFile("assets/golf/particles/firework.cps", tr);
     m_emitterSettings[ParticleID::Firework].blendmode = cro::EmitterSettings::BlendMode::Add;
@@ -158,6 +159,10 @@ void GolfParticleDirector::handleMessage(const cro::Message& msg)
                 pos.y += (Ball::Radius * 2.f);
                 getEnt(ParticleID::Puff, pos);
             }
+        }
+        else if (data.type == GolfEvent::TargetHit)
+        {
+            getEnt(ParticleID::Star, data.position);
         }
     }
         break;

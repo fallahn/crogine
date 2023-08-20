@@ -110,5 +110,6 @@ struct TriggerEvent final
 
 struct BullsEyeEvent final
 {
+    glm::vec3 position = glm::vec3(0.f);
     float accuracy = 0.f;
 };
