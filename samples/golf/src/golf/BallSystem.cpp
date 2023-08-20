@@ -780,6 +780,13 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
                 else
                 {
                     tx.setPosition(m_holeData->target);
+
+                    //this might be multi-target mode so we don't want to sit right on top of the target
+                    //that we also want to aim at...
+
+                    auto d = glm::normalize(m_holeData->pin - m_holeData->target) * 0.5f;
+                    tx.move(d);
+
                 }
                 auto pos = tx.getPosition();
                 auto height = getTerrain(pos).intersection.y;

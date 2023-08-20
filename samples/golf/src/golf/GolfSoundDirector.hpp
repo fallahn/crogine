@@ -118,6 +118,7 @@ private:
             TerrainWater01,
             TerrainWater02,
             TerrainWater03,
+            Target,
 
             Honour,
             NiceSwing01,

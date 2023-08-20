@@ -167,15 +167,12 @@ void GolfState::handleMessage(const cro::Message& msg)
         if (data.type == GolfBallEvent::TurnEnded)
         {
             //check if we reached max strokes
-            auto maxStrokes = MaxStrokes;
+            auto maxStrokes = m_scene.getSystem<BallSystem>()->getPuttFromTee() ? MaxStrokes / 2 : MaxStrokes;
             std::uint8_t reason = MaxStrokeID::Default;
             switch (m_sharedData.scoreType)
             {
             default:
-                if (m_scene.getSystem<BallSystem>()->getPuttFromTee())
-                {
-                    maxStrokes /= 2;
-                }
+                
                 break;
             case ScoreType::Stableford:
                 maxStrokes = m_holeData[m_currentHole].par + 1;

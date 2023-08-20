@@ -5945,10 +5945,17 @@ void GolfState::handleBullHit(const BullHit& bh)
                 {
                     floatingMessage("Target Hit!");
                 }
+
+                auto* msg = postMessage<GolfEvent>(MessageID::GolfMessage);
+                msg->type = GolfEvent::TargetHit;
+                msg->position = m_currentPlayer.position;
             }
         }
         else if (!m_sharedData.connectionData[bh.client].playerData[bh.player].targetHit)
         {
+            auto* msg = postMessage<GolfEvent>(MessageID::GolfMessage);
+            msg->type = GolfEvent::TargetHit;
+            msg->position = m_currentPlayer.position;
 
             floatingMessage("Target Hit!");
         }

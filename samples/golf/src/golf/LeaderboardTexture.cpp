@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021
+Matt Marchant 2021 - 2023
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -80,7 +80,7 @@ void LeaderboardTexture::update(std::vector<LeaderboardEntry>& entries)
     m_backgroundSprite.draw();
 
     
-
+    std::int32_t i = 0;
     for (auto& [position, str] : entries)
     {
         position -= Border;

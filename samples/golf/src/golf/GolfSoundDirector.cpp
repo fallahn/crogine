@@ -128,6 +128,7 @@ GolfSoundDirector::GolfSoundDirector(cro::AudioResource& ar)
         "assets/golf/sound/terrain/water01.wav",
         "assets/golf/sound/terrain/water02.wav",
         "assets/golf/sound/terrain/water03.wav",
+        "assets/golf/sound/terrain/target.wav",
 
         "assets/golf/sound/holes/honour.wav",
         "assets/golf/sound/kudos/swing01.wav",
@@ -250,6 +251,9 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
             switch (data.type)
             {
             default: break;
+            case GolfEvent::TargetHit:
+                playSound(AudioID::Target, data.position, 0.2f).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
+                break;
             case GolfEvent::RoundEnd:
                 if (data.score == 0)
                 {

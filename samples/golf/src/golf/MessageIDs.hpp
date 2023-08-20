@@ -72,6 +72,7 @@ struct GolfEvent final
         HoleDrawn,
         DroneHit,
         BirdHit,
+        TargetHit,
         Gimme,
         RoundEnd
     }type = HitBall;
