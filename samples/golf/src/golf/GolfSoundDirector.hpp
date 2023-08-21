@@ -124,6 +124,8 @@ private:
             NiceSwing01,
             NiceSwing02,
             NiceSwing03,
+            PowerShot,
+            BigStick,
 
             Hook,
             Slice,

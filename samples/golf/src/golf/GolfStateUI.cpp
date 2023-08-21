@@ -1476,7 +1476,8 @@ void GolfState::showCountdown(std::uint8_t seconds)
     {
         if (m_statBoardScores[0].client == m_sharedData.clientConnection.connectionID)
         {
-            if (!m_sharedData.localConnectionData.playerData[m_statBoardScores[0].player].isCPU)
+            auto isCPU = m_sharedData.localConnectionData.playerData[m_statBoardScores[0].player].isCPU;
+            if (!isCPU)
             {
                 //remember this is auto-disabled if the player is not the only one on the client
                 Achievements::awardAchievement(AchievementStrings[AchievementID::LeaderOfThePack]);
@@ -1506,7 +1507,7 @@ void GolfState::showCountdown(std::uint8_t seconds)
             //message for audio director
             auto* msg = getContext().appInstance.getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
             msg->type = GolfEvent::RoundEnd;
-            msg->score = 0;
+            msg->score = isCPU ? 1 : 0;
         }
         else if (m_statBoardScores.back().client == m_sharedData.clientConnection.connectionID)
         {

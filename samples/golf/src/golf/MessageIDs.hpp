@@ -66,6 +66,7 @@ struct GolfEvent final
         BallLanded,
         Scored,
         NiceShot,
+        PowerShot,
         DriveComplete,
         HoleInOne,
         HoleWon,

@@ -134,6 +134,8 @@ GolfSoundDirector::GolfSoundDirector(cro::AudioResource& ar)
         "assets/golf/sound/kudos/swing01.wav",
         "assets/golf/sound/kudos/swing02.wav",
         "assets/golf/sound/kudos/swing03.wav",
+        "assets/golf/sound/kudos/power_drive.wav",
+        "assets/golf/sound/kudos/flag_pole.wav",
 
         "assets/golf/sound/kudos/hook.wav",
         "assets/golf/sound/kudos/slice.wav",
@@ -332,6 +334,9 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
             case GolfEvent::NiceShot:
                 playSound(cro::Util::Random::value(AudioID::NiceSwing01, AudioID::NiceSwing03), data.position);
                 break;
+            case GolfEvent::PowerShot:
+                playSound(AudioID::PowerShot, data.position);
+                break;
             case GolfEvent::ClubSwing:
             {
                 if (data.terrain == TerrainID::Green)
@@ -498,6 +503,11 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
                     {
                         playSound(AudioID::Pole, data.position).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
                         m_flagSoundTime = 2.f;
+
+                        if (cro::Util::Random::value(0, 1) == 0)
+                        {
+                            playSoundDelayed(AudioID::BigStick, data.position, 1.2f, 1.f, MixerChannel::Voice);
+                        }
                     }
                     break;
                 default:

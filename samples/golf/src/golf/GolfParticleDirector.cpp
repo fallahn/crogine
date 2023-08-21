@@ -63,6 +63,7 @@ GolfParticleDirector::GolfParticleDirector(cro::TextureResource& tr, const Share
     m_emitterSettings[ParticleID::Drone].loadFromFile("assets/golf/particles/drone.cps", tr);
     m_emitterSettings[ParticleID::Explode].loadFromFile("assets/golf/particles/explode.cps", tr);
     m_emitterSettings[ParticleID::Blades].loadFromFile("assets/golf/particles/blades.cps", tr);
+    m_emitterSettings[ParticleID::PowerShot].loadFromFile("assets/golf/particles/power_shot.cps", tr);
     m_emitterSettings[ParticleID::Puff].loadFromFile("assets/golf/particles/puff.cps", tr);
     m_emitterSettings[ParticleID::Star].loadFromFile("assets/golf/particles/star.cps", tr);
     m_emitterSettings[ParticleID::Trail].loadFromFile("assets/golf/particles/trail.cps", tr);
@@ -163,6 +164,10 @@ void GolfParticleDirector::handleMessage(const cro::Message& msg)
         else if (data.type == GolfEvent::TargetHit)
         {
             getEnt(ParticleID::Star, data.position);
+        }
+        else if (data.type == GolfEvent::PowerShot)
+        {
+            getEnt(ParticleID::PowerShot, data.position);
         }
     }
         break;

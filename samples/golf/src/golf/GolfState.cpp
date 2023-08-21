@@ -971,12 +971,14 @@ void GolfState::handleMessage(const cro::Message& msg)
                 hook *= 20.f;
                 hook = std::round(hook);
                 hook /= 20.f;
+                static constexpr float  PowerShot = 0.97f;
 
                 if (power > 0.59f //hmm not sure why power should factor into this?
                     && std::abs(hook) < 0.05f)
                 {
                     auto* msg3 = cro::App::getInstance().getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
-                    msg3->type = GolfEvent::NiceShot;
+                    msg3->type = power > PowerShot ? GolfEvent::PowerShot : GolfEvent::NiceShot;
+                    msg3->position = m_currentPlayer.position;
 
                     //award more XP for aiming straight
                     float dirAmount = /*cro::Util::Easing::easeOutExpo*/((m_inputParser.getMaxRotation() - std::abs(m_inputParser.getRotation())) / m_inputParser.getMaxRotation());
@@ -987,6 +989,12 @@ void GolfState::handleMessage(const cro::Message& msg)
                         Social::awardXP(xp, XPStringID::GreatAccuracy);
                         Social::getMonthlyChallenge().updateChallenge(ChallengeID::Eight, 0);
                     }
+                }
+                else if (power > PowerShot)
+                {
+                    auto* msg3 = cro::App::getInstance().getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
+                    msg3->type = GolfEvent::PowerShot;
+                    msg3->position = m_currentPlayer.position;
                 }
 
                 //hide the ball briefly to hack around the motion lag
