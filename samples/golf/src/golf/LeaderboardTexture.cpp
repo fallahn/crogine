@@ -50,7 +50,7 @@ void LeaderboardTexture::init(const cro::Sprite& backgroundSprite, cro::Font& fo
     m_text.setCharacterSize(UITextSize);
     m_text.setFillColour(LeaderboardTextDark);
     m_text.setVerticalSpacing(LeaderboardTextSpacing);
-    m_text.setCroppingArea({ 0.f, 20.f, MinLobbyCropWidth, -((textureRect.height * 2.f) + 20.f) });
+    m_text.setCroppingArea({ -MinLobbyCropWidth, 20.f, MinLobbyCropWidth * 2.f, -((textureRect.height * 2.f) + 20.f) });
 
     m_texture.create(static_cast<std::uint32_t>(textureRect.width),
                     static_cast<std::uint32_t>(textureRect.height) * 2, false);
@@ -79,6 +79,10 @@ void LeaderboardTexture::update(std::vector<LeaderboardEntry>& entries)
     m_backgroundSprite.setPosition({ 0.f, offset });
     m_backgroundSprite.draw();
 
+    std::vector<std::int32_t> alignments(entries.size());
+    std::fill(alignments.begin(), alignments.end(), cro::SimpleText::Alignment::Right);
+    alignments[0] = cro::SimpleText::Alignment::Left;
+    alignments.back() = cro::SimpleText::Alignment::Left;
     
     std::int32_t i = 0;
     for (auto& [position, str] : entries)
@@ -90,6 +94,7 @@ void LeaderboardTexture::update(std::vector<LeaderboardEntry>& entries)
         position.y = std::floor(position.y);
 
         m_text.setPosition(position);
+        m_text.setAlignment(alignments[i++]);
         m_text.setString(str);
         m_text.draw();
     }

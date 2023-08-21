@@ -2682,6 +2682,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
                     return a.score > b.score;
                 case ScoreType::Stroke:
                 case ScoreType::ShortRound:
+                case ScoreType::MultiTarget:
                     return a.score < b.score;
                 }
             });
@@ -3955,6 +3956,7 @@ void MenuState::createPreviousScoreCard()
                 return a.total > b.total;
             case ScoreType::Stroke:
             case ScoreType::ShortRound:
+            case ScoreType::MultiTarget:
                 return a.total < b.total;
             }
         });

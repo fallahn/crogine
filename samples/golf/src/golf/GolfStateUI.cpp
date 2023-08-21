@@ -2045,6 +2045,7 @@ void GolfState::createScoreboard()
     bgSprite = spriteSheet.getSprite("board");
     m_leaderboardTexture.init(bgSprite, font);
 
+
     cro::FloatRect bgCrop = bgSprite.getTextureBounds();
     bgCrop.bottom += bgCrop.height;
 
@@ -2413,6 +2414,7 @@ void GolfState::updateScoreboard(bool updateParDiff)
             default:
             case ScoreType::Stroke:
             case ScoreType::ShortRound:
+            case ScoreType::MultiTarget:
                 return a.total < b.total;
             case ScoreType::Stableford:
             case ScoreType::StablefordPro:
@@ -2567,6 +2569,7 @@ void GolfState::updateScoreboard(bool updateParDiff)
         ents[i].getComponent<cro::Text>().setString(scoreString);
         ents[i].getComponent<cro::Entity>().getComponent<cro::Text>().setString(redScoreString); //yes there's an entity as a component.
         leaderboardEntries.emplace_back(glm::vec3(ents[i].getComponent<UIElement>().absolutePosition - glm::vec2(ColumnMargin, -UITextPosV), 0.f), scoreString);
+        leaderboardEntries.emplace_back(glm::vec3(ents[i].getComponent<UIElement>().absolutePosition - glm::vec2(ColumnMargin, -UITextPosV), 0.f), redScoreString);
     }
 
     //total column
