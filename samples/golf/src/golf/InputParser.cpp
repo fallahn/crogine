@@ -566,7 +566,15 @@ void InputParser::setMaxClub(float dist)
 void InputParser::setMaxClub(std::int32_t clubID)
 {
     CRO_ASSERT(clubID < ClubID::Putter, "");
-    m_firstClub = m_currentClub = clubID;
+
+    m_firstClub = clubID;
+    while ((m_inputBinding.clubset & ClubID::Flags[m_firstClub]) == 0
+        && m_firstClub != ClubID::PitchWedge)
+    {
+        m_firstClub++;
+    }
+
+    m_currentClub = m_firstClub;
     m_clubOffset = 0;
 
     auto* msg = cro::App::postMessage<GolfEvent>(MessageID::GolfMessage);

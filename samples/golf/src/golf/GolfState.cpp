@@ -6721,7 +6721,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
 
     if (player.terrain == TerrainID::Bunker)
     {
-        m_inputParser.setMaxClub(ClubID::PitchWedge);
+        m_inputParser.setMaxClub(/*ClubID::PitchWedge*/ClubID::SevenIron);
     }
     else
     {
