@@ -1035,10 +1035,14 @@ void GolfState::buildUI()
     entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::MapFlag];
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function =
-        [&](cro::Entity e, float dt)
+        [&, mapEnt](cro::Entity e, float dt)
     {
         e.getComponent<cro::Transform>().setPosition(glm::vec3(m_minimapZoom.toMapCoords(m_holeData[m_currentHole].pin), 0.02f));
         e.getComponent<cro::Transform>().setScale((m_minimapZoom.mapScale * 2.f * (1.f + ((m_minimapZoom.zoom - 1.f) * 0.125f))) * 0.75f);
+
+        auto miniBounds = mapEnt.getComponent<cro::Transform>().getWorldTransform() * mapEnt.getComponent<cro::Drawable2D>().getLocalBounds();
+        auto flagBounds = glm::inverse(e.getComponent<cro::Transform>().getWorldTransform()) * miniBounds;
+        e.getComponent<cro::Drawable2D>().setCroppingArea(flagBounds);
     };
     mapEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
@@ -1054,10 +1058,14 @@ void GolfState::buildUI()
         entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::MapTarget]; //used to show/hide so can share with flag
         entity.addComponent<cro::Callback>().active = true;
         entity.getComponent<cro::Callback>().function =
-            [&](cro::Entity e, float dt)
+            [&, mapEnt](cro::Entity e, float dt)
             {
                 e.getComponent<cro::Transform>().setPosition(glm::vec3(m_minimapZoom.toMapCoords(m_holeData[m_currentHole].target), 0.02f));
                 e.getComponent<cro::Transform>().setScale((m_minimapZoom.mapScale * 2.f * (1.f + ((m_minimapZoom.zoom - 1.f) * 0.125f))) * 0.75f);
+
+                auto miniBounds = mapEnt.getComponent<cro::Transform>().getWorldTransform() * mapEnt.getComponent<cro::Drawable2D>().getLocalBounds();
+                auto targBounds = glm::inverse(e.getComponent<cro::Transform>().getWorldTransform()) * miniBounds;
+                e.getComponent<cro::Drawable2D>().setCroppingArea(targBounds);
             };
         mapEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     }
@@ -1105,7 +1113,11 @@ void GolfState::buildUI()
         }
 
         //4 is the relative size of the sprite to the texture... need to update this if we make sprite scale dynamic
-        e.getComponent<cro::Transform>().setScale(glm::vec2(scale, 1.f) * (1.f / mapEnt.getComponent<cro::Transform>().getScale().x)); 
+        e.getComponent<cro::Transform>().setScale(glm::vec2(scale, 1.f) * (1.f / mapEnt.getComponent<cro::Transform>().getScale().x));
+
+        auto miniBounds = mapEnt.getComponent<cro::Transform>().getWorldTransform() * mapEnt.getComponent<cro::Drawable2D>().getLocalBounds();
+        auto targBounds = glm::inverse(e.getComponent<cro::Transform>().getWorldTransform()) * miniBounds;
+        e.getComponent<cro::Drawable2D>().setCroppingArea(targBounds);
     };
     mapEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
