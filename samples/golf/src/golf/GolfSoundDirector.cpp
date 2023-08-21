@@ -90,6 +90,7 @@ GolfSoundDirector::GolfSoundDirector(cro::AudioResource& ar)
         "assets/golf/sound/ball/scrub.wav",
         "assets/golf/sound/ball/stone.wav",
         "assets/golf/sound/ball/pole.wav",
+        "assets/golf/sound/ball/power.wav",
 
         "assets/golf/sound/holes/albatross.wav",
         "assets/golf/sound/holes/birdie.wav",
@@ -332,10 +333,15 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
             }
             break;
             case GolfEvent::NiceShot:
-                playSound(cro::Util::Random::value(AudioID::NiceSwing01, AudioID::NiceSwing03), data.position);
+                playSoundDelayed(cro::Util::Random::value(AudioID::NiceSwing01, AudioID::NiceSwing03), data.position, 0.5f);
                 break;
             case GolfEvent::PowerShot:
-                playSound(AudioID::PowerShot, data.position);
+                playSound(AudioID::PowerBall, data.position).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
+
+                if (cro::Util::Random::value(0, 2) == 0)
+                {
+                    playSoundDelayed(AudioID::PowerShot, data.position, 1.5f, 1.1f, MixerChannel::Voice);
+                }
                 break;
             case GolfEvent::ClubSwing:
             {

@@ -80,6 +80,7 @@ private:
             Scrub,
             Stone,
             Pole,
+            PowerBall,
 
             ScoreAlbatross,
             ScoreBirdie,

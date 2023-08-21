@@ -977,7 +977,7 @@ void GolfState::handleMessage(const cro::Message& msg)
                     && std::abs(hook) < 0.05f)
                 {
                     auto* msg3 = cro::App::getInstance().getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
-                    msg3->type = power > PowerShot ? GolfEvent::PowerShot : GolfEvent::NiceShot;
+                    msg3->type = (power > PowerShot && club < ClubID::NineIron) ? GolfEvent::PowerShot : GolfEvent::NiceShot;
                     msg3->position = m_currentPlayer.position;
 
                     //award more XP for aiming straight
@@ -990,7 +990,8 @@ void GolfState::handleMessage(const cro::Message& msg)
                         Social::getMonthlyChallenge().updateChallenge(ChallengeID::Eight, 0);
                     }
                 }
-                else if (power > PowerShot)
+                else if (power > PowerShot
+                    && club < ClubID::NineIron)
                 {
                     auto* msg3 = cro::App::getInstance().getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
                     msg3->type = GolfEvent::PowerShot;
