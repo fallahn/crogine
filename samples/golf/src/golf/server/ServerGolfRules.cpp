@@ -188,12 +188,37 @@ bool GolfState::summariseDefaultRules()
             std::uint16_t data = (player->client << 8) | player->player;
             m_sharedData.host.broadcastPacket(PacketID::HoleWon, data, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
         }
-        else
+        else //increase the skins pot, but only if not repeating the final hole else we'll be here forever...
         {
             m_skinsPot++;
-
             std::uint16_t data = 0xff00 | m_skinsPot;
             m_sharedData.host.broadcastPacket(PacketID::HoleWon, data, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+        }
+
+
+        //check if we tied the last hole
+        if (m_sharedData.scoreType == ScoreType::Skins
+            && ((m_currentHole + 1) == m_holeData.size()))
+        {
+            if (sortData[0].holeScore[m_currentHole] == sortData[1].holeScore[m_currentHole])
+            {
+                gameFinished = false;
+                //this is used to make sure we send the correct score update to the client when this function returns
+                //TODO we can also use this to cap the skins pot if necessary
+                m_skinsFinals = true;
+
+                for (auto& p : m_playerInfo)
+                {
+                    p.holeScore[m_currentHole] = 0;
+                }
+
+                if (m_currentHole)
+                {
+                    //we might be on a custom course with one
+                    //hole in which case don't negate.
+                    m_currentHole--;
+                }
+            }
         }
     }
 

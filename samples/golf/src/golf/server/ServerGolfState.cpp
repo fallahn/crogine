@@ -91,6 +91,7 @@ GolfState::GolfState(SharedData& sd)
     m_scoreboardReadyFlags  (0),
     m_gameStarted           (false),
     m_allMapsLoaded         (false),
+    m_skinsFinals           (false),
     m_currentHole           (0),
     m_skinsPot              (1),
     m_currentBest           (MaxStrokes),
@@ -795,19 +796,22 @@ void GolfState::setNextHole()
     
 
     //broadcast all scores to make sure everyone is up to date
+    //note that in skins games the above summary may have reduced
+    //the current hole index if the hole needs repeating
+    auto scoreHole = m_skinsFinals ? std::min(m_currentHole + 1, std::uint8_t(m_holeData.size()) - 1) : m_currentHole;
     for (auto& player : m_playerInfo)
     {
-        player.totalScore += player.holeScore[m_currentHole];
+        player.totalScore += player.holeScore[scoreHole];
         player.targetHit = false;
 
         ScoreUpdate su;
         su.client = player.client;
         su.player = player.player;
-        su.hole = m_currentHole;
+        su.hole = scoreHole;
         su.score = player.totalScore;
         su.matchScore = player.matchWins;
         su.skinsScore = player.skins;
-        su.stroke = player.holeScore[m_currentHole];
+        su.stroke = player.holeScore[scoreHole];
 
         m_sharedData.host.broadcastPacket(PacketID::ScoreUpdate, su, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
     }
