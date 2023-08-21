@@ -566,54 +566,72 @@ void ClubhouseState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter
 
     static constexpr float BarWidth = 60.f;
     static constexpr float BarHeight = 12.f;
-    auto [value, target, _] = Social::getMonthlyChallenge().getProgress();
+    auto [value, target, _, flags] = Social::getMonthlyChallenge().getProgress();
     const float progress = static_cast<float>(value) / target;
 
-    if (value != target) //don't down the bar if completed
+    if (value != target) //don't draw the progress if completed
     {
+        std::vector<cro::Vertex2D> verts;
+
         entity = m_uiScene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition({ 0.f, -24.f,-0.1f });
-        std::vector<cro::Vertex2D> verts =
+        entity.addComponent<cro::Transform>();
+
+        if (flags != std::numeric_limits<std::uint32_t>::max())
         {
-            cro::Vertex2D(glm::vec2(-BarWidth, BarHeight), LeaderboardTextDark),
-            cro::Vertex2D(glm::vec2(-BarWidth, 0.f), LeaderboardTextDark),
-            cro::Vertex2D(glm::vec2(BarWidth, BarHeight), LeaderboardTextDark),
-
-            cro::Vertex2D(glm::vec2(BarWidth, BarHeight), LeaderboardTextDark),
-            cro::Vertex2D(glm::vec2(-BarWidth, 0.f), LeaderboardTextDark),
-            cro::Vertex2D(glm::vec2(BarWidth, 0.f), LeaderboardTextDark),
-
-
-
-            cro::Vertex2D(glm::vec2(-BarWidth, BarHeight), TextHighlightColour),
-            cro::Vertex2D(glm::vec2(-BarWidth, 0.f), TextHighlightColour),
-            cro::Vertex2D(glm::vec2(((BarWidth * 2.f) * progress) - BarWidth, BarHeight), TextHighlightColour),
-
-            cro::Vertex2D(glm::vec2(((BarWidth * 2.f) * progress) - BarWidth, BarHeight), TextHighlightColour),
-            cro::Vertex2D(glm::vec2(-BarWidth, 0.f), TextHighlightColour),
-            cro::Vertex2D(glm::vec2(((BarWidth * 2.f) * progress) - BarWidth, 0.f), TextHighlightColour),
-        };
-
-        //corners
-        constexpr std::array<glm::vec2, 4u> CornerPos =
-        {
-            glm::vec2(0.f, (BarHeight / 6.f) * 5.f),
-            glm::vec2(0.f),
-            glm::vec2((BarWidth * 2.f) - 2.f, (BarHeight / 6.f) * 5.f),
-            glm::vec2((BarWidth * 2.f) - 2.f, 0.f)
-        };
-        const auto cd = CD32::Colours[CD32::Brown];
-        for (auto i = 0; i < 4; ++i)
-        {
-            verts.emplace_back(glm::vec2(-BarWidth, BarHeight / 6.f) + CornerPos[i], cd);
-            verts.emplace_back(glm::vec2(-BarWidth, 0.f) + CornerPos[i], cd);
-            verts.emplace_back(glm::vec2(-BarWidth + 2.f, BarHeight / 6.f) + CornerPos[i], cd);
-
-            verts.emplace_back(glm::vec2(-BarWidth + 2.f, BarHeight / 6.f) + CornerPos[i], cd);
-            verts.emplace_back(glm::vec2(-BarWidth, 0.f) + CornerPos[i], cd);
-            verts.emplace_back(glm::vec2(-BarWidth + 2.f, 0.f) + CornerPos[i], cd);
+            auto spr = spriteSheet.getSprite("progress_icon");
+            
+            //we gots flags baybee
+            CRO_ASSERT(target < 31, "too many flags buddy");
+            entity.getComponent<cro::Transform>();// .setPosition({ 0.f, -24.f,-0.1f });
+            verts = {};
+            //GL_TRIANGLES
         }
+        else
+        {
+            //regular progress
+            entity.getComponent<cro::Transform>().setPosition({ 0.f, -24.f,-0.1f });
+            verts =
+            {
+                cro::Vertex2D(glm::vec2(-BarWidth, BarHeight), LeaderboardTextDark),
+                cro::Vertex2D(glm::vec2(-BarWidth, 0.f), LeaderboardTextDark),
+                cro::Vertex2D(glm::vec2(BarWidth, BarHeight), LeaderboardTextDark),
 
+                cro::Vertex2D(glm::vec2(BarWidth, BarHeight), LeaderboardTextDark),
+                cro::Vertex2D(glm::vec2(-BarWidth, 0.f), LeaderboardTextDark),
+                cro::Vertex2D(glm::vec2(BarWidth, 0.f), LeaderboardTextDark),
+
+
+
+                cro::Vertex2D(glm::vec2(-BarWidth, BarHeight), TextHighlightColour),
+                cro::Vertex2D(glm::vec2(-BarWidth, 0.f), TextHighlightColour),
+                cro::Vertex2D(glm::vec2(((BarWidth * 2.f) * progress) - BarWidth, BarHeight), TextHighlightColour),
+
+                cro::Vertex2D(glm::vec2(((BarWidth * 2.f) * progress) - BarWidth, BarHeight), TextHighlightColour),
+                cro::Vertex2D(glm::vec2(-BarWidth, 0.f), TextHighlightColour),
+                cro::Vertex2D(glm::vec2(((BarWidth * 2.f) * progress) - BarWidth, 0.f), TextHighlightColour),
+            };
+
+            //corners
+            constexpr std::array<glm::vec2, 4u> CornerPos =
+            {
+                glm::vec2(0.f, (BarHeight / 6.f) * 5.f),
+                glm::vec2(0.f),
+                glm::vec2((BarWidth * 2.f) - 2.f, (BarHeight / 6.f) * 5.f),
+                glm::vec2((BarWidth * 2.f) - 2.f, 0.f)
+            };
+            const auto cd = CD32::Colours[CD32::Brown];
+            for (auto i = 0; i < 4; ++i)
+            {
+                verts.emplace_back(glm::vec2(-BarWidth, BarHeight / 6.f) + CornerPos[i], cd);
+                verts.emplace_back(glm::vec2(-BarWidth, 0.f) + CornerPos[i], cd);
+                verts.emplace_back(glm::vec2(-BarWidth + 2.f, BarHeight / 6.f) + CornerPos[i], cd);
+
+                verts.emplace_back(glm::vec2(-BarWidth + 2.f, BarHeight / 6.f) + CornerPos[i], cd);
+                verts.emplace_back(glm::vec2(-BarWidth, 0.f) + CornerPos[i], cd);
+                verts.emplace_back(glm::vec2(-BarWidth + 2.f, 0.f) + CornerPos[i], cd);
+            }
+
+        }
         entity.addComponent<cro::Drawable2D>().setVertexData(verts);
         entity.getComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLES);
         textEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());

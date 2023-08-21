@@ -125,6 +125,7 @@ public:
         std::int32_t value = 0;
         std::int32_t target = 0;
         std::int32_t index = -1;
+        std::uint32_t flags = std::numeric_limits<std::uint32_t>::max();
     };
     Progress getProgress() const;
     cro::String getProgressString() const;
