@@ -133,6 +133,12 @@ namespace AchievementID
 
         UpForTheChallenge,
 
+        BigBird,
+        BarnStormer,
+        HitTheSpot,
+        BeholdTheImpossible,
+        TakeInAShow,
+
         Count
     };
     static_assert(Count <= 256, "Count exceeds maximum 256 Achievements!");

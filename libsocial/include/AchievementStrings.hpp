@@ -128,7 +128,12 @@ static const std::array<std::string, AchievementID::Count> AchievementStrings =
     "drive_it_home",
     "gamer",
     "cause_a_racket",
-    "up_for_the_challenge"
+    "up_for_the_challenge",
+    "big_bird",
+    "stableford",
+    "hit_the_spot",
+    "behold",
+    "took_a_show"
 };
 
 //appears on the notification
@@ -215,7 +220,12 @@ static const std::array<std::string, AchievementID::Count> AchievementLabels =
     "Drive It Home",
     "Gamer",
     "Cause A Racket",
-    "Up For The Challenge"
+    "Up For The Challenge",
+    "Big Bird",
+    "Barn Stormer",
+    "Hit The Spot",
+    "Behold The Impossible",
+    "Take In a Show"
 };
 
 //description and whether or not the achievement is hidden until it is unlocked
@@ -303,6 +313,11 @@ static const std::array<std::pair<std::string, bool>, AchievementID::Count> Achi
     std::make_pair("Unlock the arcade", false),
     std::make_pair("Hit the tennis court then land on the fairway of Course 5, Hole 18", false),
     std::make_pair("Complete at least one monthly challenge", false),
+    std::make_pair("Get an Albatross", false),
+    std::make_pair("Win a Stableford match", false),
+    std::make_pair("Win a round of Multi-Target", false),
+    std::make_pair("Get a hole in one whilst playing Multi-Target", false),
+    std::make_pair("The front row is a splash zone", true),
 };
 
 //assuming trophies load correctly they are:
@@ -418,6 +433,12 @@ static constexpr std::array<std::size_t, AchievementID::Count> AchievementTrophi
     TrophyID::BronzeCup,
 
     TrophyID::SilverFigure,
+
+    TrophyID::GoldFigure,
+    TrophyID::GoldCup,
+    TrophyID::GoldCup,
+    TrophyID::Platinum,
+    TrophyID::Spoon
 };
 
 //these are indexed by StatID, so do try to get them in the correct order ;)

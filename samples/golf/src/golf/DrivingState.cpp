@@ -3391,6 +3391,8 @@ void DrivingState::triggerGC(glm::vec3 position)
                     
                     g.getComponent<cro::Callback>().active = false;
                     m_uiScene.destroyEntity(g);
+
+                    Achievements::awardAchievement(AchievementStrings[AchievementID::TakeInAShow]);
                 }
             };
 

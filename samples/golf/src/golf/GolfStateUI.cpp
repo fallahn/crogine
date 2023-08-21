@@ -1493,6 +1493,13 @@ void GolfState::showCountdown(std::uint8_t seconds)
                 case ScoreType::Skins:
                     Achievements::awardAchievement(AchievementStrings[AchievementID::SkinOfYourTeeth]);
                     break;
+                case ScoreType::Stableford:
+                case ScoreType::StablefordPro:
+                    Achievements::awardAchievement(AchievementStrings[AchievementID::BarnStormer]);
+                    break;
+                case ScoreType::MultiTarget:
+                    Achievements::awardAchievement(AchievementStrings[AchievementID::HitTheSpot]);
+                    break;
                 }
             }
 
@@ -3089,6 +3096,7 @@ void GolfState::showMessageBoard(MessageBoardID messageType, bool special)
                 break;
             case ScoreID::Albatross:
                 Achievements::incrementStat(StatStrings[StatID::Albatrosses]);
+                Achievements::awardAchievement(AchievementStrings[AchievementID::BigBird]);
                 break;
             }
 
@@ -3096,6 +3104,11 @@ void GolfState::showMessageBoard(MessageBoardID messageType, bool special)
             {
                 Achievements::incrementStat(StatStrings[StatID::HIOs]);
                 Achievements::awardAchievement(AchievementStrings[AchievementID::HoleInOne]);
+
+                if (m_sharedData.scoreType == ScoreType::MultiTarget)
+                {
+                    Achievements::awardAchievement(AchievementStrings[AchievementID::BeholdTheImpossible]);
+                }
 
                 //award supplimentary XP
                 switch (statScore)
