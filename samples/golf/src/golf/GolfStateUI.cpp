@@ -3141,12 +3141,14 @@ void GolfState::showMessageBoard(MessageBoardID messageType, bool special)
                 if (!m_sharedData.localConnectionData.playerData[m_currentPlayer.player].isCPU)
                 {
                     m_achievementTracker.eagles++;
-
+                    LogI << "Wiggle wiggle" << std::endl;
                     if (m_sharedData.holeCount == 2
                         || m_currentHole > 8)
                     {
+                        LogI << "Oi OI" << std::endl;
                         if (m_courseIndex != -1)
                         {
+                            LogI << "Pass the toilet paper" << std::endl;
                             Social::getMonthlyChallenge().updateChallenge(ChallengeID::Ten, m_courseIndex);
                         }
                     }

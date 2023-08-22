@@ -212,8 +212,6 @@ bool BallSystem::setHoleData(HoleData& holeData, bool rebuildMesh)
     holeData.pin.y = getTerrain(holeData.pin).intersection.y;
     holeData.puttFromTee = m_puttFromTee;
 
-    //m_gimmeRadius = m_puttFromTee ? 0 : m_activeGimme;
-
     for (auto entity : getEntities())
     {
         entity.getComponent<cro::Transform>().setPosition(holeData.tee);
@@ -238,7 +236,7 @@ const BullsEye& BallSystem::spawnBullsEye()
     }
         
     m_bullsEye.position = m_holeData->target;
-    m_bullsEye.spawn = true;// !m_puttFromTee;
+    m_bullsEye.spawn = true;
     return m_bullsEye;
 }
 
@@ -665,7 +663,16 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
                 //ball.delay = 0.f;
                 return;
             }
-
+            //if we went OOB in a putting course we
+            //want to quit immediately, not wait for the velocity to stop
+            else if (ball.terrain == TerrainID::Water
+                || ball.terrain == TerrainID::Scrub)
+            {
+                ball.state = Ball::State::Reset;
+                ball.delay = BallTurnDelay / 2.f;
+                ball.velocity = glm::vec3(0.f);
+                return;
+            }
 
             //rotate based on velocity
             auto vel2 = glm::length2(ball.velocity);
@@ -687,7 +694,7 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
             {
                 ball.velocity = glm::vec3(0.f);
 
-                if (ball.terrain == TerrainID::Water
+                if (ball.terrain == TerrainID::Water //TODO this should never be true because of the above check
                     || ball.terrain == TerrainID::Scrub)
                 {
                     ball.state = Ball::State::Reset;

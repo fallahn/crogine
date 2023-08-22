@@ -207,6 +207,9 @@ void GolfGame::handleEvent(const cro::Event& evt)
     switch (evt.type)
     {
     default: break;
+    case SDL_MOUSEMOTION:
+        cro::App::getWindow().setMouseCaptured(false);
+        break;
     case SDL_KEYUP:
         switch (evt.key.keysym.sym)
         {
@@ -231,6 +234,14 @@ void GolfGame::handleEvent(const cro::Event& evt)
         case SDLK_KP_PLUS:
             togglePixelScale(m_sharedData, true);
             break;
+#ifdef USE_GNS
+        case SDLK_F8:
+            if (evt.key.keysym.mod & KMOD_SHIFT)
+            {
+                //Social::toggleChat();
+            }
+            break;
+#endif
         }
         break;
     }

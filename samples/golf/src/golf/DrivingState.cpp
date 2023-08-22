@@ -433,6 +433,7 @@ bool DrivingState::handleEvent(const cro::Event& evt)
         case SDLK_F7:
             floatingMessage("buns");
             break;
+            //F8 toggles chat!
         case SDLK_HOME:
             debugFlags = (debugFlags == 0) ? BulletDebug::DebugFlags : 0;
             m_gameScene.getSystem<BallSystem>()->setDebugFlags(debugFlags);

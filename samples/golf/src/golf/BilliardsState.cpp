@@ -249,6 +249,7 @@ bool BilliardsState::handleEvent(const cro::Event& evt)
         case SDLK_F4:
             //addPocketBall(1);
             break;
+            //F8 toggles chat!
         case SDLK_HOME:
             m_gameScene.getSystem<BilliardsCollisionSystem>()->toggleDebug();
             break;
