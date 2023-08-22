@@ -199,7 +199,14 @@ cro::String MonthlyChallenge::getProgressString() const
         ret = ChallengeDescriptions[m_month] + "\n";
         if (progress.value != progress.target)
         {
-            ret += "Progress: " + std::to_string(progress.value) + "/" + std::to_string(progress.target);
+            if (m_challenges[m_month].type == Challenge::Counter)
+            {
+                ret += "Progress: " + std::to_string(progress.value) + "/" + std::to_string(progress.target);
+            }
+            else
+            {
+                ret += " "; //leave empty so we can display the 'check' boxes
+            }
 
             if (remain == 0)
             {

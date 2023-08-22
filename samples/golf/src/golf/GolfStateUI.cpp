@@ -2688,6 +2688,16 @@ void GolfState::updateScoreboard(bool updateParDiff)
                 break;
             case ScoreType::Stableford:
             case ScoreType::StablefordPro:
+                totalString += " - " + std::to_string(scores[i].total);
+                if (scores[i].total == 1)
+                {
+                    totalString += " POINT";
+                }
+                else
+                {
+                    totalString += " POINTS";
+                }
+                break;
             case ScoreType::Match:
                 if (scores[i].backNine == 1)
                 {

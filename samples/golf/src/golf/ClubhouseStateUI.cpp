@@ -574,22 +574,51 @@ void ClubhouseState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter
         std::vector<cro::Vertex2D> verts;
 
         entity = m_uiScene.createEntity();
-        entity.addComponent<cro::Transform>();
+        entity.addComponent<cro::Transform>().setPosition({ 0.f, -24.f,-0.1f });
+        entity.addComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLES);
 
         if (flags != std::numeric_limits<std::uint32_t>::max())
         {
             auto spr = spriteSheet.getSprite("progress_icon");
+            const auto uvRect = spr.getTextureRectNormalised();
+            const float IconWidth = spr.getTextureBounds().width;
+            const float IconHeight = spr.getTextureBounds().height;
+            static constexpr float IconPadding = 2.f;
+
+            const auto addIcon = 
+                [&](glm::vec2 position, bool selected)
+            {
+                auto uv = uvRect;
+                if (selected)
+                {
+                    uv.bottom += uvRect.height;
+                }
+
+                //GL_TRIANGLES
+                verts.emplace_back(glm::vec2(position.x, position.y + IconHeight), glm::vec2(uv.left, uv.bottom + uv.height));
+                verts.emplace_back(position, glm::vec2(uv.left, uv.bottom));
+                verts.emplace_back(glm::vec2(position.x + IconWidth, position.y + IconHeight), glm::vec2(uv.left + uv.width, uv.bottom + uv.height));
+
+                verts.emplace_back(glm::vec2(position.x + IconWidth, position.y + IconHeight), glm::vec2(uv.left + uv.width, uv.bottom + uv.height));
+                verts.emplace_back(position, glm::vec2(uv.left, uv.bottom));
+                verts.emplace_back(glm::vec2(position.x + IconWidth, position.y), glm::vec2(uv.left + uv.width, uv.bottom));
+            };
             
             //we gots flags baybee
             CRO_ASSERT(target < 31, "too many flags buddy");
-            entity.getComponent<cro::Transform>();// .setPosition({ 0.f, -24.f,-0.1f });
-            verts = {};
-            //GL_TRIANGLES
+            float xPos = ((target * (IconWidth + IconPadding)) - IconPadding) / 2.f;
+            xPos = -std::floor(xPos);
+
+            for (auto i = 0; i < target; ++i)
+            {
+                addIcon(glm::vec2(xPos, 0.f), (flags & (1 << i)) != 0);
+                xPos += (IconWidth + IconPadding);
+            }
+            entity.getComponent<cro::Drawable2D>().setTexture(spr.getTexture());
         }
         else
         {
             //regular progress
-            entity.getComponent<cro::Transform>().setPosition({ 0.f, -24.f,-0.1f });
             verts =
             {
                 cro::Vertex2D(glm::vec2(-BarWidth, BarHeight), LeaderboardTextDark),
@@ -632,8 +661,7 @@ void ClubhouseState::createMainMenu(cro::Entity parent, std::uint32_t mouseEnter
             }
 
         }
-        entity.addComponent<cro::Drawable2D>().setVertexData(verts);
-        entity.getComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLES);
+        entity.getComponent<cro::Drawable2D>().setVertexData(verts);
         textEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     }
 }
