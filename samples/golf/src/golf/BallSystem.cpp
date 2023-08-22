@@ -669,8 +669,12 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
                 || ball.terrain == TerrainID::Scrub)
             {
                 ball.state = Ball::State::Reset;
-                ball.delay = BallTurnDelay / 2.f;
+                ball.delay = BallTurnDelay;
                 ball.velocity = glm::vec3(0.f);
+
+                auto* msg = postEvent();
+                msg->type = GolfBallEvent::Landed;
+                msg->terrain = ball.terrain;
                 return;
             }
 

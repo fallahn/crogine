@@ -136,6 +136,8 @@ GolfSoundDirector::GolfSoundDirector(cro::AudioResource& ar)
         "assets/golf/sound/kudos/swing02.wav",
         "assets/golf/sound/kudos/swing03.wav",
         "assets/golf/sound/kudos/power_drive.wav",
+        "assets/golf/sound/kudos/power_drive02.wav",
+        "assets/golf/sound/kudos/power_drive03.wav",
         "assets/golf/sound/kudos/flag_pole.wav",
 
         "assets/golf/sound/kudos/hook.wav",
@@ -340,7 +342,7 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
 
                 if (cro::Util::Random::value(0, 2) == 0)
                 {
-                    playSoundDelayed(AudioID::PowerShot, data.position, 1.5f, 1.1f, MixerChannel::Voice);
+                    playSoundDelayed(AudioID::PowerShot01 + cro::Util::Random::value(0,2), data.position, 1.5f, 1.1f, MixerChannel::Voice);
                 }
                 break;
             case GolfEvent::ClubSwing:

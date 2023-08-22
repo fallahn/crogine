@@ -208,7 +208,7 @@ void GolfGame::handleEvent(const cro::Event& evt)
     {
     default: break;
     case SDL_MOUSEMOTION:
-        cro::App::getWindow().setMouseCaptured(false);
+        //cro::App::getWindow().setMouseCaptured(false);
         break;
     case SDL_KEYUP:
         switch (evt.key.keysym.sym)
