@@ -2288,7 +2288,12 @@ void GolfState::updateScoreboard(bool updateParDiff)
                 {
                     switch (m_sharedData.scoreType)
                     {
-                    default: break;
+                    default: //dear future me: the default type should *ALWAYS* be the same as stroke type. Everywhere.
+                    case ScoreType::MultiTarget:
+                    case ScoreType::Stroke:
+                    case ScoreType::ShortRound:
+                        entry.frontNine += client.playerData[i].holeScores[j];
+                        break;
                     case ScoreType::Stableford:
                         stableScore = std::max(0, stableScore);
                         entry.frontNine += stableScore;
@@ -2302,10 +2307,6 @@ void GolfState::updateScoreboard(bool updateParDiff)
                         }
                         entry.frontNine += stableScore;
                         entry.holes.back() = stableScore;
-                        break;
-                    case ScoreType::Stroke:
-                    case ScoreType::ShortRound:
-                        entry.frontNine += client.playerData[i].holeScores[j];
                         break;
                     case ScoreType::Match:
                         entry.frontNine = client.playerData[i].matchScore;
@@ -2320,7 +2321,12 @@ void GolfState::updateScoreboard(bool updateParDiff)
                 {
                     switch (m_sharedData.scoreType)
                     {
-                    default: break;
+                    default:
+                    case ScoreType::MultiTarget:
+                    case ScoreType::Stroke:
+                    case ScoreType::ShortRound:
+                        entry.backNine += client.playerData[i].holeScores[j];
+                        break;
                     case ScoreType::Stableford:
                         stableScore = std::max(0, stableScore);
                         entry.backNine += stableScore;
@@ -2334,10 +2340,6 @@ void GolfState::updateScoreboard(bool updateParDiff)
                         }
                         entry.backNine += stableScore;
                         entry.holes.back() = stableScore;
-                        break;
-                    case ScoreType::Stroke:
-                    case ScoreType::ShortRound:
-                        entry.backNine += client.playerData[i].holeScores[j];
                         break;
                     case ScoreType::Match:
                         entry.backNine = client.playerData[i].matchScore;
@@ -2354,9 +2356,9 @@ void GolfState::updateScoreboard(bool updateParDiff)
             switch (m_sharedData.scoreType)
             {
             default:
+            case ScoreType::MultiTarget:
             case ScoreType::Stroke:
             case ScoreType::ShortRound:
-
                 //track achievement make no mistake
                 if (client.connectionID == m_sharedData.localConnectionData.connectionID
                     && !client.playerData[i].isCPU
@@ -2395,12 +2397,13 @@ void GolfState::updateScoreboard(bool updateParDiff)
             switch (m_sharedData.scoreType)
             {
             default:
+            case ScoreType::Stroke:
+            case ScoreType::ShortRound:
+            case ScoreType::MultiTarget:
+                return a.score < b.score;
             case ScoreType::Stableford:
             case ScoreType::StablefordPro:
                 return b.score < a.score;
-            case ScoreType::Stroke:
-            case ScoreType::ShortRound:
-                return a.score < b.score;
             }
         });
     //LOG("Table Update", cro::Logger::Type::Info);
@@ -2532,7 +2535,6 @@ void GolfState::updateScoreboard(bool updateParDiff)
 
                     switch (m_sharedData.scoreType)
                     {
-
                     default:
                         if (s)
                         {
@@ -2588,6 +2590,7 @@ void GolfState::updateScoreboard(bool updateParDiff)
         switch (m_sharedData.scoreType)
         {
         default:
+        case ScoreType::MultiTarget:
         case ScoreType::ShortRound:
         case ScoreType::Stroke:
             if (scores[i].parDiff > 0)
@@ -2606,10 +2609,24 @@ void GolfState::updateScoreboard(bool updateParDiff)
         case ScoreType::Stableford:
         case ScoreType::StablefordPro:
         case ScoreType::Match:
-            totalString += " POINTS";
+            if (scores[i].frontNine == 1)
+            {
+                totalString += " POINT";
+            }
+            else
+            {
+                totalString += " POINTS";
+            }
             break;
         case ScoreType::Skins:
-            totalString += " SKINS";
+            if (scores[i].frontNine == 1)
+            {
+                totalString += " SKIN";
+            }
+            else
+            {
+                totalString += " SKINS";
+            }
             break;
         }
     }
@@ -2652,6 +2669,7 @@ void GolfState::updateScoreboard(bool updateParDiff)
             switch (m_sharedData.scoreType)
             {
             default:
+            case ScoreType::MultiTarget:
             case ScoreType::ShortRound:
             case ScoreType::Stroke:
                 totalString += separator + std::to_string(scores[i].total);
@@ -2671,10 +2689,24 @@ void GolfState::updateScoreboard(bool updateParDiff)
             case ScoreType::Stableford:
             case ScoreType::StablefordPro:
             case ScoreType::Match:
-                totalString += " POINTS";
+                if (scores[i].backNine == 1)
+                {
+                    totalString += " POINT";
+                }
+                else
+                {
+                    totalString += " POINTS";
+                }
                 break;
             case ScoreType::Skins:
-                totalString += " SKINS";
+                if (scores[i].backNine == 1)
+                {
+                    totalString += " SKIN";
+                }
+                else
+                {
+                    totalString += " SKINS";
+                }
                 break;
             }
         }
