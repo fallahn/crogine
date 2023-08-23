@@ -64,13 +64,13 @@ struct FontID final
 static const std::array<std::string, ScoreType::Count> ScoreTypes =
 {
     "Stroke Play", 
-    
-    "Stableford", "Stableford Pro",
-    
-    "Match Play", "Skins",
-
-    "Multi-target"
+    "Stableford", 
+    "Stableford Pro",
+    "Match Play",
+    "Skins",
+    "Multi-target",
     /*
+    "Bingo Bango Bongo",
     "Nearest the Pin",
     "Longest Drive",
     "Short Round",
@@ -102,6 +102,7 @@ static const std::array<std::string, ScoreType::Count> RuleDescriptions =
     "Holes are scored individually by fewest strokes.\nThe winner of the hole gets the skins pot,\nelse the pot rolls over to the next hole.",
     "Stroke play, but each player must hit the mid-point\ntarget before reaching the green. Not hitting the\ntarget forfeits the hole.\nPar is increased by one on larger courses.",
     /*
+    "The first player on the green scores Bingo, the\nplayer closest to the pin when all players are on\nthe green scores Bango and first to hole out wins\nBongo. Not recommended for putting courses.",
     "Each player has one stroke to get as near to the\npin as possible. The winner is the player with the\nshortest total distance.\nGreat for casual play.",
     "Each player has one stroke to make the longest\ndrive possible while staying on the fairway.\nThe winner is the player with the longest total\ndistance.",
     "As stroke play, but the tee is\nmoved closer to the pin and\neach hole's par is reduced\nby one. Achievements are disabled.",

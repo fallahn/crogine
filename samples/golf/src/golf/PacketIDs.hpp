@@ -44,6 +44,7 @@ namespace ScoreType
         MultiTarget,
 
         Count,
+        BBB,
         NearestThePin,
         LongestDrive,
         ShortRound,

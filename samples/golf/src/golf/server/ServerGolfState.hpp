@@ -88,7 +88,7 @@ namespace sv
         void buildWorld();
 
         void handleRules(const struct GolfBallEvent&);
-        bool summariseDefaultRules();
+        bool summariseRules();
 
         void doServerCommand(const net::NetEvent&);
     };

@@ -140,7 +140,7 @@ void GolfState::handleRules(const GolfBallEvent& data)
     }
 }
 
-bool GolfState::summariseDefaultRules()
+bool GolfState::summariseRules()
 {
     bool gameFinished = false;
 

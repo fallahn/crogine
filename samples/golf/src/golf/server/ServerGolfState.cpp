@@ -738,12 +738,45 @@ void GolfState::setNextPlayer(bool newHole)
 
     if (!newHole || m_currentHole == 0)
     {
-        //sort players by distance
-        std::sort(m_playerInfo.begin(), m_playerInfo.end(),
-            [](const PlayerStatus& a, const PlayerStatus& b)
+        if (m_sharedData.scoreType == ScoreType::BBB)
+        {
+            //if BBB favour players not on green
+            std::sort(m_playerInfo.begin(), m_playerInfo.end(),
+                [](const PlayerStatus& a, const PlayerStatus& b)
+                {
+                    return a.terrain != TerrainID::Green;
+                });
+
+            auto currTerrain = m_playerInfo[0].terrain;
+            if (currTerrain == TerrainID::Green)
             {
-                return a.distanceToHole > b.distanceToHole;
-            });
+                std::sort(m_playerInfo.begin(), m_playerInfo.end(),
+                    [](const PlayerStatus& a, const PlayerStatus& b)
+                    {
+                        return a.distanceToHole > b.distanceToHole;
+                    });
+
+                //TODO award Bango for closest if not already awarded
+            }
+            else
+            {
+                std::sort(m_playerInfo.begin(), m_playerInfo.end(),
+                    [](const PlayerStatus& a, const PlayerStatus& b)
+                    {
+                        return (a.distanceToHole > b.distanceToHole)
+                            && a.terrain != TerrainID::Green;
+                    });
+            }
+        }
+        else
+        {
+            //sort players by distance
+            std::sort(m_playerInfo.begin(), m_playerInfo.end(),
+                [](const PlayerStatus& a, const PlayerStatus& b)
+                {
+                    return a.distanceToHole > b.distanceToHole;
+                });
+        }
     }
     else
     {
@@ -792,7 +825,7 @@ void GolfState::setNextHole()
 
 
     //update player skins/match scores
-    auto gameFinished = summariseDefaultRules();
+    auto gameFinished = summariseRules();
     
 
     //broadcast all scores to make sure everyone is up to date
