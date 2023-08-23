@@ -6038,18 +6038,22 @@ void GolfState::removeClient(std::uint8_t clientID)
 
 void GolfState::setCurrentHole(std::uint16_t holeInfo)
 {
+    std::uint8_t hole = (holeInfo & 0xff00) >> 8;
+    m_holeData[hole].par = (holeInfo & 0x00ff);
+
     //mark all holes complete - this fudges any missing
     //scores on the scoreboard... we shouldn't really have to do this :(
-    for (auto& client : m_sharedData.connectionData)
+    if (hole > m_currentHole)
     {
-        for (auto& player : client.playerData)
+        for (auto& client : m_sharedData.connectionData)
         {
-            player.holeComplete[m_currentHole] = true;
+            for (auto& player : client.playerData)
+            {
+                player.holeComplete[m_currentHole] = true;
+            }
         }
     }
 
-    std::uint8_t hole = (holeInfo & 0xff00) >> 8;
-    m_holeData[hole].par = (holeInfo & 0x00ff);
 
     if (hole != m_currentHole
         && m_sharedData.logBenchmarks)

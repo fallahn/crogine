@@ -239,6 +239,7 @@ void GolfGame::handleEvent(const cro::Event& evt)
             if (evt.key.keysym.mod & KMOD_SHIFT)
             {
                 //Social::toggleChat();
+                //cro::App::getWindow().setMouseCaptured(false);
             }
             break;
 #endif

@@ -2439,7 +2439,18 @@ void GolfState::updateScoreboard(bool updateParDiff)
     std::vector<LeaderboardEntry> leaderboardEntries;
 
     //name column
-    cro::String nameString = "HOLE\nPAR";
+    cro::String nameString = "HOLE\n";
+    switch (m_sharedData.scoreType)
+    {
+    default:
+        nameString += "PAR";
+        break;
+    case ScoreType::Stableford:
+    case ScoreType::StablefordPro:
+        nameString += " ";
+        break;
+    }
+
     for (auto i = 0u; i < playerCount; ++i)
     {
         nameString += "\n  " + scores[i].name.substr(0, ConstVal::MaxStringChars);
@@ -2454,7 +2465,18 @@ void GolfState::updateScoreboard(bool updateParDiff)
             nameString += "\n";
         }
 
-        nameString += "\n\nHOLE\nPAR";
+        nameString += "\n\nHOLE\n";
+        switch (m_sharedData.scoreType)
+        {
+        default:
+            nameString += "PAR";
+            break;
+        case ScoreType::Stableford:
+        case ScoreType::StablefordPro:
+            nameString += " ";
+            break;
+        }
+
         for (auto i = 0u; i < playerCount; ++i)
         {
             nameString += "\n  " + scores[i].name.substr(0, ConstVal::MaxStringChars);
@@ -2471,7 +2493,19 @@ void GolfState::updateScoreboard(bool updateParDiff)
         {
             holeNumber += 9;
         }
-        std::string scoreString = std::to_string(holeNumber) + "\n" + std::to_string(m_holeData[i - 1].par);
+
+        std::string scoreString = std::to_string(holeNumber) + "\n";
+        switch (m_sharedData.scoreType)
+        {
+        default:
+            scoreString += std::to_string(m_holeData[i - 1].par);
+            break;
+        case ScoreType::Stableford:
+        case ScoreType::StablefordPro:
+            scoreString += " ";
+            break;
+        }
+
         std::string redScoreString = "\n";
 
         for (auto j = 0u; j < playerCount; ++j)
@@ -2525,7 +2559,19 @@ void GolfState::updateScoreboard(bool updateParDiff)
             auto holeIndex = (i + MaxCols) - 1;
             if (holeIndex < m_holeData.size())
             {
-                scoreString += "\n\n" + std::to_string(i + MaxCols) + "\n" + std::to_string(m_holeData[holeIndex].par);
+                scoreString += "\n\n" + std::to_string(i + MaxCols) + "\n";
+
+                switch (m_sharedData.scoreType)
+                {
+                default:
+                    scoreString += std::to_string(m_holeData[holeIndex].par);
+                    break;
+                case ScoreType::Stableford:
+                case ScoreType::StablefordPro:
+                    scoreString += " ";
+                    break;
+                }
+
                 redScoreString += "\n\n\n";
                 for (auto j = 0u; j < playerCount; ++j)
                 {
@@ -2581,7 +2627,24 @@ void GolfState::updateScoreboard(bool updateParDiff)
         par += m_holeData[i].par;
     }
 
-    std::string totalString = "TOTAL\n" + std::to_string(par);
+    std::string totalString = "TOTAL\n";
+    switch (m_sharedData.scoreType)
+    {
+    default:
+        totalString += std::to_string(par);
+        break;
+    case ScoreType::Stableford:
+    case ScoreType::StablefordPro:
+        if (page2)
+        {
+            totalString += "FRONT";
+        }
+        else
+        {
+            totalString += " ";
+        }
+        break;
+    }
 
     for (auto i = 0u; i < playerCount; ++i)
     {
@@ -2660,7 +2723,19 @@ void GolfState::updateScoreboard(bool updateParDiff)
         }
         auto separator = getSeparator(par);
 
-        totalString += "\n\nTOTAL\n" + std::to_string(par) + separator + std::to_string(par + frontPar);
+        totalString += "\n\nTOTAL\n";
+        
+        switch (m_sharedData.scoreType)
+        {
+        default:
+            totalString += std::to_string(par) + separator + std::to_string(par + frontPar);
+            break;
+        case ScoreType::Stableford:
+        case ScoreType::StablefordPro:
+            totalString += "BACK - FINAL";
+            break;
+        }
+        
         for (auto i = 0u; i < playerCount; ++i)
         {
             separator = getSeparator(scores[i].backNine);
@@ -2688,6 +2763,15 @@ void GolfState::updateScoreboard(bool updateParDiff)
                 break;
             case ScoreType::Stableford:
             case ScoreType::StablefordPro:
+                //align with back/total string
+                if (scores[i].backNine < 10)
+                {
+                    totalString += "   ";
+                }
+                else
+                {
+                    totalString += "  ";
+                }
                 totalString += " - " + std::to_string(scores[i].total);
                 if (scores[i].total == 1)
                 {

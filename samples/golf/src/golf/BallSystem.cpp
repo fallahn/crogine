@@ -229,10 +229,10 @@ void BallSystem::setGimmeRadius(std::uint8_t rad)
 const BullsEye& BallSystem::spawnBullsEye()
 {
     //TODO how do we decide on a radius?
-    m_bullsEye.diametre = static_cast<float>(cro::Util::Random::value(5, 8));
+    m_bullsEye.diametre = static_cast<float>(cro::Util::Random::value(8, 12));
     if (m_puttFromTee)
     {
-        m_bullsEye.diametre *= 0.04f;
+        m_bullsEye.diametre *= 0.027f;
     }
         
     m_bullsEye.position = m_holeData->target;
