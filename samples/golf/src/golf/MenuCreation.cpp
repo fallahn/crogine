@@ -3986,7 +3986,18 @@ void MenuState::createPreviousScoreCard()
 
     bool page2 = m_sharedData.holeCount == 0;// holeCount > 9;
 
-    cro::String str("HOLE\nPAR");
+    cro::String str("HOLE\n");
+    switch (m_sharedData.scoreType)
+    {
+    default:
+        str += "PAR";
+        break;
+    case ScoreType::Stableford:
+    case ScoreType::StablefordPro:
+        str += " ";
+        break;
+    }
+
     for (const auto& entry : scoreEntries)
     {
         str += "\n " + m_sharedData.connectionData[entry.client].playerData[entry.player].name.substr(0, ConstVal::MaxStringChars);
@@ -4000,7 +4011,18 @@ void MenuState::createPreviousScoreCard()
             str += "\n";
         }
         
-        str += "\n\nHOLE\nPAR";
+        str += "\n\nHOLE\n";
+        switch (m_sharedData.scoreType)
+        {
+        default:
+            str += "PAR";
+            break;
+        case ScoreType::Stableford:
+        case ScoreType::StablefordPro:
+            str += " ";
+            break;
+        }
+
         for (const auto& entry : scoreEntries)
         {
             str += "\n " + m_sharedData.connectionData[entry.client].playerData[entry.player].name.substr(0, ConstVal::MaxStringChars);
@@ -4062,7 +4084,18 @@ void MenuState::createPreviousScoreCard()
         textEntities.push_back(redEnt);
 
         str = std::to_string(i + 1);
-        str += "\n" + std::to_string(courseData.parVals[parOffset + i]);
+        str += "\n";
+
+        switch (m_sharedData.scoreType)
+        {
+        default:
+            str += std::to_string(courseData.parVals[parOffset + i]);
+            break;
+        case ScoreType::Stableford:
+        case ScoreType::StablefordPro:
+            str += " ";
+            break;
+        }
 
         parTotal += courseData.parVals[parOffset + i];
         parTotalFront += courseData.parVals[parOffset + i];
@@ -4117,8 +4150,21 @@ void MenuState::createPreviousScoreCard()
                 parTotal += courseData.parVals[parOffset + i + 9];
                 parTotalBack += courseData.parVals[parOffset + i + 9];
 
-                str += "\n\n" + std::to_string(i + 10) + "\n" + std::to_string(courseData.parVals[parOffset + i + 9]);
+                str += "\n\n" + std::to_string(i + 10) + "\n";
                 redStr += "\n\n\n";
+
+                switch (m_sharedData.scoreType)
+                {
+                default:
+                    str += std::to_string(courseData.parVals[parOffset + i + 9]);
+                    break;
+                case ScoreType::Stableford:
+                case ScoreType::StablefordPro:
+                    str += " ";
+                    break;
+                }
+
+
                 for (const auto& entry : scoreEntries)
                 {
                     auto score = entry.holeScores[i + 9];
@@ -4188,7 +4234,25 @@ void MenuState::createPreviousScoreCard()
     rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     textEntities.push_back(entity);
 
-    str = "Total\n" + std::to_string(parTotalFront);
+    str = "TOTAL\n";
+    switch (m_sharedData.scoreType)
+    {
+    default:
+        str += std::to_string(parTotalFront);
+        break;
+    case ScoreType::Stableford:
+    case ScoreType::StablefordPro:
+        if (page2)
+        {
+            str += "FRONT";
+        }
+        else
+        {
+            str += " ";
+        }
+        break;
+    }
+
     for (const auto& entry : scoreEntries)
     {
         str += "\n" + std::to_string(entry.totalFront);
@@ -4196,6 +4260,7 @@ void MenuState::createPreviousScoreCard()
         switch (m_sharedData.scoreType)
         {
         default:
+        case ScoreType::MultiTarget:
         case ScoreType::Stroke:
         case ScoreType::ShortRound:
         {
@@ -4229,7 +4294,19 @@ void MenuState::createPreviousScoreCard()
             str += "\n";
         }
 
-        str += "\n\nTotal\n" + std::to_string(parTotalBack) + " (" + std::to_string(parTotal) + ")";
+        str += "\n\nTOTAL\n";
+
+        switch (m_sharedData.scoreType)
+        {
+        default:
+            str += std::to_string(parTotalBack) + " (" + std::to_string(parTotal) + ")";
+            break;
+        case ScoreType::Stableford:
+        case ScoreType::StablefordPro:
+            str += "BACK - FINAL";
+            break;
+        }
+
         for (const auto& entry : scoreEntries)
         {
             str += "\n" + std::to_string(entry.totalBack);
@@ -4237,6 +4314,7 @@ void MenuState::createPreviousScoreCard()
             switch (m_sharedData.scoreType)
             {
             default:
+            case ScoreType::MultiTarget:
             case ScoreType::ShortRound:
             case ScoreType::Stroke:
             {
@@ -4251,6 +4329,14 @@ void MenuState::createPreviousScoreCard()
                 break;
             case ScoreType::Stableford:
             case ScoreType::StablefordPro:
+                if (entry.totalBack < 10)
+                {
+                    str += "   ";
+                }
+                else
+                {
+                    str += "  ";
+                }
                 str += " - " + std::to_string(entry.total) + " POINTS";
                 break;
             case ScoreType::Match:
