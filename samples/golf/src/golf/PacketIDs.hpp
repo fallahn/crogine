@@ -31,6 +31,7 @@ source distribution.
 
 #include <cstdint>
 #include <string>
+#include <array>
 
 namespace ScoreType
 {
@@ -88,6 +89,17 @@ namespace MaxStrokeID
         Forfeit
     };
 }
+
+struct TextMessage final
+{
+    std::uint8_t client = 0;
+
+    //this is the max message bytes - total message length is
+    //this plus 1 for nullterm
+    static constexpr std::size_t MaxBytes = 8192; 
+    std::array<char, MaxBytes + 1> messageData = {};
+    TextMessage() { std::fill(messageData.begin(), messageData.end(), 0); }
+};
 
 namespace PacketID
 {
@@ -158,7 +170,8 @@ namespace PacketID
         Emote, //< uint32 00|client|player|emoteID
         LevelUp, //< uint64 00|00|client|player|level (level is 4 bytes)
         BallPrediction, //< InputUpdate if from client, vec3 if from server
-        PlayerXP //<uint16 level << 8 | client - used to share client xp/level info
+        PlayerXP, //<uint16 level << 8 | client - used to share client xp/level info
+        ChatMessage //TextMessage struct
     };
 }
 

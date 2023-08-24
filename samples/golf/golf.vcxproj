@@ -679,6 +679,7 @@
     <ClCompile Include="src\golf\TerrainBuilder.cpp" />
     <ClCompile Include="src\golf\TerrainChunks.cpp" />
     <ClCompile Include="src\golf\TerrainDepthmap.cpp" />
+    <ClCompile Include="src\golf\TextChat.cpp" />
     <ClCompile Include="src\golf\TrophyDisplaySystem.cpp" />
     <ClCompile Include="src\golf\TrophyState.cpp" />
     <ClCompile Include="src\golf\TutorialDirector.cpp" />
@@ -804,6 +805,7 @@
     <ClInclude Include="src\golf\TerrainChunks.hpp" />
     <ClInclude Include="src\golf\TerrainDepthmap.hpp" />
     <ClInclude Include="src\golf\TextAnimCallback.hpp" />
+    <ClInclude Include="src\golf\TextChat.hpp" />
     <ClInclude Include="src\golf\Treeset.hpp" />
     <ClInclude Include="src\golf\TrophyDisplaySystem.hpp" />
     <ClInclude Include="src\golf\TrophyState.hpp" />

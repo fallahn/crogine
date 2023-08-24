@@ -194,6 +194,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     m_skyScene          (context.appInstance.getMessageBus(), 512),
     m_uiScene           (context.appInstance.getMessageBus(), 1024),
     m_trophyScene       (context.appInstance.getMessageBus()),
+    m_textChat          (m_uiScene, sd),
     m_inputParser       (sd, &m_gameScene),
     m_cpuGolfer         (m_inputParser, m_currentPlayer, m_collisionMesh),
     m_wantsGameState    (true),
@@ -521,6 +522,12 @@ bool GolfState::handleEvent(const cro::Event& evt)
             break;
         case SDLK_F6:
             logCSV();
+            break;
+        case SDLK_F8:
+            if (evt.key.keysym.mod & KMOD_SHIFT)
+            {
+                m_textChat.toggleWindow();
+            }
             break;
 #ifdef CRO_DEBUG_
         case SDLK_F2:
@@ -5456,7 +5463,7 @@ void GolfState::spawnBullsEye(const BullsEye& b)
                 }
             }
 
-            float scale = cro::Util::Easing::easeOutElastic(progress) * targetScale;
+            float scale = cro::Util::Easing::easeOutBack(progress) * targetScale;
             e.getComponent<cro::Transform>().setScale(glm::vec3(scale));
             e.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, dt * 0.2f);
         };
@@ -5483,6 +5490,9 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
         switch (evt.packet.getID())
         {
         default: break;
+        case PacketID::ChatMessage:
+            m_textChat.handlePacket(evt.packet);
+            break;
         case PacketID::FlagHit:
         {
             auto data = evt.packet.as<BullHit>();

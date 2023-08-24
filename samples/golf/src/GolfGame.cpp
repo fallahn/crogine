@@ -234,15 +234,6 @@ void GolfGame::handleEvent(const cro::Event& evt)
         case SDLK_KP_PLUS:
             togglePixelScale(m_sharedData, true);
             break;
-#ifdef USE_GNS
-        case SDLK_F8:
-            if (evt.key.keysym.mod & KMOD_SHIFT)
-            {
-                //Social::toggleChat();
-                //cro::App::getWindow().setMouseCaptured(false);
-            }
-            break;
-#endif
         }
         break;
     }

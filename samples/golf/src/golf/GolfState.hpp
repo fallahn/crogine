@@ -43,6 +43,7 @@ source distribution.
 #include "TerrainChunks.hpp"
 #include "MinimapZoom.hpp"
 #include "BallTrail.hpp"
+#include "TextChat.hpp"
 #include "server/ServerPacketData.hpp"
 
 #include <crogine/core/State.hpp>
@@ -121,6 +122,8 @@ private:
     cro::Scene m_uiScene;
     cro::Scene m_trophyScene;
     TerrainDepthmap m_depthMap;
+
+    TextChat m_textChat;
 
     InputParser m_inputParser;
     CPUGolfer m_cpuGolfer;
