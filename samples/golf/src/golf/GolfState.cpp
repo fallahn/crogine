@@ -185,28 +185,6 @@ namespace
         return sd.connectionData[activePlayer.client].playerData[activePlayer.player].isCPU
             && sd.fastCPU;
     }
-
-    const std::array<std::string, 10u> CourseNames =
-    {
-        "course_01",
-        "course_02",
-        "course_03",
-        "course_04",
-        "course_05",
-        "course_06",
-        "course_07",
-        "course_08",
-        "course_09",
-        "course_10",
-    };
-    std::int32_t getCourseIndex(const std::string& name)
-    {
-        if (auto result = std::find(CourseNames.begin(), CourseNames.end(), name); result != CourseNames.end())
-        {
-            return static_cast<std::int32_t>(std::distance(CourseNames.begin(), result));
-        }
-        return -1;
-    }
 }
 
 GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, SharedStateData& sd)
@@ -339,7 +317,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     }
     m_allowAchievements = (humanCount == 1) && (getCourseIndex(sd.mapDirectory) != -1);
 
-    switch (sd.scoreType)
+    /*switch (sd.scoreType)
     {
     default:
         m_allowAchievements = m_allowAchievements;
@@ -347,7 +325,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     case ScoreType::ShortRound:
         m_allowAchievements = false;
         break;
-    }
+    }*/
 
     //This is set when setting active player.
     Achievements::setActive(m_allowAchievements);
@@ -3436,6 +3414,30 @@ void GolfState::loadAssets()
             return !hd.modelEntity.isValid();
         }), m_holeData.end());
 
+    //if we're running a short round, crop the number of holes
+    if (m_sharedData.scoreType == ScoreType::ShortRound
+        && m_courseIndex != -1)
+    {
+        switch (m_sharedData.holeCount)
+        {
+        default:
+        case 0:
+        {
+            auto size = std::min(m_holeData.size(), 12ull);
+            m_holeData.resize(size);
+        }
+            break;
+        case 1:
+        case 2:
+        {
+            auto size = std::min(m_holeData.size(), 6ull);
+            m_holeData.resize(size);
+        }
+            break;
+        }
+    }
+
+
     //check the crowd positions on every hole and set the height
     for (auto& hole : m_holeData)
     {
@@ -3492,24 +3494,25 @@ void GolfState::loadAssets()
         switch (m_sharedData.scoreType)
         {
         default: break;
-        case ScoreType::ShortRound:
-            //if we're playing a short round, move the tee
-            if (!hole.puttFromTee)
-            {
-                hole.par = std::min(3, hole.par);
+            //this now just reduces the number of holes
+        //case ScoreType::ShortRound:
+        //    //if we're playing a short round, move the tee
+        //    if (!hole.puttFromTee)
+        //    {
+        //        hole.par = std::min(3, hole.par);
 
-                //TODO fix this in the map because wildy
-                //guessing is too unreliable
-                auto dir = hole.target - hole.tee;
-                hole.tee += dir * 0.5f;
+        //        //TODO fix this in the map because wildy
+        //        //guessing is too unreliable
+        //        auto dir = hole.target - hole.tee;
+        //        hole.tee += dir * 0.5f;
 
-                dir = hole.pin - hole.target;
-                hole.target += dir * 0.5f;
+        //        dir = hole.pin - hole.target;
+        //        hole.target += dir * 0.5f;
 
-                hole.tee.y = m_collisionMesh.getTerrain(hole.tee).height;
-                hole.target.y = m_collisionMesh.getTerrain(hole.target).height;
-            }
-            break;
+        //        hole.tee.y = m_collisionMesh.getTerrain(hole.tee).height;
+        //        hole.target.y = m_collisionMesh.getTerrain(hole.target).height;
+        //    }
+        //    break;
         case ScoreType::MultiTarget:
             if (!hole.puttFromTee)
             {

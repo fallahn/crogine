@@ -2722,6 +2722,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
                         break;
                     case ScoreType::Stroke:
                     case ScoreType::ShortRound:
+                    case ScoreType::MultiTarget:
                         info.score = m_sharedData.connectionData[i].playerData[j].parScore;
                         break;
                     case ScoreType::Match:
@@ -2760,6 +2761,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
             switch (m_sharedData.scoreType)
             {
             default:
+            case ScoreType::MultiTarget:
             case ScoreType::ShortRound:
             case ScoreType::Stroke:
                 if (score.score < 0)
@@ -3946,6 +3948,7 @@ void MenuState::createPreviousScoreCard()
                 case ScoreType::Stableford:
                     //do nothing, we re-calc below
                     break;
+                case ScoreType::MultiTarget:
                 case ScoreType::Stroke:
                 case ScoreType::ShortRound:
                     entry.roundScore = m_sharedData.connectionData[i].playerData[j].parScore;

@@ -35,6 +35,32 @@ source distribution.
 #include <crogine/util/Spline.hpp>
 #include <crogine/detail/glm/vec3.hpp>
 
+#include <array>
+#include <string>
+
+static const std::array<std::string, 10u> CourseNames =
+{
+    "course_01",
+    "course_02",
+    "course_03",
+    "course_04",
+    "course_05",
+    "course_06",
+    "course_07",
+    "course_08",
+    "course_09",
+    "course_10",
+};
+
+static inline std::int32_t getCourseIndex(const std::string& name)
+{
+    if (auto result = std::find(CourseNames.begin(), CourseNames.end(), name); result != CourseNames.end())
+    {
+        return static_cast<std::int32_t>(std::distance(CourseNames.begin(), result));
+    }
+    return -1;
+}
+
 struct HoleData final
 {
     glm::vec3 tee = glm::vec3(0.f);

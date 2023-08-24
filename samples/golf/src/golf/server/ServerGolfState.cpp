@@ -1152,6 +1152,29 @@ void GolfState::initScene()
     m_scene.addSystem<cro::CallbackSystem>(mb);
     m_scene.addSystem<BallSystem>(mb)->setGimmeRadius(m_sharedData.gimmeRadius);
 
+    if (m_sharedData.scoreType == ScoreType::ShortRound
+        && getCourseIndex(m_sharedData.mapDir.toAnsiString()) != -1)
+    {
+        switch (m_sharedData.holeCount)
+        {
+        default:
+        case 0:
+        {
+            auto size = std::min(m_holeData.size(), 12ull);
+            m_holeData.resize(size);
+        }
+        break;
+        case 1:
+        case 2:
+        {
+            auto size = std::min(m_holeData.size(), 6ull);
+            m_holeData.resize(size);
+        }
+        break;
+        }
+    }
+
+
     //check for putt from tee and update any rule properties
     for (auto& hole : m_holeData)
     {
@@ -1160,7 +1183,8 @@ void GolfState::initScene()
         switch (m_sharedData.scoreType)
         {
         default: break;
-        case ScoreType::ShortRound:
+            //this now just reduces hole count by 33%
+        /*case ScoreType::ShortRound:
             if (!hole.puttFromTee)
             {
                 hole.par = std::min(3, hole.par);
@@ -1174,7 +1198,7 @@ void GolfState::initScene()
                 hole.tee.y = m_scene.getSystem<BallSystem>()->getTerrain(hole.tee).intersection.y;
                 hole.target.y = m_scene.getSystem<BallSystem>()->getTerrain(hole.target).intersection.y;
             }
-            break;
+            break;*/
         case ScoreType::MultiTarget:
             if (!hole.puttFromTee)
             {

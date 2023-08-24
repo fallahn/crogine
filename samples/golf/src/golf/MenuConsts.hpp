@@ -69,11 +69,11 @@ static const std::array<std::string, ScoreType::Count> ScoreTypes =
     "Match Play",
     "Skins",
     "Multi-target",
+    "Short Round",
     /*
     "Bingo Bango Bongo",
     "Nearest the Pin",
     "Longest Drive",
-    "Short Round",
     */
 };
 
@@ -101,11 +101,15 @@ static const std::array<std::string, ScoreType::Count> RuleDescriptions =
     "Holes are scored individually by fewest strokes\n and one point is awarded for each hole won.\nThe player with the most points wins.",
     "Holes are scored individually by fewest strokes.\nThe winner of the hole gets the skins pot,\nelse the pot rolls over to the next hole.",
     "Stroke play, but each player must hit the mid-point\ntarget before reaching the green. Not hitting the\ntarget forfeits the hole.\nPar is increased by one on larger courses.",
+#ifdef USE_GNS
+    "As stroke play, however the number of holes is\nreduced by 33% - 18 holes become 12 and 9 holes\nbecome 6. Ideal for casual games. User courses\nremain unaffected, and scores are omitted from\nthe leaderboards.",
+#else
+    "As stroke play, however the number of holes is\nreduced by 33% - 18 holes become 12 and 9 holes\nbecome 6. Ideal for casual games. User courses\nremain unaffected.",
+#endif
     /*
     "The first player on the green scores Bingo, the\nplayer closest to the pin when all players are on\nthe green scores Bango and first to hole out wins\nBongo. Not recommended for putting courses.",
     "Each player has one stroke to get as near to the\npin as possible. The winner is the player with the\nshortest total distance.\nGreat for casual play.",
     "Each player has one stroke to make the longest\ndrive possible while staying on the fairway.\nThe winner is the player with the longest total\ndistance.",
-    "As stroke play, but the tee is\nmoved closer to the pin and\neach hole's par is reduced\nby one. Achievements are disabled.",
     */
 };
 

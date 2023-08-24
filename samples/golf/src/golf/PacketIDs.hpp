@@ -42,12 +42,12 @@ namespace ScoreType
         
         Match, Skins,
         MultiTarget,
+        ShortRound,
 
         Count,
         BBB,
         NearestThePin,
         LongestDrive,
-        ShortRound,
     };
 }
 
