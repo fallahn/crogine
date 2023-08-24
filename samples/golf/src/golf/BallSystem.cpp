@@ -232,7 +232,7 @@ const BullsEye& BallSystem::spawnBullsEye()
     m_bullsEye.diametre = static_cast<float>(cro::Util::Random::value(8, 12));
     if (m_puttFromTee)
     {
-        m_bullsEye.diametre *= 0.027f;
+        m_bullsEye.diametre *= 0.032f;
     }
         
     m_bullsEye.position = m_holeData->target;

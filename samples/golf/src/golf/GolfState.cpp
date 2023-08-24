@@ -5946,7 +5946,7 @@ void GolfState::handleBullHit(const BullHit& bh)
 
             if (!m_sharedData.connectionData[bh.client].playerData[bh.player].targetHit)
             {
-                auto xp = static_cast<std::int32_t>(50.f * bh.accuracy);
+                auto xp = static_cast<std::int32_t>(80.f * bh.accuracy);
                 if (xp)
                 {
                     Social::awardXP(xp, XPStringID::BullsEyeHit);
