@@ -4308,7 +4308,7 @@ void MenuState::createPreviousScoreCard()
     case ScoreType::StablefordPro:
         if (page2)
         {
-            str += "FRONT";
+            str += "F9";
         }
         else
         {
@@ -4367,7 +4367,7 @@ void MenuState::createPreviousScoreCard()
             break;
         case ScoreType::Stableford:
         case ScoreType::StablefordPro:
-            str += "BACK - FINAL";
+            str += "B9 - FINAL";
             break;
         }
 
@@ -4395,11 +4395,7 @@ void MenuState::createPreviousScoreCard()
             case ScoreType::StablefordPro:
                 if (entry.totalBack < 10)
                 {
-                    str += "   ";
-                }
-                else
-                {
-                    str += "  ";
+                    str += " ";
                 }
                 str += " - " + std::to_string(entry.total) + " POINTS";
                 break;

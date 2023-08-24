@@ -2637,7 +2637,7 @@ void GolfState::updateScoreboard(bool updateParDiff)
     case ScoreType::StablefordPro:
         if (page2)
         {
-            totalString += "FRONT";
+            totalString += "F9";
         }
         else
         {
@@ -2732,7 +2732,7 @@ void GolfState::updateScoreboard(bool updateParDiff)
             break;
         case ScoreType::Stableford:
         case ScoreType::StablefordPro:
-            totalString += "BACK - FINAL";
+            totalString += "B9 - FINAL";
             break;
         }
         
@@ -2766,11 +2766,7 @@ void GolfState::updateScoreboard(bool updateParDiff)
                 //align with back/total string
                 if (scores[i].backNine < 10)
                 {
-                    totalString += "   ";
-                }
-                else
-                {
-                    totalString += "  ";
+                    totalString += " ";
                 }
                 totalString += " - " + std::to_string(scores[i].total);
                 if (scores[i].total == 1)
