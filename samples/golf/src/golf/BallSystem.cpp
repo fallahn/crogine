@@ -430,7 +430,7 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
             newPos.y = terrainContact.intersection.y;
             tx.setPosition(newPos);
         }
-
+        doBullsEyeCollision(tx.getPosition());
 
 
         const auto resetBall = [&](Ball::State state, std::uint8_t terrain)
@@ -1186,21 +1186,24 @@ void BallSystem::doBullsEyeCollision(glm::vec3 ballPos)
 {
     if (m_bullsEye.spawn && m_processFlags != ProcessFlags::Predicting)
     {
-        const glm::vec2 p1(ballPos.x, ballPos.z);
-        const glm::vec2 p2(m_bullsEye.position.x, m_bullsEye.position.z);
+        const glm::vec2 p1(ballPos.x, -ballPos.z);
+        const glm::vec2 p2(m_bullsEye.position.x, -m_bullsEye.position.z);
 
         const float BullRad = m_bullsEye.diametre / 2.f;
 
         if (auto len2 = glm::length2(p2 - p1); len2 < (BullRad * BullRad))
         {
+            auto* msg = postMessage<BullsEyeEvent>(sv::MessageID::BullsEyeMessage);
             //unlikely, but will upset sqrt
             if (len2 == 0)
             {
-                len2 = 0.000001f;
+                //len2 = 0.000001f;
+                msg->accuracy = 1.f;
             }
-
-            auto* msg = postMessage<BullsEyeEvent>(sv::MessageID::BullsEyeMessage);
-            msg->accuracy = std::clamp(1.f - (std::sqrt(len2) / BullRad), 0.f, 1.f);
+            else
+            {
+                msg->accuracy = std::clamp(1.f - (std::sqrt(len2) / BullRad), 0.f, 1.f);
+            }
             msg->position = ballPos;
         }
     }

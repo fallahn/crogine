@@ -4396,7 +4396,7 @@ void MenuState::createPreviousScoreCard()
                 break;
             case ScoreType::Stableford:
             case ScoreType::StablefordPro:
-                if (entry.totalBack < 10)
+                if (entry.totalBack < 10 && entry.totalBack > -1)
                 {
                     str += " ";
                 }

@@ -2765,7 +2765,7 @@ void GolfState::updateScoreboard(bool updateParDiff)
             case ScoreType::Stableford:
             case ScoreType::StablefordPro:
                 //align with back/total string
-                if (scores[i].backNine < 10)
+                if (scores[i].backNine < 10 && scores[i].backNine > -1)
                 {
                     totalString += " ";
                 }
