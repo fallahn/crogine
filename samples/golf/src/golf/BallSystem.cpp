@@ -1309,16 +1309,18 @@ bool BallSystem::updateCollisionMesh(const std::string& modelPath)
     //we have to create a specific object for each sub mesh
     //to be able to tag it with a different terrain...
 
-    //Later note: now we have per-traingle terrain detection this probably isn't true now.
-    for (auto i = 0u; i < m_indexData.size(); ++i)
+    //Later note: now we have per-triangle terrain detection this probably isn't true now.
+    //for (auto i = 0u; i < m_indexData.size(); ++i)
+    for(const auto& id : m_indexData)
     {
         btIndexedMesh groundMesh;
         groundMesh.m_vertexBase = reinterpret_cast<std::uint8_t*>(m_vertexData.data());
         groundMesh.m_numVertices = static_cast<int>(meshData.vertexCount);
         groundMesh.m_vertexStride = static_cast<int>(meshData.vertexSize);
 
-        groundMesh.m_numTriangles = meshData.indexData[i].indexCount / 3;
-        groundMesh.m_triangleIndexBase = reinterpret_cast<std::uint8_t*>(m_indexData[i].data());
+        
+        groundMesh.m_numTriangles = /*meshData.indexData[i].indexCount*/id.size() / 3;
+        groundMesh.m_triangleIndexBase = reinterpret_cast<const std::uint8_t*>(id.data());
         groundMesh.m_triangleIndexStride = 3 * sizeof(std::uint32_t);
 
 
