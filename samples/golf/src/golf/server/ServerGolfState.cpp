@@ -1183,22 +1183,6 @@ void GolfState::initScene()
         switch (m_sharedData.scoreType)
         {
         default: break;
-            //this now just reduces hole count by 33%
-        /*case ScoreType::ShortRound:
-            if (!hole.puttFromTee)
-            {
-                hole.par = std::min(3, hole.par);
-
-                auto dir = hole.target - hole.tee;
-                hole.tee += dir * 0.5f;
-
-                dir = hole.pin - hole.target;
-                hole.target += dir * 0.5f;
-
-                hole.tee.y = m_scene.getSystem<BallSystem>()->getTerrain(hole.tee).intersection.y;
-                hole.target.y = m_scene.getSystem<BallSystem>()->getTerrain(hole.target).intersection.y;
-            }
-            break;*/
         case ScoreType::MultiTarget:
             if (!hole.puttFromTee)
             {

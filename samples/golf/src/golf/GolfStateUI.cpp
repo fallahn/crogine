@@ -1849,7 +1849,8 @@ void GolfState::showCountdown(std::uint8_t seconds)
     }
 
     //loading the db can be choppy so spin this off in a thread
-    if (m_courseIndex != -1)
+    if (m_courseIndex != -1
+        && m_sharedData.scoreType == ScoreType::Stroke)
     {
         m_statResult = std::async(std::launch::async, &GolfState::updateProfileDB, this);
     }

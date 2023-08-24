@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2022
+Matt Marchant 2021 - 2023
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -254,7 +254,9 @@ void ErrorState::buildScene()
 
     //message
     entity = createItem(glm::vec2(0.f, 70.f), m_sharedData.errorMessage, menuEntity);
-    
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    entity.getComponent<cro::Transform>().setOrigin({ 0.f, 0.f });
+
     std::string continueMsg;
     if (cro::GameController::getControllerCount() != 0)
     {

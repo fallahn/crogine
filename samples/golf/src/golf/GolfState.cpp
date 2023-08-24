@@ -3494,25 +3494,6 @@ void GolfState::loadAssets()
         switch (m_sharedData.scoreType)
         {
         default: break;
-            //this now just reduces the number of holes
-        //case ScoreType::ShortRound:
-        //    //if we're playing a short round, move the tee
-        //    if (!hole.puttFromTee)
-        //    {
-        //        hole.par = std::min(3, hole.par);
-
-        //        //TODO fix this in the map because wildy
-        //        //guessing is too unreliable
-        //        auto dir = hole.target - hole.tee;
-        //        hole.tee += dir * 0.5f;
-
-        //        dir = hole.pin - hole.target;
-        //        hole.target += dir * 0.5f;
-
-        //        hole.tee.y = m_collisionMesh.getTerrain(hole.tee).height;
-        //        hole.target.y = m_collisionMesh.getTerrain(hole.target).height;
-        //    }
-        //    break;
         case ScoreType::MultiTarget:
             if (!hole.puttFromTee)
             {
@@ -6493,6 +6474,21 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo)
         if (m_sharedData.reverseCourse)
         {
             holeNumber = static_cast<std::uint32_t>(m_holeData.size() + 1) - holeNumber;
+
+            if (m_sharedData.scoreType == ScoreType::ShortRound)
+            {
+                switch (m_sharedData.holeCount)
+                {
+                default:
+                case 0:
+                    holeNumber += 6;
+                    break;
+                case 1:
+                case 2:
+                    holeNumber += 3;
+                    break;
+                }
+            }
         }
 
         if (m_sharedData.holeCount == 2)
