@@ -316,6 +316,7 @@
     <ClCompile Include="src\collision\RollSystem.cpp" />
     <ClCompile Include="src\frustum\FrustumState.cpp" />
     <ClCompile Include="src\gc\GcState.cpp" />
+    <ClCompile Include="src\league\League.cpp" />
     <ClCompile Include="src\LoadingScreen.cpp" />
     <ClCompile Include="src\log\LogState.cpp" />
     <ClCompile Include="src\main.cpp" />
@@ -365,6 +366,7 @@
     <ClInclude Include="src\ErrorCheck.hpp" />
     <ClInclude Include="src\frustum\FrustumState.hpp" />
     <ClInclude Include="src\gc\GcState.hpp" />
+    <ClInclude Include="src\league\League.hpp" />
     <ClInclude Include="src\LoadingScreen.hpp" />
     <ClInclude Include="src\log\LogState.hpp" />
     <ClInclude Include="src\MenuState.hpp" />

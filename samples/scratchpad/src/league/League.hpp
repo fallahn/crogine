@@ -27,43 +27,42 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-//Auto-generated header file for Scratchpad Stub 05/01/2023, 21:01:55
-
 #pragma once
 
-#include "../StateIDs.hpp"
-#include "../league/League.hpp"
+#include <cstdint>
+#include <array>
 
-#include <crogine/core/State.hpp>
-#include <crogine/ecs/Scene.hpp>
-#include <crogine/gui/GuiClient.hpp>
-#include <crogine/graphics/ModelDefinition.hpp>
+struct LeaguePlayer final
+{
+    std::int32_t skill = 1; //indexes into the skill array
+    std::int32_t curve = 0; //selects skill curve of final result
+    std::int32_t outlier = 0; //chance in 100 of making a mess.
+    std::int32_t nameIndex = 0;
 
-class AnimBlendState final : public cro::State, public cro::GuiClient
+    std::int32_t currentScore = 0; //this is total par diff so lower is better
+};
+
+class League final
 {
 public:
-    AnimBlendState(cro::StateStack&, cro::State::Context);
+    static constexpr std::size_t PlayerCount = 7u;
 
-    cro::StateID getStateID() const override { return States::ScratchPad::AnimBlend; }
 
-    bool handleEvent(const cro::Event&) override;
-    void handleMessage(const cro::Message&) override;
-    bool simulate(float) override;
-    void render() override;
+    League();
+
+    void reset();
+    void iterate(); //TODO indicate which course data to use for iteration
+
+    std::int32_t getCurrentIteration() const { return m_currentIteration; }
+
+    const std::array<LeaguePlayer, PlayerCount>& getTable() const { return m_players; }
 
 private:
+    std::array<LeaguePlayer, PlayerCount> m_players = {};
 
-    cro::Scene m_gameScene;
-    cro::Scene m_uiScene;
-    cro::ResourceCollection m_resources;
+    std::int32_t m_currentIteration;
+    static constexpr std::int32_t MaxIterations = 24;
 
-    cro::Entity m_modelEntity;
-
-    League m_league;
-
-    void addSystems();
-    void loadAssets();
-    void createScene();
-    void createUI();
-
+    void read();
+    void write();
 };
