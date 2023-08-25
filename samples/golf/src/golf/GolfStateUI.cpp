@@ -2490,10 +2490,10 @@ void GolfState::updateScoreboard(bool updateParDiff)
     for (auto i = 1u; i < ents.size() - 1; ++i)
     {
         auto holeNumber = i;
-        if (m_sharedData.holeCount == 2)
+        /*if (m_sharedData.holeCount == 2)
         {
             holeNumber += 9;
-        }
+        }*/
 
         std::string scoreString = std::to_string(holeNumber) + "\n";
         switch (m_sharedData.scoreType)

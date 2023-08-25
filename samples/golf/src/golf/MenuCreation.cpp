@@ -3889,17 +3889,12 @@ void MenuState::createPreviousScoreCard()
 
 
 
-
-
-
-
     //fills with dummy data for testing  - must remove this!
     //for (auto i = 0u; i < ConstVal::MaxClients; ++i)
     //{
     //    for (auto j = 0u; j < ConstVal::MaxPlayers; ++j)
     //    {
     //        m_sharedData.connectionData[i].playerData[j].name = RandomNames[cro::Util::Random::value(0u, RandomNames.size() - 1)];
-
     //        m_sharedData.connectionData[i].playerData[j].holeScores.resize(18);
     //        for (auto& score : m_sharedData.connectionData[i].playerData[j].holeScores)
     //        {

@@ -6503,7 +6503,15 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo)
 
         if (m_sharedData.holeCount == 2)
         {
-            holeNumber += static_cast<std::uint32_t>(m_holeData.size());
+            if (m_sharedData.scoreType == ScoreType::ShortRound
+                && m_courseIndex != -1)
+            {
+                holeNumber += 9;
+            }
+            else
+            {
+                holeNumber += static_cast<std::uint32_t>(m_holeData.size());
+            }
         }
 
         auto& data = e.getComponent<cro::Callback>().getUserData<TextCallbackData>();

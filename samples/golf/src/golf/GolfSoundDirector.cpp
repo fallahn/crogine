@@ -335,7 +335,7 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
             }
             break;
             case GolfEvent::NiceShot:
-                playSoundDelayed(cro::Util::Random::value(AudioID::NiceSwing01, AudioID::NiceSwing03), data.position, 0.5f, MixerChannel::Voice);
+                playSoundDelayed(cro::Util::Random::value(AudioID::NiceSwing01, AudioID::NiceSwing03), data.position, 0.45f, MixerChannel::Voice);
                 break;
             case GolfEvent::PowerShot:
                 playSound(AudioID::PowerBall, data.position).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
