@@ -221,6 +221,9 @@ void Server::run()
                 case PacketID::PlayerXP:
                     m_sharedData.host.broadcastPacket(PacketID::PlayerXP, evt.packet.as<std::uint16_t>(), net::NetFlag::Reliable);
                     break;
+                case PacketID::ChatMessage:
+                    m_sharedData.host.broadcastPacket(PacketID::ChatMessage, evt.packet.as<TextMessage>(), net::NetFlag::Reliable, ConstVal::NetChannelStrings);
+                    break;
                 }
             }
         }

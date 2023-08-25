@@ -31,6 +31,7 @@ source distribution.
 
 #include "SharedStateData.hpp"
 
+#include <crogine/core/Clock.hpp>
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/gui/Gui.hpp>
 #include <crogine/gui/GuiClient.hpp>
@@ -54,7 +55,7 @@ private:
 
     struct BufferLine final
     {
-        const std::string str;
+        const cro::String str;
         ImVec4 colour;
 
         BufferLine(const std::string& s, ImVec4 c)
@@ -64,6 +65,8 @@ private:
     static constexpr std::size_t MaxLines = 24;
     std::deque<BufferLine> m_displayBuffer;
     std::string m_inputBuffer;
+
+    cro::Clock m_limitClock;
 
     void sendTextChat();
 };
