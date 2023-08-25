@@ -29,6 +29,12 @@ source distribution.
 
 #include "TextChat.hpp"
 #include "PacketIDs.hpp"
+#include "MenuConsts.hpp"
+
+#include <crogine/ecs/components/Callback.hpp>
+#include <crogine/ecs/components/Transform.hpp>
+#include <crogine/ecs/components/Drawable2D.hpp>
+#include <crogine/ecs/components/Text.hpp>
 
 #include <cstring>
 
@@ -38,9 +44,11 @@ namespace
 }
 
 TextChat::TextChat(cro::Scene& s, SharedStateData& sd)
-    : m_scene   (s),
-    m_sharedData(sd),
-    m_visible   (false)
+    : m_scene           (s),
+    m_sharedData        (sd),
+    m_visible           (false),
+    m_scrollToEnd       (false),
+    m_screenChatIndex   (0)
 {
     registerWindow([&]() 
         {
@@ -60,9 +68,11 @@ TextChat::TextChat(cro::Scene& s, SharedStateData& sd)
                         ImGui::PopStyleColor();
                     }
 
-                    if (ImGui::GetScrollY() >= ImGui::GetScrollMaxY())
+                    if (m_scrollToEnd ||
+                        ImGui::GetScrollY() >= ImGui::GetScrollMaxY())
                     {
                         ImGui::SetScrollHereY(1.0f);
+                        m_scrollToEnd = false;
                     }
                     ImGui::PopStyleVar();
                     ImGui::EndChild();
@@ -103,18 +113,20 @@ void TextChat::handlePacket(const net::NetEvent::Packet& pkt)
     auto end = std::find(msg.messageData.begin(), msg.messageData.end(), char(0));
     auto msgText = cro::String::fromUtf8(msg.messageData.begin(), end);
 
+    cro::Colour chatColour = TextNormalColour;
+
     //process any emotes such as /me and choose colour
     if (auto p = msgText.find("/me"); p != cro::String::InvalidPos
         && msgText.size() > 4)
     {
+        chatColour = TextGoldColour;
         outStr += " " + msgText.substr(p + 4);
-        m_displayBuffer.emplace_back(outStr, ImVec4(1.f, 1.f, 0.f, 1.f));
     }
     else
     {
         outStr += ": " + msgText;
-        m_displayBuffer.emplace_back(outStr, ImVec4(1.f, 1.f, 1.f, 1.f));
     }
+    m_displayBuffer.emplace_back(outStr, ImVec4(chatColour));
 
     if (m_displayBuffer.size() > MaxLines)
     {
@@ -122,7 +134,51 @@ void TextChat::handlePacket(const net::NetEvent::Packet& pkt)
     }
 
     
-    //TODO create an entity to temporarily show the message on screen
+    //create an entity to temporarily show the message on screen
+    if (m_screenChatBuffer[m_screenChatIndex].isValid())
+    {
+        m_scene.destroyEntity(m_screenChatBuffer[m_screenChatIndex]);
+    }
+    //TODO we need to attach this to some root node?
+    const auto& font = m_sharedData.sharedResources->fonts.get(FontID::Label);
+    auto entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 10.f, 30.f, 1.f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(font).setString(outStr);
+    entity.getComponent<cro::Text>().setFillColour(chatColour);
+    entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+    entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
+    entity.getComponent<cro::Text>().setCharacterSize(LabelTextSize);
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<float>(5.f);
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float dt)
+    {
+        float& currTime = e.getComponent<cro::Callback>().getUserData<float>();
+        currTime -= dt;
+        float alpha = std::clamp(currTime, 0.f, 1.f);
+        auto c = e.getComponent<cro::Text>().getFillColour();
+        c.setAlpha(alpha);
+        e.getComponent<cro::Text>().setFillColour(c);
+
+        c = e.getComponent<cro::Text>().getShadowColour();
+        c.setAlpha(alpha);
+        e.getComponent<cro::Text>().setShadowColour(c);
+
+        if (currTime < 0)
+        {
+            e.getComponent<cro::Callback>().active = false;
+            m_scene.destroyEntity(e);
+        }
+    };
+    m_rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    m_screenChatBuffer[m_screenChatIndex] = entity;
+    m_screenChatIndex = (m_screenChatIndex + 1) % 2;
+    if (m_screenChatBuffer[m_screenChatIndex].isValid())
+    {
+        m_screenChatBuffer[m_screenChatIndex].getComponent<cro::Transform>().move({ 0.f, 12.f });
+    }
 }
 
 
@@ -143,5 +199,6 @@ void TextChat::sendTextChat()
         m_sharedData.clientConnection.netClient.sendPacket(PacketID::ChatMessage, msg, net::NetFlag::Reliable, ConstVal::NetChannelStrings);
 
         m_limitClock.restart();
+        m_scrollToEnd = true;
     }
 }

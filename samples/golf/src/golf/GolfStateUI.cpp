@@ -239,6 +239,7 @@ void GolfState::buildUI()
     entity.addComponent<cro::Drawable2D>();
     auto infoEnt = entity;
     createSwingMeter(infoEnt);
+    m_textChat.setRootNode(infoEnt);
 
     auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
 

@@ -47,11 +47,14 @@ public:
 
     void toggleWindow() { m_visible = !m_visible; }
 
+    void setRootNode(cro::Entity e) { m_rootNode = e; }
+
 private:
 
     cro::Scene& m_scene;
     SharedStateData& m_sharedData;
     bool m_visible;
+    bool m_scrollToEnd;
 
     struct BufferLine final
     {
@@ -67,6 +70,10 @@ private:
     std::string m_inputBuffer;
 
     cro::Clock m_limitClock;
+
+    cro::Entity m_rootNode;
+    std::array<cro::Entity, 2U> m_screenChatBuffer = {};
+    std::size_t m_screenChatIndex;
 
     void sendTextChat();
 };

@@ -45,6 +45,7 @@ Index of this file:
 //#include "imconfig.h"
 #define IMGUI_IMPL_OPENGL_LOADER_GLAD
 #include <crogine/Config.hpp>
+#include <crogine/graphics/Colour.hpp>
 #include <crogine/detail/glm/vec2.hpp>
 #include <crogine/detail/glm/vec4.hpp>
 #define IM_VEC2_CLASS_EXTRA                                                 \
@@ -53,7 +54,8 @@ Index of this file:
 
 #define IM_VEC4_CLASS_EXTRA                                                 \
         ImVec4(const glm::vec4& f) { x = f.x; y = f.y; z = f.z; w = f.w; }     \
-        operator glm::vec4() const { return glm::vec4(x,y,z,w); }
+        operator glm::vec4() const { return glm::vec4(x,y,z,w); }           \
+        ImVec4(const cro::Colour& c) { x = c.getRed(); y = c.getGreen(); z = c.getBlue(); w = c.getAlpha(); }
 #endif
 
 #ifndef IMGUI_DISABLE
