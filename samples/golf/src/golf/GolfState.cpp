@@ -5492,6 +5492,9 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
         default: break;
         case PacketID::ChatMessage:
             m_textChat.handlePacket(evt.packet);
+            {
+                postMessage<SceneEvent>(MessageID::SceneMessage)->type = SceneEvent::ChatMessage;
+            }
             break;
         case PacketID::FlagHit:
         {

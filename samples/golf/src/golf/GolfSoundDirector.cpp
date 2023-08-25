@@ -164,6 +164,7 @@ GolfSoundDirector::GolfSoundDirector(cro::AudioResource& ar)
         "assets/golf/sound/ambience/foot04.wav",
 
         "assets/golf/sound/bad.wav",
+        "assets/golf/sound/tutorial_appear.wav",
 
         "assets/golf/sound/ambience/crowd_clear_throat.wav",
         "assets/golf/sound/ambience/crowd_cough.wav",
@@ -576,6 +577,10 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
             {
                 playSound(AudioID::BadSport, glm::vec3(0.f), 0.8f).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
                 playSoundDelayed(AudioID::NearMiss, glm::vec3(0.f), 1.f, 1.f, MixerChannel::Effects);
+            }
+            else if (data.type == SceneEvent::ChatMessage)
+            {
+                playSound(AudioID::Chat, glm::vec3(0.f), 0.3f).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Menu);
             }
         }
         break;

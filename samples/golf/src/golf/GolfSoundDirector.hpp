@@ -152,6 +152,7 @@ private:
             Foot03,
             Foot04,
             BadSport,
+            Chat,
 
             CrowdClearThroat,
             CrowdCough,
