@@ -120,6 +120,7 @@ GolfSoundDirector::GolfSoundDirector(cro::AudioResource& ar)
         "assets/golf/sound/terrain/fairway02.wav",
         "assets/golf/sound/terrain/green01.wav",
         "assets/golf/sound/terrain/green02.wav",
+        "assets/golf/sound/terrain/green03.wav",
         "assets/golf/sound/terrain/rough01.wav",
         "assets/golf/sound/terrain/rough02.wav",
         "assets/golf/sound/terrain/scrub01.wav",
@@ -138,6 +139,7 @@ GolfSoundDirector::GolfSoundDirector(cro::AudioResource& ar)
         "assets/golf/sound/kudos/power_drive.wav",
         "assets/golf/sound/kudos/power_drive02.wav",
         "assets/golf/sound/kudos/power_drive03.wav",
+        "assets/golf/sound/kudos/power_drive04.wav",
         "assets/golf/sound/kudos/flag_pole.wav",
 
         "assets/golf/sound/kudos/hook.wav",
@@ -343,7 +345,7 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
 
                 if (cro::Util::Random::value(0, 2) == 0)
                 {
-                    playSoundDelayed(AudioID::PowerShot01 + cro::Util::Random::value(0,2), data.position, 1.5f, 1.1f, MixerChannel::Voice);
+                    playSoundDelayed(AudioID::PowerShot01 + cro::Util::Random::value(0,3), data.position, 1.5f, 1.1f, MixerChannel::Voice);
                 }
                 break;
             case GolfEvent::ClubSwing:
@@ -443,7 +445,7 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
                     case TerrainID::Green:
                         if (data.club != ClubID::Putter) //previous shot wasn't from green
                         {
-                            playSound(cro::Util::Random::value(AudioID::TerrainGreen01, AudioID::TerrainGreen02), glm::vec3(0.f));
+                            playSound(cro::Util::Random::value(AudioID::TerrainGreen01, AudioID::TerrainGreen03), glm::vec3(0.f));
 
                             if (data.pinDistance < MinHoleDistance //near the hole
                                 || data.travelDistance > 10000.f) //landed a long shot

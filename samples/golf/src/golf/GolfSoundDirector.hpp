@@ -110,6 +110,7 @@ private:
             TerrainFairway02,
             TerrainGreen01,
             TerrainGreen02,
+            TerrainGreen03,
             TerrainRough01,
             TerrainRough02,
             TerrainScrub01,
@@ -128,6 +129,7 @@ private:
             PowerShot01,
             PowerShot02,
             PowerShot03,
+            PowerShot04,
             BigStick,
 
             Hook,
