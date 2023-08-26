@@ -3909,10 +3909,34 @@ void MenuState::createPreviousScoreCard()
 
     //this should still be set from the last round (it'll be modified if the
     //host changes settings but we'll already have built this by now)
-    const auto& courseData = m_courseData[m_sharedData.courseIndex];
+    auto courseData = m_courseData[m_sharedData.courseIndex];
+    if (m_sharedData.reverseCourse)
+    {
+        std::reverse(courseData.parVals.begin(), courseData.parVals.end());
+    }
+
     auto holeCount = static_cast<std::int32_t>(courseData.parVals.size());
     auto frontCount = std::max(holeCount / 2, 1);
     auto backCount = std::min(holeCount - (holeCount / 2), 9);    
+
+    if (m_sharedData.scoreType == ScoreType::ShortRound
+        && !m_sharedData.showCustomCourses)
+    {
+        switch (m_sharedData.holeCount)
+        {
+        default:
+        case 0:
+            backCount = 3;
+            break;
+        case 1:
+            frontCount = 6;
+            break;
+        case 2:
+            backCount = 6;
+            break;
+        }
+    }
+
 
     struct Entry final
     {
@@ -4207,7 +4231,9 @@ void MenuState::createPreviousScoreCard()
                 redStr += "\n";
             }
 
-            if (i < (holeCount - 9))
+            auto holeTotal = m_sharedData.scoreType == ScoreType::ShortRound ? 12 : holeCount;
+
+            if (i < (holeTotal - 9))
             {
                 parTotal += courseData.parVals[parOffset + i + 9];
                 parTotalBack += courseData.parVals[parOffset + i + 9];
