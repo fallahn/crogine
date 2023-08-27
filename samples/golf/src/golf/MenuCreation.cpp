@@ -4036,14 +4036,16 @@ void MenuState::createPreviousScoreCard()
             switch (m_sharedData.scoreType)
             {
             default:
-                return a.roundScore > b.roundScore;
-            case ScoreType::Stableford:
-            case ScoreType::StablefordPro:
-                return a.total > b.total;
             case ScoreType::Stroke:
             case ScoreType::ShortRound:
             case ScoreType::MultiTarget:
                 return a.total < b.total;
+            case ScoreType::Match:
+            case ScoreType::Skins:
+                return a.roundScore > b.roundScore;
+            case ScoreType::Stableford:
+            case ScoreType::StablefordPro:
+                return a.total > b.total;
             }
         });
 

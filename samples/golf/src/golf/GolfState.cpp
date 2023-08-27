@@ -5691,7 +5691,11 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
                             Achievements::incrementStat(StatStrings[StatID::HolesPlayed]);
                             Achievements::awardAchievement(AchievementStrings[AchievementID::JoinTheClub]);
                         }
-                        Social::awardXP(XPValues[XPID::CompleteCourse] / (18 / m_holeData.size()), XPStringID::CourseComplete);
+
+                        if (m_sharedData.scoreType != ScoreType::Skins)
+                        {
+                            Social::awardXP(XPValues[XPID::CompleteCourse] / (18 / m_holeData.size()), XPStringID::CourseComplete);
+                        }
                     }
 
                     //check putt distance / if this was in fact a putt

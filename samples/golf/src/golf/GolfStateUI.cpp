@@ -2405,6 +2405,8 @@ void GolfState::updateScoreboard(bool updateParDiff)
                 return a.score < b.score;
             case ScoreType::Stableford:
             case ScoreType::StablefordPro:
+            case ScoreType::Match:
+            case ScoreType::Skins:
                 return b.score < a.score;
             }
         });
@@ -3630,10 +3632,13 @@ void GolfState::showNotification(const cro::String& msg)
 {
     auto entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 4.f * m_viewScale.x, UIBarHeight * m_viewScale.y * 2.f });
+    entity.getComponent<cro::Transform>().setScale(m_viewScale);
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(m_sharedData.sharedResources->fonts.get(FontID::UI));
-    entity.getComponent<cro::Text>().setCharacterSize(8u * static_cast<std::uint32_t>(m_viewScale.y));
+    entity.getComponent<cro::Text>().setCharacterSize(8u/* * static_cast<std::uint32_t>(m_viewScale.y)*/);
     entity.getComponent<cro::Text>().setFillColour(LeaderboardTextLight);
+    entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+    entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
     entity.addComponent<Notification>().message = msg;
 }
 

@@ -1082,6 +1082,12 @@ void BallSystem::doCollision(cro::Entity entity)
             default: 
                 resetBall(ball, Ball::State::Paused, terrainResult.terrain);
                 break;
+            case TerrainID::Green:
+                //we need to check if we're in hole/gimme rad so switch to rolling state
+                //and let that deal with stopping
+                ball.state = Ball::State::Putt;
+                ball.delay = 0.f;
+                break;
             case TerrainID::Water:
             case TerrainID::Scrub:
                 resetBall(ball, Ball::State::Reset, terrainResult.terrain);

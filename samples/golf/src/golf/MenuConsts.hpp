@@ -99,7 +99,7 @@ static const std::array<std::string, ScoreType::Count> RuleDescriptions =
     "Stroke play rules, however par is scored at\n2 points, with one extra point awarded for every\nstroke under par. Max strokes are reached when\nthere are no more points available.\nThe player with the most points wins.",
     "Stableford rules, however one point for every\nstroke over par is deducted instead of reaching\nthe stroke limit.\nThe player with the most points wins.",
     "Holes are scored individually by fewest strokes\n and one point is awarded for each hole won.\nThe player with the most points wins.",
-    "Holes are scored individually by fewest strokes.\nThe winner of the hole gets the skins pot,\nelse the pot rolls over to the next hole.",
+    "Holes are scored individually by fewest strokes.\nThe winner of the hole gets the skins pot,\nelse the pot rolls over to the next hole.\nThe final hole is repeated until all skins are won.",
     "Stroke play, but each player must hit the mid-point\ntarget before reaching the green. Not hitting the\ntarget forfeits the hole.\nPar is increased by one on larger courses.",
 #ifdef USE_GNS
     "As stroke play, however the number of holes is\nreduced by 33% - 18 holes become 12 and 9 holes\nbecome 6. Ideal for casual games. User courses\nremain unaffected, and scores are omitted from\nthe leaderboards.",
