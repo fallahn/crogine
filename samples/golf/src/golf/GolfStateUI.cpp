@@ -1490,7 +1490,8 @@ void GolfState::showCountdown(std::uint8_t seconds)
         if (m_statBoardScores[0].client == m_sharedData.clientConnection.connectionID)
         {
             auto isCPU = m_sharedData.localConnectionData.playerData[m_statBoardScores[0].player].isCPU;
-            if (!isCPU)
+            if (!isCPU
+                && m_statBoardScores[0].score != m_statBoardScores[1].score) //don't award if drawn first
             {
                 //remember this is auto-disabled if the player is not the only one on the client
                 Achievements::awardAchievement(AchievementStrings[AchievementID::LeaderOfThePack]);

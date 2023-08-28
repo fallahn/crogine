@@ -5376,6 +5376,7 @@ void GolfState::spawnBall(const ActorInfo& info)
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::MiniBall;
     entity.addComponent<MiniBall>().playerID = depthOffset;
     entity.getComponent<MiniBall>().parent = ballEnt;
+    entity.getComponent<MiniBall>().minimap = m_minimapEnt;
 
     m_minimapEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 

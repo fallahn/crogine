@@ -317,7 +317,7 @@ static const std::array<std::pair<std::string, bool>, AchievementID::Count> Achi
     std::make_pair("Win a Stableford match", false),
     std::make_pair("Win a round of Multi-Target", false),
     std::make_pair("Get a hole in one whilst playing Multi-Target", false),
-    std::make_pair("The front row is a splash zone", true),
+    std::make_pair("Gopher broke.", true),
 };
 
 //assuming trophies load correctly they are:
