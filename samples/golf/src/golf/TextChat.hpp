@@ -45,9 +45,15 @@ public:
 
     void handlePacket(const net::NetEvent::Packet&);
 
-    void toggleWindow() { m_visible = !m_visible; }
+    void toggleWindow() { m_visible = !m_visible; m_focusInput = m_visible; }
 
     void setRootNode(cro::Entity e) { m_rootNode = e; }
+
+    enum
+    {
+        Angry, Happy, Laughing, Applaud
+    };
+    void quickEmote(std::int32_t);
 
 private:
 
@@ -55,6 +61,7 @@ private:
     SharedStateData& m_sharedData;
     bool m_visible;
     bool m_scrollToEnd;
+    bool m_focusInput;
 
     struct BufferLine final
     {

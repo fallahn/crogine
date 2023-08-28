@@ -390,6 +390,15 @@ bool GolfState::handleEvent(const cro::Event& evt)
         if (ImGui::GetIO().WantCaptureKeyboard
             || ImGui::GetIO().WantCaptureMouse)
         {
+            if (evt.type == SDL_KEYUP)
+            {
+                if (evt.key.keysym.sym == SDLK_F8 &&
+                    (evt.key.keysym.mod & KMOD_SHIFT))
+                {
+                    m_textChat.toggleWindow();
+                }
+            }
+
             return true;
         }
     }
@@ -513,6 +522,18 @@ bool GolfState::handleEvent(const cro::Event& evt)
             //4&5 rotate camera
         case SDLK_6:
             showMapOverview();
+            break;
+        case SDLK_7:
+            m_textChat.quickEmote(TextChat::Angry);
+            break;
+        case SDLK_8:
+            m_textChat.quickEmote(TextChat::Applaud);
+            break;
+        case SDLK_9:
+            m_textChat.quickEmote(TextChat::Laughing);
+            break;
+        case SDLK_0:
+            m_textChat.quickEmote(TextChat::Happy);
             break;
         case SDLK_TAB:
             showScoreboard(false);
@@ -1329,7 +1350,7 @@ void GolfState::handleMessage(const cro::Message& msg)
         case GolfEvent::DroneHit:
         {
             Achievements::awardAchievement(AchievementStrings[AchievementID::HoleInOneMillion]);
-            Social::awardXP(XPValues[XPID::Special], XPStringID::DroneHit);
+            Social::awardXP(XPValues[XPID::Special] * 5, XPStringID::DroneHit);
 
             m_gameScene.destroyEntity(m_drone);
             m_drone = {};

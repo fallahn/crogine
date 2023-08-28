@@ -30,17 +30,54 @@ source distribution.
 #include "TextChat.hpp"
 #include "PacketIDs.hpp"
 #include "MenuConsts.hpp"
+#include "GameConsts.hpp"
+#include "../GolfGame.hpp"
 
 #include <crogine/ecs/components/Callback.hpp>
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Drawable2D.hpp>
 #include <crogine/ecs/components/Text.hpp>
 
+#include <crogine/detail/OpenGL.hpp>
+#include <crogine/util/Random.hpp>
+
 #include <cstring>
 
 namespace
 {
     const cro::Time ResendTime = cro::seconds(0.5f);
+
+    const std::array<std::string, 4u> AngerStrings =
+    {
+        "/me rages",
+        "/me throws their club into the lake",
+        "/me ejects steam from their ears",
+        "/me stamps their foot"
+    };
+
+    const std::array<std::string, 4u> HappyStrings =
+    {
+        "/me is ecstatic",
+        "/me grins from ear to ear",
+        "/me couldn't be happier",
+        "/me cheers"
+    };
+
+    const std::array<std::string, 4u> ApplaudStrings =
+    {
+        "/me applauds",
+        "/me nods in appreciation",
+        "/me claps",
+        "/me congratulates"
+    };
+
+    const std::array<std::string, 4u> LaughStrings =
+    {
+        "/me laughs like a clogged drain",
+        "/me giggles into their sleeve",
+        "/me laughs out loud",
+        "/me falls on the floor"
+    };
 }
 
 TextChat::TextChat(cro::Scene& s, SharedStateData& sd)
@@ -48,13 +85,14 @@ TextChat::TextChat(cro::Scene& s, SharedStateData& sd)
     m_sharedData        (sd),
     m_visible           (false),
     m_scrollToEnd       (false),
+    m_focusInput        (false),
     m_screenChatIndex   (0)
 {
     registerWindow([&]() 
         {
             if (m_visible)
             {
-                ImGui::SetNextWindowSize({ 400.f, 200.f });
+                ImGui::SetNextWindowSize({ 600.f, 280.f });
                 if (ImGui::Begin("Chat Window", &m_visible))
                 {
                     const float reserveHeight = ImGui::GetStyle().ItemSpacing.y + ImGui::GetFrameHeightWithSpacing();
@@ -78,11 +116,10 @@ TextChat::TextChat(cro::Scene& s, SharedStateData& sd)
                     ImGui::EndChild();
                     ImGui::Separator();
 
-                    bool focusInput = false;
                     if (ImGui::InputText("##ip", &m_inputBuffer, ImGuiInputTextFlags_EnterReturnsTrue))
                     {
                         sendTextChat();
-                        focusInput = true;
+                        m_focusInput = true;
                     }
                     ImGui::SetItemDefaultFocus();
                     
@@ -90,12 +127,13 @@ TextChat::TextChat(cro::Scene& s, SharedStateData& sd)
                     if (ImGui::Button("Send"))
                     {
                         sendTextChat();
-                        focusInput = true;
+                        m_focusInput = true;
                     }
-                    if (focusInput)
+                    if (m_focusInput)
                     {
                         ImGui::SetKeyboardFocusHere(-1);
                     }
+                    m_focusInput = false;
                 }
                 ImGui::End();
             }
@@ -139,10 +177,14 @@ void TextChat::handlePacket(const net::NetEvent::Packet& pkt)
     {
         m_scene.destroyEntity(m_screenChatBuffer[m_screenChatIndex]);
     }
-    //TODO we need to attach this to some root node?
+
+
+    auto uiSize = glm::vec2(GolfGame::getActiveTarget()->getSize());
+    uiSize /= getViewScale(uiSize);
+
     const auto& font = m_sharedData.sharedResources->fonts.get(FontID::Label);
     auto entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 10.f, 30.f, 1.f });
+    entity.addComponent<cro::Transform>().setPosition({ 4.f, std::floor(uiSize.y - 36.f), 1.f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(font).setString(outStr);
     entity.getComponent<cro::Text>().setFillColour(chatColour);
@@ -150,9 +192,31 @@ void TextChat::handlePacket(const net::NetEvent::Packet& pkt)
     entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
     entity.getComponent<cro::Text>().setCharacterSize(LabelTextSize);
     entity.addComponent<cro::Callback>().active = true;
-    entity.getComponent<cro::Callback>().setUserData<float>(5.f);
+    entity.getComponent<cro::Callback>().setUserData<float>(10.f);
+    
+    auto bounds = cro::Text::getLocalBounds(entity);
+    bounds.left -= 2.f;
+    bounds.bottom -= 2.f;
+    bounds.width += 5.f;
+    bounds.height += 4.f;
+
+    static constexpr float BgAlpha = 0.2f;
+    const cro::Colour c(0.f, 0.f, 0.f, BgAlpha);
+    auto bgEnt = m_scene.createEntity();
+    bgEnt.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -0.05f });
+    bgEnt.addComponent<cro::Drawable2D>().setVertexData(
+        {
+            cro::Vertex2D(glm::vec2(bounds.left, bounds.bottom + bounds.height), c),
+            cro::Vertex2D(glm::vec2(bounds.left, bounds.bottom), c),
+            cro::Vertex2D(glm::vec2(bounds.left + bounds.width, bounds.bottom + bounds.height), c),
+            cro::Vertex2D(glm::vec2(bounds.left + bounds.width, bounds.bottom), c)
+        }
+    );
+    bgEnt.getComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLE_STRIP);
+    entity.getComponent<cro::Transform>().addChild(bgEnt.getComponent<cro::Transform>());
+    
     entity.getComponent<cro::Callback>().function =
-        [&](cro::Entity e, float dt)
+        [&, bgEnt](cro::Entity e, float dt) mutable
     {
         float& currTime = e.getComponent<cro::Callback>().getUserData<float>();
         currTime -= dt;
@@ -165,6 +229,13 @@ void TextChat::handlePacket(const net::NetEvent::Packet& pkt)
         c.setAlpha(alpha);
         e.getComponent<cro::Text>().setShadowColour(c);
 
+        c = cro::Colour(0.f, 0.f, 0.f, BgAlpha * alpha);
+        auto& verts = bgEnt.getComponent<cro::Drawable2D>().getVertexData();
+        for (auto& v : verts)
+        {
+            v.colour = c;
+        }
+
         if (currTime < 0)
         {
             e.getComponent<cro::Callback>().active = false;
@@ -173,11 +244,40 @@ void TextChat::handlePacket(const net::NetEvent::Packet& pkt)
     };
     m_rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
-    m_screenChatBuffer[m_screenChatIndex] = entity;
-    m_screenChatIndex = (m_screenChatIndex + 1) % 2;
-    if (m_screenChatBuffer[m_screenChatIndex].isValid())
+
+    for (auto e : m_screenChatBuffer)
     {
-        m_screenChatBuffer[m_screenChatIndex].getComponent<cro::Transform>().move({ 0.f, 12.f });
+        if (e.isValid())
+        {
+            e.getComponent<cro::Transform>().move({ 0.f, 16.f });
+        }
+    }
+    m_screenChatBuffer[m_screenChatIndex] = entity;
+    m_screenChatIndex = (m_screenChatIndex + 1) % m_screenChatBuffer.size();
+}
+
+void TextChat::quickEmote(std::int32_t emote)
+{
+    if (!m_visible)
+    {
+        switch (emote)
+        {
+        default: return;
+        case Angry:
+            m_inputBuffer = AngerStrings[cro::Util::Random::value(0u, AngerStrings.size() - 1)];
+            break;
+        case Happy:
+            m_inputBuffer = HappyStrings[cro::Util::Random::value(0u, HappyStrings.size() - 1)];
+            break;
+        case Laughing:
+            m_inputBuffer = LaughStrings[cro::Util::Random::value(0u, LaughStrings.size() - 1)];
+            break;
+        case Applaud:
+            m_inputBuffer = ApplaudStrings[cro::Util::Random::value(0u, ApplaudStrings.size() - 1)];
+            break;
+        }
+
+        sendTextChat();
     }
 }
 
