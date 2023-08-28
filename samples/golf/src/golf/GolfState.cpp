@@ -5993,6 +5993,14 @@ void GolfState::handleBullHit(const BullHit& bh)
             floatingMessage("Target Hit!");
         }
     }
+    else if (!m_sharedData.connectionData[bh.client].playerData[bh.player].targetHit)
+    {
+        auto* msg = postMessage<GolfEvent>(MessageID::GolfMessage);
+        msg->type = GolfEvent::TargetHit;
+        msg->position = bh.position;
+
+        floatingMessage("Target Hit!");
+    }
     
     //hide the target
     cro::Command cmd;

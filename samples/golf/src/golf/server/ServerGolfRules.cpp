@@ -190,7 +190,10 @@ bool GolfState::summariseRules()
         }
         else //increase the skins pot, but only if not repeating the final hole else we'll be here forever...
         {
-            m_skinsPot++;
+            if (!m_skinsFinals)
+            {
+                m_skinsPot++;
+            }
             std::uint16_t data = 0xff00 | m_skinsPot;
             m_sharedData.host.broadcastPacket(PacketID::HoleWon, data, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
         }

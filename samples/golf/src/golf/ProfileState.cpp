@@ -109,7 +109,7 @@ namespace
     constexpr glm::vec3 CameraBasePosition({ -0.867f, 1.325f, -1.68f });
     constexpr glm::vec3 CameraZoomPosition({ -0.867f, 1.625f, -0.58f });
     const glm::vec3 CameraZoomVector = glm::normalize(CameraZoomPosition - CameraBasePosition);
-    constexpr glm::vec3 MugCameraPosition({ -0.854f, 1.6f, -0.32f });
+    constexpr glm::vec3 MugCameraPosition({ -0.843f, 1.61f, -0.35f });
 
     const cro::String XboxString("LB/LT - RB/RT Rotate/Zoom");
     const cro::String PSString("L1/L2 - R1/R2 Rotate/Zoom");
@@ -1708,9 +1708,9 @@ void ProfileState::buildPreviewScene()
     m_cameras[CameraID::Mugshot] = m_modelScene.createEntity();
     m_cameras[CameraID::Mugshot].addComponent<cro::Transform>().setPosition(MugCameraPosition);
     m_cameras[CameraID::Mugshot].getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, cro::Util::Const::PI);
-    //m_cameras[CameraID::Mugshot].getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -0.157f);
+    m_cameras[CameraID::Mugshot].getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -0.057f);
     auto& cam2 = m_cameras[CameraID::Mugshot].addComponent<cro::Camera>();
-    cam2.setPerspective(70.f * cro::Util::Const::degToRad, 1.f, 0.1f, 6.f);
+    cam2.setPerspective(60.f * cro::Util::Const::degToRad, 1.f, 0.1f, 6.f);
     cam2.viewport = { 0.f, 0.f, 0.5f, 1.f };
     cam2.renderFlags = ~(1 << 1);
 
@@ -2458,7 +2458,7 @@ void ProfileState::generateMugshot()
     m_modelScene.render();
 
     cam.viewport = { 0.5f, 0.f, 0.5f, 1.f };
-    m_cameras[CameraID::Mugshot].getComponent<cro::Transform>().setPosition(MugCameraPosition + glm::vec3(-MugCameraPosition.z + 0.05f, 0.f, -MugCameraPosition.z));
+    m_cameras[CameraID::Mugshot].getComponent<cro::Transform>().setPosition(MugCameraPosition + glm::vec3(-MugCameraPosition.z /*+ 0.05f*/, 0.f, -MugCameraPosition.z));
     m_cameras[CameraID::Mugshot].getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, cro::Util::Const::PI / 2.f);
     m_cameras[CameraID::Mugshot].getComponent<cro::Camera>().updateMatrices(m_cameras[CameraID::Mugshot].getComponent<cro::Transform>());
     m_modelScene.render();
