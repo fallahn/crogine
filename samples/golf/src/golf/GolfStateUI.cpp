@@ -4570,7 +4570,7 @@ void GolfState::showEmote(std::uint32_t data)
     player = std::min(player, std::uint8_t(3u));
 
     auto msg = m_sharedData.connectionData[client].playerData[player].name;
-    msg += " is ";
+    //msg += " is ";
 
     std::int32_t emoteID = SpriteID::EmoteHappy;
     switch (emote)
@@ -4579,18 +4579,18 @@ void GolfState::showEmote(std::uint32_t data)
         msg += "undecided";
         break;
     case Emote::Happy:
-        msg += "happy";
+        msg += " is happy";
         break;
     case Emote::Grumpy:
-        msg += "grumpy";
+        msg += " is grumpy";
         emoteID = SpriteID::EmoteGrumpy;
         break;
     case Emote::Laughing:
-        msg += "laughing";
+        msg += " is laughing";
         emoteID = SpriteID::EmoteLaugh;
         break;
     case Emote::Sad:
-        msg += "sad";
+        msg += " applauds";
         emoteID = SpriteID::EmoteSad;
         break;
     }
