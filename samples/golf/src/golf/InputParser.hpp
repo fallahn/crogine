@@ -75,6 +75,7 @@ public:
 
     bool inProgress() const;
     bool getActive() const;
+    bool isAiming() const { return m_state == InputParser::State::Aim; }
 
     bool isSwingputActive() const { return m_swingput.isActive() && m_state != State::Drone; }
     float getSwingputPosition() const { return m_swingput.getActivePoint().y; }

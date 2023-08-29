@@ -221,6 +221,16 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     m_courseIndex       (getCourseIndex(sd.mapDirectory.toAnsiString())),
     m_emoteWheel        (sd, m_currentPlayer)
 {
+    registerWindow([&]() 
+        {
+            if (ImGui::Begin("Screen pos"))
+            {
+                auto pos = m_gameScene.getActiveCamera().getComponent<cro::Camera>().coordsToPixel(m_currentPlayer.position, m_gameSceneTexture.getSize());
+                ImGui::Text("%3.3f, %3.3f", pos.x, pos.y);
+            }
+            ImGui::End();        
+        });
+
     m_cpuGolfer.setFastCPU(m_sharedData.fastCPU);
 
     godmode = 1.f;
@@ -385,20 +395,38 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
 //public
 bool GolfState::handleEvent(const cro::Event& evt)
 {
-    if (evt.type != SDL_MOUSEMOTION)
+    if (evt.type != SDL_MOUSEMOTION
+        && evt.type != SDL_CONTROLLERBUTTONDOWN
+        && evt.type != SDL_CONTROLLERBUTTONUP)
     {
         if (ImGui::GetIO().WantCaptureKeyboard
             || ImGui::GetIO().WantCaptureMouse)
         {
             if (evt.type == SDL_KEYUP)
             {
-                if (evt.key.keysym.sym == SDLK_F8 &&
-                    (evt.key.keysym.mod & KMOD_SHIFT))
+                switch (evt.key.keysym.sym)
                 {
-                    m_textChat.toggleWindow();
-                }
+                default: break;
+                /*case SDLK_7:
+                    m_textChat.quickEmote(TextChat::Angry);
+                    break;
+                case SDLK_8:
+                    m_textChat.quickEmote(TextChat::Applaud);
+                    break;
+                case SDLK_9:
+                    m_textChat.quickEmote(TextChat::Laughing);
+                    break;
+                case SDLK_0:
+                    m_textChat.quickEmote(TextChat::Happy);
+                    break;*/
+                case SDLK_F8:
+                    if (evt.key.keysym.mod & KMOD_SHIFT)
+                    {
+                        m_textChat.toggleWindow();
+                    }
+                    break;
+                }                
             }
-
             return true;
         }
     }
@@ -1733,6 +1761,20 @@ bool GolfState::simulate(float dt)
             updateCameraHeight(movement * dt);
         }
 
+        //if we're CPU or remote player check screen pos of ball and
+        //move the cam
+        if (m_currentPlayer.client != m_sharedData.localConnectionData.connectionID
+            || m_sharedData.localConnectionData.playerData[m_currentPlayer.player].isCPU)
+        {
+            if (m_inputParser.isAiming())
+            {
+                auto pos = m_gameScene.getActiveCamera().getComponent<cro::Camera>().coordsToPixel(m_currentPlayer.position, m_gameSceneTexture.getSize());
+                if ((pos.y / m_gameSceneTexture.getSize().y) < 0.08f)
+                {
+                    updateCameraHeight(-dt);
+                }
+            }
+        }
 
         float rotation = m_inputParser.getCamRotation() * dt;
         if (getClub() != ClubID::Putter

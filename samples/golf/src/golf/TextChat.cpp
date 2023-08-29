@@ -47,12 +47,14 @@ namespace
 {
     const cro::Time ResendTime = cro::seconds(0.5f);
 
-    const std::array<std::string, 4u> AngerStrings =
+    const std::array<std::string, 6u> AngerStrings =
     {
         "/me rages",
         "/me throws their club into the lake",
         "/me ejects steam from their ears",
-        "/me stamps their foot"
+        "/me stamps their foot",
+        "/me has a tantrum",
+        "/me accidentally swears on a live public feed"
     };
 
     const std::array<std::string, 4u> HappyStrings =
@@ -60,7 +62,7 @@ namespace
         "/me is ecstatic",
         "/me grins from ear to ear",
         "/me couldn't be happier",
-        "/me cheers"
+        "/me incredibly pleased"
     };
 
     const std::array<std::string, 4u> ApplaudStrings =
@@ -76,7 +78,7 @@ namespace
         "/me laughs like a clogged drain",
         "/me giggles into their sleeve",
         "/me laughs out loud",
-        "/me falls on the floor"
+        "/me rolls on the floor with laughter"
     };
 }
 
@@ -258,27 +260,29 @@ void TextChat::handlePacket(const net::NetEvent::Packet& pkt)
 
 void TextChat::quickEmote(std::int32_t emote)
 {
-    if (!m_visible)
-    {
-        switch (emote)
-        {
-        default: return;
-        case Angry:
-            m_inputBuffer = AngerStrings[cro::Util::Random::value(0u, AngerStrings.size() - 1)];
-            break;
-        case Happy:
-            m_inputBuffer = HappyStrings[cro::Util::Random::value(0u, HappyStrings.size() - 1)];
-            break;
-        case Laughing:
-            m_inputBuffer = LaughStrings[cro::Util::Random::value(0u, LaughStrings.size() - 1)];
-            break;
-        case Applaud:
-            m_inputBuffer = ApplaudStrings[cro::Util::Random::value(0u, ApplaudStrings.size() - 1)];
-            break;
-        }
+    //preserve any partially complete input
+    auto oldStr = m_inputBuffer;
 
-        sendTextChat();
+    switch (emote)
+    {
+    default: return;
+    case Angry:
+        m_inputBuffer = AngerStrings[cro::Util::Random::value(0u, AngerStrings.size() - 1)];
+        break;
+    case Happy:
+        m_inputBuffer = HappyStrings[cro::Util::Random::value(0u, HappyStrings.size() - 1)];
+        break;
+    case Laughing:
+        m_inputBuffer = LaughStrings[cro::Util::Random::value(0u, LaughStrings.size() - 1)];
+        break;
+    case Applaud:
+        m_inputBuffer = ApplaudStrings[cro::Util::Random::value(0u, ApplaudStrings.size() - 1)];
+        break;
     }
+
+    sendTextChat();
+
+    m_inputBuffer = oldStr;
 }
 
 
