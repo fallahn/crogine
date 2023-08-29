@@ -54,7 +54,14 @@ source distribution.
 
 namespace
 {
-
+    std::size_t courseIndex = 0;
+    const std::vector<std::array<std::int32_t, 18>> courseData =
+    {
+        std::array<std::int32_t, 18>{4,4,3,3,3,4,4,3,2,3,4,4,5,3,2,3,4,3},
+        std::array<std::int32_t, 18>{4,4,4,3,2,3,4,5,3,3,4,3,4,3,2,3,4,3},
+        std::array<std::int32_t, 18>{4,3,2,3,3,2,4,3,3,4,3,3,4,4,4,5,4,3},
+        std::array<std::int32_t, 18>{4,3,2,3,4,4,3,2,4,3,3,4,4,3,5,3,4,3}
+    };
 }
 
 AnimBlendState::AnimBlendState(cro::StateStack& stack, cro::State::Context context)
@@ -227,10 +234,13 @@ void AnimBlendState::createUI()
                 ImGui::Text("Iteratation: %d", m_league.getCurrentIteration());
                 ImGui::SameLine();
                 ImGui::Text("Season: %d", m_league.getCurrentSeason());
+                ImGui::SameLine();
+                ImGui::Text("Score: %d", m_league.getCurrentScore());
 
                 if (ImGui::Button("Iterate"))
                 {
-                    m_league.iterate();
+                    m_league.iterate(courseData[courseIndex], -36 + cro::Util::Random::value(-2, 5));
+                    courseIndex = (courseIndex + 1) % courseData.size();
                 }
                 ImGui::SameLine();
                 if (ImGui::Button("Reset"))
@@ -244,10 +254,10 @@ void AnimBlendState::createUI()
                     {
                         for (auto j = 0; j < League::MaxIterations; ++j)
                         {
-                            m_league.iterate();
+                            m_league.iterate(courseData[courseIndex], -36 + cro::Util::Random::value(-2, 5));
+                            courseIndex = (courseIndex + 1) % courseData.size();
                         }
                     }
-                    LogI << "Done!" << std::endl;
                 }
             }
             ImGui::End();

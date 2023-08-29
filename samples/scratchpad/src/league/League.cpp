@@ -44,11 +44,6 @@ namespace
     const std::string FileName("lea.gue");
     constexpr std::int32_t MaxCurve = 5;
 
-    std::array<std::int32_t, 18> DummyData =
-    {
-        3,3,3,4,4,4,3,3,4,3,4,4,3,4,2,2,4,5
-    };
-
     constexpr std::array AimSkill =
     {
         -0.5f, -0.36f, -0.2f, -0.1f, -0.05f, -0.03f, -0.01f, -0.005f,
@@ -83,7 +78,8 @@ namespace
 }
 
 League::League()
-    : m_currentIteration(0),
+    : m_playerScore     (0),
+    m_currentIteration  (0),
     m_currentSeason     (1)
 {
     read();
@@ -107,26 +103,14 @@ void League::reset()
     }
     m_currentIteration = 0;
     m_currentSeason = 1;
+    m_playerScore = 0;
     write();
 }
 
-void League::iterate()
+void League::iterate(const std::array<std::int32_t, 18>& parVals, std::int32_t playerScore)
 {
     if (m_currentIteration == MaxIterations)
     {
-        //start a new season
-
-
-        /*std::ofstream file("league.txt", std::ios::app);
-        file << "Top 5\n";
-        for (auto i = 0u; i < 5u; ++i)
-        {
-            file << m_players[i].nameIndex << "\n";
-        }
-        file << "----------------------\n\n";
-        file.close();*/
-
-        
         //evaluate all players and adjust skills
         for (auto i = 0u; i < PlayerCount / 2u; ++i)
         {
@@ -141,8 +125,9 @@ void League::iterate()
             curve = std::max(0, curve - cro::Util::Random::value(0, 1));
         }
 
-
+        //start a new season
         m_currentIteration = 0;
+        m_playerScore = 0;
         for (auto& player : m_players)
         {
             player.currentScore = 0;
@@ -156,7 +141,7 @@ void League::iterate()
         std::int32_t parTotal = 0;
         std::int32_t playerTotal = 0;
 
-        for (auto par : DummyData)
+        for (auto par : parVals)
         {
             parTotal += par;
 
@@ -178,8 +163,7 @@ void League::iterate()
             //pass through active curve
             quality = applyCurve(quality, MaxCurve - player.curve);
 
-            //TODO should error be applied post-curve?
-
+            
             //calc ideal
             float ideal = 0.f;
             switch (par)
@@ -219,6 +203,7 @@ void League::iterate()
                 a.currentScore < b.currentScore;
         });
 
+    m_playerScore += playerScore;
     m_currentIteration++;
 
     write();
@@ -239,7 +224,7 @@ void League::read()
             return;
         }
 
-        static constexpr std::size_t ExpectedSize = (sizeof(std::int32_t) * 2) + (sizeof(LeaguePlayer) * PlayerCount);
+        static constexpr std::size_t ExpectedSize = (sizeof(std::int32_t) * 3) + (sizeof(LeaguePlayer) * PlayerCount);
         if (auto size = file.file->seek(file.file, 0, RW_SEEK_END); size != ExpectedSize)
         {
             file.file->close(file.file);
@@ -252,6 +237,7 @@ void League::read()
         file.file->seek(file.file, 0, RW_SEEK_SET);
         file.file->read(file.file, &m_currentIteration, sizeof(std::int32_t), 1);
         file.file->read(file.file, &m_currentSeason, sizeof(std::int32_t), 1);
+        file.file->read(file.file, &m_playerScore, sizeof(std::int32_t), 1);
         file.file->read(file.file, m_players.data(), sizeof(LeaguePlayer), PlayerCount);
 
         //validate the loaded data and clamp to sane values
@@ -287,6 +273,7 @@ void League::write()
     {
         file.file->write(file.file, &m_currentIteration, sizeof(std::int32_t), 1);
         file.file->write(file.file, &m_currentSeason, sizeof(std::int32_t), 1);
+        file.file->write(file.file, &m_playerScore, sizeof(std::int32_t), 1);
         file.file->write(file.file, m_players.data(), sizeof(LeaguePlayer), PlayerCount);
     }
     else

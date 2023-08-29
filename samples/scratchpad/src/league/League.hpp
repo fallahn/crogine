@@ -51,16 +51,17 @@ public:
     League();
 
     void reset();
-    void iterate(); //TODO indicate which course data to use for iteration
+    void iterate(const std::array<std::int32_t, 18>&, std::int32_t playerParDiff);
 
     std::int32_t getCurrentIteration() const { return m_currentIteration; }
     std::int32_t getCurrentSeason() const { return m_currentSeason; }
+    std::int32_t getCurrentScore() const { return m_playerScore; }
 
     const std::array<LeaguePlayer, PlayerCount>& getTable() const { return m_players; }
 
 private:
     std::array<LeaguePlayer, PlayerCount> m_players = {};
-
+    std::int32_t m_playerScore;
     std::int32_t m_currentIteration;
     std::int32_t m_currentSeason;
 
