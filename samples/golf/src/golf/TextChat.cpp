@@ -92,7 +92,7 @@ namespace
         "/me goes into hysterics"
     };
 
-    const std::array<std::string, 15u> AngerStrings =
+    const std::array<std::string, 17u> AngerStrings =
     {
         "/me rages",
         "/me throws their club into the lake",
@@ -109,6 +109,8 @@ namespace
         "/me shakes a fist",
         "/me howls at the moon",
         "/me cries like a baby",
+        "/me 's blood boils",
+        "/me is about to lose it",
     };
 }
 

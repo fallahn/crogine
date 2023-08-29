@@ -44,6 +44,7 @@ source distribution.
 #include "MinimapZoom.hpp"
 #include "BallTrail.hpp"
 #include "TextChat.hpp"
+#include "League.hpp"
 #include "server/ServerPacketData.hpp"
 
 #include <crogine/core/State.hpp>
@@ -484,6 +485,9 @@ private:
         std::int32_t score = 0;
     };
     std::vector<StatBoardEntry> m_statBoardScores;
+
+    League m_league;
+    void updateLeague();
 
     struct GamepadNotify final
     {

@@ -1491,7 +1491,7 @@ void GolfState::showCountdown(std::uint8_t seconds)
         {
             auto isCPU = m_sharedData.localConnectionData.playerData[m_statBoardScores[0].player].isCPU;
             if (!isCPU
-                && m_statBoardScores[0].score != m_statBoardScores[1].score) //don't award if drawn first
+                && m_statBoardScores[0].score != m_statBoardScores[1].score) //don't award if drawn in first position
             {
                 //remember this is auto-disabled if the player is not the only one on the client
                 Achievements::awardAchievement(AchievementStrings[AchievementID::LeaderOfThePack]);
@@ -1855,8 +1855,10 @@ void GolfState::showCountdown(std::uint8_t seconds)
         && m_sharedData.scoreType == ScoreType::Stroke)
     {
         m_statResult = std::async(std::launch::async, &GolfState::updateProfileDB, this);
+        updateLeague(); //TODO make this async too
     }
     refreshUI();
+
 }
 
 void GolfState::createScoreboard()
@@ -4201,6 +4203,34 @@ void GolfState::updateProfileDB() const
                 }
             }
         }
+    }
+}
+
+void GolfState::updateLeague()
+{
+    if (m_allowAchievements
+        && m_holeData.size() == 18)
+    {
+        std::array<std::int32_t, 18u> parVals;
+        for (auto i = 0u; i < 18; ++i)
+        {
+            parVals[i] = m_holeData[i].par;
+        }
+
+        std::int32_t playerScore = 0;
+
+        //we assume that as achievments are allowed that
+        //there's only one human player
+        for (const auto& player : m_sharedData.connectionData[m_sharedData.localConnectionData.connectionID].playerData)
+        {
+            if (!player.isCPU)
+            {
+                playerScore = player.parScore;
+                break;
+            }
+        }
+
+        m_league.iterate(parVals, playerScore);
     }
 }
 

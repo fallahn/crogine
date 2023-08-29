@@ -636,6 +636,7 @@
     <ClCompile Include="src\golf\KeyboardState.cpp" />
     <ClCompile Include="src\golf\LeaderboardState.cpp" />
     <ClCompile Include="src\golf\LeaderboardTexture.cpp" />
+    <ClCompile Include="src\golf\League.cpp" />
     <ClCompile Include="src\golf\MapOverviewState.cpp" />
     <ClCompile Include="src\golf\MenuAvatars.cpp" />
     <ClCompile Include="src\golf\MenuCallbacks.cpp" />
@@ -746,6 +747,7 @@
     <ClInclude Include="src\golf\KeyboardState.hpp" />
     <ClInclude Include="src\golf\LeaderboardState.hpp" />
     <ClInclude Include="src\golf\LeaderboardTexture.hpp" />
+    <ClInclude Include="src\golf\League.hpp" />
     <ClInclude Include="src\golf\MapOverviewState.hpp" />
     <ClInclude Include="src\golf\MenuCallbacks.hpp" />
     <ClInclude Include="src\golf\MenuConsts.hpp" />
