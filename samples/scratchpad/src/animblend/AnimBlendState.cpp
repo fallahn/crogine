@@ -217,6 +217,39 @@ void AnimBlendState::createUI()
 {
     registerWindow([&]()
         {
+            if (ImGui::Begin("League"))
+            {
+                const auto& entries = m_league.getTable();
+                for (const auto& e : entries)
+                {
+                    ImGui::Text("Skill: %d - Curve: %d - Score: %d - Name: %d", e.skill, e.curve, e.currentScore, e.nameIndex);
+                }
+                ImGui::Text("Iteratation: %d", m_league.getCurrentIteration());
+                ImGui::SameLine();
+                if (ImGui::Button("Iterate"))
+                {
+                    m_league.iterate();
+                }
+                ImGui::SameLine();
+                if (ImGui::Button("Reset"))
+                {
+                    m_league.reset();
+                }
+
+                if (ImGui::Button("Run 10 Seasons"))
+                {
+                    for (auto i = 0; i < 10; ++i)
+                    {
+                        for (auto j = 0; j < League::MaxIterations; ++j)
+                        {
+                            m_league.iterate();
+                        }
+                    }
+                    LogI << "Done!" << std::endl;
+                }
+            }
+            ImGui::End();
+
             if (m_modelEntity.isValid())
             {
                 if (ImGui::Begin("Controls"))

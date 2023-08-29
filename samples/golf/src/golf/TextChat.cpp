@@ -47,38 +47,68 @@ namespace
 {
     const cro::Time ResendTime = cro::seconds(0.5f);
 
-    const std::array<std::string, 4u> ApplaudStrings =
+    const std::array<std::string, 12u> ApplaudStrings =
     {
         "/me applauds",
         "/me nods in appreciation",
         "/me claps",
-        "/me congratulates"
+        "/me congratulates",
+        "/me collapses in awe",
+        "/me kneels to a higher power",
+        "/me politely golf-claps",
+        "/me does a double-take",
+        "/me pats your back",
+        "/me thinks everything is awesome",
+        "/me catches their breath",
+        "/me feels a bit star-struck",
     };
 
-    const std::array<std::string, 4u> HappyStrings =
+    const std::array<std::string, 10u> HappyStrings =
     {
         "/me is ecstatic",
         "/me grins from ear to ear",
         "/me couldn't be happier",
-        "/me is incredibly pleased"
+        "/me is incredibly pleased",
+        "/me skips away in delight",
+        "/me moonwalks",
+        "/me twerks awkwardly",
+        "/me dabs away a tear",
+        "/me starts to hope",
+        "/me gets that warm feels"
     };
 
-    const std::array<std::string, 4u> LaughStrings =
+    const std::array<std::string, 11u> LaughStrings =
     {
         "/me laughs like a clogged drain",
         "/me giggles into their sleeve",
         "/me laughs out loud",
-        "/me rolls on the floor with laughter"
+        "/me rolls on the floor with laughter",
+        "/me can't contain their glee",
+        "/me belly laughs",
+        "/me squeees",
+        "/me 's sides have split",
+        "/me can't contain themselves",
+        "/me howls with laughter",
+        "/me goes into hysterics"
     };
 
-    const std::array<std::string, 6u> AngerStrings =
+    const std::array<std::string, 15u> AngerStrings =
     {
         "/me rages",
         "/me throws their club into the lake",
         "/me ejects steam from their ears",
         "/me stamps their foot",
-        "/me has a tantrum",
-        "/me accidentally swears on a live public feed"
+        "/me throws a tantrum",
+        "/me accidentally swears on a live public feed",
+        "/me throws a hissy-fit",
+        "/me is appalled",
+        "/me bites their lip",
+        "/me sucks their teeth",
+        "/me clenches their teeth",
+        "/me wails despondently",
+        "/me shakes a fist",
+        "/me howls at the moon",
+        "/me cries like a baby",
     };
 }
 

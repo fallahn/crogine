@@ -34,21 +34,23 @@ source distribution.
 #include <crogine/core/FileSystem.hpp>
 
 #include <crogine/util/Random.hpp>
+#include <crogine/util/Easings.hpp>
 
 #include <string>
+#include <fstream>
 
 namespace
 {
-    const std::array<std::string, League::PlayerCount> PlayerNames =
-    {
-        std::string("Albert Grey"),
-        "Laurie Astable",
-        "David Shoesmith",
-        "Bern Stein",
-        "Mischa van Holt",
-        "Kiera Daily",
-        "Meana Patel"
-    };
+    //const std::array<std::string, League::PlayerCount> PlayerNames =
+    //{
+    //    std::string("Albert Grey"),
+    //    "Laurie Astable",
+    //    "David Shoesmith",
+    //    "Bern Stein",
+    //    "Mischa van Holt",
+    //    "Kiera Daily",
+    //    "Meana Patel"
+    //};
 
     const std::string FileName("lea.gue");
     constexpr std::int32_t MaxCurve = 5;
@@ -57,6 +59,41 @@ namespace
     {
         3,3,3,4,4,4,3,3,4,3,4,4,3,4,2,2,4,5
     };
+
+    constexpr std::array AimSkill =
+    {
+        -0.5f, -0.36f, -0.2f, -0.1f, -0.05f, -0.03f, -0.01f, -0.005f,
+        0.f,
+        0.002f, 0.009f, 0.013f, 0.02f, 0.04f, 0.08f, 0.12f, 0.3f
+    };
+
+    constexpr std::array PowerSkill =
+    {
+        -0.5f, -0.36f, -0.2f, -0.1f, -0.05f, -0.03f, -0.01f, -0.005f,
+        0.f,
+        0.002f, 0.009f, 0.013f, 0.02f, 0.04f, 0.08f, 0.12f, 0.3f
+    };
+    constexpr std::int32_t SkillCentre = 8;
+
+    float applyCurve(float ip, std::int32_t curveIndex)
+    {
+        switch (curveIndex)
+        {
+        default: return ip;
+        case 0:
+        case 1:
+            return cro::Util::Easing::easeOutSine(ip);
+            //return cro::Util::Easing::easeOutQuad(ip);
+        case 2:
+        case 3:
+            return cro::Util::Easing::easeOutCubic(ip);
+            //return cro::Util::Easing::easeOutQuart(ip);
+            //return cro::Util::Easing::easeOutQuint(ip);
+        case 4:
+        case 5:
+            return cro::Util::Easing::easeOutExpo(ip);
+        }
+    }
 }
 
 League::League()
@@ -68,20 +105,20 @@ League::League()
 //public
 void League::reset()
 {
-    std::int32_t skill = 1;
     std::int32_t nameIndex = 0;
     for (auto& player : m_players)
     {
+        float dist = static_cast<float>(nameIndex) / PlayerCount;
+
         player = {};
-        player.skill = skill;
-        player.curve = player.skill + cro::Util::Random::value(-1, 1);
+        player.skill = std::round(dist * (SkillCentre - 1) + 1);
+        player.curve = std::round(dist * MaxCurve) + (player.skill % 2);
+        player.curve = player.curve + cro::Util::Random::value(-1, 1);
         player.curve = std::clamp(player.curve, 0, MaxCurve);
         player.outlier = cro::Util::Random::value(1, 10);
         player.nameIndex = nameIndex++;
-
-        skill += cro::Util::Random::value(1, 3);
     }
-
+    m_currentIteration = 0;
     write();
 }
 
@@ -89,6 +126,15 @@ void League::iterate()
 {
     if (m_currentIteration == MaxIterations)
     {
+        std::ofstream file("league.txt", std::ios::app);
+        file << "Top 5\n";
+        for (auto i = 0u; i < 5u; ++i)
+        {
+            file << m_players[i].nameIndex << "\n";
+        }
+        file << "----------------------\n\n";
+        file.close();
+
         //start a new season
 
         //TODO evaluate all players and adjust skills
@@ -110,14 +156,49 @@ void League::iterate()
         {
             parTotal += par;
 
-            //TODO calc aim accuracy
-            //TODO calc power accuracy
-            //TODO if rand(0,100) == outlier calc some amount of cock-up
+            //calc aim accuracy
+            float aim = 1.f - AimSkill[SkillCentre + cro::Util::Random::value(-player.skill, player.skill)];
 
-            //TODO pass through active curve
-            //TODO calc ideal
-            //TODO find range of triple bogey - ideal
-            //TODO add player score to player total
+            //calc power accuracy
+            float power = 1.f - PowerSkill[SkillCentre + cro::Util::Random::value(-player.skill, player.skill)];
+
+            float quality = aim * power;
+
+            //outlier for cock-up
+            if (cro::Util::Random::value(0, 99) < player.outlier)
+            {
+                float errorAmount = static_cast<float>(cro::Util::Random::value(3, 7)) / 10.f;
+                quality *= errorAmount;
+            }
+
+            //pass through active curve
+            quality = applyCurve(quality, MaxCurve - player.curve);
+
+            //TODO should error be applied post-curve?
+
+            //calc ideal
+            float ideal = 0.f;
+            switch (par)
+            {
+            default:
+            case 2:
+                ideal = -1.f;
+                break;
+            case 3:
+            case 4:
+                ideal = -2.f;
+                break;
+            case 5:
+                ideal = -3.f;
+                break;
+            }
+
+            
+            //find range of triple bogey - ideal
+            float score = std::round(ideal * quality);
+
+            //add player score to player total
+            playerTotal += par + score;
         }
 
         player.currentScore += (playerTotal - parTotal);
@@ -129,8 +210,13 @@ void League::iterate()
     std::sort(m_players.begin(), m_players.end(), 
         [](const LeaguePlayer& a, const LeaguePlayer& b)
         {
-            return a.currentScore < b.currentScore;
+            return a.currentScore == b.currentScore ? 
+                (a.curve + a.outlier) > (b.curve + b.outlier) : //roughly the handicap
+                a.currentScore < b.currentScore;
         });
+
+    m_currentIteration++;
+
 
     write();
 }

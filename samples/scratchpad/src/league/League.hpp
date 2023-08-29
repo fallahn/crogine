@@ -34,7 +34,7 @@ source distribution.
 
 struct LeaguePlayer final
 {
-    std::int32_t skill = 1; //indexes into the skill array
+    std::int32_t skill = 1; //indexes into the skill array (lower is smaller error offset == better)
     std::int32_t curve = 0; //selects skill curve of final result
     std::int32_t outlier = 0; //chance in 100 of making a mess.
     std::int32_t nameIndex = 0;
@@ -45,8 +45,8 @@ struct LeaguePlayer final
 class League final
 {
 public:
-    static constexpr std::size_t PlayerCount = 7u;
-
+    static constexpr std::size_t PlayerCount = 15u;
+    static constexpr std::int32_t MaxIterations = 24;
 
     League();
 
@@ -61,7 +61,6 @@ private:
     std::array<LeaguePlayer, PlayerCount> m_players = {};
 
     std::int32_t m_currentIteration;
-    static constexpr std::int32_t MaxIterations = 24;
 
     void read();
     void write();
