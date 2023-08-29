@@ -47,7 +47,7 @@ namespace
 {
     const cro::Time ResendTime = cro::seconds(0.5f);
 
-    const std::array<std::string, 12u> ApplaudStrings =
+    const std::array<std::string, 10u> ApplaudStrings =
     {
         "/me applauds",
         "/me nods in appreciation",
@@ -58,8 +58,6 @@ namespace
         "/me politely golf-claps",
         "/me does a double-take",
         "/me pats your back",
-        "/me thinks everything is awesome",
-        "/me catches their breath",
         "/me feels a bit star-struck",
     };
 
@@ -74,7 +72,7 @@ namespace
         "/me twerks awkwardly",
         "/me dabs away a tear",
         "/me starts to hope",
-        "/me gets that warm feels"
+        "/me is over the moon"
     };
 
     const std::array<std::string, 11u> LaughStrings =
@@ -92,18 +90,15 @@ namespace
         "/me goes into hysterics"
     };
 
-    const std::array<std::string, 17u> AngerStrings =
+    const std::array<std::string, 15u> AngerStrings =
     {
         "/me rages",
         "/me throws their club into the lake",
-        "/me ejects steam from their ears",
         "/me stamps their foot",
         "/me throws a tantrum",
         "/me accidentally swears on a live public feed",
         "/me throws a hissy-fit",
         "/me is appalled",
-        "/me bites their lip",
-        "/me sucks their teeth",
         "/me clenches their teeth",
         "/me wails despondently",
         "/me shakes a fist",
@@ -111,6 +106,7 @@ namespace
         "/me cries like a baby",
         "/me 's blood boils",
         "/me is about to lose it",
+        "/me blows a fuse"
     };
 }
 

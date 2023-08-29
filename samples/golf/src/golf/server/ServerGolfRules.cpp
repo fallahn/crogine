@@ -177,6 +177,35 @@ bool GolfState::summariseRules()
                 return a.holeScore[m_currentHole] < b.holeScore[m_currentHole];
             });
 
+
+
+        //check if we tied the last hole in skins
+        if (m_sharedData.scoreType == ScoreType::Skins
+            && ((m_currentHole + 1) == m_holeData.size()))
+        {
+            if (sortData[0].holeScore[m_currentHole] == sortData[1].holeScore[m_currentHole])
+            {
+                //this is used to make sure we send the correct score update to the client when this function returns
+                //and employ sudden death on the final hole
+                m_skinsFinals = true;
+
+                for (auto& p : m_playerInfo)
+                {
+                    p.holeScore[m_currentHole] = 0;
+                }
+
+                if (m_currentHole)
+                {
+                    //we might be on a custom course with one
+                    //hole in which case don't negate.
+                    m_currentHole--;
+                }
+            }
+        }
+
+
+
+
         //only score if no player tied
         if (sortData[0].holeScore[m_currentHole] != sortData[1].holeScore[m_currentHole])
         {
@@ -212,39 +241,14 @@ bool GolfState::summariseRules()
             std::uint16_t data = (player->client << 8) | player->player;
             m_sharedData.host.broadcastPacket(PacketID::HoleWon, data, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
         }
-        else //increase the skins pot, but only if not repeating the final hole else we'll be here forever...
+        else //increase the skins pot, but only if not repeating the final hole
         {
             if (!m_skinsFinals)
             {
                 m_skinsPot++;
-            }
-            std::uint16_t data = 0xff00 | m_skinsPot;
-            m_sharedData.host.broadcastPacket(PacketID::HoleWon, data, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
-        }
 
-
-        //check if we tied the last hole
-        if (m_sharedData.scoreType == ScoreType::Skins
-            && ((m_currentHole + 1) == m_holeData.size()))
-        {
-            if (sortData[0].holeScore[m_currentHole] == sortData[1].holeScore[m_currentHole])
-            {
-                gameFinished = false;
-                //this is used to make sure we send the correct score update to the client when this function returns
-                //and employ sudden death on the final hole
-                m_skinsFinals = true;
-
-                for (auto& p : m_playerInfo)
-                {
-                    p.holeScore[m_currentHole] = 0;
-                }
-
-                if (m_currentHole)
-                {
-                    //we might be on a custom course with one
-                    //hole in which case don't negate.
-                    m_currentHole--;
-                }
+                std::uint16_t data = 0xff00 | m_skinsPot;
+                m_sharedData.host.broadcastPacket(PacketID::HoleWon, data, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
             }
         }
     }

@@ -221,16 +221,6 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     m_courseIndex       (getCourseIndex(sd.mapDirectory.toAnsiString())),
     m_emoteWheel        (sd, m_currentPlayer)
 {
-    registerWindow([&]() 
-        {
-            if (ImGui::Begin("Screen pos"))
-            {
-                auto pos = m_gameScene.getActiveCamera().getComponent<cro::Camera>().coordsToPixel(m_currentPlayer.position, m_gameSceneTexture.getSize());
-                ImGui::Text("%3.3f, %3.3f", pos.x, pos.y);
-            }
-            ImGui::End();        
-        });
-
     m_cpuGolfer.setFastCPU(m_sharedData.fastCPU);
 
     godmode = 1.f;
@@ -807,6 +797,9 @@ bool GolfState::handleEvent(const cro::Event& evt)
         switch (evt.cbutton.button)
         {
         default: break;
+        case SDL_CONTROLLER_BUTTON_MISC1:
+            m_textChat.toggleWindow();
+            break;
         case cro::GameController::ButtonTrackpad:
             showMapOverview();
             break;
@@ -1763,7 +1756,7 @@ bool GolfState::simulate(float dt)
 
         //if we're CPU or remote player check screen pos of ball and
         //move the cam
-        if (m_currentPlayer.client != m_sharedData.localConnectionData.connectionID
+        /*if (m_currentPlayer.client != m_sharedData.localConnectionData.connectionID
             || m_sharedData.localConnectionData.playerData[m_currentPlayer.player].isCPU)
         {
             if (m_inputParser.isAiming())
@@ -1774,7 +1767,7 @@ bool GolfState::simulate(float dt)
                     updateCameraHeight(-dt);
                 }
             }
-        }
+        }*/
 
         float rotation = m_inputParser.getCamRotation() * dt;
         if (getClub() != ClubID::Putter
