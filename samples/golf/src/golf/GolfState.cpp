@@ -577,14 +577,6 @@ bool GolfState::handleEvent(const cro::Event& evt)
             //showNotification("buns");
             //Achievements::awardAchievement(AchievementStrings[AchievementID::SkinOfYourTeeth]);
             break;
-        case SDLK_F8:
-            LogW << "Toggles chat window!" << std::endl;
-        /*{
-            m_sharedData.hqShadows = !m_sharedData.hqShadows;
-            auto* msg = getContext().appInstance.getMessageBus().post<SystemEvent>(MessageID::SystemMessage);
-            msg->type = SystemEvent::ShadowQualityChanged;
-        }*/
-            break;
         case SDLK_F10:
             m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, std::uint8_t(ServerCommand::ChangeWind), net::NetFlag::Reliable);
             break;
@@ -6091,6 +6083,15 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo)
     {
         dumpBenchmark();
     }
+
+
+    //if this is the final hole repeated then we're in skins sudden death
+    if (hole == m_currentHole
+        && hole == m_holeData.size() - 1)
+    {
+        showNotification("Sudden Death Round!");
+    }
+
 
     //update all the total hole times
     for (auto i = 0u; i < m_sharedData.localConnectionData.playerCount; ++i)

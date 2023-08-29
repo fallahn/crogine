@@ -78,33 +78,45 @@ void GolfState::handleRules(const GolfBallEvent& data)
         default: break;
         case ScoreType::Match:
         case ScoreType::Skins:
-            //eliminate anyone who can't beat this score
-            for (auto i = 1u; i < m_playerInfo.size(); ++i)
-            {
-                if ((m_playerInfo[i].holeScore[m_currentHole]) >=
-                    m_playerInfo[0].holeScore[m_currentHole])
-                {
-                    if (m_playerInfo[i].distanceToHole > 0) //not already holed
-                    {
-                        m_playerInfo[i].distanceToHole = 0.f;
-                        m_playerInfo[i].holeScore[m_currentHole]++; //therefore they lose a stroke and don't draw
-                    }
-                }
-            }
-
-            //if this is the second hole and it has the same as the current best
-            //force a draw by eliminating anyone who can't beat it
-            if (m_playerInfo[0].holeScore[m_currentHole] == m_currentBest)
+            //if this is skins sudden death then make everyone else the loser
+            if (m_skinsFinals)
             {
                 for (auto i = 1u; i < m_playerInfo.size(); ++i)
                 {
-                    if ((m_playerInfo[i].holeScore[m_currentHole] + 1) >=
-                        m_currentBest)
+                    m_playerInfo[i].distanceToHole = 0.f;
+                    m_playerInfo[i].holeScore[m_currentHole] = m_playerInfo[0].holeScore[m_currentHole] + 1;
+                }
+            }
+            else
+            {
+                //eliminate anyone who can't beat this score
+                for (auto i = 1u; i < m_playerInfo.size(); ++i)
+                {
+                    if ((m_playerInfo[i].holeScore[m_currentHole]) >=
+                        m_playerInfo[0].holeScore[m_currentHole])
                     {
-                        if (m_playerInfo[i].distanceToHole > 0)
+                        if (m_playerInfo[i].distanceToHole > 0) //not already holed
                         {
                             m_playerInfo[i].distanceToHole = 0.f;
-                            m_playerInfo[i].holeScore[m_currentHole] = std::min(m_currentBest, std::uint8_t(m_playerInfo[i].holeScore[m_currentHole] + 1));
+                            m_playerInfo[i].holeScore[m_currentHole]++; //therefore they lose a stroke and don't draw
+                        }
+                    }
+                }
+
+                //if this is the second hole and it has the same as the current best
+                //force a draw by eliminating anyone who can't beat it
+                if (m_playerInfo[0].holeScore[m_currentHole] == m_currentBest)
+                {
+                    for (auto i = 1u; i < m_playerInfo.size(); ++i)
+                    {
+                        if ((m_playerInfo[i].holeScore[m_currentHole] + 1) >=
+                            m_currentBest)
+                        {
+                            if (m_playerInfo[i].distanceToHole > 0)
+                            {
+                                m_playerInfo[i].distanceToHole = 0.f;
+                                m_playerInfo[i].holeScore[m_currentHole] = std::min(m_currentBest, std::uint8_t(m_playerInfo[i].holeScore[m_currentHole] + 1));
+                            }
                         }
                     }
                 }
@@ -121,18 +133,30 @@ void GolfState::handleRules(const GolfBallEvent& data)
     }
     else if (data.type == GolfBallEvent::Gimme)
     {
-        //if match/skins play check if our score is even with anyone holed already and forfeit
         switch (m_sharedData.scoreType)
         {
         default: break;
         case ScoreType::Match:
         case ScoreType::Skins:
-            for (auto i = 1u; i < m_playerInfo.size(); ++i)
+            //if this is skins sudden death then make everyone else the loser
+            if (m_skinsFinals)
             {
-                if (m_playerInfo[i].distanceToHole == 0
-                    && m_playerInfo[i].holeScore[m_currentHole] < m_playerInfo[0].holeScore[m_currentHole])
+                for (auto i = 1u; i < m_playerInfo.size(); ++i)
                 {
-                    m_playerInfo[0].distanceToHole = 0;
+                    m_playerInfo[i].distanceToHole = 0.f;
+                    m_playerInfo[i].holeScore[m_currentHole] = m_playerInfo[0].holeScore[m_currentHole] + 1;
+                }
+            }
+            else
+            {
+                //check if our score is even with anyone holed already and forfeit
+                for (auto i = 1u; i < m_playerInfo.size(); ++i)
+                {
+                    if (m_playerInfo[i].distanceToHole == 0
+                        && m_playerInfo[i].holeScore[m_currentHole] < m_playerInfo[0].holeScore[m_currentHole])
+                    {
+                        m_playerInfo[0].distanceToHole = 0;
+                    }
                 }
             }
             break;
@@ -207,7 +231,7 @@ bool GolfState::summariseRules()
             {
                 gameFinished = false;
                 //this is used to make sure we send the correct score update to the client when this function returns
-                //TODO we can also use this to cap the skins pot if necessary
+                //and employ sudden death on the final hole
                 m_skinsFinals = true;
 
                 for (auto& p : m_playerInfo)
