@@ -41,17 +41,6 @@ source distribution.
 
 namespace
 {
-    //const std::array<std::string, League::PlayerCount> PlayerNames =
-    //{
-    //    std::string("Albert Grey"),
-    //    "Laurie Astable",
-    //    "David Shoesmith",
-    //    "Bern Stein",
-    //    "Mischa van Holt",
-    //    "Kiera Daily",
-    //    "Meana Patel"
-    //};
-
     const std::string FileName("lea.gue");
     constexpr std::int32_t MaxCurve = 5;
 
@@ -83,12 +72,9 @@ namespace
         case 0:
         case 1:
             return cro::Util::Easing::easeOutSine(ip);
-            //return cro::Util::Easing::easeOutQuad(ip);
         case 2:
         case 3:
             return cro::Util::Easing::easeOutCubic(ip);
-            //return cro::Util::Easing::easeOutQuart(ip);
-            //return cro::Util::Easing::easeOutQuint(ip);
         case 4:
         case 5:
             return cro::Util::Easing::easeOutExpo(ip);
@@ -97,7 +83,8 @@ namespace
 }
 
 League::League()
-    : m_currentIteration(0)
+    : m_currentIteration(0),
+    m_currentSeason     (1)
 {
     read();
 }
@@ -119,6 +106,7 @@ void League::reset()
         player.nameIndex = nameIndex++;
     }
     m_currentIteration = 0;
+    m_currentSeason = 1;
     write();
 }
 
@@ -126,27 +114,43 @@ void League::iterate()
 {
     if (m_currentIteration == MaxIterations)
     {
-        std::ofstream file("league.txt", std::ios::app);
+        //start a new season
+
+
+        /*std::ofstream file("league.txt", std::ios::app);
         file << "Top 5\n";
         for (auto i = 0u; i < 5u; ++i)
         {
             file << m_players[i].nameIndex << "\n";
         }
         file << "----------------------\n\n";
-        file.close();
+        file.close();*/
 
-        //start a new season
+        
+        //evaluate all players and adjust skills
+        for (auto i = 0u; i < PlayerCount / 2u; ++i)
+        {
+            auto outlier = m_players[i].outlier;
+            outlier = std::clamp(outlier + cro::Util::Random::value(-1, 1), 1, 10);
+            m_players[i].outlier = outlier;
+        }
 
-        //TODO evaluate all players and adjust skills
+        for (auto i = 0u; i < PlayerCount / 3u; ++i)
+        {
+            auto curve = m_players[i].curve;
+            curve = std::max(0, curve - cro::Util::Random::value(0, 1));
+        }
+
 
         m_currentIteration = 0;
         for (auto& player : m_players)
         {
             player.currentScore = 0;
         }
+        m_currentSeason++;
     }
     
-    //TODO this
+
     for (auto& player : m_players)
     {
         std::int32_t parTotal = 0;
@@ -217,7 +221,6 @@ void League::iterate()
 
     m_currentIteration++;
 
-
     write();
 }
 
@@ -236,7 +239,7 @@ void League::read()
             return;
         }
 
-        static constexpr std::size_t ExpectedSize = sizeof(std::int32_t) + (sizeof(LeaguePlayer) * PlayerCount);
+        static constexpr std::size_t ExpectedSize = (sizeof(std::int32_t) * 2) + (sizeof(LeaguePlayer) * PlayerCount);
         if (auto size = file.file->seek(file.file, 0, RW_SEEK_END); size != ExpectedSize)
         {
             file.file->close(file.file);
@@ -248,6 +251,7 @@ void League::read()
 
         file.file->seek(file.file, 0, RW_SEEK_SET);
         file.file->read(file.file, &m_currentIteration, sizeof(std::int32_t), 1);
+        file.file->read(file.file, &m_currentSeason, sizeof(std::int32_t), 1);
         file.file->read(file.file, m_players.data(), sizeof(LeaguePlayer), PlayerCount);
 
         //validate the loaded data and clamp to sane values
@@ -282,6 +286,7 @@ void League::write()
     if (file.file)
     {
         file.file->write(file.file, &m_currentIteration, sizeof(std::int32_t), 1);
+        file.file->write(file.file, &m_currentSeason, sizeof(std::int32_t), 1);
         file.file->write(file.file, m_players.data(), sizeof(LeaguePlayer), PlayerCount);
     }
     else

@@ -54,6 +54,7 @@ public:
     void iterate(); //TODO indicate which course data to use for iteration
 
     std::int32_t getCurrentIteration() const { return m_currentIteration; }
+    std::int32_t getCurrentSeason() const { return m_currentSeason; }
 
     const std::array<LeaguePlayer, PlayerCount>& getTable() const { return m_players; }
 
@@ -61,6 +62,7 @@ private:
     std::array<LeaguePlayer, PlayerCount> m_players = {};
 
     std::int32_t m_currentIteration;
+    std::int32_t m_currentSeason;
 
     void read();
     void write();

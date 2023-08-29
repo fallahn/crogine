@@ -226,6 +226,8 @@ void AnimBlendState::createUI()
                 }
                 ImGui::Text("Iteratation: %d", m_league.getCurrentIteration());
                 ImGui::SameLine();
+                ImGui::Text("Season: %d", m_league.getCurrentSeason());
+
                 if (ImGui::Button("Iterate"))
                 {
                     m_league.iterate();
