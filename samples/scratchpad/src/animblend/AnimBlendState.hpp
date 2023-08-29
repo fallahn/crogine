@@ -39,6 +39,7 @@ source distribution.
 #include <crogine/gui/GuiClient.hpp>
 #include <crogine/graphics/ModelDefinition.hpp>
 
+
 class AnimBlendState final : public cro::State, public cro::GuiClient
 {
 public:

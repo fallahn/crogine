@@ -88,6 +88,7 @@ bool AnimBlendState::handleEvent(const cro::Event& evt)
             requestStackClear();
             requestStackPush(0);
             break;
+
         }
     }
 

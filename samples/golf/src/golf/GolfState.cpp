@@ -552,16 +552,16 @@ bool GolfState::handleEvent(const cro::Event& evt)
             showMapOverview();
             break;
         case SDLK_7:
-            m_textChat.quickEmote(TextChat::Angry);
+            m_textChat.quickEmote(TextChat::Applaud);
             break;
         case SDLK_8:
-            m_textChat.quickEmote(TextChat::Applaud);
+            m_textChat.quickEmote(TextChat::Happy);
             break;
         case SDLK_9:
             m_textChat.quickEmote(TextChat::Laughing);
             break;
         case SDLK_0:
-            m_textChat.quickEmote(TextChat::Happy);
+            m_textChat.quickEmote(TextChat::Angry);
             break;
         case SDLK_TAB:
             showScoreboard(false);
