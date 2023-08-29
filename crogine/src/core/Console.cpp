@@ -273,18 +273,24 @@ void Console::draw()
                 //console
                 if (ui::BeginTabItem("Console"))
                 {
-                    ui::BeginChild("ScrollingRegion", ImVec2(0, -ui::GetFrameHeightWithSpacing()), false, ImGuiWindowFlags_HorizontalScrollbar);
+                    ui::BeginChild("ScrollingRegion", ImVec2(0, -ui::GetFrameHeightWithSpacing()), false/*, ImGuiWindowFlags_HorizontalScrollbar*/);
+                    static bool scrollToEnd = false;
 
                     ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(4, 1));
                     for (const auto& [str, colour] : buffer)
                     {
                         ImGui::PushStyleColor(ImGuiCol_Text, colour);
-                        ImGui::TextUnformatted(str.c_str());
+                        ImGui::TextWrapped("%s", str.c_str());
                         ImGui::PopStyleColor();
                     }
                     ImGui::PopStyleVar();
 
-                    ui::SetScrollHereY(1.f); //TODO track when the user scrolled and set to correct position
+                    if (scrollToEnd ||
+                        ImGui::GetScrollY() >= ImGui::GetScrollMaxY())
+                    {
+                        ImGui::SetScrollHereY(1.0f);
+                        scrollToEnd = false;
+                    }
                     ui::EndChild();
 
                     ui::Separator();
@@ -296,6 +302,7 @@ void Console::draw()
                         ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CallbackCompletion | ImGuiInputTextFlags_CallbackHistory,
                         &textEditCallback)))
                     {
+                        scrollToEnd = true;
                         doCommand(input);
                     }
 
