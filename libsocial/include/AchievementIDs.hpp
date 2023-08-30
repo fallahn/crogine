@@ -144,6 +144,7 @@ namespace AchievementID
     static_assert(Count <= 256, "Count exceeds maximum 256 Achievements!");
 }
 
+//DON'T change this order, it breaks existing save files
 namespace StatID
 {
     enum
@@ -180,6 +181,10 @@ namespace StatID
         Course09Complete,
         Course10Complete,
         Albatrosses,
+
+        LeagueFirst,
+        LeagueSecond,
+        LeagueThird,
 
         Count
     };
