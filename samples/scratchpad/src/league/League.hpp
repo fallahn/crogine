@@ -31,6 +31,7 @@ source distribution.
 
 #include <cstdint>
 #include <array>
+#include <vector>
 
 struct LeaguePlayer final
 {
@@ -39,7 +40,9 @@ struct LeaguePlayer final
     std::int32_t outlier = 0; //chance in 100 of making a mess.
     std::int32_t nameIndex = 0;
 
-    std::int32_t currentScore = 0; //this is total par diff so lower is better
+    float quality = 1.f; //quality of player result is multiplied by this to limit them from being Perfect
+
+    std::int32_t currentScore = 0; //sum of holes converted to stableford
 };
 
 class League final
@@ -51,7 +54,7 @@ public:
     League();
 
     void reset();
-    void iterate(const std::array<std::int32_t, 18>&, std::int32_t playerParDiff);
+    void iterate(const std::array<std::int32_t, 18>&, const std::vector<std::uint8_t>& playerScores, std::uint8_t holeCount);
 
     std::int32_t getCurrentIteration() const { return m_currentIteration; }
     std::int32_t getCurrentSeason() const { return m_currentSeason; }

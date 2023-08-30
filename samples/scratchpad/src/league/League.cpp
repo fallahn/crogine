@@ -100,6 +100,8 @@ void League::reset()
         player.curve = std::clamp(player.curve, 0, MaxCurve);
         player.outlier = cro::Util::Random::value(1, 10);
         player.nameIndex = nameIndex++;
+
+        player.quality = 0.89f - (0.01f * player.nameIndex);
     }
     m_currentIteration = 0;
     m_currentSeason = 1;
@@ -107,7 +109,7 @@ void League::reset()
     write();
 }
 
-void League::iterate(const std::array<std::int32_t, 18>& parVals, std::int32_t playerScore)
+void League::iterate(const std::array<std::int32_t, 18>& parVals, const std::vector<std::uint8_t>& playerScores, std::uint8_t holeCount)
 {
     if (m_currentIteration == MaxIterations)
     {
@@ -136,15 +138,15 @@ void League::iterate(const std::array<std::int32_t, 18>& parVals, std::int32_t p
     }
     
 
+    holeCount = holeCount == 0 ? 18 : 9;
+
     for (auto& player : m_players)
     {
-        std::int32_t parTotal = 0;
         std::int32_t playerTotal = 0;
 
-        for (auto par : parVals)
-        {
-            parTotal += par;
 
+        for (auto i = 0u; i < holeCount; ++i)
+        {
             //calc aim accuracy
             float aim = 1.f - AimSkill[SkillCentre + cro::Util::Random::value(-player.skill, player.skill)];
 
@@ -161,35 +163,40 @@ void League::iterate(const std::array<std::int32_t, 18>& parVals, std::int32_t p
             }
 
             //pass through active curve
-            quality = applyCurve(quality, MaxCurve - player.curve);
+            quality = applyCurve(quality, MaxCurve - player.curve) * player.quality;
 
             
             //calc ideal
-            float ideal = 0.f;
-            switch (par)
+            float ideal = 3.f; //triple bogey
+            switch (parVals[i])
             {
             default:
             case 2:
-                ideal = -1.f;
+                ideal += 1.f; //1 under par etc
                 break;
             case 3:
             case 4:
-                ideal = -2.f;
+                ideal += 2.f;
                 break;
             case 5:
-                ideal = -3.f;
+                ideal += 3.f;
                 break;
             }
 
             
             //find range of triple bogey - ideal
             float score = std::round(ideal * quality);
+            score -= 3.f;
 
             //add player score to player total
-            playerTotal += par + score;
+            std::int32_t holeScore = -score;
+
+            //convert to stableford where par == 2
+            holeScore = std::max(0, 2 - holeScore);
+            playerTotal += holeScore;
         }
 
-        player.currentScore += (playerTotal - parTotal);
+        player.currentScore += playerTotal;
     }
 
     //as we store the index into the name array
@@ -200,10 +207,16 @@ void League::iterate(const std::array<std::int32_t, 18>& parVals, std::int32_t p
         {
             return a.currentScore == b.currentScore ? 
                 (a.curve + a.outlier) > (b.curve + b.outlier) : //roughly the handicap
-                a.currentScore < b.currentScore;
+                a.currentScore > b.currentScore;
         });
 
-    m_playerScore += playerScore;
+    //calculate the player's stableford score
+    for (auto i = 0u; i < holeCount; ++i)
+    {
+        std::int32_t holeScore = static_cast<std::int32_t>(playerScores[i]) - parVals[i];
+        m_playerScore += std::max(0, 2 - holeScore);
+    }
+
     m_currentIteration++;
 
     write();

@@ -1851,11 +1851,21 @@ void GolfState::showCountdown(std::uint8_t seconds)
     }
 
     //loading the db can be choppy so spin this off in a thread
-    if (m_courseIndex != -1
-        && m_sharedData.scoreType == ScoreType::Stroke)
+    if (m_courseIndex != -1)
     {
-        m_statResult = std::async(std::launch::async, &GolfState::updateProfileDB, this);
-        updateLeague(); //TODO make this async too
+        switch (m_sharedData.scoreType)
+        {
+        default: break;
+        case ScoreType::Stroke:
+            m_statResult = std::async(std::launch::async, &GolfState::updateProfileDB, this);
+            [[fallthrough]];
+        case ScoreType::Stableford:
+        case ScoreType::StablefordPro:
+            //TODO make this async too
+            updateLeague();
+            break;
+        }
+
     }
     refreshUI();
 
@@ -4208,11 +4218,10 @@ void GolfState::updateProfileDB() const
 
 void GolfState::updateLeague()
 {
-    if (m_allowAchievements
-        && m_holeData.size() == 18)
+    if (m_allowAchievements)
     {
         std::array<std::int32_t, 18u> parVals;
-        for (auto i = 0u; i < 18; ++i)
+        for (auto i = 0u; i < m_holeData.size(); ++i)
         {
             parVals[i] = m_holeData[i].par;
         }
@@ -4225,12 +4234,10 @@ void GolfState::updateLeague()
         {
             if (!player.isCPU)
             {
-                playerScore = player.parScore;
+                m_league.iterate(parVals, player.holeScores, m_sharedData.holeCount);
                 break;
             }
         }
-
-        m_league.iterate(parVals, playerScore);
     }
 }
 

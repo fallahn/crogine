@@ -62,6 +62,11 @@ namespace
         std::array<std::int32_t, 18>{4,3,2,3,3,2,4,3,3,4,3,3,4,4,4,5,4,3},
         std::array<std::int32_t, 18>{4,3,2,3,4,4,3,2,4,3,3,4,4,3,5,3,4,3}
     };
+
+    const std::vector<std::uint8_t> testScores =
+    {
+        3,3,2,2,2,3,2,3,1,2,2,3,3,2,3,2,2,3
+    };
 }
 
 AnimBlendState::AnimBlendState(cro::StateStack& stack, cro::State::Context context)
@@ -239,7 +244,7 @@ void AnimBlendState::createUI()
 
                 if (ImGui::Button("Iterate"))
                 {
-                    m_league.iterate(courseData[courseIndex], -36 + cro::Util::Random::value(-2, 5));
+                    m_league.iterate(courseData[courseIndex], testScores, 0);
                     courseIndex = (courseIndex + 1) % courseData.size();
                 }
                 ImGui::SameLine();
@@ -254,7 +259,7 @@ void AnimBlendState::createUI()
                     {
                         for (auto j = 0; j < League::MaxIterations; ++j)
                         {
-                            m_league.iterate(courseData[courseIndex], -36 + cro::Util::Random::value(-2, 5));
+                            m_league.iterate(courseData[courseIndex], testScores, cro::Util::Random::value(0,2));
                             courseIndex = (courseIndex + 1) % courseData.size();
                         }
                     }
