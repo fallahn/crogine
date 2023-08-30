@@ -91,7 +91,7 @@ private:
 
     void buildScene();
     void createLeagueTab(cro::Entity, const cro::SpriteSheet&);
-    void createInfoTab(cro::Entity, const cro::SpriteSheet&);
+    void createInfoTab(cro::Entity);
     void activateTab(std::int32_t);
     void quitState();
 };

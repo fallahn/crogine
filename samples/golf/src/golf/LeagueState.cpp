@@ -35,9 +35,8 @@ source distribution.
 #include "GameConsts.hpp"
 #include "TextAnimCallback.hpp"
 #include "MessageIDs.hpp"
-#include "Clubs.hpp"
-#include "../GolfGame.hpp"
-#include "../Colordome-32.hpp"
+#include "League.hpp"
+#include "RandNames.hpp"
 
 #include <Social.hpp>
 #include <AchievementIDs.hpp>
@@ -46,10 +45,7 @@ source distribution.
 
 #include <crogine/core/Window.hpp>
 #include <crogine/core/GameController.hpp>
-#include <crogine/graphics/Image.hpp>
-#include <crogine/graphics/SpriteSheet.hpp>
 #include <crogine/gui/Gui.hpp>
-#include <crogine/core/SysTime.hpp>
 
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/UIInput.hpp>
@@ -315,7 +311,7 @@ void LeagueState::buildScene()
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 0.1f });
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("club_stats_button");
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("league_button");
     bgNode.getComponent<cro::Transform >().addChild(entity.getComponent<cro::Transform>());
 
     m_tabEntity = entity;
@@ -337,7 +333,7 @@ void LeagueState::buildScene()
     const float stride = 102.f;
     auto sprite = spriteSheet.getSprite("button_highlight");
     bounds = sprite.getTextureBounds();
-    const float offset = 51.f;
+    const float offset = 153.f;
 
     for (auto i = 0; i < TabID::Max; ++i)
     {
@@ -373,7 +369,7 @@ void LeagueState::buildScene()
     }
 
     createLeagueTab(bgNode, spriteSheet);
-    createInfoTab(bgNode, spriteSheet);
+    createInfoTab(bgNode);
 
     auto updateView = [&, rootNode](cro::Camera& cam) mutable
     {
@@ -421,14 +417,229 @@ void LeagueState::createLeagueTab(cro::Entity parent, const cro::SpriteSheet& sp
     m_tabNodes[TabID::League] = m_scene.createEntity();
     m_tabNodes[TabID::League].addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 0.2f });
     parent.getComponent<cro::Transform>().addChild(m_tabNodes[TabID::League].getComponent<cro::Transform>());
+
+    const auto centre = parent.getComponent<cro::Sprite>().getTextureBounds().width / 2.f;
+
+    const auto& largeFont = m_sharedData.sharedResources->fonts.get(FontID::UI);
+
+    auto entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ centre, 298.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(largeFont).setString("The Club League");
+    entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+    entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
+    centreText(entity);
+    m_tabNodes[TabID::League].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    //stripes
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ centre, 61.f, 0.05f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("stripes");
+    auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, 0.f });
+    m_tabNodes[TabID::League].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+
+    League league;
+    auto season = league.getCurrentSeason();
+    auto gamesPlayed = league.getCurrentIteration();
+
+    auto statusString = "Season " + std::to_string(season) + " - Games played: " + std::to_string(gamesPlayed) + "/24";
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ centre, 52.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(largeFont).setString(statusString);
+    entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+    entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
+    centreText(entity);
+    m_tabNodes[TabID::League].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    auto table = league.getTable();
+    struct TableEntry final
+    {
+        std::int32_t score = 0;
+        std::int32_t handicap = 0;
+        std::int32_t name = -1;
+        TableEntry(std::int32_t s, std::int32_t h, std::int32_t n)
+            :score(s), handicap(h), name(n) {}
+    };
+    std::vector<TableEntry> entries;
+    for (const auto& p : table)
+    {
+        entries.emplace_back(p.currentScore, p.outlier + p.curve, p.nameIndex);
+    }
+    //we'll fake our handicap (it's not a real golf one anyway) with our current level
+    entries.emplace_back(league.getCurrentScore(), Social::getLevel() / 2, -1);
+
+    std::sort(entries.begin(), entries.end(),
+        [](const TableEntry& a, const TableEntry& b)
+        {
+            return a.score == b.score ?
+                a.handicap > b.handicap :
+                a.score > b.score;
+        });
+
+
+    //column of rank badges representing psuedo-level (handicap * 2)
+    //or the player's current level.
+    static constexpr float VerticalSpacing = 13.f;
+    static constexpr float TextTop = 268.f;
+
+    cro::SpriteSheet shieldSprites;
+    shieldSprites.loadFromFile("assets/golf/sprites/lobby_menu.spt", m_sharedData.sharedResources->textures);
+
+    //TODO we could optimise this a bit by batching into a vertex array...
+
+    glm::vec3 spritePos(68.f, TextTop - 12.f, 0.1f);
+    for (const auto& entry : entries)
+    {
+        std::int32_t level = 0;
+        if (entry.name == -1)
+        {
+            level = Social::getLevel() / 10;
+        }
+        else
+        {
+            level = entry.handicap * 2;
+            level /= 10;
+        }
+        level = std::clamp(level, 0, 5);
+
+        entity = m_scene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition(spritePos);
+        entity.addComponent<cro::Drawable2D>();
+        entity.addComponent<cro::Sprite>() = shieldSprites.getSprite("rank_badge");
+        entity.addComponent<cro::SpriteAnimation>().play(level);
+        m_tabNodes[TabID::League].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+        spritePos.y -= VerticalSpacing;
+    }
+
+
+
+    cro::String playerName;
+    if (Social::isAvailable())
+    {
+        playerName = Social::getPlayerName();
+    }
+    else
+    {
+        playerName = m_sharedData.localConnectionData.playerData[0].name;
+    }
+
+    cro::String str;
+    for (auto i = 0u; i < entries.size(); ++i)
+    {
+        if (i < 9)
+        {
+            str += " ";
+        }
+        
+        str += std::to_string(i + 1);
+        str += ". ";
+
+        if (entries[i].name > -1)
+        {
+            str += RandomNames[entries[i].name];
+        }
+        else
+        {
+            str += playerName;
+        }
+        str += "\n";
+    }
+
+    const auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Label);
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 86.f, TextTop, 0.1f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(smallFont).setString(str);
+    entity.getComponent<cro::Text>().setFillColour(LeaderboardTextDark);
+    entity.getComponent<cro::Text>().setCharacterSize(LabelTextSize);
+    m_tabNodes[TabID::League].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    str.clear();
+    for (const auto& e : entries)
+    {
+        if (e.score < 100)
+        {
+            str += " ";
+        }
+        if (e.score < 10)
+        {
+            str += " ";
+        }
+        str += std::to_string(e.score) + "\n";
+    }
+
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 320.f, TextTop, 0.1f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(smallFont).setString(str);
+    entity.getComponent<cro::Text>().setFillColour(LeaderboardTextDark);
+    entity.getComponent<cro::Text>().setCharacterSize(LabelTextSize);
+    m_tabNodes[TabID::League].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 }
 
-void LeagueState::createInfoTab(cro::Entity parent, const cro::SpriteSheet& spriteSheet)
+void LeagueState::createInfoTab(cro::Entity parent)
 {
     m_tabNodes[TabID::Info] = m_scene.createEntity();
     m_tabNodes[TabID::Info].addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 0.2f });
     m_tabNodes[TabID::Info].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
     parent.getComponent<cro::Transform>().addChild(m_tabNodes[TabID::Info].getComponent<cro::Transform>());
+
+    const auto centre = parent.getComponent<cro::Sprite>().getTextureBounds().width / 2.f;
+
+    const auto& largeFont = m_sharedData.sharedResources->fonts.get(FontID::UI);
+
+    auto entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ centre, 298.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(largeFont).setString("The Club League");
+    entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+    entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
+    centreText(entity);
+    m_tabNodes[TabID::Info].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+    std::string desc = R"(
+Every Stroke Play or Stableford round you play contributes to the club league. The league
+is split into seasons, with 24 rounds played for each season. At the end of a season the
+top three players win an award.
+
+At the end of a round your scores are converted using the Stableford scoring system with
+par being worth 2 points and 1 point extra awarded for each stroke under par. Scores for
+each round are summed to give the total score for the current season.
+
+Other player scores are automatically calculated based on their own stats, randomly
+generated when the first season begins. Think of it as something like a fantasy football
+league. At the end of each season these stats are re-evaluated based on the previous
+season's performance. Some players will increase in skill, others will decrease.
+
+Can you top the league table by the end of the season? Good luck!
+
+
+(Note: the league is reset if you reset your player progress at any time.)
+)";
+
+
+    const auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ centre, 258.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(smallFont).setString(desc);
+    entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    m_tabNodes[TabID::Info].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 }
 
 void LeagueState::activateTab(std::int32_t tabID)

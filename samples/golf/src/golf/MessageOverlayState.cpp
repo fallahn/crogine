@@ -36,6 +36,7 @@ source distribution.
 #include "PacketIDs.hpp"
 #include "Utility.hpp"
 #include "TextAnimCallback.hpp"
+#include "League.hpp"
 #include "../GolfGame.hpp"
 
 #include <Achievements.hpp>
@@ -508,6 +509,8 @@ void MessageOverlayState::buildScene()
                     if (activated(evt))
                     {
                         Social::resetProfile();
+                        League league;
+                        league.reset();
 
                         requestStackClear();
                         requestStackPush(StateID::SplashScreen);
