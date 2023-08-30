@@ -2651,6 +2651,17 @@ void ClubhouseState::createStatMenu(cro::Entity parent, std::uint32_t mouseEnter
                 }
             });
 
+    //league
+    entity = createButton("Club League");
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
+        m_uiScene.getSystem<cro::UISystem>()->addCallback([&](cro::Entity, const cro::ButtonEvent& evt)
+            {
+                if (activated(evt))
+                {
+                    requestStackPush(StateID::League);
+                    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+                }
+            });
 
     //leaderboards
 #ifdef USE_GNS
@@ -2667,7 +2678,6 @@ void ClubhouseState::createStatMenu(cro::Entity parent, std::uint32_t mouseEnter
 #else
     textPos.y -= LineSpacing;
 #endif
-    textPos.y -= LineSpacing;
     
     //back
     entity = createButton("Back");

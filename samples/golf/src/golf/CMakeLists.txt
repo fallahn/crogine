@@ -40,6 +40,7 @@ set(GOLF_SRC
   ${PROJECT_DIR}/golf/LeaderboardState.cpp
   ${PROJECT_DIR}/golf/LeaderboardTexture.cpp
   ${PROJECT_DIR}/golf/League.cpp
+  ${PROJECT_DIR}/golf/LeagueState.cpp
   ${PROJECT_DIR}/golf/MenuAvatars.cpp
   ${PROJECT_DIR}/golf/MapOverviewState.cpp
   ${PROJECT_DIR}/golf/MenuCallbacks.cpp

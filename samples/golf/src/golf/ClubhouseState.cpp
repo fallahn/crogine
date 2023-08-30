@@ -169,6 +169,7 @@ ClubhouseState::ClubhouseState(cro::StateStack& ss, cro::State::Context ctx, Sha
         cacheState(StateID::Trophy);
         cacheState(StateID::Leaderboard);
         cacheState(StateID::Stats);
+        cacheState(StateID::League);
         });
 
     ctx.mainWindow.setMouseCaptured(false);
