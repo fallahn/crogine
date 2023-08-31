@@ -4330,6 +4330,11 @@ void GolfState::EmoteWheel::build(cro::Entity root, cro::Scene& uiScene, cro::Te
             auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
             entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
 
+            if (i > 3)
+            {
+                entity.addComponent<cro::SpriteAnimation>();
+            }
+
             entity.addComponent<cro::Callback>().setUserData<AnimData>();
             entity.getComponent<cro::Callback>().function =
                 [&](cro::Entity e, float dt)
@@ -4529,6 +4534,15 @@ bool GolfState::EmoteWheel::handleEvent(const cro::Event& evt)
             default: break;
             case cro::GameController::ButtonY:
                 targetScale = 1.f;
+
+                {
+                    auto anim = cro::GameController::hasPSLayout(controllerID) ? 1 : 0;
+                    for (auto i = 4u; i < buttonNodes.size(); ++i)
+                    {
+                        buttonNodes[i].getComponent<cro::SpriteAnimation>().play(anim);
+                    }
+                }
+
                 return true;
             }
         }
