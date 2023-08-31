@@ -530,21 +530,30 @@ void InputParser::setEnableFlags(std::uint16_t flags)
     m_swingput.setEnabled(flags == std::numeric_limits<std::uint16_t>::max() ? m_swingput.getEnabled() : -1);
 }
 
-void InputParser::setMaxClub(float dist)
+void InputParser::setMaxClub(float dist, bool atTee)
 {
     //a fudge to allow a full set on any hole bigger than pitch n putt
-    /*if (dist > 115.f)
+    if (!atTee)
     {
-        dist = 1000.f;
-    }*/
-    if (dist < Clubs[ClubID::FiveWood].getBaseTarget())
+        if (dist > 115.f)
+        {
+            dist = 1000.f;
+        }
+    }
+    else
     {
-        dist = Clubs[ClubID::FourIron].getBaseTarget() + 5.f;
+        //teeing off we want to allow all the way up to wood
+        //on par 3s
+        if (dist < Clubs[ClubID::FiveWood].getBaseTarget())
+        {
+            dist = Clubs[ClubID::FourIron].getBaseTarget() + 5.f;
+        }
+        else dist = 1000.f;
     }
 
     m_firstClub = ClubID::SandWedge;
 
-    while ((Clubs[m_firstClub].getBaseTarget(/*dist*/) * 1.05f) < dist
+    while ((Clubs[m_firstClub].getBaseTarget() * 1.05f) < dist
         && m_firstClub != ClubID::Driver)
     {
         //this WILL get stuck in an infinite loop if the clubset is 0 for some reason
@@ -556,8 +565,10 @@ void InputParser::setMaxClub(float dist)
     }
 
     //this isn't perfect so give one extra club wiggle room
-    //m_firstClub = std::max(0, m_firstClub - 1);
-
+    if (!atTee)
+    {
+        m_firstClub = std::max(0, m_firstClub - 1);
+    }
     m_currentClub = m_firstClub;
     m_clubOffset = 0;
 

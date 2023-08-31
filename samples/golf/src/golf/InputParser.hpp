@@ -68,7 +68,7 @@ public:
     void setActive(bool active, std::int32_t terrain, bool isCPU = false);
     void setSuspended(bool);
     void setEnableFlags(std::uint16_t); //bits which are set are *enabled*
-    void setMaxClub(float); //based on overall distance of hole
+    void setMaxClub(float, bool atTee); //based on overall distance of hole
     void setMaxClub(std::int32_t); //force set when only wanting wedges for example
     void resetPower();
     void update(float);
