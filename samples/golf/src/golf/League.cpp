@@ -268,6 +268,7 @@ void League::iterate(const std::array<std::int32_t, 18>& parVals, const std::vec
     }
 
     m_currentIteration++;
+    Achievements::incrementStat(StatStrings[StatID::LeagueRounds]);
 
     write();
 }

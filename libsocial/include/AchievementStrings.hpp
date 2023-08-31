@@ -134,7 +134,8 @@ static const std::array<std::string, AchievementID::Count> AchievementStrings =
     "hit_the_spot",
     "behold",
     "took_a_show",
-    "league_champion"
+    "league_champion",
+    "league_seasonal"
 };
 
 //appears on the notification
@@ -227,7 +228,8 @@ static const std::array<std::string, AchievementID::Count> AchievementLabels =
     "Hit The Spot",
     "Behold The Impossible",
     "Take In a Show",
-    "League Champion"
+    "League Champion",
+    "League Participant"
 };
 
 //description and whether or not the achievement is hidden until it is unlocked
@@ -321,6 +323,7 @@ static const std::array<std::pair<std::string, bool>, AchievementID::Count> Achi
     std::make_pair("Get a hole in one whilst playing Multi-Target", false),
     std::make_pair("Gopher broke.", true),
     std::make_pair("Finish in the top 3 of the Club League", false),
+    std::make_pair("Complete a full season in the Club League", false),
 };
 
 //assuming trophies load correctly they are:
@@ -443,7 +446,8 @@ static constexpr std::array<std::size_t, AchievementID::Count> AchievementTrophi
     TrophyID::Platinum,
     TrophyID::Spoon,
 
-    TrophyID::GoldFigure
+    TrophyID::GoldFigure,
+    TrophyID::BronzeFigure,
 };
 
 //these are indexed by StatID, so do try to get them in the correct order ;)
@@ -484,6 +488,7 @@ static const std::array<std::string, StatID::Count> StatStrings =
     "league_first",
     "league_second",
     "league_third",
+    "league_rounds"
 };
 
 static const std::array<std::string, StatID::Count> StatLabels =
@@ -523,6 +528,7 @@ static const std::array<std::string, StatID::Count> StatLabels =
     "Number of times placed first in the league",
     "Number of times placed second in the league",
     "Number of times placed third in the league",
+    "Number of rounds completed in the league"
 };
 
 struct StatType final
@@ -552,6 +558,7 @@ static constexpr std::array<std::int32_t, StatID::Count> StatTypes =
     StatType::Integer,
     StatType::Integer,
     StatType::Time,
+    StatType::Integer,
     StatType::Integer,
     StatType::Integer,
     StatType::Integer,

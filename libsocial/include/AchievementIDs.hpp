@@ -140,6 +140,7 @@ namespace AchievementID
         TakeInAShow,
 
         LeagueChampion,
+        LeagueSeasonal,
 
         Count
     };
@@ -187,6 +188,7 @@ namespace StatID
         LeagueFirst,
         LeagueSecond,
         LeagueThird,
+        LeagueRounds,
 
         Count
     };

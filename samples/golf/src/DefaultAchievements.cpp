@@ -120,6 +120,10 @@ bool DefaultAchievements::init()
     trigger->achID = AchievementID::GolfinDolphin;
     trigger->threshold = 5;
 
+    trigger = &StatTriggers[StatID::LeagueRounds].emplace_back();
+    trigger->achID = AchievementID::LeagueSeasonal;
+    trigger->threshold = 24;
+
     return true;
 }
 
