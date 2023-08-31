@@ -4653,6 +4653,7 @@ bool GolfState::EmoteWheel::handleEvent(const cro::Event& evt)
         {
             axisPos[controllerID][1] = evt.caxis.value;
         }
+        return true;
     }
 
     return false;
@@ -4802,6 +4803,7 @@ void GolfState::showEmote(std::uint32_t data)
 
             if (data.velocity == 0)
             {
+                postMessage<SceneEvent>(MessageID::SceneMessage)->type = SceneEvent::ChatMessage;
                 e.getComponent<cro::Callback>().active = false;
                 m_uiScene.destroyEntity(e);
             }
@@ -4815,5 +4817,7 @@ void GolfState::showEmote(std::uint32_t data)
 
         pos.x += static_cast<float>(cro::Util::Random::value(24, 38)) * m_viewScale.x;
         pos.y = -static_cast<float>(cro::Util::Random::value(1, 3)) * 10.f;
+
     }
+    postMessage<SceneEvent>(MessageID::SceneMessage)->type = SceneEvent::ChatMessage;
 }

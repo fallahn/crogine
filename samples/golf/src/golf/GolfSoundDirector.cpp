@@ -582,7 +582,10 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
             }
             else if (data.type == SceneEvent::ChatMessage)
             {
-                playSound(AudioID::Chat, glm::vec3(0.f), 0.3f).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Menu);
+                auto e = playSound(AudioID::Chat, glm::vec3(0.f), 0.3f);
+                e.getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Menu);
+                float pitch = static_cast<float>(cro::Util::Random::value(7, 13)) / 10.f;
+                e.getComponent<cro::AudioEmitter>().setPitch(pitch);
             }
         }
         break;
