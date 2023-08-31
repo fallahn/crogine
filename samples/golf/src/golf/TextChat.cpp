@@ -61,7 +61,7 @@ namespace
         "/me feels a bit star-struck",
     };
 
-    const std::array<std::string, 10u> HappyStrings =
+    const std::array<std::string, 11u> HappyStrings =
     {
         "/me is ecstatic",
         "/me grins from ear to ear",
@@ -72,7 +72,8 @@ namespace
         "/me twerks awkwardly",
         "/me dabs away a tear",
         "/me starts to hope",
-        "/me is over the moon"
+        "/me is over the moon",
+        "/me cartwheels to the clubhouse and back"
     };
 
     const std::array<std::string, 11u> LaughStrings =
@@ -284,6 +285,12 @@ void TextChat::handlePacket(const net::NetEvent::Packet& pkt)
     }
     m_screenChatBuffer[m_screenChatIndex] = entity;
     m_screenChatIndex = (m_screenChatIndex + 1) % m_screenChatBuffer.size();
+}
+
+void TextChat::toggleWindow()
+{
+    m_visible = (!m_visible && !Social::isSteamdeck());
+    m_focusInput = m_visible;
 }
 
 void TextChat::quickEmote(std::int32_t emote)

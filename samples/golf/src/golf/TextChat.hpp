@@ -45,7 +45,7 @@ public:
 
     void handlePacket(const net::NetEvent::Packet&);
 
-    void toggleWindow() { m_visible = !m_visible; m_focusInput = m_visible; }
+    void toggleWindow();
 
     void setRootNode(cro::Entity e) { m_rootNode = e; }
 

@@ -1861,6 +1861,7 @@ void GolfState::showCountdown(std::uint8_t seconds)
             [[fallthrough]];
         case ScoreType::Stableford:
         case ScoreType::StablefordPro:
+        case ScoreType::ShortRound:
             //TODO make this async too
             updateLeague();
             break;
@@ -4234,7 +4235,7 @@ void GolfState::updateLeague()
         {
             if (!player.isCPU)
             {
-                m_league.iterate(parVals, player.holeScores, m_sharedData.holeCount);
+                m_league.iterate(parVals, player.holeScores, m_holeData.size());
                 break;
             }
         }

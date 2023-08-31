@@ -54,7 +54,7 @@ public:
     League();
 
     void reset();
-    void iterate(const std::array<std::int32_t, 18>&, const std::vector<std::uint8_t>& playerScores, std::uint8_t holeCount);
+    void iterate(const std::array<std::int32_t, 18>&, const std::vector<std::uint8_t>& playerScores, std::size_t holeCount);
 
     std::int32_t getCurrentIteration() const { return m_currentIteration; }
     std::int32_t getCurrentSeason() const { return m_currentSeason; }

@@ -109,7 +109,7 @@ void League::reset()
     write();
 }
 
-void League::iterate(const std::array<std::int32_t, 18>& parVals, const std::vector<std::uint8_t>& playerScores, std::uint8_t holeCount)
+void League::iterate(const std::array<std::int32_t, 18>& parVals, const std::vector<std::uint8_t>& playerScores, std::size_t holeCount)
 {
     if (m_currentIteration == MaxIterations)
     {
@@ -138,7 +138,7 @@ void League::iterate(const std::array<std::int32_t, 18>& parVals, const std::vec
     }
     
 
-    holeCount = holeCount == 0 ? 18 : 9;
+    CRO_ASSERT(holeCount == 6 || holeCount == 9 || holeCount == 12 || holeCount == 18, "");
 
     for (auto& player : m_players)
     {
