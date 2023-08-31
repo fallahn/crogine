@@ -104,7 +104,9 @@ void League::reset()
         player.outlier = cro::Util::Random::value(1, 10);
         player.nameIndex = nameIndex++;
 
-        player.quality = 0.89f - (0.01f * player.nameIndex);
+        //TODO this needs to start small and increase as
+        //player level is increased
+        player.quality = 0.87f - (0.01f * player.nameIndex);
     }
     m_currentIteration = 0;
     m_currentSeason = 1;

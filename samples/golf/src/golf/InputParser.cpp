@@ -544,7 +544,7 @@ void InputParser::setMaxClub(float dist, bool atTee)
     {
         //teeing off we want to allow all the way up to wood
         //on par 3s
-        if (dist < Clubs[ClubID::FiveWood].getBaseTarget())
+        if (dist < Clubs[ClubID::FiveWood].getBaseTarget() - 5.f)
         {
             dist = Clubs[ClubID::FourIron].getBaseTarget() + 5.f;
         }
