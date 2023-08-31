@@ -219,7 +219,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     m_scoreColumnCount  (2),
     m_readyQuitFlags    (0),
     m_courseIndex       (getCourseIndex(sd.mapDirectory.toAnsiString())),
-    m_emoteWheel        (sd, m_currentPlayer)
+    m_emoteWheel        (sd, m_currentPlayer, m_textChat)
 {
     m_cpuGolfer.setFastCPU(m_sharedData.fastCPU);
 
@@ -541,18 +541,6 @@ bool GolfState::handleEvent(const cro::Event& evt)
         case SDLK_6:
             showMapOverview();
             break;
-        case SDLK_7:
-            m_textChat.quickEmote(TextChat::Applaud);
-            break;
-        case SDLK_8:
-            m_textChat.quickEmote(TextChat::Happy);
-            break;
-        case SDLK_9:
-            m_textChat.quickEmote(TextChat::Laughing);
-            break;
-        case SDLK_0:
-            m_textChat.quickEmote(TextChat::Angry);
-            break;
         case SDLK_TAB:
             showScoreboard(false);
             break;
@@ -758,6 +746,18 @@ bool GolfState::handleEvent(const cro::Event& evt)
             break;
         case SDLK_SPACE:
             toggleQuitReady();
+            break;
+        case SDLK_7:
+            m_textChat.quickEmote(TextChat::Applaud);
+            break;
+        case SDLK_8:
+            m_textChat.quickEmote(TextChat::Happy);
+            break;
+        case SDLK_9:
+            m_textChat.quickEmote(TextChat::Laughing);
+            break;
+        case SDLK_0:
+            m_textChat.quickEmote(TextChat::Angry);
             break;
         }
     }

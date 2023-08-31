@@ -413,14 +413,17 @@ private:
 
     struct EmoteWheel final
     {
-        EmoteWheel(const SharedStateData& ib, const ActivePlayer& cp)
-            : sharedData(ib), currentPlayer(cp) {}
+        EmoteWheel(const SharedStateData& ib, const ActivePlayer& cp, TextChat& tc)
+            : sharedData(ib), currentPlayer(cp), m_textChat(tc) {}
 
         const SharedStateData& sharedData;
         const ActivePlayer& currentPlayer;
+        TextChat& m_textChat;
         cro::Entity rootNode;
-        std::array<cro::Entity, 4u> buttonNodes = {};
-        std::array<cro::Entity, 4u> labelNodes = {};
+        std::array<cro::Entity, 8u> buttonNodes = {};
+        std::array<cro::Entity, 8u> labelNodes = {};
+
+        std::array<std::array<std::int16_t, 2u>, cro::GameController::MaxControllers> axisPos = {};
 
         float targetScale = 0.f;
         float currentScale = 0.f;

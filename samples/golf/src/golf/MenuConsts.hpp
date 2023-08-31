@@ -113,12 +113,17 @@ static const std::array<std::string, ScoreType::Count> RuleDescriptions =
     */
 };
 
-static constexpr std::array<glm::vec3, 4u> EmotePositions =
+static constexpr std::array<glm::vec3, 8u> EmotePositions =
 {
     glm::vec3(0.f, 34.f, 0.15f),
     glm::vec3(34.f, 0.f, 0.15f),
     glm::vec3(0.f, -34.f, 0.15f),
-    glm::vec3(-34.f, 0.f, 0.15f)
+    glm::vec3(-34.f, 0.f, 0.15f),
+
+    glm::vec3(24.f, 24.f, 0.15f),
+    glm::vec3(-24.f, 24.f, 0.15f),
+    glm::vec3(-24.f, -24.f, 0.15f),
+    glm::vec3(24.f, -24.f, 0.15f),
 };
 
 static constexpr std::uint32_t LargeTextSize = 64;

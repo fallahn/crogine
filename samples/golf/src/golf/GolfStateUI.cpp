@@ -4302,7 +4302,12 @@ void GolfState::EmoteWheel::build(cro::Entity root, cro::Scene& uiScene, cro::Te
             std::string("happy_large"),
             std::string("grumpy_large"),
             std::string("laughing_large"),
-            std::string("sad_large")
+            std::string("sad_large"),
+
+            std::string("rb"),
+            std::string("lb"),
+            std::string("lt"),
+            std::string("rt"),
         };
 
         auto& font = sharedData.sharedResources->fonts.get(FontID::UI);
@@ -4360,8 +4365,10 @@ void GolfState::EmoteWheel::build(cro::Entity root, cro::Scene& uiScene, cro::Te
             rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
             buttonNodes[i] = entity;
 
+            glm::vec3 originOffset = i < 4 ? glm::vec3(0.f, 20.f, 0.f) : glm::vec3(0.f);
+
             auto labelEnt = uiScene.createEntity();
-            labelEnt.addComponent<cro::Transform>().setPosition(entity.getComponent<cro::Transform>().getOrigin() + glm::vec3(0.f, 20.f, 0.f));
+            labelEnt.addComponent<cro::Transform>().setPosition(entity.getComponent<cro::Transform>().getOrigin() + originOffset);
             labelEnt.addComponent<cro::Drawable2D>();
             labelEnt.addComponent<cro::Text>(font);
             labelEnt.getComponent<cro::Text>().setFillColour(LeaderboardTextDark);
@@ -4441,6 +4448,16 @@ bool GolfState::EmoteWheel::handleEvent(const cro::Event& evt)
             {
                 return true;
             }
+
+            switch (evt.key.keysym.sym)
+            {
+            default: break;
+            case SDLK_7:
+            case SDLK_8:
+            case SDLK_9:
+            case SDLK_0:
+                return true;
+            }
         }
     }
     else if (evt.type == SDL_KEYUP)
@@ -4473,6 +4490,31 @@ bool GolfState::EmoteWheel::handleEvent(const cro::Event& evt)
                 sendEmote(Emote::Grumpy, 0);
                 return true;
             }
+
+            switch (evt.key.keysym.sym)
+            {
+            default: break;
+            case SDLK_7:
+                m_textChat.quickEmote(TextChat::Applaud);
+                cooldown = 6.f;
+                buttonNodes[5].getComponent<cro::Callback>().active = true;
+                return true;
+            case SDLK_8:
+                m_textChat.quickEmote(TextChat::Happy);
+                cooldown = 6.f;
+                buttonNodes[4].getComponent<cro::Callback>().active = true;
+                return true;
+            case SDLK_9:
+                m_textChat.quickEmote(TextChat::Laughing);
+                cooldown = 6.f;
+                buttonNodes[6].getComponent<cro::Callback>().active = true;
+                return true;
+            case SDLK_0:
+                m_textChat.quickEmote(TextChat::Angry);
+                cooldown = 6.f;
+                buttonNodes[7].getComponent<cro::Callback>().active = true;
+                return true;
+            }
         }
     }
 
@@ -4501,6 +4543,8 @@ bool GolfState::EmoteWheel::handleEvent(const cro::Event& evt)
             case SDL_CONTROLLER_BUTTON_DPAD_DOWN:
             case SDL_CONTROLLER_BUTTON_DPAD_LEFT:
             case SDL_CONTROLLER_BUTTON_DPAD_RIGHT:
+            case cro::GameController::ButtonLeftShoulder:
+            case cro::GameController::ButtonRightShoulder:
                 return true;
             }
         }
@@ -4537,7 +4581,63 @@ bool GolfState::EmoteWheel::handleEvent(const cro::Event& evt)
             case SDL_CONTROLLER_BUTTON_DPAD_RIGHT:
                 sendEmote(Emote::Grumpy, controllerID);
                 return true;
+            case cro::GameController::ButtonLeftShoulder:
+                m_textChat.quickEmote(TextChat::Applaud);
+                cooldown = 6.f;
+                buttonNodes[5].getComponent<cro::Callback>().active = true;
+                return true;
+            case cro::GameController::ButtonRightShoulder:
+                m_textChat.quickEmote(TextChat::Happy);
+                cooldown = 6.f;
+                buttonNodes[4].getComponent<cro::Callback>().active = true;
+                return true;
             }
+        }
+    }
+
+    else if (evt.type == SDL_CONTROLLERAXISMOTION)
+    {
+        auto controllerID = activeControllerID(sharedData.inputBinding.playerID);
+        if (cro::GameController::isButtonPressed(controllerID, cro::GameController::ButtonY))
+        {
+            if (evt.caxis.axis == cro::GameController::TriggerLeft)
+            {
+                if (evt.caxis.value > axisPos[controllerID][0]
+                    && currentScale == 1)
+                {
+                    //rely on the cooldown to stop this happening again?
+                    m_textChat.quickEmote(TextChat::Laughing);
+                    cooldown = 6.f;
+                    buttonNodes[6].getComponent<cro::Callback>().active = true;
+                }
+
+                axisPos[controllerID][0] = evt.caxis.value;
+            }
+
+            else if (evt.caxis.axis == cro::GameController::TriggerRight)
+            {
+                if (evt.caxis.value > axisPos[controllerID][1]
+                    && currentScale == 1)
+                {
+                    //rely on the cooldown to stop this happening again?
+                    m_textChat.quickEmote(TextChat::Angry);
+                    cooldown = 6.f;
+                    buttonNodes[7].getComponent<cro::Callback>().active = true;
+                }
+
+                axisPos[controllerID][1] = evt.caxis.value;
+            }            
+
+            return true;
+        }
+
+        if (evt.caxis.axis == cro::GameController::TriggerLeft)
+        {
+            axisPos[controllerID][0] = evt.caxis.value;
+        }
+        else if (evt.caxis.axis == cro::GameController::TriggerRight)
+        {
+            axisPos[controllerID][1] = evt.caxis.value;
         }
     }
 
@@ -4583,7 +4683,7 @@ void GolfState::EmoteWheel::refreshLabels()
         InputBinding::Left,
     };
 
-    for (auto i = 0u; i < labelNodes.size(); ++i)
+    for (auto i = 0u; i < /*labelNodes.size()*/InputMap.size(); ++i)
     {
         labelNodes[i].getComponent<cro::Text>().setString(SDL_GetKeyName(sharedData.inputBinding.keys[InputMap[i]]));
         centreText(labelNodes[i]);
@@ -4595,6 +4695,32 @@ void GolfState::EmoteWheel::refreshLabels()
         else
         {
             labelNodes[i].getComponent<cro::Transform>().setScale({ 1.f, 0.f });
+        }
+    }
+
+    const std::array LabelStr =
+    {
+        std::string("7"),
+        std::string("8"),
+        std::string("9"),
+        std::string("0"),
+    };
+
+    //hide trigger icons if no controller
+    for (auto i = InputMap.size(); i < labelNodes.size(); ++i)
+    {
+        /*labelNodes[i].getComponent<cro::Text>().setString(LabelStr[i - 4]);
+        centreText(labelNodes[i]);*/
+
+        if (cro::GameController::getControllerCount() == 0)
+        {
+            buttonNodes[i].getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
+            //labelNodes[i].getComponent<cro::Transform>().setScale({ 1.f, 1.f });
+        }
+        else
+        {
+            buttonNodes[i].getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
+            //labelNodes[i].getComponent<cro::Transform>().setScale({ 1.f, 0.f });
         }
     }
 }
