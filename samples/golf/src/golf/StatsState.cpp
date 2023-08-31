@@ -1931,6 +1931,15 @@ void StatsState::refreshAwardsTab(std::int32_t page)
             case Social::Award::Level50:
                 m_awardQuad = m_awardSprites[SpriteID::DiamondBall];
                 break;
+            case Social::Award::LeagueFirst:
+                m_awardQuad = m_awardSprites[SpriteID::GoldSpike];
+                break;
+            case Social::Award::LeagueSecond:
+                m_awardQuad = m_awardSprites[SpriteID::SilverSpike];
+                break;
+            case Social::Award::LeagueThird:
+                m_awardQuad = m_awardSprites[SpriteID::BronzeSpike];
+                break;
             }
             m_awardQuad.draw();
         }

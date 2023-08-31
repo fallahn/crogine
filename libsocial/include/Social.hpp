@@ -182,7 +182,8 @@ public:
         {
             MonthlyGold, MonthlySilver, MonthlyBronze,
             MonthlyChallenge,
-            Level10, Level20, Level30, Level40, Level50
+            Level10, Level20, Level30, Level40, Level50,
+            LeagueFirst, LeagueSecond, LeagueThird
         };
         std::int32_t type;
         cro::String description;

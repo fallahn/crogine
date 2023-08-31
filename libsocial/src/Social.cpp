@@ -468,6 +468,23 @@ void Social::refreshAwards()
         }
     }
 
+    //check for league awards
+    for (auto i = 0; i < 3; ++i)
+    {
+        if (Achievements::getStat(StatStrings[StatID::LeagueFirst + i])->value != 0)
+        {
+            auto type = Social::Award::LeagueFirst + i;
+            if (auto result = std::find_if(awardData.begin(), awardData.end(), [type](const AwardData& ad)
+                {
+                    return ad.type == type;
+                }); result == awardData.end())
+            {
+                awardData.emplace_back().type = type;
+                newAwards = true;
+            }
+        }
+    }
+
 
     //if list updated write file
     if (newAwards)
@@ -540,6 +557,27 @@ void Social::refreshAwards()
             award.description = "Reached Level 50";
         }
             break;
+        case Social::Award::LeagueFirst:
+        {
+            auto& award = awards.emplace_back();
+            award.type = a.type;
+            award.description = "Placed First in a\nClub League Season";
+        }
+        break;
+        case Social::Award::LeagueSecond:
+        {
+            auto& award = awards.emplace_back();
+            award.type = a.type;
+            award.description = "Placed Second in a\nClub League Season";
+        }
+        break;
+        case Social::Award::LeagueThird:
+        {
+            auto& award = awards.emplace_back();
+            award.type = a.type;
+            award.description = "Placed Third in a\nClub League Season";
+        }
+        break;
         }
     }
 }

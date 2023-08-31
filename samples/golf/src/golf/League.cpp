@@ -28,6 +28,9 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include "League.hpp"
+#include "Social.hpp"
+#include "Achievements.hpp"
+#include "AchievementStrings.hpp"
 
 #include <crogine/detail/Types.hpp>
 #include <crogine/core/App.hpp>
@@ -126,6 +129,51 @@ void League::iterate(const std::array<std::int32_t, 18>& parVals, const std::vec
             auto curve = m_players[i].curve;
             curve = std::max(0, curve - cro::Util::Random::value(0, 1));
         }
+
+        //calculate our final place and update our stats
+        struct SortData final
+        {
+            std::int32_t score = 0;
+            std::int32_t handicap = 0;
+            std::int32_t nameIndex = 0;
+        };
+        std::vector<SortData> sortData;
+        
+        for (auto i = 0; i < 3; ++i)
+        {
+            //only need to compare against the top 3
+            auto& data = sortData.emplace_back();
+            data.score = m_players[i].currentScore;
+            data.nameIndex = m_players[i].nameIndex;
+            data.handicap = (m_players[i].curve + m_players[i].outlier);
+        }
+        auto& data = sortData.emplace_back();
+        data.score = m_playerScore;
+        data.nameIndex = -1;
+        data.handicap = Social::getLevel() / 2;
+
+        std::sort(sortData.begin(), sortData.end(), 
+            [](const SortData& a, const SortData& b)
+            {
+                return a.score == b.score ? 
+                    a.handicap > b.handicap :
+                a.score > b.score;
+            });
+
+        for (auto i = 0; i < 3; ++i)
+        {
+            if (sortData[i].nameIndex == -1)
+            {
+                //this is us
+                Achievements::incrementStat(StatStrings[StatID::LeagueFirst + i]);
+
+                Achievements::awardAchievement(AchievementStrings[AchievementID::LeagueChampion]);
+
+                //TODO raise a message to notify somewhere?
+                break;
+            }
+        }
+
 
         //start a new season
         m_currentIteration = 0;
