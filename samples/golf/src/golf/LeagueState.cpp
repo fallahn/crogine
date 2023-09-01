@@ -588,7 +588,7 @@ void LeagueState::createLeagueTab(cro::Entity parent, const cro::SpriteSheet& sp
         {
             str += " ";
         }
-        str += std::to_string(e.score) + "\n";
+        str += std::to_string(e.score) + " Points\n";
     }
 
     entity = m_scene.createEntity();
@@ -598,6 +598,86 @@ void LeagueState::createLeagueTab(cro::Entity parent, const cro::SpriteSheet& sp
     entity.getComponent<cro::Text>().setFillColour(LeaderboardTextDark);
     entity.getComponent<cro::Text>().setCharacterSize(LabelTextSize);
     m_tabNodes[TabID::League].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+    //check if a previous season exists and scroll the results
+    const auto path = cro::App::getPreferencePath() + PrevFileName;
+    if (cro::FileSystem::fileExists(path))
+    {
+        cro::RaiiRWops file;
+        file.file = SDL_RWFromFile(path.c_str(), "rb");
+        if (file.file)
+        {
+            auto size = SDL_RWseek(file.file, 0, RW_SEEK_END);
+            if (size % sizeof(PreviousEntry) == 0)
+            {
+                auto count = size / sizeof(PreviousEntry);
+                std::vector<PreviousEntry> buff(count);
+
+                SDL_RWseek(file.file, 0, RW_SEEK_SET);
+                SDL_RWread(file.file, buff.data(), sizeof(PreviousEntry), count);
+
+                //this assumes everything was sorted correctly when it was saved
+                cro::String str = "Previous Season's Results";
+                for (auto i = 0; i < buff.size(); ++i)
+                {
+                    buff[i].nameIndex = std::clamp(buff[i].nameIndex, -1, static_cast<std::int32_t>(RandomNames.size()) - 1);
+
+                    str += " -~- ";
+                    str += std::to_string(i + 1);
+                    if (buff[i].nameIndex > -1)
+                    {
+                        str += ". " + RandomNames[buff[i].nameIndex];
+                    }
+                    else
+                    {
+                        str += ". " + playerName;
+                    }
+                    str += " " + std::to_string(buff[i].score);
+                }
+
+
+                entity = m_scene.createEntity();
+                entity.addComponent<cro::Transform>().setPosition({ 0.f, 12.f, 0.1f });
+                entity.addComponent<cro::Drawable2D>();
+                entity.addComponent<cro::Text>(smallFont).setString(str);
+                entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+                entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+                entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
+            }
+                entity.getComponent<cro::Text>().setCharacterSize(LabelTextSize);
+                m_tabNodes[TabID::League].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+                bounds = cro::Text::getLocalBounds(entity);
+                entity.addComponent<cro::Callback>().active = true;
+                entity.getComponent<cro::Callback>().setUserData<float>(0.f);
+                entity.getComponent<cro::Callback>().function =
+                    [&, bounds](cro::Entity e, float dt)
+                {
+                    float& xPos = e.getComponent<cro::Callback>().getUserData<float>();
+                    xPos -= (dt * 50.f);
+
+                    const auto worldX = m_tabNodes[TabID::League].getComponent<cro::Transform>().getWorldPosition().x;
+
+                    if ((xPos + worldX) < (-bounds.width))
+                    {
+                        xPos = cro::App::getWindow().getSize().x / m_viewScale.x;
+                    }
+
+                    auto pos = e.getComponent<cro::Transform>().getPosition();
+                    pos.x = std::round(xPos);
+                    
+                    e.getComponent<cro::Transform>().setPosition(pos);
+
+                    auto cropping = bounds;
+                    cropping.left = -pos.x;
+                    cropping.left += 6.f;
+                    cropping.width = 494.f;
+                    e.getComponent<cro::Drawable2D>().setCroppingArea(cropping);
+                };
+            }
+        }
+    }
 }
 
 void LeagueState::createInfoTab(cro::Entity parent)

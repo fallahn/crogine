@@ -45,6 +45,7 @@ source distribution.
 namespace
 {
     const std::string FileName("lea.gue");
+
     constexpr std::int32_t MaxCurve = 5;
 
     constexpr std::array AimSkill =
@@ -86,6 +87,41 @@ League::League()
     m_currentSeason     (1)
 {
     read();
+
+
+    //delme
+    //std::vector<SortData> sortData;
+
+    ////we'll also save this to a file so we
+    ////can review previous season
+    //for (auto i = 0; i < m_players.size(); ++i)
+    //{
+    //    auto& data = sortData.emplace_back();
+    //    data.score = m_players[i].currentScore;
+    //    data.nameIndex = m_players[i].nameIndex;
+    //    data.handicap = (m_players[i].curve + m_players[i].outlier);
+    //}
+    //auto& data = sortData.emplace_back();
+    //data.score = m_playerScore;
+    //data.nameIndex = -1;
+    //data.handicap = Social::getLevel() / 2;
+
+    //std::sort(sortData.begin(), sortData.end(),
+    //    [](const SortData& a, const SortData& b)
+    //    {
+    //        return a.score == b.score ?
+    //            a.handicap > b.handicap :
+    //        a.score > b.score;
+    //    });
+
+    //const auto path = cro::App::getPreferencePath() + PrevFileName;
+    //cro::RaiiRWops file;
+    //file.file = SDL_RWFromFile(path.c_str(), "wb");
+    //if (file.file)
+    //{
+    //    SDL_RWwrite(file.file, sortData.data(), sizeof(SortData), sortData.size());
+    //    LogI << "Wrote previous season to " << PrevFileName << std::endl;
+    //}
 }
 
 //public
@@ -133,17 +169,12 @@ void League::iterate(const std::array<std::int32_t, 18>& parVals, const std::vec
         }
 
         //calculate our final place and update our stats
-        struct SortData final
-        {
-            std::int32_t score = 0;
-            std::int32_t handicap = 0;
-            std::int32_t nameIndex = 0;
-        };
         std::vector<SortData> sortData;
         
-        for (auto i = 0; i < 3; ++i)
+        //we'll also save this to a file so we
+        //can review previous season
+        for (auto i = 0; i < m_players.size(); ++i)
         {
-            //only need to compare against the top 3
             auto& data = sortData.emplace_back();
             data.score = m_players[i].currentScore;
             data.nameIndex = m_players[i].nameIndex;
@@ -175,7 +206,16 @@ void League::iterate(const std::array<std::int32_t, 18>& parVals, const std::vec
                 break;
             }
         }
-
+        
+        //write the data to a file
+        const auto path = cro::App::getPreferencePath() + PrevFileName;
+        cro::RaiiRWops file;
+        file.file = SDL_RWFromFile(path.c_str(), "wb");
+        if (file.file)
+        {
+            SDL_RWwrite(file.file, sortData.data(), sizeof(SortData), sortData.size());
+            LogI << "Wrote previous season to " << PrevFileName << std::endl;
+        }
 
         //start a new season
         m_currentIteration = 0;

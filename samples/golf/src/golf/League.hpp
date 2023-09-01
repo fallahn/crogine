@@ -32,6 +32,7 @@ source distribution.
 #include <cstdint>
 #include <array>
 #include <vector>
+#include <string>
 
 struct LeaguePlayer final
 {
@@ -44,6 +45,15 @@ struct LeaguePlayer final
 
     std::int32_t currentScore = 0; //sum of holes converted to stableford
 };
+
+struct PreviousEntry final
+{
+    std::int32_t score = 0;
+    std::int32_t handicap = 0;
+    std::int32_t nameIndex = 0;
+};
+using SortData = PreviousEntry;
+static const std::string PrevFileName("last.gue");
 
 class League final
 {
