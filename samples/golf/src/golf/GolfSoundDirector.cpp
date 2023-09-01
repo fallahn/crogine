@@ -58,6 +58,8 @@ namespace
     constexpr float VoiceDelay = 0.5f;
 
     const cro::Time MinCrowdTime = cro::seconds(43.f);
+    const cro::Time FlagSoundTime = cro::seconds(2.f);
+    const cro::Time ChatSoundTime = cro::seconds(0.5f);
 }
 
 GolfSoundDirector::GolfSoundDirector(cro::AudioResource& ar)
@@ -66,8 +68,7 @@ GolfSoundDirector::GolfSoundDirector(cro::AudioResource& ar)
     m_honourID          (0),
     m_newHole           (false),
     m_crowdPositions    (nullptr),
-    m_crowdTime         (MinCrowdTime),
-    m_flagSoundTime     (0.f)
+    m_crowdTime         (MinCrowdTime)
 {
     //this must match with AudioID enum
     static const std::array<std::string, AudioID::Count> FilePaths =
@@ -510,10 +511,10 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
                 }
                     break;
                 case CollisionEvent::FlagPole:
-                    if (m_flagSoundTime < 0)
+                    if (m_soundTimers[AudioID::Pole].elapsed() > FlagSoundTime)
                     {
                         playSound(AudioID::Pole, data.position).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
-                        m_flagSoundTime = 2.f;
+                        m_soundTimers[AudioID::Pole].restart();
 
                         if (cro::Util::Random::value(0, 1) == 0)
                         {
@@ -582,10 +583,15 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
             }
             else if (data.type == SceneEvent::ChatMessage)
             {
-                auto e = playSound(AudioID::Chat, glm::vec3(0.f), 0.3f);
-                e.getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Menu);
-                float pitch = static_cast<float>(cro::Util::Random::value(7, 13)) / 10.f;
-                e.getComponent<cro::AudioEmitter>().setPitch(pitch);
+                if (m_soundTimers[AudioID::Chat].elapsed() > ChatSoundTime)
+                {
+                    auto e = playSound(AudioID::Chat, glm::vec3(0.f), 0.3f);
+                    e.getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Menu);
+                    float pitch = static_cast<float>(cro::Util::Random::value(7, 13)) / 10.f;
+                    e.getComponent<cro::AudioEmitter>().setPitch(pitch);
+
+                    m_soundTimers[AudioID::Chat].restart();
+                }
             }
         }
         break;
@@ -596,8 +602,6 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
 void GolfSoundDirector::process(float dt)
 {
     SoundEffectsDirector::process(dt);
-
-    m_flagSoundTime -= dt;
 
     if (m_crowdTimer.elapsed() > m_crowdTime)
     {

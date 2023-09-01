@@ -442,7 +442,7 @@ void LeagueState::createLeagueTab(cro::Entity parent, const cro::SpriteSheet& sp
     entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, 0.f });
     m_tabNodes[TabID::League].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
-
+    auto stripeEnt = entity;
 
     League league;
     auto season = league.getCurrentSeason();
@@ -490,19 +490,21 @@ void LeagueState::createLeagueTab(cro::Entity parent, const cro::SpriteSheet& sp
     //or the player's current level.
     static constexpr float VerticalSpacing = 13.f;
     static constexpr float TextTop = 268.f;
+    float stripePos = 0.f;
 
     cro::SpriteSheet shieldSprites;
     shieldSprites.loadFromFile("assets/golf/sprites/lobby_menu.spt", m_sharedData.sharedResources->textures);
 
     //TODO we could optimise this a bit by batching into a vertex array...
-
     glm::vec3 spritePos(68.f, TextTop - 12.f, 0.1f);
+    auto z = 0; //track our position so we can highlight the name
     for (const auto& entry : entries)
     {
         std::int32_t level = 0;
         if (entry.name == -1)
         {
             level = Social::getLevel() / 10;
+            stripePos = (VerticalSpacing * (entries.size() - (z+ 1)));
         }
         else
         {
@@ -519,9 +521,20 @@ void LeagueState::createLeagueTab(cro::Entity parent, const cro::SpriteSheet& sp
         m_tabNodes[TabID::League].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
         spritePos.y -= VerticalSpacing;
+        z++;
     }
-
-
+    
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, stripePos + 1.f, 0.01f }); //vertical pad border
+    entity.addComponent<cro::Drawable2D>().setVertexData(
+        {
+            cro::Vertex2D(glm::vec2(0.f, VerticalSpacing), TextGoldColour),
+            cro::Vertex2D(glm::vec2(0.f), TextGoldColour),
+            cro::Vertex2D(glm::vec2(bounds.width, VerticalSpacing), TextGoldColour),
+            cro::Vertex2D(glm::vec2(bounds.width, 0.f), TextGoldColour),
+        });
+    entity.getComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLE_STRIP);
+    stripeEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     cro::String playerName;
     if (Social::isAvailable())

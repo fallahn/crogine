@@ -544,16 +544,20 @@ void InputParser::setMaxClub(float dist, bool atTee)
     {
         //teeing off we want to allow all the way up to wood
         //on par 3s
-        if (dist < Clubs[ClubID::FiveWood].getBaseTarget() - 5.f)
-        {
-            dist = Clubs[ClubID::FourIron].getBaseTarget() + 5.f;
-        }
-        else dist = 1000.f;
+        dist = std::max(dist, Clubs[ClubID::FiveWood].getBaseTarget());
+        //if (dist < Clubs[ClubID::FourIron].getBaseTarget() - 5.f)
+        //{
+        //    dist = Clubs[ClubID::FourIron].getBaseTarget() * 1.06f;
+        //}
+        //else
+        //{
+        //    dist = 1000.f;
+        //}
     }
 
     m_firstClub = ClubID::SandWedge;
 
-    while ((Clubs[m_firstClub].getBaseTarget() * 1.05f) < dist
+    while ((Clubs[m_firstClub].getBaseTarget()/* * 1.05f*/) < dist
         && m_firstClub != ClubID::Driver)
     {
         //this WILL get stuck in an infinite loop if the clubset is 0 for some reason
@@ -565,7 +569,7 @@ void InputParser::setMaxClub(float dist, bool atTee)
     }
 
     //this isn't perfect so give one extra club wiggle room
-    if (!atTee)
+    //if (!atTee)
     {
         m_firstClub = std::max(0, m_firstClub - 1);
     }

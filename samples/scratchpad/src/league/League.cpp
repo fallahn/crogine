@@ -101,7 +101,7 @@ void League::reset()
         player.outlier = cro::Util::Random::value(1, 10);
         player.nameIndex = nameIndex++;
 
-        player.quality = 0.89f - (0.01f * player.nameIndex);
+        player.quality = 0.87f - (0.01f * player.nameIndex);
     }
     m_currentIteration = 0;
     m_currentSeason = 1;
@@ -138,7 +138,7 @@ void League::iterate(const std::array<std::int32_t, 18>& parVals, const std::vec
     }
     
 
-    holeCount = holeCount == 0 ? 18 : 9;
+    holeCount = 9;// holeCount == 0 ? 18 : 9;
 
     for (auto& player : m_players)
     {
@@ -266,7 +266,7 @@ void League::read()
             player.skill = std::clamp(player.skill, 1, 20);
             player.nameIndex = std::clamp(player.nameIndex, 0, std::int32_t(PlayerCount) - 1);
 
-            player.currentScore = std::clamp(player.currentScore, MaxScore, 100);
+            //player.currentScore = std::clamp(player.currentScore, MaxScore, 100);
         }
     }
     else

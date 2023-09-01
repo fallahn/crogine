@@ -307,7 +307,7 @@ void League::read()
         //validate the loaded data and clamp to sane values
         m_currentIteration = std::clamp(m_currentIteration, 0, MaxIterations);
 
-        static constexpr std::int32_t MaxScore = -2 * 18 * MaxIterations;
+        static constexpr std::int32_t MaxScore = 5 * 18 * MaxIterations;
 
         //TODO what do we consider sane values for each player?
         for (auto& player : m_players)
@@ -317,7 +317,7 @@ void League::read()
             player.skill = std::clamp(player.skill, 1, 20);
             player.nameIndex = std::clamp(player.nameIndex, 0, std::int32_t(PlayerCount) - 1);
 
-            player.currentScore = std::clamp(player.currentScore, MaxScore, 100);
+            //player.currentScore = std::clamp(player.currentScore, 0, MaxScore);
         }
     }
     else
