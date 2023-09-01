@@ -59,7 +59,7 @@ namespace
 
     const cro::Time MinCrowdTime = cro::seconds(43.f);
     const cro::Time FlagSoundTime = cro::seconds(2.f);
-    const cro::Time ChatSoundTime = cro::seconds(0.5f);
+    const cro::Time ChatSoundTime = cro::seconds(0.05f);
 }
 
 GolfSoundDirector::GolfSoundDirector(cro::AudioResource& ar)
