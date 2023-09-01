@@ -215,6 +215,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     m_camRotation       (0.f),
     m_roundEnded        (false),
     m_newHole           (true),
+    m_suddenDeath       (false),
     m_viewScale         (1.f),
     m_scoreColumnCount  (2),
     m_readyQuitFlags    (0),
@@ -6125,6 +6126,8 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo)
         && hole == m_holeData.size() - 1)
     {
         showNotification("Sudden Death Round!");
+        showNotification("First to hole wins!");
+        m_suddenDeath = true;
     }
 
 

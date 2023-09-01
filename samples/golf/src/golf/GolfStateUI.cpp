@@ -3452,7 +3452,14 @@ void GolfState::showMessageBoard(MessageBoardID messageType, bool special)
         textEnt.getComponent<cro::Text>().setString(m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].name.substr(0, 19));
         textEnt.getComponent<cro::Text>().setFillColour(TextGoldColour);
         textEnt2.getComponent<cro::Text>().setString("Stroke: " + std::to_string(m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].holeScores[m_currentHole] + 1));
-        textEnt3.getComponent<cro::Text>().setString(ScoreTypes[m_sharedData.scoreType]);
+        if (m_sharedData.scoreType == ScoreType::Skins && m_suddenDeath)
+        {
+            textEnt3.getComponent<cro::Text>().setString("First To Hole Wins");
+        }
+        else
+        {
+            textEnt3.getComponent<cro::Text>().setString(ScoreTypes[m_sharedData.scoreType]);
+        }
         break;
     case MessageBoardID::Scrub:
     case MessageBoardID::Water:

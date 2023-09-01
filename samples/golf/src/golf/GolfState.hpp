@@ -347,6 +347,7 @@ private:
     float m_camRotation; //used to offset the rotation of the wind indicator
     bool m_roundEnded;
     bool m_newHole; //prevents closing scoreboard until everyone is ready
+    bool m_suddenDeath;
     glm::vec2 m_viewScale;
     std::size_t m_scoreColumnCount;
     LeaderboardTexture m_leaderboardTexture;

@@ -188,6 +188,7 @@ bool GolfState::summariseRules()
                 //this is used to make sure we send the correct score update to the client when this function returns
                 //and employ sudden death on the final hole
                 m_skinsFinals = true;
+                m_scene.getSystem<BallSystem>()->setGimmeRadius(0);
 
                 for (auto& p : m_playerInfo)
                 {
