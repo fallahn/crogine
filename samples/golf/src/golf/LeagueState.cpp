@@ -338,7 +338,7 @@ void LeagueState::buildScene()
     for (auto i = 0; i < TabID::Max; ++i)
     {
         entity = m_scene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition({ (stride * i) + offset, 13.f, 0.5f });
+        entity.addComponent<cro::Transform>().setPosition({ (stride * i) + offset, 19.f, 0.5f });
         entity.getComponent<cro::Transform>().setOrigin({ std::floor(bounds.width / 2.f), std::floor(bounds.height / 2.f) });
         entity.getComponent<cro::Transform>().move(entity.getComponent<cro::Transform>().getOrigin());
         entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
@@ -638,15 +638,15 @@ void LeagueState::createLeagueTab(cro::Entity parent, const cro::SpriteSheet& sp
 
 
                 entity = m_scene.createEntity();
-                entity.addComponent<cro::Transform>().setPosition({ 0.f, 12.f, 0.1f });
+                entity.addComponent<cro::Transform>().setPosition({ 0.f, 15.f, 0.1f });
                 entity.addComponent<cro::Drawable2D>();
                 entity.addComponent<cro::Text>(smallFont).setString(str);
                 entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
                 entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
                 entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
-            }
+            
                 entity.getComponent<cro::Text>().setCharacterSize(LabelTextSize);
-                m_tabNodes[TabID::League].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+                parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
                 bounds = cro::Text::getLocalBounds(entity);
                 entity.addComponent<cro::Callback>().active = true;
@@ -657,11 +657,11 @@ void LeagueState::createLeagueTab(cro::Entity parent, const cro::SpriteSheet& sp
                     float& xPos = e.getComponent<cro::Callback>().getUserData<float>();
                     xPos -= (dt * 50.f);
 
-                    const auto worldX = m_tabNodes[TabID::League].getComponent<cro::Transform>().getWorldPosition().x;
+                    static constexpr float BGWidth = 494.f;
 
-                    if ((xPos + worldX) < (-bounds.width))
+                    if (xPos < (-bounds.width))
                     {
-                        xPos = cro::App::getWindow().getSize().x / m_viewScale.x;
+                        xPos = BGWidth;
                     }
 
                     auto pos = e.getComponent<cro::Transform>().getPosition();
@@ -672,7 +672,7 @@ void LeagueState::createLeagueTab(cro::Entity parent, const cro::SpriteSheet& sp
                     auto cropping = bounds;
                     cropping.left = -pos.x;
                     cropping.left += 6.f;
-                    cropping.width = 494.f;
+                    cropping.width = BGWidth;
                     e.getComponent<cro::Drawable2D>().setCroppingArea(cropping);
                 };
             }
