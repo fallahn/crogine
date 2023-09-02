@@ -619,6 +619,14 @@ bool GolfGame::initialise()
             cro::Util::String::parseURL(Social::getBaseContentPath());
         });
 
+    registerCommand("reset_league", 
+        [](const std::string&)
+        {
+            League l;
+            l.reset();
+            cro::Console::print("League tables are reset");
+        });
+
     getWindow().setLoadingScreen<LoadingScreen>(m_sharedData);
     getWindow().setTitle("Super Video Golf - " + StringVer);
     getWindow().setIcon(icon);
