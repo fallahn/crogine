@@ -170,6 +170,7 @@ struct SpriteAnimID final
     };
 };
 
+
 struct MixerChannel final
 {
     enum
@@ -181,6 +182,7 @@ struct MixerChannel final
         Count
     };
 };
+
 
 //data blocks for uniform buffer
 struct WindData final

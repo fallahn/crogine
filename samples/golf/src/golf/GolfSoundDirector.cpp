@@ -62,8 +62,9 @@ namespace
     const cro::Time ChatSoundTime = cro::seconds(0.05f);
 }
 
-GolfSoundDirector::GolfSoundDirector(cro::AudioResource& ar)
-    : m_currentClient   (0),
+GolfSoundDirector::GolfSoundDirector(cro::AudioResource& ar, const SharedStateData& sd)
+    : m_sharedData      (sd),
+    m_currentClient     (0),
     m_currentPlayer     (0),
     m_honourID          (0),
     m_newHole           (false),
@@ -168,6 +169,7 @@ GolfSoundDirector::GolfSoundDirector(cro::AudioResource& ar)
 
         "assets/golf/sound/bad.wav",
         "assets/golf/sound/tutorial_appear.wav",
+        "assets/golf/sound/menu/skins.wav",
 
         "assets/golf/sound/ambience/crowd_clear_throat.wav",
         "assets/golf/sound/ambience/crowd_cough.wav",
@@ -295,6 +297,12 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
                         playAvatarSound(idx, emitterName, glm::vec3(0.f)).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Voice);
                     }
                 }
+
+                if (m_sharedData.scoreType == ScoreType::Skins)
+                {
+                    playSoundDelayed(AudioID::SkinsWin, glm::vec3(0.f), 1.f, 1.f, MixerChannel::Menu);
+                }
+
                 break;
             case GolfEvent::HoleDrawn:
                 playSoundDelayed(cro::Util::Random::value(AudioID::Draw01, AudioID::Draw02), glm::vec3(0.f), 0.2f, 1.f, MixerChannel::Voice);

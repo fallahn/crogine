@@ -956,7 +956,7 @@ void DrivingState::addSystems()
     m_gameScene.setSystemActive<CameraFollowSystem>(false);
 
     m_gameScene.addDirector<DrivingRangeDirector>(m_holeData);
-    m_gameScene.addDirector<GolfSoundDirector>(m_resources.audio);
+    m_gameScene.addDirector<GolfSoundDirector>(m_resources.audio, m_sharedData);
     m_gameScene.addDirector<GolfParticleDirector>(m_resources.textures, m_sharedData);
 
 

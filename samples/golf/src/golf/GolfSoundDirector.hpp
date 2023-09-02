@@ -47,7 +47,7 @@ namespace cro
 class GolfSoundDirector final : public SoundEffectsDirector
 {
 public:
-    explicit GolfSoundDirector(cro::AudioResource&);
+    GolfSoundDirector(cro::AudioResource&, const SharedStateData&);
 
     void handleMessage(const cro::Message&) override;
     void process(float) override;
@@ -155,6 +155,7 @@ private:
             Foot04,
             BadSport,
             Chat,
+            SkinsWin,
 
             CrowdClearThroat,
             CrowdCough,
@@ -164,6 +165,8 @@ private:
         };
     };
     std::array<const cro::AudioSource*, AudioID::Count> m_audioSources = {};
+
+    const SharedStateData& m_sharedData;
 
     std::array<std::array<std::int32_t, ConstVal::MaxPlayers>, ConstVal::MaxClients> m_playerIndices = {};
     std::vector<cro::AudioScape> m_playerVoices;
