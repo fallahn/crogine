@@ -80,6 +80,10 @@ source distribution.
 
 #include <crogine/detail/glm/gtx/rotate_vector.hpp>
 
+#ifdef USE_GNS
+#include "DebugUtil.hpp"
+#endif
+
 using namespace cl;
 
 namespace
@@ -4243,6 +4247,9 @@ void GolfState::updateLeague()
             if (!player.isCPU)
             {
                 m_league.iterate(parVals, player.holeScores, m_holeData.size());
+#ifdef USE_GNS
+                logGameScores(parVals, player.holeScores, m_holeData.size());
+#endif
                 break;
             }
         }
