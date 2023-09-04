@@ -37,8 +37,10 @@ source distribution.
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/graphics/SpriteSheet.hpp>
 
+#include <crogine/gui/GuiClient.hpp>
+
 struct SharedStateData;
-class LeagueState final : public cro::State, public cro::ConsoleClient
+class LeagueState final : public cro::State, public cro::ConsoleClient, public cro::GuiClient
 {
 public:
     LeagueState(cro::StateStack&, cro::State::Context, SharedStateData&);

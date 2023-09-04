@@ -38,6 +38,8 @@ source distribution.
 #include "League.hpp"
 #include "RandNames.hpp"
 
+#include <DebugUtil.hpp>
+
 #include <Social.hpp>
 #include <AchievementIDs.hpp>
 #include <AchievementStrings.hpp>
@@ -77,7 +79,8 @@ using namespace cl;
 
 namespace
 {
-
+    std::vector<ScoreSet> scoreSet;
+    std::size_t courseIndex = 0;
 }
 
 LeagueState::LeagueState(cro::StateStack& ss, cro::State::Context ctx, SharedStateData& sd)
@@ -88,6 +91,54 @@ LeagueState::LeagueState(cro::StateStack& ss, cro::State::Context ctx, SharedSta
     m_currentTab            (0)
 {
     ctx.mainWindow.setMouseCaptured(false);
+
+    scoreSet = readGameScores();
+
+    registerWindow([&]()
+        {
+            if (ImGui::Begin("League"))
+            {
+                static League league;
+
+                const auto& entries = league.getTable();
+                for (const auto& e : entries)
+                {
+                    ImGui::Text("Skill: %d - Curve: %d - Score: %d - Name: %d", e.skill, e.curve, e.currentScore, e.nameIndex);
+                }
+                ImGui::Text("Iteration: %d", league.getCurrentIteration());
+                ImGui::SameLine();
+                ImGui::Text("Season: %d", league.getCurrentSeason());
+                ImGui::SameLine();
+                ImGui::Text("Score: %d", league.getCurrentScore());
+
+                if (!scoreSet.empty())
+                {
+                    if (ImGui::Button("Iterate"))
+                    {
+                        league.iterate(scoreSet[courseIndex].par, scoreSet[courseIndex].scores, scoreSet[courseIndex].scores.size());
+                        courseIndex = (courseIndex + 1) % scoreSet.size();
+                    }
+                    ImGui::SameLine();
+                    if (ImGui::Button("Reset"))
+                    {
+                        league.reset();
+                    }
+
+                    if (ImGui::Button("Run 10 Seasons"))
+                    {
+                        for (auto i = 0; i < 10; ++i)
+                        {
+                            for (auto j = 0; j < League::MaxIterations; ++j)
+                            {
+                                league.iterate(scoreSet[courseIndex].par, scoreSet[courseIndex].scores, scoreSet[courseIndex].scores.size());
+                                courseIndex = (courseIndex + 1) % scoreSet.size();
+                            }
+                        }
+                    }
+                }
+            }
+            ImGui::End();
+        });
 
     buildScene();
 }
