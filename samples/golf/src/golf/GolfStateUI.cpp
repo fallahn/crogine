@@ -2201,7 +2201,7 @@ void GolfState::createScoreboard()
                 }
                 else
                 {
-                    auto idx = m_sharedData.connectionData[client].pingTime / 30;
+                    auto idx = m_sharedData.connectionData[client].pingTime / 60;
                     e.getComponent<cro::SpriteAnimation>().play(std::min(4u, idx));
                 }
 
@@ -2292,15 +2292,16 @@ void GolfState::updateScoreboard(bool updateParDiff)
                 //as the mid-point score looks confusing... however
                 //we still want to count the current number of strokes...
                 if (s)
-                {
-                    if (updateParDiff || j < (m_currentHole))
+                {                    
+                    if (updateParDiff 
+                        || j < (m_currentHole)
+                        || entry.holeComplete.back())
                     {
                         auto diff = static_cast<std::int32_t>(s) - m_holeData[j].par;
-                        entry.parDiff += diff;
-
-                        overPar = (diff > 0);
-
                         stableScore = 2 - diff;
+
+                        entry.parDiff += diff;
+                        overPar = (diff > 0);
                     }
                 }
 
