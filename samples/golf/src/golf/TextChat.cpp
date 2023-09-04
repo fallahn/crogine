@@ -91,7 +91,7 @@ namespace
         "/me goes into hysterics"
     };
 
-    const std::array<std::string, 15u> AngerStrings =
+    const std::array<std::string, 14u> AngerStrings =
     {
         "/me rages",
         "/me throws their club into the lake",
@@ -103,7 +103,6 @@ namespace
         "/me clenches their teeth",
         "/me wails despondently",
         "/me shakes a fist",
-        "/me howls at the moon",
         "/me cries like a baby",
         "/me 's blood boils",
         "/me is about to lose it",
@@ -185,7 +184,7 @@ void TextChat::handlePacket(const net::NetEvent::Packet& pkt)
     cro::Colour chatColour = TextNormalColour;
 
     //process any emotes such as /me and choose colour
-    if (auto p = msgText.find("/me"); p != cro::String::InvalidPos
+    if (auto p = msgText.find("/me"); p == 0
         && msgText.size() > 4)
     {
         chatColour = TextGoldColour;
