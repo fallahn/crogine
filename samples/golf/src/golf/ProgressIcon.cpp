@@ -110,7 +110,8 @@ ProgressIcon::ProgressIcon(const cro::Font& font)
 
     m_text.setFont(font);
     m_text.setCharacterSize(16);
-    m_text.setPosition({ 4.f, 60.f });
+    m_text.setPosition({ std::floor(IconSize.x / 2.f), 60.f });
+    m_text.setAlignment(cro::SimpleText::Alignment::Centre);
     m_text.setVerticalSpacing(1.f);
 
     m_titleText.setFont(font);

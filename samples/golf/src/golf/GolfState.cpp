@@ -5965,6 +5965,11 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
             {
                 if (e.getComponent<InterpolationComponent<InterpolationType::Linear>>().id == idx)
                 {
+                    //this just does some effects
+                    auto* msg = postMessage<GolfEvent>(MessageID::GolfMessage);
+                    msg->type = GolfEvent::PowerShot;
+                    msg->position = e.getComponent<cro::Transform>().getWorldPosition();
+
                     m_gameScene.destroyEntity(e);
                     LOG("Packet removed ball entity", cro::Logger::Type::Warning);
                 }
@@ -6820,7 +6825,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
 
     if (player.terrain == TerrainID::Bunker)
     {
-        m_inputParser.setMaxClub(/*ClubID::PitchWedge*/ClubID::SevenIron);
+        m_inputParser.setMaxClub(/*ClubID::PitchWedge*/ClubID::FourIron);
     }
     else
     {
