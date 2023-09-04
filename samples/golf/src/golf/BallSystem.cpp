@@ -741,6 +741,8 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
                     position.y = m_holeData->pin.y - (Ball::Radius * 2.5f);
                     position.z = m_holeData->pin.z;
                     tx.setPosition(position);
+
+                    ball.terrain = TerrainID::Hole; //let the ball reset know to raise a holed message
                 }
 
                 msg->position = position;
@@ -898,13 +900,13 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
 
             auto position = entity.getComponent<cro::Transform>().getPosition();
             auto len2 = glm::length2(glm::vec2(position.x, position.z) - glm::vec2(m_holeData->pin.x, m_holeData->pin.z));
+            //auto wantGimme = (len2 <= (BallHoleDistance + GimmeRadii[m_gimmeRadius]));
 
             //send message to report status
             auto* msg = postEvent();
             msg->terrain = ball.terrain;
 
-            if (ball.terrain == TerrainID::Hole
-                || (len2 <= (BallHoleDistance + GimmeRadii[m_gimmeRadius])))
+            if (ball.terrain == TerrainID::Hole)
             {
                 //we're in the hole
                 msg->type = GolfBallEvent::Holed;
