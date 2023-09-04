@@ -60,6 +60,7 @@ namespace
     const cro::Time MinCrowdTime = cro::seconds(43.f);
     const cro::Time FlagSoundTime = cro::seconds(2.f);
     const cro::Time ChatSoundTime = cro::seconds(0.05f);
+    const cro::Time PowerSoundTime = cro::seconds(0.5f);
 }
 
 GolfSoundDirector::GolfSoundDirector(cro::AudioResource& ar, const SharedStateData& sd)
@@ -350,11 +351,16 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
                 playSoundDelayed(cro::Util::Random::value(AudioID::NiceSwing01, AudioID::NiceSwing03), data.position, 0.8f, 1.f, MixerChannel::Voice);
                 break;
             case GolfEvent::PowerShot:
-                playSound(AudioID::PowerBall, data.position).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
-
-                if (cro::Util::Random::value(0, 2) == 0)
+                if (m_soundTimers[AudioID::PowerBall].elapsed() > PowerSoundTime)
                 {
-                    playSoundDelayed(AudioID::PowerShot01 + cro::Util::Random::value(0,3), data.position, 1.5f, 1.1f, MixerChannel::Voice);
+                    playSound(AudioID::PowerBall, data.position).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
+
+                    //this might also play if a player quits but meh
+                    if (cro::Util::Random::value(0, 2) == 0)
+                    {
+                        playSoundDelayed(AudioID::PowerShot01 + cro::Util::Random::value(0, 3), data.position, 1.5f, 1.1f, MixerChannel::Voice);
+                    }
+                    m_soundTimers[AudioID::PowerBall].restart();
                 }
                 break;
             case GolfEvent::ClubSwing:

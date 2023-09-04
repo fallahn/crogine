@@ -3288,6 +3288,7 @@ void GolfState::loadAssets()
                                 ent.getComponent<cro::ParticleEmitter>().setRenderFlags(~(RenderFlags::MiniGreen | RenderFlags::MiniMap));
                                 ent.addComponent<cro::CommandTarget>().ID = CommandID::ParticleEmitter;
                                 holeData.particleEntities.push_back(ent);
+                                holeData.modelEntity.getComponent<cro::Transform>().addChild(ent.getComponent<cro::Transform>());
                             }
                         }
                     }
