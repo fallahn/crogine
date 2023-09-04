@@ -178,7 +178,6 @@ bool GolfState::summariseRules()
             });
 
 
-
         //check if we tied the last hole in skins
         if (m_sharedData.scoreType == ScoreType::Skins
             && ((m_currentHole + 1) == m_holeData.size()))

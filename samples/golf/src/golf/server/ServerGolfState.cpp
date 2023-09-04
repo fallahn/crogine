@@ -786,6 +786,32 @@ void GolfState::setNextPlayer(bool newHole)
             {
                 return a.holeScore[m_currentHole - 1] < b.holeScore[m_currentHole - 1];
             });
+
+        //check the last honour taker to see if their score matches
+        //current first position and swap them in to first if so
+        //TODO we could probably include this in the predicate above
+        //but ehhhh no harm in being explicit I guess?
+        if (m_playerInfo[0].client != m_honour[0]
+            || m_playerInfo[0].player != m_honour[1])
+        {
+            auto r = std::find_if(m_playerInfo.begin(), m_playerInfo.end(),
+                [&](const PlayerStatus& ps)
+                {
+                    return ps.client == m_honour[0] && ps.player == m_honour[1];
+                });
+
+            if (r != m_playerInfo.end())
+            {
+                if (r->holeScore[m_currentHole - 1] == m_playerInfo[0].holeScore[m_currentHole - 1])
+                {
+                    std::swap(m_playerInfo[std::distance(m_playerInfo.begin(), r)], m_playerInfo[0]);
+                }
+            }
+        }
+
+        //set whoever is first as current honour taker
+        m_honour[0] = m_playerInfo[0].client;
+        m_honour[1] = m_playerInfo[0].player;
     }
 
 

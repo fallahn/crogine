@@ -74,6 +74,7 @@ namespace sv
         std::uint8_t m_randomTargetCount;
 
         cro::Clock m_turnTimer;
+        std::array<std::uint8_t, 2u> m_honour = { 0, 0 };
 
         void sendInitialGameState(std::uint8_t);
         void handlePlayerInput(const net::NetEvent::Packet&, bool predict);
