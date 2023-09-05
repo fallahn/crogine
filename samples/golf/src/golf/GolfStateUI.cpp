@@ -500,12 +500,12 @@ void GolfState::buildUI()
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement;
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::UIElement | CommandID::UI::TerrainType;
     entity.addComponent<UIElement>().relativePosition = { 0.76f, 1.f };
     entity.getComponent<UIElement>().depth = 0.05f;
     entity.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
     entity.getComponent<cro::Text>().setFillColour(LeaderboardTextLight);
-    entity.addComponent<cro::Callback>().active = true;
+   /* entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float)
     {
@@ -519,7 +519,7 @@ void GolfState::buildUI()
         {
             e.getComponent<cro::Text>().setString(TerrainStrings[m_currentPlayer.terrain]);
         }
-    };
+    };*/
     infoEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     //ball spin indicator - positioned by camera callback

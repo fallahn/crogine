@@ -6883,6 +6883,24 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     };
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
+    //display current terrain
+    cmd.targetFlags = CommandID::UI::TerrainType;
+    cmd.action =
+        [&,player](cro::Entity e, float)
+    {
+        if (player.terrain == TerrainID::Bunker)
+        {
+            auto lie = m_avatars[player.client][player.player].ballModel.getComponent<ClientCollider>().lie;
+            static const std::array<std::string, 2u> str = { "Bunker (B)", "Bunker (SU)" };
+            e.getComponent<cro::Text>().setString(str[lie]);
+        }
+        else
+        {
+            e.getComponent<cro::Text>().setString(TerrainStrings[player.terrain]);
+        }
+    };
+    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
     //show ui if this is our client    
     cmd.targetFlags = CommandID::UI::Root;
     cmd.action = [&,localPlayer, isCPU](cro::Entity e, float)
