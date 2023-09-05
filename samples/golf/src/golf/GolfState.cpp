@@ -6818,15 +6818,17 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     showScoreboard(false);
 
     Club::setClubLevel(isCPU ? m_cpuGolfer.getClubLevel() : m_sharedData.clubSet); //do this first else setActive has the wrong estimation distance
+    auto lie = m_avatars[player.client][player.player].ballModel.getComponent<ClientCollider>().lie;
 
     m_sharedData.inputBinding.playerID = localPlayer ? player.player : 0; //this also affects who can emote, so if we're currently emoting when it's not our turn always be player 0(??)
-    m_inputParser.setActive(localPlayer && !m_photoMode, m_currentPlayer.terrain, isCPU);
+    m_inputParser.setActive(localPlayer && !m_photoMode, m_currentPlayer.terrain, isCPU, lie);
     m_restoreInput = localPlayer; //if we're in photo mode should we restore input parser?
     Achievements::setActive(localPlayer && !isCPU && m_allowAchievements);
 
     if (player.terrain == TerrainID::Bunker)
     {
-        m_inputParser.setMaxClub(/*ClubID::PitchWedge*/ClubID::FourIron);
+        auto clubID = lie == 0 ? ClubID::SevenIron : ClubID::FourIron;
+        m_inputParser.setMaxClub(clubID);
     }
     else
     {
@@ -7358,8 +7360,10 @@ void GolfState::predictBall(float powerPct)
     rotation = glm::rotate(rotation, pitch, cro::Transform::Z_AXIS);
     impulse = glm::toMat3(rotation) * impulse;
 
+    auto lie = m_avatars[m_currentPlayer.client][m_currentPlayer.player].ballModel.getComponent<ClientCollider>().lie;
+
     impulse *= power;
-    impulse *= Dampening[m_currentPlayer.terrain];
+    impulse *= Dampening[m_currentPlayer.terrain] * LieDampening[m_currentPlayer.terrain][lie];
     impulse *= godmode;
 
     InputUpdate update;
@@ -7374,9 +7378,10 @@ void GolfState::hitBall()
 {
     auto club = getClub();
     auto facing = cro::Util::Maths::sgn(m_activeAvatar->model.getComponent<cro::Transform>().getScale().x);
+    auto lie = m_avatars[m_currentPlayer.client][m_currentPlayer.player].ballModel.getComponent<ClientCollider>().lie;
 
     auto [impulse, spin, _] = m_inputParser.getStroke(club, facing, m_distanceToHole);
-    impulse *= Dampening[m_currentPlayer.terrain];
+    impulse *= Dampening[m_currentPlayer.terrain] * LieDampening[m_currentPlayer.terrain][lie];
     impulse *= godmode;
 
     InputUpdate update;

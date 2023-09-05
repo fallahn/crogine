@@ -95,7 +95,20 @@ static const std::array<std::string, TerrainID::Count> TerrainStrings =
 //how much the stroke is affected by the current terrain
 static constexpr std::array<float, TerrainID::Count> Dampening =
 {
-    0.9f, 1.f, 1.f, 0.85f, 1.f, 1.f, 0.f, 0.f
+    0.95f, 1.f, 1.f, 0.9f, 1.f, 1.f, 0.f, 0.f
+};
+
+//how much the dampening is affected by the current lie
+static constexpr std::array<std::array<float, 2u>, TerrainID::Count> LieDampening =
+{
+    std::array<float, 2u>{0.95f, 1.f},
+    {1.f, 1.f},
+    {1.f, 1.f},
+    {0.97f, 1.f},
+    {1.f, 1.f},
+    {1.f, 1.f},
+    {1.f, 1.f},
+    {1.f, 1.f}
 };
 
 //how much the velocity of the ball is reduced when colliding

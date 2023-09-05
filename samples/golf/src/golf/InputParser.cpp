@@ -98,6 +98,7 @@ InputParser::InputParser(const SharedStateData& sd, cro::Scene* s)
     m_firstClub         (ClubID::Driver),
     m_clubOffset        (0),
     m_terrain           (TerrainID::Fairway),
+    m_lie               (1),
     m_estimatedDistance (0.f)
 {
 
@@ -476,7 +477,15 @@ float InputParser::getPower() const
 
 float InputParser::getHook() const
 {
-    return m_hook * 2.f - 1.f;
+    float hook = m_hook;
+    if (m_terrain == TerrainID::Bunker
+        && m_lie == 0)
+    {
+        //TODO include the current player/CPU skill level here?
+        hook = std::min(1.f, hook * 1.02f);
+    }
+    
+    return hook * 2.f - 1.f;
 }
 
 std::int32_t InputParser::getClub() const
@@ -484,12 +493,13 @@ std::int32_t InputParser::getClub() const
     return m_currentClub;
 }
 
-void InputParser::setActive(bool active, std::int32_t terrain, bool isCPU)
+void InputParser::setActive(bool active, std::int32_t terrain, bool isCPU, std::uint8_t lie)
 {
     CRO_ASSERT(terrain < TerrainID::Count, "");
     m_active = active;
     m_terrain = terrain;
     m_isCPU = isCPU;
+    m_lie = lie;
     m_state = State::Aim;
     //if the parser was suspended when set active then make sure un-suspending it returns the correct state.
     m_suspended = active;
@@ -779,7 +789,7 @@ void InputParser::updateDistanceEstimation()
     impulse *= power;
 
     //multiply the terrain dampening
-    impulse *= Dampening[m_terrain];
+    impulse *= Dampening[m_terrain] * LieDampening[m_terrain][m_lie];
 
     static constexpr float dt = 1.f / 60.f; //I'm sure we're redefining this...
     const auto stepVel = impulse * dt;
