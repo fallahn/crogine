@@ -1074,6 +1074,16 @@ void GolfState::handleMessage(const cro::Message& msg)
             }
 
             m_gameScene.setSystemActive<CameraFollowSystem>(!(isCPU && m_sharedData.fastCPU));
+
+            //hide current terrain
+            cro::Command cmd;
+            cmd.targetFlags = CommandID::UI::TerrainType;
+            cmd.action =
+                [](cro::Entity e, float)
+                {
+                    e.getComponent<cro::Text>().setString(" ");
+                };
+            m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
         }
         else if (data.userType == cro::Message::SkeletalAnimationEvent::Stopped)
         {
@@ -6612,6 +6622,14 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo)
     };
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
+    //hide current terrain
+    cmd.targetFlags = CommandID::UI::TerrainType;
+    cmd.action =
+        [](cro::Entity e, float)
+    {
+        e.getComponent<cro::Text>().setString(" ");
+    };
+    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
     //tell the tee and its children to scale depending on if they should be visible
     cmd.targetFlags = CommandID::Tee;
