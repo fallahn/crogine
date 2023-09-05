@@ -7500,6 +7500,7 @@ void GolfState::updateActor(const ActorInfo& update)
 
             e.getComponent<ClientCollider>().active = active;
             e.getComponent<ClientCollider>().state = update.state;
+            e.getComponent<ClientCollider>().lie = update.lie;
         }
     };
     m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);

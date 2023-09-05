@@ -31,6 +31,7 @@ source distribution.
 #include "GameConsts.hpp"
 #include "CommandIDs.hpp"
 #include "SharedStateData.hpp"
+#include "ClientCollisionSystem.hpp"
 #include "Clubs.hpp"
 #include "MenuConsts.hpp"
 #include "CommonConsts.hpp"
@@ -508,7 +509,16 @@ void GolfState::buildUI()
     entity.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float)
     {
-        e.getComponent<cro::Text>().setString(TerrainStrings[m_currentPlayer.terrain]);
+        if (m_currentPlayer.terrain == TerrainID::Bunker)
+        {
+            auto lie = m_avatars[m_currentPlayer.client][m_currentPlayer.player].ballModel.getComponent<ClientCollider>().lie;
+            static const std::array<std::string, 2u> str = { "Bunker (B)", "Bunker (SU)" };
+            e.getComponent<cro::Text>().setString(str[lie]);
+        }
+        else
+        {
+            e.getComponent<cro::Text>().setString(TerrainStrings[m_currentPlayer.terrain]);
+        }
     };
     infoEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 

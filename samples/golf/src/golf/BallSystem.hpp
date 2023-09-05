@@ -73,6 +73,7 @@ struct Ball final
     static const std::array<std::string, 5> StateStrings;
 
     std::uint8_t terrain = TerrainID::Fairway;
+    std::uint8_t lie = 0; //0 buried, 1 sitting up
 
     glm::vec3 velocity = glm::vec3(0.f);
     float delay = 0.f;

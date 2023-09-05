@@ -120,6 +120,8 @@ namespace
     };
     constexpr float SideSpinInfluence = 6.f;
     constexpr float TopSpinInfluence = 1.f;
+
+    constexpr float BallPenetrationAvg = 0.054f; //if the ball collision is greater than this it's set to 'buried' else 'sitting up'
 }
 
 const std::array<std::string, 5u> Ball::StateStrings = { "Idle", "Flight", "Putt", "Paused", "Reset" };
@@ -1021,6 +1023,7 @@ void BallSystem::doCollision(cro::Entity entity)
         tx.setPosition(pos);
 
         auto& ball = entity.getComponent<Ball>();
+        ball.lie = terrainResult.penetration > BallPenetrationAvg ? 0 : 1;
         CRO_ASSERT(!std::isnan(pos.x), "");
         CRO_ASSERT(!std::isnan(ball.velocity.x), "");
 

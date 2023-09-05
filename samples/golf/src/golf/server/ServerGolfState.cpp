@@ -415,7 +415,7 @@ void GolfState::netBroadcast()
             ball.getComponent<Ball>().state != Ball::State::Idle*/)
         {
             auto timestamp = m_serverTime.elapsed().asMilliseconds();
-            
+            const auto ballC = ball.getComponent<Ball>();
 
             ActorInfo info;
             info.serverID = static_cast<std::uint32_t>(ball.getIndex());
@@ -423,11 +423,12 @@ void GolfState::netBroadcast()
             info.rotation = cro::Util::Net::compressQuat(ball.getComponent<cro::Transform>().getRotation());
             //info.velocity = cro::Util::Net::compressVec3(ball.getComponent<Ball>().velocity);
             //info.velocity = ball.getComponent<Ball>().velocity;
-            info.windEffect = ball.getComponent<Ball>().windEffect;
+            info.windEffect = ballC.windEffect;
             info.timestamp = timestamp;
             info.clientID = player.client;
             info.playerID = player.player;
-            info.state = static_cast<std::uint8_t>(ball.getComponent<Ball>().state);
+            info.state = static_cast<std::uint8_t>(ballC.state);
+            info.lie = ballC.lie;
             m_sharedData.host.broadcastPacket(PacketID::ActorUpdate, info, net::NetFlag::Unreliable);
         }
     }
