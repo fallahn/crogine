@@ -1,4 +1,4 @@
-/*-----------------------------------------------------------------------
+﻿/*-----------------------------------------------------------------------
 
 Matt Marchant 2021 - 2023
 http://trederia.blogspot.com
@@ -6909,8 +6909,8 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
         if (player.terrain == TerrainID::Bunker)
         {
             auto lie = m_avatars[player.client][player.player].ballModel.getComponent<ClientCollider>().lie;
-            static const std::array<std::string, 2u> str = { "Bunker (B)", "Bunker (SU)" };
-            e.getComponent<cro::Text>().setString(str[lie]);
+            static const std::array<std::string, 2u> str = { u8"Bunker ↓", u8"Bunker ↑" };
+            e.getComponent<cro::Text>().setString(cro::String::fromUtf8(str[lie].begin(), str[lie].end()));
         }
         else
         {
