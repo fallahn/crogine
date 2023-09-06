@@ -723,6 +723,17 @@ void GolfState::checkReadyQuit(std::uint8_t clientID)
 
 void GolfState::setNextPlayer(bool newHole)
 {
+    //each player is sequential (ideally with fewest skins, use connect ID to tie break)
+    const auto skinsPredicate = 
+        [&](const PlayerStatus& a, const PlayerStatus& b)
+    {
+            return a.holeScore[m_currentHole] == b.holeScore[m_currentHole]
+                ? a.skins == b.skins ?
+                ((a.client * ConstVal::MaxClients) + a.player) > ((b.client * ConstVal::MaxClients) + b.player)
+                : a.skins < b.skins
+            : a.holeScore[m_currentHole] < b.holeScore[m_currentHole];
+    };
+
     hadTennisBounce = false;
 
     //broadcast current player's score first
@@ -774,48 +785,62 @@ void GolfState::setNextPlayer(bool newHole)
         }
         else
         {
-            //sort players by distance
-            std::sort(m_playerInfo.begin(), m_playerInfo.end(),
-                [](const PlayerStatus& a, const PlayerStatus& b)
-                {
-                    return a.distanceToHole > b.distanceToHole;
-                });
+            if (m_skinsFinals)
+            {
+                std::sort(m_playerInfo.begin(), m_playerInfo.end(), skinsPredicate);
+            }
+            else
+            {
+                //sort players by distance
+                std::sort(m_playerInfo.begin(), m_playerInfo.end(),
+                    [](const PlayerStatus& a, const PlayerStatus& b)
+                    {
+                        return a.distanceToHole > b.distanceToHole;
+                    });
+            }
         }
     }
     else
     {
-        //winner of the last hole goes first
-        std::sort(m_playerInfo.begin(), m_playerInfo.end(),
-            [&](const PlayerStatus& a, const PlayerStatus& b)
-            {
-                return a.holeScore[m_currentHole - 1] < b.holeScore[m_currentHole - 1];
-            });
-
-        //check the last honour taker to see if their score matches
-        //current first position and swap them in to first if so
-        //TODO we could probably include this in the predicate above
-        //but ehhhh no harm in being explicit I guess?
-        if (m_playerInfo[0].client != m_honour[0]
-            || m_playerInfo[0].player != m_honour[1])
+        if (m_skinsFinals)
         {
-            auto r = std::find_if(m_playerInfo.begin(), m_playerInfo.end(),
-                [&](const PlayerStatus& ps)
+            std::sort(m_playerInfo.begin(), m_playerInfo.end(), skinsPredicate);
+        }
+        else
+        {
+            //winner of the last hole goes first
+            std::sort(m_playerInfo.begin(), m_playerInfo.end(),
+                [&](const PlayerStatus& a, const PlayerStatus& b)
                 {
-                    return ps.client == m_honour[0] && ps.player == m_honour[1];
+                    return a.holeScore[m_currentHole - 1] < b.holeScore[m_currentHole - 1];
                 });
 
-            if (r != m_playerInfo.end())
+            //check the last honour taker to see if their score matches
+            //current first position and swap them in to first if so
+            //TODO we could probably include this in the predicate above
+            //but ehhhh no harm in being explicit I guess?
+            if (m_playerInfo[0].client != m_honour[0]
+                || m_playerInfo[0].player != m_honour[1])
             {
-                if (r->holeScore[m_currentHole - 1] == m_playerInfo[0].holeScore[m_currentHole - 1])
+                auto r = std::find_if(m_playerInfo.begin(), m_playerInfo.end(),
+                    [&](const PlayerStatus& ps)
+                    {
+                        return ps.client == m_honour[0] && ps.player == m_honour[1];
+                    });
+
+                if (r != m_playerInfo.end())
                 {
-                    std::swap(m_playerInfo[std::distance(m_playerInfo.begin(), r)], m_playerInfo[0]);
+                    if (r->holeScore[m_currentHole - 1] == m_playerInfo[0].holeScore[m_currentHole - 1])
+                    {
+                        std::swap(m_playerInfo[std::distance(m_playerInfo.begin(), r)], m_playerInfo[0]);
+                    }
                 }
             }
-        }
 
-        //set whoever is first as current honour taker
-        m_honour[0] = m_playerInfo[0].client;
-        m_honour[1] = m_playerInfo[0].player;
+            //set whoever is first as current honour taker
+            m_honour[0] = m_playerInfo[0].client;
+            m_honour[1] = m_playerInfo[0].player;
+        }
     }
 
 
