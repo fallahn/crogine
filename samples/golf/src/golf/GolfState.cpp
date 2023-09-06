@@ -6904,11 +6904,10 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     //display current terrain
     cmd.targetFlags = CommandID::UI::TerrainType;
     cmd.action =
-        [&,player](cro::Entity e, float)
+        [&,player, lie](cro::Entity e, float)
     {
         if (player.terrain == TerrainID::Bunker)
         {
-            auto lie = m_avatars[player.client][player.player].ballModel.getComponent<ClientCollider>().lie;
             static const std::array<std::string, 2u> str = { u8"Bunker ↓", u8"Bunker ↑" };
             e.getComponent<cro::Text>().setString(cro::String::fromUtf8(str[lie].begin(), str[lie].end()));
         }

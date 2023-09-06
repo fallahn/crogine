@@ -193,6 +193,12 @@ void GolfState::handleMessage(const cro::Message& msg)
                     reason = MaxStrokeID::Forfeit;
                 }
                 break;
+            case ScoreType::Skins:
+                if (m_skinsFinals)
+                {
+                    maxStrokes *= 100;
+                }
+                break;
             }
 
             if (m_playerInfo[0].holeScore[m_currentHole] >= maxStrokes)
