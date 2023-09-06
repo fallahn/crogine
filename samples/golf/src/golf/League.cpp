@@ -79,6 +79,8 @@ namespace
             return cro::Util::Easing::easeOutExpo(ip);
         }
     }
+
+    constexpr std::size_t SkillRoof = 6; //after this many seasons the skills stop getting better - just shift around
 }
 
 League::League()
@@ -87,41 +89,6 @@ League::League()
     m_currentSeason     (1)
 {
     read();
-
-
-    //delme
-    //std::vector<SortData> sortData;
-
-    ////we'll also save this to a file so we
-    ////can review previous season
-    //for (auto i = 0; i < m_players.size(); ++i)
-    //{
-    //    auto& data = sortData.emplace_back();
-    //    data.score = m_players[i].currentScore;
-    //    data.nameIndex = m_players[i].nameIndex;
-    //    data.handicap = (m_players[i].curve + m_players[i].outlier);
-    //}
-    //auto& data = sortData.emplace_back();
-    //data.score = m_playerScore;
-    //data.nameIndex = -1;
-    //data.handicap = Social::getLevel() / 2;
-
-    //std::sort(sortData.begin(), sortData.end(),
-    //    [](const SortData& a, const SortData& b)
-    //    {
-    //        return a.score == b.score ?
-    //            a.handicap > b.handicap :
-    //        a.score > b.score;
-    //    });
-
-    //const auto path = cro::App::getPreferencePath() + PrevFileName;
-    //cro::RaiiRWops file;
-    //file.file = SDL_RWFromFile(path.c_str(), "wb");
-    //if (file.file)
-    //{
-    //    SDL_RWwrite(file.file, sortData.data(), sizeof(SortData), sortData.size());
-    //    LogI << "Wrote previous season to " << PrevFileName << std::endl;
-    //}
 }
 
 //public
@@ -142,7 +109,7 @@ void League::reset()
 
         //TODO this needs to start small and increase as
         //player level is increased
-        player.quality = 0.87f - (0.01f * player.nameIndex);
+        player.quality = 0.85f - (0.01f * player.nameIndex);
     }
     m_currentIteration = 0;
     m_currentSeason = 1;
@@ -155,17 +122,37 @@ void League::iterate(const std::array<std::int32_t, 18>& parVals, const std::vec
     if (m_currentIteration == MaxIterations)
     {
         //evaluate all players and adjust skills
-        for (auto i = 0u; i < PlayerCount / 2u; ++i)
+        if (m_currentSeason < SkillRoof)
         {
-            auto outlier = m_players[i].outlier;
-            outlier = std::clamp(outlier + cro::Util::Random::value(-1, 1), 1, 10);
-            m_players[i].outlier = outlier;
-        }
+            for (auto i = 0u; i < PlayerCount / 2u; ++i)
+            {
+                auto outlier = m_players[i].outlier;
+                outlier = std::clamp(outlier + cro::Util::Random::value(-1, 1), 1, 10);
+                m_players[i].outlier = outlier;
 
-        for (auto i = 0u; i < PlayerCount / 3u; ++i)
+                m_players[i].quality = std::min(1.f, m_players[i].quality + 0.01f);
+            }
+
+            for (auto i = 0u; i < PlayerCount / 3u; ++i)
+            {
+                auto curve = m_players[i].curve;
+                curve = std::max(0, curve - cro::Util::Random::value(0, 1));
+            }
+        }
+        else
         {
-            auto curve = m_players[i].curve;
-            curve = std::max(0, curve - cro::Util::Random::value(0, 1));
+            for (auto& player : m_players)
+            {
+                auto rVal = cro::Util::Random::value(0.f, 0.03f);
+                if (player.quality > 0.87f)
+                {
+                    player.quality -= rVal;
+                }
+                else
+                {
+                    player.quality += rVal;
+                }
+            }
         }
 
         //calculate our final place and update our stats
@@ -246,7 +233,7 @@ void League::iterate(const std::array<std::int32_t, 18>& parVals, const std::vec
             float quality = aim * power;
 
             //outlier for cock-up
-            if (cro::Util::Random::value(0, 99) < player.outlier)
+            if (cro::Util::Random::value(0, 39) < player.outlier)
             {
                 float errorAmount = static_cast<float>(cro::Util::Random::value(3, 7)) / 10.f;
                 quality *= errorAmount;
@@ -276,7 +263,13 @@ void League::iterate(const std::array<std::int32_t, 18>& parVals, const std::vec
             
             //find range of triple bogey - ideal
             float score = std::round(ideal * quality);
-            score -= 3.f;
+            score -= 2.f; //average out to birdie
+
+            //then use the player skill chance to decide if we got an eagle
+            if (cro::Util::Random::value(1, 10) > player.skill)
+            {
+                score -= 1.f;
+            }
 
             //add player score to player total
             std::int32_t holeScore = -score;
