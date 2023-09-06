@@ -71,7 +71,7 @@ namespace
         "/me skips away in delight",
         "/me moonwalks",
         "/me twerks awkwardly",
-        "/me dabs away a tear",
+        "/me dabs",
         "/me starts to hope",
         "/me is over the moon",
         "/me cartwheels to the clubhouse and back"
@@ -92,7 +92,7 @@ namespace
         "/me goes into hysterics"
     };
 
-    const std::array<std::string, 14u> AngerStrings =
+    const std::array<std::string, 13u> AngerStrings =
     {
         "/me rages",
         "/me throws their club into the lake",
@@ -106,7 +106,6 @@ namespace
         "/me shakes a fist",
         "/me cries like a baby",
         "/me 's blood boils",
-        "/me is about to lose it",
         "/me blows a fuse"
     };
 }

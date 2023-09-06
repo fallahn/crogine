@@ -479,7 +479,10 @@ std::int32_t GolfState::process(float dt)
                         return true;
                     }
 
+                    const auto& progress = Social::getMonthlyChallenge().getProgress();
+
                     if (Social::getMonth() == 2
+                        && (progress.value != progress.target)
                         && m_sharedData.scoreType == ScoreType::Stroke)
                     {
                         if (cro::Util::Random::value(0, 9) == 0)
