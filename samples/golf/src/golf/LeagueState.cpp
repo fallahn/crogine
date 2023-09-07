@@ -94,7 +94,7 @@ LeagueState::LeagueState(cro::StateStack& ss, cro::State::Context ctx, SharedSta
 
     scoreSet = readGameScores();
 
-    registerWindow([&]()
+    /*registerWindow([&]()
         {
             if (ImGui::Begin("League"))
             {
@@ -138,7 +138,7 @@ LeagueState::LeagueState(cro::StateStack& ss, cro::State::Context ctx, SharedSta
                 }
             }
             ImGui::End();
-        });
+        });*/
 
     buildScene();
 }

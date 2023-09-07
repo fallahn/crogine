@@ -50,16 +50,16 @@ namespace
 
     constexpr std::array AimSkill =
     {
-        -0.5f, -0.36f, -0.2f, -0.1f, -0.05f, -0.03f, -0.01f, -0.005f,
+        0.49f, 0.436f, 0.37f, 0.312f, 0.25f, 0.187f, 0.125f, 0.062f,
         0.f,
-        0.002f, 0.009f, 0.013f, 0.02f, 0.04f, 0.08f, 0.12f, 0.3f
+        0.062f, 0.125f, 0.187f, 0.25f, 0.312f, 0.375f, 0.437f, 0.49f
     };
 
     constexpr std::array PowerSkill =
     {
-        -0.5f, -0.36f, -0.2f, -0.1f, -0.05f, -0.03f, -0.01f, -0.005f,
+        0.49f, 0.436f, 0.37f, 0.312f, 0.25f, 0.187f, 0.125f, 0.062f,
         0.f,
-        0.002f, 0.009f, 0.013f, 0.02f, 0.04f, 0.08f, 0.12f, 0.3f
+        0.062f, 0.125f, 0.187f, 0.25f, 0.312f, 0.375f, 0.437f, 0.49f
     };
     constexpr std::int32_t SkillCentre = 8;
 
@@ -70,17 +70,17 @@ namespace
         default: return ip;
         case 0:
         case 1:
-            return cro::Util::Easing::easeOutSine(ip);
+            return cro::Util::Easing::easeInCubic(ip);
         case 2:
         case 3:
-            return cro::Util::Easing::easeOutCubic(ip);
+            return cro::Util::Easing::easeInQuad(ip);
         case 4:
         case 5:
-            return cro::Util::Easing::easeOutExpo(ip);
+            return cro::Util::Easing::easeInSine(ip);
         }
     }
 
-    constexpr std::size_t SkillRoof = 6; //after this many seasons the skills stop getting better - just shift around
+    constexpr std::size_t SkillRoof = 10; //after this many seasons the skills stop getting better - just shift around
 }
 
 League::League()
@@ -107,9 +107,9 @@ void League::reset()
         player.outlier = cro::Util::Random::value(1, 10);
         player.nameIndex = nameIndex++;
 
-        //TODO this needs to start small and increase as
+        //this starts small and increase as
         //player level is increased
-        player.quality = 0.85f - (0.01f * player.nameIndex);
+        player.quality = 0.87f - (0.01f * player.nameIndex);
     }
     m_currentIteration = 0;
     m_currentSeason = 1;
@@ -201,7 +201,7 @@ void League::iterate(const std::array<std::int32_t, 18>& parVals, const std::vec
         if (file.file)
         {
             SDL_RWwrite(file.file, sortData.data(), sizeof(SortData), sortData.size());
-            LogI << "Wrote previous season to " << PrevFileName << std::endl;
+            //LogI << "Wrote previous season to " << PrevFileName << std::endl;
         }
 
         //start a new season
@@ -233,9 +233,9 @@ void League::iterate(const std::array<std::int32_t, 18>& parVals, const std::vec
             float quality = aim * power;
 
             //outlier for cock-up
-            if (cro::Util::Random::value(0, 39) < player.outlier)
+            if (cro::Util::Random::value(0, 49) < player.outlier)
             {
-                float errorAmount = static_cast<float>(cro::Util::Random::value(3, 7)) / 10.f;
+                float errorAmount = static_cast<float>(cro::Util::Random::value(5, 7)) / 10.f;
                 quality *= errorAmount;
             }
 
