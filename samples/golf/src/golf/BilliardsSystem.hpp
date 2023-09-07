@@ -30,6 +30,7 @@ source distribution.
 #pragma once
 
 #include <crogine/ecs/System.hpp>
+#include <crogine/core/String.hpp>
 #include <crogine/detail/NoResize.hpp>
 #include <crogine/graphics/MeshData.hpp>
 #include <crogine/graphics/BoundingBox.hpp>
@@ -109,6 +110,15 @@ struct TableData
     std::vector<std::string> ballSkins;
 
     bool loadFromFile(const std::string&);
+};
+
+static const std::array<cro::String, TableData::Rules::Count> TableStrings =
+{
+    cro::String("Eight Ball"),
+    cro::String("Nine Ball"),
+    cro::String("Bar Billiards"),
+    cro::String("Snooker"),
+    cro::String("Void")
 };
 
 //this needs to be non-resizable as the physics world keeps references to motion states

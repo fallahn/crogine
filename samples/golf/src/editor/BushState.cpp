@@ -145,7 +145,7 @@ BushState::BushState(cro::StateStack& stack, cro::State::Context context, const 
         cro::Console::show();
     }
 
-    Social::setStatus(Social::InfoID::Menu, { "In Treeset Editor" });
+    Social::setStatus(Social::InfoID::Menu, { "Treeset Editor" });
 }
 
 //public

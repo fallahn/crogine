@@ -788,6 +788,8 @@ void BilliardsState::buildScene()
         }
         m_gameMode = tableData.rules;
         
+        Social::setStatus(Social::InfoID::Billiards, { TableStrings[tableData.rules].toAnsiString().c_str() });
+
         if (tableData.ballSkins.size() > m_sharedData.ballSkinIndex)
         {
             m_ballTexture = m_resources.textures.get(tableData.ballSkins[m_sharedData.ballSkinIndex]);

@@ -78,15 +78,6 @@ namespace
 #include "ShaderIncludes.inl"
 #include "TVShader.inl"
 
-    const std::array<cro::String, TableData::Rules::Count> TableStrings =
-    {
-        cro::String("Eight Ball"),
-        cro::String("Nine Ball"),
-        cro::String("Bar Billiards"),
-        cro::String("Snooker"),
-        cro::String("Void")
-    };
-
     struct TableCallbackData final
     {
         float progress = 0.f;
@@ -1655,8 +1646,6 @@ void ClubhouseState::handleNetEvent(const net::NetEvent& evt)
 
                 m_sharedData.ballSkinIndex = m_tableData[m_tableIndex].ballSkinIndex;
                 m_sharedData.tableSkinIndex = m_tableData[m_tableIndex].tableSkinIndex;
-
-                Social::setStatus(Social::InfoID::Billiards, { TableStrings[m_tableData[m_sharedData.courseIndex].rules].toAnsiString().c_str() });
 
                 //save these for later
                 cro::ConfigFile cfg("table_skins");
