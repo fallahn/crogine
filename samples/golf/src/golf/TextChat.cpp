@@ -54,7 +54,7 @@ namespace
         "/me claps",
         "/me congratulates",
         "/me collapses in awe",
-        "/me kneels to a higher power",
+        "/me is not worthy",
         "/me politely golf-claps",
         "/me does a double-take",
         "/me pats your back",
@@ -72,7 +72,7 @@ namespace
         "/me moonwalks",
         "/me twerks awkwardly",
         "/me dabs",
-        "/me starts to hope",
+        "/me sploots with joy",
         "/me is over the moon",
         "/me cartwheels to the clubhouse and back"
     };
