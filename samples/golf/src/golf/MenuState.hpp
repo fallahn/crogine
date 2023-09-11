@@ -171,6 +171,7 @@ private:
         std::uint32_t prevHoleType = 0;
         std::uint32_t nextHoleType = 0;
         std::uint32_t toggleReverseCourse = 0;
+        std::uint32_t toggleClubLimit = 0;
         std::uint32_t toggleFriendsOnly = 0;
         std::uint32_t toggleFastCPU = 0;
         std::uint32_t inviteFriends = 0;

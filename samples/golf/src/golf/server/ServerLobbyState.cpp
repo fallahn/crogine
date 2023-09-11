@@ -135,6 +135,13 @@ void LobbyState::netEvent(const net::NetEvent& evt)
                 m_sharedData.host.broadcastPacket(PacketID::ReverseCourse, m_sharedData.reverseCourse, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
             }
             break;
+        case PacketID::ClubLimit:
+            if (evt.peer.getID() == m_sharedData.hostID)
+            {
+                m_sharedData.clubLimit = evt.packet.as<std::uint8_t>();
+                m_sharedData.host.broadcastPacket(PacketID::ClubLimit, m_sharedData.clubLimit, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+            }
+            break;
         case PacketID::RequestGameStart:
             if (evt.peer.getID() == m_sharedData.hostID)
             {

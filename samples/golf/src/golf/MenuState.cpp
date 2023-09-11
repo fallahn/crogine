@@ -1946,6 +1946,9 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
             m_sharedData.reverseCourse = evt.packet.as<std::uint8_t>();
             updateCourseRuleString();
             break;
+        case PacketID::ClubLimit:
+            m_sharedData.clubLimit = evt.packet.as<std::uint8_t>();
+            break;
         case PacketID::ServerError:
             switch (evt.packet.as<std::uint8_t>())
             {
@@ -2062,6 +2065,7 @@ void MenuState::finaliseGameCreate(const MatchMaking::Message& msgData)
         m_sharedData.clientConnection.netClient.sendPacket(PacketID::GimmeRadius, m_sharedData.gimmeRadius, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
         m_sharedData.clientConnection.netClient.sendPacket(PacketID::HoleCount, m_sharedData.holeCount, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
         m_sharedData.clientConnection.netClient.sendPacket(PacketID::ReverseCourse, m_sharedData.reverseCourse, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+        m_sharedData.clientConnection.netClient.sendPacket(PacketID::ClubLimit, m_sharedData.clubLimit, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
     }
 }
 

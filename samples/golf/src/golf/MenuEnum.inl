@@ -77,6 +77,7 @@ enum MenuIndex
     CourseReverse,
     CourseUser,
     CourseCPUSkip,
+    CourseClubLimit,
     CourseFriendsOnly,
 
     RulesPrevious,

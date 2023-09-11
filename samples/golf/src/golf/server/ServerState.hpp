@@ -76,6 +76,7 @@ namespace sv
         std::uint8_t gimmeRadius = 0;
         std::uint8_t holeCount = 0;
         std::uint8_t reverseCourse = 0;
+        std::uint8_t clubLimit = 0;
         std::uint8_t fastCPU = 1;
 
         std::atomic_uint64_t hostID = 0;
