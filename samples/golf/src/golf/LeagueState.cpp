@@ -38,7 +38,9 @@ source distribution.
 #include "League.hpp"
 #include "RandNames.hpp"
 
+#ifdef USE_GNS
 #include <DebugUtil.hpp>
+#endif
 
 #include <Social.hpp>
 #include <AchievementIDs.hpp>
@@ -79,7 +81,9 @@ using namespace cl;
 
 namespace
 {
+#ifdef USE_GNS
     std::vector<ScoreSet> scoreSet;
+#endif
     std::size_t courseIndex = 0;
 }
 
@@ -91,7 +95,7 @@ LeagueState::LeagueState(cro::StateStack& ss, cro::State::Context ctx, SharedSta
     m_currentTab            (0)
 {
     ctx.mainWindow.setMouseCaptured(false);
-
+#ifdef USE_GNS
     scoreSet = readGameScores();
 
     /*registerWindow([&]()
@@ -139,7 +143,7 @@ LeagueState::LeagueState(cro::StateStack& ss, cro::State::Context ctx, SharedSta
             }
             ImGui::End();
         });*/
-
+#endif
     buildScene();
 }
 
