@@ -47,8 +47,8 @@ static const std::string BillboardVertexShader = R"(
     uniform sampler2D u_noiseTexture;
 
 #if defined(SHADOW_MAPPING)
-    uniform mat4 u_cameraViewMatrix;
     uniform mat4 u_projectionMatrix;
+    uniform mat4 u_cameraViewMatrix;
 #endif
 
 
@@ -98,8 +98,8 @@ static const std::string BillboardVertexShader = R"(
         vec3 camRight = vec3(viewMatrix[0][0], viewMatrix[1][0], viewMatrix[2][0]);
         vec3 camUp = vec3(0.0, 1.0, 0.0);
         position = position + (camRight * relPos.x)
-                            + (camUp * relPos.y)
-                            + (cross(camRight, camUp) * relPos.z);
+                            + (camUp * relPos.y);
+                            //+ (cross(camRight, camUp) * relPos.z);
 
 
         //---generic wind added to tall billboards---//
