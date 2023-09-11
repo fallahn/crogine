@@ -1040,8 +1040,6 @@ void BallSystem::doCollision(cro::Entity entity)
             ball.velocity *= Restitution[terrainResult.terrain];
             break;
         case TerrainID::Fairway:
-            doBullsEyeCollision(tx.getPosition());
-            [[fallthrough]];
         case TerrainID::Stone: //bouncy :)
             if (ball.velocity.y > MinRollVelocity)
             {
@@ -1052,6 +1050,8 @@ void BallSystem::doCollision(cro::Entity entity)
             //else bounce
             [[fallthrough]];
         case TerrainID::Rough:
+            doBullsEyeCollision(tx.getPosition());
+
             ball.velocity *= Restitution[terrainResult.terrain];
             ball.velocity = glm::reflect(ball.velocity, terrainResult.normal);
             //ball.velocity += ball.spin.y * ball.initialForwardVector * SpinAddition[terrainResult.terrain];
