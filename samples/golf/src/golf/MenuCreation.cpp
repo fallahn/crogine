@@ -125,6 +125,9 @@ namespace
         }
     };
     std::vector<float> CursorAnimationCallback::WaveTable;
+
+    //updates start/quit buttons with correct navigation indices
+    std::function<void(std::int32_t)> navigationUpdate;
 }
 
 constexpr std::array<glm::vec2, MenuState::MenuID::Count> MenuState::m_menuPositions =
@@ -1761,8 +1764,6 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
         bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     }
 
-    //updates start/quit buttons with correct navigation indices
-    static std::function<void(std::int32_t)> navigationUpdate;
     navigationUpdate = nullptr; //we're using nasty static hack so make sure to reset this
 
     const auto selectNext = [&](std::int32_t idx)
@@ -3028,7 +3029,8 @@ void MenuState::quitLobby()
     //reset the lobby tabs
     m_lobbyWindowEntities[LobbyEntityID::HoleSelection].getComponent<cro::Transform>().setScale({ 1.f, 1.f });
     m_lobbyWindowEntities[LobbyEntityID::Info].getComponent<cro::Transform>().setScale({ 0.f, 0.f });
-    
+    navigationUpdate(LobbyCourseA);
+    m_uiScene.getSystem<cro::UISystem>()->selectByIndex(LobbyCourseA);
 
     //delete the course selection entities as they'll be re-created as needed
     cro::Command cmd;
