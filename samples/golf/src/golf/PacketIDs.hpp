@@ -123,6 +123,7 @@ namespace PacketID
         FoulEvent, //< int8 BilliardsEvent foul reason - tells client to display a foul message
         GameEnd, //< uint8 seconds. tells clients to show scoreboard/countdown to lobby, or BilliardsPlayer of winner in billiards
         MaxStrokes, //< uint8 MaxStrokeID player reached stroke limit (so client can print message)
+        MaxClubs, //< tells the client to use this club set
 
         ActorAnimation, //< Tell player sprite to play the given anim with uint8 ID
         ActorUpdate, //< ActorInfo - ball interpolation
@@ -151,6 +152,7 @@ namespace PacketID
         ReadyQuit, //< uint8 clientID - client wants to toggle skip viewing scores
         BallPlaced, //< BilliardBallInput with position in offset member
         SkipTurn, //< uint8 clientID - requests server fast forward current turn
+        ClubLevel, //< uint8 client ID | uint8 client club level (max clubs - used to limit to lowest player)
 
         //both directions
         ClientVersion, //uint16 FROM server on join contains the game mode, TO server CURRENT_VER of client. Clients are kicked if this does not match the server

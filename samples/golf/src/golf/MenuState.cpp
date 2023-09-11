@@ -1948,6 +1948,21 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
             break;
         case PacketID::ClubLimit:
             m_sharedData.clubLimit = evt.packet.as<std::uint8_t>();
+
+            //reply with our level so server knows which limit to set
+            {
+                std::uint16_t data = (m_sharedData.clientConnection.connectionID << 8) | std::uint8_t(m_sharedData.clubSet);
+                m_sharedData.clientConnection.netClient.sendPacket(PacketID::ClubLevel, data, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+            }
+            break;
+        case PacketID::MaxClubs:
+        {
+            std::uint8_t clubSet = evt.packet.as<std::uint8_t>();
+            if (clubSet < m_sharedData.clubSet)
+            {
+                m_sharedData.clubSet = clubSet;
+            }
+        }
             break;
         case PacketID::ServerError:
             switch (evt.packet.as<std::uint8_t>())

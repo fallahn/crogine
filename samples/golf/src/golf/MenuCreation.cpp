@@ -1756,6 +1756,11 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
                     m_sharedData.clubSet = (m_sharedData.clubSet + 1) % (Social::getClubLevel() + 1);
                     buttonEnt.getComponent<cro::SpriteAnimation>().play(m_sharedData.clubSet);
                     m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+
+                    //make sure the server knows what we request so it can be considered
+                    //when choosing a club set limit in MP games
+                    std::uint16_t data = (m_sharedData.clientConnection.connectionID << 8) | std::uint8_t(m_sharedData.clubSet);
+                    m_sharedData.clientConnection.netClient.sendPacket(PacketID::ClubLevel, data, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
                 }
             });
 
@@ -2030,7 +2035,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Lobby);
     entity.getComponent<cro::UIInput>().setSelectionIndex(LobbyInfoB);
     entity.getComponent<cro::UIInput>().setNextIndex(LobbyRulesA, LobbyStart);
-    entity.getComponent<cro::UIInput>().setPrevIndex(LobbyRulesA, LobbyStart); //TODO up date this if hosting
+    entity.getComponent<cro::UIInput>().setPrevIndex(LobbyRulesA, LobbyStart);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = m_courseSelectCallbacks.selectHighlight;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = m_courseSelectCallbacks.unselectHighlight;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = m_uiScene.getSystem<cro::UISystem>()->addCallback(

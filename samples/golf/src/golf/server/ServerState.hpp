@@ -79,6 +79,8 @@ namespace sv
         std::uint8_t clubLimit = 0;
         std::uint8_t fastCPU = 1;
 
+        std::array<std::uint8_t, ConstVal::MaxClients> clubLevels = {};
+
         std::atomic_uint64_t hostID = 0;
     };
 

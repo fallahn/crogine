@@ -5551,6 +5551,15 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
         switch (evt.packet.getID())
         {
         default: break;
+        case PacketID::MaxClubs:
+        {
+            std::uint8_t clubSet = evt.packet.as<std::uint8_t>();
+            if (clubSet < m_sharedData.clubSet)
+            {
+                m_sharedData.clubSet = clubSet;
+            }
+        }
+        break;
         case PacketID::ChatMessage:
             m_textChat.handlePacket(evt.packet);
             {
@@ -6835,7 +6844,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     updateScoreboard(false);
     showScoreboard(false);
 
-    Club::setClubLevel(isCPU ? m_cpuGolfer.getClubLevel() : m_sharedData.clubSet); //do this first else setActive has the wrong estimation distance
+    Club::setClubLevel(isCPU ? m_sharedData.clubLimit ? m_sharedData.clubSet : m_cpuGolfer.getClubLevel() : m_sharedData.clubSet); //do this first else setActive has the wrong estimation distance
     auto lie = m_avatars[player.client][player.player].ballModel.getComponent<ClientCollider>().lie;
 
     m_sharedData.inputBinding.playerID = localPlayer ? player.player : 0; //this also affects who can emote, so if we're currently emoting when it's not our turn always be player 0(??)
