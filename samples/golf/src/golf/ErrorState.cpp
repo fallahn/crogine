@@ -253,7 +253,7 @@ void ErrorState::buildScene()
 
 
     //message
-    entity = createItem(glm::vec2(0.f, 70.f), m_sharedData.errorMessage, menuEntity);
+    entity = createItem(glm::vec2(0.f, 60.f), m_sharedData.errorMessage, menuEntity);
     entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
     entity.getComponent<cro::Transform>().setOrigin({ 0.f, 0.f });
 

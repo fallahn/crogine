@@ -2031,7 +2031,7 @@ void MenuState::updateLobbyAvatars()
                     else
                     {
                         ent.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
-                        auto index = std::min(4u, m_sharedData.connectionData[h].pingTime / 30);
+                        auto index = std::min(4u, m_sharedData.connectionData[h].pingTime / 60);
                         ent.getComponent<cro::SpriteAnimation>().play(index);
                     }
                 };

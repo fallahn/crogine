@@ -1160,7 +1160,7 @@ void ClubhouseState::buildScene()
         {
             static constexpr float BaseX = 17.1f; //see position, above
 
-            static const auto highFreq = cro::Util::Wavetable::sine(5.f, 0.005f);
+            static const auto highFreq = cro::Util::Wavetable::sine(5.f, 0.003f);
             static std::size_t highFreqIndex = 0;
 
             static const auto lowFreq = cro::Util::Wavetable::sine(0.0001f);

@@ -643,7 +643,7 @@ void LeagueState::createLeagueTab(cro::Entity parent, const cro::SpriteSheet& sp
     }
 
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 320.f, TextTop, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 328.f, TextTop, 0.1f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(smallFont).setString(str);
     entity.getComponent<cro::Text>().setFillColour(LeaderboardTextDark);
