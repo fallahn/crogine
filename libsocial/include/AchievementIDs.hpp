@@ -189,6 +189,8 @@ namespace StatID
         LeagueSecond,
         LeagueThird,
         LeagueRounds,
+        ChipIns,
+        FlagHits,
 
         Count
     };

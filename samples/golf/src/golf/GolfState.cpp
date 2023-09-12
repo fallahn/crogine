@@ -5573,6 +5573,7 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
             if (!m_sharedData.localConnectionData.playerData[data.player].isCPU)
             {
                 Social::getMonthlyChallenge().updateChallenge(ChallengeID::Eleven, 0);
+                Achievements::incrementStat(StatStrings[StatID::FlagHits]);
             }
         }
             break;
@@ -5783,6 +5784,7 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
                     else
                     {
                         Achievements::awardAchievement(AchievementStrings[AchievementID::TopChip]);
+                        Achievements::incrementStat(StatStrings[StatID::ChipIns]);
                         Social::awardXP(XPValues[XPID::Special], XPStringID::TopChip);
 
                         if (m_achievementTracker.hadBackspin)

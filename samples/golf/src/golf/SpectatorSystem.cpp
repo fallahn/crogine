@@ -42,7 +42,7 @@ namespace
 {
     constexpr float BaseSeparation = 1.8f;
     constexpr float NextTargetRadius = (0.5f * 0.5f);
-    constexpr float AnimationSpeed = 0.86f;
+    constexpr float AnimationSpeed = 0.85f;
 }
 
 SpectatorSystem::SpectatorSystem(cro::MessageBus& mb, const CollisionMesh& cm)

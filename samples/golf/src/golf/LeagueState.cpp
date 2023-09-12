@@ -98,7 +98,7 @@ LeagueState::LeagueState(cro::StateStack& ss, cro::State::Context ctx, SharedSta
 #ifdef USE_GNS
     scoreSet = readGameScores();
 
-    /*registerWindow([&]()
+    registerWindow([&]()
         {
             if (ImGui::Begin("League"))
             {
@@ -107,7 +107,8 @@ LeagueState::LeagueState(cro::StateStack& ss, cro::State::Context ctx, SharedSta
                 const auto& entries = league.getTable();
                 for (const auto& e : entries)
                 {
-                    ImGui::Text("Skill: %d - Curve: %d - Score: %d - Name: %d", e.skill, e.curve, e.currentScore, e.nameIndex);
+                    ImGui::Text("Skill: %d - Curve: %d - Score: %d - Name: %d - Mistake Probability: %d  - Quality: %3.3f",
+                        e.skill, e.curve, e.currentScore, e.nameIndex, e.outlier, e.quality * 100.f);
                 }
                 ImGui::Text("Iteration: %d", league.getCurrentIteration());
                 ImGui::SameLine();
@@ -115,7 +116,7 @@ LeagueState::LeagueState(cro::StateStack& ss, cro::State::Context ctx, SharedSta
                 ImGui::SameLine();
                 ImGui::Text("Score: %d", league.getCurrentScore());
 
-                if (!scoreSet.empty())
+                /*if (!scoreSet.empty())
                 {
                     if (ImGui::Button("Iterate"))
                     {
@@ -139,10 +140,10 @@ LeagueState::LeagueState(cro::StateStack& ss, cro::State::Context ctx, SharedSta
                             }
                         }
                     }
-                }
+                }*/
             }
             ImGui::End();
-        });*/
+        });
 #endif
     buildScene();
 }

@@ -38,7 +38,7 @@ struct LeaguePlayer final
 {
     std::int32_t skill = 1; //indexes into the skill array (lower is smaller error offset == better)
     std::int32_t curve = 0; //selects skill curve of final result
-    std::int32_t outlier = 0; //chance in 40 of making a mess.
+    std::int32_t outlier = 0; //chance in 50 of making a mess.
     std::int32_t nameIndex = 0;
 
     float quality = 1.f; //quality of player result is multiplied by this to limit them from being Perfect

@@ -488,7 +488,9 @@ static const std::array<std::string, StatID::Count> StatStrings =
     "league_first",
     "league_second",
     "league_third",
-    "league_rounds"
+    "league_rounds",
+    "chip_ins",
+    "flag_hits"
 };
 
 static const std::array<std::string, StatID::Count> StatLabels =
@@ -525,10 +527,12 @@ static const std::array<std::string, StatID::Count> StatLabels =
     "Number Of Times Course 9 Completed",
     "Number Of Times Course 10 Completed",
     "Albatrosses Scored",
-    "Number of times placed first in the league",
-    "Number of times placed second in the league",
-    "Number of times placed third in the league",
-    "Number of rounds completed in the league"
+    "Number Of Times Placed First In The League",
+    "Number Of Times Placed Second In The League",
+    "Number Of Times Placed Third In The League",
+    "Number Of Rounds Completed In The League",
+    "Chip-ins From Outside The Green",
+    "Flag Pole Collisions",
 };
 
 struct StatType final
@@ -558,6 +562,8 @@ static constexpr std::array<std::int32_t, StatID::Count> StatTypes =
     StatType::Integer,
     StatType::Integer,
     StatType::Time,
+    StatType::Integer,
+    StatType::Integer,
     StatType::Integer,
     StatType::Integer,
     StatType::Integer,
