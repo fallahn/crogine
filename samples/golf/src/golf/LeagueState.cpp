@@ -98,52 +98,52 @@ LeagueState::LeagueState(cro::StateStack& ss, cro::State::Context ctx, SharedSta
 #ifdef USE_GNS
     scoreSet = readGameScores();
 
-    registerWindow([&]()
-        {
-            if (ImGui::Begin("League"))
-            {
-                static League league;
+    //registerWindow([&]()
+    //    {
+    //        if (ImGui::Begin("League"))
+    //        {
+    //            static League league;
 
-                const auto& entries = league.getTable();
-                for (const auto& e : entries)
-                {
-                    ImGui::Text("Skill: %d - Curve: %d - Score: %d - Name: %d - Mistake Probability: %d  - Quality: %3.3f",
-                        e.skill, e.curve, e.currentScore, e.nameIndex, e.outlier, e.quality * 100.f);
-                }
-                ImGui::Text("Iteration: %d", league.getCurrentIteration());
-                ImGui::SameLine();
-                ImGui::Text("Season: %d", league.getCurrentSeason());
-                ImGui::SameLine();
-                ImGui::Text("Score: %d", league.getCurrentScore());
+    //            const auto& entries = league.getTable();
+    //            for (const auto& e : entries)
+    //            {
+    //                ImGui::Text("Skill: %d - Curve: %d - Score: %d - Name: %d - Mistake Probability: %d  - Quality: %3.3f",
+    //                    e.skill, e.curve, e.currentScore, e.nameIndex, e.outlier, e.quality * 100.f);
+    //            }
+    //            ImGui::Text("Iteration: %d", league.getCurrentIteration());
+    //            ImGui::SameLine();
+    //            ImGui::Text("Season: %d", league.getCurrentSeason());
+    //            ImGui::SameLine();
+    //            ImGui::Text("Score: %d", league.getCurrentScore());
 
-                /*if (!scoreSet.empty())
-                {
-                    if (ImGui::Button("Iterate"))
-                    {
-                        league.iterate(scoreSet[courseIndex].par, scoreSet[courseIndex].scores, scoreSet[courseIndex].scores.size());
-                        courseIndex = (courseIndex + 1) % scoreSet.size();
-                    }
-                    ImGui::SameLine();
-                    if (ImGui::Button("Reset"))
-                    {
-                        league.reset();
-                    }
+    //            /*if (!scoreSet.empty())
+    //            {
+    //                if (ImGui::Button("Iterate"))
+    //                {
+    //                    league.iterate(scoreSet[courseIndex].par, scoreSet[courseIndex].scores, scoreSet[courseIndex].scores.size());
+    //                    courseIndex = (courseIndex + 1) % scoreSet.size();
+    //                }
+    //                ImGui::SameLine();
+    //                if (ImGui::Button("Reset"))
+    //                {
+    //                    league.reset();
+    //                }
 
-                    if (ImGui::Button("Run 10 Seasons"))
-                    {
-                        for (auto i = 0; i < 10; ++i)
-                        {
-                            for (auto j = 0; j < League::MaxIterations; ++j)
-                            {
-                                league.iterate(scoreSet[courseIndex].par, scoreSet[courseIndex].scores, scoreSet[courseIndex].scores.size());
-                                courseIndex = (courseIndex + 1) % scoreSet.size();
-                            }
-                        }
-                    }
-                }*/
-            }
-            ImGui::End();
-        });
+    //                if (ImGui::Button("Run 10 Seasons"))
+    //                {
+    //                    for (auto i = 0; i < 10; ++i)
+    //                    {
+    //                        for (auto j = 0; j < League::MaxIterations; ++j)
+    //                        {
+    //                            league.iterate(scoreSet[courseIndex].par, scoreSet[courseIndex].scores, scoreSet[courseIndex].scores.size());
+    //                            courseIndex = (courseIndex + 1) % scoreSet.size();
+    //                        }
+    //                    }
+    //                }
+    //            }*/
+    //        }
+    //        ImGui::End();
+    //    });
 #endif
     buildScene();
 }

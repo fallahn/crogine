@@ -4558,7 +4558,7 @@ bool GolfState::EmoteWheel::handleEvent(const cro::Event& evt)
             {
             default: break;
             case cro::GameController::ButtonY:
-                targetScale = 1.f;
+                targetScale = targetScale == 1.f ? 0.f : 1.f;
 
                 {
                     auto anim = cro::GameController::hasPSLayout(controllerID) ? 1 : 0;
@@ -4573,7 +4573,8 @@ bool GolfState::EmoteWheel::handleEvent(const cro::Event& evt)
         }
 
         //prevent these getting forwarded to input parser if wheel is open
-        if (cro::GameController::isButtonPressed(controllerID, cro::GameController::ButtonY))
+        //if (cro::GameController::isButtonPressed(controllerID, cro::GameController::ButtonY))
+        if (targetScale == 1)
         {
             switch (evt.cbutton.button)
             {
@@ -4584,6 +4585,8 @@ bool GolfState::EmoteWheel::handleEvent(const cro::Event& evt)
             case SDL_CONTROLLER_BUTTON_DPAD_RIGHT:
             case cro::GameController::ButtonLeftShoulder:
             case cro::GameController::ButtonRightShoulder:
+            case cro::GameController::ButtonLeftStick:
+            case cro::GameController::ButtonRightStick:
                 return true;
             }
         }
@@ -4592,7 +4595,7 @@ bool GolfState::EmoteWheel::handleEvent(const cro::Event& evt)
     {
         auto controllerID = activeControllerID(sharedData.inputBinding.playerID);
 
-        if (cro::GameController::controllerID(evt.cbutton.which) == controllerID)
+        /*if (cro::GameController::controllerID(evt.cbutton.which) == controllerID)
         {
             switch (evt.cbutton.button)
             {
@@ -4601,7 +4604,7 @@ bool GolfState::EmoteWheel::handleEvent(const cro::Event& evt)
                 targetScale = 0.f;
                 return true;
             }
-        }
+        }*/
 
         if (currentScale == 1)
         {
@@ -4630,55 +4633,77 @@ bool GolfState::EmoteWheel::handleEvent(const cro::Event& evt)
                 cooldown = 6.f;
                 buttonNodes[4].getComponent<cro::Callback>().active = true;
                 return true;
+            case cro::GameController::ButtonLeftStick:
+                m_textChat.quickEmote(TextChat::Laughing);
+                cooldown = 6.f;
+                buttonNodes[6].getComponent<cro::Callback>().active = true;
+                return true;
+            case cro::GameController::ButtonRightStick:
+                m_textChat.quickEmote(TextChat::Angry);
+                cooldown = 6.f;
+                buttonNodes[7].getComponent<cro::Callback>().active = true;
+                return true;
             }
         }
     }
 
     else if (evt.type == SDL_CONTROLLERAXISMOTION)
     {
-        auto controllerID = activeControllerID(sharedData.inputBinding.playerID);
-        if (cro::GameController::isButtonPressed(controllerID, cro::GameController::ButtonY))
-        {
-            if (evt.caxis.axis == cro::GameController::TriggerLeft)
-            {
-                if (evt.caxis.value > axisPos[controllerID][0]
-                    && currentScale == 1)
-                {
-                    //rely on the cooldown to stop this happening again?
-                    m_textChat.quickEmote(TextChat::Laughing);
-                    cooldown = 6.f;
-                    buttonNodes[6].getComponent<cro::Callback>().active = true;
-                }
+        //auto controllerID = activeControllerID(sharedData.inputBinding.playerID);
+        //if (cro::GameController::isButtonPressed(controllerID, cro::GameController::ButtonY))
+        //{
+        //    if (evt.caxis.axis == cro::GameController::TriggerLeft)
+        //    {
+        //        if (evt.caxis.value > axisPos[controllerID][0]
+        //            && currentScale == 1)
+        //        {
+        //            //rely on the cooldown to stop this happening again?
+        //            m_textChat.quickEmote(TextChat::Laughing);
+        //            cooldown = 6.f;
+        //            buttonNodes[6].getComponent<cro::Callback>().active = true;
+        //        }
 
-                axisPos[controllerID][0] = evt.caxis.value;
+        //        axisPos[controllerID][0] = evt.caxis.value;
+        //    }
+
+        //    else if (evt.caxis.axis == cro::GameController::TriggerRight)
+        //    {
+        //        if (evt.caxis.value > axisPos[controllerID][1]
+        //            && currentScale == 1)
+        //        {
+        //            //rely on the cooldown to stop this happening again?
+        //            m_textChat.quickEmote(TextChat::Angry);
+        //            cooldown = 6.f;
+        //            buttonNodes[7].getComponent<cro::Callback>().active = true;
+        //        }
+
+        //        axisPos[controllerID][1] = evt.caxis.value;
+        //    }            
+
+        //    return true;
+        //}
+
+        //if (evt.caxis.axis == cro::GameController::TriggerLeft)
+        //{
+        //    axisPos[controllerID][0] = evt.caxis.value;
+        //}
+        //else if (evt.caxis.axis == cro::GameController::TriggerRight)
+        //{
+        //    axisPos[controllerID][1] = evt.caxis.value;
+        //}
+
+        //auto controllerID = activeControllerID(sharedData.inputBinding.playerID);
+        //if (cro::GameController::isButtonPressed(controllerID, cro::GameController::ButtonY))
+        if (targetScale ==  1.f)
+        {
+            switch (evt.caxis.axis)
+            {
+            default: return false;
+            case cro::GameController::TriggerLeft:
+            case cro::GameController::TriggerRight:
+                return true;
             }
-
-            else if (evt.caxis.axis == cro::GameController::TriggerRight)
-            {
-                if (evt.caxis.value > axisPos[controllerID][1]
-                    && currentScale == 1)
-                {
-                    //rely on the cooldown to stop this happening again?
-                    m_textChat.quickEmote(TextChat::Angry);
-                    cooldown = 6.f;
-                    buttonNodes[7].getComponent<cro::Callback>().active = true;
-                }
-
-                axisPos[controllerID][1] = evt.caxis.value;
-            }            
-
-            return true;
         }
-
-        if (evt.caxis.axis == cro::GameController::TriggerLeft)
-        {
-            axisPos[controllerID][0] = evt.caxis.value;
-        }
-        else if (evt.caxis.axis == cro::GameController::TriggerRight)
-        {
-            axisPos[controllerID][1] = evt.caxis.value;
-        }
-        return true;
     }
 
     return false;
