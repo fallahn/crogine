@@ -569,6 +569,24 @@ void LeagueState::createLeagueTab(cro::Entity parent, const cro::SpriteSheet& sp
         }
         level = std::clamp(level, 0, 5);
 
+        //uhhh there ought to be a good way to swap just these cases
+        switch (level)
+        {
+        default: break;
+        case 0:
+            level = 2;
+            break;
+        case 2:
+            level = 0;
+            break;
+        case 3:
+            level = 5;
+            break;
+        case 5:
+            level = 3;
+            break;
+        }
+
         entity = m_scene.createEntity();
         entity.addComponent<cro::Transform>().setPosition(spritePos);
         entity.addComponent<cro::Drawable2D>();
