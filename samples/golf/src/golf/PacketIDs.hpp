@@ -186,6 +186,7 @@ namespace ServerCommand
         NextHole,
         NextPlayer,
         GotoGreen,
+        GotoHole,
         EndGame,
         ChangeWind,
 

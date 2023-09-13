@@ -1292,10 +1292,18 @@ void GolfState::buildWorld()
 
 void GolfState::doServerCommand(const net::NetEvent& evt)
 {
-#ifdef CRO_DEBUG_
     switch (evt.packet.as<std::uint8_t>())
     {
     default: break;
+#ifdef CRO_DEBUG_
+    case ServerCommand::GotoHole:
+    {
+        m_playerInfo[0].ballEntity.getComponent<cro::Transform>().setPosition(m_holeData[m_currentHole].pin + glm::vec3(Ball::Radius, 0.f, 0.f));
+        m_playerInfo[0].ballEntity.getComponent<Ball>().terrain = TerrainID::Green;
+        m_playerInfo[0].ballEntity.getComponent<Ball>().state = Ball::State::Putt;
+    }
+
+    break;
     case ServerCommand::ChangeWind:
         m_scene.getSystem<BallSystem>()->forceWindChange();
         break;
@@ -1319,7 +1327,7 @@ void GolfState::doServerCommand(const net::NetEvent& evt)
         setNextPlayer();
         break;
     case ServerCommand::GotoGreen:
-        //set ball to greeen position
+        //set ball to green position
         //set ball state to paused to trigger updates
     {
         auto pos = m_playerInfo[0].position - m_holeData[m_currentHole].pin;
@@ -1353,7 +1361,7 @@ void GolfState::doServerCommand(const net::NetEvent& evt)
             }
         };
     }
+#endif
         break;
     }
-#endif
 }

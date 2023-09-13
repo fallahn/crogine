@@ -3170,7 +3170,7 @@ void GolfState::showMessageBoard(MessageBoardID messageType, bool special)
         //display type is correct.
         if (m_currentPlayer.client != m_sharedData.clientConnection.connectionID)
         {
-                score++;
+            score++;
         }
 
         //if this is forfeit we won't have received the score yet either
@@ -3193,7 +3193,7 @@ void GolfState::showMessageBoard(MessageBoardID messageType, bool special)
         }
         else
         {
-            statScore = score - m_holeData[m_currentHole].par;
+            statScore = /*score*/1 - m_holeData[m_currentHole].par;
             statScore += ScoreID::ScoreOffset;
 
             //hio is also technically an eagle or birdie
