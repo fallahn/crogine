@@ -1580,6 +1580,16 @@ void MenuState::createBrowserMenu(cro::Entity parent, std::uint32_t mouseEnter, 
                 for (const auto& game : newList)
                 {
                     //TODO create a button ent to join the lobby
+                    //TODO rather than create a background drawable for
+                    //each button use a single repeated texture on the
+                    //parent entity
+                    auto ent = m_uiScene.createEntity();
+                    ent.addComponent<cro::Transform>();
+
+
+
+                    listItems.push_back(ent);
+                    e.getComponent<cro::Transform>().addChild(ent.getComponent<cro::Transform>());
                 }
 
                 currTime += 5.f;
