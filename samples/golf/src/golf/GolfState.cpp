@@ -398,18 +398,12 @@ bool GolfState::handleEvent(const cro::Event& evt)
                 switch (evt.key.keysym.sym)
                 {
                 default: break;
-                /*case SDLK_7:
-                    m_textChat.quickEmote(TextChat::Angry);
+                case SDLK_ESCAPE:
+                    if (m_textChat.isVisible())
+                    {
+                        m_textChat.toggleWindow();
+                    }
                     break;
-                case SDLK_8:
-                    m_textChat.quickEmote(TextChat::Applaud);
-                    break;
-                case SDLK_9:
-                    m_textChat.quickEmote(TextChat::Laughing);
-                    break;
-                case SDLK_0:
-                    m_textChat.quickEmote(TextChat::Happy);
-                    break;*/
                 case SDLK_F8:
                     if (evt.key.keysym.mod & KMOD_SHIFT)
                     {
@@ -741,6 +735,12 @@ bool GolfState::handleEvent(const cro::Event& evt)
             showScoreboard(false);
             break;
         case SDLK_ESCAPE:
+            if (m_textChat.isVisible())
+            {
+                m_textChat.toggleWindow();
+                break;
+            }
+            [[fallthrough]];
         case SDLK_p:
         case SDLK_PAUSE:
             requestStackPush(StateID::Pause);

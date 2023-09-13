@@ -47,6 +47,8 @@ public:
 
     void toggleWindow();
 
+    bool isVisible() const { return m_visible; }
+
     void setRootNode(cro::Entity e) { m_rootNode = e; }
 
     enum

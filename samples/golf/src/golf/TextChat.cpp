@@ -338,5 +338,7 @@ void TextChat::sendTextChat()
 
         m_limitClock.restart();
         m_scrollToEnd = true;
+
+        m_visible = false;
     }
 }
