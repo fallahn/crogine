@@ -311,6 +311,13 @@ void League::iterate(const std::array<std::int32_t, 18>& parVals, const std::vec
     m_currentIteration++;
     Achievements::incrementStat(StatStrings[StatID::LeagueRounds]);
 
+    //displays the notification overlay
+    auto* msg = cro::App::postMessage<Social::SocialEvent>(Social::MessageID::SocialMessage);
+    msg->type = Social::SocialEvent::MonthlyProgress;
+    msg->challengeID = -1;
+    msg->level = m_currentIteration;
+    msg->reason = MaxIterations;
+
     write();
 }
 

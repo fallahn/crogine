@@ -105,7 +105,7 @@ void MonthlyChallenge::updateChallenge(std::int32_t id, std::int32_t value)
                 msg->type = Social::SocialEvent::MonthlyProgress;
                 msg->level = m_challenges[id].value;
                 msg->reason = m_challenges[id].targetValue;
-                msg->playerID = id;
+                msg->challengeID = id;
             }
             else if (m_challenges[id].type == Challenge::Flag
                 && value < 32)
@@ -122,7 +122,7 @@ void MonthlyChallenge::updateChallenge(std::int32_t id, std::int32_t value)
                     msg->type = Social::SocialEvent::MonthlyProgress;
                     msg->level = static_cast<std::int32_t>(value.count());
                     msg->reason = static_cast<std::int32_t>(target.count());
-                    msg->playerID = id;
+                    msg->challengeID = id;
                 }
             }
 

@@ -76,6 +76,10 @@ bool AudioResource::load(std::int32_t ID, const std::string& path, bool streamin
         m_sources.insert(std::make_pair(ID, std::move(buffer)));
         m_usedPaths.insert(std::make_pair(path, ID));
     }
+    else
+    {
+        LogW << "Audio Resource: Failed loading " << path << std::endl;
+    }
     return result;
 }
 

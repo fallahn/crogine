@@ -107,7 +107,11 @@ public:
         }type = LevelUp;
         std::int32_t level = 0; //if monthly progress then current value
         std::int32_t reason = -1; //if monthly progress then target value
-        std::uint64_t playerID = 0; //id of monthly challenge
+        union
+        {
+            std::uint64_t playerID = 0;
+            std::int32_t challengeID; //id of monthly challenge
+        };
     };
 
     struct ProgressData final

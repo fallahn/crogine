@@ -126,35 +126,56 @@ ProgressIcon::ProgressIcon(const cro::Font& font)
 //public
 void ProgressIcon::show(std::int32_t index, std::int32_t progress, std::int32_t total)
 {
-    //update progress bar verts
-    float pc = static_cast<float>(progress) / total;
-    auto idx = m_vertexData.size() - 1;
-    const auto pos = (BarSize.x * pc) + BarPos.x;
-    m_vertexData[idx].position.x = pos;
-    m_vertexData[idx-1].position.x = pos;
-    m_vertexData[idx-3].position.x = pos;
-    m_background.setVertexData(m_vertexData);
-
-    //update text
-    auto str = cro::Util::String::wordWrap(ChallengeDescriptions[index], 40, 128);
-    m_text.setString(str);
-
-    if (progress == total)
+    //rare, but we don't want, say, a league notification clobbering an active challenge
+    if (!m_active)
     {
-        m_titleText.setString("CHALLENGE COMPLETE! 500XP");
-    }
-    else
-    {
-        str = std::to_string(progress) + "/" + std::to_string(total);
-        m_titleText.setString("CHALLENGE PROGRESS " + str);
-    }
+        //update progress bar verts
+        float pc = static_cast<float>(progress) / total;
+        auto idx = m_vertexData.size() - 1;
+        const auto pos = (BarSize.x * pc) + BarPos.x;
+        m_vertexData[idx].position.x = pos;
+        m_vertexData[idx - 1].position.x = pos;
+        m_vertexData[idx - 3].position.x = pos;
+        m_background.setVertexData(m_vertexData);
 
-    m_active = true;
-    m_state = ScrollIn;
-    m_pauseTime = PauseTime;
+        //update text
+        if (index < 0)
+        {
+            m_titleText.setString("CLUB LEAGUE UPDATED");
 
-    const float windowSize = static_cast<float>(cro::App::getWindow().getSize().x);
-    setPosition({ windowSize - IconSize.x, -IconSize.y });
+            if (progress == total)
+            {
+                m_text.setString("Season Complete!");
+            }
+            else
+            {
+                auto str = std::to_string(progress) + "/" + std::to_string(total);
+                m_text.setString("Season Progress " + str);
+            }
+        }
+        else
+        {
+            auto str = cro::Util::String::wordWrap(ChallengeDescriptions[index], 40, 128);
+            m_text.setString(str);
+
+            if (progress == total)
+            {
+                m_titleText.setString("CHALLENGE COMPLETE! 500XP");
+            }
+            else
+            {
+                str = std::to_string(progress) + "/" + std::to_string(total);
+                m_titleText.setString("CHALLENGE PROGRESS " + str);
+            }
+        }
+
+        m_active = true;
+        m_state = ScrollIn;
+        m_pauseTime = PauseTime;
+
+        const float windowSize = static_cast<float>(cro::App::getWindow().getSize().x);
+        setPosition({ windowSize - IconSize.x, -IconSize.y });
+    }
 }
 
 //public

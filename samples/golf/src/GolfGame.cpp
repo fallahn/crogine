@@ -356,9 +356,10 @@ void GolfGame::handleMessage(const cro::Message& msg)
         }
         else if (data.type == Social::SocialEvent::MonthlyProgress)
         {
-            m_progressIcon->show(static_cast<std::int32_t>(data.playerID), data.level, data.reason);
+            m_progressIcon->show(data.challengeID, data.level, data.reason);
 
-            if (data.level == data.reason)
+            if (data.challengeID != -1 &&
+                data.level == data.reason)
             {
                 Social::awardXP(500, XPStringID::ChallengeComplete);
                 Achievements::awardAchievement(AchievementStrings[AchievementID::UpForTheChallenge]);
