@@ -109,7 +109,7 @@ void League::reset()
 
         //this starts small and increase as
         //player level is increased
-        player.quality = 0.87f - (0.01f * player.nameIndex);
+        player.quality = 0.87f - (0.01f * (player.nameIndex / 2));
     }
     m_currentIteration = 0;
     m_currentSeason = 1;
@@ -124,26 +124,34 @@ void League::iterate(const std::array<std::int32_t, 18>& parVals, const std::vec
         //evaluate all players and adjust skills
         if (m_currentSeason < SkillRoof)
         {
-            for (auto i = 0u; i < PlayerCount / 2u; ++i)
+            //increase ALL player quality, but show a bigger improvement near the bottom
+            for (auto i = 0u; i < PlayerCount; ++i)
             {
-                auto outlier = m_players[i].outlier;
-                outlier = std::clamp(outlier + cro::Util::Random::value(-1, 1), 1, 10);
-                m_players[i].outlier = outlier;
+                m_players[i].quality = std::min(1.f, m_players[i].quality + ((0.02f * i) / 10.f));
 
-                m_players[i].quality = std::min(1.f, m_players[i].quality + 0.01f);
-            }
+                //modify chance of making mistake for top half
+                if (i < PlayerCount / 2)
+                {
+                    auto outlier = m_players[i].outlier;
+                    outlier = std::clamp(outlier + cro::Util::Random::value(-1, 1), 1, 10);
+                    m_players[i].outlier = outlier;
 
-            for (auto i = 0u; i < PlayerCount / 3u; ++i)
-            {
-                auto curve = m_players[i].curve;
-                curve = std::max(0, curve - cro::Util::Random::value(0, 1));
+                    //modify curve for top 3rd
+                    if (1 < PlayerCount < 3)
+                    {
+                        auto curve = m_players[i].curve;
+                        curve = std::max(0, curve - cro::Util::Random::value(0, 1));
+
+                        //wait... I've forgotten what I was doing here - though this clearly does nothing.
+                    }
+                }
             }
         }
         else
         {
             for (auto& player : m_players)
             {
-                auto rVal = cro::Util::Random::value(0.f, 0.03f);
+                auto rVal = cro::Util::Random::value(0.f, 0.125f);
                 if (player.quality > 0.87f)
                 {
                     player.quality -= rVal;
