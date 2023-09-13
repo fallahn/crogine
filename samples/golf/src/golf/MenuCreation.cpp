@@ -1549,6 +1549,47 @@ void MenuState::createBrowserMenu(cro::Entity parent, std::uint32_t mouseEnter, 
     menuTransform.addChild(entity.getComponent<cro::Transform>());
 
 
+#ifdef USE_GNS
+    struct ListData final
+    {
+        float refreshTime = 5.f;
+        std::vector<cro::Entity> listItems;
+    };
+
+    //list of friends currently in a lobby
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<ListData>();
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float dt)
+    {
+        if (m_uiScene.getSystem<cro::UISystem>()->getActiveGroup() == MenuID::Join)
+        {
+            auto& [currTime, listItems] = e.getComponent<cro::Callback>().getUserData<ListData>();
+            currTime -= dt;
+            if (currTime < 0)
+            {
+                for (auto e : listItems)
+                {
+                    m_uiScene.destroyEntity(e);
+                }
+                listItems.clear();
+
+                const auto newList = m_matchMaking.getFriendGames();
+                for (const auto& game : newList)
+                {
+                    //TODO create a button ent to join the lobby
+                }
+
+                currTime += 5.f;
+            }
+        }
+    };
+
+    menuTransform.addChild(entity.getComponent<cro::Transform>());
+#endif
+
     updateLobbyList();
 }
 

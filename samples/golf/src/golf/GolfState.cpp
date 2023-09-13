@@ -1340,7 +1340,6 @@ void GolfState::handleMessage(const cro::Message& msg)
                 break;
             }
 
-
             //creates a delay before switching back to player cam
             auto entity = m_gameScene.createEntity();
             entity.addComponent<cro::Callback>().active = true;
@@ -5783,9 +5782,12 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
                     }
                     else
                     {
-                        Achievements::awardAchievement(AchievementStrings[AchievementID::TopChip]);
-                        Achievements::incrementStat(StatStrings[StatID::ChipIns]);
-                        Social::awardXP(XPValues[XPID::Special], XPStringID::TopChip);
+                        if (getClub() > ClubID::NineIron)
+                        {
+                            Achievements::awardAchievement(AchievementStrings[AchievementID::TopChip]);
+                            Achievements::incrementStat(StatStrings[StatID::ChipIns]);
+                            Social::awardXP(XPValues[XPID::Special], XPStringID::TopChip);
+                        }
 
                         if (m_achievementTracker.hadBackspin)
                         {
