@@ -358,8 +358,8 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     ballEntity = {};
 
     registerDebugCommands();
-    registerDebugWindows();
 #endif
+    registerDebugWindows();
 
     cro::App::getInstance().resetFrameTime();
 }
@@ -2011,15 +2011,15 @@ void GolfState::render()
         m_greenBuffer.display();
         m_gameScene.setActiveCamera(oldCam);
     }
-    //else if (m_flightCam.getComponent<cro::Camera>().active)
-    //{
-    //    //update the flight view
-    //    auto oldCam = m_gameScene.setActiveCamera(m_flightCam);
-    //    m_flightTexture.clear();
-    //    m_gameScene.render();
-    //    m_flightTexture.display();
-    //    m_gameScene.setActiveCamera(oldCam);
-    //}
+    else if (m_flightCam.getComponent<cro::Camera>().active)
+    {
+        //update the flight view
+        auto oldCam = m_gameScene.setActiveCamera(m_flightCam);
+        m_flightTexture.clear(cro::Colour::Magenta);
+        m_gameScene.render();
+        m_flightTexture.display();
+        m_gameScene.setActiveCamera(oldCam);
+    }
     
 #ifndef CRO_DEBUG_
     if (m_roundEnded /* && !m_sharedData.tutorial */)
@@ -7084,6 +7084,9 @@ void GolfState::updateActor(const ActorInfo& update)
                     en.getComponent<CameraFollower>().holePosition = m_holeData[m_currentHole].pin;
                 };
                 m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd2);
+
+                //set this ball as the flight cam target
+                m_flightCam.getComponent<cro::Callback>().setUserData<cro::Entity>(e);
 
                 //if the dest point moves the ball out of a certain radius
                 //then set the drone cam to follow (if it's active)

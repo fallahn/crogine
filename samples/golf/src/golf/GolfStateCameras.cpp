@@ -30,6 +30,7 @@ source distribution.
 #include "GolfState.hpp"
 #include "FpsCameraSystem.hpp"
 #include "CommandIDs.hpp"
+#include "GameConsts.hpp"
 
 #include <crogine/ecs/components/AudioListener.hpp>
 #include <crogine/ecs/components/CommandTarget.hpp>
@@ -392,7 +393,7 @@ void GolfState::createCameras()
     //unfortuantely this kills the FPS
 
     const auto createFlightTexture =
-        [&]()
+        [&](cro::Camera& cam)
     {
             auto texSize = MapSize.y / 2u;
 
@@ -429,27 +430,50 @@ void GolfState::createCameras()
             //}
             //greenEnt.getComponent<cro::Transform>().setOrigin({ (texSize / 2), (texSize / 2) }); //must divide to a whole pixel!
             //greenEnt.getComponent<cro::Callback>().getUserData<GreenCallbackData>().targetScale = targetScale.x;
+
+            cam.setPerspective(FlightCamFOV* cro::Util::Const::degToRad, 1.f, 0.001f, static_cast<float>(MapSize.x) * 1.25f);
+            cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
-    //createFlightTexture();
 
-    ////follows the ball in flight
-    //camEnt = m_gameScene.createEntity();
-    //camEnt.addComponent<cro::Transform>();
-    //camEnt.addComponent<cro::Camera>().resizeCallback =
-    //    [&, createFlightTexture](cro::Camera& cam)
-    //    {
-    //        createFlightTexture();
+    //follows the ball in flight
+    camEnt = m_gameScene.createEntity();
+    camEnt.addComponent<cro::Transform>();
+    camEnt.addComponent<cro::Camera>().resizeCallback = createFlightTexture;
+        /*[&, createFlightTexture](cro::Camera& cam)
+        {
+            createFlightTexture();
 
-    //        cam.setPerspective(m_sharedData.fov * cro::Util::Const::degToRad, 1.f, 0.1f, static_cast<float>(MapSize.x) * 1.25f, m_shadowQuality.cascadeCount);
-    //        cam.viewport = { 0.f, 0.f, 1.f, 1.f };
-    //    };
-    //camEnt.getComponent<cro::Camera>().reflectionBuffer.create(ReflectionMapSize, ReflectionMapSize);
-    //camEnt.getComponent<cro::Camera>().reflectionBuffer.setSmooth(true);
-    //camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(ShadowMapSize, ShadowMapSize);
+            cam.setPerspective(FlightCamFOV * cro::Util::Const::degToRad, 1.f, 0.001f, static_cast<float>(MapSize.x) * 1.25f);
+            cam.viewport = { 0.f, 0.f, 1.f, 1.f };
+        };*/
+    camEnt.getComponent<cro::Camera>().reflectionBuffer.create(ReflectionMapSize / 4, ReflectionMapSize / 4);
+    camEnt.getComponent<cro::Camera>().reflectionBuffer.setSmooth(true);
+    camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(ShadowMapSize / 4, ShadowMapSize / 4);
     //camEnt.getComponent<cro::Camera>().active = false;
-    //camEnt.getComponent<cro::Camera>().setMaxShadowDistance(m_shadowQuality.shadowFarDistance);
-    //camEnt.getComponent<cro::Camera>().setShadowExpansion(15.f);
-    //m_flightCam = camEnt;
+    LogI << "SET CAM FALSE BY DEFAULT!" << std::endl;
+    camEnt.getComponent<cro::Camera>().setMaxShadowDistance(m_shadowQuality.shadowFarDistance);
+    camEnt.getComponent<cro::Camera>().setShadowExpansion(1.f);
+
+    camEnt.addComponent<cro::Callback>().active = true;
+    camEnt.getComponent<cro::Callback>().setUserData<cro::Entity>(); //this is the target ball
+    camEnt.getComponent<cro::Callback>().function =
+        [](cro::Entity e, float)
+        {
+            if (e.getComponent<cro::Camera>().active)
+            {
+                auto target = e.getComponent<cro::Callback>().getUserData<cro::Entity>();
+                if (target.isValid())
+                {
+                    auto pos = target.getComponent<cro::Transform>().getPosition() + FlightCamOffset;
+                    e.getComponent<cro::Transform>().setPosition(pos);
+
+                    glm::quat rot = glm::rotate(cro::Transform::QUAT_IDENTITY, FlightCamRotation, cro::Transform::X_AXIS);
+                    e.getComponent<cro::Transform>().setRotation(rot);
+                }
+            }
+        };
+    createFlightTexture(camEnt.getComponent<cro::Camera>());
+    m_flightCam = camEnt;
 }
 
 void GolfState::setGreenCamPosition()
