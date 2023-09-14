@@ -316,6 +316,13 @@ void GolfState::registerDebugWindows()
 {
     registerWindow([&]()
         {
+            if (ImGui::Begin("Ball Cam"))
+            {
+                glm::vec2 size(m_flightTexture.getSize());
+                ImGui::Image(m_flightTexture.getTexture(), { size.x, size.y }, { 0.f, 1.f }, { 1.f, 0.f });
+            }
+            ImGui::End();
+
             //if (ImGui::Begin("Ach Track"))
             //{
             //    ImGui::Text("No holes over par %s", m_achievementTracker.noHolesOverPar ? "true" : "false");
@@ -327,13 +334,12 @@ void GolfState::registerDebugWindows()
             //}
             //ImGui::End();
 
-            if (ImGui::Begin("Depth Map"))
+            /*if (ImGui::Begin("Depth Map"))
             {
-                //glm::vec2 size(m_gameSceneTexture.getSize() / 2u);
-                //ImGui::Image(m_gameSceneTexture.getDepthTexture(), { size.x, size.y }, { 0.f, 1.f }, { 1.f, 0.f });
-                cro::AudioMixer::printDebug();
+                glm::vec2 size(m_gameSceneTexture.getSize() / 2u);
+                ImGui::Image(m_gameSceneTexture.getDepthTexture(), { size.x, size.y }, { 0.f, 1.f }, { 1.f, 0.f });
             }
-            ImGui::End();
+            ImGui::End();*/
         });
 
     //registerWindow([&]()

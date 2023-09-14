@@ -30,6 +30,7 @@ set(GOLF_SRC
   ${PROJECT_DIR}/golf/GolfParticleDirector.cpp
   ${PROJECT_DIR}/golf/GolfSoundDirector.cpp
   ${PROJECT_DIR}/golf/GolfState.cpp
+  ${PROJECT_DIR}/golf/GolfStateCameras.cpp
   ${PROJECT_DIR}/golf/GolfStateDebug.cpp
   ${PROJECT_DIR}/golf/GolfStateScoring.cpp
   ${PROJECT_DIR}/golf/GolfStateUI.cpp

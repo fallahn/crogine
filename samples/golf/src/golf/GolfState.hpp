@@ -70,6 +70,10 @@ source distribution.
 //#define PATH_TRACING
 #endif
 
+static constexpr std::uint32_t MaxCascades = 4; //actual value is 1 less this - see ShadowQuality::update()
+static constexpr float MaxShadowFarDistance = 150.f;
+static constexpr float MaxShadowNearDistance = 90.f;
+
 struct BullsEye;
 struct BullHit;
 namespace cro
@@ -273,9 +277,31 @@ private:
     void startFlyBy();
     std::int32_t getClub() const;
 
-    //allows switching camera, TV style
+
+    struct ShadowQuality final
+    {
+        float shadowNearDistance = MaxShadowNearDistance;
+        float shadowFarDistance = MaxShadowFarDistance;
+        std::uint32_t cascadeCount = MaxCascades - 1;
+
+        void update(bool hq)
+        {
+            cascadeCount = hq ? 3 : 1;
+            float divisor = static_cast<float>(std::pow((MaxCascades - cascadeCount), 2)); //cascade sizes are exponential
+            shadowNearDistance = 90.f / divisor;
+            shadowFarDistance = 150.f / divisor;
+        }
+    }m_shadowQuality;
+
+
+    //follows the ball mid-flight
+    cro::Entity m_flightCam;
+    cro::RenderTexture m_flightTexture;
+
+    //allows switching camera, TV style (GolfStateCameras.cpp)
     std::array<cro::Entity, CameraID::Count> m_cameras = {};
     std::int32_t m_currentCamera;
+    void createCameras();
     void setActiveCamera(std::int32_t);
     void updateCameraHeight(float);
     void setGreenCamPosition();
