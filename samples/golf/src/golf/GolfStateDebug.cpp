@@ -316,12 +316,35 @@ void GolfState::registerDebugWindows()
 {
     registerWindow([&]()
         {
-            if (ImGui::Begin("Ball Cam"))
+            /*if (ImGui::Begin("Ball Cam"))
             {
                 glm::vec2 size(m_flightTexture.getSize());
                 ImGui::Image(m_flightTexture.getTexture(), { size.x, size.y }, { 0.f, 1.f }, { 1.f, 0.f });
+
+                auto& cam = m_flightCam.getComponent<cro::Camera>();
+                static float fov = 60.f;
+                if (ImGui::SliderFloat("FOV", &fov, 40.f, 90.f))
+                {
+                    cam.setPerspective(fov * cro::Util::Const::degToRad, 1.f, 0.1f, static_cast<float>(MapSize.x) * 1.25f, m_shadowQuality.cascadeCount);
+                }
+
+                static glm::vec3 pos(0.f);
+                if (ImGui::SliderFloat("Y", &pos.y, 0.f, 0.1f))
+                {
+                    m_flightCam.getComponent<cro::Transform>().setPosition(m_currentPlayer.position + pos);
+                }
+                if (ImGui::SliderFloat("Z", &pos.z, 0.f, 0.1f))
+                {
+                    m_flightCam.getComponent<cro::Transform>().setPosition(m_currentPlayer.position + pos);
+                }
+
+                static float rotation = 0.f;
+                if (ImGui::SliderFloat("Rotation", &rotation, -0.2f, 0.2f))
+                {
+                    m_flightCam.getComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, rotation);
+                }
             }
-            ImGui::End();
+            ImGui::End();*/
 
             //if (ImGui::Begin("Ach Track"))
             //{

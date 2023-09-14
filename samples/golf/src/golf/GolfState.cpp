@@ -358,8 +358,8 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     ballEntity = {};
 
     registerDebugCommands();
-#endif
     registerDebugWindows();
+#endif
 
     cro::App::getInstance().resetFrameTime();
 }
@@ -2011,6 +2011,15 @@ void GolfState::render()
         m_greenBuffer.display();
         m_gameScene.setActiveCamera(oldCam);
     }
+    //else if (m_flightCam.getComponent<cro::Camera>().active)
+    //{
+    //    //update the flight view
+    //    auto oldCam = m_gameScene.setActiveCamera(m_flightCam);
+    //    m_flightTexture.clear();
+    //    m_gameScene.render();
+    //    m_flightTexture.display();
+    //    m_gameScene.setActiveCamera(oldCam);
+    //}
     
 #ifndef CRO_DEBUG_
     if (m_roundEnded /* && !m_sharedData.tutorial */)

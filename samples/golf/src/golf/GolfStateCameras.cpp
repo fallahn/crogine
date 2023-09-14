@@ -50,42 +50,46 @@ void GolfState::createCameras()
             float scale = m_sharedData.pixelScale ? maxScale : 1.f;
             auto texSize = winSize / scale;
 
-            std::uint32_t samples = m_sharedData.pixelScale ? 0 :
-                m_sharedData.antialias ? m_sharedData.multisamples : 0;
-
-            cro::RenderTarget::Context ctx;
-            ctx.depthBuffer = true;
-#ifdef __APPLE__
-            //*sigh*
-            ctx.depthTexture = false;
-#else
-            ctx.depthTexture = true;
-#endif
-            ctx.samples = samples;
-            ctx.width = static_cast<std::uint32_t>(texSize.x);
-            ctx.height = static_cast<std::uint32_t>(texSize.y);
-
-            m_sharedData.antialias =
-                m_gameSceneTexture.create(ctx)
-                && m_sharedData.multisamples != 0
-                && !m_sharedData.pixelScale;
-
-            auto invScale = (maxScale + 1.f) - scale;
-            glCheck(glPointSize(invScale * BallPointSize));
-            glCheck(glLineWidth(invScale));
-
-            m_scaleBuffer.setData(invScale);
-
-            m_resolutionUpdate.resolutionData.resolution = texSize / invScale;
-            m_resolutionBuffer.setData(m_resolutionUpdate.resolutionData);
-
-
-            //this lets the shader scale leaf billboards correctly
-            if (m_sharedData.treeQuality == SharedStateData::High)
+            //only want to resize the buffer once !!
+            if (cam == m_cameras[CameraID::Player].getComponent<cro::Camera>())
             {
-                auto targetHeight = texSize.y;
-                glUseProgram(m_resources.shaders.get(ShaderID::TreesetLeaf).getGLHandle());
-                glUniform1f(m_resources.shaders.get(ShaderID::TreesetLeaf).getUniformID("u_targetHeight"), targetHeight);
+                std::uint32_t samples = m_sharedData.pixelScale ? 0 :
+                    m_sharedData.antialias ? m_sharedData.multisamples : 0;
+
+                cro::RenderTarget::Context ctx;
+                ctx.depthBuffer = true;
+#ifdef __APPLE__
+                //*sigh*
+                ctx.depthTexture = false;
+#else
+                ctx.depthTexture = true;
+#endif
+                ctx.samples = samples;
+                ctx.width = static_cast<std::uint32_t>(texSize.x);
+                ctx.height = static_cast<std::uint32_t>(texSize.y);
+
+                m_sharedData.antialias =
+                    m_gameSceneTexture.create(ctx)
+                    && m_sharedData.multisamples != 0
+                    && !m_sharedData.pixelScale;
+
+                auto invScale = (maxScale + 1.f) - scale;
+                glCheck(glPointSize(invScale * BallPointSize));
+                glCheck(glLineWidth(invScale));
+
+                m_scaleBuffer.setData(invScale);
+
+                m_resolutionUpdate.resolutionData.resolution = texSize / invScale;
+                m_resolutionBuffer.setData(m_resolutionUpdate.resolutionData);
+
+
+                //this lets the shader scale leaf billboards correctly
+                if (m_sharedData.treeQuality == SharedStateData::High)
+                {
+                    auto targetHeight = texSize.y;
+                    glUseProgram(m_resources.shaders.get(ShaderID::TreesetLeaf).getGLHandle());
+                    glUniform1f(m_resources.shaders.get(ShaderID::TreesetLeaf).getUniformID("u_targetHeight"), targetHeight);
+                }
             }
 
             //fetch this explicitly so the transition cam also gets the correct zoom
@@ -356,12 +360,12 @@ void GolfState::createCameras()
     updateView(camEnt.getComponent<cro::Camera>());
     m_cameras[CameraID::Transition] = camEnt;
 
-    //#ifdef CRO_DEBUG_
-        //free cam
+
+    //free cam
     camEnt = m_gameScene.createEntity();
     camEnt.addComponent<cro::Transform>();
     camEnt.addComponent<cro::Camera>().resizeCallback =
-        [&, camEnt](cro::Camera& cam)
+        [&](cro::Camera& cam)
         {
             auto vpSize = glm::vec2(cro::App::getWindow().getSize());
             cam.setPerspective(m_sharedData.fov * cro::Util::Const::degToRad, vpSize.x / vpSize.y, 0.1f, static_cast<float>(MapSize.x) * 1.25f, m_shadowQuality.cascadeCount);
@@ -382,7 +386,70 @@ void GolfState::createCameras()
     initBallDebug();
 #endif
     addCameraDebugging();
-    //#endif
+
+
+
+    //unfortuantely this kills the FPS
+
+    const auto createFlightTexture =
+        [&]()
+    {
+            auto texSize = MapSize.y / 2u;
+
+            auto windowScale = getViewScale();
+            float scale = m_sharedData.pixelScale ? windowScale : 1.f;
+            scale = (windowScale + 1.f) - scale;
+            texSize *= static_cast<std::uint32_t>(scale);
+
+            std::uint32_t samples = m_sharedData.pixelScale ? 0 :
+                m_sharedData.antialias ? m_sharedData.multisamples : 0;
+
+            cro::RenderTarget::Context ctx;
+            ctx.depthBuffer = true;
+#ifdef __APPLE__
+            //*sigh*
+            ctx.depthTexture = false;
+#else
+            ctx.depthTexture = true;
+#endif
+            ctx.samples = samples;
+            ctx.width = texSize;
+            ctx.height = texSize;
+
+            m_flightTexture.create(ctx);
+
+            //TODO this is the UI entity to which we're attached - if we use the green
+            //ent we can let the other callback do this for us
+            //greenEnt.getComponent<cro::Sprite>().setTexture(m_greenBuffer.getTexture());
+
+            //auto targetScale = glm::vec2(1.f / scale);
+            //if (m_currentPlayer.terrain == TerrainID::Green)
+            //{
+            //    greenEnt.getComponent<cro::Transform>().setScale(targetScale);
+            //}
+            //greenEnt.getComponent<cro::Transform>().setOrigin({ (texSize / 2), (texSize / 2) }); //must divide to a whole pixel!
+            //greenEnt.getComponent<cro::Callback>().getUserData<GreenCallbackData>().targetScale = targetScale.x;
+    };
+    //createFlightTexture();
+
+    ////follows the ball in flight
+    //camEnt = m_gameScene.createEntity();
+    //camEnt.addComponent<cro::Transform>();
+    //camEnt.addComponent<cro::Camera>().resizeCallback =
+    //    [&, createFlightTexture](cro::Camera& cam)
+    //    {
+    //        createFlightTexture();
+
+    //        cam.setPerspective(m_sharedData.fov * cro::Util::Const::degToRad, 1.f, 0.1f, static_cast<float>(MapSize.x) * 1.25f, m_shadowQuality.cascadeCount);
+    //        cam.viewport = { 0.f, 0.f, 1.f, 1.f };
+    //    };
+    //camEnt.getComponent<cro::Camera>().reflectionBuffer.create(ReflectionMapSize, ReflectionMapSize);
+    //camEnt.getComponent<cro::Camera>().reflectionBuffer.setSmooth(true);
+    //camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(ShadowMapSize, ShadowMapSize);
+    //camEnt.getComponent<cro::Camera>().active = false;
+    //camEnt.getComponent<cro::Camera>().setMaxShadowDistance(m_shadowQuality.shadowFarDistance);
+    //camEnt.getComponent<cro::Camera>().setShadowExpansion(15.f);
+    //m_flightCam = camEnt;
 }
 
 void GolfState::setGreenCamPosition()
