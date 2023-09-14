@@ -129,22 +129,26 @@ void League::iterate(const std::array<std::int32_t, 18>& parVals, const std::vec
             {
                 m_players[i].quality = std::min(1.f, m_players[i].quality + ((0.02f * i) / 10.f));
 
-                //modify chance of making mistake for top half
+                //modify chance of making mistake 
+                auto outlier = m_players[i].outlier;
                 if (i < PlayerCount / 2)
                 {
-                    auto outlier = m_players[i].outlier;
-                    outlier = std::clamp(outlier + cro::Util::Random::value(-1, 1), 1, 10);
-                    m_players[i].outlier = outlier;
+                    outlier = std::clamp(outlier + cro::Util::Random::value(0, 1), 1, 10);
 
                     //modify curve for top 3rd
-                    if (1 < PlayerCount < 3)
-                    {
-                        auto curve = m_players[i].curve;
-                        curve = std::max(0, curve - cro::Util::Random::value(0, 1));
+                    //if (1 < PlayerCount < 3)
+                    //{
+                    //    auto curve = m_players[i].curve;
+                    //    curve = std::max(0, curve - cro::Util::Random::value(0, 1));
 
-                        //wait... I've forgotten what I was doing here - though this clearly does nothing.
-                    }
+                    //    //wait... I've forgotten what I was doing here - though this clearly does nothing.
+                    //}
                 }
+                else
+                {
+                    outlier = std::clamp(outlier + cro::Util::Random::value(-1, 0), 1, 10);
+                }
+                m_players[i].outlier = outlier;
             }
         }
         else
