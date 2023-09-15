@@ -358,8 +358,8 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     ballEntity = {};
 
     registerDebugCommands();
-#endif
     registerDebugWindows();
+#endif
 
     cro::App::getInstance().resetFrameTime();
 }
@@ -1065,6 +1065,20 @@ void GolfState::handleMessage(const cro::Message& msg)
                     e.getComponent<cro::Text>().setString(" ");
                 };
             m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+            //show flight cam if not putting
+            cmd.targetFlags = CommandID::UI::MiniGreen;
+            cmd.action = [&](cro::Entity e, float)
+                {
+                    if (m_currentPlayer.terrain != TerrainID::Green)
+                    {
+                        e.getComponent<cro::Callback>().getUserData<GreenCallbackData>().state = 0;
+                        e.getComponent<cro::Callback>().active = true;
+                        e.getComponent<cro::Sprite>().setTexture(m_flightTexture.getTexture());
+                        m_flightCam.getComponent<cro::Camera>().active = true;
+                    }
+                };
+            m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
         }
         else if (data.userType == cro::Message::SkeletalAnimationEvent::Stopped)
         {
@@ -1343,6 +1357,21 @@ void GolfState::handleMessage(const cro::Message& msg)
             {
                 Social::awardXP(1, XPStringID::OnTheFairway);
             }
+
+            //hide the flight cam
+            cro::Command cmd;
+            cmd.targetFlags = CommandID::UI::MiniGreen;
+            cmd.action = [&](cro::Entity e, float)
+            {
+                if (m_currentPlayer.terrain != TerrainID::Green)
+                {
+                    e.getComponent<cro::Callback>().getUserData<GreenCallbackData>().state = 1;
+                    e.getComponent<cro::Callback>().active = true;
+                }
+            };
+            m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+
 #ifdef PATH_TRACING
             endBallDebug();
 #endif
@@ -6827,6 +6856,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
         {
             e.getComponent<cro::Callback>().getUserData<GreenCallbackData>().state = 0;
             e.getComponent<cro::Callback>().active = true;
+            e.getComponent<cro::Sprite>().setTexture(m_greenBuffer.getTexture());
             m_greenCam.getComponent<cro::Camera>().active = true;
         }
         else

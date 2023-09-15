@@ -446,8 +446,7 @@ void GolfState::createCameras()
     camEnt.getComponent<cro::Camera>().reflectionBuffer.create(ReflectionMapSize / 4, ReflectionMapSize / 4);
     camEnt.getComponent<cro::Camera>().reflectionBuffer.setSmooth(true);
     camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(ShadowMapSize / 4, ShadowMapSize / 4);
-    //camEnt.getComponent<cro::Camera>().active = false;
-    LogI << "SET CAM FALSE BY DEFAULT!" << std::endl;
+    camEnt.getComponent<cro::Camera>().active = false;
     camEnt.getComponent<cro::Camera>().setMaxShadowDistance(/*m_shadowQuality.shadowFarDistance*/3.f);
     camEnt.getComponent<cro::Camera>().setShadowExpansion(1.f);
 
@@ -476,7 +475,7 @@ void GolfState::createCameras()
                     pos.y += 0.08f;
 
                     static glm::vec3 vel(0.f);
-                    pos = cro::Util::Maths::smoothDamp(e.getComponent<cro::Transform>().getPosition(), pos, vel, 0.005f, dt);
+                    pos = cro::Util::Maths::smoothDamp(e.getComponent<cro::Transform>().getPosition(), pos, vel, 0.007f, dt);
 
 
                     e.getComponent<cro::Transform>().setPosition(pos);

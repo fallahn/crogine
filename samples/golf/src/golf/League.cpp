@@ -80,7 +80,7 @@ namespace
         }
     }
 
-    constexpr std::size_t SkillRoof = 10; //after this many seasons the skills stop getting better - just shift around
+    constexpr std::size_t SkillRoof = 7; //after this many seasons the skills stop getting better - just shift around
 }
 
 League::League()

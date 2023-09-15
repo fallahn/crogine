@@ -1178,6 +1178,7 @@ void GolfState::buildUI()
 
                 m_greenCam.getComponent<cro::Callback>().active = false;
                 m_greenCam.getComponent<cro::Camera>().active = false;
+                m_flightCam.getComponent<cro::Camera>().active = false;
             }
         }
     };
@@ -1280,7 +1281,7 @@ void GolfState::buildUI()
             m_sharedData.antialias ? m_sharedData.multisamples : 0;
 
         m_greenBuffer.create(texSize, texSize, true, false, samples); //yes, it's square
-        greenEnt.getComponent<cro::Sprite>().setTexture(m_greenBuffer.getTexture());
+        //greenEnt.getComponent<cro::Sprite>().setTexture(m_greenBuffer.getTexture());
 
         auto targetScale = glm::vec2(1.f / scale);
         if (m_currentPlayer.terrain == TerrainID::Green)
