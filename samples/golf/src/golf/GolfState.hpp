@@ -306,6 +306,17 @@ private:
     void updateCameraHeight(float);
     void setGreenCamPosition();
 
+    struct SkyCam final
+    {
+        enum
+        {
+            Main, Flight,
+            Count
+        };
+    };
+    std::array<cro::Entity, SkyCam::Count> m_skyCameras = {};
+    void updateSkybox(float);
+
     cro::Entity m_drone;
     cro::Entity m_defaultCam;
     cro::Entity m_freeCam;

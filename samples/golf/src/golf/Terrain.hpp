@@ -39,11 +39,12 @@ struct RenderFlags final
 {
     enum
     {
-        MiniMap = 0x1,
-        MiniGreen = 0x2,
+        MiniMap    = 0x1,
+        MiniGreen  = 0x2,
         Reflection = 0x4,
         Refraction = 0x8,
-        Cue = 0x10,
+        Cue        = 0x10,
+        FlightCam  = 0x20,
 
         All = std::numeric_limits<std::uint64_t>::max()
     };

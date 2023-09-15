@@ -1788,26 +1788,7 @@ bool GolfState::simulate(float dt)
     //m_terrainChunker.update();//this needs to be done after the camera system is updated
 
     //do this last to ensure game scene camera is up to date
-    const auto& srcCam = m_gameScene.getActiveCamera().getComponent<cro::Camera>();
-    auto& dstCam = m_skyScene.getActiveCamera().getComponent<cro::Camera>();
-
-    auto baseFov = m_sharedData.fov * cro::Util::Const::degToRad;
-    auto ratio = srcCam.getFOV() / baseFov;
-    float diff = 1.f - ratio;
-    diff -= (diff / 32.f);
-
-    dstCam.viewport = srcCam.viewport;
-    dstCam.setPerspective(baseFov * (1.f - diff), srcCam.getAspectRatio(), 0.5f, 14.f);
-
-    m_skyScene.getActiveCamera().getComponent<cro::Transform>().setRotation(m_gameScene.getActiveCamera().getComponent<cro::Transform>().getWorldRotation());
-    auto pos = m_gameScene.getActiveCamera().getComponent<cro::Transform>().getWorldPosition();
-    pos.x = 0.f;
-    pos.y /= 64.f;
-    pos.z = 0.f;
-    m_skyScene.getActiveCamera().getComponent<cro::Transform>().setPosition(pos);
-    //and make sure the skybox is up to date too, so there's
-    //no lag between camera orientation.
-    m_skyScene.simulate(dt);
+    updateSkybox(dt);
 
 
 #ifndef CRO_DEBUG_
@@ -1949,10 +1930,11 @@ void GolfState::render()
     cam.setActivePass(cro::Camera::Pass::Reflection);
     cam.renderFlags = RenderFlags::Reflection;
 
-    auto& skyCam = m_skyScene.getActiveCamera().getComponent<cro::Camera>();
+    auto& skyCam = m_skyCameras[SkyCam::Main].getComponent<cro::Camera>();
     skyCam.setActivePass(cro::Camera::Pass::Reflection);
     skyCam.renderFlags = RenderFlags::Reflection;
     skyCam.viewport = { 0.f,0.f,1.f,1.f };
+    m_skyScene.setActiveCamera(m_skyCameras[SkyCam::Main]);
 
     cam.reflectionBuffer.clear(cro::Colour::Red);
     //don't want to test against skybox depth values.
@@ -2013,9 +1995,14 @@ void GolfState::render()
     }
     else if (m_flightCam.getComponent<cro::Camera>().active)
     {
+        //TODO ought we be updating the reflection buffers here too?
+        m_skyScene.setActiveCamera(m_skyCameras[SkyCam::Flight]);
+
         //update the flight view
         auto oldCam = m_gameScene.setActiveCamera(m_flightCam);
         m_flightTexture.clear(cro::Colour::Magenta);
+        m_skyScene.render();
+        glClear(GL_DEPTH_BUFFER_BIT);
         m_gameScene.render();
         m_flightTexture.display();
         m_gameScene.setActiveCamera(oldCam);
@@ -3952,7 +3939,7 @@ void GolfState::buildScene()
     glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
 
     entity.getComponent<cro::Model>().setHidden(true);
-    entity.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniGreen | RenderFlags::MiniMap | RenderFlags::Reflection));
+    entity.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniGreen | RenderFlags::MiniMap | RenderFlags::Reflection | RenderFlags::FlightCam));
 
 
     //a 'fan' which shows max rotation
@@ -3963,7 +3950,7 @@ void GolfState::buildScene()
     entity = m_gameScene.createEntity();
     entity.addComponent<cro::CommandTarget>().ID = CommandID::StrokeArc;
     entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), material);
-    entity.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniGreen | RenderFlags::MiniMap | RenderFlags::Reflection));
+    entity.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniGreen | RenderFlags::MiniMap | RenderFlags::Reflection | RenderFlags::FlightCam));
     entity.addComponent<cro::Transform>().setPosition(pos);
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function = 

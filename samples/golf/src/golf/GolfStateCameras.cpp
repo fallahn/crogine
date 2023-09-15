@@ -431,7 +431,7 @@ void GolfState::createCameras()
             //greenEnt.getComponent<cro::Transform>().setOrigin({ (texSize / 2), (texSize / 2) }); //must divide to a whole pixel!
             //greenEnt.getComponent<cro::Callback>().getUserData<GreenCallbackData>().targetScale = targetScale.x;
 
-            cam.setPerspective(FlightCamFOV* cro::Util::Const::degToRad, 1.f, 0.001f, static_cast<float>(MapSize.x) * 1.25f);
+            cam.setPerspective(FlightCamFOV * cro::Util::Const::degToRad, 1.f, 0.001f, static_cast<float>(MapSize.x));
             cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
 
@@ -439,19 +439,13 @@ void GolfState::createCameras()
     camEnt = m_gameScene.createEntity();
     camEnt.addComponent<cro::Transform>();
     camEnt.addComponent<cro::Camera>().resizeCallback = createFlightTexture;
-        /*[&, createFlightTexture](cro::Camera& cam)
-        {
-            createFlightTexture();
-
-            cam.setPerspective(FlightCamFOV * cro::Util::Const::degToRad, 1.f, 0.001f, static_cast<float>(MapSize.x) * 1.25f);
-            cam.viewport = { 0.f, 0.f, 1.f, 1.f };
-        };*/
+    camEnt.getComponent<cro::Camera>().renderFlags = RenderFlags::FlightCam;
     camEnt.getComponent<cro::Camera>().reflectionBuffer.create(ReflectionMapSize / 4, ReflectionMapSize / 4);
     camEnt.getComponent<cro::Camera>().reflectionBuffer.setSmooth(true);
     camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(ShadowMapSize / 4, ShadowMapSize / 4);
     //camEnt.getComponent<cro::Camera>().active = false;
     LogI << "SET CAM FALSE BY DEFAULT!" << std::endl;
-    camEnt.getComponent<cro::Camera>().setMaxShadowDistance(m_shadowQuality.shadowFarDistance);
+    camEnt.getComponent<cro::Camera>().setMaxShadowDistance(/*m_shadowQuality.shadowFarDistance*/3.f);
     camEnt.getComponent<cro::Camera>().setShadowExpansion(1.f);
 
     camEnt.addComponent<cro::Callback>().active = true;
@@ -474,6 +468,16 @@ void GolfState::createCameras()
         };
     createFlightTexture(camEnt.getComponent<cro::Camera>());
     m_flightCam = camEnt;
+
+
+    //set up the skybox cameras so they can be updated with the relative active cams
+    m_skyCameras[SkyCam::Main] = m_skyScene.getActiveCamera();
+    m_skyCameras[SkyCam::Flight] = m_skyScene.createEntity();
+    m_skyCameras[SkyCam::Flight].addComponent<cro::Transform>();
+    auto& skyCam = m_skyCameras[SkyCam::Flight].addComponent<cro::Camera>();
+    skyCam.setPerspective(FlightCamFOV* cro::Util::Const::degToRad, 1.f, 5.f, 14.f);
+    skyCam.viewport = { 0.f, 0.f, 1.f, 1.f };
+
 }
 
 void GolfState::setGreenCamPosition()
@@ -782,4 +786,39 @@ void GolfState::applyShadowQuality()
     applyShadowSettings(m_freeCam.getComponent<cro::Camera>(), -1);
 #endif // CRO_DEBUG_
 
+}
+
+void GolfState::updateSkybox(float dt)
+{
+    const auto& srcCam = m_gameScene.getActiveCamera().getComponent<cro::Camera>();
+    auto& dstCam = m_skyCameras[SkyCam::Main].getComponent<cro::Camera>();
+
+    auto baseFov = m_sharedData.fov * cro::Util::Const::degToRad;
+    auto ratio = srcCam.getFOV() / baseFov;
+    float diff = 1.f - ratio;
+    diff -= (diff / 32.f);
+
+    dstCam.viewport = srcCam.viewport;
+    dstCam.setPerspective(baseFov * (1.f - diff), srcCam.getAspectRatio(), 0.5f, 14.f);
+
+    m_skyCameras[SkyCam::Main].getComponent<cro::Transform>().setRotation(m_gameScene.getActiveCamera().getComponent<cro::Transform>().getWorldRotation());
+    auto pos = m_gameScene.getActiveCamera().getComponent<cro::Transform>().getWorldPosition();
+    pos.x = 0.f;
+    pos.y /= 64.f;
+    pos.z = 0.f;
+    m_skyCameras[SkyCam::Main].getComponent<cro::Transform>().setPosition(pos);
+
+    if (m_flightCam.getComponent<cro::Camera>().active)
+    {
+        m_skyCameras[SkyCam::Flight].getComponent<cro::Transform>().setRotation(m_flightCam.getComponent<cro::Transform>().getWorldRotation());
+        pos = m_flightCam.getComponent<cro::Transform>().getWorldPosition();
+        pos.x = 0.f;
+        pos.y /= 64.f;
+        pos.z = 0.f;
+        m_skyCameras[SkyCam::Flight].getComponent<cro::Transform>().setPosition(pos);
+    }
+
+    //and make sure the skybox is up to date too, so there's
+    //no lag between camera orientation.
+    m_skyScene.simulate(dt);
 }
