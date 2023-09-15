@@ -51,7 +51,11 @@ static const std::string MinimapVertex = R"(
 
 //minimap as in top down view of green
 static const std::string MinimapFragment = R"(
+        
         uniform sampler2D u_texture;
+
+#include WIND_BUFFER
+#include SCALE_BUFFER
 
         VARYING_IN LOW vec4 v_colour;
         VARYING_IN MED vec2 v_texCoord;
@@ -66,6 +70,11 @@ static const std::string MinimapFragment = R"(
         const float res = 100.0;
         const float scale = 2.0;
 
+        float rand(vec2 position)
+        {
+            return fract(sin(dot(position, vec2(12.9898, 4.1414)) + u_windData.w) * 43758.5453);
+        }
+
         void main()
         {
             vec2 pos = (round(floor(v_texCoord * res) * scale) / scale) / res;
@@ -73,8 +82,10 @@ static const std::string MinimapFragment = R"(
             vec2 dir = pos - vec2(0.5);
             float length2 = dot(dir,dir);
 
-            FRAG_OUT = TEXTURE(u_texture, v_texCoord) * v_colour;
+            vec3 noise = vec3(rand(floor((v_texCoord * textureSize(u_texture, 0)) / u_pixelScale)));
 
+            FRAG_OUT = TEXTURE(u_texture, v_texCoord);// * v_colour;
+            FRAG_OUT.rgb = mix(noise, FRAG_OUT.rgb, v_colour.r);
             FRAG_OUT = mix(FRAG_OUT, borderColour, step(borderPos, length2));
             FRAG_OUT.a *= 1.0 - step(stepPos, length2);
         })";

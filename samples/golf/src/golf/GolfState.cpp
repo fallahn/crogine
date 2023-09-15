@@ -2287,6 +2287,9 @@ void GolfState::loadAssets()
 
     //minimap - green overhead
     m_resources.shaders.loadFromString(ShaderID::Minimap, MinimapVertex, MinimapFragment);
+    shader = &m_resources.shaders.get(ShaderID::Minimap);
+    m_scaleBuffer.addShader(*shader);
+    m_windBuffer.addShader(*shader);
 
     //minimap - course view
     m_resources.shaders.loadFromString(ShaderID::MinimapView, MinimapViewVertex, MinimapViewFragment);
@@ -5120,29 +5123,40 @@ void GolfState::spawnBall(const ActorInfo& info)
             return;
         }
 
-        if (m_currentPlayer.terrain == TerrainID::Green)
+        if (m_miniGreenEnt.getComponent<cro::Sprite>().getTexture() &&
+            m_miniGreenEnt.getComponent<cro::Sprite>().getTexture()->getGLHandle() ==
+            m_flightTexture.getTexture().getGLHandle())
         {
-            auto pos = ballEnt.getComponent<cro::Transform>().getWorldPosition();
-            auto iconPos = m_greenCam.getComponent<cro::Camera>().coordsToPixel(pos, m_greenBuffer.getSize());
-
-            const glm::vec2 Centre = glm::vec2(m_greenBuffer.getSize() / 2u);
-
-            iconPos -= Centre;
-            iconPos *= std::min(1.f, Centre.x / glm::length(iconPos));
-            iconPos += Centre;
-
-            auto terrain = ballEnt.getComponent<ClientCollider>().terrain;
-            float scale = terrain == TerrainID::Green ? m_viewScale.x / m_miniGreenEnt.getComponent<cro::Transform>().getScale().x : 0.f;
-
-            e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
-
-            e.getComponent<cro::Transform>().setPosition(glm::vec3(iconPos, static_cast<float>(depthOffset) / 100.f));
-            
-            const auto activePlayer = ((m_currentPlayer.client * ConstVal::MaxPlayers) + m_currentPlayer.player) + 1;
-            if (m_inputParser.getActive()
-                && activePlayer == depthOffset)
+            //hide
+            e.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
+        }
+        else
+        {
+            e.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
+            if (m_currentPlayer.terrain == TerrainID::Green)
             {
-                m_miniGreenIndicatorEnt.getComponent<cro::Transform>().setPosition(glm::vec3(iconPos, 0.05f));
+                auto pos = ballEnt.getComponent<cro::Transform>().getWorldPosition();
+                auto iconPos = m_greenCam.getComponent<cro::Camera>().coordsToPixel(pos, m_greenBuffer.getSize());
+
+                const glm::vec2 Centre = glm::vec2(m_greenBuffer.getSize() / 2u);
+
+                iconPos -= Centre;
+                iconPos *= std::min(1.f, Centre.x / glm::length(iconPos));
+                iconPos += Centre;
+
+                auto terrain = ballEnt.getComponent<ClientCollider>().terrain;
+                float scale = terrain == TerrainID::Green ? m_viewScale.x / m_miniGreenEnt.getComponent<cro::Transform>().getScale().x : 0.f;
+
+                e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
+
+                e.getComponent<cro::Transform>().setPosition(glm::vec3(iconPos, static_cast<float>(depthOffset) / 100.f));
+
+                const auto activePlayer = ((m_currentPlayer.client * ConstVal::MaxPlayers) + m_currentPlayer.player) + 1;
+                if (m_inputParser.getActive()
+                    && activePlayer == depthOffset)
+                {
+                    m_miniGreenIndicatorEnt.getComponent<cro::Transform>().setPosition(glm::vec3(iconPos, 0.05f));
+                }
             }
         }
     };
