@@ -66,7 +66,8 @@ static constexpr float GreenCamZoomFast = 2.5f;
 static constexpr float GreenCamZoomSlow = 1.8f;
 static constexpr float SkyCamZoomSpeed = 1.1f;// 3.f;
 static constexpr float FlightCamFOV = 90.f;
-static constexpr glm::vec3 FlightCamOffset = glm::vec3(0.f, 0.098f, 0.089f);
+static constexpr glm::vec3 FlightCamOffset = glm::vec3(0.f, 0.098f, 0.f);
+static constexpr float MinFlightCamDistance = 0.132f;
 static constexpr float FlightCamRotation = -0.158f;
 
 static constexpr glm::uvec2 MapSize(320u, 200u);

@@ -2006,6 +2006,8 @@ void GolfState::render()
         m_gameScene.render();
         m_flightTexture.display();
         m_gameScene.setActiveCamera(oldCam);
+
+        m_skyScene.setActiveCamera(m_skyCameras[SkyCam::Main]);
     }
     
 #ifndef CRO_DEBUG_

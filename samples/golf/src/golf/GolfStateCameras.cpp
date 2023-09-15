@@ -31,6 +31,8 @@ source distribution.
 #include "FpsCameraSystem.hpp"
 #include "CommandIDs.hpp"
 #include "GameConsts.hpp"
+#include "ClientCollisionSystem.hpp"
+#include "BallSystem.hpp"
 
 #include <crogine/ecs/components/AudioListener.hpp>
 #include <crogine/ecs/components/CommandTarget.hpp>
@@ -38,6 +40,7 @@ source distribution.
 #include <crogine/ecs/systems/ShadowMapRenderer.hpp>
 
 #include <crogine/detail/glm/gtx/rotate_vector.hpp>
+#include <crogine/util/Maths.hpp>
 
 #include "../ErrorCheck.hpp"
 
@@ -451,18 +454,35 @@ void GolfState::createCameras()
     camEnt.addComponent<cro::Callback>().active = true;
     camEnt.getComponent<cro::Callback>().setUserData<cro::Entity>(); //this is the target ball
     camEnt.getComponent<cro::Callback>().function =
-        [](cro::Entity e, float)
+        [&](cro::Entity e, float dt)
         {
             if (e.getComponent<cro::Camera>().active)
             {
                 auto target = e.getComponent<cro::Callback>().getUserData<cro::Entity>();
                 if (target.isValid())
                 {
-                    auto pos = target.getComponent<cro::Transform>().getPosition() + FlightCamOffset;
+                    glm::vec3 dir(0.f);
+                    auto targetPos = target.getComponent<cro::Transform>().getPosition();
+
+                    if (target.getComponent<ClientCollider>().state == static_cast<std::uint8_t>(Ball::State::Flight))
+                    {
+                        dir = e.getComponent<cro::Transform>().getPosition() - targetPos;
+                    }
+                    else
+                    {
+                        dir = e.getComponent<cro::Transform>().getPosition() - m_holeData[m_currentHole].pin;
+                    }
+                    auto pos = targetPos + (glm::normalize(dir) * MinFlightCamDistance);
+                    pos.y += 0.08f;
+
+                    static glm::vec3 vel(0.f);
+                    pos = cro::Util::Maths::smoothDamp(e.getComponent<cro::Transform>().getPosition(), pos, vel, 0.005f, dt);
+
+
                     e.getComponent<cro::Transform>().setPosition(pos);
 
-                    glm::quat rot = glm::rotate(cro::Transform::QUAT_IDENTITY, FlightCamRotation, cro::Transform::X_AXIS);
-                    e.getComponent<cro::Transform>().setRotation(rot);
+                    auto  rotation = lookRotation(pos, targetPos + glm::vec3(0.f, 0.04f, 0.f));
+                    e.getComponent<cro::Transform>().setRotation(rotation);
                 }
             }
         };
@@ -790,7 +810,7 @@ void GolfState::applyShadowQuality()
 
 void GolfState::updateSkybox(float dt)
 {
-    const auto& srcCam = m_gameScene.getActiveCamera().getComponent<cro::Camera>();
+    const auto& srcCam = m_cameras[m_currentCamera].getComponent<cro::Camera>();
     auto& dstCam = m_skyCameras[SkyCam::Main].getComponent<cro::Camera>();
 
     auto baseFov = m_sharedData.fov * cro::Util::Const::degToRad;
@@ -801,8 +821,8 @@ void GolfState::updateSkybox(float dt)
     dstCam.viewport = srcCam.viewport;
     dstCam.setPerspective(baseFov * (1.f - diff), srcCam.getAspectRatio(), 0.5f, 14.f);
 
-    m_skyCameras[SkyCam::Main].getComponent<cro::Transform>().setRotation(m_gameScene.getActiveCamera().getComponent<cro::Transform>().getWorldRotation());
-    auto pos = m_gameScene.getActiveCamera().getComponent<cro::Transform>().getWorldPosition();
+    m_skyCameras[SkyCam::Main].getComponent<cro::Transform>().setRotation(m_cameras[m_currentCamera].getComponent<cro::Transform>().getWorldRotation());
+    auto pos = m_cameras[m_currentCamera].getComponent<cro::Transform>().getWorldPosition();
     pos.x = 0.f;
     pos.y /= 64.f;
     pos.z = 0.f;
