@@ -3426,9 +3426,9 @@ void GolfState::showMessageBoard(MessageBoardID messageType, bool special)
             {
                 textEnt3.getComponent<cro::Text>().setString("Nice Putt!");
                 textEnt3.getComponent<cro::Text>().setFillColour(TextGoldColour);
-                textEnt3.getComponent<cro::Transform>().move({ 0.f, -10.f });
+                textEnt3.getComponent<cro::Transform>().move({ 0.f, -11.f });
 
-                textEnt.getComponent<cro::Transform>().move({ 0.f, 2.f, 0.f });
+                textEnt.getComponent<cro::Transform>().move({ 0.f, 3.f, 0.f });
             }
 
             //overwrite special text if this is a forfeit

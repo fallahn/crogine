@@ -482,7 +482,7 @@ float InputParser::getHook() const
         && m_lie == 0)
     {
         //TODO include the current player/CPU skill level here?
-        hook = std::min(1.f, hook * 1.02f);
+        hook = std::min(1.f, hook * (1.f + (hook * 0.04f)));
     }
     
     return hook * 2.f - 1.f;

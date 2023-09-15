@@ -148,7 +148,19 @@ void LobbyState::netEvent(const net::NetEvent& evt)
         case PacketID::ClubLevel:
             {
                 auto data = evt.packet.as<std::uint16_t>();
-                m_sharedData.clubLevels[(data & 0xff00) >> 8] = (data & 0xff);
+                auto idx = ((data & 0xff00) >> 8);
+
+                //TODO sending our own here returns 255 as
+                //it happens before gaining a client ID...
+                //is this true for other connections?
+                if (idx < ConstVal::MaxClients)
+                {
+                    m_sharedData.clubLevels[idx] = (data & 0xff);
+                }
+                else
+                {
+                    LogW << "Got Club Level placket from client ID " << (int)idx << std::endl;
+                }
             }
             break;
         case PacketID::RequestGameStart:
