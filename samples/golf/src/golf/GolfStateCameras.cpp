@@ -463,7 +463,7 @@ void GolfState::createCameras()
                     glm::vec3 dir(0.f);
                     auto targetPos = target.getComponent<cro::Transform>().getPosition();
 
-                    if (target.getComponent<ClientCollider>().state == static_cast<std::uint8_t>(Ball::State::Flight))
+                    if (target.getComponent<ClientCollider>().state != static_cast<std::uint8_t>(Ball::State::Idle))
                     {
                         dir = e.getComponent<cro::Transform>().getPosition() - targetPos;
                     }
@@ -471,16 +471,16 @@ void GolfState::createCameras()
                     {
                         dir = e.getComponent<cro::Transform>().getPosition() - m_holeData[m_currentHole].pin;
                     }
-                    auto pos = targetPos + (glm::normalize(dir) * MinFlightCamDistance);
+                    auto pos = targetPos + (glm::normalize(glm::vec3(dir.x, 0.f, dir.z)) * MinFlightCamDistance);
+                    //pos.y = std::max(targetPos.y, std::min(pos.y + 0.08f, targetPos.y + 0.08f));
                     pos.y += 0.08f;
 
                     static glm::vec3 vel(0.f);
-                    pos = cro::Util::Maths::smoothDamp(e.getComponent<cro::Transform>().getPosition(), pos, vel, 0.007f, dt);
+                    auto newPos = cro::Util::Maths::smoothDamp(e.getComponent<cro::Transform>().getPosition(), pos, vel, 0.007f, dt);
 
+                    e.getComponent<cro::Transform>().setPosition(newPos);
 
-                    e.getComponent<cro::Transform>().setPosition(pos);
-
-                    auto  rotation = lookRotation(pos, targetPos + glm::vec3(0.f, 0.04f, 0.f));
+                    auto  rotation = lookRotation(newPos, targetPos + glm::vec3(0.f, 0.04f, 0.f));
                     e.getComponent<cro::Transform>().setRotation(rotation);
                 }
             }

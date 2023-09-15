@@ -1075,6 +1075,7 @@ void GolfState::handleMessage(const cro::Message& msg)
                         e.getComponent<cro::Callback>().getUserData<GreenCallbackData>().state = 0;
                         e.getComponent<cro::Callback>().active = true;
                         e.getComponent<cro::Sprite>().setTexture(m_flightTexture.getTexture());
+                        e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
                         m_flightCam.getComponent<cro::Camera>().active = true;
                     }
                 };
@@ -1281,12 +1282,15 @@ void GolfState::handleMessage(const cro::Message& msg)
         break;
         case GolfEvent::BallLanded:
         {
+            bool oob = false;
             switch (data.terrain)
             {
             default: break;
-            case TerrainID::Bunker:
             case TerrainID::Scrub:
             case TerrainID::Water:
+                oob = true;
+                [[fallthrough]];
+            case TerrainID::Bunker:
                 if (data.travelDistance > 100.f
                     && !isFastCPU(m_sharedData, m_currentPlayer))
                 {
@@ -1361,12 +1365,18 @@ void GolfState::handleMessage(const cro::Message& msg)
             //hide the flight cam
             cro::Command cmd;
             cmd.targetFlags = CommandID::UI::MiniGreen;
-            cmd.action = [&](cro::Entity e, float)
+            cmd.action = [&, oob](cro::Entity e, float)
             {
                 if (m_currentPlayer.terrain != TerrainID::Green)
                 {
                     e.getComponent<cro::Callback>().getUserData<GreenCallbackData>().state = 1;
                     e.getComponent<cro::Callback>().active = true;
+
+                    //set to black if out of bounds
+                    if (oob)
+                    {
+                        e.getComponent<cro::Sprite>().setColour(cro::Colour::Black);
+                    }
                 }
             };
             m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
@@ -6857,6 +6867,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
             e.getComponent<cro::Callback>().getUserData<GreenCallbackData>().state = 0;
             e.getComponent<cro::Callback>().active = true;
             e.getComponent<cro::Sprite>().setTexture(m_greenBuffer.getTexture());
+            e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
             m_greenCam.getComponent<cro::Camera>().active = true;
         }
         else

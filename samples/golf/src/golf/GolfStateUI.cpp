@@ -1141,7 +1141,7 @@ void GolfState::buildUI()
     entity.addComponent<cro::Transform>().setScale({ 0.f, 0.f }); //position is set in UI cam callback, below
     entity.addComponent<cro::Drawable2D>().setShader(&m_resources.shaders.get(ShaderID::Minimap));
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::MiniGreen;
-    entity.addComponent<cro::Sprite>(); //updated by the camera callback with correct texture
+    entity.addComponent<cro::Sprite>(); //updated by the instigation message with the green or flight texture
     entity.addComponent<cro::Callback>().setUserData<GreenCallbackData>();
     entity.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float dt) mutable
