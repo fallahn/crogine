@@ -478,6 +478,7 @@ void GolfState::createCameras()
         {
             static constexpr float FollowFast = 0.007f;
             static constexpr float FollowSlow = 0.5f;
+            static constexpr float MinHeight = 0.08f;
 
             if (e.getComponent<cro::Camera>().active)
             {
@@ -496,7 +497,7 @@ void GolfState::createCameras()
                         dir = e.getComponent<cro::Transform>().getPosition() - m_holeData[m_currentHole].pin;
                     }
                     auto pos = targetPos + (glm::normalize(glm::vec3(dir.x, 0.f, dir.z)) * MinFlightCamDistance);
-                    pos.y += 0.08f;
+                    pos.y += MinHeight;
 
                     auto t = m_collisionMesh.getTerrain(targetPos);
 
@@ -509,9 +510,13 @@ void GolfState::createCameras()
                     static glm::vec3 vel(0.f);
                     auto newPos = cro::Util::Maths::smoothDamp(e.getComponent<cro::Transform>().getPosition(), pos, vel, followSpeed, dt);
 
+                    //clamp above ground
+                    t = m_collisionMesh.getTerrain(newPos);
+                    if (newPos.y < t.height + MinHeight)
+                    {
+                        newPos.y = t.height + MinHeight;
+                    }
                     
-                    
-
                     e.getComponent<cro::Transform>().setPosition(newPos);
 
                     auto  rotation = lookRotation(newPos, targetPos + glm::vec3(0.f, 0.04f, 0.f));

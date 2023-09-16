@@ -3899,7 +3899,7 @@ void GolfState::buildScene()
     entity.getComponent<cro::Model>().setMaterial(0, beaconMat);
     entity.getComponent<cro::Model>().setHidden(!m_sharedData.showBeacon);
     entity.getComponent<cro::Model>().setMaterialProperty(0, "u_colourRotation", m_sharedData.beaconColour);
-    entity.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniGreen | RenderFlags::MiniMap));
+    entity.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniGreen | RenderFlags::MiniMap | RenderFlags::FlightCam));
     auto beaconEntity = entity;
 
 #ifdef CRO_DEBUG_
