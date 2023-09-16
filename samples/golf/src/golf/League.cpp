@@ -119,114 +119,6 @@ void League::reset()
 
 void League::iterate(const std::array<std::int32_t, 18>& parVals, const std::vector<std::uint8_t>& playerScores, std::size_t holeCount)
 {
-    if (m_currentIteration == MaxIterations)
-    {
-        //evaluate all players and adjust skills
-        if (m_currentSeason < SkillRoof)
-        {
-            //increase ALL player quality, but show a bigger improvement near the bottom
-            for (auto i = 0u; i < PlayerCount; ++i)
-            {
-                m_players[i].quality = std::min(1.f, m_players[i].quality + ((0.02f * i) / 10.f));
-
-                //modify chance of making mistake 
-                auto outlier = m_players[i].outlier;
-                if (i < PlayerCount / 2)
-                {
-                    outlier = std::clamp(outlier + cro::Util::Random::value(0, 1), 1, 10);
-
-                    //modify curve for top 3rd
-                    //if (1 < PlayerCount < 3)
-                    //{
-                    //    auto curve = m_players[i].curve;
-                    //    curve = std::max(0, curve - cro::Util::Random::value(0, 1));
-
-                    //    //wait... I've forgotten what I was doing here - though this clearly does nothing.
-                    //}
-                }
-                else
-                {
-                    outlier = std::clamp(outlier + cro::Util::Random::value(-1, 0), 1, 10);
-                }
-                m_players[i].outlier = outlier;
-            }
-        }
-        else
-        {
-            for (auto& player : m_players)
-            {
-                auto rVal = cro::Util::Random::value(0.f, 0.125f);
-                if (player.quality > 0.87f)
-                {
-                    player.quality -= rVal;
-                }
-                else
-                {
-                    player.quality += rVal;
-                }
-            }
-        }
-
-        //calculate our final place and update our stats
-        std::vector<SortData> sortData;
-        
-        //we'll also save this to a file so we
-        //can review previous season
-        for (auto i = 0; i < m_players.size(); ++i)
-        {
-            auto& data = sortData.emplace_back();
-            data.score = m_players[i].currentScore;
-            data.nameIndex = m_players[i].nameIndex;
-            data.handicap = (m_players[i].curve + m_players[i].outlier);
-        }
-        auto& data = sortData.emplace_back();
-        data.score = m_playerScore;
-        data.nameIndex = -1;
-        data.handicap = Social::getLevel() / 2;
-
-        std::sort(sortData.begin(), sortData.end(), 
-            [](const SortData& a, const SortData& b)
-            {
-                return a.score == b.score ? 
-                    a.handicap > b.handicap :
-                a.score > b.score;
-            });
-
-        for (auto i = 0; i < 3; ++i)
-        {
-            if (sortData[i].nameIndex == -1)
-            {
-                //this is us
-                Achievements::incrementStat(StatStrings[StatID::LeagueFirst + i]);
-
-                Achievements::awardAchievement(AchievementStrings[AchievementID::LeagueChampion]);
-
-                //TODO raise a message to notify somewhere?
-                break;
-            }
-        }
-        
-        //write the data to a file
-        const auto path = cro::App::getPreferencePath() + PrevFileName;
-        cro::RaiiRWops file;
-        file.file = SDL_RWFromFile(path.c_str(), "wb");
-        if (file.file)
-        {
-            SDL_RWwrite(file.file, sortData.data(), sizeof(SortData), sortData.size());
-            //LogI << "Wrote previous season to " << PrevFileName << std::endl;
-        }
-
-        //start a new season
-        m_currentIteration = 0;
-        m_playerScore = 0;
-        for (auto& player : m_players)
-        {
-            player.currentScore = 0;
-        }
-        m_currentSeason++;
-    }
-    
-
     CRO_ASSERT(holeCount == 6 || holeCount == 9 || holeCount == 12 || holeCount == 18, "");
 
     for (auto& player : m_players)
@@ -323,6 +215,113 @@ void League::iterate(const std::array<std::int32_t, 18>& parVals, const std::vec
     msg->reason = MaxIterations;
 
     write();
+
+    if (m_currentIteration == MaxIterations)
+    {
+        //evaluate all players and adjust skills
+        if (m_currentSeason < SkillRoof)
+        {
+            //increase ALL player quality, but show a bigger improvement near the bottom
+            for (auto i = 0u; i < PlayerCount; ++i)
+            {
+                m_players[i].quality = std::min(1.f, m_players[i].quality + ((0.02f * i) / 10.f));
+
+                //modify chance of making mistake 
+                auto outlier = m_players[i].outlier;
+                if (i < PlayerCount / 2)
+                {
+                    outlier = std::clamp(outlier + cro::Util::Random::value(0, 1), 1, 10);
+
+                    //modify curve for top 3rd
+                    //if (1 < PlayerCount < 3)
+                    //{
+                    //    auto curve = m_players[i].curve;
+                    //    curve = std::max(0, curve - cro::Util::Random::value(0, 1));
+
+                    //    //wait... I've forgotten what I was doing here - though this clearly does nothing.
+                    //}
+                }
+                else
+                {
+                    outlier = std::clamp(outlier + cro::Util::Random::value(-1, 0), 1, 10);
+                }
+                m_players[i].outlier = outlier;
+            }
+        }
+        else
+        {
+            for (auto& player : m_players)
+            {
+                auto rVal = cro::Util::Random::value(0.f, 0.125f);
+                if (player.quality > 0.87f)
+                {
+                    player.quality -= rVal;
+                }
+                else
+                {
+                    player.quality += rVal;
+                }
+            }
+        }
+
+        //calculate our final place and update our stats
+        std::vector<SortData> sortData;
+
+        //we'll also save this to a file so we
+        //can review previous season
+        for (auto i = 0; i < m_players.size(); ++i)
+        {
+            auto& data = sortData.emplace_back();
+            data.score = m_players[i].currentScore;
+            data.nameIndex = m_players[i].nameIndex;
+            data.handicap = (m_players[i].curve + m_players[i].outlier);
+        }
+        auto& data = sortData.emplace_back();
+        data.score = m_playerScore;
+        data.nameIndex = -1;
+        data.handicap = Social::getLevel() / 2;
+
+        std::sort(sortData.begin(), sortData.end(),
+            [](const SortData& a, const SortData& b)
+            {
+                return a.score == b.score ?
+                    a.handicap > b.handicap :
+                a.score > b.score;
+            });
+
+        for (auto i = 0; i < 3; ++i)
+        {
+            if (sortData[i].nameIndex == -1)
+            {
+                //this is us
+                Achievements::incrementStat(StatStrings[StatID::LeagueFirst + i]);
+
+                Achievements::awardAchievement(AchievementStrings[AchievementID::LeagueChampion]);
+
+                //TODO raise a message to notify somewhere?
+                break;
+            }
+        }
+
+        //write the data to a file
+        const auto path = cro::App::getPreferencePath() + PrevFileName;
+        cro::RaiiRWops file;
+        file.file = SDL_RWFromFile(path.c_str(), "wb");
+        if (file.file)
+        {
+            SDL_RWwrite(file.file, sortData.data(), sizeof(SortData), sortData.size());
+            //LogI << "Wrote previous season to " << PrevFileName << std::endl;
+        }
+
+        //start a new season
+        m_currentIteration = 0;
+        m_playerScore = 0;
+        for (auto& player : m_players)
+        {
+            player.currentScore = 0;
+        }
+        m_currentSeason++;
+    }
 }
 
 //private

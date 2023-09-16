@@ -90,7 +90,7 @@ using namespace cl;
 namespace
 {
 #include "PostProcess.inl"
-
+    cro::FloatRect cropRect;
     //hack to map course names to achievement IDs
     const std::unordered_map<std::string, std::int32_t> ParAch =
     {
@@ -1133,14 +1133,25 @@ void GolfState::buildUI()
         auto miniBounds = mapEnt.getComponent<cro::Transform>().getWorldTransform() * mapEnt.getComponent<cro::Drawable2D>().getLocalBounds();
         auto targBounds = glm::inverse(e.getComponent<cro::Transform>().getWorldTransform()) * miniBounds;
         e.getComponent<cro::Drawable2D>().setCroppingArea(targBounds);
+        cropRect = targBounds;
     };
     mapEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    registerWindow([]()
+        {
+            if (ImGui::Begin("buns"))
+            {
+                ImGui::Text("Left: %3.3f, Bottom: %3.3f, Width: %3.3f, Height: %3.3f", cropRect.left, cropRect.bottom, cropRect.width, cropRect.height);
+            }
+            ImGui::End();
+        });
+
 
     //green close up view
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setScale({ 0.f, 0.f }); //position is set in UI cam callback, below
     entity.addComponent<cro::Drawable2D>().setShader(&m_resources.shaders.get(ShaderID::Minimap));
-    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::MiniGreen;
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::MiniGreen; //dunno why we need this, we store the ent as a class member...
     entity.addComponent<cro::Sprite>(); //updated by the instigation message with the green or flight texture
     entity.addComponent<cro::Callback>().setUserData<GreenCallbackData>();
     entity.getComponent<cro::Callback>().function =
@@ -4650,51 +4661,6 @@ bool GolfState::EmoteWheel::handleEvent(const cro::Event& evt)
 
     else if (evt.type == SDL_CONTROLLERAXISMOTION)
     {
-        //auto controllerID = activeControllerID(sharedData.inputBinding.playerID);
-        //if (cro::GameController::isButtonPressed(controllerID, cro::GameController::ButtonY))
-        //{
-        //    if (evt.caxis.axis == cro::GameController::TriggerLeft)
-        //    {
-        //        if (evt.caxis.value > axisPos[controllerID][0]
-        //            && currentScale == 1)
-        //        {
-        //            //rely on the cooldown to stop this happening again?
-        //            m_textChat.quickEmote(TextChat::Laughing);
-        //            cooldown = 6.f;
-        //            buttonNodes[6].getComponent<cro::Callback>().active = true;
-        //        }
-
-        //        axisPos[controllerID][0] = evt.caxis.value;
-        //    }
-
-        //    else if (evt.caxis.axis == cro::GameController::TriggerRight)
-        //    {
-        //        if (evt.caxis.value > axisPos[controllerID][1]
-        //            && currentScale == 1)
-        //        {
-        //            //rely on the cooldown to stop this happening again?
-        //            m_textChat.quickEmote(TextChat::Angry);
-        //            cooldown = 6.f;
-        //            buttonNodes[7].getComponent<cro::Callback>().active = true;
-        //        }
-
-        //        axisPos[controllerID][1] = evt.caxis.value;
-        //    }            
-
-        //    return true;
-        //}
-
-        //if (evt.caxis.axis == cro::GameController::TriggerLeft)
-        //{
-        //    axisPos[controllerID][0] = evt.caxis.value;
-        //}
-        //else if (evt.caxis.axis == cro::GameController::TriggerRight)
-        //{
-        //    axisPos[controllerID][1] = evt.caxis.value;
-        //}
-
-        //auto controllerID = activeControllerID(sharedData.inputBinding.playerID);
-        //if (cro::GameController::isButtonPressed(controllerID, cro::GameController::ButtonY))
         if (targetScale ==  1.f)
         {
             switch (evt.caxis.axis)

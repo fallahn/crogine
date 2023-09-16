@@ -434,9 +434,30 @@ void GolfState::createCameras()
             //greenEnt.getComponent<cro::Transform>().setOrigin({ (texSize / 2), (texSize / 2) }); //must divide to a whole pixel!
             //greenEnt.getComponent<cro::Callback>().getUserData<GreenCallbackData>().targetScale = targetScale.x;
 
-            cam.setPerspective(FlightCamFOV * cro::Util::Const::degToRad, 1.f, 0.001f, static_cast<float>(MapSize.x));
+            cam.setPerspective(FlightCamFOV * cro::Util::Const::degToRad, 1.f, 0.06f, 200.f);
             cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
+
+    //registerWindow([&]() 
+    //    {
+    //        if (ImGui::Begin("FlightCam"))
+    //        {
+    //            glm::vec2 size(m_flightTexture.getSize());
+    //            ImGui::Image(m_flightTexture.getTexture(), { size.x, size.y }, { 0.f, 1.f }, { 1.f, 0.f });;
+
+    //            static float nearPlane = 0.06f;
+    //            static float farPlane = 1000.f;
+    //            if (ImGui::SliderFloat("Near Plane", &nearPlane, 0.001f, 0.1f))
+    //            {
+    //                m_flightCam.getComponent<cro::Camera>().setPerspective(FlightCamFOV * cro::Util::Const::degToRad, 1.f, nearPlane, farPlane);
+    //            }
+    //            if (ImGui::SliderFloat("Far Plane", &farPlane, 100.f, 320.f))
+    //            {
+    //                m_flightCam.getComponent<cro::Camera>().setPerspective(FlightCamFOV * cro::Util::Const::degToRad, 1.f, nearPlane, farPlane);
+    //            }
+    //        }
+    //        ImGui::End();
+    //    });
 
     //follows the ball in flight
     camEnt = m_gameScene.createEntity();
@@ -455,6 +476,9 @@ void GolfState::createCameras()
     camEnt.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float dt)
         {
+            static constexpr float FollowFast = 0.007f;
+            static constexpr float FollowSlow = 0.5f;
+
             if (e.getComponent<cro::Camera>().active)
             {
                 auto target = e.getComponent<cro::Callback>().getUserData<cro::Entity>();
@@ -472,11 +496,21 @@ void GolfState::createCameras()
                         dir = e.getComponent<cro::Transform>().getPosition() - m_holeData[m_currentHole].pin;
                     }
                     auto pos = targetPos + (glm::normalize(glm::vec3(dir.x, 0.f, dir.z)) * MinFlightCamDistance);
-                    //pos.y = std::max(targetPos.y, std::min(pos.y + 0.08f, targetPos.y + 0.08f));
                     pos.y += 0.08f;
 
+                    auto t = m_collisionMesh.getTerrain(targetPos);
+
+                    
+                    //slowing down when up close in the air reduces stutter
+                    float followSpeed = glm::length2(dir) < 0.025f 
+                        ? targetPos.y - t.height > 1.f ? FollowSlow : FollowFast
+                        : FollowFast;
+
                     static glm::vec3 vel(0.f);
-                    auto newPos = cro::Util::Maths::smoothDamp(e.getComponent<cro::Transform>().getPosition(), pos, vel, 0.007f, dt);
+                    auto newPos = cro::Util::Maths::smoothDamp(e.getComponent<cro::Transform>().getPosition(), pos, vel, followSpeed, dt);
+
+                    
+                    
 
                     e.getComponent<cro::Transform>().setPosition(newPos);
 
@@ -494,7 +528,7 @@ void GolfState::createCameras()
     m_skyCameras[SkyCam::Flight] = m_skyScene.createEntity();
     m_skyCameras[SkyCam::Flight].addComponent<cro::Transform>();
     auto& skyCam = m_skyCameras[SkyCam::Flight].addComponent<cro::Camera>();
-    skyCam.setPerspective(FlightCamFOV* cro::Util::Const::degToRad, 1.f, 5.f, 14.f);
+    skyCam.setPerspective(FlightCamFOV * cro::Util::Const::degToRad, 1.f, 5.f, 14.f);
     skyCam.viewport = { 0.f, 0.f, 1.f, 1.f };
 
 }
@@ -707,6 +741,8 @@ void GolfState::toggleFreeCam()
         }
     }
 
+    static std::size_t prevCam = 0; //need to restore this when switching back
+
     cro::Command cmd;
     cmd.targetFlags = CommandID::StrokeArc | CommandID::StrokeIndicator;
 
@@ -809,7 +845,9 @@ void GolfState::applyShadowQuality()
 
 void GolfState::updateSkybox(float dt)
 {
-    const auto& srcCam = m_cameras[m_currentCamera].getComponent<cro::Camera>();
+    auto activeCam = m_photoMode ? m_freeCam : m_cameras[m_currentCamera];
+
+    const auto& srcCam = activeCam.getComponent<cro::Camera>();
     auto& dstCam = m_skyCameras[SkyCam::Main].getComponent<cro::Camera>();
 
     auto baseFov = m_sharedData.fov * cro::Util::Const::degToRad;
@@ -820,8 +858,8 @@ void GolfState::updateSkybox(float dt)
     dstCam.viewport = srcCam.viewport;
     dstCam.setPerspective(baseFov * (1.f - diff), srcCam.getAspectRatio(), 0.5f, 14.f);
 
-    m_skyCameras[SkyCam::Main].getComponent<cro::Transform>().setRotation(m_cameras[m_currentCamera].getComponent<cro::Transform>().getWorldRotation());
-    auto pos = m_cameras[m_currentCamera].getComponent<cro::Transform>().getWorldPosition();
+    m_skyCameras[SkyCam::Main].getComponent<cro::Transform>().setRotation(activeCam.getComponent<cro::Transform>().getWorldRotation());
+    auto pos = activeCam.getComponent<cro::Transform>().getWorldPosition();
     pos.x = 0.f;
     pos.y /= 64.f;
     pos.z = 0.f;

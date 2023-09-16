@@ -532,7 +532,7 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
 
                         if (cro::Util::Random::value(0, 1) == 0)
                         {
-                            playSoundDelayed(AudioID::BigStick, data.position, 1.2f, 1.f, MixerChannel::Voice);
+                            playSoundDelayed(AudioID::BigStick, data.position, 2.2f, 1.f, MixerChannel::Voice);
                         }
                     }
                     break;

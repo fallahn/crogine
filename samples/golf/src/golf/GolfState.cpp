@@ -1361,6 +1361,20 @@ void GolfState::handleMessage(const cro::Message& msg)
                     setActiveCamera(CameraID::Player);
                     e.getComponent<cro::Callback>().active = false;
                     m_gameScene.destroyEntity(e);
+
+
+                    //hide the flight cam
+                    cro::Command cmd;
+                    cmd.targetFlags = CommandID::UI::MiniGreen;
+                    cmd.action = [&, oob](cro::Entity en, float)
+                        {
+                            if (m_currentPlayer.terrain != TerrainID::Green)
+                            {
+                                en.getComponent<cro::Callback>().getUserData<GreenCallbackData>().state = 1;
+                                en.getComponent<cro::Callback>().active = true;
+                            }
+                        };
+                    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
                 }
             };
 
@@ -1369,25 +1383,11 @@ void GolfState::handleMessage(const cro::Message& msg)
                 Social::awardXP(1, XPStringID::OnTheFairway);
             }
 
-            //hide the flight cam
-            cro::Command cmd;
-            cmd.targetFlags = CommandID::UI::MiniGreen;
-            cmd.action = [&, oob](cro::Entity e, float)
+            if (oob)
             {
-                if (m_currentPlayer.terrain != TerrainID::Green)
-                {
-                    e.getComponent<cro::Callback>().getUserData<GreenCallbackData>().state = 1;
-                    e.getComponent<cro::Callback>().active = true;
-
-                    //set to black if out of bounds
-                    if (oob)
-                    {
-                        e.getComponent<cro::Sprite>().setColour(cro::Colour::Black);
-                    }
-                }
-            };
-            m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
-
+                //red channel triggers noise effect
+                m_miniGreenEnt.getComponent<cro::Sprite>().setColour(cro::Colour::Cyan);
+            }
 
 #ifdef PATH_TRACING
             endBallDebug();
@@ -2041,7 +2041,10 @@ void GolfState::render()
     }
     else if (m_flightCam.getComponent<cro::Camera>().active)
     {
-        //TODO ought we be updating the reflection buffers here too?
+        auto resolutionData = m_resolutionUpdate.resolutionData;
+        resolutionData.nearFadeDistance = 0.15f;
+        m_resolutionBuffer.setData(resolutionData);
+
         m_skyScene.setActiveCamera(m_skyCameras[SkyCam::Flight]);
 
         //update the flight view
@@ -2054,6 +2057,7 @@ void GolfState::render()
         m_gameScene.setActiveCamera(oldCam);
 
         m_skyScene.setActiveCamera(m_skyCameras[SkyCam::Main]);
+        m_resolutionBuffer.setData(m_resolutionUpdate.resolutionData);
     }
     
 #ifndef CRO_DEBUG_
@@ -4205,7 +4209,7 @@ void GolfState::buildScene()
     waterEnt.getComponent<cro::Transform>().move({ 0.f, 0.f, -30.f });
     waterEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -cro::Util::Const::PI / 2.f);
     waterEnt.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), m_resources.materials.get(m_materialIDs[MaterialID::Water]));
-    waterEnt.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniMap | RenderFlags::Refraction));
+    waterEnt.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniMap | RenderFlags::Refraction | RenderFlags::FlightCam));
     waterEnt.addComponent<cro::Callback>().active = true;
     waterEnt.getComponent<cro::Callback>().setUserData<glm::vec3>(m_holeData[0].pin);
     waterEnt.getComponent<cro::Callback>().function =
