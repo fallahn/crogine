@@ -4900,6 +4900,7 @@ void GolfState::spawnBall(const ActorInfo& info)
         e.getComponent<cro::Transform>().setScale(ballEnt.getComponent<cro::Transform>().getScale()/* * 0.95f*/);
     };
 
+
     //adding a ball model means we see something a bit more reasonable when close up
     entity = m_gameScene.createEntity();
     entity.addComponent<cro::Transform>();

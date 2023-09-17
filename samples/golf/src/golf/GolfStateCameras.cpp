@@ -478,24 +478,23 @@ void GolfState::createCameras()
                     auto pos = targetPos + (glm::normalize(glm::vec3(dir.x, 0.f, dir.z)) * MinFlightCamDistance);
                     pos.y += MinHeight;
 
-                    auto t = m_collisionMesh.getTerrain(targetPos);
-
+                    
                     //slowing down when up close in the air reduces stutter
-                    float followSpeed = glm::length2(dir) < 0.0256f 
+                    /*float followSpeed = glm::length2(dir) < 0.0256f 
                         ? targetPos.y - t.height > 1.f ? FollowSlow : FollowFast
-                        : FollowFast;
+                        : FollowFast;*/
 
-                    static glm::vec3 vel(0.f);
-                    auto newPos = cro::Util::Maths::smoothDamp(e.getComponent<cro::Transform>().getPosition(), pos, vel, followSpeed, dt);
+                    //static glm::vec3 vel(0.f);
+                    auto newPos = pos;// cro::Util::Maths::smoothDamp(e.getComponent<cro::Transform>().getPosition(), pos, vel, followSpeed, dt);
 
                     //clamp above ground
-                    t = m_collisionMesh.getTerrain(newPos);
+                    auto t = m_collisionMesh.getTerrain(newPos);
                     if (newPos.y < t.height + MinHeight)
                     {
                         newPos.y = t.height + MinHeight;
                     }
                     
-                    if (glm::length2(targetPos - newPos) > (MinFlightCamDistance * MinFlightCamDistance))
+                    //if (glm::length2(targetPos - newPos) > (MinFlightCamDistance * MinFlightCamDistance))
                     {
                         e.getComponent<cro::Transform>().setPosition(newPos);
 
