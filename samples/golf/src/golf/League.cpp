@@ -214,7 +214,7 @@ void League::iterate(const std::array<std::int32_t, 18>& parVals, const std::vec
     msg->level = m_currentIteration;
     msg->reason = MaxIterations;
 
-    if (m_currentIteration >= MaxIterations)
+    if (m_currentIteration == MaxIterations)
     {
         //evaluate all players and adjust skills
         if (m_currentSeason < SkillRoof)
@@ -356,7 +356,7 @@ void League::read()
         file.file->read(file.file, m_players.data(), sizeof(LeaguePlayer), PlayerCount);
 
         //validate the loaded data and clamp to sane values
-        m_currentIteration = std::clamp(m_currentIteration, 0, MaxIterations);
+        m_currentIteration %= MaxIterations;// std::clamp(m_currentIteration, 0, MaxIterations - 1);
 
         static constexpr std::int32_t MaxScore = 5 * 18 * MaxIterations;
 
