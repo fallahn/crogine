@@ -438,34 +438,13 @@ void GolfState::createCameras()
             cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
 
-    //registerWindow([&]() 
-    //    {
-    //        if (ImGui::Begin("FlightCam"))
-    //        {
-    //            glm::vec2 size(m_flightTexture.getSize());
-    //            ImGui::Image(m_flightTexture.getTexture(), { size.x, size.y }, { 0.f, 1.f }, { 1.f, 0.f });;
-
-    //            static float nearPlane = 0.06f;
-    //            static float farPlane = 1000.f;
-    //            if (ImGui::SliderFloat("Near Plane", &nearPlane, 0.001f, 0.1f))
-    //            {
-    //                m_flightCam.getComponent<cro::Camera>().setPerspective(FlightCamFOV * cro::Util::Const::degToRad, 1.f, nearPlane, farPlane);
-    //            }
-    //            if (ImGui::SliderFloat("Far Plane", &farPlane, 100.f, 320.f))
-    //            {
-    //                m_flightCam.getComponent<cro::Camera>().setPerspective(FlightCamFOV * cro::Util::Const::degToRad, 1.f, nearPlane, farPlane);
-    //            }
-    //        }
-    //        ImGui::End();
-    //    });
-
     //follows the ball in flight
     camEnt = m_gameScene.createEntity();
     camEnt.addComponent<cro::Transform>();
     camEnt.addComponent<cro::Camera>().resizeCallback = createFlightTexture;
     camEnt.getComponent<cro::Camera>().renderFlags = RenderFlags::FlightCam;
-    camEnt.getComponent<cro::Camera>().reflectionBuffer.create(ReflectionMapSize / 4, ReflectionMapSize / 4);
-    camEnt.getComponent<cro::Camera>().reflectionBuffer.setSmooth(true);
+    //camEnt.getComponent<cro::Camera>().reflectionBuffer.create(ReflectionMapSize / 4, ReflectionMapSize / 4);
+    //camEnt.getComponent<cro::Camera>().reflectionBuffer.setSmooth(true);
     camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(ShadowMapSize / 4, ShadowMapSize / 4);
     camEnt.getComponent<cro::Camera>().active = false;
     camEnt.getComponent<cro::Camera>().setMaxShadowDistance(/*m_shadowQuality.shadowFarDistance*/3.f);
@@ -476,7 +455,7 @@ void GolfState::createCameras()
     camEnt.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float dt)
         {
-            static constexpr float FollowFast = 0.007f;
+            static constexpr float FollowFast = 0.009f;
             static constexpr float FollowSlow = 0.5f;
             static constexpr float MinHeight = 0.08f;
 
@@ -501,9 +480,8 @@ void GolfState::createCameras()
 
                     auto t = m_collisionMesh.getTerrain(targetPos);
 
-                    
                     //slowing down when up close in the air reduces stutter
-                    float followSpeed = glm::length2(dir) < 0.025f 
+                    float followSpeed = glm::length2(dir) < 0.0256f 
                         ? targetPos.y - t.height > 1.f ? FollowSlow : FollowFast
                         : FollowFast;
 
@@ -517,15 +495,19 @@ void GolfState::createCameras()
                         newPos.y = t.height + MinHeight;
                     }
                     
-                    e.getComponent<cro::Transform>().setPosition(newPos);
+                    if (glm::length2(targetPos - newPos) > (MinFlightCamDistance * MinFlightCamDistance))
+                    {
+                        e.getComponent<cro::Transform>().setPosition(newPos);
 
-                    auto  rotation = lookRotation(newPos, targetPos + glm::vec3(0.f, 0.04f, 0.f));
-                    e.getComponent<cro::Transform>().setRotation(rotation);
+                        auto  rotation = lookRotation(newPos, targetPos + glm::vec3(0.f, 0.04f, 0.f));
+                        e.getComponent<cro::Transform>().setRotation(rotation);
+                    }
                 }
             }
         };
     createFlightTexture(camEnt.getComponent<cro::Camera>());
     m_flightCam = camEnt;
+
 
 
     //set up the skybox cameras so they can be updated with the relative active cams

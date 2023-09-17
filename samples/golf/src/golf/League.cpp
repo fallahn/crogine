@@ -214,9 +214,7 @@ void League::iterate(const std::array<std::int32_t, 18>& parVals, const std::vec
     msg->level = m_currentIteration;
     msg->reason = MaxIterations;
 
-    write();
-
-    if (m_currentIteration == MaxIterations)
+    if (m_currentIteration >= MaxIterations)
     {
         //evaluate all players and adjust skills
         if (m_currentSeason < SkillRoof)
@@ -322,6 +320,8 @@ void League::iterate(const std::array<std::int32_t, 18>& parVals, const std::vec
         }
         m_currentSeason++;
     }
+
+    write();
 }
 
 //private
