@@ -208,6 +208,11 @@ void ClientCollisionSystem::process(float)
             else if (collider.previousHeight > CollisionLevel)
             {
                 notify(CollisionEvent::Begin, position);
+
+                if (collider.terrain == TerrainID::Bunker)
+                {
+                    entity.getComponent<cro::Transform>().setOrigin({ 0.f, Ball::Radius * 1.5f, 0.f });
+                }
             }
             else if(collider.terrain == TerrainID::Hole
                 &&(collider.previousHeight > result.height - (Ball::Radius * 2.f)

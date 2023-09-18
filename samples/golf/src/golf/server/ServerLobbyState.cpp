@@ -156,10 +156,11 @@ void LobbyState::netEvent(const net::NetEvent& evt)
                 if (idx < ConstVal::MaxClients)
                 {
                     m_sharedData.clubLevels[idx] = (data & 0xff);
+                    LogI << "set club level for client " << (int)idx << std::endl;
                 }
                 else
                 {
-                    LogW << "Got Club Level placket from client ID " << (int)idx << std::endl;
+                    LogW << "Got Club Level packet from client ID " << (int)idx << std::endl;
                 }
             }
             break;

@@ -1087,6 +1087,9 @@ void GolfState::handleMessage(const cro::Message& msg)
                     }
                 };
             m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+            //restore the ball origin if buried
+            m_activeAvatar->ballModel.getComponent<cro::Transform>().setOrigin(glm::vec3(0.f));
         }
         else if (data.userType == cro::Message::SkeletalAnimationEvent::Stopped)
         {
@@ -4788,7 +4791,7 @@ void GolfState::spawnBall(const ActorInfo& info)
 
     auto entity = m_gameScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(info.position);
-    //entity.getComponent<cro::Transform>().setOrigin({ 0.f, -0.003f, 0.f }); //pushes the ent above the ground a bit to stop Z fighting
+    //entity.getComponent<cro::Transform>().setOrigin({ 0.f, Ball::Radius, 0.f }); //pushes the ent above the ground a bit to stop Z fighting
     entity.getComponent<cro::Transform>().setScale(glm::vec3(0.f));
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Ball;
     entity.addComponent<InterpolationComponent<InterpolationType::Linear>>(
@@ -4814,11 +4817,6 @@ void GolfState::spawnBall(const ActorInfo& info)
     };
     m_avatars[info.clientID][info.playerID].ballModel = entity;
 
-
-    //cro::AudioScape propAudio;
-    //propAudio.loadFromFile("assets/golf/sound/props.xas", m_resources.audio);
-    //entity.addComponent<cro::AudioEmitter>() = propAudio.getEmitter("ball");
-    //entity.getComponent<cro::AudioEmitter>().play();
 
 
     //ball shadow
