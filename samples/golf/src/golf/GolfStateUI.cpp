@@ -1133,18 +1133,9 @@ void GolfState::buildUI()
         auto miniBounds = mapEnt.getComponent<cro::Transform>().getWorldTransform() * mapEnt.getComponent<cro::Drawable2D>().getLocalBounds();
         auto targBounds = glm::inverse(e.getComponent<cro::Transform>().getWorldTransform()) * miniBounds;
         e.getComponent<cro::Drawable2D>().setCroppingArea(targBounds);
-        cropRect = targBounds;
     };
     mapEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
-    /*registerWindow([]()
-        {
-            if (ImGui::Begin("buns"))
-            {
-                ImGui::Text("Left: %3.3f, Bottom: %3.3f, Width: %3.3f, Height: %3.3f", cropRect.left, cropRect.bottom, cropRect.width, cropRect.height);
-            }
-            ImGui::End();
-        });*/
 
 
     //green close up view

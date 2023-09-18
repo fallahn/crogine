@@ -209,9 +209,11 @@ void ClientCollisionSystem::process(float)
             {
                 notify(CollisionEvent::Begin, position);
 
+                //really we only want to do this if the lie is 'buried' however
+                //it's not been updated from the servr yet...
                 if (collider.terrain == TerrainID::Bunker)
                 {
-                    entity.getComponent<cro::Transform>().setOrigin({ 0.f, Ball::Radius * 1.5f, 0.f });
+                    entity.getComponent<cro::Transform>().setOrigin({ 0.f, Ball::Radius * 1.2f, 0.f });
                 }
             }
             else if(collider.terrain == TerrainID::Hole
