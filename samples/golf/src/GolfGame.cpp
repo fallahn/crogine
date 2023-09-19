@@ -628,6 +628,46 @@ bool GolfGame::initialise()
             cro::Console::print("League tables are reset");
         });
 
+    cro::Console::addConvar("shuffle_music", "false", "If true then custom music playlists will be shuffled when loaded.");
+
+    registerCommand("cl_shuffle_music",
+        [&](const std::string& param)
+        {
+            if (cro::Util::String::toLower(param) == "true")
+            {
+                cro::Console::setConvarValue("shuffle_music", true);
+                cro::Console::print("cl_shuffle_music set to TRUE");
+
+                m_sharedData.m3uPlaylist->shuffle();
+            }
+            else if (cro::Util::String::toLower(param) == "false")
+            {
+                cro::Console::setConvarValue("shuffle_music", false);
+                cro::Console::print("cl_shuffle_music set to FALSE");
+            }
+            else if (param.empty())
+            {
+                bool b = cro::Console::getConvarValue<bool>("shuffle_music");
+                if (b)
+                {
+                    cro::Console::print("cl_shuffle_music set to TRUE");
+                }
+                else
+                {
+                    cro::Console::print("cl_shuffle_music set to FALSE");
+                }
+            }
+            else
+            {
+                cro::Console::print(param + ": invalid argument. Set to TRUE or FALSE");
+            }
+        });
+
+    if (cro::Console::getConvarValue<bool>("shuffle_music"))
+    {
+        m_sharedData.m3uPlaylist->shuffle();
+    }
+
     getWindow().setLoadingScreen<LoadingScreen>(m_sharedData);
     getWindow().setTitle("Super Video Golf - " + StringVer);
     getWindow().setIcon(icon);

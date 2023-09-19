@@ -81,7 +81,7 @@ namespace cro
         \param name Name of the variable as it appears in the console.
         \param value the default value of the variable
         \param helpText Optional string describing the variable which appears the console
-        when search for variable names.
+        when searching for variable names.
         */
         static void addConvar(const std::string& name, const std::string& value, const std::string& helpText = "");
 
@@ -96,7 +96,11 @@ namespace cro
             if (auto* obj = getConvars().findObjectWithName(convar); obj != nullptr)
             {
                 CRO_ASSERT(obj->findProperty("value"), "");
-                return obj->findProperty("value")->getValue<T>();
+                if (auto val = obj->findProperty("value"); val != nullptr)
+                {
+                    return val->getValue<T>();
+                }
+                return T();
             }
             LogE << convar << ": variable doesn't exist" << std::endl;
             return T();
@@ -115,8 +119,11 @@ namespace cro
             if (auto* obj = getConvars().findObjectWithName(convar); obj != nullptr)
             {
                 CRO_ASSERT(obj->findProperty("value"), "");
-                obj->findProperty("value")->setValue(value);
-                finalise(); //saves convar file.
+                if (auto val = obj->findProperty("value"); val != nullptr)
+                {
+                    val->setValue(value);
+                    finalise(); //saves convar file.
+                }
                 return;
             }
             LogE << convar << ": variable doesn't exist" << std::endl;
