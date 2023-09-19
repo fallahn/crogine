@@ -75,9 +75,6 @@ void CameraSystem::process(float)
 
     for (auto entity : entities)
     {
-        //TODO could dirty flag optimise as updating the frustum
-        //requires 6(!!) sqrts
-
         auto& camera = entity.getComponent<Camera>();
 
         if (camera.active)
