@@ -254,8 +254,10 @@ void Camera::updateMatrices(const Transform& tx, float level)
     //where clip level may change, but the camera transform
     //is not marked dirty
 
-    if (tx.getDirty()
-        || m_dirtyTx)
+    //TODO this needs to be updated as soon as possible else coordsToPixel uses an out of date matrix
+
+    /*if (tx.getDirty()
+        || m_dirtyTx)*/
     {
         auto& finalPass = m_passes[Camera::Pass::Final];
         auto& reflectionPass = m_passes[Camera::Pass::Reflection];
