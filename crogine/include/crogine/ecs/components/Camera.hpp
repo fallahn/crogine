@@ -603,6 +603,8 @@ namespace cro
         std::vector<glm::mat4> m_shadowProjectionMatrices;
         float m_shadowExpansion;
         std::vector<float> m_splitDistances;
+
+        bool m_dirtyTx;
     };
 }
 

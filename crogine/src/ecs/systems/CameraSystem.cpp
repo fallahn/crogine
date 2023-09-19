@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2021
+Matt Marchant 2020 - 2023
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -130,6 +130,12 @@ void CameraSystem::onEntityAdded(Entity entity)
     {
         entity.getComponent<cro::Camera>().m_drawListIndex = m_nextDrawlistIndex++;
     }
+
+    entity.getComponent<cro::Transform>().addCallback(
+        [entity]() mutable
+        {
+            entity.getComponent<cro::Camera>().m_dirtyTx = true;
+        });
 }
 
 void CameraSystem::onEntityRemoved(Entity entity)

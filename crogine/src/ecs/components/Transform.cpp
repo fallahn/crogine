@@ -46,7 +46,7 @@ Transform::Transform()
     m_transform             (1.f),
     m_parent                (nullptr),
     m_depth                 (0),
-    m_dirtyFlags            (0),
+    m_dirtyFlags            (Flags::Tx),
     m_attachmentTransform   (1.f)
 {
 
@@ -60,7 +60,7 @@ Transform::Transform(Transform&& other) noexcept
     m_transform             (1.f),
     m_parent                (nullptr),
     m_depth                 (0),
-    m_dirtyFlags            (0),
+    m_dirtyFlags            (Flags::Tx),
     m_attachmentTransform   (1.f)
 {
     CRO_ASSERT(other.m_parent != this, "Invalid assignment");
