@@ -61,7 +61,7 @@ void CameraSystem::handleMessage(const Message& msg)
                 if (camera.resizeCallback)
                 {
                     camera.resizeCallback(camera);
-                    camera.active = true;
+                    //camera.active = true; //don't do this, if there are a lot of cameras active at once it utterly kills perf
                 }
                 resizeGBuffer(entity);
             }

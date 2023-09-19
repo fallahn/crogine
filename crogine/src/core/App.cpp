@@ -84,6 +84,7 @@ namespace
     //back as the underlying SDL timer only
     //supports milliseconds
     constexpr float frameTime = 1.f / 60.f;
+    float timeSinceLastUpdate = 0.f;
 
 #include "../detail/DefaultIcon.inl"
 
@@ -395,8 +396,6 @@ void App::run()
         Logger::log("App initialise() returned false.", Logger::Type::Error, Logger::Output::All);
     }
 
-    float timeSinceLastUpdate = 0.f;
-
     while (m_running)
     {
         timeSinceLastUpdate += frameClock.restart();
@@ -412,7 +411,7 @@ void App::run()
 
             simulate(frameTime);
         }
-        //DPRINT("Frame time", std::to_string(timeSinceLastUpdate.asMilliseconds()));
+
         doImGui();
 
         ImGui::Render();
@@ -469,6 +468,7 @@ void App::resetFrameTime()
 {
     CRO_ASSERT(m_frameClock, "App not initialised");
     m_frameClock->restart();
+    timeSinceLastUpdate = 0.f;
 }
 
 App& App::getInstance()
@@ -726,7 +726,7 @@ void App::doImGui()
 
     //show other windows (console etc)
     Console::draw();
-
+    
     for (const auto& f : m_guiWindows)
     {
         f.first();
