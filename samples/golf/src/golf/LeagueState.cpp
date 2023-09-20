@@ -297,7 +297,10 @@ void LeagueState::buildScene()
                 m_scene.setSystemActive<cro::AudioPlayerSystem>(true);
                 m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
 
-                Social::setStatus(Social::InfoID::Menu, { "Browsing League Table" });
+                if (m_sharedData.baseState == StateID::Clubhouse)
+                {
+                    Social::setStatus(Social::InfoID::Menu, { "Browsing League Table" });
+                }
             }
             break;
         case RootCallbackData::FadeOut:
@@ -309,7 +312,10 @@ void LeagueState::buildScene()
 
                 state = RootCallbackData::FadeIn;
 
-                Social::setStatus(Social::InfoID::Menu, { "Clubhouse" });
+                if (m_sharedData.baseState == StateID::Clubhouse)
+                {
+                    Social::setStatus(Social::InfoID::Menu, { "Clubhouse" });
+                }
             }
             break;
         }
