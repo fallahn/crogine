@@ -2176,7 +2176,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Lobby);
     entity.getComponent<cro::UIInput>().setSelectionIndex(LobbyRulesB);
     entity.getComponent<cro::UIInput>().setNextIndex(LobbyCourseB, LobbyStart);
-    entity.getComponent<cro::UIInput>().setPrevIndex(LobbyCourseB, InfoLeaderboards); //TODO this should be scorecard if it was created
+    entity.getComponent<cro::UIInput>().setPrevIndex(LobbyCourseB, InfoLeague);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = m_courseSelectCallbacks.selectHighlight;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = m_courseSelectCallbacks.unselectHighlight;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = m_uiScene.getSystem<cro::UISystem>()->addCallback(
@@ -2247,13 +2247,13 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheetV2.getSprite("leaderboard_highlight");
     entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
-    entity.addComponent<UIElement>().absolutePosition = { 13.f, 17.f };
+    entity.addComponent<UIElement>().absolutePosition = { 3.f, 17.f };
     entity.getComponent<UIElement>().depth = 0.1f;
     entity.addComponent<cro::UIInput>().area = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Lobby);
     entity.getComponent<cro::UIInput>().setSelectionIndex(InfoLeaderboards);
-    entity.getComponent<cro::UIInput>().setNextIndex(LobbyCourseB, LobbyCourseB); //TODO this should be score card if it was created
-    entity.getComponent<cro::UIInput>().setPrevIndex(LobbyCourseB, LobbyCourseB); // and this
+    entity.getComponent<cro::UIInput>().setNextIndex(InfoLeague, LobbyCourseB);
+    entity.getComponent<cro::UIInput>().setPrevIndex(LobbyCourseB, LobbyCourseB);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = m_courseSelectCallbacks.selectHighlight;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = m_courseSelectCallbacks.unselectHighlight;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = m_uiScene.getSystem<cro::UISystem>()->addCallback(
@@ -2274,7 +2274,41 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function = infoButtonEnable;
     infoBgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-    m_lobbyButtonContext.infoLeaderboard = entity;
+    
+    
+    
+    
+    //button to show league
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheetV2.getSprite("league_highlight");
+    entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+    entity.addComponent<UIElement>().absolutePosition = { 92.f, 17.f };
+    entity.getComponent<UIElement>().depth = 0.1f;
+    entity.addComponent<cro::UIInput>().area = entity.getComponent<cro::Sprite>().getTextureBounds();
+    entity.getComponent<cro::UIInput>().setGroup(MenuID::Lobby);
+    entity.getComponent<cro::UIInput>().setSelectionIndex(InfoLeague);
+    entity.getComponent<cro::UIInput>().setNextIndex(LobbyRulesB, LobbyRulesB);
+    entity.getComponent<cro::UIInput>().setPrevIndex(InfoLeaderboards, LobbyCourseB);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = m_courseSelectCallbacks.selectHighlight;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = m_courseSelectCallbacks.unselectHighlight;
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = m_uiScene.getSystem<cro::UISystem>()->addCallback(
+        [&](cro::Entity, const cro::ButtonEvent& evt)
+        {
+            if (activated(evt))
+            {
+                requestStackPush(StateID::League);
+                m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+            }
+        }
+    );
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement;
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function = infoButtonEnable;
+    infoBgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_lobbyButtonContext.infoLeague = entity;
 
     //banner
     entity = m_uiScene.createEntity();
@@ -4654,7 +4688,7 @@ void MenuState::createPreviousScoreCard()
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("score_button");
-    entity.addComponent<UIElement>().absolutePosition = { 137.f, 19.f };
+    entity.addComponent<UIElement>().absolutePosition = { 147.f, 19.f };
     entity.getComponent<UIElement>().depth = 0.1f;
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement;
     m_lobbyWindowEntities[LobbyEntityID::Info].getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -4665,13 +4699,13 @@ void MenuState::createPreviousScoreCard()
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("score_button_highlight");
     entity.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
-    entity.addComponent<UIElement>().absolutePosition = { 135.f, 17.f };
+    entity.addComponent<UIElement>().absolutePosition = { 145.f, 17.f };
     entity.getComponent<UIElement>().depth = 0.1f;
     entity.addComponent<cro::UIInput>().area = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Lobby);
     entity.getComponent<cro::UIInput>().setSelectionIndex(InfoScorecard);
-    entity.getComponent<cro::UIInput>().setNextIndex(InfoLeaderboards, LobbyRulesB);
-    entity.getComponent<cro::UIInput>().setPrevIndex(InfoLeaderboards, LobbyStart);
+    entity.getComponent<cro::UIInput>().setNextIndex(InfoLeague, LobbyRulesB);
+    entity.getComponent<cro::UIInput>().setPrevIndex(InfoLeague, LobbyStart);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = m_courseSelectCallbacks.selectHighlight;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = m_courseSelectCallbacks.unselectHighlight;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = m_uiScene.getSystem<cro::UISystem>()->addCallback(
@@ -4780,15 +4814,15 @@ void MenuState::refreshLobbyButtons()
         m_lobbyButtonContext.lobbyRulesB.getComponent<cro::UIInput>().setNextIndex(LobbyCourseB, LobbyStart);
         m_lobbyButtonContext.lobbyRulesB.getComponent<cro::UIInput>().setPrevIndex(LobbyCourseB, InfoScorecard);
 
-        m_lobbyButtonContext.infoLeaderboard.getComponent<cro::UIInput>().setNextIndex(InfoScorecard, LobbyCourseB);
-        m_lobbyButtonContext.infoLeaderboard.getComponent<cro::UIInput>().setPrevIndex(InfoScorecard, LobbyQuit);
+        m_lobbyButtonContext.infoLeague.getComponent<cro::UIInput>().setNextIndex(InfoScorecard, LobbyRulesB);
+        m_lobbyButtonContext.infoLeague.getComponent<cro::UIInput>().setPrevIndex(InfoLeaderboards, LobbyQuit);
     }
     else
     {
         m_lobbyButtonContext.lobbyRulesB.getComponent<cro::UIInput>().setNextIndex(LobbyCourseB, LobbyStart);
-        m_lobbyButtonContext.lobbyRulesB.getComponent<cro::UIInput>().setPrevIndex(LobbyCourseB, LobbyStart);
+        m_lobbyButtonContext.lobbyRulesB.getComponent<cro::UIInput>().setPrevIndex(LobbyCourseB, InfoLeague);
 
-        m_lobbyButtonContext.infoLeaderboard.getComponent<cro::UIInput>().setNextIndex(LobbyRulesB, LobbyCourseB);
-        m_lobbyButtonContext.infoLeaderboard.getComponent<cro::UIInput>().setPrevIndex(LobbyRulesB, LobbyQuit);
+        m_lobbyButtonContext.infoLeague.getComponent<cro::UIInput>().setNextIndex(LobbyRulesB, LobbyRulesB);
+        m_lobbyButtonContext.infoLeague.getComponent<cro::UIInput>().setPrevIndex(InfoLeaderboards, LobbyQuit);
     }
 }

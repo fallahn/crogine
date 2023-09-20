@@ -87,5 +87,6 @@ enum MenuIndex
     RulesClubset,
 
     InfoLeaderboards,
+    InfoLeague,
     InfoScorecard,
 };

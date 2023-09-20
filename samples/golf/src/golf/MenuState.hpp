@@ -326,7 +326,7 @@ private:
     //user is hosting or not
     struct LobbyButtonContext final
     {
-        cro::Entity infoLeaderboard;
+        cro::Entity infoLeague;
         cro::Entity lobbyCourseA;
         cro::Entity lobbyInfoA;
         cro::Entity lobbyInfoB;

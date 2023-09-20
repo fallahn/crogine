@@ -80,13 +80,14 @@ namespace
         }
     }
 
-    constexpr std::size_t SkillRoof = 10; //after this many seasons the skills stop getting better - just shift around
+    constexpr std::int32_t SkillRoof = 10; //after this many increments the skills stop getting better - just shift around
 }
 
 League::League()
     : m_playerScore     (0),
     m_currentIteration  (0),
-    m_currentSeason     (1)
+    m_currentSeason     (1),
+    m_increaseCount     (0)
 {
     read();
 }
@@ -114,6 +115,7 @@ void League::reset()
     m_currentIteration = 0;
     m_currentSeason = 1;
     m_playerScore = 0;
+    m_increaseCount = 0;
     write();
 }
 
@@ -279,8 +281,8 @@ void League::iterate(const std::array<std::int32_t, 18>& parVals, const std::vec
 
 
         //evaluate all players and adjust skills if we came in the top 2
-        //TODO count the number of incrments as set the ceiling at SkillRoof
-        if (playerPos < 2)
+        if (playerPos < 2
+            && m_increaseCount < SkillRoof)
         {
             //increase ALL player quality, but show a bigger improvement near the bottom
             for (auto i = 0u; i < PlayerCount; ++i)
@@ -308,6 +310,7 @@ void League::iterate(const std::array<std::int32_t, 18>& parVals, const std::vec
                 }
                 m_players[i].outlier = outlier;
             }
+            m_increaseCount++;
         }
         else
         {
@@ -362,10 +365,12 @@ void League::read()
         file.file->read(file.file, &m_currentIteration, sizeof(std::int32_t), 1);
         file.file->read(file.file, &m_currentSeason, sizeof(std::int32_t), 1);
         file.file->read(file.file, &m_playerScore, sizeof(std::int32_t), 1);
+        //TODO read skill increase count
         file.file->read(file.file, m_players.data(), sizeof(LeaguePlayer), PlayerCount);
 
+
         //validate the loaded data and clamp to sane values
-        m_currentIteration %= MaxIterations;// std::clamp(m_currentIteration, 0, MaxIterations - 1);
+        m_currentIteration %= MaxIterations;
 
         static constexpr std::int32_t MaxScore = 5 * 18 * MaxIterations;
 
@@ -398,6 +403,9 @@ void League::write()
         file.file->write(file.file, &m_currentIteration, sizeof(std::int32_t), 1);
         file.file->write(file.file, &m_currentSeason, sizeof(std::int32_t), 1);
         file.file->write(file.file, &m_playerScore, sizeof(std::int32_t), 1);
+
+        //TODO write skill increase count
+
         file.file->write(file.file, m_players.data(), sizeof(LeaguePlayer), PlayerCount);
     }
     else
