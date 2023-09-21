@@ -4812,7 +4812,7 @@ void MenuState::refreshLobbyButtons()
     if (m_lobbyButtonContext.hasScoreCard)
     {
         m_lobbyButtonContext.lobbyRulesB.getComponent<cro::UIInput>().setNextIndex(LobbyCourseB, LobbyStart);
-        m_lobbyButtonContext.lobbyRulesB.getComponent<cro::UIInput>().setPrevIndex(LobbyCourseB, InfoScorecard);
+        m_lobbyButtonContext.lobbyRulesB.getComponent<cro::UIInput>().setPrevIndex(LobbyCourseB, InfoLeague);
 
         m_lobbyButtonContext.infoLeague.getComponent<cro::UIInput>().setNextIndex(InfoScorecard, LobbyRulesB);
         m_lobbyButtonContext.infoLeague.getComponent<cro::UIInput>().setPrevIndex(InfoLeaderboards, LobbyQuit);

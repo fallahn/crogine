@@ -4262,7 +4262,7 @@ void GolfState::updateLeague()
             {
                 m_league.iterate(parVals, player.holeScores, m_holeData.size());
 #ifdef USE_GNS
-                logGameScores(parVals, player.holeScores, m_holeData.size());
+                //logGameScores(parVals, player.holeScores, m_holeData.size());
 #endif
                 break;
             }
