@@ -982,10 +982,10 @@ void GolfState::handleMessage(const cro::Message& msg)
                     msg3->type = (power > PowerShot && club < ClubID::NineIron) ? GolfEvent::PowerShot : GolfEvent::NiceShot;
                     msg3->position = m_currentPlayer.position;
 
-                    if (msg3->type == GolfEvent::PowerShot)
+                    /*if (msg3->type == GolfEvent::PowerShot)
                     {
                         m_activeAvatar->ballModel.getComponent<cro::ParticleEmitter>().start();
-                    }
+                    }*/
 
                     //award more XP for aiming straight
                     float dirAmount = /*cro::Util::Easing::easeOutExpo*/((m_inputParser.getMaxRotation() - std::abs(m_inputParser.getRotation())) / m_inputParser.getMaxRotation());
@@ -4800,7 +4800,8 @@ void GolfState::spawnBall(const ActorInfo& info)
     entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_ballResources.ballMeshID), material);
     entity.getComponent<cro::Model>().setRenderFlags(~RenderFlags::MiniMap);
     
-    entity.addComponent<cro::ParticleEmitter>().settings.loadFromFile("assets/golf/particles/rockit.cps", m_resources.textures);
+    //revisit this if we can interpolate spawn positions
+    //entity.addComponent<cro::ParticleEmitter>().settings.loadFromFile("assets/golf/particles/rockit.cps", m_resources.textures);
 
     entity.addComponent<cro::Callback>().function =
         [](cro::Entity e, float dt)
