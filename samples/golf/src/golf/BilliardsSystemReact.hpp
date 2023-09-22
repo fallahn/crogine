@@ -43,9 +43,9 @@ source distribution.
 #include <vector>
 
 //this needs to be non-resizable as the physics world keeps references to motion states
-struct BilliardBall final : public btMotionState, public cro::Detail::NonResizeable
+struct BilliardBallReact final : public btMotionState, public cro::Detail::NonResizeable
 {
-    BilliardBall() : m_physicsBody(nullptr) {}
+    BilliardBallReact() : m_physicsBody(nullptr) {}
     void getWorldTransform(btTransform& worldTrans) const override;
     void setWorldTransform(const btTransform& worldTrans) override;
     glm::vec3 getVelocity() const;
@@ -84,25 +84,25 @@ private:
     std::int32_t m_cushionContact = -1;
     std::int32_t m_prevCushionContact = -1;
 
-    friend class BilliardsSystem;
+    friend class BilliardsSystemReact;
     friend class BilliardsCollisionSystem;
 };
 
-using BPhysBall = BilliardBall;
+using BPhysBall = BilliardBallReact;
 
 class BulletDebug;
-class BilliardsSystem final : public cro::System
+class BilliardsSystemReact final : public cro::System
 {
 public:
-    explicit BilliardsSystem(cro::MessageBus&);
-    BilliardsSystem(cro::MessageBus&, BulletDebug&);
-    ~BilliardsSystem();
+    explicit BilliardsSystemReact(cro::MessageBus&);
+    BilliardsSystemReact(cro::MessageBus&, BulletDebug&);
+    ~BilliardsSystemReact();
 
-    BilliardsSystem(const BilliardsSystem&) = delete;
-    BilliardsSystem(BilliardsSystem&&) = delete;
+    BilliardsSystemReact(const BilliardsSystemReact&) = delete;
+    BilliardsSystemReact(BilliardsSystemReact&&) = delete;
 
-    BilliardsSystem& operator = (const BilliardsSystem&) = delete;
-    BilliardsSystem& operator = (BilliardsSystem&&) = delete;
+    BilliardsSystemReact& operator = (const BilliardsSystemReact&) = delete;
+    BilliardsSystemReact& operator = (BilliardsSystemReact&&) = delete;
 
     void process(float) override;
     void initTable(const TableData&);
@@ -175,4 +175,4 @@ private:
     void onEntityRemoved(cro::Entity) override;
 };
 
-using BPhysSystem = BilliardsSystem;
+using BPhysSystem = BilliardsSystemReact;

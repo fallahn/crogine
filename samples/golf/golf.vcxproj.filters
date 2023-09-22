@@ -393,6 +393,12 @@
     <ClCompile Include="src\golf\GolfStateCameras.cpp">
       <Filter>Source Files\golf\client\states</Filter>
     </ClCompile>
+    <ClCompile Include="src\golf\BilliardsSystemReact.cpp">
+      <Filter>Source Files\golf\server\systems</Filter>
+    </ClCompile>
+    <ClCompile Include="src\golf\TableData.cpp">
+      <Filter>Source Files\golf\shared</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ErrorCheck.hpp">
@@ -790,6 +796,12 @@
     </ClInclude>
     <ClInclude Include="src\golf\LeagueState.hpp">
       <Filter>Header Files\golf\client\states</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\BilliardsSystemReact.hpp">
+      <Filter>Header Files\golf\server\systems</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\TableData.hpp">
+      <Filter>Header Files\golf\shared</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

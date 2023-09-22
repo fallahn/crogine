@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022
+Matt Marchant 2022 - 2023
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -27,7 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#include "BilliardsSystem.hpp"
+#include "BilliardsSystemReact.hpp"
 #include "DebugDraw.hpp"
 #include "server/ServerMessages.hpp"
 
@@ -44,13 +44,13 @@ namespace
 
 }
 
-void BilliardBall::getWorldTransform(btTransform& dest) const
+void BilliardBallReact::getWorldTransform(btTransform& dest) const
 {
     const auto& tx = m_parent.getComponent<cro::Transform>();
     dest.setFromOpenGLMatrix(&tx.getWorldTransform()[0][0]);
 }
 
-void BilliardBall::setWorldTransform(const btTransform& src)
+void BilliardBallReact::setWorldTransform(const btTransform& src)
 {
     static std::array<float, 16> matrixBuffer = {};
 
@@ -64,21 +64,21 @@ void BilliardBall::setWorldTransform(const btTransform& src)
     hadUpdate = true;
 }
 
-glm::vec3 BilliardBall::getVelocity() const
+glm::vec3 BilliardBallReact::getVelocity() const
 {
     return btToGlm(m_physicsBody->getLinearVelocity());
 }
 
-BilliardsSystem::BilliardsSystem(cro::MessageBus& mb)
-    : cro::System(mb, typeid(BilliardsSystem)),
+BilliardsSystemReact::BilliardsSystemReact(cro::MessageBus& mb)
+    : cro::System(mb, typeid(BilliardsSystemReact)),
     m_awakeCount(0),
     m_shotActive(false),
     m_cueball   (nullptr)
 {
-    requireComponent<BilliardBall>();
+    requireComponent<BilliardBallReact>();
     requireComponent<cro::Transform>();
 
-    m_ballShape = std::make_unique<btSphereShape>(BilliardBall::Radius);
+    m_ballShape = std::make_unique<btSphereShape>(BilliardBallReact::Radius);
 
     //note these have to be created in the right order so that destruction
     //is properly done in reverse...
@@ -94,8 +94,8 @@ BilliardsSystem::BilliardsSystem(cro::MessageBus& mb)
     m_collisionWorld->setGravity({ 0.f, -9.f, 0.f });
 }
 
-BilliardsSystem::BilliardsSystem(cro::MessageBus& mb, BulletDebug& dd)
-    : BilliardsSystem(mb)
+BilliardsSystemReact::BilliardsSystemReact(cro::MessageBus& mb, BulletDebug& dd)
+    : BilliardsSystemReact(mb)
 {
 #ifdef CRO_DEBUG_
     m_collisionWorld->setDebugDrawer(&dd);
@@ -103,7 +103,7 @@ BilliardsSystem::BilliardsSystem(cro::MessageBus& mb, BulletDebug& dd)
 
 }
 
-BilliardsSystem::~BilliardsSystem()
+BilliardsSystemReact::~BilliardsSystemReact()
 {
     for (auto& o : m_ballObjects)
     {
@@ -117,7 +117,7 @@ BilliardsSystem::~BilliardsSystem()
 }
 
 //public
-void BilliardsSystem::process(float dt)
+void BilliardsSystemReact::process(float dt)
 {
     /*
     Increasing the number of steps means there's a chance of
@@ -140,7 +140,7 @@ void BilliardsSystem::process(float dt)
     //else we can do it once and accept the results are one frame late
     for (auto entity : getEntities())
     {
-        auto& ball = entity.getComponent<BilliardBall>();
+        auto& ball = entity.getComponent<BilliardBallReact>();
         if (ball.m_prevBallContact != ball.m_ballContact)
         {
             if (ball.m_ballContact == -1)
@@ -196,7 +196,7 @@ void BilliardsSystem::process(float dt)
     m_awakeCount = awakeCount;
 }
 
-void BilliardsSystem::initTable(const TableData& tableData)
+void BilliardsSystemReact::initTable(const TableData& tableData)
 {
     m_spawnArea = tableData.spawnArea;
 
@@ -306,7 +306,7 @@ void BilliardsSystem::initTable(const TableData& tableData)
     }
 }
 
-void BilliardsSystem::applyImpulse(glm::vec3 dir, glm::vec3 offset)
+void BilliardsSystemReact::applyImpulse(glm::vec3 dir, glm::vec3 offset)
 {
     if (m_cueball)
     {
@@ -319,7 +319,7 @@ void BilliardsSystem::applyImpulse(glm::vec3 dir, glm::vec3 offset)
     }
 }
 
-glm::vec3 BilliardsSystem::getCueballPosition() const
+glm::vec3 BilliardsSystemReact::getCueballPosition() const
 {
     if (m_cueball)
     {
@@ -328,14 +328,14 @@ glm::vec3 BilliardsSystem::getCueballPosition() const
     return glm::vec3(0.f);
 }
 
-bool BilliardsSystem::isValidSpawnPosition(glm::vec3 position) const
+bool BilliardsSystemReact::isValidSpawnPosition(glm::vec3 position) const
 {
     glm::vec2 ballPos(position.x, -position.z);
     return m_spawnArea.contains(ballPos);
 }
 
 //private
-btRigidBody::btRigidBodyConstructionInfo BilliardsSystem::createBodyDef(std::int32_t collisionID, float mass, btCollisionShape* shape, btMotionState* motionState)
+btRigidBody::btRigidBodyConstructionInfo BilliardsSystemReact::createBodyDef(std::int32_t collisionID, float mass, btCollisionShape* shape, btMotionState* motionState)
 {
     btVector3 inertia(0.f, 0.f, 0.f);
     if (mass > 0.f)
@@ -371,7 +371,7 @@ btRigidBody::btRigidBodyConstructionInfo BilliardsSystem::createBodyDef(std::int
     return info;
 }
 
-void BilliardsSystem::doBallCollision() const
+void BilliardsSystemReact::doBallCollision() const
 {
     auto manifoldCount = m_collisionDispatcher->getNumManifolds();
     for (auto i = 0; i < manifoldCount; ++i)
@@ -386,8 +386,8 @@ void BilliardsSystem::doBallCollision() const
             auto contactCount = manifold->getNumContacts();
             for (auto j = 0; j < contactCount; ++j)
             {
-                auto ballA = static_cast<BilliardBall*>(body0->getUserPointer());
-                auto ballB = static_cast<BilliardBall*>(body1->getUserPointer());
+                auto ballA = static_cast<BilliardBallReact*>(body0->getUserPointer());
+                auto ballB = static_cast<BilliardBallReact*>(body1->getUserPointer());
 
                 //don't overwrite any existing collision this frame
                 ballA->m_ballContact = ballA->m_ballContact == -1 ? ballB->id : ballA->m_ballContact;
@@ -397,9 +397,9 @@ void BilliardsSystem::doBallCollision() const
     }
 }
 
-void BilliardsSystem::doPocketCollision(cro::Entity entity) const
+void BilliardsSystemReact::doPocketCollision(cro::Entity entity) const
 {
-    auto& ball = entity.getComponent<BilliardBall>();
+    auto& ball = entity.getComponent<BilliardBallReact>();
     if (ball.m_physicsBody->isActive())
     {
         const auto position = entity.getComponent<cro::Transform>().getPosition();
@@ -470,9 +470,9 @@ void BilliardsSystem::doPocketCollision(cro::Entity entity) const
     }
 }
 
-void BilliardsSystem::onEntityAdded(cro::Entity entity)
+void BilliardsSystemReact::onEntityAdded(cro::Entity entity)
 {
-    auto& ball = entity.getComponent<BilliardBall>();
+    auto& ball = entity.getComponent<BilliardBallReact>();
     ball.m_parent = entity;
 
     //set a random orientation
@@ -481,12 +481,12 @@ void BilliardsSystem::onEntityAdded(cro::Entity entity)
     btTransform transform;
     transform.setFromOpenGLMatrix(&entity.getComponent<cro::Transform>().getWorldTransform()[0][0]);
     
-    auto& body = m_ballObjects.emplace_back(std::make_unique<btRigidBody>(createBodyDef(CollisionID::Ball, BilliardBall::Mass, m_ballShape.get(), &ball)));
+    auto& body = m_ballObjects.emplace_back(std::make_unique<btRigidBody>(createBodyDef(CollisionID::Ball, BilliardBallReact::Mass, m_ballShape.get(), &ball)));
     body->setWorldTransform(transform);
     body->setUserIndex(CollisionID::Ball);
     body->setUserPointer(&ball);
-    body->setCcdMotionThreshold(BilliardBall::Radius * 0.5f);
-    body->setCcdSweptSphereRadius(BilliardBall::Radius);
+    body->setCcdMotionThreshold(BilliardBallReact::Radius * 0.5f);
+    body->setCcdSweptSphereRadius(BilliardBallReact::Radius);
     
     body->setAnisotropicFriction(m_ballShape->getAnisotropicRollingFrictionDirection(), btCollisionObject::CF_ANISOTROPIC_ROLLING_FRICTION);
 
@@ -500,9 +500,9 @@ void BilliardsSystem::onEntityAdded(cro::Entity entity)
     }
 }
 
-void BilliardsSystem::onEntityRemoved(cro::Entity entity)
+void BilliardsSystemReact::onEntityRemoved(cro::Entity entity)
 {
-    const auto& ball = entity.getComponent<BilliardBall>();
+    const auto& ball = entity.getComponent<BilliardBallReact>();
 
     auto* body = ball.m_physicsBody;
     body->setUserPointer(nullptr);

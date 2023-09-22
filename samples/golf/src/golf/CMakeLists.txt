@@ -9,6 +9,7 @@ set(GOLF_SRC
   ${PROJECT_DIR}/golf/BilliardsState.cpp
   ${PROJECT_DIR}/golf/BilliardsStateUI.cpp
   ${PROJECT_DIR}/golf/BilliardsSystem.cpp
+  ${PROJECT_DIR}/golf/BilliardsSystemReact.cpp
   ${PROJECT_DIR}/golf/CameraFollowSystem.cpp
   ${PROJECT_DIR}/golf/ClientCollisionSystem.cpp
   ${PROJECT_DIR}/golf/CloudSystem.cpp
@@ -76,6 +77,7 @@ set(GOLF_SRC
   ${PROJECT_DIR}/golf/StatsState.cpp
   ${PROJECT_DIR}/golf/StudioCameraSystem.cpp
   ${PROJECT_DIR}/golf/Swingput.cpp
+  ${PROJECT_DIR}/golf/TableData.cpp
   ${PROJECT_DIR}/golf/TerrainBuilder.cpp
   ${PROJECT_DIR}/golf/TerrainChunks.cpp
   ${PROJECT_DIR}/golf/TerrainDepthmap.cpp
