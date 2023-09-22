@@ -29,8 +29,11 @@ source distribution.
 
 #pragma once
 
-//#include "../BilliardsSystem.hpp"
+#ifdef CRO_DEBUG_
 #include "../BilliardsSystemReact.hpp"
+#else
+#include "../BilliardsSystem.hpp"
+#endif
 
 #include "ServerState.hpp"
 #include "ServerPacketData.hpp"

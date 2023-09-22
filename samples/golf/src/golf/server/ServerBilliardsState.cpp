@@ -290,8 +290,7 @@ void BilliardsState::initScene()
 {
     auto& mb = m_sharedData.messageBus;
     m_scene.addSystem<cro::CallbackSystem>(mb);
-    //m_scene.addSystem<BPhysSystem>(mb);
-    m_scene.addSystem<BilliardsSystemReact>(mb);
+    m_scene.addSystem<BPhysSystem>(mb);
 
     //add director based on rule set
     switch (m_tableData.rules)

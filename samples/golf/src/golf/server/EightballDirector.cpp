@@ -29,8 +29,11 @@ source distribution.
 
 #include "EightballDirector.hpp"
 #include "ServerMessages.hpp"
-//#include "../BilliardsSystem.hpp"
+#ifdef CRO_DEBUG_
 #include "../BilliardsSystemReact.hpp"
+#else
+#include "../BilliardsSystem.hpp"
+#endif
 
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/ecs/components/Callback.hpp>

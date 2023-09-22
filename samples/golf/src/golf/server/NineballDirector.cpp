@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022
+Matt Marchant 2022 - 2023
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -30,8 +30,11 @@ source distribution.
 #include "NineballDirector.hpp"
 #include "ServerMessages.hpp"
 
-//#include "../BilliardsSystem.hpp"
+#ifdef CRO_DEBUG_
 #include "../BilliardsSystemReact.hpp"
+#else
+#include "../BilliardsSystem.hpp"
+#endif
 
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/ecs/components/Callback.hpp>
