@@ -383,10 +383,12 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
             }
         });
 
-    registerCommand("let_me_fetch_my_shovel", [](const std::string&)
+#ifdef USE_GNS
+    registerCommand("restore_xp", [](const std::string&)
         {
-            //bunnage();
+            bunnage();
         });
+#endif
 
 #ifdef USE_WORKSHOP
     registerCommand("workshop",
@@ -902,6 +904,34 @@ void MenuState::handleMessage(const cro::Message& msg)
         if (data.type == Social::StatEvent::StatsReceived)
         {
             refreshCourseAchievements();
+        }
+        else if (data.type == Social::StatEvent::RequestRestart)
+        {
+            cro::Console::print("Quitting in...");
+            auto entity = m_uiScene.createEntity();
+            entity.addComponent<cro::Callback>().active = true;
+            entity.getComponent<cro::Callback>().setUserData<float>(0.f);
+            entity.getComponent<cro::Callback>().function =
+                [](cro::Entity e, float dt)
+            {
+                    static std::int32_t counter = 4;
+                    auto& ct = e.getComponent<cro::Callback>().getUserData<float>();
+                    ct -= dt;
+                    if (ct < 0)
+                    {
+                        counter--;
+                        ct += 1.f;
+
+                        if (counter == 0)
+                        {
+                            cro::App::quit();
+                        }
+                        else
+                        {
+                            cro::Console::print(std::to_string(counter));
+                        }
+                    }
+            };
         }
     }
 #endif
