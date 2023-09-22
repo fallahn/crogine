@@ -34,20 +34,8 @@ source distribution.
 #include <crogine/detail/glm/vec2.hpp>
 #include <crogine/detail/glm/vec3.hpp>
 
-#include <btBulletCollisionCommon.h>
-
 #include <vector>
 #include <array>
-
-static inline glm::vec3 btToGlm(btVector3 v)
-{
-    return { v.getX(), v.getY(), v.getZ() };
-}
-
-static inline btVector3 glmToBt(glm::vec3 v)
-{
-    return { v.x, v.y, v.z };
-}
 
 struct CollisionID final
 {

@@ -39,86 +39,106 @@ source distribution.
 #include <crogine/graphics/MeshBuilder.hpp>
 #include <crogine/util/Random.hpp>
 
+//TODO remove this
+#ifdef CRO_DEBUG_
+
 namespace
 {
+    static inline glm::vec3 rpToGlm(rp3d::Vector3 v)
+    {
+        return { v.x, v.y, v.z };
+    }
 
+    static inline glm::quat rpToGlm(rp3d::Quaternion q)
+    {
+        return { q.w, q.x, q.y, q.z };
+    }
+
+    static inline rp3d::Vector3 glmToRp(glm::vec3 v)
+    {
+        return { v.x, v.y, v.z };
+    }
+
+    static inline rp3d::Quaternion glmToRp(glm::quat q)
+    {
+        return { q.x,q.y,q.z,q.w };
+    }
 }
 
-void BilliardBallReact::getWorldTransform(btTransform& dest) const
-{
-    const auto& tx = m_parent.getComponent<cro::Transform>();
-    dest.setFromOpenGLMatrix(&tx.getWorldTransform()[0][0]);
-}
-
-void BilliardBallReact::setWorldTransform(const btTransform& src)
-{
-    static std::array<float, 16> matrixBuffer = {};
-
-    src.getOpenGLMatrix(matrixBuffer.data());
-    auto mat = glm::make_mat4(matrixBuffer.data());
-
-    auto& tx = m_parent.getComponent<cro::Transform>();
-    tx.setPosition(glm::vec3(mat[3]));
-    tx.setRotation(glm::quat_cast(mat));
-
-    hadUpdate = true;
-}
+//void BilliardBallReact::getWorldTransform(btTransform& dest) const
+//{
+//    const auto& tx = m_parent.getComponent<cro::Transform>();
+//    dest.setFromOpenGLMatrix(&tx.getWorldTransform()[0][0]);
+//}
+//
+//void BilliardBallReact::setWorldTransform(const btTransform& src)
+//{
+//    static std::array<float, 16> matrixBuffer = {};
+//
+//    src.getOpenGLMatrix(matrixBuffer.data());
+//    auto mat = glm::make_mat4(matrixBuffer.data());
+//
+//    auto& tx = m_parent.getComponent<cro::Transform>();
+//    tx.setPosition(glm::vec3(mat[3]));
+//    tx.setRotation(glm::quat_cast(mat));
+//
+//    hadUpdate = true;
+//}
 
 glm::vec3 BilliardBallReact::getVelocity() const
 {
-    return btToGlm(m_physicsBody->getLinearVelocity());
+    return rpToGlm(m_physicsBody->getLinearVelocity());
 }
+
+
 
 BilliardsSystemReact::BilliardsSystemReact(cro::MessageBus& mb)
     : cro::System(mb, typeid(BilliardsSystemReact)),
     m_awakeCount(0),
     m_shotActive(false),
+    m_physWorld (nullptr),
+    m_ballShape (nullptr),
     m_cueball   (nullptr)
 {
     requireComponent<BilliardBallReact>();
     requireComponent<cro::Transform>();
 
-    m_ballShape = std::make_unique<btSphereShape>(BilliardBallReact::Radius);
+    rp3d::PhysicsWorld::WorldSettings settings;
+    settings.gravity = { 0.f, -9.f, 0.f };
 
-    //note these have to be created in the right order so that destruction
-    //is properly done in reverse...
-    m_collisionConfiguration = std::make_unique<btDefaultCollisionConfiguration>();
-    m_collisionDispatcher = std::make_unique<btCollisionDispatcher>(m_collisionConfiguration.get());
-    m_broadphaseInterface = std::make_unique<btDbvtBroadphase>();
-    m_constraintSolver = std::make_unique<btSequentialImpulseConstraintSolver>();
-    m_collisionWorld = std::make_unique<btDiscreteDynamicsWorld>(
-        m_collisionDispatcher.get(),
-        m_broadphaseInterface.get(),
-        m_constraintSolver.get(),
-        m_collisionConfiguration.get());
-    m_collisionWorld->setGravity({ 0.f, -9.f, 0.f });
+    m_physWorld = m_physicsCommon.createPhysicsWorld(settings);
+    m_ballShape = m_physicsCommon.createSphereShape(BilliardBallReact::Radius);
 }
 
-BilliardsSystemReact::BilliardsSystemReact(cro::MessageBus& mb, BulletDebug& dd)
-    : BilliardsSystemReact(mb)
-{
-#ifdef CRO_DEBUG_
-    m_collisionWorld->setDebugDrawer(&dd);
-#endif
-
-}
+//BilliardsSystemReact::BilliardsSystemReact(cro::MessageBus& mb, BulletDebug& dd)
+//    : BilliardsSystemReact(mb)
+//{
+//#ifdef CRO_DEBUG_
+//    m_collisionWorld->setDebugDrawer(&dd);
+//#endif
+//
+//}
 
 BilliardsSystemReact::~BilliardsSystemReact()
 {
-    for (auto& o : m_ballObjects)
-    {
-        m_collisionWorld->removeCollisionObject(o.get());
-    }
+    //physics common does this for us :)
 
-    for (auto& o : m_tableObjects)
-    {
-        m_collisionWorld->removeCollisionObject(o.get());
-    }
+    //for (auto& o : m_ballObjects)
+    //{
+    //    m_collisionWorld->removeCollisionObject(o.get());
+    //}
+
+    //for (auto& o : m_tableObjects)
+    //{
+    //    m_collisionWorld->removeCollisionObject(o.get());
+    //}
 }
 
 //public
 void BilliardsSystemReact::process(float dt)
 {
+    m_physWorld->update(dt);
+
     /*
     Increasing the number of steps means there's a chance of
     missing contacts when only checking at game loop speed.
@@ -128,11 +148,8 @@ void BilliardsSystemReact::process(float dt)
     frequently called callback in which we can update the ball
     contact IDs
     */
-    m_collisionWorld->stepSimulation(dt, 10/*, 1.f/120.f*/);
+    //m_collisionWorld->stepSimulation(dt, 10/*, 1.f/120.f*/);
 
-#ifdef CRO_DEBUG_
-    m_collisionWorld->debugDrawWorld();
-#endif
 
     std::int32_t awakeCount = 0;
 
@@ -141,6 +158,15 @@ void BilliardsSystemReact::process(float dt)
     for (auto entity : getEntities())
     {
         auto& ball = entity.getComponent<BilliardBallReact>();
+
+        //apply position from physics body
+        auto& tx = entity.getComponent<cro::Transform>();
+        auto pos = rpToGlm(ball.m_physicsBody->getTransform().getPosition());
+        auto rot = rpToGlm(ball.m_physicsBody->getTransform().getOrientation());
+        tx.setPosition(pos);
+        tx.setRotation(rot);
+        ball.hadUpdate = true;
+
         if (ball.m_prevBallContact != ball.m_ballContact)
         {
             if (ball.m_ballContact == -1)
@@ -162,7 +188,7 @@ void BilliardsSystemReact::process(float dt)
         doPocketCollision(entity);
 
         //tidy up rogue balls
-        auto pos = entity.getComponent<cro::Transform>().getPosition();
+        pos = entity.getComponent<cro::Transform>().getPosition();
         if (pos.y < -2.f)
         {
             getScene()->destroyEntity(entity);
@@ -209,37 +235,62 @@ void BilliardsSystemReact::initTable(const TableData& tableData)
     }
 
 
-    btTransform transform;
-    transform.setIdentity();
+    rp3d::Transform transform = rp3d::Transform::identity();
+    auto* tableBody = m_physWorld->createRigidBody(transform);
+    tableBody->setType(rp3d::BodyType::STATIC);
+
+    auto* tableMesh = m_physicsCommon.createTriangleMesh();
 
     for (auto i = 0u; i < m_indexData.size(); ++i)
     {
-        btIndexedMesh tableMesh;
-        tableMesh.m_vertexBase = reinterpret_cast<std::uint8_t*>(m_vertexData.data());
-        tableMesh.m_numVertices = static_cast<std::int32_t>(meshData.vertexCount);
-        tableMesh.m_vertexStride = static_cast<std::int32_t>(meshData.vertexSize);
+        auto& triangleArray = m_tableVertices.emplace_back(std::make_unique<rp3d::TriangleVertexArray>(
+            static_cast<std::uint32_t>(meshData.vertexCount), m_vertexData.data(), static_cast<std::uint32_t>(meshData.vertexSize),
+            static_cast<std::uint32_t>(meshData.indexData[i].indexCount / 3), m_indexData[i].data(), static_cast<std::uint32_t>(3 * sizeof(std::uint32_t)),
+            rp3d::TriangleVertexArray::VertexDataType::VERTEX_FLOAT_TYPE,
+            rp3d::TriangleVertexArray::IndexDataType::INDEX_INTEGER_TYPE));
+        
+        tableMesh->addSubpart(triangleArray.get());
 
-        tableMesh.m_numTriangles = meshData.indexData[i].indexCount / 3;
-        tableMesh.m_triangleIndexBase = reinterpret_cast<std::uint8_t*>(m_indexData[i].data());
-        tableMesh.m_triangleIndexStride = 3 * sizeof(std::uint32_t);
+        //btIndexedMesh tableMesh;
+        //tableMesh.m_vertexBase = reinterpret_cast<std::uint8_t*>(m_vertexData.data());
+        //tableMesh.m_numVertices = static_cast<std::int32_t>(meshData.vertexCount);
+        //tableMesh.m_vertexStride = static_cast<std::int32_t>(meshData.vertexSize);
+
+        //tableMesh.m_numTriangles = meshData.indexData[i].indexCount / 3;
+        //tableMesh.m_triangleIndexBase = reinterpret_cast<std::uint8_t*>(m_indexData[i].data());
+        //tableMesh.m_triangleIndexStride = 3 * sizeof(std::uint32_t);
 
 
-        m_tableVertices.emplace_back(std::make_unique<btTriangleIndexVertexArray>())->addIndexedMesh(tableMesh);
-        m_tableShapes.emplace_back(std::make_unique<btBvhTriangleMeshShape>(m_tableVertices.back().get(), false));
+        //m_tableVertices.emplace_back(std::make_unique<btTriangleIndexVertexArray>())->addIndexedMesh(tableMesh);
+        //m_tableShapes.emplace_back(std::make_unique<btBvhTriangleMeshShape>(m_tableVertices.back().get(), false));
 
-        auto& body = m_tableObjects.emplace_back(std::make_unique<btRigidBody>(createBodyDef(CollisionID::Cushion, 0.f, m_tableShapes.back().get())));
-        body->setWorldTransform(transform);
-        m_collisionWorld->addRigidBody(body.get(), (1<< CollisionID::Cushion), (1 << CollisionID::Ball));
+        //auto& body = m_tableObjects.emplace_back(std::make_unique<btRigidBody>(createBodyDef(CollisionID::Cushion, 0.f, m_tableShapes.back().get())));
+        //body->setWorldTransform(transform);
+        //m_collisionWorld->addRigidBody(body.get(), (1<< CollisionID::Cushion), (1 << CollisionID::Ball));
     }
+    auto* meshShape = m_physicsCommon.createConcaveMeshShape(tableMesh);
+    auto* collider = tableBody->addCollider(meshShape, transform);
+    collider->setCollisionCategoryBits((1 << CollisionID::Cushion));
+    collider->setCollideWithMaskBits((1 << CollisionID::Ball));
+
 
     //create a single flat surface for the table as even a few triangles perturb
     //the physics. Balls check their proximity to pockets and disable table collision
     //when they need to. This way we can place a pocket anywhere on the surface.
-    auto& tableShape = m_boxShapes.emplace_back(std::make_unique<btBoxShape>(btBoxShape(btVector3(meshData.boundingBox[1].x, 0.05f, meshData.boundingBox[1].z))));
-    transform.setOrigin({ 0.f, -0.05f, 0.f });
-    auto& table = m_tableObjects.emplace_back(std::make_unique<btRigidBody>(createBodyDef(CollisionID::Table, 0.f, tableShape.get())));
-    table->setWorldTransform(transform);
-    m_collisionWorld->addCollisionObject(table.get(), (1 << CollisionID::Table), (1 << CollisionID::Ball));
+    transform.setPosition({ 0.f, 0.05f, 0.f });
+    tableBody = m_physWorld->createRigidBody(transform);
+    tableBody->setType(rp3d::BodyType::STATIC);
+
+    auto* tableShape = m_physicsCommon.createBoxShape({ meshData.boundingBox[1].x, 0.05f, meshData.boundingBox[1].z });
+    auto* tableCollider = tableBody->addCollider(tableShape, rp3d::Transform::identity());
+    tableCollider->setCollisionCategoryBits((1 << CollisionID::Table));
+    tableCollider->setCollideWithMaskBits((1 << CollisionID::Ball));
+
+    //auto& tableShape = m_boxShapes.emplace_back(std::make_unique<btBoxShape>(btBoxShape(btVector3(meshData.boundingBox[1].x, 0.05f, meshData.boundingBox[1].z))));
+    //transform.setOrigin({ 0.f, -0.05f, 0.f });
+    //auto& table = m_tableObjects.emplace_back(std::make_unique<btRigidBody>(createBodyDef(CollisionID::Table, 0.f, tableShape.get())));
+    //table->setWorldTransform(transform);
+    //m_collisionWorld->addCollisionObject(table.get(), (1 << CollisionID::Table), (1 << CollisionID::Ball));
 
     //create triggers for each pocket
     static constexpr glm::vec3 PocketHalfSize({ 0.075f, 0.1f, 0.075f });
@@ -249,12 +300,8 @@ void BilliardsSystemReact::initTable(const TableData& tableData)
 
     auto i = 0;
 
-#ifdef CRO_DEBUG_
-    m_pocketShape = std::make_unique<btCylinderShape>(btVector3(Pocket::DefaultRadius, 0.01f, Pocket::DefaultRadius));
-#endif
-
-    m_pocketWalls[0] = std::make_unique<btBoxShape>(btVector3(Pocket::DefaultRadius, WallHeight, WallThickness));
-    m_pocketWalls[1] = std::make_unique<btBoxShape>(btVector3(WallThickness, WallHeight, Pocket::DefaultRadius));
+    m_pocketWalls[0] = m_physicsCommon.createBoxShape({ Pocket::DefaultRadius, WallHeight, WallThickness });
+    m_pocketWalls[1] = m_physicsCommon.createBoxShape({ WallThickness, WallHeight, Pocket::DefaultRadius });
 
     const std::array Offsets =
     {
@@ -283,21 +330,13 @@ void BilliardsSystemReact::initTable(const TableData& tableData)
         for (auto j = 0; j < 4; ++j)
         {
             const auto& wallShape = m_pocketWalls[j % 2];
-            auto& obj = m_tableObjects.emplace_back(std::make_unique<btRigidBody>(createBodyDef(CollisionID::Pocket, 0.f, wallShape.get())));
+
+
+            /*auto& obj = m_tableObjects.emplace_back(std::make_unique<btRigidBody>(createBodyDef(CollisionID::Pocket, 0.f, wallShape.get())));
             transform.setOrigin(glmToBt(pocketPos) + (Offsets[j] * (WallThickness + p.radius)));
             obj->setWorldTransform(transform);
-            m_collisionWorld->addCollisionObject(obj.get(), (1 << CollisionID::Pocket), (1 << CollisionID::Ball));
+            m_collisionWorld->addCollisionObject(obj.get(), (1 << CollisionID::Pocket), (1 << CollisionID::Ball));*/
         }
-
-#ifdef CRO_DEBUG_
-        //just so something shows in debug drawer
-        //collision is actually done in process() by checking radial proximity.
-        auto& cylinder = m_tableObjects.emplace_back(std::make_unique<btRigidBody>(createBodyDef(CollisionID::Table, 0.f, m_pocketShape.get())));
-        cylinder->setCollisionFlags(cylinder->getCollisionFlags() | btRigidBody::CollisionFlags::CF_NO_CONTACT_RESPONSE);
-        transform.setOrigin({ pocketPos.x, 0.f, pocketPos.z });
-        cylinder->setWorldTransform(transform);
-        m_collisionWorld->addCollisionObject(cylinder.get());
-#endif
     }
 
     if (tableData.pockets.empty())
@@ -306,12 +345,14 @@ void BilliardsSystemReact::initTable(const TableData& tableData)
     }
 }
 
-void BilliardsSystemReact::applyImpulse(glm::vec3 dir, glm::vec3 offset)
+void BilliardsSystemReact::applyImpulse(glm::vec3 impulse, glm::vec3 relPos)
 {
     if (m_cueball)
     {
-        m_cueball->activate();
-        m_cueball->applyImpulse(glmToBt(dir), glmToBt(offset / 4.f));
+        //TODO see which if the below is the correct one
+        m_cueball->setIsActive(true);
+        m_cueball->applyLocalForceAtLocalPosition(glmToRp(impulse), glmToRp(relPos / 4.f));
+        //m_cueball->applyWorldForceAtLocalPosition(glmToRp(impulse), glmToRp(relPos / 4.f));
         m_shotActive = true;
 
         auto* msg = postMessage<BilliardsEvent>(sv::MessageID::BilliardsMessage);
@@ -323,7 +364,7 @@ glm::vec3 BilliardsSystemReact::getCueballPosition() const
 {
     if (m_cueball)
     {
-        return btToGlm(m_cueball->getWorldTransform().getOrigin());
+        return rpToGlm(m_cueball->getTransform().getPosition());
     }
     return glm::vec3(0.f);
 }
@@ -335,66 +376,68 @@ bool BilliardsSystemReact::isValidSpawnPosition(glm::vec3 position) const
 }
 
 //private
-btRigidBody::btRigidBodyConstructionInfo BilliardsSystemReact::createBodyDef(std::int32_t collisionID, float mass, btCollisionShape* shape, btMotionState* motionState)
-{
-    btVector3 inertia(0.f, 0.f, 0.f);
-    if (mass > 0.f)
-    {
-        shape->calculateLocalInertia(mass, inertia);
-    }
-
-
-    btRigidBody::btRigidBodyConstructionInfo info(mass, motionState, shape, inertia);
-
-    switch (collisionID)
-    {
-    default: break;
-    case CollisionID::Table:
-        //info.m_friction = 0.26f;
-        info.m_friction = 0.3f;
-        break;
-    case CollisionID::Cushion:
-        info.m_restitution = 1.f;// 0.5f;
-        info.m_friction = 0.28f;
-        break;
-    case CollisionID::Ball:
-        info.m_restitution = 0.5f;
-        info.m_rollingFriction = 0.0025f;
-        info.m_spinningFriction = 0.001f;// hmm if this is too high then the balls curve a lot, but too low and they never come to rest...
-        //info.m_friction = 0.15f;
-        info.m_friction = 0.3f;
-        info.m_linearSleepingThreshold = 0.003f; //if this is 0 then we never sleep...
-        info.m_angularSleepingThreshold = 0.003f;
-        break;
-    }
-
-    return info;
-}
+//btRigidBody::btRigidBodyConstructionInfo BilliardsSystemReact::createBodyDef(std::int32_t collisionID, float mass, btCollisionShape* shape, btMotionState* motionState)
+//{
+//    btVector3 inertia(0.f, 0.f, 0.f);
+//    if (mass > 0.f)
+//    {
+//        shape->calculateLocalInertia(mass, inertia);
+//    }
+//
+//
+//    btRigidBody::btRigidBodyConstructionInfo info(mass, motionState, shape, inertia);
+//
+//    switch (collisionID)
+//    {
+//    default: break;
+//    case CollisionID::Table:
+//        //info.m_friction = 0.26f;
+//        info.m_friction = 0.3f;
+//        break;
+//    case CollisionID::Cushion:
+//        info.m_restitution = 1.f;// 0.5f;
+//        info.m_friction = 0.28f;
+//        break;
+//    case CollisionID::Ball:
+//        info.m_restitution = 0.5f;
+//        info.m_rollingFriction = 0.0025f;
+//        info.m_spinningFriction = 0.001f;// hmm if this is too high then the balls curve a lot, but too low and they never come to rest...
+//        //info.m_friction = 0.15f;
+//        info.m_friction = 0.3f;
+//        info.m_linearSleepingThreshold = 0.003f; //if this is 0 then we never sleep...
+//        info.m_angularSleepingThreshold = 0.003f;
+//        break;
+//    }
+//
+//    return info;
+//}
 
 void BilliardsSystemReact::doBallCollision() const
 {
-    auto manifoldCount = m_collisionDispatcher->getNumManifolds();
-    for (auto i = 0; i < manifoldCount; ++i)
-    {
-        auto manifold = m_collisionDispatcher->getManifoldByIndexInternal(i);
-        auto body0 = manifold->getBody0();
-        auto body1 = manifold->getBody1();
+    //TODO replace this with EventListener?
 
-        if (body0->getUserIndex() == CollisionID::Ball
-            && body1->getUserIndex() == CollisionID::Ball)
-        {
-            auto contactCount = manifold->getNumContacts();
-            for (auto j = 0; j < contactCount; ++j)
-            {
-                auto ballA = static_cast<BilliardBallReact*>(body0->getUserPointer());
-                auto ballB = static_cast<BilliardBallReact*>(body1->getUserPointer());
+    //auto manifoldCount = m_collisionDispatcher->getNumManifolds();
+    //for (auto i = 0; i < manifoldCount; ++i)
+    //{
+    //    auto manifold = m_collisionDispatcher->getManifoldByIndexInternal(i);
+    //    auto body0 = manifold->getBody0();
+    //    auto body1 = manifold->getBody1();
 
-                //don't overwrite any existing collision this frame
-                ballA->m_ballContact = ballA->m_ballContact == -1 ? ballB->id : ballA->m_ballContact;
-                ballB->m_ballContact = ballB->m_ballContact == -1 ? ballA->id : ballB->m_ballContact;
-            }
-        }
-    }
+    //    if (body0->getUserIndex() == CollisionID::Ball
+    //        && body1->getUserIndex() == CollisionID::Ball)
+    //    {
+    //        auto contactCount = manifold->getNumContacts();
+    //        for (auto j = 0; j < contactCount; ++j)
+    //        {
+    //            auto ballA = static_cast<BilliardBallReact*>(body0->getUserPointer());
+    //            auto ballB = static_cast<BilliardBallReact*>(body1->getUserPointer());
+
+    //            //don't overwrite any existing collision this frame
+    //            ballA->m_ballContact = ballA->m_ballContact == -1 ? ballB->id : ballA->m_ballContact;
+    //            ballB->m_ballContact = ballB->m_ballContact == -1 ? ballA->id : ballB->m_ballContact;
+    //        }
+    //    }
+    //}
 }
 
 void BilliardsSystemReact::doPocketCollision(cro::Entity entity) const
@@ -457,14 +500,13 @@ void BilliardsSystemReact::doPocketCollision(cro::Entity entity) const
                 {
                     flags |= (1 << CollisionID::Table);
                 }
+
+                ball.m_physicsBody->getCollider(0)->setCollideWithMaskBits(flags);
+
                 //apparently the only way to change the grouping - however network lag
                 //seems to cover up any jitter...
-                m_collisionWorld->removeRigidBody(ball.m_physicsBody);
-                m_collisionWorld->addRigidBody(ball.m_physicsBody, (1 << CollisionID::Ball), flags);
-
-                //hmmm setting this directly doesn't work :(
-                //ball.m_physicsBody->getBroadphaseProxy()->m_collisionFilterGroup = (1 << CollisionID::Ball);
-                //ball.m_physicsBody->getBroadphaseProxy()->m_collisionFilterMask = flags;
+                //m_collisionWorld->removeRigidBody(ball.m_physicsBody);
+                //m_collisionWorld->addRigidBody(ball.m_physicsBody, (1 << CollisionID::Ball), flags);
             }
         }
     }
@@ -478,25 +520,34 @@ void BilliardsSystemReact::onEntityAdded(cro::Entity entity)
     //set a random orientation
     entity.getComponent<cro::Transform>().setRotation(cro::Util::Random::quaternion());
 
-    btTransform transform;
-    transform.setFromOpenGLMatrix(&entity.getComponent<cro::Transform>().getWorldTransform()[0][0]);
+    rp3d::Transform transform;
+    transform.setFromOpenGL(&entity.getComponent<cro::Transform>().getWorldTransform()[0][0]);
     
-    auto& body = m_ballObjects.emplace_back(std::make_unique<btRigidBody>(createBodyDef(CollisionID::Ball, BilliardBallReact::Mass, m_ballShape.get(), &ball)));
-    body->setWorldTransform(transform);
-    body->setUserIndex(CollisionID::Ball);
-    body->setUserPointer(&ball);
-    body->setCcdMotionThreshold(BilliardBallReact::Radius * 0.5f);
-    body->setCcdSweptSphereRadius(BilliardBallReact::Radius);
-    
-    body->setAnisotropicFriction(m_ballShape->getAnisotropicRollingFrictionDirection(), btCollisionObject::CF_ANISOTROPIC_ROLLING_FRICTION);
+    //auto& body = m_ballObjects.emplace_back(std::make_unique<btRigidBody>(createBodyDef(CollisionID::Ball, BilliardBallReact::Mass, m_ballShape.get(), &ball)));
+    //body->setWorldTransform(transform);
+    //body->setUserIndex(CollisionID::Ball);
+    //body->setUserPointer(&ball);
+    //body->setCcdMotionThreshold(BilliardBallReact::Radius * 0.5f);
+    //body->setCcdSweptSphereRadius(BilliardBallReact::Radius);
+    //
+    //body->setAnisotropicFriction(m_ballShape->getAnisotropicRollingFrictionDirection(), btCollisionObject::CF_ANISOTROPIC_ROLLING_FRICTION);
 
-    m_collisionWorld->addRigidBody(body.get(), (1 << CollisionID::Ball), (1 << CollisionID::Table) | (1 << CollisionID::Cushion) | (1 << CollisionID::Ball));
+    //m_collisionWorld->addRigidBody(body.get(), (1 << CollisionID::Ball), (1 << CollisionID::Table) | (1 << CollisionID::Cushion) | (1 << CollisionID::Ball));
 
-    ball.m_physicsBody = body.get();
+    //ball.m_physicsBody = body.get();
+
+    auto* body = m_ballObjects.emplace_back(m_physWorld->createRigidBody(transform));
+    auto* collider = body->addCollider(m_ballShape, rp3d::Transform::identity());
+    collider->setCollisionCategoryBits((1 << CollisionID::Ball));
+    collider->setCollideWithMaskBits((1 << CollisionID::Table) | (1 << CollisionID::Cushion) | (1 << CollisionID::Ball));
+
+    body->setMass(BPhysBall::Mass);
+
+    ball.m_physicsBody = body;
 
     if (ball.id == CueBall)
     {
-        m_cueball = body.get();
+        m_cueball = body;
     }
 }
 
@@ -505,18 +556,20 @@ void BilliardsSystemReact::onEntityRemoved(cro::Entity entity)
     const auto& ball = entity.getComponent<BilliardBallReact>();
 
     auto* body = ball.m_physicsBody;
-    body->setUserPointer(nullptr);
+    //body->setUserPointer(nullptr);
 
     if (m_cueball == body)
     {
         m_cueball = nullptr;
     }
 
-    m_collisionWorld->removeRigidBody(body);
+    m_physWorld->destroyRigidBody(body);
 
     m_ballObjects.erase(std::remove_if(m_ballObjects.begin(), m_ballObjects.end(), 
-        [body](const std::unique_ptr<btRigidBody>& b)
+        [body](const rp3d::RigidBody* b)
         {
-            return b.get() == body;
+            return b == body;
         }), m_ballObjects.end());
 }
+
+#endif //CRO_DEBUG_

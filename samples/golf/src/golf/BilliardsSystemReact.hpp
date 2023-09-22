@@ -29,6 +29,8 @@ source distribution.
 
 #pragma once
 
+//TODO remove this
+#ifdef CRO_DEBUG_
 #include "TableData.hpp"
 
 #include <crogine/ecs/System.hpp>
@@ -36,18 +38,21 @@ source distribution.
 #include <crogine/graphics/MeshData.hpp>
 #include <crogine/graphics/BoundingBox.hpp>
 
-#include <btBulletDynamicsCommon.h>
-#include <BulletCollision/CollisionDispatch/btGhostObject.h>
+#include <BulletCollision/CollisionDispatch/btGhostObject.h> //client side
+
+#include <reactphysics3d/reactphysics3d.h>
 
 #include <memory>
 #include <vector>
 
+
+
 //this needs to be non-resizable as the physics world keeps references to motion states
-struct BilliardBallReact final : public btMotionState, public cro::Detail::NonResizeable
+struct BilliardBallReact final// : public btMotionState, public cro::Detail::NonResizeable
 {
     BilliardBallReact() : m_physicsBody(nullptr) {}
-    void getWorldTransform(btTransform& worldTrans) const override;
-    void setWorldTransform(const btTransform& worldTrans) override;
+    //void getWorldTransform(btTransform& worldTrans) const override;
+    //void setWorldTransform(const btTransform& worldTrans) override;
     glm::vec3 getVelocity() const;
 
     /*
@@ -70,8 +75,8 @@ private:
     cro::Entity m_parent;
     union
     {
-        btRigidBody* m_physicsBody;
-        btPairCachingGhostObject* m_collisionBody;
+        rp3d::RigidBody* m_physicsBody = nullptr;
+        btPairCachingGhostObject* m_collisionBody; //client side
     };
     std::int32_t m_pocketContact = -1; //ID of pocket, or -1
     std::int32_t m_prevPocketContact = -1; //client side only
@@ -95,7 +100,7 @@ class BilliardsSystemReact final : public cro::System
 {
 public:
     explicit BilliardsSystemReact(cro::MessageBus&);
-    BilliardsSystemReact(cro::MessageBus&, BulletDebug&);
+    //BilliardsSystemReact(cro::MessageBus&, BulletDebug&);
     ~BilliardsSystemReact();
 
     BilliardsSystemReact(const BilliardsSystemReact&) = delete;
@@ -119,33 +124,32 @@ private:
     std::int32_t m_awakeCount;
     bool m_shotActive;
 
-    std::unique_ptr<btCollisionConfiguration> m_collisionConfiguration;
-    std::unique_ptr<btCollisionDispatcher> m_collisionDispatcher;
-    std::unique_ptr<btBroadphaseInterface> m_broadphaseInterface;
-    std::unique_ptr<btSequentialImpulseConstraintSolver> m_constraintSolver;
-    std::unique_ptr<btDiscreteDynamicsWorld> m_collisionWorld;
+    rp3d::PhysicsCommon m_physicsCommon;
+    rp3d::PhysicsWorld* m_physWorld;
 
     //we have to keep a local copy of the table verts as the
     //collision world only maintains pointers to it
     std::vector<float> m_vertexData;
     std::vector<std::vector<std::uint32_t>> m_indexData;
 
+    std::vector<std::unique_ptr<rp3d::TriangleVertexArray>> m_tableVertices;
+
     //these are what do the pointing.
-    std::vector<std::unique_ptr<btRigidBody>> m_tableObjects;
-    std::vector<std::unique_ptr<btTriangleIndexVertexArray>> m_tableVertices;
-    std::vector<std::unique_ptr<btBvhTriangleMeshShape>> m_tableShapes;
+    //std::vector<rp3d::RigidBody*> m_tableObjects;
+    //std::vector<std::unique_ptr<btTriangleIndexVertexArray>> m_tableVertices;
+    //std::vector<std::unique_ptr<btBvhTriangleMeshShape>> m_tableShapes;
 
 
     //tracks ball objects
-    std::vector<std::unique_ptr<btRigidBody>> m_ballObjects;
-    std::unique_ptr<btSphereShape> m_ballShape; //balls can all share this.
-    btRigidBody* m_cueball;
+    std::vector<rp3d::RigidBody*> m_ballObjects;
+    rp3d::SphereShape* m_ballShape; //balls can all share this.
+    rp3d::RigidBody* m_cueball;
 
     //table surface
-    std::vector<std::unique_ptr<btBoxShape>> m_boxShapes;
+    std::vector<rp3d::BoxShape*> m_boxShapes;
 
     //pocket walls
-    std::array<std::unique_ptr<btBoxShape>, 2u> m_pocketWalls;
+    std::array<rp3d::BoxShape*, 2u> m_pocketWalls;
 
     //simplified pocketry
     struct Pocket final
@@ -162,11 +166,7 @@ private:
 
     cro::FloatRect m_spawnArea;
 
-#ifdef CRO_DEBUG_
-    std::unique_ptr<btCylinderShape> m_pocketShape;
-#endif
-
-    btRigidBody::btRigidBodyConstructionInfo createBodyDef(std::int32_t, float, btCollisionShape*, btMotionState* = nullptr);
+    //btRigidBody::btRigidBodyConstructionInfo createBodyDef(std::int32_t, float, btCollisionShape*, btMotionState* = nullptr);
 
     void doBallCollision() const;
     void doPocketCollision(cro::Entity) const;
@@ -176,3 +176,4 @@ private:
 };
 
 using BPhysSystem = BilliardsSystemReact;
+#endif //CRO_DEBUG_

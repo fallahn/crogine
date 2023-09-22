@@ -37,6 +37,7 @@ source distribution.
 #include <crogine/graphics/BoundingBox.hpp>
 
 #include <btBulletDynamicsCommon.h>
+#include <btBulletCollisionCommon.h>
 #include <BulletCollision/CollisionDispatch/btGhostObject.h>
 
 #include <memory>
@@ -70,7 +71,7 @@ private:
     cro::Entity m_parent;
     union
     {
-        btRigidBody* m_physicsBody;
+        btRigidBody* m_physicsBody = nullptr;
         btPairCachingGhostObject* m_collisionBody;
     };
     std::int32_t m_pocketContact = -1; //ID of pocket, or -1

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022
+Matt Marchant 2022 - 2023
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -41,7 +41,15 @@ source distribution.
 
 namespace
 {
+    static inline glm::vec3 btToGlm(btVector3 v)
+    {
+        return { v.getX(), v.getY(), v.getZ() };
+    }
 
+    static inline btVector3 glmToBt(glm::vec3 v)
+    {
+        return { v.x, v.y, v.z };
+    }
 }
 
 void BilliardBall::getWorldTransform(btTransform& dest) const
