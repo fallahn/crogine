@@ -2138,7 +2138,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::CourseRules;
     entity.addComponent<cro::Text>(smallFont).setCharacterSize(InfoTextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
-    entity.getComponent<cro::Text>().setString("IMPLEMENT ME\nPLEASE\nCOURSE 5");
+    entity.getComponent<cro::Text>().setString("Please Wait...");
     entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
     thumbBgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
