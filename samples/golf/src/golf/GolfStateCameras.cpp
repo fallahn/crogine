@@ -422,17 +422,9 @@ void GolfState::createCameras()
 
             m_flightTexture.create(ctx);
 
-            //TODO this is the UI entity to which we're attached - if we use the green
-            //ent we can let the other callback do this for us
+            //we let the callback for the green overhead view rescale the sprite
+            //though we could explicitly set this if not performed in the correct order.
             //greenEnt.getComponent<cro::Sprite>().setTexture(m_greenBuffer.getTexture());
-
-            //auto targetScale = glm::vec2(1.f / scale);
-            //if (m_currentPlayer.terrain == TerrainID::Green)
-            //{
-            //    greenEnt.getComponent<cro::Transform>().setScale(targetScale);
-            //}
-            //greenEnt.getComponent<cro::Transform>().setOrigin({ (texSize / 2), (texSize / 2) }); //must divide to a whole pixel!
-            //greenEnt.getComponent<cro::Callback>().getUserData<GreenCallbackData>().targetScale = targetScale.x;
 
             cam.setPerspective(FlightCamFOV * cro::Util::Const::degToRad, 1.f, 0.06f, 200.f);
             cam.viewport = { 0.f, 0.f, 1.f, 1.f };
@@ -443,8 +435,6 @@ void GolfState::createCameras()
     camEnt.addComponent<cro::Transform>();
     camEnt.addComponent<cro::Camera>().resizeCallback = createFlightTexture;
     camEnt.getComponent<cro::Camera>().renderFlags = RenderFlags::FlightCam;
-    //camEnt.getComponent<cro::Camera>().reflectionBuffer.create(ReflectionMapSize / 4, ReflectionMapSize / 4);
-    //camEnt.getComponent<cro::Camera>().reflectionBuffer.setSmooth(true);
     camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(ShadowMapSize / 4, ShadowMapSize / 4);
     camEnt.getComponent<cro::Camera>().active = false;
     camEnt.getComponent<cro::Camera>().setMaxShadowDistance(/*m_shadowQuality.shadowFarDistance*/3.f);
@@ -478,13 +468,6 @@ void GolfState::createCameras()
                     auto pos = targetPos + (glm::normalize(glm::vec3(dir.x, 0.f, dir.z)) * MinFlightCamDistance);
                     pos.y += MinHeight;
 
-                    
-                    //slowing down when up close in the air reduces stutter
-                    /*float followSpeed = glm::length2(dir) < 0.0256f 
-                        ? targetPos.y - t.height > 1.f ? FollowSlow : FollowFast
-                        : FollowFast;*/
-
-                    //static glm::vec3 vel(0.f);
                     auto newPos = pos;// cro::Util::Maths::smoothDamp(e.getComponent<cro::Transform>().getPosition(), pos, vel, followSpeed, dt);
 
                     //clamp above ground

@@ -1288,10 +1288,22 @@ void GolfState::buildUI()
         auto targetScale = glm::vec2(1.f / scale);
         if (m_currentPlayer.terrain == TerrainID::Green)
         {
+            greenEnt.getComponent<cro::Sprite>().setTexture(m_greenBuffer.getTexture());
             greenEnt.getComponent<cro::Transform>().setScale(targetScale);
         }
+        else
+        {
+            greenEnt.getComponent<cro::Sprite>().setTexture(m_flightTexture.getTexture());
+        }
         greenEnt.getComponent<cro::Transform>().setOrigin({ (texSize / 2), (texSize / 2) }); //must divide to a whole pixel!
-        greenEnt.getComponent<cro::Callback>().getUserData<GreenCallbackData>().targetScale = targetScale.x;
+        auto& ud = greenEnt.getComponent<cro::Callback>().getUserData<GreenCallbackData>();
+        ud.targetScale = targetScale.x;
+
+        if (!greenEnt.getComponent<cro::Callback>().active)
+        {
+            ud.state = ud.state == 1 ? 0 : 1;
+            greenEnt.getComponent<cro::Callback>().active = true;
+        }
     };
 
     m_greenCam = m_gameScene.createEntity();
@@ -3674,7 +3686,7 @@ void GolfState::showNotification(const cro::String& msg)
     entity.getComponent<cro::Transform>().setScale(m_viewScale);
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(m_sharedData.sharedResources->fonts.get(FontID::UI));
-    entity.getComponent<cro::Text>().setCharacterSize(8u/* * static_cast<std::uint32_t>(m_viewScale.y)*/);
+    entity.getComponent<cro::Text>().setCharacterSize(UITextSize/* * static_cast<std::uint32_t>(m_viewScale.y)*/);
     entity.getComponent<cro::Text>().setFillColour(LeaderboardTextLight);
     entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
     entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
