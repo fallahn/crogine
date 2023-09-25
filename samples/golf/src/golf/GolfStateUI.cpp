@@ -1819,7 +1819,7 @@ void GolfState::showCountdown(std::uint8_t seconds)
 
             float basePos = 0.f;
             std::vector<cro::Vertex2D> vertices;
-            for (auto i = 0u; i < 4u; ++i)
+            for (auto i = 0u; i < ConstVal::MaxClients; ++i)
             {
                 if (m_sharedData.connectionData[i].playerCount)
                 {
@@ -4754,8 +4754,8 @@ void GolfState::showEmote(std::uint32_t data)
     std::uint8_t player = (data & 0x0000ff00) >> 8;
     std::uint8_t emote = (data & 0x000000ff);
 
-    client = std::min(client, std::uint8_t(3u));
-    player = std::min(player, std::uint8_t(3u));
+    client = std::min(client, std::uint8_t(ConstVal::MaxClients - 1));
+    player = std::min(player, std::uint8_t(ConstVal::MaxPlayers - 1));
 
     auto msg = m_sharedData.connectionData[client].playerData[player].name;
     //msg += " is ";
