@@ -336,7 +336,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
             }
         }
     }
-    if (clientCount == /*ConstVal::MaxClients*/4) //achievement is for 4
+    if (clientCount > /*ConstVal::MaxClients*/3) //achievement is for 4
     {
         Achievements::awardAchievement(AchievementStrings[AchievementID::BetterWithFriends]);
     }
