@@ -142,34 +142,34 @@ MainMenuContext::MainMenuContext(MenuState* state)
 }
 
 MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, SharedStateData& sd, SharedProfileData& sp)
-    : cro::State            (stack, context),
-    m_sharedData            (sd),
-    m_profileData           (sp),
-    m_matchMaking           (context.appInstance.getMessageBus()),
-    m_cursor                (/*"assets/images/cursor.png", 0, 0*/cro::SystemCursor::Hand),
-    m_uiScene               (context.appInstance.getMessageBus(), 512),
-    m_backgroundScene       (context.appInstance.getMessageBus(), 512/*, cro::INFO_FLAG_SYSTEMS_ACTIVE*/),
-    m_avatarScene           (context.appInstance.getMessageBus(), 640/*, cro::INFO_FLAG_SYSTEMS_ACTIVE*/),
-    m_scaleBuffer           ("PixelScale"),
-    m_resolutionBuffer      ("ScaledResolution"),
-    m_windBuffer            ("WindValues"),
-    m_lobbyExpansion        (0.f),
-    m_avatarCallbacks       (std::numeric_limits<std::uint32_t>::max(), std::numeric_limits<std::uint32_t>::max()),
-    m_currentMenu           (MenuID::Main),
-    m_prevMenu              (MenuID::Main),
-    m_viewScale             (1.f)
+    : cro::State(stack, context),
+    m_sharedData(sd),
+    m_profileData(sp),
+    m_matchMaking(context.appInstance.getMessageBus()),
+    m_cursor(/*"assets/images/cursor.png", 0, 0*/cro::SystemCursor::Hand),
+    m_uiScene(context.appInstance.getMessageBus(), 512),
+    m_backgroundScene(context.appInstance.getMessageBus(), 512/*, cro::INFO_FLAG_SYSTEMS_ACTIVE*/),
+    m_avatarScene(context.appInstance.getMessageBus(), 640/*, cro::INFO_FLAG_SYSTEMS_ACTIVE*/),
+    m_scaleBuffer("PixelScale"),
+    m_resolutionBuffer("ScaledResolution"),
+    m_windBuffer("WindValues"),
+    m_lobbyExpansion(0.f),
+    m_avatarCallbacks(std::numeric_limits<std::uint32_t>::max(), std::numeric_limits<std::uint32_t>::max()),
+    m_currentMenu(MenuID::Main),
+    m_prevMenu(MenuID::Main),
+    m_viewScale(1.f)
 {
     sd.clubSet = std::clamp(sd.clubSet, 0, 2);
     Club::setClubLevel(sd.clubSet);
-    
+
     std::fill(m_readyState.begin(), m_readyState.end(), false);
     sd.minimapData = {};
-    
+
     auto size = glm::vec2(GolfGame::getActiveTarget()->getSize());
     m_viewScale = glm::vec2(getViewScale());
 
     Achievements::setActive(true);
-    
+
     //launches a loading screen (registered in MyApp.cpp)
     CRO_ASSERT(!isCached(), "Don't use loading screen on cached states!");
     context.mainWindow.loadResources([&]() {
@@ -179,7 +179,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
 
 #ifdef USE_GNS
         Social::findLeaderboards(Social::BoardType::Courses);
-        
+
         //cached menu states depend on steam stats being
         //up to date so this hacks in a delay and pumps the callback loop
         cro::Clock cl;
@@ -194,11 +194,11 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
         cacheState(StateID::Profile);
         cacheState(StateID::Practice);
         cacheState(StateID::Keyboard);
-        cacheState(StateID::Leaderboard);    
-        cacheState(StateID::League);    
- 
+        cacheState(StateID::Leaderboard);
+        cacheState(StateID::League);
+
         context.mainWindow.setMouseCaptured(false);
-    
+
         //sd.inputBinding.controllerID = 0;
         sd.baseState = StateID::Menu;
         sd.mapDirectory = "course_01";
@@ -211,7 +211,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
         {
             auto idx = indexFromBallID(m_sharedData.localConnectionData.playerData[i].ballID);
 
-            if(idx == -1
+            if (idx == -1
                 || idx >= m_profileData.ballDefs.size()) //checks we're not trying to load a locked ball
             {
                 m_sharedData.localConnectionData.playerData[i].ballID = 0;
@@ -246,11 +246,11 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
             cro::Command cmd;
             cmd.targetFlags = CommandID::Menu::RootNode;
             cmd.action = [&](cro::Entity e, float)
-            {
-                m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Dummy);
-                m_menuEntities[m_currentMenu].getComponent<cro::Callback>().getUserData<MenuData>().targetMenu = MenuID::Lobby;
-                m_menuEntities[m_currentMenu].getComponent<cro::Callback>().active = true;
-            };
+                {
+                    m_uiScene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Dummy);
+                    m_menuEntities[m_currentMenu].getComponent<cro::Callback>().getUserData<MenuData>().targetMenu = MenuID::Lobby;
+                    m_menuEntities[m_currentMenu].getComponent<cro::Callback>().active = true;
+                };
             m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
             std::int32_t spriteID = 0;
@@ -275,16 +275,16 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
                 cmd.targetFlags = CommandID::Menu::UIElement;
                 cmd.action =
                     [&, size](cro::Entity e, float)
-                {
-                    const auto& element = e.getComponent<UIElement>();
-                    auto pos = element.absolutePosition;
-                    pos += element.relativePosition * size / m_viewScale;
+                    {
+                        const auto& element = e.getComponent<UIElement>();
+                        auto pos = element.absolutePosition;
+                        pos += element.relativePosition * size / m_viewScale;
 
-                    pos.x = std::floor(pos.x);
-                    pos.y = std::floor(pos.y);
+                        pos.x = std::floor(pos.x);
+                        pos.y = std::floor(pos.y);
 
-                    e.getComponent<cro::Transform>().setPosition(glm::vec3(pos, element.depth));
-                };
+                        e.getComponent<cro::Transform>().setPosition(glm::vec3(pos, element.depth));
+                    };
                 m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
 
@@ -305,16 +305,16 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
 
             cmd.targetFlags = CommandID::Menu::ReadyButton;
             cmd.action = [&, spriteID](cro::Entity e, float)
-            {
-                e.getComponent<cro::Sprite>() = m_sprites[spriteID];
-            };
+                {
+                    e.getComponent<cro::Sprite>() = m_sprites[spriteID];
+                };
             m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
             cmd.targetFlags = CommandID::Menu::ServerInfo;
             cmd.action = [connectionString](cro::Entity e, float)
-            {
-                e.getComponent<cro::Text>().setString(connectionString);
-            };
+                {
+                    e.getComponent<cro::Text>().setString(connectionString);
+                };
             m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
         }
         else
@@ -338,11 +338,11 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
         }
         m_sharedData.inviteID = 0;
         m_sharedData.lobbyID = 0;
-    });
+        });
     //for some reason this immediately unsets itself
     //cro::App::getWindow().setCursor(&m_cursor);
 
-    registerCommand("tree_ed", [&](const std::string&) 
+    registerCommand("tree_ed", [&](const std::string&)
         {
             if (getStateCount() == 1)
             {
@@ -387,6 +387,31 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     registerCommand("restore_xp", [](const std::string&)
         {
             bunnage();
+        });
+#else
+    registerCommand("connect", [&](const std::string& address)
+        {
+            if (getStateCount() != 1)
+            {
+                return;
+            }
+
+            if (!address.empty())
+            {
+                m_sharedData.targetIP = address;
+                if (!m_sharedData.clientConnection.connected)
+                {
+                    m_matchMaking.joinGame(0);
+                }
+                else
+                {
+                    cro::Console::print("Already connected to a host");
+                }
+            }
+            else
+            {
+                cro::Console::print("Usage: connect <dest_address> eg connect 255.255.255.255");
+            }
         });
 #endif
 
