@@ -204,8 +204,6 @@ bool GolfState::summariseRules()
         }
 
 
-
-
         //only score if no player tied
         if (sortData[0].holeScore[m_currentHole] != sortData[1].holeScore[m_currentHole])
         {
@@ -218,24 +216,7 @@ bool GolfState::summariseRules()
             player->skins += m_skinsPot;
             m_skinsPot = 1;
 
-            //check the match score and end the game if this is the mode we're in
-            if (m_sharedData.scoreType == ScoreType::Match)
-            {
-                sortData[0].matchWins++;
-                std::sort(sortData.begin(), sortData.end(),
-                    [&](const PlayerStatus& a, const PlayerStatus& b)
-                    {
-                        return a.matchWins > b.matchWins;
-                    });
-
-
-                auto remainingHoles = static_cast<std::uint8_t>(m_holeData.size()) - (m_currentHole + 1);
-                //if second place can't beat first even if they win all the holes it's game over
-                if (sortData[1].matchWins + remainingHoles < sortData[0].matchWins)
-                {
-                    gameFinished = true;
-                }
-            }
+            sortData[0].matchWins++; //this is used to test to see if we won the majority of match points
 
             //send notification packet to clients that player won the hole
             std::uint16_t data = (player->client << 8) | player->player;
@@ -249,6 +230,24 @@ bool GolfState::summariseRules()
 
                 std::uint16_t data = 0xff00 | m_skinsPot;
                 m_sharedData.host.broadcastPacket(PacketID::HoleWon, data, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+            }
+        }
+
+        //check the match score and end the game if this is the mode we're in
+        if (m_sharedData.scoreType == ScoreType::Match)
+        {
+            std::sort(sortData.begin(), sortData.end(),
+                [&](const PlayerStatus& a, const PlayerStatus& b)
+                {
+                    return a.matchWins > b.matchWins;
+                });
+
+
+            auto remainingHoles = static_cast<std::uint8_t>(m_holeData.size()) - (m_currentHole + 1);
+            //if second place can't beat first even if they win all the remaining holes it's game over
+            if (sortData[1].matchWins + remainingHoles < sortData[0].matchWins)
+            {
+                gameFinished = true;
             }
         }
     }

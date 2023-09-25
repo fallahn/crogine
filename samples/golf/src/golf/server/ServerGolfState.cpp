@@ -1009,8 +1009,7 @@ void GolfState::setNextHole()
 
             if (ct < 0)
             {
-                //end of game baby! TODO really this should include all final scores so
-                //clients will make sure to show correct trophy/podium
+                //end of game baby!
                 m_sharedData.host.broadcastPacket(PacketID::GameEnd, ConstVal::SummaryTimeout, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
 
                 //create a timer ent which returns to lobby on time out
