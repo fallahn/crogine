@@ -374,6 +374,22 @@ void Scene::setCubemap(const std::string& path)
     }
     enableSkybox();
 
+    auto currPath = cro::FileSystem::getFilePath(path);
+    const auto processPath = 
+        [&](std::string& outPath, std::string inPath)
+        {
+            std::replace(inPath.begin(), inPath.end(), '\\', '/');
+            if (inPath.find('/') == std::string::npos)
+            {
+                //assume this is in the same dir
+                outPath = currPath + inPath;
+            }
+            else
+            {
+                outPath = inPath;
+            }
+        };
+
     std::array<std::string, CubemapDirection::Count> paths;
     const auto& properties = cfg.getProperties();
     for (const auto& prop : properties)
@@ -381,27 +397,27 @@ void Scene::setCubemap(const std::string& path)
         auto name = prop.getName();
         if (name == "up")
         {
-            paths[CubemapDirection::Up] = prop.getValue<std::string>();
+            processPath(paths[CubemapDirection::Up], prop.getValue<std::string>());
         }
         else if (name == "down")
         {
-            paths[CubemapDirection::Down] = prop.getValue<std::string>();
+            processPath(paths[CubemapDirection::Down], prop.getValue<std::string>());
         }
         else if (name == "left")
         {
-            paths[CubemapDirection::Left] = prop.getValue<std::string>();
+            processPath(paths[CubemapDirection::Left], prop.getValue<std::string>());
         }
         else if (name == "right")
         {
-            paths[CubemapDirection::Right] = prop.getValue<std::string>();
+            processPath(paths[CubemapDirection::Right], prop.getValue<std::string>());
         }
         else if (name == "front")
         {
-            paths[CubemapDirection::Front] = prop.getValue<std::string>();
+            processPath(paths[CubemapDirection::Front], prop.getValue<std::string>());
         }
         else if (name == "back")
         {
-            paths[CubemapDirection::Back] = prop.getValue<std::string>();
+            processPath(paths[CubemapDirection::Back], prop.getValue<std::string>());
         }
     }
 

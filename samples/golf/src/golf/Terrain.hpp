@@ -45,6 +45,7 @@ struct RenderFlags final
         Refraction = 0x8,
         Cue        = 0x10,
         FlightCam  = 0x20,
+        CubeMap    = 0x40,
 
         All = std::numeric_limits<std::uint64_t>::max()
     };

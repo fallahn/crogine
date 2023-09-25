@@ -392,9 +392,6 @@ void GolfState::createCameras()
     addCameraDebugging();
 
 
-
-    //unfortuantely this kills the FPS
-
     const auto createFlightTexture =
         [&](cro::Camera& cam)
     {

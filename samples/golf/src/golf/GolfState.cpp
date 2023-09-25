@@ -357,9 +357,9 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
 #ifdef CRO_DEBUG_
     ballEntity = {};
 
-    registerDebugCommands();
     registerDebugWindows();
 #endif
+    registerDebugCommands(); //includes cubemap creation
 
     cro::App::getInstance().resetFrameTime();
 }
@@ -530,6 +530,12 @@ bool GolfState::handleEvent(const cro::Event& evt)
             if (evt.key.keysym.mod & KMOD_SHIFT)
             {
                 m_textChat.toggleWindow();
+            }
+            break;
+        case SDLK_F9:
+            if (evt.key.keysym.mod & KMOD_SHIFT)
+            {
+                cro::Console::doCommand("build_cubemaps");
             }
             break;
 #ifdef CRO_DEBUG_
@@ -2567,6 +2573,7 @@ void GolfState::loadAssets()
                             applyMaterialData(md, material); //applies double sidedness
                             material.setProperty("u_hairColour", pc::Palette[m_sharedData.connectionData[i].playerData[j].avatarFlags[pc::ColourKey::Hair]]);
                             hairEnt.getComponent<cro::Model>().setMaterial(0, material);
+                            hairEnt.getComponent<cro::Model>().setRenderFlags(~RenderFlags::CubeMap);
 
                             skel.getAttachments()[id].setModel(hairEnt);
 
@@ -2586,6 +2593,7 @@ void GolfState::loadAssets()
                 }
 
                 entity.getComponent<cro::Model>().setHidden(true);
+                entity.getComponent<cro::Model>().setRenderFlags(~RenderFlags::CubeMap);
                 m_avatars[i][j].model = entity;
             }
         }
@@ -2602,7 +2610,7 @@ void GolfState::loadAssets()
         auto material = m_resources.materials.get(m_materialIDs[MaterialID::Ball]);
         applyMaterialData(md, material, 0);
         m_clubModels[ClubModel::Wood].getComponent<cro::Model>().setMaterial(0, material);
-        m_clubModels[ClubModel::Wood].getComponent<cro::Model>().setRenderFlags(~RenderFlags::MiniGreen);
+        m_clubModels[ClubModel::Wood].getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniGreen | RenderFlags::CubeMap));
     }
     else
     {
@@ -2631,7 +2639,7 @@ void GolfState::loadAssets()
         auto material = m_resources.materials.get(m_materialIDs[MaterialID::Ball]);
         applyMaterialData(md, material, 0);
         m_clubModels[ClubModel::Iron].getComponent<cro::Model>().setMaterial(0, material);
-        m_clubModels[ClubModel::Iron].getComponent<cro::Model>().setRenderFlags(~RenderFlags::MiniGreen);
+        m_clubModels[ClubModel::Iron].getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniGreen | RenderFlags::CubeMap));
     }
     else
     {
@@ -3997,7 +4005,7 @@ void GolfState::buildScene()
     glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
 
     entity.getComponent<cro::Model>().setHidden(true);
-    entity.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniGreen | RenderFlags::MiniMap | RenderFlags::Reflection | RenderFlags::FlightCam));
+    entity.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniGreen | RenderFlags::MiniMap | RenderFlags::Reflection | RenderFlags::FlightCam | RenderFlags::CubeMap));
 
 
     //a 'fan' which shows max rotation
@@ -4008,7 +4016,7 @@ void GolfState::buildScene()
     entity = m_gameScene.createEntity();
     entity.addComponent<cro::CommandTarget>().ID = CommandID::StrokeArc;
     entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), material);
-    entity.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniGreen | RenderFlags::MiniMap | RenderFlags::Reflection | RenderFlags::FlightCam));
+    entity.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniGreen | RenderFlags::MiniMap | RenderFlags::Reflection | RenderFlags::FlightCam | RenderFlags::CubeMap));
     entity.addComponent<cro::Transform>().setPosition(pos);
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function = 
@@ -4798,7 +4806,7 @@ void GolfState::spawnBall(const ActorInfo& info)
         InterpolationPoint(info.position, glm::vec3(0.f), cro::Util::Net::decompressQuat(info.rotation), info.timestamp)).id = info.serverID;
     entity.addComponent<ClientCollider>();
     entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_ballResources.ballMeshID), material);
-    entity.getComponent<cro::Model>().setRenderFlags(~RenderFlags::MiniMap);
+    entity.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniMap | RenderFlags::CubeMap));
     
     //revisit this if we can interpolate spawn positions
     //entity.addComponent<cro::ParticleEmitter>().settings.loadFromFile("assets/golf/particles/rockit.cps", m_resources.textures);
@@ -4875,7 +4883,7 @@ void GolfState::spawnBall(const ActorInfo& info)
         }
     };
     entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_ballResources.shadowMeshID), material);
-    entity.getComponent<cro::Model>().setRenderFlags(~RenderFlags::MiniMap);
+    entity.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniMap | RenderFlags::CubeMap));
     ballEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     //large shadow seen close up
@@ -4884,7 +4892,7 @@ void GolfState::spawnBall(const ActorInfo& info)
     shadowEnt.getComponent<cro::Transform>().addChild(entity.addComponent<cro::Transform>());
     entity.getComponent<cro::Transform>().setOrigin({ 0.f, 0.003f, 0.f });
     m_modelDefs[ModelID::BallShadow]->createModel(entity);
-    entity.getComponent<cro::Model>().setRenderFlags(~RenderFlags::MiniMap);
+    entity.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniMap | RenderFlags::CubeMap));
     //entity.getComponent<cro::Transform>().setScale(glm::vec3(1.3f));
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function =
@@ -4972,7 +4980,7 @@ void GolfState::spawnBall(const ActorInfo& info)
         applyMaterialData(*m_ballModels[ballID], mat);
         entity.getComponent<cro::Model>().setMaterial(1, mat);
     }
-    entity.getComponent<cro::Model>().setRenderFlags(~RenderFlags::MiniMap);
+    entity.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniMap | RenderFlags::CubeMap));
     ballEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     //name label for the ball's owner

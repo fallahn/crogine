@@ -213,6 +213,8 @@ void BilliardsState::addSystems()
 
 void BilliardsState::buildScene()
 {
+    m_scene.setCubemap("assets/images/1/cmap.ccm");
+
     cro::ModelDefinition md(m_resources);
     if (md.loadFromFile("assets/billiards/skyrings.cmt"))
     {
