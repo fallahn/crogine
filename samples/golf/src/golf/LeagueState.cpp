@@ -85,6 +85,8 @@ namespace
     std::vector<ScoreSet> scoreSet;
 #endif
     std::size_t courseIndex = 0;
+
+    bool showStats = false;
 }
 
 LeagueState::LeagueState(cro::StateStack& ss, cro::State::Context ctx, SharedStateData& sd)
@@ -96,55 +98,64 @@ LeagueState::LeagueState(cro::StateStack& ss, cro::State::Context ctx, SharedSta
 {
     ctx.mainWindow.setMouseCaptured(false);
 #ifdef USE_GNS
-    scoreSet = readGameScores();
-
-    //registerWindow([&]()
-    //    {
-    //        if (ImGui::Begin("League"))
-    //        {
-    //            static League league;
-
-    //            const auto& entries = league.getTable();
-    //            for (const auto& e : entries)
-    //            {
-    //                ImGui::Text("Skill: %d - Curve: %d - Score: %d - Name: %d - Mistake Probability: %d  - Quality: %3.3f",
-    //                    e.skill, e.curve, e.currentScore, e.nameIndex, e.outlier, e.quality * 100.f);
-    //            }
-    //            ImGui::Text("Iteration: %d", league.getCurrentIteration());
-    //            ImGui::SameLine();
-    //            ImGui::Text("Season: %d", league.getCurrentSeason());
-    //            ImGui::SameLine();
-    //            ImGui::Text("Score: %d", league.getCurrentScore());
-
-    //            /*if (!scoreSet.empty())
-    //            {
-    //                if (ImGui::Button("Iterate"))
-    //                {
-    //                    league.iterate(scoreSet[courseIndex].par, scoreSet[courseIndex].scores, scoreSet[courseIndex].scores.size());
-    //                    courseIndex = (courseIndex + 1) % scoreSet.size();
-    //                }
-    //                ImGui::SameLine();
-    //                if (ImGui::Button("Reset"))
-    //                {
-    //                    league.reset();
-    //                }
-
-    //                if (ImGui::Button("Run 10 Seasons"))
-    //                {
-    //                    for (auto i = 0; i < 10; ++i)
-    //                    {
-    //                        for (auto j = 0; j < League::MaxIterations; ++j)
-    //                        {
-    //                            league.iterate(scoreSet[courseIndex].par, scoreSet[courseIndex].scores, scoreSet[courseIndex].scores.size());
-    //                            courseIndex = (courseIndex + 1) % scoreSet.size();
-    //                        }
-    //                    }
-    //                }
-    //            }*/
-    //        }
-    //        ImGui::End();
-    //    });
+    //scoreSet = readGameScores();
 #endif
+
+    registerCommand("show_league_stats", [](const std::string&) 
+        {
+            showStats = !showStats;
+        });
+
+    registerWindow([&]()
+        {
+            if (showStats)
+            {
+                if (ImGui::Begin("League", &showStats))
+                {
+                    static League league;
+
+                    const auto& entries = league.getTable();
+                    for (const auto& e : entries)
+                    {
+                        ImGui::Text("Skill: %d - Curve: %d - Score: %d - Name: %d - Mistake Probability: %d  - Quality: %3.3f",
+                            e.skill, e.curve, e.currentScore, e.nameIndex, e.outlier, e.quality * 100.f);
+                    }
+                    ImGui::Text("Iteration: %d", league.getCurrentIteration());
+                    ImGui::SameLine();
+                    ImGui::Text("Season: %d", league.getCurrentSeason());
+                    ImGui::SameLine();
+                    ImGui::Text("Score: %d", league.getCurrentScore());
+
+                    /*if (!scoreSet.empty())
+                    {
+                        if (ImGui::Button("Iterate"))
+                        {
+                            league.iterate(scoreSet[courseIndex].par, scoreSet[courseIndex].scores, scoreSet[courseIndex].scores.size());
+                            courseIndex = (courseIndex + 1) % scoreSet.size();
+                        }
+                        ImGui::SameLine();
+                        if (ImGui::Button("Reset"))
+                        {
+                            league.reset();
+                        }
+
+                        if (ImGui::Button("Run 10 Seasons"))
+                        {
+                            for (auto i = 0; i < 10; ++i)
+                            {
+                                for (auto j = 0; j < League::MaxIterations; ++j)
+                                {
+                                    league.iterate(scoreSet[courseIndex].par, scoreSet[courseIndex].scores, scoreSet[courseIndex].scores.size());
+                                    courseIndex = (courseIndex + 1) % scoreSet.size();
+                                }
+                            }
+                        }
+                    }*/
+                }
+                ImGui::End();
+            }
+        });
+
     buildScene();
 }
 
