@@ -41,6 +41,7 @@ source distribution.
 #include <crogine/graphics/Shader.hpp>
 #include <crogine/graphics/MaterialData.hpp>
 #include <crogine/graphics/RenderTexture.hpp>
+#include <crogine/graphics/CubemapTexture.hpp>
 #include <crogine/graphics/postprocess/PostProcess.hpp>
 
 #include <crogine/detail/glm/mat4x4.hpp>
@@ -453,7 +454,7 @@ namespace cro
         std::array<RenderTexture, 2u> m_postBuffers;
         std::vector<std::unique_ptr<PostProcess>> m_postEffects;
 
-
+        cro::CubemapTexture m_skyboxCubemap;
         struct Skybox final
         {
             std::uint32_t vbo = 0;

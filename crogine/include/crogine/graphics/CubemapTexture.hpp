@@ -34,6 +34,22 @@ source distribution.
 
 namespace cro
 {
+    /*!
+    /brief Loads a set of images into a cubmap from a *.ccm file with the following format:
+    /begincode
+    cubemap
+    {
+        up = "py.png"
+        down = "ny.png"
+        right = "nx.png"
+        left = "px.png"
+        front = "pz.png"
+        back = "nz.png"
+    }
+    /endcode
+    Image files may be referenced in the same directory as the *.ccm file, be realtive
+    to the current working directory or have absolute paths.
+    */
     class CRO_EXPORT_API CubemapTexture : public Detail::SDLResource
     {
     public:
@@ -41,10 +57,10 @@ namespace cro
         ~CubemapTexture();
 
         CubemapTexture(const CubemapTexture&) = delete;
-        CubemapTexture(CubemapTexture&&) = delete;
+        CubemapTexture(CubemapTexture&&) noexcept;
 
         CubemapTexture& operator = (const CubemapTexture&) = delete;
-        CubemapTexture& operator = (CubemapTexture&&) = delete;
+        CubemapTexture& operator = (CubemapTexture&&) noexcept;
 
         std::uint32_t getGLHandle() const;
 

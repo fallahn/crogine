@@ -55,6 +55,22 @@ CubemapTexture::CubemapTexture()
 
 }
 
+CubemapTexture::CubemapTexture(CubemapTexture&& other) noexcept
+    : CubemapTexture()
+{
+    std::swap(m_handle, other.m_handle);
+}
+
+CubemapTexture& CubemapTexture::operator= (CubemapTexture&& other) noexcept
+{
+    if (m_handle)
+    {
+        glCheck(glDeleteTextures(1, &m_handle));
+        m_handle = 0;
+    }
+    std::swap(m_handle, other.m_handle);
+}
+
 CubemapTexture::~CubemapTexture()
 {
     if (m_handle)
@@ -84,32 +100,38 @@ bool CubemapTexture::loadFromFile(const std::string& path)
         return false;
     }
 
-    std::array<std::string, CubemapDirection::Count> paths;
-    std::uint8_t flags = 0;
+    auto currPath = cro::FileSystem::getFilePath(path);
+    const auto processPath =
+        [&](std::string& outPath, std::string inPath)
+        {
+            std::replace(inPath.begin(), inPath.end(), '\\', '/');
+            if (inPath.find('/') == std::string::npos)
+            {
+                //assume this is in the same dir
+                outPath = currPath + inPath;
+            }
+            else
+            {
+                outPath = inPath;
+            }
+        };
+
+
+    std::array<std::string, CubemapDirection::Count> paths = {};
 
     const auto& properties = cfg.getProperties();
-    for (const auto& prop : properties)
-    {
-        auto name = prop.getName();
-        for (auto i = 0; i < CubemapDirection::Count; ++i)
-        {
-            if (name == Labels[i])
-            {
-                paths[i] = prop.getValue<std::string>();
-                flags |= (1 << i);
-                break;
-            }
-        }
-    }
-
-    //warn if a side is missing
     for (auto i = 0; i < CubemapDirection::Count; ++i)
     {
-        if ((flags & (1 << i)) == 0)
+        if(auto* prop = cfg.findProperty(Labels[i]); prop != nullptr)
+        {
+            processPath(paths[i], prop->getValue<std::string>());
+        }
+        else
         {
             LogW << "Path to " << Labels[i] << " image is missing from " << path << std::endl;
         }
     }
+
 
     if (m_handle == 0)
     {
