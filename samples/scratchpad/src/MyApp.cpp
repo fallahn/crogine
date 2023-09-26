@@ -166,7 +166,7 @@ bool MyApp::initialise()
     m_stateStack.registerState<GCState>(States::ScratchPad::GC);
 
 #ifdef CRO_DEBUG_
-    m_stateStack.pushState(States::ScratchPad::Billiards);
+    m_stateStack.pushState(States::ScratchPad::Swing);
     //m_stateStack.pushState(States::ScratchPad::MainMenu);
 #else
     m_stateStack.pushState(States::ScratchPad::MainMenu);

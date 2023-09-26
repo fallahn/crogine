@@ -36,7 +36,6 @@ source distribution.
 #include <crogine/core/State.hpp>
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/graphics/ModelDefinition.hpp>
-#include <crogine/graphics/CubemapTexture.hpp>
 
 class BilliardsState final : public cro::State
 {
@@ -60,8 +59,6 @@ private:
     cro::Scene m_scene;
     cro::Scene m_skyboxScene;
     cro::ResourceCollection m_resources;
-
-    cro::CubemapTexture m_cubemap;
 
     BulletDebug m_debugDrawer;
     cro::ModelDefinition m_ballDef;

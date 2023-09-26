@@ -63,12 +63,22 @@ CubemapTexture::CubemapTexture(CubemapTexture&& other) noexcept
 
 CubemapTexture& CubemapTexture::operator= (CubemapTexture&& other) noexcept
 {
+    //hmm we should check the other handle is not this
+    //but if it is we're doing something silly like self-assigning?
+
+    if (m_handle == other.m_handle)
+    {
+        return *this;
+    }
+
     if (m_handle)
     {
         glCheck(glDeleteTextures(1, &m_handle));
         m_handle = 0;
     }
     std::swap(m_handle, other.m_handle);
+
+    return *this;
 }
 
 CubemapTexture::~CubemapTexture()

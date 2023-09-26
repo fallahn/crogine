@@ -54,6 +54,37 @@ namespace
     float cohesion = 10.f;
     float maxVelocity = 200.f;
     float targetRadius = 50.f;
+
+    const std::string CubeFrag = R"(
+    OUTPUT
+
+    uniform sampler2D u_diffuseMap;
+
+    VARYING_IN vec2 v_texCoord0;
+
+    void main()
+    {
+        FRAG_OUT = TEXTURE(u_diffuseMap, v_texCoord0);
+    })";
+
+    struct ShaderID final
+    {
+        enum
+        {
+            Water = 1,
+
+
+        };
+    };
+
+    struct MaterialID final
+    {
+        enum
+        {
+            Water
+
+        };
+    };
 }
 
 SwingState::SwingState(cro::StateStack& stack, cro::State::Context context)
@@ -161,6 +192,11 @@ void SwingState::addSystems()
 
 void SwingState::loadAssets()
 {
+    m_cubemap.loadFromFile("assets/images/1/cmap.ccm");
+    m_resources.shaders.loadFromString(ShaderID::Water,
+        cro::ModelRenderer::getDefaultVertexShader(cro::ModelRenderer::VertexShaderID::Unlit), CubeFrag, "#define TEXTURED\n#define SUBRECTS\n");
+    m_resources.materials.add(MaterialID::Water, m_resources.shaders.get(ShaderID::Water));
+
     m_target.setVertexData(
         {
             cro::Vertex2D(glm::vec2(-10.f, 10.f), cro::Colour::Blue),
@@ -187,6 +223,38 @@ void SwingState::createScene()
     updateView(camEnt.getComponent<cro::Camera>());
     camEnt.getComponent<cro::Camera>().resizeCallback = std::bind(&SwingState::updateView, this, std::placeholders::_1);
 
+    camEnt.getComponent<cro::Transform>().setPosition({ 0.f, 1.2f, 2.5f });
+    camEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -0.5f);
+
+    cro::ModelDefinition md(m_resources);
+    md.loadFromFile("assets/models/plane.cmt");
+
+    auto entity = m_gameScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    md.createModel(entity);
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [](cro::Entity e, float dt)
+    {
+        e.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, dt * 0.5f);
+    };
+
+    auto material = m_resources.materials.get(MaterialID::Water);
+    material.doubleSided = true;
+    auto* m = md.getMaterial(0);
+    if (m->properties.count("u_diffuseMap"))
+    {
+        material.setProperty("u_diffuseMap", cro::TextureID(m->properties.at("u_diffuseMap").second.textureID));
+    }
+    if (m->properties.count("u_subrect"))
+    {
+        const float* v = m->properties.at("u_subrect").second.vecValue;
+        glm::vec4 subrect(v[0], v[1], v[2], v[3]);
+        material.setProperty("u_subrect", subrect);
+    }
+    material.animation = m->animation;
+    entity.getComponent<cro::Model>().setMaterial(0, material);
+
 
     //entity uses callback system to process logic of follower
     struct FollowerData final
@@ -194,7 +262,7 @@ void SwingState::createScene()
         glm::vec2 velocity = glm::vec2(0.f);
     };
 
-    auto entity = m_gameScene.createEntity();
+    entity = m_gameScene.createEntity();
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().setUserData<FollowerData>();
     entity.getComponent<cro::Callback>().function =
@@ -222,6 +290,10 @@ void SwingState::createScene()
         //make sure not to mutate the velocity by the multiplier
         m_follower.move(data.velocity * multiplier * dt);
     };
+
+
+    m_gameScene.getSunlight().getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -0.32f);
+    m_gameScene.getSunlight().getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, -0.2f);
 }
 
 void SwingState::createUI()
