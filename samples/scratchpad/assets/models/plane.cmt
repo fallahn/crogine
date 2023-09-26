@@ -1,10 +1,10 @@
 model plane
 {
 	
-	mesh = quad
+	mesh = "plane.cmb"
 	size = 0.7,2
 
-	material Unlit
+	material VertexLit
     {
         name = "Untitled"
         colour = 1.000000,1.000000,1.000000,1.000000
