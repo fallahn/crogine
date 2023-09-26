@@ -29,6 +29,8 @@ source distribution.
 
 #pragma once
 
+#include <cstdint>
+
 #if defined __APPLE__
 #include <TargetConditionals.h>
 #define GL41 //load GL4.1 not 4.6

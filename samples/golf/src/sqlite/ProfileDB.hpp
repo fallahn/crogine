@@ -35,6 +35,7 @@ source distribution.
 #include <array>
 #include <vector>
 #include <limits>
+#include <cstdint>
 
 struct CourseRecord final
 {

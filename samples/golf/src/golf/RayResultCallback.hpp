@@ -30,6 +30,7 @@ source distribution.
 #pragma once
 
 #include <btBulletCollisionCommon.h>
+#include <cstdint>
 
 struct CollisionGroup final
 {

@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.2.2)
+cmake_minimum_required(VERSION 3.5.2)
 
 
 #Xcode 10 will default to Mojave (must be done BEFORE project())
@@ -60,7 +60,7 @@ find_package(SDL2 REQUIRED)
 find_package(OpenGL REQUIRED)
 #TODO specify version 2.83
 find_package(Bullet REQUIRED)
-find_package(SQLite REQUIRED)
+find_package(SQLite3 REQUIRED)
 
 if(USE_NEWSFEED)
 find_package(CURL REQUIRED)
@@ -80,7 +80,7 @@ include_directories(
   ${SDL2_INCLUDE_DIR}
   ${OPENGL_INCLUDE_DIR}
   ${BULLET_INCLUDE_DIRS}
-  ${SQLITE_INCLUDE_DIRS}
+  ${SQLite3_INCLUDE_DIRS}
   ${CMAKE_CURRENT_SOURCE_DIR}/../../libsocial/include
   src)
 
@@ -156,7 +156,7 @@ target_link_libraries(${PROJECT_NAME}
   ${CROGINE_LIBRARIES}
   ${SDL2_LIBRARY}
   ${BULLET_LIBRARIES}
-  ${SQLITE_LIBRARIES}  
+  ${SQLite3_LIBRARIES}  
   ${OPENGL_LIBRARIES})
 
 if(USE_NEWSFEED)

@@ -32,6 +32,7 @@ source distribution.
 #include <crogine/Config.hpp>
 
 #include <string>
+#include <cstdint>
 
 namespace cro
 {

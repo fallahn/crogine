@@ -102,7 +102,7 @@ struct Challenge final
     std::uint32_t value = 0;
 
     explicit Challenge(std::uint32_t target, std::int32_t t = Counter, std::uint32_t v = 0)
-        : targetValue(target), value(v), type(t) {}
+        : targetValue(target), type(t), value(v) {}
 };
 
 class MonthlyChallenge final

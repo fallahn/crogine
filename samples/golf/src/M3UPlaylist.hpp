@@ -34,6 +34,7 @@ source distribution.
 
 #include <string>
 #include <vector>
+#include <cstdint>
 
 class M3UPlaylist final
 {

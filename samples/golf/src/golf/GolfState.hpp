@@ -65,6 +65,7 @@ source distribution.
 #include <array>
 #include <future>
 #include <unordered_map>
+#include <cstdint>
 
 #ifdef CRO_DEBUG_
 //#define PATH_TRACING

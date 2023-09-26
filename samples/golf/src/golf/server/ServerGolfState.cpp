@@ -1220,14 +1220,14 @@ void GolfState::initScene()
         default:
         case 0:
         {
-            auto size = std::min(m_holeData.size(), 12ull);
+            auto size = std::min(m_holeData.size(), std::size_t(12));
             m_holeData.resize(size);
         }
         break;
         case 1:
         case 2:
         {
-            auto size = std::min(m_holeData.size(), 6ull);
+            auto size = std::min(m_holeData.size(), std::size_t(6));
             m_holeData.resize(size);
         }
         break;
