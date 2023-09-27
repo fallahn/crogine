@@ -83,6 +83,9 @@ namespace
         v_worldPosition = worldPosition.xyz;
         gl_Position = wvp * position;
 
+#if defined(SPHERE)
+        v_tbn[0] = normalize(a_position.xyz); //assumes the position is relative to centre and used as cubmap lookup
+#else
         vec3 normal = a_normal;
         vec4 tangent = vec4(a_tangent, 0.0);
         vec4 bitangent = vec4(a_bitangent, 0.0);
@@ -94,6 +97,7 @@ namespace
         v_texCoord0 = u_subrect.xy + (a_texCoord0 * u_subrect.zw);
 
         gl_ClipDistance[0] = dot(worldPosition, u_clipPlane);
+#endif
     })";
 
 
@@ -153,12 +157,27 @@ namespace
         FRAG_OUT = colour;
     })";
 
+
+    const std::string SphereFrag = 
+    R"(
+    OUTPUT
+
+    uniform samplerCube u_cubeMap;
+
+    VARYING_IN vec3 v_tbn[3];
+
+    void main()
+    {
+        FRAG_OUT = TEXTURE_CUBE(u_cubeMap, normalize(v_tbn[0]));
+    })";
+
+
     struct ShaderID final
     {
         enum
         {
             Water = 1,
-
+            Sphere,
 
         };
     };
@@ -167,8 +186,8 @@ namespace
     {
         enum
         {
-            Water
-
+            Water,
+            Sphere
         };
     };
 
@@ -294,6 +313,11 @@ void SwingState::loadAssets()
     timeUniform = shader.getUniformID("u_time");
     m_resources.materials.add(MaterialID::Water, shader);
 
+
+    m_resources.shaders.loadFromString(ShaderID::Sphere, WaterVert, SphereFrag, "#define SPHERE\n");
+    m_resources.materials.add(MaterialID::Sphere, m_resources.shaders.get(ShaderID::Sphere));
+
+
     m_target.setVertexData(
         {
             cro::Vertex2D(glm::vec2(-10.f, 10.f), cro::Colour::Blue),
@@ -357,6 +381,19 @@ void SwingState::createScene()
     material.setProperty("u_cubeMap", cro::CubemapID(m_cubemap.getGLHandle()));
     material.animation = m->animation;
     entity.getComponent<cro::Model>().setMaterial(0, material);
+
+
+    //sphere preview
+    md.loadFromFile("assets/models/sphere_1m.cmt");
+    entity = m_gameScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ -1.f, 0.5f, 0.f });
+    md.createModel(entity);
+
+    material = m_resources.materials.get(MaterialID::Sphere);
+    material.setProperty("u_cubeMap", cro::CubemapID(m_cubemap.getGLHandle()));
+    entity.getComponent<cro::Model>().setMaterial(0, material);
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function = [](cro::Entity e, float dt) {e.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, dt); };
 
 
     //entity uses callback system to process logic of follower

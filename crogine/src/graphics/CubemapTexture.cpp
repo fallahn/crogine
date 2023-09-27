@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022
+Matt Marchant 2022 - 2023
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -159,6 +159,8 @@ bool CubemapTexture::loadFromFile(const std::string& path)
 
         Image* currImage = &fallback;
         GLenum format = GL_RGB;
+        std::uint32_t prevSize = 0;
+
         for (auto i = 0u; i < 6u; i++)
         {
             if (side.loadFromFile(paths[i]))
@@ -186,6 +188,13 @@ bool CubemapTexture::loadFromFile(const std::string& path)
 
             auto size = currImage->getSize();
             glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, format, size.x, size.y, 0, format, GL_UNSIGNED_BYTE, currImage->getPixelData());
+
+            if (i != 0 && prevSize != size.x)
+            {
+                LogE << cro::FileSystem::getFileName(path) << ": Cubemap face " << i << " was not the same size as previous faces." << std::endl;
+                break;
+            }
+            prevSize = size.x;
         }
         glCheck(glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
         glCheck(glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
