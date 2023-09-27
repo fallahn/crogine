@@ -129,7 +129,6 @@ bool CubemapTexture::loadFromFile(const std::string& path)
 
     std::array<std::string, CubemapDirection::Count> paths = {};
 
-    const auto& properties = cfg.getProperties();
     for (auto i = 0; i < CubemapDirection::Count; ++i)
     {
         if(auto* prop = cfg.findProperty(Labels[i]); prop != nullptr)
