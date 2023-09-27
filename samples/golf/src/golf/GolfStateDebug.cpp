@@ -305,7 +305,7 @@ void GolfState::registerDebugCommands()
 
                 static const std::array<std::string, 6u> FileNames =
                 {
-                    "/nz.png", "/px.png", "/pz.png", "/nx.png", "/py.png", "/ny.png"
+                    "/pz.png", "/nx.png", "/nz.png", "/px.png", "/py.png", "/ny.png"
                 };
 
                 auto position = Positions[i];
