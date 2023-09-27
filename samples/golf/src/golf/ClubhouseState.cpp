@@ -1443,7 +1443,7 @@ void ClubhouseState::createTableScene()
     {
         auto texSize = BaseSize;
 
-        auto winSize = glm::vec2(cro::App::getWindow().getSize());
+        //auto winSize = glm::vec2(cro::App::getWindow().getSize());
         float viewScale = getViewScale();
 
         if (!m_sharedData.pixelScale)

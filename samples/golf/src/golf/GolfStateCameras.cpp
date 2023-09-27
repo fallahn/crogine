@@ -442,8 +442,8 @@ void GolfState::createCameras()
     camEnt.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float dt)
         {
-            static constexpr float FollowFast = 0.009f;
-            static constexpr float FollowSlow = 0.5f;
+            //static constexpr float FollowFast = 0.009f;
+            //static constexpr float FollowSlow = 0.5f;
             static constexpr float MinHeight = 0.08f;
 
             if (e.getComponent<cro::Camera>().active)
@@ -707,7 +707,7 @@ void GolfState::toggleFreeCam()
         }
     }
 
-    static std::size_t prevCam = 0; //need to restore this when switching back
+    //static std::size_t prevCam = 0; //need to restore this when switching back
 
     cro::Command cmd;
     cmd.targetFlags = CommandID::StrokeArc | CommandID::StrokeIndicator;

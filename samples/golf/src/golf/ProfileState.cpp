@@ -1671,10 +1671,10 @@ void ProfileState::buildPreviewScene()
 
     auto ballTexCallback = [&](cro::Camera& cam)
     {
-        std::uint32_t samples = m_sharedData.pixelScale ? 0 :
-            m_sharedData.antialias ? m_sharedData.multisamples : 0;
+        //std::uint32_t samples = m_sharedData.pixelScale ? 0 :
+        //    m_sharedData.antialias ? m_sharedData.multisamples : 0;
 
-        auto windowSize = static_cast<float>(cro::App::getWindow().getSize().x);
+        //auto windowSize = static_cast<float>(cro::App::getWindow().getSize().x);
 
         float windowScale = getViewScale();
         float scale = m_sharedData.pixelScale ? windowScale : 1.f;
@@ -1834,7 +1834,7 @@ void ProfileState::createPalettes(cro::Entity parent)
             //direction of keys/controller is correct in the grid
             std::size_t x = j % PaletteColumnCount;
             std::size_t y = (RowCount - 1) - (j / PaletteColumnCount);
-            auto colour = pc::Palette[j];
+            //auto colour = pc::Palette[j];
 
             glm::vec2 pos = { x * (IconSize.x + IconPadding), y * (IconSize.y + IconPadding) };
             pos += IconPadding;
@@ -2038,7 +2038,7 @@ void ProfileState::createBallFlyout(cro::Entity parent)
 
     //pad out missing cols to make column count work
     const auto PadCount = (BallColCount - (m_ballModels.size() % BallColCount));
-    for (auto j = 0; j < PadCount; ++j)
+    for (auto j = 0u; j < PadCount; ++j)
     {
         entity = m_uiScene.createEntity();
         entity.addComponent<cro::Transform>();

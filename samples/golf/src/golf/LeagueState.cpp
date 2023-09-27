@@ -710,7 +710,7 @@ void LeagueState::createLeagueTab(cro::Entity parent, const cro::SpriteSheet& sp
 
                 //this assumes everything was sorted correctly when it was saved
                 cro::String str = "Previous Season's Results";
-                for (auto i = 0; i < buff.size(); ++i)
+                for (auto i = 0u; i < buff.size(); ++i)
                 {
                     buff[i].nameIndex = std::clamp(buff[i].nameIndex, -1, static_cast<std::int32_t>(RandomNames.size()) - 1);
 
@@ -851,18 +851,18 @@ void LeagueState::activateTab(std::int32_t tabID)
 
     //for reasons I've given up trying to understand, we need to
     //delay the selection by one frame.
-    const auto selectNext = [&](std::int32_t idx)
-    {
-        auto e = m_scene.createEntity();
-        e.addComponent<cro::Callback>().active = true;
-        e.getComponent<cro::Callback>().function =
-            [&, idx](cro::Entity f, float)
-        {
-            m_scene.getSystem<cro::UISystem>()->selectByIndex(idx);
-            f.getComponent<cro::Callback>().active = false;
-            m_scene.destroyEntity(f);
-        };
-    };
+    // const auto selectNext = [&](std::int32_t idx)
+    // {
+    //     auto e = m_scene.createEntity();
+    //     e.addComponent<cro::Callback>().active = true;
+    //     e.getComponent<cro::Callback>().function =
+    //         [&, idx](cro::Entity f, float)
+    //     {
+    //         m_scene.getSystem<cro::UISystem>()->selectByIndex(idx);
+    //         f.getComponent<cro::Callback>().active = false;
+    //         m_scene.destroyEntity(f);
+    //     };
+    // };
 
     //update the selection order depending on which page we're on
     /*switch (tabID)

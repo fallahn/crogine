@@ -65,8 +65,8 @@ GCState::GCState(cro::StateStack& stack, cro::State::Context context)
     : cro::State    (stack, context),
     m_gameScene     (context.appInstance.getMessageBus()),
     m_uiScene       (context.appInstance.getMessageBus()),
-    m_cameraIndex   (0),
-    m_processReturn (true)
+    m_processReturn (true),
+    m_cameraIndex   (0)
 {
     addSystems();
     loadAssets();

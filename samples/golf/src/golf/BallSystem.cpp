@@ -51,10 +51,11 @@ using namespace cl;
 
 namespace
 {
-    glm::vec3 btToGlm(btVector3 v)
-    {
-        return { v.getX(), v.getY(), v.getZ() };
-    }
+    //TODO get these all in one place and not reproduce everywhere
+    //glm::vec3 btToGlm(btVector3 v)
+    //{
+    //    return { v.getX(), v.getY(), v.getZ() };
+    //}
 
     static constexpr float MinBallDistance = HoleRadius * HoleRadius;
     static constexpr float FallRadius = Ball::Radius * 0.25f;
@@ -911,7 +912,7 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
             ball.initialSideVector = { 0.f, 0.f, 0.f };
 
             auto position = entity.getComponent<cro::Transform>().getPosition();
-            auto len2 = glm::length2(glm::vec2(position.x, position.z) - glm::vec2(m_holeData->pin.x, m_holeData->pin.z));
+            //auto len2 = glm::length2(glm::vec2(position.x, position.z) - glm::vec2(m_holeData->pin.x, m_holeData->pin.z));
             //auto wantGimme = (len2 <= (BallHoleDistance + GimmeRadii[m_gimmeRadius]));
 
             //send message to report status
@@ -1158,7 +1159,7 @@ void BallSystem::doBallCollision(cro::Entity entity)
 
     auto& tx = entity.getComponent<cro::Transform>();
     auto& ball = entity.getComponent<Ball>();
-    static constexpr float MinDist = 5.f * 5.f;// 0.5f * 0.5f;// (Ball::Radius * 10.f)* (Ball::Radius * 10.f);
+    //static constexpr float MinDist = 5.f * 5.f;// 0.5f * 0.5f;// (Ball::Radius * 10.f)* (Ball::Radius * 10.f);
     static constexpr float CollisionDist = (Ball::Radius * 1.7f) * (Ball::Radius * 1.7f);
 
     //don't collide until we moved from our start position

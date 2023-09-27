@@ -165,7 +165,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     std::fill(m_readyState.begin(), m_readyState.end(), false);
     sd.minimapData = {};
 
-    auto size = glm::vec2(GolfGame::getActiveTarget()->getSize());
+    //auto size = glm::vec2(GolfGame::getActiveTarget()->getSize());
     m_viewScale = glm::vec2(getViewScale());
 
     Achievements::setActive(true);

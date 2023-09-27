@@ -840,8 +840,8 @@ void StatsState::createClubStatsTab(cro::Entity parent, const cro::SpriteSheet& 
         {
             //fudgenstein.
             auto c = BarColours[colourIndex];
-            if (colourIndex == 2 && playerLevel < 30
-                || colourIndex == 1 && playerLevel < 15)
+            if ((colourIndex == 2 && playerLevel < 30)
+                || (colourIndex == 1 && playerLevel < 15))
             {
                 c.setAlpha(0.15f);
             }
@@ -2317,7 +2317,7 @@ void PieChart::updateVerts()
             }
             wedgePoints.emplace_back(-std::cos(currentAngle), std::sin(currentAngle));
 
-            for (auto i = 0; i < wedgePoints.size() - 1; ++i)
+            for (auto i = 0u; i < wedgePoints.size() - 1; ++i)
             {
                 verts.emplace_back(glm::vec2(0.f), CD32::Colours[colourIndex]);
                 verts.emplace_back(wedgePoints[i+1] * PieRadius, CD32::Colours[colourIndex]);

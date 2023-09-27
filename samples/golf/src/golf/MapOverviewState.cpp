@@ -173,8 +173,8 @@ MapOverviewState::MapOverviewState(cro::StateStack& ss, cro::State::Context ctx,
     m_scene             (ctx.appInstance.getMessageBus()),
     m_sharedData        (sd),
     m_previousMap       (-1),
-    m_shaderValueIndex  (0),
     m_viewScale         (2.f),
+    m_shaderValueIndex  (0),
     m_zoomScale         (1.f),
     m_fingerCount       (0)
 {
@@ -776,11 +776,11 @@ void MapOverviewState::refreshMap()
         std::round(m_sharedData.minimapData.teePos.x),
         std::round(-m_sharedData.minimapData.teePos.z)
     };
-    glm::vec2 pinPos =
-    {
-        std::round(m_sharedData.minimapData.pinPos.x),
-        std::round(-m_sharedData.minimapData.pinPos.z),
-    };
+    //glm::vec2 pinPos =
+    //{
+    //    std::round(m_sharedData.minimapData.pinPos.x),
+    //    std::round(-m_sharedData.minimapData.pinPos.z),
+    //};
 
     auto charScale = std::round(MaxZoom - (m_zoomScale - MinZoom));
     charScale = std::round((charScale / MaxZoom) * 8.f);

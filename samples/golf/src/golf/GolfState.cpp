@@ -4682,7 +4682,7 @@ void GolfState::createDrone()
             //move towards skycam target
             static constexpr float MoveSpeed = 6.f;
             static constexpr float MinRadius = MoveSpeed * MoveSpeed;
-            static constexpr float AccelerationRadius = 7.f;// 40.f;
+            //static constexpr float AccelerationRadius = 7.f;// 40.f;
 
             auto movement = target.getComponent<cro::Transform>().getPosition() - oldPos;
             if (auto len2 = glm::length2(movement); len2 > MinRadius)
@@ -7242,7 +7242,7 @@ void GolfState::updateActor(const ActorInfo& update)
 
 void GolfState::createTransition(const ActivePlayer& playerData)
 {
-    float targetDistance = glm::length2(playerData.position - m_currentPlayer.position);
+    //float targetDistance = glm::length2(playerData.position - m_currentPlayer.position);
 
     //set the target zoom on the player camera
     float zoom = 1.f;

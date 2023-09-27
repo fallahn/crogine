@@ -4264,8 +4264,6 @@ void GolfState::updateLeague()
             parVals[i] = m_holeData[i].par;
         }
 
-        std::int32_t playerScore = 0;
-
         //we assume that as achievments are allowed that
         //there's only one human player
         for (const auto& player : m_sharedData.connectionData[m_sharedData.localConnectionData.connectionID].playerData)

@@ -39,10 +39,10 @@ namespace
         return { v.x, v.y, v.z };
     }
 
-    glm::vec3 toGLM(btVector3 v)
-    {
-        return { v.x(), v.y(), v.z() };
-    }
+    //glm::vec3 toGLM(btVector3 v)
+    //{
+    //    return { v.x(), v.y(), v.z() };
+    //}
 }
 
 CollisionMesh::CollisionMesh()

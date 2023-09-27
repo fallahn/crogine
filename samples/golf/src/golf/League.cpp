@@ -233,7 +233,7 @@ void League::iterate(const std::array<std::int32_t, 18>& parVals, const std::vec
 
         //we'll also save this to a file so we
         //can review previous season
-        for (auto i = 0; i < m_players.size(); ++i)
+        for (auto i = 0u; i < m_players.size(); ++i)
         {
             auto& data = sortData.emplace_back();
             data.score = m_players[i].currentScore;
@@ -373,7 +373,7 @@ void League::read()
         //validate the loaded data and clamp to sane values
         m_currentIteration %= MaxIterations;
 
-        static constexpr std::int32_t MaxScore = 5 * 18 * MaxIterations;
+        //static constexpr std::int32_t MaxScore = 5 * 18 * MaxIterations;
 
         //TODO what do we consider sane values for each player?
         for (auto& player : m_players)

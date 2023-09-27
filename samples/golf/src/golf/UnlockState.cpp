@@ -279,7 +279,7 @@ void UnlockState::buildScene()
 
     auto resizeCallback = [&](cro::Camera& cam)
     {
-        auto windowSize = glm::vec2(GolfGame::getActiveTarget()->getSize());
+        //auto windowSize = glm::vec2(GolfGame::getActiveTarget()->getSize());
 
         auto size = PreviewSize * static_cast<std::uint32_t>(getViewScale());
         m_modelTexture.create(size, size, true, false, m_sharedData.multisamples);

@@ -65,21 +65,21 @@ namespace
 
     bool hadTennisBounce = false;
 
-    glm::vec3 randomOffset3()
-    {
-        auto x = cro::Util::Random::value(0, 1) * 2;
-        auto y = cro::Util::Random::value(0, 1) * 2;
-
-        x -= 1;
-        y -= 1;
-
-        x *= cro::Util::Random::value(3, 8);
-        y *= cro::Util::Random::value(3, 8);
-
-        glm::vec3 ret(x, 0.f, y);
-        ret = glm::normalize(ret) *= cro::Util::Random::value(3.f, 5.f);
-        return ret / 100.f;
-    };
+    //glm::vec3 randomOffset3()
+    //{
+    //    auto x = cro::Util::Random::value(0, 1) * 2;
+    //    auto y = cro::Util::Random::value(0, 1) * 2;
+    //
+    //    x -= 1;
+    //    y -= 1;
+    //
+    //    x *= cro::Util::Random::value(3, 8);
+    //    y *= cro::Util::Random::value(3, 8);
+    //
+    //    glm::vec3 ret(x, 0.f, y);
+    //    ret = glm::normalize(ret) *= cro::Util::Random::value(3.f, 5.f);
+    //    return ret / 100.f;
+    //};
 }
 
 GolfState::GolfState(SharedData& sd)
