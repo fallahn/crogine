@@ -29,20 +29,13 @@ source distribution.
 
 #include "CollisionMesh.hpp"
 #include "RayResultCallback.hpp"
+#include "GameConsts.hpp"
 
 #include <crogine/detail/glm/mat4x4.hpp>
 
 namespace
 {
-    btVector3 fromGLM(glm::vec3 v)
-    {
-        return { v.x, v.y, v.z };
-    }
 
-    //glm::vec3 toGLM(btVector3 v)
-    //{
-    //    return { v.x(), v.y(), v.z() };
-    //}
 }
 
 CollisionMesh::CollisionMesh()
@@ -102,7 +95,7 @@ void CollisionMesh::updateCollisionMesh(const cro::Mesh::Data& meshData)
 TerrainResult CollisionMesh::getTerrain(glm::vec3 position) const
 {
     static const btVector3 RayLength(0.f, -50.f, 0.f);
-    auto worldPos = fromGLM(position);
+    auto worldPos = glmToBt(position);
     worldPos -= (RayLength / 2.f);
 
     TerrainResult retVal;
@@ -128,8 +121,8 @@ TerrainResult CollisionMesh::getTerrain(glm::vec3 position) const
 
 TerrainResult CollisionMesh::getTerrain(glm::vec3 rayStart, glm::vec3 rayDir) const 
 {
-    auto start = fromGLM(rayStart);
-    auto end = fromGLM(rayStart + rayDir);
+    auto start = glmToBt(rayStart);
+    auto end = glmToBt(rayStart + rayDir);
 
     TerrainResult retVal;
 

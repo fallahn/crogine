@@ -31,6 +31,7 @@ source distribution.
 #include "BilliardsSystem.hpp"
 #include "InterpolationSystem.hpp"
 #include "MessageIDs.hpp"
+#include "GameConsts.hpp"
 
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/detail/ModelBinary.hpp>
@@ -42,16 +43,6 @@ namespace
 {
     std::int32_t collisionCount = 0;
     glm::vec3 rayForward = glm::vec3(0.f);
-
-    static inline glm::vec3 btToGlm(btVector3 v)
-    {
-        return { v.getX(), v.getY(), v.getZ() };
-    }
-
-    static inline btVector3 glmToBt(glm::vec3 v)
-    {
-        return { v.x, v.y, v.z };
-    }
 }
 
 BilliardsCollisionSystem::BilliardsCollisionSystem(cro::MessageBus& mb)

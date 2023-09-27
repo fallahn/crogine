@@ -137,6 +137,10 @@ static constexpr std::int16_t TriggerDeadZone = 30;
 static constexpr glm::vec3 BallHairScale(0.277f);
 static constexpr glm::vec3 BallHairOffset(0.f, 0.04f, -0.007f);
 
+class btVector3;
+glm::vec3 btToGlm(btVector3 v);
+btVector3 glmToBt(glm::vec3 v);
+
 struct TutorialID
 {
     //note that these are in order in which they are displayed

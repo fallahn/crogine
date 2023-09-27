@@ -51,12 +51,6 @@ using namespace cl;
 
 namespace
 {
-    //TODO get these all in one place and not reproduce everywhere
-    //glm::vec3 btToGlm(btVector3 v)
-    //{
-    //    return { v.getX(), v.getY(), v.getZ() };
-    //}
-
     static constexpr float MinBallDistance = HoleRadius * HoleRadius;
     static constexpr float FallRadius = Ball::Radius * 0.25f;
     static constexpr float MinFallDistance = (HoleRadius - FallRadius) * (HoleRadius - FallRadius);
