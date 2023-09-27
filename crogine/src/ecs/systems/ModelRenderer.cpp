@@ -588,6 +588,11 @@ void ModelRenderer::applyProperties(const Material::Data& material, const Model&
             glCheck(glBindTexture(GL_TEXTURE_CUBE_MAP, prop.second.second.textureID));
             glCheck(glUniform1i(prop.second.first, currentTextureUnit++));
             break;
+        case Material::Property::CubemapArray:
+            glCheck(glActiveTexture(GL_TEXTURE0 + currentTextureUnit));
+            glCheck(glBindTexture(GL_TEXTURE_CUBE_MAP_ARRAY, prop.second.second.textureID));
+            glCheck(glUniform1i(prop.second.first, currentTextureUnit++));
+            break;
         case Material::Property::Number:
             glCheck(glUniform1f(prop.second.first,
                 prop.second.second.numberValue));

@@ -37,7 +37,7 @@ using namespace cro;
 using namespace cro::Material;
 
 TextureID::TextureID(const cro::Texture& t)
-    : textureID(t.getGLHandle()), isArray(false) {}
+    : textureID(t.getGLHandle()), m_isArray(false) {}
 
 TextureID& TextureID::operator = (std::uint32_t id)
 {
@@ -48,24 +48,26 @@ TextureID& TextureID::operator = (std::uint32_t id)
 
 TextureID& TextureID::operator = (const Texture& t)
 {
-    CRO_ASSERT(!isArray, "Already assigned to array texture.");
+    CRO_ASSERT(!isArray(), "Already assigned to array texture.");
     textureID = t.getGLHandle();
     return *this;
 }
 
 
 CubemapID::CubemapID(const cro::CubemapTexture& t)
-    : textureID(t.getGLHandle()) {}
+    : textureID(t.getGLHandle()), m_isArray(t.getCubemapCount() > 1) {}
 
 CubemapID& CubemapID::operator = (std::uint32_t id)
 {
     textureID = id;
+    //URGH we don't now id the other is even a cubemap, let alone an array...
     return *this;
 }
 
 CubemapID& CubemapID::operator = (const CubemapTexture& t)
 {
     textureID = t.getGLHandle();
+    m_isArray = t.getCubemapCount() > 1;
     return *this;
 }
 
@@ -178,7 +180,7 @@ void Data::setProperty(const std::string& name, TextureID value)
     if (result != properties.end())
     {
         result->second.second.textureID = value.textureID;
-        result->second.second.type = value.isArray ? Property::TextureArray : Property::Texture;
+        result->second.second.type = value.isArray() ? Property::TextureArray : Property::Texture;
     }
 }
 
@@ -189,7 +191,7 @@ void Data::setProperty(const std::string& name, CubemapID value)
     if (result != properties.end())
     {
         result->second.second.textureID = value.textureID;
-        result->second.second.type = Property::Cubemap;
+        result->second.second.type = value.isArray() ? Property::CubemapArray : Property::Cubemap;
     }
 }
 

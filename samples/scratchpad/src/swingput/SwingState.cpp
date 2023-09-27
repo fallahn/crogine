@@ -162,13 +162,15 @@ namespace
     R"(
     OUTPUT
 
-    uniform samplerCube u_cubeMap;
+    uniform samplerCubeArray u_cubeMap;
+    //uniform samplerCube u_cubeMap;
 
     VARYING_IN vec3 v_tbn[3];
 
     void main()
     {
-        FRAG_OUT = TEXTURE_CUBE(u_cubeMap, normalize(v_tbn[0]));
+        FRAG_OUT = texture(u_cubeMap, vec4(normalize(v_tbn[0]), 0.0));
+        //FRAG_OUT = texture(u_cubeMap, normalize(v_tbn[0]));
     })";
 
 
@@ -318,6 +320,14 @@ void SwingState::loadAssets()
     m_resources.materials.add(MaterialID::Sphere, m_resources.shaders.get(ShaderID::Sphere));
 
 
+    std::vector<std::string> cubemapPaths =
+    {
+        "assets/images/0/cmap.ccm",
+        "assets/images/1/cmap.ccm",
+        "assets/images/2/cmap.ccm"
+    };
+    m_cubemapArray.loadFromFiles(cubemapPaths);
+
     m_target.setVertexData(
         {
             cro::Vertex2D(glm::vec2(-10.f, 10.f), cro::Colour::Blue),
@@ -378,7 +388,7 @@ void SwingState::createScene()
         glm::vec4 subrect(v[0], v[1], v[2], v[3]);
         material.setProperty("u_subrect", subrect);
     }
-    material.setProperty("u_cubeMap", cro::CubemapID(m_cubemap.getGLHandle()));
+    material.setProperty("u_cubeMap", cro::CubemapID(m_cubemap));
     material.animation = m->animation;
     entity.getComponent<cro::Model>().setMaterial(0, material);
 
@@ -390,7 +400,7 @@ void SwingState::createScene()
     md.createModel(entity);
 
     material = m_resources.materials.get(MaterialID::Sphere);
-    material.setProperty("u_cubeMap", cro::CubemapID(m_cubemap.getGLHandle()));
+    material.setProperty("u_cubeMap", cro::CubemapID(m_cubemapArray));
     entity.getComponent<cro::Model>().setMaterial(0, material);
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function = [](cro::Entity e, float dt) {e.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, dt); };

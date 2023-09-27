@@ -64,14 +64,31 @@ namespace cro
 
         std::uint32_t getGLHandle() const;
 
+        /*!
+        \brief Returns the number of loaded cubemaps - eg the size
+        of the array if it is a cubmap array, else 1 or 0 if nothing
+        has been loaded.
+        */
+        std::uint32_t getCubemapCount() const { return m_cubemapCount; }
+
         /*
         \brief Attempts to load a cubemap from a *.ccm configuration file
         \returns true on success else false.
         */
         bool loadFromFile(const std::string& path);
 
+
+        /*!
+        \brief Attempts to load the given vector of paths to *.ccm files
+        into a cubemap array.
+        \returns true on success else false
+        */
+        bool loadFromFiles(const std::vector<std::string>& paths);
+
     private:
         std::uint32_t m_handle;
+        std::uint32_t m_cubemapCount;
 
+        bool parseInputFile(const std::string& filePath, std::array<std::string, 6u>& outFiles);
     };
 }

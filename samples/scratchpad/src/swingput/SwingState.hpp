@@ -64,6 +64,7 @@ private:
 
     cro::ResourceCollection m_resources;
     cro::CubemapTexture m_cubemap;
+    cro::CubemapTexture m_cubemapArray;
 
     Swingput m_inputParser;
 
