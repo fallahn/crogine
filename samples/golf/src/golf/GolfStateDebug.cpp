@@ -231,6 +231,20 @@ void GolfState::addCameraDebugging()
 
 void GolfState::registerDebugCommands()
 {
+    //registerWindow([&]()
+    //    {
+    //        if (ImGui::Begin("sunlight"))
+    //        {
+    //            static float col[3] = { 1.f, 1.f, 1.f };
+    //            if (ImGui::ColorPicker3("Sky", col))
+    //            {
+    //                m_skyScene.getSunlight().getComponent<cro::Sunlight>().setColour({ col[0], col[1], col[2], 1.f });
+    //                m_gameScene.getSunlight().getComponent<cro::Sunlight>().setColour({ col[0], col[1], col[2], 1.f });
+    //            }
+    //        }
+    //        ImGui::End();
+    //    });
+
     registerCommand("build_cubemaps",
         [&](const std::string&)
         {
@@ -240,7 +254,10 @@ void GolfState::registerDebugCommands()
                 holeNumber = "0" + holeNumber;
             }
 
-            auto courseDir = "assets/golf/courses/" + m_sharedData.mapDirectory + "/cmap/" + holeNumber + "/";
+            std::string tod = "/d/";
+            //TODO if night tod = "/n/"
+
+            auto courseDir = "assets/golf/courses/" + m_sharedData.mapDirectory + "/cmap/" + holeNumber + tod;
             if (!cro::FileSystem::directoryExists(courseDir))
             {
                 cro::FileSystem::createDirectory(courseDir);

@@ -233,6 +233,7 @@ uniform sampler2DArray u_depthMap;
     OUTPUT
 
     uniform sampler2D u_diffuseMap;
+    uniform vec4 u_lightColour = vec4(1.0);
 
     VARYING_IN vec4 v_colour;
     VARYING_IN vec2 v_texCoord;
@@ -241,7 +242,11 @@ uniform sampler2DArray u_depthMap;
 
     void main()
     {
+#if defined (SUNLIGHT)
+        vec4 colour = TEXTURE(u_diffuseMap, v_texCoord) * u_lightColour;
+#else
         vec4 colour = TEXTURE(u_diffuseMap, v_texCoord);
+#endif
         FRAG_OUT = vec4(mix(WaterColour, colour.rgb, v_colour.g), 1.0);
 
         if(colour.a < 0.1) discard;
