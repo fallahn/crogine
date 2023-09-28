@@ -157,6 +157,7 @@ struct SharedStateData final
     std::uint8_t gimmeRadius = 0;
     std::uint8_t holeCount = 0; //0-1-2 all, front, back
     std::uint8_t reverseCourse = 0; //play holes in reverse order
+    std::uint8_t clubLimit = 0; //limit game to lowest player's clubs
 
     //printed by the error state
     std::string errorMessage;

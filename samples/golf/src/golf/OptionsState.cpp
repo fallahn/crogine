@@ -81,6 +81,8 @@ source distribution.
 
 #include "OptionsEnum.inl"
 
+using namespace cl;
+
 namespace
 {
     constexpr float CameraDepth = 3.f;
@@ -3318,7 +3320,7 @@ void OptionsState::buildAchievementsMenu(cro::Entity parent, const cro::SpriteSh
     textureRect.bottom = bufferSize.y - cropping.height;
     parent.getComponent<cro::Sprite>().setTextureRect(textureRect);
 
-    glm::vec2 position(60.f, bufferSize.y - (4 + VerticalSpacing));
+    glm::vec2 position(12.f, bufferSize.y - (4 + VerticalSpacing));
     const glm::vec2 TitleOffset(40.f, 24.f);
     const glm::vec2 DescOffset(40.f, 13.f);
     const glm::vec2 TSOffset(40.f, 2.f);
@@ -3514,8 +3516,8 @@ void OptionsState::buildStatsMenu(cro::Entity parent, const cro::SpriteSheet& sp
     parent.getComponent<cro::Sprite>().setTextureRect(textureRect);
 
     glm::vec2 position(30.f, bufferSize.y - (4 + VerticalSpacing));
-    const glm::vec2 TitleOffset(40.f, 24.f);
-    const glm::vec2 DescOffset(40.f, 13.f);
+    const glm::vec2 TitleOffset(-2.f, 24.f);
+    const glm::vec2 DescOffset(-2.f, 13.f);
 
 
     static constexpr float Border = 0.f;

@@ -10,6 +10,7 @@
 #include <crogine/ecs/components/Skeleton.hpp>
 #include <crogine/ecs/components/Drawable2D.hpp>
 #include <crogine/ecs/components/Sprite.hpp>
+#include <crogine/ecs/components/ParticleEmitter.hpp>
 
 #include <crogine/ecs/systems/CameraSystem.hpp>
 #include <crogine/ecs/systems/CallbackSystem.hpp>
@@ -18,6 +19,7 @@
 #include <crogine/ecs/systems/ModelRenderer.hpp>
 #include <crogine/ecs/systems/SpriteSystem2D.hpp>
 #include <crogine/ecs/systems/RenderSystem2D.hpp>
+#include <crogine/ecs/systems/ParticleSystem.hpp>
 
 #include <crogine/util/Constants.hpp>
 #include <crogine/util/Easings.hpp>
@@ -26,7 +28,8 @@ GCState::GCState(cro::StateStack& stack, cro::State::Context context)
     : cro::State    (stack, context),
     m_gameScene     (context.appInstance.getMessageBus()),
     m_uiScene       (context.appInstance.getMessageBus()),
-    m_cameraIndex   (0)
+    m_cameraIndex   (0),
+    m_processReturn (true)
 {
     context.mainWindow.loadResources([this]() {
         addSystems();
@@ -106,9 +109,14 @@ void GCState::handleMessage(const cro::Message& msg)
 
 bool GCState::simulate(float dt)
 {
+    if (m_music.getStatus() == cro::MusicPlayer::Status::Stopped)
+    {
+        quitState();
+    }
+
     m_gameScene.simulate(dt);
     m_uiScene.simulate(dt);
-    return true;
+    return m_processReturn;
 }
 
 void GCState::render()
@@ -126,6 +134,7 @@ void GCState::addSystems()
     m_gameScene.addSystem<cro::CameraSystem>(mb);
     m_gameScene.addSystem<cro::ShadowMapRenderer>(mb);
     m_gameScene.addSystem<cro::ModelRenderer>(mb);
+    m_gameScene.addSystem<cro::ParticleSystem>(mb);
 
     m_uiScene.addSystem<cro::CallbackSystem>(mb);
     m_uiScene.addSystem<cro::SpriteSystem2D>(mb);
@@ -136,6 +145,9 @@ void GCState::addSystems()
 void GCState::loadAssets()
 {
     m_environmentMap.loadFromFile("assets/images/hills.hdr");
+    m_music.loadFromFile("assets/golf/sound/stage.ogg");
+    m_music.setVolume(0.f);
+    m_music.play();
 }
 
 void GCState::createScene()
@@ -173,11 +185,61 @@ void GCState::createScene()
         md.createModel(entity);
     }
 
+    if (md.loadFromFile("assets/golf/models/phone.cmt"))
+    {
+        auto entity = m_gameScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ -5.8f, 0.f, 0.3f });
+        entity.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, 2.f);
+        md.createModel(entity);
+    }
+
+    cro::EmitterSettings particles;
+    particles.loadFromFile("assets/golf/particles/hio.cps", m_resources.textures);
+    const std::array Positions =
+    {
+        glm::vec3(-3.2f, 0.f, 0.2f),
+        glm::vec3(3.2f, 0.f, 0.2f),
+
+        glm::vec3(-3.f, 0.f, 3.8f),
+        glm::vec3(3.f, 0.f, 3.8f),
+    };
+
+    for (auto p : Positions)
+    {
+        static constexpr float RotationAmount = cro::Util::Const::PI / 8.f;
+        float rotation = -RotationAmount;
+
+        for (auto i = 0; i < 3; ++i)
+        {
+            auto entity = m_gameScene.createEntity();
+            entity.addComponent<cro::Transform>().setPosition(p);
+            entity.getComponent<cro::Transform>().setRotation(cro::Transform::Z_AXIS, rotation);
+            entity.addComponent<cro::ParticleEmitter>().settings = particles;
+            entity.addComponent<cro::Callback>().active = true;
+            entity.getComponent<cro::Callback>().setUserData<float>(5.f);
+            entity.getComponent<cro::Callback>().function =
+                [](cro::Entity e, float dt)
+                {
+                    auto& t = e.getComponent<cro::Callback>().getUserData<float>();
+                    t -= dt;
+
+                    if (t < 0)
+                    {
+                        t += 8.f;
+                        e.getComponent<cro::ParticleEmitter>().start();
+                    }
+                };
+
+            rotation += RotationAmount;
+        }
+    }
+
+
     auto resize = [](cro::Camera& cam)
     {
         glm::vec2 size(cro::App::getWindow().getSize());
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
-        cam.setPerspective(70.f * cro::Util::Const::degToRad, size.x / size.y, 0.1f, 20.f);
+        cam.setPerspective(70.f * cro::Util::Const::degToRad, size.x / size.y, 0.1f, 15.f);
     };
 
     auto& cam = m_gameScene.getActiveCamera().getComponent<cro::Camera>();
@@ -211,10 +273,13 @@ void GCState::createScene()
 
     for (auto i = 0; i < CameraID::Count; ++i)
     {
+        //TODO read shadow map size from settings
+        std::uint32_t ShadowSize = 4096;
+
         auto entity = m_gameScene.createEntity();
         entity.addComponent<cro::Transform>();
         entity.addComponent<cro::Camera>().resizeCallback = resize;
-        entity.getComponent<cro::Camera>().shadowMapBuffer.create(2048, 2048);
+        entity.getComponent<cro::Camera>().shadowMapBuffer.create(ShadowSize, ShadowSize);
         entity.getComponent<cro::Camera>().active = false;
         resize(entity.getComponent<cro::Camera>());
         m_cameras[i] = entity;
@@ -356,13 +421,18 @@ void GCState::createUI()
             }
         }
 
+        //any time the fade is active update the underlying
+        //state to allow it to complete any transition effect
+        m_processReturn = progress != 0;
+
         const float alpha = cro::Util::Easing::easeOutQuint(progress);
         auto& verts = e.getComponent<cro::Drawable2D>().getVertexData();
         for (auto& v : verts)
         {
             v.colour.setAlpha(alpha);
         }
-        //TODO also set music volume
+        
+        m_music.setVolume(1.f - progress);
 
         glm::vec2 size(cro::App::getWindow().getSize());
         e.getComponent<cro::Transform>().setScale(size);

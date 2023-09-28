@@ -200,11 +200,16 @@ private:
     void setHole(std::int32_t);
     void setActiveCamera(std::int32_t);
     void forceRestart();
+    void triggerGC(glm::vec3);
     
     //DrivingStateUI.cpp
 #ifdef USE_GNS
     cro::Entity m_leaderboardEntity;
 #endif
+    cro::Entity m_courseEntity;
+    cro::Shader m_saturationShader;
+    std::int32_t m_saturationUniform;
+
     cro::RenderTexture m_mapTexture;
     cro::Entity m_mapCam;
     cro::SimpleQuad m_flagQuad;

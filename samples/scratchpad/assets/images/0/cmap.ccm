@@ -1,0 +1,10 @@
+cubemap 
+{
+    up = "py.png"
+    down = "ny.png"
+    left = "nx.png"
+    right = "px.png"
+    front = "pz.png"
+    back = "nz.png"
+
+}

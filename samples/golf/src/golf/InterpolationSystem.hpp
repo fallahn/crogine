@@ -250,7 +250,6 @@ public:
 							interp.addPosition(position);
 #endif
 							interp.m_interpVelocity = (position - lastPos) * (1.f / dt);// 60.f; //fixed step... should be 1/dt?
-
 						}
 
 						auto rotation = glm::slerp(interp.m_buffer[0].rotation, interp.m_buffer[1].rotation, t);

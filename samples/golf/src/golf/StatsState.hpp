@@ -149,12 +149,14 @@ private:
     std::vector<ProfileData> m_profileData;
     std::size_t m_profileIndex;
     std::size_t m_courseIndex;
-    bool m_showCPUStat;
+
     struct DateRange final
     {
         enum {Week, Month, Quarter, Half, Year, Count};
     };
     std::int32_t m_dateRange;
+    bool m_showCPUStat;
+
     std::array<cro::Entity, 18u> m_graphEntities = {};
     cro::Entity m_gridEntity;
     cro::Entity m_recordCountEntity;
@@ -196,6 +198,12 @@ private:
             SilverSpike,
             GoldSpike,
             TeeBall,
+
+            BronzeBall,
+            SilverBall,
+            GoldBall,
+            PlatinumBall,
+            DiamondBall,
 
             Count
         };

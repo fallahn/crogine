@@ -47,7 +47,7 @@ namespace cro
 class GolfSoundDirector final : public SoundEffectsDirector
 {
 public:
-    explicit GolfSoundDirector(cro::AudioResource&);
+    GolfSoundDirector(cro::AudioResource&, const SharedStateData&);
 
     void handleMessage(const cro::Message&) override;
     void process(float) override;
@@ -80,6 +80,7 @@ private:
             Scrub,
             Stone,
             Pole,
+            PowerBall,
 
             ScoreAlbatross,
             ScoreBirdie,
@@ -109,6 +110,7 @@ private:
             TerrainFairway02,
             TerrainGreen01,
             TerrainGreen02,
+            TerrainGreen03,
             TerrainRough01,
             TerrainRough02,
             TerrainScrub01,
@@ -118,11 +120,17 @@ private:
             TerrainWater01,
             TerrainWater02,
             TerrainWater03,
+            Target,
 
             Honour,
             NiceSwing01,
             NiceSwing02,
             NiceSwing03,
+            PowerShot01,
+            PowerShot02,
+            PowerShot03,
+            PowerShot04,
+            BigStick,
 
             Hook,
             Slice,
@@ -146,6 +154,8 @@ private:
             Foot03,
             Foot04,
             BadSport,
+            Chat,
+            SkinsWin,
 
             CrowdClearThroat,
             CrowdCough,
@@ -155,6 +165,8 @@ private:
         };
     };
     std::array<const cro::AudioSource*, AudioID::Count> m_audioSources = {};
+
+    const SharedStateData& m_sharedData;
 
     std::array<std::array<std::int32_t, ConstVal::MaxPlayers>, ConstVal::MaxClients> m_playerIndices = {};
     std::vector<cro::AudioScape> m_playerVoices;
@@ -167,8 +179,8 @@ private:
     cro::Clock m_crowdTimer;
     cro::Time m_crowdTime;
 
-    //fudge to stop double flag collision sound
-    float m_flagSoundTime;
+    //fudge to stop double sounds
+    std::array<cro::Clock, AudioID::Count> m_soundTimers = {};
 
     cro::Entity playSound(std::int32_t, glm::vec3, float = 1.f);
     void playSoundDelayed(std::int32_t, glm::vec3, float, float = 1.f, std::uint8_t = 1/*MixerChannel::Effects*/);

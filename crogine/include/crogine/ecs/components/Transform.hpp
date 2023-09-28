@@ -280,6 +280,12 @@ namespace cro
         std::size_t getDepth() const { return m_depth; }
 
         /*!
+        \brief Returns true if this transform is marked for an update
+        next time getWorldTransform() or getLocalTransform() are called
+        */
+        bool getDirty() const { return m_dirtyFlags != 0; }
+
+        /*!
         \brief Adds a callback which is executed when the transform is updated.
         Specifically this happens on setLocalTransform() or getLocalTransform()
         if the transform has internally been flagged as dirty. As getWorldTransform()

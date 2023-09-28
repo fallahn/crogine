@@ -54,7 +54,19 @@ source distribution.
 
 namespace
 {
+    std::size_t courseIndex = 0;
+    const std::vector<std::array<std::int32_t, 18>> courseData =
+    {
+        std::array<std::int32_t, 18>{4,4,3,3,3,4,4,3,2,3,4,4,5,3,2,3,4,3},
+        std::array<std::int32_t, 18>{4,4,4,3,2,3,4,5,3,3,4,3,4,3,2,3,4,3},
+        std::array<std::int32_t, 18>{4,3,2,3,3,2,4,3,3,4,3,3,4,4,4,5,4,3},
+        std::array<std::int32_t, 18>{4,3,2,3,4,4,3,2,4,3,3,4,4,3,5,3,4,3}
+    };
 
+    const std::vector<std::uint8_t> testScores =
+    {
+        3,3,2,2,2,3,2,3,1,2,2,3,3,2,3,2,2,3
+    };
 }
 
 AnimBlendState::AnimBlendState(cro::StateStack& stack, cro::State::Context context)
@@ -88,6 +100,7 @@ bool AnimBlendState::handleEvent(const cro::Event& evt)
             requestStackClear();
             requestStackPush(0);
             break;
+
         }
     }
 
@@ -216,6 +229,44 @@ void AnimBlendState::createUI()
 {
     registerWindow([&]()
         {
+            if (ImGui::Begin("League"))
+            {
+                const auto& entries = m_league.getTable();
+                for (const auto& e : entries)
+                {
+                    ImGui::Text("Skill: %d - Curve: %d - Score: %d - Name: %d", e.skill, e.curve, e.currentScore, e.nameIndex);
+                }
+                ImGui::Text("Iteratation: %d", m_league.getCurrentIteration());
+                ImGui::SameLine();
+                ImGui::Text("Season: %d", m_league.getCurrentSeason());
+                ImGui::SameLine();
+                ImGui::Text("Score: %d", m_league.getCurrentScore());
+
+                if (ImGui::Button("Iterate"))
+                {
+                    m_league.iterate(courseData[courseIndex], testScores, 0);
+                    courseIndex = (courseIndex + 1) % courseData.size();
+                }
+                ImGui::SameLine();
+                if (ImGui::Button("Reset"))
+                {
+                    m_league.reset();
+                }
+
+                if (ImGui::Button("Run 10 Seasons"))
+                {
+                    for (auto i = 0; i < 10; ++i)
+                    {
+                        for (auto j = 0; j < League::MaxIterations; ++j)
+                        {
+                            m_league.iterate(courseData[courseIndex], testScores, cro::Util::Random::value(0,2));
+                            courseIndex = (courseIndex + 1) % courseData.size();
+                        }
+                    }
+                }
+            }
+            ImGui::End();
+
             if (m_modelEntity.isValid())
             {
                 if (ImGui::Begin("Controls"))

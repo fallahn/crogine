@@ -47,6 +47,21 @@ namespace cro
     class Image;
 }
 
+struct BullsEye final
+{
+    glm::vec3 position = glm::vec3(0.f);
+    float diametre = 1.f;
+    bool spawn = false; //if rx packet is false, delete the current target
+};
+
+struct BullHit final
+{
+    glm::vec3 position = glm::vec3(0.f);
+    float accuracy = 0;
+    std::uint8_t client = 0;
+    std::uint8_t player = 0;
+};
+
 struct Ball final
 {
     static constexpr float Radius = 0.0215f;
@@ -58,6 +73,7 @@ struct Ball final
     static const std::array<std::string, 5> StateStrings;
 
     std::uint8_t terrain = TerrainID::Fairway;
+    std::uint8_t lie = 0; //0 buried, 1 sitting up
 
     glm::vec3 velocity = glm::vec3(0.f);
     float delay = 0.f;
@@ -101,6 +117,11 @@ public:
 
     void setGimmeRadius(std::uint8_t);
 
+    //always spawns at target point of current hole
+    //use this func to control when it's spawned.
+    //setHoleData always resets any existing.
+    const BullsEye& spawnBullsEye();
+
     struct TerrainResult final
     {
         std::uint8_t terrain = TerrainID::Scrub;
@@ -109,7 +130,7 @@ public:
         glm::vec3 intersection = glm::vec3(0.f);
         float penetration = 0.f; //positive values are down into the ground
     };
-    TerrainResult getTerrain(glm::vec3) const;
+    TerrainResult getTerrain(glm::vec3 position, glm::vec3 forward = glm::vec3(0.f, -1.f, 0.f), float rayLength = 20.f) const;
 
     bool getPuttFromTee() const { return m_puttFromTee; }
 
@@ -147,9 +168,13 @@ private:
     const HoleData* m_holeData;
     bool m_puttFromTee;
     std::uint8_t m_gimmeRadius;
+    std::uint8_t m_activeGimme;
+
+    BullsEye m_bullsEye;
 
     void doCollision(cro::Entity);
     void doBallCollision(cro::Entity);
+    void doBullsEyeCollision(glm::vec3);
     void updateWind();
 
     std::unique_ptr<btDefaultCollisionConfiguration> m_collisionCfg;

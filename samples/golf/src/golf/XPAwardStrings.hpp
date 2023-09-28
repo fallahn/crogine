@@ -37,6 +37,7 @@ struct XPStringID final
     enum
     {
         NiceOn,
+        NearMiss,
         GreatAccuracy,
         OnTheFairway,
         DroneHit,
@@ -60,6 +61,9 @@ struct XPStringID final
         Par,
         ParAssist,
 
+        ChallengeComplete,
+        BullsEyeHit,
+
         Count
     };
 };
@@ -68,7 +72,7 @@ struct XPStringID final
 static const std::array<std::string, XPStringID::Count> XPStrings =
 {
     std::string("Nice On!"),
-
+    "Near Miss",
     "Great Accuracy",
     "Fairway",
     "Drone Hit!",
@@ -91,4 +95,7 @@ static const std::array<std::string, XPStringID::Count> XPStrings =
     "Birdie",
     "Par (No Assist)",
     "Par",
+
+    "Challenge Completed",
+    "Target Hit"
 };

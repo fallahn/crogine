@@ -34,6 +34,8 @@ source distribution.
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Drawable2D.hpp>
 
+#include <crogine/detail/glm/gtc/matrix_transform.hpp>
+
 MiniBallSystem::MiniBallSystem(cro::MessageBus& mb, const MinimapZoom& mz)
     : cro::System(mb, typeid(MiniBallSystem)),
     m_minimapZoom(mz)
@@ -96,6 +98,12 @@ void MiniBallSystem::process(float dt)
                 static constexpr float MaxHeight = 40.f;
                 float scale = 1.f + (position.y / MaxHeight);
                 entity.getComponent<cro::Transform>().setScale(glm::vec2(scale) * m_minimapZoom.mapScale);
+
+
+                //or if in bounds of the mini map
+                auto miniBounds = ball.minimap.getComponent<cro::Transform>().getWorldTransform() * ball.minimap.getComponent<cro::Drawable2D>().getLocalBounds();
+                auto renderBounds = glm::inverse(entity.getComponent<cro::Transform>().getWorldTransform()) * miniBounds;
+                entity.getComponent<cro::Drawable2D>().setCroppingArea(renderBounds);
             }
         }
     }

@@ -61,6 +61,8 @@ source distribution.
 
 #include <chrono>
 
+using namespace cl;
+
 namespace
 {
 #include "TerrainShader.inl"
@@ -870,6 +872,7 @@ void TerrainBuilder::threadFunc()
                                 auto& bb = m_billboardBuffer.emplace_back(m_billboardTemplates[cro::Util::Random::value(BillboardID::Grass01, BillboardID::Grass02)]);
                                 bb.position = bbPos;
                                 bb.size *= scale;
+                                bb.origin *= scale;
                             }
                         }
                     }
@@ -951,6 +954,7 @@ void TerrainBuilder::threadFunc()
                                     auto& bb = m_billboardBuffer.emplace_back(m_billboardTemplates[BillboardID::Tree01 + currIndex]);
                                     bb.position = bbPos; //small vertical offset to stop floating billboards
                                     bb.size *= scale;
+                                    bb.origin *= scale;
                                     
                                     if (cro::Util::Random::value(0, 1) == 0)
                                     {
@@ -987,6 +991,7 @@ void TerrainBuilder::threadFunc()
                                 auto& bb = m_billboardBuffer.emplace_back(m_billboardTemplates[cro::Util::Random::value(BillboardID::Flowers01, BillboardID::Bush02)]);
                                 bb.position = bbPos;
                                 bb.size *= scale;
+                                bb.origin *= scale;
                             }
                             else
                             {
@@ -997,6 +1002,7 @@ void TerrainBuilder::threadFunc()
                                 auto& bb = m_billboardBuffer.emplace_back(m_billboardTemplates[cro::Util::Random::value(BillboardID::Grass01, BillboardID::Grass02)]);
                                 bb.position = bbPos;
                                 bb.size *= scale;
+                                bb.origin *= scale;
                             }
                         }
                     }

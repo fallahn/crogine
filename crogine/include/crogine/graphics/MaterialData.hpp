@@ -52,10 +52,9 @@ namespace cro
     struct CRO_EXPORT_API TextureID final
     {
         std::uint32_t textureID = 0;
-        const bool isArray = false;
-
+        
         TextureID() = default;
-        explicit TextureID(std::uint32_t id, bool a = false) : textureID(id), isArray(a) {}
+        explicit TextureID(std::uint32_t id, bool a = false) : textureID(id), m_isArray(a) {}
         explicit TextureID(const Texture&);
         TextureID(const TextureID&) = default;
 
@@ -63,6 +62,11 @@ namespace cro
         TextureID& operator = (const Texture& t);
 
         TextureID& operator = (const TextureID&) = default;
+
+        bool isArray() const { return m_isArray; }
+
+    private:
+        bool m_isArray = false;
     };
 
     /*!
@@ -73,11 +77,15 @@ namespace cro
         std::uint32_t textureID = 0;
 
         CubemapID() = default;
-        explicit CubemapID(std::uint32_t id) : textureID(id) {}
+        explicit CubemapID(std::uint32_t id, bool a = false) : textureID(id), m_isArray(a) {}
         explicit CubemapID(const cro::CubemapTexture&);
 
         CubemapID& operator = (std::uint32_t id);
         CubemapID& operator = (const CubemapTexture& t);
+        
+        bool isArray() const { return m_isArray; }
+    private:
+        bool m_isArray = false;
     };
 
     namespace Material
@@ -135,7 +143,8 @@ namespace cro
                 Mat4,
                 Texture,
                 TextureArray,
-                Cubemap
+                Cubemap,
+                CubemapArray
             }type = None;
 
 

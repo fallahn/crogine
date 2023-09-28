@@ -37,6 +37,7 @@ source distribution.
 #include <crogine/gui/GuiClient.hpp>
 #include <crogine/graphics/ModelDefinition.hpp>
 #include <crogine/graphics/SimpleVertexArray.hpp>
+#include <crogine/graphics/CubemapTexture.hpp>
 
 namespace cro
 {
@@ -62,6 +63,8 @@ private:
     cro::Scene m_uiScene;
 
     cro::ResourceCollection m_resources;
+    cro::CubemapTexture m_cubemap;
+    cro::CubemapTexture m_cubemapArray;
 
     Swingput m_inputParser;
 

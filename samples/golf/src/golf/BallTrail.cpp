@@ -88,7 +88,7 @@ void BallTrail::create(cro::Scene& scene, cro::ResourceCollection& resources, st
         entity.addComponent<cro::Transform>();
         entity.addComponent<cro::Model>(meshData, material);
         entity.addComponent<cro::CommandTarget>().ID = CommandID::BeaconColour;
-        entity.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniGreen | RenderFlags::MiniMap));
+        entity.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniGreen | RenderFlags::MiniMap | RenderFlags::FlightCam));
 
         m_trails[i].meshData = &entity.getComponent<cro::Model>().getMeshData();
     }

@@ -131,11 +131,23 @@ namespace AchievementID
         Gamer,
         CauseARacket,
 
+        UpForTheChallenge,
+
+        BigBird,
+        BarnStormer,
+        HitTheSpot,
+        BeholdTheImpossible,
+        TakeInAShow,
+
+        LeagueChampion,
+        LeagueSeasonal,
+
         Count
     };
     static_assert(Count <= 256, "Count exceeds maximum 256 Achievements!");
 }
 
+//DON'T change this order, it breaks existing save files
 namespace StatID
 {
     enum
@@ -171,6 +183,14 @@ namespace StatID
         Course08Complete,
         Course09Complete,
         Course10Complete,
+        Albatrosses,
+
+        LeagueFirst,
+        LeagueSecond,
+        LeagueThird,
+        LeagueRounds,
+        ChipIns,
+        FlagHits,
 
         Count
     };

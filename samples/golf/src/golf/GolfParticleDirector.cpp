@@ -48,6 +48,8 @@ source distribution.
 #include <crogine/graphics/SpriteSheet.hpp>
 #include <crogine/util/Constants.hpp>
 
+using namespace cl;
+
 GolfParticleDirector::GolfParticleDirector(cro::TextureResource& tr, const SharedStateData& sd)
     : m_sharedData(sd)
 {
@@ -61,7 +63,9 @@ GolfParticleDirector::GolfParticleDirector(cro::TextureResource& tr, const Share
     m_emitterSettings[ParticleID::Drone].loadFromFile("assets/golf/particles/drone.cps", tr);
     m_emitterSettings[ParticleID::Explode].loadFromFile("assets/golf/particles/explode.cps", tr);
     m_emitterSettings[ParticleID::Blades].loadFromFile("assets/golf/particles/blades.cps", tr);
+    m_emitterSettings[ParticleID::PowerShot].loadFromFile("assets/golf/particles/power_shot.cps", tr);
     m_emitterSettings[ParticleID::Puff].loadFromFile("assets/golf/particles/puff.cps", tr);
+    m_emitterSettings[ParticleID::Star].loadFromFile("assets/golf/particles/star.cps", tr);
     m_emitterSettings[ParticleID::Trail].loadFromFile("assets/golf/particles/trail.cps", tr);
     m_emitterSettings[ParticleID::Firework].loadFromFile("assets/golf/particles/firework.cps", tr);
     m_emitterSettings[ParticleID::Firework].blendmode = cro::EmitterSettings::BlendMode::Add;
@@ -157,6 +161,14 @@ void GolfParticleDirector::handleMessage(const cro::Message& msg)
                 getEnt(ParticleID::Puff, pos);
             }
         }
+        else if (data.type == GolfEvent::TargetHit)
+        {
+            getEnt(ParticleID::Star, data.position);
+        }
+        else if (data.type == GolfEvent::PowerShot)
+        {
+            getEnt(ParticleID::PowerShot, data.position);
+        }
     }
         break;
     case MessageID::CollisionMessage:
@@ -182,6 +194,9 @@ void GolfParticleDirector::handleMessage(const cro::Message& msg)
             case TerrainID::Water:
                 getEnt(ParticleID::Water, data.position);
                 spawnRings(data.position);
+                break;
+            case CollisionEvent::Billboard:
+                getEnt(ParticleID::Explode, data.position);
                 break;
             }
         }
@@ -248,7 +263,7 @@ void GolfParticleDirector::launchFireworks()
 
             auto* msg = postMessage<CollisionEvent>(MessageID::CollisionMessage);
             msg->type = CollisionEvent::Begin;
-            msg->terrain = -2; //OI stop keep doing these and enumerate them properly (-1 is also flag collision)
+            msg->terrain = CollisionEvent::Firework;
             msg->position = f.getComponent<cro::Transform>().getPosition();
 
             idx++;

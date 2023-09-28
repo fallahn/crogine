@@ -127,7 +127,15 @@ static const std::array<std::string, AchievementID::Count> AchievementStrings =
     "gimmegimmegimme",
     "drive_it_home",
     "gamer",
-    "cause_a_racket"
+    "cause_a_racket",
+    "up_for_the_challenge",
+    "big_bird",
+    "stableford",
+    "hit_the_spot",
+    "behold",
+    "took_a_show",
+    "league_champion",
+    "league_seasonal"
 };
 
 //appears on the notification
@@ -213,7 +221,15 @@ static const std::array<std::string, AchievementID::Count> AchievementLabels =
     "Gimme Gimme Gimme",
     "Drive It Home",
     "Gamer",
-    "Cause A Racket"
+    "Cause A Racket",
+    "Up For The Challenge",
+    "Big Bird",
+    "Barn Stormer",
+    "Hit The Spot",
+    "Behold The Impossible",
+    "Take In a Show",
+    "League Champion",
+    "League Participant"
 };
 
 //description and whether or not the achievement is hidden until it is unlocked
@@ -300,6 +316,14 @@ static const std::array<std::pair<std::string, bool>, AchievementID::Count> Achi
     std::make_pair("Land on the flag on the Driving Range", false),
     std::make_pair("Unlock the arcade", false),
     std::make_pair("Hit the tennis court then land on the fairway of Course 5, Hole 18", false),
+    std::make_pair("Complete at least one monthly challenge", false),
+    std::make_pair("Get an Albatross", false),
+    std::make_pair("Win a Stableford match", false),
+    std::make_pair("Win a round of Multi-Target", false),
+    std::make_pair("Get a hole in one whilst playing Multi-Target", false),
+    std::make_pair("Gopher broke.", true),
+    std::make_pair("Finish in the top 3 of the Club League", false),
+    std::make_pair("Complete a full season in the Club League", false),
 };
 
 //assuming trophies load correctly they are:
@@ -413,6 +437,17 @@ static constexpr std::array<std::size_t, AchievementID::Count> AchievementTrophi
     TrophyID::Platinum,
     TrophyID::GoldCup,
     TrophyID::BronzeCup,
+
+    TrophyID::SilverFigure,
+
+    TrophyID::GoldFigure,
+    TrophyID::GoldCup,
+    TrophyID::GoldCup,
+    TrophyID::Platinum,
+    TrophyID::Spoon,
+
+    TrophyID::GoldFigure,
+    TrophyID::BronzeFigure,
 };
 
 //these are indexed by StatID, so do try to get them in the correct order ;)
@@ -449,6 +484,13 @@ static const std::array<std::string, StatID::Count> StatStrings =
     "course_08",
     "course_09",
     "course_10",
+    "albatrosses",
+    "league_first",
+    "league_second",
+    "league_third",
+    "league_rounds",
+    "chip_ins",
+    "flag_hits"
 };
 
 static const std::array<std::string, StatID::Count> StatLabels =
@@ -484,6 +526,13 @@ static const std::array<std::string, StatID::Count> StatLabels =
     "Number Of Times Course 8 Completed",
     "Number Of Times Course 9 Completed",
     "Number Of Times Course 10 Completed",
+    "Albatrosses Scored",
+    "Number Of Times Placed First In The League",
+    "Number Of Times Placed Second In The League",
+    "Number Of Times Placed Third In The League",
+    "Number Of Rounds Completed In The League",
+    "Chip-ins From Outside The Green",
+    "Flag Pole Collisions",
 };
 
 struct StatType final
@@ -513,6 +562,13 @@ static constexpr std::array<std::int32_t, StatID::Count> StatTypes =
     StatType::Integer,
     StatType::Integer,
     StatType::Time,
+    StatType::Integer,
+    StatType::Integer,
+    StatType::Integer,
+    StatType::Integer,
+    StatType::Integer,
+    StatType::Integer,
+    StatType::Integer,
     StatType::Integer,
     StatType::Integer,
     StatType::Integer,

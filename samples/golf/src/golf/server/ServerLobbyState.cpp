@@ -56,6 +56,9 @@ LobbyState::LobbyState(SharedData& sd)
 
     //this is lobby readiness
     std::fill(m_readyState.begin(), m_readyState.end(), false);
+
+    //make sure to reset this in case the players have changed
+    std::fill(sd.clubLevels.begin(), sd.clubLevels.end(), 2);
 }
 
 void LobbyState::handleMessage(const cro::Message& msg)
@@ -135,6 +138,32 @@ void LobbyState::netEvent(const net::NetEvent& evt)
                 m_sharedData.host.broadcastPacket(PacketID::ReverseCourse, m_sharedData.reverseCourse, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
             }
             break;
+        case PacketID::ClubLimit:
+            if (evt.peer.getID() == m_sharedData.hostID)
+            {
+                m_sharedData.clubLimit = evt.packet.as<std::uint8_t>();
+                m_sharedData.host.broadcastPacket(PacketID::ClubLimit, m_sharedData.clubLimit, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+            }
+            break;
+        case PacketID::ClubLevel:
+            {
+                auto data = evt.packet.as<std::uint16_t>();
+                auto idx = ((data & 0xff00) >> 8);
+
+                //TODO sending our own here returns 255 as
+                //it happens before gaining a client ID...
+                //is this true for other connections?
+                if (idx < ConstVal::MaxClients)
+                {
+                    m_sharedData.clubLevels[idx] = (data & 0xff);
+                    //LogI << "set club level for client " << (int)idx << std::endl;
+                }
+                /*else
+                {
+                    LogW << "Got Club Level packet from client ID " << (int)idx << std::endl;
+                }*/
+            }
+            break;
         case PacketID::RequestGameStart:
             if (evt.peer.getID() == m_sharedData.hostID)
             {
@@ -144,6 +173,18 @@ void LobbyState::netEvent(const net::NetEvent& evt)
                     m_returnValue = state;
                 }
                 //TODO throw a server error if this is a weird value
+
+                //make sure to enforce club set if needed
+                if (m_sharedData.clubLimit)
+                {
+                    std::sort(m_sharedData.clubLevels.begin(), m_sharedData.clubLevels.end(),
+                        [](std::uint8_t a, std::uint8_t b)
+                        {
+                            return a < b;
+                        });
+
+                    m_sharedData.host.broadcastPacket(PacketID::MaxClubs, m_sharedData.clubLevels[0], net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                }
             }
             break;
         }
@@ -237,6 +278,7 @@ void LobbyState::insertPlayerInfo(const net::NetEvent& evt)
         m_sharedData.host.broadcastPacket(PacketID::HoleCount, m_sharedData.holeCount, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
         m_sharedData.host.broadcastPacket(PacketID::GimmeRadius, m_sharedData.gimmeRadius, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
         m_sharedData.host.broadcastPacket(PacketID::ReverseCourse, m_sharedData.reverseCourse, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+        m_sharedData.host.broadcastPacket(PacketID::ClubLimit, m_sharedData.clubLimit, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
         m_sharedData.host.broadcastPacket(PacketID::FastCPU, m_sharedData.fastCPU, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
     }
 }

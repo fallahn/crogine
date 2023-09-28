@@ -221,6 +221,9 @@ void Server::run()
                 case PacketID::PlayerXP:
                     m_sharedData.host.broadcastPacket(PacketID::PlayerXP, evt.packet.as<std::uint16_t>(), net::NetFlag::Reliable);
                     break;
+                case PacketID::ChatMessage:
+                    m_sharedData.host.broadcastPacket(PacketID::ChatMessage, evt.packet.as<TextMessage>(), net::NetFlag::Reliable, ConstVal::NetChannelStrings);
+                    break;
                 }
             }
         }
@@ -408,13 +411,15 @@ void Server::removeClient(const net::NetEvent& evt)
 
         *result = sv::ClientConnection(); //resets the data, setting 'connected' to false etc
 
-        auto playerID = std::distance(m_sharedData.clients.begin(), result);
+        auto clientID = std::distance(m_sharedData.clients.begin(), result);
         auto* msg = m_sharedData.messageBus.post<ConnectionEvent>(sv::MessageID::ConnectionMessage);
-        msg->clientID = static_cast<std::uint8_t>(playerID);
+        msg->clientID = static_cast<std::uint8_t>(clientID);
         msg->type = ConnectionEvent::Disconnected;
 
+        m_sharedData.clubLevels[clientID] = 2; //reset this if quitting, else we might clamp to the level of a quit player
+
         //broadcast to all connected clients
-        m_sharedData.host.broadcastPacket(PacketID::ClientDisconnected, static_cast<std::uint8_t>(playerID), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+        m_sharedData.host.broadcastPacket(PacketID::ClientDisconnected, static_cast<std::uint8_t>(clientID), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
         LOG("Client disconnected", cro::Logger::Type::Info);
 
         m_clientCount--;

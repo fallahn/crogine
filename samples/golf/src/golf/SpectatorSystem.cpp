@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022
+Matt Marchant 2022 - 2023
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -42,6 +42,7 @@ namespace
 {
     constexpr float BaseSeparation = 1.8f;
     constexpr float NextTargetRadius = (0.5f * 0.5f);
+    constexpr float AnimationSpeed = 0.85f;
 }
 
 SpectatorSystem::SpectatorSystem(cro::MessageBus& mb, const CollisionMesh& cm)
@@ -71,7 +72,7 @@ void SpectatorSystem::process(float dt)
                 {
                     spectator.stateTime = 0.f;
                     spectator.state = Spectator::State::Walk;
-                    entity.getComponent<cro::Skeleton>().play(spectator.anims[Spectator::AnimID::Walk], /*spectator.walkSpeed*/1.f, 0.15f);
+                    entity.getComponent<cro::Skeleton>().play(spectator.anims[Spectator::AnimID::Walk], /*spectator.walkSpeed*/AnimationSpeed, 0.15f);
                 }
                 break;
 

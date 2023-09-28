@@ -30,6 +30,7 @@ source distribution.
 #pragma once
 
 #include <string>
+#include <cstdint>
 
 class VatFile final
 {

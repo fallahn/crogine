@@ -39,6 +39,8 @@ source distribution.
 #include "golf/PracticeState.hpp"
 #include "golf/DrivingState.hpp"
 #include "golf/ClubhouseState.hpp"
+#include "golf/LeagueState.hpp"
+#include "golf/GcState.hpp"
 #include "golf/MessageOverlayState.hpp"
 #include "golf/TrophyState.hpp"
 #include "golf/NewsState.hpp"
@@ -63,6 +65,7 @@ source distribution.
 #include "icon.hpp"
 #include "Achievements.hpp"
 #include "golf/Clubs.hpp"
+#include "golf/XPAwardStrings.hpp"
 
 #include "ImTheme.hpp"
 
@@ -71,6 +74,7 @@ source distribution.
 
 #ifdef USE_GNS
 #include <AchievementsImpl.hpp>
+#include <Social.hpp>
 #endif
 #ifdef USE_WORKSHOP
 #include <WorkshopState.hpp>
@@ -89,6 +93,8 @@ source distribution.
 #include <crogine/util/String.hpp>
 
 #include <filesystem>
+
+using namespace cl;
 
 namespace
 {
@@ -181,10 +187,12 @@ GolfGame::GolfGame()
     m_stateStack.registerState<PlaylistState>(StateID::Playlist, m_sharedData);
     m_stateStack.registerState<LeaderboardState>(StateID::Leaderboard, m_sharedData);
     m_stateStack.registerState<StatsState>(StateID::Stats, m_sharedData);
+    m_stateStack.registerState<LeagueState>(StateID::League, m_sharedData);
     m_stateStack.registerState<MapOverviewState>(StateID::MapOverview, m_sharedData);
     m_stateStack.registerState<BushState>(StateID::Bush, m_sharedData);
     m_stateStack.registerState<MessageOverlayState>(StateID::MessageOverlay, m_sharedData);
     m_stateStack.registerState<EventOverlayState>(StateID::EventOverlay);
+    m_stateStack.registerState<GCState>(StateID::GC);
 
 #ifdef CRO_DEBUG_
     m_stateStack.registerState<SqliteState>(StateID::SQLite);
@@ -201,6 +209,9 @@ void GolfGame::handleEvent(const cro::Event& evt)
     switch (evt.type)
     {
     default: break;
+    case SDL_MOUSEMOTION:
+        //cro::App::getWindow().setMouseCaptured(false);
+        break;
     case SDL_KEYUP:
         switch (evt.key.keysym.sym)
         {
@@ -210,6 +221,9 @@ void GolfGame::handleEvent(const cro::Event& evt)
         case SDLK_AC_BACK:
             App::quit();
             break;
+        /*case SDLK_KP_PERIOD:
+            m_progressIcon->show(0, 10, 10);
+            break;*/
 #ifndef USE_GNS
         case SDLK_t:
             m_achievements->showTest();
@@ -342,7 +356,14 @@ void GolfGame::handleMessage(const cro::Message& msg)
         }
         else if (data.type == Social::SocialEvent::MonthlyProgress)
         {
-            m_progressIcon->show(static_cast<std::int32_t>(data.playerID), data.level, data.reason);
+            m_progressIcon->show(data.challengeID, data.level, data.reason);
+
+            if (data.challengeID != -1 &&
+                data.level == data.reason)
+            {
+                Social::awardXP(500, XPStringID::ChallengeComplete);
+                Achievements::awardAchievement(AchievementStrings[AchievementID::UpForTheChallenge]);
+            }
         }
     }
 
@@ -405,14 +426,14 @@ bool GolfGame::initialise()
         return false;
     }
 
-#ifdef USE_WORKSHOP
-    registerCommand("workshop",
-        [&](const std::string&)
-        {
-            m_stateStack.clearStates();
-            m_stateStack.pushState(StateID::Workshop);
-        });
-#endif
+//#ifdef USE_WORKSHOP
+//    registerCommand("workshop",
+//        [&](const std::string&)
+//        {
+//            m_stateStack.clearStates();
+//            m_stateStack.pushState(StateID::Workshop);
+//        });
+//#endif
 
 #ifdef CRO_DEBUG_
 #ifndef USE_GNS
@@ -599,6 +620,54 @@ bool GolfGame::initialise()
             cro::Util::String::parseURL(Social::getBaseContentPath());
         });
 
+    registerCommand("reset_league", 
+        [](const std::string&)
+        {
+            League l;
+            l.reset();
+            cro::Console::print("League tables are reset");
+        });
+
+    cro::Console::addConvar("shuffle_music", "false", "If true then custom music playlists will be shuffled when loaded.");
+
+    registerCommand("cl_shuffle_music",
+        [&](const std::string& param)
+        {
+            if (cro::Util::String::toLower(param) == "true")
+            {
+                cro::Console::setConvarValue("shuffle_music", true);
+                cro::Console::print("cl_shuffle_music set to TRUE");
+
+                m_sharedData.m3uPlaylist->shuffle();
+            }
+            else if (cro::Util::String::toLower(param) == "false")
+            {
+                cro::Console::setConvarValue("shuffle_music", false);
+                cro::Console::print("cl_shuffle_music set to FALSE");
+            }
+            else if (param.empty())
+            {
+                bool b = cro::Console::getConvarValue<bool>("shuffle_music");
+                if (b)
+                {
+                    cro::Console::print("cl_shuffle_music set to TRUE");
+                }
+                else
+                {
+                    cro::Console::print("cl_shuffle_music set to FALSE");
+                }
+            }
+            else
+            {
+                cro::Console::print(param + ": invalid argument. Set to TRUE or FALSE");
+            }
+        });
+
+    if (cro::Console::getConvarValue<bool>("shuffle_music"))
+    {
+        m_sharedData.m3uPlaylist->shuffle();
+    }
+
     getWindow().setLoadingScreen<LoadingScreen>(m_sharedData);
     getWindow().setTitle("Super Video Golf - " + StringVer);
     getWindow().setIcon(icon);
@@ -731,10 +800,10 @@ bool GolfGame::initialise()
 #ifdef CRO_DEBUG_
     //m_stateStack.pushState(StateID::DrivingRange); //can't go straight to this because menu needs to parse avatar data
     //m_stateStack.pushState(StateID::Bush);
-    //m_stateStack.pushState(StateID::Clubhouse);
+    m_stateStack.pushState(StateID::Clubhouse);
     //m_stateStack.pushState(StateID::SplashScreen);
-    m_stateStack.pushState(StateID::Menu);
-    //m_stateStack.pushState(StateID::SQLite);
+    //m_stateStack.pushState(StateID::Menu);
+    //m_stateStack.pushState(StateID::Workshop);
 #else
     m_stateStack.pushState(StateID::SplashScreen);
 #endif

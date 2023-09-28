@@ -9,6 +9,7 @@ set(GOLF_SRC
   ${PROJECT_DIR}/golf/BilliardsState.cpp
   ${PROJECT_DIR}/golf/BilliardsStateUI.cpp
   ${PROJECT_DIR}/golf/BilliardsSystem.cpp
+  ${PROJECT_DIR}/golf/BilliardsSystemReact.cpp
   ${PROJECT_DIR}/golf/CameraFollowSystem.cpp
   ${PROJECT_DIR}/golf/ClientCollisionSystem.cpp
   ${PROJECT_DIR}/golf/CloudSystem.cpp
@@ -25,11 +26,14 @@ set(GOLF_SRC
   ${PROJECT_DIR}/golf/ErrorState.cpp
   ${PROJECT_DIR}/golf/FloatingTextSystem.cpp
   ${PROJECT_DIR}/golf/FpsCameraSystem.cpp
+  ${PROJECT_DIR}/golf/GcState.cpp
   ${PROJECT_DIR}/golf/GolfCartSystem.cpp
   ${PROJECT_DIR}/golf/GolfParticleDirector.cpp
   ${PROJECT_DIR}/golf/GolfSoundDirector.cpp
   ${PROJECT_DIR}/golf/GolfState.cpp
+  ${PROJECT_DIR}/golf/GolfStateCameras.cpp
   ${PROJECT_DIR}/golf/GolfStateDebug.cpp
+  ${PROJECT_DIR}/golf/GolfStateScoring.cpp
   ${PROJECT_DIR}/golf/GolfStateUI.cpp
   ${PROJECT_DIR}/golf/InputParser.cpp  
 #  ${PROJECT_DIR}/golf/InterpolationComponent.cpp
@@ -37,6 +41,8 @@ set(GOLF_SRC
   ${PROJECT_DIR}/golf/KeyboardState.cpp
   ${PROJECT_DIR}/golf/LeaderboardState.cpp
   ${PROJECT_DIR}/golf/LeaderboardTexture.cpp
+  ${PROJECT_DIR}/golf/League.cpp
+  ${PROJECT_DIR}/golf/LeagueState.cpp
   ${PROJECT_DIR}/golf/MenuAvatars.cpp
   ${PROJECT_DIR}/golf/MapOverviewState.cpp
   ${PROJECT_DIR}/golf/MenuCallbacks.cpp
@@ -71,9 +77,11 @@ set(GOLF_SRC
   ${PROJECT_DIR}/golf/StatsState.cpp
   ${PROJECT_DIR}/golf/StudioCameraSystem.cpp
   ${PROJECT_DIR}/golf/Swingput.cpp
+  ${PROJECT_DIR}/golf/TableData.cpp
   ${PROJECT_DIR}/golf/TerrainBuilder.cpp
   ${PROJECT_DIR}/golf/TerrainChunks.cpp
   ${PROJECT_DIR}/golf/TerrainDepthmap.cpp
+  ${PROJECT_DIR}/golf/TextChat.cpp
   ${PROJECT_DIR}/golf/TrophyDisplaySystem.cpp
   ${PROJECT_DIR}/golf/TrophyState.cpp
   ${PROJECT_DIR}/golf/TutorialDirector.cpp

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2022
+Matt Marchant 2017 - 2023
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -362,48 +362,13 @@ void Scene::disableSkybox()
 
 void Scene::setCubemap(const std::string& path)
 {
-    //TODO replace this with the CubemapTexture class
-    //once I can be bothered to implement move operators for it :3
-
     //open the file, check it's valid
-    cro::ConfigFile cfg;
-    if (!cfg.loadFromFile(path))
+    if (!m_skyboxCubemap.loadFromFile(path))
     {
         cro::Logger::log("Failed to open cubemap " + path, cro::Logger::Type::Error);
         return;
     }
     enableSkybox();
-
-    std::array<std::string, CubemapDirection::Count> paths;
-    const auto& properties = cfg.getProperties();
-    for (const auto& prop : properties)
-    {
-        auto name = prop.getName();
-        if (name == "up")
-        {
-            paths[CubemapDirection::Up] = prop.getValue<std::string>();
-        }
-        else if (name == "down")
-        {
-            paths[CubemapDirection::Down] = prop.getValue<std::string>();
-        }
-        else if (name == "left")
-        {
-            paths[CubemapDirection::Left] = prop.getValue<std::string>();
-        }
-        else if (name == "right")
-        {
-            paths[CubemapDirection::Right] = prop.getValue<std::string>();
-        }
-        else if (name == "front")
-        {
-            paths[CubemapDirection::Front] = prop.getValue<std::string>();
-        }
-        else if (name == "back")
-        {
-            paths[CubemapDirection::Back] = prop.getValue<std::string>();
-        }
-    }
 
     //create shader if it doesn't exist
     if (m_skyboxShaders[SkyboxType::Cubemap].getGLHandle() == 0)
@@ -418,55 +383,7 @@ void Scene::setCubemap(const std::string& path)
     m_skybox.setShader(m_skyboxShaders[Cubemap]);
     m_shaderIndex = SkyboxType::Cubemap;
 
-    if (m_skybox.texture == 0)
-    {
-        glCheck(glGenTextures(1, &m_skybox.texture));
-    }
-
-    //load textures, filling in fallback where needed
-    cro::Image fallback;
-    fallback.create(2, 2, cro::Colour::Magenta, cro::ImageFormat::RGB);
-
-    cro::Image side(true);
-
-    glCheck(glBindTexture(GL_TEXTURE_CUBE_MAP, m_skybox.texture));
-
-    cro::Image* currImage = &fallback;
-    GLenum format = GL_RGB;
-    for (auto i = 0u; i < 6u; i++)
-    {
-        if (side.loadFromFile(paths[i]))
-        {
-            currImage = &side;
-            if (currImage->getFormat() == cro::ImageFormat::RGB)
-            {
-                format = GL_RGB;
-            }
-            else if (currImage->getFormat() == cro::ImageFormat::RGBA)
-            {
-                 format = GL_RGBA;
-            }
-            else
-            {
-                currImage = &fallback;
-                format = GL_RGB;
-            }
-        }
-        else
-        {
-            currImage = &fallback;
-            format = GL_RGB;
-        }
-
-        auto size = currImage->getSize();
-        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, format, size.x, size.y, 0, format, GL_UNSIGNED_BYTE, currImage->getPixelData());
-    }
-    glCheck(glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
-    glCheck(glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
-    glCheck(glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE));
-    glCheck(glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE));
-    glCheck(glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE));
-
+    m_skybox.texture = m_skyboxCubemap.getGLHandle();
     m_activeSkyboxTexture = m_skybox.texture;
 }
 
@@ -482,6 +399,8 @@ void Scene::setCubemap(const EnvironmentMap& map)
     m_activeSkyboxTexture = map.m_textures[0];
     m_skybox.setShader(m_skyboxShaders[Environment]);
     m_shaderIndex = SkyboxType::Environment;
+
+    m_skyboxCubemap = {};
 }
 
 CubemapID Scene::getCubemap() const

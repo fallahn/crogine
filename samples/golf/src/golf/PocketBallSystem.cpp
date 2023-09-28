@@ -35,6 +35,8 @@ source distribution.
 #include <crogine/ecs/components/AudioEmitter.hpp>
 #include <crogine/ecs/Scene.hpp>
 
+using namespace cl;
+
 namespace
 {
     constexpr float MaxXPos = (-100.f - ((BilliardBall::Radius * 2.f) * 8.f) + BilliardBall::Radius);

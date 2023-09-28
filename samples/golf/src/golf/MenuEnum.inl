@@ -77,6 +77,7 @@ enum MenuIndex
     CourseReverse,
     CourseUser,
     CourseCPUSkip,
+    CourseClubLimit,
     CourseFriendsOnly,
 
     RulesPrevious,
@@ -86,5 +87,6 @@ enum MenuIndex
     RulesClubset,
 
     InfoLeaderboards,
+    InfoLeague,
     InfoScorecard,
 };

@@ -32,7 +32,7 @@ source distribution.
 #include <crogine/core/Message.hpp>
 #include <crogine/detail/glm/vec3.hpp>
 
-namespace MessageID
+namespace cl::MessageID
 {
     enum
     {
@@ -66,12 +66,14 @@ struct GolfEvent final
         BallLanded,
         Scored,
         NiceShot,
+        PowerShot,
         DriveComplete,
         HoleInOne,
         HoleWon,
         HoleDrawn,
         DroneHit,
         BirdHit,
+        TargetHit,
         Gimme,
         RoundEnd
     }type = HitBall;
@@ -103,7 +105,8 @@ struct SceneEvent
         PlayerIdle,
         PlayerRotate,
         PlayerBad,
-        MinimapUpdated
+        MinimapUpdated,
+        ChatMessage
     }type = TransitionComplete;
 
     //union
@@ -120,6 +123,14 @@ struct CollisionEvent final
     {
         Begin, End, NearMiss
     }type = Begin;
+
+    enum Special
+    {
+        Billboard = -3,
+        Firework,
+        FlagPole
+    };
+
     glm::vec3 position = glm::vec3(0.f);
     std::int32_t terrain = 0;
     std::int32_t clubID = -1;

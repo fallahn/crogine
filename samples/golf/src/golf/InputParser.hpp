@@ -65,16 +65,17 @@ public:
     std::int32_t getClub() const;
 
     // *sigh* be careful with this, the int param can be implicitly converted to bool...
-    void setActive(bool active, std::int32_t terrain, bool isCPU = false);
+    void setActive(bool active, std::int32_t terrain, bool isCPU = false, std::uint8_t lie = 1);
     void setSuspended(bool);
     void setEnableFlags(std::uint16_t); //bits which are set are *enabled*
-    void setMaxClub(float); //based on overall distance of hole
+    void setMaxClub(float, bool atTee); //based on overall distance of hole
     void setMaxClub(std::int32_t); //force set when only wanting wedges for example
     void resetPower();
     void update(float);
 
     bool inProgress() const;
     bool getActive() const;
+    bool isAiming() const { return m_state == InputParser::State::Aim; }
 
     bool isSwingputActive() const { return m_swingput.isActive() && m_state != State::Drone; }
     float getSwingputPosition() const { return m_swingput.getActivePoint().y; }
@@ -150,6 +151,7 @@ private:
     std::int32_t m_clubOffset; //offset ID from first club
 
     std::int32_t m_terrain;
+    std::uint8_t m_lie;
     float m_estimatedDistance;
     void updateDistanceEstimation();
 

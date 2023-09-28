@@ -65,6 +65,10 @@ static constexpr float SkyCamRadius = 80.f;
 static constexpr float GreenCamZoomFast = 2.5f;
 static constexpr float GreenCamZoomSlow = 1.8f;
 static constexpr float SkyCamZoomSpeed = 1.1f;// 3.f;
+static constexpr float FlightCamFOV = 90.f;
+static constexpr glm::vec3 FlightCamOffset = glm::vec3(0.f, 0.098f, 0.f);
+static constexpr float MinFlightCamDistance = 0.132f;
+static constexpr float FlightCamRotation = -0.158f;
 
 static constexpr glm::uvec2 MapSize(320u, 200u);
 static constexpr glm::vec2 RangeSize(200.f, 250.f);
@@ -133,6 +137,10 @@ static constexpr std::int16_t TriggerDeadZone = 30;
 static constexpr glm::vec3 BallHairScale(0.277f);
 static constexpr glm::vec3 BallHairOffset(0.f, 0.04f, -0.007f);
 
+class btVector3;
+glm::vec3 btToGlm(btVector3 v);
+btVector3 glmToBt(glm::vec3 v);
+
 struct TutorialID
 {
     //note that these are in order in which they are displayed
@@ -170,6 +178,7 @@ struct SpriteAnimID final
     };
 };
 
+
 struct MixerChannel final
 {
     enum
@@ -181,6 +190,7 @@ struct MixerChannel final
         Count
     };
 };
+
 
 //data blocks for uniform buffer
 struct WindData final
@@ -1003,18 +1013,20 @@ static inline void createFallbackModel(cro::Entity target, cro::ResourceCollecti
     target.addComponent<cro::Model>(meshData, material);
 }
 
-static inline void formatDistanceString(float distance, cro::Text& target, bool imperial)
+static inline void formatDistanceString(float distance, cro::Text& target, bool imperial, bool isTarget = false)
 {
     static constexpr float ToYards = 1.094f;
     static constexpr float ToFeet = 3.281f;
     static constexpr float ToInches = 12.f;
+
+    const std::string Prefix = isTarget ? "Target: " : "Pin: ";
 
     if (imperial)
     {
         if (distance > 7) //TODO this should read the putter value (?)
         {
             auto dist = static_cast<std::int32_t>(std::round(distance * ToYards));
-            target.setString("Pin: " + std::to_string(dist) + "yds");
+            target.setString(Prefix + std::to_string(dist) + "yds");
         }
         else
         {
@@ -1053,7 +1065,7 @@ static inline void formatDistanceString(float distance, cro::Text& target, bool 
         if (distance > 5)
         {
             auto dist = static_cast<std::int32_t>(std::round(distance));
-            target.setString("Pin: " + std::to_string(dist) + "m");
+            target.setString(Prefix + std::to_string(dist) + "m");
         }
         else
         {

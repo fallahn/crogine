@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2022
+Matt Marchant 2021 - 2023
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -31,11 +31,12 @@ source distribution.
 
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/ecs/components/Text.hpp>
+#include <crogine/ecs/components/Drawable2D.hpp>
 
 namespace
 {
-    constexpr float CharTime = 0.04f;
-    constexpr float HoldTime = 5.f;
+    constexpr float CharTime = 0.01f;
+    constexpr float HoldTime = 3.f;
 }
 
 NotificationSystem::NotificationSystem(cro::MessageBus& mb)
@@ -89,19 +90,16 @@ void NotificationSystem::process(float dt)
         case Notification::Out:
         {
             CRO_ASSERT(notification.speed > 0, "");
-            notification.currentTime += (dt * notification.speed);
+            notification.currentTime = std::min(1.f, notification.currentTime + (dt * 10.f));
 
-            if (notification.currentTime > CharTime)
+            auto bounds = cro::Text::getLocalBounds(entities[0]);
+            bounds.height *= std::max(0.f, 1.f - notification.currentTime);
+
+            entities[0].getComponent<cro::Drawable2D>().setCroppingArea(bounds);
+
+            if (notification.currentTime == 1)
             {
-                notification.currentTime -= CharTime;
-                notification.charPosition--;
-
-                text.setString(notification.message.substr(0, notification.charPosition));
-                
-                if (notification.charPosition == 1)
-                {
-                    getScene()->destroyEntity(entities[0]);
-                }
+                getScene()->destroyEntity(entities[0]);
             }
         }
             break;

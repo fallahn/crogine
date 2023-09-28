@@ -33,6 +33,7 @@ source distribution.
 
 #include <string>
 #include <array>
+#include <cstdint>
 
 struct ClubID final
 {
@@ -62,7 +63,7 @@ struct ClubID final
 
     static inline std::int32_t getUnlockLevel(std::int32_t id)
     {
-        for (auto i = 0; i < LockedSet.size(); ++i)
+        for (auto i = 0u; i < LockedSet.size(); ++i)
         {
             if (LockedSet[i] == id)
             {

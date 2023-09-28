@@ -69,21 +69,14 @@ source distribution.
 #include <crogine/gui/Gui.hpp>
 #include <crogine/graphics/SpriteSheet.hpp>
 
+using namespace cl;
+
 namespace
 {
 #include "CelShader.inl"
 #include "BillboardShader.inl"
 #include "ShaderIncludes.inl"
 #include "TVShader.inl"
-
-    const std::array<cro::String, TableData::Rules::Count> TableStrings =
-    {
-        cro::String("Eight Ball"),
-        cro::String("Nine Ball"),
-        cro::String("Bar Billiards"),
-        cro::String("Snooker"),
-        cro::String("Void")
-    };
 
     struct TableCallbackData final
     {
@@ -144,6 +137,7 @@ ClubhouseState::ClubhouseState(cro::StateStack& ss, cro::State::Context ctx, Sha
     sd.mapDirectory = "pool";
 
     Achievements::refreshGlobalStats();
+    Social::getMonthlyChallenge().refresh();
 
     ctx.mainWindow.loadResources([this]() {
         addSystems();
@@ -166,6 +160,7 @@ ClubhouseState::ClubhouseState(cro::StateStack& ss, cro::State::Context ctx, Sha
         cacheState(StateID::Trophy);
         cacheState(StateID::Leaderboard);
         cacheState(StateID::Stats);
+        cacheState(StateID::League);
         });
 
     ctx.mainWindow.setMouseCaptured(false);
@@ -329,6 +324,8 @@ ClubhouseState::ClubhouseState(cro::StateStack& ss, cro::State::Context ctx, Sha
     //        ImGui::End();
     //    });
 #endif
+
+    cro::App::getInstance().resetFrameTime();
 }
 
 //public
@@ -1163,7 +1160,7 @@ void ClubhouseState::buildScene()
         {
             static constexpr float BaseX = 17.1f; //see position, above
 
-            static const auto highFreq = cro::Util::Wavetable::sine(5.f, 0.005f);
+            static const auto highFreq = cro::Util::Wavetable::sine(5.f, 0.003f);
             static std::size_t highFreqIndex = 0;
 
             static const auto lowFreq = cro::Util::Wavetable::sine(0.0001f);
@@ -1446,7 +1443,7 @@ void ClubhouseState::createTableScene()
     {
         auto texSize = BaseSize;
 
-        auto winSize = glm::vec2(cro::App::getWindow().getSize());
+        //auto winSize = glm::vec2(cro::App::getWindow().getSize());
         float viewScale = getViewScale();
 
         if (!m_sharedData.pixelScale)
@@ -1649,8 +1646,6 @@ void ClubhouseState::handleNetEvent(const net::NetEvent& evt)
 
                 m_sharedData.ballSkinIndex = m_tableData[m_tableIndex].ballSkinIndex;
                 m_sharedData.tableSkinIndex = m_tableData[m_tableIndex].tableSkinIndex;
-
-                Social::setStatus(Social::InfoID::Billiards, { TableStrings[m_tableData[m_sharedData.courseIndex].rules].toAnsiString().c_str() });
 
                 //save these for later
                 cro::ConfigFile cfg("table_skins");

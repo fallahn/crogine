@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022
+Matt Marchant 2022 - 2023
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -29,7 +29,11 @@ source distribution.
 
 #include "EightballDirector.hpp"
 #include "ServerMessages.hpp"
+#ifdef CRO_DEBUG_
+#include "../BilliardsSystemReact.hpp"
+#else
 #include "../BilliardsSystem.hpp"
+#endif
 
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/ecs/components/Callback.hpp>
@@ -174,10 +178,10 @@ std::uint32_t EightballDirector::getTargetID(glm::vec3 playerPos) const
     float dist = std::numeric_limits<float>::max();
     std::uint32_t retVal = std::numeric_limits<std::uint32_t>::max();
 
-    const auto& balls = getScene().getSystem<BilliardsSystem>()->getEntities();
+    const auto& balls = getScene().getSystem<BPhysSystem>()->getEntities();
     for (const auto& ball : balls)
     {
-        if (getStatusType(ball.getComponent<BilliardBall>().id) == m_playerStatus[m_currentPlayer].target)
+        if (getStatusType(ball.getComponent<BPhysBall>().id) == m_playerStatus[m_currentPlayer].target)
         {
             //TODO get the actual cueball position
             auto d2 = glm::length2(playerPos - ball.getComponent<cro::Transform>().getPosition());

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022
+Matt Marchant 2022 - 2023
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -43,7 +43,7 @@ struct Spectator final
 
     std::int32_t direction = 1;
     std::int32_t target = 0;
-    static constexpr float WalkSpeed = 1.2f;
+    static constexpr float WalkSpeed = 1.7f;
     const Path* path = nullptr;
 
     float rotation = 0.f;

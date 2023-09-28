@@ -45,6 +45,7 @@ source distribution.
 
 #include <crogine/util/Constants.hpp>
 #include <crogine/util/Maths.hpp>
+#include <crogine/util/Wavetable.hpp>
 
 #include <crogine/detail/OpenGL.hpp>
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
@@ -54,6 +55,146 @@ namespace
     float cohesion = 10.f;
     float maxVelocity = 200.f;
     float targetRadius = 50.f;
+
+    const std::string WaterVert =
+        R"(
+    ATTRIBUTE vec4 a_position;
+    ATTRIBUTE vec3 a_normal;
+    ATTRIBUTE vec3 a_tangent;
+    ATTRIBUTE vec3 a_bitangent;
+    ATTRIBUTE vec2 a_texCoord0;
+
+    #include WVP_UNIFORMS
+
+    uniform vec4 u_subrect;
+    uniform vec4 u_clipPlane;
+
+    VARYING_OUT vec3 v_worldPosition;
+
+    VARYING_OUT vec3 v_tbn[3];
+    VARYING_OUT vec2 v_texCoord0;
+
+    void main()
+    {
+        mat4 wvp = u_projectionMatrix * u_worldViewMatrix;
+        vec4 position = a_position;
+        vec4 worldPosition = u_worldMatrix * position;
+
+        v_worldPosition = worldPosition.xyz;
+        gl_Position = wvp * position;
+
+#if defined(SPHERE)
+        v_tbn[0] = normalize(a_position.xyz); //assumes the position is relative to centre and used as cubmap lookup
+#else
+        vec3 normal = a_normal;
+        vec4 tangent = vec4(a_tangent, 0.0);
+        vec4 bitangent = vec4(a_bitangent, 0.0);
+
+        v_tbn[0] = normalize(u_normalMatrix * tangent.xyz);
+        v_tbn[1] = normalize(u_normalMatrix * bitangent.xyz);
+        v_tbn[2] = normalize(u_normalMatrix * normal);
+
+        v_texCoord0 = u_subrect.xy + (a_texCoord0 * u_subrect.zw);
+
+        gl_ClipDistance[0] = dot(worldPosition, u_clipPlane);
+#endif
+    })";
+
+
+    const std::string WaterFrag = R"(
+    OUTPUT
+
+    uniform sampler2D u_diffuseMap;
+    uniform samplerCube u_cubeMap;
+    uniform vec3 u_cameraWorldPosition;
+    uniform float u_time;
+
+    VARYING_IN vec2 v_texCoord0;
+    VARYING_IN vec3 v_worldPosition;
+    VARYING_IN vec3 v_tbn[3]; //v_tbn[2] contains normal, remember
+
+    const float RidgeCount = 300.0;
+    const float MaxAngle = 0.05;
+
+    void main()
+    {
+        vec4 colour = TEXTURE(u_diffuseMap, v_texCoord0);
+
+        vec3 eyeDirection = normalize(u_cameraWorldPosition - v_worldPosition);
+        vec3 normal = v_tbn[2];
+
+        float fresnel = dot(reflect(-eyeDirection, normal), normal);
+        const float bias = 0.8;
+        fresnel = 1.0 - ((fresnel * (1.0 - bias)) + bias);
+
+
+        //for ease this is calculated in tangent space, hence the need for bitan matrix
+        float r = sin(v_texCoord0.x * RidgeCount);
+        float cycle = sin((u_time * 5.0) + v_texCoord0.x);
+        r *= cycle;
+
+        float s = sin(v_texCoord0.y * 10.0) * cos(u_time * 10.0);
+        r *= s;
+        r *= MaxAngle;
+
+        vec3 noiseNormal = normalize(vec3(sin(r) * 0.5 + 0.5, 0.5, cos(r)));
+
+        noiseNormal = noiseNormal * 2.0 - 1.0;
+        noiseNormal = normalize(v_tbn[0] * noiseNormal.r + v_tbn[1] * noiseNormal.g + v_tbn[2] * noiseNormal.b);
+
+
+
+        vec3 R = reflect(-eyeDirection, noiseNormal);
+        vec3 reflectionColour = TEXTURE_CUBE(u_cubeMap, R).rgb;
+
+        colour.rgb = mix(colour.rgb, reflectionColour, fresnel);
+        //colour.rgb += reflectionColour * fresnel;
+
+//colour.rgb = vec3(r + 1.0 * 0.5);
+//colour.rgb = noiseNormal;
+//colour.rgb = vec3(fresnel);
+//colour.rgb = reflectionColour;
+        FRAG_OUT = colour;
+    })";
+
+
+    const std::string SphereFrag = 
+    R"(
+    OUTPUT
+
+    uniform samplerCubeArray u_cubeMap;
+    //uniform samplerCube u_cubeMap;
+
+    VARYING_IN vec3 v_tbn[3];
+
+    void main()
+    {
+        FRAG_OUT = texture(u_cubeMap, vec4(normalize(v_tbn[0]), 0.0));
+        //FRAG_OUT = texture(u_cubeMap, normalize(v_tbn[0]));
+    })";
+
+
+    struct ShaderID final
+    {
+        enum
+        {
+            Water = 1,
+            Sphere,
+
+        };
+    };
+
+    struct MaterialID final
+    {
+        enum
+        {
+            Water,
+            Sphere
+        };
+    };
+
+    std::int32_t timeUniform = -1;
+    std::uint32_t shaderID = 0;
 }
 
 SwingState::SwingState(cro::StateStack& stack, cro::State::Context context)
@@ -129,6 +270,12 @@ void SwingState::handleMessage(const cro::Message& msg)
 
 bool SwingState::simulate(float dt)
 {
+    static float accumulator = 0.f;
+    accumulator += dt;
+
+    glUseProgram(shaderID);
+    glUniform1f(timeUniform, accumulator);
+
     m_inputParser.process(dt);
 
     m_gameScene.simulate(dt);
@@ -161,6 +308,26 @@ void SwingState::addSystems()
 
 void SwingState::loadAssets()
 {
+    m_cubemap.loadFromFile("assets/images/1/cmap.ccm");
+    m_resources.shaders.loadFromString(ShaderID::Water, WaterVert, WaterFrag);
+    auto& shader = m_resources.shaders.get(ShaderID::Water);
+    shaderID = shader.getGLHandle();
+    timeUniform = shader.getUniformID("u_time");
+    m_resources.materials.add(MaterialID::Water, shader);
+
+
+    m_resources.shaders.loadFromString(ShaderID::Sphere, WaterVert, SphereFrag, "#define SPHERE\n");
+    m_resources.materials.add(MaterialID::Sphere, m_resources.shaders.get(ShaderID::Sphere));
+
+
+    std::vector<std::string> cubemapPaths =
+    {
+        "assets/images/0/cmap.ccm",
+        "assets/images/1/cmap.ccm",
+        "assets/images/2/cmap.ccm"
+    };
+    m_cubemapArray.loadFromFiles(cubemapPaths);
+
     m_target.setVertexData(
         {
             cro::Vertex2D(glm::vec2(-10.f, 10.f), cro::Colour::Blue),
@@ -187,6 +354,57 @@ void SwingState::createScene()
     updateView(camEnt.getComponent<cro::Camera>());
     camEnt.getComponent<cro::Camera>().resizeCallback = std::bind(&SwingState::updateView, this, std::placeholders::_1);
 
+    camEnt.getComponent<cro::Transform>().setPosition({ 0.f, 1.8f, 2.5f });
+    camEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -0.5f);
+
+    cro::ModelDefinition md(m_resources);
+    md.loadFromFile("assets/models/plane.cmt");
+
+    auto entity = m_gameScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    md.createModel(entity);
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [](cro::Entity e, float dt)
+    {
+        static const std::vector<float> WaveTable = cro::Util::Wavetable::sine(0.1f);
+        static std::size_t idx = 0;
+
+        e.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, WaveTable[idx] * 0.5f);
+
+        idx = (idx + 1) % WaveTable.size();
+    };
+
+    auto material = m_resources.materials.get(MaterialID::Water);
+    material.doubleSided = true;
+    auto* m = md.getMaterial(0);
+    if (m->properties.count("u_diffuseMap"))
+    {
+        material.setProperty("u_diffuseMap", cro::TextureID(m->properties.at("u_diffuseMap").second.textureID));
+    }
+    if (m->properties.count("u_subrect"))
+    {
+        const float* v = m->properties.at("u_subrect").second.vecValue;
+        glm::vec4 subrect(v[0], v[1], v[2], v[3]);
+        material.setProperty("u_subrect", subrect);
+    }
+    material.setProperty("u_cubeMap", cro::CubemapID(m_cubemap));
+    material.animation = m->animation;
+    entity.getComponent<cro::Model>().setMaterial(0, material);
+
+
+    //sphere preview
+    md.loadFromFile("assets/models/sphere_1m.cmt");
+    entity = m_gameScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ -1.f, 0.5f, 0.f });
+    md.createModel(entity);
+
+    material = m_resources.materials.get(MaterialID::Sphere);
+    material.setProperty("u_cubeMap", cro::CubemapID(m_cubemapArray));
+    entity.getComponent<cro::Model>().setMaterial(0, material);
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function = [](cro::Entity e, float dt) {e.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, dt); };
+
 
     //entity uses callback system to process logic of follower
     struct FollowerData final
@@ -194,7 +412,7 @@ void SwingState::createScene()
         glm::vec2 velocity = glm::vec2(0.f);
     };
 
-    auto entity = m_gameScene.createEntity();
+    entity = m_gameScene.createEntity();
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().setUserData<FollowerData>();
     entity.getComponent<cro::Callback>().function =
@@ -222,6 +440,10 @@ void SwingState::createScene()
         //make sure not to mutate the velocity by the multiplier
         m_follower.move(data.velocity * multiplier * dt);
     };
+
+
+    m_gameScene.getSunlight().getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -0.32f);
+    m_gameScene.getSunlight().getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, -0.2f);
 }
 
 void SwingState::createUI()

@@ -34,6 +34,7 @@ source distribution.
 
 #include <string>
 #include <vector>
+#include <cstdint>
 
 class M3UPlaylist final
 {
@@ -44,6 +45,9 @@ public:
 
     //load another file and appeand it to the list
     bool loadPlaylist(const std::string& path);
+
+    //shuffles playlist if it is loaded
+    void shuffle();
 
     //increments the current index
     void nextTrack();

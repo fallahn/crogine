@@ -77,6 +77,8 @@ source distribution.
 #include <crogine/detail/OpenGL.hpp>
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
 
+using namespace cl;
+
 namespace
 {
     constexpr float PieRadius = 48.f;
@@ -838,8 +840,8 @@ void StatsState::createClubStatsTab(cro::Entity parent, const cro::SpriteSheet& 
         {
             //fudgenstein.
             auto c = BarColours[colourIndex];
-            if (colourIndex == 2 && playerLevel < 30
-                || colourIndex == 1 && playerLevel < 15)
+            if ((colourIndex == 2 && playerLevel < 30)
+                || (colourIndex == 1 && playerLevel < 15))
             {
                 c.setAlpha(0.15f);
             }
@@ -1812,6 +1814,11 @@ void StatsState::createAwardsTab(cro::Entity parent, const cro::SpriteSheet& spr
     m_awardSprites[SpriteID::SilverSpike] = spriteSheet.getSprite("silver_spike");
     m_awardSprites[SpriteID::GoldSpike] = spriteSheet.getSprite("gold_spike");
     m_awardSprites[SpriteID::TeeBall] = spriteSheet.getSprite("tee_ball");
+    m_awardSprites[SpriteID::BronzeBall] = spriteSheet.getSprite("bronze_ball");
+    m_awardSprites[SpriteID::SilverBall] = spriteSheet.getSprite("silver_ball");
+    m_awardSprites[SpriteID::GoldBall] = spriteSheet.getSprite("gold_ball");
+    m_awardSprites[SpriteID::PlatinumBall] = spriteSheet.getSprite("platinum_ball");
+    m_awardSprites[SpriteID::DiamondBall] = spriteSheet.getSprite("diamond_ball");
     
     m_awardQuad = m_awardSprites[SpriteID::BronzeShield];
     auto size = m_awardQuad.getSize();
@@ -1836,13 +1843,14 @@ void StatsState::refreshAwardsTab(std::int32_t page)
     constexpr float StrideY = 120.f;
 
 #ifdef CRO_DEBUG_
-    std::vector<Social::Award> awards;
+    /*std::vector<Social::Award> awards;
     for (auto i = 0; i < 43; ++i)
     {
         auto& a = awards.emplace_back();
         a.description = "Monthly Winner\nJuly 200" + std::to_string(i%10);
         a.type = cro::Util::Random::value(0, 2);
-    }
+    }*/
+    const auto& awards = Social::getAwards();
 #else
 #ifdef USE_GNS
     const auto& awards = Social::getAwards();
@@ -1904,6 +1912,33 @@ void StatsState::refreshAwardsTab(std::int32_t page)
                 break;
             case Social::Award::MonthlyGold:
                 m_awardQuad = m_awardSprites[SpriteID::GoldShield];
+                break;
+            case Social::Award::MonthlyChallenge:
+                m_awardQuad = m_awardSprites[SpriteID::GoldSpike];
+                break;
+            case Social::Award::Level10:
+                m_awardQuad = m_awardSprites[SpriteID::BronzeBall];
+                break;
+            case Social::Award::Level20:
+                m_awardQuad = m_awardSprites[SpriteID::SilverBall];
+                break;
+            case Social::Award::Level30:
+                m_awardQuad = m_awardSprites[SpriteID::GoldBall];
+                break;
+            case Social::Award::Level40:
+                m_awardQuad = m_awardSprites[SpriteID::PlatinumBall];
+                break;
+            case Social::Award::Level50:
+                m_awardQuad = m_awardSprites[SpriteID::DiamondBall];
+                break;
+            case Social::Award::LeagueFirst:
+                m_awardQuad = m_awardSprites[SpriteID::GoldSpike];
+                break;
+            case Social::Award::LeagueSecond:
+                m_awardQuad = m_awardSprites[SpriteID::SilverSpike];
+                break;
+            case Social::Award::LeagueThird:
+                m_awardQuad = m_awardSprites[SpriteID::BronzeSpike];
                 break;
             }
             m_awardQuad.draw();
@@ -2282,7 +2317,7 @@ void PieChart::updateVerts()
             }
             wedgePoints.emplace_back(-std::cos(currentAngle), std::sin(currentAngle));
 
-            for (auto i = 0; i < wedgePoints.size() - 1; ++i)
+            for (auto i = 0u; i < wedgePoints.size() - 1; ++i)
             {
                 verts.emplace_back(glm::vec2(0.f), CD32::Colours[colourIndex]);
                 verts.emplace_back(wedgePoints[i+1] * PieRadius, CD32::Colours[colourIndex]);

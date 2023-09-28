@@ -32,6 +32,7 @@ source distribution.
 #include <crogine/core/FileSystem.hpp>
 #include <crogine/core/Log.hpp>
 #include <crogine/detail/Types.hpp>
+#include <crogine/util/Random.hpp>
 
 #include <array>
 
@@ -138,6 +139,11 @@ bool M3UPlaylist::loadPlaylist(const std::string& path)
 
     LogE << path << " file is empty" << std::endl;
     return false;
+}
+
+void M3UPlaylist::shuffle()
+{
+    std::shuffle(m_filePaths.begin(), m_filePaths.end(), cro::Util::Random::rndEngine);
 }
 
 void M3UPlaylist::nextTrack()

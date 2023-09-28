@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant - 2022
+Matt Marchant 2022 - 2023
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -157,7 +157,7 @@ void BilliardsState::netEvent(const net::NetEvent& evt)
             m_sharedData.host.broadcastPacket(PacketID::CueUpdate, evt.packet.as<BilliardsUpdate>(), net::NetFlag::Unreliable);
             break;
         case PacketID::BallPlaced:
-        if (!m_scene.getSystem<BilliardsSystem>()->hasCueball())
+        if (!m_scene.getSystem<BPhysSystem>()->hasCueball())
         {
             auto data = evt.packet.as<BilliardBallInput>();
             auto currentPlayer = m_activeDirector->getCurrentPlayer();
@@ -177,7 +177,7 @@ void BilliardsState::netEvent(const net::NetEvent& evt)
             if (data.client == m_playerInfo[currentPlayer].client
                 && data.player == m_playerInfo[currentPlayer].player)
             {
-                m_scene.getSystem<BilliardsSystem>()->applyImpulse(data.impulse, data.offset);
+                m_scene.getSystem<BPhysSystem>()->applyImpulse(data.impulse, data.offset);
             }
         }
             break;
@@ -220,10 +220,10 @@ void BilliardsState::netBroadcast()
     {
         auto timestamp = m_serverTime.elapsed().asMilliseconds();
 
-        auto& balls = m_scene.getSystem<BilliardsSystem>()->getEntities();
+        auto& balls = m_scene.getSystem<BPhysSystem>()->getEntities();
         for (auto entity : balls)
         {
-            auto& ball = entity.getComponent<BilliardBall>();
+            auto& ball = entity.getComponent<BPhysBall>();
             if (ball.hadUpdate) //sending all updates, even non-moving ones, provides smoother client side interpolation (??)
             {
                 BilliardsUpdate info;
@@ -290,7 +290,7 @@ void BilliardsState::initScene()
 {
     auto& mb = m_sharedData.messageBus;
     m_scene.addSystem<cro::CallbackSystem>(mb);
-    m_scene.addSystem<BilliardsSystem>(mb);
+    m_scene.addSystem<BPhysSystem>(mb);
 
     //add director based on rule set
     switch (m_tableData.rules)
@@ -324,7 +324,7 @@ void BilliardsState::initScene()
 
 void BilliardsState::buildWorld()
 {
-    m_scene.getSystem<BilliardsSystem>()->initTable(m_tableData);
+    m_scene.getSystem<BPhysSystem>()->initTable(m_tableData);
 
     if (m_activeDirector)
     {
@@ -349,10 +349,10 @@ void BilliardsState::sendInitialGameState(std::uint8_t clientID)
         //send all the ball positions
         auto timestamp = m_serverTime.elapsed().asMilliseconds();
 
-        auto& balls = m_scene.getSystem<BilliardsSystem>()->getEntities();
+        auto& balls = m_scene.getSystem<BPhysSystem>()->getEntities();
         for (auto entity : balls)
         {
-            auto& ball = entity.getComponent<BilliardBall>();
+            auto& ball = entity.getComponent<BPhysBall>();
 
             ActorInfo info;
             info.position = entity.getComponent<cro::Transform>().getPosition();
@@ -421,7 +421,7 @@ void BilliardsState::doServerCommand(const net::NetEvent& evt)
         spawnBall(addBall({ cro::Util::Random::value(-0.1f, 0.1f), 0.5f, cro::Util::Random::value(-0.1f, 0.1f) }, cro::Util::Random::value(0, 15)));
         break;
     case ServerCommand::StrikeBall:
-        m_scene.getSystem<BilliardsSystem>()->applyImpulse({0.f, 0.f, -0.7f}, {0.f, 0.f, 0.f});
+        m_scene.getSystem<BPhysSystem>()->applyImpulse({0.f, 0.f, -0.7f}, {0.f, 0.f, 0.f});
         break;
     case ServerCommand::EndGame:
         endGame(m_playerInfo[0]);
@@ -440,8 +440,8 @@ void BilliardsState::setNextPlayer(bool waitForAck)
 
     auto packetID = waitForAck ? PacketID::NotifyPlayer : PacketID::SetPlayer;
 
-    auto playerPos = m_scene.getSystem<BilliardsSystem>()->hasCueball() ?
-        m_scene.getSystem<BilliardsSystem>()->getCueballPosition() :
+    auto playerPos = m_scene.getSystem<BPhysSystem>()->hasCueball() ?
+        m_scene.getSystem<BPhysSystem>()->getCueballPosition() :
         m_activeDirector->getCueballPosition();
 
     auto info = m_playerInfo[m_activeDirector->getCurrentPlayer()];
@@ -457,14 +457,14 @@ cro::Entity BilliardsState::addBall(glm::vec3 position, std::uint8_t id)
 {
     auto entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(position);
-    entity.addComponent<BilliardBall>().id = id;
+    entity.addComponent<BPhysBall>().id = id;
     
     if (id == CueBall)
     {
         m_activeDirector->setCueball(entity);
 
         //make sure the ball is in a valid spawn area
-        if (!m_scene.getSystem<BilliardsSystem>()->isValidSpawnPosition(position))
+        if (!m_scene.getSystem<BPhysSystem>()->isValidSpawnPosition(position))
         {
             entity.getComponent<cro::Transform>().setPosition(m_activeDirector->getCueballPosition());
         }
@@ -480,7 +480,7 @@ void BilliardsState::spawnBall(cro::Entity entity)
     info.serverID = entity.getIndex();
     info.position = entity.getComponent<cro::Transform>().getPosition();
     info.rotation = cro::Util::Net::compressQuat(entity.getComponent<cro::Transform>().getRotation());
-    info.state = entity.getComponent<BilliardBall>().id;
+    info.state = entity.getComponent<BPhysBall>().id;
     info.timestamp = m_serverTime.elapsed().asMilliseconds();
 
     m_sharedData.host.broadcastPacket(PacketID::ActorSpawn, info, net::NetFlag::Reliable, ConstVal::NetChannelReliable);

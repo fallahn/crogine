@@ -29,6 +29,8 @@ source distribution.
 
 #pragma once
 
+#include "PacketIDs.hpp"
+
 #include <crogine/core/Clock.hpp>
 #include <crogine/graphics/Colour.hpp>
 #include <crogine/graphics/Vertex2D.hpp>
@@ -59,12 +61,23 @@ struct FontID final
     };
 };
 
-static const std::array<std::string, 3u> ScoreTypes =
+static const std::array<std::string, ScoreType::Count> ScoreTypes =
 {
-    "Stroke Play", "Match Play", "Skins"
+    "Stroke Play", 
+    "Stableford", 
+    "Stableford Pro",
+    "Match Play",
+    "Skins",
+    "Multi-target",
+    "Short Round",
+    /*
+    "Bingo Bango Bongo",
+    "Nearest the Pin",
+    "Longest Drive",
+    */
 };
 
-static const std::array<std::string, 3u> GimmeString =
+static const std::array<std::string, GimmeSize::Count> GimmeString =
 {
     "No Gimme",
     "Inside The Leather",
@@ -76,19 +89,41 @@ static const std::array<std::string, 3u> CourseTypes =
     "Official Courses", "User Courses", "Workshop Courses"
 };
 
-static const std::array<std::string, 3u> RuleDescriptions =
+static const std::array<std::string, ScoreType::Count> RuleDescriptions =
 {
-    "Player with the fewest total\nstrokes wins",
-    "Holes are scored individually.\nPlayer with the most holes\nwins",
-    "Holes are scored individually.\nWinner of the hole gets the\nskins pot, else the pot\nrolls over to the next hole."
+#ifdef USE_GNS
+    "The player with the fewest total strokes wins.\nSolo or network play scores contribute to the\nmonthly and all time leaderboards.\nContributes to the Club League.",
+#else
+    "The player with the fewest total strokes wins.\nContributes to the Club League.",
+#endif
+    "Stroke play rules, however par is scored at\n2 points, with one extra point awarded for every\nstroke under par. Max strokes are reached when\nthere are no more points available. The player with\nthe most points wins. Contributes to the Club League.",
+    "Stableford rules, however one point for every\nstroke over par is deducted instead of reaching\nthe stroke limit. The player with the most points wins.\nContributes to the Club League.",
+    "Holes are scored individually by fewest strokes\n and one point is awarded for each hole won.\nThe player with the most points wins.",
+    "Holes are scored individually by fewest strokes.\nThe winner of the hole gets the skins pot,\nelse the pot rolls over to the next hole.\nTies are resolved with a sudden death round.",
+    "Stroke play, but each player must hit the mid-point\ntarget before reaching the green. Not hitting the\ntarget forfeits the hole.\nPar is increased by one on larger courses.",
+#ifdef USE_GNS
+    "As stroke play, however the number of holes is\nreduced by 33% - 18 holes become 12 and 9 holes\nbecome 6. Ideal for casual games. User courses\nremain unaffected, and scores are omitted from\nthe leaderboards. Contributes to the Club League.",
+#else
+    "As stroke play, however the number of holes is\nreduced by 33% - 18 holes become 12 and 9 holes\nbecome 6. Ideal for casual games. User courses\nremain unaffected.\nContributes to the Club League.",
+#endif
+    /*
+    "The first player on the green scores Bingo, the\nplayer closest to the pin when all players are on\nthe green scores Bango and first to hole out wins\nBongo. Not recommended for putting courses.",
+    "Each player has one stroke to get as near to the\npin as possible. The winner is the player with the\nshortest total distance.\nGreat for casual play.",
+    "Each player has one stroke to make the longest\ndrive possible while staying on the fairway.\nThe winner is the player with the longest total\ndistance.",
+    */
 };
 
-static constexpr std::array<glm::vec3, 4u> EmotePositions =
+static constexpr std::array<glm::vec3, 8u> EmotePositions =
 {
     glm::vec3(0.f, 34.f, 0.15f),
     glm::vec3(34.f, 0.f, 0.15f),
     glm::vec3(0.f, -34.f, 0.15f),
-    glm::vec3(-34.f, 0.f, 0.15f)
+    glm::vec3(-34.f, 0.f, 0.15f),
+
+    glm::vec3(24.f, 24.f, 0.15f),
+    glm::vec3(-24.f, 24.f, 0.15f),
+    glm::vec3(-24.f, -24.f, 0.15f),
+    glm::vec3(24.f, -24.f, 0.15f),
 };
 
 static constexpr std::uint32_t LargeTextSize = 64;

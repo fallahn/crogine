@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2022
+Matt Marchant 2021 - 2023
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -33,6 +33,7 @@ source distribution.
 #include "BallSystem.hpp"
 #include "CollisionMesh.hpp"
 #include "BallSystem.hpp"
+#include "Clubs.hpp"
 
 #include <crogine/ecs/components/Transform.hpp>
 
@@ -40,6 +41,8 @@ source distribution.
 
 #include <Achievements.hpp>
 #include <AchievementStrings.hpp>
+
+using namespace cl;
 
 namespace
 {
@@ -90,7 +93,7 @@ void ClientCollisionSystem::process(float)
                 if (auto l2 = glm::length2(dir); l2 < (CollisionRadius * CollisionRadius))
                 {
                     auto* msg = postMessage<CollisionEvent>(MessageID::CollisionMessage);
-                    msg->terrain = -1;
+                    msg->terrain = CollisionEvent::FlagPole;
                     msg->position = position;
                     msg->type = CollisionEvent::Begin;
                 }
@@ -130,10 +133,11 @@ void ClientCollisionSystem::process(float)
             }
 
             //or a near miss
-            if (oldNear 
+            else if (oldNear 
                 && !collider.nearHole 
-                && collider.terrain == TerrainID::Green
-                && position.y > m_holeData[m_holeIndex].pin.y
+                //&& collider.terrain == TerrainID::Green
+                && m_club == ClubID::Putter
+                //&& position.y > m_holeData[m_holeIndex].pin.y
                 /*&& result.height >= (position.y - (Ball::Radius / 2.f))*/)
             {
                 auto* msg = postMessage<CollisionEvent>(MessageID::CollisionMessage);
@@ -204,6 +208,13 @@ void ClientCollisionSystem::process(float)
             else if (collider.previousHeight > CollisionLevel)
             {
                 notify(CollisionEvent::Begin, position);
+
+                //really we only want to do this if the lie is 'buried' however
+                //it's not been updated from the servr yet...
+                if (collider.terrain == TerrainID::Bunker)
+                {
+                    entity.getComponent<cro::Transform>().setOrigin({ 0.f, Ball::Radius * 1.2f, 0.f });
+                }
             }
             else if(collider.terrain == TerrainID::Hole
                 &&(collider.previousHeight > result.height - (Ball::Radius * 2.f)

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022
+Matt Marchant 2022 - 2023
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -30,7 +30,11 @@ source distribution.
 #include "NineballDirector.hpp"
 #include "ServerMessages.hpp"
 
+#ifdef CRO_DEBUG_
+#include "../BilliardsSystemReact.hpp"
+#else
 #include "../BilliardsSystem.hpp"
+#endif
 
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/ecs/components/Callback.hpp>
@@ -143,11 +147,11 @@ glm::vec3 NineballDirector::getCueballPosition() const
 
 std::uint32_t NineballDirector::getTargetID(glm::vec3) const
 {
-    const auto& balls = getScene().getSystem<BilliardsSystem>()->getEntities();
+    const auto& balls = getScene().getSystem<BPhysSystem>()->getEntities();
     const auto& result = std::find_if(balls.cbegin(), balls.cend(), 
         [&](const cro::Entity& e)
         {
-            return e.getComponent<BilliardBall>().id == m_currentTarget; 
+            return e.getComponent<BPhysBall>().id == m_currentTarget; 
         });
 
     if (result != balls.cend())

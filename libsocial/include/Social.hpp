@@ -29,6 +29,8 @@ source distribution.
 
 #pragma once
 
+#include "MonthlyChallenge.hpp"
+
 #include <crogine/graphics/Image.hpp>
 #include <crogine/core/App.hpp>
 #include <crogine/core/String.hpp>
@@ -45,8 +47,8 @@ source distribution.
 //(terrain vertex data and materials changed 1100 -> 1110)
 //(player avatar data format changed 1110 -> 1120)
 //(ball started sending wind effect 1120 -> 1124)
-static constexpr std::uint16_t CURRENT_VER = 1130;
-static const std::string StringVer("1.13.0");
+static constexpr std::uint16_t CURRENT_VER = 1140;
+static const std::string StringVer("1.14.0");
 
 struct HallEntry final
 {
@@ -85,7 +87,8 @@ public:
         {
             StatsReceived,
             HOFReceived,
-            AwardsReceived
+            AwardsReceived,
+            RequestRestart
         }type = StatsReceived;
         std::int32_t index = -1;
         std::int32_t page = -1;
@@ -105,7 +108,11 @@ public:
         }type = LevelUp;
         std::int32_t level = 0; //if monthly progress then current value
         std::int32_t reason = -1; //if monthly progress then target value
-        std::uint64_t playerID = 0; //id of monthly challenge
+        union
+        {
+            std::uint64_t playerID = 0;
+            std::int32_t challengeID; //id of monthly challenge
+        };
     };
 
     struct ProgressData final
@@ -178,13 +185,16 @@ public:
         //dictates appearance
         enum
         {
-            MonthlyGold, MonthlySilver, MonthlyBronze
+            MonthlyGold, MonthlySilver, MonthlyBronze,
+            MonthlyChallenge,
+            Level10, Level20, Level30, Level40, Level50,
+            LeagueFirst, LeagueSecond, LeagueThird
         };
         std::int32_t type;
         cro::String description;
     };
-    static void refreshAwards() {};
-    static const std::vector<Award>& getAwards() { return {}; }
+    static void refreshAwards();
+    static const std::vector<Award>& getAwards();
 
     enum class UnlockType
     {
@@ -203,4 +213,9 @@ public:
     };
     static std::string getBaseContentPath();
     static std::string getUserContentPath(std::int32_t);
+
+    static MonthlyChallenge& getMonthlyChallenge();
+    static std::int32_t getMonth();
+
+    static void showWebPage(const std::string&) {}
 };

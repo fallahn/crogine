@@ -48,6 +48,8 @@ source distribution.
 #include <crogine/gui/Gui.hpp>
 #include <crogine/util/Constants.hpp>
 
+using namespace cl;
+
 namespace
 {
     constexpr float MaxTilt = 18.f * cro::Util::Const::degToRad;

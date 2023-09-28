@@ -231,91 +231,245 @@ void GolfState::addCameraDebugging()
 
 void GolfState::registerDebugCommands()
 {
-    registerCommand("show_stat_window", 
+    //registerWindow([&]()
+    //    {
+    //        if (ImGui::Begin("sunlight"))
+    //        {
+    //            static float col[3] = { 1.f, 1.f, 1.f };
+    //            if (ImGui::ColorPicker3("Sky", col))
+    //            {
+    //                m_skyScene.getSunlight().getComponent<cro::Sunlight>().setColour({ col[0], col[1], col[2], 1.f });
+    //                m_gameScene.getSunlight().getComponent<cro::Sunlight>().setColour({ col[0], col[1], col[2], 1.f });
+    //            }
+    //        }
+    //        ImGui::End();
+    //    });
+
+    registerCommand("build_cubemaps",
         [&](const std::string&)
         {
-            if (!m_achievementDebug.wasActivated)
+            std::string holeNumber = std::to_string(m_currentHole + 1);
+            if (m_currentHole < 9)
             {
-                if (m_allowAchievements)
-                {
-                    m_achievementDebug.achievementEnableReason = "Single human player found on client";
-                }
-                else
-                {
-                    m_achievementDebug.achievementEnableReason = "Multiple human players found on client";
-                }
-
-                //create the window first time
-                registerWindow([&]() 
-                    {
-                        if (m_achievementDebug.visible)
-                        {
-                            if (ImGui::Begin("Stats & Achievements", &m_achievementDebug.visible))
-                            {
-                                ImGui::Text("Achievements active: ");
-                                ImGui::SameLine();
-                                if (Achievements::getActive())
-                                {
-                                    ImGui::PushStyleColor(ImGuiCol_Text, 0xff00ff00);
-                                    ImGui::Text("True");
-                                    ImGui::PopStyleColor();
-                                }
-                                else
-                                {
-                                    ImGui::PushStyleColor(ImGuiCol_Text, 0xffff00ff);
-                                    ImGui::Text("False");
-                                    ImGui::PopStyleColor();
-                                }
-                                ImGui::Text("Reason: %s", m_achievementDebug.achievementEnableReason.c_str());
-
-                                ImGui::NewLine();
-                                ImGui::Text("Achievment Status:");
-
-                                for (auto i = static_cast<std::int32_t>(AchievementID::Complete01); i <= AchievementID::Complete10; ++i)
-                                {
-                                    ImGui::Text("%s", AchievementLabels[i].c_str());
-                                    ImGui::SameLine();
-                                    if (Achievements::getAchievement(AchievementStrings[i])->achieved)
-                                    {
-                                        ImGui::TextColored({ 0.f, 1.f, 0.f, 1.f }, "Achieved");
-                                    }
-                                    else
-                                    {
-                                        ImGui::TextColored({ 1.f, 0.f, 0.f, 1.f }, "Locked");
-                                    }
-                                }
-
-                                ImGui::NewLine();
-                                ImGui::Text("Stat Count:");
-                                for (auto i = static_cast<std::int32_t>(StatID::Course01Complete); i <= StatID::Course10Complete; ++i)
-                                {
-                                    ImGui::Text("%s: %2.1f", StatLabels[i].c_str(), Achievements::getStat(StatStrings[i])->value);
-                                }
-                                ImGui::NewLine();
-
-                                if (m_achievementDebug.awardStatus.empty())
-                                {
-                                    ImGui::Text("Course not yet completed");
-                                }
-                                else
-                                {
-                                    ImGui::Text("%s", m_achievementDebug.awardStatus.c_str());
-                                }
-                            }
-                            ImGui::End();
-                        }
-                    });
-
-                m_achievementDebug.wasActivated = true;
+                holeNumber = "0" + holeNumber;
             }
-            m_achievementDebug.visible = !m_achievementDebug.visible;
+
+            std::string tod = "/d/";
+            //TODO if night tod = "/n/"
+
+            auto courseDir = "assets/golf/courses/" + m_sharedData.mapDirectory + "/cmap/" + holeNumber + tod;
+            if (!cro::FileSystem::directoryExists(courseDir))
+            {
+                cro::FileSystem::createDirectory(courseDir);
+            }
+
+            cro::Entity cam = m_gameScene.createEntity();
+            cam.addComponent<cro::Transform>();
+            cam.addComponent<cro::Camera>().setPerspective(90.f * cro::Util::Const::degToRad, 1.f, 0.1f, 280.f);
+            cam.getComponent<cro::Camera>().viewport = { 0.f, 0.f, 1.f, 1.f };
+            cam.getComponent<cro::Camera>().renderFlags = RenderFlags::CubeMap;
+            m_gameScene.simulate(0.f); //do this once to integrate the new entity;
+
+            auto oldCam = m_gameScene.setActiveCamera(cam);
+            m_skyScene.setActiveCamera(m_skyCameras[SkyCam::Flight]);
+
+            static const std::uint32_t TexSize = 256;
+            cro::RenderTexture rt;
+            rt.create(TexSize, TexSize);
+
+
+            //create 3 cubemaps based on pin/tee position etc
+            const std::array<glm::vec3, 3u> Positions =
+            {
+                m_holeData[m_currentHole].tee,
+                m_holeData[m_currentHole].target,
+                m_holeData[m_currentHole].pin,
+            };
+
+            for (auto i = 0; i < 3; ++i)
+            {
+                auto path = courseDir + std::to_string(i);
+                if (!cro::FileSystem::directoryExists(path))
+                {
+                    cro::FileSystem::createDirectory(path);
+                }
+
+                cro::ConfigFile cfg("cubemap");
+                cfg.addProperty("up").setValue(path + "/py.png");
+                cfg.addProperty("down").setValue(path + "/ny.png");
+                cfg.addProperty("left").setValue(path + "/nx.png");
+                cfg.addProperty("right").setValue(path + "/px.png");
+                cfg.addProperty("front").setValue(path + "/pz.png");
+                cfg.addProperty("back").setValue(path + "/nz.png");
+                cfg.save(path + "/cmap.ccm");
+
+
+                struct Rotation final
+                {
+                    glm::vec3 axis = glm::vec3(0.f);
+                    float angle = 0.f;
+                    constexpr Rotation(glm::vec3 a, float r) : axis(a), angle(r) {};
+                };
+                static constexpr std::array<Rotation, 6u> Rotations =
+                {
+                    Rotation(cro::Transform::Y_AXIS, 0.f),
+                    Rotation(cro::Transform::Y_AXIS, cro::Util::Const::PI / 2.f),
+                    Rotation(cro::Transform::Y_AXIS, cro::Util::Const::PI),
+                    Rotation(cro::Transform::Y_AXIS, -cro::Util::Const::PI / 2.f),
+                    Rotation(cro::Transform::X_AXIS, cro::Util::Const::PI / 2.f),
+                    Rotation(cro::Transform::X_AXIS, -cro::Util::Const::PI / 2.f)
+                };
+
+                static const std::array<std::string, 6u> FileNames =
+                {
+                    "/pz.png", "/nx.png", "/nz.png", "/px.png", "/py.png", "/ny.png"
+                };
+
+                auto position = Positions[i];
+                position.y += 0.5f;
+
+                cam.getComponent<cro::Transform>().setPosition(position);
+                for (auto j = 0; j < 6; ++j)
+                {
+                    cam.getComponent<cro::Transform>().setRotation(Rotations[j].axis, Rotations[j].angle);
+                    m_gameScene.simulate(0.f);
+
+                    //we'll use the existing cam as it happens to have the same FOV
+                    m_skyCameras[SkyCam::Flight].getComponent<cro::Transform>().setRotation(cam.getComponent<cro::Transform>().getWorldRotation());
+                    m_skyCameras[SkyCam::Flight].getComponent<cro::Transform>().setPosition({0.f, position.y / 64.f, 0.f});
+                    m_skyScene.simulate(0.f);
+
+                    rt.clear();
+                    m_skyScene.render();
+                    glClear(GL_DEPTH_BUFFER_BIT);
+                    m_gameScene.render();
+                    rt.display();
+
+                    rt.saveToFile(path + FileNames[j]);
+                }
+            }
+
+            m_gameScene.setActiveCamera(oldCam);
+            m_gameScene.destroyEntity(cam);
+
+            cro::Console::print("Done!");
         });
+
+    //registerCommand("show_stat_window", 
+    //    [&](const std::string&)
+    //    {
+    //        if (!m_achievementDebug.wasActivated)
+    //        {
+    //            if (m_allowAchievements)
+    //            {
+    //                m_achievementDebug.achievementEnableReason = "Single human player found on client";
+    //            }
+    //            else
+    //            {
+    //                m_achievementDebug.achievementEnableReason = "Multiple human players found on client";
+    //            }
+
+    //            //create the window first time
+    //            registerWindow([&]() 
+    //                {
+    //                    if (m_achievementDebug.visible)
+    //                    {
+    //                        if (ImGui::Begin("Stats & Achievements", &m_achievementDebug.visible))
+    //                        {
+    //                            ImGui::Text("Achievements active: ");
+    //                            ImGui::SameLine();
+    //                            if (Achievements::getActive())
+    //                            {
+    //                                ImGui::PushStyleColor(ImGuiCol_Text, 0xff00ff00);
+    //                                ImGui::Text("True");
+    //                                ImGui::PopStyleColor();
+    //                            }
+    //                            else
+    //                            {
+    //                                ImGui::PushStyleColor(ImGuiCol_Text, 0xffff00ff);
+    //                                ImGui::Text("False");
+    //                                ImGui::PopStyleColor();
+    //                            }
+    //                            ImGui::Text("Reason: %s", m_achievementDebug.achievementEnableReason.c_str());
+
+    //                            ImGui::NewLine();
+    //                            ImGui::Text("Achievment Status:");
+
+    //                            for (auto i = static_cast<std::int32_t>(AchievementID::Complete01); i <= AchievementID::Complete10; ++i)
+    //                            {
+    //                                ImGui::Text("%s", AchievementLabels[i].c_str());
+    //                                ImGui::SameLine();
+    //                                if (Achievements::getAchievement(AchievementStrings[i])->achieved)
+    //                                {
+    //                                    ImGui::TextColored({ 0.f, 1.f, 0.f, 1.f }, "Achieved");
+    //                                }
+    //                                else
+    //                                {
+    //                                    ImGui::TextColored({ 1.f, 0.f, 0.f, 1.f }, "Locked");
+    //                                }
+    //                            }
+
+    //                            ImGui::NewLine();
+    //                            ImGui::Text("Stat Count:");
+    //                            for (auto i = static_cast<std::int32_t>(StatID::Course01Complete); i <= StatID::Course10Complete; ++i)
+    //                            {
+    //                                ImGui::Text("%s: %2.1f", StatLabels[i].c_str(), Achievements::getStat(StatStrings[i])->value);
+    //                            }
+    //                            ImGui::NewLine();
+
+    //                            if (m_achievementDebug.awardStatus.empty())
+    //                            {
+    //                                ImGui::Text("Course not yet completed");
+    //                            }
+    //                            else
+    //                            {
+    //                                ImGui::Text("%s", m_achievementDebug.awardStatus.c_str());
+    //                            }
+    //                        }
+    //                        ImGui::End();
+    //                    }
+    //                });
+
+    //            m_achievementDebug.wasActivated = true;
+    //        }
+    //        m_achievementDebug.visible = !m_achievementDebug.visible;
+    //    });
 }
 
 void GolfState::registerDebugWindows()
 {
     registerWindow([&]()
         {
+            //if (ImGui::Begin("Ball Cam"))
+            //{
+            //    glm::vec2 size(m_flightTexture.getSize());
+            //    ImGui::Image(m_flightTexture.getTexture(), { size.x, size.y }, { 0.f, 1.f }, { 1.f, 0.f });
+
+            //    auto& cam = m_flightCam.getComponent<cro::Camera>();
+            //    static float fov = 60.f;
+            //    if (ImGui::SliderFloat("FOV", &fov, 40.f, 90.f))
+            //    {
+            //        cam.setPerspective(fov * cro::Util::Const::degToRad, 1.f, 0.001f, static_cast<float>(MapSize.x) * 1.25f/*, m_shadowQuality.cascadeCount*/);
+            //    }
+
+            //    static glm::vec3 pos(0.f);
+            //    if (ImGui::SliderFloat("Y", &pos.y, 0.f, 0.1f))
+            //    {
+            //        m_flightCam.getComponent<cro::Transform>().setPosition(m_currentPlayer.position + pos);
+            //    }
+            //    if (ImGui::SliderFloat("Z", &pos.z, 0.f, 0.1f))
+            //    {
+            //        m_flightCam.getComponent<cro::Transform>().setPosition(m_currentPlayer.position + pos);
+            //    }
+
+            //    static float rotation = 0.f;
+            //    if (ImGui::SliderFloat("Rotation", &rotation, -0.2f, 0.2f))
+            //    {
+            //        m_flightCam.getComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, rotation);
+            //    }
+            //}
+            //ImGui::End();
+
             //if (ImGui::Begin("Ach Track"))
             //{
             //    ImGui::Text("No holes over par %s", m_achievementTracker.noHolesOverPar ? "true" : "false");
@@ -327,13 +481,12 @@ void GolfState::registerDebugWindows()
             //}
             //ImGui::End();
 
-            if (ImGui::Begin("Depth Map"))
+            /*if (ImGui::Begin("Depth Map"))
             {
-                //glm::vec2 size(m_gameSceneTexture.getSize() / 2u);
-                //ImGui::Image(m_gameSceneTexture.getDepthTexture(), { size.x, size.y }, { 0.f, 1.f }, { 1.f, 0.f });
-                cro::AudioMixer::printDebug();
+                glm::vec2 size(m_gameSceneTexture.getSize() / 2u);
+                ImGui::Image(m_gameSceneTexture.getDepthTexture(), { size.x, size.y }, { 0.f, 1.f }, { 1.f, 0.f });
             }
-            ImGui::End();
+            ImGui::End();*/
         });
 
     //registerWindow([&]()

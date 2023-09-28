@@ -30,6 +30,7 @@ source distribution.
 #include "Social.hpp"
 #include "Achievements.hpp"
 #include "AchievementStrings.hpp"
+#include "StoredValue.hpp"
 
 #include <crogine/core/App.hpp>
 #include <crogine/core/ConfigFile.hpp>
@@ -39,51 +40,6 @@ source distribution.
 
 namespace
 {
-    void readValue(std::int32_t& dst, const std::string& fileName)
-    {
-        auto path = cro::App::getPreferencePath() + fileName;
-        if (cro::FileSystem::fileExists(path))
-        {
-            auto* file = SDL_RWFromFile(path.c_str(), "rb");
-            if (file)
-            {
-                SDL_RWread(file, &dst, sizeof(dst), 1);
-            }
-            SDL_RWclose(file);
-        }
-    }
-
-    void writeValue(std::int32_t src, const std::string& fileName)
-    {
-        auto path = cro::App::getPreferencePath() + fileName;
-        auto* file = SDL_RWFromFile(path.c_str(), "wb");
-        if (file)
-        {
-            SDL_RWwrite(file, &src, sizeof(src), 1);
-        }
-        SDL_RWclose(file);
-    }
-
-    struct StoredValue final
-    {
-        bool loaded = false;
-        std::int32_t value = 0;
-        const std::string ext;
-        void read()
-        {
-            if (!loaded)
-            {
-                readValue(value, ext);
-                loaded = true;
-            }
-        }
-        void write()
-        {
-            writeValue(value, ext);
-        }
-
-        explicit StoredValue(const std::string& e) :ext(e) {}
-    };
     StoredValue experience("exp");
     StoredValue clubset("clb");
     StoredValue ballset("bls");
@@ -93,6 +49,12 @@ namespace
     StoredValue dayStreak("dsk");
     StoredValue longestStreak("lsk");
 
+    std::vector<Social::Award> awards;
+    const std::array<std::string, 12u> MonthStrings =
+    {
+        "January ", "Febrary ", "March ", "April ", "May ", "June ",
+        "July ", "August ", "September ", "October ", "November ", "December "
+    };
 
     //XP curve = (level / x) ^ y
     constexpr float XPx = 0.07f;
@@ -438,4 +400,200 @@ float Social::getCompletionCount(const std::string& course, bool)
 {
     return Achievements::getStat(course)->value;
     //return std::max(1.f, Achievements::getStat(/*StatStrings[StatID::Course01Complete]*/course)->value);
+}
+
+void Social::refreshAwards()
+{
+    struct AwardData final
+    {
+        std::uint32_t timestamp = 0; //month|year
+        std::int32_t type = -1; //Social::Award::Type
+    };
+    std::vector<AwardData> awardData;
+
+    auto path = Social::getBaseContentPath() + "awards.awd";
+
+    //check for awards file and load
+    if (cro::FileSystem::fileExists(path))
+    {
+        cro::RaiiRWops file;
+        file.file = SDL_RWFromFile(path.c_str(), "rb");
+        if (file.file)
+        {
+            auto size = SDL_RWseek(file.file, 0, RW_SEEK_END);
+            if (size % sizeof(AwardData) == 0)
+            {
+                SDL_RWseek(file.file, 0, RW_SEEK_SET);
+                awardData.resize(size / sizeof(AwardData));
+                SDL_RWread(file.file, awardData.data(), size, 1);
+            }
+        }
+    }
+
+    //check for anything new and add
+    bool newAwards = false;
+    auto ts = static_cast<std::time_t>( cro::SysTime::epoch());
+    auto* td = std::localtime(&ts);
+    
+    const std::uint32_t awardTime = (td->tm_mon << 16) | td->tm_year;
+
+    auto challengeProgress = getMonthlyChallenge().getProgress();
+    if (challengeProgress.value == challengeProgress.target)
+    {
+        //see if it exists in the data already
+        if (auto result = std::find_if(awardData.begin(), awardData.end(), [awardTime](const AwardData& ad)
+            {
+                return ad.type == Social::Award::MonthlyChallenge && ad.timestamp == awardTime;
+            }); result == awardData.end())
+        {
+            auto& award = awardData.emplace_back();
+            award.timestamp = awardTime;
+            award.type = Social::Award::MonthlyChallenge;
+
+            newAwards = true;
+        }
+    }
+
+    auto level = getLevel() / 10;
+    for (auto i = 0; i < level; ++i)
+    {
+        auto type = Social::Award::Level10 + i;
+        if (auto result = std::find_if(awardData.begin(), awardData.end(), [type](const AwardData& ad)
+            {
+                return ad.type == type;
+            }); result == awardData.end())
+        {
+            awardData.emplace_back().type = type;
+            newAwards = true;
+        }
+    }
+
+    //check for league awards
+    for (auto i = 0; i < 3; ++i)
+    {
+        if (Achievements::getStat(StatStrings[StatID::LeagueFirst + i])->value != 0)
+        {
+            auto type = Social::Award::LeagueFirst + i;
+            if (auto result = std::find_if(awardData.begin(), awardData.end(), [type](const AwardData& ad)
+                {
+                    return ad.type == type;
+                }); result == awardData.end())
+            {
+                awardData.emplace_back().type = type;
+                newAwards = true;
+            }
+        }
+    }
+
+
+    //if list updated write file
+    if (newAwards)
+    {
+        cro::RaiiRWops file;
+        file.file = SDL_RWFromFile(path.c_str(), "wb");
+        if (file.file)
+        {
+            SDL_RWwrite(file.file, awardData.data(), sizeof(AwardData), awardData.size());
+        }
+    }
+
+
+    //and finally convert to readable version
+    awards.clear();
+    for (const auto& a : awardData)
+    {
+        switch (a.type)
+        {
+        case Social::Award::MonthlyBronze:
+        case Social::Award::MonthlySilver:
+        case Social::Award::MonthlyGold:
+        default: continue;
+        case Social::Award::MonthlyChallenge:
+        {
+            auto& award = awards.emplace_back();
+            award.type = a.type;
+            
+            auto month = a.timestamp >> 16;
+            auto year = a.timestamp & 0x00ff;
+
+            cro::String str("Monthly Challenge ");
+            str += MonthStrings[std::min(11u, std::max(0u, month))];
+            str += std::to_string(1900 + year);
+            award.description = str;
+        }
+            break;
+        case Social::Award::Level10:
+        {
+            auto& award = awards.emplace_back();
+            award.type = a.type;
+            award.description = "Reached Level 10";
+        }
+            break;
+        case Social::Award::Level20:
+        {
+            auto& award = awards.emplace_back();
+            award.type = a.type;
+            award.description = "Reached Level 20";
+        }
+            break;
+        case Social::Award::Level30:
+        {
+            auto& award = awards.emplace_back();
+            award.type = a.type;
+            award.description = "Reached Level 30";
+        }
+            break;
+        case Social::Award::Level40:
+        {
+            auto& award = awards.emplace_back();
+            award.type = a.type;
+            award.description = "Reached Level 40";
+        }
+            break;
+        case Social::Award::Level50:
+        {
+            auto& award = awards.emplace_back();
+            award.type = a.type;
+            award.description = "Reached Level 50";
+        }
+            break;
+        case Social::Award::LeagueFirst:
+        {
+            auto& award = awards.emplace_back();
+            award.type = a.type;
+            award.description = "Placed First in a\nClub League Season";
+        }
+        break;
+        case Social::Award::LeagueSecond:
+        {
+            auto& award = awards.emplace_back();
+            award.type = a.type;
+            award.description = "Placed Second in a\nClub League Season";
+        }
+        break;
+        case Social::Award::LeagueThird:
+        {
+            auto& award = awards.emplace_back();
+            award.type = a.type;
+            award.description = "Placed Third in a\nClub League Season";
+        }
+        break;
+        }
+    }
+}
+
+const std::vector<Social::Award>& Social::getAwards()
+{
+    return awards;
+}
+
+MonthlyChallenge& Social::getMonthlyChallenge()
+{
+    static MonthlyChallenge mc;
+    return mc;
+}
+
+std::int32_t Social::getMonth()
+{
+    return cro::SysTime::now().months() - 1; //we're using this as an index
 }

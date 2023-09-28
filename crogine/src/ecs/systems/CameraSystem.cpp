@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2020 - 2021
+Matt Marchant 2020 - 2023
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -61,7 +61,8 @@ void CameraSystem::handleMessage(const Message& msg)
                 if (camera.resizeCallback)
                 {
                     camera.resizeCallback(camera);
-                    camera.active = true;
+                    camera.m_dirtyTx = true;
+                    //camera.active = true; //don't do this, if there are a lot of cameras active at once it utterly kills perf
                 }
                 resizeGBuffer(entity);
             }
@@ -75,9 +76,6 @@ void CameraSystem::process(float)
 
     for (auto entity : entities)
     {
-        //TODO could dirty flag optimise as updating the frustum
-        //requires 6(!!) sqrts
-
         auto& camera = entity.getComponent<Camera>();
 
         if (camera.active)
@@ -130,6 +128,12 @@ void CameraSystem::onEntityAdded(Entity entity)
     {
         entity.getComponent<cro::Camera>().m_drawListIndex = m_nextDrawlistIndex++;
     }
+
+    entity.getComponent<cro::Transform>().addCallback(
+        [entity]() mutable
+        {
+            entity.getComponent<cro::Camera>().m_dirtyTx = true;
+        });
 }
 
 void CameraSystem::onEntityRemoved(Entity entity)

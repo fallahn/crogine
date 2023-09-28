@@ -42,7 +42,8 @@ Camera::Camera()
     m_farPlane          (150.f),
     m_orthographic      (false),
     m_maxShadowDistance (std::numeric_limits<float>::max()),
-    m_shadowExpansion   (0.f)
+    m_shadowExpansion   (0.f),
+    m_dirtyTx           (true)
 {
     glm::vec2 windowSize(App::getWindow().getSize());
     m_aspectRatio = windowSize.x / windowSize.y;
@@ -249,22 +250,34 @@ std::size_t Camera::getCascadeCount() const
 
 void Camera::updateMatrices(const Transform& tx, float level)
 {
-    auto& finalPass = m_passes[Camera::Pass::Final];
-    auto& reflectionPass = m_passes[Camera::Pass::Reflection];
+    //TODO this doesn't take into account the edge cases
+    //where clip level may change, but the camera transform
+    //is not marked dirty
 
-    const auto worldTx = tx.getWorldTransform();
-    finalPass.viewMatrix = glm::inverse(worldTx);
-    finalPass.viewProjectionMatrix = m_projectionMatrix * finalPass.viewMatrix;
-    finalPass.m_aabb = Spatial::updateFrustum(finalPass.m_frustum, finalPass.viewProjectionMatrix);
-    finalPass.forwardVector = Util::Matrix::getForwardVector(worldTx);
+    //TODO this needs to be updated as soon as possible else coordsToPixel uses an out of date matrix
 
-    if (reflectionBuffer.available())
+    /*if (tx.getDirty()
+        || m_dirtyTx)*/
     {
-        reflectionPass.viewMatrix = glm::scale(finalPass.viewMatrix, glm::vec3(1.f, -1.f, 1.f));
-        reflectionPass.viewMatrix = glm::translate(reflectionPass.viewMatrix, glm::vec3(0.f, level, 0.f));
-        reflectionPass.viewProjectionMatrix = m_projectionMatrix * reflectionPass.viewMatrix;
-        reflectionPass.m_aabb = Spatial::updateFrustum(reflectionPass.m_frustum, reflectionPass.viewProjectionMatrix);
-        reflectionPass.forwardVector = glm::reflect(finalPass.forwardVector, Transform::Y_AXIS);
+        auto& finalPass = m_passes[Camera::Pass::Final];
+        auto& reflectionPass = m_passes[Camera::Pass::Reflection];
+
+        const auto worldTx = tx.getWorldTransform();
+        finalPass.viewMatrix = glm::inverse(worldTx);
+        finalPass.viewProjectionMatrix = m_projectionMatrix * finalPass.viewMatrix;
+        finalPass.m_aabb = Spatial::updateFrustum(finalPass.m_frustum, finalPass.viewProjectionMatrix);
+        finalPass.forwardVector = Util::Matrix::getForwardVector(worldTx);
+
+        if (reflectionBuffer.available())
+        {
+            reflectionPass.viewMatrix = glm::scale(finalPass.viewMatrix, glm::vec3(1.f, -1.f, 1.f));
+            reflectionPass.viewMatrix = glm::translate(reflectionPass.viewMatrix, glm::vec3(0.f, level, 0.f));
+            reflectionPass.viewProjectionMatrix = m_projectionMatrix * reflectionPass.viewMatrix;
+            reflectionPass.m_aabb = Spatial::updateFrustum(reflectionPass.m_frustum, reflectionPass.viewProjectionMatrix);
+            reflectionPass.forwardVector = glm::reflect(finalPass.forwardVector, Transform::Y_AXIS);
+        }
+
+        m_dirtyTx = false;
     }
 }
 

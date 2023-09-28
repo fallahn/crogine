@@ -242,7 +242,6 @@ namespace cro
         bool m_drawDebugWindows;
         void doImGui();
 
-
         static void addConsoleTab(const std::string&, const std::function<void()>&, const GuiClient*);
         static void removeConsoleTab(const GuiClient*);
 

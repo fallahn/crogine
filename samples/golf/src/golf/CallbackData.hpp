@@ -113,4 +113,13 @@ struct AvatarAnimCallbackData final
     std::int32_t direction = 0; //in/out
     float progress = 0.f;
 };
+
+struct AnimDirection final
+{
+    enum
+    {
+        Grow, Hold, Shrink, Destroy
+    };
+};
 using WindHideData = AvatarAnimCallbackData;
+using BullsEyeData = AvatarAnimCallbackData;

@@ -319,6 +319,7 @@ bool RenderTexture::createDefault(RenderTarget::Context ctx)
         if (m_msDepthTextureID)
         {
             glCheck(glDeleteTextures(1, &m_msDepthTextureID));
+            m_msDepthTextureID = 0;
         }
 
         m_samples = 0;

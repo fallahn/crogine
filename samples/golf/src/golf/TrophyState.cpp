@@ -32,6 +32,7 @@ source distribution.
 #include "CommonConsts.hpp"
 #include "CommandIDs.hpp"
 #include "MenuConsts.hpp"
+#include "GameConsts.hpp"
 #include "TextAnimCallback.hpp"
 #include "../GolfGame.hpp"
 
@@ -501,7 +502,7 @@ void TrophyState::buildScene()
     backgroundEnt.getComponent<cro::Transform>().addChild(titleEnt.getComponent<cro::Transform>());
 
     auto descEnt = m_scene.createEntity();
-    descEnt.addComponent<cro::Transform>().setPosition({ 72.f, 266.f, 0.1f });
+    descEnt.addComponent<cro::Transform>().setPosition({ 74.f, 269.f, 0.1f });
     descEnt.addComponent<cro::Drawable2D>();
     descEnt.addComponent<cro::Text>(infoFont).setCharacterSize(InfoTextSize);
     descEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
@@ -515,7 +516,7 @@ void TrophyState::buildScene()
     backgroundEnt.getComponent<cro::Transform>().addChild(dateEnt.getComponent<cro::Transform>());
 
     auto iconEnt = m_scene.createEntity();
-    iconEnt.addComponent<cro::Transform>().setPosition({ 30.f, 238.f, 0.1f });
+    iconEnt.addComponent<cro::Transform>().setPosition({ 32.f, 238.f, 0.1f });
     iconEnt.getComponent<cro::Transform>().setScale(glm::vec2(0.5f));
     iconEnt.addComponent<cro::Drawable2D>();
     backgroundEnt.getComponent<cro::Transform>().addChild(iconEnt.getComponent<cro::Transform>());
@@ -529,12 +530,13 @@ void TrophyState::buildScene()
 
             if (descString.length() >= MaxLength)
             {
-                auto end = std::min(descString.length() - 1, MaxLength);
+                /*auto end = std::min(descString.length() - 1, MaxLength);
                 auto pos = descString.substr(0, end).find_last_of(' ');
                 if (pos != std::string::npos)
                 {
                     descString[pos] = '\n';
-                }
+                }*/
+                descString = cro::Util::String::wordWrap(descString, MaxLength, descString.length());
             }
 
             titleEnt.getComponent<cro::Text>().setString(AchievementLabels[m_trophyIndex]);

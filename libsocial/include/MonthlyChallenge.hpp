@@ -32,6 +32,9 @@ source distribution.
 #include <array>
 #include <string>
 
+#include <crogine/core/Clock.hpp>
+#include <crogine/core/String.hpp>
+
 struct ChallengeID final
 {
     enum
@@ -72,18 +75,18 @@ static const std::array<std::string, ChallengeID::Count> ChallengeStrings =
 
 static const std::array<std::string, ChallengeID::Count> ChallengeDescriptions =
 {
-    "Make 25 So Close chips on to the green",
+    "Make 50 So Close chips on to the green",
     "Make 50 Nice Putts",
-    "Hit 15 random bull's eyes",
-    "Play 18 holes in every game mode at least once",
-    "Play 9 holes on each course with at least 4 human or CPU players",
-    "Get 10 Boomerangs",
+    "Hit 25 random bull's eyes",
+    "Play a full 18 (or 12) hole round in every game mode",
+    "Play 9 holes on each course with at least 3 human or CPU players",
+    "Get the equivalent of 10 Boomerang achievements",
     "Get 99% or better on each target on the Driving Range",
-    "Take 25 gimmies resulting from a near miss",
-    "Make 50 shots with Great Accuracy",
-    "Score 2 birdies on the front 9 of each course",
-    "Score 1 eagle on the back 9 of each course",
-    "Implement me."
+    "Take 50 gimmies resulting from a Near Miss",
+    "Make 250 shots with Great Accuracy",
+    "Score 2 Birdies in one round on the front 9 of each course",
+    "Score 1 Eagle on the back 9 of each course",
+    "Hit the flag stick 50 times"
 };
 
 struct Challenge final
@@ -99,49 +102,54 @@ struct Challenge final
     std::uint32_t value = 0;
 
     explicit Challenge(std::uint32_t target, std::int32_t t = Counter, std::uint32_t v = 0)
-        : targetValue(target), value(v), type(t) {}
+        : targetValue(target), type(t), value(v) {}
 };
 
 class MonthlyChallenge final
 {
 public:
-    MonthlyChallenge() {}; //fetch the current active month
+    MonthlyChallenge(); //fetch the current active month
 
     //ignores the value if id != m_month
     //else increments counter (ignoring value)
     //or sets value as flag.
     //raises a message to show progress or completion
-    void updateChallenge(std::int32_t id, std::int32_t value) {};
+    void updateChallenge(std::int32_t id, std::int32_t value);
 
     //refreshes the status of the current month's stat
-    //or resets other month's stats. TODO much check
-    //we have a valid month, else we'll reset ALL progress...
-    void refresh() {}; //call from game start, driving start and clubhouse.
+    //or resets other month's stats.
+    void refresh();
 
     struct Progress final
     {
         std::int32_t value = 0;
         std::int32_t target = 0;
         std::int32_t index = -1;
+        std::uint32_t flags = std::numeric_limits<std::uint32_t>::max();
     };
-    Progress getProgress() const {};
+    Progress getProgress() const;
+    cro::String getProgressString() const;
 
 private:
     std::array<Challenge, ChallengeID::Count> m_challenges =
     {
-        Challenge(25, Challenge::Counter),
         Challenge(50, Challenge::Counter),
-        Challenge(15, Challenge::Counter),
-        Challenge(0x7, Challenge::Flag), //TODO update this with new game modes
+        Challenge(50, Challenge::Counter),
+        Challenge(25, Challenge::Counter),
+        Challenge(0x7F, Challenge::Flag), //game mode count
         Challenge(0x3ff, Challenge::Flag), //(1 << 0) - (1 << 9)
         Challenge(10, Challenge::Counter),
         Challenge(0x1fff, Challenge::Flag), //(1 << 0) - (1 << 12)
-        Challenge(25, Challenge::Counter),
         Challenge(50, Challenge::Counter),
+        Challenge(250, Challenge::Counter),
         Challenge(0x3ff, Challenge::Flag),
         Challenge(0x3ff, Challenge::Flag),
-        Challenge(0),
+        Challenge(50, Challenge::Counter),
     };
 
-    std::int32_t m_month = -1;
+    std::int32_t m_month;
+    std::int32_t m_day;
+    bool m_leapYear;
+
+    cro::Clock m_repeatClock;
 };

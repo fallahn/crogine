@@ -95,7 +95,10 @@ source distribution.
 #include <crogine/util/Constants.hpp>
 #include <crogine/util/Random.hpp>
 #include <crogine/util/Maths.hpp>
+#include <crogine/util/Wavetable.hpp>
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
+
+using namespace cl;
 
 namespace
 {
@@ -126,6 +129,39 @@ namespace
 #else
 #define DEBUG_DRAW false
 #endif
+
+    cro::Box BillBox;
+    bool prevBillBox = false;
+    std::vector<float> noiseTable;
+    std::size_t noiseIndex = 0;
+
+    const std::string SaturationFrag = 
+        R"(
+            uniform sampler2D u_texture;
+            uniform float u_amount;
+
+            VARYING_IN vec2 v_texCoord;
+            VARYING_IN vec4 v_colour;
+
+            OUTPUT
+
+            const vec4 White = vec4(1.0);
+
+            void main()
+            {
+                vec4 colour = TEXTURE(u_texture, v_texCoord) * v_colour;
+
+                //float leftEdge = step(0.5 - (0.5 * u_amount), v_texCoord.x);
+                //float rightEdge = 1.0 - step((0.5 * u_amount) + 0.5, v_texCoord.x);
+
+                //vec4 fadeColour = mix(colour, White, leftEdge * rightEdge);
+
+                //FRAG_OUT = mix(colour, fadeColour, u_amount);
+
+
+                FRAG_OUT = mix(colour, White, u_amount);
+            })";
+
 
     float playerXScale = 1.f;
 
@@ -196,8 +232,12 @@ DrivingState::DrivingState(cro::StateStack& stack, cro::State::Context context, 
     m_windBuffer        ("WindValues"),
     m_targetIndex       (0),
     m_strokeCountIndex  (0),
-    m_currentCamera     (CameraID::Player)
+    m_currentCamera     (CameraID::Player),
+    m_saturationUniform (-1)
 {
+    prevBillBox = false;
+    noiseTable = cro::Util::Wavetable::noise(2.f, 10.f);
+    
     sd.clubSet = std::clamp(sd.clubSet, 0, 2);
     Club::setClubLevel(sd.clubSet);
 
@@ -221,10 +261,12 @@ DrivingState::DrivingState(cro::StateStack& stack, cro::State::Context context, 
         createScene();
 
         cacheState(StateID::Pause);
+        cacheState(StateID::GC);
     });
 
     Achievements::setActive(true);
     Social::setStatus(Social::InfoID::Menu, { "On The Driving Range" });
+    Social::getMonthlyChallenge().refresh();
 
 #ifdef CRO_DEBUG_
     m_sharedData.inputBinding.clubset = ClubID::FullSet;
@@ -391,6 +433,7 @@ bool DrivingState::handleEvent(const cro::Event& evt)
         case SDLK_F7:
             floatingMessage("buns");
             break;
+            //F8 toggles chat!
         case SDLK_HOME:
             debugFlags = (debugFlags == 0) ? BulletDebug::DebugFlags : 0;
             m_gameScene.getSystem<BallSystem>()->setDebugFlags(debugFlags);
@@ -433,7 +476,7 @@ bool DrivingState::handleEvent(const cro::Event& evt)
         }
         break;
         case SDLK_KP_MULTIPLY:
-
+            triggerGC(PlayerPosition);
             break;
 #endif
         }
@@ -567,6 +610,10 @@ void DrivingState::handleMessage(const cro::Message& msg)
                 msg2->travelDistance = std::atan2(dir.z, dir.x);
             }
         }
+        /*else if (data.terrain == CollisionEvent::FlagPole)
+        {
+            Social::getMonthlyChallenge().updateChallenge(ChallengeID::Eleven, 0);
+        }*/
         //LogI << glm::length(data.position - PlayerPosition) << std::endl;
     }
         break;
@@ -737,6 +784,37 @@ void DrivingState::handleMessage(const cro::Message& msg)
 
                 m_ballTrail.setUseBeaconColour(m_sharedData.trailBeaconColour);
             }
+            else if (data.id == StateID::GC)
+            {
+                if (m_courseEntity.getComponent<cro::Drawable2D>().getShader())
+                {
+                    auto entity = m_uiScene.createEntity();
+                    entity.addComponent<cro::Callback>().active = true;
+                    entity.getComponent<cro::Callback>().setUserData<float>(1.f);
+                    entity.getComponent<cro::Callback>().function =
+                        [&](cro::Entity e, float dt)
+                    {
+                        auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
+                        currTime = std::max(0.f, currTime - dt);
+
+                        float amount = cro::Util::Easing::easeOutQuint(currTime);
+                        glCheck(glUseProgram(m_saturationShader.getGLHandle()));
+                        glCheck(glUniform1f(m_saturationUniform, amount));
+
+                        cro::AudioMixer::setPrefadeVolume(1.f - amount, MixerChannel::Environment);
+                        cro::AudioMixer::setPrefadeVolume(1.f - amount, MixerChannel::UserMusic);
+                        cro::AudioMixer::setPrefadeVolume(1.f - amount, MixerChannel::Music);
+                        cro::AudioMixer::setPrefadeVolume(1.f - amount, MixerChannel::Voice);
+
+                        if (currTime == 0)
+                        {
+                            m_courseEntity.getComponent<cro::Drawable2D>().setShader(nullptr);
+                            e.getComponent<cro::Callback>().active = false;
+                            m_uiScene.destroyEntity(e);
+                        }
+                    };
+                }
+            }
         }
     }
         break;
@@ -878,7 +956,7 @@ void DrivingState::addSystems()
     m_gameScene.setSystemActive<CameraFollowSystem>(false);
 
     m_gameScene.addDirector<DrivingRangeDirector>(m_holeData);
-    m_gameScene.addDirector<GolfSoundDirector>(m_resources.audio);
+    m_gameScene.addDirector<GolfSoundDirector>(m_resources.audio, m_sharedData);
     m_gameScene.addDirector<GolfParticleDirector>(m_resources.textures, m_sharedData);
 
 
@@ -1032,6 +1110,9 @@ void DrivingState::loadAssets()
     auto flagSprite = spriteSheet.getSprite("flag03");
     m_flagQuad.setTexture(*flagSprite.getTexture());
     m_flagQuad.setTextureRect(flagSprite.getTextureRect());
+
+    m_saturationShader.loadFromString(cro::RenderSystem2D::getDefaultVertexShader(), SaturationFrag, "#define TEXTURED\n");
+    m_saturationUniform = m_saturationShader.getUniformID("u_amount");
 
     //club models
     cro::ModelDefinition md(m_resources);
@@ -1386,6 +1467,22 @@ void DrivingState::createScene()
 
                 //not sure we need to set all submeshes - for one thing it breaks the cart shadow
                 auto material = m_resources.materials.get(m_materialIDs[MaterialID::CelTextured]);
+
+                if (md.hasSkeleton())
+                {
+                    material = m_resources.materials.get(m_materialIDs[MaterialID::CelTexturedSkinned]);
+                    entity.getComponent<cro::Skeleton>().play(0);
+
+                    if (path.find("billboard") != std::string::npos)
+                    {
+                        BillBox = entity.getComponent<cro::Model>().getMeshData().boundingBox;
+                        BillBox[0].x += 1.f;
+                        BillBox[1].x += 2.5f;
+                        BillBox[1].z += 1.4f;
+                        BillBox = entity.getComponent<cro::Transform>().getLocalTransform() * BillBox;
+                    }
+                }
+
                 applyMaterialData(md, material);
                 entity.getComponent<cro::Model>().setMaterial(0, material);
                 entity.getComponent<cro::Model>().setRenderFlags(~RenderFlags::MiniMap);
@@ -2505,6 +2602,14 @@ void DrivingState::createBall()
                 e.getComponent<CameraFollower>().holePosition = m_holeData[m_gameScene.getDirector<DrivingRangeDirector>()->getCurrentHole()].pin;
             };
             m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+            auto b = BillBox.contains(pos);
+            if (b && !prevBillBox)
+            {
+                //clonk
+                triggerGC(pos);
+            }
+            prevBillBox = b;
         }
 
         //and wind effect meter
@@ -3211,6 +3316,91 @@ void DrivingState::forceRestart()
     };
     m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
+}
+
+void DrivingState::triggerGC(glm::vec3 position)
+{
+    auto* msg = postMessage<CollisionEvent>(MessageID::CollisionMessage);
+    msg->terrain = CollisionEvent::Billboard;
+    msg->position = position;
+
+
+    //set a limit on the number of times this can trigger
+    //we don't want to do this more than once per game run
+#ifndef CRO_DEBUG_
+    if (cro::Util::Random::value(0, 3) != 0)
+    {
+        return;
+    }
+    
+    static std::int32_t triggerCount = 0;
+    if (triggerCount++)
+    {
+        return;
+    }
+#endif
+
+    auto basePos = m_courseEntity.getComponent<cro::Transform>().getPosition();
+    m_courseEntity.getComponent<cro::Drawable2D>().setShader(&m_saturationShader);
+
+    cro::Entity entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<float>(0.f);
+    entity.getComponent<cro::Callback>().function =
+        [&, basePos](cro::Entity e, float dt)
+    {
+        auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
+        currTime = std::min(1.f, currTime + (dt * 0.25f));
+
+        const float offsetX = noiseTable[noiseIndex];
+        const float offsetY = noiseTable[(noiseIndex + (noiseIndex / 2)) % noiseTable.size()];
+        noiseIndex = (noiseIndex + 1) % noiseTable.size();
+
+
+        const float amplitude = cro::Util::Easing::easeInSine(currTime);
+        const glm::vec3 offset = (glm::vec3(offsetX, offsetY, 0.f) * amplitude) / m_viewScale.x;
+
+        const float scale = (0.1f * amplitude) + 1.f;
+
+        glCheck(glUseProgram(m_saturationShader.getGLHandle()));
+        glCheck(glUniform1f(m_saturationUniform, amplitude));
+
+        m_courseEntity.getComponent<cro::Transform>().setScale(glm::vec2(scale));
+        m_courseEntity.getComponent<cro::Transform>().setPosition(basePos + offset);
+
+        cro::AudioMixer::setPrefadeVolume(1.f - amplitude, MixerChannel::Environment);
+        cro::AudioMixer::setPrefadeVolume(1.f - amplitude, MixerChannel::UserMusic);
+        cro::AudioMixer::setPrefadeVolume(1.f - amplitude, MixerChannel::Music);
+        cro::AudioMixer::setPrefadeVolume(1.f - amplitude, MixerChannel::Voice);
+
+        if (currTime == 1)
+        {
+            requestStackPush(StateID::GC);
+
+            //create a delayed ent to reset the scene output
+            auto f = m_uiScene.createEntity();
+            f.addComponent<cro::Callback>().active = true;
+            f.getComponent<cro::Callback>().setUserData<std::int32_t>(60);
+            f.getComponent<cro::Callback>().function =
+                [&, basePos](cro::Entity g, float)
+            {
+                auto& counter = g.getComponent<cro::Callback>().getUserData<std::int32_t>();
+                if (counter-- == 0)
+                {
+                    m_courseEntity.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+                    m_courseEntity.getComponent<cro::Transform>().setPosition(basePos);
+                    
+                    g.getComponent<cro::Callback>().active = false;
+                    m_uiScene.destroyEntity(g);
+
+                    Achievements::awardAchievement(AchievementStrings[AchievementID::TakeInAShow]);
+                }
+            };
+
+            e.getComponent<cro::Callback>().active = false;
+            m_uiScene.destroyEntity(e);
+        }
+    };
 }
 
 void DrivingState::loadScores()

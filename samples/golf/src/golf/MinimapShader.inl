@@ -51,7 +51,11 @@ static const std::string MinimapVertex = R"(
 
 //minimap as in top down view of green
 static const std::string MinimapFragment = R"(
+        
         uniform sampler2D u_texture;
+
+#include WIND_BUFFER
+#include SCALE_BUFFER
 
         VARYING_IN LOW vec4 v_colour;
         VARYING_IN MED vec2 v_texCoord;
@@ -64,17 +68,45 @@ static const std::string MinimapFragment = R"(
         //these ought to be uniforms for texture
         //res and screen scale
         const float res = 100.0;
+        const float invRes = 0.01;
         const float scale = 2.0;
+        const float invScale = 0.5;
+
+        float rand()
+        {
+            return fract(sin(u_windData.w) * 1e4);
+        }
+
+        float rand(vec2 position)
+        {
+            return fract(sin(dot(position, vec2(12.9898, 4.1414)) + u_windData.w) * 43758.5453);
+        }
 
         void main()
         {
-            vec2 pos = (round(floor(v_texCoord * res) * scale) / scale) / res;
+            vec2 pos = (round(floor(v_texCoord * res) * scale) * invScale) * invRes;
 
             vec2 dir = pos - vec2(0.5);
             float length2 = dot(dir,dir);
 
-            FRAG_OUT = TEXTURE(u_texture, v_texCoord) * v_colour;
+            vec3 noise = vec3(rand(floor((v_texCoord * textureSize(u_texture, 0)) / u_pixelScale)));
 
+            //vec2 coordR = v_texCoord;
+            //coordR.x *= 1.0 - rand() * 0.02 * 0.8;
+            //vec2 coordB = v_texCoord;
+            //coordB.x *= 1.0 + rand() * 0.02 * 0.8;
+            //vec4 effect = vec4(
+            //    TEXTURE(u_texture, coordR).r,
+            //    TEXTURE(u_texture, v_texCoord).g,
+            //    TEXTURE(u_texture, coordB).b,
+            //    1.0
+            //);
+            //effect *= 1.0 - step(0.5, sin(v_texCoord.y * (res * scale) * rand())) * 0.033;
+
+            //FRAG_OUT = mix(TEXTURE(u_texture, v_texCoord), effect, v_colour.g);
+
+            FRAG_OUT = TEXTURE(u_texture, v_texCoord);
+            FRAG_OUT.rgb = mix(noise, FRAG_OUT.rgb, v_colour.r);
             FRAG_OUT = mix(FRAG_OUT, borderColour, step(borderPos, length2));
             FRAG_OUT.a *= 1.0 - step(stepPos, length2);
         })";

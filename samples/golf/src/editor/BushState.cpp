@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022
+Matt Marchant 2022 - 2023
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -48,6 +48,8 @@ source distribution.
 
 #include <crogine/detail/OpenGL.hpp>
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
+
+#include <Social.hpp>
 
 namespace
 {
@@ -136,7 +138,14 @@ BushState::BushState(cro::StateStack& stack, cro::State::Context context, const 
             drawUI();
         });
 
-    palette.loadFromFile("mod_kit/colordome-32.ase");
+    palette.loadFromFile("assets/workshop/colordome-32.ase");
+
+    if (cro::Console::isVisible())
+    {
+        cro::Console::show();
+    }
+
+    Social::setStatus(Social::InfoID::Menu, { "Treeset Editor" });
 }
 
 //public
@@ -315,14 +324,14 @@ void BushState::loadAssets()
 
     m_scaleBuffer.setData(1.f);
 
-    std::string hq = m_sharedData.treeQuality == SharedStateData::High ? "#define HQ\n" : "";
+    //std::string hq = m_sharedData.treeQuality == SharedStateData::High ? "#define HQ\n" : "";
 
     for (const auto& [name, str] : IncludeMappings)
     {
         m_resources.shaders.addInclude(name, str);
     }
 
-    m_resources.shaders.loadFromString(BushShaderID::Bush, BushVertex, BushFragment, "#define INSTANCING\n" + hq);
+    m_resources.shaders.loadFromString(BushShaderID::Bush, BushVertex, BushFragment, "#define INSTANCING\n#define HQ\n");
     auto* shader = &m_resources.shaders.get(BushShaderID::Bush);
     bushMaterial = m_resources.materials.add(*shader);
 
@@ -553,6 +562,7 @@ void BushState::drawUI()
                 else
                 {
                     requestStackPop();
+                    Social::setStatus(Social::InfoID::Menu, { "Main Menu" });
                 }
             }
 

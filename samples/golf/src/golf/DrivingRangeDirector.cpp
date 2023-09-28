@@ -32,12 +32,16 @@ source distribution.
 #include "server/ServerMessages.hpp"
 #include "CommandIDs.hpp"
 
+#include <Social.hpp>
+
 #include <crogine/ecs/components/Text.hpp>
 #include <crogine/ecs/systems/CommandSystem.hpp>
 
 #include <crogine/util/Random.hpp>
 #include <crogine/util/Easings.hpp>
 #include <crogine/detail/glm/gtx/norm.hpp>
+
+using namespace cl;
 
 DrivingRangeDirector::DrivingRangeDirector(std::vector<HoleData>& hd)
     : m_holeData	(hd),
@@ -95,6 +99,11 @@ void DrivingRangeDirector::handleMessage(const cro::Message& msg)
                 m_scores[idx] = 100.f;
             }
             m_holeCount--;
+
+            if (m_scores[idx] > 99.f)
+            {
+                Social::getMonthlyChallenge().updateChallenge(ChallengeID::Six, hole);
+            }
         }
     }
         break;

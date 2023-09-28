@@ -61,6 +61,8 @@ source distribution.
 
 #include "../ErrorCheck.hpp"
 
+using namespace cl;
+
 namespace
 {
     //used as indices when scrolling through leaderboards
@@ -231,6 +233,7 @@ void DrivingState::createUI()
         e.getComponent<cro::Callback>().active = false;
     };
     auto courseEnt = entity;
+    m_courseEntity = entity;
     createPlayer(courseEnt);
     createBall(); //hmmm should probably be in createScene()?
 
@@ -2632,7 +2635,8 @@ void DrivingState::showMessage(float range)
 
                         totalScore += score;
                     }
-                    for (; j < 9; ++j)
+                    j++;
+                    for (; j < 10; ++j)
                     {
                         summary += "Turn " + std::to_string(j) + ":       N/A\n";
                     }

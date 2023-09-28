@@ -66,12 +66,15 @@ namespace sv
         //game rule stuff. TODO encapsulate somewhere
         bool m_gameStarted;
         bool m_allMapsLoaded;
+        bool m_skinsFinals;
         std::uint8_t m_currentHole;
         std::vector<PlayerStatus> m_playerInfo; //active players. Sorted by distance so the front position is active player
         std::uint8_t m_skinsPot;
         std::uint8_t m_currentBest; //current best score for hole, non-stroke games end if no-one can beat it
+        std::uint8_t m_randomTargetCount;
 
         cro::Clock m_turnTimer;
+        std::array<std::uint8_t, 2u> m_honour = { 0, 0 };
 
         void sendInitialGameState(std::uint8_t);
         void handlePlayerInput(const net::NetEvent::Packet&, bool predict);
@@ -85,8 +88,8 @@ namespace sv
         void initScene();
         void buildWorld();
 
-        void handleDefaultRules(const struct GolfBallEvent&);
-        bool summariseDefaultRules();
+        void handleRules(const struct GolfBallEvent&);
+        bool summariseRules();
 
         void doServerCommand(const net::NetEvent&);
     };

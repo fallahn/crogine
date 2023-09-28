@@ -103,6 +103,12 @@
     <Filter Include="Source Files\gc">
       <UniqueIdentifier>{3d37093a-b41e-4736-96d6-952fb4ca1a14}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\league">
+      <UniqueIdentifier>{2ae3818a-807a-4ad7-beeb-3d865c6ef505}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\league">
+      <UniqueIdentifier>{1df49813-245d-49b6-b62a-d6a07d6ec217}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\LoadingScreen.cpp">
@@ -218,6 +224,9 @@
     </ClCompile>
     <ClCompile Include="src\gc\GcState.cpp">
       <Filter>Source Files\gc</Filter>
+    </ClCompile>
+    <ClCompile Include="src\league\League.cpp">
+      <Filter>Source Files\league</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -367,6 +376,9 @@
     </ClInclude>
     <ClInclude Include="src\gc\GcState.hpp">
       <Filter>Header Files\gc</Filter>
+    </ClInclude>
+    <ClInclude Include="src\league\League.hpp">
+      <Filter>Header Files\league</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

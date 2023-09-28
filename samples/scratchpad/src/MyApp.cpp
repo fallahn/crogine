@@ -95,32 +95,32 @@ void MyApp::handleEvent(const cro::Event& evt)
         case SDLK_AC_BACK:
             App::quit();
             break;
-        case SDLK_p:
-        {
-            cro::FileSystem::createDirectory(getPreferencePath() + u8"wisp€fun");
-            cro::FileSystem::createDirectory(getBasePath());
-            cro::FileSystem::createDirectory(getContentPath());
+        //case SDLK_p:
+        //{
+        //    cro::FileSystem::createDirectory(getPreferencePath() + u8"wisp€fun");
+        //    cro::FileSystem::createDirectory(getBasePath());
+        //    cro::FileSystem::createDirectory(getContentPath());
 
-            auto dirs = cro::FileSystem::listDirectories(getPreferencePath());
-            for (auto dir : dirs)
-            {
-                std::cout << dir << std::endl;
-                cro::ConfigFile cfg;
-                cfg.save(getPreferencePath() + dir + ".cfg");
-            }
-            LogI << "found " << dirs.size() << " entries" << std::endl;
+        //    auto dirs = cro::FileSystem::listDirectories(getPreferencePath());
+        //    for (auto dir : dirs)
+        //    {
+        //        std::cout << dir << std::endl;
+        //        cro::ConfigFile cfg;
+        //        cfg.save(getPreferencePath() + dir + ".cfg");
+        //    }
+        //    LogI << "found " << dirs.size() << " entries" << std::endl;
 
-            auto files = cro::FileSystem::listFiles(getPreferencePath());
-            for (auto file : files)
-            {
-                std::cout << file << std::endl;
-                cro::ConfigFile cfg;
-                cfg.save(getBasePath() + file);
-                cfg.save(getContentPath() + file);
-            }
-            LogI << "found " << files.size() << " files" << std::endl;
-        }
-            break;
+        //    auto files = cro::FileSystem::listFiles(getPreferencePath());
+        //    for (auto file : files)
+        //    {
+        //        std::cout << file << std::endl;
+        //        cro::ConfigFile cfg;
+        //        cfg.save(getBasePath() + file);
+        //        cfg.save(getContentPath() + file);
+        //    }
+        //    LogI << "found " << files.size() << " files" << std::endl;
+        //}
+        //    break;
         }
     }
 #endif
@@ -166,7 +166,7 @@ bool MyApp::initialise()
     m_stateStack.registerState<GCState>(States::ScratchPad::GC);
 
 #ifdef CRO_DEBUG_
-    m_stateStack.pushState(States::ScratchPad::GC);
+    m_stateStack.pushState(States::ScratchPad::Swing);
     //m_stateStack.pushState(States::ScratchPad::MainMenu);
 #else
     m_stateStack.pushState(States::ScratchPad::MainMenu);

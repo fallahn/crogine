@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022
+Matt Marchant 2022 - 2023
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -50,9 +50,39 @@ namespace
 }
 
 CubemapTexture::CubemapTexture()
-    : m_handle(0)
+    : m_handle      (0),
+    m_cubemapCount  (0)
 {
 
+}
+
+CubemapTexture::CubemapTexture(CubemapTexture&& other) noexcept
+    : CubemapTexture()
+{
+    std::swap(m_handle, other.m_handle);
+    std::swap(m_cubemapCount, other.m_cubemapCount);
+}
+
+CubemapTexture& CubemapTexture::operator= (CubemapTexture&& other) noexcept
+{
+    //hmm we should check the other handle is not this
+    //but if it is we're doing something silly like self-assigning?
+
+    if (m_handle == other.m_handle)
+    {
+        return *this;
+    }
+
+    if (m_handle)
+    {
+        glCheck(glDeleteTextures(1, &m_handle));
+        m_handle = 0;
+        m_cubemapCount = 0;
+    }
+    std::swap(m_handle, other.m_handle);
+    std::swap(m_cubemapCount, other.m_cubemapCount);
+
+    return *this;
 }
 
 CubemapTexture::~CubemapTexture()
@@ -71,45 +101,12 @@ std::uint32_t CubemapTexture::getGLHandle() const
 
 bool CubemapTexture::loadFromFile(const std::string& path)
 {
-    if (FileSystem::getFileExtension(path) != ".ccm")
+    std::array<std::string, CubemapDirection::Count> paths = {};
+    if (!parseInputFile(path, paths))
     {
-        LogE << path << ": not a *.ccm file" << std::endl;
         return false;
     }
 
-    cro::ConfigFile cfg;
-    if (!cfg.loadFromFile(path))
-    {
-        LogE << "Failed to open cubemap " << path << std::endl;
-        return false;
-    }
-
-    std::array<std::string, CubemapDirection::Count> paths;
-    std::uint8_t flags = 0;
-
-    const auto& properties = cfg.getProperties();
-    for (const auto& prop : properties)
-    {
-        auto name = prop.getName();
-        for (auto i = 0; i < CubemapDirection::Count; ++i)
-        {
-            if (name == Labels[i])
-            {
-                paths[i] = prop.getValue<std::string>();
-                flags |= (1 << i);
-                break;
-            }
-        }
-    }
-
-    //warn if a side is missing
-    for (auto i = 0; i < CubemapDirection::Count; ++i)
-    {
-        if ((flags & (1 << i)) == 0)
-        {
-            LogW << "Path to " << Labels[i] << " image is missing from " << path << std::endl;
-        }
-    }
 
     if (m_handle == 0)
     {
@@ -128,7 +125,9 @@ bool CubemapTexture::loadFromFile(const std::string& path)
 
         Image* currImage = &fallback;
         GLenum format = GL_RGB;
-        for (auto i = 0u; i < 6u; i++)
+        std::uint32_t prevSize = 0;
+
+        for (auto i = 0u; i < CubemapDirection::Count; i++)
         {
             if (side.loadFromFile(paths[i]))
             {
@@ -155,6 +154,14 @@ bool CubemapTexture::loadFromFile(const std::string& path)
 
             auto size = currImage->getSize();
             glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, format, size.x, size.y, 0, format, GL_UNSIGNED_BYTE, currImage->getPixelData());
+
+            if (i != 0 
+                && prevSize != size.x)
+            {
+                LogE << cro::FileSystem::getFileName(path) << ": Cubemap face " << i << " was not the same size as previous faces." << std::endl;
+                return false;
+            }
+            prevSize = size.x;
         }
         glCheck(glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
         glCheck(glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
@@ -162,9 +169,160 @@ bool CubemapTexture::loadFromFile(const std::string& path)
         glCheck(glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE));
         glCheck(glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE));
 
+        m_cubemapCount = 1;
+
         return true;
     }
 
     LogE << "Failed creating texture handle" << std::endl;
     return false;
+}
+
+bool CubemapTexture::loadFromFiles(const std::vector<std::string>& paths)
+{
+    if (paths.empty())
+    {
+        LogE << "Cubemap paths was empty" << std::endl;
+        return false;
+    }
+
+    //don't create an array if this is a regular map
+    if (paths.size() == 1)
+    {
+        return loadFromFile(paths[0]);
+    }
+
+    if (m_handle == 0)
+    {
+        glCheck(glGenTextures(1, &m_handle));
+    }
+
+    //this is a complete faff - we need to parse at least one image first
+    //so we can allot the memory up front based on the size/depth of the
+    //very first image.
+
+    if (m_handle)
+    {
+        std::array<std::string, CubemapDirection::Count> imagePaths = {};
+        if (!parseInputFile(paths[0], imagePaths))
+        {
+            return false;
+        }
+
+        Image fallback;
+        Image side(true);
+        if (!side.loadFromFile(imagePaths[0]))
+        {
+            return false;
+        }
+
+        auto size = side.getSize();
+        fallback.create(size.x, size.y, Colour::Magenta, side.getFormat());
+
+        GLenum format = side.getFormat() == cro::ImageFormat::RGB ? GL_RGB : side.getFormat() == cro::ImageFormat::RGBA ? GL_RGBA : GL_R8;
+        if (format == GL_R8)
+        {
+            LogE << "Bad image format" << std::endl;
+            return false;
+        }
+
+        GLsizei currentDepth = 0;
+        glCheck(glBindTexture(GL_TEXTURE_CUBE_MAP_ARRAY, m_handle));
+        glTexImage3D(GL_TEXTURE_CUBE_MAP_ARRAY, 0, format, size.x, size.y, paths.size() * 6, 0, format, GL_UNSIGNED_BYTE, nullptr);
+
+        for (const auto& cm : paths)
+        {
+            if (parseInputFile(cm, imagePaths))
+            {
+                Image* currImage = &fallback;
+                std::uint32_t prevSize = 0;
+
+                for (auto i = 0u; i < CubemapDirection::Count; i++)
+                {
+                    if (side.loadFromFile(imagePaths[i]))
+                    {
+                        if (side.getFormat() == fallback.getFormat()
+                            && side.getSize() == fallback.getSize())
+                        {
+                            currImage = &side;
+                        }
+                        else
+                        {
+                            currImage = &fallback;
+                        }                        
+                    }
+                    else
+                    {
+                        currImage = &fallback;
+                    }
+
+                    size = currImage->getSize();
+                    glCheck(glTexSubImage3D(GL_TEXTURE_CUBE_MAP_ARRAY, 0, 0, 0, (m_cubemapCount * 6) + i, size.x, size.y, 1, format, GL_UNSIGNED_BYTE, currImage->getPixelData()));
+                    if (i != 0
+                        && prevSize != size.x)
+                    {
+                        LogE << cro::FileSystem::getFileName(cm) << ": Cubemap face " << i << " was not the same size as previous faces." << std::endl;
+                    }
+                    prevSize = size.x;
+                }
+
+                m_cubemapCount++;
+            }
+        }
+    }
+
+    glCheck(glTexParameteri(GL_TEXTURE_CUBE_MAP_ARRAY, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
+    glCheck(glTexParameteri(GL_TEXTURE_CUBE_MAP_ARRAY, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
+    glCheck(glTexParameteri(GL_TEXTURE_CUBE_MAP_ARRAY, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE));
+    glCheck(glTexParameteri(GL_TEXTURE_CUBE_MAP_ARRAY, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE));
+    glCheck(glTexParameteri(GL_TEXTURE_CUBE_MAP_ARRAY, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE));
+
+    return m_cubemapCount != 0;
+}
+
+//private
+bool CubemapTexture::parseInputFile(const std::string& path, std::array<std::string, CubemapDirection::Count>& outPaths)
+{
+    if (FileSystem::getFileExtension(path) != ".ccm")
+    {
+        LogE << path << ": not a *.ccm file" << std::endl;
+        return false;
+    }
+
+    cro::ConfigFile cfg;
+    if (!cfg.loadFromFile(path))
+    {
+        LogE << "Failed to open cubemap " << path << std::endl;
+        return false;
+    }
+
+    auto currPath = cro::FileSystem::getFilePath(path);
+    const auto processPath =
+        [&](std::string& outPath, std::string inPath)
+    {
+        std::replace(inPath.begin(), inPath.end(), '\\', '/');
+        if (inPath.find('/') == std::string::npos)
+        {
+            //assume this is in the same dir
+            outPath = currPath + inPath;
+        }
+        else
+        {
+            outPath = inPath;
+        }
+    };
+
+    for (auto i = 0; i < CubemapDirection::Count; ++i)
+    {
+        if (auto* prop = cfg.findProperty(Labels[i]); prop != nullptr)
+        {
+            processPath(outPaths[i], prop->getValue<std::string>());
+        }
+        else
+        {
+            LogW << "Path to " << Labels[i] << " image is missing from " << path << std::endl;
+        }
+    }
+
+    return true;
 }

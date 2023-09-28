@@ -42,6 +42,8 @@ source distribution.
 #include <stdio.h>
 #include <sys/stat.h>
 
+using namespace cl;
+
 namespace
 {
     const std::string FileName = "progress.stats";
@@ -117,6 +119,10 @@ bool DefaultAchievements::init()
     trigger = &StatTriggers[StatID::WaterTrapRounds].emplace_back();
     trigger->achID = AchievementID::GolfinDolphin;
     trigger->threshold = 5;
+
+    trigger = &StatTriggers[StatID::LeagueRounds].emplace_back();
+    trigger->achID = AchievementID::LeagueSeasonal;
+    trigger->threshold = 24;
 
     return true;
 }

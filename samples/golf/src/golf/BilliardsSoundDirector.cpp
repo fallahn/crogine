@@ -37,6 +37,8 @@ source distribution.
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/util/Random.hpp>
 
+using namespace cl;
+
 BilliardsSoundDirector::BilliardsSoundDirector(cro::AudioResource& ar)
 {
     static const std::array<std::string, AudioID::Count> FilePaths =

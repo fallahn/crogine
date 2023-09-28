@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022
+Matt Marchant 2022 - 2023
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -29,6 +29,7 @@ source distribution.
 
 #include "BilliardsSystem.hpp"
 #include "DebugDraw.hpp"
+#include "GameConsts.hpp"
 #include "server/ServerMessages.hpp"
 
 #include <crogine/core/ConfigFile.hpp>
@@ -44,148 +45,14 @@ namespace
 
 }
 
-const std::array<std::string, TableData::Rules::Count> TableData::RuleStrings =
+glm::vec3 btToGlm(btVector3 v)
 {
-    "8_ball", "9_ball", "bar_billiards", "snooker", "void"
-};
+    return { v.getX(), v.getY(), v.getZ() };
+}
 
-bool TableData::loadFromFile(const std::string& path)
+btVector3 glmToBt(glm::vec3 v)
 {
-    cro::ConfigFile tableConfig;
-    if (tableConfig.loadFromFile(path))
-    {
-        name = cro::FileSystem::getFileName(path);
-        name = name.substr(0, name.find_last_of('.'));
-
-        const auto& props = tableConfig.getProperties();
-        for (const auto& p : props)
-        {
-            const auto& name = p.getName();
-            if (name == "model")
-            {
-                viewModel = p.getValue<std::string>();
-            }
-            else if (name == "collision")
-            {
-                collisionModel = p.getValue<std::string>();
-            }
-            else if (name == "ruleset")
-            {
-                std::string ruleString = p.getValue<std::string>();
-                auto result = std::find_if(TableData::RuleStrings.begin(), TableData::RuleStrings.end(), [&ruleString](const std::string& s) {return s == ruleString; });
-                if (result != TableData::RuleStrings.end())
-                {
-                    rules = static_cast<TableData::Rules>(std::distance(TableData::RuleStrings.begin(), result));
-                }
-                else
-                {
-                    LogE << "No valid rule set data found" << std::endl;
-                }
-            }
-            else if (name == "ball_skin")
-            {
-                std::string skin = p.getValue<std::string>();
-                if (cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + skin))
-                {
-                    ballSkins.push_back(skin);
-                }
-            }
-            else if (name == "table_skin")
-            {
-                std::string skin = p.getValue<std::string>();
-                if (cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + skin))
-                {
-                    tableSkins.push_back(skin);
-                }
-            }
-        }
-
-        if (viewModel.empty() || cro::FileSystem::getFileExtension(viewModel) != ".cmt")
-        {
-            LogE << "Invalid path to table view model" << std::endl;
-        }
-
-        if (collisionModel.empty() || cro::FileSystem::getFileExtension(collisionModel) != ".cmb")
-        {
-            LogE << "Invalid path to table collision model" << std::endl;
-        }
-
-        //note that the cfg file gives x/y position
-        //which should be converted to x/-z
-        const auto& objs = tableConfig.getObjects();
-        for (const auto& obj : objs)
-        {
-            const auto& name = obj.getName();
-            if (name == "pocket")
-            {
-                auto& pocket = pockets.emplace_back();
-
-                const auto& pocketProps = obj.getProperties();
-                for (const auto& prop : pocketProps)
-                {
-                    const auto& propName = prop.getName();
-                    if (propName == "position")
-                    {
-                        pocket.position = prop.getValue<glm::vec2>();
-                    }
-                    else if (propName == "value")
-                    {
-                        pocket.value = prop.getValue<std::int32_t>();
-                    }
-                    else if (propName == "radius")
-                    {
-                        pocket.radius = prop.getValue<float>();
-                    }
-                }
-            }
-            else if (name == "spawn")
-            {
-                glm::vec2 size = glm::vec2(0.f);
-                glm::vec2 position = glm::vec2(0.f);
-
-                const auto& spawnProps = obj.getProperties();
-                for (const auto& prop : spawnProps)
-                {
-                    const auto& sName = prop.getName();
-                    if (sName == "position")
-                    {
-                        position = prop.getValue<glm::vec2>();
-                    }
-                    else if (sName == "size")
-                    {
-                        size = prop.getValue<glm::vec2>();
-                    }
-                }
-
-                spawnArea.left = position.x - size.x;
-                spawnArea.bottom = position.y - size.y;
-                spawnArea.width = size.x * 2.f;
-                spawnArea.height = size.y * 2.f;
-            }
-        }
-
-
-        //load the default table skin
-        if (!viewModel.empty())
-        {
-            cro::ConfigFile vm;
-            vm.loadFromFile(viewModel);
-            if (auto* skin = vm.findProperty("diffuse"); skin != nullptr)
-            {
-                auto skinPath = skin->getValue<std::string>();
-                if (cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + skinPath))
-                {
-                    tableSkins.push_back(skinPath);
-                }
-            }
-        }
-
-        return !viewModel.empty() && !collisionModel.empty() 
-            && !pockets.empty() && rules != TableData::Void 
-            && spawnArea.width > 0 && spawnArea.height > 0
-            && !tableSkins.empty() && !ballSkins.empty();
-    }
-    return false;
+    return { v.x, v.y, v.z };
 }
 
 void BilliardBall::getWorldTransform(btTransform& dest) const
@@ -212,11 +79,6 @@ glm::vec3 BilliardBall::getVelocity() const
 {
     return btToGlm(m_physicsBody->getLinearVelocity());
 }
-
-const std::array<std::string, CollisionID::Count> CollisionID::Labels =
-{
-    "Table", "Cushion", "Ball", "Pocket"
-};
 
 BilliardsSystem::BilliardsSystem(cro::MessageBus& mb)
     : cro::System(mb, typeid(BilliardsSystem)),

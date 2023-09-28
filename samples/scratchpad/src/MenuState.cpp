@@ -126,8 +126,8 @@ void MenuState::handleMessage(const cro::Message& msg)
 bool MenuState::simulate(float dt)
 {
     m_video.update(dt);
-
     m_scene.simulate(dt);
+
     return true;
 }
 

@@ -47,6 +47,8 @@ source distribution.
 
 #include <crogine/gui/Gui.hpp>
 
+using namespace cl;
+
 namespace
 {
     const std::array<std::string, CameraID::Count> CamNames =

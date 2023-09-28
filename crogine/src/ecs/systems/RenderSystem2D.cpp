@@ -282,7 +282,10 @@ void RenderSystem2D::render(Entity cameraEntity, const RenderTarget& rt)
                     auto scissorStart = mapCoordsToPixel(start, pass.viewProjectionMatrix, viewport);
                     auto scissorEnd = mapCoordsToPixel(end, pass.viewProjectionMatrix, viewport);
 
-                    glCheck(glScissor(scissorStart.x, scissorStart.y, scissorEnd.x - scissorStart.x, scissorEnd.y - scissorStart.y));
+                    auto w = scissorEnd.x - scissorStart.x;
+                    auto h = scissorEnd.y - scissorStart.y;
+                    
+                    glCheck(glScissor(scissorStart.x, scissorStart.y, w, h));
                 }
                 else
                 {

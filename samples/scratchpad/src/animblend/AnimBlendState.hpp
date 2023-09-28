@@ -32,11 +32,13 @@ source distribution.
 #pragma once
 
 #include "../StateIDs.hpp"
+#include "../league/League.hpp"
 
 #include <crogine/core/State.hpp>
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/gui/GuiClient.hpp>
 #include <crogine/graphics/ModelDefinition.hpp>
+
 
 class AnimBlendState final : public cro::State, public cro::GuiClient
 {
@@ -57,6 +59,8 @@ private:
     cro::ResourceCollection m_resources;
 
     cro::Entity m_modelEntity;
+
+    League m_league;
 
     void addSystems();
     void loadAssets();

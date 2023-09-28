@@ -34,6 +34,7 @@ source distribution.
 
 #include <string>
 #include <vector>
+#include <cstdint>
 
 namespace cro
 {

@@ -68,6 +68,8 @@ source distribution.
 
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
 
+using namespace cl;
+
 namespace
 {
     struct MenuID final
@@ -172,7 +174,7 @@ void PauseState::handleMessage(const cro::Message& msg)
 bool PauseState::simulate(float dt)
 {
     m_scene.simulate(dt);
-    return true;
+    return /*true*/m_sharedData.baseState != StateID::DrivingRange;
 }
 
 void PauseState::render()

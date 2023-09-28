@@ -50,7 +50,8 @@ struct CommandID final
         Spectator       = 0x4000,
         BeaconColour    = 0x8000,
         DroneCam        = 0x10000,
-        HoleRing        = 0x20000
+        HoleRing        = 0x20000,
+        BullsEye        = 0x40000
     };
 
     struct UI final
@@ -82,7 +83,8 @@ struct CommandID final
             FastForward          = 0x400000,
             WindHidden           = 0x800000, //I can't think of a better name - basically when the wind indicator is hidden during putting
             WindEffect           = 0x1000000,
-            PuttPower            = 0x2000000
+            PuttPower            = 0x2000000,
+            TerrainType          = 0x4000000
         };
     };
 

@@ -52,6 +52,7 @@ struct ClientCollider final
     float previousWorldHeight = 0.f;
     std::uint8_t terrain = 0;
     std::uint8_t state = 0;
+    std::uint8_t lie = 0; //0 buried, 1 sitting up
     bool active = false;
     bool nearHole = false;
 };

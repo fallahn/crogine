@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022
+Matt Marchant 2022 - 2023
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -29,87 +29,19 @@ source distribution.
 
 #pragma once
 
+#include "TableData.hpp"
+
 #include <crogine/ecs/System.hpp>
 #include <crogine/detail/NoResize.hpp>
 #include <crogine/graphics/MeshData.hpp>
 #include <crogine/graphics/BoundingBox.hpp>
 
-#include <btBulletCollisionCommon.h>
 #include <btBulletDynamicsCommon.h>
+#include <btBulletCollisionCommon.h>
 #include <BulletCollision/CollisionDispatch/btGhostObject.h>
 
 #include <memory>
 #include <vector>
-
-static inline glm::vec3 btToGlm(btVector3 v)
-{
-    return { v.getX(), v.getY(), v.getZ() };
-}
-
-static inline btVector3 glmToBt(glm::vec3 v)
-{
-    return { v.x, v.y, v.z };
-}
-
-struct CollisionID final
-{
-    enum
-    {
-        Table, Cushion,
-        Ball, Pocket,
-
-        Count
-    };
-
-    static const std::array<std::string, Count> Labels;
-};
-
-struct SnookerID final
-{
-    enum
-    {
-        White, Red, 
-        Yellow, Green, Brown,
-        Blue, Pink, Black,
-
-        Count
-    };
-};
-
-static constexpr std::int8_t CueBall = 0;
-
-struct PocketInfo final
-{
-    glm::vec2 position = glm::vec2(0.f);
-    std::int32_t value = 0;
-    float radius = 0.06f;
-};
-
-struct TableData
-{
-    std::string name;
-    std::string collisionModel;
-    std::string viewModel;
-    std::vector<PocketInfo> pockets;
-    cro::FloatRect spawnArea;
-
-    enum Rules
-    {
-        Eightball,
-        Nineball,
-        BarBillliards,
-        Snooker,
-
-        Void,
-        Count
-    }rules = Void;
-    static const std::array<std::string, Rules::Count> RuleStrings;
-
-    std::vector<std::string> tableSkins;
-    std::vector<std::string> ballSkins;
-
-    bool loadFromFile(const std::string&);
-};
 
 //this needs to be non-resizable as the physics world keeps references to motion states
 struct BilliardBall final : public btMotionState, public cro::Detail::NonResizeable
@@ -139,7 +71,7 @@ private:
     cro::Entity m_parent;
     union
     {
-        btRigidBody* m_physicsBody;
+        btRigidBody* m_physicsBody = nullptr;
         btPairCachingGhostObject* m_collisionBody;
     };
     std::int32_t m_pocketContact = -1; //ID of pocket, or -1
@@ -156,6 +88,8 @@ private:
     friend class BilliardsSystem;
     friend class BilliardsCollisionSystem;
 };
+
+using BPhysBall = BilliardBall;
 
 class BulletDebug;
 class BilliardsSystem final : public cro::System
@@ -241,3 +175,5 @@ private:
     void onEntityAdded(cro::Entity) override;
     void onEntityRemoved(cro::Entity) override;
 };
+
+using BPhysSystem = BilliardsSystem;

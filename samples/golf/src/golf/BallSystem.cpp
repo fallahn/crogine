@@ -47,13 +47,10 @@ source distribution.
 #include <crogine/detail/Types.hpp>
 #include <crogine/detail/glm/gtx/norm.hpp>
 
+using namespace cl;
+
 namespace
 {
-    glm::vec3 btToGlm(btVector3 v)
-    {
-        return { v.getX(), v.getY(), v.getZ() };
-    }
-
     static constexpr float MinBallDistance = HoleRadius * HoleRadius;
     static constexpr float FallRadius = Ball::Radius * 0.25f;
     static constexpr float MinFallDistance = (HoleRadius - FallRadius) * (HoleRadius - FallRadius);
@@ -118,6 +115,8 @@ namespace
     };
     constexpr float SideSpinInfluence = 6.f;
     constexpr float TopSpinInfluence = 1.f;
+
+    constexpr float BallPenetrationAvg = 0.054f; //if the ball collision is greater than this it's set to 'buried' else 'sitting up'
 }
 
 const std::array<std::string, 5u> Ball::StateStrings = { "Idle", "Flight", "Putt", "Paused", "Reset" };
@@ -137,6 +136,7 @@ BallSystem::BallSystem(cro::MessageBus& mb, bool drawDebug)
     m_holeData              (nullptr),
     m_puttFromTee           (false),
     m_gimmeRadius           (0),
+    m_activeGimme           (0),
     m_processFlags          (0)
 {
     requireComponent<cro::Transform>();
@@ -199,10 +199,15 @@ void BallSystem::forceWindChange()
 
 bool BallSystem::setHoleData(HoleData& holeData, bool rebuildMesh)
 {
+    m_bullsEye.position = glm::vec3(0.f);
+    m_bullsEye.diametre = 0.f;
+
     m_holeData = &holeData;
 
+    //updating the collision mesh sets m_puttFromTee too
     auto result = rebuildMesh ? updateCollisionMesh(holeData.modelPath) : true;
     holeData.pin.y = getTerrain(holeData.pin).intersection.y;
+    holeData.puttFromTee = m_puttFromTee;
 
     for (auto entity : getEntities())
     {
@@ -215,17 +220,37 @@ bool BallSystem::setHoleData(HoleData& holeData, bool rebuildMesh)
 void BallSystem::setGimmeRadius(std::uint8_t rad)
 {
     m_gimmeRadius = std::min(std::uint8_t(2), rad);
+    m_activeGimme = m_gimmeRadius;
 }
 
-BallSystem::TerrainResult BallSystem::getTerrain(glm::vec3 pos) const
+const BullsEye& BallSystem::spawnBullsEye()
 {
+    //TODO how do we decide on a radius?
+    m_bullsEye.diametre = static_cast<float>(cro::Util::Random::value(8, 12));
+    if (m_puttFromTee)
+    {
+        m_bullsEye.diametre *= 0.032f;
+    }
+        
+    m_bullsEye.position = m_holeData->target;
+    m_bullsEye.spawn = true;
+    return m_bullsEye;
+}
+
+BallSystem::TerrainResult BallSystem::getTerrain(glm::vec3 pos, glm::vec3 forward, float rayLength) const
+{
+    CRO_ASSERT(glm::length2(forward) != 0, "");
+    //TODO how do we assert forward is a normal vec without normalising?
+
     TerrainResult retVal;
 
-    //casts a vertical ray 10m above/below the ball
-    static const btVector3 RayLength = { 0.f, -20.f, 0.f };
+    //casts a ray in front/behind the ball
+    //static constexpr float RayLength = 20.f;
+    const auto f = btVector3(forward.x, forward.y, forward.z) * rayLength;
+
     btVector3 rayStart = { pos.x, pos.y, pos.z };
-    rayStart -= (RayLength / 2.f);
-    auto rayEnd = rayStart + RayLength;
+    rayStart -= (f / 2.f);
+    auto rayEnd = rayStart + f;
 
     RayResultCallback res(rayStart, rayEnd);
 
@@ -344,6 +369,16 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
             //move by velocity
             tx.move(ball.velocity * dt);
 
+            //rotate based on velocity
+            auto vel2 = glm::length2(ball.velocity);
+            static constexpr float MaxVel = 20.f; //some arbitrary number. Actual max is ~20.f so smaller is faster spin
+            static constexpr float MaxRotation = 5.f;
+            float r = cro::Util::Const::TAU * (vel2 / MaxVel) * ball.rotation;
+            r = std::clamp(r, -MaxRotation, MaxRotation);
+
+
+            tx.rotate(cro::Transform::Y_AXIS, r * dt);
+
             //test collision
             doCollision(entity);
             //doBallCollision(entity);
@@ -402,7 +437,7 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
             newPos.y = terrainContact.intersection.y;
             tx.setPosition(newPos);
         }
-
+        doBullsEyeCollision(tx.getPosition());
 
 
         const auto resetBall = [&](Ball::State state, std::uint8_t terrain)
@@ -595,6 +630,23 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
             //move by velocity
             tx.move(ball.velocity * dt);
 
+
+            //check for wall collision
+            /*if (auto l2 = glm::length2(ball.velocity); l2 != 0
+                && glm::dot(ball.velocity, cro::Transform::Y_AXIS) > 0)
+            {
+                //the problem with this is that the ray *shouldn't* be cast from behind the ball in this case.
+                auto wallResult = getTerrain(tx.getPosition(), ball.velocity / std::sqrt(l2) * (Ball::Radius * 4.f));
+                if (wallResult.penetration > 0)
+                {
+                    tx.move(wallResult.normal * wallResult.penetration);
+                    ball.velocity = glm::reflect(ball.velocity, wallResult.normal);
+                    LogI << "Bounced off wall" << std::endl;
+                }
+            }*/
+
+
+
             auto newPos = tx.getPosition();
             terrainContact = getTerrain(newPos);
             ball.terrain = terrainContact.terrain;
@@ -618,13 +670,31 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
                 //ball.delay = 0.f;
                 return;
             }
+            //if we went OOB in a putting course we
+            //want to quit immediately, not wait for the velocity to stop
+            else if (ball.terrain == TerrainID::Water
+                || ball.terrain == TerrainID::Scrub)
+            {
+                ball.state = Ball::State::Reset;
+                ball.delay = BallTurnDelay;
+                ball.velocity = glm::vec3(0.f);
 
+                auto* msg = postEvent();
+                msg->type = GolfBallEvent::Landed;
+                msg->terrain = ball.terrain;
+                return;
+            }
 
             //rotate based on velocity
             auto vel2 = glm::length2(ball.velocity);
             static constexpr float MaxVel = 2.f; //some arbitrary number. Actual max is ~20.f so smaller is faster spin
             tx.rotate(cro::Transform::Y_AXIS, cro::Util::Const::TAU * (vel2 / MaxVel) * ball.rotation * dt);
 
+            //check for target
+            if (vel2 != 0)
+            {
+                doBullsEyeCollision(tx.getPosition());
+            }
 
             //if we've slowed down or fallen more than the
             //ball's diameter (radius??) stop the ball
@@ -635,7 +705,7 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
             {
                 ball.velocity = glm::vec3(0.f);
 
-                if (ball.terrain == TerrainID::Water
+                if (ball.terrain == TerrainID::Water //TODO this should never be true because of the above check
                     || ball.terrain == TerrainID::Scrub)
                 {
                     ball.state = Ball::State::Reset;
@@ -668,7 +738,8 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
 
                     ball.terrain = TerrainID::Hole;
                 }
-                else if (len2 < GimmeRadii[m_gimmeRadius])
+                else if (len2 < GimmeRadii[m_gimmeRadius]
+                    && ball.terrain == TerrainID::Green) //this might be OOB on a putting course
                 {
                     auto* msg2 = postEvent();
                     msg2->type = GolfBallEvent::Gimme;
@@ -677,6 +748,8 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
                     position.y = m_holeData->pin.y - (Ball::Radius * 2.5f);
                     position.z = m_holeData->pin.z;
                     tx.setPosition(position);
+
+                    ball.terrain = TerrainID::Hole; //let the ball reset know to raise a holed message
                 }
 
                 msg->position = position;
@@ -727,6 +800,13 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
                 else
                 {
                     tx.setPosition(m_holeData->target);
+
+                    //this might be multi-target mode so we don't want to sit right on top of the target
+                    //that we also want to aim at...
+
+                    auto d = glm::normalize(m_holeData->pin - m_holeData->target) * 0.5f;
+                    tx.move(d);
+
                 }
                 auto pos = tx.getPosition();
                 auto height = getTerrain(pos).intersection.y;
@@ -826,14 +906,14 @@ void BallSystem::processEntity(cro::Entity entity, float dt)
             ball.initialSideVector = { 0.f, 0.f, 0.f };
 
             auto position = entity.getComponent<cro::Transform>().getPosition();
-            auto len2 = glm::length2(glm::vec2(position.x, position.z) - glm::vec2(m_holeData->pin.x, m_holeData->pin.z));
+            //auto len2 = glm::length2(glm::vec2(position.x, position.z) - glm::vec2(m_holeData->pin.x, m_holeData->pin.z));
+            //auto wantGimme = (len2 <= (BallHoleDistance + GimmeRadii[m_gimmeRadius]));
 
             //send message to report status
             auto* msg = postEvent();
             msg->terrain = ball.terrain;
 
-            if (ball.terrain == TerrainID::Hole
-                || (len2 <= (BallHoleDistance + GimmeRadii[m_gimmeRadius])))
+            if (ball.terrain == TerrainID::Hole)
             {
                 //we're in the hole
                 msg->type = GolfBallEvent::Holed;
@@ -909,7 +989,7 @@ void BallSystem::doCollision(cro::Entity entity)
 
 
             auto* msg = postMessage<CollisionEvent>(MessageID::CollisionMessage);
-            msg->terrain = -1;
+            msg->terrain = CollisionEvent::FlagPole;
             msg->position = pos;
             msg->type = CollisionEvent::Begin;
         }
@@ -948,6 +1028,7 @@ void BallSystem::doCollision(cro::Entity entity)
         tx.setPosition(pos);
 
         auto& ball = entity.getComponent<Ball>();
+        ball.lie = terrainResult.penetration > BallPenetrationAvg ? 0 : 1;
         CRO_ASSERT(!std::isnan(pos.x), "");
         CRO_ASSERT(!std::isnan(ball.velocity.x), "");
 
@@ -974,6 +1055,8 @@ void BallSystem::doCollision(cro::Entity entity)
             //else bounce
             [[fallthrough]];
         case TerrainID::Rough:
+            doBullsEyeCollision(tx.getPosition());
+
             ball.velocity *= Restitution[terrainResult.terrain];
             ball.velocity = glm::reflect(ball.velocity, terrainResult.normal);
             //ball.velocity += ball.spin.y * ball.initialForwardVector * SpinAddition[terrainResult.terrain];
@@ -1008,6 +1091,12 @@ void BallSystem::doCollision(cro::Entity entity)
             {
             default: 
                 resetBall(ball, Ball::State::Paused, terrainResult.terrain);
+                break;
+            case TerrainID::Green:
+                //we need to check if we're in hole/gimme rad so switch to rolling state
+                //and let that deal with stopping
+                ball.state = Ball::State::Putt;
+                ball.delay = 0.f;
                 break;
             case TerrainID::Water:
             case TerrainID::Scrub:
@@ -1064,7 +1153,7 @@ void BallSystem::doBallCollision(cro::Entity entity)
 
     auto& tx = entity.getComponent<cro::Transform>();
     auto& ball = entity.getComponent<Ball>();
-    static constexpr float MinDist = 5.f * 5.f;// 0.5f * 0.5f;// (Ball::Radius * 10.f)* (Ball::Radius * 10.f);
+    //static constexpr float MinDist = 5.f * 5.f;// 0.5f * 0.5f;// (Ball::Radius * 10.f)* (Ball::Radius * 10.f);
     static constexpr float CollisionDist = (Ball::Radius * 1.7f) * (Ball::Radius * 1.7f);
 
     //don't collide until we moved from our start position
@@ -1105,6 +1194,33 @@ void BallSystem::doBallCollision(cro::Entity entity)
                     ball.velocity = glm::vec3(0.f);
                 }
             }
+        }
+    }
+}
+
+void BallSystem::doBullsEyeCollision(glm::vec3 ballPos)
+{
+    if (m_bullsEye.spawn && m_processFlags != ProcessFlags::Predicting)
+    {
+        const glm::vec2 p1(ballPos.x, -ballPos.z);
+        const glm::vec2 p2(m_bullsEye.position.x, -m_bullsEye.position.z);
+
+        const float BullRad = m_bullsEye.diametre / 2.f;
+
+        if (auto len2 = glm::length2(p2 - p1); len2 < (BullRad * BullRad))
+        {
+            auto* msg = postMessage<BullsEyeEvent>(sv::MessageID::BullsEyeMessage);
+            //unlikely, but will upset sqrt
+            if (len2 == 0)
+            {
+                //len2 = 0.000001f;
+                msg->accuracy = 1.f;
+            }
+            else
+            {
+                msg->accuracy = std::clamp(1.f - (std::sqrt(len2) / BullRad), 0.f, 1.f);
+            }
+            msg->position = ballPos;
         }
     }
 }
@@ -1212,16 +1328,18 @@ bool BallSystem::updateCollisionMesh(const std::string& modelPath)
     //we have to create a specific object for each sub mesh
     //to be able to tag it with a different terrain...
 
-    //Later note: now we have per-traingle terrain detection this probably isn't true now.
-    for (auto i = 0u; i < m_indexData.size(); ++i)
+    //Later note: now we have per-triangle terrain detection this probably isn't true now.
+    //for (auto i = 0u; i < m_indexData.size(); ++i)
+    for(const auto& id : m_indexData)
     {
         btIndexedMesh groundMesh;
         groundMesh.m_vertexBase = reinterpret_cast<std::uint8_t*>(m_vertexData.data());
         groundMesh.m_numVertices = static_cast<int>(meshData.vertexCount);
         groundMesh.m_vertexStride = static_cast<int>(meshData.vertexSize);
 
-        groundMesh.m_numTriangles = meshData.indexData[i].indexCount / 3;
-        groundMesh.m_triangleIndexBase = reinterpret_cast<std::uint8_t*>(m_indexData[i].data());
+        
+        groundMesh.m_numTriangles = /*meshData.indexData[i].indexCount*/id.size() / 3;
+        groundMesh.m_triangleIndexBase = reinterpret_cast<const std::uint8_t*>(id.data());
         groundMesh.m_triangleIndexStride = 3 * sizeof(std::uint32_t);
 
 

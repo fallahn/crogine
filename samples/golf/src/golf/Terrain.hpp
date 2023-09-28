@@ -39,11 +39,13 @@ struct RenderFlags final
 {
     enum
     {
-        MiniMap = 0x1,
-        MiniGreen = 0x2,
+        MiniMap    = 0x1,
+        MiniGreen  = 0x2,
         Reflection = 0x4,
         Refraction = 0x8,
-        Cue = 0x10,
+        Cue        = 0x10,
+        FlightCam  = 0x20,
+        CubeMap    = 0x40,
 
         All = std::numeric_limits<std::uint64_t>::max()
     };
@@ -95,7 +97,20 @@ static const std::array<std::string, TerrainID::Count> TerrainStrings =
 //how much the stroke is affected by the current terrain
 static constexpr std::array<float, TerrainID::Count> Dampening =
 {
-    0.9f, 1.f, 1.f, 0.85f, 1.f, 1.f, 0.f, 0.f
+    0.95f, 1.f, 1.f, 0.95f, 1.f, 1.f, 0.f, 0.f
+};
+
+//how much the dampening is affected by the current lie
+static constexpr std::array<std::array<float, 2u>, TerrainID::Count> LieDampening =
+{
+    std::array<float, 2u>{0.99f, 1.f},
+    {1.f, 1.f},
+    {1.f, 1.f},
+    {0.99f, 1.f},
+    {1.f, 1.f},
+    {1.f, 1.f},
+    {1.f, 1.f},
+    {1.f, 1.f}
 };
 
 //how much the velocity of the ball is reduced when colliding

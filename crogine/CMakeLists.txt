@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.2.2)
+cmake_minimum_required(VERSION 3.5.0)
 project(crogine)
 SET(PROJECT_NAME crogine)
 

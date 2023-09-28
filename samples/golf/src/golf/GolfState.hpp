@@ -43,6 +43,8 @@ source distribution.
 #include "TerrainChunks.hpp"
 #include "MinimapZoom.hpp"
 #include "BallTrail.hpp"
+#include "TextChat.hpp"
+#include "League.hpp"
 #include "server/ServerPacketData.hpp"
 
 #include <crogine/core/State.hpp>
@@ -63,12 +65,18 @@ source distribution.
 #include <array>
 #include <future>
 #include <unordered_map>
+#include <cstdint>
 
 #ifdef CRO_DEBUG_
 //#define PATH_TRACING
 #endif
 
+static constexpr std::uint32_t MaxCascades = 4; //actual value is 1 less this - see ShadowQuality::update()
+static constexpr float MaxShadowFarDistance = 150.f;
+static constexpr float MaxShadowNearDistance = 90.f;
 
+struct BullsEye;
+struct BullHit;
 namespace cro
 {
     struct NetEvent;
@@ -120,6 +128,8 @@ private:
     cro::Scene m_uiScene;
     cro::Scene m_trophyScene;
     TerrainDepthmap m_depthMap;
+
+    TextChat m_textChat;
 
     InputParser m_inputParser;
     CPUGolfer m_cpuGolfer;
@@ -210,6 +220,7 @@ private:
         {
             BallShadow,
             PlayerShadow,
+            BullsEye,
 
             Count
         };
@@ -248,8 +259,11 @@ private:
     void buildBow();
     void createDrone();
     void spawnBall(const struct ActorInfo&);
+    void spawnBullsEye(const BullsEye&);
 
     void handleNetEvent(const net::NetEvent&);
+    void handleBullHit(const BullHit&);
+    void handleMaxStrokes(std::uint8_t reason);
     void removeClient(std::uint8_t);
 
     void setCurrentHole(std::uint16_t); //(number << 8) | par
@@ -264,12 +278,45 @@ private:
     void startFlyBy();
     std::int32_t getClub() const;
 
-    //allows switching camera, TV style
+
+    struct ShadowQuality final
+    {
+        float shadowNearDistance = MaxShadowNearDistance;
+        float shadowFarDistance = MaxShadowFarDistance;
+        std::uint32_t cascadeCount = MaxCascades - 1;
+
+        void update(bool hq)
+        {
+            cascadeCount = hq ? 3 : 1;
+            float divisor = static_cast<float>(std::pow((MaxCascades - cascadeCount), 2)); //cascade sizes are exponential
+            shadowNearDistance = 90.f / divisor;
+            shadowFarDistance = 150.f / divisor;
+        }
+    }m_shadowQuality;
+
+
+    //follows the ball mid-flight
+    cro::Entity m_flightCam;
+    cro::RenderTexture m_flightTexture;
+
+    //allows switching camera, TV style (GolfStateCameras.cpp)
     std::array<cro::Entity, CameraID::Count> m_cameras = {};
     std::int32_t m_currentCamera;
+    void createCameras();
     void setActiveCamera(std::int32_t);
     void updateCameraHeight(float);
     void setGreenCamPosition();
+
+    struct SkyCam final
+    {
+        enum
+        {
+            Main, Flight,
+            Count
+        };
+    };
+    std::array<cro::Entity, SkyCam::Count> m_skyCameras = {};
+    void updateSkybox(float);
 
     cro::Entity m_drone;
     cro::Entity m_defaultCam;
@@ -278,6 +325,10 @@ private:
     bool m_restoreInput;
     void toggleFreeCam();
     void applyShadowQuality();
+
+    //scoring related stuff in GolfStateScoring.cpp
+    void updateHoleScore(std::uint16_t); //< diplays result of a hole win/loss
+    void updateLeaderboardScore(bool&, cro::String&); //updates the params with personal best from current leaderboard
 
     //UI stuffs - found in GolfStateUI.cpp
     struct SpriteID final
@@ -291,6 +342,7 @@ private:
             BallSpeed,
             MiniFlag,
             MapFlag,
+            MapTarget,
             WindIndicator,
             WindSpeed,
             WindSpeedBg,
@@ -333,6 +385,7 @@ private:
     float m_camRotation; //used to offset the rotation of the wind indicator
     bool m_roundEnded;
     bool m_newHole; //prevents closing scoreboard until everyone is ready
+    bool m_suddenDeath;
     glm::vec2 m_viewScale;
     std::size_t m_scoreColumnCount;
     LeaderboardTexture m_leaderboardTexture;
@@ -399,14 +452,17 @@ private:
 
     struct EmoteWheel final
     {
-        EmoteWheel(const SharedStateData& ib, const ActivePlayer& cp)
-            : sharedData(ib), currentPlayer(cp) {}
+        EmoteWheel(const SharedStateData& ib, const ActivePlayer& cp, TextChat& tc)
+            : sharedData(ib), currentPlayer(cp), m_textChat(tc) {}
 
         const SharedStateData& sharedData;
         const ActivePlayer& currentPlayer;
+        TextChat& m_textChat;
         cro::Entity rootNode;
-        std::array<cro::Entity, 4u> buttonNodes = {};
-        std::array<cro::Entity, 4u> labelNodes = {};
+        std::array<cro::Entity, 8u> buttonNodes = {};
+        std::array<cro::Entity, 8u> labelNodes = {};
+
+        std::array<std::array<std::int16_t, 2u>, cro::GameController::MaxControllers> axisPos = {};
 
         float targetScale = 0.f;
         float currentScale = 0.f;
@@ -455,6 +511,10 @@ private:
         std::int32_t eagles = 0;
         std::int32_t birdies = 0; //nested achievement
         std::int32_t gimmes = 0; //gimme gimme gimme
+
+        std::int32_t birdieChallenge = 0; //monthly challenge only incremented on front 9
+        bool nearMissChallenge = false;
+        bool bullseyeChallenge = false;
     }m_achievementTracker;
     cro::Clock m_playTimer; //track avg play time stat
     cro::Time m_playTime;
@@ -467,6 +527,9 @@ private:
         std::int32_t score = 0;
     };
     std::vector<StatBoardEntry> m_statBoardScores;
+
+    League m_league;
+    void updateLeague();
 
     struct GamepadNotify final
     {

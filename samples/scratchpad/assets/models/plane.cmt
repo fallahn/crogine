@@ -1,0 +1,24 @@
+model plane
+{
+	
+	mesh = "plane.cmb"
+	size = 0.7,2
+
+	material VertexLit
+    {
+        name = "Untitled"
+        colour = 1.000000,1.000000,1.000000,1.000000
+        smooth = false
+        repeat = true
+        depth_test = true
+        double_sided = true
+        use_mipmaps = false
+        animated = true
+        row_count = 1
+        col_count = 6
+        framerate = 12.000000
+        blendmode = none
+        diffuse = "assets/images/waterfall.png"
+
+    }
+}

@@ -64,6 +64,9 @@ struct PlayerData final
 
     //these aren't included in serialise/deserialise
     std::vector<std::uint8_t> holeScores;
+    std::vector<bool> holeComplete; //TODO surely we don't need to record this for *every* hole?
+    std::vector<float> distanceScores;
+    bool targetHit = false; //used in multi-target mode to decide what to look at
     std::uint8_t score = 0;
     std::uint8_t matchScore = 0;
     std::uint8_t skinScore = 0;

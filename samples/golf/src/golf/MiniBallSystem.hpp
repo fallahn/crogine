@@ -37,6 +37,8 @@ struct MiniBall final
     float currentTime = 1.f;
     std::int32_t playerID = -1; //(client * maxPlayer) + player - used when tidying up disconnecting client
     cro::Entity parent;
+    
+    cro::Entity minimap;
 
     enum
     {

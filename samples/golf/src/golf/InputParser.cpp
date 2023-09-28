@@ -47,6 +47,8 @@ source distribution.
 #include <crogine/ecs/systems/CommandSystem.hpp>
 #include <crogine/util/Maths.hpp>
 
+using namespace cl;
+
 namespace
 {
     constexpr float SpeedReduction = 1.4f; //bar speed is dividied by this when putt assist is enabled
@@ -96,6 +98,7 @@ InputParser::InputParser(const SharedStateData& sd, cro::Scene* s)
     m_firstClub         (ClubID::Driver),
     m_clubOffset        (0),
     m_terrain           (TerrainID::Fairway),
+    m_lie               (1),
     m_estimatedDistance (0.f)
 {
 
@@ -474,7 +477,15 @@ float InputParser::getPower() const
 
 float InputParser::getHook() const
 {
-    return m_hook * 2.f - 1.f;
+    float hook = m_hook;
+    if (m_terrain == TerrainID::Bunker
+        && m_lie == 0)
+    {
+        //TODO include the current player/CPU skill level here?
+        hook = std::min(1.f, hook * (1.f + (hook * 0.04f)));
+    }
+    
+    return hook * 2.f - 1.f;
 }
 
 std::int32_t InputParser::getClub() const
@@ -482,12 +493,13 @@ std::int32_t InputParser::getClub() const
     return m_currentClub;
 }
 
-void InputParser::setActive(bool active, std::int32_t terrain, bool isCPU)
+void InputParser::setActive(bool active, std::int32_t terrain, bool isCPU, std::uint8_t lie)
 {
     CRO_ASSERT(terrain < TerrainID::Count, "");
     m_active = active;
     m_terrain = terrain;
     m_isCPU = isCPU;
+    m_lie = lie;
     m_state = State::Aim;
     //if the parser was suspended when set active then make sure un-suspending it returns the correct state.
     m_suspended = active;
@@ -528,17 +540,34 @@ void InputParser::setEnableFlags(std::uint16_t flags)
     m_swingput.setEnabled(flags == std::numeric_limits<std::uint16_t>::max() ? m_swingput.getEnabled() : -1);
 }
 
-void InputParser::setMaxClub(float dist)
+void InputParser::setMaxClub(float dist, bool atTee)
 {
     //a fudge to allow a full set on any hole bigger than pitch n putt
-    if (dist > 115.f)
+    if (!atTee)
     {
-        dist = 1000.f;
+        if (dist > 115.f)
+        {
+            dist = 1000.f;
+        }
+    }
+    else
+    {
+        //teeing off we want to allow all the way up to wood
+        //on par 3s
+        dist = std::max(dist, Clubs[ClubID::FiveWood].getBaseTarget());
+        //if (dist < Clubs[ClubID::FourIron].getBaseTarget() - 5.f)
+        //{
+        //    dist = Clubs[ClubID::FourIron].getBaseTarget() * 1.06f;
+        //}
+        //else
+        //{
+        //    dist = 1000.f;
+        //}
     }
 
     m_firstClub = ClubID::SandWedge;
 
-    while ((Clubs[m_firstClub].getBaseTarget(/*dist*/) * 1.05f) < dist
+    while ((Clubs[m_firstClub].getBaseTarget()/* * 1.05f*/) < dist
         && m_firstClub != ClubID::Driver)
     {
         //this WILL get stuck in an infinite loop if the clubset is 0 for some reason
@@ -550,8 +579,10 @@ void InputParser::setMaxClub(float dist)
     }
 
     //this isn't perfect so give one extra club wiggle room
-    m_firstClub = std::max(0, m_firstClub - 1);
-
+    //if (!atTee)
+    {
+        m_firstClub = std::max(0, m_firstClub - 1);
+    }
     m_currentClub = m_firstClub;
     m_clubOffset = 0;
 
@@ -564,7 +595,15 @@ void InputParser::setMaxClub(float dist)
 void InputParser::setMaxClub(std::int32_t clubID)
 {
     CRO_ASSERT(clubID < ClubID::Putter, "");
-    m_firstClub = m_currentClub = clubID;
+
+    m_firstClub = clubID;
+    while ((m_inputBinding.clubset & ClubID::Flags[m_firstClub]) == 0
+        && m_firstClub != ClubID::PitchWedge)
+    {
+        m_firstClub++;
+    }
+
+    m_currentClub = m_firstClub;
     m_clubOffset = 0;
 
     auto* msg = cro::App::postMessage<GolfEvent>(MessageID::GolfMessage);
@@ -750,7 +789,7 @@ void InputParser::updateDistanceEstimation()
     impulse *= power;
 
     //multiply the terrain dampening
-    impulse *= Dampening[m_terrain];
+    impulse *= Dampening[m_terrain] * LieDampening[m_terrain][m_lie];
 
     static constexpr float dt = 1.f / 60.f; //I'm sure we're redefining this...
     const auto stepVel = impulse * dt;

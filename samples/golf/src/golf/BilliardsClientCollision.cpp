@@ -31,10 +31,13 @@ source distribution.
 #include "BilliardsSystem.hpp"
 #include "InterpolationSystem.hpp"
 #include "MessageIDs.hpp"
+#include "GameConsts.hpp"
 
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/detail/ModelBinary.hpp>
 #include <crogine/gui/Gui.hpp>
+
+using namespace cl;
 
 namespace
 {
