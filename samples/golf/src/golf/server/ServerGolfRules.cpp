@@ -205,7 +205,8 @@ bool GolfState::summariseRules()
 
 
         //only score if no player tied
-        if (sortData[0].holeScore[m_currentHole] != sortData[1].holeScore[m_currentHole])
+        if (!m_skinsFinals && //we have to check this flag because if it was set m_currentHole was probably modified and the score check is the old hole.
+            sortData[0].holeScore[m_currentHole] != sortData[1].holeScore[m_currentHole])
         {
             auto player = std::find_if(m_playerInfo.begin(), m_playerInfo.end(), [&sortData](const PlayerStatus& p)
                 {

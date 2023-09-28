@@ -824,10 +824,12 @@ void GolfState::updateSkybox(float dt)
     dstCam.viewport = srcCam.viewport;
     dstCam.setPerspective(baseFov * (1.f - diff), srcCam.getAspectRatio(), 0.5f, 14.f);
 
+    static constexpr float HeightScale = 128.f;
+
     m_skyCameras[SkyCam::Main].getComponent<cro::Transform>().setRotation(activeCam.getComponent<cro::Transform>().getWorldRotation());
     auto pos = activeCam.getComponent<cro::Transform>().getWorldPosition();
     pos.x = 0.f;
-    pos.y /= 64.f;
+    pos.y /= HeightScale;
     pos.z = 0.f;
     m_skyCameras[SkyCam::Main].getComponent<cro::Transform>().setPosition(pos);
 
@@ -836,7 +838,7 @@ void GolfState::updateSkybox(float dt)
         m_skyCameras[SkyCam::Flight].getComponent<cro::Transform>().setRotation(m_flightCam.getComponent<cro::Transform>().getWorldRotation());
         pos = m_flightCam.getComponent<cro::Transform>().getWorldPosition();
         pos.x = 0.f;
-        pos.y /= 64.f;
+        pos.y /= HeightScale;
         pos.z = 0.f;
         m_skyCameras[SkyCam::Flight].getComponent<cro::Transform>().setPosition(pos);
     }
