@@ -29,6 +29,7 @@ endif()
 
 SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/../cmake/modules/")
 SET (PROJECT_STATIC_RUNTIME FALSE)
+SET (USE_GNS FALSE)
 
 if(CMAKE_COMPILER_IS_GNUCXX OR APPLE)
   if(PROJECT_STATIC_RUNTIME)
@@ -75,13 +76,25 @@ if(NOT CROGINE_FOUND)
 
 endif()
 
+
+if(USE_GNS)
+add_definitions(-DUSE_GNS)
+
+#TODO set the social lib for steam builds
+
+else()
+SET(SOCIAL_DIR ${PROJECT_DIR}/../../../libsocial/src)
+SET(SOCIAL_INCLUDE_DIR ${PROJECT_DIR}/../../../libsocial/include)
+endif()
+
+
 include_directories(
   ${CROGINE_INCLUDE_DIR}
   ${SDL2_INCLUDE_DIR}
   ${OPENGL_INCLUDE_DIR}
   ${BULLET_INCLUDE_DIRS}
   ${SQLite3_INCLUDE_DIRS}
-  ${CMAKE_CURRENT_SOURCE_DIR}/../../libsocial/include
+  ${SOCIAL_INCLUDE_DIR}
   src)
 
 if(USE_NEWSFEED)
@@ -89,7 +102,7 @@ include_directories(${CURL_INCLUDE_DIR})
 endif()
 
 SET(PROJECT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
-SET(SOCIAL_DIR ${PROJECT_DIR}/../../../libsocial/src)
+
 include(${PROJECT_DIR}/CMakeLists.txt)
 include(${PROJECT_DIR}/golf/CMakeLists.txt)
 include(${PROJECT_DIR}/editor/CMakeLists.txt)
