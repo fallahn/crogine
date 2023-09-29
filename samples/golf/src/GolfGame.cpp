@@ -411,6 +411,18 @@ void GolfGame::render()
 
 bool GolfGame::initialise()
 {
+    auto path = cro::App::getPreferencePath() + "user/";
+    if (!cro::FileSystem::directoryExists(path))
+    {
+        cro::FileSystem::createDirectory(path);
+    }
+    path = cro::App::getPreferencePath() + "courses/";
+    if (!cro::FileSystem::directoryExists(path))
+    {
+        cro::FileSystem::createDirectory(path);
+    }
+
+
     //do this first because if we quit early the preferences will otherwise get overwritten by defaults.
     loadPreferences();
     loadAvatars();
