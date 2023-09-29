@@ -2950,7 +2950,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
         });
 
 
-    auto createSlider = [&, mouseText](glm::vec2 position)
+    auto createSlider = [&, mouseText](glm::vec2 position) mutable
     {
         auto entity = m_scene.createEntity();
         entity.addComponent<cro::Transform>().setPosition(position);
@@ -2969,7 +2969,11 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
             std::stringstream st;
             st.precision(2);
             st << "Look Speed (Billiards) " << m_sharedData.mouseSpeed;
-            mouseText.getComponent<cro::Text>().setString(st.str());
+
+            //some versions of gcc complain about this so hack around
+            //it by making a copy
+            auto mt = mouseText;
+            mt.getComponent<cro::Text>().setString(st.str());
         };
         entity.addComponent<cro::Callback>().active = true;
         entity.getComponent<cro::Callback>().setUserData<SliderData>(userData);

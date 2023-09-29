@@ -1063,6 +1063,10 @@ bool GolfState::validateMap()
     bool isUser = false;
     if (!cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + mapPath))
     {
+        //hmmm this check also happens on the client which should make sure it
+        //creates the path first to prevent filesystem exception... as
+        //this runs in its own thread trying to create it here too is probably not a good idea
+
         mapPath = cro::App::getPreferencePath() + ConstVal::UserMapPath + mapDir + "/course.data";
         isUser = true;
 

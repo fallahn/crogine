@@ -2755,6 +2755,12 @@ void GolfState::loadAssets()
     bool isUser = false;
     if (!cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + mapPath))
     {
+        auto coursePath = cro::App::getPreferencePath() + ConstVal::UserMapPath;
+        if (!cro::FileSystem::directoryExists(coursePath))
+        {
+            cro::FileSystem::createDirectory(coursePath);
+        }
+
         mapPath = cro::App::getPreferencePath() + ConstVal::UserMapPath + mapDir + "/course.data";
         isUser = true;
 
@@ -5866,12 +5872,18 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo)
 
 
     //if this is the final hole repeated then we're in skins sudden death
-    if (hole == m_currentHole
-        && hole == m_holeData.size() - 1)
+    if (!m_sharedData.tutorial
+        && m_sharedData.scoreType == ScoreType::Skins)
     {
-        showNotification("Sudden Death Round!");
-        showNotification("First to hole wins!");
-        m_suddenDeath = true;
+        //TODO this will show if we're playing a custom course with
+        //only one hole in skins mode (for some reason)
+        if (hole == m_currentHole
+            && hole == m_holeData.size() - 1)
+        {
+            showNotification("Sudden Death Round!");
+            showNotification("First to hole wins!");
+            m_suddenDeath = true;
+        }
     }
 
 
@@ -5883,7 +5895,7 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo)
         Achievements::incrementStat(StatStrings[StatID::TimeOnTheCourse], m_sharedData.timeStats[i].holeTimes[m_currentHole]);
     }
 
-    //update the look-at target in mutlti-target mode
+    //update the look-at target in multi-target mode
     for (auto& client : m_sharedData.connectionData)
     {
         for (auto& player : client.playerData)

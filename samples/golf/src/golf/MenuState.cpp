@@ -159,6 +159,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     m_prevMenu(MenuID::Main),
     m_viewScale(1.f)
 {
+    sd.baseState = StateID::Menu;
     sd.clubSet = std::clamp(sd.clubSet, 0, 2);
     Club::setClubLevel(sd.clubSet);
 
@@ -200,7 +201,6 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
         context.mainWindow.setMouseCaptured(false);
 
         //sd.inputBinding.controllerID = 0;
-        sd.baseState = StateID::Menu;
         sd.mapDirectory = "course_01";
 
         sd.clientConnection.ready = false;

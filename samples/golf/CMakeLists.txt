@@ -29,6 +29,7 @@ endif()
 
 SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/../cmake/modules/")
 SET (PROJECT_STATIC_RUNTIME FALSE)
+SET (USE_GNS FALSE CACHE STRING "Can't use newsfeed with this")
 
 if(CMAKE_COMPILER_IS_GNUCXX OR APPLE)
   if(PROJECT_STATIC_RUNTIME)
@@ -75,21 +76,43 @@ if(NOT CROGINE_FOUND)
 
 endif()
 
+
+if(USE_GNS)
+  if(USE_NEWSFEED)
+  message(FATAL_ERROR "Can't use newsfeed with GNS builds. Set USE_NEWSFEED to false")
+  endif()
+
+  add_compile_definitions(USE_GNS)
+  find_package(STEAMWORKS REQUIRED)
+  SET(GNS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../../libgns)
+  SET(SOCIAL_DIR ${GNS_DIR}/golf_ach/src)
+  SET(SOCIAL_INCLUDE_DIR ${GNS_DIR}/golf_ach/include)
+else()
+  SET(SOCIAL_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../libsocial/src)
+  SET(SOCIAL_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../libsocial/include)
+endif()
+
+
 include_directories(
   ${CROGINE_INCLUDE_DIR}
   ${SDL2_INCLUDE_DIR}
   ${OPENGL_INCLUDE_DIR}
   ${BULLET_INCLUDE_DIRS}
   ${SQLite3_INCLUDE_DIRS}
-  ${CMAKE_CURRENT_SOURCE_DIR}/../../libsocial/include
+  ${SOCIAL_INCLUDE_DIR}
   src)
 
 if(USE_NEWSFEED)
-include_directories(${CURL_INCLUDE_DIR})
+  include_directories(${CURL_INCLUDE_DIR})
+endif()
+
+if(USE_GNS)
+  include_directories(${STEAMWORKS_INCLUDE_DIR})
+  include_directories(${GNS_DIR}/golf_workshop/include)
+  include_directories(${GNS_DIR}/libgns/include)
 endif()
 
 SET(PROJECT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
-SET(SOCIAL_DIR ${PROJECT_DIR}/../../../libsocial/src)
 include(${PROJECT_DIR}/CMakeLists.txt)
 include(${PROJECT_DIR}/golf/CMakeLists.txt)
 include(${PROJECT_DIR}/editor/CMakeLists.txt)
@@ -100,6 +123,14 @@ SET(GOLF_SRC ${GOLF_SRC} ${SOCIAL_SRC} ${EDITOR_SRC} ${SQLITE_SRC})
 if(USE_NEWSFEED)
   include(${PROJECT_DIR}/rss/CMakeLists.txt)
   SET(GOLF_SRC ${GOLF_SRC} ${RSS_SRC})
+endif()
+
+if(USE_GNS)
+  #include source of workshop, libgns
+  include(${GNS_DIR}/golf_workshop/src/CMakeLists.txt)
+  include(${GNS_DIR}/libgns/src/CMakeLists.txt)
+
+  SET(GOLF_SRC ${GOLF_SRC} ${GNS_SRC} ${WORKSHOP_SRC})
 endif()
 
 
@@ -161,6 +192,10 @@ target_link_libraries(${PROJECT_NAME}
 
 if(USE_NEWSFEED)
   target_link_libraries(${PROJECT_NAME} ${CURL_LIBRARIES})
+endif()
+
+if(USE_GNS)
+  target_link_libraries(${PROJECT_NAME} ${STEAMWORKS_LIBRARIES})
 endif()
 
 # install to the bundle
