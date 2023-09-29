@@ -3109,6 +3109,12 @@ void PlaylistState::createFileSystemMenu(cro::Entity rootNode, const MenuData& m
                 if (activated(evt)
                     && !m_playlist.empty())
                 {
+                    auto courseDir = cro::App::getPreferencePath() + UserCoursePath;
+                    if (!cro::FileSystem::directoryExists(courseDir))
+                    {
+                        cro::FileSystem::createDirectory(courseDir);
+                    }
+
                     auto exportDir = cro::App::getPreferencePath() + UserCourseExport;
                     if (!cro::FileSystem::directoryExists(exportDir))
                     {
@@ -4340,6 +4346,12 @@ void PlaylistState::loadCourse()
 
 bool PlaylistState::exportCourse()
 {
+    auto courseDir = cro::App::getPreferencePath() + UserCoursePath;
+    if (!cro::FileSystem::directoryExists(courseDir))
+    {
+        cro::FileSystem::createDirectory(courseDir);
+    }
+
     auto exportDir = cro::App::getPreferencePath() + UserCourseExport;
     if (!cro::FileSystem::directoryExists(exportDir))
     {
@@ -4348,7 +4360,7 @@ bool PlaylistState::exportCourse()
 
     std::stringstream ss;
     ss << "course" << std::setw(2) << std::setfill('0') << m_saveFileIndex << '/';
-    std::string courseDir = ss.str();
+    courseDir = ss.str();
 
     exportDir += courseDir;
 

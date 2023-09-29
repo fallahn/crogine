@@ -2755,6 +2755,12 @@ void GolfState::loadAssets()
     bool isUser = false;
     if (!cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + mapPath))
     {
+        auto coursePath = cro::App::getPreferencePath() + ConstVal::UserMapPath;
+        if (!cro::FileSystem::directoryExists(coursePath))
+        {
+            cro::FileSystem::createDirectory(coursePath);
+        }
+
         mapPath = cro::App::getPreferencePath() + ConstVal::UserMapPath + mapDir + "/course.data";
         isUser = true;
 
