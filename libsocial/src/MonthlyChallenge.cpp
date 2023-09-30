@@ -187,7 +187,7 @@ cro::String MonthlyChallenge::getProgressString() const
     if (m_month != -1)
     {
         auto progress = getProgress();
-        auto monthDays = MonthDays[m_month - 1];
+        auto monthDays = MonthDays[m_month];
         if (m_month == 2 && m_leapYear)
         {
             monthDays++;
