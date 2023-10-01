@@ -115,8 +115,8 @@ void MonthlyChallenge::updateChallenge(std::int32_t id, std::int32_t value)
 
                 if (oldVal != m_challenges[id].value)
                 {
-                    std::bitset<sizeof(Challenge::value)> value(m_challenges[id].value);
-                    std::bitset<sizeof(Challenge::targetValue)> target(m_challenges[id].targetValue);
+                    std::bitset<sizeof(Challenge::value) * 8> value(m_challenges[id].value);
+                    std::bitset<sizeof(Challenge::targetValue) * 8> target(m_challenges[id].targetValue);
 
                     auto* msg = cro::App::postMessage<Social::SocialEvent>(Social::MessageID::SocialMessage);
                     msg->type = Social::SocialEvent::MonthlyProgress;
@@ -167,8 +167,8 @@ MonthlyChallenge::Progress MonthlyChallenge::getProgress() const
         }
         else
         {
-            std::bitset<sizeof(Challenge::value)> value(m_challenges[m_month].value);
-            std::bitset<sizeof(Challenge::targetValue)> target(m_challenges[m_month].targetValue);
+            std::bitset<sizeof(Challenge::value) * 8> value(m_challenges[m_month].value);
+            std::bitset<sizeof(Challenge::targetValue) * 8> target(m_challenges[m_month].targetValue);
 
             retVal.value = static_cast<std::int32_t>(value.count());
             retVal.target = static_cast<std::int32_t>(target.count());
@@ -214,7 +214,7 @@ cro::String MonthlyChallenge::getProgressString() const
             }
             else
             {
-                ret += "\n" + std::to_string(remain) + " days remaining";
+                ret += "\n" + std::to_string(remain) + "more days remaining";
             }
         }
         else
