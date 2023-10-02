@@ -92,6 +92,7 @@ struct SharedStateData final
         bool ready = false;
         std::uint8_t connectionID = ConstVal::NullValue;
 
+        std::uint64_t hostID = 0;
         std::vector<net::NetEvent> eventBuffer; //don't touch this while loading screen is active!!
     }clientConnection;
 
