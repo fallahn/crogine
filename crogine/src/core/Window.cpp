@@ -290,6 +290,15 @@ void Window::setPosition(std::int32_t x, std::int32_t y)
     SDL_SetWindowPosition(m_window, x, y);
 }
 
+glm::ivec2 Window::getPosition() const
+{
+    CRO_ASSERT(m_window, "window not created");
+
+    glm::ivec2 ret(0);
+    SDL_GetWindowPosition(m_window, &ret.x, &ret.y);
+    return ret;
+}
+
 void Window::setIcon(const std::uint8_t* data)
 {
     CRO_ASSERT(m_window, "window not created");

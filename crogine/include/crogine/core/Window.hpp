@@ -158,6 +158,11 @@ namespace cro
         */
         void setPosition(std::int32_t x, std::int32_t y);
 
+        /*
+        \brief Returns the window's position in destop coordinates
+        */
+        glm::ivec2 getPosition() const;
+
         /*!
         \brief Sets the window icon from an array of RGBA pixels.
         The image size is assumed to be 16x16 pixels in 8-bit format.

@@ -304,6 +304,7 @@
     <ClCompile Include="src\billiards\BilliardsState.cpp" />
     <ClCompile Include="src\billiards\BilliardsSystem.cpp" />
     <ClCompile Include="src\billiards\InterpolationSystem.cpp" />
+    <ClCompile Include="src\bounce\BounceState.cpp" />
     <ClCompile Include="src\bsp\BspState.cpp" />
     <ClCompile Include="src\bsp\FpsCameraSystem.cpp" />
     <ClCompile Include="src\bsp\InputParser.cpp" />
@@ -350,6 +351,7 @@
     <ClInclude Include="src\billiards\BilliardsState.hpp" />
     <ClInclude Include="src\billiards\BilliardsSystem.hpp" />
     <ClInclude Include="src\billiards\InterpolationSystem.hpp" />
+    <ClInclude Include="src\bounce\BounceState.hpp" />
     <ClInclude Include="src\bsp\BspState.hpp" />
     <ClInclude Include="src\bsp\FpsCameraSystem.hpp" />
     <ClInclude Include="src\bsp\InputParser.hpp" />
