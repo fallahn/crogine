@@ -47,8 +47,8 @@ source distribution.
 //(terrain vertex data and materials changed 1100 -> 1110)
 //(player avatar data format changed 1110 -> 1120)
 //(ball started sending wind effect 1120 -> 1124)
-static constexpr std::uint16_t CURRENT_VER = 1140;
-static const std::string StringVer("1.14.0");
+static constexpr std::uint16_t CURRENT_VER = 1141;
+static const std::string StringVer("1.14.1");
 
 struct HallEntry final
 {

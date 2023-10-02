@@ -573,7 +573,7 @@ bool GolfGame::initialise()
             }
         });
 
-    registerConsoleTab("Credits",
+    /*registerConsoleTab("Credits",
         []()
         {
             ImGui::Text("Credits:");
@@ -596,7 +596,7 @@ bool GolfGame::initialise()
             {
                 cro::Util::String::parseURL(Social::WebURL);
             }
-        });
+        });*/
 
     registerCommand("log_benchmark", 
         [&](const std::string& state)

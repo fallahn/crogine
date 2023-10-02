@@ -61,6 +61,7 @@ namespace
     const cro::Time FlagSoundTime = cro::seconds(2.f);
     const cro::Time ChatSoundTime = cro::seconds(0.05f);
     const cro::Time PowerSoundTime = cro::seconds(0.5f);
+    const cro::Time ApplauseSoundTime = cro::seconds(3.5f);
 }
 
 GolfSoundDirector::GolfSoundDirector(cro::AudioResource& ar, const SharedStateData& sd)
@@ -215,12 +216,18 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
             if (data.type == Social::SocialEvent::LevelUp
                 || (data.type == Social::SocialEvent::XPAwarded && data.reason == XPStringID::ChallengeComplete))
             {
-                playSound(AudioID::ApplausePlus, glm::vec3(0.f)).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
+                if (m_soundTimers[AudioID::ApplausePlus].elapsed() > ApplauseSoundTime)
+                {
+                    playSound(AudioID::ApplausePlus, glm::vec3(0.f)).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
+                }
             }
             else if (data.type == Social::SocialEvent::PlayerAchievement)
             {
                 auto id = data.level == 0 ? AudioID::ApplausePlus : AudioID::NearMiss;
-                playSound(id, glm::vec3(0.f)).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
+                if (m_soundTimers[AudioID::ApplausePlus].elapsed() > ApplauseSoundTime)
+                {
+                    playSound(id, glm::vec3(0.f)).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
+                }
             }
         }
             break;
@@ -360,7 +367,6 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
                     {
                         playSoundDelayed(AudioID::PowerShot01 + cro::Util::Random::value(0, 3), data.position, 1.5f, 1.1f, MixerChannel::Voice);
                     }
-                    m_soundTimers[AudioID::PowerBall].restart();
                 }
                 break;
             case GolfEvent::ClubSwing:
@@ -412,7 +418,8 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
                     break;
                 }
 
-                if (data.score <= ScoreID::Par)
+                if (data.score <= ScoreID::Par
+                    && m_soundTimers[AudioID::Applause].elapsed() > ApplauseSoundTime)
                 {
                     playSoundDelayed(AudioID::Applause, glm::vec3(0.f), 0.8f, MixerChannel::Effects);
                     applaud();
@@ -420,8 +427,11 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
 
                 if (data.travelDistance > (LongPuttDistance * LongPuttDistance))
                 {
-                    playSoundDelayed(AudioID::ApplausePlus, glm::vec3(0.f), 1.2f, MixerChannel::Effects);
-                    applaud();
+                    if (m_soundTimers[AudioID::ApplausePlus].elapsed() > ApplauseSoundTime)
+                    {
+                        playSoundDelayed(AudioID::ApplausePlus, glm::vec3(0.f), 1.2f, MixerChannel::Effects);
+                        applaud();
+                    }
 
                     //sunk an extra long putt
                     if (data.club == ClubID::Putter)
@@ -465,8 +475,11 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
                             if (data.pinDistance < MinHoleDistance //near the hole
                                 || data.travelDistance > 10000.f) //landed a long shot
                             {
-                                playSoundDelayed(AudioID::Applause, glm::vec3(0.f), 0.8f);
-                                applaud();
+                                if (m_soundTimers[AudioID::Applause].elapsed() > ApplauseSoundTime)
+                                {
+                                    playSoundDelayed(AudioID::Applause, glm::vec3(0.f), 0.8f);
+                                    applaud();
+                                }
                                 Social::awardXP(XPValues[XPID::Par] / 2, XPStringID::NiceOn);
                             }
                         }
@@ -500,7 +513,10 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
                         && data.club != ClubID::Putter)
                     {
                         playSoundDelayed(AudioID::DriveGood, data.position, 2.4f, 1.f, MixerChannel::Voice);
-                        playSoundDelayed(AudioID::ApplausePlus, data.position, 0.8f, 0.6f, MixerChannel::Effects);
+                        if (m_soundTimers[AudioID::ApplausePlus].elapsed() > ApplauseSoundTime)
+                        {
+                            playSoundDelayed(AudioID::ApplausePlus, data.position, 0.8f, 0.6f, MixerChannel::Effects);
+                        }
                     }
                 }
                 break;
@@ -528,7 +544,6 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
                     if (m_soundTimers[AudioID::Pole].elapsed() > FlagSoundTime)
                     {
                         playSound(AudioID::Pole, data.position).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
-                        m_soundTimers[AudioID::Pole].restart();
 
                         if (cro::Util::Random::value(0, 1) == 0)
                         {
@@ -603,8 +618,6 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
                     e.getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Menu);
                     float pitch = static_cast<float>(cro::Util::Random::value(7, 13)) / 10.f;
                     e.getComponent<cro::AudioEmitter>().setPitch(pitch);
-
-                    m_soundTimers[AudioID::Chat].restart();
                 }
             }
         }
@@ -657,6 +670,7 @@ void GolfSoundDirector::setActivePlayer(std::size_t client, std::size_t player, 
     {
         std::int32_t honour = (client << 8) | player;
         if (honour != m_honourID
+            && client == m_sharedData.clientConnection.connectionID //only play if it's our client
             && !skipAudio) //don't play this if fast CPU as it overlaps other audio
         {
             playSoundDelayed(AudioID::Honour, glm::vec3(0.f), 1.f, 1.f, MixerChannel::Voice);
@@ -738,6 +752,8 @@ cro::Entity GolfSoundDirector::playSound(std::int32_t id, glm::vec3 position, fl
     case AudioID::Slice:
         return playSpecial();
     }
+
+    m_soundTimers[id].restart();
 }
 
 void GolfSoundDirector::playSoundDelayed(std::int32_t id, glm::vec3 position, float delay, float volume, std::uint8_t channel)
@@ -759,6 +775,8 @@ void GolfSoundDirector::playSoundDelayed(std::int32_t id, glm::vec3 position, fl
             getScene().destroyEntity(e);
         }
     };
+
+    m_soundTimers[id].restart();
 }
 
 cro::Entity GolfSoundDirector::playAvatarSound(std::int32_t idx, const std::string& emitterName, glm::vec3 position)
