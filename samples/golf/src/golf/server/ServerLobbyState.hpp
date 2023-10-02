@@ -53,5 +53,6 @@ namespace sv
         std::array<bool, ConstVal::MaxClients> m_readyState = {};
 
         void insertPlayerInfo(const net::NetEvent&);
+        void broadcastRules();
     };
 }

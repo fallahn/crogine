@@ -544,6 +544,18 @@ void GolfState::sendInitialGameState(std::uint8_t clientID)
             info.timestamp = timestamp;
             m_sharedData.host.sendPacket(m_sharedData.clients[clientID].peer, PacketID::ActorSpawn, info, net::NetFlag::Reliable);
         }
+
+        //make sure to enforce club set if needed
+        if (m_sharedData.clubLimit)
+        {
+            std::sort(m_sharedData.clubLevels.begin(), m_sharedData.clubLevels.end(),
+                [](std::uint8_t a, std::uint8_t b)
+                {
+                    return a < b;
+                });
+
+            m_sharedData.host.broadcastPacket(PacketID::MaxClubs, m_sharedData.clubLevels[0], net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+        }
     }
 
     m_sharedData.clients[clientID].ready = true;

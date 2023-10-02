@@ -183,6 +183,14 @@ void ClubhouseState::createUI()
             e.getComponent<cro::Transform>().setPosition(glm::vec3(pos, element.depth));
         };
         m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+        cmd.targetFlags = CommandID::Menu::UIBanner;
+        cmd.action =
+            [](cro::Entity e, float)
+            {
+                e.getComponent<cro::Callback>().active = true;
+            };
+        m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
     };
 
     entity = m_uiScene.getActiveCamera();
