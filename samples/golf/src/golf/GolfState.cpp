@@ -5277,6 +5277,22 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
             if (clubSet < m_sharedData.clubSet)
             {
                 m_sharedData.clubSet = clubSet;
+                Club::setClubLevel(clubSet);
+
+                //hmm this should be read from whichever player is setting the limit
+                switch (clubSet)
+                {
+                default: break;
+                case 0:
+                    m_sharedData.inputBinding.clubset = ClubID::DefaultSet;
+                    break;
+                case 1:
+                    m_sharedData.inputBinding.clubset = ClubID::DefaultSet | ClubID::FiveWood | ClubID::FourIron | ClubID::SixIron;
+                    break;
+                case 2:
+                    m_sharedData.inputBinding.clubset = ClubID::FullSet;
+                    break;
+                }
             }
         }
         break;
