@@ -77,7 +77,7 @@ namespace
         "/me 's rubbing intensifies"
     };
 
-    const std::array<std::string, 10u> LaughStrings =
+    const std::array<std::string, 11u> LaughStrings =
     {
         "/me laughs like a clogged drain",
         "/me giggles into their sleeve",
@@ -88,7 +88,8 @@ namespace
         "/me 's sides have split from laughing",
         "/me can't contain themselves",
         "/me howls with laughter",
-        "/me goes into hysterics"
+        "/me goes into hysterics",
+        "/me cachinnates (which means laughing loudly)"
     };
 
     const std::array<std::string, 13u> AngerStrings =
