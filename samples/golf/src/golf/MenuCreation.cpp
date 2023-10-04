@@ -1403,7 +1403,7 @@ void MenuState::createBrowserMenu(cro::Entity parent, std::uint32_t mouseEnter, 
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = arrowSelected;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = arrowUnselected;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
-        uiSystem->addCallback([&, menuEntity](cro::Entity, const cro::ButtonEvent& evt) mutable
+        uiSystem->addCallback([&](cro::Entity, const cro::ButtonEvent& evt) mutable
             {
                 if (activated(evt))
                 {
