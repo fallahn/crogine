@@ -146,7 +146,11 @@ void MenuState::parseCourseDirectory(const std::string& rootDir, bool isUser)
     if (!isUser)
     {
         //macOS shenanigans.
-        root = cro::FileSystem::getResourcePath() + root;
+        auto rpath = cro::FileSystem::getResourcePath();
+        if (rpath.find(root) == std::string::npos)
+        {
+            root = rpath + root;
+        }
     }
 
     if (!cro::FileSystem::directoryExists(root))
