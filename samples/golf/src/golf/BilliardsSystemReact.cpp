@@ -69,7 +69,7 @@ namespace
 
     constexpr float CushionBounciness = 0.65f; //no more than 1
     constexpr float CushionFriction = 0.1f;
-    constexpr float TableFriction = 0.01f;
+    constexpr float TableFriction = 0.05f;
     constexpr float BallBounciness = 0.6f;
     constexpr float BallFriction = 0.01f;
 }
@@ -334,7 +334,7 @@ void BilliardsSystemReact::doPocketCollision(cro::Entity entity) const
         const auto position = entity.getComponent<cro::Transform>().getPosition();
 
         //if below the table check for pocketry
-        if (position.y < 0)
+        if (position.y < 0.f)
         {
             auto lastContact = ball.m_pocketContact;
             ball.m_pocketContact = -1;
@@ -407,7 +407,7 @@ void BilliardsSystemReact::onEntityAdded(cro::Entity entity)
 
     auto* body = m_ballObjects.emplace_back(m_physWorld->createRigidBody(transform));
     body->setType(rp3d::BodyType::DYNAMIC);
-    body->setAngularDamping(0.1f);
+    body->setAngularDamping(0.f);
     body->setLinearDamping(0.1f);
     body->setMass(BPhysBall::Mass);
     body->setUserData(&ball);
@@ -469,6 +469,18 @@ void BallEventListener::onContact(const rp3d::CollisionCallback::CallbackData& d
                 //don't overwrite any existing collision this frame
                 ballA->m_ballContact = ballA->m_ballContact == -1 ? ballB->id : ballA->m_ballContact;
                 ballB->m_ballContact = ballB->m_ballContact == -1 ? ballA->id : ballB->m_ballContact;
+
+
+                //hm. Doesn't work.
+                /*auto* msg = cro::App::postMessage<BilliardsEvent>(sv::MessageID::BilliardsMessage);
+                msg->type = BilliardsEvent::Collision;
+                msg->first = ballA->id;
+                msg->second = ballB->id;
+
+                msg = cro::App::postMessage<BilliardsEvent>(sv::MessageID::BilliardsMessage);
+                msg->type = BilliardsEvent::Collision;
+                msg->first = ballB->id;
+                msg->second = ballA->id;*/
             }
         }
     }
