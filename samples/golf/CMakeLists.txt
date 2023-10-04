@@ -7,7 +7,7 @@ if (APPLE)
  SET(MACOS_BUNDLE False CACHE BOOL "")
 
   if(MACOS_BUNDLE)
-    SET(BUNDLE_NAME "Video Golf")
+    SET(BUNDLE_NAME "Super Video Golf")
   endif()
 
 endif()

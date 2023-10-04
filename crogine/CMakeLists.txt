@@ -1,4 +1,10 @@
 cmake_minimum_required(VERSION 3.5.0)
+
+#required for std::filesystem
+if(APPLE)
+  SET(CMAKE_OSX_DEPLOYMENT_TARGET "10.15" CACHE STRING "Minimum OS X deployment version")
+endif()
+
 project(crogine)
 SET(PROJECT_NAME crogine)
 
