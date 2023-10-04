@@ -330,7 +330,7 @@ void BilliardsState::buildWorld()
     {
         for (const auto& ball : m_activeDirector->getBallLayout())
         {
-            addBall(ball.position, ball.id);
+            addBall(ball.position + glm::vec3(0.f, 0.5f, 0.f), ball.id);
         }
     }
 }

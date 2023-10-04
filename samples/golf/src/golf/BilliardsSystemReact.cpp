@@ -38,6 +38,7 @@ source distribution.
 #include <crogine/detail/glm/gtc/type_ptr.hpp>
 #include <crogine/graphics/MeshBuilder.hpp>
 #include <crogine/util/Random.hpp>
+#include <crogine/gui/Gui.hpp>
 
 //TODO remove this
 #ifdef CRO_DEBUG_
@@ -63,27 +64,15 @@ namespace
     {
         return { q.x,q.y,q.z,q.w };
     }
-}
 
-//void BilliardBallReact::getWorldTransform(btTransform& dest) const
-//{
-//    const auto& tx = m_parent.getComponent<cro::Transform>();
-//    dest.setFromOpenGLMatrix(&tx.getWorldTransform()[0][0]);
-//}
-//
-//void BilliardBallReact::setWorldTransform(const btTransform& src)
-//{
-//    static std::array<float, 16> matrixBuffer = {};
-//
-//    src.getOpenGLMatrix(matrixBuffer.data());
-//    auto mat = glm::make_mat4(matrixBuffer.data());
-//
-//    auto& tx = m_parent.getComponent<cro::Transform>();
-//    tx.setPosition(glm::vec3(mat[3]));
-//    tx.setRotation(glm::quat_cast(mat));
-//
-//    hadUpdate = true;
-//}
+    constexpr std::int32_t UpdateCountPerFrame = 2;
+
+    constexpr float CushionBounciness = 0.8f; //no more than 1
+    constexpr float CushionFriction = 0.1f;
+    constexpr float TableFriction = 0.01f;
+    constexpr float BallBounciness = 0.7f;
+    constexpr float BallFriction = 0.01f;
+}
 
 glm::vec3 BilliardBallReact::getVelocity() const
 {
@@ -104,10 +93,19 @@ BilliardsSystemReact::BilliardsSystemReact(cro::MessageBus& mb)
     requireComponent<cro::Transform>();
 
     rp3d::PhysicsWorld::WorldSettings settings;
-    settings.gravity = { 0.f, -9.f, 0.f };
+    settings.gravity = rp3d::Vector3(0.f, -9.81f, 0.f);
 
     m_physWorld = m_physicsCommon.createPhysicsWorld(settings);
     m_ballShape = m_physicsCommon.createSphereShape(BilliardBallReact::Radius);
+
+    registerWindow([&]()
+        {
+            if (ImGui::Begin("Billiards"))
+            {
+                ImGui::Text("Awwake count: %d", m_awakeCount);
+            }
+            ImGui::End();
+        });
 }
 
 //BilliardsSystemReact::BilliardsSystemReact(cro::MessageBus& mb, BulletDebug& dd)
@@ -137,19 +135,10 @@ BilliardsSystemReact::~BilliardsSystemReact()
 //public
 void BilliardsSystemReact::process(float dt)
 {
-    m_physWorld->update(dt);
-
-    /*
-    Increasing the number of steps means there's a chance of
-    missing contacts when only checking at game loop speed.
-    It also messes with friction values (so requires changing
-    the body creation values to be changed). Seems OK like this
-    anyway, else we need to look at caching contacts (?) or a more
-    frequently called callback in which we can update the ball
-    contact IDs
-    */
-    //m_collisionWorld->stepSimulation(dt, 10/*, 1.f/120.f*/);
-
+    for (auto i = 0; i < UpdateCountPerFrame; ++i)
+    {
+        m_physWorld->update(dt / UpdateCountPerFrame);
+    }
 
     std::int32_t awakeCount = 0;
 
@@ -200,7 +189,7 @@ void BilliardsSystemReact::process(float dt)
             msg->second = ball.m_inPocketRadius ? 1 : 0;
         }
 
-        if (ball.m_physicsBody->isActive())
+        if (!ball.m_physicsBody->isSleeping())
         {
             awakeCount++;
         }
@@ -272,12 +261,13 @@ void BilliardsSystemReact::initTable(const TableData& tableData)
     auto* collider = tableBody->addCollider(meshShape, transform);
     collider->setCollisionCategoryBits((1 << CollisionID::Cushion));
     collider->setCollideWithMaskBits((1 << CollisionID::Ball));
-
+    collider->getMaterial().setBounciness(CushionBounciness);
+    collider->getMaterial().setFrictionCoefficient(CushionFriction);
 
     //create a single flat surface for the table as even a few triangles perturb
     //the physics. Balls check their proximity to pockets and disable table collision
     //when they need to. This way we can place a pocket anywhere on the surface.
-    transform.setPosition({ 0.f, 0.05f, 0.f });
+    transform.setPosition({ 0.f, -0.05f, 0.f });
     tableBody = m_physWorld->createRigidBody(transform);
     tableBody->setType(rp3d::BodyType::STATIC);
 
@@ -285,6 +275,7 @@ void BilliardsSystemReact::initTable(const TableData& tableData)
     auto* tableCollider = tableBody->addCollider(tableShape, rp3d::Transform::identity());
     tableCollider->setCollisionCategoryBits((1 << CollisionID::Table));
     tableCollider->setCollideWithMaskBits((1 << CollisionID::Ball));
+    tableCollider->getMaterial().setFrictionCoefficient(TableFriction);
 
     //auto& tableShape = m_boxShapes.emplace_back(std::make_unique<btBoxShape>(btBoxShape(btVector3(meshData.boundingBox[1].x, 0.05f, meshData.boundingBox[1].z))));
     //transform.setOrigin({ 0.f, -0.05f, 0.f });
@@ -349,10 +340,9 @@ void BilliardsSystemReact::applyImpulse(glm::vec3 impulse, glm::vec3 relPos)
 {
     if (m_cueball)
     {
-        //TODO see which if the below is the correct one
+        //as this is applied as a force we create an impulse by applying 1s worth
         m_cueball->setIsActive(true);
-        m_cueball->applyLocalForceAtLocalPosition(glmToRp(impulse), glmToRp(relPos / 4.f));
-        //m_cueball->applyWorldForceAtLocalPosition(glmToRp(impulse), glmToRp(relPos / 4.f));
+        m_cueball->applyWorldForceAtLocalPosition(glmToRp(impulse * (60.f * UpdateCountPerFrame)), glmToRp(relPos / 4.f));
         m_shotActive = true;
 
         auto* msg = postMessage<BilliardsEvent>(sv::MessageID::BilliardsMessage);
@@ -415,6 +405,7 @@ bool BilliardsSystemReact::isValidSpawnPosition(glm::vec3 position) const
 void BilliardsSystemReact::doBallCollision() const
 {
     //TODO replace this with EventListener?
+    //TODO see RollingState in scratchpad
 
     //auto manifoldCount = m_collisionDispatcher->getNumManifolds();
     //for (auto i = 0; i < manifoldCount; ++i)
@@ -537,11 +528,18 @@ void BilliardsSystemReact::onEntityAdded(cro::Entity entity)
     //ball.m_physicsBody = body.get();
 
     auto* body = m_ballObjects.emplace_back(m_physWorld->createRigidBody(transform));
+    body->setType(rp3d::BodyType::DYNAMIC);
+    body->setAngularDamping(0.f);
+    body->setLinearDamping(0.f);
+    body->setMass(BPhysBall::Mass);
+
     auto* collider = body->addCollider(m_ballShape, rp3d::Transform::identity());
     collider->setCollisionCategoryBits((1 << CollisionID::Ball));
     collider->setCollideWithMaskBits((1 << CollisionID::Table) | (1 << CollisionID::Cushion) | (1 << CollisionID::Ball));
-
-    body->setMass(BPhysBall::Mass);
+    
+    auto& mat = collider->getMaterial();
+    mat.setFrictionCoefficient(BallFriction);
+    mat.setBounciness(BallBounciness);
 
     ball.m_physicsBody = body;
 

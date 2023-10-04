@@ -37,6 +37,7 @@ source distribution.
 #include <crogine/detail/NoResize.hpp>
 #include <crogine/graphics/MeshData.hpp>
 #include <crogine/graphics/BoundingBox.hpp>
+#include <crogine/gui/GuiClient.hpp>
 
 #include <BulletCollision/CollisionDispatch/btGhostObject.h> //client side
 
@@ -96,7 +97,7 @@ private:
 using BPhysBall = BilliardBallReact;
 
 class BulletDebug;
-class BilliardsSystemReact final : public cro::System
+class BilliardsSystemReact final : public cro::System, public cro::GuiClient
 {
 public:
     explicit BilliardsSystemReact(cro::MessageBus&);
@@ -149,7 +150,7 @@ private:
     std::vector<rp3d::BoxShape*> m_boxShapes;
 
     //pocket walls
-    std::array<rp3d::BoxShape*, 2u> m_pocketWalls;
+    std::array<rp3d::BoxShape*, 2u> m_pocketWalls = {};
 
     //simplified pocketry
     struct Pocket final
