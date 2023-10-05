@@ -21,15 +21,15 @@
 void SpookyHash::Short(
     const void *message,
     size_t length,
-    uint64 *hash1,
-    uint64 *hash2)
+    uint64t *hash1,
+    uint64t *hash2)
 {
-    uint64 buf[2*sc_numVars];
+    uint64t buf[2*sc_numVars];
     union 
     { 
         const uint8 *p8; 
         uint32 *p32;
-        uint64 *p64; 
+        uint64t *p64;
         size_t i; 
     } u;
 
@@ -42,14 +42,14 @@ void SpookyHash::Short(
     }
 
     size_t remainder = length%32;
-    uint64 a=*hash1;
-    uint64 b=*hash2;
-    uint64 c=sc_const;
-    uint64 d=sc_const;
+    uint64t a=*hash1;
+    uint64t b=*hash2;
+    uint64t c=sc_const;
+    uint64t d=sc_const;
 
     if (length > 15)
     {
-        const uint64 *end = u.p64 + (length/32)*4;
+        const uint64t *end = u.p64 + (length/32)*4;
         
         // handle all complete sets of 32 bytes
         for (; u.p64 < end; u.p64 += 4)
@@ -73,43 +73,43 @@ void SpookyHash::Short(
     }
     
     // Handle the last 0..15 bytes, and its length
-    d += ((uint64)length) << 56;
+    d += ((uint64t)length) << 56;
     switch (remainder)
     {
     case 15:
-    d += ((uint64)u.p8[14]) << 48;
+    d += ((uint64t)u.p8[14]) << 48;
     case 14:
-        d += ((uint64)u.p8[13]) << 40;
+        d += ((uint64t)u.p8[13]) << 40;
     case 13:
-        d += ((uint64)u.p8[12]) << 32;
+        d += ((uint64t)u.p8[12]) << 32;
     case 12:
         d += u.p32[2];
         c += u.p64[0];
         break;
     case 11:
-        d += ((uint64)u.p8[10]) << 16;
+        d += ((uint64t)u.p8[10]) << 16;
     case 10:
-        d += ((uint64)u.p8[9]) << 8;
+        d += ((uint64t)u.p8[9]) << 8;
     case 9:
-        d += (uint64)u.p8[8];
+        d += (uint64t)u.p8[8];
     case 8:
         c += u.p64[0];
         break;
     case 7:
-        c += ((uint64)u.p8[6]) << 48;
+        c += ((uint64t)u.p8[6]) << 48;
     case 6:
-        c += ((uint64)u.p8[5]) << 40;
+        c += ((uint64t)u.p8[5]) << 40;
     case 5:
-        c += ((uint64)u.p8[4]) << 32;
+        c += ((uint64t)u.p8[4]) << 32;
     case 4:
         c += u.p32[0];
         break;
     case 3:
-        c += ((uint64)u.p8[2]) << 16;
+        c += ((uint64t)u.p8[2]) << 16;
     case 2:
-        c += ((uint64)u.p8[1]) << 8;
+        c += ((uint64t)u.p8[1]) << 8;
     case 1:
-        c += (uint64)u.p8[0];
+        c += (uint64t)u.p8[0];
         break;
     case 0:
         c += sc_const;
@@ -127,8 +127,8 @@ void SpookyHash::Short(
 void SpookyHash::Hash128(
     const void *message, 
     size_t length, 
-    uint64 *hash1, 
-    uint64 *hash2)
+    uint64t *hash1,
+    uint64t *hash2)
 {
     if (length < sc_bufSize)
     {
@@ -136,13 +136,13 @@ void SpookyHash::Hash128(
         return;
     }
 
-    uint64 h0,h1,h2,h3,h4,h5,h6,h7,h8,h9,h10,h11;
-    uint64 buf[sc_numVars];
-    uint64 *end;
+    uint64t h0,h1,h2,h3,h4,h5,h6,h7,h8,h9,h10,h11;
+    uint64t buf[sc_numVars];
+    uint64t *end;
     union 
     { 
         const uint8 *p8; 
-        uint64 *p64; 
+        uint64t *p64;
         size_t i; 
     } u;
     size_t remainder;
@@ -188,7 +188,7 @@ void SpookyHash::Hash128(
 
 
 // init spooky state
-void SpookyHash::Init(uint64 seed1, uint64 seed2)
+void SpookyHash::Init(uint64t seed1, uint64t seed2)
 {
     m_length = 0;
     m_remainder = 0;
@@ -200,16 +200,16 @@ void SpookyHash::Init(uint64 seed1, uint64 seed2)
 // add a message fragment to the state
 void SpookyHash::Update(const void *message, size_t length)
 {
-    uint64 h0,h1,h2,h3,h4,h5,h6,h7,h8,h9,h10,h11;
+    uint64t h0,h1,h2,h3,h4,h5,h6,h7,h8,h9,h10,h11;
     size_t newLength = length + m_remainder;
     uint8  remainder;
     union 
     { 
         const uint8 *p8; 
-        uint64 *p64; 
+        uint64t *p64;
         size_t i; 
     } u;
-    const uint64 *end;
+    const uint64t *end;
     
     // Is this message fragment too short?  If it is, stuff it away.
     if (newLength < sc_bufSize)
@@ -302,7 +302,7 @@ void SpookyHash::Update(const void *message, size_t length)
 
 
 // report the hash for the concatenation of all message fragments so far
-void SpookyHash::Final(uint64 *hash1, uint64 *hash2)
+void SpookyHash::Final(uint64t *hash1, uint64t *hash2)
 {
     // init the variables
     if (m_length < sc_bufSize)
@@ -313,21 +313,21 @@ void SpookyHash::Final(uint64 *hash1, uint64 *hash2)
         return;
     }
     
-    const uint64 *data = (const uint64 *)m_data;
+    const uint64t *data = (const uint64t *)m_data;
     uint8 remainder = m_remainder;
     
-    uint64 h0 = m_state[0];
-    uint64 h1 = m_state[1];
-    uint64 h2 = m_state[2];
-    uint64 h3 = m_state[3];
-    uint64 h4 = m_state[4];
-    uint64 h5 = m_state[5];
-    uint64 h6 = m_state[6];
-    uint64 h7 = m_state[7];
-    uint64 h8 = m_state[8];
-    uint64 h9 = m_state[9];
-    uint64 h10 = m_state[10];
-    uint64 h11 = m_state[11];
+    uint64t h0 = m_state[0];
+    uint64t h1 = m_state[1];
+    uint64t h2 = m_state[2];
+    uint64t h3 = m_state[3];
+    uint64t h4 = m_state[4];
+    uint64t h5 = m_state[5];
+    uint64t h6 = m_state[6];
+    uint64t h7 = m_state[7];
+    uint64t h8 = m_state[8];
+    uint64t h9 = m_state[9];
+    uint64t h10 = m_state[10];
+    uint64t h11 = m_state[11];
 
     if (remainder >= sc_blockSize)
     {

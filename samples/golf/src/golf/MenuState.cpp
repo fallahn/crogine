@@ -2145,7 +2145,7 @@ void MenuState::finaliseGameCreate(const MatchMaking::Message& msgData)
 void MenuState::finaliseGameJoin(const MatchMaking::Message& data)
 {
 #ifdef USE_GNS
-    m_sharedData.clientConnection.connected = m_sharedData.clientConnection.netClient.connect(CSteamID(data.hostID));
+    m_sharedData.clientConnection.connected = m_sharedData.clientConnection.netClient.connect(CSteamID(uint64(data.hostID)));
     m_sharedData.clientConnection.hostID = data.hostID;
 #else
     m_sharedData.clientConnection.connected = m_sharedData.clientConnection.netClient.connect(m_sharedData.targetIP.toAnsiString(), ConstVal::GamePort);
