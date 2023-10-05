@@ -243,7 +243,7 @@ void Window::setFullScreen(bool fullscreen)
     }
 
 #ifdef __APPLE__
-#define FS_MODE SDL_WINDOW_FULLSCREEN
+#define FS_MODE SDL_WINDOW_FULLSCREEN_DESKTOP
 #else
 #define FS_MODE SDL_WINDOW_FULLSCREEN_DESKTOP
 #endif
@@ -384,21 +384,22 @@ void Window::loadResources(const std::function<void()>& loader)
     }
 
 #ifdef PLATFORM_DESKTOP
-    //macs use exclusive fullscreen, which crashes with threaded loading *sigh*
+    //macs crashes with loading screens
 #ifdef __APPLE__
-    if (m_fullscreen)
+    //if (m_fullscreen)
     {
-        m_loadingScreen->launch();
+        /*m_loadingScreen->launch();
         m_loadingScreen->update();
         glCheck(glClear(GL_COLOR_BUFFER_BIT));
         m_loadingScreen->draw();
-        SDL_GL_SwapWindow(m_window);
+        SDL_GL_SwapWindow(m_window);*/
 
         loader();
     }
-    else
+#else
+    //else
     {
-#endif
+
     //create thread
     ThreadData data;
     data.context = m_threadContext;
@@ -418,7 +419,6 @@ void Window::loadResources(const std::function<void()>& loader)
 
     //SDL_GL_MakeCurrent(m_window, m_mainContext);
 
-#ifdef __APPLE__
     }
 #endif
 #else
