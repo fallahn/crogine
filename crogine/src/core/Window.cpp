@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2022
+Matt Marchant 2017 - 2023
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -382,8 +382,23 @@ void Window::loadResources(const std::function<void()>& loader)
     {
         m_loadingScreen = std::make_unique<DefaultLoadingScreen>();
     }
-  
+
 #ifdef PLATFORM_DESKTOP
+    //macs use exclusive fullscreen, which crashes with threaded loading *sigh*
+#ifdef __APPLE__
+    if (m_fullscreen)
+    {
+        m_loadingScreen->launch();
+        m_loadingScreen->update();
+        glCheck(glClear(GL_COLOR_BUFFER_BIT));
+        m_loadingScreen->draw();
+        SDL_GL_SwapWindow(m_window);
+
+        loader();
+    }
+    else
+    {
+#endif
     //create thread
     ThreadData data;
     data.context = m_threadContext;
@@ -403,11 +418,14 @@ void Window::loadResources(const std::function<void()>& loader)
 
     //SDL_GL_MakeCurrent(m_window, m_mainContext);
 
-    App::getInstance().resetFrameTime();
+#ifdef __APPLE__
+    }
+#endif
 #else
 
     //android doesn't appear to like running the thread - so we'll display the loading screen once
     //before loading resources
+    m_loadingScreen->launch();
     m_loadingScreen->update();
     glCheck(glClear(GL_COLOR_BUFFER_BIT));
     m_loadingScreen->draw();
@@ -416,6 +434,8 @@ void Window::loadResources(const std::function<void()>& loader)
     loader();
 
 #endif //PLATFORM_DESKTOP
+
+    App::getInstance().resetFrameTime();
 }
 
 void Window::setMouseCaptured(bool captured)
