@@ -62,12 +62,12 @@ void GolfState::createCameras()
 
                 cro::RenderTarget::Context ctx;
                 ctx.depthBuffer = true;
-#ifdef __APPLE__
-                //*sigh*
-                ctx.depthTexture = false;
-#else
+//#ifdef __APPLE__
+//                //*sigh*
+//                ctx.depthTexture = false;
+//#else
                 ctx.depthTexture = true;
-#endif
+//#endif
                 ctx.samples = samples;
                 ctx.width = static_cast<std::uint32_t>(texSize.x);
                 ctx.height = static_cast<std::uint32_t>(texSize.y);

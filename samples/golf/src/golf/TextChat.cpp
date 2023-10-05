@@ -59,7 +59,6 @@ namespace
         "/me pats your back",
         "/me feels a bit star-struck",
         "/me ovates (which means applauding.)",
-
         "/me raises a glass of Fizz",
         "/me now knows what a true hero looks like"
     };
@@ -78,7 +77,6 @@ namespace
         "/me is over the moon",
         "/me cartwheels to the clubhouse and back",
         "/me 's rubbing intensifies",
-
         "/me high fives their caddy",
         "/me is on top of the world",
         "/me pirouettes jubilantly",
@@ -101,8 +99,9 @@ namespace
         "/me cachinnates (which means laughing loudly)"
     };
 
-    const std::array<std::string, 13u> AngerStrings =
+    const std::array<std::string, 14u> AngerStrings =
     {
+        "/me cow-fudged that one up",
         "/me rages",
         "/me throws their club into the lake",
         "/me stamps their foot",
