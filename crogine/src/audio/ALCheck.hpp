@@ -34,7 +34,7 @@ source distribution.
 #define alcCheck(x,y) x;
 #else
 #ifdef __APPLE__
-#include <al.h>
+#include "al.h"
 #else
 #include <AL/al.h>
 #endif
