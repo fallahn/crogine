@@ -591,17 +591,24 @@ void App::handleEvents()
                     saveSettings();
                 }
                 break;
+#ifdef __APPLE__
+            case SDLK_q:
+                if (evt.key.keysym.mod & KMOD_GUI)
+#else
             case SDLK_F4:
                 if (evt.key.keysym.mod & KMOD_ALT)
+#endif
                 {
                     quit();
                 }
                 break;
-            case SDLK_F5:
-                saveScreenshot();
-                break;
+#ifdef __APPLE__
+            case SDLK_f:
+                if (evt.key.keysym.mod & (KMOD_GUI | KMOD_CTRL))
+#else
             case SDLK_RETURN:
                 if (evt.key.keysym.mod & KMOD_ALT)
+#endif
                 {
                     auto fs = m_window.isFullscreen();
                     fs = !fs;
@@ -615,6 +622,9 @@ void App::handleEvents()
                     }
                     saveSettings();
                 }
+                break;
+            case SDLK_F5:
+                saveScreenshot();
                 break;
             }
             break;
