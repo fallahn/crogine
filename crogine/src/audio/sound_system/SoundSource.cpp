@@ -32,7 +32,7 @@ source distribution.
 #include <crogine/audio/sound_system/SoundSource.hpp>
 
 #ifdef __APPLE__
-#include <al.h>
+#include "../al.h"
 
 //silence deprecated openal warnings
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"

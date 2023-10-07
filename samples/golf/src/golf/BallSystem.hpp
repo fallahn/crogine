@@ -104,7 +104,7 @@ public:
     BallSystem& operator = (const BallSystem&) = delete;
 
     BallSystem(BallSystem&&) = default;
-    BallSystem& operator = (BallSystem&&) = default;
+    BallSystem& operator = (BallSystem&&) = delete;
 
     void process(float) override;
 

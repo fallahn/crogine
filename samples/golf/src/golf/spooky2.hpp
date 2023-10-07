@@ -30,14 +30,14 @@
 
 #ifdef _MSC_VER
 # define INLINE __forceinline
-  typedef  unsigned __int64 uint64;
+  typedef  unsigned __int64 uint64t;
   typedef  unsigned __int32 uint32;
   typedef  unsigned __int16 uint16;
   typedef  unsigned __int8  uint8;
 #else
 # include <stdint.h>
 # define INLINE inline
-  typedef  uint64_t  uint64;
+  typedef  uint64_t  uint64t;
   typedef  uint32_t  uint32;
   typedef  uint16_t  uint16;
   typedef  uint8_t   uint8;
@@ -53,18 +53,18 @@ public:
     static void Hash128(
         const void *message,  // message to hash
         size_t length,        // length of message in bytes
-        uint64 *hash1,        // in/out: in seed 1, out hash value 1
-        uint64 *hash2);       // in/out: in seed 2, out hash value 2
+        uint64t *hash1,        // in/out: in seed 1, out hash value 1
+        uint64t *hash2);       // in/out: in seed 2, out hash value 2
 
     //
     // Hash64: hash a single message in one call, return 64-bit output
     //
-    static uint64 Hash64(
+    static uint64t Hash64(
         const void *message,  // message to hash
         size_t length,        // length of message in bytes
-        uint64 seed)          // seed
+        uint64t seed)          // seed
     {
-        uint64 hash1 = seed;
+        uint64t hash1 = seed;
         Hash128(message, length, &hash1, &seed);
         return hash1;
     }
@@ -77,7 +77,7 @@ public:
         size_t length,        // length of message in bytes
         uint32 seed)          // seed
     {
-        uint64 hash1 = seed, hash2 = seed;
+        uint64t hash1 = seed, hash2 = seed;
         Hash128(message, length, &hash1, &hash2);
         return (uint32)hash1;
     }
@@ -86,8 +86,8 @@ public:
     // Init: initialize the context of a SpookyHash
     //
     void Init(
-        uint64 seed1,       // any 64-bit value will do, including 0
-        uint64 seed2);      // different seeds produce independent hashes
+        uint64t seed1,       // any 64-bit value will do, including 0
+        uint64t seed2);      // different seeds produce independent hashes
     
     //
     // Update: add a piece of a message to a SpookyHash state
@@ -106,13 +106,13 @@ public:
     // all the pieces concatenated into one message.
     //
     void Final(
-        uint64 *hash1,    // out only: first 64 bits of hash value.
-        uint64 *hash2);   // out only: second 64 bits of hash value.
+        uint64t *hash1,    // out only: first 64 bits of hash value.
+        uint64t *hash2);   // out only: second 64 bits of hash value.
 
     //
     // left rotate a 64-bit value by k bytes
     //
-    static INLINE uint64 Rot64(uint64 x, int k)
+    static INLINE uint64t Rot64(uint64t x, int k)
     {
         return (x << k) | (x >> (64 - k));
     }
@@ -131,10 +131,10 @@ public:
     // I tried 3 pairs of each; they all differed by at least 212 bits.
     //
     static INLINE void Mix(
-        const uint64 *data, 
-        uint64 &s0, uint64 &s1, uint64 &s2, uint64 &s3,
-        uint64 &s4, uint64 &s5, uint64 &s6, uint64 &s7,
-        uint64 &s8, uint64 &s9, uint64 &s10,uint64 &s11)
+        const uint64t *data,
+        uint64t &s0, uint64t &s1, uint64t &s2, uint64t &s3,
+        uint64t &s4, uint64t &s5, uint64t &s6, uint64t &s7,
+        uint64t &s8, uint64t &s9, uint64t &s10,uint64t &s11)
     {
       s0 += data[0];    s2 ^= s10;    s11 ^= s0;    s0 = Rot64(s0,11);    s11 += s1;
       s1 += data[1];    s3 ^= s11;    s0 ^= s1;    s1 = Rot64(s1,32);    s0 += s2;
@@ -167,9 +167,9 @@ public:
     // 128-bit result is reported, so End() does three iterations.
     //
     static INLINE void EndPartial(
-        uint64 &h0, uint64 &h1, uint64 &h2, uint64 &h3,
-        uint64 &h4, uint64 &h5, uint64 &h6, uint64 &h7, 
-        uint64 &h8, uint64 &h9, uint64 &h10,uint64 &h11)
+        uint64t &h0, uint64t &h1, uint64t &h2, uint64t &h3,
+        uint64t &h4, uint64t &h5, uint64t &h6, uint64t &h7,
+        uint64t &h8, uint64t &h9, uint64t &h10,uint64t &h11)
     {
         h11+= h1;    h2 ^= h11;   h1 = Rot64(h1,44);
         h0 += h2;    h3 ^= h0;    h2 = Rot64(h2,15);
@@ -186,10 +186,10 @@ public:
     }
 
     static INLINE void End(
-        const uint64 *data, 
-        uint64 &h0, uint64 &h1, uint64 &h2, uint64 &h3,
-        uint64 &h4, uint64 &h5, uint64 &h6, uint64 &h7, 
-        uint64 &h8, uint64 &h9, uint64 &h10,uint64 &h11)
+        const uint64t *data,
+        uint64t &h0, uint64t &h1, uint64t &h2, uint64t &h3,
+        uint64t &h4, uint64t &h5, uint64t &h6, uint64t &h7,
+        uint64t &h8, uint64t &h9, uint64t &h10,uint64t &h11)
     {
         h0 += data[0];   h1 += data[1];   h2 += data[2];   h3 += data[3];
         h4 += data[4];   h5 += data[5];   h6 += data[6];   h7 += data[7];
@@ -214,7 +214,7 @@ public:
     // with diffs defined by either xor or subtraction
     // with a base of all zeros plus a counter, or plus another bit, or random
     //
-    static INLINE void ShortMix(uint64 &h0, uint64 &h1, uint64 &h2, uint64 &h3)
+    static INLINE void ShortMix(uint64t &h0, uint64t &h1, uint64t &h2, uint64t &h3)
     {
         h2 = Rot64(h2,50);  h2 += h3;  h0 ^= h2;
         h3 = Rot64(h3,52);  h3 += h0;  h1 ^= h3;
@@ -242,7 +242,7 @@ public:
     // For every pair of input bits,
     // with probability 50 +- .75% (the worst case is approximately that)
     //
-    static INLINE void ShortEnd(uint64 &h0, uint64 &h1, uint64 &h2, uint64 &h3)
+    static INLINE void ShortEnd(uint64t &h0, uint64t &h1, uint64t &h2, uint64t &h3)
     {
         h3 ^= h2;  h2 = Rot64(h2,15);  h3 += h2;
         h0 ^= h3;  h3 = Rot64(h3,52);  h0 += h3;
@@ -268,10 +268,10 @@ private:
     static void Short(
         const void *message,  // message (array of bytes, not necessarily aligned)
         size_t length,        // length of message (in bytes)
-        uint64 *hash1,        // in/out: in the seed, out the hash value
-        uint64 *hash2);       // in/out: in the seed, out the hash value
+        uint64t *hash1,        // in/out: in the seed, out the hash value
+        uint64t *hash2);       // in/out: in the seed, out the hash value
 
-    // number of uint64's in internal state
+    // number of uint64t's in internal state
     static const size_t sc_numVars = 12;
 
     // size of the internal state
@@ -287,10 +287,10 @@ private:
     //  * is a not-very-regular mix of 1's and 0's
     //  * does not need any other special mathematical properties
     //
-    static const uint64 sc_const = 0xdeadbeefdeadbeefLL;
+    static const uint64t sc_const = 0xdeadbeefdeadbeefLL;
 
-    uint64 m_data[2*sc_numVars];   // unhashed data, for partial messages
-    uint64 m_state[sc_numVars];  // internal state of the hash
+    uint64t m_data[2*sc_numVars];   // unhashed data, for partial messages
+    uint64t m_state[sc_numVars];  // internal state of the hash
     size_t m_length;             // total length of the input so far
     uint8  m_remainder;          // length of unhashed data stashed in m_data
 };

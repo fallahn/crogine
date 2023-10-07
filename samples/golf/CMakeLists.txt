@@ -7,7 +7,7 @@ if (APPLE)
  SET(MACOS_BUNDLE False CACHE BOOL "")
 
   if(MACOS_BUNDLE)
-    SET(BUNDLE_NAME "Video Golf")
+    SET(BUNDLE_NAME "Super Video Golf")
   endif()
 
 endif()
@@ -33,9 +33,9 @@ SET (USE_GNS FALSE CACHE STRING "Can't use newsfeed with this")
 
 if(CMAKE_COMPILER_IS_GNUCXX OR APPLE)
   if(PROJECT_STATIC_RUNTIME)
-    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=c++17 -static")
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wno-invalid-offsetof -Wno-potentially-evaluated-expression -std=c++17 -static")
   else()
-    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=c++17")
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wno-invalid-offsetof -Wno-potentially-evaluated-expression -std=c++17")
   endif()
 endif()
 
@@ -83,10 +83,14 @@ if(USE_GNS)
   endif()
 
   add_compile_definitions(USE_GNS)
-  find_package(STEAMWORKS REQUIRED)
+
+
   SET(GNS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../../libgns)
   SET(SOCIAL_DIR ${GNS_DIR}/golf_ach/src)
   SET(SOCIAL_INCLUDE_DIR ${GNS_DIR}/golf_ach/include)
+  SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${GNS_DIR}/cmake/modules/")
+  find_package(STEAMWORKS REQUIRED)
+
 else()
   SET(SOCIAL_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../libsocial/src)
   SET(SOCIAL_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../libsocial/include)

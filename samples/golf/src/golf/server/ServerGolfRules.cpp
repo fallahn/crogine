@@ -180,6 +180,7 @@ bool GolfState::summariseRules()
 
         //check if we tied the last hole in skins
         if (m_sharedData.scoreType == ScoreType::Skins
+            && !m_skinsFinals
             && ((m_currentHole + 1) == m_holeData.size()))
         {
             if (sortData[0].holeScore[m_currentHole] == sortData[1].holeScore[m_currentHole])
@@ -205,8 +206,9 @@ bool GolfState::summariseRules()
 
 
         //only score if no player tied
-        if (!m_skinsFinals && //we have to check this flag because if it was set m_currentHole was probably modified and the score check is the old hole.
+        if ((!m_skinsFinals && //we have to check this flag because if it was set m_currentHole was probably modified and the score check is the old hole.
             sortData[0].holeScore[m_currentHole] != sortData[1].holeScore[m_currentHole])
+            || (m_skinsFinals && m_currentHole == m_holeData.size() - 1)) //this was the sudden death hole
         {
             auto player = std::find_if(m_playerInfo.begin(), m_playerInfo.end(), [&sortData](const PlayerStatus& p)
                 {

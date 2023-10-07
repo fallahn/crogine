@@ -230,8 +230,7 @@ StatsState::StatsState(cro::StateStack& ss, cro::State::Context ctx, SharedState
                     {
                         CourseRecord record;
                         record.courseIndex = j;
-                        record.holeCount = 0;
-                        record.timestamp = ts;
+                        record.holeCount = 0;                        record.timestamp = ts;
                         record.wasCPU = cro::Util::Random::value(0, 1);
 
                         for (auto& score : record.holeScores)
@@ -632,7 +631,7 @@ void StatsState::parseCourseData()
             if (cro::FileSystem::fileExists(filePath))
             {
                 cro::ConfigFile cfg;
-                cfg.loadFromFile(filePath);
+                cfg.loadFromFile(filePath, false);
                 if (auto* prop = cfg.findProperty("title"); prop != nullptr)
                 {
                     const auto courseTitle = prop->getValue<std::string>();

@@ -172,6 +172,7 @@ MonthlyChallenge::Progress MonthlyChallenge::getProgress() const
 
             retVal.value = static_cast<std::int32_t>(value.count());
             retVal.target = static_cast<std::int32_t>(target.count());
+            retVal.flags = m_challenges[m_month].value;
         }
 
         retVal.index = m_month;
@@ -214,7 +215,7 @@ cro::String MonthlyChallenge::getProgressString() const
             }
             else
             {
-                ret += "\n" + std::to_string(remain) + "more days remaining";
+                ret += "\n" + std::to_string(remain) + " more days remaining";
             }
         }
         else

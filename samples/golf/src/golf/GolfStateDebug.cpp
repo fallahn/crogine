@@ -355,6 +355,22 @@ void GolfState::registerDebugCommands()
             cro::Console::print("Done!");
         });
 
+    registerCommand("rain", [&](const std::string&)
+        {
+            static bool raining = false;
+            if (!raining)
+            {
+                createWeather(WeatherType::Rain);
+
+                auto& shader = m_resources.shaders.get(ShaderID::Fog);
+                auto uniform = shader.getUniformID("u_density");
+                glUseProgram(shader.getGLHandle());
+                glUniform1f(uniform, 0.49f);
+
+                raining = true;
+            }
+        });
+
     //registerCommand("show_stat_window", 
     //    [&](const std::string&)
     //    {

@@ -1939,7 +1939,7 @@ void ClubhouseState::finaliseGameCreate()
 void ClubhouseState::finaliseGameJoin(const MatchMaking::Message& data)
 {
 #ifdef USE_GNS
-    m_sharedData.clientConnection.connected = m_sharedData.clientConnection.netClient.connect(CSteamID(data.hostID));
+    m_sharedData.clientConnection.connected = m_sharedData.clientConnection.netClient.connect(CSteamID(uint64(data.hostID)));
 #else
     m_sharedData.clientConnection.connected = m_sharedData.clientConnection.netClient.connect(m_sharedData.targetIP.toAnsiString(), ConstVal::GamePort);
 #endif

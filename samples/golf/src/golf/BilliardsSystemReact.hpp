@@ -37,6 +37,7 @@ source distribution.
 #include <crogine/detail/NoResize.hpp>
 #include <crogine/graphics/MeshData.hpp>
 #include <crogine/graphics/BoundingBox.hpp>
+#include <crogine/gui/GuiClient.hpp>
 
 #include <BulletCollision/CollisionDispatch/btGhostObject.h> //client side
 
@@ -45,7 +46,14 @@ source distribution.
 #include <memory>
 #include <vector>
 
+class BallEventListener final : public rp3d::EventListener
+{
+public:
+    void onContact(const rp3d::CollisionCallback::CallbackData& data) override;
 
+private:
+
+};
 
 //this needs to be non-resizable as the physics world keeps references to motion states
 struct BilliardBallReact final// : public btMotionState, public cro::Detail::NonResizeable
@@ -91,17 +99,16 @@ private:
 
     friend class BilliardsSystemReact;
     friend class BilliardsCollisionSystem;
+    friend class BallEventListener;
 };
 
 using BPhysBall = BilliardBallReact;
 
-class BulletDebug;
-class BilliardsSystemReact final : public cro::System
+class BilliardsSystemReact final : public cro::System, public cro::GuiClient
 {
 public:
     explicit BilliardsSystemReact(cro::MessageBus&);
     //BilliardsSystemReact(cro::MessageBus&, BulletDebug&);
-    ~BilliardsSystemReact();
 
     BilliardsSystemReact(const BilliardsSystemReact&) = delete;
     BilliardsSystemReact(BilliardsSystemReact&&) = delete;
@@ -126,18 +133,13 @@ private:
 
     rp3d::PhysicsCommon m_physicsCommon;
     rp3d::PhysicsWorld* m_physWorld;
+    BallEventListener m_ballEventListener;
 
     //we have to keep a local copy of the table verts as the
     //collision world only maintains pointers to it
     std::vector<float> m_vertexData;
     std::vector<std::vector<std::uint32_t>> m_indexData;
-
     std::vector<std::unique_ptr<rp3d::TriangleVertexArray>> m_tableVertices;
-
-    //these are what do the pointing.
-    //std::vector<rp3d::RigidBody*> m_tableObjects;
-    //std::vector<std::unique_ptr<btTriangleIndexVertexArray>> m_tableVertices;
-    //std::vector<std::unique_ptr<btBvhTriangleMeshShape>> m_tableShapes;
 
 
     //tracks ball objects
@@ -149,7 +151,7 @@ private:
     std::vector<rp3d::BoxShape*> m_boxShapes;
 
     //pocket walls
-    std::array<rp3d::BoxShape*, 2u> m_pocketWalls;
+    std::array<rp3d::BoxShape*, 2u> m_pocketWalls = {};
 
     //simplified pocketry
     struct Pocket final
@@ -166,9 +168,6 @@ private:
 
     cro::FloatRect m_spawnArea;
 
-    //btRigidBody::btRigidBodyConstructionInfo createBodyDef(std::int32_t, float, btCollisionShape*, btMotionState* = nullptr);
-
-    void doBallCollision() const;
     void doPocketCollision(cro::Entity) const;
 
     void onEntityAdded(cro::Entity) override;

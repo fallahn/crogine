@@ -34,7 +34,7 @@ source distribution.
 #include "../ALCheck.hpp"
 
 #ifdef __APPLE__
-#include <al.h>
+#include "../al.h"
 
 //silence deprecated openal warnings
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2022
+Matt Marchant 2017 - 2023
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -243,7 +243,7 @@ void Window::setFullScreen(bool fullscreen)
     }
 
 #ifdef __APPLE__
-#define FS_MODE SDL_WINDOW_FULLSCREEN
+#define FS_MODE SDL_WINDOW_FULLSCREEN_DESKTOP
 #else
 #define FS_MODE SDL_WINDOW_FULLSCREEN_DESKTOP
 #endif
@@ -288,6 +288,15 @@ void Window::setPosition(std::int32_t x, std::int32_t y)
     if (x < 0) x = SDL_WINDOWPOS_CENTERED;
     if (y < 0) y = SDL_WINDOWPOS_CENTERED;
     SDL_SetWindowPosition(m_window, x, y);
+}
+
+glm::ivec2 Window::getPosition() const
+{
+    CRO_ASSERT(m_window, "window not created");
+
+    glm::ivec2 ret(0);
+    SDL_GetWindowPosition(m_window, &ret.x, &ret.y);
+    return ret;
 }
 
 void Window::setIcon(const std::uint8_t* data)
@@ -373,8 +382,26 @@ void Window::loadResources(const std::function<void()>& loader)
     {
         m_loadingScreen = std::make_unique<DefaultLoadingScreen>();
     }
-  
+
 #ifdef PLATFORM_DESKTOP
+    //macs crashes with loading screens
+#ifdef __APPLE__
+    //if (m_fullscreen)
+    {
+        /*m_loadingScreen->launch();
+        m_loadingScreen->update();
+        glCheck(glClear(GL_COLOR_BUFFER_BIT));
+        m_loadingScreen->draw();
+        SDL_GL_SwapWindow(m_window);*/
+
+        glCheck(glClear(GL_COLOR_BUFFER_BIT));
+        SDL_GL_SwapWindow(m_window);
+        loader();
+    }
+#else
+    //else
+    {
+
     //create thread
     ThreadData data;
     data.context = m_threadContext;
@@ -394,11 +421,13 @@ void Window::loadResources(const std::function<void()>& loader)
 
     //SDL_GL_MakeCurrent(m_window, m_mainContext);
 
-    App::getInstance().resetFrameTime();
+    }
+#endif
 #else
 
     //android doesn't appear to like running the thread - so we'll display the loading screen once
     //before loading resources
+    m_loadingScreen->launch();
     m_loadingScreen->update();
     glCheck(glClear(GL_COLOR_BUFFER_BIT));
     m_loadingScreen->draw();
@@ -407,6 +436,8 @@ void Window::loadResources(const std::function<void()>& loader)
     loader();
 
 #endif //PLATFORM_DESKTOP
+
+    App::getInstance().resetFrameTime();
 }
 
 void Window::setMouseCaptured(bool captured)

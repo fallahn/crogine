@@ -31,6 +31,7 @@ source distribution.
 #include "MenuState.hpp"
 #include "batcat/BatcatState.hpp"
 #include "billiards/BilliardsState.hpp"
+#include "bounce/BounceState.hpp"
 #include "bush/BushState.hpp"
 #include "bsp/BspState.hpp"
 #include "collision/CollisionState.hpp"
@@ -164,9 +165,10 @@ bool MyApp::initialise()
     m_stateStack.registerState<SSAOState>(States::ScratchPad::SSAO);
     m_stateStack.registerState<LogState>(States::ScratchPad::Log);
     m_stateStack.registerState<GCState>(States::ScratchPad::GC);
+    m_stateStack.registerState<BounceState>(States::ScratchPad::Bounce);
 
 #ifdef CRO_DEBUG_
-    m_stateStack.pushState(States::ScratchPad::Swing);
+    m_stateStack.pushState(States::ScratchPad::Bounce);
     //m_stateStack.pushState(States::ScratchPad::MainMenu);
 #else
     m_stateStack.pushState(States::ScratchPad::MainMenu);

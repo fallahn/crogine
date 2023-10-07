@@ -30,6 +30,7 @@ source distribution.
 #ifndef __ANDROID__
 #include "tinyfiledialogs.h"
 #endif
+#include <crogine/core/App.hpp>
 #include <crogine/core/FileSystem.hpp>
 #include <crogine/core/Log.hpp>
 
@@ -40,13 +41,13 @@ source distribution.
 #include <algorithm>
 #include <sstream>
 #include <fstream>
+#include <filesystem>
 
 //TODO check this macro works on all windows compilers
 //(only tested in VC right now)
 #ifdef _WIN32
 #include <Windows.h>
 #include <shlobj.h>
-#include <filesystem> //technically crossplatform but unsupported on the oldest version of macOS which cro supports
 #define PATH_SEPARATOR_CHAR '\\'
 #define PATH_SEPARATOR_STRING "\\"
 #ifdef _MSC_VER
@@ -67,7 +68,7 @@ source distribution.
 #define MAX_PATH 512
 #include <string.h>
 #include <stdlib.h>
-#include <filesystem>
+
 #elif defined(__APPLE__)
 #define MAX_PATH PATH_MAX
 #include <CoreServices/CoreServices.h>
@@ -98,7 +99,6 @@ std::vector<std::string> FileSystem::listFiles(std::string path)
 {
     std::vector<std::string> results;
 
-#ifndef __APPLE__
     std::filesystem::directory_iterator it(std::filesystem::u8path(path));
     for (const auto& dir : it)
     {
@@ -108,40 +108,6 @@ std::vector<std::string> FileSystem::listFiles(std::string path)
         }
     }
     return results;
-#else
-    if (path.back() != '/')
-    {
-        path.append("/.");
-    }
-    else
-    {
-        path.append(".");
-    }
-
-    
-    DIR* dir = opendir(path.c_str());
-    if (dir)
-    {
-        struct dirent* dp;
-        while ((dp = readdir(dir)) != nullptr)
-        {
-            std::string workingPath(path);
-            workingPath.append("/");
-            workingPath.append((dp->d_name));
-
-            struct stat buf;
-            if (!stat(workingPath.c_str(), &buf))
-            {
-                if (!S_ISDIR(buf.st_mode))
-                {
-                    results.emplace_back(dp->d_name);
-                }
-            }
-        }
-        closedir(dir);
-    }
-    return results;
-#endif
 }
 
 std::string FileSystem::getFileExtension(const std::string& path)
@@ -171,14 +137,9 @@ std::string FileSystem::getFileName(const std::string& path)
 
         return path;
     };
-    
 
-//#ifdef _WIN32 //try windows formatted paths first
     std::string retVal = searchFunc('\\', path);
     return searchFunc('/', retVal);
-//#else
-//    return searchFunc('/', path);
-//#endif
 }
 
 std::string FileSystem::getFilePath(const std::string& path)
@@ -208,25 +169,18 @@ std::string FileSystem::getFilePath(const std::string& path)
 
 bool FileSystem::fileExists(const std::string& path)
 {
-#ifndef __APPLE__
     std::error_code ec;
     if (!std::filesystem::exists(std::filesystem::u8path(path), ec))
     {
         return false;
     }
     return true;
-#else
-    std::ifstream file(path);
-    bool exists = (file.is_open() && file.good());
-    file.close();
-    return exists;
-#endif
 }
 
 bool FileSystem::createDirectory(const std::string& path)
 {
     //TODO regex this or at least check for illegal chars
-#ifdef _WIN32
+//#ifdef _WIN32
     //if this throws here check the path passed in.
     //if at any point a string literal is concatenated to it make sure to
     //use the u8 prefix - eg someString += u8"dirname"
@@ -240,7 +194,7 @@ bool FileSystem::createDirectory(const std::string& path)
             ss << ec.message() << " - Error Code: " << ec.value();
 
             //TODO these are WinAPI error codes - haven't tested
-            //MinGW etc to see if these are what they report.
+            //other platforms to see if these are what they report.
             switch (ec.value())
             {
             default: ss << " (unknown error)"; break;
@@ -269,76 +223,62 @@ bool FileSystem::createDirectory(const std::string& path)
         }
     }
     return true;
-#else
-    if (mkdir(path.c_str(), 0777) == 0)
-    {
-        LOG("Created directory " + path, cro::Logger::Type::Info);
-        return true;
-    }
-    else
-    {
-        auto result = errno;
-        switch (result)
-        {
-        case EEXIST:
-            {
-                Logger::log(path + " directory already exists!", Logger::Type::Info);
-            }
-            break;
-        case ENOENT:
-            {
-                Logger::log("Unable to create " + path + ": parent directory not found.", Logger::Type::Error, Logger::Output::All);
-            }
-            break;
-        case EFAULT:
-            {
-                Logger::log("Unable to create " + path + ". Reason: EFAULT", Logger::Type::Error);
-            }
-            break;
-        case EACCES:
-            {
-                Logger::log("Unable to create " + path + ". Reason: EACCES", Logger::Type::Error);
-            }
-            break;
-        case ENAMETOOLONG:
-            {
-                Logger::log("Unable to create " + path + ". Reason: ENAMETOOLONG", Logger::Type::Error);
-            }
-            break;
-        case ENOTDIR:
-            {
-                Logger::log("Unable to create " + path + ". Reason: ENOTDIR", Logger::Type::Error);
-            }
-            break;
-        case ENOMEM:
-            {
-                Logger::log("Unable to create " + path + ". Reason: ENOMEM", Logger::Type::Error);
-            }
-            break;
-        }
-    }
-    return false;
-#endif
+//#else
+//    if (mkdir(path.c_str(), 0777) == 0)
+//    {
+//        LOG("Created directory " + path, cro::Logger::Type::Info);
+//        return true;
+//    }
+//    else
+//    {
+//        auto result = errno;
+//        switch (result)
+//        {
+//        case EEXIST:
+//            {
+//                Logger::log(path + " directory already exists!", Logger::Type::Info);
+//            }
+//            break;
+//        case ENOENT:
+//            {
+//                Logger::log("Unable to create " + path + ": parent directory not found.", Logger::Type::Error, Logger::Output::All);
+//            }
+//            break;
+//        case EFAULT:
+//            {
+//                Logger::log("Unable to create " + path + ". Reason: EFAULT", Logger::Type::Error);
+//            }
+//            break;
+//        case EACCES:
+//            {
+//                Logger::log("Unable to create " + path + ". Reason: EACCES", Logger::Type::Error);
+//            }
+//            break;
+//        case ENAMETOOLONG:
+//            {
+//                Logger::log("Unable to create " + path + ". Reason: ENAMETOOLONG", Logger::Type::Error);
+//            }
+//            break;
+//        case ENOTDIR:
+//            {
+//                Logger::log("Unable to create " + path + ". Reason: ENOTDIR", Logger::Type::Error);
+//            }
+//            break;
+//        case ENOMEM:
+//            {
+//                Logger::log("Unable to create " + path + ". Reason: ENOMEM", Logger::Type::Error);
+//            }
+//            break;
+//        }
+//    }
+//    return false;
+//#endif
 }
 
 bool FileSystem::directoryExists(const std::string& path)
 {
-#ifndef __APPLE__
     std::filesystem::directory_entry dir(std::filesystem::u8path(path));
     return dir.exists();
-#else
-    struct stat info;
-    if (stat(path.c_str(), &info) != 0)
-    {
-        LOG(path + " access denied, or doesn't exist", Logger::Type::Warning);
-        return false;
-    }
-    else if (info.st_mode & S_IFDIR)
-    {
-        return true;
-    }
-    return false;
-#endif
 }
 
 std::vector<std::string> FileSystem::listDirectories(const std::string& path)
@@ -351,7 +291,6 @@ std::vector<std::string> FileSystem::listDirectories(const std::string& path)
     if (workingPath.empty() || workingPath[0] != '/') fullPath.push_back('/');
     fullPath += workingPath;*/
 
-#ifndef __APPLE__
     std::filesystem::directory_iterator it(std::filesystem::u8path(path));
     for (const auto& dir : it)
     {
@@ -360,46 +299,6 @@ std::vector<std::string> FileSystem::listDirectories(const std::string& path)
             retVal.push_back(dir.path().stem().u8string());
         }
     }
-    return retVal;
-#else
-    std::string fullPath = path;
-    std::replace(fullPath.begin(), fullPath.end(), '\\', '/');
-
-    DIR *dp = nullptr;
-    struct dirent *dirp;
-    if ((dp = opendir(fullPath.c_str())) == nullptr)
-    {
-        Logger::log("Error(" + std::to_string(errno) + ") opening " + path, Logger::Type::Error);
-        return retVal;
-    }
-
-    while ((dirp = readdir(dp)) != nullptr)
-    {
-        std::string str(dirp->d_name);
-        if (str != "." && str != "..")
-        {
-            bool isDir = false;
-            if (dirp->d_type != DT_UNKNOWN && dirp->d_type != DT_LNK)
-            {
-                isDir = (dirp->d_type == DT_DIR);
-            }
-            else
-            {
-                struct stat stbuf;
-                // stat follows symlinks, lstat doesn't.
-                stat(dirp->d_name, &stbuf);
-                isDir = S_ISDIR(stbuf.st_mode);
-            }
-            
-            if (isDir)
-            {
-                retVal.emplace_back(std::move(str));
-            }
-        }
-    }
-    closedir(dp);
-
-#endif
     return retVal;
 }
 
@@ -470,113 +369,116 @@ std::string FileSystem::getRelativePath(std::string path, const std::string& roo
     return retVal;
 }
 
-std::string FileSystem::getConfigDirectory(const std::string& appName)
+std::string FileSystem::getConfigDirectory(const std::string&/* appName*/)
 {
+    return cro::App::getPreferencePath();
+
     //this is all deprecated.
-    if (appName.empty())
-    {
-        LOG("Unable to get configuration directory, app name cannot be empty", Logger::Type::Error);
-        return{};
-    }
-
-    static constexpr std::size_t maxlen = MAX_PATH;
-    char outStr[maxlen];
-    char* out = outStr;
-    const char* appname = appName.c_str();
-
-#ifdef __linux__
-    const char *out_orig = out;
-    char *home = getenv("XDG_CONFIG_HOME");
-    unsigned int config_len = 0;
-    if (!home)
-    {
-        home = getenv("HOME");
-        if (!home)
-        {
-            // Can't find home directory
-            out[0] = 0;
-            LOG("Unable to find HOME directory when creating confinguration directory", Logger::Type::Error);
-            return {};
-        }
-        config_len = strlen(".config/");
-    }
-
-    unsigned int home_len = strlen(home);
-    unsigned int appname_len = strlen(appname);
-
-    /* first +1 is "/", second is trailing "/", third is terminating null */
-    if (home_len + 1 + config_len + appname_len + 1 + 1 > maxlen)
-    {
-        out[0] = 0;
-        return {};
-    }
-
-    memcpy(out, home, home_len);
-    out += home_len;
-    *out = '/';
-    out++;
-    if (config_len) 
-    {
-        memcpy(out, ".config/", config_len);
-        out += config_len;
-        /* Make the .config folder if it doesn't already exist */
-        *out = '\0';
-        mkdir(out_orig, 0755);
-    }
-    memcpy(out, appname, appname_len);
-    out += appname_len;
-    /* Make the .config/appname folder if it doesn't already exist */
-    *out = '\0';
-    mkdir(out_orig, 0755);
-    *out = '/';
-    out++;
-    *out = 0;
-
-#elif defined(_WIN32)
-    if (maxlen < MAX_PATH) 
-    {
-        out[0] = 0;
-        return {};
-    }
-    if (!SUCCEEDED(SHGetFolderPath(NULL, CSIDL_APPDATA, NULL, 0, out)))
-    {
-        out[0] = 0;
-        return {};
-    }
-    /* We don't try to create the AppData folder as it always exists already */
-    auto appname_len = strlen(appname);
-    if (strlen(out) + 1 + appname_len + 1 + 1 > maxlen) 
-    {
-        out[0] = 0;
-        return {};
-    }
-    strcat(out, "\\");
-    strcat(out, appname);
-    /* Make the AppData\appname folder if it doesn't already exist */
-    _mkdir(out);
-    strcat(out, "\\");
-
-#elif defined(__APPLE__)
-    FSRef ref;
-    FSFindFolder(kUserDomain, kApplicationSupportFolderType, kCreateFolder, &ref);
-    char home[MAX_PATH];
-    FSRefMakePath(&ref, (UInt8 *)&home, MAX_PATH);
-    /* first +1 is "/", second is trailing "/", third is terminating null */
-    if (strlen(home) + 1 + strlen(appname) + 1 + 1 > maxlen)
-    {
-        out[0] = 0;
-        return {};
-    }
-
-    strcpy(out, home);
-    strcat(out, PATH_SEPARATOR_STRING);
-    strcat(out, appname);
-    /* Make the .config/appname folder if it doesn't already exist */
-    mkdir(out, 0755);
-    strcat(out, PATH_SEPARATOR_STRING);
-#endif
-
-    return { out };
+//
+//    if (appName.empty())
+//    {
+//        LOG("Unable to get configuration directory, app name cannot be empty", Logger::Type::Error);
+//        return{};
+//    }
+//
+//    static constexpr std::size_t maxlen = MAX_PATH;
+//    char outStr[maxlen];
+//    char* out = outStr;
+//    const char* appname = appName.c_str();
+//
+//#ifdef __linux__
+//    const char *out_orig = out;
+//    char *home = getenv("XDG_CONFIG_HOME");
+//    unsigned int config_len = 0;
+//    if (!home)
+//    {
+//        home = getenv("HOME");
+//        if (!home)
+//        {
+//            // Can't find home directory
+//            out[0] = 0;
+//            LOG("Unable to find HOME directory when creating confinguration directory", Logger::Type::Error);
+//            return {};
+//        }
+//        config_len = strlen(".config/");
+//    }
+//
+//    unsigned int home_len = strlen(home);
+//    unsigned int appname_len = strlen(appname);
+//
+//    /* first +1 is "/", second is trailing "/", third is terminating null */
+//    if (home_len + 1 + config_len + appname_len + 1 + 1 > maxlen)
+//    {
+//        out[0] = 0;
+//        return {};
+//    }
+//
+//    memcpy(out, home, home_len);
+//    out += home_len;
+//    *out = '/';
+//    out++;
+//    if (config_len) 
+//    {
+//        memcpy(out, ".config/", config_len);
+//        out += config_len;
+//        /* Make the .config folder if it doesn't already exist */
+//        *out = '\0';
+//        mkdir(out_orig, 0755);
+//    }
+//    memcpy(out, appname, appname_len);
+//    out += appname_len;
+//    /* Make the .config/appname folder if it doesn't already exist */
+//    *out = '\0';
+//    mkdir(out_orig, 0755);
+//    *out = '/';
+//    out++;
+//    *out = 0;
+//
+//#elif defined(_WIN32)
+//    if (maxlen < MAX_PATH) 
+//    {
+//        out[0] = 0;
+//        return {};
+//    }
+//    if (!SUCCEEDED(SHGetFolderPath(NULL, CSIDL_APPDATA, NULL, 0, out)))
+//    {
+//        out[0] = 0;
+//        return {};
+//    }
+//    /* We don't try to create the AppData folder as it always exists already */
+//    auto appname_len = strlen(appname);
+//    if (strlen(out) + 1 + appname_len + 1 + 1 > maxlen) 
+//    {
+//        out[0] = 0;
+//        return {};
+//    }
+//    strcat(out, "\\");
+//    strcat(out, appname);
+//    /* Make the AppData\appname folder if it doesn't already exist */
+//    _mkdir(out);
+//    strcat(out, "\\");
+//
+//#elif defined(__APPLE__)
+//    FSRef ref;
+//    FSFindFolder(kUserDomain, kApplicationSupportFolderType, kCreateFolder, &ref);
+//    char home[MAX_PATH];
+//    FSRefMakePath(&ref, (UInt8 *)&home, MAX_PATH);
+//    /* first +1 is "/", second is trailing "/", third is terminating null */
+//    if (strlen(home) + 1 + strlen(appname) + 1 + 1 > maxlen)
+//    {
+//        out[0] = 0;
+//        return {};
+//    }
+//
+//    strcpy(out, home);
+//    strcat(out, PATH_SEPARATOR_STRING);
+//    strcat(out, appname);
+//    /* Make the .config/appname folder if it doesn't already exist */
+//    mkdir(out, 0755);
+//    strcat(out, PATH_SEPARATOR_STRING);
+//#endif
+//
+//    return { out };
 }
 
 std::string FileSystem::openFileDialogue(const std::string& defaultDir, const std::string& filter, bool selectMultiple)
@@ -635,7 +537,15 @@ std::string FileSystem::saveFileDialogue(const std::string& defaultDir, const st
 std::string FileSystem::getResourcePath()
 {
 #ifdef __APPLE__
-    return resourcePath() + m_resourceDirectory;
+    //ugh - cwd when using bundles is a pain, so at least add some
+    //checks to make sure we're not concatinating an existing part of the path
+    auto rpath = resourcePath();
+    if (m_resourceDirectory.find(rpath) == std::string::npos)
+    {
+        return resourcePath() + m_resourceDirectory;
+    }
+
+    return m_resourceDirectory;
 #endif
     return m_resourceDirectory;
 }
@@ -643,26 +553,20 @@ std::string FileSystem::getResourcePath()
 void FileSystem::setResourceDirectory(const std::string& path)
 {
     m_resourceDirectory = path;
+    std::replace(m_resourceDirectory.begin(), m_resourceDirectory.end(), '\\','/');
 
     if (!path.empty())
     {
         //strip preceeding slashes
-        if(m_resourceDirectory[0] == '\\'
-            || m_resourceDirectory[0] == '/')
+        if(m_resourceDirectory[0] == '/')
         {
             m_resourceDirectory = m_resourceDirectory.substr(1);
         }
 
         //and add post slashes if missing
-        if (m_resourceDirectory.find('/') != std::string::npos
-            && m_resourceDirectory.back() != '/')
+        if (m_resourceDirectory.back() != '/')
         {
             m_resourceDirectory.push_back('/');
-        }
-        else if (m_resourceDirectory.find('\\') != std::string::npos
-            && m_resourceDirectory.back() != '\\')
-        {
-            m_resourceDirectory.push_back('\\');
         }
     }
 }

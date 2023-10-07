@@ -39,6 +39,7 @@ namespace States
             AnimBlend,
             BatCat,
             Billiards,
+            Bounce,
             Bush,
             BSP,
             Frustum,

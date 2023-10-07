@@ -109,6 +109,12 @@
     <Filter Include="Source Files\league">
       <UniqueIdentifier>{1df49813-245d-49b6-b62a-d6a07d6ec217}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\bounce">
+      <UniqueIdentifier>{f25bb8ef-d21c-4b69-8000-b95df3617dfc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\bounce">
+      <UniqueIdentifier>{f48efd51-7ca1-486f-85a4-b816f9d99734}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\LoadingScreen.cpp">
@@ -227,6 +233,9 @@
     </ClCompile>
     <ClCompile Include="src\league\League.cpp">
       <Filter>Source Files\league</Filter>
+    </ClCompile>
+    <ClCompile Include="src\bounce\BounceState.cpp">
+      <Filter>Source Files\bounce</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -379,6 +388,9 @@
     </ClInclude>
     <ClInclude Include="src\league\League.hpp">
       <Filter>Header Files\league</Filter>
+    </ClInclude>
+    <ClInclude Include="src\bounce\BounceState.hpp">
+      <Filter>Header Files\bounce</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

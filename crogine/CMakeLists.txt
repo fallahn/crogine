@@ -1,4 +1,10 @@
 cmake_minimum_required(VERSION 3.5.0)
+
+#required for std::filesystem
+if(APPLE)
+  SET(CMAKE_OSX_DEPLOYMENT_TARGET "10.15" CACHE STRING "Minimum OS X deployment version")
+endif()
+
 project(crogine)
 SET(PROJECT_NAME crogine)
 
@@ -20,9 +26,9 @@ SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/cmake/mo
 
 if(CMAKE_COMPILER_IS_GNUCXX)
   if(PROJECT_STATIC_RUNTIME)
-    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=c++17 -static")
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wno-potentially-evaluated-expression -std=c++17 -static")
   else()
-    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -std=c++17")
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wno-potentially-evaluated-expression -std=c++17")
   endif()
 endif()
 
@@ -67,7 +73,10 @@ find_package(Freetype REQUIRED)
 find_package(OpenGL REQUIRED)
 
 if(USE_OPENAL)
-  find_package(OpenAL REQUIRED)
+#use mojo AL on mac
+  if(NOT APPLE)
+    find_package(OpenAL REQUIRED)
+  endif()
 else()
   find_package(SDL2_mixer REQUIRED)
 endif()
@@ -89,7 +98,9 @@ SET(PROJECT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
 include(${PROJECT_DIR}/CMakeLists.txt)
 
 if(USE_OPENAL)
-  include_directories(${OPENAL_INCLUDE_DIR})
+  if(NOT APPLE)
+    include_directories(${OPENAL_INCLUDE_DIR})
+  endif()
   SET(PROJECT_SRC ${PROJECT_SRC} ${project_src_openal})
 else()
   include_directories(${SDL2_MIXER_INCLUDE_DIR})
@@ -104,7 +115,7 @@ else()
   SET(PROJECT_SRC ${PROJECT_SRC} ${project_src_nix})
 endif()
 
-# add the Resourcepath source and GL41 loader for apple, else load GL46
+# add the Resourcepath source, mojoal source and GL41 loader for apple, else load GL46
 if (APPLE)
   set(PROJECT_SRC ${PROJECT_SRC} ${project_src_macos})
 else()
@@ -121,18 +132,17 @@ if(NOT TARGET crogine)
   endif()
 
 
+  target_link_libraries(${PROJECT_NAME}
+    ${SDL2_LIBRARY} 
+    ${FREETYPE_LIBRARIES}
+    ${OPENGL_LIBRARIES})
+
   if(USE_OPENAL)
-  target_link_libraries(${PROJECT_NAME}
-    ${SDL2_LIBRARY} 
-    ${FREETYPE_LIBRARIES}
-    ${OPENGL_LIBRARIES}
-    ${OPENAL_LIBRARY})
+    if(NOT APPLE)
+      target_link_libraries(${PROJECT_NAME} ${OPENAL_LIBRARY})
+    endif()
   else()
-  target_link_libraries(${PROJECT_NAME}
-    ${SDL2_LIBRARY} 
-    ${FREETYPE_LIBRARIES}
-    ${OPENGL_LIBRARIES}
-    ${SDL2_MIXER_LIBRARY})
+    target_link_libraries(${PROJECT_NAME} ${SDL2_MIXER_LIBRARY})
   endif()
 
   if(MSVC)

@@ -146,7 +146,11 @@ void MenuState::parseCourseDirectory(const std::string& rootDir, bool isUser)
     if (!isUser)
     {
         //macOS shenanigans.
-        root = cro::FileSystem::getResourcePath() + root;
+        auto rpath = cro::FileSystem::getResourcePath();
+        if (rpath.find(root) == std::string::npos)
+        {
+            root = rpath + root;
+        }
     }
 
     if (!cro::FileSystem::directoryExists(root))
@@ -1399,7 +1403,7 @@ void MenuState::createBrowserMenu(cro::Entity parent, std::uint32_t mouseEnter, 
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = arrowSelected;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = arrowUnselected;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
-        uiSystem->addCallback([&, menuEntity](cro::Entity, const cro::ButtonEvent& evt) mutable
+        uiSystem->addCallback([&](cro::Entity, const cro::ButtonEvent& evt) mutable
             {
                 if (activated(evt))
                 {

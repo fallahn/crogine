@@ -2078,6 +2078,7 @@ void MenuState::finaliseGameCreate(const MatchMaking::Message& msgData)
             + " is allowed through\nany firewalls or NAT";
         requestStackPush(StateID::Error);
 
+        m_sharedData.clientConnection.hostID = 0;
         m_sharedData.lobbyID = 0;
     }
     else
@@ -2085,7 +2086,8 @@ void MenuState::finaliseGameCreate(const MatchMaking::Message& msgData)
         m_sharedData.lobbyID = msgData.hostID;
 
         //make sure the server knows we're the host
-        m_sharedData.serverInstance.setHostID(m_sharedData.clientConnection.netClient.getPeer().getID());
+        m_sharedData.clientConnection.hostID = m_sharedData.clientConnection.netClient.getPeer().getID();
+        m_sharedData.serverInstance.setHostID(m_sharedData.clientConnection.hostID);
 
         cro::Command cmd;
         cmd.targetFlags = CommandID::Menu::ReadyButton;
@@ -2143,12 +2145,14 @@ void MenuState::finaliseGameCreate(const MatchMaking::Message& msgData)
 void MenuState::finaliseGameJoin(const MatchMaking::Message& data)
 {
 #ifdef USE_GNS
-    m_sharedData.clientConnection.connected = m_sharedData.clientConnection.netClient.connect(CSteamID(data.hostID));
+    m_sharedData.clientConnection.connected = m_sharedData.clientConnection.netClient.connect(CSteamID(uint64(data.hostID)));
+    m_sharedData.clientConnection.hostID = data.hostID;
 #else
     m_sharedData.clientConnection.connected = m_sharedData.clientConnection.netClient.connect(m_sharedData.targetIP.toAnsiString(), ConstVal::GamePort);
 #endif
     if (!m_sharedData.clientConnection.connected)
     {
+        m_sharedData.clientConnection.hostID = 0;
         m_sharedData.errorMessage = "Could not connect to server";
         requestStackPush(StateID::Error);
     }

@@ -33,8 +33,8 @@ source distribution.
 #include "AudioFile.hpp"
 
 #ifdef __APPLE__
-#include <al.h>
-#include <alc.h>
+#include "al.h"
+#include "alc.h"
 #else
 #include <AL/al.h>
 #include <AL/alc.h>

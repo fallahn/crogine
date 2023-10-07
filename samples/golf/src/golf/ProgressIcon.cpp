@@ -173,8 +173,8 @@ void ProgressIcon::show(std::int32_t index, std::int32_t progress, std::int32_t 
         m_state = ScrollIn;
         m_pauseTime = PauseTime;
 
-        const float windowSize = static_cast<float>(cro::App::getWindow().getSize().x);
-        setPosition({ windowSize - IconSize.x, -IconSize.y });
+        const auto windowSize = glm::vec2(cro::App::getWindow().getSize());
+        setPosition({ windowSize.x - IconSize.x, windowSize.y });
     }
 }
 
@@ -184,13 +184,13 @@ void ProgressIcon::update(float dt)
     static const float Speed = 240.f;
     if (m_active)
     {
-        const float windowSize = static_cast<float>(cro::App::getWindow().getSize().x);
+        const auto windowSize = glm::vec2(cro::App::getWindow().getSize());
         if (m_state == ScrollIn)
         {
-            move({ 0.f, Speed * dt });
-            if (getPosition().y > 0.f)
+            move({ 0.f, -Speed * dt });
+            if (getPosition().y < windowSize.y - IconSize.y)
             {
-                setPosition({ windowSize - IconSize.x, 0.f });
+                setPosition({ windowSize.x - IconSize.x, windowSize.y - IconSize.y });
                 m_state = Paused;
             }
         }
@@ -204,8 +204,8 @@ void ProgressIcon::update(float dt)
         }
         else
         {
-            move({ 0.f, -Speed * dt });
-            if (getPosition().y < -IconSize.y)
+            move({ 0.f, Speed * dt });
+            if (getPosition().y > windowSize.y)
             {
                 m_active = false;
             }

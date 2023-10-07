@@ -9,7 +9,7 @@ set(GOLF_SRC
   ${PROJECT_DIR}/golf/BilliardsState.cpp
   ${PROJECT_DIR}/golf/BilliardsStateUI.cpp
   ${PROJECT_DIR}/golf/BilliardsSystem.cpp
-  ${PROJECT_DIR}/golf/BilliardsSystemReact.cpp
+  #${PROJECT_DIR}/golf/BilliardsSystemReact.cpp
   ${PROJECT_DIR}/golf/CameraFollowSystem.cpp
   ${PROJECT_DIR}/golf/ClientCollisionSystem.cpp
   ${PROJECT_DIR}/golf/CloudSystem.cpp
