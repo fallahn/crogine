@@ -524,7 +524,9 @@ bool GolfState::handleEvent(const cro::Event& evt)
             closeMessage();
             break;
         case SDLK_F6:
-            logCSV();
+            //logCSV();
+            /*m_activeAvatar->model.getComponent<cro::Callback>().active = true;
+            m_activeAvatar->model.getComponent<cro::Model>().setHidden(false);*/
             break;
         case SDLK_F8:
             if (evt.key.keysym.mod & KMOD_SHIFT)
@@ -2461,7 +2463,6 @@ void GolfState::loadAssets()
                     if (direction == 0)
                     {
                         scale = std::min(1.f, scale + (dt * 3.f));
-
                         if (scale == 1)
                         {
                             direction = 1;
@@ -2598,7 +2599,7 @@ void GolfState::loadAssets()
             }
         }
     }
-
+    m_activeAvatar = &m_avatars[0][0];
 
     //club models
     m_clubModels[ClubModel::Wood] = m_gameScene.createEntity();
