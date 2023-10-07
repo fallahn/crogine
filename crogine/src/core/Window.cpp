@@ -394,6 +394,8 @@ void Window::loadResources(const std::function<void()>& loader)
         m_loadingScreen->draw();
         SDL_GL_SwapWindow(m_window);*/
 
+        glCheck(glClear(GL_COLOR_BUFFER_BIT));
+        SDL_GL_SwapWindow(m_window);
         loader();
     }
 #else
