@@ -269,7 +269,7 @@ void LeaderboardState::parseCourseDirectory()
 
     const std::string coursePath = cro::FileSystem::getResourcePath() + "assets/golf/courses/";
     auto dirs = cro::FileSystem::listDirectories(coursePath);
-    LogI << cro::FileSystem::getResourcePath() << std::endl;
+
     std::sort(dirs.begin(), dirs.end());
 
     for (const auto& dir : dirs)

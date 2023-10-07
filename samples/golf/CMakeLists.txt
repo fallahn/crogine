@@ -33,9 +33,9 @@ SET (USE_GNS FALSE CACHE STRING "Can't use newsfeed with this")
 
 if(CMAKE_COMPILER_IS_GNUCXX OR APPLE)
   if(PROJECT_STATIC_RUNTIME)
-    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wno-invalid-offsetof -std=c++17 -static")
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wno-invalid-offsetof -Wno-potentially-evaluated-expression -std=c++17 -static")
   else()
-    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wno-invalid-offsetof -std=c++17")
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wno-invalid-offsetof -Wno-potentially-evaluated-expression -std=c++17")
   endif()
 endif()
 
