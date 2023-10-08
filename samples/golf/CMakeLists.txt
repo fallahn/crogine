@@ -205,9 +205,9 @@ endif()
 # install to the bundle
 if(APPLE AND MACOS_BUNDLE)
 
-  install(TARGETS ${PROJECT_NAME}
-    RUNTIME DESTINATION .
-    BUNDLE DESTINATION ${CMAKE_SOURCE_DIR}/bundle)
+  #install(TARGETS ${PROJECT_NAME}
+  #  RUNTIME DESTINATION .
+  #  BUNDLE DESTINATION ${CMAKE_SOURCE_DIR}/bundle)
 
 
   install(CODE " include(BundleUtilities)

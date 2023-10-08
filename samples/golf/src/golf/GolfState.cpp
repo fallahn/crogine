@@ -2599,7 +2599,7 @@ void GolfState::loadAssets()
             }
         }
     }
-    m_activeAvatar = &m_avatars[0][0];
+    //m_activeAvatar = &m_avatars[0][0]; //DON'T DO THIS! WE MUST BE NULL WHEN THE MAP LOADS
 
     //club models
     m_clubModels[ClubModel::Wood] = m_gameScene.createEntity();
