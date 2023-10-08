@@ -90,7 +90,7 @@ using namespace cl;
 namespace
 {
 #include "PostProcess.inl"
-    cro::FloatRect cropRect;
+    //cro::FloatRect cropRect;
     //hack to map course names to achievement IDs
     const std::unordered_map<std::string, std::int32_t> ParAch =
     {
@@ -2216,7 +2216,7 @@ void GolfState::createScoreboard()
             //this is set active only when scoreboard is visible
             entity.addComponent<cro::Callback>().setUserData<std::pair<std::uint8_t, std::uint8_t>>(c.connectionID, j);
             entity.getComponent<cro::Callback>().function =
-                [&, bgEnt, iconPos](cro::Entity e, float)
+                [&, iconPos](cro::Entity e, float)
             {
                 auto [client, player] = e.getComponent<cro::Callback>().getUserData<std::pair<std::uint8_t, std::uint8_t>>();
 

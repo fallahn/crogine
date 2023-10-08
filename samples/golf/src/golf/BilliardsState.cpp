@@ -857,7 +857,7 @@ void BilliardsState::buildScene()
 
     spectateController.addComponent<cro::Callback>().active = true;
     spectateController.getComponent<cro::Callback>().function =
-        [&, camEnt](cro::Entity e, float)
+        [&](cro::Entity e, float)
     {
         if(m_gameScene.getActiveCamera() == m_cameras[CameraID::Player])
         {

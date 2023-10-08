@@ -87,7 +87,7 @@ private:
 
     std::uint16_t m_inputFlags;
     std::uint16_t m_prevFlags;
-    std::uint16_t m_prevStick;
+    //std::uint16_t m_prevStick;
 
     glm::vec2 m_mouseMove;
     glm::vec2 m_prevMouseMove;

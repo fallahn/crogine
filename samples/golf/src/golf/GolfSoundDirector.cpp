@@ -695,7 +695,7 @@ cro::Entity GolfSoundDirector::playSound(std::int32_t id, glm::vec3 position, fl
         return ent;
     };
 
-    const auto playSpecial = [&, id, volume, position]()
+    const auto playSpecial = [&, id, position]()
     {
         if (auto idx = m_playerIndices[m_currentClient][m_currentPlayer]; idx > -1)
         {

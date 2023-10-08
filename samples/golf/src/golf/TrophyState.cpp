@@ -633,7 +633,7 @@ void TrophyState::buildScene()
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectedID;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectedID;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown ] =
-        uiSystem.addCallback([&, updateText](cro::Entity, const cro::ButtonEvent& evt) 
+        uiSystem.addCallback([&](cro::Entity, const cro::ButtonEvent& evt) 
             {
                 if (activated(evt))
                 {
@@ -691,7 +691,7 @@ void TrophyState::buildScene()
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = selectedID;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectedID;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
-        uiSystem.addCallback([&, updateText](cro::Entity e, const cro::ButtonEvent& evt) mutable
+        uiSystem.addCallback([&](cro::Entity e, const cro::ButtonEvent& evt) mutable
             {
                 if (activated(evt))
                 {

@@ -122,8 +122,8 @@ private:
 
     std::int32_t m_mouseWheel;
     std::int32_t m_prevMouseWheel;
-    std::int32_t m_mouseMove;
-    std::int32_t m_prevMouseMove;
+    //std::int32_t m_mouseMove;
+    //std::int32_t m_prevMouseMove;
 
     bool m_isCPU;
     cro::Clock m_doubleTapClock; //prevent accidentally double tapping action

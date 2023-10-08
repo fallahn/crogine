@@ -824,7 +824,7 @@ void ClubhouseState::createAvatarMenu(cro::Entity parent, std::uint32_t mouseEnt
         textEnt.getComponent<cro::Drawable2D>().setCroppingArea(bounds);
         
         textEnt.addComponent<cro::Callback>().function =
-            [&, spriteBounds](cro::Entity e, float)
+            [&](cro::Entity e, float)
         {
             if (m_textEdit.string != nullptr)
             {
@@ -1925,7 +1925,7 @@ void ClubhouseState::createBrowserMenu(cro::Entity parent, std::uint32_t mouseEn
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = arrowSelected;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = arrowUnselected;
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
-        m_uiScene.getSystem<cro::UISystem>()->addCallback([&, menuEntity](cro::Entity, const cro::ButtonEvent& evt) mutable
+        m_uiScene.getSystem<cro::UISystem>()->addCallback([&](cro::Entity, const cro::ButtonEvent& evt) mutable
             {
                 if (activated(evt))
                 {
@@ -2572,7 +2572,7 @@ void ClubhouseState::createStatMenu(cro::Entity parent, std::uint32_t mouseEnter
 
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function =
-        [&, parent](cro::Entity e, float)
+        [&](cro::Entity e, float)
     {
         if (m_menuEntities[MenuID::HallOfFame].getComponent<cro::Callback>().active)
         {

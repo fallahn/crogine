@@ -48,7 +48,7 @@ namespace cro::Keyboard
     */
     static inline bool isKeyPressed(SDL_Scancode scancode)
     {
-        CRO_ASSERT(scancode > -1 && scancode < SDL_NUM_SCANCODES, "scancode out of range!");
+        CRO_ASSERT(scancode < SDL_NUM_SCANCODES, "scancode out of range!");
         auto* state = SDL_GetKeyboardState(nullptr);
         return state[scancode] != 0;
     }

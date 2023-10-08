@@ -1810,7 +1810,7 @@ void ProfileState::createPalettes(cro::Entity parent)
                 }
             });
         m_flyouts[i].selectCallback = m_uiScene.getSystem<cro::UISystem>()->addCallback(
-            [&, entity, i, menuID](cro::Entity e) mutable
+            [&, entity, i](cro::Entity e) mutable
             {
                 if (i == PaletteID::Hair)
                 {
