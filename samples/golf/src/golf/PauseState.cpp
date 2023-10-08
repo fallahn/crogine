@@ -414,7 +414,7 @@ void PauseState::buildScene()
     entity = createItem(glm::vec2(0.f, -4.f), "Hole Overview", menuEntity);
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Main);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
-        uiSystem.addCallback([&, menuEntity, confirmEntity](cro::Entity e, cro::ButtonEvent evt) mutable
+        uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt) mutable
             {
                 if (activated(evt))
                 {
@@ -464,7 +464,7 @@ void PauseState::buildScene()
     entity = createItem(glm::vec2(20.f, -12.f), "Yes", confirmEntity);
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Confirm);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
-        uiSystem.addCallback([&, menuEntity, confirmEntity](cro::Entity e, cro::ButtonEvent evt) mutable
+        uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt) mutable
             {
                 if (activated(evt))
                 {

@@ -1377,7 +1377,7 @@ void GolfState::handleMessage(const cro::Message& msg)
                     //hide the flight cam
                     cro::Command cmd;
                     cmd.targetFlags = CommandID::UI::MiniGreen;
-                    cmd.action = [&, oob](cro::Entity en, float)
+                    cmd.action = [&](cro::Entity en, float)
                         {
                             if (m_currentPlayer.terrain != TerrainID::Green)
                             {

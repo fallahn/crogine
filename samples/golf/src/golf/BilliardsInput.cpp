@@ -73,7 +73,7 @@ BilliardsInput::BilliardsInput(const SharedStateData& sd, cro::MessageBus& mb)
     m_messageBus            (mb),
     m_inputFlags            (0),
     m_prevFlags             (0),
-    m_prevStick             (0),
+    //m_prevStick             (0),
     m_mouseMove             (0.f),
     m_prevMouseMove         (0.f),
     m_analogueAmountLeft    (1.f),

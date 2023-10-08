@@ -1318,7 +1318,7 @@ void TutorialState::tutorialThree(cro::Entity root)
     bounds = cro::Text::getLocalBounds(entity);
     entity.addComponent<cro::Callback>().setUserData<float>(0.f);
     entity.getComponent<cro::Callback>().function =
-        [&, cancelEnt, bounds](cro::Entity e, float dt) mutable
+        [&, bounds](cro::Entity e, float dt) mutable
     {
         auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
         currTime = std::min(1.f, currTime + (dt * 3.f));

@@ -51,7 +51,7 @@ using namespace cl;
 
 namespace
 {
-    constexpr float SpeedReduction = 1.4f; //bar speed is dividied by this when putt assist is enabled
+    constexpr float SpeedReduction = 1.4f; //bar speed is divided by this when putt assist is enabled
     constexpr float SideSpinReduction = 0.3f; //power is reduced p * (1.f - (SideSpinReduction * abs(sideSpin)))
 
     static constexpr float RotationSpeed = 1.2f;
@@ -81,8 +81,8 @@ InputParser::InputParser(const SharedStateData& sd, cro::Scene* s)
     m_camMotion         (0.f),
     m_mouseWheel        (0),
     m_prevMouseWheel    (0),
-    m_mouseMove         (0),
-    m_prevMouseMove     (0),
+    //m_mouseMove         (0),
+    //m_prevMouseMove     (0),
     m_isCPU             (false),
     m_holeDirection     (0.f),
     m_rotation          (0.f),

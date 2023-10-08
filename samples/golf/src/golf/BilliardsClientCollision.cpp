@@ -42,7 +42,7 @@ using namespace cl;
 namespace
 {
     std::int32_t collisionCount = 0;
-    glm::vec3 rayForward = glm::vec3(0.f);
+    //glm::vec3 rayForward = glm::vec3(0.f);
 }
 
 BilliardsCollisionSystem::BilliardsCollisionSystem(cro::MessageBus& mb)
