@@ -42,6 +42,7 @@ source distribution.
 
 #include <array>
 #include <cstring>
+#include <filesystem>
 
 using namespace cro;
 
@@ -92,7 +93,16 @@ void Image::create(std::uint32_t width, std::uint32_t height, Colour colour, Ima
 
 bool Image::loadFromFile(const std::string& filePath)
 {
-    auto path = FileSystem::getResourcePath() + filePath;
+    std::string path;
+    std::filesystem::path p(filePath);
+    if (p.is_absolute())
+    {
+        path = filePath;
+    }
+    else
+    {
+        path = FileSystem::getResourcePath() + filePath;
+    }
 
     auto* file = SDL_RWFromFile(path.c_str(), "rb");
     if (!file)

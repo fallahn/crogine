@@ -49,6 +49,8 @@ source distribution.
 #include <crogine/ecs/components/BillboardCollection.hpp>
 #include <crogine/ecs/Entity.hpp>
 
+#include <filesystem>
+
 using namespace cro;
 
 namespace
@@ -105,7 +107,7 @@ bool ModelDefinition::loadFromFile(const std::string& inPath, bool instanced, bo
     }
 
     ConfigFile cfg;
-    if (!cfg.loadFromFile(path))
+    if (!cfg.loadFromFile(path, std::filesystem::path(inPath).is_relative()))
     {
         Logger::log("Failed loading ModelDefinition " + path, Logger::Type::Error);
         return false;

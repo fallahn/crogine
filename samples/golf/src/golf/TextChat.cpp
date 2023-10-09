@@ -45,7 +45,7 @@ source distribution.
 
 namespace
 {
-    const cro::Time ResendTime = cro::seconds(0.5f);
+    const cro::Time ResendTime = cro::seconds(1.5f);
 
     const std::array<std::string, 12u> ApplaudStrings =
     {

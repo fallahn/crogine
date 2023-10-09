@@ -40,6 +40,7 @@ source distribution.
 #include <SDL_rwops.h>
 
 #include <algorithm>
+#include <filesystem>
 
 using namespace cro;
 
@@ -183,7 +184,18 @@ void Texture::create(std::uint32_t width, std::uint32_t height, ImageFormat::Typ
 
 bool Texture::loadFromFile(const std::string& filePath, bool createMipMaps)
 {
-    auto path = FileSystem::getResourcePath() + filePath;
+    std::filesystem::path p(filePath);
+    auto path = FileSystem::getResourcePath();
+    //only add resource path if not done so already
+    if (!p.is_absolute() &&
+        filePath.find(path) == std::string::npos)
+    {
+        path += filePath;
+    }
+    else
+    {
+        path = filePath;
+    }
 
     ImageArray<std::uint8_t> arr;
     if (arr.loadFromFile(path, true))

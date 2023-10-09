@@ -625,13 +625,14 @@ bool GolfState::handleEvent(const cro::Event& evt)
             msg2->travelDistance = rot;
         }
             break;
-        case SDLK_KP_MULTIPLY:
+            //used in font smoothing debug GolfGame.cpp
+        /*case SDLK_KP_MULTIPLY:
         {
             auto* msg = postMessage<GolfEvent>(MessageID::GolfMessage);
             msg->type = GolfEvent::HoleInOne;
             msg->position = m_holeData[m_currentHole].pin;
         }
-            showMessageBoard(MessageBoardID::HoleScore);
+            showMessageBoard(MessageBoardID::HoleScore);*/
             break;
         case SDLK_PAGEUP:
         {
@@ -2599,7 +2600,7 @@ void GolfState::loadAssets()
             }
         }
     }
-    m_activeAvatar = &m_avatars[0][0];
+    //m_activeAvatar = &m_avatars[0][0]; //DON'T DO THIS! WE MUST BE NULL WHEN THE MAP LOADS
 
     //club models
     m_clubModels[ClubModel::Wood] = m_gameScene.createEntity();

@@ -44,6 +44,7 @@ source distribution.
 
 #include <array>
 #include <vector>
+#include <filesystem>
 
 using namespace cro;
 
@@ -137,7 +138,16 @@ bool EnvironmentMap::loadFromFile(const std::string& filePath)
     return false;
 #else
 
-    auto path = FileSystem::getResourcePath() + filePath;
+    std::string path;
+    std::filesystem::path p(filePath);
+    if (p.is_absolute())
+    {
+        path = filePath;
+    }
+    else
+    {
+        path = FileSystem::getResourcePath() + filePath;
+    }
 
     if (!cro::FileSystem::fileExists(path))
     {

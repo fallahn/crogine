@@ -536,7 +536,7 @@ std::string FileSystem::saveFileDialogue(const std::string& defaultDir, const st
 
 std::string FileSystem::getResourcePath()
 {
-#ifdef __APPLE__
+#ifdef __APPLE__  
     //ugh - cwd when using bundles is a pain, so at least add some
     //checks to make sure we're not concatinating an existing part of the path
     auto rpath = resourcePath();
