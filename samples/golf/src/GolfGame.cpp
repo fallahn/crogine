@@ -236,6 +236,9 @@ void GolfGame::handleEvent(const cro::Event& evt)
         case SDLK_KP_PLUS:
             togglePixelScale(m_sharedData, true);
             break;
+        case SDLK_KP_MULTIPLY:
+            m_sharedData.sharedResources->fonts.get(FontID::Label).setSmooth(true);
+            break;
         }
         break;
     }
