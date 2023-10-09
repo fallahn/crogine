@@ -5475,7 +5475,9 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
             case TerrainID::Hole:
                 if (m_sharedData.tutorial)
                 {
+                    Achievements::setActive(true);
                     Achievements::awardAchievement(AchievementStrings[AchievementID::CluedUp]);
+                    Achievements::setActive(m_allowAchievements);
                 }
 
                 //check if this is our own score
