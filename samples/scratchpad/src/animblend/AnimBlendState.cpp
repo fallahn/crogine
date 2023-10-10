@@ -50,10 +50,79 @@ source distribution.
 #include <crogine/util/Random.hpp>
 
 #include <crogine/graphics/Image.hpp>
-#include <crogine/graphics/Texture.hpp>
 
 namespace
 {
+    //shell shaders
+    const std::string ShellVert = 
+        R"(
+ATTRIBUTE vec4 a_position;
+ATTRIBUTE vec4 a_colour;
+ATTRIBUTE vec2 a_texCoord0;
+
+uniform mat4 u_worldMatrix;
+uniform mat4 u_viewProjectionMatrix;
+
+VARYING_OUT vec2 v_texCoord;
+VARYING_OUT float v_height;
+
+
+void main()
+{
+    //TODO add displacement from noise map
+
+    gl_Position = u_viewProjectionMatrix * u_worldMatrix * a_position;
+    v_texCoord = a_texCoord0;
+    v_height = a_colour.r;
+}        )";
+
+
+    const std::string ShellFrag = 
+        R"(
+OUTPUT
+uniform sampler2D u_shellTexture;
+
+VARYING_IN vec2 v_texCoord;
+VARYING_IN float v_height;
+
+//TODO replace with uniform
+const vec3 Colour = vec3(0.2, 0.8, 0.2);
+const vec4 GroundColour = vec4(0.1, 0.05, 0.02, 1.0);
+const float ShadowAmount = 0.3;
+
+void main()
+{
+    //TODO multiply with noise map
+    float height = v_height;
+
+    vec4 colour = vec4(Colour * mix(ShadowAmount, 1.0, height), 1.0);
+    vec4 shellSample = TEXTURE(u_shellTexture, v_texCoord);
+
+    float visibility = (1.0 - step(shellSample.r, height)) * shellSample.a;
+    colour.a = visibility;
+
+    colour = mix(GroundColour, colour, step(1.0/8.0, v_height)); //TODO feed in shell count / single layer size? - green channel perhaps?
+
+    FRAG_OUT = colour;
+}        )";
+
+    struct ShaderID final
+    {
+        enum
+        {
+            Shell
+        };
+    };
+
+    struct MaterialID final
+    {
+        enum
+        {
+            Shell
+        };
+    };
+
+    //league testing
     std::size_t courseIndex = 0;
     const std::vector<std::array<std::int32_t, 18>> courseData =
     {
@@ -144,7 +213,38 @@ void AnimBlendState::addSystems()
 
 void AnimBlendState::loadAssets()
 {
-    
+    //generate a shell texture
+    static constexpr std::uint32_t width = 256;
+    static constexpr std::uint32_t height = 256;
+
+    static constexpr std::int32_t LayerCount = 8; //TODO this is tied to the model - create geom dynamcally instead?
+    static constexpr float Density = 0.4f;
+
+    static constexpr std::int32_t StrandCount = static_cast<float>(width * height) * Density;
+    static constexpr std::int32_t StrandsPerLayer = StrandCount / LayerCount;
+
+    std::vector<std::uint8_t> imgArray(width * height * 4);
+    std::fill(imgArray.begin(), imgArray.end(), 0);
+
+    for (auto i = 0; i < StrandCount; ++i)
+    {
+        const auto x = cro::Util::Random::value(0, width - 1);
+        const auto y = cro::Util::Random::value(0, height - 1);
+        const float MaxLayer = std::pow(static_cast<float>(i / StrandsPerLayer) / LayerCount, 0.7f);
+
+        const auto idx = (x * width + y) * 4;
+        imgArray[idx] = static_cast<std::uint8_t>(MaxLayer * 255.f);
+        imgArray[idx+3] = 255;
+    }
+
+    m_shellTexture.create(width, height);
+    m_shellTexture.update(imgArray.data());
+
+    //shell material
+    m_resources.shaders.loadFromString(ShaderID::Shell, ShellVert, ShellFrag);
+    m_resources.materials.add(MaterialID::Shell, m_resources.shaders.get(ShaderID::Shell));
+    m_resources.materials.get(MaterialID::Shell).setProperty("u_shellTexture", m_shellTexture);
+    m_resources.materials.get(MaterialID::Shell).blendMode = cro::Material::BlendMode::Alpha;
 }
 
 void AnimBlendState::createScene()
@@ -211,25 +311,42 @@ void AnimBlendState::createScene()
         }
     }
 
+
+    if (md.loadFromFile("assets/models/shell.cmt"))
+    {
+        auto entity = m_gameScene.createEntity();
+        entity.addComponent<cro::Transform>();
+        md.createModel(entity);
+
+        entity.getComponent<cro::Model>().setMaterial(0, m_resources.materials.get(MaterialID::Shell));
+    }
+
+
     auto resize = [](cro::Camera& cam)
     {
         glm::vec2 size(cro::App::getWindow().getSize());
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
-        cam.setPerspective(70.f * cro::Util::Const::degToRad, size.x / size.y, 0.1f, 10.f);
+        cam.setPerspective(65.f * cro::Util::Const::degToRad, size.x / size.y, 0.1f, 10.f);
     };
 
     auto& cam = m_gameScene.getActiveCamera().getComponent<cro::Camera>();
     cam.resizeCallback = resize;
     resize(cam);
 
-    m_gameScene.getActiveCamera().getComponent<cro::Transform>().setPosition({ 0.f, 0.8f, 1.f });
+    m_gameScene.getActiveCamera().getComponent<cro::Transform>().setPosition({ 0.f, 0.8f, 2.f });
 }
 
 void AnimBlendState::createUI()
 {
     registerWindow([&]()
         {
-            if (ImGui::Begin("League"))
+            if (ImGui::Begin("Buns"))
+            {
+                ImGui::Image(m_shellTexture, { 512.f, 512.f }, { 0.f, 1.f }, { 1.f, 0.f });
+            }
+            ImGui::End();
+
+            /*if (ImGui::Begin("League"))
             {
                 const auto& entries = m_league.getTable();
                 for (const auto& e : entries)
@@ -265,7 +382,7 @@ void AnimBlendState::createUI()
                     }
                 }
             }
-            ImGui::End();
+            ImGui::End();*/
 
             if (m_modelEntity.isValid())
             {
