@@ -64,6 +64,7 @@ private:
     League m_league;
 
     cro::Texture m_shellTexture;
+    cro::Texture m_noiseTexture;
 
     void addSystems();
     void loadAssets();

@@ -50,6 +50,8 @@ source distribution.
 #include <crogine/util/Random.hpp>
 
 #include <crogine/graphics/Image.hpp>
+#include <crogine/graphics/DynamicMeshBuilder.hpp>
+#include <crogine/detail/OpenGL.hpp>
 
 namespace
 {
@@ -62,49 +64,65 @@ ATTRIBUTE vec2 a_texCoord0;
 
 uniform mat4 u_worldMatrix;
 uniform mat4 u_viewProjectionMatrix;
+uniform vec3 u_cameraWorldPosition;
 
 VARYING_OUT vec2 v_texCoord;
-VARYING_OUT float v_height;
-
+VARYING_OUT vec2 v_height;
+VARYING_OUT float v_viewDistance;
 
 void main()
 {
-    //TODO add displacement from noise map
+    vec4 worldPos = u_worldMatrix * a_position;
+    v_viewDistance = length(worldPos.xyz - u_cameraWorldPosition);
 
-    gl_Position = u_viewProjectionMatrix * u_worldMatrix * a_position;
+    gl_Position = u_viewProjectionMatrix * worldPos;
     v_texCoord = a_texCoord0;
-    v_height = a_colour.r;
-}        )";
+    v_height = a_colour.rg;
+}
+        )";
 
 
     const std::string ShellFrag = 
         R"(
 OUTPUT
 uniform sampler2D u_shellTexture;
+uniform sampler2D u_noiseTexture;
+uniform float u_time;
 
 VARYING_IN vec2 v_texCoord;
-VARYING_IN float v_height;
+VARYING_IN vec2 v_height;
+VARYING_IN float v_viewDistance;
 
 //TODO replace with uniform
-const vec3 Colour = vec3(0.2, 0.8, 0.2);
-const vec4 GroundColour = vec4(0.1, 0.05, 0.02, 1.0);
-const float ShadowAmount = 0.3;
+const vec4 BladeColour = vec4(0.275,0.494,0.243,1.0);
+const vec4 ShadowColour = vec4(0.157,0.306,0.263, 1.0);
+const vec4 GroundColour = vec4(0.314,0.157,0.184,1.0);
+
+const vec2 WindDir = vec2(0.02);
 
 void main()
 {
-    //TODO multiply with noise map
-    float height = v_height;
+    float distance = 1.0 - smoothstep(0.1, 0.9, v_viewDistance / 5.0);
 
-    vec4 colour = vec4(Colour * mix(ShadowAmount, 1.0, height), 1.0);
-    vec4 shellSample = TEXTURE(u_shellTexture, v_texCoord);
+    float height = v_height.r;
+    float noiseHeight = TEXTURE(u_noiseTexture, v_texCoord / 2.0).r;
+
+    float windAmount = TEXTURE(u_noiseTexture, (v_texCoord / 4.0) + (u_time * 0.02)).r * height;
+
+    vec4 colour = mix(ShadowColour * 0.5, BladeColour, height);
+    colour = mix(ShadowColour * height, colour, ((0.9 * noiseHeight) + 0.1));
+
+    vec4 shellSample = TEXTURE(u_shellTexture, (WindDir * windAmount) + v_texCoord) * ((0.5 * noiseHeight) + 0.5);
 
     float visibility = (1.0 - step(shellSample.r, height)) * shellSample.a;
     colour.a = visibility;
 
-    colour = mix(GroundColour, colour, step(1.0/8.0, v_height)); //TODO feed in shell count / single layer size? - green channel perhaps?
+    //TODO if we're on top of other geom we don't need a ground colour
+    colour = mix(GroundColour * distance, colour, step(v_height.g, v_height.r));
 
     FRAG_OUT = colour;
-}        )";
+}
+        )";
 
     struct ShaderID final
     {
@@ -113,6 +131,8 @@ void main()
             Shell
         };
     };
+    std::int32_t timeUniform = -1;
+    std::int32_t shaderHandle = 0;
 
     struct MaterialID final
     {
@@ -186,6 +206,11 @@ void AnimBlendState::handleMessage(const cro::Message& msg)
 
 bool AnimBlendState::simulate(float dt)
 {
+    static float accum = 0.f;
+    accum += dt;
+    glUseProgram(shaderHandle);
+    glUniform1f(timeUniform, accum);
+
     m_gameScene.simulate(dt);
     m_uiScene.simulate(dt);
     return true;
@@ -214,11 +239,11 @@ void AnimBlendState::addSystems()
 void AnimBlendState::loadAssets()
 {
     //generate a shell texture
-    static constexpr std::uint32_t width = 256;
-    static constexpr std::uint32_t height = 256;
+    static constexpr std::uint32_t width = 512;
+    static constexpr std::uint32_t height = 512;
 
-    static constexpr std::int32_t LayerCount = 8; //TODO this is tied to the model - create geom dynamcally instead?
-    static constexpr float Density = 0.4f;
+    static constexpr std::int32_t LayerCount = 24;
+    static constexpr float Density = 0.6f;
 
     static constexpr std::int32_t StrandCount = static_cast<float>(width * height) * Density;
     static constexpr std::int32_t StrandsPerLayer = StrandCount / LayerCount;
@@ -239,12 +264,106 @@ void AnimBlendState::loadAssets()
 
     m_shellTexture.create(width, height);
     m_shellTexture.update(imgArray.data());
+    m_shellTexture.setSmooth(true);
+
+    m_noiseTexture.loadFromFile("assets/images/noise.png");
+    m_noiseTexture.setRepeated(true);
+    m_noiseTexture.setSmooth(true);
 
     //shell material
     m_resources.shaders.loadFromString(ShaderID::Shell, ShellVert, ShellFrag);
-    m_resources.materials.add(MaterialID::Shell, m_resources.shaders.get(ShaderID::Shell));
+    auto& shader = m_resources.shaders.get(ShaderID::Shell);
+    shaderHandle = shader.getGLHandle();
+    timeUniform = shader.getUniformID("u_time");
+
+    m_resources.materials.add(MaterialID::Shell, shader);
     m_resources.materials.get(MaterialID::Shell).setProperty("u_shellTexture", m_shellTexture);
+    m_resources.materials.get(MaterialID::Shell).setProperty("u_noiseTexture", m_noiseTexture);
     m_resources.materials.get(MaterialID::Shell).blendMode = cro::Material::BlendMode::Alpha;
+
+
+    //shell mesh
+    static constexpr std::array<glm::vec3, 4u> Corners =
+    {
+        glm::vec3(-1.f, 0.f, -1.f),
+        glm::vec3(-1.f, 0.f, 1.f),
+        glm::vec3(1.f, 0.f, -1.f),
+        glm::vec3(1.f, 0.f, 1.f)
+    };
+
+    static constexpr std::array<glm::vec2, 4u> UVs =
+    {
+        glm::vec2(0.f, 1.f),
+        glm::vec2(0.f, 0.f),
+        glm::vec2(1.f, 1.f),
+        glm::vec2(1.f, 0.f),
+    };
+
+    struct Vertex final
+    {
+        glm::vec3 position = glm::vec3(0.f);
+        glm::vec4 colour = glm::vec4(1.f);
+        glm::vec2 uv = glm::vec2(0.f);
+        Vertex(glm::vec3 p, glm::vec4 c, glm::vec2 u)
+            : position(p), colour(c), uv(u) {}
+    };
+
+    float y = 0.f;
+    static constexpr float MaxHeight = 0.1f;
+    static constexpr float LayerHeight = MaxHeight / LayerCount;
+
+    std::vector<Vertex> vertData;
+    std::vector<std::uint32_t> indexData;
+
+    for (auto i = 0; i < LayerCount; ++i)
+    {
+        glm::vec4 colour = glm::vec4(((i + 1) * LayerHeight) / MaxHeight, (LayerHeight / MaxHeight) - 0.001f, 0.f, 1.f);
+
+        for (auto j = 0; j < 4; ++j)
+        {
+            auto p = Corners[j];
+            p.y = y;
+
+            vertData.emplace_back(p, colour, UVs[j]);
+        }
+
+        const std::uint32_t Offset = static_cast<std::uint32_t>(vertData.size());
+        indexData.push_back(Offset);
+        indexData.push_back(Offset + 1);
+        indexData.push_back(Offset + 2);
+
+        indexData.push_back(Offset + 2);
+        indexData.push_back(Offset + 1);
+        indexData.push_back(Offset + 3);
+
+        y += LayerHeight;
+    }
+
+
+
+
+    auto entity = m_gameScene.createEntity();
+    entity.addComponent<cro::Transform>();
+
+    auto meshID = m_resources.meshes.loadMesh(cro::DynamicMeshBuilder(cro::VertexProperty::Position | cro::VertexProperty::Colour | cro::VertexProperty::UV0, 1, GL_TRIANGLES));
+    auto material = m_resources.materials.get(MaterialID::Shell);
+    entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), material);
+    auto* meshData = &entity.getComponent<cro::Model>().getMeshData();
+
+    meshData->boundingBox = { glm::vec3(-1.f), glm::vec3(1.f) };
+    meshData->boundingSphere = meshData->boundingBox;
+
+    auto vertStride = (meshData->vertexSize / sizeof(float));
+    meshData->vertexCount = static_cast<std::uint32_t>(vertData.size());
+    (glBindBuffer(GL_ARRAY_BUFFER, meshData->vbo));
+    (glBufferData(GL_ARRAY_BUFFER, meshData->vertexSize * meshData->vertexCount, vertData.data(), GL_STATIC_DRAW));
+    (glBindBuffer(GL_ARRAY_BUFFER, 0));
+
+    auto* submesh = &meshData->indexData[0];
+    submesh->indexCount = static_cast<std::uint32_t>(indexData.size());
+    (glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, submesh->ibo));
+    (glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh->indexCount * sizeof(std::uint32_t), indexData.data(), GL_STATIC_DRAW));
+    (glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
 }
 
 void AnimBlendState::createScene()
@@ -292,9 +411,9 @@ void AnimBlendState::createScene()
 
         const std::array pos =
         {
-            glm::vec3(1.f, 0.f, 0.f),
-            glm::vec3(1.f, 0.f, -1.f),
-            glm::vec3(-1.f, 0.f, -1.f),
+            glm::vec3(1.f, -0.05f, 0.f),
+            glm::vec3(1.f, -0.05f, -1.f),
+            glm::vec3(-1.f, -0.05f, -1.f),
         };
 
         for (auto i = 0u; i < 3u; ++i)
@@ -312,14 +431,14 @@ void AnimBlendState::createScene()
     }
 
 
-    if (md.loadFromFile("assets/models/shell.cmt"))
-    {
-        auto entity = m_gameScene.createEntity();
-        entity.addComponent<cro::Transform>();
-        md.createModel(entity);
+    //if (md.loadFromFile("assets/models/shell.cmt"))
+    //{
+    //    auto entity = m_gameScene.createEntity();
+    //    entity.addComponent<cro::Transform>();
+    //    md.createModel(entity);
 
-        entity.getComponent<cro::Model>().setMaterial(0, m_resources.materials.get(MaterialID::Shell));
-    }
+    //    entity.getComponent<cro::Model>().setMaterial(0, m_resources.materials.get(MaterialID::Shell));
+    //}
 
 
     auto resize = [](cro::Camera& cam)
@@ -333,7 +452,7 @@ void AnimBlendState::createScene()
     cam.resizeCallback = resize;
     resize(cam);
 
-    m_gameScene.getActiveCamera().getComponent<cro::Transform>().setPosition({ 0.f, 0.8f, 2.f });
+    m_gameScene.getActiveCamera().getComponent<cro::Transform>().setPosition({ 0.f, 0.6f, 2.f });
 }
 
 void AnimBlendState::createUI()
