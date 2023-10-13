@@ -38,6 +38,7 @@ source distribution.
 #include <crogine/ecs/components/Callback.hpp>
 #include <crogine/ecs/components/Drawable2D.hpp>
 #include <crogine/ecs/components/Sprite.hpp>
+#include <crogine/ecs/components/ParticleEmitter.hpp>
 
 #include <crogine/ecs/systems/CameraSystem.hpp>
 #include <crogine/ecs/systems/CallbackSystem.hpp>
@@ -45,9 +46,11 @@ source distribution.
 #include <crogine/ecs/systems/ModelRenderer.hpp>
 #include <crogine/ecs/systems/SpriteSystem2D.hpp>
 #include <crogine/ecs/systems/RenderSystem2D.hpp>
+#include <crogine/ecs/systems/ParticleSystem.hpp>
 
 #include <crogine/util/Constants.hpp>
 #include <crogine/util/Random.hpp>
+#include <crogine/util/Wavetable.hpp>
 
 #include <crogine/graphics/Image.hpp>
 #include <crogine/graphics/DynamicMeshBuilder.hpp>
@@ -230,6 +233,7 @@ void AnimBlendState::addSystems()
     m_gameScene.addSystem<cro::SkeletalAnimator>(mb);
     m_gameScene.addSystem<cro::CameraSystem>(mb);
     m_gameScene.addSystem<cro::ModelRenderer>(mb);
+    m_gameScene.addSystem<cro::ParticleSystem>(mb);
 
     m_uiScene.addSystem<cro::SpriteSystem2D>(mb);
     m_uiScene.addSystem<cro::CameraSystem>(mb);
@@ -431,14 +435,38 @@ void AnimBlendState::createScene()
     }
 
 
-    //if (md.loadFromFile("assets/models/shell.cmt"))
-    //{
-    //    auto entity = m_gameScene.createEntity();
-    //    entity.addComponent<cro::Transform>();
-    //    md.createModel(entity);
+    auto entity = m_gameScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 0.f, 1.f, 0.f });
+    entity.addComponent<cro::ParticleEmitter>().settings.loadFromFile("assets/particles/dropsy.cps", m_resources.textures);
+    entity.getComponent<cro::ParticleEmitter>().start();
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [](cro::Entity e, float)
+    {
+        static const auto WaveTable = cro::Util::Wavetable::sine(2.f);
+        static std::size_t s = 0;
+        static std::size_t c = WaveTable.size() / 4;
 
-    //    entity.getComponent<cro::Model>().setMaterial(0, m_resources.materials.get(MaterialID::Shell));
-    //}
+        glm::vec3 pos(WaveTable[c], 1.f, WaveTable[s]);
+        e.getComponent<cro::Transform>().setPosition(pos);
+
+        s = (s + 1) % WaveTable.size();
+        c = (c + 1) % WaveTable.size();
+    };
+
+    registerWindow([entity]() mutable
+        {
+            if (ImGui::Begin("P"))
+            {
+                float rate = entity.getComponent<cro::ParticleEmitter>().settings.emitRate;
+                if (ImGui::SliderFloat("Rate", &rate, 40.f, 100.f))
+                {
+                    entity.getComponent<cro::ParticleEmitter>().settings.emitRate = rate;
+                }
+            }
+            ImGui::End();
+        
+        });
 
 
     auto resize = [](cro::Camera& cam)
