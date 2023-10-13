@@ -133,6 +133,7 @@ private:
 
     InputParser m_inputParser;
     CPUGolfer m_cpuGolfer;
+    std::int32_t m_humanCount;
     cro::Clock m_turnTimer;
 
     cro::Clock m_idleTimer;

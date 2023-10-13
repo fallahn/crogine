@@ -66,7 +66,6 @@ ShadowMapRenderer::ShadowMapRenderer(cro::MessageBus& mb)
     requireComponent<cro::ShadowCaster>();
 }
 
-
 //public
 void ShadowMapRenderer::setMaxDistance(float)
 {
@@ -411,7 +410,7 @@ void ShadowMapRenderer::render()
         glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 #endif //PLATFORM
 
-        glCheck(glUseProgram(0));
+        //glCheck(glUseProgram(0));
 
         glCheck(glFrontFace(GL_CCW));
         glCheck(glDisable(GL_DEPTH_TEST));

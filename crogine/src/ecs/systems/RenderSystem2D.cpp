@@ -330,7 +330,7 @@ void RenderSystem2D::render(Entity cameraEntity, const RenderTarget& rt)
 #else
         glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 #endif
-        glCheck(glUseProgram(0));
+        //glCheck(glUseProgram(0));
 
         glCheck(glDisable(GL_SCISSOR_TEST));
         applyBlendMode(Material::BlendMode::None);

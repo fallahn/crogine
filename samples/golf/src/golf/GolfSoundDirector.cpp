@@ -704,22 +704,37 @@ cro::Entity GolfSoundDirector::playSound(std::int32_t id, glm::vec3 position, fl
             {
             default: break;
             case AudioID::TerrainBunker01:
-                emitterName = "bunker";
+            case AudioID::TerrainRough01:
+            case AudioID::TerrainScrub01:
+            case AudioID::TerrainWater01:
+
+                {
+                    auto r = cro::Util::Random::value(0, 3);
+                    switch (r)
+                    {
+                    default:
+                    case 0:
+                        emitterName = "bunker";
+                        break;
+                    case 1:
+                        emitterName = "rough";
+                        break;
+                    case 2:
+                        emitterName = "scrub";
+                        break;
+                    case 3:
+                        emitterName = "water";
+                        break;
+                    }
+                }
+
                 break;
+
             case AudioID::TerrainFairway01:
                 emitterName = "fairway";
                 break;
             case AudioID::TerrainGreen01:
                 emitterName = "green";
-                break;
-            case AudioID::TerrainRough01:
-                emitterName = "rough";
-                break;
-            case AudioID::TerrainScrub01:
-                emitterName = "scrub";
-                break;
-            case AudioID::TerrainWater01:
-                emitterName = "water";
                 break;
             case AudioID::Hook:
                 emitterName = "hook";

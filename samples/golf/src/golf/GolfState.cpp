@@ -178,6 +178,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     m_textChat          (m_uiScene, sd),
     m_inputParser       (sd, &m_gameScene),
     m_cpuGolfer         (m_inputParser, m_currentPlayer, m_collisionMesh),
+    m_humanCount        (0),
     m_wantsGameState    (true),
     m_allowAchievements (false),
     m_scaleBuffer       ("PixelScale"),
@@ -299,6 +300,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
         }
     }
     m_allowAchievements = (humanCount == 1) && (getCourseIndex(sd.mapDirectory) != -1);
+    m_humanCount = humanCount;
 
     /*switch (sd.scoreType)
     {

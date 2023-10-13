@@ -1548,11 +1548,15 @@ void GolfState::showCountdown(std::uint8_t seconds)
             }
 
             //message for audio director
-            auto* msg = getContext().appInstance.getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
-            msg->type = GolfEvent::RoundEnd;
-            msg->score = isCPU ? 1 : 0;
+            if (m_humanCount != 0)
+            {
+                auto* msg = getContext().appInstance.getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
+                msg->type = GolfEvent::RoundEnd;
+                msg->score = isCPU ? 1 : 0;
+            }
         }
-        else if (m_statBoardScores.back().client == m_sharedData.clientConnection.connectionID)
+        else if (m_statBoardScores.back().client == m_sharedData.clientConnection.connectionID
+            && m_humanCount != 0)
         {
             auto* msg = getContext().appInstance.getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
             msg->type = GolfEvent::RoundEnd;

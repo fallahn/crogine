@@ -240,7 +240,7 @@ void ModelRenderer::render(Entity camera, const RenderTarget& rt)
         glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
 #endif //PLATFORM
 
-        glCheck(glUseProgram(0));
+        //glCheck(glUseProgram(0));
 
         glCheck(glFrontFace(GL_CCW));
         glCheck(glDisable(GL_BLEND));
