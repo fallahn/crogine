@@ -173,8 +173,10 @@ namespace cro
         std::size_t m_nextFreeParticle;
 
         bool m_running;
-        Clock m_emissionClock;
+        float m_emissionTime;
         Sphere m_bounds;
+        glm::vec3 m_previousPosition; //used to interpolate spawn position if emit rate is > frame rate
+        glm::vec3 m_previousEmitPosition;
 
         bool m_pendingUpdate;
         std::uint64_t m_renderFlags;

@@ -441,9 +441,9 @@ void AnimBlendState::createScene()
     entity.getComponent<cro::ParticleEmitter>().start();
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().function =
-        [](cro::Entity e, float)
+        [](cro::Entity e, float dt)
     {
-        static const auto WaveTable = cro::Util::Wavetable::sine(2.f);
+        /*static const auto WaveTable = cro::Util::Wavetable::sine(1.f);
         static std::size_t s = 0;
         static std::size_t c = WaveTable.size() / 4;
 
@@ -451,7 +451,15 @@ void AnimBlendState::createScene()
         e.getComponent<cro::Transform>().setPosition(pos);
 
         s = (s + 1) % WaveTable.size();
-        c = (c + 1) % WaveTable.size();
+        c = (c + 1) % WaveTable.size();*/
+
+        auto pos = e.getComponent<cro::Transform>().getPosition();
+        pos.x += dt * 6.f;
+        if (pos.x > 2.f)
+        {
+            pos.x -= 4.f;
+        }
+        e.getComponent<cro::Transform>().setPosition(pos);
     };
 
     registerWindow([entity]() mutable
@@ -459,7 +467,7 @@ void AnimBlendState::createScene()
             if (ImGui::Begin("P"))
             {
                 float rate = entity.getComponent<cro::ParticleEmitter>().settings.emitRate;
-                if (ImGui::SliderFloat("Rate", &rate, 40.f, 100.f))
+                if (ImGui::SliderFloat("Rate", &rate, 10.f, 300.f))
                 {
                     entity.getComponent<cro::ParticleEmitter>().settings.emitRate = rate;
                 }

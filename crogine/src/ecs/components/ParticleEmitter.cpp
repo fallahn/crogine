@@ -35,14 +35,17 @@ source distribution.
 using namespace cro;
 
 ParticleEmitter::ParticleEmitter()
-    : m_vbo             (0),
-    m_vao               (0),
-    m_particles         (MaxParticles),
-    m_nextFreeParticle  (0),
-    m_running           (false),
-    m_pendingUpdate     (true),
-    m_renderFlags       (std::numeric_limits<std::uint64_t>::max()),
-    m_releaseCount      (-1)
+    : m_vbo                 (0),
+    m_vao                   (0),
+    m_particles             (MaxParticles),
+    m_nextFreeParticle      (0),
+    m_running               (false),
+    m_emissionTime          (0.f),
+    m_previousPosition      (0.f),
+    m_previousEmitPosition  (0.f),
+    m_pendingUpdate         (true),
+    m_renderFlags           (std::numeric_limits<std::uint64_t>::max()),
+    m_releaseCount          (-1)
 {
 
 }
