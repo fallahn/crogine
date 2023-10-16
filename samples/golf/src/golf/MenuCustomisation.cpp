@@ -938,6 +938,15 @@ void MenuState::ugcInstalledHandler(std::uint64_t id, std::int32_t type)
         //exist in the shared data so the main game can find the
         //models for remote players who have them.
         const auto BallUserPath = Social::getUserContentPath(Social::UserContent::Ball) + std::to_string(id) + "/";
+
+        //this can happen sometimes when the UGC fails to install (usually linux)
+        //so quit so we don't throw
+        if (!cro::FileSystem::directoryExists(BallUserPath))
+        {
+            LogE << "Couldn't find UGC at " << BallUserPath << std::endl;
+            return;
+        }
+
         auto files = cro::FileSystem::listFiles(BallUserPath);
         LogI << "installed remote ball" << std::endl;
         for (const auto& file : files)
@@ -961,6 +970,13 @@ void MenuState::ugcInstalledHandler(std::uint64_t id, std::int32_t type)
     {
         const auto HairUserPath = Social::getUserContentPath(Social::UserContent::Hair) + std::to_string(id) + "/";
         auto files = cro::FileSystem::listFiles(HairUserPath);
+
+        if (!cro::FileSystem::directoryExists(HairUserPath))
+        {
+            LogE << "Couldn't find UGC at " << HairUserPath << std::endl;
+            return;
+        }
+
         LogI << "installed remote hair" << std::endl;
         for (const auto& file : files)
         {
@@ -983,6 +999,13 @@ void MenuState::ugcInstalledHandler(std::uint64_t id, std::int32_t type)
     {
         //insert into m_sharedData.avatarInfo so GolfState can find it
         const auto& avatarPath = Social::getUserContentPath(Social::UserContent::Avatar) + std::to_string(id) + "/";
+
+        if (!cro::FileSystem::directoryExists(avatarPath))
+        {
+            LogE << "Couldn't find UGC at " << avatarPath << std::endl;
+            return;
+        }
+
         auto files = cro::FileSystem::listFiles(avatarPath);
         processAvatarList(files, avatarPath, avatarPath);
         LogI << "Installed remote avatar" << std::endl;
