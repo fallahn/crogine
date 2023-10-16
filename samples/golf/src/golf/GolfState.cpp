@@ -529,6 +529,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
             //logCSV();
             /*m_activeAvatar->model.getComponent<cro::Callback>().active = true;
             m_activeAvatar->model.getComponent<cro::Model>().setHidden(false);*/
+
             break;
         case SDLK_F8:
             if (evt.key.keysym.mod & KMOD_SHIFT)

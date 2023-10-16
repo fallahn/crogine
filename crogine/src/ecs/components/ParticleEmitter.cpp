@@ -44,7 +44,7 @@ ParticleEmitter::ParticleEmitter()
     m_previousPosition      (0.f),
     m_prevTimestamp         (0.f),
     m_currentTimestamp      (0.f),
-    m_emissionTimeStamp     (0.f),
+    m_emissionTimestamp     (0.f),
     m_pendingUpdate         (true),
     m_renderFlags           (std::numeric_limits<std::uint64_t>::max()),
     m_releaseCount          (-1)
@@ -63,7 +63,8 @@ ParticleEmitter::ParticleEmitter()
 void ParticleEmitter::start()
 {
     m_running = true;
-    m_emissionTime = m_prevTimestamp;
+    m_emissionTimestamp = m_prevTimestamp;
+    m_emissionTime = 0.f;
 
     if (settings.releaseCount)
     {

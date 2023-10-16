@@ -178,7 +178,7 @@ namespace cro
         glm::vec3 m_previousPosition; //used to interpolate spawn position if emit rate is > frame rate
         float m_prevTimestamp;
         float m_currentTimestamp;
-        float m_emissionTimeStamp;
+        float m_emissionTimestamp;
 
         bool m_pendingUpdate;
         std::uint64_t m_renderFlags;

@@ -348,13 +348,11 @@ void ParticleSystem::process(float dt)
     {
         //check each emitter to see if it should spawn a new particle
         auto& emitter = e.getComponent<ParticleEmitter>();
-        emitter.m_emissionTime += dt;
 
         emitter.m_prevTimestamp = emitter.m_currentTimestamp;
         emitter.m_currentTimestamp += dt;
 
         const float rate = (1.f / emitter.settings.emitRate); //TODO this ought to be const when rate itself is set...
-
 
         if (/*emitter.m_pendingUpdate &&*/
             emitter.m_running)
@@ -362,6 +360,8 @@ void ParticleSystem::process(float dt)
             auto& tx = e.getComponent<Transform>();
             glm::quat rotation = glm::quat_cast(tx.getLocalTransform());
             auto worldPos = tx.getWorldPosition();
+
+            emitter.m_emissionTime += dt;
 
             while (emitter.m_emissionTime > rate)
             {
@@ -379,9 +379,9 @@ void ParticleSystem::process(float dt)
                 emitter.m_emissionTime -= rate;
 
                 //interpolate position
-                emitter.m_emissionTimeStamp += rate;
+                emitter.m_emissionTimestamp += rate;
 
-                const float t = (emitter.m_emissionTimeStamp - emitter.m_prevTimestamp) / (emitter.m_currentTimestamp - emitter.m_prevTimestamp);
+                const float t = (emitter.m_emissionTimestamp - emitter.m_prevTimestamp) / (emitter.m_currentTimestamp - emitter.m_prevTimestamp);
                 auto basePosition = glm::mix(emitter.m_previousPosition, worldPos, t);
 
                 static const float epsilon = 0.0001f;
@@ -398,6 +398,7 @@ void ParticleSystem::process(float dt)
                         p.colour = settings.colour;
                         p.gravity = settings.gravity;
                         p.lifetime = settings.lifetime + cro::Util::Random::value(-settings.lifetimeVariance, settings.lifetimeVariance + epsilon);
+                        p.lifetime -= (emitter.m_currentTimestamp - emitter.m_emissionTimestamp);
                         p.maxLifeTime = p.lifetime;
 
                         auto randRot = glm::rotate(rotation, Util::Random::value(-settings.spread, (settings.spread + epsilon)) * Util::Const::degToRad, Transform::X_AXIS);

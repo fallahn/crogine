@@ -140,6 +140,7 @@ namespace PacketID
         BullsEye, //< bullseye struct
         BullHit, //< BullHit struct
         FlagHit, //< BullHit struct
+        WarnTime, //< uint8 warning time for AFK in seconds
 
         //from client
         RequestGameStart, //uint8 sv::State, ie Golf to start golf, Billiards to start billiards etc

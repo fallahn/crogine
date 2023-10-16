@@ -62,6 +62,7 @@ namespace
     constexpr std::uint8_t MaxStrokes = 12;
     constexpr std::uint8_t MaxRandomTargets = 2;
     const cro::Time TurnTime = cro::seconds(90.f);
+    const cro::Time WarnTime = cro::seconds(10.f);
 
     bool hadTennisBounce = false;
 
@@ -447,17 +448,32 @@ std::int32_t GolfState::process(float dt)
 {
     if (m_gameStarted)
     {
+        static bool warned = false;
+
         //check the turn timer and skip player if they AFK'd
-        if (m_turnTimer.elapsed() > TurnTime)
+        if (m_turnTimer.elapsed() > (TurnTime - WarnTime))
         {
-            if (m_sharedData.clients[m_playerInfo[0].client].peer.getID() != m_sharedData.hostID)
+            if (!warned)
             {
-                m_playerInfo[0].holeScore[m_currentHole] = MaxStrokes;
-                m_playerInfo[0].position = m_holeData[m_currentHole].pin;
-                m_playerInfo[0].distanceToHole = 0.f;
-                m_playerInfo[0].terrain = TerrainID::Green;
-                setNextPlayer(); //resets the timer
+                warned = true;
+                m_sharedData.host.broadcastPacket(PacketID::WarnTime, std::uint8_t(10), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
             }
+
+            if (m_turnTimer.elapsed() > TurnTime)
+            {
+                if (m_sharedData.clients[m_playerInfo[0].client].peer.getID() != m_sharedData.hostID)
+                {
+                    m_playerInfo[0].holeScore[m_currentHole] = MaxStrokes;
+                    m_playerInfo[0].position = m_holeData[m_currentHole].pin;
+                    m_playerInfo[0].distanceToHole = 0.f;
+                    m_playerInfo[0].terrain = TerrainID::Green;
+                    setNextPlayer(); //resets the timer
+                }
+            }
+        }
+        else
+        {
+            warned = false;
         }
 
         //we have to keep checking this as a client might
