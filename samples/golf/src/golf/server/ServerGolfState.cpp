@@ -453,7 +453,8 @@ std::int32_t GolfState::process(float dt)
         //check the turn timer and skip player if they AFK'd
         if (m_turnTimer.elapsed() > (TurnTime - WarnTime))
         {
-            if (!warned)
+            if (!warned
+                && m_sharedData.clients[m_playerInfo[0].client].peer.getID() != m_sharedData.hostID)
             {
                 warned = true;
                 m_sharedData.host.broadcastPacket(PacketID::WarnTime, std::uint8_t(10), net::NetFlag::Reliable, ConstVal::NetChannelReliable);

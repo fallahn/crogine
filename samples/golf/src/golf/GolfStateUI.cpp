@@ -353,6 +353,41 @@ void GolfState::buildUI()
     entity.getComponent<cro::Text>().setFillColour(LeaderboardTextLight);
     infoEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
+    cro::AudioScape as;
+    as.loadFromFile("assets/golf/sound/menu.xas", m_resources.audio);
+
+    //afk warning
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::AudioEmitter>() = as.getEmitter("switch");
+    entity.addComponent<cro::Transform>().setScale(glm::vec2(0.f));
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::AFKWarn | CommandID::UI::UIElement;
+    entity.addComponent<UIElement>().relativePosition = { 0.5f, 1.f };
+    entity.getComponent<UIElement>().absolutePosition = { 0.f, -UIBarHeight };
+    entity.getComponent<UIElement>().depth = 0.05f;
+    entity.addComponent<cro::Callback>().setUserData<float>(10.f);
+    entity.getComponent<cro::Callback>().function =
+        [](cro::Entity e, float dt)
+        {
+            auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
+            auto oldTime = currTime;
+
+            currTime = std::max(0.f, currTime - dt);
+
+            if (std::floor(currTime) < std::floor(oldTime))
+            {
+                std::string str = "Skipping in " + std::to_string(static_cast<std::int32_t>(currTime));
+                e.getComponent<cro::Text>().setString(str);
+                centreText(e);
+
+                e.getComponent<cro::AudioEmitter>().play();
+            }
+        };
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
+    entity.getComponent<cro::Text>().setFillColour(TextHighlightColour);
+    infoEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
 
     //fast forward option
     entity = m_uiScene.createEntity();

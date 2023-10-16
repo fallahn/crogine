@@ -84,7 +84,8 @@ struct CommandID final
             WindHidden           = 0x800000, //I can't think of a better name - basically when the wind indicator is hidden during putting
             WindEffect           = 0x1000000,
             PuttPower            = 0x2000000,
-            TerrainType          = 0x4000000
+            TerrainType          = 0x4000000,
+            AFKWarn              = 0x8000000
         };
     };
 

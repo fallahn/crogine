@@ -5276,6 +5276,21 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
         switch (evt.packet.getID())
         {
         default: break;
+        case PacketID::WarnTime:
+        {
+            float warnTime = static_cast<float>(evt.packet.as<std::uint8_t>());
+
+            cro::Command cmd;
+            cmd.targetFlags = CommandID::UI::AFKWarn;
+            cmd.action = [warnTime](cro::Entity e, float)
+            {
+                e.getComponent<cro::Callback>().setUserData<float>(warnTime + 0.1f);
+                e.getComponent<cro::Callback>().active = true;
+                e.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+            };
+            m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+        }
+            break;
         case PacketID::MaxClubs:
         {
             std::uint8_t clubSet = evt.packet.as<std::uint8_t>();
@@ -6691,6 +6706,14 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     };
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
+    //reset any warning
+    cmd.targetFlags = CommandID::UI::AFKWarn;
+    cmd.action = [](cro::Entity e, float)
+        {
+            e.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+            e.getComponent<cro::Callback>().active = false;
+        };
+    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
     //stroke indicator is in model scene...
     cmd.targetFlags = CommandID::StrokeIndicator | CommandID::StrokeArc;
@@ -7137,6 +7160,15 @@ void GolfState::hitBall()
         };
     };
     m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+    //reset any warning
+    cmd.targetFlags = CommandID::UI::AFKWarn;
+    cmd.action = [](cro::Entity e, float)
+        {
+            e.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+            e.getComponent<cro::Callback>().active = false;
+        };
+    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
     if (m_currentCamera == CameraID::Bystander
         && cro::Util::Random::value(0,1) == 0)
