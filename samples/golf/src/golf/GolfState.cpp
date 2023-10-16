@@ -5482,20 +5482,18 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
                     Achievements::setActive(m_allowAchievements);
                 }
 
-                //check if this is our own score
                 bool special = false;
+                std::int32_t score = m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].holeScores[m_currentHole];
+                if (score == 1)
+                {
+                    auto* msg = postMessage<GolfEvent>(MessageID::GolfMessage);
+                    msg->type = GolfEvent::HoleInOne;
+                    msg->position = m_holeData[m_currentHole].pin;
+                }
+
+                //check if this is our own score
                 if (m_currentPlayer.client == m_sharedData.clientConnection.connectionID)
                 {
-                    std::int32_t score = m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].holeScores[m_currentHole];
-                    if (score == 1)
-                    {
-                        //achievement is awarded in showMessageBoard() where other achievements/stats are updated.
-                        //Achievements::awardAchievement(AchievementStrings[AchievementID::HoleInOne]);
-                        auto* msg = postMessage<GolfEvent>(MessageID::GolfMessage);
-                        msg->type = GolfEvent::HoleInOne;
-                        msg->position = m_holeData[m_currentHole].pin;
-                    }
-
                     if (m_currentHole == m_holeData.size() - 1)
                     {
                         //just completed the course
