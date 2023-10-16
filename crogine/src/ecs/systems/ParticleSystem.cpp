@@ -174,11 +174,6 @@ namespace
     const std::size_t MinParticleSystems = 4; //min amount before resizing - this many added on resize (so don't make too large!!)
     const std::size_t VertexSize = 10 * sizeof(float); //pos, colour, rotation/scale vert attribs
 
-#ifdef CRO_DEBUG_
-    float overflow = 0.f;
-    float dRate = 0.f;
-    glm::vec3 emitPos(0.f);
-#endif
 
     bool inFrustum(const Frustum& frustum, const ParticleEmitter& emitter)
     {
@@ -202,18 +197,6 @@ ParticleSystem::ParticleSystem(MessageBus& mb)
     m_nextBuffer        (0),
     m_bufferCount       (0)
 {
-#ifdef CRO_DEBUG_
-    registerWindow([]()
-        {
-            if (ImGui::Begin("Particle System"))
-            {
-                ImGui::Text("Overflow %3.6f", overflow);
-                ImGui::Text("Rate %3.6f", dRate);
-                ImGui::Text("Pos %3.3f, %3.3f, %3.3f", emitPos.x, emitPos.y, emitPos.z);
-            }
-            ImGui::End();
-        });
-#endif
     for (auto& vbo : m_vboIDs)
     {
         vbo = 0;
@@ -367,7 +350,11 @@ void ParticleSystem::process(float dt)
         auto& emitter = e.getComponent<ParticleEmitter>();
         emitter.m_emissionTime += dt;
 
+        emitter.m_prevTimestamp = emitter.m_currentTimestamp;
+        emitter.m_currentTimestamp += dt;
+
         const float rate = (1.f / emitter.settings.emitRate); //TODO this ought to be const when rate itself is set...
+
 
         if (/*emitter.m_pendingUpdate &&*/
             emitter.m_running)
@@ -375,8 +362,6 @@ void ParticleSystem::process(float dt)
             auto& tx = e.getComponent<Transform>();
             glm::quat rotation = glm::quat_cast(tx.getLocalTransform());
             auto worldPos = tx.getWorldPosition();
-            glm::vec3 basePosition = worldPos;// emitter.m_previousEmitPosition;
-            const glm::vec3 velocity = (worldPos - emitter.m_previousPosition) * (1.f / dt);
 
             while (emitter.m_emissionTime > rate)
             {
@@ -391,21 +376,13 @@ void ParticleSystem::process(float dt)
                     emitter.settings.textureID = m_fallbackTexture.getGLHandle();
                 }
 
-
-
-
                 emitter.m_emissionTime -= rate;
-                dRate = rate;
 
                 //interpolate position
-                auto l2 = glm::length2(velocity);
-                if (l2 != 0)
-                {
-                    //basePosition += velocity * rate;
+                emitter.m_emissionTimeStamp += rate;
 
-                    overflow = emitter.m_emissionTime;
-                }
-                emitPos = basePosition;
+                const float t = (emitter.m_emissionTimeStamp - emitter.m_prevTimestamp) / (emitter.m_currentTimestamp - emitter.m_prevTimestamp);
+                auto basePosition = glm::mix(emitter.m_previousPosition, worldPos, t);
 
                 static const float epsilon = 0.0001f;
                 auto emitCount = emitter.settings.emitCount;
@@ -466,7 +443,6 @@ void ParticleSystem::process(float dt)
                     }
                 }
             }
-            emitter.m_previousEmitPosition = basePosition;
         }
 
         if (emitter.m_releaseCount == 0)

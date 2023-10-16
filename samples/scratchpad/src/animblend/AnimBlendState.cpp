@@ -443,7 +443,7 @@ void AnimBlendState::createScene()
     entity.getComponent<cro::Callback>().function =
         [](cro::Entity e, float dt)
     {
-        /*static const auto WaveTable = cro::Util::Wavetable::sine(1.f);
+        static const auto WaveTable = cro::Util::Wavetable::sine(1.f);
         static std::size_t s = 0;
         static std::size_t c = WaveTable.size() / 4;
 
@@ -451,14 +451,14 @@ void AnimBlendState::createScene()
         e.getComponent<cro::Transform>().setPosition(pos);
 
         s = (s + 1) % WaveTable.size();
-        c = (c + 1) % WaveTable.size();*/
+        c = (c + 1) % WaveTable.size();
 
-        auto pos = e.getComponent<cro::Transform>().getPosition();
+        /*auto pos = e.getComponent<cro::Transform>().getPosition();
         pos.x += dt * 6.f;
         if (pos.x > 2.f)
         {
             pos.x -= 4.f;
-        }
+        }*/
         e.getComponent<cro::Transform>().setPosition(pos);
     };
 
