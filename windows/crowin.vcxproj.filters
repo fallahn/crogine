@@ -711,6 +711,9 @@
     <ClInclude Include="..\crogine\include\crogine\core\ProfileTimer.hpp">
       <Filter>Header Files\core</Filter>
     </ClInclude>
+    <ClInclude Include="..\crogine\include\crogine\graphics\ArrayTexture.hpp">
+      <Filter>Header Files\graphics</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\crogine\src\ecs\Entity.cpp">

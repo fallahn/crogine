@@ -125,6 +125,7 @@
     <ClInclude Include="..\crogine\include\crogine\ecs\systems\SpriteSystem3D.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\systems\TextSystem.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\systems\UISystem.hpp" />
+    <ClInclude Include="..\crogine\include\crogine\graphics\ArrayTexture.hpp" />
     <ClInclude Include="..\crogine\include\crogine\graphics\BinaryMeshBuilder.hpp" />
     <ClInclude Include="..\crogine\include\crogine\graphics\BoundingBox.hpp" />
     <ClInclude Include="..\crogine\include\crogine\graphics\CircleMeshBuilder.hpp" />
