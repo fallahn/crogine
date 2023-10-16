@@ -206,14 +206,18 @@ void Server::run()
                     m_sharedData.host.broadcastPacket(PacketID::AchievementGet, evt.packet.as<std::array<std::uint8_t, 2u>>(), net::NetFlag::Reliable);
                     break;
                 case PacketID::ClientVersion:
-                    if (evt.packet.as<std::uint16_t>() != CURRENT_VER)
+                {
+                    auto clientVer = evt.packet.as<std::uint16_t>();
+                    if (clientVer != CURRENT_VER)
                     {
                         m_sharedData.host.sendPacket(evt.peer, PacketID::ConnectionRefused, std::uint8_t(MessageType::VersionMismatch), net::NetFlag::Reliable);
+                        LogE << "Client responded with version " << clientVer << ", server is " << CURRENT_VER << std::endl;
                     }
                     else
                     {
                         m_sharedData.host.sendPacket(evt.peer, PacketID::ClientPlayerCount, std::uint8_t(0), net::NetFlag::Reliable);
                     }
+                }
                     break;
                 case PacketID::ClientPlayerCount:
                     validatePeer(evt.peer, evt.packet.as<std::uint8_t>());
