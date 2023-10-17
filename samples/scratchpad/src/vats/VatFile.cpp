@@ -32,6 +32,7 @@ source distribution.
 #include <crogine/core/ConfigFile.hpp>
 #include <crogine/core/FileSystem.hpp>
 #include <crogine/graphics/Image.hpp>
+#include <crogine/graphics/ImageArray.hpp>
 
 namespace
 {
@@ -225,7 +226,23 @@ bool VatFile::fillArrayTexture(cro::ArrayTexture<float, 4u>& arrayTexture) const
     }
 
     arrayTexture.create(m_binaryDims.x, m_binaryDims.y);
-    //TODO convert model texture to float and insert in here
+
+    //TODO load the correct diffuse map from the model data
+    cro::ImageArray<float> diffuseMap;
+    if (diffuseMap.loadFromFile(cro::FileSystem::getResourcePath() + "assets/vats/crowd01.png"))
+    {
+        //TODO we need to resize the diffuse map to match
+        //the dimensions of the array - is this worth it?
+        std::vector<float> buff;
+        diffuseMap.swap(buff);
+        
+        if (!arrayTexture.insertLayer(buff, 0))
+        {
+            //return false;
+        }
+    }
+    
+
     if (!arrayTexture.insertLayer(m_binaryData[DataID::Position], 1))
     {
         return false;
