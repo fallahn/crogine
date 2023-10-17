@@ -318,6 +318,10 @@ private:
     };
     std::array<cro::Entity, SkyCam::Count> m_skyCameras = {};
     void updateSkybox(float);
+    
+    static const cro::Time DefaultIdleTime;
+    cro::Time m_idleTime;
+    void resetIdle();
 
     cro::Entity m_drone;
     cro::Entity m_defaultCam;

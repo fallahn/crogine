@@ -454,7 +454,7 @@ std::int32_t GolfState::process(float dt)
         if (m_turnTimer.elapsed() > (TurnTime - WarnTime))
         {
             if (!warned
-                && m_sharedData.clients[m_playerInfo[0].client].peer.getID() != m_sharedData.hostID)
+                 && m_sharedData.clients[m_playerInfo[0].client].peer.getID() != m_sharedData.hostID)
             {
                 warned = true;
                 m_sharedData.host.broadcastPacket(PacketID::WarnTime, std::uint8_t(10), net::NetFlag::Reliable, ConstVal::NetChannelReliable);

@@ -355,10 +355,13 @@ void GolfState::buildUI()
 
     cro::AudioScape as;
     as.loadFromFile("assets/golf/sound/menu.xas", m_resources.audio);
+    entity = m_gameScene.createEntity(); //needs to be in game s cene to play audio
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::AudioEmitter>() = as.getEmitter("switch");
+    auto audioEnt = entity;
 
     //afk warning
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::AudioEmitter>() = as.getEmitter("switch");
     entity.addComponent<cro::Transform>().setScale(glm::vec2(0.f));
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::AFKWarn | CommandID::UI::UIElement;
     entity.addComponent<UIElement>().relativePosition = { 0.5f, 1.f };
@@ -366,7 +369,7 @@ void GolfState::buildUI()
     entity.getComponent<UIElement>().depth = 0.05f;
     entity.addComponent<cro::Callback>().setUserData<float>(10.f);
     entity.getComponent<cro::Callback>().function =
-        [](cro::Entity e, float dt)
+        [audioEnt](cro::Entity e, float dt) mutable
         {
             auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
             auto oldTime = currTime;
@@ -375,11 +378,18 @@ void GolfState::buildUI()
 
             if (std::floor(currTime) < std::floor(oldTime))
             {
-                std::string str = "Skipping in " + std::to_string(static_cast<std::int32_t>(currTime));
+                auto t = static_cast<std::int32_t>(currTime);
+                std::string str = "Skipping in " + std::to_string(t);
                 e.getComponent<cro::Text>().setString(str);
                 centreText(e);
 
-                e.getComponent<cro::AudioEmitter>().play();
+                audioEnt.getComponent<cro::AudioEmitter>().play();
+
+                if (t == 0)
+                {
+                    e.getComponent<cro::Callback>().active = false;
+                    e.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+                }
             }
         };
     entity.addComponent<cro::Drawable2D>();

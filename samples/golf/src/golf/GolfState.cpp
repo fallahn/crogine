@@ -151,9 +151,6 @@ namespace
 
     float godmode = 1.f;
 
-    const cro::Time DefaultIdleTime = cro::seconds(180.f);
-    cro::Time idleTime = DefaultIdleTime;
-
     const cro::Time ReadyPingFreq = cro::seconds(1.f);
 
     constexpr float MaxRotation = 0.3f;// 0.13f;
@@ -191,6 +188,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     m_terrainBuilder    (sd, m_holeData, m_terrainChunker),
     m_audioPath         ("assets/golf/sound/ambience.xas"),
     m_currentCamera     (CameraID::Player),
+    m_idleTime          (cro::seconds(180.f)),
     m_photoMode         (false),
     m_restoreInput      (false),
     m_activeAvatar      (nullptr),
@@ -434,34 +432,6 @@ bool GolfState::handleEvent(const cro::Event& evt)
         if (getStateCount() == 1)
         {
             cro::App::getWindow().setMouseCaptured(true);
-        }
-    };
-
-    const auto resetIdle = [&]()
-    {
-        m_idleTimer.restart();
-        idleTime = DefaultIdleTime / 3.f;
-
-        if (m_currentCamera == CameraID::Idle)
-        {
-            setActiveCamera(CameraID::Player);
-            m_inputParser.setSuspended(false);
-
-            cro::Command cmd;
-            cmd.targetFlags = CommandID::StrokeArc | CommandID::StrokeIndicator;
-            cmd.action = [&](cro::Entity e, float)
-            {
-                auto localPlayer = m_currentPlayer.client == m_sharedData.clientConnection.connectionID;
-                e.getComponent<cro::Model>().setHidden(!(localPlayer && !m_sharedData.localConnectionData.playerData[m_currentPlayer.player].isCPU));
-            };
-            m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
-
-            //resets the drone which may have drifted while player idled.
-            if (m_drone.isValid())
-            {
-                auto& data = m_drone.getComponent<cro::Callback>().getUserData<DroneCallbackData>();
-                data.target.getComponent<cro::Transform>().setPosition(data.resetPosition);
-            }
         }
     };
 
@@ -1897,10 +1867,10 @@ bool GolfState::simulate(float dt)
     if (!m_sharedData.tutorial
         && !m_roundEnded)
     {
-        if (m_idleTimer.elapsed() > idleTime)
+        if (m_idleTimer.elapsed() > m_idleTime)
         {
             m_idleTimer.restart();
-            idleTime = cro::seconds(std::max(20.f, idleTime.asSeconds() / 2.f));
+            m_idleTime = cro::seconds(std::max(20.f, m_idleTime.asSeconds() / 2.f));
 
 
             //horrible hack to make the coughing less frequent
@@ -1943,7 +1913,7 @@ bool GolfState::simulate(float dt)
         }
 
         //switch to idle cam if more than half time
-        if (m_idleTimer.elapsed() > (idleTime * 0.65f)
+        if (m_idleTimer.elapsed() > (m_idleTime * 0.65f)
             && m_currentCamera == CameraID::Player
             && m_inputParser.getActive()) //hmm this stops this happening on remote clients
         {
@@ -5636,6 +5606,14 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
             requestStackPush(StateID::Error);
             break;
         case PacketID::SetPlayer:
+            if (m_photoMode)
+            {
+                toggleFreeCam();
+            }
+            else
+            {
+                resetIdle();
+            }
             m_wantsGameState = false;
             m_newHole = false; //not necessarily a new hole, but the server has said player wants to go, regardless
             {
@@ -5690,6 +5668,14 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
             updateWindDisplay(cro::Util::Net::decompressVec3(evt.packet.as<std::array<std::int16_t, 3u>>()));
             break;
         case PacketID::SetHole:
+            if (m_photoMode)
+            {
+                toggleFreeCam();
+            }
+            else
+            {
+                resetIdle();
+            }
             setCurrentHole(evt.packet.as<std::uint16_t>());
             break;
         case PacketID::ScoreUpdate:
@@ -6595,7 +6581,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     m_turnTimer.restart();
     m_idleTimer.restart();
     m_playTimer.restart();
-    idleTime = cro::seconds(90.f);
+    m_idleTime = cro::seconds(90.f);
     m_skipState = {};
     m_ballTrail.setNext();
 
@@ -7510,7 +7496,7 @@ void GolfState::createTransition(const ActivePlayer& playerData)
 void GolfState::startFlyBy()
 {
     m_idleTimer.restart();
-    idleTime = cro::seconds(90.f);
+    m_idleTime = cro::seconds(90.f);
 
     //reset the zoom if not putting from tee
     m_cameras[CameraID::Player].getComponent<CameraFollower::ZoomData>().target = m_holeData[m_currentHole].puttFromTee ? PuttingZoom : 1.f;
@@ -7612,6 +7598,7 @@ void GolfState::startFlyBy()
         if (planeIntersect(camTx.getLocalTransform(), intersection))
         {
             intersection.y = WaterLevel;
+            m_cameras[CameraID::Transition].getComponent<TargetInfo>().waterPlane = m_waterEnt; //TODO this doesn't actually update the parent if already attached somewhere else...
             m_cameras[CameraID::Transition].getComponent<TargetInfo>().waterPlane.getComponent<cro::Transform>().setPosition(intersection);
         }
 

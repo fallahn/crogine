@@ -33,6 +33,7 @@ source distribution.
 #include "GameConsts.hpp"
 #include "ClientCollisionSystem.hpp"
 #include "BallSystem.hpp"
+#include "CallbackData.hpp"
 
 #include <crogine/ecs/components/AudioListener.hpp>
 #include <crogine/ecs/components/CommandTarget.hpp>
@@ -43,6 +44,8 @@ source distribution.
 #include <crogine/util/Maths.hpp>
 
 #include "../ErrorCheck.hpp"
+
+const cro::Time GolfState::DefaultIdleTime = cro::seconds(180.f);
 
 void GolfState::createCameras()
 {
@@ -846,4 +849,32 @@ void GolfState::updateSkybox(float dt)
     //and make sure the skybox is up to date too, so there's
     //no lag between camera orientation.
     m_skyScene.simulate(dt);
+}
+
+void GolfState::resetIdle()
+{
+    m_idleTimer.restart();
+    m_idleTime = DefaultIdleTime / 3.f;
+
+    if (m_currentCamera == CameraID::Idle)
+    {
+        setActiveCamera(CameraID::Player);
+        m_inputParser.setSuspended(false);
+
+        cro::Command cmd;
+        cmd.targetFlags = CommandID::StrokeArc | CommandID::StrokeIndicator;
+        cmd.action = [&](cro::Entity e, float)
+            {
+                auto localPlayer = m_currentPlayer.client == m_sharedData.clientConnection.connectionID;
+                e.getComponent<cro::Model>().setHidden(!(localPlayer && !m_sharedData.localConnectionData.playerData[m_currentPlayer.player].isCPU));
+            };
+        m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+        //resets the drone which may have drifted while player idled.
+        if (m_drone.isValid())
+        {
+            auto& data = m_drone.getComponent<cro::Callback>().getUserData<DroneCallbackData>();
+            data.target.getComponent<cro::Transform>().setPosition(data.resetPosition);
+        }
+    }
 }
