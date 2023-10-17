@@ -47,7 +47,7 @@ namespace cro
 
     Currently only supports 4 channel image data
     */
-    template <class T, std::uint32_t Layers, std::uint32_t Width, std::uint32_t Height>
+    template <class T, std::uint32_t Layers>
     class ArrayTexture final
     {
     public:
@@ -57,26 +57,21 @@ namespace cro
             {
                 m_type = GL_FLOAT;
                 m_format = GL_RGBA32F;
-                createTexture();
             }
 
             else if constexpr (std::is_same<T, std::uint16_t>::value)
             {
                 m_type = GL_UNSIGNED_SHORT;
                 m_format = GL_RGBA16;
-                createTexture();
             }
 
             else if constexpr (std::is_same<T, std::uint8_t>::value)
             {
                 m_type = GL_UNSIGNED_BYTE;
                 m_format = GL_RGBA8;
-                createTexture();
             }
-            else
-            {
-                static_assert(false, "Use float, U16 or U8");
-            }
+
+            static_assert(std::is_same<T, float>::value || std::is_same<T, std::uint16_t>::value || std::is_same<T, std::uint8_t>::value, "Use float, U16 or U8");
         }
 
         ~ArrayTexture()
@@ -91,15 +86,55 @@ namespace cro
         ArrayTexture(const ArrayTexture&) = delete;
         ArrayTexture(ArrayTexture&&) = delete;
         const ArrayTexture& operator = (const ArrayTexture&) = delete;
-        const ArrayTexture& = operator (ArrayTexture&&) = delete;
+        const ArrayTexture& operator = (ArrayTexture&&) = delete;
 
-        operator TextureID() { return TextureID(m_handle, true;) }
+        operator TextureID() { return TextureID(m_handle, Layers > 1); }
+
+        void create(std::uint32_t width, std::uint32_t height)
+        {
+            static_assert(Layers != 0, "Requires at least one layer");
+
+            if (!m_handle)
+            {
+                glGenTextures(1, &m_handle);
+            }
+
+            if constexpr (Layers == 1)
+            {
+                //create a regular texture so we can at least render a preview with ImGui or so
+                glBindTexture(GL_TEXTURE_2D, m_handle);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+            }
+            else
+            {
+                glBindTexture(GL_TEXTURE_2D_ARRAY, m_handle);
+                glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_R, GL_REPEAT);
+                glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_REPEAT);
+                glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_REPEAT);
+                glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+                glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+
+                glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, m_format, width, height, Layers, 0, GL_RGBA, m_type, nullptr);
+            }
+
+            m_width = width;
+            m_height = height;
+        }
 
         std::uint32_t getGLHandle() const { return m_handle; }
-        constexpr glm::uvec2 getSize() noexcept const return { glm::uvec2(Width, Height); }
+        glm::uvec2 getSize() const { return glm::uvec2(m_width, m_height); }
 
         bool insertLayer(const cro::ImageArray<T>& data, std::uint32_t layer)
         {
+            if (!m_handle)
+            {
+                LogE << __FILE__ << " texture not yet created" << std::endl;
+                return false;
+            }
+
             //validate incoming data
             if (data.getFormat() != ImageFormat::RGBA)
             {
@@ -125,6 +160,12 @@ namespace cro
 
         bool insertLayer(const std::vector<T>& data, std::uint32_t layer)
         {
+            if (!m_handle)
+            {
+                LogE << __FILE__ << " texture not yet created" << std::endl;
+                return false;
+            }
+
             //validate incoming data
             if (data.size() % 4 != 0)
             {
@@ -132,7 +173,7 @@ namespace cro
                 return false;
             }
 
-            if (data.size() != (Width * Height * 4))
+            if (data.size() != (m_width * m_height * 4))
             {
                 LogE << __FILE__ << " array texture data not correct dimensions" << std::endl;
                 return false;
@@ -153,19 +194,23 @@ namespace cro
         std::uint32_t m_type = 0;
         std::uint32_t m_format = 0;
 
-        void createTexture()
-        {
-            glGenTextures(1, &m_handle);
-            glBindTexture(GL_TEXTURE_2D_ARRAY, m_handle);
-            glTexStorage3D(GL_TEXTURE_2D_ARRAY, 0, m_type, Width, Height, Layers);
-        }
+        std::uint32_t m_width = 0;
+        std::uint32_t m_height = 0;
 
         bool updateTexture(const void* data, std::uint32_t layer)
         {
             if (m_handle)
             {
-                glBindTexture(GL_TEXTURE_2D_ARRAY, m_handle);
-                glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, m_format, Width, Height, layer, 0, GL_RGBA, m_type, data);
+                if constexpr (Layers == 1)
+                {
+                    glBindTexture(GL_TEXTURE_2D, m_handle);
+                    glTexImage2D(GL_TEXTURE_2D, 0, m_format, m_width, m_height, 0, GL_RGBA, m_type, data);
+                }
+                else
+                {
+                    glBindTexture(GL_TEXTURE_2D_ARRAY, m_handle);
+                    glTexSubImage3D(GL_TEXTURE_2D_ARRAY, 0, 0, 0, layer, m_width, m_height, 1, GL_RGBA, m_type, data);
+                }
                 return true;
             }
             return false;

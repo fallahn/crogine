@@ -34,6 +34,7 @@ source distribution.
 #include <crogine/core/State.hpp>
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/graphics/ModelDefinition.hpp>
+#include <crogine/graphics/ArrayTexture.hpp>
 #include <crogine/gui/GuiClient.hpp>
 
 #include <array>
@@ -60,6 +61,7 @@ private:
     cro::Texture m_positionTexture;
     cro::Texture m_normalTexture;
 
+    cro::ArrayTexture<float, 4u> m_arrayTexture;
 
     struct ShaderID final
     {
@@ -67,6 +69,7 @@ private:
         {
             NoVats,
             Vats,
+            VatsArray,
             VatsInstanced,
 
             Count
@@ -79,6 +82,7 @@ private:
         {
             NoVats,
             Vats,
+            VatsArray,
             VatsInstanced,
 
             Count

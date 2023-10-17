@@ -37,6 +37,7 @@ source distribution.
 #include <crogine/gui/GuiClient.hpp>
 #include <crogine/graphics/ModelDefinition.hpp>
 #include <crogine/graphics/SimpleVertexArray.hpp>
+#include <crogine/graphics/SimpleQuad.hpp>
 #include <crogine/graphics/CubemapTexture.hpp>
 
 namespace cro

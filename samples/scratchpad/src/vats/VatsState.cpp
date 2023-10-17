@@ -67,9 +67,12 @@ namespace
     uniform mat4 u_worldMatrix;
     uniform mat4 u_projectionMatrix;
 
-
+#if defined(ARRAY_MAPPING)
+    uniform sampler2DArray u_arrayMap;
+#else
     uniform sampler2D u_positionMap;
     uniform sampler2D u_normalMap;
+#endif
     uniform float u_time;
 
     VARYING_OUT vec4 v_colour;
@@ -77,6 +80,16 @@ namespace
     VARYING_OUT vec2 v_texCoord;
     flat VARYING_OUT int v_instanceID;
 
+#if defined(ARRAY_MAPPING)
+    vec3 decodeVector(sampler2DArray source, vec3 coord)
+    {
+        vec3 vec = texture(source, coord).rgb;
+        vec *= 2.0;
+        vec -= 1.0;
+
+        return vec;
+    }
+#else
     vec3 decodeVector(sampler2D source, vec2 coord)
     {
         vec3 vec = TEXTURE(source, coord).rgb;
@@ -85,6 +98,7 @@ namespace
 
         return vec;
     }
+#endif
 
     const float AnimationOffset = 0.34;    
 
@@ -106,6 +120,19 @@ namespace
         gl_Position = u_projectionMatrix * worldViewMatrix * a_position;
         v_normal = normalMatrix * a_normal;
 #else
+
+#if defined(ARRAY_MAPPING)
+        vec3 texCoord = vec3(a_texCoord1, 1.0); //1 is position
+
+        float scale = texCoord.y;
+        texCoord.y = mod(u_time + (gl_InstanceID * AnimationOffset), 1.0);
+
+        vec4 position = vec4(decodeVector(u_arrayMap, texCoord) * scale, 1.0);
+        gl_Position = u_projectionMatrix * worldViewMatrix * position;
+
+        texCoord.z = 2.0;
+        v_normal = normalMatrix * (decodeVector(u_arrayMap, texCoord));
+#else
         vec2 texCoord = a_texCoord1;
         float scale = texCoord.y;
         texCoord.y = mod(u_time + (gl_InstanceID * AnimationOffset), 1.0);
@@ -113,6 +140,7 @@ namespace
         vec4 position = vec4(decodeVector(u_positionMap, texCoord) * scale, 1.0);
         gl_Position = u_projectionMatrix * worldViewMatrix * position;
         v_normal = normalMatrix * (decodeVector(u_normalMap, texCoord));
+#endif
 #endif
         v_colour = a_colour;
         v_texCoord = a_texCoord0;
@@ -123,6 +151,10 @@ namespace
     OUTPUT
 
     uniform vec3 u_lightDirection;
+
+#if defined (ARRAY_MAPPING)
+    uniform sampler2DArray u_arrayMap;
+#endif
 
     VARYING_IN vec3 v_normal;
     VARYING_IN vec4 v_colour;
@@ -141,6 +173,10 @@ namespace
         float amount = clamp(dot(normalize(v_normal), normalize(-u_lightDirection)), 0.4, 1.0);
 
         FRAG_OUT = Colours[v_instanceID] * amount;
+#if defined(ARRAY_MAPPING)
+        FRAG_OUT.rgb *= texture(u_arrayMap, vec3(v_texCoord, 0.0)).rgb;
+#endif
+
     })";
 
     std::int32_t timeUniform = -1;
@@ -258,6 +294,10 @@ void VatsState::loadAssets()
     shader = &m_resources.shaders.get(ShaderID::Vats);
     m_materialIDs[MaterialID::Vats] = m_resources.materials.add(*shader);
 
+    m_resources.shaders.loadFromString(ShaderID::VatsArray, Vertex, Fragment, "#define INSTANCING\n#define ARRAY_MAPPING\n");
+    shader = &m_resources.shaders.get(ShaderID::VatsArray);
+    m_materialIDs[MaterialID::VatsArray] = m_resources.materials.add(*shader);
+
     timeUniform = shader->getUniformID("u_time");
     shaderID = shader->getGLHandle();
 
@@ -320,16 +360,34 @@ void VatsState::loadModel(const std::string& path)
             m_reference.getComponent<cro::Model>().setMaterial(0, m_resources.materials.get(m_materialIDs[MaterialID::NoVats]));
         }
 
-        m_positionTexture.loadFromFile(file.getPositionPath());
-        m_positionTexture.setSmooth(false);
-        m_normalTexture.loadFromFile(file.getNormalPath());
-        m_normalTexture.setSmooth(true);
+        if (file.fillArrayTexture(m_arrayTexture))
+        {
+            auto material = m_resources.materials.get(m_materialIDs[MaterialID::VatsArray]);
+            material.setProperty("u_arrayMap", m_arrayTexture);
 
-        auto material = m_resources.materials.get(m_materialIDs[MaterialID::Vats]);
-        material.setProperty("u_positionMap", m_positionTexture);
-        material.setProperty("u_normalMap", m_normalTexture);
+            m_model.getComponent<cro::Model>().setMaterial(0, material);
 
-        m_model.getComponent<cro::Model>().setMaterial(0, material);
+            auto* shader = &m_resources.shaders.get(ShaderID::VatsArray);
+            timeUniform = shader->getUniformID("u_time");
+            shaderID = shader->getGLHandle();
+        }
+        else
+        {
+            m_positionTexture.loadFromFile(file.getPositionPath());
+            m_positionTexture.setSmooth(false);
+            m_normalTexture.loadFromFile(file.getNormalPath());
+            m_normalTexture.setSmooth(true);
+
+            auto material = m_resources.materials.get(m_materialIDs[MaterialID::Vats]);
+            material.setProperty("u_positionMap", m_positionTexture);
+            material.setProperty("u_normalMap", m_normalTexture);
+
+            m_model.getComponent<cro::Model>().setMaterial(0, material);
+
+            auto* shader = &m_resources.shaders.get(ShaderID::Vats);
+            timeUniform = shader->getUniformID("u_time");
+            shaderID = shader->getGLHandle();
+        }
     }
 }
 
