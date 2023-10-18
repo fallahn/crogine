@@ -190,6 +190,25 @@ static inline const std::string WindCalc = R"(
     }
 )";
 
+/*
+Decodes vector from VATs image data
+*/
+static inline const std::string VATVector = R"(
+    #if defined (ARRAY_MAPPING)
+        vec3 decodeVector(sampler2DArray source, vec3 coord)
+    #else
+        vec3 decodeVector(sampler2D source, vec2 coord)
+    #endif
+        {
+            vec3 vec = texture(source, coord).rgb;
+            vec *= 2.0;
+            vec -= 1.0;
+
+            return vec;
+        }
+)";
+
+
 static inline const std::unordered_map<std::string, const char*> IncludeMappings =
 {
     std::make_pair("WIND_BUFFER", WindBuffer.c_str()),
@@ -199,4 +218,5 @@ static inline const std::unordered_map<std::string, const char*> IncludeMappings
     std::make_pair("RANDOM", Random.c_str()),
     std::make_pair("HSV", HSV.c_str()),
     std::make_pair("WIND_CALC", WindCalc.c_str()),
+    std::make_pair("VAT_VEC", VATVector.c_str()),
 };

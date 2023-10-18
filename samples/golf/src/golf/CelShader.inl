@@ -53,8 +53,12 @@ static const std::string CelVertexShader = R"(
 
 #if defined (VATS)
     #define MAX_INSTANCE 3
+#if defined (ARRAY_MAPPING)
+    uniform sampler2DArray u_arrayMap;
+#else
     uniform sampler2D u_vatsPosition;
     uniform sampler2D u_vatsNormal;
+#endif
     uniform float u_time;
     uniform float u_maxTime;
     uniform float u_offsetMultiplier;
@@ -105,14 +109,7 @@ static const std::string CelVertexShader = R"(
 
 #include WIND_CALC
 
-    vec3 decodeVector(sampler2D source, vec2 coord)
-    {
-        vec3 vec = TEXTURE(source, coord).rgb;
-        vec *= 2.0;
-        vec -= 1.0;
-
-        return vec;
-    }
+#include VAT_VEC
 
     void main()
     {
@@ -125,12 +122,21 @@ static const std::string CelVertexShader = R"(
     #endif
 
     #if defined (VATS)
+    #if defined (ARRAY_MAPPING)
+        vec3 texCoord = vec3(a_texCoord1, 1.0);
+        float scale = texCoord.y;
+        float instanceOffset = mod(gl_InstanceID, MAX_INSTANCE) * u_offsetMultiplier;
+        texCoord.y = mod((0.15 * instanceOffset)+ u_time, u_maxTime);
+
+        vec4 position = vec4(decodeVector(u_arrayMap, texCoord) * scale, 1.0);
+    #else
         vec2 texCoord = a_texCoord1;
         float scale = texCoord.y;
         float instanceOffset = mod(gl_InstanceID, MAX_INSTANCE) * u_offsetMultiplier;
         texCoord.y = mod((0.15 * instanceOffset)+ u_time, u_maxTime);
 
         vec4 position = vec4(decodeVector(u_vatsPosition, texCoord) * scale, 1.0);
+    #endif //ARRAY_MAPPING
     #else
         vec4 position = a_position;
     #endif
@@ -187,12 +193,17 @@ static const std::string CelVertexShader = R"(
 
         gl_Position = vertPos;
 
-#if defined(VATS)
+#if defined (VATS)
+#if defined (ARRAY_MAPPING)
+        texCoord.z = 2.0;
+        vec3 normal = decodeVector(u_arrayMap, texCoord);
+#else
         vec3 normal = decodeVector(u_vatsNormal, texCoord);
+#endif
 #else
         vec3 normal = a_normal;
 #endif
-#if defined(SKINNED)
+#if defined (SKINNED)
         normal = (skinMatrix * vec4(normal, 0.0)).xyz;
 #endif
         v_normal = normalMatrix * normal;
@@ -262,7 +273,11 @@ static const std::string CelFragmentShader = R"(
 #endif
 
 #if defined (TEXTURED)
+#if defined (ARRAY_MAPPING)
+    uniform sampler2DArray u_arrayMap;
+#else
     uniform sampler2D u_diffuseMap;
+#endif
 #endif
 
 #if defined (CONTOUR)
@@ -417,8 +432,11 @@ static const std::string CelFragmentShader = R"(
         texCoord *= u_subrect.ba;
         texCoord += u_subrect.rg;
 #endif
-
+#if defined (ARRAY_MAPPING)
+        vec4 c = texure(u_arrayMap, vec3(texCoord, 0.0));
+#else
         vec4 c = TEXTURE(u_diffuseMap, texCoord);
+#endif
 
         if(c. a < 0.2)
         {

@@ -66,7 +66,11 @@ static const std::string ShadowVertex = R"(
 
     #if defined (VATS)
         #define MAX_INSTANCE 3
+    #if defined (ARRAY_MAPPING)
+        uniform sampler2DArray u_arrayMap;
+    #else
         uniform sampler2D u_vatsPosition;
+    #endif
         uniform float u_time;
         uniform float u_maxTime;
         uniform float u_offsetMultiplier;
@@ -94,14 +98,7 @@ static const std::string ShadowVertex = R"(
         VARYING_OUT vec2 v_texCoord0;
     #endif
 
-        vec3 decodeVector(sampler2D source, vec2 coord)
-        {
-            vec3 vec = TEXTURE(source, coord).rgb;
-            vec *= 2.0;
-            vec -= 1.0;
-
-            return vec;
-        }
+#include VAT_VEC
 
     #if defined(WIND_WARP) || defined (TREE_WARP) || defined(LEAF_SIZE)
     #include WIND_CALC
@@ -125,7 +122,11 @@ static const std::string ShadowVertex = R"(
             float instanceOffset = mod(gl_InstanceID, MAX_INSTANCE) * u_offsetMultiplier;
             texCoord.y = mod(u_time + (0.15 * instanceOffset), u_maxTime);
 
+        #if defined (ARRAY_MAPPING)
+            vec4 position = vec4(decodeVector(u_arrayMap, vec3(texCoord, 1.0)) * scale, 1.0);
+        #else
             vec4 position = vec4(decodeVector(u_vatsPosition, texCoord) * scale, 1.0);
+        #endif
         #else
             vec4 position = a_position;
         #endif

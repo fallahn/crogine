@@ -1,9 +1,9 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022
+Matt Marchant 2022 - 2023
 http://trederia.blogspot.com
 
-Super Video Golf - zlib licence.
+crogine application - Zlib license.
 
 This software is provided 'as-is', without any express or
 implied warranty.In no event will the authors be held
