@@ -30,10 +30,12 @@ source distribution.
 #include "VatsState.hpp"
 #include "VatFile.hpp"
 
+#include <crogine/ecs/components/Callback.hpp>
 #include <crogine/ecs/components/Camera.hpp>
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Model.hpp>
 
+#include <crogine/ecs/systems/CallbackSystem.hpp>
 #include <crogine/ecs/systems/CameraSystem.hpp>
 #include <crogine/ecs/systems/ModelRenderer.hpp>
 
@@ -206,6 +208,13 @@ VatsState::VatsState(cro::StateStack& stack, cro::State::Context context)
                     }
                 }
 
+                ImGui::SameLine();
+                static float stars = 0.f;
+                if (ImGui::SliderFloat("Stars", &stars, 0.f, 1.f))
+                {
+                    m_gameScene.setStarsAmount(stars);
+                }
+
                 if (m_model.isValid())
                 {
                     static float rotation = 0.f;
@@ -280,6 +289,7 @@ void VatsState::render()
 void VatsState::addSystems()
 {
     auto& mb = getContext().appInstance.getMessageBus();
+    m_gameScene.addSystem<cro::CallbackSystem>(mb);
     m_gameScene.addSystem<cro::CameraSystem>(mb);
     m_gameScene.addSystem<cro::ModelRenderer>(mb);
 }
@@ -308,6 +318,9 @@ void VatsState::loadAssets()
 
 void VatsState::createScene()
 {
+    m_gameScene.enableSkybox();
+    m_gameScene.setSkyboxColours(cro::Colour(0.921f,0.513f,0.054f), cro::Colour(0.176f,0.239f,0.321f), cro::Colour(0.004f,0.035f,0.105f));
+
     auto updateView = [&](cro::Camera& cam)
     {
         auto windowSize = glm::vec2(cro::App::getWindow().getSize());
@@ -320,6 +333,13 @@ void VatsState::createScene()
     camEnt.getComponent<cro::Camera>().resizeCallback = updateView;
     camEnt.getComponent<cro::Transform>().setPosition({ 0.f, 1.6f, 2.2f });
     camEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -15.f * cro::Util::Const::degToRad);
+
+    //camEnt.addComponent<cro::Callback>().active = true;
+    //camEnt.getComponent<cro::Callback>().function =
+    //    [](cro::Entity e, float dt)
+    //{
+    //    e.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, dt);
+    //};
 
     auto sunlight = m_gameScene.getSunlight();
     sunlight.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -60.f * cro::Util::Const::degToRad);

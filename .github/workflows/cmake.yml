@@ -32,7 +32,7 @@ jobs:
 
     - name: Install linux Dependencies
       if: runner.os == 'Linux'
-      run: sudo apt-get update && sudo apt-get install libgtk-3-dev libenet-dev libxrandr-dev libudev-dev libopenal-dev libflac-dev libvorbis-dev libsdl2-dev libassimp-dev assimp-utils
+      run: sudo apt-get update && sudo apt-get install libgtk-3-dev libenet-dev libxrandr-dev libudev-dev libopenal-dev libflac-dev libvorbis-dev libsdl2-dev libunwind-dev libassimp-dev assimp-utils
 
     - name: Install macOS Dependencies
       if: runner.os == 'MacOS'
