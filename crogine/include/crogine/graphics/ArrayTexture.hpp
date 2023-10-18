@@ -142,7 +142,7 @@ namespace cro
                 return false;
             }
 
-            if (data.getSize() != getSize())
+            if (data.getDimensions() != getSize())
             {
                 LogE << __FILE__ << " image array incorrect dimensions" << std::endl;
                 return false;

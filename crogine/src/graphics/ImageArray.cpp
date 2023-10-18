@@ -173,7 +173,7 @@ namespace cro::Detail
         auto* img = stbi_loadf_from_callbacks(&io.stb_cbs, &io, &w, &h, &d, wantedChannels);
         if (img)
         {
-            d = (wantedChannels) ? wantedChannels : 0;
+            d = (wantedChannels) ? wantedChannels : d;
             auto size = w * h * d;
 
             dst.resize(size);

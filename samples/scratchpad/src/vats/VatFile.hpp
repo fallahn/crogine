@@ -63,6 +63,7 @@ private:
     std::int32_t m_frameLoop;
 
     std::string m_modelPath;
+    std::string m_diffusePath;
 
     struct DataID final
     {

@@ -125,7 +125,7 @@ namespace
         vec3 texCoord = vec3(a_texCoord1, 1.0); //1 is position
 
         float scale = texCoord.y;
-        texCoord.y = mod(u_time + (gl_InstanceID * AnimationOffset), 1.0);
+        texCoord.y = mod((u_time * 0.1) + (gl_InstanceID * AnimationOffset), 1.0);
 
         vec4 position = vec4(decodeVector(u_arrayMap, texCoord) * scale, 1.0);
         gl_Position = u_projectionMatrix * worldViewMatrix * position;
@@ -171,10 +171,10 @@ namespace
     void main()
     {
         float amount = clamp(dot(normalize(v_normal), normalize(-u_lightDirection)), 0.4, 1.0);
-
-        FRAG_OUT = Colours[v_instanceID] * amount;
 #if defined(ARRAY_MAPPING)
-        FRAG_OUT.rgb *= texture(u_arrayMap, vec3(v_texCoord, 0.0)).rgb;
+        FRAG_OUT = texture(u_arrayMap, vec3(v_texCoord, 0.0)) * amount;
+#else
+        FRAG_OUT = Colours[v_instanceID] * amount;
 #endif
 
     })";

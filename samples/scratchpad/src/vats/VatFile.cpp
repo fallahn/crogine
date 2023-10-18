@@ -141,6 +141,14 @@ bool VatFile::loadFromFile(const std::string& path)
                 LogE << "Couldn't find file at " << filepath << std::endl;
             }
         }
+        else if (name == "diffuse")
+        {
+            auto filepath = workingPath + prop.getValue<std::string>();
+            if (cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + filepath))
+            {
+                m_diffusePath = filepath;
+            }
+        }
         else if (name == "frame_count")
         {
             m_frameLoop = std::max(0, prop.getValue<std::int32_t>());
@@ -227,22 +235,15 @@ bool VatFile::fillArrayTexture(cro::ArrayTexture<float, 4u>& arrayTexture) const
 
     arrayTexture.create(m_binaryDims.x, m_binaryDims.y);
 
-    //TODO load the correct diffuse map from the model data
     cro::ImageArray<float> diffuseMap;
-    if (diffuseMap.loadFromFile(cro::FileSystem::getResourcePath() + "assets/vats/crowd01.png"))
+    if (diffuseMap.loadFromFile(cro::FileSystem::getResourcePath() + m_diffusePath, true))
     {
-        //TODO we need to resize the diffuse map to match
-        //the dimensions of the array - is this worth it?
-        std::vector<float> buff;
-        diffuseMap.swap(buff);
-        
-        if (!arrayTexture.insertLayer(buff, 0))
+        if (!arrayTexture.insertLayer(diffuseMap, 0))
         {
-            //return false;
+            return false;
         }
     }
     
-
     if (!arrayTexture.insertLayer(m_binaryData[DataID::Position], 1))
     {
         return false;
