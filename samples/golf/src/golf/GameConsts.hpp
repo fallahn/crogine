@@ -224,6 +224,8 @@ struct ShaderID final
         ShadowMapSkinned,
         Crowd,
         CrowdShadow,
+        CrowdArray,
+        CrowdShadowArray,
         Cloud,
         CloudRing,
         Leaderboard,

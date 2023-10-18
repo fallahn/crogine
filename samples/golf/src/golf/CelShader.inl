@@ -122,19 +122,14 @@ static const std::string CelVertexShader = R"(
     #endif
 
     #if defined (VATS)
-    #if defined (ARRAY_MAPPING)
-        vec3 texCoord = vec3(a_texCoord1, 1.0);
-        float scale = texCoord.y;
-        float instanceOffset = mod(gl_InstanceID, MAX_INSTANCE) * u_offsetMultiplier;
-        texCoord.y = mod((0.15 * instanceOffset)+ u_time, u_maxTime);
-
-        vec4 position = vec4(decodeVector(u_arrayMap, texCoord) * scale, 1.0);
-    #else
         vec2 texCoord = a_texCoord1;
         float scale = texCoord.y;
         float instanceOffset = mod(gl_InstanceID, MAX_INSTANCE) * u_offsetMultiplier;
         texCoord.y = mod((0.15 * instanceOffset)+ u_time, u_maxTime);
 
+    #if defined (ARRAY_MAPPING)
+        vec4 position = vec4(decodeVector(u_arrayMap, vec3(texCoord, 1.0)) * scale, 1.0);
+    #else
         vec4 position = vec4(decodeVector(u_vatsPosition, texCoord) * scale, 1.0);
     #endif //ARRAY_MAPPING
     #else
@@ -195,8 +190,7 @@ static const std::string CelVertexShader = R"(
 
 #if defined (VATS)
 #if defined (ARRAY_MAPPING)
-        texCoord.z = 2.0;
-        vec3 normal = decodeVector(u_arrayMap, texCoord);
+        vec3 normal = decodeVector(u_arrayMap, vec3(texCoord, 2.0));
 #else
         vec3 normal = decodeVector(u_vatsNormal, texCoord);
 #endif
@@ -433,7 +427,7 @@ static const std::string CelFragmentShader = R"(
         texCoord += u_subrect.rg;
 #endif
 #if defined (ARRAY_MAPPING)
-        vec4 c = texure(u_arrayMap, vec3(texCoord, 0.0));
+        vec4 c = texture(u_arrayMap, vec3(texCoord, 0.0));
 #else
         vec4 c = TEXTURE(u_diffuseMap, texCoord);
 #endif

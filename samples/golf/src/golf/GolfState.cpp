@@ -2211,6 +2211,15 @@ void GolfState::loadAssets()
     m_resources.shaders.loadFromString(ShaderID::CrowdShadow, ShadowVertex, ShadowFragment, "#define DITHERED\n#define INSTANCING\n#define VATS\n");
     m_resolutionBuffer.addShader(m_resources.shaders.get(ShaderID::CrowdShadow));
 
+    m_resources.shaders.loadFromString(ShaderID::CrowdArray, CelVertexShader, CelFragmentShader, "#define DITHERED\n#define INSTANCING\n#define VATS\n#define NOCHEX\n#define TEXTURED\n#define ARRAY_MAPPING\n");
+    shader = &m_resources.shaders.get(ShaderID::CrowdArray);
+    m_scaleBuffer.addShader(*shader);
+    m_resolutionBuffer.addShader(*shader);
+
+    m_resources.shaders.loadFromString(ShaderID::CrowdShadowArray, ShadowVertex, ShadowFragment, "#define DITHERED\n#define INSTANCING\n#define VATS\n#define ARRAY_MAPPING\n");
+    m_resolutionBuffer.addShader(m_resources.shaders.get(ShaderID::CrowdShadowArray));
+
+
     if (m_sharedData.treeQuality == SharedStateData::High)
     {
         m_resources.shaders.loadFromString(ShaderID::TreesetBranch, BranchVertex, BranchFragment, "#define ALPHA_CLIP\n#define INSTANCING\n" + wobble);

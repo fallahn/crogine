@@ -40,6 +40,7 @@ source distribution.
 #include <crogine/graphics/MeshData.hpp>
 #include <crogine/graphics/Image.hpp>
 #include <crogine/graphics/RenderTexture.hpp>
+#include <crogine/graphics/ArrayTexture.hpp>
 
 #include <vector>
 #include <thread>
@@ -94,6 +95,9 @@ private:
     const std::vector<HoleData>& m_holeData;
     std::size_t m_currentHole;
 
+    std::vector<std::unique_ptr<cro::ArrayTexture<float, 4>>> m_arrayTextures;
+
+    //TODO this isn't used
     TerrainChunker& m_terrainChunker;
     std::vector<TerrainChunk> m_chunks;
 

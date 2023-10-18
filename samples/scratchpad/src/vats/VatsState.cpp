@@ -172,7 +172,7 @@ namespace
     {
         float amount = clamp(dot(normalize(v_normal), normalize(-u_lightDirection)), 0.4, 1.0);
 #if defined(ARRAY_MAPPING)
-        FRAG_OUT = texture(u_arrayMap, vec3(v_texCoord, 0.0)) * amount;
+        FRAG_OUT = texture(u_arrayMap, vec3(v_texCoord, 0.0));// * amount;
 #else
         FRAG_OUT = Colours[v_instanceID] * amount;
 #endif

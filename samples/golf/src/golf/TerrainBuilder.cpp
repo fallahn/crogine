@@ -328,6 +328,8 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
     auto crowdMaterialID = resources.materials.add(resources.shaders.get(ShaderID::Crowd));
     auto shadowMaterialID = resources.materials.add(resources.shaders.get(ShaderID::CrowdShadow));
 
+    auto crowdArrayMaterialID = resources.materials.add(resources.shaders.get(ShaderID::CrowdArray));
+    auto shadowArrayMaterialID = resources.materials.add(resources.shaders.get(ShaderID::CrowdShadowArray));
 
     //create billboard/instanced entities
     cro::ModelDefinition billboardDef(resources);
@@ -491,17 +493,38 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
                 crowdDef.createModel(childEnt);
 
                 //setup material
-                auto material = resources.materials.get(crowdMaterialID);
-                applyMaterialData(crowdDef, material);
+                std::unique_ptr<cro::ArrayTexture<float, 4u>> tex = std::make_unique<cro::ArrayTexture<float, 4u>>();
+                if (!m_sharedData.vertexSnap && vatFile.fillArrayTexture(*tex))
+                {
+                    auto material = resources.materials.get(crowdArrayMaterialID);
+                    applyMaterialData(crowdDef, material);
 
-                material.setProperty("u_vatsPosition", resources.textures.get(vatFile.getPositionPath()));
-                material.setProperty("u_vatsNormal", resources.textures.get(vatFile.getNormalPath()));
+                    material.setProperty("u_arrayMap", *tex);
 
-                auto shadowMaterial = resources.materials.get(shadowMaterialID);
-                shadowMaterial.setProperty("u_vatsPosition", resources.textures.get(vatFile.getPositionPath()));
+                    auto shadowMaterial = resources.materials.get(shadowArrayMaterialID);
+                    shadowMaterial.setProperty("u_arrayMap", *tex);
 
-                childEnt.getComponent<cro::Model>().setMaterial(0, material);
-                childEnt.getComponent<cro::Model>().setShadowMaterial(0, shadowMaterial);
+                    childEnt.getComponent<cro::Model>().setMaterial(0, material);
+                    childEnt.getComponent<cro::Model>().setShadowMaterial(0, shadowMaterial);
+                    
+                    m_arrayTextures.push_back(std::move(tex));
+                }
+                else
+                {
+                    auto material = resources.materials.get(crowdMaterialID);
+                    applyMaterialData(crowdDef, material);
+
+                    material.setProperty("u_vatsPosition", resources.textures.get(vatFile.getPositionPath()));
+                    material.setProperty("u_vatsNormal", resources.textures.get(vatFile.getNormalPath()));
+
+                    auto shadowMaterial = resources.materials.get(shadowMaterialID);
+                    shadowMaterial.setProperty("u_vatsPosition", resources.textures.get(vatFile.getPositionPath()));
+
+                    childEnt.getComponent<cro::Model>().setMaterial(0, material);
+                    childEnt.getComponent<cro::Model>().setShadowMaterial(0, shadowMaterial);
+                }
+
+
                 childEnt.getComponent<cro::Model>().setHidden(true);
                 childEnt.getComponent<cro::Model>().setRenderFlags(~RenderFlags::MiniMap);
                 childEnt.addComponent<VatAnimation>().setVatData(vatFile);
