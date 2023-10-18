@@ -3304,7 +3304,7 @@ void GolfState::showMessageBoard(MessageBoardID messageType, bool special)
                         && m_currentHole < 9)
                     {
                         m_achievementTracker.birdieChallenge++;
-                        if (m_achievementTracker.birdieChallenge == 2
+                        if (m_achievementTracker.birdieChallenge == 4
                             && m_courseIndex != -1)
                         {
                             Social::getMonthlyChallenge().updateChallenge(ChallengeID::Nine, m_courseIndex);
@@ -3322,7 +3322,8 @@ void GolfState::showMessageBoard(MessageBoardID messageType, bool special)
                     if (m_sharedData.holeCount == 2
                         || m_currentHole > 8)
                     {
-                        if (m_courseIndex != -1)
+                        if (m_achievementTracker.eagles == 2
+                            && m_courseIndex != -1)
                         {
                             Social::getMonthlyChallenge().updateChallenge(ChallengeID::Ten, m_courseIndex);
                         }

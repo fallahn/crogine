@@ -349,6 +349,11 @@ void ShadowMapRenderer::render()
                         switch (prop.second.second.type)
                         {
                         default: break;
+                        case Material::Property::TextureArray:
+                            glCheck(glActiveTexture(GL_TEXTURE0 + currentTextureUnit));
+                            glCheck(glBindTexture(GL_TEXTURE_2D_ARRAY, prop.second.second.textureID));
+                            glCheck(glUniform1i(prop.second.first, currentTextureUnit++));
+                            break;
                         case Material::Property::Texture:
                             glCheck(glActiveTexture(GL_TEXTURE0 + currentTextureUnit));
                             glCheck(glBindTexture(GL_TEXTURE_2D, prop.second.second.textureID));

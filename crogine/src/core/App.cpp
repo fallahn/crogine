@@ -27,7 +27,7 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifdef _MSC_VER
+#ifndef __APPLE__
 #include "../detail/StackDump.hpp"
 #include <signal.h>
 void winAbort(int)
@@ -53,7 +53,6 @@ void winAbort(int)
 #include <SDL_joystick.h>
 #include <SDL_filesystem.h>
 
-//#include "../detail/backward.hpp"
 #include "../detail/GLCheck.hpp"
 #include "../detail/SDLImageRead.hpp"
 #include "../imgui/imgui_impl_opengl3.h"
@@ -224,8 +223,8 @@ App::App(std::uint32_t styleFlags)
 {
     CRO_ASSERT(m_instance == nullptr, "App instance already exists!");
 
-#ifdef _MSC_VER
 #ifndef CRO_DEBUG_
+#ifndef __APPLE__ //mac actually gives a decent stack dump
     //register custom abort which prints the call stack
     signal(SIGABRT, &winAbort);
 #endif

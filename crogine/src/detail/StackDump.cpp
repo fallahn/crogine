@@ -27,18 +27,19 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#include "StackDump.hpp"
 
 #ifdef _MSC_VER
 #include <Windows.h>
+#endif
+
+#include "StackDump.hpp"
 #include "ust.hpp"
 #include <iostream>
-#endif
 
 void StackDump::dump()
 {
-#ifdef _MSC_VER
+//#ifdef _MSC_VER
     std::ofstream file("stack_dump.txt");
     file << "Call Stack:\n" << ust::generate() << std::endl;
-#endif
+//#endif
 }
