@@ -1032,7 +1032,7 @@ void BushState::loadSkyboxFile()
             m_skyScene.destroyEntity(e);
         }
 
-        loadSkybox(path, m_skyScene, m_resources, -1);
+        loadSkybox(path, m_skyScene, m_resources, SkyboxMaterials());
         const auto& colours = m_skyScene.getSkyboxColours();
         skyMid = colours.middle;
         skyTop = colours.top;

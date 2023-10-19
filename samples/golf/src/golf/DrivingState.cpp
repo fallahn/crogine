@@ -1593,7 +1593,11 @@ void DrivingState::createScene()
     //and sky detail
     std::string skybox = "assets/golf/skyboxes/spring.sbf";
 
-    auto cloudRing = loadSkybox(skybox, m_skyScene, m_resources, m_materialIDs[MaterialID::Horizon]);
+    SkyboxMaterials materials;
+    materials.horizon = m_materialIDs[MaterialID::Horizon];
+    //materials.horizonSun = m_materialIDs[MaterialID::HorizonSun];
+
+    auto cloudRing = loadSkybox(skybox, m_skyScene, m_resources, materials);
     if (cloudRing.isValid()
         && cloudRing.hasComponent<cro::Model>())
     {

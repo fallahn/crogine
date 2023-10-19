@@ -1599,7 +1599,12 @@ void PlaylistState::createSkyboxMenu(cro::Entity rootNode, const MenuData& menuD
                             m_skyboxScene.destroyEntity(e); //this includes destroying the active cloud ring
                         }
 
-                        auto cloudEnt = loadSkybox(SkyboxPath + m_skyboxes[i], m_skyboxScene, m_resources, m_materialIDs[MaterialID::Horizon], m_materialIDs[MaterialID::CelTexturedSkinned]);
+                        SkyboxMaterials materials;
+                        materials.horizon = m_materialIDs[MaterialID::Horizon];
+                        //materials.horizonSun = m_materialIDs[MaterialID::HorizonSun];
+                        materials.skinned = m_materialIDs[MaterialID::CelTexturedSkinned];
+
+                        auto cloudEnt = loadSkybox(SkyboxPath + m_skyboxes[i], m_skyboxScene, m_resources, materials);
                         if (cloudEnt.isValid())
                         {
                             auto material = m_resources.materials.get(m_materialIDs[MaterialID::Cloud]);
@@ -1628,7 +1633,13 @@ void PlaylistState::createSkyboxMenu(cro::Entity rootNode, const MenuData& menuD
     if (!m_skyboxes.empty())
     {
         m_skyboxIndex = 0;
-        auto ent = loadSkybox(SkyboxPath + m_skyboxes[m_skyboxIndex], m_skyboxScene, m_resources, m_materialIDs[MaterialID::Horizon], m_materialIDs[MaterialID::CelTexturedSkinned]);
+
+        SkyboxMaterials materials;
+        materials.horizon = m_materialIDs[MaterialID::Horizon];
+        //materials.horizonSun = m_materialIDs[MaterialID::HorizonSun];
+        materials.skinned = m_materialIDs[MaterialID::CelTexturedSkinned];
+
+        auto ent = loadSkybox(SkyboxPath + m_skyboxes[m_skyboxIndex], m_skyboxScene, m_resources, materials);
         //we only want one of these
         if (!cloudEnt.isValid())
         {
@@ -4266,7 +4277,13 @@ void PlaylistState::loadCourse()
         {
             m_skyboxScene.destroyEntity(e); //this includes destroying the active clouds...
         }
-        auto cloudEnt = loadSkybox(SkyboxPath + m_skyboxes[m_skyboxIndex], m_skyboxScene, m_resources, m_materialIDs[MaterialID::Horizon], m_materialIDs[MaterialID::CelTexturedSkinned]);
+        
+        SkyboxMaterials materials;
+        materials.horizon = m_materialIDs[MaterialID::Horizon];
+        //materials.horizonSun = m_materialIDs[MaterialID::HorizonSun];
+        materials.skinned = m_materialIDs[MaterialID::CelTexturedSkinned];
+        
+        auto cloudEnt = loadSkybox(SkyboxPath + m_skyboxes[m_skyboxIndex], m_skyboxScene, m_resources, materials);
         //hum I didn't think this through did I?
         if (cloudEnt.isValid())
         {

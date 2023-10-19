@@ -192,6 +192,7 @@ private:
             WireFrameCulled,
             Water,
             Horizon,
+            HorizonSun,
             Cel,
             CelSkinned,
             CelTextured,

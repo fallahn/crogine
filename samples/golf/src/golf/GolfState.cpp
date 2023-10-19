@@ -202,6 +202,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     m_courseIndex       (getCourseIndex(sd.mapDirectory.toAnsiString())),
     m_emoteWheel        (sd, m_currentPlayer, m_textChat)
 {
+    //sd.nightTime = 1;
     m_cpuGolfer.setFastCPU(m_sharedData.fastCPU);
 
     godmode = 1.f;
@@ -2313,6 +2314,10 @@ void GolfState::loadAssets()
     //also suffers the black banding effect where alpha  < 1
     //m_resources.materials.get(m_materialIDs[MaterialID::Water]).blendMode = cro::Material::BlendMode::Alpha; 
     
+    //this version is affected by the sunlight colour of the scene
+    m_resources.shaders.loadFromString(ShaderID::HorizonSun, HorizonVert, HorizonFrag, "#define SUNLIGHT\n");
+    shader = &m_resources.shaders.get(ShaderID::HorizonSun);
+    m_materialIDs[MaterialID::HorizonSun] = m_resources.materials.add(*shader);
 
     m_resources.shaders.loadFromString(ShaderID::Horizon, HorizonVert, HorizonFrag);
     shader = &m_resources.shaders.get(ShaderID::Horizon);
@@ -2782,6 +2787,20 @@ void GolfState::loadAssets()
         else if (name == "skybox")
         {
             skyboxPath = prop.getValue<std::string>();
+
+            //if set to night check for night path (appended with _n)
+            if (m_sharedData.nightTime)
+            {
+                auto ext = cro::FileSystem::getFileExtension(skyboxPath);
+                auto nightPath = skyboxPath.substr(0, skyboxPath.find(ext)) + "_n" + ext;
+                if (cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + nightPath))
+                {
+                    skyboxPath = nightPath;
+
+                    m_skyScene.getSunlight().getComponent<cro::Sunlight>().setColour(SkyNight);
+                    m_gameScene.getSunlight().getComponent<cro::Sunlight>().setColour(SkyNight);
+                }
+            }
         }
         else if (name == "shrubbery")
         {
@@ -2860,7 +2879,12 @@ void GolfState::loadAssets()
         }
     }
 
-    auto cloudRing = loadSkybox(skyboxPath, m_skyScene, m_resources, m_materialIDs[MaterialID::Horizon], m_materialIDs[MaterialID::CelTexturedSkinned]);
+    SkyboxMaterials materials;
+    materials.horizon = m_materialIDs[MaterialID::Horizon];
+    materials.horizonSun = m_materialIDs[MaterialID::HorizonSun];
+    materials.skinned = m_materialIDs[MaterialID::CelTexturedSkinned];
+
+    auto cloudRing = loadSkybox(skyboxPath, m_skyScene, m_resources, materials);
     if (cloudRing.isValid()
         && cloudRing.hasComponent<cro::Model>())
     {

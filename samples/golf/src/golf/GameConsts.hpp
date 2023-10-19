@@ -119,15 +119,17 @@ static constexpr glm::vec2 LabelIconSize(Social::IconSize);
 static constexpr glm::uvec2 LabelTextureSize(160u, 128u + (Social::IconSize * 4));
 static constexpr glm::vec3 OriginOffset(static_cast<float>(MapSize.x / 2), 0.f, -static_cast<float>(MapSize.y / 2));
 
-static const cro::Colour WaterColour(0.02f, 0.078f, 0.578f);
-static const cro::Colour SkyTop(0.678f, 0.851f, 0.718f);
-static const cro::Colour SkyBottom(0.2f, 0.304f, 0.612f);
-static const cro::Colour DropShadowColour(0.396f, 0.263f, 0.184f);
+static constexpr cro::Colour WaterColour(0.02f, 0.078f, 0.578f);
+static constexpr cro::Colour SkyTop(0.678f, 0.851f, 0.718f);
+static constexpr cro::Colour SkyBottom(0.2f, 0.304f, 0.612f);
+static constexpr cro::Colour SkyNight(std::uint8_t(101), 103, 178);
+//static constexpr cro::Colour SkyNight(std::uint8_t(69), 71, 130);
+static constexpr cro::Colour DropShadowColour(0.396f, 0.263f, 0.184f);
 
-static const cro::Colour SwingputDark(std::uint8_t(40), 23, 33);
-//static const cro::Colour SwingputLight(std::uint8_t(242), 207, 92);
-static const cro::Colour SwingputLight(std::uint8_t(236), 119, 61);
-//static const cro::Colour SwingputLight(std::uint8_t(236), 153, 61);
+static constexpr cro::Colour SwingputDark(std::uint8_t(40), 23, 33);
+//static constexpr cro::Colour SwingputLight(std::uint8_t(242), 207, 92);
+static constexpr cro::Colour SwingputLight(std::uint8_t(236), 119, 61);
+//static constexpr cro::Colour SwingputLight(std::uint8_t(236), 153, 61);
 
 //default values from DX sdk
 static constexpr std::int16_t LeftThumbDeadZone = 7849;
@@ -211,6 +213,7 @@ struct ShaderID final
     {
         Water = 100,
         Horizon,
+        HorizonSun,
         Terrain,
         Billboard,
         BillboardShadow,
@@ -859,11 +862,19 @@ static inline cro::Image loadNormalMap(std::vector<glm::vec3>& dst, const std::s
     return img;
 }
 
+struct SkyboxMaterials final
+{
+    std::int32_t horizon = -1;
+    std::int32_t horizonSun = -1;
+    std::int32_t skinned = -1;
+};
+
 //return the entity with the cloud ring (so we can apply material)
-static inline cro::Entity loadSkybox(const std::string& path, cro::Scene& skyScene, cro::ResourceCollection& resources, std::int32_t materialID, std::int32_t skinMatID = -1)
+static inline cro::Entity loadSkybox(const std::string& path, cro::Scene& skyScene, cro::ResourceCollection& resources, SkyboxMaterials materials)
 {
     auto skyTop = SkyTop;
     auto skyMid = TextNormalColour;
+    float stars = 0.f;
 
     cro::ConfigFile cfg;
 
@@ -873,6 +884,7 @@ static inline cro::Entity loadSkybox(const std::string& path, cro::Scene& skySce
         glm::vec3 position = glm::vec3(0.f);
         glm::vec3 scale = glm::vec3(0.f);
         float rotation = 0.f;
+        bool useSunlight = false;
     };
     std::vector<PropData> propModels;
 
@@ -891,6 +903,10 @@ static inline cro::Entity loadSkybox(const std::string& path, cro::Scene& skySce
                 else if (name == "sky_bottom")
                 {
                     skyMid = p.getValue<cro::Colour>();
+                }
+                else if (name == "stars")
+                {
+                    stars = p.getValue<float>();
                 }
             }
         }
@@ -922,6 +938,10 @@ static inline cro::Entity loadSkybox(const std::string& path, cro::Scene& skySce
                     {
                         data.scale = p.getValue<glm::vec3>();
                     }
+                    else if (propName == "skylight")
+                    {
+                        data.useSunlight = p.getValue<bool>();
+                    }
                 }
             }
         }
@@ -939,13 +959,23 @@ static inline cro::Entity loadSkybox(const std::string& path, cro::Scene& skySce
             entity.setLabel(cro::FileSystem::getFileName(model.path));
             md.createModel(entity);
 
-            if (materialID > -1)
+            std::int32_t matID = -1;
+            if (model.useSunlight && materials.horizonSun != -1)
             {
-                auto material = resources.materials.get(materialID);
+                matID = materials.horizonSun;
+            }
+            else
+            {
+                matID = materials.horizon;
+            }
 
-                if (md.hasSkeleton() && skinMatID > -1)
+            if (matID > -1)
+            {
+                auto material = resources.materials.get(matID);
+
+                if (md.hasSkeleton() && materials.skinned > -1)
                 {
-                    material = resources.materials.get(skinMatID);
+                    material = resources.materials.get(materials.skinned);
                     entity.getComponent<cro::Skeleton>().play(0);
                 }
 
@@ -975,6 +1005,7 @@ static inline cro::Entity loadSkybox(const std::string& path, cro::Scene& skySce
 
     skyScene.enableSkybox();
     skyScene.setSkyboxColours(SkyBottom, skyMid, skyTop);
+    skyScene.setStarsAmount(stars);
 
     cro::Entity cloudEnt;
     if (md.loadFromFile("assets/golf/models/skybox/cloud_ring.cmt"))

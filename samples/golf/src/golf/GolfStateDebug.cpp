@@ -371,6 +371,21 @@ void GolfState::registerDebugCommands()
             }
         });
 
+    //registerWindow([&]() 
+    //    {
+    //        if (ImGui::Begin("Sunlight"))
+    //        {
+    //            auto c = m_skyScene.getSunlight().getComponent<cro::Sunlight>().getColour();
+    //            if (ImGui::ColorPicker3("Sun", c.asArray()))
+    //            {
+    //                m_skyScene.getSunlight().getComponent<cro::Sunlight>().setColour(c);
+    //                m_gameScene.getSunlight().getComponent<cro::Sunlight>().setColour(c);
+    //            }
+    //        }
+    //        ImGui::End();
+    //    
+    //    });
+
     //registerCommand("show_stat_window", 
     //    [&](const std::string&)
     //    {

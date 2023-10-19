@@ -182,8 +182,9 @@ static const std::string CloudOverheadFragment = R"(
     OUTPUT
 
     uniform vec2 u_worldCentre = vec2(0.0);
-    uniform vec3 u_lightDirection;
     uniform vec3 u_cameraWorldPosition;
+    uniform vec3 u_lightDirection;
+    uniform vec4 u_lightColour;
     uniform vec4 u_skyColourTop;
     uniform vec4 u_skyColourBottom;
 
@@ -240,7 +241,7 @@ static const std::string CloudOverheadFragment = R"(
         colour.rgb = mix(WaterColour, colour.rgb, v_colour.g);
 #endif
 
-        FRAG_OUT = colour;
+        FRAG_OUT = colour * clamp(u_lightColour + u_lightColour, 0.0, 1.0);
 
 
 #if defined(FEATHER_EDGE)
