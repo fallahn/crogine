@@ -4386,6 +4386,17 @@ void GolfState::buildScene()
     //{
     //    createWeather(WeatherType::Rain);
     //}
+
+    /*md.loadFromFile("assets/golf/models/light_sphere.cmt");
+    entity = m_gameScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 40.831287f,1.996931f,-100.147438f });
+    entity.getComponent<cro::Transform>().setScale(glm::vec3(3.f));
+    md.createModel(entity);
+
+    entity = m_gameScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 124.924004f,2.089445f,-139.739395f });
+    entity.getComponent<cro::Transform>().setScale(glm::vec3(3.f));
+    md.createModel(entity);*/
 }
 
 void GolfState::initAudio(bool loadTrees)
