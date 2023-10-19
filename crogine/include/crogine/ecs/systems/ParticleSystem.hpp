@@ -102,6 +102,7 @@ namespace cro
             ClipPlane,
             ViewProjection,
             Projection,
+            LightColour,
             Texture,
             TextureSize,
             Viewport,

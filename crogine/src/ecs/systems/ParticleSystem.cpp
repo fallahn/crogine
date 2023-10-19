@@ -113,6 +113,11 @@ namespace
         uniform vec2 u_textureSize;
         uniform vec2 u_cameraRange;
 
+#if defined (SUNLIGHT)
+        uniform vec4 u_lightColour;
+#endif
+
+
         VARYING_IN LOW vec4 v_colour;
         VARYING_IN MED mat2 v_rotation;
         VARYING_IN LOW float v_currentFrame;
@@ -158,6 +163,10 @@ namespace
             float strength = smoothstep(0.0, 0.05, diff);
 
             FRAG_OUT = v_colour * TEXTURE(u_texture, coord);// * strength;
+
+        #if defined (SUNLIGHT)
+            FRAG_OUT *= u_lightColour;
+        #endif
 
         #if defined (BLEND_ADD)
             FRAG_OUT.rgb *= v_colour.a;
@@ -213,7 +222,7 @@ ParticleSystem::ParticleSystem(MessageBus& mb)
 
     const std::array<std::string, ShaderID::Count> Defines =
     {
-        "", "#define BLEND_ADD\n", "#define BLEND_MULTIPLY\n"
+        "#define SUNLIGHT\n", "#define BLEND_ADD\n", "#define BLEND_MULTIPLY\n"
     };
 
     for (auto i = 0; i < ShaderID::Count; ++i)
@@ -239,6 +248,10 @@ ParticleSystem::ParticleSystem(MessageBus& mb)
             handle.uniformIDs[UniformID::ClipPlane] = uniforms.find("u_clipPlane")->second;
 #endif
             handle.uniformIDs[UniformID::Projection] = uniforms.find("u_projection")->second;
+            if (i == ShaderID::Alpha)
+            {
+                handle.uniformIDs[UniformID::LightColour] = uniforms.find("u_lightColour")->second;
+            }
             handle.uniformIDs[UniformID::Texture] = uniforms.find("u_texture")->second;
             handle.uniformIDs[UniformID::ViewProjection] = uniforms.find("u_viewProjection")->second;
             handle.uniformIDs[UniformID::Viewport] = uniforms.find("u_viewportHeight")->second;
@@ -553,6 +566,8 @@ void ParticleSystem::process(float dt)
 
 void ParticleSystem::render(Entity camera, const RenderTarget& rt)
 {   
+    const auto sunlightColour = getScene()->getSunlight().getComponent<cro::Sunlight>().getColour();
+
     //particles are already in world space so just need viewProj
     const auto& cam = camera.getComponent<Camera>();
     if (cam.getDrawListIndex() < m_drawLists.size())
@@ -624,6 +639,7 @@ void ParticleSystem::render(Entity camera, const RenderTarget& rt)
             case EmitterSettings::Alpha:
                 glCheck(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
                 bindShader(ShaderID::Alpha, emitter);
+                glCheck(glUniform4f(m_shaderHandles[ShaderID::Alpha].uniformIDs[UniformID::LightColour], sunlightColour.getRed(), sunlightColour.getGreen(), sunlightColour.getBlue(), 1.f));
                 break;
             case EmitterSettings::Multiply:
                 glCheck(glBlendFunc(GL_DST_COLOR, GL_ZERO));

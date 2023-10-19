@@ -161,6 +161,7 @@ namespace PacketID
         TurnReady, //< uint8 clientID - ready to take their turn - rebroadcast by server to tell all clients to clear messages
         MapInfo, //< serialised cro::String containing course directory
         ScoreType, //< uint8 ScoreType of golf game
+        NightTime, //< uint8 0 false else true
         FastCPU, //< uint8 0 false else true
         GimmeRadius, //< uint8 gimme radius of golf
         HoleCount, //< uint8 0 - 2: all, front or back
