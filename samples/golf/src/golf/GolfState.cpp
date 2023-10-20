@@ -2842,7 +2842,18 @@ void GolfState::loadAssets()
         else if (name == "audio")
         {
             auto audioPath = prop.getValue<std::string>();
-            if (cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + audioPath))
+
+            if (m_sharedData.nightTime)
+            {
+                auto ext = cro::FileSystem::getFileExtension(audioPath);
+                auto nightPath = audioPath.substr(0, audioPath.find(ext)) + "_n" + ext;
+
+                if (cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + nightPath))
+                {
+                    m_audioPath = nightPath;
+                }
+            }
+            else if (cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + audioPath))
             {
                 m_audioPath = audioPath;
             }
