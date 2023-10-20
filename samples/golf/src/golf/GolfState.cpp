@@ -2898,6 +2898,14 @@ void GolfState::loadAssets()
         cloudRing.getComponent<cro::Model>().setMaterial(0, material);
     }
 
+    if (m_sharedData.nightTime)
+    {
+        auto skyDark = SkyBottom.getVec4() * SkyNight.getVec4();
+        auto colours = m_skyScene.getSkyboxColours();
+        colours.bottom = skyDark;
+        m_skyScene.setSkyboxColours(colours);
+    }
+
 #ifdef CRO_DEBUG_
     auto& colours = m_skyScene.getSkyboxColours();
     topSky = colours.top.getVec4();

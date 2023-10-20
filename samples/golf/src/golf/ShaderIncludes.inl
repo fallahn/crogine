@@ -208,6 +208,15 @@ static inline const std::string VATVector = R"(
         }
 )";
 
+/*
+Calculates a reduced-effect colour from the current 'sunlight' colour
+*/
+static inline const std::string LightColour = R"(
+    vec4 getLightColour()
+    {
+        return vec4(clamp(u_lightColour * 2.0, 0.0, 1.0));
+    }
+)";
 
 static inline const std::unordered_map<std::string, const char*> IncludeMappings =
 {
@@ -219,4 +228,5 @@ static inline const std::unordered_map<std::string, const char*> IncludeMappings
     std::make_pair("HSV", HSV.c_str()),
     std::make_pair("WIND_CALC", WindCalc.c_str()),
     std::make_pair("VAT_VEC", VATVector.c_str()),
+    std::make_pair("LIGHT_COLOUR", LightColour.c_str()),
 };

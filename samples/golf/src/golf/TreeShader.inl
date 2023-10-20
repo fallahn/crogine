@@ -294,6 +294,7 @@ R"(
     uniform sampler2D u_diffuseMap;
     uniform vec3 u_lightDirection;
     uniform vec3 u_colour = vec3(1.0);
+    uniform vec4 u_lightColour;
 
 #include SCALE_BUFFER
 
@@ -307,6 +308,7 @@ R"(
     }v_data;
 
 #include BAYER_MATRIX
+#include LIGHT_COLOUR
 
 #include HSV
     vec3 complementaryColour(vec3 c)
@@ -351,7 +353,7 @@ R"(
 
         textureColour.rgb *= v_data.darkenAmount;
 
-        FRAG_OUT = vec4(colour, 1.0) * textureColour;
+        FRAG_OUT = vec4(colour, 1.0) * textureColour * getLightColour();
     })";
 
 std::string BranchVertex = R"(
@@ -451,6 +453,7 @@ std::string BranchFragment = R"(
 
     uniform sampler2D u_diffuseMap;
     uniform vec3 u_lightDirection;
+    uniform vec4 u_lightColour;
 
 #include SCALE_BUFFER
 
@@ -460,6 +463,7 @@ std::string BranchFragment = R"(
     VARYING_IN float v_darkenAmount;
 
 #include BAYER_MATRIX
+#include LIGHT_COLOUR
 
     void main()
     {
@@ -472,7 +476,7 @@ std::string BranchFragment = R"(
         amount = (amount * 0.4) + 0.6;
 
         colour.rgb *= amount * v_darkenAmount;
-        FRAG_OUT = colour;
+        FRAG_OUT = colour * getLightColour();
 
 
         vec2 xy = gl_FragCoord.xy;// / u_pixelScale;

@@ -175,6 +175,7 @@ static const std::string BillboardFragmentShader = R"(
     OUTPUT
 
     uniform sampler2D u_diffuseMap;
+    uniform vec4 u_lightColour;
 
     #include SCALE_BUFFER
 
@@ -186,11 +187,13 @@ static const std::string BillboardFragmentShader = R"(
     VARYING_IN HIGH vec3 v_worldPosition;
 
     #include BAYER_MATRIX
+    #include LIGHT_COLOUR
 
     void main()
     {
         FRAG_OUT = v_colour;
         FRAG_OUT *= TEXTURE(u_diffuseMap, v_texCoord0);
+        FRAG_OUT *= getLightColour();
 
 //this probably undoes any usefulness of mipmapping
 //FRAG_OUT.a = textureLod(u_diffuseMap, v_texCoord0, 0.0).a;

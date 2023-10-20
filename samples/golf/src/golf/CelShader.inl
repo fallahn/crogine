@@ -409,6 +409,8 @@ static const std::string CelFragmentShader = R"(
         return c;
     }
 
+#include LIGHT_COLOUR
+
     const float Quantise = 10.0;
     const float TerrainLevel = -0.049;
     const float WaterLevel = -0.019;
@@ -418,7 +420,7 @@ static const std::string CelFragmentShader = R"(
 
     void main()
     {
-        vec4 colour = clamp(u_lightColour * 2.0, 0.0, 1.0);//vec4(1.0);
+        vec4 colour = getLightColour();
 #if defined (TEXTURED)
         vec2 texCoord = v_texCoord;
 
@@ -675,10 +677,8 @@ float greenTerrain = step(0.065, v_colour.r) * (1.0 - step(0.13, v_colour.r));
 
 
 #if defined(TERRAIN_CLIP)
-    FRAG_OUT.rgb = mix(vec3(0.2, 0.3059, 0.6118), FRAG_OUT.rgb, smoothstep(WaterLevel - 0.001, WaterLevel + 0.001, v_worldPosition.y));
+    FRAG_OUT.rgb = mix(vec3(0.2, 0.3059, 0.6118) * u_lightColour.rgb, FRAG_OUT.rgb, smoothstep(WaterLevel - 0.001, WaterLevel + 0.001, v_worldPosition.y));
 
 //if(v_worldPosition.y < WaterLevel) discard;//don't do this, it reveals the hidden trees.
 #endif
-//FRAG_OUT.rgb *= u_lightColour.rgb;
-
     })";

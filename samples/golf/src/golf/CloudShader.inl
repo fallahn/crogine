@@ -199,8 +199,11 @@ static const std::string CloudOverheadFragment = R"(
     const float MaxDist = MAX_RADIUS;
 #endif
 
+
 #include BAYER_MATRIX
 #endif
+
+#include LIGHT_COLOUR
 
     const vec4 BaseColour = vec4(1.0);
     const vec3 WaterColour = vec3(0.02, 0.078, 0.578);
@@ -238,10 +241,10 @@ static const std::string CloudOverheadFragment = R"(
         colour.rgb = mix(colour.rgb, u_skyColourBottom.rgb * 1.25, rim * 0.7);
 
 #if defined(REFLECTION)
-        colour.rgb = mix(WaterColour, colour.rgb, v_colour.g);
+        colour.rgb = mix(WaterColour * u_lightColour.rgb, colour.rgb, v_colour.g);
 #endif
 
-        FRAG_OUT = colour * clamp(u_lightColour + u_lightColour, 0.0, 1.0);
+        FRAG_OUT = colour * getLightColour();
 
 
 #if defined(FEATHER_EDGE)
