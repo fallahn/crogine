@@ -210,6 +210,7 @@ private:
             Beacon,
             BallTrail,
             Flag,
+            PointLight,
 
             Count
         };

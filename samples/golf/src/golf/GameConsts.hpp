@@ -258,7 +258,8 @@ struct ShaderID final
         FXAA,
         Fog,
         Flag,
-        TV
+        TV,
+        PointLight
     };
 };
 
