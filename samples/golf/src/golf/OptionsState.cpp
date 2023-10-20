@@ -936,6 +936,7 @@ void OptionsState::buildScene()
         //show video tab
         showVideo();
         uiSystem.setActiveGroup(MenuID::Video);
+        uiSystem.selectByIndex(TabController);
 
         //refresh visible objects for one frame
         refreshView();
@@ -956,6 +957,7 @@ void OptionsState::buildScene()
         refreshView();
 
         uiSystem.setActiveGroup(MenuID::Controls);
+        uiSystem.selectByIndex(TabAchievements);
 
         m_currentTabFunction = 1;
     };
@@ -973,6 +975,7 @@ void OptionsState::buildScene()
         refreshView();
 
         uiSystem.setActiveGroup(MenuID::Achievements);
+        uiSystem.selectByIndex(TabStats);
 
         m_currentTabFunction = 2;
     };
@@ -990,6 +993,7 @@ void OptionsState::buildScene()
         refreshView();
 
         uiSystem.setActiveGroup(MenuID::Stats);
+        uiSystem.selectByIndex(TabAV);
 
         m_currentTabFunction = 3;
     };
