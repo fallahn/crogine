@@ -150,6 +150,9 @@ namespace
 
 #endif // CRO_DEBUG_
 
+    cro::Entity inc01;
+    cro::Entity inc02;
+
     float godmode = 1.f;
 
     const cro::Time ReadyPingFreq = cro::seconds(1.f);
@@ -501,7 +504,12 @@ bool GolfState::handleEvent(const cro::Event& evt)
             //logCSV();
             /*m_activeAvatar->model.getComponent<cro::Callback>().active = true;
             m_activeAvatar->model.getComponent<cro::Model>().setHidden(false);*/
-
+            inc02.getComponent<cro::AudioEmitter>().play();
+            LogI << "playing 02" << std::endl;
+            break;
+        case SDLK_F7:
+            inc01.getComponent<cro::AudioEmitter>().play();
+            LogI << "playing 01" << std::endl;
             break;
         case SDLK_F8:
             if (evt.key.keysym.mod & KMOD_SHIFT)
@@ -2844,17 +2852,7 @@ void GolfState::loadAssets()
         {
             auto audioPath = prop.getValue<std::string>();
 
-            if (m_sharedData.nightTime)
-            {
-                auto ext = cro::FileSystem::getFileExtension(audioPath);
-                auto nightPath = audioPath.substr(0, audioPath.find(ext)) + "_n" + ext;
-
-                if (cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + nightPath))
-                {
-                    m_audioPath = nightPath;
-                }
-            }
-            else if (cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + audioPath))
+            if (cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + audioPath))
             {
                 m_audioPath = audioPath;
             }
@@ -4431,6 +4429,18 @@ void GolfState::buildScene()
 
 void GolfState::initAudio(bool loadTrees)
 {
+    if (m_sharedData.nightTime)
+    {
+        auto ext = cro::FileSystem::getFileExtension(m_audioPath);
+        auto nightPath = m_audioPath.substr(0, m_audioPath.find(ext)) + "_n" + ext;
+
+        if (cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + nightPath))
+        {
+            m_audioPath = nightPath;
+        }
+    }
+
+
     //6 evenly spaced points with ambient audio
     auto envOffset = glm::vec2(MapSize) / 3.f;
     cro::AudioScape as;
@@ -4487,11 +4497,14 @@ void GolfState::initAudio(bool loadTrees)
             entity.getComponent<cro::AudioEmitter>().setLooped(false);
             auto plane01 = entity;
 
+            inc01 = entity;
+
             entity = m_gameScene.createEntity();
             entity.addComponent<cro::AudioEmitter>() = as.getEmitter("incidental02");
             entity.getComponent<cro::AudioEmitter>().setLooped(false);
             auto plane02 = entity;
 
+            inc02 = entity;
 
             //we'll shoehorn the plane in here. won't make much sense
             //if the audioscape has different audio but hey...
