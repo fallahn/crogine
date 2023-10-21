@@ -1874,7 +1874,7 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
                 {
                     setUnavailable();
                 }
-                updateCourseRuleString();
+                updateCourseRuleString(true);
 
                 static constexpr glm::vec2 ThumbnailSize(138.f, 104.f);
 
@@ -1946,7 +1946,7 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
                 };
                 m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
-                updateCourseRuleString();
+                updateCourseRuleString(false);
             }
             break;
         case PacketID::NightTime:
@@ -1968,7 +1968,7 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
             };
             m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
-            updateCourseRuleString();
+            updateCourseRuleString(false);
         }
             break;
         case PacketID::HoleCount:
@@ -1998,12 +1998,11 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
                 };
             }
             m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
-            updateCourseRuleString();
+            updateCourseRuleString(true);
         }
             break;
         case PacketID::ReverseCourse:
             m_sharedData.reverseCourse = evt.packet.as<std::uint8_t>();
-            updateCourseRuleString();
             break;
         case PacketID::ClubLimit:
             m_sharedData.clubLimit = evt.packet.as<std::uint8_t>();

@@ -2160,7 +2160,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
 
     //current rules
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 214.f, 79.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 213.f, 68.f, 0.1f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::CourseRules;
     entity.addComponent<cro::Text>(smallFont).setCharacterSize(InfoTextSize);
@@ -3777,7 +3777,7 @@ void MenuState::refreshUI()
     m_uiScene.getActiveCamera().getComponent<cro::Camera>().active = true;
 }
 
-void MenuState::updateCourseRuleString()
+void MenuState::updateCourseRuleString(bool updateScoreboard)
 {
     const auto data = std::find_if(m_courseData.cbegin(), m_courseData.cend(),
         [&](const CourseData& cd)
@@ -3795,6 +3795,10 @@ void MenuState::updateCourseRuleString()
         {
             str = "Course " + std::to_string(data->courseNumber) + "\n";
         }
+        else
+        {
+            str = "User Course\n";
+        }
 
         str += ScoreTypes[m_sharedData.scoreType];
         str += "\n" + GimmeString[m_sharedData.gimmeRadius];
@@ -3803,19 +3807,14 @@ void MenuState::updateCourseRuleString()
         {
             str += "\n" + data->holeCount[m_sharedData.holeCount];
         }
-
-        if (m_sharedData.reverseCourse)
-        {
-            str += "\nReversed";
-        }
-        
+       
         e.getComponent<cro::Text>().setString(str);
     };
     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
 #ifdef USE_GNS
     //update ticker
-    if (!m_sharedData.tutorial && //data will be courseDAta.cend()
+    if (!m_sharedData.tutorial && //data will be courseData.cend()
         m_lobbyWindowEntities[LobbyEntityID::CourseTicker].isValid())
     {
         if (!data->isUser)
@@ -3837,10 +3836,13 @@ void MenuState::updateCourseRuleString()
             cro::String scoreStr(ss.str());
             scoreStr += Social::getTopFive(m_sharedData.mapDirectory, m_sharedData.holeCount);*/
 
-            auto scoreStr = Social::getTopFive(m_sharedData.mapDirectory, m_sharedData.holeCount);
-            m_lobbyWindowEntities[LobbyEntityID::CourseTicker].getComponent<cro::Text>().setString(scoreStr);
-            m_lobbyWindowEntities[LobbyEntityID::CourseTicker].getComponent<cro::Transform>().setScale(glm::vec2(1.f));
-            m_lobbyWindowEntities[LobbyEntityID::CourseTicker].getComponent<cro::Transform>().setPosition(glm::vec2(200.f,0.f));
+            if (updateScoreboard)
+            {
+                auto scoreStr = Social::getTopFive(m_sharedData.mapDirectory, m_sharedData.holeCount);
+                m_lobbyWindowEntities[LobbyEntityID::CourseTicker].getComponent<cro::Text>().setString(scoreStr);
+                m_lobbyWindowEntities[LobbyEntityID::CourseTicker].getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+                m_lobbyWindowEntities[LobbyEntityID::CourseTicker].getComponent<cro::Transform>().setPosition(glm::vec2(200.f, 0.f));
+            }
         }
         else
         {

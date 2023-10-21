@@ -355,7 +355,7 @@ private:
     void prevCourse();
     void nextCourse();
     void refreshUI();
-    void updateCourseRuleString();
+    void updateCourseRuleString(bool updateScoreboard );
     void updateUnlockedItems();
 
     void createPreviousScoreCard();
