@@ -150,9 +150,6 @@ namespace
 
 #endif // CRO_DEBUG_
 
-    cro::Entity inc01;
-    cro::Entity inc02;
-
     float godmode = 1.f;
 
     const cro::Time ReadyPingFreq = cro::seconds(1.f);
@@ -504,12 +501,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
             //logCSV();
             /*m_activeAvatar->model.getComponent<cro::Callback>().active = true;
             m_activeAvatar->model.getComponent<cro::Model>().setHidden(false);*/
-            inc02.getComponent<cro::AudioEmitter>().play();
-            LogI << "playing 02" << std::endl;
-            break;
-        case SDLK_F7:
-            inc01.getComponent<cro::AudioEmitter>().play();
-            LogI << "playing 01" << std::endl;
+
             break;
         case SDLK_F8:
             if (evt.key.keysym.mod & KMOD_SHIFT)
@@ -4497,14 +4489,10 @@ void GolfState::initAudio(bool loadTrees)
             entity.getComponent<cro::AudioEmitter>().setLooped(false);
             auto plane01 = entity;
 
-            inc01 = entity;
-
             entity = m_gameScene.createEntity();
             entity.addComponent<cro::AudioEmitter>() = as.getEmitter("incidental02");
             entity.getComponent<cro::AudioEmitter>().setLooped(false);
             auto plane02 = entity;
-
-            inc02 = entity;
 
             //we'll shoehorn the plane in here. won't make much sense
             //if the audioscape has different audio but hey...
