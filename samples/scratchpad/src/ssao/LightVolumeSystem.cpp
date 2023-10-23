@@ -116,17 +116,17 @@ LightVolumeSystem::LightVolumeSystem(MessageBus& mb)
     }
 
 #ifdef CRO_DEBUG_
-    registerWindow([&]() 
-        {
-            if (ImGui::Begin("Volume Lights"))
-            {
-                ImGui::Text("Visible Lights %u", m_visibleEntities.size());
+    //registerWindow([&]() 
+    //    {
+    //        if (ImGui::Begin("Volume Lights"))
+    //        {
+    //            ImGui::Text("Visible Lights %u", m_visibleEntities.size());
 
-                glm::vec2 size(m_bufferSize);
-                ImGui::Image(m_renderTexture.getTexture(), { size.x / 4.f, size.y / 4.f }, { 0.f, 1.f }, { 1.f, 0.f });
-            }
-            ImGui::End();
-        });
+    //            glm::vec2 size(m_bufferSize);
+    //            ImGui::Image(m_renderTexture.getTexture(), { size.x / 4.f, size.y / 4.f }, { 0.f, 1.f }, { 1.f, 0.f });
+    //        }
+    //        ImGui::End();
+    //    });
 #endif
 
     //always do this last
@@ -185,8 +185,6 @@ void LightVolumeSystem::updateDrawList(Entity cameraEnt)
             visible = (Spatial::intersects(frustum[j++], sphere) != Planar::Back);
         }
 
-        //TODO we want to store the face direction based on
-        //whether the camera is inside or outside the volume
         if (visible)
         {
             m_visibleEntities.push_back(entity);
@@ -201,9 +199,9 @@ void LightVolumeSystem::updateBuffer(Entity camera)
     const auto& camTx = camera.getComponent<Transform>();
     const auto cameraPosition = camTx.getWorldPosition();
 
-    //glCheck(glCullFace(SET ME PER MODEL));
     /*glCheck*/(glFrontFace(GL_CCW)); //TODO enable glCheck
     /*glCheck*/(glDisable(GL_BLEND));
+    /*glCheck*/(glEnable(GL_CULL_FACE));
 
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, m_bufferIDs[BufferID::Normal].textureID);
@@ -220,8 +218,10 @@ void LightVolumeSystem::updateBuffer(Entity camera)
     /*glCheck*/(glUniformMatrix4fv(m_uniformIDs[UniformID::ViewProjection], 1, GL_FALSE, &viewProj[0][0]));
 
 
-    for (auto entity : m_visibleEntities)
+    for (const auto& entity : m_visibleEntities)
     {
+        /*glCheck*/(glCullFace(GL_FRONT));
+
         const auto& tx = entity.getComponent<Transform>();
         glm::mat4 worldMat = tx.getWorldTransform();
         /*glCheck*/(glUniformMatrix4fv(m_uniformIDs[UniformID::World], 1, GL_FALSE, &worldMat[0][0]));
@@ -236,6 +236,8 @@ void LightVolumeSystem::updateBuffer(Entity camera)
         entity.getComponent<Model>().draw(0, Mesh::IndexData::Final);
     }
     m_renderTexture.display();
+
+    /*glCheck*/(glDisable(GL_CULL_FACE));
 
     //TODO assess these
     //glCheck(glDisable(GL_DEPTH_TEST));

@@ -72,6 +72,7 @@ private:
     cro::SimpleQuad m_normalQuad;
     cro::SimpleQuad m_positionQuad;
     cro::SimpleQuad m_depthQuad;
+    cro::SimpleQuad m_lightQuad;
 
     cro::RenderTexture m_ssaoBuffer;
     cro::RenderTexture m_ssaoBlurBuffer;
@@ -81,6 +82,7 @@ private:
     {
         std::uint32_t shader = 0;
         std::int32_t aoMap = -1;
+        std::int32_t lightMap = -1;
     }m_outputData;
     cro::SimpleQuad m_outputQuad;
 

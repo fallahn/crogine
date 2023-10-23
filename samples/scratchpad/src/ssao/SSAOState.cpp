@@ -156,12 +156,14 @@ namespace
 
     uniform sampler2D u_texture;
     uniform sampler2D u_aoMap;
+    uniform sampler2D u_lightMap;
 
     VARYING_IN vec2 v_texCoord;
 
     void main()
     {
         FRAG_OUT = vec4(TEXTURE(u_texture, v_texCoord).rgb * TEXTURE(u_aoMap, v_texCoord).r, 1.0);
+        FRAG_OUT.rgb += TEXTURE(u_lightMap, v_texCoord).rgb;
     })";
 }
 
@@ -211,6 +213,30 @@ void SSAOState::handleMessage(const cro::Message& msg)
 
 bool SSAOState::simulate(float dt)
 {
+    glm::vec3 movement(0.f);
+    if (cro::Keyboard::isKeyPressed(SDLK_a))
+    {
+        movement.x -= 1.f;
+    }
+    if (cro::Keyboard::isKeyPressed(SDLK_d))
+    {
+        movement.x += 1.f;
+    }
+    if (cro::Keyboard::isKeyPressed(SDLK_s))
+    {
+        movement.z += 1.f;
+    }
+    if (cro::Keyboard::isKeyPressed(SDLK_w))
+    {
+        movement.z -= 1.f;
+    }
+    if (auto len2 = glm::length2(movement); len2 > 1)
+    {
+        movement /= std::sqrt(len2);
+    }
+    m_gameScene.getActiveCamera().getComponent<cro::Transform>().move(movement * dt);
+
+
     m_gameScene.simulate(dt);
     m_uiScene.simulate(dt);
     return true;
@@ -229,6 +255,7 @@ void SSAOState::render()
     m_normalQuad.draw();
     m_positionQuad.draw();
     m_depthQuad.draw();
+    m_lightQuad.draw();
 
     m_ssaoBuffer.clear(cro::Colour::CornflowerBlue);
     updateSSAOData();
@@ -238,10 +265,15 @@ void SSAOState::render()
     m_ssaoBlurQuad.draw();
 
 
-    glActiveTexture(GL_TEXTURE10);
+    glActiveTexture(GL_TEXTURE0+10);
     glBindTexture(GL_TEXTURE_2D, m_ssaoBuffer.getTexture().getGLHandle());
+
+    glActiveTexture(GL_TEXTURE0+11);
+    glBindTexture(GL_TEXTURE_2D, m_gameScene.getSystem<cro::LightVolumeSystem>()->getBuffer().getGLHandle());
+
     glUseProgram(m_outputData.shader);
     glUniform1i(m_outputData.aoMap, 10);
+    glUniform1i(m_outputData.lightMap, 11);
     m_outputQuad.draw();
 
     m_uiScene.render();
@@ -280,6 +312,7 @@ void SSAOState::loadAssets()
     shader = &m_resources.shaders.get(ShaderID::SSAOBlend);
     m_outputData.shader = shader->getGLHandle();
     m_outputData.aoMap = shader->getUniformID("u_aoMap");
+    m_outputData.lightMap = shader->getUniformID("u_lightMap");
 }
 
 void SSAOState::createScene()
@@ -334,10 +367,12 @@ void SSAOState::createScene()
     {
         auto buffSize = cro::App::getWindow().getSize();
         auto size = glm::vec2(buffSize);
+
+        static constexpr std::uint32_t LightBufferScale = 1;
         auto& lightVolSystem = *m_gameScene.getSystem<cro::LightVolumeSystem>();
 
         m_renderBuffer.create(buffSize.x, buffSize.y, 3);
-        lightVolSystem.setTargetSize(size, 1);
+        lightVolSystem.setTargetSize(size, LightBufferScale);
         
         m_colourQuad.setTexture(m_renderBuffer.getTexture(MRTChannel::Colour), buffSize);
         m_colourQuad.setPosition({ 0.f, (size.y / 4.f) * 3.f });
@@ -356,6 +391,10 @@ void SSAOState::createScene()
 
         m_depthQuad.setTexture(m_renderBuffer.getDepthTexture(), buffSize);
         m_depthQuad.setScale({ 0.25f, 0.25f });
+
+        m_lightQuad.setTexture(lightVolSystem.getBuffer());
+        m_lightQuad.setScale({ 0.25f, 0.25f });
+        m_lightQuad.setPosition({ (size.x / 4.f) * 3.f, 0.f });
 
         buffSize /= 2u;
 
@@ -416,7 +455,13 @@ void SSAOState::createUI()
                 {
                     m_gameScene.getActiveCamera().getComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, rotation);
                 }*/
-                ImGui::Image(m_noiseTexture, { 32.f, 32.f }, { 0.f, 1.f }, { 1.f, 0.f });
+                //ImGui::Image(m_noiseTexture, { 32.f, 32.f }, { 0.f, 1.f }, { 1.f, 0.f });
+
+                auto c = m_gameScene.getSunlight().getComponent<cro::Sunlight>().getColour().getVec4();
+                if (ImGui::ColorEdit3("Sky Colour", &c[0]))
+                {
+                    m_gameScene.getSunlight().getComponent<cro::Sunlight>().setColour(c);
+                }
             }
             ImGui::End();        
         });
@@ -464,10 +509,10 @@ void SSAOState::updateSSAOData()
     //position texture is automatically set to m_texture via SimpleQuad
 
     glUseProgram(m_ssaoData.shader);
-    glActiveTexture(GL_TEXTURE10);
+    glActiveTexture(GL_TEXTURE0 + 10);
     glBindTexture(GL_TEXTURE_2D, m_renderBuffer.getTexture(1).textureID);
     glUniform1i(m_ssaoData.normal, 10);
-    glActiveTexture(GL_TEXTURE11);
+    glActiveTexture(GL_TEXTURE0 + 11);
     glBindTexture(GL_TEXTURE_2D, m_noiseTexture.getGLHandle());
     glUniform1i(m_ssaoData.noise, 11);
     glUniform3fv(m_ssaoData.kernel, KernelSize, &m_sampleKernel[0][0]);

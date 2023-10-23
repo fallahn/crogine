@@ -118,10 +118,11 @@ namespace cro
             };
         };
         std::array<std::int32_t, UniformID::Count> m_uniformIDs = {};
+        std::array<TextureID, BufferID::Count> m_bufferIDs = {};
+
 
         std::vector<Entity> m_visibleEntities;
 
-        std::array<TextureID, BufferID::Count> m_bufferIDs = {};
 
         void resizeBuffer();
     };
