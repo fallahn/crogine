@@ -318,10 +318,10 @@ void ModelRenderer::onEntityRemoved(Entity entity)
 void ModelRenderer::updateDrawListDefault(Entity cameraEnt)
 {
     const auto& camComponent = cameraEnt.getComponent<Camera>();
-    auto cameraPos = cameraEnt.getComponent<Transform>().getWorldPosition();
+    const auto cameraPos = cameraEnt.getComponent<Transform>().getWorldPosition();
     //assume if there's no reflection buffer there's no need to sort the
     //entities for the second pass...
-    auto passCount = camComponent.reflectionBuffer.available() ? 2 : 1;
+    const auto passCount = camComponent.reflectionBuffer.available() ? 2 : 1;
 
     auto& entities = getEntities();
     auto& drawList = m_drawLists[camComponent.getDrawListIndex()];

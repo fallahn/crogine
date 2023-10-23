@@ -326,6 +326,7 @@
     <ClCompile Include="src\retro\RetroState.cpp" />
     <ClCompile Include="src\rolling\RollingState.cpp" />
     <ClCompile Include="src\rolling\RollingSystem.cpp" />
+    <ClCompile Include="src\ssao\LightVolumeSystem.cpp" />
     <ClCompile Include="src\ssao\SSAOState.cpp" />
     <ClCompile Include="src\swingput\Swingput.cpp" />
     <ClCompile Include="src\swingput\SwingState.cpp" />
@@ -379,6 +380,7 @@
     <ClInclude Include="src\rolling\RollingState.hpp" />
     <ClInclude Include="src\rolling\RollingSystem.hpp" />
     <ClInclude Include="src\rolling\Utility.hpp" />
+    <ClInclude Include="src\ssao\LightVolumeSystem.hpp" />
     <ClInclude Include="src\ssao\SSAOState.hpp" />
     <ClInclude Include="src\StateIDs.hpp" />
     <ClInclude Include="src\swingput\Swingput.hpp" />

@@ -28,6 +28,7 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include "SSAOState.hpp"
+#include "LightVolumeSystem.hpp"
 #include "../StateIDs.hpp"
 
 #include <crogine/gui/Gui.hpp>
@@ -221,6 +222,9 @@ void SSAOState::render()
     m_gameScene.render();
     m_renderBuffer.display();
 
+    m_gameScene.getSystem<cro::LightVolumeSystem>()->updateBuffer(m_gameScene.getActiveCamera());
+
+
     m_colourQuad.draw();
     m_normalQuad.draw();
     m_positionQuad.draw();
@@ -252,6 +256,7 @@ void SSAOState::addSystems()
     m_gameScene.addSystem<cro::CameraSystem>(mb);
     m_gameScene.addSystem<cro::ShadowMapRenderer>(mb);
     m_gameScene.addSystem<cro::ModelRenderer>(mb);
+    m_gameScene.addSystem<cro::LightVolumeSystem>(mb);
 }
 
 void SSAOState::loadAssets()
@@ -301,24 +306,53 @@ void SSAOState::createScene()
         md.createModel(entity);
     }
 
+    if (md.loadFromFile("assets/ssao/light_sphere.cmt"))
+    {
+        //TODO update the model so radius is 1m, not diametre
+        static constexpr float Radius = 1.25f;
+        auto entity = m_gameScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ 1.2f, 1.f, 0.f });
+        entity.getComponent<cro::Transform>().setScale(glm::vec3(Radius * 2.f));
+        md.createModel(entity);
+
+        entity.addComponent<cro::LightVolume>().radius = Radius;
+        entity.getComponent<cro::LightVolume>().colour = cro::Colour::AliceBlue;
+        entity.getComponent<cro::Model>().setHidden(true);
+
+
+        entity = m_gameScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ -1.2f, 1.f, 0.f });
+        entity.getComponent<cro::Transform>().setScale(glm::vec3(Radius * 3.f));
+        md.createModel(entity);
+
+        entity.addComponent<cro::LightVolume>().radius = Radius * 1.5f;
+        entity.getComponent<cro::LightVolume>().colour = cro::Colour::Plum;
+        entity.getComponent<cro::Model>().setHidden(true);
+    }
+
     auto resizeWindow = [&](cro::Camera& cam)
     {
         auto buffSize = cro::App::getWindow().getSize();
         auto size = glm::vec2(buffSize);
+        auto& lightVolSystem = *m_gameScene.getSystem<cro::LightVolumeSystem>();
 
         m_renderBuffer.create(buffSize.x, buffSize.y, 3);
+        lightVolSystem.setTargetSize(size, 1);
         
         m_colourQuad.setTexture(m_renderBuffer.getTexture(MRTChannel::Colour), buffSize);
         m_colourQuad.setPosition({ 0.f, (size.y / 4.f) * 3.f });
         m_colourQuad.setScale({ 0.25f, 0.25f });
+        lightVolSystem.setSourceBuffer(m_renderBuffer.getTexture(MRTChannel::Colour), cro::LightVolumeSystem::BufferID::Colour);
 
         m_normalQuad.setTexture(m_renderBuffer.getTexture(MRTChannel::Normal), buffSize);
         m_normalQuad.setPosition({ 0.f, size.y / 2.f });
         m_normalQuad.setScale({ 0.25f, 0.25f });
+        lightVolSystem.setSourceBuffer(m_renderBuffer.getTexture(MRTChannel::Normal), cro::LightVolumeSystem::BufferID::Normal);
 
         m_positionQuad.setTexture(m_renderBuffer.getTexture(MRTChannel::Position), buffSize);
         m_positionQuad.setPosition({ 0.f, size.y / 4.f });
         m_positionQuad.setScale({ 0.25f, 0.25f });
+        lightVolSystem.setSourceBuffer(m_renderBuffer.getTexture(MRTChannel::Position), cro::LightVolumeSystem::BufferID::Position);
 
         m_depthQuad.setTexture(m_renderBuffer.getDepthTexture(), buffSize);
         m_depthQuad.setScale({ 0.25f, 0.25f });
@@ -360,6 +394,7 @@ void SSAOState::createScene()
     auto sun = m_gameScene.getSunlight();
     sun.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -0.3f);
     sun.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, 0.4f);
+    sun.getComponent<cro::Sunlight>().setColour(cro::Colour(0.251f, 0.243f, 0.412f));
 
     generateSSAOData();
 }

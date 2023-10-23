@@ -3,7 +3,7 @@
 Matt Marchant 2023
 http://trederia.blogspot.com
 
-crogine application - Zlib license.
+crogine - Zlib license.
 
 This software is provided 'as-is', without any express or
 implied warranty.In no event will the authors be held

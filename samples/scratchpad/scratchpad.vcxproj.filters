@@ -237,6 +237,9 @@
     <ClCompile Include="src\bounce\BounceState.cpp">
       <Filter>Source Files\bounce</Filter>
     </ClCompile>
+    <ClCompile Include="src\ssao\LightVolumeSystem.cpp">
+      <Filter>Source Files\ssao</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ErrorCheck.hpp">
@@ -391,6 +394,9 @@
     </ClInclude>
     <ClInclude Include="src\bounce\BounceState.hpp">
       <Filter>Header Files\bounce</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ssao\LightVolumeSystem.hpp">
+      <Filter>Header Files\ssao</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
