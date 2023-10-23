@@ -545,7 +545,8 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
                     {
                         playSound(AudioID::Pole, data.position).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
 
-                        if (cro::Util::Random::value(0, 1) == 0)
+                        if (m_sharedData.gimmeRadius == 0 &&
+                            cro::Util::Random::value(0, 1) == 0)
                         {
                             playSoundDelayed(AudioID::BigStick, data.position, 2.2f, 1.f, MixerChannel::Voice);
                         }

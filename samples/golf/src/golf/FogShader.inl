@@ -69,6 +69,7 @@ uniform sampler2D u_depthTexture;
 uniform float u_density = 0.0;
 uniform float u_fogStart = 0.0;
 uniform float u_fogEnd = ZFAR;
+uniform vec4 u_lightColour;
 
 VARYING_IN vec2 v_texCoord;
 VARYING_IN vec4 v_colour;
@@ -76,6 +77,8 @@ VARYING_IN vec4 v_colour;
 OUTPUT
 
 const vec4 FogColour = vec4(0.91,0.92,0.923,1.0);
+
+#include LIGHT_COLOUR
 
 float fogAmount(float distance)
 {
@@ -103,7 +106,7 @@ void main()
     //float d = (2.0 * ZNear * ZFar) / (ZFar + ZNear - depthSample * (ZFar - ZNear));
 
     float d = (2.0 * ZNear) / (ZFar + ZNear - depthSample * (ZFar - ZNear));
-    FRAG_OUT = mix(colour, FogColour, fogAmount(d));
+    FRAG_OUT = mix(colour, FogColour/* * getLightColour()*/, fogAmount(d));
 
 
 

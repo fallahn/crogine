@@ -4333,7 +4333,7 @@ void GolfState::buildScene()
     //carts
     md.loadFromFile("assets/golf/models/cart.cmt");
     auto texturedMat = m_resources.materials.get(m_materialIDs[MaterialID::CelTextured]);
-    applyMaterialData(md, texturedMat, 1);
+    applyMaterialData(md, texturedMat);
     std::array cartPositions =
     {
         glm::vec3(-0.4f, 0.f, -5.9f),
@@ -4355,7 +4355,7 @@ void GolfState::buildScene()
             entity.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, rotation);
             entity.addComponent<cro::CommandTarget>().ID = CommandID::Cart;
             md.createModel(entity);
-            entity.getComponent<cro::Model>().setMaterial(1, texturedMat);
+            entity.getComponent<cro::Model>().setMaterial(0, texturedMat);
             entity.getComponent<cro::Model>().setRenderFlags(~RenderFlags::MiniMap);
             teeEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
         }

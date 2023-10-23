@@ -141,7 +141,7 @@ namespace
             float stars = pow(clamp(noise(viewDirection * 200.0), 0.0f, 1.0f), Threshold) * Exposure;
             stars *= mix(0.4, 1.4, noise(viewDirection * 100.0));
 
-            FRAG_OUT.rgb = mix(FRAG_OUT.rgb, vec3(1.0), stars * u_starsAmount);
+            FRAG_OUT.rgb = mix(FRAG_OUT.rgb, vec3(1.0), stars * amount * u_starsAmount);
 
         })";
     const std::string skyboxFragTextured =

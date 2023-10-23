@@ -421,6 +421,7 @@ static const std::string CelFragmentShader = R"(
     void main()
     {
         vec4 colour = getLightColour();
+
 #if defined (TEXTURED)
         vec2 texCoord = v_texCoord;
 
