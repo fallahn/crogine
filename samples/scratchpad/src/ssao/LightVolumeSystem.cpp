@@ -93,7 +93,8 @@ namespace
 LightVolumeSystem::LightVolumeSystem(MessageBus& mb)
     : System        (mb, typeid(LightVolumeSystem)),
     m_bufferSize    (App::getWindow().getSize()),
-    m_bufferScale   (1)
+    m_bufferScale   (1),
+    m_multiSamples  (0)
 {
     requireComponent<LightVolume>();
     requireComponent<Model>();
@@ -217,6 +218,13 @@ void LightVolumeSystem::updateBuffer(Entity camera)
     /*glCheck*/(glUniform1i(m_uniformIDs[UniformID::PositionMap], 1));
     /*glCheck*/(glUniformMatrix4fv(m_uniformIDs[UniformID::ViewProjection], 1, GL_FALSE, &viewProj[0][0]));
 
+    //if there are multiple lights blend additively
+    //TODO we probably want to sort back to front when culling
+    /*glCheck*/(glEnable(GL_BLEND));
+    /*glCheck*/(glEnable(GL_DEPTH_TEST));
+    /*glCheck*/(glDepthMask(GL_FALSE));
+    /*glCheck*/(glBlendFunc(GL_ONE, GL_ONE));
+    /*glCheck*/(glBlendEquation(GL_FUNC_ADD));
 
     for (const auto& entity : m_visibleEntities)
     {
@@ -238,9 +246,9 @@ void LightVolumeSystem::updateBuffer(Entity camera)
     m_renderTexture.display();
 
     /*glCheck*/(glDisable(GL_CULL_FACE));
+    /*glCheck*/(glDisable(GL_DEPTH_TEST));
 
     //TODO assess these
-    //glCheck(glDisable(GL_DEPTH_TEST));
     //glCheck(glDepthMask(GL_TRUE));
 }
 
@@ -263,6 +271,15 @@ void LightVolumeSystem::setTargetSize(glm::uvec2 size, std::uint32_t scale)
     }
 }
 
+void LightVolumeSystem::setMultiSamples(std::uint32_t samples)
+{
+    if (samples != m_multiSamples)
+    {
+        m_multiSamples = samples;
+        resizeBuffer();
+    }
+}
+
 //private
 void LightVolumeSystem::resizeBuffer()
 {
@@ -271,10 +288,11 @@ void LightVolumeSystem::resizeBuffer()
 
     if (m_shader.getGLHandle())
     {
-        const auto size = glm::vec2(m_bufferSize);
+        const auto usize = glm::vec2(size);
         glUseProgram(m_shader.getGLHandle());
-        /*glCheck*/(glUniform2f(m_uniformIDs[UniformID::TargetSize], size.x, size.y));
+        /*glCheck*/(glUniform2f(m_uniformIDs[UniformID::TargetSize], usize.x, usize.y));
     }
 
-    m_renderTexture.create(size.x, size.y);
+    m_renderTexture.create(size.x, size.y, true, false, m_multiSamples);
+    m_renderTexture.setSmooth(true);
 }

@@ -377,7 +377,6 @@ void SSAOState::createScene()
         m_colourQuad.setTexture(m_renderBuffer.getTexture(MRTChannel::Colour), buffSize);
         m_colourQuad.setPosition({ 0.f, (size.y / 4.f) * 3.f });
         m_colourQuad.setScale({ 0.25f, 0.25f });
-        lightVolSystem.setSourceBuffer(m_renderBuffer.getTexture(MRTChannel::Colour), cro::LightVolumeSystem::BufferID::Colour);
 
         m_normalQuad.setTexture(m_renderBuffer.getTexture(MRTChannel::Normal), buffSize);
         m_normalQuad.setPosition({ 0.f, size.y / 2.f });

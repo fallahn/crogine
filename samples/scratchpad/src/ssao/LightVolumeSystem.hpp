@@ -63,8 +63,7 @@ namespace cro
         {
             enum
             {
-                //hmm actually we don't need the colour buffer
-                Colour, Position, Normal,
+                Position, Normal,
                 Count
             };
         };
@@ -90,12 +89,14 @@ namespace cro
         void setSourceBuffer(TextureID, std::int32_t index);
 
         void setTargetSize(glm::uvec2 size, std::uint32_t scale);
+        void setMultiSamples(std::uint32_t samples);
         const Texture& getBuffer() const { return m_renderTexture.getTexture(); }
 
     private:
         cro::RenderTexture m_renderTexture;
         glm::uvec2 m_bufferSize;
         std::uint32_t m_bufferScale; //texture size is divided by this
+        std::uint32_t m_multiSamples;
 
         Shader m_shader;
         struct UniformID final
