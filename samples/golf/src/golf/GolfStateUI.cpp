@@ -203,15 +203,46 @@ void GolfState::buildUI()
     auto entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Sprite>(m_gameSceneTexture.getTexture());
-    auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
-    entity.getComponent<cro::Transform>().setOrigin(glm::vec3(bounds.width / 2.f, bounds.height / 2.f, 0.5f));
-    entity.addComponent<cro::Callback>().function = resizeCallback;
+    if (m_sharedData.nightTime)
+    {
+        entity.getComponent<cro::Drawable2D>().setTexture(m_gameSceneMRTexture.getTexture(0), m_gameSceneMRTexture.getSize());
+        entity.getComponent<cro::Drawable2D>().setVertexData(
+            {
+                cro::Vertex2D(glm::vec2(-0.5f, 0.5f), glm::vec2(0.f, 1.f)),
+                cro::Vertex2D(glm::vec2(-0.5f), glm::vec2(0.f)),
+                cro::Vertex2D(glm::vec2(0.5f), glm::vec2(1.f)),
+                cro::Vertex2D(glm::vec2(0.5f, -0.5f), glm::vec2(1.f, 0.f))
+            });
+        entity.getComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLE_STRIP);
+        entity.getComponent<cro::Transform>().setScale(glm::vec2(m_gameSceneMRTexture.getSize()));
 
-    auto* shader = &m_resources.shaders.get(ShaderID::Fog);
-    entity.getComponent<cro::Drawable2D>().setShader(shader);
-    entity.getComponent<cro::Drawable2D>().bindUniform("u_depthTexture", m_gameSceneTexture.getDepthTexture());
-    m_postProcesses[PostID::Fog].uniforms.emplace_back(std::make_pair("u_depthTexture", m_gameSceneTexture.getDepthTexture()));
+        entity.addComponent<cro::Callback>().function =
+            [&](cro::Entity e, float)
+        {
+            //update texture rect and recentre the origin
+            e.getComponent<cro::Transform>().setScale(glm::vec2(m_gameSceneMRTexture.getSize()));
+
+            e.getComponent<cro::Callback>().active = false;
+        };
+
+        //TODO load the fog shader with the light map combining dealy
+        //entity.getComponent<cro::Drawable2D>().bindUniform("u_depthTexture", m_gameSceneMRTexture.getTexture(3));
+        //m_postProcesses[PostID::Fog].uniforms.emplace_back(std::make_pair("u_depthTexture", m_gameSceneMRTexture.getTexture(3)));
+    }
+    else
+    {
+        entity.addComponent<cro::Sprite>(m_gameSceneTexture.getTexture());
+
+        auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+        entity.getComponent<cro::Transform>().setOrigin(glm::vec3(bounds.width / 2.f, bounds.height / 2.f, 0.5f));
+        entity.addComponent<cro::Callback>().function = resizeCallback;
+
+        auto* shader = &m_resources.shaders.get(ShaderID::Fog);
+        entity.getComponent<cro::Drawable2D>().setShader(shader);
+        entity.getComponent<cro::Drawable2D>().bindUniform("u_depthTexture", m_gameSceneTexture.getDepthTexture());
+        m_postProcesses[PostID::Fog].uniforms.emplace_back(std::make_pair("u_depthTexture", m_gameSceneTexture.getDepthTexture()));
+    }    
+
     
     for (auto cam : m_cameras)
     {
@@ -227,7 +258,7 @@ void GolfState::buildUI()
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>(m_trophySceneTexture.getTexture());
-    bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
+    auto bounds = entity.getComponent<cro::Sprite>().getTextureBounds();
     entity.getComponent<cro::Transform>().setOrigin(glm::vec3(bounds.width / 2.f, bounds.height / 2.f, 0.f));
     entity.addComponent<cro::Callback>().function = resizeCallback;
 

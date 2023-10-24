@@ -72,7 +72,25 @@ namespace cro
         This has no effect when using Sprite or Text components
         as they override this property with their own.
         */
-        void setTexture(const cro::Texture*);
+        void setTexture(const Texture*);
+
+        /*!
+        \brief Sets the Drawable2D texture via a TextureID
+        This should be used when rendering the TextureID returned
+        from a RenderTarget or similar, when a Texture is not
+        available, otherwise setting via setTexture(Texture*)
+        is preferred.
+        Note that setting the texture via this function means
+        that getTexture() will return nullptr, even when a 
+        texture is in use.
+        Using a texture ID still requires that vertex data be
+        set - and is not compatible with Sprite components.
+        \param textureID a TextureID containing the handle of
+        an available texture to use
+        \param size A vector containing the dimensions of the
+        given texture.
+        */
+        void setTexture(TextureID textureID, glm::uvec2 size);
 
         /*!
         \brief Set a custom shader for this drawable.
@@ -119,7 +137,8 @@ namespace cro
 
         /*!
         \brief Returns a pointer to the active texture
-        May be nullptr is no texture is set.
+        May be nullptr is no texture is set, or the
+        texture was set via TextureID.
         */
         const Texture* getTexture() const;
 
@@ -267,7 +286,14 @@ namespace cro
 
     private:
 
-        const Texture* m_texture;
+        //fudgy wrapper which allows drawing with TextureID
+        struct TextureInfo final
+        {
+            const Texture* texture = nullptr;
+            TextureID textureID;
+            glm::uvec2 size = glm::vec2(0);
+        }m_textureInfo;
+
         Shader* m_shader;
         bool m_customShader;
         bool m_applyDefaultShader;

@@ -57,6 +57,7 @@ source distribution.
 #include <crogine/ecs/components/Sprite.hpp>
 #include <crogine/graphics/ModelDefinition.hpp>
 #include <crogine/graphics/RenderTexture.hpp>
+#include <crogine/graphics/MultiRenderTexture.hpp>
 #include <crogine/graphics/Image.hpp>
 #include <crogine/graphics/SimpleQuad.hpp>
 #include <crogine/graphics/UniformBuffer.hpp>
@@ -142,7 +143,15 @@ private:
     bool m_allowAchievements;
     cro::Clock m_readyClock; //pings ready state until ack'd
 
+    struct RenderTargetContext final
+    {
+        std::function<void(cro::Colour)> clear;
+        std::function<void()> display;
+        std::function<glm::uvec2()> getSize;
+    }m_renderTarget;
+
     cro::RenderTexture m_gameSceneTexture;
+    cro::MultiRenderTexture m_gameSceneMRTexture;
     cro::RenderTexture m_trophySceneTexture;
     cro::CubemapTexture m_reflectionMap;
 

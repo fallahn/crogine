@@ -63,22 +63,41 @@ void GolfState::createCameras()
                 std::uint32_t samples = m_sharedData.pixelScale ? 0 :
                     m_sharedData.antialias ? m_sharedData.multisamples : 0;
 
-                cro::RenderTarget::Context ctx;
-                ctx.depthBuffer = true;
-#ifdef __APPLE__
-                //*sigh*
-                ctx.depthTexture = false;
-#else
-                ctx.depthTexture = true;
-#endif
-                ctx.samples = samples;
-                ctx.width = static_cast<std::uint32_t>(texSize.x);
-                ctx.height = static_cast<std::uint32_t>(texSize.y);
+                if (m_sharedData.nightTime)
+                {
 
-                m_sharedData.antialias =
-                    m_gameSceneTexture.create(ctx)
-                    && m_sharedData.multisamples != 0
-                    && !m_sharedData.pixelScale;
+                    m_sharedData.antialias =
+                        m_gameSceneMRTexture.create(static_cast<std::uint32_t>(texSize.x), static_cast<std::uint32_t>(texSize.y))
+                        && m_sharedData.multisamples != 0
+                        && !m_sharedData.pixelScale;
+
+                    m_renderTarget.clear = [&](cro::Colour c) { m_gameSceneMRTexture.clear(c); };
+                    m_renderTarget.display = std::bind(&cro::MultiRenderTexture::display, &m_gameSceneMRTexture);
+                    m_renderTarget.getSize = std::bind(&cro::MultiRenderTexture::getSize, &m_gameSceneMRTexture);
+                }
+                else
+                {
+                    cro::RenderTarget::Context ctx;
+                    ctx.depthBuffer = true;
+#ifdef __APPLE__
+                    //*sigh*
+                    ctx.depthTexture = false;
+#else
+                    ctx.depthTexture = true;
+#endif
+                    ctx.samples = samples;
+                    ctx.width = static_cast<std::uint32_t>(texSize.x);
+                    ctx.height = static_cast<std::uint32_t>(texSize.y);
+
+                    m_sharedData.antialias =
+                        m_gameSceneTexture.create(ctx)
+                        && m_sharedData.multisamples != 0
+                        && !m_sharedData.pixelScale;
+
+                    m_renderTarget.clear = std::bind(&cro::RenderTexture::clear, &m_gameSceneTexture, std::placeholders::_1);
+                    m_renderTarget.display = std::bind(&cro::RenderTexture::display, &m_gameSceneTexture);
+                    m_renderTarget.getSize = std::bind(&cro::RenderTexture::getSize, &m_gameSceneTexture);
+                }
 
                 auto invScale = (maxScale + 1.f) - scale;
                 glCheck(glPointSize(invScale * BallPointSize));

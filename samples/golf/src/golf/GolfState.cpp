@@ -1996,7 +1996,7 @@ void GolfState::render()
         glUseProgram(m_gridShaders[0].shaderID);
         glUniform1f(m_gridShaders[0].transparency, m_sharedData.gridTransparency * (1.f - m_terrainBuilder.getSlopeAlpha()));
     }    
-    m_gameSceneTexture.clear();
+    m_renderTarget.clear(cro::Colour::Black);
     m_skyScene.render();
     glClear(GL_DEPTH_BUFFER_BIT);
     glCheck(glEnable(GL_LINE_SMOOTH));
@@ -2012,7 +2012,7 @@ void GolfState::render()
 #ifdef CRO_DEBUG_
     //m_collisionMesh.renderDebug(cam.getActivePass().viewProjectionMatrix, m_gameSceneTexture.getSize());
 #endif
-    m_gameSceneTexture.display();
+    m_renderTarget.display();
 
     //update mini green if ball is there
     if (m_currentPlayer.terrain == TerrainID::Green)
@@ -5101,8 +5101,8 @@ void GolfState::spawnBall(const ActorInfo& info)
         auto position = ballEnt.getComponent<cro::Transform>().getPosition();
         position.y += Ball::Radius * 3.f;
 
-        auto labelPos = m_gameScene.getActiveCamera().getComponent<cro::Camera>().coordsToPixel(position, m_gameSceneTexture.getSize());
-        const float halfWidth = m_gameSceneTexture.getSize().x / 2.f;
+        auto labelPos = m_gameScene.getActiveCamera().getComponent<cro::Camera>().coordsToPixel(position, m_renderTarget.getSize());
+        const float halfWidth = m_renderTarget.getSize().x / 2.f;
 
         e.getComponent<cro::Transform>().setPosition(labelPos);
 

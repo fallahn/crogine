@@ -142,7 +142,7 @@ void RenderSystem2D::process(float)
         //check shader flag and set correct shader if needed
         if (drawable.m_applyDefaultShader)
         {
-            if (drawable.m_texture)
+            if (drawable.m_textureInfo.textureID.textureID)
             {
                 //use textured shader
                 drawable.m_shader = &m_texturedShader;
@@ -231,10 +231,10 @@ void RenderSystem2D::render(Entity cameraEntity, const RenderTarget& rt)
                 glCheck(glUniformMatrix4fv(drawable.m_worldUniform, 1, GL_FALSE, glm::value_ptr(worldMat)));
 
                 //apply texture if active
-                if (drawable.m_texture)
+                if (drawable.m_textureInfo.textureID.textureID)
                 {
                     glCheck(glActiveTexture(GL_TEXTURE0));
-                    glCheck(glBindTexture(GL_TEXTURE_2D, drawable.m_texture->getGLHandle()));
+                    glCheck(glBindTexture(GL_TEXTURE_2D, drawable.m_textureInfo.textureID.textureID));
                     glCheck(glUniform1i(drawable.m_textureUniform, 0));
                 }
 
