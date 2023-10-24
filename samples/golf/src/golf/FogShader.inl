@@ -65,6 +65,7 @@ const float ZFar = ZFAR;
 
 uniform sampler2D u_texture;
 uniform sampler2D u_depthTexture;
+uniform sampler2D u_lightTexture;
 
 uniform float u_density = 0.0;
 uniform float u_fogStart = 0.0;
@@ -96,6 +97,11 @@ void main()
     float desatAmount = clamp(u_density, 0.0, 1.0);
 
     vec4 colour = TEXTURE(u_texture, v_texCoord) * v_colour;
+
+#if defined(LIGHT_COLOUR)
+    //colour.rgb += TEXTURE(u_lightTexture, v_texCoord).rgb;
+#endif
+
     vec3 desat = vec3(dot(colour.rgb, vec3(0.299, 0.587, 0.114)));
     vec3 dimmed = colour.rgb * (1.0 - (0.3 * desatAmount));
     colour.rgb = mix(dimmed, desat, desatAmount * DESAT);

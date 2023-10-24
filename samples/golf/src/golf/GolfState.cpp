@@ -2271,6 +2271,10 @@ void GolfState::loadAssets()
     {
         desat = "#define DESAT 1.0\n";
     }
+    if (m_sharedData.nightTime)
+    {
+        desat += "#define LIGHT_COLOUR\n";
+    }
     m_resources.shaders.loadFromString(ShaderID::Fog, FogVert, FogFrag, "#define ZFAR 320.0\n" + desat);
     shader = &m_resources.shaders.get(ShaderID::Fog);
     m_postProcesses[PostID::Fog].shader = shader;

@@ -67,7 +67,7 @@ void GolfState::createCameras()
                 {
 
                     m_sharedData.antialias =
-                        m_gameSceneMRTexture.create(static_cast<std::uint32_t>(texSize.x), static_cast<std::uint32_t>(texSize.y))
+                        m_gameSceneMRTexture.create(static_cast<std::uint32_t>(texSize.x), static_cast<std::uint32_t>(texSize.y), MRTIndex::Count)
                         && m_sharedData.multisamples != 0
                         && !m_sharedData.pixelScale;
 

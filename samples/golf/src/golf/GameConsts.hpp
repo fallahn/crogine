@@ -143,6 +143,16 @@ class btVector3;
 glm::vec3 btToGlm(btVector3 v);
 btVector3 glmToBt(glm::vec3 v);
 
+struct MRTIndex final
+{
+    enum
+    {
+        Colour, Position, Normal, Depth,
+
+        Count
+    };
+};
+
 struct TutorialID
 {
     //note that these are in order in which they are displayed

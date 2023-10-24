@@ -205,7 +205,7 @@ void GolfState::buildUI()
     entity.addComponent<cro::Drawable2D>();
     if (m_sharedData.nightTime)
     {
-        entity.getComponent<cro::Drawable2D>().setTexture(m_gameSceneMRTexture.getTexture(0), m_gameSceneMRTexture.getSize());
+        entity.getComponent<cro::Drawable2D>().setTexture(m_gameSceneMRTexture.getTexture(MRTIndex::Colour), m_gameSceneMRTexture.getSize());
         entity.getComponent<cro::Drawable2D>().setVertexData(
             {
                 cro::Vertex2D(glm::vec2(-0.5f, 0.5f), glm::vec2(0.f, 1.f)),
@@ -226,8 +226,9 @@ void GolfState::buildUI()
         };
 
         //TODO load the fog shader with the light map combining dealy
-        //entity.getComponent<cro::Drawable2D>().bindUniform("u_depthTexture", m_gameSceneMRTexture.getTexture(3));
-        //m_postProcesses[PostID::Fog].uniforms.emplace_back(std::make_pair("u_depthTexture", m_gameSceneMRTexture.getTexture(3)));
+        //ie don't forget to uncomment in the fog shader
+        //entity.getComponent<cro::Drawable2D>().bindUniform("u_depthTexture", m_gameSceneMRTexture.getTexture(MRTIndex::Depth));
+        //m_postProcesses[PostID::Fog].uniforms.emplace_back(std::make_pair("u_depthTexture", m_gameSceneMRTexture.getTexture(MRTIndex::Depth)));
     }
     else
     {
