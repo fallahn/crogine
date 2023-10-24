@@ -58,7 +58,7 @@ namespace
     constexpr float VoiceDelay = 0.5f;
 
     const cro::Time MinCrowdTime = cro::seconds(43.f);
-    const cro::Time FlagSoundTime = cro::seconds(2.f);
+    const cro::Time FlagSoundTime = cro::seconds(3.f);
     const cro::Time ChatSoundTime = cro::seconds(0.05f);
     const cro::Time PowerSoundTime = cro::seconds(0.5f);
     const cro::Time ApplauseSoundTime = cro::seconds(3.5f);
@@ -544,6 +544,7 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
                     if (m_soundTimers[AudioID::Pole].elapsed() > FlagSoundTime)
                     {
                         playSound(AudioID::Pole, data.position).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
+                        m_soundTimers[AudioID::Pole].restart();
 
                         if (m_sharedData.gimmeRadius == 0 &&
                             cro::Util::Random::value(0, 1) == 0)
