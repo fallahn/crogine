@@ -39,12 +39,13 @@ source distribution.
 #include <crogine/graphics/ImageArray.hpp>
 
 bool PlayerData::saveProfile() const
-{    
+{   
     cro::ConfigFile cfg("avatar");
 
     if (!name.empty())
     {
-        cfg.addProperty("name", name.toAnsiString());
+        const auto s = name.toUtf8();
+        cfg.addProperty("name", std::string(s.c_str(), s.c_str() + s.length()));
     }
     cfg.addProperty("ball_id").setValue(ballID);
     cfg.addProperty("hair_id").setValue(hairID);

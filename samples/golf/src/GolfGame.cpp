@@ -428,7 +428,6 @@ bool GolfGame::initialise()
 
     //do this first because if we quit early the preferences will otherwise get overwritten by defaults.
     loadPreferences();
-    loadAvatars();
 
 #if defined USE_GNS
     m_achievements = std::make_unique<SteamAchievements>(MessageID::AchievementMessage);
@@ -440,6 +439,8 @@ bool GolfGame::initialise()
         //no point trying to load the menu if we failed to init.
         return false;
     }
+
+    loadAvatars(); //this relies on steam being initialised
 
 //#ifdef USE_WORKSHOP
 //    registerCommand("workshop",
@@ -1200,8 +1201,62 @@ void GolfGame::loadAvatars()
         cro::FileSystem::createDirectory(path);
     }
 
-    auto profileDirs = cro::FileSystem::listDirectories(path);
+
     std::int32_t i = 0;
+#ifdef USE_GNS
+    auto uid = Social::getPlayerID();
+    
+    auto steamPath = path + uid + "/";
+    if (!cro::FileSystem::directoryExists(steamPath))
+    {
+        cro::FileSystem::createDirectory(steamPath);
+
+        PlayerData sPlayer;
+        sPlayer.profileID = uid;
+        sPlayer.name = Social::getPlayerName();
+        sPlayer.saveProfile();
+
+        m_profileData.playerProfiles.push_back(sPlayer);
+        i++;
+    }
+    else
+    {
+        auto files = cro::FileSystem::listFiles(steamPath);
+        files.erase(std::remove_if(files.begin(), files.end(),
+            [](const std::string& f)
+            {
+                return cro::FileSystem::getFileExtension(f) != ".pfl";
+            }), files.end());
+
+        if (!files.empty())
+        {
+            PlayerData pd;
+            if (pd.loadProfile(steamPath + files[0], files[0].substr(0, files[0].size() - 4)))
+            {
+                //always use the current Steam user name
+                pd.name = Social::getPlayerName();
+
+                m_profileData.playerProfiles.push_back(pd);
+                i++;
+            }
+        }
+    }
+
+#endif
+
+    auto profileDirs = cro::FileSystem::listDirectories(path);
+#ifdef USE_GNS
+    //remove the steam profile because we already explicitly parsed it
+    profileDirs.erase(std::remove_if(profileDirs.begin(), profileDirs.end(),
+        [uid](const std::string& d) 
+        {
+            return d == uid;
+        }), profileDirs.end());
+
+#endif // USE_GNS
+
+
+
     for (const auto& dir : profileDirs)
     {
         auto profilePath = path + dir + "/";
@@ -1217,8 +1272,45 @@ void GolfGame::loadAvatars()
             PlayerData pd;
             if (pd.loadProfile(profilePath + files[0], files[0].substr(0, files[0].size() - 4)))
             {
-                m_profileData.playerProfiles.push_back(pd);
-                i++;
+#ifdef USE_GNS
+                //check if we need to convert this to the UID profile
+                if (pd.name == Social::getPlayerName())
+                {
+                    pd.profileID = Social::getPlayerID();
+                    pd.saveProfile();
+                    m_profileData.playerProfiles[0] = pd;
+
+                    auto copyFiles = cro::FileSystem::listFiles(profilePath);
+                    for (const auto& cFile : copyFiles)
+                    {
+                        if (cro::FileSystem::getFileExtension(cFile) != ".pfl")
+                        {
+                            auto dbPath = profilePath + cFile;
+                            if (cro::FileSystem::fileExists(dbPath))
+                            {
+                                std::error_code ec;
+                                std::filesystem::copy_file(std::filesystem::u8path(dbPath),
+                                    std::filesystem::u8path(steamPath + cFile),
+                                    std::filesystem::copy_options::update_existing, ec);
+
+                                if (ec)
+                                {
+                                    LogE << "Failed copying player data, error code: " << ec.value() << std::endl;
+                                }
+                            }
+                        }
+                    }
+                    //remove the old data so it stops getting sync'd
+                    cro::FileSystem::removeDirectory(profilePath);
+                }
+                else
+                {
+#endif
+                    m_profileData.playerProfiles.push_back(pd);
+                    i++;
+#ifdef USE_GNS
+                }
+#endif
             }
         }
 

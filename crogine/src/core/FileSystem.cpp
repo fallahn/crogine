@@ -336,6 +336,17 @@ bool FileSystem::setCurrentDirectory(std::string path)
 #endif
 }
 
+void FileSystem::removeDirectory(const std::string& path)
+{
+    std::error_code ec;
+    std::filesystem::remove_all(std::filesystem::u8path(path), ec);
+
+    if (ec)
+    {
+        LogE << "unable to remove directory " << path << ": error code " << ec.value() << std::endl;
+    }
+}
+
 std::string FileSystem::getRelativePath(std::string path, const std::string& root)
 {
     auto currentPath = root;

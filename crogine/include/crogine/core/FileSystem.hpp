@@ -124,6 +124,12 @@ namespace cro
         */
         static bool setCurrentDirectory(std::string path);
 
+        /*!
+        \brief Removes the given directory and recursively removes all content
+        Equivalent of rm -rf BE WARNED THIS IS A ONE WAY TRIP
+        */
+        static void removeDirectory(const std::string& path);
+
         /*! 
         \brief Attempts to convert the given absolute path to a path relative to the given root directory
         \param path Absolute path to convert

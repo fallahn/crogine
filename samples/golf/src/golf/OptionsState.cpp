@@ -258,6 +258,7 @@ OptionsState::OptionsState(cro::StateStack& ss, cro::State::Context ctx, SharedS
     m_lastMousePos      (0.f),
     m_bindingIndex      (-1),
     m_currentTabFunction(0),
+    m_activeToolTip     (-1),
     m_viewScale         (2.f)
 {
     ctx.mainWindow.setMouseCaptured(false);
@@ -483,7 +484,27 @@ bool OptionsState::handleEvent(const cro::Event& evt)
         if (evt.button.button == SDL_BUTTON_LEFT
             && !m_updatingKeybind)
         {
-            pickSlider();
+            if (m_activeToolTip == -1)
+            {
+                pickSlider();
+            }
+            else
+            {
+                switch (m_activeToolTip)
+                {
+                default: break;
+                case ToolTipID::CustomMusic:
+#ifdef USE_GNS
+                    if (!Social::isSteamdeck())
+                    {
+                        Social::showGuides();
+                    }
+#else
+                    cro::Util::String::parseURL("https://steamcommunity.com/sharedfiles/filedetails/?id=3013809801");
+#endif
+                    break;
+                }
+            }
         }
     }
     else if (evt.type == SDL_MOUSEBUTTONUP)
@@ -1174,6 +1195,7 @@ void OptionsState::buildScene()
     m_tooltips[ToolTipID::Achievements] = createToolTip("Achievements");
     m_tooltips[ToolTipID::Stats] = createToolTip("Stats");
     m_tooltips[ToolTipID::NeedsRestart] = createToolTip("Applied On Next Game Load");
+    m_tooltips[ToolTipID::CustomMusic] = createToolTip("Visit the Steam Community for\nguides on adding custom music");
 
     auto updateView = [&, rootNode](cro::Camera& cam) mutable
     {
@@ -1253,6 +1275,12 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
     //audio label
     auto audioLabel = createLabel(glm::vec2((bgBounds.width / 2.f) - 101.f, 139.f), "Music Volume");
     centreText(audioLabel);
+    audioLabel.addComponent<cro::Callback>().active = true;
+    audioLabel.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+    {
+        updateToolTip(e, ToolTipID::CustomMusic);
+    };
 
     //antialiasing label
     auto aliasLabel = createLabel(glm::vec2(12.f, 114.f), "Antialiasing");
@@ -3927,6 +3955,7 @@ void OptionsState::updateToolTip(cro::Entity e, std::int32_t tipID)
         }
 
         m_scene.getActiveCamera().getComponent<cro::Camera>().active = true;
+        m_activeToolTip = tipID;
     }
     else
     {
@@ -3934,6 +3963,8 @@ void OptionsState::updateToolTip(cro::Entity e, std::int32_t tipID)
         {
             m_tooltips[tipID].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
             m_tooltips[tipID].getComponent<ToolTip>().target = {};
+
+            m_activeToolTip = -1;
         }
     }
 }
