@@ -66,6 +66,7 @@ R"(
         mat2 rotation;
         vec4 colour;
         vec3 normal;
+        vec3 worldPos;
         float darkenAmount;
         float ditherAmount;
     }v_data;
@@ -212,6 +213,8 @@ R"(
         v_data.darkenAmount = (((1.0 - pow(clamp(distance / farFadeDistance, 0.0, 1.0), 5.0)) * 0.8) + 0.2);
 
         gl_ClipDistance[0] = dot(worldPosition, u_clipPlane);
+
+        v_data.worldPos = worldPosition.xyz;
     })";
 
     const static std::string BushGeom = R"(
@@ -232,6 +235,7 @@ R"(
         mat2 rotation;
         vec4 colour;
         vec3 normal;
+        vec3 worldPos;
         float darkenAmount;
         float ditherAmount;
     }v_dataIn[ARRAY_SIZE];
@@ -242,6 +246,7 @@ R"(
         mat2 rotation;
         vec4 colour;
         vec3 normal;
+        vec3 worldPos;
         float darkenAmount;
         float ditherAmount;
     } v_dataOut;
@@ -289,7 +294,7 @@ R"(
 
 const std::string BushFragment =
 R"(
-    OUTPUT
+#include OUTPUT_LOCATION
 
     uniform sampler2D u_diffuseMap;
     uniform vec3 u_lightDirection;
@@ -303,6 +308,7 @@ R"(
         mat2 rotation;
         vec4 colour;
         vec3 normal;
+        vec3 worldPos;
         float darkenAmount;
         float ditherAmount;
     }v_data;
@@ -322,7 +328,8 @@ R"(
 
     void main()
     {
-        float amount = dot(normalize(v_data.normal), -u_lightDirection);
+        vec3 normal = normalize(v_data.normal);
+        float amount = dot(normal, -u_lightDirection);
         amount *= 2.0;
         amount = round(amount);
         amount *= 0.5;
@@ -352,6 +359,11 @@ R"(
         if (textureColour.a * alpha < 0.3) discard;
 
         textureColour.rgb *= v_data.darkenAmount;
+
+#if defined(USE_MRT)
+        NORM_OUT = vec4(normal, 1.0);
+        POS_OUT = vec4(v_data.worldPos, 1.0);
+#endif
 
         FRAG_OUT = vec4(colour, 1.0) * textureColour * getLightColour();
     })";
@@ -383,6 +395,7 @@ std::string BranchVertex = R"(
     VARYING_OUT float v_ditherAmount;
     VARYING_OUT vec2 v_texCoord;
     VARYING_OUT vec3 v_normal;
+    VARYING_OUT vec3 v_worldPosition;
     VARYING_OUT float v_darkenAmount;
 
 #include WIND_CALC
@@ -397,25 +410,25 @@ std::string BranchVertex = R"(
         mat3 normalMatrix = u_normalMatrix;
     #endif
 
-    vec4 position = a_position;
-    WindResult windResult = getWindData(position.xz, worldMatrix[3].xz);
+        vec4 position = a_position;
+        WindResult windResult = getWindData(position.xz, worldMatrix[3].xz);
 
-    vec3 vertexStrength = a_colour.rgb;
-    //multiply high and low frequency by vertex colours
-    //note that in tree models red/green ARE SWAPPED >.<
-    windResult.highFreq *= vertexStrength.r;
-    windResult.lowFreq *= vertexStrength.g;
+        vec3 vertexStrength = a_colour.rgb;
+        //multiply high and low frequency by vertex colours
+        //note that in tree models red/green ARE SWAPPED >.<
+        windResult.highFreq *= vertexStrength.r;
+        windResult.lowFreq *= vertexStrength.g;
 
-    //apply high frequency and low frequency in local space
-    position.x += windResult.lowFreq.x + windResult.highFreq.x;
-    position.z += windResult.lowFreq.y + windResult.highFreq.y;
+        //apply high frequency and low frequency in local space
+        position.x += windResult.lowFreq.x + windResult.highFreq.x;
+        position.z += windResult.lowFreq.y + windResult.highFreq.y;
 
-    //multiply wind direction by wind strength
-    vec3 windDir = vec3(u_windData.x, 0.0, u_windData.z) * windResult.strength * vertexStrength.b;
-    //wind dir is added in world space (below)
+        //multiply wind direction by wind strength
+        vec3 windDir = vec3(u_windData.x, 0.0, u_windData.z) * windResult.strength * vertexStrength.b;
+        //wind dir is added in world space (below)
 
-    vec4 worldPosition = worldMatrix * position;
-    worldPosition.xyz += windDir;
+        vec4 worldPosition = worldMatrix * position;
+        worldPosition.xyz += windDir;
 
 
 #if defined(WOBBLE)
@@ -430,7 +443,7 @@ std::string BranchVertex = R"(
 #else
         gl_Position = u_viewProjectionMatrix * worldPosition;
 #endif
-
+        v_worldPosition = worldPosition.xyz;
 
         gl_ClipDistance[0] = dot(u_clipPlane, worldPosition);
 
@@ -449,7 +462,7 @@ std::string BranchVertex = R"(
     })";
 
 std::string BranchFragment = R"(
-    OUTPUT
+#include OUTPUT_LOCATION
 
     uniform sampler2D u_diffuseMap;
     uniform vec3 u_lightDirection;
@@ -460,6 +473,7 @@ std::string BranchFragment = R"(
     VARYING_IN float v_ditherAmount;
     VARYING_IN vec2 v_texCoord;
     VARYING_IN vec3 v_normal;
+    VARYING_IN vec3 v_worldPosition;
     VARYING_IN float v_darkenAmount;
 
 #include BAYER_MATRIX
@@ -469,7 +483,8 @@ std::string BranchFragment = R"(
     {
         vec4 colour = TEXTURE(u_diffuseMap, v_texCoord);
 
-        float amount = dot(normalize(v_normal), -u_lightDirection);
+        vec3 normal = normalize(v_normal);
+        float amount = dot(normal, -u_lightDirection);
         amount *= 2.0;
         amount = round(amount);
         amount *= 0.5;
@@ -477,6 +492,11 @@ std::string BranchFragment = R"(
 
         colour.rgb *= amount * v_darkenAmount;
         FRAG_OUT = colour * getLightColour();
+
+#if defined(USE_MRT)
+        NORM_OUT = vec4(normal, 1.0);
+        POS_OUT = vec4(v_worldPosition, 1.0);
+#endif
 
 
         vec2 xy = gl_FragCoord.xy;// / u_pixelScale;

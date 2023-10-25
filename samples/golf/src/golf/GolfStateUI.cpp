@@ -242,6 +242,7 @@ void GolfState::buildUI()
         //TODO load the fog shader with the light map combining dealy
         //ie don't forget to uncomment in the fog shader
         entity.getComponent<cro::Drawable2D>().bindUniform("u_depthTexture", m_gameSceneMRTexture.getDepthTexture());
+        //entity.getComponent<cro::Drawable2D>().bindUniform("u_density", 0.6f);
         m_postProcesses[PostID::Fog].uniforms.emplace_back(std::make_pair("u_depthTexture", m_gameSceneMRTexture.getDepthTexture()));
     }
     else

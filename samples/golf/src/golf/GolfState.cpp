@@ -2185,7 +2185,14 @@ void GolfState::loadAssets()
     m_gridShaders[1].transparency = shader->getUniformID("u_transparency");
     m_gridShaders[1].holeHeight = shader->getUniformID("u_holeHeight");
 
-    m_resources.shaders.loadFromString(ShaderID::Billboard, BillboardVertexShader, BillboardFragmentShader);
+    if (m_sharedData.nightTime)
+    {
+        m_resources.shaders.loadFromString(ShaderID::Billboard, BillboardVertexShader, BillboardFragmentShader, "#define USE_MRT\n");;
+    }
+    else
+    {
+        m_resources.shaders.loadFromString(ShaderID::Billboard, BillboardVertexShader, BillboardFragmentShader);
+    }
     shader = &m_resources.shaders.get(ShaderID::Billboard);
     m_scaleBuffer.addShader(*shader);
     m_resolutionBuffer.addShader(*shader);
@@ -2224,13 +2231,19 @@ void GolfState::loadAssets()
 
     if (m_sharedData.treeQuality == SharedStateData::High)
     {
-        m_resources.shaders.loadFromString(ShaderID::TreesetBranch, BranchVertex, BranchFragment, "#define ALPHA_CLIP\n#define INSTANCING\n" + wobble);
+        std::string mrt;
+        if (m_sharedData.nightTime)
+        {
+            mrt = "#define USE_MRT\n";
+        }
+
+        m_resources.shaders.loadFromString(ShaderID::TreesetBranch, BranchVertex, BranchFragment, "#define ALPHA_CLIP\n#define INSTANCING\n" + wobble + mrt);
         shader = &m_resources.shaders.get(ShaderID::TreesetBranch);
         m_scaleBuffer.addShader(*shader);
         m_resolutionBuffer.addShader(*shader);
         m_windBuffer.addShader(*shader);
 
-        m_resources.shaders.loadFromString(ShaderID::TreesetLeaf, BushVertex, /*BushGeom,*/ BushFragment, "#define POINTS\n#define INSTANCING\n#define HQ\n" + wobble);
+        m_resources.shaders.loadFromString(ShaderID::TreesetLeaf, BushVertex, /*BushGeom,*/ BushFragment, "#define POINTS\n#define INSTANCING\n#define HQ\n" + wobble + mrt);
         shader = &m_resources.shaders.get(ShaderID::TreesetLeaf);
         m_scaleBuffer.addShader(*shader);
         m_resolutionBuffer.addShader(*shader);

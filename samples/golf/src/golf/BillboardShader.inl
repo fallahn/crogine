@@ -63,6 +63,9 @@ static const std::string BillboardVertexShader = R"(
 
     VARYING_OUT float v_ditherAmount;
 
+    VARYING_OUT vec3 v_normalVector;
+    VARYING_OUT vec3 v_worldPosition;
+
 #include WIND_CALC
 
     void main()
@@ -140,6 +143,10 @@ static const std::string BillboardVertexShader = R"(
 
         v_colour = vec4(1.0);
 
+#if defined(USE_MRT)
+        v_worldPosition = position.xyz;
+        v_normalVector = cross(camRight, camUp);
+#endif
 
         //snap vert pos to nearest fragment for retro wobble
         //hmm not so good when coupled with wind (above)
@@ -172,7 +179,7 @@ static const std::string BillboardVertexShader = R"(
 
 
 static const std::string BillboardFragmentShader = R"(
-    OUTPUT
+    #include OUTPUT_LOCATION
 
     uniform sampler2D u_diffuseMap;
     uniform vec4 u_lightColour;
@@ -184,13 +191,18 @@ static const std::string BillboardFragmentShader = R"(
 
     VARYING_IN float v_ditherAmount;
     VARYING_IN vec3 v_normalVector;
-    VARYING_IN HIGH vec3 v_worldPosition;
+    VARYING_IN vec3 v_worldPosition;
 
     #include BAYER_MATRIX
     #include LIGHT_COLOUR
 
     void main()
     {
+#if defined(USE_MRT)
+    POS_OUT = vec4(v_worldPosition, 1.0);
+    NORM_OUT = vec4(normalize(v_normalVector), 1.0);
+#endif
+
         FRAG_OUT = v_colour;
         FRAG_OUT *= TEXTURE(u_diffuseMap, v_texCoord0);
         FRAG_OUT *= getLightColour();

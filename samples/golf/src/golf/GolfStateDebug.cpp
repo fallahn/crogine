@@ -231,19 +231,24 @@ void GolfState::addCameraDebugging()
 
 void GolfState::registerDebugCommands()
 {
-    //registerWindow([&]()
-    //    {
-    //        if (ImGui::Begin("sunlight"))
-    //        {
-    //            static float col[3] = { 1.f, 1.f, 1.f };
-    //            if (ImGui::ColorPicker3("Sky", col))
-    //            {
-    //                m_skyScene.getSunlight().getComponent<cro::Sunlight>().setColour({ col[0], col[1], col[2], 1.f });
-    //                m_gameScene.getSunlight().getComponent<cro::Sunlight>().setColour({ col[0], col[1], col[2], 1.f });
-    //            }
-    //        }
-    //        ImGui::End();
-    //    });
+    registerWindow([&]()
+        {
+            if (ImGui::Begin("sunlight"))
+            {
+                /*static float col[3] = { 1.f, 1.f, 1.f };
+                if (ImGui::ColorPicker3("Sky", col))
+                {
+                    m_skyScene.getSunlight().getComponent<cro::Sunlight>().setColour({ col[0], col[1], col[2], 1.f });
+                    m_gameScene.getSunlight().getComponent<cro::Sunlight>().setColour({ col[0], col[1], col[2], 1.f });
+                }*/
+
+                auto size = glm::vec2(m_gameSceneMRTexture.getSize() / 4u);
+                ImGui::Image(m_gameSceneMRTexture.getTexture(1), { size.x , size.y }, { 0.f ,1.f }, { 1.f, 0.f });
+                ImGui::SameLine();
+                ImGui::Image(m_gameSceneMRTexture.getTexture(2), { size.x , size.y }, { 0.f ,1.f }, { 1.f, 0.f });
+            }
+            ImGui::End();
+        });
 
     registerCommand("build_cubemaps",
         [&](const std::string&)
