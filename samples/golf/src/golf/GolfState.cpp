@@ -84,6 +84,7 @@ source distribution.
 #include <crogine/ecs/systems/ParticleSystem.hpp>
 #include <crogine/ecs/systems/AudioSystem.hpp>
 #include <crogine/ecs/systems/AudioPlayerSystem.hpp>
+#include <crogine/ecs/systems/LightVolumeSystem.hpp>
 
 #include <crogine/ecs/components/ShadowCaster.hpp>
 #include <crogine/ecs/components/Transform.hpp>
@@ -98,6 +99,7 @@ source distribution.
 #include <crogine/ecs/components/BillboardCollection.hpp>
 #include <crogine/ecs/components/AudioEmitter.hpp>
 #include <crogine/ecs/components/AudioListener.hpp>
+#include <crogine/ecs/components/LightVolume.hpp>
 
 #include <crogine/graphics/SpriteSheet.hpp>
 #include <crogine/graphics/DynamicMeshBuilder.hpp>
@@ -2014,6 +2016,13 @@ void GolfState::render()
 #endif
     m_renderTarget.display();
 
+    //TODO remove conditional branch?
+    if (m_sharedData.nightTime)
+    {
+        m_gameScene.getSystem<cro::LightVolumeSystem>()->updateBuffer(m_gameScene.getActiveCamera());
+    }
+
+
     //update mini green if ball is there
     if (m_currentPlayer.terrain == TerrainID::Green)
     {
@@ -3821,6 +3830,11 @@ void GolfState::addSystems()
     m_gameScene.addSystem<cro::ModelRenderer>(mb);
     m_gameScene.addSystem<cro::ParticleSystem>(mb);
     m_gameScene.addSystem<cro::AudioSystem>(mb);
+
+    if (m_sharedData.nightTime)
+    {
+        m_gameScene.addSystem<cro::LightVolumeSystem>(mb, cro::LightVolume::WorldSpace);
+    }
 
     //m_gameScene.setSystemActive<InterpolationSystem<InterpolationType::Linear>>(false);
     m_gameScene.setSystemActive<CameraFollowSystem>(false);

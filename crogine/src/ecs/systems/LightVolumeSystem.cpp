@@ -230,8 +230,8 @@ void LightVolumeSystem::updateBuffer(Entity camera)
     const auto cameraPosition = camTx.getWorldPosition();
 
     glCheck(glFrontFace(GL_CCW));
-    glCheck(glDisable(GL_BLEND));
     glCheck(glEnable(GL_CULL_FACE));
+    glCheck(glCullFace(GL_FRONT));
 
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, m_bufferIDs[BufferID::Normal].textureID);
@@ -241,7 +241,6 @@ void LightVolumeSystem::updateBuffer(Entity camera)
 
     const auto viewProj = camComponent.getProjectionMatrix() * pass.viewMatrix;
 
-    m_renderTexture.clear();
     glCheck(glUseProgram(m_shader.getGLHandle()));
     glCheck(glUniform1i(m_uniformIDs[UniformID::NormalMap], 0));
     glCheck(glUniform1i(m_uniformIDs[UniformID::PositionMap], 1));
@@ -255,10 +254,9 @@ void LightVolumeSystem::updateBuffer(Entity camera)
     glCheck(glBlendFunc(GL_ONE, GL_ONE));
     glCheck(glBlendEquation(GL_FUNC_ADD));
 
+    m_renderTexture.clear();
     for (const auto& entity : m_visibleEntities)
     {
-        glCheck(glCullFace(GL_FRONT));
-
         const auto& tx = entity.getComponent<Transform>();
         glm::mat4 worldMat = tx.getWorldTransform();
         glCheck(glUniformMatrix4fv(m_uniformIDs[UniformID::World], 1, GL_FALSE, &worldMat[0][0]));
@@ -274,8 +272,13 @@ void LightVolumeSystem::updateBuffer(Entity camera)
     }
     m_renderTexture.display();
 
+    glCheck(glCullFace(GL_BACK));
     glCheck(glDisable(GL_CULL_FACE));
     glCheck(glDisable(GL_DEPTH_TEST));
+    glCheck(glDisable(GL_BLEND));
+    glCheck(glDepthMask(GL_TRUE));
+
+    //glCheck(glUseProgram(0));
 }
 
 void LightVolumeSystem::setSourceBuffer(TextureID id, std::int32_t index)

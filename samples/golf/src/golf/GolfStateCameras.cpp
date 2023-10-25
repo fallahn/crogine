@@ -39,6 +39,7 @@ source distribution.
 #include <crogine/ecs/components/CommandTarget.hpp>
 #include <crogine/ecs/components/Drawable2D.hpp>
 #include <crogine/ecs/systems/ShadowMapRenderer.hpp>
+#include <crogine/ecs/systems/LightVolumeSystem.hpp>
 
 #include <crogine/detail/glm/gtx/rotate_vector.hpp>
 #include <crogine/util/Maths.hpp>
@@ -74,6 +75,11 @@ void GolfState::createCameras()
                     m_renderTarget.clear = [&](cro::Colour c) { m_gameSceneMRTexture.clear(c); };
                     m_renderTarget.display = std::bind(&cro::MultiRenderTexture::display, &m_gameSceneMRTexture);
                     m_renderTarget.getSize = std::bind(&cro::MultiRenderTexture::getSize, &m_gameSceneMRTexture);
+
+                    auto& lightVolSystem = *m_gameScene.getSystem<cro::LightVolumeSystem>();
+                    lightVolSystem.setTargetSize(glm::uvec2(texSize), 1);
+                    lightVolSystem.setSourceBuffer(m_gameSceneMRTexture.getTexture(MRTIndex::Normal), cro::LightVolumeSystem::BufferID::Normal);
+                    lightVolSystem.setSourceBuffer(m_gameSceneMRTexture.getTexture(MRTIndex::Position), cro::LightVolumeSystem::BufferID::Position);
                 }
                 else
                 {
