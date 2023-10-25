@@ -87,6 +87,7 @@
     <ClInclude Include="..\crogine\include\crogine\ecs\components\Drawable2D.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\components\DynamicTreeComponent.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\components\GBuffer.hpp" />
+    <ClInclude Include="..\crogine\include\crogine\ecs\components\LightVolume.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\components\Model.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\components\ParticleEmitter.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\components\ProjectionMap.hpp" />
@@ -114,6 +115,7 @@
     <ClInclude Include="..\crogine\include\crogine\ecs\systems\DebugInfo.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\systems\DeferredRenderSystem.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\systems\DynamicTreeSystem.hpp" />
+    <ClInclude Include="..\crogine\include\crogine\ecs\systems\LightVolumeSystem.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\systems\ParticleSystem.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\systems\ProjectionMapSystem.hpp" />
     <ClInclude Include="..\crogine\include\crogine\ecs\systems\ModelRenderer.hpp" />
@@ -320,6 +322,7 @@
     <ClCompile Include="..\crogine\src\ecs\systems\DebugInfo.cpp" />
     <ClCompile Include="..\crogine\src\ecs\systems\DeferredRenderSystem.cpp" />
     <ClCompile Include="..\crogine\src\ecs\systems\DynamicTreeSystem.cpp" />
+    <ClCompile Include="..\crogine\src\ecs\systems\LightVolumeSystem.cpp" />
     <ClCompile Include="..\crogine\src\ecs\systems\ParticleSystem.cpp" />
     <ClCompile Include="..\crogine\src\ecs\systems\ProjectionMapSystem.cpp" />
     <ClCompile Include="..\crogine\src\ecs\systems\ModelRenderer.cpp" />
