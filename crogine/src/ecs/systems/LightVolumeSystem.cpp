@@ -55,18 +55,15 @@ namespace
 
         uniform mat4 u_worldMatrix;
         uniform mat4 u_viewProjectionMatrix;
-
-#if defined(WORLD_SPACE)
-        VARYING_OUT vec3 v_worldPosition; //this is the world position of the current light, not frag position
+#if defined (WORLD_SPACE)
+        VARYING_OUT vec3 v_lightPosition;
 #endif
-
         void main()
         {
             gl_Position = u_viewProjectionMatrix * u_worldMatrix * a_position;
-#if defined(WORLD_SPACE)
-            v_worldPosition = vec3(u_worldMatrix[3][0]);
+#if defined (WORLD_SPACE)
+            v_lightPosition = vec3(u_worldMatrix[3]);
 #endif
-
         })";
 
     const std::string FragmentShader = 
@@ -79,23 +76,24 @@ namespace
         uniform float u_lightRadiusSqr;
         uniform vec3 u_lightColour = vec3(1.0, 1.0, 0.0);
 
-#if defined (WORLD_SPACE)
-        VARYING_IN vec3 v_worldPosition;
-#else
-        uniform vec3 u_lightViewPos; //positions are in view space
-#endif
+        uniform vec3 u_lightPos;
         uniform vec2 u_targetSize = vec2(640.0, 480.0);
+
+#if defined (WORLD_SPACE)
+        VARYING_IN vec3 v_lightPosition;
+#endif
 
         void main()
         {
             vec2 texCoord = gl_FragCoord.xy / u_targetSize;
+
             vec3 normal = normalize(TEXTURE(u_normalMap, texCoord).rgb);
             vec3 position = TEXTURE(u_positionMap, texCoord).rgb;
 
 #if defined(WORLD_SPACE)
-            vec3 lightDir = v_worldPosition - position;
+            vec3 lightDir = v_lightPosition - position;
 #else
-            vec3 lightDir = u_lightViewPos - position;
+            vec3 lightDir = u_lightPos - position;
 #endif
             vec3 lightColour = u_lightColour * max(dot(normal, normalize(lightDir)), 0.0);
 
@@ -108,6 +106,7 @@ namespace
 
 LightVolumeSystem::LightVolumeSystem(MessageBus& mb, std::int32_t spaceIndex)
     : System        (mb, typeid(LightVolumeSystem)),
+    m_spaceIndex    (spaceIndex),
     m_bufferSize    (App::getWindow().getSize()),
     m_bufferScale   (1),
     m_multiSamples  (0)
@@ -134,6 +133,7 @@ LightVolumeSystem::LightVolumeSystem(MessageBus& mb, std::int32_t spaceIndex)
     if (loaded)
     {
         m_uniformIDs[UniformID::World] = m_shader.getUniformID("u_worldMatrix");
+        //m_uniformIDs[UniformID::View] = m_shader.getUniformID("u_viewMatrix");
         m_uniformIDs[UniformID::ViewProjection] = m_shader.getUniformID("u_viewProjectionMatrix");
 
         m_uniformIDs[UniformID::NormalMap] = m_shader.getUniformID("u_normalMap");
@@ -143,7 +143,7 @@ LightVolumeSystem::LightVolumeSystem(MessageBus& mb, std::int32_t spaceIndex)
 
         m_uniformIDs[UniformID::LightColour] = m_shader.getUniformID("u_lightColour");
         m_uniformIDs[UniformID::LightRadiusSqr] = m_shader.getUniformID("u_lightRadiusSqr");
-        m_uniformIDs[UniformID::LightPosition] = m_shader.getUniformID("u_lightViewPos");
+        m_uniformIDs[UniformID::LightPosition] = m_shader.getUniformID("u_lightPos");
     }
 #ifdef CRO_DEBUG_
     //registerWindow([&]() 
@@ -244,13 +244,15 @@ void LightVolumeSystem::updateBuffer(Entity camera)
     glCheck(glUseProgram(m_shader.getGLHandle()));
     glCheck(glUniform1i(m_uniformIDs[UniformID::NormalMap], 0));
     glCheck(glUniform1i(m_uniformIDs[UniformID::PositionMap], 1));
+    //glCheck(glUniformMatrix4fv(m_uniformIDs[UniformID::View], 1, GL_FALSE, &pass.viewMatrix[0][0]));
     glCheck(glUniformMatrix4fv(m_uniformIDs[UniformID::ViewProjection], 1, GL_FALSE, &viewProj[0][0]));
 
     //if there are multiple lights blend additively
     //TODO we probably want to sort back to front when culling
     glCheck(glEnable(GL_BLEND));
-    glCheck(glEnable(GL_DEPTH_TEST));
-    glCheck(glDepthMask(GL_FALSE));
+    //glCheck(glEnable(GL_DEPTH_TEST));
+    glCheck(glDisable(GL_DEPTH_TEST));
+    //glCheck(glDepthMask(GL_FALSE));
     glCheck(glBlendFunc(GL_ONE, GL_ONE));
     glCheck(glBlendEquation(GL_FUNC_ADD));
 
@@ -261,8 +263,11 @@ void LightVolumeSystem::updateBuffer(Entity camera)
         glm::mat4 worldMat = tx.getWorldTransform();
         glCheck(glUniformMatrix4fv(m_uniformIDs[UniformID::World], 1, GL_FALSE, &worldMat[0][0]));
 
-        const auto viewPos = glm::vec3(pass.viewMatrix * glm::vec4(tx.getWorldPosition(), 1.f));
-        glCheck(glUniform3f(m_uniformIDs[UniformID::LightPosition], viewPos.x, viewPos.y, viewPos.z));
+        if (m_spaceIndex == LightVolume::ViewSpace)
+        {
+            const auto viewPos = glm::vec3(pass.viewMatrix * glm::vec4(tx.getWorldPosition(), 1.f));
+            glCheck(glUniform3f(m_uniformIDs[UniformID::LightPosition], viewPos.x, viewPos.y, viewPos.z));
+        }
 
         const auto& light = entity.getComponent<LightVolume>();
         glCheck(glUniform3f(m_uniformIDs[UniformID::LightColour], light.colour.getRed(), light.colour.getGreen(), light.colour.getBlue()));

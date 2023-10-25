@@ -45,17 +45,17 @@ source distribution.
 #include <cstdint>
 #include <array>
 
-namespace cro
+namespace test
 {
     struct LightVolume final
     {
         float radius = 1.f;
-        Colour colour = Colour::White;
+        cro::Colour colour = cro::Colour::White;
     };
 
-    class LightVolumeSystem final : public System, public Renderable
+    class LightVolumeSystem final : public cro::System, public cro::Renderable
 #ifdef CRO_DEBUG_
-        , public GuiClient
+        , public cro::GuiClient
 #endif
     {
     public:
@@ -68,7 +68,7 @@ namespace cro
             };
         };
 
-        explicit LightVolumeSystem(MessageBus&);
+        explicit LightVolumeSystem(cro::MessageBus&);
 
         LightVolumeSystem(const LightVolumeSystem&) = delete;
         LightVolumeSystem(LightVolumeSystem&&) = delete;
@@ -76,21 +76,21 @@ namespace cro
         LightVolumeSystem& operator = (const LightVolumeSystem&) = delete;
         LightVolumeSystem& operator = (LightVolumeSystem&&) = delete;
 
-        void handleMessage(const Message&) override;
+        void handleMessage(const cro::Message&) override;
         void process(float) override;
 
-        void updateDrawList(Entity camera) override;
+        void updateDrawList(cro::Entity camera) override;
 
-        void render(Entity camera, const RenderTarget& target) override {} //we'll be invoking our own function
+        void render(cro::Entity camera, const cro::RenderTarget& target) override {} //we'll be invoking our own function
 
-        void updateBuffer(Entity camera);
+        void updateBuffer(cro::Entity camera);
 
 
-        void setSourceBuffer(TextureID, std::int32_t index);
+        void setSourceBuffer(cro::TextureID, std::int32_t index);
 
         void setTargetSize(glm::uvec2 size, std::uint32_t scale);
         void setMultiSamples(std::uint32_t samples);
-        const Texture& getBuffer() const { return m_renderTexture.getTexture(); }
+        const cro::Texture& getBuffer() const { return m_renderTexture.getTexture(); }
 
     private:
         cro::RenderTexture m_renderTexture;
@@ -98,7 +98,7 @@ namespace cro
         std::uint32_t m_bufferScale; //texture size is divided by this
         std::uint32_t m_multiSamples;
 
-        Shader m_shader;
+        cro::Shader m_shader;
         struct UniformID final
         {
             enum
@@ -119,10 +119,10 @@ namespace cro
             };
         };
         std::array<std::int32_t, UniformID::Count> m_uniformIDs = {};
-        std::array<TextureID, BufferID::Count> m_bufferIDs = {};
+        std::array<cro::TextureID, BufferID::Count> m_bufferIDs = {};
 
 
-        std::vector<Entity> m_visibleEntities;
+        std::vector<cro::Entity> m_visibleEntities;
 
 
         void resizeBuffer();

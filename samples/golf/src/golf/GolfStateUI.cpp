@@ -70,6 +70,7 @@ source distribution.
 #include <crogine/ecs/systems/SpriteSystem3D.hpp>
 #include <crogine/ecs/systems/RenderSystem2D.hpp>
 #include <crogine/ecs/systems/CameraSystem.hpp>
+#include <crogine/ecs/systems/LightVolumeSystem.hpp>
 
 #include <crogine/graphics/SpriteSheet.hpp>
 #include <crogine/gui/Gui.hpp>
@@ -239,11 +240,12 @@ void GolfState::buildUI()
             e.getComponent<cro::Callback>().active = false;
         };
 
-        //TODO load the fog shader with the light map combining dealy
-        //ie don't forget to uncomment in the fog shader
+        cro::TextureID lightID(m_gameScene.getSystem<cro::LightVolumeSystem>()->getBuffer());
         entity.getComponent<cro::Drawable2D>().bindUniform("u_depthTexture", m_gameSceneMRTexture.getDepthTexture());
+        entity.getComponent<cro::Drawable2D>().bindUniform("u_lightTexture", lightID);
         //entity.getComponent<cro::Drawable2D>().bindUniform("u_density", 0.6f);
         m_postProcesses[PostID::Fog].uniforms.emplace_back(std::make_pair("u_depthTexture", m_gameSceneMRTexture.getDepthTexture()));
+        m_postProcesses[PostID::Fog].uniforms.emplace_back(std::make_pair("u_lightTexture", lightID));
     }
     else
     {

@@ -205,7 +205,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     m_courseIndex       (getCourseIndex(sd.mapDirectory.toAnsiString())),
     m_emoteWheel        (sd, m_currentPlayer, m_textChat)
 {
-    //sd.nightTime = 1;
+    sd.nightTime = 1;
     m_cpuGolfer.setFastCPU(m_sharedData.fastCPU);
 
     godmode = 1.f;
@@ -5069,6 +5069,28 @@ void GolfState::spawnBall(const ActorInfo& info)
     }
     entity.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniMap | RenderFlags::CubeMap));
     ballEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+
+    if (m_sharedData.nightTime)
+    {
+        cro::ModelDefinition md(m_resources);
+        if (md.loadFromFile("assets/golf/models/light_sphere.cmt"))
+        {
+            entity = m_gameScene.createEntity();
+            entity.addComponent<cro::Transform>().setScale(glm::vec3(0.5f));
+            entity.getComponent<cro::Transform>().setPosition({ 0.f, 0.1f, 0.f });
+            md.createModel(entity);
+
+            entity.addComponent<cro::LightVolume>().radius = 0.5f;
+            entity.getComponent<cro::LightVolume>().colour = miniBallColour.getVec4() / 2.f;
+            entity.getComponent<cro::Model>().setHidden(true);
+
+            ballEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+        }
+    }
+
+
 
     //name label for the ball's owner
     glm::vec2 texSize(LabelTextureSize);

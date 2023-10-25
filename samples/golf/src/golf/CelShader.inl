@@ -308,6 +308,7 @@ static const std::string CelFragmentShader = R"(
     layout (location = 2) out vec4 o_normal;
     layout (location = 3) out vec4 o_terrain;
 
+
 #if defined(RX_SHADOWS)
 #include SHADOWMAP_INPUTS
 

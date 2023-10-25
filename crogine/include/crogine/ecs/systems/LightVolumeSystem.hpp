@@ -145,6 +145,7 @@ namespace cro
         const Texture& getBuffer() const { return m_renderTexture.getTexture(); }
 
     private:
+        std::int32_t m_spaceIndex;
         cro::RenderTexture m_renderTexture;
         glm::uvec2 m_bufferSize;
         std::uint32_t m_bufferScale; //texture size is divided by this
@@ -156,6 +157,7 @@ namespace cro
             enum
             {
                 World,
+                View,
                 ViewProjection,
 
                 PositionMap,

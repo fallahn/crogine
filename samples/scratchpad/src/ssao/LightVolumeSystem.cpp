@@ -45,7 +45,7 @@ source distribution.
 #include <crogine/gui/Gui.hpp>
 #endif
 
-using namespace cro;
+using namespace test;
 
 namespace
 {
@@ -90,15 +90,15 @@ namespace
         })";
 }
 
-LightVolumeSystem::LightVolumeSystem(MessageBus& mb)
+LightVolumeSystem::LightVolumeSystem(cro::MessageBus& mb)
     : System        (mb, typeid(LightVolumeSystem)),
-    m_bufferSize    (App::getWindow().getSize()),
+    m_bufferSize    (cro::App::getWindow().getSize()),
     m_bufferScale   (1),
     m_multiSamples  (0)
 {
     requireComponent<LightVolume>();
-    requireComponent<Model>();
-    requireComponent<Transform>();
+    requireComponent<cro::Model>();
+    requireComponent<cro::Transform>();
 
     std::fill(m_uniformIDs.begin(), m_uniformIDs.end(), -1);
     if (m_shader.loadFromString(VertexShader, FragmentShader))
@@ -135,12 +135,12 @@ LightVolumeSystem::LightVolumeSystem(MessageBus& mb)
 }
 
 //public
-void LightVolumeSystem::handleMessage(const Message& msg)
+void LightVolumeSystem::handleMessage(const cro::Message& msg)
 {
     //resize buffer based on scale and target size
-    if (msg.id == Message::WindowMessage)
+    if (msg.id == cro::Message::WindowMessage)
     {
-        const auto& data = msg.getData<Message::WindowEvent>();
+        const auto& data = msg.getData<cro::Message::WindowEvent>();
         if (data.event == SDL_WINDOWEVENT_RESIZED)
         {
             //hmmmmm this is surely moot if we're not using the window size directly?
@@ -150,28 +150,28 @@ void LightVolumeSystem::handleMessage(const Message& msg)
 
 void LightVolumeSystem::process(float) {}
 
-void LightVolumeSystem::updateDrawList(Entity cameraEnt)
+void LightVolumeSystem::updateDrawList(cro::Entity cameraEnt)
 {
     m_visibleEntities.clear();
-    const auto& camComponent = cameraEnt.getComponent<Camera>();
-    const auto& frustum = camComponent.getPass(Camera::Pass::Final).getFrustum();
-    const auto cameraPos = cameraEnt.getComponent<Transform>().getWorldPosition();
+    const auto& camComponent = cameraEnt.getComponent<cro::Camera>();
+    const auto& frustum = camComponent.getPass(cro::Camera::Pass::Final).getFrustum();
+    const auto cameraPos = cameraEnt.getComponent<cro::Transform>().getWorldPosition();
     const auto& entities = getEntities();
 
     //TODO this only does lighting on the output pass, not the reflection
     //though this is probably enough for our case
     for (auto entity : entities)
     {
-        const auto& model = entity.getComponent<Model>();
+        const auto& model = entity.getComponent<cro::Model>();
         auto sphere = model.getBoundingSphere();
-        const auto& tx = entity.getComponent<Transform>();
+        const auto& tx = entity.getComponent<cro::Transform>();
 
         sphere.centre = glm::vec3(tx.getWorldTransform() * glm::vec4(sphere.centre, 1.f));
         auto scale = tx.getScale();
         sphere.radius *= ((scale.x + scale.y + scale.z) / 3.f);
 
         const auto direction = (sphere.centre - cameraPos);
-        const float distance = glm::dot(camComponent.getPass(Camera::Pass::Final).forwardVector, direction);
+        const float distance = glm::dot(camComponent.getPass(cro::Camera::Pass::Final).forwardVector, direction);
 
         if (distance < -sphere.radius)
         {
@@ -183,7 +183,7 @@ void LightVolumeSystem::updateDrawList(Entity cameraEnt)
         std::size_t j = 0;
         while (visible && j < frustum.size())
         {
-            visible = (Spatial::intersects(frustum[j++], sphere) != Planar::Back);
+            visible = (cro::Spatial::intersects(frustum[j++], sphere) != cro::Planar::Back);
         }
 
         if (visible)
@@ -193,15 +193,14 @@ void LightVolumeSystem::updateDrawList(Entity cameraEnt)
     }
 }
 
-void LightVolumeSystem::updateBuffer(Entity camera)
+void LightVolumeSystem::updateBuffer(cro::Entity camera)
 {
-    const auto& camComponent = camera.getComponent<Camera>();
-    const auto& pass = camComponent.getPass(Camera::Pass::Final);
-    const auto& camTx = camera.getComponent<Transform>();
+    const auto& camComponent = camera.getComponent<cro::Camera>();
+    const auto& pass = camComponent.getPass(cro::Camera::Pass::Final);
+    const auto& camTx = camera.getComponent<cro::Transform>();
     const auto cameraPosition = camTx.getWorldPosition();
 
     /*glCheck*/(glFrontFace(GL_CCW)); //TODO enable glCheck
-    /*glCheck*/(glDisable(GL_BLEND));
     /*glCheck*/(glEnable(GL_CULL_FACE));
 
     glActiveTexture(GL_TEXTURE0);
@@ -230,7 +229,7 @@ void LightVolumeSystem::updateBuffer(Entity camera)
     {
         /*glCheck*/(glCullFace(GL_FRONT));
 
-        const auto& tx = entity.getComponent<Transform>();
+        const auto& tx = entity.getComponent<cro::Transform>();
         glm::mat4 worldMat = tx.getWorldTransform();
         /*glCheck*/(glUniformMatrix4fv(m_uniformIDs[UniformID::World], 1, GL_FALSE, &worldMat[0][0]));
 
@@ -241,18 +240,16 @@ void LightVolumeSystem::updateBuffer(Entity camera)
         /*glCheck*/(glUniform3f(m_uniformIDs[UniformID::LightColour], light.colour.getRed(), light.colour.getGreen(), light.colour.getBlue()));
         /*glCheck*/(glUniform1f(m_uniformIDs[UniformID::LightRadiusSqr], light.radius * light.radius));
 
-        entity.getComponent<Model>().draw(0, Mesh::IndexData::Final);
+        entity.getComponent<cro::Model>().draw(0, cro::Mesh::IndexData::Final);
     }
     m_renderTexture.display();
 
     /*glCheck*/(glDisable(GL_CULL_FACE));
     /*glCheck*/(glDisable(GL_DEPTH_TEST));
-
-    //TODO assess these
-    //glCheck(glDepthMask(GL_TRUE));
+    /*glCheck*/(glDepthMask(GL_TRUE));
 }
 
-void LightVolumeSystem::setSourceBuffer(TextureID id, std::int32_t index)
+void LightVolumeSystem::setSourceBuffer(cro::TextureID id, std::int32_t index)
 {
     CRO_ASSERT(index != -1 && index < BufferID::Count, "");
     m_bufferIDs[index] = id;

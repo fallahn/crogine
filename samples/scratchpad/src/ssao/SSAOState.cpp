@@ -248,7 +248,7 @@ void SSAOState::render()
     m_gameScene.render();
     m_renderBuffer.display();
 
-    m_gameScene.getSystem<cro::LightVolumeSystem>()->updateBuffer(m_gameScene.getActiveCamera());
+    m_gameScene.getSystem<test::LightVolumeSystem>()->updateBuffer(m_gameScene.getActiveCamera());
 
 
     m_colourQuad.draw();
@@ -269,7 +269,7 @@ void SSAOState::render()
     glBindTexture(GL_TEXTURE_2D, m_ssaoBuffer.getTexture().getGLHandle());
 
     glActiveTexture(GL_TEXTURE0+11);
-    glBindTexture(GL_TEXTURE_2D, m_gameScene.getSystem<cro::LightVolumeSystem>()->getBuffer().getGLHandle());
+    glBindTexture(GL_TEXTURE_2D, m_gameScene.getSystem<test::LightVolumeSystem>()->getBuffer().getGLHandle());
 
     glUseProgram(m_outputData.shader);
     glUniform1i(m_outputData.aoMap, 10);
@@ -288,7 +288,7 @@ void SSAOState::addSystems()
     m_gameScene.addSystem<cro::CameraSystem>(mb);
     m_gameScene.addSystem<cro::ShadowMapRenderer>(mb);
     m_gameScene.addSystem<cro::ModelRenderer>(mb);
-    m_gameScene.addSystem<cro::LightVolumeSystem>(mb);
+    m_gameScene.addSystem<test::LightVolumeSystem>(mb);
 }
 
 void SSAOState::loadAssets()
@@ -348,8 +348,8 @@ void SSAOState::createScene()
         entity.getComponent<cro::Transform>().setScale(glm::vec3(Radius * 2.f));
         md.createModel(entity);
 
-        entity.addComponent<cro::LightVolume>().radius = Radius;
-        entity.getComponent<cro::LightVolume>().colour = cro::Colour::AliceBlue;
+        entity.addComponent<test::LightVolume>().radius = Radius;
+        entity.getComponent<test::LightVolume>().colour = cro::Colour::AliceBlue;
         entity.getComponent<cro::Model>().setHidden(true);
 
 
@@ -358,8 +358,8 @@ void SSAOState::createScene()
         entity.getComponent<cro::Transform>().setScale(glm::vec3(Radius * 3.f));
         md.createModel(entity);
 
-        entity.addComponent<cro::LightVolume>().radius = Radius * 1.5f;
-        entity.getComponent<cro::LightVolume>().colour = cro::Colour::Plum;
+        entity.addComponent<test::LightVolume>().radius = Radius * 1.5f;
+        entity.getComponent<test::LightVolume>().colour = cro::Colour::Plum;
         entity.getComponent<cro::Model>().setHidden(true);
     }
 
@@ -369,7 +369,7 @@ void SSAOState::createScene()
         auto size = glm::vec2(buffSize);
 
         static constexpr std::uint32_t LightBufferScale = 1;
-        auto& lightVolSystem = *m_gameScene.getSystem<cro::LightVolumeSystem>();
+        auto& lightVolSystem = *m_gameScene.getSystem<test::LightVolumeSystem>();
 
         m_renderBuffer.create(buffSize.x, buffSize.y, 3);
         lightVolSystem.setTargetSize(size, LightBufferScale);
@@ -381,12 +381,12 @@ void SSAOState::createScene()
         m_normalQuad.setTexture(m_renderBuffer.getTexture(MRTChannel::Normal), buffSize);
         m_normalQuad.setPosition({ 0.f, size.y / 2.f });
         m_normalQuad.setScale({ 0.25f, 0.25f });
-        lightVolSystem.setSourceBuffer(m_renderBuffer.getTexture(MRTChannel::Normal), cro::LightVolumeSystem::BufferID::Normal);
+        lightVolSystem.setSourceBuffer(m_renderBuffer.getTexture(MRTChannel::Normal), test::LightVolumeSystem::BufferID::Normal);
 
         m_positionQuad.setTexture(m_renderBuffer.getTexture(MRTChannel::Position), buffSize);
         m_positionQuad.setPosition({ 0.f, size.y / 4.f });
         m_positionQuad.setScale({ 0.25f, 0.25f });
-        lightVolSystem.setSourceBuffer(m_renderBuffer.getTexture(MRTChannel::Position), cro::LightVolumeSystem::BufferID::Position);
+        lightVolSystem.setSourceBuffer(m_renderBuffer.getTexture(MRTChannel::Position), test::LightVolumeSystem::BufferID::Position);
 
         m_depthQuad.setTexture(m_renderBuffer.getDepthTexture(), buffSize);
         m_depthQuad.setScale({ 0.25f, 0.25f });

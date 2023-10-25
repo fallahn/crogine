@@ -99,7 +99,7 @@ void main()
     vec4 colour = TEXTURE(u_texture, v_texCoord) * v_colour;
 
 #if defined(LIGHT_COLOUR)
-    //colour.rgb += TEXTURE(u_lightTexture, v_texCoord).rgb;
+    colour.rgb += TEXTURE(u_lightTexture, v_texCoord).rgb;
 #endif
 
     vec3 desat = vec3(dot(colour.rgb, vec3(0.299, 0.587, 0.114)));
