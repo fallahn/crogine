@@ -147,7 +147,7 @@ struct MRTIndex final
 {
     enum
     {
-        Colour, Position, Normal, Depth,
+        Colour, Position, Normal,
 
         Count
     };

@@ -218,6 +218,19 @@ static inline const std::string LightColour = R"(
     }
 )";
 
+static inline const std::string OutputLocation = R"(
+#if defined(USE_MRT)
+    layout (location = 0) out vec4 FRAG_OUT;
+    layout (location = 1) out vec4 POS_OUT;
+    layout (location = 2) out vec4 NORM_OUT;
+    uniform mat4 u_viewMatrix;
+#else
+
+    OUTPUT
+#endif
+
+)";
+
 static inline const std::unordered_map<std::string, const char*> IncludeMappings =
 {
     std::make_pair("WIND_BUFFER", WindBuffer.c_str()),
@@ -229,4 +242,5 @@ static inline const std::unordered_map<std::string, const char*> IncludeMappings
     std::make_pair("WIND_CALC", WindCalc.c_str()),
     std::make_pair("VAT_VEC", VATVector.c_str()),
     std::make_pair("LIGHT_COLOUR", LightColour.c_str()),
+    std::make_pair("OUTPUT_LOCATION", OutputLocation.c_str()),
 };
