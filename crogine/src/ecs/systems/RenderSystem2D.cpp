@@ -245,6 +245,7 @@ void RenderSystem2D::render(Entity cameraEntity, const RenderTarget& rt)
                     glCheck(glActiveTexture(GL_TEXTURE0 + j));
                     glCheck(glBindTexture(GL_TEXTURE_2D, value));
                     glCheck(glUniform1i(uniform, j));
+                    j++;
                 }
                 for (auto [uniform, value] : drawable.m_floatBindings)
                 {

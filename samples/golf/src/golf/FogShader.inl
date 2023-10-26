@@ -71,18 +71,16 @@ OUTPUT
 void main()
 {
     vec4 colour = TEXTURE(u_texture, v_texCoord) * v_colour;
+    colour.rgb = dim(colour.rgb);
+
+    float depthSample = TEXTURE(u_depthTexture, v_texCoord).r;
+    float d = getDistance(depthSample);
+    colour = mix(colour, FogColour, fogAmount(d));
 
 #if defined(LIGHT_COLOUR)
     colour.rgb += TEXTURE(u_lightTexture, v_texCoord).rgb;
 #endif
 
-    colour.rgb = dim(colour.rgb);
-
-    float depthSample = TEXTURE(u_depthTexture, v_texCoord).r;
-
-    float d = getDistance(depthSample);
-    FRAG_OUT = mix(colour, FogColour, fogAmount(d));
-
-
+    FRAG_OUT = colour;
     //FRAG_OUT = mix(colour, vec4(d,d,d,1.0), u_density / 10.0);
 })";

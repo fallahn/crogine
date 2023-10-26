@@ -1408,7 +1408,8 @@ void GolfState::buildUI()
     if (m_sharedData.nightTime)
     {
         //can't bind lightmap to shader until it's been created...
-        greenEnt.getComponent<cro::Drawable2D>().bindUniform("u_lightTexture", cro::TextureID(m_lightMaps[LightMapID::Overhead].getTexture().getGLHandle()));
+        auto lightID = cro::TextureID(m_lightMaps[LightMapID::Overhead].getTexture().getGLHandle());
+        greenEnt.getComponent<cro::Drawable2D>().bindUniform("u_lightTexture", lightID);
     }
     greenEnt.getComponent<cro::Drawable2D>().bindUniform("u_depthTexture", m_overheadBuffer.getDepthTexture());
 

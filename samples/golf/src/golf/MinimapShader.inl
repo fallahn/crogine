@@ -96,15 +96,18 @@ static const std::string MinimapFragment = R"(
             vec3 noise = vec3(rand(floor((v_texCoord * textureSize(u_texture, 0)) / u_pixelScale)));
 
             vec4 colour = TEXTURE(u_texture, v_texCoord);
+            colour.rgb = dim(colour.rgb);
+
+            float depthSample = TEXTURE(u_depthTexture, v_texCoord).r;
+            float d = getDistance(depthSample);
+            colour = mix(colour, FogColour, fogAmount(d));
+
+
 
 #if defined (LIGHT_COLOUR)
             colour.rgb += TEXTURE(u_lightTexture, v_texCoord).rgb;
 #endif
-            colour.rgb = dim(colour.rgb);
-            float depthSample = TEXTURE(u_depthTexture, v_texCoord).r;
 
-            float d = getDistance(depthSample);
-            colour = mix(colour, FogColour, fogAmount(d));
 
             FRAG_OUT = vec4(mix(noise, colour.rgb, v_colour.r), 1.0);
             FRAG_OUT = mix(FRAG_OUT, borderColour, step(borderPos, length2));

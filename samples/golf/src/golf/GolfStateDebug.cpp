@@ -380,7 +380,7 @@ void GolfState::registerDebugCommands()
             {
                 createWeather(WeatherType::Rain);
 
-                static constexpr float Density = 0.6f;
+                static constexpr float Density = 0.5f;
 
                 auto* shader = &m_resources.shaders.get(ShaderID::Fog);
                 auto uniform = shader->getUniformID("u_density");
@@ -391,6 +391,9 @@ void GolfState::registerDebugCommands()
                 uniform = shader->getUniformID("u_density");
                 glUseProgram(shader->getGLHandle());
                 glUniform1f(uniform, Density);
+
+                uniform = shader->getUniformID("u_fogEnd");
+                glUniform1f(uniform, 280.f);
 
                 raining = true;
             }
