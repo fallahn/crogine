@@ -248,9 +248,13 @@ void GolfState::registerDebugCommands()
                 ImGui::SameLine();
                 ImGui::Image(m_gameSceneMRTexture.getTexture(2), { size.x , size.y }, { 0.f ,1.f }, { 1.f, 0.f });*/
 
-                const auto& buff = m_lightMaps[LightMapID::Scene].getTexture();
-                auto size = glm::vec2(buff.getSize() / 2u);
+                const auto& buff = m_lightMaps[LightMapID::Overhead].getTexture();
+                auto size = glm::vec2(buff.getSize()/* / 2u*/);
                 ImGui::Image(buff, { size.x , size.y }, { 0.f ,1.f }, { 1.f, 0.f });
+                ImGui::SameLine();
+                ImGui::Image(m_overheadBuffer.getTexture(MRTIndex::Position), { size.x , size.y }, { 0.f ,1.f }, { 1.f, 0.f });
+                ImGui::SameLine();
+                ImGui::Image(m_overheadBuffer.getTexture(MRTIndex::Normal), { size.x , size.y }, { 0.f ,1.f }, { 1.f, 0.f });
             }
             ImGui::End();
         });

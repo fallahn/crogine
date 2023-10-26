@@ -1371,15 +1371,16 @@ void GolfState::buildUI()
         scale = (windowScale + 1.f) - scale;
         texSize *= static_cast<std::uint32_t>(scale);
 
-        std::uint32_t samples = m_sharedData.pixelScale ? 0 :
-            m_sharedData.antialias ? m_sharedData.multisamples : 0;
+        /*std::uint32_t samples = m_sharedData.pixelScale ? 0 :
+            m_sharedData.antialias ? m_sharedData.multisamples : 0;*/
 
-        m_greenBuffer.create(texSize, texSize, /*true, false, samples*/MRTIndex::Count); //yes, it's square
+        m_overheadBuffer.create(texSize, texSize, /*true, false, samples*/MRTIndex::Count); //yes, it's square
         //greenEnt.getComponent<cro::Sprite>().setTexture(m_greenBuffer.getTexture());
+        m_lightMaps[LightMapID::Overhead].create(texSize, texSize);
 
         auto targetScale = glm::vec2(1.f / scale);
 
-        greenEnt.getComponent<cro::Sprite>().setTexture(m_greenBuffer.getTexture());
+        greenEnt.getComponent<cro::Sprite>().setTexture(m_overheadBuffer.getTexture());
         greenEnt.getComponent<cro::Transform>().setScale(targetScale);
 
         greenEnt.getComponent<cro::Transform>().setOrigin({ (texSize / 2), (texSize / 2) }); //must divide to a whole pixel!

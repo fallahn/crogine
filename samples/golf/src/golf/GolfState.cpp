@@ -2016,6 +2016,7 @@ void GolfState::render()
 #endif
     m_renderTarget.display();
 
+    cro::Entity nightCam;
 
     //update mini green if ball is there
     if (m_currentPlayer.terrain == TerrainID::Green)
@@ -2024,10 +2025,11 @@ void GolfState::render()
         glUniform1f(m_gridShaders[1].transparency, 0.f);
 
         auto oldCam = m_gameScene.setActiveCamera(m_greenCam);
-        m_greenBuffer.clear();
+        m_overheadBuffer.clear();
         m_gameScene.render();
-        m_greenBuffer.display();
+        m_overheadBuffer.display();
         m_gameScene.setActiveCamera(oldCam);
+        nightCam = m_greenCam;
     }
     else if (m_flightCam.getComponent<cro::Camera>().active)
     {
@@ -2039,15 +2041,17 @@ void GolfState::render()
 
         //update the flight view
         auto oldCam = m_gameScene.setActiveCamera(m_flightCam);
-        m_greenBuffer.clear(cro::Colour::Magenta);
+        m_overheadBuffer.clear(cro::Colour::Magenta);
         m_skyScene.render();
         glClear(GL_DEPTH_BUFFER_BIT);
         m_gameScene.render();
-        m_greenBuffer.display();
+        m_overheadBuffer.display();
         m_gameScene.setActiveCamera(oldCam);
 
         m_skyScene.setActiveCamera(m_skyCameras[SkyCam::Main]);
         m_resolutionBuffer.setData(m_resolutionUpdate.resolutionData);
+
+        nightCam = m_flightCam;
     }
  
 
@@ -2058,6 +2062,13 @@ void GolfState::render()
         lightVolSystem.setSourceBuffer(m_gameSceneMRTexture.getTexture(MRTIndex::Normal), cro::LightVolumeSystem::BufferID::Normal);
         lightVolSystem.setSourceBuffer(m_gameSceneMRTexture.getTexture(MRTIndex::Position), cro::LightVolumeSystem::BufferID::Position);
         lightVolSystem.updateTarget(m_gameScene.getActiveCamera(), m_lightMaps[LightMapID::Scene]);
+
+        if (nightCam.isValid())
+        {
+            lightVolSystem.setSourceBuffer(m_overheadBuffer.getTexture(MRTIndex::Normal), cro::LightVolumeSystem::BufferID::Normal);
+            lightVolSystem.setSourceBuffer(m_overheadBuffer.getTexture(MRTIndex::Position), cro::LightVolumeSystem::BufferID::Position);
+            lightVolSystem.updateTarget(nightCam, m_lightMaps[LightMapID::Overhead]);
+        }
     }
 
 
@@ -5271,9 +5282,9 @@ void GolfState::spawnBall(const ActorInfo& info)
             {
                 e.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
                 auto pos = ballEnt.getComponent<cro::Transform>().getWorldPosition();
-                auto iconPos = m_greenCam.getComponent<cro::Camera>().coordsToPixel(pos, m_greenBuffer.getSize());
+                auto iconPos = m_greenCam.getComponent<cro::Camera>().coordsToPixel(pos, m_overheadBuffer.getSize());
 
-                const glm::vec2 Centre = glm::vec2(m_greenBuffer.getSize() / 2u);
+                const glm::vec2 Centre = glm::vec2(m_overheadBuffer.getSize() / 2u);
 
                 iconPos -= Centre;
                 iconPos *= std::min(1.f, Centre.x / glm::length(iconPos));
@@ -7080,7 +7091,6 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
         {
             e.getComponent<cro::Callback>().getUserData<GreenCallbackData>().state = 0;
             e.getComponent<cro::Callback>().active = true;
-            e.getComponent<cro::Sprite>().setTexture(m_greenBuffer.getTexture());
             e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
             m_greenCam.getComponent<cro::Camera>().active = true;
         }

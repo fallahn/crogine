@@ -159,7 +159,7 @@ private:
     {
         enum
         {
-            Scene, Overhad,
+            Scene, Overhead,
 
             Count
         };
@@ -318,10 +318,6 @@ private:
     }m_shadowQuality;
 
 
-    //follows the ball mid-flight
-    cro::Entity m_flightCam;
-    //cro::RenderTexture m_flightTexture;
-
     //allows switching camera, TV style (GolfStateCameras.cpp)
     std::array<cro::Entity, CameraID::Count> m_cameras = {};
     std::int32_t m_currentCamera;
@@ -345,6 +341,8 @@ private:
     cro::Time m_idleTime;
     void resetIdle();
 
+    //follows the ball mid-flight
+    cro::Entity m_flightCam;
     cro::Entity m_drone;
     cro::Entity m_defaultCam;
     cro::Entity m_freeCam;
@@ -515,7 +513,7 @@ private:
     void retargetMinimap(bool reset);
 
     cro::Entity m_greenCam;
-    cro::MultiRenderTexture m_greenBuffer;
+    cro::MultiRenderTexture m_overheadBuffer;
 
     std::vector<cro::Entity> m_netStrengthIcons;
 
