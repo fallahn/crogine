@@ -66,9 +66,9 @@ void GolfState::createCameras()
 
                 if (m_sharedData.nightTime)
                 {
-
+                    glm::uvec2 usize(texSize);
                     m_sharedData.antialias =
-                        m_gameSceneMRTexture.create(static_cast<std::uint32_t>(texSize.x), static_cast<std::uint32_t>(texSize.y), MRTIndex::Count)
+                        m_gameSceneMRTexture.create(usize.x, usize.y, MRTIndex::Count)
                         && m_sharedData.multisamples != 0
                         && !m_sharedData.pixelScale;
 
@@ -76,10 +76,7 @@ void GolfState::createCameras()
                     m_renderTarget.display = std::bind(&cro::MultiRenderTexture::display, &m_gameSceneMRTexture);
                     m_renderTarget.getSize = std::bind(&cro::MultiRenderTexture::getSize, &m_gameSceneMRTexture);
 
-                    auto& lightVolSystem = *m_gameScene.getSystem<cro::LightVolumeSystem>();
-                    lightVolSystem.setTargetSize(glm::uvec2(texSize), 1);
-                    lightVolSystem.setSourceBuffer(m_gameSceneMRTexture.getTexture(MRTIndex::Normal), cro::LightVolumeSystem::BufferID::Normal);
-                    lightVolSystem.setSourceBuffer(m_gameSceneMRTexture.getTexture(MRTIndex::Position), cro::LightVolumeSystem::BufferID::Position);
+                    m_lightMaps[LightMapID::Scene].create(usize.x, usize.y, false);
                 }
                 else
                 {

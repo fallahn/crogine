@@ -2016,12 +2016,6 @@ void GolfState::render()
 #endif
     m_renderTarget.display();
 
-    //TODO remove conditional branch?
-    if (m_sharedData.nightTime)
-    {
-        m_gameScene.getSystem<cro::LightVolumeSystem>()->updateBuffer(m_gameScene.getActiveCamera());
-    }
-
 
     //update mini green if ball is there
     if (m_currentPlayer.terrain == TerrainID::Green)
@@ -2055,7 +2049,18 @@ void GolfState::render()
         m_skyScene.setActiveCamera(m_skyCameras[SkyCam::Main]);
         m_resolutionBuffer.setData(m_resolutionUpdate.resolutionData);
     }
-    
+ 
+
+    //TODO remove conditional branch?
+    if (m_sharedData.nightTime)
+    {
+        auto& lightVolSystem = *m_gameScene.getSystem<cro::LightVolumeSystem>();
+        lightVolSystem.setSourceBuffer(m_gameSceneMRTexture.getTexture(MRTIndex::Normal), cro::LightVolumeSystem::BufferID::Normal);
+        lightVolSystem.setSourceBuffer(m_gameSceneMRTexture.getTexture(MRTIndex::Position), cro::LightVolumeSystem::BufferID::Position);
+        lightVolSystem.updateTarget(m_gameScene.getActiveCamera(), m_lightMaps[LightMapID::Scene]);
+    }
+
+
 #ifndef CRO_DEBUG_
     if (m_roundEnded /* && !m_sharedData.tutorial */)
 #endif

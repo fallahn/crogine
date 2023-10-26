@@ -115,8 +115,11 @@ namespace cro
         \brief Updates the lightmap buffer by rendering the visible lights
         This needs to be called explicitly after Scene has been rendered to
         the source buffers for position and normal data.
+        \param camera The entity containing the Camera component used to
+        create the active source buffers
+        \param dest The destination RenderTexture for the lightmap output
         */
-        void updateBuffer(Entity camera);
+        void updateTarget(Entity camera, RenderTexture& dest);
 
         /*!
         \brief Sets the TextureID of the given source buffer
@@ -126,30 +129,9 @@ namespace cro
         */
         void setSourceBuffer(TextureID id, std::int32_t index);
 
-        /*!
-        \brief Sets the size of the output buffer. Usually the same
-        size as the source buffer.
-        */
-        void setTargetSize(glm::uvec2 size, std::uint32_t scale);
-
-        /*!
-        \brief Enables multisampling on the output buffer.
-        Usually this can be left at 0 as it offers little quality
-        gain for performance loss.
-        */
-        void setMultiSamples(std::uint32_t samples);
-
-        /*!
-        \brief Returns the rendered output of the lightmap.
-        */
-        const Texture& getBuffer() const { return m_renderTexture.getTexture(); }
 
     private:
         std::int32_t m_spaceIndex;
-        cro::RenderTexture m_renderTexture;
-        glm::uvec2 m_bufferSize;
-        std::uint32_t m_bufferScale; //texture size is divided by this
-        std::uint32_t m_multiSamples;
 
         Shader m_shader;
         struct UniformID final
@@ -174,11 +156,6 @@ namespace cro
         };
         std::array<std::int32_t, UniformID::Count> m_uniformIDs = {};
         std::array<TextureID, BufferID::Count> m_bufferIDs = {};
-
-
         std::vector<std::vector<Entity>> m_drawLists;
-
-
-        void resizeBuffer();
     };
 }

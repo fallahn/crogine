@@ -248,7 +248,7 @@ void GolfState::registerDebugCommands()
                 ImGui::SameLine();
                 ImGui::Image(m_gameSceneMRTexture.getTexture(2), { size.x , size.y }, { 0.f ,1.f }, { 1.f, 0.f });*/
 
-                const auto& buff = m_gameScene.getSystem<cro::LightVolumeSystem>()->getBuffer();
+                const auto& buff = m_lightMaps[LightMapID::Scene].getTexture();
                 auto size = glm::vec2(buff.getSize() / 2u);
                 ImGui::Image(buff, { size.x , size.y }, { 0.f ,1.f }, { 1.f, 0.f });
             }

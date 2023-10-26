@@ -155,6 +155,17 @@ private:
     cro::RenderTexture m_trophySceneTexture;
     cro::CubemapTexture m_reflectionMap;
 
+    struct LightMapID final
+    {
+        enum
+        {
+            Scene, Overhad,
+
+            Count
+        };
+    };
+    std::array<cro::RenderTexture, LightMapID::Count> m_lightMaps = {};
+
     cro::UniformBuffer<float> m_scaleBuffer;
     cro::UniformBuffer<ResolutionData> m_resolutionBuffer;
     cro::UniformBuffer<WindData> m_windBuffer;

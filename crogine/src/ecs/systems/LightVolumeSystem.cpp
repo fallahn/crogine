@@ -106,10 +106,7 @@ namespace
 
 LightVolumeSystem::LightVolumeSystem(MessageBus& mb, std::int32_t spaceIndex)
     : System        (mb, typeid(LightVolumeSystem)),
-    m_spaceIndex    (spaceIndex),
-    m_bufferSize    (App::getWindow().getSize()),
-    m_bufferScale   (1),
-    m_multiSamples  (0)
+    m_spaceIndex    (spaceIndex)
 {
     requireComponent<LightVolume>();
     requireComponent<Model>();
@@ -158,9 +155,6 @@ LightVolumeSystem::LightVolumeSystem(MessageBus& mb, std::int32_t spaceIndex)
     //        ImGui::End();
     //    });
 #endif
-
-    //always do this last
-    resizeBuffer();
 }
 
 //public
@@ -236,7 +230,7 @@ void LightVolumeSystem::updateDrawList(Entity cameraEnt)
     }
 }
 
-void LightVolumeSystem::updateBuffer(Entity camera)
+void LightVolumeSystem::updateTarget(Entity camera, RenderTexture& target)
 {
     const auto& camComponent = camera.getComponent<Camera>();
     const auto& pass = camComponent.getPass(Camera::Pass::Final);
@@ -257,8 +251,10 @@ void LightVolumeSystem::updateBuffer(Entity camera)
     glBindTexture(GL_TEXTURE_2D, m_bufferIDs[BufferID::Position].textureID);
 
     const auto viewProj = camComponent.getProjectionMatrix() * pass.viewMatrix;
+    const glm::vec2 size = glm::vec2(target.getSize());
 
     glCheck(glUseProgram(m_shader.getGLHandle()));
+    glCheck(glUniform2f(m_uniformIDs[UniformID::TargetSize], size.x, size.y));
     glCheck(glUniform1i(m_uniformIDs[UniformID::NormalMap], 0));
     glCheck(glUniform1i(m_uniformIDs[UniformID::PositionMap], 1));
     //glCheck(glUniformMatrix4fv(m_uniformIDs[UniformID::View], 1, GL_FALSE, &pass.viewMatrix[0][0]));
@@ -273,7 +269,7 @@ void LightVolumeSystem::updateBuffer(Entity camera)
     glCheck(glBlendFunc(GL_ONE, GL_ONE));
     glCheck(glBlendEquation(GL_FUNC_ADD));
 
-    m_renderTexture.clear();
+    target.clear();
     for (const auto& entity : drawList)
     {
         const auto& tx = entity.getComponent<Transform>();
@@ -292,7 +288,7 @@ void LightVolumeSystem::updateBuffer(Entity camera)
 
         entity.getComponent<Model>().draw(0, Mesh::IndexData::Final);
     }
-    m_renderTexture.display();
+    target.display();
 
     glCheck(glCullFace(GL_BACK));
     glCheck(glDisable(GL_CULL_FACE));
@@ -307,43 +303,4 @@ void LightVolumeSystem::setSourceBuffer(TextureID id, std::int32_t index)
 {
     CRO_ASSERT(index != -1 && index < BufferID::Count, "");
     m_bufferIDs[index] = id;
-}
-
-void LightVolumeSystem::setTargetSize(glm::uvec2 size, std::uint32_t scale)
-{
-    bool wantsUpdate = size != m_bufferSize || scale != m_bufferScale;
-    m_bufferSize = size;
-    m_bufferScale = scale;
-    CRO_ASSERT(m_bufferSize.x > 0 && m_bufferSize.y > 0 && m_bufferScale > 0, "");
-
-    if (wantsUpdate)
-    {
-        resizeBuffer();
-    }
-}
-
-void LightVolumeSystem::setMultiSamples(std::uint32_t samples)
-{
-    if (samples != m_multiSamples)
-    {
-        m_multiSamples = samples;
-        resizeBuffer();
-    }
-}
-
-//private
-void LightVolumeSystem::resizeBuffer()
-{
-    CRO_ASSERT(m_bufferSize.x > 0 && m_bufferSize.y > 0 && m_bufferScale > 0, "");
-    auto size = m_bufferSize / m_bufferScale;
-
-    if (m_shader.getGLHandle())
-    {
-        const auto usize = glm::vec2(size);
-        glUseProgram(m_shader.getGLHandle());
-        glCheck(glUniform2f(m_uniformIDs[UniformID::TargetSize], usize.x, usize.y));
-    }
-
-    m_renderTexture.create(size.x, size.y, true, false, m_multiSamples);
-    m_renderTexture.setSmooth(true);
 }

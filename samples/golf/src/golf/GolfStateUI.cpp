@@ -240,7 +240,7 @@ void GolfState::buildUI()
             e.getComponent<cro::Callback>().active = false;
         };
 
-        cro::TextureID lightID(m_gameScene.getSystem<cro::LightVolumeSystem>()->getBuffer());
+        cro::TextureID lightID(m_lightMaps[LightMapID::Scene].getTexture());
         entity.getComponent<cro::Drawable2D>().bindUniform("u_depthTexture", m_gameSceneMRTexture.getDepthTexture());
         entity.getComponent<cro::Drawable2D>().bindUniform("u_lightTexture", lightID);
         //entity.getComponent<cro::Drawable2D>().bindUniform("u_density", 0.6f);
