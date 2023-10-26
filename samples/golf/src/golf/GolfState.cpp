@@ -1067,7 +1067,7 @@ void GolfState::handleMessage(const cro::Message& msg)
                     {
                         e.getComponent<cro::Callback>().getUserData<GreenCallbackData>().state = 0;
                         e.getComponent<cro::Callback>().active = true;
-                        e.getComponent<cro::Sprite>().setTexture(m_flightTexture.getTexture());
+                        //e.getComponent<cro::Sprite>().setTexture(m_flightTexture.getTexture());
                         e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
                         m_flightCam.getComponent<cro::Camera>().active = true;
                     }
@@ -2039,11 +2039,11 @@ void GolfState::render()
 
         //update the flight view
         auto oldCam = m_gameScene.setActiveCamera(m_flightCam);
-        m_flightTexture.clear(cro::Colour::Magenta);
+        m_greenBuffer.clear(cro::Colour::Magenta);
         m_skyScene.render();
         glClear(GL_DEPTH_BUFFER_BIT);
         m_gameScene.render();
-        m_flightTexture.display();
+        m_greenBuffer.display();
         m_gameScene.setActiveCamera(oldCam);
 
         m_skyScene.setActiveCamera(m_skyCameras[SkyCam::Main]);
@@ -5258,18 +5258,18 @@ void GolfState::spawnBall(const ActorInfo& info)
             return;
         }
 
-        if (m_miniGreenEnt.getComponent<cro::Sprite>().getTexture() &&
-            m_miniGreenEnt.getComponent<cro::Sprite>().getTexture()->getGLHandle() ==
-            m_flightTexture.getTexture().getGLHandle())
+        //if (m_miniGreenEnt.getComponent<cro::Sprite>().getTexture() &&
+        //    m_miniGreenEnt.getComponent<cro::Sprite>().getTexture()->getGLHandle() ==
+        //    m_flightTexture.getTexture().getGLHandle())
+        //{
+        //    //hide
+        //    e.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
+        //}
+        //else
         {
-            //hide
-            e.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
-        }
-        else
-        {
-            e.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
             if (m_currentPlayer.terrain == TerrainID::Green)
             {
+                e.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Front);
                 auto pos = ballEnt.getComponent<cro::Transform>().getWorldPosition();
                 auto iconPos = m_greenCam.getComponent<cro::Camera>().coordsToPixel(pos, m_greenBuffer.getSize());
 
@@ -5292,6 +5292,10 @@ void GolfState::spawnBall(const ActorInfo& info)
                 {
                     m_miniGreenIndicatorEnt.getComponent<cro::Transform>().setPosition(glm::vec3(iconPos, 0.05f));
                 }
+            }
+            else
+            {
+                e.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
             }
         }
     };

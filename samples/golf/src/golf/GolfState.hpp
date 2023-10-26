@@ -320,7 +320,7 @@ private:
 
     //follows the ball mid-flight
     cro::Entity m_flightCam;
-    cro::RenderTexture m_flightTexture;
+    //cro::RenderTexture m_flightTexture;
 
     //allows switching camera, TV style (GolfStateCameras.cpp)
     std::array<cro::Entity, CameraID::Count> m_cameras = {};

@@ -417,37 +417,11 @@ void GolfState::createCameras()
     addCameraDebugging();
 
 
-    const auto createFlightTexture =
+    const auto flightCamCallback =
         [&](cro::Camera& cam)
     {
-            auto texSize = MapSize.y / 2u;
-
-            auto windowScale = getViewScale();
-            float scale = m_sharedData.pixelScale ? windowScale : 1.f;
-            scale = (windowScale + 1.f) - scale;
-            texSize *= static_cast<std::uint32_t>(scale);
-
-            std::uint32_t samples = m_sharedData.pixelScale ? 0 :
-                m_sharedData.antialias ? m_sharedData.multisamples : 0;
-
-            cro::RenderTarget::Context ctx;
-            ctx.depthBuffer = true;
-#ifdef __APPLE__
-            //*sigh*
-            ctx.depthTexture = false;
-#else
-            ctx.depthTexture = true;
-#endif
-            ctx.samples = samples;
-            ctx.width = texSize;
-            ctx.height = texSize;
-
-            m_flightTexture.create(ctx);
-
-            //we let the callback for the green overhead view rescale the sprite
-            //though we could explicitly set this if not performed in the correct order.
-            //greenEnt.getComponent<cro::Sprite>().setTexture(m_greenBuffer.getTexture());
-
+            //we're using the same texture as the green view
+            //so just set the camera properties
             cam.setPerspective(FlightCamFOV * cro::Util::Const::degToRad, 1.f, 0.06f, 200.f);
             cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
@@ -455,7 +429,7 @@ void GolfState::createCameras()
     //follows the ball in flight
     camEnt = m_gameScene.createEntity();
     camEnt.addComponent<cro::Transform>();
-    camEnt.addComponent<cro::Camera>().resizeCallback = createFlightTexture;
+    camEnt.addComponent<cro::Camera>().resizeCallback = flightCamCallback;
     camEnt.getComponent<cro::Camera>().renderFlags = RenderFlags::FlightCam;
     camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(ShadowMapSize / 4, ShadowMapSize / 4);
     camEnt.getComponent<cro::Camera>().active = false;
@@ -509,7 +483,7 @@ void GolfState::createCameras()
                 }
             }
         };
-    createFlightTexture(camEnt.getComponent<cro::Camera>());
+    flightCamCallback(camEnt.getComponent<cro::Camera>());
     m_flightCam = camEnt;
 
 
