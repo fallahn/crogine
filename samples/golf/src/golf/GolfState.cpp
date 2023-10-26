@@ -4315,7 +4315,14 @@ void GolfState::buildScene()
 
     //tee marker
     material = m_resources.materials.get(m_materialIDs[MaterialID::Ball]);
-    md.loadFromFile("assets/golf/models/tee_balls.cmt");
+    if (cro::SysTime::now().months() == 10)
+    {
+        md.loadFromFile("assets/golf/models/tee_balls02.cmt");
+    }
+    else
+    {
+        md.loadFromFile("assets/golf/models/tee_balls.cmt");
+    }
     entity = m_gameScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(m_holeData[0].tee);
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Tee;

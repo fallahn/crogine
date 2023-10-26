@@ -31,6 +31,7 @@ source distribution.
 
 #include <crogine/ecs/System.hpp>
 #include <crogine/graphics/Colour.hpp>
+#include <crogine/util/Random.hpp>
 
 #include <vector>
 
@@ -51,6 +52,11 @@ struct LightAnimation final
         for (auto c : s)
         {
             pattern.push_back(static_cast<float>(c - 'a') / 13.f);
+        }
+
+        if (!pattern.empty())
+        {
+            currentIndex = cro::Util::Random::value(0u, pattern.size()) % pattern.size();
         }
     }
 };

@@ -159,7 +159,7 @@ bool MultiRenderTexture::create(std::uint32_t width, std::uint32_t height, std::
         m_textureIDs.push_back(m_defaultTexture.getGLHandle());
     }
 
-    std::size_t removeCount = 0;
+    std::uint32_t removeCount = 0;
     if (colourCount == m_textureIDs.size())
     {
         //resize the existing buffers
@@ -216,7 +216,7 @@ bool MultiRenderTexture::create(std::uint32_t width, std::uint32_t height, std::
     glCheck(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_defaultTexture.getGLHandle(), 0));
     attachments.push_back(GL_COLOR_ATTACHMENT0);
 
-    std::size_t i = 1u;
+    std::uint32_t i = 1u;
     for (; i < m_textureIDs.size(); ++i)
     {
         glCheck(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + i, GL_TEXTURE_2D, m_textureIDs[i], 0));
