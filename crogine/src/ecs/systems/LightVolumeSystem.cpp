@@ -181,11 +181,18 @@ void LightVolumeSystem::process(float) {}
 
 void LightVolumeSystem::updateDrawList(Entity cameraEnt)
 {
-    m_visibleEntities.clear();
     const auto& camComponent = cameraEnt.getComponent<Camera>();
     const auto& frustum = camComponent.getPass(Camera::Pass::Final).getFrustum();
     const auto cameraPos = cameraEnt.getComponent<Transform>().getWorldPosition();
     const auto& entities = getEntities();
+
+    if (m_drawLists.size() <= camComponent.getDrawListIndex())
+    {
+        m_drawLists.resize(camComponent.getDrawListIndex() + 1);
+    }
+
+    auto& drawList = m_drawLists[camComponent.getDrawListIndex()];
+    drawList.clear();
 
     //TODO this only does lighting on the output pass, not the reflection
     //though this is probably enough for our case
@@ -196,7 +203,14 @@ void LightVolumeSystem::updateDrawList(Entity cameraEnt)
         const auto& tx = entity.getComponent<Transform>();
 
         sphere.centre = glm::vec3(tx.getWorldTransform() * glm::vec4(sphere.centre, 1.f));
-        auto scale = tx.getScale();
+        auto scale = tx.getWorldScale();
+
+        if (scale.x * scale.y * scale.z == 0)
+        {
+            continue;
+        }
+
+        //average for non-uniform scale
         sphere.radius *= ((scale.x + scale.y + scale.z) / 3.f);
 
         const auto direction = (sphere.centre - cameraPos);
@@ -217,7 +231,7 @@ void LightVolumeSystem::updateDrawList(Entity cameraEnt)
 
         if (visible)
         {
-            m_visibleEntities.push_back(entity);
+            drawList.push_back(entity);
         }
     }
 }
@@ -228,6 +242,9 @@ void LightVolumeSystem::updateBuffer(Entity camera)
     const auto& pass = camComponent.getPass(Camera::Pass::Final);
     const auto& camTx = camera.getComponent<Transform>();
     const auto cameraPosition = camTx.getWorldPosition();
+
+    CRO_ASSERT(camComponent.getDrawListIndex() < m_drawLists.size(), "Can't call this before having updated draw lists");
+    const auto& drawList = m_drawLists[camComponent.getDrawListIndex()];
 
     glCheck(glFrontFace(GL_CCW));
     glCheck(glEnable(GL_CULL_FACE));
@@ -257,7 +274,7 @@ void LightVolumeSystem::updateBuffer(Entity camera)
     glCheck(glBlendEquation(GL_FUNC_ADD));
 
     m_renderTexture.clear();
-    for (const auto& entity : m_visibleEntities)
+    for (const auto& entity : drawList)
     {
         const auto& tx = entity.getComponent<Transform>();
         glm::mat4 worldMat = tx.getWorldTransform();

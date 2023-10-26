@@ -176,7 +176,7 @@ namespace cro
         std::array<TextureID, BufferID::Count> m_bufferIDs = {};
 
 
-        std::vector<Entity> m_visibleEntities;
+        std::vector<std::vector<Entity>> m_drawLists;
 
 
         void resizeBuffer();

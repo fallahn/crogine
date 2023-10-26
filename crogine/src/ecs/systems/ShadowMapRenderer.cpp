@@ -229,7 +229,14 @@ void ShadowMapRenderer::updateDrawList(Entity camEnt)
             auto sphere = model.getBoundingSphere();
 
             sphere.centre = glm::vec3(tx.getWorldTransform() * glm::vec4(sphere.centre, 1.f));
-            auto scale = tx.getScale();
+            auto scale = tx.getWorldScale();
+
+            //if it's approaching zero scale then don't cast shadow
+            if (scale.x * scale.y * scale.z < 0.01f)
+            {
+                continue;
+            }
+
             sphere.radius *= ((scale.x + scale.y + scale.z) / 3.f);
 
             std::vector<std::pair<std::size_t, std::size_t>> drawListOffsets;
