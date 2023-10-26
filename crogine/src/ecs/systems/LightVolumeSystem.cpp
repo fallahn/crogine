@@ -30,12 +30,15 @@ source distribution.
 #include <crogine/core/App.hpp>
 #include <crogine/core/Message.hpp>
 
+#include <crogine/ecs/Scene.hpp>
+
 #include <crogine/ecs/components/Camera.hpp>
 #include <crogine/ecs/components/LightVolume.hpp>
 #include <crogine/ecs/components/Model.hpp>
 #include <crogine/ecs/components/Transform.hpp>
 
 #include <crogine/ecs/systems/LightVolumeSystem.hpp>
+#include <crogine/ecs/systems/CameraSystem.hpp>
 #include <crogine/ecs/systems/ModelRenderer.hpp>
 
 #include <crogine/graphics/Spatial.hpp>
@@ -106,7 +109,8 @@ namespace
 
 LightVolumeSystem::LightVolumeSystem(MessageBus& mb, std::int32_t spaceIndex)
     : System        (mb, typeid(LightVolumeSystem)),
-    m_spaceIndex    (spaceIndex)
+    m_spaceIndex    (spaceIndex),
+    m_drawLists     (20)
 {
     requireComponent<LightVolume>();
     requireComponent<Model>();
@@ -160,18 +164,13 @@ LightVolumeSystem::LightVolumeSystem(MessageBus& mb, std::int32_t spaceIndex)
 //public
 void LightVolumeSystem::handleMessage(const Message& msg)
 {
-    //resize buffer based on scale and target size
-    if (msg.id == Message::WindowMessage)
-    {
-        const auto& data = msg.getData<Message::WindowEvent>();
-        if (data.event == SDL_WINDOWEVENT_RESIZED)
-        {
-            //hmmmmm this is surely moot if we're not using the window size directly?
-        }
-    }
+
 }
 
-void LightVolumeSystem::process(float) {}
+void LightVolumeSystem::process(float)
+{
+
+}
 
 void LightVolumeSystem::updateDrawList(Entity cameraEnt)
 {
@@ -263,9 +262,7 @@ void LightVolumeSystem::updateTarget(Entity camera, RenderTexture& target)
     //if there are multiple lights blend additively
     //TODO we probably want to sort back to front when culling
     glCheck(glEnable(GL_BLEND));
-    //glCheck(glEnable(GL_DEPTH_TEST));
     glCheck(glDisable(GL_DEPTH_TEST));
-    //glCheck(glDepthMask(GL_FALSE));
     glCheck(glBlendFunc(GL_ONE, GL_ONE));
     glCheck(glBlendEquation(GL_FUNC_ADD));
 
@@ -292,7 +289,7 @@ void LightVolumeSystem::updateTarget(Entity camera, RenderTexture& target)
 
     glCheck(glCullFace(GL_BACK));
     glCheck(glDisable(GL_CULL_FACE));
-    glCheck(glDisable(GL_DEPTH_TEST));
+    glCheck(glEnable(GL_DEPTH_TEST));
     glCheck(glDisable(GL_BLEND));
     glCheck(glDepthMask(GL_TRUE));
 

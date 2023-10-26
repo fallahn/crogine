@@ -232,32 +232,36 @@ void GolfState::addCameraDebugging()
 
 void GolfState::registerDebugCommands()
 {
-    registerWindow([&]()
-        {
-            if (ImGui::Begin("sunlight"))
-            {
-                /*static float col[3] = { 1.f, 1.f, 1.f };
-                if (ImGui::ColorPicker3("Sky", col))
-                {
-                    m_skyScene.getSunlight().getComponent<cro::Sunlight>().setColour({ col[0], col[1], col[2], 1.f });
-                    m_gameScene.getSunlight().getComponent<cro::Sunlight>().setColour({ col[0], col[1], col[2], 1.f });
-                }*/
+    //registerWindow([&]()
+    //    {
+    //        if (ImGui::Begin("sunlight"))
+    //        {
+    //            /*static float col[3] = { 1.f, 1.f, 1.f };
+    //            if (ImGui::ColorPicker3("Sky", col))
+    //            {
+    //                m_skyScene.getSunlight().getComponent<cro::Sunlight>().setColour({ col[0], col[1], col[2], 1.f });
+    //                m_gameScene.getSunlight().getComponent<cro::Sunlight>().setColour({ col[0], col[1], col[2], 1.f });
+    //            }*/
 
-                /*auto size = glm::vec2(m_gameSceneMRTexture.getSize() / 4u);
-                ImGui::Image(m_gameSceneMRTexture.getTexture(1), { size.x , size.y }, { 0.f ,1.f }, { 1.f, 0.f });
-                ImGui::SameLine();
-                ImGui::Image(m_gameSceneMRTexture.getTexture(2), { size.x , size.y }, { 0.f ,1.f }, { 1.f, 0.f });*/
+    //            /*auto 
+    //            size = glm::vec2(m_gameSceneMRTexture.getSize() / 4u);
+    //            ImGui::Image(m_gameSceneMRTexture.getTexture(1), { size.x , size.y }, { 0.f ,1.f }, { 1.f, 0.f });
+    //            ImGui::SameLine();
+    //            ImGui::Image(m_gameSceneMRTexture.getTexture(2), { size.x , size.y }, { 0.f ,1.f }, { 1.f, 0.f });*/
 
-                const auto& buff = m_lightMaps[LightMapID::Overhead].getTexture();
-                auto size = glm::vec2(buff.getSize()/* / 2u*/);
-                ImGui::Image(buff, { size.x , size.y }, { 0.f ,1.f }, { 1.f, 0.f });
-                ImGui::SameLine();
-                ImGui::Image(m_overheadBuffer.getTexture(MRTIndex::Position), { size.x , size.y }, { 0.f ,1.f }, { 1.f, 0.f });
-                ImGui::SameLine();
-                ImGui::Image(m_overheadBuffer.getTexture(MRTIndex::Normal), { size.x , size.y }, { 0.f ,1.f }, { 1.f, 0.f });
-            }
-            ImGui::End();
-        });
+    //            const auto& buff = m_lightMaps[LightMapID::Overhead].getTexture();
+    //            auto size = glm::vec2(buff.getSize()/* / 2u*/);
+    //            ImGui::Image(buff, { size.x , size.y }, { 0.f ,1.f }, { 1.f, 0.f });
+    //            ImGui::SameLine();
+    //            ImGui::Image(m_overheadBuffer.getDepthTexture(), {size.x , size.y}, {0.f ,1.f}, {1.f, 0.f});
+    //            ImGui::SameLine();
+    //            ImGui::Image(m_overheadBuffer.getTexture(MRTIndex::Normal), { size.x , size.y }, { 0.f ,1.f }, { 1.f, 0.f });
+
+    //            size = glm::vec2(m_gameSceneMRTexture.getSize() / 4u);
+    //            ImGui::Image(m_gameSceneMRTexture.getDepthTexture(), {size.x , size.y}, {0.f ,1.f}, {1.f, 0.f});
+    //        }
+    //        ImGui::End();
+    //    });
 
     registerCommand("build_cubemaps",
         [&](const std::string&)
@@ -376,10 +380,17 @@ void GolfState::registerDebugCommands()
             {
                 createWeather(WeatherType::Rain);
 
-                auto& shader = m_resources.shaders.get(ShaderID::Fog);
-                auto uniform = shader.getUniformID("u_density");
-                glUseProgram(shader.getGLHandle());
-                glUniform1f(uniform, 0.49f);
+                static constexpr float Density = 0.6f;
+
+                auto* shader = &m_resources.shaders.get(ShaderID::Fog);
+                auto uniform = shader->getUniformID("u_density");
+                glUseProgram(shader->getGLHandle());
+                glUniform1f(uniform, Density);
+
+                shader = &m_resources.shaders.get(ShaderID::Minimap);
+                uniform = shader->getUniformID("u_density");
+                glUseProgram(shader->getGLHandle());
+                glUniform1f(uniform, Density);
 
                 raining = true;
             }

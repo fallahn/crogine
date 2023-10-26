@@ -1405,6 +1405,13 @@ void GolfState::buildUI()
     greenCam.shadowMapBuffer.display();
     updateGreenView(greenCam);
 
+    if (m_sharedData.nightTime)
+    {
+        //can't bind lightmap to shader until it's been created...
+        greenEnt.getComponent<cro::Drawable2D>().bindUniform("u_lightTexture", cro::TextureID(m_lightMaps[LightMapID::Overhead].getTexture().getGLHandle()));
+    }
+    greenEnt.getComponent<cro::Drawable2D>().bindUniform("u_depthTexture", m_overheadBuffer.getDepthTexture());
+
     m_greenCam.addComponent<cro::Callback>().active = true;
     m_greenCam.getComponent<cro::Callback>().setUserData<MiniCamData>();
     m_greenCam.getComponent<cro::Callback>().function =

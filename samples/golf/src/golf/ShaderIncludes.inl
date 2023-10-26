@@ -231,6 +231,50 @@ static inline const std::string OutputLocation = R"(
 
 )";
 
+static inline const std::string FogColour = R"(
+const float ZNear = 0.1;
+#if !defined(ZFAR)
+#define ZFAR 320.0
+#endif
+const float ZFar = ZFAR;
+
+#if !defined(DESAT)
+#define DESAT 0.06
+#endif
+
+uniform float u_density = 0.0;
+uniform float u_fogStart = 0.0;
+uniform float u_fogEnd = ZFAR;
+
+const vec4 FogColour = vec4(0.91,0.92,0.923,1.0);
+
+float fogAmount(float distance)
+{
+    //linear
+    return clamp(smoothstep(u_fogStart, u_fogEnd, distance * ZFar) * u_density, 0.0, 1.0);
+
+    //exp
+    //distance = smoothstep(u_fogStart, u_fogEnd, distance * ZFar) * ZFar;
+    //float density = 0.1 / u_density;
+    //return 1.0 - clamp(exp2(-density * density * distance * distance), 0.1, 1.0);
+}
+
+float getDistance(float ds)
+{
+    //although this is "correct" it actually looks wrong.
+    //float d = (2.0 * ZNear * ZFar) / (ZFar + ZNear - ds * (ZFar - ZNear));
+
+    return (2.0 * ZNear) / (ZFar + ZNear - ds * (ZFar - ZNear));
+}
+
+vec3 dim(vec3 c)
+{
+    float desatAmount = clamp(u_density, 0.0, 1.0);
+    vec3 desat = vec3(dot(c, vec3(0.299, 0.587, 0.114)));
+    vec3 dimmed = c * (1.0 - (0.3 * desatAmount));
+    return mix(dimmed, desat, desatAmount * DESAT);
+})";
+
 static inline const std::unordered_map<std::string, const char*> IncludeMappings =
 {
     std::make_pair("WIND_BUFFER", WindBuffer.c_str()),
@@ -243,4 +287,5 @@ static inline const std::unordered_map<std::string, const char*> IncludeMappings
     std::make_pair("VAT_VEC", VATVector.c_str()),
     std::make_pair("LIGHT_COLOUR", LightColour.c_str()),
     std::make_pair("OUTPUT_LOCATION", OutputLocation.c_str()),
+    std::make_pair("FOG_COLOUR", FogColour.c_str()),
 };

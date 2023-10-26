@@ -53,6 +53,8 @@ static const std::string MinimapVertex = R"(
 static const std::string MinimapFragment = R"(
         
         uniform sampler2D u_texture;
+        uniform sampler2D u_depthTexture;
+        uniform sampler2D u_lightTexture;
 
 #include WIND_BUFFER
 #include SCALE_BUFFER
@@ -71,6 +73,8 @@ static const std::string MinimapFragment = R"(
         const float invRes = 0.01;
         const float scale = 2.0;
         const float invScale = 0.5;
+
+#include FOG_COLOUR
 
         float rand()
         {
@@ -91,22 +95,18 @@ static const std::string MinimapFragment = R"(
 
             vec3 noise = vec3(rand(floor((v_texCoord * textureSize(u_texture, 0)) / u_pixelScale)));
 
-            //vec2 coordR = v_texCoord;
-            //coordR.x *= 1.0 - rand() * 0.02 * 0.8;
-            //vec2 coordB = v_texCoord;
-            //coordB.x *= 1.0 + rand() * 0.02 * 0.8;
-            //vec4 effect = vec4(
-            //    TEXTURE(u_texture, coordR).r,
-            //    TEXTURE(u_texture, v_texCoord).g,
-            //    TEXTURE(u_texture, coordB).b,
-            //    1.0
-            //);
-            //effect *= 1.0 - step(0.5, sin(v_texCoord.y * (res * scale) * rand())) * 0.033;
+            vec4 colour = TEXTURE(u_texture, v_texCoord);
 
-            //FRAG_OUT = mix(TEXTURE(u_texture, v_texCoord), effect, v_colour.g);
+#if defined (LIGHT_COLOUR)
+            colour.rgb += TEXTURE(u_lightTexture, v_texCoord).rgb;
+#endif
+            colour.rgb = dim(colour.rgb);
+            float depthSample = TEXTURE(u_depthTexture, v_texCoord).r;
 
-            FRAG_OUT = TEXTURE(u_texture, v_texCoord);
-            FRAG_OUT.rgb = mix(noise, FRAG_OUT.rgb, v_colour.r);
+            float d = getDistance(depthSample);
+            colour = mix(colour, FogColour, fogAmount(d));
+
+            FRAG_OUT = vec4(mix(noise, colour.rgb, v_colour.r), 1.0);
             FRAG_OUT = mix(FRAG_OUT, borderColour, step(borderPos, length2));
             FRAG_OUT.a *= 1.0 - step(stepPos, length2);
         })";

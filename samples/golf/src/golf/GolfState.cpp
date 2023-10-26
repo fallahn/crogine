@@ -205,7 +205,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     m_courseIndex       (getCourseIndex(sd.mapDirectory.toAnsiString())),
     m_emoteWheel        (sd, m_currentPlayer, m_textChat)
 {
-    sd.nightTime = 1;
+    //sd.nightTime = 1;
     m_cpuGolfer.setFastCPU(m_sharedData.fastCPU);
 
     godmode = 1.f;
@@ -2304,16 +2304,16 @@ void GolfState::loadAssets()
     m_postProcesses[PostID::Noise].shader = shader;
 
     //fog
-    std::string desat;
+    std::string defines;
     if (Social::isGreyscale())
     {
-        desat = "#define DESAT 1.0\n";
+        defines = "#define DESAT 1.0\n";
     }
     if (m_sharedData.nightTime)
     {
-        desat += "#define LIGHT_COLOUR\n";
+        defines += "#define LIGHT_COLOUR\n";
     }
-    m_resources.shaders.loadFromString(ShaderID::Fog, FogVert, FogFrag, "#define ZFAR 320.0\n" + desat);
+    m_resources.shaders.loadFromString(ShaderID::Fog, FogVert, FogFrag, "#define ZFAR 320.0\n" + defines);
     shader = &m_resources.shaders.get(ShaderID::Fog);
     m_postProcesses[PostID::Fog].shader = shader;
     //depth uniform is set after creating the UI once we know the render texture is created
@@ -2335,7 +2335,7 @@ void GolfState::loadAssets()
     m_resources.materials.get(m_materialIDs[MaterialID::BallTrail]).setProperty("u_colourRotation", m_sharedData.beaconColour);
 
     //minimap - green overhead
-    m_resources.shaders.loadFromString(ShaderID::Minimap, MinimapVertex, MinimapFragment);
+    m_resources.shaders.loadFromString(ShaderID::Minimap, MinimapVertex, MinimapFragment, defines);
     shader = &m_resources.shaders.get(ShaderID::Minimap);
     m_scaleBuffer.addShader(*shader);
     m_windBuffer.addShader(*shader);

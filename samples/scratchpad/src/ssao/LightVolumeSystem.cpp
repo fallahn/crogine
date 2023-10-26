@@ -220,10 +220,10 @@ void LightVolumeSystem::updateBuffer(cro::Entity camera)
     //if there are multiple lights blend additively
     //TODO we probably want to sort back to front when culling
     /*glCheck*/(glEnable(GL_BLEND));
-    /*glCheck*/(glEnable(GL_DEPTH_TEST));
-    /*glCheck*/(glDepthMask(GL_FALSE));
+    /*glCheck*/(glDisable(GL_DEPTH_TEST));
     /*glCheck*/(glBlendFunc(GL_ONE, GL_ONE));
     /*glCheck*/(glBlendEquation(GL_FUNC_ADD));
+
 
     for (const auto& entity : m_visibleEntities)
     {

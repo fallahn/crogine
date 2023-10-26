@@ -53,23 +53,10 @@ void main()
 
 static const std::string FogFrag = 
 R"(
-const float ZNear = 0.1;
-#if !defined(ZFAR)
-#define ZFAR 320.0
-#endif
-const float ZFar = ZFAR;
-
-#if !defined(DESAT)
-#define DESAT 0.06
-#endif
-
 uniform sampler2D u_texture;
 uniform sampler2D u_depthTexture;
 uniform sampler2D u_lightTexture;
 
-uniform float u_density = 0.0;
-uniform float u_fogStart = 0.0;
-uniform float u_fogEnd = ZFAR;
 uniform vec4 u_lightColour;
 
 VARYING_IN vec2 v_texCoord;
@@ -77,43 +64,24 @@ VARYING_IN vec4 v_colour;
 
 OUTPUT
 
-const vec4 FogColour = vec4(0.91,0.92,0.923,1.0);
-
 #include LIGHT_COLOUR
 
-float fogAmount(float distance)
-{
-    //linear
-    return clamp(smoothstep(u_fogStart, u_fogEnd, distance * ZFar) * u_density, 0.0, 1.0);
-
-    //exp
-    //distance = smoothstep(u_fogStart, u_fogEnd, distance * ZFar) * ZFar;
-    //float density = 0.1 / u_density;
-    //return 1.0 - clamp(exp2(-density * density * distance * distance), 0.1, 1.0);
-}
+#include FOG_COLOUR
 
 void main()
 {
-    float desatAmount = clamp(u_density, 0.0, 1.0);
-
     vec4 colour = TEXTURE(u_texture, v_texCoord) * v_colour;
 
 #if defined(LIGHT_COLOUR)
     colour.rgb += TEXTURE(u_lightTexture, v_texCoord).rgb;
 #endif
 
-    vec3 desat = vec3(dot(colour.rgb, vec3(0.299, 0.587, 0.114)));
-    vec3 dimmed = colour.rgb * (1.0 - (0.3 * desatAmount));
-    colour.rgb = mix(dimmed, desat, desatAmount * DESAT);
+    colour.rgb = dim(colour.rgb);
 
     float depthSample = TEXTURE(u_depthTexture, v_texCoord).r;
 
-    //although this is "correct" it actually looks wrong.
-    //float d = (2.0 * ZNear * ZFar) / (ZFar + ZNear - depthSample * (ZFar - ZNear));
-
-    float d = (2.0 * ZNear) / (ZFar + ZNear - depthSample * (ZFar - ZNear));
-    FRAG_OUT = mix(colour, FogColour/* * getLightColour()*/, fogAmount(d));
-
+    float d = getDistance(depthSample);
+    FRAG_OUT = mix(colour, FogColour, fogAmount(d));
 
 
     //FRAG_OUT = mix(colour, vec4(d,d,d,1.0), u_density / 10.0);
