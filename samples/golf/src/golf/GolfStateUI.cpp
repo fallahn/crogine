@@ -1374,7 +1374,7 @@ void GolfState::buildUI()
         std::uint32_t samples = m_sharedData.pixelScale ? 0 :
             m_sharedData.antialias ? m_sharedData.multisamples : 0;
 
-        m_greenBuffer.create(texSize, texSize, true, false, samples); //yes, it's square
+        m_greenBuffer.create(texSize, texSize, /*true, false, samples*/MRTIndex::Count); //yes, it's square
         //greenEnt.getComponent<cro::Sprite>().setTexture(m_greenBuffer.getTexture());
 
         auto targetScale = glm::vec2(1.f / scale);
