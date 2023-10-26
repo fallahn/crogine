@@ -162,16 +162,6 @@ LightVolumeSystem::LightVolumeSystem(MessageBus& mb, std::int32_t spaceIndex)
 }
 
 //public
-void LightVolumeSystem::handleMessage(const Message& msg)
-{
-
-}
-
-void LightVolumeSystem::process(float)
-{
-
-}
-
 void LightVolumeSystem::updateDrawList(Entity cameraEnt)
 {
     const auto& camComponent = cameraEnt.getComponent<Camera>();

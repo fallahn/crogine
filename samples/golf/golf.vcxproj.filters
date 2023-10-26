@@ -399,6 +399,9 @@
     <ClCompile Include="src\golf\TableData.cpp">
       <Filter>Source Files\golf\shared</Filter>
     </ClCompile>
+    <ClCompile Include="src\golf\LightAnimationSystem.cpp">
+      <Filter>Source Files\golf\client\systems</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ErrorCheck.hpp">
@@ -802,6 +805,9 @@
     </ClInclude>
     <ClInclude Include="src\golf\TableData.hpp">
       <Filter>Header Files\golf\shared</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\LightAnimationSystem.hpp">
+      <Filter>Header Files\golf\client\systems</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

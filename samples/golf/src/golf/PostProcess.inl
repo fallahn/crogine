@@ -485,9 +485,16 @@ static const std::string FXAAFrag = R"(
 
     OUTPUT
 
+    const vec3 luma = vec3(0.299, 0.587, 0.114);
+
     vec3 tex(vec2 coord)
     {
         return TEXTURE(u_texture, coord).rgb;
+    }
+
+    vec3 texOffset(vec2 coord, ivec2 off)
+    {
+        return TEXTURE(u_texture, coord, off).rgb;
     }
 
     vec3 fxaa(vec2 p)
@@ -496,14 +503,13 @@ static const std::string FXAAFrag = R"(
         float FXAA_REDUCE_MUL = 1.0 / 8.0;
         float FXAA_REDUCE_MIN = 1.0 / 128.0;
 
-        // 1st stage - Find edge
-        vec3 rgbNW = tex(p + (vec2(-1.0,-1.0) / u_resolution));
-        vec3 rgbNE = tex(p + (vec2( 1.0,-1.0) / u_resolution));
-        vec3 rgbSW = tex(p + (vec2(-1.0, 1.0) / u_resolution));
-        vec3 rgbSE = tex(p + (vec2( 1.0, 1.0) / u_resolution));
+        //1st stage - Find edge
+        vec3 rgbNW = texOffset(p, ivec2(-1,-1));
+        vec3 rgbNE = texOffset(p, ivec2( 1,-1));
+        vec3 rgbSW = texOffset(p, ivec2(-1, 1));
+        vec3 rgbSE = texOffset(p, ivec2( 1, 1));
         vec3 rgbM  = tex(p);
 
-        vec3 luma = vec3(0.299, 0.587, 0.114);
 
         float lumaNW = dot(rgbNW, luma);
         float lumaNE = dot(rgbNE, luma);
@@ -533,7 +539,11 @@ static const std::string FXAAFrag = R"(
         float lumaMin = min(lumaM, min(min(lumaNW, lumaNE), min(lumaSW, lumaSE)));
         float lumaMax = max(lumaM, max(max(lumaNW, lumaNE), max(lumaSW, lumaSE)));
 
-        return ((lumaB < lumaMin) || (lumaB > lumaMax)) ? rgbA : rgbB;
+        if ((lumaB < lumaMin) || (lumaB > lumaMax))
+        {
+            return rgbA;
+        }
+        return rgbB;
     }
 
 
