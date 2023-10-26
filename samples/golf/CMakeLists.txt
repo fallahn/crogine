@@ -168,7 +168,7 @@ if(APPLE AND MACOS_BUNDLE)
                  ${PROJECT_SRC} 
                  ${GOLF_SRC} 
                  ${CMAKE_SOURCE_DIR}/assets 
-                 ${CMAKE_SOURCE_DIR}/icon.icns)
+                 ${CMAKE_SOURCE_DIR}/macOS/icon.icns)
 
 
   set_target_properties(${PROJECT_NAME} PROPERTIES MACOSX_BUNDLE_ICON_FILE icon.icns)
@@ -205,9 +205,9 @@ endif()
 # install to the bundle
 if(APPLE AND MACOS_BUNDLE)
 
-  #install(TARGETS ${PROJECT_NAME}
-  #  RUNTIME DESTINATION .
-  #  BUNDLE DESTINATION ${CMAKE_SOURCE_DIR}/bundle)
+  install(TARGETS ${PROJECT_NAME}
+    RUNTIME DESTINATION .
+    BUNDLE DESTINATION ${CMAKE_SOURCE_DIR}/bundle)
 
 
   install(CODE " include(BundleUtilities)
