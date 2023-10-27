@@ -31,6 +31,7 @@ source distribution.
 #include "CameraFollowSystem.hpp"
 #include "AchievementIDs.hpp"
 #include "AchievementStrings.hpp"
+#include "WeatherAnimationSystem.hpp"
 
 #include <crogine/audio/AudioMixer.hpp>
 #include <crogine/ecs/components/Camera.hpp>
@@ -376,26 +377,41 @@ void GolfState::registerDebugCommands()
     registerCommand("rain", [&](const std::string&)
         {
             static bool raining = false;
+            static constexpr float Density = 0.5f;
             if (!raining)
             {
                 createWeather(WeatherType::Rain);
 
-                static constexpr float Density = 0.5f;
-
-                auto* shader = &m_resources.shaders.get(ShaderID::Fog);
-                auto uniform = shader->getUniformID("u_density");
-                glUseProgram(shader->getGLHandle());
-                glUniform1f(uniform, Density);
-
-                shader = &m_resources.shaders.get(ShaderID::Minimap);
-                uniform = shader->getUniformID("u_density");
-                glUseProgram(shader->getGLHandle());
-                glUniform1f(uniform, Density);
-
-                uniform = shader->getUniformID("u_fogEnd");
-                glUniform1f(uniform, 280.f);
+                setFog(Density);
 
                 raining = true;
+                m_gameScene.getSystem<WeatherAnimationSystem>()->setHidden(false);
+            }
+            else
+            {
+                static bool hidden = false;
+                hidden = !hidden;
+                m_gameScene.getSystem<WeatherAnimationSystem>()->setHidden(hidden);
+
+                setFog(hidden ? 0.f : Density);
+            }
+        });
+
+    registerCommand("fog", [&](const std::string& amount)
+        {
+            if (amount.empty())
+            {
+                cro::Console::print("Usage: fog <0 - 1> where value represents density. EG fog 0.5");
+            }
+            else
+            {
+                float density = 0.f;
+                std::stringstream ss;
+                ss << amount;
+                ss >> density;
+                density = std::clamp(density, 0.f, 1.f);
+
+                setFog(density);
             }
         });
 

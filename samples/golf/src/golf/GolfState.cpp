@@ -53,6 +53,8 @@ source distribution.
 #include "SpectatorSystem.hpp"
 #include "PropFollowSystem.hpp"
 #include "BallAnimationSystem.hpp"
+#include "LightAnimationSystem.hpp"
+#include "WeatherAnimationSystem.hpp"
 #include "SpectatorAnimCallback.hpp"
 #include "MiniBallSystem.hpp"
 #include "CallbackData.hpp"
@@ -3832,6 +3834,8 @@ void GolfState::addSystems()
     m_gameScene.addSystem<cro::BillboardSystem>(mb);
     m_gameScene.addSystem<VatAnimationSystem>(mb);
     m_gameScene.addSystem<BallAnimationSystem>(mb);
+    m_gameScene.addSystem<LightAnimationSystem>(mb);
+    m_gameScene.addSystem<WeatherAnimationSystem>(mb);
     m_gameScene.addSystem<cro::CommandSystem>(mb);
     m_gameScene.addSystem<cro::CallbackSystem>(mb);
     m_gameScene.addSystem<cro::SpriteSystem3D>(mb, 10.f); //water rings sprite :D
@@ -4359,6 +4363,34 @@ void GolfState::buildScene()
 
 
     auto teeEnt = entity;
+    if (cro::SysTime::now().months() == 10 && m_sharedData.nightTime)
+    {
+        static constexpr float LightRadius = 8.f;
+        static constexpr std::array<glm::vec3, 2u> Positions =
+        {
+            glm::vec3(0.f, 0.1f, -2.f),
+            glm::vec3(0.f, 0.1f, 2.f)
+        };
+
+        md.loadFromFile("assets/golf/models/light_sphere.cmt");
+
+        for (auto i = 0u; i < Positions.size(); ++i)
+        {
+            entity = m_gameScene.createEntity();
+            entity.addComponent<cro::Transform>().setPosition(Positions[i]);
+            entity.getComponent<cro::Transform>().setScale(glm::vec3(LightRadius));
+            md.createModel(entity);
+            entity.getComponent<cro::Model>().setHidden(true);
+            entity.addComponent<cro::LightVolume>().radius = LightRadius;
+            entity.getComponent<cro::LightVolume>().colour = cro::Colour(1.f, 0.5f, 0.1f);
+            entity.addComponent<LightAnimation>(0.7f, 1.f);// .setPattern(LightAnimation::FlickerA);
+            teeEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+        }
+
+        //setFog(0.4f);
+    }
+
+    
 
     //golf bags
     material.doubleSided = true;
@@ -5100,12 +5132,13 @@ void GolfState::spawnBall(const ActorInfo& info)
         cro::ModelDefinition md(m_resources);
         if (md.loadFromFile("assets/golf/models/light_sphere.cmt"))
         {
+            static constexpr float LightRadius = 2.f;
             entity = m_gameScene.createEntity();
-            entity.addComponent<cro::Transform>().setScale(glm::vec3(0.5f));
+            entity.addComponent<cro::Transform>().setScale(glm::vec3(LightRadius));
             entity.getComponent<cro::Transform>().setPosition({ 0.f, 0.1f, 0.f });
             md.createModel(entity);
 
-            entity.addComponent<cro::LightVolume>().radius = 0.5f;
+            entity.addComponent<cro::LightVolume>().radius = LightRadius;
             entity.getComponent<cro::LightVolume>().colour = miniBallColour.getVec4() / 2.f;
             entity.getComponent<cro::Model>().setHidden(true);
 

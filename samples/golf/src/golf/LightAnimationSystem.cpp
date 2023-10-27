@@ -31,6 +31,10 @@ source distribution.
 
 #include <crogine/ecs/components/LightVolume.hpp>
 
+const std::string LightAnimation::FlickerA = "mmmmmaaaaammmmmaaaaaabcdefgabcdefg";
+const std::string LightAnimation::FlickerB = "mmmaaaabcdefgmmmmaaaammmaamm";
+const std::string LightAnimation::FlickerC = "mmmaaammmaaammmabcdefaaaammmmabcdefmmmaaaa";
+
 LightAnimationSystem::LightAnimationSystem(cro::MessageBus& mb)
     : cro::System(mb, typeid(LightAnimationSystem)),
     m_accumulator(0.f)

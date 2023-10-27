@@ -214,7 +214,7 @@ Calculates a reduced-effect colour from the current 'sunlight' colour
 static inline const std::string LightColour = R"(
     vec4 getLightColour()
     {
-        return vec4(clamp(u_lightColour * 1.8, 0.0, 1.0));
+        return vec4(clamp(u_lightColour * 1.5, 0.0, 1.0));
     }
 )";
 

@@ -32,6 +32,7 @@ source distribution.
 #include "GameConsts.hpp"
 #include "MenuConsts.hpp"
 #include "CloudSystem.hpp"
+#include "WeatherAnimationSystem.hpp"
 #include "../ErrorCheck.hpp"
 
 #include <crogine/ecs/Scene.hpp>
@@ -157,9 +158,6 @@ namespace
     }
 )";
 
-    constexpr std::array<float, 3u> AreaStart = { 0.f, 0.f, 0.f };
-    constexpr std::array<float, 3u> AreaEnd = { 20.f, 80.f, 20.f };
-
     constexpr std::int32_t GridX = 3;
     constexpr std::int32_t GridY = 3;
 }
@@ -167,7 +165,7 @@ namespace
 void GolfState::createWeather(std::int32_t weatherType)
 {
     //cro::Clock clock;
-    auto points = pd::PoissonDiskSampling(2.3f, AreaStart, AreaEnd, 30u, static_cast<std::uint32_t>(std::time(nullptr)));
+    auto points = pd::PoissonDiskSampling(2.3f, WeatherAnimationSystem::AreaStart, WeatherAnimationSystem::AreaEnd, 30u, static_cast<std::uint32_t>(std::time(nullptr)));
 
     //auto t = static_cast<float>(clock.elapsed().asMilliseconds()) / 1000.f;
     //LogI << "Generated " << points.size() << " in " << t << " seconds" << std::endl;
@@ -202,8 +200,8 @@ void GolfState::createWeather(std::int32_t weatherType)
     glCheck(glBufferData(GL_ELEMENT_ARRAY_BUFFER, submesh->indexCount * sizeof(std::uint32_t), indices.data(), GL_STATIC_DRAW));
     glCheck(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0));
 
-    meshData->boundingBox[0] = { AreaStart[0], AreaStart[1], AreaStart[2] };
-    meshData->boundingBox[1] = { AreaEnd[0], AreaEnd[1], AreaEnd[2] };
+    meshData->boundingBox[0] = { WeatherAnimationSystem::AreaStart[0], WeatherAnimationSystem::AreaStart[1], WeatherAnimationSystem::AreaStart[2] };
+    meshData->boundingBox[1] = { WeatherAnimationSystem::AreaEnd[0], WeatherAnimationSystem::AreaEnd[1], WeatherAnimationSystem::AreaEnd[2] };
     meshData->boundingSphere.centre = meshData->boundingBox[0] + ((meshData->boundingBox[1] - meshData->boundingBox[0]) / 2.f);
     meshData->boundingSphere.radius = glm::length((meshData->boundingBox[1] - meshData->boundingBox[0]) / 2.f);
 
@@ -230,40 +228,39 @@ void GolfState::createWeather(std::int32_t weatherType)
     material.blendData.equation = GL_FUNC_ADD;
     material.blendData.writeDepthMask = GL_TRUE;
 
-    constexpr glm::vec3 Offset(AreaEnd[0] * -1.5f, 0.f, AreaEnd[2] * -1.5f);
+    constexpr glm::vec3 Offset(WeatherAnimationSystem::AreaEnd[0] * -1.5f, 0.f, WeatherAnimationSystem::AreaEnd[2] * -1.5f);
     for (auto y = 0; y < GridY; ++y)
     {
         for (auto x = 0; x < GridX; ++x)
         {
-            glm::vec3 basePos(AreaEnd[0] * x, 0.f, AreaEnd[2] * y);
+            glm::vec3 basePos(WeatherAnimationSystem::AreaEnd[0] * x, 0.f, WeatherAnimationSystem::AreaEnd[2] * y);
             basePos += Offset;
 
             auto entity = m_gameScene.createEntity();
             entity.addComponent<cro::Transform>();
             entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), material);
             entity.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniGreen | RenderFlags::MiniMap));
-
-            //TODO replace this with a System?
-            entity.addComponent<cro::Callback>().active = true;
-            entity.getComponent<cro::Callback>().function =
-                [&, basePos](cro::Entity e, float)
-            {
-                //if this was in a system we'd only have to work out the cam pos
-                //once per update...
-                auto camPos = m_gameScene.getActiveCamera().getComponent<cro::Transform>().getPosition();
-                camPos.x = std::floor(camPos.x / AreaEnd[0]);
-                camPos.z = std::floor(camPos.z / AreaEnd[2]);
-
-                camPos.x *= AreaEnd[0];
-                camPos.y = 0.f;
-                camPos.z *= AreaEnd[2];
-
-                e.getComponent<cro::Transform>().setPosition(basePos + camPos);
-            };
+            entity.addComponent<WeatherAnimation>().basePosition = basePos;
         }
     }
     m_windBuffer.addShader(shader);
     m_scaleBuffer.addShader(shader);
+}
+
+void GolfState::setFog(float density)
+{
+    auto* shader = &m_resources.shaders.get(ShaderID::Fog);
+    auto uniform = shader->getUniformID("u_density");
+    glUseProgram(shader->getGLHandle());
+    glUniform1f(uniform, density);
+
+    shader = &m_resources.shaders.get(ShaderID::Minimap);
+    uniform = shader->getUniformID("u_density");
+    glUseProgram(shader->getGLHandle());
+    glUniform1f(uniform, density);
+
+    uniform = shader->getUniformID("u_fogEnd");
+    glUniform1f(uniform, 280.f);
 }
 
 void GolfState::createClouds()

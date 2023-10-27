@@ -43,6 +43,16 @@ struct LightAnimation final
     std::size_t currentIndex = 0;
     glm::vec4 baseColour = glm::vec4(1.f);
 
+    LightAnimation() = default;
+
+    LightAnimation(float lowest, float highest)
+    {
+        for (auto i = 0; i < 20; ++i)
+        {
+            pattern.push_back(cro::Util::Random::value(lowest, highest));
+        }
+    }
+
     void setPattern(const std::string& s)
     {
         //use the classic quake engine light flicker pattern
@@ -59,6 +69,10 @@ struct LightAnimation final
             currentIndex = cro::Util::Random::value(0u, pattern.size()) % pattern.size();
         }
     }
+
+    static const std::string FlickerA;
+    static const std::string FlickerB;
+    static const std::string FlickerC;
 };
 
 class LightAnimationSystem final : public cro::System

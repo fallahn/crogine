@@ -278,6 +278,7 @@ private:
         };
     };
     void createWeather(std::int32_t); //weather.cpp
+    void setFog(float density);
     void createClouds();
     void buildBow();
     void createDrone();
