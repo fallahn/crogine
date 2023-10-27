@@ -4371,8 +4371,8 @@ void GolfState::buildScene()
         static constexpr float LightRadius = 3.5f;
         static constexpr std::array<glm::vec3, 2u> Positions =
         {
-            glm::vec3(0.f, 0.1f, -2.f),
-            glm::vec3(0.f, 0.1f, 2.f)
+            glm::vec3(0.f, 0.15f, -2.f),
+            glm::vec3(0.f, 0.15f, 2.f)
         };
 
         md.loadFromFile("assets/golf/models/light_sphere.cmt");
@@ -4385,12 +4385,12 @@ void GolfState::buildScene()
             md.createModel(entity);
             entity.getComponent<cro::Model>().setHidden(true);
             entity.addComponent<cro::LightVolume>().radius = LightRadius;
-            entity.getComponent<cro::LightVolume>().colour = cro::Colour(1.f, 0.5f, 0.1f);
+            entity.getComponent<cro::LightVolume>().colour = cro::Colour(1.f, 0.55f, 0.1f);
             entity.addComponent<LightAnimation>(0.7f, 1.f);// .setPattern(LightAnimation::FlickerA);
             teeEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
         }
 
-        setFog(0.4f);
+        setFog(0.5f);
     }
 
     

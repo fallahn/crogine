@@ -250,17 +250,17 @@ void GolfState::createWeather(std::int32_t weatherType)
 void GolfState::setFog(float density)
 {
     auto* shader = &m_resources.shaders.get(ShaderID::Composite);
-    auto uniform = shader->getUniformID("u_density");
     glUseProgram(shader->getGLHandle());
-    glUniform1f(uniform, density);
+    glUniform1f(shader->getUniformID("u_density"), density);
+
+    auto skyColour = m_gameScene.getSunlight().getComponent<cro::Sunlight>().getColour().getVec4();
+    glUniform4f(shader->getUniformID("u_lightColour"), skyColour.r, skyColour.g, skyColour.b, skyColour.a);
 
     shader = &m_resources.shaders.get(ShaderID::Minimap);
-    uniform = shader->getUniformID("u_density");
     glUseProgram(shader->getGLHandle());
-    glUniform1f(uniform, density);
-
-    uniform = shader->getUniformID("u_fogEnd");
-    glUniform1f(uniform, 280.f);
+    glUniform1f(shader->getUniformID("u_density"), density);
+    glUniform4f(shader->getUniformID("u_lightColour"), skyColour.r, skyColour.g, skyColour.b, skyColour.a);
+    glUniform1f(shader->getUniformID("u_fogEnd"), 280.f);
 }
 
 void GolfState::createClouds()

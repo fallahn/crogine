@@ -55,6 +55,7 @@ static const std::string MinimapFragment = R"(
         uniform sampler2D u_texture;
         uniform sampler2D u_depthTexture;
         uniform sampler2D u_lightTexture;
+        uniform vec4 u_lightColour;
 
 #include WIND_BUFFER
 #include SCALE_BUFFER
@@ -100,7 +101,7 @@ static const std::string MinimapFragment = R"(
 
             float depthSample = TEXTURE(u_depthTexture, v_texCoord).r;
             float d = getDistance(depthSample);
-            colour = mix(colour, FogColour, fogAmount(d));
+            colour = mix(colour, FogColour * u_lightColour, fogAmount(d));
 
 
 

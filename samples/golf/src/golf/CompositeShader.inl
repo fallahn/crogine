@@ -64,8 +64,6 @@ VARYING_IN vec4 v_colour;
 
 OUTPUT
 
-#include LIGHT_COLOUR
-
 #include FOG_COLOUR
 
 void main()
@@ -75,7 +73,7 @@ void main()
 
     float depthSample = TEXTURE(u_depthTexture, v_texCoord).r;
     float d = getDistance(depthSample);
-    colour = mix(colour, FogColour, fogAmount(d));
+    colour = mix(colour, FogColour * u_lightColour, fogAmount(d));
 
 #if defined(LIGHT_COLOUR)
     colour.rgb += TEXTURE(u_lightTexture, v_texCoord).rgb;
