@@ -71,6 +71,7 @@ ShaderResource::ShaderResource()
     addInclude("SHADOWMAP_UNIFORMS_FRAG", ShadowmapUniformsFrag.c_str());
     addInclude("SHADOWMAP_INPUTS", ShadowmapInputs.c_str());
     addInclude("PCF_SHADOWS", PCFShadows.c_str());
+    addInclude("FXAA", FXAA.c_str());
 }
 
 //public

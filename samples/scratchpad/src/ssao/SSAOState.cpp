@@ -160,9 +160,18 @@ namespace
 
     VARYING_IN vec2 v_texCoord;
 
+#include FXAA
+
     void main()
     {
-        FRAG_OUT = vec4(TEXTURE(u_texture, v_texCoord).rgb * TEXTURE(u_aoMap, v_texCoord).r, 1.0);
+        //vec3 colour = TEXTURE(u_texture, v_texCoord).rgb;
+        //vec3 colour = fxaa(u_texture, v_texCoord).rgb;
+
+        vec3 colour = mix(TEXTURE(u_texture, v_texCoord).rgb, fxaa(u_texture, v_texCoord).rgb, step(0.5, v_texCoord.x));
+        vec2 px = vec2(1.0) / u_resolution;
+        colour = mix(colour, vec3(1.0, 0.0, 0.0), step(0.5 - px.x, v_texCoord.x) * (1.0 - step(0.5 + px.x, v_texCoord.x)));
+
+        FRAG_OUT = vec4(colour * TEXTURE(u_aoMap, v_texCoord).r, 1.0);
         FRAG_OUT.rgb += TEXTURE(u_lightMap, v_texCoord).rgb;
     })";
 }
@@ -276,6 +285,9 @@ void SSAOState::render()
     glUniform1i(m_outputData.lightMap, 11);
     m_outputQuad.draw();
 
+    m_textA.draw();
+    m_textB.draw();
+
     m_uiScene.render();
 }
 
@@ -342,7 +354,7 @@ void SSAOState::createScene()
     if (md.loadFromFile("assets/ssao/light_sphere.cmt"))
     {
         //TODO update the model so radius is 1m, not diametre
-        static constexpr float Radius = 1.25f;
+        static constexpr float Radius = 0.5f;
         auto entity = m_gameScene.createEntity();
         entity.addComponent<cro::Transform>().setPosition({ 1.2f, 1.f, 0.f });
         entity.getComponent<cro::Transform>().setScale(glm::vec3(Radius * 2.f));
@@ -362,6 +374,18 @@ void SSAOState::createScene()
         entity.getComponent<test::LightVolume>().colour = cro::Colour::Plum;
         entity.getComponent<cro::Model>().setHidden(true);
     }
+
+    m_resources.fonts.load(1, "assets/fonts/VeraMono.ttf");
+    auto& font = m_resources.fonts.get(1);
+    m_textA.setFont(font);
+    m_textA.setCharacterSize(16);
+    m_textA.setFillColour(cro::Colour::Red);
+    m_textA.setString("No AA");
+
+    m_textB.setFont(font);
+    m_textB.setCharacterSize(16);
+    m_textB.setFillColour(cro::Colour::Red);
+    m_textB.setString("FXAA (GeeXLab)");
 
     auto resizeWindow = [&](cro::Camera& cam)
     {
@@ -414,10 +438,22 @@ void SSAOState::createScene()
         m_ssaoBufferQuad.setShader(m_resources.shaders.get(ShaderID::SSAO));
 
 
-        m_outputQuad.setTexture(m_renderBuffer.getTexture(MRTChannel::Colour), buffSize * 2u);
+        m_outputQuad.setTexture(m_renderBuffer.getTexture());
         m_outputQuad.setShader(m_resources.shaders.get(ShaderID::SSAOBlend));
         m_outputQuad.setPosition({ size.x / 4.f, size.y / 4.f });
         m_outputQuad.setScale({ 0.75f, 0.75f });
+
+
+        glm::vec2 res = glm::vec2(m_renderBuffer.getTexture().getSize());
+        auto& shader = m_resources.shaders.get(ShaderID::SSAOBlend);
+        auto uniform = shader.getUniformID("u_resolution");
+        glUseProgram(shader.getGLHandle());
+        glUniform2f(uniform, res.x, res.y);
+
+        auto pos = m_outputQuad.getPosition();
+        m_textA.setPosition(pos + glm::vec2(2.f, 2.f));
+        pos.x += (res.x / 2.f) * 0.75f;
+        m_textB.setPosition(pos + glm::vec2(2.f, 2.f));
 
         cam.setPerspective(0.7f, size.x / size.y, 2.1f, 7.f);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
@@ -432,7 +468,7 @@ void SSAOState::createScene()
     auto sun = m_gameScene.getSunlight();
     sun.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -0.3f);
     sun.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, 0.4f);
-    sun.getComponent<cro::Sunlight>().setColour(cro::Colour(0.251f, 0.243f, 0.412f));
+    //sun.getComponent<cro::Sunlight>().setColour(cro::Colour(0.251f, 0.243f, 0.412f));
 
     generateSSAOData();
 }
