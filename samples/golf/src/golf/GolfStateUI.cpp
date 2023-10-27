@@ -205,7 +205,7 @@ void GolfState::buildUI()
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>();
 
-    auto* shader = &m_resources.shaders.get(ShaderID::Fog);
+    auto* shader = &m_resources.shaders.get(ShaderID::Composite);
     entity.getComponent<cro::Drawable2D>().setShader(shader);
 
     if (m_sharedData.nightTime)

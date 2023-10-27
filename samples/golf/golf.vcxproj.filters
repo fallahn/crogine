@@ -865,7 +865,7 @@
     <None Include="src\golf\UnlockShader.inl">
       <Filter>Header Files\golf\client\shaders</Filter>
     </None>
-    <None Include="src\golf\FogShader.inl">
+    <None Include="src\golf\CompositeShader.inl">
       <Filter>Header Files\golf\client\shaders</Filter>
     </None>
     <None Include="src\golf\TVShader.inl">

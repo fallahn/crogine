@@ -31,7 +31,7 @@ source distribution.
 
 #include <string>
 
-static const std::string FogVert = 
+static const std::string CompositeVert = 
 R"(
 uniform mat4 u_worldMatrix;
 uniform mat4 u_viewProjectionMatrix;
@@ -51,7 +51,7 @@ void main()
 })";
 
 
-static const std::string FogFrag = 
+static const std::string CompositeFrag = 
 R"(
 uniform sampler2D u_texture;
 uniform sampler2D u_depthTexture;

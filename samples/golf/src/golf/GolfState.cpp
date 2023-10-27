@@ -140,7 +140,7 @@ namespace
 #include "ShadowMapping.inl"
 #include "TreeShader.inl"
 #include "BeaconShader.inl"
-#include "FogShader.inl"
+#include "CompositeShader.inl"
 #include "PostProcess.inl"
 #include "ShaderIncludes.inl"
 
@@ -2313,10 +2313,11 @@ void GolfState::loadAssets()
     }
     if (m_sharedData.nightTime)
     {
+        //defines += "#define LIGHT_COLOUR\n#define USE_AA\n";
         defines += "#define LIGHT_COLOUR\n";
     }
-    m_resources.shaders.loadFromString(ShaderID::Fog, FogVert, FogFrag, "#define ZFAR 320.0\n" + defines);
-    shader = &m_resources.shaders.get(ShaderID::Fog);
+    m_resources.shaders.loadFromString(ShaderID::Composite, CompositeVert, CompositeFrag, "#define ZFAR 320.0\n" + defines);
+    shader = &m_resources.shaders.get(ShaderID::Composite);
     m_postProcesses[PostID::Fog].shader = shader;
     //depth uniform is set after creating the UI once we know the render texture is created
 
@@ -4477,32 +4478,6 @@ void GolfState::buildScene()
             buildBow();
         }
     }
-
-    
-
-    //m_resources.shaders.loadFromString(ShaderID::PointLight,
-    //    cro::ModelRenderer::getDefaultVertexShader(cro::ModelRenderer::VertexShaderID::Unlit), PointLightFrag, "#define RIMMING\n");
-    //auto* shader = &m_resources.shaders.get(ShaderID::PointLight);
-    //m_windBuffer.addShader(*shader);
-    //auto& noiseTex = m_resources.textures.get("assets/golf/images/wind.png");
-    //auto matID = m_resources.materials.add(*shader);
-    //material = m_resources.materials.get(matID);
-    //material.setProperty("u_noiseTexture", noiseTex);
-
-    //md.loadFromFile("assets/golf/models/light_sphere.cmt");
-    //applyMaterialData(md, material);
-
-    //entity = m_gameScene.createEntity();
-    //entity.addComponent<cro::Transform>().setPosition({ 40.831287f,1.996931f,-100.147438f });
-    //entity.getComponent<cro::Transform>().setScale(glm::vec3(5.f));
-    //md.createModel(entity);
-    //entity.getComponent<cro::Model>().setMaterial(0, material);
-
-    //entity = m_gameScene.createEntity();
-    //entity.addComponent<cro::Transform>().setPosition({ 124.924004f,2.089445f,-139.739395f });
-    //entity.getComponent<cro::Transform>().setScale(glm::vec3(5.f));
-    //md.createModel(entity);
-    //entity.getComponent<cro::Model>().setMaterial(0, material);
 }
 
 void GolfState::initAudio(bool loadTrees)

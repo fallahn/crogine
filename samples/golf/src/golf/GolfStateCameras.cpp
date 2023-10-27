@@ -76,7 +76,11 @@ void GolfState::createCameras()
                     m_renderTarget.display = std::bind(&cro::MultiRenderTexture::display, &m_gameSceneMRTexture);
                     m_renderTarget.getSize = std::bind(&cro::MultiRenderTexture::getSize, &m_gameSceneMRTexture);
 
-                    m_lightMaps[LightMapID::Scene].create(usize.x, usize.y, false);
+                    m_lightMaps[LightMapID::Scene].create(usize.x, usize.y, false/*, false, samples*/);
+
+                    //auto& shader = m_resources.shaders.get(ShaderID::Fog); //TODO disable FXAA if samples == 0
+                    //glUseProgram(shader.getGLHandle());
+                    //glUniform2f(shader.getUniformID("u_resolution"), texSize.x, texSize.y);
                 }
                 else
                 {

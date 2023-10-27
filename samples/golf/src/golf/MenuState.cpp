@@ -101,7 +101,6 @@ namespace
 #include "CloudShader.inl"
 #include "ShaderIncludes.inl"
 #include "ShadowMapping.inl"
-#include "FogShader.inl"
 
     //constexpr glm::vec3 CameraBasePosition(-22.f, 4.9f, 22.2f);
 
@@ -142,22 +141,22 @@ MainMenuContext::MainMenuContext(MenuState* state)
 }
 
 MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, SharedStateData& sd, SharedProfileData& sp)
-    : cro::State(stack, context),
-    m_sharedData(sd),
-    m_profileData(sp),
-    m_matchMaking(context.appInstance.getMessageBus()),
-    m_cursor(/*"assets/images/cursor.png", 0, 0*/cro::SystemCursor::Hand),
-    m_uiScene(context.appInstance.getMessageBus(), 512),
-    m_backgroundScene(context.appInstance.getMessageBus(), 512/*, cro::INFO_FLAG_SYSTEMS_ACTIVE*/),
-    m_avatarScene(context.appInstance.getMessageBus(), 640/*, cro::INFO_FLAG_SYSTEMS_ACTIVE*/),
-    m_scaleBuffer("PixelScale"),
-    m_resolutionBuffer("ScaledResolution"),
-    m_windBuffer("WindValues"),
-    m_lobbyExpansion(0.f),
-    m_avatarCallbacks(std::numeric_limits<std::uint32_t>::max(), std::numeric_limits<std::uint32_t>::max()),
-    m_currentMenu(MenuID::Main),
-    m_prevMenu(MenuID::Main),
-    m_viewScale(1.f)
+    : cro::State        (stack, context),
+    m_sharedData        (sd),
+    m_profileData       (sp),
+    m_matchMaking       (context.appInstance.getMessageBus()),
+    m_cursor            (/*"assets/images/cursor.png", 0, 0*/cro::SystemCursor::Hand),
+    m_uiScene           (context.appInstance.getMessageBus(), 512),
+    m_backgroundScene   (context.appInstance.getMessageBus(), 512/*, cro::INFO_FLAG_SYSTEMS_ACTIVE*/),
+    m_avatarScene       (context.appInstance.getMessageBus(), 640/*, cro::INFO_FLAG_SYSTEMS_ACTIVE*/),
+    m_scaleBuffer       ("PixelScale"),
+    m_resolutionBuffer  ("ScaledResolution"),
+    m_windBuffer        ("WindValues"),
+    m_lobbyExpansion    (0.f),
+    m_avatarCallbacks   (std::numeric_limits<std::uint32_t>::max(), std::numeric_limits<std::uint32_t>::max()),
+    m_currentMenu       (MenuID::Main),
+    m_prevMenu          (MenuID::Main),
+    m_viewScale         (1.f)
 {
     sd.baseState = StateID::Menu;
     sd.clubSet = std::clamp(sd.clubSet, 0, 2);

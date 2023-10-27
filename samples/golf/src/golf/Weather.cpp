@@ -249,7 +249,7 @@ void GolfState::createWeather(std::int32_t weatherType)
 
 void GolfState::setFog(float density)
 {
-    auto* shader = &m_resources.shaders.get(ShaderID::Fog);
+    auto* shader = &m_resources.shaders.get(ShaderID::Composite);
     auto uniform = shader->getUniformID("u_density");
     glUseProgram(shader->getGLHandle());
     glUniform1f(uniform, density);
@@ -340,12 +340,7 @@ void GolfState::buildBow()
     if (Social::isGreyscale())
     {
         createWeather(WeatherType::Rain);
-
-        auto& shader = m_resources.shaders.get(ShaderID::Fog);
-        auto uniform = shader.getUniformID("u_density");
-        glUseProgram(shader.getGLHandle());
-        glUniform1f(uniform, 0.89f);
-
+        setFog(0.89f);
         return;
     }
 
