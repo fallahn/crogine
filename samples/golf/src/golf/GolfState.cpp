@@ -4320,7 +4320,8 @@ void GolfState::buildScene()
 
     //tee marker
     material = m_resources.materials.get(m_materialIDs[MaterialID::Ball]);
-    if (cro::SysTime::now().months() == 10)
+    bool spooky = cro::SysTime::now().months() == 10 && cro::SysTime::now().days() > 22;
+    if (spooky)
     {
         md.loadFromFile("assets/golf/models/tee_balls02.cmt");
     }
@@ -4364,9 +4365,10 @@ void GolfState::buildScene()
 
 
     auto teeEnt = entity;
-    if (cro::SysTime::now().months() == 10 && m_sharedData.nightTime)
+    if (spooky
+        && m_sharedData.nightTime)
     {
-        static constexpr float LightRadius = 8.f;
+        static constexpr float LightRadius = 3.5f;
         static constexpr std::array<glm::vec3, 2u> Positions =
         {
             glm::vec3(0.f, 0.1f, -2.f),
@@ -4388,7 +4390,7 @@ void GolfState::buildScene()
             teeEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
         }
 
-        //setFog(0.4f);
+        setFog(0.4f);
     }
 
     

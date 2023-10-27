@@ -239,12 +239,12 @@ const float ZNear = 0.1;
 const float ZFar = ZFAR;
 
 #if !defined(DESAT)
-#define DESAT 0.06
+#define DESAT 0.03
 #endif
 
 uniform float u_density = 0.0;
-uniform float u_fogStart = 0.0;
-uniform float u_fogEnd = ZFAR;
+uniform float u_fogStart = 10.0;
+uniform float u_fogEnd = ZFAR / 2.0;
 
 const vec4 FogColour = vec4(0.91,0.92,0.923,1.0);
 
