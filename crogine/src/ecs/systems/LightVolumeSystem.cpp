@@ -162,6 +162,21 @@ LightVolumeSystem::LightVolumeSystem(MessageBus& mb, std::int32_t spaceIndex)
 }
 
 //public
+void LightVolumeSystem::process(float)
+{
+    for (auto entity : getEntities())
+    {
+        const auto& model = entity.getComponent<Model>();
+        auto sphere = model.getBoundingSphere();
+        const auto& tx = entity.getComponent<Transform>();
+
+        auto scale = tx.getWorldScale();
+        sphere.radius *= ((scale.x + scale.y + scale.z) / 3.f);
+
+        entity.getComponent<LightVolume>().lightScale = sphere.radius / entity.getComponent<LightVolume>().radius;
+    }
+}
+
 void LightVolumeSystem::updateDrawList(Entity cameraEnt)
 {
     const auto& camComponent = cameraEnt.getComponent<Camera>();
@@ -179,6 +194,10 @@ void LightVolumeSystem::updateDrawList(Entity cameraEnt)
 
     //TODO this only does lighting on the output pass, not the reflection
     //though this is probably enough for our case
+
+    //TODO - and this goes for all culling functions
+    //the world space transform of the sphere could be cached for a frame
+    //insteadof being recalculated for every active camera
     for (auto entity : entities)
     {
         const auto& model = entity.getComponent<Model>();
@@ -270,8 +289,9 @@ void LightVolumeSystem::updateTarget(Entity camera, RenderTexture& target)
         }
 
         const auto& light = entity.getComponent<LightVolume>();
+        float radius = light.radius * light.lightScale;
         glCheck(glUniform3f(m_uniformIDs[UniformID::LightColour], light.colour.getRed(), light.colour.getGreen(), light.colour.getBlue()));
-        glCheck(glUniform1f(m_uniformIDs[UniformID::LightRadiusSqr], light.radius * light.radius));
+        glCheck(glUniform1f(m_uniformIDs[UniformID::LightRadiusSqr], radius * radius));
 
         entity.getComponent<Model>().draw(0, Mesh::IndexData::Final);
     }

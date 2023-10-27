@@ -66,5 +66,8 @@ namespace cro
         {
             WorldSpace, ViewSpace
         };
+    private:
+        float lightScale = 1.f; //used to scale the volume to the mesh based on current transform
+        friend class LightVolumeSystem;
     };
 }

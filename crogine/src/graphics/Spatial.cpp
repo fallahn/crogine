@@ -43,14 +43,31 @@ Sphere::Sphere(const Box& box)
 {
     auto rad = (box[1] - box[0]) / 2.f;
     centre = box[0] + rad;
-    radius = glm::length(rad);
+
+    for (auto i = 0; i < 3; ++i)
+    {
+        auto l = std::abs(rad[i]);
+        if (l > radius)
+        {
+            radius = l;
+        }
+    }
 }
 
 Sphere& Sphere::operator=(const Box& box)
 {
     auto rad = (box[1] - box[0]) / 2.f;
     centre = box[0] + rad;
-    radius = glm::length(rad);
+
+    for (auto i = 0; i < 3; ++i)
+    {
+        auto l = std::abs(rad[i]);
+        if (l > radius)
+        {
+            radius = l;
+        }
+    }
+
     return *this;
 }
 

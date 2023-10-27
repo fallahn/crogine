@@ -98,6 +98,7 @@ namespace cro
         LightVolumeSystem& operator = (const LightVolumeSystem&) = delete;
         LightVolumeSystem& operator = (LightVolumeSystem&&) = delete;
 
+        void process(float) override;
 
         /*
         Called by the scene to cull the light objects for rendering
