@@ -2090,7 +2090,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
 
                 navigationUpdate(LobbyRulesA);
 
-                selectNext(LobbyCourseA);
+                selectNext(LobbyInfoA);
             }
         }
     );
@@ -2100,7 +2100,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     thumbBgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     m_lobbyButtonContext.lobbyRulesA = entity;
 
-    //button for info page
+    //button for score page
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
@@ -3616,7 +3616,7 @@ void MenuState::addCourseSelectButtons()
     buttonEnt.addComponent<cro::UIInput>().area = bounds;
     buttonEnt.getComponent<cro::UIInput>().setGroup(MenuID::Lobby);
     buttonEnt.getComponent<cro::UIInput>().setSelectionIndex(CourseNext);
-    buttonEnt.getComponent<cro::UIInput>().setNextIndex(CourseClubLimit, CourseHoleNext);
+    buttonEnt.getComponent<cro::UIInput>().setNextIndex(CourseNightTime, CourseHoleNext);
 //#ifdef USE_GNS
 //#else
 //    buttonEnt.getComponent<cro::UIInput>().setNextIndex(CourseCPUSkip, CourseHoleNext);
@@ -3689,7 +3689,7 @@ void MenuState::addCourseSelectButtons()
         labelEnt.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
         labelEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
         labelEnt.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement | CommandID::Menu::CourseSelect;
-        labelEnt.addComponent<UIElement>().absolutePosition = { 187.f, 149.f };
+        labelEnt.addComponent<UIElement>().absolutePosition = { 187.f, 148.f };
         labelEnt.getComponent<UIElement>().depth = 0.1f;
         m_lobbyWindowEntities[LobbyEntityID::HoleSelection].getComponent<cro::Transform>().addChild(labelEnt.getComponent<cro::Transform>());
     }

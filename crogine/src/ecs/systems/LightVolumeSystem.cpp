@@ -103,7 +103,12 @@ namespace
             //not perfectly accurate compared to the linear/quadratic equation but easier to involve the radius 
             float attenuation = 1.0 - min(dot(lightDir, lightDir) / u_lightRadiusSqr, 1.0);
 
-            FRAG_OUT = vec4(lightColour * attenuation, 1.0);
+            lightColour *= attenuation;
+            /*lightColour *= 80.0;
+            lightColour = round(lightColour);
+            lightColour /= 80.0;*/
+
+            FRAG_OUT = vec4(lightColour, 1.0);
         })";
 }
 
