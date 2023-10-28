@@ -946,7 +946,7 @@ void MenuState::ugcInstalledHandler(std::uint64_t id, std::int32_t type)
             LogE << "Couldn't find UGC at " << BallUserPath << std::endl;
             return;
         }
-
+        
         auto files = cro::FileSystem::listFiles(BallUserPath);
         LogI << "installed remote ball" << std::endl;
         for (const auto& file : files)
@@ -969,13 +969,13 @@ void MenuState::ugcInstalledHandler(std::uint64_t id, std::int32_t type)
     else if (type == Social::UserContent::Hair)
     {
         const auto HairUserPath = Social::getUserContentPath(Social::UserContent::Hair) + std::to_string(id) + "/";
-        auto files = cro::FileSystem::listFiles(HairUserPath);
 
         if (!cro::FileSystem::directoryExists(HairUserPath))
         {
             LogE << "Couldn't find UGC at " << HairUserPath << std::endl;
             return;
         }
+        auto files = cro::FileSystem::listFiles(HairUserPath);
 
         LogI << "installed remote hair" << std::endl;
         for (const auto& file : files)
