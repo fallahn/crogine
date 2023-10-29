@@ -1,7 +1,7 @@
 bl_info = {
     "name": "Export golf hole data",
     "author": "Bald Guy",
-    "version": (2023, 3, 4),
+    "version": (2023, 10, 29),
     "blender": (2, 80, 0),
     "location": "File > Export > Golf Hole",
     "description": "Export position and rotation info of selected objects",
@@ -128,6 +128,21 @@ def WriteParticles(file, path, location):
     file.write("    }\n\n")
 
 
+def WriteLight(file, ob):
+    light = ob.data
+    if light.type == 'POINT':
+        location = ob.location
+        colour = light.color
+        
+        file.write("    light\n    {\n")
+        file.write("        colour = %f,%f,%f,1.0\n" % (colour.r, colour.g, colour.b))
+        file.write("        position = %f,%f,%f\n" % (location[0], location[2], -location[1]))
+        file.write("        radius = %f\n" % light.shadow_soft_size)
+        file.write("    }\n\n")
+
+
+
+
 def showMessageBox(message = "", title = "Message Box", icon = 'INFO'):
 
     def draw(self, context):
@@ -224,6 +239,9 @@ class ExportInfo(bpy.types.Operator, bpy_extras.io_utils.ExportHelper):
                     elif ob.type == 'SPEAKER' and ob.parent is None:
                         WriteSpeakerSolo(file, ob)
 
+            elif ob.type == 'LIGHT':
+                WriteLight(file, ob)
+        
 
         file.write("}")
         file.close()
