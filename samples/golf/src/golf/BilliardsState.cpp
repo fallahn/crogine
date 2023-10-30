@@ -1367,7 +1367,7 @@ void BilliardsState::handleNetEvent(const net::NetEvent& evt)
     }
     else if (evt.type == net::NetEvent::ClientDisconnect)
     {
-        m_sharedData.errorMessage = "Disconnected From Server (Host Quit)";
+        m_sharedData.errorMessage = "Disconnected From Server";
         requestStackPush(StateID::Error);
     }
 }

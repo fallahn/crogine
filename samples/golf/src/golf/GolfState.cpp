@@ -768,7 +768,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
         {
         default: break;
         case SDL_CONTROLLER_BUTTON_MISC1:
-            m_textChat.toggleWindow();
+            //m_textChat.toggleWindow();
             break;
         case cro::GameController::ButtonTrackpad:
             showMapOverview();
@@ -5637,9 +5637,10 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
                 std::int32_t score = m_sharedData.connectionData[m_currentPlayer.client].playerData[m_currentPlayer.player].holeScores[m_currentHole];
                 if (score == 1)
                 {
-                    auto* msg = postMessage<GolfEvent>(MessageID::GolfMessage);
+                    //moved to showMessageBoard where we assert we actually scored a HIO
+                    /*auto* msg = postMessage<GolfEvent>(MessageID::GolfMessage);
                     msg->type = GolfEvent::HoleInOne;
-                    msg->position = m_holeData[m_currentHole].pin;
+                    msg->position = m_holeData[m_currentHole].pin;*/
                 }
 
                 //check if this is our own score
@@ -5912,7 +5913,7 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
         }
         break;
     case net::NetEvent::ClientDisconnect:
-        m_sharedData.errorMessage = "Disconnected From Server (Host Quit)";
+        m_sharedData.errorMessage = "Disconnected From Server";
         requestStackPush(StateID::Error);
         break;
     default: break;

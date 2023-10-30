@@ -3424,6 +3424,13 @@ void GolfState::showMessageBoard(MessageBoardID messageType, bool special)
             msg->travelDistance = glm::length2(m_holeData[m_currentHole].pin - m_currentPlayer.position);
             msg->club = getClub();
 
+            if (score == ScoreID::HIO)
+            {
+                auto* msg2 = postMessage<GolfEvent>(MessageID::GolfMessage);
+                msg2->type = GolfEvent::HoleInOne;
+                msg2->position = m_holeData[m_currentHole].pin;
+            }
+
             if (score <= ScoreID::Par
                 && m_sharedData.showBeacon)
             {

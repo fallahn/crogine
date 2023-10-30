@@ -446,43 +446,45 @@ void ProfileState::handleMessage(const cro::Message& msg)
 bool ProfileState::simulate(float dt)
 {
     //rotate/zoom avatar
-    float rotation = 0.f;
-    
-    if (cro::GameController::isButtonPressed(0, cro::GameController::ButtonLeftShoulder)
-        || cro::Keyboard::isKeyPressed(m_sharedData.inputBinding.keys[InputBinding::Left]))
+    if (!m_textEdit.entity.isValid())
     {
-        rotation -= dt;
-    }
-    if (cro::GameController::isButtonPressed(0, cro::GameController::ButtonRightShoulder)
-        || cro::Keyboard::isKeyPressed(m_sharedData.inputBinding.keys[InputBinding::Right]))
-    {
-        rotation += dt;
-    }
-    m_avatarModels[m_avatarIndex].previewModel.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, rotation);
+        float rotation = 0.f;
 
-
-    float zoom = 0.f;
-    if(cro::GameController::getAxisPosition(0, cro::GameController::TriggerLeft) > TriggerDeadZone
-        || cro::Keyboard::isKeyPressed(m_sharedData.inputBinding.keys[InputBinding::Down]))
-    {
-        zoom -= dt;
-    }
-    if (cro::GameController::getAxisPosition(0, cro::GameController::TriggerRight) > TriggerDeadZone
-        || cro::Keyboard::isKeyPressed(m_sharedData.inputBinding.keys[InputBinding::Up]))
-    {
-        zoom += dt;
-    }
-    if (zoom != 0)
-    {
-        auto pos = m_cameras[CameraID::Avatar].getComponent<cro::Transform>().getPosition();
-        if (glm::dot(CameraZoomPosition - pos, CameraZoomVector) > zoom 
-            && glm::dot(CameraBasePosition - pos, CameraZoomVector) < zoom)
+        if (cro::GameController::isButtonPressed(0, cro::GameController::ButtonLeftShoulder)
+            || cro::Keyboard::isKeyPressed(m_sharedData.inputBinding.keys[InputBinding::Left]))
         {
-            pos += CameraZoomVector * zoom;
-            m_cameras[CameraID::Avatar].getComponent<cro::Transform>().setPosition(pos);
+            rotation -= dt;
+        }
+        if (cro::GameController::isButtonPressed(0, cro::GameController::ButtonRightShoulder)
+            || cro::Keyboard::isKeyPressed(m_sharedData.inputBinding.keys[InputBinding::Right]))
+        {
+            rotation += dt;
+        }
+        m_avatarModels[m_avatarIndex].previewModel.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, rotation);
+
+
+        float zoom = 0.f;
+        if (cro::GameController::getAxisPosition(0, cro::GameController::TriggerLeft) > TriggerDeadZone
+            || cro::Keyboard::isKeyPressed(m_sharedData.inputBinding.keys[InputBinding::Down]))
+        {
+            zoom -= dt;
+        }
+        if (cro::GameController::getAxisPosition(0, cro::GameController::TriggerRight) > TriggerDeadZone
+            || cro::Keyboard::isKeyPressed(m_sharedData.inputBinding.keys[InputBinding::Up]))
+        {
+            zoom += dt;
+        }
+        if (zoom != 0)
+        {
+            auto pos = m_cameras[CameraID::Avatar].getComponent<cro::Transform>().getPosition();
+            if (glm::dot(CameraZoomPosition - pos, CameraZoomVector) > zoom
+                && glm::dot(CameraBasePosition - pos, CameraZoomVector) < zoom)
+            {
+                pos += CameraZoomVector * zoom;
+                m_cameras[CameraID::Avatar].getComponent<cro::Transform>().setPosition(pos);
+            }
         }
     }
-
 
     m_modelScene.simulate(dt);
     m_uiScene.simulate(dt);
