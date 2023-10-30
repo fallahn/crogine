@@ -1606,6 +1606,7 @@ int ImTextCharFromUtf8(unsigned int* out_char, const char* in_text, const char* 
         *out_char = c;
         return 4;
     }
+
     *out_char = 0;
     return 0;
 }

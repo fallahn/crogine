@@ -1062,7 +1062,8 @@ void ProfileState::buildScene()
     nameButton.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] =
         uiSystem.addCallback([&](cro::Entity, const cro::ButtonEvent& evt) mutable
             {
-                if (activated(evt))
+                if (!m_activeProfile.isSteamID &&
+                    activated(evt))
                 {
                     auto& callback = m_menuEntities[EntityID::NameText].getComponent<cro::Callback>();
                     callback.active = !callback.active;

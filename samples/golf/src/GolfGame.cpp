@@ -1241,7 +1241,7 @@ void GolfGame::loadAvatars()
             }
         }
     }
-
+    m_profileData.playerProfiles[0].isSteamID = true;
 #endif
 
     auto profileDirs = cro::FileSystem::listDirectories(path);

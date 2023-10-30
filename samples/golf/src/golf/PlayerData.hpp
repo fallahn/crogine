@@ -80,6 +80,8 @@ struct PlayerData final
     mutable std::string profileID; //saving file generates this
     bool saveProfile() const;
     bool loadProfile(const std::string& path, const std::string& uid);
+
+    bool isSteamID = false;
 };
 
 struct ProfileTexture

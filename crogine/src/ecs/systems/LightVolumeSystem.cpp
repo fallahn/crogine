@@ -86,6 +86,8 @@ namespace
         VARYING_IN vec3 v_lightPosition;
 #endif
 
+        const float ColourSteps = 20.0;
+
         void main()
         {
             vec2 texCoord = gl_FragCoord.xy / u_targetSize;
@@ -98,16 +100,19 @@ namespace
 #else
             vec3 lightDir = u_lightPos - position;
 #endif
-            vec3 lightColour = u_lightColour * max(dot(normal, normalize(lightDir)), 0.0);
+            
+            float amount = dot(normal, normalize(lightDir));
+
+            /*amount *= ColourSteps;
+            amount = round(amount);
+            amount /= ColourSteps;*/
+
+            vec3 lightColour = u_lightColour * max(amount, 0.0);
 
             //not perfectly accurate compared to the linear/quadratic equation but easier to involve the radius 
             float attenuation = 1.0 - min(dot(lightDir, lightDir) / u_lightRadiusSqr, 1.0);
 
             lightColour *= attenuation;
-            /*lightColour *= 80.0;
-            lightColour = round(lightColour);
-            lightColour /= 80.0;*/
-
             FRAG_OUT = vec4(lightColour, 1.0);
         })";
 }
@@ -303,10 +308,13 @@ void LightVolumeSystem::updateTarget(Entity camera, RenderTexture& target)
     target.display();
 
     glCheck(glCullFace(GL_BACK));
-    glCheck(glDisable(GL_CULL_FACE));
-    glCheck(glEnable(GL_DEPTH_TEST));
+    glCheck(glFrontFace(GL_CCW));
     glCheck(glDisable(GL_BLEND));
+    glCheck(glDisable(GL_CULL_FACE));
+    //glCheck(glEnable(GL_DEPTH_TEST));
+    glCheck(glDisable(GL_DEPTH_TEST));
     glCheck(glDepthMask(GL_TRUE));
+
 
     //glCheck(glUseProgram(0));
 }

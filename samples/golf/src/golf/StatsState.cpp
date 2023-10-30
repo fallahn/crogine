@@ -673,6 +673,13 @@ void StatsState::parseProfileData()
                 auto& pf = m_profileData.emplace_back();
                 pf.name = pd.name;
                 pf.dbPath = profilePath + "profile.db3";
+
+#ifdef USE_GNS
+                if (dir == Social::getPlayerID())
+                {
+                    pf.name = Social::getPlayerName();
+                }
+#endif
             }
         }
 

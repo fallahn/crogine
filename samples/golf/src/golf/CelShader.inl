@@ -485,7 +485,7 @@ float greenTerrain = step(0.065, v_colour.r) * (1.0 - step(0.13, v_colour.r));
         amount *= COLOUR_LEVELS;
         amount = round(amount);
         amount /= COLOUR_LEVELS;
-        amount = AMOUNT_MIN + (amount * AMOUNT_MAX);
+        amount = (amount * AMOUNT_MAX) + AMOUNT_MIN;
 
         vec3 viewDirection = v_cameraWorldPosition - v_worldPosition.xyz;
 #if defined(COMP_SHADE)

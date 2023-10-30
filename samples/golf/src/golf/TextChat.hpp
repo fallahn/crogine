@@ -69,9 +69,10 @@ private:
     {
         const cro::String str;
         ImVec4 colour;
-
+        
         BufferLine(const std::string& s, ImVec4 c)
-            : str(s), colour(c) {}
+            : str(s), colour(c)
+        { }
     };
 
     static constexpr std::size_t MaxLines = 24;

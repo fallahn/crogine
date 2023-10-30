@@ -187,7 +187,7 @@ void TextChat::handlePacket(const net::NetEvent::Packet& pkt)
     auto outStr = m_sharedData.connectionData[msg.client].playerData[0].name;
 
     auto end = std::find(msg.messageData.begin(), msg.messageData.end(), char(0));
-    auto msgText = cro::String::fromUtf8(msg.messageData.begin(), end);
+    auto msgText = cro::String::fromUtf8(msg.messageData.begin(), /*end*/msg.messageData.end());
 
     cro::Colour chatColour = TextNormalColour;
 
