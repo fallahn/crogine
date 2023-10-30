@@ -70,7 +70,7 @@ private:
         const cro::String str;
         ImVec4 colour;
         
-        BufferLine(const std::string& s, ImVec4 c)
+        BufferLine(const cro::String& s, ImVec4 c)
             : str(s), colour(c)
         { }
     };

@@ -128,6 +128,14 @@ TextChat::TextChat(cro::Scene& s, SharedStateData& sd)
 {
     registerWindow([&]() 
         {
+            /*if (!m_displayBuffer.empty())
+            {
+                const auto& [str, _] = m_displayBuffer[0];
+                const auto us = str.toUtf8();
+
+                ImGui::DebugTextEncoding(reinterpret_cast<const char*>(us.c_str()));
+            }*/
+
             if (m_visible)
             {
                 ImGui::SetNextWindowSize({ 600.f, 280.f });
