@@ -154,6 +154,7 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/imgui/imgui_impl_opengl3.cpp
   ${PROJECT_DIR}/imgui/imgui_impl_sdl.cpp
   ${PROJECT_DIR}/imgui/imgui_stdlib.cpp
+  ${PROJECT_DIR}/imgui/imgui_tables.cpp
   ${PROJECT_DIR}/imgui/imgui_widgets.cpp
   ${PROJECT_DIR}/imgui/ImGuizmo.cpp
   ${PROJECT_DIR}/imgui/implot.cpp

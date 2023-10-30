@@ -77,7 +77,7 @@ namespace
     bool isNewFrame = true;
     bool showDemoWindow = false;
 }
-int textEditCallback(ImGuiTextEditCallbackData* data);
+int textEditCallback(ImGuiInputTextCallbackData* data);
 
 std::vector<std::string> Console::m_debugLines;
 
@@ -612,7 +612,7 @@ ConfigFile& Console::getConvars()
     return convars;
 }
 
-int textEditCallback(ImGuiTextEditCallbackData* data)
+int textEditCallback(ImGuiInputTextCallbackData* data)
 {
     //use this to scroll up and down through command history
     //TODO create an auto complete thinger
