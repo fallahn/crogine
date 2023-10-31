@@ -122,8 +122,12 @@ namespace cro
         \param path A string containing the path to the font to append
         \param rangeStart The first codepoint which this font should render
         \param rangeEnd the final codepoint this font should render
+        \param allowBold Set to false if using eg. Emoji fonts, this will
+        prevent bold rendering on emojis when rendering the default font in bold
+        \param allowOutline As allowBold, but applied to font outlining
         */
-        bool appendFromFile(const std::string& path, std::uint32_t rangeStart, std::uint32_t rangeEnd);
+        bool appendFromFile(const std::string& path, std::uint32_t rangeStart, std::uint32_t rangeEnd, bool allowBold = false, bool allowOutline = false);
+        bool appendFromFile(const std::string& path, std::array<std::uint32_t, 2u> range, bool allowBold = false, bool allowOutline = false);
 
 
         /*!
@@ -186,6 +190,9 @@ namespace cro
             std::any face;
             std::any stroker;
             std::array<std::uint32_t, 2> codepointRange = { 0x1,0xffff };
+
+            bool allowBold = false;
+            bool allowOutline = false;
         };
         std::vector<FontData> m_fontData;
 

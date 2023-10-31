@@ -4,7 +4,7 @@ static inline void applyImGuiStyle()
 {
     //golf style
     ImGuiStyle& style = ImGui::GetStyle();
-    
+
     style.Alpha = 1.0f;
     style.DisabledAlpha = 0.6000000238418579f;
     style.WindowPadding = ImVec2(8.0f, 8.0f);
@@ -35,7 +35,7 @@ static inline void applyImGuiStyle()
     style.ColorButtonPosition = ImGuiDir_Right;
     style.ButtonTextAlign = ImVec2(0.6f, 0.5f);
     style.SelectableTextAlign = ImVec2(0.0f, 0.0f);
-    
+
     style.Colors[ImGuiCol_Text] = ImVec4(1.0f, 0.9725490212440491f, 0.8823529481887817f, 1.0f);
     style.Colors[ImGuiCol_TextDisabled] = ImVec4(0.7843137383460999f, 0.7215686440467834f, 0.6235294342041016f, 1.0f);
     style.Colors[ImGuiCol_WindowBg] = ImVec4(0.3137255012989044f, 0.1568627506494522f, 0.1843137294054031f, 0.9f);
@@ -94,17 +94,28 @@ static inline void applyImGuiStyle()
     //load specific fonts
     auto* fonts = ImGui::GetIO().Fonts;
     fonts->AddFontDefault();
-    
+
     ImFontConfig config;
     config.MergeMode = true;
-    config.FontBuilderFlags |= (1 << 8); /*ImGui::ImGuiFreeTypeBuilderFlags_LoadColor*/;
+    config.FontBuilderFlags |= (1 << 8) | (1 << 9); /*ImGuiFreeTypeBuilderFlags_LoadColor ImGuiFreeTypeBuilderFlags_LoadBitmap*/;
     config.OversampleH = config.OversampleV = 1;
 
     //expands the default glyph set - default is 32-255
     std::array<ImWchar, 3> range = { 0x1, 0xFFFF, 0 }; //TODO what's the third number? Plane? Terminator?
     fonts->AddFontFromFileTTF("assets/golf/fonts/ProggyClean.ttf", 13.0f, &config, range.data());
     range = { 0x10000, 0x1FFFF, 0 };
-    fonts->AddFontFromFileTTF("assets/golf/fonts/NotoEmoji-Regular.ttf", 13.0f, &config, range.data());
+    //fonts->AddFontFromFileTTF("assets/golf/fonts/NotoEmoji-Regular.ttf", 13.0f, &config, range.data());
+#ifdef _WIN32
+    const std::string winPath = "C:/Windows/Fonts/seguiemj.ttf";
+    if (cro::FileSystem::fileExists(winPath))
+    {
+        fonts->AddFontFromFileTTF(winPath.c_str(), 10.0f, &config, range.data());
+    }
+    else
+#endif
+    {
+        fonts->AddFontFromFileTTF("assets/golf/fonts/NotoEmoji-Regular.ttf", 13.0f, &config, range.data());
+    }
 
     fonts->Build();
 }

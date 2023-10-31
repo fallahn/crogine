@@ -89,16 +89,23 @@ bool Font::loadFromFile(const std::string& filePath)
     //remove existing loaded font
     cleanup();
 
-    return appendFromFile(filePath, 0x1, 0xffff);
+    return appendFromFile(filePath, 0x1, 0xffff, true, true);
 }
 
-bool Font::appendFromFile(const std::string& filePath, std::uint32_t rangeStart, std::uint32_t rangeEnd)
+bool Font::appendFromFile(const std::string& filePath, std::array<std::uint32_t, 2u> range, bool allowBold, bool allowOutline)
+{
+    return appendFromFile(filePath, range[0], range[1], allowBold, allowOutline);
+}
+
+bool Font::appendFromFile(const std::string& filePath, std::uint32_t rangeStart, std::uint32_t rangeEnd, bool allowBold, bool allowOutline)
 {
     CRO_ASSERT(rangeStart > 0 && rangeStart < rangeEnd, "invalid codepoint range");
 
     auto path = FileSystem::getResourcePath() + filePath;
     FontData fd; //TODO do this need a dtor to RAII away any failed loading?
     fd.codepointRange = { rangeStart, rangeEnd };
+    fd.allowBold = allowBold;
+    fd.allowOutline = allowOutline;
 
     //load the face
     RaiiRWops fontFile;
@@ -190,7 +197,7 @@ Glyph Font::getGlyph(std::uint32_t codepoint, std::uint32_t charSize, bool bold,
 {
     auto& fontData = getFontData(codepoint);
     auto& currentGlyphs = m_pages[charSize].glyphs;
-    auto key = combine(outlineThickness, bold, FT_Get_Char_Index(std::any_cast<FT_Face>(fontData.face), codepoint));
+    auto key = combine(fontData.allowOutline ? outlineThickness : 0.f, bold && fontData.allowBold, FT_Get_Char_Index(std::any_cast<FT_Face>(fontData.face), codepoint));
 
     auto result = currentGlyphs.find(key);
     if (result != currentGlyphs.end())
@@ -200,7 +207,7 @@ Glyph Font::getGlyph(std::uint32_t codepoint, std::uint32_t charSize, bool bold,
     else
     {
         //add the glyph to the page
-        auto glyph = loadGlyph(codepoint, charSize, bold, outlineThickness);
+        auto glyph = loadGlyph(codepoint, charSize, bold && fontData.allowBold, fontData.allowOutline ? outlineThickness : 0.f);
         return currentGlyphs.insert(std::make_pair(key, glyph)).first->second;
     }
 
@@ -318,7 +325,7 @@ Glyph Font::loadGlyph(std::uint32_t codepoint, std::uint32_t charSize, bool bold
     }
 
     //fetch the glyph
-    FT_Int32 flags = FT_LOAD_TARGET_NORMAL | FT_LOAD_FORCE_AUTOHINT;
+    FT_Int32 flags = FT_LOAD_TARGET_NORMAL | FT_LOAD_FORCE_AUTOHINT | FT_LOAD_COLOR;
 
     if (FT_Load_Char(face, codepoint, flags) != 0)
     {
@@ -350,11 +357,13 @@ Glyph Font::loadGlyph(std::uint32_t codepoint, std::uint32_t charSize, bool bold
         }
     }
 
+    //TODO if we want to support colour glyphs we need to swwap to FT_Render_Glyph()
+    //as FT_Glyph_To_Bitmap actually only renders alpha coverage
 
     //rasterise it
     FT_Glyph_To_Bitmap(&glyphDesc, FT_RENDER_MODE_NORMAL, 0, 1);
     FT_Bitmap& bitmap = reinterpret_cast<FT_BitmapGlyph>(glyphDesc)->bitmap;
-
+    
     if (!outline)
     {
         if (bold)
@@ -428,6 +437,10 @@ Glyph Font::loadGlyph(std::uint32_t codepoint, std::uint32_t charSize, bool bold
                 }
                 pixels += bitmap.pitch;
             }
+        }
+        else if (bitmap.pixel_mode == FT_PIXEL_MODE_BGRA)
+        {
+            LogI << "Colour glyph" << std::endl;
         }
         else
         {

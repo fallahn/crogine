@@ -302,7 +302,7 @@ void GolfState::buildUI()
     entity.addComponent<UIElement>().relativePosition = { 0.2f, 0.f };
     entity.getComponent<UIElement>().depth = 0.05f;
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
+    entity.addComponent<cro::Text>(font).setCharacterSize(UITextSize*2);
     entity.getComponent<cro::Text>().setFillColour(LeaderboardTextLight);
     entity.addComponent<cro::Callback>().setUserData<TextCallbackData>();
     entity.getComponent<cro::Callback>().function = TextAnimCallback();
