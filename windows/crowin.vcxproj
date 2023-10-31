@@ -234,6 +234,7 @@
     <ClInclude Include="..\crogine\src\graphics\shaders\VertexLit.hpp" />
     <ClInclude Include="..\crogine\src\graphics\stb_image.h" />
     <ClInclude Include="..\crogine\src\imgui\imconfig.h" />
+    <ClInclude Include="..\crogine\src\imgui\imgui_freetype.h" />
     <ClInclude Include="..\crogine\src\imgui\imgui_impl_opengl3.h" />
     <ClInclude Include="..\crogine\src\imgui\imgui_impl_sdl.h" />
     <ClInclude Include="..\crogine\src\imgui\imgui_internal.h" />
@@ -387,6 +388,7 @@
     <ClCompile Include="..\crogine\src\imgui\ImGuizmo.cpp" />
     <ClCompile Include="..\crogine\src\imgui\imgui_demo.cpp" />
     <ClCompile Include="..\crogine\src\imgui\imgui_draw.cpp" />
+    <ClCompile Include="..\crogine\src\imgui\imgui_freetype.cpp" />
     <ClCompile Include="..\crogine\src\imgui\imgui_impl_opengl3.cpp" />
     <ClCompile Include="..\crogine\src\imgui\imgui_impl_sdl.cpp" />
     <ClCompile Include="..\crogine\src\imgui\imgui_stdlib.cpp" />

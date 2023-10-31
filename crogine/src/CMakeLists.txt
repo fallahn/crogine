@@ -151,6 +151,7 @@ set(PROJECT_SRC
   ${PROJECT_DIR}/imgui/imgui.cpp
   ${PROJECT_DIR}/imgui/imgui_demo.cpp
   ${PROJECT_DIR}/imgui/imgui_draw.cpp
+  ${PROJECT_DIR}/imgui/imgui_freetype.cpp
   ${PROJECT_DIR}/imgui/imgui_impl_opengl3.cpp
   ${PROJECT_DIR}/imgui/imgui_impl_sdl.cpp
   ${PROJECT_DIR}/imgui/imgui_stdlib.cpp
