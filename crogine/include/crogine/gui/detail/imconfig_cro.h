@@ -1,6 +1,7 @@
 #define IMGUI_IMPL_OPENGL_LOADER_GLAD
 #define IMGUI_DEFINE_MATH_OPERATORS
 #define IMGUI_ENABLE_FREETYPE
+#define IMGUI_USE_WCHAR32
 #include <crogine/Config.hpp>
 #include <crogine/graphics/Colour.hpp>
 #include <crogine/detail/glm/vec2.hpp>
