@@ -89,16 +89,16 @@ bool Font::loadFromFile(const std::string& filePath)
     //remove existing loaded font
     cleanup();
 
-    auto path = FileSystem::getResourcePath() + filePath;
+    return appendFromFile(filePath, 0x1, 0xffff);
+}
 
-    //init freetype
-    FT_Library library;
-    if (FT_Init_FreeType(&library) != 0)
-    {
-        Logger::log("Failed to load font " + path + ": Failed to init freetype", Logger::Type::Error);
-        return false;
-    }
-    m_library = std::make_any<FT_Library>(library);
+bool Font::appendFromFile(const std::string& filePath, std::uint32_t rangeStart, std::uint32_t rangeEnd)
+{
+    CRO_ASSERT(rangeStart > 0 && rangeStart < rangeEnd, "invalid codepoint range");
+
+    auto path = FileSystem::getResourcePath() + filePath;
+    FontData fd; //TODO do this need a dtor to RAII away any failed loading?
+    fd.codepointRange = { rangeStart, rangeEnd };
 
     //load the face
     RaiiRWops fontFile;
@@ -109,19 +109,31 @@ bool Font::loadFromFile(const std::string& filePath)
         return false;
     }
     
-    m_buffer.clear();
-    m_buffer.resize(fontFile.file->size(fontFile.file));
-    if (m_buffer.size() == 0)
+    fd.buffer.resize(fontFile.file->size(fontFile.file));
+    if (fd.buffer.size() == 0)
     {
         Logger::log("Could not open " + path + ": files size was 0", Logger::Type::Error);
         return false;
     }
-    SDL_RWread(fontFile.file, m_buffer.data(), m_buffer.size(), 1);
+    SDL_RWread(fontFile.file, fd.buffer.data(), fd.buffer.size(), 1);
+
+
+
+    //init freetype - TODO can we use a single library for all font data?
+    FT_Library library;
+    if (FT_Init_FreeType(&library) != 0)
+    {
+        Logger::log("Failed to load font " + path + ": Failed to init freetype", Logger::Type::Error);
+        return false;
+    }
+    fd.library = std::make_any<FT_Library>(library);
 
 
     FT_Face face = nullptr;
-    if (FT_New_Memory_Face(library, m_buffer.data(), static_cast<FT_Long>(m_buffer.size()), 0, &face) != 0)
+    if (FT_New_Memory_Face(library, fd.buffer.data(), static_cast<FT_Long>(fd.buffer.size()), 0, &face) != 0)
     {
+        //TODO relase library!
+
         Logger::log("Failed to load font " + path + ": Failed creating font face", Logger::Type::Error);
         return false;
     }
@@ -130,6 +142,9 @@ bool Font::loadFromFile(const std::string& filePath)
     FT_Stroker stroker = nullptr;
     if (FT_Stroker_New(library, &stroker) != 0)
     {
+        //TODO release face!
+        //TODO release library!
+
         LogE << "Failed to load font " << path << ": Failed to create stroker" << std::endl;
         return false;
     }
@@ -143,17 +158,39 @@ bool Font::loadFromFile(const std::string& filePath)
         return false;
     }
 
-    m_face = std::make_any<FT_Face>(face);
-    m_stroker = std::make_any<FT_Stroker>(stroker);
+    fd.face = std::make_any<FT_Face>(face);
+    fd.stroker = std::make_any<FT_Stroker>(stroker);
+
+    m_fontData.emplace_back(std::move(fd));
+
+    if (m_fontData.size() > 1)
+    {
+        //sort by start range
+        std::sort(m_fontData.begin(), m_fontData.end(),
+            [](const FontData& a, const FontData& b)
+        {
+            return a.codepointRange[0] < b.codepointRange[0];
+        });
+
+        //correct range overlap, where start range is priorotised
+        for (auto i = 0u; i < m_fontData.size() - 1; ++i)
+        {
+            if (m_fontData[i].codepointRange[1] >= m_fontData[i + 1].codepointRange[0])
+            {
+                m_fontData[i].codepointRange[1] = m_fontData[i + 1].codepointRange[0] - 1;
+            }
+        }
+    }
+
 
     return true;
 }
 
 Glyph Font::getGlyph(std::uint32_t codepoint, std::uint32_t charSize, bool bold, float outlineThickness) const
 {
+    auto& fontData = getFontData(codepoint);
     auto& currentGlyphs = m_pages[charSize].glyphs;
-
-    auto key = combine(outlineThickness, bold, FT_Get_Char_Index(std::any_cast<FT_Face>(m_face), codepoint));
+    auto key = combine(outlineThickness, bold, FT_Get_Char_Index(std::any_cast<FT_Face>(fontData.face), codepoint));
 
     auto result = currentGlyphs.find(key);
     if (result != currentGlyphs.end())
@@ -180,9 +217,12 @@ const Texture& Font::getTexture(std::uint32_t charSize) const
 
 float Font::getLineHeight(std::uint32_t charSize) const
 {
-    if (m_face.has_value())
+    CRO_ASSERT(!m_fontData.empty(), "font not loaded");
+
+    auto& fd = m_fontData[0];
+    if (fd.face.has_value())
     {
-        auto face = std::any_cast<FT_Face>(m_face);
+        auto face = std::any_cast<FT_Face>(fd.face);
         if (face && setCurrentCharacterSize(charSize))
         {
             //there's some magic going on here...
@@ -194,12 +234,12 @@ float Font::getLineHeight(std::uint32_t charSize) const
 
 float Font::getKerning(std::uint32_t cpA, std::uint32_t cpB, std::uint32_t charSize) const
 {
-    if (cpA == 0 || cpB == 0 || !m_face.has_value())
+    if (cpA == 0 || cpB == 0 || m_fontData.empty())
     {
         return 0.f;
     }
 
-    FT_Face face = std::any_cast<FT_Face>(m_face);
+    FT_Face face = std::any_cast<FT_Face>(m_fontData[0].face);
 
     if (face && FT_HAS_KERNING(face) && setCurrentCharacterSize(charSize))
     {
@@ -241,16 +281,32 @@ void Font::setSmooth(bool smooth)
 }
 
 //private
+const Font::FontData& Font::getFontData(std::uint32_t codepoint) const
+{
+    CRO_ASSERT(!m_fontData.empty(), "No fonts are loaded");
+    for (auto& fd : m_fontData)
+    {
+        if (codepoint >= fd.codepointRange[0]
+            && codepoint <= fd.codepointRange[1])
+        {
+            return fd;
+        }
+    }
+    return m_fontData[0];
+}
+
 Glyph Font::loadGlyph(std::uint32_t codepoint, std::uint32_t charSize, bool bold, float outlineThickness) const
 {
     Glyph retVal;
 
-    if (!m_face.has_value())
+    if (m_fontData.empty())
     {
         return retVal;
     }
 
-    auto face = std::any_cast<FT_Face>(m_face);
+    auto& fd = getFontData(codepoint);
+
+    auto face = std::any_cast<FT_Face>(fd.face);
     if (!face)
     {
         return retVal;
@@ -288,7 +344,7 @@ Glyph Font::loadGlyph(std::uint32_t codepoint, std::uint32_t charSize, bool bold
 
         if (outlineThickness != 0)
         {
-            auto stroker = std::any_cast<FT_Stroker>(m_stroker);
+            auto stroker = std::any_cast<FT_Stroker>(fd.stroker);
             FT_Stroker_Set(stroker, static_cast<FT_Fixed>(outlineThickness * MagicNumber), FT_STROKER_LINECAP_ROUND, FT_STROKER_LINEJOIN_ROUND, 0);
             FT_Glyph_Stroke(&glyphDesc, stroker, true);
         }
@@ -303,7 +359,7 @@ Glyph Font::loadGlyph(std::uint32_t codepoint, std::uint32_t charSize, bool bold
     {
         if (bold)
         {
-            FT_Bitmap_Embolden(std::any_cast<FT_Library>(m_library), &bitmap, weight, weight);
+            FT_Bitmap_Embolden(std::any_cast<FT_Library>(fd.library), &bitmap, weight, weight);
         }
     }
 
@@ -470,67 +526,78 @@ FloatRect Font::getGlyphRect(Page& page, std::uint32_t width, std::uint32_t heig
 
 bool Font::setCurrentCharacterSize(std::uint32_t size) const
 {
-    auto face = std::any_cast<FT_Face>(m_face);
-    FT_UShort currentSize = face->size->metrics.x_ppem;
-
-    if (currentSize != size)
+    for (auto& fd : m_fontData)
     {
-        FT_Error result = FT_Set_Pixel_Sizes(face, 0, size);
+        auto face = std::any_cast<FT_Face>(fd.face);
+        FT_UShort currentSize = face->size->metrics.x_ppem;
 
-        if (result == FT_Err_Invalid_Pixel_Size)
+        if (currentSize != size)
         {
-            Logger::log("Failed to set font face to " + std::to_string(size), Logger::Type::Error);
+            FT_Error result = FT_Set_Pixel_Sizes(face, 0, size);
 
-            //bitmap fonts may fail if the size isn't supported
-            if (!FT_IS_SCALABLE(face))
+            if (result == FT_Err_Invalid_Pixel_Size)
             {
-                Logger::log("Available sizes:", Logger::Type::Info);
-                std::stringstream ss;
-                for (auto i = 0; i < face->num_fixed_sizes; ++i)
+                Logger::log("Failed to set font face to " + std::to_string(size), Logger::Type::Error);
+
+                //bitmap fonts may fail if the size isn't supported
+                if (!FT_IS_SCALABLE(face))
                 {
-                    ss << ((face->available_sizes[i].y_ppem + 32) >> 6) << " ";
+                    Logger::log("Available sizes:", Logger::Type::Info);
+                    std::stringstream ss;
+                    for (auto i = 0; i < face->num_fixed_sizes; ++i)
+                    {
+                        ss << ((face->available_sizes[i].y_ppem + 32) >> 6) << " ";
+                    }
+                    Logger::log(ss.str(), Logger::Type::Info);
                 }
-                Logger::log(ss.str(), Logger::Type::Info);
+            }
+
+            if (result != FT_Err_Ok)
+            {
+                return false;
             }
         }
-
-        return result == FT_Err_Ok;
     }
     return true;
 }
 
 void Font::cleanup()
 {
-    if (m_stroker.has_value())
+    for (auto& fd : m_fontData)
     {
-        auto stroker = std::any_cast<FT_Stroker>(m_stroker);
-        if (stroker)
+        if (fd.stroker.has_value())
         {
-            FT_Stroker_Done(stroker);
+            auto stroker = std::any_cast<FT_Stroker>(fd.stroker);
+            if (stroker)
+            {
+                FT_Stroker_Done(stroker);
+            }
         }
+
+        if (fd.face.has_value())
+        {
+            auto face = std::any_cast<FT_Face>(fd.face);
+            if (face)
+            {
+                FT_Done_Face(face);
+            }
+        }
+
+        if (fd.library.has_value())
+        {
+            auto library = std::any_cast<FT_Library>(fd.library);
+            if (library)
+            {
+                FT_Done_FreeType(library);
+            }
+        }
+
+        fd.stroker.reset();
+        fd.face.reset();
+        fd.library.reset();
     }
 
-    if (m_face.has_value())
-    {
-        auto face = std::any_cast<FT_Face>(m_face);
-        if (face)
-        {
-            FT_Done_Face(face);
-        }
-    }
-
-    if (m_library.has_value())
-    {
-        auto library = std::any_cast<FT_Library>(m_library);
-        if (library)
-        {
-            FT_Done_FreeType(library);
-        }
-    }
-
-    m_stroker.reset();
-    m_face.reset();
-    m_library.reset();
+    m_fontData.clear();
 
     m_pages.clear();
     m_pixelBuffer.clear();

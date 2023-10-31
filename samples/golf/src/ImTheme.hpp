@@ -101,7 +101,7 @@ static inline void applyImGuiStyle()
     config.OversampleH = config.OversampleV = 1;
 
     //expands the default glyph set - default is 32-255
-    std::array<ImWchar, 3> range = { 0x1, 0xFFFF, 0 }; //TODO what's the third number? Plane?
+    std::array<ImWchar, 3> range = { 0x1, 0xFFFF, 0 }; //TODO what's the third number? Plane? Terminator?
     fonts->AddFontFromFileTTF("assets/golf/fonts/ProggyClean.ttf", 13.0f, &config, range.data());
     range = { 0x10000, 0x1FFFF, 0 };
     fonts->AddFontFromFileTTF("assets/golf/fonts/NotoEmoji-Regular.ttf", 13.0f, &config, range.data());
