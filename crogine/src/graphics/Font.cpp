@@ -514,9 +514,11 @@ FloatRect Font::getGlyphRect(Page& page, std::uint32_t width, std::uint32_t heig
                 //increase texture 4 fold
                 Texture texture;
                 texture.create(texWidth * 2, texHeight * 2);
-                texture.setSmooth(true);
+                texture.setSmooth(page.texture.isSmooth());
                 texture.update(page.texture);
                 page.texture.swap(texture);
+
+                //page.texture.create(texWidth * 2, texHeight * 2);
                 page.updated = true;
             }
             else

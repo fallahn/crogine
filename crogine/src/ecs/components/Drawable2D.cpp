@@ -61,7 +61,8 @@ Drawable2D::Drawable2D()
 //public
 void Drawable2D::setTexture(const Texture* texture)
 {
-    if (texture != m_textureInfo.texture)
+    if (texture != m_textureInfo.texture ||
+        (texture && (texture->getGLHandle() != m_textureInfo.textureID.textureID)))
     {
         m_textureInfo.texture = texture;
 

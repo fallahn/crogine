@@ -259,7 +259,7 @@ void GolfState::buildUI()
         m_postProcesses[PostID::Fog].uniforms.emplace_back(std::make_pair("u_depthTexture", m_gameSceneTexture.getDepthTexture()));
     }    
 
-    
+
     for (auto cam : m_cameras)
     {
         cam.getComponent<TargetInfo>().postProcess = &m_postProcesses[PostID::Fog];
@@ -3373,7 +3373,7 @@ void GolfState::showMessageBoard(MessageBoardID messageType, bool special)
                     if (m_sharedData.holeCount == 2
                         || m_currentHole > 8)
                     {
-                        if (m_achievementTracker.eagles == 2
+                        if (m_achievementTracker.eagles == 1
                             && m_courseIndex != -1)
                         {
                             Social::getMonthlyChallenge().updateChallenge(ChallengeID::Ten, m_courseIndex);

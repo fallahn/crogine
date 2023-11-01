@@ -231,12 +231,13 @@ void TextChat::handlePacket(const net::NetEvent::Packet& pkt)
     const auto& font = m_sharedData.sharedResources->fonts.get(FontID::Label);
     auto entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 4.f, std::floor(uiSize.y - 36.f), 1.f });
+    entity.getComponent<cro::Transform>().setScale(glm::vec2(0.5f));
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(font).setString(outStr);
     entity.getComponent<cro::Text>().setFillColour(chatColour);
     entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
     entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
-    entity.getComponent<cro::Text>().setCharacterSize(LabelTextSize);
+    entity.getComponent<cro::Text>().setCharacterSize(LabelTextSize*2);
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().setUserData<float>(10.f);
     

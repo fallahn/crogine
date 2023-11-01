@@ -101,6 +101,12 @@ void TextSystem::process(float)
             }
 
             text.m_dirtyFlags = 0;
+
+
+            //isPageUpdate may be triggered by a texture resize
+            //which means a swap has happened and the drawable needs
+            //to know the new texture information
+            //drawable.setTexture(&text.getFont()->getTexture(text.getCharacterSize()));
         }
     }
 
