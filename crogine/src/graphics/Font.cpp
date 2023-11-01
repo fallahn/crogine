@@ -361,9 +361,12 @@ Glyph Font::loadGlyph(std::uint32_t codepoint, std::uint32_t charSize, bool bold
     //as FT_Glyph_To_Bitmap actually only renders alpha coverage
 
     //rasterise it
-    FT_Glyph_To_Bitmap(&glyphDesc, FT_RENDER_MODE_NORMAL, 0, 1);
-    FT_Bitmap& bitmap = reinterpret_cast<FT_BitmapGlyph>(glyphDesc)->bitmap;
+    //FT_Glyph_To_Bitmap(&glyphDesc, FT_RENDER_MODE_NORMAL, 0, 1);
+    //FT_Bitmap& bitmap = reinterpret_cast<FT_BitmapGlyph>(glyphDesc)->bitmap;
     
+    FT_Render_Glyph(face->glyph, FT_RENDER_MODE_NORMAL);
+    FT_Bitmap& bitmap = face->glyph->bitmap;
+
     if (!outline)
     {
         if (bold)
@@ -432,7 +435,7 @@ Glyph Font::loadGlyph(std::uint32_t codepoint, std::uint32_t charSize, bool bold
             {
                 for (auto x = padding; x < width - padding; ++x)
                 {
-                    std::size_t index = x + y * width;
+                    const std::size_t index = x + y * width;
                     m_pixelBuffer[index * 4 + 3] = ((pixels[(x - padding) / 8]) & (1 << (7 - ((x - padding) % 8)))) ? 255 : 0;
                 }
                 pixels += bitmap.pitch;
@@ -440,7 +443,21 @@ Glyph Font::loadGlyph(std::uint32_t codepoint, std::uint32_t charSize, bool bold
         }
         else if (bitmap.pixel_mode == FT_PIXEL_MODE_BGRA)
         {
-            LogI << "Colour glyph" << std::endl;
+            for (auto y = padding; y < height - padding; ++y)
+            {
+                for (auto x = padding; x < width - padding; ++x)
+                {
+                    const std::size_t index = (x + y * width)* 4;
+                    const std::size_t xIndex = (x - padding) * 4;
+
+                    m_pixelBuffer[index] = pixels[xIndex + 2];
+                    m_pixelBuffer[index + 1] = pixels[xIndex + 1];
+                    m_pixelBuffer[index + 2] = pixels[xIndex];
+
+                    m_pixelBuffer[index + 3] = pixels[xIndex + 3];
+                }
+                pixels += bitmap.pitch;
+            }
         }
         else
         {
@@ -449,7 +466,7 @@ Glyph Font::loadGlyph(std::uint32_t codepoint, std::uint32_t charSize, bool bold
             {
                 for (auto x = padding; x < width - padding; ++x)
                 {
-                    std::size_t index = x + y * width;
+                    const std::size_t index = x + y * width;
                     m_pixelBuffer[index * 4 + 3] = pixels[x - padding];
                 }
                 pixels += bitmap.pitch;

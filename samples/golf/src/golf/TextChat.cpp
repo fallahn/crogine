@@ -246,7 +246,7 @@ void TextChat::handlePacket(const net::NetEvent::Packet& pkt)
     bounds.left -= 2.f;
     bounds.bottom -= 2.f;
     //bounds.width += 5.f; //TODO for some reason this is wildly off
-    bounds.width = (static_cast<float>(cro::App::getWindow().getSize().x * 2) - 10.f) / getViewScale();
+    bounds.width = (static_cast<float>(cro::App::getWindow().getSize().x * 2) - 16.f) / getViewScale();
     bounds.height += 4.f;
 
     static constexpr float BgAlpha = 0.2f;
