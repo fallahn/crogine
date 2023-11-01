@@ -197,7 +197,7 @@ Glyph Font::getGlyph(std::uint32_t codepoint, std::uint32_t charSize, bool bold,
 {
     auto& fontData = getFontData(codepoint);
     auto& currentGlyphs = m_pages[charSize].glyphs;
-    auto key = combine(fontData.allowOutline ? outlineThickness : 0.f, bold && fontData.allowBold, FT_Get_Char_Index(std::any_cast<FT_Face>(fontData.face), codepoint));
+    auto key = combine(outlineThickness, bold, FT_Get_Char_Index(std::any_cast<FT_Face>(fontData.face), codepoint));
 
     auto result = currentGlyphs.find(key);
     if (result != currentGlyphs.end())
@@ -516,9 +516,8 @@ FloatRect Font::getGlyphRect(Page& page, std::uint32_t width, std::uint32_t heig
                 texture.create(texWidth * 2, texHeight * 2);
                 texture.setSmooth(page.texture.isSmooth());
                 texture.update(page.texture);
+                
                 page.texture.swap(texture);
-
-                //page.texture.create(texWidth * 2, texHeight * 2);
                 page.updated = true;
             }
             else

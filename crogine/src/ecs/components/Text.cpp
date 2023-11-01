@@ -222,6 +222,7 @@ FloatRect Text::getLocalBounds(Entity entity)
             text.m_dirtyFlags = 0;
         }
     }
+
     return drawable.getLocalBounds();
 }
 

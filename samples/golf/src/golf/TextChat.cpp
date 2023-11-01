@@ -236,15 +236,17 @@ void TextChat::handlePacket(const net::NetEvent::Packet& pkt)
     entity.addComponent<cro::Text>(font).setString(outStr);
     entity.getComponent<cro::Text>().setFillColour(chatColour);
     entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
-    entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
+    entity.getComponent<cro::Text>().setShadowOffset({ 2.f, -2.f });
     entity.getComponent<cro::Text>().setCharacterSize(LabelTextSize*2);
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().setUserData<float>(10.f);
     
     auto bounds = cro::Text::getLocalBounds(entity);
+    //LogI << bounds.width << std::endl;
     bounds.left -= 2.f;
     bounds.bottom -= 2.f;
-    bounds.width += 5.f;
+    //bounds.width += 5.f; //TODO for some reason this is wildly off
+    bounds.width = (static_cast<float>(cro::App::getWindow().getSize().x * 2) - 10.f) / getViewScale();
     bounds.height += 4.f;
 
     static constexpr float BgAlpha = 0.2f;

@@ -78,7 +78,7 @@ namespace cro
     {
         static constexpr std::array<std::uint32_t, 2> Cyrillic = { 0x0400, 0x052F };
         static constexpr std::array<std::uint32_t, 2> Default = { 0x1, 0xffff };
-        static constexpr std::array<std::uint32_t, 2> Emoji = { 0x10000, 0x1ffff };
+        static constexpr std::array<std::uint32_t, 2> Emoji = { 0x10000, 0x10ffff };
         static constexpr std::array<std::uint32_t, 2> Greek = { 0x0370, 0x03FF };
         static constexpr std::array<std::uint32_t, 2> KoreanAlphabet = { 0x3131, 0x3163 };
         static constexpr std::array<std::uint32_t, 2> KoreanCharacters = { 0xAC00, 0xD7A3 };
