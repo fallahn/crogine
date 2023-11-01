@@ -1679,12 +1679,15 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     {
         if (m_currentMenu == MenuID::Lobby)
         {
+            static constexpr float BasePosY = 23.f;
+            static constexpr float LineHeight = 13.f;
+
             auto scrollBounds = cro::Text::getLocalBounds(e);
 
             auto pos = e.getComponent<cro::Transform>().getPosition();
 
             pos.x -= 20.f * dt;
-            pos.y = 23.f;
+            pos.y = BasePosY + std::floor(scrollBounds.height - LineHeight) ;
             pos.z = 0.3f;
 
             static constexpr float Offset = 232.f;
@@ -1696,7 +1699,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
 
             e.getComponent<cro::Transform>().setPosition(pos);
 
-            cro::FloatRect cropping = { -pos.x + Offset, -16.f, (bgWidth) - (Offset + 10.f), 18.f };
+            cro::FloatRect cropping = { -pos.x + Offset, -16.f + (BasePosY - pos.y), (bgWidth)-(Offset + 10.f), 18.f};
             e.getComponent<cro::Drawable2D>().setCroppingArea(cropping);
         }
     };
