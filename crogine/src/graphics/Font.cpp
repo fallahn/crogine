@@ -402,11 +402,13 @@ Glyph Font::loadGlyph(std::uint32_t codepoint, std::uint32_t charSize, bool bold
         retVal.bounds.height = static_cast<float>(face->glyph->metrics.height) / MagicNumber;
         retVal.bounds.bottom -= retVal.bounds.height;
 
+
         //buffer the pixel data and update the page texture
         m_pixelBuffer.resize(width * height * 4);
+        std::fill(m_pixelBuffer.begin(), m_pixelBuffer.end(), 255);
 
         auto* current = m_pixelBuffer.data();
-        auto* end = current + m_pixelBuffer.size();
+        /*auto* end = current + m_pixelBuffer.size();
 
         while (current != end)
         {
@@ -414,7 +416,7 @@ Glyph Font::loadGlyph(std::uint32_t codepoint, std::uint32_t charSize, bool bold
             (*current++) = 255;
             (*current++) = 255;
             (*current++) = 0;
-        }
+        }*/
 
         //copy from rasterised bitmap
         const auto* pixels = bitmap.buffer;

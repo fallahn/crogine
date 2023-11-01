@@ -472,28 +472,37 @@ bool GolfState::handleEvent(const cro::Event& evt)
         {
         default: break;
         case SDLK_2:
-            if (m_currentPlayer.client == m_sharedData.localConnectionData.connectionID
-                && !m_sharedData.localConnectionData.playerData[m_currentPlayer.player].isCPU)
+            if (!m_textChat.isVisible())
             {
-                if (m_inputParser.getActive())
+                if (m_currentPlayer.client == m_sharedData.localConnectionData.connectionID
+                    && !m_sharedData.localConnectionData.playerData[m_currentPlayer.player].isCPU)
                 {
-                    if (m_currentCamera == CameraID::Player)
+                    if (m_inputParser.getActive())
                     {
-                        setActiveCamera(CameraID::Bystander);
-                    }
-                    else if (m_currentCamera == CameraID::Bystander)
-                    {
-                        setActiveCamera(CameraID::Player);
+                        if (m_currentCamera == CameraID::Player)
+                        {
+                            setActiveCamera(CameraID::Bystander);
+                        }
+                        else if (m_currentCamera == CameraID::Bystander)
+                        {
+                            setActiveCamera(CameraID::Player);
+                        }
                     }
                 }
             }
             break;
         case SDLK_3:
-            toggleFreeCam();
+            if (!m_textChat.isVisible())
+            {
+                toggleFreeCam();
+            }
             break;
             //4&5 rotate camera
         case SDLK_6:
-            showMapOverview();
+            if (!m_textChat.isVisible())
+            {
+                showMapOverview();
+            }
             break;
         case SDLK_TAB:
             showScoreboard(false);
@@ -1772,7 +1781,8 @@ bool GolfState::simulate(float dt)
     m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
     //don't update the CPU or gamepad if there are any menus open
-    if (getStateCount() == 1)
+    if (getStateCount() == 1
+        && !m_textChat.isVisible())
     {
         m_cpuGolfer.update(dt, windVector, m_distanceToHole);
         m_inputParser.update(dt);
