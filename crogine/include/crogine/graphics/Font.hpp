@@ -51,6 +51,9 @@ namespace cro
         float advance = 0.f;
         FloatRect bounds; //< relative to baseline
         FloatRect textureBounds; //< relative to texture atlas
+
+        //some glyphs, eg emojis, won't want to be multiplied by fill colour
+        bool useFillColour = true;
     };
 
     class Font;
@@ -68,6 +71,7 @@ namespace cro
         bool bold = false;
         std::int32_t alignment = 0;
     };
+    
 
     /*!
     \brief Set of codepoint ranges which can be used with
@@ -83,6 +87,35 @@ namespace cro
         static constexpr std::array<std::uint32_t, 2> KoreanAlphabet = { 0x3131, 0x3163 };
         static constexpr std::array<std::uint32_t, 2> KoreanCharacters = { 0xAC00, 0xD7A3 };
         static constexpr std::array<std::uint32_t, 2> Thai = { 0x0E00, 0x0E7F };
+    };
+
+    /*!
+    \brief When appending an external font this struct can
+    be configured to control how the font is applied.
+    eg Emoji fonts will probably want to have bold, outline
+    and fill colour disabled.
+    */
+    struct CRO_EXPORT_API FontAppendmentContext final
+    {
+        /*!
+        \brief Range of codepoints which this font should cover
+        */
+        std::array<std::uint32_t, 2> codepointRange = CodePointRange::Default;
+        /*!
+        \brief Disables or enables bold rendering of glyphs created
+        with the appended font
+        */
+        bool allowBold = true;
+        /*!
+        \brief Disables or enables outlining of glyphs created with the font
+        */
+        bool allowOutline = true;
+        /*!
+        \brief Allow glyphs created with this font to be multiplied by
+        the fill colour of the text.
+        Coloured glyphs, such as emojis, probably don't want their colour multiplied
+        */
+        bool allowFillColour = true;
     };
 
     /*!
@@ -120,14 +153,11 @@ namespace cro
         ranges are already mapped, and underwrite (existing high values take
         precedence) from the range end
         \param path A string containing the path to the font to append
-        \param rangeStart The first codepoint which this font should render
-        \param rangeEnd the final codepoint this font should render
-        \param allowBold Set to false if using eg. Emoji fonts, this will
-        prevent bold rendering on emojis when rendering the default font in bold
-        \param allowOutline As allowBold, but applied to font outlining
+        \param ctx FontAppendmentContext containing the rules dictating how
+        the appended font should be rendered
+        \see FontAppendmentContext
         */
-        bool appendFromFile(const std::string& path, std::uint32_t rangeStart, std::uint32_t rangeEnd, bool allowBold = false, bool allowOutline = false);
-        bool appendFromFile(const std::string& path, std::array<std::uint32_t, 2u> range, bool allowBold = false, bool allowOutline = false);
+        bool appendFromFile(const std::string& path, FontAppendmentContext ctx);
 
 
         /*!
@@ -189,10 +219,8 @@ namespace cro
             std::any library;
             std::any face;
             std::any stroker;
-            std::array<std::uint32_t, 2> codepointRange = { 0x1,0xffff };
-
-            bool allowBold = false;
-            bool allowOutline = false;
+            
+            FontAppendmentContext context;
         };
         std::vector<FontData> m_fontData;
 

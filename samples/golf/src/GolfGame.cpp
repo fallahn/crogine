@@ -711,20 +711,26 @@ bool GolfGame::initialise()
     m_sharedData.sharedResources->fonts.load(FontID::Info, "assets/golf/fonts/MCPixel.otf");
     m_sharedData.sharedResources->fonts.load(FontID::Label, "assets/golf/fonts/ProggyClean.ttf");
 
+    cro::FontAppendmentContext ctx;
+    ctx.allowBold = false;
+    ctx.allowFillColour = false;
+    ctx.allowOutline = false;
+    ctx.codepointRange = cro::CodePointRange::Emoji;
+
 #ifdef _WIN32
     const std::string winPath = "C:/Windows/Fonts/seguiemj.ttf";
     if (cro::FileSystem::fileExists(winPath))
     {
-        m_sharedData.sharedResources->fonts.get(FontID::UI).appendFromFile(winPath, cro::CodePointRange::Emoji);
-        m_sharedData.sharedResources->fonts.get(FontID::Info).appendFromFile(winPath, cro::CodePointRange::Emoji);
-        m_sharedData.sharedResources->fonts.get(FontID::Label).appendFromFile(winPath, cro::CodePointRange::Emoji);
+        m_sharedData.sharedResources->fonts.get(FontID::UI).appendFromFile(winPath, ctx);
+        m_sharedData.sharedResources->fonts.get(FontID::Info).appendFromFile(winPath, ctx);
+        m_sharedData.sharedResources->fonts.get(FontID::Label).appendFromFile(winPath, ctx);
     }
     else
 #endif
     {
-        m_sharedData.sharedResources->fonts.get(FontID::UI).appendFromFile("assets/golf/fonts/NotoEmoji-Regular.ttf", cro::CodePointRange::Emoji);
-        m_sharedData.sharedResources->fonts.get(FontID::Info).appendFromFile("assets/golf/fonts/NotoEmoji-Regular.ttf", cro::CodePointRange::Emoji);
-        m_sharedData.sharedResources->fonts.get(FontID::Label).appendFromFile("assets/golf/fonts/NotoEmoji-Regular.ttf", cro::CodePointRange::Emoji);
+        m_sharedData.sharedResources->fonts.get(FontID::UI).appendFromFile("assets/golf/fonts/NotoEmoji-Regular.ttf", ctx);
+        m_sharedData.sharedResources->fonts.get(FontID::Info).appendFromFile("assets/golf/fonts/NotoEmoji-Regular.ttf", ctx);
+        m_sharedData.sharedResources->fonts.get(FontID::Label).appendFromFile("assets/golf/fonts/NotoEmoji-Regular.ttf", ctx);
     }
 
     for (const auto& [name, str] : IncludeMappings)

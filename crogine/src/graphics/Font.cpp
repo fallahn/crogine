@@ -89,23 +89,16 @@ bool Font::loadFromFile(const std::string& filePath)
     //remove existing loaded font
     cleanup();
 
-    return appendFromFile(filePath, 0x1, 0xffff, true, true);
+    return appendFromFile(filePath, FontAppendmentContext());
 }
 
-bool Font::appendFromFile(const std::string& filePath, std::array<std::uint32_t, 2u> range, bool allowBold, bool allowOutline)
-{
-    return appendFromFile(filePath, range[0], range[1], allowBold, allowOutline);
-}
-
-bool Font::appendFromFile(const std::string& filePath, std::uint32_t rangeStart, std::uint32_t rangeEnd, bool allowBold, bool allowOutline)
+bool Font::appendFromFile(const std::string& filePath, FontAppendmentContext ctx)
 {
     CRO_ASSERT(rangeStart > 0 && rangeStart < rangeEnd, "invalid codepoint range");
 
     auto path = FileSystem::getResourcePath() + filePath;
     FontData fd; //TODO do this need a dtor to RAII away any failed loading?
-    fd.codepointRange = { rangeStart, rangeEnd };
-    fd.allowBold = allowBold;
-    fd.allowOutline = allowOutline;
+    fd.context = ctx;
 
     //load the face
     RaiiRWops fontFile;
@@ -176,15 +169,15 @@ bool Font::appendFromFile(const std::string& filePath, std::uint32_t rangeStart,
         std::sort(m_fontData.begin(), m_fontData.end(),
             [](const FontData& a, const FontData& b)
         {
-            return a.codepointRange[0] < b.codepointRange[0];
+            return a.context.codepointRange[0] < b.context.codepointRange[0];
         });
 
         //correct range overlap, where start range is priorotised
         for (auto i = 0u; i < m_fontData.size() - 1; ++i)
         {
-            if (m_fontData[i].codepointRange[1] >= m_fontData[i + 1].codepointRange[0])
+            if (m_fontData[i].context.codepointRange[1] >= m_fontData[i + 1].context.codepointRange[0])
             {
-                m_fontData[i].codepointRange[1] = m_fontData[i + 1].codepointRange[0] - 1;
+                m_fontData[i].context.codepointRange[1] = m_fontData[i + 1].context.codepointRange[0] - 1;
             }
         }
     }
@@ -207,7 +200,7 @@ Glyph Font::getGlyph(std::uint32_t codepoint, std::uint32_t charSize, bool bold,
     else
     {
         //add the glyph to the page
-        auto glyph = loadGlyph(codepoint, charSize, bold && fontData.allowBold, fontData.allowOutline ? outlineThickness : 0.f);
+        auto glyph = loadGlyph(codepoint, charSize, bold && fontData.context.allowBold, fontData.context.allowOutline ? outlineThickness : 0.f);
         return currentGlyphs.insert(std::make_pair(key, glyph)).first->second;
     }
 
@@ -293,8 +286,8 @@ const Font::FontData& Font::getFontData(std::uint32_t codepoint) const
     CRO_ASSERT(!m_fontData.empty(), "No fonts are loaded");
     for (auto& fd : m_fontData)
     {
-        if (codepoint >= fd.codepointRange[0]
-            && codepoint <= fd.codepointRange[1])
+        if (codepoint >= fd.context.codepointRange[0]
+            && codepoint <= fd.context.codepointRange[1])
         {
             return fd;
         }
@@ -357,11 +350,8 @@ Glyph Font::loadGlyph(std::uint32_t codepoint, std::uint32_t charSize, bool bold
         }
     }
 
-    //TODO if we want to support colour glyphs we need to swwap to FT_Render_Glyph()
-    //as FT_Glyph_To_Bitmap actually only renders alpha coverage
-
     //rasterise it
-    //FT_Glyph_To_Bitmap(&glyphDesc, FT_RENDER_MODE_NORMAL, 0, 1);
+    //FT_Glyph_To_Bitmap(&glyphDesc, FT_RENDER_MODE_NORMAL, 0, 1); //this renders alpha coverage only
     //FT_Bitmap& bitmap = reinterpret_cast<FT_BitmapGlyph>(glyphDesc)->bitmap;
     
     FT_Render_Glyph(face->glyph, FT_RENDER_MODE_NORMAL);
@@ -481,6 +471,7 @@ Glyph Font::loadGlyph(std::uint32_t codepoint, std::uint32_t charSize, bool bold
         page.texture.update(m_pixelBuffer.data(), false, { x,y,w,h });
     }
 
+    retVal.useFillColour = fd.context.allowFillColour;
     return retVal;
 }
 
