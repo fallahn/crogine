@@ -50,6 +50,8 @@ by Laurent Gomila et al https://github.com/SFML/SFML/blob/master/src/SFML/Graphi
 #include FT_OUTLINE_H
 #include FT_STROKER_H
 
+#include <unordered_map>
+
 using namespace cro;
 
 namespace
@@ -70,16 +72,76 @@ namespace
     {
         return (static_cast<std::uint64_t>(reinterpret<std::uint32_t>(outlineThickness)) << 32) | (static_cast<std::uint64_t>(bold) << 31) | index;
     }
+
+    //if we use the same font as multiple sub-fonts (eg emoji font)
+    //these structs just makes sure each one is only loaded once
+    //TODO we could probably also include the FT face, library and stroker here...
+    struct FontDataBuffer final
+    {
+        const std::uint8_t* buffer = nullptr;
+        FT_Long size = 0;
+    };
+
+    struct FontDataResource final
+    {
+        std::unordered_map<std::string, std::vector<std::uint8_t>> fontData;
+
+        FontDataBuffer getFontData(const std::string& path)
+        {
+            if (fontData.count(path) == 0)
+            {
+                RaiiRWops fontFile;
+                fontFile.file = SDL_RWFromFile(path.c_str(), "r");
+                if (!fontFile.file)
+                {
+                    Logger::log("Failed opening " + path, Logger::Type::Error);
+                    return {};
+                }
+
+                std::vector<std::uint8_t> buffer;
+                buffer.resize(fontFile.file->size(fontFile.file));
+                if (buffer.size() == 0)
+                {
+                    Logger::log("Could not open " + path + ": files size was 0", Logger::Type::Error);
+                    return {};
+                }
+                SDL_RWread(fontFile.file, buffer.data(), buffer.size(), 1);
+
+                fontData.insert(std::make_pair(path, buffer));
+            }
+
+            const auto& data = fontData.at(path);
+            FontDataBuffer retVal;
+            retVal.buffer = data.data();
+            retVal.size = static_cast<FT_Long>(data.size());
+
+            return retVal;
+        }
+
+        std::size_t refCount = 0;
+    };
+    std::unique_ptr<FontDataResource> fontDataResource;
 }
 
 Font::Font()
     : m_useSmoothing(false)
 {
-
+    if (!fontDataResource)
+    {
+        fontDataResource = std::make_unique<FontDataResource>();
+    }
+    fontDataResource->refCount++;
 }
 
 Font::~Font()
 {
+    fontDataResource->refCount--;
+
+    if (fontDataResource->refCount == 0)
+    {
+        fontDataResource.reset();
+    }
+
     cleanup();
 }
 
@@ -100,24 +162,13 @@ bool Font::appendFromFile(const std::string& filePath, FontAppendmentContext ctx
     FontData fd; //TODO do this need a dtor to RAII away any failed loading?
     fd.context = ctx;
 
-    //load the face
-    RaiiRWops fontFile;
-    fontFile.file = SDL_RWFromFile(path.c_str(), "r");
-    if (!fontFile.file)
+    //load the face    
+    auto buffer = fontDataResource->getFontData(filePath);
+    if (buffer.buffer == nullptr)
     {
-        Logger::log("Failed opening " + path, Logger::Type::Error);
+        //failed to load the resource
         return false;
     }
-    
-    fd.buffer.resize(fontFile.file->size(fontFile.file));
-    if (fd.buffer.size() == 0)
-    {
-        Logger::log("Could not open " + path + ": files size was 0", Logger::Type::Error);
-        return false;
-    }
-    SDL_RWread(fontFile.file, fd.buffer.data(), fd.buffer.size(), 1);
-
-
 
     //init freetype - TODO can we use a single library for all font data?
     FT_Library library;
@@ -130,7 +181,7 @@ bool Font::appendFromFile(const std::string& filePath, FontAppendmentContext ctx
 
 
     FT_Face face = nullptr;
-    if (FT_New_Memory_Face(library, fd.buffer.data(), static_cast<FT_Long>(fd.buffer.size()), 0, &face) != 0)
+    if (FT_New_Memory_Face(library, buffer.buffer, buffer.size, 0, &face) != 0)
     {
         //TODO relase library!
 

@@ -216,7 +216,6 @@ namespace cro
 
         struct FontData final
         {
-            std::vector<std::uint8_t> buffer;
             //use std::any so we don't expose freetype pointers to public API
             std::any library;
             std::any face;
