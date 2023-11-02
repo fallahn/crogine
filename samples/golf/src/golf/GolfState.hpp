@@ -165,6 +165,7 @@ private:
         };
     };
     std::array<cro::RenderTexture, LightMapID::Count> m_lightMaps = {};
+    cro::ModelDefinition m_lightVolumeDefinition;
 
     cro::UniformBuffer<float> m_scaleBuffer;
     cro::UniformBuffer<ResolutionData> m_resolutionBuffer;

@@ -171,41 +171,42 @@ namespace
 }
 
 GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, SharedStateData& sd)
-    : cro::State        (stack, context),
-    m_sharedData        (sd),
-    m_gameScene         (context.appInstance.getMessageBus(), 768/*, cro::INFO_FLAG_SYSTEM_TIME | cro::INFO_FLAG_SYSTEMS_ACTIVE*/),
-    m_skyScene          (context.appInstance.getMessageBus(), 512),
-    m_uiScene           (context.appInstance.getMessageBus(), 1024),
-    m_trophyScene       (context.appInstance.getMessageBus()),
-    m_textChat          (m_uiScene, sd),
-    m_inputParser       (sd, &m_gameScene),
-    m_cpuGolfer         (m_inputParser, m_currentPlayer, m_collisionMesh),
-    m_humanCount        (0),
-    m_wantsGameState    (true),
-    m_allowAchievements (false),
-    m_scaleBuffer       ("PixelScale"),
-    m_resolutionBuffer  ("ScaledResolution"),
-    m_windBuffer        ("WindValues"),
-    m_holeToModelRatio  (1.f),
-    m_currentHole       (0),
-    m_distanceToHole    (1.f), //don't init to 0 in case we get div0
-    m_terrainChunker    (m_gameScene),
-    m_terrainBuilder    (sd, m_holeData, m_terrainChunker),
-    m_audioPath         ("assets/golf/sound/ambience.xas"),
-    m_currentCamera     (CameraID::Player),
-    m_idleTime          (cro::seconds(180.f)),
-    m_photoMode         (false),
-    m_restoreInput      (false),
-    m_activeAvatar      (nullptr),
-    m_camRotation       (0.f),
-    m_roundEnded        (false),
-    m_newHole           (true),
-    m_suddenDeath       (false),
-    m_viewScale         (1.f),
-    m_scoreColumnCount  (2),
-    m_readyQuitFlags    (0),
-    m_courseIndex       (getCourseIndex(sd.mapDirectory.toAnsiString())),
-    m_emoteWheel        (sd, m_currentPlayer, m_textChat)
+    : cro::State            (stack, context),
+    m_sharedData            (sd),
+    m_gameScene             (context.appInstance.getMessageBus(), 768/*, cro::INFO_FLAG_SYSTEM_TIME | cro::INFO_FLAG_SYSTEMS_ACTIVE*/),
+    m_skyScene              (context.appInstance.getMessageBus(), 512),
+    m_uiScene               (context.appInstance.getMessageBus(), 1024),
+    m_trophyScene           (context.appInstance.getMessageBus()),
+    m_textChat              (m_uiScene, sd),
+    m_inputParser           (sd, &m_gameScene),
+    m_cpuGolfer             (m_inputParser, m_currentPlayer, m_collisionMesh),
+    m_humanCount            (0),
+    m_wantsGameState        (true),
+    m_allowAchievements     (false),
+    m_lightVolumeDefinition (m_resources),
+    m_scaleBuffer           ("PixelScale"),
+    m_resolutionBuffer      ("ScaledResolution"),
+    m_windBuffer            ("WindValues"),
+    m_holeToModelRatio      (1.f),
+    m_currentHole           (0),
+    m_distanceToHole        (1.f), //don't init to 0 in case we get div0
+    m_terrainChunker        (m_gameScene),
+    m_terrainBuilder        (sd, m_holeData, m_terrainChunker),
+    m_audioPath             ("assets/golf/sound/ambience.xas"),
+    m_currentCamera         (CameraID::Player),
+    m_idleTime              (cro::seconds(180.f)),
+    m_photoMode             (false),
+    m_restoreInput          (false),
+    m_activeAvatar          (nullptr),
+    m_camRotation           (0.f),
+    m_roundEnded            (false),
+    m_newHole               (true),
+    m_suddenDeath           (false),
+    m_viewScale             (1.f),
+    m_scoreColumnCount      (2),
+    m_readyQuitFlags        (0),
+    m_courseIndex           (getCourseIndex(sd.mapDirectory.toAnsiString())),
+    m_emoteWheel            (sd, m_currentPlayer, m_textChat)
 {
     //sd.nightTime = 1;
     m_cpuGolfer.setFastCPU(m_sharedData.fastCPU);
@@ -2100,6 +2101,10 @@ void GolfState::render()
 //private
 void GolfState::loadAssets()
 {
+    if (m_sharedData.nightTime)
+    {
+        m_lightVolumeDefinition.loadFromFile("assets/golf/models/light_sphere.cmt");
+    }
     m_reflectionMap.loadFromFile("assets/golf/images/skybox/billiards/trophy.ccm");
 
     std::string wobble;
@@ -3012,6 +3017,7 @@ void GolfState::loadAssets()
     cro::ModelDefinition modelDef(m_resources);
     std::string prevHoleString;
     cro::Entity prevHoleEntity;
+    std::vector<LightData> prevLightData;
     std::vector<cro::Entity> prevProps;
     std::vector<cro::Entity> prevParticles;
     std::vector<cro::Entity> prevAudio;
@@ -3522,17 +3528,44 @@ void GolfState::loadAssets()
                             holeData.audioEntities.push_back(emitterEnt);
                         }
                     }
+                    else if (name == "light")
+                    {
+                        if (m_sharedData.nightTime)
+                        {
+                            auto& lightData = holeData.lightData.emplace_back();
+
+                            const auto& lightProps = obj.getProperties();
+                            for (const auto& lightProp : lightProps)
+                            {
+                                const auto& propName = lightProp.getName();
+                                if (propName == "radius")
+                                {
+                                    lightData.radius = std::clamp(lightProp.getValue<float>(), 0.1f, 20.f);
+                                }
+                                else if (propName == "colour")
+                                {
+                                    lightData.colour = lightProp.getValue<cro::Colour>();
+                                }
+                                else if (propName == "position")
+                                {
+                                    lightData.position = lightProp.getValue<glm::vec3>();
+                                }
+                            }
+                        }
+                    }
                 }
 
                 prevProps = holeData.propEntities;
                 prevParticles = holeData.particleEntities;
                 prevAudio = holeData.audioEntities;
+                prevLightData = holeData.lightData;
             }
             else
             {
                 holeData.propEntities = prevProps;
                 holeData.particleEntities = prevParticles;
                 holeData.audioEntities = prevAudio;
+                holeData.lightData = prevLightData; //TODO is this necessary - we're creating the entities on the fly
             }
 
             //cos you know someone is dying to try and break the game :P
@@ -4375,7 +4408,7 @@ void GolfState::buildScene()
 
 
     auto teeEnt = entity;
-    if (spooky
+    if (spooky && m_lightVolumeDefinition.isLoaded()
         && m_sharedData.nightTime)
     {
         static constexpr float LightRadius = 3.5f;
@@ -4384,8 +4417,6 @@ void GolfState::buildScene()
             glm::vec3(0.f, 0.15f, -2.f),
             glm::vec3(0.f, 0.15f, 2.f)
         };
-
-        md.loadFromFile("assets/golf/models/light_sphere.cmt");
 
         for (auto i = 0u; i < Positions.size(); ++i)
         {
@@ -5116,14 +5147,13 @@ void GolfState::spawnBall(const ActorInfo& info)
 
     if (m_sharedData.nightTime)
     {
-        cro::ModelDefinition md(m_resources);
-        if (md.loadFromFile("assets/golf/models/light_sphere.cmt"))
+        if (m_lightVolumeDefinition.isLoaded())
         {
             static constexpr float LightRadius = 2.f;
             entity = m_gameScene.createEntity();
             entity.addComponent<cro::Transform>().setScale(glm::vec3(LightRadius));
             entity.getComponent<cro::Transform>().setPosition({ 0.f, 0.1f, 0.f });
-            md.createModel(entity);
+            m_lightVolumeDefinition.createModel(entity);
 
             entity.addComponent<cro::LightVolume>().radius = LightRadius;
             entity.getComponent<cro::LightVolume>().colour = miniBallColour.getVec4() / 2.f;
@@ -6133,10 +6163,11 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo)
     auto* propModels = &m_holeData[m_currentHole].propEntities;
     auto* particles = &m_holeData[m_currentHole].particleEntities;
     auto* audio = &m_holeData[m_currentHole].audioEntities;
+    auto* lights = &m_holeData[m_currentHole].lights;
     m_holeData[m_currentHole].modelEntity.getComponent<cro::Callback>().active = true;
     m_holeData[m_currentHole].modelEntity.getComponent<cro::Callback>().setUserData<float>(0.f);
     m_holeData[m_currentHole].modelEntity.getComponent<cro::Callback>().function =
-        [&, propModels, particles, audio, rescale](cro::Entity e, float dt)
+        [&, propModels, particles, audio, lights, rescale](cro::Entity e, float dt)
     {
         auto& progress = e.getComponent<cro::Callback>().getUserData<float>();
         progress = std::min(1.f, progress + (dt / 2.f));
@@ -6148,7 +6179,7 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo)
             m_waterEnt.getComponent<cro::Transform>().setScale({ scale, scale, scale });
         }
 
-        if (progress == 1)
+        if (progress == 1) //fully scaled to zero
         {
             e.getComponent<cro::Callback>().active = false;
             e.getComponent<cro::Model>().setHidden(rescale);
@@ -6188,6 +6219,25 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo)
             if (rescale)
             {
                 entity.getComponent<cro::Transform>().setScale({ 0.f, 1.f, 0.f });
+
+                if (m_lightVolumeDefinition.isLoaded())
+                {
+                    for (const auto& lightData : m_holeData[m_currentHole].lightData)
+                    {
+                        //create a light entity and parent it to the hole model
+                        //these will already exist if we're not rescaling
+                        auto lightEnt = m_gameScene.createEntity();
+                        lightEnt.addComponent<cro::Transform>().setPosition(lightData.position);
+                        lightEnt.getComponent<cro::Transform>().setScale(glm::vec3(lightData.radius));
+                        lightEnt.addComponent<cro::LightVolume>().colour = lightData.colour;
+                        lightEnt.getComponent<cro::LightVolume>().radius = lightData.radius;
+                        //TODO add any light animation property
+
+                        m_lightVolumeDefinition.createModel(lightEnt);
+                        lightEnt.getComponent<cro::Model>().setHidden(true);
+                        entity.getComponent<cro::Transform>().addChild(lightEnt.getComponent<cro::Transform>());
+                    }
+                }
             }
             else
             {
@@ -6318,6 +6368,12 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo)
                     audio->at(i).getComponent<cro::Callback>().active = true;
                 }
                 audio->clear();
+
+                for (auto i = 0u; i < lights->size(); ++i)
+                {
+                    m_gameScene.destroyEntity(lights->at(i));
+                }
+                lights->clear();
             }
         }
     };

@@ -34,6 +34,7 @@ source distribution.
 #include <crogine/ecs/Entity.hpp>
 #include <crogine/util/Spline.hpp>
 #include <crogine/detail/glm/vec3.hpp>
+#include <crogine/graphics/Colour.hpp>
 
 #include <array>
 #include <string>
@@ -61,6 +62,13 @@ static inline std::int32_t getCourseIndex(const std::string& name)
     return -1;
 }
 
+struct LightData final
+{
+    float radius = 0.f;
+    glm::vec3 position = glm::vec3(0.f);
+    cro::Colour colour = cro::Colour::White;
+};
+
 struct HoleData final
 {
     glm::vec3 tee = glm::vec3(0.f);
@@ -72,6 +80,8 @@ struct HoleData final
     std::string mapPath;
     std::string modelPath;
     cro::Entity modelEntity;
+    std::vector<LightData> lightData;
+    std::vector<cro::Entity> lights;
     std::vector<cro::Entity> propEntities;
     std::vector<cro::Entity> particleEntities;
     std::vector<cro::Entity> audioEntities;
