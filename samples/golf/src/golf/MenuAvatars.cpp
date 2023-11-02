@@ -242,11 +242,10 @@ void MenuState::createAvatarMenu(cro::Entity parent)
     //active profile name
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({382.f, 226.f, 0.1f});
-    entity.getComponent<cro::Transform>().setScale(glm::vec2(0.5f));
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(largeFont).setString("Buns");
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
-    entity.getComponent<cro::Text>().setCharacterSize(UITextSize*2);
+    entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
     centreText(entity);
     avatarEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     auto nameLabel = entity;

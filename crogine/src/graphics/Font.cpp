@@ -407,17 +407,6 @@ Glyph Font::loadGlyph(std::uint32_t codepoint, std::uint32_t charSize, bool bold
         m_pixelBuffer.resize(width * height * 4);
         std::fill(m_pixelBuffer.begin(), m_pixelBuffer.end(), 255);
 
-        auto* current = m_pixelBuffer.data();
-        /*auto* end = current + m_pixelBuffer.size();
-
-        while (current != end)
-        {
-            (*current++) = 255;
-            (*current++) = 255;
-            (*current++) = 255;
-            (*current++) = 0;
-        }*/
-
         //copy from rasterised bitmap
         const auto* pixels = bitmap.buffer;
         if (bitmap.pixel_mode == FT_PIXEL_MODE_MONO)

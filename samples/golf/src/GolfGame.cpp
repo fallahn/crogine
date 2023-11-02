@@ -713,24 +713,39 @@ bool GolfGame::initialise()
 
     cro::FontAppendmentContext ctx;
     ctx.allowBold = false;
-    ctx.allowFillColour = false;
+    ctx.allowFillColour = true;
     ctx.allowOutline = false;
-    ctx.codepointRange = cro::CodePointRange::Emoji;
+
+    static constexpr std::array Ranges =
+    {
+        cro::CodePointRange::EmojiLower,
+        cro::CodePointRange::EmojiMid,
+        cro::CodePointRange::EmojiUpper,
+    };
 
 #ifdef _WIN32
     const std::string winPath = "C:/Windows/Fonts/seguiemj.ttf";
     if (cro::FileSystem::fileExists(winPath))
     {
-        m_sharedData.sharedResources->fonts.get(FontID::UI).appendFromFile(winPath, ctx);
-        m_sharedData.sharedResources->fonts.get(FontID::Info).appendFromFile(winPath, ctx);
-        m_sharedData.sharedResources->fonts.get(FontID::Label).appendFromFile(winPath, ctx);
+        ctx.allowFillColour = false;
+        for (const auto& r : Ranges)
+        {
+            ctx.codepointRange = r;
+            m_sharedData.sharedResources->fonts.get(FontID::UI).appendFromFile(winPath, ctx);
+            m_sharedData.sharedResources->fonts.get(FontID::Info).appendFromFile(winPath, ctx);
+            m_sharedData.sharedResources->fonts.get(FontID::Label).appendFromFile(winPath, ctx);
+        }
     }
     else
 #endif
     {
-        m_sharedData.sharedResources->fonts.get(FontID::UI).appendFromFile("assets/golf/fonts/NotoEmoji-Regular.ttf", ctx);
-        m_sharedData.sharedResources->fonts.get(FontID::Info).appendFromFile("assets/golf/fonts/NotoEmoji-Regular.ttf", ctx);
-        m_sharedData.sharedResources->fonts.get(FontID::Label).appendFromFile("assets/golf/fonts/NotoEmoji-Regular.ttf", ctx);
+        for (const auto& r : Ranges)
+        {
+            ctx.codepointRange = r;
+            m_sharedData.sharedResources->fonts.get(FontID::UI).appendFromFile("assets/golf/fonts/NotoEmoji-Regular.ttf", ctx);
+            m_sharedData.sharedResources->fonts.get(FontID::Info).appendFromFile("assets/golf/fonts/NotoEmoji-Regular.ttf", ctx);
+            m_sharedData.sharedResources->fonts.get(FontID::Label).appendFromFile("assets/golf/fonts/NotoEmoji-Regular.ttf", ctx);
+        }
     }
 
     for (const auto& [name, str] : IncludeMappings)

@@ -194,8 +194,8 @@ void TextChat::handlePacket(const net::NetEvent::Packet& pkt)
     //so we'll always assume it's player 0
     auto outStr = m_sharedData.connectionData[msg.client].playerData[0].name;
 
-    auto end = std::find(msg.messageData.begin(), msg.messageData.end(), char(0));
-    auto msgText = cro::String::fromUtf8(msg.messageData.begin(), /*end*/msg.messageData.end());
+    //we have to manually truncate this else we get a lot of white space
+    auto msgText = cro::String::fromUtf8(msg.messageData.begin(), std::find(msg.messageData.begin(), msg.messageData.end(), 0));
 
     cro::Colour chatColour = TextNormalColour;
 
@@ -231,22 +231,19 @@ void TextChat::handlePacket(const net::NetEvent::Packet& pkt)
     const auto& font = m_sharedData.sharedResources->fonts.get(FontID::Label);
     auto entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 4.f, std::floor(uiSize.y - 36.f), 1.f });
-    entity.getComponent<cro::Transform>().setScale(glm::vec2(0.5f));
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(font).setString(outStr);
     entity.getComponent<cro::Text>().setFillColour(chatColour);
     entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
-    entity.getComponent<cro::Text>().setShadowOffset({ 2.f, -2.f });
-    entity.getComponent<cro::Text>().setCharacterSize(LabelTextSize*2);
+    entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
+    entity.getComponent<cro::Text>().setCharacterSize(LabelTextSize);
     entity.addComponent<cro::Callback>().active = true;
     entity.getComponent<cro::Callback>().setUserData<float>(10.f);
     
     auto bounds = cro::Text::getLocalBounds(entity);
-    //LogI << bounds.width << std::endl;
     bounds.left -= 2.f;
     bounds.bottom -= 2.f;
-    //bounds.width += 5.f; //TODO for some reason this is wildly off
-    bounds.width = (static_cast<float>(cro::App::getWindow().getSize().x * 2) - 16.f) / getViewScale();
+    bounds.width += 5.f;
     bounds.height += 4.f;
 
     static constexpr float BgAlpha = 0.2f;
