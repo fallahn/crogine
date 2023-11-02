@@ -59,7 +59,7 @@ Drawable2D::Drawable2D()
 }
 
 //public
-void Drawable2D::setTexture(const Texture* texture)
+bool Drawable2D::setTexture(const Texture* texture)
 {
     if (texture != m_textureInfo.texture ||
         (texture && (texture->getGLHandle() != m_textureInfo.textureID.textureID)))
@@ -80,7 +80,9 @@ void Drawable2D::setTexture(const Texture* texture)
         m_applyDefaultShader = !m_customShader;
 
         applyShader();
+        return true;
     }
+    return false;
 }
 
 void Drawable2D::setTexture(TextureID textureID, glm::uvec2 size)

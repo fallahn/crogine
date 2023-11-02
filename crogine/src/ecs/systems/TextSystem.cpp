@@ -95,18 +95,22 @@ void TextSystem::process(float)
             else
             {
                 text.updateVertices(drawable);
-                drawable.setTexture(&text.getFont()->getTexture(text.getCharacterSize()));
                 drawable.setPrimitiveType(GL_TRIANGLES);
                 m_readPages.push_back({ text.getFont(), text.getCharacterSize() }); //font needs its pages marked as read
             }
 
             text.m_dirtyFlags = 0;
-
-
-            //isPageUpdate may be triggered by a texture resize
-            //which means a swap has happened and the drawable needs
-            //to know the new texture information
-            //drawable.setTexture(&text.getFont()->getTexture(text.getCharacterSize()));
+        }
+        
+        //we don't really want to be doing this all the time (though it mostly
+        //does nothing) - however if a font updates its texture an instance of
+        //this class in one scene can reset the flag before an instance of this
+        //class in a different scene has updated the texture - and it becomes
+        //out of date. Most noticeable when fonts are shared between multiple
+        //active scenes
+        if (drawable.setTexture(&text.getFont()->getTexture(text.getCharacterSize())))
+        {
+            text.updateVertices(drawable);
         }
     }
 

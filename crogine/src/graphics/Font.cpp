@@ -461,6 +461,14 @@ Glyph Font::loadGlyph(std::uint32_t codepoint, std::uint32_t charSize, bool bold
         retVal.bounds.height = static_cast<float>(face->glyph->metrics.height) / MagicNumber;
         retVal.bounds.bottom -= retVal.bounds.height;
 
+        if (&fd != &m_fontData[0])
+        {
+            //scale other characters to match that of the base font
+            const float lineHeight = getLineHeight(charSize);
+            const float scale = std::min(1.f, lineHeight / retVal.bounds.height);
+            retVal.bounds.height *= scale;
+            retVal.bounds.width *= scale;
+        }
 
         //buffer the pixel data and update the page texture
         m_pixelBuffer.resize(width * height * 4);

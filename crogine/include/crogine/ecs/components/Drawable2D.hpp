@@ -71,8 +71,10 @@ namespace cro
         which should be kept in mind if using a custom shader.
         This has no effect when using Sprite or Text components
         as they override this property with their own.
+        \returns true if the new texture was applied or false
+        if the given texture was the same as the existing one
         */
-        void setTexture(const Texture*);
+        bool setTexture(const Texture*);
 
         /*!
         \brief Sets the Drawable2D texture via a TextureID
