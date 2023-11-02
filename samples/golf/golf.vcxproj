@@ -695,6 +695,7 @@
     <ClCompile Include="src\golf\VatFile.cpp" />
     <ClCompile Include="src\golf\Weather.cpp" />
     <ClCompile Include="src\golf\WeatherAnimationSystem.cpp" />
+    <ClCompile Include="src\golf\WeatherDirector.cpp" />
     <ClCompile Include="src\LoadingScreen.cpp" />
     <ClCompile Include="src\M3UPlaylist.cpp" />
     <ClCompile Include="src\main.cpp" />
@@ -829,6 +830,7 @@
     <ClInclude Include="src\golf\VatFile.hpp" />
     <ClInclude Include="src\golf\VatAnimationSystem.hpp" />
     <ClInclude Include="src\golf\WeatherAnimationSystem.hpp" />
+    <ClInclude Include="src\golf\WeatherDirector.hpp" />
     <ClInclude Include="src\golf\XPAwardStrings.hpp" />
     <ClInclude Include="src\ImTheme.hpp" />
     <ClInclude Include="src\LoadingScreen.hpp" />

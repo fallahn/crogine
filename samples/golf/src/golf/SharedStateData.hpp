@@ -160,6 +160,7 @@ struct SharedStateData final
     std::uint8_t reverseCourse = 0; //play holes in reverse order
     std::uint8_t clubLimit = 0; //limit game to lowest player's clubs
     std::uint8_t nightTime = 0; //bool
+    std::uint8_t weatherType = 0;
 
     //printed by the error state
     std::string errorMessage;

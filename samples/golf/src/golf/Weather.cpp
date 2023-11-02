@@ -35,6 +35,7 @@ source distribution.
 #include "WeatherAnimationSystem.hpp"
 #include "../ErrorCheck.hpp"
 
+#include <crogine/audio/AudioScape.hpp>
 #include <crogine/ecs/Scene.hpp>
 
 #include <crogine/ecs/components/Transform.hpp>
@@ -216,6 +217,36 @@ void GolfState::createWeather(std::int32_t weatherType)
         m_resources.shaders.loadFromString(ShaderID::Weather, WeatherVertex, RainFragment);
         weatherColour = cro::Colour(0.86f, 0.87f, 0.873f);
         blendMode = cro::Material::BlendMode::Custom;
+
+        //create audio entity
+        cro::AudioScape propAudio;
+        if (propAudio.loadFromFile("assets/golf/sound/props.xas", m_resources.audio))
+        {
+            auto audioEnt = m_gameScene.createEntity();
+            audioEnt.addComponent<cro::Transform>();
+            audioEnt.addComponent<cro::AudioEmitter>() = propAudio.getEmitter("rain");
+
+            const float baseVolume = audioEnt.getComponent<cro::AudioEmitter>().getVolume();
+            audioEnt.addComponent<cro::Callback>().active = true;
+            audioEnt.getComponent<cro::Callback>().setUserData<const float>(baseVolume);
+            audioEnt.getComponent<cro::Callback>().function =
+                [&](cro::Entity e, float)
+            {
+                const float vol = e.getComponent<cro::Callback>().getUserData<const float>() *
+                    m_gameScene.getSystem<WeatherAnimationSystem>()->getOpacity();
+                e.getComponent<cro::AudioEmitter>().setVolume(vol);
+
+                auto state = e.getComponent<cro::AudioEmitter>().getState();
+                if (vol == 0 && state == cro::AudioEmitter::State::Playing)
+                {
+                    e.getComponent<cro::AudioEmitter>().stop();
+                }
+                else if (vol != 0 && state == cro::AudioEmitter::State::Stopped)
+                {
+                    e.getComponent<cro::AudioEmitter>().play();
+                }
+            };
+        }
     }
     auto& shader = m_resources.shaders.get(ShaderID::Weather);
     auto materialID = m_resources.materials.add(shader);
@@ -227,6 +258,8 @@ void GolfState::createWeather(std::int32_t weatherType)
     material.blendData.enableProperties = { GL_BLEND, GL_DEPTH_TEST };
     material.blendData.equation = GL_FUNC_ADD;
     material.blendData.writeDepthMask = GL_TRUE;
+
+    m_gameScene.getSystem<WeatherAnimationSystem>()->setMaterialData(shader, weatherColour);
 
     constexpr glm::vec3 Offset(WeatherAnimationSystem::AreaEnd[0] * -1.5f, 0.f, WeatherAnimationSystem::AreaEnd[2] * -1.5f);
     for (auto y = 0; y < GridY; ++y)

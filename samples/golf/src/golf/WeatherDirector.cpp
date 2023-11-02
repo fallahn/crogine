@@ -27,43 +27,15 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#pragma once
+#include "WeatherDirector.hpp"
 
-#include <crogine/ecs/System.hpp>
-#include <crogine/graphics/Colour.hpp>
-#include <crogine/graphics/Shader.hpp>
-
-#include <array>
-
-struct WeatherAnimation final
+WeatherDirector::WeatherDirector()
 {
-    glm::vec3 basePosition = glm::vec3(0.f);
-};
 
-class WeatherAnimationSystem final : public cro::System 
+}
+
+//public
+void WeatherDirector::handleMessage(const cro::Message&)
 {
-public:
-    static constexpr std::array<float, 3u> AreaStart = { 0.f, 0.f, 0.f };
-    static constexpr std::array<float, 3u> AreaEnd = { 20.f, 80.f, 20.f };
 
-    explicit WeatherAnimationSystem(cro::MessageBus&);
-
-    void process(float) override;
-
-    void setHidden(bool);
-
-    void setMaterialData(const cro::Shader&, cro::Colour);
-
-    float getOpacity() const { return m_opacity; }
-
-private:
-    bool m_hidden;
-    float m_opacity;
-    float m_targetOpacity;
-
-    std::uint32_t m_shaderID;
-    std::int32_t m_uniformID;
-    cro::Colour m_colour;
-
-    void updateShader();
-};
+}

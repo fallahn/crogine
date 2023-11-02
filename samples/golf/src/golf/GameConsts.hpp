@@ -143,6 +143,14 @@ class btVector3;
 glm::vec3 btToGlm(btVector3 v);
 btVector3 glmToBt(glm::vec3 v);
 
+struct WeatherType final
+{
+    enum
+    {
+        Sun, Rain, Showers, Mist, Snow
+    };
+};
+
 struct MRTIndex final
 {
     enum
