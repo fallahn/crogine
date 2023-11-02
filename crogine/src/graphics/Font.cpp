@@ -383,7 +383,7 @@ Glyph Font::loadGlyph(std::uint32_t codepoint, std::uint32_t charSize, bool bold
     }
 
     //get the outline
-    FT_Pos weight = (1 << 6);
+    constexpr FT_Pos weight = (1 << 6);
     bool outline = (glyphDesc->format == FT_GLYPH_FORMAT_OUTLINE);
     if (outline)
     {
@@ -402,17 +402,25 @@ Glyph Font::loadGlyph(std::uint32_t codepoint, std::uint32_t charSize, bool bold
     }
 
     //rasterise it
-    //FT_Glyph_To_Bitmap(&glyphDesc, FT_RENDER_MODE_NORMAL, 0, 1); //this renders alpha coverage only
-    //FT_Bitmap& bitmap = reinterpret_cast<FT_BitmapGlyph>(glyphDesc)->bitmap;
-    
-    FT_Render_Glyph(face->glyph, FT_RENDER_MODE_NORMAL);
-    FT_Bitmap& bitmap = face->glyph->bitmap;
+    FT_Bitmap* bitmap = nullptr;
+    if (fd.context.allowOutline || fd.context.allowBold)
+    {
+        FT_Glyph_To_Bitmap(&glyphDesc, FT_RENDER_MODE_NORMAL, 0, 1); //this renders alpha coverage only
+        bitmap = &reinterpret_cast<FT_BitmapGlyph>(glyphDesc)->bitmap;
+    }
+    else
+    {
+        //this is needed if we're rendering colour
+        //so assume outlining etc is disabled.
+        FT_Render_Glyph(face->glyph, FT_RENDER_MODE_NORMAL);
+        bitmap = &face->glyph->bitmap;
+    }
 
     if (!outline)
     {
         if (bold)
         {
-            FT_Bitmap_Embolden(std::any_cast<FT_Library>(fd.library), &bitmap, weight, weight);
+            FT_Bitmap_Embolden(std::any_cast<FT_Library>(fd.library), bitmap, weight, weight);
         }
     }
 
@@ -423,8 +431,8 @@ Glyph Font::loadGlyph(std::uint32_t codepoint, std::uint32_t charSize, bool bold
         retVal.advance += static_cast<float>(weight) / MagicNumber; //surely this is the same as adding 1?
     }
 
-    std::int32_t width = bitmap.width;
-    std::int32_t height = bitmap.rows;
+    std::int32_t width = bitmap->width;
+    std::int32_t height = bitmap->rows;
 
     if (width > 0 && height > 0)
     {
@@ -456,11 +464,11 @@ Glyph Font::loadGlyph(std::uint32_t codepoint, std::uint32_t charSize, bool bold
 
         //buffer the pixel data and update the page texture
         m_pixelBuffer.resize(width * height * 4);
-        std::fill(m_pixelBuffer.begin(), m_pixelBuffer.end(), 255);
+        std::fill(m_pixelBuffer.begin(), m_pixelBuffer.end(), 0);
 
         //copy from rasterised bitmap
-        const auto* pixels = bitmap.buffer;
-        if (bitmap.pixel_mode == FT_PIXEL_MODE_MONO)
+        const auto* pixels = bitmap->buffer;
+        if (bitmap->pixel_mode == FT_PIXEL_MODE_MONO)
         {
             //for(auto y = height - padding - 1; y >= padding; --y)
             for(auto y = padding; y < height - padding; ++y)
@@ -470,10 +478,10 @@ Glyph Font::loadGlyph(std::uint32_t codepoint, std::uint32_t charSize, bool bold
                     const std::size_t index = x + y * width;
                     m_pixelBuffer[index * 4 + 3] = ((pixels[(x - padding) / 8]) & (1 << (7 - ((x - padding) % 8)))) ? 255 : 0;
                 }
-                pixels += bitmap.pitch;
+                pixels += bitmap->pitch;
             }
         }
-        else if (bitmap.pixel_mode == FT_PIXEL_MODE_BGRA)
+        else if (bitmap->pixel_mode == FT_PIXEL_MODE_BGRA)
         {
             for (auto y = padding; y < height - padding; ++y)
             {
@@ -488,7 +496,7 @@ Glyph Font::loadGlyph(std::uint32_t codepoint, std::uint32_t charSize, bool bold
 
                     m_pixelBuffer[index + 3] = pixels[xIndex + 3];
                 }
-                pixels += bitmap.pitch;
+                pixels += bitmap->pitch;
             }
         }
         else
@@ -498,10 +506,14 @@ Glyph Font::loadGlyph(std::uint32_t codepoint, std::uint32_t charSize, bool bold
             {
                 for (auto x = padding; x < width - padding; ++x)
                 {
-                    const std::size_t index = x + y * width;
-                    m_pixelBuffer[index * 4 + 3] = pixels[x - padding];
+                    const std::size_t index = (x + y * width) * 4;
+                    
+                    m_pixelBuffer[index] = 255;
+                    m_pixelBuffer[index + 1] = 255;
+                    m_pixelBuffer[index + 2] = 255;
+                    m_pixelBuffer[index + 3] = pixels[x - padding];
                 }
-                pixels += bitmap.pitch;
+                pixels += bitmap->pitch;
             }
         }
 
