@@ -109,8 +109,11 @@ static inline void applyImGuiStyle()
     fonts->AddFontFromFileTTF("assets/golf/fonts/NotoSans-Regular.ttf", 10.f, &config, fonts->GetGlyphRangesVietnamese());
     fonts->AddFontFromFileTTF("assets/golf/fonts/NotoSansThai-Regular.ttf", 10.f, &config, fonts->GetGlyphRangesThai());
     fonts->AddFontFromFileTTF("assets/golf/fonts/NotoSansKR-Regular.ttf", 10.f, &config, fonts->GetGlyphRangesKorean());
+    //fonts->AddFontFromFileTTF("assets/golf/fonts/ark-pixel-10px-monospaced-ko.ttf", 10.f, &config, fonts->GetGlyphRangesKorean());
     fonts->AddFontFromFileTTF("assets/golf/fonts/NotoSansJP-Regular.ttf", 10.f, &config, fonts->GetGlyphRangesJapanese());
+    //fonts->AddFontFromFileTTF("assets/golf/fonts/ark-pixel-10px-monospaced-ja.ttf", 10.f, &config, fonts->GetGlyphRangesJapanese());
     fonts->AddFontFromFileTTF("assets/golf/fonts/NotoSansTC-Regular.ttf", 10.f, &config, fonts->GetGlyphRangesChineseFull());
+    //fonts->AddFontFromFileTTF("assets/golf/fonts/ark-pixel-10px-monospaced-zh_cn.ttf", 10.f, &config, fonts->GetGlyphRangesChineseFull());
     
     std::vector<ImWchar> rangesB = { 0x231a, 0x23fe, 0x256d, 0x2bd1, 0x10000, 0x10FFFF, 0 };
 #ifdef _WIN32
