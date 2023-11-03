@@ -219,17 +219,10 @@ void GolfState::createWeather(std::int32_t weatherType)
         blendMode = cro::Material::BlendMode::Custom;
 
         //create audio entity
-        cro::AudioScape propAudio;
-        if (propAudio.loadFromFile("assets/golf/sound/props.xas", m_resources.audio))
+        cro::AudioScape audioscape;
+        if (audioscape.loadFromFile("assets/golf/sound/rain.xas", m_resources.audio))
         {
-            auto audioEnt = m_gameScene.createEntity();
-            audioEnt.addComponent<cro::Transform>();
-            audioEnt.addComponent<cro::AudioEmitter>() = propAudio.getEmitter("rain");
-
-            const float baseVolume = audioEnt.getComponent<cro::AudioEmitter>().getVolume();
-            audioEnt.addComponent<cro::Callback>().active = true;
-            audioEnt.getComponent<cro::Callback>().setUserData<const float>(baseVolume);
-            audioEnt.getComponent<cro::Callback>().function =
+            const auto callback = 
                 [&](cro::Entity e, float)
             {
                 const float vol = e.getComponent<cro::Callback>().getUserData<const float>() *
@@ -239,13 +232,50 @@ void GolfState::createWeather(std::int32_t weatherType)
                 auto state = e.getComponent<cro::AudioEmitter>().getState();
                 if (vol == 0 && state == cro::AudioEmitter::State::Playing)
                 {
-                    e.getComponent<cro::AudioEmitter>().stop();
+                    e.getComponent<cro::AudioEmitter>().pause();
                 }
-                else if (vol != 0 && state == cro::AudioEmitter::State::Stopped)
+                else if (vol != 0 && state == cro::AudioEmitter::State::Paused)
                 {
                     e.getComponent<cro::AudioEmitter>().play();
                 }
             };
+
+            const std::array EmitterNames =
+            {
+                std::string("01"),
+                std::string("02"),
+                std::string("03"),
+                std::string("04"),
+                std::string("05"),
+                std::string("06"),
+            };
+
+            constexpr std::array Positions =
+            {
+                glm::vec3(20.f, 2.f, -180.f),
+                glm::vec3(150.f, 2.f, -180.f),
+                glm::vec3(300.f, 2.f, -180.f),
+                glm::vec3(20.f, 2.f, -20.f),
+                glm::vec3(150.f, 2.f, -20.f),
+                glm::vec3(300.f, 2.f, -20.f)
+            };
+
+            for (auto i = 0u; i < Positions.size(); ++i)
+            {
+                auto audioEnt = m_gameScene.createEntity();
+                audioEnt.addComponent<cro::Transform>();
+                audioEnt.addComponent<cro::AudioEmitter>() = audioscape.getEmitter(EmitterNames[i]);
+
+                auto offset = (i % 3) + 1;
+                float playingOffset = 60.f / offset;
+                audioEnt.getComponent<cro::AudioEmitter>().play();
+                audioEnt.getComponent<cro::AudioEmitter>().setPlayingOffset(cro::seconds(playingOffset));
+
+                const float baseVolume = audioEnt.getComponent<cro::AudioEmitter>().getVolume();
+                audioEnt.addComponent<cro::Callback>().active = true;
+                audioEnt.getComponent<cro::Callback>().setUserData<const float>(baseVolume);
+                audioEnt.getComponent<cro::Callback>().function = callback;
+            }
         }
     }
     auto& shader = m_resources.shaders.get(ShaderID::Weather);
