@@ -468,7 +468,12 @@ Glyph Font::loadGlyph(std::uint32_t codepoint, std::uint32_t charSize, bool bold
             const float scale = std::min(1.f, lineHeight / retVal.bounds.height);
             retVal.bounds.height *= scale;
             retVal.bounds.width *= scale;
+
+            retVal.bounds.height -= 1.f;
+            retVal.bounds.width -= 1.f;
+            retVal.bounds.bottom += 1.f;
         }
+
 
         //buffer the pixel data and update the page texture
         m_pixelBuffer.resize(width * height * 4);

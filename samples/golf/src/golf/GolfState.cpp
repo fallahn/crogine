@@ -2054,7 +2054,7 @@ void GolfState::render()
 
         //update the flight view
         auto oldCam = m_gameScene.setActiveCamera(m_flightCam);
-        m_overheadBuffer.clear(cro::Colour::Magenta);
+        m_overheadBuffer.clear(cro::Colour(0.5, 0.5, 1.f));
         m_skyScene.render();
         glClear(GL_DEPTH_BUFFER_BIT);
         m_gameScene.render();
@@ -4528,7 +4528,7 @@ void GolfState::buildScene()
     switch (m_sharedData.weatherType)
     {
     default:
-    case WeatherType::Sun:
+    case WeatherType::Clear:
         break;
     case WeatherType::Rain:
         setFog(0.4f);

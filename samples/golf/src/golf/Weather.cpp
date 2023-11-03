@@ -303,7 +303,7 @@ void GolfState::createWeather(std::int32_t weatherType)
             auto entity = m_gameScene.createEntity();
             entity.addComponent<cro::Transform>();
             entity.addComponent<cro::Model>(m_resources.meshes.getMesh(meshID), material);
-            entity.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniGreen | RenderFlags::MiniMap));
+            entity.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniGreen | RenderFlags::MiniMap | RenderFlags::FlightCam));
             entity.addComponent<WeatherAnimation>().basePosition = basePos;
         }
     }

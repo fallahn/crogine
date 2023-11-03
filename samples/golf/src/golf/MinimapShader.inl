@@ -55,6 +55,9 @@ static const std::string MinimapFragment = R"(
         uniform sampler2D u_texture;
         uniform sampler2D u_depthTexture;
         uniform sampler2D u_lightTexture;
+
+uniform sampler2D u_distortionTexture;
+
         uniform vec4 u_lightColour;
 
 #include WIND_BUFFER
@@ -96,17 +99,23 @@ static const std::string MinimapFragment = R"(
 
             vec3 noise = vec3(rand(floor((v_texCoord * textureSize(u_texture, 0)) / u_pixelScale)));
 
-            vec4 colour = TEXTURE(u_texture, v_texCoord);
+
+vec2 coord = v_texCoord;
+//vec3 distort = TEXTURE(u_distortionTexture, v_texCoord).rgb * 2.0 - 1.0;
+////coord.y *= distort.b; //flips distorted part
+//coord.xy += distort.rg * 0.05;
+
+            vec4 colour = TEXTURE(u_texture, coord);
             colour.rgb = dim(colour.rgb);
 
-            float depthSample = TEXTURE(u_depthTexture, v_texCoord).r;
+            float depthSample = TEXTURE(u_depthTexture, coord).r;
             float d = getDistance(depthSample);
             colour = mix(colour, FogColour * u_lightColour, fogAmount(d));
 
 
 
 #if defined (LIGHT_COLOUR)
-            colour.rgb += TEXTURE(u_lightTexture, v_texCoord).rgb;
+            colour.rgb += TEXTURE(u_lightTexture, coord).rgb;
 #endif
 
 

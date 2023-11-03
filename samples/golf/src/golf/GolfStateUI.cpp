@@ -1374,8 +1374,7 @@ void GolfState::buildUI()
         /*std::uint32_t samples = m_sharedData.pixelScale ? 0 :
             m_sharedData.antialias ? m_sharedData.multisamples : 0;*/
 
-        m_overheadBuffer.create(texSize, texSize, /*true, false, samples*/MRTIndex::Count); //yes, it's square
-        //greenEnt.getComponent<cro::Sprite>().setTexture(m_greenBuffer.getTexture());
+        m_overheadBuffer.create(texSize, texSize, MRTIndex::Count); //yes, it's square
         m_lightMaps[LightMapID::Overhead].create(texSize, texSize);
 
         auto targetScale = glm::vec2(1.f / scale);
@@ -1412,6 +1411,7 @@ void GolfState::buildUI()
         greenEnt.getComponent<cro::Drawable2D>().bindUniform("u_lightTexture", lightID);
     }
     greenEnt.getComponent<cro::Drawable2D>().bindUniform("u_depthTexture", m_overheadBuffer.getDepthTexture());
+    //greenEnt.getComponent<cro::Drawable2D>().bindUniform("u_distortionTexture", cro::TextureID(m_resources.textures.get("assets/images/test.png")));
 
     m_greenCam.addComponent<cro::Callback>().active = true;
     m_greenCam.getComponent<cro::Callback>().setUserData<MiniCamData>();

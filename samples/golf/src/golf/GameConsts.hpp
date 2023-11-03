@@ -147,7 +147,7 @@ struct WeatherType final
 {
     enum
     {
-        Sun, Rain, Showers, Mist, Snow
+        Clear, Rain, Showers, Mist, Snow
     };
 };
 

@@ -707,46 +707,7 @@ bool GolfGame::initialise()
     }
 
     //preload resources which will be used in dynamically loaded menus
-    m_sharedData.sharedResources->fonts.load(FontID::UI, "assets/golf/fonts/IBM_CGA.ttf");
-    m_sharedData.sharedResources->fonts.load(FontID::Info, "assets/golf/fonts/MCPixel.otf");
-    m_sharedData.sharedResources->fonts.load(FontID::Label, "assets/golf/fonts/ProggyClean.ttf");
-
-    cro::FontAppendmentContext ctx;
-    ctx.allowBold = false;
-    ctx.allowFillColour = true;
-    ctx.allowOutline = false;
-
-    static constexpr std::array Ranges =
-    {
-        cro::CodePointRange::EmojiLower,
-        cro::CodePointRange::EmojiMid,
-        cro::CodePointRange::EmojiUpper,
-    };
-
-#ifdef _WIN32
-    const std::string winPath = "C:/Windows/Fonts/seguiemj.ttf";
-    if (cro::FileSystem::fileExists(winPath))
-    {
-        ctx.allowFillColour = false;
-        for (const auto& r : Ranges)
-        {
-            ctx.codepointRange = r;
-            m_sharedData.sharedResources->fonts.get(FontID::UI).appendFromFile(winPath, ctx);
-            m_sharedData.sharedResources->fonts.get(FontID::Info).appendFromFile(winPath, ctx);
-            m_sharedData.sharedResources->fonts.get(FontID::Label).appendFromFile(winPath, ctx);
-        }
-    }
-    else
-#endif
-    {
-        for (const auto& r : Ranges)
-        {
-            ctx.codepointRange = r;
-            m_sharedData.sharedResources->fonts.get(FontID::UI).appendFromFile("assets/golf/fonts/NotoEmoji-Regular.ttf", ctx);
-            m_sharedData.sharedResources->fonts.get(FontID::Info).appendFromFile("assets/golf/fonts/NotoEmoji-Regular.ttf", ctx);
-            m_sharedData.sharedResources->fonts.get(FontID::Label).appendFromFile("assets/golf/fonts/NotoEmoji-Regular.ttf", ctx);
-        }
-    }
+    initFonts();
 
     for (const auto& [name, str] : IncludeMappings)
     {
@@ -900,6 +861,86 @@ void GolfGame::finalise()
     m_achievements.reset();
 
     getWindow().setCursor(nullptr);
+}
+
+void GolfGame::initFonts()
+{
+    m_sharedData.sharedResources->fonts.load(FontID::UI, "assets/golf/fonts/IBM_CGA.ttf");
+    m_sharedData.sharedResources->fonts.load(FontID::Info, "assets/golf/fonts/MCPixel.otf");
+    m_sharedData.sharedResources->fonts.load(FontID::Label, "assets/golf/fonts/ProggyClean.ttf");
+
+    //international fonts - these mappings are those used in DearImGui
+    cro::FontAppendmentContext ctx;
+    static const std::array FontMappings =
+    {
+        std::make_pair("assets/golf/fonts/NotoSans-Regular.ttf", cro::CodePointRange::Cyrillic),
+        std::make_pair("assets/golf/fonts/NotoSans-Regular.ttf", cro::CodePointRange::Greek),
+        std::make_pair("assets/golf/fonts/NotoSans-Regular.ttf", std::array<std::uint32_t, 2u>({0x0102, 0x0103})), //VT
+        std::make_pair("assets/golf/fonts/NotoSans-Regular.ttf", std::array<std::uint32_t, 2u>({0x0110, 0x0111})), //VT
+        std::make_pair("assets/golf/fonts/NotoSans-Regular.ttf", std::array<std::uint32_t, 2u>({0x0128, 0x0129})), //VT
+        std::make_pair("assets/golf/fonts/NotoSans-Regular.ttf", std::array<std::uint32_t, 2u>({0x0168, 0x0169})), //VT
+        std::make_pair("assets/golf/fonts/NotoSans-Regular.ttf", std::array<std::uint32_t, 2u>({0x01A0, 0x01A1})), //VT
+        std::make_pair("assets/golf/fonts/NotoSans-Regular.ttf", std::array<std::uint32_t, 2u>({0x01AF, 0x01B0})), //VT
+        std::make_pair("assets/golf/fonts/NotoSans-Regular.ttf", std::array<std::uint32_t, 2u>({0x1EA0, 0x1EF9})), //VT
+
+        std::make_pair("assets/golf/fonts/NotoSansThai-Regular.ttf", std::array<std::uint32_t, 2u>({0x2010, 0x205E})),
+        std::make_pair("assets/golf/fonts/NotoSansThai-Regular.ttf", std::array<std::uint32_t, 2u>({0x0E00, 0x0E7F})),
+        std::make_pair("assets/golf/fonts/NotoSansKR-Regular.ttf", std::array<std::uint32_t, 2u>({0x3131, 0x3163})),
+        std::make_pair("assets/golf/fonts/NotoSansKR-Regular.ttf", std::array<std::uint32_t, 2u>({0xAC00, 0xD7A3})),
+        std::make_pair("assets/golf/fonts/NotoSansTC-Regular.ttf", std::array<std::uint32_t, 2u>({0x2000, 0x206F})),
+        std::make_pair("assets/golf/fonts/NotoSansTC-Regular.ttf", std::array<std::uint32_t, 2u>({0x3000, 0x30FF})),
+        std::make_pair("assets/golf/fonts/NotoSansTC-Regular.ttf", std::array<std::uint32_t, 2u>({0x31F0, 0x31FF})),
+        std::make_pair("assets/golf/fonts/NotoSansTC-Regular.ttf", std::array<std::uint32_t, 2u>({0xFF00, 0xFFEF})),
+        //std::make_pair("assets/golf/fonts/NotoSansTC-Regular.ttf", std::array<std::uint32_t, 2u>({0xFFFD, 0xFFFD})),
+        std::make_pair("assets/golf/fonts/NotoSansTC-Regular.ttf", std::array<std::uint32_t, 2u>({0x4e00, 0x9FAF})),
+    };
+
+    for (const auto& [path, codepoints] : FontMappings)
+    {
+        ctx.codepointRange = codepoints;
+        m_sharedData.sharedResources->fonts.get(FontID::UI).appendFromFile(path, ctx);
+        m_sharedData.sharedResources->fonts.get(FontID::Info).appendFromFile(path, ctx);
+        m_sharedData.sharedResources->fonts.get(FontID::Label).appendFromFile(path, ctx);
+    }
+
+
+
+    //emoji fonts
+    ctx.allowBold = false;
+    ctx.allowFillColour = true;
+    ctx.allowOutline = false;
+
+    static constexpr std::array Ranges =
+    {
+        cro::CodePointRange::EmojiLower,
+        cro::CodePointRange::EmojiMid,
+        cro::CodePointRange::EmojiUpper,
+    };
+
+#ifdef _WIN32
+    const std::string winPath = "C:/Windows/Fonts/seguiemj.ttf";
+    if (cro::FileSystem::fileExists(winPath))
+    {
+        ctx.allowFillColour = false;
+        for (const auto& r : Ranges)
+        {
+            ctx.codepointRange = r;
+            m_sharedData.sharedResources->fonts.get(FontID::UI).appendFromFile(winPath, ctx);
+            m_sharedData.sharedResources->fonts.get(FontID::Info).appendFromFile(winPath, ctx);
+            m_sharedData.sharedResources->fonts.get(FontID::Label).appendFromFile(winPath, ctx);
+        }
+    }
+    else
+#endif
+    {
+        for (const auto& r : Ranges)
+        {
+            ctx.codepointRange = r;
+            m_sharedData.sharedResources->fonts.get(FontID::UI).appendFromFile("assets/golf/fonts/NotoEmoji-Regular.ttf", ctx);
+            m_sharedData.sharedResources->fonts.get(FontID::Info).appendFromFile("assets/golf/fonts/NotoEmoji-Regular.ttf", ctx);
+            m_sharedData.sharedResources->fonts.get(FontID::Label).appendFromFile("assets/golf/fonts/NotoEmoji-Regular.ttf", ctx);
+        }
+    }
 }
 
 void GolfGame::loadPreferences()

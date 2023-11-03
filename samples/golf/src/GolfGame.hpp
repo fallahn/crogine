@@ -102,6 +102,7 @@ private:
     bool initialise() override;
     void finalise() override;
 
+    void initFonts();
     void loadPreferences();
     void savePreferences();
     void loadAvatars();

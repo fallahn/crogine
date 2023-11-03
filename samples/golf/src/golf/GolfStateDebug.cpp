@@ -415,24 +415,24 @@ void GolfState::registerDebugCommands()
             }
         });
 
-    registerWindow([&]() 
-        {
-            if (ImGui::Begin("Weather"))
-            {
-                /*auto c = m_skyScene.getSunlight().getComponent<cro::Sunlight>().getColour();
-                if (ImGui::ColorPicker3("Sun", c.asArray()))
-                {
-                    m_skyScene.getSunlight().getComponent<cro::Sunlight>().setColour(c);
-                    m_gameScene.getSunlight().getComponent<cro::Sunlight>().setColour(c);
-                }*/
-                if (ImGui::Button("Rain"))
-                {
-                    cro::Console::doCommand("rain");
-                }
-            }
-            ImGui::End();
-        
-        });
+    //registerWindow([&]() 
+    //    {
+    //        if (ImGui::Begin("Weather"))
+    //        {
+    //            /*auto c = m_skyScene.getSunlight().getComponent<cro::Sunlight>().getColour();
+    //            if (ImGui::ColorPicker3("Sun", c.asArray()))
+    //            {
+    //                m_skyScene.getSunlight().getComponent<cro::Sunlight>().setColour(c);
+    //                m_gameScene.getSunlight().getComponent<cro::Sunlight>().setColour(c);
+    //            }*/
+    //            if (ImGui::Button("Rain"))
+    //            {
+    //                cro::Console::doCommand("rain");
+    //            }
+    //        }
+    //        ImGui::End();
+    //    
+    //    });
 
     //registerCommand("show_stat_window", 
     //    [&](const std::string&)
