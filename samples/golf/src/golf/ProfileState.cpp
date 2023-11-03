@@ -226,6 +226,7 @@ bool ProfileState::handleEvent(const cro::Event& evt)
 
     if (evt.type == SDL_KEYUP)
     {
+        handleTextEdit(evt);
         switch (evt.key.keysym.sym)
         {
         default:
@@ -2322,6 +2323,7 @@ void ProfileState::refreshBio()
 void ProfileState::beginTextEdit(cro::Entity stringEnt, cro::String* dst, std::size_t maxChars)
 {
     *dst = dst->substr(0, maxChars);
+    m_previousString = *dst;
 
     stringEnt.getComponent<cro::Text>().setFillColour(TextEditColour);
     m_textEdit.string = dst;
@@ -2352,6 +2354,32 @@ void ProfileState::handleTextEdit(const cro::Event& evt)
                 m_textEdit.string->erase(m_textEdit.string->size() - 1);
             }
             break;
+        case SDLK_v:
+            if (evt.key.keysym.mod & KMOD_CTRL)
+            {
+                if (SDL_HasClipboardText())
+                {
+                    char* text = SDL_GetClipboardText();
+                    auto codePoints = cro::Util::String::getCodepoints(text);
+                    SDL_free(text);
+
+                    cro::String str = cro::String::fromUtf32(codePoints.begin(), codePoints.end());
+                    auto len = std::min(str.size(), ConstVal::MaxStringChars - m_textEdit.string->size());
+
+                    *m_textEdit.string += str.substr(0, len);
+                }
+            }
+            break;
+        }
+    }
+    else if (evt.type == SDL_KEYUP)
+    {
+        switch (evt.key.keysym.sym)
+        {
+        default: break;
+        case SDLK_ESCAPE:
+            cancelTextEdit();
+            break;
         }
     }
     else if (evt.type == SDL_TEXTINPUT)
@@ -2363,6 +2391,19 @@ void ProfileState::handleTextEdit(const cro::Event& evt)
             *m_textEdit.string += cro::String::fromUtf32(codePoints.begin(), codePoints.end());
         }
     }
+}
+
+void ProfileState::cancelTextEdit()
+{
+    *m_textEdit.string = m_previousString;
+    applyTextEdit();
+
+    //strictly speaking this should be whichever entity
+    //that just cancelled editing - but m_textEdit is reset
+    //after having applied the edit...
+    centreText(m_menuEntities[EntityID::NameText]);
+
+    m_previousString.clear();
 }
 
 bool ProfileState::applyTextEdit()
