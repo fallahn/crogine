@@ -147,7 +147,7 @@ namespace
         vec4 colour = v_colour * u_colour;
         
         //if alpha blended
-        colour.rgb += (1.0 - colour.a) * colour.rgb;
+        //colour.rgb += (1.0 - colour.a) * colour.rgb;
         colour.a *= 0.5 + (0.5 * ease(gl_PointCoord.y));
 
         float crop = step(0.495, gl_PointCoord.x);
@@ -226,9 +226,15 @@ void GolfState::createWeather(std::int32_t weatherType)
             const auto callback = 
                 [&](cro::Entity e, float)
             {
-                const float vol = e.getComponent<cro::Callback>().getUserData<const float>() *
-                    m_gameScene.getSystem<WeatherAnimationSystem>()->getOpacity();
-                e.getComponent<cro::AudioEmitter>().setVolume(vol);
+                const auto& [vol, pos] = e.getComponent<cro::Callback>().getUserData<const std::pair<float, glm::vec3>>();
+                e.getComponent<cro::AudioEmitter>().setVolume(vol * m_gameScene.getSystem<WeatherAnimationSystem>()->getOpacity());
+
+                //really we need to set the height at ground height - but is
+                //it worth doing all that ray casting?
+                auto camPos = m_gameScene.getActiveListener().getComponent<cro::Transform>().getWorldPosition();
+                camPos.y = 0.f;
+
+                e.getComponent<cro::Transform>().setPosition(pos + camPos);
 
                 auto state = e.getComponent<cro::AudioEmitter>().getState();
                 if (vol == 0 && state == cro::AudioEmitter::State::Playing)
@@ -253,12 +259,12 @@ void GolfState::createWeather(std::int32_t weatherType)
 
             constexpr std::array Positions =
             {
-                glm::vec3(20.f, 2.f, -180.f),
-                glm::vec3(150.f, 2.f, -180.f),
-                glm::vec3(300.f, 2.f, -180.f),
-                glm::vec3(20.f, 2.f, -20.f),
-                glm::vec3(150.f, 2.f, -20.f),
-                glm::vec3(300.f, 2.f, -20.f)
+                glm::vec3(-0.865, 2.f, -0.5f),
+                glm::vec3(0.f, 2.f, 1.f),
+                glm::vec3(0.865, 2.f, -0.5f),
+                glm::vec3(-0.865, 2.f, 0.5f),
+                glm::vec3(0.f, 2.f, 1.f),
+                glm::vec3(0.865, 2.f, 0.5f),
             };
 
             for (auto i = 0u; i < Positions.size(); ++i)
@@ -274,7 +280,7 @@ void GolfState::createWeather(std::int32_t weatherType)
 
                 const float baseVolume = audioEnt.getComponent<cro::AudioEmitter>().getVolume();
                 audioEnt.addComponent<cro::Callback>().active = true;
-                audioEnt.getComponent<cro::Callback>().setUserData<const float>(baseVolume);
+                audioEnt.getComponent<cro::Callback>().setUserData<const std::pair<float, glm::vec3>>(baseVolume, Positions[i]);
                 audioEnt.getComponent<cro::Callback>().function = callback;
             }
         }
@@ -283,12 +289,13 @@ void GolfState::createWeather(std::int32_t weatherType)
     auto materialID = m_resources.materials.add(shader);
     auto material = m_resources.materials.get(materialID);
     //material.setProperty("u_colour", weatherColour); //this will override the fade animation
-    material.blendMode = blendMode;
-    //ignored by snow as it has a different blendmode, but that's fine
-    material.blendData.blendFunc = { GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA };
-    material.blendData.enableProperties = { GL_BLEND, GL_DEPTH_TEST };
-    material.blendData.equation = GL_FUNC_ADD;
-    material.blendData.writeDepthMask = GL_TRUE;
+    material.blendMode = cro::Material::BlendMode::Alpha;
+    //material.blendMode = blendMode;
+    ////ignored by snow as it has a different blendmode, but that's fine
+    //material.blendData.blendFunc = { GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA };
+    //material.blendData.enableProperties = { GL_BLEND, GL_DEPTH_TEST };
+    //material.blendData.equation = GL_FUNC_ADD;
+    //material.blendData.writeDepthMask = GL_TRUE;
 
     m_gameScene.getSystem<WeatherAnimationSystem>()->setMaterialData(shader, weatherColour);
 
