@@ -95,7 +95,7 @@ namespace
         //return sqrt(1.0 - pow(i - 1.0, 2.0));
         return i;
     }
-    const float FallSpeed = 16.0;
+    const float FallSpeed = 32.0;//16.0;
     const float WindEffect = 10.0;
 #endif
 
@@ -155,6 +155,7 @@ namespace
 
         if(crop < 0.05) discard;
 
+        colour.a *= u_colour.a;
         FRAG_OUT = colour;
     }
 )";
@@ -281,7 +282,7 @@ void GolfState::createWeather(std::int32_t weatherType)
     auto& shader = m_resources.shaders.get(ShaderID::Weather);
     auto materialID = m_resources.materials.add(shader);
     auto material = m_resources.materials.get(materialID);
-    material.setProperty("u_colour", weatherColour);
+    //material.setProperty("u_colour", weatherColour); //this will override the fade animation
     material.blendMode = blendMode;
     //ignored by snow as it has a different blendmode, but that's fine
     material.blendData.blendFunc = { GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA };
