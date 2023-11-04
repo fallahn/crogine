@@ -3550,6 +3550,12 @@ void GolfState::loadAssets()
                                 {
                                     lightData.position = lightProp.getValue<glm::vec3>();
                                 }
+                                else if (propName == "animation")
+                                {
+                                    auto str = lightProp.getValue<std::string>();
+                                    auto len = std::min(std::size_t(20), str.length());
+                                    lightData.animation = str.substr(0, len);
+                                }
                             }
                         }
                     }
@@ -6209,6 +6215,13 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo)
                 propModels->at(i).getComponent<cro::Model>().setHidden(rescale);
             }
 
+            
+            
+            //index should be updated by now (as this is a callback)
+            //so we're actually targetting the next hole entity
+            auto entity = m_holeData[m_currentHole].modelEntity;
+            entity.getComponent<cro::Model>().setHidden(false);            
+            
             if (rescale)
             {
                 for (auto i = 0u; i < particles->size(); ++i)
@@ -6228,15 +6241,7 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo)
                     spectator.getComponent<Spectator>().path = nullptr;
                     spectator.getComponent<cro::Skeleton>().stop();
                 }
-            }
 
-            //index should be updated by now (as this is a callback)
-            //so we're actually targetting the next hole entity
-            auto entity = m_holeData[m_currentHole].modelEntity;
-            entity.getComponent<cro::Model>().setHidden(false);
-
-            if (rescale)
-            {
                 entity.getComponent<cro::Transform>().setScale({ 0.f, 1.f, 0.f });
 
                 if (m_lightVolumeDefinition.isLoaded())
@@ -6250,7 +6255,11 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo)
                         lightEnt.getComponent<cro::Transform>().setScale(glm::vec3(lightData.radius));
                         lightEnt.addComponent<cro::LightVolume>().colour = lightData.colour;
                         lightEnt.getComponent<cro::LightVolume>().radius = lightData.radius;
-                        //TODO add any light animation property
+                        //add any light animation property
+                        if (!lightData.animation.empty())
+                        {
+                            lightEnt.addComponent<LightAnimation>().setPattern(lightData.animation);
+                        }
 
                         m_lightVolumeDefinition.createModel(lightEnt);
                         lightEnt.getComponent<cro::Model>().setHidden(true);

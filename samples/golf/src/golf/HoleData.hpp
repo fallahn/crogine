@@ -67,6 +67,7 @@ struct LightData final
     float radius = 0.f;
     glm::vec3 position = glm::vec3(0.f);
     cro::Colour colour = cro::Colour::White;
+    std::string animation;
 };
 
 struct HoleData final

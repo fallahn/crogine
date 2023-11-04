@@ -1,7 +1,7 @@
 bl_info = {
     "name": "Export golf hole data",
     "author": "Bald Guy",
-    "version": (2023, 10, 29),
+    "version": (2023, 11, 4),
     "blender": (2, 80, 0),
     "location": "File > Export > Golf Hole",
     "description": "Export position and rotation info of selected objects",
@@ -137,6 +137,11 @@ def WriteLight(file, ob):
         file.write("    light\n    {\n")
         file.write("        colour = %f,%f,%f,1.0\n" % (colour.r, colour.g, colour.b))
         file.write("        position = %f,%f,%f\n" % (location[0], location[2], -location[1]))
+
+        if ob.get('animation') is not None:
+            file.write("        animation = \"%s\"\n" % ob['animation'])
+
+
         file.write("        radius = %f\n" % light.shadow_soft_size)
         file.write("    }\n\n")
 
@@ -165,14 +170,14 @@ class ExportInfo(bpy.types.Operator, bpy_extras.io_utils.ExportHelper):
         file.write("hole %s\n{\n" % Path(self.properties.filepath).stem)
 
         if scene.get('map_path') is not None:
-            file.write("    map=\"%s/%s.png\"\n" % (scene['map_path'], Path(self.properties.filepath).stem))
+            file.write("    map = \"%s/%s.png\"\n" % (scene['map_path'], Path(self.properties.filepath).stem))
         else:
-            file.write("    map=\"assets/golf/courses/course_0/%s.png\"\n" % Path(self.properties.filepath).stem)
+            file.write("    map = \"assets/golf/courses/course_0/%s.png\"\n" % Path(self.properties.filepath).stem)
 
         if scene.get('model_path') is not None:
-            file.write("    model=\"%s\"\n" % scene['model_path'])
+            file.write("    model = \"%s\"\n" % scene['model_path'])
         else:
-            file.write("    model=\"assets/golf/models/course_0/%s.cmt\"\n" % Path(self.properties.filepath).stem)
+            file.write("    model = \"assets/golf/models/course_0/%s.cmt\"\n" % Path(self.properties.filepath).stem)
         
         if scene.get('par') is not None:
             file.write("    par = %d\n\n" % scene['par'])
