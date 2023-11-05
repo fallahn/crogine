@@ -156,7 +156,7 @@ bool Font::loadFromFile(const std::string& filePath)
 
 bool Font::appendFromFile(const std::string& filePath, FontAppendmentContext ctx)
 {
-    CRO_ASSERT(rangeStart > 0 && rangeStart < rangeEnd, "invalid codepoint range");
+    CRO_ASSERT(ctx.codepointRange[0] > 0 && ctx.codepointRange[0] < ctx.codepointRange[1], "invalid codepoint range");
 
     auto path = FileSystem::getResourcePath() + filePath;
     FontData fd; //TODO do this need a dtor to RAII away any failed loading?
