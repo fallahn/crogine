@@ -80,6 +80,18 @@ uniform sampler2D u_distortionTexture;
 
 #include FOG_COLOUR
 
+#if defined (LIGHT_COLOUR)
+#include BAYER_MATRIX
+
+        const float Brightness = 1.1;
+        const float Contrast = 2.0;
+
+        float brightnessContrast(float value)
+        {
+            return (value - 0.5) * Contrast + 0.5 + Brightness;
+        }
+#endif
+
         float rand()
         {
             return fract(sin(u_windData.w) * 1e4);
@@ -115,7 +127,19 @@ vec2 coord = v_texCoord;
 
 
 #if defined (LIGHT_COLOUR)
-            colour.rgb += TEXTURE(u_lightTexture, coord).rgb;
+            //colour.rgb += TEXTURE(u_lightTexture, coord).rgb;
+
+            vec3 lightColour = TEXTURE(u_lightTexture, coord).rgb;
+
+            /*vec2 xy = gl_FragCoord.xy;
+            int x = int(mod(xy.x, MatrixSize));
+            int y = int(mod(xy.y, MatrixSize));
+    
+            float desat = brightnessContrast(dot(lightColour, vec3(0.2125, 0.7154, 0.0721)));
+            float amount = findClosest(x, y, desat);
+
+            colour.rgb += lightColour * amount;*/
+            colour.rgb += lightColour;
 #endif
 
 

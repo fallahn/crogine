@@ -59,12 +59,26 @@ uniform sampler2D u_lightTexture;
 
 uniform vec4 u_lightColour;
 
+//uniform float u_brightness = 1.1;
+//uniform float u_contrast = 2.0;
+
 VARYING_IN vec2 v_texCoord;
 VARYING_IN vec4 v_colour;
 
 OUTPUT
 
 #include FOG_COLOUR
+#if defined (LIGHT_COLOUR)
+#include BAYER_MATRIX
+
+const float Brightness = 1.1;
+const float Contrast = 2.0;
+
+float brightnessContrast(float value)
+{
+    return (value - 0.5) * Contrast + 0.5 + Brightness;
+}
+#endif
 
 void main()
 {
@@ -76,7 +90,18 @@ void main()
     colour = mix(colour, FogColour * u_lightColour, fogAmount(d));
 
 #if defined(LIGHT_COLOUR)
-    colour.rgb += TEXTURE(u_lightTexture, v_texCoord).rgb;
+    vec3 lightColour = TEXTURE(u_lightTexture, v_texCoord).rgb;
+
+    /*vec2 xy = gl_FragCoord.xy;
+    int x = int(mod(xy.x, MatrixSize));
+    int y = int(mod(xy.y, MatrixSize));
+    
+    float desat = brightnessContrast(dot(lightColour, vec3(0.2125, 0.7154, 0.0721)));
+    float amount = findClosest(x, y, desat);
+
+    colour.rgb += lightColour * amount;*/
+    colour.rgb += lightColour;
+
 #endif
 
     FRAG_OUT = colour;

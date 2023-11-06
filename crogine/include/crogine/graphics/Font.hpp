@@ -217,7 +217,6 @@ namespace cro
         struct FontData final
         {
             //use std::any so we don't expose freetype pointers to public API
-            std::any library;
             std::any face;
             std::any stroker;
             

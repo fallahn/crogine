@@ -232,8 +232,8 @@ void GolfState::buildUI()
         entity.getComponent<cro::Drawable2D>().bindUniform("u_depthTexture", m_gameSceneMRTexture.getDepthTexture());
         entity.getComponent<cro::Drawable2D>().bindUniform("u_lightTexture", lightID);
         //entity.getComponent<cro::Drawable2D>().bindUniform("u_density", 0.6f);
-        m_postProcesses[PostID::Fog].uniforms.emplace_back(std::make_pair("u_depthTexture", m_gameSceneMRTexture.getDepthTexture()));
-        m_postProcesses[PostID::Fog].uniforms.emplace_back(std::make_pair("u_lightTexture", lightID));
+        m_postProcesses[PostID::Composite].uniforms.emplace_back(std::make_pair("u_depthTexture", m_gameSceneMRTexture.getDepthTexture()));
+        m_postProcesses[PostID::Composite].uniforms.emplace_back(std::make_pair("u_lightTexture", lightID));
     }
     else
     {
@@ -244,13 +244,13 @@ void GolfState::buildUI()
         entity.addComponent<cro::Callback>().function = resizeCallback;
 
         entity.getComponent<cro::Drawable2D>().bindUniform("u_depthTexture", m_gameSceneTexture.getDepthTexture());
-        m_postProcesses[PostID::Fog].uniforms.emplace_back(std::make_pair("u_depthTexture", m_gameSceneTexture.getDepthTexture()));
+        m_postProcesses[PostID::Composite].uniforms.emplace_back(std::make_pair("u_depthTexture", m_gameSceneTexture.getDepthTexture()));
     }    
 
 
     for (auto cam : m_cameras)
     {
-        cam.getComponent<TargetInfo>().postProcess = &m_postProcesses[PostID::Fog];
+        cam.getComponent<TargetInfo>().postProcess = &m_postProcesses[PostID::Composite];
     }
 
 

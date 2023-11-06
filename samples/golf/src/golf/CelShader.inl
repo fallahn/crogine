@@ -92,6 +92,7 @@ static const std::string CelVertexShader = R"(
     VARYING_OUT vec4 v_colour;
     VARYING_OUT vec3 v_cameraWorldPosition;
     VARYING_OUT vec3 v_worldPosition;
+    VARYING_OUT float v_perspectiveScale;
 
 #if defined (TEXTURED)
     VARYING_OUT vec2 v_texCoord;
@@ -225,6 +226,8 @@ static const std::string CelVertexShader = R"(
         v_ditherAmount = pow(clamp((distance - u_nearFadeDistance) / fadeDistance, 0.0, 1.0), 2.0);
         v_ditherAmount *= 1.0 - clamp((distance - farFadeDistance) / fadeDistance, 0.0, 1.0);
 #endif
+
+        v_perspectiveScale = u_projectionMatrix[1][1] / gl_Position.w;
     })";
 
 static const std::string CelFragmentShader = R"(
@@ -301,6 +304,7 @@ static const std::string CelFragmentShader = R"(
     VARYING_IN vec3 v_cameraWorldPosition;
     VARYING_IN vec3 v_worldPosition;
     VARYING_IN vec2 v_texCoord;
+    VARYING_IN float v_perspectiveScale;
 
     //OUTPUT
     layout (location = 0) out vec4 FRAG_OUT;
@@ -632,6 +636,7 @@ float greenTerrain = step(0.065, v_colour.r) * (1.0 - step(0.13, v_colour.r));
 #if !defined(CONTOUR)
     vec3 f = fract(v_worldPosition * 0.5);
     vec3 df = fwidth(v_worldPosition * 0.5);
+    //df = (df * 0.25) + ((df * 0.75) * clamp(v_perspectiveScale, 0.01, 1.0));
     vec3 g = step(df * u_pixelScale, f);
 
     float contourX = 1.0 - (g.y * g.z);
@@ -652,6 +657,7 @@ float greenTerrain = step(0.065, v_colour.r) * (1.0 - step(0.13, v_colour.r));
 
     vec3 f = fract(v_worldPosition * 2.0);
     vec3 df = fwidth(v_worldPosition * 2.0);
+    //df = (df * 0.25) + ((df * 0.75) * clamp(v_perspectiveScale, 0.01, 1.0));
     vec3 g = step(df * u_pixelScale, f);
 
     float contourX = 1.0 - (g.y * g.z);

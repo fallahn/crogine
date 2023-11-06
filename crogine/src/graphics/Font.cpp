@@ -84,10 +84,32 @@ namespace
 
     struct FontDataResource final
     {
+        FT_Library library = nullptr;
+
+        FontDataResource()
+        {
+            //init freetype
+            if (FT_Init_FreeType(&library) != 0)
+            {
+                Logger::log("Failed to init freetype", Logger::Type::Error);
+            }
+        }
+
+        ~FontDataResource()
+        {
+            FT_Done_FreeType(library);
+        }
+
         std::unordered_map<std::string, std::vector<std::uint8_t>> fontData;
 
         FontDataBuffer getFontData(const std::string& path)
         {
+            if (!library)
+            {
+                //we failed for some reason
+                return {};
+            }
+
             if (fontData.count(path) == 0)
             {
                 RaiiRWops fontFile;
@@ -135,14 +157,14 @@ Font::Font()
 
 Font::~Font()
 {
+    cleanup();
+
     fontDataResource->refCount--;
 
     if (fontDataResource->refCount == 0)
     {
         fontDataResource.reset();
     }
-
-    cleanup();
 }
 
 //public
@@ -159,7 +181,7 @@ bool Font::appendFromFile(const std::string& filePath, FontAppendmentContext ctx
     CRO_ASSERT(ctx.codepointRange[0] > 0 && ctx.codepointRange[0] < ctx.codepointRange[1], "invalid codepoint range");
 
     auto path = FileSystem::getResourcePath() + filePath;
-    FontData fd; //TODO do this need a dtor to RAII away any failed loading?
+    FontData fd;
     fd.context = ctx;
 
     //load the face    
@@ -170,31 +192,19 @@ bool Font::appendFromFile(const std::string& filePath, FontAppendmentContext ctx
         return false;
     }
 
-    //init freetype - TODO can we use a single library for all font data?
-    FT_Library library;
-    if (FT_Init_FreeType(&library) != 0)
-    {
-        Logger::log("Failed to load font " + path + ": Failed to init freetype", Logger::Type::Error);
-        return false;
-    }
-    fd.library = std::make_any<FT_Library>(library);
-
 
     FT_Face face = nullptr;
-    if (FT_New_Memory_Face(library, buffer.buffer, buffer.size, 0, &face) != 0)
+    if (FT_New_Memory_Face(fontDataResource->library, buffer.buffer, buffer.size, 0, &face) != 0)
     {
-        //TODO relase library!
-
         Logger::log("Failed to load font " + path + ": Failed creating font face", Logger::Type::Error);
         return false;
     }
 
     //stroker used for rendering outlines
     FT_Stroker stroker = nullptr;
-    if (FT_Stroker_New(library, &stroker) != 0)
+    if (FT_Stroker_New(fontDataResource->library, &stroker) != 0)
     {
         //TODO release face!
-        //TODO release library!
 
         LogE << "Failed to load font " << path << ": Failed to create stroker" << std::endl;
         return false;
@@ -427,7 +437,7 @@ Glyph Font::loadGlyph(std::uint32_t codepoint, std::uint32_t charSize, bool bold
     {
         if (bold)
         {
-            FT_Bitmap_Embolden(std::any_cast<FT_Library>(fd.library), bitmap, weight, weight);
+            FT_Bitmap_Embolden(fontDataResource->library, bitmap, weight, weight);
         }
     }
 
@@ -679,18 +689,8 @@ void Font::cleanup()
             }
         }
 
-        if (fd.library.has_value())
-        {
-            auto library = std::any_cast<FT_Library>(fd.library);
-            if (library)
-            {
-                FT_Done_FreeType(library);
-            }
-        }
-
         fd.stroker.reset();
         fd.face.reset();
-        fd.library.reset();
     }
 
     m_fontData.clear();

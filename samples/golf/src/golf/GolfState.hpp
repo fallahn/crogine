@@ -188,7 +188,7 @@ private:
     {
         enum
         {
-            Noise, Fog,
+            Noise, Composite,
             Count
         };
     };

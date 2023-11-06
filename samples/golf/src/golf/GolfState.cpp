@@ -2333,7 +2333,7 @@ void GolfState::loadAssets()
     }
     m_resources.shaders.loadFromString(ShaderID::Composite, CompositeVert, CompositeFrag, "#define ZFAR 320.0\n" + defines);
     shader = &m_resources.shaders.get(ShaderID::Composite);
-    m_postProcesses[PostID::Fog].shader = shader;
+    m_postProcesses[PostID::Composite].shader = shader;
     //depth uniform is set after creating the UI once we know the render texture is created
 
     //wireframe
@@ -4951,9 +4951,9 @@ void GolfState::createDrone()
         };
 
         m_drone.getComponent<cro::Callback>().getUserData<DroneCallbackData>().target = targetEnt;
-        m_cameras[CameraID::Sky].getComponent<TargetInfo>().postProcess = &m_postProcesses[PostID::Fog];
+        m_cameras[CameraID::Sky].getComponent<TargetInfo>().postProcess = &m_postProcesses[PostID::Composite];
     }
-    m_cameras[CameraID::Drone].getComponent<TargetInfo>().postProcess = &m_postProcesses[PostID::Fog];
+    m_cameras[CameraID::Drone].getComponent<TargetInfo>().postProcess = &m_postProcesses[PostID::Composite];
 }
 
 void GolfState::spawnBall(const ActorInfo& info)
