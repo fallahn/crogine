@@ -210,33 +210,21 @@ void GolfState::buildUI()
 
     if (m_sharedData.nightTime)
     {
-        entity.getComponent<cro::Drawable2D>().setTexture(m_gameSceneMRTexture.getTexture(MRTIndex::Colour), m_gameSceneMRTexture.getSize());
-        entity.getComponent<cro::Drawable2D>().setVertexData(
-            {
-                cro::Vertex2D(glm::vec2(-0.5f, 0.5f), glm::vec2(0.f, 1.f)),
-                cro::Vertex2D(glm::vec2(-0.5f), glm::vec2(0.f)),
-                cro::Vertex2D(glm::vec2(0.5f), glm::vec2(1.f)),
-                cro::Vertex2D(glm::vec2(0.5f, -0.5f), glm::vec2(1.f, 0.f))
-            });
-        entity.getComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLE_STRIP);
-        
-        auto scale = glm::vec2(m_gameSceneMRTexture.getSize());
-        if (m_sharedData.pixelScale)
-        {
-            scale *= m_viewScale;
-        }
-        entity.getComponent<cro::Transform>().setScale(scale);
-
         entity.addComponent<cro::Callback>().function =
             [&](cro::Entity e, float)
         {
             //update texture rect and recentre the origin
-            auto scale = glm::vec2(m_gameSceneMRTexture.getSize());
-            if (m_sharedData.pixelScale)
-            {
-                scale *= m_viewScale;
-            }
-            e.getComponent<cro::Transform>().setScale(scale);
+            e.getComponent<cro::Drawable2D>().setTexture(m_gameSceneMRTexture.getTexture(MRTIndex::Colour), m_gameSceneMRTexture.getSize());
+
+            auto size = glm::vec2(m_gameSceneMRTexture.getSize());
+            e.getComponent<cro::Drawable2D>().setVertexData(
+                {
+                    cro::Vertex2D(glm::vec2(0.f, size.y), glm::vec2(0.f, 1.f)),
+                    cro::Vertex2D(glm::vec2(0.f), glm::vec2(0.f)),
+                    cro::Vertex2D(size, glm::vec2(1.f)),
+                    cro::Vertex2D(glm::vec2(size.x, 0.f), glm::vec2(1.f, 0.f))
+                });
+            e.getComponent<cro::Transform>().setOrigin(size / 2.f);
             e.getComponent<cro::Callback>().active = false;
         };
 

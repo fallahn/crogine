@@ -100,6 +100,8 @@ void RenderSystem2D::updateDrawList(Entity camEnt)
     for (auto entity : entities)
     {
         auto& drawable = entity.getComponent<Drawable2D>();
+        drawable.m_wasCulledLastFrame = true;
+
         if (drawable.m_autoCrop)
         {
             auto scale = entity.getComponent<cro::Transform>().getWorldScale();
@@ -112,12 +114,14 @@ void RenderSystem2D::updateDrawList(Entity camEnt)
                 if (bounds.intersects(viewRect))
                 {
                     drawlist.push_back(entity);
+                    drawable.m_wasCulledLastFrame = false;
                 }
             }
         }
         else
         {
             drawlist.push_back(entity);
+            drawable.m_wasCulledLastFrame = false;
         }
     }
 

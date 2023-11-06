@@ -53,6 +53,7 @@ Drawable2D::Drawable2D()
     m_croppingArea          (std::numeric_limits<float>::lowest() / 2.f, std::numeric_limits<float>::lowest() / 2.f,
                                 std::numeric_limits<float>::max(), std::numeric_limits<float>::max()),
     m_cropped               (false),
+    m_wasCulledLastFrame    (true),
     m_sortCriteria          (0)
 {
 

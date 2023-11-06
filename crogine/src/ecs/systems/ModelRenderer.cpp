@@ -355,10 +355,10 @@ void ModelRenderer::updateDrawListDefault(Entity cameraEnt)
         sphere.centre = glm::vec3(tx.getWorldTransform() * glm::vec4(sphere.centre, 1.f));
         auto scale = tx.getWorldScale();
 
-        if (scale.x * scale.y * scale.z == 0)
+        /*if (scale.x * scale.y * scale.z == 0)
         {
             continue;
-        }
+        }*/
 
         sphere.radius *= ((scale.x + scale.y + scale.z) / 3.f);
 

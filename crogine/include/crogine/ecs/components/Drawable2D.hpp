@@ -263,6 +263,12 @@ namespace cro
         void setCullingEnabled(bool enabled) { m_autoCrop = enabled; }
 
 
+        /*!
+        \brief Returns whether or not the Drawable was culled from drawing last frame
+        */
+        bool wasCulledLastFrame() const { return m_wasCulledLastFrame; }
+
+
         enum class Facing
         {
             Front, Back
@@ -330,6 +336,7 @@ namespace cro
         FloatRect m_croppingArea;
         FloatRect m_croppingWorldArea;
         bool m_cropped;
+        bool m_wasCulledLastFrame;
 
         std::int32_t m_sortCriteria; //either Y or Z value depending on system sort mode
 

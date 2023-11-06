@@ -5217,6 +5217,7 @@ void GolfState::spawnBall(const ActorInfo& info)
     entity.addComponent<cro::Transform>().setOrigin({ texSize.x / 2.f, 0.f, -0.1f - (0.01f * depthOffset) });
     entity.addComponent<cro::Drawable2D>().setTexture(&m_sharedData.nameTextures[info.clientID].getTexture());
     entity.getComponent<cro::Drawable2D>().setPrimitiveType(GL_TRIANGLES);
+    //entity.getComponent<cro::Drawable2D>().setCullingEnabled(false);
     entity.getComponent<cro::Drawable2D>().setVertexData(
         {
             cro::Vertex2D(glm::vec2(0.f, textureRect.height), glm::vec2(0.f, uvRect.bottom + uvRect.height), BaseColour),
@@ -5307,7 +5308,6 @@ void GolfState::spawnBall(const ActorInfo& info)
         e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
     };
     m_courseEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-
 
 
     //miniball for player

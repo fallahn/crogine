@@ -410,6 +410,13 @@ Glyph Font::loadGlyph(std::uint32_t codepoint, std::uint32_t charSize, bool bold
     }
     else
     {
+        //TODO use this to render a double density texture
+        FT_Matrix scaleMat;
+        scaleMat.xx = 2;
+        scaleMat.xy = 0;
+        scaleMat.yy = 2;
+        scaleMat.yx = 0;
+
         //this is needed if we're rendering colour
         //so assume outlining etc is disabled.
         FT_Render_Glyph(face->glyph, FT_RENDER_MODE_NORMAL);

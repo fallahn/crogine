@@ -232,10 +232,10 @@ void ShadowMapRenderer::updateDrawList(Entity camEnt)
             auto scale = tx.getWorldScale();
 
             //if it's approaching zero scale then don't cast shadow
-            if (scale.x * scale.y * scale.z < 0.01f)
+            /*if (scale.x * scale.y * scale.z < 0.01f)
             {
                 continue;
-            }
+            }*/
 
             sphere.radius *= ((scale.x + scale.y + scale.z) / 3.f);
 
