@@ -72,6 +72,16 @@ private:
     cro::SimpleVertexArray m_target;
     cro::SimpleVertexArray m_follower;
 
+    cro::SimpleQuad m_rainQuad;
+
+    struct RainShder final
+    {
+        std::uint32_t shaderID = 0;
+        std::uint32_t textureID = 0;
+        std::int32_t rainUniform = -1;
+        std::int32_t rectUniform = -1;
+    }m_rainShader;
+
     void addSystems();
     void loadAssets();
     void createScene();

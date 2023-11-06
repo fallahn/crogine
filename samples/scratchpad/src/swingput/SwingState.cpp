@@ -52,6 +52,8 @@ source distribution.
 
 namespace
 {
+#include "Rain.inl"
+
     float cohesion = 10.f;
     float maxVelocity = 200.f;
     float targetRadius = 50.f;
@@ -276,6 +278,35 @@ bool SwingState::simulate(float dt)
     glUseProgram(shaderID);
     glUniform1f(timeUniform, accumulator);
 
+
+    static constexpr float FrameTime = 1.f / 10.f;
+    static float animTime = 0.f;
+    animTime += dt;
+
+    static constexpr std::int32_t MaxFrames = 24;
+    static std::int32_t frameID = 0;
+
+    while (animTime > FrameTime)
+    {
+        frameID = (frameID + 1) % MaxFrames;
+
+        auto row = 5 - (frameID / 4);
+        auto col = frameID % 4;
+
+        glm::vec4 rect =
+        {
+            (1.f / 4.f) * col,
+            (1.f / 6.f) * row,
+            (1.f / 4.f), (1.f / 6.f)
+        };
+
+        glUseProgram(m_rainShader.shaderID);
+        glUniform4f(m_rainShader.rectUniform, rect.x, rect.y, rect.z, rect.w);
+
+        animTime -= FrameTime;
+    }
+
+
     m_inputParser.process(dt);
 
     m_gameScene.simulate(dt);
@@ -287,6 +318,15 @@ void SwingState::render()
 {
     m_gameScene.render();
     m_uiScene.render();
+
+
+    glUseProgram(m_rainShader.shaderID);
+    glActiveTexture(GL_TEXTURE11);
+    glBindTexture(GL_TEXTURE_2D, m_rainShader.textureID);
+    glUniform1i(m_rainShader.rainUniform, 11);
+
+
+    m_rainQuad.draw();
 
     m_target.draw();
     m_follower.draw();
@@ -345,6 +385,24 @@ void SwingState::loadAssets()
             cro::Vertex2D(glm::vec2(10.f, -10.f), cro::Colour::Red)
         }
     );
+
+    auto& tex = m_resources.textures.get("assets/images/face.png");
+    tex.setSmooth(true);
+    m_rainQuad.setTexture(tex);
+    m_rainQuad.setScale(glm::vec2(4.f));
+
+    std::int32_t shaderID = 10;
+    m_resources.shaders.loadFromString(shaderID, RainVert, RainFrag);
+    auto& rainShader = m_resources.shaders.get(shaderID);
+    m_rainQuad.setShader(rainShader);
+
+    auto& rainTex = m_resources.textures.get("assets/golf/images/rain_sheet.png");
+    rainTex.setSmooth(true);
+
+    m_rainShader.shaderID = rainShader.getGLHandle();
+    m_rainShader.rainUniform = rainShader.getUniformID("u_rainMap");
+    m_rainShader.rectUniform = rainShader.getUniformID("u_subrect");
+    m_rainShader.textureID = rainTex.getGLHandle();
 }
 
 void SwingState::createScene()
@@ -577,7 +635,8 @@ void SwingState::saveSettings()
 void SwingState::updateView(cro::Camera& cam3D)
 {
     glm::vec2 size(cro::App::getWindow().getSize());
-    auto windowSize = size;
+   
+    const auto windowSize = size;
     size.y = ((size.x / 16.f) * 9.f) / size.y;
     size.x = 1.f;
 
@@ -585,4 +644,6 @@ void SwingState::updateView(cro::Camera& cam3D)
     cam3D.setPerspective(50.6f * cro::Util::Const::degToRad, 16.f / 9.f, 0.1f, 140.f);
     cam3D.viewport.bottom = (1.f - size.y) / 2.f;
     cam3D.viewport.height = size.y;
+
+    m_rainQuad.setPosition(windowSize - glm::vec2(256.f + 224.f));
 }

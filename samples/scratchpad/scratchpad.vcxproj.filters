@@ -409,5 +409,8 @@
     <None Include="src\ssao\BlurShaders.inl">
       <Filter>Header Files\ssao</Filter>
     </None>
+    <None Include="src\swingput\Rain.inl">
+      <Filter>Header Files\swingput</Filter>
+    </None>
   </ItemGroup>
 </Project>

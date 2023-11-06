@@ -396,6 +396,7 @@
   <ItemGroup>
     <None Include="src\retro\RetroShaders.inl" />
     <None Include="src\ssao\BlurShaders.inl" />
+    <None Include="src\swingput\Rain.inl" />
     <None Include="src\voxels\Tables.inl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

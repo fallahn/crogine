@@ -413,6 +413,8 @@ Glyph Font::loadGlyph(std::uint32_t codepoint, std::uint32_t charSize, bool bold
 
     //rasterise it
     FT_Bitmap* bitmap = nullptr;
+    //FT_Glyph glyphDouble;
+
     if (fd.context.allowOutline || fd.context.allowBold)
     {
         FT_Glyph_To_Bitmap(&glyphDesc, FT_RENDER_MODE_NORMAL, 0, 1); //this renders alpha coverage only
@@ -421,11 +423,15 @@ Glyph Font::loadGlyph(std::uint32_t codepoint, std::uint32_t charSize, bool bold
     else
     {
         //TODO use this to render a double density texture
-        FT_Matrix scaleMat;
+        /*FT_Matrix scaleMat;
         scaleMat.xx = 2;
         scaleMat.xy = 0;
         scaleMat.yy = 2;
         scaleMat.yx = 0;
+
+        FT_Glyph_Copy(glyphDesc, &glyphDouble);
+        FT_Glyph_Transform(glyphDouble, &scaleMat, nullptr);
+        */
 
         //this is needed if we're rendering colour
         //so assume outlining etc is disabled.
