@@ -1330,9 +1330,11 @@ void GolfState::doServerCommand(const net::NetEvent& evt)
 #ifdef CRO_DEBUG_
     case ServerCommand::GotoHole:
     {
-        m_playerInfo[0].ballEntity.getComponent<cro::Transform>().setPosition(m_holeData[m_currentHole].pin + glm::vec3(Ball::Radius, 0.f, 0.f));
-        m_playerInfo[0].ballEntity.getComponent<Ball>().terrain = TerrainID::Green;
-        m_playerInfo[0].ballEntity.getComponent<Ball>().state = Ball::State::Putt;
+        m_playerInfo[0].position = m_holeData[m_currentHole].pin;
+        m_playerInfo[0].holeScore[m_currentHole] = MaxStrokes;
+        m_playerInfo[0].distanceToHole = 0.f;
+        m_playerInfo[0].terrain = TerrainID::Green;
+        setNextPlayer();
     }
 
     break;

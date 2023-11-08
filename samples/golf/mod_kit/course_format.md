@@ -197,3 +197,16 @@ The vertex colours of hole models are used to set the collision data used by the
 
 ###### Prop Models
 Prop models are textured models, and can be static or contain skeletal animation. Animated models will, by default, play animation zero once the hole is loaded, and the animation is stopped again when the hole is unloaded. Static models can use the vertex colours to allow wind effects. The red channel dicatates the amount of low frequency effect, the green channel the high frequency, and blue channel the amount of bend. These colours can also be applied to billboarded geometry using the billboard's Sprite colour property. NOTE this is DIFFERENT from treeset models *sigh* which use red for high frequncy and blue for bend - the green channel is unused in these cases (see above).
+
+###### Lighting
+From 1.15.0, when night time mode was introduced, it is possible to add point lights.
+
+    light
+    {
+        position = 1.0, 1.0, 1.0
+        colour = 1.0, 1.0, 1.0, 1.0
+        radius = 4.0
+        animation = "klnknknlnknlkmm"
+    }
+
+Postion, colour and radius are all required properties, however animation is optional. The animation is a string as used in the Quake engines (read more [here](https://www.alanzucconi.com/2021/06/15/valve-flickering-lights/)) - in brief the character 'm' represents full bright lightness, with 13 steps to zero ('a') and 13 steps to double bright ('z') Animations are played back at approximately 10 frames per second. In Blender lights are exported from Point style lights, and the postion, colour and radius are automatically read from the object properties. Animations can be added as a custom property with the type 'string'.

@@ -3549,6 +3549,7 @@ void GolfState::loadAssets()
                                 else if (propName == "position")
                                 {
                                     lightData.position = lightProp.getValue<glm::vec3>();
+                                    lightData.position.y += 0.01f;
                                 }
                                 else if (propName == "animation")
                                 {
