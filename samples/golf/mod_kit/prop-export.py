@@ -1,7 +1,7 @@
 bl_info = {
     "name": "Export golf hole data",
     "author": "Bald Guy",
-    "version": (2023, 11, 4),
+    "version": (2023, 11, 9),
     "blender": (2, 80, 0),
     "location": "File > Export > Golf Hole",
     "description": "Export position and rotation info of selected objects",
@@ -135,14 +135,16 @@ def WriteLight(file, ob):
         colour = light.color
         
         file.write("    light\n    {\n")
-        file.write("        colour = %f,%f,%f,1.0\n" % (colour.r, colour.g, colour.b))
         file.write("        position = %f,%f,%f\n" % (location[0], location[2], -location[1]))
+        file.write("        colour = %f,%f,%f,1.0\n" % (colour.r, colour.g, colour.b))
+        file.write("        radius = %f\n" % light.shadow_soft_size)
 
         if ob.get('animation') is not None:
             file.write("        animation = \"%s\"\n" % ob['animation'])
 
+        if ob.get('preset') is not None:
+            file.write("        preset = \"%s\"\n" % ob['preset'])
 
-        file.write("        radius = %f\n" % light.shadow_soft_size)
         file.write("    }\n\n")
 
 
