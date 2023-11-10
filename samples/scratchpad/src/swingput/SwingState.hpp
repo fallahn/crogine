@@ -39,6 +39,7 @@ source distribution.
 #include <crogine/graphics/SimpleVertexArray.hpp>
 #include <crogine/graphics/SimpleQuad.hpp>
 #include <crogine/graphics/CubemapTexture.hpp>
+#include <crogine/graphics/RenderTexture.hpp>
 
 namespace cro
 {
@@ -73,6 +74,10 @@ private:
     cro::SimpleVertexArray m_follower;
 
     cro::SimpleQuad m_rainQuad;
+
+    cro::RenderTexture m_ballTexture;
+    cro::SimpleQuad m_ballQuad;
+    cro::Entity m_ballCam;
 
     struct RainShder final
     {

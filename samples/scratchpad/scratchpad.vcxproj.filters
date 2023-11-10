@@ -412,5 +412,8 @@
     <None Include="src\swingput\Rain.inl">
       <Filter>Header Files\swingput</Filter>
     </None>
+    <None Include="src\swingput\Glow.inl">
+      <Filter>Header Files\swingput</Filter>
+    </None>
   </ItemGroup>
 </Project>

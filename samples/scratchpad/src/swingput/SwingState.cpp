@@ -53,6 +53,7 @@ source distribution.
 namespace
 {
 #include "Rain.inl"
+#include "Glow.inl"
 
     float cohesion = 10.f;
     float maxVelocity = 200.f;
@@ -183,6 +184,8 @@ namespace
             Water = 1,
             Sphere,
 
+            Rain,
+            Glow
         };
     };
 
@@ -191,7 +194,9 @@ namespace
         enum
         {
             Water,
-            Sphere
+            Sphere,
+
+            Glow
         };
     };
 
@@ -319,6 +324,11 @@ void SwingState::render()
     m_gameScene.render();
     m_uiScene.render();
 
+    auto oldCam = m_gameScene.setActiveCamera(m_ballCam);
+    m_ballTexture.clear(cro::Colour(0.05f, 0.05f, 0.05f, 1.f));
+    m_gameScene.render();
+    m_ballTexture.display();
+    m_gameScene.setActiveCamera(oldCam);
 
     glUseProgram(m_rainShader.shaderID);
     glActiveTexture(GL_TEXTURE11);
@@ -327,6 +337,7 @@ void SwingState::render()
 
 
     m_rainQuad.draw();
+    m_ballQuad.draw();
 
     m_target.draw();
     m_follower.draw();
@@ -391,9 +402,8 @@ void SwingState::loadAssets()
     m_rainQuad.setTexture(tex);
     m_rainQuad.setScale(glm::vec2(4.f));
 
-    std::int32_t shaderID = 10;
-    m_resources.shaders.loadFromString(shaderID, RainVert, RainFrag);
-    auto& rainShader = m_resources.shaders.get(shaderID);
+    m_resources.shaders.loadFromString(ShaderID::Rain, RainVert, RainFrag);
+    auto& rainShader = m_resources.shaders.get(ShaderID::Rain);
     m_rainQuad.setShader(rainShader);
 
     auto& rainTex = m_resources.textures.get("assets/golf/images/rain_sheet.png");
@@ -403,6 +413,13 @@ void SwingState::loadAssets()
     m_rainShader.rainUniform = rainShader.getUniformID("u_rainMap");
     m_rainShader.rectUniform = rainShader.getUniformID("u_subrect");
     m_rainShader.textureID = rainTex.getGLHandle();
+
+
+    m_ballTexture.create(512, 512);
+    m_ballQuad.setTexture(m_ballTexture.getTexture());
+
+    m_resources.shaders.loadFromString(ShaderID::Glow, GlowVertex, GlowFragment);
+    m_resources.materials.add(MaterialID::Glow, m_resources.shaders.get(ShaderID::Glow));
 }
 
 void SwingState::createScene()
@@ -502,6 +519,58 @@ void SwingState::createScene()
 
     m_gameScene.getSunlight().getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -0.32f);
     m_gameScene.getSunlight().getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, -0.2f);
+
+
+
+    //balls.
+    const std::array BallPaths =
+    {
+        std::string("assets/golf/models/balls/ball_pot.cmt"),
+        std::string("assets/golf/models/balls/ball_nine.cmt"),
+        std::string("assets/golf/models/balls/ball_pineapple.cmt"),
+        std::string("assets/golf/models/balls/ball02.cmt"),
+        std::string("assets/golf/models/balls/ball03.cmt"),
+    };
+
+    auto nub = m_gameScene.createEntity();
+    nub.addComponent<cro::Transform>().setPosition({ 1.5f, 0.f, 0.f });
+    nub.addComponent<cro::Callback>().active = true;
+    nub.getComponent<cro::Callback>().function =
+        [](cro::Entity e, float dt)
+        {
+            e.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, 0.25f * dt);
+        };
+
+    static constexpr float Radius = 0.1f;
+    static constexpr float Arc = cro::Util::Const::TAU / BallPaths.size();
+    for (auto i = 0u; i < BallPaths.size(); ++i)
+    {
+        if (md.loadFromFile(BallPaths[i]))
+        {
+            auto pos = glm::vec3(glm::cos(i * Arc), 0.f, glm::sin(i * Arc));
+
+            entity = m_gameScene.createEntity();
+            entity.addComponent<cro::Transform>().setPosition(pos * Radius);
+            entity.addComponent<cro::Callback>().active = true;
+            entity.getComponent<cro::Callback>().function =
+                [](cro::Entity e, float dt)
+                {
+                    e.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, 0.1f * dt);
+                };
+
+            md.createModel(entity);
+            entity.getComponent<cro::Model>().setMaterial(0, m_resources.materials.get(MaterialID::Glow));
+            nub.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+        }
+    }
+
+    camEnt = m_gameScene.createEntity();
+    camEnt.addComponent<cro::Transform>().setPosition(nub.getComponent<cro::Transform>().getPosition() + glm::vec3(0.f, 0.02f, 0.f));
+    auto& ballCam = camEnt.addComponent<cro::Camera>();
+    ballCam.viewport = { 0.f, 0.f, 1.f, 1.f };
+    ballCam.setPerspective(75.f * cro::Util::Const::degToRad, 1.f, 0.01f, 0.2f);
+    m_ballCam = camEnt;
+    //nub.getComponent<cro::Transform>().addChild(camEnt.getComponent<cro::Transform>());
 }
 
 void SwingState::createUI()
@@ -645,5 +714,6 @@ void SwingState::updateView(cro::Camera& cam3D)
     cam3D.viewport.bottom = (1.f - size.y) / 2.f;
     cam3D.viewport.height = size.y;
 
-    m_rainQuad.setPosition(windowSize - glm::vec2(256.f + 224.f));
+    m_rainQuad.setPosition(windowSize - glm::vec2(576.f, 280.f));
+    m_ballQuad.setPosition(windowSize - glm::vec2(576.f, 824.f));
 }
