@@ -72,13 +72,13 @@ void main()
     
     vec3 colour = v_colour.rgb;
 
-    vec3 dark = colour * 0.1;
-    float darkAmount = smoothstep(0.7, 0.9, 1.0 - rim);
+    //vec3 dark = colour * 0.1;
+    //float darkAmount = 0.0;//smoothstep(0.7, 0.9, 1.0 - rim);
 
 
-    vec3 light = colour * 1.1;
-    float lightAmount = smoothstep(0.4,0.7,rim);
+    vec3 light = colour * 3.1;
+    float lightAmount = pow(rim, 3.0);//smoothstep(0.4,0.7,rim);
 
-    FRAG_OUT = vec4((light * lightAmount) + mix(colour, dark, darkAmount), 1.0);
+    FRAG_OUT = vec4((light * lightAmount) + colour, 1.0);// mix(colour, dark, darkAmount), 1.0);
 }
 )";

@@ -33,7 +33,7 @@ source distribution.
 
 namespace cro::Shaders::VertexLit
 {
-    static const std::string Vertex = R"(
+    inline const std::string Vertex = R"(
         ATTRIBUTE vec4 a_position;
     #if defined (VERTEX_COLOUR)
         ATTRIBUTE LOW vec4 a_colour;
@@ -176,7 +176,7 @@ namespace cro::Shaders::VertexLit
         #endif
         })";
 
-    static const std::string Fragment = R"(
+    inline const std::string Fragment = R"(
         OUTPUT
     #if defined(DIFFUSE_MAP)
         uniform sampler2D u_diffuseMap;

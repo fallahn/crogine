@@ -31,7 +31,7 @@ source distribution.
 
 #include <string>
 
-static const std::string TerrainVertexShader = R"(
+inline const std::string TerrainVertexShader = R"(
     ATTRIBUTE vec4 a_position;
     ATTRIBUTE vec4 a_colour;
     ATTRIBUTE vec3 a_normal;
@@ -108,7 +108,7 @@ static const std::string TerrainVertexShader = R"(
         gl_ClipDistance[0] = dot(position, u_clipPlane);
     })";
 
-static const std::string SlopeVertexShader =
+inline const std::string SlopeVertexShader =
 R"(
     ATTRIBUTE vec4 a_position;
     ATTRIBUTE vec4 a_colour;
@@ -148,7 +148,7 @@ R"(
 )";
 
 //the UV coords actually indicate direction of slope
-static const std::string SlopeFragmentShader =
+inline const std::string SlopeFragmentShader =
 R"(
     OUTPUT
 
@@ -187,7 +187,7 @@ R"(
     }
 )";
 
-const std::string NormalMapVertexShader = R"(
+inline const std::string NormalMapVertexShader = R"(
     ATTRIBUTE vec4 a_position;
     ATTRIBUTE vec3 a_normal;
 
@@ -212,7 +212,7 @@ const std::string NormalMapVertexShader = R"(
     }
 )";
 
-const std::string NormalMapFragmentShader = R"(
+inline const std::string NormalMapFragmentShader = R"(
     OUTPUT
 
     VARYING_IN vec3 v_normal;

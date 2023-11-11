@@ -31,7 +31,7 @@ source distribution.
 
 #include <string>
 
-static const std::string TVFragment =
+inline const std::string TVFragment =
 R"(
 uniform sampler2D u_diffuseMap;
 uniform samplerCube u_reflectMap;

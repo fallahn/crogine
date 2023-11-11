@@ -96,11 +96,11 @@ using namespace cl;
 
 namespace
 {
-#include "CelShader.inl"
-#include "BillboardShader.inl"
-#include "CloudShader.inl"
-#include "ShaderIncludes.inl"
-#include "ShadowMapping.inl"
+#include "shaders/CelShader.inl"
+#include "shaders/BillboardShader.inl"
+#include "shaders/CloudShader.inl"
+#include "shaders/ShaderIncludes.inl"
+#include "shaders/ShadowMapping.inl"
 
     //constexpr glm::vec3 CameraBasePosition(-22.f, 4.9f, 22.2f);
 

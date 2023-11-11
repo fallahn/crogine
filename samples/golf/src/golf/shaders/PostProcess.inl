@@ -31,7 +31,7 @@ source distribution.
 
 #include <string>
 
-static const std::string PostVertex =
+inline const std::string PostVertex =
 R"(
     ATTRIBUTE vec2 a_position;
     ATTRIBUTE vec2 a_texCoord0;
@@ -50,7 +50,7 @@ R"(
         v_colour = a_colour;
     })";
 
-static const std::string NoiseFragment =
+inline const std::string NoiseFragment =
 R"(
     uniform sampler2D u_texture;
 
@@ -73,7 +73,7 @@ R"(
     }
 )";
 
-static const std::string BWFragment =
+inline const std::string BWFragment =
 R"(
     uniform sampler2D u_texture;
     uniform float u_time = 1.0;
@@ -98,7 +98,7 @@ R"(
         FRAG_OUT = vec4(mix(vec3(grey), vec3(noise), 0.07), colour.a); 
     })";
 
-static const std::string TerminalFragment =
+inline const std::string TerminalFragment =
 R"(
     uniform sampler2D u_texture;
     uniform float u_time = 1.0;
@@ -180,7 +180,7 @@ R"(
 // It is an example what I personally would want as a display option for pixel art games.
 // Please take and use, change, or whatever.
 
-const std::string CRTFragment =
+inline const std::string CRTFragment =
 R"(
     uniform sampler2D u_texture;
     uniform vec2 u_resolution;
@@ -344,7 +344,7 @@ R"(
       FRAG_OUT *= v_colour;
     })";
 
-static const std::string CinematicFragment =
+inline const std::string CinematicFragment =
 R"(
 uniform sampler2D u_texture;
 uniform float u_time = 1.0;

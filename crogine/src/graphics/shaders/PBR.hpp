@@ -13,7 +13,7 @@ namespace cro::Shaders::PBR
     //note that this shader is not designed with mobile
     //devices in mind. It also shares a vertex shader
     //with the VertexLit type.
-    static const std::string Fragment = 
+    inline const std::string Fragment = 
         R"(
     layout (location = 0) out vec4 FRAG_OUT;
     layout (location = 1) out vec4 NORM_OUT;

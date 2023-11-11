@@ -53,8 +53,8 @@ source distribution.
 
 namespace
 {
-#include "../golf/TreeShader.inl"
-#include "../golf/ShaderIncludes.inl"
+#include "../golf/shaders/TreeShader.inl"
+#include "../golf/shaders/ShaderIncludes.inl"
 
     struct BushShaderID final
     {

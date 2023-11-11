@@ -846,28 +846,29 @@
     <ClInclude Include="VersionNumber.hpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="src\golf\BeaconShader.inl" />
-    <None Include="src\golf\BillboardShader.inl" />
-    <None Include="src\golf\CelShader.inl" />
-    <None Include="src\golf\CloudShader.inl" />
-    <None Include="src\golf\CompositeShader.inl" />
     <None Include="src\golf\MenuEnum.inl" />
-    <None Include="src\golf\MinimapShader.inl" />
     <None Include="src\golf\OptionsEnum.inl" />
-    <None Include="src\golf\PaletteSwap.inl" />
-    <None Include="src\golf\PointLightShader.inl" />
-    <None Include="src\golf\PostProcess.inl" />
     <None Include="src\golf\ProfileEnum.inl" />
-    <None Include="src\golf\ShaderIncludes.inl" />
-    <None Include="src\golf\ShadowMapping.inl" />
-    <None Include="src\golf\TerrainShader.inl" />
-    <None Include="src\golf\TransitionShader.inl" />
-    <None Include="src\golf\TreeShader.inl" />
-    <None Include="src\golf\TutorialShaders.inl" />
-    <None Include="src\golf\TVShader.inl" />
-    <None Include="src\golf\UnlockShader.inl" />
-    <None Include="src\golf\WaterShader.inl" />
-    <None Include="src\golf\WireframeShader.inl" />
+    <None Include="src\golf\shaders\BeaconShader.inl" />
+    <None Include="src\golf\shaders\BillboardShader.inl" />
+    <None Include="src\golf\shaders\CelShader.inl" />
+    <None Include="src\golf\shaders\CloudShader.inl" />
+    <None Include="src\golf\shaders\CompositeShader.inl" />
+    <None Include="src\golf\shaders\GlowShader.inl" />
+    <None Include="src\golf\shaders\MinimapShader.inl" />
+    <None Include="src\golf\shaders\PaletteSwap.inl" />
+    <None Include="src\golf\shaders\PointLightShader.inl" />
+    <None Include="src\golf\shaders\PostProcess.inl" />
+    <None Include="src\golf\shaders\ShaderIncludes.inl" />
+    <None Include="src\golf\shaders\ShadowMapping.inl" />
+    <None Include="src\golf\shaders\TerrainShader.inl" />
+    <None Include="src\golf\shaders\TransitionShader.inl" />
+    <None Include="src\golf\shaders\TreeShader.inl" />
+    <None Include="src\golf\shaders\TutorialShaders.inl" />
+    <None Include="src\golf\shaders\TVShader.inl" />
+    <None Include="src\golf\shaders\UnlockShader.inl" />
+    <None Include="src\golf\shaders\WaterShader.inl" />
+    <None Include="src\golf\shaders\WireframeShader.inl" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="golf.rc" />

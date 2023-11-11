@@ -31,7 +31,7 @@ source distribution.
 
 #include <string>
 
-static const std::string ScanlineTransition =
+inline const std::string ScanlineTransition =
 R"(
 uniform float u_time;
 uniform vec2 u_scale;

@@ -86,9 +86,9 @@ using namespace cl;
 
 namespace
 {
-#include "WireframeShader.inl"
-#include "CelShader.inl"
-#include "ShaderIncludes.inl"
+#include "shaders/WireframeShader.inl"
+#include "shaders/CelShader.inl"
+#include "shaders/ShaderIncludes.inl"
 
     constexpr float MaxShadowDistance = 12.f;
     constexpr float ShadowExpansion = 10.f;

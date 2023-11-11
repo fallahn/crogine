@@ -73,10 +73,10 @@ using namespace cl;
 
 namespace
 {
-#include "CelShader.inl"
-#include "BillboardShader.inl"
-#include "ShaderIncludes.inl"
-#include "TVShader.inl"
+#include "shaders/CelShader.inl"
+#include "shaders/BillboardShader.inl"
+#include "shaders/ShaderIncludes.inl"
+#include "shaders/TVShader.inl"
 
     struct TableCallbackData final
     {

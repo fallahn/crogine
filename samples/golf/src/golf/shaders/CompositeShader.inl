@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022 - 2023
+Matt Marchant 2023
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -29,14 +29,9 @@ source distribution.
 
 #pragma once
 
-/*
-Palette swap technique based on https://gamedev.stackexchange.com/questions/80577/palette-reduction-to-pre-defined-palette
-*/
-
-
 #include <string>
 
-static const std::string PaletteSwapVertex = 
+inline const std::string CompositeVert = 
 R"(
 uniform mat4 u_worldMatrix;
 uniform mat4 u_viewProjectionMatrix;
@@ -55,24 +50,60 @@ void main()
     v_texCoord = a_texCoord0;
 })";
 
-static const std::string PaletteSwapFragment = 
+
+inline const std::string CompositeFrag = 
 R"(
+uniform sampler2D u_texture;
+uniform sampler2D u_depthTexture;
+uniform sampler2D u_lightTexture;
+
+uniform vec4 u_lightColour;
+
+//uniform float u_brightness = 1.1;
+//uniform float u_contrast = 2.0;
+
+VARYING_IN vec2 v_texCoord;
+VARYING_IN vec4 v_colour;
+
 OUTPUT
 
-uniform sampler2D u_texture;
-uniform sampler2D u_palette;
+#include FOG_COLOUR
+#if defined (LIGHT_COLOUR)
+#include BAYER_MATRIX
 
-VARYING_IN vec4 v_colour;
-VARYING_IN vec2 v_texCoord;
+const float Brightness = 1.1;
+const float Contrast = 2.0;
+
+float brightnessContrast(float value)
+{
+    return (value - 0.5) * Contrast + 0.5 + Brightness;
+}
+#endif
 
 void main()
 {
-    vec3 outColour = TEXTURE(u_texture, v_texCoord).rgb * 255.0;
+    vec4 colour = TEXTURE(u_texture, v_texCoord) * v_colour;
+    colour.rgb = dim(colour.rgb);
 
-    outColour = floor(outColour * 16.0);
-    float index = outColour.r + (outColour.g * 16.0) + (outColour.b * 16.0 * 16.0);
+    float depthSample = TEXTURE(u_depthTexture, v_texCoord).r;
+    float d = getDistance(depthSample);
+    colour = mix(colour, FogColour * u_lightColour, fogAmount(d));
 
-    vec2 paletteCoord = vec2(index / 64.0, 64.0 - mod(index, 64.0));
+#if defined(LIGHT_COLOUR)
+    vec3 lightColour = TEXTURE(u_lightTexture, v_texCoord).rgb;
 
-    FRAG_OUT = TEXTURE(u_palette, floor(paletteCoord) / vec2(64.0)) * v_colour;
+    /*vec2 xy = gl_FragCoord.xy;
+    int x = int(mod(xy.x, MatrixSize));
+    int y = int(mod(xy.y, MatrixSize));
+    
+    float desat = brightnessContrast(dot(lightColour, vec3(0.2125, 0.7154, 0.0721)));
+    float amount = findClosest(x, y, desat);
+
+    colour.rgb += lightColour * amount;*/
+    colour.rgb += lightColour;
+
+#endif
+
+    FRAG_OUT = colour;
+    //FRAG_OUT = mix(colour, vec4(d,d,d,1.0), u_density / 10.0);
 })";

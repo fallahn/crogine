@@ -77,7 +77,7 @@ source distribution.
 
 namespace
 {
-#include "CelShader.inl"
+#include "shaders/CelShader.inl"
     constexpr glm::vec2 TrophyTextureSize(140.f, 184.f);
 
     //use static material IDs as we're reading materials from

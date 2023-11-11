@@ -102,16 +102,16 @@ using namespace cl;
 
 namespace
 {
-#include "CelShader.inl"
-#include "TerrainShader.inl"
-#include "TransitionShader.inl"
-#include "MinimapShader.inl"
-#include "WireframeShader.inl"
-#include "BillboardShader.inl"
-#include "CloudShader.inl"
-#include "BeaconShader.inl"
-#include "WaterShader.inl"
-#include "ShaderIncludes.inl"
+#include "shaders/CelShader.inl"
+#include "shaders/TerrainShader.inl"
+#include "shaders/TransitionShader.inl"
+#include "shaders/MinimapShader.inl"
+#include "shaders/WireframeShader.inl"
+#include "shaders/BillboardShader.inl"
+#include "shaders/CloudShader.inl"
+#include "shaders/BeaconShader.inl"
+#include "shaders/WaterShader.inl"
+#include "shaders/ShaderIncludes.inl"
 
 #ifdef CRO_DEBUG_
     float powerMultiplier = 1.f;

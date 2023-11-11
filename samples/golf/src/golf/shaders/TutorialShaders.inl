@@ -31,7 +31,7 @@ source distribution.
 
 #include <string>
 
-static const std::string TutorialVertexShader = R"(
+inline const std::string TutorialVertexShader = R"(
         uniform mat4 u_worldMatrix;
         uniform mat4 u_viewProjectionMatrix;
 
@@ -49,7 +49,7 @@ static const std::string TutorialVertexShader = R"(
             v_position = a_position;
         })";
 
-static const std::string TutorialSlopeShader =
+inline const std::string TutorialSlopeShader =
 R"(
     OUTPUT
 

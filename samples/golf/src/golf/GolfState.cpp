@@ -129,20 +129,20 @@ using namespace cl;
 
 namespace
 {
-#include "PointLightShader.inl"
-#include "WaterShader.inl"
-#include "CloudShader.inl"
-#include "CelShader.inl"
-#include "MinimapShader.inl"
-#include "WireframeShader.inl"
-#include "TransitionShader.inl"
-#include "BillboardShader.inl"
-#include "ShadowMapping.inl"
-#include "TreeShader.inl"
-#include "BeaconShader.inl"
-#include "CompositeShader.inl"
-#include "PostProcess.inl"
-#include "ShaderIncludes.inl"
+//#include "PointLightShader.inl"
+#include "shaders/WaterShader.inl"
+#include "shaders/CloudShader.inl"
+#include "shaders/CelShader.inl"
+#include "shaders/MinimapShader.inl"
+#include "shaders/WireframeShader.inl"
+#include "shaders/TransitionShader.inl"
+#include "shaders/BillboardShader.inl"
+#include "shaders/ShadowMapping.inl"
+#include "shaders/TreeShader.inl"
+#include "shaders/BeaconShader.inl"
+#include "shaders/CompositeShader.inl"
+#include "shaders/PostProcess.inl"
+#include "shaders/ShaderIncludes.inl"
 
 #ifdef CRO_DEBUG_
     std::int32_t debugFlags = 0;

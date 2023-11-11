@@ -65,8 +65,8 @@ using namespace cl;
 
 namespace
 {
-#include "TerrainShader.inl"
-#include "CelShader.inl"
+#include "shaders/TerrainShader.inl"
+#include "shaders/CelShader.inl"
 
     //params for poisson disk samples
     static constexpr float GrassDensity = 1.7f; //radius for PD sampler

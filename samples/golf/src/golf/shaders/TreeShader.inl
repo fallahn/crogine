@@ -31,7 +31,7 @@ source distribution.
 
 #include <string>
 
-const std::string BushVertex =
+inline const std::string BushVertex =
 R"(
     ATTRIBUTE vec4 a_position;
     ATTRIBUTE vec4 a_colour;
@@ -217,7 +217,7 @@ R"(
         v_data.worldPos = worldPosition.xyz;
     })";
 
-    const static std::string BushGeom = R"(
+inline const std::string BushGeom = R"(
 
 #if defined (POINTS)
     layout (points) in;
@@ -292,7 +292,7 @@ R"(
 #endif
     })";
 
-const std::string BushFragment =
+inline const std::string BushFragment =
 R"(
 #include OUTPUT_LOCATION
 
@@ -368,7 +368,7 @@ R"(
         FRAG_OUT = vec4(colour, 1.0) * textureColour * getLightColour();
     })";
 
-std::string BranchVertex = R"(
+inline const std::string BranchVertex = R"(
     ATTRIBUTE vec4 a_position;
     ATTRIBUTE vec4 a_colour;
     ATTRIBUTE vec3 a_normal;
@@ -461,7 +461,7 @@ std::string BranchVertex = R"(
         v_darkenAmount = (((1.0 - pow(clamp(distance / farFadeDistance, 0.0, 1.0), 5.0)) * 0.8) + 0.2);
     })";
 
-std::string BranchFragment = R"(
+inline const std::string BranchFragment = R"(
 #include OUTPUT_LOCATION
 
     uniform sampler2D u_diffuseMap;

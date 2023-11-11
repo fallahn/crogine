@@ -98,11 +98,11 @@ using namespace cl;
 
 namespace
 {
-#include "golf/TutorialShaders.inl"
-#include "golf/TerrainShader.inl"
-#include "golf/BeaconShader.inl"
-#include "golf/PostProcess.inl"
-#include "golf/ShaderIncludes.inl"
+#include "golf/shaders/TutorialShaders.inl"
+#include "golf/shaders/TerrainShader.inl"
+#include "golf/shaders/BeaconShader.inl"
+#include "golf/shaders/PostProcess.inl"
+#include "golf/shaders/ShaderIncludes.inl"
 #include "golf/RandNames.hpp"
 
     struct ShaderDescription final

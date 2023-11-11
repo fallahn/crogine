@@ -1,9 +1,9 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2021
+Matt Marchant 2023
 http://trederia.blogspot.com
 
-crogine - Zlib license.
+Super Video Golf - zlib licence.
 
 This software is provided 'as-is', without any express or
 implied warranty.In no event will the authors be held
@@ -31,28 +31,35 @@ source distribution.
 
 #include <string>
 
-namespace cro::Shaders::Debug
-{
-    inline const std::string Vertex = R"(
-        ATTRIBUTE vec4 a_position;
-        ATTRIBUTE LOW vec4 a_colour;
-
-        uniform mat4 u_projectionMatrix;
-
-        VARYING_OUT MED vec4 v_colour;
-
-        void main()
-        {
-            gl_Position = u_projectionMatrix * a_position;
-            v_colour = a_colour;
-        })";
-
-    inline const std::string Fragment = R"(
-        VARYING_IN LOW vec4 v_colour;
+inline const std::string PointLightFrag =
+R"(
         OUTPUT
 
+        uniform sampler2D u_noiseTexture;
+        uniform vec4 u_colour;
+        uniform vec3 u_cameraWorldPosition;
+
+#include WIND_BUFFER
+
+        VARYING_IN vec3 v_normalVector;
+        VARYING_IN vec3 v_worldPosition;
+
         void main()
         {
-            FRAG_OUT = v_colour;
+            vec3 normal = normalize(v_normalVector);
+            vec3 eyeDirection = normalize(u_cameraWorldPosition - v_worldPosition);
+
+            float rim = abs(dot(normal, eyeDirection));
+            rim = smoothstep(0.02, 0.95, rim);
+
+            float n = texture(u_noiseTexture, vec2(u_windData.w * 0.2, 0.0)).r;
+            rim *= (n * 0.5) + 0.5;
+
+            vec3 colour = u_colour.rgb;
+            n = texture(u_noiseTexture, vec2(u_windData.w * 0.2, 0.5)).r;
+            n = (n * 0.3) + 0.7;
+            colour.g *= n;
+            colour.b *= n * 0.7;
+
+            FRAG_OUT = vec4(colour * rim, 1.0);
         })";
-}

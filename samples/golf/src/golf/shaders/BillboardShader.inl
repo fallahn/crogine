@@ -33,7 +33,7 @@ source distribution.
 
 //because the billboards are based on the view direction when casting
 //shadows we need to use the game camera to set up vert positions.
-static const std::string BillboardVertexShader = R"(
+inline const std::string BillboardVertexShader = R"(
     ATTRIBUTE vec4 a_position; //relative to root position (below)
     ATTRIBUTE vec3 a_normal; //actually contains root position of billboard
     ATTRIBUTE vec4 a_colour;
@@ -178,7 +178,7 @@ static const std::string BillboardVertexShader = R"(
     })";
 
 
-static const std::string BillboardFragmentShader = R"(
+inline const std::string BillboardFragmentShader = R"(
     #include OUTPUT_LOCATION
 
     uniform sampler2D u_diffuseMap;

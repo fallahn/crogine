@@ -90,7 +90,7 @@ using namespace cl;
 
 namespace
 {
-#include "PostProcess.inl"
+#include "shaders/PostProcess.inl"
     //cro::FloatRect cropRect;
     //hack to map course names to achievement IDs
     const std::unordered_map<std::string, std::int32_t> ParAch =

@@ -3,7 +3,7 @@
 Matt Marchant 2023
 http://trederia.blogspot.com
 
-Super Video Golf - zlib licence.
+crogine application - Zlib license.
 
 This software is provided 'as-is', without any express or
 implied warranty.In no event will the authors be held
@@ -31,35 +31,50 @@ source distribution.
 
 #include <string>
 
-const std::string PointLightFrag =
+inline const std::string GlowVertex = 
 R"(
-        OUTPUT
+ATTRIBUTE vec4 a_position;
+ATTRIBUTE vec3 a_normal;
+ATTRIBUTE vec4 a_colour;
 
-        uniform sampler2D u_noiseTexture;
-        uniform vec4 u_colour;
-        uniform vec3 u_cameraWorldPosition;
+#include WVP_UNIFORMS
 
-#include WIND_BUFFER
+VARYING_OUT vec4 v_colour;
+VARYING_OUT vec3 v_normal;
+VARYING_OUT vec3 v_worldPosition;
 
-        VARYING_IN vec3 v_normalVector;
-        VARYING_IN vec3 v_worldPosition;
+void main()
+{
+    gl_Position = u_projectionMatrix * u_worldViewMatrix * a_position;
+    v_worldPosition = (u_worldMatrix * a_position).xyz;
+    v_normal = u_normalMatrix * a_normal;
+    v_colour = a_colour;
+}
 
-        void main()
-        {
-            vec3 normal = normalize(v_normalVector);
-            vec3 eyeDirection = normalize(u_cameraWorldPosition - v_worldPosition);
+)";
 
-            float rim = abs(dot(normal, eyeDirection));
-            rim = smoothstep(0.02, 0.95, rim);
+inline const std::string GlowFragment =
+R"(
+OUTPUT
 
-            float n = texture(u_noiseTexture, vec2(u_windData.w * 0.2, 0.0)).r;
-            rim *= (n * 0.5) + 0.5;
+uniform vec3 u_cameraWorldPosition;
 
-            vec3 colour = u_colour.rgb;
-            n = texture(u_noiseTexture, vec2(u_windData.w * 0.2, 0.5)).r;
-            n = (n * 0.3) + 0.7;
-            colour.g *= n;
-            colour.b *= n * 0.7;
+VARYING_IN vec4 v_colour;
+VARYING_IN vec3 v_normal;
+VARYING_IN vec3 v_worldPosition;
 
-            FRAG_OUT = vec4(colour * rim, 1.0);
-        })";
+void main()
+{
+    vec3 normal = normalize(v_normal);
+    vec3 eyeDirection = normalize(u_cameraWorldPosition - v_worldPosition);
+
+    float rim = dot(normal, eyeDirection);
+    
+    vec3 colour = v_colour.rgb;
+
+    vec3 light = colour * 3.1;
+    float lightAmount = pow(rim, 3.0);
+
+    FRAG_OUT = vec4((light * lightAmount) + colour, 1.0);
+}
+)";

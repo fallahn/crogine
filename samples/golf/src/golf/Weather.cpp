@@ -50,8 +50,8 @@ source distribution.
 
 namespace
 {
-#include "WireframeShader.inl"
-#include "CloudShader.inl"
+#include "shaders/WireframeShader.inl"
+#include "shaders/CloudShader.inl"
 
     const std::string WeatherVertex = R"(
     ATTRIBUTE vec4 a_position;

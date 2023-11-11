@@ -83,7 +83,7 @@ source distribution.
 namespace
 {
 #include "RandNames.hpp"
-#include "PostProcess.inl"
+#include "shaders/PostProcess.inl"
 
     const char VersionNumber[] =
     {

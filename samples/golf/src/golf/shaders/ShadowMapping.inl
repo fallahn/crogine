@@ -33,7 +33,7 @@ source distribution.
 
 //modified shadow mapping shader for wind animated models
 //and models with VATs
-static const std::string ShadowVertex = R"(
+inline const std::string ShadowVertex = R"(
         ATTRIBUTE vec4 a_position;
         ATTRIBUTE vec4 a_colour;
         ATTRIBUTE vec3 a_normal;
@@ -278,7 +278,7 @@ worldPosition.z += windResult.lowFreq.y;
 
         })";
 
-const static std::string ShadowGeom = R"(
+inline const std::string ShadowGeom = R"(
 
 #if defined (POINTS)
     layout (points) in;
@@ -317,7 +317,7 @@ const static std::string ShadowGeom = R"(
 #endif
     })";
 
-const static std::string ShadowFragment = R"(
+inline const std::string ShadowFragment = R"(
         
 #if defined (DITHERED)
         in float v_ditherAmount;

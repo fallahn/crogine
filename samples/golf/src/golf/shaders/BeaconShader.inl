@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2023
+Matt Marchant 2022
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -31,67 +31,58 @@ source distribution.
 
 #include <string>
 
-static const std::string UnlockVertex = R"(
+inline const std::string BeaconVertex = R"(
+#line 1
     ATTRIBUTE vec4 a_position;
-    ATTRIBUTE vec3 a_normal;
     ATTRIBUTE vec4 a_colour;
+    ATTRIBUTE vec2 a_texCoord0;
 
     uniform mat4 u_worldMatrix;
     uniform mat4 u_viewProjectionMatrix;
-    uniform mat3 u_normalMatrix;
 
-    VARYING_OUT vec3 v_normal;
-    VARYING_OUT vec4 v_worldPosition;
+    uniform vec4 u_clipPlane;
+    uniform float u_colourRotation = 1.0;
+
     VARYING_OUT vec4 v_colour;
-
     VARYING_OUT vec2 v_texCoord;
+
+#include HSV
 
     void main()
     {
+#if defined (SPRITE)
+        vec4 position = vec4(a_position.xy, 0.0, 1.0);
+#else
         vec4 position = a_position;
-        gl_Position = u_viewProjectionMatrix * u_worldMatrix * position;
-
-        vec3 normal = a_normal;
-        v_normal = u_normalMatrix * normal;
-
-        v_worldPosition = u_worldMatrix * a_position;
-        v_colour = a_colour;
-    })";
-
-static const std::string UnlockFragment = R"(
-    OUTPUT
-
-#if defined(REFLECTION)
-    uniform samplerCube u_reflectMap;
 #endif
 
-    uniform vec3 u_cameraWorldPosition;
-    uniform vec3 u_lightDirection = vec3(0.1, -0.5, 0.4);
+        gl_Position = u_viewProjectionMatrix * u_worldMatrix * position;
 
-    VARYING_IN vec3 v_normal;
-    VARYING_IN vec4 v_worldPosition;
+        v_texCoord = a_texCoord0;
+
+        vec3 hsv = rgb2hsv(a_colour.rgb);
+        hsv.x += u_colourRotation;
+        v_colour = vec4(hsv2rgb(hsv), a_colour.a);
+
+        vec4 worldPos = u_worldMatrix * position;
+        gl_ClipDistance[0] = dot(worldPos, u_clipPlane);
+    })";
+
+
+inline const std::string BeaconFragment = R"(
+    OUTPUT
+
+    uniform sampler2D u_diffuseMap;
+    uniform vec4 u_colour;
+
     VARYING_IN vec4 v_colour;
-
     VARYING_IN vec2 v_texCoord;
 
     void main()
     {
-        vec4 colour = v_colour;
-        vec3 normal = normalize(v_normal);
-
-        float amount = dot(normal, normalize(-u_lightDirection));
-
-        amount *= 2.0;
-        amount = round(amount);
-        amount /= 2.0;
-        amount = 0.8 + (amount * 0.2);
-        colour.rgb *= amount;
-
-#if defined (REFLECTION)
-        vec3 viewDirection = normalize(u_cameraWorldPosition - v_worldPosition.xyz);
-        colour.rgb += TEXTURE_CUBE(u_reflectMap, reflect(-viewDirection, normal)).rgb * 0.25;
+#if defined (TEXTURED)
+        FRAG_OUT = TEXTURE(u_diffuseMap, v_texCoord) * v_colour * u_colour;
+#else
+        FRAG_OUT = v_colour;
 #endif
-
-        FRAG_OUT = colour;
-    }
-)";
+    })";

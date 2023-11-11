@@ -31,7 +31,7 @@ source distribution.
 
 #include <string>
 
-static const std::string CloudVertex = 
+inline const std::string CloudVertex = 
 R"(
     uniform mat4 u_worldMatrix;
     uniform mat4 u_viewProjectionMatrix;
@@ -55,7 +55,7 @@ R"(
     }
 )";
 
-static const std::string CloudFragment =
+inline const std::string CloudFragment =
 R"(
     OUTPUT
 
@@ -90,7 +90,7 @@ R"(
     }
 )";
 
-static const std::string BowFragment =
+inline const std::string BowFragment =
 R"(
     VARYING_IN vec4 v_colour;
     VARYING_IN vec2 v_texCoord;
@@ -141,7 +141,7 @@ R"(
 
 
 //updated shader for 3D overhead clouds
-static const std::string CloudOverheadVertex = R"(
+inline const std::string CloudOverheadVertex = R"(
     ATTRIBUTE vec4 a_position;
     ATTRIBUTE vec4 a_colour;
     ATTRIBUTE vec3 a_normal;
@@ -178,7 +178,7 @@ static const std::string CloudOverheadVertex = R"(
         v_colour = a_colour;
     })";
 
-static const std::string CloudOverheadFragment = R"(
+inline const std::string CloudOverheadFragment = R"(
     OUTPUT
 
     uniform vec2 u_worldCentre = vec2(0.0);
@@ -267,7 +267,7 @@ static const std::string CloudOverheadFragment = R"(
 
 
 //these are used in the course editor (PlaylistState)
-static const std::string CloudVertex3D =
+inline const std::string CloudVertex3D =
 R"(
 ATTRIBUTE vec4 a_position;
 ATTRIBUTE vec3 a_normal;
@@ -286,7 +286,7 @@ void main()
     v_normal = u_normalMatrix * a_normal;
 })";
 
-static const std::string CloudFragment3D =
+inline const std::string CloudFragment3D =
 R"(
 
 OUTPUT

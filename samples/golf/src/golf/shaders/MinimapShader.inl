@@ -31,7 +31,7 @@ source distribution.
 
 #include <string>
 
-static const std::string MinimapVertex = R"(
+inline const std::string MinimapVertex = R"(
         uniform mat4 u_worldMatrix;
         uniform mat4 u_viewProjectionMatrix;
 
@@ -50,7 +50,7 @@ static const std::string MinimapVertex = R"(
         })";
 
 //minimap as in top down view of green
-static const std::string MinimapFragment = R"(
+inline const std::string MinimapFragment = R"(
         
         uniform sampler2D u_texture;
         uniform sampler2D u_depthTexture;
@@ -150,7 +150,7 @@ vec2 coord = v_texCoord;
 
 //minimap as in mini course view
 //well, this is a silly inconsistency...
-static const std::string MinimapViewVertex = R"(
+inline const std::string MinimapViewVertex = R"(
         ATTRIBUTE vec2 a_position;
         ATTRIBUTE vec2 a_texCoord0;
         ATTRIBUTE vec4 a_colour;
@@ -172,7 +172,7 @@ static const std::string MinimapViewVertex = R"(
             v_colour = a_colour;
         })";
 
-static const std::string MinimapViewFragment = R"(
+inline const std::string MinimapViewFragment = R"(
         uniform sampler2D u_texture;
 
         VARYING_IN vec2 v_texCoord0;

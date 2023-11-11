@@ -89,13 +89,13 @@ source distribution.
 
 namespace
 {
-#include "WaterShader.inl"
-#include "CelShader.inl"
-#include "BillboardShader.inl"
-#include "TreeShader.inl"
-#include "ShadowMapping.inl"
-#include "CloudShader.inl"
-#include "ShaderIncludes.inl"
+#include "shaders/WaterShader.inl"
+#include "shaders/CelShader.inl"
+#include "shaders/BillboardShader.inl"
+#include "shaders/TreeShader.inl"
+#include "shaders/ShadowMapping.inl"
+#include "shaders/CloudShader.inl"
+#include "shaders/ShaderIncludes.inl"
 
     const std::string SkyboxPath = "assets/golf/skyboxes/";
     const std::string ShrubPath = "assets/golf/shrubs/";
