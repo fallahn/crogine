@@ -46,6 +46,7 @@ source distribution.
 #include "BallSystem.hpp"
 #include "CallbackData.hpp"
 #include "InterpolationSystem.hpp"
+#include "WeatherAnimationSystem.hpp"
 #include "XPAwardStrings.hpp"
 #include "../ErrorCheck.hpp"
 
@@ -1399,7 +1400,50 @@ void GolfState::buildUI()
         greenEnt.getComponent<cro::Drawable2D>().bindUniform("u_lightTexture", lightID);
     }
     greenEnt.getComponent<cro::Drawable2D>().bindUniform("u_depthTexture", m_overheadBuffer.getDepthTexture());
-    //greenEnt.getComponent<cro::Drawable2D>().bindUniform("u_distortionTexture", cro::TextureID(m_resources.textures.get("assets/images/test.png")));
+    
+    //TODO check the weather first
+    auto rainShaderID = m_resources.shaders.get(ShaderID::Minimap).getGLHandle();
+    auto rainSubrectID = m_resources.shaders.get(ShaderID::Minimap).getUniformID("u_subrect");
+    auto rainMixID = m_resources.shaders.get(ShaderID::Minimap).getUniformID("u_distortAmount");
+
+    greenEnt.getComponent<cro::Drawable2D>().bindUniform("u_distortionTexture", cro::TextureID(m_resources.textures.get("assets/golf/images/rain_sheet.png")));
+    //create ent to animate texture
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&,rainShaderID, rainSubrectID, rainMixID](cro::Entity e, float dt)
+        {
+            static constexpr float FrameTime = 1.f / 16.f;
+            static float animTime = 0.f;
+            animTime += dt;
+
+            static constexpr std::int32_t MaxFrames = 24;
+            static std::int32_t frameID = 0;
+
+            while (animTime > FrameTime)
+            {
+                frameID = (frameID + 1) % MaxFrames;
+
+                auto row = 5 - (frameID / 4);
+                auto col = frameID % 4;
+
+                glm::vec4 rect =
+                {
+                    (1.f / 4.f) * col,
+                    (1.f / 6.f) * row,
+                    (1.f / 4.f), (1.f / 6.f)
+                };
+
+                const float rainAmount = m_gameScene.getSystem<WeatherAnimationSystem>()->getOpacity();
+
+                glUseProgram(rainShaderID);
+                glUniform4f(rainSubrectID, rect.x, rect.y, rect.z, rect.w);
+                glUniform1f(rainMixID, rainAmount);
+
+                animTime -= FrameTime;
+            }        
+        };
+
 
     m_greenCam.addComponent<cro::Callback>().active = true;
     m_greenCam.getComponent<cro::Callback>().setUserData<MiniCamData>();

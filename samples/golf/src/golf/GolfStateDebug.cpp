@@ -385,6 +385,7 @@ void GolfState::registerDebugCommands()
                 setFog(Density);
 
                 raining = true;
+                m_gameScene.setSystemActive<WeatherAnimationSystem>(true);
                 m_gameScene.getSystem<WeatherAnimationSystem>()->setHidden(false);
             }
             else

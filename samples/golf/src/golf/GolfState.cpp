@@ -2367,6 +2367,7 @@ void GolfState::loadAssets()
     m_resources.materials.get(m_materialIDs[MaterialID::BallTrail]).setProperty("u_colourRotation", m_sharedData.beaconColour);
 
     //minimap - green overhead
+    defines += "#define RAIN\n"; //TODO check weather.
     m_resources.shaders.loadFromString(ShaderID::Minimap, MinimapVertex, MinimapFragment, defines);
     shader = &m_resources.shaders.get(ShaderID::Minimap);
     m_scaleBuffer.addShader(*shader);
@@ -3923,9 +3924,10 @@ void GolfState::addSystems()
 
     //m_gameScene.setSystemActive<InterpolationSystem<InterpolationType::Linear>>(false);
     m_gameScene.setSystemActive<CameraFollowSystem>(false);
+    m_gameScene.setSystemActive<WeatherAnimationSystem>(m_sharedData.weatherType == WeatherType::Rain || m_sharedData.weatherType == WeatherType::Showers);
 #ifdef CRO_DEBUG_
-    m_gameScene.setSystemActive<FpsCameraSystem>(false);
     m_gameScene.setSystemActive<cro::ParticleSystem>(false);
+    m_gameScene.setSystemActive<FpsCameraSystem>(false);
     //m_gameScene.setSystemActive<cro::SkeletalAnimator>(false); //can't do this because we rely on player animation events
 #endif
 
@@ -5035,12 +5037,61 @@ void GolfState::spawnBall(const ActorInfo& info)
 
     bool showTrail = !(m_sharedData.connectionData[info.clientID].playerData[info.playerID].isCPU && m_sharedData.fastCPU);
 
-    if (!m_sharedData.nightTime)
+
+    //point shadow seen from distance
+    entity = m_gameScene.createEntity();
+    entity.addComponent<cro::Transform>();// .setPosition(info.position);
+    entity.addComponent<cro::Callback>().active = true;
+
+    if (m_sharedData.nightTime)
     {
-        //point shadow seen from distance
-        entity = m_gameScene.createEntity();
-        entity.addComponent<cro::Transform>();// .setPosition(info.position);
-        entity.addComponent<cro::Callback>().active = true;
+        //still do the ball trail
+        entity.getComponent<cro::Callback>().function =
+            [&, ballEnt, info, showTrail](cro::Entity e, float)
+            {
+                if (ballEnt.destroyed())
+                {
+                    e.getComponent<cro::Callback>().active = false;
+                    m_gameScene.destroyEntity(e);
+                }
+                else
+                {
+                    //only do this when active player.
+                    if (ballEnt.getComponent<ClientCollider>().state != std::uint8_t(Ball::State::Idle)
+                        || ballEnt.getComponent<cro::Transform>().getPosition() == m_holeData[m_currentHole].tee)
+                    {
+                        auto ballPos = ballEnt.getComponent<cro::Transform>().getPosition();
+                        //auto ballHeight = ballPos.y;
+
+                        //auto c = cro::Colour::White;
+                        //if (ballPos.y > WaterLevel)
+                        //{
+                        //    //rays have limited length so might miss from high up (making shadow disappear)
+                        //    auto rayPoint = ballPos;
+                        //    rayPoint.y = 10.f;
+                        //    auto height = m_collisionMesh.getTerrain(rayPoint).height;
+                        //    c.setAlpha(smoothstep(0.2f, 0.8f, (ballPos.y - height) / 0.25f));
+
+                        //    ballPos.y = 0.00001f + (height - ballHeight);
+                        //}
+                        //e.getComponent<cro::Transform>().setPosition({ 0.f, ballPos.y, 0.f });
+                        //e.getComponent<cro::Model>().setHidden((m_currentPlayer.terrain == TerrainID::Green) || ballEnt.getComponent<cro::Model>().isHidden());
+                        //e.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", c);
+
+                        if (showTrail)
+                        {
+                            if (m_sharedData.showBallTrail && (info.playerID == m_currentPlayer.player && info.clientID == m_currentPlayer.client)
+                                && ballEnt.getComponent<ClientCollider>().state == static_cast<std::uint8_t>(Ball::State::Flight))
+                            {
+                                m_ballTrail.addPoint(ballEnt.getComponent<cro::Transform>().getPosition());
+                            }
+                        }
+                    }
+                }
+            };
+    }
+    else
+    {
         entity.getComponent<cro::Callback>().function =
             [&, ballEnt, info, showTrail](cro::Entity e, float)
             {
@@ -5086,8 +5137,12 @@ void GolfState::spawnBall(const ActorInfo& info)
             };
         entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_ballResources.shadowMeshID), material);
         entity.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniMap | RenderFlags::CubeMap));
-        ballEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    }
 
+    ballEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    if (!m_sharedData.nightTime)
+    {
         //large shadow seen close up
         auto shadowEnt = entity;
         entity = m_gameScene.createEntity();

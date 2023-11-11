@@ -49,14 +49,18 @@ inline const std::string MinimapVertex = R"(
             v_texCoord = a_texCoord0;
         })";
 
-//minimap as in top down view of green
+//minimap as in top down view of green/flight camera
 inline const std::string MinimapFragment = R"(
         
         uniform sampler2D u_texture;
         uniform sampler2D u_depthTexture;
         uniform sampler2D u_lightTexture;
 
-uniform sampler2D u_distortionTexture;
+#if defined (RAIN)
+        uniform sampler2D u_distortionTexture;
+        uniform float u_distortAmount = 1.0;
+        uniform vec4 u_subrect = vec4(0.0, 0.0, 1.0, 1.0);
+#endif
 
         uniform vec4 u_lightColour;
 
@@ -112,10 +116,13 @@ uniform sampler2D u_distortionTexture;
             vec3 noise = vec3(rand(floor((v_texCoord * textureSize(u_texture, 0)) / u_pixelScale)));
 
 
-vec2 coord = v_texCoord;
-//vec3 distort = TEXTURE(u_distortionTexture, v_texCoord).rgb * 2.0 - 1.0;
-////coord.y *= distort.b; //flips distorted part
-//coord.xy += distort.rg * 0.05;
+            vec2 coord = v_texCoord;
+#if defined (RAIN)
+            vec2 rainCoord  = u_subrect.xy + (v_texCoord * u_subrect.zw);
+            vec4 rain = TEXTURE(u_distortionTexture, rainCoord) * 2.0 - 1.0;
+            
+            coord = mix(coord, coord + rain.xy, u_distortAmount);
+#endif
 
             vec4 colour = TEXTURE(u_texture, coord);
             colour.rgb = dim(colour.rgb);
@@ -124,11 +131,7 @@ vec2 coord = v_texCoord;
             float d = getDistance(depthSample);
             colour = mix(colour, FogColour * u_lightColour, fogAmount(d));
 
-
-
 #if defined (LIGHT_COLOUR)
-            //colour.rgb += TEXTURE(u_lightTexture, coord).rgb;
-
             vec3 lightColour = TEXTURE(u_lightTexture, coord).rgb;
 
             /*vec2 xy = gl_FragCoord.xy;
@@ -139,9 +142,9 @@ vec2 coord = v_texCoord;
             float amount = findClosest(x, y, desat);
 
             colour.rgb += lightColour * amount;*/
+
             colour.rgb += lightColour;
 #endif
-
 
             FRAG_OUT = vec4(mix(noise, colour.rgb, v_colour.r), 1.0);
             FRAG_OUT = mix(FRAG_OUT, borderColour, step(borderPos, length2));
