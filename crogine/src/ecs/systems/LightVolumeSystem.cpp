@@ -92,7 +92,8 @@ namespace
         {
             vec2 texCoord = gl_FragCoord.xy / u_targetSize;
 
-            vec3 normal = normalize(TEXTURE(u_normalMap, texCoord).rgb);
+            vec4 normalSample = TEXTURE(u_normalMap, texCoord);
+            vec3 normal = normalize(normalSample.rgb); //normalSample.a is self-illum mask
             vec3 position = TEXTURE(u_positionMap, texCoord).rgb;
 
 #if defined(WORLD_SPACE)
@@ -107,7 +108,7 @@ namespace
             amount = round(amount);
             amount /= ColourSteps;*/
 
-            vec3 lightColour = u_lightColour * max(amount, 0.0);
+            vec3 lightColour = u_lightColour * max(amount, 0.0) * normalSample.a;
 
             //not perfectly accurate compared to the linear/quadratic equation but easier to involve the radius 
             float attenuation = 1.0 - min(dot(lightDir, lightDir) / u_lightRadiusSqr, 1.0);

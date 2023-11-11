@@ -306,7 +306,7 @@ inline const std::string CelFragmentShader = R"(
     VARYING_IN vec2 v_texCoord;
     VARYING_IN float v_perspectiveScale;
 
-    //OUTPUT
+    //OUTPUT - TODO switch this to the include version(? that requires MRT defined though...)
     layout (location = 0) out vec4 FRAG_OUT;
     layout (location = 1) out vec4 o_pos;
     layout (location = 2) out vec4 o_normal;

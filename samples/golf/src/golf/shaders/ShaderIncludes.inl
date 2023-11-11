@@ -111,6 +111,7 @@ static inline const std::string Random = R"(
 )";
 
 //https://gist.github.com/yiwenl/745bfea7f04c456e0101
+//or possibly https://gamedev.stackexchange.com/a/59808 ??
 static inline const std::string HSV = R"(
     vec3 rgb2hsv(vec3 c)
     {
@@ -223,7 +224,7 @@ static inline const std::string OutputLocation = R"(
     layout (location = 0) out vec4 FRAG_OUT;
     layout (location = 1) out vec4 POS_OUT;
     layout (location = 2) out vec4 NORM_OUT;
-    //uniform mat4 u_viewMatrix;
+    
 #else
 
     OUTPUT

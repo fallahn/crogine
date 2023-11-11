@@ -256,6 +256,7 @@ struct ShaderID final
         CourseGreen,
         CourseGrid,
         Ball,
+        BallNight,
         Slope,
         Minimap,
         MinimapView,

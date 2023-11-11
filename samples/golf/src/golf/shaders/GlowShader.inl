@@ -55,7 +55,8 @@ void main()
 
 inline const std::string GlowFragment =
 R"(
-OUTPUT
+#define USE_MRT
+#include OUTPUT_LOCATION
 
 uniform vec3 u_cameraWorldPosition;
 
@@ -63,18 +64,23 @@ VARYING_IN vec4 v_colour;
 VARYING_IN vec3 v_normal;
 VARYING_IN vec3 v_worldPosition;
 
+#include HSV
+
 void main()
 {
     vec3 normal = normalize(v_normal);
+
+    NORM_OUT = vec4(normal, 0.0);
+    POS_OUT = vec4(v_worldPosition, 1.0);
+
     vec3 eyeDirection = normalize(u_cameraWorldPosition - v_worldPosition);
-
     float rim = dot(normal, eyeDirection);
-    
-    vec3 colour = v_colour.rgb;
+    rim = (pow(rim, 3.0) * 0.15) + 1.0;
 
-    vec3 light = colour * 3.1;
-    float lightAmount = pow(rim, 3.0);
+    vec3 colour = rgb2hsv(v_colour.rgb);
+    colour.g *= rim;//1.1;
+    colour = hsv2rgb(colour);
 
-    FRAG_OUT = vec4((light * lightAmount) + colour, 1.0);
+    FRAG_OUT = vec4(colour, 1.0);
 }
 )";

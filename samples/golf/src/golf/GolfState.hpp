@@ -226,6 +226,7 @@ private:
             Hair,
             Course,
             Ball,
+            BallNight,
             Billboard,
             Trophy,
             Beacon,

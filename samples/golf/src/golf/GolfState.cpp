@@ -133,6 +133,7 @@ namespace
 #include "shaders/WaterShader.inl"
 #include "shaders/CloudShader.inl"
 #include "shaders/CelShader.inl"
+#include "shaders/GlowShader.inl"
 #include "shaders/MinimapShader.inl"
 #include "shaders/WireframeShader.inl"
 #include "shaders/TransitionShader.inl"
@@ -2145,6 +2146,19 @@ void GolfState::loadAssets()
     m_scaleBuffer.addShader(*shader);
     m_resolutionBuffer.addShader(*shader);
     m_materialIDs[MaterialID::Ball] = m_resources.materials.add(*shader);
+
+
+    if (m_sharedData.nightTime)
+    {
+        //TODO vertex snapping?
+        m_resources.shaders.loadFromString(ShaderID::BallNight, GlowVertex, GlowFragment);
+        shader = &m_resources.shaders.get(ShaderID::BallNight);
+        /*m_scaleBuffer.addShader(*shader);
+        m_resolutionBuffer.addShader(*shader);*/
+        m_materialIDs[MaterialID::BallNight] = m_resources.materials.add(*shader);
+    }
+
+
 
     m_resources.shaders.loadFromString(ShaderID::Trophy, CelVertexShader, CelFragmentShader, "#define VERTEX_COLOURED\n#define REFLECTIONS\n" + wobble);
     shader = &m_resources.shaders.get(ShaderID::Trophy);
@@ -5021,78 +5035,80 @@ void GolfState::spawnBall(const ActorInfo& info)
 
     bool showTrail = !(m_sharedData.connectionData[info.clientID].playerData[info.playerID].isCPU && m_sharedData.fastCPU);
 
-    //point shadow seen from distance
-    entity = m_gameScene.createEntity();
-    entity.addComponent<cro::Transform>();// .setPosition(info.position);
-    entity.addComponent<cro::Callback>().active = true;
-    entity.getComponent<cro::Callback>().function =
-        [&, ballEnt, info, showTrail](cro::Entity e, float)
+    if (!m_sharedData.nightTime)
     {
-        if (ballEnt.destroyed())
-        {
-            e.getComponent<cro::Callback>().active = false;
-            m_gameScene.destroyEntity(e);
-        }
-        else
-        {
-            //only do this when active player.
-            if (ballEnt.getComponent<ClientCollider>().state != std::uint8_t(Ball::State::Idle)
-                || ballEnt.getComponent<cro::Transform>().getPosition() == m_holeData[m_currentHole].tee)
+        //point shadow seen from distance
+        entity = m_gameScene.createEntity();
+        entity.addComponent<cro::Transform>();// .setPosition(info.position);
+        entity.addComponent<cro::Callback>().active = true;
+        entity.getComponent<cro::Callback>().function =
+            [&, ballEnt, info, showTrail](cro::Entity e, float)
             {
-                auto ballPos = ballEnt.getComponent<cro::Transform>().getPosition();
-                auto ballHeight = ballPos.y;
-
-                auto c = cro::Colour::White;
-                if (ballPos.y > WaterLevel)
+                if (ballEnt.destroyed())
                 {
-                    //rays have limited length so might miss from high up (making shadow disappear)
-                    auto rayPoint = ballPos;
-                    rayPoint.y = 10.f;
-                    auto height = m_collisionMesh.getTerrain(rayPoint).height;
-                    c.setAlpha(smoothstep(0.2f, 0.8f, (ballPos.y - height) / 0.25f));
-
-                    ballPos.y = 0.00001f + (height - ballHeight);
+                    e.getComponent<cro::Callback>().active = false;
+                    m_gameScene.destroyEntity(e);
                 }
-                e.getComponent<cro::Transform>().setPosition({ 0.f, ballPos.y, 0.f });
-                e.getComponent<cro::Model>().setHidden((m_currentPlayer.terrain == TerrainID::Green) || ballEnt.getComponent<cro::Model>().isHidden());
-                e.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", c);
-
-                if (showTrail)
+                else
                 {
-                    if (m_sharedData.showBallTrail && (info.playerID == m_currentPlayer.player && info.clientID == m_currentPlayer.client)
-                        && ballEnt.getComponent<ClientCollider>().state == static_cast<std::uint8_t>(Ball::State::Flight))
+                    //only do this when active player.
+                    if (ballEnt.getComponent<ClientCollider>().state != std::uint8_t(Ball::State::Idle)
+                        || ballEnt.getComponent<cro::Transform>().getPosition() == m_holeData[m_currentHole].tee)
                     {
-                        m_ballTrail.addPoint(ballEnt.getComponent<cro::Transform>().getPosition());
+                        auto ballPos = ballEnt.getComponent<cro::Transform>().getPosition();
+                        auto ballHeight = ballPos.y;
+
+                        auto c = cro::Colour::White;
+                        if (ballPos.y > WaterLevel)
+                        {
+                            //rays have limited length so might miss from high up (making shadow disappear)
+                            auto rayPoint = ballPos;
+                            rayPoint.y = 10.f;
+                            auto height = m_collisionMesh.getTerrain(rayPoint).height;
+                            c.setAlpha(smoothstep(0.2f, 0.8f, (ballPos.y - height) / 0.25f));
+
+                            ballPos.y = 0.00001f + (height - ballHeight);
+                        }
+                        e.getComponent<cro::Transform>().setPosition({ 0.f, ballPos.y, 0.f });
+                        e.getComponent<cro::Model>().setHidden((m_currentPlayer.terrain == TerrainID::Green) || ballEnt.getComponent<cro::Model>().isHidden());
+                        e.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", c);
+
+                        if (showTrail)
+                        {
+                            if (m_sharedData.showBallTrail && (info.playerID == m_currentPlayer.player && info.clientID == m_currentPlayer.client)
+                                && ballEnt.getComponent<ClientCollider>().state == static_cast<std::uint8_t>(Ball::State::Flight))
+                            {
+                                m_ballTrail.addPoint(ballEnt.getComponent<cro::Transform>().getPosition());
+                            }
+                        }
                     }
                 }
-            }
-        }
-    };
-    entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_ballResources.shadowMeshID), material);
-    entity.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniMap | RenderFlags::CubeMap));
-    ballEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+            };
+        entity.addComponent<cro::Model>(m_resources.meshes.getMesh(m_ballResources.shadowMeshID), material);
+        entity.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniMap | RenderFlags::CubeMap));
+        ballEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
-    //large shadow seen close up
-    auto shadowEnt = entity;
-    entity = m_gameScene.createEntity();
-    shadowEnt.getComponent<cro::Transform>().addChild(entity.addComponent<cro::Transform>());
-    entity.getComponent<cro::Transform>().setOrigin({ 0.f, 0.003f, 0.f });
-    m_modelDefs[ModelID::BallShadow]->createModel(entity);
-    entity.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniMap | RenderFlags::CubeMap));
-    //entity.getComponent<cro::Transform>().setScale(glm::vec3(1.3f));
-    entity.addComponent<cro::Callback>().active = true;
-    entity.getComponent<cro::Callback>().function =
-        [&, ballEnt](cro::Entity e, float)
-    {
-        if (ballEnt.destroyed())
-        {
-            e.getComponent<cro::Callback>().active = false;
-            m_gameScene.destroyEntity(e);
-        }
-        e.getComponent<cro::Model>().setHidden(ballEnt.getComponent<cro::Model>().isHidden());
-        e.getComponent<cro::Transform>().setScale(ballEnt.getComponent<cro::Transform>().getScale()/* * 0.95f*/);
-    };
-
+        //large shadow seen close up
+        auto shadowEnt = entity;
+        entity = m_gameScene.createEntity();
+        shadowEnt.getComponent<cro::Transform>().addChild(entity.addComponent<cro::Transform>());
+        entity.getComponent<cro::Transform>().setOrigin({ 0.f, 0.003f, 0.f });
+        m_modelDefs[ModelID::BallShadow]->createModel(entity);
+        entity.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniMap | RenderFlags::CubeMap));
+        //entity.getComponent<cro::Transform>().setScale(glm::vec3(1.3f));
+        entity.addComponent<cro::Callback>().active = true;
+        entity.getComponent<cro::Callback>().function =
+            [&, ballEnt](cro::Entity e, float)
+            {
+                if (ballEnt.destroyed())
+                {
+                    e.getComponent<cro::Callback>().active = false;
+                    m_gameScene.destroyEntity(e);
+                }
+                e.getComponent<cro::Model>().setHidden(ballEnt.getComponent<cro::Model>().isHidden());
+                e.getComponent<cro::Transform>().setScale(ballEnt.getComponent<cro::Transform>().getScale()/* * 0.95f*/);
+            };
+    }
 
     //adding a ball model means we see something a bit more reasonable when close up
     entity = m_gameScene.createEntity();
@@ -5130,7 +5146,9 @@ void GolfState::spawnBall(const ActorInfo& info)
         applyMaterialData(*m_ballModels.begin()->second, material);
     };
 
-    material = m_resources.materials.get(m_materialIDs[MaterialID::Ball]);
+    const auto matID = m_sharedData.nightTime ? MaterialID::BallNight : MaterialID::Ball;
+
+    material = m_resources.materials.get(m_materialIDs[matID]);
     if (m_ballModels.count(ballID) != 0
         && ball != m_sharedData.ballInfo.end())
     {
@@ -5162,7 +5180,7 @@ void GolfState::spawnBall(const ActorInfo& info)
     {
         //this assumes the model loaded successfully, otherwise
         //there wouldn't be two submeshes.
-        auto mat = m_resources.materials.get(m_materialIDs[MaterialID::Trophy]);
+        auto mat = m_resources.materials.get(m_materialIDs[m_sharedData.nightTime ? MaterialID::BallNight : MaterialID::Trophy]);
         applyMaterialData(*m_ballModels[ballID], mat);
         entity.getComponent<cro::Model>().setMaterial(1, mat);
     }
