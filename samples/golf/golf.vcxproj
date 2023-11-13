@@ -630,6 +630,7 @@
     <ClCompile Include="src\golf\GolfParticleDirector.cpp" />
     <ClCompile Include="src\golf\GolfSoundDirector.cpp" />
     <ClCompile Include="src\golf\GolfState.cpp" />
+    <ClCompile Include="src\golf\GolfStateAssets.cpp" />
     <ClCompile Include="src\golf\GolfStateCameras.cpp" />
     <ClCompile Include="src\golf\GolfStateDebug.cpp" />
     <ClCompile Include="src\golf\GolfStateScoring.cpp" />

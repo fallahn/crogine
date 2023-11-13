@@ -266,11 +266,16 @@ private:
 
     std::vector<cro::Entity> m_spectatorModels;
 
+    /*GolfStateAssets.cpp*/
     void loadAssets();
+    void loadMaterials();
+    void loadSprites();
+    void loadModels();
     void loadSpectators();
+    void initAudio(bool loadTrees);
+
     void addSystems();
     void buildScene();
-    void initAudio(bool loadTrees);
 
     void createWeather(std::int32_t); //weather.cpp
     void setFog(float density);

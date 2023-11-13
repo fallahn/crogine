@@ -80,6 +80,7 @@ float brightnessContrast(float value)
 }
 #endif
 
+
 void main()
 {
     vec4 colour = TEXTURE(u_texture, v_texCoord) * v_colour;
@@ -101,7 +102,6 @@ void main()
 
     colour.rgb += lightColour * amount;*/
     colour.rgb += lightColour;
-
 #endif
 
     FRAG_OUT = colour;
