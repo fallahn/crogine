@@ -76,7 +76,7 @@ inline const std::string WaterVertex = R"(
     })";
 
 inline const std::string WaterFragment = R"(
-    OUTPUT
+#include OUTPUT_LOCATION
     #define MAX_RADIUS 239.9
 
     uniform sampler2D u_reflectionMap;
@@ -166,6 +166,12 @@ uniform sampler2DArray u_depthMap;
 
         vec3 eyeDirection = normalize(u_cameraWorldPosition - v_worldPosition);
         vec3 normal = normalize(v_normal);
+
+#if defined (USE_MRT)
+        NORM_OUT = vec4(normal, 1.0);
+        POS_OUT = vec4(v_worldPosition, 1.0);
+#endif
+
 
         float fresnel = dot(reflect(-eyeDirection, normal), normal);
         const float bias = 0.6;

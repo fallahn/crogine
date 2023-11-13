@@ -2315,7 +2315,7 @@ void GolfState::loadAssets()
     m_minimapZoom.matrixUniformID = shader->getUniformID("u_coordMatrix");
 
     //water
-    m_resources.shaders.loadFromString(ShaderID::Water, WaterVertex, WaterFragment);
+    m_resources.shaders.loadFromString(ShaderID::Water, WaterVertex, WaterFragment, "#define USE_MRT\n");
     shader = &m_resources.shaders.get(ShaderID::Water);
     m_scaleBuffer.addShader(*shader);
     m_windBuffer.addShader(*shader);
