@@ -233,36 +233,10 @@ void GolfState::addCameraDebugging()
 
 void GolfState::registerDebugCommands()
 {
-    //registerWindow([&]()
-    //    {
-    //        if (ImGui::Begin("sunlight"))
-    //        {
-    //            /*static float col[3] = { 1.f, 1.f, 1.f };
-    //            if (ImGui::ColorPicker3("Sky", col))
-    //            {
-    //                m_skyScene.getSunlight().getComponent<cro::Sunlight>().setColour({ col[0], col[1], col[2], 1.f });
-    //                m_gameScene.getSunlight().getComponent<cro::Sunlight>().setColour({ col[0], col[1], col[2], 1.f });
-    //            }*/
-
-    //            /*auto 
-    //            size = glm::vec2(m_gameSceneMRTexture.getSize() / 4u);
-    //            ImGui::Image(m_gameSceneMRTexture.getTexture(1), { size.x , size.y }, { 0.f ,1.f }, { 1.f, 0.f });
-    //            ImGui::SameLine();
-    //            ImGui::Image(m_gameSceneMRTexture.getTexture(2), { size.x , size.y }, { 0.f ,1.f }, { 1.f, 0.f });*/
-
-    //            const auto& buff = m_lightMaps[LightMapID::Overhead].getTexture();
-    //            auto size = glm::vec2(buff.getSize()/* / 2u*/);
-    //            ImGui::Image(buff, { size.x , size.y }, { 0.f ,1.f }, { 1.f, 0.f });
-    //            ImGui::SameLine();
-    //            ImGui::Image(m_overheadBuffer.getDepthTexture(), {size.x , size.y}, {0.f ,1.f}, {1.f, 0.f});
-    //            ImGui::SameLine();
-    //            ImGui::Image(m_overheadBuffer.getTexture(MRTIndex::Normal), { size.x , size.y }, { 0.f ,1.f }, { 1.f, 0.f });
-
-    //            size = glm::vec2(m_gameSceneMRTexture.getSize() / 4u);
-    //            ImGui::Image(m_gameSceneMRTexture.getDepthTexture(), {size.x , size.y}, {0.f ,1.f}, {1.f, 0.f});
-    //        }
-    //        ImGui::End();
-    //    });
+    registerCommand("skip_turn", [&](const std::string&)
+        {
+            m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, std::uint8_t(ServerCommand::SkipTurn), gns::NetFlag::Reliable);
+        });
 
     registerCommand("build_cubemaps",
         [&](const std::string&)
@@ -415,6 +389,85 @@ void GolfState::registerDebugCommands()
                 setFog(density);
             }
         });
+
+    registerCommand("noclip", [&](const std::string&)
+        {
+            toggleFreeCam();
+            if (m_photoMode)
+            {
+                cro::Console::print("noclip ON");
+            }
+            else
+            {
+                cro::Console::print("noclip OFF");
+            }
+        });
+
+#ifdef CRO_DEBUG_
+    registerCommand("fast_cpu", [&](const std::string& param)
+        {
+            if (m_sharedData.hosting)
+            {
+                const auto sendCmd = [&]()
+                    {
+                        m_sharedData.clientConnection.netClient.sendPacket<std::uint8_t>(PacketID::FastCPU, m_sharedData.fastCPU ? 1 : 0, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+
+                        m_cpuGolfer.setFastCPU(m_sharedData.fastCPU);
+
+                        //TODO set active or not if current player is CPU
+
+                    };
+
+                if (param == "0")
+                {
+                    m_sharedData.fastCPU = false;
+                    sendCmd();
+                }
+                else if (param == "1")
+                {
+                    m_sharedData.fastCPU = true;
+                    sendCmd();
+                }
+                else
+                {
+                    cro::Console::print("Usage: fast_cpu <0|1>");
+                }
+            }
+        });
+#endif
+
+    //registerWindow([&]()
+    //    {
+    //        if (ImGui::Begin("sunlight"))
+    //        {
+    //            /*static float col[3] = { 1.f, 1.f, 1.f };
+    //            if (ImGui::ColorPicker3("Sky", col))
+    //            {
+    //                m_skyScene.getSunlight().getComponent<cro::Sunlight>().setColour({ col[0], col[1], col[2], 1.f });
+    //                m_gameScene.getSunlight().getComponent<cro::Sunlight>().setColour({ col[0], col[1], col[2], 1.f });
+    //            }*/
+
+    //            /*auto 
+    //            size = glm::vec2(m_gameSceneMRTexture.getSize() / 4u);
+    //            ImGui::Image(m_gameSceneMRTexture.getTexture(1), { size.x , size.y }, { 0.f ,1.f }, { 1.f, 0.f });
+    //            ImGui::SameLine();
+    //            ImGui::Image(m_gameSceneMRTexture.getTexture(2), { size.x , size.y }, { 0.f ,1.f }, { 1.f, 0.f });*/
+
+    //            const auto& buff = m_lightMaps[LightMapID::Overhead].getTexture();
+    //            auto size = glm::vec2(buff.getSize()/* / 2u*/);
+    //            ImGui::Image(buff, { size.x , size.y }, { 0.f ,1.f }, { 1.f, 0.f });
+    //            ImGui::SameLine();
+    //            ImGui::Image(m_overheadBuffer.getDepthTexture(), {size.x , size.y}, {0.f ,1.f}, {1.f, 0.f});
+    //            ImGui::SameLine();
+    //            ImGui::Image(m_overheadBuffer.getTexture(MRTIndex::Normal), { size.x , size.y }, { 0.f ,1.f }, { 1.f, 0.f });
+
+    //            size = glm::vec2(m_gameSceneMRTexture.getSize() / 4u);
+    //            ImGui::Image(m_gameSceneMRTexture.getDepthTexture(), {size.x , size.y}, {0.f ,1.f}, {1.f, 0.f});
+    //        }
+    //        ImGui::End();
+    //    });
+
+
 
     //registerWindow([&]() 
     //    {

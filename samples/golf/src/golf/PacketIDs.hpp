@@ -191,6 +191,7 @@ namespace ServerCommand
         GotoHole,
         EndGame,
         ChangeWind,
+        SkipTurn,
 
         //billiards
         SpawnBall,

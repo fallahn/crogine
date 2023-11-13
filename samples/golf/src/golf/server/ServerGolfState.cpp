@@ -54,6 +54,8 @@ source distribution.
 #include <crogine/util/Random.hpp>
 #include <crogine/detail/glm/vec3.hpp>
 
+#include <algorithm>
+
 using namespace sv;
 
 namespace
@@ -1327,6 +1329,27 @@ void GolfState::doServerCommand(const net::NetEvent& evt)
     switch (evt.packet.as<std::uint8_t>())
     {
     default: break;
+    case ServerCommand::SkipTurn:
+    
+    if (m_gameStarted && m_allMapsLoaded)
+    {
+        auto result = std::find_if(m_sharedData.clients.begin(), m_sharedData.clients.end(),
+            [&](const sv::ClientConnection& cc)
+            {
+                return cc.peer == evt.peer;
+            });
+
+        if (result != m_sharedData.clients.end())
+        {
+            auto client = std::distance(m_sharedData.clients.begin(), result);
+            if (m_playerInfo[0].client == client
+                && m_playerInfo[0].ballEntity.getComponent<Ball>().state == Ball::State::Idle)
+            {
+                setNextPlayer();
+            }
+        }
+    }    
+        break;
 #ifdef CRO_DEBUG_
     case ServerCommand::GotoHole:
     {
