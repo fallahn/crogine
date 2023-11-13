@@ -112,7 +112,7 @@ float far = 15.0;
 )";
 
 inline const std::string WireframeFragment = R"(
-    OUTPUT
+#include OUTPUT_LOCATION
     uniform vec4 u_colour = vec4(1.0);
 #if defined (DASHED)
     uniform float u_time;
@@ -133,5 +133,9 @@ inline const std::string WireframeFragment = R"(
         if (alpha < 0.5) discard;
 #endif
         FRAG_OUT = colour;
+
+#if defined USE_MRT
+        NORM_OUT.a = 0.0; //masks off receiving light map
+#endif
     }
 )";

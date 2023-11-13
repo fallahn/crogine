@@ -70,7 +70,7 @@ inline const std::string BeaconVertex = R"(
 
 
 inline const std::string BeaconFragment = R"(
-    OUTPUT
+#include OUTPUT_LOCATION
 
     uniform sampler2D u_diffuseMap;
     uniform vec4 u_colour;
@@ -84,5 +84,9 @@ inline const std::string BeaconFragment = R"(
         FRAG_OUT = TEXTURE(u_diffuseMap, v_texCoord) * v_colour * u_colour;
 #else
         FRAG_OUT = v_colour;
+#endif
+
+#if defined (USE_MRT)
+        NORM_OUT.a = 0.0; //masks off light map
 #endif
     })";
