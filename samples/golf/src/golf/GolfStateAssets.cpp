@@ -112,6 +112,45 @@ void GolfState::loadAssets()
             }
         };
 
+    //presets for lighting volume
+    std::unordered_map<std::string, LightData> lightPresets;
+    if (m_sharedData.nightTime)
+    {
+        auto files = cro::FileSystem::listFiles(cro::FileSystem::getResourcePath() + u8"assets/golf/lights");
+        for (const auto& file : files)
+        {
+            auto ext = cro::FileSystem::getFileExtension(file);
+            if (ext == ".lgt")
+            {
+                LightData preset;
+
+                cro::ConfigFile cfg;
+                cfg.loadFromFile("assets/golf/lights/" + file);
+                const auto& props = cfg.getProperties();
+                for (const auto& prop : props)
+                {
+                    const auto& name = prop.getName();
+                    if (name == "colour")
+                    {
+                        preset.colour = prop.getValue<cro::Colour>();
+                    }
+                    else if (name == "radius")
+                    {
+                        preset.radius = prop.getValue<float>();
+                    }
+                    else if (name == "animation")
+                    {
+                        preset.animation = prop.getValue<std::string>();
+                    }
+                }
+
+                if (preset.radius > 0.01f)
+                {
+                    lightPresets.insert(std::make_pair(file.substr(0, file.find(ext)), preset));
+                }
+            }
+        }
+    }
 
     //load the map data
     bool error = false;
@@ -851,6 +890,7 @@ void GolfState::loadAssets()
                         if (m_sharedData.nightTime)
                         {
                             auto& lightData = holeData.lightData.emplace_back();
+                            std::string preset;
 
                             const auto& lightProps = obj.getProperties();
                             for (const auto& lightProp : lightProps)
@@ -874,6 +914,22 @@ void GolfState::loadAssets()
                                     auto str = lightProp.getValue<std::string>();
                                     auto len = std::min(std::size_t(20), str.length());
                                     lightData.animation = str.substr(0, len);
+                                }
+                                else if (propName == "preset")
+                                {
+                                    preset = lightProp.getValue<std::string>();
+                                }
+                            }
+
+                            if (!preset.empty() && lightPresets.count(preset) != 0)
+                            {
+                                const auto& p = lightPresets.at(preset);
+                                //presets take precedence, except for animation
+                                lightData.colour = p.colour;
+                                lightData.radius = p.radius;
+                                if (lightData.animation.empty())
+                                {
+                                    lightData.animation = p.animation;
                                 }
                             }
                         }
