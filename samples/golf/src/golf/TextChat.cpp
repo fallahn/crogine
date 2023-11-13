@@ -167,18 +167,23 @@ TextChat::TextChat(cro::Scene& s, SharedStateData& sd)
                         sendTextChat();
                         m_focusInput = true;
                     }
-                    ImGui::SetItemDefaultFocus();
                     
+                    ImGui::SetItemDefaultFocus();
+                    if (m_focusInput
+                        || ImGui::IsItemHovered()
+                        || (ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows)
+                            && !ImGui::IsAnyItemActive() && !ImGui::IsMouseClicked(0)))
+                    {
+                        ImGui::SetKeyboardFocusHere(-1);
+                    }
+
                     ImGui::SameLine();
                     if (ImGui::Button("Send"))
                     {
                         sendTextChat();
-                        m_focusInput = true;
+                        //m_focusInput = true;
                     }
-                    if (m_focusInput)
-                    {
-                        ImGui::SetKeyboardFocusHere(-1);
-                    }
+
                     m_focusInput = false;
                 }
                 ImGui::End();
