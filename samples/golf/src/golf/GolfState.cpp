@@ -2917,34 +2917,18 @@ void GolfState::spawnBall(const ActorInfo& info)
                 }
                 else
                 {
+                    auto ballPos = ballEnt.getComponent<cro::Transform>().getPosition();
+
                     //only do this when active player.
                     if (ballEnt.getComponent<ClientCollider>().state != std::uint8_t(Ball::State::Idle)
-                        || ballEnt.getComponent<cro::Transform>().getPosition() == m_holeData[m_currentHole].tee)
+                        || ballPos == m_holeData[m_currentHole].tee)
                     {
-                        auto ballPos = ballEnt.getComponent<cro::Transform>().getPosition();
-                        //auto ballHeight = ballPos.y;
-
-                        //auto c = cro::Colour::White;
-                        //if (ballPos.y > WaterLevel)
-                        //{
-                        //    //rays have limited length so might miss from high up (making shadow disappear)
-                        //    auto rayPoint = ballPos;
-                        //    rayPoint.y = 10.f;
-                        //    auto height = m_collisionMesh.getTerrain(rayPoint).height;
-                        //    c.setAlpha(smoothstep(0.2f, 0.8f, (ballPos.y - height) / 0.25f));
-
-                        //    ballPos.y = 0.00001f + (height - ballHeight);
-                        //}
-                        //e.getComponent<cro::Transform>().setPosition({ 0.f, ballPos.y, 0.f });
-                        //e.getComponent<cro::Model>().setHidden((m_currentPlayer.terrain == TerrainID::Green) || ballEnt.getComponent<cro::Model>().isHidden());
-                        //e.getComponent<cro::Model>().setMaterialProperty(0, "u_colour", c);
-
                         if (showTrail)
                         {
                             if (m_sharedData.showBallTrail && (info.playerID == m_currentPlayer.player && info.clientID == m_currentPlayer.client)
                                 && ballEnt.getComponent<ClientCollider>().state == static_cast<std::uint8_t>(Ball::State::Flight))
                             {
-                                m_ballTrail.addPoint(ballEnt.getComponent<cro::Transform>().getPosition());
+                                m_ballTrail.addPoint(ballPos);
                             }
                         }
                     }
