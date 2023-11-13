@@ -1824,7 +1824,7 @@ void ClubhouseState::createBrowserMenu(cro::Entity parent, std::uint32_t mouseEn
         });
 
     //entry highlights
-    glm::vec2 highlightPos(6.f, 161.f);
+    glm::vec3 highlightPos(6.f, 161.f, 0.2f);
     for (auto i = 0u; i < LobbyPager::ItemsPerPage; ++i)
     {
         entity = m_uiScene.createEntity();
@@ -1864,7 +1864,7 @@ void ClubhouseState::createBrowserMenu(cro::Entity parent, std::uint32_t mouseEn
 
     //button left
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 13.f, 5.f });
+    entity.addComponent<cro::Transform>().setPosition({ 13.f, 5.f, 0.1f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("button_left");
     m_lobbyPager.rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -1872,7 +1872,7 @@ void ClubhouseState::createBrowserMenu(cro::Entity parent, std::uint32_t mouseEn
 
     //highlight left
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 11.f, 3.f });
+    entity.addComponent<cro::Transform>().setPosition({ 11.f, 3.f, 0.2f });
     entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("highlight_left");
@@ -1938,7 +1938,7 @@ void ClubhouseState::createBrowserMenu(cro::Entity parent, std::uint32_t mouseEn
 
     //button right
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 382.f, 5.f });
+    entity.addComponent<cro::Transform>().setPosition({ 382.f, 5.f, 0.1f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("button_right");
     m_lobbyPager.rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -1946,7 +1946,7 @@ void ClubhouseState::createBrowserMenu(cro::Entity parent, std::uint32_t mouseEn
 
     //highlight right
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 380.f, 3.f });
+    entity.addComponent<cro::Transform>().setPosition({ 380.f, 3.f, 0.2f });
     entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = spriteSheet.getSprite("highlight_right");
@@ -2818,7 +2818,7 @@ void ClubhouseState::updateLobbyList()
     {
         //no lobbies found :(
         auto entity = m_uiScene.createEntity();
-        entity.addComponent<cro::Transform>().setPosition(LobbyTextRootPosition);
+        entity.addComponent<cro::Transform>().setPosition(glm::vec3(LobbyTextRootPosition, 0.1f));
         entity.addComponent<cro::Drawable2D>();
         entity.addComponent<cro::Text>(font).setString(" No Games Found.");
         entity.getComponent<cro::Text>().setFillColour(LeaderboardTextDark);
@@ -2852,7 +2852,7 @@ void ClubhouseState::updateLobbyList()
             }
 
             auto entity = m_uiScene.createEntity();
-            entity.addComponent<cro::Transform>().setPosition(LobbyTextRootPosition);
+            entity.addComponent<cro::Transform>().setPosition(glm::vec3(LobbyTextRootPosition, 0.1f));
             entity.getComponent<cro::Transform>().setScale(glm::vec2(0.f));
             entity.addComponent<cro::Drawable2D>();
             entity.addComponent<cro::Text>(font).setString(pageString);
