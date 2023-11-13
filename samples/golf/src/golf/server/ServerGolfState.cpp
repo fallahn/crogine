@@ -376,10 +376,7 @@ void GolfState::netEvent(const net::NetEvent& evt)
             handlePlayerInput(evt.packet, false);
             break;
         case PacketID::ServerCommand:
-            if (evt.peer.getID() == m_sharedData.hostID)
-            {
-                doServerCommand(evt);
-            }
+            doServerCommand(evt);
             break;
         case PacketID::TransitionComplete:
         {
@@ -1326,99 +1323,119 @@ void GolfState::buildWorld()
 
 void GolfState::doServerCommand(const net::NetEvent& evt)
 {
-    switch (evt.packet.as<std::uint8_t>())
+    switch (evt.packet.as<std::uint16_t>())
     {
     default: break;
     case ServerCommand::SkipTurn:
-    
-    if (m_gameStarted && m_allMapsLoaded)
-    {
-        auto result = std::find_if(m_sharedData.clients.begin(), m_sharedData.clients.end(),
-            [&](const sv::ClientConnection& cc)
-            {
-                return cc.peer == evt.peer;
-            });
-
-        if (result != m_sharedData.clients.end())
+        if (m_gameStarted && m_allMapsLoaded)
         {
-            auto client = std::distance(m_sharedData.clients.begin(), result);
-            if (m_playerInfo[0].client == client
-                && m_playerInfo[0].ballEntity.getComponent<Ball>().state == Ball::State::Idle)
+            auto result = std::find_if(m_sharedData.clients.begin(), m_sharedData.clients.end(),
+                [&](const sv::ClientConnection& cc)
+                {
+                    return cc.peer == evt.peer;
+                });
+
+            if (result != m_sharedData.clients.end())
             {
-                setNextPlayer();
+                auto client = std::distance(m_sharedData.clients.begin(), result);
+                if (m_playerInfo[0].client == client
+                    && m_playerInfo[0].ballEntity.getComponent<Ball>().state == Ball::State::Idle)
+                {
+                    setNextPlayer();
+                }
             }
         }
-    }    
         break;
-#ifdef CRO_DEBUG_
-    case ServerCommand::GotoHole:
-    {
-        m_playerInfo[0].position = m_holeData[m_currentHole].pin;
-        m_playerInfo[0].holeScore[m_currentHole] = MaxStrokes;
-        m_playerInfo[0].distanceToHole = 0.f;
-        m_playerInfo[0].terrain = TerrainID::Green;
-        setNextPlayer();
     }
 
-    break;
-    case ServerCommand::ChangeWind:
-        m_scene.getSystem<BallSystem>()->forceWindChange();
-        break;
-    case ServerCommand::NextHole:
-        m_currentHole = m_holeData.size() - 1;
-        //if (m_currentHole < m_holeData.size() - 1)
+    if (evt.peer.getID() == m_sharedData.hostID)
+    {
+        const auto data = evt.packet.as<std::uint16_t>();
+        const std::uint8_t command = (data & 0xff);
+        const std::uint8_t target = ((data >> 8) & 0xff);
+
+        switch (command)
         {
-            for (auto& p : m_playerInfo)
+        default: break;
+        case ServerCommand::KickClient:
+            if (target != 0 && target < ConstVal::MaxClients)
             {
-                p.position = m_holeData[m_currentHole].pin;
-                p.distanceToHole = 0.f;
-                p.holeScore[m_currentHole] = MaxStrokes;
-                p.totalScore += MaxStrokes;
+                //we assume host is always 0...
+                auto& peer = m_sharedData.clients[target].peer;
+                m_sharedData.host.sendPacket(peer, PacketID::ConnectionRefused, std::uint8_t(MessageType::Kicked), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                m_sharedData.host.disconnectLater(peer);
             }
+            break;
+#ifdef CRO_DEBUG_
+        case ServerCommand::GotoHole:
+        {
+            m_playerInfo[0].position = m_holeData[m_currentHole].pin;
+            m_playerInfo[0].holeScore[m_currentHole] = MaxStrokes;
+            m_playerInfo[0].distanceToHole = 0.f;
+            m_playerInfo[0].terrain = TerrainID::Green;
             setNextPlayer();
         }
-        break;
-    case ServerCommand::NextPlayer:
-        //this fakes the ball getting closer to the hole
-        m_playerInfo[0].distanceToHole *= 0.99f;
-        setNextPlayer();
-        break;
-    case ServerCommand::GotoGreen:
-        //set ball to green position
-        //set ball state to paused to trigger updates
-    {
-        auto pos = m_playerInfo[0].position - m_holeData[m_currentHole].pin;
-        pos = glm::normalize(pos) * 6.f;
-
-        m_playerInfo[0].ballEntity.getComponent<cro::Transform>().setPosition(pos + m_holeData[m_currentHole].pin);
-        m_playerInfo[0].ballEntity.getComponent<Ball>().terrain = TerrainID::Green;
-        m_playerInfo[0].ballEntity.getComponent<Ball>().state = Ball::State::Paused;
-    }
 
         break;
-    case ServerCommand::EndGame:
-    {
-        //end of game baby!
-        m_sharedData.host.broadcastPacket(PacketID::GameEnd, std::uint8_t(10), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
-
-        //create a timer ent which returns to lobby on time out
-        auto entity = m_scene.createEntity();
-        entity.addComponent<cro::Transform>();
-        entity.addComponent<cro::Callback>().active = true;
-        entity.getComponent<cro::Callback>().setUserData<float>(10.f);
-        entity.getComponent<cro::Callback>().function =
-            [&](cro::Entity e, float dt)
-        {
-            auto& remain = e.getComponent<cro::Callback>().getUserData<float>();
-            remain -= dt;
-            if (remain < 0)
+        case ServerCommand::ChangeWind:
+            m_scene.getSystem<BallSystem>()->forceWindChange();
+            break;
+        case ServerCommand::NextHole:
+            m_currentHole = m_holeData.size() - 1;
+            //if (m_currentHole < m_holeData.size() - 1)
             {
-                m_returnValue = StateID::Lobby;
-                e.getComponent<cro::Callback>().active = false;
+                for (auto& p : m_playerInfo)
+                {
+                    p.position = m_holeData[m_currentHole].pin;
+                    p.distanceToHole = 0.f;
+                    p.holeScore[m_currentHole] = MaxStrokes;
+                    p.totalScore += MaxStrokes;
+                }
+                setNextPlayer();
             }
-        };
-    }
+            break;
+        case ServerCommand::NextPlayer:
+            //this fakes the ball getting closer to the hole
+            m_playerInfo[0].distanceToHole *= 0.99f;
+            setNextPlayer();
+            break;
+        case ServerCommand::GotoGreen:
+            //set ball to green position
+            //set ball state to paused to trigger updates
+        {
+            auto pos = m_playerInfo[0].position - m_holeData[m_currentHole].pin;
+            pos = glm::normalize(pos) * 6.f;
+
+            m_playerInfo[0].ballEntity.getComponent<cro::Transform>().setPosition(pos + m_holeData[m_currentHole].pin);
+            m_playerInfo[0].ballEntity.getComponent<Ball>().terrain = TerrainID::Green;
+            m_playerInfo[0].ballEntity.getComponent<Ball>().state = Ball::State::Paused;
+        }
+
+        break;
+        case ServerCommand::EndGame:
+        {
+            //end of game baby!
+            m_sharedData.host.broadcastPacket(PacketID::GameEnd, std::uint8_t(10), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+
+            //create a timer ent which returns to lobby on time out
+            auto entity = m_scene.createEntity();
+            entity.addComponent<cro::Transform>();
+            entity.addComponent<cro::Callback>().active = true;
+            entity.getComponent<cro::Callback>().setUserData<float>(10.f);
+            entity.getComponent<cro::Callback>().function =
+                [&](cro::Entity e, float dt)
+                {
+                    auto& remain = e.getComponent<cro::Callback>().getUserData<float>();
+                    remain -= dt;
+                    if (remain < 0)
+                    {
+                        m_returnValue = StateID::Lobby;
+                        e.getComponent<cro::Callback>().active = false;
+                    }
+                };
+        }
 #endif
         break;
+        }
     }
 }

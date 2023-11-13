@@ -241,10 +241,10 @@ bool BilliardsState::handleEvent(const cro::Event& evt)
         {
         default: break;
         case SDLK_F2:
-            m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, std::uint8_t(ServerCommand::SpawnBall), net::NetFlag::Reliable);
+            m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, std::uint16_t(ServerCommand::SpawnBall), net::NetFlag::Reliable);
             break;
         case SDLK_F3:
-            m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, std::uint8_t(ServerCommand::StrikeBall), net::NetFlag::Reliable);
+            m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, std::uint16_t(ServerCommand::StrikeBall), net::NetFlag::Reliable);
             break;
         case SDLK_F4:
             //addPocketBall(1);
@@ -286,7 +286,7 @@ bool BilliardsState::handleEvent(const cro::Event& evt)
             setActiveCamera(CameraID::Overhead);
             break;
         case SDLK_F6:
-            m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, std::uint8_t(ServerCommand::EndGame), net::NetFlag::Reliable);
+            m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, std::uint16_t(ServerCommand::EndGame), net::NetFlag::Reliable);
             break;
         case SDLK_F7:
         {

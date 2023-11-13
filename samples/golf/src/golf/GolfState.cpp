@@ -467,16 +467,16 @@ bool GolfState::handleEvent(const cro::Event& evt)
             break;
 #ifdef CRO_DEBUG_
         case SDLK_F2:
-            m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, std::uint8_t(ServerCommand::GotoHole), net::NetFlag::Reliable);
+            m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, std::uint16_t(ServerCommand::GotoHole), net::NetFlag::Reliable);
             break;
         case SDLK_F3:
-            m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, std::uint8_t(ServerCommand::NextPlayer), net::NetFlag::Reliable);
+            m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, std::uint16_t(ServerCommand::NextPlayer), net::NetFlag::Reliable);
             break;
         case SDLK_F4:
-            m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, std::uint8_t(ServerCommand::GotoGreen), net::NetFlag::Reliable);
+            m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, std::uint16_t(ServerCommand::GotoGreen), net::NetFlag::Reliable);
             break;
 //        case SDLK_F6: //this is used to log CSV
-//            m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, std::uint8_t(ServerCommand::EndGame), net::NetFlag::Reliable);
+//            m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, std::uint16_t(ServerCommand::EndGame), net::NetFlag::Reliable);
 //#ifdef USE_GNS
 //            //Social::resetAchievement(AchievementStrings[AchievementID::SkinOfYourTeeth]);
 //#endif
@@ -493,7 +493,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
             //Achievements::awardAchievement(AchievementStrings[AchievementID::SkinOfYourTeeth]);
             break;
         case SDLK_F10:
-            m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, std::uint8_t(ServerCommand::ChangeWind), net::NetFlag::Reliable);
+            m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, std::uint16_t(ServerCommand::ChangeWind), net::NetFlag::Reliable);
             break;
         case SDLK_KP_0:
             setActiveCamera(CameraID::Idle);
@@ -5983,6 +5983,10 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
             };
             m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
         }
+            break;
+        case PacketID::ConnectionRefused:
+            m_sharedData.errorMessage = "Kicked By Host";
+            requestStackPush(StateID::Error);
             break;
         }
         break;

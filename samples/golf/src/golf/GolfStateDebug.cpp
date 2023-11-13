@@ -235,7 +235,7 @@ void GolfState::registerDebugCommands()
 {
     registerCommand("skip_turn", [&](const std::string&)
         {
-            m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, std::uint8_t(ServerCommand::SkipTurn), gns::NetFlag::Reliable);
+            m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, std::uint16_t(ServerCommand::SkipTurn), gns::NetFlag::Reliable);
         });
 
     registerCommand("build_cubemaps",
@@ -403,6 +403,70 @@ void GolfState::registerDebugCommands()
             }
         });
 
+    //nasssssty staticses
+    static bool showKickWindow = false;
+    if (m_sharedData.hosting)
+    {
+        registerWindow([&]()
+            {
+                if (showKickWindow)
+                {
+                    if (ImGui::Begin("Kick Player", &showKickWindow, ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_AlwaysAutoResize))
+                    {
+                        struct ListItem final
+                        {
+                            const cro::String* name = nullptr;
+                            std::uint8_t client = 0;
+                        };
+                        static std::vector<ListItem> items;
+                        items.clear();
+
+                        for (auto i = 0u; i < ConstVal::MaxClients; ++i)
+                        {
+                            const auto& client = m_sharedData.connectionData[i];
+                            for (auto j = 0u; j < client.playerCount; ++j)
+                            {
+                                auto& item = items.emplace_back();
+                                item.name = &client.playerData[j].name;
+                                item.client = i;
+                            }
+                        }
+
+                        static std::int32_t idx = 0;
+                        if (ImGui::BeginListBox("Players", ImVec2(-FLT_MIN, 6.f * ImGui::GetTextLineHeightWithSpacing())))
+                        {
+                            for (auto n = 0u; n < items.size(); ++n)
+                            {
+                                const bool selected = (idx == n);
+                                if (ImGui::Selectable(reinterpret_cast<char*>(items[n].name->toUtf8().data()), selected))
+                                {
+                                    idx = n;
+                                }
+
+                                if (selected)
+                                {
+                                    ImGui::SetItemDefaultFocus();
+                                }
+                            }
+                            ImGui::EndListBox();
+                        }
+                        if (ImGui::Button("Kick"))
+                        {
+                            //again, assuming host is client 0...
+                            if (items[idx].client != 0)
+                            {
+                                std::uint16_t data = std::uint16_t(ServerCommand::KickClient) | ((items[idx].client) << 8);
+                                m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, data, gns::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                                showKickWindow = false;
+                            }
+                        }
+                    }
+                    ImGui::End();
+                }
+            });
+
+        registerCommand("kick", [](const std::string&) {showKickWindow = true; });
+    }
 #ifdef CRO_DEBUG_
     registerCommand("fast_cpu", [&](const std::string& param)
         {

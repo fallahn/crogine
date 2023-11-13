@@ -69,7 +69,8 @@ namespace MessageType
         NotInLobby,
         MapNotFound,
         BadData,
-        VersionMismatch
+        VersionMismatch,
+        Kicked
     };
 }
 
@@ -147,7 +148,7 @@ namespace PacketID
         ClientReady, //< uint8 clientID - requests game data from server. Sent repeatedly until ack'd
         InputUpdate, //< InputUpdate struct for golf, or BilliardBallInput
         PlayerInfo, //< ConnectionData array
-        ServerCommand, //< uint8_t command type
+        ServerCommand, //< uint16_t command type | optionally client target
         TransitionComplete, //< uint8 clientID, signal hole transition completed
         NewPlayer, //< animation completed on the client and new player active
         ReadyQuit, //< uint8 clientID - client wants to toggle skip viewing scores
@@ -192,6 +193,7 @@ namespace ServerCommand
         EndGame,
         ChangeWind,
         SkipTurn,
+        KickClient,
 
         //billiards
         SpawnBall,
