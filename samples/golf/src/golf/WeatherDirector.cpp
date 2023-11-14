@@ -28,14 +28,40 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include "WeatherDirector.hpp"
+#include "PacketIDs.hpp"
 
-WeatherDirector::WeatherDirector()
+#include <crogine/util/Random.hpp>
+
+namespace
 {
+    std::array<cro::Time, 10> Times = { };
+}
 
+WeatherDirector::WeatherDirector(gns::NetHost& host)
+    : m_host        (host),
+    m_weatherState  (0),
+    m_timeIndex     (cro::Util::Random::value(0u, Times.size() - 1))
+{
+    for (auto& t : Times)
+    {
+        t = cro::seconds(static_cast<float>(cro::Util::Random::value(50, 120)));
+    }
 }
 
 //public
 void WeatherDirector::handleMessage(const cro::Message&)
 {
 
+}
+
+void WeatherDirector::process(float)
+{
+    if (m_timer.elapsed() > Times[m_timeIndex])
+    {
+        m_timer.restart();
+        m_timeIndex = (m_timeIndex + 1) % Times.size();
+        m_weatherState = ~m_weatherState;
+
+        m_host.broadcastPacket(PacketID::WeatherChange, m_weatherState, gns::NetFlag::Reliable);
+    }
 }

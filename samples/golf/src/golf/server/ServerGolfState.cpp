@@ -34,6 +34,7 @@ source distribution.
 #include "../BallSystem.hpp"
 #include "../Clubs.hpp"
 #include "../MessageIDs.hpp"
+#include "../WeatherDirector.hpp"
 #include "CPUStats.hpp"
 #include "ServerGolfState.hpp"
 #include "ServerMessages.hpp"
@@ -1243,6 +1244,11 @@ void GolfState::initScene()
     auto& mb = m_sharedData.messageBus;
     m_scene.addSystem<cro::CallbackSystem>(mb);
     m_scene.addSystem<BallSystem>(mb)->setGimmeRadius(m_sharedData.gimmeRadius);
+
+    if (m_sharedData.weatherType == WeatherType::Showers)
+    {
+        m_scene.addDirector<WeatherDirector>(m_sharedData.host);
+    }
 
     if (m_sharedData.scoreType == ScoreType::ShortRound
         && getCourseIndex(m_sharedData.mapDir.toAnsiString()) != -1)

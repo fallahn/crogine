@@ -29,15 +29,24 @@ source distribution.
 
 #pragma once
 
+#include "server/Networking.hpp"
+
 #include <crogine/ecs/Director.hpp>
+#include <crogine/core/Clock.hpp>
 
 class WeatherDirector final : public cro::Director
 {
 public:
-    WeatherDirector();
+    explicit WeatherDirector(gns::NetHost&);
 
     void handleMessage(const cro::Message&) override;
 
-private:
+    void process(float) override;
 
+private:
+    gns::NetHost& m_host;
+    std::uint8_t m_weatherState;
+    std::size_t m_timeIndex;
+
+    cro::Clock m_timer;
 };

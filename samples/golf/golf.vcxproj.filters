@@ -405,11 +405,11 @@
     <ClCompile Include="src\golf\WeatherAnimationSystem.cpp">
       <Filter>Source Files\golf\client\systems</Filter>
     </ClCompile>
-    <ClCompile Include="src\golf\WeatherDirector.cpp">
-      <Filter>Source Files\golf\client\directors</Filter>
-    </ClCompile>
     <ClCompile Include="src\golf\GolfStateAssets.cpp">
       <Filter>Source Files\golf\client\states</Filter>
+    </ClCompile>
+    <ClCompile Include="src\golf\WeatherDirector.cpp">
+      <Filter>Source Files\golf\server\directors</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -822,7 +822,7 @@
       <Filter>Header Files\golf\client\systems</Filter>
     </ClInclude>
     <ClInclude Include="src\golf\WeatherDirector.hpp">
-      <Filter>Header Files\golf\client\directors</Filter>
+      <Filter>Header Files\golf\server\directors</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

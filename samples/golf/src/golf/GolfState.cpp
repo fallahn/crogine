@@ -3395,6 +3395,13 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
         switch (evt.packet.getID())
         {
         default: break;
+        case PacketID::WeatherChange:
+            if (m_sharedData.weatherType == WeatherType::Showers)
+            {
+                m_gameScene.getSystem<WeatherAnimationSystem>()->setHidden(evt.packet.as<std::uint8_t>());
+                m_gameScene.setSystemActive<WeatherAnimationSystem>(true);
+            }
+            break;
         case PacketID::WarnTime:
         {
             float warnTime = static_cast<float>(evt.packet.as<std::uint8_t>());

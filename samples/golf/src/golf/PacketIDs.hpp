@@ -142,6 +142,7 @@ namespace PacketID
         BullHit, //< BullHit struct
         FlagHit, //< BullHit struct
         WarnTime, //< uint8 warning time for AFK in seconds
+        WeatherChange, //< 0 off 1 on uint8
 
         //from client
         RequestGameStart, //uint8 sv::State, ie Golf to start golf, Billiards to start billiards etc

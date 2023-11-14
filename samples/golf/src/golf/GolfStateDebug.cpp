@@ -348,47 +348,47 @@ void GolfState::registerDebugCommands()
             cro::Console::print("Done!");
         });
 
-    registerCommand("rain", [&](const std::string&)
-        {
-            static bool raining = false;
-            static constexpr float Density = 0.5f;
-            if (!raining)
-            {
-                createWeather(WeatherType::Rain);
+    //registerCommand("rain", [&](const std::string&)
+    //    {
+    //        static bool raining = false;
+    //        static constexpr float Density = 0.5f;
+    //        if (!raining)
+    //        {
+    //            createWeather(WeatherType::Rain);
 
-                setFog(Density);
+    //            setFog(Density);
 
-                raining = true;
-                m_gameScene.setSystemActive<WeatherAnimationSystem>(true);
-                m_gameScene.getSystem<WeatherAnimationSystem>()->setHidden(false);
-            }
-            else
-            {
-                static bool hidden = false;
-                hidden = !hidden;
-                m_gameScene.getSystem<WeatherAnimationSystem>()->setHidden(hidden);
+    //            raining = true;
+    //            m_gameScene.setSystemActive<WeatherAnimationSystem>(true);
+    //            m_gameScene.getSystem<WeatherAnimationSystem>()->setHidden(false);
+    //        }
+    //        else
+    //        {
+    //            static bool hidden = false;
+    //            hidden = !hidden;
+    //            m_gameScene.getSystem<WeatherAnimationSystem>()->setHidden(hidden);
 
-                setFog(hidden ? 0.f : Density);
-            }
-        });
+    //            setFog(hidden ? 0.f : Density);
+    //        }
+    //    });
 
-    registerCommand("fog", [&](const std::string& amount)
-        {
-            if (amount.empty())
-            {
-                cro::Console::print("Usage: fog <0 - 1> where value represents density. EG fog 0.5");
-            }
-            else
-            {
-                float density = 0.f;
-                std::stringstream ss;
-                ss << amount;
-                ss >> density;
-                density = std::clamp(density, 0.f, 1.f);
+    //registerCommand("fog", [&](const std::string& amount)
+    //    {
+    //        if (amount.empty())
+    //        {
+    //            cro::Console::print("Usage: fog <0 - 1> where value represents density. EG fog 0.5");
+    //        }
+    //        else
+    //        {
+    //            float density = 0.f;
+    //            std::stringstream ss;
+    //            ss << amount;
+    //            ss >> density;
+    //            density = std::clamp(density, 0.f, 1.f);
 
-                setFog(density);
-            }
-        });
+    //            setFog(density);
+    //        }
+    //    });
 
     registerCommand("noclip", [&](const std::string&)
         {
