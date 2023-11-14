@@ -1968,7 +1968,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::LobbyCheckbox];
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement;
-    entity.addComponent<UIElement>().absolutePosition = { 176.f, 155.f };
+    entity.addComponent<UIElement>().absolutePosition = { 176.f, 156.f };
     entity.getComponent<UIElement>().depth = 0.01f;
 
     bounds = m_sprites[SpriteID::LobbyCheckbox].getTextureRect();
@@ -1991,7 +1991,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::LobbyCheckbox];
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement;
-    entity.addComponent<UIElement>().absolutePosition = { 176.f, 129.f };
+    entity.addComponent<UIElement>().absolutePosition = { 176.f, 130.f };
     entity.getComponent<UIElement>().depth = 0.01f;
 
     bounds = m_sprites[SpriteID::LobbyCheckbox].getTextureRect();
@@ -2015,7 +2015,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::LobbyCheckbox];
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement;
-    entity.addComponent<UIElement>().absolutePosition = { 176.f, 116.f };
+    entity.addComponent<UIElement>().absolutePosition = { 176.f, 117.f };
     entity.getComponent<UIElement>().depth = 0.01f;
 
     bounds = m_sprites[SpriteID::LobbyCheckbox].getTextureRect();
@@ -2039,7 +2039,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::LobbyCheckbox];
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement;
-    entity.addComponent<UIElement>().absolutePosition = { 176.f, 102.f };
+    entity.addComponent<UIElement>().absolutePosition = { 176.f, 104.f };
     entity.getComponent<UIElement>().depth = 0.01f;
 
     bounds = m_sprites[SpriteID::LobbyCheckbox].getTextureRect();
@@ -2092,7 +2092,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
                 centreText(e);
 
                 auto x = std::round(cro::Text::getLocalBounds(e).width) + 2.f;
-                iconEnt.getComponent<cro::Transform>().setPosition(glm::vec3(x, -10.f, 0.1f));
+                iconEnt.getComponent<cro::Transform>().setPosition(glm::vec3(x, -9.f, 0.1f));
 
                 auto rect = bounds;
                 rect.left += bounds.width * m_sharedData.weatherType;
@@ -2213,7 +2213,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
 
     //current rules
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 213.f, 68.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ 213.f, 67.f, 0.1f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::CourseRules;
     entity.addComponent<cro::Text>(smallFont).setCharacterSize(InfoTextSize);
@@ -3427,7 +3427,7 @@ void MenuState::addCourseSelectButtons()
     checkboxEnt.addComponent<cro::Sprite>() = m_sprites[SpriteID::LobbyCheckboxHighlight];
     checkboxEnt.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
     checkboxEnt.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement | CommandID::Menu::CourseSelect;
-    checkboxEnt.addComponent<UIElement>().absolutePosition = { 175.f, 154.f };
+    checkboxEnt.addComponent<UIElement>().absolutePosition = { 175.f, 155.f };
     checkboxEnt.getComponent<UIElement>().depth = 0.01f;
     bounds = checkboxEnt.getComponent<cro::Sprite>().getTextureBounds();
     bounds.width += 78.f; //wild stab at the width of the text (it's not here to measure...)
@@ -3452,7 +3452,7 @@ void MenuState::addCourseSelectButtons()
     checkboxEnt.addComponent<cro::Sprite>() = m_sprites[SpriteID::LobbyCheckboxHighlight];
     checkboxEnt.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
     checkboxEnt.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement | CommandID::Menu::CourseSelect;
-    checkboxEnt.addComponent<UIElement>().absolutePosition = { 175.f, 128.f };
+    checkboxEnt.addComponent<UIElement>().absolutePosition = { 175.f, 129.f };
     checkboxEnt.getComponent<UIElement>().depth = 0.01f;
     bounds = checkboxEnt.getComponent<cro::Sprite>().getTextureBounds();
     bounds.width += 78.f;
@@ -3477,7 +3477,7 @@ void MenuState::addCourseSelectButtons()
     checkboxEnt.addComponent<cro::Sprite>() = m_sprites[SpriteID::LobbyCheckboxHighlight];
     checkboxEnt.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
     checkboxEnt.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement | CommandID::Menu::CourseSelect;
-    checkboxEnt.addComponent<UIElement>().absolutePosition = { 175.f, 115.f };
+    checkboxEnt.addComponent<UIElement>().absolutePosition = { 175.f, 116.f };
     checkboxEnt.getComponent<UIElement>().depth = 0.01f;
     bounds = checkboxEnt.getComponent<cro::Sprite>().getTextureBounds();
     bounds.width += 78.f;
@@ -3502,7 +3502,7 @@ void MenuState::addCourseSelectButtons()
     checkboxEnt.addComponent<cro::Sprite>() = m_sprites[SpriteID::LobbyCheckboxHighlight];
     checkboxEnt.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
     checkboxEnt.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement | CommandID::Menu::CourseSelect;
-    checkboxEnt.addComponent<UIElement>().absolutePosition = { 175.f, 101.f };
+    checkboxEnt.addComponent<UIElement>().absolutePosition = { 175.f, 103.f };
     checkboxEnt.getComponent<UIElement>().depth = 0.01f;
     bounds = checkboxEnt.getComponent<cro::Sprite>().getTextureBounds();
     bounds.width += 60.f;
@@ -3528,7 +3528,7 @@ void MenuState::addCourseSelectButtons()
         checkboxEnt.addComponent<cro::Drawable2D>();
         checkboxEnt.addComponent<cro::Sprite>() = m_sprites[SpriteID::LobbyCheckbox];
         checkboxEnt.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement | CommandID::Menu::CourseSelect;
-        checkboxEnt.addComponent<UIElement>().absolutePosition = { 176.f, 89.f };
+        checkboxEnt.addComponent<UIElement>().absolutePosition = { 176.f, 91.f };
         checkboxEnt.getComponent<UIElement>().depth = 0.01f;
 
         bounds = m_sprites[SpriteID::LobbyCheckbox].getTextureRect();
@@ -3554,7 +3554,7 @@ void MenuState::addCourseSelectButtons()
         checkboxEnt.addComponent<cro::Sprite>() = m_sprites[SpriteID::LobbyCheckboxHighlight];
         checkboxEnt.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
         checkboxEnt.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement | CommandID::Menu::CourseSelect;
-        checkboxEnt.addComponent<UIElement>().absolutePosition = { 175.f, 88.f };
+        checkboxEnt.addComponent<UIElement>().absolutePosition = { 175.f, 90.f };
         checkboxEnt.getComponent<UIElement>().depth = 0.01f;
         bounds = checkboxEnt.getComponent<cro::Sprite>().getTextureBounds();
         checkboxEnt.addComponent<cro::UIInput>().area = bounds;
@@ -3578,7 +3578,7 @@ void MenuState::addCourseSelectButtons()
         labelEnt.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
         labelEnt.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
         labelEnt.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement | CommandID::Menu::CourseSelect;
-        labelEnt.addComponent<UIElement>().absolutePosition = { 187.f, 96.f };
+        labelEnt.addComponent<UIElement>().absolutePosition = { 187.f, 98.f };
         labelEnt.getComponent<UIElement>().depth = 0.01f;
         m_lobbyWindowEntities[LobbyEntityID::HoleSelection].getComponent<cro::Transform>().addChild(labelEnt.getComponent<cro::Transform>());
         checkboxEnt.getComponent<cro::UIInput>().area.width += cro::Text::getLocalBounds(labelEnt).width;
@@ -3628,7 +3628,7 @@ void MenuState::addCourseSelectButtons()
     buttonEnt.addComponent<cro::Sprite>() = m_sprites[SpriteID::WeatherHighlight];
     buttonEnt.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
     buttonEnt.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement | CommandID::Menu::CourseSelect;
-    buttonEnt.addComponent<UIElement>().absolutePosition = { 183.f, 72.f };
+    buttonEnt.addComponent<UIElement>().absolutePosition = { 185.f, 72.f };
     buttonEnt.getComponent<UIElement>().depth = 0.01f;
     bounds = m_sprites[SpriteID::WeatherHighlight].getTextureBounds();
     buttonEnt.addComponent<cro::UIInput>().area = bounds;
@@ -3716,7 +3716,7 @@ void MenuState::addCourseSelectButtons()
         checkboxEnt.addComponent<cro::Sprite>() = m_sprites[SpriteID::LobbyCheckboxHighlight];
         checkboxEnt.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
         checkboxEnt.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement | CommandID::Menu::CourseSelect;
-        checkboxEnt.addComponent<UIElement>().absolutePosition = { 175.f, 141.f };
+        checkboxEnt.addComponent<UIElement>().absolutePosition = { 175.f, 142.f };
         checkboxEnt.getComponent<UIElement>().depth = 0.01f;
         bounds = checkboxEnt.getComponent<cro::Sprite>().getTextureBounds();
         bounds.width += 78.f; //wild stab at the width of the text (it's not here to measure...)
@@ -3738,7 +3738,7 @@ void MenuState::addCourseSelectButtons()
         checkboxEnt.addComponent<cro::Drawable2D>();
         checkboxEnt.addComponent<cro::Sprite>() = m_sprites[SpriteID::LobbyCheckbox];
         checkboxEnt.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement | CommandID::Menu::CourseSelect;
-        checkboxEnt.addComponent<UIElement>().absolutePosition = { 176.f, 142.f };
+        checkboxEnt.addComponent<UIElement>().absolutePosition = { 176.f, 143.f };
         checkboxEnt.getComponent<UIElement>().depth = 0.01f;
 
         bounds = m_sprites[SpriteID::LobbyCheckbox].getTextureRect();
@@ -3764,7 +3764,7 @@ void MenuState::addCourseSelectButtons()
         labelEnt.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
         labelEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
         labelEnt.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement | CommandID::Menu::CourseSelect;
-        labelEnt.addComponent<UIElement>().absolutePosition = { 187.f, 148.f };
+        labelEnt.addComponent<UIElement>().absolutePosition = { 187.f, 150.f };
         labelEnt.getComponent<UIElement>().depth = 0.1f;
         m_lobbyWindowEntities[LobbyEntityID::HoleSelection].getComponent<cro::Transform>().addChild(labelEnt.getComponent<cro::Transform>());
     }
