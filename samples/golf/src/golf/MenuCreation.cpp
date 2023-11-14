@@ -2057,12 +2057,20 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     thumbBgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
+    //weather icon
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>() = spriteSheetV2.getSprite("weather_icon");
+    auto iconEnt = entity;
+    bounds = entity.getComponent<cro::Sprite>().getTextureRect();
+
     //text for current weather type
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement;
-    entity.addComponent<UIElement>().absolutePosition = { 213.f, 82.f };
+    entity.addComponent<UIElement>().absolutePosition = { 208.f, 82.f };
     entity.getComponent<UIElement>().depth = 0.01f;
 
     entity.addComponent<cro::Text>(smallFont);
@@ -2073,18 +2081,31 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity.getComponent<cro::Text>().setString(WeatherStrings[m_sharedData.weatherType]);
     centreText(entity);
     entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().setUserData<std::uint32_t>(WeatherType::Count);
     entity.getComponent<cro::Callback>().function =
-        [&](cro::Entity e, float)
+        [&, iconEnt, bounds](cro::Entity e, float) mutable
         {
-            static std::int32_t lastType = 0;
+            auto& lastType = e.getComponent<cro::Callback>().getUserData<std::uint32_t>();
             if (lastType != m_sharedData.weatherType)
             {
                 e.getComponent<cro::Text>().setString(WeatherStrings[m_sharedData.weatherType]);
                 centreText(e);
+
+                auto x = std::round(cro::Text::getLocalBounds(e).width) + 2.f;
+                iconEnt.getComponent<cro::Transform>().setPosition(glm::vec3(x, -10.f, 0.1f));
+
+                auto rect = bounds;
+                rect.left += bounds.width * m_sharedData.weatherType;
+                iconEnt.getComponent<cro::Sprite>().setTextureRect(rect);
             }
             lastType = m_sharedData.weatherType;
         };
+
+    entity.getComponent<cro::Transform>().addChild(iconEnt.getComponent<cro::Transform>());
     thumbBgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+    
+
 
     const auto courseButtonEnable =
         [&](cro::Entity e, float)

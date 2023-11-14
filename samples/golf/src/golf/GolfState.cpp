@@ -2661,14 +2661,7 @@ void GolfState::buildScene()
     sunEnt.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, -130.f * cro::Util::Const::degToRad);
     sunEnt.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -75.f * cro::Util::Const::degToRad);
 
-    /*if (auto month = cro::SysTime::now().months(); month == 12)
-    {
-        if (cro::Util::Random::value(0, 20) == 0)
-        {
-            createWeather(WeatherType::Snow);
-        }
-    }
-    else*/ 
+ 
     if (auto month = cro::SysTime::now().months(); 
              (month == 6 || m_sharedData.weatherType == WeatherType::Showers) && !m_sharedData.nightTime)
     {
@@ -2683,15 +2676,23 @@ void GolfState::buildScene()
     {
     default:
     case WeatherType::Clear:
+        if (auto month = cro::SysTime::now().months(); month == 12)
+        {
+            if (cro::Util::Random::value(0, 20) == 0)
+            {
+                createWeather(WeatherType::Snow);
+                setFog(m_sharedData.nightTime ? 0.45f : 0.3f);
+            }
+        }
         break;
     case WeatherType::Rain:
-        setFog(0.4f);
+        setFog(m_sharedData.nightTime ? 0.48f : 0.4f);
         [[fallthrough]];
     case WeatherType::Showers:
         createWeather(WeatherType::Rain);
         break;
     case WeatherType::Mist:
-        setFog(0.25f);
+        setFog(m_sharedData.nightTime ? 0.45f : 0.3f);
         break;
     }
 }
