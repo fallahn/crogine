@@ -175,6 +175,7 @@ private:
         std::uint32_t toggleNightTime = 0;
         std::uint32_t toggleFriendsOnly = 0;
         std::uint32_t toggleFastCPU = 0;
+        std::uint32_t setWeather = 0;
         std::uint32_t inviteFriends = 0;
         std::uint32_t selected = 0;
         std::uint32_t unselected = 0;

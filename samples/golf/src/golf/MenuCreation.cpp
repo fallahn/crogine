@@ -1,4 +1,4 @@
-/*-----------------------------------------------------------------------
+﻿/*-----------------------------------------------------------------------
 
 Matt Marchant 2021 - 2023
 http://trederia.blogspot.com
@@ -1630,6 +1630,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     m_sprites[SpriteID::ReadyStatus] = spriteSheetV2.getSprite("ready_indicator");
     m_sprites[SpriteID::LobbyLeft] = spriteSheetV2.getSprite("prev_course");
     m_sprites[SpriteID::LobbyRight] = spriteSheetV2.getSprite("next_course");
+    m_sprites[SpriteID::WeatherHighlight] = spriteSheetV2.getSprite("weather_highlight");
 
     //title
     auto entity = m_uiScene.createEntity();
@@ -2056,6 +2057,34 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     thumbBgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
+    //text for current weather type
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>();
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement;
+    entity.addComponent<UIElement>().absolutePosition = { 213.f, 82.f };
+    entity.getComponent<UIElement>().depth = 0.01f;
+
+    entity.addComponent<cro::Text>(smallFont);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+    entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
+    entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
+    entity.getComponent<cro::Text>().setString(WeatherStrings[m_sharedData.weatherType]);
+    centreText(entity);
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+        {
+            static std::int32_t lastType = 0;
+            if (lastType != m_sharedData.weatherType)
+            {
+                e.getComponent<cro::Text>().setString(WeatherStrings[m_sharedData.weatherType]);
+                centreText(e);
+            }
+            lastType = m_sharedData.weatherType;
+        };
+    thumbBgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     const auto courseButtonEnable =
         [&](cro::Entity e, float)
@@ -3459,7 +3488,7 @@ void MenuState::addCourseSelectButtons()
     checkboxEnt.addComponent<cro::UIInput>().area = bounds;
     checkboxEnt.getComponent<cro::UIInput>().setGroup(MenuID::Lobby);
     checkboxEnt.getComponent<cro::UIInput>().setSelectionIndex(CourseNightTime);
-    checkboxEnt.getComponent<cro::UIInput>().setNextIndex(CoursePrev, Social::isAvailable() ? CourseFriendsOnly : LobbyInfoB);
+    checkboxEnt.getComponent<cro::UIInput>().setNextIndex(CoursePrev, Social::isAvailable() ? CourseFriendsOnly : CourseWeather);
     checkboxEnt.getComponent<cro::UIInput>().setPrevIndex(CourseNext, CourseClubLimit);
     checkboxEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = m_courseSelectCallbacks.selectHighlight;
     checkboxEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = m_courseSelectCallbacks.unselectHighlight;
@@ -3510,7 +3539,7 @@ void MenuState::addCourseSelectButtons()
         checkboxEnt.addComponent<cro::UIInput>().area = bounds;
         checkboxEnt.getComponent<cro::UIInput>().setGroup(MenuID::Lobby);
         checkboxEnt.getComponent<cro::UIInput>().setSelectionIndex(CourseFriendsOnly);
-        checkboxEnt.getComponent<cro::UIInput>().setNextIndex(CoursePrev, LobbyInfoB);
+        checkboxEnt.getComponent<cro::UIInput>().setNextIndex(CoursePrev, CourseWeather);
         checkboxEnt.getComponent<cro::UIInput>().setPrevIndex(CourseNext, CourseNightTime);
         checkboxEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = m_courseSelectCallbacks.selectHighlight;
         checkboxEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = m_courseSelectCallbacks.unselectHighlight;
@@ -3570,7 +3599,29 @@ void MenuState::addCourseSelectButtons()
     }
 
 
+    //change weather
+    buttonEnt = m_uiScene.createEntity();
+    buttonEnt.addComponent<cro::Transform>();
+    buttonEnt.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
+    buttonEnt.addComponent<cro::Drawable2D>();
+    buttonEnt.addComponent<cro::Sprite>() = m_sprites[SpriteID::WeatherHighlight];
+    buttonEnt.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
+    buttonEnt.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement | CommandID::Menu::CourseSelect;
+    buttonEnt.addComponent<UIElement>().absolutePosition = { 183.f, 72.f };
+    buttonEnt.getComponent<UIElement>().depth = 0.01f;
+    bounds = m_sprites[SpriteID::WeatherHighlight].getTextureBounds();
+    buttonEnt.addComponent<cro::UIInput>().area = bounds;
+    buttonEnt.getComponent<cro::UIInput>().setGroup(MenuID::Lobby);
+    buttonEnt.getComponent<cro::UIInput>().setSelectionIndex(CourseWeather);
+    buttonEnt.getComponent<cro::UIInput>().setNextIndex(CoursePrev, LobbyInfoB);
+    buttonEnt.getComponent<cro::UIInput>().setPrevIndex(CourseNext, Social::isAvailable() ? CourseFriendsOnly : CourseNightTime);
+    buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Selected] = m_courseSelectCallbacks.selectHighlight;
+    buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = m_courseSelectCallbacks.unselectHighlight;
+    buttonEnt.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonUp] = m_courseSelectCallbacks.setWeather;
+    buttonEnt.addComponent<cro::Callback>().active = true;
+    buttonEnt.getComponent<cro::Callback>().function = courseButtonEnable;
 
+    m_lobbyWindowEntities[LobbyEntityID::HoleSelection].getComponent<cro::Transform>().addChild(buttonEnt.getComponent<cro::Transform>());
 
 
     //choose course
@@ -4830,11 +4881,7 @@ void MenuState::refreshLobbyButtons()
         m_lobbyButtonContext.lobbyInfoA.getComponent<cro::UIInput>().setPrevIndex(LobbyCourseA, Social::getClubLevel() ? RulesClubset : RulesGimmeNext);
 
         m_lobbyButtonContext.lobbyInfoB.getComponent<cro::UIInput>().setNextIndex(LobbyRulesA, LobbyStart);
-#ifdef USE_GNS
-        m_lobbyButtonContext.lobbyInfoB.getComponent<cro::UIInput>().setPrevIndex(LobbyRulesA, CourseFriendsOnly);
-#else
-        m_lobbyButtonContext.lobbyInfoB.getComponent<cro::UIInput>().setPrevIndex(LobbyRulesA, CourseCPUSkip);
-#endif
+        m_lobbyButtonContext.lobbyInfoB.getComponent<cro::UIInput>().setPrevIndex(LobbyRulesA, CourseWeather);
 
         m_lobbyButtonContext.lobbyRulesA.getComponent<cro::UIInput>().setNextIndex(LobbyInfoB, LobbyQuit);
         m_lobbyButtonContext.lobbyRulesA.getComponent<cro::UIInput>().setPrevIndex(LobbyInfoB, CourseNext);

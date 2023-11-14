@@ -147,8 +147,15 @@ struct WeatherType final
 {
     enum
     {
-        Clear, Rain, Showers, Mist, Snow
+        Clear, Rain, Showers, Mist,
+        Count,
+        Snow
     };
+};
+static inline const std::array<cro::String, WeatherType::Count> WeatherStrings =
+{
+    "Clear", "Rain",
+    "Showers", "Mist"
 };
 
 struct MRTIndex final
@@ -316,7 +323,8 @@ struct Avatar final
     cro::Entity ballModel;
 };
 
-static const std::array BallTints =
+//TODO these aren't used now
+static inline const std::array BallTints =
 {
     cro::Colour(1.f,0.937f,0.752f), //default
     cro::Colour(1.f,0.364f,0.015f), //pumpkin

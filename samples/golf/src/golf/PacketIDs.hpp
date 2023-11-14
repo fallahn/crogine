@@ -163,6 +163,7 @@ namespace PacketID
         MapInfo, //< serialised cro::String containing course directory
         ScoreType, //< uint8 ScoreType of golf game
         NightTime, //< uint8 0 false else true
+        WeatherType, //< uint8 WeatherType
         FastCPU, //< uint8 0 false else true
         GimmeRadius, //< uint8 gimme radius of golf
         HoleCount, //< uint8 0 - 2: all, front or back

@@ -1951,6 +1951,9 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
         case PacketID::NightTime:
             m_sharedData.nightTime = evt.packet.as<std::uint8_t>();
             break;
+        case PacketID::WeatherType:
+            m_sharedData.weatherType = std::clamp(evt.packet.as<std::uint8_t>(), std::uint8_t(0), std::uint8_t(WeatherType::Count - 1));
+            break;
         case PacketID::FastCPU:
             m_sharedData.fastCPU = evt.packet.as<std::uint8_t>() != 0;
             break;
@@ -2137,6 +2140,7 @@ void MenuState::finaliseGameCreate(const MatchMaking::Message& msgData)
         //and game rules
         m_sharedData.clientConnection.netClient.sendPacket(PacketID::ScoreType, m_sharedData.scoreType, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
         m_sharedData.clientConnection.netClient.sendPacket(PacketID::NightTime, m_sharedData.nightTime, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+        m_sharedData.clientConnection.netClient.sendPacket(PacketID::WeatherType, m_sharedData.weatherType, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
         //hmmm there must be a reason I omitted this in the first place but it escapes me now
         //m_sharedData.clientConnection.netClient.sendPacket(PacketID::FastCPU, m_sharedData.fastCPU ? std::uint8_t(0) : std::uint8_t(1), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
         m_sharedData.clientConnection.netClient.sendPacket(PacketID::GimmeRadius, m_sharedData.gimmeRadius, net::NetFlag::Reliable, ConstVal::NetChannelReliable);

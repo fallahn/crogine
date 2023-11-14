@@ -79,6 +79,7 @@ enum MenuIndex
     CourseCPUSkip,
     CourseClubLimit,
     CourseNightTime,
+    CourseWeather,
     CourseFriendsOnly,
 
     RulesPrevious,
