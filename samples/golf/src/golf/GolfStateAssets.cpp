@@ -328,8 +328,8 @@ void GolfState::loadAssets()
 
 #ifdef CRO_DEBUG_
     auto& colours = m_skyScene.getSkyboxColours();
-    topSky = colours.top.getVec4();
-    bottomSky = colours.middle.getVec4();
+    //topSky = colours.top.getVec4();
+    //bottomSky = colours.middle.getVec4();
 #endif
 
     if (theme.billboardModel.empty()

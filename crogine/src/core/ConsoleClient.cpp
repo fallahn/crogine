@@ -35,11 +35,20 @@ using namespace cro;
 ConsoleClient::~ConsoleClient()
 {
     //we're outta here so unregister commands
-    Console::removeCommands(this);
+    if (m_wantsRemoving)
+    {
+        Console::removeCommands(this);
+    }
 }
 
 //public
 void ConsoleClient::registerCommand(const std::string& name, const Console::Command& command)
 {
     Console::addCommand(name, command, this);
+}
+
+void ConsoleClient::removeCommands()
+{
+    Console::removeCommands(this);
+    m_wantsRemoving = false;
 }

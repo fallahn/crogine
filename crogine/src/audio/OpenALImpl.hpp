@@ -32,6 +32,9 @@ source distribution.
 #include "AudioRenderer.hpp"
 #include "AudioFile.hpp"
 
+#include <crogine/core/ConsoleClient.hpp>
+#include <crogine/gui/GuiClient.hpp>
+
 #ifdef __APPLE__
 #include "al.h"
 #include "alc.h"
@@ -69,7 +72,8 @@ namespace cro
             ALenum state = AL_STOPPED;
         };
 
-        class OpenALImpl final : public cro::AudioRendererImpl
+        class OpenALImpl final : public cro::AudioRendererImpl,
+            public cro::ConsoleClient, public cro::GuiClient
         {
         public:
             OpenALImpl();
@@ -128,6 +132,10 @@ namespace cro
             ALuint getSource();
             void freeSource(ALuint);
             void resizeSourcePool();
+
+            std::vector<std::string> m_devices;
+            std::string m_preferredDevice;
+            void enumerateDevices();
         };
     }
 }
