@@ -539,6 +539,20 @@ void GolfState::loadAssets()
                             else if (propName == "model")
                             {
                                 path = modelProp.getValue<std::string>();
+
+                                if (m_sharedData.nightTime)
+                                {
+                                    //see if there's a specific model
+                                    auto ext = cro::FileSystem::getFileExtension(path);
+                                    if (!ext.empty())
+                                    {
+                                        auto nightPath = path.substr(0, path.find(ext)) + "_night" + ext;
+                                        if (cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + nightPath))
+                                        {
+                                            path = nightPath;
+                                        }
+                                    }
+                                }
                             }
                             else if (propName == "rotation")
                             {
@@ -636,9 +650,16 @@ void GolfState::loadAssets()
                                 {
                                     for (auto i = 0u; i < modelDef.getMaterialCount(); ++i)
                                     {
-                                        auto texturedMat = m_resources.materials.get(m_materialIDs[MaterialID::CelTextured]);
+                                        auto texMatID = MaterialID::CelTextured;
+
+                                        if (modelDef.getMaterial(i)->properties.count("u_maskMap") != 0)
+                                        {
+                                            texMatID = MaterialID::CelTexturedMasked;
+                                        }
+                                        auto texturedMat = m_resources.materials.get(m_materialIDs[texMatID]);
                                         applyMaterialData(modelDef, texturedMat, i);
                                         ent.getComponent<cro::Model>().setMaterial(i, texturedMat);
+
 
                                         auto shadowMat = m_resources.materials.get(m_materialIDs[MaterialID::ShadowMap]);
                                         applyMaterialData(modelDef, shadowMat);
@@ -1241,6 +1262,18 @@ void GolfState::loadMaterials()
     m_windBuffer.addShader(*shader);
     m_materialIDs[MaterialID::CelTextured] = m_resources.materials.add(*shader);
     m_resources.materials.get(m_materialIDs[MaterialID::CelTextured]).setProperty("u_noiseTexture", noiseTex);
+
+
+    //this is only used on prop models, in case they are emissive or reflective
+    m_resources.shaders.loadFromString(ShaderID::CelTexturedMasked, CelVertexShader, CelFragmentShader, "#define WIND_WARP\n#define TEXTURED\n#define DITHERED\n#define NOCHEX\n#define SUBRECT\n#define MASK_MAP" + wobble);
+    shader = &m_resources.shaders.get(ShaderID::CelTexturedMasked);
+    m_scaleBuffer.addShader(*shader);
+    m_resolutionBuffer.addShader(*shader);
+    m_windBuffer.addShader(*shader);
+    m_materialIDs[MaterialID::CelTexturedMasked] = m_resources.materials.add(*shader);
+    m_resources.materials.get(m_materialIDs[MaterialID::CelTexturedMasked]).setProperty("u_noiseTexture", noiseTex);
+
+
 
     //custom shadow map so shadows move with wind too...
     m_resources.shaders.loadFromString(ShaderID::ShadowMap, ShadowVertex, ShadowFragment, "#define DITHERED\n#define WIND_WARP\n#define ALPHA_CLIP\n");

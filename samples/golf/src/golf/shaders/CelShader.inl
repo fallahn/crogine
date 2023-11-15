@@ -257,6 +257,11 @@ inline const std::string CelFragmentShader = R"(
     uniform vec4 u_darkColour = vec4(0.5);
 #endif
 
+#if defined (MASK_MAP)
+//#define REFLECTIONS
+    uniform sampler2D u_maskMap;
+#endif
+
 #if defined(REFLECTIONS)
     uniform samplerCube u_reflectMap;
 #endif
@@ -438,6 +443,10 @@ inline const std::string CelFragmentShader = R"(
         vec4 c = texture(u_arrayMap, vec3(texCoord, 0.0));
 #else
         vec4 c = TEXTURE(u_diffuseMap, texCoord);
+#endif
+
+#if defined (MASK_MAP)
+        vec3 emissionColour = c.rgb;
 #endif
 
         if(c. a < 0.2)
@@ -689,4 +698,14 @@ float greenTerrain = step(0.065, v_colour.r) * (1.0 - step(0.13, v_colour.r));
 
 //if(v_worldPosition.y < WaterLevel) discard;//don't do this, it reveals the hidden trees.
 #endif
+
+#if defined (MASK_MAP)
+//TODO mix in reflections using red channel - NOTE this is already done around line 570
+
+    vec3 mask = TEXTURE(u_maskMap, v_texCoord).rgb;
+    FRAG_OUT.rgb = mix(FRAG_OUT.rgb, emissionColour, mask.g);
+
+    o_normal.a = 1.0 - mask.g;
+#endif
+
     })";

@@ -245,8 +245,10 @@ struct ShaderID final
         Cel,
         CelSkinned,
         CelTextured,
+        CelTexturedMasked,
         CelTexturedInstanced,
         CelTexturedSkinned,
+        CelTexturedSkinnedMasked,
         ShadowMap,
         ShadowMapInstanced,
         ShadowMapSkinned,
@@ -691,6 +693,11 @@ static inline void applyMaterialData(const cro::ModelDefinition& modelDef, cro::
         if (m->properties.count("u_diffuseMap"))
         {
             dest.setProperty("u_diffuseMap", cro::TextureID(m->properties.at("u_diffuseMap").second.textureID));
+        }
+
+        if (m->properties.count("u_maskMap"))
+        {
+            dest.setProperty("u_maskMap", cro::TextureID(m->properties.at("u_maskMap").second.textureID));
         }
 
         if (m->properties.count("u_colour")

@@ -504,12 +504,12 @@ void GolfState::registerDebugCommands()
     //    {
     //        if (ImGui::Begin("sunlight"))
     //        {
-    //            /*static float col[3] = { 1.f, 1.f, 1.f };
+    //            static float col[3] = { 1.f, 1.f, 1.f };
     //            if (ImGui::ColorPicker3("Sky", col))
     //            {
     //                m_skyScene.getSunlight().getComponent<cro::Sunlight>().setColour({ col[0], col[1], col[2], 1.f });
     //                m_gameScene.getSunlight().getComponent<cro::Sunlight>().setColour({ col[0], col[1], col[2], 1.f });
-    //            }*/
+    //            }
 
     //            /*auto 
     //            size = glm::vec2(m_gameSceneMRTexture.getSize() / 4u);
