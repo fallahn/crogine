@@ -317,7 +317,7 @@ void GolfState::createWeather(std::int32_t weatherType)
     m_windBuffer.addShader(shader);
     m_scaleBuffer.addShader(shader);
 
-    if (weatherType == WeatherType::Rain)
+    //if (weatherType == WeatherType::Rain)
     {
         m_gameScene.setSystemActive<WeatherAnimationSystem>(true);
         m_gameScene.getSystem<WeatherAnimationSystem>()->setHidden(false);
