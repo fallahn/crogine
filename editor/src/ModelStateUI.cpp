@@ -399,6 +399,12 @@ void ModelState::buildUI()
                     {
                         importModel();
                     }
+                    
+                    if (ImGui::MenuItem("Flip Normals", nullptr, nullptr, m_entities[EntityID::ActiveModel].isValid()))
+                    {
+                        flipNormals();
+                    }
+                    
                     if (ImGui::MenuItem("Export Model", nullptr, nullptr, !m_importedVBO.empty()))
                     {
                         //TODO show modal asking if we want to export animation
