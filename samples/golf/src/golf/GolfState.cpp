@@ -3333,11 +3333,14 @@ void GolfState::spawnBullsEye(const BullsEye& b)
         auto position = b.position;
         position.y = m_collisionMesh.getTerrain(b.position).height;
 
+        auto material = m_resources.materials.get(m_materialIDs[MaterialID::Target]);
+
         //create new model
         auto entity = m_gameScene.createEntity();
         entity.addComponent<cro::Transform>().setPosition(position);
         entity.addComponent<cro::CommandTarget>().ID = CommandID::BullsEye;
         m_modelDefs[ModelID::BullsEye]->createModel(entity);
+        entity.getComponent<cro::Model>().setMaterial(0, material);
         entity.addComponent<cro::Callback>().active = true;
         entity.getComponent<cro::Callback>().setUserData<BullsEyeData>();
         entity.getComponent<cro::Callback>().function =

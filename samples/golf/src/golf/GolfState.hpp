@@ -232,6 +232,7 @@ private:
             Billboard,
             Trophy,
             Beacon,
+            Target,
             BallTrail,
             Flag,
             PointLight,

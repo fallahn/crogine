@@ -276,6 +276,7 @@ struct ShaderID final
         Transition,
         Trophy,
         Beacon,
+        Target,
         Bow,
         Noise,
         TreesetLeaf,

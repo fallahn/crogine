@@ -86,6 +86,10 @@ inline const std::string BeaconFragment = R"(
         FRAG_OUT = v_colour;
 #endif
 
+#if defined(INTENSITY)
+        //FRAG_OUT.rgb *= 1.3;
+#endif
+
 #if defined (USE_MRT)
         NORM_OUT.a = 0.0; //masks off light map
 #endif
