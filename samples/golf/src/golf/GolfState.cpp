@@ -2687,8 +2687,10 @@ void GolfState::buildScene()
         break;
     case WeatherType::Rain:
         setFog(m_sharedData.nightTime ? 0.48f : 0.4f);
-        [[fallthrough]];
+        createWeather(WeatherType::Rain);
+        break;
     case WeatherType::Showers:
+        setFog(0.3f);
         createWeather(WeatherType::Rain);
         break;
     case WeatherType::Mist:
@@ -3397,11 +3399,7 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
         {
         default: break;
         case PacketID::WeatherChange:
-            if (m_sharedData.weatherType == WeatherType::Showers)
-            {
-                m_gameScene.getSystem<WeatherAnimationSystem>()->setHidden(evt.packet.as<std::uint8_t>());
-                m_gameScene.setSystemActive<WeatherAnimationSystem>(true);
-            }
+            handleWeatherChange(evt.packet.as<std::uint8_t>());
             break;
         case PacketID::WarnTime:
         {

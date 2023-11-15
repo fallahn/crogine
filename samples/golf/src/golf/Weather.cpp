@@ -335,9 +335,9 @@ void GolfState::setFog(float density)
 
     shader = &m_resources.shaders.get(ShaderID::Minimap);
     glUseProgram(shader->getGLHandle());
+    glUniform1f(shader->getUniformID("u_fogEnd"), 280.f);
     glUniform1f(shader->getUniformID("u_density"), density);
     glUniform4f(shader->getUniformID("u_lightColour"), skyColour.r, skyColour.g, skyColour.b, skyColour.a);
-    glUniform1f(shader->getUniformID("u_fogEnd"), 280.f);
 }
 
 void GolfState::createClouds()
@@ -458,4 +458,79 @@ void GolfState::buildBow()
     auto entity = m_skyScene.createEntity();
     entity.addComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, 220.f * cro::Util::Const::degToRad);
     entity.addComponent<cro::Model>(*meshData, material);
+}
+
+void GolfState::handleWeatherChange(std::uint8_t v)
+{
+    if (m_sharedData.weatherType == WeatherType::Showers)
+    {
+        m_gameScene.getSystem<WeatherAnimationSystem>()->setHidden(v);
+        m_gameScene.setSystemActive<WeatherAnimationSystem>(true);
+
+        struct FogShader final
+        {
+            std::uint32_t id = 0;
+            std::int32_t colour = -1;
+            std::int32_t density = -1;
+            std::int32_t end = -1;
+        };
+        FogShader composite;
+        FogShader minimap;
+        auto skyColour = m_gameScene.getSunlight().getComponent<cro::Sunlight>().getColour().getVec4();
+
+        auto* shader = &m_resources.shaders.get(ShaderID::Composite);
+        composite.id = shader->getGLHandle();
+        composite.colour = shader->getUniformID("u_lightColour");
+        composite.density = shader->getUniformID("u_density");
+
+        shader = &m_resources.shaders.get(ShaderID::Minimap);
+        minimap.id = shader->getGLHandle();
+        minimap.colour = shader->getUniformID("u_lightColour");
+        minimap.density = shader->getUniformID("u_density");
+        minimap.end = shader->getUniformID("u_fogEnd");
+
+        static constexpr float FogAmount = 0.3f;
+        struct FogProgress final
+        {
+            float current = 0.f;
+            float target = 0.f;
+        };
+        FogProgress progress;
+        //I'm sure this should be the other way, but results speak for themselves..
+        progress.current = v ? FogAmount : 0.f;
+        progress.target = v ? 0.f : FogAmount;
+
+        auto entity = m_gameScene.createEntity();
+        entity.addComponent<cro::Callback>().active = true;
+        entity.getComponent<cro::Callback>().setUserData<FogProgress>(progress);
+        entity.getComponent<cro::Callback>().function =
+            [&, composite, minimap, skyColour, v](cro::Entity e, float dt)
+        {
+            const float Speed = dt * 0.5f * FogAmount;
+            auto& [current, target] = e.getComponent<cro::Callback>().getUserData<FogProgress>();
+            if (v)
+            {
+                current = std::max(target, current - Speed);
+            }
+            else
+            {
+                current = std::min(target, current + Speed);
+            }
+
+            glUseProgram(composite.id);
+            glUniform1f(composite.density, current);
+            glUniform4f(composite.colour, skyColour.r, skyColour.g, skyColour.b, skyColour.a);
+
+            glUseProgram(minimap.id);
+            glUniform1f(minimap.end, 280.f);
+            glUniform1f(minimap.density, current);
+            glUniform4f(minimap.colour, skyColour.r, skyColour.g, skyColour.b, skyColour.a);
+
+            if (current == target)
+            {
+                e.getComponent<cro::Callback>().active = false;
+                m_gameScene.destroyEntity(e);
+            }
+        };
+    }
 }

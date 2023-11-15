@@ -45,6 +45,7 @@ WeatherDirector::WeatherDirector(gns::NetHost& host)
     for (auto& t : Times)
     {
         t = cro::seconds(static_cast<float>(cro::Util::Random::value(50, 120)));
+        //t = cro::seconds(static_cast<float>(cro::Util::Random::value(5, 12)));
     }
 }
 

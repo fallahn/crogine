@@ -281,6 +281,7 @@ private:
     void setFog(float density);
     void createClouds();
     void buildBow();
+    void handleWeatherChange(std::uint8_t);
     void createDrone();
     void spawnBall(const struct ActorInfo&);
     void spawnBullsEye(const BullsEye&);
