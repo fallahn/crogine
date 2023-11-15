@@ -616,7 +616,14 @@ void GolfState::loadAssets()
                                 {
                                     for (auto i = 0u; i < modelDef.getMaterialCount(); ++i)
                                     {
-                                        auto texturedMat = m_resources.materials.get(m_materialIDs[MaterialID::CelTexturedSkinned]);
+                                        auto texMatID = MaterialID::CelTexturedSkinned;
+
+                                        if (modelDef.getMaterial(i)->properties.count("u_maskMap") != 0)
+                                        {
+                                            texMatID = MaterialID::CelTexturedSkinnedMasked;
+                                        }
+
+                                        auto texturedMat = m_resources.materials.get(m_materialIDs[texMatID]);
                                         applyMaterialData(modelDef, texturedMat, i);
                                         ent.getComponent<cro::Model>().setMaterial(i, texturedMat);
                                     }
@@ -1298,6 +1305,15 @@ void GolfState::loadMaterials()
     m_scaleBuffer.addShader(*shader);
     m_resolutionBuffer.addShader(*shader);
     m_materialIDs[MaterialID::CelTexturedSkinned] = m_resources.materials.add(*shader);
+
+
+    //again, on props only
+    m_resources.shaders.loadFromString(ShaderID::CelTexturedSkinnedMasked, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define DITHERED\n#define SKINNED\n#define NOCHEX\n#define SUBRECT\n#define MASK_MAP\n" + wobble);
+    shader = &m_resources.shaders.get(ShaderID::CelTexturedSkinnedMasked);
+    m_scaleBuffer.addShader(*shader);
+    m_resolutionBuffer.addShader(*shader);
+    m_materialIDs[MaterialID::CelTexturedSkinnedMasked] = m_resources.materials.add(*shader);
+
 
     m_resources.shaders.loadFromString(ShaderID::Player, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define SKINNED\n#define NOCHEX\n" + wobble);
     shader = &m_resources.shaders.get(ShaderID::Player);
