@@ -1319,7 +1319,7 @@ void GolfState::buildUI()
         glm::uvec2 previewSize = MapSize * 8u;
 
         m_mapTexture.create(previewSize.x, previewSize.y);
-        m_mapTextureMRT.create(previewSize.x, previewSize.y, 4); //colour, pos, normal, terrain mask
+        m_mapTextureMRT.create(previewSize.x, previewSize.y, MRTIndex::Count + 1); //colour, pos, normal, *unused - sigh*, terrain mask
         m_sharedData.minimapData.mrt = &m_mapTextureMRT;
 
         mapEnt.getComponent<cro::Sprite>().setTexture(m_mapTexture.getTexture());

@@ -348,47 +348,6 @@ void GolfState::registerDebugCommands()
             cro::Console::print("Done!");
         });
 
-    //registerCommand("rain", [&](const std::string&)
-    //    {
-    //        static bool raining = false;
-    //        static constexpr float Density = 0.5f;
-    //        if (!raining)
-    //        {
-    //            createWeather(WeatherType::Rain);
-
-    //            setFog(Density);
-
-    //            raining = true;
-    //            m_gameScene.setSystemActive<WeatherAnimationSystem>(true);
-    //            m_gameScene.getSystem<WeatherAnimationSystem>()->setHidden(false);
-    //        }
-    //        else
-    //        {
-    //            static bool hidden = false;
-    //            hidden = !hidden;
-    //            m_gameScene.getSystem<WeatherAnimationSystem>()->setHidden(hidden);
-
-    //            setFog(hidden ? 0.f : Density);
-    //        }
-    //    });
-
-    //registerCommand("fog", [&](const std::string& amount)
-    //    {
-    //        if (amount.empty())
-    //        {
-    //            cro::Console::print("Usage: fog <0 - 1> where value represents density. EG fog 0.5");
-    //        }
-    //        else
-    //        {
-    //            float density = 0.f;
-    //            std::stringstream ss;
-    //            ss << amount;
-    //            ss >> density;
-    //            density = std::clamp(density, 0.f, 1.f);
-
-    //            setFog(density);
-    //        }
-    //    });
 
     registerCommand("noclip", [&](const std::string&)
         {
@@ -468,6 +427,52 @@ void GolfState::registerDebugCommands()
         registerCommand("kick", [](const std::string&) {showKickWindow = true; });
     }
 #ifdef CRO_DEBUG_
+
+    registerCommand("rain", [&](const std::string&)
+        {
+            static bool raining = false;
+            static constexpr float Density = 0.5f;
+            if (!raining)
+            {
+                createWeather(WeatherType::Rain);
+
+                setFog(Density);
+
+                raining = true;
+                m_gameScene.setSystemActive<WeatherAnimationSystem>(true);
+                m_gameScene.getSystem<WeatherAnimationSystem>()->setHidden(false);
+            }
+            else
+            {
+                static bool hidden = false;
+                hidden = !hidden;
+                m_gameScene.getSystem<WeatherAnimationSystem>()->setHidden(hidden);
+
+                setFog(hidden ? 0.f : Density);
+            }
+        });
+
+    registerCommand("fog", [&](const std::string& amount)
+        {
+            if (amount.empty())
+            {
+                cro::Console::print("Usage: fog <0 - 1> where value represents density. EG fog 0.5");
+            }
+            else
+            {
+                float density = 0.f;
+                std::stringstream ss;
+                ss << amount;
+                ss >> density;
+                density = std::clamp(density, 0.f, 1.f);
+
+                setFog(density);
+            }
+        });
+
+
+
+
     registerCommand("fast_cpu", [&](const std::string& param)
         {
             if (m_sharedData.hosting)
@@ -500,36 +505,39 @@ void GolfState::registerDebugCommands()
         });
 #endif
 
-    //registerWindow([&]()
-    //    {
-    //        if (ImGui::Begin("sunlight"))
-    //        {
-    //            static float col[3] = { 1.f, 1.f, 1.f };
-    //            if (ImGui::ColorPicker3("Sky", col))
-    //            {
-    //                m_skyScene.getSunlight().getComponent<cro::Sunlight>().setColour({ col[0], col[1], col[2], 1.f });
-    //                m_gameScene.getSunlight().getComponent<cro::Sunlight>().setColour({ col[0], col[1], col[2], 1.f });
-    //            }
+    registerWindow([&]()
+        {
+            if (ImGui::Begin("sunlight"))
+            {
+                /*static float col[3] = { 1.f, 1.f, 1.f };
+                if (ImGui::ColorPicker3("Sky", col))
+                {
+                    m_skyScene.getSunlight().getComponent<cro::Sunlight>().setColour({ col[0], col[1], col[2], 1.f });
+                    m_gameScene.getSunlight().getComponent<cro::Sunlight>().setColour({ col[0], col[1], col[2], 1.f });
+                }*/
 
-    //            /*auto 
-    //            size = glm::vec2(m_gameSceneMRTexture.getSize() / 4u);
-    //            ImGui::Image(m_gameSceneMRTexture.getTexture(1), { size.x , size.y }, { 0.f ,1.f }, { 1.f, 0.f });
-    //            ImGui::SameLine();
-    //            ImGui::Image(m_gameSceneMRTexture.getTexture(2), { size.x , size.y }, { 0.f ,1.f }, { 1.f, 0.f });*/
+                //this only works on night mode obvs
+                /*auto size = glm::vec2(m_gameSceneMRTexture.getSize() / 4u);
+                ImGui::Image(m_gameSceneMRTexture.getTexture(3), { size.x , size.y }, { 0.f ,1.f }, { 1.f, 0.f });
+                ImGui::SameLine();
+                ImGui::Image(m_gameSceneMRTexture.getTexture(2), { size.x , size.y }, { 0.f ,1.f }, { 1.f, 0.f });*/
 
-    //            //const auto& buff = m_lightMaps[LightMapID::Overhead].getTexture();
-    //            //auto size = glm::vec2(buff.getSize()/* / 2u*/);
-    //            //ImGui::Image(buff, { size.x , size.y }, { 0.f ,1.f }, { 1.f, 0.f });
-    //            //ImGui::SameLine();
-    //            //ImGui::Image(m_overheadBuffer.getDepthTexture(), {size.x , size.y}, {0.f ,1.f}, {1.f, 0.f});
-    //            //ImGui::SameLine();
-    //            //ImGui::Image(m_overheadBuffer.getTexture(MRTIndex::Normal), { size.x , size.y }, { 0.f ,1.f }, { 1.f, 0.f });
+                auto size = glm::vec2(m_lightBlurTexture.getSize()) * 2.f;
+                ImGui::Image(m_lightBlurTexture.getTexture(), {size.x , size.y}, {0.f ,1.f}, {1.f, 0.f});
 
-    //            //size = glm::vec2(m_gameSceneMRTexture.getSize() / 4u);
-    //            //ImGui::Image(m_gameSceneMRTexture.getDepthTexture(), {size.x , size.y}, {0.f ,1.f}, {1.f, 0.f});
-    //        }
-    //        ImGui::End();
-    //    });
+                //const auto& buff = m_lightMaps[LightMapID::Overhead].getTexture();
+                //auto size = glm::vec2(buff.getSize()/* / 2u*/);
+                //ImGui::Image(buff, { size.x , size.y }, { 0.f ,1.f }, { 1.f, 0.f });
+                //ImGui::SameLine();
+                //ImGui::Image(m_overheadBuffer.getDepthTexture(), {size.x , size.y}, {0.f ,1.f}, {1.f, 0.f});
+                //ImGui::SameLine();
+                //ImGui::Image(m_overheadBuffer.getTexture(MRTIndex::Normal), { size.x , size.y }, { 0.f ,1.f }, { 1.f, 0.f });
+
+                //size = glm::vec2(m_gameSceneMRTexture.getSize() / 4u);
+                //ImGui::Image(m_gameSceneMRTexture.getDepthTexture(), {size.x , size.y}, {0.f ,1.f}, {1.f, 0.f});
+            }
+            ImGui::End();
+        });
 
 
 

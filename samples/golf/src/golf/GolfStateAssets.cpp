@@ -1449,6 +1449,14 @@ void GolfState::loadMaterials()
 
     m_postProcesses[PostID::Noise].shader = shader;
 
+
+    //light blur
+    if (m_sharedData.nightTime)
+    {
+        m_resources.shaders.loadFromString(ShaderID::Blur, BlurVert, BlurFrag);
+    }
+
+
     //fog
     std::string defines;
     if (Social::isGreyscale())

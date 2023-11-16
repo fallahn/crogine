@@ -311,11 +311,11 @@ inline const std::string CelFragmentShader = R"(
     VARYING_IN vec2 v_texCoord;
     VARYING_IN float v_perspectiveScale;
 
-    //OUTPUT - TODO switch this to the include version(? that requires MRT defined though...)
-    layout (location = 0) out vec4 FRAG_OUT;
-    layout (location = 1) out vec4 o_pos;
-    layout (location = 2) out vec4 o_normal;
-    layout (location = 3) out vec4 o_terrain;
+    
+#define USE_MRT
+#include OUTPUT_LOCATION
+
+    layout (location = 4) out vec4 o_terrain;
 
 
 #if defined(RX_SHADOWS)
@@ -466,10 +466,10 @@ inline const std::string CelFragmentShader = R"(
 #else
         vec3 normal = normalize(v_normal);
 #endif
-        o_normal = vec4(normal, 1.0);
-        o_pos = vec4(v_worldPosition, 1.0);
+        NORM_OUT = vec4(normal, 1.0);
+        POS_OUT = vec4(v_worldPosition, 1.0);
 
-float greenTerrain = step(0.065, v_colour.r) * (1.0 - step(0.13, v_colour.r));
+        float greenTerrain = step(0.065, v_colour.r) * (1.0 - step(0.13, v_colour.r));
 
         o_terrain = vec4(vec3(greenTerrain), 1.0);
 
@@ -704,8 +704,9 @@ float greenTerrain = step(0.065, v_colour.r) * (1.0 - step(0.13, v_colour.r));
 
     vec3 mask = TEXTURE(u_maskMap, v_texCoord).rgb;
     FRAG_OUT.rgb = mix(FRAG_OUT.rgb, emissionColour, mask.g);
+    LIGHT_OUT = vec4(emissionColour * mask.g, 1.0);
 
-    o_normal.a = 1.0 - mask.g;
+    NORM_OUT.a = 1.0 - mask.g;
 #endif
 
     })";

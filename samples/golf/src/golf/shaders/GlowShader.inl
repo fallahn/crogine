@@ -82,5 +82,6 @@ void main()
     colour = hsv2rgb(colour);
 
     FRAG_OUT = vec4(colour, 1.0);
+    LIGHT_OUT = FRAG_OUT;
 }
 )";

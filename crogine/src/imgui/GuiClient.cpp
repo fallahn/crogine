@@ -35,7 +35,11 @@ using namespace cro;
 GuiClient::~GuiClient()
 {
     App::removeConsoleTab(this);
-    App::removeWindows(this);
+    
+    if (m_wantsRemoving)
+    {
+        App::removeWindows(this);
+    }
 }
 
 //public
@@ -57,6 +61,7 @@ void GuiClient::registerWindow(const std::function<void()>& f, bool isDebug) con
 void GuiClient::unregisterWindows() const
 {
     App::removeWindows(this);
+    m_wantsRemoving = false;
 }
 
 void GuiClient::unregisterConsoleTabs() const

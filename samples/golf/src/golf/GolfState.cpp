@@ -2002,6 +2002,10 @@ void GolfState::render()
             lightVolSystem.setSourceBuffer(m_overheadBuffer.getTexture(MRTIndex::Position), cro::LightVolumeSystem::BufferID::Position);
             lightVolSystem.updateTarget(nightCam, m_lightMaps[LightMapID::Overhead]);
         }
+
+        m_lightBlurTexture.clear();
+        m_lightBlurQuad.draw();
+        m_lightBlurTexture.display();
     }
 
 

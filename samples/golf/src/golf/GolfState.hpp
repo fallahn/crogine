@@ -155,6 +155,9 @@ private:
     cro::RenderTexture m_trophySceneTexture;
     cro::CubemapTexture m_reflectionMap;
 
+    cro::RenderTexture m_lightBlurTexture;
+    cro::SimpleQuad m_lightBlurQuad;
+
     struct LightMapID final
     {
         enum
@@ -280,11 +283,14 @@ private:
     void addSystems();
     void buildScene();
 
-    void createWeather(std::int32_t); //weather.cpp
+    //weather.cpp
+    void createWeather(std::int32_t);
     void setFog(float density);
     void createClouds();
     void buildBow();
     void handleWeatherChange(std::uint8_t);
+
+    //GolfState.cpp
     void createDrone();
     void spawnBall(const struct ActorInfo&);
     void spawnBullsEye(const BullsEye&);

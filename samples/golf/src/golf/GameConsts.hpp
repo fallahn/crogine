@@ -162,7 +162,7 @@ struct MRTIndex final
 {
     enum
     {
-        Colour, Position, Normal,
+        Colour, Position, Normal, Light,
 
         Count
     };
@@ -286,6 +286,7 @@ struct ShaderID final
         BallTrail,
         FXAA,
         Composite,
+        Blur,
         Flag,
         TV,
         PointLight

@@ -31,6 +31,56 @@ source distribution.
 
 #include <string>
 
+inline const std::string BlurVert =
+R"(
+ATTRIBUTE vec2 a_position;
+ATTRIBUTE vec2 a_texCoord0;
+
+uniform mat4 u_worldMatrix;
+uniform mat4 u_projectionMatrix;
+
+VARYING_OUT vec2 v_texCoord;
+
+void main()
+{
+    gl_Position = u_projectionMatrix * u_worldMatrix * vec4(a_position, 0.0, 1.0);
+    v_texCoord = a_texCoord0;
+}
+)";
+
+inline const std::string BlurFrag =
+R"(
+uniform sampler2D u_texture;
+
+VARYING_IN vec2 v_texCoord;
+
+OUTPUT
+
+const int size = 5;
+const float separation = 0.8; //TODO use depth to control this?
+
+void main()
+{
+    //FRAG_OUT = TEXTURE(u_texture, v_texCoord);
+
+    float count = 0.0;
+    vec2 pixelUV = vec2(1.0) / textureSize(u_texture, 0);
+    vec3 colour = vec3(0.0);
+
+    for (int i = -size; i <= size; ++i)
+    {
+        for (int j = -size; j <= size; ++j)
+        {
+            colour += texture(u_texture, (v_texCoord + (vec2(i, j) * pixelUV * separation))).rgb;
+            count++;
+        }
+    }
+
+    colour /= count;
+    FRAG_OUT = vec4(colour, 1.0);
+}
+)";
+
 inline const std::string CompositeVert = 
 R"(
 uniform mat4 u_worldMatrix;

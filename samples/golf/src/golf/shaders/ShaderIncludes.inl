@@ -224,6 +224,7 @@ static inline const std::string OutputLocation = R"(
     layout (location = 0) out vec4 FRAG_OUT;
     layout (location = 1) out vec4 POS_OUT;
     layout (location = 2) out vec4 NORM_OUT;
+    layout (location = 3) out vec4 LIGHT_OUT;
     
 #else
 

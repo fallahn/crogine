@@ -78,9 +78,10 @@ void GolfState::createCameras()
 
                     m_lightMaps[LightMapID::Scene].create(usize.x, usize.y, false/*, false, samples*/);
 
-                    //auto& shader = m_resources.shaders.get(ShaderID::Fog); //TODO disable FXAA if samples == 0
-                    //glUseProgram(shader.getGLHandle());
-                    //glUniform2f(shader.getUniformID("u_resolution"), texSize.x, texSize.y);
+                    m_lightBlurTexture.create(usize.x / 4u, usize.y / 4u, false);
+                    m_lightBlurTexture.setSmooth(true);
+                    m_lightBlurQuad.setTexture(m_gameSceneMRTexture.getTexture(MRTIndex::Light), usize / 4u);
+                    m_lightBlurQuad.setShader(m_resources.shaders.get(ShaderID::Blur));
                 }
                 else
                 {
