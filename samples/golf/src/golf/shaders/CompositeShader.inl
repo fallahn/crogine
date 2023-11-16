@@ -106,6 +106,8 @@ R"(
 uniform sampler2D u_texture;
 uniform sampler2D u_depthTexture;
 uniform sampler2D u_lightTexture;
+uniform sampler2D u_blurTexture;
+uniform sampler2D u_maskTexture;
 
 uniform vec4 u_lightColour;
 
@@ -142,16 +144,10 @@ void main()
 
 #if defined(LIGHT_COLOUR)
     vec3 lightColour = TEXTURE(u_lightTexture, v_texCoord).rgb;
-
-    /*vec2 xy = gl_FragCoord.xy;
-    int x = int(mod(xy.x, MatrixSize));
-    int y = int(mod(xy.y, MatrixSize));
-    
-    float desat = brightnessContrast(dot(lightColour, vec3(0.2125, 0.7154, 0.0721)));
-    float amount = findClosest(x, y, desat);
-
-    colour.rgb += lightColour * amount;*/
     colour.rgb += lightColour;
+
+    vec3 blurColour = TEXTURE(u_blurTexture, v_texCoord).rgb * (1.0 - d);
+    colour.rgb = (blurColour * TEXTURE(u_maskTexture, v_texCoord).a * 0.5) + colour.rgb;
 #endif
 
     FRAG_OUT = colour;

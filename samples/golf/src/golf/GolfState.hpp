@@ -155,9 +155,6 @@ private:
     cro::RenderTexture m_trophySceneTexture;
     cro::CubemapTexture m_reflectionMap;
 
-    cro::RenderTexture m_lightBlurTexture;
-    cro::SimpleQuad m_lightBlurQuad;
-
     struct LightMapID final
     {
         enum
@@ -169,6 +166,9 @@ private:
     };
     std::array<cro::RenderTexture, LightMapID::Count> m_lightMaps = {};
     cro::ModelDefinition m_lightVolumeDefinition;
+
+    std::array<cro::RenderTexture, LightMapID::Count> m_lightBlurTextures = {};
+    std::array<cro::SimpleQuad, LightMapID::Count> m_lightBlurQuads = {};
 
     cro::UniformBuffer<float> m_scaleBuffer;
     cro::UniformBuffer<ResolutionData> m_resolutionBuffer;

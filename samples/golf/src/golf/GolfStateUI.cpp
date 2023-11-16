@@ -230,11 +230,16 @@ void GolfState::buildUI()
         };
 
         cro::TextureID lightID(m_lightMaps[LightMapID::Scene].getTexture());
+        cro::TextureID blurID(m_lightBlurTextures[LightMapID::Scene].getTexture());
         entity.getComponent<cro::Drawable2D>().bindUniform("u_depthTexture", m_gameSceneMRTexture.getDepthTexture());
         entity.getComponent<cro::Drawable2D>().bindUniform("u_lightTexture", lightID);
+        entity.getComponent<cro::Drawable2D>().bindUniform("u_blurTexture", blurID);
+        entity.getComponent<cro::Drawable2D>().bindUniform("u_maskTexture", m_gameSceneMRTexture.getTexture(MRTIndex::Normal));
         //entity.getComponent<cro::Drawable2D>().bindUniform("u_density", 0.6f);
         m_postProcesses[PostID::Composite].uniforms.emplace_back(std::make_pair("u_depthTexture", m_gameSceneMRTexture.getDepthTexture()));
         m_postProcesses[PostID::Composite].uniforms.emplace_back(std::make_pair("u_lightTexture", lightID));
+        m_postProcesses[PostID::Composite].uniforms.emplace_back(std::make_pair("u_blurTexture", blurID));
+        m_postProcesses[PostID::Composite].uniforms.emplace_back(std::make_pair("u_maskTexture", m_gameSceneMRTexture.getTexture(MRTIndex::Normal)));
     }
     else
     {
@@ -1366,6 +1371,11 @@ void GolfState::buildUI()
         m_overheadBuffer.create(texSize, texSize, MRTIndex::Count); //yes, it's square
         m_lightMaps[LightMapID::Overhead].create(texSize, texSize);
 
+        m_lightBlurTextures[LightMapID::Overhead].create(texSize / 4u, texSize / 4u, false);
+        m_lightBlurTextures[LightMapID::Overhead].setSmooth(true);
+        m_lightBlurQuads[LightMapID::Overhead].setTexture(m_overheadBuffer.getTexture(MRTIndex::Light), glm::uvec2(texSize / 4u));
+        m_lightBlurQuads[LightMapID::Overhead].setShader(m_resources.shaders.get(ShaderID::Blur));
+
         auto targetScale = glm::vec2(1.f / scale);
 
         greenEnt.getComponent<cro::Sprite>().setTexture(m_overheadBuffer.getTexture());
@@ -1398,6 +1408,10 @@ void GolfState::buildUI()
         //can't bind lightmap to shader until it's been created...
         auto lightID = cro::TextureID(m_lightMaps[LightMapID::Overhead].getTexture().getGLHandle());
         greenEnt.getComponent<cro::Drawable2D>().bindUniform("u_lightTexture", lightID);
+
+        auto blurID = cro::TextureID(m_lightBlurTextures[LightMapID::Overhead].getTexture().getGLHandle());
+        greenEnt.getComponent<cro::Drawable2D>().bindUniform("u_blurTexture", blurID);
+        greenEnt.getComponent<cro::Drawable2D>().bindUniform("u_maskTexture", m_overheadBuffer.getTexture(MRTIndex::Normal));
     }
     greenEnt.getComponent<cro::Drawable2D>().bindUniform("u_depthTexture", m_overheadBuffer.getDepthTexture());
     

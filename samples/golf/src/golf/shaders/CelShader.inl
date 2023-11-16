@@ -707,6 +707,8 @@ inline const std::string CelFragmentShader = R"(
     LIGHT_OUT = vec4(emissionColour * mask.g, 1.0);
 
     NORM_OUT.a = 1.0 - mask.g;
+#else
+    LIGHT_OUT = vec4(vec3(0.0), 1.0);
 #endif
 
     })";

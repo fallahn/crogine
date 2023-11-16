@@ -1244,11 +1244,8 @@ void GolfState::loadMaterials()
 
     if (m_sharedData.nightTime)
     {
-        //TODO vertex snapping?
         m_resources.shaders.loadFromString(ShaderID::BallNight, GlowVertex, GlowFragment);
         shader = &m_resources.shaders.get(ShaderID::BallNight);
-        /*m_scaleBuffer.addShader(*shader);
-        m_resolutionBuffer.addShader(*shader);*/
         m_materialIDs[MaterialID::BallNight] = m_resources.materials.add(*shader);
     }
 

@@ -78,10 +78,10 @@ void GolfState::createCameras()
 
                     m_lightMaps[LightMapID::Scene].create(usize.x, usize.y, false/*, false, samples*/);
 
-                    m_lightBlurTexture.create(usize.x / 4u, usize.y / 4u, false);
-                    m_lightBlurTexture.setSmooth(true);
-                    m_lightBlurQuad.setTexture(m_gameSceneMRTexture.getTexture(MRTIndex::Light), usize / 4u);
-                    m_lightBlurQuad.setShader(m_resources.shaders.get(ShaderID::Blur));
+                    m_lightBlurTextures[LightMapID::Scene].create(usize.x / 4u, usize.y / 4u, false);
+                    m_lightBlurTextures[LightMapID::Scene].setSmooth(true);
+                    m_lightBlurQuads[LightMapID::Scene].setTexture(m_gameSceneMRTexture.getTexture(MRTIndex::Light), usize / 4u);
+                    m_lightBlurQuads[LightMapID::Scene].setShader(m_resources.shaders.get(ShaderID::Blur));
                 }
                 else
                 {

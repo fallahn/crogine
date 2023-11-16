@@ -505,39 +505,44 @@ void GolfState::registerDebugCommands()
         });
 #endif
 
-    registerWindow([&]()
-        {
-            if (ImGui::Begin("sunlight"))
-            {
-                /*static float col[3] = { 1.f, 1.f, 1.f };
-                if (ImGui::ColorPicker3("Sky", col))
-                {
-                    m_skyScene.getSunlight().getComponent<cro::Sunlight>().setColour({ col[0], col[1], col[2], 1.f });
-                    m_gameScene.getSunlight().getComponent<cro::Sunlight>().setColour({ col[0], col[1], col[2], 1.f });
-                }*/
+    //registerWindow([&]()
+    //    {
+    //        if (ImGui::Begin("sunlight"))
+    //        {
+    //            /*static float col[3] = { 1.f, 1.f, 1.f };
+    //            if (ImGui::ColorPicker3("Sky", col))
+    //            {
+    //                m_skyScene.getSunlight().getComponent<cro::Sunlight>().setColour({ col[0], col[1], col[2], 1.f });
+    //                m_gameScene.getSunlight().getComponent<cro::Sunlight>().setColour({ col[0], col[1], col[2], 1.f });
+    //            }*/
 
-                //this only works on night mode obvs
-                /*auto size = glm::vec2(m_gameSceneMRTexture.getSize() / 4u);
-                ImGui::Image(m_gameSceneMRTexture.getTexture(3), { size.x , size.y }, { 0.f ,1.f }, { 1.f, 0.f });
-                ImGui::SameLine();
-                ImGui::Image(m_gameSceneMRTexture.getTexture(2), { size.x , size.y }, { 0.f ,1.f }, { 1.f, 0.f });*/
+    //            //this only works on night mode obvs
+    //            /*auto size = glm::vec2(m_gameSceneMRTexture.getSize() / 4u);
+    //            ImGui::Image(m_gameSceneMRTexture.getTexture(3), { size.x , size.y }, { 0.f ,1.f }, { 1.f, 0.f });
+    //            ImGui::SameLine();
+    //            ImGui::Image(m_gameSceneMRTexture.getTexture(2), { size.x , size.y }, { 0.f ,1.f }, { 1.f, 0.f });*/
 
-                auto size = glm::vec2(m_lightBlurTexture.getSize()) * 2.f;
-                ImGui::Image(m_lightBlurTexture.getTexture(), {size.x , size.y}, {0.f ,1.f}, {1.f, 0.f});
+    //            auto size = glm::vec2(m_lightBlurTextures[LightMapID::Scene].getSize()) * 2.f;
+    //            ImGui::Image(m_lightBlurTextures[LightMapID::Scene].getTexture(), {size.x , size.y}, {0.f ,1.f}, {1.f, 0.f});
+    //            ImGui::SameLine();
+    //            size = glm::vec2(m_lightBlurTextures[LightMapID::Overhead].getSize()) * 2.f;
+    //            ImGui::Image(m_lightBlurTextures[LightMapID::Overhead].getTexture(), { size.x , size.y }, { 0.f ,1.f }, { 1.f, 0.f });
 
-                //const auto& buff = m_lightMaps[LightMapID::Overhead].getTexture();
-                //auto size = glm::vec2(buff.getSize()/* / 2u*/);
-                //ImGui::Image(buff, { size.x , size.y }, { 0.f ,1.f }, { 1.f, 0.f });
-                //ImGui::SameLine();
-                //ImGui::Image(m_overheadBuffer.getDepthTexture(), {size.x , size.y}, {0.f ,1.f}, {1.f, 0.f});
-                //ImGui::SameLine();
-                //ImGui::Image(m_overheadBuffer.getTexture(MRTIndex::Normal), { size.x , size.y }, { 0.f ,1.f }, { 1.f, 0.f });
 
-                //size = glm::vec2(m_gameSceneMRTexture.getSize() / 4u);
-                //ImGui::Image(m_gameSceneMRTexture.getDepthTexture(), {size.x , size.y}, {0.f ,1.f}, {1.f, 0.f});
-            }
-            ImGui::End();
-        });
+
+    //            //const auto& buff = m_lightMaps[LightMapID::Overhead].getTexture();
+    //            //auto size = glm::vec2(buff.getSize()/* / 2u*/);
+    //            //ImGui::Image(buff, { size.x , size.y }, { 0.f ,1.f }, { 1.f, 0.f });
+    //            //ImGui::SameLine();
+    //            //ImGui::Image(m_overheadBuffer.getDepthTexture(), {size.x , size.y}, {0.f ,1.f}, {1.f, 0.f});
+    //            //ImGui::SameLine();
+    //            //ImGui::Image(m_overheadBuffer.getTexture(MRTIndex::Normal), { size.x , size.y }, { 0.f ,1.f }, { 1.f, 0.f });
+
+    //            //size = glm::vec2(m_gameSceneMRTexture.getSize() / 4u);
+    //            //ImGui::Image(m_gameSceneMRTexture.getDepthTexture(), {size.x , size.y}, {0.f ,1.f}, {1.f, 0.f});
+    //        }
+    //        ImGui::End();
+    //    });
 
 
 

@@ -55,6 +55,8 @@ inline const std::string MinimapFragment = R"(
         uniform sampler2D u_texture;
         uniform sampler2D u_depthTexture;
         uniform sampler2D u_lightTexture;
+        uniform sampler2D u_blurTexture;
+        uniform sampler2D u_maskTexture;
 
 #if defined (RAIN)
         uniform sampler2D u_distortionTexture;
@@ -133,17 +135,10 @@ inline const std::string MinimapFragment = R"(
 
 #if defined (LIGHT_COLOUR)
             vec3 lightColour = TEXTURE(u_lightTexture, coord).rgb;
-
-            /*vec2 xy = gl_FragCoord.xy;
-            int x = int(mod(xy.x, MatrixSize));
-            int y = int(mod(xy.y, MatrixSize));
-    
-            float desat = brightnessContrast(dot(lightColour, vec3(0.2125, 0.7154, 0.0721)));
-            float amount = findClosest(x, y, desat);
-
-            colour.rgb += lightColour * amount;*/
-
             colour.rgb += lightColour;
+
+            vec3 blurColour = TEXTURE(u_blurTexture, coord).rgb * (1.0 - d);
+            colour.rgb = (blurColour * 0.5 * TEXTURE(u_maskTexture, coord).a) + colour.rgb;
 #endif
 
             FRAG_OUT = vec4(mix(noise, colour.rgb, v_colour.r), 1.0);

@@ -363,6 +363,7 @@ R"(
 #if defined(USE_MRT)
         NORM_OUT = vec4(normal, 1.0);
         POS_OUT = vec4(v_data.worldPos, 1.0);
+        LIGHT_OUT = vec4(vec3(0.0), 1.0);
 #endif
 
         FRAG_OUT = vec4(colour, 1.0) * textureColour * getLightColour();
@@ -496,6 +497,7 @@ inline const std::string BranchFragment = R"(
 #if defined(USE_MRT)
         NORM_OUT = vec4(normal, 1.0);
         POS_OUT = vec4(v_worldPosition, 1.0);
+        LIGHT_OUT = vec4(vec3(0.0), 1.0);
 #endif
 
 

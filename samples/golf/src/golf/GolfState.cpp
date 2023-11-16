@@ -1974,7 +1974,7 @@ void GolfState::render()
 
         //update the flight view
         auto oldCam = m_gameScene.setActiveCamera(m_flightCam);
-        m_overheadBuffer.clear(cro::Colour(0.5, 0.5, 1.f));
+        m_overheadBuffer.clear(/*cro::Colour(0.5, 0.5, 1.f)*/);
         m_skyScene.render();
         glClear(GL_DEPTH_BUFFER_BIT);
         m_gameScene.render();
@@ -1996,16 +1996,20 @@ void GolfState::render()
         lightVolSystem.setSourceBuffer(m_gameSceneMRTexture.getTexture(MRTIndex::Position), cro::LightVolumeSystem::BufferID::Position);
         lightVolSystem.updateTarget(m_gameScene.getActiveCamera(), m_lightMaps[LightMapID::Scene]);
 
+        m_lightBlurTextures[LightMapID::Scene].clear();
+        m_lightBlurQuads[LightMapID::Scene].draw();
+        m_lightBlurTextures[LightMapID::Scene].display();
+
         if (nightCam.isValid())
         {
             lightVolSystem.setSourceBuffer(m_overheadBuffer.getTexture(MRTIndex::Normal), cro::LightVolumeSystem::BufferID::Normal);
             lightVolSystem.setSourceBuffer(m_overheadBuffer.getTexture(MRTIndex::Position), cro::LightVolumeSystem::BufferID::Position);
             lightVolSystem.updateTarget(nightCam, m_lightMaps[LightMapID::Overhead]);
-        }
 
-        m_lightBlurTexture.clear();
-        m_lightBlurQuad.draw();
-        m_lightBlurTexture.display();
+            m_lightBlurTextures[LightMapID::Overhead].clear();
+            m_lightBlurQuads[LightMapID::Overhead].draw();
+            m_lightBlurTextures[LightMapID::Overhead].display();
+        }
     }
 
 
@@ -2127,6 +2131,12 @@ void GolfState::buildScene()
     auto entity = m_gameScene.createEntity();
     entity.addComponent<cro::Transform>().setScale({ 1.1f, 1.f, 1.1f });
     md.createModel(entity);
+
+    if (m_sharedData.nightTime)
+    {
+        auto holeMat = m_resources.materials.get(m_materialIDs[MaterialID::BallNight]);
+        entity.getComponent<cro::Model>().setMaterial(0, holeMat);
+    }
 
     auto holeEntity = entity; //each of these entities are added to the entity with CommandID::Hole - below
 

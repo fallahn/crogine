@@ -201,6 +201,7 @@ inline const std::string BillboardFragmentShader = R"(
 #if defined(USE_MRT)
     POS_OUT = vec4(v_worldPosition, 1.0);
     NORM_OUT = vec4(normalize(v_normalVector), 1.0);
+    LIGHT_OUT = vec4(vec3(0.0), 1.0);
 #endif
 
         FRAG_OUT = v_colour;

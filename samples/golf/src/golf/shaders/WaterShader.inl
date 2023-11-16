@@ -170,6 +170,7 @@ uniform sampler2DArray u_depthMap;
 #if defined (USE_MRT)
         NORM_OUT = vec4(normal, 1.0);
         POS_OUT = vec4(v_worldPosition, 1.0);
+        LIGHT_OUT = vec4(vec3(0.0), 1.0);
 #endif
 
 
