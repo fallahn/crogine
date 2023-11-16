@@ -662,6 +662,9 @@ inline const std::string CelFragmentShader = R"(
     FRAG_OUT.rgb = mix(FRAG_OUT.rgb, gridColour, contourX * holeHeightFade * transparency);
     FRAG_OUT.rgb = mix(FRAG_OUT.rgb, gridColour, contourZ * holeHeightFade * transparency);
 
+    LIGHT_OUT.rgb = mix(vec3(0.0), gridColour, contourX * holeHeightFade * transparency);
+    LIGHT_OUT.rgb = mix(vec3(0.0), gridColour, contourZ * holeHeightFade * transparency);
+    NORM_OUT.a *= 1.0 - (contourX * holeHeightFade * transparency);
 #else
 
     vec3 f = fract(v_worldPosition * 2.0);
@@ -683,6 +686,11 @@ inline const std::string CelFragmentShader = R"(
 
     FRAG_OUT.rgb = mix(FRAG_OUT.rgb, contourColour, contourX * fade);
     FRAG_OUT.rgb = mix(FRAG_OUT.rgb, contourColour, contourZ * fade);
+
+    LIGHT_OUT.rgb = mix(vec3(0.0), contourColour, contourX * fade);
+    LIGHT_OUT.rgb = mix(vec3(0.0), contourColour, contourZ * fade);
+    LIGHT_OUT.a = 1.0;
+    NORM_OUT.a *= 1.0 - (contourX * fade);
 
     float minHeight = u_holeHeight - 0.025;
     float maxHeight = u_holeHeight + 0.08;

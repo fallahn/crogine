@@ -151,6 +151,8 @@ R"(
 inline const std::string SlopeFragmentShader =
 R"(
     OUTPUT
+    layout (location = 2) out vec4 NORM_OUT;
+    layout (location = 3) out vec4 LIGHT_OUT;
 
     //for elapsedTime in w component
     #include WIND_BUFFER
@@ -184,6 +186,8 @@ R"(
         colour = mix(vec4(DotColour, (0.5 + (0.5 * u_alpha)) * v_heightData.x * step(0.001, alpha)), colour, alpha);
 
         FRAG_OUT = colour;
+        //LIGHT_OUT = vec4(FRAG_OUT.rgb * FRAG_OUT.a, 1.0);
+        NORM_OUT.a = FRAG_OUT.a;
     }
 )";
 
