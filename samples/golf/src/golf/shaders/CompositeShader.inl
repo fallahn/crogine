@@ -56,8 +56,8 @@ VARYING_IN vec2 v_texCoord;
 
 OUTPUT
 
-const int size = 5;
-const float separation = 0.8; //TODO use depth to control this?
+const int size = 8;
+const float separation = 0.5; //TODO use depth to control this?
 
 void main()
 {
@@ -147,7 +147,7 @@ void main()
     colour.rgb += lightColour;
 
     vec3 blurColour = TEXTURE(u_blurTexture, v_texCoord).rgb * (1.0 - d);
-    colour.rgb = (blurColour * TEXTURE(u_maskTexture, v_texCoord).a * 0.5) + colour.rgb;
+    colour.rgb = (blurColour * TEXTURE(u_maskTexture, v_texCoord).a * 0.65) + colour.rgb;
 #endif
 
     FRAG_OUT = colour;
