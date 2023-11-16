@@ -91,9 +91,15 @@ bool OpenALImpl::init()
     //and loads the config if it's found
     enumerateDevices();
 
-    if (!m_preferredDevice.empty())
+    if (!m_preferredDevice.empty()
+        && m_preferredDevice != "Default")
     {
         m_device = alcOpenDevice(m_preferredDevice.c_str());
+
+        if (!m_device)
+        {
+            LogW << "Unable to open preferred device " << m_preferredDevice << ". Trying default device." << std::endl;
+        }
     }
 
     if (!m_device)
@@ -663,6 +669,12 @@ void OpenALImpl::enumerateDevices()
 
         if (deviceList)
         {
+            char* pp = SDL_GetPrefPath("Trederia", "common");
+            auto prefPath = std::string(pp);
+            SDL_free(pp);
+            std::replace(prefPath.begin(), prefPath.end(), '\\', '/');
+            prefPath += u8"audio_device.cfg";
+
             auto* next = deviceList + 1;
             std::size_t len = 0;
 
@@ -675,6 +687,7 @@ void OpenALImpl::enumerateDevices()
                 deviceList += (len + 1);
                 next += (len + 2);
             }
+            m_devices.push_back("Default");
 
             static bool showWindow = false;
 
@@ -685,7 +698,7 @@ void OpenALImpl::enumerateDevices()
                 });
 
             registerWindow(
-                [&]()
+                [&, prefPath]()
                 {
                     if (showWindow)
                     {
@@ -698,7 +711,7 @@ void OpenALImpl::enumerateDevices()
                             }
 
                             static std::int32_t idx = 0;
-                            if (ImGui::BeginListBox("##"))
+                            if (ImGui::BeginListBox("##", ImVec2(-FLT_MIN, 0.f)))
                             {
                                 for (auto n = 0u; n < items.size(); ++n)
                                 {
@@ -731,7 +744,7 @@ void OpenALImpl::enumerateDevices()
 
                                 ConfigFile cfg;
                                 cfg.addProperty("preferred_device", m_preferredDevice);
-                                cfg.save(App::getPreferencePath() + u8"audio_device.cfg");
+                                cfg.save(prefPath);
                             }
                             ImGui::SameLine();
                             ImGui::Text("(Takes effect after restart)");
@@ -742,7 +755,7 @@ void OpenALImpl::enumerateDevices()
 
             //look for device config and load if found
             ConfigFile cfg;
-            if (cfg.loadFromFile(App::getPreferencePath() + u8"audio_device.cfg"))
+            if (cfg.loadFromFile(prefPath))
             {
                 const auto& props = cfg.getProperties();
                 for (const auto& prop : props)

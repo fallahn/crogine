@@ -252,15 +252,16 @@ App::App(std::uint32_t styleFlags)
         //controllers are automatically connected as the connect events are raised
         //on start up
 
+        char* pp = SDL_GetPrefPath(m_orgString.c_str(), m_appString.c_str());
+        m_prefPath = std::string(pp);
+        SDL_free(pp);
+        std::replace(m_prefPath.begin(), m_prefPath.end(), '\\', '/');
+
         if (!AudioRenderer::init())
         {
             Logger::log("Failed to initialise audio renderer", Logger::Type::Error);
         }
 
-        char* pp = SDL_GetPrefPath(m_orgString.c_str(), m_appString.c_str());
-        m_prefPath = std::string(pp);
-        SDL_free(pp);
-        std::replace(m_prefPath.begin(), m_prefPath.end(), '\\', '/');
 
 #ifdef WIN32
 #ifdef CRO_DEBUG_
