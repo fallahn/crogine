@@ -168,7 +168,7 @@ bool MyApp::initialise()
     m_stateStack.registerState<BounceState>(States::ScratchPad::Bounce);
 
 #ifdef CRO_DEBUG_
-    m_stateStack.pushState(States::ScratchPad::Swing);
+    m_stateStack.pushState(States::ScratchPad::AnimBlend);
     //m_stateStack.pushState(States::ScratchPad::MainMenu);
 #else
     m_stateStack.pushState(States::ScratchPad::MainMenu);

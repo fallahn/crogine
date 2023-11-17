@@ -670,7 +670,19 @@ bool MenuState::handleEvent(const cro::Event& evt)
             m_uiScene.getActiveCamera().getComponent<cro::Camera>().active = true;
             break;
         case SDLK_F8:
+        //{
+        //    static bool dayTime = true;
+        //    dayTime = !dayTime;
 
+        //    if (dayTime)
+        //    {
+        //        m_backgroundScene.getSunlight().getComponent<cro::Sunlight>().setColour(cro::Colour::White);
+        //    }
+        //    else
+        //    {
+        //        m_backgroundScene.getSunlight().getComponent<cro::Sunlight>().setColour(SkyNight);
+        //    }
+        //}
             break;
         }
     }

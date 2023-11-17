@@ -85,6 +85,7 @@ namespace cro
         void unregisterConsoleTabs() const;
 
     private:
-        mutable bool m_wantsRemoving = true;
+        mutable bool m_wantsWindowsRemoving = true;
+        mutable bool m_wantsTabsRemoving = true;
     };
 }

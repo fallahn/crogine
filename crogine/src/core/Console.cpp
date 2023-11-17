@@ -442,6 +442,8 @@ void Console::addConsoleTab(const std::string& name, const std::function<void()>
 
 void Console::removeConsoleTab(const GuiClient* c)
 {
+    if (m_consoleTabs.empty()) return;
+
     m_consoleTabs.erase(std::remove_if(std::begin(m_consoleTabs),
         std::end(m_consoleTabs),
         [c](const ConsoleTab& tab)

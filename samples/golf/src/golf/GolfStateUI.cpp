@@ -1369,12 +1369,16 @@ void GolfState::buildUI()
             m_sharedData.antialias ? m_sharedData.multisamples : 0;*/
 
         m_overheadBuffer.create(texSize, texSize, MRTIndex::Count); //yes, it's square
-        m_lightMaps[LightMapID::Overhead].create(texSize, texSize);
+        
+        if (m_sharedData.nightTime)
+        {
+            m_lightMaps[LightMapID::Overhead].create(texSize, texSize);
 
-        m_lightBlurTextures[LightMapID::Overhead].create(texSize / 4u, texSize / 4u, false);
-        m_lightBlurTextures[LightMapID::Overhead].setSmooth(true);
-        m_lightBlurQuads[LightMapID::Overhead].setTexture(m_overheadBuffer.getTexture(MRTIndex::Light), glm::uvec2(texSize / 4u));
-        m_lightBlurQuads[LightMapID::Overhead].setShader(m_resources.shaders.get(ShaderID::Blur));
+            m_lightBlurTextures[LightMapID::Overhead].create(texSize / 4u, texSize / 4u, false);
+            m_lightBlurTextures[LightMapID::Overhead].setSmooth(true);
+            m_lightBlurQuads[LightMapID::Overhead].setTexture(m_overheadBuffer.getTexture(MRTIndex::Light), glm::uvec2(texSize / 4u));
+            m_lightBlurQuads[LightMapID::Overhead].setShader(m_resources.shaders.get(ShaderID::Blur));
+        }
 
         auto targetScale = glm::vec2(1.f / scale);
 
@@ -3099,6 +3103,11 @@ void GolfState::logCSV() const
 
 void GolfState::showScoreboard(bool visible)
 {
+    if (m_textChat.isVisible())
+    {
+        return;
+    }
+
     for (auto e : m_netStrengthIcons)
     {
         e.getComponent<cro::Callback>().active = visible;
@@ -4035,7 +4044,7 @@ void GolfState::buildTrophyScene()
         m_trophySceneTexture.create(static_cast<std::uint32_t>(winSize.x), static_cast<std::uint32_t>(winSize.y), true, false, samples);
         
         float ratio = winSize.x / winSize.y;
-        cam.setPerspective(m_sharedData.fov * cro::Util::Const::degToRad, ratio, 0.1f, 10.f);
+        cam.setPerspective(m_sharedData.fov * cro::Util::Const::degToRad, ratio, 0.01f, 20.f);
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
 
@@ -4057,6 +4066,7 @@ void GolfState::buildTrophyScene()
 
     cro::EmitterSettings emitterSettings;
     emitterSettings.loadFromFile("assets/golf/particles/firework.cps", m_resources.textures);
+    emitterSettings.blendmode = cro::EmitterSettings::BlendMode::Add;
 
     if (emitterSettings.releaseCount == 0)
     {

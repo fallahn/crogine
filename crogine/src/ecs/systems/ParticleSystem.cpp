@@ -423,8 +423,9 @@ void ParticleSystem::process(float dt)
                         p.colour = settings.colour;
                         p.gravity = settings.gravity;
                         p.lifetime = settings.lifetime + cro::Util::Random::value(-settings.lifetimeVariance, settings.lifetimeVariance + epsilon);
-                        p.lifetime -= (emitter.m_currentTimestamp - emitter.m_emissionTimestamp);
+                        //p.lifetime -= (emitter.m_currentTimestamp - emitter.m_emissionTimestamp);
                         p.maxLifeTime = p.lifetime;
+                        //p.lifetime *= 1.f - t;
 
                         auto randRot = glm::rotate(rotation, Util::Random::value(-settings.spread, (settings.spread + epsilon)) * Util::Const::degToRad, Transform::X_AXIS);
                         randRot = glm::rotate(randRot, Util::Random::value(-settings.spread, (settings.spread + epsilon)) * Util::Const::degToRad, Transform::Z_AXIS);
@@ -725,6 +726,9 @@ void ParticleSystem::onEntityAdded(Entity entity)
             allocateBuffer();
         }
     }
+
+    auto pos = entity.getComponent<cro::Transform>().getWorldPosition();
+    entity.getComponent<cro::ParticleEmitter>().m_previousPosition = pos;
 
     entity.getComponent<ParticleEmitter>().m_vbo = m_vboIDs[m_nextBuffer];
     entity.getComponent<ParticleEmitter>().m_vao = m_vaoIDs[m_nextBuffer];

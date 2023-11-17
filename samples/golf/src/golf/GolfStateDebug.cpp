@@ -233,7 +233,7 @@ void GolfState::addCameraDebugging()
 
 void GolfState::registerDebugCommands()
 {
-    registerCommand("skip_turn", [&](const std::string&)
+    registerCommand("refresh_turn", [&](const std::string&)
         {
             m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, std::uint16_t(ServerCommand::SkipTurn), gns::NetFlag::Reliable);
         });
