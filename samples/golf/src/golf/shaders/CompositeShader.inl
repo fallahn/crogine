@@ -140,14 +140,21 @@ void main()
 
     float depthSample = TEXTURE(u_depthTexture, v_texCoord).r;
     float d = getDistance(depthSample);
-    colour = mix(colour, FogColour * u_lightColour, fogAmount(d));
+    float fogMix = fogAmount(d);
+
+#if defined (LIGHT_COLOUR)
+    float maskAmount = TEXTURE(u_maskTexture, v_texCoord).a;
+    fogMix *= maskAmount;
+#endif
+
+    colour = mix(colour, FogColour * u_lightColour, fogMix);
 
 #if defined(LIGHT_COLOUR)
     vec3 lightColour = TEXTURE(u_lightTexture, v_texCoord).rgb;
     colour.rgb += lightColour;
 
     vec3 blurColour = TEXTURE(u_blurTexture, v_texCoord).rgb * (1.0 - d);
-    colour.rgb = (blurColour * TEXTURE(u_maskTexture, v_texCoord).a * 0.65) + colour.rgb;
+    colour.rgb = (blurColour * maskAmount * 0.65) + colour.rgb;
 #endif
 
     FRAG_OUT = colour;
