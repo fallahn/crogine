@@ -114,6 +114,7 @@ void GolfState::createCameras()
                 m_scaleBuffer.setData(invScale);
 
                 m_resolutionUpdate.resolutionData.resolution = texSize / invScale;
+                m_resolutionUpdate.resolutionData.bufferResolution = texSize;
                 m_resolutionBuffer.setData(m_resolutionUpdate.resolutionData);
 
 

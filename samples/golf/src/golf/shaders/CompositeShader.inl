@@ -53,6 +53,7 @@ R"(
 uniform sampler2D u_texture;
 
 VARYING_IN vec2 v_texCoord;
+#include RESOLUTION_BUFFER
 
 OUTPUT
 
@@ -64,14 +65,14 @@ void main()
     //FRAG_OUT = TEXTURE(u_texture, v_texCoord);
 
     float count = 0.0;
-    vec2 pixelUV = vec2(1.0) / textureSize(u_texture, 0);
+    vec2 pixelUV = vec2(1.0) / u_bufferResolution;//textureSize(u_texture, 0);
     vec3 colour = vec3(0.0);
 
-    for (int i = -size; i <= size; ++i)
+    for (int y = -size; y <= size; ++y)
     {
-        for (int j = -size; j <= size; ++j)
+        for (int x = -size; x <= size; ++x)
         {
-            colour += texture(u_texture, (v_texCoord + (vec2(i, j) * pixelUV * separation))).rgb;
+            colour += texture(u_texture, (v_texCoord + (vec2(x, y) * pixelUV * separation))).rgb;
             count++;
         }
     }
@@ -153,7 +154,9 @@ void main()
     vec3 lightColour = TEXTURE(u_lightTexture, v_texCoord).rgb;
     colour.rgb += lightColour;
 
-    vec3 blurColour = TEXTURE(u_blurTexture, v_texCoord).rgb * (1.0 - d);
+    maskAmount = (0.9 * maskAmount) + 0.1;
+
+    vec3 blurColour = TEXTURE(u_blurTexture, v_texCoord).rgb * (1.0 - ((d * 0.9) + 0.1));
     colour.rgb = (blurColour * maskAmount * 0.65) + colour.rgb;
 #endif
 

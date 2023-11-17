@@ -229,6 +229,7 @@ struct WindData final
 struct ResolutionData final
 {
     glm::vec2 resolution = glm::vec2(1.f);
+    glm::vec2 bufferResolution = glm::vec2(1.f);
     float nearFadeDistance = 2.f;
 };
 

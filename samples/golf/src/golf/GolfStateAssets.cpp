@@ -1451,6 +1451,8 @@ void GolfState::loadMaterials()
     if (m_sharedData.nightTime)
     {
         m_resources.shaders.loadFromString(ShaderID::Blur, BlurVert, BlurFrag);
+        shader = &m_resources.shaders.get(ShaderID::Blur);
+        m_resolutionBuffer.addShader(*shader);
     }
 
 

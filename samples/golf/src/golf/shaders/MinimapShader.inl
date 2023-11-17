@@ -144,7 +144,9 @@ inline const std::string MinimapFragment = R"(
             vec3 lightColour = TEXTURE(u_lightTexture, coord).rgb;
             colour.rgb += lightColour;
 
-            vec3 blurColour = TEXTURE(u_blurTexture, coord).rgb * (1.0 - d);
+            maskAmount = (0.9 * maskAmount) + 0.1;
+
+            vec3 blurColour = TEXTURE(u_blurTexture, coord).rgb * (1.0 - ((d * 0.9) + 0.1));
             colour.rgb = (blurColour * 0.65 * maskAmount) + colour.rgb;
 #endif
 

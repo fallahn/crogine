@@ -42,6 +42,7 @@ static inline const std::string ResolutionBuffer = R"(
     layout (std140) uniform ScaledResolution
     {
         vec2 u_scaledResolution;
+        vec2 u_bufferResolution;
         float u_nearFadeDistance;
     };)";
 
