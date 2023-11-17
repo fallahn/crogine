@@ -131,7 +131,9 @@ namespace
 )";
 
     static const std::string RainFragment = R"(
-    OUTPUT
+    #define USE_MRT
+    #include OUTPUT_LOCATION
+
     uniform vec4 u_colour = vec4(1.0);
 
     VARYING_IN vec4 v_colour;
@@ -157,6 +159,8 @@ namespace
 
         colour.a *= u_colour.a;
         FRAG_OUT = colour;
+
+        LIGHT_OUT = vec4(vec3(0.0), 1.0);
     }
 )";
 

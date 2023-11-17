@@ -124,12 +124,19 @@ namespace
         VARYING_IN HIGH float v_depth;
         OUTPUT
 
+
 #if defined (MOBILE)
         float smoothstep(float edge0, float edge1, float x)
         {
             float t = clamp((x - edge0) / (edge1 - edge0), 0.0, 1.0);
             return t * t * (3.0 - 2.0 * t);
         }
+#else
+//horrible hack to stop particles outputting
+//to light buffer in golf
+
+layout (location = 3) out vec4 LIGHT_OUT;
+
 #endif
 
         float linearise(float z)
@@ -175,6 +182,11 @@ namespace
         #if defined (BLEND_MULTIPLY)
             FRAG_OUT.rgb += (vec3(1.0) - FRAG_OUT.rgb) * (1.0 - FRAG_OUT.a);
         #endif
+
+#if !defined(MOBILE)
+LIGHT_OUT = vec4(vec3(0.0), 1.0);
+#endif
+
         }
     )";
 
