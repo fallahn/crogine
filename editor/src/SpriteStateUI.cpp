@@ -358,7 +358,7 @@ void SpriteState::drawInspector()
     
     if (!m_spriteSheet.getSprites().empty())
     {
-        ImGui::ListBoxHeader("", std::min(20, static_cast<std::int32_t>(m_spriteSheet.getSprites().size() + 1)));
+        ImGui::ListBoxHeader("##", std::min(20, static_cast<std::int32_t>(m_spriteSheet.getSprites().size() + 1)));
         for (auto& spritePair : m_spriteSheet.getSprites())
         {
             if (ImGui::Selectable(spritePair.first.c_str(), &spritePair == m_activeSprite))

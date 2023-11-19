@@ -145,7 +145,9 @@ void main()
 
 #if defined (LIGHT_COLOUR)
     float maskAmount = TEXTURE(u_maskTexture, v_texCoord).a;
-    fogMix *= maskAmount;
+    float fogAddition = (0.95 * maskAmount) + 0.05;
+
+    fogMix *= fogAddition;
 #endif
 
     colour = mix(colour, FogColour * u_lightColour, fogMix);
