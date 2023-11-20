@@ -92,7 +92,7 @@ namespace
     constexpr float TabWindowDepth = 0.1f;
     constexpr float TabBarDepth = 0.15f;
 
-    constexpr glm::vec3 PanelPosition(4.f, 20.f, TabWindowDepth);
+    constexpr glm::vec3 PanelPosition(4.f, 52.f, TabWindowDepth); //y is 20 if we increase panel by 66
     constexpr glm::vec3 HiddenPosition(-10000.f);
 
     constexpr float HighlightOffset = 0.25f;
@@ -1022,10 +1022,10 @@ void OptionsState::buildScene()
 
     const std::array<glm::vec3, 4u> TabPositions =
     {
-        glm::vec3(1.f, 171.f, TabBarDepth + HighlightOffset),
-        glm::vec3(101.f, 171.f, TabBarDepth + HighlightOffset),
-        glm::vec3(201.f, 171.f, TabBarDepth + HighlightOffset),
-        glm::vec3(301.f, 171.f, TabBarDepth + HighlightOffset)
+        glm::vec3(1.f, 237.f, TabBarDepth + HighlightOffset),
+        glm::vec3(101.f, 237.f, TabBarDepth + HighlightOffset),
+        glm::vec3(201.f, 237.f, TabBarDepth + HighlightOffset),
+        glm::vec3(301.f, 237.f, TabBarDepth + HighlightOffset)
     };
 
     auto createTab = [&, spriteSelectedID, spriteUnselectedID](cro::Entity parent, std::size_t index, std::int32_t menuID, std::size_t selectionIndex)

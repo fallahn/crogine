@@ -577,31 +577,6 @@ bool GolfGame::initialise()
             }
         });
 
-    /*registerConsoleTab("Credits",
-        []()
-        {
-            ImGui::Text("Credits:");
-
-            for (const auto& [title, names] : credits)
-            {
-                ImGui::Text(title.toAnsiString().c_str());
-
-                for (const auto& name : names)
-                {
-                    ImGui::Text(name.toAnsiString().c_str());
-                }
-                ImGui::NewLine();
-            }
-
-#ifndef USE_GNS
-            ImGui::Text("Check out other games available from https://fallahn.itch.io !");
-#endif
-            if (ImGui::Button("Visit Website"))
-            {
-                cro::Util::String::parseURL(Social::WebURL);
-            }
-        });*/
-
     registerCommand("log_benchmark", 
         [&](const std::string& state)
         {
@@ -919,6 +894,7 @@ void GolfGame::initFonts()
 
 #ifdef _WIN32
     const std::string winPath = "C:/Windows/Fonts/seguiemj.ttf";
+    
     if (cro::FileSystem::fileExists(winPath))
     {
         ctx.allowFillColour = false;

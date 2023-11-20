@@ -54,6 +54,9 @@ namespace
         StoredValue("m11"),
     };
 
+    StoredValue challengeFlags("flg");
+    constexpr std::int32_t ChallengeFlagsComplete = 0xfff;
+
     constexpr std::array<std::int32_t, 12u> MonthDays =
     {
         31,28,31,30,31,30,31,31,30,31,30,31
@@ -144,6 +147,28 @@ void MonthlyChallenge::refresh()
                 //fetch current value
                 StoredValues[i].read();
                 m_challenges[i].value = StoredValues[i].value;
+
+                //update the completion flags here (this makes sure to retroactively apply at least this month's, if needed)
+                if (m_challenges[i].value == m_challenges[i].targetValue)
+                {
+                    challengeFlags.read();
+                    std::int32_t flags = challengeFlags.value;
+
+                    flags |= (1 << i);
+                    challengeFlags.value = flags;
+                    challengeFlags.write();
+
+                    if (flags == ChallengeFlagsComplete)
+                    {
+                        //award achievement
+                    }
+                    else
+                    {
+                        //display progress TODO hmmm do we want to do this on EVERY refresh?
+                        std::bitset<sizeof(std::int32_t) * 8> bitflags(flags);
+                        LogI << "Completed " << bitflags.count() << " challenges" << std::endl;
+                    }
+                }
             }
             else
             {
