@@ -1271,7 +1271,7 @@ void GolfState::loadMaterials()
 
 
     //this is only used on prop models, in case they are emissive or reflective
-    m_resources.shaders.loadFromString(ShaderID::CelTexturedMasked, CelVertexShader, CelFragmentShader, "#define WIND_WARP\n#define TEXTURED\n#define DITHERED\n#define NOCHEX\n#define SUBRECT\n#define MASK_MAP" + wobble);
+    m_resources.shaders.loadFromString(ShaderID::CelTexturedMasked, CelVertexShader, CelFragmentShader, "#define WIND_WARP\n#define TEXTURED\n#define DITHERED\n#define NOCHEX\n#define SUBRECT\n#define MASK_MAP\n" + wobble);
     shader = &m_resources.shaders.get(ShaderID::CelTexturedMasked);
     m_scaleBuffer.addShader(*shader);
     m_resolutionBuffer.addShader(*shader);

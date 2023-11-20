@@ -617,7 +617,8 @@ bool GolfState::handleEvent(const cro::Event& evt)
         {
         default: break;
         case SDLK_TAB:
-            if (!evt.key.repeat)
+            if (!evt.key.repeat
+                && !m_textChat.isVisible())
             {
                 showScoreboard(true);
             }

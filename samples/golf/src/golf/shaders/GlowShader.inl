@@ -73,7 +73,9 @@ void main()
     NORM_OUT = vec4(normal, 0.0);
     POS_OUT = vec4(v_worldPosition, 1.0);
 
-    vec3 eyeDirection = normalize(u_cameraWorldPosition - v_worldPosition);
+    vec3 viewDist = u_cameraWorldPosition - v_worldPosition;
+    
+    vec3 eyeDirection = normalize(viewDist);
     float rim = dot(normal, eyeDirection);
     rim = (pow(rim, 3.0) * 0.15) + 1.0;
 
@@ -82,6 +84,6 @@ void main()
     colour = hsv2rgb(colour);
 
     FRAG_OUT = vec4(colour, 1.0);
-    LIGHT_OUT = FRAG_OUT;
+    LIGHT_OUT = vec4(FRAG_OUT.rgb * smoothstep(0.01, 2.9, dot(viewDist, viewDist)), 1.0);
 }
 )";

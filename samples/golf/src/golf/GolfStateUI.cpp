@@ -3103,11 +3103,6 @@ void GolfState::logCSV() const
 
 void GolfState::showScoreboard(bool visible)
 {
-    if (m_textChat.isVisible())
-    {
-        return;
-    }
-
     for (auto e : m_netStrengthIcons)
     {
         e.getComponent<cro::Callback>().active = visible;
