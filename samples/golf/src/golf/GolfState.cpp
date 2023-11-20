@@ -4205,6 +4205,7 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo)
                         lightEnt.getComponent<cro::Transform>().setScale(glm::vec3(lightData.radius));
                         lightEnt.addComponent<cro::LightVolume>().colour = lightData.colour;
                         lightEnt.getComponent<cro::LightVolume>().radius = lightData.radius;
+                        lightEnt.getComponent<cro::LightVolume>().maxVisibilityDistance = static_cast<float>((MapSize.x / 2) * (MapSize.x / 2)); //this is sqr!!
                         //add any light animation property
                         if (!lightData.animation.empty())
                         {

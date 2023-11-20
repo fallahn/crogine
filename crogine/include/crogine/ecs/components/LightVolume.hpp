@@ -55,6 +55,7 @@ namespace cro
     */
     struct CRO_EXPORT_API LightVolume final
     {
+        float maxVisibilityDistance = 90000.f; //!< lights are culled when beyond this distance from the camera (Sqr)
         float radius = 1.f; //!< maxiumum radius of the fall-off
         Colour colour = Colour::White; //!< colour of the light
 
@@ -68,6 +69,7 @@ namespace cro
         };
     private:
         float lightScale = 1.f; //used to scale the volume to the mesh based on current transform
+        float cullAttenuation = 1.f; //used to fade the light before it's culled
         friend class LightVolumeSystem;
     };
 }

@@ -52,6 +52,13 @@ using namespace cro;
 
 namespace
 {
+    //TODO worth adding to Util?
+    static inline constexpr float smoothstep(float edge0, float edge1, float x)
+    {
+        float t = std::min(1.f, std::max(0.f, (x - edge0) / (edge1 - edge0)));
+        return t * t * (3.f - 2.f * t);
+    }
+
     const std::string VertexShader = 
         R"(
         ATTRIBUTE vec4 a_position;
@@ -208,7 +215,7 @@ void LightVolumeSystem::updateDrawList(Entity cameraEnt)
 
     //TODO - and this goes for all culling functions
     //the world space transform of the sphere could be cached for a frame
-    //insteadof being recalculated for every active camera
+    //instead of being recalculated for every active camera
     for (auto entity : entities)
     {
         const auto& model = entity.getComponent<Model>();
@@ -235,6 +242,14 @@ void LightVolumeSystem::updateDrawList(Entity cameraEnt)
             continue;
         }
 
+        auto& light = entity.getComponent<LightVolume>();
+        const auto l2 = glm::length2(direction);
+        if (l2 >light.maxVisibilityDistance)
+        {
+            //model is out of bounds
+            continue;
+        }
+
         bool visible = true;
         std::size_t j = 0;
         while (visible && j < frustum.size())
@@ -244,6 +259,7 @@ void LightVolumeSystem::updateDrawList(Entity cameraEnt)
 
         if (visible)
         {
+            light.cullAttenuation = 1.f - smoothstep(light.maxVisibilityDistance - (light.maxVisibilityDistance * 0.33f), light.maxVisibilityDistance, l2);
             drawList.push_back(entity);
         }
     }
@@ -301,7 +317,8 @@ void LightVolumeSystem::updateTarget(Entity camera, RenderTexture& target)
 
         const auto& light = entity.getComponent<LightVolume>();
         float radius = light.radius * light.lightScale;
-        glCheck(glUniform3f(m_uniformIDs[UniformID::LightColour], light.colour.getRed(), light.colour.getGreen(), light.colour.getBlue()));
+        glm::vec4 colour = light.colour.getVec4() * light.cullAttenuation;
+        glCheck(glUniform3f(m_uniformIDs[UniformID::LightColour], colour.r, colour.g, colour.b));
         glCheck(glUniform1f(m_uniformIDs[UniformID::LightRadiusSqr], radius * radius));
 
         entity.getComponent<Model>().draw(0, Mesh::IndexData::Final);
