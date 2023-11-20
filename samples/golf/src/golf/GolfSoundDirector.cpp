@@ -302,7 +302,7 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
                     static const std::string emitterName = "celebrate";
                     if (m_playerVoices[idx].hasEmitter(emitterName))
                     {
-                        playAvatarSound(idx, emitterName, glm::vec3(0.f)).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Voice);
+                        playAvatarSound(idx, emitterName, glm::vec3(0.f));
                     }
                 }
 
@@ -798,12 +798,27 @@ void GolfSoundDirector::playSoundDelayed(std::int32_t id, glm::vec3 position, fl
 
 cro::Entity GolfSoundDirector::playAvatarSound(std::int32_t idx, const std::string& emitterName, glm::vec3 position)
 {
+    //stops repeating the same voice twice
+    static std::int32_t lastIdx = 0;
+    static std::string lastEmitter = emitterName;
+
     auto ent = getNextEntity();
     ent.getComponent<cro::AudioEmitter>() = m_playerVoices[idx].getEmitter(emitterName);
     ent.getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Voice);
     ent.getComponent<cro::AudioEmitter>().setPitch(1.f);
-    ent.getComponent<cro::AudioEmitter>().play();
+    
+    //urgh, we want to cancel this entirely really
+    //but we need to return a valid entity...
+    if (idx != lastIdx || emitterName != lastEmitter)
+    {
+        ent.getComponent<cro::AudioEmitter>().play();
+    }
     ent.getComponent<cro::Transform>().setPosition(position);
+
+
+    lastIdx = idx;
+    lastEmitter = emitterName;
+
     return ent;
 }
 

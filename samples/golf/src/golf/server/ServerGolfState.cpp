@@ -1366,10 +1366,9 @@ void GolfState::doServerCommand(const net::NetEvent& evt)
         case ServerCommand::KickClient:
             if (target != 0 && target < ConstVal::MaxClients)
             {
-                //we assume host is always 0...
-                auto& peer = m_sharedData.clients[target].peer;
-                m_sharedData.host.sendPacket(peer, PacketID::ConnectionRefused, std::uint8_t(MessageType::Kicked), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
-                m_sharedData.host.disconnectLater(peer);
+                auto* msg = m_sharedData.messageBus.post<ConnectionEvent>(MessageID::ConnectionMessage);
+                msg->type = ConnectionEvent::Kicked;
+                msg->clientID = target;
             }
             break;
 #ifdef CRO_DEBUG_
