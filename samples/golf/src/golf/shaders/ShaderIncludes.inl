@@ -154,35 +154,41 @@ static inline const std::string WindCalc = R"(
     WindResult getWindData(vec2 localPos, vec2 worldPos)
     {
         WindResult retVal = WindResult(vec2(0.0), vec2(0.0), 0.0);
-        vec2 uv = localPos;
-        //uv.x += u_windData.w * (hFreq + (hFreq * u_windData.y));
-        uv.x = (u_windData.w * hFreq) + uv.x;
-        retVal.highFreq.x = TEXTURE(u_noiseTexture, uv).r;
 
-        uv = localPos;
-        //uv.y += u_windData.w * (hFreq + (hFreq * u_windData.y));
-        uv.y = (u_windData.w * hFreq) + uv.y;
-        retVal.highFreq.y = TEXTURE(u_noiseTexture, uv).r;
+        //vec2 uv = localPos;
+        //uv.x = (u_windData.w * hFreq) + uv.x;
+        //retVal.highFreq.x = TEXTURE(u_noiseTexture, uv).b;
 
-        uv = worldPos;
-        uv.x -= u_windData.w * lFreq;
-        retVal.lowFreq.x = TEXTURE(u_noiseTexture, uv).r;
+        //uv = localPos;
+        //uv.y = (u_windData.w * hFreq) + uv.y;
+        //retVal.highFreq.y = TEXTURE(u_noiseTexture, uv).b;
 
-        uv = worldPos;
-        uv.y -= u_windData.w * lFreq;
-        retVal.lowFreq.y = TEXTURE(u_noiseTexture, uv).r;
+        //uv = worldPos;
+        //uv.x -= u_windData.w * lFreq;
+        //retVal.lowFreq.x = TEXTURE(u_noiseTexture, uv).b;
+
+        //uv = worldPos;
+        //uv.y -= u_windData.w * lFreq;
+        //retVal.lowFreq.y = TEXTURE(u_noiseTexture, uv).b;
+
+vec2 uv = worldPos;
+uv -= u_windData.w * lFreq;
+
+vec3 freqSample = TEXTURE(u_noiseTexture, uv).rgb;
+retVal.highFreq = freqSample.rg;
+retVal.lowFreq = freqSample.bb;
 
 
         retVal.highFreq *= 2.0;
         retVal.highFreq -= 1.0;
         retVal.highFreq *= u_windData.y;
-        //retVal.highFreq *= hMagnitude;
+
         retVal.highFreq *= (hMagnitude * u_windData.y) + hMagnitude;
 
         retVal.lowFreq *= 2.0;
         retVal.lowFreq -= 1.0;
         retVal.lowFreq *= ((0.4 * u_windData.y)+ 0.6);
-        //retVal.lowFreq *= lMagnitude;
+
         retVal.lowFreq *= (lMagnitude * u_windData.y) + lMagnitude;
 
         retVal.strength = u_windData.y;

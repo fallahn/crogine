@@ -76,12 +76,19 @@ void main()
     vec3 viewDist = u_cameraWorldPosition - v_worldPosition;
     
     vec3 eyeDirection = normalize(viewDist);
-    float rim = dot(normal, eyeDirection);
-    rim = (pow(rim, 3.0) * 0.15) + 1.0;
+
+    float outer = smoothstep(0.25, 0.8, dot(normal, eyeDirection));
+    float inner = 1.0 - outer;
 
     vec3 colour = rgb2hsv(v_colour.rgb);
-    colour.g *= rim;//1.1;
+    colour.g *= (0.4 * outer) + 0.6;
+    colour.g *= (inner * 0.3) + 1.0;
+
+    //colour.b *= (outer * 0.3) + 1.0;
+
     colour = hsv2rgb(colour);
+
+colour += vec3((1.0 - outer) * 0.01);
 
     FRAG_OUT = vec4(colour, 1.0);
     LIGHT_OUT = vec4(FRAG_OUT.rgb * smoothstep(0.01, 12.0, dot(viewDist, viewDist)), 1.0);
