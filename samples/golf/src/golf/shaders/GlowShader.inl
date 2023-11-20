@@ -84,6 +84,6 @@ void main()
     colour = hsv2rgb(colour);
 
     FRAG_OUT = vec4(colour, 1.0);
-    LIGHT_OUT = vec4(FRAG_OUT.rgb * smoothstep(0.01, 2.9, dot(viewDist, viewDist)), 1.0);
+    LIGHT_OUT = vec4(FRAG_OUT.rgb * smoothstep(0.01, 12.0, dot(viewDist, viewDist)), 1.0);
 }
 )";

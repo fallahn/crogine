@@ -710,7 +710,7 @@ inline const std::string CelFragmentShader = R"(
 #if defined (MASK_MAP)
 //TODO mix in reflections using red channel - NOTE this is already done around line 570
 
-    vec3 mask = TEXTURE(u_maskMap, v_texCoord).rgb;
+    vec3 mask = TEXTURE(u_maskMap, texCoord).rgb;
     FRAG_OUT.rgb = mix(FRAG_OUT.rgb, emissionColour, mask.g);
     LIGHT_OUT = vec4(emissionColour * mask.g, 1.0);
 

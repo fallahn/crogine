@@ -657,23 +657,26 @@ void GolfState::loadAssets()
                                 }
                                 else
                                 {
+                                    bool useWind = ((ent.getComponent<cro::Model>().getMeshData().attributeFlags & cro::VertexProperty::Colour) != 0);
                                     for (auto i = 0u; i < modelDef.getMaterialCount(); ++i)
                                     {
-                                        auto texMatID = MaterialID::CelTextured;
+                                        auto texMatID = useWind ? MaterialID::CelTextured : MaterialID::CelTexturedNoWind;
 
                                         if (modelDef.getMaterial(i)->properties.count("u_maskMap") != 0)
                                         {
-                                            texMatID = MaterialID::CelTexturedMasked;
+                                            texMatID = useWind ? MaterialID::CelTexturedMasked : MaterialID::CelTexturedMaskedNoWind;
                                         }
                                         auto texturedMat = m_resources.materials.get(m_materialIDs[texMatID]);
                                         applyMaterialData(modelDef, texturedMat, i);
                                         ent.getComponent<cro::Model>().setMaterial(i, texturedMat);
 
-
-                                        auto shadowMat = m_resources.materials.get(m_materialIDs[MaterialID::ShadowMap]);
-                                        applyMaterialData(modelDef, shadowMat);
-                                        //shadowMat.setProperty("u_alphaClip", 0.5f);
-                                        ent.getComponent<cro::Model>().setShadowMaterial(i, shadowMat);
+                                        // only do this if we have vertex animation, else the default will suffice
+                                        if (useWind)
+                                        {
+                                            auto shadowMat = m_resources.materials.get(m_materialIDs[MaterialID::ShadowMap]);
+                                            applyMaterialData(modelDef, shadowMat);
+                                            ent.getComponent<cro::Model>().setShadowMaterial(i, shadowMat);
+                                        }
                                     }
                                 }
                                 ent.getComponent<cro::Model>().setHidden(true);
@@ -1279,6 +1282,24 @@ void GolfState::loadMaterials()
     m_materialIDs[MaterialID::CelTexturedMasked] = m_resources.materials.add(*shader);
     m_resources.materials.get(m_materialIDs[MaterialID::CelTexturedMasked]).setProperty("u_noiseTexture", noiseTex);
 
+    //disable wind/vert animation on models with no colour channel
+    //saves on probably significant amount of vertex processing...
+    m_resources.shaders.loadFromString(ShaderID::CelTexturedNoWind, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define DITHERED\n#define NOCHEX\n#define SUBRECT\n" + wobble);
+    shader = &m_resources.shaders.get(ShaderID::CelTexturedNoWind);
+    m_scaleBuffer.addShader(*shader);
+    m_resolutionBuffer.addShader(*shader);
+    m_windBuffer.addShader(*shader);
+    m_materialIDs[MaterialID::CelTexturedNoWind] = m_resources.materials.add(*shader);
+
+
+    //this is only used on prop models, in case they are emissive or reflective
+    m_resources.shaders.loadFromString(ShaderID::CelTexturedMaskedNoWind, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define DITHERED\n#define NOCHEX\n#define SUBRECT\n#define MASK_MAP\n" + wobble);
+    shader = &m_resources.shaders.get(ShaderID::CelTexturedMaskedNoWind);
+    m_scaleBuffer.addShader(*shader);
+    m_resolutionBuffer.addShader(*shader);
+    m_windBuffer.addShader(*shader);
+    m_materialIDs[MaterialID::CelTexturedMaskedNoWind] = m_resources.materials.add(*shader);
+
 
 
     //custom shadow map so shadows move with wind too...
@@ -1489,7 +1510,11 @@ void GolfState::loadMaterials()
     m_resources.materials.get(m_materialIDs[MaterialID::BallTrail]).setProperty("u_colourRotation", m_sharedData.beaconColour);
 
     //minimap - green overhead
-    defines += "#define RAIN\n"; //TODO check weather.
+    if (m_sharedData.weatherType == WeatherType::Rain
+        || m_sharedData.weatherType == WeatherType::Showers)
+    {
+        defines += "#define RAIN\n";
+    }
     m_resources.shaders.loadFromString(ShaderID::Minimap, MinimapVertex, MinimapFragment, defines);
     shader = &m_resources.shaders.get(ShaderID::Minimap);
     m_scaleBuffer.addShader(*shader);

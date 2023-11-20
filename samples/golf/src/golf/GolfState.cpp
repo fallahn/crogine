@@ -674,7 +674,10 @@ bool GolfState::handleEvent(const cro::Event& evt)
             //showMapOverview();
             break;
         case cro::GameController::ButtonBack:
-            showScoreboard(true);
+            if (!m_textChat.isVisible())
+            {
+                showScoreboard(true);
+            }
             break;
         case cro::GameController::ButtonB:
             showScoreboard(false);
