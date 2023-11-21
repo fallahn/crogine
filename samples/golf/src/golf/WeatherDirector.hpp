@@ -37,14 +37,14 @@ source distribution.
 class WeatherDirector final : public cro::Director
 {
 public:
-    explicit WeatherDirector(gns::NetHost&);
+    explicit WeatherDirector(net::NetHost&);
 
     void handleMessage(const cro::Message&) override;
 
     void process(float) override;
 
 private:
-    gns::NetHost& m_host;
+    net::NetHost& m_host;
     std::uint8_t m_weatherState;
     std::size_t m_timeIndex;
 

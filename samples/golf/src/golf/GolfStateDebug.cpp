@@ -235,7 +235,7 @@ void GolfState::registerDebugCommands()
 {
     registerCommand("refresh_turn", [&](const std::string&)
         {
-            m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, std::uint16_t(ServerCommand::SkipTurn), gns::NetFlag::Reliable);
+            m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, std::uint16_t(ServerCommand::SkipTurn), net::NetFlag::Reliable);
         });
 
     registerCommand("build_cubemaps",
@@ -415,7 +415,7 @@ void GolfState::registerDebugCommands()
                             if (items[idx].client != 0)
                             {
                                 std::uint16_t data = std::uint16_t(ServerCommand::KickClient) | ((items[idx].client) << 8);
-                                m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, data, gns::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                                m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, data, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
                                 showKickWindow = false;
                             }
                         }

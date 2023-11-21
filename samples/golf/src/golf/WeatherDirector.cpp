@@ -37,7 +37,7 @@ namespace
     std::array<cro::Time, 10> Times = { };
 }
 
-WeatherDirector::WeatherDirector(gns::NetHost& host)
+WeatherDirector::WeatherDirector(net::NetHost& host)
     : m_host        (host),
     m_weatherState  (0),
     m_timeIndex     (cro::Util::Random::value(0u, Times.size() - 1))
@@ -63,6 +63,6 @@ void WeatherDirector::process(float)
         m_timeIndex = (m_timeIndex + 1) % Times.size();
         m_weatherState = ~m_weatherState;
 
-        m_host.broadcastPacket(PacketID::WeatherChange, m_weatherState, gns::NetFlag::Reliable);
+        m_host.broadcastPacket(PacketID::WeatherChange, m_weatherState, net::NetFlag::Reliable);
     }
 }

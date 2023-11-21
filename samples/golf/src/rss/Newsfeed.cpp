@@ -27,12 +27,14 @@ source distribution.
 
 -----------------------------------------------------------------------*/
 
-#ifdef USE_RSS
-
 #include "Newsfeed.hpp"
 #include "pugixml.hpp"
 
+#ifdef USE_GNS
+#include <Social.hpp>
+#else
 #include <curl/curl.h>
+#endif
 #include <crogine/core/Log.hpp>
 #include <crogine/util/String.hpp>
 
@@ -51,7 +53,17 @@ bool RSSFeed::fetch(const std::string& url)
     m_items.clear();
     m_fetchComplete = false;
 
+#ifdef USE_GNS
+    Social::requestRSSFeed();
+    
+    cro::Clock timeout;
+    std::string buffer;
+    while (!Social::getRSSFeed(&buffer) && timeout.elapsed().asSeconds() < 5.f)
+    {
 
+    }
+    return parseFeed(buffer);
+#else
     auto* curl = curl_easy_init();
     if (curl)
     {
@@ -68,6 +80,7 @@ bool RSSFeed::fetch(const std::string& url)
 
         return parseFeed(buffer);
     }
+#endif
 
     m_fetchComplete = true;
     return false;
@@ -101,22 +114,23 @@ bool RSSFeed::parseFeed(const std::string& src)
 
     {
         std::scoped_lock<std::mutex> lock(m_mutex);
-        for (auto item : channel.children("item"))
+        for (const auto item : channel.children("item"))
         {
             auto& i = m_items.emplace_back();
 
             i.title = item.child("title").child_value();
             i.url = item.child("link").child_value();
             i.date = item.child("pubDate").child_value();
+            i.date = i.date.substr(0, 16);
+
             i.description = item.child("description").child_value();
 
             cro::Util::String::replace(i.description, "&#039;", "'");
             cro::Util::String::replace(i.description, "<p>", "");
             cro::Util::String::replace(i.description, "</p>", "");
+            cro::Util::String::replace(i.description, "<br>", " ");
         }
     }
     m_fetchComplete = true;
     return !m_items.empty();
 }
-
-#endif

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022
+Matt Marchant 2022 - 2023
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -28,8 +28,6 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #pragma once
-
-#ifdef USE_RSS
 
 #include <string>
 #include <vector>
@@ -91,5 +89,3 @@ private:
     std::vector<Item> m_items;
     bool parseFeed(const std::string&);
 };
-
-#endif
