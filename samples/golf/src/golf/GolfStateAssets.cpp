@@ -405,6 +405,8 @@ void GolfState::loadAssets()
         auto& holeData = m_holeData.emplace_back();
         bool duplicate = false;
 
+        std::vector<std::string> includeFiles;
+
         const auto& holeProps = holeCfg.getProperties();
         for (const auto& holeProp : holeProps)
         {
@@ -492,12 +494,16 @@ void GolfState::loadAssets()
                 }
                 else
                 {
-                    //duplicate the hole by copying the previous model entitity
+                    //duplicate the hole by copying the previous model entity
                     holeData.modelPath = prevHoleString;
                     holeData.modelEntity = prevHoleEntity;
                     duplicate = true;
                     propCount++;
                 }
+            }
+            else if (name == "include")
+            {
+                includeFiles.push_back(holeProp.getValue<std::string>());
             }
         }
 
@@ -511,461 +517,473 @@ void GolfState::loadAssets()
             if (!duplicate) //this hole wasn't a duplicate of the previous
             {
                 //look for prop models (are optional and can fail to load no problem)
-                const auto& propObjs = holeCfg.getObjects();
-                for (const auto& obj : propObjs)
-                {
-                    const auto& name = obj.getName();
-                    if (name == "prop")
+                const auto parseProps = [&](const std::vector<cro::ConfigObject>& propObjs)
                     {
-                        const auto& modelProps = obj.getProperties();
-                        glm::vec3 position(0.f);
-                        float rotation = 0.f;
-                        glm::vec3 scale(1.f);
-                        std::string path;
-
-                        std::vector<glm::vec3> curve;
-                        bool loopCurve = true;
-                        float loopDelay = 4.f;
-                        float loopSpeed = 6.f;
-
-                        std::string particlePath;
-                        std::string emitterName;
-
-                        for (const auto& modelProp : modelProps)
+                        for (const auto& obj : propObjs)
                         {
-                            auto propName = modelProp.getName();
-                            if (propName == "position")
+                            const auto& name = obj.getName();
+                            if (name == "prop")
                             {
-                                position = modelProp.getValue<glm::vec3>();
-                            }
-                            else if (propName == "model")
-                            {
-                                path = modelProp.getValue<std::string>();
+                                const auto& modelProps = obj.getProperties();
+                                glm::vec3 position(0.f);
+                                float rotation = 0.f;
+                                glm::vec3 scale(1.f);
+                                std::string path;
 
-                                if (m_sharedData.nightTime)
+                                std::vector<glm::vec3> curve;
+                                bool loopCurve = true;
+                                float loopDelay = 4.f;
+                                float loopSpeed = 6.f;
+
+                                std::string particlePath;
+                                std::string emitterName;
+
+                                for (const auto& modelProp : modelProps)
                                 {
-                                    //see if there's a specific model
-                                    auto ext = cro::FileSystem::getFileExtension(path);
-                                    if (!ext.empty())
+                                    auto propName = modelProp.getName();
+                                    if (propName == "position")
                                     {
-                                        auto nightPath = path.substr(0, path.find(ext)) + "_night" + ext;
-                                        if (cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + nightPath))
+                                        position = modelProp.getValue<glm::vec3>();
+                                    }
+                                    else if (propName == "model")
+                                    {
+                                        path = modelProp.getValue<std::string>();
+
+                                        if (m_sharedData.nightTime)
                                         {
-                                            path = nightPath;
+                                            //see if there's a specific model
+                                            auto ext = cro::FileSystem::getFileExtension(path);
+                                            if (!ext.empty())
+                                            {
+                                                auto nightPath = path.substr(0, path.find(ext)) + "_night" + ext;
+                                                if (cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + nightPath))
+                                                {
+                                                    path = nightPath;
+                                                }
+                                            }
                                         }
                                     }
-                                }
-                            }
-                            else if (propName == "rotation")
-                            {
-                                rotation = modelProp.getValue<float>();
-                            }
-                            else if (propName == "scale")
-                            {
-                                scale = modelProp.getValue<glm::vec3>();
-                            }
-                            else if (propName == "particles")
-                            {
-                                particlePath = modelProp.getValue<std::string>();
-                            }
-                            else if (propName == "emitter")
-                            {
-                                emitterName = modelProp.getValue<std::string>();
-                            }
-                        }
-
-                        const auto modelObjs = obj.getObjects();
-                        for (const auto& o : modelObjs)
-                        {
-                            if (o.getName() == "path")
-                            {
-                                const auto points = o.getProperties();
-                                for (const auto& p : points)
-                                {
-                                    if (p.getName() == "point")
+                                    else if (propName == "rotation")
                                     {
-                                        curve.push_back(p.getValue<glm::vec3>());
+                                        rotation = modelProp.getValue<float>();
                                     }
-                                    else if (p.getName() == "loop")
+                                    else if (propName == "scale")
                                     {
-                                        loopCurve = p.getValue<bool>();
+                                        scale = modelProp.getValue<glm::vec3>();
                                     }
-                                    else if (p.getName() == "delay")
+                                    else if (propName == "particles")
                                     {
-                                        loopDelay = std::max(0.f, p.getValue<float>());
+                                        particlePath = modelProp.getValue<std::string>();
                                     }
-                                    else if (p.getName() == "speed")
+                                    else if (propName == "emitter")
                                     {
-                                        loopSpeed = std::max(0.f, p.getValue<float>());
+                                        emitterName = modelProp.getValue<std::string>();
                                     }
                                 }
 
-                                break;
-                            }
-                        }
-
-                        if (!path.empty() && Social::isValid(path)
-                            && cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + path))
-                        {
-                            if (modelDef.loadFromFile(path))
-                            {
-                                auto ent = m_gameScene.createEntity();
-                                ent.addComponent<cro::Transform>().setPosition(position);
-                                ent.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, rotation * cro::Util::Const::degToRad);
-                                ent.getComponent<cro::Transform>().setScale(scale);
-                                modelDef.createModel(ent);
-                                if (modelDef.hasSkeleton())
+                                const auto modelObjs = obj.getObjects();
+                                for (const auto& o : modelObjs)
                                 {
-                                    for (auto i = 0u; i < modelDef.getMaterialCount(); ++i)
+                                    if (o.getName() == "path")
                                     {
-                                        auto texMatID = MaterialID::CelTexturedSkinned;
-
-                                        if (modelDef.getMaterial(i)->properties.count("u_maskMap") != 0)
+                                        const auto points = o.getProperties();
+                                        for (const auto& p : points)
                                         {
-                                            texMatID = MaterialID::CelTexturedSkinnedMasked;
+                                            if (p.getName() == "point")
+                                            {
+                                                curve.push_back(p.getValue<glm::vec3>());
+                                            }
+                                            else if (p.getName() == "loop")
+                                            {
+                                                loopCurve = p.getValue<bool>();
+                                            }
+                                            else if (p.getName() == "delay")
+                                            {
+                                                loopDelay = std::max(0.f, p.getValue<float>());
+                                            }
+                                            else if (p.getName() == "speed")
+                                            {
+                                                loopSpeed = std::max(0.f, p.getValue<float>());
+                                            }
                                         }
 
-                                        auto texturedMat = m_resources.materials.get(m_materialIDs[texMatID]);
-                                        applyMaterialData(modelDef, texturedMat, i);
-                                        ent.getComponent<cro::Model>().setMaterial(i, texturedMat);
+                                        break;
                                     }
+                                }
 
-                                    auto& skel = ent.getComponent<cro::Skeleton>();
-                                    if (!skel.getAnimations().empty())
+                                if (!path.empty() && Social::isValid(path)
+                                    && cro::FileSystem::fileExists(cro::FileSystem::getResourcePath() + path))
+                                {
+                                    if (modelDef.loadFromFile(path))
                                     {
-                                        //this is the default behaviour
-                                        const auto& anims = skel.getAnimations();
-                                        if (anims.size() == 1)
+                                        auto ent = m_gameScene.createEntity();
+                                        ent.addComponent<cro::Transform>().setPosition(position);
+                                        ent.getComponent<cro::Transform>().setRotation(cro::Transform::Y_AXIS, rotation * cro::Util::Const::degToRad);
+                                        ent.getComponent<cro::Transform>().setScale(scale);
+                                        modelDef.createModel(ent);
+                                        if (modelDef.hasSkeleton())
                                         {
-                                            //ent.getComponent<cro::Skeleton>().play(0); // don't play this until unhidden
-                                            skel.getAnimations()[0].looped = true;
-                                            skel.setMaxInterpolationDistance(100.f);
+                                            for (auto i = 0u; i < modelDef.getMaterialCount(); ++i)
+                                            {
+                                                auto texMatID = MaterialID::CelTexturedSkinned;
+
+                                                if (modelDef.getMaterial(i)->properties.count("u_maskMap") != 0)
+                                                {
+                                                    texMatID = MaterialID::CelTexturedSkinnedMasked;
+                                                }
+
+                                                auto texturedMat = m_resources.materials.get(m_materialIDs[texMatID]);
+                                                applyMaterialData(modelDef, texturedMat, i);
+                                                ent.getComponent<cro::Model>().setMaterial(i, texturedMat);
+                                            }
+
+                                            auto& skel = ent.getComponent<cro::Skeleton>();
+                                            if (!skel.getAnimations().empty())
+                                            {
+                                                //this is the default behaviour
+                                                const auto& anims = skel.getAnimations();
+                                                if (anims.size() == 1)
+                                                {
+                                                    //ent.getComponent<cro::Skeleton>().play(0); // don't play this until unhidden
+                                                    skel.getAnimations()[0].looped = true;
+                                                    skel.setMaxInterpolationDistance(100.f);
+                                                }
+                                                //however spectator models need fancier animation
+                                                //control... and probably a smaller interp distance
+                                                else
+                                                {
+                                                    //TODO we could improve this by disabling when hidden?
+                                                    ent.addComponent<cro::Callback>().active = true;
+                                                    ent.getComponent<cro::Callback>().function = SpectatorCallback(anims);
+                                                    ent.getComponent<cro::Callback>().setUserData<bool>(false);
+                                                    ent.addComponent<cro::CommandTarget>().ID = CommandID::Spectator;
+
+                                                    skel.setMaxInterpolationDistance(80.f);
+                                                }
+                                            }
                                         }
-                                        //however spectator models need fancier animation
-                                        //control... and probably a smaller interp distance
                                         else
                                         {
-                                            //TODO we could improve this by disabling when hidden?
-                                            ent.addComponent<cro::Callback>().active = true;
-                                            ent.getComponent<cro::Callback>().function = SpectatorCallback(anims);
-                                            ent.getComponent<cro::Callback>().setUserData<bool>(false);
-                                            ent.addComponent<cro::CommandTarget>().ID = CommandID::Spectator;
+                                            bool useWind = ((ent.getComponent<cro::Model>().getMeshData().attributeFlags & cro::VertexProperty::Colour) != 0);
+                                            for (auto i = 0u; i < modelDef.getMaterialCount(); ++i)
+                                            {
+                                                auto texMatID = useWind ? MaterialID::CelTextured : MaterialID::CelTexturedNoWind;
 
-                                            skel.setMaxInterpolationDistance(80.f);
+                                                if (modelDef.getMaterial(i)->properties.count("u_maskMap") != 0)
+                                                {
+                                                    texMatID = useWind ? MaterialID::CelTexturedMasked : MaterialID::CelTexturedMaskedNoWind;
+                                                }
+                                                auto texturedMat = m_resources.materials.get(m_materialIDs[texMatID]);
+                                                applyMaterialData(modelDef, texturedMat, i);
+                                                ent.getComponent<cro::Model>().setMaterial(i, texturedMat);
+
+                                                // only do this if we have vertex animation, else the default will suffice
+                                                if (useWind)
+                                                {
+                                                    auto shadowMat = m_resources.materials.get(m_materialIDs[MaterialID::ShadowMap]);
+                                                    applyMaterialData(modelDef, shadowMat);
+                                                    ent.getComponent<cro::Model>().setShadowMaterial(i, shadowMat);
+                                                }
+                                            }
+                                        }
+                                        ent.getComponent<cro::Model>().setHidden(true);
+                                        ent.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniGreen | RenderFlags::MiniMap));
+
+                                        holeData.modelEntity.getComponent<cro::Transform>().addChild(ent.getComponent<cro::Transform>());
+                                        holeData.propEntities.push_back(ent);
+
+                                        //special case for leaderboard model, cos, y'know
+                                        if (cro::FileSystem::getFileName(path) == "leaderboard.cmt")
+                                        {
+                                            leaderboardProps.push_back(ent);
+                                        }
+
+                                        //add path if it exists
+                                        if (curve.size() > 3)
+                                        {
+                                            Path propPath;
+                                            for (auto p : curve)
+                                            {
+                                                propPath.addPoint(p);
+                                            }
+
+                                            ent.addComponent<PropFollower>().path = propPath;
+                                            ent.getComponent<PropFollower>().loop = loopCurve;
+                                            ent.getComponent<PropFollower>().idleTime = loopDelay;
+                                            ent.getComponent<PropFollower>().speed = loopSpeed;
+                                            ent.getComponent<cro::Transform>().setPosition(curve[0]);
+                                        }
+
+                                        //add child particles if they exist
+                                        if (!particlePath.empty())
+                                        {
+                                            cro::EmitterSettings settings;
+                                            if (settings.loadFromFile(particlePath, m_resources.textures))
+                                            {
+                                                auto pEnt = m_gameScene.createEntity();
+                                                pEnt.addComponent<cro::Transform>();
+                                                pEnt.addComponent<cro::ParticleEmitter>().settings = settings;
+                                                pEnt.getComponent<cro::ParticleEmitter>().setRenderFlags(~(RenderFlags::MiniGreen | RenderFlags::MiniMap));
+                                                pEnt.addComponent<cro::CommandTarget>().ID = CommandID::ParticleEmitter;
+                                                ent.getComponent<cro::Transform>().addChild(pEnt.getComponent<cro::Transform>());
+                                                holeData.particleEntities.push_back(pEnt);
+                                            }
+                                        }
+
+                                        //and child audio
+                                        if (propAudio.hasEmitter(emitterName))
+                                        {
+                                            struct AudioCallbackData final
+                                            {
+                                                glm::vec3 prevPos = glm::vec3(0.f);
+                                                float fadeAmount = 0.f;
+                                                float currentVolume = 0.f;
+                                            };
+
+                                            auto audioEnt = m_gameScene.createEntity();
+                                            audioEnt.addComponent<cro::Transform>();
+                                            audioEnt.addComponent<cro::AudioEmitter>() = propAudio.getEmitter(emitterName);
+                                            auto baseVolume = audioEnt.getComponent<cro::AudioEmitter>().getVolume();
+                                            audioEnt.addComponent<cro::CommandTarget>().ID = CommandID::AudioEmitter;
+                                            audioEnt.addComponent<cro::Callback>().setUserData<AudioCallbackData>();
+
+                                            if (ent.hasComponent<PropFollower>())
+                                            {
+                                                audioEnt.getComponent<cro::Callback>().function =
+                                                    [&, ent, baseVolume](cro::Entity e, float dt)
+                                                    {
+                                                        auto& [prevPos, fadeAmount, currentVolume] = e.getComponent<cro::Callback>().getUserData<AudioCallbackData>();
+                                                        auto pos = ent.getComponent<cro::Transform>().getPosition();
+                                                        auto velocity = (pos - prevPos) * 60.f; //frame time
+                                                        prevPos = pos;
+                                                        e.getComponent<cro::AudioEmitter>().setVelocity(velocity);
+
+                                                        const float speed = ent.getComponent<PropFollower>().speed + 0.001f; //prevent div0
+                                                        float pitch = std::min(1.f, glm::length2(velocity) / (speed * speed));
+                                                        e.getComponent<cro::AudioEmitter>().setPitch(pitch);
+
+                                                        //fades in when callback first started
+                                                        fadeAmount = std::min(1.f, fadeAmount + dt);
+
+                                                        //rather than just jump to volume, we move towards it for a
+                                                        //smoother fade
+                                                        auto targetVolume = (baseVolume * 0.1f) + (pitch * (baseVolume * 0.9f));
+                                                        auto diff = targetVolume - currentVolume;
+                                                        if (std::abs(diff) > 0.001f)
+                                                        {
+                                                            currentVolume += (diff * dt);
+                                                        }
+                                                        else
+                                                        {
+                                                            currentVolume = targetVolume;
+                                                        }
+
+                                                        e.getComponent<cro::AudioEmitter>().setVolume(currentVolume * fadeAmount);
+                                                    };
+                                            }
+                                            else
+                                            {
+                                                //add a dummy function which will still be updated on hole end to remove this ent
+                                                audioEnt.getComponent<cro::Callback>().function = [](cro::Entity, float) {};
+                                            }
+                                            ent.getComponent<cro::Transform>().addChild(audioEnt.getComponent<cro::Transform>());
+                                            holeData.audioEntities.push_back(audioEnt);
                                         }
                                     }
+                                }
+                            }
+                            else if (name == "particles")
+                            {
+                                const auto& particleProps = obj.getProperties();
+                                glm::vec3 position(0.f);
+                                std::string path;
+
+                                for (auto particleProp : particleProps)
+                                {
+                                    auto propName = particleProp.getName();
+                                    if (propName == "path")
+                                    {
+                                        path = particleProp.getValue<std::string>();
+                                    }
+                                    else if (propName == "position")
+                                    {
+                                        position = particleProp.getValue<glm::vec3>();
+                                    }
+                                }
+
+                                if (!path.empty())
+                                {
+                                    cro::EmitterSettings settings;
+                                    if (settings.loadFromFile(path, m_resources.textures))
+                                    {
+                                        auto ent = m_gameScene.createEntity();
+                                        ent.addComponent<cro::Transform>().setPosition(position);
+                                        ent.addComponent<cro::ParticleEmitter>().settings = settings;
+                                        ent.getComponent<cro::ParticleEmitter>().setRenderFlags(~(RenderFlags::MiniGreen | RenderFlags::MiniMap));
+                                        ent.addComponent<cro::CommandTarget>().ID = CommandID::ParticleEmitter;
+                                        holeData.particleEntities.push_back(ent);
+                                        holeData.modelEntity.getComponent<cro::Transform>().addChild(ent.getComponent<cro::Transform>());
+                                    }
+                                }
+                            }
+                            else if (name == "crowd")
+                            {
+                                const auto& modelProps = obj.getProperties();
+                                glm::vec3 position(0.f);
+                                float rotation = 0.f;
+                                glm::vec3 lookAt = holeData.pin;
+
+                                for (const auto& modelProp : modelProps)
+                                {
+                                    auto propName = modelProp.getName();
+                                    if (propName == "position")
+                                    {
+                                        position = modelProp.getValue<glm::vec3>();
+                                    }
+                                    else if (propName == "rotation")
+                                    {
+                                        rotation = modelProp.getValue<float>();
+                                    }
+                                    else if (propName == "lookat")
+                                    {
+                                        lookAt = modelProp.getValue<glm::vec3>();
+                                    }
+                                }
+
+                                std::vector<glm::vec3> curve;
+                                const auto& modelObjs = obj.getObjects();
+                                for (const auto& o : modelObjs)
+                                {
+                                    if (o.getName() == "path")
+                                    {
+                                        const auto& points = o.getProperties();
+                                        for (const auto& p : points)
+                                        {
+                                            if (p.getName() == "point")
+                                            {
+                                                curve.push_back(p.getValue<glm::vec3>());
+                                            }
+                                        }
+
+                                        break;
+                                    }
+                                }
+
+                                if (curve.size() < 4)
+                                {
+                                    addCrowd(holeData, position, lookAt, rotation);
                                 }
                                 else
                                 {
-                                    bool useWind = ((ent.getComponent<cro::Model>().getMeshData().attributeFlags & cro::VertexProperty::Colour) != 0);
-                                    for (auto i = 0u; i < modelDef.getMaterialCount(); ++i)
-                                    {
-                                        auto texMatID = useWind ? MaterialID::CelTextured : MaterialID::CelTexturedNoWind;
-
-                                        if (modelDef.getMaterial(i)->properties.count("u_maskMap") != 0)
-                                        {
-                                            texMatID = useWind ? MaterialID::CelTexturedMasked : MaterialID::CelTexturedMaskedNoWind;
-                                        }
-                                        auto texturedMat = m_resources.materials.get(m_materialIDs[texMatID]);
-                                        applyMaterialData(modelDef, texturedMat, i);
-                                        ent.getComponent<cro::Model>().setMaterial(i, texturedMat);
-
-                                        // only do this if we have vertex animation, else the default will suffice
-                                        if (useWind)
-                                        {
-                                            auto shadowMat = m_resources.materials.get(m_materialIDs[MaterialID::ShadowMap]);
-                                            applyMaterialData(modelDef, shadowMat);
-                                            ent.getComponent<cro::Model>().setShadowMaterial(i, shadowMat);
-                                        }
-                                    }
-                                }
-                                ent.getComponent<cro::Model>().setHidden(true);
-                                ent.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniGreen | RenderFlags::MiniMap));
-
-                                holeData.modelEntity.getComponent<cro::Transform>().addChild(ent.getComponent<cro::Transform>());
-                                holeData.propEntities.push_back(ent);
-
-                                //special case for leaderboard model, cos, y'know
-                                if (cro::FileSystem::getFileName(path) == "leaderboard.cmt")
-                                {
-                                    leaderboardProps.push_back(ent);
-                                }
-
-                                //add path if it exists
-                                if (curve.size() > 3)
-                                {
-                                    Path propPath;
+                                    auto& spline = holeData.crowdCurves.emplace_back();
                                     for (auto p : curve)
                                     {
-                                        propPath.addPoint(p);
+                                        spline.addPoint(p);
                                     }
-
-                                    ent.addComponent<PropFollower>().path = propPath;
-                                    ent.getComponent<PropFollower>().loop = loopCurve;
-                                    ent.getComponent<PropFollower>().idleTime = loopDelay;
-                                    ent.getComponent<PropFollower>().speed = loopSpeed;
-                                    ent.getComponent<cro::Transform>().setPosition(curve[0]);
+                                    hasSpectators = true;
                                 }
+                            }
+                            else if (name == "speaker")
+                            {
+                                std::string emitterName;
+                                glm::vec3 position = glm::vec3(0.f);
 
-                                //add child particles if they exist
-                                if (!particlePath.empty())
+                                const auto& speakerProps = obj.getProperties();
+                                for (const auto& speakerProp : speakerProps)
                                 {
-                                    cro::EmitterSettings settings;
-                                    if (settings.loadFromFile(particlePath, m_resources.textures))
+                                    const auto& propName = speakerProp.getName();
+                                    if (propName == "emitter")
                                     {
-                                        auto pEnt = m_gameScene.createEntity();
-                                        pEnt.addComponent<cro::Transform>();
-                                        pEnt.addComponent<cro::ParticleEmitter>().settings = settings;
-                                        pEnt.getComponent<cro::ParticleEmitter>().setRenderFlags(~(RenderFlags::MiniGreen | RenderFlags::MiniMap));
-                                        pEnt.addComponent<cro::CommandTarget>().ID = CommandID::ParticleEmitter;
-                                        ent.getComponent<cro::Transform>().addChild(pEnt.getComponent<cro::Transform>());
-                                        holeData.particleEntities.push_back(pEnt);
+                                        emitterName = speakerProp.getValue<std::string>();
+                                    }
+                                    else if (propName == "position")
+                                    {
+                                        position = speakerProp.getValue<glm::vec3>();
                                     }
                                 }
 
-                                //and child audio
-                                if (propAudio.hasEmitter(emitterName))
+                                if (!emitterName.empty() &&
+                                    propAudio.hasEmitter(emitterName))
                                 {
-                                    struct AudioCallbackData final
-                                    {
-                                        glm::vec3 prevPos = glm::vec3(0.f);
-                                        float fadeAmount = 0.f;
-                                        float currentVolume = 0.f;
-                                    };
+                                    auto emitterEnt = m_gameScene.createEntity();
+                                    emitterEnt.addComponent<cro::Transform>().setPosition(position);
+                                    emitterEnt.addComponent<cro::AudioEmitter>() = propAudio.getEmitter(emitterName);
+                                    float baseVol = emitterEnt.getComponent<cro::AudioEmitter>().getVolume();
+                                    emitterEnt.getComponent<cro::AudioEmitter>().setVolume(0.f);
+                                    emitterEnt.addComponent<cro::Callback>().function =
+                                        [baseVol](cro::Entity e, float dt)
+                                        {
+                                            auto vol = e.getComponent<cro::AudioEmitter>().getVolume();
+                                            vol = std::min(baseVol, vol + dt);
+                                            e.getComponent<cro::AudioEmitter>().setVolume(vol);
 
-                                    auto audioEnt = m_gameScene.createEntity();
-                                    audioEnt.addComponent<cro::Transform>();
-                                    audioEnt.addComponent<cro::AudioEmitter>() = propAudio.getEmitter(emitterName);
-                                    auto baseVolume = audioEnt.getComponent<cro::AudioEmitter>().getVolume();
-                                    audioEnt.addComponent<cro::CommandTarget>().ID = CommandID::AudioEmitter;
-                                    audioEnt.addComponent<cro::Callback>().setUserData<AudioCallbackData>();
-
-                                    if (ent.hasComponent<PropFollower>())
-                                    {
-                                        audioEnt.getComponent<cro::Callback>().function =
-                                            [&, ent, baseVolume](cro::Entity e, float dt)
+                                            if (vol == baseVol)
                                             {
-                                                auto& [prevPos, fadeAmount, currentVolume] = e.getComponent<cro::Callback>().getUserData<AudioCallbackData>();
-                                                auto pos = ent.getComponent<cro::Transform>().getPosition();
-                                                auto velocity = (pos - prevPos) * 60.f; //frame time
-                                                prevPos = pos;
-                                                e.getComponent<cro::AudioEmitter>().setVelocity(velocity);
+                                                e.getComponent<cro::Callback>().active = false;
+                                            }
+                                        };
+                                    holeData.audioEntities.push_back(emitterEnt);
+                                }
+                            }
+                            else if (name == "light")
+                            {
+                                if (m_sharedData.nightTime)
+                                {
+                                    auto& lightData = holeData.lightData.emplace_back();
+                                    std::string preset;
 
-                                                const float speed = ent.getComponent<PropFollower>().speed + 0.001f; //prevent div0
-                                                float pitch = std::min(1.f, glm::length2(velocity) / (speed * speed));
-                                                e.getComponent<cro::AudioEmitter>().setPitch(pitch);
-
-                                                //fades in when callback first started
-                                                fadeAmount = std::min(1.f, fadeAmount + dt);
-
-                                                //rather than just jump to volume, we move towards it for a
-                                                //smoother fade
-                                                auto targetVolume = (baseVolume * 0.1f) + (pitch * (baseVolume * 0.9f));
-                                                auto diff = targetVolume - currentVolume;
-                                                if (std::abs(diff) > 0.001f)
-                                                {
-                                                    currentVolume += (diff * dt);
-                                                }
-                                                else
-                                                {
-                                                    currentVolume = targetVolume;
-                                                }
-
-                                                e.getComponent<cro::AudioEmitter>().setVolume(currentVolume * fadeAmount);
-                                            };
-                                    }
-                                    else
+                                    const auto& lightProps = obj.getProperties();
+                                    for (const auto& lightProp : lightProps)
                                     {
-                                        //add a dummy function which will still be updated on hole end to remove this ent
-                                        audioEnt.getComponent<cro::Callback>().function = [](cro::Entity, float) {};
+                                        const auto& propName = lightProp.getName();
+                                        if (propName == "radius")
+                                        {
+                                            lightData.radius = std::clamp(lightProp.getValue<float>(), 0.1f, 20.f);
+                                        }
+                                        else if (propName == "colour")
+                                        {
+                                            lightData.colour = lightProp.getValue<cro::Colour>();
+                                        }
+                                        else if (propName == "position")
+                                        {
+                                            lightData.position = lightProp.getValue<glm::vec3>();
+                                            lightData.position.y += 0.01f;
+                                        }
+                                        else if (propName == "animation")
+                                        {
+                                            auto str = lightProp.getValue<std::string>();
+                                            auto len = std::min(std::size_t(20), str.length());
+                                            lightData.animation = str.substr(0, len);
+                                        }
+                                        else if (propName == "preset")
+                                        {
+                                            preset = lightProp.getValue<std::string>();
+                                        }
                                     }
-                                    ent.getComponent<cro::Transform>().addChild(audioEnt.getComponent<cro::Transform>());
-                                    holeData.audioEntities.push_back(audioEnt);
-                                }
-                            }
-                        }
-                    }
-                    else if (name == "particles")
-                    {
-                        const auto& particleProps = obj.getProperties();
-                        glm::vec3 position(0.f);
-                        std::string path;
 
-                        for (auto particleProp : particleProps)
-                        {
-                            auto propName = particleProp.getName();
-                            if (propName == "path")
-                            {
-                                path = particleProp.getValue<std::string>();
-                            }
-                            else if (propName == "position")
-                            {
-                                position = particleProp.getValue<glm::vec3>();
-                            }
-                        }
-
-                        if (!path.empty())
-                        {
-                            cro::EmitterSettings settings;
-                            if (settings.loadFromFile(path, m_resources.textures))
-                            {
-                                auto ent = m_gameScene.createEntity();
-                                ent.addComponent<cro::Transform>().setPosition(position);
-                                ent.addComponent<cro::ParticleEmitter>().settings = settings;
-                                ent.getComponent<cro::ParticleEmitter>().setRenderFlags(~(RenderFlags::MiniGreen | RenderFlags::MiniMap));
-                                ent.addComponent<cro::CommandTarget>().ID = CommandID::ParticleEmitter;
-                                holeData.particleEntities.push_back(ent);
-                                holeData.modelEntity.getComponent<cro::Transform>().addChild(ent.getComponent<cro::Transform>());
-                            }
-                        }
-                    }
-                    else if (name == "crowd")
-                    {
-                        const auto& modelProps = obj.getProperties();
-                        glm::vec3 position(0.f);
-                        float rotation = 0.f;
-                        glm::vec3 lookAt = holeData.pin;
-
-                        for (const auto& modelProp : modelProps)
-                        {
-                            auto propName = modelProp.getName();
-                            if (propName == "position")
-                            {
-                                position = modelProp.getValue<glm::vec3>();
-                            }
-                            else if (propName == "rotation")
-                            {
-                                rotation = modelProp.getValue<float>();
-                            }
-                            else if (propName == "lookat")
-                            {
-                                lookAt = modelProp.getValue<glm::vec3>();
-                            }
-                        }
-
-                        std::vector<glm::vec3> curve;
-                        const auto& modelObjs = obj.getObjects();
-                        for (const auto& o : modelObjs)
-                        {
-                            if (o.getName() == "path")
-                            {
-                                const auto& points = o.getProperties();
-                                for (const auto& p : points)
-                                {
-                                    if (p.getName() == "point")
+                                    if (!preset.empty() && lightPresets.count(preset) != 0)
                                     {
-                                        curve.push_back(p.getValue<glm::vec3>());
+                                        const auto& p = lightPresets.at(preset);
+                                        //presets take precedence, except for animation
+                                        lightData.colour = p.colour;
+                                        lightData.radius = p.radius;
+                                        if (lightData.animation.empty())
+                                        {
+                                            lightData.animation = p.animation;
+                                        }
                                     }
                                 }
-
-                                break;
                             }
                         }
+                    };
+                parseProps(holeCfg.getObjects());
 
-                        if (curve.size() < 4)
-                        {
-                            addCrowd(holeData, position, lookAt, rotation);
-                        }
-                        else
-                        {
-                            auto& spline = holeData.crowdCurves.emplace_back();
-                            for (auto p : curve)
-                            {
-                                spline.addPoint(p);
-                            }
-                            hasSpectators = true;
-                        }
-                    }
-                    else if (name == "speaker")
+                for (const auto& include : includeFiles)
+                {
+                    cro::ConfigFile includeCfg;
+                    if (includeCfg.loadFromFile(include))
                     {
-                        std::string emitterName;
-                        glm::vec3 position = glm::vec3(0.f);
-
-                        const auto& speakerProps = obj.getProperties();
-                        for (const auto& speakerProp : speakerProps)
-                        {
-                            const auto& propName = speakerProp.getName();
-                            if (propName == "emitter")
-                            {
-                                emitterName = speakerProp.getValue<std::string>();
-                            }
-                            else if (propName == "position")
-                            {
-                                position = speakerProp.getValue<glm::vec3>();
-                            }
-                        }
-
-                        if (!emitterName.empty() &&
-                            propAudio.hasEmitter(emitterName))
-                        {
-                            auto emitterEnt = m_gameScene.createEntity();
-                            emitterEnt.addComponent<cro::Transform>().setPosition(position);
-                            emitterEnt.addComponent<cro::AudioEmitter>() = propAudio.getEmitter(emitterName);
-                            float baseVol = emitterEnt.getComponent<cro::AudioEmitter>().getVolume();
-                            emitterEnt.getComponent<cro::AudioEmitter>().setVolume(0.f);
-                            emitterEnt.addComponent<cro::Callback>().function =
-                                [baseVol](cro::Entity e, float dt)
-                                {
-                                    auto vol = e.getComponent<cro::AudioEmitter>().getVolume();
-                                    vol = std::min(baseVol, vol + dt);
-                                    e.getComponent<cro::AudioEmitter>().setVolume(vol);
-
-                                    if (vol == baseVol)
-                                    {
-                                        e.getComponent<cro::Callback>().active = false;
-                                    }
-                                };
-                            holeData.audioEntities.push_back(emitterEnt);
-                        }
-                    }
-                    else if (name == "light")
-                    {
-                        if (m_sharedData.nightTime)
-                        {
-                            auto& lightData = holeData.lightData.emplace_back();
-                            std::string preset;
-
-                            const auto& lightProps = obj.getProperties();
-                            for (const auto& lightProp : lightProps)
-                            {
-                                const auto& propName = lightProp.getName();
-                                if (propName == "radius")
-                                {
-                                    lightData.radius = std::clamp(lightProp.getValue<float>(), 0.1f, 20.f);
-                                }
-                                else if (propName == "colour")
-                                {
-                                    lightData.colour = lightProp.getValue<cro::Colour>();
-                                }
-                                else if (propName == "position")
-                                {
-                                    lightData.position = lightProp.getValue<glm::vec3>();
-                                    lightData.position.y += 0.01f;
-                                }
-                                else if (propName == "animation")
-                                {
-                                    auto str = lightProp.getValue<std::string>();
-                                    auto len = std::min(std::size_t(20), str.length());
-                                    lightData.animation = str.substr(0, len);
-                                }
-                                else if (propName == "preset")
-                                {
-                                    preset = lightProp.getValue<std::string>();
-                                }
-                            }
-
-                            if (!preset.empty() && lightPresets.count(preset) != 0)
-                            {
-                                const auto& p = lightPresets.at(preset);
-                                //presets take precedence, except for animation
-                                lightData.colour = p.colour;
-                                lightData.radius = p.radius;
-                                if (lightData.animation.empty())
-                                {
-                                    lightData.animation = p.animation;
-                                }
-                            }
-                        }
+                        parseProps(includeCfg.getObjects());
                     }
                 }
 

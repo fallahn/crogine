@@ -102,6 +102,62 @@ These properties are ignored by paths assigned to crowds, as the crowd members w
 Also since 1.7.0 props may have `emitters` added to them and `particles`. The `particles` property contains a path to a particle settings file which, if loaded successfully, will be parented to the prop, and started once the hole loads. Parented particles follow the prop as it moves along a path, so can be used for the spray behind a boat for example. The `emitter` property contains a single name which references an audio emitter defined in `assets/golf/sound/props.xas`. If the emitter exists in this file it will be parented to the prop, useful for creating effects such as the noise of a boat engine. Both emitters and particles can be defined in Blender, using a Sound object for emitters, or an Empty set to draw as a point for particle emitters (see `placeholders.blend`). If these are parented to a prop model in Blender the export script will automatically append them to the exported file.
 
 
+From version 1.15 it is possible to place all prop data in a single configuration file and include it in multiple `*.hole` files. EG
+Props.include
+
+    include
+    {
+        crowd
+        {
+            position = 103.052010,1.262347,-135.670990
+            rotation = -377.916374
+
+            path
+            {
+                point = 95.192429,1.262303,-140.468903
+                point = 118.227936,1.262303,-133.075958
+                point = 134.671310,1.262303,-129.906708
+                point = 151.243515,1.262302,-127.346008
+                point = 163.376205,1.262303,-125.559677
+            }
+        }        
+    }
+
+
+
+01.hole
+    
+    hole 01 //hole ID
+    {
+        map = "assets/golf/holes/01.png"
+        model = "assets/golf/models/hole_01.cmt"
+        pin = 22, 0, -172
+        target = 22, 0, -172
+        tee = 243, 2.5, -30
+        par = 3
+        include = "assets/golf/holes/props.include"
+    }
+
+
+02.hole
+    
+    hole 02
+    {
+        map = "assets/golf/holes/02.png"
+        model = "assets/golf/models/hole_01.cmt"
+        pin = 42, 0.5, -24
+        target = 28, 1.05, -72
+        tee = 243, 2.5, -60
+        par = 4
+        include = "assets/golf/holes/props.include"
+    }
+
+
+This way it is possible to use one definition for properties in multiple holes, useful particularly when these holes share the same model, eg the pitch n putt courses.
+
+
+
+
 
 Hole file creation can be aided with the export script for blender. See readme.txt for more details.
 

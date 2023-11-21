@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2022
+Matt Marchant 2021 - 2023
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -334,7 +334,7 @@ void FpsCameraSystem::process(float dt)
         float moveSpeed = controller.moveSpeed * dt;
         if (cro::Keyboard::isKeyPressed(SDLK_LSHIFT))
         {
-            moveSpeed *= 0.1f;
+            moveSpeed *= 0.05f;
         }
 
         if (controller.flyMode)
