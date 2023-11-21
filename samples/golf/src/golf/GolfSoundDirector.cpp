@@ -809,7 +809,7 @@ cro::Entity GolfSoundDirector::playAvatarSound(std::int32_t idx, const std::stri
     
     //urgh, we want to cancel this entirely really
     //but we need to return a valid entity...
-    if (idx != lastIdx || emitterName != lastEmitter)
+    //if (idx != lastIdx || emitterName != lastEmitter)
     {
         ent.getComponent<cro::AudioEmitter>().play();
     }
