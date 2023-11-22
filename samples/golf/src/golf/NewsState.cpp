@@ -425,6 +425,7 @@ void NewsState::buildScene()
                 auto url = items[0].url;
                 ent.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
                 ent.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
+                ent.getComponent<cro::Text>().setVerticalSpacing(1.f);
                 ent.getComponent<cro::UIInput>().setGroup(MenuID::Main);
                 ent.getComponent<cro::UIInput>().setSelectionIndex(TitleButtonIndex);
                 ent.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =

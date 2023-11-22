@@ -45,6 +45,7 @@ source distribution.
 #include "golf/TrophyState.hpp"
 #include "golf/NewsState.hpp"
 #include "golf/PlaylistState.hpp"
+#include "golf/PlayerManagementState.hpp"
 #include "golf/CreditsState.hpp"
 #include "golf/UnlockState.hpp"
 #include "golf/ProfileState.hpp"
@@ -178,6 +179,7 @@ GolfGame::GolfGame()
     m_stateStack.registerState<GolfState>(StateID::Golf, m_sharedData);
     m_stateStack.registerState<ErrorState>(StateID::Error, m_sharedData);
     m_stateStack.registerState<PauseState>(StateID::Pause, m_sharedData);
+    m_stateStack.registerState<PlayerManagementState>(StateID::PlayerManagement, m_sharedData);
     m_stateStack.registerState<TutorialState>(StateID::Tutorial, m_sharedData);
     m_stateStack.registerState<PracticeState>(StateID::Practice, m_sharedData);
     m_stateStack.registerState<DrivingState>(StateID::DrivingRange, m_sharedData, m_profileData);

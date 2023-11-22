@@ -60,6 +60,7 @@ struct StateID final
         MapOverview,
         GC,
         League,
+        PlayerManagement,
 
         SQLite, //used for testing SQLite features
         Workshop = 1100

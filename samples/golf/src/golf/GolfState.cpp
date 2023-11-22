@@ -4046,6 +4046,11 @@ void GolfState::removeClient(std::uint8_t clientID)
     m_sharedData.connectionData[clientID].pingTime = 1000; //just so existing net indicators don't show green
 
     updateScoreboard();
+
+    //raise a message in case other states (eg player management) needs to know
+    auto* msg = postMessage<GolfEvent>(MessageID::GolfMessage);
+    msg->type = GolfEvent::ClientDisconnect;
+    msg->client = clientID;
 }
 
 void GolfState::setCurrentHole(std::uint16_t holeInfo)

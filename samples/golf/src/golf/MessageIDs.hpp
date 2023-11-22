@@ -75,7 +75,8 @@ struct GolfEvent final
         BirdHit,
         TargetHit,
         Gimme,
-        RoundEnd
+        RoundEnd,
+        ClientDisconnect
     }type = HitBall;
 
     glm::vec3 position = glm::vec3(0.f);

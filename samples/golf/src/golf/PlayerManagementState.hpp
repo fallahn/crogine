@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021 - 2023
+Matt Marchant 2023
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -33,14 +33,15 @@ source distribution.
 
 #include <crogine/core/State.hpp>
 #include <crogine/audio/AudioScape.hpp>
+#include <crogine/graphics/ModelDefinition.hpp>
 #include <crogine/ecs/Scene.hpp>
 
 struct SharedStateData;
 
-class PauseState final : public cro::State
+class PlayerManagementState final : public cro::State
 {
 public:
-    PauseState(cro::StateStack&, cro::State::Context, SharedStateData&);
+    PlayerManagementState(cro::StateStack&, cro::State::Context, SharedStateData&);
 
     bool handleEvent(const cro::Event&) override;
 
@@ -50,12 +51,13 @@ public:
 
     void render() override;
 
-    cro::StateID getStateID() const override { return StateID::Pause; }
+    cro::StateID getStateID() const override { return StateID::PlayerManagement; }
 
 private:
 
     cro::Scene m_scene;
     SharedStateData& m_sharedData;
+    cro::ResourceCollection m_resources;
 
     cro::AudioScape m_menuSounds;
     struct AudioID final
@@ -71,21 +73,19 @@ private:
 
     glm::vec2 m_viewScale;
     cro::Entity m_rootNode;
-    cro::Entity m_restartButton;
-    bool m_requestRestart;
 
-    struct ConfirmType final
+    struct PlayerList final
     {
-        enum
-        {
-            Restart, Quit
-        };
-    };
-    std::int32_t m_confirmationType; //used to decide which action the confirmation menu should take
+        cro::Entity text;
+        std::vector<cro::Entity> buttons;
+        
+        //indexes into shared data
+        std::uint8_t selectedClient = 0;
+        std::uint8_t selectedPlayer = 0;
 
-    cro::Entity m_minimapButton;
-    cro::Entity m_playerButton;
+    }m_playerList;
 
     void buildScene();
+    void refreshPlayerList();
     void quitState();
 };
