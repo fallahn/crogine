@@ -327,6 +327,12 @@ void NewsState::buildScene()
             e.getComponent<cro::Text>().setFillColour(TextGoldColour); 
             e.getComponent<cro::AudioEmitter>().play();
             e.getComponent<cro::Callback>().active = true;
+
+            auto [rect, ent] = e.getComponent<cro::Callback>().getUserData<std::pair<cro::FloatRect, cro::Entity>>();
+            if (ent.isValid())
+            {
+                ent.getComponent<cro::Sprite>().setTextureRect(rect);
+            }
         });
     auto unselectedID = uiSystem.addCallback(
         [](cro::Entity e) 
@@ -349,6 +355,8 @@ void NewsState::buildScene()
         e.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectedID;
 
         e.addComponent<cro::Callback>().function = MenuTextCallback();
+        //used by selection callback to see if we need to set a thumbnail
+        e.getComponent<cro::Callback>().setUserData<std::pair<cro::FloatRect, cro::Entity>>();
 
         parent.getComponent<cro::Transform>().addChild(e.getComponent<cro::Transform>());
         return e;
@@ -368,6 +376,7 @@ void NewsState::buildScene()
             e.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectedID;
 
             e.addComponent<cro::Callback>().function = MenuTextCallback();
+            e.getComponent<cro::Callback>().setUserData<std::pair<cro::FloatRect, cro::Entity>>();
 
             parent.getComponent<cro::Transform>().addChild(e.getComponent<cro::Transform>());
             return e;
@@ -504,9 +513,21 @@ void NewsState::buildScene()
     };
 
 #ifdef USE_GNS
+    //section thumbnail
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ -6.f, -86.f, 0.1f });
+    entity.getComponent<cro::Transform>().setScale(glm::vec2(0.25f));
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>(m_sharedData.sharedResources->textures.get("assets/golf/images/news_thumbs.png"));
+    bounds = entity.getComponent<cro::Sprite>().getTextureRect();
+    bounds.height /= 2.f;
+    entity.getComponent<cro::Sprite>().setTextureRect(bounds);
+    menuEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    auto thumbEnt = entity;
+
     //section titles
     entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ -178.f, 8.f, 0.1f });
+    entity.addComponent<cro::Transform>().setPosition({ -170.f, 8.f, 0.1f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
     entity.getComponent<cro::Text>().setFillColour(TextEditColour);
@@ -523,6 +544,7 @@ void NewsState::buildScene()
                     Social::joinChatroom();
                 }
             });
+    entity.getComponent<cro::Callback>().setUserData<std::pair<cro::FloatRect, cro::Entity>>(bounds,thumbEnt);
 
     entity = createSmallItem(glm::vec2(8.f, -23.f), "Join The Clubhouse", titleEnt);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
@@ -533,7 +555,8 @@ void NewsState::buildScene()
                     Social::showWebPage("https://steamcommunity.com/groups/supervideoclubhouse");
                 }
             });
-
+    bounds.bottom += bounds.height;
+    entity.getComponent<cro::Callback>().setUserData<std::pair<cro::FloatRect, cro::Entity>>(bounds, thumbEnt);
 
     entity = createSmallItem(glm::vec2(8.f, -60.f), "Getting Started", titleEnt);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
