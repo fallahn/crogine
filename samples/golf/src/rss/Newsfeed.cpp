@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022
+Matt Marchant 2022 - 2023
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -42,7 +42,11 @@ namespace
 {
     std::size_t writeCallback(char* contents, std::size_t size, std::size_t numMem, void* outStr)
     {
-        static_cast<std::string*>(outStr)->append(contents, size * numMem);
+        //hmm, surely there's a bettre way to concat this?
+        for (auto i = 0u; i < size * numMem; ++i)
+        {
+            static_cast<std::vector<std::uint8_t>*>(outStr)->push_back(contents[i]);
+        }
         return size * numMem;
     }
 }
@@ -57,7 +61,7 @@ bool RSSFeed::fetch(const std::string& url)
     Social::requestRSSFeed();
     
     cro::Clock timeout;
-    std::string buffer;
+    std::vector<std::uint8_t> buffer;
     while (!Social::getRSSFeed(&buffer) && timeout.elapsed().asSeconds() < 5.f)
     {
 
@@ -67,7 +71,7 @@ bool RSSFeed::fetch(const std::string& url)
     auto* curl = curl_easy_init();
     if (curl)
     {
-        std::string buffer;
+        std::vector<std::uint8_t> buffer;
         curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
         curl_easy_setopt(curl, CURLOPT_HTTPGET, 1L);
         curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writeCallback);
@@ -93,7 +97,7 @@ void RSSFeed::fetchAsync(const std::string& url)
 }
 
 //private
-bool RSSFeed::parseFeed(const std::string& src)
+bool RSSFeed::parseFeed(const std::vector<std::uint8_t>& src)
 {
     if (src.empty())
     {
@@ -103,7 +107,7 @@ bool RSSFeed::parseFeed(const std::string& src)
     }
 
     pugi::xml_document doc;
-    if (!doc.load_buffer(src.c_str(), src.size()))
+    if (!doc.load_buffer(src.data(), src.size(), 116u, pugi::encoding_utf8))
     {
         LogE << "Failed to parse returned string to XML" << std::endl;
         m_fetchComplete = true;
@@ -118,12 +122,15 @@ bool RSSFeed::parseFeed(const std::string& src)
         {
             auto& i = m_items.emplace_back();
 
-            i.title = item.child("title").child_value();
+            const auto* s = item.child("title").child_value();
+
+            i.title = cro::String::fromUtf8(s, s + std::strlen(s));
             i.url = item.child("link").child_value();
             i.date = item.child("pubDate").child_value();
             i.date = i.date.substr(0, 16);
 
-            i.description = item.child("description").child_value();
+            s = item.child("description").child_value();
+            i.description = cro::String::fromUtf8(s, s + std::strlen(s));
 
             cro::Util::String::replace(i.description, "&#039;", "'");
             cro::Util::String::replace(i.description, "<p>", "");

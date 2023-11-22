@@ -894,6 +894,7 @@ void GolfGame::initFonts()
 
 #ifdef _WIN32
     const std::string winPath = "C:/Windows/Fonts/seguiemj.ttf";
+    //const std::string winPath = "assets/golf/fonts/NotoEmoji-Regular.ttf";
     
     if (cro::FileSystem::fileExists(winPath))
     {

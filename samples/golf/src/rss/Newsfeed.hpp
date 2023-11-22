@@ -29,6 +29,8 @@ source distribution.
 
 #pragma once
 
+#include <crogine/core/String.hpp>
+
 #include <string>
 #include <vector>
 #include <thread>
@@ -45,10 +47,10 @@ public:
     */
     struct Item final
     {
-        std::string title;
-        std::string url;
-        std::string date;
-        std::string description;
+        cro::String title;
+        cro::String url;
+        cro::String date;
+        cro::String description;
     };
 
     /*!
@@ -87,5 +89,5 @@ private:
     std::mutex m_mutex;
     
     std::vector<Item> m_items;
-    bool parseFeed(const std::string&);
+    bool parseFeed(const std::vector<std::uint8_t>&);
 };

@@ -196,6 +196,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
         cacheState(StateID::Keyboard);
         cacheState(StateID::Leaderboard);
         cacheState(StateID::League);
+        cacheState(StateID::News);
 
         context.mainWindow.setMouseCaptured(false);
 

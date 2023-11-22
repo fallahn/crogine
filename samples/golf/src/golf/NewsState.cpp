@@ -293,14 +293,14 @@ void NewsState::buildScene()
     rootNode.getComponent<cro::Transform>().addChild(menuEntity.getComponent<cro::Transform>());
 
 
-    auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
-    auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
+    const auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
+    const auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
 
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 0.f, 143.f, 0.1f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(font).setString("News");
-    entity.getComponent<cro::Text>().setFillColour(TextEditColour);
+    entity.getComponent<cro::Text>().setFillColour(TextGoldColour);
     entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
     centreText(entity);
     menuEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
@@ -390,7 +390,7 @@ void NewsState::buildScene()
     entity.addComponent<cro::Text>(smallFont).setString("Fetching News...");
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
-    centreText(entity);
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
     menuEntity.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     auto newsEnt = entity;
 
@@ -405,11 +405,14 @@ void NewsState::buildScene()
         if (m_feed.fetchComplete())
         {
             const auto& items = m_feed.getItems();
-            glm::vec3 position(0.f, 28.f, 0.1f);
+            glm::vec3 position(0.f, 24.f, 0.1f);
 
             if (!items.empty())
             {
-                auto ent = createItem({ 0.f, 110.f }, items[0].title, menuEntity);
+                auto title = items[0].title;
+                auto rowCount = cro::Util::String::wordWrap(title, 25);
+
+                auto ent = createItem({ 0.f, ((rowCount - 1) * 8.f) + 110.f }, title, menuEntity);
                 auto url = items[0].url;
                 ent.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
                 ent.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
@@ -436,15 +439,8 @@ void NewsState::buildScene()
                 ent.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
                 menuEntity.getComponent<cro::Transform>().addChild(ent.getComponent<cro::Transform>());
 
-                std::size_t start = 50;
-                auto description = items[0].description.substr(0, 150) + "...";
-                auto found = description.find_first_of(' ', start);
-                do
-                {
-                    description[found] = '\n';
-                    start += 50;
-                    found = description.find_first_of(' ', start);
-                } while (found != std::string::npos);
+                auto description = items[0].description.substr(0, 180) + "...";
+                cro::Util::String::wordWrap(description, 60);
 
 
                 ent = m_scene.createEntity();
