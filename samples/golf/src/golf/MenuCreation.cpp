@@ -278,10 +278,10 @@ void MenuState::parseCourseDirectory(const std::string& rootDir, bool isUser)
         }
 
         //TODO remove me - this prevents parsing the incomplete course for now
-        if (courseNumber == 10)
+        /*if (courseNumber == 10)
         {
             break;
-        }
+        }*/
     }
 
     //moved to createUI() because this func gets called multiple times
