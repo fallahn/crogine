@@ -322,6 +322,24 @@ void PlayerManagementState::buildScene()
     rootNode.getComponent<cro::Transform>().addChild(confirmEntity.getComponent<cro::Transform>());
 
     auto& font = m_sharedData.sharedResources->fonts.get(FontID::UI);
+    auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Label);
+
+    //contains the player preview/icon - updated by refreshPreview()
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 80.f, 30.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Sprite>();
+    rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_playerList.previewAvatar = entity;
+
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 20.f, 10.f, 0.1f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(smallFont);
+    entity.getComponent<cro::Text>().setCharacterSize(LabelTextSize);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    rootNode.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_playerList.previewText = entity;
 
     //contains the player name list - updated by refreshPlayerList()
     entity = m_scene.createEntity();
@@ -384,6 +402,7 @@ void PlayerManagementState::buildScene()
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::Unselected] = unselectedID;
         entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = activatedID;
         entity.getComponent<cro::UIInput>().setSelectionIndex(BaseSelectionIndex + i);
+        entity.getComponent<cro::UIInput>().setGroup(MenuID::Main);
 
         entity.addComponent<cro::Callback>().function = MenuTextCallback();
         entity.getComponent<cro::Callback>().setUserData<std::pair<std::uint8_t, std::uint8_t>>(0, 0);
@@ -446,7 +465,6 @@ void PlayerManagementState::buildScene()
 
 
     //confirm message
-    auto& smallFont = m_sharedData.sharedResources->fonts.get(FontID::Label);
     entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition(glm::vec2(0.f, 2.f));
     entity.addComponent<cro::Drawable2D>();
@@ -619,7 +637,31 @@ void PlayerManagementState::refreshPlayerList()
 
 void PlayerManagementState::refreshPreview()
 {
+    glm::vec2 texSize(LabelTextureSize);
+    texSize.y -= (LabelIconSize.y * 4.f);
 
+    const cro::FloatRect textureRect(0.f, m_playerList.selectedPlayer * (texSize.y / ConstVal::MaxPlayers), texSize.x, texSize.y / ConstVal::MaxPlayers);
+
+    constexpr glm::vec2 AvatarSize(16.f);
+    const glm::vec2 AvatarOffset((textureRect.width - AvatarSize.x) / 2.f, textureRect.height + 2.f);
+    cro::FloatRect avatarUV(0.f, texSize.y/* / static_cast<float>(LabelTextureSize.y)*/,
+        LabelIconSize.x /*/ static_cast<float>(LabelTextureSize.x)*/,
+        LabelIconSize.y /*/ static_cast<float>(LabelTextureSize.y)*/);
+
+    float xOffset = (m_playerList.selectedPlayer % 2) * avatarUV.width;
+    float yOffset = (m_playerList.selectedPlayer / 2) * avatarUV.height;
+    avatarUV.left += xOffset;
+    avatarUV.bottom += yOffset;
+
+    
+    m_playerList.previewAvatar.getComponent<cro::Sprite>().setTexture(m_sharedData.nameTextures[m_playerList.selectedClient].getTexture());
+    m_playerList.previewAvatar.getComponent<cro::Sprite>().setTextureRect(avatarUV);
+
+    cro::String str = m_sharedData.connectionData[m_playerList.selectedClient].playerData[m_playerList.selectedPlayer].name;
+    str += "\nClientID: " + std::to_string(m_playerList.selectedClient);
+    str += "\nWith " + std::to_string(m_sharedData.connectionData[m_playerList.selectedClient].playerCount - 1) + " other players";
+
+    m_playerList.previewText.getComponent<cro::Text>().setString(str);
 }
 
 void PlayerManagementState::quitState()

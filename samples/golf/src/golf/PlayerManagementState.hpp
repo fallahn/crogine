@@ -83,6 +83,9 @@ private:
         std::uint8_t selectedClient = 0;
         std::uint8_t selectedPlayer = 0;
 
+        cro::Entity previewAvatar;
+        cro::Entity previewText;
+
     }m_playerList;
 
     void buildScene();
