@@ -35,7 +35,7 @@ source distribution.
 
 namespace
 {
-    const std::array<std::string, 10u> CourseNames =
+    const std::array<std::string, 11u> CourseNames =
     {
         "course_01",
         "course_02",
@@ -47,9 +47,10 @@ namespace
         "course_08",
         "course_09",
         "course_10",
+        "course_11",
     };
     constexpr std::int32_t MinCourse = 0;
-    constexpr std::int32_t MaxCourse = 9;
+    constexpr std::int32_t MaxCourse = 10;
 }
 
 ProfileDB::ProfileDB()

@@ -192,6 +192,8 @@ namespace StatID
         ChipIns,
         FlagHits,
 
+        Course11Complete,
+
         Count
     };
     static_assert(Count <= 64, "Count exceeds maximum number of stats");

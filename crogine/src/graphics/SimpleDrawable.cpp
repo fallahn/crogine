@@ -273,7 +273,8 @@ void SimpleDrawable::setCroppingArea(FloatRect area)
 //protected
 void SimpleDrawable::setTexture(const Texture& texture)
 {
-    if (m_texture != &texture)
+    if (!m_texture ||
+        m_texture->getGLHandle() != texture.getGLHandle())
     {
         setTexture(TextureID(texture.getGLHandle()));
         m_texture = &texture;

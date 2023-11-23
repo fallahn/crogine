@@ -221,6 +221,11 @@ FloatRect SimpleText::getGlobalBounds()
 
 void SimpleText::draw(const glm::mat4& parentTransform)
 {
+    //TODO this could be done more elegantly by comparing font->getTexture().getSize()
+    /*m_fontTexture = &m_context.font->getTexture(m_context.charSize);
+    m_lastTextureSize = m_fontTexture->getSize();
+    setTexture(*m_fontTexture);*/
+
     if (m_dirtyFlags
         || (m_fontTexture && m_fontTexture->getSize() != m_lastTextureSize))
     {
