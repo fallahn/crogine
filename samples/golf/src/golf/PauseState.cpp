@@ -255,7 +255,7 @@ void PauseState::buildScene()
                 e.getComponent<cro::Callback>().active = false;
 
                 m_scene.setSystemActive<cro::AudioPlayerSystem>(true);
-                //m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+                m_scene.getSystem<cro::UISystem>()->selectAt(0);
             }
             break;
         case RootCallbackData::FadeOut:
@@ -387,7 +387,7 @@ void PauseState::buildScene()
 
     //options button
     entity = createItem(glm::vec2(0.f, 17.f), "Options", menuEntity);
-    entity.getComponent<cro::Text>().setFillColour(TextGoldColour);
+    entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Main);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt) 

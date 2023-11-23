@@ -87,5 +87,6 @@ private:
 
     void buildScene();
     void refreshPlayerList();
+    void refreshPreview();
     void quitState();
 };
