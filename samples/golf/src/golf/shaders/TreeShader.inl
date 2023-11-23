@@ -77,6 +77,9 @@ R"(
     const float MaxWindOffset = 0.1f;
     const float Amp = 0.01;
 
+const float MinVisibility = 0.3;
+const float MinWindDistance = 50.0;
+
     void main()
     {
         //int UID = gl_InstanceID << 16 | (gl_VertexID & 0x0000ffff);
@@ -107,8 +110,17 @@ R"(
 
         vec4 worldPosition = worldMatrix * position;
 
+
+        vec3 camForward = vec3(u_viewMatrix[0][2], u_viewMatrix[1][2], u_viewMatrix[2][2]);
+        vec3 eyeDir = normalize(u_cameraWorldPosition - worldPosition.xyz);
+        float visibility = dot(eyeDir, (camForward));
+
+
 //wind
+float distance = length(worldPosition.xyz - u_cameraWorldPosition);
     #if defined (HQ)
+if(visibility > MinVisibility
+    && distance < MinWindDistance){
         WindResult windResult = getWindData(position.xz, worldPosition.xz);
         windResult.lowFreq *= (0.5 * u_windData.y) + 0.5;
         windResult.highFreq *= (0.5 * u_windData.y) + 0.5;
@@ -134,7 +146,9 @@ R"(
 
         worldPosition.x += windResult.lowFreq.x;
         worldPosition.z += windResult.lowFreq.y;
-
+}else{
+        v_data.rotation = mat2(1.0);
+}
     #else
         float time = (u_windData.w * 15.0) + gl_InstanceID;
         float x = sin(time * 2.0) * 0.125;
@@ -166,14 +180,14 @@ R"(
 //size calc
 
     #if defined(HQ)
+        //distance = length(worldPosition.xyz - u_cameraWorldPosition);
+
+if(visibility > MinVisibility){
         float variation = rand(-vec2(gl_VertexID));
         variation = (0.5 * variation) + 0.5;
 
         float pointSize = ((u_leafSize * 2.0) * offset) + u_leafSize;
         pointSize *= variation;
-
-        vec3 camForward = vec3(u_viewMatrix[0][2], u_viewMatrix[1][2], u_viewMatrix[2][2]);
-        vec3 eyeDir = normalize(u_cameraWorldPosition - worldPosition.xyz);
             
         float facingAmount = dot(v_data.normal, camForward);
         pointSize *= (0.2 * facingAmount) + 0.8;
@@ -183,7 +197,7 @@ R"(
         pointSize *= smoothstep(-0.2, 0.0, facingAmount);
             
         //we use the camera's forward vector to shrink any points out of view to zero
-        pointSize *= step(0.0, clamp(dot(eyeDir, (camForward)), 0.0, 1.0));
+        pointSize *= step(0.0, clamp(visibility, 0.0, 1.0));
 
         //shrink with perspective/distance and scale to world units
         pointSize *= u_targetHeight * (u_projectionMatrix[1][1] / gl_Position.w);
@@ -192,15 +206,14 @@ R"(
         //scaled equally, as we only use the X axis
         pointSize *= length(worldMatrix[0].xyz);
 
-        float distance = length(worldPosition.xyz - u_cameraWorldPosition);
-
         //after X distance set every other vert size to 0
         //which will cause the geom shader to cull it
         pointSize *= 1.0 - (smoothstep(0.5, 1.0, distance / 150.0) * (gl_VertexID & 1));
 
         gl_PointSize = pointSize;
+}else{ gl_PointSize = 0.0; }
     #else
-        float distance = length(worldPosition.xyz - u_cameraWorldPosition);
+        //float distance = length(worldPosition.xyz - u_cameraWorldPosition);
     #endif
 
 //proximity fade
