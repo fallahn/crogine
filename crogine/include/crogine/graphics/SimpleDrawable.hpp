@@ -134,11 +134,13 @@ namespace cro
         */
         static const std::string& getDefaultVertexShader();
 
+
     protected:
         /*!
         \brief Sets the Texture to be used when rendering
+        \returns true if the texture was updated, else false
         */
-        void setTexture(const Texture& texture);
+        bool setTexture(const Texture& texture);
 
         /*!
         \brief Set the texture via texture ID - it is up to the

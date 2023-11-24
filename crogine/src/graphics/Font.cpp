@@ -157,6 +157,11 @@ Font::Font()
 
 Font::~Font()
 {
+    for (auto o : m_observers)
+    {
+        o->removeFont();
+    }
+
     cleanup();
 
     fontDataResource->refCount--;
@@ -617,6 +622,11 @@ FloatRect Font::getGlyphRect(Page& page, std::uint32_t width, std::uint32_t heig
                 
                 page.texture.swap(texture);
                 page.updated = true;
+
+                for (auto o : m_observers)
+                {
+                    o->onFontUpdate();
+                }
             }
             else
             {
@@ -713,6 +723,16 @@ bool Font::pageUpdated(std::uint32_t charSize) const
 void Font::markPageRead(std::uint32_t charSize) const
 {
     m_pages[charSize].updated = false;
+}
+
+void Font::registerObserver(FontObserver* o) const
+{
+    m_observers.push_back(o);
+}
+
+void Font::unregisterObserver(FontObserver* o) const
+{
+    m_observers.erase(std::remove_if(m_observers.begin(), m_observers.end(), [o](const FontObserver* ob) { return o == ob; }), m_observers.end());
 }
 
 Font::Page::Page()
