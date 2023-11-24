@@ -75,7 +75,7 @@ void ClientCollisionSystem::process(float)
 
         //skip if not near the ground
         if (!collider.active
-            || position.y > 10.f)
+            || position.y > 15.f) //NOTE this assumes the ground is less than this, some courses are 12m high!
         {
             continue;
         }
