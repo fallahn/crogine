@@ -252,6 +252,7 @@ namespace cro
         SIGH not actually const - but mutable to allow const refs to Fonts
         */
         friend class SimpleText;
+        friend class Text;
         mutable std::vector<FontObserver*> m_observers;
         void registerObserver(FontObserver*) const;
         void unregisterObserver(FontObserver*) const;

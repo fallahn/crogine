@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2022
+Matt Marchant 2017 - 2023
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -251,7 +251,7 @@ namespace cro
         std::uint16_t m_dirtyFlags;
 
         void updateVertices();
-        void onFontUpdate();
-        void removeFont();
+        void onFontUpdate() override;
+        void removeFont() override;
     };
 }
