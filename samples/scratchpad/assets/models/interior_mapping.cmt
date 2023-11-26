@@ -1,0 +1,44 @@
+model interior_mapping
+{
+    mesh = assets/models/interior_mapping.cmb
+    cast_shadows = true
+
+    material Unlit
+    {
+        name = "Untitled"
+        colour = 1.000000,1.000000,1.000000,1.000000
+        smooth = true
+        repeat = true
+        depth_test = true
+        double_sided = false
+        use_mipmaps = true
+        animated = false
+        row_count = 1
+        col_count = 1
+        framerate = 1.000000
+        rx_shadows = true
+        blendmode = none
+        diffuse = "assets/images/pavilion_v2.png"
+        alpha_clip = 0.065000
+
+    }
+    material Unlit
+    {
+        name = "Untitled"
+        colour = 1.000000,1.000000,1.000000,1.000000
+        smooth = true
+        repeat = true
+        depth_test = true
+        double_sided = false
+        use_mipmaps = true
+        animated = false
+        row_count = 1
+        col_count = 1
+        framerate = 1.000000
+        rx_shadows = true
+        blendmode = none
+        diffuse = "assets/images/pavilion_v2.png"
+        alpha_clip = 0.065000
+
+    }
+}

@@ -102,6 +102,15 @@ These properties are ignored by paths assigned to crowds, as the crowd members w
 Also since 1.7.0 props may have `emitters` added to them and `particles`. The `particles` property contains a path to a particle settings file which, if loaded successfully, will be parented to the prop, and started once the hole loads. Parented particles follow the prop as it moves along a path, so can be used for the spray behind a boat for example. The `emitter` property contains a single name which references an audio emitter defined in `assets/golf/sound/props.xas`. If the emitter exists in this file it will be parented to the prop, useful for creating effects such as the noise of a boat engine. Both emitters and particles can be defined in Blender, using a Sound object for emitters, or an Empty set to draw as a point for particle emitters (see `placeholders.blend`). If these are parented to a prop model in Blender the export script will automatically append them to the exported file.
 
 
+###### Hole Model Materials
+Materials used for the hole models should be set to VertexLit to enable the `mask colour` property. The mask colour is used to control a variety of effects on the materials when rendered. By default the mask value is WHITE which mean no effect... so to increase the value of a specific effect you must use `1.0 - value` - which might be counterintuitive at first.
+
+ - Red Channel. Tilt shading. 1 = no effect, 0 = full effect. As materials tilt in the world they are gradually shaded, eg the sides of bunkers, or on the green to highlight slopes.
+ - Green Channel. Water dither. 1 = no effect, 0 = full effect. As the material approaches the waterline a dithered, darkening effect is added.
+ - Blue channel. Stone face. Used on stone materials it allows a stone pattern texture to be blended with materials as they become more vertical.
+
+
+
 From version 1.15 it is possible to place all prop data in a single configuration file and include it in multiple `*.hole` files. EG
 Props.include
 

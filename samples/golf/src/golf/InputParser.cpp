@@ -340,15 +340,13 @@ void InputParser::handleEvent(const cro::Event& evt)
             }
         }
 
+        //this would be nice - but I cba to block the input when, say,
+        //a menu is open so clicking the menu doesn't take a swing...
         /*else if (evt.type == SDL_MOUSEBUTTONDOWN)
         {
             if (evt.button.button == SDL_BUTTON_LEFT)
             {
                 m_inputFlags |= InputFlag::Action;
-            }
-            else if (evt.button.button == SDL_BUTTON_RIGHT)
-            {
-                m_inputFlags |= InputFlag::NextClub;
             }
         }
         else if (evt.type == SDL_MOUSEBUTTONUP)
@@ -356,10 +354,6 @@ void InputParser::handleEvent(const cro::Event& evt)
             if (evt.button.button == SDL_BUTTON_LEFT)
             {
                 m_inputFlags &= ~InputFlag::Action;
-            }
-            else if (evt.button.button == SDL_BUTTON_RIGHT)
-            {
-                m_inputFlags &= ~InputFlag::NextClub;
             }
         }*/
 

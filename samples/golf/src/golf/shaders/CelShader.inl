@@ -296,6 +296,7 @@ inline const std::string CelFragmentShader = R"(
 #if defined (COMP_SHADE)
     uniform vec4 u_maskColour = vec4(1.0);
     uniform vec4 u_colour = vec4(1.0);
+uniform sampler2D u_angleTex;
 #endif
 
 #if defined (NORMAL_MAP)
@@ -448,7 +449,6 @@ inline const std::string CelFragmentShader = R"(
 #if defined (MASK_MAP)
         vec3 emissionColour = c.rgb;
 #endif
-
         if(c. a < 0.2)
         {
             discard;
@@ -505,9 +505,21 @@ inline const std::string CelFragmentShader = R"(
         float effectAmount = (1.0 - u_maskColour.r);
         float tilt  = dot(normal, vec3(0.0, 1.0, 0.0));
         //tilt = ((smoothstep(0.97, 0.999, tilt) * 0.2)) * effectAmount;
-        tilt = ((1.0 - smoothstep(0.97, 0.999, tilt)) * 0.2) * effectAmount;
+        tilt = ((1.0 - smoothstep(0.97, 0.999, tilt)) * 0.2);
 
-        colour.rgb = mix(colour.rgb, colour.rgb * SlopeShade, tilt);
+        colour.rgb = mix(colour.rgb, colour.rgb * SlopeShade, tilt * effectAmount);
+
+//TODO most of these comp shade materials don't need this
+//so would be nice to be able to skip the pointless lookups
+vec3 blend = vec3(abs(normal.x), abs(normal.y), abs(normal.z));
+float blendSum = blend.r + blend.g + blend.b;
+blend /= blendSum;
+
+vec3 xCol = TEXTURE(u_angleTex, v_worldPosition.zy * 0.03).r * colour.rgb;
+vec3 zCol = TEXTURE(u_angleTex, v_worldPosition.xy * 0.03).r * colour.rgb;
+vec3 result = vec3((xCol * blend.x) + (colour.rgb * blend.y) + (zCol * blend.z));
+colour.rgb = mix(colour.rgb, result, 1.0 - u_maskColour.b);
+
 
 #if defined(HOLE_HEIGHT)
         float minHeight = u_holeHeight - 0.25;
