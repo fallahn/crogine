@@ -256,5 +256,7 @@ namespace cro
         mutable std::vector<FontObserver*> m_observers;
         void registerObserver(FontObserver*) const;
         void unregisterObserver(FontObserver*) const;
+
+        bool isRegistered(const FontObserver*) const;
     };
 }

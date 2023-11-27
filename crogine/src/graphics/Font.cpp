@@ -735,6 +735,11 @@ void Font::unregisterObserver(FontObserver* o) const
     m_observers.erase(std::remove_if(m_observers.begin(), m_observers.end(), [o](const FontObserver* ob) { return o == ob; }), m_observers.end());
 }
 
+bool Font::isRegistered(const FontObserver* o) const
+{
+    return std::find_if(m_observers.begin(), m_observers.end(), [o](const FontObserver* fo) {return fo == o; }) != m_observers.end();
+}
+
 Font::Page::Page()
 {
     cro::Image img;

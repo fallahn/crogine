@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2022
+Matt Marchant 2017 - 2023
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -164,6 +164,11 @@ void Text::setString(const String& str)
     {
         m_context.string = str;
         m_dirtyFlags |= DirtyFlags::All;
+
+        /*if (!m_context.font->isRegistered(this))
+        {
+            LogI << "text is not registered with ofotn observers!" << std::endl;
+        }*/
     }
 }
 
@@ -280,7 +285,7 @@ FloatRect Text::getLocalBounds(Entity entity)
     if (text.m_dirtyFlags)
     {
         //check if only the colour needs updating
-        if (text.m_dirtyFlags == DirtyFlags::Colour)
+        if ((text.m_dirtyFlags & DirtyFlags::Colour) != 0)
         {
             auto& verts = drawable.getVertexData();
 
@@ -306,11 +311,17 @@ FloatRect Text::getLocalBounds(Entity entity)
                 }
             }
         }
-        else
+        //else
         {
             text.updateVertices(drawable);
             drawable.setTexture(&text.getFont()->getTexture(text.getCharacterSize()));
             drawable.setPrimitiveType(GL_TRIANGLES);
+            
+            if ((text.m_dirtyFlags & DirtyFlags::Texture) != 0)
+            {
+                drawable.setTexture(&text.getFont()->getTexture(text.getCharacterSize()));
+            }
+            
             text.m_dirtyFlags = 0;
         }
     }
@@ -330,7 +341,7 @@ void Text::setAlignment(Text::Alignment alignment)
 //private
 void Text::updateVertices(Drawable2D& drawable)
 {
-    m_dirtyFlags = 0;
+    //m_dirtyFlags = (m_dirtyFlags & ~DirtyFlags::Texture);
 
     FloatRect localBounds;
 
@@ -359,7 +370,7 @@ void Text::updateVertices(Drawable2D& drawable)
 
 void Text::onFontUpdate()
 {
-    m_dirtyFlags |= DirtyFlags::Font;
+    m_dirtyFlags |= DirtyFlags::Texture;
 }
 
 void Text::removeFont()
