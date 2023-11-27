@@ -640,7 +640,7 @@ void ParticleSystem::render(Entity camera, const RenderTarget& rt)
 
             const auto& emitter = entity.getComponent<ParticleEmitter>();
 
-            if ((emitter.m_renderFlags & cam.renderFlags) == 0)
+            if ((emitter.m_renderFlags & pass.renderFlags) == 0)
             {
                 continue;
             }

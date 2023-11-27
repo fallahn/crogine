@@ -1660,7 +1660,7 @@ void DrivingState::createScene()
     cam.resizeCallback = updateView;
     cam.setMaxShadowDistance(40.f);
     cam.setShadowExpansion(30.f);
-    cam.renderFlags = ~RenderFlags::MiniMap;
+    cam.setRenderFlags(cro::Camera::Pass::Final, ~RenderFlags::MiniMap);
     updateView(cam);
     
     m_cameras[CameraID::Player] = camEnt;
@@ -1761,7 +1761,7 @@ void DrivingState::createScene()
     };
     camEnt.getComponent<cro::Camera>().setMaxShadowDistance(80.f);
     camEnt.getComponent<cro::Camera>().active = false;
-    camEnt.getComponent<cro::Camera>().renderFlags = ~RenderFlags::MiniMap;
+    camEnt.getComponent<cro::Camera>().setRenderFlags(cro::Camera::Pass::Final, ~RenderFlags::MiniMap);
     camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(ShadowMapSize, ShadowMapSize);
     camEnt.addComponent<cro::CommandTarget>().ID = CommandID::SpectatorCam;
     camEnt.addComponent<CameraFollower>().radius = 85.f * 85.f;
@@ -1784,7 +1784,7 @@ void DrivingState::createScene()
         cam.viewport = { 0.f, 0.f, 1.f, 1.f };
     };
     camEnt.getComponent<cro::Camera>().active = false;
-    camEnt.getComponent<cro::Camera>().renderFlags = ~RenderFlags::MiniMap;
+    camEnt.getComponent<cro::Camera>().setRenderFlags(cro::Camera::Pass::Final, ~RenderFlags::MiniMap);
     camEnt.getComponent<cro::Camera>().setMaxShadowDistance(50.f);
     camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(ShadowMapSize, ShadowMapSize);
     camEnt.addComponent<cro::CommandTarget>().ID = CommandID::SpectatorCam;

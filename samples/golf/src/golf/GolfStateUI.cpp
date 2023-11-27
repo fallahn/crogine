@@ -1345,7 +1345,7 @@ void GolfState::buildUI()
     m_mapCam.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -90.f * cro::Util::Const::degToRad);
     auto& miniCam = m_mapCam.addComponent<cro::Camera>();
     updateMiniView(miniCam);
-    miniCam.renderFlags = RenderFlags::MiniMap;
+    miniCam.setRenderFlags(cro::Camera::Pass::Final, RenderFlags::MiniMap);
     miniCam.active = false;
     //this is a hack to stop the entire terrain being drawn in shadow
     miniCam.shadowMapBuffer.create(2, 2);
@@ -1399,7 +1399,7 @@ void GolfState::buildUI()
     m_greenCam = m_gameScene.createEntity();
     m_greenCam.addComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -90.f * cro::Util::Const::degToRad);
     auto& greenCam = m_greenCam.addComponent<cro::Camera>();
-    greenCam.renderFlags = RenderFlags::MiniGreen;
+    greenCam.setRenderFlags(cro::Camera::Pass::Final, RenderFlags::MiniGreen);
     greenCam.resizeCallback = updateGreenView;
     greenCam.active = false;
     greenCam.shadowMapBuffer.create(2, 2);
@@ -1557,7 +1557,7 @@ void GolfState::buildUI()
     };
 
     auto& cam = m_uiScene.getActiveCamera().getComponent<cro::Camera>();
-    cam.renderFlags = ~RenderFlags::Reflection;
+    cam.setRenderFlags(cro::Camera::Pass::Final, ~RenderFlags::Reflection);
     cam.resizeCallback = updateView;
     updateView(cam);
     m_uiScene.getActiveCamera().getComponent<cro::Transform>().setPosition({ 0.f, 0.f, 5.f });

@@ -199,7 +199,7 @@ void MenuState::createBallScene()
     m_ballCam.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -0.03f);
     m_ballCam.addComponent<cro::Camera>().setPerspective(1.f, static_cast<float>(BallPreviewSize.x) / BallPreviewSize.y, 0.001f, 2.f);
     m_ballCam.getComponent<cro::Camera>().resizeCallback = ballTexCallback;
-    m_ballCam.getComponent<cro::Camera>().renderFlags = BallRenderFlags;
+    m_ballCam.getComponent<cro::Camera>().setRenderFlags(cro::Camera::Pass::Final, BallRenderFlags);
     m_ballCam.addComponent<cro::Callback>().active = true;
     m_ballCam.getComponent<cro::Callback>().setUserData<std::int32_t>(0);
     m_ballCam.getComponent<cro::Callback>().function = ballTargetCallback;

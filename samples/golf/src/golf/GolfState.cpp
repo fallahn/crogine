@@ -1919,11 +1919,9 @@ void GolfState::render()
     cam.viewport = { 0.f,0.f,1.f,1.f };
 
     cam.setActivePass(cro::Camera::Pass::Reflection);
-    cam.renderFlags = RenderFlags::Reflection;
 
     auto& skyCam = m_skyCameras[SkyCam::Main].getComponent<cro::Camera>();
     skyCam.setActivePass(cro::Camera::Pass::Reflection);
-    skyCam.renderFlags = RenderFlags::Reflection;
     skyCam.viewport = { 0.f,0.f,1.f,1.f };
     m_skyScene.setActiveCamera(m_skyCameras[SkyCam::Main]);
 
@@ -1936,11 +1934,9 @@ void GolfState::render()
     cam.reflectionBuffer.display();
 
     cam.setActivePass(cro::Camera::Pass::Final);
-    cam.renderFlags = RenderFlags::All;
     cam.viewport = oldVP;
 
     skyCam.setActivePass(cro::Camera::Pass::Final);
-    skyCam.renderFlags = RenderFlags::All;
     skyCam.viewport = oldVP;
 
     //then render scene

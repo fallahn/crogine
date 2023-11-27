@@ -585,11 +585,9 @@ void PlaylistState::render()
     cam.viewport = { 0.f,0.f,1.f,1.f };
 
     cam.setActivePass(cro::Camera::Pass::Reflection);
-    cam.renderFlags = RenderFlags::Reflection;
 
     auto& skyCam = m_skyboxScene.getActiveCamera().getComponent<cro::Camera>();
     skyCam.setActivePass(cro::Camera::Pass::Reflection);
-    skyCam.renderFlags = RenderFlags::Reflection;
     skyCam.viewport = { 0.f,0.f,1.f,1.f };
 
     cam.reflectionBuffer.clear(cro::Colour::Red);
@@ -600,11 +598,9 @@ void PlaylistState::render()
     cam.reflectionBuffer.display();
 
     cam.setActivePass(cro::Camera::Pass::Final);
-    cam.renderFlags = RenderFlags::All;
     cam.viewport = oldVP;
 
     skyCam.setActivePass(cro::Camera::Pass::Final);
-    skyCam.renderFlags = RenderFlags::All;
     skyCam.viewport = oldVP;
 
 
@@ -895,6 +891,7 @@ void PlaylistState::buildScene()
     cam.reflectionBuffer.setSmooth(true);
     cam.shadowMapBuffer.create(ShadowMapSize, ShadowMapSize);
     cam.setMaxShadowDistance(20.f);
+    cam.setRenderFlags(cro::Camera::Pass::Reflection, RenderFlags::Reflection);
     cam.resizeCallback = updateView;
     updateView(cam);
 

@@ -58,19 +58,11 @@ namespace cro
     specific pass. For example reflective plane geometry should only
     be rendered into the final buffer, not the reflection and refraction
     buffers.
-
-    Set the render flags on the Model component to 'ReflectionPlane' to
-    flag it as such. Then set the RenderFlags of the Camera to the inverse:
+    
     \begincode
-    camera.renderFlags = ~RenderFlags::ReflectionPlane;
-    \endcode
-    This will set all flags active on the renderer so that everything but
-    reflection plane geometry will be drawn.
+    entity.getComponent<cro::Model>().setRenderFlags(ReflectionPlane | Flags::Minimap);
 
-    When rendering to the final buffer return the flags to their default
-    value to render all geometry again:
-    \begincode
-    camera.renderFlags = RenderFlags::All;
+    camera.setRenderFlags(cro::Camera::Pass::Reflection, ReflectionPlane);
     \endcode
 
     Custom flags can be created for any renderable component starting
@@ -80,7 +72,7 @@ namespace cro
     are rendered, if they match the Camera's current flags:
 
     \begincode
-    camera.renderFlags = Flags::Minimap | Flags::Skybox;
+    camera.setRenderFlags(cro::Camera::Pass::Final, (Flags::Minimap | Flags::Skybox));
     \endcode
 
     While these flags are active only geometry with the Minimap or
@@ -143,6 +135,9 @@ namespace cro
         scene.draw(renderWindow);
         \endcode
 
+        As each pass is rendered the RenderFlags for that specific pass is used to filter
+        any drawables.
+
         Note that if any post process effects are active on the Scene that they should be
         disabled by first calling scene.setPostEnabled(false) and then re-enabling
         them for the final pass, to prevent post processes getting rendered into the
@@ -152,6 +147,11 @@ namespace cro
         */
         struct Pass final
         {
+            /*!
+            \brief Render flags for this pass
+            */
+            std::uint64_t renderFlags = RenderFlags::All;
+
             /*!
             \brief View Matrix.
             This matrix is, by default, an identity matrix. This
@@ -232,6 +232,13 @@ namespace cro
         \param pass Pass index to set.
         */
         void setActivePass(std::uint32_t pass);
+
+
+        /*!
+        \brief Sets the RenderFlags which should be used for the given pass
+        \see RenderFlags
+        */
+        void setRenderFlags(std::uint32_t pass, std::uint64_t flags) { m_passes[pass].renderFlags = flags; }
 
 
         /*!
@@ -395,12 +402,6 @@ namespace cro
         */
         RenderTexture refractionBuffer;
 
-
-        /*!
-        \brief Only renderables which match these flags when AND together
-        will be drawn when this camera is active.
-        */
-        std::uint64_t renderFlags = RenderFlags::All;
 
 
         /*

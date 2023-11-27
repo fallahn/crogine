@@ -283,7 +283,7 @@ void DeferredRenderSystem::render(Entity camera, const RenderTarget& rt)
         //foreach submesh / material:
         const auto& model = entity.getComponent<Model>();
 
-        if ((model.m_renderFlags & cam.renderFlags) == 0)
+        if ((model.m_renderFlags & pass.renderFlags) == 0)
         {
             continue;
         }
@@ -336,7 +336,7 @@ void DeferredRenderSystem::render(Entity camera, const RenderTarget& rt)
         //foreach submesh / material:
         const auto& model = entity.getComponent<Model>();
 
-        if ((model.m_renderFlags & cam.renderFlags) == 0)
+        if ((model.m_renderFlags & pass.renderFlags) == 0)
         {
             continue;
         }

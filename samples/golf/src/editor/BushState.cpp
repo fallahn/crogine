@@ -462,7 +462,7 @@ void BushState::createScene()
     updateView(camEnt.getComponent<cro::Camera>());
     camEnt.getComponent<cro::Camera>().resizeCallback = std::bind(&BushState::updateView, this, std::placeholders::_1);
     camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(2048, 2048);
-    camEnt.getComponent<cro::Camera>().renderFlags = ~RenderFlagsThumbnail;
+    camEnt.getComponent<cro::Camera>().setRenderFlags(cro::Camera::Pass::Final, ~RenderFlagsThumbnail);
     camEnt.getComponent<cro::Camera>().setMaxShadowDistance(20.f);
     camEnt.getComponent<cro::Camera>().setShadowExpansion(10.f);
     camEnt.getComponent<cro::Transform>().setPosition({ 0.f, 0.5f, 6.f });
@@ -479,7 +479,7 @@ void BushState::createScene()
     m_billboardCamera = m_gameScene.createEntity();
     m_billboardCamera.addComponent<cro::Transform>().setPosition({0.f, 0.f, 3.f});
     m_billboardCamera.addComponent<cro::Camera>().setOrthographic(-(camSize.x) / 2.f, camSize.x / 2.f, 0.f, camSize.y, 0.1f, 16.f);
-    m_billboardCamera.getComponent<cro::Camera>().renderFlags = RenderFlagsBillboard;
+    m_billboardCamera.getComponent<cro::Camera>().setRenderFlags(cro::Camera::Pass::Final, RenderFlagsBillboard);
 
 
     //ortho cam for creating thumbnails
@@ -488,7 +488,7 @@ void BushState::createScene()
     m_thumbnailCamera.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -90.f * cro::Util::Const::degToRad);
     m_thumbnailCamera.addComponent<cro::Camera>().setOrthographic(0.f, 320.f, 0.f, 200.f, -0.1f, 20.f);
     m_thumbnailCamera.getComponent<cro::Camera>().viewport = { 0.f, 0.f, 1.f, 1.f };
-    m_thumbnailCamera.getComponent<cro::Camera>().renderFlags = RenderFlagsThumbnail;
+    m_thumbnailCamera.getComponent<cro::Camera>().setRenderFlags(cro::Camera::Pass::Final, RenderFlagsThumbnail);
 }
 
 void BushState::updateView(cro::Camera& cam3D)

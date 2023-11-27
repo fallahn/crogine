@@ -311,7 +311,7 @@ void ShadowMapRenderer::render()
             {
                 const auto& model = e.getComponent<Model>();
                 //skip this model if its flags don't pass
-                if ((model.m_renderFlags & camera.renderFlags) == 0)
+                if ((model.m_renderFlags & camera.getActivePass().renderFlags) == 0)
                 {
                     continue;
                 }

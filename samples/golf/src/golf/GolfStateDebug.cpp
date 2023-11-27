@@ -260,7 +260,7 @@ void GolfState::registerDebugCommands()
             cam.addComponent<cro::Transform>();
             cam.addComponent<cro::Camera>().setPerspective(90.f * cro::Util::Const::degToRad, 1.f, 0.1f, 280.f);
             cam.getComponent<cro::Camera>().viewport = { 0.f, 0.f, 1.f, 1.f };
-            cam.getComponent<cro::Camera>().renderFlags = RenderFlags::CubeMap;
+            cam.getComponent<cro::Camera>().setRenderFlags(cro::Camera::Pass::Final, RenderFlags::CubeMap);
             m_gameScene.simulate(0.f); //do this once to integrate the new entity;
 
             auto oldCam = m_gameScene.setActiveCamera(cam);

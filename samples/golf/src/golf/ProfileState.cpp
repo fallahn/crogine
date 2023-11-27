@@ -1716,7 +1716,7 @@ void ProfileState::buildPreviewScene()
     auto& cam2 = m_cameras[CameraID::Mugshot].addComponent<cro::Camera>();
     cam2.setPerspective(60.f * cro::Util::Const::degToRad, 1.f, 0.1f, 6.f);
     cam2.viewport = { 0.f, 0.f, 0.5f, 1.f };
-    cam2.renderFlags = ~(1 << 1);
+    cam2.setRenderFlags(cro::Camera::Pass::Final, ~(1 << 1));
 
 
     m_modelScene.getSunlight().getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, 96.f * cro::Util::Const::degToRad);
