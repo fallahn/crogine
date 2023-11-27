@@ -511,15 +511,17 @@ uniform sampler2D u_angleTex;
 
 //TODO most of these comp shade materials don't need this
 //so would be nice to be able to skip the pointless lookups
-vec3 blend = vec3(abs(normal.x), abs(normal.y), abs(normal.z));
-float blendSum = blend.r + blend.g + blend.b;
-blend /= blendSum;
+if(u_maskColour.b < 0.95)
+{
+    vec3 blend = vec3(abs(normal.x), abs(normal.y), abs(normal.z));
+    float blendSum = blend.r + blend.g + blend.b;
+    blend /= blendSum;
 
-vec3 xCol = TEXTURE(u_angleTex, v_worldPosition.zy * 0.03).r * colour.rgb;
-vec3 zCol = TEXTURE(u_angleTex, v_worldPosition.xy * 0.03).r * colour.rgb;
-vec3 result = vec3((xCol * blend.x) + (colour.rgb * blend.y) + (zCol * blend.z));
-colour.rgb = mix(colour.rgb, result, 1.0 - u_maskColour.b);
-
+    vec3 xCol = TEXTURE(u_angleTex, v_worldPosition.zy * 0.03).r * colour.rgb;
+    vec3 zCol = TEXTURE(u_angleTex, v_worldPosition.xy * 0.03).r * colour.rgb;
+    vec3 result = vec3((xCol * blend.x) + (colour.rgb * blend.y) + (zCol * blend.z));
+    colour.rgb = mix(colour.rgb, result, 1.0 - u_maskColour.b);
+}
 
 #if defined(HOLE_HEIGHT)
         float minHeight = u_holeHeight - 0.25;

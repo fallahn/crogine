@@ -155,9 +155,9 @@ namespace
         float crop = step(0.495, gl_PointCoord.x);
         crop *= 1.0 - step(0.505, gl_PointCoord.x);
 
-        if(crop < 0.05) discard;
+        //if(crop < 0.05) discard;
 
-        colour.a *= u_colour.a;
+        colour.a *= u_colour.a * crop;
         FRAG_OUT = colour;
 
         LIGHT_OUT = vec4(vec3(0.0), 1.0);

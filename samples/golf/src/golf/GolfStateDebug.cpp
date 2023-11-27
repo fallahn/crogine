@@ -505,6 +505,36 @@ void GolfState::registerDebugCommands()
         });
 #endif
 
+    /*registerWindow([&]()
+        {
+            const auto printCam = [](const std::string& s, bool active)
+                {
+                    if (active)
+                    {
+                        ImGui::ColorButton("##", ImVec4(0.f, 1.f, 0.f, 1.f));
+                    }
+                    else
+                    {
+                        ImGui::ColorButton("##", ImVec4(1.f, 0.f, 0.f, 1.f));
+                    }
+                    ImGui::SameLine();
+                    ImGui::Text("%s", s.c_str());
+                };
+
+            if (ImGui::Begin("Cams"))
+            {
+                for (auto i = 0u; i < CameraID::Count; ++i)
+                {
+                    printCam(CameraStrings[i], m_cameras[i].getComponent<cro::Camera>().active);
+                }
+                printCam("Flight Cam", m_flightCam.getComponent<cro::Camera>().active);
+                printCam("Green Cam", m_greenCam.getComponent<cro::Camera>().active);
+                printCam("Map Cam", m_mapCam.getComponent<cro::Camera>().active);
+            }
+            ImGui::End();
+        
+        });*/
+
     //registerWindow([&]()
     //    {
     //        if (ImGui::Begin("sunlight"))
