@@ -1299,6 +1299,7 @@ void GolfState::loadMaterials()
     m_windBuffer.addShader(*shader);
     m_materialIDs[MaterialID::CelTexturedMasked] = m_resources.materials.add(*shader);
     m_resources.materials.get(m_materialIDs[MaterialID::CelTexturedMasked]).setProperty("u_noiseTexture", noiseTex);
+    m_resources.materials.get(m_materialIDs[MaterialID::CelTexturedMasked]).setProperty("u_reflectMap", cro::CubemapID(m_reflectionMap));
 
     //disable wind/vert animation on models with no colour channel
     //saves on probably significant amount of vertex processing...
@@ -1317,7 +1318,7 @@ void GolfState::loadMaterials()
     m_resolutionBuffer.addShader(*shader);
     m_windBuffer.addShader(*shader);
     m_materialIDs[MaterialID::CelTexturedMaskedNoWind] = m_resources.materials.add(*shader);
-
+    m_resources.materials.get(m_materialIDs[MaterialID::CelTexturedMaskedNoWind]).setProperty("u_reflectMap", cro::CubemapID(m_reflectionMap));
 
 
     //custom shadow map so shadows move with wind too...
@@ -1351,6 +1352,7 @@ void GolfState::loadMaterials()
     m_scaleBuffer.addShader(*shader);
     m_resolutionBuffer.addShader(*shader);
     m_materialIDs[MaterialID::CelTexturedSkinnedMasked] = m_resources.materials.add(*shader);
+    m_resources.materials.get(m_materialIDs[MaterialID::CelTexturedSkinnedMasked]).setProperty("u_reflectMap", cro::CubemapID(m_reflectionMap));
 
 
     m_resources.shaders.loadFromString(ShaderID::Player, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define SKINNED\n#define NOCHEX\n" + wobble);

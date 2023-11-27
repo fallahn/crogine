@@ -258,8 +258,10 @@ inline const std::string CelFragmentShader = R"(
 #endif
 
 #if defined (MASK_MAP)
-//#define REFLECTIONS
     uniform sampler2D u_maskMap;
+#if !defined(REFLECTION)
+    uniform samplerCube u_reflectMap;
+#endif
 #endif
 
 #if defined(REFLECTIONS)
@@ -722,12 +724,15 @@ if(u_maskColour.b < 0.95)
 #endif
 
 #if defined (MASK_MAP)
-//TODO mix in reflections using red channel - NOTE this is already done around line 570
-
     vec3 mask = TEXTURE(u_maskMap, texCoord).rgb;
-    FRAG_OUT.rgb = mix(FRAG_OUT.rgb, emissionColour, mask.g);
-    LIGHT_OUT = vec4(emissionColour * mask.g, 1.0);
 
+#if !defined(REFLECTIONS)
+    FRAG_OUT.rgb = mix(FRAG_OUT.rgb, (TEXTURE_CUBE(u_reflectMap, reflect(-viewDirection, normal)).rgb * 0.25) + FRAG_OUT.rgb, mask.r);
+#endif
+
+    FRAG_OUT.rgb = mix(FRAG_OUT.rgb, emissionColour, mask.g);
+
+    LIGHT_OUT = vec4(emissionColour * mask.g, 1.0);
     NORM_OUT.a = 1.0 - mask.g;
 #else
 //#if !defined(HOLE_HEIGHT)
