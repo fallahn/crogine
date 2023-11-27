@@ -87,7 +87,7 @@ inline const std::string BeaconFragment = R"(
 #endif
 
 #if defined(INTENSITY)
-        //FRAG_OUT.rgb *= 1.3;
+        FRAG_OUT.rgb *= INTENSITY;
 #endif
 
 #if defined (USE_MRT)

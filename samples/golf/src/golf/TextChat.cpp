@@ -64,7 +64,7 @@ namespace
         "/me compliments you on outperforming yourjaguarlover"
     };
 
-    const std::array<std::string, 17u> HappyStrings =
+    const std::array<std::string, 18u> HappyStrings =
     {
         "/me is ecstatic",
         "/me grins from ear to ear",
@@ -82,10 +82,11 @@ namespace
         "/me is on top of the world",
         "/me pirouettes jubilantly",
         "/me feels like a dog with two tails",
-        "/me is happier than yourjaguarlover"
+        "/me is happier than yourjaguarlover",
+        "/me lets out a squeak"
     };
 
-    const std::array<std::string, 12u> LaughStrings =
+    const std::array<std::string, 13u> LaughStrings =
     {
         "/me laughs like a clogged drain",
         "/me giggles into their sleeve",
@@ -98,10 +99,11 @@ namespace
         "/me howls with laughter",
         "/me goes into hysterics",
         "/me cachinnates (which means laughing loudly)",
-        "/me laughs like yourjaguarlover"
+        "/me laughs like yourjaguarlover",
+        "/me should've known better"
     };
 
-    const std::array<std::string, 15u> AngerStrings =
+    const std::array<std::string, 16u> AngerStrings =
     {
         "/me cow-fudged that one up",
         "/me rages",
@@ -117,7 +119,8 @@ namespace
         "/me cries like a baby",
         "/me 's blood boils",
         "/me blows a fuse",
-        "/me blames yourjaguarlover"
+        "/me blames the dev",
+        "/me explodes in a shower of fleshy chunks"
     };
 }
 

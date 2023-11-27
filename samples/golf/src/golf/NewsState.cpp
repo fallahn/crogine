@@ -79,7 +79,7 @@ namespace
             Main, Confirm
         };
     };
-    constexpr std::size_t TitleButtonIndex = 999;
+    constexpr std::size_t TitleButtonIndex = 0;
     constexpr std::size_t QuitButtonIndex = 1000;
 }
 
@@ -471,6 +471,7 @@ void NewsState::buildScene()
                     ent = createItem(position, items[i].title, menuEntity);
                     url = items[i].url;
                     ent.getComponent<cro::UIInput>().setGroup(MenuID::Main);
+                    ent.getComponent<cro::UIInput>().setSelectionIndex(i);
                     ent.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
                         uiSystem.addCallback([&, url](cro::Entity e, cro::ButtonEvent evt)
                             {
@@ -537,6 +538,7 @@ void NewsState::buildScene()
 
     auto titleEnt = entity;
     entity = createSmallItem(glm::vec2(8.f, -12.f), "Join The Chat Room", titleEnt);
+    entity.getComponent<cro::UIInput>().setSelectionIndex(QuitButtonIndex - 5);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)
             {
@@ -548,6 +550,7 @@ void NewsState::buildScene()
     entity.getComponent<cro::Callback>().setUserData<std::pair<cro::FloatRect, cro::Entity>>(bounds,thumbEnt);
 
     entity = createSmallItem(glm::vec2(8.f, -23.f), "Join The Clubhouse", titleEnt);
+    entity.getComponent<cro::UIInput>().setSelectionIndex(QuitButtonIndex - 4);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)
             {
@@ -560,6 +563,7 @@ void NewsState::buildScene()
     entity.getComponent<cro::Callback>().setUserData<std::pair<cro::FloatRect, cro::Entity>>(bounds, thumbEnt);
 
     entity = createSmallItem(glm::vec2(8.f, -60.f), "Getting Started", titleEnt);
+    entity.getComponent<cro::UIInput>().setSelectionIndex(QuitButtonIndex - 3);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)
             {
@@ -569,6 +573,7 @@ void NewsState::buildScene()
                 }
             });
     entity = createSmallItem(glm::vec2(8.f, -71.f), "How To Add Custom Music", titleEnt);
+    entity.getComponent<cro::UIInput>().setSelectionIndex(QuitButtonIndex - 2);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)
             {
@@ -578,6 +583,7 @@ void NewsState::buildScene()
                 }
             });
     entity = createSmallItem(glm::vec2(8.f, -82.f), "Using The Steam Workshop", titleEnt);
+    entity.getComponent<cro::UIInput>().setSelectionIndex(QuitButtonIndex - 1);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)
             {

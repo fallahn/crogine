@@ -139,6 +139,8 @@ namespace
 
 #endif // CRO_DEBUG_
 
+    std::uint32_t depthUpdateCount = 1;
+
     float godmode = 1.f;
 
     const cro::Time ReadyPingFreq = cro::seconds(1.f);
@@ -211,6 +213,23 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
             }
         });
 
+    registerCommand("render_wavemap", [](const std::string& s) 
+        {
+            if (s == "false" || s == "0")
+            {
+                depthUpdateCount = 0;
+                cro::Console::print("wavemap rendering is OFF");
+            }
+            else if(s == "true" || s == "1")
+            {
+                depthUpdateCount = 1;
+                cro::Console::print("wavemap rendering is ON");
+            }
+            else
+            {
+                cro::Console::print("<0|1> or <false|true> enables or disables rendering of depthmap used by water waves");
+            }
+        });
 
     m_shadowQuality.update(sd.hqShadows);
 
@@ -1595,7 +1614,7 @@ bool GolfState::simulate(float dt)
     //this gets used a lot so we'll save on some calls to length()
     m_distanceToHole = glm::length(holeDir);
 
-    m_depthMap.update(1);
+    m_depthMap.update(depthUpdateCount);
 
     if (m_sharedData.clientConnection.connected)
     {
