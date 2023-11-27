@@ -1525,17 +1525,30 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
         e.getComponent<cro::Transform>().setPosition({ pos.x + (width * m_sharedData.gridTransparency), pos.y });
     };
 
-    //TODO this is repeated for each creation function - we could reduce this to one instance
+    auto helpEnt = m_scene.createEntity();
+    helpEnt.addComponent<cro::Transform>().setPosition({ bgBounds.width / 2.f, -4.f, 0.1f });
+    helpEnt.addComponent<cro::Drawable2D>();
+    helpEnt.addComponent<cro::Text>(font).setCharacterSize(InfoTextSize);
+    helpEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    helpEnt.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    parent.getComponent<cro::Transform>().addChild(helpEnt.getComponent<cro::Transform>());
+
+
     auto& uiSystem = *m_scene.getSystem<cro::UISystem>();
-    auto selectedID = uiSystem.addCallback([](cro::Entity e) 
+    auto selectedID = uiSystem.addCallback([&,helpEnt](cro::Entity e) mutable
         {
             e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
             e.getComponent<cro::AudioEmitter>().play();
             e.getComponent<cro::Callback>().active = true;
+
+            helpEnt.getComponent<cro::Text>().setString(e.getLabel());
+            m_scene.getActiveCamera().getComponent<cro::Camera>().active = true;
         });
-    auto unselectedID = uiSystem.addCallback([](cro::Entity e)
+    auto unselectedID = uiSystem.addCallback([helpEnt](cro::Entity e) mutable
         {
             e.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent); 
+
+            helpEnt.getComponent<cro::Text>().setString(" ");
         });
 
     auto createHighlight = [&](glm::vec2 pos)
@@ -1761,6 +1774,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
 
     //pixel scale check box
     entity = createHighlight(glm::vec2(81.f, 57.f));
+    entity.setLabel("Scale up pixels to match the screen resolution.\nShortcut: +/- on numpad");
     entity.getComponent<cro::UIInput>().setSelectionIndex(AVPixelScale);
     entity.getComponent<cro::UIInput>().setNextIndex(AVUnits, AVVertSnap);
     entity.getComponent<cro::UIInput>().setPrevIndex(AVUnits, AVResolutionL);
@@ -1797,6 +1811,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
 
     //vertex snap checkbox
     entity = createHighlight(glm::vec2(81.f, 41.f));
+    entity.setLabel("Usually used in conjunction with Pixel Scaling. Default is OFF.\nMay cause z-fighting.");
     entity.getComponent<cro::UIInput>().setSelectionIndex(AVVertSnap);
     entity.getComponent<cro::UIInput>().setNextIndex(AVGridL, AVFullScreen);
     entity.getComponent<cro::UIInput>().setPrevIndex(AVGridR, AVPixelScale);
@@ -1870,7 +1885,8 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
 
 
     //beacon check box
-    entity = createHighlight(glm::vec2(81.f, 9.f)); 
+    entity = createHighlight(glm::vec2(81.f, 9.f));
+    entity.setLabel("Displays a beacon on the course at the pin position.");
     entity.getComponent<cro::UIInput>().setSelectionIndex(AVBeacon);
     entity.getComponent<cro::UIInput>().setNextIndex(AVBeaconL, WindowCredits);
     entity.getComponent<cro::UIInput>().setPrevIndex(AVShadowR, AVFullScreen);
@@ -1986,6 +2002,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
 
     //ball trail checkbox
     entity = createHighlight(glm::vec2(246.f, 105.f));
+    entity.setLabel("Draws a trail behind the ball when it is in flight.");
     entity.getComponent<cro::UIInput>().setSelectionIndex(AVTrail);
     entity.getComponent<cro::UIInput>().setNextIndex(AVTrailL, AVPuttAss);
     entity.getComponent<cro::UIInput>().setPrevIndex(AVAAR, AVVolumeDown);
@@ -2059,6 +2076,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
 
     //putting assist toggle
     entity = createHighlight(glm::vec2(246.f, 89.f));
+    entity.setLabel("Displays a power estimation when putting at the cost of awarded XP.");
     entity.getComponent<cro::UIInput>().setSelectionIndex(AVPuttAss);
     entity.getComponent<cro::UIInput>().setNextIndex(AVFOVL, AVPost);
     entity.getComponent<cro::UIInput>().setPrevIndex(AVFOVR, AVTrail);
@@ -2179,6 +2197,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
 
     //imperial measurements
     entity = createHighlight(glm::vec2(246.f, 57.f));
+    entity.setLabel("Enables imperial measurements in yards, feet and inches.\nDefault is metric (metres and centimetres)");
     entity.getComponent<cro::UIInput>().setSelectionIndex(AVUnits);
     entity.getComponent<cro::UIInput>().setNextIndex(AVPixelScale, AVGridL);
     entity.getComponent<cro::UIInput>().setPrevIndex(AVPixelScale, AVPost);
@@ -2255,6 +2274,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
 
     //prev / next tree quality
     entity = createHighlight(glm::vec2(286.f, 25.f));
+    entity.setLabel("Switch between billboard and 3D trees.\nThis is applied at the next hole change.");
     entity.getComponent<cro::UIInput>().setSelectionIndex(AVTreeL);
     entity.getComponent<cro::UIInput>().setNextIndex(AVTreeR, AVShadowL);
     entity.getComponent<cro::UIInput>().setPrevIndex(AVFullScreen, AVGridL);
@@ -2271,6 +2291,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
             });
 
     entity = createHighlight(glm::vec2(355.f, 25.f));
+    entity.setLabel("Switch between billboard and 3D trees.\nThis is applied at the next hole change.");
     entity.getComponent<cro::UIInput>().setSelectionIndex(AVTreeR);
     entity.getComponent<cro::UIInput>().setNextIndex(AVFullScreen, AVShadowR);
     entity.getComponent<cro::UIInput>().setPrevIndex(AVTreeL, AVGridR);
