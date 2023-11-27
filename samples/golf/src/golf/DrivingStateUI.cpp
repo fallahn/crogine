@@ -649,7 +649,7 @@ void DrivingState::createUI()
     m_mapCam.addComponent<cro::Transform>().setPosition({ 0.f, 5.f, 0.f });
     m_mapCam.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -90.f * cro::Util::Const::degToRad);
     auto& miniCam = m_mapCam.addComponent<cro::Camera>();
-    miniCam.renderFlags = RenderFlags::MiniMap;
+    miniCam.setRenderFlags(cro::Camera::Pass::Final, RenderFlags::MiniMap);
     //miniCam.resizeCallback = updateMiniView;
     updateMiniView(miniCam);
 

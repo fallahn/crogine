@@ -160,7 +160,7 @@ namespace
         colour.a *= u_colour.a * crop;
         FRAG_OUT = colour;
 
-        LIGHT_OUT = vec4(vec3(0.0), 1.0);
+        LIGHT_OUT = vec4(vec3(0.0), colour.a);
     }
 )";
 

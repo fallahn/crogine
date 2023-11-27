@@ -842,7 +842,7 @@ void BilliardsState::buildScene()
     m_cameras[CameraID::Spectate] = camEnt;
     auto& cam = camEnt.getComponent<cro::Camera>();
     cam.resizeCallback = setPerspective;
-    cam.renderFlags = ~RenderFlags::Cue;
+    cam.setRenderFlags(cro::Camera::Pass::Final, ~RenderFlags::Cue);
     setPerspective(cam);
 
     const std::uint32_t ShadowMapSize = m_sharedData.hqShadows ? 4096u : 2048u;
@@ -892,7 +892,7 @@ void BilliardsState::buildScene()
     camEnt.getComponent<cro::Camera>().active = false;
     camEnt.getComponent<cro::Camera>().setMaxShadowDistance(MaxShadowDistance);
     camEnt.getComponent<cro::Camera>().setShadowExpansion(ShadowExpansion * 2.f);
-    camEnt.getComponent<cro::Camera>().renderFlags = ~RenderFlags::Cue;
+    camEnt.getComponent<cro::Camera>().setRenderFlags(cro::Camera::Pass::Final, ~RenderFlags::Cue);
     camEnt.addComponent<CameraProperties>().farPlane = 7.f;
     camEnt.getComponent<CameraProperties>().FOVAdjust = 0.8f; //needs to match spectate cam initial value to prevent popping
     camEnt.addComponent<cro::AudioListener>();
