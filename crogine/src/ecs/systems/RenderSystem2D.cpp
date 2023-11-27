@@ -102,6 +102,11 @@ void RenderSystem2D::updateDrawList(Entity camEnt)
         auto& drawable = entity.getComponent<Drawable2D>();
         drawable.m_wasCulledLastFrame = true;
 
+        if ((camera.getPass(Camera::Pass::Final).renderFlags & drawable.m_renderFlags) == 0)
+        {
+            continue;
+        }
+
         if (drawable.m_autoCrop)
         {
             auto scale = entity.getComponent<cro::Transform>().getWorldScale();
@@ -220,7 +225,7 @@ void RenderSystem2D::render(Entity cameraEntity, const RenderTarget& rt)
             const auto& tx = entity.getComponent<cro::Transform>();
             glm::mat4 worldMat = tx.getWorldTransform();
 
-            if ((pass.renderFlags & drawable.m_renderFlags) &&
+            if (//TODO surely these ought to be culling criteria?
                 drawable.m_shader && !drawable.m_updateBufferData)
             {
                 //apply shader

@@ -341,6 +341,11 @@ void ParticleSystem::updateDrawList(Entity cameraEnt)
 
         for (auto i = 0; i < passCount; ++i)
         {
+            if ((emitter.m_renderFlags & cam.getPass(i).renderFlags) == 0)
+            {
+                continue;
+            }
+
             if (glm::dot(forwardVec, emitterDirection) > 0)
             {
                 if (!emitter.m_pendingUpdate)
@@ -639,11 +644,6 @@ void ParticleSystem::render(Entity camera, const RenderTarget& rt)
             }
 
             const auto& emitter = entity.getComponent<ParticleEmitter>();
-
-            if ((emitter.m_renderFlags & pass.renderFlags) == 0)
-            {
-                continue;
-            }
 
             //apply blend mode - this also binds the appropriate shader for current mode
             switch (emitter.settings.blendmode)

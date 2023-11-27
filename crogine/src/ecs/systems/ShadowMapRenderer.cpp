@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2022
+Matt Marchant 2017 - 2023
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -225,6 +225,11 @@ void ShadowMapRenderer::updateDrawList(Entity camEnt)
                 continue;
             }
 
+            if ((model.m_renderFlags & camera.getPass(Camera::Pass::Final).renderFlags) == 0)
+            {
+                continue;
+            }
+
             const auto& tx = entity.getComponent<Transform>();
             auto sphere = model.getBoundingSphere();
 
@@ -310,11 +315,6 @@ void ShadowMapRenderer::render()
             for (const auto& [e, _] : list)
             {
                 const auto& model = e.getComponent<Model>();
-                //skip this model if its flags don't pass
-                if ((model.m_renderFlags & camera.getActivePass().renderFlags) == 0)
-                {
-                    continue;
-                }
 
                 glCheck(glFrontFace(model.m_facing));
 

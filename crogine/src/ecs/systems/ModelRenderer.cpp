@@ -162,10 +162,10 @@ void ModelRenderer::render(Entity camera, const RenderTarget& rt)
             //foreach submesh / material:
             const auto& model = entity.getComponent<Model>();
 
-            if ((model.m_renderFlags & pass.renderFlags) == 0)
+            /*if ((model.m_renderFlags & pass.renderFlags) == 0)
             {
                 continue;
-            }
+            }*/
             glCheck(glFrontFace(model.m_facing));
 
             //calc entity transform
@@ -345,9 +345,6 @@ void ModelRenderer::updateDrawListDefault(Entity cameraEnt)
             model.updateBounds();
         }
 
-        //render flags are tested when drawing as the flags may have changed
-        //between draw calls but without updating the visiblity list.
-
         //use the bounding sphere for depth testing
         auto sphere = model.getBoundingSphere();
         const auto& tx = entity.getComponent<Transform>();
@@ -365,6 +362,11 @@ void ModelRenderer::updateDrawListDefault(Entity cameraEnt)
         //for each pass in the list (different passes may use different projections, eg reflections)
         for (auto p = 0; p < passCount; ++p)
         {
+            if ((model.m_renderFlags & camComponent.getPass(p).renderFlags) == 0)
+            {
+                continue;
+            }
+            
             //this is a good approximation of distance based on the centre
             //of the model (large models might suffer without face sorting...)
             //assuming the forward vector is normalised - though WHY would you
@@ -455,6 +457,11 @@ void ModelRenderer::updateDrawListBalancedTree(Entity cameraEnt)
         {
             auto& model = entity.getComponent<Model>();
             if (model.isHidden())
+            {
+                continue;
+            }
+
+            if ((model.m_renderFlags & camComponent.getPass(p).renderFlags) == 0)
             {
                 continue;
             }

@@ -53,7 +53,8 @@ using namespace cro;
 
 namespace
 {
-
+    //TODO Albedo needs to be moved to channel 0, as it is only
+    //an 8 bit buffer by default.
     /*
     GBuffer layout:
     Channel 0 - View space normal, RGB
