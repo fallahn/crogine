@@ -1861,7 +1861,7 @@ void GolfState::showCountdown(std::uint8_t seconds)
         bounds = getAvatarBounds(m_statBoardScores[i].player);
         m_trophies[i].avatar.getComponent<cro::Sprite>().setTextureRect(bounds);
     }
-
+    m_trophyScene.getActiveCamera().getComponent<cro::Camera>().active = true;
 
     bool personalBest = false;
     cro::String bestString("PERSONAL BEST!");
@@ -4048,7 +4048,8 @@ void GolfState::buildTrophyScene()
 
     auto& cam = m_trophyScene.getActiveCamera().getComponent<cro::Camera>();
     cam.resizeCallback = updateCam;
-    cam.isStatic = true;
+    //cam.isStatic = true;
+    cam.active = false; //we'll activate this once the scene is shown
     updateCam(cam);
 
     auto sunEnt = m_trophyScene.getSunlight();
@@ -4148,52 +4149,49 @@ void GolfState::buildTrophyScene()
             m_trophies[i].label = entity;
 
 
-            //icon if available 
-            //if (Social::isAvailable()) //always do this in case the player profile has an avatar
+            //icon
+            entity = m_uiScene.createEntity();
+            entity.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, bounds.height - 8.f, 0.1f });
+            entity.addComponent<cro::Drawable2D>();
+            entity.addComponent<cro::Sprite>(m_sharedData.nameTextures[0].getTexture());
+            bounds = { 0.f, LabelTextureSize.y - (LabelIconSize.y * 4.f), LabelIconSize.x, LabelIconSize.y };
+            entity.getComponent<cro::Sprite>().setTextureRect(bounds);
+            entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, -14.f, -0.1f });
+            m_trophies[i].label.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+            m_trophies[i].avatar = entity;
+
+            entity.addComponent<cro::Callback>().active = true;
+            entity.getComponent<cro::Callback>().setUserData<float>(1.f);
+            entity.getComponent<cro::Callback>().function =
+                [&,i](cro::Entity e, float dt)
             {
-                entity = m_uiScene.createEntity();
-                entity.addComponent<cro::Transform>().setPosition({ bounds.width / 2.f, bounds.height - 8.f, 0.1f });
-                entity.addComponent<cro::Drawable2D>();
-                entity.addComponent<cro::Sprite>(m_sharedData.nameTextures[0].getTexture());
-                bounds = { 0.f, LabelTextureSize.y - (LabelIconSize.y * 4.f), LabelIconSize.x, LabelIconSize.y };
-                entity.getComponent<cro::Sprite>().setTextureRect(bounds);
-                entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, -14.f, -0.1f });
-                m_trophies[i].label.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-                m_trophies[i].avatar = entity;
-
-                entity.addComponent<cro::Callback>().active = true;
-                entity.getComponent<cro::Callback>().setUserData<float>(1.f);
-                entity.getComponent<cro::Callback>().function =
-                    [&,i](cro::Entity e, float dt)
+                if (m_trophies[i].label.getComponent<cro::Callback>().active)
                 {
-                    if (m_trophies[i].label.getComponent<cro::Callback>().active)
+                    e.getComponent<cro::Sprite>().setTexture(*m_trophies[i].label.getComponent<cro::Sprite>().getTexture(), false);
+
+                    static constexpr float BaseScale = 0.5f;
+                    static constexpr float SpinCount = 6.f;
+                    static constexpr float Duration = 3.f;
+
+                    auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
+                    currTime = std::max(0.f, currTime - (dt / Duration));
+
+                    float progress = cro::Util::Easing::easeInQuart(currTime) * SpinCount;
+                    float scale = std::cos(cro::Util::Const::TAU * progress);
+
+                    scale += 1.f;
+                    scale /= 2.f;
+                    scale *= BaseScale;
+
+                    e.getComponent<cro::Transform>().setScale({ scale, BaseScale });
+
+                    if (currTime == 0)
                     {
-                        e.getComponent<cro::Sprite>().setTexture(*m_trophies[i].label.getComponent<cro::Sprite>().getTexture(), false);
-
-                        static constexpr float BaseScale = 0.5f;
-                        static constexpr float SpinCount = 6.f;
-                        static constexpr float Duration = 3.f;
-
-                        auto& currTime = e.getComponent<cro::Callback>().getUserData<float>();
-                        currTime = std::max(0.f, currTime - (dt / Duration));
-
-                        float progress = cro::Util::Easing::easeInQuart(currTime) * SpinCount;
-                        float scale = std::cos(cro::Util::Const::TAU * progress);
-
-                        scale += 1.f;
-                        scale /= 2.f;
-                        scale *= BaseScale;
-
-                        e.getComponent<cro::Transform>().setScale({ scale, BaseScale });
-
-                        if (currTime == 0)
-                        {
-                            e.getComponent<cro::Callback>().active = false;
-                            e.getComponent<cro::Transform>().setScale({ BaseScale, BaseScale });
-                        }
+                        e.getComponent<cro::Callback>().active = false;
+                        e.getComponent<cro::Transform>().setScale({ BaseScale, BaseScale });
                     }
-                };
-            }
+                }
+            };
         }
         ++i;
     }
