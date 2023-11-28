@@ -87,7 +87,7 @@ struct MaterialDefinition final
     std::uint32_t colCount = 1;
 
     cro::Material::BlendMode blendMode = cro::Material::BlendMode::None;
-
+    std::vector<std::string> tags;
 
     //used for rendering preview
     cro::RenderTexture previewTexture;

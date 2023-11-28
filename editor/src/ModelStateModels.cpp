@@ -457,6 +457,15 @@ void ModelState::saveModel(const std::string& path)
         {
             obj->addProperty("skinned").setValue(true);
         }
+
+        if (!mat.tags.empty())
+        {
+            auto* tags = obj->addObject("tags");
+            for (const auto& t : mat.tags)
+            {
+                tags->addProperty("tag").setValue(t);
+            }
+        }
     }
 
     if (newCfg.save(path))
