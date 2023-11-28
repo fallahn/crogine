@@ -44,6 +44,7 @@ namespace States
             BSP,
             Frustum,
             GC,
+            InteriorMapping,
             Log,
             MeshCollision,
             Retro,

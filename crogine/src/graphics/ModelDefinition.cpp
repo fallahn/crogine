@@ -697,8 +697,8 @@ bool ModelDefinition::loadFromFile(const std::string& inPath, bool instanced, bo
 
         m_materialIDs[m_materialCount] = matID;
 
-        const auto& objs = mat.getObjects();
-        for (const auto& obj : objs)
+        const auto& tObjs = mat.getObjects();
+        for (const auto& obj : tObjs)
         {
             if (obj.getName() == "tags")
             {

@@ -317,6 +317,7 @@
     <ClCompile Include="src\collision\RollSystem.cpp" />
     <ClCompile Include="src\frustum\FrustumState.cpp" />
     <ClCompile Include="src\gc\GcState.cpp" />
+    <ClCompile Include="src\interiormapping\InteriormappingState.cpp" />
     <ClCompile Include="src\league\League.cpp" />
     <ClCompile Include="src\LoadingScreen.cpp" />
     <ClCompile Include="src\log\LogState.cpp" />
@@ -369,6 +370,7 @@
     <ClInclude Include="src\ErrorCheck.hpp" />
     <ClInclude Include="src\frustum\FrustumState.hpp" />
     <ClInclude Include="src\gc\GcState.hpp" />
+    <ClInclude Include="src\interiormapping\InteriormappingState.hpp" />
     <ClInclude Include="src\league\League.hpp" />
     <ClInclude Include="src\LoadingScreen.hpp" />
     <ClInclude Include="src\log\LogState.hpp" />
@@ -394,6 +396,7 @@
     <ClInclude Include="src\voxels\VoxelState.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="src\interiormapping\IMShader.inl" />
     <None Include="src\retro\RetroShaders.inl" />
     <None Include="src\ssao\BlurShaders.inl" />
     <None Include="src\swingput\Glow.inl" />

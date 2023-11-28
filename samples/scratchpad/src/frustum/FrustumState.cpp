@@ -468,7 +468,7 @@ void FrustumState::createScene()
     auto camEnt = m_gameScene.getActiveCamera();
     camEnt.getComponent<cro::Transform>().setPosition({ 0.f, 0.f, 10.f });
     camEnt.getComponent<cro::Camera>().resizeCallback = updateView;
-    camEnt.getComponent<cro::Camera>().renderFlags = RenderFlags::Vis;
+    camEnt.getComponent<cro::Camera>().setRenderFlags(cro::Camera::Pass::Final, RenderFlags::Vis);
     updateView(camEnt.getComponent<cro::Camera>());
 
     //this is the camera on the cube which we're visualising
@@ -476,7 +476,7 @@ void FrustumState::createScene()
     camEnt.addComponent<cro::Transform>();
     camEnt.addComponent<cro::Camera>().resizeCallback = std::bind(&PerspectiveDebug::update, &perspectiveDebug, std::placeholders::_1);
     camEnt.getComponent<cro::Camera>().shadowMapBuffer.create(512, 512);
-    camEnt.getComponent<cro::Camera>().renderFlags = RenderFlags::Scene;
+    camEnt.getComponent<cro::Camera>().setRenderFlags(cro::Camera::Pass::Final, RenderFlags::Scene);
     perspectiveDebug.update(camEnt.getComponent<cro::Camera>());
     m_entities[EntityID::Camera] = camEnt;
 

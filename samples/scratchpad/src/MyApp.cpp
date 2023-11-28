@@ -45,6 +45,7 @@ source distribution.
 #include "ssao/SSAOState.hpp"
 #include "log/LogState.hpp"
 #include "gc/GcState.hpp"
+#include "interiormapping/InteriormappingState.hpp"
 #include "LoadingScreen.hpp"
 
 #include <crogine/core/Clock.hpp>
@@ -166,9 +167,10 @@ bool MyApp::initialise()
     m_stateStack.registerState<LogState>(States::ScratchPad::Log);
     m_stateStack.registerState<GCState>(States::ScratchPad::GC);
     m_stateStack.registerState<BounceState>(States::ScratchPad::Bounce);
+    m_stateStack.registerState<InteriorMappingState>(States::ScratchPad::InteriorMapping);
 
 #ifdef CRO_DEBUG_
-    m_stateStack.pushState(States::ScratchPad::AnimBlend);
+    m_stateStack.pushState(States::ScratchPad::InteriorMapping);
     //m_stateStack.pushState(States::ScratchPad::MainMenu);
 #else
     m_stateStack.pushState(States::ScratchPad::MainMenu);
