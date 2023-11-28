@@ -1215,8 +1215,11 @@ void MenuState::loadAssets()
     m_sprites[SpriteID::LobbyCheckboxHighlight] = spriteSheet.getSprite("checkbox_highlight");
     m_sprites[SpriteID::LobbyRuleButton] = spriteSheet.getSprite("button");
     m_sprites[SpriteID::LobbyRuleButtonHighlight] = spriteSheet.getSprite("button_highlight");
-    m_sprites[SpriteID::Envelope] = spriteSheet.getSprite("envelope");
+    //m_sprites[SpriteID::Envelope] = spriteSheet.getSprite("envelope");
     m_sprites[SpriteID::LevelBadge] = spriteSheet.getSprite("rank_badge");
+
+    spriteSheet.loadFromFile("assets/golf/sprites/lobby_menu_v2.spt", m_resources.textures);
+    m_sprites[SpriteID::Envelope] = spriteSheet.getSprite("invite_friend");
 
     //network icon
     spriteSheet.loadFromFile("assets/golf/sprites/scoreboard.spt", m_resources.textures);

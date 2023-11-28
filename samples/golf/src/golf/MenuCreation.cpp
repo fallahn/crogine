@@ -3593,14 +3593,14 @@ void MenuState::addCourseSelectButtons()
         labelEnt.addComponent<cro::Transform>();
         labelEnt.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
         labelEnt.addComponent<cro::Drawable2D>();
-        labelEnt.addComponent<cro::Text>(font).setString("Invite Friends");
+        labelEnt.addComponent<cro::Text>(font).setString("Invite Friend");
         labelEnt.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
         labelEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
         labelEnt.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
         labelEnt.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
         labelEnt.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement | CommandID::Menu::CourseSelect;
-        labelEnt.addComponent<UIElement>().absolutePosition = { 58.f, 29.f };
-        labelEnt.getComponent<UIElement>().depth = 0.01f;
+        labelEnt.addComponent<UIElement>().absolutePosition = { 58.f, 27.f };
+        labelEnt.getComponent<UIElement>().depth = 0.02f;
         bounds = cro::Text::getLocalBounds(labelEnt);
         labelEnt.addComponent<cro::UIInput>().area = bounds;
         labelEnt.getComponent<cro::UIInput>().setGroup(MenuID::Lobby);
@@ -3620,7 +3620,7 @@ void MenuState::addCourseSelectButtons()
         labelEnt.addComponent<cro::Drawable2D>();
         labelEnt.addComponent<cro::Sprite>() = m_sprites[SpriteID::Envelope];
         labelEnt.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement | CommandID::Menu::CourseSelect;
-        labelEnt.addComponent<UIElement>().absolutePosition = { 40.f, 22.f };
+        labelEnt.addComponent<UIElement>().absolutePosition = { 41.f, 17.f };
         labelEnt.getComponent<UIElement>().depth = 0.01f;
         m_lobbyWindowEntities[LobbyEntityID::HoleSelection].getComponent<cro::Transform>().addChild(labelEnt.getComponent<cro::Transform>());
     }
