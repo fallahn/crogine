@@ -292,7 +292,9 @@ struct ShaderID final
         Blur,
         Flag,
         TV,
-        PointLight
+        PointLight,
+        Glass
+
     };
 };
 
@@ -684,8 +686,9 @@ static inline void applyMaterialData(const cro::ModelDefinition& modelDef, cro::
     if (auto* m = modelDef.getMaterial(matID); m != nullptr)
     {
         //skip over materials with alpha blend as they are
-        //probably glass or shadow materials
-        if (m->blendMode == cro::Material::BlendMode::Alpha)
+        //probably shadow materials if not explicitly glass
+        if (m->blendMode == cro::Material::BlendMode::Alpha
+            && !modelDef.hasTag(matID, "glass"))
         {
             dest = *m;
             return;

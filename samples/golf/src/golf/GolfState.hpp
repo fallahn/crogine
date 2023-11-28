@@ -241,6 +241,7 @@ private:
             BallTrail,
             Flag,
             PointLight,
+            Glass,
 
             Count
         };

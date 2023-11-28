@@ -60,6 +60,7 @@ namespace
 #include "shaders/CloudShader.inl"
 #include "shaders/WaterShader.inl"
 #include "shaders/PostProcess.inl"
+#include "shaders/Glass.inl"
 }
 
 void GolfState::loadAssets()
@@ -69,6 +70,7 @@ void GolfState::loadAssets()
         m_lightVolumeDefinition.loadFromFile("assets/golf/models/light_sphere.cmt");
     }
     m_reflectionMap.loadFromFile("assets/golf/images/skybox/billiards/trophy.ccm");
+
 
     loadMaterials();
 
@@ -669,7 +671,12 @@ void GolfState::loadAssets()
                                             {
                                                 auto texMatID = useWind ? MaterialID::CelTextured : MaterialID::CelTexturedNoWind;
 
-                                                if (modelDef.getMaterial(i)->properties.count("u_maskMap") != 0)
+                                                if (modelDef.hasTag(i, "glass"))
+                                                {
+                                                    texMatID = MaterialID::Glass;
+                                                }
+
+                                                else if (modelDef.getMaterial(i)->properties.count("u_maskMap") != 0)
                                                 {
                                                     texMatID = useWind ? MaterialID::CelTexturedMasked : MaterialID::CelTexturedMaskedNoWind;
                                                 }
@@ -1353,6 +1360,15 @@ void GolfState::loadMaterials()
     m_resolutionBuffer.addShader(*shader);
     m_materialIDs[MaterialID::CelTexturedSkinnedMasked] = m_resources.materials.add(*shader);
     m_resources.materials.get(m_materialIDs[MaterialID::CelTexturedSkinnedMasked]).setProperty("u_reflectMap", cro::CubemapID(m_reflectionMap));
+
+
+    m_resources.shaders.loadFromString(ShaderID::Glass, cro::ModelRenderer::getDefaultVertexShader(cro::ModelRenderer::VertexShaderID::VertexLit), GlassFragment);
+    shader = &m_resources.shaders.get(ShaderID::Glass);
+    m_materialIDs[MaterialID::Glass] = m_resources.materials.add(*shader);
+    auto& glassMat = m_resources.materials.get(m_materialIDs[MaterialID::Glass]);
+    glassMat.setProperty("u_reflectMap", cro::CubemapID(m_reflectionMap));
+    glassMat.doubleSided = true;
+    glassMat.blendMode = cro::Material::BlendMode::Alpha;
 
 
     m_resources.shaders.loadFromString(ShaderID::Player, CelVertexShader, CelFragmentShader, "#define TEXTURED\n#define SKINNED\n#define NOCHEX\n" + wobble);

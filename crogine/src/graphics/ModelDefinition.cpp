@@ -697,6 +697,22 @@ bool ModelDefinition::loadFromFile(const std::string& inPath, bool instanced, bo
 
         m_materialIDs[m_materialCount] = matID;
 
+        const auto& objs = mat.getObjects();
+        for (const auto& obj : objs)
+        {
+            if (obj.getName() == "tags")
+            {
+                const auto& tags = obj.getProperties();
+                for (const auto& tag : tags)
+                {
+                    if (tag.getName() == "tag")
+                    {
+                        m_materialTags[m_materialCount].push_back(tag.getValue<std::string>());
+                    }
+                }
+            }
+        }
+
         if (m_castShadows)
         {
             flags = ShaderResource::DepthMap | (flags & (ShaderResource::Skinning | ShaderResource::AlphaClip | ShaderResource::DiffuseMap));
@@ -797,6 +813,23 @@ const Material::Data* ModelDefinition::getMaterial(std::size_t index) const
 
     return nullptr;
 }
+
+bool ModelDefinition::hasTag(std::size_t idx, const std::string& tag) const
+{
+    if (idx >= m_materialCount)
+    {
+        return false;
+    }
+
+    if (m_materialTags[idx].empty())
+    {
+        return false;
+    }
+
+    const auto& tags = m_materialTags[idx];
+    return std::find_if(tags.cbegin(), tags.cend(), [&tag](const std::string& s) { return s == tag; }) != tags.cend();
+}
+
 
 //private
 void ModelDefinition::reset()
