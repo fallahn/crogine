@@ -108,6 +108,7 @@ struct SpriteID final
         WeatherHighlight,
         Envelope,
         LevelBadge,
+        InviteHighlight,
 
         Count
     };

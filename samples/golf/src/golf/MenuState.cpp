@@ -1220,6 +1220,7 @@ void MenuState::loadAssets()
 
     spriteSheet.loadFromFile("assets/golf/sprites/lobby_menu_v2.spt", m_resources.textures);
     m_sprites[SpriteID::Envelope] = spriteSheet.getSprite("invite_friend");
+    m_sprites[SpriteID::InviteHighlight] = spriteSheet.getSprite("invite_highlight");
 
     //network icon
     spriteSheet.loadFromFile("assets/golf/sprites/scoreboard.spt", m_resources.textures);
