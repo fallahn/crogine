@@ -47,7 +47,7 @@ namespace
 {
     const cro::Time ResendTime = cro::seconds(1.5f);
 
-    const std::array<std::string, 13u> ApplaudStrings =
+    const std::array<std::string, 12u> ApplaudStrings =
     {
         "/me applauds",
         "/me nods in appreciation",
@@ -60,11 +60,10 @@ namespace
         "/me feels a bit star-struck",
         "/me ovates (which means applauding.)",
         "/me raises a glass of Fizz",
-        "/me now knows what a true hero looks like",
-        "/me compliments you on outperforming yourjaguarlover"
+        "/me now knows what a true hero looks like"
     };
 
-    const std::array<std::string, 18u> HappyStrings =
+    const std::array<std::string, 17u> HappyStrings =
     {
         "/me is ecstatic",
         "/me grins from ear to ear",
@@ -82,11 +81,10 @@ namespace
         "/me is on top of the world",
         "/me pirouettes jubilantly",
         "/me feels like a dog with two tails",
-        "/me is happier than yourjaguarlover",
         "/me lets out a squeak"
     };
 
-    const std::array<std::string, 13u> LaughStrings =
+    const std::array<std::string, 12u> LaughStrings =
     {
         "/me laughs like a clogged drain",
         "/me giggles into their sleeve",
@@ -99,11 +97,10 @@ namespace
         "/me howls with laughter",
         "/me goes into hysterics",
         "/me cachinnates (which means laughing loudly)",
-        "/me laughs like yourjaguarlover",
-        "/me should've known better"
+        "/me chortles like yourjaguarlover"
     };
 
-    const std::array<std::string, 16u> AngerStrings =
+    const std::array<std::string, 17u> AngerStrings =
     {
         "/me cow-fudged that one up",
         "/me rages",
@@ -120,7 +117,8 @@ namespace
         "/me 's blood boils",
         "/me blows a fuse",
         "/me blames the dev",
-        "/me explodes in a shower of fleshy chunks"
+        "/me explodes in a shower of fleshy chunks",
+        "/me should've known better"
     };
 }
 

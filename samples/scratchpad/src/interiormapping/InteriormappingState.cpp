@@ -19,6 +19,7 @@
 #include <crogine/graphics/BinaryMeshBuilder.hpp>
 
 #include <crogine/util/Constants.hpp>
+#include <crogine/detail/OpenGL.hpp>
 #include <crogine/detail/glm/gtx/euler_angles.hpp>
 
 namespace
@@ -43,6 +44,14 @@ namespace
             InMapping = 1
         };
     };
+
+    struct ShaderUniforms final
+    {
+        std::uint32_t shaderID = 0;
+        std::int32_t uv = -1;
+        std::int32_t roomSize = -1;
+        std::int32_t backplane = -1;
+    }shaderUniforms;
 }
 
 InteriorMappingState::InteriorMappingState(cro::StateStack& stack, cro::State::Context context)
@@ -118,10 +127,21 @@ void InteriorMappingState::addSystems()
 
 void InteriorMappingState::loadAssets()
 {
-    m_resources.shaders.loadFromString(ShaderID::IntMapping, IMVertex, IMFragment);
-    m_resources.materials.add(MaterialID::InMapping, m_resources.shaders.get(ShaderID::IntMapping));
+    m_resources.shaders.loadFromString(ShaderID::IntMapping, IMVertex, IMFragment2);
+    auto& shader = m_resources.shaders.get(ShaderID::IntMapping);
+    
+    auto& tex = m_resources.textures.get("assets/images/room_3.png");
+    tex.setRepeated(true);
+    m_resources.materials.add(MaterialID::InMapping, shader);
+    m_resources.materials.get(MaterialID::InMapping).setProperty("u_roomTexture", tex);
 
-    m_resources.materials.get(MaterialID::InMapping).setProperty("u_roomTexture", m_resources.textures.get("assets/images/interior.png"));
+    //m_cubemap.loadFromFile("assets/images/0/cmap.ccm");
+    //m_resources.materials.get(MaterialID::InMapping).setProperty("u_roomTexture", cro::CubemapID(m_cubemap));
+
+    shaderUniforms.shaderID = shader.getGLHandle();
+    //shaderUniforms.roomSize = shader.getUniformID("u_roomSize");
+    shaderUniforms.uv = shader.getUniformID("u_texCoordScale");
+    shaderUniforms.backplane = shader.getUniformID("u_backPlaneScale");
 }
 
 void InteriorMappingState::createScene()
@@ -176,6 +196,7 @@ void InteriorMappingState::createScene()
             {
                 if (ImGui::Begin("Plane"))
                 {
+                    ImGui::BeginChild("##0", {320.f, 0.f}, true);
                     auto pos = entity.getComponent<cro::Transform>().getPosition();
                     
                     if (ImGui::SliderFloat("X", &pos.x, -3.f, 3.f))
@@ -218,6 +239,60 @@ void InteriorMappingState::createScene()
                         scale.x = std::clamp(scale.x, 0.5f, 2.f);
                         entity.getComponent<cro::Transform>().setScale(scale);
                     }
+                    ImGui::EndChild();
+
+
+                    ImGui::SameLine();
+
+
+                    ImGui::BeginChild("##1", { 320.f, 0.f }, true);
+                    
+                    ImGui::Text("TexCoords");
+                    static glm::vec2 uvScale(1.f);
+                    if (ImGui::SliderFloat("U", &uvScale.x, 0.1f, 3.f))
+                    {
+                        uvScale.x = std::clamp(uvScale.x, 0.1f, 3.f);
+                        glUseProgram(shaderUniforms.shaderID);
+                        glUniform2f(shaderUniforms.uv, uvScale.x, uvScale.y);
+                    }
+                    if (ImGui::SliderFloat("V", &uvScale.y, 0.1f, 3.f))
+                    {
+                        uvScale.x = std::clamp(uvScale.x, 0.1f, 3.f);
+                        glUseProgram(shaderUniforms.shaderID);
+                        glUniform2f(shaderUniforms.uv, uvScale.x, uvScale.y);
+                    }
+
+                    ImGui::Text("Room Size");
+                    static glm::vec3 roomScale(1.f);
+
+                    if (ImGui::SliderFloat("X", &roomScale.x, 0.5f, 3.f))
+                    {
+                        roomScale.x = std::clamp(roomScale.x, 0.5f, 3.f);
+                        glUseProgram(shaderUniforms.shaderID);
+                        glUniform3f(shaderUniforms.roomSize, roomScale.x, roomScale.y, roomScale.z);
+                    }
+                    if (ImGui::SliderFloat("Y", &roomScale.y, 0.5f, 3.f))
+                    {
+                        roomScale.y = std::clamp(roomScale.y, 0.5f, 3.f);
+                        glUseProgram(shaderUniforms.shaderID);
+                        glUniform3f(shaderUniforms.roomSize, roomScale.x, roomScale.y, roomScale.z);
+                    }
+                    if (ImGui::SliderFloat("Z", &roomScale.z, 0.5f, 3.f))
+                    {
+                        roomScale.z = std::clamp(roomScale.z, 0.5f, 3.f);
+                        glUseProgram(shaderUniforms.shaderID);
+                        glUniform3f(shaderUniforms.roomSize, roomScale.x, roomScale.y, roomScale.z);
+                    }
+
+                    static float bpScale = 0.5f;
+                    if (ImGui::SliderFloat("BP Scale", &bpScale, 0.f, 2.f))
+                    {
+                        bpScale = std::clamp(bpScale, 0.f, 2.f);
+                        glUseProgram(shaderUniforms.shaderID);
+                        glUniform1f(shaderUniforms.backplane, bpScale);
+                    }
+
+                    ImGui::EndChild();
                 }
                 ImGui::End();
             });

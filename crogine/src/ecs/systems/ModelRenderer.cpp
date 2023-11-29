@@ -161,17 +161,14 @@ void ModelRenderer::render(Entity camera, const RenderTarget& rt)
 
             //foreach submesh / material:
             const auto& model = entity.getComponent<Model>();
-
-            /*if ((model.m_renderFlags & pass.renderFlags) == 0)
-            {
-                continue;
-            }*/
             glCheck(glFrontFace(model.m_facing));
 
             //calc entity transform
             const auto& tx = entity.getComponent<Transform>();
-            glm::mat4 worldMat = tx.getWorldTransform();
-            glm::mat4 worldView = pass.viewMatrix * worldMat;
+            const glm::mat4 worldMat = tx.getWorldTransform();
+            const glm::mat4 worldView = pass.viewMatrix * worldMat;
+            //hmm for some reason doning this only once breaks rendering
+            //const glm::mat4 normalMat = glm::inverseTranspose(glm::mat3(worldMat));
 
 #ifndef PLATFORM_DESKTOP
             glCheck(glBindBuffer(GL_ARRAY_BUFFER, model.m_meshData.vbo));

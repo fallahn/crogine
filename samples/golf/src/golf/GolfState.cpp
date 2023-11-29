@@ -454,7 +454,7 @@ bool GolfState::handleEvent(const cro::Event& evt)
             //logCSV();
             /*m_activeAvatar->model.getComponent<cro::Callback>().active = true;
             m_activeAvatar->model.getComponent<cro::Model>().setHidden(false);*/
-
+            //m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, std::uint16_t(ServerCommand::NextHole), net::NetFlag::Reliable);
             break;
         case SDLK_F8:
             if (evt.key.keysym.mod & KMOD_SHIFT)
