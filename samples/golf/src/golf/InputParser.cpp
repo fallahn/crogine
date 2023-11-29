@@ -40,12 +40,13 @@ source distribution.
 
 #include <AchievementStrings.hpp>
 
+#include <crogine/ecs/Scene.hpp>
+#include <crogine/ecs/systems/CommandSystem.hpp>
 #include <crogine/core/GameController.hpp>
 #include <crogine/detail/glm/gtx/norm.hpp>
 #include <crogine/util/Easings.hpp>
-#include <crogine/ecs/Scene.hpp>
-#include <crogine/ecs/systems/CommandSystem.hpp>
 #include <crogine/util/Maths.hpp>
+#include <crogine/util/Wavetable.hpp>
 
 using namespace cl;
 
@@ -97,11 +98,14 @@ InputParser::InputParser(const SharedStateData& sd, cro::Scene* s)
     m_currentClub       (ClubID::Driver),
     m_firstClub         (ClubID::Driver),
     m_clubOffset        (0),
+    m_bunkerTableIndex  (0),
+    m_roughTableIndex   (0),
     m_terrain           (TerrainID::Fairway),
     m_lie               (1),
     m_estimatedDistance (0.f)
 {
-
+    m_bunkerWavetable = cro::Util::Wavetable::sine(0.25f, 0.035f);
+    m_roughWavetable = cro::Util::Wavetable::sine(0.25f, 0.025f);
 }
 
 //public
@@ -642,6 +646,9 @@ void InputParser::update(float dt)
     }
 
     m_prevFlags = m_inputFlags;
+
+    m_bunkerTableIndex = (m_bunkerTableIndex + 1) % m_bunkerWavetable.size();
+    m_roughTableIndex = (m_roughTableIndex + 1) % m_roughWavetable.size();
 }
 
 bool InputParser::inProgress() const
@@ -739,6 +746,17 @@ InputParser::StrokeResult InputParser::getStroke(std::int32_t club, std::int32_t
     return { impulse, spin, hook };
 }
 
+float InputParser::getEstimatedDistance() const
+{
+    switch (m_terrain)
+    {
+    default: return m_estimatedDistance;
+    case TerrainID::Bunker: return m_estimatedDistance * (1.f - m_bunkerWavetable[m_bunkerTableIndex]);
+    case TerrainID::Rough: return m_estimatedDistance * (1.f - m_roughWavetable[m_roughTableIndex]);
+    }
+    return m_estimatedDistance; 
+}
+
 void InputParser::doFastStroke(float accuracy, float power)
 {
     //this ONLY works with the CPU because it's been estimating
@@ -798,7 +816,7 @@ void InputParser::updateDistanceEstimation()
         totalSteps += 1.f;
     } while (endPos.y > 0.f);
 
-    m_estimatedDistance = glm::length(endPos) * 1.08f; //correction of the average difference of club rating (we're only usin this for the range indicator)
+    m_estimatedDistance = glm::length(endPos) * 1.08f; //correction of the average difference of club rating (we're only using this for the range indicator)
 }
 
 void InputParser::updateStroke(float dt)

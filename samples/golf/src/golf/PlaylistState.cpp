@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2022
+Matt Marchant 2022 - 2023
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -1384,7 +1384,7 @@ void PlaylistState::createSkyboxMenu(cro::Entity rootNode, const MenuData& menuD
     m_skyboxes.erase(std::remove_if(m_skyboxes.begin(), m_skyboxes.end(),
         [](const std::string& box)
         {
-            return cro::FileSystem::getFileExtension(box) != ".sbf";
+            return cro::FileSystem::getFileExtension(box) != ".sbf" || box.find("_n") != std::string::npos;
         }), m_skyboxes.end());
     //just to make consistent across platforms
     std::sort(m_skyboxes.begin(), m_skyboxes.end());
