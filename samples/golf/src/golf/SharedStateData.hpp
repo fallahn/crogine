@@ -208,6 +208,7 @@ struct SharedStateData final
     bool fastCPU = true;
     std::int32_t enableRumble = 1;
     std::int32_t clubSet = 0;
+    bool pressHold = false; //press and hold the action button to select power
 
     std::int32_t baseState = 0; //used to tell which state we're returning to from errors etc
     std::unique_ptr<cro::ResourceCollection> sharedResources;

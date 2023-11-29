@@ -1053,6 +1053,10 @@ void GolfGame::loadPreferences()
                 {
                     m_sharedData.clubSet = std::clamp(prop.getValue<std::int32_t>(), 0, 2);
                 }
+                else if (name == "press_hold")
+                {
+                    m_sharedData.pressHold = prop.getValue<bool>();
+                }
             }
         }
     }
@@ -1147,6 +1151,7 @@ void GolfGame::savePreferences()
     cfg.addProperty("use_beacon_colour").setValue(m_sharedData.trailBeaconColour);
     cfg.addProperty("fast_cpu").setValue(m_sharedData.fastCPU);
     cfg.addProperty("clubset").setValue(m_sharedData.clubSet);
+    cfg.addProperty("press_hold").setValue(m_sharedData.pressHold);
     cfg.save(path);
 
 

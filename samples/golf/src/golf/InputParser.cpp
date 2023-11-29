@@ -647,8 +647,12 @@ void InputParser::update(float dt)
 
     m_prevFlags = m_inputFlags;
 
-    m_bunkerTableIndex = (m_bunkerTableIndex + 1) % m_bunkerWavetable.size();
-    m_roughTableIndex = (m_roughTableIndex + 1) % m_roughWavetable.size();
+    if (m_state == State::Aim
+        || m_state == State::Drone)
+    {
+        m_bunkerTableIndex = (m_bunkerTableIndex + 1) % m_bunkerWavetable.size();
+        m_roughTableIndex = (m_roughTableIndex + 1) % m_roughWavetable.size();
+    }
 }
 
 bool InputParser::inProgress() const
@@ -947,27 +951,27 @@ void InputParser::updateStroke(float dt)
                 m_powerbarDirection = -1.f;
             }
 
-            if (/*m_power == 0 //this just resets the shot now - see above.
-                ||*/ ((m_inputFlags & InputFlag::Action) && ((m_prevFlags & InputFlag::Action) == 0)))
+            if (m_sharedData.pressHold)
             {
-                if (m_doubleTapClock.elapsed() > DoubleTapTime)
+                if ((m_inputFlags & InputFlag::Action) == 0 && (m_prevFlags & InputFlag::Action))
                 {
                     m_powerbarDirection = 1.f;
 
-                    //if (m_sharedData.showPuttingPower
-                    //    && terrainID == TerrainID::Green)
-                    //{
-                    //    //skip the hook bar cos we're on easy mode
-                    //    m_state = State::Flight;
-
-                    //    auto* msg = cro::App::postMessage<GolfEvent>(MessageID::GolfMessage);
-                    //    msg->type = GolfEvent::HitBall;
-                    //}
-                    //else
-                    {
-                        m_state = State::Stroke;
-                    }
+                    m_state = State::Stroke;
                     m_doubleTapClock.restart();
+                }
+            }
+            else
+            {
+                if ((m_inputFlags & InputFlag::Action) && ((m_prevFlags & InputFlag::Action) == 0))
+                {
+                    if (m_doubleTapClock.elapsed() > DoubleTapTime)
+                    {
+                        m_powerbarDirection = 1.f;
+
+                        m_state = State::Stroke;
+                        m_doubleTapClock.restart();
+                    }
                 }
             }
         }

@@ -2346,7 +2346,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
     auto& infoFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
     auto& uiFont = m_sharedData.sharedResources->fonts.get(FontID::UI);
     auto infoEnt = m_scene.createEntity();
-    infoEnt.addComponent<cro::Transform>().setPosition(glm::vec3(parentBounds.width / 2.f, parentBounds.height - 8.f, TextOffset));
+    infoEnt.addComponent<cro::Transform>().setPosition(glm::vec3(parentBounds.width / 2.f, parentBounds.height + 8.f, TextOffset));
     infoEnt.addComponent<cro::Drawable2D>();
     infoEnt.addComponent<cro::Text>(uiFont);
     if (!Social::isSteamdeck())
@@ -2989,13 +2989,32 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
     createText(glm::vec2(32.f, 63.f), "Invert X");
     createText(glm::vec2(32.f, 47.f), "Invert Y");
     createText(glm::vec2(118.f, 63.f), "Use Vibration");
+    createText(glm::vec2(118.f, 47.f), "Hold For Power");
 
     //TODO don't duplicate these as they already exist in the AV menu
-    auto selectedID = uiSystem.addCallback([](cro::Entity e)
+    auto selectedID = uiSystem.addCallback([infoEnt](cro::Entity e) mutable
         {
             e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
             e.getComponent<cro::AudioEmitter>().play();
             e.getComponent<cro::Callback>().active = true;
+
+            if (e.getLabel().empty())
+            {
+                if (Social::isSteamdeck())
+                {
+                    infoEnt.getComponent<cro::Text>().setString(" ");
+                }
+                else
+                {
+                    infoEnt.getComponent<cro::Text>().setString("Click On A Keybind To Change It");
+                }
+                centreText(infoEnt);
+            }
+            else
+            {
+                infoEnt.getComponent<cro::Text>().setString(e.getLabel());
+                centreText(infoEnt);
+            }
         });
     auto unselectedID = uiSystem.addCallback([](cro::Entity e)
         {
@@ -3214,7 +3233,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
     //rumble enable
     entity = createSquareHighlight(glm::vec2(103.f, 54.f));
     entity.getComponent<cro::UIInput>().setSelectionIndex(CtrlVib);
-    entity.getComponent<cro::UIInput>().setNextIndex(CtrlLeft, CtrlReset);
+    entity.getComponent<cro::UIInput>().setNextIndex(CtrlLeft, CtrlAltPower);
     entity.getComponent<cro::UIInput>().setPrevIndex(CtrlInvX, CtrlLookR);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
         [&](cro::Entity, cro::ButtonEvent evt) mutable
@@ -3245,6 +3264,44 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
         float scale = static_cast<float>(m_sharedData.enableRumble);
         e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
     };
+    parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+
+
+    //alt power input
+    entity = createSquareHighlight(glm::vec2(103.f, 38.f));
+    entity.setLabel("Press and hold Action to select stroke power");
+    entity.getComponent<cro::UIInput>().setSelectionIndex(CtrlAltPower);
+    entity.getComponent<cro::UIInput>().setNextIndex(CtrlLeft, CtrlReset);
+    entity.getComponent<cro::UIInput>().setPrevIndex(CtrlInvY, CtrlVib);
+    entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] = uiSystem.addCallback(
+        [&](cro::Entity, cro::ButtonEvent evt) mutable
+        {
+            if (activated(evt))
+            {
+                m_sharedData.pressHold = !m_sharedData.pressHold;
+                m_audioEnts[AudioID::Back].getComponent<cro::AudioEmitter>().play();
+
+                m_scene.getActiveCamera().getComponent<cro::Camera>().active = true;
+            }
+        });
+    //y'know if we defined these first we could capture them and update them in the button callback...
+    entity = m_scene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition(glm::vec3(105.f, 40.f, HighlightOffset));
+    entity.addComponent<cro::Drawable2D>().getVertexData() =
+    {
+        cro::Vertex2D(glm::vec2(0.f, 7.f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(0.f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(7.f), TextGoldColour),
+        cro::Vertex2D(glm::vec2(7.f, 0.f), TextGoldColour)
+    };
+    entity.getComponent<cro::Drawable2D>().updateLocalBounds();
+    entity.addComponent<cro::Callback>().active = true;
+    entity.getComponent<cro::Callback>().function =
+        [&](cro::Entity e, float)
+        {
+            float scale = m_sharedData.pressHold ? 1.f : 0.f;
+            e.getComponent<cro::Transform>().setScale(glm::vec2(scale));
+        };
     parent.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
 
