@@ -41,7 +41,7 @@ struct TrophyDisplay final
 
     std::int32_t particleCount = 3;
     float particleTime = 0.f;
-    static constexpr float ParticleInterval = 0.5f;
+    static constexpr float ParticleInterval = 0.6f;
 
     enum
     {

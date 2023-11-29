@@ -105,6 +105,7 @@ void TrophyDisplaySystem::process(float dt)
                     trophy.particleTime += TrophyDisplay::ParticleInterval + cro::Util::Random::value(-0.4f, 0.4f);
 
                     entity.getComponent<cro::ParticleEmitter>().start();
+                    entity.getComponent<cro::AudioEmitter>().setPlayingOffset(cro::seconds(0.f));
                     entity.getComponent<cro::AudioEmitter>().play();
                 }
             }
