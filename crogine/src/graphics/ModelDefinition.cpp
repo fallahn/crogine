@@ -837,6 +837,7 @@ void ModelDefinition::reset()
     m_meshID = 0;
     m_materialIDs = {};
     m_shadowIDs = {};
+    m_materialTags = {};
     m_materialCount = 0;
     m_skeleton = {};
     m_castShadows = false;

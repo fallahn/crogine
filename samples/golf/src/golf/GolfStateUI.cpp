@@ -1391,7 +1391,7 @@ void GolfState::buildUI()
 
         if (!greenEnt.getComponent<cro::Callback>().active)
         {
-            ud.state = ud.state == 1 ? 0 : 1;
+            ud.state = ud.state == 1 ? 0.f : 1.f;
             greenEnt.getComponent<cro::Callback>().active = true;
         }
     };

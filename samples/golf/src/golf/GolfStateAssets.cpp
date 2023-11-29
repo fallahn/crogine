@@ -78,7 +78,11 @@ void GolfState::loadAssets()
 
     loadModels();
 
-    
+    loadMap();
+}
+
+void GolfState::loadMap()
+{
     //used when parsing holes
     const auto addCrowd = [&](HoleData& holeData, glm::vec3 position, glm::vec3 lookAt, float rotation)
         {
@@ -1590,7 +1594,7 @@ void GolfState::loadMaterials()
     m_resources.shaders.loadFromString(ShaderID::Beacon, BeaconVertex, BeaconFragment, "#define TEXTURED\n#define USE_MRT\n");
     m_materialIDs[MaterialID::Beacon] = m_resources.materials.add(m_resources.shaders.get(ShaderID::Beacon));
 
-    const std::string intensity = m_sharedData.nightTime ? "#define INTENSITY 0.0\n" : "#define INTENSITY 0.5\n";
+    const std::string intensity = m_sharedData.nightTime ? "#define INTENSITY 0.9\n" : "#define INTENSITY 0.5\n";
     m_resources.shaders.loadFromString(ShaderID::Target, cro::ModelRenderer::getDefaultVertexShader(cro::ModelRenderer::VertexShaderID::Unlit),
         BeaconFragment, intensity + "#define USE_MRT\n#define VERTEX_COLOUR\n");
     m_materialIDs[MaterialID::Target] = m_resources.materials.add(m_resources.shaders.get(ShaderID::Target));

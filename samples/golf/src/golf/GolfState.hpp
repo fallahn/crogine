@@ -281,6 +281,7 @@ private:
     void loadSprites();
     void loadModels();
     void loadSpectators();
+    void loadMap();
     void initAudio(bool loadTrees);
 
     void addSystems();
