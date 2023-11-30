@@ -4656,9 +4656,53 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo)
     //update status
     const std::size_t MaxTitleLen = 220;
 
-    auto title = m_sharedData.tutorial ? cro::String("Tutorial").toUtf8() : m_courseTitle.substr(0, MaxTitleLen).toUtf8();
-    auto holeNumber = std::to_string(m_currentHole + 1);
-    auto holeTotal = std::to_string(m_holeData.size());
+    cro::String courseTitle;
+    if (m_sharedData.nightTime)
+    {
+        //moon
+        courseTitle = cro::String(std::uint32_t(0x1F319));
+    }
+    else
+    {
+        //sun
+        courseTitle = cro::String(std::uint32_t(0x2600));
+        courseTitle += cro::String(std::uint32_t(0xFE0F));
+    }
+
+    switch (m_sharedData.weatherType)
+    {
+    default:
+        //don't add anything if the weather is clear
+        break;
+    case WeatherType::Rain:
+        //rain cloud
+        courseTitle += std::uint32_t(0x1F327);
+        courseTitle += std::uint32_t(0xFE0F);
+        break;
+    case WeatherType::Showers:
+        if (m_sharedData.nightTime)
+        {
+            //umbrella
+            courseTitle += std::uint32_t(0x2614);
+        }
+        else
+        {
+            //rainbow
+            courseTitle += std::uint32_t(0x1F308);
+        }
+        break;
+    case WeatherType::Mist:
+        //fog
+        courseTitle += std::uint32_t(0x1F32B);
+        courseTitle += std::uint32_t(0xFE0F);
+        break;
+    }
+
+    courseTitle += m_courseTitle;
+
+    const auto title = m_sharedData.tutorial ? cro::String("Tutorial").toUtf8() : courseTitle.substr(0, MaxTitleLen).toUtf8();
+    const auto holeNumber = std::to_string(m_currentHole + 1);
+    const auto holeTotal = std::to_string(m_holeData.size());
     //well... this is awful.
     Social::setStatus(Social::InfoID::Course, { reinterpret_cast<const char*>(title.c_str()), holeNumber.c_str(), holeTotal.c_str() });
 
