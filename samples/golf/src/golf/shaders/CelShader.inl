@@ -82,6 +82,12 @@ inline const std::string CelVertexShader = R"(
 
     uniform sampler2D u_noiseTexture;
 
+#if defined(MULTI_TARGET)
+    //projective texturing for target
+    uniform mat4 u_targetViewProjectionMatrix;
+    VARYING_OUT vec4 v_targetProjection;
+#endif
+
 //dirX, strength, dirZ, elapsedTime
 #include WIND_BUFFER
 
@@ -92,7 +98,7 @@ inline const std::string CelVertexShader = R"(
     VARYING_OUT vec4 v_colour;
     VARYING_OUT vec3 v_cameraWorldPosition;
     VARYING_OUT vec3 v_worldPosition;
-    VARYING_OUT float v_perspectiveScale;
+    //VARYING_OUT float v_perspectiveScale;
 
 #if defined (TEXTURED)
     VARYING_OUT vec2 v_texCoord;
@@ -227,7 +233,11 @@ inline const std::string CelVertexShader = R"(
         v_ditherAmount *= 1.0 - clamp((distance - farFadeDistance) / fadeDistance, 0.0, 1.0);
 #endif
 
-        v_perspectiveScale = u_projectionMatrix[1][1] / gl_Position.w;
+#if defined(MULTI_TARGET)
+        v_targetProjection = u_targetViewProjectionMatrix * worldPosition;
+#endif
+
+        //v_perspectiveScale = u_projectionMatrix[1][1] / gl_Position.w;
     })";
 
 inline const std::string CelFragmentShader = R"(
@@ -312,8 +322,11 @@ uniform sampler2D u_angleTex;
     VARYING_IN vec3 v_cameraWorldPosition;
     VARYING_IN vec3 v_worldPosition;
     VARYING_IN vec2 v_texCoord;
-    VARYING_IN float v_perspectiveScale;
+    //VARYING_IN float v_perspectiveScale;
 
+#if defined(MULTI_TARGET)
+    VARYING_IN vec4 v_targetProjection;
+#endif
     
 #define USE_MRT
 #include OUTPUT_LOCATION
@@ -357,49 +370,6 @@ uniform sampler2D u_angleTex;
 
         float depthSample = TEXTURE(u_shadowMap, vec3(projectionCoords.xy, float(cascadeIndex))).r;
         return (currDepth < depthSample) ? 1.0 : 1.0 - (0.3);
-    }
-
-    const vec2 kernel[16] = vec2[](
-        vec2(-0.94201624, -0.39906216),
-        vec2(0.94558609, -0.76890725),
-        vec2(-0.094184101, -0.92938870),
-        vec2(0.34495938, 0.29387760),
-        vec2(-0.91588581, 0.45771432),
-        vec2(-0.81544232, -0.87912464),
-        vec2(-0.38277543, 0.27676845),
-        vec2(0.97484398, 0.75648379),
-        vec2(0.44323325, -0.97511554),
-        vec2(0.53742981, -0.47373420),
-        vec2(-0.26496911, -0.41893023),
-        vec2(0.79197514, 0.19090188),
-        vec2(-0.24188840, 0.99706507),
-        vec2(-0.81409955, 0.91437590),
-        vec2(0.19984126, 0.78641367),
-        vec2(0.14383161, -0.14100790)
-    );
-    const int filterSize = 3;
-    float shadowAmountSoft(int cascadeIndex)
-    {
-        vec4 lightWorldPos = v_lightWorldPosition[cascadeIndex];
-
-        vec3 projectionCoords = lightWorldPos.xyz / lightWorldPos.w;
-        projectionCoords = projectionCoords * 0.5 + 0.5;
-
-        if(projectionCoords.z > 1.0) return 1.0;
-
-        float shadow = 0.0;
-        vec2 texelSize = 1.0 / textureSize(u_shadowMap, 0).xy;
-        for(int x = 0; x < filterSize; ++x)
-        {
-            for(int y = 0; y < filterSize; ++y)
-            {
-                float pcfDepth = TEXTURE(u_shadowMap, vec3((kernel[y * filterSize + x] * texelSize) + projectionCoords.xy, cascadeIndex)).r;
-                shadow += (projectionCoords.z - 0.001) > pcfDepth ? 0.4 : 0.0;
-            }
-        }
-
-        float amount = shadow / 9.0;
-        return 1.0 - amount;
     }
 #endif
 
@@ -738,6 +708,18 @@ if(u_maskColour.b < 0.95)
 //#if !defined(HOLE_HEIGHT)
     LIGHT_OUT = vec4(vec3(0.0), 1.0);
 //#endif
+#endif
+
+#if defined(MULTI_TARGET)
+    vec2 projUV = v_targetProjection.xy/v_targetProjection.w;
+
+    float RingCount = 5.0;
+    float l = length(projUV);
+    float r = step(0.0, sin(min(RingCount, l * RingCount) * 3.14));
+    vec3 targetColour = mix(vec3(1.0, 0.0, 0.0), vec3(1.0), r);
+
+    //this is effectively clip-space so +/- 1 is perfect for circles
+    FRAG_OUT.rgb = mix(targetColour, FRAG_OUT.rgb, step(1.0, l));
 #endif
 
     })";

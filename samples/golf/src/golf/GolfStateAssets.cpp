@@ -1385,13 +1385,19 @@ void GolfState::loadMaterials()
     m_resolutionBuffer.addShader(*shader);
     m_materialIDs[MaterialID::Hair] = m_resources.materials.add(*shader);
 
-    m_resources.shaders.loadFromString(ShaderID::Course, CelVertexShader, CelFragmentShader, "#define TERRAIN\n#define COMP_SHADE\n#define COLOUR_LEVELS 5.0\n#define TEXTURED\n#define RX_SHADOWS\n" + wobble);
+    std::string targetDefines = (m_sharedData.scoreType == ScoreType::MultiTarget || Social::getMonth() == 2) ? "#define MULTI_TARGET\n" : "";
+
+    m_resources.shaders.loadFromString(ShaderID::Course, CelVertexShader, CelFragmentShader, "#define TERRAIN\n#define COMP_SHADE\n#define COLOUR_LEVELS 5.0\n#define TEXTURED\n#define RX_SHADOWS\n" + wobble + targetDefines);
     shader = &m_resources.shaders.get(ShaderID::Course);
     m_scaleBuffer.addShader(*shader);
     m_resolutionBuffer.addShader(*shader);
     m_windBuffer.addShader(*shader);
     m_materialIDs[MaterialID::Course] = m_resources.materials.add(*shader);
-
+    if (!targetDefines.empty())
+    {
+        m_targetShader.shaderID = shader->getGLHandle();
+        m_targetShader.vpUniform = shader->getUniformID("u_targetViewProjectionMatrix");
+    }
     auto& shaleTex = m_resources.textures.get("assets/golf/images/shale.png", true);
     shaleTex.setRepeated(true);
     m_resources.materials.get(m_materialIDs[MaterialID::Course]).setProperty("u_angleTex", shaleTex);

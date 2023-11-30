@@ -25,12 +25,14 @@
 namespace
 {
 #include "IMShader.inl"
+#include "ProjectionShader.inl"
 
     struct ShaderID final
     {
         enum
         {
             IntMapping,
+            Projection,
 
             Count
         };
@@ -41,7 +43,8 @@ namespace
     {
         enum
         {
-            InMapping = 1
+            InMapping = 1,
+            Projection
         };
     };
 
@@ -128,25 +131,55 @@ void InteriorMappingState::addSystems()
 void InteriorMappingState::loadAssets()
 {
     m_resources.shaders.loadFromString(ShaderID::IntMapping, IMVertex, IMFragment2);
-    auto& shader = m_resources.shaders.get(ShaderID::IntMapping);
+    auto* shader = &m_resources.shaders.get(ShaderID::IntMapping);
     
     auto& tex = m_resources.textures.get("assets/images/room_3.png");
     tex.setRepeated(true);
-    m_resources.materials.add(MaterialID::InMapping, shader);
+    m_resources.materials.add(MaterialID::InMapping, *shader);
     m_resources.materials.get(MaterialID::InMapping).setProperty("u_roomTexture", tex);
 
     //m_cubemap.loadFromFile("assets/images/0/cmap.ccm");
     //m_resources.materials.get(MaterialID::InMapping).setProperty("u_roomTexture", cro::CubemapID(m_cubemap));
 
-    shaderUniforms.shaderID = shader.getGLHandle();
+    shaderUniforms.shaderID = shader->getGLHandle();
     //shaderUniforms.roomSize = shader.getUniformID("u_roomSize");
-    shaderUniforms.uv = shader.getUniformID("u_texCoordScale");
-    shaderUniforms.backplane = shader.getUniformID("u_backPlaneScale");
+    shaderUniforms.uv = shader->getUniformID("u_texCoordScale");
+    shaderUniforms.backplane = shader->getUniformID("u_backPlaneScale");
+
+
+    m_resources.shaders.loadFromString(ShaderID::Projection, ProjectionVertex, ProjectionFragment);
+    shader = &m_resources.shaders.get(ShaderID::Projection);
+    m_resources.materials.add(MaterialID::Projection, *shader);
 }
 
 void InteriorMappingState::createScene()
 {
     cro::ModelDefinition md(m_resources);
+    if (md.loadFromFile("assets/models/cylinder_tangents.cmt"))
+    {
+        auto entity = m_gameScene.createEntity();
+        entity.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, 0.f });
+        md.createModel(entity);
+
+        glm::mat4 proj = glm::ortho(-0.3f, 0.3f, -0.3f, 0.3f, -5.f, 5.f);
+        glm::mat4 view = glm::translate(glm::mat4(1.f), glm::vec3(0.f, -1.f, 0.f));
+
+        auto rotation = glm::rotate(cro::Transform::QUAT_IDENTITY, -0.75f, cro::Transform::X_AXIS);
+        //view *= glm::toMat4(rotation);
+
+        auto material = m_resources.materials.get(MaterialID::Projection);
+        material.setProperty("u_targetViewProjectionMatrix", proj * view);
+        entity.getComponent<cro::Model>().setMaterial(0, material);
+
+        entity.addComponent<cro::Callback>().active = true;
+        entity.getComponent<cro::Callback>().function =
+            [](cro::Entity e, float dt)
+            {
+                e.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, dt);
+                e.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, dt);
+            };
+    }
+    
     //if (md.loadFromFile("assets/models/cylinder_tangents.cmt"))
     //{
     //    auto entity = m_gameScene.createEntity();

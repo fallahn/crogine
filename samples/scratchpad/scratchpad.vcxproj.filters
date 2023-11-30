@@ -430,5 +430,8 @@
     <None Include="src\interiormapping\IMShader.inl">
       <Filter>Header Files\interior mapping</Filter>
     </None>
+    <None Include="src\interiormapping\ProjectionShader.inl">
+      <Filter>Header Files\interior mapping</Filter>
+    </None>
   </ItemGroup>
 </Project>

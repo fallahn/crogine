@@ -170,6 +170,12 @@ private:
     std::array<cro::RenderTexture, LightMapID::Count> m_lightBlurTextures = {};
     std::array<cro::SimpleQuad, LightMapID::Count> m_lightBlurQuads = {};
 
+    struct TargetShader final
+    {
+        std::uint32_t shaderID = 0;
+        std::int32_t vpUniform = -1;
+    }m_targetShader;
+
     cro::UniformBuffer<float> m_scaleBuffer;
     cro::UniformBuffer<ResolutionData> m_resolutionBuffer;
     cro::UniformBuffer<WindData> m_windBuffer;
