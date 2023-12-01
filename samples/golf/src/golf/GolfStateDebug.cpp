@@ -233,6 +233,18 @@ void GolfState::addCameraDebugging()
 
 void GolfState::registerDebugCommands()
 {
+    //registerWindow([&]() 
+    //    {
+    //        if (ImGui::Begin("asefsd"))
+    //        {
+    //            ImGui::Text("Shader ID %d", m_targetShader.shaderID);
+    //            ImGui::Text("Shader Uniform %d", m_targetShader.vpUniform);
+    //            ImGui::Text("Position %3.2f, %3.2f, %3.2f", m_targetShader.position.x, m_targetShader.position.y, m_targetShader.position.z);
+    //            ImGui::Text("Size %3.3f", m_targetShader.size);
+    //        }
+    //        ImGui::End();        
+    //    });
+
     registerCommand("refresh_turn", [&](const std::string&)
         {
             m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, std::uint16_t(ServerCommand::SkipTurn), net::NetFlag::Reliable);

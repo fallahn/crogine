@@ -164,20 +164,63 @@ void InteriorMappingState::createScene()
         glm::mat4 proj = glm::ortho(-0.3f, 0.3f, -0.3f, 0.3f, -5.f, 5.f);
         glm::mat4 view = glm::translate(glm::mat4(1.f), glm::vec3(0.f, -1.f, 0.f));
 
-        auto rotation = glm::rotate(cro::Transform::QUAT_IDENTITY, -0.75f, cro::Transform::X_AXIS);
+        //auto rotation = glm::rotate(cro::Transform::QUAT_IDENTITY, -0.75f, cro::Transform::X_AXIS);
         //view *= glm::toMat4(rotation);
 
         auto material = m_resources.materials.get(MaterialID::Projection);
         material.setProperty("u_targetViewProjectionMatrix", proj * view);
         entity.getComponent<cro::Model>().setMaterial(0, material);
 
-        entity.addComponent<cro::Callback>().active = true;
+        /*entity.addComponent<cro::Callback>().active = true;
         entity.getComponent<cro::Callback>().function =
             [](cro::Entity e, float dt)
             {
                 e.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, dt);
                 e.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, dt);
-            };
+            };*/
+
+        registerWindow([entity]() mutable
+            {
+                if (ImGui::Begin("Shader"))
+                {
+                    static glm::vec3 position(0.f, 1.f, 0.f);
+                    static float rotation = 0.f;
+                    static float size = 0.3f;
+
+                    static auto updateShader = [entity]() mutable
+                        {
+                            glm::mat4 proj = glm::ortho(-size, size, -size, size, -5.f, 5.f);
+                            glm::mat4 view = glm::translate(glm::mat4(1.f), -position);
+
+                            auto rot = glm::rotate(cro::Transform::QUAT_IDENTITY, -rotation, cro::Transform::X_AXIS);
+                            view *= glm::toMat4(rot);
+
+                            entity.getComponent<cro::Model>().setMaterialProperty(0, "u_targetViewProjectionMatrix", proj * view);
+                        };
+
+                    if (ImGui::SliderFloat("Size##t", &size, 0.1f, 0.6f))
+                    {
+                        size = std::clamp(size, 0.1f, 0.6f);
+                        updateShader();
+                    }
+                    if (ImGui::SliderFloat("X##t", &position.x, -1.f, 1.f))
+                    {
+                        position.x = std::clamp(position.x, -1.f, 1.f);
+                        updateShader();
+                    }
+                    if (ImGui::SliderFloat("Y##t", &position.y, 0.f, 2.f))
+                    {
+                        position.y = std::clamp(position.y, 0.f, 2.f);
+                        updateShader();
+                    }
+                    if (ImGui::SliderFloat("Rotation##t", &rotation, -cro::Util::Const::PI / 2.f, cro::Util::Const::PI))
+                    {
+                        rotation = std::clamp(rotation, -cro::Util::Const::PI / 2.f, cro::Util::Const::PI / 2.f);
+                        updateShader();
+                    }
+                }
+                ImGui::End();
+            });
     }
     
     //if (md.loadFromFile("assets/models/cylinder_tangents.cmt"))

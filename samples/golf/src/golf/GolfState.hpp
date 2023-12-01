@@ -174,6 +174,15 @@ private:
     {
         std::uint32_t shaderID = 0;
         std::int32_t vpUniform = -1;
+
+        glm::vec3 position = glm::vec3(0.f);
+        float size = 0.f;
+
+        glm::mat4 viewMat = glm::mat4(1.f);
+        glm::mat4 projMat = glm::mat4(1.f);
+
+        void update(); //GolfStateAssets.cpp
+
     }m_targetShader;
 
     cro::UniformBuffer<float> m_scaleBuffer;

@@ -234,7 +234,7 @@ inline const std::string CelVertexShader = R"(
 #endif
 
 #if defined(MULTI_TARGET)
-        v_targetProjection = u_targetViewProjectionMatrix * worldPosition;
+        v_targetProjection = u_targetViewProjectionMatrix * u_worldMatrix * a_position;
 #endif
 
         //v_perspectiveScale = u_projectionMatrix[1][1] / gl_Position.w;
@@ -308,7 +308,7 @@ inline const std::string CelFragmentShader = R"(
 #if defined (COMP_SHADE)
     uniform vec4 u_maskColour = vec4(1.0);
     uniform vec4 u_colour = vec4(1.0);
-uniform sampler2D u_angleTex;
+    uniform sampler2D u_angleTex;
 #endif
 
 #if defined (NORMAL_MAP)
@@ -432,8 +432,6 @@ uniform sampler2D u_angleTex;
 #endif
 
 #if defined (NORMAL_MAP)
-        //colour = TEXTURE(u_normalMap, v_normalTexCoord);
-        //colour.rg = v_normalTexCoord;
         vec3 normal = TEXTURE(u_normalMap, v_normalTexCoord).rgb * 2.0 - 1.0;
 #else
         vec3 normal = normalize(v_normal);
@@ -451,11 +449,7 @@ uniform sampler2D u_angleTex;
 #if defined (USER_COLOUR)
         float mixAmount = step(0.95, (v_colour.r + v_colour.g + v_colour.b) / 3.0);        
         colour.rgb = mix(v_colour.rgb, u_hairColour.rgb, mixAmount);
-
-        //colour *= u_hairColour;// * v_colour;
 #endif
-
-        //float checkAmount = step(0.3, 1.0 - amount);
         float checkAmount = smoothstep(0.3, 0.9, 1.0 - amount);
 
 #if !defined(COLOUR_LEVELS)
@@ -514,14 +508,6 @@ if(u_maskColour.b < 0.95)
         holeHeightFade = (1.0 - smoothstep(625.0, 1225.0, dot(viewDirection, viewDirection)));
 #endif
         viewDirection = normalize(viewDirection);
-
-
-        /*float rim = 1.0 - dot(normal, viewDirection);
-        rim = smoothstep(0.9, 1.0, rim);
-        rim = pow(rim, 5.0) * effectAmount;
-
-        colour.rg += rim * 0.08;*/
-
 #else
         colour.rgb *= amount;
 #endif
@@ -545,12 +531,8 @@ if(u_maskColour.b < 0.95)
 #define NOCHEX
 #if !defined(NOCHEX)
         float pixelScale = u_pixelScale;
-        //float pixelScale = 1.0;
         float check = mod(floor(gl_FragCoord.x / pixelScale) + floor(gl_FragCoord.y / pixelScale), 2.0) * checkAmount;
-        //float check = mod(gl_FragCoord.x + gl_FragCoord.y, 2.0) * checkAmount;
         amount = (1.0 - check) + (check * amount);
-        //colour.rgb = complementaryColour(colour.rgb);
-        //colour.rgb = mix(complementaryColour(colour.rgb), colour.rgb, amount);
         colour.rgb *= amount;
 #endif
 
@@ -601,8 +583,6 @@ if(u_maskColour.b < 0.95)
 
 #if defined (ADD_NOISE)
         float noiseVal = noise(floor(v_worldPosition.xz * NoisePerMetre)) * 0.4;
-        //noiseVal *= (noise(floor(v_worldPosition.xz / 6.0)) * 0.3);
-        //FRAG_OUT.rgb *= (1.0 - noiseVal);
         FRAG_OUT.rgb = mix(FRAG_OUT.rgb, u_noiseColour.rgb, noiseVal);
 #endif
 
@@ -647,10 +627,6 @@ if(u_maskColour.b < 0.95)
     float transparency = 1.0 - pow(1.0 - u_transparency, 4.0);
     FRAG_OUT.rgb = mix(FRAG_OUT.rgb, gridColour, contourX * holeHeightFade * transparency);
     FRAG_OUT.rgb = mix(FRAG_OUT.rgb, gridColour, contourZ * holeHeightFade * transparency);
-
-    /*LIGHT_OUT.rgb = mix(vec3(0.0), gridColour, contourX * holeHeightFade * transparency);
-    LIGHT_OUT.rgb = mix(vec3(0.0), gridColour, contourZ * holeHeightFade * transparency);
-    NORM_OUT.a *= 1.0 - (contourX * holeHeightFade * transparency);*/
 #else
 
     vec3 f = fract(v_worldPosition * 2.0);
@@ -672,11 +648,6 @@ if(u_maskColour.b < 0.95)
 
     FRAG_OUT.rgb = mix(FRAG_OUT.rgb, contourColour, contourX * fade);
     FRAG_OUT.rgb = mix(FRAG_OUT.rgb, contourColour, contourZ * fade);
-
-    /*LIGHT_OUT.rgb = mix(vec3(0.0), contourColour, contourX * fade);
-    LIGHT_OUT.rgb = mix(vec3(0.0), contourColour, contourZ * fade);
-    LIGHT_OUT.a = 1.0;
-    NORM_OUT.a *= 1.0 - (contourX * fade);*/
 
     float minHeight = u_holeHeight - 0.025;
     float maxHeight = u_holeHeight + 0.08;
@@ -705,21 +676,24 @@ if(u_maskColour.b < 0.95)
     LIGHT_OUT = vec4(emissionColour * mask.g, 1.0);
     NORM_OUT.a = 1.0 - mask.g;
 #else
-//#if !defined(HOLE_HEIGHT)
     LIGHT_OUT = vec4(vec3(0.0), 1.0);
-//#endif
 #endif
 
 #if defined(MULTI_TARGET)
+    //this is effectively clip-space so +/- 1 is perfect for circles
     vec2 projUV = v_targetProjection.xy/v_targetProjection.w;
 
     float RingCount = 5.0;
     float l = length(projUV);
     float r = step(0.0, sin(min(RingCount, l * RingCount) * 3.14));
-    vec3 targetColour = mix(vec3(1.0, 0.0, 0.0), vec3(1.0), r);
+    vec3 targetColour = mix(vec3(1.0,0.972,0.882), vec3(0.721, 0.2, 0.188), r) * 0.8;
 
-    //this is effectively clip-space so +/- 1 is perfect for circles
-    FRAG_OUT.rgb = mix(targetColour, FRAG_OUT.rgb, step(1.0, l));
+    float targetAmount = 1.0 - step(1.0, l);
+
+    LIGHT_OUT = vec4(targetColour * targetAmount, 1.0);
+    NORM_OUT.a = 1.0 - (0.9 * targetAmount);
+
+    FRAG_OUT.rgb = mix(FRAG_OUT.rgb, targetColour + FRAG_OUT.rgb, targetAmount);
 #endif
 
     })";

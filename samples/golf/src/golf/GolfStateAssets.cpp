@@ -41,6 +41,7 @@ source distribution.
 
 #include <crogine/graphics/SpriteSheet.hpp>
 #include <crogine/graphics/DynamicMeshBuilder.hpp>
+#include <crogine/detail/glm/gtc/type_ptr.hpp>
 
 #include "../ErrorCheck.hpp"
 
@@ -1397,6 +1398,7 @@ void GolfState::loadMaterials()
     {
         m_targetShader.shaderID = shader->getGLHandle();
         m_targetShader.vpUniform = shader->getUniformID("u_targetViewProjectionMatrix");
+        m_targetShader.update();
     }
     auto& shaleTex = m_resources.textures.get("assets/golf/images/shale.png", true);
     shaleTex.setRepeated(true);
@@ -2319,4 +2321,16 @@ void GolfState::initAudio(bool loadTrees)
                 m_gameScene.destroyEntity(e);
             }
         };
+}
+
+
+void GolfState::TargetShader::update()
+{
+    static const auto RotMat = glm::toMat4(glm::rotate(cro::Transform::QUAT_IDENTITY, -cro::Util::Const::PI / 2.f, cro::Transform::X_AXIS));
+
+    projMat = glm::ortho(-size, size, -size, size, -20.f, 20.f);
+    viewMat = glm::translate(RotMat, -position );
+
+    glCheck(glUseProgram(shaderID));
+    glCheck(glUniformMatrix4fv(vpUniform, 1, GL_FALSE, glm::value_ptr(projMat * viewMat)));
 }

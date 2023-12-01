@@ -36,7 +36,7 @@ void main()
 
     float l = length(coord);
     float r = step(0.0, sin(min(RingCount, l * RingCount) * 3.14));
-    vec3 target = vec3(1.0, r, 1.0);
+    vec3 target = mix(vec3(1.0), vec3(1.0, 0.0, 0.0), r);
     vec3 base = vec3(0.0, 1.0, 1.0);
 
     FRAG_OUT = vec4(mix(target, base, step(1.0, l)), 1.0);

@@ -117,7 +117,6 @@ source distribution.
 #include <crogine/util/Easings.hpp>
 #include <crogine/util/Maths.hpp>
 
-#include <crogine/detail/glm/gtc/type_ptr.hpp>
 #include <crogine/detail/glm/gtc/matrix_transform.hpp>
 #include <crogine/detail/glm/gtx/rotate_vector.hpp>
 #include <crogine/detail/glm/gtx/euler_angles.hpp>
@@ -3387,6 +3386,12 @@ void GolfState::spawnBullsEye(const BullsEye& b)
             if (direction == AnimDirection::Grow)
             {
                 progress = std::min(1.f, progress + dt);
+
+                float scale = cro::Util::Easing::easeOutBack(progress) * targetScale;
+                e.getComponent<cro::Transform>().setScale(glm::vec3(scale));
+                m_targetShader.size = scale / 2.f;
+                m_targetShader.update();
+
                 if (progress == 1)
                 {
                     direction = AnimDirection::Hold;
@@ -3399,6 +3404,12 @@ void GolfState::spawnBullsEye(const BullsEye& b)
             else
             {
                 progress = std::max(0.f, progress - dt);
+
+                float scale = cro::Util::Easing::easeOutBack(progress) * targetScale;
+                e.getComponent<cro::Transform>().setScale(glm::vec3(scale));
+                m_targetShader.size = scale / 2.f;
+                m_targetShader.update();
+                
                 if (progress == 0)
                 {
                     e.getComponent<cro::Callback>().active = false;
@@ -3411,21 +3422,10 @@ void GolfState::spawnBullsEye(const BullsEye& b)
                 }
             }
 
-            float scale = cro::Util::Easing::easeOutBack(progress) * targetScale;
-            e.getComponent<cro::Transform>().setScale(glm::vec3(scale));
             e.getComponent<cro::Transform>().rotate(cro::Transform::Y_AXIS, dt * 0.2f);
         };
-
-
-        //vp matrix to project image onto course
-        glm::mat4 proj = glm::ortho(-12.f, 12.f, -12.f, 12.f, -15.f, 15.f);
-        glm::mat4 view = glm::translate(glm::mat4(1.f), -position); //negate this to save an inverse op
-        auto rotation = glm::rotate(cro::Transform::QUAT_IDENTITY, -cro::Util::Const::PI / 2.f, cro::Transform::X_AXIS);
-        view *= glm::toMat4(rotation);
-        glm::mat4 viewProj = proj * view;
-
-        glUseProgram(m_targetShader.shaderID);
-        glUniformMatrix4fv(m_targetShader.vpUniform, 1, GL_FALSE, glm::value_ptr(viewProj));
+        m_targetShader.position = position;
+        m_targetShader.update();
     }
     else
     {
