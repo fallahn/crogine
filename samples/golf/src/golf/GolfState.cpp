@@ -5267,6 +5267,12 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     {
         if (m_drone.isValid())
         {
+            auto t = m_collisionMesh.getTerrain(pos);
+            if (pos.y - t.height < 10.f)
+            {
+                pos.y += 10.f;
+            }
+
             auto& data = m_drone.getComponent<cro::Callback>().getUserData<DroneCallbackData>();
             data.target.getComponent<cro::Transform>().setPosition(pos);
             data.resetPosition = pos;

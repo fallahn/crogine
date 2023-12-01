@@ -46,6 +46,7 @@ namespace ScoreType
         ShortRound,
 
         Count,
+        BattleRoyale,
         BBB,
         NearestThePin,
         LongestDrive,

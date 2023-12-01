@@ -196,6 +196,8 @@ GolfGame::GolfGame()
     m_stateStack.registerState<EventOverlayState>(StateID::EventOverlay);
     m_stateStack.registerState<GCState>(StateID::GC);
 
+    m_sharedData.courseIndex = cro::Util::Random::value(0, 10);
+
 #ifdef CRO_DEBUG_
     m_stateStack.registerState<SqliteState>(StateID::SQLite);
 #endif
