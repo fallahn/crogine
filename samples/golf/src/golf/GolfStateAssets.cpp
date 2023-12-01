@@ -1416,11 +1416,17 @@ void GolfState::loadMaterials()
     m_gridShaders[0].holeHeight = shader->getUniformID("u_holeHeight");
 
 
-    m_resources.shaders.loadFromString(ShaderID::CourseGrid, CelVertexShader, CelFragmentShader, "#define HOLE_HEIGHT\n#define TEXTURED\n#define RX_SHADOWS\n#define CONTOUR\n" + wobble);
+    m_resources.shaders.loadFromString(ShaderID::CourseGrid, CelVertexShader, CelFragmentShader, "#define HOLE_HEIGHT\n#define TEXTURED\n#define RX_SHADOWS\n#define CONTOUR\n" + wobble + targetDefines);
     shader = &m_resources.shaders.get(ShaderID::CourseGrid);
     m_scaleBuffer.addShader(*shader);
     m_resolutionBuffer.addShader(*shader);
     m_windBuffer.addShader(*shader);
+    if (!targetDefines.empty())
+    {
+        m_targetShader.shaderID = shader->getGLHandle();
+        m_targetShader.vpUniform = shader->getUniformID("u_targetViewProjectionMatrix");
+        m_targetShader.update();
+    }
 
     m_gridShaders[1].shaderID = shader->getGLHandle();
     m_gridShaders[1].transparency = shader->getUniformID("u_transparency");
@@ -1602,11 +1608,12 @@ void GolfState::loadMaterials()
     m_resources.shaders.loadFromString(ShaderID::Beacon, BeaconVertex, BeaconFragment, "#define TEXTURED\n#define USE_MRT\n");
     m_materialIDs[MaterialID::Beacon] = m_resources.materials.add(m_resources.shaders.get(ShaderID::Beacon));
 
-    const std::string intensity = m_sharedData.nightTime ? "#define INTENSITY 0.9\n" : "#define INTENSITY 0.5\n";
+    const std::string intensity = m_sharedData.nightTime ? "#define INTENSITY 0.6\n" : "#define INTENSITY 0.3\n";
     m_resources.shaders.loadFromString(ShaderID::Target, cro::ModelRenderer::getDefaultVertexShader(cro::ModelRenderer::VertexShaderID::Unlit),
         BeaconFragment, intensity + "#define USE_MRT\n#define VERTEX_COLOUR\n");
     m_materialIDs[MaterialID::Target] = m_resources.materials.add(m_resources.shaders.get(ShaderID::Target));
     m_resources.materials.get(m_materialIDs[MaterialID::Target]).blendMode = cro::Material::BlendMode::Additive;
+    m_resources.materials.get(m_materialIDs[MaterialID::Target]).doubleSided = true;
 }
 
 void GolfState::loadSprites()

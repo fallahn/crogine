@@ -85,6 +85,7 @@ source distribution.
 #include <crogine/core/Clock.hpp>
 #include <crogine/core/Message.hpp>
 #include <crogine/core/ConfigFile.hpp>
+#include <crogine/core/SysTime.hpp>
 #include <crogine/gui/Gui.hpp>
 #include <crogine/graphics/SpriteSheet.hpp>
 #include <crogine/detail/Types.hpp>
@@ -196,7 +197,7 @@ GolfGame::GolfGame()
     m_stateStack.registerState<EventOverlayState>(StateID::EventOverlay);
     m_stateStack.registerState<GCState>(StateID::GC);
 
-    m_sharedData.courseIndex = cro::Util::Random::value(0, 10);
+    m_sharedData.courseIndex = cro::SysTime::now().months() % 11;
 
 #ifdef CRO_DEBUG_
     m_stateStack.registerState<SqliteState>(StateID::SQLite);

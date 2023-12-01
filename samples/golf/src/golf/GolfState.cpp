@@ -3364,6 +3364,11 @@ void GolfState::spawnBullsEye(const BullsEye& b)
 {
     if (b.spawn)
     {
+        //make sure to select the correct shader
+        auto* shader = m_holeData[m_currentHole].puttFromTee ? &m_resources.shaders.get(ShaderID::CourseGrid) : &m_resources.shaders.get(ShaderID::Course);
+        m_targetShader.shaderID = shader->getGLHandle();
+        m_targetShader.vpUniform = shader->getUniformID("u_targetViewProjectionMatrix");
+
         auto targetScale = b.diametre;
 
         auto position = b.position;
@@ -3389,7 +3394,7 @@ void GolfState::spawnBullsEye(const BullsEye& b)
 
                 float scale = cro::Util::Easing::easeOutBack(progress) * targetScale;
                 e.getComponent<cro::Transform>().setScale(glm::vec3(scale));
-                m_targetShader.size = scale / 2.f;
+                m_targetShader.size = (scale / 2.f) + TargetShader::Sigma;
                 m_targetShader.update();
 
                 if (progress == 1)
@@ -3407,7 +3412,7 @@ void GolfState::spawnBullsEye(const BullsEye& b)
 
                 float scale = cro::Util::Easing::easeOutBack(progress) * targetScale;
                 e.getComponent<cro::Transform>().setScale(glm::vec3(scale));
-                m_targetShader.size = scale / 2.f;
+                m_targetShader.size = (scale / 2.f) + TargetShader::Sigma;
                 m_targetShader.update();
                 
                 if (progress == 0)
