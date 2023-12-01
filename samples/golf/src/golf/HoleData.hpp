@@ -51,6 +51,7 @@ static const std::array<std::string, 10u> CourseNames =
     "course_08",
     "course_09",
     "course_10",
+    //"course_11",
 };
 
 static inline std::int32_t getCourseIndex(const std::string& name)

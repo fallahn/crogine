@@ -1257,7 +1257,17 @@ void OptionsState::buildScene()
 void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& spriteSheet)
 {
     auto bgBounds = parent.getComponent<cro::Sprite>().getTextureBounds();
-    auto& font = m_sharedData.sharedResources->fonts.get(FontID::Info);
+    const auto& font = m_sharedData.sharedResources->fonts.get(FontID::Info);
+
+    const auto& titleFont = m_sharedData.sharedResources->fonts.get(FontID::UI);
+    auto titleEnt = m_scene.createEntity();
+    titleEnt.addComponent<cro::Transform>().setPosition({ bgBounds.width / 2.f, 174.f, TextOffset });
+    titleEnt.addComponent<cro::Drawable2D>();
+    titleEnt.addComponent<cro::Text>(titleFont).setString("Audio & Video");
+    titleEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    titleEnt.getComponent<cro::Text>().setCharacterSize(UITextSize);
+    titleEnt.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    parent.getComponent<cro::Transform>().addChild(titleEnt.getComponent<cro::Transform>());
 
     auto createLabel = [&](glm::vec2 pos, const std::string& str)
     {
@@ -2345,18 +2355,28 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
 
     auto& infoFont = m_sharedData.sharedResources->fonts.get(FontID::Info);
     auto& uiFont = m_sharedData.sharedResources->fonts.get(FontID::UI);
+
+    auto titleEnt = m_scene.createEntity();
+    titleEnt.addComponent<cro::Transform>().setPosition({ parentBounds.width / 2.f, 174.f, TextOffset });
+    titleEnt.addComponent<cro::Drawable2D>();
+    titleEnt.addComponent<cro::Text>(uiFont).setString("Controls");
+    titleEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    titleEnt.getComponent<cro::Text>().setCharacterSize(UITextSize);
+    titleEnt.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    parent.getComponent<cro::Transform>().addChild(titleEnt.getComponent<cro::Transform>());
+
+
     auto infoEnt = m_scene.createEntity();
-    infoEnt.addComponent<cro::Transform>().setPosition(glm::vec3(parentBounds.width / 2.f, parentBounds.height + 8.f, TextOffset));
+    infoEnt.addComponent<cro::Transform>().setPosition({ parentBounds.width / 2.f, -4.f, TextOffset });
     infoEnt.addComponent<cro::Drawable2D>();
-    infoEnt.addComponent<cro::Text>(uiFont);
+    infoEnt.addComponent<cro::Text>(infoFont).setAlignment(cro::Text::Alignment::Centre);
     if (!Social::isSteamdeck())
     {
         infoEnt.getComponent<cro::Text>().setString("Click On A Keybind To Change It");
     }
     infoEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
-    infoEnt.getComponent<cro::Text>().setCharacterSize(UITextSize);
+    infoEnt.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
     infoEnt.addComponent<cro::CommandTarget>().ID = CommandID::Menu::PlayerConfig; //not the best description, just recycling existing members here...
-    centreText(infoEnt);
     infoEnt.addComponent<cro::Callback>().function =
         [](cro::Entity e, float dt)
     {
@@ -2365,7 +2385,6 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
         if (currTime < 0)
         {
             e.getComponent<cro::Text>().setString(str);
-            centreText(e);
             e.getComponent<cro::Callback>().active = false;
         }
     };
@@ -2374,7 +2393,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
 
 
     auto buttonChangeEnt = m_scene.createEntity();
-    buttonChangeEnt.addComponent<cro::Transform>().setPosition(glm::vec3((parentBounds.width / 4.f) * 3.f, 12.f, TextOffset));
+    buttonChangeEnt.addComponent<cro::Transform>().setPosition(glm::vec3((parentBounds.width / 4.f) * 3.f, 130.f, TextOffset));
     buttonChangeEnt.addComponent<cro::Drawable2D>();
     buttonChangeEnt.addComponent<cro::Text>(infoFont).setString("Press Enter to Change");
     buttonChangeEnt.getComponent<cro::Text>().setFillColour(cro::Colour::Transparent);
@@ -2394,7 +2413,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
             {
                 infoEnt.getComponent<cro::Text>().setString("Click On A Keybind To Change It");
             }
-            centreText(infoEnt);
+
             buttonChangeEnt.getComponent<cro::Text>().setFillColour(cro::Colour::Transparent);
             e.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
         });
@@ -2424,7 +2443,6 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
                     //still returns an immutable reference
                     auto b = infoEnt;
                     b.getComponent<cro::Text>().setString("Press a Key");
-                    centreText(infoEnt);
 
                     m_bindingIndex = keyIndex;
 
@@ -2611,7 +2629,6 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
             e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
             e.getComponent<cro::AudioEmitter>().play();
             infoEnt.getComponent<cro::Text>().setString(m_labelStrings[InputBinding::PrevClub] + keyString(InputBinding::PrevClub, m_sharedData));
-            centreText(infoEnt);
 
             buttonChangeEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
             m_scene.getActiveCamera().getComponent<cro::Camera>().active = true;
@@ -2629,7 +2646,6 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
             e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
             e.getComponent<cro::AudioEmitter>().play();
             infoEnt.getComponent<cro::Text>().setString(m_labelStrings[InputBinding::NextClub] + keyString(InputBinding::NextClub, m_sharedData));
-            centreText(infoEnt);
 
             buttonChangeEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
             m_scene.getActiveCamera().getComponent<cro::Camera>().active = true;
@@ -2646,7 +2662,6 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
             e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
             e.getComponent<cro::AudioEmitter>().play();
             infoEnt.getComponent<cro::Text>().setString(m_labelStrings[InputBinding::CancelShot] + keyString(InputBinding::CancelShot, m_sharedData));
-            centreText(infoEnt);
 
             buttonChangeEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
             m_scene.getActiveCamera().getComponent<cro::Camera>().active = true;
@@ -2663,7 +2678,6 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
             e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
             e.getComponent<cro::AudioEmitter>().play();
             infoEnt.getComponent<cro::Text>().setString(m_labelStrings[InputBinding::Left] + keyString(InputBinding::Left, m_sharedData));
-            centreText(infoEnt);
 
             buttonChangeEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
             m_scene.getActiveCamera().getComponent<cro::Camera>().active = true;
@@ -2680,7 +2694,6 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
             e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
             e.getComponent<cro::AudioEmitter>().play();
             infoEnt.getComponent<cro::Text>().setString(m_labelStrings[InputBinding::Right] + keyString(InputBinding::Right, m_sharedData));
-            centreText(infoEnt);
 
             buttonChangeEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
             m_scene.getActiveCamera().getComponent<cro::Camera>().active = true;
@@ -2697,7 +2710,6 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
             e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
             e.getComponent<cro::AudioEmitter>().play();
             infoEnt.getComponent<cro::Text>().setString(m_labelStrings[InputBinding::Action] + keyString(InputBinding::Action, m_sharedData));
-            centreText(infoEnt);
 
             buttonChangeEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
             m_scene.getActiveCamera().getComponent<cro::Camera>().active = true;
@@ -2715,7 +2727,6 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
             e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
             e.getComponent<cro::AudioEmitter>().play();
             infoEnt.getComponent<cro::Text>().setString(m_labelStrings[InputBinding::Up] + keyString(InputBinding::Up, m_sharedData));
-            centreText(infoEnt);
 
             buttonChangeEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
             m_scene.getActiveCamera().getComponent<cro::Camera>().active = true;
@@ -2732,7 +2743,6 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
             e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
             e.getComponent<cro::AudioEmitter>().play();
             infoEnt.getComponent<cro::Text>().setString(m_labelStrings[InputBinding::Down] + keyString(InputBinding::Down, m_sharedData));
-            centreText(infoEnt);
 
             buttonChangeEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
             m_scene.getActiveCamera().getComponent<cro::Camera>().active = true;
@@ -2755,7 +2765,6 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
                 e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
                 e.getComponent<cro::AudioEmitter>().play();
                 infoEnt.getComponent<cro::Text>().setString(m_labelStrings[InputBinding::SwitchView] + keyString(InputBinding::SwitchView, m_sharedData));
-                centreText(infoEnt);
             });
 
         //rotate cam
@@ -2772,7 +2781,6 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
                 e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
                 e.getComponent<cro::AudioEmitter>().play();
                 infoEnt.getComponent<cro::Text>().setString(m_labelStrings[InputBinding::CamModifier] + keyString(InputBinding::CamModifier, m_sharedData));
-                centreText(infoEnt);
             });
     }
     else
@@ -2788,7 +2796,6 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
                 e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
                 e.getComponent<cro::AudioEmitter>().play();
                 infoEnt.getComponent<cro::Text>().setString(m_labelStrings[InputBinding::EmoteMenu] + keyString(InputBinding::EmoteMenu, m_sharedData));
-                centreText(infoEnt);
 
                 buttonChangeEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
                 m_scene.getActiveCamera().getComponent<cro::Camera>().active = true;
@@ -2805,7 +2812,6 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
                 e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
                 e.getComponent<cro::AudioEmitter>().play();
                 infoEnt.getComponent<cro::Text>().setString(m_labelStrings[InputBinding::SpinMenu] + keyString(InputBinding::SpinMenu, m_sharedData));
-                centreText(infoEnt);
 
                 buttonChangeEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
                 m_scene.getActiveCamera().getComponent<cro::Camera>().active = true;
@@ -2826,7 +2832,6 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
                 e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
                 e.getComponent<cro::AudioEmitter>().play();
                 infoEnt.getComponent<cro::Text>().setString("Show Scores (Tab)");
-                centreText(infoEnt);
             });
     }
 
@@ -3008,12 +3013,10 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
                 {
                     infoEnt.getComponent<cro::Text>().setString("Click On A Keybind To Change It");
                 }
-                centreText(infoEnt);
             }
             else
             {
                 infoEnt.getComponent<cro::Text>().setString(e.getLabel());
-                centreText(infoEnt);
             }
         });
     auto unselectedID = uiSystem.addCallback([](cro::Entity e)
@@ -3194,6 +3197,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
 
     //invert X
     entity = createSquareHighlight(glm::vec2(17.f, 54.f));
+    entity.setLabel("Invert the controller X axis when playing Billiards");
     entity.getComponent<cro::UIInput>().setSelectionIndex(CtrlInvX);
     entity.getComponent<cro::UIInput>().setNextIndex(CtrlVib, CtrlInvY);
     entity.getComponent<cro::UIInput>().setPrevIndex(CtrlY, CtrlLookL);
@@ -3232,6 +3236,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
 
     //rumble enable
     entity = createSquareHighlight(glm::vec2(103.f, 54.f));
+    entity.setLabel("Enable or disable controller vibration");
     entity.getComponent<cro::UIInput>().setSelectionIndex(CtrlVib);
     entity.getComponent<cro::UIInput>().setNextIndex(CtrlLeft, CtrlAltPower);
     entity.getComponent<cro::UIInput>().setPrevIndex(CtrlInvX, CtrlLookR);
@@ -3269,7 +3274,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
 
     //alt power input
     entity = createSquareHighlight(glm::vec2(103.f, 38.f));
-    entity.setLabel("Press and hold Action to select stroke power");
+    entity.setLabel("When enabled press and hold Action to select stroke power\nelse use the default 2-tap method when disabled");
     entity.getComponent<cro::UIInput>().setSelectionIndex(CtrlAltPower);
     entity.getComponent<cro::UIInput>().setNextIndex(CtrlLeft, CtrlReset);
     entity.getComponent<cro::UIInput>().setPrevIndex(CtrlInvY, CtrlVib);
@@ -3308,6 +3313,7 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
 
     //invert Y
     entity = createSquareHighlight(glm::vec2(17.f, 38.f));
+    entity.setLabel("Invert the controller Y axis when playing Billiards");
     entity.getComponent<cro::UIInput>().setSelectionIndex(CtrlInvY);
     entity.getComponent<cro::UIInput>().setNextIndex(CtrlRight, WindowAdvanced);
     entity.getComponent<cro::UIInput>().setPrevIndex(CtrlB, CtrlInvX);
@@ -3362,7 +3368,6 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
             if (!Social::isSteamdeck())
             {
                 infoEnt.getComponent<cro::Text>().setString("Reset All Keybinds To Their Default Values");
-                centreText(infoEnt);
             }
 
             e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
@@ -3375,7 +3380,6 @@ void OptionsState::buildControlMenu(cro::Entity parent, const cro::SpriteSheet& 
             if (!Social::isSteamdeck())
             {
                 infoEnt.getComponent<cro::Text>().setString("Click On A Keybind To Change It");
-                centreText(infoEnt);
             }
 
             e.getComponent<cro::Sprite>().setColour(cro::Colour::Transparent);
@@ -3404,6 +3408,18 @@ void OptionsState::buildAchievementsMenu(cro::Entity parent, const cro::SpriteSh
 {
     //render details to buffer
     auto& largeFont = m_sharedData.sharedResources->fonts.get(FontID::UI);
+
+    auto parentBounds = parent.getComponent<cro::Sprite>().getTextureBounds();
+    auto titleEnt = m_scene.createEntity();
+    titleEnt.addComponent<cro::Transform>().setPosition({ parentBounds.width / 2.f, 174.f, TextOffset });
+    titleEnt.addComponent<cro::Drawable2D>();
+    titleEnt.addComponent<cro::Text>(largeFont).setString("Achievements");
+    titleEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    titleEnt.getComponent<cro::Text>().setCharacterSize(UITextSize);
+    titleEnt.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    parent.getComponent<cro::Transform>().addChild(titleEnt.getComponent<cro::Transform>());
+
+
     cro::SimpleText title(largeFont);
     title.setFillColour(TextNormalColour);
     title.setCharacterSize(UITextSize);
@@ -3606,6 +3622,18 @@ void OptionsState::buildAchievementsMenu(cro::Entity parent, const cro::SpriteSh
 void OptionsState::buildStatsMenu(cro::Entity parent, const cro::SpriteSheet& spriteSheet)
 {
     auto& largeFont = m_sharedData.sharedResources->fonts.get(FontID::UI);
+
+    auto parentBounds = parent.getComponent<cro::Sprite>().getTextureBounds();
+    auto titleEnt = m_scene.createEntity();
+    titleEnt.addComponent<cro::Transform>().setPosition({ parentBounds.width / 2.f, 174.f, TextOffset });
+    titleEnt.addComponent<cro::Drawable2D>();
+    titleEnt.addComponent<cro::Text>(largeFont).setString("Stats");
+    titleEnt.getComponent<cro::Text>().setFillColour(TextNormalColour);
+    titleEnt.getComponent<cro::Text>().setCharacterSize(UITextSize);
+    titleEnt.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    parent.getComponent<cro::Transform>().addChild(titleEnt.getComponent<cro::Transform>());
+
+
     cro::SimpleText title(largeFont);
     title.setFillColour(TextNormalColour);
     title.setCharacterSize(UITextSize);
