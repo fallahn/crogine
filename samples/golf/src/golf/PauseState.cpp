@@ -374,6 +374,7 @@ void PauseState::buildScene()
 
     //return to game
     entity = createItem(glm::vec2(0.f, 28.f), "Return", menuEntity);
+    entity.getComponent<cro::Text>().setFillColour(TextGoldColour);
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Main);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
         uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt)

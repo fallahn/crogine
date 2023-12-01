@@ -484,9 +484,9 @@ void BushState::createScene()
 
     //ortho cam for creating thumbnails
     m_thumbnailCamera = m_gameScene.createEntity();
-    m_thumbnailCamera.addComponent<cro::Transform>().setPosition({ 0.f, 10.f, 0.f });
+    m_thumbnailCamera.addComponent<cro::Transform>().setPosition({ 0.f, 20.f, 0.f });
     m_thumbnailCamera.getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -90.f * cro::Util::Const::degToRad);
-    m_thumbnailCamera.addComponent<cro::Camera>().setOrthographic(0.f, 320.f, 0.f, 200.f, -0.1f, 20.f);
+    m_thumbnailCamera.addComponent<cro::Camera>().setOrthographic(0.f, 320.f, 0.f, 200.f, -0.1f, 30.f);
     m_thumbnailCamera.getComponent<cro::Camera>().viewport = { 0.f, 0.f, 1.f, 1.f };
     m_thumbnailCamera.getComponent<cro::Camera>().setRenderFlags(cro::Camera::Pass::Final, RenderFlagsThumbnail);
 }
@@ -1103,6 +1103,8 @@ void BushState::createThumbnails()
     std::vector<std::string> outPaths;
 
     auto dirs = cro::FileSystem::listDirectories("assets/golf/courses");
+    dirs.erase(std::remove_if(dirs.begin(), dirs.end(), [](const std::string& s) {return s.find("course_") == std::string::npos; }), dirs.end());
+
     for (auto dir : dirs)
     {
         auto path = "assets/golf/courses/" + dir + "/course.data";
@@ -1113,7 +1115,7 @@ void BushState::createThumbnails()
             path = "assets/golf/thumbs/" + dir;
             if (!cro::FileSystem::directoryExists(path))
             {
-                LogI << "creating directory..." << std::endl;
+                LogI << "creating directory " << dir << "..." << std::endl;
                 cro::FileSystem::createDirectory(path);
             }
             outPaths.push_back(path);

@@ -2717,9 +2717,8 @@ void GolfState::buildScene()
                 createWeather(WeatherType::Snow);
                 setFog(m_sharedData.nightTime ? 0.45f : 0.3f);
 
-                cro::String title(std::uint32_t(0x2744));
-                title += std::uint32_t(0xFE0F);
-                m_courseTitle = title + m_courseTitle;
+                m_courseTitle += std::uint32_t(0x2744);
+                m_courseTitle += std::uint32_t(0xFE0F);
             }
         }
         break;
@@ -4672,16 +4671,16 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo)
     //update status
     const std::size_t MaxTitleLen = 220;
 
-    cro::String courseTitle;
+    cro::String courseTitle = m_courseTitle.substr(0, MaxTitleLen);
     if (m_sharedData.nightTime)
     {
         //moon
-        courseTitle = cro::String(std::uint32_t(0x1F319));
+        courseTitle += cro::String(std::uint32_t(0x1F319));
     }
     else
     {
         //sun
-        courseTitle = cro::String(std::uint32_t(0x2600));
+        courseTitle += cro::String(std::uint32_t(0x2600));
         courseTitle += cro::String(std::uint32_t(0xFE0F));
     }
 
@@ -4714,9 +4713,7 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo)
         break;
     }
 
-    courseTitle += m_courseTitle;
-
-    const auto title = m_sharedData.tutorial ? cro::String("Tutorial").toUtf8() : courseTitle.substr(0, MaxTitleLen).toUtf8();
+    const auto title = m_sharedData.tutorial ? cro::String("Tutorial").toUtf8() : courseTitle.toUtf8()/*.substr(0, MaxTitleLen)*/;
     const auto holeNumber = std::to_string(m_currentHole + 1);
     const auto holeTotal = std::to_string(m_holeData.size());
     //well... this is awful.
