@@ -249,6 +249,8 @@ void PlayerManagementState::buildScene()
 
                 m_scene.setSystemActive<cro::AudioPlayerSystem>(true);
                 refreshPlayerList();
+
+                m_scene.getSystem<cro::UISystem>()->selectByIndex(BaseSelectionIndex);
             }
             break;
         case RootCallbackData::FadeOut:
@@ -632,6 +634,8 @@ void PlayerManagementState::refreshPlayerList()
 
     m_playerList.selectedClient = 0;
     m_playerList.selectedPlayer = 0;
+    m_playerList.buttons[0].getComponent<cro::Sprite>().setColour(cro::Colour::White);
+
     refreshPreview();
 }
 
