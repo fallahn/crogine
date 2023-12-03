@@ -172,13 +172,13 @@ private:
 
     struct TargetShader final
     {
-        static constexpr float Sigma = 0.0001f;
+        static constexpr float Epsilon = 0.0001f;
 
         std::uint32_t shaderID = 0;
         std::int32_t vpUniform = -1;
 
         glm::vec3 position = glm::vec3(0.f);
-        float size = Sigma;
+        float size = Epsilon;
 
         glm::mat4 viewMat = glm::mat4(1.f);
         glm::mat4 projMat = glm::mat4(1.f);

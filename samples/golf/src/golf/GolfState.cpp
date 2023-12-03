@@ -3393,8 +3393,8 @@ void GolfState::spawnBullsEye(const BullsEye& b)
                 progress = std::min(1.f, progress + dt);
 
                 float scale = cro::Util::Easing::easeOutBack(progress) * targetScale;
-                e.getComponent<cro::Transform>().setScale(glm::vec3(scale));
-                m_targetShader.size = (scale / 2.f) + TargetShader::Sigma;
+                e.getComponent<cro::Transform>().setScale(glm::vec3(scale, targetScale, scale));
+                m_targetShader.size = (scale / 2.f) + TargetShader::Epsilon;
                 m_targetShader.update();
 
                 if (progress == 1)
@@ -3411,8 +3411,8 @@ void GolfState::spawnBullsEye(const BullsEye& b)
                 progress = std::max(0.f, progress - dt);
 
                 float scale = cro::Util::Easing::easeOutBack(progress) * targetScale;
-                e.getComponent<cro::Transform>().setScale(glm::vec3(scale));
-                m_targetShader.size = (scale / 2.f) + TargetShader::Sigma;
+                e.getComponent<cro::Transform>().setScale(glm::vec3(scale, targetScale, scale));
+                m_targetShader.size = (scale / 2.f) + TargetShader::Epsilon;
                 m_targetShader.update();
                 
                 if (progress == 0)

@@ -31,6 +31,7 @@ source distribution.
 #include <crogine/core/Log.hpp>
 #include <crogine/core/App.hpp>
 #include <crogine/core/Cursor.hpp>
+#include <crogine/core/Message.hpp>
 #include <crogine/detail/SDLResource.hpp>
 
 #include <SDL.h>
@@ -272,6 +273,9 @@ void Window::setFullScreen(bool fullscreen)
             SDL_SetWindowSize(m_window, m_previousWindowSize.x, m_previousWindowSize.y);
             SDL_SetWindowPosition(m_window, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
         }
+
+        auto* msg = App::postMessage<Message::SystemEvent>(Message::SystemMessage);
+        msg->type = Message::SystemEvent::FullScreenToggled;
     }
     else
     {

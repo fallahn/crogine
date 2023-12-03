@@ -130,6 +130,7 @@ namespace
     static constexpr float SliderWidth = 142.f;
     static constexpr glm::vec3 ToolTipOffset(10.f, 10.f, 0.f);
 
+    cro::Entity resolutionLabel; //nasty static hack to update label on window FS toggle
 
     const std::array<cro::String, 4u> AAStrings =
     {
@@ -549,6 +550,32 @@ void OptionsState::handleMessage(const cro::Message& msg)
         if (data.type == SystemEvent::PostProcessToggled)
         {
             m_scene.getActiveCamera().getComponent<cro::Camera>().active = true;
+        }
+    }
+    else if (msg.id == cro::Message::SystemMessage)
+    {
+        const auto& data = msg.getData<cro::Message::SystemEvent>();
+        if (data.type == cro::Message::SystemEvent::FullScreenToggled)
+        {
+            auto& cam = m_scene.getActiveCamera().getComponent<cro::Camera>();
+            cam.active = true;
+            cam.resizeCallback(cam);
+
+            m_videoSettings.fullScreen = cro::App::getWindow().isFullscreen();
+
+            auto currentRes = cro::App::getWindow().getSize();
+            if (auto res = std::find_if(m_sharedData.resolutions.cbegin(), m_sharedData.resolutions.cend(),
+                [currentRes](const glm::uvec2& r)
+                {
+                    return r == currentRes;
+                });
+                res != m_sharedData.resolutions.cend())
+            {
+                m_videoSettings.resolutionIndex = std::distance(m_sharedData.resolutions.cbegin(), res);
+
+                resolutionLabel.getComponent<cro::Text>().setString(m_sharedData.resolutionStrings[m_videoSettings.resolutionIndex]);
+                centreText(resolutionLabel);
+            }
         }
     }
     m_scene.forwardMessage(msg);
@@ -1314,6 +1341,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
     //resolution value text
     resLabel = createLabel(glm::vec2(136.f, 82.f), m_sharedData.resolutionStrings[m_videoSettings.resolutionIndex]);
     centreText(resLabel);
+    resolutionLabel = resLabel; //globa static used by callback to update display when window is toggled FS
 
     //pixel scale label
     auto pixelLabel = createLabel(glm::vec2(12.f, 66.f), "Pixel Scaling");
@@ -2284,7 +2312,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
 
     //prev / next tree quality
     entity = createHighlight(glm::vec2(286.f, 25.f));
-    entity.setLabel("Switch between billboard and 3D trees.\nThis is applied at the next hole change.");
+    entity.setLabel("Switch between billboard and 3D trees.\nThis is applied at the next course change.");
     entity.getComponent<cro::UIInput>().setSelectionIndex(AVTreeL);
     entity.getComponent<cro::UIInput>().setNextIndex(AVTreeR, AVShadowL);
     entity.getComponent<cro::UIInput>().setPrevIndex(AVFullScreen, AVGridL);
@@ -2301,7 +2329,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
             });
 
     entity = createHighlight(glm::vec2(355.f, 25.f));
-    entity.setLabel("Switch between billboard and 3D trees.\nThis is applied at the next hole change.");
+    entity.setLabel("Switch between billboard and 3D trees.\nThis is applied at the next course change.");
     entity.getComponent<cro::UIInput>().setSelectionIndex(AVTreeR);
     entity.getComponent<cro::UIInput>().setNextIndex(AVFullScreen, AVShadowR);
     entity.getComponent<cro::UIInput>().setPrevIndex(AVTreeL, AVGridR);
@@ -3994,10 +4022,6 @@ void OptionsState::createButtons(cro::Entity parent, std::int32_t menuID, std::u
                     cro::App::getWindow().setSize(m_sharedData.resolutions[m_videoSettings.resolutionIndex]);
                 }
                 m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
-
-                auto& cam = m_scene.getActiveCamera().getComponent<cro::Camera>();
-                cam.active = true;
-                cam.resizeCallback(cam);
             }
         });
     entity.addComponent<cro::Callback>().active = true;
