@@ -1051,6 +1051,21 @@ void GolfState::buildUI()
 
             if (scale == 0)
             {
+                if (m_sharedData.scoreType == ScoreType::MultiTarget)
+                {
+                    auto* shader = m_holeData[m_currentHole].puttFromTee ? &m_resources.shaders.get(ShaderID::CourseGrid) : &m_resources.shaders.get(ShaderID::Course);
+                    m_targetShader.shaderID = shader->getGLHandle();
+                    m_targetShader.vpUniform = shader->getUniformID("u_targetViewProjectionMatrix");
+
+                    m_targetShader.size = 5.f; //we don't actually know what size has been chosen, so this is a rough average
+                    if (m_holeData[m_currentHole].puttFromTee)
+                    {
+                        m_targetShader.size *= 0.032f;
+                    }
+                    m_targetShader.position = m_holeData[m_currentHole].target;
+                    m_targetShader.update();
+                }
+
                 m_mapCam.getComponent<cro::Transform>().setRotation(cro::Transform::X_AXIS, -90.f * cro::Util::Const::degToRad);
 
                 //update render
@@ -1086,6 +1101,12 @@ void GolfState::buildUI()
 
                 auto* msg = postMessage<SceneEvent>(MessageID::SceneMessage);
                 msg->type = SceneEvent::MinimapUpdated;
+
+                if (m_sharedData.scoreType == ScoreType::MultiTarget)
+                {
+                    m_targetShader.size = 0.f;
+                    m_targetShader.update();
+                }
             }
         }
         else
@@ -1147,29 +1168,29 @@ void GolfState::buildUI()
     };
     mapEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
-    //target icon in multitarget mode
-    if (m_sharedData.scoreType == ScoreType::MultiTarget)
-    {
-        auto tBounds = m_sprites[SpriteID::MapTarget].getTextureBounds();
+    //target icon in multitarget mode - this is now rendered directly on the texture
+    //if (m_sharedData.scoreType == ScoreType::MultiTarget)
+    //{
+    //    auto tBounds = m_sprites[SpriteID::MapTarget].getTextureBounds();
 
-        entity = m_uiScene.createEntity();
-        entity.addComponent<cro::Transform>().setOrigin({ tBounds.width / 2.f, tBounds.height / 2.f });
-        entity.addComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
-        entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::MiniFlag;
-        entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::MapTarget]; //used to show/hide so can share with flag
-        entity.addComponent<cro::Callback>().active = true;
-        entity.getComponent<cro::Callback>().function =
-            [&, mapEnt](cro::Entity e, float dt)
-            {
-                e.getComponent<cro::Transform>().setPosition(glm::vec3(m_minimapZoom.toMapCoords(m_holeData[m_currentHole].target), 0.02f));
-                e.getComponent<cro::Transform>().setScale((m_minimapZoom.mapScale * 2.f * (1.f + ((m_minimapZoom.zoom - 1.f) * 0.125f))) * 0.75f);
+    //    entity = m_uiScene.createEntity();
+    //    entity.addComponent<cro::Transform>().setOrigin({ tBounds.width / 2.f, tBounds.height / 2.f });
+    //    entity.addComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
+    //    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::MiniFlag;
+    //    entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::MapTarget]; //used to show/hide so can share with flag
+    //    entity.addComponent<cro::Callback>().active = true;
+    //    entity.getComponent<cro::Callback>().function =
+    //        [&, mapEnt](cro::Entity e, float dt)
+    //        {
+    //            e.getComponent<cro::Transform>().setPosition(glm::vec3(m_minimapZoom.toMapCoords(m_holeData[m_currentHole].target), 0.02f));
+    //            e.getComponent<cro::Transform>().setScale((m_minimapZoom.mapScale * 2.f * (1.f + ((m_minimapZoom.zoom - 1.f) * 0.125f))) * 0.75f);
 
-                auto miniBounds = mapEnt.getComponent<cro::Transform>().getWorldTransform() * mapEnt.getComponent<cro::Drawable2D>().getLocalBounds();
-                auto targBounds = glm::inverse(e.getComponent<cro::Transform>().getWorldTransform()) * miniBounds;
-                e.getComponent<cro::Drawable2D>().setCroppingArea(targBounds);
-            };
-        mapEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-    }
+    //            auto miniBounds = mapEnt.getComponent<cro::Transform>().getWorldTransform() * mapEnt.getComponent<cro::Drawable2D>().getLocalBounds();
+    //            auto targBounds = glm::inverse(e.getComponent<cro::Transform>().getWorldTransform()) * miniBounds;
+    //            e.getComponent<cro::Drawable2D>().setCroppingArea(targBounds);
+    //        };
+    //    mapEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    //}
 
 
     //stroke indicator

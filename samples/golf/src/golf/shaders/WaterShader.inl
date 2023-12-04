@@ -80,7 +80,10 @@ inline const std::string WaterFragment = R"(
     #define MAX_RADIUS 239.9
 
     uniform sampler2D u_reflectionMap;
-    uniform sampler2D u_refractionMap;
+#if defined(RAIN)
+    uniform sampler2D u_rainTexture;
+    uniform float u_rainAmount;
+#endif
 
 #if !defined(NO_DEPTH)
 uniform sampler2DArray u_depthMap;
@@ -104,7 +107,8 @@ uniform sampler2DArray u_depthMap;
     VARYING_IN float v_scale;
 
     //pixels per metre
-    vec2 PixelCount = vec2(320.0 * 4.0, 200.0 * 4.0);
+    const vec2 PixelCount = vec2(1280.0, 800.0);
+    const vec2 TileCount = vec2(320.0, 200.0); //tiles of rain animation
 
     const vec3 WaterColour = vec3(0.02, 0.078, 0.578);
     //const vec3 WaterColour = vec3(0.2, 0.278, 0.278);
@@ -212,6 +216,11 @@ uniform sampler2DArray u_depthMap;
         blendedColour = (edgeWave * depth) + blendedColour;
         blendedColour = (depth * 0.18) + blendedColour;
 #endif
+
+#if defined(RAIN)
+        blendedColour = (TEXTURE(u_rainTexture, v_texCoord /** TileCount*/).rgb * u_rainAmount) + (blendedColour);
+#endif
+
         FRAG_OUT = vec4(blendedColour, 1.0);
     })";
 

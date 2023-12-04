@@ -1585,15 +1585,25 @@ void GolfState::loadMaterials()
     m_minimapZoom.matrixUniformID = shader->getUniformID("u_coordMatrix");
 
     //water
-    m_resources.shaders.loadFromString(ShaderID::Water, WaterVertex, WaterFragment, "#define USE_MRT\n");
+    std::string waterDefines;
+    //if (m_sharedData.weatherType == WeatherType::Rain
+    //    || m_sharedData.weatherType == WeatherType::Showers)
+    //{
+    //    waterDefines = "#define RAIN\n";
+    //}
+    m_resources.shaders.loadFromString(ShaderID::Water, WaterVertex, WaterFragment, "#define USE_MRT\n" + waterDefines);
     shader = &m_resources.shaders.get(ShaderID::Water);
     m_scaleBuffer.addShader(*shader);
     m_windBuffer.addShader(*shader);
     m_materialIDs[MaterialID::Water] = m_resources.materials.add(*shader);
-    //m_resources.materials.get(m_materialIDs[MaterialID::Water]).setProperty("u_noiseTexture", noiseTex);
-    //forces rendering last to reduce overdraw - overdraws stroke indicator though(??)
-    //also suffers the black banding effect where alpha  < 1
-    //m_resources.materials.get(m_materialIDs[MaterialID::Water]).blendMode = cro::Material::BlendMode::Alpha; 
+    if (!waterDefines.empty())
+    {
+        auto& waterTex = m_resources.textures.get("assets/golf/images/rain_water.png");
+        m_resources.materials.get(m_materialIDs[MaterialID::Water]).setProperty("u_rainTexture", waterTex);
+        m_resources.materials.get(m_materialIDs[MaterialID::Water]).setProperty("u_rainAmount", 1.f);
+    }
+
+ 
 
     //this version is affected by the sunlight colour of the scene
     m_resources.shaders.loadFromString(ShaderID::HorizonSun, HorizonVert, HorizonFrag, "#define SUNLIGHT\n");
