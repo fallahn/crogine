@@ -34,6 +34,7 @@ source distribution.
 #include "../GolfGame.hpp"
 
 #include <crogine/ecs/components/Callback.hpp>
+#include <crogine/ecs/components/Camera.hpp>
 #include <crogine/ecs/components/Transform.hpp>
 #include <crogine/ecs/components/Drawable2D.hpp>
 #include <crogine/ecs/components/Text.hpp>
@@ -132,14 +133,6 @@ TextChat::TextChat(cro::Scene& s, SharedStateData& sd)
 {
     registerWindow([&]() 
         {
-            /*if (!m_displayBuffer.empty())
-            {
-                const auto& [str, _] = m_displayBuffer[0];
-                const auto us = str.toUtf8();
-
-                ImGui::DebugTextEncoding(reinterpret_cast<const char*>(us.c_str()));
-            }*/
-
             if (m_visible)
             {
                 ImGui::SetNextWindowSize({ 600.f, 280.f });
@@ -237,6 +230,9 @@ void TextChat::handlePacket(const net::NetEvent::Packet& pkt)
     auto uiSize = glm::vec2(GolfGame::getActiveTarget()->getSize());
     uiSize /= getViewScale(uiSize);
 
+    //create this up front to aid depth sorting
+    auto bgEnt = m_scene.createEntity();
+
     const auto& font = m_sharedData.sharedResources->fonts.get(FontID::Label);
     auto entity = m_scene.createEntity();
     entity.addComponent<cro::Transform>().setPosition({ 4.f, std::floor(uiSize.y - 36.f), 1.f });
@@ -257,7 +253,7 @@ void TextChat::handlePacket(const net::NetEvent::Packet& pkt)
 
     static constexpr float BgAlpha = 0.2f;
     const cro::Colour c(0.f, 0.f, 0.f, BgAlpha);
-    auto bgEnt = m_scene.createEntity();
+
     bgEnt.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -0.05f });
     bgEnt.addComponent<cro::Drawable2D>().setVertexData(
         {
@@ -309,6 +305,8 @@ void TextChat::handlePacket(const net::NetEvent::Packet& pkt)
     }
     m_screenChatBuffer[m_screenChatIndex] = entity;
     m_screenChatIndex = (m_screenChatIndex + 1) % m_screenChatBuffer.size();
+
+    m_scene.getActiveCamera().getComponent<cro::Camera>().active = true;
 }
 
 void TextChat::toggleWindow()

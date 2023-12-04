@@ -144,6 +144,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     : cro::State        (stack, context),
     m_sharedData        (sd),
     m_profileData       (sp),
+    m_textChat          (m_uiScene, sd),
     m_matchMaking       (context.appInstance.getMessageBus()),
     m_cursor            (/*"assets/images/cursor.png", 0, 0*/cro::SystemCursor::Hand),
     m_uiScene           (context.appInstance.getMessageBus(), 512),
@@ -702,6 +703,13 @@ bool MenuState::handleEvent(const cro::Event& evt)
         case SDLK_TAB:
             togglePreviousScoreCard();
             break;
+        case SDLK_F8:
+            if ((evt.key.keysym.mod & KMOD_SHIFT)
+                && m_currentMenu == MenuID::Lobby)
+            {
+                m_textChat.toggleWindow();
+            }
+            break;
         }
     }
     else if (evt.type == SDL_TEXTINPUT)
@@ -787,7 +795,10 @@ bool MenuState::handleEvent(const cro::Event& evt)
         }
     }
 
-    m_uiScene.getSystem<cro::UISystem>()->handleEvent(evt);
+    if (!m_textChat.isVisible())
+    {
+        m_uiScene.getSystem<cro::UISystem>()->handleEvent(evt);
+    }
 
     m_uiScene.forwardEvent(evt);
     return true;
@@ -1647,6 +1658,12 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
         switch (evt.packet.getID())
         {
         default: break;
+        case PacketID::ChatMessage:
+            m_textChat.handlePacket(evt.packet);
+            {
+                postMessage<SceneEvent>(MessageID::SceneMessage)->type = SceneEvent::ChatMessage;
+            }
+            break;
         case PacketID::ClientPlayerCount:
             m_sharedData.clientConnection.netClient.sendPacket(PacketID::ClientPlayerCount, m_sharedData.localConnectionData.playerCount, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
             break;

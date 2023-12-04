@@ -37,6 +37,7 @@ source distribution.
 #include "Billboard.hpp"
 #include "SharedStateData.hpp"
 #include "MenuCallbacks.hpp"
+#include "TextChat.hpp"
 
 #include <MatchMaking.hpp>
 
@@ -104,6 +105,7 @@ private:
     SharedStateData& m_sharedData;
     SharedProfileData& m_profileData;
 
+    TextChat m_textChat;
     MatchMaking m_matchMaking;
     cro::Cursor m_cursor;
     cro::ResourceCollection m_resources;

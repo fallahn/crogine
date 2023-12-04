@@ -187,7 +187,7 @@ FloatRect Detail::Text::updateVertices(std::vector<Vertex2D>& dst, TextContext& 
             //add a shadow if only no outline
             Detail::Text::addQuad(shadowVerts, glm::vec2(x, y) + context.shadowOffset, context.shadowColour, glyph, texture.getSize());
         }
-        Detail::Text::addQuad(characterVerts, glm::vec2(x, y), glyph.useFillColour ? context.fillColour : cro::Colour::White, glyph, texture.getSize());
+        Detail::Text::addQuad(characterVerts, glm::vec2(x, y), glyph.useFillColour ? context.fillColour : cro::Colour(1.f,1.f,1.f, context.fillColour.getAlpha()), glyph, texture.getSize());
 
         //only do this if not outlined
         //if (context.outlineThickness == 0)
