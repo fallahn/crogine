@@ -520,13 +520,18 @@ void PlayerManagementState::buildScene()
     entity = createItem(glm::vec2(20.f, -12.f), "Yes", confirmEntity);
     entity.getComponent<cro::UIInput>().setGroup(MenuID::Confirm);
     entity.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
-        uiSystem.addCallback([&](cro::Entity e, cro::ButtonEvent evt) mutable
+        uiSystem.addCallback([&,menuEntity,confirmEntity](cro::Entity e, cro::ButtonEvent evt) mutable
             {
                 if (activated(evt))
                 {
                     //kick selected player
                     std::uint16_t data = std::uint16_t(ServerCommand::KickClient) | ((m_playerList.selectedClient) << 8);
                     m_sharedData.clientConnection.netClient.sendPacket(PacketID::ServerCommand, data, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+
+                    menuEntity.getComponent<cro::Transform>().setPosition(MenuNodePosition);
+                    confirmEntity.getComponent<cro::Transform>().setPosition(MenuHiddenPosition);
+
+                    m_scene.getSystem<cro::UISystem>()->setActiveGroup(MenuID::Main);
 
                     m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
                 }

@@ -427,6 +427,8 @@ void NewsState::buildScene()
                 ent.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
                 ent.getComponent<cro::Text>().setVerticalSpacing(1.f);
                 ent.getComponent<cro::Text>().setFillColour(TextGoldColour);
+                ent.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+                ent.getComponent<cro::Transform>().setOrigin(glm::vec2(0.f));
                 ent.getComponent<cro::UIInput>().setGroup(MenuID::Main);
                 ent.getComponent<cro::UIInput>().setSelectionIndex(TitleButtonIndex);
                 ent.getComponent<cro::UIInput>().callbacks[cro::UIInput::ButtonDown] =
