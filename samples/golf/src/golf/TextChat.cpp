@@ -135,6 +135,9 @@ TextChat::TextChat(cro::Scene& s, SharedStateData& sd)
         {
             if (m_visible)
             {
+                //used to detect if we had any input
+                auto buffSize = m_inputBuffer.size();
+
                 ImGui::SetNextWindowSize({ 600.f, 280.f });
                 if (ImGui::Begin("Chat Window", &m_visible))
                 {
@@ -184,6 +187,16 @@ TextChat::TextChat(cro::Scene& s, SharedStateData& sd)
                     m_focusInput = false;
                 }
                 ImGui::End();
+
+                //notification packets to tell clients if someone is typing
+                if (m_inputBuffer.size() != buffSize)
+                {
+                    m_inputBuffer.empty() ? endChat() : beginChat();
+                }
+                else if (m_chatTimer.elapsed() > cro::seconds(2.f))
+                {
+                    endChat();
+                }
             }
         });
 }
@@ -230,8 +243,6 @@ void TextChat::handlePacket(const net::NetEvent::Packet& pkt)
     auto uiSize = glm::vec2(GolfGame::getActiveTarget()->getSize());
     uiSize /= getViewScale(uiSize);
 
-    //create this up front to aid depth sorting
-    auto bgEnt = m_scene.createEntity();
 
     const auto& font = m_sharedData.sharedResources->fonts.get(FontID::Label);
     auto entity = m_scene.createEntity();
@@ -246,15 +257,16 @@ void TextChat::handlePacket(const net::NetEvent::Packet& pkt)
     entity.getComponent<cro::Callback>().setUserData<float>(10.f);
     
     auto bounds = cro::Text::getLocalBounds(entity);
-    bounds.left -= 2.f;
-    bounds.bottom -= 2.f;
+    //bounds.left -= 2.f;
+    //bounds.bottom -= 2.f;
     bounds.width += 5.f;
     bounds.height += 4.f;
 
     static constexpr float BgAlpha = 0.2f;
     const cro::Colour c(0.f, 0.f, 0.f, BgAlpha);
 
-    bgEnt.addComponent<cro::Transform>().setPosition({ 0.f, 0.f, -0.05f });
+    auto bgEnt = m_scene.createEntity();
+    bgEnt.addComponent<cro::Transform>().setPosition({ -2.f, -2.f, -0.15f });
     bgEnt.addComponent<cro::Drawable2D>().setVertexData(
         {
             cro::Vertex2D(glm::vec2(bounds.left, bounds.bottom + bounds.height), c),
@@ -344,6 +356,24 @@ void TextChat::quickEmote(std::int32_t emote)
 
 
 //private
+void TextChat::beginChat()
+{
+    m_chatTimer.restart();
+
+    Activity a;
+    a.client = m_sharedData.clientConnection.connectionID;
+    a.type = Activity::PlayerChatStart;
+    m_sharedData.clientConnection.netClient.sendPacket(PacketID::Activity, a, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+}
+
+void TextChat::endChat()
+{
+    Activity a;
+    a.client = m_sharedData.clientConnection.connectionID;
+    a.type = Activity::PlayerChatEnd;
+    m_sharedData.clientConnection.netClient.sendPacket(PacketID::Activity, a, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+}
+
 void TextChat::sendTextChat()
 {
     if (!m_inputBuffer.empty()
@@ -363,5 +393,7 @@ void TextChat::sendTextChat()
         m_scrollToEnd = true;
 
         m_visible = false;
+
+        endChat();
     }
 }

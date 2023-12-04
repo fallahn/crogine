@@ -355,8 +355,8 @@ void GolfState::netEvent(const net::NetEvent& evt)
         case PacketID::SkipTurn:
             skipCurrentTurn(evt.packet.as<std::uint8_t>());
             break;
-        case PacketID::CPUThink:
-            m_sharedData.host.broadcastPacket(PacketID::CPUThink, evt.packet.as<std::uint8_t>(), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+        case PacketID::Activity:
+            m_sharedData.host.broadcastPacket(PacketID::Activity, evt.packet.as<Activity>(), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
             break;
         case PacketID::Emote:
             m_sharedData.host.broadcastPacket(PacketID::Emote, evt.packet.as<std::uint32_t>(), net::NetFlag::Reliable, ConstVal::NetChannelReliable);

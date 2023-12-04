@@ -37,6 +37,7 @@ source distribution.
 #include "CameraFollowSystem.hpp"
 #include "CommandIDs.hpp"
 #include "BallSystem.hpp"
+#include "PacketIDs.hpp"
 
 #include <AchievementStrings.hpp>
 
@@ -102,7 +103,8 @@ InputParser::InputParser(const SharedStateData& sd, cro::Scene* s)
     m_roughTableIndex   (0),
     m_terrain           (TerrainID::Fairway),
     m_lie               (1),
-    m_estimatedDistance (0.f)
+    m_estimatedDistance (0.f),
+    m_iconActive        (false)
 {
     m_bunkerWavetable = cro::Util::Wavetable::sine(0.25f, 0.035f);
     m_roughWavetable = cro::Util::Wavetable::sine(0.25f, 0.025f);
@@ -653,6 +655,12 @@ void InputParser::update(float dt)
         m_bunkerTableIndex = (m_bunkerTableIndex + 1) % m_bunkerWavetable.size();
         m_roughTableIndex = (m_roughTableIndex + 1) % m_roughWavetable.size();
     }
+
+    if (m_iconActive 
+        && m_iconTimer.elapsed() > cro::seconds(2.f))
+    {
+        endIcon();
+    }
 }
 
 bool InputParser::inProgress() const
@@ -870,17 +878,20 @@ void InputParser::updateStroke(float dt)
             if (m_inputFlags & InputFlag::Left)
             {
                 rotate(rotation);
+                beginIcon();
             }
 
             if (m_inputFlags & InputFlag::Right)
             {
                 rotate(-rotation);
+                beginIcon();
             }
 
             if (m_inputFlags & InputFlag::Action)
             {
                 m_state = State::Power;
                 m_doubleTapClock.restart();
+                beginIcon();
             }
 
             if ((m_prevFlags & InputFlag::PrevClub) == 0
@@ -898,6 +909,7 @@ void InputParser::updateStroke(float dt)
                 msg->score = m_isCPU ? 0 : 1; //tag this with a value so we know the input triggered this and should play a sound.
 
                 updateDistanceEstimation();
+                beginIcon();
             }
 
             if ((m_prevFlags & InputFlag::NextClub) == 0
@@ -915,6 +927,7 @@ void InputParser::updateStroke(float dt)
                 msg->score = m_isCPU? 0 : 1;
 
                 updateDistanceEstimation();
+                beginIcon();
             }
         }
         break;
@@ -959,6 +972,7 @@ void InputParser::updateStroke(float dt)
 
                     m_state = State::Stroke;
                     m_doubleTapClock.restart();
+                    beginIcon();
                 }
             }
             else
@@ -971,6 +985,7 @@ void InputParser::updateStroke(float dt)
 
                         m_state = State::Stroke;
                         m_doubleTapClock.restart();
+                        beginIcon();
                     }
                 }
             }
@@ -1018,6 +1033,8 @@ void InputParser::updateStroke(float dt)
                     msg->type = GolfEvent::HitBall;
 
                     m_doubleTapClock.restart();
+
+                    endIcon();
                 }
             }
         }
@@ -1297,4 +1314,37 @@ glm::vec2 InputParser::getRotationalInput(std::int32_t xAxis, std::int32_t yAxis
     }
 
     return rotation;
+}
+
+void InputParser::beginIcon()
+{
+    //this is false if we're on the driving range
+    if (!m_isCPU &&
+        !m_iconActive &&
+        m_sharedData.clientConnection.connected)
+    {
+        Activity a;
+        a.type = Activity::PlayerThinkStart;
+        a.client = m_sharedData.clientConnection.connectionID;
+
+        m_sharedData.clientConnection.netClient.sendPacket(PacketID::Activity, a, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+
+        m_iconActive = true;
+    }
+    m_iconTimer.restart();
+}
+
+void InputParser::endIcon()
+{
+    if (!m_isCPU &&
+        m_sharedData.clientConnection.connected)
+    {
+        Activity a;
+        a.type = Activity::PlayerThinkEnd;
+        a.client = m_sharedData.clientConnection.connectionID;
+
+        m_sharedData.clientConnection.netClient.sendPacket(PacketID::Activity, a, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+    }
+
+    m_iconActive = false;
 }

@@ -412,6 +412,7 @@ void RenderSystem2D::onEntityAdded(Entity entity)
         {
             m_needsSort = true;
         });
+    m_needsSort = true;
 }
 
 void RenderSystem2D::onEntityRemoved(Entity entity)

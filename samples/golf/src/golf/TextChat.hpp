@@ -85,5 +85,10 @@ private:
     std::array<cro::Entity, 2U> m_screenChatBuffer = {};
     std::size_t m_screenChatIndex;
 
+    //raises notifications for client icons
+    cro::Clock m_chatTimer;
+    void beginChat();
+    void endChat();
+
     void sendTextChat();
 };

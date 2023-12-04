@@ -168,4 +168,9 @@ private:
     void checkControllerInput();
     void checkMouseInput();
     glm::vec2 getRotationalInput(std::int32_t xAxis, std::int32_t yAxis) const; //used for drone cam and spin amount
+
+    cro::Clock m_iconTimer;
+    bool m_iconActive;
+    void beginIcon();
+    void endIcon();
 };

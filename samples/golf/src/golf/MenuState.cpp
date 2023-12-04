@@ -540,6 +540,10 @@ bool MenuState::handleEvent(const cro::Event& evt)
             m_menuEntities[m_currentMenu].getComponent<cro::Callback>().active = true;
             break;
         case MenuID::Lobby:
+            if (m_textChat.isVisible())
+            {
+                break;
+            }
             //TODO the active menu might be a sub-group of the lobby
             //however m_currentMenu is still set tl Lobby as this is
             //used by the window resize callback (which I can't find
@@ -569,11 +573,35 @@ bool MenuState::handleEvent(const cro::Event& evt)
         }
     };
 
-    if(cro::ui::wantsMouse() || cro::ui::wantsKeyboard())
+    if (evt.type != SDL_MOUSEMOTION
+        && evt.type != SDL_CONTROLLERBUTTONDOWN
+        && evt.type != SDL_CONTROLLERBUTTONUP)
     {
-        return true;
-    }
+        if (cro::ui::wantsMouse() || cro::ui::wantsKeyboard())
+        {
+            if (evt.type == SDL_KEYUP)
+            {
+                switch (evt.key.keysym.sym)
+                {
+                default: break;
+                case SDLK_ESCAPE:
+                    if (m_textChat.isVisible())
+                    {
+                        m_textChat.toggleWindow();
+                    }
+                    break;
+                case SDLK_F8:
+                    if (evt.key.keysym.mod & KMOD_SHIFT)
+                    {
+                        m_textChat.toggleWindow();
+                    }
+                    break;
+                }
+            }
 
+            return true;
+        }
+    }
 
     if (evt.type == SDL_KEYUP)
     {
@@ -1660,9 +1688,7 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
         default: break;
         case PacketID::ChatMessage:
             m_textChat.handlePacket(evt.packet);
-            {
-                postMessage<SceneEvent>(MessageID::SceneMessage)->type = SceneEvent::ChatMessage;
-            }
+            postMessage<SceneEvent>(MessageID::SceneMessage)->type = SceneEvent::ChatMessage;
             break;
         case PacketID::ClientPlayerCount:
             m_sharedData.clientConnection.netClient.sendPacket(PacketID::ClientPlayerCount, m_sharedData.localConnectionData.playerCount, net::NetFlag::Reliable, ConstVal::NetChannelReliable);

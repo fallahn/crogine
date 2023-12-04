@@ -1537,7 +1537,9 @@ void GolfState::handleMessage(const cro::Message& msg)
         }
         else
         {
-            m_sharedData.clientConnection.netClient.sendPacket(PacketID::CPUThink, std::uint8_t(data.type), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+            Activity a;
+            a.type = data.type;
+            m_sharedData.clientConnection.netClient.sendPacket(PacketID::Activity, a, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
         }
     }
         break;
@@ -3464,14 +3466,14 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
             cro::Command cmd;
             cmd.targetFlags = CommandID::UI::AFKWarn;
             cmd.action = [warnTime](cro::Entity e, float)
-            {
-                e.getComponent<cro::Callback>().setUserData<float>(warnTime + 0.1f);
-                e.getComponent<cro::Callback>().active = true;
-                e.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
-            };
+                {
+                    e.getComponent<cro::Callback>().setUserData<float>(warnTime + 0.1f);
+                    e.getComponent<cro::Callback>().active = true;
+                    e.getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+                };
             m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
         }
-            break;
+        break;
         case PacketID::MaxClubs:
         {
             std::uint8_t clubSet = evt.packet.as<std::uint8_t>();
@@ -3513,7 +3515,7 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
                 Achievements::incrementStat(StatStrings[StatID::FlagHits]);
             }
         }
-            break;
+        break;
         case PacketID::BullHit:
             handleBullHit(evt.packet.as<BullHit>());
             break;
@@ -3521,7 +3523,7 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
         {
             spawnBullsEye(evt.packet.as<BullsEye>());
         }
-            break;
+        break;
         case PacketID::FastCPU:
             m_sharedData.fastCPU = evt.packet.as<std::uint8_t>() != 0;
             m_cpuGolfer.setFastCPU(m_sharedData.fastCPU);
@@ -3542,7 +3544,7 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
             //PredictedTarget.getComponent<cro::Transform>().setPosition(evt.packet.as<glm::vec3>());
 #endif
         }
-            break;
+        break;
         case PacketID::LevelUp:
             showLevelUp(evt.packet.as<std::uint64_t>());
             break;
@@ -3557,7 +3559,7 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
                 updateScoreboard();
             }
         }
-            break;
+        break;
         case PacketID::Emote:
             showEmote(evt.packet.as<std::uint32_t>());
             break;
@@ -3572,22 +3574,51 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
 
             m_sharedData.connectionData[client].pingTime = pingTime;
         }
-            break;
-        case PacketID::CPUThink:
+        break;
+        case PacketID::Activity:
         {
-            auto direction = evt.packet.as<std::uint8_t>();
+            const auto sendCommand = [&](std::uint32_t target, std::int32_t direction)
+                {
+                    cro::Command cmd;
+                    cmd.targetFlags = target;
+                    cmd.action = [direction](cro::Entity e, float)
+                        {
+                            auto& [dir, _] = e.getComponent<cro::Callback>().getUserData<std::pair<std::int32_t, float>>();
+                            dir = direction;
+                            e.getComponent<cro::Callback>().active = true;
+                        };
+                    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+                };
 
-            cro::Command cmd;
-            cmd.targetFlags = CommandID::UI::ThinkBubble;
-            cmd.action = [direction](cro::Entity e, float)
+            auto data = evt.packet.as<Activity>();
+            std::uint32_t target = 0;
+            switch (data.type)
             {
-                auto& [dir, _] = e.getComponent<cro::Callback>().getUserData<std::pair<std::int32_t, float>>();
-                dir = direction;
-                e.getComponent<cro::Callback>().active = true;
-            };
-            m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+            default: break;
+            case Activity::CPUThinkStart:
+            case Activity::CPUThinkEnd:
+                sendCommand(CommandID::UI::ThinkBubble, data.type % 2);
+                break;
+            case Activity::PlayerChatStart:
+            case Activity::PlayerChatEnd:
+                target = CommandID::UI::ThinkBubble;
+                break;
+            case Activity::PlayerThinkStart:
+            case Activity::PlayerThinkEnd:
+                target = CommandID::UI::ThinkBubble;
+                break;
+            case Activity::PlayerIdleStart:
+            case Activity::PlayerIdleEnd:
+                target = CommandID::UI::ThinkBubble;
+                break;
+            }
+
+            if (data.client == m_currentPlayer.client)
+            {
+                sendCommand(target, data.type % 2);
+            }
         }
-            break;
+        break;
         case PacketID::ReadyQuitStatus:
             m_readyQuitFlags = evt.packet.as<std::uint8_t>();
             break;
@@ -3604,54 +3635,54 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
                 Achievements::awardAchievement(AchievementStrings[achID]);
             }
         }
-            break;
+        break;
         case PacketID::Gimme:
+        {
+            auto* msg = getContext().appInstance.getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
+            msg->type = GolfEvent::Gimme;
+
+            auto data = evt.packet.as<std::uint16_t>();
+            auto client = (data >> 8);
+            auto player = (data & 0x0f);
+
+            showNotification(m_sharedData.connectionData[client].playerData[player].name + " took a Gimme");
+
+            //inflate this so that the message board is correct - the update will come
+            //in to assert this is correct afterwards
+            m_sharedData.connectionData[client].playerData[player].holeScores[m_currentHole]++;
+            m_sharedData.connectionData[client].playerData[player].holeComplete[m_currentHole] = true;
+            showMessageBoard(MessageBoardID::Gimme);
+
+            if (client == m_sharedData.localConnectionData.connectionID)
             {
-                auto* msg = getContext().appInstance.getMessageBus().post<GolfEvent>(MessageID::GolfMessage);
-                msg->type = GolfEvent::Gimme;
-
-                auto data = evt.packet.as<std::uint16_t>();
-                auto client = (data >> 8);
-                auto player = (data & 0x0f);
-
-                showNotification(m_sharedData.connectionData[client].playerData[player].name + " took a Gimme");
-
-                //inflate this so that the message board is correct - the update will come
-                //in to assert this is correct afterwards
-                m_sharedData.connectionData[client].playerData[player].holeScores[m_currentHole]++;
-                m_sharedData.connectionData[client].playerData[player].holeComplete[m_currentHole] = true;
-                showMessageBoard(MessageBoardID::Gimme);
-
-                if (client == m_sharedData.localConnectionData.connectionID)
+                if (m_sharedData.gimmeRadius == 1)
                 {
-                    if (m_sharedData.gimmeRadius == 1)
+                    Achievements::incrementStat(StatStrings[StatID::LeatherGimmies]);
+                }
+                else
+                {
+                    Achievements::incrementStat(StatStrings[StatID::PutterGimmies]);
+                }
+
+                if (!m_sharedData.connectionData[client].playerData[player].isCPU)
+                {
+                    m_achievementTracker.noGimmeUsed = false;
+                    m_achievementTracker.gimmes++;
+
+                    if (m_achievementTracker.gimmes == 18)
                     {
-                        Achievements::incrementStat(StatStrings[StatID::LeatherGimmies]);
+                        Achievements::awardAchievement(AchievementStrings[AchievementID::GimmeGimmeGimme]);
                     }
-                    else
+
+                    if (m_achievementTracker.nearMissChallenge)
                     {
-                        Achievements::incrementStat(StatStrings[StatID::PutterGimmies]);
-                    }
-
-                    if (!m_sharedData.connectionData[client].playerData[player].isCPU)
-                    {
-                        m_achievementTracker.noGimmeUsed = false;
-                        m_achievementTracker.gimmes++;
-
-                        if (m_achievementTracker.gimmes == 18)
-                        {
-                            Achievements::awardAchievement(AchievementStrings[AchievementID::GimmeGimmeGimme]);
-                        }
-
-                        if (m_achievementTracker.nearMissChallenge)
-                        {
-                            Social::getMonthlyChallenge().updateChallenge(ChallengeID::Seven, 0);
-                            m_achievementTracker.nearMissChallenge = false;
-                        }
+                        Social::getMonthlyChallenge().updateChallenge(ChallengeID::Seven, 0);
+                        m_achievementTracker.nearMissChallenge = false;
                     }
                 }
             }
-            break;
+        }
+        break;
         case PacketID::BallLanded:
         {
             auto update = evt.packet.as<BallUpdate>();
@@ -3789,7 +3820,7 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
                 if (msg->club == ClubID::Putter
                     && msg->terrain == TerrainID::Hole)
                 {
-                    m_personalBests[m_currentPlayer.player][m_currentHole].longestPutt = 
+                    m_personalBests[m_currentPlayer.player][m_currentHole].longestPutt =
                         std::max(std::sqrt(msg->travelDistance), m_personalBests[m_currentPlayer.player][m_currentHole].longestPutt);
 
                     m_personalBests[m_currentPlayer.player][m_currentHole].wasPuttAssist = m_sharedData.showPuttingPower ? 1 : 0;
@@ -3801,7 +3832,7 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
                 }
             }
         }
-            break;
+        break;
         case PacketID::ClientDisconnected:
             removeClient(evt.packet.as<std::uint8_t>());
             break;
@@ -3837,7 +3868,7 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
             spawnBall(evt.packet.as<ActorInfo>());
             break;
         case PacketID::ActorUpdate:
-            updateActor( evt.packet.as<ActorInfo>());            
+            updateActor(evt.packet.as<ActorInfo>());
             break;
         case PacketID::ActorAnimation:
         {
@@ -3875,7 +3906,7 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
                 }
             }
         }
-            break;
+        break;
         case PacketID::WindDirection:
             updateWindDisplay(cro::Util::Net::decompressVec3(evt.packet.as<std::array<std::int16_t, 3u>>()));
             break;
@@ -3894,7 +3925,7 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
         {
             auto su = evt.packet.as<ScoreUpdate>();
             auto& player = m_sharedData.connectionData[su.client].playerData[su.player];
-            
+
             if (su.hole < player.holeScores.size())
             {
                 player.score = su.score;
@@ -3921,10 +3952,10 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
                 updateScoreboard(false);
             }
         }
-            break;
+        break;
         case PacketID::HoleWon:
             updateHoleScore(evt.packet.as<std::uint16_t>());
-        break;
+            break;
         case PacketID::GameEnd:
             showCountdown(evt.packet.as<std::uint8_t>());
             break;
@@ -3940,22 +3971,22 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
             auto idx = evt.packet.as<std::uint32_t>();
             cro::Command cmd;
             cmd.targetFlags = CommandID::Ball;
-            cmd.action = [&,idx](cro::Entity e, float)
-            {
-                if (e.getComponent<InterpolationComponent<InterpolationType::Linear>>().id == idx)
+            cmd.action = [&, idx](cro::Entity e, float)
                 {
-                    //this just does some effects
-                    auto* msg = postMessage<GolfEvent>(MessageID::GolfMessage);
-                    msg->type = GolfEvent::PowerShot;
-                    msg->position = e.getComponent<cro::Transform>().getWorldPosition();
+                    if (e.getComponent<InterpolationComponent<InterpolationType::Linear>>().id == idx)
+                    {
+                        //this just does some effects
+                        auto* msg = postMessage<GolfEvent>(MessageID::GolfMessage);
+                        msg->type = GolfEvent::PowerShot;
+                        msg->position = e.getComponent<cro::Transform>().getWorldPosition();
 
-                    m_gameScene.destroyEntity(e);
-                    LOG("Packet removed ball entity", cro::Logger::Type::Warning);
-                }
-            };
+                        m_gameScene.destroyEntity(e);
+                        LOG("Packet removed ball entity", cro::Logger::Type::Warning);
+                    }
+                };
             m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
         }
-            break;
+        break;
         case PacketID::ConnectionRefused:
             m_sharedData.errorMessage = "Kicked By Host";
             requestStackPush(StateID::Error);
@@ -4878,6 +4909,16 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     m_skipState = {};
     m_ballTrail.setNext();
 
+    //close any remaining icons
+    cro::Command cmd;
+    cmd.targetFlags = CommandID::UI::ThinkBubble;
+    cmd.action = [](cro::Entity e, float)
+        {
+            auto& [dir, _] = e.getComponent<cro::Callback>().getUserData<std::pair<std::int32_t, float>>();
+            dir = 1;
+            e.getComponent<cro::Callback>().active = true;
+        };
+    m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
 
     auto localPlayer = (player.client == m_sharedData.clientConnection.connectionID);
     auto isCPU = m_sharedData.localConnectionData.playerData[player.player].isCPU;
@@ -4909,7 +4950,6 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     }
 
     //player UI name
-    cro::Command cmd;
     cmd.targetFlags = CommandID::UI::PlayerName;
     cmd.action =
         [&](cro::Entity e, float)

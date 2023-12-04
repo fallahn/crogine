@@ -1749,7 +1749,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity.addComponent<cro::Text>(font).setCharacterSize(UITextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
     entity.getComponent<cro::Text>().setString(GimmeString[m_sharedData.gimmeRadius]);
-    entity.addComponent<UIElement>().absolutePosition = {364.f, 116.f };
+    entity.addComponent<UIElement>().absolutePosition = {364.f, 104.f };
     entity.getComponent<UIElement>().depth = 0.1f;
     entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::GimmeDesc | CommandID::Menu::UIElement;
     centreText(entity);
@@ -1758,7 +1758,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>();
     entity.addComponent<cro::Drawable2D>();
-    entity.addComponent<UIElement>().absolutePosition = { 364.f, 100.f };
+    entity.addComponent<UIElement>().absolutePosition = { 364.f, 88.f };
     entity.getComponent<UIElement>().depth = 0.1f;
     entity.addComponent<cro::Text>(smallFont).setCharacterSize(InfoTextSize);
     entity.getComponent<cro::Text>().setFillColour(TextNormalColour);
@@ -1785,7 +1785,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
         entity = m_uiScene.createEntity();
         entity.addComponent<cro::Transform>();
         entity.addComponent<cro::Drawable2D>();
-        entity.addComponent<UIElement>().absolutePosition = { 306.f, 52.f };
+        entity.addComponent<UIElement>().absolutePosition = { 306.f, 48.f };
         entity.getComponent<UIElement>().depth = 0.1f;
         entity.addComponent<cro::Sprite>() = spriteSheetV2.getSprite("clubset_button");
         entity.addComponent<cro::SpriteAnimation>().play(m_sharedData.clubSet);
@@ -1797,7 +1797,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
         entity = m_uiScene.createEntity();
         entity.addComponent<cro::Transform>();
         entity.addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("switch");
-        entity.addComponent<UIElement>().absolutePosition = { 304.f, 50.f };
+        entity.addComponent<UIElement>().absolutePosition = { 304.f, 46.f };
         entity.getComponent<UIElement>().depth = 0.1f;
         entity.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement;
         entity.addComponent<cro::Drawable2D>();
@@ -3318,7 +3318,7 @@ void MenuState::addCourseSelectButtons()
     buttonEnt.addComponent<cro::Sprite>() = m_sprites[SpriteID::PrevCourse];
     buttonEnt.addComponent<cro::SpriteAnimation>();
     buttonEnt.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement | CommandID::Menu::CourseSelect;
-    buttonEnt.addComponent<UIElement>().absolutePosition = { 364.f - 91.f, 111.f };
+    buttonEnt.addComponent<UIElement>().absolutePosition = { 364.f - 91.f, 99.f };
     buttonEnt.getComponent<UIElement>().depth = 0.01f;
     bounds = buttonEnt.getComponent<cro::Sprite>().getTextureBounds();
     buttonEnt.addComponent<cro::UIInput>().area = bounds;
@@ -3343,7 +3343,7 @@ void MenuState::addCourseSelectButtons()
     buttonEnt.addComponent<cro::Sprite>() = m_sprites[SpriteID::NextCourse];
     buttonEnt.addComponent<cro::SpriteAnimation>();
     buttonEnt.addComponent<cro::CommandTarget>().ID = CommandID::Menu::UIElement | CommandID::Menu::CourseSelect;
-    buttonEnt.addComponent<UIElement>().absolutePosition = { 364.f + 92.f, 111.f };
+    buttonEnt.addComponent<UIElement>().absolutePosition = { 364.f + 92.f, 99.f };
     buttonEnt.getComponent<UIElement>().depth = 0.01f;
     bounds = buttonEnt.getComponent<cro::Sprite>().getTextureBounds();
     buttonEnt.addComponent<cro::UIInput>().area = bounds;
