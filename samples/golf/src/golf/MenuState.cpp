@@ -590,12 +590,12 @@ bool MenuState::handleEvent(const cro::Event& evt)
                         m_textChat.toggleWindow();
                     }
                     break;
-                case SDLK_F8:
+                /*case SDLK_F8:
                     if (evt.key.keysym.mod & KMOD_SHIFT)
                     {
                         m_textChat.toggleWindow();
                     }
-                    break;
+                    break;*/
                 }
             }
 
@@ -1272,6 +1272,8 @@ void MenuState::loadAssets()
     m_audioEnts[AudioID::Back].addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("back");
     m_audioEnts[AudioID::Start] = m_uiScene.createEntity();
     m_audioEnts[AudioID::Start].addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("start_game");
+    m_audioEnts[AudioID::Message] = m_uiScene.createEntity();
+    m_audioEnts[AudioID::Message].addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("message");
 }
 
 void MenuState::createScene()
@@ -1688,7 +1690,20 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
         default: break;
         case PacketID::ChatMessage:
             m_textChat.handlePacket(evt.packet);
-            postMessage<SceneEvent>(MessageID::SceneMessage)->type = SceneEvent::ChatMessage;
+
+            {
+                float pitch = static_cast<float>(cro::Util::Random::value(7, 13)) / 10.f;
+                auto& e = m_audioEnts[AudioID::Message].getComponent<cro::AudioEmitter>();
+                e.setPitch(pitch);
+                if (e.getState() == cro::AudioEmitter::State::Playing)
+                {
+                    e.setPlayingOffset(cro::seconds(0.f));
+                }
+                else
+                {
+                    e.play();
+                }
+            }
             break;
         case PacketID::ClientPlayerCount:
             m_sharedData.clientConnection.netClient.sendPacket(PacketID::ClientPlayerCount, m_sharedData.localConnectionData.playerCount, net::NetFlag::Reliable, ConstVal::NetChannelReliable);

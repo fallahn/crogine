@@ -477,7 +477,7 @@ void SpriteState::drawSpriteWindow()
                 ImGui::Text("Animations");
 
                 auto i = 0;
-                ImGui::ListBoxHeader("", std::min(20, static_cast<std::int32_t>(anims.size() + 1)));
+                ImGui::ListBoxHeader("##buns", std::min(20, static_cast<std::int32_t>(anims.size() + 1)));
                 for (const auto& anim : anims)
                 {
                     std::string label = "Add Name Here##" + std::to_string(i);
@@ -492,9 +492,9 @@ void SpriteState::drawSpriteWindow()
 
                 if (currentAnim)
                 {
-                    std::string label = "Frame Rate: " + std::to_string(currentAnim->framerate);
-                    ImGui::Text("%s", label.c_str());
+                    ImGui::Text("Frame Rate: %3.2f", currentAnim->framerate);
 
+                    std::string label;
                     if (currentAnim->looped)
                     {
                         label = "Looped: true";
@@ -504,12 +504,8 @@ void SpriteState::drawSpriteWindow()
                         label = "Looped: false";
                     }
                     ImGui::Text("%s", label.c_str());
-
-                    label = "Loop Start: " + std::to_string(currentAnim->loopStart);
-                    ImGui::Text("%s", label.c_str());
-
-                    label = "Frame Count: " + std::to_string(currentAnim->frames.size());
-                    ImGui::Text("%s", label.c_str());
+                    ImGui::Text("Loop Start: %d", currentAnim->loopStart);
+                    ImGui::Text("Frame Count:  %d", currentAnim->frames.size());
                     ImGui::NewLine();
                 }
             }
