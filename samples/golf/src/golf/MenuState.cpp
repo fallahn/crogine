@@ -1938,6 +1938,15 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
                         {
                             m_matchMaking.setGameTitle(data->title);
                         }
+
+                        if (m_sharedData.courseIndex == courseOfTheMonth())
+                        {
+                            m_lobbyWindowEntities[LobbyEntityID::MonthlyCourse].getComponent<cro::Transform>().setScale({ 1.f, 1.f });
+                        }
+                        else
+                        {
+                            m_lobbyWindowEntities[LobbyEntityID::MonthlyCourse].getComponent<cro::Transform>().setScale({ 0.f, 0.f });
+                        }
                     }
                     else
                     {
@@ -1984,6 +1993,8 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
 
                     m_uiScene.getActiveCamera().getComponent<cro::Camera>().active = true;
                     delayRefresh();
+
+
                 }
                 else if (m_courseThumbs.count(course) != 0)
                 {

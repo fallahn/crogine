@@ -204,6 +204,7 @@ private:
             CourseTicker,
             Background,
             Info,
+            MonthlyCourse,
 
             Scorecard,
 

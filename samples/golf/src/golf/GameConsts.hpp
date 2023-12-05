@@ -39,6 +39,7 @@ source distribution.
 #include <crogine/audio/AudioMixer.hpp>
 #include <crogine/core/ConfigFile.hpp>
 #include <crogine/core/GameController.hpp>
+#include <crogine/core/SysTime.hpp>
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/ecs/components/Model.hpp>
 #include <crogine/ecs/components/Callback.hpp>
@@ -342,6 +343,11 @@ static inline const std::array BallTints =
     cro::Colour(0.015f,0.031f,1.f), //bowling
     cro::Colour(0.964f,1.f,0.878f) //snowman
 };
+
+static inline std::int32_t courseOfTheMonth()
+{
+    return cro::SysTime::now().months() % 11;
+}
 
 static inline float getWindMultiplier(float ballHeight, float distanceToPin)
 {
