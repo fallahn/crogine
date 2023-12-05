@@ -689,7 +689,7 @@ cro::Entity GolfSoundDirector::playSound(std::int32_t id, glm::vec3 position, fl
     {
         auto ent = getNextEntity();
         ent.getComponent<cro::AudioEmitter>().setSource(*m_audioSources[id]);
-        ent.getComponent<cro::AudioEmitter>().setVolume(volume);
+        ent.getComponent<cro::AudioEmitter>().setVolume(volume * 0.5f);
         ent.getComponent<cro::AudioEmitter>().setPitch(1.f);
         ent.getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Voice);
         ent.getComponent<cro::AudioEmitter>().play();
@@ -806,6 +806,7 @@ cro::Entity GolfSoundDirector::playAvatarSound(std::int32_t idx, const std::stri
     ent.getComponent<cro::AudioEmitter>() = m_playerVoices[idx].getEmitter(emitterName);
     ent.getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Voice);
     ent.getComponent<cro::AudioEmitter>().setPitch(1.f);
+    ent.getComponent<cro::AudioEmitter>().setVolume(0.5f);
     
     //urgh, we want to cancel this entirely really
     //but we need to return a valid entity...

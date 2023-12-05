@@ -2347,7 +2347,9 @@ void GolfState::TargetShader::update()
 {
     static const auto RotMat = glm::toMat4(glm::rotate(cro::Transform::QUAT_IDENTITY, -cro::Util::Const::PI / 2.f, cro::Transform::X_AXIS));
 
-    projMat = glm::ortho(-size, size, -size, size, -20.f, 20.f);
+    auto s = size + TargetShader::Epsilon;
+
+    projMat = glm::ortho(-s, s, -s, s, -20.f, 20.f);
     viewMat = glm::translate(RotMat, -position );
 
     glCheck(glUseProgram(shaderID));
