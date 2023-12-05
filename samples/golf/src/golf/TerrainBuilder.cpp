@@ -80,7 +80,7 @@ namespace
     static constexpr float MaxShrubOffset = MaxTerrainHeight + 13.f;
     static constexpr std::int32_t SlopeGridSize = 20;
     static constexpr std::int32_t HalfGridSize = SlopeGridSize / 2;
-    static constexpr std::int32_t NormalMapMultiplier = 4; //number of times the resolution of the map to increase normal map resolution by
+    static constexpr std::int32_t NormalMapMultiplier = 8;// 4; //number of times the resolution of the map to increase normal map resolution by
 
     //callback data
     struct SwapData final
@@ -1085,7 +1085,7 @@ void TerrainBuilder::threadFunc()
                 static constexpr float DashCount = 80.f; //actual div by TAU cos its sin but eh.
                 static constexpr float SlopeSpeed = -30.f;//REMEMBER this const is also used in the slope frag shader
                 static constexpr std::int32_t AvgDistance = 1;
-                static constexpr std::int32_t GridDensity = 4; //verts per metre, however grid size is half this. Can only be 1,2 or 4 to match Normal Map resolution
+                static constexpr std::int32_t GridDensity = NormalMapMultiplier;// 4; //verts per metre, however grid size is half this. Can only be 1,2 or 4 to match Normal Map resolution
                 static constexpr float GridSpacing = 1.f / GridDensity;
 
                 static constexpr float SurfaceOffset = 0.02f; //verts are pushed along normal by this much
@@ -1220,6 +1220,13 @@ void TerrainBuilder::renderNormalMap()
         m_normalDebugTexture.loadFromImage(m_normalMapImage);
     }
 #endif
+    //skip this if we rendered the model the previous hole
+    if (m_currentHole && 
+        m_holeData[m_currentHole].modelEntity == m_holeData[m_currentHole - 1].modelEntity)
+    {
+        return;
+    }
+
 
     //hmmm is there some of this we can pre-process to save doing it here?
     const auto& meshData = m_holeData[m_currentHole].modelEntity.getComponent<cro::Model>().getMeshData();
