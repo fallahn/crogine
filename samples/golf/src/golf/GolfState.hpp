@@ -404,6 +404,8 @@ private:
             WindSpeed,
             WindSpeedBg,
             Thinking,
+            Sleeping,
+            Typing,
             MessageBoard,
             Bunker,
             Foul,

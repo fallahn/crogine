@@ -176,6 +176,7 @@ namespace cro
         */
         const std::vector<Animation>& getAnimations() const { return m_animations; }
 
+
     private:
         FloatRect m_textureRect;
         const Texture* m_texture;

@@ -343,7 +343,7 @@ void GolfState::buildUI()
     };
     nameEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
-    //think bulb displayed when CPU players are thinking
+    //think bulb displayed when players are thinking
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setScale({ 0.f, 0.f });
     entity.addComponent<cro::Drawable2D>();
@@ -352,35 +352,8 @@ void GolfState::buildUI()
     entity.getComponent<cro::Transform>().setOrigin({ bounds.width / 2.f, bounds.height / 2.f });
     entity.addComponent<cro::SpriteAnimation>().play(0);
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::ThinkBubble;
-    entity.addComponent<cro::Callback>().setUserData<std::pair<std::int32_t, float>>(1, 0.f);
-    entity.getComponent<cro::Callback>().function =
-        [nameEnt](cro::Entity e, float dt)
-    {
-        auto end = nameEnt.getComponent<cro::Drawable2D>().getLocalBounds().width;
-        e.getComponent<cro::Transform>().setPosition({ end + 6.f, 4.f });
-
-        float scale = 0.f;
-        auto& [direction, currTime] = e.getComponent<cro::Callback>().getUserData<std::pair<std::int32_t, float>>();
-        if (direction == 0)
-        {
-            //grow
-            currTime = std::min(1.f, currTime + (dt * 3.f));
-            scale = cro::Util::Easing::easeOutQuint(currTime);
-        }
-        else
-        {
-            //shrink
-            currTime = std::max(0.f, currTime - (dt * 3.f));
-            if (currTime == 0)
-            {
-                e.getComponent<cro::Callback>().active = false;
-            }
-
-            scale = cro::Util::Easing::easeInQuint(currTime);
-        }
-
-        e.getComponent<cro::Transform>().setScale({ scale, scale });
-    };
+    entity.addComponent<cro::Callback>().setUserData<CogitationData>();
+    entity.getComponent<cro::Callback>().function = CogitationCallback(nameEnt);
     nameEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
     //hole distance

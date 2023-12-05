@@ -887,5 +887,10 @@ void GolfState::resetIdle()
             auto& data = m_drone.getComponent<cro::Callback>().getUserData<DroneCallbackData>();
             data.target.getComponent<cro::Transform>().setPosition(data.resetPosition);
         }
+
+        Activity a;
+        a.client = m_sharedData.clientConnection.connectionID;
+        a.type = Activity::PlayerIdleEnd;
+        m_sharedData.clientConnection.netClient.sendPacket(PacketID::Activity, a, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
     }
 }

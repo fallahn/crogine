@@ -1886,6 +1886,11 @@ bool GolfState::simulate(float dt)
             cmd.targetFlags = CommandID::StrokeArc | CommandID::StrokeIndicator;
             cmd.action = [](cro::Entity e, float) {e.getComponent<cro::Model>().setHidden(true); };
             m_gameScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+            Activity a;
+            a.client = m_sharedData.clientConnection.connectionID;
+            a.type = Activity::PlayerIdleStart;
+            m_sharedData.clientConnection.netClient.sendPacket(PacketID::Activity, a, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
         }
     }
 #else
@@ -3577,45 +3582,52 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
         break;
         case PacketID::Activity:
         {
-            const auto sendCommand = [&](std::uint32_t target, std::int32_t direction)
+            const auto sendCommand = [&](std::int32_t spriteID, std::int32_t direction)
                 {
                     cro::Command cmd;
-                    cmd.targetFlags = target;
-                    cmd.action = [direction](cro::Entity e, float)
+                    cmd.targetFlags = CommandID::UI::ThinkBubble;
+                    cmd.action = [&,direction, spriteID](cro::Entity e, float)
                         {
-                            auto& [dir, _] = e.getComponent<cro::Callback>().getUserData<std::pair<std::int32_t, float>>();
+                            auto& [dir, _, sprID] = e.getComponent<cro::Callback>().getUserData<CogitationData>();
                             dir = direction;
                             e.getComponent<cro::Callback>().active = true;
+
+                            if (sprID != spriteID)
+                            {
+                                e.getComponent<cro::Sprite>() = m_sprites[spriteID];
+                                sprID = spriteID;
+                            }
                         };
                     m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
                 };
 
             auto data = evt.packet.as<Activity>();
-            std::uint32_t target = 0;
+            std::int32_t spriteID = SpriteID::Thinking;
             switch (data.type)
             {
             default: break;
             case Activity::CPUThinkStart:
             case Activity::CPUThinkEnd:
-                sendCommand(CommandID::UI::ThinkBubble, data.type % 2);
-                break;
+                sendCommand(SpriteID::Thinking, data.type % 2);
+                return;
             case Activity::PlayerChatStart:
             case Activity::PlayerChatEnd:
-                target = CommandID::UI::ThinkBubble;
+                spriteID = SpriteID::Typing;
                 break;
             case Activity::PlayerThinkStart:
             case Activity::PlayerThinkEnd:
-                target = CommandID::UI::ThinkBubble;
+                spriteID = SpriteID::Thinking;
                 break;
             case Activity::PlayerIdleStart:
             case Activity::PlayerIdleEnd:
-                target = CommandID::UI::ThinkBubble;
+                spriteID = SpriteID::Sleeping;
                 break;
             }
 
-            if (data.client == m_currentPlayer.client)
+            if (data.client == m_currentPlayer.client
+                && data.client != m_sharedData.clientConnection.connectionID)
             {
-                sendCommand(target, data.type % 2);
+                sendCommand(spriteID, data.type % 2);
             }
         }
         break;
@@ -4914,7 +4926,7 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     cmd.targetFlags = CommandID::UI::ThinkBubble;
     cmd.action = [](cro::Entity e, float)
         {
-            auto& [dir, _] = e.getComponent<cro::Callback>().getUserData<std::pair<std::int32_t, float>>();
+            auto& [dir, _1, _2] = e.getComponent<cro::Callback>().getUserData<CogitationData>();
             dir = 1;
             e.getComponent<cro::Callback>().active = true;
         };
