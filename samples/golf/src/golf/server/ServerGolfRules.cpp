@@ -135,7 +135,12 @@ void GolfState::handleRules(const GolfBallEvent& data)
             auto sortData = m_playerInfo; //don't sort on the live data
             std::sort(sortData.begin(), sortData.end(), [](const PlayerStatus& a, const PlayerStatus& b)
                 {
-                    return a.distanceToHole > b.distanceToHole;
+                    if (!a.eliminated && !b.eliminated)
+                    {
+                        return a.distanceToHole > b.distanceToHole;
+                    }
+
+                    return !a.eliminated;
                 });
 
             if (sortData[1].distanceToHole == 0)
@@ -151,6 +156,8 @@ void GolfState::handleRules(const GolfBallEvent& data)
 
                 std::uint16_t packet = ((sortData[0].client << 8) | sortData[0].player);
                 m_sharedData.host.broadcastPacket(PacketID::Elimination, packet, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+
+                LogI << (int)sortData[0].player << " was eliminated" << std::endl;
             }
         }
             break;

@@ -824,8 +824,12 @@ void GolfState::setNextPlayer(bool newHole)
             std::sort(m_playerInfo.begin(), m_playerInfo.end(),
                 [](const PlayerStatus& a, const PlayerStatus& b)
                 {
-                    if (a.eliminated) return false;
-                    return a.distanceToHole > b.distanceToHole;
+                    if (!a.eliminated && !b.eliminated)
+                    {
+                        return a.distanceToHole > b.distanceToHole;
+                    }
+                    
+                    return !a.eliminated;
                 });
         }
         else
@@ -1293,21 +1297,6 @@ void GolfState::initScene()
             m_holeData.resize(size);
         }
         break;
-        }
-    }
-
-    //if we're running elimination with 9 holes duplicate
-    //the last hole in case we're playing with 16 players
-    if (m_sharedData.scoreType == ScoreType::BattleRoyale
-        && m_holeData.size() < 16)
-    {
-        //we can't repeat the first holes because
-        //they'll have been destroyed on hole change
-        auto count = 16 - m_holeData.size();
-        auto last = m_holeData.size() - 1;
-        for (auto i = 0u; i < count; ++i)
-        {
-            m_holeData.push_back(m_holeData[last]);
         }
     }
 

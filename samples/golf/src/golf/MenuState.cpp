@@ -1275,6 +1275,8 @@ void MenuState::loadAssets()
     m_audioEnts[AudioID::Start].addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("start_game");
     m_audioEnts[AudioID::Message] = m_uiScene.createEntity();
     m_audioEnts[AudioID::Message].addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("message");
+    m_audioEnts[AudioID::Nope] = m_uiScene.createEntity();
+    m_audioEnts[AudioID::Nope].addComponent<cro::AudioEmitter>() = m_menuSounds.getEmitter("nope");
 }
 
 void MenuState::createScene()

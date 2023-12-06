@@ -2792,6 +2792,8 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
                         if (m_connectedPlayerCount < ScoreType::PlayerCount[m_sharedData.scoreType])
                         {
                             m_lobbyWindowEntities[LobbyEntityID::MinPlayerCount].getComponent<cro::Callback>().active = true;
+                            m_audioEnts[AudioID::Nope].getComponent<cro::AudioEmitter>().play();
+                            m_audioEnts[AudioID::Nope].getComponent<cro::AudioEmitter>().setPlayingOffset(cro::seconds(0.f));
                         }
                         else
                         {

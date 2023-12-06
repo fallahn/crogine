@@ -122,7 +122,7 @@ private:
         enum
         {
             Accept, Back, Start,
-            Message,
+            Message, Nope,
 
             Count
         };
