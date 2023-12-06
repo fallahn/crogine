@@ -47,7 +47,7 @@ source distribution.
 //(terrain vertex data and materials changed 1100 -> 1110)
 //(player avatar data format changed 1110 -> 1120)
 //(ball started sending wind effect 1120 -> 1124)
-//(added night mode 1141 -> 1150)
+//(added night mode/weather 1141 -> 1150)
 static constexpr std::uint16_t CURRENT_VER = 1150;
 #ifdef __APPLE__
 static const std::string StringVer("1.15.0 (macOS beta)");

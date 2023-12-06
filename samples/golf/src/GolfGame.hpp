@@ -103,6 +103,7 @@ private:
     void finalise() override;
 
     void initFonts();
+    void convertPreferences() const;
     void loadPreferences();
     void savePreferences();
     void loadAvatars();

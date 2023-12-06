@@ -431,15 +431,30 @@ bool GolfGame::initialise()
     }
 
 
-    //do this first because if we quit early the preferences will otherwise get overwritten by defaults.
-    loadPreferences();
-
 #if defined USE_GNS
     m_achievements = std::make_unique<SteamAchievements>(MessageID::AchievementMessage);
 #else
     m_achievements = std::make_unique<DefaultAchievements>();
 #endif
-    if (!Achievements::init(*m_achievements))
+    auto initResult = Achievements::init(*m_achievements);
+
+    //in 1.15 we moved user prefs to individual user IDs
+    //so multiple users can have their own profiles on the
+    //same device. This just looks for existing data and
+    //moves it to the current user's dir, in an attempt to
+    //prevent any profile loss.
+    if (initResult)
+    {
+        //however this relies on having successfully
+        //init Steam as we need the uid of the logged on user
+        convertPreferences();
+    }
+
+
+    //do this first because if we quit early the preferences will otherwise get overwritten by defaults.
+    loadPreferences();
+
+    if (!initResult)
     {
         //no point trying to load the menu if we failed to init.
         return false;
@@ -925,6 +940,98 @@ void GolfGame::initFonts()
     }
 }
 
+void GolfGame::convertPreferences() const
+{
+    auto srcPath = cro::App::getPreferencePath();
+    const auto dstPath = Social::getBaseContentPath();
+
+    const std::array FileNames =
+    {
+        std::string("profiles.tar"),
+        std::string("last.gue"),
+        std::string("lea.gue"),
+        std::string("keys.bind"),
+    };
+
+    //make sure the target doesn't yet exist - else
+    //chances are this is already done and we're overwriting
+    //with old data...
+    for (const auto& name : FileNames)
+    {
+        const auto outPath = dstPath + name;
+        const auto inPath = srcPath + name;
+
+        if (!cro::FileSystem::fileExists(outPath))
+        {
+            LogI << outPath << " doesn't exist" << std::endl;
+            
+            if (cro::FileSystem::fileExists(inPath))
+            {
+                LogI << inPath << " exists - attempting to copy..." << std::endl;
+
+                std::error_code ec;
+                std::filesystem::path src = std::filesystem::u8path(inPath);
+                std::filesystem::path dst = std::filesystem::u8path(outPath);
+
+                std::filesystem::copy(src, dst, std::filesystem::copy_options::skip_existing | std::filesystem::copy_options::recursive, ec);
+
+                if (ec)
+                {
+                    LogE << "Failed copying " << inPath << ": " << ec.message() << std::endl;
+                }
+            }
+        }
+        else
+        {
+            LogI << outPath << " already exists - skipping." << std::endl;
+            if (cro::FileSystem::fileExists(inPath))
+            {
+                std::error_code ec;
+                std::filesystem::rename(std::filesystem::u8path(inPath), std::filesystem::u8path(inPath + ".old"), ec);
+
+                if (ec)
+                {
+                    LogI << "Failed to rename existing file: " << ec.message() << std::endl;
+                }
+            }
+        }
+    }
+
+    const std::array DirNames =
+    {
+        std::string("avatars"),
+        std::string("balls"),
+        std::string("hair"),
+        std::string("music"),
+        std::string("profiles"),
+    };
+    srcPath += "user/";
+
+    for (const auto& dir : DirNames)
+    {
+        const auto outPath = dstPath + dir;
+        const auto inPath = srcPath + dir;
+
+        if (cro::FileSystem::directoryExists(inPath))
+        {
+            std::error_code ec;
+            std::filesystem::path src = std::filesystem::u8path(inPath);
+            std::filesystem::path dst = std::filesystem::u8path(outPath);
+
+            std::filesystem::copy(src, dst, std::filesystem::copy_options::skip_existing | std::filesystem::copy_options::recursive, ec);
+
+            if (ec)
+            {
+                LogE << "Failed copying " << inPath << ": " << ec.message() << std::endl;
+            }
+            else
+            {
+                std::filesystem::rename(inPath, inPath + ".old");
+            }
+        }
+    }
+}
+
 void GolfGame::loadPreferences()
 {
     auto path = getPreferencePath() + "prefs.cfg";
@@ -1065,7 +1172,7 @@ void GolfGame::loadPreferences()
     }
 
     //read keybind bin
-    path = getPreferencePath() + "keys.bind";
+    path = Social::getBaseContentPath() + "keys.bind";
 
     if (cro::FileSystem::fileExists(path))
     {
@@ -1159,7 +1266,7 @@ void GolfGame::savePreferences()
 
 
     //keybinds
-    path = getPreferencePath() + "keys.bind";
+    path = Social::getBaseContentPath() + "keys.bind";
     cro::RaiiRWops file;
     file.file = SDL_RWFromFile(path.c_str(), "wb");
     if (file.file)

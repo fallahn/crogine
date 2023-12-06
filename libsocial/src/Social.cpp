@@ -373,7 +373,7 @@ void Social::setUnlockStatus(UnlockType type, std::int32_t set)
 
 std::string Social::getBaseContentPath()
 {
-    return cro::App::getPreferencePath() + "user/";
+    return cro::App::getPreferencePath() + "user/1234/";
 }
 
 std::string Social::getUserContentPath(std::int32_t contentType)

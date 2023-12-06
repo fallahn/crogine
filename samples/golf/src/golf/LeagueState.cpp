@@ -692,7 +692,7 @@ void LeagueState::createLeagueTab(cro::Entity parent, const cro::SpriteSheet& sp
 
 
     //check if a previous season exists and scroll the results
-    const auto path = cro::App::getPreferencePath() + PrevFileName;
+    const auto path = Social::getBaseContentPath() + PrevFileName;
     if (cro::FileSystem::fileExists(path))
     {
         cro::RaiiRWops file;
