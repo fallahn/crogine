@@ -963,7 +963,7 @@ void GolfGame::convertPreferences() const
 
         if (!cro::FileSystem::fileExists(outPath))
         {
-            LogI << outPath << " doesn't exist" << std::endl;
+            //LogI << outPath << " doesn't exist" << std::endl;
             
             if (cro::FileSystem::fileExists(inPath))
             {
@@ -983,7 +983,7 @@ void GolfGame::convertPreferences() const
         }
         else
         {
-            LogI << outPath << " already exists - skipping." << std::endl;
+            //LogI << outPath << " already exists - skipping." << std::endl;
             if (cro::FileSystem::fileExists(inPath))
             {
                 std::error_code ec;

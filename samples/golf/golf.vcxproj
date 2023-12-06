@@ -793,6 +793,7 @@
     <ClInclude Include="src\golf\RandNames.hpp" />
     <ClInclude Include="src\golf\RayResultCallback.hpp" />
     <ClInclude Include="src\golf\ScoreStrings.hpp" />
+    <ClInclude Include="src\golf\ScoreType.hpp" />
     <ClInclude Include="src\golf\server\BilliardsDirector.hpp" />
     <ClInclude Include="src\golf\server\CPUStats.hpp" />
     <ClInclude Include="src\golf\server\EightballDirector.hpp" />

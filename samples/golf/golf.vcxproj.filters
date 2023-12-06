@@ -830,6 +830,9 @@
     <ClInclude Include="src\golf\PlayerManagementState.hpp">
       <Filter>Header Files\golf\client\states</Filter>
     </ClInclude>
+    <ClInclude Include="src\golf\ScoreType.hpp">
+      <Filter>Header Files\golf\client\states</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="src\golf\OptionsEnum.inl">

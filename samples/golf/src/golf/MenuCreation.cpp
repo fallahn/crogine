@@ -1939,6 +1939,19 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity.addComponent<cro::Callback>().setUserData<std::vector<cro::Entity>>(); //abuse this component to store handles to the text children.
     bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
+    //displays a message if current rule type requires more players
+    entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 118.f, 20.f, 0.4f });
+    entity.addComponent<cro::Drawable2D>();
+    entity.addComponent<cro::Text>(font).setString("NEED MORE PLAYERS");
+    entity.getComponent<cro::Text>().setCharacterSize(UITextSize);
+    entity.getComponent<cro::Text>().setFillColour(TextHighlightColour);
+    entity.getComponent<cro::Text>().setShadowOffset({ 1.f, -1.f });
+    entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
+    entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
+    entity.addComponent<cro::Callback>().function = HighlightAnimationCallback();
+    bgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
+    m_lobbyWindowEntities[LobbyEntityID::MinPlayerCount] = entity;
 
     //displays the thumbnails for the selected course
     entity = m_uiScene.createEntity();
@@ -1959,8 +1972,8 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     thumbBgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
     m_lobbyWindowEntities[LobbyEntityID::HoleThumb] = entity;
 
-    entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 86.f, 64.f, 0.4f });
+    /*entity = m_uiScene.createEntity();
+    entity.addComponent<cro::Transform>().setPosition({ 85.f, 140.f, 0.4f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(smallFont).setString("Course of the Month!");
     entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);
@@ -1969,7 +1982,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
     entity.getComponent<cro::Text>().setShadowColour(LeaderboardTextDark);
     entity.getComponent<cro::Text>().setAlignment(cro::Text::Alignment::Centre);
     thumbBgEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-    m_lobbyWindowEntities[LobbyEntityID::MonthlyCourse] = entity;
+    m_lobbyWindowEntities[LobbyEntityID::MonthlyCourse] = entity;*/
 
     //hole count
     entity = m_uiScene.createEntity();
@@ -2776,37 +2789,44 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
                 {
                     if (m_sharedData.hosting)
                     {
-                        //check all members ready
-                        bool ready = true;
-                        std::int32_t clientCount = 0;
-                        for (auto i = 0u; i < ConstVal::MaxClients; ++i)
+                        if (m_connectedPlayerCount < ScoreType::PlayerCount[m_sharedData.scoreType])
                         {
-                            if (m_sharedData.connectionData[i].playerCount != 0)
+                            m_lobbyWindowEntities[LobbyEntityID::MinPlayerCount].getComponent<cro::Callback>().active = true;
+                        }
+                        else
+                        {
+                            //check all members ready
+                            bool ready = true;
+                            std::int32_t clientCount = 0;
+                            for (auto i = 0u; i < ConstVal::MaxClients; ++i)
                             {
-                                clientCount++;
-                                if (!m_readyState[i])
+                                if (m_sharedData.connectionData[i].playerCount != 0)
                                 {
-                                    ready = false;
-                                    break;
+                                    clientCount++;
+                                    if (!m_readyState[i])
+                                    {
+                                        ready = false;
+                                        break;
+                                    }
                                 }
                             }
-                        }
 
-                        if (ready && m_sharedData.clientConnection.connected
-                            && m_sharedData.serverInstance.running()) //not running if we're not hosting :)
-                        {
-                            if (clientCount > 1)
+                            if (ready && m_sharedData.clientConnection.connected
+                                && m_sharedData.serverInstance.running()) //not running if we're not hosting :)
                             {
-                                m_sharedData.clientConnection.netClient.sendPacket(PacketID::RequestGameStart, std::uint8_t(sv::StateID::Golf), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
-                                m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+                                if (clientCount > 1)
+                                {
+                                    m_sharedData.clientConnection.netClient.sendPacket(PacketID::RequestGameStart, std::uint8_t(sv::StateID::Golf), net::NetFlag::Reliable, ConstVal::NetChannelReliable);
+                                    m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+                                }
+                                else
+                                {
+                                    enterConfirmCallback(false);
+                                }
                             }
-                            else
-                            {
-                                enterConfirmCallback(false);
-                            }
-                        }
 
-                        LogI << "Shared Data set to Hosting" << std::endl;
+                            LogI << "Shared Data set to Hosting" << std::endl;
+                        }
                     }
                     else
                     {

@@ -141,23 +141,24 @@ MainMenuContext::MainMenuContext(MenuState* state)
 }
 
 MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, SharedStateData& sd, SharedProfileData& sp)
-    : cro::State        (stack, context),
-    m_sharedData        (sd),
-    m_profileData       (sp),
-    m_textChat          (m_uiScene, sd),
-    m_matchMaking       (context.appInstance.getMessageBus()),
-    m_cursor            (/*"assets/images/cursor.png", 0, 0*/cro::SystemCursor::Hand),
-    m_uiScene           (context.appInstance.getMessageBus(), 512),
-    m_backgroundScene   (context.appInstance.getMessageBus(), 512/*, cro::INFO_FLAG_SYSTEMS_ACTIVE*/),
-    m_avatarScene       (context.appInstance.getMessageBus(), 640/*, cro::INFO_FLAG_SYSTEMS_ACTIVE*/),
-    m_scaleBuffer       ("PixelScale"),
-    m_resolutionBuffer  ("ScaledResolution"),
-    m_windBuffer        ("WindValues"),
-    m_lobbyExpansion    (0.f),
-    m_avatarCallbacks   (std::numeric_limits<std::uint32_t>::max(), std::numeric_limits<std::uint32_t>::max()),
-    m_currentMenu       (MenuID::Main),
-    m_prevMenu          (MenuID::Main),
-    m_viewScale         (1.f)
+    : cro::State            (stack, context),
+    m_sharedData            (sd),
+    m_profileData           (sp),
+    m_connectedPlayerCount  (0),
+    m_textChat              (m_uiScene, sd),
+    m_matchMaking           (context.appInstance.getMessageBus()),
+    m_cursor                (/*"assets/images/cursor.png", 0, 0*/cro::SystemCursor::Hand),
+    m_uiScene               (context.appInstance.getMessageBus(), 512),
+    m_backgroundScene       (context.appInstance.getMessageBus(), 512/*, cro::INFO_FLAG_SYSTEMS_ACTIVE*/),
+    m_avatarScene           (context.appInstance.getMessageBus(), 640/*, cro::INFO_FLAG_SYSTEMS_ACTIVE*/),
+    m_scaleBuffer           ("PixelScale"),
+    m_resolutionBuffer      ("ScaledResolution"),
+    m_windBuffer            ("WindValues"),
+    m_lobbyExpansion        (0.f),
+    m_avatarCallbacks       (std::numeric_limits<std::uint32_t>::max(), std::numeric_limits<std::uint32_t>::max()),
+    m_currentMenu           (MenuID::Main),
+    m_prevMenu              (MenuID::Main),
+    m_viewScale             (1.f)
 {
     sd.baseState = StateID::Menu;
     sd.clubSet = std::clamp(sd.clubSet, 0, 2);
@@ -1939,14 +1940,14 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
                             m_matchMaking.setGameTitle(data->title);
                         }
 
-                        if (m_sharedData.courseIndex == courseOfTheMonth())
+                        /*if (m_sharedData.courseIndex == courseOfTheMonth())
                         {
                             m_lobbyWindowEntities[LobbyEntityID::MonthlyCourse].getComponent<cro::Transform>().setScale({ 1.f, 1.f });
                         }
                         else
                         {
                             m_lobbyWindowEntities[LobbyEntityID::MonthlyCourse].getComponent<cro::Transform>().setScale({ 0.f, 0.f });
-                        }
+                        }*/
                     }
                     else
                     {
@@ -2030,6 +2031,16 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
                     e.getComponent<cro::Text>().setString(RuleDescriptions[m_sharedData.scoreType]);
                 };
                 m_uiScene.getSystem<cro::CommandSystem>()->sendCommand(cmd);
+
+                if (m_connectedPlayerCount < ScoreType::PlayerCount[m_sharedData.scoreType])
+                {
+                    m_lobbyWindowEntities[LobbyEntityID::MinPlayerCount].getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+                }
+                else
+                {
+                    m_lobbyWindowEntities[LobbyEntityID::MinPlayerCount].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+                }
+                m_uiScene.getActiveCamera().getComponent<cro::Camera>().active = true;
 
                 updateCourseRuleString(false);
             }

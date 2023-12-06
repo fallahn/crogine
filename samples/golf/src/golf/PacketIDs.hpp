@@ -29,29 +29,11 @@ source distribution.
 
 #pragma once
 
+#include "ScoreType.hpp"
+
 #include <cstdint>
 #include <string>
 #include <array>
-
-namespace ScoreType
-{
-    enum
-    {
-        Stroke, 
-        Stableford,
-        StablefordPro,
-        
-        Match, Skins,
-        MultiTarget,
-        ShortRound,
-
-        Count,
-        BattleRoyale,
-        BBB,
-        NearestThePin,
-        LongestDrive,
-    };
-}
 
 namespace GimmeSize
 {

@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2021
+Matt Marchant 2021 - 2023
 http://trederia.blogspot.com
 
 Super Video Golf - zlib licence.
@@ -29,29 +29,30 @@ source distribution.
 
 #pragma once
 
-#include <string>
 #include <array>
 
-struct ScoreID final
+namespace ScoreType
 {
     enum
     {
-        HIO,
-        Albatross,
-        Eagle,
-        Birdie,
-        Par,
-        Bogie,
-        DoubleBogie,
-        TripleBogie,
+        Stroke,
+        Stableford,
+        StablefordPro,
 
-        Count
+        Match, Skins,
+        MultiTarget,
+        ShortRound,
+
+        Count,
+        BattleRoyale,
+        BBB,
+        NearestThePin,
+        LongestDrive,
     };
 
-    static constexpr std::int32_t ScoreOffset = 4;
-};
+    static const inline std::array<std::int32_t, Count> PlayerCount =
+    {
+        1,1,1, 1,1,1,1, //2
+    };
+}
 
-static inline const std::array<std::string, ScoreID::Count> ScoreStrings =
-{
-    "Hole\nIn\nOne!", "Albatross", "Eagle", "Birdie", "Par", "Bogey", "Double Bogey", "Triple Bogey"
-};

@@ -2181,6 +2181,17 @@ void MenuState::updateLobbyAvatars()
         Social::setGroup(/*m_sharedData.lobbyID*/m_sharedData.clientConnection.hostID, playerCount);
         //LogI << "Set group data to " << m_sharedData.clientConnection.hostID << ", " << playerCount << std::endl;
 
+        m_connectedPlayerCount = playerCount;
+        if (m_connectedPlayerCount < ScoreType::PlayerCount[m_sharedData.scoreType])
+        {
+            m_lobbyWindowEntities[LobbyEntityID::MinPlayerCount].getComponent<cro::Transform>().setScale(glm::vec2(1.f));
+        }
+        else
+        {
+            m_lobbyWindowEntities[LobbyEntityID::MinPlayerCount].getComponent<cro::Transform>().setScale(glm::vec2(0.f));
+        }
+        m_uiScene.getActiveCamera().getComponent<cro::Camera>().active = true;
+
         auto temp = m_uiScene.createEntity();
         temp.addComponent<cro::Callback>().active = true;
         temp.getComponent<cro::Callback>().function = [&](cro::Entity e, float)
