@@ -43,8 +43,8 @@ namespace ScoreType
         MultiTarget,
         ShortRound,
 
-        Count,
         BattleRoyale,
+        Count,
         BBB,
         NearestThePin,
         LongestDrive,
@@ -52,7 +52,15 @@ namespace ScoreType
 
     static const inline std::array<std::int32_t, Count> PlayerCount =
     {
-        1,1,1, 1,1,1,1, //2
+        1,1,1, 1,1,1,1, 3
     };
 }
 
+namespace GimmeSize
+{
+    enum
+    {
+        None, Leather, Putter,
+        Count
+    };
+}

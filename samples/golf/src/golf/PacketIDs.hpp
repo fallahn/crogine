@@ -35,15 +35,6 @@ source distribution.
 #include <string>
 #include <array>
 
-namespace GimmeSize
-{
-    enum
-    {
-        None, Leather, Putter,
-        Count
-    };
-}
-
 namespace MessageType
 {
     enum
@@ -132,6 +123,7 @@ namespace PacketID
         WindDirection, //< compressed vec3
         BallLanded, //< BallUpdate struct
         Gimme, //< uint16 client << 8 | player turn was ended on a gimme
+        Elimination, //< uint16 client << 8 | player was eliminated
         TableInfo, //< TableInfo struct
         TargetID, //< uint16 billiards player OR'd ball ID to update the UI
         ServerAchievement, //< uint8 client, uint8 player, uint8 achievement id - up to client to decide if to award

@@ -60,6 +60,7 @@ struct PlayerStatus final : public ActivePlayer
     std::vector<std::uint8_t> holeScore;
     std::vector<float> distanceScore;
     bool targetHit = false;
+    bool eliminated = false;
     std::uint8_t totalScore = 0;
     std::uint8_t skins = 0;
     std::uint8_t matchWins = 0;

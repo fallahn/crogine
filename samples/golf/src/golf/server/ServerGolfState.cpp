@@ -818,6 +818,16 @@ void GolfState::setNextPlayer(bool newHole)
                     });
             }
         }
+        else if (m_sharedData.scoreType == ScoreType::BattleRoyale)
+        {
+            //make sure eliminated are last before sorting by distance
+            std::sort(m_playerInfo.begin(), m_playerInfo.end(),
+                [](const PlayerStatus& a, const PlayerStatus& b)
+                {
+                    if (a.eliminated) return false;
+                    return a.distanceToHole > b.distanceToHole;
+                });
+        }
         else
         {
             if (m_skinsFinals)
@@ -1024,6 +1034,19 @@ void GolfState::setNextHole()
         };
 
         m_scoreboardReadyFlags = 0;
+
+        //if this is battle royale set all eliminated players to forfeit
+        if (m_sharedData.scoreType == ScoreType::BattleRoyale)
+        {
+            for (auto& p : m_playerInfo)
+            {
+                if (p.eliminated)
+                {
+                    p.holeScore[m_currentHole] = m_holeData[m_currentHole].puttFromTee ? 6 : 12;
+                    p.distanceToHole = 0.f;
+                }
+            }
+        }
     }
     else
     {
@@ -1250,6 +1273,7 @@ void GolfState::initScene()
         m_scene.addDirector<WeatherDirector>(m_sharedData.host);
     }
 
+    //trim the hole data if we play short round
     if (m_sharedData.scoreType == ScoreType::ShortRound
         && getCourseIndex(m_sharedData.mapDir.toAnsiString()) != -1)
     {
@@ -1272,6 +1296,20 @@ void GolfState::initScene()
         }
     }
 
+    //if we're running elimination with 9 holes duplicate
+    //the last hole in case we're playing with 16 players
+    if (m_sharedData.scoreType == ScoreType::BattleRoyale
+        && m_holeData.size() < 16)
+    {
+        //we can't repeat the first holes because
+        //they'll have been destroyed on hole change
+        auto count = 16 - m_holeData.size();
+        auto last = m_holeData.size() - 1;
+        for (auto i = 0u; i < count; ++i)
+        {
+            m_holeData.push_back(m_holeData[last]);
+        }
+    }
 
     //check for putt from tee and update any rule properties
     for (auto& hole : m_holeData)

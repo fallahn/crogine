@@ -28,6 +28,7 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include "GolfState.hpp"
+#include "PacketIDs.hpp"
 #include "FpsCameraSystem.hpp"
 #include "CommandIDs.hpp"
 #include "GameConsts.hpp"

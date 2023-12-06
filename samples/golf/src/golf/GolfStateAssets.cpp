@@ -1102,6 +1102,19 @@ void GolfState::loadMap()
         }
     }
 
+    //if we're running elimination with 9 holes duplicate
+    //the last one in case we're playing with 16 players
+    if (m_sharedData.scoreType == ScoreType::BattleRoyale
+        && m_holeData.size() < 16)
+    {
+        auto count = 16 - m_holeData.size();
+        auto last = m_holeData.size() - 1;
+        for (auto i = 0u; i < count; ++i)
+        {
+            m_holeData.push_back(m_holeData[last]);
+        }
+    }
+
     auto* greenShader = &m_resources.shaders.get(ShaderID::CourseGreen); //greens use either this or the gridShader for their material
     auto* gridShader = &m_resources.shaders.get(ShaderID::CourseGrid); //used below when testing for putt holes.
 

@@ -28,6 +28,7 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include "GolfState.hpp"
+#include "PacketIDs.hpp"
 #include "CameraFollowSystem.hpp"
 #include "AchievementIDs.hpp"
 #include "AchievementStrings.hpp"

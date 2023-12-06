@@ -28,6 +28,7 @@ source distribution.
 -----------------------------------------------------------------------*/
 
 #include "PlayerManagementState.hpp"
+#include "PacketIDs.hpp"
 #include "SharedStateData.hpp"
 #include "CommonConsts.hpp"
 #include "CommandIDs.hpp"
