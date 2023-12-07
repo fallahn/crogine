@@ -2939,6 +2939,18 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
                     switch (m_sharedData.scoreType)
                     {
                     default:
+                    case ScoreType::BattleRoyale:
+                    case ScoreType::Stroke:
+                    case ScoreType::ShortRound:
+                    case ScoreType::MultiTarget:
+                        info.score = m_sharedData.connectionData[i].playerData[j].parScore;
+                        break;
+                    case ScoreType::Match:
+                        info.score = m_sharedData.connectionData[i].playerData[j].matchScore;
+                        break;
+                    case ScoreType::Skins:
+                        info.score = m_sharedData.connectionData[i].playerData[j].skinScore;
+                        break;
                     case ScoreType::Stableford:
                     case ScoreType::StablefordPro:
                         for (auto k = 0u; k < m_sharedData.connectionData[i].playerData[j].holeScores.size(); ++k)
@@ -2957,17 +2969,6 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
                             info.score += stableScore;
                         }
                         break;
-                    case ScoreType::Stroke:
-                    case ScoreType::ShortRound:
-                    case ScoreType::MultiTarget:
-                        info.score = m_sharedData.connectionData[i].playerData[j].parScore;
-                        break;
-                    case ScoreType::Match:
-                        info.score = m_sharedData.connectionData[i].playerData[j].matchScore;
-                        break;
-                    case ScoreType::Skins:
-                        info.score = m_sharedData.connectionData[i].playerData[j].skinScore;
-                        break;
                     }
                 }
             }
@@ -2979,13 +2980,14 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
                 switch (m_sharedData.scoreType)
                 {
                 default:
-                case ScoreType::Stableford:
-                case ScoreType::StablefordPro:
-                    return a.score > b.score;
                 case ScoreType::Stroke:
+                case ScoreType::BattleRoyale:
                 case ScoreType::ShortRound:
                 case ScoreType::MultiTarget:
                     return a.score < b.score;
+                case ScoreType::Stableford:
+                case ScoreType::StablefordPro:
+                    return a.score > b.score;
                 }
             });
 
@@ -2998,6 +3000,7 @@ void MenuState::createLobbyMenu(cro::Entity parent, std::uint32_t mouseEnter, st
             switch (m_sharedData.scoreType)
             {
             default:
+            case ScoreType::BattleRoyale:
             case ScoreType::MultiTarget:
             case ScoreType::ShortRound:
             case ScoreType::Stroke:
