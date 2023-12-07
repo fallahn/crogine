@@ -411,7 +411,7 @@ void MenuState::createUI()
 
     //diplays version number
     entity = m_uiScene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 2.f, 10.f, 1.f });
+    entity.addComponent<cro::Transform>().setPosition({ 2.f, 10.f, 0.05f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(m_sharedData.sharedResources->fonts.get(FontID::Info)).setString("Version: " + StringVer + VersionNumber + BUILDNUMBER_STR);
     entity.getComponent<cro::Text>().setCharacterSize(InfoTextSize);

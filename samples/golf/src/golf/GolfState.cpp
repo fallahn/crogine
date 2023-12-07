@@ -3461,6 +3461,25 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
         switch (evt.packet.getID())
         {
         default: break;
+        case PacketID::Elimination:
+        {
+            auto d = evt.packet.as<std::uint16_t>();
+            std::uint8_t p = d & 0xff;
+            std::uint8_t c = (d >> 8) & 0xff;
+
+            if (c == m_sharedData.clientConnection.connectionID)
+            {
+                showMessageBoard(MessageBoardID::Eliminated);
+            }
+            
+            c = std::clamp(c, std::uint8_t(0), std::uint8_t(ConstVal::MaxClients - 1));
+            p = std::clamp(p, std::uint8_t(0), std::uint8_t(ConstVal::MaxPlayers - 1));
+
+            cro::String s = m_sharedData.connectionData[c].playerData[p].name;
+            s += " was eliminated.";
+            showNotification(s);
+        }
+            break;
         case PacketID::WeatherChange:
             handleWeatherChange(evt.packet.as<std::uint8_t>());
             break;

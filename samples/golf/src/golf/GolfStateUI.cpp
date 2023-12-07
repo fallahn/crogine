@@ -3646,6 +3646,13 @@ void GolfState::showMessageBoard(MessageBoardID messageType, bool special)
             textEnt3.getComponent<cro::Text>().setString(ScoreTypes[m_sharedData.scoreType]);
         }
         break;
+    case MessageBoardID::Eliminated:
+        textEnt.getComponent<cro::Text>().setString("Eliminated!");
+        textEnt.getComponent<cro::Text>().setFillColour(TextGoldColour);
+        //textEnt.getComponent<cro::Text>().setCharacterSize(UITextSize * 2);
+        //textEnt.getComponent<cro::Transform>().move({ 0.f, 2.f, 0.f });
+        textEnt3.getComponent<cro::Text>().setString("Bad Luck!");
+        break;
     case MessageBoardID::Scrub:
     case MessageBoardID::Water:
         textEnt.getComponent<cro::Text>().setString("Foul!");

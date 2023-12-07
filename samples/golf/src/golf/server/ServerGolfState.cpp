@@ -94,6 +94,7 @@ GolfState::GolfState(SharedData& sd)
     m_scoreboardTime        (0.f),
     m_scoreboardReadyFlags  (0),
     m_gameStarted           (false),
+    m_eliminationStarted    (false),
     m_allMapsLoaded         (false),
     m_skinsFinals           (false),
     m_currentHole           (0),
@@ -960,6 +961,8 @@ void GolfState::setNextHole()
     }
     m_allMapsLoaded = false;
     m_scoreboardTime = 0.f;
+
+    m_eliminationStarted = true;
 
     m_currentHole++;
     if (m_currentHole < m_holeData.size()

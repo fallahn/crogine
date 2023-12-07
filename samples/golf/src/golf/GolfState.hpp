@@ -471,7 +471,7 @@ private:
     {
         Bunker, Scrub, Water,
         PlayerName, HoleScore,
-        Gimme
+        Gimme, Eliminated
     };
     void showMessageBoard(MessageBoardID, bool special = false);
     void floatingMessage(const std::string&);

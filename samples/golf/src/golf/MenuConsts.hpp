@@ -107,7 +107,7 @@ static const std::array<std::string, ScoreType::Count> RuleDescriptions =
 #else
     "As stroke play, however the number of holes is\nreduced by 33% - 18 holes become 12 and 9 holes\nbecome 6. Ideal for casual games. User courses\nremain unaffected.Contributes to the Club League.\n\nRecommended for solo play or 2+ players.",
 #endif
-    "Elimination mode. The round is played as Stroke\nPlay, however the last player to hole out each\nturn is eliminated. The game is won by the\nfinal remaining player.\n\nMinimum 3 players, recommended for 4+ players."
+    "Elimination mode. The round is played as Stroke\nPlay, however after the first hole the last\nplayer to hole out each turn is eliminated.\nThe game is won by the final remaining player.\n\nMinimum 3 players, recommended for 4+ players."
 
     /*"The first player on the green scores Bingo, the\nplayer closest to the pin when all players are on\nthe green scores Bango and first to hole out wins\nBongo. Not recommended for putting courses.",
     "Each player has one stroke to get as near to the\npin as possible. The winner is the player with the\nshortest total distance.\nGreat for casual play.",
