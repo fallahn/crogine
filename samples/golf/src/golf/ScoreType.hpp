@@ -30,6 +30,7 @@ source distribution.
 #pragma once
 
 #include <array>
+#include <cstdint>
 
 namespace ScoreType
 {
