@@ -80,7 +80,7 @@ namespace
     static constexpr float MaxShrubOffset = MaxTerrainHeight + 13.f;
     static constexpr std::int32_t SlopeGridSize = 20;
     static constexpr std::int32_t HalfGridSize = SlopeGridSize / 2;
-    static constexpr std::int32_t NormalMapMultiplier = 8;// 4; //number of times the resolution of the map to increase normal map resolution by
+    static constexpr std::int32_t NormalMapMultiplier = 4; //number of times the resolution of the map to increase normal map resolution by
 
     //callback data
     struct SwapData final
@@ -620,7 +620,7 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
     glCheck(glUniformMatrix4fv(m_normalShader.getUniformID("u_projectionMatrix"), 1, GL_FALSE, &normalViewProj[0][0]));
     glCheck(glUseProgram(0));
 
-    m_normalMap.create(MapSize.x * NormalMapMultiplier, MapSize.y * NormalMapMultiplier, false);
+    m_normalMap.create(MapSize.x * NormalMapMultiplier, MapSize.y * NormalMapMultiplier, 2);
     if (m_currentHole < m_holeData.size())
     {
         renderNormalMap();
@@ -786,11 +786,8 @@ void TerrainBuilder::threadFunc()
         x = std::min(size.x - 1, std::max(0u, x * (NormalMapMultiplier / gridRes)));
         y = std::min(size.y - 1, std::max(0u, y * (NormalMapMultiplier / gridRes)));
 
-        //float height = static_cast<float>(m_normalMapImage.getPixel(x, y)[3]) / 255.f;
         auto idx = 4 * (y * size.x + x);
-        float height = m_normalMapValues[idx + 3];
-
-        return m_holeHeight.bottom + (m_holeHeight.height * height);
+        return m_normalMapValues[idx + 3];
     };
 
     const auto readNormal = [&](std::uint32_t x, std::uint32_t y, std::int32_t gridRes = 1)
@@ -799,17 +796,10 @@ void TerrainBuilder::threadFunc()
         x = std::min(size.x - 1, std::max(0u, x * (NormalMapMultiplier / gridRes)));
         y = std::min(size.y - 1, std::max(0u, y * (NormalMapMultiplier / gridRes)));
 
-        /*glm::vec3 normal(static_cast<float>(m_normalMapImage.getPixel(x, y)[0]) / 255.f,
-            static_cast<float>(m_normalMapImage.getPixel(x, y)[2]) / 255.f,
-            -static_cast<float>(m_normalMapImage.getPixel(x, y)[1]) / 255.f);*/
-
         auto idx = 4 * (y * size.x + x);
-        glm::vec3 normal(m_normalMapValues[idx], m_normalMapValues[idx + 2], -m_normalMapValues[idx + 1]);
-        //glm::vec3 normal(m_normalMapValues[idx], m_normalMapValues[idx + 1], m_normalMapValues[idx + 2]);
+        glm::vec3 normal(m_normalMapValues[idx], m_normalMapValues[idx + 1], m_normalMapValues[idx + 2]);
 
-        normal *= 2.f;
-        normal -= glm::vec3(1.f);
-        return /*glm::normalize*/(normal);
+        return normal;
     };
 
     //we can optimise this a bit by storing each prop
@@ -1077,8 +1067,6 @@ void TerrainBuilder::threadFunc()
                 } 
 
                 //update the vertex data for the slope indicator
-                //loadNormalMap(m_normalMapBuffer, m_normalMapImage); //image is populated when rendering texture
-
                 m_slopeBuffer.clear();
                 m_slopeIndices.clear();
 
@@ -1089,9 +1077,9 @@ void TerrainBuilder::threadFunc()
                 const std::int32_t startX = std::max(0, static_cast<std::int32_t>(std::floor(pinPos.x)) - HalfGridSize);
                 const std::int32_t startY = std::max(0, static_cast<std::int32_t>(-std::floor(pinPos.z)) - HalfGridSize);
                 static constexpr float DashCount = 80.f; //actual div by TAU cos its sin but eh.
-                static constexpr float SlopeSpeed = -30.f;//REMEMBER this const is also used in the slope frag shader
+                static constexpr float SlopeSpeed = -40.f;//REMEMBER this const is also used in the slope frag shader
                 static constexpr std::int32_t AvgDistance = 1;
-                static constexpr std::int32_t GridDensity = NormalMapMultiplier;// 4; //verts per metre, however grid size is half this. Can only be 1,2 or 4 to match Normal Map resolution
+                static constexpr std::int32_t GridDensity = NormalMapMultiplier; //verts per metre, however grid size is half this. Can only be 1,2 or 4 to match Normal Map resolution
                 static constexpr float GridSpacing = 1.f / GridDensity;
 
                 static constexpr float SurfaceOffset = 0.02f; //verts are pushed along normal by this much
@@ -1262,10 +1250,6 @@ void TerrainBuilder::renderNormalMap()
     glCheck(glUseProgram(m_normalShader.getGLHandle()));
     glCheck(glDisable(GL_CULL_FACE));
 
-    m_holeHeight.bottom = std::min(meshData.boundingBox[0].y, meshData.boundingBox[1].y);
-    m_holeHeight.height = std::max(meshData.boundingBox[0].y, meshData.boundingBox[1].y) - m_holeHeight.bottom;
-    glCheck(glUniform1f(m_normalShader.getUniformID("u_lowestPoint"), m_holeHeight.bottom));
-    glCheck(glUniform1f(m_normalShader.getUniformID("u_maxHeight"), m_holeHeight.height));
 
     //clear the alpha to 0 so unrendered areas have zero height
     //then the heightmap image can be compared and highest value used
@@ -1282,9 +1266,8 @@ void TerrainBuilder::renderNormalMap()
     glCheck(glDeleteVertexArrays(vaoCount, vaos.data()));
 
 
-    //TODO this might be faster with glReadPixels directly from the above framebuffer?
-    //probably doesn't matter if it's fast enough.
-    //m_normalMap.getTexture().saveToImage(m_normalMapImage);
-
-    m_normalMap.getTexture().saveToBuffer(m_normalMapValues);
+    //copy the texture to an array we can query
+    m_normalMapValues.resize(m_normalMap.getSize().x * m_normalMap.getSize().y * 4);
+    glBindTexture(GL_TEXTURE_2D, m_normalMap.getTexture(1).textureID);
+    glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_FLOAT, m_normalMapValues.data());
 }

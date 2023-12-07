@@ -170,8 +170,10 @@ R"(
 
     void main()
     {
-        float strength = 1.0 - dot(normalize(v_normal), vec3(0.0, 1.0, 0.0));
-        strength = smoothstep(0.01, 0.05, strength);
+        //float strength = 1.0 - dot(normalize(v_normal), vec3(0.0, 1.0, 0.0));
+        //strength = smoothstep(0.0, 0.05, strength);
+
+float strength = 1.0; //apparently superfluous?
 
         float alpha = (sin(v_texCoord.x - ((u_windData.w * 5.0 * strength) * v_texCoord.y)) + 1.0) * 0.5;
         alpha = step(0.1, alpha);
@@ -189,9 +191,10 @@ R"(
 
 //colour.rgb *= 0.1; //additive blending
 //colour.rgb *= colour.a; //additive blending
+//LIGHT_OUT = vec4(FRAG_OUT.rgb * FRAG_OUT.a, 1.0);
 
         FRAG_OUT = colour;
-        //LIGHT_OUT = vec4(FRAG_OUT.rgb * FRAG_OUT.a, 1.0);
+        LIGHT_OUT = vec4(vec3(0.0), 1.0);
         NORM_OUT.a = FRAG_OUT.a;
     }
 )";
@@ -201,38 +204,39 @@ inline const std::string NormalMapVertexShader = R"(
     ATTRIBUTE vec3 a_normal;
 
     uniform mat4 u_projectionMatrix;
-    uniform float u_maxHeight;
-    uniform float u_lowestPoint;
 
     VARYING_OUT vec3 v_normal;
-    VARYING_OUT float v_height;
+    VARYING_OUT float v_position;
 
     void main()
     {
         gl_Position = u_projectionMatrix * a_position;
         v_normal = a_normal;
-
-        //yeah should be a normal matrix, but YOLO
-        float z = v_normal.y;
-        v_normal.y = -v_normal.z;
-        v_normal.z = z;
-
-        v_height = clamp((a_position.y - u_lowestPoint) / u_maxHeight, 0.0, 1.0);
+        v_position = a_position.y;
     }
 )";
 
 inline const std::string NormalMapFragmentShader = R"(
-    OUTPUT
+    layout (location = 0) out vec4 FRAG_OUT;
+    layout (location = 1) out vec4 POS_OUT;
 
     VARYING_IN vec3 v_normal;
-    VARYING_IN float v_height;
+    VARYING_IN float v_position;
 
     void main()
     {
         vec3 normal = normalize(v_normal);
-        normal += 1.0;
-        normal /= 2.0;
+        POS_OUT = vec4(normal, v_position);
 
-        FRAG_OUT = vec4(normal, v_height);
+        FRAG_OUT = vec4(1.0);
+
+        //float z = normal.y;
+        //normal.y - normal.z;
+        //normal.z = z;
+
+        //normal += 1.0;
+        //normal *= 0.5;
+
+        //FRAG_OUT = vec4(normal, v_height);
     }
 )";

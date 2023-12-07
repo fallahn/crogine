@@ -39,7 +39,7 @@ source distribution.
 #include <crogine/ecs/components/BillboardCollection.hpp>
 #include <crogine/graphics/MeshData.hpp>
 #include <crogine/graphics/Image.hpp>
-#include <crogine/graphics/RenderTexture.hpp>
+#include <crogine/graphics/MultiRenderTexture.hpp>
 #include <crogine/graphics/ArrayTexture.hpp>
 
 #include <vector>
@@ -161,7 +161,6 @@ private:
         cro::Entity entity;
         float currentAlpha = 0.f;
     }m_slopeProperties;
-    //std::vector<glm::vec3> m_normalMapBuffer;
 
 
     std::atomic_bool m_threadRunning;
@@ -170,17 +169,12 @@ private:
 
     void threadFunc();
 
-    cro::RenderTexture m_normalMap;
+    cro::MultiRenderTexture m_normalMap;
     cro::Shader m_normalShader;
-    cro::Image m_normalMapImage;
-    struct HoleHeight final
-    {
-        float bottom = 0.f;
-        float height = 0.f;
-    }m_holeHeight;
+    std::vector<float> m_normalMapValues;
+
     void renderNormalMap(); //don't call this from thread!!
 
-    std::vector<float> m_normalMapValues;
 
 #ifdef CRO_DEBUG_
     cro::Texture m_normalDebugTexture;
