@@ -344,6 +344,45 @@ void Model::setInstanceTransforms(const std::vector<glm::mat4>& transforms)
 #endif
 }
 
+void Model::updateInstanceTransforms(const std::vector<const std::vector<glm::mat4>*>& transforms, const std::vector<const std::vector<glm::mat3>*>& normalMatrices)
+{
+    //as this is intended for speed we'll assert rather than conditional
+    CRO_ASSERT(!transforms.empty() && transforms.size() == normalMatrices.size(), "Invalid transform data");
+    CRO_ASSERT(m_instanceBuffers.normalBuffer && m_instanceBuffers.transformBuffer, "setInstanceTransforms() must be used at least once");
+    //CRO_ASSERT(transforms.size() <= initialInstanceCount, "We're using sub-data so no resizing!");
+
+    //TODO we could double buffer and swap this
+
+    std::uint32_t offset = 0;
+    std::uint32_t instanceCount = 0;
+
+    //upload transform data
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_instanceBuffers.transformBuffer));
+    for (const auto* v : transforms)
+    {
+        auto size = v->size() * sizeof(glm::mat4);
+        glCheck(glBufferSubData(GL_ARRAY_BUFFER, offset, size, v->data()));
+
+        offset += size;
+        instanceCount += v->size();
+    }
+
+    offset = 0;
+    glCheck(glBindBuffer(GL_ARRAY_BUFFER, m_instanceBuffers.normalBuffer));
+    for (const auto& v : normalMatrices)
+    {
+        auto size = v->size() * sizeof(glm::mat3);
+        glCheck(glBufferSubData(GL_ARRAY_BUFFER, offset, size, v->data()));
+
+        offset += size;
+    }
+
+    //glCheck(glBindBuffer(GL_ARRAY_BUFFER, 0));
+
+    //TODO assert instance count fits within the original buffer (although we've already errored by this point if it is)
+    m_instanceBuffers.instanceCount = instanceCount;
+}
+
 //private
 void Model::initMaterialAnimation(std::size_t index)
 {

@@ -220,6 +220,23 @@ namespace cro
         void setInstanceTransforms(const std::vector<glm::mat4>& transforms);
 
         /*!
+        \brief Updates the transform data for an instanced model.
+        This assumes that setInstanceTransforms() has been called at least once.
+        Bounding boxes and normal matrices are NOT recalculated - and the vertex
+        attributes of materials are not updated. This function is intended for
+        updating the the transform and normal matrix buffers as quickly as possible.
+
+        Pointers to multiple vectors are used so that each vector of data can be
+        uploaded sequentially with glBufferSubData(). The total size must NOT exceed
+        the size of the original buffer created with setInstanceTransforms()
+
+        \param transforms A std::vector containing the transforms with which to render
+        \param normalMatricies A std::vector containing the inverse transpose of each
+        transform
+        */
+        void updateInstanceTransforms(const std::vector<const std::vector<glm::mat4>*>& transforms, const std::vector<const std::vector<glm::mat3>*>& normalMatrices);
+
+        /*!
         \brief Returns the bounding sphere of the Model
         Note that this may not necessarily be the same as the of the Model's
         MeshData, as it is expanded to include any instanced geometry.
