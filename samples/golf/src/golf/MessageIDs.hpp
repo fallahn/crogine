@@ -107,7 +107,8 @@ struct SceneEvent
         PlayerRotate,
         PlayerBad,
         MinimapUpdated,
-        ChatMessage
+        ChatMessage,
+        PlayerEliminated
     }type = TransitionComplete;
 
     //union

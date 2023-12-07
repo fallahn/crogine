@@ -3649,9 +3649,18 @@ void GolfState::showMessageBoard(MessageBoardID messageType, bool special)
     case MessageBoardID::Eliminated:
         textEnt.getComponent<cro::Text>().setString("Eliminated!");
         textEnt.getComponent<cro::Text>().setFillColour(TextGoldColour);
-        //textEnt.getComponent<cro::Text>().setCharacterSize(UITextSize * 2);
-        //textEnt.getComponent<cro::Transform>().move({ 0.f, 2.f, 0.f });
         textEnt3.getComponent<cro::Text>().setString("Bad Luck!");
+
+        imgEnt.addComponent<cro::Sprite>() = m_sprites[SpriteID::BounceAnim];
+        imgEnt.addComponent<cro::SpriteAnimation>().play(0);
+        imgEnt.getComponent<cro::Transform>().setPosition({ 86.f, 25.f, 0.1f });
+        if (cro::Util::Random::value(0, 1) == 0)
+        {
+            imgEnt.getComponent<cro::Transform>().setScale({ -1.f, 1.f });
+            imgEnt.getComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
+        }
+        bounds = m_sprites[SpriteID::BounceAnim].getTextureBounds();
+
         break;
     case MessageBoardID::Scrub:
     case MessageBoardID::Water:

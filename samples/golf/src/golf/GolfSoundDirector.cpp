@@ -622,6 +622,10 @@ void GolfSoundDirector::handleMessage(const cro::Message& msg)
                     e.getComponent<cro::AudioEmitter>().setPitch(pitch);
                 }
             }
+            else if (data.type == SceneEvent::PlayerEliminated)
+            {
+                playSound(AudioID::NearMiss, glm::vec3(0.f), 1.f).getComponent<cro::AudioEmitter>().setMixerChannel(MixerChannel::Effects);
+            }
         }
         break;
         }

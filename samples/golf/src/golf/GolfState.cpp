@@ -3478,6 +3478,8 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
             cro::String s = m_sharedData.connectionData[c].playerData[p].name;
             s += " was eliminated.";
             showNotification(s);
+
+            postMessage<SceneEvent>(MessageID::SceneMessage)->type = SceneEvent::PlayerEliminated;
         }
             break;
         case PacketID::WeatherChange:
