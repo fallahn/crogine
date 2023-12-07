@@ -180,12 +180,12 @@ R"(
         c.x += mod(v_heightData.y * 3.0, 1.0);
         c = hsv2rgb(c);
 
-        c.g *= 0.6; //reduce the green to increase contrast with the background
+        c.g *= 0.7; //reduce the green to increase contrast with the background
 
         vec4 colour = vec4(c, v_heightData.x);
 
         colour.a *= u_alpha;
-        colour = mix(vec4(DotColour, (0.5 + (0.5 * u_alpha)) * v_heightData.x * step(0.001, alpha)), colour, alpha);
+        colour = mix(vec4(DotColour, (0.5 + (0.5 * u_alpha)) * v_heightData.x * step(0.0001, alpha)), colour, alpha);
 
 //colour.rgb *= 0.1; //additive blending
 //colour.rgb *= colour.a; //additive blending

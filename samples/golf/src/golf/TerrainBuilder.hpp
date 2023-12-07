@@ -161,7 +161,7 @@ private:
         cro::Entity entity;
         float currentAlpha = 0.f;
     }m_slopeProperties;
-    std::vector<glm::vec3> m_normalMapBuffer;
+    //std::vector<glm::vec3> m_normalMapBuffer;
 
 
     std::atomic_bool m_threadRunning;
@@ -179,6 +179,8 @@ private:
         float height = 0.f;
     }m_holeHeight;
     void renderNormalMap(); //don't call this from thread!!
+
+    std::vector<float> m_normalMapValues;
 
 #ifdef CRO_DEBUG_
     cro::Texture m_normalDebugTexture;

@@ -612,7 +612,7 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
     m_normalShader.loadFromString(NormalMapVertexShader, NormalMapFragmentShader);
     glm::mat4 viewMat = glm::rotate(glm::mat4(1.f), cro::Util::Const::PI / 2.f, glm::vec3(1.f, 0.f, 0.f));
     glm::vec2 mapSize(MapSize);
-    glm::mat4 projMat = glm::ortho(0.f, mapSize.x, 0.f, mapSize.y, -10.f, 20.f);
+    glm::mat4 projMat = glm::ortho(0.f, mapSize.x, 0.f, mapSize.y, -20.f, 20.f);
     auto normalViewProj = projMat * viewMat;
 
     //we can set this once so we don't need to store the matrix
@@ -782,28 +782,34 @@ void TerrainBuilder::threadFunc()
 
     const auto readHeightMap = [&](std::uint32_t x, std::uint32_t y, std::int32_t gridRes = 1)
     {
-        auto size = m_normalMapImage.getSize();
+        auto size = m_normalMap.getSize();
         x = std::min(size.x - 1, std::max(0u, x * (NormalMapMultiplier / gridRes)));
         y = std::min(size.y - 1, std::max(0u, y * (NormalMapMultiplier / gridRes)));
 
-        float height = static_cast<float>(m_normalMapImage.getPixel(x, y)[3]) / 255.f;
+        //float height = static_cast<float>(m_normalMapImage.getPixel(x, y)[3]) / 255.f;
+        auto idx = 4 * (y * size.x + x);
+        float height = m_normalMapValues[idx + 3];
 
         return m_holeHeight.bottom + (m_holeHeight.height * height);
     };
 
     const auto readNormal = [&](std::uint32_t x, std::uint32_t y, std::int32_t gridRes = 1)
     {
-        auto size = m_normalMapImage.getSize();
+        auto size = m_normalMap.getSize();
         x = std::min(size.x - 1, std::max(0u, x * (NormalMapMultiplier / gridRes)));
         y = std::min(size.y - 1, std::max(0u, y * (NormalMapMultiplier / gridRes)));
 
-        glm::vec3 normal(static_cast<float>(m_normalMapImage.getPixel(x, y)[0]) / 255.f,
+        /*glm::vec3 normal(static_cast<float>(m_normalMapImage.getPixel(x, y)[0]) / 255.f,
             static_cast<float>(m_normalMapImage.getPixel(x, y)[2]) / 255.f,
-            -static_cast<float>(m_normalMapImage.getPixel(x, y)[1]) / 255.f);
+            -static_cast<float>(m_normalMapImage.getPixel(x, y)[1]) / 255.f);*/
+
+        auto idx = 4 * (y * size.x + x);
+        glm::vec3 normal(m_normalMapValues[idx], m_normalMapValues[idx + 2], -m_normalMapValues[idx + 1]);
+        //glm::vec3 normal(m_normalMapValues[idx], m_normalMapValues[idx + 1], m_normalMapValues[idx + 2]);
 
         normal *= 2.f;
         normal -= glm::vec3(1.f);
-        return normal;
+        return /*glm::normalize*/(normal);
     };
 
     //we can optimise this a bit by storing each prop
@@ -1071,7 +1077,7 @@ void TerrainBuilder::threadFunc()
                 } 
 
                 //update the vertex data for the slope indicator
-                loadNormalMap(m_normalMapBuffer, m_normalMapImage); //image is populated when rendering texture
+                //loadNormalMap(m_normalMapBuffer, m_normalMapImage); //image is populated when rendering texture
 
                 m_slopeBuffer.clear();
                 m_slopeIndices.clear();
@@ -1278,5 +1284,7 @@ void TerrainBuilder::renderNormalMap()
 
     //TODO this might be faster with glReadPixels directly from the above framebuffer?
     //probably doesn't matter if it's fast enough.
-    m_normalMap.getTexture().saveToImage(m_normalMapImage);
+    //m_normalMap.getTexture().saveToImage(m_normalMapImage);
+
+    m_normalMap.getTexture().saveToBuffer(m_normalMapValues);
 }
