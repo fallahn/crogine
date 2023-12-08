@@ -162,6 +162,9 @@ struct SharedStateData final
     std::uint8_t nightTime = 0; //bool
     std::uint8_t weatherType = 0;
 
+    //counts the number of holes actually played in elimination
+    std::uint8_t holesPlayed = 0;
+
     //printed by the error state
     std::string errorMessage;
 

@@ -4230,6 +4230,13 @@ void MenuState::createPreviousScoreCard()
         }
     }
 
+    if (m_sharedData.scoreType == ScoreType::BattleRoyale)
+    {
+        //use the number of holes actually played
+        holeCount = m_sharedData.holesPlayed + 1;
+        frontCount = std::min(9, holeCount);
+        backCount = std::max(0, holeCount - frontCount);
+    }
 
     struct Entry final
     {
@@ -4367,7 +4374,9 @@ void MenuState::createPreviousScoreCard()
     //TODO we could do all the updates in one iter over the Entries
     //but this is all in the loading screen so... meh
 
-    bool page2 = m_sharedData.holeCount == 0;// holeCount > 9;
+    bool page2 = m_sharedData.scoreType == ScoreType::BattleRoyale ?
+        backCount != 0
+        : m_sharedData.holeCount == 0;
 
     cro::String str("HOLE\n");
     switch (m_sharedData.scoreType)
