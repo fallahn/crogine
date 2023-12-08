@@ -894,10 +894,10 @@ void GolfState::setNextPlayer(bool newHole)
     }
 
 
-    if (m_playerInfo[0].distanceToHole == 0)
+    if (m_playerInfo[0].distanceToHole == 0 //all players must be in the hole
+        || (m_sharedData.scoreType == ScoreType::BattleRoyale && m_playerInfo.size() == 1) //players have quit the game so attempt next hole
+        || (m_sharedData.scoreType == ScoreType::BattleRoyale && m_playerInfo[1].eliminated)) //(which triggers the rules to end the game)
     {
-        //we must all be in a hole so move on
-        //to next hole
         setNextHole();
     }
     else
@@ -906,14 +906,14 @@ void GolfState::setNextPlayer(bool newHole)
 
         //if we're on a putting course and this is the player's first turn
         //offset them from the tee a little
-        //TODO WHHHYYYY does this add a vertical offset to the camera??
-        /*if (m_scene.getSystem<BallSystem>()->getPuttFromTee()
-            && m_playerInfo[0].holeScore[m_currentHole] == 0)
-        {
-            m_playerInfo[0].position += randomOffset3();
-            m_playerInfo[0].ballEntity.getComponent<cro::Transform>().setPosition(m_playerInfo[0].position);
-            LogI << "added offset" << std::endl;
-        }*/
+        //TODO hmm this adds vertical offset too for some reason
+        //if (m_scene.getSystem<BallSystem>()->getPuttFromTee()
+        //    && m_playerInfo[0].holeScore[m_currentHole] == 0)
+        //{
+        //    m_playerInfo[0].position += randomOffset3();
+        //    m_playerInfo[0].ballEntity.getComponent<cro::Transform>().setPosition(m_playerInfo[0].position);
+        //    //LogI << "added offset" << std::endl;
+        //}
 
         ActivePlayer player = m_playerInfo[0]; //deliberate slice.
         m_sharedData.host.broadcastPacket(PacketID::SetPlayer, player, net::NetFlag::Reliable, ConstVal::NetChannelReliable);
