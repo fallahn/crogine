@@ -63,6 +63,7 @@ struct XPStringID final
 
         ChallengeComplete,
         BullsEyeHit,
+        Survivor,
 
         Count
     };
@@ -97,5 +98,6 @@ static const std::array<std::string, XPStringID::Count> XPStrings =
     "Par",
 
     "Challenge Completed",
-    "Target Hit"
+    "Target Hit",
+    "Survivor"
 };

@@ -1022,7 +1022,6 @@ void GolfState::handleMessage(const cro::Message& msg)
                     {
                         e.getComponent<cro::Callback>().getUserData<GreenCallbackData>().state = 0;
                         e.getComponent<cro::Callback>().active = true;
-                        //e.getComponent<cro::Sprite>().setTexture(m_flightTexture.getTexture());
                         e.getComponent<cro::Sprite>().setColour(cro::Colour::White);
                         m_flightCam.getComponent<cro::Camera>().active = true;
                     }
@@ -3471,6 +3470,10 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
             {
                 showMessageBoard(MessageBoardID::Eliminated);
             }
+            else
+            {
+                Social::awardXP(10, XPStringID::Survivor);
+            }
             
             c = std::clamp(c, std::uint8_t(0), std::uint8_t(ConstVal::MaxClients - 1));
             p = std::clamp(p, std::uint8_t(0), std::uint8_t(ConstVal::MaxPlayers - 1));
@@ -5345,10 +5348,11 @@ void GolfState::setCurrentPlayer(const ActivePlayer& player)
     {
         if (m_drone.isValid())
         {
+            static constexpr float MinDroneHeight = 20.f;
             auto t = m_collisionMesh.getTerrain(pos);
-            if (pos.y - t.height < 30.f)
+            if (pos.y - t.height < MinDroneHeight)
             {
-                pos.y = t.height + 30.f;
+                pos.y = t.height + MinDroneHeight;
             }
 
             auto& data = m_drone.getComponent<cro::Callback>().getUserData<DroneCallbackData>();

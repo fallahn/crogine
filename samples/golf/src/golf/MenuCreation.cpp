@@ -4256,10 +4256,7 @@ void MenuState::createPreviousScoreCard()
                 switch (m_sharedData.scoreType)
                 {
                 default:
-                case ScoreType::StablefordPro:
-                case ScoreType::Stableford:
-                    //do nothing, we re-calc below
-                    break;
+                case ScoreType::BattleRoyale:
                 case ScoreType::MultiTarget:
                 case ScoreType::Stroke:
                 case ScoreType::ShortRound:
@@ -4270,6 +4267,10 @@ void MenuState::createPreviousScoreCard()
                     break;
                 case ScoreType::Skins:
                     entry.roundScore = m_sharedData.connectionData[i].playerData[j].skinScore;
+                    break;
+                case ScoreType::StablefordPro:
+                case ScoreType::Stableford:
+                    //do nothing, we re-calc below
                     break;
                 }
 
@@ -4329,6 +4330,7 @@ void MenuState::createPreviousScoreCard()
             switch (m_sharedData.scoreType)
             {
             default:
+            case ScoreType::BattleRoyale:
             case ScoreType::Stroke:
             case ScoreType::ShortRound:
             case ScoreType::MultiTarget:
@@ -4643,6 +4645,7 @@ void MenuState::createPreviousScoreCard()
         switch (m_sharedData.scoreType)
         {
         default:
+        case ScoreType::BattleRoyale:
         case ScoreType::MultiTarget:
         case ScoreType::Stroke:
         case ScoreType::ShortRound:
@@ -4697,6 +4700,7 @@ void MenuState::createPreviousScoreCard()
             switch (m_sharedData.scoreType)
             {
             default:
+            case ScoreType::BattleRoyale:
             case ScoreType::MultiTarget:
             case ScoreType::ShortRound:
             case ScoreType::Stroke:

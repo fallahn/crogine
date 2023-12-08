@@ -1141,31 +1141,7 @@ void GolfState::buildUI()
     };
     mapEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
 
-    //target icon in multitarget mode - this is now rendered directly on the texture
-    //if (m_sharedData.scoreType == ScoreType::MultiTarget)
-    //{
-    //    auto tBounds = m_sprites[SpriteID::MapTarget].getTextureBounds();
-
-    //    entity = m_uiScene.createEntity();
-    //    entity.addComponent<cro::Transform>().setOrigin({ tBounds.width / 2.f, tBounds.height / 2.f });
-    //    entity.addComponent<cro::Drawable2D>().setFacing(cro::Drawable2D::Facing::Back);
-    //    entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::MiniFlag;
-    //    entity.addComponent<cro::Sprite>() = m_sprites[SpriteID::MapTarget]; //used to show/hide so can share with flag
-    //    entity.addComponent<cro::Callback>().active = true;
-    //    entity.getComponent<cro::Callback>().function =
-    //        [&, mapEnt](cro::Entity e, float dt)
-    //        {
-    //            e.getComponent<cro::Transform>().setPosition(glm::vec3(m_minimapZoom.toMapCoords(m_holeData[m_currentHole].target), 0.02f));
-    //            e.getComponent<cro::Transform>().setScale((m_minimapZoom.mapScale * 2.f * (1.f + ((m_minimapZoom.zoom - 1.f) * 0.125f))) * 0.75f);
-
-    //            auto miniBounds = mapEnt.getComponent<cro::Transform>().getWorldTransform() * mapEnt.getComponent<cro::Drawable2D>().getLocalBounds();
-    //            auto targBounds = glm::inverse(e.getComponent<cro::Transform>().getWorldTransform()) * miniBounds;
-    //            e.getComponent<cro::Drawable2D>().setCroppingArea(targBounds);
-    //        };
-    //    mapEnt.getComponent<cro::Transform>().addChild(entity.getComponent<cro::Transform>());
-    //}
-
-
+    
     //stroke indicator
     entity = m_uiScene.createEntity();
     entity.addComponent<cro::Transform>().setScale({ 0.f, 0.f });
@@ -1223,7 +1199,7 @@ void GolfState::buildUI()
     entity.addComponent<cro::Transform>().setScale({ 0.f, 0.f }); //position is set in UI cam callback, below
     entity.addComponent<cro::Drawable2D>().setShader(&m_resources.shaders.get(ShaderID::Minimap));
     entity.addComponent<cro::CommandTarget>().ID = CommandID::UI::MiniGreen; //dunno why we need this, we store the ent as a class member...
-    entity.addComponent<cro::Sprite>(); //updated by the instigation message with the green or flight texture
+    entity.addComponent<cro::Sprite>(); //set to m_overheadBuffer by resize callback, below
     entity.addComponent<cro::Callback>().setUserData<GreenCallbackData>();
     entity.getComponent<cro::Callback>().function =
         [&](cro::Entity e, float dt) mutable
@@ -1243,7 +1219,7 @@ void GolfState::buildUI()
                 e.getComponent<cro::Callback>().active = false;
 
                 //start the cam view updater
-                m_greenCam.getComponent<cro::Callback>().active = true;
+                //m_greenCam.getComponent<cro::Callback>().active = true;
             }
         }
         else
@@ -2482,6 +2458,7 @@ void GolfState::updateScoreboard(bool updateParDiff)
                     switch (m_sharedData.scoreType)
                     {
                     default: //dear future me: the default type should *ALWAYS* be the same as stroke type. Everywhere.
+                    case ScoreType::BattleRoyale:
                     case ScoreType::MultiTarget:
                     case ScoreType::Stroke:
                     case ScoreType::ShortRound:
@@ -2515,6 +2492,7 @@ void GolfState::updateScoreboard(bool updateParDiff)
                     switch (m_sharedData.scoreType)
                     {
                     default:
+                    case ScoreType::BattleRoyale:
                     case ScoreType::MultiTarget:
                     case ScoreType::Stroke:
                     case ScoreType::ShortRound:
@@ -2549,6 +2527,7 @@ void GolfState::updateScoreboard(bool updateParDiff)
             switch (m_sharedData.scoreType)
             {
             default:
+            case ScoreType::BattleRoyale:
             case ScoreType::MultiTarget:
             case ScoreType::Stroke:
             case ScoreType::ShortRound:
@@ -2590,6 +2569,7 @@ void GolfState::updateScoreboard(bool updateParDiff)
             switch (m_sharedData.scoreType)
             {
             default:
+            case ScoreType::BattleRoyale:
             case ScoreType::Stroke:
             case ScoreType::ShortRound:
             case ScoreType::MultiTarget:
@@ -2610,6 +2590,7 @@ void GolfState::updateScoreboard(bool updateParDiff)
             switch (m_sharedData.scoreType)
             {
             default:
+            case ScoreType::BattleRoyale:
             case ScoreType::Stroke:
             case ScoreType::ShortRound:
             case ScoreType::MultiTarget:
@@ -2848,6 +2829,7 @@ void GolfState::updateScoreboard(bool updateParDiff)
         switch (m_sharedData.scoreType)
         {
         default:
+        case ScoreType::BattleRoyale:
         case ScoreType::MultiTarget:
         case ScoreType::ShortRound:
         case ScoreType::Stroke:
@@ -2939,6 +2921,7 @@ void GolfState::updateScoreboard(bool updateParDiff)
             switch (m_sharedData.scoreType)
             {
             default:
+            case ScoreType::BattleRoyale:
             case ScoreType::MultiTarget:
             case ScoreType::ShortRound:
             case ScoreType::Stroke:
