@@ -1254,12 +1254,6 @@ void TerrainBuilder::threadFunc()
 
 void TerrainBuilder::renderNormalMap()
 {
-#ifdef CRO_DEBUG_
-    if (m_normalMapImage.getSize().x)
-    {
-        m_normalDebugTexture.loadFromImage(m_normalMapImage);
-    }
-#endif
     //skip this if we rendered the model the previous hole
     if (m_currentHole && 
         m_holeData[m_currentHole].modelEntity == m_holeData[m_currentHole - 1].modelEntity)
