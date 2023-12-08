@@ -92,6 +92,7 @@ namespace
         cro::Entity otherEnt;
         cro::Entity instancedEnt; //entity containing instanced waterside geometry
         std::array<cro::Entity, 2u> billboardEnts = {};
+        std::array<cro::Entity, 2u> billboardTreeEnts = {}; //low quality trees
         std::array<cro::Entity, 4u> shrubberyEnts; //instanced shrubbery/trees (if HQ)
         std::vector<cro::Entity>* crowdEnts = nullptr;
     };
@@ -120,9 +121,11 @@ namespace
                 if (swapData.otherEnt.isValid())
                 {
                     swapData.billboardEnts[0].getComponent<cro::Model>().setHidden(true);
+                    swapData.billboardTreeEnts[0].getComponent<cro::Model>().setHidden(true);
 
                     swapData.otherEnt.getComponent<cro::Callback>().active = true;
                     swapData.billboardEnts[1].getComponent<cro::Model>().setHidden(false);
+                    swapData.billboardTreeEnts[1].getComponent<cro::Model>().setHidden(false);
                     terrainEntity.getComponent<cro::Callback>().active = true; //starts terrain morph
                 }
 
@@ -313,17 +316,12 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
     auto reedShadowID = resources.materials.add(resources.shaders.get(ShaderID::ShadowMapInstanced));
 
 
-    std::int32_t branchMaterialID = 0;
-    std::int32_t leafMaterialID = 0;
-    std::int32_t treeShadowMaterialID = 0;
-    std::int32_t leafShadowMaterialID = 0;
-    if (m_sharedData.treeQuality == SharedStateData::High)
-    {
-        branchMaterialID = resources.materials.add(resources.shaders.get(ShaderID::TreesetBranch));
-        leafMaterialID = resources.materials.add(resources.shaders.get(ShaderID::TreesetLeaf));
-        treeShadowMaterialID = resources.materials.add(resources.shaders.get(ShaderID::TreesetShadow));
-        leafShadowMaterialID = resources.materials.add(resources.shaders.get(ShaderID::TreesetLeafShadow));
-    }
+    //HQ tree materials
+    std::int32_t branchMaterialID = resources.materials.add(resources.shaders.get(ShaderID::TreesetBranch));
+    std::int32_t leafMaterialID = resources.materials.add(resources.shaders.get(ShaderID::TreesetLeaf));
+    std::int32_t treeShadowMaterialID = resources.materials.add(resources.shaders.get(ShaderID::TreesetShadow));
+    std::int32_t leafShadowMaterialID = resources.materials.add(resources.shaders.get(ShaderID::TreesetLeafShadow));
+
     //and VATs shader for crowd
     auto crowdMaterialID = resources.materials.add(resources.shaders.get(ShaderID::Crowd));
     auto shadowMaterialID = resources.materials.add(resources.shaders.get(ShaderID::CrowdShadow));
@@ -363,45 +361,64 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
 
         //create a billboard entity for each chunk in the TerrainChunker
         //reload the the model def each time to ensure unique VBOs
-        if (billboardDef.loadFromFile(theme.billboardModel))
+        const auto createBillboardEnt = [&]()
+            {
+                if (billboardDef.loadFromFile(theme.billboardModel))
+                {
+                    auto e = scene.createEntity();
+                    e.addComponent<cro::Transform>();
+                    entity.getComponent<cro::Transform>().addChild(e.getComponent<cro::Transform>());
+
+                    billboardDef.createModel(e);
+                    //if the model def failed to load for some reason this will be
+                    //missing, so we'll add it here just to stop the thread exploding
+                    //if it can't find the component
+                    if (!e.hasComponent<cro::BillboardCollection>())
+                    {
+                        e.addComponent<cro::BillboardCollection>();
+                    }
+
+                    if (e.hasComponent<cro::Model>())
+                    {
+                        e.getComponent<cro::Model>().setHidden(true);
+                        e.getComponent<cro::Model>().getMeshData().boundingBox = { glm::vec3(0.f), glm::vec3(MapSize.x, 20.f, -static_cast<float>(MapSize.y)) };
+                        e.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniMap | RenderFlags::MiniGreen));
+
+                        auto material = resources.materials.get(billboardMatID);
+                        applyMaterialData(billboardDef, material);
+                        material.setProperty("u_noiseTexture", noiseTex);
+                        e.getComponent<cro::Model>().setMaterial(0, material);
+
+                        material = resources.materials.get(billboardShadowID);
+                        applyMaterialData(billboardDef, material);
+                        material.setProperty("u_noiseTexture", noiseTex);
+                        material.doubleSided = true; //do this second because applyMaterial() overwrites it
+                        e.getComponent<cro::Model>().setShadowMaterial(0, material);
+                    }
+                    return e;
+                }
+                return cro::Entity();
+            };
+
+        //this contains the regular billboards (always visible)
+        auto bbe = createBillboardEnt();
+        if (bbe.hasComponent<cro::Model>())
         {
-            auto e = scene.createEntity();
-            e.addComponent<cro::Transform>();
-            entity.getComponent<cro::Transform>().addChild(e.getComponent<cro::Transform>());
-
-            billboardDef.createModel(e);
-            //if the model def failed to load for some reason this will be
-            //missing, so we'll add it here just to stop the thread exploding
-            //if it can't find the component
-            if (!e.hasComponent<cro::BillboardCollection>())
-            {
-                e.addComponent<cro::BillboardCollection>();
-            }
-
-            if (e.hasComponent<cro::Model>())
-            {
-                e.getComponent<cro::Model>().setHidden(true);
-                e.getComponent<cro::Model>().getMeshData().boundingBox = { glm::vec3(0.f), glm::vec3(MapSize.x, 20.f, -static_cast<float>(MapSize.y)) };
-                e.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniMap));
-
-                auto material = resources.materials.get(billboardMatID);
-                applyMaterialData(billboardDef, material);
-                material.setProperty("u_noiseTexture", noiseTex);
-                e.getComponent<cro::Model>().setMaterial(0, material);
-
-                material = resources.materials.get(billboardShadowID);
-                applyMaterialData(billboardDef, material);
-                material.setProperty("u_noiseTexture", noiseTex);
-                material.doubleSided = true; //do this second because applyMaterial() overwrites it
-                e.getComponent<cro::Model>().setShadowMaterial(0, material);
-
-                m_billboardEntities[b++] = e;
-            }
+            m_billboardEntities[b] = bbe;
         }
+        //these have billboarded trees used for flight cam and when
+        //tree quality is set to low.
+        bbe = createBillboardEnt();
+        if (bbe.hasComponent<cro::Model>())
+        {
+            bbe.getComponent<cro::Model>().setRenderFlags(RenderFlags::FlightCam);
+            m_billboardTreeEntities[b] = bbe;
+        }
+        b++;
 
         //create a child entity for instanced geometry
         std::string instancePath = theme.instancePath.empty() ? "assets/golf/models/reeds_large.cmt" : theme.instancePath;
-
+        //these are the plants etc that appear newar the water
         if (shrubDef.loadFromFile(instancePath, true))
         {
             auto material = resources.materials.get(reedMaterialID);
@@ -422,62 +439,59 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
                 childEnt.getComponent<cro::Model>().setShadowMaterial(j, shadowMat);
             }
             childEnt.getComponent<cro::Model>().setHidden(true);
-            childEnt.getComponent<cro::Model>().setRenderFlags(~RenderFlags::MiniMap);
+            childEnt.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniMap | RenderFlags::MiniGreen));
             entity.getComponent<cro::Transform>().addChild(childEnt.getComponent<cro::Transform>());
             m_instancedEntities[i] = childEnt;
         }
 
-        //instanced shrubs
-        if (m_sharedData.treeQuality == SharedStateData::High)
+        //instanced trees/shrubs
+        for (auto j = 0u; j < std::min(ThemeSettings::MaxTreeSets, theme.treesets.size()); ++j)
         {
-            for (auto j = 0u; j < std::min(ThemeSettings::MaxTreeSets, theme.treesets.size()); ++j)
+            if (shrubDef.loadFromFile(theme.treesets[j].modelPath, true))
             {
-                if (shrubDef.loadFromFile(theme.treesets[j].modelPath, true))
+                auto childEnt = scene.createEntity();
+                childEnt.addComponent<cro::Transform>();
+                shrubDef.createModel(childEnt);
+
+                for (auto idx : theme.treesets[j].branchIndices)
                 {
-                    auto childEnt = scene.createEntity();
-                    childEnt.addComponent<cro::Transform>();
-                    shrubDef.createModel(childEnt);
+                    auto material = resources.materials.get(branchMaterialID);
+                    applyMaterialData(shrubDef, material, idx);
+                    material.setProperty("u_noiseTexture", noiseTex);
+                    childEnt.getComponent<cro::Model>().setMaterial(idx, material);
 
-                    for (auto idx : theme.treesets[j].branchIndices)
-                    {
-                        auto material = resources.materials.get(branchMaterialID);
-                        applyMaterialData(shrubDef, material, idx);
-                        material.setProperty("u_noiseTexture", noiseTex);
-                        childEnt.getComponent<cro::Model>().setMaterial(idx, material);
-
-                        material = resources.materials.get(treeShadowMaterialID);
-                        material.setProperty("u_noiseTexture", noiseTex);
-                        applyMaterialData(shrubDef, material, idx);
-                        childEnt.getComponent<cro::Model>().setShadowMaterial(idx, material);
-                    }
-
-                    auto& meshData = childEnt.getComponent<cro::Model>().getMeshData();
-                    for (auto idx : theme.treesets[j].leafIndices)
-                    {
-                        auto material = resources.materials.get(leafMaterialID);
-                        meshData.indexData[idx].primitiveType = GL_POINTS;
-                        material.setProperty("u_diffuseMap", resources.textures.get(theme.treesets[j].texturePath));
-                        material.setProperty("u_leafSize", theme.treesets[j].leafSize);
-                        material.setProperty("u_randAmount", theme.treesets[j].randomness);
-                        material.setProperty("u_colour", theme.treesets[j].colour);
-                        material.setProperty("u_noiseTexture", noiseTex);
-                        childEnt.getComponent<cro::Model>().setMaterial(idx, material);
-
-                        material = resources.materials.get(leafShadowMaterialID);
-                        if (m_sharedData.hqShadows)
-                        {
-                            material.setProperty("u_diffuseMap", resources.textures.get(theme.treesets[j].texturePath));
-                            material.setProperty("u_noiseTexture", noiseTex);
-                        }
-                        material.setProperty("u_leafSize", theme.treesets[j].leafSize);
-                        childEnt.getComponent<cro::Model>().setShadowMaterial(idx, material);
-                    }
-
-                    childEnt.getComponent<cro::Model>().setHidden(true);
-                    childEnt.getComponent<cro::Model>().setRenderFlags(~RenderFlags::MiniMap);
-                    entity.getComponent<cro::Transform>().addChild(childEnt.getComponent<cro::Transform>());
-                    m_instancedShrubs[i][j] = childEnt;
+                    material = resources.materials.get(treeShadowMaterialID);
+                    material.setProperty("u_noiseTexture", noiseTex);
+                    applyMaterialData(shrubDef, material, idx);
+                    childEnt.getComponent<cro::Model>().setShadowMaterial(idx, material);
                 }
+
+                auto& meshData = childEnt.getComponent<cro::Model>().getMeshData();
+                for (auto idx : theme.treesets[j].leafIndices)
+                {
+                    auto material = resources.materials.get(leafMaterialID);
+                    meshData.indexData[idx].primitiveType = GL_POINTS;
+                    material.setProperty("u_diffuseMap", resources.textures.get(theme.treesets[j].texturePath));
+                    material.setProperty("u_leafSize", theme.treesets[j].leafSize);
+                    material.setProperty("u_randAmount", theme.treesets[j].randomness);
+                    material.setProperty("u_colour", theme.treesets[j].colour);
+                    material.setProperty("u_noiseTexture", noiseTex);
+                    childEnt.getComponent<cro::Model>().setMaterial(idx, material);
+
+                    material = resources.materials.get(leafShadowMaterialID);
+                    if (m_sharedData.hqShadows)
+                    {
+                        material.setProperty("u_diffuseMap", resources.textures.get(theme.treesets[j].texturePath));
+                        material.setProperty("u_noiseTexture", noiseTex);
+                    }
+                    material.setProperty("u_leafSize", theme.treesets[j].leafSize);
+                    childEnt.getComponent<cro::Model>().setShadowMaterial(idx, material);
+                }
+
+                childEnt.getComponent<cro::Model>().setHidden(true);
+                childEnt.getComponent<cro::Model>().setRenderFlags(~(RenderFlags::MiniMap | RenderFlags::MiniGreen | RenderFlags::FlightCam));
+                entity.getComponent<cro::Transform>().addChild(childEnt.getComponent<cro::Transform>());
+                m_instancedShrubs[i][j] = childEnt;
             }
         }
 
@@ -554,6 +568,7 @@ void TerrainBuilder::create(cro::ResourceCollection& resources, cro::Scene& scen
     m_billboardTemplates[BillboardID::Tree03] = spriteToBillboard(spriteSheet.getSprite("tree03"));
     m_billboardTemplates[BillboardID::Tree04] = spriteToBillboard(spriteSheet.getSprite("tree04"));
 
+    applyTreeQuality();
 
     //create a mesh to display the slope data
     flags = cro::VertexProperty::Position | cro::VertexProperty::Colour | cro::VertexProperty::Normal | cro::VertexProperty::UV0;
@@ -660,6 +675,7 @@ void TerrainBuilder::update(std::size_t holeIndex)
                 swapData.currentTime = 0.f;
 
                 m_billboardEntities[first].getComponent<cro::BillboardCollection>().setBillboards(m_billboardBuffer);
+                m_billboardTreeEntities[first].getComponent<cro::BillboardCollection>().setBillboards(m_billboardTreeBuffer);
                 m_propRootEntities[first].getComponent<cro::Callback>().setUserData<SwapData>(swapData);
 
                 swapData.start = m_propRootEntities[second].getComponent<cro::Transform>().getPosition().y;
@@ -670,6 +686,8 @@ void TerrainBuilder::update(std::size_t holeIndex)
                 swapData.crowdEnts = &m_crowdEntities[second];
                 swapData.billboardEnts[0] = m_billboardEntities[second];
                 swapData.billboardEnts[1] = m_billboardEntities[first];
+                swapData.billboardTreeEnts[0] = m_billboardTreeEntities[second];
+                swapData.billboardTreeEnts[1] = m_billboardTreeEntities[first];
                 swapData.currentTime = 0.f;
                 m_propRootEntities[second].getComponent<cro::Callback>().setUserData<SwapData>(swapData);
                 m_propRootEntities[second].getComponent<cro::Callback>().active = true;
@@ -763,6 +781,37 @@ void TerrainBuilder::setSlopePosition(glm::vec3 position)
 float TerrainBuilder::getSlopeAlpha() const
 {
     return m_slopeProperties.currentAlpha;
+}
+
+void TerrainBuilder::applyTreeQuality()
+{
+    std::uint64_t hqFlags = 0;
+    std::uint64_t bbFlags = RenderFlags::FlightCam | RenderFlags::Main | RenderFlags::Reflection;
+
+    if (m_sharedData.treeQuality == SharedStateData::High)
+    {
+        hqFlags = RenderFlags::Main | RenderFlags::Reflection;
+        bbFlags = RenderFlags::FlightCam;
+    }
+    
+    for (auto& ents : m_instancedShrubs)
+    {
+        for (auto e : ents)
+        {
+            if (e.isValid())
+            {
+                e.getComponent<cro::Model>().setRenderFlags(hqFlags);
+            }
+        }
+    }
+
+    for (auto e : m_billboardTreeEntities)
+    {
+        if (e.isValid())
+        {
+            e.getComponent<cro::Model>().setRenderFlags(bbFlags);
+        }
+    }
 }
 
 //private
@@ -871,6 +920,7 @@ void TerrainBuilder::threadFunc()
 
                 //filter distribution by map area
                 m_billboardBuffer.clear();
+                m_billboardTreeBuffer.clear();
                 
                 for (auto [x, y] : grass)
                 {
@@ -950,10 +1000,7 @@ void TerrainBuilder::threadFunc()
                                 static std::size_t shrubIdx = 0;
                                 auto currIndex = shrubIdx % MaxShrubInstances;
 
-                                //bool quality = m_sharedData.treeQuality == 2 || (m_sharedData.treeQuality == 1 && (shrubIdx % 2) == 0);
-
-                                if (m_instancedShrubs[0][currIndex].isValid()
-                                    && m_sharedData.treeQuality == SharedStateData::High)
+                                if (m_instancedShrubs[0][currIndex].isValid())
                                 {
                                     glm::vec3 position(x, height - 0.05f, -y);
                                     float rotation = static_cast<float>(cro::Util::Random::value(0, 36) * 10) * cro::Util::Const::degToRad;
@@ -964,25 +1011,24 @@ void TerrainBuilder::threadFunc()
                                     mat4 = glm::rotate(mat4, rotation, cro::Transform::Y_AXIS);
                                     mat4 = glm::scale(mat4, glm::vec3(scale));
                                 }
-                                else
-                                {
-                                    //no model loaded for this theme or quality setting prevents it, so fall back to billboard
-                                    glm::vec3 bbPos({ x, height - 0.05f, -y });
 
-                                    float scale = static_cast<float>(cro::Util::Random::value(12, 22)) / 10.f;
-                                    auto& bb = m_billboardBuffer.emplace_back(m_billboardTemplates[BillboardID::Tree01 + currIndex]);
-                                    bb.position = bbPos; //small vertical offset to stop floating billboards
-                                    bb.size *= scale;
-                                    bb.origin *= scale;
+                                //low quality version - always rendered on flight cam and optionally on LQ settings
+                                glm::vec3 bbPos({ x, height - 0.05f, -y });
+
+                                float scale = static_cast<float>(cro::Util::Random::value(12, 22)) / 10.f;
+                                auto& bb = m_billboardTreeBuffer.emplace_back(m_billboardTemplates[BillboardID::Tree01 + currIndex]);
+                                bb.position = bbPos; //small vertical offset to stop floating billboards
+                                bb.size *= scale;
+                                bb.origin *= scale;
                                     
-                                    if (cro::Util::Random::value(0, 1) == 0)
-                                    {
-                                        //flip billboard
-                                        auto rect = bb.textureRect;
-                                        bb.textureRect.left = rect.left + rect.width;
-                                        bb.textureRect.width = -rect.width;
-                                    }
+                                if (cro::Util::Random::value(0, 1) == 0)
+                                {
+                                    //flip billboard
+                                    auto rect = bb.textureRect;
+                                    bb.textureRect.left = rect.left + rect.width;
+                                    bb.textureRect.width = -rect.width;
                                 }
+
                                 shrubIdx++;
                             }
                         }

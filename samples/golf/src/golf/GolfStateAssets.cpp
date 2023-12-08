@@ -1477,42 +1477,39 @@ void GolfState::loadMaterials()
     m_resolutionBuffer.addShader(m_resources.shaders.get(ShaderID::CrowdShadowArray));
 
 
-    if (m_sharedData.treeQuality == SharedStateData::High)
+    //HQ tree shaders - wasted if the whole game is LQ, but we want to be able to swap mid-game...
+    std::string mrt;
+    if (m_sharedData.nightTime)
     {
-        std::string mrt;
-        if (m_sharedData.nightTime)
-        {
-            mrt = "#define USE_MRT\n";
-        }
-
-        m_resources.shaders.loadFromString(ShaderID::TreesetBranch, BranchVertex, BranchFragment, "#define ALPHA_CLIP\n#define INSTANCING\n" + wobble + mrt);
-        shader = &m_resources.shaders.get(ShaderID::TreesetBranch);
-        m_scaleBuffer.addShader(*shader);
-        m_resolutionBuffer.addShader(*shader);
-        m_windBuffer.addShader(*shader);
-
-        m_resources.shaders.loadFromString(ShaderID::TreesetLeaf, BushVertex, /*BushGeom,*/ BushFragment, "#define POINTS\n#define INSTANCING\n#define HQ\n" + wobble + mrt);
-        shader = &m_resources.shaders.get(ShaderID::TreesetLeaf);
-        m_scaleBuffer.addShader(*shader);
-        m_resolutionBuffer.addShader(*shader);
-        m_windBuffer.addShader(*shader);
-
-
-        m_resources.shaders.loadFromString(ShaderID::TreesetShadow, ShadowVertex, ShadowFragment, "#define INSTANCING\n#define TREE_WARP\n#define ALPHA_CLIP\n" + wobble);
-        shader = &m_resources.shaders.get(ShaderID::TreesetShadow);
-        m_windBuffer.addShader(*shader);
-        //m_resolutionBuffer.addShader(*shader);
-
-        std::string alphaClip;
-        if (m_sharedData.hqShadows)
-        {
-            alphaClip = "#define ALPHA_CLIP\n";
-        }
-        m_resources.shaders.loadFromString(ShaderID::TreesetLeafShadow, ShadowVertex, /*ShadowGeom,*/ ShadowFragment, "#define POINTS\n#define INSTANCING\n#define LEAF_SIZE\n" + alphaClip + wobble);
-        shader = &m_resources.shaders.get(ShaderID::TreesetLeafShadow);
-        m_windBuffer.addShader(*shader);
-        //m_resolutionBuffer.addShader(*shader);
+        mrt = "#define USE_MRT\n";
     }
+
+    m_resources.shaders.loadFromString(ShaderID::TreesetBranch, BranchVertex, BranchFragment, "#define ALPHA_CLIP\n#define INSTANCING\n" + wobble + mrt);
+    shader = &m_resources.shaders.get(ShaderID::TreesetBranch);
+    m_scaleBuffer.addShader(*shader);
+    m_resolutionBuffer.addShader(*shader);
+    m_windBuffer.addShader(*shader);
+
+    m_resources.shaders.loadFromString(ShaderID::TreesetLeaf, BushVertex, /*BushGeom,*/ BushFragment, "#define POINTS\n#define INSTANCING\n#define HQ\n" + wobble + mrt);
+    shader = &m_resources.shaders.get(ShaderID::TreesetLeaf);
+    m_scaleBuffer.addShader(*shader);
+    m_resolutionBuffer.addShader(*shader);
+    m_windBuffer.addShader(*shader);
+
+
+    m_resources.shaders.loadFromString(ShaderID::TreesetShadow, ShadowVertex, ShadowFragment, "#define INSTANCING\n#define TREE_WARP\n#define ALPHA_CLIP\n" + wobble);
+    shader = &m_resources.shaders.get(ShaderID::TreesetShadow);
+    m_windBuffer.addShader(*shader);
+
+    std::string alphaClip;
+    if (m_sharedData.hqShadows)
+    {
+        alphaClip = "#define ALPHA_CLIP\n";
+    }
+    m_resources.shaders.loadFromString(ShaderID::TreesetLeafShadow, ShadowVertex, /*ShadowGeom,*/ ShadowFragment, "#define POINTS\n#define INSTANCING\n#define LEAF_SIZE\n" + alphaClip + wobble);
+    shader = &m_resources.shaders.get(ShaderID::TreesetLeafShadow);
+    m_windBuffer.addShader(*shader);
+
 
 
     //scanline transition

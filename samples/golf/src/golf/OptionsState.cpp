@@ -2312,7 +2312,7 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
 
     //prev / next tree quality
     entity = createHighlight(glm::vec2(286.f, 25.f));
-    entity.setLabel("Switch between billboard and 3D trees.\nThis is applied at the next course change.");
+    entity.setLabel("Switch between billboard and 3D trees.\nClassic trees are applied when the game is loaded.");
     entity.getComponent<cro::UIInput>().setSelectionIndex(AVTreeL);
     entity.getComponent<cro::UIInput>().setNextIndex(AVTreeR, AVShadowL);
     entity.getComponent<cro::UIInput>().setPrevIndex(AVFullScreen, AVGridL);
@@ -2325,11 +2325,14 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
                     treeQualityText.getComponent<cro::Text>().setString(TreeLabels[m_sharedData.treeQuality]);
                     centreText(treeQualityText);
                     m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+
+                    auto* msg = getContext().appInstance.getMessageBus().post<SystemEvent>(MessageID::SystemMessage);
+                    msg->type = SystemEvent::TreeQualityChanged;
                 }
             });
 
     entity = createHighlight(glm::vec2(355.f, 25.f));
-    entity.setLabel("Switch between billboard and 3D trees.\nThis is applied at the next course change.");
+    entity.setLabel("Switch between billboard and 3D trees.\nClassic trees are applied when the game is loaded.");
     entity.getComponent<cro::UIInput>().setSelectionIndex(AVTreeR);
     entity.getComponent<cro::UIInput>().setNextIndex(AVFullScreen, AVShadowR);
     entity.getComponent<cro::UIInput>().setPrevIndex(AVTreeL, AVGridR);
@@ -2342,6 +2345,9 @@ void OptionsState::buildAVMenu(cro::Entity parent, const cro::SpriteSheet& sprit
                     treeQualityText.getComponent<cro::Text>().setString(TreeLabels[m_sharedData.treeQuality]);
                     centreText(treeQualityText);
                     m_audioEnts[AudioID::Accept].getComponent<cro::AudioEmitter>().play();
+
+                    auto* msg = getContext().appInstance.getMessageBus().post<SystemEvent>(MessageID::SystemMessage);
+                    msg->type = SystemEvent::TreeQualityChanged;
                 }
             });
 

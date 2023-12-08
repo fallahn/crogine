@@ -854,6 +854,10 @@ void GolfState::handleMessage(const cro::Message& msg)
         {
             applyShadowQuality();
         }
+        else if (data.type == SystemEvent::TreeQualityChanged)
+        {
+            m_terrainBuilder.applyTreeQuality();
+        }
     }
         break;
     case cro::Message::SkeletalAnimationMessage:

@@ -90,6 +90,8 @@ public:
 
     float getSlopeAlpha() const;
 
+    void applyTreeQuality();
+
 private:
     SharedStateData& m_sharedData;
     const std::vector<HoleData>& m_holeData;
@@ -105,7 +107,9 @@ private:
 
     std::array<cro::Billboard, BillboardID::Count> m_billboardTemplates = {};
     std::vector<cro::Billboard> m_billboardBuffer;
+    std::vector<cro::Billboard> m_billboardTreeBuffer;
     std::array<cro::Entity, 2u> m_billboardEntities = {};
+    std::array<cro::Entity, 2u> m_billboardTreeEntities = {};
     std::array<cro::Entity, 2u> m_propRootEntities = {};
     std::size_t m_swapIndex; //might not swap every hole so we need to track this independently
 

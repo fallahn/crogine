@@ -147,6 +147,7 @@ struct SystemEvent final
         StateRequest,
         InputActivated,
         ShadowQualityChanged,
+        TreeQualityChanged,
         MenuChanged,
         RestartActiveMode //currently just driving range, but might apply somewhere else one day :)
     }type = PostProcessToggled;

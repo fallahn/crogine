@@ -120,12 +120,9 @@ void GolfState::createCameras()
 
 
                 //this lets the shader scale leaf billboards correctly
-                if (m_sharedData.treeQuality == SharedStateData::High)
-                {
-                    auto targetHeight = texSize.y;
-                    glUseProgram(m_resources.shaders.get(ShaderID::TreesetLeaf).getGLHandle());
-                    glUniform1f(m_resources.shaders.get(ShaderID::TreesetLeaf).getUniformID("u_targetHeight"), targetHeight);
-                }
+                auto targetHeight = texSize.y;
+                glUseProgram(m_resources.shaders.get(ShaderID::TreesetLeaf).getGLHandle());
+                glUniform1f(m_resources.shaders.get(ShaderID::TreesetLeaf).getUniformID("u_targetHeight"), targetHeight);
             }
 
             //fetch this explicitly so the transition cam also gets the correct zoom
@@ -164,6 +161,7 @@ void GolfState::createCameras()
     m_cameras[CameraID::Player] = camEnt;
     auto& cam = camEnt.getComponent<cro::Camera>();
     cam.setRenderFlags(cro::Camera::Pass::Reflection, RenderFlags::Reflection);
+    cam.setRenderFlags(cro::Camera::Pass::Final, RenderFlags::Main);
     cam.resizeCallback = updateView;
     updateView(cam);
 
@@ -212,6 +210,7 @@ void GolfState::createCameras()
     camEnt.getComponent<cro::Camera>().setMaxShadowDistance(m_shadowQuality.shadowFarDistance);
     camEnt.getComponent<cro::Camera>().setShadowExpansion(25.f);
     camEnt.getComponent<cro::Camera>().setRenderFlags(cro::Camera::Pass::Reflection, RenderFlags::Reflection);
+    camEnt.getComponent<cro::Camera>().setRenderFlags(cro::Camera::Pass::Final, RenderFlags::Main);
     camEnt.addComponent<cro::CommandTarget>().ID = CommandID::SpectatorCam;
     camEnt.addComponent<CameraFollower>().radius = SkyCamRadius * SkyCamRadius;
     camEnt.getComponent<CameraFollower>().id = CameraID::Sky;
@@ -252,6 +251,7 @@ void GolfState::createCameras()
     camEnt.getComponent<cro::Camera>().setMaxShadowDistance(m_shadowQuality.shadowFarDistance);
     camEnt.getComponent<cro::Camera>().setShadowExpansion(25.f);
     camEnt.getComponent<cro::Camera>().setRenderFlags(cro::Camera::Pass::Reflection, RenderFlags::Reflection);
+    camEnt.getComponent<cro::Camera>().setRenderFlags(cro::Camera::Pass::Final, RenderFlags::Main);
     camEnt.addComponent<cro::CommandTarget>().ID = CommandID::DroneCam;
     camEnt.addComponent<cro::AudioListener>();
     camEnt.addComponent<CameraFollower::ZoomData>();
@@ -282,6 +282,7 @@ void GolfState::createCameras()
     camEnt.getComponent<cro::Camera>().setMaxShadowDistance(m_shadowQuality.shadowFarDistance);
     camEnt.getComponent<cro::Camera>().setShadowExpansion(25.f);
     camEnt.getComponent<cro::Camera>().setRenderFlags(cro::Camera::Pass::Reflection, RenderFlags::Reflection);
+    camEnt.getComponent<cro::Camera>().setRenderFlags(cro::Camera::Pass::Final, RenderFlags::Main);
     camEnt.addComponent<cro::CommandTarget>().ID = CommandID::SpectatorCam;
     camEnt.addComponent<CameraFollower>().radius = GreenCamRadiusLarge * GreenCamRadiusLarge;
     camEnt.getComponent<CameraFollower>().id = CameraID::Green;
@@ -313,6 +314,7 @@ void GolfState::createCameras()
     camEnt.getComponent<cro::Camera>().setMaxShadowDistance(m_shadowQuality.shadowNearDistance);
     camEnt.getComponent<cro::Camera>().setShadowExpansion(25.f);
     camEnt.getComponent<cro::Camera>().setRenderFlags(cro::Camera::Pass::Reflection, RenderFlags::Reflection);
+    camEnt.getComponent<cro::Camera>().setRenderFlags(cro::Camera::Pass::Final, RenderFlags::Main);
     camEnt.addComponent<cro::AudioListener>();
     camEnt.addComponent<TargetInfo>();
 
@@ -360,6 +362,7 @@ void GolfState::createCameras()
     camEnt.getComponent<cro::Camera>().setMaxShadowDistance(m_shadowQuality.shadowNearDistance);
     camEnt.getComponent<cro::Camera>().setShadowExpansion(25.f);
     camEnt.getComponent<cro::Camera>().setRenderFlags(cro::Camera::Pass::Reflection, RenderFlags::Reflection);
+    camEnt.getComponent<cro::Camera>().setRenderFlags(cro::Camera::Pass::Final, RenderFlags::Main);
     camEnt.addComponent<cro::AudioListener>();
     camEnt.addComponent<TargetInfo>();
     camEnt.addComponent<cro::Callback>().setUserData<CameraFollower::ZoomData>(zoomData); //needed by resize callback, but not used HUM
@@ -398,6 +401,7 @@ void GolfState::createCameras()
     camEnt.getComponent<cro::Camera>().setMaxShadowDistance(m_shadowQuality.shadowFarDistance);
     camEnt.getComponent<cro::Camera>().setShadowExpansion(45.f);
     camEnt.getComponent<cro::Camera>().setRenderFlags(cro::Camera::Pass::Reflection, RenderFlags::Reflection);
+    camEnt.getComponent<cro::Camera>().setRenderFlags(cro::Camera::Pass::Final, RenderFlags::Main);
     camEnt.addComponent<cro::AudioListener>();
     camEnt.addComponent<TargetInfo>();
     updateView(camEnt.getComponent<cro::Camera>());
@@ -421,6 +425,7 @@ void GolfState::createCameras()
     camEnt.getComponent<cro::Camera>().setMaxShadowDistance(m_shadowQuality.shadowFarDistance);
     camEnt.getComponent<cro::Camera>().setShadowExpansion(15.f);
     camEnt.getComponent<cro::Camera>().setRenderFlags(cro::Camera::Pass::Reflection, RenderFlags::Reflection);
+    camEnt.getComponent<cro::Camera>().setRenderFlags(cro::Camera::Pass::Final, RenderFlags::Main);
     camEnt.addComponent<cro::AudioListener>();
     camEnt.addComponent<FpsCamera>();
     setPerspective(camEnt.getComponent<cro::Camera>());
