@@ -70,7 +70,7 @@ struct XPStringID final
 };
 
 //note that final message appends a space and the XP value.
-static const std::array<std::string, XPStringID::Count> XPStrings =
+static inline const std::array<std::string, XPStringID::Count> XPStrings =
 {
     std::string("Nice On!"),
     "Near Miss",

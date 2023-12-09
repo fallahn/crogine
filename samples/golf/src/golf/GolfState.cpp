@@ -3473,6 +3473,19 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
             if (c == m_sharedData.clientConnection.connectionID)
             {
                 showMessageBoard(MessageBoardID::Eliminated);
+
+                //for everyone on this client who isn't the eliminated player
+                for (auto i = 0u; i < m_sharedData.connectionData[c].playerCount; ++i)
+                {
+                    if (i != p &&
+                        !m_sharedData.connectionData[c].playerData[i].isCPU)
+                    {
+                        auto active = Achievements::getActive();
+                        Achievements::setActive(m_allowAchievements);
+                        Social::awardXP(10, XPStringID::Survivor);
+                        Achievements::setActive(active);
+                    }
+                }
             }
             else
             {
