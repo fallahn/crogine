@@ -1549,6 +1549,8 @@ void GolfState::loadMaterials()
     m_postProcesses[PostID::Composite].shader = shader;
     //depth uniform is set after creating the UI once we know the render texture is created
 
+
+
     //wireframe
     m_resources.shaders.loadFromString(ShaderID::Wireframe, WireframeVertex, WireframeFragment, "#define USE_MRT\n");
     m_materialIDs[MaterialID::WireFrame] = m_resources.materials.add(m_resources.shaders.get(ShaderID::Wireframe));

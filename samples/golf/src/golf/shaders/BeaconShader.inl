@@ -87,7 +87,7 @@ inline const std::string BeaconFragment = R"(
 #endif
 
 #if defined (USE_MRT)
-        NORM_OUT.a = 0.0; //masks off light map
+        NORM_OUT = vec4(0.0); //masks off light map
 
 #if defined(INTENSITY)
         LIGHT_OUT = FRAG_OUT;

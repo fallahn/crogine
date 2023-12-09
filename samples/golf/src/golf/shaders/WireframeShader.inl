@@ -134,8 +134,8 @@ inline const std::string WireframeFragment = R"(
 #endif
         FRAG_OUT = colour;
 
-#if defined USE_MRT
-        NORM_OUT.a = 0.0; //masks off receiving light map
+#if defined (USE_MRT)
+        NORM_OUT = vec4(0.0);
         LIGHT_OUT = vec4(vec3(0.0), 1.0);
 #endif
     }
