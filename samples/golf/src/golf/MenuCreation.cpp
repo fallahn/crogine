@@ -4443,11 +4443,25 @@ void MenuState::createPreviousScoreCard()
     default: break;
     case 1:
         holeCount = frontCount;
+        
+        if (m_sharedData.scoreType == ScoreType::BattleRoyale
+            && m_sharedData.reverseCourse)
+        {
+            parOffset = 9;
+        }
+
         break;
     case 2:
         //back 9
-        parOffset = frontCount;
-        holeCount = backCount;
+        if (m_sharedData.scoreType == ScoreType::BattleRoyale)
+        {
+            parOffset = m_sharedData.reverseCourse ? 0 : 9;
+        }
+        else
+        {
+            parOffset = frontCount;
+            holeCount = backCount;
+        }
         break;
     }
 
