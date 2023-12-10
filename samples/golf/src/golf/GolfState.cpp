@@ -3474,7 +3474,10 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
 
             if (c == m_sharedData.clientConnection.connectionID)
             {
-                showMessageBoard(MessageBoardID::Eliminated);
+                if (!m_sharedData.connectionData[c].playerData[p].isCPU)
+                {
+                    showMessageBoard(MessageBoardID::Eliminated);
+                }
 
                 //for everyone on this client who isn't the eliminated player
                 for (auto i = 0u; i < m_sharedData.connectionData[c].playerCount; ++i)
@@ -3497,7 +3500,16 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
             }
             else
             {
-                Social::awardXP(10, XPStringID::Survivor);
+                //we might be inactive between turns...
+                if (m_allowAchievements)
+                {
+                    auto active = Achievements::getActive();
+                    Achievements::setActive(true);
+                    Social::awardXP(survivorXP, XPStringID::Survivor);
+                    Achievements::setActive(active);
+
+                    survivorXP *= 2;
+                }
             }
             
             c = std::clamp(c, std::uint8_t(0), std::uint8_t(ConstVal::MaxClients - 1));
@@ -4940,14 +4952,16 @@ void GolfState::requestNextPlayer(const ActivePlayer& player)
     if (!m_sharedData.tutorial)
     {
         m_currentPlayer = player;
-        Club::setClubLevel(0); //always use the default set for the tutorial
+        //Club::setClubLevel(0); //always use the default set for the tutorial
         //setCurrentPlayer() is called when the sign closes
 
+        setActiveCamera(CameraID::Player);
         showMessageBoard(MessageBoardID::PlayerName);
         showScoreboard(false);
     }
     else
     {
+        Club::setClubLevel(0); //always use the default set for the tutorial
         setCurrentPlayer(player);
     }
 
