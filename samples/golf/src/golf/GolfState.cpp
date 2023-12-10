@@ -142,6 +142,7 @@ namespace
     std::uint32_t depthUpdateCount = 1;
 
     float godmode = 1.f;
+    std::int32_t survivorXP = 5;
 
     const cro::Time ReadyPingFreq = cro::seconds(1.f);
 
@@ -198,6 +199,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     sd.holesPlayed = 0;
     m_cpuGolfer.setFastCPU(m_sharedData.fastCPU);
 
+    survivorXP = 5;
     godmode = 1.f;
     registerCommand("god", [](const std::string&)
         {
@@ -3480,10 +3482,16 @@ void GolfState::handleNetEvent(const net::NetEvent& evt)
                     if (i != p &&
                         !m_sharedData.connectionData[c].playerData[i].isCPU)
                     {
-                        auto active = Achievements::getActive();
-                        Achievements::setActive(m_allowAchievements);
-                        Social::awardXP(10, XPStringID::Survivor);
-                        Achievements::setActive(active);
+                        //we might be inactive between turns...
+                        if (m_allowAchievements)
+                        {
+                            auto active = Achievements::getActive();
+                            Achievements::setActive(true);
+                            Social::awardXP(survivorXP, XPStringID::Survivor);
+                            Achievements::setActive(active);
+
+                            survivorXP *= 2;
+                        }
                     }
                 }
             }
