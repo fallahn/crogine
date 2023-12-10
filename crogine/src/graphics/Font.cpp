@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2022
+Matt Marchant 2017 - 2023
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -209,8 +209,7 @@ bool Font::appendFromFile(const std::string& filePath, FontAppendmentContext ctx
     FT_Stroker stroker = nullptr;
     if (FT_Stroker_New(fontDataResource->library, &stroker) != 0)
     {
-        //TODO release face!
-
+        FT_Done_Face(face);
         LogE << "Failed to load font " << path << ": Failed to create stroker" << std::endl;
         return false;
     }
@@ -275,6 +274,7 @@ Glyph Font::getGlyph(std::uint32_t codepoint, std::uint32_t charSize, bool bold,
 
 const Texture& Font::getTexture(std::uint32_t charSize) const
 {
+    //CRO_ASSERT(m_pages.count(charSize) != 0, "Page doesn't exist");
     //TODO this may return an invalid texture if the
     //current charSize is not inserted in the page map
     //and is automatically created
@@ -623,7 +623,7 @@ FloatRect Font::getGlyphRect(Page& page, std::uint32_t width, std::uint32_t heig
                 page.texture.swap(texture);
                 page.updated = true;
 
-                for (auto o : m_observers)
+                for (auto* o : m_observers)
                 {
                     o->onFontUpdate();
                 }

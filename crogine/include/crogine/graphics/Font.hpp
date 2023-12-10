@@ -1,6 +1,6 @@
 /*-----------------------------------------------------------------------
 
-Matt Marchant 2017 - 2022
+Matt Marchant 2017 - 2023
 http://trederia.blogspot.com
 
 crogine - Zlib license.
@@ -26,6 +26,11 @@ and must not be misrepresented as being the original software.
 source distribution.
 
 -----------------------------------------------------------------------*/
+
+/*
+Based on the source of SFML's font class
+by Laurent Gomila et al https://github.com/SFML/SFML/blob/master/src/SFML/Graphics/Font.cpp
+*/
 
 #pragma once
 
@@ -133,9 +138,12 @@ namespace cro
 
     /*!
     \brief Font class.
-    Fonts are created from a given texture atlas which are a standard
-    greyscale image. Atlases use only the first (red)
-    colour channel to multiply the colour of the given text instance when drawn.
+    Supports rendering all font types which are supported by libfreetype
+    including some colour fonts, eg Emojis. Multiple font files can be
+    loaded into a single Font instance and mapped to different codepoint
+    ranges.
+    \see loadFromFile()
+    \see appendFromFile()
     */
     class CRO_EXPORT_API Font final : public Detail::SDLResource
     {
@@ -180,7 +188,9 @@ namespace cro
         Glyph getGlyph(std::uint32_t codepoint, std::uint32_t charSize, bool bold = false, float outlineThickness = 0.f) const;
 
         /*!
-        \brief Returns a reference to the texture used by the font
+        \brief Returns a reference to the texture used by the font.
+        Note that different character sizes use different textures, and that
+        when a texture is resized internally its GL handle my change
         */
         const Texture& getTexture(std::uint32_t charSize) const;
 
