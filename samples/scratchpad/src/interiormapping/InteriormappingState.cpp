@@ -1,6 +1,7 @@
 //Auto-generated source file for Scratchpad Stub 28/11/2023, 13:22:27
 
 #include "InteriorMappingState.hpp"
+#include "../chunkvis/ChunkVisSystem.hpp"
 
 #include <crogine/gui/Gui.hpp>
 
@@ -192,15 +193,35 @@ bool InteriorMappingState::simulate(float dt)
 
     m_gameScene.simulate(dt);
     m_uiScene.simulate(dt);
+
+
+    const auto* system = m_gameScene.getSystem<ChunkVisSystem>();
+    static std::int32_t oldIdx = 0;
+    auto idx = system->getIndex();
+
+    if (idx != oldIdx)
+    {
+        const auto& indices = system->getIndexList();
+        const auto chunkSize = system->getChunkSize();
+
+        m_cullingDebugTexture.clear(cro::Colour::Plum);
+        for (auto i : indices)
+        {
+            auto x = i % ChunkVisSystem::ColCount;
+            auto y = i / ChunkVisSystem::ColCount;
+
+            m_cullingDebugVerts.setPosition({ x * chunkSize.x, y * chunkSize.y });
+            m_cullingDebugVerts.draw();
+        }
+        m_cullingDebugTexture.display();
+    }
+    oldIdx = idx;
+
     return true;
 }
 
 void InteriorMappingState::render()
 {
-    m_cullingDebugTexture.clear(cro::Colour::Plum);
-
-    m_cullingDebugTexture.display();
-
     m_gameScene.render();
     m_uiScene.render();
 }
@@ -211,6 +232,7 @@ void InteriorMappingState::addSystems()
     auto& mb = getContext().appInstance.getMessageBus();
     m_gameScene.addSystem<cro::CallbackSystem>(mb);
     m_gameScene.addSystem<cro::CameraSystem>(mb);
+    m_gameScene.addSystem<ChunkVisSystem>(mb, glm::vec2(320.f, 200.f));
     m_gameScene.addSystem<cro::ModelRenderer>(mb);
 
     m_uiScene.addSystem<cro::SpriteSystem2D>(mb);
@@ -478,7 +500,17 @@ void InteriorMappingState::createScene()
 
 void InteriorMappingState::loadCullingAssets()
 {
+    const auto Size = m_gameScene.getSystem<ChunkVisSystem>()->getChunkSize();
 
+    m_cullingDebugVerts.setVertexData(
+        {
+            cro::Vertex2D(glm::vec2(0.f, Size.y), cro::Colour::Green),
+            cro::Vertex2D(glm::vec2(0.f), cro::Colour::Green),
+            cro::Vertex2D(Size, cro::Colour::Green),
+            cro::Vertex2D(glm::vec2(Size.x, 0.f), cro::Colour::Green)
+        }
+    );
+    m_cullingDebugVerts.setPrimitiveType(GL_TRIANGLE_STRIP);
 }
 
 void InteriorMappingState::createCullingScene()
@@ -493,8 +525,6 @@ void InteriorMappingState::createCullingScene()
         m_cullingDebugTexture.create(320, 200, false);
         entity.getComponent<cro::Model>().setMaterialProperty(0, "u_diffuseMap", cro::TextureID(m_cullingDebugTexture.getTexture()));
     }
-
-
 
     auto resize = [](cro::Camera& cam)
         {
@@ -513,6 +543,28 @@ void InteriorMappingState::createCullingScene()
 
 void InteriorMappingState::createUI()
 {
+    registerWindow([&]() 
+        {
+            if (ImGui::Begin("Culling"))
+            {
+                const auto* s = m_gameScene.getSystem<ChunkVisSystem>();
+                static std::int32_t lastFlags = 0;
+
+                auto idx = s->getIndex();
+
+                ImVec4 c = lastFlags == idx ? ImVec4(0.f, 1.f, 0.f, 1.f) : ImVec4(1.f, 0.f, 0.f, 1.f);
+                ImGui::PushStyleColor(ImGuiCol_Text, c);
+                ImGui::Text("Flags: %d", idx);
+                ImGui::PopStyleColor();
+                lastFlags = idx;
+
+                ImGui::Image(m_cullingDebugTexture.getTexture(), { 320.f, 200.f }, { 0.f, 1.f }, { 1.f, 0.f });
+            }
+            ImGui::End();
+        
+        });
+
+
     auto resize = [](cro::Camera& cam)
     {
         glm::vec2 size(cro::App::getWindow().getSize());

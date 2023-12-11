@@ -9,6 +9,7 @@
 #include <crogine/gui/GuiClient.hpp>
 #include <crogine/graphics/ModelDefinition.hpp>
 #include <crogine/graphics/CubemapTexture.hpp>
+#include <crogine/graphics/SimpleVertexArray.hpp>
 
 class InteriorMappingState final : public cro::State, public cro::GuiClient
 {
@@ -36,6 +37,7 @@ private:
     void createUI();
 
     cro::RenderTexture m_cullingDebugTexture;
+    cro::SimpleVertexArray m_cullingDebugVerts;
 
     void loadCullingAssets();
     void createCullingScene();

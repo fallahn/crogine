@@ -311,6 +311,7 @@
     <ClCompile Include="src\bsp\Patch.cpp" />
     <ClCompile Include="src\bsp\Q3BspSystem.cpp" />
     <ClCompile Include="src\bush\BushState.cpp" />
+    <ClCompile Include="src\chunkvis\ChunkVisSystem.cpp" />
     <ClCompile Include="src\collision\BallSystem.cpp" />
     <ClCompile Include="src\collision\CollisionState.cpp" />
     <ClCompile Include="src\collision\DebugDraw.cpp" />
@@ -361,6 +362,7 @@
     <ClInclude Include="src\bsp\Q3Bsp.hpp" />
     <ClInclude Include="src\bsp\Q3BspSystem.hpp" />
     <ClInclude Include="src\bush\BushState.hpp" />
+    <ClInclude Include="src\chunkvis\ChunkVisSystem.hpp" />
     <ClInclude Include="src\CircularBuffer.hpp" />
     <ClInclude Include="src\collision\BallSystem.hpp" />
     <ClInclude Include="src\collision\CollisionState.hpp" />

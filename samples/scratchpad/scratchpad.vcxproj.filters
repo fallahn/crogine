@@ -121,6 +121,12 @@
     <Filter Include="Header Files\interior mapping">
       <UniqueIdentifier>{fab49e99-8d9c-44b4-a1cc-02384eac9ffa}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\chunk vis">
+      <UniqueIdentifier>{1ade601f-29b0-4580-81a5-ae4f00144099}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\chunk vis">
+      <UniqueIdentifier>{9dcc73e0-0849-4f1e-b21e-d9bc5c985d27}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\LoadingScreen.cpp">
@@ -248,6 +254,9 @@
     </ClCompile>
     <ClCompile Include="src\interiormapping\InteriormappingState.cpp">
       <Filter>Source Files\interior mapping</Filter>
+    </ClCompile>
+    <ClCompile Include="src\chunkvis\ChunkVisSystem.cpp">
+      <Filter>Source Files\chunk vis</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -409,6 +418,9 @@
     </ClInclude>
     <ClInclude Include="src\interiormapping\InteriormappingState.hpp">
       <Filter>Header Files\interior mapping</Filter>
+    </ClInclude>
+    <ClInclude Include="src\chunkvis\ChunkVisSystem.hpp">
+      <Filter>Header Files\chunk vis</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
