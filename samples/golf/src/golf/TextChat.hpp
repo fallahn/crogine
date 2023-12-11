@@ -82,7 +82,7 @@ private:
     cro::Clock m_limitClock;
 
     cro::Entity m_rootNode;
-    std::array<cro::Entity, 5U> m_screenChatBuffer = {};
+    std::array<cro::Entity, 3U> m_screenChatBuffer = {};
     std::size_t m_screenChatIndex;
 
     //raises notifications for client icons

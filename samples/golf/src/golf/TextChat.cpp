@@ -234,11 +234,6 @@ void TextChat::handlePacket(const net::NetEvent::Packet& pkt)
 
     
     //create an entity to temporarily show the message on screen
-    /*if (m_screenChatBuffer[m_screenChatIndex].isValid())
-    {
-        m_scene.destroyEntity(m_screenChatBuffer[m_screenChatIndex]);
-    }*/
-
 
     auto uiSize = glm::vec2(GolfGame::getActiveTarget()->getSize());
     uiSize /= getViewScale(uiSize);
@@ -246,7 +241,7 @@ void TextChat::handlePacket(const net::NetEvent::Packet& pkt)
 
     const auto& font = m_sharedData.sharedResources->fonts.get(FontID::Label);
     auto entity = m_scene.createEntity();
-    entity.addComponent<cro::Transform>().setPosition({ 4.f, std::floor(uiSize.y - 66.f), 1.f });
+    entity.addComponent<cro::Transform>().setPosition({ 4.f, std::floor(uiSize.y - 34.f), 2.f });
     entity.addComponent<cro::Drawable2D>();
     entity.addComponent<cro::Text>(font).setString(outStr);
     entity.getComponent<cro::Text>().setFillColour(chatColour);
@@ -257,8 +252,6 @@ void TextChat::handlePacket(const net::NetEvent::Packet& pkt)
     entity.getComponent<cro::Callback>().setUserData<float>(12.f);
     
     auto bounds = cro::Text::getLocalBounds(entity);
-    //bounds.left -= 2.f;
-    //bounds.bottom -= 2.f;
     bounds.width += 5.f;
     bounds.height += 4.f;
 
@@ -267,6 +260,7 @@ void TextChat::handlePacket(const net::NetEvent::Packet& pkt)
 
     auto bgEnt = m_scene.createEntity();
     bgEnt.addComponent<cro::Transform>().setPosition({ -2.f, -2.f, -0.15f });
+    bgEnt.getComponent<cro::Transform>().setOrigin({ 0.f, 0.f, 0.1f });
     bgEnt.addComponent<cro::Drawable2D>().setVertexData(
         {
             cro::Vertex2D(glm::vec2(bounds.left, bounds.bottom + bounds.height), c),
