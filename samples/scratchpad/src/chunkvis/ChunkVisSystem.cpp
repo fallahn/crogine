@@ -29,6 +29,7 @@ source distribution.
 
 #include "ChunkVisSystem.hpp"
 
+#include <crogine/graphics/Spatial.hpp>
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/ecs/components/Camera.hpp>
 #include <crogine/util/Frustum.hpp>
@@ -63,20 +64,42 @@ void ChunkVisSystem::process(float)
 
     const auto& cam = getScene()->getActiveCamera().getComponent<cro::Camera>();
     const auto frustum = cam.getPass(cro::Camera::Pass::Final).getFrustum();
-    const auto frustumBounds = cam.getPass(cro::Camera::Pass::Final).getAABB();
 
     static constexpr auto ChunkCount = RowCount * ColCount;
+
+#ifdef CRO_DEBUG_
+    narrowphaseCount = 0;
+    m_narrowphaseTimer.begin();
+#endif
     for (auto i = 0; i < ChunkCount; ++i)
     {
-        //broad phase
-        if (m_boundingBoxes[i].intersects(frustumBounds))
+        //wow this is slow
+        /*if (cro::Util::Frustum::visible(f, cam.getPass(cro::Camera::Pass::Final).viewMatrix, m_boundingBoxes[i]))
+        {
+            narrowphaseCount++;
+        }*/
+
+        //all planes face inwards
+        bool intersects = true;
+        auto j = 0;
+        do
+        {
+            intersects = cro::Spatial::intersects(frustum[j++], m_boundingBoxes[i]) != cro::Planar::Back;
+        } while (intersects && j < 6);
+
+        if (intersects)
         {
             m_currentIndex |= (1 << i);
             m_indexList.push_back(i);
-
-            //TODO narrow phase
+#ifdef CRO_DEBUG_
+            narrowphaseCount++;
         }
     }
+    m_narrowphaseTimer.end();
+#else
+        }
+    }
+#endif
 }
 
 void ChunkVisSystem::setWorldHeight(float h)

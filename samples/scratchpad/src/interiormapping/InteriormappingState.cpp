@@ -1,7 +1,6 @@
 //Auto-generated source file for Scratchpad Stub 28/11/2023, 13:22:27
 
 #include "InteriorMappingState.hpp"
-#include "../chunkvis/ChunkVisSystem.hpp"
 
 #include <crogine/gui/Gui.hpp>
 
@@ -18,10 +17,13 @@
 #include <crogine/ecs/systems/RenderSystem2D.hpp>
 
 #include <crogine/graphics/BinaryMeshBuilder.hpp>
+#include <crogine/graphics/ImageArray.hpp>
 
 #include <crogine/util/Constants.hpp>
+#include <crogine/util/Random.hpp>
 #include <crogine/detail/OpenGL.hpp>
 #include <crogine/detail/glm/gtx/euler_angles.hpp>
+#include <crogine/detail/glm/gtc/matrix_inverse.hpp>
 
 namespace
 {
@@ -199,14 +201,21 @@ bool InteriorMappingState::simulate(float dt)
     static std::int32_t oldIdx = 0;
     auto idx = system->getIndex();
 
-    if (idx != oldIdx)
+    if (idx &&
+        idx != oldIdx)
     {
         const auto& indices = system->getIndexList();
         const auto chunkSize = system->getChunkSize();
 
+        std::vector<const std::vector<glm::mat4>*> transforms;
+        std::vector<const std::vector<glm::mat3>*> normals;
+
         m_cullingDebugTexture.clear(cro::Colour::Plum);
         for (auto i : indices)
         {
+            transforms.push_back(&m_cells[i].transforms);
+            normals.push_back(&m_cells[i].normals);
+
             auto x = i % ChunkVisSystem::ColCount;
             auto y = i / ChunkVisSystem::ColCount;
 
@@ -214,6 +223,8 @@ bool InteriorMappingState::simulate(float dt)
             m_cullingDebugVerts.draw();
         }
         m_cullingDebugTexture.display();
+
+        m_entities[EntityID::InstancedCulled].getComponent<cro::Model>().updateInstanceTransforms(transforms, normals);
     }
     oldIdx = idx;
 
@@ -222,7 +233,10 @@ bool InteriorMappingState::simulate(float dt)
 
 void InteriorMappingState::render()
 {
+    m_profileTimer.begin();
     m_gameScene.render();
+    m_profileTimer.end();
+
     m_uiScene.render();
 }
 
@@ -526,6 +540,62 @@ void InteriorMappingState::createCullingScene()
         entity.getComponent<cro::Model>().setMaterialProperty(0, "u_diffuseMap", cro::TextureID(m_cullingDebugTexture.getTexture()));
     }
 
+    std::vector<glm::mat4> positions;
+    cro::ImageArray<std::uint8_t> arr;
+    if (arr.loadFromFile("assets/images/instance_map.png"))
+    {
+        for (auto i = 0u; i < arr.size(); i += arr.getChannels())
+        {
+            if (arr[i])
+            {
+                if (cro::Util::Random::value(0, 6) == 0)
+                {
+                    auto x = (i / arr.getChannels()) % arr.getDimensions().x;
+                    auto y = (i / arr.getChannels()) / arr.getDimensions().x;
+
+                    float scale = static_cast<float>(cro::Util::Random::value(5, 40)) / 10.f;
+
+                    auto tx = glm::translate(glm::mat4(1.f), glm::vec3(static_cast<float>(x), 0.f, -static_cast<float>(y)));
+                    tx = glm::scale(tx, glm::vec3(scale));
+
+                    positions.push_back(tx);
+
+                    auto norm = glm::inverseTranspose(tx);
+
+                    x /= std::ceil(m_gameScene.getSystem<ChunkVisSystem>()->getChunkSize().x);
+                    y /= std::ceil(m_gameScene.getSystem<ChunkVisSystem>()->getChunkSize().y);
+
+                    auto idx = y * ChunkVisSystem::ColCount + x;
+                    m_cells[idx].transforms.push_back(tx);
+                    m_cells[idx].normals.push_back(norm);
+                }
+            }
+        }
+    }
+
+    if (md.loadFromFile("assets/models/cube.cmt", true))
+    {
+        auto entity = m_gameScene.createEntity();
+        entity.addComponent<cro::Transform>();
+        md.createModel(entity);
+
+        entity.getComponent<cro::Model>().setInstanceTransforms(positions);
+        m_entities[EntityID::Instanced] = entity;
+    }
+
+    if (md.loadFromFile("assets/models/cube2.cmt", true))
+    {
+        auto entity = m_gameScene.createEntity();
+        entity.addComponent<cro::Transform>();
+        md.createModel(entity);
+
+        entity.getComponent<cro::Model>().setInstanceTransforms(positions);
+        entity.getComponent<cro::Model>().setHidden(true);
+        m_entities[EntityID::InstancedCulled] = entity;
+    }
+
+
+
     auto resize = [](cro::Camera& cam)
         {
             glm::vec2 size(cro::App::getWindow().getSize());
@@ -539,6 +609,8 @@ void InteriorMappingState::createCullingScene()
 
     m_gameScene.getActiveCamera().getComponent<cro::Transform>().setPosition({ 160.f, 60.f, 30.5f });
     m_gameScene.getActiveCamera().getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -0.5f);
+
+    m_gameScene.getSunlight().getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -0.4f);
 }
 
 void InteriorMappingState::createUI()
@@ -547,6 +619,22 @@ void InteriorMappingState::createUI()
         {
             if (ImGui::Begin("Culling"))
             {
+                ImGui::Text("Render Time %3.3f", m_profileTimer.result() * 1000.f);
+
+                bool v = m_entities[EntityID::Instanced].getComponent<cro::Model>().isHidden();
+                if (ImGui::Checkbox("Hide Instanced", &v))
+                {
+                    m_entities[EntityID::Instanced].getComponent<cro::Model>().setHidden(v);
+                    m_entities[EntityID::InstancedCulled].getComponent<cro::Model>().setHidden(!v);
+                }
+
+                v = !v;
+                if (ImGui::Checkbox("Hide Instance Culled", &v))
+                {
+                    m_entities[EntityID::Instanced].getComponent<cro::Model>().setHidden(!v);
+                    m_entities[EntityID::InstancedCulled].getComponent<cro::Model>().setHidden(v);
+                }
+
                 const auto* s = m_gameScene.getSystem<ChunkVisSystem>();
                 static std::int32_t lastFlags = 0;
 
@@ -558,7 +646,10 @@ void InteriorMappingState::createUI()
                 ImGui::PopStyleColor();
                 lastFlags = idx;
 
-                ImGui::Image(m_cullingDebugTexture.getTexture(), { 320.f, 200.f }, { 0.f, 1.f }, { 1.f, 0.f });
+#ifdef CRO_DEBUG_
+                ImGui::Text("Narrowphase %3.3fms, %d visible", s->getNarrowphaseTime() * 1000.f, s->narrowphaseCount);
+#endif
+                //ImGui::Image(m_cullingDebugTexture.getTexture(), { 320.f, 200.f }, { 0.f, 1.f }, { 1.f, 0.f });
             }
             ImGui::End();
         

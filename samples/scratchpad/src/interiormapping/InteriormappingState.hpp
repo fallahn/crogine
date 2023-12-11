@@ -3,8 +3,10 @@
 #pragma once
 
 #include "../StateIDs.hpp"
+#include "../chunkvis/ChunkVisSystem.hpp"
 
 #include <crogine/core/State.hpp>
+#include <crogine/core/ProfileTimer.hpp>
 #include <crogine/ecs/Scene.hpp>
 #include <crogine/gui/GuiClient.hpp>
 #include <crogine/graphics/ModelDefinition.hpp>
@@ -38,6 +40,29 @@ private:
 
     cro::RenderTexture m_cullingDebugTexture;
     cro::SimpleVertexArray m_cullingDebugVerts;
+    cro::ProfileTimer<30> m_profileTimer;
+
+    struct EntityID final
+    {
+        enum
+        {
+            Instanced,
+            InstancedCulled,
+
+            Count
+        };
+    };
+
+    std::array<cro::Entity, EntityID::Count> m_entities = {};
+
+
+    struct Cell final
+    {
+        std::vector<glm::mat4> transforms;
+        std::vector<glm::mat3> normals;
+    };
+    std::array<Cell, ChunkVisSystem::RowCount* ChunkVisSystem::ColCount> m_cells = {};
+
 
     void loadCullingAssets();
     void createCullingScene();

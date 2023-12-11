@@ -29,6 +29,7 @@ source distribution.
 
 #pragma once
 
+#include <crogine/core/ProfileTimer.hpp>
 #include <crogine/detail/glm/vec2.hpp>
 #include <crogine/ecs/System.hpp>
 #include <crogine/graphics/BoundingBox.hpp>
@@ -58,10 +59,19 @@ public:
     static constexpr std::int32_t RowCount = 3;
     static constexpr std::int32_t ColCount = 4;
 
+#ifdef CRO_DEBUG_
+    //checks all boxes against frustum
+    std::int32_t narrowphaseCount = 0;
+    float getNarrowphaseTime() const { return m_narrowphaseTimer.result(); }
+#endif
 private:
     glm::vec2 m_chunkSize;
     std::int32_t m_currentIndex;
     std::vector<std::int32_t> m_indexList; //TODO would a fixed size array be faster?
 
     std::array<cro::Box, RowCount* ColCount> m_boundingBoxes = {};
+
+#ifdef CRO_DEBUG_
+    cro::ProfileTimer<30> m_narrowphaseTimer;
+#endif
 };
