@@ -213,8 +213,12 @@ bool InteriorMappingState::simulate(float dt)
         m_cullingDebugTexture.clear(cro::Colour::Plum);
         for (auto i : indices)
         {
-            transforms.push_back(&m_cells[i].transforms);
-            normals.push_back(&m_cells[i].normals);
+            //we're assuming if a transform was added the corresponding normal mat exists
+            if (!m_cells[i].transforms.empty())
+            {
+                transforms.push_back(&m_cells[i].transforms);
+                normals.push_back(&m_cells[i].normals);
+            }
 
             auto x = i % ChunkVisSystem::ColCount;
             auto y = i / ChunkVisSystem::ColCount;
@@ -224,7 +228,10 @@ bool InteriorMappingState::simulate(float dt)
         }
         m_cullingDebugTexture.display();
 
-        m_entities[EntityID::InstancedCulled].getComponent<cro::Model>().updateInstanceTransforms(transforms, normals);
+        if (!transforms.empty())
+        {
+            m_entities[EntityID::InstancedCulled].getComponent<cro::Model>().updateInstanceTransforms(transforms, normals);
+        }
     }
     oldIdx = idx;
 
