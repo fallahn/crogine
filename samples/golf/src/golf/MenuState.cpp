@@ -144,6 +144,7 @@ MenuState::MenuState(cro::StateStack& stack, cro::State::Context context, Shared
     : cro::State            (stack, context),
     m_sharedData            (sd),
     m_profileData           (sp),
+    m_connectedClientCount  (0),
     m_connectedPlayerCount  (0),
     m_textChat              (m_uiScene, sd),
     m_matchMaking           (context.appInstance.getMessageBus()),
@@ -2045,6 +2046,11 @@ void MenuState::handleNetEvent(const net::NetEvent& evt)
                 m_uiScene.getActiveCamera().getComponent<cro::Camera>().active = true;
 
                 updateCourseRuleString(false);
+
+                auto strClientCount = std::to_string(m_connectedClientCount);
+                auto strGameType = std::to_string(ConstVal::MaxClients) + " - " + ScoreTypes[m_sharedData.scoreType];
+
+                Social::setStatus(Social::InfoID::Lobby, { "Golf", strClientCount.c_str(), strGameType.c_str() });
             }
             break;
         case PacketID::NightTime:

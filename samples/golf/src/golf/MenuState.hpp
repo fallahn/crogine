@@ -104,6 +104,7 @@ public:
 private:
     SharedStateData& m_sharedData;
     SharedProfileData& m_profileData;
+    std::int32_t m_connectedClientCount;
     std::int32_t m_connectedPlayerCount;
 
     TextChat m_textChat;

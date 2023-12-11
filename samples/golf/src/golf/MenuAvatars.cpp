@@ -30,6 +30,7 @@ source distribution.
 #include "MenuState.hpp"
 #include "CommandIDs.hpp"
 #include "PacketIDs.hpp"
+#include "MenuConsts.hpp"
 #include "CallbackData.hpp"
 #include "Clubs.hpp"
 #include "TextAnimCallback.hpp"
@@ -2177,10 +2178,13 @@ void MenuState::updateLobbyAvatars()
 
 
         auto strClientCount = std::to_string(clientCount);
-        Social::setStatus(Social::InfoID::Lobby, { "Golf", strClientCount.c_str(), std::to_string(ConstVal::MaxClients).c_str() });
+        auto strGameType = std::to_string(ConstVal::MaxClients) + " - " + ScoreTypes[m_sharedData.scoreType];
+
+        Social::setStatus(Social::InfoID::Lobby, { "Golf", strClientCount.c_str(), strGameType.c_str() });
         Social::setGroup(/*m_sharedData.lobbyID*/m_sharedData.clientConnection.hostID, playerCount);
         //LogI << "Set group data to " << m_sharedData.clientConnection.hostID << ", " << playerCount << std::endl;
 
+        m_connectedClientCount = clientCount;
         m_connectedPlayerCount = playerCount;
         if (m_connectedPlayerCount < ScoreType::PlayerCount[m_sharedData.scoreType])
         {
