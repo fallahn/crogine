@@ -80,7 +80,10 @@ namespace
     static constexpr float MaxShrubOffset = MaxTerrainHeight + 13.f;
     static constexpr std::int32_t SlopeGridSize = 20;
     static constexpr std::int32_t HalfGridSize = SlopeGridSize / 2;
-    static constexpr std::int32_t NormalMapMultiplier = 4; //number of times the resolution of the map to increase normal map resolution by
+    
+    //number of times the resolution of the map to increase normal map resolution by
+    //MUST be even and should be 2,4 or 8 as 1 will cause a div0!
+    static constexpr std::int32_t NormalMapMultiplier = 8; 
 
     //callback data
     struct SwapData final
@@ -1103,7 +1106,7 @@ void TerrainBuilder::threadFunc()
                 static constexpr float DashCount = 80.f; //actual div by TAU cos its sin but eh.
                 static constexpr float SlopeSpeed = -40.f;//REMEMBER this const is also used in the slope frag shader
                 static constexpr std::int32_t AvgDistance = 1;
-                static constexpr std::int32_t GridDensity = NormalMapMultiplier; //verts per metre, however grid size is half this. Can only be 1,2 or 4 to match Normal Map resolution
+                static constexpr std::int32_t GridDensity = NormalMapMultiplier; //verts per metre, however grid size is half this.
                 static constexpr float GridSpacing = 1.f / GridDensity;
 
                 static constexpr float SurfaceOffset = 0.02f; //verts are pushed along normal by this much
@@ -1178,7 +1181,7 @@ void TerrainBuilder::threadFunc()
                             //TODO this is a lazy addition where we could really skip
                             //all vert processing entirely when not needed, but it
                             //doesn't actually make processing time *worse*
-                            if (y % 2)
+                            if ((y % (NormalMapMultiplier / 2) == 0))
                             {
                                 m_slopeBuffer.push_back(vert);
                                 m_slopeIndices.push_back(currIndex++);
@@ -1186,7 +1189,7 @@ void TerrainBuilder::threadFunc()
                                 m_slopeIndices.push_back(currIndex++);
                             }
 
-                            if (x % 2)
+                            if ((x % (NormalMapMultiplier / 2)) == 0)
                             {
                                 m_slopeBuffer.push_back(vert3);
                                 m_slopeIndices.push_back(currIndex++);

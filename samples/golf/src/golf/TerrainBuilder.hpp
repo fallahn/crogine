@@ -106,7 +106,7 @@ private:
     std::array<cro::Entity, 2u> m_propRootEntities = {};
     std::size_t m_swapIndex; //might not swap every hole so we need to track this independently
 
-    std::vector<glm::mat4> m_instanceTransforms;
+    std::vector<glm::mat4> m_instanceTransforms; //water-side instances (not trees)
     std::array<cro::Entity, 2u> m_instancedEntities = {};
 
     static constexpr std::size_t MaxShrubInstances = 4;
