@@ -35,4 +35,8 @@ private:
     void createScene();
     void createUI();
 
+    cro::RenderTexture m_cullingDebugTexture;
+
+    void loadCullingAssets();
+    void createCullingScene();
 };

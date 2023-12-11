@@ -64,8 +64,11 @@ InteriorMappingState::InteriorMappingState(cro::StateStack& stack, cro::State::C
 {
     context.mainWindow.loadResources([this]() {
         addSystems();
-        loadAssets();
-        createScene();
+        /*loadAssets();
+        createScene();*/
+
+        loadCullingAssets();
+        createCullingScene();
         createUI();
     });
 }
@@ -91,6 +94,43 @@ bool InteriorMappingState::handleEvent(const cro::Event& evt)
         }
     }
 
+    else if (evt.type == SDL_MOUSEBUTTONDOWN)
+    {
+        switch (evt.button.button)
+        {
+        default: break;
+        case SDL_BUTTON_LEFT:
+            cro::App::getWindow().setMouseCaptured(true);
+            break;
+        }
+    }
+    else if (evt.type == SDL_MOUSEBUTTONUP)
+    {
+        switch (evt.button.button)
+        {
+        default: break;
+        case SDL_BUTTON_LEFT:
+            cro::App::getWindow().setMouseCaptured(false);
+            break;
+        }
+    }
+    else if (evt.type == SDL_MOUSEMOTION)
+    {
+        static constexpr float PixelsPerRad = 380.f; //obvs this doesn't scale with window size...
+
+        if (cro::App::getWindow().getMouseCaptured())
+        {
+            auto& tx = m_gameScene.getActiveCamera().getComponent<cro::Transform>();
+
+            const float xMotion = static_cast<float>(evt.motion.xrel) / PixelsPerRad;
+            const float yMotion = static_cast<float>(evt.motion.yrel) / PixelsPerRad;
+            const auto upVec = glm::inverse(glm::toMat3(tx.getRotation())) * cro::Transform::Y_AXIS;
+
+            tx.rotate(upVec, -xMotion);
+            tx.rotate(cro::Transform::X_AXIS, -yMotion);
+        }
+    }
+
     m_gameScene.forwardEvent(evt);
     m_uiScene.forwardEvent(evt);
     return true;
@@ -104,6 +144,52 @@ void InteriorMappingState::handleMessage(const cro::Message& msg)
 
 bool InteriorMappingState::simulate(float dt)
 {
+    glm::vec3 motion(0.f);
+    if (cro::Keyboard::isKeyPressed(SDLK_w))
+    {
+        motion.z += 1.f;
+    }
+    if (cro::Keyboard::isKeyPressed(SDLK_s))
+    {
+        motion.z -= 1.f;
+    }
+
+    if (cro::Keyboard::isKeyPressed(SDLK_d))
+    {
+        motion.x += 1.f;
+    }
+    if (cro::Keyboard::isKeyPressed(SDLK_a))
+    {
+        motion.x -= 1.f;
+    }
+
+    if (cro::Keyboard::isKeyPressed(SDLK_SPACE))
+    {
+        motion.y += 1.f;
+    }
+    if (cro::Keyboard::isKeyPressed(SDLK_LCTRL))
+    {
+        motion.y -= 1.f;
+    }
+
+    if (auto l2 = glm::length2(motion); l2 != 0)
+    {
+        static constexpr float Speed = 50.f;
+        auto& tx = m_gameScene.getActiveCamera().getComponent<cro::Transform>();
+
+        motion /= std::sqrt(l2);
+        motion *= Speed * dt;
+
+        const auto fwd = tx.getForwardVector();
+        tx.move(fwd * motion.z);
+
+        const auto rgt = tx.getRightVector();
+        tx.move(rgt * motion.x);
+
+        const auto up = tx.getUpVector();
+        tx.move(up * motion.y);
+    }
+
     m_gameScene.simulate(dt);
     m_uiScene.simulate(dt);
     return true;
@@ -111,6 +197,10 @@ bool InteriorMappingState::simulate(float dt)
 
 void InteriorMappingState::render()
 {
+    m_cullingDebugTexture.clear(cro::Colour::Plum);
+
+    m_cullingDebugTexture.display();
+
     m_gameScene.render();
     m_uiScene.render();
 }
@@ -384,6 +474,41 @@ void InteriorMappingState::createScene()
 
     m_gameScene.getActiveCamera().getComponent<cro::Transform>().setPosition({ 0.f, 1.f, 3.5f });
     //m_gameScene.getActiveCamera().getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -0.4f);
+}
+
+void InteriorMappingState::loadCullingAssets()
+{
+
+}
+
+void InteriorMappingState::createCullingScene()
+{
+    cro::ModelDefinition md(m_resources);
+    if (md.loadFromFile("assets/models/map_plane.cmt"))
+    {
+        auto entity = m_gameScene.createEntity();
+        entity.addComponent<cro::Transform>();
+        md.createModel(entity);
+
+        m_cullingDebugTexture.create(320, 200, false);
+        entity.getComponent<cro::Model>().setMaterialProperty(0, "u_diffuseMap", cro::TextureID(m_cullingDebugTexture.getTexture()));
+    }
+
+
+
+    auto resize = [](cro::Camera& cam)
+        {
+            glm::vec2 size(cro::App::getWindow().getSize());
+            cam.viewport = { 0.f, 0.f, 1.f, 1.f };
+            cam.setPerspective(80.f * cro::Util::Const::degToRad, size.x / size.y, 0.1f, 350.f);
+        };
+
+    auto& cam = m_gameScene.getActiveCamera().getComponent<cro::Camera>();
+    cam.resizeCallback = resize;
+    resize(cam);
+
+    m_gameScene.getActiveCamera().getComponent<cro::Transform>().setPosition({ 160.f, 60.f, 30.5f });
+    m_gameScene.getActiveCamera().getComponent<cro::Transform>().rotate(cro::Transform::X_AXIS, -0.5f);
 }
 
 void InteriorMappingState::createUI()
