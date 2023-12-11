@@ -40,7 +40,6 @@ source distribution.
 #include "LeaderboardTexture.hpp"
 #include "CPUGolfer.hpp"
 #include "TerrainDepthmap.hpp"
-#include "TerrainChunks.hpp"
 #include "MinimapZoom.hpp"
 #include "BallTrail.hpp"
 #include "TextChat.hpp"
@@ -221,7 +220,6 @@ private:
     float m_distanceToHole;
     ActivePlayer m_currentPlayer;
     CollisionMesh m_collisionMesh;
-    TerrainChunker m_terrainChunker;
 
     TerrainBuilder m_terrainBuilder;
 

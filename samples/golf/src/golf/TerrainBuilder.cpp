@@ -160,11 +160,10 @@ namespace
     };
 }
 
-TerrainBuilder::TerrainBuilder(SharedStateData& sd, const std::vector<HoleData>& hd, TerrainChunker& chunker)
+TerrainBuilder::TerrainBuilder(SharedStateData& sd, const std::vector<HoleData>& hd)
     : m_sharedData  (sd),
     m_holeData      (hd),
     m_currentHole   (0),
-    m_terrainChunker(chunker),
     m_swapIndex     (0),
     m_terrainBuffer ((MapSize.x * MapSize.y) / QuadsPerMetre),
     m_threadRunning (false),
@@ -754,11 +753,6 @@ void TerrainBuilder::update(std::size_t holeIndex)
         
         m_slopeProperties.entity.getComponent<cro::Transform>().setPosition(m_holeData[m_currentHole].pin);
 
-
-        //TODO this wants to be done at the bottom of the animation - need to make it available to the callback
-        m_terrainChunker.setChunks(m_chunks);
-
-
         //signal to the thread we want to update the buffers
         //ready for next time
         m_currentHole++;
@@ -817,18 +811,6 @@ void TerrainBuilder::applyTreeQuality()
 //private
 void TerrainBuilder::threadFunc()
 {
-    const auto chunkIndex = [](glm::vec3 worldPos)
-    {
-        static constexpr float ChunkSizeX = static_cast<float>(MapSize.x) / TerrainChunker::ChunkCountX;
-        static constexpr float ChunkSizeY = static_cast<float>(MapSize.y) / TerrainChunker::ChunkCountY;
-
-        glm::vec2 pos(worldPos.x, -worldPos.z);
-        //TODO is this safe to assume the position is always within the map?
-        std::int32_t xPos = static_cast<std::int32_t>(pos.x / ChunkSizeX);
-        std::int32_t yPos = static_cast<std::int32_t>(pos.y / ChunkSizeY);
-        return yPos * TerrainChunker::ChunkCountX + xPos;
-    };
-
     const auto readHeightMap = [&](std::uint32_t x, std::uint32_t y, std::int32_t gridRes = 1)
     {
         auto size = m_normalMap.getSize();
@@ -882,9 +864,6 @@ void TerrainBuilder::threadFunc()
     {
         if (m_wantsUpdate)
         {
-            m_chunks.clear();
-            m_chunks.resize(TerrainChunker::ChunkCount);
-
             //should be empty anyway because we clear after assigning them
             m_instanceTransforms.clear();
             for (auto& tx : m_shrubTransforms)
@@ -894,7 +873,6 @@ void TerrainBuilder::threadFunc()
 
             //we checked the file validity when the game starts.
             //if the map file is broken now something more drastic happened...
-            //cro::Image mapImage;
             cro::ImageArray<std::uint8_t> mapImage;
             if (mapImage.loadFromFile(m_holeData[m_currentHole].mapPath, true))
             {

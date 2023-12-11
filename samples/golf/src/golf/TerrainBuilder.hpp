@@ -32,7 +32,6 @@ source distribution.
 #include "HoleData.hpp"
 #include "Billboard.hpp"
 #include "Treeset.hpp"
-#include "TerrainChunks.hpp"
 
 #include <crogine/gui/GuiClient.hpp>
 #include <crogine/ecs/Entity.hpp>
@@ -73,7 +72,7 @@ struct SharedStateData;
 class TerrainBuilder final : public cro::GuiClient
 {
 public:
-    TerrainBuilder(SharedStateData&, const std::vector<HoleData>&, TerrainChunker&);
+    TerrainBuilder(SharedStateData&, const std::vector<HoleData>&);
     ~TerrainBuilder();
 
     TerrainBuilder(const TerrainBuilder&) = delete;
@@ -98,12 +97,6 @@ private:
     std::size_t m_currentHole;
 
     std::vector<std::unique_ptr<cro::ArrayTexture<float, 4>>> m_arrayTextures;
-
-    //TODO this isn't used
-    TerrainChunker& m_terrainChunker;
-    std::vector<TerrainChunk> m_chunks;
-
-    static constexpr auto ChunkCount = TerrainChunker::ChunkCountX * TerrainChunker::ChunkCountY;
 
     std::array<cro::Billboard, BillboardID::Count> m_billboardTemplates = {};
     std::vector<cro::Billboard> m_billboardBuffer;

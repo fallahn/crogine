@@ -44,8 +44,8 @@ namespace ScoreType
         MultiTarget,
         ShortRound,
 
-        BattleRoyale,
         Count,
+        BattleRoyale,
         BBB,
         NearestThePin,
         LongestDrive,
@@ -53,7 +53,7 @@ namespace ScoreType
 
     static const inline std::array<std::int32_t, Count> PlayerCount =
     {
-        1,1,1, 1,1,1,1, 3
+        1,1,1, 1,1,1,1, //3
     };
 }
 

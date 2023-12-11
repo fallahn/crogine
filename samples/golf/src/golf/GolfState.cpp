@@ -178,8 +178,7 @@ GolfState::GolfState(cro::StateStack& stack, cro::State::Context context, Shared
     m_holeToModelRatio      (1.f),
     m_currentHole           (0),
     m_distanceToHole        (1.f), //don't init to 0 in case we get div0
-    m_terrainChunker        (m_gameScene),
-    m_terrainBuilder        (sd, m_holeData, m_terrainChunker),
+    m_terrainBuilder        (sd, m_holeData),
     m_audioPath             ("assets/golf/sound/ambience.xas"),
     m_currentCamera         (CameraID::Player),
     m_idleTime              (cro::seconds(180.f)),
