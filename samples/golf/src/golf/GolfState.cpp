@@ -59,6 +59,7 @@ source distribution.
 #include "MiniBallSystem.hpp"
 #include "CallbackData.hpp"
 #include "XPAwardStrings.hpp"
+#include "ChunkVisSystem.hpp"
 
 #include <Achievements.hpp>
 #include <AchievementStrings.hpp>
@@ -858,6 +859,7 @@ void GolfState::handleMessage(const cro::Message& msg)
         else if (data.type == SystemEvent::TreeQualityChanged)
         {
             m_terrainBuilder.applyTreeQuality();
+            m_gameScene.setSystemActive<ChunkVisSystem>(m_sharedData.treeQuality == SharedStateData::High);
         }
     }
         break;
@@ -2078,6 +2080,7 @@ void GolfState::addSystems()
     m_gameScene.addSystem<cro::SkeletalAnimator>(mb);
     m_gameScene.addSystem<CameraFollowSystem>(mb);
     m_gameScene.addSystem<cro::CameraSystem>(mb);
+    m_gameScene.addSystem<ChunkVisSystem>(mb, MapSize, &m_terrainBuilder);
     m_gameScene.addSystem<cro::ShadowMapRenderer>(mb)->setRenderInterval(m_sharedData.hqShadows ? 2 : 3);
 //#ifdef CRO_DEBUG_
     m_gameScene.addSystem<FpsCameraSystem>(mb);
@@ -2093,6 +2096,7 @@ void GolfState::addSystems()
 
     //m_gameScene.setSystemActive<InterpolationSystem<InterpolationType::Linear>>(false);
     m_gameScene.setSystemActive<CameraFollowSystem>(false);
+    m_gameScene.setSystemActive<ChunkVisSystem>(m_sharedData.treeQuality == SharedStateData::High);
     m_gameScene.setSystemActive<WeatherAnimationSystem>(m_sharedData.weatherType == WeatherType::Rain || m_sharedData.weatherType == WeatherType::Showers);
 #ifdef CRO_DEBUG_
     m_gameScene.setSystemActive<cro::ParticleSystem>(false);
@@ -4276,6 +4280,10 @@ void GolfState::setCurrentHole(std::uint16_t holeInfo)
     m_gameScene.getSystem<ClientCollisionSystem>()->setMap(hole);
     m_gameScene.getSystem<ClientCollisionSystem>()->setPinPosition(m_holeData[hole].pin);
     m_collisionMesh.updateCollisionMesh(m_holeData[hole].modelEntity.getComponent<cro::Model>().getMeshData());
+
+    //set the min tree height of the culling system based on the hole model's AABB
+    const float height = m_holeData[hole].modelEntity.getComponent<cro::Model>().getAABB().getSize().y + 15.f;
+    m_gameScene.getSystem<ChunkVisSystem>()->setWorldHeight(height);
 
     //create hole model transition
     bool rescale = (hole == 0) || (m_holeData[hole - 1].modelPath != m_holeData[hole].modelPath);

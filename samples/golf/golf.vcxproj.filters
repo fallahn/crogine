@@ -414,6 +414,9 @@
     <ClCompile Include="src\golf\PlayerManagementState.cpp">
       <Filter>Source Files\golf\client\states</Filter>
     </ClCompile>
+    <ClCompile Include="src\golf\ChunkVisSystem.cpp">
+      <Filter>Source Files\golf\client\systems</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\ErrorCheck.hpp">
@@ -832,6 +835,9 @@
     </ClInclude>
     <ClInclude Include="src\golf\ScoreType.hpp">
       <Filter>Header Files\golf\shared</Filter>
+    </ClInclude>
+    <ClInclude Include="src\golf\ChunkVisSystem.hpp">
+      <Filter>Header Files\golf\client\systems</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

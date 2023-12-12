@@ -812,6 +812,13 @@ void TerrainBuilder::applyTreeQuality()
 }
 
 //private
+void TerrainBuilder::onChunkUpdate(const std::vector<std::int32_t>& visibleChunks)
+{
+    //TODO for each visible chunk check transform data exists and add to update list
+    //TODO use update list to update instance tree entities
+    //TODO if visible chunks is zero hide the model entities
+}
+
 void TerrainBuilder::threadFunc()
 {
     const auto readHeightMap = [&](std::uint32_t x, std::uint32_t y, std::int32_t gridRes = 1)

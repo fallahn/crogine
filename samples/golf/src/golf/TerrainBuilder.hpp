@@ -32,6 +32,7 @@ source distribution.
 #include "HoleData.hpp"
 #include "Billboard.hpp"
 #include "Treeset.hpp"
+#include "ChunkVisSystem.hpp"
 
 #include <crogine/gui/GuiClient.hpp>
 #include <crogine/ecs/Entity.hpp>
@@ -110,9 +111,18 @@ private:
     std::array<cro::Entity, 2u> m_instancedEntities = {};
 
     static constexpr std::size_t MaxShrubInstances = 4;
-    std::array<std::vector<glm::mat4>, MaxShrubInstances> m_shrubTransforms;
+    std::array<std::vector<glm::mat4>, MaxShrubInstances> m_shrubTransforms; //these are the incoming transforms and will be set next swap
     std::array<std::array<cro::Entity, MaxShrubInstances>, 2u> m_instancedShrubs = {};
 
+    struct CellData final
+    {
+        std::vector<glm::mat4> transforms;
+        std::vector<glm::mat3> normalMats;
+    };
+    //contains matrix data for current and next hole, indexed by m_swapIndex
+    std::array<std::array<std::array<CellData, ChunkVisSystem::RowCount* ChunkVisSystem::ColCount>, MaxShrubInstances>, 2> m_cellData = {};
+    friend class ChunkVisSystem;
+    void onChunkUpdate(const std::vector<std::int32_t>&);
 
     std::array<std::vector<cro::Entity>, 2u> m_crowdEntities = {};
 
